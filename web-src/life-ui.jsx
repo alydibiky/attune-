@@ -17,6 +17,7 @@ import { parseCar, loadCar, saveCar, addCarEntry, carMoneyText } from "./car.js"
 import { loadRadar, saveRadar, addDeadline, radarReminder } from "./deadlines.js";
 import { PlanDraft, GoldCard, CarCard } from "./plans-ui.jsx";
 import { tickRegular } from "./regular.js";
+import * as U from "./ui-kit.jsx";
 
 const KIND = { installment: "Installments", debt: "Money between people", circle: "Savings circle", bill: "Bill", rent: "Rent", subscription: "Subscription", regular: "Comes regularly" };
 // v6.27 computer layout A: a narrower left panel here, so the commitments on the right fit two cards side by side
@@ -44,29 +45,29 @@ function Item({ c, onTick, onRemove }) {
   // a regular (the maid every Saturday): the last few days and the next one — ticked = she came, and it's in Money
   const show = c.kind === "regular" ? pr.schedule.slice(Math.max(0, pr.schedule.length - 6)) : pr.schedule.slice(0, 24);
   return (
-    <div className="c-card" data-testid="life-item">
+    <div className={U.cardPad} data-testid="life-item">
       <div className="flex items-start gap-3">
-        <span className="c-ic"><Users size={16} /></span>
+        <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
         <div className="flex-1 min-w-0">
-          <b className="block" dir="auto">{heading(c)}</b>
-          <div className="c-sub" dir="auto">{describe(c)}</div>
+          <b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c)}</b>
+          <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(c)}</div>
         </div>
-        {pr.left != null ? <div className="text-end"><span className="c-lbl">{tr("Left")}</span><div className="c-num font-bold">{fmt(pr.left)}</div></div> : null}
-        <button onClick={() => onRemove(c)} aria-label={tr("Delete")} className="c-sub ms-1" data-testid="life-remove"><Trash2 size={15} /></button>
+        {pr.left != null ? <div className="text-end"><span className={U.label}>{tr("Left")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(pr.left)}</div></div> : null}
+        <button onClick={() => onRemove(c)} aria-label={tr("Delete")} className={"w-11 h-11 -me-2 -mt-1.5 shrink-0 grid place-items-center rounded-[14px] hover:text-[var(--c-neg)] " + U.muted} data-testid="life-remove"><Trash2 size={15} /></button>
       </div>
       {show.length > 1 ? (
         <div className="grid gap-1.5 mt-3" style={{ gridTemplateColumns: "repeat(" + Math.min(12, show.length) + ", minmax(0,1fr))" }}>
           {show.map((s) => (
             <button key={s.i} onClick={() => onTick(c, s.i, !s.paid)} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick"
               aria-pressed={s.paid} aria-label={tr("Payment {k}", { k: s.i + 1 }) + " · " + s.date}
-              className="h-8 rounded-lg flex items-center justify-center text-[10.5px] c-num"
-              style={{ background: s.paid ? "var(--c-acc)" : "transparent", border: "1.5px solid " + (s.paid || (pr.next && pr.next.i === s.i) ? "var(--c-acc)" : "var(--c-ln)"), color: s.paid ? "#fff" : "var(--c-mut)" }}>
+              className="h-11 rounded-[12px] flex items-center justify-center text-[10.5px] font-bold tabular-nums transition-colors duration-150"
+              style={{ background: s.paid ? "var(--c-acc)" : "var(--c-bg)", border: "1.5px solid " + (s.paid || (pr.next && pr.next.i === s.i) ? "var(--c-acc)" : "var(--c-ln)"), color: s.paid ? "var(--c-on-acc)" : "var(--c-mut)" }}>
               {s.paid ? <Check size={13} /> : s.date.slice(5)}</button>))}
         </div>) : (
-        <button onClick={() => onTick(c, 0, !(c.paid || []).includes(0))} className="mt-3 flex items-center gap-2 c-sub" data-testid="life-tick">
-          <span className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: (c.paid || []).includes(0) ? "var(--c-acc)" : "transparent", border: "1.5px solid var(--c-acc)", color: "#fff" }}>{(c.paid || []).includes(0) ? <Check size={12} /> : null}</span>
+        <button onClick={() => onTick(c, 0, !(c.paid || []).includes(0))} className={"mt-3 min-h-[44px] flex items-center gap-2 text-[13.5px] font-bold " + U.muted} data-testid="life-tick">
+          <span className="w-6 h-6 rounded-[8px] flex items-center justify-center" style={{ background: (c.paid || []).includes(0) ? "var(--c-acc)" : "transparent", border: "1.5px solid var(--c-acc)", color: "var(--c-on-acc)" }}>{(c.paid || []).includes(0) ? <Check size={12} /> : null}</span>
           {(c.paid || []).includes(0) ? tr("Settled") : c.dir === "in" ? tr("Mark as paid back") : tr("Mark as paid")}</button>)}
-      {pr.next && show.length > 1 ? <div className="c-sub mt-2">{tr("Next: {d} · {a}", { d: pr.next.date, a: fmt(pr.next.amount) })}</div> : null}
+      {pr.next && show.length > 1 ? <div className={"mt-2 text-[12.5px] tabular-nums " + U.muted}>{tr("Next: {d} · {a}", { d: pr.next.date, a: fmt(pr.next.amount) })}</div> : null}
     </div>);
 }
 
@@ -129,37 +130,37 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     ["Installments", data.items.filter((c) => c.kind === "installment" && !c.person)], ["Savings circles", data.items.filter((c) => c.kind === "circle")],
     ["Bills, rent and subscriptions", data.items.filter((c) => ["bill", "rent", "subscription"].includes(c.kind))], ["Comes regularly", data.items.filter((c) => c.kind === "regular")]].filter((g) => g[1].length);
   return (
-    <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="life-page">
-      <div><h2 className="text-[22px] font-bold m-0">{tr("People & plans")}</h2><p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
+    <div className={U.page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="life-page">
+      <div><h2 className={U.h1}>{tr("People & plans")}</h2><p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
       {/* v6.27 computer layout A: what you type and what's due on the left, the commitments on the right (stacked on a phone) */}
       <div className={PANES_N}><div className={LEFT}>
-      <div className="c-card">
+      <div className={U.cardPad}>
         <div className="flex items-end gap-2">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="life-input"
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); read(); } }}
             placeholder={tr("Type it as you'd say it — “Ahmed owes me 12,000, 1,000 a month for a year”")}
-            className="flex-1 resize-none bg-transparent focus:outline-none text-[15px]" style={{ color: "var(--c-ink)" }} />
-          <button className="c-btn" onClick={read} disabled={busy || !text.trim()} data-testid="life-read">{busy ? "…" : tr("Read")}</button>
+            className={U.area + " flex-1 resize-none"} />
+          <button className={U.btnP} onClick={read} disabled={busy || !text.trim()} data-testid="life-read">{busy ? "…" : tr("Read")}</button>
         </div>
       </div>
       {draft ? (
-        <div className="c-card" style={{ borderColor: "var(--c-acc)" }} data-testid="life-draft">
+        <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-acc)]")} data-testid="life-draft">
           {["split", "holding", "car"].includes(draft.kind) ? <PlanDraft d={draft} /> : <>
-          <span className="c-lbl">{tr(KIND[draft.kind])}{draft.model ? " · " + tr("read by AI") : ""}</span>
-          <div className="mt-1 font-bold" dir="auto">{heading(draft)}</div>
-          <div className="c-sub" dir="auto">{describe(draft)}{draft.start ? " · " + tr("from {d}", { d: draft.start }) : ""}</div></>}
-          <div className="flex gap-2 mt-3"><button className="c-btn" onClick={save} data-testid="life-save">{tr("Save")}</button><button className="c-sub" onClick={() => setDraft(null)}>{tr("Cancel")}</button></div>
+          <span className={U.label}>{tr(KIND[draft.kind])}{draft.model ? " · " + tr("read by AI") : ""}</span>
+          <div className="mt-1 font-extrabold text-[15px]" dir="auto">{heading(draft)}</div>
+          <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(draft)}{draft.start ? " · " + tr("from {d}", { d: draft.start }) : ""}</div></>}
+          <div className="flex gap-2 mt-3"><button className={U.btnP} onClick={save} data-testid="life-save">{tr("Save")}</button><button className={U.btnS} onClick={() => setDraft(null)}>{tr("Cancel")}</button></div>
         </div>) : null}
       {soon.length ? (
-        <div className="c-card" data-testid="life-soon"><span className="c-lbl">{tr("Due this week")}</span>
+        <div className={U.cardPad} data-testid="life-soon"><span className={U.label}>{tr("Due this week")}</span>
           {soon.slice(0, 6).map((x, k) => (
-            <div key={k} className="flex items-center mt-2"><span className="flex-1 truncate" dir="auto">{heading(x.c)}</span>
-              <span className={"c-pill " + (x.late ? "late" : "due")}>{x.late ? tr("Late") : x.date.slice(5)} · <span className="c-num">{fmt(x.amount)}</span></span></div>))}
+            <div key={k} className="flex items-center gap-2 mt-2"><span className="flex-1 truncate font-semibold" dir="auto">{heading(x.c)}</span>
+              <span className={U.tag(x.late ? "red" : "amber")}>{x.late ? tr("Late") : x.date.slice(5)} · <span className="tabular-nums">{fmt(x.amount)}</span></span></div>))}
         </div>) : null}
-      {!data.items.length && !draft ? <p className="c-sub flex items-center gap-2"><Sparkles size={14} />{tr("Try: «جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع» or “Netflix 200 every month”.")}</p> : null}
+      {!data.items.length && !draft ? <p className={"flex items-center gap-2 text-[13px] " + U.muted}><Sparkles size={14} className="shrink-0 text-[var(--c-acc)]" />{tr("Try: «جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع» or “Netflix 200 every month”.")}</p> : null}
       </div><div className={groups.length || gold.items.length || car.log.length ? RIGHT : "min-w-0"}>
       {groups.map(([g, items]) => (
-        <div key={g} className="space-y-2"><span className="c-lbl">{tr(g)}</span>
+        <div key={g} className="space-y-2"><span className={U.label}>{tr(g)}</span>
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{items.map((c) => <Item key={c.id} c={c} onTick={tick} onRemove={remove} />)}</div></div>))}
       {gold.items.length || car.log.length ? <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
         {gold.items.length ? <GoldCard data={gold} put={putGold} flash={flash} /> : null}

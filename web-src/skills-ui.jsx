@@ -8,23 +8,23 @@ import { tr } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
 import * as S from "./userskills.js";
 import { GRID3 } from "./desk.jsx";
+import { page, card, btnP, btnS, btnDanger, area, label as lbl, h1 } from "./ui-kit.jsx";
 
-const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500";
-const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
-const primary = btn + " bg-teal-500 text-slate-950";
-const ghost = btn + " border border-slate-700 text-slate-200";
+const field = area;
+const primary = btnP;
+const ghost = btnS;
 
 function Sheet({ title, onClose, children, footer, testid }) {
   useSubBack(true, onClose);
   return (
-    <div className="att-shift fixed inset-0 z-[70] bg-slate-950 flex flex-col" data-testid={testid}>
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-800">
-        <button onClick={onClose} className="p-1.5 -ms-1 rounded-lg text-slate-300" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
-        <h2 className="text-[15px] font-semibold text-white flex-1 truncate">{title}</h2>
-        <button onClick={onClose} className="p-1.5 text-slate-400" aria-label={tr("Close")}><X size={18} /></button>
+    <div className="calm att-shift fixed inset-0 z-[70] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col" data-testid={testid}>
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--c-ln)] bg-[var(--c-surf)]">
+        <button onClick={onClose} className="w-11 h-11 grid place-items-center -ms-1 rounded-[14px] text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
+        <h2 className="text-[16px] font-extrabold text-[var(--c-ink)] flex-1 truncate m-0">{title}</h2>
+        <button onClick={onClose} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={18} /></button>
       </div>
       <div className="flex-1 overflow-auto p-4"><div className="lg:max-w-5xl lg:mx-auto">{children}</div></div>
-      {footer ? <div className="border-t border-slate-800 p-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}><div className="lg:max-w-5xl lg:mx-auto">{footer}</div></div> : null}
+      {footer ? <div className="border-t border-[var(--c-ln)] bg-[var(--c-surf)] p-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}><div className="lg:max-w-5xl lg:mx-auto">{footer}</div></div> : null}
     </div>
   );
 }
@@ -32,8 +32,8 @@ function Sheet({ title, onClose, children, footer, testid }) {
 function Toggle({ on, onChange, label }) {
   return (
     <button role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} data-testid="skill-toggle"
-      className={`shrink-0 w-11 h-6 rounded-full relative transition-colors ${on ? "bg-teal-500" : "bg-slate-700"}`}>
-      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${on ? "start-[22px]" : "start-0.5"}`} />
+      className={`shrink-0 w-11 h-6 my-2.5 rounded-full relative transition-colors duration-150 ${on ? "bg-[var(--c-acc)]" : "bg-[var(--c-surf-2)]"}`}>
+      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-150 ${on ? "start-[22px]" : "start-0.5"}`} />
     </button>
   );
 }
@@ -62,20 +62,20 @@ function Editor({ skill, onSave, onClose, llm, modelReady, openEngine, flash }) 
       {/* v6.27 computer layout: the skill itself on the left, the optional extras on the right */}
       <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
       <div className="space-y-3 min-w-0">
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Name")}</span><input className={field} value={s.name} onChange={set("name")} data-testid="skill-name" placeholder={tr("e.g. Cake order writer")} /></label>
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Command (optional)")}</span><input className={field} value={s.command} onChange={set("command")} dir="ltr" data-testid="skill-command" placeholder="/quote" />
-          <span className="block text-[11px] text-slate-500 mt-1">{tr("Start a message with it to use this skill, e.g. “/quote 3 birthday cakes for Friday”.")}</span></label>
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("When to use it")}</span><textarea className={field + " resize-none"} rows={2} value={s.when} onChange={set("when")} data-testid="skill-when" placeholder={tr("Words that tell the app this skill fits: cake order, price offer, delivery…")} />
-          <span className="block text-[11px] text-slate-500 mt-1">{tr("The app uses these words to pick the skill by itself when your question fits.")}</span></label>
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Instructions")}</span><textarea className={field + " resize-none"} rows={7} value={s.instructions} onChange={set("instructions")} data-testid="skill-instructions" placeholder={tr("What the AI should do: the structure of the answer, the tone, what to ask if something is missing…")} />
-          <span className="block text-[11px] text-slate-500 mt-1" dir="ltr">{s.instructions.length} / {S.LIMITS.instructions}</span></label>
+        <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Name")}</span><input className={field} value={s.name} onChange={set("name")} data-testid="skill-name" placeholder={tr("e.g. Cake order writer")} /></label>
+        <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Command (optional)")}</span><input className={field} value={s.command} onChange={set("command")} dir="ltr" data-testid="skill-command" placeholder="/quote" />
+          <span className="block text-[11px] text-[var(--c-mut)] mt-1">{tr("Start a message with it to use this skill, e.g. “/quote 3 birthday cakes for Friday”.")}</span></label>
+        <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("When to use it")}</span><textarea className={field + " resize-none"} rows={2} value={s.when} onChange={set("when")} data-testid="skill-when" placeholder={tr("Words that tell the app this skill fits: cake order, price offer, delivery…")} />
+          <span className="block text-[11px] text-[var(--c-mut)] mt-1">{tr("The app uses these words to pick the skill by itself when your question fits.")}</span></label>
+        <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Instructions")}</span><textarea className={field + " resize-none"} rows={7} value={s.instructions} onChange={set("instructions")} data-testid="skill-instructions" placeholder={tr("What the AI should do: the structure of the answer, the tone, what to ask if something is missing…")} />
+          <span className="block text-[11px] text-[var(--c-mut)] mt-1" dir="ltr">{s.instructions.length} / {S.LIMITS.instructions}</span></label>
         <button onClick={draft} disabled={busy} className={ghost + " w-full flex items-center justify-center gap-1.5 py-2.5"} data-testid="skill-draft"><Wand2 size={14} />{busy ? tr("Writing…") : tr("Write it for me (from “When to use it”)")}</button>
       </div>
       <div className="space-y-3 mt-3 lg:mt-0 min-w-0">
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Example of a good answer (optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.example} onChange={set("example")} /></label>
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Checklist: what every answer must satisfy (one per line, optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.checklist || ""} onChange={set("checklist")} data-testid="skill-checklist" /></label>
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Facts the AI should know (prices, rules, terms — optional)")}</span><textarea className={field + " resize-none"} rows={4} value={s.reference || ""} onChange={set("reference")} data-testid="skill-reference" />
-          <span className="block text-[11px] text-slate-500 mt-1">{tr("Separate topics with an empty line. Only the paragraphs that fit the question are used, so this can be long.")}</span></label>
+        <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Example of a good answer (optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.example} onChange={set("example")} /></label>
+        <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Checklist: what every answer must satisfy (one per line, optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.checklist || ""} onChange={set("checklist")} data-testid="skill-checklist" /></label>
+        <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Facts the AI should know (prices, rules, terms — optional)")}</span><textarea className={field + " resize-none"} rows={4} value={s.reference || ""} onChange={set("reference")} data-testid="skill-reference" />
+          <span className="block text-[11px] text-[var(--c-mut)] mt-1">{tr("Separate topics with an empty line. Only the paragraphs that fit the question are used, so this can be long.")}</span></label>
       </div>
       </div>
     </Sheet>
@@ -85,15 +85,15 @@ function Editor({ skill, onSave, onClose, llm, modelReady, openEngine, flash }) 
 function Catalogue({ have, onAdd, onClose }) {
   return (
     <Sheet title={tr("Skill catalogue")} onClose={onClose} testid="skill-catalogue">
-      <p className="text-[12.5px] text-slate-400 mb-3">{tr("Ready-made skills. Add one, then change it to fit your work.")}</p>
+      <p className="text-[12.5px] text-[var(--c-mut)] mb-3">{tr("Ready-made skills. Add one, then change it to fit your work.")}</p>
       <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3">
         {neutral(S.CATALOGUE, "skills").map((c) => {
           const added = have.some((x) => x.name === c.name);
           return (
-            <div key={c.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3" data-testid="catalogue-item">
+            <div key={c.id} className={card + " p-4"} data-testid="catalogue-item">
               <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1"><p className="text-sm font-medium text-slate-100">{c.name} <span className="text-[11px] text-teal-300" dir="ltr">{c.command}</span></p>
-                  <p className="text-[12px] text-slate-400 mt-0.5 line-clamp-3">{c.instructions}</p></div>
+                <div className="min-w-0 flex-1"><p className="text-[14.5px] font-extrabold text-[var(--c-ink)] m-0">{c.name} <span className="text-[11px] text-[var(--c-acc)]" dir="ltr">{c.command}</span></p>
+                  <p className="text-[12px] text-[var(--c-mut)] mt-0.5 line-clamp-3">{c.instructions}</p></div>
                 <button disabled={added} onClick={() => onAdd(c)} className={(added ? ghost : primary) + " shrink-0"} data-testid="catalogue-add">{added ? tr("Added") : tr("Add")}</button>
               </div>
             </div>
@@ -113,19 +113,19 @@ function Import({ onSave, onClose, flash }) {
   return (
     <Sheet title={tr("Import a skill")} onClose={onClose} testid="skill-import"
       footer={<button className={primary + " w-full py-2.5"} disabled={!sk} onClick={() => onSave(sk)} data-testid="skill-import-save">{tr("Add this skill")}</button>}>
-      <p className="text-[12.5px] text-slate-400 mb-2">{tr("Paste a skill someone shared, or pick its file. You will see exactly what it adds before you save it. It is only text: it cannot run anything.")}</p>
+      <p className="text-[12.5px] text-[var(--c-mut)] mb-2">{tr("Paste a skill someone shared, or pick its file. You will see exactly what it adds before you save it. It is only text: it cannot run anything.")}</p>
       <textarea className={field + " resize-none font-mono text-[12px]"} rows={7} value={text} onChange={(e) => setText(e.target.value)} placeholder={"---\nname: My skill\ncommand: /my\nwhen: …\n---\nInstructions…"} dir="ltr" data-testid="skill-import-text" />
       <label className={ghost + " mt-2 inline-flex items-center gap-1.5 cursor-pointer"}><Upload size={14} />{tr("Pick a file")}<input type="file" accept=".md,.txt,.json,text/plain" className="hidden" onChange={(e) => { pick(e.target.files && e.target.files[0]); e.target.value = ""; }} /></label>
-      {err ? <p className="text-[12px] text-amber-300 mt-3">{tr(err)}</p> : null}
+      {err ? <p className="text-[12px] text-[var(--c-warn)] mt-3">{tr(err)}</p> : null}
       {sk ? (
-        <div className="mt-3 rounded-xl border border-teal-800 bg-teal-500/5 p-3" data-testid="skill-import-preview">
-          <p className="text-[13px] font-semibold text-white">{sk.name} <span className="text-[11px] text-teal-300" dir="ltr">{sk.command}</span></p>
-          {sk.when ? <p className="text-[12px] text-slate-400 mt-1">{tr("Used when")}: {sk.when}</p> : null}
-          <p className="text-[11px] uppercase tracking-wide text-slate-500 mt-2">{tr("It will add this to your questions")}</p>
-          <p className="text-[12.5px] text-slate-200 mt-1 whitespace-pre-wrap">{sk.instructions}</p>
-          {sk.checklist ? <><p className="text-[11px] uppercase tracking-wide text-slate-500 mt-2">{tr("Checklist")}</p><p className="text-[12.5px] text-slate-200 mt-1 whitespace-pre-wrap">{sk.checklist}</p></> : null}
-          {sk.reference ? <><p className="text-[11px] uppercase tracking-wide text-slate-500 mt-2">{tr("Facts")}</p><p className="text-[12.5px] text-slate-300 mt-1 whitespace-pre-wrap max-h-40 overflow-auto">{sk.reference}</p></> : null}
-          {sk.script ? <div className="mt-2 rounded-lg border border-amber-700 bg-amber-500/10 p-2" data-testid="skill-import-script"><p className="text-[11px] uppercase tracking-wide text-amber-300">{tr("It also runs this small program on your phone (offline, in a locked box — no internet, no files, no access to the app)")}</p><pre className="text-[11.5px] text-slate-200 mt-1 whitespace-pre-wrap max-h-48 overflow-auto" dir="ltr">{sk.script.code}</pre></div> : null}
+        <div className="mt-3 rounded-[22px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-4" data-testid="skill-import-preview">
+          <p className="text-[13px] font-semibold text-[var(--c-ink)]">{sk.name} <span className="text-[11px] text-[var(--c-acc)]" dir="ltr">{sk.command}</span></p>
+          {sk.when ? <p className="text-[12px] text-[var(--c-mut)] mt-1">{tr("Used when")}: {sk.when}</p> : null}
+          <p className={lbl + " mt-3 mb-0"}>{tr("It will add this to your questions")}</p>
+          <p className="text-[12.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap">{sk.instructions}</p>
+          {sk.checklist ? <><p className={lbl + " mt-3 mb-0"}>{tr("Checklist")}</p><p className="text-[12.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap">{sk.checklist}</p></> : null}
+          {sk.reference ? <><p className={lbl + " mt-3 mb-0"}>{tr("Facts")}</p><p className="text-[12.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap max-h-40 overflow-auto">{sk.reference}</p></> : null}
+          {sk.script ? <div className="mt-2 rounded-[14px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2" data-testid="skill-import-script"><p className="text-[11px] uppercase tracking-wide text-[var(--c-warn)]">{tr("It also runs this small program on your phone (offline, in a locked box — no internet, no files, no access to the app)")}</p><pre className="text-[11.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap max-h-48 overflow-auto" dir="ltr">{sk.script.code}</pre></div> : null}
         </div>
       ) : null}
     </Sheet>
@@ -146,12 +146,12 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
   const shareOne = (s) => { const t = S.toFile(s); if (share) share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } };
   const saveOne = (s) => { const t = S.toFile(s); if (saveFile) saveFile(`skill-${(s.command || s.name).replace(/[^\w-]+/g, "_")}.md`, t, "text/markdown"); else shareOne(s); };
   return (
-    <section className="p-4 space-y-3" data-testid="skills-page">
+    <section className={page + " p-4 space-y-4"} data-testid="skills-page">
       <div className="flex items-start gap-3">
-        <Sparkles size={22} className="text-teal-300 mt-1" />
+        <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Sparkles size={20} /></span>
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-slate-100">{tr("Skills")}</h2>
-          <p data-intro="" className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>
+          <h2 className={h1}>{tr("Skills")}</h2>
+          <p data-intro="" className="m-0 mt-0.5 text-[13px] text-[var(--c-mut)] lg:max-w-[70ch]">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>
         </div>
       </div>
       <div className="flex gap-2 lg:max-w-xl">
@@ -160,24 +160,25 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
         <button className={ghost + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet("import")} data-testid="skill-open-import"><Download size={14} />{tr("Import")}</button>
       </div>
       {!list.length ? (
-        <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">
-          <p className="text-sm text-slate-300">{tr("No skills yet")}</p>
-          <p className="text-[12px] text-slate-500 mt-1">{tr("Add one from the catalogue, or write your own.")}</p>
+        <div className={card + " border-dashed p-6 text-center"}>
+          <span className="mx-auto mb-3 w-12 h-12 rounded-2xl grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Sparkles size={22} /></span>
+          <p className="text-[14px] font-extrabold text-[var(--c-ink)] m-0">{tr("No skills yet")}</p>
+          <p className="text-[12px] text-[var(--c-mut)] mt-1">{tr("Add one from the catalogue, or write your own.")}</p>
         </div>
       ) : <div className={GRID3}>{list.map((s) => (
-        <div key={s.id} className={`rounded-xl border p-3 lg:flex lg:flex-col ${s.on ? "border-slate-700 bg-slate-900/70" : "border-slate-800 bg-slate-900/30 opacity-70"}`} data-testid="skill-row">
+        <div key={s.id} className={`${card} p-4 lg:flex lg:flex-col ${s.on ? "" : "opacity-70"}`} data-testid="skill-row">
           <div className="flex items-start gap-3">
-            <button className="min-w-0 flex-1 text-start" onClick={() => setSheet({ kind: "edit", skill: s })}>
-              <p className="text-sm font-medium text-slate-100">{s.name} {s.command ? <span className="text-[11px] text-teal-300 ms-1" dir="ltr">{s.command}</span> : null}
-                {s.source === "imported" ? <span className="text-[10px] ms-1 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-200">{tr("imported")}</span> : null}</p>
-              <p className="text-[12px] text-slate-400 mt-0.5 line-clamp-2">{s.when || s.instructions}</p>
+            <button className="min-w-0 min-h-[44px] flex-1 text-start" onClick={() => setSheet({ kind: "edit", skill: s })}>
+              <p className="text-[14.5px] font-extrabold text-[var(--c-ink)] m-0">{s.name} {s.command ? <span className="text-[11px] text-[var(--c-acc)] ms-1" dir="ltr">{s.command}</span> : null}
+                {s.source === "imported" ? <span className="text-[11px] font-extrabold ms-1 px-2 py-0.5 rounded-full bg-[var(--c-warn)]/15 text-[var(--c-warn)] border border-[var(--c-warn)]/30">{tr("imported")}</span> : null}</p>
+              <p className="text-[12px] text-[var(--c-mut)] mt-0.5 line-clamp-2">{s.when || s.instructions}</p>
             </button>
             <Toggle on={s.on !== false} onChange={(v) => upd(s.id, { on: v })} label={tr("Use this skill")} />
           </div>
-          <div className="flex gap-2 mt-2.5 lg:mt-auto lg:pt-2.5">
+          <div className="flex flex-wrap gap-2 mt-3 lg:mt-auto lg:pt-3">
             <button className={ghost + " flex items-center gap-1"} onClick={() => shareOne(s)} data-testid="skill-share"><Share2 size={12} />{tr("Share")}</button>
             <button className={ghost + " flex items-center gap-1"} onClick={() => saveOne(s)}><Download size={12} />{tr("Save file")}</button>
-            <button className={ghost + " flex items-center gap-1 text-red-300 ms-auto"} onClick={() => del(s)} data-testid="skill-delete"><Trash2 size={12} />{tr("Delete")}</button>
+            <button className={btnDanger + " ms-auto"} onClick={() => del(s)} data-testid="skill-delete"><Trash2 size={12} />{tr("Delete")}</button>
           </div>
         </div>
       ))}</div>}

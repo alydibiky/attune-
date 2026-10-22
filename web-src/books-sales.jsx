@@ -3,7 +3,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Trash2, FileText, Share2, Copy, AlertTriangle } from "lucide-react";
 import * as B from "./books.js";
 import * as O from "./books-ops.js";
-import { L, isAr, useBooks, useTheme, Card, Section, Money, Badge, Empty, Field, Input, Select, Search_, Chips, Sheet, BTN, btnPrimary, today, fmtDate, docLabel, STATUS } from "./books-kit.jsx";
+import { L, isAr, useBooks, useTheme, Card, Section, Money, Badge, Empty, Field, Input, Select, Search_, Chips, Sheet, BTN, btnPrimary, SEL, NEG, today, fmtDate, docLabel, STATUS } from "./books-kit.jsx";
+import { inp } from "./ui-kit.jsx";
 import { ReceiptForm } from "./books-money.jsx";
 import { shareDocument, shareDocumentWord } from "./books-docs.jsx";
 import * as M from "./books-more.js";
@@ -29,10 +30,10 @@ function LineRow({ line, items, bill, onChange, onRemove, restock, autoPrice }) 
     patch({ item: id, desc: it.name, price: p, vat: it.vat || "S", _auto: !bill });
   };
   return (
-    <div className={`rounded-lg border p-2.5 space-y-2 ${th.line}`} data-testid="doc-line">
+    <div className={`rounded-[18px] border p-3 space-y-2.5 bg-[var(--c-surf)] ${th.line}`} data-testid="doc-line">
       <div className="flex gap-2">
         <div className="flex-1 min-w-0"><Select value={line.item || ""} onChange={pickItem} data-testid="line-item"><option value="">{L("— free text —", "— نص حر —")}</option>{items.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</Select></div>
-        <button onClick={onRemove} className="p-2 rounded-lg text-red-600" aria-label={L("Remove line", "شيل السطر")}><Trash2 size={16} /></button>
+        <button onClick={onRemove} className={`w-11 h-11 rounded-[14px] grid place-items-center shrink-0 hover:bg-[var(--c-surf-2)] ${NEG}`} aria-label={L("Remove line", "شيل السطر")}><Trash2 size={16} /></button>
       </div>
       <Input value={line.desc || ""} onChange={(v) => patch({ desc: v })} placeholder={L("Description", "الوصف")} data-testid="line-desc" />
       <div className="grid grid-cols-3 gap-2">
@@ -45,7 +46,7 @@ function LineRow({ line, items, bill, onChange, onRemove, restock, autoPrice }) 
         {!bill ? <Field label={L("Withholding", "خصم من المنبع")}><Select value={typeof line.wht === "string" ? line.wht : "none"} onChange={(v) => patch({ wht: v })}>
           <option value="none">{L("None", "لا يوجد")}</option><option value="supplies">{L("Supplies 1%", "توريدات ١٪")}</option><option value="services">{L("Services 3%", "خدمات ٣٪")}</option><option value="professional">{L("Professional 5%", "مهنية ٥٪")}</option></Select></Field> : <div />}
       </div>
-      <div className={`flex justify-between text-[12px] ${th.sub}`}><span>{f.vat ? `${L("VAT", "ضريبة")} ${B.fmt(f.vat)}` : ""}</span><span className="font-semibold"><Money v={f.total} /></span></div>
+      <div className={`flex justify-between items-baseline text-[12.5px] ${th.sub}`}><span className="tabular-nums">{f.vat ? `${L("VAT", "ضريبة")} ${B.fmt(f.vat)}` : ""}</span><span className="font-extrabold text-[14px] text-[var(--c-ink)]"><Money v={f.total} /></span></div>
     </div>
   );
 }
@@ -55,7 +56,7 @@ export function LinesEditor({ lines, setLines, items, bill, autoPrice }) {
     <div className="space-y-2">
       {lines.map((l, i) => <LineRow key={(l._k || i) + ":" + (l.item || "")} line={l} items={items} bill={bill} autoPrice={autoPrice}
         onChange={(nl) => setLines(lines.map((x, j) => (j === i ? nl : x)))} onRemove={() => setLines(lines.filter((_, j) => j !== i))} />)}
-      <button onClick={() => setLines([...lines, { _k: "n" + Date.now() + lines.length, qty: 1, price: 0, vat: "S" }])} className={`${BTN} border ${th.line} w-full flex items-center justify-center gap-1.5`} data-testid="add-line"><Plus size={14} />{L("Add a line", "ضيف سطر")}</button>
+      <button onClick={() => setLines([...lines, { _k: "n" + Date.now() + lines.length, qty: 1, price: 0, vat: "S" }])} className={`${BTN} border border-dashed ${th.line} w-full flex items-center justify-center gap-1.5 text-[var(--c-acc)] hover:border-[var(--c-acc)]`} data-testid="add-line"><Plus size={14} />{L("Add a line", "ضيف سطر")}</button>
     </div>
   );
 }
@@ -63,16 +64,16 @@ export function Totals({ doc }) {
   const { s } = useBooks();
   const th = useTheme();
   const t = B.docTotals(doc, s.tax);
-  const row = (en, ar, v, strong) => v || strong ? <div className={`flex justify-between ${strong ? "font-bold text-[15px] border-t pt-1.5 mt-1 " + th.line : ""}`}><span>{L(en, ar)}</span><Money v={v} /></div> : null;
+  const row = (en, ar, v, strong) => v || strong ? <div className={`flex justify-between items-baseline gap-3 ${strong ? "font-black text-[17px] tracking-tight border-t pt-2.5 mt-1.5 " + th.line : ""}`}><span className={strong ? "" : th.sub}>{L(en, ar)}</span><Money v={v} /></div> : null;
   return (
-    <Card className="p-3 text-[13px] space-y-1" testid="doc-totals">
+    <Card className="p-4 text-[13.5px] space-y-1.5" testid="doc-totals">
       {row("Subtotal", "الإجمالي قبل الخصم", t.gross)}
       {row("Discount", "الخصم", -t.discount)}
       {row("Table tax", "ضريبة الجدول", t.tableTax)}
       {row("VAT", "ضريبة القيمة المضافة", t.vat)}
       {row("Total", "الإجمالي", t.total, true)}
       {t.wht ? row("Withheld by customer", "خصم من المنبع", -t.wht) : null}
-      {t.wht ? <div className="flex justify-between font-semibold"><span>{L("Cash to receive", "المطلوب تحصيله")}</span><Money v={t.cashDue} /></div> : null}
+      {t.wht ? <div className="flex justify-between font-extrabold"><span>{L("Cash to receive", "المطلوب تحصيله")}</span><Money v={t.cashDue} /></div> : null}
     </Card>
   );
 }
@@ -102,7 +103,7 @@ export function DocEditor({ type, doc, onClose, onSaved }) {
       <div className="space-y-3">
         <Field label={L("Customer", "العميل")}>
           <div className="flex gap-2"><div className="flex-1 min-w-0"><Select value={d.customer} onChange={set("customer")} data-testid="doc-customer"><option value="">{L("— choose —", "— اختار —")}</option>{s.customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></div>
-            <button onClick={() => setNewCust(true)} className={`${BTN} border ${th.line}`} data-testid="new-customer"><Plus size={14} /></button></div>
+            <button onClick={() => setNewCust(true)} className={`${BTN} border ${th.line} w-11 !px-0 grid place-items-center shrink-0`} data-testid="new-customer"><Plus size={14} /></button></div>
         </Field>
         <div className="grid grid-cols-2 gap-2">
           <Field label={L("Date", "التاريخ")}><Input type="date" value={d.date} onChange={set("date")} data-testid="doc-date" /></Field>
@@ -111,9 +112,9 @@ export function DocEditor({ type, doc, onClose, onSaved }) {
         {type !== "credit" ? <DocCurrency d={d} setD={setD} /> : null}
         <Section title={L("Lines", "البنود")}><LinesEditor lines={d.lines} setLines={(l) => set("lines")(l)} items={s.items} autoPrice={autoPrice} /></Section>
         <Totals doc={d} />
-        {d.fx && d.fx.rate ? <p className="text-[12px] text-end" dir="ltr" data-testid="fx-note">{d.fx.currency} × {M.rateText(d.fx.rate)} = {B.fmt(B.docTotals(M.toBaseDoc({ ...d, lines: d.lines.map(({ fxPrice, ...l }) => l) }, d.fx.currency, d.fx.rate), s.tax).total)} EGP</p> : null}
+        {d.fx && d.fx.rate ? <p className={`text-[12.5px] font-bold tabular-nums text-end ${th.sub}`} dir="ltr" data-testid="fx-note">{d.fx.currency} × {M.rateText(d.fx.rate)} = {B.fmt(B.docTotals(M.toBaseDoc({ ...d, lines: d.lines.map(({ fxPrice, ...l }) => l) }, d.fx.currency, d.fx.rate), s.tax).total)} EGP</p> : null}
         <Field label={L("Notes (printed on the document)", "ملاحظات (تُطبع على المستند)")}><Input value={d.notes || ""} onChange={set("notes")} /></Field>
-        {type === "invoice" ? <p className={`text-[11px] ${th.sub}`}>{L("Posting gives the invoice its number and locks it. A mistake after that is fixed with a credit note.", "الترحيل بيدّي الفاتورة رقمها ويقفلها. وأي غلطة بعد كده تتصلح بإشعار دائن.")}</p> : null}
+        {type === "invoice" ? <p className={`text-[12px] leading-relaxed ${th.sub}`}>{L("Posting gives the invoice its number and locks it. A mistake after that is fixed with a credit note.", "الترحيل بيدّي الفاتورة رقمها ويقفلها. وأي غلطة بعد كده تتصلح بإشعار دائن.")}</p> : null}
       </div>
       {newCust ? <PartyForm kind="customers" onClose={() => setNewCust(false)} onSaved={(id) => { set("customer")(id); setNewCust(false); }} /> : null}
     </Sheet>
@@ -138,8 +139,8 @@ export function PartyForm({ kind, party, onClose, onSaved }) {
         <Field label={L("Address", "العنوان")}><Input value={p.address || ""} onChange={set("address")} /></Field>
         {kind === "customers" ? <Field label={L("Price group (e.g. wholesale)", "مجموعة الأسعار (مثلاً جملة)")}><Input value={p.group || ""} onChange={set("group")} data-testid="party-group" /></Field> : null}
         {kind === "customers" ? <Field label={L("Credit limit (0 = none)", "حد الائتمان (٠ = بدون)")}><Input value={limit} onChange={setLimit} inputMode="decimal" /></Field> : null}
-        {kind === "customers" ? <details className="text-[12.5px]" data-testid="party-eta"><summary className="cursor-pointer py-1 opacity-80">{L("For e-invoices (ETA)", "للفاتورة الإلكترونية")}</summary><div className="space-y-2 pt-2">
-          <Field label={L("Customer type", "نوع العميل")}><select value={(p.eta && p.eta.type) || ""} onChange={(e) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), type: e.target.value } }))} className="w-full border rounded-lg px-2 py-2 bg-transparent"><option value="">{L("Automatic (company if it has a tax number)", "تلقائي (شركة لو ليها رقم ضريبي)")}</option><option value="B">{L("Company", "شركة")}</option><option value="P">{L("Person", "فرد")}</option><option value="F">{L("Foreign", "أجنبي")}</option></select></Field>
+        {kind === "customers" ? <details className="text-[13px]" data-testid="party-eta"><summary className="cursor-pointer min-h-[44px] flex items-center font-bold text-[var(--c-acc)]">{L("For e-invoices (ETA)", "للفاتورة الإلكترونية")}</summary><div className="space-y-2 pt-2">
+          <Field label={L("Customer type", "نوع العميل")}><select value={(p.eta && p.eta.type) || ""} onChange={(e) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), type: e.target.value } }))} className={inp}><option value="">{L("Automatic (company if it has a tax number)", "تلقائي (شركة لو ليها رقم ضريبي)")}</option><option value="B">{L("Company", "شركة")}</option><option value="P">{L("Person", "فرد")}</option><option value="F">{L("Foreign", "أجنبي")}</option></select></Field>
           {[["governate", "Governorate", "المحافظة"], ["regionCity", "City / area", "المدينة / المنطقة"], ["street", "Street", "الشارع"], ["buildingNumber", "Building no.", "رقم المبنى"]].map(([k, en, ar]) => <Field key={k} label={L(en, ar)}><Input value={((p.eta || {}).address || {})[k] || ""} onChange={(v) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), address: { ...((x.eta || {}).address || {}), [k]: v } } }))} /></Field>)}
           <Field label={L("National ID (a person, invoices of 50,000 EGP or more)", "الرقم القومي (للأفراد، للفواتير من 50,000 جنيه فأكثر)")}><Input value={(p.eta || {}).nationalId || ""} onChange={(v) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), nationalId: v } }))} inputMode="numeric" /></Field>
         </div></details> : null}
@@ -165,7 +166,7 @@ function DocView({ id, onClose }) {
   return (
     <Sheet title={d.number || docLabel(d.type)} onClose={onClose} testid="doc-view"
       footer={<div className="flex gap-2 flex-wrap">
-        {d.status === "draft" ? <><button onClick={() => setEdit(true)} className={`${btnPrimary} flex-1`} data-testid="doc-edit">{L("Edit & post", "عدّل ورحّل")}</button><button onClick={del} className={`${BTN} border ${th.line} text-red-600`}>{L("Delete", "امسح")}</button></> : null}
+        {d.status === "draft" ? <><button onClick={() => setEdit(true)} className={`${btnPrimary} flex-1`} data-testid="doc-edit">{L("Edit & post", "عدّل ورحّل")}</button><button onClick={del} className={`${BTN} border ${th.line} ${NEG}`}>{L("Delete", "امسح")}</button></> : null}
         {d.status === "posted" ? <button onClick={() => shareDocument({ s, doc: d, kind: d.type, flash })} className={`${btnPrimary} flex-1 flex items-center justify-center gap-1.5`} data-testid="doc-share"><Share2 size={14} />{L("Share / PDF", "مشاركة / PDF")}</button> : null}
         {d.status === "posted" ? <button onClick={() => shareDocumentWord({ s, doc: d, kind: d.type, flash, saveFile })} className={`${BTN} border ${th.line}`} data-testid="doc-word">{L("Word", "وورد")}</button> : null}
         {open && open.open > 0 ? <button onClick={() => setPay(true)} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-pay">{L("Record payment", "تسجيل دفعة")}</button> : null}
@@ -176,14 +177,14 @@ function DocView({ id, onClose }) {
         {d.status === "posted" && d.type === "quote" ? <button onClick={toInvoice} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-to-invoice">{L("Make an invoice", "حوّل لفاتورة")}</button> : null}
       </div>}>
       <div className="space-y-3">
-        <div className="flex items-center gap-2"><Badge tone={STATUS[d.status][2]}>{L(STATUS[d.status][0], STATUS[d.status][1])}</Badge><span className={`text-[12px] ${th.sub}`}>{docLabel(d.type)} · {fmtDate(d.date)}{d.due ? ` · ${L("due", "استحقاق")} ${fmtDate(d.due)}` : ""}</span></div>
-        <Card className="p-3"><p className="text-[14px] font-semibold">{cust ? cust.name : "—"}</p>{d.against ? <p className={`text-[12px] ${th.sub}`}>{L("Against", "بخصوص")} {d.against}</p> : null}</Card>
+        <div className="flex items-center gap-2 flex-wrap"><Badge tone={STATUS[d.status][2]}>{L(STATUS[d.status][0], STATUS[d.status][1])}</Badge><span className={`text-[12.5px] ${th.sub}`}>{docLabel(d.type)} · {fmtDate(d.date)}{d.due ? ` · ${L("due", "استحقاق")} ${fmtDate(d.due)}` : ""}</span></div>
+        <Card className="p-4"><p className="text-[16px] font-extrabold m-0">{cust ? cust.name : "—"}</p>{d.against ? <p className={`text-[12px] ${th.sub}`}>{L("Against", "بخصوص")} {d.against}</p> : null}</Card>
         <Card className="divide-y" testid="doc-lines">{d.lines.map((l, i) => { const f = B.lineFigures(l, s.tax); return (
-          <div key={i} className="px-3 py-2 text-[13px] flex justify-between gap-2"><div className="min-w-0"><p className="truncate">{l.desc || (s.items.find((x) => x.id === l.item) || {}).name || "—"}</p><p className={`text-[11px] ${th.sub}`}>{l.qty} × {B.fmt(l.price)}{l.discBp ? ` − ${l.discBp / 100}%` : ""}</p></div><Money v={f.total} bold /></div>); })}</Card>
+          <div key={i} className="px-3.5 py-2.5 text-[13.5px] flex justify-between items-center gap-3"><div className="min-w-0"><p className="truncate font-semibold m-0">{l.desc || (s.items.find((x) => x.id === l.item) || {}).name || "—"}</p><p className={`text-[12px] tabular-nums m-0 ${th.sub}`}>{l.qty} × {B.fmt(l.price)}{l.discBp ? ` − ${l.discBp / 100}%` : ""}</p></div><Money v={f.total} bold /></div>); })}</Card>
         <Totals doc={d} />
         <FxNote doc={d} />
-        {open ? <Card className="p-3 text-[13px]"><div className="flex justify-between"><span>{L("Paid", "المدفوع")}</span><Money v={open.paid} /></div>{open.credited ? <div className="flex justify-between"><span>{L("Credited", "إشعارات دائنة")}</span><Money v={open.credited} /></div> : null}<div className="flex justify-between font-bold"><span>{L("Still owed", "المتبقي")}</span><Money v={open.open} /></div></Card> : null}
-        {d.notes ? <p className={`text-[12px] ${th.sub}`}>{d.notes}</p> : null}
+        {open ? <Card className="p-4 text-[13.5px] space-y-1.5"><div className="flex justify-between"><span className={th.sub}>{L("Paid", "المدفوع")}</span><Money v={open.paid} /></div>{open.credited ? <div className="flex justify-between"><span className={th.sub}>{L("Credited", "إشعارات دائنة")}</span><Money v={open.credited} /></div> : null}<div className="flex justify-between font-black text-[15px]"><span>{L("Still owed", "المتبقي")}</span><Money v={open.open} /></div></Card> : null}
+        {d.notes ? <p className={`text-[12.5px] leading-relaxed ${th.sub}`}>{d.notes}</p> : null}
       </div>
       {edit ? <DocEditor type={d.type} doc={{ ...d, lines: d.lines.map((l, i) => ({ ...l, _k: "k" + i })) }} onClose={() => { setEdit(false); onClose(); }} /> : null}
       {pay ? <ReceiptForm customer={d.customer} onClose={() => setPay(false)} /> : null}
@@ -209,19 +210,19 @@ export function SalesModule() {
   return (
     <div data-testid="books-sales">
       <div className="flex gap-2 mb-3">
-        <button onClick={() => setView("docs")} className={`${BTN} flex-1 ${view === "docs" ? "bg-teal-700 text-white" : "border " + th.line}`}>{L("Documents", "المستندات")}</button>
-        <button onClick={() => setView("customers")} className={`${BTN} flex-1 ${view === "customers" ? "bg-teal-700 text-white" : "border " + th.line}`} data-testid="sales-customers-tab">{L("Customers", "العملاء")}</button>
+        <button onClick={() => setView("docs")} className={`${BTN} flex-1 ${view === "docs" ? SEL : "border " + th.line + " " + th.sub}`}>{L("Documents", "المستندات")}</button>
+        <button onClick={() => setView("customers")} className={`${BTN} flex-1 ${view === "customers" ? SEL : "border " + th.line + " " + th.sub}`} data-testid="sales-customers-tab">{L("Customers", "العملاء")}</button>
       </div>
       {view === "docs" ? (
         <>
-          <div className="flex gap-2 mb-2"><div className="flex-1"><Search_ value={q} onChange={setQ} placeholder={L("Search number or customer", "دوّر برقم أو عميل")} /></div>
-            <button onClick={() => setPicker(true)} className={`${btnPrimary} flex items-center gap-1`} data-testid="sales-new"><Plus size={15} />{L("New", "جديد")}</button></div>
-          <div className="mb-2"><Chips value={filter} onChange={setFilter} options={[["all", L("All", "الكل")], ["invoice", L("Invoices", "فواتير")], ["quote", L("Quotes", "عروض")], ["credit", L("Credit notes", "إشعارات")], ["order", L("Orders", "أوامر بيع")], ["draft", L("Drafts", "مسودات")]]} /></div>
+          <div className="flex gap-2 mb-3"><div className="flex-1 min-w-0"><Search_ value={q} onChange={setQ} placeholder={L("Search number or customer", "دوّر برقم أو عميل")} /></div>
+            <button onClick={() => setPicker(true)} className={`${btnPrimary} flex items-center gap-1.5 shrink-0`} data-testid="sales-new"><Plus size={15} />{L("New", "جديد")}</button></div>
+          <div className="mb-3"><Chips value={filter} onChange={setFilter} options={[["all", L("All", "الكل")], ["invoice", L("Invoices", "فواتير")], ["quote", L("Quotes", "عروض")], ["credit", L("Credit notes", "إشعارات")], ["order", L("Orders", "أوامر بيع")], ["draft", L("Drafts", "مسودات")]]} /></div>
           {!docs.length ? <Empty title={L("No documents yet", "مفيش مستندات لسه")} hint={L("Create your first invoice or quotation.", "اعمل أول فاتورة أو عرض سعر.")} action={<button onClick={() => setNewType("invoice")} className={btnPrimary}>{L("New invoice", "فاتورة جديدة")}</button>} />
             : <Card className="divide-y" testid="sales-list">{docs.map((d) => { const t = B.docTotals(d, s.tax); return (
-              <button key={d.id} onClick={() => setOpenId(d.id)} className="w-full flex items-center gap-3 px-3 py-2.5 text-start" data-testid="sales-row">
-                <div className="min-w-0 flex-1"><p className="text-[13.5px] font-medium truncate">{name(d.customer)}</p><p className={`text-[11.5px] ${th.sub}`}>{d.number || L("Draft", "مسودة")} · {docLabel(d.type)} · {fmtDate(d.date)}</p></div>
-                <div className="text-end"><Money v={t.total} bold /><div><Badge tone={STATUS[d.status][2]}>{L(STATUS[d.status][0], STATUS[d.status][1])}</Badge></div></div></button>); })}</Card>}
+              <button key={d.id} onClick={() => setOpenId(d.id)} className="w-full min-h-[60px] flex items-center gap-3 px-3.5 py-3 text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[22px] last:rounded-b-[22px]" data-testid="sales-row">
+                <div className="min-w-0 flex-1"><p className="text-[14px] font-extrabold truncate m-0">{name(d.customer)}</p><p className={`text-[12px] truncate m-0 ${th.sub}`}>{d.number || L("Draft", "مسودة")} · {docLabel(d.type)} · {fmtDate(d.date)}</p></div>
+                <div className="text-end shrink-0 space-y-1"><Money v={t.total} bold /><div><Badge tone={STATUS[d.status][2]}>{L(STATUS[d.status][0], STATUS[d.status][1])}</Badge></div></div></button>); })}</Card>}
         </>
       ) : (
         <>
@@ -230,7 +231,7 @@ export function SalesModule() {
         </>
       )}
       {picker ? <Sheet title={L("New document", "مستند جديد")} onClose={() => setPicker(false)}><div className="space-y-2">{[["invoice", "Tax invoice", "فاتورة ضريبية", "Bill a customer; goes into your books.", "بتحاسب بيها العميل وبتدخل في دفاترك."], ["quote", "Quotation", "عرض سعر", "A price offer; no effect on your books until it becomes an invoice.", "عرض سعر؛ مش بيأثر على الدفاتر لحد ما يتحوّل لفاتورة."], ["order", "Sales order", "أمر بيع", "A confirmed order: deliver it in parts with delivery notes, then invoice.", "طلب مؤكد: سلّمه على دفعات بأذون تسليم، وبعدين طلّع فاتورته."]].map(([k, en, ar, hen, har]) => (
-        <Card key={k} onClick={() => { setPicker(false); setNewType(k); }} className="p-3" testid={"new-" + k}><p className="text-[14px] font-semibold">{L(en, ar)}</p><p className={`text-[12px] ${th.sub}`}>{L(hen, har)}</p></Card>))}</div></Sheet> : null}
+        <Card key={k} onClick={() => { setPicker(false); setNewType(k); }} className="p-4" testid={"new-" + k}><p className="text-[15px] font-extrabold m-0">{L(en, ar)}</p><p className={`text-[12.5px] mt-0.5 mb-0 ${th.sub}`}>{L(hen, har)}</p></Card>))}</div></Sheet> : null}
       {newType ? <DocEditor type={newType} onClose={() => setNewType(null)} onSaved={(id) => setOpenId(id)} /> : null}
       {openId ? <DocView id={openId} onClose={() => setOpenId(null)} /> : null}
       {party ? <PartyForm kind="customers" party={party.id ? party : undefined} onClose={() => setParty(null)} /> : null}
@@ -241,5 +242,5 @@ function CustomerRow({ c, onEdit }) {
   const { s } = useBooks();
   const th = useTheme();
   const owed = useMemo(() => O.openInvoices(s, today()).filter((o) => o.customer === c.id).reduce((a, o) => a + Math.max(0, o.open), 0), [s, c.id]);
-  return <button onClick={onEdit} className="w-full flex items-center justify-between px-3 py-2.5 text-start" data-testid="customer-row"><div><p className="text-[13.5px] font-medium">{c.name}</p><p className={`text-[11.5px] ${th.sub}`}>{c.phone || ""}</p></div>{owed ? <div className="text-end"><p className={`text-[10px] ${th.sub}`}>{L("owes", "عليه")}</p><Money v={owed} bold /></div> : null}</button>;
+  return <button onClick={onEdit} className="w-full min-h-[56px] flex items-center justify-between gap-3 px-3.5 py-3 text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[22px] last:rounded-b-[22px]" data-testid="customer-row"><div className="min-w-0"><p className="text-[14px] font-extrabold truncate m-0">{c.name}</p><p className={`text-[12px] m-0 ${th.sub}`}>{c.phone || ""}</p></div>{owed ? <div className="text-end shrink-0"><p className={`text-[11px] m-0 ${th.sub}`}>{L("owes", "عليه")}</p><Money v={owed} bold /></div> : null}</button>;
 }

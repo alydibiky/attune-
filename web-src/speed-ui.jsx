@@ -52,7 +52,7 @@ export function diagnose(d, lastTps) {
   return out;
 }
 
-function Bar({ v, max }) { return <span className="block h-1.5 rounded-full bg-teal-500/70" style={{ width: Math.max(4, Math.round((v / (max || 1)) * 100)) + "%" }} />; }
+function Bar({ v, max }) { return <span className="block h-1.5 rounded-full bg-[var(--c-acc)]" style={{ width: Math.max(4, Math.round((v / (max || 1)) * 100)) + "%" }} />; }
 
 export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row, engineReady, fastTier, onFast, busy: dlBusy }) {
   const read = () => { try { return JSON.parse(native.speed()); } catch (e) { return null; } };
@@ -93,15 +93,15 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
   return (
     <div className={box} data-testid="speed-panel">
       <p className={head}>{tr("Speed")}</p>
-      {sp.npuNote ? <p className="text-[12px] text-amber-200 flex items-start gap-1.5 mb-2" data-testid="npu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.npuNote)}</p> : null}
+      {sp.npuNote ? <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5 mb-2" data-testid="npu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.npuNote)}</p> : null}
       {sp.gpuNote ? (
-        <p className="text-[12px] text-amber-200 flex items-start gap-1.5 mb-2" data-testid="gpu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.gpuNote)}</p>
+        <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5 mb-2" data-testid="gpu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.gpuNote)}</p>
       ) : null}
       {sp.engine === "litert" ? (
         <div className="space-y-1.5" data-testid="fast-panel">
-          <p className="text-[12px] text-amber-200 flex items-center gap-1.5"><Zap size={13} className="shrink-0" />
+          <p className="text-[12px] text-[var(--c-warn)] flex items-center gap-1.5"><Zap size={13} className="shrink-0" />
             {tr(sp.fastBackend === "GPU" ? "Fast engine on the graphics chip" : "Fast engine on the CPU")}{sp.fastMtp ? " · " + tr("multi-token prediction on") : ""}</p>
-          {sp.fastNote ? <p className="text-[12px] text-amber-200 flex items-start gap-1.5" data-testid="fast-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.fastNote)}</p> : null}
+          {sp.fastNote ? <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5" data-testid="fast-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.fastNote)}</p> : null}
           {row(!sp.fastCpu, () => !busy && apply({ fastCpu: !sp.fastCpu }, tr("Restarting the engine…")), "Use the graphics chip",
             "On: the model runs on the GPU — first words in about a second. Off: the CPU, slower, only for phones whose GPU driver misbehaves.")}
           {row(!!sp.fastMtpPref, () => !busy && apply({ fastMtp: !sp.fastMtpPref }, tr("Restarting the engine…")), "Multi-token prediction (faster writing)",
@@ -110,82 +110,82 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
       ) : (<>
       {fastTier && onFast ? (
         <button onClick={() => !busy && !dlBusy && onFast(fastTier)} disabled={!!busy || dlBusy} data-testid="fast-install"
-          className="w-full mb-2 flex items-center gap-3 px-3 py-2.5 rounded-lg border border-amber-700/60 bg-amber-400/10 text-start disabled:opacity-50">
-          <Zap size={18} className="text-amber-300 shrink-0" />
-          <span className="min-w-0"><span className="block text-sm text-amber-100 font-medium">{tr("Switch to the fast engine")}</span>
-            <span className="block text-[11px] text-slate-400">{tr("Blaze on the graphics chip: first words in about a second, many times faster than this engine. {s} GB, once.", { s: fastTier.sizeGB.toFixed(1) })}</span></span>
+          className="w-full mb-2 flex items-center gap-3 px-3 py-2.5 rounded-lg border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-start disabled:opacity-50">
+          <Zap size={18} className="text-[var(--c-warn)] shrink-0" />
+          <span className="min-w-0"><span className="block text-sm text-[var(--c-warn)] font-medium">{tr("Switch to the fast engine")}</span>
+            <span className="block text-[11px] text-[var(--c-mut)]">{tr("Blaze on the graphics chip: first words in about a second, many times faster than this engine. {s} GB, once.", { s: fastTier.sizeGB.toFixed(1) })}</span></span>
         </button>
       ) : null}
       <div className="space-y-1.5">
         {sp.gpuBuilt ? row(sp.gpu, () => !busy && apply({ gpu: !sp.gpu }, tr("Restarting the engine…")), "Use the GPU",
           sp.gpuName ? tr("Running on {g}.", { g: sp.gpuName }) : "Runs the model on the phone's graphics chip (Adreno). Often faster at reading long prompts; test it below. Switches itself back to the CPU if anything goes wrong.")
-          : <p className="text-[11px] text-slate-500 px-1">{tr("This build has no GPU engine — it will come with the next APK built on GitHub.")}</p>}
+          : <p className="text-[11px] text-[var(--c-mut)] px-1">{tr("This build has no GPU engine — it will come with the next APK built on GitHub.")}</p>}
         {/* v6.34 (Ali: lighter, faster, cooler): the Snapdragon NPU — llama.cpp's experimental Hexagon backend; off unless turned on */}
         {sp.npuBuilt ? row(sp.npu, () => !busy && apply({ npu: !sp.npu }, tr("Restarting the engine…")), "Use the NPU (experimental)",
           sp.npuDev ? tr("Running on the NPU ({d}).", { d: sp.npuDev }) : "Runs the model on the Snapdragon NPU (Hexagon): much cooler, often faster at reading. Works best with Core Max (8-bit). Switches itself back to the CPU if anything goes wrong.") : null}
         {sp.mtpMode ? (
-          <div className="rounded-lg border border-slate-800 px-3 py-2" data-testid="mtp-setting">
-            <span className="block text-sm text-slate-200">{tr("Faster writing (MTP)")}</span>
+          <div className="rounded-lg border border-[var(--c-ln)] px-3 py-2" data-testid="mtp-setting">
+            <span className="block text-sm text-[var(--c-ink)]">{tr("Faster writing (MTP)")}</span>
             <div className="flex gap-1.5 mt-1.5" role="radiogroup" aria-label={tr("Faster writing (MTP)")}>
               {[["auto", "Auto"], ["on", "On"], ["off", "Off"]].map(([v, l]) => (
                 <button key={v} role="radio" aria-checked={sp.mtpMode === v} data-testid={"mtp-" + v} disabled={!!busy}
                   onClick={() => sp.mtpMode !== v && !busy && apply({ mtp: v }, tr("Restarting the engine…"))}
-                  className={"flex-1 px-2 py-1.5 rounded-md border text-[13px] disabled:opacity-50 " + (sp.mtpMode === v ? "border-teal-500 bg-teal-500/15 text-teal-100" : "border-slate-800 text-slate-300")}>{tr(l)}</button>
+                  className={"flex-1 px-2 py-1.5 rounded-md border text-[13px] disabled:opacity-50 " + (sp.mtpMode === v ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-ink)]")}>{tr(l)}</button>
               ))}
             </div>
-            <span className="block text-[11px] text-slate-500 mt-1.5">{tr("Same answers, faster for code, tables, JSON, emails and summaries; roughly the same or slightly slower for free-form explanations.")}</span>
-            <span className="block text-[11px] text-slate-400 mt-0.5" data-testid="mtp-state">{sp.mtpActive ? tr("MTP is on for this model.") : sp.mtpFailed ? tr("MTP did not start on this phone, so this model runs without it.") : sp.mtpHas ? tr("MTP is off for this model.") : tr("This model has no MTP layers; install it again from the list to get them.")}</span>
+            <span className="block text-[11px] text-[var(--c-mut)] mt-1.5">{tr("Same answers, faster for code, tables, JSON, emails and summaries; roughly the same or slightly slower for free-form explanations.")}</span>
+            <span className="block text-[11px] text-[var(--c-mut)] mt-0.5" data-testid="mtp-state">{sp.mtpActive ? tr("MTP is on for this model.") : sp.mtpFailed ? tr("MTP did not start on this phone, so this model runs without it.") : sp.mtpHas ? tr("MTP is off for this model.") : tr("This model has no MTP layers; install it again from the list to get them.")}</span>
           </div>
         ) : null}
         {sp.safe ? (
-          <div className="mt-2 rounded-lg border border-amber-800/60 bg-amber-500/10 p-2.5 text-[12px] text-amber-100" data-testid="safe-mode">
+          <div className="mt-2 rounded-lg border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2.5 text-[12px] text-[var(--c-warn)]" data-testid="safe-mode">
             {tr("Safe mode is on for this model: it once wrote nonsense on this phone, so it runs without speed tricks and with full-precision memory (a little slower, same answers).")}
-            <button disabled={!!busy} onClick={() => !busy && apply({ safe: false }, tr("Restarting the engine…"))} className="block mt-1.5 px-2.5 py-1 rounded-md border border-amber-700 text-amber-100 disabled:opacity-50" data-testid="safe-off">{tr("Turn safe mode off")}</button>
+            <button disabled={!!busy} onClick={() => !busy && apply({ safe: false }, tr("Restarting the engine…"))} className="block mt-1.5 px-2.5 py-1 rounded-md border border-[var(--c-warn)]/50 text-[var(--c-warn)] disabled:opacity-50" data-testid="safe-off">{tr("Turn safe mode off")}</button>
           </div>) : null}
         {sp.draftInstalled && sp.draft ? row(sp.draft, () => !busy && apply({ draft: false }, tr("Restarting the engine…")), "Faster answers with a draft model",
           "Not recommended: it was slower in our tests. Turn it off.") : null}
       </div>
       </>)}
-      {busy ? <p className="text-[12px] text-teal-300 mt-2 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{busy}{pct ? " " + pct + "%" : ""}</p> : null}
+      {busy ? <p className="text-[12px] text-[var(--c-acc)] mt-2 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{busy}{pct ? " " + pct + "%" : ""}</p> : null}
 
-      <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-3" data-testid="doctor">
+      <div className="mt-3 rounded-xl border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="doctor">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-slate-200 flex items-center gap-1.5"><AlertTriangle size={15} className="text-amber-300" />{tr("Why is it slow?")}</span>
+          <span className="text-sm text-[var(--c-ink)] flex items-center gap-1.5"><AlertTriangle size={15} className="text-[var(--c-warn)]" />{tr("Why is it slow?")}</span>
           <button onClick={() => { try { setDoc(JSON.parse(native.doctor())); } catch (e) { flash(tr("Not available in this build")); } }} data-testid="doctor-run"
-            className="px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-200">{tr("Check now")}</button>
+            className="px-3 py-1.5 rounded-lg border border-[var(--c-ln)] text-xs text-[var(--c-ink)]">{tr("Check now")}</button>
         </div>
         {doc ? (
           <div className="mt-2 space-y-1.5 text-[12px]">
             {diagnose(doc, bench[0] ? bench[0].tps : null).map(([lvl, msg, v], i) => (
-              <p key={i} className={lvl === "bad" ? "text-rose-300" : lvl === "warn" ? "text-amber-200" : "text-emerald-300"} data-testid="doctor-finding">• {tr(msg, v)}</p>
+              <p key={i} className={lvl === "bad" ? "text-[var(--c-neg)]" : lvl === "warn" ? "text-[var(--c-warn)]" : "text-[var(--c-pos)]"} data-testid="doctor-finding">• {tr(msg, v)}</p>
             ))}
-            <p className="text-[11px] text-slate-500" dir="ltr">{[doc.model, doc.modelGB ? doc.modelGB.toFixed(1) + " GB" : "", "RAM " + (doc.availRamGB || 0).toFixed(1) + "/" + doc.ramGB + " GB free",
+            <p className="text-[11px] text-[var(--c-mut)]" dir="ltr">{[doc.model, doc.modelGB ? doc.modelGB.toFixed(1) + " GB" : "", "RAM " + (doc.availRamGB || 0).toFixed(1) + "/" + doc.ramGB + " GB free",
               doc.engine === "litert" ? "LiteRT-LM " + (doc.fastBackend || "") + (doc.fastMtp ? " + MTP" : "") : doc.genThreads + " threads", doc.engine === "litert" ? "" : doc.cpu, doc.gpu ? "GPU " + doc.gpu : "", "thermal " + doc.thermal].filter(Boolean).join(" · ")}</p>
             <button onClick={() => { const t = JSON.stringify(doc, null, 1); try { navigator.clipboard.writeText(t); } catch (e) {} if (native.share) native.share("Attune speed report\n" + t); }}
-              className="text-[11px] text-teal-300 underline underline-offset-2">{tr("Send this report")}</button>
+              className="text-[11px] text-[var(--c-acc)] underline underline-offset-2">{tr("Send this report")}</button>
           </div>
-        ) : <p className="text-[11px] text-slate-500 mt-1">{tr("Reads the phone's heat, battery saver, free memory and the engine's own log, and says in plain words what is slowing answers down.")}</p>}
+        ) : <p className="text-[11px] text-[var(--c-mut)] mt-1">{tr("Reads the phone's heat, battery saver, free memory and the engine's own log, and says in plain words what is slowing answers down.")}</p>}
       </div>
 
-      <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-3">
+      <div className="mt-3 rounded-xl border border-[var(--c-ln)] bg-[var(--c-bg)] p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-slate-200 flex items-center gap-1.5"><Gauge size={15} className="text-teal-300" />{tr("Speed test")}</span>
+          <span className="text-sm text-[var(--c-ink)] flex items-center gap-1.5"><Gauge size={15} className="text-[var(--c-acc)]" />{tr("Speed test")}</span>
           <button onClick={test} disabled={!!busy || !engineReady} data-testid="bench-run"
-            className="px-3 py-1.5 rounded-lg bg-teal-500 disabled:opacity-40 text-slate-950 text-xs font-semibold">{tr("Run it")}</button>
+            className="px-3 py-1.5 rounded-[16px] bg-[var(--c-acc)] disabled:opacity-40 text-[var(--c-on-acc)] text-xs font-extrabold min-h-[44px]">{tr("Run it")}</button>
         </div>
-        <p className="text-[11px] text-slate-500 mt-1">{tr("The same short task every time (read a site report, write five bullets), so CPU, GPU and draft can be compared on this phone. Takes 10–40 s.")}</p>
+        <p className="text-[11px] text-[var(--c-mut)] mt-1">{tr("The same short task every time (read a site report, write five bullets), so CPU, GPU and draft can be compared on this phone. Takes 10–40 s.")}</p>
         {bench.length ? (
           <div className="mt-2 space-y-1.5" data-testid="bench-results">
             {bench.slice(0, 6).map((b) => (
               <div key={b.at} className="text-[11px]">
-                <div className="flex justify-between gap-2 text-slate-300">
+                <div className="flex justify-between gap-2 text-[var(--c-ink)]">
                   <span className="truncate">{b.mode}{b.draft ? " + " + tr("draft") : ""} · {publicName(b.model)}</span>
                   <span dir="ltr" className="shrink-0">{tr("writes {w}/s · reads {r}/s", { w: fmtNum(b.tps), r: fmtNum(b.promptTps) })}</span>
                 </div>
                 <Bar v={b.tps} max={maxTps} />
               </div>
             ))}
-            {best ? <p className="text-[11px] text-teal-300 flex items-center gap-1 pt-1"><Zap size={12} />{tr("Fastest here so far: {m}", { m: best.mode + (best.draft ? " + " + tr("draft") : "") })}</p> : null}
+            {best ? <p className="text-[11px] text-[var(--c-acc)] flex items-center gap-1 pt-1"><Zap size={12} />{tr("Fastest here so far: {m}", { m: best.mode + (best.draft ? " + " + tr("draft") : "") })}</p> : null}
           </div>
         ) : null}
       </div>

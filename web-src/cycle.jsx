@@ -12,6 +12,7 @@ import React, { useState, useMemo } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
 import { withTemperature, mergeNights, TEMPS_KEY } from "./cycletemp.js";   // v6.41 (F4)
+import { card, btnP, btnS, inp, label, chip } from "./ui-kit.jsx";
 // v6.27 computer layout (option A): where you are, quick logging, the day editor and history on the left; the month's
 // calendar on the right. The grid places the calendar in the right column across every row (the last row, 1fr, takes
 // up its extra height), so a phone keeps its order. Below 1024 px none of this applies.
@@ -322,7 +323,7 @@ export function parseExtract(raw, now) {
 }
 
 // ---- the screen ----------------------------------------------------------------
-const FLOW_BG = { spotting: "bg-rose-300/30 text-rose-100", light: "bg-rose-400/40 text-white", medium: "bg-rose-500/70 text-white", heavy: "bg-rose-600 text-white" };
+const FLOW_BG = { spotting: "bg-rose-300/30 text-[var(--c-ink)]", light: "bg-rose-400/40 text-[var(--c-ink)]", medium: "bg-rose-500/70 text-[var(--c-ink)]", heavy: "bg-rose-600 text-white" };
 const FLOWS = [["spotting", "Spotting"], ["light", "Light"], ["medium", "Medium"], ["heavy", "Heavy"]];
 
 export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall }) {
@@ -377,108 +378,108 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
   const cellStyle = (k) => {
     const dk = dayKind(cycle, stats, k, todayKey);
     if (dk.kind === "period" || dk.kind === "spotting") return FLOW_BG[dk.flow] || FLOW_BG.medium;
-    if (dk.kind === "predicted") return "border border-dashed border-rose-400/70 text-rose-200";
-    if (dk.kind === "ovulation") return "bg-teal-500/40 text-white";
-    if (dk.kind === "fertile") return "bg-teal-500/15 text-teal-100";
-    return "text-slate-300";
+    if (dk.kind === "predicted") return "border border-dashed border-rose-400/70 text-[var(--c-ink)]";
+    if (dk.kind === "ovulation") return "bg-teal-500/40 text-[var(--c-ink)]";
+    if (dk.kind === "fertile") return "bg-teal-500/15 text-[var(--c-ink)]";
+    return "text-[var(--c-ink)]";
   };
 
   return (
-    <div className={"space-y-4 max-w-xl lg:max-w-none mx-auto " + SPLIT}>
-      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 lg:col-start-1">
-        <p className="text-xs uppercase tracking-wider text-rose-300/80 flex items-center gap-1.5"><Droplet size={13} /> {tr("Cycle")}</p>
-        <p className="text-2xl text-white font-semibold mt-1">{headline.big}</p>
-        <p className="text-sm text-slate-400 mt-1 leading-snug">{headline.small}</p>
+    <div className={"calm text-[var(--c-ink)] space-y-4 max-w-xl lg:max-w-none mx-auto " + SPLIT}>
+      <section className={card + " p-4 lg:col-start-1"}>
+        <p className={label + " flex items-center gap-1.5"}><Droplet size={13} /> {tr("Cycle")}</p>
+        <p className="text-[24px] font-black tracking-tight mt-1 tabular-nums">{headline.big}</p>
+        <p className="text-sm text-[var(--c-mut)] mt-1 leading-snug">{headline.small}</p>
         {stats.last ? (
           <div className="grid grid-cols-3 gap-2 mt-3">
-            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Cycle")}</p><p className="text-sm text-slate-100">{stats.cycleLen} days{stats.known ? "" : tr(" (default)")}</p></div>
-            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Period")}</p><p className="text-sm text-slate-100">{stats.periodLen} days</p></div>
-            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Fertile window")}</p><p className="text-sm text-slate-100">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
+            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[16px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Cycle")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.cycleLen} days{stats.known ? "" : tr(" (default)")}</p></div>
+            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[16px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Period")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.periodLen} days</p></div>
+            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[16px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Fertile window")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
           </div>
         ) : null}
         <CycleChat cycle={cycle} todayKey={todayKey} />
-        <div className="flex flex-wrap gap-1.5 mt-3">
+        <div className="flex flex-wrap gap-2 mt-3">
           {!stats.inPeriod ? (
             <button onClick={() => { upd((c) => cycleSetDay(c, todayKey, { flow: "medium", start: true, at: Date.now() })); flash(tr("Period started today")); }}
-              className="px-3 py-2 rounded-lg bg-rose-500 text-white text-sm font-medium active:scale-95">{tr("Period started today")}</button>
+              className={btnP}>{tr("Period started today")}</button>
           ) : (
             <button onClick={() => { upd((c) => cycleSetDay(c, todayKey, { flow: (c.days[todayKey] || {}).flow || "light", end: true, at: Date.now() })); flash(tr("Marked as ended today")); }}
-              className="px-3 py-2 rounded-lg bg-slate-700 text-white text-sm font-medium active:scale-95">{tr("Period ended today")}</button>
+              className={btnP}>{tr("Period ended today")}</button>
           )}
-          <button onClick={() => setSel(todayKey)} className="px-3 py-2 rounded-lg border border-slate-700 text-slate-200 text-sm">{tr("Log today")}</button>
-          <button onClick={goInstant} className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-sm">{tr("Type it instead")}</button>
+          <button onClick={() => setSel(todayKey)} className={btnS}>{tr("Log today")}</button>
+          <button onClick={goInstant} className={btnS + " text-[var(--c-mut)]"}>{tr("Type it instead")}</button>
         </div>
         {native && native.healthTemps ? (
-          <div className="mt-3 bg-slate-950 rounded-xl p-2.5 text-[12.5px]" data-testid="cycle-temp">
+          <div className="mt-3 bg-[var(--c-surf-2)] rounded-[16px] p-3 text-[12.5px]" data-testid="cycle-temp">
             {stats.temp && stats.temp.ovulation ? (
-              <p className="text-slate-200" data-testid="cycle-temp-line">{tr("Your watch's temperature rose {r} °C: ovulation around {o}, so the period is expected {n}.", { r: stats.temp.rise, o: fromKey(stats.temp.ovulation).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }), n: fromKey(stats.temp.nextStart).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) })}
-                {" "}<span className="text-slate-500">{stats.temp.luteal.own ? tr("(your own {d} days after ovulation)", { d: stats.temp.luteal.days }) : tr("(14 days after ovulation until 2 cycles are measured)")}</span></p>
+              <p className="text-[var(--c-ink)]" data-testid="cycle-temp-line">{tr("Your watch's temperature rose {r} °C: ovulation around {o}, so the period is expected {n}.", { r: stats.temp.rise, o: fromKey(stats.temp.ovulation).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }), n: fromKey(stats.temp.nextStart).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) })}
+                {" "}<span className="text-[var(--c-mut)]">{stats.temp.luteal.own ? tr("(your own {d} days after ovulation)", { d: stats.temp.luteal.days }) : tr("(14 days after ovulation until 2 cycles are measured)")}</span></p>
             ) : stats.temp && stats.temp.waiting ? (
-              <p className="text-amber-200/90" data-testid="cycle-temp-line">{tr("No temperature rise yet — ovulation looks later than usual, so the period will likely be later than the date above.")}</p>
+              <p className="text-[var(--c-warn)]" data-testid="cycle-temp-line">{tr("No temperature rise yet — ovulation looks later than usual, so the period will likely be later than the date above.")}</p>
             ) : nights.length ? (
-              <p className="text-slate-400" data-testid="cycle-temp-line">{tr("{n} nights of temperature from your watch — the rise after ovulation shows here.", { n: nights.length })}</p>
+              <p className="text-[var(--c-mut)]" data-testid="cycle-temp-line">{tr("{n} nights of temperature from your watch — the rise after ovulation shows here.", { n: nights.length })}</p>
             ) : (
-              <p className="text-slate-400">{tr("A watch that measures night temperature (Galaxy Watch, Pixel Watch, Oura…) makes the prediction more exact.")}</p>
+              <p className="text-[var(--c-mut)]">{tr("A watch that measures night temperature (Galaxy Watch, Pixel Watch, Oura…) makes the prediction more exact.")}</p>
             )}
             <div className="flex gap-2 mt-1.5">
-              {!nights.length || (tempState && tempState.granted === 0) ? <button className="text-rose-300 underline" onClick={() => { try { native.healthTempConnect(); } catch (e) {} }} data-testid="cycle-temp-connect">{tr("Use my watch's temperature")}</button> : null}
-              <button className="text-slate-400 underline" onClick={() => readTemps()} data-testid="cycle-temp-read">{tempState === "busy" ? tr("Reading…") : tr("Read now")}</button>
+              {!nights.length || (tempState && tempState.granted === 0) ? <button className="min-h-[44px] text-[var(--c-acc)] font-bold underline" onClick={() => { try { native.healthTempConnect(); } catch (e) {} }} data-testid="cycle-temp-connect">{tr("Use my watch's temperature")}</button> : null}
+              <button className="min-h-[44px] text-[var(--c-mut)] underline" onClick={() => readTemps()} data-testid="cycle-temp-read">{tempState === "busy" ? tr("Reading…") : tr("Read now")}</button>
             </div>
-            {tempState && tempState !== "busy" && tempState.granted > 0 && !tempState.n ? <p className="text-slate-500 mt-1">{tr("Connected, but the watch hasn't shared any night temperature yet.")}</p> : null}
+            {tempState && tempState !== "busy" && tempState.granted > 0 && !tempState.n ? <p className="text-[var(--c-mut)] mt-1">{tr("Connected, but the watch hasn't shared any night temperature yet.")}</p> : null}
           </div>
         ) : null}
         {stats.variation != null && stats.variation > 9 ? (
-          <p className="text-[11px] text-amber-300/80 mt-3 leading-snug">{tr("Your last cycles differed by")} {stats.variation} {tr("days, so predictions are rough. If cycles are often very irregular, it's worth mentioning to a doctor.")}</p>
+          <p className="text-[11.5px] text-[var(--c-warn)] mt-3 leading-snug">{tr("Your last cycles differed by")} {stats.variation} {tr("days, so predictions are rough. If cycles are often very irregular, it's worth mentioning to a doctor.")}</p>
         ) : null}
       </section>
 
       {/* calendar */}
-      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 lg:col-start-2 lg:row-start-1 lg:row-span-4 min-w-0">
+      <section className={card + " p-4 lg:col-start-2 lg:row-start-1 lg:row-span-4 min-w-0"}>
         <div className="flex items-center justify-between mb-3">
           <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))} className="att-icon-btn"><ChevronLeft size={18} className="rtl:rotate-180" /></button>
-          <p className="text-sm text-slate-200 font-medium">{month.toLocaleDateString(dateLocale(), { month: "long", year: "numeric" })}</p>
+          <p className="text-[15px] font-extrabold">{month.toLocaleDateString(dateLocale(), { month: "long", year: "numeric" })}</p>
           <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))} className="att-icon-btn"><ChevronRight size={18} className="rtl:rotate-180" /></button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center">
-          {["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"].map((d) => <span key={d} className="text-[10px] text-slate-500 py-1">{tr(d)}</span>)}
+          {["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"].map((d) => <span key={d} className="text-[11px] font-bold text-[var(--c-mut)] py-1">{tr(d)}</span>)}
           {grid.map((k, i) => k ? (
             <button key={k} onClick={() => setSel(k)}
-              className={`aspect-square rounded-lg text-sm flex flex-col items-center justify-center relative ${cellStyle(k)} ${k === todayKey ? "ring-2 ring-white/70" : ""} ${sel === k ? "outline outline-2 outline-teal-400" : ""}`}>
+              className={`aspect-square rounded-[12px] text-sm font-semibold tabular-nums flex flex-col items-center justify-center relative ${cellStyle(k)} ${k === todayKey ? "ring-2 ring-[var(--c-ink)]/70" : ""} ${sel === k ? "outline outline-2 outline-[var(--c-acc)]" : ""}`}>
               {fromKey(k).getDate()}
-              {(cycle.days[k] && (cycle.days[k].symptoms || []).length) ? <span className="absolute bottom-1 w-1 h-1 rounded-full bg-amber-300" /> : null}
+              {(cycle.days[k] && (cycle.days[k].symptoms || []).length) ? <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[var(--c-warn)]" /> : null}
             </button>
           ) : <span key={"p" + i} />)}
         </div>
-        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[10px] text-slate-400">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[11px] text-[var(--c-mut)]">
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-rose-500/70" /> {tr("Period")}</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-dashed border-rose-400" /> {tr("Expected")}</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-500/15" /> {tr("Fertile")}</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-500/40" /> {tr("Ovulation (est.)")}</span>
-          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-300" /> {tr("Symptoms")}</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[var(--c-warn)]" /> {tr("Symptoms")}</span>
         </div>
       </section>
 
       {/* edit one day */}
       {sel ? (
-        <section className="bg-slate-900 rounded-2xl border border-teal-800/60 p-4 lg:col-start-1">
+        <section className={card + " p-4 lg:col-start-1 border-[var(--c-acc)]/50"}>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-100 font-medium">{fromKey(sel).toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" })}</p>
+            <p className="text-[15px] font-extrabold">{fromKey(sel).toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" })}</p>
             <button onClick={() => setSel(null)} className="att-icon-btn"><X size={16} /></button>
           </div>
-          <p className="text-[11px] text-slate-500 mt-2 mb-1.5">{tr("Flow")}</p>
+          <p className={label + " mt-2 mb-1.5"}>{tr("Flow")}</p>
           <div className="grid grid-cols-4 gap-1.5">
             {FLOWS.map(([k, l]) => (
               <button key={k} onClick={() => upd((c) => cycleSetDay(c, sel, { flow: selDay.flow === k ? null : k }))}
-                className={`py-2 rounded-lg text-xs border ${selDay.flow === k ? "border-rose-400 " + FLOW_BG[k] : "border-slate-800 bg-slate-950 text-slate-300"}`}>{tr(l)}</button>
+                className={`min-h-[44px] rounded-[14px] text-[12.5px] font-bold border ${selDay.flow === k ? "border-rose-400 " + FLOW_BG[k] : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-mut)]"}`}>{tr(l)}</button>
             ))}
           </div>
           <div className="flex gap-1.5 mt-2">
             <button onClick={() => upd((c) => cycleSetDay(c, sel, { start: !selDay.start, flow: selDay.flow || "medium" }))}
-              className={`flex-1 py-2 rounded-lg text-xs border ${selDay.start ? "border-rose-400 text-rose-200" : "border-slate-800 text-slate-400"}`}>{tr("First day of a period")}</button>
+              className={`flex-1 min-h-[44px] rounded-[14px] text-[12.5px] font-bold border ${selDay.start ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("First day of a period")}</button>
             <button onClick={() => upd((c) => cycleSetDay(c, sel, { end: !selDay.end }))}
-              className={`flex-1 py-2 rounded-lg text-xs border ${selDay.end ? "border-slate-400 text-slate-100" : "border-slate-800 text-slate-400"}`}>{tr("Last day")}</button>
+              className={`flex-1 min-h-[44px] rounded-[14px] text-[12.5px] font-bold border ${selDay.end ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("Last day")}</button>
           </div>
-          <p className="text-[11px] text-slate-500 mt-3 mb-1.5">{tr("Symptoms")}</p>
+          <p className={label + " mt-3 mb-1.5"}>{tr("Symptoms")}</p>
           <div className="flex flex-wrap gap-1.5">
             {SYMPTOM_LIST.map((sy) => {
               const on = (selDay.symptoms || []).includes(sy);
@@ -487,30 +488,30 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
                   const cur = (c.days[sel] || {}).symptoms || [];
                   const days = { ...c.days, [sel]: { ...(c.days[sel] || {}), symptoms: on ? cur.filter((x) => x !== sy) : [...cur, sy] } };
                   return { ...c, days };
-                })} className={`text-xs px-2.5 py-1.5 rounded-lg border ${on ? "border-amber-400 text-amber-200 bg-amber-500/10" : "border-slate-800 text-slate-400"}`}>{tr(sy)}</button>
+                })} className={chip(on)}>{tr(sy)}</button>
               );
             })}
           </div>
           <input value={selDay.note || ""} onChange={(e) => upd((c) => ({ ...c, days: { ...c.days, [sel]: { ...(c.days[sel] || {}), note: e.target.value } } }))}
             placeholder={tr("Note (optional)")} dir="auto"
-            className="w-full mt-3 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
+            className={inp + " mt-3"} />
           {cycle.days[sel] ? (
-            <button onClick={() => { upd((c) => cycleClearDay(c, sel)); flash(tr("Day cleared")); }} className="mt-3 text-xs text-slate-500 flex items-center gap-1"><Trash2 size={12} /> {tr("Clear this day")}</button>
+            <button onClick={() => { upd((c) => cycleClearDay(c, sel)); flash(tr("Day cleared")); }} className="mt-3 min-h-[44px] text-[12.5px] font-bold text-[var(--c-neg)] flex items-center gap-1"><Trash2 size={12} /> {tr("Clear this day")}</button>
           ) : null}
         </section>
       ) : null}
 
       {/* history */}
       {stats.periods.length ? (
-        <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 lg:col-start-1">
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("History")}</p>
+        <section className={card + " p-4 lg:col-start-1"}>
+          <p className={label + " mb-2"}>{tr("History")}</p>
           <div className="space-y-1">
             {stats.periods.slice().reverse().slice(0, 8).map((p, i, arr) => {
               const prev = stats.periods[stats.periods.length - 1 - i - 1];
               return (
-                <div key={p.start} className="flex items-center justify-between text-sm py-1.5 border-b border-slate-800/60 last:border-0">
-                  <span className="text-slate-200">{fromKey(p.start).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: "numeric" })}</span>
-                  <span className="text-slate-400 text-xs">{p.length} day{p.length === 1 ? "" : "s"}{prev ? " · cycle " + diffDays(prev.start, p.start) + " days" : ""}</span>
+                <div key={p.start} className="flex items-center justify-between text-sm py-2 border-b border-[var(--c-ln)] last:border-0">
+                  <span className="text-[var(--c-ink)] font-semibold">{fromKey(p.start).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: "numeric" })}</span>
+                  <span className="text-[var(--c-mut)] text-xs tabular-nums">{p.length} day{p.length === 1 ? "" : "s"}{prev ? " · cycle " + diffDays(prev.start, p.start) + " days" : ""}</span>
                 </div>
               );
             })}
@@ -518,7 +519,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
         </section>
       ) : null}
 
-      <p className="flex items-start justify-center gap-1.5 text-[11px] text-slate-500 text-center px-4 leading-snug lg:col-span-2">
+      <p className="flex items-start justify-center gap-1.5 text-[11px] text-[var(--c-mut)] text-center px-4 leading-snug lg:col-span-2">
         <ShieldCheck size={12} className="mt-0.5 shrink-0" /> {tr("Stays on this phone — kept out of Memory and never sent anywhere. Predictions are estimates, not contraception or medical advice.")}
       </p>
     </div>
@@ -535,16 +536,16 @@ function CycleChat({ cycle, todayKey }) {
     setQ("");
   };
   return (
-    <div className="mt-3 rounded-xl bg-slate-950 border border-slate-800 p-2.5" data-testid="cycle-chat">
-      {log.map((m, i) => m.me ? <p key={i} className="text-[13px] text-rose-100 bg-rose-500/15 rounded-lg px-2.5 py-1.5 my-1 ms-auto w-fit max-w-[85%]">{m.me}</p>
-        : <p key={i} className="text-[13px] text-slate-200 bg-slate-900 rounded-lg px-2.5 py-1.5 my-1 w-fit max-w-[90%] whitespace-pre-line" data-testid="cycle-answer">{m.a}</p>)}
+    <div className="mt-3 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3" data-testid="cycle-chat">
+      {log.map((m, i) => m.me ? <p key={i} className="text-[13px] text-[var(--c-ink)] bg-[var(--c-soft)] rounded-[14px] px-3 py-2 my-1 ms-auto w-fit max-w-[85%]">{m.me}</p>
+        : <p key={i} className="text-[13px] text-[var(--c-ink)] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 my-1 w-fit max-w-[90%] whitespace-pre-line" data-testid="cycle-answer">{m.a}</p>)}
       {!log.length ? <div className="flex flex-wrap gap-1.5 mb-1.5">{[tr("When is my next period?"), tr("Am I late?"), tr("When do I ovulate?")].map((x) =>
-        <button key={x} onClick={() => ask(x)} className="text-[11.5px] rounded-full border border-slate-700 text-slate-300 px-2.5 py-1">{x}</button>)}</div> : null}
+        <button key={x} onClick={() => ask(x)} className={chip(false)}>{x}</button>)}</div> : null}
       <div className="flex gap-1.5">
         <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} dir="auto" placeholder={tr("Ask about your cycle…")} data-testid="cycle-ask"
-          className="flex-1 min-w-0 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[13px] text-slate-100" />
-        <button onClick={() => ask()} className="px-3 rounded-lg bg-rose-500 text-white text-[13px]" data-testid="cycle-ask-go">{tr("Ask")}</button>
+          className={inp + " flex-1"} />
+        <button onClick={() => ask()} className={btnP + " px-4"} data-testid="cycle-ask-go">{tr("Ask")}</button>
       </div>
-      <p className="text-center text-[10.5px] leading-tight text-slate-500 mt-1" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
+      <p className="text-center text-[10.5px] leading-tight text-[var(--c-mut)] mt-1" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
     </div>);
 }

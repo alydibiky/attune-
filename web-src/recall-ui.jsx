@@ -15,12 +15,12 @@ export function RecallCard({ text, navTo, className = "" }) {
   const found = useMemo(() => { try { return String(t || "").trim().length >= 3 ? recallFor(t, storesNow()) : []; } catch (e) { return []; } }, [t]);
   if (!found.length) return null;
   return (
-    <div className={"rounded-xl border border-violet-800/60 bg-violet-500/10 p-2.5 space-y-1.5 " + className} data-testid="recall-card">
+    <div className={"rounded-[18px] border border-[var(--c-acc)]/30 bg-[var(--c-soft)] p-3 space-y-1.5 " + className} data-testid="recall-card">
       {found.map((p) => (
         <div key={p.person}>
-          <p className="text-[12px] text-violet-200 font-semibold flex items-center gap-1.5 m-0"><Brain size={13} />{tr("Remembered about {p}", { p: p.person })}</p>
+          <p className="text-[12px] text-[var(--c-acc)] font-extrabold flex items-center gap-1.5 m-0"><Brain size={13} />{tr("Remembered about {p}", { p: p.person })}</p>
           <ul className="m-0 mt-1 p-0 list-none space-y-0.5">{p.items.map((x, i) => (
-            <li key={i}><button onClick={() => navTo && navTo(PAGE[x.src])} className="text-start text-[12.5px] text-slate-200 hover:underline" dir="auto" data-testid="recall-item">• {x.what}</button></li>))}</ul>
+            <li key={i}><button onClick={() => navTo && navTo(PAGE[x.src])} className="text-start min-h-[36px] text-[13px] font-semibold text-[var(--c-ink)] hover:underline" dir="auto" data-testid="recall-item">• {x.what}</button></li>))}</ul>
         </div>))}
     </div>);
 }

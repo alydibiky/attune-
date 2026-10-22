@@ -66,7 +66,7 @@ function FadeImg({ src, under, alt, testid }) {
     <div className="relative lg:max-w-[min(100%,62vh)] lg:mx-auto">
       {under ? <img src={under} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover rounded-lg" data-testid="studio-fade-under" /> : null}
       <img src={src} alt={alt} onLoad={() => setOn(true)} data-testid={testid}
-        className="relative w-full rounded-lg bg-slate-950 transition-opacity duration-300 motion-reduce:transition-none" style={{ opacity: on ? 1 : 0 }} />
+        className="relative w-full rounded-lg bg-[var(--c-bg)] transition-opacity duration-300 motion-reduce:transition-none" style={{ opacity: on ? 1 : 0 }} />
     </div>
   );
 }
@@ -84,33 +84,33 @@ function DraftFrame({ flow, now, onStop, onKeep, onPick }) {
     : flow.phase === "draft" ? tr("Draft ready — you can keep it")
     : tr("Refining to {w} px", { w: P.finalSide });
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-2" data-testid="studio-flow" data-phase={flow.phase} aria-live="polite">
+    <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-2" data-testid="studio-flow" data-phase={flow.phase} aria-live="polite">
       {flow.phase === "pick" ? (
         <div className="grid grid-cols-2 gap-1.5">
           {(flow.drafts || []).map((x, i) => (
             <button key={x.file} onClick={() => onPick(i)} data-testid={"studio-pick-" + i}
-              className="relative rounded-lg overflow-hidden border border-slate-700 focus:border-violet-500 min-h-[48px]">
+              className="relative rounded-lg overflow-hidden border border-[var(--c-ln)] focus:border-[var(--c-acc)] min-h-[48px]">
               <img src={x.url} alt={tr("Draft {n}", { n: i + 1 })} className="w-full aspect-square object-cover" />
               <span className="absolute top-1.5 start-1.5 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px]">{tr("Draft {n}", { n: i + 1 })}</span>
             </button>
           ))}
         </div>
       ) : (
-        <div className="relative rounded-lg overflow-hidden bg-slate-950 aspect-square lg:max-w-[min(100%,62vh)] lg:mx-auto">
+        <div className="relative rounded-lg overflow-hidden bg-[var(--c-bg)] aspect-square lg:max-w-[min(100%,62vh)] lg:mx-auto">
           {d ? <img src={d.url} alt="" className="w-full h-full object-cover" data-testid="studio-draft-img" />
             : <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 motion-safe:animate-pulse" data-testid="studio-skeleton" />}
           <span className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px]" data-testid="studio-flow-badge">{badge}</span>
         </div>
       )}
-      <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all motion-reduce:transition-none" style={{ width: pct + "%" }} /></div>
-      <div className="flex justify-between text-[11px] text-slate-400 mt-1 px-0.5">
+      <div className="h-1 bg-[var(--c-surf-2)] rounded-full overflow-hidden mt-2"><div className="h-full bg-[var(--c-acc)] transition-all motion-reduce:transition-none" style={{ width: pct + "%" }} /></div>
+      <div className="flex justify-between text-[11px] text-[var(--c-mut)] mt-1 px-0.5">
         <span data-testid="studio-flow-line">{line}</span>
         {left != null ? <span data-testid="studio-flow-left">{tr("~{s} s left", { s: left })}</span> : null}
       </div>
       <div className="flex gap-1.5 mt-2">
-        <button onClick={onStop} data-testid="studio-flow-stop" className="flex-1 min-h-[44px] rounded-lg border border-slate-700 text-slate-200 text-sm">{tr("Stop")}</button>
+        <button onClick={onStop} data-testid="studio-flow-stop" className="flex-1 min-h-[44px] rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-sm">{tr("Stop")}</button>
         {d && (flow.phase === "draft" || flow.phase === "refining") ? (
-          <button onClick={onKeep} data-testid="studio-keep-draft" className="flex-1 min-h-[44px] rounded-lg bg-violet-500 text-white text-sm font-semibold">{tr("Keep draft")}</button>
+          <button onClick={onKeep} data-testid="studio-keep-draft" className="flex-1 min-h-[44px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold">{tr("Keep draft")}</button>
         ) : null}
       </div>
     </div>
@@ -210,7 +210,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   }, []);
   useEffect(() => { if (incoming && incoming.prompt != null) { setIdea(incoming.prompt); setMode("create"); clearIncoming && clearIncoming(); } }, [incoming]);
 
-  if (!info) return <div className="p-4 text-sm text-slate-400" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
+  if (!info) return <div className="p-4 text-sm text-[var(--c-mut)]" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
   // v6.19: the device facts (cores, big cores, platform) join the picture facts for the per-device recommendation
   let dev = info; try { dev = { ...JSON.parse(native.info()), ...info }; } catch (e) {}
   const gpuOk = gpuWorks(info);
@@ -440,40 +440,40 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
     : busy.stage === "upscale" && busy.total ? tr("Sharpening ×4 — part {n} of {t}", { n: busy.step, t: busy.total }) + (busy.step > 0 && busy.step < busy.total ? " · " + tr("about {m} min left", { m: Math.max(1, Math.round((Date.now() - busy.t0) / busy.step * (busy.total - busy.step) / 60000)) }) : "")
     : busy.stage === "load" && busy.total ? tr("Loading the picture model… {p}%", { p: Math.round(busy.step * 100 / busy.total) })
     : tr(STAGE[busy.stage] || "Working…")) : "";
-  const chip = (on) => `px-2.5 py-1 rounded-lg text-[12px] border ${on ? "bg-violet-500 border-violet-500 text-white font-medium" : "border-slate-700 text-slate-300"}`;
-  const btn = "px-3 py-1.5 rounded-lg border border-slate-700 text-slate-200 text-xs flex items-center gap-1.5 disabled:opacity-40";
+  const chip = (on) => `px-2.5 py-1 rounded-lg text-[12px] border ${on ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "border-[var(--c-ln)] text-[var(--c-ink)]"}`;
+  const btn = "px-3 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-xs flex items-center gap-1.5 disabled:opacity-40";
 
   return (
     <div className={"space-y-3 pb-24 " + SPLIT} data-testid="studio-page">
       {!info.built ? (
-        <div className="rounded-xl border border-amber-900/60 bg-amber-500/5 p-3 text-[12px] text-amber-200 lg:col-start-1" data-testid="studio-no-engine">
+        <div className="rounded-xl border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12px] text-[var(--c-warn)] lg:col-start-1" data-testid="studio-no-engine">
           {tr("This APK has no picture engine yet — it comes with the next APK built on GitHub.")}</div>
       ) : null}
 
       {!drawReady ? (
-        <div className="rounded-xl border border-violet-800/60 bg-violet-500/5 p-3 lg:col-start-1" data-testid="studio-install">
-          <p className="text-sm text-slate-100 font-medium flex items-center gap-1.5"><Palette size={16} className="text-violet-300" />{tr("Pictures made on your phone")}</p>
-          {dp.why === "cpu" ? <p className="text-[12px] text-amber-200 mt-1 leading-relaxed" data-testid="studio-why-turbo">{tr("This phone's graphics chip isn't working with Studio, so the Pro model would take 10–20 minutes a picture on the CPU. Studio Turbo makes a picture in about a minute.")}</p> : null}
-          <p className="text-[12px] text-slate-300 mt-1 leading-relaxed">{tr(P.quality)}</p>
-          {rec.pack === dp.id ? <p className="text-[11px] text-emerald-300 mt-1" data-testid="studio-recommended">✓ {tr("Recommended for your phone")} · {tr(rec.why)} · {tr("about {s} s a picture", { s: rec.estSeconds })}</p> : null}
-          <p className="text-[11px] text-slate-500 mt-1">{P.label} · {P.sizeGB} {tr("GB, once")} · {tr("needs {n} GB RAM", { n: P.needRam })} · {P.license}</p>
-          {info.ramGB && info.ramGB < P.needRam ? <p className="text-[11px] text-amber-300 mt-1">{tr("This phone has {n} GB — it may be too little for pictures.", { n: info.ramGB })}</p> : null}
+        <div className="rounded-xl border border-[var(--c-acc)] bg-[var(--c-soft)] p-3 lg:col-start-1" data-testid="studio-install">
+          <p className="text-sm text-[var(--c-ink)] font-medium flex items-center gap-1.5"><Palette size={16} className="text-[var(--c-acc)]" />{tr("Pictures made on your phone")}</p>
+          {dp.why === "cpu" ? <p className="text-[12px] text-[var(--c-warn)] mt-1 leading-relaxed" data-testid="studio-why-turbo">{tr("This phone's graphics chip isn't working with Studio, so the Pro model would take 10–20 minutes a picture on the CPU. Studio Turbo makes a picture in about a minute.")}</p> : null}
+          <p className="text-[12px] text-[var(--c-ink)] mt-1 leading-relaxed">{tr(P.quality)}</p>
+          {rec.pack === dp.id ? <p className="text-[11px] text-[var(--c-pos)] mt-1" data-testid="studio-recommended">✓ {tr("Recommended for your phone")} · {tr(rec.why)} · {tr("about {s} s a picture", { s: rec.estSeconds })}</p> : null}
+          <p className="text-[11px] text-[var(--c-mut)] mt-1">{P.label} · {P.sizeGB} {tr("GB, once")} · {tr("needs {n} GB RAM", { n: P.needRam })} · {P.license}</p>
+          {info.ramGB && info.ramGB < P.needRam ? <p className="text-[11px] text-[var(--c-warn)] mt-1">{tr("This phone has {n} GB — it may be too little for pictures.", { n: info.ramGB })}</p> : null}
           {dl && dl.id === dp.id ? (
             <div className="mt-2">
-              <div className="flex justify-between text-[11px] text-slate-300"><span>{dl.stage}</span><span>{dl.pct}%</span></div>
-              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1"><div className="h-full bg-violet-500" style={{ width: dl.pct + "%" }} /></div>
-              <div className="flex justify-between items-center mt-1"><span className="text-[11px] text-slate-500">{dl.detail}</span>
-                <button onClick={stop} className="text-[11px] text-slate-400 underline">{tr("Cancel")}</button></div>
+              <div className="flex justify-between text-[11px] text-[var(--c-ink)]"><span>{dl.stage}</span><span>{dl.pct}%</span></div>
+              <div className="h-1.5 bg-[var(--c-surf-2)] rounded-full overflow-hidden mt-1"><div className="h-full bg-[var(--c-acc)]" style={{ width: dl.pct + "%" }} /></div>
+              <div className="flex justify-between items-center mt-1"><span className="text-[11px] text-[var(--c-mut)]">{dl.detail}</span>
+                <button onClick={stop} className="text-[11px] text-[var(--c-mut)] underline">{tr("Cancel")}</button></div>
             </div>
           ) : (
             <button onClick={() => install(dp.id)} disabled={!!dl || !info.built} data-testid="studio-install-go"
-              className="mt-2 px-3 py-2 rounded-lg bg-violet-500 text-white text-sm font-medium disabled:opacity-40 flex items-center gap-1.5"><Download size={14} />{tr("Install · {s} GB", { s: P.sizeGB })}</button>
+              className="mt-2 px-3 py-2 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold disabled:opacity-40 flex items-center gap-1.5 min-h-[44px]"><Download size={14} />{tr("Install · {s} GB", { s: P.sizeGB })}</button>
           )}
-          <p className="text-[11px] text-slate-500 mt-2">{tr("Download it on Wi-Fi. After that, pictures are made with no internet at all.")}</p>
+          <p className="text-[11px] text-[var(--c-mut)] mt-2">{tr("Download it on Wi-Fi. After that, pictures are made with no internet at all.")}</p>
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 lg:col-start-1">
+      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 lg:col-start-1">
         <div className="flex gap-1.5 mb-2">
           <button onClick={() => setMode("create")} className={chip(mode === "create")} data-testid="studio-mode-create"><Sparkles size={12} className="inline me-1" />{tr("Create")}</button>
           <button onClick={() => setMode("edit")} className={chip(mode === "edit")} data-testid="studio-mode-edit"><Wand2 size={12} className="inline me-1" />{tr("Edit a photo")}</button>
@@ -484,14 +484,14 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
             {info.ramGB >= PACKS["turbo-xl"].needRam ? <button onClick={() => setChoice("turbo-xl")} className={chip(dp.id === "turbo-xl")} data-testid="studio-use-turbo-xl">⚡ {tr("Turbo+ · about 20 s · {s} GB", { s: PACKS["turbo-xl"].sizeGB })}</button> : null}
             {info.ramGB >= PACKS["qwen-21"].needRam ? <button onClick={() => setChoice("qwen-21")} className={chip(dp.id === "qwen-21")} data-testid="studio-use-qwen">{tr("Ultra · best quality, slow · {s} GB", { s: PACKS["qwen-21"].sizeGB })}</button> : null}
             <button onClick={() => setChoice("pro")} className={chip(!PACKS[dp.id] || (!PACKS[dp.id].fast && dp.id !== "qwen-21"))} data-testid="studio-use-pro">{tr("Pro · best quality")}</button>
-            {!(PACKS[dp.id] && PACKS[dp.id].fast) && gpuOk === false ? <span className="text-[11px] text-amber-300" data-testid="studio-pro-slow">{tr("Pro on this phone's CPU: 10–20 min a picture")}</span> : null}
+            {!(PACKS[dp.id] && PACKS[dp.id].fast) && gpuOk === false ? <span className="text-[11px] text-[var(--c-warn)]" data-testid="studio-pro-slow">{tr("Pro on this phone's CPU: 10–20 min a picture")}</span> : null}
           </div>
         ) : null}
         {mode === "edit" ? (
           <div className="mb-2">
             {ref ? (
               <div className="relative inline-block">
-                <img src={ref.dataUrl} alt="" className="max-h-40 rounded-lg border border-slate-700" data-testid="studio-ref" />
+                <img src={ref.dataUrl} alt="" className="max-h-40 rounded-lg border border-[var(--c-ln)]" data-testid="studio-ref" />
                 <button onClick={() => setRef(null)} className="absolute top-1 end-1 p-1 rounded-full bg-black/60 text-white"><X size={12} /></button>
               </div>
             ) : (
@@ -503,28 +503,28 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
         ) : null}
         <textarea value={idea} onChange={(e) => setIdea(e.target.value)} rows={3} dir="auto" data-testid="studio-idea"
           placeholder={mode === "edit" ? tr("What should change? e.g. “make it night, with the street lights on”") : tr("Describe the picture, in Arabic or English — e.g. “a felucca on the Nile at sunset”")}
-          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder:text-slate-600" />
+          className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-3 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" />
         {mode === "create" ? (
           <>
-            <label className="flex items-center gap-2 mt-2 text-[12px] text-slate-300">
+            <label className="flex items-center gap-2 mt-2 text-[12px] text-[var(--c-ink)]">
               <input type="checkbox" checked={enhance} onChange={(e) => setEnhance(e.target.checked)} data-testid="studio-enhance" />
               {tr("Write a fuller description first (better pictures; uses the chat model)")}
             </label>
-            <label className="flex items-center gap-2 mt-1.5 text-[12px] text-slate-300">
+            <label className="flex items-center gap-2 mt-1.5 text-[12px] text-[var(--c-ink)]">
               <input type="checkbox" checked={hd} onChange={(e) => setHdKeep(e.target.checked)} data-testid="studio-hd" />
               {tr("Highest resolution — sharpen every picture (×4 with the graphics chip; an instant ×2 without it)")}
             </label>
-            <label className="flex items-center gap-2 mt-1.5 text-[12px] text-slate-300">
+            <label className="flex items-center gap-2 mt-1.5 text-[12px] text-[var(--c-ink)]">
               <input type="checkbox" checked={dprefs.on} onChange={(e) => setDprefs({ ...dprefs, on: e.target.checked })} data-testid="studio-draft-on" />
               {tr("Show a quick draft first (about 10 s), then the clear picture")}
             </label>
             {dprefs.on ? (
               <div className="ms-6 space-y-1 mt-1">
-                <label className="flex items-center gap-2 text-[12px] text-slate-400">
+                <label className="flex items-center gap-2 text-[12px] text-[var(--c-mut)]">
                   <input type="checkbox" checked={dprefs.best2} onChange={(e) => setDprefs({ ...dprefs, best2: e.target.checked })} data-testid="studio-best2" />
                   {tr("Best of 2 — two drafts, you pick one (a little slower)")}
                 </label>
-                <label className="flex items-center gap-2 text-[12px] text-slate-400">
+                <label className="flex items-center gap-2 text-[12px] text-[var(--c-mut)]">
                   <input type="checkbox" checked={dprefs.keepDrafts} onChange={(e) => setDprefs({ ...dprefs, keepDrafts: e.target.checked })} data-testid="studio-keep-drafts" />
                   {tr("Keep drafts in the gallery too")}
                 </label>
@@ -537,23 +537,23 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
         ) : null}
         <div className="flex items-center gap-2 mt-3">
           {busy ? (
-            <button onClick={stop} data-testid="studio-stop" className="px-3 py-2 rounded-lg bg-rose-500/20 border border-rose-800 text-rose-200 text-sm flex items-center gap-1.5 shrink-0 whitespace-nowrap"><Square size={13} />{tr("Stop")}</button>
+            <button onClick={stop} data-testid="studio-stop" className="px-3 py-2 rounded-lg bg-[var(--c-neg)]/15 border border-[var(--c-neg)]/50 text-[var(--c-neg)] text-sm flex items-center gap-1.5 shrink-0 whitespace-nowrap"><Square size={13} />{tr("Stop")}</button>
           ) : (
             <button onClick={() => draw()} disabled={!drawReady || !idea.trim() || !info.built} data-testid="studio-go"
-              className="px-4 py-2 rounded-lg bg-violet-500 text-white text-sm font-semibold disabled:opacity-40 flex items-center gap-1.5"><Palette size={14} />{mode === "edit" ? tr("Edit it") : tr("Draw it")}</button>
+              className="px-4 py-2 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold disabled:opacity-40 flex items-center gap-1.5 min-h-[44px]"><Palette size={14} />{mode === "edit" ? tr("Edit it") : tr("Draw it")}</button>
           )}
-          {busy && !flowLive ? <span className="text-[12px] text-violet-200 flex items-center gap-1.5 min-w-0" data-testid="studio-progress"><Loader2 size={13} className="animate-spin shrink-0" /><span className="truncate">{stageText}</span><span className="text-slate-500 shrink-0">· {secs(now - busy.t0)}</span></span> : null}
+          {busy && !flowLive ? <span className="text-[12px] text-[var(--c-acc)] flex items-center gap-1.5 min-w-0" data-testid="studio-progress"><Loader2 size={13} className="animate-spin shrink-0" /><span className="truncate">{stageText}</span><span className="text-[var(--c-mut)] shrink-0">· {secs(now - busy.t0)}</span></span> : null}
         </div>
-        {busy && busy.line ? <p className="text-[10.5px] text-slate-500 mt-1.5 font-mono truncate" dir="ltr" data-i18n-skip data-testid="studio-engine-line">{busy.line}</p> : null}
+        {busy && busy.line ? <p className="text-[10.5px] text-[var(--c-mut)] mt-1.5 font-mono truncate" dir="ltr" data-i18n-skip data-testid="studio-engine-line">{busy.line}</p> : null}
         {busy && busy.what === "draw" && now - busy.t0 > 90000 && busy.stage !== "draw" ? (
-          <p className="text-[11px] text-slate-400 mt-2 leading-relaxed" data-testid="studio-slow-note">
+          <p className="text-[11px] text-[var(--c-mut)] mt-2 leading-relaxed" data-testid="studio-slow-note">
             {PACKS[dp.id] && PACKS[dp.id].fast ? tr("Still working — nothing is stuck. Turbo takes about 1–2 minutes on the CPU. Keep Attune open; Stop cancels it.")
               : tr("Still working — nothing is stuck. Without the graphics chip a Pro picture takes 10–20 minutes (edits take longer). For speed, pick Turbo. Keep Attune open; Stop cancels it.")}</p>
         ) : null}
-        {busy && busy.total && !flowLive ? <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all" style={{ width: Math.round(busy.step * 100 / busy.total) + "%" }} /></div> : null}
-        {!err && !busy && info.lastError ? <p className="text-[11px] text-amber-300/90 mt-2" data-testid="studio-last-error">{tr("The last picture didn't finish:")} {tr(info.lastError)}</p> : null}
-        {err ? <p className="text-[12px] text-rose-300 mt-2 flex items-start gap-1.5" data-testid="studio-error"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{err}</p> : null}
-        {prompt && mode === "create" ? <p className="text-[11px] text-slate-500 mt-2 leading-relaxed" dir="ltr" data-testid="studio-prompt">{prompt}</p> : null}
+        {busy && busy.total && !flowLive ? <div className="h-1 bg-[var(--c-surf-2)] rounded-full overflow-hidden mt-2"><div className="h-full bg-[var(--c-acc)] transition-all" style={{ width: Math.round(busy.step * 100 / busy.total) + "%" }} /></div> : null}
+        {!err && !busy && info.lastError ? <p className="text-[11px] text-[var(--c-warn)] mt-2" data-testid="studio-last-error">{tr("The last picture didn't finish:")} {tr(info.lastError)}</p> : null}
+        {err ? <p className="text-[12px] text-[var(--c-neg)] mt-2 flex items-start gap-1.5" data-testid="studio-error"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{err}</p> : null}
+        {prompt && mode === "create" ? <p className="text-[11px] text-[var(--c-mut)] mt-2 leading-relaxed" dir="ltr" data-testid="studio-prompt">{prompt}</p> : null}
       </div>
 
       <div className={PICTURE}>
@@ -568,11 +568,11 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
         onDone={(r) => commitPic({ ...(eraseOn.file ? cur : {}), file: r.file, url: r.url, w: r.width, h: r.height, ms: r.ms, backend: r.backend, idea: (eraseOn.file && cur && cur.idea) || tr(r.cutout ? "Cut-out" : "Edited photo"), erased: true, upscaled: false, at: Date.now() })} /> : null}
       {!flowLive && !cur ? <DeskEmpty icon={Palette} title={tr("Your picture appears here")} text={tr("Describe it and tap Draw it — it is made on this device, with no internet.")} testid="studio-desk-empty" /> : null}
       {flowLive ? <DraftFrame flow={flow} now={now} onStop={stop} onKeep={keepDraft} onPick={pickDraft} /> : cur ? (
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-2" data-testid="studio-result">
+        <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-2" data-testid="studio-result">
           <FadeImg key={cur.file} src={cur.url} alt={cur.idea} testid="studio-result-img"
             under={flow && flow.phase === "done" && flow.draft && flow.final && flow.final.file === cur.file ? flow.draft.url : null} />
-          <p className="text-[11px] text-slate-500 mt-1.5 px-1" dir="auto">
-            {cur.draft ? <span className="text-violet-300" data-testid="studio-is-draft">{tr("Draft")} · </span> : null}{cur.w}×{cur.h} ·{tr(cur.upscaled ? "sharpened on the {b} in {t}" : "drawn on the {b} in {t}", { b: cur.backend || "phone", t: secs(cur.ms || 0) })}{cur.seed != null ? " · seed " + cur.seed : ""}
+          <p className="text-[11px] text-[var(--c-mut)] mt-1.5 px-1" dir="auto">
+            {cur.draft ? <span className="text-[var(--c-acc)]" data-testid="studio-is-draft">{tr("Draft")} · </span> : null}{cur.w}×{cur.h} ·{tr(cur.upscaled ? "sharpened on the {b} in {t}" : "drawn on the {b} in {t}", { b: cur.backend || "phone", t: secs(cur.ms || 0) })}{cur.seed != null ? " · seed " + cur.seed : ""}
           </p>
           <div className="flex flex-wrap gap-1.5 mt-2 px-1 pb-1">
             <button className={btn} data-testid="studio-save" onClick={() => { try { const r = JSON.parse(native.saveImageToGallery(cur.file)); flash(r.ok ? tr("Saved to {w}", { w: r.where }) : tr(r.error)); } catch (e) { flash(tr("Could not save")); } }}><Download size={13} />{tr("Save to gallery")}</button>
@@ -590,8 +590,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       {gallery.length > 1 ? (
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-1.5" data-testid="studio-gallery">
           {gallery.slice(0, 30).map((g) => (
-            <button key={g.file + g.at} onClick={() => setCur(g)} className={`rounded-lg overflow-hidden border ${cur && cur.file === g.file ? "border-violet-500" : "border-slate-800"}`}>
-              <img src={g.url} alt="" className="w-full aspect-square object-cover bg-slate-950" loading="lazy" />
+            <button key={g.file + g.at} onClick={() => setCur(g)} className={`rounded-lg overflow-hidden border ${cur && cur.file === g.file ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`}>
+              <img src={g.url} alt="" className="w-full aspect-square object-cover bg-[var(--c-bg)]" loading="lazy" />
             </button>
           ))}
         </div>
@@ -599,17 +599,17 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       </div>
 
       {info.built && info.gpuBuilt && info.cpuOnly ? (
-        <div className="rounded-xl border border-amber-800 bg-amber-500/10 p-3 space-y-2 lg:col-start-1" data-testid="studio-gpu-card">
-          <p className="text-[13px] text-amber-100">{tr("Studio is drawing on the processor (slow). This phone has a graphics chip — try it: pictures and ×4 sharpening are many times faster there.")}</p>
-          <button className="px-3 py-2 rounded-lg bg-amber-500 text-slate-950 text-[13px] font-semibold" data-testid="studio-gpu-on"
+        <div className="rounded-xl border border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10 p-3 space-y-2 lg:col-start-1" data-testid="studio-gpu-card">
+          <p className="text-[13px] text-[var(--c-warn)]">{tr("Studio is drawing on the processor (slow). This phone has a graphics chip — try it: pictures and ×4 sharpening are many times faster there.")}</p>
+          <button className="px-3 py-2 rounded-lg bg-[var(--c-warn)] text-[var(--c-on-acc)] text-[13px] font-semibold" data-testid="studio-gpu-on"
             onClick={() => { native.setImageCpu(false); setInfo(readInfo()); flash(tr("The next picture uses the graphics chip")); }}>{tr("Use the graphics chip")}</button>
         </div>
       ) : null}
       {info.built ? (
-        <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-[11px] text-slate-500 space-y-1 lg:col-start-1">
-          {info.note ? <p className="text-amber-200" data-testid="studio-note">{tr(info.note)}</p> : null}
+        <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[11px] text-[var(--c-mut)] space-y-1 lg:col-start-1">
+          {info.note ? <p className="text-[var(--c-warn)]" data-testid="studio-note">{tr(info.note)}</p> : null}
           {info.gpuBuilt ? (
-            <label className="flex items-center gap-2 text-slate-300"><input type="checkbox" checked={!info.cpuOnly} data-testid="studio-gpu"
+            <label className="flex items-center gap-2 text-[var(--c-ink)]"><input type="checkbox" checked={!info.cpuOnly} data-testid="studio-gpu"
               onChange={(e) => { native.setImageCpu(!e.target.checked); setInfo(readInfo()); }} />{tr("Draw on the graphics chip (faster; switches itself off if the driver fails)")}</label>
           ) : <p>{tr("This build draws on the CPU.")}</p>}
           <p>{tr("Each picture is made by a separate engine process: when it finishes, all its memory goes back to the phone. Nothing is uploaded.")}</p>

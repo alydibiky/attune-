@@ -71,12 +71,12 @@ function CoverPicker({ value, onPick, flash }) {
     <div>
       <div className="grid grid-cols-5 gap-2" data-testid="shelf-covers">
         <button onClick={() => fileRef.current && fileRef.current.click()} data-testid="shelf-cover-photo"
-          className={`aspect-[3/4] rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 text-[10px] ${S.isPhotoCover(value) ? "border-teal-400 text-teal-300" : "border-slate-600 text-slate-400"}`}>
+          className={`aspect-[3/4] rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 text-[10px] ${S.isPhotoCover(value) ? "border-[var(--c-acc)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>
           <Camera size={16} />{tr("Your photo")}
         </button>
         {S.COVERS.map((c) => (
           <button key={c.id} onClick={() => onPick(c.id)} aria-label={tr(c.name)} data-testid={"shelf-cover-" + c.id}
-            className={`rounded-lg p-0.5 ${value === c.id ? "ring-2 ring-teal-400" : ""}`}>
+            className={`rounded-lg p-0.5 ${value === c.id ? "ring-2 ring-[var(--c-acc)]" : ""}`}>
             <div className="aspect-[3/4] rounded-md" style={{ background: c.bg }} />
           </button>
         ))}
@@ -90,8 +90,8 @@ function CoverPicker({ value, onPick, flash }) {
 function Sheet({ title, close, children, testid }) {
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={close}>
-      <div data-testid={testid} className="w-full max-w-xl mx-auto bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center mb-3"><p className="flex-1 text-slate-100 font-semibold">{title}</p><button onClick={close} aria-label={tr("Close")} className="p-1 text-slate-400"><X size={18} /></button></div>
+      <div data-testid={testid} className="w-full max-w-xl mx-auto bg-[var(--c-surf)] border-t border-[var(--c-ln)] rounded-t-2xl p-4 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center mb-3"><p className="flex-1 text-[var(--c-ink)] font-semibold">{title}</p><button onClick={close} aria-label={tr("Close")} className="p-1 text-[var(--c-mut)]"><X size={18} /></button></div>
         {children}
       </div>
     </div>
@@ -128,9 +128,9 @@ function Sketch({ done, close }) {
       <canvas ref={ref} width={720} height={720} data-testid="shelf-sketch-canvas" className="w-full aspect-square rounded-xl bg-white touch-none"
         onPointerDown={down} onPointerMove={move} onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} />
       <div className="flex items-center gap-2 mt-3">
-        {["#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"].map((c) => <button key={c} onClick={() => setColor(c)} aria-label={c === "#ffffff" ? tr("Eraser") : tr("Colour")} className={`w-8 h-8 rounded-full border-2 ${color === c ? "border-teal-400" : "border-slate-600"}`} style={{ background: c }} />)}
-        <button onClick={() => { const c = ref.current, x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height); setUsed(false); }} className="ms-auto text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200">{tr("Clear")}</button>
-        <button disabled={!used} data-testid="shelf-sketch-save" onClick={() => done(ref.current.toDataURL("image/jpeg", 0.85))} className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold disabled:opacity-40">{tr("Add to note")}</button>
+        {["#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"].map((c) => <button key={c} onClick={() => setColor(c)} aria-label={c === "#ffffff" ? tr("Eraser") : tr("Colour")} className={`w-8 h-8 rounded-full border-2 ${color === c ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`} style={{ background: c }} />)}
+        <button onClick={() => { const c = ref.current, x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height); setUsed(false); }} className="ms-auto text-xs px-3 py-1.5 rounded-lg bg-[var(--c-surf-2)] text-[var(--c-ink)]">{tr("Clear")}</button>
+        <button disabled={!used} data-testid="shelf-sketch-save" onClick={() => done(ref.current.toDataURL("image/jpeg", 0.85))} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold disabled:opacity-40">{tr("Add to note")}</button>
       </div>
     </Sheet>);
 }
@@ -179,82 +179,82 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
   const set = (fn) => (e) => { if (fn === setText) remember(); dirty.current = true; fn(e.target.value); };
   const info = S.noteInfo({ ...rec, text });
   const m = rec.meta || {};
-  const btn = "flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300";
+  const btn = "flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)]";
   return (
-    <div className="att-shift fixed inset-x-0 top-0 z-[60] bg-slate-950 flex flex-col" style={{ height: vh, ...(m.color ? { background: `linear-gradient(${m.color}55, ${m.color}22), #020617` } : {}) }} data-testid="shelf-editor">
-      <div className="flex items-center gap-1 px-2 py-2 border-b border-slate-800 lg:px-[max(1rem,calc((100%-46rem)/2))]">
-        <button onClick={close} aria-label={tr("Back")} className="p-2 text-slate-300" data-testid="shelf-editor-back">{getLang() === "ar" ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}</button>
+    <div className="att-shift fixed inset-x-0 top-0 z-[60] bg-[var(--c-bg)] flex flex-col" style={{ height: vh, ...(m.color ? { background: `linear-gradient(${m.color}55, ${m.color}22), #020617` } : {}) }} data-testid="shelf-editor">
+      <div className="flex items-center gap-1 px-2 py-2 border-b border-[var(--c-ln)] lg:px-[max(1rem,calc((100%-46rem)/2))]">
+        <button onClick={close} aria-label={tr("Back")} className="p-2 text-[var(--c-ink)]" data-testid="shelf-editor-back">{getLang() === "ar" ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}</button>
         <input value={title} onChange={set(setTitle)} dir="auto" placeholder={tr("Title")} data-testid="shelf-note-title"
-          className="flex-1 min-w-0 bg-transparent text-lg font-semibold text-slate-100 placeholder-slate-600 focus:outline-none" />
-        <button onClick={() => togglePin()} aria-label={tr("Pin")} className="p-2"><Star size={18} className={rec.pinned ? "text-amber-400" : "text-slate-500"} fill={rec.pinned ? "currentColor" : "none"} /></button>
-        <button onClick={() => setSheet("remind")} aria-label={tr("Remind me")} data-testid="shelf-note-remind" className="p-2"><Bell size={18} className={m.remindAt > Date.now() ? "text-teal-300" : "text-slate-500"} /></button>
+          className="flex-1 min-w-0 bg-transparent text-lg font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
+        <button onClick={() => togglePin()} aria-label={tr("Pin")} className="p-2"><Star size={18} className={rec.pinned ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]"} fill={rec.pinned ? "currentColor" : "none"} /></button>
+        <button onClick={() => setSheet("remind")} aria-label={tr("Remind me")} data-testid="shelf-note-remind" className="p-2"><Bell size={18} className={m.remindAt > Date.now() ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]"} /></button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-3 lg:px-[max(1rem,calc((100%-46rem)/2))]">
         <textarea ref={taRef} value={text} onChange={set(setText)} dir="auto" placeholder={tr("Write your note…")} data-testid="shelf-note-body"
           onFocus={(e) => { const el = e.target; setTimeout(() => { try { el.scrollIntoView({ block: "nearest" }); } catch (x) {} }, 300); }}
-          className="w-full min-h-[40vh] bg-transparent text-slate-100 placeholder-slate-600 leading-relaxed focus:outline-none resize-none" />
+          className="w-full min-h-[40vh] bg-transparent text-[var(--c-ink)] placeholder:text-[var(--c-mut)] leading-relaxed focus:outline-none resize-none" />
         {checks.length ? (
           <div className="mt-2 space-y-1" data-testid="shelf-checklist">
             {checks.map((l, i) => { const done = /\[(x|X)\]/.test(l); return (
               <div key={i} className="flex items-center gap-1">
               <button data-testid="shelf-check" onClick={() => setBody(S.toggleCheck(text, i))} className="flex-1 flex items-center gap-2 text-sm text-start" dir="auto">
-                {done ? <Check size={16} className="text-teal-400" /> : <Square size={16} className="text-slate-500" />}
-                <span className={done ? "line-through text-slate-500" : "text-slate-200"}>{l.replace(/^\s*[-*]\s*\[( |x|X)\]\s*/, "")}</span>
+                {done ? <Check size={16} className="text-[var(--c-acc)]" /> : <Square size={16} className="text-[var(--c-mut)]" />}
+                <span className={done ? "line-through text-[var(--c-mut)]" : "text-[var(--c-ink)]"}>{l.replace(/^\s*[-*]\s*\[( |x|X)\]\s*/, "")}</span>
               </button>
-              <button disabled={!i} onClick={() => setBody(S.moveCheck(text, i, -1))} aria-label={tr("Move earlier")} className="p-1 text-slate-500 disabled:opacity-20"><ArrowUp size={13} /></button>
-              <button disabled={i === checks.length - 1} onClick={() => setBody(S.moveCheck(text, i, 1))} aria-label={tr("Move later")} className="p-1 text-slate-500 disabled:opacity-20"><ArrowDown size={13} /></button>
+              <button disabled={!i} onClick={() => setBody(S.moveCheck(text, i, -1))} aria-label={tr("Move earlier")} className="p-1 text-[var(--c-mut)] disabled:opacity-20"><ArrowUp size={13} /></button>
+              <button disabled={i === checks.length - 1} onClick={() => setBody(S.moveCheck(text, i, 1))} aria-label={tr("Move later")} className="p-1 text-[var(--c-mut)] disabled:opacity-20"><ArrowDown size={13} /></button>
               </div>); })}
           </div>) : null}
-        {(text.match(/https?:\/\/[^\s<>"')\]]+/g) || []).slice(0, 5).map((u) => <a key={u} href={u} target="_blank" rel="noreferrer" className="block text-xs text-teal-400 truncate mt-1" dir="ltr">{u}</a>)}
+        {(text.match(/https?:\/\/[^\s<>"')\]]+/g) || []).slice(0, 5).map((u) => <a key={u} href={u} target="_blank" rel="noreferrer" className="block text-xs text-[var(--c-acc)] truncate mt-1" dir="ltr">{u}</a>)}
         {photos.length ? <div className="flex flex-wrap gap-2 mt-3">{photos.map((p) => <NotePhoto key={p} id={p} remove={() => { thumbDel(p); save({ ...latest.current, photos: photos.filter((x) => x !== p) }); }} />)}</div> : null}
-        {m.remindAt > Date.now() ? <p className="text-xs text-teal-300 mt-3"><AlarmClock size={12} className="inline me-1" />{tr("Reminder set")}: {fmtWhen(m.remindAt)}</p> : null}
-        <p className="text-[11px] text-slate-500 mt-3"><Brain size={11} className="inline me-1" />{tr("Also in your Mind: Mind's search finds it.")}</p>
+        {m.remindAt > Date.now() ? <p className="text-xs text-[var(--c-acc)] mt-3"><AlarmClock size={12} className="inline me-1" />{tr("Reminder set")}: {fmtWhen(m.remindAt)}</p> : null}
+        <p className="text-[11px] text-[var(--c-mut)] mt-3"><Brain size={11} className="inline me-1" />{tr("Also in your Mind: Mind's search finds it.")}</p>
       </div>
-      <div className="flex items-center gap-0.5 px-2 pt-1.5 border-t border-slate-800 overflow-x-auto lg:px-[max(1rem,calc((100%-46rem)/2))]" data-testid="shelf-format" dir="ltr">
+      <div className="flex items-center gap-0.5 px-2 pt-1.5 border-t border-[var(--c-ln)] overflow-x-auto lg:px-[max(1rem,calc((100%-46rem)/2))]" data-testid="shelf-format" dir="ltr">
         {[["bold", <b>B</b>], ["italic", <i>I</i>], ["strike", <s>S</s>], ["h1", "H1"], ["h2", "H2"], ["bullet", "•"], ["number", "1."], ["check", "☐"], ["quote", "❝"]].map(([k, l]) => (
-          <button key={k} onMouseDown={(e) => e.preventDefault()} onClick={() => fmt(k)} data-testid={"shelf-fmt-" + k} className="min-w-[34px] px-2 py-1 rounded-md text-sm text-slate-200 active:bg-slate-800">{l}</button>))}
-        <button onClick={undoT} aria-label={tr("Undo")} data-testid="shelf-undo-text" className="px-2 py-1 text-slate-300"><Undo2 size={16} /></button>
-        <button onClick={redoT} aria-label={tr("Redo")} data-testid="shelf-redo-text" className="px-2 py-1 text-slate-300"><Undo2 size={16} className="-scale-x-100" /></button>
+          <button key={k} onMouseDown={(e) => e.preventDefault()} onClick={() => fmt(k)} data-testid={"shelf-fmt-" + k} className="min-w-[34px] px-2 py-1 rounded-md text-sm text-[var(--c-ink)] active:bg-[var(--c-surf-2)]">{l}</button>))}
+        <button onClick={undoT} aria-label={tr("Undo")} data-testid="shelf-undo-text" className="px-2 py-1 text-[var(--c-ink)]"><Undo2 size={16} /></button>
+        <button onClick={redoT} aria-label={tr("Redo")} data-testid="shelf-redo-text" className="px-2 py-1 text-[var(--c-ink)]"><Undo2 size={16} className="-scale-x-100" /></button>
       </div>
-      <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-slate-950 lg:justify-center" data-testid="shelf-editor-bar">
+      <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-[var(--c-bg)] lg:justify-center" data-testid="shelf-editor-bar">
         <button className={btn} onClick={() => setSheet("more")} data-testid="shelf-note-more"><MoreVertical size={13} />{tr("More")}</button>
         <button className={btn} onClick={() => photoRef.current && photoRef.current.click()}><ImagePlus size={13} />{tr("Photo")}</button>
         <button className={btn} onClick={() => camRef.current && camRef.current.click()}><Camera size={13} />{tr("Camera")}</button>
         <button className={btn} onClick={() => setSheet("sketch")} data-testid="shelf-note-sketch"><PenLine size={13} />{tr("Sketch")}</button>
-        <button className={btn + (hearing ? " text-teal-300 border-teal-600" : "")} onClick={dictate} data-testid="shelf-note-voice"><Mic size={13} />{hearing ? tr("Listening…") : tr("Voice")}</button>
+        <button className={btn + (hearing ? " text-[var(--c-acc)] border-[var(--c-acc)]" : "")} onClick={dictate} data-testid="shelf-note-voice"><Mic size={13} />{hearing ? tr("Listening…") : tr("Voice")}</button>
         <input ref={camRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { addPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} />
         <button className={btn} onClick={() => setSheet("move")} data-testid="shelf-note-move"><Folder size={13} />{tr("Move")}</button>
         <button className={btn} onClick={() => setSheet("copy")}><Copy size={13} />{tr("Copy to…")}</button>
         <button className={btn} onClick={() => { save(latest.current); openInMind(); }} data-testid="shelf-note-mind"><Brain size={13} />{tr("Open in Mind")}</button>
         <button className={btn} onClick={() => { try { navigator.clipboard.writeText([title, text].filter(Boolean).join("\n\n")); } catch (e) {} flash(tr("Copied")); }}><Share2 size={13} />{tr("Copy text")}</button>
-        <button className={btn + " text-red-300"} onClick={remove} data-testid="shelf-note-delete"><Trash2 size={13} />{tr("Delete")}</button>
+        <button className={btn + " text-[var(--c-neg)]"} onClick={remove} data-testid="shelf-note-delete"><Trash2 size={13} />{tr("Delete")}</button>
         <input ref={photoRef} type="file" accept="image/*" className="hidden" data-testid="shelf-note-photo-file" onChange={(e) => { addPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} />
       </div>
       {sheet === "move" || sheet === "copy" ? (
         <Sheet title={sheet === "move" ? tr("Move to…") : tr("Copy to…")} close={() => setSheet(null)} testid="shelf-pick-book">
           <div className="grid grid-cols-3 gap-3">{shelf.books.map((b) => (
             <button key={b.id} onClick={() => { save(latest.current); (sheet === "move" ? moveTo : copyTo)(b.id); setSheet(null); }} className="text-center" data-testid="shelf-pick">
-              <Cover cover={b.cover} /><span className="block text-xs text-slate-200 truncate mt-1" dir="auto">{bookName(b)}</span></button>))}</div>
+              <Cover cover={b.cover} /><span className="block text-xs text-[var(--c-ink)] truncate mt-1" dir="auto">{bookName(b)}</span></button>))}</div>
         </Sheet>) : null}
       {sheet === "sketch" ? <Sketch close={() => setSheet(null)} done={async (url) => { await addPicture(url); setSheet(null); }} /> : null}
       {sheet === "more" ? (
         <Sheet title={tr("Note")} close={() => setSheet(null)} testid="shelf-note-sheet">
-          <p className="text-xs text-slate-400 mb-1.5">{tr("Colour")}</p>
+          <p className="text-xs text-[var(--c-mut)] mb-1.5">{tr("Colour")}</p>
           <div className="flex gap-2 mb-3">{S.NOTE_COLORS.map((c) => (
             <button key={c || "none"} onClick={() => patch({ color: c })} aria-label={tr("Colour")} data-testid="shelf-color"
-              className={`w-8 h-8 rounded-full border-2 ${(m.color || "") === c ? "border-teal-400" : "border-slate-700"}`} style={{ background: c || "#0f172a" }} />))}</div>
+              className={`w-8 h-8 rounded-full border-2 ${(m.color || "") === c ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`} style={{ background: c || "#0f172a" }} />))}</div>
           <div className="flex flex-wrap gap-1.5">
-            <button className={btn} onClick={() => patch({ star: !m.star })} data-testid="shelf-star"><Star size={13} className={m.star ? "text-amber-400" : ""} />{m.star ? tr("Unstar") : tr("Star")}</button>
+            <button className={btn} onClick={() => patch({ star: !m.star })} data-testid="shelf-star"><Star size={13} className={m.star ? "text-[var(--c-warn)]" : ""} />{m.star ? tr("Unstar") : tr("Star")}</button>
             <button className={btn} onClick={() => { save(latest.current); archive(); }} data-testid="shelf-archive"><Download size={13} />{m.archived ? tr("Unarchive") : tr("Archive")}</button>
             <button className={btn} onClick={() => { save(latest.current); duplicate(); setSheet(null); }} data-testid="shelf-duplicate"><Copy size={13} />{tr("Duplicate")}</button>
             <button className={btn} onClick={() => { save(latest.current); exportNote(latest.current); setSheet(null); }}><Share2 size={13} />{tr("Export as a text file")}</button>
           </div>
-          <p className="text-[11px] text-slate-500 mt-3" data-testid="shelf-info">{tr("Created {a} · edited {b} · {n} words", { a: fmtWhen(info.created), b: fmtWhen(info.edited), n: info.words })}</p>
+          <p className="text-[11px] text-[var(--c-mut)] mt-3" data-testid="shelf-info">{tr("Created {a} · edited {b} · {n} words", { a: fmtWhen(info.created), b: fmtWhen(info.edited), n: info.words })}</p>
         </Sheet>) : null}
       {sheet === "remind" ? (
         <Sheet title={tr("Remind me")} close={() => setSheet(null)} testid="shelf-remind-sheet">
-          <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} data-testid="shelf-remind-when" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" />
-          <button data-testid="shelf-remind-set" onClick={() => { save(latest.current); if (setReminder(new Date(when).getTime())) setSheet(null); }} className="mt-3 w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold">{tr("Set reminder")}</button>
+          <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} data-testid="shelf-remind-when" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-3 py-2 text-[var(--c-ink)]" />
+          <button data-testid="shelf-remind-set" onClick={() => { save(latest.current); if (setReminder(new Date(when).getTime())) setSheet(null); }} className="mt-3 w-full py-2.5 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold">{tr("Set reminder")}</button>
         </Sheet>) : null}
     </div>
   );
@@ -267,10 +267,10 @@ function BookForm({ init, done, shelf, flash }) {
     return (
       <div>
         <input autoFocus value={name} onChange={(e) => setName(e.target.value)} dir="auto" placeholder={tr("Book name")} data-testid="shelf-book-name"
-          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 mb-3 focus:outline-none focus:border-teal-500" />
-        <p className="text-xs text-slate-400 mb-2">{tr("Book cover")}</p>
+          className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-3 py-2 text-[var(--c-ink)] mb-3 focus:outline-none focus:border-[var(--c-acc)]" />
+        <p className="text-xs text-[var(--c-mut)] mb-2">{tr("Book cover")}</p>
         <CoverPicker value={cover} onPick={setCv} flash={flash} />
-        <button data-testid="shelf-book-save" disabled={!name.trim()} onClick={() => done(name.trim(), cover)} className="mt-4 w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold disabled:opacity-40">{init ? tr("Save") : tr("Create book")}</button>
+        <button data-testid="shelf-book-save" disabled={!name.trim()} onClick={() => done(name.trim(), cover)} className="mt-4 w-full py-2.5 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold disabled:opacity-40">{init ? tr("Save") : tr("Create book")}</button>
       </div>
     );
 }
@@ -388,15 +388,15 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
     upd(r.id, () => out); flash(tr("I'll remind you")); return true;
   };
 
-  const ib = "p-2 text-slate-200 rounded-full active:bg-slate-800";
+  const ib = "p-2 text-[var(--c-ink)] rounded-full active:bg-[var(--c-surf-2)]";
   const fab = (onClick, testid) => (
     <button onClick={onClick} data-testid={testid} aria-label={tr("Add")}
-      className="fixed z-30 end-5 w-14 h-14 rounded-full bg-slate-700 border border-slate-600 text-white shadow-xl shadow-black/50 flex items-center justify-center active:bg-slate-600"
+      className="fixed z-30 end-5 w-14 h-14 rounded-full bg-[var(--c-surf-2)] border border-[var(--c-ln)] text-[var(--c-ink)] shadow-xl shadow-black/50 flex items-center justify-center active:bg-[var(--c-ln)]"
       style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}><Plus size={26} /></button>);
 
   const header = (title, left, right) => (
     <div className="flex items-center gap-1 mb-4" data-testid="shelf-bar">
-      {left}<h2 className="flex-1 min-w-0 truncate text-xl font-semibold text-slate-100" dir="auto">{title}</h2>{right}
+      {left}<h2 className="flex-1 min-w-0 truncate text-xl font-semibold text-[var(--c-ink)]" dir="auto">{title}</h2>{right}
     </div>);
   const backBtn = (fn) => <button onClick={fn} aria-label={tr("Back")} className={ib}>{getLang() === "ar" ? <ChevronRight size={22} /> : <ChevronLeft size={22} />}</button>;
 
@@ -405,71 +405,71 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
     body = (<div data-testid="shelf-search">
       {header(tr("Search all books"), backBtn(() => setView(null)))}
       <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} dir="auto" placeholder={tr("Search every book…")} data-testid="shelf-search-input"
-        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 mb-3 focus:outline-none focus:border-teal-500" />
-      {q.trim() && !hits.length ? <p className="text-sm text-slate-500">{tr("Nothing found")}</p> : null}
+        className="w-full bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-xl px-3 py-2.5 text-[var(--c-ink)] mb-3 focus:outline-none focus:border-[var(--c-acc)]" />
+      {q.trim() && !hits.length ? <p className="text-sm text-[var(--c-mut)]">{tr("Nothing found")}</p> : null}
       <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">{hits.map(({ rec: r, book: b }) => (
-        <button key={r.id} onClick={() => { setBookId(b && b.id); setNoteId(r.id); }} data-testid="shelf-hit" className="w-full text-start bg-slate-900 border border-slate-800 rounded-xl p-3">
-          <p className="text-[11px] text-teal-400" dir="auto"><BookOpen size={11} className="inline me-1" />{bookName(b)}</p>
-          <p className="text-sm text-slate-100 truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</p>
-          <p className="text-xs text-slate-400 line-clamp-2" dir="auto">{r.text}</p></button>))}</div>
+        <button key={r.id} onClick={() => { setBookId(b && b.id); setNoteId(r.id); }} data-testid="shelf-hit" className="w-full text-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-xl p-3">
+          <p className="text-[11px] text-[var(--c-acc)]" dir="auto"><BookOpen size={11} className="inline me-1" />{bookName(b)}</p>
+          <p className="text-sm text-[var(--c-ink)] truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</p>
+          <p className="text-xs text-[var(--c-mut)] line-clamp-2" dir="auto">{r.text}</p></button>))}</div>
     </div>);
   } else if (view === "reminders") {
     body = (<div data-testid="shelf-reminders">
       {header(tr("Reminders"), backBtn(() => setView(null)))}
-      {!ups.length ? <p className="text-sm text-slate-500">{tr("No reminders yet. Open a note and tap the bell.")}</p> : null}
+      {!ups.length ? <p className="text-sm text-[var(--c-mut)]">{tr("No reminders yet. Open a note and tap the bell.")}</p> : null}
       <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">{ups.map(({ rec: r, at, book: b }) => (
-        <button key={r.id} onClick={() => { setBookId(b && b.id); setNoteId(r.id); }} data-testid="shelf-reminder" className="w-full text-start bg-slate-900 border border-slate-800 rounded-xl p-3 flex gap-3 items-center">
-          <AlarmClock size={18} className="text-teal-300 shrink-0" />
-          <span className="flex-1 min-w-0"><span className="block text-sm text-slate-100 truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
-            <span className="block text-[11px] text-slate-400" dir="auto">{fmtWhen(at)} · {bookName(b)}</span></span></button>))}</div>
+        <button key={r.id} onClick={() => { setBookId(b && b.id); setNoteId(r.id); }} data-testid="shelf-reminder" className="w-full text-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-xl p-3 flex gap-3 items-center">
+          <AlarmClock size={18} className="text-[var(--c-acc)] shrink-0" />
+          <span className="flex-1 min-w-0"><span className="block text-sm text-[var(--c-ink)] truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
+            <span className="block text-[11px] text-[var(--c-mut)]" dir="auto">{fmtWhen(at)} · {bookName(b)}</span></span></button>))}</div>
     </div>);
   } else if (view === "trash" || view === "archive") {
     const list = view === "trash" ? S.trashOf(records) : S.archiveOf(records, shelf);
     body = (<div data-testid={"shelf-" + view}>
       {header(view === "trash" ? tr("Trash") : tr("Archive"), backBtn(() => setView(null)),
-        view === "trash" && list.length ? <button data-testid="shelf-empty-trash" onClick={async () => { if (!(await askConfirm(tr("Delete these {n} notes for good?", { n: list.length })))) return; const ids = new Set(list.map((r) => r.id)); setRecords((rs) => rs.filter((r) => !ids.has(r.id))); }} className="text-xs text-red-300 px-2">{tr("Empty the trash")}</button> : null)}
-      <p className="text-xs text-slate-500 mb-3">{view === "trash" ? tr("Notes stay here for 30 days, then are deleted for good.") : tr("Archived notes leave their book but are still found by search.")}</p>
-      {!list.length ? <p className="text-sm text-slate-500 text-center mt-8">{tr("Nothing here")}</p> : null}
+        view === "trash" && list.length ? <button data-testid="shelf-empty-trash" onClick={async () => { if (!(await askConfirm(tr("Delete these {n} notes for good?", { n: list.length })))) return; const ids = new Set(list.map((r) => r.id)); setRecords((rs) => rs.filter((r) => !ids.has(r.id))); }} className="text-xs text-[var(--c-neg)] px-2">{tr("Empty the trash")}</button> : null)}
+      <p className="text-xs text-[var(--c-mut)] mb-3">{view === "trash" ? tr("Notes stay here for 30 days, then are deleted for good.") : tr("Archived notes leave their book but are still found by search.")}</p>
+      {!list.length ? <p className="text-sm text-[var(--c-mut)] text-center mt-8">{tr("Nothing here")}</p> : null}
       <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">{list.map((r) => (
-        <div key={r.id} className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-2" data-testid="shelf-bin-note">
-          <span className="flex-1 min-w-0"><span className="block text-sm text-slate-100 truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
-            <span className="block text-[11px] text-slate-500" dir="auto">{bookName(shelf.books.find((b) => b.id === S.bookOf(r, shelf)))}</span></span>
-          <button data-testid="shelf-restore" onClick={() => setRecords((rs) => (view === "trash" ? S.restoreNotes(rs, [r.id]) : S.archiveNotes(rs, [r.id], false)))} className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-teal-300">{tr("Restore")}</button>
+        <div key={r.id} className="bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-xl p-3 flex items-center gap-2" data-testid="shelf-bin-note">
+          <span className="flex-1 min-w-0"><span className="block text-sm text-[var(--c-ink)] truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
+            <span className="block text-[11px] text-[var(--c-mut)]" dir="auto">{bookName(shelf.books.find((b) => b.id === S.bookOf(r, shelf)))}</span></span>
+          <button data-testid="shelf-restore" onClick={() => setRecords((rs) => (view === "trash" ? S.restoreNotes(rs, [r.id]) : S.archiveNotes(rs, [r.id], false)))} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-surf-2)] text-[var(--c-acc)]">{tr("Restore")}</button>
         </div>))}</div>
     </div>);
   } else if (book) {
     body = (<div data-testid="shelf-book">
       {header(bookName(book), backBtn(() => { setBookId(null); setSel(null); }),
-        <>{sel ? <span className="text-xs text-slate-400 px-2">{tr("{n} selected", { n: sel.size })}</span> : null}
+        <>{sel ? <span className="text-xs text-[var(--c-mut)] px-2">{tr("{n} selected", { n: sel.size })}</span> : null}
           <button onClick={() => setSel(sel ? null : new Set())} aria-label={tr("Select")} data-testid="shelf-select" className={ib}><Check size={20} /></button>
           <button onClick={() => setSheet({ kind: "more", id: book.id })} aria-label={tr("More")} className={ib} data-testid="shelf-book-more"><MoreVertical size={20} /></button></>)}
       <div className="flex items-center gap-1.5 mb-3 overflow-x-auto" data-testid="shelf-filters">
-        <select value={prefs.noteSort || "edited"} onChange={(e) => setPref("noteSort", e.target.value)} data-testid="shelf-sort" className="bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-200 px-2 py-1">
+        <select value={prefs.noteSort || "edited"} onChange={(e) => setPref("noteSort", e.target.value)} data-testid="shelf-sort" className="bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-lg text-xs text-[var(--c-ink)] px-2 py-1">
           <option value="edited">{tr("Last edited")}</option><option value="created">{tr("Date created")}</option><option value="title">{tr("Title")}</option></select>
-        {tags.map(({ tag }) => <button key={tag} onClick={() => setTagF(tagF === tag ? null : tag)} data-testid="shelf-tag" className={`shrink-0 text-xs px-2.5 py-1 rounded-full border ${tagF === tag ? "border-teal-400 text-teal-300" : "border-slate-700 text-slate-400"}`} dir="auto">#{tag}</button>)}
+        {tags.map(({ tag }) => <button key={tag} onClick={() => setTagF(tagF === tag ? null : tag)} data-testid="shelf-tag" className={`shrink-0 text-xs px-2.5 py-1 rounded-full border ${tagF === tag ? "border-[var(--c-acc)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`} dir="auto">#{tag}</button>)}
       </div>
-      {!notes.length ? <p className="text-sm text-slate-500 mt-8 text-center">{tr("No notes in this book yet. Tap + to write one.")}</p> : null}
+      {!notes.length ? <p className="text-sm text-[var(--c-mut)] mt-8 text-center">{tr("No notes in this book yet. Tap + to write one.")}</p> : null}
       <div className="space-y-2 pb-24 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3">{notes.map((r) => {
         const on = sel && sel.has(r.id);
         return (
           <button key={r.id} data-testid="shelf-note" onClick={() => { if (sel) { const s = new Set(sel); on ? s.delete(r.id) : s.add(r.id); setSel(s); } else setNoteId(r.id); }}
             style={r.meta && r.meta.color && !on ? { background: r.meta.color + "66" } : undefined}
-            className={`w-full text-start rounded-xl p-3 border flex gap-2 ${on ? "border-teal-500 bg-teal-500/10" : "border-slate-800 bg-slate-900"}`}>
-            {sel ? (on ? <Check size={18} className="text-teal-400 shrink-0" /> : <Square size={18} className="text-slate-500 shrink-0" />) : null}
+            className={`w-full text-start rounded-xl p-3 border flex gap-2 ${on ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`}>
+            {sel ? (on ? <Check size={18} className="text-[var(--c-acc)] shrink-0" /> : <Square size={18} className="text-[var(--c-mut)] shrink-0" />) : null}
             <span className="flex-1 min-w-0">
-              <span className="flex items-center gap-1">{r.pinned ? <Star size={12} className="text-amber-400 shrink-0" fill="currentColor" /> : null}
-                <span className="text-sm font-medium text-slate-100 truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
-                {r.meta && r.meta.remindAt > Date.now() ? <Bell size={12} className="text-teal-300 shrink-0" /> : null}
-                {r.meta && r.meta.star ? <span className="text-amber-400 text-xs shrink-0">★</span> : null}</span>
-              <span className="block text-xs text-slate-400 line-clamp-2 lg:line-clamp-4 mt-0.5" dir="auto">{r.text}</span>
+              <span className="flex items-center gap-1">{r.pinned ? <Star size={12} className="text-[var(--c-warn)] shrink-0" fill="currentColor" /> : null}
+                <span className="text-sm font-medium text-[var(--c-ink)] truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
+                {r.meta && r.meta.remindAt > Date.now() ? <Bell size={12} className="text-[var(--c-acc)] shrink-0" /> : null}
+                {r.meta && r.meta.star ? <span className="text-[var(--c-warn)] text-xs shrink-0">★</span> : null}</span>
+              <span className="block text-xs text-[var(--c-mut)] line-clamp-2 lg:line-clamp-4 mt-0.5" dir="auto">{r.text}</span>
             </span>
           </button>); })}</div>
       {sel && sel.size ? (
         <div className="att-shift fixed inset-x-0 z-30 flex justify-center gap-2 px-3" style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }} data-testid="shelf-selbar">
-          <button onClick={() => setSelPick("move")} data-testid="shelf-sel-move" className="px-4 py-2 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold"><Folder size={14} className="inline me-1" />{tr("Move")}</button>
-          <button onClick={() => setSelPick("copy")} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-100 text-sm"><Copy size={14} className="inline me-1" />{tr("Copy to…")}</button>
+          <button onClick={() => setSelPick("move")} data-testid="shelf-sel-move" className="px-4 py-2 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-semibold"><Folder size={14} className="inline me-1" />{tr("Move")}</button>
+          <button onClick={() => setSelPick("copy")} className="px-4 py-2 rounded-xl bg-[var(--c-surf-2)] text-[var(--c-ink)] text-sm"><Copy size={14} className="inline me-1" />{tr("Copy to…")}</button>
           <button data-testid="shelf-sel-delete" onClick={() => { const ids = [...sel]; setRecords((rs) => S.trashNotes(rs, ids)); setSel(null); setUndo({ text: tr("Moved to the trash"), run: () => setRecords((rs) => S.restoreNotes(rs, ids)) }); }}
-            className="px-4 py-2 rounded-xl bg-slate-800 text-red-300 text-sm"><Trash2 size={14} className="inline me-1" />{tr("Delete")}</button>
+            className="px-4 py-2 rounded-xl bg-[var(--c-surf-2)] text-[var(--c-neg)] text-sm"><Trash2 size={14} className="inline me-1" />{tr("Delete")}</button>
         </div>) : !sel ? fab(() => newNote(book.id), "shelf-new-note") : null}
       {selPick ? (
         <Sheet title={selPick === "move" ? tr("Move to…") : tr("Copy to…")} close={() => setSelPick(null)} testid="shelf-pick-book">
@@ -480,20 +480,20 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
               else setRecords((rs) => [...rs.filter((r) => sel.has(r.id)).map((r, i) => S.copyNote(r, b.id, Date.now() + i)), ...rs]);
               flash(selPick === "move" ? tr("Moved to «{name}»", { name: bookName(b) }) : tr("Copied to «{name}»", { name: bookName(b) }));
               setSelPick(null); setSel(null); }} className="text-center">
-              <Cover cover={b.cover} /><span className="block text-xs text-slate-200 truncate mt-1" dir="auto">{bookName(b)}</span></button>))}</div>
+              <Cover cover={b.cover} /><span className="block text-xs text-[var(--c-ink)] truncate mt-1" dir="auto">{bookName(b)}</span></button>))}</div>
         </Sheet>) : null}
     </div>);
   } else {
     body = (<div data-testid="shelf-home">
       {header(tr("Shelf"),
         <button onClick={() => setView("books")} aria-label={tr("Menu")} className={ib} data-testid="shelf-menu"><Menu size={22} /></button>,
-        <><button onClick={() => setView("reminders")} aria-label={tr("Reminders")} className={ib + " relative"} data-testid="shelf-alarm"><AlarmClock size={21} />{ups.length ? <span className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-red-500" /> : null}</button>
+        <><button onClick={() => setView("reminders")} aria-label={tr("Reminders")} className={ib + " relative"} data-testid="shelf-alarm"><AlarmClock size={21} />{ups.length ? <span className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-[var(--c-neg)]" /> : null}</button>
           <button onClick={() => { setQ(""); setView("search"); }} aria-label={tr("Search")} className={ib} data-testid="shelf-search-open"><Search size={21} /></button>
           <button onClick={() => setSheet({ kind: "new" })} aria-label={tr("New book")} className={ib} data-testid="shelf-add"><Plus size={22} /></button>
           <button onClick={() => setSheet({ kind: "shelfmore" })} aria-label={tr("More")} className={ib} data-testid="shelf-more"><MoreVertical size={21} /></button></>)}
       {/* v6.37 (H6): a few of your notes come back each day, spaced by how well you remembered them */}
       {!reorderOn ? <ShelfReview records={records} shelf={shelf} /> : null}
-      {reorderOn ? <div className="flex items-center gap-2 mb-3 text-xs text-teal-300"><span className="flex-1">{tr("Move books with the arrows")}</span><button onClick={() => setReorderOn(false)} data-testid="shelf-reorder-done" className="px-3 py-1 rounded-lg bg-teal-500 text-slate-950 font-semibold">{tr("Done")}</button></div> : null}
+      {reorderOn ? <div className="flex items-center gap-2 mb-3 text-xs text-[var(--c-acc)]"><span className="flex-1">{tr("Move books with the arrows")}</span><button onClick={() => setReorderOn(false)} data-testid="shelf-reorder-done" className="px-3 py-1 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold">{tr("Done")}</button></div> : null}
       <div className={prefs.view === "list" ? "grid grid-cols-4 lg:grid-cols-8 gap-x-3 gap-y-4 lg:gap-x-6 lg:gap-y-6 pb-28" : "grid grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-6 lg:gap-x-10 lg:gap-y-8 px-3 pb-28"} data-testid="shelf-grid">
         {books.map((b, i) => (
           <div key={b.id} className="min-w-0" data-testid="shelf-book-tile">
@@ -504,26 +504,26 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
             </button>
             {reorderOn ? (
               <div className="flex justify-center gap-3 mt-1">
-                <button disabled={!i} onClick={() => setShelf((s) => S.moveBook(s, b.id, -1))} aria-label={tr("Move earlier")} data-testid="shelf-move-up" className="p-1 text-slate-200 disabled:opacity-30">{getLang() === "ar" ? <ArrowUp size={18} className="rotate-90" /> : <ArrowUp size={18} className="-rotate-90" />}</button>
-                <button disabled={i === shelf.books.length - 1} onClick={() => setShelf((s) => S.moveBook(s, b.id, 1))} aria-label={tr("Move later")} data-testid="shelf-move-down" className="p-1 text-slate-200 disabled:opacity-30">{getLang() === "ar" ? <ArrowDown size={18} className="rotate-90" /> : <ArrowDown size={18} className="-rotate-90" />}</button>
+                <button disabled={!i} onClick={() => setShelf((s) => S.moveBook(s, b.id, -1))} aria-label={tr("Move earlier")} data-testid="shelf-move-up" className="p-1 text-[var(--c-ink)] disabled:opacity-30">{getLang() === "ar" ? <ArrowUp size={18} className="rotate-90" /> : <ArrowUp size={18} className="-rotate-90" />}</button>
+                <button disabled={i === shelf.books.length - 1} onClick={() => setShelf((s) => S.moveBook(s, b.id, 1))} aria-label={tr("Move later")} data-testid="shelf-move-down" className="p-1 text-[var(--c-ink)] disabled:opacity-30">{getLang() === "ar" ? <ArrowDown size={18} className="rotate-90" /> : <ArrowDown size={18} className="-rotate-90" />}</button>
               </div>) : null}
-            <p className="text-center text-[15px] text-slate-100 mt-2 truncate" dir="auto" data-testid="shelf-book-title">{bookName(b)}</p>
-            <p className="text-center text-[11px] text-slate-500" data-testid="shelf-book-count">{tr("{n} notes", { n: counts[b.id] || 0 })}</p>
+            <p className="text-center text-[15px] text-[var(--c-ink)] mt-2 truncate" dir="auto" data-testid="shelf-book-title">{bookName(b)}</p>
+            <p className="text-center text-[11px] text-[var(--c-mut)]" data-testid="shelf-book-count">{tr("{n} notes", { n: counts[b.id] || 0 })}</p>
           </div>))}
       </div>
-      {!shelf.books.length ? <p className="text-sm text-slate-500 text-center mt-6">{tr("Your shelf is empty. Tap + to make your first book.")}</p> : null}
+      {!shelf.books.length ? <p className="text-sm text-[var(--c-mut)] text-center mt-6">{tr("Your shelf is empty. Tap + to make your first book.")}</p> : null}
       {fab(() => setSheet({ kind: "new" }), "shelf-fab")}
     </div>);
   }
 
   const sb = sheet && sheet.id ? shelf.books.find((b) => b.id === sheet.id) : null;
-  const row = "w-full flex items-center gap-3 px-2 py-3 text-start text-slate-100 border-b border-slate-800";
+  const row = "w-full flex items-center gap-3 px-2 py-3 text-start text-[var(--c-ink)] border-b border-[var(--c-ln)]";
   return (
     <div className="max-w-3xl lg:max-w-none mx-auto px-3 pt-2 min-h-[70vh]" data-testid="shelf">
       {body}
       {view === "books" ? (
         <Sheet title={tr("Your books")} close={() => setView(null)} testid="shelf-books-menu">
-          {shelf.books.map((b) => <button key={b.id} className={row} onClick={() => { setView(null); openBook(b.id); }}><div className="w-8"><Cover cover={b.cover} /></div><span className="flex-1 truncate" dir="auto">{bookName(b)}</span><span className="text-xs text-slate-500">{counts[b.id] || 0}</span></button>)}
+          {shelf.books.map((b) => <button key={b.id} className={row} onClick={() => { setView(null); openBook(b.id); }}><div className="w-8"><Cover cover={b.cover} /></div><span className="flex-1 truncate" dir="auto">{bookName(b)}</span><span className="text-xs text-[var(--c-mut)]">{counts[b.id] || 0}</span></button>)}
         </Sheet>) : null}
       {sheet && sheet.kind === "new" ? (
         <Sheet title={tr("New book")} close={() => setSheet(null)} testid="shelf-new-book">
@@ -543,18 +543,18 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
           <button className={row} data-testid="shelf-merge" onClick={() => setSheet({ kind: "merge", id: sb.id })}><Folder size={18} />{tr("Merge into another book")}</button>
           <button className={row} data-testid="shelf-import" onClick={() => { setImpBook(sb.id); setSheet({ kind: "import" }); }}><Download size={18} className="rotate-180" />{tr("Import notes")}</button>
           <button className={row} onClick={() => { exportBook(sb); setSheet(null); }} data-testid="shelf-export"><Download size={18} />{tr("Export as a text file")}</button>
-          <button className={row + " text-red-300"} data-testid="shelf-delete-book" onClick={() => deleteBk(sb.id)}><Trash2 size={18} />{tr("Delete book")}</button>
+          <button className={row + " text-[var(--c-neg)]"} data-testid="shelf-delete-book" onClick={() => deleteBk(sb.id)}><Trash2 size={18} />{tr("Delete book")}</button>
         </Sheet>) : null}
       {sheet && (sheet.kind === "pin" || sheet.kind === "setpin") && sb ? (
         <Sheet title={sheet.kind === "pin" ? tr("Enter your Shelf PIN") : tr("Choose a Shelf PIN (4 to 6 digits)")} close={() => setSheet(null)} testid="shelf-pin">
           <input autoFocus type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPinIn(e.target.value.replace(/\D/g, ""))} data-testid="shelf-pin-input"
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-center tracking-[0.5em] text-lg text-slate-100" dir="ltr" />
-          <p className="text-[11px] text-slate-500 mt-2">{tr("The lock keeps others out on a shared phone. It is not encryption, and the notes still show in Mind.")}</p>
+            className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-3 py-2 text-center tracking-[0.5em] text-lg text-[var(--c-ink)]" dir="ltr" />
+          <p className="text-[11px] text-[var(--c-mut)] mt-2">{tr("The lock keeps others out on a shared phone. It is not encryption, and the notes still show in Mind.")}</p>
           <button data-testid="shelf-pin-ok" onClick={() => {
             if (sheet.kind === "setpin") { const ns = S.setPin(shelf, pin); if (!ns) return flash(tr("The PIN must be 4 to 6 digits")); setShelf(S.setLocked(ns, sb.id, true)); setBookId(null); setSheet(null); flash(tr("Book locked")); return; }
             if (!S.checkPin(shelf, pin)) { setPinIn(""); return flash(tr("Wrong PIN")); }
             setUnlocked((u) => new Set([...u, sb.id])); setSheet(null); setBookId(sb.id); }}
-            className="mt-3 w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold">{tr("OK")}</button>
+            className="mt-3 w-full py-2.5 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold">{tr("OK")}</button>
         </Sheet>) : null}
       {sheet && sheet.kind === "merge" && sb ? (
         <Sheet title={tr("Merge «{name}» into…", { name: bookName(sb) })} close={() => setSheet(null)} testid="shelf-merge-sheet">
@@ -562,26 +562,26 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
             <button key={b.id} data-testid="shelf-pick" className="text-center" onClick={async () => {
               if (!(await askConfirm(tr("Move every note of «{a}» into «{b}» and remove «{a}»?", { a: bookName(sb), b: bookName(b) }), { yes: "Merge" }))) return;
               const r = S.mergeBooks(shelf, records, sb.id, b.id); setShelf(r.shelf); setRecords(() => r.records); setSheet(null); setBookId(null); flash(tr("Books merged")); }}>
-              <Cover cover={b.cover} /><span className="block text-xs text-slate-200 truncate mt-1" dir="auto">{bookName(b)}</span></button>))}</div>
+              <Cover cover={b.cover} /><span className="block text-xs text-[var(--c-ink)] truncate mt-1" dir="auto">{bookName(b)}</span></button>))}</div>
         </Sheet>) : null}
       <input ref={importRef} type="file" multiple accept={SI.IMPORT_ACCEPT} className="hidden" data-testid="shelf-import-file" onChange={(e) => { const fl = [...(e.target.files || [])]; e.target.value = ""; importFiles(fl, sheet && sheet.kind === "import" ? null : book ? book.id : null); }} />
       {sheet && sheet.kind === "import" ? (
         <Sheet title={tr("Import notes")} close={() => setSheet(null)} testid="shelf-import-sheet">
-          <p className="text-[12.5px] text-slate-400 mb-3">{tr("From the phone's Notebook app: open a note (or select several) → Share → Attune → “Save to Shelf”. Or pick exported files here: text, Word, PDF, web pages, Google Keep, Evernote, a .zip, or photos of notes.")}</p>
-          <label className="block text-[11.5px] text-slate-400 mb-1">{tr("Into the book")}</label>
-          <select value={impBook} onChange={(e) => setImpBook(e.target.value)} data-testid="shelf-import-book" className="w-full bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 px-2 py-2 mb-3">
+          <p className="text-[12.5px] text-[var(--c-mut)] mb-3">{tr("From the phone's Notebook app: open a note (or select several) → Share → Attune → “Save to Shelf”. Or pick exported files here: text, Word, PDF, web pages, Google Keep, Evernote, a .zip, or photos of notes.")}</p>
+          <label className="block text-[11.5px] text-[var(--c-mut)] mb-1">{tr("Into the book")}</label>
+          <select value={impBook} onChange={(e) => setImpBook(e.target.value)} data-testid="shelf-import-book" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg text-sm text-[var(--c-ink)] px-2 py-2 mb-3">
             <option value="">{tr("A new book: Imported notes")}</option>{shelf.books.map((b) => <option key={b.id} value={b.id}>{bookName(b)}</option>)}</select>
-          <button disabled={!!impBusy} onClick={() => importRef.current && importRef.current.click()} data-testid="shelf-import-pick" className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold flex items-center justify-center gap-2"><Download size={16} className="rotate-180" />{impBusy || tr("Pick files (several at once)")}</button>
-          <p className="text-[11.5px] text-slate-400 mt-4 mb-1">{tr("…or paste notes (separate them with a line of --- or two empty lines)")}</p>
-          <textarea value={impText} onChange={(e) => setImpText(e.target.value)} rows={6} dir="auto" data-testid="shelf-import-text" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 resize-none" />
-          <button onClick={importPasted} data-testid="shelf-import-paste" className="mt-2 w-full py-2.5 rounded-xl bg-slate-800 text-slate-100 text-sm">{tr("Add these notes")}</button>
+          <button disabled={!!impBusy} onClick={() => importRef.current && importRef.current.click()} data-testid="shelf-import-pick" className="w-full py-2.5 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold flex items-center justify-center gap-2"><Download size={16} className="rotate-180" />{impBusy || tr("Pick files (several at once)")}</button>
+          <p className="text-[11.5px] text-[var(--c-mut)] mt-4 mb-1">{tr("…or paste notes (separate them with a line of --- or two empty lines)")}</p>
+          <textarea value={impText} onChange={(e) => setImpText(e.target.value)} rows={6} dir="auto" data-testid="shelf-import-text" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-3 py-2 text-sm text-[var(--c-ink)] resize-none" />
+          <button onClick={importPasted} data-testid="shelf-import-paste" className="mt-2 w-full py-2.5 rounded-xl bg-[var(--c-surf-2)] text-[var(--c-ink)] text-sm">{tr("Add these notes")}</button>
         </Sheet>) : null}
       {sheet && sheet.kind === "shelfmore" ? (
         <Sheet title={tr("Shelf")} close={() => setSheet(null)} testid="shelf-shelf-menu">
           <button className={row} data-testid="shelf-import-open" onClick={() => { setImpBook(""); setSheet({ kind: "import" }); }}><Download size={18} className="rotate-180" />{tr("Import notes (Notebook, Keep, files…)")}</button>
           <button className={row} data-testid="shelf-reorder" onClick={() => { setSheet(null); setPref("bookSort", "manual"); setReorderOn(true); }}><ArrowUp size={18} />{tr("Reorder books")}</button>
           <div className={row}><span className="flex-1">{tr("Sort books")}</span>
-            <select value={prefs.bookSort || "manual"} onChange={(e) => setPref("bookSort", e.target.value)} data-testid="shelf-book-sort" className="bg-slate-950 border border-slate-800 rounded-lg text-xs px-2 py-1">
+            <select value={prefs.bookSort || "manual"} onChange={(e) => setPref("bookSort", e.target.value)} data-testid="shelf-book-sort" className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg text-xs px-2 py-1">
               <option value="manual">{tr("My order")}</option><option value="name">{tr("Name")}</option><option value="notes">{tr("Most notes")}</option></select></div>
           <button className={row} data-testid="shelf-view-toggle" onClick={() => { setPref("view", prefs.view === "list" ? "grid" : "list"); setSheet(null); }}><BookOpen size={18} />{prefs.view === "list" ? tr("Big covers") : tr("Small covers")}</button>
           <button className={row} data-testid="shelf-open-archive" onClick={() => { setSheet(null); setView("archive"); }}><Download size={18} />{tr("Archive")}</button>
@@ -606,9 +606,9 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
       ) : null}
       {undo ? (
         <div className="att-shift fixed inset-x-0 z-[65] flex justify-center px-4" style={{ bottom: "calc(140px + env(safe-area-inset-bottom))" }} data-testid="shelf-undo">
-          <div className="flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 shadow-xl">
-            <span className="text-sm text-slate-100">{undo.text}</span>
-            <button onClick={() => { undo.run(); setUndo(null); }} data-testid="shelf-undo-btn" className="text-sm font-semibold text-teal-300"><Undo2 size={14} className="inline me-1" />{tr("Undo")}</button>
+          <div className="flex items-center gap-3 bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-xl px-4 py-2.5 shadow-xl">
+            <span className="text-sm text-[var(--c-ink)]">{undo.text}</span>
+            <button onClick={() => { undo.run(); setUndo(null); }} data-testid="shelf-undo-btn" className="text-sm font-semibold text-[var(--c-acc)]"><Undo2 size={14} className="inline me-1" />{tr("Undo")}</button>
           </div>
         </div>) : null}
     </div>
@@ -624,25 +624,25 @@ function ShelfReview({ records, shelf }) {
   const cur = due[0];
   const rate = (g) => { setSt(R.saveReview(R.grade(st, cur.id, g))); setShown(false); };
   if (!open) return (
-    <button onClick={() => setOpen(true)} className="w-full mb-3 rounded-2xl border border-teal-900/60 bg-teal-500/5 p-3 text-start flex items-center gap-3" data-testid="shelf-review">
-      <Brain size={18} className="text-teal-300 shrink-0" />
-      <span className="flex-1 min-w-0"><b className="block text-[14px] text-slate-100">{tr("Remember your notes")}</b>
-        <span className="block text-[12px] text-slate-400">{tr("{n} notes to look at again today · about a minute", { n: due.length })}</span></span>
+    <button onClick={() => setOpen(true)} className="w-full mb-3 rounded-2xl border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3 text-start flex items-center gap-3" data-testid="shelf-review">
+      <Brain size={18} className="text-[var(--c-acc)] shrink-0" />
+      <span className="flex-1 min-w-0"><b className="block text-[14px] text-[var(--c-ink)]">{tr("Remember your notes")}</b>
+        <span className="block text-[12px] text-[var(--c-mut)]">{tr("{n} notes to look at again today · about a minute", { n: due.length })}</span></span>
     </button>);
   return (
-    <div className="mb-3 rounded-2xl border border-teal-900/60 bg-slate-900 p-4 space-y-3" data-testid="shelf-review-card">
+    <div className="mb-3 rounded-2xl border border-[var(--c-acc)]/40 bg-[var(--c-surf)] p-4 space-y-3" data-testid="shelf-review-card">
       {cur ? <>
-        <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("{n} left", { n: due.length })}{cur.isNew ? " · " + tr("first time") : ""}</p>
-        <p className="text-[16px] font-semibold text-slate-100" dir="auto">{cur.title}</p>
-        {shown ? <p className="text-[14px] text-slate-300 whitespace-pre-wrap max-h-60 overflow-y-auto" dir="auto" data-testid="shelf-review-text">{cur.text}</p>
-          : <p className="text-[12.5px] text-slate-500">{tr("Try to remember what it says, then show it.")}</p>}
-        {!shown ? <button onClick={() => setShown(true)} className="w-full rounded-xl bg-teal-500 text-slate-950 font-semibold py-2.5 text-sm" data-testid="shelf-review-show">{tr("Show")}</button> : (
+        <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)]">{tr("{n} left", { n: due.length })}{cur.isNew ? " · " + tr("first time") : ""}</p>
+        <p className="text-[16px] font-semibold text-[var(--c-ink)]" dir="auto">{cur.title}</p>
+        {shown ? <p className="text-[14px] text-[var(--c-ink)] whitespace-pre-wrap max-h-60 overflow-y-auto" dir="auto" data-testid="shelf-review-text">{cur.text}</p>
+          : <p className="text-[12.5px] text-[var(--c-mut)]">{tr("Try to remember what it says, then show it.")}</p>}
+        {!shown ? <button onClick={() => setShown(true)} className="w-full rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold py-2.5 text-sm" data-testid="shelf-review-show">{tr("Show")}</button> : (
           <div className="grid grid-cols-3 gap-2">
-            <button onClick={() => rate(1)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-rose-300" data-testid="shelf-review-forgot">{tr("Forgot")}</button>
-            <button onClick={() => rate(2)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-amber-300" data-testid="shelf-review-hard">{tr("Hard")}</button>
-            <button onClick={() => rate(3)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-emerald-300" data-testid="shelf-review-good">{tr("I remembered")}</button>
+            <button onClick={() => rate(1)} className="rounded-xl border border-[var(--c-ln)] py-2 text-[13px] text-[var(--c-neg)]" data-testid="shelf-review-forgot">{tr("Forgot")}</button>
+            <button onClick={() => rate(2)} className="rounded-xl border border-[var(--c-ln)] py-2 text-[13px] text-[var(--c-warn)]" data-testid="shelf-review-hard">{tr("Hard")}</button>
+            <button onClick={() => rate(3)} className="rounded-xl border border-[var(--c-ln)] py-2 text-[13px] text-[var(--c-pos)]" data-testid="shelf-review-good">{tr("I remembered")}</button>
           </div>)}
-      </> : <p className="text-[13px] text-emerald-300" data-testid="shelf-review-done">{tr("Done for today — they will come back when you are about to forget them.")}</p>}
-      <button onClick={() => { setOpen(false); setShown(false); }} className="text-[12px] text-slate-500">{tr("Close")}</button>
+      </> : <p className="text-[13px] text-[var(--c-pos)]" data-testid="shelf-review-done">{tr("Done for today — they will come back when you are about to forget them.")}</p>}
+      <button onClick={() => { setOpen(false); setShown(false); }} className="text-[12px] text-[var(--c-mut)]">{tr("Close")}</button>
     </div>);
 }

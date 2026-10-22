@@ -5,92 +5,100 @@ import React, { useState, createContext, useContext } from "react";
 import { X, ChevronLeft, Search } from "lucide-react";
 import { getLang } from "./i18n.js";
 import * as B from "./books.js";
+import { tag, chip } from "./ui-kit.jsx";
 
 export const isAr = () => getLang() === "ar";
 /** Pick the language of the screen: L("Invoice", "فاتورة"). */
 export const L = (en, ar) => (isAr() ? ar : en);
 
-const THEMES = {
-  light: { page: "bg-slate-50 text-slate-900", card: "bg-white border-slate-200", sub: "text-slate-500", line: "border-slate-200", input: "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-teal-600", head: "bg-slate-100 text-slate-600", brand: "text-teal-700", press: "bg-slate-100", bar: "bg-white border-slate-200", chip: "bg-slate-100 text-slate-700", sheet: "bg-white" },
-  dark: { page: "bg-slate-950 text-slate-100", card: "bg-slate-900 border-slate-800", sub: "text-slate-400", line: "border-slate-800", input: "bg-slate-950 border-slate-700 text-slate-100 placeholder-slate-600 focus:border-teal-500", head: "bg-slate-800 text-slate-300", brand: "text-teal-300", press: "bg-slate-800", bar: "bg-slate-900 border-slate-800", chip: "bg-slate-800 text-slate-200", sheet: "bg-slate-900" },
-};
+// v7.0 Gemini's Direction 2 "Quiet Atelier" (Ali's pick, 22 Oct 2026): every Books screen is drawn with the theme tokens of
+// build/tw.css (.calm), so it follows the app's light AND dark look. Both names keep working (the Settings choice is kept).
+const TOKENS = { page: "calm bg-[var(--c-bg)] text-[var(--c-ink)]", card: "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-ink)]", sub: "text-[var(--c-mut)]", line: "border-[var(--c-ln)]",
+  input: "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:border-[var(--c-acc)] focus:bg-[var(--c-surf)]", head: "bg-[var(--c-surf-2)] text-[var(--c-mut)]",
+  brand: "text-[var(--c-acc)]", press: "bg-[var(--c-surf-2)]", bar: "bg-[var(--c-bg)] border-[var(--c-ln)]", chip: "bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)]", sheet: "bg-[var(--c-surf)]" };
+const THEMES = { light: TOKENS, dark: TOKENS };
 export const BooksCtx = createContext(null);
 export const useBooks = () => useContext(BooksCtx);
 export const ThemeCtx = createContext(THEMES.light);
 export const useTheme = () => useContext(ThemeCtx);
 export const themeFor = (name) => THEMES[name] || THEMES.light;
 
-export const BTN = "px-3.5 py-2.5 rounded-lg text-[13px] font-semibold disabled:opacity-40 active:scale-[0.98] transition";
-export const btnPrimary = BTN + " bg-teal-700 text-white";
-export function btnGhost(t) { return BTN + " border " + t.line + " " + t.sub.replace("text-", "text-") + " hover:" + t.press.split(" ")[0]; }
+export const BTN = "min-h-[44px] px-3.5 py-2 rounded-[14px] text-[13.5px] font-bold disabled:opacity-40 transition-colors duration-150 cursor-pointer";
+export const btnPrimary = BTN + " bg-[var(--c-acc)] text-[var(--c-on-acc)]";
+export function btnGhost(t) { return BTN + " border " + t.line + " " + t.sub + " hover:bg-[var(--c-surf-2)]"; }
+/** What is selected: Gemini's terracotta pill. */
+export const SEL = "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent shadow-sm";
+/** Status colours (one meaning each): good / due soon / overdue. */
+/** A quiet table header row (no capitals: tests read the words as written). */
+export const HEAD = "text-[11.5px] font-extrabold tracking-[0.04em] text-[var(--c-mut)] bg-[var(--c-surf-2)]";
+export const POS = "text-[var(--c-pos)]", WARN = "text-[var(--c-warn)]", NEG = "text-[var(--c-neg)]";
 
 /** Money for the screen: 1,234.56 (piastres in). */
 export function Money({ v, cur, bold, className = "" }) {
   const neg = (v || 0) < 0;
-  return <span className={`tabular-nums ${neg ? "text-red-600" : ""} ${bold ? "font-semibold" : ""} ${className}`} dir="ltr">{B.fmt(v || 0)}{cur ? <span className="text-[0.7em] opacity-60 ms-1">{cur}</span> : null}</span>;
+  return <span className={`tabular-nums ${neg ? NEG : ""} ${bold ? "font-extrabold" : ""} ${className}`} dir="ltr">{B.fmt(v || 0)}{cur ? <span className="text-[0.7em] opacity-60 ms-1">{cur}</span> : null}</span>;
 }
 
 export function Card({ children, className = "", onClick, testid }) {
   const t = useTheme();
   const C = onClick ? "button" : "div";
-  return <C onClick={onClick} data-testid={testid} className={`rounded-xl border ${t.card} ${onClick ? "text-start w-full active:scale-[0.99] transition" : ""} ${className}`}>{children}</C>;
+  return <C onClick={onClick} data-testid={testid} className={`rounded-[22px] border ${t.card} divide-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ${onClick ? "text-start w-full min-h-[44px] hover:border-[var(--c-acc)] transition-colors duration-150" : ""} ${className}`}>{children}</C>;
 }
+/** A KPI tile: a quiet label, a big tabular number, one quiet line. */
 export function Stat({ label, value, sub, tone, onClick, testid }) {
   const t = useTheme();
-  const tones = { good: "text-emerald-600", bad: "text-red-600", warn: "text-amber-600" };
+  const tones = { good: POS, bad: NEG, warn: WARN };
   return (
-    <Card onClick={onClick} className="p-3" testid={testid}>
-      <p className={`text-[11px] ${t.sub}`}>{label}</p>
-      <p className={`text-[19px] font-bold mt-0.5 leading-tight ${tone ? tones[tone] : ""}`}>{value}</p>
-      {sub ? <p className={`text-[11px] mt-0.5 ${t.sub}`}>{sub}</p> : null}
+    <Card onClick={onClick} className="p-3.5" testid={testid}>
+      <p className={`text-[12px] font-bold truncate m-0 ${t.sub}`}>{label}</p>
+      <p className={`text-[clamp(17px,4.6vw,21px)] font-black tracking-tight tabular-nums mt-1 mb-0 leading-tight ${tone ? tones[tone] : ""}`}>{value}</p>
+      {sub ? <p className={`text-[11.5px] mt-1 mb-0 ${t.sub}`}>{sub}</p> : null}
     </Card>
   );
 }
 export function Badge({ children, tone = "gray" }) {
-  const tones = { gray: "bg-slate-200 text-slate-700", green: "bg-emerald-100 text-emerald-800", red: "bg-red-100 text-red-800", amber: "bg-amber-100 text-amber-800", blue: "bg-sky-100 text-sky-800" };
-  return <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded-full font-medium ${tones[tone]}`}>{children}</span>;
+  return <span className={tag(tone)}>{children}</span>;
 }
 export function Empty({ title, hint, action }) {
   const t = useTheme();
-  return <div className="text-center py-10 px-6"><p className="text-[14px] font-medium">{title}</p>{hint ? <p className={`text-[12px] mt-1 ${t.sub}`}>{hint}</p> : null}{action ? <div className="mt-3">{action}</div> : null}</div>;
+  return <div className="text-center py-10 px-6"><p className="text-[14px] font-extrabold">{title}</p>{hint ? <p className={`text-[12.5px] mt-1 ${t.sub}`}>{hint}</p> : null}{action ? <div className="mt-3">{action}</div> : null}</div>;
 }
 export function Section({ title, right, children }) {
-  const t = useTheme();
-  return <section className="mb-4"><div className="flex items-center justify-between mb-1.5 px-0.5"><h3 className={`text-[12px] font-semibold uppercase tracking-wide ${t.sub}`}>{title}</h3>{right}</div>{children}</section>;
+  return <section className="mb-5"><div className="flex items-center justify-between gap-2 mb-2 px-0.5"><h3 className="m-0 text-[12.5px] font-extrabold tracking-[0.04em] text-[var(--c-mut)]">{title}</h3>{right}</div>{children}</section>;
 }
 export function Field({ label, children, hint }) {
   const t = useTheme();
-  return <label className="block"><span className={`block text-[11.5px] mb-1 ${t.sub}`}>{label}</span>{children}{hint ? <span className={`block text-[11px] mt-0.5 ${t.sub}`}>{hint}</span> : null}</label>;
+  return <label className="block min-w-0"><span className={`block text-[12px] font-bold mb-1.5 ${t.sub}`}>{label}</span>{children}{hint ? <span className={`block text-[11.5px] mt-1 ${t.sub}`}>{hint}</span> : null}</label>;
 }
+const FIELD = "w-full min-w-0 min-h-[44px] rounded-[14px] border px-3.5 py-2 text-[15px] font-semibold focus:outline-none transition-colors duration-150";
 export function Input({ value, onChange, ...p }) {
   const t = useTheme();
-  return <input value={value ?? ""} onChange={(e) => onChange(e.target.value)} className={`w-full min-w-0 rounded-lg border px-2.5 py-2 text-[14px] focus:outline-none ${t.input}`} {...p} />;
+  return <input value={value ?? ""} onChange={(e) => onChange(e.target.value)} className={`${FIELD} ${t.input}`} {...p} />;
 }
 export function Select({ value, onChange, children, ...p }) {
   const t = useTheme();
-  return <select value={value ?? ""} onChange={(e) => onChange(e.target.value)} className={`w-full min-w-0 rounded-lg border px-2 py-2 text-[14px] focus:outline-none ${t.input}`} {...p}>{children}</select>;
+  return <select value={value ?? ""} onChange={(e) => onChange(e.target.value)} className={`${FIELD} !px-3 ${t.input}`} {...p}>{children}</select>;
 }
 export function Search_({ value, onChange, placeholder }) {
   const t = useTheme();
-  return <div className="relative"><Search size={15} className={`absolute top-1/2 -translate-y-1/2 start-2.5 ${t.sub}`} /><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`w-full rounded-lg border ps-8 pe-2.5 py-2 text-[14px] focus:outline-none ${t.input}`} /></div>;
+  return <div className="relative"><Search size={16} className={`absolute top-1/2 -translate-y-1/2 start-3 ${t.sub}`} /><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`${FIELD} ps-9 ${t.input}`} /></div>;
 }
 export function Chips({ value, onChange, options }) {
-  const t = useTheme();
   return <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">{options.map(([k, label]) => (
-    <button key={k} onClick={() => onChange(k)} className={`shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium ${value === k ? "bg-teal-700 text-white" : t.chip}`}>{label}</button>))}</div>;
+    <button key={k} onClick={() => onChange(k)} className={`shrink-0 ${chip(value === k)}`}>{label}</button>))}</div>;
 }
 /** A bottom sheet / full page for forms. */
 export function Sheet({ title, onClose, children, footer, testid }) {
   const t = useTheme();
   return (
     <div className={`fixed inset-0 z-[70] ${t.page} flex flex-col`} data-testid={testid}>
-      <div className={`flex items-center gap-2 px-3 py-2.5 border-b ${t.bar}`}>
-        <button onClick={onClose} className="p-1.5 -ms-1 rounded-lg" aria-label={L("Back", "رجوع")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
-        <h2 className="text-[15px] font-semibold flex-1 truncate">{title}</h2>
-        <button onClick={onClose} className="p-1.5 rounded-lg" aria-label={L("Close", "إغلاق")}><X size={18} /></button>
+      <div className={`flex items-center gap-2 px-3 py-2 border-b ${t.bar}`}>
+        <button onClick={onClose} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] grid place-items-center shrink-0" aria-label={L("Back", "رجوع")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
+        <h2 className="text-[17px] font-extrabold flex-1 truncate m-0">{title}</h2>
+        <button onClick={onClose} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] grid place-items-center shrink-0" aria-label={L("Close", "إغلاق")}><X size={18} /></button>
       </div>
-      <div className="flex-1 overflow-auto px-3 py-3">{children}</div>
-      {footer ? <div className={`border-t ${t.bar} px-3 py-2.5`} style={{ paddingBottom: "calc(10px + env(safe-area-inset-bottom))" }}>{footer}</div> : null}
+      <div className="flex-1 overflow-auto px-4 py-4"><div className="max-w-3xl mx-auto">{children}</div></div>
+      {footer ? <div className={`border-t ${t.bar} px-4 py-2.5`} style={{ paddingBottom: "calc(10px + env(safe-area-inset-bottom))" }}><div className="max-w-3xl mx-auto">{footer}</div></div> : null}
     </div>
   );
 }

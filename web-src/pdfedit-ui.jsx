@@ -243,11 +243,11 @@ export function PdfEditor({ file, nativeCall, onClose, onDone, flash }) {
     if (e.kind === "highlight") return e.rects.map((q, j) => <div key={k + "-" + j} className="absolute mix-blend-multiply" style={{ left: q[0] * 100 + "%", top: q[1] * 100 + "%", width: q[2] * 100 + "%", height: q[3] * 100 + "%", background: e.color, opacity: 0.45 }} />);
     if (e.kind === "ink") return <svg key={k} className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1 1" preserveAspectRatio="none"><polyline points={e.pts.map((p) => p.join(",")).join(" ")} fill="none" stroke={e.color} strokeWidth="2.2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" /></svg>;
     if (e.kind === "image") return (
-      <div key={k} className={"absolute " + (picked === e.id && tool === "sign" ? "outline outline-2 outline-teal-400 outline-dashed" : "")} style={{ left: e.x * 100 + "%", top: e.y * 100 + "%", width: e.w * 100 + "%", height: e.h * 100 + "%" }} data-testid="pdfedit-sig">
+      <div key={k} className={"absolute " + (picked === e.id && tool === "sign" ? "outline outline-2 outline-[var(--c-acc)] outline-dashed" : "")} style={{ left: e.x * 100 + "%", top: e.y * 100 + "%", width: e.w * 100 + "%", height: e.h * 100 + "%" }} data-testid="pdfedit-sig">
         <img src={"data:image/png;base64," + e.png} alt="" className="w-full h-full pointer-events-none" />
         {picked === e.id && tool === "sign" ? <>
-          <button onPointerDown={(ev) => { ev.stopPropagation(); remember(); setEdits((es) => es.filter((x) => x.id !== e.id)); setPicked(null); }} className="absolute -top-3 -end-3 w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center" aria-label={tr("Remove")} data-testid="pdfedit-sig-remove"><X size={13} /></button>
-          <span onPointerDown={(ev) => { ev.stopPropagation(); gest.current = { resize: e.id, moved: false }; try { sheet.current.setPointerCapture(ev.pointerId); } catch (x) {} }} className="absolute -bottom-2 -right-2 w-5 h-5 rounded-full bg-teal-400 border-2 border-slate-900 cursor-nwse-resize" />
+          <button onPointerDown={(ev) => { ev.stopPropagation(); remember(); setEdits((es) => es.filter((x) => x.id !== e.id)); setPicked(null); }} className="absolute -top-3 -end-3 w-6 h-6 rounded-full bg-[var(--c-neg)] text-[var(--c-on-acc)] flex items-center justify-center" aria-label={tr("Remove")} data-testid="pdfedit-sig-remove"><X size={13} /></button>
+          <span onPointerDown={(ev) => { ev.stopPropagation(); gest.current = { resize: e.id, moved: false }; try { sheet.current.setPointerCapture(ev.pointerId); } catch (x) {} }} className="absolute -bottom-2 -right-2 w-5 h-5 rounded-full bg-[var(--c-acc)] border-2 border-[var(--c-ln)] cursor-nwse-resize" />
         </> : null}
       </div>);
     // a changed or added line: the paper colour over the old words, the new words on top
@@ -255,92 +255,92 @@ export function PdfEditor({ file, nativeCall, onClose, onDone, flash }) {
     return (
       <React.Fragment key={k}>
         {e.kind === "retext" ? <div className="absolute" style={{ left: e.rect.x * 100 + "%", top: e.rect.y * 100 + "%", width: e.rect.w * 100 + "%", height: e.rect.h * 100 + "%", background: e.bg }} /> : null}
-        <div dir={e.rtl ? "rtl" : "ltr"} className={"absolute whitespace-pre leading-none " + (pop && pop.draft.id === e.id ? "outline outline-2 outline-teal-400" : "")} data-testid="pdfedit-text"
+        <div dir={e.rtl ? "rtl" : "ltr"} className={"absolute whitespace-pre leading-none " + (pop && pop.draft.id === e.id ? "outline outline-2 outline-[var(--c-acc)]" : "")} data-testid="pdfedit-text"
           style={{ [e.rtl ? "right" : "left"]: (e.rtl ? (1 - (e.kind === "retext" ? e.rect.x + e.rect.w : e.x)) : e.x) * 100 + "%", top: (e.base - e.size * 0.82) * 100 + "%", fontSize: fs + "px", color: e.color, fontWeight: e.bold ? 700 : 400, fontFamily: "Helvetica, Arial, sans-serif" }}>{e.text || " "}</div>
       </React.Fragment>);
   };
 
   if (err && !doc) return (
-    <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3" data-testid="pdfedit">
-      <p className="text-[13px] text-rose-300" data-testid="pdfedit-error">{err}</p>
-      <button onClick={onClose} className="w-full py-2.5 rounded-xl border border-slate-700 text-slate-200 text-sm">{tr("Back")}</button>
+    <section className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3" data-testid="pdfedit">
+      <p className="text-[13px] text-[var(--c-neg)]" data-testid="pdfedit-error">{err}</p>
+      <button onClick={onClose} className="w-full py-2.5 rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] text-sm">{tr("Back")}</button>
     </section>);
 
   return (
     <div className="flex flex-col max-w-3xl mx-auto" data-testid="pdfedit">
       <div className="flex items-center gap-2 px-1 pb-2">
-        <button onClick={leave} aria-label={tr("Back")} className="p-2 -m-1 text-slate-300" data-testid="pdfedit-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
-        <p className="flex-1 truncate text-[14px] text-slate-100">{file.name}</p>
-        <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"p-2 " + (hist.length ? "text-teal-300" : "text-slate-600")} data-testid="pdfedit-undo"><Undo2 size={17} /></button>
-        <button onClick={save} disabled={!dirty || !!busy} className={"px-3.5 py-1.5 rounded-lg text-[13px] font-semibold " + (dirty && !busy ? "bg-teal-500 text-slate-950" : "bg-slate-800 text-slate-500")} data-testid="pdfedit-save">{tr("Save")}</button>
+        <button onClick={leave} aria-label={tr("Back")} className="p-2 -m-1 text-[var(--c-ink)]" data-testid="pdfedit-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
+        <p className="flex-1 truncate text-[14px] text-[var(--c-ink)]">{file.name}</p>
+        <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"p-2 " + (hist.length ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")} data-testid="pdfedit-undo"><Undo2 size={17} /></button>
+        <button onClick={save} disabled={!dirty || !!busy} className={"px-3.5 py-1.5 rounded-lg text-[13px] font-semibold " + (dirty && !busy ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-save">{tr("Save")}</button>
       </div>
-      {busy ? <p className="flex items-center gap-2 text-[12.5px] text-teal-200 px-1 pb-2" data-testid="pdfedit-busy"><Loader2 size={14} className="animate-spin" />{busy}</p> : null}
-      {err ? <p className="text-[12.5px] text-rose-300 px-1 pb-2" data-testid="pdfedit-error">{err}</p> : null}
+      {busy ? <p className="flex items-center gap-2 text-[12.5px] text-[var(--c-acc)] px-1 pb-2" data-testid="pdfedit-busy"><Loader2 size={14} className="animate-spin" />{busy}</p> : null}
+      {err ? <p className="text-[12.5px] text-[var(--c-neg)] px-1 pb-2" data-testid="pdfedit-error">{err}</p> : null}
 
-      {!doc ? <p className="flex items-center gap-2 text-[13px] text-slate-400 p-4"><Loader2 size={14} className="animate-spin" />{tr("Opening the PDF…")}</p>
+      {!doc ? <p className="flex items-center gap-2 text-[13px] text-[var(--c-mut)] p-4"><Loader2 size={14} className="animate-spin" />{tr("Opening the PDF…")}</p>
       : tool === "pages" ? (
         <div className="pb-4" onPointerMove={holdMove} onPointerUp={holdEnd} onPointerCancel={holdEnd} data-testid="pdfedit-pages">
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 select-none">
             {order.map((p, i) => (
               <div key={p.key} data-idx={i} data-testid="pdfedit-thumb" onPointerDown={(ev) => holdStart(i, ev)} onClick={() => { if (Date.now() - (hold.justMoved || 0) > 300) { setAt(i); setTool("text"); } }}
-                className={"relative " + (drag && drag.from === i ? "opacity-40" : "") + (drag && drag.over === i && drag.from !== i ? " outline outline-2 outline-teal-400 rounded" : "")}>
+                className={"relative " + (drag && drag.from === i ? "opacity-40" : "") + (drag && drag.over === i && drag.from !== i ? " outline outline-2 outline-[var(--c-acc)] rounded" : "")}>
                 <div className="aspect-[0.707] bg-white rounded overflow-hidden flex items-center justify-center cursor-grab" style={{ touchAction: "none" }}>
-                  {p.n && thumbs[p.n] ? <img src={thumbs[p.n]} alt="" className="max-w-full max-h-full pointer-events-none" style={{ transform: `rotate(${p.rot || 0}deg)` }} /> : p.n ? <Loader2 size={14} className="animate-spin text-slate-400" /> : <span className="text-[11px] text-slate-400">{tr("Blank page")}</span>}
+                  {p.n && thumbs[p.n] ? <img src={thumbs[p.n]} alt="" className="max-w-full max-h-full pointer-events-none" style={{ transform: `rotate(${p.rot || 0}deg)` }} /> : p.n ? <Loader2 size={14} className="animate-spin text-[var(--c-mut)]" /> : <span className="text-[11px] text-[var(--c-mut)]">{tr("Blank page")}</span>}
                 </div>
-                <button onPointerDown={(ev) => ev.stopPropagation()} onClick={(ev) => { ev.stopPropagation(); turn(i); }} aria-label={tr("Turn")} className="absolute -top-2 -start-2 w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center" data-testid="pdfedit-turn"><RefreshCw size={12} /></button>
-                <button onPointerDown={(ev) => ev.stopPropagation()} onClick={(ev) => { ev.stopPropagation(); drop(i); }} aria-label={tr("Delete")} className="absolute -top-2 -end-2 w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center" data-testid="pdfedit-del"><Trash2 size={12} /></button>
-                <p className="text-center text-[11px] text-slate-400 mt-1">{i + 1}</p>
+                <button onPointerDown={(ev) => ev.stopPropagation()} onClick={(ev) => { ev.stopPropagation(); turn(i); }} aria-label={tr("Turn")} className="absolute -top-2 -start-2 w-6 h-6 rounded-full bg-[var(--c-ln)] text-[var(--c-ink)] flex items-center justify-center" data-testid="pdfedit-turn"><RefreshCw size={12} /></button>
+                <button onPointerDown={(ev) => ev.stopPropagation()} onClick={(ev) => { ev.stopPropagation(); drop(i); }} aria-label={tr("Delete")} className="absolute -top-2 -end-2 w-6 h-6 rounded-full bg-[var(--c-neg)] text-[var(--c-on-acc)] flex items-center justify-center" data-testid="pdfedit-del"><Trash2 size={12} /></button>
+                <p className="text-center text-[11px] text-[var(--c-mut)] mt-1">{i + 1}</p>
               </div>))}
           </div>
           <div className="flex flex-wrap gap-2 mt-5">
             <input ref={addRef} type="file" accept=".pdf,application/pdf" className="hidden" data-testid="pdfedit-add-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; addPdf(f); }} />
-            <button onClick={() => addRef.current && addRef.current.click()} className="px-3 py-2 rounded-xl border border-slate-700 text-[13px] text-slate-200 flex items-center gap-1.5" data-testid="pdfedit-add"><Plus size={14} />{tr("Add pages from a PDF")}</button>
-            <button onClick={blank} className="px-3 py-2 rounded-xl border border-slate-700 text-[13px] text-slate-200 flex items-center gap-1.5" data-testid="pdfedit-blank"><Plus size={14} />{tr("Blank page")}</button>
+            <button onClick={() => addRef.current && addRef.current.click()} className="px-3 py-2 rounded-xl border border-[var(--c-ln)] text-[13px] text-[var(--c-ink)] flex items-center gap-1.5" data-testid="pdfedit-add"><Plus size={14} />{tr("Add pages from a PDF")}</button>
+            <button onClick={blank} className="px-3 py-2 rounded-xl border border-[var(--c-ln)] text-[13px] text-[var(--c-ink)] flex items-center gap-1.5" data-testid="pdfedit-blank"><Plus size={14} />{tr("Blank page")}</button>
           </div>
-          <p className="text-[12px] text-slate-500 mt-3">{tr("Drag a page to change the order. Tap a page to edit it.")}</p>
+          <p className="text-[12px] text-[var(--c-mut)] mt-3">{tr("Drag a page to change the order. Tap a page to edit it.")}</p>
         </div>
       ) : (
         <div className="pb-2">
           <div className="relative mx-auto bg-white shadow-lg select-none" ref={sheet} style={{ aspectRatio: String(ar), maxWidth: "100%", width: ar >= 1 ? "100%" : `min(100%, calc(76vh * ${ar}))`, touchAction: tool === "text" ? "auto" : "none" }}
             onClick={tool === "text" && !pop ? tapText : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} data-testid="pdfedit-page">
             {n && pics[n] ? <img ref={img} src={pics[n]} alt="" className="absolute inset-0 w-full h-full pointer-events-none" data-testid="pdfedit-pic" />
-              : n ? <div className="absolute inset-0 flex items-center justify-center"><Loader2 size={18} className="animate-spin text-slate-400" /></div> : null}
+              : n ? <div className="absolute inset-0 flex items-center justify-center"><Loader2 size={18} className="animate-spin text-[var(--c-mut)]" /></div> : null}
             <div className="absolute inset-0 overflow-hidden pointer-events-none [&_button]:pointer-events-auto [&_span]:pointer-events-auto">{shown.map(layer)}{live ? layer({ ...live, id: "live" }, "live") : null}</div>
           </div>
-          <div className="flex items-center justify-center gap-4 mt-2 text-[12.5px] text-slate-400">
+          <div className="flex items-center justify-center gap-4 mt-2 text-[12.5px] text-[var(--c-mut)]">
             <button onClick={() => { setAt((a) => Math.max(0, a - 1)); setPop(null); setPicked(null); }} disabled={at === 0} className="p-1.5 disabled:opacity-30" aria-label={tr("Previous page")} data-testid="pdfedit-prev"><ChevronLeft size={18} className="rtl:-scale-x-100" /></button>
             <span data-testid="pdfedit-at">{tr("Page {n} of {m}", { n: at + 1, m: order.length })}</span>
             <button onClick={() => { setAt((a) => Math.min(order.length - 1, a + 1)); setPop(null); setPicked(null); }} disabled={at >= order.length - 1} className="p-1.5 disabled:opacity-30" aria-label={tr("Next page")} data-testid="pdfedit-next"><ChevronRight size={18} className="rtl:-scale-x-100" /></button>
           </div>
-          <p className="text-center text-[12px] text-slate-500 mt-1" data-testid="pdfedit-hint">{tr(
+          <p className="text-center text-[12px] text-[var(--c-mut)] mt-1" data-testid="pdfedit-hint">{tr(
             tool === "text" ? (lines.length ? "Tap a line to change it, or an empty spot to add text" : "Tap where the text should go")
             : tool === "highlight" ? "Drag over words to highlight them" : tool === "draw" ? "Draw with your finger"
             : sign ? "Tap where your signature goes; drag it to move it" : "Tap the page to make your signature")}</p>
           {tool === "draw" || tool === "highlight" || tool === "sign" ? (
             <div className="flex items-center justify-center gap-3 mt-2">
-              {tool === "sign" ? (sign ? <button onClick={() => setPad(true)} className="text-[12.5px] text-teal-300" data-testid="pdfedit-new-sign">{tr("Change my signature")}</button> : null)
-                : (tool === "draw" ? INK : MARK).map((c) => <button key={c} onClick={() => (tool === "draw" ? setInk(c) : setMark(c))} aria-label={c} className={"shrink-0 p-0 rounded-full border-2 " + ((tool === "draw" ? ink : mark) === c ? "border-teal-300" : "border-slate-700")} style={{ background: c, width: 26, height: 26, minWidth: 26, minHeight: 26 }} />)}
+              {tool === "sign" ? (sign ? <button onClick={() => setPad(true)} className="text-[12.5px] text-[var(--c-acc)]" data-testid="pdfedit-new-sign">{tr("Change my signature")}</button> : null)
+                : (tool === "draw" ? INK : MARK).map((c) => <button key={c} onClick={() => (tool === "draw" ? setInk(c) : setMark(c))} aria-label={c} className={"shrink-0 p-0 rounded-full border-2 " + ((tool === "draw" ? ink : mark) === c ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]")} style={{ background: c, width: 26, height: 26, minWidth: 26, minHeight: 26 }} />)}
             </div>) : null}
         </div>
       )}
 
       {pop ? (
-        <div className="fixed inset-x-0 bottom-0 z-[60] p-3 bg-slate-900 border-t border-slate-700 lg:static lg:mt-2 lg:rounded-2xl lg:border" data-testid="pdfedit-pop">
+        <div className="fixed inset-x-0 bottom-0 z-[60] p-3 bg-[var(--c-surf)] border-t border-[var(--c-ln)] lg:static lg:mt-2 lg:rounded-2xl lg:border" data-testid="pdfedit-pop">
           <input autoFocus dir="auto" value={pop.draft.text} onChange={(e) => setDraft({ text: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") donePop(); }}
-            placeholder={tr("Type the text")} className="w-full bg-slate-950 border border-teal-700 rounded-xl px-3 py-2.5 text-[15px] text-slate-100" data-testid="pdfedit-input" />
-          <div className="flex items-center gap-2 mt-2 text-[12.5px] text-slate-300">
-            <button onClick={() => setDraft({ size: Math.max(0.006, pop.draft.size * 0.9) })} className="px-2 py-1 rounded-lg border border-slate-700" aria-label={tr("Smaller")}>A−</button>
-            <button onClick={() => setDraft({ size: Math.min(0.08, pop.draft.size * 1.1) })} className="px-2 py-1 rounded-lg border border-slate-700" aria-label={tr("Bigger")}>A+</button>
-            <button onClick={() => setDraft({ bold: !pop.draft.bold })} className={"px-2 py-1 rounded-lg border font-bold " + (pop.draft.bold ? "border-teal-500 text-teal-200" : "border-slate-700")}>B</button>
-            {["#000000", "#1e3a8a", "#b91c1c"].map((c) => <button key={c} onClick={() => setDraft({ color: c })} aria-label={c} className={"shrink-0 p-0 rounded-full border-2 " + (pop.draft.color === c ? "border-teal-300" : "border-slate-600")} style={{ background: c, width: 22, height: 22, minWidth: 22, minHeight: 22 }} />)}
+            placeholder={tr("Type the text")} className="w-full bg-[var(--c-bg)] border border-[var(--c-acc)] rounded-xl px-3 py-2.5 text-[15px] text-[var(--c-ink)]" data-testid="pdfedit-input" />
+          <div className="flex items-center gap-2 mt-2 text-[12.5px] text-[var(--c-ink)]">
+            <button onClick={() => setDraft({ size: Math.max(0.006, pop.draft.size * 0.9) })} className="px-2 py-1 rounded-lg border border-[var(--c-ln)]" aria-label={tr("Smaller")}>A−</button>
+            <button onClick={() => setDraft({ size: Math.min(0.08, pop.draft.size * 1.1) })} className="px-2 py-1 rounded-lg border border-[var(--c-ln)]" aria-label={tr("Bigger")}>A+</button>
+            <button onClick={() => setDraft({ bold: !pop.draft.bold })} className={"px-2 py-1 rounded-lg border font-bold " + (pop.draft.bold ? "border-[var(--c-acc)] text-[var(--c-acc)]" : "border-[var(--c-ln)]")}>B</button>
+            {["#000000", "#1e3a8a", "#b91c1c"].map((c) => <button key={c} onClick={() => setDraft({ color: c })} aria-label={c} className={"shrink-0 p-0 rounded-full border-2 " + (pop.draft.color === c ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]")} style={{ background: c, width: 22, height: 22, minWidth: 22, minHeight: 22 }} />)}
             <span className="flex-1" />
-            {pop.old || pop.draft.kind === "retext" ? <button onClick={dropPop} className="text-rose-300 px-1" data-testid="pdfedit-pop-undo">{tr(pop.old ? "Remove" : "Cancel")}</button> : null}
-            <button onClick={donePop} className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold" data-testid="pdfedit-done">{tr("Done")}</button>
+            {pop.old || pop.draft.kind === "retext" ? <button onClick={dropPop} className="text-[var(--c-neg)] px-1" data-testid="pdfedit-pop-undo">{tr(pop.old ? "Remove" : "Cancel")}</button> : null}
+            <button onClick={donePop} className="px-3 py-1.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold min-h-[44px]" data-testid="pdfedit-done">{tr("Done")}</button>
           </div>
         </div>
       ) : (
-        <div className="sticky bottom-0 z-10 bg-slate-950/95 border-t border-slate-800 flex justify-around py-2.5 mt-1" data-testid="pdfedit-tools">
-          {TOOLS.map(([k, label]) => <button key={k} onClick={() => { setTool(k); setPicked(null); }} className={"px-2 py-1 text-[13.5px] " + (tool === k ? "text-teal-300 font-semibold" : "text-slate-400")} data-testid={"pdfedit-tool-" + k}>{tr(label)}</button>)}
+        <div className="sticky bottom-0 z-10 bg-[var(--c-bg)] border-t border-[var(--c-ln)] flex justify-around py-2.5 mt-1" data-testid="pdfedit-tools">
+          {TOOLS.map(([k, label]) => <button key={k} onClick={() => { setTool(k); setPicked(null); }} className={"px-2 py-1 text-[13.5px] " + (tool === k ? "text-[var(--c-acc)] font-semibold" : "text-[var(--c-mut)]")} data-testid={"pdfedit-tool-" + k}>{tr(label)}</button>)}
         </div>
       )}
 
@@ -372,15 +372,15 @@ function SignPad({ onCancel, onUse }) {
   };
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center p-3" data-testid="pdfedit-signpad">
-      <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 p-4">
-        <p className="text-[14px] text-slate-100 mb-2">{tr("Sign with your finger")}</p>
+      <div className="w-full max-w-md rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4">
+        <p className="text-[14px] text-[var(--c-ink)] mb-2">{tr("Sign with your finger")}</p>
         <canvas ref={cv} className="w-full h-44 rounded-xl bg-white" style={{ touchAction: "none" }} data-testid="pdfedit-signcanvas"
           onPointerDown={(ev) => { last.current = at(ev); try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {} }} onPointerMove={draw} onPointerUp={() => { last.current = null; }} />
-        <p className="text-[11.5px] text-slate-500 mt-1.5">{tr("Kept only on this device, for the next time you sign.")}</p>
+        <p className="text-[11.5px] text-[var(--c-mut)] mt-1.5">{tr("Kept only on this device, for the next time you sign.")}</p>
         <div className="flex justify-end gap-2 mt-3">
-          <button onClick={() => { const c = cv.current; c.getContext("2d").clearRect(0, 0, c.width, c.height); setAny(false); }} className="px-3 py-2 rounded-xl text-slate-300 text-sm">{tr("Clear")}</button>
-          <button onClick={onCancel} className="px-3 py-2 rounded-xl border border-slate-700 text-slate-200 text-sm">{tr("Cancel")}</button>
-          <button onClick={use} disabled={!any} className={"px-4 py-2 rounded-xl text-sm font-semibold " + (any ? "bg-teal-500 text-slate-950" : "bg-slate-800 text-slate-500")} data-testid="pdfedit-sign-use">{tr("Use this signature")}</button>
+          <button onClick={() => { const c = cv.current; c.getContext("2d").clearRect(0, 0, c.width, c.height); setAny(false); }} className="px-3 py-2 rounded-xl text-[var(--c-ink)] text-sm">{tr("Clear")}</button>
+          <button onClick={onCancel} className="px-3 py-2 rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] text-sm">{tr("Cancel")}</button>
+          <button onClick={use} disabled={!any} className={"px-4 py-2 rounded-xl text-sm font-semibold " + (any ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-sign-use">{tr("Use this signature")}</button>
         </div>
       </div>
     </div>

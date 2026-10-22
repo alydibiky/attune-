@@ -15,6 +15,7 @@ import * as O from "./owed.js";
 import { openOwed } from "./owed-ui.jsx";
 import { payReader, openAccess, RestrictedHelp } from "./paylog-ui.jsx";
 import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+import * as U from "./ui-kit.jsx";
 
 const KIND_LABEL = { trial: "Free trial", renewal: "Renewal", return: "Return window", warranty: "Warranty", expiry: "Document expiry", other: "Other" };
 const DOC_LABEL = { passport: "Passport", visa: "Visa", licence: "Driving licence", id: "ID card", insurance: "Insurance", registration: "Car registration", card: "Bank card" };
@@ -65,13 +66,13 @@ export function runAutoRadar(N, { pro, remind } = {}) {
 function Form({ init, onSave, onCancel, photo }) {
   const [f, setF] = useState(() => ({ kind: "trial", title: "", date: "", amount: "", currency: homeCurrency(), doc: "", note: "", ...init, amount: init && init.amount ? String(init.amount) : "" }));
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
-  const field = "w-full rounded-lg px-3 py-2 text-[14px] border bg-transparent";
-  const st = { borderColor: "var(--c-ln)", color: "var(--c-ink)" };
+  const field = U.inp;
+  const st = undefined;
   const okDate = /^\d{4}-\d{2}-\d{2}$/.test(f.date);
   return (
-    <div className="c-card space-y-2.5" data-testid="radar-form">
+    <div className={U.cardPad + " space-y-2.5"} data-testid="radar-form">
       <div className="flex flex-wrap gap-1.5">
-        {Object.keys(KIND_LABEL).map((k) => <button key={k} onClick={() => set("kind", k)} className="c-pill" aria-pressed={f.kind === k} style={f.kind === k ? { background: "var(--c-acc)", color: "#fff" } : {}} data-testid={"radar-kind-" + k}>{tr(KIND_LABEL[k])}</button>)}
+        {Object.keys(KIND_LABEL).map((k) => <button key={k} onClick={() => set("kind", k)} className={U.chip(f.kind === k)} aria-pressed={f.kind === k} data-testid={"radar-kind-" + k}>{tr(KIND_LABEL[k])}</button>)}
       </div>
       {f.kind === "expiry" ? (
         <select value={f.doc} onChange={(e) => { set("doc", e.target.value); if (!f.title && e.target.value) set("title", tr(DOC_LABEL[e.target.value])); }} className={field} style={st} data-testid="radar-doc">
@@ -79,17 +80,17 @@ function Form({ init, onSave, onCancel, photo }) {
           {Object.keys(DOC_LABEL).map((k) => <option key={k} value={k}>{tr(DOC_LABEL[k])}</option>)}
         </select>) : null}
       <input value={f.title} onChange={(e) => set("title", e.target.value)} placeholder={tr("What is it? (Netflix, the TV, my passport…)")} className={field} style={st} dir="auto" data-testid="radar-title" />
-      <label className="block"><span className="c-lbl">{f.kind === "trial" ? tr("Trial ends on") : f.kind === "renewal" ? tr("Renews on") : f.kind === "return" ? tr("Last day to return") : f.kind === "warranty" ? tr("Warranty ends on") : f.kind === "expiry" ? tr("Expires on") : tr("Date")}</span>
+      <label className="block space-y-1"><span className={U.label}>{f.kind === "trial" ? tr("Trial ends on") : f.kind === "renewal" ? tr("Renews on") : f.kind === "return" ? tr("Last day to return") : f.kind === "warranty" ? tr("Warranty ends on") : f.kind === "expiry" ? tr("Expires on") : tr("Date")}</span>
         <input type="date" value={f.date} onChange={(e) => set("date", e.target.value)} className={field} style={st} data-testid="radar-date" /></label>
       <div className="flex gap-2">
         <input value={f.amount} onChange={(e) => set("amount", e.target.value.replace(/[^\d.,]/g, ""))} inputMode="decimal" placeholder={tr("Amount (optional)")} className={field} style={st} data-testid="radar-amount" />
         <input value={f.currency} onChange={(e) => set("currency", e.target.value.toUpperCase().slice(0, 3))} className={field + " max-w-[5.5rem]"} style={st} aria-label={tr("Currency")} />
       </div>
       <input value={f.note} onChange={(e) => set("note", e.target.value)} placeholder={tr("Note (optional): order number, where to cancel…")} className={field} style={st} dir="auto" />
-      {photo ? <img src={photo} alt="" className="max-h-28 rounded-lg" /> : null}
+      {photo ? <img src={photo} alt="" className="max-h-28 rounded-[14px] border border-[var(--c-ln)]" /> : null}
       <div className="flex gap-2 pt-1">
-        <button className="c-btn" disabled={!okDate || !f.title.trim()} style={!okDate || !f.title.trim() ? { opacity: 0.5 } : {}} onClick={() => onSave({ ...f, amount: parseFloat(String(f.amount).replace(",", ".")) || 0, title: f.title.trim() })} data-testid="radar-save">{tr("Save and remind me")}</button>
-        <button className="c-sub px-2" onClick={onCancel}>{tr("Cancel")}</button>
+        <button className={U.btnP} disabled={!okDate || !f.title.trim()} onClick={() => onSave({ ...f, amount: parseFloat(String(f.amount).replace(",", ".")) || 0, title: f.title.trim() })} data-testid="radar-save">{tr("Save and remind me")}</button>
+        <button className={U.btnS} onClick={onCancel}>{tr("Cancel")}</button>
       </div>
     </div>);
 }
@@ -99,35 +100,35 @@ function Item({ x, onDone, onEdit, onDelete }) {
   const K = kit ? D.cancelKit(x, getLang() === "ar" ? "ar" : "en") : null;
   const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} days", { n: left }) : left < 730 ? tr("in {n} months", { n: Math.round(left / 30.4) }) : tr("in {n} years", { n: Math.round(left / 365) });
   return (
-    <div className="c-card" data-testid="radar-item">
+    <div className={U.cardPad} data-testid="radar-item">
       <div className="flex items-start gap-3">
-        <div className="c-ic"><Bell size={16} /></div>
+        <div className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Bell size={17} /></div>
         <div className="flex-1 min-w-0">
-          <b className="block" dir="auto">{x.title || tr(KIND_LABEL[x.kind])}</b>
-          <div className="c-sub text-[12.5px]">{tr(KIND_LABEL[x.kind])}{x.doc ? " · " + tr(DOC_LABEL[x.doc] || x.doc) : ""} · {x.date}{x.amount ? " · " + fmt(x.amount) + " " + (x.currency || "") : ""}</div>
+          <b className="block font-extrabold text-[14.5px]" dir="auto">{x.title || tr(KIND_LABEL[x.kind])}</b>
+          <div className={"text-[12.5px] tabular-nums " + U.muted}>{tr(KIND_LABEL[x.kind])}{x.doc ? " · " + tr(DOC_LABEL[x.doc] || x.doc) : ""} · {x.date}{x.amount ? " · " + fmt(x.amount) + " " + (x.currency || "") : ""}</div>
         </div>
-        <span className={"c-pill " + (left <= 2 ? "late" : left <= D.alertDays(x) ? "due" : "")} data-testid="radar-when">{x.status === "done" ? tr("done") : when}</span>
+        <span className={U.tag(x.status === "done" ? "gray" : left <= 2 ? "red" : left <= D.alertDays(x) ? "amber" : "green")} data-testid="radar-when">{x.status === "done" ? tr("done") : when}</span>
       </div>
-      {x.note ? <p className="c-sub text-[12.5px] mt-1.5" dir="auto">{x.note}</p> : null}
-      {img ? <img src={img} alt="" className="mt-2 max-h-64 rounded-lg" /> : null}
+      {x.note ? <p className={"text-[12.5px] mt-1.5 " + U.muted} dir="auto">{x.note}</p> : null}
+      {img ? <img src={img} alt="" className="mt-2 max-h-64 rounded-[14px] border border-[var(--c-ln)]" /> : null}
       {x.status !== "done" ? (
         <div className="flex flex-wrap gap-2 mt-2.5">
-          {(DONE_ACTS[x.kind] || DONE_ACTS.other).map(([o, l], i) => <button key={o} className={i === 0 ? "c-btn" : "c-sub px-1"} onClick={() => onDone(x, o)} data-testid={"radar-" + o}>{i === 0 ? <Check size={14} className="inline -mt-0.5 me-1" /> : null}{tr(l)}</button>)}
-          {D.cancelLink(x) ? <button className="c-sub px-1" onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: D.cancelLink(x), plan: null, inApp: false } }))} data-testid="radar-cancel-page">{tr("Where to cancel")}</button> : null}
-          {x.kind === "trial" || x.kind === "renewal" ? <button className="c-sub px-1" onClick={() => setKit(!kit)} aria-expanded={kit} data-testid="radar-kit">{tr("Cancel kit")}</button> : null}
-          {x.kind === "return" || x.kind === "warranty" ? <button className="c-sub px-1" onClick={() => openOwed({ letter: { title: x.kind === "return" ? "Return request" : "Warranty claim", text: x.kind === "return" ? O.returnLetter(x, { lang: getLang() === "ar" ? "ar" : "en" }) : O.warrantyLetter(x, { lang: getLang() === "ar" ? "ar" : "en" }) } })} data-testid="radar-letter">{tr("Write the request")}</button> : null}
-          <button className="c-sub px-1" onClick={() => onEdit(x)} data-testid="radar-edit">{tr("Edit")}</button>
-          {x.photo ? <button className="c-sub px-1" onClick={async () => setImg(img ? "" : await getPhoto(x.photo))} data-testid="radar-photo">{img ? tr("Hide receipt") : tr("Receipt")}</button> : null}
-          <button className="c-sub px-1 ms-auto" aria-label={tr("Delete")} onClick={() => onDelete(x)}><Trash2 size={14} /></button>
+          {(DONE_ACTS[x.kind] || DONE_ACTS.other).map(([o, l], i) => <button key={o} className={i === 0 ? U.btnP : U.btnS} onClick={() => onDone(x, o)} data-testid={"radar-" + o}>{i === 0 ? <Check size={14} /> : null}{tr(l)}</button>)}
+          {D.cancelLink(x) ? <button className={U.btnS} onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: D.cancelLink(x), plan: null, inApp: false } }))} data-testid="radar-cancel-page">{tr("Where to cancel")}</button> : null}
+          {x.kind === "trial" || x.kind === "renewal" ? <button className={U.btnS} onClick={() => setKit(!kit)} aria-expanded={kit} data-testid="radar-kit">{tr("Cancel kit")}</button> : null}
+          {x.kind === "return" || x.kind === "warranty" ? <button className={U.btnS} onClick={() => openOwed({ letter: { title: x.kind === "return" ? "Return request" : "Warranty claim", text: x.kind === "return" ? O.returnLetter(x, { lang: getLang() === "ar" ? "ar" : "en" }) : O.warrantyLetter(x, { lang: getLang() === "ar" ? "ar" : "en" }) } })} data-testid="radar-letter">{tr("Write the request")}</button> : null}
+          <button className={U.btnS} onClick={() => onEdit(x)} data-testid="radar-edit">{tr("Edit")}</button>
+          {x.photo ? <button className={U.btnS} onClick={async () => setImg(img ? "" : await getPhoto(x.photo))} data-testid="radar-photo">{img ? tr("Hide receipt") : tr("Receipt")}</button> : null}
+          <button className={U.btnS + " ms-auto w-11 px-0 " + U.muted} aria-label={tr("Delete")} onClick={() => onDelete(x)}><Trash2 size={14} /></button>
         </div>) : null}
       {/* v6.37 (M5): the cancel kit — the steps and a ready message */}
       {K ? (
-        <div className="mt-2.5 rounded-lg border p-3 text-[12.5px] grid gap-2" style={{ borderColor: "var(--c-ln)" }} data-testid="radar-kit-panel">
+        <div className="mt-2.5 rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[12.5px] grid gap-2" data-testid="radar-kit-panel">
           <ol className="m-0 ps-5 grid gap-1">{K.steps.map((st, i) => <li key={i} dir="auto">{st}</li>)}</ol>
-          <p className="c-sub" dir="auto" data-testid="radar-kit-msg">{K.message}</p>
+          <p className={U.muted} dir="auto" data-testid="radar-kit-msg">{K.message}</p>
           <div className="flex flex-wrap gap-2">
-            <button className="c-btn" onClick={() => { try { navigator.clipboard.writeText(K.message).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }, () => {}); } catch (e) {} }} data-testid="radar-kit-copy">{copied ? tr("Copied") : tr("Copy the message")}</button>
-            {K.link ? <button className="c-sub px-1" onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: K.link, plan: null, inApp: false } }))}>{tr("Open the page")}</button> : null}
+            <button className={U.btnP} onClick={() => { try { navigator.clipboard.writeText(K.message).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }, () => {}); } catch (e) {} }} data-testid="radar-kit-copy">{copied ? tr("Copied") : tr("Copy the message")}</button>
+            {K.link ? <button className={U.btnS} onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: K.link, plan: null, inApp: false } }))}>{tr("Open the page")}</button> : null}
           </div>
         </div>) : null}
     </div>);
@@ -206,52 +207,52 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const rightHas = data.items.length > 3 || (!V.soon.length && !V.later.length && !drafts.length && mode !== "form") || [V.soon, V.later, V.done.slice(0, 20)].some((l) => l.filter(match).length);
 
   return (
-    <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="radar-page">
-      <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Radar size={20} className="c-acc" />{tr("Deadline Radar")}</h2>
-        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
+    <div className={U.page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="radar-page">
+      <div><h2 className={U.h1 + " flex items-center gap-2"}><Radar size={20} className="text-[var(--c-acc)]" />{tr("Deadline Radar")}</h2>
+        <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
 
       {/* v6.27 computer layout A: the counters and the ways in on the left, the deadlines on the right (stacked on a phone) */}
       <div className={PANES_N}><div className={LEFT}>
       {radarSaved > 0 || auto > 0 ? (
         <div className="grid grid-cols-2 gap-3">
-          <div className="c-card"><span className="c-lbl">{tr("Saved by the Radar")}</span><div className="c-amt" data-testid="radar-saved">{fmt(radarSaved)}</div></div>
-          <div className="c-card"><span className="c-lbl">{tr("Added by itself")}</span><div className="c-amt">{auto}</div></div>
+          <div className={U.card + " p-3.5 space-y-1.5"}><span className={"block text-[12px] font-bold truncate " + U.muted}>{tr("Saved by the Radar")}</span><b className="block tabular-nums text-[clamp(17px,4.6vw,21px)] font-black tracking-tight text-[var(--c-pos)]" dir="ltr" data-testid="radar-saved">{fmt(radarSaved)}</b></div>
+          <div className={U.card + " p-3.5 space-y-1.5"}><span className={"block text-[12px] font-bold truncate " + U.muted}>{tr("Added by itself")}</span><b className="block tabular-nums text-[clamp(17px,4.6vw,21px)] font-black tracking-tight" dir="ltr">{auto}</b></div>
         </div>) : null}
 
       {/* automatic */}
       {payReader(N) && !access ? (
-        <div className="c-card" data-testid="radar-access"><b className="flex items-center gap-2"><Bell size={15} className="c-acc" />{tr("Find deadlines by itself")}</b>
-          <p className="c-sub text-[13px] mt-1">{tr("Turn on notification access and the Radar catches free trials and renewals from your apps and bank by itself. Nothing leaves the phone.")}</p>
-          <button className="c-btn mt-2" onClick={() => openAccess(N)}>{tr("Turn on")}</button><RestrictedHelp N={N} /></div>
+        <div className={U.cardPad} data-testid="radar-access"><b className="flex items-center gap-2 font-extrabold"><Bell size={15} className="text-[var(--c-acc)]" />{tr("Find deadlines by itself")}</b>
+          <p className={"text-[13px] mt-1 " + U.muted}>{tr("Turn on notification access and the Radar catches free trials and renewals from your apps and bank by itself. Nothing leaves the phone.")}</p>
+          <button className={U.btnP + " mt-2"} onClick={() => openAccess(N)}>{tr("Turn on")}</button><RestrictedHelp N={N} /></div>
       ) : null}
       {sugg.length ? (
-        <div className="c-card space-y-2" data-testid="radar-suggestions"><span className="c-lbl">{tr("Found in your notifications")}</span>
+        <div className={U.cardPad + " space-y-2"} data-testid="radar-suggestions"><span className={U.label}>{tr("Found in your notifications")}</span>
           {sugg.slice(0, 8).map((s) => (
             <div key={s.nid + s.kind} className="flex items-center gap-2" data-testid="radar-sugg">
-              <span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{s.title || tr(KIND_LABEL[s.kind])}</b><span className="c-sub text-[12px]">{tr(KIND_LABEL[s.kind])} · {s.date}{s.app ? " · " + s.app : ""}</span></span>
-              <button className="c-btn" onClick={() => { if (saveOne(s)) { put(D.markSeen(D.loadRadar(), [s.nid])); setSugg((x) => x.filter((y) => y !== s)); } }} data-testid="radar-sugg-keep">{tr("Keep")}</button>
-              <button className="c-sub" aria-label={tr("Not this")} onClick={() => { put(D.markSeen(data, [s.nid])); setSugg((x) => x.filter((y) => y !== s)); }}><X size={15} /></button>
+              <span className="flex-1 min-w-0"><b className="block text-[14px] font-extrabold" dir="auto">{s.title || tr(KIND_LABEL[s.kind])}</b><span className={"text-[12px] " + U.muted}>{tr(KIND_LABEL[s.kind])} · {s.date}{s.app ? " · " + s.app : ""}</span></span>
+              <button className={U.btnP} onClick={() => { if (saveOne(s)) { put(D.markSeen(D.loadRadar(), [s.nid])); setSugg((x) => x.filter((y) => y !== s)); } }} data-testid="radar-sugg-keep">{tr("Keep")}</button>
+              <button className={U.btnS + " w-11 px-0 " + U.muted} aria-label={tr("Not this")} onClick={() => { put(D.markSeen(data, [s.nid])); setSugg((x) => x.filter((y) => y !== s)); }}><X size={15} /></button>
             </div>))}
         </div>) : null}
 
       {/* by hand */}
       <div className="grid grid-cols-3 gap-2">
-        <button className="c-card text-center py-3" onClick={() => (full ? openPlan && openPlan() : fileRef.current && fileRef.current.click())} data-testid="radar-scan"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12.5px] mt-1">{tr("Scan a receipt")}</span></button>
-        <button className="c-card text-center py-3" onClick={() => (full ? openPlan && openPlan() : setMode(mode === "paste" ? null : "paste"))} data-testid="radar-paste"><ClipboardPaste size={18} className="c-acc mx-auto" /><span className="block text-[12.5px] mt-1">{tr("Paste or type")}</span></button>
-        <button className="c-card text-center py-3" onClick={() => { if (full) { openPlan && openPlan(); return; } setEdit({}); setMode("form"); }} data-testid="radar-add"><Plus size={18} className="c-acc mx-auto" /><span className="block text-[12.5px] mt-1">{tr("Add by hand")}</span></button>
+        <button className={U.card + " text-center py-3 px-1 min-h-[72px] hover:border-[var(--c-acc)]"} onClick={() => (full ? openPlan && openPlan() : fileRef.current && fileRef.current.click())} data-testid="radar-scan"><Camera size={18} className="text-[var(--c-acc)] mx-auto" /><span className="block text-[12.5px] font-bold mt-1">{tr("Scan a receipt")}</span></button>
+        <button className={U.card + " text-center py-3 px-1 min-h-[72px] hover:border-[var(--c-acc)]"} onClick={() => (full ? openPlan && openPlan() : setMode(mode === "paste" ? null : "paste"))} data-testid="radar-paste"><ClipboardPaste size={18} className="text-[var(--c-acc)] mx-auto" /><span className="block text-[12.5px] font-bold mt-1">{tr("Paste or type")}</span></button>
+        <button className={U.card + " text-center py-3 px-1 min-h-[72px] hover:border-[var(--c-acc)]"} onClick={() => { if (full) { openPlan && openPlan(); return; } setEdit({}); setMode("form"); }} data-testid="radar-add"><Plus size={18} className="text-[var(--c-acc)] mx-auto" /><span className="block text-[12.5px] font-bold mt-1">{tr("Add by hand")}</span></button>
       </div>
       <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { onPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="radar-file" />
       {full ? (
-        <button className="c-card w-full text-start" onClick={openPlan} data-testid="radar-limit"><b className="flex items-center gap-2"><Crown size={15} className="c-warn" />{tr("Free watches {n} deadlines", { n: D.FREE_LIMIT })}</b>
-          <span className="c-sub text-[13px]">{tr("Pro watches all of them and keeps your receipts — one cancelled trial usually pays for it.")}</span></button>) : null}
-      {busy ? <p className="c-sub" data-testid="radar-busy">{busy}</p> : null}
+        <button className={U.cardPad + " w-full text-start hover:border-[var(--c-acc)]"} onClick={openPlan} data-testid="radar-limit"><b className="flex items-center gap-2 font-extrabold"><Crown size={15} className="text-[var(--c-acc-2)]" />{tr("Free watches {n} deadlines", { n: D.FREE_LIMIT })}</b>
+          <span className={"text-[13px] " + U.muted}>{tr("Pro watches all of them and keeps your receipts — one cancelled trial usually pays for it.")}</span></button>) : null}
+      {busy ? <p className={U.muted} data-testid="radar-busy">{busy}</p> : null}
       {mode === "paste" ? (
-        <div className="c-card space-y-2">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder={tr("Paste an email or message, or type: “my Netflix trial ends on 20 November”")} className="w-full rounded-lg px-3 py-2 text-[14px] border bg-transparent" style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} dir="auto" data-testid="radar-text" />
-          <button className="c-btn" disabled={!text.trim()} onClick={() => read(text)} data-testid="radar-read">{tr("Find the deadline")}</button>
+        <div className={U.cardPad + " space-y-2"}>
+          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder={tr("Paste an email or message, or type: “my Netflix trial ends on 20 November”")} className={U.area} dir="auto" data-testid="radar-text" />
+          <button className={U.btnP} disabled={!text.trim()} onClick={() => read(text)} data-testid="radar-read">{tr("Find the deadline")}</button>
         </div>) : null}
       {drafts.map((d, i) => (
-        <div key={d._k || i}><span className="c-lbl">{tr("Check it, then save")}</span>
+        <div key={d._k || i} className="space-y-1.5"><span className={U.label}>{tr("Check it, then save")}</span>
           <Form init={d} photo={i === 0 ? photo : ""} onCancel={() => setDrafts((x) => x.filter((y) => y !== d))}
             onSave={(f) => { const { _k, ...rest } = { ...d, ...f }; if (saveOne(rest)) setDrafts((x) => x.filter((y) => y !== d)); }} /></div>))}
       {mode === "form" && edit ? (
@@ -263,11 +264,11 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
       </div><div className={rightHas ? RIGHT : "min-w-0"}>
 
       {data.items.length > 3 ? (
-        <div className="flex items-center gap-2 c-card py-2"><Search size={15} className="c-sub" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find a receipt or document…")} className="flex-1 bg-transparent outline-none text-[14px]" style={{ color: "var(--c-ink)" }} data-testid="radar-search" /></div>) : null}
+        <div className="relative"><Search size={15} className={"absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none " + U.muted} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find a receipt or document…")} className={U.inp + " ps-10"} data-testid="radar-search" /></div>) : null}
       {!V.soon.length && !V.later.length && !drafts.length && mode !== "form" ? (
-        <p className="c-sub" data-testid="radar-empty">{tr("Nothing to watch yet. Scan a receipt, paste a trial email, or add a passport or warranty by hand.")}</p>) : null}
+        <p className={"text-[13.5px] " + U.muted} data-testid="radar-empty">{tr("Nothing to watch yet. Scan a receipt, paste a trial email, or add a passport or warranty by hand.")}</p>) : null}
       {[["Soon", V.soon], ["Later", V.later], ["Done", V.done.slice(0, 20)]].map(([h, list]) => list.filter(match).length ? (
-        <div key={h} className="space-y-2 @container" data-testid={"radar-" + h.toLowerCase()}><span className="c-lbl">{tr(h)}</span>
+        <div key={h} className="space-y-2 @container" data-testid={"radar-" + h.toLowerCase()}><span className={U.label}>{tr(h)}</span>
           {/* v6.28: two columns only when each card has room for its buttons on one line (they wrapped at 1366 px) */}
           <div className="space-y-2 @[920px]:space-y-0 @[920px]:grid @[920px]:grid-cols-2 @[920px]:gap-3 @[920px]:items-start" data-testid="radar-grid">
           {list.filter(match).map((x) => <Item key={x.id} x={x} onDone={done} onEdit={(it) => { setEdit(it); setMode("form"); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} }} onDelete={del} />)}

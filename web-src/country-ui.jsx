@@ -24,21 +24,21 @@ export function CountryRow({ onChange }) {
   return (
     <div className="mb-3" data-testid="country-row">
       <div className="flex items-center gap-2">
-        <span className="flex-1 min-w-0"><span className="block text-[12px] text-slate-300">{tr("Your country")}</span>
-          <span className="block text-[11px] text-slate-500">{tr("Money, VAT, holidays and the weekend follow it")}</span></span>
-        <select value={code} onChange={(e) => pick(e.target.value)} className="shrink-0 rounded-lg border border-slate-700 bg-transparent px-2 py-1 text-[12px] text-slate-200 max-w-[48%]" data-testid="country-pick">
+        <span className="flex-1 min-w-0"><span className="block text-[12px] text-[var(--c-ink)]">{tr("Your country")}</span>
+          <span className="block text-[11px] text-[var(--c-mut)]">{tr("Money, VAT, holidays and the weekend follow it")}</span></span>
+        <select value={code} onChange={(e) => pick(e.target.value)} className="shrink-0 rounded-[14px] border border-[var(--c-ln)] bg-transparent px-2 py-1 text-[12px] text-[var(--c-ink)] max-w-[48%] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="country-pick">
           {!code ? <option value="">{tr("Choose…")}</option> : null}
           {list.map(([k, n]) => <option key={k} value={k}>{n}</option>)}
         </select>
       </div>
-      {!saved && guess ? <button onClick={() => pick(guess)} className="mt-1.5 rounded-lg border border-teal-700 px-2.5 py-1 text-[12px] text-teal-200" data-testid="country-confirm">{tr("Yes, I live in {c}", { c: countryLabel(guess) })}</button> : null}
-      {c ? <div className="mt-2 rounded-xl border border-slate-800 px-3 py-2 text-[12px] text-slate-300 space-y-1" data-testid="country-card">
+      {!saved && guess ? <button onClick={() => pick(guess)} className="mt-1.5 rounded-lg border border-[var(--c-acc)] px-2.5 py-1 text-[12px] text-[var(--c-acc)]" data-testid="country-confirm">{tr("Yes, I live in {c}", { c: countryLabel(guess) })}</button> : null}
+      {c ? <div className="mt-2 rounded-xl border border-[var(--c-ln)] px-3 py-2 text-[12px] text-[var(--c-ink)] space-y-1" data-testid="country-card">
         <p className="m-0">{[c.cur, c.vat == null ? tr("VAT: varies") : tr("VAT {v}%", { v: c.vat }), tr("Weekend: {d}", { d: c.weekend.map(DAY).join(" · ") })].join("  ·  ")}</p>
         <p className="m-0" data-testid="country-tel">{C.emergencyLines(code).join("  ·  ")}</p>
-        {c.note ? <p className="m-0 text-slate-500">{tr(c.note)}</p> : null}
+        {c.note ? <p className="m-0 text-[var(--c-mut)]">{tr(c.note)}</p> : null}
         {next.length ? <div data-testid="country-holidays">
-          {next.map((h) => <p key={h.date + h.name} className="m-0 flex gap-2"><span className="w-24 shrink-0 text-slate-500">{fmt(h.date)}</span><span className="flex-1">{C.holidayName(h)}{h.lunar ? " ☾" : ""}</span></p>)}
-          <button onClick={() => setOpen(!open)} className="text-teal-300 text-[12px] mt-1" data-testid="country-more">{open ? tr("Less") : tr("All the holidays")}</button>
+          {next.map((h) => <p key={h.date + h.name} className="m-0 flex gap-2"><span className="w-24 shrink-0 text-[var(--c-mut)]">{fmt(h.date)}</span><span className="flex-1">{C.holidayName(h)}{h.lunar ? " ☾" : ""}</span></p>)}
+          <button onClick={() => setOpen(!open)} className="text-[var(--c-acc)] text-[12px] mt-1" data-testid="country-more">{open ? tr("Less") : tr("All the holidays")}</button>
         </div> : null}
       </div> : null}
     </div>);

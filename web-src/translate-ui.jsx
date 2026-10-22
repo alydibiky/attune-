@@ -10,8 +10,9 @@ import * as T from "./translate.js";
 import { speakNow } from "./lesson-ui.jsx";
 import { useSubBack } from "./backstack.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+import { page, cardPad, btnP, btnS, area, label, chip, h1, muted } from "./ui-kit.jsx";
 
-const field = "w-full rounded-xl px-3 py-2.5 text-[15px] border bg-transparent";
+const field = area;
 const st = { borderColor: "var(--c-ln)", color: "var(--c-ink)" };
 const GKEY = "attune:translate:glossary", LKEY = "attune:translate:to";
 const RTL = new Set(["ar", "he", "fa", "ur"]);
@@ -49,16 +50,16 @@ function Result({ res, to, native, onCopy }) {
   const flagged = res.filter((r) => !r.ok);
   const text = res.map((r) => r.text).join("\n\n");
   return (
-    <div className="c-card space-y-2" data-testid="tr-result">
+    <div className={cardPad + " space-y-3"} data-testid="tr-result">
       <div dir={RTL.has(to) ? "rtl" : "ltr"} className="text-[16px] leading-relaxed space-y-2">
-        {res.map((r, i) => <p key={i} className="m-0 rounded-lg" style={r.ok ? {} : { background: "rgba(227,164,74,.14)", padding: "4px 6px" }} data-testid={r.ok ? "tr-piece" : "tr-flagged"} title={r.why}>{r.text}</p>)}
+        {res.map((r, i) => <p key={i} className="m-0 rounded-lg" style={r.ok ? {} : { background: "color-mix(in srgb, var(--c-warn) 14%, transparent)", padding: "4px 6px" }} data-testid={r.ok ? "tr-piece" : "tr-flagged"} title={r.why}>{r.text}</p>)}
       </div>
       <p className={"text-[12.5px] m-0 flex items-center gap-1.5 " + (flagged.length ? "c-warn" : "c-pos")} data-testid="tr-badge">
         {flagged.length ? <AlertTriangle size={14} /> : <ShieldCheck size={14} />}
         {flagged.length ? tr("{n} part(s) marked — check them: {why}", { n: flagged.length, why: flagged.map((f) => f.why).filter(Boolean).slice(0, 2).join("; ") }) : tr("Checked: numbers, names and codes kept exactly; written in the right language")}</p>
       <div className="flex gap-2">
-        <button className="c-pill flex items-center gap-1" onClick={() => onCopy(text)} data-testid="tr-copy"><Copy size={13} />{tr("Copy")}</button>
-        <button className="c-pill flex items-center gap-1" onClick={() => speakNow(text, { lang: to, native })} data-testid="tr-listen"><Volume2 size={13} />{tr("Listen")}</button>
+        <button className={btnS} onClick={() => onCopy(text)} data-testid="tr-copy"><Copy size={14} />{tr("Copy")}</button>
+        <button className={btnS} onClick={() => speakNow(text, { lang: to, native })} data-testid="tr-listen"><Volume2 size={14} />{tr("Listen")}</button>
       </div>
     </div>);
 }
@@ -95,23 +96,23 @@ function Interpreter({ llm, native, flash, gloss, close }) {
     setBusy(null);
   };
   const Half = ({ side, flip }) => (
-    <div className={"flex-1 flex flex-col p-4 gap-3 min-h-0 " + (side === "b" ? "bg-slate-900" : "bg-slate-950")} style={flip ? { transform: "rotate(180deg)" } : {}} data-testid={"interp-" + side}>
+    <div className={"flex-1 flex flex-col p-4 gap-3 min-h-0 " + (side === "b" ? "bg-[var(--c-surf)]" : "bg-[var(--c-bg)]")} style={flip ? { transform: "rotate(180deg)" } : {}} data-testid={"interp-" + side}>
       <div className="flex items-center gap-2">
-        <select value={langs[side]} onChange={(e) => setLangs({ ...langs, [side]: e.target.value })} className="rounded-lg bg-slate-800 text-slate-100 text-sm px-2 py-1.5" data-testid={"interp-lang-" + side}>
+        <select value={langs[side]} onChange={(e) => setLangs({ ...langs, [side]: e.target.value })} className="min-h-[44px] rounded-[14px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] text-[var(--c-ink)] text-[14px] font-bold px-3" data-testid={"interp-lang-" + side}>
           {Object.entries(T.LANGS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <span className="flex-1" />
-        {side === "a" ? <button onClick={close} className="text-slate-400 text-sm" data-testid="interp-close">{tr("Close")}</button> : null}
+        {side === "a" ? <button onClick={close} className={btnS} data-testid="interp-close">{tr("Close")}</button> : null}
       </div>
-      <p className="flex-1 overflow-y-auto text-[26px] leading-snug text-white m-0" dir={RTL.has(langs[side]) ? "rtl" : "ltr"} data-testid={"interp-heard-" + side}>{heard[side]}</p>
-      {said[side] ? <p className="text-[13px] text-slate-400 m-0" dir="auto" data-testid={"interp-said-" + side}>{said[side]}</p> : null}
+      <p className="flex-1 overflow-y-auto text-[26px] leading-snug text-[var(--c-ink)] m-0" dir={RTL.has(langs[side]) ? "rtl" : "ltr"} data-testid={"interp-heard-" + side}>{heard[side]}</p>
+      {said[side] ? <p className="text-[13px] text-[var(--c-mut)] m-0" dir="auto" data-testid={"interp-said-" + side}>{said[side]}</p> : null}
       <button onClick={() => turn(side)} disabled={!!busy && busy !== side} data-testid={"interp-mic-" + side}
-        className={"w-full py-4 rounded-2xl text-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-40 " + (busy === side ? "bg-rose-600 text-white" : "bg-teal-500 text-slate-950")}>
+        className={"w-full min-h-[56px] py-4 rounded-[22px] text-lg font-extrabold flex items-center justify-center gap-2 disabled:opacity-40 " + (busy === side ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-acc)] text-[var(--c-on-acc)]")}>
         <Volume2 size={20} />{busy === side ? T.LANGS[langs[side]] + " …" : (T.LANGS[langs[side]] || langs[side])}</button>
     </div>);
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="interp">
+    <div className="calm fixed inset-0 z-[70] flex flex-col bg-[var(--c-bg)] text-[var(--c-ink)]" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="interp">
       <Half side="b" flip />
-      <div className="h-px bg-slate-700" />
+      <div className="h-px bg-[var(--c-ln)]" />
       <Half side="a" />
     </div>);
 }
@@ -152,49 +153,49 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   };
   if (tab === "talk") return <Interpreter llm={llm} native={native} flash={flash} gloss={gloss} close={() => setTab("text")} />;
   return (
-    <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="translate-page">
-      <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Languages size={20} className="c-acc" />{tr("Translate")}</h2>
-        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
-      <div className="flex gap-4 border-b" style={{ borderColor: "var(--c-ln)" }} role="tablist">
-        {[["text", "Text"], ["talk", "Conversation"], ["photo", "Photo"], ["doc", "Document"]].map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className="c-tab pb-2" onClick={() => { setTab(id); setRes(null); }} data-testid={"tr-tab-" + id}>{tr(l)}</button>)}
+    <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="translate-page">
+      <div><h2 className={h1 + " flex items-center gap-2"}><Languages size={20} className="text-[var(--c-acc)]" />{tr("Translate")}</h2>
+        <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + muted}>{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" role="tablist">
+        {[["text", "Text"], ["talk", "Conversation"], ["photo", "Photo"], ["doc", "Document"]].map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className={chip(tab === id)} onClick={() => { setTab(id); setRes(null); }} data-testid={"tr-tab-" + id}>{tr(l)}</button>)}
       </div>
       {/* v6.27 computer layout A: what to translate on the left, the translation on the right (stacked on a phone);
           a document opens the File Converter, so its tab keeps one column */}
       <div className={tab === "doc" ? "lg:max-w-2xl" : PANES}><div className={LEFT}>
       <div className="flex items-center gap-2">
-        <span className="c-sub text-[13px]">{tr("Into")}</span>
+        <span className={label}>{tr("Into")}</span>
         <select value={to} onChange={(e) => { setTo(e.target.value); setRes(null); }} className={field + " flex-1"} style={st} data-testid="tr-to">
           {Object.entries(T.LANGS).map(([k, v]) => <option key={k} value={k}>{tr(v)}</option>)}
         </select>
-        {tab === "text" && res ? <button className="c-ic" aria-label={tr("Swap")} onClick={() => { const from = guessFrom(text); setText(res.map((r) => r.text).join("\n\n")); setTo(from); setRes(null); }}><Shuffle size={15} /></button> : null}
+        {tab === "text" && res ? <button className={btnS + " w-11 px-0"} aria-label={tr("Swap")} onClick={() => { const from = guessFrom(text); setText(res.map((r) => r.text).join("\n\n")); setTo(from); setRes(null); }}><Shuffle size={15} /></button> : null}
       </div>
       {tab === "text" ? (
         <div className="space-y-2">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} dir="auto" placeholder={tr("Type or paste anything…")} className={field} style={st} data-testid="tr-text" />
           <div className="flex items-center gap-3 flex-wrap">
-            <button className="c-btn" disabled={!text.trim() || !!busy} onClick={go} data-testid="tr-go">{tr("Translate")}</button>
-            <label className="flex items-center gap-1.5 text-[13px]"><input type="checkbox" checked={careful} onChange={(e) => setCareful(e.target.checked)} data-testid="tr-careful" />{tr("Extra careful (slower)")}</label>
-            <button className="c-sub text-[13px] underline" onClick={() => setShowG((v) => !v)} data-testid="tr-glossary">{tr("My words ({n})", { n: gloss.length })}</button>
+            <button className={btnP} disabled={!text.trim() || !!busy} onClick={go} data-testid="tr-go">{tr("Translate")}</button>
+            <label className="flex items-center gap-2 min-h-[44px] text-[13.5px] font-semibold"><input type="checkbox" className="w-4 h-4 accent-[var(--c-acc)]" checked={careful} onChange={(e) => setCareful(e.target.checked)} data-testid="tr-careful" />{tr("Extra careful (slower)")}</label>
+            <button className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-acc)]" onClick={() => setShowG((v) => !v)} data-testid="tr-glossary">{tr("My words ({n})", { n: gloss.length })}</button>
           </div>
         </div>) : null}
       {tab === "photo" ? (
         <div className="space-y-2">
-          <button className="c-card w-full text-center py-4" onClick={() => fileRef.current && fileRef.current.click()} data-testid="tr-photo"><Camera size={20} className="c-acc mx-auto" /><span className="block text-[13px] mt-1">{tr("Photo of a menu, a sign, a document…")}</span></button>
+          <button className={cardPad + " w-full text-center py-6 border-dashed hover:border-[var(--c-acc)]"} onClick={() => fileRef.current && fileRef.current.click()} data-testid="tr-photo"><span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Camera size={22} /></span><span className="block text-[13.5px] font-semibold mt-2">{tr("Photo of a menu, a sign, a document…")}</span></button>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { goPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="tr-file" />
-          {photo && photo.out ? <div className="space-y-2" data-testid="tr-overlay"><img src={photo.out} alt="" className="w-full rounded-xl" />
-            <a href={photo.out} download="translated.jpg" className="c-pill inline-flex items-center gap-1"><Download size={13} />{tr("Save the picture")}</a></div> : photo ? <img src={photo.src} alt="" className="max-h-56 rounded-xl" /> : null}
+          {photo && photo.out ? <div className="space-y-2" data-testid="tr-overlay"><img src={photo.out} alt="" className="w-full rounded-[16px] border border-[var(--c-ln)]" />
+            <a href={photo.out} download="translated.jpg" className={btnS}><Download size={14} />{tr("Save the picture")}</a></div> : photo ? <img src={photo.src} alt="" className="max-h-56 rounded-[16px] border border-[var(--c-ln)]" /> : null}
         </div>) : null}
-      {tab === "photo" && photo && photo.text ? <button className="c-pill inline-flex items-center gap-1" style={{ fontSize: 13, padding: "6px 12px", border: 0, cursor: "pointer" }} onClick={() => openRead({ text: photo.text, image: photo.src })} data-testid="tr-read"><Volume2 size={14} />{tr("Read it to me")}</button> : null}
+      {tab === "photo" && photo && photo.text ? <button className={btnS} onClick={() => openRead({ text: photo.text, image: photo.src })} data-testid="tr-read"><Volume2 size={14} />{tr("Read it to me")}</button> : null}
       {tab === "doc" ? (
-        <div className="c-card space-y-2" data-testid="tr-doc"><b className="flex items-center gap-2"><FileText size={16} className="c-acc" />{tr("PDF, Word, slides, subtitles…")}</b>
-          <p className="c-sub m-0 text-[13.5px]">{tr("The File Converter translates the whole file and keeps its layout — tables, headings and pictures stay where they are — with the same checks.")}</p>
-          <button className="c-btn" onClick={() => openConverter && openConverter(to)} data-testid="tr-open-converter">{tr("Choose a file")}</button></div>) : null}
+        <div className={cardPad + " space-y-3"} data-testid="tr-doc"><b className="flex items-center gap-2 text-[16px] font-extrabold"><FileText size={16} className="text-[var(--c-acc)]" />{tr("PDF, Word, slides, subtitles…")}</b>
+          <p className={"m-0 text-[13.5px] " + muted}>{tr("The File Converter translates the whole file and keeps its layout — tables, headings and pictures stay where they are — with the same checks.")}</p>
+          <button className={btnP} onClick={() => openConverter && openConverter(to)} data-testid="tr-open-converter">{tr("Choose a file")}</button></div>) : null}
       {showG ? (
-        <div className="c-card space-y-2" data-testid="tr-gloss"><span className="c-lbl">{tr("Always translate these my way")}</span>
-          {gloss.map((g, i) => <div key={i} className="flex gap-2 items-center"><input value={g.from} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, from: e.target.value } : x)))} placeholder={tr("Word")} className={field} style={st} dir="auto" /><span>→</span><input value={g.to} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, to: e.target.value } : x)))} placeholder={tr("My translation")} className={field} style={st} dir="auto" /><button aria-label={tr("Delete")} onClick={() => saveG(gloss.filter((_, k) => k !== i))}><Trash2 size={14} /></button></div>)}
-          <button className="c-pill inline-flex items-center gap-1" onClick={() => saveG([...gloss, { from: "", to: "" }])}><Plus size={13} />{tr("Add")}</button></div>) : null}
+        <div className={cardPad + " space-y-2.5"} data-testid="tr-gloss"><span className={label}>{tr("Always translate these my way")}</span>
+          {gloss.map((g, i) => <div key={i} className="flex gap-2 items-center"><input value={g.from} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, from: e.target.value } : x)))} placeholder={tr("Word")} className={field} style={st} dir="auto" /><span className="rtl:rotate-180 text-[var(--c-mut)]">→</span><input value={g.to} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, to: e.target.value } : x)))} placeholder={tr("My translation")} className={field} style={st} dir="auto" /><button aria-label={tr("Delete")} className="w-11 h-11 shrink-0 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" onClick={() => saveG(gloss.filter((_, k) => k !== i))}><Trash2 size={14} /></button></div>)}
+          <button className={btnS} onClick={() => saveG([...gloss, { from: "", to: "" }])}><Plus size={14} />{tr("Add")}</button></div>) : null}
       </div><div className={res || busy ? RIGHT : "min-w-0"}>
-      {busy ? <p className="c-sub" data-testid="tr-busy">{busy}</p> : null}
+      {busy ? <p className={"text-[13.5px] " + muted} data-testid="tr-busy">{busy}</p> : null}
       {res ? <Result res={res} to={to} native={native} onCopy={(t) => { try { navigator.clipboard.writeText(t); flash && flash(tr("Copied")); } catch (e) {} }} /> : null}
       {!res && !busy && tab !== "doc" ? <DeskEmpty icon={Languages} title={tr("The translation appears here")} text={tr("Every part is checked: numbers, names and codes kept exactly.")} testid="tr-desk-empty" /> : null}
       </div></div>

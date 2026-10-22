@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { MessageSquare, Trash2, AlertTriangle, BellRing } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as W from "./watch.js";
+import { cardPad, btnP, inp, label, chip } from "./ui-kit.jsx";
 
 const EX = [["Tell me when Ahmed messages me", "لو أحمد بعتلي قولي"], ["Alert me when I get an email from the bank", "نبهني لو جالي إيميل من البنك"], ["Any WhatsApp with the word urgent — tell me", "أي رسالة على الواتس فيها كلمة ضروري نبهني"]];
 
@@ -25,25 +26,25 @@ export function WatchPanel({ native: N, flash }) {
     flash && flash(tr("I'll tell you: {r}", { r: W.ruleText(p, ar) }));
   };
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3" data-testid="watch-panel">
-      <div><p className="text-sm text-slate-200 font-medium flex items-center gap-2 m-0"><BellRing size={16} className="text-teal-300" />{tr("Message alerts")}</p>
-        <p className="text-[12px] text-slate-500 mt-1 mb-0">{tr("Tell Attune whose message you are waiting for — on WhatsApp, Gmail or any email app — and it tells you the moment it arrives. Checked on this phone; SMS are never read.")}</p></div>
-      {N && !access ? <button onClick={() => { try { N.openPayAccess && N.openPayAccess(); } catch (e) {} }} className="w-full text-start rounded-xl border border-amber-700/60 bg-amber-500/10 p-2.5 text-[12px] text-amber-100 flex gap-2" data-testid="watch-access">
+    <div className={"calm " + cardPad + " space-y-3"} data-testid="watch-panel">
+      <div><p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><BellRing size={16} className="text-[var(--c-acc)]" />{tr("Message alerts")}</p>
+        <p className="text-[12px] text-[var(--c-mut)] mt-1 mb-0">{tr("Tell Attune whose message you are waiting for — on WhatsApp, Gmail or any email app — and it tells you the moment it arrives. Checked on this phone; SMS are never read.")}</p></div>
+      {N && !access ? <button onClick={() => { try { N.openPayAccess && N.openPayAccess(); } catch (e) {} }} className="w-full text-start min-h-[44px] rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12.5px] font-semibold text-[var(--c-warn)] flex gap-2" data-testid="watch-access">
         <AlertTriangle size={14} className="shrink-0 mt-0.5" />{tr("Turn on Notification access for Attune so it can see new messages (Settings opens). If it is grey, see “restricted setting” in Money → Payments.")}</button> : null}
       <form onSubmit={(e) => { e.preventDefault(); add(); }} className="flex gap-2">
         <input value={text} onChange={(e) => setText(e.target.value)} dir="auto" placeholder={tr("e.g. tell me when Ahmed messages me")} data-testid="watch-input"
-          className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500" />
-        <button className="px-3 rounded-lg bg-teal-500 text-slate-950 text-sm font-semibold" data-testid="watch-add">{tr("Add")}</button>
+          className={inp + " flex-1"} />
+        <button className={btnP + " !h-11 !min-h-[44px] shrink-0"} data-testid="watch-add">{tr("Add")}</button>
       </form>
-      {!rules.length ? <div className="flex flex-wrap gap-1.5">{EX.map(([en, a]) => <button key={en} onClick={() => add(ar ? a : en)} className="text-[12px] px-2.5 py-1 rounded-full border border-slate-700 text-slate-300" dir="auto" data-testid="watch-example">{ar ? a : en}</button>)}</div> : null}
+      {!rules.length ? <div className="flex flex-wrap gap-1.5">{EX.map(([en, a]) => <button key={en} onClick={() => add(ar ? a : en)} className={chip(false) + " !h-auto min-h-[40px] py-2 !whitespace-normal text-start"} dir="auto" data-testid="watch-example">{ar ? a : en}</button>)}</div> : null}
       {rules.length ? <ul className="m-0 p-0 list-none space-y-1.5" data-testid="watch-rules">{rules.map((r) => (
-        <li key={r.id} className="flex items-center gap-2 rounded-lg border border-slate-800 px-2.5 py-2" data-testid="watch-rule">
-          <MessageSquare size={14} className={r.on ? "text-teal-300" : "text-slate-600"} />
-          <span className={"flex-1 min-w-0 text-[13px] " + (r.on ? "text-slate-100" : "text-slate-500 line-through")} dir="auto">{W.ruleText(r, ar)}</span>
-          <label className="text-[11px] text-slate-400 flex items-center gap-1"><input type="checkbox" checked={!!r.on} onChange={(e) => put(rules.map((x) => (x.id === r.id ? { ...x, on: e.target.checked } : x)))} data-testid="watch-on" />{tr("On")}</label>
-          <button onClick={() => put(rules.filter((x) => x.id !== r.id))} aria-label={tr("Delete")} className="p-1 text-slate-500"><Trash2 size={13} /></button>
+        <li key={r.id} className="flex items-center gap-2 rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] ps-3 pe-1 min-h-[52px]" data-testid="watch-rule">
+          <MessageSquare size={14} className={r.on ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]"} />
+          <span className={"flex-1 min-w-0 text-[13px] " + (r.on ? "text-[var(--c-ink)]" : "text-[var(--c-mut)] line-through")} dir="auto">{W.ruleText(r, ar)}</span>
+          <label className="min-h-[44px] px-1 text-[11px] font-bold text-[var(--c-mut)] flex items-center gap-1.5"><input type="checkbox" className="w-4 h-4 accent-[var(--c-acc)]" checked={!!r.on} onChange={(e) => put(rules.map((x) => (x.id === r.id ? { ...x, on: e.target.checked } : x)))} data-testid="watch-on" />{tr("On")}</label>
+          <button onClick={() => put(rules.filter((x) => x.id !== r.id))} aria-label={tr("Delete")} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-neg)]"><Trash2 size={15} /></button>
         </li>))}</ul> : null}
-      {hits.length ? <div className="space-y-1" data-testid="watch-hits"><p className="text-[11px] uppercase tracking-wider text-slate-500 m-0">{tr("Last alerts")}</p>
-        {hits.map((h, i) => <p key={i} className="text-[12px] text-slate-300 m-0 truncate" dir="auto"><b>{h.who}</b> · {h.app} · {new Date(h.ts).toLocaleString(ar ? "ar-EG" : undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} — {h.text}</p>)}</div> : null}
+      {hits.length ? <div className="space-y-1" data-testid="watch-hits"><p className={label + " m-0"}>{tr("Last alerts")}</p>
+        {hits.map((h, i) => <p key={i} className="text-[12.5px] tabular-nums text-[var(--c-ink)] m-0 truncate" dir="auto"><b>{h.who}</b> · {h.app} · {new Date(h.ts).toLocaleString(ar ? "ar-EG" : undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} — {h.text}</p>)}</div> : null}
     </div>);
 }

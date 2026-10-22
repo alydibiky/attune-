@@ -15,7 +15,7 @@ import {
 } from "./crane.js";
 
 const TABS = [["lift", "Lift"], ["plan", "Lift plan"], ["ground", "Ground"], ["slings", "Slings"], ["wind", "Wind"], ["check", "Checklist"], ["charts", "Charts"]];
-const field = "w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
+const field = "w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2.5 py-2 text-sm text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)]";
 const n = (x, d = 2) => fmtNum(x, { maximumFractionDigits: d });
 // v6.27 computer layout (option A): in each tab the numbers you type on the left and the answer on the right. The
 // grid places CARD_R in the right column across every row (the last row, 1fr, takes up its extra height), so a phone
@@ -27,16 +27,16 @@ const CARD_L = "lg:col-start-1";
 function Num({ label, value, set, unit, testid, hint, className }) {
   return (
     <label className={"block" + (className ? " " + className : "")}>
-      <span className="block text-[11px] text-slate-400 mb-1">{tr(label)}{unit ? <span className="text-slate-600"> ({tr(unit)})</span> : null}</span>
+      <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr(label)}{unit ? <span className="text-[var(--c-mut)]"> ({tr(unit)})</span> : null}</span>
       <input inputMode="decimal" dir="ltr" value={value} onChange={(e) => set(e.target.value)} className={field} data-testid={testid} />
-      {hint ? <span className="block text-[10px] text-slate-600 mt-0.5">{tr(hint)}</span> : null}
+      {hint ? <span className="block text-[10px] text-[var(--c-mut)] mt-0.5">{tr(hint)}</span> : null}
     </label>
   );
 }
 
 function Verdict({ tone, children, testid }) {
-  const c = tone === "ok" ? "border-emerald-700/60 bg-emerald-500/10 text-emerald-200" : tone === "warn" ? "border-amber-700/60 bg-amber-500/10 text-amber-200"
-    : tone === "bad" ? "border-rose-700/60 bg-rose-500/10 text-rose-200" : "border-slate-800 bg-slate-950 text-slate-300";
+  const c = tone === "ok" ? "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10 text-[var(--c-pos)]" : tone === "warn" ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)]"
+    : tone === "bad" ? "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10 text-[var(--c-neg)]" : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-ink)]";
   const Icon = tone === "ok" ? CheckCircle2 : tone === "none" ? Info : AlertTriangle;
   return <div className={`rounded-xl border p-3 text-sm flex items-start gap-2 ${c}`} data-testid={testid}><Icon size={16} className="mt-0.5 shrink-0" /><div className="min-w-0">{children}</div></div>;
 }
@@ -59,21 +59,21 @@ export function CraneToolkit({ flash, share, remember }) {
 
   return (
     <div className="mt-3 space-y-3" data-testid="crane-toolkit">
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 text-[11px] text-slate-400 flex gap-2">
-        <Info size={14} className="shrink-0 mt-0.5 text-slate-500" />
+      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 text-[11px] text-[var(--c-mut)] flex gap-2">
+        <Info size={14} className="shrink-0 mt-0.5 text-[var(--c-mut)]" />
         <span>{tr("Planning aid only. The crane's own load chart and computer (LMI), the manufacturer's manuals and a competent lift planner always decide. Every rule here takes the cautious side.")}</span>
       </div>
-      <div className="flex gap-1 overflow-x-auto att-tabs bg-slate-900 border border-slate-800 rounded-xl p-1">
+      <div className="flex gap-1 overflow-x-auto att-tabs bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-xl p-1">
         {TABS.map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} data-testid={"ctab-" + id}
-            className={`shrink-0 px-3 py-1.5 rounded-lg text-sm ${tab === id ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-400"}`}>{tr(label)}</button>
+            className={`shrink-0 px-3 py-1.5 rounded-lg text-sm ${tab === id ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "text-[var(--c-mut)]"}`}>{tr(label)}</button>
         ))}
       </div>
 
       {tab === "lift" ? (
-        <div className={"bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3 " + CARD_SPLIT}>
+        <div className={"bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3 " + CARD_SPLIT}>
           <label className={"block " + CARD_L}>
-            <span className="block text-[11px] text-slate-400 mb-1">{tr("Crane")}</span>
+            <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Crane")}</span>
             <select value={craneId} onChange={(e) => setCraneId(e.target.value)} className={field} data-testid="lift-crane">
               {data.cranes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               <option value="">{tr("No chart — type the capacity")}</option>
@@ -88,9 +88,9 @@ export function CraneToolkit({ flash, share, remember }) {
             <Num label="Chart capacity at this radius" unit="t" value={manualCap} set={setManualCap} testid="lift-cap" hint="From the crane's load chart for the exact configuration." className={CARD_L} />
           )}
           {crane && chartRes ? (
-            <p className={"text-[12px] text-slate-300 " + CARD_L} data-testid="lift-chart">
-              {chartRes.cap != null ? <>{tr("Chart capacity")}: <b dir="ltr">{n(chartRes.cap)} t</b>{crane.config ? " · " + crane.config : ""}</> : <span className="text-amber-300">{tr(chartRes.why)}</span>}
-              {chartRes.cap != null && chartRes.why ? <span className="block text-[11px] text-slate-500">{tr(chartRes.why)}</span> : null}
+            <p className={"text-[12px] text-[var(--c-ink)] " + CARD_L} data-testid="lift-chart">
+              {chartRes.cap != null ? <>{tr("Chart capacity")}: <b dir="ltr">{n(chartRes.cap)} t</b>{crane.config ? " · " + crane.config : ""}</> : <span className="text-[var(--c-warn)]">{tr(chartRes.why)}</span>}
+              {chartRes.cap != null && chartRes.why ? <span className="block text-[11px] text-[var(--c-mut)]">{tr(chartRes.why)}</span> : null}
             </p>
           ) : null}
           <div className={"grid grid-cols-2 gap-2 " + CARD_L}>
@@ -103,13 +103,13 @@ export function CraneToolkit({ flash, share, remember }) {
           {lift.level === "missing" ? <Verdict tone="none">{tr(lift.why)}</Verdict> : (
             <Verdict tone={lift.level === "ok" ? "ok" : lift.level === "plan" ? "warn" : "bad"} testid="lift-verdict">
               <p className="font-semibold" dir="auto">{tr("{g} t of {c} t = {p}% of the chart", { g: n(lift.gross), c: n(capacity), p: n(lift.pct, 1) })}</p>
-              <div className="h-2 rounded-full bg-slate-800 mt-2 overflow-hidden"><div className={`h-full ${lift.level === "ok" ? "bg-emerald-400" : lift.level === "plan" ? "bg-amber-400" : "bg-rose-500"}`} style={{ width: Math.min(100, lift.pct) + "%" }} /></div>
+              <div className="h-2 rounded-full bg-[var(--c-surf-2)] mt-2 overflow-hidden"><div className={`h-full ${lift.level === "ok" ? "bg-[var(--c-pos)]" : lift.level === "plan" ? "bg-[var(--c-warn)]" : "bg-[var(--c-neg)]"}`} style={{ width: Math.min(100, lift.pct) + "%" }} /></div>
               <p className="mt-2 text-[13px]">{tr({ ok: "Within the chart with margin.", plan: "Critical lift: over {a}% — needs a written lift plan and sign-off.", stop: "Over {b}%: too close to the limit — replan (shorter radius, bigger crane, lighter rigging).", over: "OVER THE CHART — this lift is not allowed." }[lift.level], { a: limits.plan, b: limits.stop })}</p>
               {lift.spare > 0 ? <p className="text-[11px] opacity-80">{tr("Spare: {s} t", { s: n(lift.spare) })}</p> : null}
             </Verdict>
           )}
           </div>
-          <details className={"text-[11px] text-slate-500 " + CARD_L}>
+          <details className={"text-[11px] text-[var(--c-mut)] " + CARD_L}>
             <summary>{tr("Company limits")}</summary>
             <div className="grid grid-cols-2 gap-2 mt-2">
               <Num label="Lift plan above" unit="%" value={String(limits.plan)} set={(v) => setData({ ...data, limits: { ...limits, plan: num(v) || DEFAULT_LIMITS.plan } })} />
@@ -136,21 +136,21 @@ function PlanTab({ lift, flash }) {
   const p = { ...f, ...lift, date: f.date || new Date().toISOString().slice(0, 10), legs: f.legs || 2, angle: f.angle == null ? "" : f.angle, soil: f.soil || "dense_gravel" };
   const r = liftPlan(p);
   const V = { go: ["ok", "GO — within every limit"], caution: ["warn", "GO WITH CARE — read the cautions"], plan: ["warn", "CRITICAL LIFT — a signed lift plan is required"], stop: ["bad", "STOP — do not lift as planned"], incomplete: ["none", "INCOMPLETE — fill the missing checks"] }[r.overall];
-  const t = (label, k, ph) => <label className="block"><span className="block text-[11px] text-slate-400 mb-1">{tr(label)}</span><input value={f[k] || ""} onChange={(e) => set(k)(e.target.value)} placeholder={ph || ""} dir="auto" className={field} data-testid={"plan-" + k} /></label>;
+  const t = (label, k, ph) => <label className="block"><span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr(label)}</span><input value={f[k] || ""} onChange={(e) => set(k)(e.target.value)} placeholder={ph || ""} dir="auto" className={field} data-testid={"plan-" + k} /></label>;
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3" data-testid="crane-plan">
-      <p className="text-[12px] text-slate-400 m-0">{tr("The crane, radius and load come from the Lift tab. Add the rest and make the plan as a PDF to sign.")}</p>
+    <div className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3" data-testid="crane-plan">
+      <p className="text-[12px] text-[var(--c-mut)] m-0">{tr("The crane, radius and load come from the Lift tab. Add the rest and make the plan as a PDF to sign.")}</p>
       <div className="grid grid-cols-2 gap-2">{t("Job", "job", "Beam lift, bay 3")}{t("Site", "site")}{t("Load (what)", "loadName", "Steel beam")}{t("Lift planner", "planner")}</div>
-      <p className="text-[11px] uppercase tracking-wider text-slate-500 m-0">{tr("Ground")}</p>
+      <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)] m-0">{tr("Ground")}</p>
       <div className="grid grid-cols-2 gap-2">
         <Num label="Crane mass" unit="t" value={f.craneMass || ""} set={set("craneMass")} testid="plan-cranemass" />
         <Num label="Counterweight" unit="t" value={f.counterweight || ""} set={set("counterweight")} />
         <Num label="Mat length" unit="m" value={f.matL || ""} set={set("matL")} testid="plan-matl" />
         <Num label="Mat width" unit="m" value={f.matW || ""} set={set("matW")} testid="plan-matw" />
-        <label className="block col-span-2"><span className="block text-[11px] text-slate-400 mb-1">{tr("Ground")}</span>
+        <label className="block col-span-2"><span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Ground")}</span>
           <select value={p.soil} onChange={(e) => set("soil")(e.target.value)} className={field}>{GROUNDS.map(([id, name, q]) => <option key={id} value={id}>{tr(name)} · {q} kN/m²</option>)}</select></label>
       </div>
-      <p className="text-[11px] uppercase tracking-wider text-slate-500 m-0">{tr("Slings and wind")}</p>
+      <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)] m-0">{tr("Slings and wind")}</p>
       <div className="grid grid-cols-2 gap-2">
         <Num label="Sling legs" value={String(p.legs)} set={set("legs")} />
         <Num label="Angle from vertical" unit="°" value={String(f.angle ?? "")} set={set("angle")} testid="plan-angle" />
@@ -161,7 +161,7 @@ function PlanTab({ lift, flash }) {
       </div>
       <Verdict tone={V[0]} testid="plan-verdict"><p className="font-semibold m-0">{tr(V[1])}</p>
         <ul className="mt-1.5 mb-0 ps-4 text-[12.5px] space-y-0.5">{r.checks.map((c) => <li key={c.id}>{tr(c.title)}: {tr({ ok: "OK", caution: "caution", plan: "critical", stop: "STOP", missing: "missing" }[c.level])} — {tr(c.lines[c.lines.length - 1])}</li>)}</ul></Verdict>
-      <button onClick={() => sharePdf({ html: planHtml(p, r), name: "Lift plan " + (f.job || p.crane || "").replace(/[^\p{L}\p{N}-]+/gu, " ").trim(), flash })} className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2" data-testid="plan-pdf"><Share2 size={15} />{tr("Make the lift plan (PDF)")}</button>
+      <button onClick={() => sharePdf({ html: planHtml(p, r), name: "Lift plan " + (f.job || p.crane || "").replace(/[^\p{L}\p{N}-]+/gu, " ").trim(), flash })} className="w-full py-2.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="plan-pdf"><Share2 size={15} />{tr("Make the lift plan (PDF)")}</button>
     </div>);
 }
 
@@ -172,7 +172,7 @@ function GroundTab({ gross }) {
   const allowable = custom ? num(custom) : (GROUNDS.find((x) => x[0] === soil) || [])[2];
   const r = outriggerPressure({ force, craneMass: mass, counterweight: cw, gross: g, matL: L, matW: W, allowable });
   return (
-    <div className={"bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3 " + CARD_SPLIT} data-testid="ground-tab">
+    <div className={"bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3 " + CARD_SPLIT} data-testid="ground-tab">
       <Num label="Heaviest outrigger force" unit="t" value={force} set={setForce} testid="g-force" hint="Best: from the manufacturer's outrigger calculator for this lift. Leave empty to estimate." className={CARD_L} />
       {!(num(force) > 0) ? (
         <div className={"grid grid-cols-3 gap-2 " + CARD_L}>
@@ -186,7 +186,7 @@ function GroundTab({ gross }) {
         <Num label="Mat width" unit="m" value={W} set={setW} testid="g-W" />
       </div>
       <label className={"block " + CARD_L}>
-        <span className="block text-[11px] text-slate-400 mb-1">{tr("Ground")}</span>
+        <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Ground")}</span>
         <select value={soil} onChange={(e) => { setSoil(e.target.value); setCustom(""); }} className={field} data-testid="g-soil">
           {GROUNDS.map(([k, label, q]) => <option key={k} value={k}>{tr(label)} · {q} kN/m²</option>)}
         </select>
@@ -210,19 +210,19 @@ function SlingTab({ gross }) {
   const [w, setW] = useState(String(gross || "")); const [legs, setLegs] = useState(2); const [angle, setAngle] = useState(30); const [all, setAll] = useState(false);
   const r = slingTension({ load: w, legs, angle, allLegs: all });
   return (
-    <div className={"bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3 " + CARD_SPLIT} data-testid="sling-tab">
+    <div className={"bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3 " + CARD_SPLIT} data-testid="sling-tab">
       <Num label="Load (with spreader, if any)" unit="t" value={w} set={setW} testid="s-load" className={CARD_L} />
       <div className={"flex gap-1.5 " + CARD_L}>{[1, 2, 3, 4].map((k) => (
-        <button key={k} onClick={() => setLegs(k)} data-testid={"s-legs-" + k} className={`flex-1 py-2 rounded-lg border text-sm ${legs === k ? "border-teal-600 bg-teal-500/10 text-teal-200" : "border-slate-800 text-slate-400"}`}>{tr("{n} leg", { n: k })}</button>
+        <button key={k} onClick={() => setLegs(k)} data-testid={"s-legs-" + k} className={`flex-1 py-2 rounded-lg border text-sm ${legs === k ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("{n} leg", { n: k })}</button>
       ))}</div>
       {legs > 1 ? (
         <label className={"block " + CARD_L}>
-          <span className="block text-[11px] text-slate-400 mb-1">{tr("Angle of each leg from vertical: {a}° (between legs: {b}°)", { a: angle, b: angle * 2 })}</span>
+          <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Angle of each leg from vertical: {a}° (between legs: {b}°)", { a: angle, b: angle * 2 })}</span>
           <input type="range" min="0" max="75" step="5" value={angle} onChange={(e) => setAngle(+e.target.value)} className="w-full" data-testid="s-angle" />
         </label>
       ) : null}
       {legs >= 3 ? (
-        <label className={"flex items-center gap-2 text-[12px] text-slate-400 " + CARD_L}><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} />{tr("All legs share the load (engineered, balanced lift only)")}</label>
+        <label className={"flex items-center gap-2 text-[12px] text-[var(--c-mut)] " + CARD_L}><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} />{tr("All legs share the load (engineered, balanced lift only)")}</label>
       ) : null}
       <div className={CARD_R}>
       {r.why ? <Verdict tone="none">{tr(r.why)}</Verdict> : (
@@ -246,7 +246,7 @@ function WindTab({ gross }) {
   const vTip = num(hTip) > 0 && num(vNow) >= 0 ? windAtHeight(vNow, hMeas, Math.max(num(hTip), num(hMeas))) : num(vNow);
   const r = windCheck({ vChart, mass, area, cw, vNow: isFinite(vTip) ? vTip : "" });
   return (
-    <div className={"bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3 " + CARD_SPLIT} data-testid="wind-tab">
+    <div className={"bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3 " + CARD_SPLIT} data-testid="wind-tab">
       <div className={"grid grid-cols-2 gap-2 " + CARD_L}>
         <Num label="Chart's wind limit" unit="m/s" value={vChart} set={setVChart} testid="w-vchart" hint="Printed on the load chart (often 9.8 m/s)." />
         <Num label="Wind now" unit="m/s" value={vNow} set={setVNow} testid="w-vnow" hint="3-second gust from the crane's anemometer or a meter." />
@@ -256,7 +256,7 @@ function WindTab({ gross }) {
         <Num label="Load's largest face" unit="m²" value={area} set={setArea} testid="w-area" />
       </div>
       <label className={"block " + CARD_L}>
-        <span className="block text-[11px] text-slate-400 mb-1">{tr("Load shape (drag coefficient)")}</span>
+        <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Load shape (drag coefficient)")}</span>
         <select value={cw} onChange={(e) => setCw(e.target.value)} className={field}>
           <option value="0.8">{tr("Round (pipe, tank) · 0.8")}</option>
           <option value="1.2">{tr("Box or panel · 1.2 (usual)")}</option>
@@ -264,7 +264,7 @@ function WindTab({ gross }) {
         </select>
       </label>
       <div className={CARD_R}>
-      {isFinite(vTip) && num(hTip) > num(hMeas) ? <p className="text-[12px] text-slate-300">{tr("Wind at the boom tip: about {v} m/s (Beaufort {b})", { v: n(vTip, 1), b: beaufort(vTip) })}</p> : null}
+      {isFinite(vTip) && num(hTip) > num(hMeas) ? <p className="text-[12px] text-[var(--c-ink)]">{tr("Wind at the boom tip: about {v} m/s (Beaufort {b})", { v: n(vTip, 1), b: beaufort(vTip) })}</p> : null}
       {r.why ? <Verdict tone="none">{tr(r.why)}</Verdict> : (
         <Verdict tone={r.ok == null ? (r.reduced ? "warn" : "none") : r.ok ? "ok" : "bad"} testid="w-verdict">
           <p className="font-semibold">{tr("Highest wind for this lift: {v} m/s", { v: n(r.vAllowed, 1) })}</p>
@@ -288,27 +288,27 @@ function ChecklistTab({ data, setData, share, remember, flash, lift }) {
     ...CHECKLIST.flatMap(([g, items]) => ["", tr(g) + ":", ...items.map((i) => (state[i] ? "☑ " : "☐ ") + tr(i))]),
   ].filter((x) => x !== "").join("\n");
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3" data-testid="check-tab">
-      <div className="flex items-center justify-between"><span className="text-sm text-slate-200">{tr("{d} of {t} checked", { d: done, t: all.length })}</span>
-        <button onClick={() => setData({ ...data, checklist: {} })} className="text-[12px] text-slate-500">{tr("Start again")}</button></div>
-      <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden"><div className="h-full bg-teal-400" style={{ width: (done / all.length) * 100 + "%" }} /></div>
+    <div className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3" data-testid="check-tab">
+      <div className="flex items-center justify-between"><span className="text-sm text-[var(--c-ink)]">{tr("{d} of {t} checked", { d: done, t: all.length })}</span>
+        <button onClick={() => setData({ ...data, checklist: {} })} className="text-[12px] text-[var(--c-mut)]">{tr("Start again")}</button></div>
+      <div className="h-1.5 rounded-full bg-[var(--c-surf-2)] overflow-hidden"><div className="h-full bg-[var(--c-acc)]" style={{ width: (done / all.length) * 100 + "%" }} /></div>
       <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-8 lg:gap-y-3">
       {CHECKLIST.map(([g, items]) => (
         <div key={g}>
-          <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">{tr(g)}</p>
+          <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)] mb-1">{tr(g)}</p>
           {items.map((i) => (
-            <label key={i} className="flex items-start gap-2 py-1 text-[13px] text-slate-200">
+            <label key={i} className="flex items-start gap-2 py-1 text-[13px] text-[var(--c-ink)]">
               <input type="checkbox" checked={!!state[i]} onChange={() => toggle(i)} className="mt-1" data-testid="chk" />
-              <span className={state[i] ? "text-slate-500 line-through" : ""}>{tr(i)}</span>
+              <span className={state[i] ? "text-[var(--c-mut)] line-through" : ""}>{tr(i)}</span>
             </label>
           ))}
         </div>
       ))}
       </div>
       <div className="flex gap-2 lg:max-w-md lg:ms-auto">
-        <button onClick={() => share(text())} className="flex-1 flex items-center justify-center gap-1.5 border border-slate-700 rounded-xl py-2 text-sm text-slate-200" data-testid="chk-share"><Share2 size={15} />{tr("Share")}</button>
+        <button onClick={() => share(text())} className="flex-1 flex items-center justify-center gap-1.5 border border-[var(--c-ln)] rounded-xl py-2 text-sm text-[var(--c-ink)]" data-testid="chk-share"><Share2 size={15} />{tr("Share")}</button>
         <button onClick={() => { remember({ kind: "note", title: tr("Pre-lift checklist") + (lift.crane ? " · " + lift.crane : ""), text: text(), output: "", tags: ["crane", "checklist"] }); flash(tr("Saved to Memory")); }}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-teal-500 text-slate-950 font-semibold rounded-xl py-2 text-sm"><Save size={15} />{tr("Save to Memory")}</button>
+          className="flex-1 flex items-center justify-center gap-1.5 bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2 text-sm min-h-[44px]"><Save size={15} />{tr("Save to Memory")}</button>
       </div>
     </div>
   );
@@ -326,37 +326,37 @@ function ChartsTab({ data, setData, flash, onPick }) {
   };
   return (
     <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start" data-testid="charts-tab">
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-2">
-        <p className="text-sm text-slate-200">{tr("Your cranes' load charts")}</p>
-        {data.cranes.length === 0 ? <p className="text-[12px] text-slate-500">{tr("None yet. Add each crane's chart once — copy it from the manufacturer's table (PDF or the crane's manual).")}</p> : null}
+      <div className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-2">
+        <p className="text-sm text-[var(--c-ink)]">{tr("Your cranes' load charts")}</p>
+        {data.cranes.length === 0 ? <p className="text-[12px] text-[var(--c-mut)]">{tr("None yet. Add each crane's chart once — copy it from the manufacturer's table (PDF or the crane's manual).")}</p> : null}
         {data.cranes.map((c) => (
-          <div key={c.id} className="flex items-center gap-2 rounded-xl bg-slate-950 border border-slate-800 px-3 py-2" data-testid="crane-item">
+          <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="crane-item">
             <button onClick={() => onPick(c.id)} className="flex-1 min-w-0 text-start">
-              <span className="block text-sm text-slate-100 truncate" dir="auto">{c.name}</span>
-              <span className="block text-[11px] text-slate-500 truncate">{c.config ? c.config + " · " : ""}{tr("{r} radii × {b} boom lengths", { r: c.chart.radii.length, b: c.chart.booms.length })}</span>
+              <span className="block text-sm text-[var(--c-ink)] truncate" dir="auto">{c.name}</span>
+              <span className="block text-[11px] text-[var(--c-mut)] truncate">{c.config ? c.config + " · " : ""}{tr("{r} radii × {b} boom lengths", { r: c.chart.radii.length, b: c.chart.booms.length })}</span>
             </button>
-            <button onClick={async () => { if (await askConfirm("Remove this crane from the fleet?")) setData({ ...data, cranes: data.cranes.filter((x) => x.id !== c.id) }); }} className="p-2 text-slate-500" aria-label={tr("Delete")}><Trash2 size={15} /></button>
+            <button onClick={async () => { if (await askConfirm("Remove this crane from the fleet?")) setData({ ...data, cranes: data.cranes.filter((x) => x.id !== c.id) }); }} className="p-2 text-[var(--c-mut)]" aria-label={tr("Delete")}><Trash2 size={15} /></button>
           </div>
         ))}
       </div>
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-2">
-        <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("Add a chart")}</p>
+      <div className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-2">
+        <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)]">{tr("Add a chart")}</p>
         <input dir="auto" value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("Crane, e.g. Liebherr LTM 1100-4.2 · unit 3")} className={field} data-testid="ch-name" />
         <input dir="auto" value={config} onChange={(e) => setConfig(e.target.value)} placeholder={tr("Configuration, e.g. 22 t counterweight · outriggers 7.0 × 7.0 m · 360°")} className={field} data-testid="ch-config" />
         <textarea dir="ltr" value={text} onChange={(e) => setText(e.target.value)} rows={6} data-testid="ch-text"
           placeholder={"m\t12\t20\t30\n3\t60\t45\t-\n5\t42\t38\t30\n10\t20\t19\t17"} className={field + " font-mono text-[12px] resize-none"} />
-        <p className="text-[11px] text-slate-500">{tr("First row: boom lengths (m). Each next row: radius (m), then the capacity (t) for each boom length. “-” where the chart has no value. One chart per configuration.")}</p>
+        <p className="text-[11px] text-[var(--c-mut)]">{tr("First row: boom lengths (m). Each next row: radius (m), then the capacity (t) for each boom length. “-” where the chart has no value. One chart per configuration.")}</p>
         {parsed ? (
-          <div className="rounded-lg border border-slate-800 p-2 overflow-x-auto" data-testid="ch-preview">
-            {parsed.problems.map((p) => <p key={p} className="text-[11px] text-amber-300">{tr(p)}</p>)}
-            <table className="text-[11px] text-slate-300" dir="ltr"><tbody>
-              <tr><td className="pe-2 text-slate-500">R \ L</td>{parsed.booms.map((b, i) => <td key={i} className="px-1.5 text-teal-300">{b}</td>)}</tr>
-              {parsed.radii.map((r, i) => <tr key={i}><td className="pe-2 text-teal-300">{r}</td>{parsed.cap[i].map((v, j) => <td key={j} className="px-1.5">{v == null ? "–" : v}</td>)}</tr>)}
+          <div className="rounded-lg border border-[var(--c-ln)] p-2 overflow-x-auto" data-testid="ch-preview">
+            {parsed.problems.map((p) => <p key={p} className="text-[11px] text-[var(--c-warn)]">{tr(p)}</p>)}
+            <table className="text-[11px] text-[var(--c-ink)]" dir="ltr"><tbody>
+              <tr><td className="pe-2 text-[var(--c-mut)]">R \ L</td>{parsed.booms.map((b, i) => <td key={i} className="px-1.5 text-[var(--c-acc)]">{b}</td>)}</tr>
+              {parsed.radii.map((r, i) => <tr key={i}><td className="pe-2 text-[var(--c-acc)]">{r}</td>{parsed.cap[i].map((v, j) => <td key={j} className="px-1.5">{v == null ? "–" : v}</td>)}</tr>)}
             </tbody></table>
           </div>
         ) : null}
-        <button onClick={add} className="w-full flex items-center justify-center gap-1.5 bg-teal-500 text-slate-950 font-semibold rounded-xl py-2.5 text-sm" data-testid="ch-add"><Plus size={16} />{tr("Save chart")}</button>
-        <p className="text-[11px] text-slate-600">{tr("Check the preview against the printed chart before relying on it. Charts are kept on this phone and in your backups.")}</p>
+        <button onClick={add} className="w-full flex items-center justify-center gap-1.5 bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 text-sm min-h-[44px]" data-testid="ch-add"><Plus size={16} />{tr("Save chart")}</button>
+        <p className="text-[11px] text-[var(--c-mut)]">{tr("Check the preview against the printed chart before relying on it. Charts are kept on this phone and in your backups.")}</p>
       </div>
     </div>
   );

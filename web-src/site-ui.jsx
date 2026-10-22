@@ -16,7 +16,7 @@ export function MicButton({ listen, value, setValue, flash }) {
     try { const t = await listen(getLang() === "ar" ? "ar-EG" : "", (p) => setValue(base + p)); if (t) setValue(base + t); }
     catch (e) { flash && flash(tr(String((e && e.message) || e))); } finally { setOn(false); }
   };
-  return <button onClick={go} data-testid="site-mic" className={"shrink-0 whitespace-nowrap flex items-center gap-1 text-xs px-2 py-1 rounded-lg border " + (on ? "bg-rose-500/15 border-rose-800 text-rose-200" : "bg-teal-500/10 border-teal-900 text-teal-300")}>
+  return <button onClick={go} data-testid="site-mic" className={"shrink-0 whitespace-nowrap flex items-center gap-1 text-xs px-2 py-1 rounded-lg border " + (on ? "bg-[var(--c-neg)]/15 border-[var(--c-neg)]/50 text-[var(--c-neg)]" : "bg-[var(--c-soft)] border-[var(--c-acc)]/40 text-[var(--c-acc)]")}>
     {on ? <Loader2 size={13} className="animate-spin" /> : <Mic size={13} />}{on ? tr("Listening…") : tr("Speak")}</button>;
 }
 
@@ -39,20 +39,20 @@ export function SitePhotos({ photos, setPhotos, title, text, by, flash }) {
   return (
     <div className="mt-3 space-y-2" data-testid="site-photos">
       <div className="flex items-center gap-2">
-        <button onClick={() => ref.current && ref.current.click()} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-slate-700 text-slate-200" data-testid="site-photo-add"><Camera size={14} />{tr("Add photos")}</button>
-        <span className="text-[11px] text-slate-500">{tr("Each photo gets the time and the place")}</span>
+        <button onClick={() => ref.current && ref.current.click()} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)]" data-testid="site-photo-add"><Camera size={14} />{tr("Add photos")}</button>
+        <span className="text-[11px] text-[var(--c-mut)]">{tr("Each photo gets the time and the place")}</span>
         <input ref={ref} type="file" accept="image/*" capture="environment" multiple className="hidden" data-testid="site-photo-file" onChange={(e) => { add([...(e.target.files || [])]); e.target.value = ""; }} />
       </div>
       {photos.length ? <div className="grid grid-cols-2 gap-2">{photos.map((p, i) => (
-        <div key={i} className="rounded-lg border border-slate-800 p-1.5 space-y-1" data-testid="site-photo">
+        <div key={i} className="rounded-lg border border-[var(--c-ln)] p-1.5 space-y-1" data-testid="site-photo">
           <div className="relative"><img src={p.url} alt="" className="w-full h-24 object-cover rounded" />
             <button onClick={() => setPhotos(photos.filter((_, j) => j !== i))} aria-label={tr("Remove")} className="absolute top-1 end-1 bg-black/60 rounded-full p-1 text-white"><X size={12} /></button></div>
-          <p className="text-[10.5px] text-slate-400" dir="auto" data-testid="site-photo-stamp">{stampLine(p, i, ar ? "ar" : "en")}</p>
+          <p className="text-[10.5px] text-[var(--c-mut)]" dir="auto" data-testid="site-photo-stamp">{stampLine(p, i, ar ? "ar" : "en")}</p>
           <input value={p.note} onChange={(e) => setPhotos(photos.map((x, j) => (j === i ? { ...x, note: e.target.value } : x)))} placeholder={tr("What it shows (optional)")} dir="auto"
-            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[11.5px] text-slate-200" />
+            className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded px-2 py-1 text-[11.5px] text-[var(--c-ink)]" />
         </div>))}</div> : null}
       {text ? <button disabled={busy} onClick={async () => { setBusy(true); await sharePdf({ html: reportHtml({ title, text, by, photos, lang: ar ? "ar" : "en" }), name: String(title || "report").replace(/[^\w؀-ۿ-]+/g, "_"), flash }); setBusy(false); }}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-teal-700 text-teal-200 text-sm" data-testid="site-pdf">
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[var(--c-acc)]/40 text-[var(--c-acc)] text-sm" data-testid="site-pdf">
         {busy ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}{photos.length ? tr("Report with {n} photos (PDF)", { n: photos.length }) : tr("Report as PDF")}</button> : null}
     </div>);
 }

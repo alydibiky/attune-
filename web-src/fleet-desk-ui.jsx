@@ -29,8 +29,8 @@ export function TableOut({ s, saveFile, flash, title, head, rows, total = null, 
 }
 const Table = ({ head, rows, total, testid }) => <div className={card + " overflow-x-auto"} data-testid={testid}><table className="w-full text-[13px]">
   <thead><tr className={muted}>{head.map((h, i) => <th key={h + i} className="px-3 py-2.5 font-semibold whitespace-nowrap text-start">{tr(h)}</th>)}</tr></thead>
-  <tbody>{rows.map((r, i) => <tr key={i} className="border-t border-[#EEF2F7]" data-testid={testid ? testid + "-row" : null}>{r.map((v, j) => <td key={j} className={"px-3 py-2.5 " + (typeof v === "number" ? "text-end tabular-nums whitespace-nowrap" : "")} dir={typeof v === "number" ? "ltr" : "auto"}>{typeof v === "number" ? num(v) : v}</td>)}</tr>)}
-    {total != null ? <tr className="border-t-2 border-[#DCE3EC] font-bold"><td className="px-3 py-2.5" colSpan={head.length - 1}>{tr("Total")}</td><td className="px-3 py-2.5 text-end tabular-nums" dir="ltr">{num(total)}</td></tr> : null}</tbody></table></div>;
+  <tbody>{rows.map((r, i) => <tr key={i} className="border-t border-[var(--c-ln)]" data-testid={testid ? testid + "-row" : null}>{r.map((v, j) => <td key={j} className={"px-3 py-2.5 " + (typeof v === "number" ? "text-end tabular-nums whitespace-nowrap" : "")} dir={typeof v === "number" ? "ltr" : "auto"}>{typeof v === "number" ? num(v) : v}</td>)}</tr>)}
+    {total != null ? <tr className="border-t-2 border-[var(--c-ln)] font-bold"><td className="px-3 py-2.5" colSpan={head.length - 1}>{tr("Total")}</td><td className="px-3 py-2.5 text-end tabular-nums" dir="ltr">{num(total)}</td></tr> : null}</tbody></table></div>;
 
 // ---- Today: the crane program's Dashboard money -------------------------------------------------------------------------------
 export function TodayCash({ s, money, setOpen }) {
@@ -48,7 +48,7 @@ export function TodayCash({ s, money, setOpen }) {
     {more ? <>
       <Table head={["Month", "Collected", "Spent", "Profit"]} rows={six.map((x) => [showYm(x.ym), x.income, x.expenses, x.profit])} testid="fleet-six" />
       {owe.length ? <div className="space-y-1.5"><p className="font-bold text-[14px]">{tr("Who owes most")}</p>
-        {owe.map((x) => <button key={x.client.id} onClick={() => setOpen({ kind: "client", id: x.client.id })} className="w-full flex justify-between text-[13.5px] py-1" data-testid="fleet-owe"><span dir="auto">{x.client.name}</span><span className="tabular-nums font-semibold text-[#B45309]" dir="ltr">{money(x.balance)}</span></button>)}</div> : null}
+        {owe.map((x) => <button key={x.client.id} onClick={() => setOpen({ kind: "client", id: x.client.id })} className="w-full flex justify-between text-[13.5px] py-1" data-testid="fleet-owe"><span dir="auto">{x.client.name}</span><span className="tabular-nums font-semibold text-[var(--c-warn)]" dir="ltr">{money(x.balance)}</span></button>)}</div> : null}
     </> : null}
   </div>;
 }
@@ -94,7 +94,7 @@ export function QueryPane({ s, saveFile, flash }) {
     <Seg value={q.table} onChange={(v) => setQ({ ...q, table: v, status: "" })} items={TABLES} testid="fleet-qt" />
     {st.length ? <Seg value={q.status || "all"} onChange={(v) => setQ({ ...q, status: v === "all" ? "" : v })} items={[["all", "All"], ...st.map((x) => [x, STATUS_L[x]])]} testid="fleet-qs" /> : null}
     <div className="grid grid-cols-2 gap-2"><DateF label={tr("From")} value={q.from} onChange={(v) => setQ({ ...q, from: v })} testid="fleet-q-from" /><DateF label={tr("To")} value={q.to} onChange={(v) => setQ({ ...q, to: v })} testid="fleet-q-to" /></div>
-    {err ? <p className="text-[13px] text-[#B91C1C]">{err}</p> : null}
+    {err ? <p className="text-[13px] text-[var(--c-neg)]">{err}</p> : null}
     {r ? <><p className={"text-[12.5px] " + muted} data-testid="fleet-q-count">{tr("{n} rows", { n: rows.length })}</p>
       {rows.length ? <><Table head={r.head} rows={rows.slice(0, 400)} total={r.total} testid="fleet-q-table" />
         <TableOut s={s} saveFile={saveFile} flash={flash} title={(TABLES.find((x) => x[0] === q.table) || [])[1]} head={r.head} rows={rows} total={r.total} file={"fleet-query-" + q.table + "-" + F.isoDay()} testid="fleet-q" /></> : <Empty>{tr("Nothing matches.")}</Empty>}</> : null}
@@ -107,7 +107,7 @@ export function StoreKpis({ s, money }) {
   return <div className="grid grid-cols-2 lg:grid-cols-4 gap-2" data-testid="fleet-store-kpis">
     <Kpi label={tr("Items")} value={num(k.items)} /><Kpi label={tr("Stock value")} value={money(k.value)} />
     <Kpi label={tr("In this month")} value={money(k.inMonth)} /><Kpi label={tr("Out this month")} value={money(k.outMonth)} />
-    {k.low ? <p className="col-span-2 lg:col-span-4 text-[12.5px] text-[#B45309] font-semibold">{tr("{n} items low", { n: k.low })}</p> : null}</div>;
+    {k.low ? <p className="col-span-2 lg:col-span-4 text-[12.5px] text-[var(--c-warn)] font-semibold">{tr("{n} items low", { n: k.low })}</p> : null}</div>;
 }
 /** The warehouse program's search panel: dates, item, technician, crane, supplier (the text box and in / out stay in Movements). */
 export function StoreFilters({ s, f, setF }) {
@@ -153,8 +153,8 @@ export function ListsPane({ s, run }) {
       {edit && edit.from === x.name ? <><input autoFocus value={edit.to} onChange={(e) => setEdit({ ...edit, to: e.target.value })} className={inp + " h-10"} dir="auto" data-testid="fleet-ln-edit" />
         <button className={btnS} onClick={() => { if (run((st) => D.renameName(st, list, edit.from, edit.to), tr("Renamed everywhere"))) setEdit(null); }} data-testid="fleet-ln-save">{tr("Save")}</button></>
         : <><span className="flex-1 min-w-0 font-semibold text-[14px] truncate" dir="auto">{x.name}</span><span className={"text-[12px] " + muted}>{tr("{n} lines", { n: x.used })}</span>
-          <button className="w-9 h-9 grid place-items-center text-[#475569]" aria-label={tr("Rename")} onClick={() => setEdit({ from: x.name, to: x.name })} data-testid="fleet-ln-rename"><Pencil size={15} /></button>
-          <button className="w-9 h-9 grid place-items-center text-[#94A3B8]" aria-label={tr("Remove")} onClick={async () => { if (await askConfirm("Remove this name from the list?", { yes: "Remove" })) run((st) => D.removeName(st, list, x.name), tr("Removed")); }} data-testid="fleet-ln-remove"><Trash2 size={15} /></button></>}</div>)
+          <button className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Rename")} onClick={() => setEdit({ from: x.name, to: x.name })} data-testid="fleet-ln-rename"><Pencil size={15} /></button>
+          <button className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Remove")} onClick={async () => { if (await askConfirm("Remove this name from the list?", { yes: "Remove" })) run((st) => D.removeName(st, list, x.name), tr("Removed")); }} data-testid="fleet-ln-remove"><Trash2 size={15} /></button></>}</div>)
       : <Empty>{tr("Nothing here yet.")}</Empty>}
   </div>;
 }
@@ -177,7 +177,7 @@ export function PortalForm({ s, sheet, saveFile, flash, close }) {
   return <div className="space-y-3" data-testid="fleet-portal">
     <p className={"text-[13.5px] " + muted}>{tr("One page {c} can open on any phone: what they owe, their invoices, payments and job orders. No costs, no other client. Send it on WhatsApp or by email.", { c: c.name })}</p>
     <Txt label={tr("PIN to open it (4+ digits — recommended)")} value={pin} onChange={setPin} mode="numeric" dir="ltr" testid="fleet-portal-pin" />
-    {pin && pin.length < 4 ? <p className="text-[12.5px] text-[#B91C1C]">{tr("At least 4 digits")}</p> : null}
+    {pin && pin.length < 4 ? <p className="text-[12.5px] text-[var(--c-neg)]">{tr("At least 4 digits")}</p> : null}
     <Seg value={lang} onChange={setLang} items={[["ar", "Arabic page"], ["en", "English page"]]} testid="fleet-portal-lang" />
     <SaveBtn onClick={make} disabled={busy || (pin && pin.length < 4)} testid="fleet-portal-make">{busy ? tr("Locking…") : tr("Make the page")}</SaveBtn>
   </div>;

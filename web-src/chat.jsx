@@ -149,7 +149,7 @@ function Elapsed() {
   const [, tick] = useState(0);
   useEffect(() => { const h = setInterval(() => tick((x) => x + 1), 1000); return () => clearInterval(h); }, []);
   const s = Math.floor((Date.now() - t0) / 1000);
-  return s >= 3 ? <span className="text-[11px] text-slate-500 tabular-nums shrink-0">· {s < 60 ? s + " s" : Math.floor(s / 60) + " min " + (s % 60) + " s"}</span> : null;
+  return s >= 3 ? <span className="text-[11px] text-[var(--c-mut)] tabular-nums shrink-0">· {s < 60 ? s + " s" : Math.floor(s / 60) + " min " + (s % 60) + " s"}</span> : null;
 }
 
 // ---- Markdown, drawn as real elements (never as HTML strings) -------------------
@@ -162,7 +162,7 @@ function inline(text, keyBase, sources) {
     // v6.10: bold that wraps a citation ("**… hybrid [5].**") used to lose its ** (the split cut it in two)
     const bm = String(text || "").split(/(\*\*[^\n]+?\*\*)/g);
     if (bm.length > 1) return bm.flatMap((p, bi) => (/^\*\*[^\n]+\*\*$/.test(p) && p.length > 4
-      ? [<strong key={keyBase + "b" + bi} className="font-semibold text-white">{inline(p.slice(2, -2), keyBase + "bb" + bi, sources)}</strong>]
+      ? [<strong key={keyBase + "b" + bi} className="font-semibold text-[var(--c-ink)]">{inline(p.slice(2, -2), keyBase + "bb" + bi, sources)}</strong>]
       : (p ? inline(p, keyBase + "s" + bi, sources) : [])));
     const parts = String(text || "").split(/(\[\d{1,2}\](?!\())/g);
     if (parts.length > 1) return parts.flatMap((p, pi) => {
@@ -171,7 +171,7 @@ function inline(text, keyBase, sources) {
       if (!src) return inline(p, keyBase + "p" + pi, null);
       let host = ""; try { host = new URL(src.url).hostname.replace(/^www\./, ""); } catch (e) {}
       return [<a key={keyBase + "c" + pi} href={src.url} target="_blank" rel="noreferrer" title={host + " — " + (src.title || "")} data-testid="cite"
-        className="inline-flex items-center justify-center min-w-[1.25rem] h-[1.1rem] mx-0.5 px-1 rounded-full bg-teal-500/15 border border-teal-800/70 text-[10px] leading-none text-teal-200 no-underline align-[0.15em]">{c[1]}</a>];
+        className="inline-flex items-center justify-center min-w-[1.25rem] h-[1.1rem] mx-0.5 px-1 rounded-full bg-[var(--c-soft)] border border-[var(--c-acc)]/40 text-[10px] leading-none text-[var(--c-acc)] no-underline align-[0.15em]">{c[1]}</a>];
     });
   }
   const re = /(\*\*[^*\n]+\*\*|(?<![\w\\])__[^_\n]+__(?![\w])|`[^`\n]+`|\[[^\]\n]+\]\((https?:\/\/[^)\s]+)\)|(?<![\w*\\])\*(?![\s*])[^*\n]+(?<!\s)\*(?![\w*])|(?<![\w\\])_(?![\s_])[^_\n]+(?<!\s)_(?![\w]))/g;
@@ -181,11 +181,11 @@ function inline(text, keyBase, sources) {
     if (m.index > last) out.push(s.slice(last, m.index));
     const tok = m[0];
     const key = keyBase + "-" + k++;
-    if (tok.startsWith("**") || tok.startsWith("__")) out.push(<strong key={key} className="font-semibold text-white">{tok.slice(2, -2)}</strong>);
-    else if (tok.startsWith("`")) out.push(<code key={key} className="px-1 py-0.5 rounded bg-slate-800 text-teal-200 text-[0.9em] font-mono">{tok.slice(1, -1)}</code>);
+    if (tok.startsWith("**") || tok.startsWith("__")) out.push(<strong key={key} className="font-semibold text-[var(--c-ink)]">{tok.slice(2, -2)}</strong>);
+    else if (tok.startsWith("`")) out.push(<code key={key} className="px-1 py-0.5 rounded bg-[var(--c-surf-2)] text-[var(--c-acc)] text-[0.9em] font-mono">{tok.slice(1, -1)}</code>);
     else if (tok.startsWith("[")) {
       const label = tok.slice(1, tok.indexOf("]("));
-      out.push(<a key={key} href={m[2]} target="_blank" rel="noreferrer" className="text-teal-300 underline decoration-dotted">{tr(label)}</a>);
+      out.push(<a key={key} href={m[2]} target="_blank" rel="noreferrer" className="text-[var(--c-acc)] underline decoration-dotted">{tr(label)}</a>);
     } else out.push(<em key={key}>{tok.slice(1, -1)}</em>);
     last = m.index + tok.length;
   }
@@ -204,13 +204,13 @@ function CodeBox({ lang, text }) {
   };
   const label = LANG_LABEL[String(lang || "").trim().toLowerCase()] || (lang ? String(lang).trim() : tr("Code"));
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950 overflow-hidden" data-testid="code-box">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/80 border-b border-slate-800">
-        <span className="text-[11px] text-slate-400 font-medium">{label}</span>
-        <button onClick={copy} className="text-[11px] px-2 py-0.5 rounded-md text-slate-300 active:bg-slate-800 flex items-center gap-1">
-          {done ? <CheckCircle2 size={12} className="text-emerald-300" /> : <Copy size={12} />}{done ? tr("Copied") : tr("Copy")}</button>
+    <div className="rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] overflow-hidden" data-testid="code-box">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--c-surf)] border-b border-[var(--c-ln)]">
+        <span className="text-[11px] text-[var(--c-mut)] font-extrabold tracking-[0.06em] uppercase">{label}</span>
+        <button onClick={copy} className="min-h-[32px] text-[12px] font-bold px-2.5 rounded-full text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)] flex items-center gap-1">
+          {done ? <CheckCircle2 size={12} className="text-[var(--c-pos)]" /> : <Copy size={12} />}{done ? tr("Copied") : tr("Copy")}</button>
       </div>
-      <pre className="att-hscroll p-3 text-[13px] leading-relaxed font-mono text-teal-50 overflow-x-auto whitespace-pre m-0" dir="ltr">{text}</pre>
+      <pre className="att-hscroll p-3 text-[13px] leading-relaxed font-mono text-[var(--c-ink)] overflow-x-auto whitespace-pre m-0" dir="ltr">{text}</pre>
     </div>
   );
 }
@@ -284,7 +284,7 @@ function MdView({ text, runnable = true, sources = null }) {
   }, [text]);
 
   return (
-    <div className="att-md space-y-2.5 text-[15px] leading-relaxed text-slate-100">
+    <div className="att-md space-y-2.5 text-[15px] leading-relaxed text-[var(--c-ink)]">
       {blocks.map((b, bi) => {
         const k = "b" + bi;
         if (b.t === "code") return (
@@ -294,21 +294,21 @@ function MdView({ text, runnable = true, sources = null }) {
           </div>
         );
         if (b.t === "table") return (
-          <div key={k} className="att-hscroll overflow-x-auto rounded-xl border border-slate-800" data-testid="md-table">
-            <table className="min-w-full text-[13px]" dir="auto">
-              <thead className="bg-slate-800/70"><tr>{b.head.map((h, i) => <th key={i} className="px-3 py-2 text-start font-semibold text-slate-100 whitespace-nowrap">{inline(h, k + "h" + i, sources)}</th>)}</tr></thead>
-              <tbody>{b.rows.map((r, ri) => <tr key={ri} className="border-t border-slate-800">{r.map((c, ci) => <td key={ci} className="px-3 py-2 align-top text-slate-200">{inline(c, k + "c" + ri + ci, sources)}</td>)}</tr>)}</tbody>
+          <div key={k} className="att-hscroll overflow-x-auto rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-surf)]" data-testid="md-table">
+            <table className="min-w-full text-[13px] tabular-nums" dir="auto">
+              <thead className="bg-[var(--c-surf-2)]"><tr>{b.head.map((h, i) => <th key={i} className="px-3 py-2 text-start text-[12px] font-extrabold text-[var(--c-mut)] whitespace-nowrap">{inline(h, k + "h" + i, sources)}</th>)}</tr></thead>
+              <tbody>{b.rows.map((r, ri) => <tr key={ri} className="border-t border-[var(--c-ln)]">{r.map((c, ci) => <td key={ci} className="px-3 py-2 align-top text-[var(--c-ink)]">{inline(c, k + "c" + ri + ci, sources)}</td>)}</tr>)}</tbody>
             </table>
           </div>
         );
-        if (b.t === "h") return <p key={k} dir="auto" className={`${b.level <= 2 ? "text-base" : "text-[15px]"} font-semibold text-white pt-1`}>{inline(b.text, k, sources)}</p>;
-        if (b.t === "hr") return <hr key={k} className="border-slate-800" />;
-        if (b.t === "quote") return <blockquote key={k} dir="auto" className="border-s-2 border-teal-700 ps-3 text-slate-300 whitespace-pre-wrap">{inline(b.text, k, sources)}</blockquote>;
+        if (b.t === "h") return <p key={k} dir="auto" className={`${b.level <= 2 ? "text-base" : "text-[15px]"} font-extrabold text-[var(--c-ink)] pt-1`}>{inline(b.text, k, sources)}</p>;
+        if (b.t === "hr") return <hr key={k} className="border-[var(--c-ln)]" />;
+        if (b.t === "quote") return <blockquote key={k} dir="auto" className="border-s-2 border-[var(--c-acc)]/40 ps-3 text-[var(--c-ink)] whitespace-pre-wrap">{inline(b.text, k, sources)}</blockquote>;
         if (b.t === "ul" || b.t === "ol") return (
           <div key={k} dir="auto" className="space-y-1">
             {b.items.map((it, ii) => (
               <div key={ii} className={`flex gap-2 ${it.ind ? "ms-5" : ""}`}>
-                <span className="shrink-0 text-teal-400 min-w-[1.1rem]">{b.t === "ol" ? (it.n || ii + 1) + "." : "•"}</span>
+                <span className="shrink-0 text-[var(--c-acc)] min-w-[1.1rem]">{b.t === "ol" ? (it.n || ii + 1) + "." : "•"}</span>
                 <span className="min-w-0">{inline(it.text, k + "i" + ii, sources)}</span>
               </div>
             ))}
@@ -448,15 +448,15 @@ function CallScreen({ ask, busy, last, api, tag, close, stop }) {
   };
   const label = { listen: tr("Listening… speak now"), think: tr("Thinking…"), speak: tr("Speaking — tap to cut in"), idle: tr("Tap to talk") }[phase];
   return (
-    <div className="fixed inset-0 z-[75] bg-slate-950 flex flex-col items-center justify-center p-6 gap-6" onClick={tap} data-testid="call-screen" data-phase={phase}
+    <div className="fixed inset-0 z-[75] bg-[var(--c-bg)] flex flex-col items-center justify-center p-6 gap-6" onClick={tap} data-testid="call-screen" data-phase={phase}
       style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
-      <div className={"w-40 h-40 rounded-full flex items-center justify-center " + (phase === "listen" ? "bg-rose-500/20 animate-pulse" : phase === "speak" ? "bg-teal-500/20 animate-pulse" : "bg-slate-800")}>
-        {phase === "speak" ? <Volume2 size={56} className="text-teal-300" /> : phase === "think" ? <Loader2 size={48} className="animate-spin text-slate-300" /> : <Mic size={56} className={phase === "listen" ? "text-rose-300" : "text-slate-400"} />}
+      <div className={"w-40 h-40 rounded-full flex items-center justify-center " + (phase === "listen" ? "bg-[var(--c-neg)]/10 animate-pulse" : phase === "speak" ? "bg-[var(--c-soft)] animate-pulse" : "bg-[var(--c-surf-2)]")}>
+        {phase === "speak" ? <Volume2 size={56} className="text-[var(--c-acc)]" /> : phase === "think" ? <Loader2 size={48} className="animate-spin text-[var(--c-ink)]" /> : <Mic size={56} className={phase === "listen" ? "text-[var(--c-neg)]" : "text-[var(--c-mut)]"} />}
       </div>
-      <p className="text-slate-300 text-sm" data-testid="call-phase">{label}</p>
-      {heard ? <p className="text-slate-400 text-[15px] text-center max-w-md" dir="auto" data-testid="call-heard">{heard}</p> : null}
-      {saying ? <p className="text-white text-[19px] text-center max-w-md leading-snug" dir="auto" data-testid="call-saying">{saying}</p> : null}
-      <button onClick={(e) => { e.stopPropagation(); close(); }} className="mt-4 w-16 h-16 rounded-full bg-rose-600 text-white flex items-center justify-center" title={tr("End the call")} data-testid="call-end"><PhoneOff size={24} /></button>
+      <p className="text-[var(--c-ink)] text-sm" data-testid="call-phase">{label}</p>
+      {heard ? <p className="text-[var(--c-mut)] text-[15px] text-center max-w-md" dir="auto" data-testid="call-heard">{heard}</p> : null}
+      {saying ? <p className="text-[var(--c-ink)] text-[19px] text-center max-w-md leading-snug" dir="auto" data-testid="call-saying">{saying}</p> : null}
+      <button onClick={(e) => { e.stopPropagation(); close(); }} className="mt-4 w-16 h-16 rounded-full bg-[var(--c-neg)] text-[var(--c-on-acc)] flex items-center justify-center" title={tr("End the call")} data-testid="call-end"><PhoneOff size={24} /></button>
     </div>);
 }
 
@@ -1908,49 +1908,49 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       {/* ---- history drawer ---- */}
       {drawerOpen ? (
         <div className="fixed inset-0 z-50 flex" onClick={() => setDrawerOpen(false)}>
-          <div className="w-[86%] max-w-sm h-full bg-slate-900 border-e border-slate-800 flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="p-3 border-b border-slate-800 flex items-center gap-2">
-              <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold"><Plus size={16} /> {tr("New chat")}</button>
+          <div className="w-[86%] max-w-sm h-full bg-[var(--c-surf)] border-e border-[var(--c-ln)] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="p-3 border-b border-[var(--c-ln)] flex items-center gap-2">
+              <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-semibold"><Plus size={16} /> {tr("New chat")}</button>
               <button onClick={() => setDrawerOpen(false)} className="att-icon-btn"><X size={18} /></button>
             </div>
             <div className="px-3 pt-3">
-              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3">
-                <Search size={14} className="text-slate-500" />
+              <div className="flex items-center gap-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl px-3">
+                <Search size={14} className="text-[var(--c-mut)]" />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search chats")} dir="auto"
-                  className="flex-1 bg-transparent py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none" />
+                  className="flex-1 bg-transparent py-2.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
               </div>
             </div>
             <div className="att-scroll flex-1 overflow-y-auto p-2">
-              {shownChats.length === 0 ? <p className="text-xs text-slate-500 p-3">{tr("No chats yet.")}</p> : shownChats.map((c) => (
-                <div key={c.id} className={`group flex items-center gap-1 rounded-xl ${c.id === activeId ? "bg-slate-800" : ""}`}>
+              {shownChats.length === 0 ? <p className="text-xs text-[var(--c-mut)] p-3">{tr("No chats yet.")}</p> : shownChats.map((c) => (
+                <div key={c.id} className={`group flex items-center gap-1 rounded-xl ${c.id === activeId ? "bg-[var(--c-surf-2)]" : ""}`}>
                   {renaming === c.id ? (
                     <input autoFocus defaultValue={c.title} dir="auto" onBlur={(e) => { const v = e.target.value.trim(); if (v) patchChat(c.id, (x) => ({ ...x, title: v })); setRenaming(null); }}
                       onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-                      className="flex-1 bg-slate-950 border border-teal-700 rounded-lg px-2 py-2 text-sm text-slate-100" />
+                      className="flex-1 bg-[var(--c-bg)] border border-[var(--c-acc)]/40 rounded-lg px-2 py-2 text-sm text-[var(--c-ink)]" />
                   ) : (
                     <button onClick={() => { setActiveId(c.id); setDrawerOpen(false); }} className="flex-1 min-w-0 text-start px-3 py-2.5">
-                      <span dir="auto" className="block text-sm text-slate-200 truncate">{c.projectId || c.assistantId ? <span className="me-1" data-testid="chat-space-mark">{c.projectId ? "📁" : "✨"}</span> : null}{tr(c.title)}</span>
-                      <span className="block text-[10px] text-slate-500">{new Date(c.updated).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {c.messages.length} messages</span>
+                      <span dir="auto" className="block text-sm text-[var(--c-ink)] truncate">{c.projectId || c.assistantId ? <span className="me-1" data-testid="chat-space-mark">{c.projectId ? "📁" : "✨"}</span> : null}{tr(c.title)}</span>
+                      <span className="block text-[10px] text-[var(--c-mut)]">{new Date(c.updated).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {c.messages.length} messages</span>
                     </button>
                   )}
                   {confirmDel === c.id ? (
                     // v5.28: deleting asks first — a stray tap never loses a chat
                     <div className="flex items-center gap-1 pe-1" data-testid="chat-del-confirm">
-                      <span className="text-[11px] text-rose-200 whitespace-nowrap">{tr("Delete this chat?")}</span>
+                      <span className="text-[11px] text-[var(--c-neg)] whitespace-nowrap">{tr("Delete this chat?")}</span>
                       <button onClick={() => { setChats((l) => l.filter((x) => x.id !== c.id)); if (activeId === c.id) setActiveId(null); setConfirmDel(null); }}
-                        data-testid="chat-del-yes" className="px-2 py-1.5 rounded-md bg-rose-600 text-white text-[11px] font-medium">{tr("Delete")}</button>
-                      <button onClick={() => setConfirmDel(null)} data-testid="chat-del-no" className="px-2 py-1.5 rounded-md border border-slate-700 text-slate-300 text-[11px]">{tr("Cancel")}</button>
+                        data-testid="chat-del-yes" className="px-2 py-1.5 rounded-md bg-[var(--c-neg)] text-[var(--c-on-acc)] text-[11px] font-medium">{tr("Delete")}</button>
+                      <button onClick={() => setConfirmDel(null)} data-testid="chat-del-no" className="px-2 py-1.5 rounded-md border border-[var(--c-ln)] text-[var(--c-ink)] text-[11px]">{tr("Cancel")}</button>
                     </div>
                   ) : (
                     <>
-                      <button onClick={() => setRenaming(c.id)} className="p-2 text-slate-500" title={tr("Rename")}><PenLine size={14} /></button>
-                      <button onClick={() => setConfirmDel(c.id)} data-testid="chat-del" className="p-2 text-slate-500" title={tr("Delete")}><Trash2 size={14} /></button>
+                      <button onClick={() => setRenaming(c.id)} className="p-2 text-[var(--c-mut)]" title={tr("Rename")}><PenLine size={14} /></button>
+                      <button onClick={() => setConfirmDel(c.id)} data-testid="chat-del" className="p-2 text-[var(--c-mut)]" title={tr("Delete")}><Trash2 size={14} /></button>
                     </>
                   )}
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-slate-600 p-3 border-t border-slate-800">{tr("Chats are saved on this phone only.")}</p>
+            <p className="text-[10px] text-[var(--c-mut)] p-3 border-t border-[var(--c-ln)]">{tr("Chats are saved on this phone only.")}</p>
           </div>
           <div className="flex-1 bg-black/60" />
         </div>
@@ -1959,49 +1959,49 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       {/* ---- empty state ---- */}
       {messages.length === 0 && (assistant || project) ? (
         <div className="pt-6 text-center" data-testid="space-empty">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-800 text-3xl mb-3">{(assistant || project).emoji}</div>
-          <p className="text-lg text-white font-semibold" dir="auto">{tr((assistant || project).name)}</p>
-          {assistant && project ? <p className="text-[12px] text-slate-400 mt-0.5">{tr("in")} {project.emoji} {project.name}</p> : null}
-          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed" dir="auto">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--c-soft)] border border-[var(--c-acc)]/40 text-3xl mb-3">{(assistant || project).emoji}</div>
+          <p className="text-lg text-[var(--c-ink)] font-semibold" dir="auto">{tr((assistant || project).name)}</p>
+          {assistant && project ? <p className="text-[12px] text-[var(--c-mut)] mt-0.5">{tr("in")} {project.emoji} {project.name}</p> : null}
+          <p className="text-xs text-[var(--c-mut)] mt-1 max-w-xs mx-auto leading-relaxed" dir="auto">
             {assistant ? tr(assistant.desc || "") : tr("Chats in this project share its instructions and {n} files.", { n: (project.knowledge || []).length })}</p>
           {(assistant && assistant.starters && assistant.starters.length) ? (
             <div className="grid gap-2 mt-5 text-start">
               {assistant.starters.map((st) => (
                 <button key={st} onClick={() => { setText(tr(st)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
-                  className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-slate-200 active:border-teal-600" dir="auto">{tr(st)}</button>
+                  className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 py-2.5 text-sm text-[var(--c-ink)] active:border-[var(--c-acc)]" dir="auto">{tr(st)}</button>
               ))}
             </div>
           ) : null}
-          <button onClick={() => { setPending(null); setText(""); }} className="mt-4 text-[12px] text-slate-500 underline underline-offset-2">{tr("Leave — normal chat")}</button>
+          <button onClick={() => { setPending(null); setText(""); }} className="mt-4 text-[12px] text-[var(--c-mut)] underline underline-offset-2">{tr("Leave — normal chat")}</button>
         </div>
       ) : messages.length === 0 && MINIMAL ? (
         <div className="pt-16 px-2" data-testid="chat-empty-min">
-          <p className="text-[24px] text-white font-semibold tracking-tight">{tr("What can I help with?")}</p>
+          <p className="text-[24px] text-[var(--c-ink)] font-semibold tracking-tight">{tr("What can I help with?")}</p>
           <div className="mt-4 flex flex-col">
             {STARTERS.filter((x) => x[1] !== "Car question" && x[1] !== "Translate" && x[1] !== "Explain simply").map(([, label, seed]) => (
               <button key={label} onClick={() => { setText(tr(seed)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
-                className="h-11 text-start text-[15px] text-slate-400 hover:text-slate-200">{tr(label)}</button>))}
+                className="h-11 text-start text-[15px] text-[var(--c-mut)] hover:text-[var(--c-ink)]">{tr(label)}</button>))}
           </div>
-          {api.trialDays && api.trialDays() > 0 ? <button onClick={() => api.openPlan && api.openPlan()} className="mt-3 text-[12px] text-amber-200" data-testid="home-trial">★ {tr("Pro trial · {n} days left", { n: api.trialDays() })}</button> : null}
+          {api.trialDays && api.trialDays() > 0 ? <button onClick={() => api.openPlan && api.openPlan()} className="mt-3 text-[12px] text-[var(--c-warn)]" data-testid="home-trial">★ {tr("Pro trial · {n} days left", { n: api.trialDays() })}</button> : null}
         </div>
       ) : messages.length === 0 ? (
         <div className="pt-6 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-800 text-teal-300 mb-3"><Sparkles size={22} /></div>
-          <p className="text-lg text-white font-semibold">{tr("What can I help with?")}</p>
-          <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">{tr("Type, speak or add a photo. Runs on your phone — works with no signal.")}</p>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--c-soft)] border border-[var(--c-acc)]/40 text-[var(--c-acc)] mb-3"><Sparkles size={22} /></div>
+          <p className="text-lg text-[var(--c-ink)] font-semibold">{tr("What can I help with?")}</p>
+          <p className="text-xs text-[var(--c-mut)] mt-1 max-w-xs mx-auto leading-relaxed">{tr("Type, speak or add a photo. Runs on your phone — works with no signal.")}</p>
           {/* v5.29 UX: where am I — the model (and its level) and the Pro trial, one tap to Plan */}
           {api.modelBrand && api.modelBrand() ? (
             <div className="mt-3 flex items-center justify-center gap-1.5 flex-wrap text-[11px]" data-testid="home-status">
-              <span className="px-2 py-1 rounded-full border border-slate-700 text-slate-300">{api.modelBrand()}{api.power ? " · " + tr(LEVEL_NAMES[api.power().level] || "") : ""}</span>
-              {api.trialDays && api.trialDays() > 0 ? <button onClick={() => api.openPlan && api.openPlan()} className="px-2 py-1 rounded-full border border-amber-700/70 bg-amber-400/10 text-amber-200" data-testid="home-trial">★ {tr("Pro trial · {n} days left", { n: api.trialDays() })}</button> : null}
+              <span className="px-2 py-1 rounded-full border border-[var(--c-ln)] text-[var(--c-ink)]">{api.modelBrand()}{api.power ? " · " + tr(LEVEL_NAMES[api.power().level] || "") : ""}</span>
+              {api.trialDays && api.trialDays() > 0 ? <button onClick={() => api.openPlan && api.openPlan()} className="px-2 py-1 rounded-full border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)]" data-testid="home-trial">★ {tr("Pro trial · {n} days left", { n: api.trialDays() })}</button> : null}
             </div>
           ) : null}
           <div className="grid grid-cols-2 gap-2 mt-5 text-start">
             {STARTERS.map(([ic, label, seed]) => (
               <button key={label} onClick={() => { setText(tr(seed)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
-                className="rounded-xl border border-slate-800 bg-slate-900 p-3 active:border-teal-600">
+                className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 active:border-[var(--c-acc)]">
                 <span className="text-lg">{tr(ic)}</span>
-                <span className="block text-sm text-slate-200 mt-1">{tr(label)}</span>
+                <span className="block text-sm text-[var(--c-ink)] mt-1">{tr(label)}</span>
               </button>
             ))}
           </div>
@@ -2011,19 +2011,19 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       {/* ---- the conversation ---- */}
       {messages.length && (assistant || project) ? (
         <div className="flex justify-center pt-1" data-testid="space-chip">
-          <span className="text-[11px] px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900 text-slate-300" dir="auto">
+          <span className="text-[11px] px-2.5 py-1 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]" dir="auto">
             {assistant ? assistant.emoji + " " + tr(assistant.name) : ""}{assistant && project ? " · " : ""}{project ? project.emoji + " " + project.name : ""}</span>
         </div>
       ) : null}
       <div className="space-y-4 pt-2">
         {messages.map((m, idx) => m.role === "user" ? (
           <div key={m.id} className="att-msg flex flex-col items-end">
-            {m.images && m.images.length > 1 ? <div className="flex flex-wrap justify-end gap-1.5 mb-1.5 max-w-[80%]">{m.images.map((u, i) => <img key={i} src={u} alt="" className="h-24 rounded-xl border border-slate-800 object-cover" />)}</div>
-              : m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-2xl mb-1.5 border border-slate-800 object-cover" /> : null}
-            {!m.image && m.hadImage ? <span className="mb-1.5 text-[11px] text-slate-500 px-2 py-1 rounded-lg border border-slate-800">🖼 {tr("photo (removed to save space)")}</span> : null}
-            {m.file ? <span className="mb-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12px] text-slate-200"><FileText size={13} className="text-teal-300" />{m.file}</span> : null}
-            {m.text ? <div dir="auto" className="max-w-[85%] bg-teal-600/25 border border-teal-800/60 text-slate-100 rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
-            {!busy ? <button onClick={() => editFrom(idx)} className="mt-1 text-[11px] text-slate-500 flex items-center gap-1 px-1"><PenLine size={11} /> {tr("Edit")}</button> : null}
+            {m.images && m.images.length > 1 ? <div className="flex flex-wrap justify-end gap-1.5 mb-1.5 max-w-[80%]">{m.images.map((u, i) => <img key={i} src={u} alt="" className="h-24 rounded-xl border border-[var(--c-ln)] object-cover" />)}</div>
+              : m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-2xl mb-1.5 border border-[var(--c-ln)] object-cover" /> : null}
+            {!m.image && m.hadImage ? <span className="mb-1.5 text-[11px] text-[var(--c-mut)] px-2 py-1 rounded-lg border border-[var(--c-ln)]">🖼 {tr("photo (removed to save space)")}</span> : null}
+            {m.file ? <span className="mb-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--c-surf-2)] border border-[var(--c-ln)] text-[12px] text-[var(--c-ink)]"><FileText size={13} className="text-[var(--c-acc)]" />{m.file}</span> : null}
+            {m.text ? <div dir="auto" className="max-w-[85%] bg-[var(--c-soft)] border border-[var(--c-acc)]/40 text-[var(--c-ink)] rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
+            {!busy ? <button onClick={() => editFrom(idx)} className="mt-1 text-[11px] text-[var(--c-mut)] flex items-center gap-1 px-1"><PenLine size={11} /> {tr("Edit")}</button> : null}
           </div>
         ) : m.actionCard ? (
           <ActionCard key={m.id + ":" + (m.status || "")} msg={m}
@@ -2040,14 +2040,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               setTimeout(() => ask(m.askText, { history: hist, noRoute: true }), 0);
             }} />
         ) : m.card ? (
-          <div key={m.id} data-testid={"card-" + (m.card.tone || "")} className={`rounded-2xl border p-3.5 ${m.card.tone === "rose" ? "border-rose-800/70 bg-rose-500/5" : m.card.tone === "violet" ? "border-violet-800/70 bg-violet-500/5" : "border-emerald-800/70 bg-emerald-500/5"}`}>
-            <p dir="auto" className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><CheckCircle2 size={15} className={m.card.tone === "rose" ? "text-rose-300" : m.card.tone === "violet" ? "text-violet-300" : "text-emerald-300"} /> {tr(m.card.title)}</p>
-            {m.card.detail ? <p dir="auto" className="text-sm text-slate-300 mt-1 whitespace-pre-wrap leading-relaxed">{tr(m.card.detail)}</p> : null}
+          <div key={m.id} data-testid={"card-" + (m.card.tone || "")} className={`rounded-2xl border p-3.5 ${m.card.tone === "rose" ? "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10" : m.card.tone === "violet" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10"}`}>
+            <p dir="auto" className="text-sm font-medium text-[var(--c-ink)] flex items-center gap-1.5"><CheckCircle2 size={15} className={m.card.tone === "rose" ? "text-[var(--c-neg)]" : m.card.tone === "violet" ? "text-[var(--c-acc)]" : "text-[var(--c-pos)]"} /> {tr(m.card.title)}</p>
+            {m.card.detail ? <p dir="auto" className="text-sm text-[var(--c-ink)] mt-1 whitespace-pre-wrap leading-relaxed">{tr(m.card.detail)}</p> : null}
             {(m.card.actions || []).length ? (
               <div className="flex gap-2 mt-2.5 flex-wrap">
                 {m.card.actions.map(([label, act], i) => (
                   <button key={act} onClick={() => cardAction(m, act)}
-                    className={`text-xs px-3 py-2 rounded-lg ${i === 0 ? "bg-teal-500 text-slate-950 font-medium" : "border border-slate-700 text-slate-300"}`}>{tr(label)}</button>
+                    className={`text-xs px-3 py-2 rounded-lg ${i === 0 ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-medium" : "border border-[var(--c-ln)] text-[var(--c-ink)]"}`}>{tr(label)}</button>
                 ))}
               </div>
             ) : null}
@@ -2056,27 +2056,27 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           <div key={m.id} className="group att-msg">
             {m.thinking ? (
               <div className="mb-2">
-                <button onClick={() => setOpenThought((o) => ({ ...o, [m.id]: !o[m.id] }))} className="flex items-center gap-1.5 text-[12px] text-slate-400">
-                  <Brain size={13} className={m.streaming && !m.text ? "text-teal-300 animate-pulse" : ""} />
+                <button onClick={() => setOpenThought((o) => ({ ...o, [m.id]: !o[m.id] }))} className="flex items-center gap-1.5 text-[12px] text-[var(--c-mut)]">
+                  <Brain size={13} className={m.streaming && !m.text ? "text-[var(--c-acc)] animate-pulse" : ""} />
                   {m.streaming && !m.text ? tr("Thinking…") : "Thought" + (m.secs ? " for " + m.secs + " s" : "")}
                   <ChevronDown size={13} className={openThought[m.id] ? "rotate-180" : ""} />
                 </button>
                 {(openThought[m.id] || (m.streaming && !m.text)) ? (
-                  <p dir="auto" className="mt-1.5 ps-3 border-s-2 border-slate-800 text-[12px] text-slate-500 whitespace-pre-wrap leading-relaxed" data-testid="thinking-text">
+                  <p dir="auto" className="mt-1.5 ps-3 border-s-2 border-[var(--c-ln)] text-[12px] text-[var(--c-mut)] whitespace-pre-wrap leading-relaxed" data-testid="thinking-text">
                     {openThought[m.id] ? m.thinking : lastLines(m.thinking, 6)}</p>
                 ) : null}
               </div>
             ) : null}
             {m.streaming && !m.text && !m.thinking ? (
-              <div className="flex items-center gap-2 text-sm text-teal-300/90 py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shrink-0" /> <span className="min-w-0">{m.phase || tr("Reading…")}</span> <Elapsed /></div>
+              <div className="flex items-center gap-2 text-sm text-[var(--c-acc)] py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shrink-0" /> <span className="min-w-0">{m.phase || tr("Reading…")}</span> <Elapsed /></div>
             ) : null}
             {m.webImages && m.webImages.length && !m.streaming ? (   /* v6.12: pictures from the pages read, like Gemini — tap opens the page */
               <div className="flex gap-1.5 overflow-x-auto mb-2 -mx-1 px-1" data-testid="web-images">
-                {m.webImages.map((w, i) => <a key={i} href={w.url} target="_blank" rel="noopener noreferrer" className="shrink-0"><img src={w.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} className="h-24 w-32 object-cover rounded-xl border border-slate-800 bg-slate-900" /></a>)}
+                {m.webImages.map((w, i) => <a key={i} href={w.url} target="_blank" rel="noopener noreferrer" className="shrink-0"><img src={w.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} className="h-24 w-32 object-cover rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)]" /></a>)}
               </div>) : null}
             {m.text ? <Md text={m.text + (m.streaming ? " ▍" : "")} sources={m.sources} /> : null}
             {m.calc ? (
-              <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500" data-testid="calc-note">
+              <div className="flex items-center gap-2 mt-1.5 text-[11px] text-[var(--c-mut)]" data-testid="calc-note">
                 <span>⚡ {tr("Worked out on the phone — exact, instant, no model")}</span>
                 <button onClick={() => { const at = messages.findIndex((x) => x.id === m.id); const hist = messages.slice(0, Math.max(0, at - 1));
                   patchChat(chat.id, (c) => ({ ...c, messages: hist })); setTimeout(() => ask(m.askText, { history: hist, noRoute: true }), 0); }}
@@ -2085,42 +2085,42 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.verified ? (
               <div className="mt-1.5 text-[11px]" data-testid="verified">
-                <button onClick={() => setOpenThought((o) => ({ ...o, ["v" + m.id]: !o["v" + m.id] }))} className="text-emerald-300 flex items-center gap-1">
+                <button onClick={() => setOpenThought((o) => ({ ...o, ["v" + m.id]: !o["v" + m.id] }))} className="text-[var(--c-pos)] flex items-center gap-1">
                   <CheckCircle2 size={12} />{tr("Checked by running code on this phone")} <ChevronDown size={11} className={openThought["v" + m.id] ? "rotate-180" : ""} /></button>
                 {openThought["v" + m.id] ? <Md text={"```python\n" + m.verified.code + "\n```\n\n" + tr("It printed:") + "\n```\n" + String(m.verified.output || "").trim() + "\n```"} /> : null}
               </div>
             ) : null}
-            {m.fromPhotoTable && !m.streaming ? <p className="mt-1 text-[11px] text-amber-300/90" data-testid="photo-table-note">⚠ {tr("Numbers read from a photo — check them against the original before you rely on them")}</p> : null}
-            {m.unsourced ?<p className="mt-1 text-[11px] text-amber-300" data-testid="unsourced">⚠ {tr("Not found in the sources")}: {m.unsourced.join(", ")}</p> : null}
-            {m.deep && !m.streaming ? <p className="mt-1 text-[11px] text-violet-300" data-testid="deep-tag">{tr("Deep answer")}{m.deep ? " · " + m.deep : ""}</p> : null}
-            {m.fixedSlip ? <p className="mt-1 text-[11px] text-sky-300" data-testid="slip-fixed">{tr("The first answer had a wrong sum — re-done by running code")}</p> : null}
-            {m.slips && !m.fixedSlip ? <p className="mt-1 text-[11px] text-amber-300" data-testid="slip-note">⚠ {tr("Check this sum")}: {m.slips[0].expr} → {Number(m.slips[0].right.toFixed(4)).toLocaleString("en-US")}</p> : null}
+            {m.fromPhotoTable && !m.streaming ? <p className="mt-1 text-[11px] text-[var(--c-warn)]" data-testid="photo-table-note">⚠ {tr("Numbers read from a photo — check them against the original before you rely on them")}</p> : null}
+            {m.unsourced ?<p className="mt-1 text-[11px] text-[var(--c-warn)]" data-testid="unsourced">⚠ {tr("Not found in the sources")}: {m.unsourced.join(", ")}</p> : null}
+            {m.deep && !m.streaming ? <p className="mt-1 text-[11px] text-[var(--c-acc)]" data-testid="deep-tag">{tr("Deep answer")}{m.deep ? " · " + m.deep : ""}</p> : null}
+            {m.fixedSlip ? <p className="mt-1 text-[11px] text-[var(--c-acc)]" data-testid="slip-fixed">{tr("The first answer had a wrong sum — re-done by running code")}</p> : null}
+            {m.slips && !m.fixedSlip ? <p className="mt-1 text-[11px] text-[var(--c-warn)]" data-testid="slip-note">⚠ {tr("Check this sum")}: {m.slips[0].expr} → {Number(m.slips[0].right.toFixed(4)).toLocaleString("en-US")}</p> : null}
             {m.rules ? (
-              <p className={"mt-1.5 text-[11px] flex items-center gap-1 " + (m.rules.broken.length ? "text-amber-300" : "text-emerald-300")} data-testid="rules-checked"><CheckCircle2 size={12} />
+              <p className={"mt-1.5 text-[11px] flex items-center gap-1 " + (m.rules.broken.length ? "text-[var(--c-warn)]" : "text-[var(--c-pos)]")} data-testid="rules-checked"><CheckCircle2 size={12} />
                 {m.rules.broken.length ? tr("Rules checked — still off: {what}", { what: m.rules.broken[0] }) : tr("Rules checked by the phone: all followed")}</p>
             ) : null}
             {m.reasoned ? (
-              <p className="mt-1.5 text-[11px] text-emerald-300 flex items-center gap-1" data-testid="reasoned"><CheckCircle2 size={12} />
+              <p className="mt-1.5 text-[11px] text-[var(--c-pos)] flex items-center gap-1" data-testid="reasoned"><CheckCircle2 size={12} />
                 {m.reasoned.checked === "corrected" ? tr("Checked — the reviewer fixed a mistake") : m.reasoned.checked === "judged" ? tr("{n} tries disagreed — weighed and checked", { n: m.reasoned.total })
                   : tr("{v} of {n} tries agreed · checked", { v: m.reasoned.votes, n: m.reasoned.total })}</p>
             ) : null}
             {m.reviewed ? (
               <div className="mt-1.5 text-[11px]" data-testid="reviewed">
-                <button onClick={() => setOpenThought((o) => ({ ...o, ["r" + m.id]: !o["r" + m.id] }))} className="text-emerald-300 flex items-center gap-1">
+                <button onClick={() => setOpenThought((o) => ({ ...o, ["r" + m.id]: !o["r" + m.id] }))} className="text-[var(--c-pos)] flex items-center gap-1">
                   <CheckCircle2 size={12} />{m.reviewed.problems.length ? tr("Reviewed by an expert pass · {n} improvements", { n: m.reviewed.problems.length }) : tr("Reviewed by an expert pass")}
                   {m.reviewed.problems.length ? <ChevronDown size={11} className={openThought["r" + m.id] ? "rotate-180" : ""} /> : null}</button>
-                {openThought["r" + m.id] && m.reviewed.problems.length ? <ul className="mt-1 ms-4 list-disc text-slate-400">{m.reviewed.problems.map((x, i) => <li key={i}>{x}</li>)}</ul> : null}
+                {openThought["r" + m.id] && m.reviewed.problems.length ? <ul className="mt-1 ms-4 list-disc text-[var(--c-mut)]">{m.reviewed.problems.map((x, i) => <li key={i}>{x}</li>)}</ul> : null}
               </div>
             ) : null}
             {m.computed ? (
               <div className="mt-1.5 text-[11px]" data-testid="computed">
-                <button onClick={() => setOpenThought((o) => ({ ...o, ["c" + m.id]: !o["c" + m.id] }))} className="text-emerald-300 flex items-center gap-1">
+                <button onClick={() => setOpenThought((o) => ({ ...o, ["c" + m.id]: !o["c" + m.id] }))} className="text-[var(--c-pos)] flex items-center gap-1">
                   <CheckCircle2 size={12} />{tr("Computed from {f} on this phone", { f: m.computed.file })} <ChevronDown size={11} className={openThought["c" + m.id] ? "rotate-180" : ""} /></button>
                 {openThought["c" + m.id] ? <Md text={"```python\n" + m.computed.code + "\n```\n\n" + tr("It printed:") + "\n```\n" + String(m.computed.output || "").trim() + "\n```"} /> : null}
               </div>
             ) : null}
-            {m.fileNote ? <p className="mt-1 text-[11px] text-amber-300">{tr(m.fileNote)}</p> : null}
-            {m.learnedUsed ? <p className="mt-1 text-[11px] text-sky-300" data-testid="learned-used">{tr("Used {n} of your corrections", { n: m.learnedUsed })}</p> : null}
+            {m.fileNote ? <p className="mt-1 text-[11px] text-[var(--c-warn)]">{tr(m.fileNote)}</p> : null}
+            {m.learnedUsed ? <p className="mt-1 text-[11px] text-[var(--c-acc)]" data-testid="learned-used">{tr("Used {n} of your corrections", { n: m.learnedUsed })}</p> : null}
             {(() => {
               // v5.14: a web page, program or long document in the answer opens
               // as an artifact — full screen, saved with versions, shared as a file.
@@ -2129,95 +2129,95 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               const kindLabel = art.kind === "html" ? tr("Web page") : art.kind === "doc" ? tr("Document") : tr("Program");
               return (
                 <button data-testid="artifact-card" onClick={() => window.dispatchEvent(new CustomEvent("attune-artifact", { detail: { ...art, chatId: chat && chat.id } }))}
-                  className="mt-2 w-full flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 p-3 text-start active:border-teal-600">
-                  <span className="w-10 h-10 shrink-0 rounded-lg bg-teal-500/10 border border-teal-800 flex items-center justify-center text-lg">{art.kind === "html" ? "🌐" : art.kind === "doc" ? "📄" : "⌨️"}</span>
+                  className="mt-2 w-full flex items-center gap-3 rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 text-start active:border-[var(--c-acc)]">
+                  <span className="w-10 h-10 shrink-0 rounded-lg bg-[var(--c-soft)] border border-[var(--c-acc)]/40 flex items-center justify-center text-lg">{art.kind === "html" ? "🌐" : art.kind === "doc" ? "📄" : "⌨️"}</span>
                   <span className="flex-1 min-w-0">
-                    <span className="block text-sm text-slate-100 truncate" dir="auto">{art.title}</span>
-                    <span className="block text-[11px] text-slate-500">{kindLabel} · {tr("tap to open full screen")}</span>
+                    <span className="block text-sm text-[var(--c-ink)] truncate" dir="auto">{art.title}</span>
+                    <span className="block text-[11px] text-[var(--c-mut)]">{kindLabel} · {tr("tap to open full screen")}</span>
                   </span>
-                  <Maximize2 size={16} className="text-teal-300 shrink-0" />
+                  <Maximize2 size={16} className="text-[var(--c-acc)] shrink-0" />
                 </button>
               );
             })()}
             {m.codeCheck ? (
-              <p className={`mt-1.5 text-[11px] flex items-center gap-1 ${m.codeCheck.ok ? "text-emerald-300" : "text-amber-300"}`} data-testid="code-check">
+              <p className={`mt-1.5 text-[11px] flex items-center gap-1 ${m.codeCheck.ok ? "text-[var(--c-pos)]" : "text-[var(--c-warn)]"}`} data-testid="code-check">
                 <CheckCircle2 size={12} />{m.codeCheck.ok ? (m.codeCheck.tests ? tr("Tested on this phone: {n} passed", { n: m.codeCheck.tests }) : tr("Ran on this phone")) : tr("Not passing yet")}
                 {m.codeCheck.rounds ? " · " + tr("fixed {n}×", { n: m.codeCheck.rounds }) : ""}</p>
             ) : null}
-            {m.error ? <p className="text-sm text-amber-300/90 mt-1">{m.error}</p> : null}
+            {m.error ? <p className="text-sm text-[var(--c-warn)] mt-1">{m.error}</p> : null}
             {toPack && toPack.id === m.id ? (
-              <div className="mt-2 rounded-xl border border-slate-700 bg-slate-900 p-3 space-y-2" data-testid="teach-to-pack-sheet">
-                <p className="text-[13px] font-semibold text-slate-100">{tr("Save this chat in a pack")}</p>
-                <p className="text-[11.5px] text-slate-400">{tr("The model will read it when it answers — your questions and its answers, kept together.")}</p>
+              <div className="mt-2 rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="teach-to-pack-sheet">
+                <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Save this chat in a pack")}</p>
+                <p className="text-[11.5px] text-[var(--c-mut)]">{tr("The model will read it when it answers — your questions and its answers, kept together.")}</p>
                 {toPack.packs.map((p) => (
-                  <button key={p.name} className="w-full text-start px-3 min-h-[44px] rounded-lg border border-slate-700 text-[13px] text-slate-200" dir="auto" data-testid="teach-to-pack-pick"
+                  <button key={p.name} className="w-full text-start px-3 min-h-[44px] rounded-lg border border-[var(--c-ln)] text-[13px] text-[var(--c-ink)]" dir="auto" data-testid="teach-to-pack-pick"
                     onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const r = await api.knowledge.teachChat(c, p.name); setToPack(null); api.flash(tr("Saved in “{n}” ({p} passages)", { n: p.name, p: r.passages })); }}>{p.name}</button>))}
                 <div className="flex gap-2">
                   <input value={toPack.name} onChange={(e) => setToPack({ ...toPack, name: e.target.value })} placeholder={tr("New pack…")} dir="auto" data-testid="teach-to-pack-new"
-                    className="flex-1 rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-[13px] text-slate-100" />
-                  <button className="px-3 rounded-lg bg-teal-500 text-slate-950 text-xs font-semibold disabled:opacity-40" disabled={!toPack.name.trim()} data-testid="teach-to-pack-save"
+                    className="flex-1 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2 text-[13px] text-[var(--c-ink)]" />
+                  <button className="px-3 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] text-xs font-semibold disabled:opacity-40" disabled={!toPack.name.trim()} data-testid="teach-to-pack-save"
                     onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.knowledge.teachChat(c, n); setToPack(null); api.flash(tr("Saved in “{n}” ({p} passages)", { n, p: r.passages })); }}>{tr("Save")}</button>
                 </div>
               </div>) : null}
             {teaching && teaching.id === m.id ? (
-              <div className="mt-2 rounded-xl border border-sky-900 bg-sky-500/5 p-3" data-testid="teach-form">
-                <p className="text-[12px] text-sky-200">{tr("What should it have said? Attune double-checks your correction first, and learns it only if it holds up.")}</p>
+              <div className="mt-2 rounded-xl border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3" data-testid="teach-form">
+                <p className="text-[12px] text-[var(--c-acc)]">{tr("What should it have said? Attune double-checks your correction first, and learns it only if it holds up.")}</p>
                 <textarea value={teaching.corrected} onChange={(e) => setTeaching({ ...teaching, corrected: e.target.value })} rows={3} dir="auto" data-testid="teach-right"
-                  placeholder={tr("The right answer")} className="w-full mt-2 bg-slate-950 border border-slate-800 rounded-lg p-2 text-sm text-slate-100 placeholder-slate-600" />
+                  placeholder={tr("The right answer")} className="w-full mt-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg p-2 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" />
                 <input value={teaching.note} onChange={(e) => setTeaching({ ...teaching, note: e.target.value })} dir="auto" data-testid="teach-why"
-                  placeholder={tr("Why (optional) — e.g. “the marble falls out when the glass is turned over”")} className="w-full mt-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-[13px] text-slate-100 placeholder-slate-600" />
+                  placeholder={tr("Why (optional) — e.g. “the marble falls out when the glass is turned over”")} className="w-full mt-1.5 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2 py-1.5 text-[13px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" />
                 {teaching.result ? (() => { const r = teaching.result; const tone = r.verdict === "wrong" ? "amber" : r.verdict === "partly" ? "sky" : "slate";
                   const label = { wrong: "Checked — I don't think the correction is right", partly: "Checked — your correction is partly right", unsure: "Couldn't confirm your correction" }[r.verdict] || "Checked";
                   return (
-                  <div className={`mt-2 rounded-lg border p-2.5 text-[13px] ${tone === "amber" ? "border-amber-800 bg-amber-500/10 text-amber-100" : tone === "sky" ? "border-sky-800 bg-sky-500/10 text-sky-100" : "border-slate-700 bg-slate-800/40 text-slate-200"}`} data-testid="teach-verdict">
+                  <div className={`mt-2 rounded-lg border p-2.5 text-[13px] ${tone === "amber" ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)]" : tone === "sky" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] bg-[var(--c-surf-2)] text-[var(--c-ink)]"}`} data-testid="teach-verdict">
                     <p className="font-semibold">{tr(label)}{r.how === "computed" ? " · " + tr("computed on this phone") : ""}</p>
                     {r.reason ? <p className="mt-1" dir="auto">{r.reason}</p> : null}
-                    {r.answer && r.verdict !== "unsure" ? <p className="mt-1" dir="auto"><span className="text-slate-400">{tr("Checked answer")}: </span><b>{r.answer}</b></p> : null}
+                    {r.answer && r.verdict !== "unsure" ? <p className="mt-1" dir="auto"><span className="text-[var(--c-mut)]">{tr("Checked answer")}: </span><b>{r.answer}</b></p> : null}
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {r.verdict === "partly" && r.answer ? <button data-testid="teach-save-checked" className="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 text-xs font-semibold"
+                      {r.verdict === "partly" && r.answer ? <button data-testid="teach-save-checked" className="px-3 py-1.5 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] text-xs font-semibold"
                         onClick={() => saveTeach(m, idx, r.answer, r.reason, r.verdict)}>{tr("Learn the checked answer")}</button> : null}
-                      <button data-testid="teach-force" className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 text-xs"
+                      <button data-testid="teach-force" className="px-3 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-xs"
                         onClick={() => saveTeach(m, idx, teaching.corrected.trim(), teaching.note.trim(), "kept")}>{tr("I'm sure — learn mine anyway")}</button>
-                      <button onClick={() => setTeaching({ ...teaching, result: null })} className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 text-xs">{tr("Edit my correction")}</button>
+                      <button onClick={() => setTeaching({ ...teaching, result: null })} className="px-3 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-xs">{tr("Edit my correction")}</button>
                     </div>
                   </div>); })() : (
                 <div className="flex gap-2 mt-2 items-center">
-                  <button disabled={!teaching.corrected.trim() || teaching.checking} data-testid="teach-save" className="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 text-xs font-semibold disabled:opacity-40"
+                  <button disabled={!teaching.corrected.trim() || teaching.checking} data-testid="teach-save" className="px-3 py-1.5 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] text-xs font-semibold disabled:opacity-40"
                     onClick={() => checkTeach(m, idx)}>{teaching.checking ? tr("Checking…") : tr("Check & teach")}</button>
-                  <button onClick={() => setTeaching(null)} className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 text-xs">{tr("Cancel")}</button>
-                  {teaching.checking ? <span className="text-[11px] text-sky-300" data-testid="teach-step">{teaching.step || tr("Double-checking your correction…")}</span> : null}
+                  <button onClick={() => setTeaching(null)} className="px-3 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-xs">{tr("Cancel")}</button>
+                  {teaching.checking ? <span className="text-[11px] text-[var(--c-acc)]" data-testid="teach-step">{teaching.step || tr("Double-checking your correction…")}</span> : null}
                 </div>)}
               </div>
             ) : null}
             {m.kchips && m.kchips.length ? (
               <div className="mt-2" data-testid="kn-chips">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] text-slate-500">{tr("Sources")}:</span>
+                  <span className="text-[11px] text-[var(--c-mut)]">{tr("Sources")}:</span>
                   {m.kchips.map((c, i) => <button key={i} onClick={() => setOpenThought((o) => ({ ...o, ["kn" + m.id]: o["kn" + m.id] === i + 1 ? 0 : i + 1 }))} data-testid="kn-chip" dir="auto"
-                    className="max-w-[14rem] truncate px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-200 text-[12px]">{c.title || tr("Note")}{c.page ? " · " + tr("p. {p}", { p: c.page }) : ""}</button>)}
+                    className="max-w-[14rem] truncate px-1.5 py-0.5 rounded bg-[var(--c-soft)] text-[var(--c-acc)] text-[12px]">{c.title || tr("Note")}{c.page ? " · " + tr("p. {p}", { p: c.page }) : ""}</button>)}
                 </div>
-                {m.kchips.some((c) => c.note) ? <p className="mt-1 text-[11.5px] text-amber-300" data-testid="kn-notice">{tr(m.kchips.find((c) => c.note).note)}</p> : null}
-                {openThought["kn" + m.id] && m.kchips[openThought["kn" + m.id] - 1] ? <p className="mt-1 text-[12px] text-slate-400 border-s-2 border-teal-800 ps-2 whitespace-pre-wrap" dir="auto" data-testid="kn-passage">{m.kchips[openThought["kn" + m.id] - 1].text}</p> : null}
+                {m.kchips.some((c) => c.note) ? <p className="mt-1 text-[11.5px] text-[var(--c-warn)]" data-testid="kn-notice">{tr(m.kchips.find((c) => c.note).note)}</p> : null}
+                {openThought["kn" + m.id] && m.kchips[openThought["kn" + m.id] - 1] ? <p className="mt-1 text-[12px] text-[var(--c-mut)] border-s-2 border-[var(--c-acc)]/40 ps-2 whitespace-pre-wrap" dir="auto" data-testid="kn-passage">{m.kchips[openThought["kn" + m.id] - 1].text}</p> : null}
               </div>
             ) : null}
             {m.sources && m.sources.length ? (
               <div className="mt-2 space-y-1">
-                <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}{m.research ? " · " + (m.research.fast ? tr("read {p} pages", { p: m.research.pages }) : tr("read {p} pages one by one, facts from {n}", { p: m.research.pages, n: m.research.withFacts })) : ""}{m.research && m.research.searches > 1 ? " · " + tr("{s} searches", { s: m.research.searches }) : ""}{m.research && m.research.confirmed ? " · " + tr("{c} facts confirmed by 2+ sites", { c: m.research.confirmed }) : ""}</p>
+                <p className="text-[11px] text-[var(--c-mut)]">{tr("Sources")}{m.via ? " · via " + m.via : ""}{m.research ? " · " + (m.research.fast ? tr("read {p} pages", { p: m.research.pages }) : tr("read {p} pages one by one, facts from {n}", { p: m.research.pages, n: m.research.withFacts })) : ""}{m.research && m.research.searches > 1 ? " · " + tr("{s} searches", { s: m.research.searches }) : ""}{m.research && m.research.confirmed ? " · " + tr("{c} facts confirmed by 2+ sites", { c: m.research.confirmed }) : ""}</p>
                 {m.sources.map((h, i) => { let host = ""; try { host = new URL(h.url).hostname.replace(/^www\./, ""); } catch (e) {}
                   return <a key={i} href={h.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[12px] min-w-0" data-testid="source">
-                    <span className="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-[1.1rem] px-1 rounded-full bg-teal-500/15 border border-teal-800/70 text-[10px] text-teal-200">{i + 1}</span>
-                    {host ? <span className="shrink-0 text-slate-300 font-medium">{host}</span> : null}
-                    <span className="truncate text-teal-300/80">{tr(h.title)}</span></a>; })}
+                    <span className="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-[1.1rem] px-1 rounded-full bg-[var(--c-soft)] border border-[var(--c-acc)]/40 text-[10px] text-[var(--c-acc)]">{i + 1}</span>
+                    {host ? <span className="shrink-0 text-[var(--c-ink)] font-medium">{host}</span> : null}
+                    <span className="truncate text-[var(--c-acc)]">{tr(h.title)}</span></a>; })}
                 {/* v5.31 — like Gemini's research panel: what it searched and what it read */}
                 {m.research && m.research.log ? (
                   <div className="mt-1" data-testid="research-log">
-                    <button onClick={() => setOpenThought((o) => ({ ...o, ["rs" + m.id]: !o["rs" + m.id] }))} className="text-[11px] text-slate-400 flex items-center gap-1">
+                    <button onClick={() => setOpenThought((o) => ({ ...o, ["rs" + m.id]: !o["rs" + m.id] }))} className="text-[11px] text-[var(--c-mut)] flex items-center gap-1">
                       <Globe size={11} />{tr("How I researched")} <ChevronDown size={11} className={openThought["rs" + m.id] ? "rotate-180" : ""} /></button>
                     {openThought["rs" + m.id] ? (
-                      <div className="mt-1 ms-4 text-[11px] text-slate-400 space-y-1">
-                        <p className="text-slate-300">{tr("Searched")}:</p>
+                      <div className="mt-1 ms-4 text-[11px] text-[var(--c-mut)] space-y-1">
+                        <p className="text-[var(--c-ink)]">{tr("Searched")}:</p>
                         <ul className="list-disc ms-4">{m.research.log.queries.map((q, i) => <li key={i} dir="auto">{q}</li>)}</ul>
-                        <p className="text-slate-300 pt-1">{tr("Read {n} pages", { n: m.research.log.read.length })}:</p>
+                        <p className="text-[var(--c-ink)] pt-1">{tr("Read {n} pages", { n: m.research.log.read.length })}:</p>
                         <ul className="list-disc ms-4">{m.research.log.read.map((r, i) => <li key={i} className="truncate" dir="auto">{r.title}</li>)}</ul>
                       </div>
                     ) : null}
@@ -2226,22 +2226,22 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               </div>
             ) : null}
             {!m.streaming && m.text ? (
-              <div className="flex items-center gap-0.5 mt-1.5 -ms-2 text-slate-500">
+              <div className="flex items-center gap-0.5 mt-1.5 -ms-2 text-[var(--c-mut)]">
                 <button onClick={() => { try { navigator.clipboard.writeText(m.text); } catch (e) {} api.flash(tr("Copied")); }} className="p-2" title={tr("Copy")}><Copy size={15} /></button>
                 <button onClick={() => regenerate(idx)} className="p-2" title={tr("Regenerate")} disabled={busy}><RefreshCw size={15} /></button>
-                <button onClick={() => speak(m)} className={`p-2 ${speakingId === m.id ? "text-teal-300" : ""}`} title={tr("Read aloud")}><Volume2 size={15} /></button>
+                <button onClick={() => speak(m)} className={`p-2 ${speakingId === m.id ? "text-[var(--c-acc)]" : ""}`} title={tr("Read aloud")}><Volume2 size={15} /></button>
                 <button onClick={() => share(m)} className="p-2" title={tr("Share")}><Share2 size={15} /></button>
                 <button onClick={() => { api.remember({ kind: "note", title: m.text.slice(0, 60), text: m.text, output: "", tags: ["saved"] }); api.flash(tr("Saved to Memory")); }} className="p-2" title={tr("Save to Memory")}><Save size={15} /></button>
                 {api.knowledge && api.knowledge.teachChat ? <button data-testid="teach-to-pack" className="p-2" title={tr("Teach this to my model")} aria-label={tr("Teach this to my model")}
                   onClick={async () => setToPack(toPack && toPack.id === m.id ? null : { id: m.id, packs: await api.knowledge.myPacks(), name: "" })}><GraduationCap size={15} /></button> : null}
                 {api.teach ? <button onClick={() => setTeaching(teaching && teaching.id === m.id ? null : { id: m.id, corrected: "", note: "" })} data-testid="teach"
-                  className={`p-2 ${m.taught ? "text-sky-300" : ""}`} title={tr("Wrong? Teach the right answer")}><ThumbsDown size={15} /></button> : null}
-                {sourceLine(m, tr) ? <span className="text-[10px] text-slate-500 ms-1 truncate" data-testid="answer-source" dir="auto">{sourceLine(m, tr)}</span> : null}
-                {m.stats && m.stats.tps && !(m.stats.tokens && m.stats.tokens < 16) ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
-                {m.stats && m.stats.cut ? <span className="text-[10px] text-amber-300/90 ms-1" data-testid="cut-note">{tr("long answer — tap Continue")}</span> : null}
-                {m.stats && m.stats.looped ?<span className="text-[10px] text-amber-400/80 ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
+                  className={`p-2 ${m.taught ? "text-[var(--c-acc)]" : ""}`} title={tr("Wrong? Teach the right answer")}><ThumbsDown size={15} /></button> : null}
+                {sourceLine(m, tr) ? <span className="text-[10px] text-[var(--c-mut)] ms-1 truncate" data-testid="answer-source" dir="auto">{sourceLine(m, tr)}</span> : null}
+                {m.stats && m.stats.tps && !(m.stats.tokens && m.stats.tokens < 16) ? <span className="text-[10px] text-[var(--c-mut)] ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
+                {m.stats && m.stats.cut ? <span className="text-[10px] text-[var(--c-warn)] ms-1" data-testid="cut-note">{tr("long answer — tap Continue")}</span> : null}
+                {m.stats && m.stats.looped ?<span className="text-[10px] text-[var(--c-warn)] ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
                 {m.stats && m.stats.tps != null && m.stats.tps < 3 && !(m.stats.tokens && m.stats.tokens < 40) && !m.image && api.openSpeed ? (
-                  <button onClick={api.openSpeed} className="text-[10px] text-amber-300 underline underline-offset-2 ms-1" data-testid="slow-hint">{tr("unusually slow — why?")}</button>) : null}
+                  <button onClick={api.openSpeed} className="text-[10px] text-[var(--c-warn)] underline underline-offset-2 ms-1" data-testid="slow-hint">{tr("unusually slow — why?")}</button>) : null}
               </div>
             ) : null}
           </div>
@@ -2252,10 +2252,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           <div className="flex flex-col items-end gap-1.5" data-testid="queued">
             {queued.map((q) => (
               <div key={q.id} className="max-w-[85%] flex flex-col items-end">
-                <div dir="auto" className="bg-slate-800/70 border border-dashed border-slate-600 text-slate-200 rounded-2xl rounded-ee-md px-3.5 py-2 text-[15px] whitespace-pre-wrap">{q.text}</div>
-                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
+                <div dir="auto" className="bg-[var(--c-surf-2)] border border-dashed border-[var(--c-ln)] text-[var(--c-ink)] rounded-2xl rounded-ee-md px-3.5 py-2 text-[15px] whitespace-pre-wrap">{q.text}</div>
+                <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--c-mut)]">
                   <span>{tr("Waiting — read when this answer is done")}</span>
-                  <button onClick={() => { const all = queued.map((x) => x.text).join("\n\n"); setQueued([]); ask(all, { queuedDuring: true, now: true }); }} className="text-teal-300" data-testid="queued-now">{tr("Send now")}</button>
+                  <button onClick={() => { const all = queued.map((x) => x.text).join("\n\n"); setQueued([]); ask(all, { queuedDuring: true, now: true }); }} className="text-[var(--c-acc)]" data-testid="queued-now">{tr("Send now")}</button>
                   <button onClick={() => setQueued((l) => l.filter((x) => x.id !== q.id))} className="p-0.5" title={tr("Remove")}><X size={12} /></button>
                 </div>
               </div>
@@ -2265,29 +2265,29 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         {!busy && lastAi && lastAi === messages[messages.length - 1] && lastAi.text && !lastAi.error ? (
           <div className="att-chips flex gap-1.5 overflow-x-auto pb-1" style={chipFade()}>
             {(() => { const u = messages[messages.length - 2]; return u && u.image ? (
-              <button onClick={() => api.photoToMoney(u.image)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-emerald-800 text-emerald-200 bg-emerald-500/10">{tr("💳 Add to Money")}</button>
+              <button onClick={() => api.photoToMoney(u.image)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-[var(--c-pos)]/40 text-[var(--c-pos)] bg-[var(--c-pos)]/10">{tr("💳 Add to Money")}</button>
             ) : null; })()}
             {lastAi.stats && lastAi.stats.cut ? (
               <button onClick={() => continueAnswer(messages.length - 1)} data-testid="continue"
-                className="shrink-0 text-xs px-3 py-2 rounded-full border border-teal-600 text-teal-200 bg-teal-500/10 font-medium">{tr("Continue ▸")}</button>
+                className="shrink-0 text-xs px-3 py-2 rounded-full border border-[var(--c-acc)] text-[var(--c-acc)] bg-[var(--c-soft)] font-medium">{tr("Continue ▸")}</button>
             ) : null}
             {(() => { const u = messages[messages.length - 2];
               return !api.webOn && !(lastAi.sources && lastAi.sources.length) && u && u.role === "user" && needsWeb(u.text) ? (
                 <button onClick={() => ask(u.text, { web: true })} data-testid="search-web-chip"
-                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-sky-700 text-sky-200 bg-sky-500/10">{tr("🌐 Search the web for this")}</button>
+                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-[var(--c-acc)]/40 text-[var(--c-acc)] bg-[var(--c-soft)]">{tr("🌐 Search the web for this")}</button>
               ) : null; })()}
             {(() => { const u = messages[messages.length - 2], w = u && u.role === "user" && api.openSlides ? wantsDoc(u.text) : null;
               return w ? (
                 <button onClick={() => api.openSlides(u.text, w)} data-testid="slides-chip"
-                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-amber-700 text-amber-200 bg-amber-500/10">{tr(w === "deck" ? "📊 Make it a PowerPoint" : "📄 Make it a Word / PDF report")}</button>
+                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-[var(--c-warn)]/40 text-[var(--c-warn)] bg-[var(--c-warn)]/10">{tr(w === "deck" ? "📊 Make it a PowerPoint" : "📄 Make it a Word / PDF report")}</button>
               ) : null; })()}
             {(() => { const u = messages[messages.length - 2];
               return u && u.role === "user" && api.openFit && looksLikeFoodLog(u.text) ? (
                 <button onClick={() => api.openFit(u.text)} data-testid="fit-chip"
-                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-emerald-700 text-emerald-200 bg-emerald-500/10">{tr("🍽 Log it in Fit & Food")}</button>
+                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-[var(--c-pos)]/40 text-[var(--c-pos)] bg-[var(--c-pos)]/10">{tr("🍽 Log it in Fit & Food")}</button>
               ) : null; })()}
             {followUps(lastAi, messages[messages.length - 2]).map(([label, prompt]) => (
-              <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 active:border-teal-600">{tr(label)}</button>
+              <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] active:border-[var(--c-acc)]">{tr(label)}</button>
             ))}
           </div>
         ) : null}
@@ -2297,22 +2297,22 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       {/* ---- jump to the newest words ---- */}
       {!following && messages.length ? (
         <button onClick={() => { stickRef.current = true; setFollowing(true); lastAuto.current = Date.now() + 600; try { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" }); } catch (e) { toBottom(); } }} data-testid="jump-bottom"
-          className="fixed z-40 end-4 w-10 h-10 rounded-full bg-slate-800 border border-slate-600 text-slate-100 shadow-lg flex items-center justify-center"
+          className="fixed z-40 end-4 w-10 h-10 rounded-full bg-[var(--c-surf-2)] border border-[var(--c-ln)] text-[var(--c-ink)] shadow-lg flex items-center justify-center"
           style={{ bottom: typing ? "calc(118px + env(safe-area-inset-bottom))" : "calc(" + (padB + 4) + "px + env(safe-area-inset-bottom))" }} title={tr("Newest")}><ChevronDown size={18} /></button>
       ) : null}
 
       {/* ---- composer, pinned above the bottom bar (or at the very bottom
            while typing — the bottom bar steps aside for the keyboard) ---- */}
-      <div ref={composerRef} className={`att-shift fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent`} data-testid="composer"
+      <div ref={composerRef} className={`att-shift fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-[var(--c-bg)] via-[var(--c-bg)] to-transparent`} data-testid="composer"
         style={{ bottom: typing ? "env(safe-area-inset-bottom)" : "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
-        <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-xl">
+        <div className="max-w-2xl mx-auto bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-2xl p-2 shadow-xl">
           {files.length ? (
             <div className="flex flex-wrap gap-1.5 mb-2 ms-1">
               {files.map((f, i) => (
-                <div key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[12px] text-slate-200" data-testid="attached">
-                  <FileText size={13} className="text-teal-300" /><span className="max-w-[160px] truncate">{f.name}</span>
-                  {api.openPdfChat && f.file && /\.(pdf|docx|pptx|odt|epub|html?|rtf)$/i.test(f.name) ? <button onClick={() => { const ff = f.file; setFiles((x) => x.filter((_, j) => j !== i)); api.openPdfChat(ff); }} className="text-teal-300 underline" data-testid="attached-read">{tr("Read")}</button> : null}
-                  <button onClick={() => setFiles((x) => x.filter((_, j) => j !== i))} className="text-slate-400" aria-label={tr("Remove")}><X size={12} /></button>
+                <div key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--c-surf-2)] border border-[var(--c-ln)] text-[12px] text-[var(--c-ink)]" data-testid="attached">
+                  <FileText size={13} className="text-[var(--c-acc)]" /><span className="max-w-[160px] truncate">{f.name}</span>
+                  {api.openPdfChat && f.file && /\.(pdf|docx|pptx|odt|epub|html?|rtf)$/i.test(f.name) ? <button onClick={() => { const ff = f.file; setFiles((x) => x.filter((_, j) => j !== i)); api.openPdfChat(ff); }} className="text-[var(--c-acc)] underline" data-testid="attached-read">{tr("Read")}</button> : null}
+                  <button onClick={() => setFiles((x) => x.filter((_, j) => j !== i))} className="text-[var(--c-mut)]" aria-label={tr("Remove")}><X size={12} /></button>
                 </div>))}
             </div>
           ) : null}
@@ -2320,9 +2320,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             <div className="flex flex-wrap gap-2 mb-2 ms-1" data-testid="attached-photos">
               {photos.map((p, i) => (
                 <div key={i} className="relative inline-block">
-                  <img src={p.url} alt="" className="h-16 rounded-lg border border-slate-700" />
-                  {photos.length > 1 ? <span className="absolute bottom-0.5 start-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{i + 1}</span> : null}
-                  <button onClick={() => setPhotos((x) => x.filter((_, j) => j !== i))} className="absolute -top-2 -end-2 bg-slate-800 border border-slate-600 rounded-full p-0.5 text-slate-200"><X size={13} /></button>
+                  <img src={p.url} alt="" className="h-16 rounded-lg border border-[var(--c-ln)]" />
+                  {photos.length > 1 ? <span className="absolute bottom-0.5 start-0.5 bg-[var(--c-neg)] text-[var(--c-on-acc)] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{i + 1}</span> : null}
+                  <button onClick={() => setPhotos((x) => x.filter((_, j) => j !== i))} className="absolute -top-2 -end-2 bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-full p-0.5 text-[var(--c-ink)]"><X size={13} /></button>
                 </div>))}
             </div>
           ) : null}
@@ -2337,14 +2337,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             onBlur={() => { setTimeout(() => { if (document.activeElement !== taRef.current) { setTyping(false); document.documentElement.classList.remove("att-typing"); } }, 300); }}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia && window.matchMedia(tr("(pointer: fine)")).matches) { e.preventDefault(); ask(); } }}
             placeholder={listening ? tr("Listening…") : tr("Message Attune")}
-            className="att-scroll w-full bg-transparent px-2 py-1.5 text-[16px] leading-relaxed text-slate-100 placeholder-slate-500 resize-none focus:outline-none max-h-[180px]" />
+            className="att-scroll w-full bg-transparent px-2 py-1.5 text-[16px] leading-relaxed text-[var(--c-ink)] placeholder:text-[var(--c-mut)] resize-none focus:outline-none max-h-[180px]" />
           <div className="flex items-center gap-1 relative">
             {/* the file pickers stay mounted; in the minimal layout the "+" menu opens them */}
-            <label className={MINIMAL ? "hidden" : "p-2 rounded-full text-slate-400 active:bg-slate-800"} title={tr("Photo")}>
+            <label className={MINIMAL ? "hidden" : "p-2 rounded-full text-[var(--c-mut)] active:bg-[var(--c-surf-2)]"} title={tr("Photo")}>
               <ImagePlus size={19} />
               <input type="file" accept="image/*" multiple className="hidden" id="att-pick-photo" data-testid="attach-photo" onChange={(e) => { pickImages(e.target.files); e.target.value = ""; }} />
             </label>
-            <label className={MINIMAL ? "hidden" : "p-2 rounded-full text-slate-400 active:bg-slate-800"} title={tr("Spreadsheet or document")}>
+            <label className={MINIMAL ? "hidden" : "p-2 rounded-full text-[var(--c-mut)] active:bg-[var(--c-surf-2)]"} title={tr("Spreadsheet or document")}>
               <Paperclip size={18} />
               <input type="file" accept=".csv,.tsv,.xlsx,.xlsm,.xls,.json,.txt,.md,.pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf" multiple className="hidden" id="att-pick-file" data-testid="attach-file" onChange={(e) => { pickFiles(e.target.files); e.target.value = ""; }} />
             </label>
@@ -2352,41 +2352,41 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <>
                 {/* v6.31 minimal (design A, like ChatGPT/Gemini): one "+" holds photo, file, think and web; what is on shows as a chip */}
                 <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
-                  className={"w-9 h-9 rounded-full flex items-center justify-center border " + (plusOpen ? "border-teal-600 text-teal-300" : "border-slate-700 text-slate-300")}><Plus size={18} /></button>
-                {trMode ? <button onClick={() => setTrMode(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-sky-500/10 text-sky-300" data-testid="chip-translate"><Languages size={13} />{tr("Translate")}<X size={12} /></button> : null}
-                {deep ? <button onClick={() => setDeep(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-violet-500/10 text-violet-300" data-testid="chip-deep"><Sparkles size={13} />{tr("Deep answer")}<X size={12} /></button> : null}
-                {think ? <button onClick={() => setThink(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-teal-500/10 text-teal-300" data-testid="chip-think"><Brain size={13} />{tr("Think")}<X size={12} /></button> : null}
-                {api.webOn || api.webAuto ? <button onClick={api.toggleWeb} data-testid="web-toggle" className={"h-8 px-2.5 rounded-full text-xs flex items-center gap-1 " + (api.webOn ? "bg-teal-500/10 text-teal-300" : "bg-sky-500/10 text-sky-300")}><Globe size={13} />{api.webAuto ? tr("Web · Auto") : tr("Web")}</button> : null}
+                  className={"w-9 h-9 rounded-full flex items-center justify-center border " + (plusOpen ? "border-[var(--c-acc)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-ink)]")}><Plus size={18} /></button>
+                {trMode ? <button onClick={() => setTrMode(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-[var(--c-soft)] text-[var(--c-acc)]" data-testid="chip-translate"><Languages size={13} />{tr("Translate")}<X size={12} /></button> : null}
+                {deep ? <button onClick={() => setDeep(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-[var(--c-soft)] text-[var(--c-acc)]" data-testid="chip-deep"><Sparkles size={13} />{tr("Deep answer")}<X size={12} /></button> : null}
+                {think ? <button onClick={() => setThink(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-[var(--c-soft)] text-[var(--c-acc)]" data-testid="chip-think"><Brain size={13} />{tr("Think")}<X size={12} /></button> : null}
+                {api.webOn || api.webAuto ? <button onClick={api.toggleWeb} data-testid="web-toggle" className={"h-8 px-2.5 rounded-full text-xs flex items-center gap-1 " + (api.webOn ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "bg-[var(--c-soft)] text-[var(--c-acc)]")}><Globe size={13} />{api.webAuto ? tr("Web · Auto") : tr("Web")}</button> : null}
                 {plusOpen ? createPortal(
-                  <div className="fixed start-3 bottom-[calc(var(--kb,0px)+7.5rem)] z-[70] pointer-events-auto w-60 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-xl" data-testid="composer-menu" onClick={() => setPlusOpen(false)}>
-                    <label htmlFor="att-pick-photo" className="flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800 cursor-pointer"><ImagePlus size={17} className="text-slate-400" />{tr("Photo")}</label>
-                    <label htmlFor="att-pick-file" className="flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800 cursor-pointer"><Paperclip size={17} className="text-slate-400" />{tr("File")}</label>
-                    <button onClick={() => setThink((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-think"><Brain size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Think first")}</span>{think ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
-                    <button onClick={() => setDeep((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-deep"><Sparkles size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Deep answer")}<span className="block text-[11px] text-slate-500">{tr("Your strongest model, slow and careful")}</span></span>{deep ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
-                    <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-web"><Globe size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Search the web")}</span><span className="text-[11px] text-slate-500">{api.webOn ? tr("On") : api.webAuto ? tr("Auto") : tr("Off")}</span></button>
-                    <button onClick={() => setTrMode((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-translate"><Languages size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Translate my messages")}</span>{trMode ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
+                  <div className="fixed start-3 bottom-[calc(var(--kb,0px)+7.5rem)] z-[70] pointer-events-auto w-60 rounded-2xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-1.5 shadow-xl" data-testid="composer-menu" onClick={() => setPlusOpen(false)}>
+                    <label htmlFor="att-pick-photo" className="flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)] cursor-pointer"><ImagePlus size={17} className="text-[var(--c-mut)]" />{tr("Photo")}</label>
+                    <label htmlFor="att-pick-file" className="flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)] cursor-pointer"><Paperclip size={17} className="text-[var(--c-mut)]" />{tr("File")}</label>
+                    <button onClick={() => setThink((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)]" data-testid="menu-think"><Brain size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Think first")}</span>{think ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
+                    <button onClick={() => setDeep((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)]" data-testid="menu-deep"><Sparkles size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Deep answer")}<span className="block text-[11px] text-[var(--c-mut)]">{tr("Your strongest model, slow and careful")}</span></span>{deep ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
+                    <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)]" data-testid="menu-web"><Globe size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Search the web")}</span><span className="text-[11px] text-[var(--c-mut)]">{api.webOn ? tr("On") : api.webAuto ? tr("Auto") : tr("Off")}</span></button>
+                    <button onClick={() => setTrMode((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)]" data-testid="menu-translate"><Languages size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Translate my messages")}</span>{trMode ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
                   </div>, document.body) : null}
               </>
             ) : (
               <>
-            <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Think first")}>
+            <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-[var(--c-acc)] text-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`} title={tr("Think first")}>
               <Brain size={14} /> {tr("Think")}</button>
-            <button onClick={api.toggleWeb} data-testid="web-toggle" className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${api.webOn ? "border-teal-600 text-teal-300 bg-teal-500/10" : api.webAuto ? "border-sky-700 text-sky-300 bg-sky-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Search the web")}>
+            <button onClick={api.toggleWeb} data-testid="web-toggle" className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${api.webOn ? "border-[var(--c-acc)] text-[var(--c-acc)] bg-[var(--c-soft)]" : api.webAuto ? "border-[var(--c-acc)]/40 text-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`} title={tr("Search the web")}>
               <Globe size={14} /> {api.webAuto ? tr("Web · Auto") : tr("Web")}</button>
               </>
             )}
             <div className="flex-1" />
             {busy && text.trim() ? (
-              <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center me-1" title={tr("Send")} data-testid="queue-send"><Send size={17} /></button>
+              <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center me-1" title={tr("Send")} data-testid="queue-send"><Send size={17} /></button>
             ) : null}
             {busy ? (
-              <button onClick={stop} className="w-10 h-10 rounded-full bg-slate-100 text-slate-950 flex items-center justify-center" title={tr("Stop")}><Square size={15} /></button>
+              <button onClick={stop} className="w-10 h-10 rounded-full bg-[var(--c-ink)] text-[var(--c-bg)] flex items-center justify-center" title={tr("Stop")}><Square size={15} /></button>
             ) : text.trim() || image || files.length ? (
-              <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center" title={tr("Send")}><Send size={17} /></button>
+              <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center" title={tr("Send")}><Send size={17} /></button>
             ) : (
               <>
-              {NATIVE && NATIVE.listen && !listening ? <button onClick={() => setCall(true)} className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 text-teal-300" title={tr("Talk like a phone call")} data-testid="chat-call"><Phone size={17} /></button> : null}
-              <button onClick={voice} className={`w-10 h-10 rounded-full flex items-center justify-center ${listening ? "bg-rose-500 text-white animate-pulse" : "bg-slate-800 text-slate-200"}`} title={tr("Speak")}><Mic size={18} /></button>
+              {NATIVE && NATIVE.listen && !listening ? <button onClick={() => setCall(true)} className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--c-surf-2)] text-[var(--c-acc)]" title={tr("Talk like a phone call")} data-testid="chat-call"><Phone size={17} /></button> : null}
+              <button onClick={voice} className={`w-10 h-10 rounded-full flex items-center justify-center ${listening ? "bg-[var(--c-neg)] text-[var(--c-on-acc)] animate-pulse" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]"}`} title={tr("Speak")}><Mic size={18} /></button>
               </>
             )}
           </div>
@@ -2397,7 +2397,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           tag={voiceTag(detectLang([...messages].reverse().map((m) => m.text).find((t) => detectLang(t) && detectLang(t) !== "en") || "") || (api.prefersArabic() ? "ar" : deviceLang(navigator)), "")}
           close={() => { try { NATIVE.stopSpeaking && NATIVE.stopSpeaking(); NATIVE.stopListening && NATIVE.stopListening(); } catch (e) {} setCall(false); }} />, document.body) : null}
         {/* v6.16c (Ali): like every AI app, a small line that answers can be wrong */}
-        <p className="text-center text-[10.5px] leading-tight text-slate-500 mt-1 px-2" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
+        <p className="text-center text-[10.5px] leading-tight text-[var(--c-mut)] mt-1 px-2" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
       </div>
     </div>
   );

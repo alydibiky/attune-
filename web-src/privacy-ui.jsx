@@ -28,7 +28,7 @@ export function PrivacyWeek({ readNet }) {
       <p className="text-[13px] m-0" style={{ color: "var(--c-ink)" }}>{tr("The AI ran on this device: none of your chats, notes, photos or money went to an AI company.")}</p>
       {r.places.length ? <ul className="m-0 p-0 list-none space-y-1" data-testid="privacy-week-places">{r.places.slice(0, 12).map((x) => (
         <li key={x.host} className="flex items-start gap-2 text-[13px]" data-testid="privacy-week-place">
-          {x.n ? <Globe size={14} className="mt-0.5 shrink-0" /> : <Ban size={14} className="mt-0.5 shrink-0 text-rose-400" />}
+          {x.n ? <Globe size={14} className="mt-0.5 shrink-0" /> : <Ban size={14} className="mt-0.5 shrink-0 text-[var(--c-neg)]" />}
           <span className="min-w-0"><b dir="ltr">{x.host}</b> <span className="c-sub">· {x.n ? tr("{n} times", { n: x.n }) : ""}{x.b ? (x.n ? " · " : "") + tr("{n} blocked", { n: x.b }) : ""}{x.what.length ? " · " + x.what.map((w) => tr(w)).join(", ") : ""}</span></span>
         </li>))}</ul> : null}
       <p className="c-sub text-[11px] m-0">{tr("Only the place and the reason are kept, never what was sent. Counted on this device; it starts from the day you installed this update.")}</p>

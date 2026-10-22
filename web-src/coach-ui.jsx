@@ -8,6 +8,7 @@ import { tr, getLang } from "./i18n.js";
 import * as C from "./coach.js";
 import { LessonPlayer, answerMatches, speakNow } from "./lesson-ui.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+import { page, cardPad, card, btnP, inp, area, label, h1, chip } from "./ui-kit.jsx";
 
 const LANG_NAME = () => (getLang() === "ar" ? "Arabic (simple, formal)" : "English");
 function shrink(file) {
@@ -20,13 +21,13 @@ function Practice({ src, onResult, native }) {
   if (!qs.length) return <p className="c-sub text-[13px]">{tr("No practice for this kind of problem yet.")}</p>;
   return (
     <div className="space-y-2" data-testid="coach-practice">
-      <span className="c-lbl">{tr("Your turn — 3 like this")}</span>
+      <span className={label}>{tr("Your turn — 3 like this")}</span>
       {qs.map((q, i) => (
-        <div key={i} className="flex items-center gap-2" data-testid="coach-practice-item">
-          <span className="flex-1 c-num font-semibold" dir="ltr">{q.text}</span>
-          <input value={a[i] || ""} onChange={(e) => setA((x) => ({ ...x, [i]: e.target.value }))} inputMode="decimal" dir="ltr" className="w-24 rounded-lg px-2 py-1.5 border bg-transparent" style={{ borderColor: res[i] === false ? "var(--c-neg)" : "var(--c-ln)", color: "var(--c-ink)" }} data-testid="coach-practice-answer" />
+        <div key={i} className="flex items-center gap-2 min-h-[48px]" data-testid="coach-practice-item">
+          <span className="flex-1 c-num tabular-nums font-extrabold" dir="ltr">{q.text}</span>
+          <input value={a[i] || ""} onChange={(e) => setA((x) => ({ ...x, [i]: e.target.value }))} inputMode="decimal" dir="ltr" className={inp + " !w-24 tabular-nums"} style={{ borderColor: res[i] === false ? "var(--c-neg)" : "var(--c-ln)", color: "var(--c-ink)" }} data-testid="coach-practice-answer" />
           {res[i] === true ? <Check size={18} className="c-pos" /> : (
-            <button className="c-btn px-3 py-1.5" disabled={!a[i]} data-testid="coach-practice-check" onClick={() => {
+            <button className={btnP + " !h-11 !min-h-[44px] !px-4 !text-[14px]"} disabled={!a[i]} data-testid="coach-practice-check" onClick={() => {
               const okk = answerMatches(a[i], q.answer.replace(/^[a-z] = /, "")); setRes((x) => ({ ...x, [i]: okk })); onResult(okk, q.text);
               speakNow(okk ? (getLang() === "ar" ? "صحيح" : "Correct") : (getLang() === "ar" ? "حاول مرة أخرى" : "Try again"), { lang: getLang(), native });
             }}>{tr("Check")}</button>)}
@@ -81,44 +82,44 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
   };
 
   return (
-    <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="coach-page">
-      <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><GraduationCap size={21} className="c-acc" />{tr("Homework Coach")}</h2>
-        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Snap the homework — Attune teaches it step by step, with pictures and a voice. Maths is checked by code before you see it.")}</p></div>
+    <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="coach-page">
+      <div><h2 className={h1 + " flex items-center gap-2"}><GraduationCap size={21} className="c-acc" />{tr("Homework Coach")}</h2>
+        <p data-intro="" className="c-sub m-0 mt-1 lg:max-w-[70ch]">{tr("Snap the homework — Attune teaches it step by step, with pictures and a voice. Maths is checked by code before you see it.")}</p></div>
       {/* v6.27 computer layout A: the homework and its problems on the left, the lesson on the right (stacked on a phone) */}
       <div className={PANES}><div className={LEFT}>
       <div className="flex gap-2 flex-wrap">
-        {[[true, "Teach me first"], [false, "Show the answers"]].map(([v, l]) => <button key={l} className="c-pill" aria-pressed={teach === v} style={teach === v ? { background: "var(--c-acc)", color: "#fff" } : {}} onClick={() => put({ ...state, settings: { ...(state.settings || {}), teach: v } })} data-testid={v ? "coach-teach" : "coach-answers"}>{tr(l)}</button>)}
+        {[[true, "Teach me first"], [false, "Show the answers"]].map(([v, l]) => <button key={l} className={chip(teach === v)} aria-pressed={teach === v} onClick={() => put({ ...state, settings: { ...(state.settings || {}), teach: v } })} data-testid={v ? "coach-teach" : "coach-answers"}>{tr(l)}</button>)}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <button className="c-card text-center py-3" onClick={() => fileRef.current && fileRef.current.click()} data-testid="coach-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[13px] mt-1">{tr("Photo of the homework")}</span></button>
-        <button className="c-card text-center py-3" onClick={() => setTyping((v) => !v)} data-testid="coach-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[13px] mt-1">{tr("Type a problem")}</span></button>
+        <button className={card + " text-center py-4 min-h-[88px] hover:border-[var(--c-acc)]"} onClick={() => fileRef.current && fileRef.current.click()} data-testid="coach-photo"><span className="mx-auto w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)]"><Camera size={18} className="c-acc" /></span><span className="block text-[13.5px] font-bold mt-1.5">{tr("Photo of the homework")}</span></button>
+        <button className={card + " text-center py-4 min-h-[88px] hover:border-[var(--c-acc)]"} onClick={() => setTyping((v) => !v)} data-testid="coach-type"><span className="mx-auto w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)]"><Pencil size={18} className="c-acc" /></span><span className="block text-[13.5px] font-bold mt-1.5">{tr("Type a problem")}</span></button>
       </div>
       <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" data-testid="coach-file" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) fromPhoto(await shrink(f)); }} />
       {typing ? (
-        <div className="c-card space-y-2">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} dir="auto" placeholder={tr("e.g. 3(x − 2) = x + 4   or   1/2 + 1/3   or a question from any subject")} className="w-full rounded-lg px-3 py-2 border bg-transparent text-[15px]" style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} data-testid="coach-text" />
-          <button className="c-btn" disabled={!text.trim()} onClick={() => readPage(text)} data-testid="coach-go">{tr("Start")}</button>
+        <div className={cardPad + " space-y-2.5"}>
+          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} dir="auto" placeholder={tr("e.g. 3(x − 2) = x + 4   or   1/2 + 1/3   or a question from any subject")} className={area} data-testid="coach-text" />
+          <button className={btnP} disabled={!text.trim()} onClick={() => readPage(text)} data-testid="coach-go">{tr("Start")}</button>
         </div>) : null}
-      {weak.length && !items.length ? <div className="c-card" data-testid="coach-weak"><span className="c-lbl">{tr("Needs practice")}</span><p className="m-0 mt-1">{weak.map((w) => tr(C.TOPIC_NAMES[w] || w)).join(" · ")}</p></div> : null}
+      {weak.length && !items.length ? <div className={cardPad} data-testid="coach-weak"><span className={label}>{tr("Needs practice")}</span><p className="m-0 mt-1 font-semibold">{weak.map((w) => tr(C.TOPIC_NAMES[w] || w)).join(" · ")}</p></div> : null}
       {busy ? <p className="c-sub" data-testid="coach-busy">{busy}</p> : null}
-      {photo && items.length ? <img src={photo} alt="" className="max-h-40 rounded-xl" /> : null}
+      {photo && items.length ? <img src={photo} alt="" className="max-h-40 rounded-[18px] border border-[var(--c-ln)]" /> : null}
       {items.length ? (
-        <div className="space-y-2" data-testid="coach-items"><span className="c-lbl">{tr("Check it was read right, then tap Teach me")}</span>
+        <div className="space-y-2" data-testid="coach-items"><span className={label}>{tr("Check it was read right, then tap Teach me")}</span>
           {/* v6.41 (S1): the child's written answers, marked by the maths engine */}
-          <button className="c-btn w-full" onClick={() => { const r = C.markWorksheet(items, { lang: getLang() }); setMarked(r); let st = state; for (const x of r.items) if (x.status === "right" || x.status === "wrong") st = C.record(st, x.topic || "other", x.status === "right", x.text); put(st); }} data-testid="coach-mark">{tr("Mark the worksheet")}</button>
-          {marked ? <div className="c-card space-y-1.5" data-testid="coach-marked">
-            <b className="block" data-testid="coach-mark-score">{marked.score != null ? tr("{r} of {n} right", { r: marked.right, n: marked.right + marked.wrong }) : tr("Nothing the maths engine can mark")}{marked.blank ? " · " + tr("{b} not answered", { b: marked.blank }) : ""}</b>
+          <button className={btnP + " w-full"} onClick={() => { const r = C.markWorksheet(items, { lang: getLang() }); setMarked(r); let st = state; for (const x of r.items) if (x.status === "right" || x.status === "wrong") st = C.record(st, x.topic || "other", x.status === "right", x.text); put(st); }} data-testid="coach-mark">{tr("Mark the worksheet")}</button>
+          {marked ? <div className={cardPad + " space-y-1.5"} data-testid="coach-marked">
+            <b className="block text-[16px] font-black tabular-nums" data-testid="coach-mark-score">{marked.score != null ? tr("{r} of {n} right", { r: marked.right, n: marked.right + marked.wrong }) : tr("Nothing the maths engine can mark")}{marked.blank ? " · " + tr("{b} not answered", { b: marked.blank }) : ""}</b>
             {marked.items.map((x, k) => <div key={k} className="flex items-start gap-2 text-[13.5px]" data-testid="coach-mark-row" data-status={x.status}>
               <span className={x.status === "right" ? "c-pos" : x.status === "wrong" ? "c-neg" : "c-sub"}>{x.status === "right" ? "✓" : x.status === "wrong" ? "✗" : "—"}</span>
-              <span className="flex-1 c-num" dir="ltr">{x.text}{x.given ? " → " + x.given : ""}{x.status === "wrong" ? <b className="c-pos"> · {x.correct}</b> : x.status === "blank" && x.correct ? <span className="c-sub"> · {tr("not answered")}</span> : x.status === "unsure" ? <span className="c-sub"> · {tr("check by hand")}</span> : null}</span>
-              {x.status === "wrong" || x.status === "blank" ? <button className="c-sub underline text-[12px]" onClick={() => { const i = items.findIndex((y) => y.n === x.n); if (i >= 0) open(i, x.text); }} data-testid="coach-mark-steps">{tr("The steps")}</button> : null}
+              <span className="flex-1 c-num tabular-nums" dir="ltr">{x.text}{x.given ? " → " + x.given : ""}{x.status === "wrong" ? <b className="c-pos"> · {x.correct}</b> : x.status === "blank" && x.correct ? <span className="c-sub"> · {tr("not answered")}</span> : x.status === "unsure" ? <span className="c-sub"> · {tr("check by hand")}</span> : null}</span>
+              {x.status === "wrong" || x.status === "blank" ? <button className="c-sub underline text-[12.5px] font-bold min-h-[36px] px-1" onClick={() => { const i = items.findIndex((y) => y.n === x.n); if (i >= 0) open(i, x.text); }} data-testid="coach-mark-steps">{tr("The steps")}</button> : null}
             </div>)}
           </div> : null}
           {items.map((p, i) => (
-            <div key={i} className="c-card flex items-center gap-2 py-2" data-testid="coach-item" style={active && active.i === i ? { borderColor: "var(--c-acc)" } : {}}>
-              <span className="c-sub w-6">{p.n}</span>
-              <input value={p.text} onChange={(e) => setItems((x) => x.map((y, k) => (k === i ? { ...y, text: e.target.value } : y)))} dir="auto" className="flex-1 bg-transparent outline-none c-num text-[15px]" style={{ color: "var(--c-ink)" }} data-testid="coach-item-text" />
-              <button className="c-btn px-3 py-1.5" onClick={() => open(i)} data-testid="coach-teachme">{tr("Teach me")}</button>
+            <div key={i} className={card + " flex items-center gap-2 ps-3.5 pe-2 py-2 min-h-[60px]"} data-testid="coach-item" style={active && active.i === i ? { borderColor: "var(--c-acc)" } : {}}>
+              <span className="c-sub w-6 tabular-nums font-bold">{p.n}</span>
+              <input value={p.text} onChange={(e) => setItems((x) => x.map((y, k) => (k === i ? { ...y, text: e.target.value } : y)))} dir="auto" className="flex-1 min-w-0 min-h-[44px] bg-transparent outline-none c-num tabular-nums text-[15px] font-semibold" style={{ color: "var(--c-ink)" }} data-testid="coach-item-text" />
+              <button className={btnP + " !h-11 !min-h-[44px] !px-4 !text-[14px] shrink-0"} onClick={() => open(i)} data-testid="coach-teachme">{tr("Teach me")}</button>
             </div>))}
         </div>) : null}
       </div><div className={active ? RIGHT : "min-w-0"}>

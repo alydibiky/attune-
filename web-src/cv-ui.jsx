@@ -16,25 +16,25 @@ import { myCountry } from "./agent-ui.jsx";
 import { GRID3 } from "./desk.jsx";
 import { useDesktopWide } from "./side-ui.jsx";
 
-const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500";
+const field = "w-full min-w-0 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2.5 py-2 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]";
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
-const primary = btn + " bg-teal-500 text-slate-950";
-const ghost = btn + " border border-slate-700 text-slate-200";
+const primary = btn + " bg-[var(--c-acc)] text-[var(--c-on-acc)]";
+const ghost = btn + " border border-[var(--c-ln)] text-[var(--c-ink)]";
 const L2 = (en, ar) => (getLang() === "ar" ? ar : en);
 
 function Sheet({ title, onClose, right, children, testid }) {
   useSubBack(true, onClose);
   return (
-    <div className="att-shift fixed inset-0 z-[70] bg-slate-950 flex flex-col" data-testid={testid}>
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-800">
-        <button onClick={onClose} className="p-1.5 -ms-1 rounded-lg text-slate-300" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
-        <h2 className="text-[15px] font-semibold text-white flex-1 truncate">{title}</h2>{right}
+    <div className="att-shift fixed inset-0 z-[70] bg-[var(--c-bg)] flex flex-col" data-testid={testid}>
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--c-ln)]">
+        <button onClick={onClose} className="p-1.5 -ms-1 rounded-lg text-[var(--c-ink)]" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
+        <h2 className="text-[15px] font-semibold text-[var(--c-ink)] flex-1 truncate">{title}</h2>{right}
       </div>
       <div className="flex-1 overflow-auto">{children}</div>
     </div>
   );
 }
-const Lbl = ({ t, children }) => <div className="block"><span className="block text-[11.5px] text-slate-400 mb-1">{t}</span>{children}</div>;
+const Lbl = ({ t, children }) => <div className="block"><span className="block text-[11.5px] text-[var(--c-mut)] mb-1">{t}</span>{children}</div>;
 const In = ({ value, onChange, ...p }) => <input className={field} value={value ?? ""} onChange={(e) => onChange(e.target.value)} {...p} />;
 const Tx = ({ value, onChange, rows = 3, ...p }) => <textarea className={field + " resize-none"} rows={rows} value={value ?? ""} onChange={(e) => onChange(e.target.value)} {...p} />;
 
@@ -69,7 +69,7 @@ function Preview({ cv, desk }) {
       <div style={{ width: pxW * k, height: pxH * k * Math.max(1, cv.fit || 1), margin: "0 auto", background: "#fff", boxShadow: "0 2px 14px rgba(0,0,0,.45)", overflow: "hidden", position: "relative" }}>
         <iframe title="CV" srcDoc={V.cvHtml(cv, { scale })} style={{ width: pxW, maxWidth: "none", height: pxH * Math.max(1, cv.fit || 1), border: 0, transform: `scale(${k})`, transformOrigin: "top left", position: "absolute", left: 0, top: 0 }} sandbox="allow-same-origin" />
       </div>
-      {scale < 1 ? <p className="text-center text-[11px] text-amber-300 mt-2">{tr("Text shrunk to {p}% to fit {n} page(s)", { p: Math.round(scale * 100), n: cv.fit })}</p> : null}
+      {scale < 1 ? <p className="text-center text-[11px] text-[var(--c-warn)] mt-2">{tr("Text shrunk to {p}% to fit {n} page(s)", { p: Math.round(scale * 100), n: cv.fit })}</p> : null}
     </div>
   );
 }
@@ -81,16 +81,16 @@ function Bullets({ list, onChange, onImprove }) {
     <div className="space-y-1.5">
       {arr.map((b, i) => (
         <div key={i} className="flex gap-1.5 items-start">
-          <span className="text-slate-500 pt-2">•</span>
+          <span className="text-[var(--c-mut)] pt-2">•</span>
           <textarea className={field + " resize-none"} rows={2} value={b} onChange={(e) => onChange(arr.map((x, j) => (j === i ? e.target.value : x)))} placeholder={tr("What you did and the result (use a number)")} data-testid="cv-bullet" />
-          <button className="p-1.5 text-slate-500" onClick={() => onChange(arr.filter((_, j) => j !== i))} aria-label={tr("Remove")}><X size={14} /></button>
+          <button className="p-1.5 text-[var(--c-mut)]" onClick={() => onChange(arr.filter((_, j) => j !== i))} aria-label={tr("Remove")}><X size={14} /></button>
         </div>
       ))}
       <div className="flex gap-2"><button className={ghost} onClick={() => onChange([...arr, ""])}>+ {tr("Bullet")}</button>{onImprove ? <button className={ghost + " flex items-center gap-1"} onClick={onImprove} data-testid="cv-improve"><Sparkles size={12} />{tr("Improve")}</button> : null}</div>
     </div>
   );
 }
-function ItemCard({ children, onDelete }) { return <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-2.5 space-y-2 relative"><button className="absolute top-1.5 end-1.5 p-1 text-slate-500" onClick={onDelete} aria-label={tr("Remove")}><Trash2 size={13} /></button>{children}</div>; }
+function ItemCard({ children, onDelete }) { return <div className="rounded-lg border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5 space-y-2 relative"><button className="absolute top-1.5 end-1.5 p-1 text-[var(--c-mut)]" onClick={onDelete} aria-label={tr("Remove")}><Trash2 size={13} /></button>{children}</div>; }
 
 function SectionEditor({ s, update, improveJob }) {
   const set = (items) => update({ ...s, items });
@@ -105,7 +105,7 @@ function SectionEditor({ s, update, improveJob }) {
           {s.type === "experience" ? <>
             <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Job title")}><In value={it.role} onChange={(v) => upd(i, { role: v })} data-testid="cv-role" /></Lbl><Lbl t={tr("Company")}><In value={it.company} onChange={(v) => upd(i, { company: v })} data-testid="cv-company" /></Lbl></div>
             <div className="grid grid-cols-3 gap-2"><Lbl t={tr("City")}><In value={it.location} onChange={(v) => upd(i, { location: v })} /></Lbl><Lbl t={tr("Start (2021-03)")}><In value={it.start} onChange={(v) => upd(i, { start: v })} dir="ltr" data-testid="cv-start" /></Lbl><Lbl t={tr("End")}><In value={it.current ? "" : it.end} onChange={(v) => upd(i, { end: v })} dir="ltr" disabled={it.current} /></Lbl></div>
-            <label className="flex items-center gap-2 text-[12px] text-slate-300"><input type="checkbox" checked={!!it.current} onChange={(e) => upd(i, { current: e.target.checked })} />{tr("I still work here")}</label>
+            <label className="flex items-center gap-2 text-[12px] text-[var(--c-ink)]"><input type="checkbox" checked={!!it.current} onChange={(e) => upd(i, { current: e.target.checked })} />{tr("I still work here")}</label>
             <Bullets list={it.bullets} onChange={(b) => upd(i, { bullets: b })} onImprove={() => improveJob(it, i)} />
           </> : s.type === "education" ? <>
             <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Degree / course")}><In value={it.degree} onChange={(v) => upd(i, { degree: v })} /></Lbl><Lbl t={tr("School")}><In value={it.school} onChange={(v) => upd(i, { school: v })} /></Lbl></div>
@@ -135,8 +135,8 @@ function ContentTab({ cv, setCV, improveJob }) {
   const [adding, setAdding] = useState(false);
   return (
     <div className="p-3 space-y-3">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-        <p className="text-[13px] font-semibold text-slate-100">{tr("About you")}</p>
+      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2">
+        <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("About you")}</p>
         <Lbl t={tr("Full name")}><In value={b.name} onChange={setB("name")} data-testid="cv-name" /></Lbl>
         <Lbl t={tr("Job title")}><In value={b.title} onChange={setB("title")} data-testid="cv-title" /></Lbl>
         <div className="grid grid-cols-2 gap-2"><Lbl t={tr("Email")}><In value={b.email} onChange={setB("email")} dir="ltr" inputMode="email" data-testid="cv-email" /></Lbl><Lbl t={tr("Phone")}><In value={b.phone} onChange={setB("phone")} dir="ltr" inputMode="tel" data-testid="cv-phone" /></Lbl></div>
@@ -144,16 +144,16 @@ function ContentTab({ cv, setCV, improveJob }) {
         <Lbl t={tr("Links (LinkedIn, portfolio) — one per line")}><Tx rows={2} dir="ltr" value={(b.links || []).map((l) => l.url).join("\n")} onChange={(v) => setB("links")(v.split("\n").map((x) => x.trim()).filter(Boolean).map((u) => ({ label: u, url: u })))} /></Lbl>
       </div>
       {cv.sections.map((s, i) => (
-        <div key={s.id} className="rounded-xl border border-slate-800 bg-slate-900/60" data-testid="cv-section">
+        <div key={s.id} className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)]" data-testid="cv-section">
           <div className="flex items-center gap-1 p-2">
             <button className="flex-1 flex items-center gap-2 text-start px-1" onClick={() => setOpen({ ...open, [s.id]: !open[s.id] })}>
-              <ChevronDown size={14} className={`text-slate-400 transition-transform ${open[s.id] ? "" : "-rotate-90 rtl:rotate-90"}`} />
-              <input className="bg-transparent text-[13px] font-semibold text-slate-100 w-full focus:outline-none" value={s.title} onChange={(e) => upSec({ ...s, title: e.target.value })} onClick={(e) => e.stopPropagation()} aria-label={tr("Section title")} />
+              <ChevronDown size={14} className={`text-[var(--c-mut)] transition-transform ${open[s.id] ? "" : "-rotate-90 rtl:rotate-90"}`} />
+              <input className="bg-transparent text-[13px] font-semibold text-[var(--c-ink)] w-full focus:outline-none" value={s.title} onChange={(e) => upSec({ ...s, title: e.target.value })} onClick={(e) => e.stopPropagation()} aria-label={tr("Section title")} />
             </button>
-            <button className="p-1.5 text-slate-400 disabled:opacity-30" disabled={i === 0} onClick={() => setCV(V.moveSection(cv, s.id, -1))} aria-label={tr("Move up")} data-testid="cv-up"><ArrowUp size={14} /></button>
-            <button className="p-1.5 text-slate-400 disabled:opacity-30" disabled={i === cv.sections.length - 1} onClick={() => setCV(V.moveSection(cv, s.id, 1))} aria-label={tr("Move down")}><ArrowDown size={14} /></button>
-            <label className="flex items-center gap-1 text-[11px] text-slate-400 px-1"><input type="checkbox" checked={s.visible !== false} onChange={(e) => upSec({ ...s, visible: e.target.checked })} />{tr("Show")}</label>
-            <button className="p-1.5 text-slate-500" onClick={() => { if (window.confirm(tr("Delete the section “{n}”?", { n: s.title }))) setCV({ ...cv, sections: cv.sections.filter((x) => x.id !== s.id) }); }} aria-label={tr("Delete")}><Trash2 size={14} /></button>
+            <button className="p-1.5 text-[var(--c-mut)] disabled:opacity-30" disabled={i === 0} onClick={() => setCV(V.moveSection(cv, s.id, -1))} aria-label={tr("Move up")} data-testid="cv-up"><ArrowUp size={14} /></button>
+            <button className="p-1.5 text-[var(--c-mut)] disabled:opacity-30" disabled={i === cv.sections.length - 1} onClick={() => setCV(V.moveSection(cv, s.id, 1))} aria-label={tr("Move down")}><ArrowDown size={14} /></button>
+            <label className="flex items-center gap-1 text-[11px] text-[var(--c-mut)] px-1"><input type="checkbox" checked={s.visible !== false} onChange={(e) => upSec({ ...s, visible: e.target.checked })} />{tr("Show")}</label>
+            <button className="p-1.5 text-[var(--c-mut)]" onClick={() => { if (window.confirm(tr("Delete the section “{n}”?", { n: s.title }))) setCV({ ...cv, sections: cv.sections.filter((x) => x.id !== s.id) }); }} aria-label={tr("Delete")}><Trash2 size={14} /></button>
           </div>
           {open[s.id] ? <div className="p-2 pt-0"><SectionEditor s={s} update={upSec} improveJob={(it, idx) => improveJob(s, it, idx)} /></div> : null}
         </div>
@@ -168,7 +168,7 @@ function ContentTab({ cv, setCV, improveJob }) {
 // ---- design -----------------------------------------------------------------------------------------------------------------------
 function DesignTab({ cv, setCV, flash }) {
   const set = (k) => (v) => setCV({ ...cv, [k]: v });
-  const Seg = ({ k, opts }) => <div className="flex gap-1.5 flex-wrap">{opts.map(([v, label]) => <button key={String(v)} onClick={() => set(k)(v)} className={`${btn} ${cv[k] === v ? "bg-teal-500 text-slate-950" : "border border-slate-700 text-slate-200"}`} data-testid={`cv-${k}-${v}`}>{label}</button>)}</div>;
+  const Seg = ({ k, opts }) => <div className="flex gap-1.5 flex-wrap">{opts.map(([v, label]) => <button key={String(v)} onClick={() => set(k)(v)} className={`${btn} ${cv[k] === v ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "border border-[var(--c-ln)] text-[var(--c-ink)]"}`} data-testid={`cv-${k}-${v}`}>{label}</button>)}</div>;
   const photoRef = useRef(null);
   const pickPhoto = (file) => {
     if (!file) return;
@@ -179,8 +179,8 @@ function DesignTab({ cv, setCV, flash }) {
   return (
     <div className="p-3 space-y-4">
       <Lbl t={tr("Look")}><Seg k="layout" opts={[["ats", tr("ATS-safe (one column)")], ["modern", tr("Modern (sidebar)")]]} /></Lbl>
-      <p className="text-[11px] text-slate-500 -mt-2">{tr("The content is the same — switch any time. ATS-safe is read best by company filters; Modern looks more designed.")}</p>
-      <Lbl t={tr("Colour")}><div className="flex gap-2 flex-wrap">{Object.entries(V.THEMES).map(([k, t]) => <button key={k} onClick={() => set("theme")(k)} aria-label={t.name} data-testid={"cv-theme-" + k} className={`w-9 h-9 rounded-full border-2 ${cv.theme === k ? "border-white" : "border-transparent"}`} style={{ background: t.accent }} />)}</div></Lbl>
+      <p className="text-[11px] text-[var(--c-mut)] -mt-2">{tr("The content is the same — switch any time. ATS-safe is read best by company filters; Modern looks more designed.")}</p>
+      <Lbl t={tr("Colour")}><div className="flex gap-2 flex-wrap">{Object.entries(V.THEMES).map(([k, t]) => <button key={k} onClick={() => set("theme")(k)} aria-label={t.name} data-testid={"cv-theme-" + k} className={`w-9 h-9 rounded-full border-2 ${cv.theme === k ? "border-[var(--c-ln)]" : "border-transparent"}`} style={{ background: t.accent }} />)}</div></Lbl>
       <Lbl t={tr("Font")}><Seg k="font" opts={Object.entries(V.FONTS).map(([k, f]) => [k, f.name])} /></Lbl>
       <Lbl t={tr("Text size: {n} pt", { n: cv.fontSize })}><input type="range" min="9" max="12" step="0.5" value={cv.fontSize} onChange={(e) => set("fontSize")(+e.target.value)} className="w-full" data-testid="cv-fontsize" /></Lbl>
       <Lbl t={tr("Spacing")}><Seg k="spacing" opts={[["compact", tr("Compact")], ["normal", tr("Normal")], ["airy", tr("Airy")]]} /></Lbl>
@@ -189,11 +189,11 @@ function DesignTab({ cv, setCV, flash }) {
       <Lbl t={tr("Fit to")}><Seg k="fit" opts={[[1, tr("1 page")], [2, tr("2 pages")], [0, tr("Don't shrink")]]} /></Lbl>
       <Lbl t={tr("Language & direction")}><Seg k="lang" opts={[["en", "English · LTR"], ["ar", "العربية · RTL"]]} /></Lbl>
       <div>
-        <p className="text-[11.5px] text-slate-400 mb-1">{tr("Photo (many employers in Egypt and the Gulf expect one; many elsewhere don't)")}</p>
+        <p className="text-[11.5px] text-[var(--c-mut)] mb-1">{tr("Photo (many employers in Egypt and the Gulf expect one; many elsewhere don't)")}</p>
         <div className="flex items-center gap-3">
-          {cv.photo ? <img src={cv.photo} alt="" className="w-14 h-14 rounded-full object-cover border border-slate-700" /> : null}
+          {cv.photo ? <img src={cv.photo} alt="" className="w-14 h-14 rounded-full object-cover border border-[var(--c-ln)]" /> : null}
           <button className={ghost + " flex items-center gap-1"} onClick={() => photoRef.current && photoRef.current.click()}><Camera size={13} />{cv.photo ? tr("Change") : tr("Add photo")}</button>
-          {cv.photo ? <label className="flex items-center gap-1.5 text-[12px] text-slate-300"><input type="checkbox" checked={!!cv.showPhoto} onChange={(e) => set("showPhoto")(e.target.checked)} />{tr("Show it")}</label> : null}
+          {cv.photo ? <label className="flex items-center gap-1.5 text-[12px] text-[var(--c-ink)]"><input type="checkbox" checked={!!cv.showPhoto} onChange={(e) => set("showPhoto")(e.target.checked)} />{tr("Show it")}</label> : null}
           <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickPhoto(e.target.files && e.target.files[0])} />
         </div>
       </div>
@@ -206,10 +206,10 @@ function CheckTab({ cv }) {
   const items = useMemo(() => V.checkCV(cv), [cv]);
   return (
     <div className="p-3 space-y-2" data-testid="cv-check">
-      {!items.length ? <div className="rounded-xl border border-emerald-800 bg-emerald-500/5 p-4 text-sm text-emerald-300 flex items-center gap-2"><Check size={16} />{tr("Nothing to fix — this CV looks complete.")}</div>
+      {!items.length ? <div className="rounded-xl border border-[var(--c-pos)]/50 bg-[var(--c-pos)]/10 p-4 text-sm text-[var(--c-pos)] flex items-center gap-2"><Check size={16} />{tr("Nothing to fix — this CV looks complete.")}</div>
         : items.map((x, i) => (
-          <div key={i} className={`rounded-lg border p-2.5 text-[13px] flex gap-2 ${x.level === "warn" ? "border-amber-800 bg-amber-500/5 text-amber-100" : "border-slate-800 bg-slate-900/60 text-slate-200"}`}>
-            {x.level === "warn" ? <AlertTriangle size={14} className="mt-0.5 shrink-0" /> : <Info size={14} className="mt-0.5 shrink-0 text-slate-400" />}<span>{getLang() === "ar" ? x.ar : x.en}</span>
+          <div key={i} className={`rounded-lg border p-2.5 text-[13px] flex gap-2 ${x.level === "warn" ? "border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10 text-[var(--c-warn)]" : "border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]"}`}>
+            {x.level === "warn" ? <AlertTriangle size={14} className="mt-0.5 shrink-0" /> : <Info size={14} className="mt-0.5 shrink-0 text-[var(--c-mut)]" />}<span>{getLang() === "ar" ? x.ar : x.en}</span>
           </div>))}
     </div>
   );
@@ -242,44 +242,44 @@ function JobTab({ cv, setCV, llm, modelReady, listen, native, flash, goAI }) {
   const links = J.jobLinks(target.role || "", target.city || "", country);
   return (
     <div className="p-3 space-y-3 md:max-w-3xl md:mx-auto" data-testid="cv-job">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-        <p className="text-[13px] font-semibold text-slate-100">{tr("The job you want")}</p>
+      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2">
+        <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("The job you want")}</p>
         <div className="grid grid-cols-2 gap-2">
           <input value={target.role || ""} onChange={(e) => setT("role", e.target.value)} placeholder={tr("e.g. Data analyst")} className={field} dir="auto" data-testid="cv-job-role" />
           <input value={target.city || ""} onChange={(e) => setT("city", e.target.value)} placeholder={tr("City")} className={field} dir="auto" data-testid="cv-job-city" />
         </div>
       </div>
       {target.role ? (sk.role ? (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="cv-job-skills">
-          <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-slate-100">{tr("Skills employers ask for")}</p><span className="text-[12px] text-teal-300 tabular-nums">{sk.have.length}/{sk.have.length + sk.missing.length}</span></div>
-          <div className="h-2 rounded-full bg-slate-800 overflow-hidden"><div className="h-full bg-teal-500" style={{ width: sk.score + "%" }} /></div>
-          <div className="flex flex-wrap gap-1.5">{sk.have.map((x) => <span key={x} className="rounded-full px-2.5 py-1 text-[12px] bg-teal-500/15 text-teal-200"><Check size={11} className="inline me-1" />{x}</span>)}</div>
-          {sk.missing.length ? <><p className="text-[12px] text-slate-400 m-0">{tr("Not on your CV yet — add it if you have it, or learn it:")}</p>
-            <div className="flex flex-wrap gap-1.5">{sk.missing.map((x) => <button key={x} onClick={() => window.dispatchEvent(new CustomEvent("attune-learn", { detail: { topic: x } }))} className="rounded-full px-2.5 py-1 text-[12px] border border-amber-700 text-amber-200" data-testid="cv-job-learn">{x} · {tr("learn it")}</button>)}</div></> : null}
+        <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="cv-job-skills">
+          <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Skills employers ask for")}</p><span className="text-[12px] text-[var(--c-acc)] tabular-nums">{sk.have.length}/{sk.have.length + sk.missing.length}</span></div>
+          <div className="h-2 rounded-full bg-[var(--c-surf-2)] overflow-hidden"><div className="h-full bg-[var(--c-acc)]" style={{ width: sk.score + "%" }} /></div>
+          <div className="flex flex-wrap gap-1.5">{sk.have.map((x) => <span key={x} className="rounded-full px-2.5 py-1 text-[12px] bg-[var(--c-soft)] text-[var(--c-acc)]"><Check size={11} className="inline me-1" />{x}</span>)}</div>
+          {sk.missing.length ? <><p className="text-[12px] text-[var(--c-mut)] m-0">{tr("Not on your CV yet — add it if you have it, or learn it:")}</p>
+            <div className="flex flex-wrap gap-1.5">{sk.missing.map((x) => <button key={x} onClick={() => window.dispatchEvent(new CustomEvent("attune-learn", { detail: { topic: x } }))} className="rounded-full px-2.5 py-1 text-[12px] border border-[var(--c-warn)]/50 text-[var(--c-warn)]" data-testid="cv-job-learn">{x} · {tr("learn it")}</button>)}</div></> : null}
           <button className={ghost} onClick={goAI}>{tr("Tailor this CV to a job ad")}</button>
-        </div>) : <p className="text-[12.5px] text-slate-400">{tr("I don't have a skills list for this job yet — the interview practice and job search still work.")}</p>) : null}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="cv-job-practice">
-        <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-slate-100">{tr("Interview practice")}</p><span className="text-[12px] text-slate-400">{(qi % qs.length) + 1}/{qs.length}</span></div>
-        <p className="text-[16px] text-white m-0" dir="auto" data-testid="cv-job-q">{qs[qi % qs.length]}</p>
+        </div>) : <p className="text-[12.5px] text-[var(--c-mut)]">{tr("I don't have a skills list for this job yet — the interview practice and job search still work.")}</p>) : null}
+      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="cv-job-practice">
+        <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Interview practice")}</p><span className="text-[12px] text-[var(--c-mut)]">{(qi % qs.length) + 1}/{qs.length}</span></div>
+        <p className="text-[16px] text-[var(--c-ink)] m-0" dir="auto" data-testid="cv-job-q">{qs[qi % qs.length]}</p>
         <div className="flex gap-2 flex-wrap">
           <button className={ghost + " flex items-center gap-1"} onClick={ask} data-testid="cv-job-hear"><Volume2 size={13} />{tr("Hear it")}</button>
-          <button className={(rec ? "px-3 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white" : primary) + " flex items-center gap-1"} onClick={rec ? stopRec : speak} data-testid="cv-job-mic"><Mic size={13} />{rec ? tr("Stop") : tr("Answer out loud")}</button>
+          <button className={(rec ? "px-3 py-2 rounded-lg text-xs font-semibold bg-[var(--c-neg)] text-[var(--c-on-acc)]" : primary) + " flex items-center gap-1"} onClick={rec ? stopRec : speak} data-testid="cv-job-mic"><Mic size={13} />{rec ? tr("Stop") : tr("Answer out loud")}</button>
           <button className={ghost} onClick={() => { stopRec(); setQi(qi + 1); setAns(""); setFb(null); setAi(""); }} data-testid="cv-job-next">{tr("Next question")}</button>
         </div>
         <Tx rows={4} value={ans} onChange={setAns} placeholder={tr("…or type your answer")} data-testid="cv-job-answer" />
         <button className={primary + " w-full py-2.5"} disabled={!ans.trim()} onClick={check} data-testid="cv-job-check">{tr("How did I do?")}</button>
         {fb ? <div className="space-y-1" data-testid="cv-job-feedback">
-          {fb.good.map((x, i) => <p key={"g" + i} className="m-0 text-[13px] text-teal-200 flex gap-1.5"><Check size={14} className="shrink-0 mt-0.5" />{x}</p>)}
-          {fb.fix.map((x, i) => <p key={"f" + i} className="m-0 text-[13px] text-amber-200 flex gap-1.5"><AlertTriangle size={14} className="shrink-0 mt-0.5" />{x}</p>)}
+          {fb.good.map((x, i) => <p key={"g" + i} className="m-0 text-[13px] text-[var(--c-acc)] flex gap-1.5"><Check size={14} className="shrink-0 mt-0.5" />{x}</p>)}
+          {fb.fix.map((x, i) => <p key={"f" + i} className="m-0 text-[13px] text-[var(--c-warn)] flex gap-1.5"><AlertTriangle size={14} className="shrink-0 mt-0.5" />{x}</p>)}
           {modelReady ? <button className={ghost + " flex items-center gap-1 mt-1"} onClick={coach} data-testid="cv-job-coach"><Sparkles size={13} />{tr("Ask the AI coach")}</button> : null}
-          {ai ? <p className="m-0 text-[13px] text-slate-200 whitespace-pre-wrap" dir="auto"><Sparkles size={12} className="inline me-1 text-teal-300" />{ai}</p> : null}
+          {ai ? <p className="m-0 text-[13px] text-[var(--c-ink)] whitespace-pre-wrap" dir="auto"><Sparkles size={12} className="inline me-1 text-[var(--c-acc)]" />{ai}</p> : null}
         </div> : null}
       </div>
       <MockInterview qs={qs} ar={ar} listen={listen} native={native} llm={llm} modelReady={modelReady} cvText={text} flash={flash} />
-      {links.length ? <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-1.5" data-testid="cv-job-links">
-        <p className="text-[13px] font-semibold text-slate-100">{tr("Find jobs")} · {target.role}{target.city ? " · " + target.city : ""}</p>
+      {links.length ? <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-1.5" data-testid="cv-job-links">
+        <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Find jobs")} · {target.role}{target.city ? " · " + target.city : ""}</p>
         <div className="flex flex-wrap gap-1.5">{links.map((l) => <button key={l.label} className={ghost} onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: l, plan: null, inApp: false } }))} data-testid="cv-job-link">{l.label}</button>)}</div>
-        <p className="text-[11.5px] text-slate-500 m-0">{tr("Apply with the PDF from this CV (the button at the top).")}</p>
+        <p className="text-[11.5px] text-[var(--c-mut)] m-0">{tr("Apply with the PDF from this CV (the button at the top).")}</p>
       </div> : null}
     </div>);
 }
@@ -306,27 +306,27 @@ function MockInterview({ qs, ar, listen, native, llm, modelReady, cvText, flash 
   };
   const improve = async (k) => { setBetter((b) => ({ ...b, [k]: "…" })); try { const t = await llm(J.betterAnswerPrompt(rows[k].q, rows[k].a, lang), { maxTokens: 350, temperature: 0.3 }); setBetter((b) => ({ ...b, [k]: String(t || "").trim() })); } catch (e) { setBetter((b) => ({ ...b, [k]: "" })); } };
   const card = J.scorecard(rows, lang);
-  const Bar = ({ label, v }) => v == null ? null : <div className="flex items-center gap-2 text-[12px]"><span className="w-24 text-slate-400">{label}</span><div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div className={"h-full " + (v >= 70 ? "bg-teal-500" : v >= 45 ? "bg-amber-500" : "bg-rose-500")} style={{ width: v + "%" }} /></div><span className="w-8 text-end tabular-nums text-slate-300">{v}</span></div>;
+  const Bar = ({ label, v }) => v == null ? null : <div className="flex items-center gap-2 text-[12px]"><span className="w-24 text-[var(--c-mut)]">{label}</span><div className="flex-1 h-1.5 rounded-full bg-[var(--c-surf-2)] overflow-hidden"><div className={"h-full " + (v >= 70 ? "bg-[var(--c-acc)]" : v >= 45 ? "bg-[var(--c-warn)]" : "bg-[var(--c-neg)]")} style={{ width: v + "%" }} /></div><span className="w-8 text-end tabular-nums text-[var(--c-ink)]">{v}</span></div>;
   if (!on) return <button className={ghost + " w-full py-2.5 flex items-center justify-center gap-1.5"} onClick={start} data-testid="mock-start"><Mic size={14} />{tr("Mock interview — 5 questions, scored")}</button>;
   return (
-    <div className="rounded-xl border border-teal-800/60 bg-slate-900/60 p-3 space-y-2" data-testid="mock">
+    <div className="rounded-xl border border-[var(--c-acc)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="mock">
       {i < list.length ? <>
-        <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-slate-100">{tr("Mock interview")}</p><span className="text-[12px] text-slate-400">{i + 1}/{list.length}</span></div>
-        <p className="text-[16px] text-white m-0" dir="auto" data-testid="mock-q">{list[i]}</p>
+        <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Mock interview")}</p><span className="text-[12px] text-[var(--c-mut)]">{i + 1}/{list.length}</span></div>
+        <p className="text-[16px] text-[var(--c-ink)] m-0" dir="auto" data-testid="mock-q">{list[i]}</p>
         <div className="flex gap-2 flex-wrap">
           <button className={ghost + " flex items-center gap-1"} onClick={() => hear(i)}><Volume2 size={13} />{tr("Hear it again")}</button>
-          <button className={(rec ? "px-3 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white" : primary) + " flex items-center gap-1"} onClick={rec ? () => { try { native && native.stopListening && native.stopListening(); } catch (e) {} } : record} data-testid="mock-mic"><Mic size={13} />{rec ? tr("Stop") : tr("Answer out loud")}</button>
+          <button className={(rec ? "px-3 py-2 rounded-lg text-xs font-semibold bg-[var(--c-neg)] text-[var(--c-on-acc)]" : primary) + " flex items-center gap-1"} onClick={rec ? () => { try { native && native.stopListening && native.stopListening(); } catch (e) {} } : record} data-testid="mock-mic"><Mic size={13} />{rec ? tr("Stop") : tr("Answer out loud")}</button>
         </div>
         <Tx rows={3} value={ans} onChange={setAns} placeholder={tr("…or type your answer")} data-testid="mock-answer" />
         <button className={primary + " w-full py-2.5"} onClick={next} disabled={rec} data-testid="mock-next">{i + 1 < list.length ? tr("Next question") : tr("Finish and score")}</button>
       </> : <>
-        <p className="text-[13px] font-semibold text-slate-100">{tr("Your score")}: <span className="text-teal-300 text-lg" data-testid="mock-total">{card ? card.total : 0}</span>/100</p>
+        <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Your score")}: <span className="text-[var(--c-acc)] text-lg" data-testid="mock-total">{card ? card.total : 0}</span>/100</p>
         {card ? <div className="space-y-1" data-testid="mock-card">
           <Bar label={tr("Story")} v={card.structure} /><Bar label={tr("No fillers")} v={card.fillers} /><Bar label={tr("Confidence")} v={card.confidence} /><Bar label={tr("Pace")} v={card.pace} />
-          <p className="text-[12.5px] text-amber-200 m-0 pt-1" dir="auto" data-testid="mock-tip">{card.tip}</p></div> : <p className="text-[12.5px] text-slate-400">{tr("No answers to score.")}</p>}
-        {rows.map((r, k) => r.score ? <div key={k} className="border-t border-slate-800 pt-2 space-y-1" data-testid="mock-row">
-          <p className="text-[12.5px] text-slate-300 m-0" dir="auto">{k + 1}. {r.q} — <b className="text-white">{r.score.total}</b>{r.score.pace.wpm ? " · " + tr("{w} words/min", { w: r.score.pace.wpm }) : ""}{r.score.fillers ? " · " + tr("{n} fillers", { n: r.score.fillers }) : ""}</p>
-          {better[k] ? <p className="text-[13px] text-teal-100 m-0 whitespace-pre-wrap" dir="auto" data-testid="mock-better">{better[k]}</p>
+          <p className="text-[12.5px] text-[var(--c-warn)] m-0 pt-1" dir="auto" data-testid="mock-tip">{card.tip}</p></div> : <p className="text-[12.5px] text-[var(--c-mut)]">{tr("No answers to score.")}</p>}
+        {rows.map((r, k) => r.score ? <div key={k} className="border-t border-[var(--c-ln)] pt-2 space-y-1" data-testid="mock-row">
+          <p className="text-[12.5px] text-[var(--c-ink)] m-0" dir="auto">{k + 1}. {r.q} — <b className="text-[var(--c-ink)]">{r.score.total}</b>{r.score.pace.wpm ? " · " + tr("{w} words/min", { w: r.score.pace.wpm }) : ""}{r.score.fillers ? " · " + tr("{n} fillers", { n: r.score.fillers }) : ""}</p>
+          {better[k] ? <p className="text-[13px] text-[var(--c-acc)] m-0 whitespace-pre-wrap" dir="auto" data-testid="mock-better">{better[k]}</p>
             : modelReady ? <button className={ghost + " text-[12px]"} onClick={() => improve(k)} data-testid="mock-improve"><Sparkles size={12} className="inline me-1" />{tr("Show a better answer")}</button> : null}
         </div> : null)}
         <button className={ghost} onClick={start}>{tr("Try again")}</button>
@@ -350,43 +350,43 @@ function AITab({ cv, setCV, llm, modelReady, openEngine, flash, onCopyFor, onNew
   const Btn = ({ k, onClick, children, testid }) => <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5"} disabled={!!busy} onClick={onClick} data-testid={testid}><Sparkles size={13} />{busy === k ? tr("Working…") : children}</button>;
   return (
     <div className="p-3 space-y-4" data-testid="cv-ai">
-      <p className="text-[12px] text-slate-400">{tr("The AI on your phone rewords — it never adds a number, date or skill you didn't write. Anything it suggests is shown first.")}</p>
-      <div className="space-y-2 rounded-xl border border-teal-800 bg-teal-500/5 p-3" data-testid="cv-ai-revise">
-        <p className="text-[13px] font-semibold text-slate-100">{tr("Edit or improve my CV")}</p>
-        <p className="text-[12px] text-slate-400">{tr("Say what to add or change («add my job at Dar Al Fouad Hospital as a nurse, 2019–2022», «change my phone to …»), or leave it empty and just make it more professional. You see the result before it is kept.")}</p>
+      <p className="text-[12px] text-[var(--c-mut)]">{tr("The AI on your phone rewords — it never adds a number, date or skill you didn't write. Anything it suggests is shown first.")}</p>
+      <div className="space-y-2 rounded-xl border border-[var(--c-acc)] bg-[var(--c-soft)] p-3" data-testid="cv-ai-revise">
+        <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Edit or improve my CV")}</p>
+        <p className="text-[12px] text-[var(--c-mut)]">{tr("Say what to add or change («add my job at Dar Al Fouad Hospital as a nurse, 2019–2022», «change my phone to …»), or leave it empty and just make it more professional. You see the result before it is kept.")}</p>
         <Tx rows={3} value={req} onChange={setReq} placeholder={tr("What should be added or changed? (optional)")} data-testid="cv-revise-text" />
         <div className="grid grid-cols-2 gap-2">
           <Btn k="rev" testid="cv-revise-go" onClick={() => run("rev", async () => setRev({ ...A.parseRevise(await ask(A.reviseMessages(cv, req, false), 1800), cv, req), polish: false }))}>{tr("Apply my change")}</Btn>
           <Btn k="revp" testid="cv-revise-polish" onClick={() => run("revp", async () => setRev({ ...A.parseRevise(await ask(A.reviseMessages(cv, req, true), 1800), cv, req), polish: true }))}>{tr("Change + make it professional")}</Btn>
         </div>
-        {rev ? <div className="rounded-lg bg-slate-900 p-2.5" data-testid="cv-revise-result"><p className="text-[11px] uppercase text-slate-500 mb-1">{tr("New version")}</p><p className="text-[12.5px] text-slate-200 whitespace-pre-wrap max-h-64 overflow-auto">{V.cvText(rev.cv)}</p><div className="flex gap-2 mt-2"><button className={primary} onClick={() => { setUndo(cv); setCV(rev.cv); setRev(null); setReq(""); flash(tr("Done — you can undo it")); }} data-testid="cv-revise-apply">{tr("Use this version")}</button><button className={ghost} onClick={() => setRev(null)}>{tr("Cancel")}</button></div></div> : null}
+        {rev ? <div className="rounded-lg bg-[var(--c-surf)] p-2.5" data-testid="cv-revise-result"><p className="text-[11px] uppercase text-[var(--c-mut)] mb-1">{tr("New version")}</p><p className="text-[12.5px] text-[var(--c-ink)] whitespace-pre-wrap max-h-64 overflow-auto">{V.cvText(rev.cv)}</p><div className="flex gap-2 mt-2"><button className={primary} onClick={() => { setUndo(cv); setCV(rev.cv); setRev(null); setReq(""); flash(tr("Done — you can undo it")); }} data-testid="cv-revise-apply">{tr("Use this version")}</button><button className={ghost} onClick={() => setRev(null)}>{tr("Cancel")}</button></div></div> : null}
         {undo ? <button className={ghost + " w-full"} onClick={() => { setCV(undo); setUndo(null); }} data-testid="cv-revise-undo">{tr("Undo the last change")}</button> : null}
       </div>
-      <div className="space-y-2 rounded-xl border border-slate-800 p-3">
-        <p className="text-[13px] font-semibold text-slate-100">{tr("Professional summary")}</p>
+      <div className="space-y-2 rounded-xl border border-[var(--c-ln)] p-3">
+        <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Professional summary")}</p>
         <Btn k="sum" testid="cv-ai-summary" onClick={() => run("sum", async () => setSum(A.parseSummary(await ask(A.summaryMessages(cv), 300), cv)))}>{tr("Write my summary")}</Btn>
-        {sum ? <div className="rounded-lg bg-slate-900 p-2.5 text-[13px] text-slate-200" data-testid="cv-ai-summary-result"><p>{sum}</p><div className="flex gap-2 mt-2"><button className={primary} onClick={() => { setSummaryText(sum); setSum(""); flash(tr("Summary added")); }}>{tr("Use it")}</button><button className={ghost} onClick={() => setSum("")}>{tr("Discard")}</button></div></div> : null}
+        {sum ? <div className="rounded-lg bg-[var(--c-surf)] p-2.5 text-[13px] text-[var(--c-ink)]" data-testid="cv-ai-summary-result"><p>{sum}</p><div className="flex gap-2 mt-2"><button className={primary} onClick={() => { setSummaryText(sum); setSum(""); flash(tr("Summary added")); }}>{tr("Use it")}</button><button className={ghost} onClick={() => setSum("")}>{tr("Discard")}</button></div></div> : null}
       </div>
-      <div className="space-y-2 rounded-xl border border-slate-800 p-3">
-        <p className="text-[13px] font-semibold text-slate-100">{tr("Translate")}</p>
-        <p className="text-[12px] text-slate-400">{tr("Makes a new CV in the other language. Names, companies and numbers stay.")}</p>
+      <div className="space-y-2 rounded-xl border border-[var(--c-ln)] p-3">
+        <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("Translate")}</p>
+        <p className="text-[12px] text-[var(--c-mut)]">{tr("Makes a new CV in the other language. Names, companies and numbers stay.")}</p>
         <Btn k="tr" testid="cv-ai-translate" onClick={() => run("tr", async () => { const to = cv.lang === "ar" ? "en" : "ar"; const texts = A.collectTexts(JSON.parse(JSON.stringify(cv))).map((x) => x.text); const c = A.applyTranslation(cv, to, await ask(A.translateMessages(texts, to), 1800)); onNewCV({ ...V.copyFor(c, to === "ar" ? "عربي" : "English") }); })}>{cv.lang === "ar" ? tr("Make an English copy") : tr("Make an Arabic copy")}</Btn>
       </div>
-      <div className="space-y-2 rounded-xl border border-slate-800 p-3">
-        <p className="text-[13px] font-semibold text-slate-100">{tr("For a specific job")}</p>
+      <div className="space-y-2 rounded-xl border border-[var(--c-ln)] p-3">
+        <p className="text-[13px] font-semibold text-[var(--c-ink)]">{tr("For a specific job")}</p>
         <Tx rows={5} value={ad} onChange={setAd} placeholder={tr("Paste the job advert here")} data-testid="cv-ad" />
         <In value={company} onChange={setCompany} placeholder={tr("Company (optional)")} />
         <Btn k="tailor" testid="cv-ai-tailor" onClick={() => run("tailor", async () => setTailor(A.parseTailor(await ask(A.tailorMessages(cv, ad), 900), cv)))}>{tr("Compare my CV with this job")}</Btn>
         {tailor ? (
           <div className="space-y-2" data-testid="cv-ai-tailor-result">
-            {tailor.covered.length ? <div><p className="text-[11px] uppercase text-emerald-400">{tr("Your CV already shows")}</p><div className="flex flex-wrap gap-1 mt-1">{tailor.covered.map((k) => <span key={k} className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-200">{k}</span>)}</div></div> : null}
-            {tailor.missing.length ? <div><p className="text-[11px] uppercase text-amber-400">{tr("The advert asks for — not in your CV")}</p><div className="flex flex-wrap gap-1 mt-1">{tailor.missing.map((k) => <span key={k} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-200">{k}</span>)}</div><p className="text-[11px] text-slate-500 mt-1">{tr("Add one only if it is true for you.")}</p></div> : null}
+            {tailor.covered.length ? <div><p className="text-[11px] uppercase text-[var(--c-pos)]">{tr("Your CV already shows")}</p><div className="flex flex-wrap gap-1 mt-1">{tailor.covered.map((k) => <span key={k} className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--c-pos)]/15 text-[var(--c-pos)]">{k}</span>)}</div></div> : null}
+            {tailor.missing.length ? <div><p className="text-[11px] uppercase text-[var(--c-warn)]">{tr("The advert asks for — not in your CV")}</p><div className="flex flex-wrap gap-1 mt-1">{tailor.missing.map((k) => <span key={k} className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--c-warn)]/15 text-[var(--c-warn)]">{k}</span>)}</div><p className="text-[11px] text-[var(--c-mut)] mt-1">{tr("Add one only if it is true for you.")}</p></div> : null}
             {tailor.rewrites.map((r, i) => (
-              <div key={i} className="rounded-lg bg-slate-900 p-2.5 text-[12.5px]"><p className="text-slate-500 line-through">{r.old}</p><p className="text-slate-100 mt-1">{r.new}</p><button className={primary + " mt-2"} onClick={() => { setCV(A.applyRewrite(cv, r)); setTailor({ ...tailor, rewrites: tailor.rewrites.filter((_, j) => j !== i) }); }}>{tr("Use this wording")}</button></div>))}
+              <div key={i} className="rounded-lg bg-[var(--c-surf)] p-2.5 text-[12.5px]"><p className="text-[var(--c-mut)] line-through">{r.old}</p><p className="text-[var(--c-ink)] mt-1">{r.new}</p><button className={primary + " mt-2"} onClick={() => { setCV(A.applyRewrite(cv, r)); setTailor({ ...tailor, rewrites: tailor.rewrites.filter((_, j) => j !== i) }); }}>{tr("Use this wording")}</button></div>))}
             <button className={ghost + " w-full"} onClick={() => onCopyFor(company)} data-testid="cv-copy-for">{tr("Save a copy of this CV for this job")}</button>
           </div>) : null}
         <Btn k="letter" testid="cv-ai-letter" onClick={() => run("letter", async () => setLetter(A.parseLetter(await ask(A.coverLetterMessages(cv, ad, { company }), 700), cv)))}>{tr("Write a cover letter")}</Btn>
-        {letter ? <div className="rounded-lg bg-slate-900 p-2.5" data-testid="cv-ai-letter-result"><p className="text-[13px] text-slate-200 whitespace-pre-wrap">{letter}</p><div className="flex gap-2 mt-2"><button className={ghost} onClick={() => { try { navigator.clipboard.writeText(letter); flash(tr("Copied")); } catch (e) {} }}>{tr("Copy")}</button><button className={ghost} onClick={() => shareWord(letter)}>{tr("Word")}</button><button className={ghost} onClick={() => share(letter)}>{tr("Share")}</button></div></div> : null}
+        {letter ? <div className="rounded-lg bg-[var(--c-surf)] p-2.5" data-testid="cv-ai-letter-result"><p className="text-[13px] text-[var(--c-ink)] whitespace-pre-wrap">{letter}</p><div className="flex gap-2 mt-2"><button className={ghost} onClick={() => { try { navigator.clipboard.writeText(letter); flash(tr("Copied")); } catch (e) {} }}>{tr("Copy")}</button><button className={ghost} onClick={() => shareWord(letter)}>{tr("Word")}</button><button className={ghost} onClick={() => share(letter)}>{tr("Share")}</button></div></div> : null}
       </div>
     </div>
   );
@@ -434,7 +434,7 @@ function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelRead
       right={<div className="flex gap-1"><button className={primary + " flex items-center gap-1"} onClick={doPdf} data-testid="cv-export-pdf"><Share2 size={12} />PDF</button><button className={ghost} onClick={doWord} data-testid="cv-export-word">Word</button><button className={ghost} onClick={doText}>TXT</button></div>}>
       <div className="lg:flex lg:h-full">
       <div className="lg:flex-1 lg:min-w-0 lg:overflow-auto">
-      <div className="sticky top-0 z-10 bg-slate-950 border-b border-slate-800 px-2 py-1.5 flex gap-1 overflow-x-auto">{TABS.map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"cv-tab-" + k} className={`${btn} shrink-0 ${shown === k ? "bg-teal-500 text-slate-950" : "text-slate-300"}${k === "preview" ? " lg:hidden" : ""}`}>{l}</button>)}</div>
+      <div className="sticky top-0 z-10 bg-[var(--c-bg)] border-b border-[var(--c-ln)] px-2 py-1.5 flex gap-1 overflow-x-auto">{TABS.map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"cv-tab-" + k} className={`${btn} shrink-0 ${shown === k ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "text-[var(--c-ink)]"}${k === "preview" ? " lg:hidden" : ""}`}>{l}</button>)}</div>
       {shown === "content" ? <ContentTab cv={cv} setCV={setCV} improveJob={improveJob} />
         : shown === "design" ? <DesignTab cv={cv} setCV={setCV} flash={flash} />
         : shown === "preview" ? <Preview cv={cv} />
@@ -443,7 +443,7 @@ function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelRead
         : <AITab cv={cv} setCV={setCV} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} share={(t) => (share ? share(t) : null)} shareWord={letterWord}
             onNewCV={(c) => { onNewCV(c); flash(tr("Saved as a new CV: {n}", { n: c.name })); }} onCopyFor={(co) => { const c = V.copyFor(cv, co); onNewCV(c); flash(tr("Saved a copy: {n}", { n: c.name })); }} />}
       </div>
-      {wide ? <div className="hidden lg:block lg:w-[46%] lg:shrink-0 lg:overflow-auto lg:border-s lg:border-slate-800 lg:bg-slate-900/40" data-testid="cv-live-preview"><Preview cv={cv} desk /></div> : null}
+      {wide ? <div className="hidden lg:block lg:w-[46%] lg:shrink-0 lg:overflow-auto lg:border-s lg:border-[var(--c-ln)] lg:bg-[var(--c-surf)]" data-testid="cv-live-preview"><Preview cv={cv} desk /></div> : null}
       </div>
     </Sheet>
   );
@@ -488,32 +488,32 @@ export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, na
   };
   return (
     <section className="p-4 space-y-3" data-testid="cv-page">
-      <div className="flex items-start gap-3"><FileText size={22} className="text-teal-300 mt-1" /><div><h2 className="text-lg font-semibold text-slate-100">{tr("CV / Resume")}</h2><p data-intro="" className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Build a CV in English or Arabic, keep a copy for every job, and export a clean PDF or Word file. The AI on your phone helps with wording.")}</p></div></div>
+      <div className="flex items-start gap-3"><FileText size={22} className="text-[var(--c-acc)] mt-1" /><div><h2 className="text-lg font-semibold text-[var(--c-ink)]">{tr("CV / Resume")}</h2><p data-intro="" className="text-[13px] text-[var(--c-mut)] lg:max-w-[70ch]">{tr("Build a CV in English or Arabic, keep a copy for every job, and export a clean PDF or Word file. The AI on your phone helps with wording.")}</p></div></div>
       <div className="grid grid-cols-2 gap-2 lg:max-w-md">
         <button className={primary + " py-2.5 flex items-center justify-center gap-1.5"} onClick={() => setSheet("new")} data-testid="cv-new"><Plus size={14} />{tr("New CV")}</button>
         <button className={ghost + " py-2.5 flex items-center justify-center gap-1.5"} onClick={() => setSheet("import")} data-testid="cv-import"><Upload size={14} />{tr("Import my CV")}</button>
       </div>
-      {!list.length ? <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center"><p className="text-sm text-slate-300">{tr("No CVs yet")}</p><p className="text-[12px] text-slate-500 mt-1">{tr("Start a new one, or import the one you already have.")}</p></div>
+      {!list.length ? <div className="rounded-xl border border-dashed border-[var(--c-ln)] p-6 text-center"><p className="text-sm text-[var(--c-ink)]">{tr("No CVs yet")}</p><p className="text-[12px] text-[var(--c-mut)] mt-1">{tr("Start a new one, or import the one you already have.")}</p></div>
         : <div className={GRID3}>{list.map((c) => (
-          <div key={c.id} className="rounded-xl border border-slate-700 bg-slate-900/70 p-3" data-testid="cv-row">
+          <div key={c.id} className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3" data-testid="cv-row">
             <button className="w-full text-start" onClick={() => setOpenId(c.id)}>
-              <p className="text-sm font-medium text-slate-100">{c.name}</p>
-              <p className="text-[12px] text-slate-400">{c.basics.name || tr("(no name yet)")} · {c.layout === "modern" ? tr("Modern") : tr("ATS-safe")} · {c.lang === "ar" ? "العربية" : "English"} · {c.page}</p>
+              <p className="text-sm font-medium text-[var(--c-ink)]">{c.name}</p>
+              <p className="text-[12px] text-[var(--c-mut)]">{c.basics.name || tr("(no name yet)")} · {c.layout === "modern" ? tr("Modern") : tr("ATS-safe")} · {c.lang === "ar" ? "العربية" : "English"} · {c.page}</p>
             </button>
             <div className="flex gap-2 mt-2.5">
               <button className={ghost + " flex items-center gap-1"} onClick={() => { const n = V.copyFor(c); setList([n, ...list]); flash(tr("Copied as “{n}”", { n: n.name })); }}><Copy size={12} />{tr("Duplicate")}</button>
-              <button className={ghost + " flex items-center gap-1 text-red-300 ms-auto"} onClick={() => { if (window.confirm(tr("Delete the CV “{n}”?", { n: c.name }))) setList(list.filter((x) => x.id !== c.id)); }}><Trash2 size={12} />{tr("Delete")}</button>
+              <button className={ghost + " flex items-center gap-1 text-[var(--c-neg)] ms-auto"} onClick={() => { if (window.confirm(tr("Delete the CV “{n}”?", { n: c.name }))) setList(list.filter((x) => x.id !== c.id)); }}><Trash2 size={12} />{tr("Delete")}</button>
             </div>
           </div>))}</div>}
-      {sheet === "new" ? <Sheet title={tr("New CV")} onClose={() => setSheet(null)} testid="cv-new-sheet"><div className="p-4 space-y-2"><p className="text-sm text-slate-300">{tr("Which language is this CV in?")}</p>
+      {sheet === "new" ? <Sheet title={tr("New CV")} onClose={() => setSheet(null)} testid="cv-new-sheet"><div className="p-4 space-y-2"><p className="text-sm text-[var(--c-ink)]">{tr("Which language is this CV in?")}</p>
         <button className={primary + " w-full py-3"} onClick={() => create("en")} data-testid="cv-new-en">English · left to right</button>
         <button className={primary + " w-full py-3"} onClick={() => create("ar")} data-testid="cv-new-ar">العربية · من اليمين لليسار</button></div></Sheet> : null}
       {sheet === "import" ? <Sheet title={tr("Import my CV")} onClose={() => setSheet(null)} testid="cv-import-sheet"><div className="p-4 space-y-3">
-        <p className="text-[12.5px] text-slate-400">{tr("Pick your old CV (PDF, Word or text) or paste its text. The AI puts it into sections, keeping your own words. You can fix anything after.")}</p>
+        <p className="text-[12.5px] text-[var(--c-mut)]">{tr("Pick your old CV (PDF, Word or text) or paste its text. The AI puts it into sections, keeping your own words. You can fix anything after.")}</p>
         <label className={ghost + " inline-flex items-center gap-1.5 cursor-pointer"}><Upload size={14} />{tr("Pick a file")}<input type="file" accept=".pdf,.docx,.txt,.md" className="hidden" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; try { setText(await fileText(f)); } catch (x) { flash(String(x.message || x)); } }} /></label>
         <Tx rows={10} value={text} onChange={setText} placeholder={tr("…or paste your CV text here")} data-testid="cv-import-text" />
         <button className={primary + " w-full py-2.5"} disabled={busy} onClick={doImport} data-testid="cv-import-go">{busy ? tr("Reading your CV…") : tr("Import")}</button>
-        {note ? <p className="text-[12.5px] text-amber-300" data-testid="cv-import-note">{note}</p> : null}</div></Sheet> : null}
+        {note ? <p className="text-[12.5px] text-[var(--c-warn)]" data-testid="cv-import-note">{note}</p> : null}</div></Sheet> : null}
       {cur ? <Editor key={cur.id} cv={cur} onChange={upsert} onClose={() => setOpenId(null)} onNewCV={(c) => setList([c, ...list])} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} share={share} saveFile={saveFile} listen={listen} native={native} /> : null}
     </section>
   );

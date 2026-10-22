@@ -57,13 +57,13 @@ export function QuoteView({ s, run, sheet, close, money, saveFile, setSheet }) {
     <div className={card + " p-4 space-y-1"}><div className="flex items-center gap-2"><p className="text-[20px] font-extrabold" dir="ltr">{q.no}</p><Tag tone={tone}>{tr(l)}</Tag></div>
       <p className="text-[14px]" dir="auto">{nameOf(s.clients, q.client)}{q.site ? " · " + nameOf(s.sites, q.site) : ""}</p>
       <p className={"text-[12.5px] " + muted} dir="auto">{tr(MODE_L[q.mode])} · {num(q.qty)} × <span dir="ltr">{money(q.rate)}</span>{q.mobilisation ? " + " + tr("mobilisation") + " " + money(q.mobilisation) : ""} · {tr("valid until")} {F.showDate(q.validUntil)}</p>
-      <p className="text-[22px] font-extrabold tabular-nums pt-1" dir="ltr">{money(q.total)}</p>{q.job ? <p className="text-[13px] text-[#15803D] font-semibold">{tr("Job order")} {(F.byId(s.jobs, q.job) || {}).no}</p> : null}</div>
+      <p className="text-[22px] font-extrabold tabular-nums pt-1" dir="ltr">{money(q.total)}</p>{q.job ? <p className="text-[13px] text-[var(--c-pos)] font-semibold">{tr("Job order")} {(F.byId(s.jobs, q.job) || {}).no}</p> : null}</div>
     <div className="flex flex-wrap gap-2">
       <button className={btnP + " h-10"} style={{ background: "var(--c-acc)" }} onClick={() => printHTML(Q.quoteHTML(s, q.id, { rtl: isAr() }), saveFile, q.no + ".html")} data-testid="fleet-quote-print"><Printer size={15} />{tr("Print / PDF")}</button>
       {!q.job && q.status === "draft" ? <button className={btnS} onClick={() => run((x) => Q.setQuoteStatus(x, q.id, "sent"), tr("Marked as sent"))} data-testid="fleet-quote-sent">{tr("Mark as sent")}</button> : null}
       {!q.job && q.status !== "rejected" ? <button className={btnS} onClick={() => run((x) => Q.setQuoteStatus(x, q.id, "rejected"), tr("Marked as rejected"))}>{tr("Rejected")}</button> : null}
       {!q.job && q.status === "draft" ? <button className={btnS} onClick={() => setSheet({ kind: "quote", id: q.id })}><Pencil size={14} />{tr("Edit")}</button> : null}
-      {!q.job ? <button className={btnS + " text-[#B91C1C]"} onClick={async () => { if (await askConfirm("Move this quotation to the Recycle Bin?", { yes: "Delete" })) { if (run((x) => F.remove(x, "quotes", q.id))) close(); } }}><Trash2 size={15} />{tr("Delete")}</button> : null}
+      {!q.job ? <button className={btnS + " text-[var(--c-neg)]"} onClick={async () => { if (await askConfirm("Move this quotation to the Recycle Bin?", { yes: "Delete" })) { if (run((x) => F.remove(x, "quotes", q.id))) close(); } }}><Trash2 size={15} />{tr("Delete")}</button> : null}
     </div>
     {!q.job && q.status !== "rejected" ? <div className={card + " p-3.5 space-y-2.5"} data-testid="fleet-quote-tojob"><p className="font-bold text-[14.5px] flex items-center gap-1.5"><Truck size={16} />{tr("The client said yes — make the job order")}</p>
       <div className="grid grid-cols-2 gap-2"><Sel label={tr("Crane")} value={crane} onChange={setCrane} options={(q.crane && !free.some((c) => c.id === q.crane) ? [F.byId(s.cranes, q.crane)] : []).concat(free).filter(Boolean).map((c) => ({ v: c.id, l: c.name }))} empty={tr("Choose…")} testid="fleet-f-jcrane" />
@@ -80,7 +80,7 @@ export function OrdersPane({ s, money, setSheet }) {
     <button className={btnP + " h-10 w-full"} style={{ background: "var(--c-acc)" }} onClick={() => setSheet({ kind: "po" })} data-testid="fleet-new-po"><Plus size={16} />{tr("New purchase order")}</button>
     {list.length ? list.map((p) => { const [l, tone] = PS[p.status];
       return <Row key={p.id} onClick={() => setSheet({ kind: "poView", id: p.id })} testid="fleet-po">
-        <span className="flex-1 min-w-0"><span className="flex items-center gap-2"><b className="text-[14.5px]" dir="ltr">{p.no}</b><Tag tone={tone}>{tr(l)}</Tag>{p.late ? <span className="text-[12px] text-[#B91C1C] font-semibold">{tr("{d} days late", { d: p.late })}</span> : null}</span>
+        <span className="flex-1 min-w-0"><span className="flex items-center gap-2"><b className="text-[14.5px]" dir="ltr">{p.no}</b><Tag tone={tone}>{tr(l)}</Tag>{p.late ? <span className="text-[12px] text-[var(--c-neg)] font-semibold">{tr("{d} days late", { d: p.late })}</span> : null}</span>
           <span className={"block text-[12.5px] truncate mt-0.5 " + muted} dir="auto">{p.vendor} · {F.showDate(p.date)}{p.expected ? " → " + F.showDate(p.expected) : ""}</span></span>
         <span className="text-[13.5px] font-bold tabular-nums" dir="ltr">{money(p.total)}</span></Row>; })
       : <Empty>{tr("No purchase orders. Order parts from a supplier; receive them when they come and they go straight into the store.")}</Empty>}
@@ -95,7 +95,7 @@ export function POForm({ s, run, close, setSheet }) {
   const save = () => { const r = run((st) => Q.savePO(st, x), (r) => tr("Purchase order {no} saved", { no: r.po.no })); if (r && r.po) setSheet({ kind: "poView", id: r.po.id }); };
   return <div className="space-y-3" data-testid="fleet-po-form">
     <Txt label={tr("Supplier")} value={x.vendor} onChange={set("vendor")} testid="fleet-f-povendor" placeholder={vend[0] ? vend[0].name : ""} />
-    {vend.length ? <div className="flex flex-wrap gap-1.5 -mt-1">{vend.slice(0, 6).map((v) => <button key={v.name} type="button" className="text-[12px] px-2 py-1 rounded-full border border-[#DCE3EC]" onClick={() => set("vendor")(v.name)} dir="auto">{v.name}</button>)}</div> : null}
+    {vend.length ? <div className="flex flex-wrap gap-1.5 -mt-1">{vend.slice(0, 6).map((v) => <button key={v.name} type="button" className="text-[12px] px-2 py-1 rounded-full border border-[var(--c-ln)]" onClick={() => set("vendor")(v.name)} dir="auto">{v.name}</button>)}</div> : null}
     <div className="grid grid-cols-2 gap-2"><DateF label={tr("Date")} value={x.date} onChange={set("date")} /><DateF label={tr("Expected")} value={x.expected} onChange={set("expected")} testid="fleet-f-poexp" /></div>
     {x.lines.map((l, i) => <div key={i} className="flex gap-2 items-end">
       <div className="flex-1 min-w-0"><Txt label={i ? "" : tr("Item")} value={l.item} onChange={(v) => setLine(i, "item", v)} testid="fleet-f-poitem" /></div>
@@ -120,9 +120,9 @@ export function POView({ s, run, sheet, close, money, saveFile }) {
       {(p.receipts || []).length ? <p className={"text-[12px] " + muted}>{tr("Received")}: {p.receipts.map((r) => F.showDate(r.date) + " (" + r.doc + ")").join(" · ")}</p> : null}</div>
     <div className="flex flex-wrap gap-2">
       <button className={btnP + " h-10"} style={{ background: "var(--c-acc)" }} onClick={() => printHTML(Q.poHTML(s, p.id, { rtl: isAr() }), saveFile, p.no + ".html")} data-testid="fleet-po-print"><Printer size={15} />{tr("Print / PDF")}</button>
-      {p.status === "open" ? <button className={btnS + " text-[#B91C1C]"} onClick={async () => { if (await askConfirm("Cancel this purchase order?", { yes: "Cancel the order" })) run((x) => Q.cancelPO(x, p.id), tr("Cancelled")); }}>{tr("Cancel the order")}</button> : null}</div>
+      {p.status === "open" ? <button className={btnS + " text-[var(--c-neg)]"} onClick={async () => { if (await askConfirm("Cancel this purchase order?", { yes: "Cancel the order" })) run((x) => Q.cancelPO(x, p.id), tr("Cancelled")); }}>{tr("Cancel the order")}</button> : null}</div>
     {p.status === "open" || p.status === "partial" ? <div className={card + " p-3.5 space-y-2.5"} data-testid="fleet-po-receive"><p className="font-bold text-[14.5px] flex items-center gap-1.5"><Package size={16} />{tr("Goods came — receive them")}</p>
-      {p.lines.filter((x) => x.left > 0).map((x) => <div key={x.item} className="flex items-center gap-2"><span className="flex-1 text-[13.5px]" dir="auto">{x.item}</span><input value={got[x.item] ?? String(x.left)} onChange={(e) => setGot({ ...got, [x.item]: e.target.value })} inputMode="decimal" className="w-24 h-10 rounded-xl bg-[#EEF2F7] px-2 text-end" dir="ltr" data-testid="fleet-po-got" /></div>)}
+      {p.lines.filter((x) => x.left > 0).map((x) => <div key={x.item} className="flex items-center gap-2"><span className="flex-1 text-[13.5px]" dir="auto">{x.item}</span><input value={got[x.item] ?? String(x.left)} onChange={(e) => setGot({ ...got, [x.item]: e.target.value })} inputMode="decimal" className="w-24 h-10 rounded-xl bg-[var(--c-surf-2)] px-2 text-end" dir="ltr" data-testid="fleet-po-got" /></div>)}
       <div className="grid grid-cols-2 gap-2"><Txt label={tr("Received by")} value={who} onChange={setWho} testid="fleet-f-porecv" /><DateF label={tr("Date")} value={date} onChange={setDate} /></div>
       <SaveBtn onClick={receive} disabled={!who.trim()} testid="fleet-po-receive-save">{tr("Receive into the store")}</SaveBtn></div> : null}
   </div>;
@@ -135,7 +135,7 @@ export function VendorsPane({ s, money, setSheet }) {
     <div className="grid grid-cols-2 gap-2"><Kpi label={tr("You owe suppliers")} value={money(owed)} tone={owed > 0 ? "red" : null} /><button className={btnP + " h-full"} style={{ background: "var(--c-acc)" }} onClick={() => setSheet({ kind: "vendor", rec: {} })} data-testid="fleet-new-vendor"><Plus size={16} />{tr("Supplier")}</button></div>
     {list.length ? list.map((b) => <Row key={b.vendor.name} onClick={() => setSheet({ kind: "vendor", rec: b.vendor })} testid="fleet-vendor">
       <span className="flex-1 min-w-0"><span className="block font-bold text-[14.5px] truncate" dir="auto">{b.vendor.name}</span><span className={"block text-[12px] " + muted}>{tr("bought")} <span dir="ltr">{money(b.bought)}</span> · {tr("paid")} <span dir="ltr">{money(b.paid)}</span></span></span>
-      <span className={"text-[13.5px] font-bold tabular-nums " + (b.balance > 0 ? "text-[#B45309]" : "text-[#15803D]")} dir="ltr">{money(b.balance)}</span></Row>)
+      <span className={"text-[13.5px] font-bold tabular-nums " + (b.balance > 0 ? "text-[var(--c-warn)]" : "text-[var(--c-pos)]")} dir="ltr">{money(b.balance)}</span></Row>)
       : <Empty>{tr("No suppliers yet — they come from purchase orders and incoming invoices, or add one.")}</Empty>}
   </div>;
 }
@@ -149,7 +149,7 @@ export function VendorForm({ s, run, sheet, close, money, setSheet }) {
     <SaveBtn onClick={() => { if (run((x) => Q.saveVendor(x, v), tr("Saved"))) close(); }} disabled={!String(v.name || "").trim()} />
     {st && st.rows.length ? <div className={card + " p-3"} data-testid="fleet-vendor-statement"><p className="font-bold text-[14px] mb-1">{tr("Statement")}</p>
       {st.rows.map((r, i) => <p key={i} className="flex gap-2 text-[12.5px] py-0.5"><span className="w-20" dir="ltr">{F.showDate(r.date)}</span><span className="flex-1 min-w-0 truncate" dir="auto">{r.what}</span><span className="w-20 text-end tabular-nums" dir="ltr">{r.owed ? num(r.owed) : r.paid ? "−" + num(r.paid) : ""}</span><span className="w-20 text-end tabular-nums font-semibold" dir="ltr">{num(r.balance)}</span></p>)}
-      <p className="flex justify-between font-bold text-[14px] pt-1 border-t border-[#EEF2F7] mt-1"><span>{tr("Owed")}</span><span className="tabular-nums" dir="ltr">{money(st.balance)}</span></p></div> : null}
+      <p className="flex justify-between font-bold text-[14px] pt-1 border-t border-[var(--c-ln)] mt-1"><span>{tr("Owed")}</span><span className="tabular-nums" dir="ltr">{money(st.balance)}</span></p></div> : null}
     {v.name ? <button className={btnS + " w-full"} onClick={() => setSheet({ kind: "cheque", dir: "out", payee: v.name })} data-testid="fleet-vendor-pay"><Wallet size={15} />{tr("Pay this supplier")}</button> : null}
   </div>;
 }

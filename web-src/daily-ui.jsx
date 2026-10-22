@@ -22,13 +22,13 @@ const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } ca
 export const loadCourses = () => load(CKEY);
 export const loadTopics = () => load(NKEY);
 
-const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
+const field = "w-full min-w-0 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2.5 py-2 text-sm text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)]";
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
-const primary = btn + " bg-teal-500 text-slate-950";
+const primary = btn + " bg-[var(--c-acc)] text-[var(--c-on-acc)]";
 // (v5.13: a field that must NOT stretch — "w-full" beat "w-28" and squeezed
 // the label next to it into one letter per line.)
 const fieldFixed = field.replace("w-full ", "");
-const ghost = btn + " border border-slate-700 text-slate-200";
+const ghost = btn + " border border-[var(--c-ln)] text-[var(--c-ink)]";
 
 /* v6.34 (Ali 17 Oct: "I want the lesson to be ready when the user opens the app"): while a model is loaded and nothing else
    runs, the app keeps ONE unread lesson written ahead for every course — the next one is waiting when Learn opens. One at a
@@ -96,13 +96,13 @@ export function syncDaily(native, courses = loadCourses(), topics = loadTopics()
 }
 
 function Back({ onClick, label }) {
-  return <button onClick={onClick} className="text-slate-400 text-sm flex items-center gap-1"><ChevronLeft size={16} />{label || tr("Back")}</button>;
+  return <button onClick={onClick} className="text-[var(--c-mut)] text-sm flex items-center gap-1"><ChevronLeft size={16} />{label || tr("Back")}</button>;
 }
 function Working({ what, text }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3" data-testid="daily-working">
-      <p className="text-[13px] text-teal-200 flex items-center gap-1.5"><Loader2 size={14} className="animate-spin" />{what}</p>
-      {text ? <p className="text-[12px] text-slate-500 mt-1.5 line-clamp-3 break-words" dir="auto">{text.slice(-300)}</p> : null}
+    <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3" data-testid="daily-working">
+      <p className="text-[13px] text-[var(--c-acc)] flex items-center gap-1.5"><Loader2 size={14} className="animate-spin" />{what}</p>
+      {text ? <p className="text-[12px] text-[var(--c-mut)] mt-1.5 line-clamp-3 break-words" dir="auto">{text.slice(-300)}</p> : null}
     </div>
   );
 }
@@ -111,30 +111,30 @@ function Working({ what, text }) {
 export function Visual({ v }) {
   const [flipped, setFlipped] = useState({});
   if (!v) return null;
-  const head = v.title ? <p className="text-[12px] font-semibold text-slate-300 mb-2" dir="auto">{v.title}</p> : null;
-  const box = "rounded-xl border border-teal-900/70 bg-gradient-to-b from-teal-500/5 to-transparent p-3";
+  const head = v.title ? <p className="text-[12px] font-semibold text-[var(--c-ink)] mb-2" dir="auto">{v.title}</p> : null;
+  const box = "rounded-xl border border-[var(--c-acc)]/40 bg-gradient-to-b from-[var(--c-soft)] to-transparent p-3";
   if (v.kind === "table") return (
     <div className={box} data-testid="visual-table">{head}
-      <div className="overflow-x-auto"><table className="text-[13px] min-w-full"><thead><tr>{v.columns.map((c, i) => <th key={i} className="text-start px-2 py-1.5 text-teal-200 font-semibold border-b border-slate-700 whitespace-nowrap" dir="auto">{c}</th>)}</tr></thead>
-        <tbody>{v.rows.map((r, i) => <tr key={i} className="border-b border-slate-800/70">{r.map((x, j) => <td key={j} className={`px-2 py-1.5 whitespace-nowrap ${j === 0 ? "text-slate-100 font-medium" : "text-slate-300"}`} dir="auto">{x}</td>)}</tr>)}</tbody></table></div>
+      <div className="overflow-x-auto"><table className="text-[13px] min-w-full"><thead><tr>{v.columns.map((c, i) => <th key={i} className="text-start px-2 py-1.5 text-[var(--c-acc)] font-semibold border-b border-[var(--c-ln)] whitespace-nowrap" dir="auto">{c}</th>)}</tr></thead>
+        <tbody>{v.rows.map((r, i) => <tr key={i} className="border-b border-[var(--c-ln)]">{r.map((x, j) => <td key={j} className={`px-2 py-1.5 whitespace-nowrap ${j === 0 ? "text-[var(--c-ink)] font-medium" : "text-[var(--c-ink)]"}`} dir="auto">{x}</td>)}</tr>)}</tbody></table></div>
     </div>);
   if (v.kind === "steps") return (
     <div className={box} data-testid="visual-steps">{head}
       {v.items.map((x, i) => (
         <div key={i}>
-          <div className="flex gap-2.5 items-start rounded-lg bg-slate-900 border border-slate-800 p-2.5">
-            <span className="w-6 h-6 shrink-0 rounded-full bg-teal-500 text-slate-950 text-[12px] font-bold flex items-center justify-center">{i + 1}</span>
-            <span className="text-[13px] text-slate-200 pt-0.5" dir="auto">{x}</span></div>
-          {i < v.items.length - 1 ? <div className="text-center text-teal-500 leading-none py-0.5">↓</div> : null}
+          <div className="flex gap-2.5 items-start rounded-lg bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5">
+            <span className="w-6 h-6 shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[12px] font-bold flex items-center justify-center">{i + 1}</span>
+            <span className="text-[13px] text-[var(--c-ink)] pt-0.5" dir="auto">{x}</span></div>
+          {i < v.items.length - 1 ? <div className="text-center text-[var(--c-acc)] leading-none py-0.5">↓</div> : null}
         </div>))}
     </div>);
   if (v.kind === "cards") return (
-    <div className={box} data-testid="visual-cards">{head}<p className="text-[11px] text-slate-500 mb-2">{tr("Tap a card to turn it over")}</p>
+    <div className={box} data-testid="visual-cards">{head}<p className="text-[11px] text-[var(--c-mut)] mb-2">{tr("Tap a card to turn it over")}</p>
       <div className="grid grid-cols-2 gap-2">
         {v.items.map((x, i) => (
-          <button key={i} onClick={() => setFlipped((f) => ({ ...f, [i]: !f[i] }))} className={`rounded-lg border p-2.5 min-h-[4.5rem] text-start ${flipped[i] ? "border-amber-700 bg-amber-500/10" : "border-slate-700 bg-slate-900"}`}>
-            {flipped[i] ? <><span className="block text-[13px] text-amber-100" dir="auto">{x.back}</span>{x.note ? <span className="block text-[11px] text-slate-400 mt-1" dir="auto">{x.note}</span> : null}</>
-              : <span className="block text-[15px] font-semibold text-slate-100" dir="auto">{x.front}</span>}
+          <button key={i} onClick={() => setFlipped((f) => ({ ...f, [i]: !f[i] }))} className={`rounded-lg border p-2.5 min-h-[4.5rem] text-start ${flipped[i] ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`}>
+            {flipped[i] ? <><span className="block text-[13px] text-[var(--c-warn)]" dir="auto">{x.back}</span>{x.note ? <span className="block text-[11px] text-[var(--c-mut)] mt-1" dir="auto">{x.note}</span> : null}</>
+              : <span className="block text-[15px] font-semibold text-[var(--c-ink)]" dir="auto">{x.front}</span>}
           </button>))}
       </div>
     </div>);
@@ -142,9 +142,9 @@ export function Visual({ v }) {
     <div className={box} data-testid="visual-compare">{head}
       <div className="grid grid-cols-2 gap-2">
         {[v.left, v.right].map((s, k) => (
-          <div key={k} className={`rounded-lg p-2.5 border ${k ? "border-amber-800 bg-amber-500/5" : "border-teal-800 bg-teal-500/5"}`}>
-            <p className={`text-[12px] font-semibold mb-1 ${k ? "text-amber-200" : "text-teal-200"}`} dir="auto">{s.title}</p>
-            {s.items.map((x, i) => <p key={i} className="text-[12px] text-slate-300 mt-1" dir="auto">• {x}</p>)}
+          <div key={k} className={`rounded-lg p-2.5 border ${k ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-acc)]/40 bg-[var(--c-soft)]"}`}>
+            <p className={`text-[12px] font-semibold mb-1 ${k ? "text-[var(--c-warn)]" : "text-[var(--c-acc)]"}`} dir="auto">{s.title}</p>
+            {s.items.map((x, i) => <p key={i} className="text-[12px] text-[var(--c-ink)] mt-1" dir="auto">• {x}</p>)}
           </div>))}
       </div>
     </div>);
@@ -154,17 +154,17 @@ export function Visual({ v }) {
       <div className={box} data-testid="visual-bars">{head}
         {v.items.map((x, i) => (
           <div key={i} className="mb-1.5">
-            <div className="flex justify-between text-[12px]"><span className="text-slate-300" dir="auto">{x.label}</span><span className="text-slate-400 tabular-nums">{x.value}{v.unit ? " " + v.unit : ""}</span></div>
-            <div className="h-2 rounded bg-slate-800"><div className="h-2 rounded bg-teal-500" style={{ width: `${Math.max(2, Math.round((Math.abs(x.value) / max) * 100))}%` }} /></div>
+            <div className="flex justify-between text-[12px]"><span className="text-[var(--c-ink)]" dir="auto">{x.label}</span><span className="text-[var(--c-mut)] tabular-nums">{x.value}{v.unit ? " " + v.unit : ""}</span></div>
+            <div className="h-2 rounded bg-[var(--c-surf-2)]"><div className="h-2 rounded bg-[var(--c-acc)]" style={{ width: `${Math.max(2, Math.round((Math.abs(x.value) / max) * 100))}%` }} /></div>
           </div>))}
       </div>);
   }
   if (v.kind === "timeline") return (
     <div className={box} data-testid="visual-timeline">{head}
-      <div className="border-s-2 border-teal-700 ms-1.5 ps-3 space-y-2">
+      <div className="border-s-2 border-[var(--c-acc)]/40 ms-1.5 ps-3 space-y-2">
         {v.items.map((x, i) => (
-          <div key={i} className="relative"><span className="absolute -start-[1.13rem] top-1 w-2.5 h-2.5 rounded-full bg-teal-400" />
-            {x.when ? <p className="text-[11px] text-teal-300" dir="auto">{x.when}</p> : null}<p className="text-[13px] text-slate-200" dir="auto">{x.what}</p></div>))}
+          <div key={i} className="relative"><span className="absolute -start-[1.13rem] top-1 w-2.5 h-2.5 rounded-full bg-[var(--c-acc)]" />
+            {x.when ? <p className="text-[11px] text-[var(--c-acc)]" dir="auto">{x.when}</p> : null}<p className="text-[13px] text-[var(--c-ink)]" dir="auto">{x.what}</p></div>))}
       </div>
     </div>);
   return null;
@@ -683,19 +683,19 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
     const list = D.newsThreads(topic.digests, topic.query, todayKey);
     if (!list.length) return null;
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="news-threads">
-        <p className="text-[12px] font-semibold text-slate-300">{tr("Story threads")}</p>
+      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="news-threads">
+        <p className="text-[12px] font-semibold text-[var(--c-ink)]">{tr("Story threads")}</p>
         {list.map((th) => { const ch = changes[th.id];
           return (
           <div key={th.id} data-testid="news-thread">
             <button className="text-start w-full" onClick={() => setOpenTh(openTh === th.id ? null : th.id)}>
-              <span className="block text-[13px] text-slate-200" dir="auto">{th.title}</span>
-              <span className="text-[11px] text-slate-500">{tr("{n} days · {s} sources", { n: th.days.length, s: th.sources.length })}{th.today ? " · " + tr("new today") : ""}</span></button>
-            {openTh === th.id ? <div className="mt-1.5 space-y-1.5 ps-2 border-s border-slate-800" data-testid="news-thread-open">
-              {th.days.map((d) => <div key={d}><p className="text-[11px] text-slate-500">{d}</p>
-                {th.byDay[d].map((it, i) => <a key={i} href={it.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90" dir="auto">{it.title}{it.source ? <span className="text-slate-500"> · {it.source}</span> : null}</a>)}</div>)}
-              {ch && ch.busy ? <p className="text-[12px] text-slate-400">{tr("Comparing the days…")}</p>
-                : ch && ch.none ? <p className="text-[12px] text-slate-400" data-testid="news-thread-change">{tr("Nothing really new since the day before.")}</p>
+              <span className="block text-[13px] text-[var(--c-ink)]" dir="auto">{th.title}</span>
+              <span className="text-[11px] text-[var(--c-mut)]">{tr("{n} days · {s} sources", { n: th.days.length, s: th.sources.length })}{th.today ? " · " + tr("new today") : ""}</span></button>
+            {openTh === th.id ? <div className="mt-1.5 space-y-1.5 ps-2 border-s border-[var(--c-ln)]" data-testid="news-thread-open">
+              {th.days.map((d) => <div key={d}><p className="text-[11px] text-[var(--c-mut)]">{d}</p>
+                {th.byDay[d].map((it, i) => <a key={i} href={it.url} target="_blank" rel="noreferrer" className="block text-[12px] text-[var(--c-acc)]" dir="auto">{it.title}{it.source ? <span className="text-[var(--c-mut)]"> · {it.source}</span> : null}</a>)}</div>)}
+              {ch && ch.busy ? <p className="text-[12px] text-[var(--c-mut)]">{tr("Comparing the days…")}</p>
+                : ch && ch.none ? <p className="text-[12px] text-[var(--c-mut)]" data-testid="news-thread-change">{tr("Nothing really new since the day before.")}</p>
                 : ch ? <div className="text-[13px]" dir="auto" data-testid="news-thread-change"><Md text={ch.text} runnable={false} /></div>
                 : modelReady ? <button className={ghost + " text-[12px]"} onClick={() => whatChanged(th)} data-testid="news-thread-ask">{tr("What changed since {d}?", { d: th.days[1] })}</button> : null}
             </div> : null}
@@ -705,12 +705,12 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
 
   const Digest = ({ d }) => (
     <div className="space-y-2" data-testid="digest">
-      {d.none ? <p className="text-[13px] text-slate-400">{tr("Nothing new on this in the last day.")}{d.why ? " (" + d.why + ")" : ""}</p> : <div dir="auto"><Md text={d.text} runnable={false} /></div>}
-      {d.unsourced ? <p className="text-[11px] text-amber-300 flex items-center gap-1"><AlertTriangle size={12} />{tr("{n} line(s) cite no source — treat them with care.", { n: d.unsourced })}</p> : null}
+      {d.none ? <p className="text-[13px] text-[var(--c-mut)]">{tr("Nothing new on this in the last day.")}{d.why ? " (" + d.why + ")" : ""}</p> : <div dir="auto"><Md text={d.text} runnable={false} /></div>}
+      {d.unsourced ? <p className="text-[11px] text-[var(--c-warn)] flex items-center gap-1"><AlertTriangle size={12} />{tr("{n} line(s) cite no source — treat them with care.", { n: d.unsourced })}</p> : null}
       {d.items && d.items.length ? <div className="space-y-1 pt-1" data-testid="digest-sources">
-        <p className="text-[11px] text-slate-500">{tr("Sources")}</p>
-        {d.items.map((it, i) => <a key={i} href={it.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90 truncate" dir="auto">
-          [{i + 1}] {it.title}{it.source ? <span className="text-slate-500"> · {it.source}</span> : null}{it.date ? <span className="text-slate-600"> · {ago(it.date)}</span> : null}</a>)}
+        <p className="text-[11px] text-[var(--c-mut)]">{tr("Sources")}</p>
+        {d.items.map((it, i) => <a key={i} href={it.url} target="_blank" rel="noreferrer" className="block text-[12px] text-[var(--c-acc)] truncate" dir="auto">
+          [{i + 1}] {it.title}{it.source ? <span className="text-[var(--c-mut)]"> · {it.source}</span> : null}{it.date ? <span className="text-[var(--c-mut)]"> · {ago(it.date)}</span> : null}</a>)}
       </div> : null}
     </div>);
 
@@ -718,27 +718,27 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
     const el = (
     <section className="p-4 space-y-3 lg:max-w-[76ch]" data-testid="news-topic">
       <Back onClick={() => { setCur(null); setPast(null); }} label={tr("Daily news")} />
-      <div className="flex items-center gap-2"><Newspaper size={20} className="text-amber-300 shrink-0" /><h2 className="text-lg font-semibold text-slate-100 flex-1" dir="auto">{topic.query}</h2>
-        {todays && !busy && modelReady ? <button className="p-1.5 text-slate-400" onClick={() => gather(topic)} title={tr("Refresh")} data-testid="news-refresh"><RefreshCw size={16} /></button> : null}</div>
+      <div className="flex items-center gap-2"><Newspaper size={20} className="text-[var(--c-warn)] shrink-0" /><h2 className="text-lg font-semibold text-[var(--c-ink)] flex-1" dir="auto">{topic.query}</h2>
+        {todays && !busy && modelReady ? <button className="p-1.5 text-[var(--c-mut)]" onClick={() => gather(topic)} title={tr("Refresh")} data-testid="news-refresh"><RefreshCw size={16} /></button> : null}</div>
       {busy ? <Working {...busy} /> : todays ? <Digest d={todays} /> : modelReady
         ? <button className={primary + " w-full py-2.5"} onClick={() => gather(topic)} data-testid="news-gather">{tr("Gather today's news")}</button>
         : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model to write the digest")}</button>}
-      <p className="text-[11px] text-slate-500">{tr("The articles come from the web when you open this; the digest is written on your phone and cites every line. Check the sources for anything important.")}</p>
+      <p className="text-[11px] text-[var(--c-mut)]">{tr("The articles come from the web when you open this; the digest is written on your phone and cites every line. Check the sources for anything important.")}</p>
       <Threads topic={topic} />
       {topic.digests.filter((d) => d.day !== todayKey).length ? (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-          <p className="text-[12px] font-semibold text-slate-300">{tr("Earlier days")}</p>
+        <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2">
+          <p className="text-[12px] font-semibold text-[var(--c-ink)]">{tr("Earlier days")}</p>
           {topic.digests.filter((d) => d.day !== todayKey).map((d) => (
-            <div key={d.day}><button className="text-[13px] text-slate-300" onClick={() => setPast(past === d.day ? null : d.day)}>{d.day}</button>
+            <div key={d.day}><button className="text-[13px] text-[var(--c-ink)]" onClick={() => setPast(past === d.day ? null : d.day)}>{d.day}</button>
               {past === d.day ? <div className="mt-1"><Digest d={d} /></div> : null}</div>))}
         </div>) : null}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
+      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2">
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="flex items-center gap-1.5 text-[13px] text-slate-300 basis-full sm:basis-auto sm:flex-1 whitespace-nowrap"><Bell size={14} className="text-slate-400 shrink-0" />{tr("Daily notification")}</span>
+          <span className="flex items-center gap-1.5 text-[13px] text-[var(--c-ink)] basis-full sm:basis-auto sm:flex-1 whitespace-nowrap"><Bell size={14} className="text-[var(--c-mut)] shrink-0" />{tr("Daily notification")}</span>
           <input type="time" value={topic.time} onChange={(e) => e.target.value && putTopic({ ...topic, time: e.target.value })} className={fieldFixed + " w-32 shrink-0"} />
-          <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.notify !== false ? "border-teal-600 text-teal-200" : "border-slate-700 text-slate-500"}`}>{topic.notify !== false ? tr("On") : tr("Off")}</button>
+          <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.notify !== false ? "border-[var(--c-acc)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{topic.notify !== false ? tr("On") : tr("Off")}</button>
         </div>
-        <button className={`${btn} border ${confirmDel ? "border-rose-600 bg-rose-500/15 text-rose-200" : "border-slate-700 text-slate-400"} flex items-center gap-1`}
+        <button className={`${btn} border ${confirmDel ? "border-[var(--c-neg)] bg-[var(--c-neg)]/15 text-[var(--c-neg)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"} flex items-center gap-1`}
           onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } setTopics(loadTopics().filter((x) => x.id !== topic.id)); setConfirmDel(false); setCur(null); }}>
           <Trash2 size={14} />{confirmDel ? tr("Tap again to stop following") : tr("Stop following")}</button>
       </div>
@@ -753,15 +753,15 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
   return (
     <section className="p-4 space-y-3" data-testid="news-page">
       <div className="flex items-start gap-3">
-        <Newspaper size={22} className="text-amber-300 mt-1 shrink-0" />
-        <div className="min-w-0"><h2 className="text-lg font-semibold text-slate-100">{tr("Daily news")}</h2>
-          <p data-intro="" className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Follow a team, a player, a market, a subject. Each day: what happened in the last 24 hours, with the sources.")}</p></div>
+        <Newspaper size={22} className="text-[var(--c-warn)] mt-1 shrink-0" />
+        <div className="min-w-0"><h2 className="text-lg font-semibold text-[var(--c-ink)]">{tr("Daily news")}</h2>
+          <p data-intro="" className="text-[13px] text-[var(--c-mut)] lg:max-w-[70ch]">{tr("Follow a team, a player, a market, a subject. Each day: what happened in the last 24 hours, with the sources.")}</p></div>
       </div>
       {adding ? (
-        <div className={"rounded-xl border border-teal-800 bg-slate-900 p-3 space-y-2" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">
+        <div className={"rounded-xl border border-[var(--c-acc)]/40 bg-[var(--c-surf)] p-3 space-y-2" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">
           <input value={form.query} onChange={(e) => setForm({ ...form, query: e.target.value })} className={field} dir="auto" placeholder={tr("e.g. Al Ahly, Mohamed Salah, Egypt economy")} data-testid="news-query" autoFocus />
           <div className="flex flex-wrap gap-1.5">{["Al Ahly", "Mohamed Salah", "Premier League", "Egypt economy", "Gold price", "AI", "Real estate"].map((x) =>
-            <button key={x} onClick={() => setForm({ ...form, query: tr(x) })} className="text-[12px] rounded-full border border-slate-700 text-slate-300 px-2.5 py-1">{tr(x)}</button>)}</div>
+            <button key={x} onClick={() => setForm({ ...form, query: tr(x) })} className="text-[12px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] px-2.5 py-1">{tr(x)}</button>)}</div>
           <div className="grid grid-cols-2 gap-2">
             <select value={form.lang} onChange={(e) => setForm({ ...form, lang: e.target.value })} className={field}><option value="en">English</option><option value="ar">العربية</option></select>
             <input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value || "08:30" })} className={field} />
@@ -773,9 +773,9 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
         </div>) : <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5" + (side ? "" : " lg:w-auto lg:px-5")} onClick={() => setAdding(true)} data-testid="news-add-btn"><Plus size={16} />{tr("Follow a topic")}</button>}
       <div className={side ? "space-y-3" : GRID3}>
       {topics.map((t) => { const d = t.digests[0]; const fresh = d && d.day === todayKey;
-        return <button key={t.id} onClick={() => { if (side) setPast(null); setCur(t.id); }} className={"w-full text-start rounded-xl border p-3 lg:hover:border-teal-700 " + (side && t.id === cur ? "border-teal-700 bg-teal-500/10" : "border-slate-800 bg-slate-900/60")} data-testid="news-topic-item">
-          <span className="block text-sm text-slate-100" dir="auto">{t.query}</span>
-          <span className="block text-[11px] text-slate-500 truncate" dir="auto">{fresh ? (d.none ? tr("Nothing new today") : String(d.text).split("\n")[0].replace(/\*+/g, "")) : tr("Not gathered today")} · {t.time}</span></button>; })}
+        return <button key={t.id} onClick={() => { if (side) setPast(null); setCur(t.id); }} className={"w-full text-start rounded-xl border p-3 lg:hover:border-[var(--c-acc)] " + (side && t.id === cur ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]")} data-testid="news-topic-item">
+          <span className="block text-sm text-[var(--c-ink)]" dir="auto">{t.query}</span>
+          <span className="block text-[11px] text-[var(--c-mut)] truncate" dir="auto">{fresh ? (d.none ? tr("Nothing new today") : String(d.text).split("\n")[0].replace(/\*+/g, "")) : tr("Not gathered today")} · {t.time}</span></button>; })}
       </div>
     </section>
   );

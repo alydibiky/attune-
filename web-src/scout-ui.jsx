@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play, MapPin, AlertTriangle, Bell, BellOff } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./scout.js";
+import * as K from "./ui-kit.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 // v6.31 minimal: two examples are enough to show the idea
@@ -162,44 +163,44 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
   const twins = S.photoTwins(found, usePhotoPrints(found));
   // the goal on screen: its new matches are now seen
   useEffect(() => { if (goal && (goal.unseen || []).length && !busy) { const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === goal.id ? { ...x, unseen: [] } : x)) }); } }, [sel, goal && (goal.unseen || []).length, !!busy]);
-  const field = "w-full rounded-xl px-3 py-2.5 text-[14.5px] border bg-transparent";
+  const field = K.area;
   const left = (
     <div className="space-y-4">
-      <div className="c-card space-y-2">
-        <span className="c-lbl">{tr("What should Scout look for?")}</span>
+      <div className={K.cardPad + " space-y-2.5"}>
+        <span className={K.label}>{tr("What should Scout look for?")}</span>
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} dir="auto" placeholder={tr("e.g. a 3-bedroom flat for rent in Maadi under 15,000, not ground floor")} className={field} style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} data-testid="scout-text" />
-        <button className="c-btn inline-flex items-center gap-1.5" disabled={!text.trim()} onClick={() => add()} data-testid="scout-add"><Plus size={15} />{tr("Start scouting")}</button>
-        <div className="flex flex-wrap gap-1.5 pt-1">{(MINIMAL ? EXAMPLES.slice(0, 2) : EXAMPLES).map(([en, a]) => <button key={en} onClick={() => setText(ar ? a : en)} className="rounded-full border px-2.5 py-1 text-[12px] text-start" style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} dir="auto" data-testid="scout-example">{ar ? a : en}</button>)}</div>
+        <button className={K.btnP} disabled={!text.trim()} onClick={() => add()} data-testid="scout-add"><Plus size={15} />{tr("Start scouting")}</button>
+        <div className="flex flex-wrap gap-1.5 pt-1">{(MINIMAL ? EXAMPLES.slice(0, 2) : EXAMPLES).map(([en, a]) => <button key={en} onClick={() => setText(ar ? a : en)} className={K.chip(false) + " !whitespace-normal text-start !h-auto py-2"} dir="auto" data-testid="scout-example">{ar ? a : en}</button>)}</div>
       </div>
-      {data.goals.length ? <div className="space-y-2" data-testid="scout-goals"><span className="c-lbl">{tr("Your goals")}</span>
+      {data.goals.length ? <div className="space-y-2" data-testid="scout-goals"><span className={K.label}>{tr("Your goals")}</span>
         {data.goals.map((x) => (
-          <div key={x.id} className="c-card flex items-start gap-2" style={x.id === sel ? { borderColor: "var(--c-acc)" } : {}} data-testid="scout-goal">
+          <div key={x.id} className={K.card + " p-3.5 flex items-start gap-2"} style={x.id === sel ? { borderColor: "var(--c-acc-2)" } : {}} data-testid="scout-goal">
             <button className="flex-1 min-w-0 text-start" onClick={() => setSel(x.id)}>
-              <b className="block text-[14px]" dir="auto">{x.g.what || x.text}</b>
+              <b className="block text-[14.5px] font-extrabold" dir="auto">{x.g.what || x.text}</b>
               <span className="c-sub text-[12px]">{tr(KIND[x.g.kind] ? KIND[x.g.kind][0] : "Search")}{x.g.max ? " · ≤ " + fmt(x.g.max) : ""}{x.g.place ? " · " + x.g.place : ""} · {x.lastRun ? tr("{n} matches", { n: x.lastCount || 0 }) + " · " + new Date(x.lastRun).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" }) : tr("not run yet")}{x.on === false ? " · " + tr("paused") : ""}</span>
               {busy && busy.id === x.id ? <span className="c-acc text-[12px] flex items-center gap-1 mt-0.5" data-testid="scout-busy"><Loader2 size={12} className="animate-spin" />{tr("Searching {i} of {n}…", { i: busy.i, n: busy.n })}</span> : null}
             </button>
-            <button className="c-sub p-1" aria-label={tr("Check now")} title={tr("Check now")} disabled={!!busy} onClick={() => run(x)} data-testid="scout-run"><RefreshCw size={15} /></button>
-            <button className="c-sub p-1" aria-label={x.on === false ? tr("Resume") : tr("Pause")} title={x.on === false ? tr("Resume") : tr("Pause")} onClick={() => put({ ...data, goals: data.goals.map((y) => (y.id === x.id ? { ...y, on: y.on === false } : y)) })}>{x.on === false ? <Play size={15} /> : <Pause size={15} />}</button>
-            <button className="c-sub p-1" aria-label={tr("Delete")} onClick={() => { put({ ...data, goals: data.goals.filter((y) => y.id !== x.id) }); if (sel === x.id) setSel(null); }}><Trash2 size={15} /></button>
+            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] hover:text-[var(--c-acc)]" aria-label={tr("Check now")} title={tr("Check now")} disabled={!!busy} onClick={() => run(x)} data-testid="scout-run"><RefreshCw size={15} /></button>
+            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] hover:text-[var(--c-acc)]" aria-label={x.on === false ? tr("Resume") : tr("Pause")} title={x.on === false ? tr("Resume") : tr("Pause")} onClick={() => put({ ...data, goals: data.goals.map((y) => (y.id === x.id ? { ...y, on: y.on === false } : y)) })}>{x.on === false ? <Play size={15} /> : <Pause size={15} />}</button>
+            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] hover:text-[var(--c-neg)]" aria-label={tr("Delete")} onClick={() => { put({ ...data, goals: data.goals.filter((y) => y.id !== x.id) }); if (sel === x.id) setSel(null); }}><Trash2 size={15} /></button>
           </div>))}</div> : null}
       <p data-intro="" className="c-sub text-[12px] m-0">{tr("Scout checks each goal when you open Attune (at most twice a day), once at night on the phone, and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.")}</p>
     </div>);
   const results = goal ? (
     <div className="space-y-3" data-testid="scout-results">
-      <div className="c-card space-y-1"><b dir="auto">{goal.g.what || goal.text}</b>
+      <div className={K.cardPad + " space-y-1.5"}><b className="text-[16px] font-extrabold" dir="auto">{goal.g.what || goal.text}</b>
         <div className="flex flex-wrap gap-1.5 text-[12px]">
           {goal.g.max ? <span className="c-pill">≤ {fmt(goal.g.max)}</span> : null}{goal.g.place ? <span className="c-pill">{goal.g.place}</span> : null}
           {goal.g.wish.map((w) => <span key={w.k} className="c-pill">{ar ? w.say[1] : w.say[0]}</span>)}</div></div>
-      {goal.g.kind === "gold" ? <div className="c-card space-y-1" data-testid="scout-gold">
-        <span className="c-lbl">{tr("Gold {k}K, a gram", { k: goal.g.karat || 21 })}</span>
+      {goal.g.kind === "gold" ? <div className={K.cardPad + " space-y-1"} data-testid="scout-gold">
+        <span className={K.label}>{tr("Gold {k}K, a gram", { k: goal.g.karat || 21 })}</span>
         {(goal.gold || []).length ? <b className="c-amt">{fmt(goal.gold.slice(-1)[0][1])}</b> : <p className="c-sub m-0">{tr("Checking the price…")}</p>}
         <p className="c-sub m-0 text-[12px]">{goal.g.max ? tr("You'll be told when it is at or under {v}", { v: fmt(goal.g.max) }) : goal.g.min ? tr("You'll be told when it is at or over {v}", { v: fmt(goal.g.min) }) : tr("Add a price to be told, e.g. “under 3,500”")}</p>
       </div> : null}
       {goal.g.car && goal.g.car.note ? <p className="c-acc text-[13px] m-0" data-testid="scout-car-note" dir="auto">{ar ? goal.g.car.note[1] : goal.g.car.note[0]}</p> : null}
       {cmp && (cmp.prices || cmp.n) && goal.g.kind !== "gold" ? (
-        <div className="c-card space-y-1.5" data-testid="scout-compare">
-          <span className="c-lbl">{tr("Compared")}</span>
+        <div className={K.cardPad + " space-y-1.5"} data-testid="scout-compare">
+          <span className={K.label}>{tr("Compared")}</span>
           <p className="m-0 text-[14px]" dir="auto">{tr("{n} ads from {s} sites", { n: cmp.n, s: Object.keys(cmp.sites).length })}{goal.lastSites && goal.lastSites.length ? <span className="c-sub"> · {tr("{n} sites searched", { n: goal.lastSites.length })}</span> : null}</p>
           {cmp.low ? <p className="m-0 text-[14px]" data-testid="scout-range" dir="auto">{tr("Usual price")}: <b className="c-num">{fmt(cmp.low)} – {fmt(cmp.high)}</b> · {tr("typical")} <b className="c-num">{fmt(cmp.med)}</b> <span className="c-sub text-[12px]">({tr("from {n} prices, list pages and price guides included", { n: cmp.prices })})</span></p> : null}
           {cmp.best ? <p className="m-0 text-[13.5px]" data-testid="scout-best" dir="auto">⭐ {tr("Best value")}: {cmp.best.title} — <b className="c-num">{fmt(cmp.best.price)}</b> <span className="c-sub">({cmp.best.site})</span></p> : null}
@@ -210,15 +211,15 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         const vote0 = (goal.votes || {})[a.id];
         const msg = S.sellerMessage(a, goal.g, { ar });
         return (
-          <div key={a.id} className="c-card space-y-2" data-testid="scout-ad">
+          <div key={a.id} className={K.cardPad + " space-y-2.5"} data-testid="scout-ad">
             <div className="flex items-start gap-3">
-              {a.image ? <img src={a.image} alt="" className="w-20 h-16 object-cover rounded-lg shrink-0" /> : null}
+              {a.image ? <img src={a.image} alt="" className="w-20 h-16 object-cover rounded-[14px] shrink-0" /> : null}
               <div className="flex-1 min-w-0">
-                <b className="block text-[14.5px] leading-snug" dir="auto">{a.title || a.site}</b>
+                <b className="block text-[14.5px] font-extrabold leading-snug" dir="auto">{a.title || a.site}</b>
                 <span className="c-sub text-[12px]">{a.site}{(a.also || []).length ? " · " + tr("also on {s}", { s: a.also.map((x) => x.site).join(", ") }) : ""}</span>
               </div>
-              <div className="text-end shrink-0">{a.facts.price ? <div className="c-num font-bold" data-testid="scout-price">{fmt(a.facts.price)} <span className="c-sub text-[11px]">{a.facts.cur}</span></div> : null}
-                <div className="c-num text-[12px] c-acc" data-testid="scout-score">{a.score}/100</div></div>
+              <div className="text-end shrink-0">{a.facts.price ? <div className="c-num tabular-nums font-black text-[16px]" data-testid="scout-price">{fmt(a.facts.price)} <span className="c-sub text-[11px]">{a.facts.cur}</span></div> : null}
+                <div className="c-num tabular-nums text-[12px] font-extrabold c-acc" data-testid="scout-score">{a.score}/100</div></div>
             </div>
             {(() => { const tm = S.timingOf(book, a); return tm && tm.verdict !== "steady" ? <p className={"text-[12.5px] " + (tm.verdict === "buy" ? "c-acc" : "c-sub")} data-testid="scout-timing" dir="auto">{tm.verdict === "buy" ? "⏱ " : "⏳ "}{S.timingText(tm, ar ? "ar" : "en")}</p> : null; })()}
             <div className="flex flex-wrap gap-1.5 text-[12px]">
@@ -237,19 +238,19 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
               {a.check.unknown.map((x) => <li key={"u" + x.k} className="flex gap-1.5 c-sub"><HelpCircle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en} — {tr("not stated in the ad")}</span></li>)}
             </ul>
             <div className="flex flex-wrap gap-2 items-center pt-1">
-              <button className="c-btn inline-flex items-center gap-1" onClick={() => (openLink ? openLink(a.url, a.title) : window.open(a.url, "_blank"))} data-testid="scout-open"><ExternalLink size={14} />{tr("Open the ad")}</button>
-              <button className="c-sub inline-flex items-center gap-1 px-1" onClick={() => { try { navigator.clipboard.writeText(msg); } catch (e) {} setCopied(a.id); flash && flash(tr("Message copied — paste it to the seller")); }} title={msg} data-testid="scout-msg">{copied === a.id ? <Check size={14} /> : <Copy size={14} />}{tr("Message to the seller")}</button>
+              <button className={K.btnP + " !h-11 !min-h-[44px] !px-4 !text-[13.5px]"} onClick={() => (openLink ? openLink(a.url, a.title) : window.open(a.url, "_blank"))} data-testid="scout-open"><ExternalLink size={14} />{tr("Open the ad")}</button>
+              <button className="c-sub min-h-[44px] inline-flex items-center gap-1 px-1.5 font-bold hover:text-[var(--c-ink)]" onClick={() => { try { navigator.clipboard.writeText(msg); } catch (e) {} setCopied(a.id); flash && flash(tr("Message copied — paste it to the seller")); }} title={msg} data-testid="scout-msg">{copied === a.id ? <Check size={14} /> : <Copy size={14} />}{tr("Message to the seller")}</button>
               {S.offerFor(a) && S.offerFor(a) < a.facts.price ? <span className="c-sub text-[12px]" data-testid="scout-offer">{tr("Offer {v}", { v: fmt(S.offerFor(a)) })}</span> : null}
-              <button className={"inline-flex items-center gap-1 px-1 " + (a.followed ? "c-acc" : "c-sub")} onClick={() => follow(a)} data-testid="scout-follow">{a.followed ? <BellOff size={14} /> : <Bell size={14} />}{a.followed ? tr("Unfollow") : tr("Follow price")}</button>
+              <button className={"min-h-[44px] inline-flex items-center gap-1 px-1.5 font-bold " + (a.followed ? "c-acc" : "c-sub")} onClick={() => follow(a)} data-testid="scout-follow">{a.followed ? <BellOff size={14} /> : <Bell size={14} />}{a.followed ? tr("Unfollow") : tr("Follow price")}</button>
               <span className="ms-auto flex gap-1">
-                <button className={"p-1.5 rounded-lg " + (vote0 === 1 ? "c-acc" : "c-sub")} aria-label={tr("Good match")} onClick={() => vote(a, true)} data-testid="scout-up"><ThumbsUp size={15} /></button>
-                <button className={"p-1.5 rounded-lg " + (vote0 === -1 ? "c-neg" : "c-sub")} aria-label={tr("Not for me")} onClick={() => vote(a, false)} data-testid="scout-down"><ThumbsDown size={15} /></button></span>
+                <button className={"min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] " + (vote0 === 1 ? "c-acc" : "c-sub")} aria-label={tr("Good match")} onClick={() => vote(a, true)} data-testid="scout-up"><ThumbsUp size={15} /></button>
+                <button className={"min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] " + (vote0 === -1 ? "c-neg" : "c-sub")} aria-label={tr("Not for me")} onClick={() => vote(a, false)} data-testid="scout-down"><ThumbsDown size={15} /></button></span>
             </div>
           </div>); })}
     </div>) : <DeskEmpty icon={Binoculars} title={tr("Your finds appear here")} testid="scout-empty" />;
   return (
-    <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="scout-page">
-      <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Binoculars size={20} className="c-acc" />{tr("Scout")}</h2>
+    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[22px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="scout-page">
+      <div><h2 className={K.h1 + " flex items-center gap-2"}><Binoculars size={20} className="c-acc" />{tr("Scout")}</h2>
         <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Say once what you're looking for — a flat, a car, a product, a job, a supplier. Scout searches the sites that matter, checks every wish against what each ad says, tells you if the price is fair, and lets you know when something good appears.")}</p></div>
       <div className={PANES}><div className={LEFT}>{left}</div><div className={RIGHT}>{results}</div></div>
     </div>);

@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Play, Pause, RefreshCw, Check, X, ChevronRight, ChevronLeft } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
+import { cardPad, btnP, btnS, inp, chip } from "./ui-kit.jsx";
 
 // ---- speaking: the phone's voice (waits for the end), else the browser's, else a quiet timer ---------------------------------------
 export function speakNow(text, { lang, rate = 1, native } = {}) {
@@ -123,31 +124,31 @@ export function LessonPlayer({ lesson, native, onDone, autoplay = false }) {
   };
   if (!steps.length) return null;
   return (
-    <div className="c-card" data-testid="lesson-player">
-      {lesson.title ? <b className="block mb-2" dir="auto">{lesson.title}</b> : null}
-      <div className="flex gap-1 mb-3" aria-hidden="true">{steps.map((_, k) => <span key={k} className="h-1 flex-1 rounded-full" style={{ background: k <= i ? "var(--c-acc)" : "var(--c-ln)" }} />)}</div>
+    <div className={"calm " + cardPad} data-testid="lesson-player">
+      {lesson.title ? <b className="block mb-2 text-[16px] font-extrabold" dir="auto">{lesson.title}</b> : null}
+      <div className="flex gap-1 mb-3" aria-hidden="true">{steps.map((_, k) => <span key={k} className="h-1.5 flex-1 rounded-full" style={{ background: k <= i ? "var(--c-acc)" : "var(--c-ln)" }} />)}</div>
       <div key={i} className="att-fadein space-y-2 min-h-[140px]" data-testid="lesson-step">
         <p className="c-lbl m-0">{tr("Step {i} of {n}", { i: i + 1, n: steps.length })}</p>
-        <div className="text-[22px] font-bold c-num" dir="ltr" data-testid="lesson-text">{asking ? s.ask.q || "?" : s.text}</div>
+        <div className="text-[22px] font-black tracking-tight c-num tabular-nums" dir="ltr" data-testid="lesson-text">{asking ? s.ask.q || "?" : s.text}</div>
         {!asking ? <p className="c-sub m-0" dir="auto" data-testid="lesson-rule">{s.rule}</p> : null}
         {!asking && s.visual ? <div className="pt-1"><Visual v={s.visual} /></div> : null}
         {asking && s.visual && s.visual.kind === "fractions" ? <div className="pt-1"><Visual v={{ ...s.visual, result: null }} /></div> : null}
         {s.ask && result !== "right" && tries < 3 ? (
           <div className="flex gap-2 items-center pt-1" data-testid="lesson-ask">
             <input value={answer} onChange={(e) => { setAnswer(e.target.value); setResult(null); }} onKeyDown={(e) => e.key === "Enter" && answer && check()} inputMode="decimal" dir="ltr"
-              className="flex-1 rounded-lg px-3 py-2 border bg-transparent text-[16px]" style={{ borderColor: result === "wrong" ? "var(--c-neg)" : "var(--c-ln)", color: "var(--c-ink)" }} placeholder={tr("Your answer")} data-testid="lesson-answer" />
-            <button className="c-btn" disabled={!answer} onClick={check} data-testid="lesson-check">{tr("Check")}</button>
+              className={inp + " flex-1 !text-[16px]"} style={{ borderColor: result === "wrong" ? "var(--c-neg)" : "var(--c-ln)", color: "var(--c-ink)" }} placeholder={tr("Your answer")} data-testid="lesson-answer" />
+            <button className={btnP + " shrink-0"} disabled={!answer} onClick={check} data-testid="lesson-check">{tr("Check")}</button>
           </div>) : null}
         {result === "wrong" ? <p className="c-neg text-[13px] m-0" data-testid="lesson-wrong"><X size={13} className="inline -mt-0.5" /> {tr("Not yet")}{s.ask.hint ? " — " + s.ask.hint : ""}{tries >= 3 ? " · " + tr("Here is how:") : ""}</p> : null}
         {result === "right" ? <p className="c-pos text-[13px] m-0" data-testid="lesson-right"><Check size={13} className="inline -mt-0.5" /> {tr("Right!")}</p> : null}
       </div>
       <div className="flex items-center gap-2 mt-3">
-        <button className="c-ic" aria-label={tr("Back")} onClick={() => go(i - 1)} disabled={i === 0}><ChevronLeft size={16} /></button>
-        <button className="c-btn flex items-center gap-1.5" onClick={() => { if (playing) { stopSpeaking(native); setPlaying(false); } else setPlaying(true); }} data-testid="lesson-play">
+        <button className="w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40" aria-label={tr("Back")} onClick={() => go(i - 1)} disabled={i === 0}><ChevronLeft size={18} className="rtl:rotate-180" /></button>
+        <button className={btnP + " !h-11 !min-h-[44px]"} onClick={() => { if (playing) { stopSpeaking(native); setPlaying(false); } else setPlaying(true); }} data-testid="lesson-play">
           {playing ? <Pause size={14} /> : <Play size={14} />}{playing ? tr("Pause") : i === 0 ? tr("Play the lesson") : tr("Play")}</button>
-        <button className="c-ic" aria-label={tr("Hear it again")} onClick={() => { stopSpeaking(native); speakNow(say(s), { lang, rate, native }); }}><RefreshCw size={15} /></button>
-        <button className="c-pill" onClick={() => setRate((r) => (r >= 1.25 ? 0.75 : r + 0.25))} aria-label={tr("Speed")}>{rate}×</button>
-        <button className="c-ic ms-auto" aria-label={tr("Next")} onClick={() => go(i + 1)} disabled={i >= steps.length - 1 || asking} data-testid="lesson-next"><ChevronRight size={16} /></button>
+        <button className="w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40" aria-label={tr("Hear it again")} onClick={() => { stopSpeaking(native); speakNow(say(s), { lang, rate, native }); }}><RefreshCw size={15} /></button>
+        <button className={chip(false) + " tabular-nums !min-h-[44px] !h-11"} onClick={() => setRate((r) => (r >= 1.25 ? 0.75 : r + 0.25))} aria-label={tr("Speed")}>{rate}×</button>
+        <button className={"w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40 ms-auto"} aria-label={tr("Next")} onClick={() => go(i + 1)} disabled={i >= steps.length - 1 || asking} data-testid="lesson-next"><ChevronRight size={18} className="rtl:rotate-180" /></button>
       </div>
     </div>);
 }
@@ -174,8 +175,8 @@ export function useListen(parts, { lang, native } = {}) {
 export function ListenBar({ L }) {
   return (
     <div className="flex items-center gap-2" data-testid="listen-bar">
-      <button className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-[13px] font-semibold flex items-center gap-1.5" onClick={() => (L.playing ? L.stop() : L.play(0))} data-testid="listen">
+      <button className={btnP + " !h-11 !min-h-[44px] !text-[14px] !px-4"} onClick={() => (L.playing ? L.stop() : L.play(0))} data-testid="listen">
         {L.playing ? <Pause size={14} /> : <Play size={14} />}{L.playing ? tr("Stop") : tr("Listen to the lesson")}</button>
-      <button className="px-2 py-1 rounded-lg border border-slate-700 text-[12px] text-slate-300" onClick={() => L.setRate((r) => (r >= 1.25 ? 0.75 : r + 0.25))} aria-label={tr("Speed")}>{L.rate}×</button>
+      <button className={btnS + " tabular-nums"} onClick={() => L.setRate((r) => (r >= 1.25 ? 0.75 : r + 0.25))} aria-label={tr("Speed")}>{L.rate}×</button>
     </div>);
 }

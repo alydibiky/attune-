@@ -26,16 +26,16 @@ export function PulseLoader({ url, stage, L, ar, label }) {
   return (
     <div className="flex flex-col items-center gap-4 py-3" data-testid="fit-pulse-loading" aria-busy="true" aria-label={label}>
       <div className="relative grid place-items-center" style={{ width: 200, height: 200 }}>
-        {[0, 0.55, 1.1].map((d) => <span key={d} className="absolute rounded-full fit-pulse" style={{ width: 92, height: 92, background: "var(--color-emerald-500)", opacity: 0.35, animationDelay: d + "s", animationDuration: "1.8s" }} />)}
-        <span className="absolute rounded-full fit-breathe" style={{ width: 104, height: 104, background: "var(--color-emerald-500)", opacity: 0.18 }} />
-        {url ? <img src={url} alt="" className="relative rounded-full object-cover fit-breathe" style={{ width: 92, height: 92, boxShadow: "0 0 0 4px var(--color-emerald-500)" }} />
-          : <span className="relative grid place-items-center rounded-full fit-breathe text-[40px]" style={{ width: 92, height: 92, background: "var(--color-emerald-600)" }} aria-hidden="true">🍽️</span>}
+        {[0, 0.55, 1.1].map((d) => <span key={d} className="absolute rounded-full fit-pulse" style={{ width: 92, height: 92, background: "var(--c-acc)", opacity: 0.35, animationDelay: d + "s", animationDuration: "1.8s" }} />)}
+        <span className="absolute rounded-full fit-breathe" style={{ width: 104, height: 104, background: "var(--c-acc)", opacity: 0.18 }} />
+        {url ? <img src={url} alt="" className="relative rounded-full object-cover fit-breathe" style={{ width: 92, height: 92, boxShadow: "0 0 0 4px var(--c-acc)" }} />
+          : <span className="relative grid place-items-center rounded-full fit-breathe text-[40px]" style={{ width: 92, height: 92, background: "var(--c-soft)" }} aria-hidden="true">🍽️</span>}
       </div>
-      <p className="text-[15px] font-medium text-white text-center m-0" data-testid="fit-loading-stage">{stage || L("Reading your meal…", "جارٍ قراءة وجبتك…")}</p>
-      <div key={k} className="fit-pop w-full rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-1.5" data-testid="fit-fact" aria-live="polite">
-        <p className="text-[11.5px] font-bold tracking-wider text-emerald-300 m-0">{L("DID YOU KNOW?", "هل تعلم؟")}</p>
-        <p className="text-[15px] leading-relaxed font-medium text-white m-0">{ar ? f.ar : f.en}</p>
-        <p className="text-[11.5px] text-slate-500 m-0">{ar ? f.src.ar : f.src.en}</p>
+      <p className="text-[15px] font-bold text-[var(--c-ink)] text-center m-0" data-testid="fit-loading-stage">{stage || L("Reading your meal…", "جارٍ قراءة وجبتك…")}</p>
+      <div key={k} className="fit-pop w-full rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-1.5" data-testid="fit-fact" aria-live="polite">
+        <p className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-acc)] m-0">{L("DID YOU KNOW?", "هل تعلم؟")}</p>
+        <p className="text-[15px] leading-relaxed font-semibold text-[var(--c-ink)] m-0">{ar ? f.ar : f.en}</p>
+        <p className="text-[11.5px] text-[var(--c-mut)] m-0">{ar ? f.src.ar : f.src.en}</p>
       </div>
     </div>
   );
@@ -100,14 +100,14 @@ export function LookPicker({ st, upd, L, ar }) {
   const cur = LK.lookOf(st);
   return (
     <div className="space-y-1.5" data-testid="fit-look-picker">
-      <p className="text-[13px] text-slate-200 font-medium">{L("Look", "المظهر")}</p>
+      <p className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)]">{L("Look", "المظهر")}</p>
       <div className="grid grid-cols-3 gap-2">
         {LK.LOOKS.map((l) => (
           <button key={l.id} onClick={() => upd((s) => ({ ...s, look: l.id }))} aria-pressed={cur === l.id} data-testid={"fit-look-" + l.id}
-            className={"rounded-xl p-2 text-start border-2 " + (cur === l.id ? "border-emerald-500" : "border-slate-800")}>
+            className={"rounded-[16px] p-2 text-start border-2 bg-[var(--c-surf)] transition-colors duration-150 " + (cur === l.id ? "border-[var(--c-acc-2)]" : "border-[var(--c-ln)]")}>
             <span className="flex h-9 rounded-lg overflow-hidden mb-1.5" aria-hidden="true">{l.swatch.map((c, i) => <span key={i} className="flex-1" style={{ background: c }} />)}</span>
-            <span className="block text-[13px] font-semibold text-white">{ar ? l.ar : l.en}{l.id === LK.DEFAULT_LOOK ? <span className="text-[10.5px] text-slate-500 font-normal"> · {L("default", "الافتراضي")}</span> : null}</span>
-            <span className="block text-[11px] text-slate-500 leading-snug">{ar ? l.hint.ar : l.hint.en}</span>
+            <span className="block text-[13px] font-extrabold text-[var(--c-ink)]">{ar ? l.ar : l.en}{l.id === LK.DEFAULT_LOOK ? <span className="text-[10.5px] text-[var(--c-mut)] font-normal"> · {L("default", "الافتراضي")}</span> : null}</span>
+            <span className="block text-[11px] text-[var(--c-mut)] leading-snug">{ar ? l.hint.ar : l.hint.en}</span>
           </button>))}
       </div>
     </div>

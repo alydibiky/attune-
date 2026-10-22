@@ -8,6 +8,7 @@ import { Bell, Trash2, X, Plus, AlertTriangle, CheckCircle2, Loader2 } from "luc
 import { tr, getLang } from "./i18n.js";
 import { newReminderId, nextOccurrence } from "./actions.js";
 import { PANES, LEFT, RIGHT } from "./desk.jsx";
+import { cardPad, btnP, btnS, inp, label, muted } from "./ui-kit.jsx";
 
 export const KIND_ICON = { reminder: "🔔", alarm: "⏰", timer: "⏱️", calendar: "📅", whatsapp: "💬", call: "📞", none: "❔" };
 export const KIND_LABEL = { reminder: "Reminder", alarm: "Alarm", timer: "Timer", calendar: "Calendar event", whatsapp: "WhatsApp message", call: "Phone call", none: "Nothing to do" };
@@ -34,8 +35,8 @@ export function ActionCard({ msg, onDo, onCancel, onAnswer }) {
   const [busy, setBusy] = useState(false);
   if (msg.status === "reading") {
     return (
-      <div className="rounded-2xl border border-teal-800/60 bg-teal-500/5 p-3.5 text-sm text-slate-300 flex items-center gap-2" data-testid="action-card">
-        <Loader2 size={15} className="animate-spin text-teal-300" /> {tr("Reading what you want set…")}
+      <div className="rounded-[22px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-4 text-sm text-[var(--c-ink)] flex items-center gap-2" data-testid="action-card">
+        <Loader2 size={15} className="animate-spin text-[var(--c-acc)]" /> {tr("Reading what you want set…")}
       </div>
     );
   }
@@ -47,26 +48,26 @@ export function ActionCard({ msg, onDo, onCancel, onAnswer }) {
   // WhatsApp then asks who to send it to.
   const blocked = a.kind === "none" || (needsTime && (!a.at || a.at < Date.now() - 60000)) ||
     (a.kind === "timer" && !a.durationSec) || (a.kind === "call" && !a.phone);
-  const field = "w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
+  const field = inp;
   return (
-    <div className={`rounded-2xl border p-3.5 ${done ? "border-emerald-800/70 bg-emerald-500/5" : cancelled ? "border-slate-800 opacity-60" : "border-teal-800/70 bg-teal-500/5"}`} data-testid="action-card">
-      <p className="text-sm font-medium text-slate-100 flex items-center gap-1.5">
+    <div className={`rounded-[22px] border p-4 text-[var(--c-ink)] ${done ? "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10" : cancelled ? "border-[var(--c-ln)] bg-[var(--c-surf)] opacity-60" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`} data-testid="action-card">
+      <p className="text-[15px] font-extrabold text-[var(--c-ink)] flex items-center gap-2 m-0">
         <span className="text-base">{KIND_ICON[a.kind]}</span>{tr(KIND_LABEL[a.kind])}
-        {msg.via ? <span className="ms-auto text-[10px] text-slate-500">{msg.via === "model" ? tr("read by the model · checked by the app") : tr("read on the phone")}</span> : null}
+        {msg.via ? <span className="ms-auto text-[10px] text-[var(--c-mut)]">{msg.via === "model" ? tr("read by the model · checked by the app") : tr("read on the phone")}</span> : null}
       </p>
       {done ? (
-        <p className="text-sm text-emerald-200 mt-1.5 flex items-start gap-1.5" data-testid="action-done"><CheckCircle2 size={15} className="mt-0.5 shrink-0" />{tr(msg.doneText || "Done")}</p>
+        <p className="text-sm text-[var(--c-pos)] mt-1.5 flex items-start gap-1.5" data-testid="action-done"><CheckCircle2 size={15} className="mt-0.5 shrink-0" />{tr(msg.doneText || "Done")}</p>
       ) : cancelled ? (
-        <p className="text-sm text-slate-400 mt-1">{tr("Cancelled — nothing was set.")}</p>
+        <p className="text-sm text-[var(--c-mut)] mt-1">{tr("Cancelled — nothing was set.")}</p>
       ) : (
-        <div className="mt-2 space-y-2">
+        <div className="mt-3 space-y-2.5">
           {a.kind !== "call" ? (
             <input dir="auto" value={a.title} onChange={(e) => setA({ ...a, title: e.target.value })} className={field} aria-label={tr("Title")} data-testid="act-title" />
           ) : null}
           {needsTime ? (
             <>
               <input type="datetime-local" value={toLocalInput(a.at)} onChange={(e) => setA({ ...a, at: fromLocalInput(e.target.value), allDay: false })} className={field} dir="ltr" data-testid="act-when" />
-              {a.at ? <p className="text-[12px] text-teal-200" data-testid="act-when-text">{whenText(a.at, a.allDay)}</p> : null}
+              {a.at ? <p className="text-[12px] text-[var(--c-acc)]" data-testid="act-when-text">{whenText(a.at, a.allDay)}</p> : null}
             </>
           ) : null}
           {a.kind === "reminder" || a.kind === "alarm" ? (
@@ -74,23 +75,23 @@ export function ActionCard({ msg, onDo, onCancel, onAnswer }) {
               {Object.keys(REPEAT_LABEL).map((k) => <option key={k} value={k}>{tr(REPEAT_LABEL[k])}</option>)}
             </select>
           ) : null}
-          {a.kind === "timer" ? <p className="text-[13px] text-teal-200">{a.durationSec ? durText(a.durationSec) : tr("How long should the timer be?")}</p> : null}
-          {a.kind === "calendar" && a.place ? <p className="text-[12px] text-slate-400">📍 {a.place}</p> : null}
+          {a.kind === "timer" ? <p className="text-[13px] text-[var(--c-acc)]">{a.durationSec ? durText(a.durationSec) : tr("How long should the timer be?")}</p> : null}
+          {a.kind === "calendar" && a.place ? <p className="text-[12px] text-[var(--c-mut)]">📍 {a.place}</p> : null}
           {a.kind === "whatsapp" || a.kind === "call" ? (
             <input dir="ltr" value={a.phone} onChange={(e) => setA({ ...a, phone: e.target.value.replace(/[^\d+ ]/g, "") })} placeholder={a.contact ? tr("{name}'s number (optional)", { name: a.contact }) : tr("Phone number")} className={field} data-testid="act-phone" />
           ) : null}
           {a.kind === "whatsapp" ? (
             <textarea dir="auto" value={a.message} onChange={(e) => setA({ ...a, message: e.target.value })} rows={2} placeholder={tr("Message")} className={field + " resize-none"} />
           ) : null}
-          {a.kind === "whatsapp" && !a.phone ? <p className="text-[11px] text-slate-500">{tr("No number — WhatsApp will open its contact list with the message ready.")}</p> : null}
-          {problems.length ? problems.map((p) => <p key={p} className="text-[12px] text-amber-300 flex items-start gap-1"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(p)}</p>) : null}
+          {a.kind === "whatsapp" && !a.phone ? <p className="text-[11px] text-[var(--c-mut)]">{tr("No number — WhatsApp will open its contact list with the message ready.")}</p> : null}
+          {problems.length ? problems.map((p) => <p key={p} className="text-[12px] text-[var(--c-warn)] flex items-start gap-1"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(p)}</p>) : null}
           <div className="flex flex-wrap gap-2 pt-1">
             <button disabled={blocked || busy} data-testid="act-confirm" onClick={async () => { setBusy(true); try { await onDo(a); } finally { setBusy(false); } }}
-              className="px-4 py-2 rounded-lg bg-teal-500 disabled:opacity-40 text-slate-950 text-sm font-semibold">
+              className={btnP}>
               {{ reminder: tr("Set reminder"), alarm: tr("Open in Clock"), timer: tr("Start in Clock"), calendar: tr("Add to calendar"), whatsapp: tr("Open WhatsApp"), call: tr("Open the dialer"), none: tr("Set it") }[a.kind]}
             </button>
-            <button onClick={onCancel} className="px-3 py-2 rounded-lg border border-slate-700 text-sm text-slate-300" data-testid="act-cancel">{tr("Cancel")}</button>
-            <button onClick={onAnswer} className="px-3 py-2 rounded-lg text-sm text-slate-400">{tr("Just answer")}</button>
+            <button onClick={onCancel} className={btnS} data-testid="act-cancel">{tr("Cancel")}</button>
+            <button onClick={onAnswer} className={"min-h-[44px] px-3 rounded-[14px] text-[13.5px] font-bold hover:text-[var(--c-ink)] " + muted}>{tr("Just answer")}</button>
           </div>
         </div>
       )}
@@ -118,26 +119,26 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
     setTitle("");
   };
   const remove = (id) => { setReminders(reminders.filter((r) => r.id !== id)); try { native && native.unschedule && native.unschedule(id); } catch (e) {} flash(tr("Removed")); };
-  const field = "bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
+  const field = inp.replace("w-full ", "");
   return (
-    <div className="mt-3 space-y-4" data-testid="reminders-panel">
+    <div className="calm mt-3 space-y-4 text-[var(--c-ink)]" data-testid="reminders-panel">
       {/* v6.27 computer layout (option A): what it is and "add one" on the left, what is set on the right as cards */}
       <div className={PANES}><div className={LEFT}>
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-        <p className="text-sm text-slate-200 font-medium flex items-center gap-2"><Bell size={16} className="text-teal-300" />{tr("Reminders & actions")}</p>
-        <p className="text-[12px] text-slate-500 mt-1">{tr("Just say it in Chat: “remind me tomorrow at 9 to call Ahmed”, “صحيني الساعة 6”, “ابعت لمحمود على الواتساب إني هتأخر”. You always confirm first.")}</p>
+      <div className={cardPad}>
+        <p className="text-[16px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><Bell size={16} className="text-[var(--c-acc)]" />{tr("Reminders & actions")}</p>
+        <p className={"text-[12.5px] mt-1.5 mb-0 " + muted}>{tr("Just say it in Chat: “remind me tomorrow at 9 to call Ahmed”, “صحيني الساعة 6”, “ابعت لمحمود على الواتساب إني هتأخر”. You always confirm first.")}</p>
         {native && !notify ? (
-          <button onClick={() => native.askNotifications && native.askNotifications()} className="mt-3 w-full text-start rounded-xl border border-amber-700/60 bg-amber-500/10 p-2.5 text-[12px] text-amber-200">
+          <button onClick={() => native.askNotifications && native.askNotifications()} className="mt-3 w-full min-h-[44px] text-start rounded-[14px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12.5px] font-semibold text-[var(--c-warn)] flex items-start gap-2"><AlertTriangle size={14} className="mt-0.5 shrink-0" />
             {tr("Notifications are off for Attune — tap to allow them, or reminders can't appear.")}</button>
         ) : null}
         {native && !exact ? (
-          <button onClick={() => native.askExact && native.askExact()} className="mt-2 w-full text-start rounded-xl border border-slate-700 p-2.5 text-[12px] text-slate-300" data-testid="ask-exact">
+          <button onClick={() => native.askExact && native.askExact()} className="mt-2 w-full min-h-[44px] text-start rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[12.5px] text-[var(--c-ink)]" data-testid="ask-exact">
             {tr("Reminders may come up to 10 minutes late. Tap to allow “Alarms & reminders” for Attune so they ring on the minute.")}</button>
         ) : null}
-        {!native ? <p className="mt-2 text-[11px] text-slate-500">{tr("In the browser reminders are only listed — the Android app rings them.")}</p> : null}
+        {!native ? <p className="mt-2 text-[11px] text-[var(--c-mut)]">{tr("In the browser reminders are only listed — the Android app rings them.")}</p> : null}
       </div>
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-2">
-        <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("Add one")}</p>
+      <div className={cardPad + " space-y-2.5"}>
+        <p className={label + " m-0"}>{tr("Add one")}</p>
         <input dir="auto" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr("What to remind you about")} className={field + " w-full"} data-testid="rem-title" />
         <div className="flex gap-2">
           <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} className={field + " flex-1 min-w-0"} dir="ltr" data-testid="rem-at" />
@@ -145,33 +146,33 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
             {Object.keys(REPEAT_LABEL).map((k) => <option key={k} value={k}>{tr(REPEAT_LABEL[k])}</option>)}
           </select>
         </div>
-        <button onClick={add} className="w-full flex items-center justify-center gap-1.5 bg-teal-500 text-slate-950 font-semibold rounded-xl py-2.5 text-sm" data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
+        <button onClick={add} className={btnP + " w-full"} data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
       </div>
       <PrayerPlanner onSchedule={onSchedule} flash={flash} />
       </div><div className={RIGHT}>
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-        <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Coming up")} · {upcoming.length}</p>
-        {upcoming.length === 0 ? <p className="text-sm text-slate-500">{tr("Nothing set.")}</p> : (
+      <div className={cardPad}>
+        <p className={label + " mt-0 mb-2.5"}>{tr("Coming up")} · <span className="tabular-nums">{upcoming.length}</span></p>
+        {upcoming.length === 0 ? <p className="text-sm text-[var(--c-mut)]">{tr("Nothing set.")}</p> : (
           <div className="space-y-1.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">
             {upcoming.map((r) => (
-              <div key={r.id} className="flex items-center gap-2 rounded-xl bg-slate-950 border border-slate-800 px-3 py-2" data-testid="rem-item">
-                <span>🔔</span>
+              <div key={r.id} className="flex items-center gap-3 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item">
+                <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0">🔔</span>
                 <div className="flex-1 min-w-0">
-                  <p dir="auto" className="text-sm text-slate-100 truncate">{r.title}</p>
-                  <p className="text-[11px] text-teal-300/80">{whenText(r.next)}{r.repeat && r.repeat !== "none" ? " · " + tr(REPEAT_LABEL[r.repeat]) : ""}{r.source === "promise" ? " · " + tr("from a promise") : r.source === "life" ? " · " + tr("from People & plans") : ""}</p>
+                  <p dir="auto" className="text-[14px] font-bold text-[var(--c-ink)] truncate m-0">{r.title}</p>
+                  <p className="text-[12px] font-semibold text-[var(--c-acc)] tabular-nums m-0">{whenText(r.next)}{r.repeat && r.repeat !== "none" ? " · " + tr(REPEAT_LABEL[r.repeat]) : ""}{r.source === "promise" ? " · " + tr("from a promise") : r.source === "life" ? " · " + tr("from People & plans") : ""}</p>
                 </div>
-                <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="p-2 text-slate-500" aria-label={tr("Delete")}><Trash2 size={15} /></button>
+                <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Delete")}><Trash2 size={15} /></button>
               </div>
             ))}
           </div>
         )}
         {past.length ? (
           <>
-            <p className="text-[11px] uppercase tracking-wider text-slate-600 mt-4 mb-2">{tr("Done")}</p>
+            <p className={label + " mt-4 mb-2"}>{tr("Done")}</p>
             {past.map((r) => (
-              <div key={r.id} className="flex items-center gap-2 px-1 py-1 text-[12px] text-slate-500">
-                <span className="flex-1 truncate" dir="auto">{r.title}</span><span>{new Date(r.at).toLocaleDateString(locale())}</span>
-                <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="p-1" aria-label={tr("Delete")}><X size={13} /></button>
+              <div key={r.id} className="flex items-center gap-2 px-1 py-0.5 text-[12.5px] text-[var(--c-mut)]">
+                <span className="flex-1 truncate" dir="auto">{r.title}</span><span className="tabular-nums">{new Date(r.at).toLocaleDateString(locale())}</span>
+                <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center rounded-[12px]" aria-label={tr("Delete")}><X size={13} /></button>
               </div>
             ))}
           </>

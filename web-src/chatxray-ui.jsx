@@ -7,6 +7,7 @@ import { tr, getLang, dateLocale } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as CX from "./chatxray.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+import { page, btnP, btnS, btnDanger, inp, area, label, chip, h1 } from "./ui-kit.jsx";
 
 const SKEY = "attune:xray:v1";
 const loadSaved = () => { try { const v = JSON.parse(localStorage.getItem(SKEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -107,83 +108,83 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
 
   const tabBtn = (id, label, Icon, n) => (
     <button key={id} onClick={() => setTab(id)} data-testid={"xray-tab-" + id}
-      className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full lg:rounded-xl text-[12.5px] border ${tab === id ? "border-teal-600 bg-teal-500/10 text-teal-200" : "border-slate-800 text-slate-400"}`}>
-      <Icon size={14} />{tr(label)}{n != null ? <span className="text-[11px] opacity-70 lg:ms-auto">{n}</span> : null}</button>
+      className={chip(tab === id) + " shrink-0 lg:rounded-[14px] lg:h-11"}>
+      <Icon size={14} />{tr(label)}{n != null ? <span className="text-[11px] tabular-nums opacity-80 lg:ms-auto">{n}</span> : null}</button>
   );
   const quote = (x) => (
-    <p dir="auto" className="text-[12.5px] text-slate-300 mt-1 border-s-2 border-slate-700 ps-2 whitespace-pre-wrap">“{x.quote}”
-      <span className="block text-[11px] text-slate-500 mt-0.5">{x.author || x.who} · {fmtD(x.t)} · #{x.msg}</span></p>
+    <p dir="auto" className="text-[12.5px] text-[var(--c-ink)] mt-1 border-s-2 border-[var(--c-ln)] ps-2 whitespace-pre-wrap">“{x.quote}”
+      <span className="block text-[11px] text-[var(--c-mut)] mt-0.5">{x.author || x.who} · {fmtD(x.t)} · #{x.msg}</span></p>
   );
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto" data-testid="xray">
+    <div className={page + " space-y-4 max-w-2xl mx-auto"} data-testid="xray">
       <div className="px-1">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2"><MessageCircle size={19} className="text-teal-300" />{tr("Chat X-Ray")}</h2>
-        <p data-intro="" className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Who owes whom, what was promised, which dates were agreed and which questions got no answer — read from a WhatsApp chat on your phone. The chat never leaves the phone.")}</p>
+        <h2 className={h1 + " text-[var(--c-ink)] flex items-center gap-2"}><MessageCircle size={20} className="text-[var(--c-acc)]" />{tr("Chat X-Ray")}</h2>
+        <p data-intro="" className="text-[12.5px] text-[var(--c-mut)] leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Who owes whom, what was promised, which dates were agreed and which questions got no answer — read from a WhatsApp chat on your phone. The chat never leaves the phone.")}</p>
       </div>
 
       {/* v6.27 computer layout (option A): the chat and its settings on the left, the X-ray on the right; with an
           X-ray open, the totals and its sections on the left and the section's content on the right */}
       {!res ? <div className={PANES}><div className={LEFT}>
       {!chat && !res ? (
-        <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3">
-          <ol className="text-[12.5px] text-slate-300 space-y-1 list-decimal ps-5">
+        <section className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-3">
+          <ol className="text-[12.5px] text-[var(--c-ink)] space-y-1 list-decimal ps-5">
             <li>{tr("In WhatsApp, open the chat → ⋮ → More → Export chat → Without media.")}</li>
             <li>{tr("Pick Attune in the share list — or save the file and choose it here.")}</li>
           </ol>
           <input ref={fileRef} type="file" accept=".txt,text/plain" className="hidden" data-testid="xray-file"
             onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; try { load(await f.text(), f.name.replace(/\.txt$/i, "").replace(/^WhatsApp Chat with /i, "")); } catch (x) { setErr(tr("Couldn't read that file")); } }} />
-          <button onClick={() => fileRef.current && fileRef.current.click()} className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2"><FileText size={16} />{tr("Choose the exported chat (.txt)")}</button>
+          <button onClick={() => fileRef.current && fileRef.current.click()} className={btnP + " w-full"}><FileText size={16} />{tr("Choose the exported chat (.txt)")}</button>
           <textarea value={paste} onChange={(e) => setPaste(e.target.value)} rows={3} dir="auto" data-testid="xray-paste"
-            placeholder={tr("…or paste the chat text here")} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[13px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-          {paste.trim() ? <button onClick={() => load(paste)} className="w-full py-2 rounded-xl border border-slate-700 text-slate-200 text-sm" data-testid="xray-paste-go">{tr("Read the pasted chat")}</button> : null}
+            placeholder={tr("…or paste the chat text here")} className={area} />
+          {paste.trim() ? <button onClick={() => load(paste)} className={btnS + " w-full"} data-testid="xray-paste-go">{tr("Read the pasted chat")}</button> : null}
           {saved.length ? (
-            <div className="pt-2 border-t border-slate-800">
-              <div className="flex items-center justify-between"><p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("Earlier X-rays")}</p>
-                <button onClick={() => { setSaved([]); saveSaved([]); }} aria-label={tr("Clear")} className="p-1.5 text-slate-500"><Trash2 size={14} /></button></div>
-              {saved.map((s) => <button key={s.id} onClick={() => { setRes(s); setTab("money"); }} className="w-full text-start py-2 text-[13px] text-slate-200 border-b border-slate-800 last:border-0">{s.name} <span className="text-slate-500 text-[11px]">· {fmtD(s.at)}</span></button>)}
+            <div className="pt-2 border-t border-[var(--c-ln)]">
+              <div className="flex items-center justify-between"><p className={label + " m-0"}>{tr("Earlier X-rays")}</p>
+                <button onClick={() => { setSaved([]); saveSaved([]); }} aria-label={tr("Clear")} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]"><Trash2 size={14} /></button></div>
+              {saved.map((s) => <button key={s.id} onClick={() => { setRes(s); setTab("money"); }} className="w-full min-h-[44px] text-start py-2.5 text-[13.5px] font-semibold text-[var(--c-ink)] border-b border-[var(--c-ln)] last:border-0">{s.name} <span className="text-[var(--c-mut)] text-[11.5px] font-normal tabular-nums">· {fmtD(s.at)}</span></button>)}
             </div>
           ) : null}
           {/* v6.37 (M4): who keeps their word, over every chat X-rayed here */}
           {(() => { const sc = CX.promiseScores(saved).filter((r) => r.score != null); return sc.length ? (
-            <div className="pt-2 border-t border-slate-800" data-testid="xray-scores">
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">{tr("Who keeps their word")}</p>
+            <div className="pt-2 border-t border-[var(--c-ln)]" data-testid="xray-scores">
+              <p className={label + " mt-0 mb-1"}>{tr("Who keeps their word")}</p>
               {sc.map((r) => (
-                <div key={r.person} className="py-1.5 text-[13px] text-slate-200 border-b border-slate-800 last:border-0" data-testid="xray-score">
+                <div key={r.person} className="py-1.5 text-[13px] text-[var(--c-ink)] border-b border-[var(--c-ln)] last:border-0" data-testid="xray-score">
                   <div className="flex items-center gap-2"><span className="flex-1 min-w-0 truncate">{r.person}</span>
-                    <b className={"tabular-nums " + (r.score >= 80 ? "text-emerald-300" : r.score >= 50 ? "text-amber-300" : "text-rose-300")}>{r.score}%</b></div>
-                  <p className="text-[11.5px] text-slate-500">{tr("{k} kept · {b} broken · {l} late · {o} open", { k: r.kept, b: r.broken, l: r.late, o: r.open })}</p>
-                  {r.examples[0] ? <p className="text-[11.5px] text-slate-500 truncate" dir="auto">“{r.examples[0].what}” · {r.examples[0].due}</p> : null}
+                    <b className={"tabular-nums " + (r.score >= 80 ? "text-[var(--c-pos)]" : r.score >= 50 ? "text-[var(--c-warn)]" : "text-[var(--c-neg)]")}>{r.score}%</b></div>
+                  <p className="text-[11.5px] text-[var(--c-mut)]">{tr("{k} kept · {b} broken · {l} late · {o} open", { k: r.kept, b: r.broken, l: r.late, o: r.open })}</p>
+                  {r.examples[0] ? <p className="text-[11.5px] text-[var(--c-mut)] truncate" dir="auto">“{r.examples[0].what}” · {r.examples[0].due}</p> : null}
                 </div>))}
             </div>) : null; })()}
         </section>
       ) : null}
 
       {chat && !res ? (
-        <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3" data-testid="xray-setup">
-          <p className="text-[13px] text-slate-200">{chat.name} · {tr("{n} messages", { n: chat.messages.length.toLocaleString("en-US") })}</p>
+        <section className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-4" data-testid="xray-setup">
+          <p className="text-[15px] font-extrabold text-[var(--c-ink)] m-0">{chat.name} · {tr("{n} messages", { n: chat.messages.length.toLocaleString("en-US") })}</p>
           <div>
-            <p className="text-[12px] text-slate-400 mb-1.5">{tr("Which one is you?")}</p>
+            <p className={label + " mt-0 mb-2"}>{tr("Which one is you?")}</p>
             <div className="flex flex-wrap gap-1.5">{chat.people.slice(0, 12).map((p) => (
-              <button key={p} onClick={() => setMe(p)} data-testid="xray-me" className={`px-3 py-1.5 rounded-full text-[12.5px] border ${me === p ? "border-teal-600 bg-teal-500/10 text-teal-200" : "border-slate-700 text-slate-300"}`}>{p}</button>))}</div>
+              <button key={p} onClick={() => setMe(p)} data-testid="xray-me" className={chip(me === p)}>{p}</button>))}</div>
           </div>
           <div>
-            <p className="text-[12px] text-slate-400 mb-1.5">{tr("Read")}</p>
+            <p className={label + " mt-0 mb-2"}>{tr("Read")}</p>
             <div className="flex flex-wrap gap-1.5">{RANGES.map(([id, label]) => (
-              <button key={id} onClick={() => setRange(id)} className={`px-3 py-1.5 rounded-full text-[12.5px] border ${range === id ? "border-teal-600 bg-teal-500/10 text-teal-200" : "border-slate-700 text-slate-300"}`}>{tr(label)}</button>))}</div>
+              <button key={id} onClick={() => setRange(id)} className={chip(range === id)}>{tr(label)}</button>))}</div>
           </div>
           {busy ? (
-            <div className="flex items-center justify-between gap-2 text-[12.5px] text-teal-200" data-testid="xray-progress">
+            <div className="flex items-center justify-between gap-2 text-[12.5px] text-[var(--c-acc)]" data-testid="xray-progress">
               <span className="flex items-center gap-2"><Loader2 size={14} className="animate-spin" />{tr("Reading part {n} of {t}…", { n: busy.n, t: busy.of })}</span>
-              <button onClick={() => { run.current++; setBusy(null); }} className="px-3 py-1.5 rounded-lg border border-rose-800 text-rose-200 flex items-center gap-1"><X size={13} />{tr("Stop")}</button>
+              <button onClick={() => { run.current++; setBusy(null); }} className={btnDanger}><X size={13} />{tr("Stop")}</button>
             </div>
           ) : (
-            <button onClick={analyse} disabled={!me} data-testid="xray-go" className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm disabled:opacity-40">{tr("X-ray this chat")}</button>
+            <button onClick={analyse} disabled={!me} data-testid="xray-go" className={btnP + " w-full"}>{tr("X-ray this chat")}</button>
           )}
-          {err ? <p className="text-[12.5px] text-rose-300">{err}</p> : null}
+          {err ? <p className="text-[12.5px] text-[var(--c-neg)]">{err}</p> : null}
         </section>
       ) : null}
-      {!chat && !res && err ? <p className="text-[12.5px] text-rose-300 px-1">{err}</p> : null}
+      {!chat && !res && err ? <p className="text-[12.5px] text-[var(--c-neg)] px-1">{err}</p> : null}
       </div><div className={RIGHT + " hidden lg:block"}>
         <DeskEmpty icon={MessageCircle} title={tr("The X-ray appears here")} text={tr("Who owes whom, promises and dates, unanswered questions — and you can ask the chat anything.")} />
       </div></div> : null}
@@ -195,8 +196,8 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
             {(() => { const owed = res.ledger.filter((r) => r.net > 0), owe = res.ledger.filter((r) => r.net < 0);
               const sum = (rows) => { const m = new Map(); for (const r of rows) m.set(r.currency, (m.get(r.currency) || 0) + Math.abs(r.net)); return [...m.entries()].map(([c, v]) => money(v, c)).join(" · ") || "—"; };
               return <>
-                <div className="rounded-2xl border border-emerald-800/70 bg-emerald-500/10 p-3"><p className="text-[11px] text-emerald-300">{tr("Owed to you")}</p><p className="text-[15px] font-semibold text-emerald-100 mt-0.5" data-testid="xray-owed">{sum(owed)}</p></div>
-                <div className="rounded-2xl border border-amber-800/70 bg-amber-500/10 p-3"><p className="text-[11px] text-amber-300">{tr("You owe")}</p><p className="text-[15px] font-semibold text-amber-100 mt-0.5">{sum(owe)}</p></div>
+                <div className="rounded-[22px] border border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(--c-pos)] m-0">{tr("Owed to you")}</p><p className="text-[clamp(16px,4.4vw,19px)] font-black tabular-nums text-[var(--c-pos)] mt-1 mb-0" data-testid="xray-owed">{sum(owed)}</p></div>
+                <div className="rounded-[22px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(--c-warn)] m-0">{tr("You owe")}</p><p className="text-[clamp(16px,4.4vw,19px)] font-black tabular-nums text-[var(--c-warn)] mt-1 mb-0">{sum(owe)}</p></div>
               </>; })()}
           </div>
           <div className="att-hscroll flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
@@ -211,39 +212,39 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
           {tab === "money" ? (
             <div className="space-y-2" data-testid="xray-money">
               {res.ledger.length ? res.ledger.map((r) => (
-                <details key={r.person + r.currency} className="bg-slate-900 rounded-2xl border border-slate-800 p-3">
-                  <summary className="flex items-center justify-between gap-2 cursor-pointer list-none">
-                    <span className="text-[14px] text-slate-100 truncate">{r.person}</span>
-                    <span className={`text-[14px] font-semibold shrink-0 ${r.net > 0 ? "text-emerald-300" : r.net < 0 ? "text-amber-300" : "text-slate-400"}`}>
+                <details key={r.person + r.currency} className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                  <summary className="flex items-center justify-between gap-2 min-h-[28px] cursor-pointer list-none">
+                    <span className="text-[14.5px] font-extrabold text-[var(--c-ink)] truncate">{r.person}</span>
+                    <span className={`text-[14px] font-extrabold tabular-nums shrink-0 ${r.net > 0 ? "text-[var(--c-pos)]" : r.net < 0 ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]"}`}>
                       {r.net > 0 ? tr("owes you {v}", { v: money(r.net, r.currency) }) : r.net < 0 ? tr("you owe {v}", { v: money(r.net, r.currency) }) : tr("settled")}</span>
                   </summary>
-                  <div className="mt-2 space-y-2">{r.entries.map((e, i) => <div key={i}><p className="text-[12px] text-slate-400">{e.type === "paid" ? tr("paid") : tr("owed")} · {money(e.amount, e.currency)}{e.what ? " · " + e.what : ""}</p>{quote(e)}</div>)}</div>
+                  <div className="mt-2 space-y-2">{r.entries.map((e, i) => <div key={i}><p className="text-[12px] text-[var(--c-mut)]">{e.type === "paid" ? tr("paid") : tr("owed")} · {money(e.amount, e.currency)}{e.what ? " · " + e.what : ""}</p>{quote(e)}</div>)}</div>
                 </details>
-              )) : <p className="text-[13px] text-slate-400 px-1">{tr("No money owed or paid was found in this part of the chat.")}</p>}
-              <p className="text-[11px] text-slate-500 px-1">{tr("Totals are added up by the phone from the messages quoted — check them before asking anyone to pay.")}</p>
+              )) : <p className="text-[13px] text-[var(--c-mut)] px-1">{tr("No money owed or paid was found in this part of the chat.")}</p>}
+              <p className="text-[11px] text-[var(--c-mut)] px-1">{tr("Totals are added up by the phone from the messages quoted — check them before asking anyone to pay.")}</p>
             </div>
           ) : null}
 
           {tab === "promises" ? (
             <div className="space-y-2" data-testid="xray-promises">
               {res.items.filter((x) => ["promise", "deadline", "order"].includes(x.type)).sort((a, b) => (a.due || "9") < (b.due || "9") ? -1 : 1).map((it, i) => (
-                <div key={i} className="bg-slate-900 rounded-2xl border border-slate-800 p-3">
+                <div key={i} className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[13.5px] text-slate-100">{it.from}{it.what ? ": " + it.what : ""}</p>
-                    {it.due ? <span className="text-[11px] px-2 py-0.5 rounded-md border border-sky-800 text-sky-200 shrink-0">{fmtD(it.due + "T12:00:00")}</span> : null}
+                    <p className="text-[14px] font-bold text-[var(--c-ink)] m-0">{it.from}{it.what ? ": " + it.what : ""}</p>
+                    {it.due ? <span className="text-[11px] font-extrabold tabular-nums px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] border border-[var(--c-acc)]/30 text-[var(--c-acc)] shrink-0">{fmtD(it.due + "T12:00:00")}</span> : null}
                   </div>
                   {quote(it)}
-                  {it.due && scheduleReminder ? <button onClick={() => remind(it)} className="mt-2 text-[12px] px-3 py-1.5 rounded-lg border border-slate-700 text-slate-200 flex items-center gap-1.5" data-testid="xray-remind"><Bell size={13} />{tr("Remind me")}</button> : null}
+                  {it.due && scheduleReminder ? <button onClick={() => remind(it)} className={btnS + " mt-3"} data-testid="xray-remind"><Bell size={13} />{tr("Remind me")}</button> : null}
                 </div>
               ))}
-              {!res.items.some((x) => ["promise", "deadline", "order"].includes(x.type)) ? <p className="text-[13px] text-slate-400 px-1">{tr("No promises or dates were found.")}</p> : null}
+              {!res.items.some((x) => ["promise", "deadline", "order"].includes(x.type)) ? <p className="text-[13px] text-[var(--c-mut)] px-1">{tr("No promises or dates were found.")}</p> : null}
             </div>
           ) : null}
 
           {tab === "unanswered" ? (
             <div className="space-y-2" data-testid="xray-unanswered">
-              {res.unanswered.length ? res.unanswered.map((u, i) => <div key={i} className="bg-slate-900 rounded-2xl border border-slate-800 p-3">{quote(u)}</div>)
-                : <p className="text-[13px] text-slate-400 px-1">{tr("Every question to you got an answer. 👍")}</p>}
+              {res.unanswered.length ? res.unanswered.map((u, i) => <div key={i} className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">{quote(u)}</div>)
+                : <p className="text-[13px] text-[var(--c-mut)] px-1">{tr("Every question to you got an answer. 👍")}</p>}
             </div>
           ) : null}
 
@@ -251,36 +252,36 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
             <div className="space-y-2">
               <div className="flex gap-2">
                 <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} dir="auto" data-testid="xray-q"
-                  placeholder={tr("e.g. What price did we agree for the wedding photographer?")} className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-[13.5px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-                {asking ? <button onClick={() => { askRun.current++; setAsking(false); }} className="shrink-0 px-3 rounded-xl border border-rose-800 text-rose-200 text-sm flex items-center gap-1.5" data-testid="xray-ask-stop"><Loader2 size={14} className="animate-spin" />{tr("Stop")}</button>
-                  : <button onClick={ask} disabled={!q.trim()} className="shrink-0 px-4 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm disabled:opacity-40" data-testid="xray-ask">{tr("Ask")}</button>}
+                  placeholder={tr("e.g. What price did we agree for the wedding photographer?")} className={inp + " flex-1"} />
+                {asking ? <button onClick={() => { askRun.current++; setAsking(false); }} className={btnDanger + " shrink-0"} data-testid="xray-ask-stop"><Loader2 size={14} className="animate-spin" />{tr("Stop")}</button>
+                  : <button onClick={ask} disabled={!q.trim()} className={btnP + " shrink-0 h-11 min-h-[44px]"} data-testid="xray-ask">{tr("Ask")}</button>}
               </div>
               {!ans && !asking ? (
                 <div className="flex flex-wrap gap-1.5">{[["What was this chat about?", "about"], ["Was “deposit” mentioned?", "mention"], ["What did we agree on the price?", "other"]].map(([s]) => (
-                  <button key={s} onClick={() => setQ(tr(s))} className="text-[12px] px-2.5 py-1.5 rounded-full border border-slate-700 text-slate-300">{tr(s)}</button>))}</div>
+                  <button key={s} onClick={() => setQ(tr(s))} className={chip(false) + " h-auto min-h-[40px] py-2 whitespace-normal text-start"}>{tr(s)}</button>))}</div>
               ) : null}
-              {asking ? <p className="text-[12px] text-teal-200">{tr(CX.askKind(q) === "about" ? "Reading messages from the whole chat and writing the main topics…" : "Reading the matching messages…")}</p> : null}
+              {asking ? <p className="text-[12px] text-[var(--c-acc)]">{tr(CX.askKind(q) === "about" ? "Reading messages from the whole chat and writing the main topics…" : "Reading the matching messages…")}</p> : null}
               {ans ? (
-                <div className="bg-slate-900 rounded-2xl border border-slate-800 p-3" data-testid="xray-answer">
-                  <p dir="auto" className="text-[14px] text-slate-100 whitespace-pre-wrap leading-relaxed">{ans.text}</p>
-                  <details className="mt-2" open={ans.kind === "mention" && ans.hits.length > 0 && ans.hits.length <= 8}><summary className="text-[12px] text-slate-400 cursor-pointer">{tr(ans.kind === "mention" ? "Where it was said ({n})" : "The messages it read ({n})", { n: ans.hits.length })}</summary>
-                    <div className="mt-2 space-y-1.5">{ans.hits.map((m) => <p key={m.i} dir="auto" className="text-[12px] text-slate-300"><span className="text-slate-500">#{m.i} {fmtD(m.t)} {m.who}:</span> {m.text.slice(0, 200)}</p>)}</div></details>
+                <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="xray-answer">
+                  <p dir="auto" className="text-[14px] text-[var(--c-ink)] whitespace-pre-wrap leading-relaxed">{ans.text}</p>
+                  <details className="mt-2" open={ans.kind === "mention" && ans.hits.length > 0 && ans.hits.length <= 8}><summary className="text-[12.5px] font-bold text-[var(--c-acc)] cursor-pointer min-h-[32px] flex items-center">{tr(ans.kind === "mention" ? "Where it was said ({n})" : "The messages it read ({n})", { n: ans.hits.length })}</summary>
+                    <div className="mt-2 space-y-1.5">{ans.hits.map((m) => <p key={m.i} dir="auto" className="text-[12px] text-[var(--c-ink)]"><span className="text-[var(--c-mut)]">#{m.i} {fmtD(m.t)} {m.who}:</span> {m.text.slice(0, 200)}</p>)}</div></details>
                 </div>
               ) : null}
             </div>
           ) : null}
 
           {tab === "stats" ? (
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-3 space-y-1.5 text-[13px]" data-testid="xray-stats">
-              <p className="text-slate-300">{tr("{n} messages", { n: res.stats.total.toLocaleString("en-US") })}{res.stats.first ? " · " + fmtD(res.stats.first) + " – " + fmtD(res.stats.last) : ""}</p>
+            <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-2.5 text-[13px]" data-testid="xray-stats">
+              <p className="text-[var(--c-ink)]">{tr("{n} messages", { n: res.stats.total.toLocaleString("en-US") })}{res.stats.first ? " · " + fmtD(res.stats.first) + " – " + fmtD(res.stats.last) : ""}</p>
               {res.stats.per.slice(0, 8).map(([p, n]) => {
                 const w = Math.round((n / Math.max(1, res.stats.per[0][1])) * 100);
-                return <div key={p}><div className="flex justify-between text-[12px] text-slate-400"><span className="truncate">{p}</span><span>{n}</span></div><div className="h-1.5 rounded-full bg-slate-800"><div className="h-1.5 rounded-full bg-teal-500/60" style={{ width: w + "%" }} /></div></div>;
+                return <div key={p}><div className="flex justify-between text-[12px] text-[var(--c-mut)]"><span className="truncate">{p}</span><span className="tabular-nums">{n}</span></div><div className="c-bar mt-1"><i style={{ width: w + "%" }} /></div></div>;
               })}
-              <p className="text-slate-400 text-[12px] pt-1">{tr("Busiest day: {d}", { d: new Date(2023, 0, 1 + res.stats.busiestDay).toLocaleDateString(dateLocale(), { weekday: "long" }) })}</p>
+              <p className="text-[var(--c-mut)] text-[12px] pt-1">{tr("Busiest day: {d}", { d: new Date(2023, 0, 1 + res.stats.busiestDay).toLocaleDateString(dateLocale(), { weekday: "long" }) })}</p>
             </div>
           ) : null}
-          <button onClick={() => { setRes(null); if (!chat) setChat(null); }} className="w-full py-2.5 rounded-xl border border-slate-700 text-slate-200 text-sm" data-testid="xray-new">{chat ? tr("Back to this chat") : tr("X-ray another chat")}</button>
+          <button onClick={() => { setRes(null); if (!chat) setChat(null); }} className={btnS + " w-full"} data-testid="xray-new">{chat ? tr("Back to this chat") : tr("X-ray another chat")}</button>
           </div></div>
         </section>
       ) : null}

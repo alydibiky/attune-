@@ -84,46 +84,46 @@ export function SyncPanel({ native: N, flash }) {
   };
 
   const tab = (id, I, label) => <button onClick={() => { setWay(id); setErr(""); }} data-testid={"sync-way-" + id}
-    className={`flex-1 py-2 rounded-lg text-sm flex items-center justify-center gap-1.5 ${way === id ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-400"}`}><I size={15} />{label}</button>;
-  const box = "w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-[14px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500";
+    className={`flex-1 py-2 rounded-lg text-sm flex items-center justify-center gap-1.5 ${way === id ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "text-[var(--c-mut)]"}`}><I size={15} />{label}</button>;
+  const box = "w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl px-3 py-2.5 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]";
   return (
     <div className="space-y-3" data-testid="sync-panel">
-      <p className="text-[12px] text-slate-400">{tr("Keep your phone and computer (or two phones) the same. The data is locked before it leaves this device; what you delete on one is deleted on the other, nothing else is lost.")}</p>
-      <div className="flex gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">{tab("wifi", Wifi, tr("Wi-Fi"))}{tab("google", Cloud, tr("Google Drive"))}</div>
+      <p className="text-[12px] text-[var(--c-mut)]">{tr("Keep your phone and computer (or two phones) the same. The data is locked before it leaves this device; what you delete on one is deleted on the other, nothing else is lost.")}</p>
+      <div className="flex gap-1 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-1">{tab("wifi", Wifi, tr("Wi-Fi"))}{tab("google", Cloud, tr("Google Drive"))}</div>
       {way === "wifi" ? (
         <div className="space-y-3">
-          {!netOk ? <button onClick={askNet} className="w-full rounded-xl border border-amber-700/60 bg-amber-500/10 text-amber-200 text-[12.5px] p-2.5 text-start" data-testid="sync-allow-net">{tr("Allow Attune to find your other device on this Wi-Fi (Android asks once).")}</button> : null}
+          {!netOk ? <button onClick={askNet} className="w-full rounded-xl border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)] text-[12.5px] p-2.5 text-start" data-testid="sync-allow-net">{tr("Allow Attune to find your other device on this Wi-Fi (Android asks once).")}</button> : null}
           {host ? (
-            <div className="rounded-xl border border-teal-800 bg-teal-500/5 p-3 space-y-1.5 text-center" data-testid="sync-host">
-              <p className="text-[12px] text-slate-400">{tr("On the other device: Backup → Sync → Wi-Fi → Connect, and type:")}</p>
-              <p className="text-[13px] text-slate-300">{tr("Address")} <b className="text-white tabular-nums" dir="ltr" data-testid="sync-addr">{host.ip ? host.ip + ":" + host.port : tr("not on Wi-Fi")}</b></p>
-              <p className="text-[26px] font-bold tracking-[0.15em] text-teal-300 tabular-nums" dir="ltr" data-testid="sync-code">{Y.showCode(host.code)}</p>
+            <div className="rounded-xl border border-[var(--c-acc)] bg-[var(--c-soft)] p-3 space-y-1.5 text-center" data-testid="sync-host">
+              <p className="text-[12px] text-[var(--c-mut)]">{tr("On the other device: Backup → Sync → Wi-Fi → Connect, and type:")}</p>
+              <p className="text-[13px] text-[var(--c-ink)]">{tr("Address")} <b className="text-[var(--c-ink)] tabular-nums" dir="ltr" data-testid="sync-addr">{host.ip ? host.ip + ":" + host.port : tr("not on Wi-Fi")}</b></p>
+              <p className="text-[26px] font-bold tracking-[0.15em] text-[var(--c-acc)] tabular-nums" dir="ltr" data-testid="sync-code">{Y.showCode(host.code)}</p>
             </div>
-          ) : <button onClick={startHost} disabled={!!busy} className="w-full rounded-xl border border-slate-700 text-slate-200 py-2.5 text-sm" data-testid="sync-host-start">{tr("Show a code on this device")}</button>}
-          <div className="pt-2 border-t border-slate-800 space-y-2">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("Or connect to the other device")}</p>
+          ) : <button onClick={startHost} disabled={!!busy} className="w-full rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] py-2.5 text-sm" data-testid="sync-host-start">{tr("Show a code on this device")}</button>}
+          <div className="pt-2 border-t border-[var(--c-ln)] space-y-2">
+            <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)]">{tr("Or connect to the other device")}</p>
             <input value={addr} onChange={(e) => setAddr(e.target.value)} placeholder="192.168.1.20:41873" dir="ltr" inputMode="decimal" className={box} data-testid="sync-addr-in" />
             <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tr("Code")} dir="ltr" autoCapitalize="characters" className={box + " tracking-widest"} data-testid="sync-code-in" />
-            <label className="flex items-center gap-2 text-[12px] text-slate-400"><input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} data-testid="sync-replace" />{tr("Make this device exactly like the other one (removes what the other doesn't have)")}</label>
-            <button onClick={connect} disabled={!!busy} className="w-full bg-teal-500 disabled:opacity-60 text-slate-950 font-semibold rounded-xl py-2.5 text-sm" data-testid="sync-connect">{tr("Connect and sync")}</button>
+            <label className="flex items-center gap-2 text-[12px] text-[var(--c-mut)]"><input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} data-testid="sync-replace" />{tr("Make this device exactly like the other one (removes what the other doesn't have)")}</label>
+            <button onClick={connect} disabled={!!busy} className="w-full bg-[var(--c-acc)] disabled:opacity-60 text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 text-sm min-h-[44px]" data-testid="sync-connect">{tr("Connect and sync")}</button>
           </div>
         </div>
       ) : (
         <div className="space-y-3">
-          {N && N.desktop && (!N.driveSync || (N.driveReady && !N.driveReady())) ? <p className="text-[12px] text-amber-200 rounded-lg border border-amber-700/50 bg-amber-500/10 p-2.5" data-testid="sync-drive-desktop">{tr("Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.")}</p>
-            : N && N.desktop ? <p className="text-[12px] text-slate-400" data-testid="sync-drive-desktop-how">{tr("The first time, Google's sign-in page opens in your browser; after that the computer stays signed in.")}</p> : null}
-          <p className="text-[12px] text-slate-400">{tr("One file in your own Google Drive, in a hidden folder only Attune can open. It is locked with your sync passphrase on this device, so Google only stores noise.")}</p>
-          {cfg.pass ? <p className="text-[12px] text-emerald-300 flex items-center gap-1.5" data-testid="sync-pass-set"><CheckCircle2 size={14} />{tr("Sync passphrase set on this device.")} <button className="underline text-slate-400" onClick={() => setCfg(Y.saveSync({ ...Y.loadSync(), pass: "" }))}>{tr("Change")}</button></p> : (
+          {N && N.desktop && (!N.driveSync || (N.driveReady && !N.driveReady())) ? <p className="text-[12px] text-[var(--c-warn)] rounded-lg border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2.5" data-testid="sync-drive-desktop">{tr("Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.")}</p>
+            : N && N.desktop ? <p className="text-[12px] text-[var(--c-mut)]" data-testid="sync-drive-desktop-how">{tr("The first time, Google's sign-in page opens in your browser; after that the computer stays signed in.")}</p> : null}
+          <p className="text-[12px] text-[var(--c-mut)]">{tr("One file in your own Google Drive, in a hidden folder only Attune can open. It is locked with your sync passphrase on this device, so Google only stores noise.")}</p>
+          {cfg.pass ? <p className="text-[12px] text-[var(--c-pos)] flex items-center gap-1.5" data-testid="sync-pass-set"><CheckCircle2 size={14} />{tr("Sync passphrase set on this device.")} <button className="underline text-[var(--c-mut)]" onClick={() => setCfg(Y.saveSync({ ...Y.loadSync(), pass: "" }))}>{tr("Change")}</button></p> : (
             <div className="space-y-2">
               <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder={tr("Sync passphrase (10+ characters, the same on every device)")} className={box} data-testid="sync-pass" />
-              <button onClick={savePass} className="w-full rounded-xl border border-slate-700 text-slate-200 py-2 text-sm" data-testid="sync-pass-save">{tr("Save passphrase")}</button>
+              <button onClick={savePass} className="w-full rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] py-2 text-sm" data-testid="sync-pass-save">{tr("Save passphrase")}</button>
             </div>)}
-          <button onClick={drive} disabled={!!busy || !cfg.pass} className="w-full bg-teal-500 disabled:opacity-60 text-slate-950 font-semibold rounded-xl py-2.5 text-sm" data-testid="sync-drive">{tr("Sync with Google Drive")}</button>
-          {cfg.last && cfg.lastHow === "drive" ? <p className="text-[11px] text-slate-500">{tr("Last synced: {d}", { d: new Date(cfg.last).toLocaleString() })}</p> : null}
+          <button onClick={drive} disabled={!!busy || !cfg.pass} className="w-full bg-[var(--c-acc)] disabled:opacity-60 text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 text-sm min-h-[44px]" data-testid="sync-drive">{tr("Sync with Google Drive")}</button>
+          {cfg.last && cfg.lastHow === "drive" ? <p className="text-[11px] text-[var(--c-mut)]">{tr("Last synced: {d}", { d: new Date(cfg.last).toLocaleString() })}</p> : null}
         </div>
       )}
-      {busy ? <p className="text-[12.5px] text-slate-300 flex items-center gap-2" data-testid="sync-busy"><Loader2 size={14} className="animate-spin" />{busy}</p> : null}
-      {err ? <p className="text-[12.5px] text-rose-300 flex items-start gap-2" data-testid="sync-err"><AlertTriangle size={14} className="shrink-0 mt-0.5" />{err}</p> : null}
-      {done ? <p className="text-[12.5px] text-emerald-300 flex items-center gap-2" data-testid="sync-done"><CheckCircle2 size={14} />{done}</p> : null}
+      {busy ? <p className="text-[12.5px] text-[var(--c-ink)] flex items-center gap-2" data-testid="sync-busy"><Loader2 size={14} className="animate-spin" />{busy}</p> : null}
+      {err ? <p className="text-[12.5px] text-[var(--c-neg)] flex items-start gap-2" data-testid="sync-err"><AlertTriangle size={14} className="shrink-0 mt-0.5" />{err}</p> : null}
+      {done ? <p className="text-[12.5px] text-[var(--c-pos)] flex items-center gap-2" data-testid="sync-done"><CheckCircle2 size={14} />{done}</p> : null}
     </div>);
 }

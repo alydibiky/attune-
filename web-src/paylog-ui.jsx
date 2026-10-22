@@ -8,6 +8,7 @@ import { tr } from "./i18n.js";
 import { inbox, toTxns, autoPick, appendToLedger } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
 import { payOpts } from "./locale.js";
+import * as U from "./ui-kit.jsx";
 
 const DONE_KEY = "attune:paylog:done", OFF_KEY = "attune:paylog:not-now", AUTO_KEY = "attune:paylog:auto", LOG_KEY = "attune:paylog:auto-log";
 const readDone = () => { try { return JSON.parse(localStorage.getItem(DONE_KEY) || "[]"); } catch (e) { return []; } };
@@ -34,10 +35,10 @@ export function RestrictedHelp({ N }) {
   let asked = false; try { asked = localStorage.getItem(ASKED_KEY) === "1"; } catch (e) {}
   if (!asked || !N || !N.openAppInfo) return null;
   return (
-    <div className="mt-2 text-[12.5px] leading-relaxed" style={{ color: "var(--c-mut, #94A3B8)" }} data-testid="pay-restricted-help">
-      <b style={{ color: "var(--c-ink, #E2E8F0)" }}>{tr("Attune is greyed out (\"restricted setting\")?")}</b>{" "}
+    <div className="mt-2 text-[12.5px] leading-relaxed text-[var(--c-mut)]" data-testid="pay-restricted-help">
+      <b className="text-[var(--c-ink)]">{tr("Attune is greyed out (\"restricted setting\")?")}</b>{" "}
       {tr("Android does this for apps installed from a file instead of Google Play. In App info tap ⋮ (top right) → Allow restricted settings, then turn Attune on here again.")}
-      <button onClick={() => { try { N.openAppInfo(); } catch (e) {} }} className="ms-1 underline font-semibold" style={{ color: "var(--c-acc, #2DD4BF)" }} data-testid="pay-open-appinfo">{tr("Open App info")}</button>
+      <button onClick={() => { try { N.openAppInfo(); } catch (e) {} }} className="ms-1 min-h-[44px] underline font-bold text-[var(--c-acc)]" data-testid="pay-open-appinfo">{tr("Open App info")}</button>
     </div>);
 }
 export function runAutoPay(N) {
@@ -89,36 +90,36 @@ export function PayInbox({ N, onAdd, ready = true }) {
   if (!on) {
     if (notNow) return null;
     return (
-      <div className="shrink-0 mx-2 my-2 rounded-xl border border-teal-800/60 bg-teal-500/10 p-3" data-testid="paylog-setup">
-        <p className="text-[13.5px] font-semibold text-slate-100 flex items-center gap-2"><Bell size={15} className="text-teal-300" />{tr("Log spending by itself")}</p>
-        <p className="text-[12px] text-slate-400 mt-1 leading-relaxed">{tr("Turn on notification access and Attune reads your bank, InstaPay and wallet notifications on this phone, then asks you to add each payment. Never SMS; nothing leaves the phone.")}</p>
+      <div className="calm shrink-0 px-2 py-2" data-testid="paylog-setup"><div className={U.cardPad}>
+        <p className="text-[14px] font-extrabold flex items-center gap-2 m-0"><Bell size={15} className="text-[var(--c-acc)]" />{tr("Log spending by itself")}</p>
+        <p className={"text-[12.5px] mt-1 leading-relaxed m-0 " + U.muted}>{tr("Turn on notification access and Attune reads your bank, InstaPay and wallet notifications on this phone, then asks you to add each payment. Never SMS; nothing leaves the phone.")}</p>
         <div className="flex gap-2 mt-2.5">
-          <button onClick={() => openAccess(N)} className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-[12.5px] font-semibold" data-testid="paylog-turn-on">{tr("Turn on")}</button>
-          <button onClick={() => { setNotNow(true); try { localStorage.setItem(OFF_KEY, "1"); } catch (e) {} }} className="px-3 py-1.5 rounded-lg text-slate-400 text-[12.5px]">{tr("Not now")}</button>
+          <button onClick={() => openAccess(N)} className={U.btnP} data-testid="paylog-turn-on">{tr("Turn on")}</button>
+          <button onClick={() => { setNotNow(true); try { localStorage.setItem(OFF_KEY, "1"); } catch (e) {} }} className={U.btnS + " " + U.muted}>{tr("Not now")}</button>
         </div>
         <RestrictedHelp N={N} />
-      </div>);
+      </div></div>);
   }
   if (!items.length) return autoN ? (
-    <div className="shrink-0 mx-2 my-2 rounded-xl border border-teal-800/60 bg-slate-900 px-3 py-2.5 flex items-center gap-2" data-testid="paylog-auto-done">
-      <Check size={15} className="text-teal-300" /><span className="flex-1 text-[13px] text-slate-100">{tr("{n} payments added by themselves", { n: autoN })}</span>
-      <button onClick={toggleAuto} className="text-[11.5px] text-slate-400 underline" data-testid="paylog-auto-toggle">{auto ? tr("Ask me first") : tr("Add by themselves")}</button></div>) : null;
+    <div className="calm shrink-0 px-2 py-2" data-testid="paylog-auto-done"><div className={U.card + " px-3.5 py-1 flex items-center gap-2"}>
+      <Check size={15} className="text-[var(--c-pos)] shrink-0" /><span className="flex-1 text-[13.5px] font-semibold">{tr("{n} payments added by themselves", { n: autoN })}</span>
+      <button onClick={toggleAuto} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted} data-testid="paylog-auto-toggle">{auto ? tr("Ask me first") : tr("Add by themselves")}</button></div></div>) : null;
   return (
-    <div className="shrink-0 mx-2 my-2 rounded-xl border border-teal-800/60 bg-slate-900" data-testid="paylog">
-      <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center gap-2 px-3 py-2.5 text-start" data-testid="paylog-open">
-        <Bell size={15} className="text-teal-300" /><span className="flex-1 text-[13px] text-slate-100 font-semibold">{tr("{n} payments read from your notifications", { n: items.length })}</span>
-        <span className="text-[12px] text-teal-300">{open ? tr("Hide") : tr("Review")}</span></button>
+    <div className="calm shrink-0 px-2 py-2" data-testid="paylog"><div className={U.card}>
+      <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[52px] flex items-center gap-2 px-3.5 py-2.5 text-start" data-testid="paylog-open">
+        <Bell size={15} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[13.5px] font-extrabold">{tr("{n} payments read from your notifications", { n: items.length })}</span>
+        <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
       {open ? (
-        <div className="px-3 pb-3 space-y-2">
+        <div className="px-3.5 pb-3.5 space-y-2">
           {items.slice(0, 30).map((e) => (
-            <div key={e.id} className="flex items-center gap-2 rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-2" data-testid="paylog-item">
-              <span className="flex-1 min-w-0"><b className={"block text-[13.5px] tabular-nums " + (e.direction === "in" ? "text-emerald-300" : "text-slate-100")}>{e.direction === "in" ? "+" : "−"}{e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} {e.currency}</b>
-                <span className="block text-[11.5px] text-slate-400 truncate" dir="auto">{[e.party, e.app, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span></span>
-              <button onClick={() => add([e])} aria-label={tr("Add")} className="w-8 h-8 rounded-full bg-teal-500 text-slate-950 grid place-items-center" data-testid="paylog-add"><Check size={15} /></button>
-              <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 grid place-items-center" data-testid="paylog-dismiss"><X size={15} /></button>
+            <div key={e.id} className="flex items-center gap-2 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item">
+              <span className="flex-1 min-w-0"><b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "text-[var(--c-ink)]")} dir="ltr">{e.direction === "in" ? "+" : "−"}{e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} {e.currency}</b>
+                <span className={"block text-[12px] truncate " + U.muted} dir="auto">{[e.party, e.app, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span></span>
+              <button onClick={() => add([e])} aria-label={tr("Add")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center" data-testid="paylog-add"><Check size={15} /></button>
+              <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] grid place-items-center" data-testid="paylog-dismiss"><X size={15} /></button>
             </div>))}
-          <label className="flex items-center gap-2 text-[12px] text-slate-400 pt-1"><input type="checkbox" checked={auto} onChange={toggleAuto} data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank and InstaPay messages with a name)")}</label>
-          {items.length > 1 ? <button onClick={() => add(items)} className="w-full py-2 rounded-lg bg-teal-500/15 text-teal-200 text-[13px] font-semibold" data-testid="paylog-add-all">{tr("Add all {n}", { n: items.length })}</button> : null}
+          <label className={"flex items-center gap-2 text-[12.5px] min-h-[44px] pt-1 " + U.muted}><input type="checkbox" checked={auto} onChange={toggleAuto} className="w-5 h-5 shrink-0 accent-[var(--c-acc)]" data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank and InstaPay messages with a name)")}</label>
+          {items.length > 1 ? <button onClick={() => add(items)} className={U.btnP + " w-full"} data-testid="paylog-add-all">{tr("Add all {n}", { n: items.length })}</button> : null}
         </div>) : null}
-    </div>);
+    </div></div>);
 }

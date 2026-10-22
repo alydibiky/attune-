@@ -131,7 +131,7 @@ export function MissionsPage({ flash }) {
           {text.trim() ? <button className="c-btn ms-auto" disabled={!parsed || !parsed.deadline} onClick={add} data-testid="missions-start">{tr("Start the mission")}</button> : null}
         </div>
       </div>
-      {conflict ? <div className="c-card flex gap-2 text-[13px]" data-testid="missions-conflict"><AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-500" />
+      {conflict ? <div className="c-card flex gap-2 text-[13px]" data-testid="missions-conflict"><AlertTriangle size={16} className="shrink-0 mt-0.5 text-[var(--c-warn)]" />
         <span>{tr("Your money missions need {a} a month together, but you keep about {b}. Pause one, or move a date.", { a: n(conflict.need), b: n(conflict.keep) })}</span></div> : null}
       {rows.length ? rows.map(({ m, e }) => <Card key={m.id} m={m} e={e} onChange={(x) => put(data.items.map((y) => (y.id === x.id ? x : y)))} onDelete={(x) => put(data.items.filter((y) => y.id !== x.id))}
         openScout={() => window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "scout" } }))} />)

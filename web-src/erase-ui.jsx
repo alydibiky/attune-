@@ -72,11 +72,11 @@ export function EraseSheet({ src, file, photo, nativeCall, onDone, onClose, flas
   };
   return (
     <div className="fixed inset-0 z-[70] bg-black/90 flex flex-col" data-testid="erase-sheet">
-      <div className="flex items-center justify-between px-3 py-2 text-slate-200">
+      <div className="flex items-center justify-between px-3 py-2 text-[var(--c-ink)]">
         <span className="text-[14px] font-semibold flex items-center gap-1.5"><Eraser size={16} />{tr("Erase")}</span>
         <button onClick={onClose} aria-label={tr("Close")} className="p-2" data-testid="erase-close"><X size={18} /></button>
       </div>
-      <p className="px-3 text-[12px] text-slate-400">{tr("Paint over the person or thing to remove, then tap Remove.")}</p>
+      <p className="px-3 text-[12px] text-[var(--c-mut)]">{tr("Paint over the person or thing to remove, then tap Remove.")}</p>
       <div className="flex-1 min-h-0 flex items-center justify-center p-3">
         <div className="relative w-full max-w-3xl" style={nat ? { aspectRatio: nat.w + " / " + nat.h, maxHeight: "100%" } : {}}>
           <img src={src} alt="" className="absolute inset-0 w-full h-full object-contain select-none" draggable={false} />
@@ -86,15 +86,15 @@ export function EraseSheet({ src, file, photo, nativeCall, onDone, onClose, flas
         </div>
       </div>
       <div className="px-3 pb-4 space-y-2">
-        <label className="flex items-center gap-2 text-[12px] text-slate-300">{tr("Brush")}
+        <label className="flex items-center gap-2 text-[12px] text-[var(--c-ink)]">{tr("Brush")}
           <input type="range" min="2" max="15" value={size} onChange={(e) => setSize(+e.target.value)} className="flex-1" data-testid="erase-size" /></label>
         {onEditArea ? <input value={what} onChange={(e) => setWhat(e.target.value)} dir="auto" data-testid="erase-what"
-          placeholder={tr("What should the painted part become? Empty = remove it. e.g. a sunset sky")} className="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-slate-100" /> : null}
-        {err ? <p className="text-[12px] text-rose-300" data-testid="erase-err">{err}</p> : null}
+          placeholder={tr("What should the painted part become? Empty = remove it. e.g. a sunset sky")} className="w-full rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-3 py-2 text-sm text-[var(--c-ink)]" /> : null}
+        {err ? <p className="text-[12px] text-[var(--c-neg)]" data-testid="erase-err">{err}</p> : null}
         <div className="flex gap-2">
-          <button onClick={undo} disabled={!n || busy} className="px-3 py-2.5 rounded-xl border border-slate-700 text-slate-200 disabled:opacity-40" aria-label={tr("Undo")} data-testid="erase-undo"><Undo2 size={16} /></button>
-          <button onClick={clear} disabled={!n || busy} className="px-3 py-2.5 rounded-xl border border-slate-700 text-slate-200 text-[13px] disabled:opacity-40">{tr("Clear all")}</button>
-          <button onClick={go} disabled={busy || !nat} className="flex-1 py-2.5 rounded-xl bg-violet-500 text-white font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2" data-testid="erase-go">
+          <button onClick={undo} disabled={!n || busy} className="px-3 py-2.5 rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] disabled:opacity-40" aria-label={tr("Undo")} data-testid="erase-undo"><Undo2 size={16} /></button>
+          <button onClick={clear} disabled={!n || busy} className="px-3 py-2.5 rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] disabled:opacity-40">{tr("Clear all")}</button>
+          <button onClick={go} disabled={busy || !nat} className="flex-1 py-2.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm disabled:opacity-50 flex items-center justify-center gap-2 min-h-[44px]" data-testid="erase-go">
             {busy ? <Loader2 size={15} className="animate-spin" /> : <Eraser size={15} />}{busy ? (isRemoval(what) ? tr("Removing…") : tr("Changing it…")) : isRemoval(what) ? tr("Remove") : tr("Change it")}</button>
         </div>
       </div>

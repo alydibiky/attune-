@@ -403,36 +403,36 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   // the country badge opens Offline maps, a white sheet for your places, results and the picked place.
   const sheetH = sheet === "full" ? "88%" : sheet === "half" ? "50%" : "118px";
   const cname = (c) => (lang === "ar" ? c.ar : c.en);
-  const chipCls = "shrink-0 h-10 px-4 rounded-full bg-white text-[13.5px] font-semibold text-slate-900 shadow-[0_2px_8px_rgba(17,24,39,.14)]";
-  const fab = "w-12 h-12 rounded-full bg-white text-slate-700 flex items-center justify-center shadow-[0_3px_10px_rgba(17,24,39,.2)]";
+  const chipCls = "shrink-0 h-10 px-4 rounded-full bg-[var(--c-surf)] text-[13.5px] font-semibold text-[var(--c-ink)] shadow-[0_2px_8px_rgba(17,24,39,.14)]";
+  const fab = "w-12 h-12 rounded-full bg-[var(--c-surf)] text-[var(--c-ink)] flex items-center justify-center shadow-[0_3px_10px_rgba(17,24,39,.2)]";
   const others = sel && sel.from ? sel.from.filter((r) => r !== sel.src).slice(0, 3) : [];
   return (
     <div ref={holder} data-testid="map-page" data-look="a" style={{ height: "100dvh" }}>
-      <div className="att-shift fixed inset-0 z-10 bg-[#f2efe9] text-slate-900" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="att-shift fixed inset-0 z-10 bg-[#f2efe9] text-[var(--c-ink)]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* inline: MapLibre's own CSS (.maplibregl-map{position:relative}) loads later and turned the class into a 0-px-tall box —
             the map was drawn but never seen (Ali, Oct 2026) */}
         <div ref={box} style={{ position: "absolute", inset: 0 }} data-testid="map-canvas" />
         {!active && !fail ? (
-          <div className="absolute inset-x-4 top-24 z-10 mx-auto max-w-sm rounded-2xl bg-white/95 border border-slate-200 p-4 shadow-sm text-center" data-testid="map-empty">
-            <p className="text-[15px] font-bold text-slate-900">{tr("No map on this device yet")}</p>
-            <p className="text-[12.5px] text-slate-600 mt-1 leading-relaxed">{tr("Download the world map to see every country, or your country's map for streets, places and offline search.")}</p>
-            {dl && dl.code === OM.WORLD ? <p className="text-[12px] text-slate-600 mt-2 tabular-nums" data-testid="map-world-progress">{dl.pct || 0}% · {dl.detail}</p>
-              : <button onClick={() => installWorld(false)} disabled={!!dl} data-testid="map-dl-world" className="mt-3 h-10 px-4 rounded-full bg-blue-600 text-white text-[13px] font-bold disabled:opacity-40">{tr("Download the world map")}</button>}
+          <div className="absolute inset-x-4 top-24 z-10 mx-auto max-w-sm rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 shadow-sm text-center" data-testid="map-empty">
+            <p className="text-[15px] font-bold text-[var(--c-ink)]">{tr("No map on this device yet")}</p>
+            <p className="text-[12.5px] text-[var(--c-mut)] mt-1 leading-relaxed">{tr("Download the world map to see every country, or your country's map for streets, places and offline search.")}</p>
+            {dl && dl.code === OM.WORLD ? <p className="text-[12px] text-[var(--c-mut)] mt-2 tabular-nums" data-testid="map-world-progress">{dl.pct || 0}% · {dl.detail}</p>
+              : <button onClick={() => installWorld(false)} disabled={!!dl} data-testid="map-dl-world" className="mt-3 h-10 px-4 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold disabled:opacity-40">{tr("Download the world map")}</button>}
           </div>) : null}
 
         {/* search + chips */}
         <div className="absolute inset-x-0 p-3 space-y-2.5 pointer-events-none" style={{ top: "env(safe-area-inset-top)" }}>
-          <form onSubmit={(e) => { e.preventDefault(); runSearch(q); }} className="pointer-events-auto flex items-center gap-1 h-14 rounded-full bg-white ps-1.5 pe-1.5 shadow-[0_4px_14px_rgba(17,24,39,.18)]">
-            {onExit ? <button type="button" onClick={onExit} aria-label={tr("Back to Attune")} data-testid="map-exit" className="w-11 h-11 rounded-full flex items-center justify-center text-slate-800 shrink-0">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true" className="rtl:-scale-x-100"><path d="M15 5l-7 7 7 7" /></svg></button> : <Search size={18} className="text-slate-500 shrink-0 ms-3" />}
+          <form onSubmit={(e) => { e.preventDefault(); runSearch(q); }} className="pointer-events-auto flex items-center gap-1 h-14 rounded-full bg-[var(--c-surf)] ps-1.5 pe-1.5 shadow-[0_4px_14px_rgba(17,24,39,.18)]">
+            {onExit ? <button type="button" onClick={onExit} aria-label={tr("Back to Attune")} data-testid="map-exit" className="w-11 h-11 rounded-full flex items-center justify-center text-[var(--c-ink)] shrink-0">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true" className="rtl:-scale-x-100"><path d="M15 5l-7 7 7 7" /></svg></button> : <Search size={18} className="text-[var(--c-mut)] shrink-0 ms-3" />}
             <input value={q} onChange={(e) => setQ(e.target.value)} dir="auto" data-testid="map-search" aria-label={tr("Search a place or address")} enterKeyHint="search"
-              placeholder={tr("Search here")} className="flex-1 min-w-0 bg-transparent text-[15.5px] text-slate-900 placeholder:text-slate-500 focus:outline-none" />
-            {q ? <button type="button" onClick={() => { setQ(""); setHits(null); }} aria-label={tr("Clear")} className="w-10 h-10 flex items-center justify-center text-slate-500"><X size={18} /></button> : null}
+              placeholder={tr("Search here")} className="flex-1 min-w-0 bg-transparent text-[15.5px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
+            {q ? <button type="button" onClick={() => { setQ(""); setHits(null); }} aria-label={tr("Clear")} className="w-10 h-10 flex items-center justify-center text-[var(--c-mut)]"><X size={18} /></button> : null}
             {listen && !q ? <button type="button" onClick={async () => { try { const said = await listen(lang === "ar" ? "ar-EG" : "", (t) => setQ(t)); if (said) { setQ(said); runSearch(said); } } catch (e) {} }}
-              aria-label={tr("Say it")} className="w-10 h-10 flex items-center justify-center text-slate-600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button> : null}
+              aria-label={tr("Say it")} className="w-10 h-10 flex items-center justify-center text-[var(--c-mut)]"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button> : null}
             <button type="button" onClick={() => { setSel(null); setHits(null); setTab("offline"); setSheet("full"); }} data-testid="map-open-offline" aria-label={tr("Offline maps")}
-              className={`relative h-10 min-w-10 px-2.5 rounded-full text-[12.5px] font-extrabold flex items-center justify-center shrink-0 ${active ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"}`}>
-              {streaming ? <Globe size={17} aria-hidden="true" /> : active ? active.toUpperCase() : <Download size={17} aria-hidden="true" />}{updates.length ? <span className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" aria-label={tr("Update ready")} /> : null}</button>
+              className={`relative h-10 min-w-10 px-2.5 rounded-full text-[12.5px] font-extrabold flex items-center justify-center shrink-0 ${active ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]"}`}>
+              {streaming ? <Globe size={17} aria-hidden="true" /> : active ? active.toUpperCase() : <Download size={17} aria-hidden="true" />}{updates.length ? <span className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-[var(--c-pos)] border-2 border-[var(--c-ln)]" aria-label={tr("Update ready")} /> : null}</button>
           </form>
           <div className="pointer-events-auto flex gap-2 overflow-x-auto [scrollbar-width:none] -mx-3 px-3 pb-1">
             {openMetro ? <button onClick={openMetro} className={chipCls} data-testid="map-chip-metro">{tr("Metro")}</button> : null}{/* v6.42: Cairo Metro is the tab next to Maps */}
@@ -441,8 +441,8 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
         </div>
 
         {sheet !== "full" ? <div className="absolute end-3 flex flex-col gap-2.5" style={{ bottom: `calc(${sheetH} + 14px)` }}>
-          <button onClick={() => { setSel(null); setHits(null); setAdding(""); setSheet("peek"); }} aria-label={tr("Add a missing place")} title={tr("Add a missing place")} data-testid="map-add-place" className={fab + " w-14 h-14 text-emerald-700"}><MapPin size={20} /><span className="text-[15px] font-black -ms-0.5">+</span></button>
-          <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className={fab + " w-14 h-14 text-blue-700"}>
+          <button onClick={() => { setSel(null); setHits(null); setAdding(""); setSheet("peek"); }} aria-label={tr("Add a missing place")} title={tr("Add a missing place")} data-testid="map-add-place" className={fab + " w-14 h-14 text-[var(--c-pos)]"}><MapPin size={20} /><span className="text-[15px] font-black -ms-0.5">+</span></button>
+          <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className={fab + " w-14 h-14 text-[var(--c-acc)]"}>
             <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg></button>
         </div> : null}
 
@@ -450,142 +450,142 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-[4]" data-testid="map-add-cross" aria-hidden="true">
             <svg width="34" height="44" viewBox="0 0 34 44"><path d="M17 43C17 43 32 27 32 16A15 15 0 0 0 2 16C2 27 17 43 17 43Z" fill="#059669" stroke="#fff" strokeWidth="3" /><circle cx="17" cy="16" r="5" fill="#fff" /></svg></div>
           <form onSubmit={(e) => { e.preventDefault(); const n = adding.trim(); if (!n) return; const c = center(); savePlace({ name: n, lat: c.lat, lon: c.lon }); setAdding(null); }}
-            className="absolute inset-x-3 z-[6] rounded-2xl bg-white shadow-[0_4px_18px_rgba(17,24,39,.2)] p-3 space-y-2" style={{ bottom: "calc(118px + 12px)" }} data-testid="map-add-form">
-            <p className="text-[13px] text-slate-600">{tr("Move the map so the pin is on the place, then name it. It is saved on this phone and found by search, offline.")}</p>
+            className="absolute inset-x-3 z-[6] rounded-[22px] bg-[var(--c-surf)] shadow-[0_4px_18px_rgba(17,24,39,.2)] p-3 space-y-2" style={{ bottom: "calc(118px + 12px)" }} data-testid="map-add-form">
+            <p className="text-[13px] text-[var(--c-mut)]">{tr("Move the map so the pin is on the place, then name it. It is saved on this phone and found by search, offline.")}</p>
             <div className="flex gap-2"><input autoFocus value={adding} onChange={(e) => setAdding(e.target.value)} dir="auto" placeholder={tr("The place's name")} data-testid="map-add-name"
-              className="flex-1 min-w-0 h-11 rounded-xl bg-slate-100 px-3 text-[15px] text-slate-900 focus:outline-none" />
-              <button type="submit" disabled={!adding.trim()} data-testid="map-add-save" className="h-11 px-4 rounded-xl bg-emerald-600 text-white font-bold disabled:opacity-40">{tr("Save")}</button>
-              <button type="button" onClick={() => setAdding(null)} aria-label={tr("Cancel")} className="w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><X size={18} /></button></div>
+              className="flex-1 min-w-0 h-11 rounded-xl bg-[var(--c-surf-2)] px-3 text-[15px] text-[var(--c-ink)] focus:outline-none" />
+              <button type="submit" disabled={!adding.trim()} data-testid="map-add-save" className="h-11 px-4 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold disabled:opacity-40">{tr("Save")}</button>
+              <button type="button" onClick={() => setAdding(null)} aria-label={tr("Cancel")} className="w-11 h-11 rounded-xl bg-[var(--c-surf-2)] text-[var(--c-mut)] flex items-center justify-center"><X size={18} /></button></div>
           </form></> : null}
         {/* the sheet */}
-        <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white shadow-[0_-4px_18px_rgba(17,24,39,.16)] flex flex-col transition-[height] duration-200 z-[5]" style={{ height: sheetH, paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="map-sheet">
-          {sheet !== "full" ? <span className="absolute -top-6 start-2 rounded-md bg-white/85 px-1.5 py-0.5 text-[10px] text-slate-600 pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps · Overture Maps" : ""}</span> : null}
+        <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-[var(--c-surf)] shadow-[0_-4px_18px_rgba(17,24,39,.16)] flex flex-col transition-[height] duration-200 z-[5]" style={{ height: sheetH, paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="map-sheet">
+          {sheet !== "full" ? <span className="absolute -top-6 start-2 rounded-md bg-[var(--c-surf)] px-1.5 py-0.5 text-[10px] text-[var(--c-mut)] pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps · Overture Maps" : ""}</span> : null}
           <button onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "peek")} aria-label={tr("Pull up")} className="w-full pt-2.5 pb-1.5 flex justify-center shrink-0">
-            <span className="w-10 h-1.5 rounded-full bg-slate-300" /></button>
+            <span className="w-10 h-1.5 rounded-full bg-[var(--c-ln)]" /></button>
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
             {updates.length && !sel && hits == null ? (
-              <button onClick={() => install(updates[0].code)} className="w-full text-start rounded-2xl bg-emerald-50 border border-emerald-200 p-3 text-[13px] text-emerald-900" data-testid="map-update-banner">
+              <button onClick={() => install(updates[0].code)} className="w-full text-start rounded-[22px] bg-[var(--c-soft)] border border-[var(--c-pos)]/50 p-3 text-[13px] text-[var(--c-pos)]" data-testid="map-update-banner">
                 <RefreshCw size={13} className="inline me-1.5" />{tr("A newer map of {c} is ready (data of {d}) — tap to update", { c: cname(OM.countryOf(updates[0].code)), d: remote[updates[0].code].date })}</button>) : null}
 
             {trip ? (
               <div className="space-y-3" data-testid="map-trip">
                 <div className="flex items-start gap-2">
-                  <div className="flex-1 min-w-0"><p className="text-[12.5px] text-slate-500">{tr("Directions to")}</p>
-                    <p className="text-[19px] font-extrabold text-slate-900 leading-snug truncate" dir="auto">{String(trip.to.name || "").split(",")[0]}</p></div>
-                  <button onClick={endTrip} aria-label={tr("Close")} data-testid="map-trip-close" className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><X size={18} /></button>
+                  <div className="flex-1 min-w-0"><p className="text-[12.5px] text-[var(--c-mut)]">{tr("Directions to")}</p>
+                    <p className="text-[19px] font-extrabold text-[var(--c-ink)] leading-snug truncate" dir="auto">{String(trip.to.name || "").split(",")[0]}</p></div>
+                  <button onClick={endTrip} aria-label={tr("Close")} data-testid="map-trip-close" className="w-10 h-10 rounded-full bg-[var(--c-surf-2)] text-[var(--c-mut)] flex items-center justify-center shrink-0"><X size={18} /></button>
                 </div>
                 <div className="flex gap-2" role="group" aria-label={tr("Travel by")}>
                   {[["car", tr("Car"), "🚗"], ["walk", tr("Walk"), "🚶"]].map(([k, l, e]) => (
                     <button key={k} onClick={() => goTrip(trip.to, k)} aria-pressed={trip.mode === k} data-testid={"map-mode-" + k}
-                      className={`flex-1 h-11 rounded-full text-[14px] font-bold ${trip.mode === k ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"}`}>{e} {l}</button>))}
+                      className={`flex-1 h-11 rounded-full text-[14px] font-bold ${trip.mode === k ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]"}`}>{e} {l}</button>))}
                 </div>
-                {trip.busy ? <p className="text-[13.5px] text-slate-600 flex items-center gap-2"><Loader2 size={16} className="animate-spin" />{tr("Finding the way…")}</p> : null}
+                {trip.busy ? <p className="text-[13.5px] text-[var(--c-mut)] flex items-center gap-2"><Loader2 size={16} className="animate-spin" />{tr("Finding the way…")}</p> : null}
                 {trip.res ? <>
-                  <div className="rounded-2xl bg-blue-50 p-3" data-testid="map-trip-summary">
-                    <p className="text-[24px] font-extrabold text-blue-800 leading-tight">{mins(trip.res.seconds)}</p>
-                    <p className="text-[13px] text-blue-900/80">{km(trip.res.metres / 1000)} · {trip.mode === "car" ? tr("by car, without traffic") : tr("on foot")} · {tr("offline")}</p>
+                  <div className="rounded-2xl bg-[var(--c-soft)] p-3" data-testid="map-trip-summary">
+                    <p className="text-[24px] font-extrabold text-[var(--c-acc)] leading-tight">{mins(trip.res.seconds)}</p>
+                    <p className="text-[13px] text-[var(--c-acc)]">{km(trip.res.metres / 1000)} · {trip.mode === "car" ? tr("by car, without traffic") : tr("on foot")} · {tr("offline")}</p>
                   </div>
-                  <ol className="divide-y divide-slate-100" data-testid="map-steps">
+                  <ol className="divide-y divide-[var(--c-ln)]" data-testid="map-steps">
                     {trip.res.steps.map((s, i, all) => (
                       <li key={i} className="flex items-start gap-3 py-2.5" data-testid="map-step">
-                        <span className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-[16px] shrink-0 rtl:-scale-x-100" aria-hidden="true">{turnIcon(s.turn)}</span>
-                        <span className="flex-1 min-w-0"><span className="block text-[14px] font-semibold text-slate-800" dir="auto">{turnText(s, i, all)}</span>
-                          <span className="block text-[12px] text-slate-500 tabular-nums">{km(s.metres / 1000)}</span></span>
+                        <span className="w-8 h-8 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] flex items-center justify-center text-[16px] shrink-0 rtl:-scale-x-100" aria-hidden="true">{turnIcon(s.turn)}</span>
+                        <span className="flex-1 min-w-0"><span className="block text-[14px] font-semibold text-[var(--c-ink)]" dir="auto">{turnText(s, i, all)}</span>
+                          <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{km(s.metres / 1000)}</span></span>
                       </li>))}
-                    <li className="flex items-center gap-3 py-2.5"><span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><MapPin size={16} /></span>
-                      <span className="text-[14px] font-semibold text-slate-800" dir="auto">{tr("Arrive at {p}", { p: String(trip.to.name || "").split(",")[0] })}</span></li>
+                    <li className="flex items-center gap-3 py-2.5"><span className="w-8 h-8 rounded-full bg-[var(--c-soft)] text-[var(--c-pos)] flex items-center justify-center shrink-0"><MapPin size={16} /></span>
+                      <span className="text-[14px] font-semibold text-[var(--c-ink)]" dir="auto">{tr("Arrive at {p}", { p: String(trip.to.name || "").split(",")[0] })}</span></li>
                   </ol>
                 </> : null}
                 {trip.need === "routes" ? (
-                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-2" data-testid="map-trip-need-routes">
-                    <p className="text-[13.5px] text-slate-700">{tr("Directions work inside Attune, with no signal, once the directions of {c} are on the phone.", { c: cname(OM.countryOf(trip.code)) })}</p>
-                    {dl && dl.code === trip.code ? <p className="text-[13px] text-blue-700">{tr("Downloading…")} {dl.pct}% {dl.detail}</p>
-                      : <button onClick={() => getRoutes(trip.code)} data-testid="map-get-routes" className="w-full h-11 rounded-full bg-blue-600 text-white font-bold text-[14px]">{tr("Download directions")}{remote[trip.code] && (remote[trip.code].files || []).find((x) => /-route\.bin$/.test(x.name)) ? " · " + OM.prettyMB((remote[trip.code].files || []).find((x) => /-route\.bin$/.test(x.name)).bytes) : ""}</button>}
+                  <div className="rounded-[22px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] p-3 space-y-2" data-testid="map-trip-need-routes">
+                    <p className="text-[13.5px] text-[var(--c-ink)]">{tr("Directions work inside Attune, with no signal, once the directions of {c} are on the phone.", { c: cname(OM.countryOf(trip.code)) })}</p>
+                    {dl && dl.code === trip.code ? <p className="text-[13px] text-[var(--c-acc)]">{tr("Downloading…")} {dl.pct}% {dl.detail}</p>
+                      : <button onClick={() => getRoutes(trip.code)} data-testid="map-get-routes" className="w-full h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px]">{tr("Download directions")}{remote[trip.code] && (remote[trip.code].files || []).find((x) => /-route\.bin$/.test(x.name)) ? " · " + OM.prettyMB((remote[trip.code].files || []).find((x) => /-route\.bin$/.test(x.name)).bytes) : ""}</button>}
                   </div>) : null}
-                {trip.need === "map" ? <p className="text-[13.5px] text-slate-700" data-testid="map-trip-need-map">{tr("Download this country's offline map first (the country button in the search bar) — then directions work inside Attune.")}</p> : null}
-                {trip.error ? <p className="text-[13.5px] text-amber-800" data-testid="map-trip-error">{trip.error === "location" ? tr("Couldn't get your location — turn location on, then try again.")
+                {trip.need === "map" ? <p className="text-[13.5px] text-[var(--c-ink)]" data-testid="map-trip-need-map">{tr("Download this country's offline map first (the country button in the search bar) — then directions work inside Attune.")}</p> : null}
+                {trip.error ? <p className="text-[13.5px] text-[var(--c-warn)]" data-testid="map-trip-error">{trip.error === "location" ? tr("Couldn't get your location — turn location on, then try again.")
                   : trip.error === "far-from-road" ? tr("One of the two places is far from any road in the map.") : trip.error === "no-roads" ? tr("This place is outside the directions you downloaded.") : tr("No way was found between these two places.")}</p> : null}
-                <a href={`geo:${trip.to.lat},${trip.to.lon}?q=${trip.to.lat},${trip.to.lon}`} data-testid="map-other-app" className="block text-center text-[12.5px] text-slate-500 underline py-1">{tr("Open in another maps app")}</a>
+                <a href={`geo:${trip.to.lat},${trip.to.lon}?q=${trip.to.lat},${trip.to.lon}`} data-testid="map-other-app" className="block text-center text-[12.5px] text-[var(--c-mut)] underline py-1">{tr("Open in another maps app")}</a>
               </div>
             ) : sel ? (
               <div className="space-y-3" data-testid="map-place">
                 <div className="flex items-start gap-2">
-                  <div className="flex-1 min-w-0"><p className="text-[21px] font-extrabold text-slate-900 leading-snug" dir="auto">{String(sel.name).split(",")[0]}</p>
-                    <p className="text-[13px] text-slate-600 mt-0.5" dir="auto">{[sel.local || sel.id ? tr("saved place") : sel.kind ? String(sel.kind).split("/").pop().replace(/_/g, " ") : "", String(sel.name).split(",").slice(1, 3).join(",").trim(), me ? km(distKm(me, sel)) + " " + tr("from you") : sel.dist != null ? km(sel.dist) : ""].filter(Boolean).join(" · ")}</p></div>
-                  <button onClick={() => setSel(null)} aria-label={tr("Close")} className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><X size={18} /></button>
+                  <div className="flex-1 min-w-0"><p className="text-[21px] font-extrabold text-[var(--c-ink)] leading-snug" dir="auto">{String(sel.name).split(",")[0]}</p>
+                    <p className="text-[13px] text-[var(--c-mut)] mt-0.5" dir="auto">{[sel.local || sel.id ? tr("saved place") : sel.kind ? String(sel.kind).split("/").pop().replace(/_/g, " ") : "", String(sel.name).split(",").slice(1, 3).join(",").trim(), me ? km(distKm(me, sel)) + " " + tr("from you") : sel.dist != null ? km(sel.dist) : ""].filter(Boolean).join(" · ")}</p></div>
+                  <button onClick={() => setSel(null)} aria-label={tr("Close")} className="w-10 h-10 rounded-full bg-[var(--c-surf-2)] text-[var(--c-mut)] flex items-center justify-center shrink-0"><X size={18} /></button>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => goTrip(sel)} data-testid="map-directions" className="flex-1 h-12 rounded-full bg-blue-600 text-white font-bold text-[14.5px] flex items-center justify-center">{tr("Directions")}</button>
-                  {sel.found ? <button onClick={() => savePlace(sel)} data-testid="map-save-found" className="flex-1 h-12 rounded-full border-[1.5px] border-slate-300 text-blue-700 font-bold text-[14.5px]">{tr("Save")}</button>
-                    : <button onClick={() => { if (!window.confirm(tr("Delete this place?"))) return; setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }} className="flex-1 h-12 rounded-full border-[1.5px] border-slate-300 text-slate-700 font-semibold text-[14.5px]">{tr("Remove")}</button>}
+                  <button onClick={() => goTrip(sel)} data-testid="map-directions" className="flex-1 h-12 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14.5px] flex items-center justify-center">{tr("Directions")}</button>
+                  {sel.found ? <button onClick={() => savePlace(sel)} data-testid="map-save-found" className="flex-1 h-12 rounded-full border-[1.5px] border-[var(--c-ln)] text-[var(--c-acc)] font-bold text-[14.5px]">{tr("Save")}</button>
+                    : <button onClick={() => { if (!window.confirm(tr("Delete this place?"))) return; setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }} className="flex-1 h-12 rounded-full border-[1.5px] border-[var(--c-ln)] text-[var(--c-ink)] font-semibold text-[14.5px]">{tr("Remove")}</button>}
                   <button onClick={() => { const t = `${sel.name}\nhttps://www.openstreetmap.org/?mlat=${sel.lat}&mlon=${sel.lon}#map=17/${sel.lat}/${sel.lon}`; if (N && N.share) N.share(t); else { try { navigator.clipboard.writeText(t); } catch (e) {} flash(tr("Copied")); } }}
-                    className="flex-1 h-12 rounded-full border-[1.5px] border-slate-300 text-blue-700 font-bold text-[14.5px] flex items-center justify-center gap-1.5"><Share2 size={16} />{tr("Share")}</button>
+                    className="flex-1 h-12 rounded-full border-[1.5px] border-[var(--c-ln)] text-[var(--c-acc)] font-bold text-[14.5px] flex items-center justify-center gap-1.5"><Share2 size={16} />{tr("Share")}</button>
                 </div>
-                {others.length ? <div className="pt-2 border-t border-slate-200" data-testid="map-others"><p className="text-[12.5px] text-slate-500 mb-1">{tr("Other matches")}</p>
-                  {others.map((r, i) => <button key={i} onClick={() => pick(r, sel.from)} className="w-full flex items-center justify-between gap-3 py-2.5 text-start"><span className="text-[14px] font-semibold text-slate-800 truncate" dir="auto">{String(r.name).split(",").slice(0, 2).join(",")}</span><span className="text-[12.5px] text-slate-500 shrink-0 tabular-nums">{km(r.dist)}</span></button>)}</div> : null}
-                <p className="text-[11px] text-slate-400 font-mono">{sel.lat.toFixed(5)}, {sel.lon.toFixed(5)}</p>
+                {others.length ? <div className="pt-2 border-t border-[var(--c-ln)]" data-testid="map-others"><p className="text-[12.5px] text-[var(--c-mut)] mb-1">{tr("Other matches")}</p>
+                  {others.map((r, i) => <button key={i} onClick={() => pick(r, sel.from)} className="w-full flex items-center justify-between gap-3 py-2.5 text-start"><span className="text-[14px] font-semibold text-[var(--c-ink)] truncate" dir="auto">{String(r.name).split(",").slice(0, 2).join(",")}</span><span className="text-[12.5px] text-[var(--c-mut)] shrink-0 tabular-nums">{km(r.dist)}</span></button>)}</div> : null}
+                <p className="text-[11px] text-[var(--c-mut)] font-mono">{sel.lat.toFixed(5)}, {sel.lon.toFixed(5)}</p>
               </div>
             ) : hits != null ? (
               <div className="space-y-1">
-                <div className="flex items-center justify-between"><p className="text-[13px] text-slate-600">{busy ? tr("Searching…") : tr("{n} results", { n: hits.length })}</p>
-                  <button onClick={() => setHits(null)} className="text-[13px] text-blue-700 font-semibold p-1">{tr("Close")}</button></div>
-                {busy ? <Loader2 size={18} className="animate-spin text-slate-400" /> : null}
-                {!busy && !hits.length ? <p className="text-[13.5px] text-slate-600 py-2" data-testid="map-none">{tr("Nothing found for that — try the area's name too (e.g. “… New Cairo”), or move the map there and search again.")}</p> : null}
+                <div className="flex items-center justify-between"><p className="text-[13px] text-[var(--c-mut)]">{busy ? tr("Searching…") : tr("{n} results", { n: hits.length })}</p>
+                  <button onClick={() => setHits(null)} className="text-[13px] text-[var(--c-acc)] font-semibold p-1">{tr("Close")}</button></div>
+                {busy ? <Loader2 size={18} className="animate-spin text-[var(--c-mut)]" /> : null}
+                {!busy && !hits.length ? <p className="text-[13.5px] text-[var(--c-mut)] py-2" data-testid="map-none">{tr("Nothing found for that — try the area's name too (e.g. “… New Cairo”), or move the map there and search again.")}</p> : null}
                 {hits.map((r, i) => (
-                  <button key={i} onClick={() => pick(r, hits)} data-testid="map-hit" className="w-full flex items-center gap-3 text-start py-3 border-b border-slate-100">
-                    <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${r.local ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"}`}><MapPin size={17} /></span>
-                    <span className="flex-1 min-w-0"><span className="block text-[14.5px] font-semibold text-slate-900 truncate" dir="auto">{String(r.name).split(",")[0]}</span>
-                      <span className="block text-[12px] text-slate-500 truncate" dir="auto">{[r.local ? tr("saved place") : r.kind ? String(r.kind).split("/").pop().replace(/_/g, " ") : "", String(r.name).split(",").slice(1, 3).join(",").trim(), r.offline ? tr("offline") : ""].filter(Boolean).join(" · ")}</span></span>
-                    <span className="text-[12.5px] text-slate-600 tabular-nums shrink-0">{km(r.dist)}</span>
+                  <button key={i} onClick={() => pick(r, hits)} data-testid="map-hit" className="w-full flex items-center gap-3 text-start py-3 border-b border-[var(--c-ln)]">
+                    <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${r.local ? "bg-[var(--c-soft)] text-[var(--c-pos)]" : "bg-[var(--c-soft)] text-[var(--c-acc)]"}`}><MapPin size={17} /></span>
+                    <span className="flex-1 min-w-0"><span className="block text-[14.5px] font-semibold text-[var(--c-ink)] truncate" dir="auto">{String(r.name).split(",")[0]}</span>
+                      <span className="block text-[12px] text-[var(--c-mut)] truncate" dir="auto">{[r.local ? tr("saved place") : r.kind ? String(r.kind).split("/").pop().replace(/_/g, " ") : "", String(r.name).split(",").slice(1, 3).join(",").trim(), r.offline ? tr("offline") : ""].filter(Boolean).join(" · ")}</span></span>
+                    <span className="text-[12.5px] text-[var(--c-mut)] tabular-nums shrink-0">{km(r.dist)}</span>
                   </button>))}
               </div>
             ) : (
               <>
                 {sheet === "peek" ? (
                   <div className="space-y-2.5">
-                    <div className="flex items-center justify-between gap-2"><span className="text-[16px] font-bold text-slate-900">{tr("Your places")}</span>
-                      <span className="text-[12px] font-semibold text-emerald-700 truncate" data-testid="map-mode">{streaming ? tr("online map") + " · " + cname(OM.countryOf(active) || { en: active, ar: active }) : active ? tr("offline map") + " · " + cname(OM.countryOf(active) || { en: active, ar: active }) : online ? tr("online") : tr("no signal")}</span></div>
+                    <div className="flex items-center justify-between gap-2"><span className="text-[16px] font-bold text-[var(--c-ink)]">{tr("Your places")}</span>
+                      <span className="text-[12px] font-semibold text-[var(--c-pos)] truncate" data-testid="map-mode">{streaming ? tr("online map") + " · " + cname(OM.countryOf(active) || { en: active, ar: active }) : active ? tr("offline map") + " · " + cname(OM.countryOf(active) || { en: active, ar: active }) : online ? tr("online") : tr("no signal")}</span></div>
                     <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
-                      {st.places.length ? st.places.slice(0, 12).map((p) => <button key={p.id} onClick={() => { setSel(p); setSheet("half"); flyTo(p, 15); }} className="shrink-0 max-w-[60%] truncate px-3.5 py-2 rounded-2xl bg-slate-100 text-[13.5px] font-semibold text-slate-800" dir="auto">{p.name}</button>)
-                        : <span className="text-[13px] text-slate-500">{tr("Search a place and tap “Save” — saved places work with no signal.")}</span>}
+                      {st.places.length ? st.places.slice(0, 12).map((p) => <button key={p.id} onClick={() => { setSel(p); setSheet("half"); flyTo(p, 15); }} className="shrink-0 max-w-[60%] truncate px-3.5 py-2 rounded-2xl bg-[var(--c-surf-2)] text-[13.5px] font-semibold text-[var(--c-ink)]" dir="auto">{p.name}</button>)
+                        : <span className="text-[13px] text-[var(--c-mut)]">{tr("Search a place and tap “Save” — saved places work with no signal.")}</span>}
                     </div>
                   </div>
                 ) : <>
-                <div className="flex rounded-full bg-slate-100 p-1" role="tablist">
+                <div className="flex rounded-full bg-[var(--c-surf-2)] p-1" role="tablist">
                   {[["places", tr("Your places")], ["offline", tr("Offline maps") + (updates.length ? " •" : "")]].map(([k, l]) => (
                     <button key={k} role="tab" aria-selected={tab === k} onClick={() => { setTab(k); if (sheet === "peek") setSheet("half"); }} data-testid={"map-tab-" + k}
-                      className={`flex-1 h-10 rounded-full text-[13.5px] ${tab === k ? "bg-white text-slate-900 font-bold shadow-sm" : "text-slate-600"}`}>{l}</button>))}
+                      className={`flex-1 h-10 rounded-full text-[13.5px] ${tab === k ? "bg-[var(--c-surf)] text-[var(--c-ink)] font-bold shadow-sm" : "text-[var(--c-mut)]"}`}>{l}</button>))}
                 </div>
                 {tab === "places" ? (
                   st.places.length ? st.places.map((p) => (
-                    <button key={p.id} onClick={() => { setSel(p); flyTo(p, 15); }} className="w-full flex items-center gap-3 text-start py-3 border-b border-slate-100">
-                      <span className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0"><MapPin size={17} /></span><span className="flex-1 min-w-0 text-[14.5px] font-semibold text-slate-800 truncate" dir="auto">{p.name}</span>
-                      <span className="text-[12.5px] text-slate-500">{me ? km(distKm(me, p)) : ""}</span></button>))
-                    : <p className="text-[13.5px] text-slate-600 py-2">{tr("Search a place and tap “Save” — saved places work with no signal.")}</p>
+                    <button key={p.id} onClick={() => { setSel(p); flyTo(p, 15); }} className="w-full flex items-center gap-3 text-start py-3 border-b border-[var(--c-ln)]">
+                      <span className="w-9 h-9 rounded-full bg-[var(--c-soft)] text-[var(--c-pos)] flex items-center justify-center shrink-0"><MapPin size={17} /></span><span className="flex-1 min-w-0 text-[14.5px] font-semibold text-[var(--c-ink)] truncate" dir="auto">{p.name}</span>
+                      <span className="text-[12.5px] text-[var(--c-mut)]">{me ? km(distKm(me, p)) : ""}</span></button>))
+                    : <p className="text-[13.5px] text-[var(--c-mut)] py-2">{tr("Search a place and tap “Save” — saved places work with no signal.")}</p>
                 ) : (
                   <div className="space-y-2" data-testid="map-offline">
-                    <p className="text-[12.5px] text-slate-600 leading-relaxed">{tr("Download a country once: roads, buildings, shops and search, with no signal. A new map comes every week.")}</p>
+                    <p className="text-[12.5px] text-[var(--c-mut)] leading-relaxed">{tr("Download a country once: roads, buildings, shops and search, with no signal. A new map comes every week.")}</p>
                     <input value={cq} onChange={(e) => setCq(e.target.value)} dir="auto" data-testid="map-country-find" aria-label={tr("Find a country")}
-                      placeholder={tr("Find a country — {n} available", { n: OM.COUNTRIES.length })} className="w-full h-12 rounded-2xl bg-slate-100 px-4 text-[14.5px] text-slate-900 placeholder:text-slate-500" />
-                    {onlineOk ? <p className="text-[12.5px] text-emerald-700 leading-relaxed" data-testid="map-online-note">{tr("With signal, every country here shows online without downloading — every street, compound and place. Download only to use it with no signal.")}</p> : null}
+                      placeholder={tr("Find a country — {n} available", { n: OM.COUNTRIES.length })} className="w-full h-12 rounded-2xl bg-[var(--c-surf-2)] px-4 text-[14.5px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" />
+                    {onlineOk ? <p className="text-[12.5px] text-[var(--c-pos)] leading-relaxed" data-testid="map-online-note">{tr("With signal, every country here shows online without downloading — every street, compound and place. Download only to use it with no signal.")}</p> : null}
                     {countryList.map((c) => {
                       const have = packs.find((p) => p.code === c.code), rm = remote[c.code], upd = have && OM.isNewer(rm, have), mine = dl && dl.code === c.code;
                       return (
-                        <div key={c.code} className={`rounded-2xl border-[1.5px] p-3 ${active === c.code ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`} data-testid={"map-country-" + c.code}>
+                        <div key={c.code} className={`rounded-2xl border-[1.5px] p-3 ${active === c.code ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`} data-testid={"map-country-" + c.code}>
                           <div className="flex items-center gap-2">
                             <button onClick={() => (have ? usePack(c.code) : onlineOk ? usePack("net:" + c.code) : null)} className="flex-1 min-w-0 text-start" data-testid={"map-view-" + c.code}>
-                              <span className="block text-[15px] text-slate-900 font-bold truncate">{cname(c)}</span>
-                              <span className="block text-[12px] text-slate-600">{have ? tr("On this phone · data of {d} · {s}", { d: have.date, s: OM.prettyMB(have.bytes) }) + (active === c.code ? " · " + tr("showing") : "")
+                              <span className="block text-[15px] text-[var(--c-ink)] font-bold truncate">{cname(c)}</span>
+                              <span className="block text-[12px] text-[var(--c-mut)]">{have ? tr("On this phone · data of {d} · {s}", { d: have.date, s: OM.prettyMB(have.bytes) }) + (active === c.code ? " · " + tr("showing") : "")
                                 : (rm && rm.date ? tr("{s} · data of {d}", { s: OM.prettyMB(OM.packBytes(rm)), d: rm.date }) : "") + (active === "net:" + c.code ? (rm && rm.date ? " · " : "") + tr("showing online") : "")}</span>
                             </button>
-                            {mine ? <button onClick={pause} className="h-10 px-4 rounded-full bg-slate-100 text-slate-800 font-semibold text-[13px]">{tr("Pause")}</button>
-                              : upd ? <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-update-" + c.code} className="h-10 px-4 rounded-full bg-blue-600 text-white text-[13px] font-bold flex items-center gap-1 disabled:opacity-40"><RefreshCw size={13} />{tr("Update")}</button>
-                              : have ? <button onClick={() => removePack(c.code)} aria-label={tr("Delete")} data-testid={"map-remove-" + c.code} className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center"><Trash2 size={15} /></button>
-                              : <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-dl-" + c.code} className="h-10 px-4 rounded-full bg-blue-50 text-blue-700 text-[13px] font-bold flex items-center gap-1 disabled:opacity-40"><Download size={13} />{tr("Download")}</button>}
+                            {mine ? <button onClick={pause} className="h-10 px-4 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] font-semibold text-[13px]">{tr("Pause")}</button>
+                              : upd ? <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-update-" + c.code} className="h-10 px-4 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold flex items-center gap-1 disabled:opacity-40"><RefreshCw size={13} />{tr("Update")}</button>
+                              : have ? <button onClick={() => removePack(c.code)} aria-label={tr("Delete")} data-testid={"map-remove-" + c.code} className="h-10 w-10 rounded-full bg-[var(--c-surf-2)] text-[var(--c-mut)] flex items-center justify-center"><Trash2 size={15} /></button>
+                              : <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-dl-" + c.code} className="h-10 px-4 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)] text-[13px] font-bold flex items-center gap-1 disabled:opacity-40"><Download size={13} />{tr("Download")}</button>}
                           </div>
-                          {mine ? <div className="mt-2" data-testid="map-progress"><div className="h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-blue-600" style={{ width: (dl.pct || 0) + "%" }} /></div>
-                            <p className="text-[11.5px] text-slate-600 mt-1 tabular-nums">{dl.pct || 0}% · {dl.detail}</p></div> : null}
-                          {rm && rm.error && !have ? <p className="text-[11.5px] text-amber-700 mt-1">{tr(rm.error)}</p> : null}
+                          {mine ? <div className="mt-2" data-testid="map-progress"><div className="h-2 rounded-full bg-[var(--c-surf-2)]"><div className="h-2 rounded-full bg-[var(--c-acc)]" style={{ width: (dl.pct || 0) + "%" }} /></div>
+                            <p className="text-[11.5px] text-[var(--c-mut)] mt-1 tabular-nums">{dl.pct || 0}% · {dl.detail}</p></div> : null}
+                          {rm && rm.error && !have ? <p className="text-[11.5px] text-[var(--c-warn)] mt-1">{tr(rm.error)}</p> : null}
                         </div>);
                     })}
                   </div>

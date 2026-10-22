@@ -83,52 +83,52 @@ function Card({ rec, open, update }) {
       const col = M.mainColour(x.getImageData(0, 0, 16, 16).data); if (col) update(rec.id, (r) => ({ ...r, meta: { ...(r.meta || {}), colour: col } })); } catch (e) {} };
     img.src = thumb;
   }, [thumb]);
-  const label = <p className="text-[10px] uppercase tracking-[.08em] text-slate-500 mb-1">{kindLabel(kind).replace(/s$/, "")}</p>;
+  const label = <p className="text-[10px] uppercase tracking-[.08em] text-[var(--c-mut)] mb-1">{kindLabel(kind).replace(/s$/, "")}</p>;
   const sub = (rec.meta && rec.meta.summary) || rec.output || "";
   const hue = lp ? M.siteHue(lp.site) : 0;
   return (
     <button onClick={() => open(rec)} data-testid="mind-card" data-kind={kind}
-      className="mb-2.5 w-full break-inside-avoid text-start bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-teal-600 transition-colors">
+      className="mb-2.5 w-full break-inside-avoid text-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-2xl overflow-hidden hover:border-[var(--c-acc)] transition-colors">
       {thumb ? <img src={thumb} alt="" className="w-full block" />
         : lp ? <div className="h-20 flex items-end p-2.5" style={{ background: `linear-gradient(135deg, hsl(${hue} 35% 26%), hsl(${(hue + 40) % 360} 45% 42%))` }}>
             <span className="text-[22px] font-bold text-white/85 leading-none">{(lp.site || "?").replace(/^www\./, "").charAt(0).toUpperCase()}</span></div> : null}
       <div className="p-3">
         {kind === "quote" ? (
-          <>{label}<p className="font-serif text-[15px] leading-relaxed text-slate-100" dir="auto">“{body.replace(/^\s*["“«]+|["”»]+\s*$/g, "").slice(0, 280)}”</p></>
+          <>{label}<p className="font-serif text-[15px] leading-relaxed text-[var(--c-ink)]" dir="auto">“{body.replace(/^\s*["“«]+|["”»]+\s*$/g, "").slice(0, 280)}”</p></>
         ) : kind === "link" && lp ? (
           <>
-            <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-3" dir="auto">{title && !/^https?:/.test(title) ? title : lp.path || lp.url}</p>
-            <p className="text-[11.5px] text-slate-400 mt-0.5 flex items-center gap-1"><Link2 size={11} /> {lp.site}</p>
+            <p className="text-[13.5px] font-semibold text-[var(--c-ink)] line-clamp-3" dir="auto">{title && !/^https?:/.test(title) ? title : lp.path || lp.url}</p>
+            <p className="text-[11.5px] text-[var(--c-mut)] mt-0.5 flex items-center gap-1"><Link2 size={11} /> {lp.site}</p>
           </>
         ) : kind === "product" ? (
           <>{label}
-            <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-3" dir="auto">{title}</p>
-            {M.priceIn(body) ? <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300" dir="ltr">{M.priceIn(body)}</span> : null}
+            <p className="text-[13.5px] font-semibold text-[var(--c-ink)] line-clamp-3" dir="auto">{title}</p>
+            {M.priceIn(body) ? <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-[var(--c-pos)]/15 text-[var(--c-pos)]" dir="ltr">{M.priceIn(body)}</span> : null}
           </>
         ) : kind === "todo" && rec.meta && rec.meta.todo ? (
           /* v6.48: a to-do added from Home ("add … to my to-do list") — tick it done here too */
           <>{label}<button onClick={(e) => { e.stopPropagation(); update(rec.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: !(r.meta && r.meta.done), doneAt: Date.now() } })); }} className="w-full flex items-center gap-2 text-start min-h-[40px]" data-testid="mind-todo-tick">
-            <span className={"w-5 h-5 rounded-md shrink-0 grid place-items-center " + (rec.meta.done ? "bg-teal-500" : "border-2 border-teal-500")}>{rec.meta.done ? <Check size={13} className="text-slate-950" /> : null}</span>
-            <span className={"text-[13.5px] " + (rec.meta.done ? "line-through text-slate-500" : "text-slate-100")} dir="auto">{rec.title || rec.text}</span></button></>
+            <span className={"w-5 h-5 rounded-md shrink-0 grid place-items-center " + (rec.meta.done ? "bg-[var(--c-acc)]" : "border-2 border-[var(--c-acc)]")}>{rec.meta.done ? <Check size={13} className="text-[var(--c-on-acc)]" /> : null}</span>
+            <span className={"text-[13.5px] " + (rec.meta.done ? "line-through text-[var(--c-mut)]" : "text-[var(--c-ink)]")} dir="auto">{rec.title || rec.text}</span></button></>
         ) : kind === "todo" ? (
           <>{label}<div className="space-y-1">
             {body.split("\n").filter((l) => l.trim()).slice(0, 5).map((l, i) => (
-              <p key={i} className="text-[13px] text-slate-200 flex gap-1.5" dir="auto"><span className="text-slate-500">☐</span>{l.replace(/^\s*(-\s*)?\[ ?[x ]?\]\s*|^\s*[-•☐☑]\s*/i, "")}</p>
+              <p key={i} className="text-[13px] text-[var(--c-ink)] flex gap-1.5" dir="auto"><span className="text-[var(--c-mut)]">☐</span>{l.replace(/^\s*(-\s*)?\[ ?[x ]?\]\s*|^\s*[-•☐☑]\s*/i, "")}</p>
             ))}
           </div></>
         ) : kind === "photo" && thumb ? (
-          title && !/\.(png|jpe?g|webp|heic|gif)$/i.test(title) ? <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-2" dir="auto">{title}</p> : null
+          title && !/\.(png|jpe?g|webp|heic|gif)$/i.test(title) ? <p className="text-[13.5px] font-semibold text-[var(--c-ink)] line-clamp-2" dir="auto">{title}</p> : null
         ) : (
           <>{label}
-            {title ? <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-3" dir="auto">{title}</p> : null}
-            {(sub || body) && (sub || body).trim() !== title.trim() ? <p className="text-[12px] text-slate-400 mt-1 line-clamp-3 whitespace-pre-line" dir="auto">{sub || body}</p> : null}
+            {title ? <p className="text-[13.5px] font-semibold text-[var(--c-ink)] line-clamp-3" dir="auto">{title}</p> : null}
+            {(sub || body) && (sub || body).trim() !== title.trim() ? <p className="text-[12px] text-[var(--c-mut)] mt-1 line-clamp-3 whitespace-pre-line" dir="auto">{sub || body}</p> : null}
           </>
         )}
         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-          <span className="text-[10.5px] text-slate-500">{dateText(rec.ts)}</span>
-          {rec.pinned ? <Star size={10} className="text-amber-400" /> : null}
+          <span className="text-[10.5px] text-[var(--c-mut)]">{dateText(rec.ts)}</span>
+          {rec.pinned ? <Star size={10} className="text-[var(--c-warn)]" /> : null}
           {rec.meta && rec.meta.colour && M.COLOURS[rec.meta.colour] ? <i className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: M.COLOURS[rec.meta.colour].hex }} /> : null}
-          {tags.map((t) => <span key={t} className="text-[10px] text-slate-500">#{t}</span>)}
+          {tags.map((t) => <span key={t} className="text-[10px] text-[var(--c-mut)]">#{t}</span>)}
         </div>
       </div>
     </button>
@@ -148,11 +148,11 @@ function MediaView({ rec }) {
   const Tag = rec.kind === "video" ? "video" : "audio";
   return <div className="bg-black" data-testid="mind-media">
     {url ? <Tag ref={el} src={url} controls playsInline className="w-full max-h-80" onLoadedMetadata={() => { if (seek != null) go(seek); }} data-testid="mind-player" />
-      : <p className="text-[12.5px] text-slate-400 p-3 m-0">{m.noCopy ? tr("Only the words were kept — the file was too big to keep a copy.") : tr("The file is not on this phone.")}</p>}
-    {(m.cues || []).length ? <div className="max-h-44 overflow-auto px-3 py-2 space-y-1 bg-slate-950" data-testid="mind-cues">
-      {m.cues.map((c, i) => <button key={i} onClick={() => go(c.start)} className={"w-full text-start text-[12.5px] flex gap-2 " + (seek != null && c.start === seek ? "text-teal-300" : "text-slate-300")} data-testid="mind-cue">
-        <span className="text-slate-500 shrink-0 w-10" dir="ltr">{clock(c.start)}</span><span dir="auto">{c.text}</span></button>)}
-    </div> : m.saidError ? <p className="text-[12px] text-amber-300 px-3 py-2 m-0">{tr(m.saidError)}</p> : null}
+      : <p className="text-[12.5px] text-[var(--c-mut)] p-3 m-0">{m.noCopy ? tr("Only the words were kept — the file was too big to keep a copy.") : tr("The file is not on this phone.")}</p>}
+    {(m.cues || []).length ? <div className="max-h-44 overflow-auto px-3 py-2 space-y-1 bg-[var(--c-bg)]" data-testid="mind-cues">
+      {m.cues.map((c, i) => <button key={i} onClick={() => go(c.start)} className={"w-full text-start text-[12.5px] flex gap-2 " + (seek != null && c.start === seek ? "text-[var(--c-acc)]" : "text-[var(--c-ink)]")} data-testid="mind-cue">
+        <span className="text-[var(--c-mut)] shrink-0 w-10" dir="ltr">{clock(c.start)}</span><span dir="auto">{c.text}</span></button>)}
+    </div> : m.saidError ? <p className="text-[12px] text-[var(--c-warn)] px-3 py-2 m-0">{tr(m.saidError)}</p> : null}
   </div>;
 }
 
@@ -172,7 +172,7 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
   const dropTag = (t) => setMeta({ myTags: (m.myTags || []).filter((x) => x !== t), hidden: [...new Set([...(m.hidden || []), t])] });
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-3 overflow-auto" onClick={close}>
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full my-6 overflow-hidden" onClick={(e) => e.stopPropagation()} data-testid="mind-detail">
+      <div className="bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-2xl max-w-2xl w-full my-6 overflow-hidden" onClick={(e) => e.stopPropagation()} data-testid="mind-detail">
         {thumb ? <img src={thumb} alt={tr("Open the photo")} onClick={() => thumbGet(rec.id + ":full").then((u) => setBigUrl(u || thumb))} className="w-full max-h-80 object-contain bg-black cursor-zoom-in" data-testid="mind-photo" /> : null}
         {kind === "video" || kind === "audio" ? <MediaView rec={rec} /> : null}
         {bigUrl ? (
@@ -184,75 +184,75 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
         <div className="p-5">
           <div className="flex items-start gap-3 mb-2">
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-teal-400">{M.KINDS[kind].icon} {kindLabel(kind)} · {new Date(rec.ts).toLocaleString()}</p>
+              <p className="text-[11px] text-[var(--c-acc)]">{M.KINDS[kind].icon} {kindLabel(kind)} · {new Date(rec.ts).toLocaleString()}</p>
               {editTitle != null ? (
                 <input autoFocus value={editTitle} onChange={(e) => setEditTitle(e.target.value)} dir="auto"
                   onBlur={() => { setMeta({ myTitle: editTitle.trim() || undefined }); setEditTitle(null); }}
                   onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
-                  className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-base text-white" />
+                  className="w-full mt-1 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2 py-1 text-base text-[var(--c-ink)]" />
               ) : (
-                <h3 onClick={() => setEditTitle(M.titleOf(rec))} className="text-base font-semibold text-white mt-0.5 cursor-text" dir="auto" title={tr("Tap to rename")}>{M.titleOf(rec) || tr("Untitled")}</h3>
+                <h3 onClick={() => setEditTitle(M.titleOf(rec))} className="text-base font-semibold text-[var(--c-ink)] mt-0.5 cursor-text" dir="auto" title={tr("Tap to rename")}>{M.titleOf(rec) || tr("Untitled")}</h3>
               )}
             </div>
-            <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300" aria-label={tr("Close")}><X size={18} /></button>
+            <button onClick={close} className="-m-2 p-2 rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)]" aria-label={tr("Close")}><X size={18} /></button>
           </div>
-          {m.summary ? <p className="text-sm text-slate-300 mb-3 flex gap-1.5" dir="auto"><Sparkles size={13} className="text-teal-400 mt-0.5 shrink-0" />{m.summary}</p> : null}
-          {lp ? <a href={lp.url} target="_blank" rel="noreferrer" className="text-xs text-teal-400 flex items-center gap-1 mb-3 break-all"><ExternalLink size={12} /> {lp.url}</a> : null}
+          {m.summary ? <p className="text-sm text-[var(--c-ink)] mb-3 flex gap-1.5" dir="auto"><Sparkles size={13} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{m.summary}</p> : null}
+          {lp ? <a href={lp.url} target="_blank" rel="noreferrer" className="text-xs text-[var(--c-acc)] flex items-center gap-1 mb-3 break-all"><ExternalLink size={12} /> {lp.url}</a> : null}
           {rec.text && !(kind === "link" && rec.text.trim() === (lp && lp.url)) ? (
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 max-h-64 overflow-auto">
-              {/\|.*\|/.test(rec.text) || /^#{1,4}\s|\*\*/m.test(rec.text) ? <div className="text-sm text-slate-200 leading-relaxed"><Md text={rec.text} runnable={false} /></div>
-                : <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed" dir="auto">{rec.text}</p>}
+            <div className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-3 mb-3 max-h-64 overflow-auto">
+              {/\|.*\|/.test(rec.text) || /^#{1,4}\s|\*\*/m.test(rec.text) ? <div className="text-sm text-[var(--c-ink)] leading-relaxed"><Md text={rec.text} runnable={false} /></div>
+                : <p className="text-sm text-[var(--c-ink)] whitespace-pre-wrap leading-relaxed" dir="auto">{rec.text}</p>}
             </div>
           ) : null}
           {rec.output ? (
             <>
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{tr("What it answered")}</p>
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 max-h-64 overflow-auto">
-                <div className="text-sm text-teal-50 leading-relaxed"><Md text={rec.output} runnable={false} /></div>
+              <p className="text-[10px] uppercase tracking-wider text-[var(--c-mut)] mb-1">{tr("What it answered")}</p>
+              <div className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-3 mb-3 max-h-64 overflow-auto">
+                <div className="text-sm text-[var(--c-acc)] leading-relaxed"><Md text={rec.output} runnable={false} /></div>
               </div>
             </>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
             {M.tagsOf(rec).map((t) => (
-              <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 flex items-center gap-1">#{t}
-                <button onClick={() => dropTag(t)} className="text-slate-500 hover:text-red-400" aria-label={tr("Remove tag")}><X size={10} /></button></span>
+              <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] flex items-center gap-1">#{t}
+                <button onClick={() => dropTag(t)} className="text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Remove tag")}><X size={10} /></button></span>
             ))}
             <input value={tagIn} onChange={(e) => setTagIn(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addTag(); }} placeholder={tr("+ tag")} dir="auto"
-              data-testid="mind-tag-in" className="w-24 bg-transparent border-b border-slate-700 text-xs text-slate-200 px-1 py-0.5 focus:outline-none focus:border-teal-500" />
+              data-testid="mind-tag-in" className="w-24 bg-transparent border-b border-[var(--c-ln)] text-xs text-[var(--c-ink)] px-1 py-0.5 focus:outline-none focus:border-[var(--c-acc)]" />
           </div>
           <textarea value={m.myNote || ""} onChange={(e) => setMeta({ myNote: e.target.value })} rows={2} dir="auto"
             placeholder={tr("Your note on this (why you kept it)…")}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-100 placeholder-slate-600 mb-3 focus:outline-none focus:border-teal-500" />
+            className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-2.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] mb-3 focus:outline-none focus:border-[var(--c-acc)]" />
 
           <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => togglePin(rec.id)} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-amber-500">
-              <Star size={12} className={`inline me-1 ${rec.pinned ? "text-amber-400" : ""}`} />{rec.pinned ? tr("Unpin") : tr("Pin")}</button>
+            <button onClick={() => togglePin(rec.id)} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-warn)]">
+              <Star size={12} className={`inline me-1 ${rec.pinned ? "text-[var(--c-warn)]" : ""}`} />{rec.pinned ? tr("Unpin") : tr("Pin")}</button>
             <button onClick={() => { try { navigator.clipboard.writeText([rec.text, rec.output].filter(Boolean).join("\n\n")); } catch (e) {} flash(tr("Copied")); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500"><Copy size={12} className="inline me-1" />{tr("Copy")}</button>
+              className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"><Copy size={12} className="inline me-1" />{tr("Copy")}</button>
             {navigator.share ? <button onClick={() => navigator.share({ title: M.titleOf(rec), text: rec.text }).catch(() => {})}
-              className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500"><Share2 size={12} className="inline me-1" />{tr("Share")}</button> : null}
-            <button onClick={() => askAbout(rec)} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500"><Brain size={12} className="inline me-1" />{tr("Ask about this")}</button>
-            <button onClick={() => findPromises(rec)} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500">{tr("Find promises in this")}</button>
+              className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"><Share2 size={12} className="inline me-1" />{tr("Share")}</button> : null}
+            <button onClick={() => askAbout(rec)} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"><Brain size={12} className="inline me-1" />{tr("Ask about this")}</button>
+            <button onClick={() => findPromises(rec)} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]">{tr("Find promises in this")}</button>
             <button onClick={() => forget(rec.id)} data-testid="mind-forget"
-              className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-500 hover:border-red-800 hover:text-red-400 ms-auto"><Trash2 size={12} className="inline me-1" />{tr("Forget")}</button>
+              className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-mut)] hover:border-[var(--c-neg)] hover:text-[var(--c-neg)] ms-auto"><Trash2 size={12} className="inline me-1" />{tr("Forget")}</button>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-800">
-            <Bell size={13} className="text-slate-500" />
-            <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200" />
+          <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-[var(--c-ln)]">
+            <Bell size={13} className="text-[var(--c-mut)]" />
+            <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2 py-1 text-xs text-[var(--c-ink)]" />
             <button disabled={!when} data-testid="mind-remind"
               onClick={() => { const at = new Date(when).getTime(); if (!(at > Date.now())) return flash(tr("Pick a time in the future")); scheduleReminder({ id: "m-" + rec.id, at, title: M.titleOf(rec) || tr("From your Mind"), body: (m.summary || rec.text || "").slice(0, 140), repeat: "none", created: Date.now(), source: "mind" }); setMeta({ remindAt: at }); flash(tr("I'll remind you")); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold disabled:opacity-40">{tr("Remind me")}</button>
-            {m.remindAt && m.remindAt > Date.now() ? <span className="text-[11px] text-teal-400">{tr("Reminder set")}: {new Date(m.remindAt).toLocaleString()}</span> : null}
+              className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold disabled:opacity-40">{tr("Remind me")}</button>
+            {m.remindAt && m.remindAt > Date.now() ? <span className="text-[11px] text-[var(--c-acc)]">{tr("Reminder set")}: {new Date(m.remindAt).toLocaleString()}</span> : null}
           </div>
           {sim.length ? (
             <div className="mt-4">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Similar in your Mind")}</p>
+              <p className="text-[10px] uppercase tracking-wider text-[var(--c-mut)] mb-1.5">{tr("Similar in your Mind")}</p>
               <div className="grid grid-cols-2 gap-2">
                 {sim.map((r) => (
-                  <button key={r.id} onClick={() => openRec(r)} className="text-start bg-slate-950 border border-slate-800 rounded-xl p-2 hover:border-teal-600">
-                    <p className="text-[11px] text-slate-500">{M.KINDS[M.kindOf(r)].icon} {dateText(r.ts)}</p>
-                    <p className="text-xs text-slate-200 line-clamp-2" dir="auto">{M.titleOf(r)}</p>
+                  <button key={r.id} onClick={() => openRec(r)} className="text-start bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-2 hover:border-[var(--c-acc)]">
+                    <p className="text-[11px] text-[var(--c-mut)]">{M.KINDS[M.kindOf(r)].icon} {dateText(r.ts)}</p>
+                    <p className="text-xs text-[var(--c-ink)] line-clamp-2" dir="auto">{M.titleOf(r)}</p>
                   </button>
                 ))}
               </div>
@@ -376,13 +376,13 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const removeSpace = (id) => { const next = spaces.filter((s) => s.id !== id); setSpaces(next); saveSpaces(next); };
   const doForget = (id) => { thumbDel(id); forget(id); setOpenId(null); };
 
-  const chip = (on) => `text-xs px-3 py-1.5 rounded-full border whitespace-nowrap ${on ? "bg-teal-500 text-slate-950 border-teal-500 font-semibold" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-teal-600"}`;
+  const chip = (on) => `text-xs px-3 py-1.5 rounded-full border whitespace-nowrap ${on ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] border-[var(--c-acc)] font-semibold" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"}`;
 
   return (
     <div className="space-y-4 att-in pb-20" data-testid="mind-page">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Brain size={20} className="text-teal-400" />{tr("Mind")}</h2>
-        <span className="text-[11px] text-slate-500">{records.length} {tr("kept · private, on this phone")}</span>
+        <h2 className="text-lg font-semibold text-[var(--c-ink)] flex items-center gap-2"><Brain size={20} className="text-[var(--c-acc)]" />{tr("Mind")}</h2>
+        <span className="text-[11px] text-[var(--c-mut)]">{records.length} {tr("kept · private, on this phone")}</span>
       </div>
       {shareBanner}
       {note}
@@ -390,20 +390,20 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
       {/* v6.32 look A (the wall): search, then one row of chips — kinds, promises, your words, colours, spaces — then the wall */}
       {tab === "mind" ? (
         <div>
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-2xl px-3 focus-within:border-teal-500">
-            <Search size={15} className="text-slate-500" />
+          <div className="flex items-center gap-2 bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-2xl px-3 focus-within:border-[var(--c-acc)]">
+            <Search size={15} className="text-[var(--c-mut)]" />
             <input value={q} onChange={(e) => { setQ(e.target.value); setAnswer(null); }} dir="auto" data-testid="mind-search"
               onKeyDown={(e) => { if (e.key === "Enter" && looksLikeQuestion && pro) doAsk(q); }}
               placeholder={tr("Search or ask — “wedding photos last month”, «لينكات الشقة»")}
-              className="flex-1 bg-transparent py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none" />
-            {q ? <button onClick={() => { setQ(""); setAnswer(null); }} className="text-slate-500"><X size={14} /></button> : null}
+              className="flex-1 bg-transparent py-2.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
+            {q ? <button onClick={() => { setQ(""); setAnswer(null); }} className="text-[var(--c-mut)]"><X size={14} /></button> : null}
           </div>
           {q.trim() ? (
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <button onClick={() => (pro ? doAsk(q) : openPlan())} data-testid="mind-ask" className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/15 border border-teal-800 text-teal-200"><Brain size={12} className="inline me-1" />{tr("Ask your Mind")}</button>
-              <button onClick={saveSpace} className="text-xs px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300"><Folder size={12} className="inline me-1" />{tr("Save as a Space")}</button>
+              <button onClick={() => (pro ? doAsk(q) : openPlan())} data-testid="mind-ask" className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-soft)] border border-[var(--c-acc)]/40 text-[var(--c-acc)]"><Brain size={12} className="inline me-1" />{tr("Ask your Mind")}</button>
+              <button onClick={saveSpace} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)]"><Folder size={12} className="inline me-1" />{tr("Save as a Space")}</button>
               {res.filters.kind || res.filters.from != null || res.filters.pinned ? (
-                <span className="text-[11px] text-slate-500">{tr("Showing")}: {[res.filters.kind && kindLabel(res.filters.kind), res.filters.from != null && `${dateText(res.filters.from)} – ${dateText(Math.min(res.filters.to, Date.now()))}`, res.filters.pinned && tr("pinned"), res.filters.words && `“${res.filters.words}”`].filter(Boolean).join(" · ")}</span>
+                <span className="text-[11px] text-[var(--c-mut)]">{tr("Showing")}: {[res.filters.kind && kindLabel(res.filters.kind), res.filters.from != null && `${dateText(res.filters.from)} – ${dateText(Math.min(res.filters.to, Date.now()))}`, res.filters.pinned && tr("pinned"), res.filters.words && `“${res.filters.words}”`].filter(Boolean).join(" · ")}</span>
               ) : null}
             </div>
           ) : null}
@@ -415,9 +415,9 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
         <button onClick={() => setTab("promises")} data-testid="mind-tab-promises" className={chip(tab === "promises")}>{tr("Promises")}{promiseCount ? ` (${promiseCount})` : ""}</button>
         <button onClick={() => setTab("words")} data-testid="mind-tab-words" className={chip(tab === "words")}>{tr("Your words")}</button>
         {colours.map((c) => <button key={c.colour} onClick={() => { setTab("mind"); setColour(colour === c.colour ? null : c.colour); }} data-testid={"mind-colour-" + c.colour} aria-label={M.COLOURS[c.colour][ar ? "ar" : "en"]}
-          className={"shrink-0 w-8 h-8 rounded-full border-2 " + (colour === c.colour ? "border-teal-400" : "border-slate-800")} style={{ background: M.COLOURS[c.colour].hex }} />)}
+          className={"shrink-0 w-8 h-8 rounded-full border-2 " + (colour === c.colour ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]")} style={{ background: M.COLOURS[c.colour].hex }} />)}
         {spaces.map((sp) => <span key={sp.id} className="relative shrink-0"><button onClick={() => { setTab("mind"); setQ(sp.q || ""); setTag(sp.tag || null); setKind(null); }} className={chip(false) + " pe-6"} dir="auto"><Folder size={11} className="inline me-1" />{sp.name}</button>
-          <button onClick={() => removeSpace(sp.id)} className="absolute top-1/2 -translate-y-1/2 end-1.5 text-slate-500" aria-label={tr("Remove")}><X size={11} /></button></span>)}
+          <button onClick={() => removeSpace(sp.id)} className="absolute top-1/2 -translate-y-1/2 end-1.5 text-[var(--c-mut)]" aria-label={tr("Remove")}><X size={11} /></button></span>)}
         {auto.map((t) => <button key={t.tag} onClick={() => { setTab("mind"); setTag(tag === t.tag ? null : t.tag); setKind(null); }} className={chip(tab === "mind" && tag === t.tag)} dir="auto">#{t.tag}</button>)}
       </div>
 
@@ -425,7 +425,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
         <>
           {/* keep anything — v6.15 (look C): a sheet from the + button */}
           {adding ? <div className="fixed inset-0 z-[60] bg-black/60 flex items-end" onClick={() => setAdding(false)}>
-          <section onClick={(e) => e.stopPropagation()} className={`w-full bg-slate-900 rounded-t-2xl border-t p-4 pb-6 space-y-2 ${dropping ? "border-teal-500" : "border-slate-700"}`} data-testid="mind-add-sheet"
+          <section onClick={(e) => e.stopPropagation()} className={`w-full bg-[var(--c-surf)] rounded-t-2xl border-t p-4 pb-6 space-y-2 ${dropping ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`} data-testid="mind-add-sheet"
             onDragOver={(e) => { e.preventDefault(); setDropping(true); }} onDragLeave={() => setDropping(false)}
             onDrop={async (e) => {
               e.preventDefault(); setDropping(false);
@@ -434,72 +434,72 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
               if (f && (/^text|json|csv|md/.test(f.type) || /\.(txt|md|csv|json|log)$/i.test(f.name))) return keep(await f.text(), { title: f.name });
               const t = e.dataTransfer.getData("text"); if (t) keep(t);
             }}>
-            <p className="text-sm font-semibold text-white">{tr("Keep something")}</p>
+            <p className="text-sm font-semibold text-[var(--c-ink)]">{tr("Keep something")}</p>
             <textarea autoFocus value={add} onChange={(e) => setAdd(e.target.value)} rows={3} dir="auto" data-testid="mind-add"
               placeholder={tr("Keep anything — a note, a link, a quote, a price, a number, an idea…")}
-              className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 resize-none focus:outline-none" />
+              className="w-full bg-transparent text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] resize-none focus:outline-none" />
             <div className="flex items-center gap-1.5">
-              <button onClick={() => { if (keep(add)) { setAdd(""); setAdding(false); } }} data-testid="mind-keep" className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold"><Plus size={12} className="inline me-1" />{tr("Keep")}</button>
+              <button onClick={() => { if (keep(add)) { setAdd(""); setAdding(false); } }} data-testid="mind-keep" className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold"><Plus size={12} className="inline me-1" />{tr("Keep")}</button>
               <button onClick={async () => { try { const t = await navigator.clipboard.readText(); if (t && t.trim()) setAdd(t.trim()); else flash(tr("Clipboard is empty")); } catch (e) { flash(tr("Allow clipboard access, or paste manually")); } }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300"><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
-              <button onClick={() => fileRef.current && fileRef.current.click()} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300"><Camera size={12} className="inline me-1" />{tr("Photo")}</button>
+                className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)]"><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
+              <button onClick={() => fileRef.current && fileRef.current.click()} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)]"><Camera size={12} className="inline me-1" />{tr("Photo")}</button>
             </div>
           </section></div> : null}
           <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="mind-photo" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; setAdding(false); keepPhoto(f); }} />
-          {busy ? <p className="text-[11px] text-teal-400 flex items-center gap-1"><Loader2 size={12} className="animate-spin" />{busy}</p>
-            : filing ? <p className="text-[11px] text-slate-500 flex items-center gap-1"><Sparkles size={11} />{tr("filing…")}</p> : null}
+          {busy ? <p className="text-[11px] text-[var(--c-acc)] flex items-center gap-1"><Loader2 size={12} className="animate-spin" />{busy}</p>
+            : filing ? <p className="text-[11px] text-[var(--c-mut)] flex items-center gap-1"><Sparkles size={11} />{tr("filing…")}</p> : null}
           <button onClick={() => setAdding(true)} aria-label={tr("Keep something")} data-testid="mind-new"
-            className="fixed z-40 end-5 bottom-24 lg:bottom-8 lg:end-8 w-14 h-14 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center shadow-xl shadow-black/40"><Plus size={26} /></button>
+            className="fixed z-40 end-5 bottom-24 lg:bottom-8 lg:end-8 w-14 h-14 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center shadow-xl shadow-black/40"><Plus size={26} /></button>
 
           {!pro && records.length ? (
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-[var(--c-mut)]">
               {tr("Free: keep and search everything. Pro: it files each item by itself (title, summary, tags), reads your photos and answers questions from your Mind.")}
-              <button onClick={openPlan} className="text-teal-400 ms-1">{tr("See Pro")}</button>
+              <button onClick={openPlan} className="text-[var(--c-acc)] ms-1">{tr("See Pro")}</button>
             </p>
           ) : null}
 
           {answer ? (
-            <section className="bg-slate-900 border border-teal-900/60 rounded-2xl p-4" data-testid="mind-answer">
-              <p className="text-[11px] text-teal-400 mb-1 flex items-center gap-1"><Brain size={12} /> {answer.q}</p>
-              {/\|.*\|/.test(answer.text) || /^#{1,4}\s|\*\*|^\s*[-*] /m.test(answer.text) ? <div className="text-sm text-slate-100 leading-relaxed"><Md text={answer.text} runnable={false} /></div>
-                : <p className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed" dir="auto">{answer.text}</p>}
+            <section className="bg-[var(--c-surf)] border border-[var(--c-acc)]/40 rounded-2xl p-4" data-testid="mind-answer">
+              <p className="text-[11px] text-[var(--c-acc)] mb-1 flex items-center gap-1"><Brain size={12} /> {answer.q}</p>
+              {/\|.*\|/.test(answer.text) || /^#{1,4}\s|\*\*|^\s*[-*] /m.test(answer.text) ? <div className="text-sm text-[var(--c-ink)] leading-relaxed"><Md text={answer.text} runnable={false} /></div>
+                : <p className="text-sm text-[var(--c-ink)] whitespace-pre-wrap leading-relaxed" dir="auto">{answer.text}</p>}
               {answer.sources.length ? (
                 <>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mt-3 mb-1.5">{tr("From these items in your Mind")}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[var(--c-mut)] mt-3 mb-1.5">{tr("From these items in your Mind")}</p>
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {answer.sources.map((r) => (
-                      <button key={r.id} onClick={() => setOpenId(r.id)} className="shrink-0 w-40 text-start bg-slate-950 border border-slate-800 rounded-xl p-2 hover:border-teal-600">
-                        <p className="text-[10px] text-slate-500">{M.KINDS[M.kindOf(r)].icon} {dateText(r.ts)}</p>
-                        <p className="text-xs text-slate-200 line-clamp-2" dir="auto">{M.titleOf(r)}</p>
+                      <button key={r.id} onClick={() => setOpenId(r.id)} className="shrink-0 w-40 text-start bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-2 hover:border-[var(--c-acc)]">
+                        <p className="text-[10px] text-[var(--c-mut)]">{M.KINDS[M.kindOf(r)].icon} {dateText(r.ts)}</p>
+                        <p className="text-xs text-[var(--c-ink)] line-clamp-2" dir="auto">{M.titleOf(r)}</p>
                       </button>
                     ))}
                   </div>
                 </>
-              ) : <p className="text-[11px] text-slate-500 mt-2">{tr("Nothing in your Mind matched — so this is not from your items.")}</p>}
+              ) : <p className="text-[11px] text-[var(--c-mut)] mt-2">{tr("Nothing in your Mind matched — so this is not from your items.")}</p>}
             </section>
           ) : null}
 
-          {filterOn ? <p className="text-[11px] text-slate-500" data-testid="mind-count">{shown.length} {tr(shown.length === 1 ? "item" : "items")}</p> : null}
+          {filterOn ? <p className="text-[11px] text-[var(--c-mut)]" data-testid="mind-count">{shown.length} {tr(shown.length === 1 ? "item" : "items")}</p> : null}
 
           {/* the wall */}
           {shown.length ? (
             <div className="columns-2 sm:columns-3 lg:columns-4 gap-2.5" data-testid="mind-board">
               {past.length && !hidePast && !filterOn ? (() => { const { rec, why } = past[0]; return (
-                <div className="mb-2.5 break-inside-avoid rounded-2xl p-3 border border-teal-900/60" style={{ background: "linear-gradient(135deg, rgba(79,194,175,.16), rgba(26,30,36,1))" }} data-testid="mind-past">
+                <div className="mb-2.5 break-inside-avoid rounded-2xl p-3 border border-[var(--c-acc)]/40" style={{ background: "linear-gradient(135deg, rgba(79,194,175,.16), rgba(26,30,36,1))" }} data-testid="mind-past">
                   <button onClick={() => setOpenId(rec.id)} className="w-full text-start">
-                    <p className="text-[10px] uppercase tracking-[.08em] text-teal-300 flex items-center gap-1"><Shuffle size={10} /> {tr("From your past")}</p>
-                    <p className="text-[13.5px] text-slate-100 font-semibold line-clamp-3 mt-1" dir="auto">{M.titleOf(rec)}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{/past/i.test(why) ? "" : tr(why) + " · "}{dateText(rec.ts)}</p>
+                    <p className="text-[10px] uppercase tracking-[.08em] text-[var(--c-acc)] flex items-center gap-1"><Shuffle size={10} /> {tr("From your past")}</p>
+                    <p className="text-[13.5px] text-[var(--c-ink)] font-semibold line-clamp-3 mt-1" dir="auto">{M.titleOf(rec)}</p>
+                    <p className="text-[11px] text-[var(--c-mut)] mt-0.5">{/past/i.test(why) ? "" : tr(why) + " · "}{dateText(rec.ts)}</p>
                   </button>
                   <div className="flex gap-1.5 mt-2">
-                    <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="text-[11.5px] px-2.5 py-1 rounded-lg bg-teal-500/20 text-teal-100">{tr("Keep")}</button>
-                    <button onClick={() => setHidePast(true)} className="text-[11.5px] px-2.5 py-1 rounded-lg text-slate-400">{tr("Not now")}</button>
+                    <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="text-[11.5px] px-2.5 py-1 rounded-lg bg-[var(--c-soft)] text-[var(--c-acc)]">{tr("Keep")}</button>
+                    <button onClick={() => setHidePast(true)} className="text-[11.5px] px-2.5 py-1 rounded-lg text-[var(--c-mut)]">{tr("Not now")}</button>
                   </div>
                 </div>); })() : null}
               {shown.map((r) => <Card key={r.id} rec={r} update={update} open={(x) => setOpenId(x.id)} />)}
             </div>
           ) : (
-            <p className="text-sm text-slate-500 text-center py-10 leading-relaxed">
+            <p className="text-sm text-[var(--c-mut)] text-center py-10 leading-relaxed">
               {records.length ? tr("Nothing matches that.") : <>{tr("Your Mind is empty.")}<br /><span className="text-xs">{tr("Keep a note, a link or a photo with + — or share anything to Attune from another app.")}</span></>}
             </p>
           )}

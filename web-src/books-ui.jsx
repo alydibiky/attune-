@@ -8,7 +8,7 @@ import * as B from "./books.js";
 import * as O from "./books-ops.js";
 import { loadBooks, saveBooks, exportBooks, parseBackup, replaceBooks } from "./books-store.js";
 import * as ETA from "./books-eta.js";
-import { BooksCtx, useBooks, L, isAr, ThemeCtx, themeFor, useTheme, Card, Stat, Section, Money, Badge, Empty, Field, Input, Select, Sheet, BTN, btnPrimary, today, monthStart, fmtDate } from "./books-kit.jsx";
+import { BooksCtx, useBooks, L, isAr, ThemeCtx, themeFor, useTheme, Card, Stat, Section, Money, Badge, Empty, Field, Input, Select, Sheet, BTN, btnPrimary, SEL, POS, WARN, NEG, today, monthStart, fmtDate } from "./books-kit.jsx";
 import { SalesModule } from "./books-sales.jsx";
 import { PurchasesModule } from "./books-purchases.jsx";
 import { StockModule } from "./books-stock.jsx";
@@ -61,30 +61,32 @@ export function BooksApp({ flash, saveFile, share, onBack, openPlan, goCustom })
 
   if (s && hasUsers(s) && !unlocked) return <ThemeCtx.Provider value={th}><UserLock s={s} onOk={(pin, u) => opened(pin, u.name)} onBack={onBack} /></ThemeCtx.Provider>;
   if (s && O.hasPin(s) && !unlocked) return <ThemeCtx.Provider value={th}><PinLock s={s} onOk={(pin) => opened(pin, "")} onBack={onBack} /></ThemeCtx.Provider>;
-  if (!s) return <div className="p-6 text-center text-sm text-slate-500" data-testid="books-loading">{L("Opening your books…", "بفتح دفاترك…")}</div>;
+  if (!s) return <div className="calm p-6 text-center text-[14px] text-[var(--c-mut)]" data-testid="books-loading">{L("Opening your books…", "بفتح دفاترك…")}</div>;
   const ctx = { s, run, flash, saveFile, share, themeName, setTheme, today: today(), goTab: setTab, openSettings: () => setSettings(true) };
   return (
     <ThemeCtx.Provider value={th}>
       <BooksCtx.Provider value={ctx}>
         <div className={`fixed inset-0 z-[60] flex flex-col ${th.page}`} data-testid="books-app" dir={isAr() ? "rtl" : "ltr"}>
-          <div className={`flex items-center gap-2 px-3 py-2.5 border-b ${th.bar}`}>
-            <button onClick={onBack} className="p-1.5 -ms-1 rounded-lg" aria-label={L("Back", "رجوع")}><ChevronRight size={20} className="rotate-180 rtl:rotate-0" /></button>
+          <div className={`flex items-center gap-2.5 px-4 py-2.5 border-b ${th.bar}`}>
+            <button onClick={onBack} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] grid place-items-center shrink-0" aria-label={L("Back", "رجوع")}><ChevronRight size={20} className="rotate-180 rtl:rotate-0" /></button>
             <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-semibold truncate">{(isAr() ? s.company.nameAr : s.company.name) || s.company.name || s.company.nameAr || L("My business", "شغلي")}</p>
-              <p className={`text-[11px] ${th.sub}`}>{L("Books", "الدفاتر")} · {s.currency}{O.getActor() ? " · " + O.getActor().name : ""}</p>
+              <p className="text-[17.5px] font-black truncate m-0">{(isAr() ? s.company.nameAr : s.company.name) || s.company.name || s.company.nameAr || L("My business", "شغلي")}</p>
+              <p className={`text-[12px] truncate m-0 ${th.sub}`}>{L("Books", "الدفاتر")} · {s.currency}{O.getActor() ? " · " + O.getActor().name : ""}</p>
             </div>
-            <button onClick={() => setSettings(true)} className="p-2 rounded-lg" aria-label={L("Settings", "الإعدادات")} data-testid="books-settings-open"><Building2 size={18} /></button>
+            <button onClick={() => setSettings(true)} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] grid place-items-center shrink-0" aria-label={L("Settings", "الإعدادات")} data-testid="books-settings-open"><Building2 size={18} /></button>
           </div>
-          <div className="flex-1 overflow-auto pb-2">
-            <div className="max-w-2xl mx-auto px-3 pt-3">
+          <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
+          <div className="flex-1 min-w-0 overflow-auto pb-4">
+            <div className="max-w-3xl mx-auto px-4 pt-4">
               {tab === "home" ? <Home /> : tab === "sales" ? <SalesModule /> : tab === "buy" ? <PurchasesModule /> : tab === "stock" ? <StockModule /> : tab === "money" ? <MoneyModule /> : <ReportsModule />}
             </div>
           </div>
-          <nav className={`grid grid-cols-6 border-t ${th.bar}`} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+          <nav className={`grid grid-cols-6 gap-1 border-t px-2 pt-1.5 ${th.bar} lg:order-first lg:flex lg:flex-col lg:gap-1.5 lg:w-52 lg:shrink-0 lg:border-t-0 lg:border-e lg:px-3 lg:pt-4`} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
             {TABS.map(([k, Icon, en, ar]) => (
-              <button key={k} onClick={() => setTab(k)} data-testid={"books-tab-" + k} className={`flex flex-col items-center gap-0.5 py-2 text-[10px] ${tab === k ? th.brand + " font-semibold" : th.sub}`}>
-                <Icon size={19} />{L(en, ar)}</button>))}
+              <button key={k} onClick={() => setTab(k)} data-testid={"books-tab-" + k} className={`min-w-0 min-h-[48px] mb-1.5 lg:mb-0 lg:min-h-[44px] rounded-[16px] flex flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] font-extrabold transition-colors duration-150 lg:flex-row lg:justify-start lg:gap-2.5 lg:px-3.5 lg:text-[14.5px] ${tab === k ? SEL : th.sub + " hover:text-[var(--c-ink)]"}`}>
+                <Icon size={18} className="shrink-0" /><span className="max-w-full truncate">{L(en, ar)}</span></button>))}
           </nav>
+          </div>
           {settings ? <Settings onClose={() => setSettings(false)} goCustom={goCustom} /> : null}
         </div>
       </BooksCtx.Provider>
@@ -103,46 +105,49 @@ function Home() {
   return (
     <div data-testid="books-home">
       {empty ? (
-        <Card className="p-4 mb-4">
-          <p className="text-[14px] font-semibold">{L("Welcome — set up your shop in 3 steps", "أهلاً — جهّز محلك في ٣ خطوات")}</p>
-          <ol className={`mt-2 text-[13px] space-y-1 ${th.sub} list-decimal ps-5`}>
+        <Card className="p-5 mb-4">
+          <span className="w-12 h-12 rounded-2xl bg-[var(--c-soft)] text-[var(--c-acc)] grid place-items-center mb-3"><Building2 size={24} /></span>
+          <p className="text-[19px] font-black leading-tight m-0">{L("Welcome — set up your shop in 3 steps", "أهلاً — جهّز محلك في ٣ خطوات")}</p>
+          <ol className={`mt-2.5 text-[13.5px] leading-relaxed space-y-1.5 ${th.sub} list-decimal ps-5`}>
             <li>{L("Open Settings (the building icon) and add your company name, tax number and logo — they print on every invoice.", "افتح الإعدادات (أيقونة المبنى) واكتب اسم الشركة والرقم الضريبي واللوجو — بيتطبعوا على كل فاتورة.")}</li>
             <li>{L("Add your items (Stock) and customers (Sales).", "ضيف أصنافك (المخزون) وعملاءك (المبيعات).")}</li>
             <li>{L("Create your first invoice from the button below.", "اعمل أول فاتورة من الزرار تحت.")}</li>
           </ol>
-          <button onClick={() => run((st) => O.sampleShop(st, td), L("Sample shop loaded — look around, then restore a backup or clear it in Settings", "اتحمّل محل تجريبي — اتفرّج عليه، وبعدين امسحه من الإعدادات"))} className={`${BTN} border ${th.line} mt-3 w-full`} data-testid="books-sample">{L("Try it with a sample shop", "جرّبه بمحل تجريبي")}</button>
+          <button onClick={() => run((st) => O.sampleShop(st, td), L("Sample shop loaded — look around, then restore a backup or clear it in Settings", "اتحمّل محل تجريبي — اتفرّج عليه، وبعدين امسحه من الإعدادات"))} className={`${BTN} border ${th.line} bg-[var(--c-surf)] hover:border-[var(--c-acc)] mt-4 w-full`} data-testid="books-sample">{L("Try it with a sample shop", "جرّبه بمحل تجريبي")}</button>
         </Card>
       ) : null}
-      <div className="grid grid-cols-2 gap-2 mb-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
         <Stat testid="stat-cash" label={L("Cash & bank", "النقدية والبنك")} value={<Money v={d.cash.total} />} sub={`${L("Cash", "خزنة")} ${B.fmt(d.cash.cash)} · ${L("Bank", "بنك")} ${B.fmt(d.cash.bank)}`} onClick={() => goTab("money")} />
         <Stat testid="stat-receivable" label={L("Customers owe you", "العملاء عليهم لك")} value={<Money v={d.receivable} />} tone={d.overdue ? "warn" : undefined} sub={d.overdueCount ? `${d.overdueCount} ${L("overdue", "متأخرة")} · ${B.fmt(d.overdue)}` : L("nothing overdue", "مفيش متأخرات")} onClick={() => goTab("money")} />
         <Stat testid="stat-payable" label={L("You owe suppliers", "عليك للموردين")} value={<Money v={d.payable} />} onClick={() => goTab("buy")} />
         {actorCan("profit") ? <Stat testid="stat-profit" label={L("This month's profit", "ربح الشهر ده")} value={<Money v={d.month.netProfit} />} tone={d.month.netProfit < 0 ? "bad" : "good"} sub={`${L("Sales", "مبيعات")} ${B.fmt(d.month.revenue)}`} onClick={() => goTab("reports")} /> : null}
       </div>
-      <div className="grid grid-cols-4 gap-2 mb-4" data-testid="books-actions">
+      <div className="grid grid-cols-4 gap-2 mb-5" data-testid="books-actions">
         {[["sales", "invoice", "+ Invoice", "+ فاتورة"], ["money", "receipt", "+ Receipt", "+ قبض"], ["buy", "bill", "+ Bill", "+ مشتريات"], ["money", "expense", "+ Expense", "+ مصروف"]].map(([tab, what, en, ar]) => (
-          <button key={what} onClick={() => go(tab, what)} data-testid={"act-" + what} className={`${BTN} bg-teal-700 text-white text-center`}>{L(en, ar)}</button>))}
+          <button key={what} onClick={() => go(tab, what)} data-testid={"act-" + what} className={`${BTN} !px-1 border ${th.line} bg-[var(--c-surf)] text-[var(--c-acc)] hover:border-[var(--c-acc)] text-center`}>{L(en, ar)}</button>))}
       </div>
+      <div className="lg:grid lg:grid-cols-2 lg:gap-x-4 lg:items-start">
       {d.low.length ? (
         <Section title={L("Low stock", "مخزون ناقص")}>
           <Card className="divide-y" testid="home-low">{d.low.slice(0, 5).map((x) => (
-            <button key={x.id} onClick={() => goTab("stock")} className="w-full flex items-center justify-between px-3 py-2.5 text-[13px]"><span className="flex items-center gap-2"><AlertTriangle size={14} className="text-amber-600" />{x.name}</span><span className={th.sub}>{x.onHand} / {x.reorder}</span></button>))}</Card>
+            <button key={x.id} onClick={() => goTab("stock")} className="w-full min-h-[48px] flex items-center justify-between gap-3 px-3.5 py-2.5 text-[13.5px] font-semibold text-start"><span className="flex items-center gap-2.5 min-w-0"><AlertTriangle size={16} className={`shrink-0 ${WARN}`} /><span className="truncate">{x.name}</span></span><span className={`tabular-nums shrink-0 ${th.sub}`} dir="ltr">{x.onHand} / {x.reorder}</span></button>))}</Card>
         </Section>) : null}
       {d.debtors.length ? (
         <Section title={L("Who owes you the most", "أكثر العملاء مديونية")}>
           <Card className="divide-y" testid="home-debtors">{d.debtors.map((x) => {
             const c = s.customers.find((y) => y.id === x.customer);
-            return <div key={x.customer} className="flex items-center justify-between px-3 py-2.5 text-[13px]"><span>{c ? c.name : x.customer}{x.overdue ? <span className="ms-2"><Badge tone="red">{L("overdue", "متأخر")}</Badge></span> : null}</span><Money v={x.owed} bold /></div>;
+            return <div key={x.customer} className="min-h-[48px] px-3.5 py-2.5 text-[13.5px] font-semibold space-y-1.5"><div className="flex items-center justify-between gap-3"><span className="min-w-0">{c ? c.name : x.customer}{x.overdue ? <span className="ms-2"><Badge tone="red">{L("overdue", "متأخر")}</Badge></span> : null}</span><Money v={x.owed} bold /></div><div className="c-bar" aria-hidden="true"><i style={{ width: Math.max(4, Math.min(100, (100 * x.owed) / Math.max(1, ...d.debtors.map((y) => y.owed)))) + "%", background: x.overdue ? "var(--c-neg)" : undefined }} /></div></div>;
           })}</Card>
         </Section>) : null}
       <Section title={L("VAT this month", "ضريبة القيمة المضافة الشهر ده")}>
-        <Card className="p-3 text-[13px]" testid="home-vat">
-          <div className="flex justify-between"><span>{L("On your sales", "على المبيعات")}</span><Money v={d.vat.output} /></div>
-          <div className="flex justify-between"><span>{L("On your purchases", "على المشتريات")}</span><Money v={d.vat.input} /></div>
-          <div className={`flex justify-between font-semibold border-t pt-1.5 mt-1.5 ${th.line}`}><span>{d.vat.payable >= 0 ? L("To pay", "مستحق السداد") : L("To recover", "مستحق الاسترداد")}</span><Money v={Math.abs(d.vat.payable)} /></div>
+        <Card className="p-4 text-[13.5px] space-y-1.5" testid="home-vat">
+          <div className="flex justify-between gap-3"><span className={th.sub}>{L("On your sales", "على المبيعات")}</span><Money v={d.vat.output} className="font-bold" /></div>
+          <div className="flex justify-between gap-3"><span className={th.sub}>{L("On your purchases", "على المشتريات")}</span><Money v={d.vat.input} className="font-bold" /></div>
+          <div className={`flex justify-between items-baseline gap-3 font-extrabold border-t pt-2.5 mt-2 text-[15px] ${th.line}`}><span>{d.vat.payable >= 0 ? L("To pay", "مستحق السداد") : L("To recover", "مستحق الاسترداد")}</span><Money v={Math.abs(d.vat.payable)} className="text-[19px] font-black tracking-tight" /></div>
         </Card>
       </Section>
-      <p className={`text-[11px] ${th.sub} pb-4`}>{L("Stock value", "قيمة المخزون")}: <Money v={d.stockValue} /> · {L("Figures come only from your posted documents.", "الأرقام متاخدة من مستنداتك المترحّلة بس.")}</p>
+      </div>
+      <p className={`text-[12px] ${th.sub} pb-4`}>{L("Stock value", "قيمة المخزون")}: <Money v={d.stockValue} /> · {L("Figures come only from your posted documents.", "الأرقام متاخدة من مستنداتك المترحّلة بس.")}</p>
     </div>
   );
 }
@@ -210,7 +215,7 @@ function Settings({ onClose, goCustom }) {
           <Field label={L("Bank details (shown on invoices)", "بيانات البنك (تظهر على الفواتير)")}><Input value={c.bank} onChange={set("bank")} /></Field>
           <Field label={L("Footer line", "سطر تحت المستند")}><Input value={c.footer} onChange={set("footer")} /></Field>
           <div className="flex items-center gap-3">
-            {c.logo ? <img src={c.logo} alt="" className="h-12 max-w-[120px] object-contain border rounded" /> : <div className={`h-12 w-12 rounded border ${th.line} grid place-items-center text-[10px] ${th.sub}`}>{L("logo", "لوجو")}</div>}
+            {c.logo ? <img src={c.logo} alt="" className={`h-12 max-w-[120px] object-contain border rounded-[12px] bg-white ${th.line}`} /> : <div className={`h-12 w-12 rounded-[12px] border border-dashed ${th.line} grid place-items-center text-[10px] ${th.sub}`}>{L("logo", "لوجو")}</div>}
             <button onClick={() => logoRef.current && logoRef.current.click()} className={`${BTN} border ${th.line}`}>{c.logo ? L("Change logo", "غيّر اللوجو") : L("Add logo", "ضيف لوجو")}</button>
             {c.logo ? <button onClick={() => set("logo")("")} className={`${BTN} ${th.sub}`}>{L("Remove", "شيل")}</button> : null}
             <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickLogo(e.target.files && e.target.files[0])} />
@@ -225,13 +230,13 @@ function Settings({ onClose, goCustom }) {
       </Section>
       <Section title={L("Appearance", "المظهر")}>
         <div className="flex gap-2">{[["light", "Light", "فاتح"], ["dark", "Dark", "داكن"]].map(([k, en, ar]) => (
-          <button key={k} onClick={() => setTheme(k)} className={`${BTN} border ${themeName === k ? "bg-teal-700 text-white border-teal-700" : th.line}`}>{L(en, ar)}</button>))}</div>
+          <button key={k} onClick={() => setTheme(k)} className={`${BTN} border ${themeName === k ? SEL : th.line}`}>{L(en, ar)}</button>))}</div>
       </Section>
       <Section title={L("PIN lock", "قفل بالرقم السري")}>
         <p className={`text-[12px] mb-2 ${th.sub}`}>{L("Asks for a 4–6 digit PIN when the books are opened. It keeps casual eyes out on a shared phone; it is not encryption.", "بيطلب رقم سري من 4 لـ 6 أرقام لما تفتح الدفاتر. بيمنع حد يتفرج على موبايل مشترك؛ بس ده مش تشفير.")}</p>
         <div className="flex gap-2"><div className="flex-1"><Input value={pinIn} onChange={(v) => setPinIn(v.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder={O.hasPin(s) ? L("New PIN", "رقم سري جديد") : L("Choose a PIN", "اختار رقم سري")} data-testid="books-pin-set" /></div>
           <button onClick={() => run((st) => O.setPin(st, pinIn), L("PIN saved", "الرقم السري اتحفظ")).then(() => setPinIn(""))} className={`${BTN} border ${th.line}`} disabled={pinIn.length < 4}>{L("Save", "احفظ")}</button>
-          {O.hasPin(s) ? <button onClick={() => run((st) => O.setPin(st, ""), L("PIN removed", "الرقم السري اتشال"))} className={`${BTN} border ${th.line} text-red-600`}>{L("Remove", "شيل")}</button> : null}</div>
+          {O.hasPin(s) ? <button onClick={() => run((st) => O.setPin(st, ""), L("PIN removed", "الرقم السري اتشال"))} className={`${BTN} border ${th.line} ${NEG}`}>{L("Remove", "شيل")}</button> : null}</div>
       </Section>
       <EtaSettings eta={eta} setEta={setEta} />
       <CurrencySection />
@@ -244,11 +249,11 @@ function Settings({ onClose, goCustom }) {
           <button onClick={() => restoreRef.current && restoreRef.current.click()} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Upload size={14} />{L("Restore", "استرجع")}</button>
           <input ref={restoreRef} type="file" accept=".json,application/json" className="hidden" onChange={(e) => restore(e.target.files && e.target.files[0])} />
         </div>
-        <p className={`text-[11px] mt-2 ${audit.ok ? "text-emerald-600" : "text-red-600"}`} data-testid="books-audit">{audit.ok ? L(`Audit log intact (${audit.count} entries)`, `سجل المراجعة سليم (${audit.count} حركة)`) : L(`Audit log changed at entry ${audit.brokenAt}`, `تغيّر سجل المراجعة عند الحركة ${audit.brokenAt}`)}</p>
+        <p className={`text-[12px] font-bold mt-2 ${audit.ok ? POS : NEG}`} data-testid="books-audit">{audit.ok ? L(`Audit log intact (${audit.count} entries)`, `سجل المراجعة سليم (${audit.count} حركة)`) : L(`Audit log changed at entry ${audit.brokenAt}`, `تغيّر سجل المراجعة عند الحركة ${audit.brokenAt}`)}</p>
       </Section>
       <VaultSection onClose={onClose} />
       {actorCan("users") ? <Section title={L("Danger zone", "منطقة الخطر")}>
-        <button onClick={async () => { if (!window.confirm(L("Erase ALL your books on this phone? Save a backup first — this cannot be undone.", "تمسح كل دفاترك من الموبايل ده؟ احفظ نسخة احتياطية الأول — مفيش رجوع."))) return; await replaceBooks(O.EMPTY()); run(() => O.EMPTY(), L("All books erased", "كل الدفاتر اتمسحت")); onClose(); }} className={`${BTN} border border-red-300 text-red-600`} data-testid="books-erase">{L("Erase all books", "امسح كل الدفاتر")}</button>
+        <button onClick={async () => { if (!window.confirm(L("Erase ALL your books on this phone? Save a backup first — this cannot be undone.", "تمسح كل دفاترك من الموبايل ده؟ احفظ نسخة احتياطية الأول — مفيش رجوع."))) return; await replaceBooks(O.EMPTY()); run(() => O.EMPTY(), L("All books erased", "كل الدفاتر اتمسحت")); onClose(); }} className={`${BTN} border border-[var(--c-neg)] ${NEG}`} data-testid="books-erase">{L("Erase all books", "امسح كل الدفاتر")}</button>
       </Section> : null}
       {goCustom ? <Section title={L("More", "أكتر")}><button onClick={() => { onClose(); goCustom(); }} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Users size={14} />{L("Custom tables (build your own system)", "جداول مخصصة (ابنِ نظامك بنفسك)")}</button></Section> : null}
     </Sheet>
@@ -261,13 +266,13 @@ function PinLock({ s, onOk, onBack }) {
   const tryPin = (v) => { if (O.checkPin(s, v)) onOk(v); else { setBad((b) => b + 1); setPin(""); } };
   return (
     <div className={`fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 p-6 ${th.page}`} data-testid="books-lock" dir={isAr() ? "rtl" : "ltr"}>
-      <Building2 size={32} className={th.brand} />
-      <p className="text-[15px] font-semibold">{L("Enter your PIN to open the books", "اكتب الرقم السري عشان تفتح الدفاتر")}</p>
+      <span className="w-16 h-16 rounded-[22px] bg-[var(--c-soft)] grid place-items-center"><Building2 size={30} className={th.brand} /></span>
+      <p className="text-[17px] font-extrabold text-center m-0">{L("Enter your PIN to open the books", "اكتب الرقم السري عشان تفتح الدفاتر")}</p>
       <input value={pin} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setPin(v); if (v.length >= 4 && O.checkPin(s, v)) onOk(v); }} type="password" inputMode="numeric" autoFocus data-testid="books-pin"
-        className={`w-40 text-center tracking-[0.5em] text-xl rounded-lg border px-3 py-2 ${th.input}`} />
-      {bad ? <p className="text-[12px] text-red-600">{L("Wrong PIN", "الرقم غلط")}{bad >= 5 ? " · " + L("take a breath and try again", "استنى شوية وجرّب تاني") : ""}</p> : null}
-      <button onClick={() => tryPin(pin)} className={btnPrimary} disabled={pin.length < 4}>{L("Open", "افتح")}</button>
-      <button onClick={onBack} className={`text-[12px] ${th.sub}`}>{L("Back", "رجوع")}</button>
+        className={`w-44 min-h-[52px] text-center tracking-[0.5em] text-xl font-black tabular-nums rounded-[16px] border px-3 py-2 focus:outline-none ${th.input}`} />
+      {bad ? <p className={`text-[12.5px] font-bold m-0 ${NEG}`}>{L("Wrong PIN", "الرقم غلط")}{bad >= 5 ? " · " + L("take a breath and try again", "استنى شوية وجرّب تاني") : ""}</p> : null}
+      <button onClick={() => tryPin(pin)} className={`${btnPrimary} min-w-[160px]`} disabled={pin.length < 4}>{L("Open", "افتح")}</button>
+      <button onClick={onBack} className={`min-h-[44px] px-4 text-[13px] font-bold ${th.sub}`}>{L("Back", "رجوع")}</button>
     </div>
   );
 }

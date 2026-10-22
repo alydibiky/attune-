@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { tr } from "./i18n.js";
 import { planTask, cityName } from "./agent.js";
 import { regionOf } from "./locale.js";
+import { cardPad, inp, muted } from "./ui-kit.jsx";
 
 export const AGENT_PROFILE_KEY = "attune:agent:profile";
 export const loadBooking = () => { try { return JSON.parse(localStorage.getItem(AGENT_PROFILE_KEY) || "{}") || {}; } catch (e) { return {}; } };
@@ -50,15 +51,15 @@ export function BookingDetails() {
   const [open, setOpen] = useState(false);
   const set = (k, v) => setP((x) => { const n = { ...x, [k]: v }; saveBooking(n); return n; });
   const F = ([k, label, type]) => (
-    <label key={k} className="block"><span className="text-[11px] text-slate-500">{tr(label)}</span>
+    <label key={k} className="block space-y-1"><span className={"block text-[12px] font-bold " + muted}>{tr(label)}</span>
       <input type={type || "text"} value={p[k] || ""} onChange={(e) => set(k, k === "homeAirport" ? e.target.value.toUpperCase().slice(0, 3) : e.target.value)} dir="auto"
-        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500" data-testid={"booking-" + k} /></label>);
+        className={inp} data-testid={"booking-" + k} /></label>);
   return (
-    <div className="mt-4 rounded-xl border border-slate-800 p-3" data-testid="booking-details">
-      <button onClick={() => setOpen((v) => !v)} className="w-full text-start text-sm text-slate-200 font-medium flex justify-between">{tr("Booking details")}<span className="text-slate-500 text-xs">{open ? tr("Hide") : tr("Edit")}</span></button>
-      <p className="text-[11px] text-slate-500 mt-1">{tr("Used only when you tap “Fill my details” on a booking site. Kept on this phone; never sent anywhere by Attune.")}</p>
+    <div className={"calm mt-4 " + cardPad + " bg-[var(--c-surf)]!"} data-testid="booking-details">
+      <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[44px] text-start text-[15px] text-[var(--c-ink)] font-extrabold flex items-center justify-between gap-2">{tr("Booking details")}<span className="text-[var(--c-acc)] text-[13px] font-bold">{open ? tr("Hide") : tr("Edit")}</span></button>
+      <p className={"text-[12px] mt-1 m-0 " + muted}>{tr("Used only when you tap “Fill my details” on a booking site. Kept on this phone; never sent anywhere by Attune.")}</p>
       {open ? (
-        <div className="grid grid-cols-2 gap-2 mt-3">
+        <div className="grid grid-cols-2 gap-3 mt-4">
           {[["first", "First name"], ["last", "Last name"], ["email", "Email", "email"], ["phone", "Phone (with country code)", "tel"], ["birth", "Date of birth", "date"], ["nationality", "Nationality"],
             ["passport", "Passport number"], ["passportExpiry", "Passport expiry", "date"], ["city", "City"], ["country", "Country (2 letters, e.g. EG)"], ["homeAirport", "Home airport (e.g. CAI)"]].map(F)}
         </div>) : null}

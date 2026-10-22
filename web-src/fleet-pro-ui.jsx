@@ -37,7 +37,7 @@ export function InvoicesPane({ s, money, setSheet }) {
     <Seg value={f} onChange={setF} items={[["open", "Open"], ["overdue", "Overdue"], ["paid", "Paid"], ["all", "All"]]} testid="fleet-invf" />
     {list.length ? list.map((v) => { const [l, tone] = ST[v.status];
       return <Row key={v.id} onClick={() => setSheet({ kind: "invoiceView", id: v.id })} testid="fleet-invoice">
-        <span className="flex-1 min-w-0"><span className="flex items-center gap-2"><b className="text-[14.5px]" dir="ltr">{v.no}</b><Tag tone={tone}>{tr(l)}</Tag>{v.late ? <span className="text-[12px] text-[#B91C1C] font-semibold">{tr("{d} days late", { d: v.late })}</span> : null}</span>
+        <span className="flex-1 min-w-0"><span className="flex items-center gap-2"><b className="text-[14.5px]" dir="ltr">{v.no}</b><Tag tone={tone}>{tr(l)}</Tag>{v.late ? <span className="text-[12px] text-[var(--c-neg)] font-semibold">{tr("{d} days late", { d: v.late })}</span> : null}</span>
           <span className={"block text-[12.5px] truncate mt-0.5 " + muted} dir="auto">{nameOf(s.clients, v.client)} · {F.showDate(v.date)} · {tr("due")} {F.showDate(v.due)}</span></span>
         <span className="text-end"><span className="block text-[14px] font-bold tabular-nums" dir="ltr">{money(v.left)}</span>{v.left !== v.net ? <span className={"block text-[11.5px] tabular-nums " + muted} dir="ltr">/ {num(v.net)}</span> : null}</span></Row>; })
       : <Empty>{f === "open" ? tr("No open invoices. Make one from the work above.") : tr("Nothing here.")}</Empty>}
@@ -55,7 +55,7 @@ export function InvoiceForm({ s, run, sheet, close, money, setSheet }) {
     <div className="grid grid-cols-2 gap-2"><Txt label={tr("VAT %")} value={x.vat} onChange={set("vat")} mode="decimal" testid="fleet-f-vat" /><Txt label={tr("Withholding tax %")} value={x.wht} onChange={set("wht")} mode="decimal" testid="fleet-f-wht" /></div>
     {x.client ? (lines.length ? <div className={card + " p-3.5 space-y-1.5"} data-testid="fleet-invoice-preview">
       {lines.map((l) => <div key={l.job} className="flex gap-2 text-[13px]"><span className="flex-1 min-w-0" dir="auto">{l.desc}<span className={"block text-[12px] " + muted} dir="ltr">{num(l.qty)} {tr(l.unit === "h" ? "h" : l.unit === "day" ? "days" : "periods")} × {num(l.rate)}</span></span><span className="tabular-nums font-semibold" dir="ltr">{num(l.amount)}</span></div>)}
-      <div className="border-t border-[#EEF2F7] pt-1.5 text-[13px] space-y-0.5">
+      <div className="border-t border-[var(--c-ln)] pt-1.5 text-[13px] space-y-0.5">
         <p className="flex justify-between"><span>{tr("Subtotal")}</span><span className="tabular-nums" dir="ltr">{money(t.sub)}</span></p>
         {t.vat ? <p className="flex justify-between"><span>{tr("VAT")} {x.vat}%</span><span className="tabular-nums" dir="ltr">{money(t.vat)}</span></p> : null}
         {t.wht ? <p className="flex justify-between"><span>{tr("Withholding tax")} {x.wht}%</span><span className="tabular-nums" dir="ltr">−{money(t.wht)}</span></p> : null}
@@ -76,7 +76,7 @@ export function InvoiceView({ s, run, sheet, close, money, saveFile, setSheet })
       <p className="text-[14px]" dir="auto">{nameOf(s.clients, v.client)}</p>
       <p className={"text-[12.5px] " + muted}>{F.showDate(v.date)} · {tr("due")} {F.showDate(v.due)}{v.late ? " · " + tr("{d} days late", { d: v.late }) : ""}</p>
       {v.lines.map((x) => <p key={x.job} className="text-[13px] flex gap-2"><span className="flex-1 min-w-0" dir="auto">{x.desc}</span><span className="tabular-nums" dir="ltr">{num(x.amount)}</span></p>)}
-      <div className="border-t border-[#EEF2F7] pt-1.5 mt-1 text-[13px] space-y-0.5">
+      <div className="border-t border-[var(--c-ln)] pt-1.5 mt-1 text-[13px] space-y-0.5">
         <p className="flex justify-between"><span>{tr("Subtotal")}</span><span className="tabular-nums" dir="ltr">{money(v.sub)}</span></p>
         {v.vat ? <p className="flex justify-between"><span>{tr("VAT")} {v.vatPct}%</span><span className="tabular-nums" dir="ltr">{money(v.vat)}</span></p> : null}
         {v.wht ? <p className="flex justify-between"><span>{tr("Withholding tax")} {v.whtPct}%</span><span className="tabular-nums" dir="ltr">−{money(v.wht)}</span></p> : null}
@@ -88,7 +88,7 @@ export function InvoiceView({ s, run, sheet, close, money, saveFile, setSheet })
     <div className="flex flex-wrap gap-2">
       <button className={btnP + " h-10"} style={{ background: "var(--c-acc)" }} onClick={() => printHTML(P.invoiceHTML(s, v.id, { rtl: isAr() }), saveFile, v.no + ".html")} data-testid="fleet-invoice-print"><Printer size={15} />{tr("Print / PDF")}</button>
       {v.left > 0 ? <button className={btnS} onClick={() => setSheet({ kind: "cheque", dir: "in", client: v.client })} data-testid="fleet-invoice-pay"><Wallet size={15} />{tr("Payment received")}</button> : null}
-      <button className={btnS + " text-[#B91C1C]"} onClick={del} data-testid="fleet-invoice-del"><Trash2 size={15} />{tr("Delete")}</button></div>
+      <button className={btnS + " text-[var(--c-neg)]"} onClick={del} data-testid="fleet-invoice-del"><Trash2 size={15} />{tr("Delete")}</button></div>
   </div>;
 }
 
@@ -100,9 +100,9 @@ export function AgingPane({ s, money, setOpen }) {
   return <div className="space-y-2.5" data-testid="fleet-aging">
     <p className={"text-[12.5px] " + muted}>{tr("What each client still owes, by how many days its invoices are past due. The oldest debts are the hardest to collect — call those first.")}</p>
     <div className={card + " overflow-x-auto"}><table className="w-full text-[13px]"><thead><tr className={muted}><th className="px-3 py-2.5 text-start font-semibold">{tr("Client")}</th>{H.map(([k, l]) => <th key={k} className="px-3 py-2.5 text-end font-semibold whitespace-nowrap">{tr(l)}</th>)}</tr></thead>
-      <tbody>{a.rows.map((r) => <tr key={r.client.id} className="border-t border-[#EEF2F7] cursor-pointer hover:bg-[#F8FAFC]" onClick={() => setOpen({ kind: "client", id: r.client.id })} data-testid="fleet-aging-row">
-        <td className="px-3 py-2.5 whitespace-nowrap" dir="auto">{r.client.name}</td>{H.map(([k]) => <td key={k} className={"px-3 py-2.5 text-end tabular-nums " + ((k === "d90" || k === "over90") && r[k] ? "text-[#B91C1C] font-semibold" : k === "total" ? "font-bold" : "")} dir="ltr">{r[k] ? num(r[k]) : "—"}</td>)}</tr>)}
-        <tr className="border-t-2 border-[#DCE3EC] font-bold"><td className="px-3 py-2.5">{tr("Total")}</td>{H.map(([k]) => <td key={k} className="px-3 py-2.5 text-end tabular-nums" dir="ltr">{num(a.sum[k])}</td>)}</tr></tbody></table></div>
+      <tbody>{a.rows.map((r) => <tr key={r.client.id} className="border-t border-[var(--c-ln)] cursor-pointer hover:bg-[var(--c-surf-2)]" onClick={() => setOpen({ kind: "client", id: r.client.id })} data-testid="fleet-aging-row">
+        <td className="px-3 py-2.5 whitespace-nowrap" dir="auto">{r.client.name}</td>{H.map(([k]) => <td key={k} className={"px-3 py-2.5 text-end tabular-nums " + ((k === "d90" || k === "over90") && r[k] ? "text-[var(--c-neg)] font-semibold" : k === "total" ? "font-bold" : "")} dir="ltr">{r[k] ? num(r[k]) : "—"}</td>)}</tr>)}
+        <tr className="border-t-2 border-[var(--c-ln)] font-bold"><td className="px-3 py-2.5">{tr("Total")}</td>{H.map(([k]) => <td key={k} className="px-3 py-2.5 text-end tabular-nums" dir="ltr">{num(a.sum[k])}</td>)}</tr></tbody></table></div>
     <p className={"text-[12.5px] " + muted}>{tr("Total owed: {v}", { v: money(a.sum.total) })}</p>
   </div>;
 }
@@ -117,18 +117,18 @@ export function ReportsPane({ s, money }) {
       <p className={"text-[12.5px] " + muted}>{tr("Days each crane worked, was broken down, or stood idle. An idle crane costs money every day — offer it first.")}</p>
       {P.utilisation(s, ym).map((r) => <div key={r.crane.id} className={card + " p-3.5 space-y-1.5"} data-testid="fleet-use-row">
         <div className="flex items-center gap-2"><b className="flex-1 min-w-0 truncate text-[14px]" dir="auto">{r.crane.name}</b><span className="text-[15px] font-extrabold tabular-nums" dir="ltr">{r.pct}%</span></div>
-        <div className="h-2.5 rounded-full overflow-hidden flex bg-[#EEF2F7]" aria-hidden="true"><span style={{ width: (r.days ? (r.worked / r.days) * 100 : 0) + "%", background: "var(--c-acc)" }} /><span style={{ width: (r.days ? (r.down / r.days) * 100 : 0) + "%", background: "#DC2626" }} /></div>
+        <div className="h-2.5 rounded-full overflow-hidden flex bg-[var(--c-surf-2)]" aria-hidden="true"><span style={{ width: (r.days ? (r.worked / r.days) * 100 : 0) + "%", background: "var(--c-acc)" }} /><span style={{ width: (r.days ? (r.down / r.days) * 100 : 0) + "%", background: "#DC2626" }} /></div>
         <p className={"text-[12px] " + muted}>{tr("{w} worked · {d} down · {i} idle of {n} days", { w: r.worked, d: r.down, i: r.idle, n: r.days })}</p></div>)}
     </> : rep === "revenue" ? (() => { const m = P.revenueMatrix(s, year), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       return <>
         <div className="flex items-center gap-2"><button className={btnS + " w-10 px-0"} aria-label={tr("Previous year")} onClick={() => setYear(year - 1)}><ChevronLeft size={16} className="rtl:-scale-x-100" /></button><b className="tabular-nums" dir="ltr">{year}</b><button className={btnS + " w-10 px-0"} aria-label={tr("Next year")} onClick={() => setYear(year + 1)}><ChevronRight size={16} className="rtl:-scale-x-100" /></button>
           <span className={"ms-auto text-[13px] " + muted}>{tr("Year")}: <b className="tabular-nums" dir="ltr">{money(m.total)}</b></span></div>
         <div className={card + " overflow-x-auto"} data-testid="fleet-revenue"><table className="w-full text-[12.5px]"><thead><tr className={muted}><th className="px-2.5 py-2 text-start font-semibold">{tr("Crane")}</th>{M.map((x) => <th key={x} className="px-2.5 py-2 text-end font-semibold">{tr(x)}</th>)}<th className="px-2.5 py-2 text-end font-semibold">{tr("Total")}</th></tr></thead>
-          <tbody>{m.rows.map((r) => <tr key={r.crane.id} className="border-t border-[#EEF2F7]"><td className="px-2.5 py-2 whitespace-nowrap" dir="auto">{r.crane.name}</td>{r.months.map((v, i) => <td key={i} className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{v ? num(v) : "—"}</td>)}<td className="px-2.5 py-2 text-end tabular-nums font-bold" dir="ltr">{num(r.total)}</td></tr>)}
-            <tr className="border-t-2 border-[#DCE3EC] font-bold"><td className="px-2.5 py-2">{tr("Total")}</td>{m.months.map((v, i) => <td key={i} className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{v ? num(v) : "—"}</td>)}<td className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{num(m.total)}</td></tr></tbody></table></div></>; })()
+          <tbody>{m.rows.map((r) => <tr key={r.crane.id} className="border-t border-[var(--c-ln)]"><td className="px-2.5 py-2 whitespace-nowrap" dir="auto">{r.crane.name}</td>{r.months.map((v, i) => <td key={i} className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{v ? num(v) : "—"}</td>)}<td className="px-2.5 py-2 text-end tabular-nums font-bold" dir="ltr">{num(r.total)}</td></tr>)}
+            <tr className="border-t-2 border-[var(--c-ln)] font-bold"><td className="px-2.5 py-2">{tr("Total")}</td>{m.months.map((v, i) => <td key={i} className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{v ? num(v) : "—"}</td>)}<td className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{num(m.total)}</td></tr></tbody></table></div></>; })()
     : <div className="space-y-2" data-testid="fleet-fuel-report">{F.live(s.cranes).map((c) => { const f = P.fuelReport(s, c.id).slice(-4).reverse(); if (!f.length) return null;
         return <div key={c.id} className={card + " p-3.5"}><b className="block text-[14px] mb-1" dir="auto">{c.name}</b>
-          {f.map((m) => <p key={m.ym} className={"flex gap-2 text-[13px] py-0.5 " + (m.high ? "text-[#B91C1C] font-semibold" : "")}><span dir="ltr" className="w-16">{showYm(m.ym)}</span><span className="flex-1" dir="ltr">{num(m.litres)} L · {money(m.cost)}</span><span dir="ltr">{m.lph != null ? num(m.lph) + " L/h" : "—"}</span>{m.high ? <AlertTriangle size={14} className="mt-0.5" /> : null}</p>)}</div>; })}
+          {f.map((m) => <p key={m.ym} className={"flex gap-2 text-[13px] py-0.5 " + (m.high ? "text-[var(--c-neg)] font-semibold" : "")}><span dir="ltr" className="w-16">{showYm(m.ym)}</span><span className="flex-1" dir="ltr">{num(m.litres)} L · {money(m.cost)}</span><span dir="ltr">{m.lph != null ? num(m.lph) + " L/h" : "—"}</span>{m.high ? <AlertTriangle size={14} className="mt-0.5" /> : null}</p>)}</div>; })}
       {!F.live(s.cranes).some((c) => P.fuelReport(s, c.id).length) ? <Empty>{tr("No fuel logged yet — add it from a crane's page.")}</Empty> : null}</div>}
   </div>;
 }
@@ -140,7 +140,7 @@ export function TeamPane({ s, run, money, setSheet }) {
   return <div className="space-y-3" data-testid="fleet-team">
     {people.length ? <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0">{people.map((p) => { const left = p.licenceExp ? F.daysBetween(t, p.licenceExp) : null;
       return <Row key={p.id} onClick={() => setSheet({ kind: "person", rec: p })} testid="fleet-person">
-        <span className="w-10 h-10 rounded-xl grid place-items-center shrink-0 bg-[#EEF2F7] text-[#334155]"><Users size={18} /></span>
+        <span className="w-10 h-10 rounded-xl grid place-items-center shrink-0 bg-[var(--c-surf-2)] text-[var(--c-ink)]"><Users size={18} /></span>
         <span className="flex-1 min-w-0"><span className="block font-bold text-[14.5px] truncate" dir="auto">{p.name}</span>
           <span className="flex items-center gap-1.5 mt-0.5 flex-wrap"><Tag tone="blue">{tr(ROLE_L[p.role] || p.role)}</Tag>{p.crane ? <span className={"text-[12px] truncate " + muted} dir="auto">{nameOf(s.cranes, p.crane)}</span> : null}
             {left != null && left < 0 ? <Tag tone="red">{tr("Licence expired")}</Tag> : left != null && left <= 30 ? <Tag tone="amber">{tr("Licence: {d} days", { d: left })}</Tag> : null}</span></span>
@@ -150,13 +150,13 @@ export function TeamPane({ s, run, money, setSheet }) {
       <div className="flex items-center gap-2"><b className="flex-1 text-[15px]">{tr("Payroll")}</b><MonthPick ym={ym} setYm={setYm} testid="fleet-pay-month" /></div>
       <p className={"text-[12px] " + muted}>{tr("Days come from the work of each person's crane; type a number to change it.")}</p>
       <div className="overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className={muted}>{["Name", "Days", "Gross", "Advances", "Net"].map((h, i) => <th key={h} className={"px-2 py-2 font-semibold " + (i ? "text-end" : "text-start")}>{tr(h)}</th>)}<th /></tr></thead>
-        <tbody>{pay.rows.map((r) => <tr key={r.person.id} className="border-t border-[#EEF2F7]" data-testid="fleet-pay-row">
+        <tbody>{pay.rows.map((r) => <tr key={r.person.id} className="border-t border-[var(--c-ln)]" data-testid="fleet-pay-row">
           <td className="px-2 py-2" dir="auto">{r.person.name}</td>
           <td className="px-2 py-1 text-end"><input defaultValue={r.days} key={ym + r.person.id + r.days} inputMode="numeric" className={inp + " h-9 w-16 text-end px-2"} dir="ltr" data-testid="fleet-pay-days" disabled={r.person.salary > 0}
             onBlur={(e) => { const v = e.target.value.trim(); if (String(r.days) !== v) run((x) => P.setDays(x, r.person.id, ym, v === "" ? null : v)); }} /></td>
           <td className="px-2 py-2 text-end tabular-nums" dir="ltr">{num(r.gross)}</td><td className="px-2 py-2 text-end tabular-nums" dir="ltr">{r.advances ? "−" + num(r.advances) : "—"}</td><td className="px-2 py-2 text-end tabular-nums font-bold" dir="ltr">{num(r.net)}</td>
           <td className="px-1"><button className={btnS + " h-8 px-2 text-[12px]"} onClick={() => setSheet({ kind: "advance", person: r.person.id })} data-testid="fleet-advance">{tr("Advance")}</button></td></tr>)}
-          <tr className="border-t-2 border-[#DCE3EC] font-bold"><td className="px-2 py-2">{tr("Total")}</td><td /><td className="px-2 py-2 text-end tabular-nums" dir="ltr">{num(pay.sum.gross)}</td><td className="px-2 py-2 text-end tabular-nums" dir="ltr">{num(pay.sum.advances)}</td><td className="px-2 py-2 text-end tabular-nums" dir="ltr" data-testid="fleet-pay-total">{num(pay.sum.net)}</td><td /></tr></tbody></table></div>
+          <tr className="border-t-2 border-[var(--c-ln)] font-bold"><td className="px-2 py-2">{tr("Total")}</td><td /><td className="px-2 py-2 text-end tabular-nums" dir="ltr">{num(pay.sum.gross)}</td><td className="px-2 py-2 text-end tabular-nums" dir="ltr">{num(pay.sum.advances)}</td><td className="px-2 py-2 text-end tabular-nums" dir="ltr" data-testid="fleet-pay-total">{num(pay.sum.net)}</td><td /></tr></tbody></table></div>
     </div> : null}
   </div>;
 }
@@ -172,7 +172,7 @@ export function PersonForm({ s, run, sheet, close }) {
     <div className="grid grid-cols-2 gap-2"><Txt label={tr("Licence no.")} value={r.licence} onChange={set("licence")} dir="ltr" /><DateF label={tr("Licence expires")} value={r.licenceExp || ""} onChange={set("licenceExp")} testid="fleet-f-lic" /></div>
     <SaveBtn onClick={() => { if (run((x) => P.upsertPerson(x, r), tr("Saved"))) close(); }} disabled={!String(r.name || "").trim()} />
     {adv.length ? <div className={card + " p-3"}><p className="font-bold text-[13.5px] mb-1">{tr("Advances")}</p>{adv.map((a) => <p key={a.id} className="flex justify-between text-[13px] py-0.5"><span dir="ltr">{F.showDate(a.date)}</span><span className="tabular-nums" dir="ltr">{num(a.amount)}</span></p>)}</div> : null}
-    {r.id ? <button className={btnS + " w-full text-[#B91C1C]"} onClick={async () => { if (await askConfirm("Move this person to the Recycle Bin?", { yes: "Delete" })) { if (run((x) => F.remove(x, "people", r.id), tr("In the Recycle Bin for 7 days"))) close(); } }}><Trash2 size={15} />{tr("Delete")}</button> : null}
+    {r.id ? <button className={btnS + " w-full text-[var(--c-neg)]"} onClick={async () => { if (await askConfirm("Move this person to the Recycle Bin?", { yes: "Delete" })) { if (run((x) => F.remove(x, "people", r.id), tr("In the Recycle Bin for 7 days"))) close(); } }}><Trash2 size={15} />{tr("Delete")}</button> : null}
   </div>;
 }
 export function AdvanceForm({ s, run, sheet, close }) {
@@ -207,8 +207,8 @@ export function CraneMore({ s, run, money, setSheet, id }) {
         {r.cost ? <span className="tabular-nums" dir="ltr">{money(r.cost)}</span> : null}
         {!r.to ? <button className={btnS + " h-8 px-2 text-[12px]"} onClick={() => run((x) => P.closeRepair(x, r.id), tr("Back at work"))} data-testid="fleet-repair-fixed"><Check size={13} />{tr("Fixed today")}</button> : null}</div>)}</div> : null}
     {fuel.length ? <div className={card + " p-4"} data-testid="fleet-fuel"><p className="font-bold text-[14.5px] mb-1.5">{tr("Fuel")}</p>
-      {fuel.map((m) => <p key={m.ym} className={"flex gap-2 text-[13px] py-0.5 " + (m.high ? "text-[#B91C1C] font-semibold" : "")}><span dir="ltr" className="w-16">{showYm(m.ym)}</span><span className="flex-1" dir="ltr">{num(m.litres)} L · {money(m.cost)}</span><span dir="ltr">{m.lph != null ? num(m.lph) + " L/h" : "—"}</span></p>)}
-      {fuel[0] && fuel[0].high ? <p className="text-[12.5px] text-[#B91C1C] mt-1">{tr("{l} L/h this month against a usual {u} — check for a leak, the tank, or the engine.", { l: num(fuel[0].lph), u: num(fuel[0].usual) })}</p> : null}</div> : null}
+      {fuel.map((m) => <p key={m.ym} className={"flex gap-2 text-[13px] py-0.5 " + (m.high ? "text-[var(--c-neg)] font-semibold" : "")}><span dir="ltr" className="w-16">{showYm(m.ym)}</span><span className="flex-1" dir="ltr">{num(m.litres)} L · {money(m.cost)}</span><span dir="ltr">{m.lph != null ? num(m.lph) + " L/h" : "—"}</span></p>)}
+      {fuel[0] && fuel[0].high ? <p className="text-[12.5px] text-[var(--c-neg)] mt-1">{tr("{l} L/h this month against a usual {u} — check for a leak, the tank, or the engine.", { l: num(fuel[0].lph), u: num(fuel[0].usual) })}</p> : null}</div> : null}
   </div>;
 }
 export function PaperForm({ s, run, sheet, close, flash }) {
@@ -220,7 +220,7 @@ export function PaperForm({ s, run, sheet, close, flash }) {
     <div className="grid grid-cols-2 gap-2"><Txt label={tr("Number")} value={d.no} onChange={set("no")} dir="ltr" /><DateF label={tr("Expires")} value={d.expiry} onChange={set("expiry")} testid="fleet-f-pexp" /></div>
     <Evidence value={d.evidence} onChange={set("evidence")} flash={flash} />
     <SaveBtn onClick={() => { if (run((x) => P.upsertDoc(x, d), tr("Saved — Attune warns you before it runs out"))) close(); }} disabled={!d.expiry} />
-    {d.id ? <button className={btnS + " w-full text-[#B91C1C]"} onClick={async () => { if (await askConfirm("Move this paper to the Recycle Bin?", { yes: "Delete" })) { if (run((x) => F.remove(x, "docs", d.id))) close(); } }}><Trash2 size={15} />{tr("Delete")}</button> : null}
+    {d.id ? <button className={btnS + " w-full text-[var(--c-neg)]"} onClick={async () => { if (await askConfirm("Move this paper to the Recycle Bin?", { yes: "Delete" })) { if (run((x) => F.remove(x, "docs", d.id))) close(); } }}><Trash2 size={15} />{tr("Delete")}</button> : null}
   </div>;
 }
 export function RepairForm({ s, run, sheet, close, flash }) {
