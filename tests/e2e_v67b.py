@@ -18,7 +18,7 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(200)
     page.locator("button:has-text('Improve a prompt')").first.click(); page.wait_for_timeout(300)
-    box = page.locator("textarea[placeholder*='compare our cranes']").first
+    box = page.locator("textarea[placeholder*='compare laptops']").first
     box.fill("a short launch video for our crane rental company in Cairo")
     bad = []
     for label, must in NEW.items():

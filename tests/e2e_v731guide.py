@@ -93,8 +93,8 @@ with sync_playwright() as p:
     page.click("[data-testid=guide-plan-item][data-tool='start:safe']"); page.wait_for_timeout(150)
     check(page.locator("[data-testid=guide-walk]").get_attribute("data-id") == "start:safe", "'Save a backup' opens the backup guide")
     page.click("[data-testid='guide-row-plan:work']"); page.wait_for_timeout(150)
-    page.click("[data-testid=guide-plan-item][data-tool=crane]"); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=guide-page]").count() == 0, "a plan line opens its tool (Crane toolkit)")
+    page.click("[data-testid=guide-plan-item][data-tool=field]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=guide-page]").count() == 0, "a plan line opens its tool (Site reports)")
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "guide-desk.png"))
     # Arabic
     page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.set_viewport_size({"width": 390, "height": 844})

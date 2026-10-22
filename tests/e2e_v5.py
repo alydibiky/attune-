@@ -361,6 +361,7 @@ def sec_crane(br):
     open_more(page)
     # v6.50 (Ali: the app is neutral): the Crane toolkit is not in All tools — it opens from Business → Fleet & rentals → More
     check(page.locator(".rounded-t-2xl button:has-text('Crane toolkit')").count() == 0, "All tools does not list the Crane toolkit")
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)   # (the All tools sheet closed)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'crane'}}))")
     page.wait_for_selector("[data-testid=crane-toolkit]", timeout=5000)
     check("Planning aid only" in page.locator("[data-testid=crane-toolkit]").inner_text(), "the toolkit says plainly it is a planning aid")
@@ -422,7 +423,7 @@ def sec_crane(br):
     check("Liebherr LTM 1100" in (page.evaluate("localStorage.getItem('attune:crane:v1')") or ""), "charts are kept (and so go into backups)")
     # the same screens in Arabic
     page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
-    open_more(page); page.locator(".rounded-t-2xl button:has-text('أدوات الأوناش')").click()
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'crane'}}))")   # v6.50: opened from Business → Fleet
     page.wait_for_selector("[data-testid=crane-toolkit]", timeout=5000)
     bad = []
     for t in ["lift", "ground", "slings", "wind", "check", "charts"]:
