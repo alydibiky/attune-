@@ -6561,4 +6561,7 @@ export const AR = {
   "add to your to-do list, or see it": "ضيف للمهام أو شوفها",
   "at a time, every day, or when someone messages": "في ميعاد، كل يوم، أو لما حد يبعتلك",
   "a video → its subtitles (.srt)": "فيديو ← الترجمة المكتوبة (.srt)",
+  // v6.50 Fleet: calm view + Report (option C)
+  "Calm view": "العرض الهادي",
+  "See the Fleet report": "شوف تقرير الأسطول",
 };

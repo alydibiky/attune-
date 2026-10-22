@@ -18,7 +18,7 @@ export function QuotesPane({ s, money, setSheet }) {
   const t = F.isoDay(), list = F.live(s.quotes || []).slice().reverse(), st = Q.quoteStats(s, t.slice(0, 4), t);
   return <div className="space-y-2.5" data-testid="fleet-quotes">
     <div className="grid grid-cols-3 gap-2"><Kpi label={tr("Open quotes")} value={money(st.openValue)} /><Kpi label={tr("Won this year")} value={money(st.wonValue)} /><Kpi label={tr("Win rate")} value={st.rate == null ? "—" : st.rate + "%"} /></div>
-    <button className={btnP + " h-10 w-full"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "quote" })} data-testid="fleet-new-quote"><Plus size={16} />{tr("New quotation")}</button>
+    <button className={btnP + " h-10 w-full"} style={{ background: "var(--c-acc)" }} onClick={() => setSheet({ kind: "quote" })} data-testid="fleet-new-quote"><Plus size={16} />{tr("New quotation")}</button>
     {list.length ? list.map((q) => { const k = Q.quoteState(q, t), [l, tone] = QS[k];
       return <Row key={q.id} onClick={() => setSheet({ kind: "quoteView", id: q.id })} testid="fleet-quote">
         <span className="flex-1 min-w-0"><span className="flex items-center gap-2"><b className="text-[14.5px]" dir="ltr">{q.no}</b><Tag tone={tone}>{tr(l)}</Tag><Tag tone="blue">{tr(MODE_L[q.mode])}</Tag></span>
@@ -59,7 +59,7 @@ export function QuoteView({ s, run, sheet, close, money, saveFile, setSheet }) {
       <p className={"text-[12.5px] " + muted} dir="auto">{tr(MODE_L[q.mode])} · {num(q.qty)} × <span dir="ltr">{money(q.rate)}</span>{q.mobilisation ? " + " + tr("mobilisation") + " " + money(q.mobilisation) : ""} · {tr("valid until")} {F.showDate(q.validUntil)}</p>
       <p className="text-[22px] font-extrabold tabular-nums pt-1" dir="ltr">{money(q.total)}</p>{q.job ? <p className="text-[13px] text-[#15803D] font-semibold">{tr("Job order")} {(F.byId(s.jobs, q.job) || {}).no}</p> : null}</div>
     <div className="flex flex-wrap gap-2">
-      <button className={btnP + " h-10"} style={{ background: "var(--biz)" }} onClick={() => printHTML(Q.quoteHTML(s, q.id, { rtl: isAr() }), saveFile, q.no + ".html")} data-testid="fleet-quote-print"><Printer size={15} />{tr("Print / PDF")}</button>
+      <button className={btnP + " h-10"} style={{ background: "var(--c-acc)" }} onClick={() => printHTML(Q.quoteHTML(s, q.id, { rtl: isAr() }), saveFile, q.no + ".html")} data-testid="fleet-quote-print"><Printer size={15} />{tr("Print / PDF")}</button>
       {!q.job && q.status === "draft" ? <button className={btnS} onClick={() => run((x) => Q.setQuoteStatus(x, q.id, "sent"), tr("Marked as sent"))} data-testid="fleet-quote-sent">{tr("Mark as sent")}</button> : null}
       {!q.job && q.status !== "rejected" ? <button className={btnS} onClick={() => run((x) => Q.setQuoteStatus(x, q.id, "rejected"), tr("Marked as rejected"))}>{tr("Rejected")}</button> : null}
       {!q.job && q.status === "draft" ? <button className={btnS} onClick={() => setSheet({ kind: "quote", id: q.id })}><Pencil size={14} />{tr("Edit")}</button> : null}
@@ -77,7 +77,7 @@ export function QuoteView({ s, run, sheet, close, money, saveFile, setSheet }) {
 export function OrdersPane({ s, money, setSheet }) {
   const t = F.isoDay(), list = F.live(s.pos || []).map((p) => Q.poStatus(p, t)).reverse();
   return <div className="space-y-2.5" data-testid="fleet-pos">
-    <button className={btnP + " h-10 w-full"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "po" })} data-testid="fleet-new-po"><Plus size={16} />{tr("New purchase order")}</button>
+    <button className={btnP + " h-10 w-full"} style={{ background: "var(--c-acc)" }} onClick={() => setSheet({ kind: "po" })} data-testid="fleet-new-po"><Plus size={16} />{tr("New purchase order")}</button>
     {list.length ? list.map((p) => { const [l, tone] = PS[p.status];
       return <Row key={p.id} onClick={() => setSheet({ kind: "poView", id: p.id })} testid="fleet-po">
         <span className="flex-1 min-w-0"><span className="flex items-center gap-2"><b className="text-[14.5px]" dir="ltr">{p.no}</b><Tag tone={tone}>{tr(l)}</Tag>{p.late ? <span className="text-[12px] text-[#B91C1C] font-semibold">{tr("{d} days late", { d: p.late })}</span> : null}</span>
@@ -119,7 +119,7 @@ export function POView({ s, run, sheet, close, money, saveFile }) {
       <p className="text-[18px] font-extrabold tabular-nums text-end" dir="ltr">{money(p.total)}</p>
       {(p.receipts || []).length ? <p className={"text-[12px] " + muted}>{tr("Received")}: {p.receipts.map((r) => F.showDate(r.date) + " (" + r.doc + ")").join(" · ")}</p> : null}</div>
     <div className="flex flex-wrap gap-2">
-      <button className={btnP + " h-10"} style={{ background: "var(--biz)" }} onClick={() => printHTML(Q.poHTML(s, p.id, { rtl: isAr() }), saveFile, p.no + ".html")} data-testid="fleet-po-print"><Printer size={15} />{tr("Print / PDF")}</button>
+      <button className={btnP + " h-10"} style={{ background: "var(--c-acc)" }} onClick={() => printHTML(Q.poHTML(s, p.id, { rtl: isAr() }), saveFile, p.no + ".html")} data-testid="fleet-po-print"><Printer size={15} />{tr("Print / PDF")}</button>
       {p.status === "open" ? <button className={btnS + " text-[#B91C1C]"} onClick={async () => { if (await askConfirm("Cancel this purchase order?", { yes: "Cancel the order" })) run((x) => Q.cancelPO(x, p.id), tr("Cancelled")); }}>{tr("Cancel the order")}</button> : null}</div>
     {p.status === "open" || p.status === "partial" ? <div className={card + " p-3.5 space-y-2.5"} data-testid="fleet-po-receive"><p className="font-bold text-[14.5px] flex items-center gap-1.5"><Package size={16} />{tr("Goods came — receive them")}</p>
       {p.lines.filter((x) => x.left > 0).map((x) => <div key={x.item} className="flex items-center gap-2"><span className="flex-1 text-[13.5px]" dir="auto">{x.item}</span><input value={got[x.item] ?? String(x.left)} onChange={(e) => setGot({ ...got, [x.item]: e.target.value })} inputMode="decimal" className="w-24 h-10 rounded-xl bg-[#EEF2F7] px-2 text-end" dir="ltr" data-testid="fleet-po-got" /></div>)}
@@ -132,7 +132,7 @@ export function POView({ s, run, sheet, close, money, saveFile }) {
 export function VendorsPane({ s, money, setSheet }) {
   const list = Q.vendorBalances(s), owed = list.reduce((n, b) => n + Math.max(0, b.balance), 0);
   return <div className="space-y-2.5" data-testid="fleet-vendors">
-    <div className="grid grid-cols-2 gap-2"><Kpi label={tr("You owe suppliers")} value={money(owed)} tone={owed > 0 ? "red" : null} /><button className={btnP + " h-full"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "vendor", rec: {} })} data-testid="fleet-new-vendor"><Plus size={16} />{tr("Supplier")}</button></div>
+    <div className="grid grid-cols-2 gap-2"><Kpi label={tr("You owe suppliers")} value={money(owed)} tone={owed > 0 ? "red" : null} /><button className={btnP + " h-full"} style={{ background: "var(--c-acc)" }} onClick={() => setSheet({ kind: "vendor", rec: {} })} data-testid="fleet-new-vendor"><Plus size={16} />{tr("Supplier")}</button></div>
     {list.length ? list.map((b) => <Row key={b.vendor.name} onClick={() => setSheet({ kind: "vendor", rec: b.vendor })} testid="fleet-vendor">
       <span className="flex-1 min-w-0"><span className="block font-bold text-[14.5px] truncate" dir="auto">{b.vendor.name}</span><span className={"block text-[12px] " + muted}>{tr("bought")} <span dir="ltr">{money(b.bought)}</span> · {tr("paid")} <span dir="ltr">{money(b.paid)}</span></span></span>
       <span className={"text-[13.5px] font-bold tabular-nums " + (b.balance > 0 ? "text-[#B45309]" : "text-[#15803D]")} dir="ltr">{money(b.balance)}</span></Row>)

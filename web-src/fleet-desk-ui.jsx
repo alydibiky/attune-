@@ -148,7 +148,7 @@ export function ListsPane({ s, run }) {
     <p className={"text-[13px] " + muted}>{tr("The names your store forms suggest. Renaming one changes it on every line.")}</p>
     <Seg value={list} onChange={(v) => { setList(v); setEdit(null); }} items={LISTS} testid="fleet-ln" />
     <div className="flex gap-2"><input value={add} onChange={(e) => setAdd(e.target.value)} placeholder={tr("Add a name")} className={inp} dir="auto" data-testid="fleet-ln-add" />
-      <button className={btnP + " h-11 shrink-0"} style={{ background: "var(--biz)" }} disabled={!add.trim()} onClick={() => { if (run((x) => D.addName(x, list, add), tr("Added"))) setAdd(""); }} data-testid="fleet-ln-add-btn"><Plus size={16} />{tr("Add")}</button></div>
+      <button className={btnP + " h-11 shrink-0"} style={{ background: "var(--c-acc)" }} disabled={!add.trim()} onClick={() => { if (run((x) => D.addName(x, list, add), tr("Added"))) setAdd(""); }} data-testid="fleet-ln-add-btn"><Plus size={16} />{tr("Add")}</button></div>
     {names.length ? names.map((x) => <div key={x.name} className={card + " p-3 flex items-center gap-2"} data-testid="fleet-ln-row">
       {edit && edit.from === x.name ? <><input autoFocus value={edit.to} onChange={(e) => setEdit({ ...edit, to: e.target.value })} className={inp + " h-10"} dir="auto" data-testid="fleet-ln-edit" />
         <button className={btnS} onClick={() => { if (run((st) => D.renameName(st, list, edit.from, edit.to), tr("Renamed everywhere"))) setEdit(null); }} data-testid="fleet-ln-save">{tr("Save")}</button></>

@@ -33,7 +33,7 @@ export function InvoicesPane({ s, money, setSheet }) {
   const notInv = F.live(s.clients).reduce((n, c) => n + P.uninvoiced(s, c.id).reduce((m, l) => m + l.amount, 0), 0);
   return <div className="space-y-2.5" data-testid="fleet-invoices">
     <div className="grid grid-cols-3 gap-2"><Kpi label={tr("To collect")} value={money(left)} /><Kpi label={tr("Overdue")} value={money(late)} tone={late > 0 ? "red" : null} /><Kpi label={tr("Not invoiced yet")} value={money(notInv)} /></div>
-    <button className={btnP + " h-10 w-full"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "invoice" })} data-testid="fleet-new-invoice"><Plus size={16} />{tr("New invoice from the work")}</button>
+    <button className={btnP + " h-10 w-full"} style={{ background: "var(--c-acc)" }} onClick={() => setSheet({ kind: "invoice" })} data-testid="fleet-new-invoice"><Plus size={16} />{tr("New invoice from the work")}</button>
     <Seg value={f} onChange={setF} items={[["open", "Open"], ["overdue", "Overdue"], ["paid", "Paid"], ["all", "All"]]} testid="fleet-invf" />
     {list.length ? list.map((v) => { const [l, tone] = ST[v.status];
       return <Row key={v.id} onClick={() => setSheet({ kind: "invoiceView", id: v.id })} testid="fleet-invoice">
@@ -86,7 +86,7 @@ export function InvoiceView({ s, run, sheet, close, money, saveFile, setSheet })
         <p className="flex justify-between font-extrabold text-[15px]"><span>{tr("Left to pay")}</span><span className="tabular-nums" dir="ltr" data-testid="fleet-invoice-left">{money(v.left)}</span></p></div>
     </div>
     <div className="flex flex-wrap gap-2">
-      <button className={btnP + " h-10"} style={{ background: "var(--biz)" }} onClick={() => printHTML(P.invoiceHTML(s, v.id, { rtl: isAr() }), saveFile, v.no + ".html")} data-testid="fleet-invoice-print"><Printer size={15} />{tr("Print / PDF")}</button>
+      <button className={btnP + " h-10"} style={{ background: "var(--c-acc)" }} onClick={() => printHTML(P.invoiceHTML(s, v.id, { rtl: isAr() }), saveFile, v.no + ".html")} data-testid="fleet-invoice-print"><Printer size={15} />{tr("Print / PDF")}</button>
       {v.left > 0 ? <button className={btnS} onClick={() => setSheet({ kind: "cheque", dir: "in", client: v.client })} data-testid="fleet-invoice-pay"><Wallet size={15} />{tr("Payment received")}</button> : null}
       <button className={btnS + " text-[#B91C1C]"} onClick={del} data-testid="fleet-invoice-del"><Trash2 size={15} />{tr("Delete")}</button></div>
   </div>;
@@ -117,7 +117,7 @@ export function ReportsPane({ s, money }) {
       <p className={"text-[12.5px] " + muted}>{tr("Days each crane worked, was broken down, or stood idle. An idle crane costs money every day — offer it first.")}</p>
       {P.utilisation(s, ym).map((r) => <div key={r.crane.id} className={card + " p-3.5 space-y-1.5"} data-testid="fleet-use-row">
         <div className="flex items-center gap-2"><b className="flex-1 min-w-0 truncate text-[14px]" dir="auto">{r.crane.name}</b><span className="text-[15px] font-extrabold tabular-nums" dir="ltr">{r.pct}%</span></div>
-        <div className="h-2.5 rounded-full overflow-hidden flex bg-[#EEF2F7]" aria-hidden="true"><span style={{ width: (r.days ? (r.worked / r.days) * 100 : 0) + "%", background: "var(--biz)" }} /><span style={{ width: (r.days ? (r.down / r.days) * 100 : 0) + "%", background: "#DC2626" }} /></div>
+        <div className="h-2.5 rounded-full overflow-hidden flex bg-[#EEF2F7]" aria-hidden="true"><span style={{ width: (r.days ? (r.worked / r.days) * 100 : 0) + "%", background: "var(--c-acc)" }} /><span style={{ width: (r.days ? (r.down / r.days) * 100 : 0) + "%", background: "#DC2626" }} /></div>
         <p className={"text-[12px] " + muted}>{tr("{w} worked · {d} down · {i} idle of {n} days", { w: r.worked, d: r.down, i: r.idle, n: r.days })}</p></div>)}
     </> : rep === "revenue" ? (() => { const m = P.revenueMatrix(s, year), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       return <>

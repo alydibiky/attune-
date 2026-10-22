@@ -19,7 +19,8 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, extra_init="try{localStorage.setItem('attune:start','home')}catch(e){}")
     page.set_viewport_size({"width": 390, "height": 844})
     open_fleet(page)
-    # ---- Today
+    # ---- Today (v6.50: its Report)
+    page.click("[data-testid=fleet-view-report]"); page.wait_for_selector("[data-testid=fleet-cash]")
     cash = page.inner_text("[data-testid=fleet-cash]")
     check("Collected" in cash and "Profit, all time" in cash, "Today shows the month on a cash basis and the all-time profit")
     check("2 jobs" in page.inner_text("[data-testid=fleet-active-counts]"), "Active now's counts: 2 jobs")
@@ -88,7 +89,7 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, extra_init="try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:ui:lang','ar')}catch(e){};window.__trMiss=new Set()")
     page.set_viewport_size({"width": 390, "height": 844})
     open_fleet(page, "الأعمال")
-    page.click("[data-testid=fleet-cash-more]"); page.wait_for_timeout(150)
+    page.click("[data-testid=fleet-view-report]"); page.click("[data-testid=fleet-cash-more]"); page.wait_for_timeout(150)
     page.click("[data-testid=fleet-menu]"); page.click("[data-testid=fleet-rates-open]"); page.wait_for_timeout(150); close(page)
     page.click("[data-testid=fleet-tab-money]"); page.click("[data-testid=fleet-mseg-sites]"); page.wait_for_timeout(150)
     for t in ["cheques", "jobs", "expenses", "moves"]:

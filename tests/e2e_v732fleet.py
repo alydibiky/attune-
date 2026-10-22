@@ -31,6 +31,11 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=fleet-tabs] button").count() == 5, "five tabs on a phone")
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "fleet-today.png"))
     # ---- add work: evidence required, overlap blocked
+    # v6.50 option C: Today opens calm (tiles, quick actions, what needs you); the Report holds cash and the cranes working now
+    check(page.locator("[data-testid=fleet-active]").count() == 0 and page.locator("[data-testid=fleet-cash]").count() == 0
+          and page.locator("[data-testid=fleet-see-report]").count() == 1, "Today opens calm — the Report is one tap away")
+    page.click("[data-testid=fleet-see-report]"); page.wait_for_selector("[data-testid=fleet-cash]")
+    check(page.locator("[data-testid=fleet-today]").get_attribute("data-view") == "report" and page.locator("[data-testid=fleet-active]").count() == 2, "the Report: cash and the cranes working now")
     page.locator("[data-testid=fleet-active]").first.click(); page.wait_for_selector("[data-testid=fleet-job-detail]")
     page.click("[data-testid=fleet-add-work]"); page.wait_for_selector("[data-testid=fleet-work-form]")
     page.fill("[data-testid=fleet-f-start]", "09:00"); page.fill("[data-testid=fleet-f-end]", "15:30")
@@ -88,7 +93,7 @@ with sync_playwright() as p:
     page.locator("[data-testid=fleet-sheet] button[aria-label=Close]").click()
     # ---- kept after a reload
     page.reload(); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-    open_fleet(page)
+    open_fleet(page); page.click("[data-testid=fleet-view-report]"); page.wait_for_selector("[data-testid=fleet-active]")
     check(page.locator("[data-testid=fleet-today]").count() == 1 and page.locator("[data-testid=fleet-active]").count() == 2, "everything is still there after reopening the app")
     # ---- an encrypted backup (download in the browser)
     page.click("[data-testid=fleet-menu]"); page.click("[data-testid=fleet-backup]"); page.fill("[data-testid=fleet-pass]", "crane-2026")
