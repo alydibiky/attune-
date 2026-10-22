@@ -20,7 +20,7 @@ export const label = "text-[11px] font-extrabold tracking-[0.08em] uppercase tex
 export const h1 = "text-[22px] font-black tracking-tight m-0";
 export const h2 = "text-[16px] font-extrabold m-0";
 /** A chip / pill that can be selected: terracotta when on (Gemini's active pill), quiet outline when off. */
-export const chip = (on) => "min-h-[40px] h-10 px-4 rounded-full text-[13.5px] font-extrabold whitespace-nowrap border inline-flex items-center gap-1.5 transition-colors duration-150 "
+export const chip = (on) => "min-h-[44px] h-11 px-4 rounded-full text-[13.5px] font-extrabold whitespace-nowrap border inline-flex items-center gap-1.5 transition-colors duration-150 "
   + (on ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]");
 /** Status words (always a word with the colour): good / due / late / info. */
 export const tag = (tone = "gray") => "inline-flex items-center gap-1 text-[11px] font-extrabold rounded-full px-2.5 py-0.5 whitespace-nowrap " + ({
