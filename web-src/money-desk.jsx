@@ -32,7 +32,7 @@ export const MONEY_TABS = [["overview", "Overview", null], ["home", "Transaction
   ["zakat", "Zakat", "zakat"], ["reports", "Reports", "trends"], ["accounts", "Accounts", "accounts"]];
 const ICON = { groceries: ShoppingCart, transport: Car, salary: Building2, bills: Zap, food: Utensils, rent: House, health: Heart, gifts: Gift, coffee: Coffee, invoice: FileText, shopping: ShoppingCart };
 
-function Overview({ o, go, onAsk }) {
+function Overview({ o, go, onAsk, onPeople }) {
   const max = Math.max(1, ...o.weeks.map((w) => w.out)), wkBudget = o.budget ? o.budget / 4.3 : 0;
   const label = (t) => t.note || tr(t.cat ? t.cat[0].toUpperCase() + t.cat.slice(1) : "Entry");
   return (
@@ -110,7 +110,7 @@ export function MoneyDesk({ renderYusr, onAsk, onPeople }) {
       <div className="flex gap-1.5 px-6 pt-4 pb-3 border-b border-[var(--c-ln)] overflow-x-auto" role="tablist">
         {MONEY_TABS.map(([k, label]) => <button key={k} role="tab" aria-selected={tab === k} className={U.chip(tab === k)} onClick={() => setTab(k)} data-testid={"money-tab-" + k}>{tr(label)}</button>)}
       </div>
-      {tab === "overview" ? <Overview o={o} go={go} onAsk={onAsk} /> : null}
+      {tab === "overview" ? <Overview o={o} go={go} onAsk={onAsk} onPeople={onPeople} /> : null}
       {/* Yusr stays loaded (hidden on Overview), so switching tabs is instant */}
       <div className="p-4" data-testid="money-yusr" style={{ display: tab === "overview" ? "none" : "block" }}>{renderYusr(screen || "home")}</div>
     </div>);

@@ -15,6 +15,7 @@ import { useDesktopWide } from "./side-ui.jsx";
 import { SpeakPractice, DialogueCard, LessonPicture, PackCourses } from "./speak-ui.jsx";
 import * as PC from "./packcourse.js";
 import * as SP from "./speak.js";
+import { page, inp, btnP, btnS, label as kLabel, h1, chip } from "./ui-kit.jsx";
 
 const CKEY = "attune:daily:courses:v1", NKEY = "attune:daily:news:v1";
 const load = (k) => { try { const v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -22,8 +23,8 @@ const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } ca
 export const loadCourses = () => load(CKEY);
 export const loadTopics = () => load(NKEY);
 
-const field = "w-full min-w-0 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2.5 py-2 text-sm text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)]";
-const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
+const field = inp;
+const btn = "min-h-[44px] px-3.5 py-2 rounded-[14px] text-[13.5px] font-bold disabled:opacity-40 inline-flex items-center justify-center gap-1.5 transition-colors duration-150";
 const primary = btn + " bg-[var(--c-acc)] text-[var(--c-on-acc)]";
 // (v5.13: a field that must NOT stretch — "w-full" beat "w-28" and squeezed
 // the label next to it into one letter per line.)
@@ -96,11 +97,11 @@ export function syncDaily(native, courses = loadCourses(), topics = loadTopics()
 }
 
 function Back({ onClick, label }) {
-  return <button onClick={onClick} className="text-[var(--c-mut)] text-sm flex items-center gap-1"><ChevronLeft size={16} />{label || tr("Back")}</button>;
+  return <button onClick={onClick} className="min-h-[44px] pe-2 text-[var(--c-mut)] text-[13.5px] font-bold flex items-center gap-1"><ChevronLeft size={18} className="rtl:rotate-180" />{label || tr("Back")}</button>;
 }
 function Working({ what, text }) {
   return (
-    <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3" data-testid="daily-working">
+    <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4" data-testid="daily-working">
       <p className="text-[13px] text-[var(--c-acc)] flex items-center gap-1.5"><Loader2 size={14} className="animate-spin" />{what}</p>
       {text ? <p className="text-[12px] text-[var(--c-mut)] mt-1.5 line-clamp-3 break-words" dir="auto">{text.slice(-300)}</p> : null}
     </div>
@@ -112,7 +113,7 @@ export function Visual({ v }) {
   const [flipped, setFlipped] = useState({});
   if (!v) return null;
   const head = v.title ? <p className="text-[12px] font-semibold text-[var(--c-ink)] mb-2" dir="auto">{v.title}</p> : null;
-  const box = "rounded-xl border border-[var(--c-acc)]/40 bg-gradient-to-b from-[var(--c-soft)] to-transparent p-3";
+  const box = "rounded-[18px] border border-[var(--c-acc)]/30 bg-gradient-to-b from-[var(--c-soft)] to-transparent p-3.5";
   if (v.kind === "table") return (
     <div className={box} data-testid="visual-table">{head}
       <div className="overflow-x-auto"><table className="text-[13px] min-w-full"><thead><tr>{v.columns.map((c, i) => <th key={i} className="text-start px-2 py-1.5 text-[var(--c-acc)] font-semibold border-b border-[var(--c-ln)] whitespace-nowrap" dir="auto">{c}</th>)}</tr></thead>
@@ -122,7 +123,7 @@ export function Visual({ v }) {
     <div className={box} data-testid="visual-steps">{head}
       {v.items.map((x, i) => (
         <div key={i}>
-          <div className="flex gap-2.5 items-start rounded-lg bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5">
+          <div className="flex gap-2.5 items-start rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5">
             <span className="w-6 h-6 shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[12px] font-bold flex items-center justify-center">{i + 1}</span>
             <span className="text-[13px] text-[var(--c-ink)] pt-0.5" dir="auto">{x}</span></div>
           {i < v.items.length - 1 ? <div className="text-center text-[var(--c-acc)] leading-none py-0.5">↓</div> : null}
@@ -132,7 +133,7 @@ export function Visual({ v }) {
     <div className={box} data-testid="visual-cards">{head}<p className="text-[11px] text-[var(--c-mut)] mb-2">{tr("Tap a card to turn it over")}</p>
       <div className="grid grid-cols-2 gap-2">
         {v.items.map((x, i) => (
-          <button key={i} onClick={() => setFlipped((f) => ({ ...f, [i]: !f[i] }))} className={`rounded-lg border p-2.5 min-h-[4.5rem] text-start ${flipped[i] ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`}>
+          <button key={i} onClick={() => setFlipped((f) => ({ ...f, [i]: !f[i] }))} className={`rounded-[14px] border p-2.5 min-h-[4.5rem] text-start transition-colors duration-150 ${flipped[i] ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`}>
             {flipped[i] ? <><span className="block text-[13px] text-[var(--c-warn)]" dir="auto">{x.back}</span>{x.note ? <span className="block text-[11px] text-[var(--c-mut)] mt-1" dir="auto">{x.note}</span> : null}</>
               : <span className="block text-[15px] font-semibold text-[var(--c-ink)]" dir="auto">{x.front}</span>}
           </button>))}
@@ -142,7 +143,7 @@ export function Visual({ v }) {
     <div className={box} data-testid="visual-compare">{head}
       <div className="grid grid-cols-2 gap-2">
         {[v.left, v.right].map((s, k) => (
-          <div key={k} className={`rounded-lg p-2.5 border ${k ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-acc)]/40 bg-[var(--c-soft)]"}`}>
+          <div key={k} className={`rounded-[14px] p-2.5 border ${k ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-acc)]/40 bg-[var(--c-soft)]"}`}>
             <p className={`text-[12px] font-semibold mb-1 ${k ? "text-[var(--c-warn)]" : "text-[var(--c-acc)]"}`} dir="auto">{s.title}</p>
             {s.items.map((x, i) => <p key={i} className="text-[12px] text-[var(--c-ink)] mt-1" dir="auto">• {x}</p>)}
           </div>))}
@@ -155,7 +156,7 @@ export function Visual({ v }) {
         {v.items.map((x, i) => (
           <div key={i} className="mb-1.5">
             <div className="flex justify-between text-[12px]"><span className="text-[var(--c-ink)]" dir="auto">{x.label}</span><span className="text-[var(--c-mut)] tabular-nums">{x.value}{v.unit ? " " + v.unit : ""}</span></div>
-            <div className="h-2 rounded bg-[var(--c-surf-2)]"><div className="h-2 rounded bg-[var(--c-acc)]" style={{ width: `${Math.max(2, Math.round((Math.abs(x.value) / max) * 100))}%` }} /></div>
+            <div className="h-2 rounded-full bg-[var(--c-ln)]"><div className="h-2 rounded-full bg-[var(--c-acc)]" style={{ width: `${Math.max(2, Math.round((Math.abs(x.value) / max) * 100))}%` }} /></div>
           </div>))}
       </div>);
   }
@@ -175,11 +176,11 @@ export function Visual({ v }) {
    review the cards (made by code from the lessons you read, no model needed) → today's lesson → the quiz. The course plan and the
    settings sit below, small. On a computer the course stays on the left and the lesson, review or quiz opens on the right. */
 const cf = { background: "var(--c-bg)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" };
-const cField = "w-full min-w-0 rounded-lg px-2.5 py-2 text-sm focus:outline-none";
-const cGhost = "rounded-lg px-3 py-2 text-[13px] font-medium border disabled:opacity-40";
+const cField = "w-full min-w-0 min-h-[44px] rounded-[14px] px-3.5 py-2.5 text-[15px] font-semibold focus:outline-none";
+const cGhost = "min-h-[44px] rounded-[14px] px-3.5 py-2 text-[13.5px] font-bold border inline-flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors duration-150";
 const gs = { borderColor: "var(--c-ln)", color: "var(--c-ink)", background: "transparent" };
 function CBack({ onClick, label }) {
-  return <button onClick={onClick} className="c-sub flex items-center gap-1 text-[13px]"><ChevronLeft size={16} className="rtl:-scale-x-100" />{label || tr("Back")}</button>;
+  return <button onClick={onClick} className="c-sub min-h-[44px] pe-2 flex items-center gap-1 text-[13.5px] font-bold"><ChevronLeft size={18} className="rtl:rotate-180" />{label || tr("Back")}</button>;
 }
 function CWorking({ what, text }) {
   return (
@@ -191,21 +192,21 @@ function CWorking({ what, text }) {
 /** v6.34 (Ali: "I want to add lessons"): your own lesson at the end of a course — written like the others, in its turn. */
 function AddLesson({ onAdd }) {
   const [open, setOpen] = useState(false), [t, setT] = useState("");
-  if (!open) return <button className="c-acc text-[13px] font-medium flex items-center gap-1" onClick={() => setOpen(true)} data-testid="learn-add-lesson"><Plus size={14} />{tr("Add a lesson")}</button>;
+  if (!open) return <button className="c-acc min-h-[44px] text-[13.5px] font-bold flex items-center gap-1" onClick={() => setOpen(true)} data-testid="learn-add-lesson"><Plus size={14} />{tr("Add a lesson")}</button>;
   const add = () => { const v = t.trim(); if (!v) return; onAdd(v.slice(0, 120)); setT(""); setOpen(false); };
   return <div className="flex gap-2"><input autoFocus value={t} onChange={(e) => setT(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") add(); }} placeholder={tr("What should the lesson be about?")} className={cField} style={cf} dir="auto" data-testid="learn-add-title" />
-    <button className="c-btn px-3 shrink-0" onClick={add} disabled={!t.trim()} data-testid="learn-add-save">{tr("Add")}</button></div>;
+    <button className={btnP + " !px-4 shrink-0"} onClick={add} disabled={!t.trim()} data-testid="learn-add-save">{tr("Add")}</button></div>;
 }
 /** One step of today: an icon (a tick once done), what it is, and a line under it. */
 function Step({ icon: I, title, sub, done, onClick, testid, disabled }) {
   return (
-    <button onClick={onClick} disabled={disabled} data-testid={testid} className="w-full text-start flex items-center gap-3 p-3 disabled:opacity-60">
+    <button onClick={onClick} disabled={disabled} data-testid={testid} className="w-full text-start min-h-[56px] flex items-center gap-3 p-3.5 disabled:opacity-60">
       <span className="c-ic" style={done ? { background: "transparent", border: "1px solid var(--c-ln)", color: "var(--c-pos)" } : undefined}>{done ? <Check size={16} /> : <I size={16} />}</span>
       <span className="flex-1 min-w-0"><b className="block text-[14px] font-semibold" dir="auto" style={done ? { color: "var(--c-mut)" } : undefined}>{title}</b>{sub ? <span className="c-sub block" dir="auto">{sub}</span> : null}</span>
-      {!done && !disabled ? <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" /> : null}
+      {!done && !disabled ? <ChevronRight size={16} className="c-acc shrink-0 rtl:rotate-180" /> : null}
     </button>);
 }
-const frame = (el, testid) => <div className="calm rounded-2xl p-4 md:p-6" style={{ minHeight: "70vh" }} data-testid={testid}>{el}</div>;
+const frame = (el, testid) => <div className={page + " rounded-[22px] p-4 md:p-6"} style={{ minHeight: "70vh" }} data-testid={testid}>{el}</div>;
 const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 const cardsWord = (n) => (n === 1 ? tr("1 card") : tr("{n} cards", { n }));
 
@@ -353,11 +354,11 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         <p className="c-lbl">{tr("Ready courses")}</p>
         <div className="c-list" data-testid="learn-ready">
           {neutral(D.READY_COURSES, "courses").map((r) => (
-            <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-ready-" + r.id} className="w-full text-start p-3 flex items-center gap-3">
+            <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-ready-" + r.id} className="w-full text-start p-3.5 min-h-[56px] flex items-center gap-3">
               <span className="text-2xl">{r.emoji}</span>
-              <span className="min-w-0 flex-1"><b className="block text-[14px]">{r.title[getLang() === "ar" ? 1 : 0]}</b>
+              <span className="min-w-0 flex-1"><b className="block text-[14.5px] font-extrabold">{r.title[getLang() === "ar" ? 1 : 0]}</b>
                 <span className="c-sub block truncate">{r.plan.slice(0, 3).map((p) => p[getLang() === "ar" ? 1 : 0]).join(" · ")}…</span></span>
-              <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" />
+              <ChevronRight size={16} className="c-acc shrink-0 rtl:rotate-180" />
             </button>))}
         </div>
         <p className="c-sub">{tr("A ready course starts at once: its lessons are already planned; each is written on your device when its day comes.")}</p>
@@ -367,7 +368,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         <p className="c-lbl">{tr("Or any topic you like")}</p>
         <input value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} className={cField} style={cf} dir="auto" placeholder={tr("A language, a skill, a subject…")} data-testid="learn-topic" />
         <div className="flex flex-wrap gap-1.5">{["Turkish", "English", "Photography", "Excel & Power Automate", "Java", "Economics", "Tajweed"].map((x) =>
-          <button key={x} onClick={() => setForm({ ...form, topic: tr(x) })} className="text-[12px] rounded-full border px-2.5 py-1" style={gs}>{tr(x)}</button>)}</div>
+          <button key={x} onClick={() => setForm({ ...form, topic: tr(x) })} className={chip(false)}>{tr(x)}</button>)}</div>
         <textarea value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })} rows={2} className={cField} style={cf} dir="auto" placeholder={tr("Your goal (optional) — e.g. speak like a native, pass an exam, understand my car")} />
         <div className="grid grid-cols-2 gap-2">
           <label className="block"><span className="c-sub block mb-1">{tr("Level")}</span>
@@ -380,7 +381,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             <select value={form.quizEvery} onChange={(e) => setForm({ ...form, quizEvery: Number(e.target.value) })} className={cField} style={cf}>{[3, 5, 7].map((n) => <option key={n} value={n}>{tr("{n} lessons", { n })}</option>)}</select></label>
         </div>
         {busy ? <CWorking {...busy} /> : modelReady
-          ? <button className="c-btn w-full py-2.5 disabled:opacity-40" disabled={form.topic.trim().length < 2} onClick={create} data-testid="learn-create">{tr("Plan my course")}</button>
+          ? <button className={btnP + " w-full"} disabled={form.topic.trim().length < 2} onClick={create} data-testid="learn-create">{tr("Plan my course")}</button>
           : <button className={cGhost + " w-full"} style={gs} onClick={openEngine}>{tr("Load a model first — lessons are written on your phone")}</button>}
       </div>
       </div>
@@ -397,7 +398,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
           <p className="c-amt m-0">{rev.knew} / {total}</p>
           <p className="text-[14px] m-0">{rev.knew === total ? tr("You knew them all. They come back further apart now.") : tr("The ones you didn't know come back tomorrow; the rest further apart.")}</p>
           <div className="flex gap-2 flex-wrap">
-            {t && !t.done ? <button className="c-btn" onClick={() => { setRev(null); openL(course, t.n); }} data-testid="review-to-lesson">{tr("Now today's lesson")}</button> : null}
+            {t && !t.done ? <button className={btnP} onClick={() => { setRev(null); openL(course, t.n); }} data-testid="review-to-lesson">{tr("Now today's lesson")}</button> : null}
             <button className={cGhost} style={gs} onClick={() => { setRev(null); setView("course"); }} data-testid="review-finish">{tr("Done")}</button>
           </div>
         </section>);
@@ -414,17 +415,17 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         <div className="flex justify-between c-sub c-num"><span>{tr("Review")}</span><span>{rev.i + 1} / {rev.ids.length}</span></div>
         <div className="c-bar"><i style={{ width: Math.round((rev.i / rev.ids.length) * 100) + "%" }} /></div>
         <button className="c-card w-full text-center min-h-[11rem] flex flex-col items-center justify-center gap-2" onClick={() => !rev.shown && setRev({ ...rev, shown: true })} data-testid="review-card">
-          <span className="text-[22px] font-semibold" dir="auto">{card.front}</span>
+          <span className="text-[22px] font-black tracking-tight" dir="auto">{card.front}</span>
           {rev.shown ? <>
             <span className="block w-16 border-t" style={{ borderColor: "var(--c-ln)" }} />
             <span className="text-[16px] c-acc" dir="auto" data-testid="review-back">{card.back}</span>
             {card.note ? <span className="c-sub" dir="auto">{card.note}</span> : null}</>
             : <span className="c-sub">{tr("Say it in your head, then tap")}</span>}
         </button>
-        {!rev.shown ? <button className="c-btn w-full py-2.5" onClick={() => setRev({ ...rev, shown: true })} data-testid="review-show">{tr("Show the answer")}</button>
+        {!rev.shown ? <button className={btnP + " w-full"} onClick={() => setRev({ ...rev, shown: true })} data-testid="review-show">{tr("Show the answer")}</button>
           : <div className="grid grid-cols-2 gap-2">
               <button className={cGhost + " py-2.5"} style={{ ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" }} onClick={() => grade(false)} data-testid="review-again">{tr("Not yet")}</button>
-              <button className="c-btn py-2.5" onClick={() => grade(true)} data-testid="review-knew">{tr("I knew it")}</button></div>}
+              <button className={btnP} onClick={() => grade(true)} data-testid="review-knew">{tr("I knew it")}</button></div>}
         <p className="c-sub">{tr("From lesson {n}", { n: (card.n || 0) + 1 })}{card.lapses ? " · " + tr("missed {n}×", { n: card.lapses }) : ""}</p>
       </section>);
   }
@@ -437,7 +438,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         <section className="space-y-4" data-testid="quiz-result">
           <p className="c-amt m-0">{right} / {quiz.questions.length}</p>
           <p className="text-[14px] m-0">{right === quiz.questions.length ? tr("Perfect — well done!") : tr("What you missed is now a card in your review — it comes back tomorrow, then further apart, until you know it.")}</p>
-          <button className="c-btn" onClick={() => { const f = D.finishQuiz(latest(), quiz, quiz.picks); putCourse(f.course); setQuiz(null); setView("course"); }} data-testid="quiz-finish">{tr("Done")}</button>
+          <button className={btnP} onClick={() => { const f = D.finishQuiz(latest(), quiz, quiz.picks); putCourse(f.course); setQuiz(null); setView("course"); }} data-testid="quiz-finish">{tr("Done")}</button>
         </section>);
     }
     const picked = quiz.picks[quiz.i];
@@ -451,14 +452,14 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             const state = picked == null ? "" : k === q.answer ? "right" : k === picked ? "wrong" : "";
             const col = state === "right" ? "var(--c-pos)" : state === "wrong" ? "var(--c-neg)" : "var(--c-ln)";
             return <button key={k} disabled={picked != null} onClick={() => setQuiz({ ...quiz, picks: { ...quiz.picks, [quiz.i]: k } })} data-testid="quiz-option"
-              className="w-full text-start rounded-xl border p-3 text-[14px] flex gap-2 items-start" style={{ borderColor: col, background: state ? "var(--c-surf)" : "transparent", color: "var(--c-ink)" }}>
+              className="w-full text-start min-h-[52px] rounded-[16px] border p-3.5 text-[14.5px] font-semibold flex gap-2 items-start transition-colors duration-150" style={{ borderColor: col, background: state ? "var(--c-surf)" : "transparent", color: "var(--c-ink)" }}>
               <span className="c-sub shrink-0">{"ABCDE"[k]}</span><span className="flex-1" dir="auto">{o}</span>
               {state === "right" ? <Check size={16} className="shrink-0 c-pos" /> : state === "wrong" ? <X size={16} className="shrink-0 c-neg" /> : null}</button>;
           })}
         </div>
         {picked != null ? <>
           {q.why ? <p className="c-card text-[13px]" dir="auto">{q.why}</p> : null}
-          <button className="c-btn" onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? tr("Next") : tr("See my score")}</button></> : null}
+          <button className={btnP} onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? tr("Next") : tr("See my score")}</button></> : null}
       </section>);
   }
 
@@ -471,7 +472,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         <CBack onClick={() => { L.stop(); setView("course"); }} label={course.topic} />
         <div>
           <p className="c-lbl m-0">{tr("Lesson {n} of {m}", { n: l.n + 1, m: course.plan.length })}</p>
-          <h2 className="text-[20px] font-semibold mt-1" dir="auto" data-listen="0" style={hl(0)}>{l.title}</h2>
+          <h2 className={h1 + " mt-1"} dir="auto" data-listen="0" style={hl(0)}>{l.title}</h2>
         </div>
         <ListenBar L={L} />
         <div dir="auto">{paras.map((p, k) => <div key={k} data-listen={k + 1} style={hl(k + 1)}><Md text={p} runnable={false} /></div>)}</div>
@@ -483,14 +484,14 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             <p className="c-lbl m-0 mb-1.5">{tr("Remember")}</p>
             {l.keyPoints.map((k, i) => <p key={i} className="text-[13.5px] mt-1 m-0" dir="auto">• {k}</p>)}
           </div>) : null}
-        {!l.done ? <button className="c-btn w-full py-2.5" data-testid="lesson-done" onClick={() => {
+        {!l.done ? <button className={btnP + " w-full"} data-testid="lesson-done" onClick={() => {
             const c2 = D.markDone(latest(), l.n); putCourse(c2);
             flash(newCards ? tr("Done — {n} days in a row · {k} new cards for tomorrow's review", { n: c2.streak, k: newCards }) : tr("Done — {n} days in a row", { n: c2.streak }));
             // tomorrow's lesson, prepared now, so the notification can say what it is
             if ((modelReady || c2.pack) && D.nextIndex(c2) < c2.plan.length && !D.quizDue(c2)) setTimeout(() => makeLesson(c2, D.nextIndex(c2)), 400);
           }}>{tr("I've read it")}</button>
           : <p className="text-[13px] c-pos flex items-center gap-1 m-0"><CheckCircle2 size={14} />{tr("Read")}{newCards ? " · " + tr("its {n} cards are in your review", { n: newCards }) : ""}</p>}
-        {l.done && due ? <button className="c-btn w-full py-2.5" data-testid="quiz-start" disabled={!!busy} onClick={() => startQuiz(due)}>{tr("Quiz time — a short quiz on lessons {a}–{b}", { a: due[0].n + 1, b: due[due.length - 1].n + 1 })}</button> : null}
+        {l.done && due ? <button className={btnP + " w-full"} data-testid="quiz-start" disabled={!!busy} onClick={() => startQuiz(due)}>{tr("Quiz time — a short quiz on lessons {a}–{b}", { a: due[0].n + 1, b: due[due.length - 1].n + 1 })}</button> : null}
         {l.source ? <p className="c-sub text-[12px] m-0" data-testid="lesson-source" dir="auto">{tr("From: {s}", { s: [l.source.name, l.source.title].filter(Boolean).join(" · ") })}{l.source.url ? " · " : ""}{l.source.url ? <a href={l.source.url} target="_blank" rel="noreferrer" className="c-acc">{tr("the book")}</a> : null}</p> : null}
         {D.isLanguageCourse(course.topic) ? <SpeakPractice lesson={l} course={course} native={native} call={call} listen={listen}
           onBest={(p, sc) => { const c0 = latest(); putCourse({ ...c0, lessons: c0.lessons.map((x) => (x.n === l.n ? { ...x, speak: { ...(x.speak || {}), [p]: Math.max(sc, (x.speak || {})[p] || 0) } } : x)) }); }} /> : null}
@@ -522,8 +523,8 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       <section className="space-y-4" data-testid="course">
         <CBack onClick={() => { setView("list"); setCur(null); }} label={tr("Learn daily")} />
         <div>
-          <h2 className="text-[20px] font-semibold m-0" dir="auto">{course.title || course.topic}</h2>
-          <p className="c-sub c-num m-0 mt-1">{tr("{d} of {n} lessons", { d: doneN, n: course.plan.length })} · {streak ? tr("{n} days in a row", { n: streak }) + " 🔥" : tr("read today to start a streak")}</p>
+          <h2 className={h1} dir="auto">{course.title || course.topic}</h2>
+          <p className="c-sub c-num tabular-nums m-0 mt-1">{tr("{d} of {n} lessons", { d: doneN, n: course.plan.length })} · {streak ? tr("{n} days in a row", { n: streak }) + " 🔥" : tr("read today to start a streak")}</p>
           <div className="c-bar mt-2"><i style={{ width: `${Math.round((doneN / Math.max(1, course.plan.length)) * 100)}%` }} /></div>
         </div>
         {busy && !side ? <CWorking {...busy} /> : null}
@@ -543,13 +544,13 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
               : <Step key="q" icon={HelpCircle} testid="quiz-card" disabled={!!busy || !modelReady} onClick={() => startQuiz(st.lessons)}
                   title={tr("Quiz time")} sub={modelReady ? tr("A short quiz on lessons {a}–{b}", { a: st.lessons[0].n + 1, b: st.lessons[st.lessons.length - 1].n + 1 }) : tr("Load a model to write the quiz")} />)}
             {(plan.finished || D.needsMore(course)) && !course.pack && course.plan.length < D.MAX_PLAN ? (
-              <button className="w-full text-start flex items-center gap-3 p-3 disabled:opacity-60" disabled={!!busy || !modelReady} onClick={() => planMore(course)} data-testid="learn-more">
-                <span className="c-ic"><Plus size={16} /></span><span className="flex-1 min-w-0"><b className="block text-[14px] font-semibold">{tr("Plan {n} more lessons", { n: D.MORE_N })}</b>
+              <button className="w-full text-start min-h-[56px] flex items-center gap-3 p-3.5 disabled:opacity-60" disabled={!!busy || !modelReady} onClick={() => planMore(course)} data-testid="learn-more">
+                <span className="c-ic"><Plus size={16} /></span><span className="flex-1 min-w-0"><b className="block text-[14.5px] font-extrabold">{tr("Plan {n} more lessons", { n: D.MORE_N })}</b>
                 <span className="c-sub block">{modelReady ? tr("The course goes on from lesson {n} — the next level", { n: course.plan.length + 1 }) : tr("Load a model to plan them")}</span></span></button>) : null}
             {plan.finished && !D.needsMore(course) ? <p className="p-3 m-0 text-[14px]">{tr("You finished all {n} lessons. Your cards keep coming back until you know them.", { n: course.plan.length })}</p> : null}
           </div>
           {today && today.done && !busy && nextN < course.plan.length && modelReady && !D.quizDue(course) ? (
-            <button className="c-acc text-[13px] font-medium" onClick={async () => { const c2 = unread ? course : await makeLesson(course, nextN); const nl = c2 && c2.lessons.find((l) => !l.done); if (nl) openL(c2, nl.n); }} data-testid="next-now">
+            <button className="c-acc min-h-[44px] text-[13.5px] font-bold" onClick={async () => { const c2 = unread ? course : await makeLesson(course, nextN); const nl = c2 && c2.lessons.find((l) => !l.done); if (nl) openL(c2, nl.n); }} data-testid="next-now">
               {tr("One more today: lesson {n}", { n: (unread || { n: nextN }).n + 1 })} →</button>) : null}
           {deck + learnedCards + r.due + r.waiting ? <p className="c-sub m-0" data-testid="srs-status">{[deck ? tr("{c} in your review deck", { c: cardsWord(deck) }) : "", learnedCards ? tr("{n} learned for good", { n: learnedCards }) : "", course.quizzes.length ? tr("Quizzes") + ": " + course.quizzes.map((q) => `${q.score}/${q.total}`).join(" · ") : ""].filter(Boolean).join(" · ")}</p> : null}
         </div>
@@ -558,17 +559,17 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
           <p className="c-lbl m-0">{tr("The course")}</p>
           <div className="c-list">
             {shown.map((i) => { const t = course.plan[i], l = course.lessons.find((x) => x.n === i);
-              return <button key={i} disabled={!l} onClick={() => { if (side) L.stop(); openL(course, i); }} className="w-full text-start flex gap-2.5 px-3 py-2 text-[13px] disabled:opacity-100" style={side && view === "lesson" && lessonN === i ? { background: "var(--c-soft)" } : undefined}>
-                <span className={"w-5 shrink-0 text-end c-num " + (l && l.done ? "c-pos" : "c-sub")}>{l && l.done ? "✓" : i + 1}</span>
+              return <button key={i} disabled={!l} onClick={() => { if (side) L.stop(); openL(course, i); }} className="w-full text-start min-h-[44px] items-center flex gap-2.5 px-3.5 py-2 text-[13.5px] disabled:opacity-100" style={side && view === "lesson" && lessonN === i ? { background: "var(--c-soft)" } : undefined}>
+                <span className={"w-5 shrink-0 text-end c-num tabular-nums font-bold " + (l && l.done ? "c-pos" : "c-sub")}>{l && l.done ? "✓" : i + 1}</span>
                 <span style={{ color: l ? "var(--c-ink)" : "var(--c-mut)" }} dir="auto">{t}</span></button>; })}
           </div>
           <AddLesson onAdd={(t) => { putCourse({ ...latest(), plan: [...latest().plan, t] }); flash(tr("Lesson {n} added: {t}", { n: latest().plan.length + 1, t })); }} />
-          {course.plan.length > 8 ? <button className="c-acc text-[13px] font-medium" onClick={() => setAllPlan(!allPlan)} data-testid="learn-all-plan">{allPlan ? tr("Show less") : tr("Show all {n} lessons", { n: course.plan.length })}</button> : null}
+          {course.plan.length > 8 ? <button className="c-acc min-h-[44px] text-[13.5px] font-bold" onClick={() => setAllPlan(!allPlan)} data-testid="learn-all-plan">{allPlan ? tr("Show less") : tr("Show all {n} lessons", { n: course.plan.length })}</button> : null}
         </div>
 
         <div className="flex flex-wrap gap-2 items-center c-sub" data-testid="learn-settings">
           <Bell size={14} className="shrink-0" /><span className="whitespace-nowrap">{tr("Daily notification")}</span>
-          <input type="time" value={course.time} onChange={(e) => e.target.value && putCourse({ ...course, time: e.target.value })} className="rounded-lg px-2 py-1 text-[13px] w-28 shrink-0 focus:outline-none" style={cf} data-testid="learn-time" />
+          <input type="time" value={course.time} onChange={(e) => e.target.value && putCourse({ ...course, time: e.target.value })} className="min-h-[44px] rounded-[14px] px-2.5 py-1 text-[14px] font-semibold tabular-nums w-28 shrink-0 focus:outline-none" style={cf} data-testid="learn-time" />
           <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== false ? { ...gs, borderColor: "var(--c-acc)", color: "var(--c-acc)" } : gs}>{course.notify !== false ? tr("On") : tr("Off")}</button>
           <button className={cGhost + " shrink-0 flex items-center gap-1"} style={confirmDel ? { ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" } : { ...gs, color: "var(--c-mut)" }}
             onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } setCourses(loadCourses().filter((x) => x.id !== course.id)); setConfirmDel(false); setView("list"); setCur(null); }}>
@@ -592,21 +593,21 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   return frame(
     <section className="space-y-4" data-testid="learn-page">
       <div className="flex items-start gap-3">
-        <span className="c-ic"><GraduationCap size={17} /></span>
-        <div className="min-w-0"><h2 className="text-[20px] font-semibold m-0">{tr("Learn daily")}</h2>
+        <span className="w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><GraduationCap size={19} /></span>
+        <div className="min-w-0"><h2 className={h1}>{tr("Learn daily")}</h2>
           <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("A short lesson a day, cards that come back until you know them, and a quiz every few lessons.")}</p></div>
       </div>
       {courses.length ? <>
         <p className="c-lbl m-0">{tr("Today")}</p>
         <div className="c-list">
           {courses.map((c) => { const doneN = c.lessons.filter((l) => l.done).length, st = D.streakNow(c), left = D.todayPlan(c).left;
-            return <button key={c.id} onClick={() => { setCur(c.id); setView("course"); }} className="w-full text-start p-3 flex items-center gap-3" data-testid="learn-course">
+            return <button key={c.id} onClick={() => { setCur(c.id); setView("course"); }} className="w-full text-start p-3.5 min-h-[64px] flex items-center gap-3" data-testid="learn-course">
               <span className="min-w-0 flex-1">
-                <b className="block text-[14px]" dir="auto">{c.title || c.topic}</b>
+                <b className="block text-[14.5px] font-extrabold" dir="auto">{c.title || c.topic}</b>
                 <span className="c-sub block truncate" dir="auto">{summary(c)}</span>
                 <span className="c-bar block mt-1.5"><i style={{ width: `${Math.round((doneN / Math.max(1, c.plan.length)) * 100)}%` }} /></span>
               </span>
-              <span className="text-end shrink-0"><span className="c-sub c-num block">{doneN}/{c.plan.length}</span>{st ? <span className="c-sub c-num block">🔥 {st}</span> : null}</span>
+              <span className="text-end shrink-0"><span className="c-sub c-num tabular-nums font-bold block">{doneN}/{c.plan.length}</span>{st ? <span className="c-sub c-num tabular-nums block">🔥 {st}</span> : null}</span>
               {left ? <span className="c-pill">{left}</span> : <Check size={16} className="c-pos shrink-0" />}
             </button>; })}
         </div>
@@ -615,10 +616,10 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         <p className="c-lbl m-0">{tr("Ready courses")}</p>
         <div className="c-list">
           {neutral(D.READY_COURSES, "courses").map((r) => (
-            <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-start-" + r.id} className="w-full text-start p-3 flex items-center gap-3">
-              <span className="text-2xl">{r.emoji}</span><b className="flex-1 text-[14px]">{r.title[getLang() === "ar" ? 1 : 0]}</b><ChevronRight size={16} className="c-acc rtl:-scale-x-100" /></button>))}
+            <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-start-" + r.id} className="w-full text-start p-3.5 min-h-[56px] flex items-center gap-3">
+              <span className="text-2xl">{r.emoji}</span><b className="flex-1 text-[14px]">{r.title[getLang() === "ar" ? 1 : 0]}</b><ChevronRight size={16} className="c-acc rtl:rotate-180" /></button>))}
         </div>
-        <button className="c-btn flex items-center gap-1.5" onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={15} />{tr("Any topic you like")}</button>
+        <button className={btnP + " flex items-center gap-1.5"} onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={15} />{tr("Any topic you like")}</button>
       </>}
     </section>, "learn-frame");
 }
@@ -683,14 +684,14 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
     const list = D.newsThreads(topic.digests, topic.query, todayKey);
     if (!list.length) return null;
     return (
-      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="news-threads">
-        <p className="text-[12px] font-semibold text-[var(--c-ink)]">{tr("Story threads")}</p>
+      <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2" data-testid="news-threads">
+        <p className={kLabel}>{tr("Story threads")}</p>
         {list.map((th) => { const ch = changes[th.id];
           return (
           <div key={th.id} data-testid="news-thread">
-            <button className="text-start w-full" onClick={() => setOpenTh(openTh === th.id ? null : th.id)}>
-              <span className="block text-[13px] text-[var(--c-ink)]" dir="auto">{th.title}</span>
-              <span className="text-[11px] text-[var(--c-mut)]">{tr("{n} days · {s} sources", { n: th.days.length, s: th.sources.length })}{th.today ? " · " + tr("new today") : ""}</span></button>
+            <button className="text-start w-full min-h-[44px]" onClick={() => setOpenTh(openTh === th.id ? null : th.id)}>
+              <span className="block text-[14px] font-bold text-[var(--c-ink)]" dir="auto">{th.title}</span>
+              <span className="text-[11.5px] tabular-nums text-[var(--c-mut)]">{tr("{n} days · {s} sources", { n: th.days.length, s: th.sources.length })}{th.today ? " · " + tr("new today") : ""}</span></button>
             {openTh === th.id ? <div className="mt-1.5 space-y-1.5 ps-2 border-s border-[var(--c-ln)]" data-testid="news-thread-open">
               {th.days.map((d) => <div key={d}><p className="text-[11px] text-[var(--c-mut)]">{d}</p>
                 {th.byDay[d].map((it, i) => <a key={i} href={it.url} target="_blank" rel="noreferrer" className="block text-[12px] text-[var(--c-acc)]" dir="auto">{it.title}{it.source ? <span className="text-[var(--c-mut)]"> · {it.source}</span> : null}</a>)}</div>)}
@@ -708,7 +709,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
       {d.none ? <p className="text-[13px] text-[var(--c-mut)]">{tr("Nothing new on this in the last day.")}{d.why ? " (" + d.why + ")" : ""}</p> : <div dir="auto"><Md text={d.text} runnable={false} /></div>}
       {d.unsourced ? <p className="text-[11px] text-[var(--c-warn)] flex items-center gap-1"><AlertTriangle size={12} />{tr("{n} line(s) cite no source — treat them with care.", { n: d.unsourced })}</p> : null}
       {d.items && d.items.length ? <div className="space-y-1 pt-1" data-testid="digest-sources">
-        <p className="text-[11px] text-[var(--c-mut)]">{tr("Sources")}</p>
+        <p className={kLabel}>{tr("Sources")}</p>
         {d.items.map((it, i) => <a key={i} href={it.url} target="_blank" rel="noreferrer" className="block text-[12px] text-[var(--c-acc)] truncate" dir="auto">
           [{i + 1}] {it.title}{it.source ? <span className="text-[var(--c-mut)]"> · {it.source}</span> : null}{it.date ? <span className="text-[var(--c-mut)]"> · {ago(it.date)}</span> : null}</a>)}
       </div> : null}
@@ -716,23 +717,23 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
 
   if (topic) {
     const el = (
-    <section className="p-4 space-y-3 lg:max-w-[76ch]" data-testid="news-topic">
+    <section className={page + " p-4 space-y-3 lg:max-w-[76ch]"} data-testid="news-topic">
       <Back onClick={() => { setCur(null); setPast(null); }} label={tr("Daily news")} />
-      <div className="flex items-center gap-2"><Newspaper size={20} className="text-[var(--c-warn)] shrink-0" /><h2 className="text-lg font-semibold text-[var(--c-ink)] flex-1" dir="auto">{topic.query}</h2>
-        {todays && !busy && modelReady ? <button className="p-1.5 text-[var(--c-mut)]" onClick={() => gather(topic)} title={tr("Refresh")} data-testid="news-refresh"><RefreshCw size={16} /></button> : null}</div>
+      <div className="flex items-center gap-2"><Newspaper size={20} className="text-[var(--c-warn)] shrink-0" /><h2 className={h1 + " text-[var(--c-ink)] flex-1"} dir="auto">{topic.query}</h2>
+        {todays && !busy && modelReady ? <button className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)]" onClick={() => gather(topic)} title={tr("Refresh")} data-testid="news-refresh"><RefreshCw size={16} /></button> : null}</div>
       {busy ? <Working {...busy} /> : todays ? <Digest d={todays} /> : modelReady
         ? <button className={primary + " w-full py-2.5"} onClick={() => gather(topic)} data-testid="news-gather">{tr("Gather today's news")}</button>
         : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model to write the digest")}</button>}
       <p className="text-[11px] text-[var(--c-mut)]">{tr("The articles come from the web when you open this; the digest is written on your phone and cites every line. Check the sources for anything important.")}</p>
       <Threads topic={topic} />
       {topic.digests.filter((d) => d.day !== todayKey).length ? (
-        <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2">
-          <p className="text-[12px] font-semibold text-[var(--c-ink)]">{tr("Earlier days")}</p>
+        <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2">
+          <p className={kLabel}>{tr("Earlier days")}</p>
           {topic.digests.filter((d) => d.day !== todayKey).map((d) => (
-            <div key={d.day}><button className="text-[13px] text-[var(--c-ink)]" onClick={() => setPast(past === d.day ? null : d.day)}>{d.day}</button>
+            <div key={d.day}><button className="min-h-[40px] text-[13.5px] font-bold tabular-nums text-[var(--c-ink)]" onClick={() => setPast(past === d.day ? null : d.day)}>{d.day}</button>
               {past === d.day ? <div className="mt-1"><Digest d={d} /></div> : null}</div>))}
         </div>) : null}
-      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2">
+      <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2">
         <div className="flex flex-wrap gap-2 items-center">
           <span className="flex items-center gap-1.5 text-[13px] text-[var(--c-ink)] basis-full sm:basis-auto sm:flex-1 whitespace-nowrap"><Bell size={14} className="text-[var(--c-mut)] shrink-0" />{tr("Daily notification")}</span>
           <input type="time" value={topic.time} onChange={(e) => e.target.value && putTopic({ ...topic, time: e.target.value })} className={fieldFixed + " w-32 shrink-0"} />
@@ -751,17 +752,17 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
   /** All the topics. On a computer they stay on the left while a topic is open (side = true). */
   function listScreen(side) {
   return (
-    <section className="p-4 space-y-3" data-testid="news-page">
+    <section className={page + " p-4 space-y-3"} data-testid="news-page">
       <div className="flex items-start gap-3">
         <Newspaper size={22} className="text-[var(--c-warn)] mt-1 shrink-0" />
-        <div className="min-w-0"><h2 className="text-lg font-semibold text-[var(--c-ink)]">{tr("Daily news")}</h2>
+        <div className="min-w-0"><h2 className={h1 + " text-[var(--c-ink)]"}>{tr("Daily news")}</h2>
           <p data-intro="" className="text-[13px] text-[var(--c-mut)] lg:max-w-[70ch]">{tr("Follow a team, a player, a market, a subject. Each day: what happened in the last 24 hours, with the sources.")}</p></div>
       </div>
       {adding ? (
-        <div className={"rounded-xl border border-[var(--c-acc)]/40 bg-[var(--c-surf)] p-3 space-y-2" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">
+        <div className={"rounded-[22px] border border-[var(--c-acc)]/40 bg-[var(--c-surf)] p-4 space-y-2.5" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">
           <input value={form.query} onChange={(e) => setForm({ ...form, query: e.target.value })} className={field} dir="auto" placeholder={tr("e.g. Al Ahly, Mohamed Salah, Egypt economy")} data-testid="news-query" autoFocus />
           <div className="flex flex-wrap gap-1.5">{["Al Ahly", "Mohamed Salah", "Premier League", "Egypt economy", "Gold price", "AI", "Real estate"].map((x) =>
-            <button key={x} onClick={() => setForm({ ...form, query: tr(x) })} className="text-[12px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] px-2.5 py-1">{tr(x)}</button>)}</div>
+            <button key={x} onClick={() => setForm({ ...form, query: tr(x) })} className={chip(false)}>{tr(x)}</button>)}</div>
           <div className="grid grid-cols-2 gap-2">
             <select value={form.lang} onChange={(e) => setForm({ ...form, lang: e.target.value })} className={field}><option value="en">English</option><option value="ar">العربية</option></select>
             <input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value || "08:30" })} className={field} />
@@ -773,8 +774,8 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
         </div>) : <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5" + (side ? "" : " lg:w-auto lg:px-5")} onClick={() => setAdding(true)} data-testid="news-add-btn"><Plus size={16} />{tr("Follow a topic")}</button>}
       <div className={side ? "space-y-3" : GRID3}>
       {topics.map((t) => { const d = t.digests[0]; const fresh = d && d.day === todayKey;
-        return <button key={t.id} onClick={() => { if (side) setPast(null); setCur(t.id); }} className={"w-full text-start rounded-xl border p-3 lg:hover:border-[var(--c-acc)] " + (side && t.id === cur ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]")} data-testid="news-topic-item">
-          <span className="block text-sm text-[var(--c-ink)]" dir="auto">{t.query}</span>
+        return <button key={t.id} onClick={() => { if (side) setPast(null); setCur(t.id); }} className={"w-full text-start rounded-[22px] border p-3.5 min-h-[60px] shadow-[0_2px_10px_rgba(0,0,0,0.06)] lg:hover:border-[var(--c-acc)] " + (side && t.id === cur ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]")} data-testid="news-topic-item">
+          <span className="block text-[14.5px] font-extrabold text-[var(--c-ink)]" dir="auto">{t.query}</span>
           <span className="block text-[11px] text-[var(--c-mut)] truncate" dir="auto">{fresh ? (d.none ? tr("Nothing new today") : String(d.text).split("\n")[0].replace(/\*+/g, "")) : tr("Not gathered today")} · {t.time}</span></button>; })}
       </div>
     </section>
