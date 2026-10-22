@@ -548,7 +548,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
   const partial = doc.loaded < doc.count;
   const panelBtn = (k, Icon, label) => <button onClick={() => setPanel(panel === k ? null : k)} className={tool + (panel === k ? " bg-[var(--c-soft)] border-[var(--c-acc)]" : "")} aria-label={label} title={label} data-testid={"pdf-panel-" + k}><Icon size={14} /></button>;
   return (
-    <div className="att-shift fixed inset-0 z-[60] bg-[var(--c-bg)] flex flex-col pt-[env(safe-area-inset-top)]" data-testid="pdfchat">
+    <div className="calm att-shift fixed inset-0 z-[60] bg-[var(--c-bg)] flex flex-col pt-[env(safe-area-inset-top)]" data-testid="pdfchat">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--c-ln)]">
         <button onClick={close} className="p-1.5 -ms-1 text-[var(--c-ink)]" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
         <div className="min-w-0 flex-1"><p className="text-[14px] font-semibold text-[var(--c-ink)] truncate" data-testid="pdf-name">{doc.name}</p><p className="text-[11.5px] text-[var(--c-mut)] truncate">{doc.count} {tr("pages")}{doc.scans ? " · " + tr("{n} scanned", { n: doc.scans }) : ""}{partial ? <span data-testid="pdf-loading"> · {tr("reading {a} of {n}…", { a: doc.loaded, n: doc.count })}</span> : null}</p></div>

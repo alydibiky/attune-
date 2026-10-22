@@ -9,6 +9,7 @@ import { tr, getLang } from "./i18n.js";
 import * as M from "./mind.js";
 import { useSubBack } from "./backstack.js";
 import { Md } from "./chat.jsx";
+import { page, btnP, btnS, btnDanger, inp, area, label as kLabel, h1, chip as kChip } from "./ui-kit.jsx";
 
 /* ---- thumbnails: small JPEGs in IndexedDB (the records stay small text in localStorage) ---- */
 let dbP = null;
@@ -83,27 +84,27 @@ function Card({ rec, open, update }) {
       const col = M.mainColour(x.getImageData(0, 0, 16, 16).data); if (col) update(rec.id, (r) => ({ ...r, meta: { ...(r.meta || {}), colour: col } })); } catch (e) {} };
     img.src = thumb;
   }, [thumb]);
-  const label = <p className="text-[10px] uppercase tracking-[.08em] text-[var(--c-mut)] mb-1">{kindLabel(kind).replace(/s$/, "")}</p>;
+  const label = <p className={kLabel + " !text-[10px] mb-1"}>{kindLabel(kind).replace(/s$/, "")}</p>;
   const sub = (rec.meta && rec.meta.summary) || rec.output || "";
   const hue = lp ? M.siteHue(lp.site) : 0;
   return (
     <button onClick={() => open(rec)} data-testid="mind-card" data-kind={kind}
-      className="mb-2.5 w-full break-inside-avoid text-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-2xl overflow-hidden hover:border-[var(--c-acc)] transition-colors">
+      className="mb-2.5 w-full break-inside-avoid text-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[22px] overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-[var(--c-acc)] transition-colors duration-150">
       {thumb ? <img src={thumb} alt="" className="w-full block" />
         : lp ? <div className="h-20 flex items-end p-2.5" style={{ background: `linear-gradient(135deg, hsl(${hue} 35% 26%), hsl(${(hue + 40) % 360} 45% 42%))` }}>
             <span className="text-[22px] font-bold text-white/85 leading-none">{(lp.site || "?").replace(/^www\./, "").charAt(0).toUpperCase()}</span></div> : null}
-      <div className="p-3">
+      <div className="p-3.5">
         {kind === "quote" ? (
           <>{label}<p className="font-serif text-[15px] leading-relaxed text-[var(--c-ink)]" dir="auto">“{body.replace(/^\s*["“«]+|["”»]+\s*$/g, "").slice(0, 280)}”</p></>
         ) : kind === "link" && lp ? (
           <>
-            <p className="text-[13.5px] font-semibold text-[var(--c-ink)] line-clamp-3" dir="auto">{title && !/^https?:/.test(title) ? title : lp.path || lp.url}</p>
+            <p className="text-[13.5px] font-extrabold text-[var(--c-ink)] line-clamp-3" dir="auto">{title && !/^https?:/.test(title) ? title : lp.path || lp.url}</p>
             <p className="text-[11.5px] text-[var(--c-mut)] mt-0.5 flex items-center gap-1"><Link2 size={11} /> {lp.site}</p>
           </>
         ) : kind === "product" ? (
           <>{label}
-            <p className="text-[13.5px] font-semibold text-[var(--c-ink)] line-clamp-3" dir="auto">{title}</p>
-            {M.priceIn(body) ? <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-[var(--c-pos)]/15 text-[var(--c-pos)]" dir="ltr">{M.priceIn(body)}</span> : null}
+            <p className="text-[13.5px] font-extrabold text-[var(--c-ink)] line-clamp-3" dir="auto">{title}</p>
+            {M.priceIn(body) ? <span className="inline-block mt-1.5 text-[11.5px] font-extrabold tabular-nums px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-pos)] border border-[var(--c-pos)]/30" dir="ltr">{M.priceIn(body)}</span> : null}
           </>
         ) : kind === "todo" && rec.meta && rec.meta.todo ? (
           /* v6.48: a to-do added from Home ("add … to my to-do list") — tick it done here too */
@@ -117,15 +118,15 @@ function Card({ rec, open, update }) {
             ))}
           </div></>
         ) : kind === "photo" && thumb ? (
-          title && !/\.(png|jpe?g|webp|heic|gif)$/i.test(title) ? <p className="text-[13.5px] font-semibold text-[var(--c-ink)] line-clamp-2" dir="auto">{title}</p> : null
+          title && !/\.(png|jpe?g|webp|heic|gif)$/i.test(title) ? <p className="text-[13.5px] font-extrabold text-[var(--c-ink)] line-clamp-2" dir="auto">{title}</p> : null
         ) : (
           <>{label}
-            {title ? <p className="text-[13.5px] font-semibold text-[var(--c-ink)] line-clamp-3" dir="auto">{title}</p> : null}
+            {title ? <p className="text-[13.5px] font-extrabold text-[var(--c-ink)] line-clamp-3" dir="auto">{title}</p> : null}
             {(sub || body) && (sub || body).trim() !== title.trim() ? <p className="text-[12px] text-[var(--c-mut)] mt-1 line-clamp-3 whitespace-pre-line" dir="auto">{sub || body}</p> : null}
           </>
         )}
         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-          <span className="text-[10.5px] text-[var(--c-mut)]">{dateText(rec.ts)}</span>
+          <span className="text-[10.5px] font-semibold tabular-nums text-[var(--c-mut)]">{dateText(rec.ts)}</span>
           {rec.pinned ? <Star size={10} className="text-[var(--c-warn)]" /> : null}
           {rec.meta && rec.meta.colour && M.COLOURS[rec.meta.colour] ? <i className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: M.COLOURS[rec.meta.colour].hex }} /> : null}
           {tags.map((t) => <span key={t} className="text-[10px] text-[var(--c-mut)]">#{t}</span>)}
@@ -172,42 +173,42 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
   const dropTag = (t) => setMeta({ myTags: (m.myTags || []).filter((x) => x !== t), hidden: [...new Set([...(m.hidden || []), t])] });
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-3 overflow-auto" onClick={close}>
-      <div className="bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-2xl max-w-2xl w-full my-6 overflow-hidden" onClick={(e) => e.stopPropagation()} data-testid="mind-detail">
+      <div className="calm bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-[22px] max-w-2xl w-full my-6 overflow-hidden" onClick={(e) => e.stopPropagation()} data-testid="mind-detail">
         {thumb ? <img src={thumb} alt={tr("Open the photo")} onClick={() => thumbGet(rec.id + ":full").then((u) => setBigUrl(u || thumb))} className="w-full max-h-80 object-contain bg-black cursor-zoom-in" data-testid="mind-photo" /> : null}
         {kind === "video" || kind === "audio" ? <MediaView rec={rec} /> : null}
         {bigUrl ? (
           <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center" onClick={() => setBigUrl(null)} data-testid="mind-photo-big">
             <img src={bigUrl} alt="" className="max-w-full max-h-full object-contain" />
-            <button className="absolute top-3 end-3 p-2 rounded-full bg-black/60 text-white" aria-label={tr("Close")}><X size={20} /></button>
+            <button className="absolute top-3 end-3 w-11 h-11 grid place-items-center rounded-full bg-black/60 text-white" aria-label={tr("Close")}><X size={20} /></button>
           </div>
         ) : null}
         <div className="p-5">
           <div className="flex items-start gap-3 mb-2">
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-[var(--c-acc)]">{M.KINDS[kind].icon} {kindLabel(kind)} · {new Date(rec.ts).toLocaleString()}</p>
+              <p className="text-[11.5px] font-bold tabular-nums text-[var(--c-acc)]">{M.KINDS[kind].icon} {kindLabel(kind)} · {new Date(rec.ts).toLocaleString()}</p>
               {editTitle != null ? (
                 <input autoFocus value={editTitle} onChange={(e) => setEditTitle(e.target.value)} dir="auto"
                   onBlur={() => { setMeta({ myTitle: editTitle.trim() || undefined }); setEditTitle(null); }}
                   onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
-                  className="w-full mt-1 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2 py-1 text-base text-[var(--c-ink)]" />
+                  className={inp + " mt-1 !text-base"} />
               ) : (
-                <h3 onClick={() => setEditTitle(M.titleOf(rec))} className="text-base font-semibold text-[var(--c-ink)] mt-0.5 cursor-text" dir="auto" title={tr("Tap to rename")}>{M.titleOf(rec) || tr("Untitled")}</h3>
+                <h3 onClick={() => setEditTitle(M.titleOf(rec))} className="text-[18px] font-extrabold tracking-tight text-[var(--c-ink)] mt-0.5 cursor-text" dir="auto" title={tr("Tap to rename")}>{M.titleOf(rec) || tr("Untitled")}</h3>
               )}
             </div>
-            <button onClick={close} className="-m-2 p-2 rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)]" aria-label={tr("Close")}><X size={18} /></button>
+            <button onClick={close} className="-m-2 w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)]" aria-label={tr("Close")}><X size={18} /></button>
           </div>
           {m.summary ? <p className="text-sm text-[var(--c-ink)] mb-3 flex gap-1.5" dir="auto"><Sparkles size={13} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{m.summary}</p> : null}
           {lp ? <a href={lp.url} target="_blank" rel="noreferrer" className="text-xs text-[var(--c-acc)] flex items-center gap-1 mb-3 break-all"><ExternalLink size={12} /> {lp.url}</a> : null}
           {rec.text && !(kind === "link" && rec.text.trim() === (lp && lp.url)) ? (
-            <div className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-3 mb-3 max-h-64 overflow-auto">
+            <div className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[16px] p-3.5 mb-3 max-h-64 overflow-auto">
               {/\|.*\|/.test(rec.text) || /^#{1,4}\s|\*\*/m.test(rec.text) ? <div className="text-sm text-[var(--c-ink)] leading-relaxed"><Md text={rec.text} runnable={false} /></div>
                 : <p className="text-sm text-[var(--c-ink)] whitespace-pre-wrap leading-relaxed" dir="auto">{rec.text}</p>}
             </div>
           ) : null}
           {rec.output ? (
             <>
-              <p className="text-[10px] uppercase tracking-wider text-[var(--c-mut)] mb-1">{tr("What it answered")}</p>
-              <div className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-3 mb-3 max-h-64 overflow-auto">
+              <p className={kLabel + " mb-1"}>{tr("What it answered")}</p>
+              <div className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[16px] p-3.5 mb-3 max-h-64 overflow-auto">
                 <div className="text-sm text-[var(--c-acc)] leading-relaxed"><Md text={rec.output} runnable={false} /></div>
               </div>
             </>
@@ -215,42 +216,42 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
 
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
             {M.tagsOf(rec).map((t) => (
-              <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] flex items-center gap-1">#{t}
-                <button onClick={() => dropTag(t)} className="text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Remove tag")}><X size={10} /></button></span>
+              <span key={t} className="text-xs font-bold ps-2.5 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] flex items-center gap-0.5">#{t}
+                <button onClick={() => dropTag(t)} className="w-8 h-8 grid place-items-center rounded-full text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Remove tag")}><X size={11} /></button></span>
             ))}
             <input value={tagIn} onChange={(e) => setTagIn(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addTag(); }} placeholder={tr("+ tag")} dir="auto"
-              data-testid="mind-tag-in" className="w-24 bg-transparent border-b border-[var(--c-ln)] text-xs text-[var(--c-ink)] px-1 py-0.5 focus:outline-none focus:border-[var(--c-acc)]" />
+              data-testid="mind-tag-in" className="w-28 min-h-[36px] bg-transparent border-b border-[var(--c-ln)] text-[13px] text-[var(--c-ink)] px-1 py-0.5 focus:outline-none focus:border-[var(--c-acc)]" />
           </div>
           <textarea value={m.myNote || ""} onChange={(e) => setMeta({ myNote: e.target.value })} rows={2} dir="auto"
             placeholder={tr("Your note on this (why you kept it)…")}
-            className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-2.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] mb-3 focus:outline-none focus:border-[var(--c-acc)]" />
+            className={area + " mb-3 !text-[14px]"} />
 
           <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => togglePin(rec.id)} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-warn)]">
+            <button onClick={() => togglePin(rec.id)} className={btnS + " hover:!border-[var(--c-warn)]"}>
               <Star size={12} className={`inline me-1 ${rec.pinned ? "text-[var(--c-warn)]" : ""}`} />{rec.pinned ? tr("Unpin") : tr("Pin")}</button>
             <button onClick={() => { try { navigator.clipboard.writeText([rec.text, rec.output].filter(Boolean).join("\n\n")); } catch (e) {} flash(tr("Copied")); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"><Copy size={12} className="inline me-1" />{tr("Copy")}</button>
+              className={btnS}><Copy size={12} className="inline me-1" />{tr("Copy")}</button>
             {navigator.share ? <button onClick={() => navigator.share({ title: M.titleOf(rec), text: rec.text }).catch(() => {})}
-              className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"><Share2 size={12} className="inline me-1" />{tr("Share")}</button> : null}
-            <button onClick={() => askAbout(rec)} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"><Brain size={12} className="inline me-1" />{tr("Ask about this")}</button>
-            <button onClick={() => findPromises(rec)} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]">{tr("Find promises in this")}</button>
+              className={btnS}><Share2 size={12} className="inline me-1" />{tr("Share")}</button> : null}
+            <button onClick={() => askAbout(rec)} className={btnS}><Brain size={12} className="inline me-1" />{tr("Ask about this")}</button>
+            <button onClick={() => findPromises(rec)} className={btnS}>{tr("Find promises in this")}</button>
             <button onClick={() => forget(rec.id)} data-testid="mind-forget"
-              className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-mut)] hover:border-[var(--c-neg)] hover:text-[var(--c-neg)] ms-auto"><Trash2 size={12} className="inline me-1" />{tr("Forget")}</button>
+              className={btnS + " !text-[var(--c-mut)] hover:!border-[var(--c-neg)] hover:!text-[var(--c-neg)] ms-auto"}><Trash2 size={12} className="inline me-1" />{tr("Forget")}</button>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-[var(--c-ln)]">
             <Bell size={13} className="text-[var(--c-mut)]" />
-            <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2 py-1 text-xs text-[var(--c-ink)]" />
+            <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className={inp + " !w-auto !text-[13px]"} />
             <button disabled={!when} data-testid="mind-remind"
               onClick={() => { const at = new Date(when).getTime(); if (!(at > Date.now())) return flash(tr("Pick a time in the future")); scheduleReminder({ id: "m-" + rec.id, at, title: M.titleOf(rec) || tr("From your Mind"), body: (m.summary || rec.text || "").slice(0, 140), repeat: "none", created: Date.now(), source: "mind" }); setMeta({ remindAt: at }); flash(tr("I'll remind you")); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold disabled:opacity-40">{tr("Remind me")}</button>
-            {m.remindAt && m.remindAt > Date.now() ? <span className="text-[11px] text-[var(--c-acc)]">{tr("Reminder set")}: {new Date(m.remindAt).toLocaleString()}</span> : null}
+              className={btnP + " !h-11 !min-h-[44px] !text-[14px]"}>{tr("Remind me")}</button>
+            {m.remindAt && m.remindAt > Date.now() ? <span className="text-[11.5px] font-bold tabular-nums text-[var(--c-acc)]">{tr("Reminder set")}: {new Date(m.remindAt).toLocaleString()}</span> : null}
           </div>
           {sim.length ? (
             <div className="mt-4">
-              <p className="text-[10px] uppercase tracking-wider text-[var(--c-mut)] mb-1.5">{tr("Similar in your Mind")}</p>
+              <p className={kLabel + " mb-1.5"}>{tr("Similar in your Mind")}</p>
               <div className="grid grid-cols-2 gap-2">
                 {sim.map((r) => (
-                  <button key={r.id} onClick={() => openRec(r)} className="text-start bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-2 hover:border-[var(--c-acc)]">
+                  <button key={r.id} onClick={() => openRec(r)} className="text-start min-h-[56px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[16px] p-2.5 hover:border-[var(--c-acc)]">
                     <p className="text-[11px] text-[var(--c-mut)]">{M.KINDS[M.kindOf(r)].icon} {dateText(r.ts)}</p>
                     <p className="text-xs text-[var(--c-ink)] line-clamp-2" dir="auto">{M.titleOf(r)}</p>
                   </button>
@@ -376,13 +377,13 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const removeSpace = (id) => { const next = spaces.filter((s) => s.id !== id); setSpaces(next); saveSpaces(next); };
   const doForget = (id) => { thumbDel(id); forget(id); setOpenId(null); };
 
-  const chip = (on) => `text-xs px-3 py-1.5 rounded-full border whitespace-nowrap ${on ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] border-[var(--c-acc)] font-semibold" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"}`;
+  const chip = (on) => kChip(on) + " shrink-0";
 
   return (
-    <div className="space-y-4 att-in pb-20" data-testid="mind-page">
+    <div className={page + " space-y-4 att-in pb-20"} data-testid="mind-page">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-[var(--c-ink)] flex items-center gap-2"><Brain size={20} className="text-[var(--c-acc)]" />{tr("Mind")}</h2>
-        <span className="text-[11px] text-[var(--c-mut)]">{records.length} {tr("kept · private, on this phone")}</span>
+        <h2 className={h1 + " text-[var(--c-ink)] flex items-center gap-2"}><Brain size={20} className="text-[var(--c-acc)]" />{tr("Mind")}</h2>
+        <span className="text-[11.5px] font-semibold tabular-nums text-[var(--c-mut)]">{records.length} {tr("kept · private, on this phone")}</span>
       </div>
       {shareBanner}
       {note}
@@ -390,18 +391,18 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
       {/* v6.32 look A (the wall): search, then one row of chips — kinds, promises, your words, colours, spaces — then the wall */}
       {tab === "mind" ? (
         <div>
-          <div className="flex items-center gap-2 bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-2xl px-3 focus-within:border-[var(--c-acc)]">
+          <div className="flex items-center gap-2 min-h-[48px] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[16px] ps-3.5 pe-1 focus-within:border-[var(--c-acc)] transition-colors duration-150">
             <Search size={15} className="text-[var(--c-mut)]" />
             <input value={q} onChange={(e) => { setQ(e.target.value); setAnswer(null); }} dir="auto" data-testid="mind-search"
               onKeyDown={(e) => { if (e.key === "Enter" && looksLikeQuestion && pro) doAsk(q); }}
               placeholder={tr("Search or ask — “wedding photos last month”, «لينكات الشقة»")}
-              className="flex-1 bg-transparent py-2.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
-            {q ? <button onClick={() => { setQ(""); setAnswer(null); }} className="text-[var(--c-mut)]"><X size={14} /></button> : null}
+              className="flex-1 min-w-0 bg-transparent py-2.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none" />
+            {q ? <button onClick={() => { setQ(""); setAnswer(null); }} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)]"><X size={16} /></button> : null}
           </div>
           {q.trim() ? (
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <button onClick={() => (pro ? doAsk(q) : openPlan())} data-testid="mind-ask" className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-soft)] border border-[var(--c-acc)]/40 text-[var(--c-acc)]"><Brain size={12} className="inline me-1" />{tr("Ask your Mind")}</button>
-              <button onClick={saveSpace} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)]"><Folder size={12} className="inline me-1" />{tr("Save as a Space")}</button>
+              <button onClick={() => (pro ? doAsk(q) : openPlan())} data-testid="mind-ask" className={btnS + " !bg-[var(--c-soft)] !border-[var(--c-acc)]/40 !text-[var(--c-acc)]"}><Brain size={12} className="inline me-1" />{tr("Ask your Mind")}</button>
+              <button onClick={saveSpace} className={btnS}><Folder size={12} className="inline me-1" />{tr("Save as a Space")}</button>
               {res.filters.kind || res.filters.from != null || res.filters.pinned ? (
                 <span className="text-[11px] text-[var(--c-mut)]">{tr("Showing")}: {[res.filters.kind && kindLabel(res.filters.kind), res.filters.from != null && `${dateText(res.filters.from)} – ${dateText(Math.min(res.filters.to, Date.now()))}`, res.filters.pinned && tr("pinned"), res.filters.words && `“${res.filters.words}”`].filter(Boolean).join(" · ")}</span>
               ) : null}
@@ -415,9 +416,9 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
         <button onClick={() => setTab("promises")} data-testid="mind-tab-promises" className={chip(tab === "promises")}>{tr("Promises")}{promiseCount ? ` (${promiseCount})` : ""}</button>
         <button onClick={() => setTab("words")} data-testid="mind-tab-words" className={chip(tab === "words")}>{tr("Your words")}</button>
         {colours.map((c) => <button key={c.colour} onClick={() => { setTab("mind"); setColour(colour === c.colour ? null : c.colour); }} data-testid={"mind-colour-" + c.colour} aria-label={M.COLOURS[c.colour][ar ? "ar" : "en"]}
-          className={"shrink-0 w-8 h-8 rounded-full border-2 " + (colour === c.colour ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]")} style={{ background: M.COLOURS[c.colour].hex }} />)}
+          className={"shrink-0 w-10 h-10 rounded-full border-2 " + (colour === c.colour ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]")} style={{ background: M.COLOURS[c.colour].hex }} />)}
         {spaces.map((sp) => <span key={sp.id} className="relative shrink-0"><button onClick={() => { setTab("mind"); setQ(sp.q || ""); setTag(sp.tag || null); setKind(null); }} className={chip(false) + " pe-6"} dir="auto"><Folder size={11} className="inline me-1" />{sp.name}</button>
-          <button onClick={() => removeSpace(sp.id)} className="absolute top-1/2 -translate-y-1/2 end-1.5 text-[var(--c-mut)]" aria-label={tr("Remove")}><X size={11} /></button></span>)}
+          <button onClick={() => removeSpace(sp.id)} className="absolute top-1/2 -translate-y-1/2 end-0.5 w-8 h-8 grid place-items-center rounded-full text-[var(--c-mut)]" aria-label={tr("Remove")}><X size={12} /></button></span>)}
         {auto.map((t) => <button key={t.tag} onClick={() => { setTab("mind"); setTag(tag === t.tag ? null : t.tag); setKind(null); }} className={chip(tab === "mind" && tag === t.tag)} dir="auto">#{t.tag}</button>)}
       </div>
 
@@ -425,7 +426,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
         <>
           {/* keep anything — v6.15 (look C): a sheet from the + button */}
           {adding ? <div className="fixed inset-0 z-[60] bg-black/60 flex items-end" onClick={() => setAdding(false)}>
-          <section onClick={(e) => e.stopPropagation()} className={`w-full bg-[var(--c-surf)] rounded-t-2xl border-t p-4 pb-6 space-y-2 ${dropping ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`} data-testid="mind-add-sheet"
+          <section onClick={(e) => e.stopPropagation()} className={`calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[22px] border-t p-4 pb-6 space-y-2.5 ${dropping ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`} data-testid="mind-add-sheet"
             onDragOver={(e) => { e.preventDefault(); setDropping(true); }} onDragLeave={() => setDropping(false)}
             onDrop={async (e) => {
               e.preventDefault(); setDropping(false);
@@ -434,15 +435,15 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
               if (f && (/^text|json|csv|md/.test(f.type) || /\.(txt|md|csv|json|log)$/i.test(f.name))) return keep(await f.text(), { title: f.name });
               const t = e.dataTransfer.getData("text"); if (t) keep(t);
             }}>
-            <p className="text-sm font-semibold text-[var(--c-ink)]">{tr("Keep something")}</p>
+            <p className="text-[16px] font-extrabold text-[var(--c-ink)]">{tr("Keep something")}</p>
             <textarea autoFocus value={add} onChange={(e) => setAdd(e.target.value)} rows={3} dir="auto" data-testid="mind-add"
               placeholder={tr("Keep anything — a note, a link, a quote, a price, a number, an idea…")}
-              className="w-full bg-transparent text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] resize-none focus:outline-none" />
+              className={area + " resize-none"} />
             <div className="flex items-center gap-1.5">
-              <button onClick={() => { if (keep(add)) { setAdd(""); setAdding(false); } }} data-testid="mind-keep" className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] font-semibold"><Plus size={12} className="inline me-1" />{tr("Keep")}</button>
+              <button onClick={() => { if (keep(add)) { setAdd(""); setAdding(false); } }} data-testid="mind-keep" className={btnP + " !h-11 !min-h-[44px] !text-[14px]"}><Plus size={15} />{tr("Keep")}</button>
               <button onClick={async () => { try { const t = await navigator.clipboard.readText(); if (t && t.trim()) setAdd(t.trim()); else flash(tr("Clipboard is empty")); } catch (e) { flash(tr("Allow clipboard access, or paste manually")); } }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)]"><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
-              <button onClick={() => fileRef.current && fileRef.current.click()} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)]"><Camera size={12} className="inline me-1" />{tr("Photo")}</button>
+                className={btnS}><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
+              <button onClick={() => fileRef.current && fileRef.current.click()} className={btnS}><Camera size={12} className="inline me-1" />{tr("Photo")}</button>
             </div>
           </section></div> : null}
           <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="mind-photo" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; setAdding(false); keepPhoto(f); }} />
@@ -454,21 +455,21 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
           {!pro && records.length ? (
             <p className="text-[11px] text-[var(--c-mut)]">
               {tr("Free: keep and search everything. Pro: it files each item by itself (title, summary, tags), reads your photos and answers questions from your Mind.")}
-              <button onClick={openPlan} className="text-[var(--c-acc)] ms-1">{tr("See Pro")}</button>
+              <button onClick={openPlan} className="text-[var(--c-acc)] font-bold underline ms-1 min-h-[36px]">{tr("See Pro")}</button>
             </p>
           ) : null}
 
           {answer ? (
-            <section className="bg-[var(--c-surf)] border border-[var(--c-acc)]/40 rounded-2xl p-4" data-testid="mind-answer">
-              <p className="text-[11px] text-[var(--c-acc)] mb-1 flex items-center gap-1"><Brain size={12} /> {answer.q}</p>
+            <section className="bg-[var(--c-surf)] border border-[var(--c-acc)]/40 rounded-[22px] p-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="mind-answer">
+              <p className="text-[12px] font-bold text-[var(--c-acc)] mb-1.5 flex items-center gap-1"><Brain size={13} /> {answer.q}</p>
               {/\|.*\|/.test(answer.text) || /^#{1,4}\s|\*\*|^\s*[-*] /m.test(answer.text) ? <div className="text-sm text-[var(--c-ink)] leading-relaxed"><Md text={answer.text} runnable={false} /></div>
                 : <p className="text-sm text-[var(--c-ink)] whitespace-pre-wrap leading-relaxed" dir="auto">{answer.text}</p>}
               {answer.sources.length ? (
                 <>
-                  <p className="text-[10px] uppercase tracking-wider text-[var(--c-mut)] mt-3 mb-1.5">{tr("From these items in your Mind")}</p>
+                  <p className={kLabel + " mt-3 mb-1.5"}>{tr("From these items in your Mind")}</p>
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {answer.sources.map((r) => (
-                      <button key={r.id} onClick={() => setOpenId(r.id)} className="shrink-0 w-40 text-start bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-2 hover:border-[var(--c-acc)]">
+                      <button key={r.id} onClick={() => setOpenId(r.id)} className="shrink-0 w-40 min-h-[56px] text-start bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[16px] p-2.5 hover:border-[var(--c-acc)]">
                         <p className="text-[10px] text-[var(--c-mut)]">{M.KINDS[M.kindOf(r)].icon} {dateText(r.ts)}</p>
                         <p className="text-xs text-[var(--c-ink)] line-clamp-2" dir="auto">{M.titleOf(r)}</p>
                       </button>
@@ -479,27 +480,27 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
             </section>
           ) : null}
 
-          {filterOn ? <p className="text-[11px] text-[var(--c-mut)]" data-testid="mind-count">{shown.length} {tr(shown.length === 1 ? "item" : "items")}</p> : null}
+          {filterOn ? <p className="text-[11.5px] font-semibold tabular-nums text-[var(--c-mut)]" data-testid="mind-count">{shown.length} {tr(shown.length === 1 ? "item" : "items")}</p> : null}
 
           {/* the wall */}
           {shown.length ? (
             <div className="columns-2 sm:columns-3 lg:columns-4 gap-2.5" data-testid="mind-board">
               {past.length && !hidePast && !filterOn ? (() => { const { rec, why } = past[0]; return (
-                <div className="mb-2.5 break-inside-avoid rounded-2xl p-3 border border-[var(--c-acc)]/40" style={{ background: "linear-gradient(135deg, rgba(79,194,175,.16), rgba(26,30,36,1))" }} data-testid="mind-past">
+                <div className="mb-2.5 break-inside-avoid rounded-[22px] p-3.5 border border-[var(--c-acc)]/40 bg-[var(--c-soft)]" data-testid="mind-past">
                   <button onClick={() => setOpenId(rec.id)} className="w-full text-start">
-                    <p className="text-[10px] uppercase tracking-[.08em] text-[var(--c-acc)] flex items-center gap-1"><Shuffle size={10} /> {tr("From your past")}</p>
-                    <p className="text-[13.5px] text-[var(--c-ink)] font-semibold line-clamp-3 mt-1" dir="auto">{M.titleOf(rec)}</p>
+                    <p className="text-[10px] font-extrabold uppercase tracking-[.08em] text-[var(--c-acc)] flex items-center gap-1"><Shuffle size={10} /> {tr("From your past")}</p>
+                    <p className="text-[13.5px] text-[var(--c-ink)] font-extrabold line-clamp-3 mt-1" dir="auto">{M.titleOf(rec)}</p>
                     <p className="text-[11px] text-[var(--c-mut)] mt-0.5">{/past/i.test(why) ? "" : tr(why) + " · "}{dateText(rec.ts)}</p>
                   </button>
                   <div className="flex gap-1.5 mt-2">
-                    <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="text-[11.5px] px-2.5 py-1 rounded-lg bg-[var(--c-soft)] text-[var(--c-acc)]">{tr("Keep")}</button>
-                    <button onClick={() => setHidePast(true)} className="text-[11.5px] px-2.5 py-1 rounded-lg text-[var(--c-mut)]">{tr("Not now")}</button>
+                    <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)]">{tr("Keep")}</button>
+                    <button onClick={() => setHidePast(true)} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] text-[var(--c-mut)]">{tr("Not now")}</button>
                   </div>
                 </div>); })() : null}
               {shown.map((r) => <Card key={r.id} rec={r} update={update} open={(x) => setOpenId(x.id)} />)}
             </div>
           ) : (
-            <p className="text-sm text-[var(--c-mut)] text-center py-10 leading-relaxed">
+            <p className="text-sm font-semibold text-[var(--c-mut)] text-center py-10 px-4 leading-relaxed rounded-[22px] border border-dashed border-[var(--c-ln)]">
               {records.length ? tr("Nothing matches that.") : <>{tr("Your Mind is empty.")}<br /><span className="text-xs">{tr("Keep a note, a link or a photo with + — or share anything to Attune from another app.")}</span></>}
             </p>
           )}

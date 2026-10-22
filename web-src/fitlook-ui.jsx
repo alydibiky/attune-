@@ -3,6 +3,9 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as LK from "./fitlook.js";
 
+// v7.0 Quiet Atelier: Fit sits on the app's own theme (.calm tokens), so the page around Fit's column takes the same ground as
+// --c-bg in build/tw.css (dark #101413, light #F4F7F5) instead of the look's own colour.
+const CALM_PAGE = "html:not(.att-light) body:has(.fit-calm),html:not(.att-light):has(.fit-calm){background:#101413!important}html.att-light body:has(.fit-calm),html.att-light:has(.fit-calm){background:#F4F7F5!important}";
 /** The looks' colours — rendered once inside Fit; the look itself is the class on Fit's root (`fit-look-<id>`). */
 export function LookStyle({ look }) {
   // the page behind Fit's boxes takes the look too (a light look fills the whole screen)
@@ -12,7 +15,7 @@ export function LookStyle({ look }) {
     b.style.background = h.style.background = LK.PAGE_BG[look] || "";
     return () => { b.style.background = was[0]; h.style.background = was[1]; };
   }, [look]);
-  return <style>{LK.LOOK_CSS}</style>;
+  return <style>{LK.LOOK_CSS + CALM_PAGE}</style>;
 }
 
 /** While a photo is read: the photo, what is happening, and a nutrition fact that changes every few seconds. */

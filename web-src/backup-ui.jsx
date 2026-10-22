@@ -135,7 +135,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
   );
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4" onClick={close}>
+    <div className="calm fixed inset-0 z-[60] bg-black/70! flex items-center justify-center p-4" onClick={close}>
       <div className="bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[22px] max-w-md w-full p-5" onClick={(e) => e.stopPropagation()} data-testid="backup-panel">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-lg font-bold text-[var(--c-ink)] flex items-center gap-2"><ShieldCheck size={19} className="text-[var(--c-acc)]" />{tr("Backup & sync")}</h2>

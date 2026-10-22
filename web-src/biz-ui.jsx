@@ -149,41 +149,41 @@ function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile,
   return (
     <section className="px-4 pb-6 space-y-4" data-testid="business-page">
       <TopBar title={tr("Business")} sub={tr("Your own systems — like Microsoft Access, on your phone")} onBack={onExit} label={tr("Back to Attune")}
-        right={intro ? null : <button onClick={onIntro} className="h-10 px-3 text-[13px] font-semibold text-[var(--c-mut)]" data-testid="biz-how">{tr("How it works")}</button>} />
+        right={intro ? null : <button onClick={onIntro} className={K.btnS + " rounded-full shrink-0"} data-testid="biz-how">{tr("How it works")}</button>} />
       {intro ? <IntroHero onDone={onIntroDone} /> : null}
       {/* v6.27: a shop's whole day on the phone — the counter, stock, customers, staff, the day's close (shop-ui.jsx) */}
       <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
-      <button onClick={onShop} data-testid="shop-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
-        <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[var(--c-on-acc)]" style={{ background: "var(--c-acc)" }}><ShoppingCart size={20} /></span>
-        <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Shop in your pocket")}</span>
+      <button onClick={onShop} data-testid="shop-open" className={card + " w-full text-start p-4 min-h-[72px] flex items-center gap-3.5 hover:border-[var(--c-acc)]"}>
+        <span className="w-12 h-12 rounded-[16px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><ShoppingCart size={21} /></span>
+        <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{tr("Shop in your pocket")}</span>
           <span data-intro="" className="block text-[12.5px] text-[var(--c-mut)] leading-snug">{tr("Say what your shop is — the counter with barcodes, stock, customers who owe, staff and the end-of-day close, ready in a minute. Every sale goes into your books.")}</span></span>
       </button>
       {/* v6.32: Ali's Crane Management + Crane Warehouse apps as one (fleet-ui.jsx) */}
-      <button onClick={onFleet} data-testid="fleet-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
-        <span className="w-11 h-11 rounded-xl bg-[#E0E7FF] text-[#3730A3] flex items-center justify-center shrink-0"><Truck size={20} /></span>
-        <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Fleet & rentals")}</span>
+      <button onClick={onFleet} data-testid="fleet-open" className={card + " w-full text-start p-4 min-h-[72px] flex items-center gap-3.5 hover:border-[var(--c-acc)]"}>
+        <span className="w-12 h-12 rounded-[16px] grid place-items-center shrink-0 bg-[var(--c-acc-2)]/15 text-[var(--c-acc-2)]"><Truck size={21} /></span>
+        <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{tr("Fleet & rentals")}</span>
           <span data-intro="" className="block text-[12.5px] text-[var(--c-mut)] leading-snug">{tr("Cranes and equipment for hire: job orders by the hour or day, cheques with reminders, client balances, expenses, and a parts store linked to each crane.")}</span></span>
       </button>
-      <button onClick={onNew} className={btnP + " w-full lg:col-span-2 lg:order-last"} style={{ background: "var(--c-acc)" }} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button>
-      <button onClick={onBooks} data-testid="books-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
-        <span className="w-11 h-11 rounded-xl bg-[var(--c-warn)]/15 text-[var(--c-warn)] flex items-center justify-center shrink-0"><FileText size={20} /></span>
-        <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Shop & trading books")}</span>
+      <button onClick={onNew} className={btnP + " w-full lg:col-span-2 lg:order-last"} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button>
+      <button onClick={onBooks} data-testid="books-open" className={card + " w-full text-start p-4 min-h-[72px] flex items-center gap-3.5 hover:border-[var(--c-acc)]"}>
+        <span className="w-12 h-12 rounded-[16px] grid place-items-center shrink-0 bg-[var(--c-warn)]/15 text-[var(--c-warn)]"><FileText size={21} /></span>
+        <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{tr("Shop & trading books")}</span>
           <span data-intro="" className="block text-[12.5px] text-[var(--c-mut)] leading-snug">{tr("Invoices with VAT, payments and overdue tracking, stock and purchasing, reports — your own accounting, on your phone, in English and Arabic.")}</span></span>
       </button>
       </div>
-      <div className="flex items-center justify-between pt-1"><p className="text-[15px] font-bold">{tr("Your systems")}</p>
-        <label className="text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer" style={{ color: "var(--c-acc)" }} data-testid="erp-open-app"><Upload size={15} />{tr("Open an app file")}
+      <div className="flex items-center justify-between gap-2 pt-1"><p className={K.label + " m-0"}>{tr("Your systems")}</p>
+        <label className="min-h-[44px] px-1 text-[13px] font-bold text-[var(--c-acc)] flex items-center gap-1.5 cursor-pointer" data-testid="erp-open-app"><Upload size={15} />{tr("Open an app file")}
           <input type="file" accept=".html,.htm,.json,text/html" className="hidden" data-testid="erp-open-app-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) onOpenFile(f); }} /></label></div>
       {index.length ? <div className="space-y-2.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">{index.map((x) => (
-        <button key={x.id} onClick={() => open(x.id)} className={card + " w-full text-start p-3.5 flex items-center gap-3"} data-testid="erp-system">
-          <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[var(--c-on-acc)]" style={{ background: x.color || "var(--biz)" }}><Database size={19} /></span>
-          <span className="min-w-0 flex-1"><span className="block font-bold text-[15px] truncate" dir="auto">{x.name}</span>
+        <button key={x.id} onClick={() => open(x.id)} className={card + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)]"} data-testid="erp-system">
+          <span className="relative w-11 h-11 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Database size={19} /><i aria-hidden="true" className="absolute -top-0.5 -end-0.5 w-3 h-3 rounded-full border-2 border-[var(--c-surf)]" style={{ background: x.color || "var(--biz)" }} /></span>
+          <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15px] truncate" dir="auto">{x.name}</span>
             <span className="block text-[12px] text-[var(--c-mut)]">{tr("{n} tables", { n: x.tables })} · {new Date(x.updated).toLocaleDateString()}</span></span>
-          {x.active ? <span className="text-[11px] font-semibold text-[var(--c-pos)] bg-[var(--c-soft)] rounded-full px-2 py-0.5">{tr("Active")}</span>
-            : <span className="text-[11px] font-semibold text-[var(--c-mut)] bg-[var(--c-surf-2)] rounded-full px-2 py-0.5">{tr("Trial")}</span>}
-          <ChevronRight size={18} className="text-[var(--c-mut)] rtl:-scale-x-100" />
+          {x.active ? <span className={K.tag("green")}>{tr("Active")}</span>
+            : <span className={K.tag("gray")}>{tr("Trial")}</span>}
+          <ChevronRight size={18} className="text-[var(--c-mut)] rtl:rotate-180 shrink-0" />
         </button>))}</div>
-        : <p className={card + " p-5 text-center text-[14px] text-[var(--c-mut)]"}>{tr("No systems yet.")}</p>}
+        : <p className={card + " p-6 text-center text-[14px] font-semibold text-[var(--c-mut)]"}>{tr("No systems yet.")}</p>}
     </section>
   );
 }
@@ -249,13 +249,13 @@ export function Builder({ llm, modelReady, openEngine, flash, onBack, onCreate, 
   return (
     <section className="pb-28" data-testid="erp-newpage">
       <TopBar title={edit ? draft.name : step === 0 ? tr("New system") : draft ? draft.name : tr("New system")} sub={(edit ? tr("Design") + " · " : "") + tr("Step {n} of 5", { n: step + 1 })} onBack={onBack}
-        right={draft && draft.history && draft.history.length ? <button onClick={undo} aria-label={tr("Undo")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] flex items-center justify-center" data-testid="biz-undo"><Undo2 size={18} /></button> : null} />
+        right={draft && draft.history && draft.history.length ? <button onClick={undo} aria-label={tr("Undo")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center shrink-0" data-testid="biz-undo"><Undo2 size={18} /></button> : null} />
       {/* C: the steps, jump to any once there is a design;  A: the progress bar */}
-      <div className="px-4 space-y-2">
-        <div className="grid grid-cols-5 gap-1.5" aria-hidden="true">{BS.STEPS.map((s, i) => <span key={s.id} className="h-1.5 rounded-full" style={{ background: i <= step ? "var(--biz)" : "#DCE3EC", opacity: i < step ? 0.55 : 1 }} />)}</div>
+      <div className="px-4 pt-3 space-y-2.5">
+        <div className="grid grid-cols-5 gap-1.5" aria-hidden="true">{BS.STEPS.map((s, i) => <span key={s.id} className="h-1.5 rounded-full" style={{ background: i <= step ? "var(--c-acc)" : "var(--c-ln)", opacity: i < step ? 0.55 : 1 }} />)}</div>
         <div className="grid grid-cols-5 gap-1.5" role="tablist">
           {BS.STEPS.map((s, i) => <button key={s.id} role="tab" aria-selected={step === i} disabled={!draft && i > 0} onClick={() => setStep(i)} data-testid={"biz-step-" + s.id}
-            className={"h-9 rounded-lg text-[11.5px] font-semibold disabled:opacity-40 " + (step === i ? "text-[var(--c-on-acc)]" : "text-[var(--c-mut)] bg-[var(--c-surf)] border border-[var(--c-ln)]")} style={step === i ? { background: "var(--c-acc)" } : null}>{ar ? s.ar : s.en}</button>)}
+            className={"min-h-[44px] h-11 px-1 rounded-full text-[11.5px] font-extrabold truncate disabled:opacity-40 transition-colors duration-150 " + selPill(step === i)}>{ar ? s.ar : s.en}</button>)}
         </div>
       </div>
       <div className="px-4 pt-4 space-y-4">
@@ -263,22 +263,22 @@ export function Builder({ llm, modelReady, openEngine, flash, onBack, onCreate, 
         <Interview q={ar ? S.q.ar : S.q.en} sys={draft} step={S.id} run={run} llm={modelReady ? llm : null} flash={flash} />
         {S.id === "name" ? (
           <div className="space-y-3">
-            {draft ? <label className="block"><span className="block text-[13px] font-semibold mb-1.5">{tr("System name")}</span>
+            {draft ? <label className="block"><span className="block text-[12px] font-bold mb-1.5 text-[var(--c-mut)]">{tr("System name")}</span>
               <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value, _named: true })} className={inp} dir="auto" data-testid="biz-name" /></label> : null}
-            <label className="block"><span className="block text-[13px] font-semibold mb-1.5">{tr("Describe your business")}</span>
-              <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} dir="auto" className={inp + " h-auto py-3"} data-testid="erp-desc"
+            <label className="block"><span className="block text-[12px] font-bold mb-1.5 text-[var(--c-mut)]">{tr("Describe your business")}</span>
+              <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} dir="auto" className={K.area} data-testid="erp-desc"
                 placeholder={tr("e.g. We rent mobile cranes (20–500 t) with operators in Egypt. We track customers, jobs per site, daily rates, invoices and payments, maintenance and crew licences.")} /></label>
             <div className="flex flex-wrap gap-2">{[tr("I rent out cranes with operators"), tr("I run a clinic with appointments"), tr("I sell spare parts to workshops"), tr("I run a small shop with stock")].map((x) => (
-              <button key={x} onClick={() => setDesc(x)} className="px-3 py-2 rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] text-[13px]">{x}</button>))}</div>
+              <button key={x} onClick={() => setDesc(x)} className={K.chip(desc === x) + " h-auto min-h-[44px] py-2 whitespace-normal text-start"}>{x}</button>))}</div>
             {/* v6.46: a business we have a template for needs no model at all */}
             {modelReady || E.clearTemplate(desc) ? <button className={btnP + " w-full"} style={{ background: "var(--c-acc)" }} disabled={busy || desc.trim().length < 15} onClick={design} data-testid="erp-design">
               {busy ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}{busy ? (stage || tr("Designing your system…")) : tr("Design it with AI")}</button>
               : <button className={btnG + " w-full"} onClick={openEngine}>{tr("Load a model to design it with AI — or pick a template below")}</button>}
             {err ? <p className="text-[13px] text-[var(--c-warn)]">{err}</p> : null}
-            <p className="text-[13px] font-semibold text-[var(--c-mut)] pt-2">{tr("Or start from a template")}</p>
+            <p className={K.label + " pt-2 m-0"}>{tr("Or start from a template")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">{E.TEMPLATES.map((t) => (
-              <button key={t.id} onClick={() => pick(t.spec)} className={card + " text-start p-3.5"} data-testid={"erp-tpl-" + t.id}>
-                <span className="block font-bold text-[14.5px]">{tr(t.title)}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr(t.blurb)}</span></button>))}</div>
+              <button key={t.id} onClick={() => pick(t.spec)} className={card + " text-start p-3.5 min-h-[56px] hover:border-[var(--c-acc)]"} data-testid={"erp-tpl-" + t.id}>
+                <span className="block font-extrabold text-[14.5px]">{tr(t.title)}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr(t.blurb)}</span></button>))}</div>
           </div>
         ) : !draft ? null : S.id === "data" ? <DataStep draft={draft} setDraft={setDraft} run={run} />
           : S.id === "logic" ? <LogicStep draft={draft} run={run} />
@@ -287,7 +287,7 @@ export function Builder({ llm, modelReady, openEngine, flash, onBack, onCreate, 
       </div>
       {/* A: Back / Next — and, from the second step, finish now (everything can be changed later) */}
       {step > 0 && draft ? (
-        <div className="att-shift fixed inset-x-0 bottom-0 z-40 bg-[#FFFFFFF2] backdrop-blur border-t border-[var(--c-ln)] px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+        <div className="att-shift fixed inset-x-0 bottom-0 z-40 bg-[var(--c-surf)] border-t border-[var(--c-ln)] px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
           <div className="max-w-3xl mx-auto flex gap-2.5">
             <button onClick={() => setStep(step - 1)} className={btnG}>{tr("Back")}</button>
             {step < 4 ? <button onClick={() => setStep(step + 1)} className={(edit ? btnG : btnP) + " flex-1"} style={edit ? null : { background: "var(--c-acc)" }} data-testid="biz-next">{tr("Next")}: {ar ? BS.STEPS[step + 1].ar : BS.STEPS[step + 1].en}</button> : null}
@@ -319,16 +319,16 @@ function Interview({ q, sys, step, run, llm, flash }) {
   };
   return (
     <div className={card + " p-4 space-y-3"} data-testid="biz-interview">
-      <div className="flex gap-2.5"><span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[var(--c-on-acc)]" style={{ background: "var(--c-acc)" }}><Sparkles size={15} /></span>
-        <p className="text-[15.5px] font-semibold leading-snug pt-1" dir="auto">{q}</p></div>
+      <div className="flex gap-2.5"><span className="w-9 h-9 rounded-[12px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Sparkles size={16} /></span>
+        <p className="text-[15.5px] font-bold leading-snug pt-1.5 m-0" dir="auto">{q}</p></div>
       {sys && sugg.length ? <div className="flex flex-wrap gap-2" data-testid="biz-suggestions">
-        {sugg.map((x) => <button key={x.id} onClick={() => { const r = run(x.ops); if (r.done.length) flash(r.done[r.done.length - 1]); }} className="px-3 py-2 rounded-xl text-[13px] font-semibold border-[1.5px] bg-[var(--c-surf)] text-start"
-          style={{ borderColor: "var(--color-teal-800)", color: "var(--c-acc)" }} data-testid="biz-suggestion">+ {L2(x.en, x.ar)}</button>)}</div> : null}
+        {sugg.map((x) => <button key={x.id} onClick={() => { const r = run(x.ops); if (r.done.length) flash(r.done[r.done.length - 1]); }} className="min-h-[44px] px-3.5 py-2 rounded-full text-[13px] font-extrabold border border-[var(--c-acc)]/40 bg-[var(--c-soft)] text-[var(--c-acc)] text-start hover:border-[var(--c-acc)] transition-colors duration-150"
+          data-testid="biz-suggestion">+ {L2(x.en, x.ar)}</button>)}</div> : null}
       {sys && step !== "launch" && llm ? (
         <div className="space-y-2">
           <div className="flex gap-2"><input value={ask} onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && ask.trim().length > 3) propose(); }} dir="auto" className={inp} data-testid="erp-draft-ask"
             placeholder={step === "screens" ? tr("e.g. make it green and show unpaid invoices on the home screen") : step === "logic" ? tr("e.g. Total = Days × Day rate, and VAT 14%") : tr("e.g. add a fuel log table linked to each crane")} />
-            <button onClick={propose} disabled={busy || ask.trim().length < 4} aria-label={tr("Show me the change")} className="w-12 h-12 rounded-xl text-[var(--c-on-acc)] flex items-center justify-center shrink-0 disabled:opacity-40" style={{ background: "var(--c-acc)" }} data-testid="erp-draft-ask-go">
+            <button onClick={propose} disabled={busy || ask.trim().length < 4} aria-label={tr("Show me the change")} className="w-12 h-12 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] flex items-center justify-center shrink-0 disabled:opacity-40" style={{ background: "var(--c-acc)" }} data-testid="erp-draft-ask-go">
               {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}</button></div>
           {prop ? <Proposal prop={prop} onApply={() => { run(prop.ops); setProp(null); setAsk(""); }} onCancel={() => setProp(null)} testid="erp-draft-proposal" applyId="erp-draft-apply" /> : null}
         </div>) : null}
@@ -338,12 +338,12 @@ function Interview({ q, sys, step, run, llm, flash }) {
 
 function Proposal({ prop, onApply, onCancel, testid, applyId }) {
   return (
-    <div className="rounded-xl bg-[var(--c-surf-2)] p-3 text-[13.5px] space-y-1.5" data-testid={testid}>
+    <div className="rounded-[16px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] p-3.5 text-[13.5px] space-y-1.5" data-testid={testid}>
       {prop.done.length ? prop.done.map((d, i) => <p key={i} className="flex gap-1.5"><Check size={15} className="shrink-0 mt-0.5" style={{ color: "var(--c-acc)" }} /><span dir="auto">{d}</span></p>)
         : <p className="text-[var(--c-mut)]">{tr("No design change found in that.")}</p>}
       {prop.errors.map((d, i) => <p key={"e" + i} className="text-[var(--c-warn)]" dir="auto">⚠ {d}</p>)}
-      {prop.done.length ? <div className="flex gap-2 pt-1.5"><button className="h-10 px-4 rounded-xl text-[var(--c-on-acc)] font-bold" style={{ background: "var(--c-acc)" }} onClick={onApply} data-testid={applyId}>{tr("Apply")}</button>
-        <button className="h-10 px-4 rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] font-semibold" onClick={onCancel}>{tr("Cancel")}</button></div> : null}
+      {prop.done.length ? <div className="flex gap-2 pt-1.5"><button className="h-10 px-4 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] font-bold" style={{ background: "var(--c-acc)" }} onClick={onApply} data-testid={applyId}>{tr("Apply")}</button>
+        <button className="h-10 px-4 rounded-[14px] min-h-[44px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-semibold" onClick={onCancel}>{tr("Cancel")}</button></div> : null}
     </div>
   );
 }
@@ -365,16 +365,15 @@ function DataStep({ draft, setDraft, run }) {
         <div key={t.id} className={card + " p-3.5"}>
           <div className="flex items-center justify-between gap-2"><button onClick={() => setRen({ tid: t.id, value: t.name })} className="text-[15.5px] font-extrabold flex items-center gap-1.5 text-start" dir="auto" data-testid="erp-draft-table">{t.name}<Wrench size={12} className="text-[var(--c-mut)]" /></button>
             <span className="text-[12px] text-[var(--c-mut)]">{tr("{n} fields", { n: t.fields.length })}</span></div>
-          <div className="flex flex-wrap gap-1.5 mt-2">{t.fields.map((f) => <button key={f.id} onClick={() => setRen({ tid: t.id, fid: f.id, value: f.name })} className={"text-[12px] rounded-lg px-2 py-1 " + (f.type === "link" ? "font-semibold" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]")}
-            style={f.type === "link" ? { background: "var(--color-teal-950)", color: "var(--c-acc)" } : null} dir="auto" data-testid="erp-draft-field">{f.name} <span className="opacity-60">· {tr(E.FIELD_TYPES[f.type])}{f.type === "link" ? " → " + ((draft.tables.find((x) => x.id === f.link) || {}).name || "") : ""}</span></button>)}
-            {addFor && addFor.tid === t.id ? null : <button onClick={() => setAddFor({ tid: t.id, name: "", type: "text" })} className="text-[12px] rounded-lg border border-dashed border-[var(--c-ln)] text-[var(--c-mut)] px-2 py-1" data-testid="erp-draft-add-field">+ {tr("field")}</button>}</div>
+          <div className="flex flex-wrap gap-1.5 mt-2">{t.fields.map((f) => <button key={f.id} onClick={() => setRen({ tid: t.id, fid: f.id, value: f.name })} className={"min-h-[36px] text-[12px] rounded-full px-3 py-1.5 border " + (f.type === "link" ? "font-bold bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]/30" : "bg-[var(--c-surf-2)] text-[var(--c-ink)] border-[var(--c-ln)]")} dir="auto" data-testid="erp-draft-field">{f.name} <span className="opacity-60">· {tr(E.FIELD_TYPES[f.type])}{f.type === "link" ? " → " + ((draft.tables.find((x) => x.id === f.link) || {}).name || "") : ""}</span></button>)}
+            {addFor && addFor.tid === t.id ? null : <button onClick={() => setAddFor({ tid: t.id, name: "", type: "text" })} className="min-h-[36px] text-[12px] font-bold rounded-full border border-dashed border-[var(--c-mut)] text-[var(--c-mut)] px-3 py-1.5 hover:text-[var(--c-acc)] hover:border-[var(--c-acc)]" data-testid="erp-draft-add-field">+ {tr("field")}</button>}</div>
           {addFor && addFor.tid === t.id ? (
             <div className="flex gap-1.5 mt-2.5" data-testid="erp-draft-new-field">
               <input autoFocus value={addFor.name} onChange={(e) => setAddFor({ ...addFor, name: e.target.value })} placeholder={tr("Field name")} className={inp + " h-11 flex-1"} dir="auto" data-testid="erp-draft-new-field-name" />
               <select value={addFor.type} onChange={(e) => setAddFor({ ...addFor, type: e.target.value })} className={inp + " h-11 w-28"}>
                 {Object.entries(E.FIELD_TYPES).filter(([k]) => k !== "link" && k !== "formula").map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select>
-              <button className="h-11 px-3 rounded-xl text-[var(--c-on-acc)] font-bold disabled:opacity-40" style={{ background: "var(--c-acc)" }} disabled={!addFor.name.trim()} onClick={() => { const r = run([{ op: "addField", table: t.id, name: addFor.name.trim(), type: addFor.type }]); if (r.done.length) setAddFor(null); }} data-testid="erp-draft-new-field-save">{tr("Add")}</button>
-              <button className="h-11 w-11 rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] flex items-center justify-center" onClick={() => setAddFor(null)} aria-label={tr("Cancel")}><X size={15} /></button>
+              <button className="h-11 px-3 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] font-bold disabled:opacity-40" style={{ background: "var(--c-acc)" }} disabled={!addFor.name.trim()} onClick={() => { const r = run([{ op: "addField", table: t.id, name: addFor.name.trim(), type: addFor.type }]); if (r.done.length) setAddFor(null); }} data-testid="erp-draft-new-field-save">{tr("Add")}</button>
+              <button className="h-11 w-11 rounded-[14px] min-h-[44px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] flex items-center justify-center" onClick={() => setAddFor(null)} aria-label={tr("Cancel")}><X size={15} /></button>
             </div>) : null}
         </div>))}
     </div>
@@ -392,18 +391,18 @@ function LogicStep({ draft, run }) {
   }
   const [add, setAdd] = useState({ table: draft.tables[0] ? draft.tables[0].id : "", name: "", formula: "" });
   const Box = ({ title, items, empty, testid }) => (
-    <div className={card + " p-3.5 space-y-1.5"} data-testid={testid}><p className="text-[13px] font-bold">{title}</p>
+    <div className={card + " p-4 space-y-1.5"} data-testid={testid}><p className={K.label + " m-0"}>{title}</p>
       {items.length ? items.map((x, i) => <p key={i} className="text-[13.5px] text-[var(--c-ink)]" dir="auto">{x}</p>) : <p className="text-[13px] text-[var(--c-mut)]">{empty}</p>}</div>);
   return (
     <div className="space-y-3">
       <Box title={tr("Calculations")} items={formulas} empty={tr("None yet — add one below or tap a suggestion.")} testid="biz-logic-formulas" />
       <div className={card + " p-3.5 space-y-2"}>
-        <p className="text-[13px] font-bold">{tr("Add a calculation")}</p>
+        <p className={K.label + " m-0"}>{tr("Add a calculation")}</p>
         <div className="grid grid-cols-2 gap-2"><select value={add.table} onChange={(e) => setAdd({ ...add, table: e.target.value })} className={inp + " h-11"}>{draft.tables.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
           <input value={add.name} onChange={(e) => setAdd({ ...add, name: e.target.value })} placeholder={tr("Name, e.g. Total")} className={inp + " h-11"} dir="auto" data-testid="biz-calc-name" /></div>
         <input value={add.formula} onChange={(e) => setAdd({ ...add, formula: e.target.value })} placeholder={tr("e.g. [Days] * [Day rate]")} className={inp + " h-11"} dir="ltr" data-testid="biz-calc-formula" />
         {(() => { const t = draft.tables.find((x) => x.id === add.table); return t ? <p className="text-[11.5px] text-[var(--c-mut)]" dir="auto">{tr("Fields:")} {t.fields.filter((f) => f.type === "number" || f.type === "money" || f.type === "formula").map((f) => `[${f.name}]`).join(" ") || "—"}</p> : null; })()}
-        <button className="h-11 px-4 rounded-xl text-[var(--c-on-acc)] font-bold disabled:opacity-40" style={{ background: "var(--c-acc)" }} disabled={!add.name.trim() || !add.formula.trim()} data-testid="biz-calc-add"
+        <button className="h-11 px-4 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] font-bold disabled:opacity-40" style={{ background: "var(--c-acc)" }} disabled={!add.name.trim() || !add.formula.trim()} data-testid="biz-calc-add"
           onClick={() => { const r = run([{ op: "addField", table: add.table, name: add.name.trim(), type: "formula", formula: add.formula.trim() }]); if (r.done.length) setAdd({ ...add, name: "", formula: "" }); }}>{tr("Add")}</button>
       </div>
       <Box title={tr("Links between tables")} items={links} empty={tr("No links — a linked field picks a record from another table.")} testid="biz-logic-links" />
@@ -420,37 +419,37 @@ export function ScreensEditor({ sys, run }) {
   const [dev, setDev] = useSticky("biz:device", "phone");
   const home = SC.homeFor(sys, dev), own = dev === "computer" && !!u.homeComputer;
   const setHome = (next) => run([{ op: "setHome", parts: next, device: dev === "computer" ? "computer" : u.homeComputer ? "phone" : "both" }], true);
-  const seg = (on) => "flex-1 h-10 rounded-lg text-[13px] font-semibold " + (on ? "text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)]");
+  const seg = (on) => "flex-1 min-h-[44px] h-11 rounded-full text-[13px] font-extrabold transition-colors duration-150 " + selPill(on);
   return (
     <div className="space-y-3" data-testid="biz-screens">
-      <div className={card + " p-1.5 grid grid-cols-2 gap-1.5"} role="tablist" aria-label={tr("Design for")}>
+      <div className="p-1 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] grid grid-cols-2 gap-1" role="tablist" aria-label={tr("Design for")}>
         {[["phone", tr("Phone"), Smartphone], ["computer", tr("Computer"), Monitor]].map(([k, l, I]) => (
           <button key={k} role="tab" aria-selected={dev === k} onClick={() => setDev(k)} data-testid={"biz-device-" + k}
-            className={"h-11 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 " + (dev === k ? "text-[var(--c-on-acc)]" : "text-[var(--c-ink)]")} style={dev === k ? { background: "var(--c-acc)" } : null}><I size={17} />{l}</button>))}
+            className={"min-h-[44px] h-11 rounded-full text-[14px] font-extrabold flex items-center justify-center gap-2 transition-colors duration-150 " + (dev === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}><I size={17} />{l}</button>))}
       </div>
       <p className="text-[12.5px] text-[var(--c-mut)] px-1" data-testid="biz-device-note">{tr("One system on both: the same tables, rules and records. The phone and the computer can each have their own layout.")}</p>
       <Previews sys={sys} focus={dev} />
-      <div className={card + " p-3.5 space-y-2.5"}>
-        <p className="text-[13px] font-bold flex items-center gap-1.5"><Palette size={15} />{tr("Colour")} <span className="font-normal text-[var(--c-mut)]">· {tr("both")}</span></p>
+      <div className={card + " p-4 space-y-2.5"}>
+        <p className="text-[13px] font-extrabold flex items-center gap-1.5 m-0"><Palette size={15} className="text-[var(--c-acc)]" />{tr("Colour")} <span className="font-normal text-[var(--c-mut)]">· {tr("both")}</span></p>
         <div className="flex flex-wrap gap-2.5">{Object.entries(SC.COLORS).map(([k, c]) => (
           <button key={k} onClick={() => run([{ op: "setColor", color: k }], true)} aria-label={ar ? SC.COLORS_AR[k] : k} aria-pressed={u.color === k} data-testid={"biz-color-" + k}
-            className="w-11 h-11 rounded-full" style={{ background: c, boxShadow: u.color === k ? `0 0 0 3px #fff, 0 0 0 5px ${c}` : "none" }} />))}</div>
+            className="w-11 h-11 rounded-full" style={{ background: c, boxShadow: u.color === k ? `0 0 0 3px var(--c-surf), 0 0 0 5px ${c}` : "none" }} />))}</div>
       </div>
-      <div className={card + " p-3.5 space-y-2.5"}>
-        <p className="text-[13px] font-bold">{dev === "computer" ? tr("Computer home screen shows") : tr("Phone home screen shows")}{dev === "computer" && !own ? <span className="font-normal text-[var(--c-mut)]"> · {tr("same as the phone")}</span> : null}</p>
+      <div className={card + " p-4 space-y-2.5"}>
+        <p className="text-[13px] font-extrabold m-0">{dev === "computer" ? tr("Computer home screen shows") : tr("Phone home screen shows")}{dev === "computer" && !own ? <span className="font-normal text-[var(--c-mut)]"> · {tr("same as the phone")}</span> : null}</p>
         <div className="flex flex-wrap gap-2">{Object.keys(SC.HOME_PARTS).map((p) => { const on = home.includes(p);
           return <button key={p} onClick={() => { const next = on ? home.filter((x) => x !== p) : [...home, p]; if (next.length) setHome(next); }} aria-pressed={on} data-testid={"biz-home-" + p}
-            className={"px-3 py-2 rounded-xl text-[13px] font-semibold " + (on ? "text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]")} style={on ? { background: "var(--c-acc)" } : null}>{on ? "✓ " : ""}{ar ? SC.HOME_PARTS_AR[p] : SC.HOME_PARTS[p]}</button>; })}</div>
-        {own ? <button onClick={() => run([{ op: "setHome", parts: u.home }], true)} className="text-[13px] font-semibold underline" style={{ color: "var(--c-acc)" }} data-testid="biz-home-same">{tr("Use the phone's home screen here too")}</button> : null}
+            className={K.chip(on)}>{on ? "✓ " : ""}{ar ? SC.HOME_PARTS_AR[p] : SC.HOME_PARTS[p]}</button>; })}</div>
+        {own ? <button onClick={() => run([{ op: "setHome", parts: u.home }], true)} className="min-h-[44px] text-[13px] font-bold underline text-[var(--c-acc)]" data-testid="biz-home-same">{tr("Use the phone's home screen here too")}</button> : null}
       </div>
       {dev === "computer" ? <div className="grid grid-cols-2 gap-3">
-        <div className={card + " p-3.5 space-y-2"}><p className="text-[13px] font-bold">{tr("Menu")}</p>
-          <div className="flex gap-1.5">{[["left", tr("Left")], ["top", tr("Top")]].map(([k, l]) => <button key={k} onClick={() => run([{ op: "setMenu", position: k }], true)} className={seg(u.menu === k)} style={u.menu === k ? { background: "var(--c-acc)" } : null} data-testid={"biz-menu-" + k}>{l}</button>)}</div></div>
-        <div className={card + " p-3.5 space-y-2"}><p className="text-[13px] font-bold">{tr("Form columns")}</p>
-          <div className="flex gap-1.5">{[1, 2, 3].map((n) => <button key={n} onClick={() => run([{ op: "setFormColumns", columns: n }], true)} className={seg(u.formCols === n)} style={u.formCols === n ? { background: "var(--c-acc)" } : null} data-testid={"biz-formcols-" + n}>{n}</button>)}</div></div>
+        <div className={card + " p-4 space-y-2"}><p className="text-[13px] font-extrabold m-0">{tr("Menu")}</p>
+          <div className="flex gap-1.5">{[["left", tr("Left")], ["top", tr("Top")]].map(([k, l]) => <button key={k} onClick={() => run([{ op: "setMenu", position: k }], true)} className={seg(u.menu === k)} data-testid={"biz-menu-" + k}>{l}</button>)}</div></div>
+        <div className={card + " p-4 space-y-2"}><p className="text-[13px] font-extrabold m-0">{tr("Form columns")}</p>
+          <div className="flex gap-1.5">{[1, 2, 3].map((n) => <button key={n} onClick={() => run([{ op: "setFormColumns", columns: n }], true)} className={seg(u.formCols === n)} data-testid={"biz-formcols-" + n}>{n}</button>)}</div></div>
       </div> : null}
-      <div className={card + " p-3.5 space-y-2"}><p className="text-[13px] font-bold">{tr("Spacing")} <span className="font-normal text-[var(--c-mut)]">· {tr("both")}</span></p>
-        <div className="flex gap-1.5">{[["comfortable", tr("Roomy")], ["compact", tr("Compact")]].map(([k, l]) => <button key={k} onClick={() => run([{ op: "setDensity", density: k }], true)} className={seg(u.density === k)} style={u.density === k ? { background: "var(--c-acc)" } : null}>{l}</button>)}</div></div>
+      <div className={card + " p-4 space-y-2"}><p className="text-[13px] font-extrabold m-0">{tr("Spacing")} <span className="font-normal text-[var(--c-mut)]">· {tr("both")}</span></p>
+        <div className="flex gap-1.5">{[["comfortable", tr("Roomy")], ["compact", tr("Compact")]].map(([k, l]) => <button key={k} onClick={() => run([{ op: "setDensity", density: k }], true)} className={seg(u.density === k)}>{l}</button>)}</div></div>
     </div>
   );
 }
@@ -463,8 +462,8 @@ function Previews({ sys, focus = null }) {
   return (
     <div className="flex gap-3 items-end" data-testid="biz-previews" aria-label={tr("Preview")}>
       <div className="w-[34%] max-w-[150px] shrink-0">
-        <div className="rounded-[18px] border-[3px] border-[#0F172A] bg-[var(--c-surf)] overflow-hidden aspect-[9/17] flex flex-col transition-all" style={ring("phone")} data-testid="biz-preview-phone">
-          <div className="px-2 py-2 text-[var(--c-on-acc)] text-[8.5px] font-bold truncate" style={{ background: c }}>{sys.name}</div>
+        <div className="rounded-[18px] border-[3px] border-[var(--c-ink)] bg-[var(--c-surf)] overflow-hidden aspect-[9/17] flex flex-col transition-all" style={ring("phone")} data-testid="biz-preview-phone">
+          <div className="px-2 py-2 text-[#FFFFFF] text-[8.5px] font-bold truncate" style={{ background: c }}>{sys.name}</div>
           <div className="p-1.5 space-y-1.5 flex-1">
             {hp.includes("alerts") ? <span className="block rounded bg-[var(--c-warn)]/15 px-1 py-0.5 text-[7px] text-[var(--c-warn)] truncate">⚠ {tr("Alerts")}</span> : null}
             {hp.includes("kpis") ? <div className="grid grid-cols-3 gap-1">{kp.map((k, i) => <span key={i} className="rounded bg-[var(--c-surf-2)] p-1 text-[7px] leading-tight"><b className="block text-[9px]">{SC.kpiValue(sys, k)}</b><span className="block truncate">{k.label}</span></span>)}</div> : null}
@@ -475,11 +474,11 @@ function Previews({ sys, focus = null }) {
         <p className="text-[11px] text-[var(--c-mut)] text-center mt-1">{tr("Phone")}</p>
       </div>
       <div className="flex-1 min-w-0">
-        <div className={"rounded-lg border-[3px] border-[#0F172A] bg-[var(--c-surf)] overflow-hidden aspect-[16/10] flex transition-all " + (u.menu === "top" ? "flex-col" : "")} style={ring("computer")} data-testid="biz-preview-desktop">
-          <div className={(u.menu === "top" ? "h-5 px-2 flex items-center gap-2" : "w-[22%] p-1.5 space-y-1") + " shrink-0"} style={{ background: u.menu === "top" ? c : "#0F172A" }}>
-            {sys.tables.slice(0, 5).map((t) => <span key={t.id} className={(u.menu === "top" ? "text-[#FFFFFFE6]" : "block text-[#CBD5E1]") + " text-[7px] truncate"}>{t.name}</span>)}</div>
+        <div className={"rounded-lg border-[3px] border-[var(--c-ink)] bg-[var(--c-surf)] overflow-hidden aspect-[16/10] flex transition-all " + (u.menu === "top" ? "flex-col" : "")} style={ring("computer")} data-testid="biz-preview-desktop">
+          <div className={(u.menu === "top" ? "h-5 px-2 flex items-center gap-2" : "w-[22%] p-1.5 space-y-1") + " shrink-0"} style={{ background: u.menu === "top" ? c : "var(--c-surf-2)" }}>
+            {sys.tables.slice(0, 5).map((t) => <span key={t.id} className={(u.menu === "top" ? "text-[#FFFFFFE6]" : "block text-[var(--c-mut)]") + " text-[7px] truncate"}>{t.name}</span>)}</div>
           <div className="flex-1 p-1.5 space-y-1">
-            {hc.includes("kpis") ? <div className="grid grid-cols-3 gap-1">{kp.map((k, i) => <span key={i} className="rounded p-1 text-[7px]" style={{ background: i === 0 ? "var(--color-teal-950)" : "#F1F5F9" }}><b className="block text-[8.5px]">{SC.kpiValue(sys, k)}</b><span className="block truncate">{k.label}</span></span>)}</div> : null}
+            {hc.includes("kpis") ? <div className="grid grid-cols-3 gap-1">{kp.map((k, i) => <span key={i} className="rounded p-1 text-[7px]" style={{ background: i === 0 ? "var(--c-soft)" : "var(--c-surf-2)" }}><b className="block text-[8.5px]">{SC.kpiValue(sys, k)}</b><span className="block truncate">{k.label}</span></span>)}</div> : null}
             <div className="grid grid-cols-2 gap-1" data-testid="biz-preview-desktop-parts">
               {hc.includes("chart") ? <div className="flex items-end gap-0.5 h-7 rounded bg-[var(--c-surf-2)] p-0.5" data-part="chart">{[5, 9, 6, 12, 8, 10].map((h, i) => <span key={i} className="flex-1 rounded-sm" style={{ height: h * 2, background: c, opacity: 0.75 }} />)}</div> : null}
               {hc.includes("alerts") ? <span className="block rounded bg-[var(--c-warn)]/15 px-1 py-0.5 text-[7px] text-[var(--c-warn)] h-fit" data-part="alerts">⚠ {tr("Alerts")}</span> : null}
@@ -499,12 +498,12 @@ function LaunchStep({ draft, edit }) {
   const chk = BS.checks(draft);
   return (
     <div className="space-y-3" data-testid="biz-launch">
-      <div className="rounded-2xl p-5 text-[var(--c-on-acc)] space-y-1" style={{ background: "var(--c-acc)" }}>
-        <p className="text-[22px] font-extrabold" dir="auto">{draft.name}</p>
-        <p className="text-[13.5px] opacity-90">{tr("{t} tables · {f} fields · {r} rules", { t: draft.tables.length, f: n, r: rules })}</p>
+      <div className={card + " p-5 space-y-1 border-t-4"} style={{ borderTopColor: "var(--biz)" }}>
+        <p className="text-[22px] font-black tracking-tight m-0" dir="auto">{draft.name}</p>
+        <p className="text-[13.5px] tabular-nums text-[var(--c-mut)] m-0">{tr("{t} tables · {f} fields · {r} rules", { t: draft.tables.length, f: n, r: rules })}</p>
       </div>
       <Previews sys={draft} />
-      {chk.length ? <div className={card + " p-3.5 space-y-1"}><p className="text-[13px] font-bold">{tr("Worth a look")}</p>{chk.map((x, i) => <p key={i} className="text-[13px] text-[var(--c-warn)]">⚠ {L2(x.en, x.ar)}</p>)}</div> : null}
+      {chk.length ? <div className={card + " p-4 space-y-1"}><p className={K.label + " m-0"}>{tr("Worth a look")}</p>{chk.map((x, i) => <p key={i} className="text-[13px] font-semibold text-[var(--c-warn)] m-0">⚠ {L2(x.en, x.ar)}</p>)}</div> : null}
       {!edit ? <p className="text-[12.5px] text-[var(--c-mut)]">{tr("After creating it: add records, ask questions about them, and send it to your team as one app file (Tables → More). Everything here can be changed later — with the steps or by asking the AI.")}</p> : null}
     </div>
   );
@@ -536,29 +535,29 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
     : tab === "pro" ? <ProPanel sys={sys} setSys={setSys} flash={flash} saveFile={saveFile} go={go} wide={wide} />
     : tab === "form" ? <AccessForm sys={sys} setSys={setSys} flash={flash} tid={formT} setTid={setFormT} cols={wide ? u.formCols : 1} saveFile={saveFile} />
     : <Reports sys={sys} />;
-  const fab = modelReady ? <button onClick={() => setChat(true)} className="fixed end-4 z-40 h-14 ps-4 pe-5 rounded-full text-[var(--c-on-acc)] font-bold shadow-lg flex items-center gap-2" style={{ background: c, bottom: wide ? "24px" : "calc(84px + env(safe-area-inset-bottom))" }} data-testid="biz-ai-open">
+  const fab = modelReady ? <button onClick={() => setChat(true)} className="fixed end-4 z-40 min-h-[56px] h-14 ps-4 pe-5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold shadow-lg flex items-center gap-2" style={{ bottom: wide ? "24px" : "calc(84px + env(safe-area-inset-bottom))" }} data-testid="biz-ai-open">
     <Sparkles size={18} />{tr("Change with AI")}</button> : null;
   const chatSheet = chat ? <DesignChat sys={sys} setSys={setSys} llm={llm} flash={flash} onClose={() => setChat(false)} /> : null;
-  const round = "w-11 h-11 rounded-full bg-[#FFFFFF33] flex items-center justify-center";
-  const backBtn = !onBack ? null : <button onClick={onBack} aria-label={tr("Back")} className={round + " shrink-0"} data-testid="biz-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>;
+  const round = "w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center hover:border-[var(--c-acc)] transition-colors duration-150";
+  const backBtn = !onBack ? null : <button onClick={onBack} aria-label={tr("Back")} className={round + " shrink-0"} data-testid="biz-back"><ChevronLeft size={20} className="rtl:rotate-180" /></button>;
   const undoBtn = undo ? <button onClick={undo} aria-label={tr("Undo")} className={round + " shrink-0"} data-testid="biz-sys-undo"><Undo2 size={18} /></button> : null;
   const toolsSheet = tools ? <SystemTools sys={sys} setSys={setSys} user={user} onSignIn={setUser} wide={wide} site={site} flash={flash} saveFile={saveFile} onClose={() => setTools(false)}
     onImport={(d) => { setTools(false); setSysRaw({ ...d, id: E.uid("S"), name: d.name + " " + tr("(copy)"), team: undefined, licence: undefined, updated: Date.now() }, tr("Opened the backup as a copy")); }} /> : null;
   const toolsBtn = <button onClick={() => setTools(true)} aria-label={tr("Team & tools")} className={round + " shrink-0"} data-testid="biz-tools-open"><Users size={18} /></button>;
-  const designBtn = site ? null : <button onClick={() => setStudio(true)} className="h-10 px-3.5 rounded-full bg-[#FFFFFF33] text-[13px] font-bold flex items-center gap-1.5 shrink-0" data-testid="biz-open-studio"><Palette size={15} />{tr("Design")}</button>;
+  const designBtn = site ? null : <button onClick={() => setStudio(true)} className={K.btnS + " rounded-full shrink-0"} data-testid="biz-open-studio"><Palette size={15} className="text-[var(--c-acc)]" />{tr("Design")}</button>;
   const sub = tr("{n} tables", { n: sys.tables.length }) + (E.isActive(sys) ? "" : " · " + tr("Trial"));
 
   // ---- the computer layout: the same system, a menu on the left or on top, wider pages ----
   if (wide && u.menu === "left") return (
-    <section className="flex min-h-screen" style={accentVars(c)} data-testid="biz-system" data-layout="computer-left">
-      <div className="w-64 shrink-0 sticky top-0 h-screen overflow-y-auto text-[var(--c-on-acc)] flex flex-col p-3 gap-1" style={{ background: c }}>
+    <section className="calm flex min-h-screen bg-[var(--c-bg)] text-[var(--c-ink)]" style={accentVars(c)} data-testid="biz-system" data-layout="computer-left">
+      <div className="w-64 shrink-0 sticky top-0 h-screen overflow-y-auto bg-[var(--c-surf)] border-e border-[var(--c-ln)] text-[var(--c-ink)] flex flex-col p-3 gap-1">
         <div className="flex items-center gap-2 mb-2">{backBtn}<span className="flex-1" />{undoBtn}{toolsBtn}</div>
-        <p className="text-[20px] font-extrabold px-2 leading-tight" dir="auto" data-testid="biz-system-title">{sys.name}</p>
-        <p className="text-[12.5px] opacity-85 px-2 mb-3">{sub}</p>
+        <p className="text-[20px] font-black tracking-tight px-2 leading-tight m-0 flex items-center gap-2" dir="auto" data-testid="biz-system-title"><i aria-hidden="true" className="w-3 h-3 rounded-full shrink-0" style={{ background: c }} />{sys.name}</p>
+        <p className="text-[12.5px] text-[var(--c-mut)] px-2 mb-3 m-0">{sub}</p>
         <nav className="flex flex-col gap-1" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
-          <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"h-11 px-3 rounded-xl flex items-center gap-3 text-[14px] font-semibold text-start " + (tab === k ? "bg-[var(--c-surf)] " : "hover:bg-[#FFFFFF22]")} style={tab === k ? { color: c } : null}><I size={19} />{l}</button>))}</nav>
-        <p className="text-[11px] font-bold uppercase tracking-wide opacity-75 px-3 mt-4 mb-1">{tr("Tables")}</p>
-        {sys.tables.map((t) => <button key={t.id} onClick={() => go("form", t.id)} className="h-9 px-3 rounded-lg text-[13.5px] text-start truncate hover:bg-[#FFFFFF22] flex justify-between gap-2" dir="auto"><span className="truncate">{t.name}</span><span className="opacity-75 tabular-nums">{(sys.rows[t.id] || []).length}</span></button>)}
+          <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"min-h-[44px] h-11 px-3.5 rounded-[16px] flex items-center gap-3 text-[14px] font-extrabold text-start transition-colors duration-150 " + (tab === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]")}><I size={19} />{l}</button>))}</nav>
+        <p className={K.label + " px-3 mt-4 mb-1"}>{tr("Tables")}</p>
+        {sys.tables.map((t) => <button key={t.id} onClick={() => go("form", t.id)} className="min-h-[44px] h-11 px-3 rounded-[14px] text-[13.5px] font-semibold text-start truncate hover:bg-[var(--c-surf-2)] flex items-center justify-between gap-2" dir="auto"><span className="truncate">{t.name}</span><span className="text-[var(--c-mut)] tabular-nums">{(sys.rows[t.id] || []).length}</span></button>)}
         <div className="mt-auto pt-3">{designBtn}</div>
       </div>
       <div className="flex-1 min-w-0 px-6 py-5 pb-24"><div className="max-w-6xl mx-auto">{body}</div></div>
@@ -566,13 +565,14 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
     </section>
   );
   if (wide) return (
-    <section className="pb-24" style={accentVars(c)} data-testid="biz-system" data-layout="computer-top">
-      <div className="text-[var(--c-on-acc)] sticky top-0 z-30" style={{ background: c }}>
+    <section className="calm pb-24 min-h-screen bg-[var(--c-bg)] text-[var(--c-ink)]" style={accentVars(c)} data-testid="biz-system" data-layout="computer-top">
+      <div aria-hidden="true" className="h-1.5" style={{ background: c }} />
+      <div className="sticky top-0 z-30 bg-[var(--c-bg)] border-b border-[var(--c-ln)] text-[var(--c-ink)]">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center gap-3">
           {backBtn}
-          <p className="text-[18px] font-extrabold truncate max-w-[30%]" dir="auto" data-testid="biz-system-title">{sys.name}</p>
-          <nav className="flex gap-1 ms-3" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
-            <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"h-10 px-3.5 rounded-full flex items-center gap-2 text-[13.5px] font-semibold " + (tab === k ? "bg-[var(--c-surf)]" : "hover:bg-[#FFFFFF22]")} style={tab === k ? { color: c } : null}><I size={17} />{l}</button>))}</nav>
+          <p className="text-[18px] font-black tracking-tight truncate max-w-[30%] m-0 flex items-center gap-2" dir="auto" data-testid="biz-system-title"><i aria-hidden="true" className="w-3 h-3 rounded-full shrink-0" style={{ background: c }} /><span className="truncate">{sys.name}</span></p>
+          <nav className="flex gap-1 ms-3 p-1 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)]" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
+            <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"min-h-[40px] h-10 px-3.5 rounded-full flex items-center gap-2 text-[13.5px] font-extrabold whitespace-nowrap transition-colors duration-150 " + (tab === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}><I size={17} />{l}</button>))}</nav>
           <span className="flex-1" />{undoBtn}{toolsBtn}{designBtn}
         </div>
       </div>
@@ -582,17 +582,18 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
   );
   // ---- the phone layout ----
   return (
-    <section className="pb-28" style={accentVars(c)} data-testid="biz-system" data-layout="phone">
-      <div className="text-[var(--c-on-acc)] px-3 pt-2 pb-4 rounded-b-3xl" style={{ background: c }}>
+    <section className="calm pb-28 min-h-screen bg-[var(--c-bg)] text-[var(--c-ink)]" style={accentVars(c)} data-testid="biz-system" data-layout="phone">
+      <div aria-hidden="true" className="h-1.5 rounded-b-full" style={{ background: c }} />
+      <div className="px-3 pt-2.5 pb-3 border-b border-[var(--c-ln)]">
         <div className="flex items-center gap-2">{backBtn}<span className="flex-1" />{undoBtn}{toolsBtn}{designBtn}</div>
-        <p className="text-[24px] font-extrabold mt-2 px-1" dir="auto" data-testid="biz-system-title">{sys.name}</p>
-        <p className="text-[12.5px] opacity-85 px-1">{sub}</p>
+        <p className="text-[24px] font-black tracking-tight mt-2.5 px-1 m-0 flex items-center gap-2" dir="auto" data-testid="biz-system-title"><i aria-hidden="true" className="w-3 h-3 rounded-full shrink-0" style={{ background: c }} />{sys.name}</p>
+        <p className="text-[12.5px] text-[var(--c-mut)] px-1 m-0">{sub}</p>
       </div>
       <div className="px-3 pt-3">{body}</div>
       {fab}
       <nav className="att-shift fixed bottom-0 inset-x-0 z-40 bg-[var(--c-surf)] border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="biz-nav">
-        <div className="max-w-3xl mx-auto grid grid-cols-5 h-[64px]">{tabs.map(([k, l, I]) => (
-          <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className="flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-semibold" style={{ color: tab === k ? c : "#64748B" }}><I size={21} />{l}</button>))}</div>
+        <div className="max-w-3xl mx-auto grid grid-cols-5 h-[64px] px-1">{tabs.map(([k, l, I]) => (
+          <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-extrabold transition-colors duration-150 " + (tab === k ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)]")}><span className={"w-12 h-7 rounded-full grid place-items-center " + (tab === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "")}><I size={19} /></span>{l}</button>))}</div>
       </nav>
       {chatSheet}{toolsSheet}
     </section>
@@ -604,19 +605,19 @@ function HomeDash({ sys, go, askAI, wide = false }) {
   const latest = sys.tables.map((t) => ({ t, r: (sys.rows[t.id] || []).slice(-1)[0] })).filter((x) => x.r).sort((a, b) => (b.r._u || b.r._c || 0) - (a.r._u || a.r._c || 0)).slice(0, 4);
   const part = {
     kpis: <div key="kpis" className={"grid gap-2.5 " + (wide ? "col-span-2" : "grid-cols-3")} style={wide ? { gridTemplateColumns: `repeat(${Math.max(1, Math.min(6, u.kpis.length))}, minmax(0, 1fr))` } : null} data-testid="biz-kpis">{u.kpis.slice(0, 6).map((k, i) => (
-      <div key={i} className={card + " p-3"}><p className="text-[22px] font-extrabold tabular-nums leading-tight" style={i === 0 ? { color: "var(--c-acc)" } : null}>{SC.kpiValue(sys, k).toLocaleString()}</p><p className="text-[11.5px] text-[var(--c-mut)] leading-snug" dir="auto">{k.label}</p></div>))}</div>,
-    latest: <div key="latest" className={card + " p-3.5 space-y-2"} data-testid="biz-latest"><p className="text-[13px] font-bold">{tr("Latest records")}</p>
-      {latest.length ? latest.map(({ t, r }) => <button key={t.id} onClick={() => go("form", t.id)} className="w-full flex justify-between gap-2 text-start text-[13.5px]"><span className="truncate" dir="auto">{E.displayOf(t, r)}</span><span className="text-[var(--c-mut)] shrink-0">{t.name}</span></button>)
+      <div key={i} className={card + " p-3.5 flex flex-col-reverse justify-end gap-1 min-w-0"}><p className="text-[clamp(17px,4.6vw,22px)] font-black tracking-tight tabular-nums leading-tight m-0 truncate" style={i === 0 ? { color: "var(--c-acc)" } : null} dir="ltr">{SC.kpiValue(sys, k).toLocaleString()}</p><p className="text-[12px] font-bold text-[var(--c-mut)] leading-snug m-0 truncate" dir="auto">{k.label}</p></div>))}</div>,
+    latest: <div key="latest" className={card + " p-4 space-y-1"} data-testid="biz-latest"><p className={K.label + " m-0 pb-1"}>{tr("Latest records")}</p>
+      {latest.length ? latest.map(({ t, r }) => <button key={t.id} onClick={() => go("form", t.id)} className="w-full min-h-[44px] flex items-center justify-between gap-2 text-start text-[13.5px] font-semibold border-t border-[var(--c-ln)] first-of-type:border-t-0"><span className="truncate" dir="auto">{E.displayOf(t, r)}</span><span className="text-[var(--c-mut)] shrink-0">{t.name}</span></button>)
         : <p className="text-[13px] text-[var(--c-mut)]">{tr("No records yet — open the Form tab to add the first one.")}</p>}</div>,
-    chart: <div key="chart" className={card + " p-3.5 space-y-2"} data-testid="biz-chart"><p className="text-[13px] font-bold" dir="auto">{ch ? ch.title : tr("Chart")}</p>
-      {ch ? (() => { const mx = Math.max(1, ...ch.rows.map((r) => r.value)); return ch.rows.map((r, i) => <div key={i} className="flex items-center gap-2 text-[12.5px]"><span className="w-24 truncate text-[var(--c-mut)]" dir="auto">{r.label}</span><span className="flex-1 h-3 rounded-full bg-[var(--c-surf-2)]"><span className="block h-3 rounded-full" style={{ width: (r.value / mx) * 100 + "%", background: "var(--biz)" }} /></span><span className="tabular-nums w-16 text-end">{r.value.toLocaleString()}</span></div>); })()
+    chart: <div key="chart" className={card + " p-4 space-y-2.5"} data-testid="biz-chart"><p className="text-[15px] font-extrabold m-0" dir="auto">{ch ? ch.title : tr("Chart")}</p>
+      {ch ? (() => { const mx = Math.max(1, ...ch.rows.map((r) => r.value)); return ch.rows.map((r, i) => <div key={i} className="flex items-center gap-2 text-[12.5px]"><span className="w-24 truncate text-[var(--c-mut)]" dir="auto">{r.label}</span><span className="flex-1 h-3 rounded-full bg-[var(--c-surf-2)] overflow-hidden"><span className="block h-3 rounded-full" style={{ width: (r.value / mx) * 100 + "%", background: "var(--c-acc)" }} /></span><span className="tabular-nums w-16 text-end font-bold" dir="ltr">{r.value.toLocaleString()}</span></div>); })()
         : <p className="text-[13px] text-[var(--c-mut)]">{tr("No records yet — open the Form tab to add the first one.")}</p>}</div>,
-    alerts: <div key="alerts" className={card + " p-3.5 space-y-1.5"} data-testid="biz-alerts"><p className="text-[13px] font-bold">{tr("Alerts")}</p>
-      {proAlerts(sys).map((a, i) => <button key={"p" + i} onClick={() => go("pro")} className="w-full text-start text-[13px] text-[var(--c-warn)]" dir="auto" data-testid="biz-alert-pro">⚠ {a.text}</button>)}
-      {al.length ? al.map((a, i) => <button key={i} onClick={() => go("form", a.table.id)} className="w-full text-start text-[13px] text-[var(--c-warn)]" dir="auto">⚠ {a.table.name}: {E.displayOf(a.table, a.row)} — {tr("missing")} {a.missing.join(", ")}</button>) : proAlerts(sys).length ? null : <p className="text-[13px] text-[var(--c-pos)]">✓ {tr("Nothing missing")}</p>}</div>,
+    alerts: <div key="alerts" className={card + " p-4 space-y-1"} data-testid="biz-alerts"><p className="text-[15px] font-extrabold m-0 pb-1">{tr("Alerts")}</p>
+      {proAlerts(sys).map((a, i) => <button key={"p" + i} onClick={() => go("pro")} className="w-full min-h-[44px] text-start text-[13px] font-semibold text-[var(--c-warn)]" dir="auto" data-testid="biz-alert-pro">⚠ {a.text}</button>)}
+      {al.length ? al.map((a, i) => <button key={i} onClick={() => go("form", a.table.id)} className="w-full min-h-[44px] text-start text-[13px] font-semibold text-[var(--c-warn)]" dir="auto">⚠ {a.table.name}: {E.displayOf(a.table, a.row)} — {tr("missing")} {a.missing.join(", ")}</button>) : proAlerts(sys).length ? null : <p className="text-[13px] font-semibold text-[var(--c-pos)] m-0">✓ {tr("Nothing missing")}</p>}</div>,
     tables: <div key="tables" className={wide ? "grid grid-cols-2 gap-2.5 col-span-2" : "space-y-2"} data-testid="biz-home-tables">{sys.tables.map((t) => (
-      <button key={t.id} onClick={() => go("form", t.id)} className={card + " w-full p-3.5 flex items-center justify-between text-start"}><span className="font-bold text-[14.5px]" dir="auto">{t.name}</span><span className="text-[13px] text-[var(--c-mut)]">{tr("{n} records", { n: (sys.rows[t.id] || []).length })}</span></button>))}</div>,
-    ask: <button key="ask" onClick={askAI} className={card + " w-full p-4 text-start flex items-center gap-3"}><Sparkles size={18} style={{ color: "var(--c-acc)" }} /><span className="text-[14px] text-[var(--c-mut)]">{tr("Ask the AI to change anything in this system")}</span></button>,
+      <button key={t.id} onClick={() => go("form", t.id)} className={card + " w-full p-3.5 min-h-[56px] flex items-center justify-between gap-2 text-start hover:border-[var(--c-acc)]"}><span className="font-extrabold text-[14.5px] truncate" dir="auto">{t.name}</span><span className="text-[13px] tabular-nums text-[var(--c-mut)] shrink-0">{tr("{n} records", { n: (sys.rows[t.id] || []).length })}</span></button>))}</div>,
+    ask: <button key="ask" onClick={askAI} className={card + " w-full p-4 min-h-[56px] text-start flex items-center gap-3 hover:border-[var(--c-acc)]"}><span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Sparkles size={18} /></span><span className="text-[14px] text-[var(--c-mut)]">{tr("Ask the AI to change anything in this system")}</span></button>,
   };
   // a computer has room for two columns: the key numbers (top) and the tables (bottom) span both, the rest sit side by side
   return <div className={wide ? "grid grid-cols-2 gap-4 items-start" : "space-y-3"} data-testid="biz-home" data-device={wide ? "computer" : "phone"}>{(wide ? [...parts.filter((p) => p === "kpis"), ...parts.filter((p) => p !== "kpis" && p !== "tables"), ...parts.filter((p) => p === "tables")] : parts).map((p) => part[p]).filter(Boolean)}</div>;
@@ -629,7 +630,7 @@ export function SiteSystem({ seed, flash }) {
   const setSys = (next, msg) => { try { localStorage.setItem(key, JSON.stringify(next)); } catch (e) { flash(tr("This browser's storage is full — save an encrypted backup and delete old records.")); } setS(next); if (msg) flash(msg); };
   const full = useWide();
   return (
-    <div className="biz-app min-h-[100dvh] bg-[var(--c-bg)] text-[var(--c-ink)]" style={accentVars(SC.colorOf(sys))} data-testid="business-app">
+    <div className="biz-app calm min-h-[100dvh] bg-[var(--c-bg)] text-[var(--c-ink)]" style={accentVars(SC.colorOf(sys))} data-testid="business-app">
       <style>{BIZ_CSS}</style>
       <div className={full ? "" : "max-w-3xl lg:max-w-5xl mx-auto px-3"} style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
         <SystemShell sys={sys} setSys={setSys} llm={null} modelReady={false} flash={flash} saveFile={null} site onBack={null} onDelete={null} />
@@ -639,7 +640,7 @@ export function SiteSystem({ seed, flash }) {
 
 export function SiteFleet({ seed, flash }) {
   return (
-    <div className="biz-app min-h-[100dvh] bg-[var(--c-bg)] text-[var(--c-ink)]" style={accentVars(SC.COLORS.blue)} data-testid="business-app">
+    <div className="biz-app calm min-h-[100dvh] bg-[var(--c-bg)] text-[var(--c-ink)]" style={accentVars(SC.COLORS.blue)} data-testid="business-app">
       <style>{BIZ_CSS}</style>
       <div className="max-w-3xl lg:max-w-5xl mx-auto px-3" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
         <FleetApp flash={flash} saveFile={null} seed={seed} site />
@@ -662,7 +663,7 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1, saveFile
   const [plId, setPl] = useState("");        // v6.32: the price list a picked product's price comes from
   useEffect(() => { setAt(table && (sys.rows[table.id] || []).length ? (sys.rows[table.id] || []).length - 1 : -1); }, [table && table.id]);
   useEffect(() => { if (!table) return; setVals(row ? fromRow(row) : blank()); setErrs({}); setDel(false); setDirty(false); }, [at, table && table.id, row && row._id]);
-  if (!table) return <p className={card + " p-5 text-[14px] text-[var(--c-mut)]"}>{tr("No tables — add one with +.")}</p>;
+  if (!table) return <p className={card + " p-6 text-center text-[14px] font-semibold text-[var(--c-mut)]"}>{tr("No tables — add one with +.")}</p>;
   const computed = row ? E.computeRow(table, row) : null;
   const go = (i) => { if (dirty && !window.confirm(tr("Leave without saving the changes?"))) return; setAt(i); };
   const save = () => {
@@ -681,25 +682,25 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1, saveFile
   const setField = (f, v) => setVals((o) => { const n = { ...o, [f.id]: v }; if (pt && f.id === pt.linkFid && v) { const p = V2.priceOn(sys, plId, v); if (p != null) n[pt.priceFid] = String(p); } return n; });
   return (
     <div className="space-y-3" data-testid="biz-form">
-      <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]" data-testid="biz-form-tables">{sys.tables.map((t) => (
-        <button key={t.id} onClick={() => setTid(t.id)} className={"shrink-0 h-10 px-3.5 rounded-full text-[13.5px] font-semibold " + (t.id === table.id ? "text-[var(--c-on-acc)]" : "bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)]")} style={t.id === table.id ? { background: "var(--c-acc)" } : null} dir="auto">{t.name}</button>))}</div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none]" data-testid="biz-form-tables">{sys.tables.map((t) => (
+        <button key={t.id} onClick={() => setTid(t.id)} className={K.chip(t.id === table.id) + " shrink-0"} dir="auto">{t.name}</button>))}</div>
       {lists.length ? <label className="flex items-center gap-2 text-[13px]" data-testid="biz-form-pricelist"><span className="text-[var(--c-mut)] shrink-0">{tr("Price list")}</span>
-        <select value={plId} onChange={(e) => setPl(e.target.value)} className="h-10 rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-2 text-[14px] flex-1 min-w-0" dir="auto"><option value="">{tr("— base prices —")}</option>{lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label> : null}
+        <select value={plId} onChange={(e) => setPl(e.target.value)} className={K.inp + " flex-1"} dir="auto"><option value="">{tr("— base prices —")}</option>{lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label> : null}
       <div className={card + " overflow-hidden"}>
         {/* the record bar, as in Access: ◀ record 3 of 27 ▶  + new */}
-        <div className="flex items-center gap-1 px-2 py-2 border-b border-[var(--c-ln)] bg-[var(--c-surf-2)]" data-testid="biz-form-nav">
-          <button onClick={() => go(0)} disabled={!rows.length || at === 0} aria-label={tr("First record")} className="w-10 h-10 rounded-lg disabled:opacity-30 flex items-center justify-center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true" className="rtl:-scale-x-100"><path d="M6 5v14M18 6l-7 6 7 6" /></svg></button>
-          <button onClick={() => go(at < 0 ? rows.length - 1 : at - 1)} disabled={!rows.length || at === 0} aria-label={tr("Previous record")} className="w-10 h-10 rounded-lg disabled:opacity-30 flex items-center justify-center" data-testid="biz-form-prev"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b border-[var(--c-ln)] bg-[var(--c-surf-2)]" data-testid="biz-form-nav">
+          <button onClick={() => go(0)} disabled={!rows.length || at === 0} aria-label={tr("First record")} className="w-11 h-11 rounded-[12px] disabled:opacity-30 grid place-items-center text-[var(--c-ink)] hover:bg-[var(--c-surf)]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true" className="rtl:-scale-x-100"><path d="M6 5v14M18 6l-7 6 7 6" /></svg></button>
+          <button onClick={() => go(at < 0 ? rows.length - 1 : at - 1)} disabled={!rows.length || at === 0} aria-label={tr("Previous record")} className="w-11 h-11 rounded-[12px] disabled:opacity-30 grid place-items-center text-[var(--c-ink)] hover:bg-[var(--c-surf)]" data-testid="biz-form-prev"><ChevronLeft size={20} className="rtl:rotate-180" /></button>
           <span className="flex-1 text-center text-[13px] font-semibold tabular-nums" data-testid="biz-form-pos">{row ? tr("Record {i} of {n}", { i: at + 1, n: rows.length }) : tr("New record") + (rows.length ? " · " + tr("{n} saved", { n: rows.length }) : "")}</span>
-          <button onClick={() => go(at + 1)} disabled={at < 0 || at >= rows.length - 1} aria-label={tr("Next record")} className="w-10 h-10 rounded-lg disabled:opacity-30 flex items-center justify-center" data-testid="biz-form-next"><ChevronRight size={20} className="rtl:-scale-x-100" /></button>
-          <button onClick={() => go(-1)} aria-label={tr("New record")} className="h-10 px-3 rounded-lg text-[var(--c-on-acc)] font-bold flex items-center gap-1" style={{ background: "var(--c-acc)" }} data-testid="biz-form-new"><Plus size={16} />{tr("New")}</button>
+          <button onClick={() => go(at + 1)} disabled={at < 0 || at >= rows.length - 1} aria-label={tr("Next record")} className="w-11 h-11 rounded-[12px] disabled:opacity-30 grid place-items-center text-[var(--c-ink)] hover:bg-[var(--c-surf)]" data-testid="biz-form-next"><ChevronRight size={20} className="rtl:rotate-180" /></button>
+          <button onClick={() => go(-1)} aria-label={tr("New record")} className="min-h-[44px] h-11 px-3.5 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold flex items-center gap-1" data-testid="biz-form-new"><Plus size={16} />{tr("New")}</button>
         </div>
         <div className={cols > 1 ? "grid gap-x-5 " + (compact ? "p-3 gap-y-2" : "p-4 gap-y-3") : compact ? "p-3 space-y-2" : "p-4 space-y-3"} style={cols > 1 ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : null} data-testid="biz-form-fields" data-cols={cols}>
           {ff.map(({ field: f, section }) => (
             <React.Fragment key={f.id}>
-              {section ? <p className="text-[12px] font-bold tracking-wide uppercase pt-2 border-t border-[var(--c-ln)]" style={{ color: "var(--c-acc)", gridColumn: "1 / -1" }} dir="auto">{section}</p> : null}
+              {section ? <p className="text-[11px] font-extrabold tracking-[0.08em] uppercase pt-3 m-0 border-t border-[var(--c-ln)]" style={{ color: "var(--c-acc)", gridColumn: "1 / -1" }} dir="auto">{section}</p> : null}
               <label style={f.type === "longtext" && cols > 1 ? { gridColumn: "1 / -1" } : null} className={compact ? "grid grid-cols-[38%_1fr] items-center gap-2" : "block"}>
-                <span className={"block text-[12.5px] font-semibold text-[var(--c-mut)] " + (compact ? "" : "mb-1")} dir="auto">{f.name}{f.required ? " *" : ""}</span>
+                <span className={"block text-[12px] font-bold text-[var(--c-mut)] " + (compact ? "" : "mb-1.5")} dir="auto">{f.name}{f.required ? " *" : ""}</span>
                 <span className="block" onInput={() => setDirty(true)} onChange={() => setDirty(true)}><FieldInput sys={sys} f={f} value={vals[f.id]} set={(v) => { setField(f, v); setDirty(true); }} computed={computed ? computed[f.id] : null} /></span>
                 {errs[f.id] ? <span className="block text-[12px] text-[var(--c-warn)] mt-0.5">{errs[f.id]}</span> : null}
               </label>
@@ -714,9 +715,9 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1, saveFile
       </div>
       {/* the subform, as in Access: records in other tables that point at this one */}
       {row ? E.relatedRows(sys, table.id, row._id).map((g) => (
-        <div key={g.table.id + g.field} className={card + " p-3.5"} data-testid="biz-form-related">
-          <p className="text-[13px] font-bold mb-1.5" dir="auto">{tr("Linked {t} ({n})", { t: g.table.name, n: g.rows.length })} <span className="text-[var(--c-mut)] font-normal">· {g.field}</span></p>
-          {g.rows.slice(0, 20).map((r) => <button key={r._id} onClick={() => { setTid(g.table.id); }} className="block w-full text-start text-[13.5px] py-1 truncate" dir="auto">• {E.displayOf(g.table, r)}</button>)}
+        <div key={g.table.id + g.field} className={card + " p-4"} data-testid="biz-form-related">
+          <p className="text-[13px] font-extrabold mb-1.5 m-0" dir="auto">{tr("Linked {t} ({n})", { t: g.table.name, n: g.rows.length })} <span className="text-[var(--c-mut)] font-normal">· {g.field}</span></p>
+          {g.rows.slice(0, 20).map((r) => <button key={r._id} onClick={() => { setTid(g.table.id); }} className="block w-full min-h-[44px] text-start text-[13.5px] font-semibold py-2 truncate border-t border-[var(--c-ln)] hover:text-[var(--c-acc)]" dir="auto">• {E.displayOf(g.table, r)}</button>)}
         </div>)) : null}
     </div>
   );
@@ -734,15 +735,15 @@ function Reports({ sys }) {
   if (!t) return null;
   return (
     <div className="space-y-3" data-testid="biz-reports">
-      <div className={card + " p-3.5 grid grid-cols-3 gap-2"}>
+      <div className={card + " p-3.5 grid grid-cols-1 sm:grid-cols-3 gap-2"}>
         <select value={t.id} onChange={(e) => { setTid(e.target.value); setG(""); setV(""); }} className={inp + " h-11"} aria-label={tr("Table")}>{sys.tables.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
         <select value={gf ? gf.id : ""} onChange={(e) => setG(e.target.value)} className={inp + " h-11"} aria-label={tr("Group by")}>{groups.map((f) => <option key={f.id} value={f.id}>{tr("by")} {f.name}</option>)}</select>
         <select value={vf ? vf.id : ""} onChange={(e) => setV(e.target.value)} className={inp + " h-11"} aria-label={tr("Total of")}><option value="">{tr("count")}</option>{nums.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select>
       </div>
-      <div className={card + " p-3.5 space-y-2"}>
+      <div className={card + " p-4 space-y-2.5"}>
         {rows.length ? rows.slice(0, 12).map((r, i) => <div key={i} className="flex items-center gap-2 text-[13px]"><span className="w-28 truncate" dir="auto">{r.group}</span>
-          <span className="flex-1 h-3.5 rounded-full bg-[var(--c-surf-2)]"><span className="block h-3.5 rounded-full" style={{ width: ((vf ? r.sum : r.count) / mx) * 100 + "%", background: "var(--biz)" }} /></span>
-          <span className="tabular-nums w-20 text-end font-semibold">{(vf ? r.sum : r.count).toLocaleString()}</span></div>)
+          <span className="flex-1 h-3.5 rounded-full bg-[var(--c-surf-2)] overflow-hidden"><span className="block h-3.5 rounded-full" style={{ width: ((vf ? r.sum : r.count) / mx) * 100 + "%", background: "var(--c-acc)" }} /></span>
+          <span className="tabular-nums w-20 text-end font-bold" dir="ltr">{(vf ? r.sum : r.count).toLocaleString()}</span></div>)
           : <p className="text-[13px] text-[var(--c-mut)]">{tr("No records yet")}</p>}
       </div>
     </div>
@@ -766,24 +767,24 @@ function DesignChat({ sys, setSys, llm, flash, onClose }) {
     setBusy(false);
   };
   return (
-    <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={onClose} data-testid="biz-chat">
-      <div className="w-full max-w-3xl mx-auto bg-[var(--c-surf)] rounded-t-3xl max-h-[88dvh] flex flex-col" onClick={(e) => e.stopPropagation()} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="flex items-center gap-2 px-4 pt-3 pb-2 border-b border-[var(--c-ln)]"><Sparkles size={18} style={{ color: "var(--c-acc)" }} /><p className="flex-1 font-extrabold text-[16px]">{tr("Change with AI")}</p>
-          {sys.history && sys.history.length ? <button onClick={() => { const u = E.undo(sys); if (u) { setSys(u.sys, tr("Undone: {w}", { w: u.what })); setLog((l) => [...l, { who: "ai", text: tr("Undone: {w}", { w: u.what }) }]); } }} className="h-10 px-3 rounded-full bg-[var(--c-surf-2)] text-[13px] font-semibold flex items-center gap-1" data-testid="biz-chat-undo"><Undo2 size={15} />{tr("Undo")}</button> : null}
-          <button onClick={onClose} aria-label={tr("Close")} className="w-10 h-10 rounded-full bg-[var(--c-surf-2)] flex items-center justify-center"><X size={17} /></button></div>
+    <div className="calm fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={onClose} data-testid="biz-chat">
+      <div className="w-full max-w-3xl mx-auto bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-t-[28px] max-h-[88dvh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="flex items-center gap-2 px-4 pt-3.5 pb-2.5 border-b border-[var(--c-ln)]"><Sparkles size={18} style={{ color: "var(--c-acc)" }} /><p className="flex-1 font-extrabold text-[17px] m-0">{tr("Change with AI")}</p>
+          {sys.history && sys.history.length ? <button onClick={() => { const u = E.undo(sys); if (u) { setSys(u.sys, tr("Undone: {w}", { w: u.what })); setLog((l) => [...l, { who: "ai", text: tr("Undone: {w}", { w: u.what }) }]); } }} className={K.btnS + " rounded-full"} data-testid="biz-chat-undo"><Undo2 size={15} />{tr("Undo")}</button> : null}
+          <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center shrink-0"><X size={18} /></button></div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3" data-testid="biz-chat-log">
           {!log.length ? <div className="space-y-2"><p className="text-[14px] text-[var(--c-mut)]">{tr("Tell me what to change — the tables, the calculations or how it looks. I show the change first; nothing happens until you tap Apply.")}</p>
             {[tr("Make it green instead of blue"), tr("Show alerts first on the home screen"), tr("Put the phone number at the top of the customer form"), tr("On a computer, put the menu on top")].map((x) => (
-              <button key={x} onClick={() => setAsk(x)} className="block w-full text-start px-3.5 py-2.5 rounded-xl bg-[var(--c-surf-2)] text-[13.5px]">{x}</button>))}</div> : null}
+              <button key={x} onClick={() => setAsk(x)} className={card + " block w-full min-h-[44px] text-start px-3.5 py-2.5 text-[13.5px] font-semibold hover:border-[var(--c-acc)]"}>{x}</button>))}</div> : null}
           {log.map((m, i) => m.who === "me" ? <p key={i} className="ms-auto max-w-[85%] w-fit rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[var(--c-on-acc)] text-[14px]" style={{ background: "var(--c-acc)" }} dir="auto">{m.text}</p>
             : m.prop ? <div key={i} className="max-w-[92%]"><Proposal prop={m.prop} testid="biz-chat-proposal" applyId="biz-chat-apply" onCancel={() => setLog((l) => l.map((x, j) => (j === i ? { who: "ai", text: tr("Cancelled") } : x)))}
               onApply={() => { const r = E.applyOps(sys, m.prop.ops); if (r.done.length) setSys(r.sys, r.done[r.done.length - 1]); if (r.errors.length) flash(r.errors[0]); setLog((l) => l.map((x, j) => (j === i ? { who: "ai", text: "✓ " + r.done.join(" · ") } : x))); }} /></div>
-            : <p key={i} className="max-w-[92%] rounded-2xl rounded-es-md bg-[var(--c-surf-2)] px-3.5 py-2.5 text-[13.5px]" dir="auto">{m.text}</p>)}
+            : <p key={i} className="max-w-[92%] rounded-[18px] rounded-es-md bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 text-[13.5px]" dir="auto">{m.text}</p>)}
           {busy ? <p className="text-[13px] text-[var(--c-mut)] flex items-center gap-2"><Loader2 size={15} className="animate-spin" />{tr("Working it out…")}</p> : null}
         </div>
-        <div className="p-3 border-t border-[var(--c-ln)] flex gap-2">
+        <div className="p-3 border-t border-[var(--c-ln)] bg-[var(--c-surf)] flex gap-2">
           <input value={ask} onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} dir="auto" placeholder={tr("e.g. make the colour green and show unpaid invoices on the home screen")} className={inp} data-testid="biz-chat-input" />
-          <button onClick={send} disabled={busy || ask.trim().length < 3} aria-label={tr("Send")} className="w-12 h-12 rounded-xl text-[var(--c-on-acc)] flex items-center justify-center shrink-0 disabled:opacity-40" style={{ background: "var(--c-acc)" }} data-testid="biz-chat-send"><Send size={18} /></button>
+          <button onClick={send} disabled={busy || ask.trim().length < 3} aria-label={tr("Send")} className="w-12 h-12 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] flex items-center justify-center shrink-0 disabled:opacity-40" style={{ background: "var(--c-acc)" }} data-testid="biz-chat-send"><Send size={18} /></button>
         </div>
       </div>
     </div>

@@ -23,7 +23,7 @@ with sync_playwright() as p:
       r.onupgradeneeded = () => r.result.createObjectStore('kv');
       r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); t.objectStore('kv').put(JSON.parse(s), 'state'); t.oncomplete = () => { r.result.close(); ok(); }; }; })""", DEMO)
     page.reload(); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-    page.click("[data-testid=home-missions]"); page.wait_for_selector("[data-testid=missions-page]")
+    page.click("[data-testid=home-see-report]"); page.click("[data-testid=home-missions]"); page.wait_for_selector("[data-testid=missions-page]")   # v6.50: Missions are in My report
     def start(text, read):
         page.fill("[data-testid=missions-input]", text)
         got = page.locator("[data-testid=missions-read]").inner_text()

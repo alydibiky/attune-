@@ -10,18 +10,19 @@ import { useSubBack, useSticky } from "./backstack.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { looksLikeContract, reviewContract } from "./contract.js";
 import { ContractReview } from "./contract-ui.jsx";
+import * as U from "./ui-kit.jsx";
 
 const HKEY = "attune:deals:v1";
 const loadH = () => { try { const v = JSON.parse(localStorage.getItem(HKEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
 const saveH = (v) => { try { localStorage.setItem(HKEY, JSON.stringify(v.slice(0, 20))); } catch (e) {} };
 
 const LEVELS = {
-  scam: { en: "Looks like a scam", ar: "شكلها نصب", cls: "border-rose-700 bg-rose-500/10 text-rose-200", dot: "bg-rose-400" },
-  risky: { en: "Risky — be careful", ar: "فيها مخاطرة — انتبه", cls: "border-amber-700 bg-amber-500/10 text-amber-200", dot: "bg-amber-400" },
-  overpriced: { en: "Overpriced", ar: "غالية", cls: "border-orange-700 bg-orange-500/10 text-orange-200", dot: "bg-orange-400" },
-  fair: { en: "Fair price", ar: "سعر معقول", cls: "border-sky-700 bg-sky-500/10 text-sky-200", dot: "bg-sky-400" },
-  good: { en: "Good deal", ar: "صفقة كويسة", cls: "border-emerald-700 bg-emerald-500/10 text-emerald-200", dot: "bg-emerald-400" },
-  unknown: { en: "No red flags found", ar: "لا توجد علامات خطر واضحة", cls: "border-slate-700 bg-slate-800/40 text-slate-200", dot: "bg-slate-400" },
+  scam: { en: "Looks like a scam", ar: "شكلها نصب", cls: "border-[var(--c-neg)] bg-[var(--c-neg)]/10 text-[var(--c-neg)]", dot: "bg-[var(--c-neg)]" },
+  risky: { en: "Risky — be careful", ar: "فيها مخاطرة — انتبه", cls: "border-[var(--c-warn)] bg-[var(--c-warn)]/10 text-[var(--c-warn)]", dot: "bg-[var(--c-warn)]" },
+  overpriced: { en: "Overpriced", ar: "غالية", cls: "border-[var(--c-warn)]/70 bg-[var(--c-warn)]/10 text-[var(--c-warn)]", dot: "bg-[var(--c-warn)]" },
+  fair: { en: "Fair price", ar: "سعر معقول", cls: "border-[var(--c-acc)]/50 bg-[var(--c-soft)] text-[var(--c-acc)]", dot: "bg-[var(--c-acc)]" },
+  good: { en: "Good deal", ar: "صفقة كويسة", cls: "border-[var(--c-pos)] bg-[var(--c-pos)]/10 text-[var(--c-pos)]", dot: "bg-[var(--c-pos)]" },
+  unknown: { en: "No red flags found", ar: "لا توجد علامات خطر واضحة", cls: "border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]", dot: "bg-[var(--c-mut)]" },
 };
 const STEPS = ["Reading the offer", "Working out the real cost", "Checking market prices", "Looking for traps", "Writing your reply"];
 
@@ -159,75 +160,75 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
 
   const lv = res ? LEVELS[res.v.level] || LEVELS.unknown : null;
   return (
-    <div className="space-y-4 max-w-2xl lg:max-w-none mx-auto" data-testid="deal">
+    <div className={U.page + " space-y-4 max-w-2xl lg:max-w-none mx-auto"} data-testid="deal">
       <div className="px-1">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2"><ShieldCheck size={19} className="text-emerald-300" />{tr("Deal Check")}</h2>
-        <p data-intro="" className="text-[12.5px] text-slate-400 leading-relaxed mt-1">{tr("Before you pay or sign: paste the offer, the seller's message or an installment plan — or add a screenshot. Attune works out the real cost, checks the market price, looks for scam signs and writes your reply.")}</p>
+        <h2 className={U.h1 + " flex items-center gap-2"}><ShieldCheck size={20} className="text-[var(--c-acc)]" />{tr("Deal Check")}</h2>
+        <p data-intro="" className={"text-[13px] leading-relaxed mt-1 m-0 " + U.muted}>{tr("Before you pay or sign: paste the offer, the seller's message or an installment plan — or add a screenshot. Attune works out the real cost, checks the market price, looks for scam signs and writes your reply.")}</p>
       </div>
 
       {/* v6.27 computer layout A: the offer on the left, the verdict on the right (stacked on a phone) */}
       <div className={PANES}><div className={LEFT}>
-      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
+      <section className={U.cardPad}>
         <textarea value={text} onChange={(e) => setText(e.target.value)} dir="auto" rows={5} data-testid="deal-input"
           placeholder={tr("e.g. “iPhone 15 Pro 256GB, like new, 38,000 EGP, deposit on Vodafone Cash to hold it”  ·  “12,400 EGP or 3 × 4,133 with valU”")}
-          className="att-scroll w-full min-h-[7rem] max-h-[40vh] bg-slate-950 border border-slate-800 rounded-xl p-3 text-[15px] leading-relaxed text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-emerald-500" />
+          className={"att-scroll min-h-[7rem] max-h-[40vh] resize-none " + U.area} />
         {photo ? (
           <div className="relative mt-2 inline-block">
-            <img src={photo.url} alt="" className="max-h-40 rounded-lg border border-slate-700" data-testid="deal-photo" />
-            <button onClick={() => setPhoto(null)} aria-label={tr("Remove")} className="absolute -top-2 -end-2 p-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-300"><X size={14} /></button>
+            <img src={photo.url} alt="" className="max-h-40 rounded-[14px] border border-[var(--c-ln)]" data-testid="deal-photo" />
+            <button onClick={() => setPhoto(null)} aria-label={tr("Remove")} className="absolute -top-3 -end-3 w-11 h-11 grid place-items-center rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)]"><X size={14} /></button>
           </div>
         ) : null}
         <div className="flex items-center gap-2 mt-3">
           <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="deal-file"
             onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; try { setPhoto(await readPhoto(f)); } catch (x) { setErr(tr(x.message)); } }} />
-          <button onClick={() => fileRef.current && fileRef.current.click()} className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-700 text-slate-200 text-sm"><ImagePlus size={16} />{tr("Screenshot")}</button>
+          <button onClick={() => fileRef.current && fileRef.current.click()} className={U.btnS + " h-12 min-h-[48px]"}><ImagePlus size={16} />{tr("Screenshot")}</button>
           <button onClick={busy ? () => { run.current++; setBusy(false); setStep(-1); } : check} disabled={!busy && !text.trim() && !photo} data-testid="deal-go"
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm disabled:opacity-40 ${busy ? "bg-rose-500/20 border border-rose-800 text-rose-200" : "bg-emerald-500 text-slate-950"}`}>
+            className={busy ? "flex-1 min-h-[48px] h-12 px-5 rounded-[16px] border border-[var(--c-neg)] text-[var(--c-neg)] bg-transparent font-extrabold text-[15px] inline-flex items-center justify-center gap-2" : U.btnP + " flex-1"}>
             {busy ? <><X size={15} />{tr("Stop")}</> : <><Calculator size={16} />{tr(looksLikeContract(text) && !photo ? "Check this contract" : "Check this deal")}</>}
           </button>
         </div>
         {busy ? (
           <ol className="mt-3 space-y-1.5" data-testid="deal-steps">
             {STEPS.map((s, i) => (
-              <li key={s} className={`flex items-center gap-2 text-[12.5px] ${i < step ? "text-emerald-300" : i === step ? "text-slate-100" : "text-slate-600"}`}>
+              <li key={s} className={`flex items-center gap-2 text-[12.5px] ${i < step ? "text-[var(--c-pos)]" : i === step ? "text-[var(--c-ink)] font-bold" : "text-[var(--c-mut)] opacity-60"}`}>
                 {i < step ? <Check size={13} /> : i === step ? <Loader2 size={13} className="animate-spin" /> : <span className="w-[13px]" />}{tr(s)}
               </li>
             ))}
           </ol>
         ) : null}
-        {err ? <p className="mt-3 text-[12.5px] text-rose-300">{err}</p> : null}
+        {err ? <p className="mt-3 text-[12.5px] font-semibold text-[var(--c-neg)]">{err}</p> : null}
       </section>
 
       {ask && !busy ? (
-        <section className="rounded-2xl border border-sky-700 bg-sky-500/10 p-4 space-y-3" data-testid="deal-ask">
-          <p className="text-[12px] text-sky-200/80">{L(ask.why)}</p>
-          <p className="text-[15px] text-white leading-relaxed" dir="auto" data-testid="deal-reading">{ask.reading}</p>
+        <section className="rounded-[22px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 space-y-3" data-testid="deal-ask">
+          <p className="text-[12.5px] font-bold text-[var(--c-acc)] m-0">{L(ask.why)}</p>
+          <p className="text-[15px] font-semibold text-[var(--c-ink)] leading-relaxed m-0" dir="auto" data-testid="deal-reading">{ask.reading}</p>
           {!askNo ? (
             <div className="flex gap-2">
-              <button onClick={() => check({ resume: ask })} className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-semibold text-sm" data-testid="deal-yes">{ar ? "أيوه، مظبوط" : "Yes, that's right"}</button>
-              <button onClick={() => setAskNo(true)} className="flex-1 py-2.5 rounded-xl border border-slate-600 text-slate-100 text-sm" data-testid="deal-no">{ar ? "لأ" : "No"}</button>
+              <button onClick={() => check({ resume: ask })} className={U.btnP + " flex-1"} data-testid="deal-yes">{ar ? "أيوه، مظبوط" : "Yes, that's right"}</button>
+              <button onClick={() => setAskNo(true)} className={U.btnS + " flex-1 h-12 min-h-[48px]"} data-testid="deal-no">{ar ? "لأ" : "No"}</button>
             </div>
           ) : (
             <div className="space-y-2">
               <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} dir="auto" data-testid="deal-note"
                 placeholder={ar ? "وضّح ما تقصده، مثلًا: «السعر 38,000 نقدًا، و12,400 هي المقدّم»" : "Explain what you mean, e.g. “the price is 38,000 cash; 12,400 is the down payment”"}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-[14px] text-slate-100 placeholder-slate-600" />
-              <button onClick={() => { if (note.trim()) { check({ note: note.trim() }); setNote(""); } }} disabled={!note.trim()} className="w-full py-2.5 rounded-xl bg-emerald-500 disabled:opacity-40 text-slate-950 font-semibold text-sm" data-testid="deal-note-go">{ar ? "إعادة قراءة العرض بهذا التوضيح" : "Read the offer again with this"}</button>
+                className={U.area} />
+              <button onClick={() => { if (note.trim()) { check({ note: note.trim() }); setNote(""); } }} disabled={!note.trim()} className={U.btnP + " w-full"} data-testid="deal-note-go">{ar ? "إعادة قراءة العرض بهذا التوضيح" : "Read the offer again with this"}</button>
             </div>
           )}
         </section>
       ) : null}
 
       {!res && !busy && hist.length ? (
-        <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("Earlier checks")}</p>
-            <button onClick={() => { setHist([]); saveH([]); }} aria-label={tr("Clear")} className="p-1.5 text-slate-500 hover:text-rose-300"><Trash2 size={14} /></button>
+        <section className={U.cardPad}>
+          <div className="flex items-center justify-between mb-1">
+            <p className={U.label + " m-0"}>{tr("Earlier checks")}</p>
+            <button onClick={() => { setHist([]); saveH([]); }} aria-label={tr("Clear")} className={"w-11 h-11 -me-2 grid place-items-center rounded-[14px] hover:text-[var(--c-neg)] " + U.muted}><Trash2 size={14} /></button>
           </div>
           {hist.slice(0, 8).map((h) => (
-            <button key={h.id} onClick={() => setRes(h)} className="w-full flex items-center justify-between gap-2 py-2 border-b border-slate-800 last:border-0 text-start">
-              <span className="text-[13px] text-slate-200 truncate">{h.terms.item || h.input.slice(0, 50)}</span>
-              <span className={`text-[11px] px-2 py-0.5 rounded-md border shrink-0 ${(LEVELS[h.v.level] || LEVELS.unknown).cls}`}>{L(LEVELS[h.v.level] || LEVELS.unknown)}</span>
+            <button key={h.id} onClick={() => setRes(h)} className="w-full min-h-[48px] flex items-center justify-between gap-2 py-2 border-b border-[var(--c-ln)] last:border-0 text-start">
+              <span className="text-[13.5px] font-semibold truncate" dir="auto">{h.terms.item || h.input.slice(0, 50)}</span>
+              <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border shrink-0 ${(LEVELS[h.v.level] || LEVELS.unknown).cls}`}>{L(LEVELS[h.v.level] || LEVELS.unknown)}</span>
             </button>
           ))}
         </section>
@@ -236,81 +237,81 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
       {contract && !busy ? <ContractReview r={contract} flash={flash} share={sendWhatsApp} /> : null}
       {res ? (
         <section className="space-y-3" data-testid="deal-result">
-          <div className={`rounded-2xl border p-4 ${lv.cls}`} data-testid="deal-verdict" data-level={res.v.level}>
-            <p className="text-[11px] uppercase tracking-wider opacity-80">{res.terms.item || tr("This offer")}</p>
-            <p className="text-xl font-bold mt-1 flex items-center gap-2"><span className={`w-2.5 h-2.5 rounded-full ${lv.dot}`} />{L(lv)}</p>
-            {res.v.target ? <p className="text-[13px] mt-1.5">{tr("Ask for about {p}", { p: fmt(res.v.target, res.terms.currency) })}</p> : null}
+          <div className={`rounded-[22px] border p-4 ${lv.cls}`} data-testid="deal-verdict" data-level={res.v.level}>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] opacity-80 m-0" dir="auto">{res.terms.item || tr("This offer")}</p>
+            <p className="text-[22px] font-black tracking-tight mt-1 m-0 flex items-center gap-2"><span className={`w-2.5 h-2.5 rounded-full ${lv.dot}`} />{L(lv)}</p>
+            {res.v.target ? <p className="text-[13.5px] font-semibold mt-1.5 m-0 text-[var(--c-ink)] tabular-nums">{tr("Ask for about {p}", { p: fmt(res.v.target, res.terms.currency) })}</p> : null}
           </div>
 
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("The numbers (worked out by the phone)")}</p>
-            <table className="w-full text-[13px]" data-testid="deal-numbers"><tbody>
-              <tr><td className="py-1 text-slate-400">{tr("Asked price")}</td><td className="py-1 text-end text-slate-100">{fmt(res.terms.cash || res.terms.price, res.terms.currency)}</td></tr>
+          <div className={U.cardPad}>
+            <p className={U.label + " m-0 mb-2"}>{tr("The numbers (worked out by the phone)")}</p>
+            <table className="w-full text-[13.5px] tabular-nums" data-testid="deal-numbers"><tbody>
+              <tr><td className={"py-1.5 " + U.muted}>{tr("Asked price")}</td><td className="py-1.5 text-end font-extrabold">{fmt(res.terms.cash || res.terms.price, res.terms.currency)}</td></tr>
               {res.plan ? <>
-                <tr><td className="py-1 text-slate-400">{tr("You pay in total")}</td><td className="py-1 text-end text-slate-100" data-testid="deal-total">{fmt(res.plan.total, res.terms.currency)}</td></tr>
-                {isFinite(res.plan.extra) ? <tr><td className="py-1 text-slate-400">{tr("More than cash")}</td><td className={`py-1 text-end ${res.plan.extra > 0 ? "text-amber-300" : "text-emerald-300"}`}>{fmt(res.plan.extra, res.terms.currency)}</td></tr> : null}
-                {res.plan.yearlyRate != null ? <tr><td className="py-1 text-slate-400">{tr("Real yearly interest")}</td><td className="py-1 text-end text-slate-100" data-testid="deal-rate">{Math.round(res.plan.yearlyRate * 100)}%</td></tr> : null}
-                {real ? <tr><td className="py-1 text-slate-400">{tr("In today's money")}</td><td className="py-1 text-end text-slate-100" data-testid="deal-pv">{fmt(real.pv, res.terms.currency)}</td></tr> : null}
+                <tr><td className={"py-1.5 " + U.muted}>{tr("You pay in total")}</td><td className="py-1.5 text-end font-extrabold" data-testid="deal-total">{fmt(res.plan.total, res.terms.currency)}</td></tr>
+                {isFinite(res.plan.extra) ? <tr><td className={"py-1.5 " + U.muted}>{tr("More than cash")}</td><td className={`py-1.5 text-end font-extrabold ${res.plan.extra > 0 ? "text-[var(--c-warn)]" : "text-[var(--c-pos)]"}`}>{fmt(res.plan.extra, res.terms.currency)}</td></tr> : null}
+                {res.plan.yearlyRate != null ? <tr><td className={"py-1.5 " + U.muted}>{tr("Real yearly interest")}</td><td className="py-1.5 text-end font-extrabold" data-testid="deal-rate">{Math.round(res.plan.yearlyRate * 100)}%</td></tr> : null}
+                {real ? <tr><td className={"py-1.5 " + U.muted}>{tr("In today's money")}</td><td className="py-1.5 text-end font-extrabold" data-testid="deal-pv">{fmt(real.pv, res.terms.currency)}</td></tr> : null}
               </> : null}
-              {res.market ? <tr><td className="py-1 text-slate-400">{tr("Market price")}</td><td className="py-1 text-end text-slate-100" data-testid="deal-market">{fmt(res.market.low)}–{fmt(res.market.high, res.terms.currency)}</td></tr>
-                : <tr><td className="py-1 text-slate-400">{tr("Market price")}</td><td className="py-1 text-end text-slate-500">{webPages ? tr("not found online") : tr("turn on the internet to compare")}</td></tr>}
+              {res.market ? <tr><td className={"py-1.5 " + U.muted}>{tr("Market price")}</td><td className="py-1.5 text-end font-extrabold" data-testid="deal-market">{fmt(res.market.low)}–{fmt(res.market.high, res.terms.currency)}</td></tr>
+                : <tr><td className={"py-1.5 " + U.muted}>{tr("Market price")}</td><td className={"py-1.5 text-end " + U.muted}>{webPages ? tr("not found online") : tr("turn on the internet to compare")}</td></tr>}
             </tbody></table>
             {real ? (
-              <div className="mt-3 rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-[12.5px] grid gap-2" data-testid="deal-real">
-                <p className={real.cheaper === "plan" ? "text-emerald-300" : real.cheaper === "cash" ? "text-amber-300" : "text-slate-200"}>
+              <div className="mt-3 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3 text-[12.5px] grid gap-2" data-testid="deal-real">
+                <p className={"m-0 font-semibold " + (real.cheaper === "plan" ? "text-[var(--c-pos)]" : real.cheaper === "cash" ? "text-[var(--c-warn)]" : "text-[var(--c-ink)]")}>
                   {real.cheaper === "plan" ? tr("Installments are cheaper in real money by {x}: keep the cash in the bank and pay monthly from it.", { x: fmt(real.diff, res.terms.currency) })
                     : real.cheaper === "cash" ? tr("Cash is cheaper in real money by {x}, even after what the bank would pay you.", { x: fmt(real.diff, res.terms.currency) })
                     : tr("Cash and installments cost about the same in real money.")}</p>
-                <label className="flex items-center gap-2 text-slate-400">{tr("Your bank pays a year")}
+                <label className={"flex items-center gap-2 " + U.muted}>{tr("Your bank pays a year")}
                   <input value={rateTxt} onChange={(e) => setRateTxt(e.target.value.replace(/[^\d.]/g, ""))} onBlur={() => saveRate(rateTxt)} inputMode="decimal" data-testid="deal-bank-rate"
-                    className="w-16 rounded-md border border-slate-700 bg-transparent px-2 py-0.5 text-slate-100 tabular-nums" />%</label>
+                    className={U.inp.replace("w-full", "w-20") + " tabular-nums"} />%</label>
               </div>) : null}
             {res.market && (res.terms.cash || res.terms.price) ? (() => {
               const lo = Math.min(res.market.low, res.terms.cash || res.terms.price) * 0.9, hi = Math.max(res.market.high, res.terms.cash || res.terms.price) * 1.1;
               const pos = (x) => Math.max(0, Math.min(100, ((x - lo) / (hi - lo)) * 100));
               return (
-                <div className="relative h-2 mt-3 rounded-full bg-slate-800" dir="ltr" aria-hidden="true">
-                  <div className="absolute h-2 rounded-full bg-emerald-500/40" style={{ left: pos(res.market.low) + "%", width: Math.max(2, pos(res.market.high) - pos(res.market.low)) + "%" }} />
-                  <div className="absolute -top-1 w-1 h-4 rounded bg-white" style={{ left: "calc(" + pos(res.terms.cash || res.terms.price) + "% - 2px)" }} />
+                <div className="relative h-2 mt-3 rounded-full bg-[var(--c-ln)]" dir="ltr" aria-hidden="true">
+                  <div className="absolute h-2 rounded-full bg-[var(--c-pos)]/50" style={{ left: pos(res.market.low) + "%", width: Math.max(2, pos(res.market.high) - pos(res.market.low)) + "%" }} />
+                  <div className="absolute -top-1 w-1 h-4 rounded bg-[var(--c-ink)]" style={{ left: "calc(" + pos(res.terms.cash || res.terms.price) + "% - 2px)" }} />
                 </div>
               );
             })() : null}
           </div>
 
           {res.v.reasons.length ? (
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Why")}</p>
+            <div className={U.cardPad}>
+              <p className={U.label + " m-0 mb-2"}>{tr("Why")}</p>
               <ul className="space-y-1.5" data-testid="deal-reasons">
-                {res.v.reasons.map((r, i) => <li key={i} className="text-[13px] text-slate-200 flex gap-2"><AlertTriangle size={13} className="text-amber-300 mt-0.5 shrink-0" />{L(r)}</li>)}
+                {res.v.reasons.map((r, i) => <li key={i} className="text-[13.5px] flex gap-2"><AlertTriangle size={13} className="text-[var(--c-warn)] mt-0.5 shrink-0" />{L(r)}</li>)}
               </ul>
             </div>
           ) : null}
 
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Ask the seller")}</p>
-            <ul className="space-y-1.5">{res.qs.map((q, i) => <li key={i} className="text-[13px] text-slate-200">• {L(q)}</li>)}</ul>
+          <div className={U.cardPad}>
+            <p className={U.label + " m-0 mb-2"}>{tr("Ask the seller")}</p>
+            <ul className="space-y-1.5">{res.qs.map((q, i) => <li key={i} className="text-[13.5px]">• {L(q)}</li>)}</ul>
           </div>
 
           {res.msg ? (
-            <div className="bg-slate-900 rounded-2xl border border-emerald-900/60 p-4" data-testid="deal-message">
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Your reply, ready to send")}</p>
-              <p dir="auto" className="text-[14px] text-slate-100 whitespace-pre-wrap leading-relaxed">{res.msg}</p>
+            <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-acc)]/50")} data-testid="deal-message">
+              <p className={U.label + " m-0 mb-2"}>{tr("Your reply, ready to send")}</p>
+              <p dir="auto" className="text-[14px] whitespace-pre-wrap leading-relaxed m-0">{res.msg}</p>
               <div className="flex gap-2 mt-3">
-                <button onClick={() => { try { navigator.clipboard.writeText(res.msg); } catch (e) {} flash && flash(tr("Copied")); }} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-700 text-slate-200 text-[13px]"><Copy size={14} />{tr("Copy")}</button>
-                <button onClick={() => sendWhatsApp(res.msg)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500 text-slate-950 text-[13px] font-semibold" data-testid="deal-whatsapp"><Send size={14} />{tr("Send on WhatsApp")}</button>
+                <button onClick={() => { try { navigator.clipboard.writeText(res.msg); } catch (e) {} flash && flash(tr("Copied")); }} className={U.btnS}><Copy size={14} />{tr("Copy")}</button>
+                <button onClick={() => sendWhatsApp(res.msg)} className={U.btnP} data-testid="deal-whatsapp"><Send size={14} />{tr("Send on WhatsApp")}</button>
               </div>
             </div>
           ) : null}
 
           {res.sources.length ? (
             <div className="px-1" data-testid="deal-sources">
-              <p className="text-[11px] text-slate-500 mb-1 flex items-center gap-1"><Search size={11} />{tr("Prices found on")}</p>
-              {res.sources.map((s, i) => <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="block text-[12px] text-teal-300 truncate">[{i + 1}] {s.title} · {String(s.url).replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a>)}
+              <p className={"text-[11px] font-bold mb-1 m-0 flex items-center gap-1 " + U.muted}><Search size={11} />{tr("Prices found on")}</p>
+              {res.sources.map((s, i) => <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="block py-1 text-[12.5px] font-semibold text-[var(--c-acc)] truncate">[{i + 1}] {s.title} · {String(s.url).replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a>)}
             </div>
           ) : null}
-          <p className="text-[11px] text-slate-500 px-1">{tr("The maths and the verdict are worked out by code on your phone; only the item's name is searched online. It's advice — check anything important yourself.")}</p>
+          <p className={"text-[11.5px] px-1 m-0 " + U.muted}>{tr("The maths and the verdict are worked out by code on your phone; only the item's name is searched online. It's advice — check anything important yourself.")}</p>
           <button onClick={() => { setRes(null); setText(""); setPhoto(null); }} data-testid="deal-new"
-            className="w-full py-2.5 rounded-xl border border-slate-700 text-slate-200 text-sm">{tr("Check another deal")}</button>
+            className={U.btnS + " w-full h-12 min-h-[48px]"}>{tr("Check another deal")}</button>
         </section>
       ) : contract ? null : <DeskEmpty icon={ShieldCheck} title={tr("The verdict appears here")} text={tr("The real cost, the market price, scam signs and a reply to send.")} />}
       </div></div>

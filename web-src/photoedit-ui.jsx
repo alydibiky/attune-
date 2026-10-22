@@ -193,7 +193,7 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
     : tool === "erase" ? (brush ? tr("Brush over what to remove") : tr("Tap a person or a thing — or use the brush")) : tool === "people" ? (others.length ? tr("{n} found besides the main subject", { n: others.length }) : tr("No passers-by found"))
     : tool === "cutout" ? tr("Tap the subject to lift it off the background") : tool === "enhance" ? tr("Sharper and 4× bigger") : tool === "expand" ? tr("A bigger picture — the AI draws the missing edges") : tr("Brush the part, then say what it should become");
   return (
-    <div className="fixed inset-0 z-[70] bg-black flex flex-col text-white" data-testid="photo-editor">
+    <div className="calm fixed inset-0 z-[70] bg-black! flex flex-col text-white!" data-testid="photo-editor">
       <div className="flex items-center gap-1 px-2 pt-[max(8px,env(safe-area-inset-top))] pb-1">
         <button onClick={onClose} className="w-11 h-11 grid place-items-center" aria-label={tr("Close")} data-testid="pe-close"><X size={22} /></button>
         <span className="flex-1" />

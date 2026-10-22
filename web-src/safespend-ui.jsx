@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { tr } from "./i18n.js";
 import { safeToSpend } from "./safespend.js";
 import { fmt } from "./money-calm.js";
+import * as U from "./ui-kit.jsx";
 
 const KEY = "attune:safespend:v1";
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
@@ -35,17 +36,17 @@ function Details({ s, setCushion }) {
   const [c, setC] = useState(String(s.cushion || ""));
   return (
     <div className="grid gap-2 text-[12.5px]" data-testid="safe-details">
-      <p className="opacity-80">{tr("You have {b}. Until {d} ({n} days) these are due: {t}. What is left, shared over the days, is what you can spend each day.").replace("{b}", s.cur + " " + fmt(s.balance)).replace("{d}", dayName(s.until)).replace("{n}", s.days).replace("{t}", s.cur + " " + fmt(s.dueTotal))}</p>
+      <p className="m-0 text-[var(--c-ink)]">{tr("You have {b}. Until {d} ({n} days) these are due: {t}. What is left, shared over the days, is what you can spend each day.").replace("{b}", s.cur + " " + fmt(s.balance)).replace("{d}", dayName(s.until)).replace("{n}", s.days).replace("{t}", s.cur + " " + fmt(s.dueTotal))}</p>
       {s.due.length ? (
         <ul className="grid gap-1 m-0 p-0 list-none">
           {s.due.slice(0, 12).map((d, i) => (
-            <li key={i} className="flex justify-between gap-3"><span className="min-w-0 truncate">{dayName(d.date)} · {d.what} <span className="opacity-60">· {tr(FROM[d.from])}</span></span><b className="shrink-0 tabular-nums">{fmt(d.amount)}</b></li>))}
-          {s.due.length > 12 ? <li className="opacity-60">+{s.due.length - 12}</li> : null}
-        </ul>) : <p className="opacity-70">{tr("Nothing due before then.")}</p>}
-      {!s.income ? <p className="opacity-70">{tr("Tip: add your salary as a repeating income in Money, and this counts until payday.")}</p> : null}
-      <label className="flex items-center gap-2"><span className="opacity-80">{tr("Keep aside")}</span>
+            <li key={i} className="flex justify-between gap-3 py-1 border-b border-[var(--c-ln)] last:border-0"><span className="min-w-0 truncate" dir="auto">{dayName(d.date)} · {d.what} <span className={U.muted}>· {tr(FROM[d.from])}</span></span><b className="shrink-0 tabular-nums font-extrabold" dir="ltr">{fmt(d.amount)}</b></li>))}
+          {s.due.length > 12 ? <li className={U.muted}>+{s.due.length - 12}</li> : null}
+        </ul>) : <p className={"m-0 " + U.muted}>{tr("Nothing due before then.")}</p>}
+      {!s.income ? <p className={"m-0 " + U.muted}>{tr("Tip: add your salary as a repeating income in Money, and this counts until payday.")}</p> : null}
+      <label className="flex items-center gap-2"><span className="font-bold">{tr("Keep aside")}</span>
         <input value={c} onChange={(e) => setC(e.target.value.replace(/[^\d.]/g, ""))} onBlur={() => setCushion(Number(c) || 0)} inputMode="decimal" data-testid="safe-cushion"
-          className="w-28 rounded-md border border-slate-700 bg-transparent px-2 py-1 tabular-nums" placeholder="0" /><span className="opacity-60">{s.cur}</span></label>
+          className={U.inp.replace("w-full", "w-28") + " tabular-nums"} placeholder="0" /><span className={U.muted}>{s.cur}</span></label>
     </div>);
 }
 
@@ -60,23 +61,23 @@ export function SafeSpend({ calm = false }) {
     ? tr("Short by {x} before {d}").replace("{x}", s.cur + " " + fmt(s.short)).replace("{d}", dayName(s.income ? s.income.d : s.until))
     : tr("about {x} a day until {d}").replace("{x}", fmt(s.perDay)).replace("{d}", dayName(s.until));
   if (calm) return (
-    <div className="c-card" data-testid="safe-spend">
+    <div className={U.cardPad} data-testid="safe-spend">
       <button className="w-full text-start flex items-start justify-between gap-2" onClick={() => setOpen(!open)} aria-expanded={open}>
-        <span><span className="c-lbl">{tr("Safe to spend today")}</span>
-          <span className="c-amt mt-1 block" data-testid="safe-today">{s.cur} {fmt(s.today)}</span>
-          <span className={"c-sub" + (s.short > 0 ? " c-neg" : "")}>{line}</span></span>
-        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <span className="min-w-0"><span className={U.label}>{tr("Safe to spend today")}</span>
+          <span className={"mt-1 block tabular-nums text-[28px] font-black tracking-tight " + (s.short > 0 ? "text-[var(--c-neg)]" : "")} dir="ltr" data-testid="safe-today">{s.cur} {fmt(s.today)}</span>
+          <span className={"block text-[12.5px] " + (s.short > 0 ? "font-bold text-[var(--c-neg)]" : U.muted)}>{line}</span></span>
+        {open ? <ChevronUp size={16} className={"shrink-0 " + U.muted} /> : <ChevronDown size={16} className={"shrink-0 " + U.muted} />}
       </button>
       {open ? <div className="mt-3"><Details s={s} setCushion={setCushion} /></div> : null}
     </div>);
   return (
-    <div className="shrink-0 bg-slate-950 border-b border-slate-800 px-3 py-2 text-slate-200" data-testid="safe-spend">
-      <button className="w-full flex items-center gap-2 text-start" onClick={() => setOpen(!open)} aria-expanded={open}>
-        <span className="text-[12px] text-slate-400">{tr("Safe to spend today")}</span>
-        <b className={"tabular-nums " + (s.short > 0 ? "text-amber-300" : "text-teal-300")} data-testid="safe-today">{s.cur} {fmt(s.today)}</b>
-        <span className="flex-1 min-w-0 truncate text-[11.5px] text-slate-500">{line}</span>
-        {open ? <ChevronUp size={15} className="text-slate-500" /> : <ChevronDown size={15} className="text-slate-500" />}
+    <div className="calm shrink-0 border-b border-[var(--c-ln)] px-3 py-1" data-testid="safe-spend">
+      <button className="w-full min-h-[44px] flex items-center gap-2 text-start" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <span className={"text-[12px] font-bold shrink-0 " + U.muted}>{tr("Safe to spend today")}</span>
+        <b className={"tabular-nums font-black text-[15px] shrink-0 " + (s.short > 0 ? "text-[var(--c-warn)]" : "text-[var(--c-acc)]")} dir="ltr" data-testid="safe-today">{s.cur} {fmt(s.today)}</b>
+        <span className={"flex-1 min-w-0 truncate text-[11.5px] " + U.muted}>{line}</span>
+        {open ? <ChevronUp size={15} className={"shrink-0 " + U.muted} /> : <ChevronDown size={15} className={"shrink-0 " + U.muted} />}
       </button>
-      {open ? <div className="pt-2 text-slate-300"><Details s={s} setCushion={setCushion} /></div> : null}
+      {open ? <div className="pt-1 pb-2"><Details s={s} setCushion={setCushion} /></div> : null}
     </div>);
 }

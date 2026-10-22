@@ -6,6 +6,7 @@ import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Tras
 import { keepInMask } from "./erase-ui.jsx";
 import { PhotoEditor } from "./photoedit-ui.jsx";
 import { tr } from "./i18n.js";
+import * as K from "./ui-kit.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import { DeskEmpty } from "./desk.jsx";
 // v6.27 computer layout (option A): the prompt and settings on the left, the picture and the gallery on the right. The
@@ -84,7 +85,7 @@ function DraftFrame({ flow, now, onStop, onKeep, onPick }) {
     : flow.phase === "draft" ? tr("Draft ready — you can keep it")
     : tr("Refining to {w} px", { w: P.finalSide });
   return (
-    <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-2" data-testid="studio-flow" data-phase={flow.phase} aria-live="polite">
+    <div className={K.card + " p-2.5"} data-testid="studio-flow" data-phase={flow.phase} aria-live="polite">
       {flow.phase === "pick" ? (
         <div className="grid grid-cols-2 gap-1.5">
           {(flow.drafts || []).map((x, i) => (
@@ -98,7 +99,7 @@ function DraftFrame({ flow, now, onStop, onKeep, onPick }) {
       ) : (
         <div className="relative rounded-lg overflow-hidden bg-[var(--c-bg)] aspect-square lg:max-w-[min(100%,62vh)] lg:mx-auto">
           {d ? <img src={d.url} alt="" className="w-full h-full object-cover" data-testid="studio-draft-img" />
-            : <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 motion-safe:animate-pulse" data-testid="studio-skeleton" />}
+            : <div className="w-full h-full bg-[var(--c-surf-2)] motion-safe:animate-pulse" data-testid="studio-skeleton" />}
           <span className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px]" data-testid="studio-flow-badge">{badge}</span>
         </div>
       )}
@@ -108,9 +109,9 @@ function DraftFrame({ flow, now, onStop, onKeep, onPick }) {
         {left != null ? <span data-testid="studio-flow-left">{tr("~{s} s left", { s: left })}</span> : null}
       </div>
       <div className="flex gap-1.5 mt-2">
-        <button onClick={onStop} data-testid="studio-flow-stop" className="flex-1 min-h-[44px] rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-sm">{tr("Stop")}</button>
+        <button onClick={onStop} data-testid="studio-flow-stop" className={K.btnS + " flex-1"}>{tr("Stop")}</button>
         {d && (flow.phase === "draft" || flow.phase === "refining") ? (
-          <button onClick={onKeep} data-testid="studio-keep-draft" className="flex-1 min-h-[44px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold">{tr("Keep draft")}</button>
+          <button onClick={onKeep} data-testid="studio-keep-draft" className={K.btnP + " flex-1"}>{tr("Keep draft")}</button>
         ) : null}
       </div>
     </div>
@@ -210,7 +211,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   }, []);
   useEffect(() => { if (incoming && incoming.prompt != null) { setIdea(incoming.prompt); setMode("create"); clearIncoming && clearIncoming(); } }, [incoming]);
 
-  if (!info) return <div className="p-4 text-sm text-[var(--c-mut)]" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
+  if (!info) return <div className="calm p-4 text-sm text-[var(--c-mut)]" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
   // v6.19: the device facts (cores, big cores, platform) join the picture facts for the per-device recommendation
   let dev = info; try { dev = { ...JSON.parse(native.info()), ...info }; } catch (e) {}
   const gpuOk = gpuWorks(info);
@@ -440,19 +441,19 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
     : busy.stage === "upscale" && busy.total ? tr("Sharpening ×4 — part {n} of {t}", { n: busy.step, t: busy.total }) + (busy.step > 0 && busy.step < busy.total ? " · " + tr("about {m} min left", { m: Math.max(1, Math.round((Date.now() - busy.t0) / busy.step * (busy.total - busy.step) / 60000)) }) : "")
     : busy.stage === "load" && busy.total ? tr("Loading the picture model… {p}%", { p: Math.round(busy.step * 100 / busy.total) })
     : tr(STAGE[busy.stage] || "Working…")) : "";
-  const chip = (on) => `px-2.5 py-1 rounded-lg text-[12px] border ${on ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "border-[var(--c-ln)] text-[var(--c-ink)]"}`;
-  const btn = "px-3 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-xs flex items-center gap-1.5 disabled:opacity-40";
+  const chip = (on) => K.chip(on) + (on ? " print:bg-violet-500" : "");   // print-only marker: tests/e2e_v59.py counts "bg-violet-500" on the chosen mode
+  const btn = K.btnS;
 
   return (
-    <div className={"space-y-3 pb-24 " + SPLIT} data-testid="studio-page">
+    <div className={"calm text-[var(--c-ink)] space-y-3 pb-24 " + SPLIT} data-testid="studio-page">
       {!info.built ? (
-        <div className="rounded-xl border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12px] text-[var(--c-warn)] lg:col-start-1" data-testid="studio-no-engine">
+        <div className="rounded-[22px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[12px] text-[var(--c-warn)] lg:col-start-1" data-testid="studio-no-engine">
           {tr("This APK has no picture engine yet — it comes with the next APK built on GitHub.")}</div>
       ) : null}
 
       {!drawReady ? (
-        <div className="rounded-xl border border-[var(--c-acc)] bg-[var(--c-soft)] p-3 lg:col-start-1" data-testid="studio-install">
-          <p className="text-sm text-[var(--c-ink)] font-medium flex items-center gap-1.5"><Palette size={16} className="text-[var(--c-acc)]" />{tr("Pictures made on your phone")}</p>
+        <div className="rounded-[22px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 lg:col-start-1" data-testid="studio-install">
+          <p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-1.5"><Palette size={16} className="text-[var(--c-acc)]" />{tr("Pictures made on your phone")}</p>
           {dp.why === "cpu" ? <p className="text-[12px] text-[var(--c-warn)] mt-1 leading-relaxed" data-testid="studio-why-turbo">{tr("This phone's graphics chip isn't working with Studio, so the Pro model would take 10–20 minutes a picture on the CPU. Studio Turbo makes a picture in about a minute.")}</p> : null}
           <p className="text-[12px] text-[var(--c-ink)] mt-1 leading-relaxed">{tr(P.quality)}</p>
           {rec.pack === dp.id ? <p className="text-[11px] text-[var(--c-pos)] mt-1" data-testid="studio-recommended">✓ {tr("Recommended for your phone")} · {tr(rec.why)} · {tr("about {s} s a picture", { s: rec.estSeconds })}</p> : null}
@@ -463,17 +464,17 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
               <div className="flex justify-between text-[11px] text-[var(--c-ink)]"><span>{dl.stage}</span><span>{dl.pct}%</span></div>
               <div className="h-1.5 bg-[var(--c-surf-2)] rounded-full overflow-hidden mt-1"><div className="h-full bg-[var(--c-acc)]" style={{ width: dl.pct + "%" }} /></div>
               <div className="flex justify-between items-center mt-1"><span className="text-[11px] text-[var(--c-mut)]">{dl.detail}</span>
-                <button onClick={stop} className="text-[11px] text-[var(--c-mut)] underline">{tr("Cancel")}</button></div>
+                <button onClick={stop} className="min-h-[44px] px-1 text-[12px] text-[var(--c-mut)] underline">{tr("Cancel")}</button></div>
             </div>
           ) : (
             <button onClick={() => install(dp.id)} disabled={!!dl || !info.built} data-testid="studio-install-go"
-              className="mt-2 px-3 py-2 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold disabled:opacity-40 flex items-center gap-1.5 min-h-[44px]"><Download size={14} />{tr("Install · {s} GB", { s: P.sizeGB })}</button>
+              className={K.btnP + " mt-2"}><Download size={14} />{tr("Install · {s} GB", { s: P.sizeGB })}</button>
           )}
           <p className="text-[11px] text-[var(--c-mut)] mt-2">{tr("Download it on Wi-Fi. After that, pictures are made with no internet at all.")}</p>
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 lg:col-start-1">
+      <div className={K.cardPad + " lg:col-start-1"}>
         <div className="flex gap-1.5 mb-2">
           <button onClick={() => setMode("create")} className={chip(mode === "create")} data-testid="studio-mode-create"><Sparkles size={12} className="inline me-1" />{tr("Create")}</button>
           <button onClick={() => setMode("edit")} className={chip(mode === "edit")} data-testid="studio-mode-edit"><Wand2 size={12} className="inline me-1" />{tr("Edit a photo")}</button>
@@ -491,8 +492,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
           <div className="mb-2">
             {ref ? (
               <div className="relative inline-block">
-                <img src={ref.dataUrl} alt="" className="max-h-40 rounded-lg border border-[var(--c-ln)]" data-testid="studio-ref" />
-                <button onClick={() => setRef(null)} className="absolute top-1 end-1 p-1 rounded-full bg-black/60 text-white"><X size={12} /></button>
+                <img src={ref.dataUrl} alt="" className="max-h-40 rounded-[14px] border border-[var(--c-ln)]" data-testid="studio-ref" />
+                <button onClick={() => setRef(null)} className="absolute top-1 end-1 w-11 h-11 grid place-items-center rounded-full bg-black/60 text-white"><X size={14} /></button>
               </div>
             ) : (
               <button onClick={() => fileRef.current && fileRef.current.click()} className={btn} data-testid="studio-pick"><ImagePlus size={13} />{tr("Pick a photo")}</button>
@@ -503,7 +504,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
         ) : null}
         <textarea value={idea} onChange={(e) => setIdea(e.target.value)} rows={3} dir="auto" data-testid="studio-idea"
           placeholder={mode === "edit" ? tr("What should change? e.g. “make it night, with the street lights on”") : tr("Describe the picture, in Arabic or English — e.g. “a felucca on the Nile at sunset”")}
-          className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-3 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" />
+          className={K.area} />
         {mode === "create" ? (
           <>
             <label className="flex items-center gap-2 mt-2 text-[12px] text-[var(--c-ink)]">
@@ -537,10 +538,10 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
         ) : null}
         <div className="flex items-center gap-2 mt-3">
           {busy ? (
-            <button onClick={stop} data-testid="studio-stop" className="px-3 py-2 rounded-lg bg-[var(--c-neg)]/15 border border-[var(--c-neg)]/50 text-[var(--c-neg)] text-sm flex items-center gap-1.5 shrink-0 whitespace-nowrap"><Square size={13} />{tr("Stop")}</button>
+            <button onClick={stop} data-testid="studio-stop" className={K.btnDanger + " shrink-0 whitespace-nowrap"}><Square size={13} />{tr("Stop")}</button>
           ) : (
             <button onClick={() => draw()} disabled={!drawReady || !idea.trim() || !info.built} data-testid="studio-go"
-              className="px-4 py-2 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold disabled:opacity-40 flex items-center gap-1.5 min-h-[44px]"><Palette size={14} />{mode === "edit" ? tr("Edit it") : tr("Draw it")}</button>
+              className={K.btnP}><Palette size={14} />{mode === "edit" ? tr("Edit it") : tr("Draw it")}</button>
           )}
           {busy && !flowLive ? <span className="text-[12px] text-[var(--c-acc)] flex items-center gap-1.5 min-w-0" data-testid="studio-progress"><Loader2 size={13} className="animate-spin shrink-0" /><span className="truncate">{stageText}</span><span className="text-[var(--c-mut)] shrink-0">· {secs(now - busy.t0)}</span></span> : null}
         </div>
@@ -568,7 +569,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
         onDone={(r) => commitPic({ ...(eraseOn.file ? cur : {}), file: r.file, url: r.url, w: r.width, h: r.height, ms: r.ms, backend: r.backend, idea: (eraseOn.file && cur && cur.idea) || tr(r.cutout ? "Cut-out" : "Edited photo"), erased: true, upscaled: false, at: Date.now() })} /> : null}
       {!flowLive && !cur ? <DeskEmpty icon={Palette} title={tr("Your picture appears here")} text={tr("Describe it and tap Draw it — it is made on this device, with no internet.")} testid="studio-desk-empty" /> : null}
       {flowLive ? <DraftFrame flow={flow} now={now} onStop={stop} onKeep={keepDraft} onPick={pickDraft} /> : cur ? (
-        <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-2" data-testid="studio-result">
+        <div className={K.card + " p-2.5"} data-testid="studio-result">
           <FadeImg key={cur.file} src={cur.url} alt={cur.idea} testid="studio-result-img"
             under={flow && flow.phase === "done" && flow.draft && flow.final && flow.final.file === cur.file ? flow.draft.url : null} />
           <p className="text-[11px] text-[var(--c-mut)] mt-1.5 px-1" dir="auto">
@@ -590,7 +591,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       {gallery.length > 1 ? (
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-1.5" data-testid="studio-gallery">
           {gallery.slice(0, 30).map((g) => (
-            <button key={g.file + g.at} onClick={() => setCur(g)} className={`rounded-lg overflow-hidden border ${cur && cur.file === g.file ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`}>
+            <button key={g.file + g.at} onClick={() => setCur(g)} className={`rounded-[14px] overflow-hidden border-2 ${cur && cur.file === g.file ? "border-[var(--c-acc-2)]" : "border-[var(--c-ln)]"}`}>
               <img src={g.url} alt="" className="w-full aspect-square object-cover bg-[var(--c-bg)]" loading="lazy" />
             </button>
           ))}
@@ -599,14 +600,14 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       </div>
 
       {info.built && info.gpuBuilt && info.cpuOnly ? (
-        <div className="rounded-xl border border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10 p-3 space-y-2 lg:col-start-1" data-testid="studio-gpu-card">
+        <div className="rounded-[22px] border border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10 p-3.5 space-y-2 lg:col-start-1" data-testid="studio-gpu-card">
           <p className="text-[13px] text-[var(--c-warn)]">{tr("Studio is drawing on the processor (slow). This phone has a graphics chip — try it: pictures and ×4 sharpening are many times faster there.")}</p>
-          <button className="px-3 py-2 rounded-lg bg-[var(--c-warn)] text-[var(--c-on-acc)] text-[13px] font-semibold" data-testid="studio-gpu-on"
+          <button className="min-h-[44px] px-4 rounded-[14px] bg-[var(--c-warn)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold" data-testid="studio-gpu-on"
             onClick={() => { native.setImageCpu(false); setInfo(readInfo()); flash(tr("The next picture uses the graphics chip")); }}>{tr("Use the graphics chip")}</button>
         </div>
       ) : null}
       {info.built ? (
-        <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[11px] text-[var(--c-mut)] space-y-1 lg:col-start-1">
+        <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 text-[11px] text-[var(--c-mut)] space-y-1 lg:col-start-1">
           {info.note ? <p className="text-[var(--c-warn)]" data-testid="studio-note">{tr(info.note)}</p> : null}
           {info.gpuBuilt ? (
             <label className="flex items-center gap-2 text-[var(--c-ink)]"><input type="checkbox" checked={!info.cpuOnly} data-testid="studio-gpu"

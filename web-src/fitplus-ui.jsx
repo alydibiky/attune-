@@ -2,6 +2,7 @@
    Faster logging, food quality, Ramadan mode, the day score, the weekly report, body fat, a week
    plan with one shopping list, reminders. The numbers all come from fitplus.js (code).       */
 import { LookPicker } from "./fitlook-ui.jsx";
+import { chip } from "./ui-kit.jsx";
 import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Check, Copy, Share2, Star, Timer, Bell, BarChart3, X } from "lucide-react";
 import * as F from "./fit.js";
@@ -21,8 +22,8 @@ export function Grades({ x, L }) {
   if (!x || (!x.grade && !x.nova)) return null;
   return (
     <span className="inline-flex items-center gap-1 ms-1 align-middle">
-      {x.grade ? <span className={"px-1 rounded text-[10px] font-bold text-white " + (GRADE_CLS[x.grade] || "bg-slate-600")} title="Nutri-Score" data-testid="fit-grade">{x.grade}</span> : null}
-      {x.nova ? <span className={"px-1 rounded text-[10px] " + (x.nova === 4 ? "bg-rose-900 text-rose-200" : "bg-slate-700 text-slate-200")} title="NOVA" data-testid="fit-nova">{L(P.NOVA[x.nova].en, P.NOVA[x.nova].ar)}</span> : null}
+      {x.grade ? <span className={"px-1 rounded text-[10px] font-bold text-[var(--c-ink)] " + (GRADE_CLS[x.grade] || "bg-[var(--c-ln)]")} title="Nutri-Score" data-testid="fit-grade">{x.grade}</span> : null}
+      {x.nova ? <span className={"px-1 rounded text-[10px] " + (x.nova === 4 ? "bg-[var(--c-neg)]/10 text-[var(--c-neg)]" : "bg-[var(--c-ln)] text-[var(--c-ink)]")} title="NOVA" data-testid="fit-nova">{L(P.NOVA[x.nova].en, P.NOVA[x.nova].ar)}</span> : null}
     </span>
   );
 }
@@ -36,17 +37,17 @@ export function DayQuality({ L, day, tg, isToday }) {
   const soFar = isToday && new Date().getHours() < 20;
   const bar = (label, v, max) => (
     <div className="min-w-0">
-      <div className="flex justify-between text-[11px] text-slate-400"><span>{label}</span><span className={"tabular-nums " + (q.known && v > max ? "text-rose-300" : "")}>{q.known ? `${r0(v)}/${max} g` : "—"}</span></div>
-      <div className="h-1.5 rounded-full bg-slate-800 mt-1">{q.known ? <div className={"h-1.5 rounded-full " + (v > max ? "bg-rose-400" : "bg-teal-400")} style={{ width: Math.min(100, (v / max) * 100) + "%" }} /> : null}</div>
+      <div className="flex justify-between text-[11px] text-[var(--c-mut)]"><span>{label}</span><span className={"tabular-nums " + (q.known && v > max ? "text-[var(--c-neg)]" : "")}>{q.known ? `${r0(v)}/${max} g` : "—"}</span></div>
+      <div className="h-1.5 rounded-full bg-[var(--c-surf-2)] mt-1">{q.known ? <div className={"h-1.5 rounded-full " + (v > max ? "bg-rose-400" : "bg-teal-400")} style={{ width: Math.min(100, (v / max) * 100) + "%" }} /> : null}</div>
     </div>);
   return (
-    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-quality">
+    <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-2" data-testid="fit-quality">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] text-white">{L("Today's score", "درجة النهارده")}{soFar ? <span className="text-[11px] text-slate-400"> · {L("so far", "لحد دلوقتي")}</span> : null}</span>
-        <span className={"text-xl font-bold tabular-nums " + (soFar ? "text-slate-200" : sc.score >= 80 ? "text-emerald-300" : sc.score >= 55 ? "text-amber-300" : "text-rose-300")} data-testid="fit-score">{sc.score}<span className="text-[12px] text-slate-500">/100</span></span>
+        <span className="text-[13px] text-[var(--c-ink)]">{L("Today's score", "درجة النهارده")}{soFar ? <span className="text-[11px] text-[var(--c-mut)]"> · {L("so far", "لحد دلوقتي")}</span> : null}</span>
+        <span className={"text-xl font-bold tabular-nums " + (soFar ? "text-[var(--c-ink)]" : sc.score >= 80 ? "text-[var(--c-acc)]" : sc.score >= 55 ? "text-[var(--c-warn)]" : "text-[var(--c-neg)]")} data-testid="fit-score">{sc.score}<span className="text-[12px] text-[var(--c-mut)]">/100</span></span>
       </div>
       <div className="grid grid-cols-3 gap-3">{bar(L("Sugar", "سكر"), q.sug, lim.sug)}{bar(L("Sat. fat", "دهون مشبعة"), q.sat, lim.sat)}{bar(L("Salt", "ملح"), q.salt, lim.salt)}</div>
-      {q.total ? <div className="text-[10.5px] text-slate-500">{q.known ? L(`Sugar, fat and salt from the ${q.known} of ${q.total} foods whose labels give them.`, `السكر والدهون والملح من ${q.known} من ${q.total} أكلات مكتوبين على ملصقاتها.`) : L("No sugar / salt data for today's foods — packaged products (barcode or search) carry them.", "مفيش بيانات سكر وملح لأكل النهارده — موجودة في المنتجات المتغلفة (بالباركود أو البحث).")}</div> : null}
+      {q.total ? <div className="text-[10.5px] text-[var(--c-mut)]">{q.known ? L(`Sugar, fat and salt from the ${q.known} of ${q.total} foods whose labels give them.`, `السكر والدهون والملح من ${q.known} من ${q.total} أكلات مكتوبين على ملصقاتها.`) : L("No sugar / salt data for today's foods — packaged products (barcode or search) carry them.", "مفيش بيانات سكر وملح لأكل النهارده — موجودة في المنتجات المتغلفة (بالباركود أو البحث).")}</div> : null}
     </div>
   );
 }
@@ -63,15 +64,15 @@ export function RamadanCard({ L, ar, tg, city }) {
   const left = fasting ? t.maghribMin - mins : ((t.fajrMin - mins + 1440) % 1440);
   const hm = (m) => Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0");
   return (
-    <div className="rounded-2xl border border-violet-800 bg-violet-500/10 p-3 space-y-2" data-testid="fit-ramadan">
+    <div className="rounded-2xl border border-[var(--c-ln)] bg-[var(--c-soft)] p-3 space-y-2" data-testid="fit-ramadan">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] text-violet-100">🌙 {L("Ramadan", "رمضان")} · {ar ? c.ar : c.en}</span>
-        <span className="text-[12px] text-violet-200 tabular-nums" data-testid="fit-ramadan-times">{L("Fajr", "الفجر")} {t.fajr} · {L("Maghrib", "المغرب")} {t.maghrib}</span>
+        <span className="text-[13px] text-[var(--c-ink)]">🌙 {L("Ramadan", "رمضان")} · {ar ? c.ar : c.en}</span>
+        <span className="text-[12px] text-[var(--c-ink)] tabular-nums" data-testid="fit-ramadan-times">{L("Fajr", "الفجر")} {t.fajr} · {L("Maghrib", "المغرب")} {t.maghrib}</span>
       </div>
-      <div className="text-xl font-semibold text-white tabular-nums" data-testid="fit-ramadan-left">{fasting ? L(`Iftar in ${hm(left)}`, `الفطار بعد ${hm(left)}`) : L(`Suhoor ends in ${hm(left)}`, `السحور يخلص بعد ${hm(left)}`)}</div>
-      <div className="text-[12px] text-violet-100/90">{L(`Iftar ~${plan.iftar} · after Taraweeh ~${plan.snack} · Suhoor ~${plan.suhoor} kcal · a glass of water every ${plan.everyMin} min from Maghrib to Fajr (${plan.glasses} glasses)`, `الفطار ~${plan.iftar} · بعد التراويح ~${plan.snack} · السحور ~${plan.suhoor} سعر · كوب مية كل ${plan.everyMin} دقيقة من المغرب للفجر (${plan.glasses} أكواب)`)}</div>
-      {plan.tips.map((x, i) => <div key={i} className="text-[11.5px] text-violet-200/80">• {L(x.en, x.ar)}</div>)}
-      <div className="text-[10.5px] text-violet-300/70">{L("Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call.", "المواعيد محسوبة من مكان الشمس (زوايا الهيئة المصرية)، ±3 دقايق — امشي على أذان الجامع اللي جنبك.")}</div>
+      <div className="text-xl font-semibold text-[var(--c-ink)] tabular-nums" data-testid="fit-ramadan-left">{fasting ? L(`Iftar in ${hm(left)}`, `الفطار بعد ${hm(left)}`) : L(`Suhoor ends in ${hm(left)}`, `السحور يخلص بعد ${hm(left)}`)}</div>
+      <div className="text-[12px] text-[var(--c-ink)]">{L(`Iftar ~${plan.iftar} · after Taraweeh ~${plan.snack} · Suhoor ~${plan.suhoor} kcal · a glass of water every ${plan.everyMin} min from Maghrib to Fajr (${plan.glasses} glasses)`, `الفطار ~${plan.iftar} · بعد التراويح ~${plan.snack} · السحور ~${plan.suhoor} سعر · كوب مية كل ${plan.everyMin} دقيقة من المغرب للفجر (${plan.glasses} أكواب)`)}</div>
+      {plan.tips.map((x, i) => <div key={i} className="text-[11.5px] text-[var(--c-ink)]">• {L(x.en, x.ar)}</div>)}
+      <div className="text-[10.5px] text-[var(--c-acc)]">{L("Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call.", "المواعيد محسوبة من مكان الشمس (زوايا الهيئة المصرية)، ±3 دقايق — امشي على أذان الجامع اللي جنبك.")}</div>
     </div>
   );
 }
@@ -84,11 +85,11 @@ export function InsulinCard({ L, ar, day, carbsToday }) {
   const eatenAt = Object.values((day && day.meals) || {}).flat().map((x) => x.t || 0);
   const tips = CARE.insulinTips(state, { carbsToday, mealsSince: (ts) => eatenAt.filter((t) => t >= ts).length, now });
   if (!tips.length) return null;
-  const tone = { hypo: "border-rose-700 bg-rose-500/15 text-rose-100", eat: "border-amber-700 bg-amber-500/10 text-amber-100", supply: "border-amber-700 bg-amber-500/10 text-amber-100", carbs: "border-sky-800 bg-sky-500/10 text-sky-100" };
+  const tone = { hypo: "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10 text-[var(--c-neg)]", eat: "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)]", supply: "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)]", carbs: "border-[var(--c-ln)] bg-[var(--c-soft)] text-[var(--c-ink)]" };
   return (
     <div className="space-y-2" data-testid="fit-insulin">
       {tips.map((t) => <div key={t.id} className={"rounded-2xl border p-3 text-[13px] " + tone[t.kind]} data-testid={"fit-insulin-" + t.kind} dir="auto">{t.kind === "hypo" ? <b className="block mb-1">⚠️ {L("Low blood sugar", "هبوط السكر")}</b> : null}{ar ? t.ar : t.text}</div>)}
-      <div className="text-[10.5px] text-slate-500">{L("From Family health. Not medical advice — your doctor sets your insulin.", "من صحة العيلة. دي مش نصيحة طبية — دكتورك هو اللي يحدد جرعة الإنسولين.")}</div>
+      <div className="text-[10.5px] text-[var(--c-mut)]">{L("From Family health. Not medical advice — your doctor sets your insulin.", "من صحة العيلة. دي مش نصيحة طبية — دكتورك هو اللي يحدد جرعة الإنسولين.")}</div>
     </div>);
 }
 
@@ -108,40 +109,40 @@ export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash, to
     addToDraft([F.itemFromFood(fd, 1, Object.keys(fd.portions).length ? "serving" : "g")]); setForm(null);
   };
   if (form) return (
-    <div className="rounded-xl bg-slate-800/60 p-2.5 space-y-2" data-testid="fit-own">
-      <div className="text-[13px] text-white">{L("My own food (from its label)", "أكلي الخاص (من الملصق)")}</div>
-      <input value={form.name || ""} onChange={(e) => set("name", e.target.value)} placeholder={L("Name", "الاسم")} className="w-full rounded-lg bg-slate-900 px-2 py-1.5 text-[14px] text-white" data-testid="fit-own-name" />
+    <div className="rounded-xl bg-[var(--c-surf-2)] p-2.5 space-y-2" data-testid="fit-own">
+      <div className="text-[13px] text-[var(--c-ink)]">{L("My own food (from its label)", "أكلي الخاص (من الملصق)")}</div>
+      <input value={form.name || ""} onChange={(e) => set("name", e.target.value)} placeholder={L("Name", "الاسم")} className="w-full rounded-lg bg-[var(--c-surf)] px-2 py-1.5 text-[14px] text-[var(--c-ink)]" data-testid="fit-own-name" />
       <div className="flex gap-1.5 text-[12px]">
-        {[["100g", L("per 100 g", "لكل ١٠٠ جم")], ["serving", L("per serving", "للحصة")]].map(([k, l]) => <button key={k} onClick={() => set("per", k)} className={"rounded-full px-2.5 py-1 " + ((form.per || "100g") === k ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")}>{l}</button>)}
-        <input type="number" value={form.serving || ""} onChange={(e) => set("serving", e.target.value)} placeholder={L("serving g", "الحصة جم")} className="w-24 rounded-lg bg-slate-900 px-2 py-1 text-white" data-testid="fit-own-serving" />
+        {[["100g", L("per 100 g", "لكل ١٠٠ جم")], ["serving", L("per serving", "للحصة")]].map(([k, l]) => <button key={k} onClick={() => set("per", k)} className={chip((form.per || "100g") === k)}>{l}</button>)}
+        <input type="number" value={form.serving || ""} onChange={(e) => set("serving", e.target.value)} placeholder={L("serving g", "الحصة جم")} className="w-24 rounded-lg bg-[var(--c-surf)] px-2 py-1 text-[var(--c-ink)]" data-testid="fit-own-serving" />
       </div>
       <div className="grid grid-cols-4 gap-1.5">
         {[["kcal", "kcal"], ["p", L("protein", "بروتين")], ["c", L("carbs", "كارب")], ["f", L("fat", "دهون")], ["sug", L("sugar", "سكر")], ["sat", L("sat. fat", "مشبعة")], ["salt", L("salt", "ملح")], ["fib", L("fibre", "ألياف")]].map(([k, l]) => (
-          <label key={k} className="text-[10.5px] text-slate-400">{l}<input type="number" inputMode="decimal" value={form[k] ?? ""} onChange={(e) => set(k, e.target.value)} className="w-full rounded bg-slate-900 px-1.5 py-1 text-[13px] text-white" data-testid={"fit-own-" + k} /></label>))}
+          <label key={k} className="text-[10.5px] text-[var(--c-mut)]">{l}<input type="number" inputMode="decimal" value={form[k] ?? ""} onChange={(e) => set(k, e.target.value)} className="w-full rounded bg-[var(--c-surf)] px-1.5 py-1 text-[13px] text-[var(--c-ink)]" data-testid={"fit-own-" + k} /></label>))}
       </div>
-      <div className="flex gap-2"><button onClick={() => setForm(null)} className="rounded-lg bg-slate-900 px-3 py-1.5 text-[12.5px] text-slate-300">{L("Cancel", "إلغاء")}</button>
-        <button onClick={saveOwn} className="flex-1 rounded-lg bg-emerald-600 py-1.5 text-[13px] text-white" data-testid="fit-own-save">{L("Save and add", "احفظ وضيف")}</button></div>
+      <div className="flex gap-2"><button onClick={() => setForm(null)} className="rounded-lg bg-[var(--c-surf)] px-3 py-1.5 text-[12.5px] text-[var(--c-mut)]">{L("Cancel", "إلغاء")}</button>
+        <button onClick={saveOwn} className="flex-1 rounded-lg bg-[var(--c-acc)] py-1.5 text-[13px] text-[var(--c-on-acc)]" data-testid="fit-own-save">{L("Save and add", "احفظ وضيف")}</button></div>
     </div>);
   const favs = st.favFoods || [];
   return (
     <div className="space-y-2" data-testid="fit-quick">
-      {qa ? <div className="rounded-xl bg-slate-900 border border-slate-700 p-2 grid grid-cols-5 gap-1.5" data-testid="fit-quick">
-        {[["kcal", "kcal"], ["p", L("P g", "بروتين")], ["c", L("C g", "كارب")], ["f", L("F g", "دهون")]].map(([k, ph]) => <input key={k} inputMode="decimal" placeholder={ph} value={qa[k] || ""} onChange={(e) => setQa({ ...qa, [k]: e.target.value })} data-testid={"fit-quick-" + k} className="min-w-0 rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" />)}
-        <button onClick={() => { const it = Y.quickItem(qa, ar); if (!it) return; addToDraft([it]); setQa(null); }} className="rounded-lg bg-emerald-600 text-white text-[13px]" data-testid="fit-quick-add">{L("Add", "ضيف")}</button>
+      {qa ? <div className="rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-2 grid grid-cols-5 gap-1.5" data-testid="fit-quick">
+        {[["kcal", "kcal"], ["p", L("P g", "بروتين")], ["c", L("C g", "كارب")], ["f", L("F g", "دهون")]].map(([k, ph]) => <input key={k} inputMode="decimal" placeholder={ph} value={qa[k] || ""} onChange={(e) => setQa({ ...qa, [k]: e.target.value })} data-testid={"fit-quick-" + k} className="min-w-0 rounded-lg bg-[var(--c-surf-2)] px-2 py-1.5 text-[13px] text-[var(--c-ink)]" />)}
+        <button onClick={() => { const it = Y.quickItem(qa, ar); if (!it) return; addToDraft([it]); setQa(null); }} className="rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px]" data-testid="fit-quick-add">{L("Add", "ضيف")}</button>
       </div> : null}
       {favs.length && !toolsOnly ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-favs">
-        <span className="text-[11px] text-amber-300 self-center shrink-0 flex items-center gap-0.5"><Star size={11} />{L("Favorites:", "المفضلة:")}</span>
-        {favs.map((e) => <button key={e.id} onClick={() => addToDraft([{ ...e.item }])} className="shrink-0 rounded-full bg-amber-500/15 border border-amber-700/60 px-2.5 py-1 text-[12px] text-amber-100" data-testid="fit-fav-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
+        <span className="text-[11px] text-[var(--c-warn)] self-center shrink-0 flex items-center gap-0.5"><Star size={11} />{L("Favorites:", "المفضلة:")}</span>
+        {favs.map((e) => <button key={e.id} onClick={() => addToDraft([{ ...e.item }])} className="shrink-0 rounded-full bg-[var(--c-warn)]/10 border border-[var(--c-warn)]/40 px-2.5 py-1 text-[12px] text-[var(--c-warn)]" data-testid="fit-fav-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
       </div> : null}
       {freq.length && !toolsOnly ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-recent">
-        <span className="text-[11px] text-slate-500 self-center shrink-0">{L("Recent:", "الأخيرة:")}</span>
-        {freq.map((e) => <button key={e.key} onClick={() => { const { t, ...x } = e.item; addToDraft([x]); }} className="shrink-0 rounded-full bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200" data-testid="fit-recent-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
+        <span className="text-[11px] text-[var(--c-mut)] self-center shrink-0">{L("Recent:", "الأخيرة:")}</span>
+        {freq.map((e) => <button key={e.key} onClick={() => { const { t, ...x } = e.item; addToDraft([x]); }} className="shrink-0 rounded-full bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-ink)]" data-testid="fit-recent-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
       </div> : null}
       <div className="flex flex-wrap gap-1.5">
-        {yItems.length ? <button onClick={() => addToDraft(yItems)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200 flex items-center gap-1" data-testid="fit-copy-yesterday"><Copy size={12} />{L("Same as yesterday", "زي امبارح")} ({F.sumN(yItems.filter((x) => x.kcal != null)).kcal} kcal)</button> : null}
-        {(toolsOnly ? [] : mine).map((m) => <button key={m.id} onClick={() => addToDraft(m.items)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-amber-200 flex items-center gap-1" data-testid="fit-mymeal"><Star size={12} />{m.name} · {m.kcal}</button>)}
-        <button onClick={() => setQa(qa ? null : {})} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-emerald-300 flex items-center gap-1" data-testid="fit-quick-open"><Plus size={12} />{L("Quick add kcal", "ضيف سعرات بسرعة")}</button>
-        <button onClick={() => setForm({ per: "100g" })} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300 flex items-center gap-1" data-testid="fit-own-open"><Plus size={12} />{L("My own food", "أكلي الخاص")}</button>
+        {yItems.length ? <button onClick={() => addToDraft(yItems)} className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-ink)] flex items-center gap-1" data-testid="fit-copy-yesterday"><Copy size={12} />{L("Same as yesterday", "زي امبارح")} ({F.sumN(yItems.filter((x) => x.kcal != null)).kcal} kcal)</button> : null}
+        {(toolsOnly ? [] : mine).map((m) => <button key={m.id} onClick={() => addToDraft(m.items)} className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-warn)] flex items-center gap-1" data-testid="fit-mymeal"><Star size={12} />{m.name} · {m.kcal}</button>)}
+        <button onClick={() => setQa(qa ? null : {})} className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-acc)] flex items-center gap-1" data-testid="fit-quick-open"><Plus size={12} />{L("Quick add kcal", "ضيف سعرات بسرعة")}</button>
+        <button onClick={() => setForm({ per: "100g" })} className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-acc)] flex items-center gap-1" data-testid="fit-own-open"><Plus size={12} />{L("My own food", "أكلي الخاص")}</button>
       </div>
     </div>
   );
@@ -150,12 +151,12 @@ export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash, to
 /** "Save as my meal" under the draft. */
 export function SaveMyMeal({ L, draft, upd, flash }) {
   const [name, setName] = useState(null);
-  if (name == null) return <button onClick={() => setName("")} className="text-[12px] text-amber-300 underline" data-testid="fit-save-mymeal">{L("Save these as “my meal”", "احفظهم كـ «وجبتي»")}</button>;
+  if (name == null) return <button onClick={() => setName("")} className="text-[12px] text-[var(--c-warn)] underline" data-testid="fit-save-mymeal">{L("Save these as “my meal”", "احفظهم كـ «وجبتي»")}</button>;
   return (
     <div className="flex gap-2">
-      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={L("e.g. My usual breakfast", "مثلاً فطاري العادي")} className="flex-1 min-w-0 rounded-lg bg-slate-900 px-2 py-1.5 text-[13px] text-white" data-testid="fit-mymeal-name" />
+      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={L("e.g. My usual breakfast", "مثلاً فطاري العادي")} className="flex-1 min-w-0 rounded-lg bg-[var(--c-surf)] px-2 py-1.5 text-[13px] text-[var(--c-ink)]" data-testid="fit-mymeal-name" />
       <button onClick={() => { if (!name.trim()) return; upd((s) => ({ ...s, myMeals: [P.myMeal(name, draft), ...(s.myMeals || [])].slice(0, 20) })); setName(null); flash && flash(L("Saved — one tap next time", "اتحفظت — بضغطة واحدة المرة الجاية")); }}
-        className="rounded-lg bg-amber-600 px-3 text-[13px] text-white" data-testid="fit-mymeal-ok"><Check size={14} /></button>
+        className="rounded-lg bg-[var(--c-warn)] px-3 text-[13px] text-[var(--c-on-acc)]" data-testid="fit-mymeal-ok"><Check size={14} /></button>
     </div>);
 }
 
@@ -167,20 +168,20 @@ export function WeekPlanView({ L, ar, tg, diet, share, close, addToDay }) {
   const names = { breakfast: L("Breakfast", "فطار"), lunch: L("Lunch", "غدا"), dinner: L("Dinner", "عشا"), snacks: L("Snack", "سناك") };
   return (
     <div className="space-y-3" data-testid="fit-week">
-      <div className="flex items-center justify-between"><h3 className="text-white font-semibold">{L("My week", "أسبوعي")}</h3><button onClick={close} className="text-slate-400"><X size={18} /></button></div>
+      <div className="flex items-center justify-between"><h3 className="text-[var(--c-ink)] font-semibold">{L("My week", "أسبوعي")}</h3><button onClick={close} className="text-[var(--c-mut)]"><X size={18} /></button></div>
       {week.map((d) => (
-        <div key={d.day} className="rounded-xl bg-slate-900/60 border border-slate-800 p-2.5" data-testid="fit-week-day">
-          <div className="flex justify-between text-[12.5px]"><span className="text-white">{new Date(d.day + "T12:00:00").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span><span className="text-slate-400 tabular-nums">{d.plan.total.kcal} {L("kcal", "سعرة")} · {L("Protein", "بروتين")} {Math.round(d.plan.total.p)} {L("g", "جم")}</span></div>
-          {Object.entries(d.plan.meals).map(([slot, m]) => <div key={slot} className="text-[12px] text-slate-300 mt-0.5">{names[slot]}: {ar ? m.recipe.ar : m.recipe.en}{m.x !== 1 ? ` ×${m.x}` : ""} · {m.kcal}</div>)}
+        <div key={d.day} className="rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5" data-testid="fit-week-day">
+          <div className="flex justify-between text-[12.5px]"><span className="text-[var(--c-ink)]">{new Date(d.day + "T12:00:00").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span><span className="text-[var(--c-mut)] tabular-nums">{d.plan.total.kcal} {L("kcal", "سعرة")} · {L("Protein", "بروتين")} {Math.round(d.plan.total.p)} {L("g", "جم")}</span></div>
+          {Object.entries(d.plan.meals).map(([slot, m]) => <div key={slot} className="text-[12px] text-[var(--c-mut)] mt-0.5">{names[slot]}: {ar ? m.recipe.ar : m.recipe.en}{m.x !== 1 ? ` ×${m.x}` : ""} · {m.kcal}</div>)}
         </div>))}
-      <div className="rounded-xl bg-slate-900/60 border border-emerald-900 p-3 space-y-2" data-testid="fit-shopping">
-        <div className="flex items-center justify-between"><span className="text-white font-medium">🛒 {L("Shopping list", "قايمة المشتريات")}</span>
+      <div className="rounded-xl bg-[var(--c-surf)] border border-[var(--c-acc)]/40 p-3 space-y-2" data-testid="fit-shopping">
+        <div className="flex items-center justify-between"><span className="text-[var(--c-ink)] font-medium">🛒 {L("Shopping list", "قايمة المشتريات")}</span>
           <span className="flex gap-2">
-            <button onClick={() => { try { navigator.clipboard.writeText(text); } catch (e) {} }} className="text-slate-400" title={L("Copy", "انسخ")}><Copy size={16} /></button>
-            {share ? <button onClick={() => share(text)} className="text-slate-400" data-testid="fit-shopping-share" title={L("Share", "شارك")}><Share2 size={16} /></button> : null}
+            <button onClick={() => { try { navigator.clipboard.writeText(text); } catch (e) {} }} className="text-[var(--c-mut)]" title={L("Copy", "انسخ")}><Copy size={16} /></button>
+            {share ? <button onClick={() => share(text)} className="text-[var(--c-mut)]" data-testid="fit-shopping-share" title={L("Share", "شارك")}><Share2 size={16} /></button> : null}
           </span></div>
-        {list.map((g) => <div key={g.key}><div className="text-[12px] text-emerald-300 mt-1">{ar ? g.ar : g.en}</div>
-          {g.items.map((x) => <div key={x.id} className="flex justify-between text-[12.5px] text-slate-200"><span>{ar ? x.ar : x.en}</span><span className="text-slate-400 tabular-nums">{x.grams >= 1000 ? (x.grams / 1000).toFixed(1) + (ar ? " كجم" : " kg") : x.grams + (ar ? " جم" : " g")}</span></div>)}</div>)}
+        {list.map((g) => <div key={g.key}><div className="text-[12px] text-[var(--c-acc)] mt-1">{ar ? g.ar : g.en}</div>
+          {g.items.map((x) => <div key={x.id} className="flex justify-between text-[12.5px] text-[var(--c-ink)]"><span>{ar ? x.ar : x.en}</span><span className="text-[var(--c-mut)] tabular-nums">{x.grams >= 1000 ? (x.grams / 1000).toFixed(1) + (ar ? " كجم" : " kg") : x.grams + (ar ? " جم" : " g")}</span></div>)}</div>)}
       </div>
     </div>
   );
@@ -191,10 +192,10 @@ export function WeekReport({ L, st, tg }) {
   const r = useMemo(() => P.weekReport(st.days, st.weights, tg), [st.days, st.weights, tg]);
   if (!r.logged) return null;
   return (
-    <div className="rounded-2xl bg-slate-900/60 border border-sky-900 p-3 space-y-1.5" data-testid="fit-week-report">
-      <div className="flex items-center justify-between"><span className="text-[13px] text-white flex items-center gap-1.5"><BarChart3 size={15} className="text-sky-300" />{L("Your week", "أسبوعك")}</span>
-        {r.score != null ? <span className="text-[13px] text-sky-200">{L("average score", "متوسط الدرجة")} <b>{r.score}</b></span> : null}</div>
-      {r.lines.map((x, i) => <div key={i} className="text-[12.5px] text-slate-300">• {L(x.en, x.ar)}</div>)}
+    <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-1.5" data-testid="fit-week-report">
+      <div className="flex items-center justify-between"><span className="text-[13px] text-[var(--c-ink)] flex items-center gap-1.5"><BarChart3 size={15} className="text-[var(--c-acc)]" />{L("Your week", "أسبوعك")}</span>
+        {r.score != null ? <span className="text-[13px] text-[var(--c-ink)]">{L("average score", "متوسط الدرجة")} <b>{r.score}</b></span> : null}</div>
+      {r.lines.map((x, i) => <div key={i} className="text-[12.5px] text-[var(--c-mut)]">• {L(x.en, x.ar)}</div>)}
     </div>
   );
 }
@@ -206,17 +207,17 @@ export function BodyCard({ L, st, upd }) {
   const bf = P.bodyFat({ sex: pr.sex, height: pr.cm, ...m });
   const hist = (st.body || []).slice(-6);
   return (
-    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-body">
-      <div className="text-[13px] text-white">{L("Body fat (tape measure)", "نسبة الدهون (بالمازورة)")}</div>
+    <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-2" data-testid="fit-body">
+      <div className="text-[13px] text-[var(--c-ink)]">{L("Body fat (tape measure)", "نسبة الدهون (بالمازورة)")}</div>
       <div className="flex gap-2">
         {["waist", "neck", ...(pr.sex === "f" ? ["hip"] : [])].map((k) => (
-          <label key={k} className="flex-1 text-[11px] text-slate-400">{L({ waist: "Waist cm", neck: "Neck cm", hip: "Hip cm" }[k], { waist: "الوسط سم", neck: "الرقبة سم", hip: "الأرداف سم" }[k])}
-            <input type="number" inputMode="decimal" value={m[k]} onChange={(e) => setM((x) => ({ ...x, [k]: e.target.value }))} className="w-full rounded-lg bg-slate-800 px-2 py-1.5 text-[14px] text-white" data-testid={"fit-body-" + k} /></label>))}
+          <label key={k} className="flex-1 text-[11px] text-[var(--c-mut)]">{L({ waist: "Waist cm", neck: "Neck cm", hip: "Hip cm" }[k], { waist: "الوسط سم", neck: "الرقبة سم", hip: "الأرداف سم" }[k])}
+            <input type="number" inputMode="decimal" value={m[k]} onChange={(e) => setM((x) => ({ ...x, [k]: e.target.value }))} className="w-full rounded-lg bg-[var(--c-surf-2)] px-2 py-1.5 text-[14px] text-[var(--c-ink)]" data-testid={"fit-body-" + k} /></label>))}
       </div>
-      {bf != null ? <div className="flex items-center justify-between"><span className="text-white text-lg font-semibold" data-testid="fit-bodyfat">{bf}% <span className="text-[12px] text-slate-400">{L(P.bodyFatClass(bf, pr.sex).en, P.bodyFatClass(bf, pr.sex).ar)}</span></span>
-        <button onClick={() => { upd((s) => ({ ...s, body: [...(s.body || []).filter((x) => x.d !== F.today()), { d: F.today(), ...m, bf }] })); setM({ waist: "", neck: "", hip: "" }); }} className="rounded-lg bg-sky-600 px-3 py-1.5 text-[13px] text-white" data-testid="fit-body-save">{L("Save", "احفظ")}</button></div> : null}
-      {hist.length ? <div className="text-[12px] text-slate-400 tabular-nums">{hist.map((x) => `${x.d.slice(5)}: ${x.bf}%`).join(" · ")}</div> : null}
-      <div className="text-[10.5px] text-slate-500">{L("US Navy method: waist at the navel (women: narrowest), neck below the Adam's apple — ±3 %. The trend matters more than one number.", "طريقة البحرية الأمريكية: الوسط عند السُرّة (للستات: أضيق مكان)، الرقبة تحت تفاحة آدم — ±٣٪. الاتجاه أهم من رقم واحد.")}</div>
+      {bf != null ? <div className="flex items-center justify-between"><span className="text-[var(--c-ink)] text-lg font-semibold" data-testid="fit-bodyfat">{bf}% <span className="text-[12px] text-[var(--c-mut)]">{L(P.bodyFatClass(bf, pr.sex).en, P.bodyFatClass(bf, pr.sex).ar)}</span></span>
+        <button onClick={() => { upd((s) => ({ ...s, body: [...(s.body || []).filter((x) => x.d !== F.today()), { d: F.today(), ...m, bf }] })); setM({ waist: "", neck: "", hip: "" }); }} className="rounded-lg bg-[var(--c-soft)] px-3 py-1.5 text-[13px] text-[var(--c-acc)]" data-testid="fit-body-save">{L("Save", "احفظ")}</button></div> : null}
+      {hist.length ? <div className="text-[12px] text-[var(--c-mut)] tabular-nums">{hist.map((x) => `${x.d.slice(5)}: ${x.bf}%`).join(" · ")}</div> : null}
+      <div className="text-[10.5px] text-[var(--c-mut)]">{L("US Navy method: waist at the navel (women: narrowest), neck below the Adam's apple — ±3 %. The trend matters more than one number.", "طريقة البحرية الأمريكية: الوسط عند السُرّة (للستات: أضيق مكان)، الرقبة تحت تفاحة آدم — ±٣٪. الاتجاه أهم من رقم واحد.")}</div>
     </div>
   );
 }
@@ -236,19 +237,19 @@ export function FitSettings({ L, ar, st, upd, native, flash, packText, photoClip
     flash && flash(on ? L("Reminders on: meals and water", "التنبيهات شغالة: الوجبات والمية") : L("Reminders off", "التنبيهات مقفولة"));
   };
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-settings">
+    <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="fit-settings">
       <LookPicker {...{ st, upd, L, ar }} />
       {/* v6.10: whose food the app suggests, reads and recognises in photos */}
-      <label className="flex flex-wrap items-center gap-2 text-[13px] text-slate-200">🍽 {L("Food from", "أكل بلد")}
-        <select value={F.getCountry()} onChange={(e) => { F.setCountry(e.target.value); upd((s) => ({ ...s, country: e.target.value })); }} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-country">
+      <label className="flex flex-wrap items-center gap-2 text-[13px] text-[var(--c-ink)]">🍽 {L("Food from", "أكل بلد")}
+        <select value={F.getCountry()} onChange={(e) => { F.setCountry(e.target.value); upd((s) => ({ ...s, country: e.target.value })); }} className="rounded-lg bg-[var(--c-surf-2)] px-2 py-1.5 text-[13px] text-[var(--c-ink)]" data-testid="fit-country">
           {Object.entries(F.COUNTRIES).sort((a, b) => (ar ? a[1].ar.localeCompare(b[1].ar, "ar") : a[1].en.localeCompare(b[1].en))).map(([k, c]) => <option key={k} value={k}>{c.flag} {ar ? c.ar : c.en}</option>)}</select></label>
-      <p className="text-[11.5px] text-slate-500">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "الاقتراحات والبحث والوجبات المكتوبة والصور بتبدأ بأكل البلد دي.")}</p>
-      <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!rm.on} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, on: e.target.checked } }))} data-testid="fit-ramadan-on" />🌙 {L("Ramadan mode (Suhoor, Iftar, fasting times)", "وضع رمضان (سحور، فطار، مواعيد الصيام)")}</label>
-      {rm.on ? <select value={rm.city} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, city: e.target.value } }))} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-ramadan-city">
+      <p className="text-[11.5px] text-[var(--c-mut)]">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "الاقتراحات والبحث والوجبات المكتوبة والصور بتبدأ بأكل البلد دي.")}</p>
+      <label className="flex items-center gap-2 text-[13px] text-[var(--c-ink)]"><input type="checkbox" checked={!!rm.on} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, on: e.target.checked } }))} data-testid="fit-ramadan-on" />🌙 {L("Ramadan mode (Suhoor, Iftar, fasting times)", "وضع رمضان (سحور، فطار، مواعيد الصيام)")}</label>
+      {rm.on ? <select value={rm.city} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, city: e.target.value } }))} className="rounded-lg bg-[var(--c-surf-2)] px-2 py-1.5 text-[13px] text-[var(--c-ink)]" data-testid="fit-ramadan-city">
         {Object.entries(P.CITIES).map(([k, c]) => <option key={k} value={k}>{ar ? c.ar : c.en}</option>)}</select> : null}
       <FoodPackCard {...{ L, packText, flash }} />
       <FoodClipCard {...{ L, photoClip, flash }} onChange={onClip} />
-      <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!st.reminders} onChange={(e) => setReminders(e.target.checked)} data-testid="fit-reminders" /><Bell size={14} />{L("Remind me to log meals and drink water", "فكّرني أسجّل الوجبات وأشرب مية")}</label>
+      <label className="flex items-center gap-2 text-[13px] text-[var(--c-ink)]"><input type="checkbox" checked={!!st.reminders} onChange={(e) => setReminders(e.target.checked)} data-testid="fit-reminders" /><Bell size={14} />{L("Remind me to log meals and drink water", "فكّرني أسجّل الوجبات وأشرب مية")}</label>
     </div>
   );
 }
@@ -278,19 +279,19 @@ export function FoodPackCard({ L, packText, flash, testPack }) {
   if (!packText && !info.count && !testPack) return null;
   const n = (v) => (v || 0).toLocaleString("en");
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-foodpack">
-      <p className="text-[13px] font-semibold text-slate-100">{L("Offline food pack", "باقة الأكل بدون إنترنت")}</p>
-      <p className="text-[12px] text-slate-400">{info.count ? L(`${n(info.count)} packaged foods on this phone${info.built ? " · built " + info.built : ""}. Search and barcodes work without signal.`, `${n(info.count)} منتج على الموبايل${info.built ? " · بتاريخ " + info.built : ""}. البحث والباركود شغالين من غير إنترنت.`)
+    <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="fit-foodpack">
+      <p className="text-[13px] font-semibold text-[var(--c-ink)]">{L("Offline food pack", "باقة الأكل بدون إنترنت")}</p>
+      <p className="text-[12px] text-[var(--c-mut)]">{info.count ? L(`${n(info.count)} packaged foods on this phone${info.built ? " · built " + info.built : ""}. Search and barcodes work without signal.`, `${n(info.count)} منتج على الموبايل${info.built ? " · بتاريخ " + info.built : ""}. البحث والباركود شغالين من غير إنترنت.`)
         : L("Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal.", "أكتر من مليون منتج من Open Food Facts — المنتجات المصرية والعربية الأول. دوّر بالاسم أو الباركود من غير إنترنت.")}</p>
       {busy ? (
-        <div className="space-y-1.5"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: Math.round((busy.shard / Math.max(1, busy.of)) * 100) + "%" }} /></div>
-          <p className="text-[12px] text-slate-400" data-testid="fit-foodpack-progress">{L(`Part ${busy.shard} of ${busy.of} · ${n(busy.count)} foods`, `جزء ${busy.shard} من ${busy.of} · ${n(busy.count)} منتج`)}</p>
-          <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-200" onClick={() => { stop.current = true; }}>{L("Stop", "وقّف")}</button></div>
+        <div className="space-y-1.5"><div className="h-2 rounded bg-[var(--c-surf-2)] overflow-hidden"><div className="h-full bg-[var(--c-acc)]" style={{ width: Math.round((busy.shard / Math.max(1, busy.of)) * 100) + "%" }} /></div>
+          <p className="text-[12px] text-[var(--c-mut)]" data-testid="fit-foodpack-progress">{L(`Part ${busy.shard} of ${busy.of} · ${n(busy.count)} foods`, `جزء ${busy.shard} من ${busy.of} · ${n(busy.count)} منتج`)}</p>
+          <button className="rounded-lg border border-[var(--c-ln)] px-3 py-1.5 text-[12.5px] text-[var(--c-ink)]" onClick={() => { stop.current = true; }}>{L("Stop", "وقّف")}</button></div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={() => go("starter")} data-testid="fit-foodpack-starter">{L("Get Egypt + most popular (~240,000, ~30 MB)", "نزّل المصري + الأشهر (~٢٤٠ ألف، ~٣٠ ميجا)")}</button>
-          <button className="rounded-lg bg-emerald-800 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={() => go("all")} data-testid="fit-foodpack-all">{L("Get everything (1,000,000+)", "نزّل الكل (+مليون)")}</button>
-          {info.count ? <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-300" onClick={wipe}>{L("Delete", "امسح")}</button> : null}
+          <button className="rounded-lg bg-[var(--c-acc)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--c-on-acc)]" onClick={() => go("starter")} data-testid="fit-foodpack-starter">{L("Get Egypt + most popular (~240,000, ~30 MB)", "نزّل المصري + الأشهر (~٢٤٠ ألف، ~٣٠ ميجا)")}</button>
+          <button className="rounded-lg bg-[var(--c-acc)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--c-on-acc)]" onClick={() => go("all")} data-testid="fit-foodpack-all">{L("Get everything (1,000,000+)", "نزّل الكل (+مليون)")}</button>
+          {info.count ? <button className="rounded-lg border border-[var(--c-ln)] px-3 py-1.5 text-[12.5px] text-[var(--c-mut)]" onClick={wipe}>{L("Delete", "امسح")}</button> : null}
         </div>)}
     </div>
   );
@@ -312,18 +313,18 @@ export function FoodClipCard({ L, photoClip, flash, onChange }) {
   const wipe = () => { if (!window.confirm(L("Delete the photo recognition model from this phone?", "تمسح موديل التعرّف على الصور من الموبايل؟"))) return; try { photoClip.remove(); } catch (e) {} refresh(); };
   const mb = Math.round((st.bytes || 0) / 1e6);
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-foodclip">
-      <p className="text-[13px] font-semibold text-slate-100">{L("Fast photo recognition", "التعرّف السريع على صور الأكل")}</p>
-      <p className="text-[12px] text-slate-400">{st.installed ? L(`On this phone (${mb} MB). A food photo is named in about a second, with no chat model and no internet.`, `موجود على الموبايل (${mb} ميجا). بيتعرّف على صورة الأكل في حوالي ثانية، من غير موديل شات ومن غير إنترنت.`)
+    <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2" data-testid="fit-foodclip">
+      <p className="text-[13px] font-semibold text-[var(--c-ink)]">{L("Fast photo recognition", "التعرّف السريع على صور الأكل")}</p>
+      <p className="text-[12px] text-[var(--c-mut)]">{st.installed ? L(`On this phone (${mb} MB). A food photo is named in about a second, with no chat model and no internet.`, `موجود على الموبايل (${mb} ميجا). بيتعرّف على صورة الأكل في حوالي ثانية، من غير موديل شات ومن غير إنترنت.`)
         : L("Two picture models (~200 MB, once) that name the food in a photo in a few seconds — your country's dishes first — offline. They learn from the photo meals you save.", "موديلين صور (~200 ميجا، مرة واحدة) بيعرفوا الأكل اللي في الصورة في ثواني — أطباق بلدك الأول — من غير إنترنت، وبيتعلموا من وجبات الصور اللي بتحفظها.")}</p>
       {busy ? (
-        <div className="space-y-1.5"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: (busy.pct || 0) + "%" }} /></div>
-          <p className="text-[12px] text-slate-400" data-testid="fit-foodclip-progress">{(busy.pct || 0) + "%"}{busy.detail ? " · " + busy.detail.replace(" MB", L(" MB", " ميجا")) : ""}</p>
-          <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-200" onClick={() => { try { photoClip.stop(); } catch (e) {} }}>{L("Stop", "وقّف")}</button></div>
+        <div className="space-y-1.5"><div className="h-2 rounded bg-[var(--c-surf-2)] overflow-hidden"><div className="h-full bg-[var(--c-acc)]" style={{ width: (busy.pct || 0) + "%" }} /></div>
+          <p className="text-[12px] text-[var(--c-mut)]" data-testid="fit-foodclip-progress">{(busy.pct || 0) + "%"}{busy.detail ? " · " + busy.detail.replace(" MB", L(" MB", " ميجا")) : ""}</p>
+          <button className="rounded-lg border border-[var(--c-ln)] px-3 py-1.5 text-[12.5px] text-[var(--c-ink)]" onClick={() => { try { photoClip.stop(); } catch (e) {} }}>{L("Stop", "وقّف")}</button></div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {!st.installed ? <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={go} data-testid="fit-foodclip-get">{L("Get it (~100 MB)", "نزّل (~١٠٠ ميجا)")}</button> : null}
-          {st.installed || st.bytes ? <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-300" onClick={wipe} data-testid="fit-foodclip-delete">{L("Delete", "امسح")}</button> : null}
+          {!st.installed ? <button className="rounded-lg bg-[var(--c-acc)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--c-on-acc)]" onClick={go} data-testid="fit-foodclip-get">{L("Get it (~100 MB)", "نزّل (~١٠٠ ميجا)")}</button> : null}
+          {st.installed || st.bytes ? <button className="rounded-lg border border-[var(--c-ln)] px-3 py-1.5 text-[12.5px] text-[var(--c-mut)]" onClick={wipe} data-testid="fit-foodclip-delete">{L("Delete", "امسح")}</button> : null}
         </div>)}
     </div>
   );
@@ -345,15 +346,15 @@ export function HuaweiGuide({ L, health, status, onDone }) {
     [L("Back here: “Connect my watch”, then Refresh. The first sync can take a few minutes.", "ارجع هنا: «اربط ساعتي»، وبعدين حدّث. أول مزامنة ممكن تاخد كام دقيقة."), null],
   ];
   return (
-    <div className="rounded-xl bg-slate-900/70 border border-rose-900/60 p-2.5 space-y-1.5" data-testid="fit-huawei">
-      <div className="text-[12.5px] text-rose-100">{L("Huawei watch: Huawei Health doesn't share with Android's Health Connect by itself — the app Health Sync copies it across (once, then automatically).", "ساعة هواوي: Huawei Health مش بيشارك بياناته مع Health Connect في أندرويد لوحده — تطبيق Health Sync هو اللي بينقلها (تظبطه مرة، وبعدين يشتغل لوحده).")}</div>
+    <div className="rounded-xl bg-[var(--c-surf)] border border-[var(--c-neg)]/40 p-2.5 space-y-1.5" data-testid="fit-huawei">
+      <div className="text-[12.5px] text-[var(--c-neg)]">{L("Huawei watch: Huawei Health doesn't share with Android's Health Connect by itself — the app Health Sync copies it across (once, then automatically).", "ساعة هواوي: Huawei Health مش بيشارك بياناته مع Health Connect في أندرويد لوحده — تطبيق Health Sync هو اللي بينقلها (تظبطه مرة، وبعدين يشتغل لوحده).")}</div>
       {steps.map(([t, pkg, btn], i) => (
-        <div key={i} className="flex items-start gap-2 text-[12px] text-slate-300">
-          <span className="shrink-0 w-5 h-5 rounded-full bg-rose-900/70 text-rose-100 text-[11px] flex items-center justify-center">{i + 1}</span>
-          <div className="flex-1 min-w-0">{t}{pkg && health && health.openApp ? <button onClick={() => health.openApp(pkg)} className="ms-2 rounded-md bg-rose-700 px-2 py-0.5 text-[11.5px] text-white" data-testid={"fit-huawei-open-" + i}>{btn}</button> : null}</div>
+        <div key={i} className="flex items-start gap-2 text-[12px] text-[var(--c-mut)]">
+          <span className="shrink-0 w-5 h-5 rounded-full bg-[var(--c-neg)]/10 text-[var(--c-neg)] text-[11px] flex items-center justify-center">{i + 1}</span>
+          <div className="flex-1 min-w-0">{t}{pkg && health && health.openApp ? <button onClick={() => health.openApp(pkg)} className="ms-2 rounded-md bg-[var(--c-neg)] px-2 py-0.5 text-[11.5px] text-[var(--c-on-acc)]" data-testid={"fit-huawei-open-" + i}>{btn}</button> : null}</div>
         </div>))}
-      {status && status.huawei && health && health.openApp ? <button onClick={() => health.openApp(HUAWEI_HEALTH)} className="text-[11.5px] text-rose-300 underline" data-testid="fit-huawei-app">{L("Open Huawei Health (let it sync the watch first)", "افتح Huawei Health (وسيبه يزامن الساعة الأول)")}</button> : null}
-      {onDone ? <button onClick={onDone} className="block text-[11px] text-slate-500 underline">{L("Hide", "اخفي")}</button> : null}
+      {status && status.huawei && health && health.openApp ? <button onClick={() => health.openApp(HUAWEI_HEALTH)} className="text-[11.5px] text-[var(--c-neg)] underline" data-testid="fit-huawei-app">{L("Open Huawei Health (let it sync the watch first)", "افتح Huawei Health (وسيبه يزامن الساعة الأول)")}</button> : null}
+      {onDone ? <button onClick={onDone} className="block text-[11px] text-[var(--c-mut)] underline">{L("Hide", "اخفي")}</button> : null}
     </div>);
 }
 
@@ -390,55 +391,55 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
   };
   useEffect(() => { refresh(); const on = (e) => { if (e && e.detail && e.detail.huawei === false) setNote(e.detail.error ? L(`Huawei sign-in didn't open: ${e.detail.error} — install HMS Core (below) and try again.`, `تسجيل الدخول لهواوي مفتحش: ${e.detail.error} — نزّل HMS Core (تحت) وجرّب تاني.`) : L("Huawei Health wasn't allowed — tap Connect again and allow steps, calories, distance and heart rate.", "Huawei Health مإدّاش الإذن — اضغط «اربط» تاني ووافق على الخطوات والسعرات والمسافة والنبض.")); refresh(); }; window.addEventListener("attune-resume", on); window.addEventListener("attune-health-permission", on); return () => { window.removeEventListener("attune-resume", on); window.removeEventListener("attune-health-permission", on); }; }, [dayKey]);
   if (!health) return compact ? null : (
-    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 text-[12.5px] text-slate-400" data-testid="fit-watch">⌚ {L("Watch steps and calories work in the Android app.", "خطوات الساعة وسعراتها شغالة في تطبيق أندرويد.")}</div>);
+    <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 text-[12.5px] text-[var(--c-mut)]" data-testid="fit-watch">⌚ {L("Watch steps and calories work in the Android app.", "خطوات الساعة وسعراتها شغالة في تطبيق أندرويد.")}</div>);
   const ready = status && status.available === "ready";
   const hwDirect = !!(hwS && hwS.configured), hwOn = hwDirect && hwS.authorized;
   const granted = (ready && status.granted > 0) || hwOn;
   // the direct Huawei link, when Attune has its Huawei App ID and this phone has Huawei Health or HMS Core
   const hwOffer = hwDirect && !hwOn && ((status && status.huawei) || hwS.app || hwS.hms);
   const hwButton = hwOffer ? (
-    <div className="rounded-xl bg-rose-500/10 border border-rose-800 p-2.5 space-y-1.5" data-testid="fit-huawei-direct">
-      <div className="text-[12.5px] text-rose-100">{L("Huawei watch or band: connect Huawei Health directly — steps, calories, distance and heart rate, read only.", "ساعة أو باند هواوي: اربط Huawei Health على طول — الخطوات والسعرات والمسافة والنبض، قراءة بس.")}</div>
-      {hwS.hms ? <button onClick={() => { setNote(""); hwKit.connect(); }} className="w-full rounded-lg bg-rose-600 py-2 text-[13px] font-medium text-white" data-testid="fit-huawei-connect">{L("Connect Huawei Health", "اربط Huawei Health")}</button>
-        : <button onClick={() => health.openApp("com.huawei.hwid")} className="w-full rounded-lg bg-rose-700 py-2 text-[13px] text-white" data-testid="fit-huawei-hms">{L("First install HMS Core (Huawei's services — free)", "الأول نزّل HMS Core (خدمات هواوي — ببلاش)")}</button>}
+    <div className="rounded-xl bg-[var(--c-neg)]/10 border border-[var(--c-neg)]/40 p-2.5 space-y-1.5" data-testid="fit-huawei-direct">
+      <div className="text-[12.5px] text-[var(--c-neg)]">{L("Huawei watch or band: connect Huawei Health directly — steps, calories, distance and heart rate, read only.", "ساعة أو باند هواوي: اربط Huawei Health على طول — الخطوات والسعرات والمسافة والنبض، قراءة بس.")}</div>
+      {hwS.hms ? <button onClick={() => { setNote(""); hwKit.connect(); }} className="w-full rounded-lg bg-[var(--c-neg)] py-2 text-[13px] font-medium text-[var(--c-on-acc)]" data-testid="fit-huawei-connect">{L("Connect Huawei Health", "اربط Huawei Health")}</button>
+        : <button onClick={() => health.openApp("com.huawei.hwid")} className="w-full rounded-lg bg-[var(--c-neg)] py-2 text-[13px] text-[var(--c-on-acc)]" data-testid="fit-huawei-hms">{L("First install HMS Core (Huawei's services — free)", "الأول نزّل HMS Core (خدمات هواوي — ببلاش)")}</button>}
     </div>) : null;
-  const noteEl = note ? <div className="text-[11.5px] text-amber-200" data-testid="fit-watch-note">{note}</div> : null;
+  const noteEl = note ? <div className="text-[11.5px] text-[var(--c-warn)]" data-testid="fit-watch-note">{note}</div> : null;
   if (!granted) {
     if (compact && st.watchSkip) return null;
     return (
-      <div className="rounded-2xl border border-teal-800 bg-teal-500/10 p-3 space-y-2" data-testid="fit-watch">
-        <div className="text-[13px] text-teal-100">⌚ {L("Connect your watch: steps, calories burned, workouts and heart rate go into your day automatically.", "اربط ساعتك: الخطوات والسعرات المحروقة والتمارين ونبض القلب بيتضافوا ليومك لوحدهم.")}</div>
-        <div className="text-[11.5px] text-teal-200/70">{L("Through Android's Health Connect — works with Samsung Health (Galaxy Watch), Fitbit / Pixel Watch, Garmin Connect, Mi Fitness, Huawei Health (through Health Sync) and others that share to it. Read only; nothing leaves the phone.", "عن طريق Health Connect في أندرويد — شغال مع Samsung Health (Galaxy Watch)، وFitbit / Pixel Watch، وGarmin Connect، وMi Fitness، وHuawei Health (عبر Health Sync) وغيرها من التطبيقات اللي مشتركة فيه. قراءة بس؛ ومفيش حاجة بتخرج من الموبايل.")}</div>
+      <div className="rounded-2xl border border-[var(--c-ln)] bg-[var(--c-soft)] p-3 space-y-2" data-testid="fit-watch">
+        <div className="text-[13px] text-[var(--c-ink)]">⌚ {L("Connect your watch: steps, calories burned, workouts and heart rate go into your day automatically.", "اربط ساعتك: الخطوات والسعرات المحروقة والتمارين ونبض القلب بيتضافوا ليومك لوحدهم.")}</div>
+        <div className="text-[11.5px] text-[var(--c-ink)]">{L("Through Android's Health Connect — works with Samsung Health (Galaxy Watch), Fitbit / Pixel Watch, Garmin Connect, Mi Fitness, Huawei Health (through Health Sync) and others that share to it. Read only; nothing leaves the phone.", "عن طريق Health Connect في أندرويد — شغال مع Samsung Health (Galaxy Watch)، وFitbit / Pixel Watch، وGarmin Connect، وMi Fitness، وHuawei Health (عبر Health Sync) وغيرها من التطبيقات اللي مشتركة فيه. قراءة بس؛ ومفيش حاجة بتخرج من الموبايل.")}</div>
         {hwButton}{noteEl}
         {hwDirect ? null : huaweiNeeded || hw ? <HuaweiGuide {...{ L, health, status }} onDone={() => { setHw(false); if (huaweiNeeded) upd((x) => ({ ...x, huaweiHide: true })); }} />
-          : <button onClick={() => setHw(true)} className="text-[11.5px] text-rose-300 underline" data-testid="fit-huawei-link">{L("Huawei watch?", "ساعة هواوي؟")}</button>}
-        {status && status.available === "none" ? <div className="text-[12px] text-amber-200">{L("This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it.", "الموبايل ده مفيهوش Health Connect — ثبّته من Play Store (أندرويد 9–13)، أو هتلاقيه في الإعدادات من أندرويد 14. ومش بيشتغل على الموبايلات اللي مفيهاش خدمات Google (موبايلات هواوي الجديدة).")}</div> : (
+          : <button onClick={() => setHw(true)} className="text-[11.5px] text-[var(--c-neg)] underline" data-testid="fit-huawei-link">{L("Huawei watch?", "ساعة هواوي؟")}</button>}
+        {status && status.available === "none" ? <div className="text-[12px] text-[var(--c-warn)]">{L("This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it.", "الموبايل ده مفيهوش Health Connect — ثبّته من Play Store (أندرويد 9–13)، أو هتلاقيه في الإعدادات من أندرويد 14. ومش بيشتغل على الموبايلات اللي مفيهاش خدمات Google (موبايلات هواوي الجديدة).")}</div> : (
           <div className="flex gap-2">
-            <button onClick={() => { health.connect(); }} className="flex-1 rounded-lg bg-teal-600 py-2 text-[13px] font-medium text-white" data-testid="fit-watch-connect">{status && status.available === "update" ? L("Install Health Connect", "نزّل Health Connect") : L("Connect my watch", "اربط ساعتي")}</button>
-            {compact ? <button onClick={() => upd((x) => ({ ...x, watchSkip: true }))} className="rounded-lg bg-slate-800 px-3 text-[12px] text-slate-400">{L("Later", "بعدين")}</button> : null}
+            <button onClick={() => { health.connect(); }} className="flex-1 rounded-lg bg-[var(--c-soft)] py-2 text-[13px] font-medium text-[var(--c-acc)]" data-testid="fit-watch-connect">{status && status.available === "update" ? L("Install Health Connect", "نزّل Health Connect") : L("Connect my watch", "اربط ساعتي")}</button>
+            {compact ? <button onClick={() => upd((x) => ({ ...x, watchSkip: true }))} className="rounded-lg bg-[var(--c-surf-2)] px-3 text-[12px] text-[var(--c-mut)]">{L("Later", "بعدين")}</button> : null}
           </div>)}
       </div>);
   }
   const km = w && w.distanceM ? (w.distanceM / 1000).toFixed(1) : null;
   return (
-    <div className="rounded-2xl bg-slate-900/60 border border-teal-900 p-3 space-y-1.5" data-testid="fit-watch">
-      <div className="flex items-center justify-between"><span className="text-[13px] text-white">⌚ {L("From your watch", "من ساعتك")}</span>
-        <button onClick={refresh} className="text-[11.5px] text-teal-300 underline" data-testid="fit-watch-refresh">{busy ? L("Reading…", "بقرا…") : L("Refresh", "حدّث")}</button></div>
+    <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-1.5" data-testid="fit-watch">
+      <div className="flex items-center justify-between"><span className="text-[13px] text-[var(--c-ink)]">⌚ {L("From your watch", "من ساعتك")}</span>
+        <button onClick={refresh} className="text-[11.5px] text-[var(--c-acc)] underline" data-testid="fit-watch-refresh">{busy ? L("Reading…", "بقرا…") : L("Refresh", "حدّث")}</button></div>
       {noteEl}{hwButton}
-      {w && (w.sources || []).includes(HUAWEI_HEALTH) ? <div className="text-[10.5px] text-rose-300" data-testid="fit-huawei-on">{L("Huawei Health ✓", "Huawei Health ✓")}</div> : null}
-      {viaHealthSync(w) ? <div className="text-[10.5px] text-rose-300" data-testid="fit-huawei-on">{L("Huawei Health, through Health Sync ✓", "Huawei Health، عن طريق Health Sync ✓")}</div> : null}
+      {w && (w.sources || []).includes(HUAWEI_HEALTH) ? <div className="text-[10.5px] text-[var(--c-neg)]" data-testid="fit-huawei-on">{L("Huawei Health ✓", "Huawei Health ✓")}</div> : null}
+      {viaHealthSync(w) ? <div className="text-[10.5px] text-[var(--c-neg)]" data-testid="fit-huawei-on">{L("Huawei Health, through Health Sync ✓", "Huawei Health، عن طريق Health Sync ✓")}</div> : null}
       {hwDirect ? null : !compact && (huaweiNeeded || hw) ? <HuaweiGuide {...{ L, health, status }} onDone={() => { setHw(false); if (huaweiNeeded) upd((x) => ({ ...x, huaweiHide: true })); }} />
-        : !compact && !viaHealthSync(w) ? <button onClick={() => setHw(true)} className="text-[11px] text-rose-300 underline" data-testid="fit-huawei-link">{L("Huawei watch?", "ساعة هواوي؟")}</button> : null}
+        : !compact && !viaHealthSync(w) ? <button onClick={() => setHw(true)} className="text-[11px] text-[var(--c-neg)] underline" data-testid="fit-huawei-link">{L("Huawei watch?", "ساعة هواوي؟")}</button> : null}
       {w ? <>
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div><div className="text-lg font-semibold text-white tabular-nums" data-testid="fit-steps">{(w.steps || 0).toLocaleString("en-US")}</div><div className="text-[10.5px] text-slate-400">{L("steps", "خطوة")}</div></div>
-          <div><div className="text-lg font-semibold text-white tabular-nums" data-testid="fit-watch-kcal">{w.activeKcal || 0}</div><div className="text-[10.5px] text-slate-400">{L("active kcal", "سعر نشاط")}</div></div>
-          <div><div className="text-lg font-semibold text-white tabular-nums">{km ?? "—"}</div><div className="text-[10.5px] text-slate-400">km</div></div>
+          <div><div className="text-lg font-semibold text-[var(--c-ink)] tabular-nums" data-testid="fit-steps">{(w.steps || 0).toLocaleString("en-US")}</div><div className="text-[10.5px] text-[var(--c-mut)]">{L("steps", "خطوة")}</div></div>
+          <div><div className="text-lg font-semibold text-[var(--c-ink)] tabular-nums" data-testid="fit-watch-kcal">{w.activeKcal || 0}</div><div className="text-[10.5px] text-[var(--c-mut)]">{L("active kcal", "سعر نشاط")}</div></div>
+          <div><div className="text-lg font-semibold text-[var(--c-ink)] tabular-nums">{km ?? "—"}</div><div className="text-[10.5px] text-[var(--c-mut)]">km</div></div>
         </div>
-        {w.hrAvg ? <div className="text-[11.5px] text-slate-400">❤ {L(`heart rate ${w.hrAvg} avg · ${w.hrMax} max`, `النبض ${w.hrAvg} متوسط · ${w.hrMax} أقصى`)}</div> : null}
-        {(w.workouts || []).length && !compact ? <div className="text-[12px] text-slate-300">{w.workouts.map((x, i) => <div key={i}>• {x.title || L("Workout", "تمرين")} · {x.minutes} {L("min", "د")}</div>)}</div> : null}
-        <div className="text-[10.5px] text-slate-500">{L("Burned calories count the watch or your logged workouts — whichever is more, never both.", "السعرات المحروقة بتتحسب من الساعة أو من التمارين اللي سجلتها — الأكبر فيهم، مش الاتنين.")}</div>
-      </> : <div className="text-[12px] text-slate-400">{L("Nothing from the watch today yet — open its app once so it syncs.", "مفيش حاجة وصلت من الساعة النهارده لسه — افتح تطبيقها مرة عشان تتزامن.")}</div>}
+        {w.hrAvg ? <div className="text-[11.5px] text-[var(--c-mut)]">❤ {L(`heart rate ${w.hrAvg} avg · ${w.hrMax} max`, `النبض ${w.hrAvg} متوسط · ${w.hrMax} أقصى`)}</div> : null}
+        {(w.workouts || []).length && !compact ? <div className="text-[12px] text-[var(--c-mut)]">{w.workouts.map((x, i) => <div key={i}>• {x.title || L("Workout", "تمرين")} · {x.minutes} {L("min", "د")}</div>)}</div> : null}
+        <div className="text-[10.5px] text-[var(--c-mut)]">{L("Burned calories count the watch or your logged workouts — whichever is more, never both.", "السعرات المحروقة بتتحسب من الساعة أو من التمارين اللي سجلتها — الأكبر فيهم، مش الاتنين.")}</div>
+      </> : <div className="text-[12px] text-[var(--c-mut)]">{L("Nothing from the watch today yet — open its app once so it syncs.", "مفيش حاجة وصلت من الساعة النهارده لسه — افتح تطبيقها مرة عشان تتزامن.")}</div>}
     </div>);
 }
 
@@ -470,28 +471,28 @@ export function AutoTracking({ L, ar, health, st, upd }) {
   const w = open && WATCHES.find((x) => x.k === open);
   return (
     <div className="space-y-2" data-testid="fit-autotrack">
-      <div className="text-[15px] font-semibold text-white">{L("Automatic tracking", "تتبّع تلقائي")}</div>
+      <div className="text-[15px] font-semibold text-[var(--c-ink)]">{L("Automatic tracking", "تتبّع تلقائي")}</div>
       <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
         {WATCHES.map((x) => (
           <button key={x.k} onClick={() => setOpen(open === x.k ? null : x.k)} className="shrink-0 w-[76px] text-center" data-testid={"fit-autotrack-" + x.k}>
-            <div className={"relative mx-auto w-[64px] h-[64px] rounded-2xl flex items-center justify-center text-[22px] font-bold shadow " + (open === x.k ? "ring-2 ring-emerald-400" : "")} style={{ background: x.bg, color: x.fg }}>
-              {x.mark}{live(x) ? <span className="absolute -bottom-1 -end-1 w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] flex items-center justify-center border-2 border-slate-950">✓</span> : null}
+            <div className={"relative mx-auto w-[64px] h-[64px] rounded-2xl flex items-center justify-center text-[22px] font-bold shadow " + (open === x.k ? "ring-2 ring-[var(--c-acc)]" : "")} style={{ background: x.bg, color: x.fg }}>
+              {x.mark}{live(x) ? <span className="absolute -bottom-1 -end-1 w-5 h-5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[11px] flex items-center justify-center border-2 border-[var(--c-bg)]">✓</span> : null}
             </div>
-            <div className="mt-1 text-[11.5px] leading-tight text-slate-300">{ar ? x.nameAr : x.name}</div>
+            <div className="mt-1 text-[11.5px] leading-tight text-[var(--c-mut)]">{ar ? x.nameAr : x.name}</div>
           </button>))}
       </div>
       {w ? (
-        <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 space-y-2 text-[12.5px]" data-testid="fit-autotrack-sheet">
-          {w.k === "hc" ? <div className="text-slate-200">{hcOn ? L("Connected ✓ — steps, calories burned, workouts and heart rate come into your day by themselves.", "متوصل ✓ — الخطوات والسعرات المحروقة والتمارين والنبض بيدخلوا يومك لوحدهم.")
+        <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-2 text-[12.5px]" data-testid="fit-autotrack-sheet">
+          {w.k === "hc" ? <div className="text-[var(--c-ink)]">{hcOn ? L("Connected ✓ — steps, calories burned, workouts and heart rate come into your day by themselves.", "متوصل ✓ — الخطوات والسعرات المحروقة والتمارين والنبض بيدخلوا يومك لوحدهم.")
               : L("Health Connect is Android's shared place for health data. Any watch app that writes to it reaches Attune. Read only; nothing leaves the phone.", "Health Connect هو المكان المشترك في أندرويد لبيانات الصحة. أي تطبيق ساعة بيكتب فيه بيوصل لـ Attune. قراءة بس؛ ولا حاجة بتخرج من الموبايل.")}</div>
-            : w.k === "huawei" ? <div className="text-slate-200">{L("Huawei watches and bands: use the Huawei steps under Exercise → Workouts (Huawei Health directly, or through the free Health Sync app).", "ساعات وباندات هواوي: استخدم خطوات هواوي في الرياضة ← التمارين (Huawei Health على طول، أو عن طريق تطبيق Health Sync المجاني).")}</div>
-            : <div className="space-y-1"><div className="text-slate-200">{L("1. In the watch's app: ", "١. في تطبيق الساعة: ")}<span className="text-white">{ar ? WATCH_STEP[w.k][1] : WATCH_STEP[w.k][0]}</span></div>
-                <div className="text-slate-200">{L("2. Here: Connect, and allow steps, calories, exercise and heart rate.", "٢. هنا: اربط، ووافق على الخطوات والسعرات والتمارين والنبض.")}</div></div>}
+            : w.k === "huawei" ? <div className="text-[var(--c-ink)]">{L("Huawei watches and bands: use the Huawei steps under Exercise → Workouts (Huawei Health directly, or through the free Health Sync app).", "ساعات وباندات هواوي: استخدم خطوات هواوي في الرياضة ← التمارين (Huawei Health على طول، أو عن طريق تطبيق Health Sync المجاني).")}</div>
+            : <div className="space-y-1"><div className="text-[var(--c-ink)]">{L("1. In the watch's app: ", "١. في تطبيق الساعة: ")}<span className="text-[var(--c-ink)]">{ar ? WATCH_STEP[w.k][1] : WATCH_STEP[w.k][0]}</span></div>
+                <div className="text-[var(--c-ink)]">{L("2. Here: Connect, and allow steps, calories, exercise and heart rate.", "٢. هنا: اربط، ووافق على الخطوات والسعرات والتمارين والنبض.")}</div></div>}
           <div className="flex gap-2">
-            {w.pkg && health && health.openApp ? <button onClick={() => health.openApp(have.includes(w.pkg) ? w.pkg : ((w.alt || []).find((p) => have.includes(p)) || w.pkg))} className="flex-1 min-h-[44px] rounded-xl bg-slate-800 text-slate-100" data-testid="fit-autotrack-open">{[w.pkg, ...(w.alt || [])].some((p) => have.includes(p)) ? L("Open " + w.name, "افتح " + w.nameAr) : L("Get " + w.name, "نزّل " + w.nameAr)}</button> : null}
-            {!hcOn && health ? <button onClick={() => health.connect()} className="flex-1 min-h-[44px] rounded-xl bg-emerald-600 font-medium text-white" data-testid="fit-autotrack-connect">{L("Connect", "اربط")}</button> : null}
+            {w.pkg && health && health.openApp ? <button onClick={() => health.openApp(have.includes(w.pkg) ? w.pkg : ((w.alt || []).find((p) => have.includes(p)) || w.pkg))} className="flex-1 min-h-[44px] rounded-xl bg-[var(--c-surf-2)] text-[var(--c-ink)]" data-testid="fit-autotrack-open">{[w.pkg, ...(w.alt || [])].some((p) => have.includes(p)) ? L("Open " + w.name, "افتح " + w.nameAr) : L("Get " + w.name, "نزّل " + w.nameAr)}</button> : null}
+            {!hcOn && health ? <button onClick={() => health.connect()} className="flex-1 min-h-[44px] rounded-xl bg-[var(--c-acc)] font-medium text-[var(--c-on-acc)]" data-testid="fit-autotrack-connect">{L("Connect", "اربط")}</button> : null}
           </div>
-          {!health ? <div className="text-amber-200">{L("Watches connect in the Android app.", "الساعات بتتربط في تطبيق أندرويد.")}</div> : null}
+          {!health ? <div className="text-[var(--c-warn)]">{L("Watches connect in the Android app.", "الساعات بتتربط في تطبيق أندرويد.")}</div> : null}
         </div>) : null}
     </div>
   );

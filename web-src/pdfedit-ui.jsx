@@ -371,7 +371,7 @@ function SignPad({ onCancel, onUse }) {
     onUse({ png: o.toDataURL("image/png").split(",")[1], ratio: o.height / o.width });
   };
   return (
-    <div className="fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center p-3" data-testid="pdfedit-signpad">
+    <div className="calm fixed inset-0 z-[70] bg-black/60! flex items-end sm:items-center justify-center p-3" data-testid="pdfedit-signpad">
       <div className="w-full max-w-md rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4">
         <p className="text-[14px] text-[var(--c-ink)] mb-2">{tr("Sign with your finger")}</p>
         <canvas ref={cv} className="w-full h-44 rounded-xl bg-white" style={{ touchAction: "none" }} data-testid="pdfedit-signcanvas"

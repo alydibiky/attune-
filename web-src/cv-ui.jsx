@@ -25,7 +25,7 @@ const L2 = (en, ar) => (getLang() === "ar" ? ar : en);
 function Sheet({ title, onClose, right, children, testid }) {
   useSubBack(true, onClose);
   return (
-    <div className="att-shift fixed inset-0 z-[70] bg-[var(--c-bg)] flex flex-col" data-testid={testid}>
+    <div className="calm att-shift fixed inset-0 z-[70] bg-[var(--c-bg)] flex flex-col" data-testid={testid}>
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--c-ln)]">
         <button onClick={onClose} className="p-1.5 -ms-1 rounded-lg text-[var(--c-ink)]" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
         <h2 className="text-[15px] font-semibold text-[var(--c-ink)] flex-1 truncate">{title}</h2>{right}

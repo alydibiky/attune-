@@ -4,6 +4,7 @@ import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Code2, Play, Wrench, Terminal, Loader2, Copy, Save, Share2, Square, CheckCircle2, AlertTriangle, Eye, Trash2, Plus, RefreshCw, Maximize2, X, Send } from "lucide-react";
 import { tr } from "./i18n.js";
+import * as K from "./ui-kit.jsx";
 import { runCode, runHtml, htmlDoc, warmUp, pythonAvailable, stop as stopSandbox, LANGS, normLang } from "./sandbox.js";
 import { workLoop, guessLang, countTests, judge, errorSummary, loadProjects, saveProjects, PASS_MARK } from "./code.js";
 import { getPower } from "./power.js";
@@ -17,7 +18,7 @@ function RunOutput({ res, lang, code }) {
   const v = judge(res, code, lang);
   const lines = [res.stdout, res.stderr].filter(Boolean).join("\n").trim();
   return (
-    <div className="mt-2 rounded-xl border border-[var(--c-ln)] bg-black/40 p-2.5" data-testid="code-output" dir="ltr">
+    <div className="mt-2 rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="code-output" dir="ltr">
       <div className={`text-[11px] mb-1 flex items-center gap-1.5 ${v.passed ? "text-[var(--c-pos)]" : "text-[var(--c-neg)]"}`}>
         {v.passed ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
         {v.passed ? (v.tests ? tr("Passed its {n} tests", { n: v.tests }) : tr("Ran without errors (no tests)")) : res.timedOut ? tr("Stopped — took too long") : tr("Failed")}
@@ -64,14 +65,14 @@ function HtmlPreview({ code, onReport }) {
   const errN = logs.filter((l) => l.kind === "error").length;
   const bar = (
     <div className="flex items-center gap-1.5">
-      <div className="flex rounded-lg border border-[var(--c-ln)] overflow-hidden" role="group" aria-label={tr("Preview width")}>
+      <div className="flex rounded-[14px] border border-[var(--c-ln)] overflow-hidden" role="group" aria-label={tr("Preview width")}>
         {DEVICES.map(([k, l]) => <button key={k} onClick={() => setDev(k)} aria-pressed={dev === k} data-testid={"code-dev-" + k}
-          className={`px-2 min-h-[36px] text-[12px] ${dev === k ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "text-[var(--c-ink)]"}`}>{tr(l)}</button>)}
+          className={`px-2.5 min-h-[44px] text-[12.5px] font-bold ${dev === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold" : "text-[var(--c-ink)]"}`}>{tr(l)}</button>)}
       </div>
-      <button onClick={() => setGen((g) => g + 1)} aria-label={tr("Reload")} title={tr("Reload")} className="px-2.5 min-h-[36px] rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center" data-testid="code-reload"><RefreshCw size={14} /></button>
-      <button onClick={() => setShowLog((v) => !v)} className={`px-2.5 min-h-[36px] rounded-lg border text-[12px] ${errN ? "border-[var(--c-neg)]/50 text-[var(--c-neg)]" : "border-[var(--c-ln)] text-[var(--c-ink)]"}`} data-testid="code-console-btn">
+      <button onClick={() => setGen((g) => g + 1)} aria-label={tr("Reload")} title={tr("Reload")} className="px-2.5 min-h-[44px] rounded-[14px] border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center" data-testid="code-reload"><RefreshCw size={14} /></button>
+      <button onClick={() => setShowLog((v) => !v)} className={`px-2.5 min-h-[44px] rounded-[14px] border text-[12px] ${errN ? "border-[var(--c-neg)]/50 text-[var(--c-neg)]" : "border-[var(--c-ln)] text-[var(--c-ink)]"}`} data-testid="code-console-btn">
         {tr("Console")}{logs.length ? ` ${logs.length}` : ""}{errN ? " · " + errN + "✗" : ""}</button>
-      <button onClick={() => setFull((v) => !v)} aria-label={full ? tr("Close") : tr("Full screen")} title={full ? tr("Close") : tr("Full screen")} className="ms-auto px-2.5 min-h-[36px] rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center" data-testid="code-full">
+      <button onClick={() => setFull((v) => !v)} aria-label={full ? tr("Close") : tr("Full screen")} title={full ? tr("Close") : tr("Full screen")} className="ms-auto px-2.5 min-h-[44px] rounded-[14px] border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center" data-testid="code-full">
         {full ? <X size={15} /> : <Maximize2 size={14} />}</button>
     </div>);
   const frame = (
@@ -80,12 +81,12 @@ function HtmlPreview({ code, onReport }) {
         style={{ width: devW, maxWidth: "none", height: Math.round(boxH / scale), transform: `scale(${scale})`, transformOrigin: "top left", border: 0, position: "absolute", left: Math.max(0, (boxW - devW * scale) / 2), top: 0 }} />
     </div>);
   const consoleBox = showLog ? (
-    <div className="att-scroll mt-2 max-h-40 overflow-auto rounded-xl bg-black/50 border border-[var(--c-ln)] p-2 font-mono text-[11.5px]" dir="ltr" data-testid="code-console">
+    <div className="att-scroll mt-2 max-h-40 overflow-auto rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-2.5 font-mono text-[11.5px]" dir="ltr" data-testid="code-console">
       {logs.length ? logs.map((l, i) => <div key={i} className={l.kind === "error" ? "text-[var(--c-neg)]" : "text-[var(--c-ink)]"}>{l.kind === "error" ? "✗ " : "› "}{l.text}</div>)
         : <div className="text-[var(--c-mut)]">{tr("Nothing printed yet")}</div>}
     </div>) : null;
   if (full) return (
-    <div className="fixed inset-0 z-[80] bg-[var(--c-bg)] p-3 flex flex-col gap-2" data-testid="code-preview-full">
+    <div className="calm fixed inset-0 z-[80] bg-[var(--c-bg)] p-3 flex flex-col gap-2" data-testid="code-preview-full">
       {bar}{frame}{consoleBox}
     </div>);
   return <div className="mt-2 space-y-2">{bar}{frame}{consoleBox}</div>;
@@ -105,13 +106,13 @@ export function RunBlock({ lang, code }) {
   };
   const open = () => window.dispatchEvent(new CustomEvent("attune-code", { detail: { lang: L, code, result: res } }));
   return (
-    <div className="mt-1" data-testid="run-block">
+    <div className="calm mt-1 !bg-transparent" data-testid="run-block">
       <div className="flex gap-1.5">
-        <button onClick={go} disabled={busy} data-testid="run-code" className="text-[11px] px-2.5 py-1 rounded-md bg-[var(--c-soft)] border border-[var(--c-acc)] text-[var(--c-acc)] flex items-center gap-1">
+        <button onClick={go} disabled={busy} data-testid="run-code" className="min-h-[36px] text-[12px] font-bold px-3 rounded-full bg-[var(--c-soft)] border border-[var(--c-acc)]/50 text-[var(--c-acc)] flex items-center gap-1">
           {busy ? <Loader2 size={11} className="animate-spin" /> : L === "html" ? <Eye size={11} /> : <Play size={11} />}
           {busy ? (L === "python" ? tr("Starting Python…") : tr("Running…")) : L === "html" ? (preview ? tr("Hide preview") : tr("Preview")) : tr("Run on this phone")}
         </button>
-        <button onClick={open} data-testid="open-in-code" className="text-[11px] px-2.5 py-1 rounded-md border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center gap-1"><Wrench size={11} />{tr("Test & fix in Code")}</button>
+        <button onClick={open} data-testid="open-in-code" className="min-h-[36px] text-[12px] font-bold px-3 rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center gap-1"><Wrench size={11} />{tr("Test & fix in Code")}</button>
       </div>
       {L === "html" && preview ? <HtmlPreview code={code} /> : null}
       <RunOutput res={res} lang={L} code={code} />
@@ -243,7 +244,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
     }
   };
 
-  const chip = (on) => `px-3 py-1.5 rounded-full text-[12px] border ${on ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "border-[var(--c-ln)] text-[var(--c-ink)]"}`;
+  const chip = (on) => K.chip(on);
   const isHtml = cur && cur.lang === "html";
   const dot = (k) => k === "bad" ? "bg-[var(--c-neg)]/15 text-[var(--c-neg)]" : k === "warn" ? "bg-[var(--c-warn)]/15 text-[var(--c-warn)]" : "bg-[var(--c-pos)]/15 text-[var(--c-pos)]";
   const stepIcon = (k) => <span className={"mt-0.5 shrink-0 w-[22px] h-[22px] rounded-full grid place-items-center " + dot(k)}>{k === "bad" ? <X size={12} /> : k === "warn" ? <AlertTriangle size={11} /> : <CheckCircle2 size={12} />}</span>;
@@ -256,7 +257,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
       {working ? <p className="text-[13px] text-[var(--c-acc)] flex items-center gap-2.5"><span className="w-[22px] h-[22px] grid place-items-center"><Loader2 size={14} className="animate-spin" /></span>{tr("Working…")}</p> : null}
       {lv ? <pre className="att-scroll ms-8 text-[11px] font-mono text-[var(--c-mut)] whitespace-pre-wrap max-h-40 overflow-auto" dir="ltr">{lv.split("\n").slice(-14).join("\n")}</pre> : null}
     </div>) : null);
-  const Bubble = ({ text }) => <div className="flex justify-end"><p className="max-w-[85%] rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[14px] leading-snug text-[var(--c-ink)]" style={{ background: "rgba(79,194,175,.13)" }} dir="auto" data-testid="code-ask">{text}</p></div>;
+  const Bubble = ({ text }) => <div className="flex justify-end"><p className="max-w-[85%] rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[14px] leading-snug text-[var(--c-ink)]" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="code-ask">{text}</p></div>;
   const STARTERS = [
     ["Exam grade", "A function that works out a student's average from their marks and gives the grade; a mark exactly on a boundary gets the higher grade", "python"],
     ["VAT invoice page", "A web page that makes an invoice: items, quantity, price, 14% VAT and the total in EGP, ready to print", "html"],
@@ -271,27 +272,27 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
   const openProject = (p) => { setCur(p); setRes(null); setSteps([]); setAsks([]); setCurAsk(""); setView(p.lang === "html" ? "preview" : "none"); };
   const lines = cur && cur.code ? cur.code.split("\n").length : 0;
   return (
-    <div className="space-y-4 pb-32 max-w-3xl lg:mx-auto" data-testid="code-page">
+    <div className="calm text-[var(--c-ink)] space-y-4 pb-32 max-w-3xl lg:mx-auto" data-testid="code-page">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-[var(--c-ink)] flex-1 flex items-center gap-2"><span className="w-8 h-8 rounded-[10px] grid place-items-center" style={{ background: "rgba(79,194,175,.14)" }}><Code2 size={17} className="text-[var(--c-acc)]" /></span>{tr("Code")}</h2>
-        {cur ? <button onClick={() => { setCur(null); setRes(null); setSteps([]); setAsks([]); setCurAsk(""); }} data-testid="code-new" className="px-3 min-h-[38px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] flex items-center gap-1"><Plus size={13} />{tr("New")}</button> : null}
+        <h2 className={K.h1 + " flex-1 flex items-center gap-2"}><span className="w-9 h-9 rounded-[12px] grid place-items-center" style={{ background: "var(--c-soft)" }}><Code2 size={17} className="text-[var(--c-acc)]" /></span>{tr("Code")}</h2>
+        {cur ? <button onClick={() => { setCur(null); setRes(null); setSteps([]); setAsks([]); setCurAsk(""); }} data-testid="code-new" className="px-3.5 min-h-[44px] font-bold rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] flex items-center gap-1"><Plus size={13} />{tr("New")}</button> : null}
       </div>
 
       {!cur ? (
         <>
           <div className="pt-2">
-            <p className="text-[19px] font-semibold text-[var(--c-ink)]">{tr("What should I build?")}</p>
+            <p className="text-[20px] font-black tracking-tight text-[var(--c-ink)]">{tr("What should I build?")}</p>
             <p className="text-[12.5px] text-[var(--c-mut)] mt-1 leading-relaxed">{tr("I write the program and its tests, run them on this phone, and fix every error before you get it. Offline, in a locked sandbox.")}</p>
           </div>
           <div className="grid grid-cols-2 gap-2" data-testid="code-starters">
             {STARTERS.map(([title, ask, lang]) => (
               <button key={title} onClick={() => { setTask(tr(ask)); setLangPick(lang); }} className="text-start rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 hover:border-[var(--c-acc)]">
-                <span className="block text-[13px] font-semibold text-[var(--c-ink)]">{tr(title)}</span>
+                <span className="block text-[13.5px] font-extrabold text-[var(--c-ink)]">{tr(title)}</span>
                 <span className="block text-[11.5px] text-[var(--c-mut)] mt-0.5">{tr((LANGS[lang] || LANGS.python).label)}</span>
               </button>))}
           </div>
           {projects.length ? <>
-            <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)] -mb-2">{tr("Your programs")}</p>
+            <p className={K.label + " -mb-2"}>{tr("Your programs")}</p>
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none]" data-testid="code-projects">
               {projects.slice(0, 12).map((p) => (
                 <div key={p.id} className="shrink-0 w-40 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5">
@@ -300,7 +301,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
                     <span className={`block text-[11px] mt-0.5 ${p.status === "passed" ? "text-[var(--c-pos)]" : p.status === "failing" ? "text-[var(--c-neg)]" : "text-[var(--c-mut)]"}`}>{tr((LANGS[p.lang] || LANGS.python).label)} · {p.status === "passed" ? tr("passing") : p.status === "failing" ? tr("not passing") : tr("draft")}</span>
                   </button>
                   <button onClick={async () => { if (!(await askConfirm("Delete this project?"))) return; const next = projects.filter((x) => x.id !== p.id); setProjects(next); saveProjects(next); }}
-                    className="mt-1 text-[11px] text-[var(--c-mut)] hover:text-[var(--c-neg)] flex items-center gap-1" aria-label={tr("Delete")}><Trash2 size={11} />{tr("Delete")}</button>
+                    className="mt-1 min-h-[36px] text-[11.5px] font-bold text-[var(--c-mut)] hover:text-[var(--c-neg)] flex items-center gap-1" aria-label={tr("Delete")}><Trash2 size={11} />{tr("Delete")}</button>
                 </div>))}
             </div></> : null}
           <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5 space-y-2 focus-within:border-[var(--c-acc)]">
@@ -312,7 +313,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
                 <button key={k} onClick={() => setLangPick(k)} className={chip(langPick === k)} data-testid={"code-lang-" + k}>{tr(l)}</button>
               ))}
               <button onClick={() => run({ fresh: true })} disabled={!task.trim()} data-testid="code-build"
-                className="ms-auto px-4 min-h-[42px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold disabled:opacity-40 flex items-center gap-1.5"><Wrench size={14} />{tr("Build & test")}</button>
+                className="ms-auto px-5 min-h-[44px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold disabled:opacity-40 flex items-center gap-1.5"><Wrench size={14} />{tr("Build & test")}</button>
             </div>
           </div>
           {pyLine}
@@ -326,12 +327,12 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
           {/* the code, in a card */}
           <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-bg)] overflow-hidden">
             <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-[var(--c-ln)]">
-              <span className="text-[11px] px-2 py-0.5 rounded-md bg-[var(--c-surf-2)] text-[var(--c-ink)]">{tr((LANGS[cur.lang] || LANGS.python).label)}</span>
+              <span className={K.tag("gray")}>{tr((LANGS[cur.lang] || LANGS.python).label)}</span>
               {lines ? <span className="text-[11px] text-[var(--c-mut)]">{tr("{n} lines", { n: lines })}</span> : null}
               {cur.status === "passed" && verdict && verdict.passed ? (
-                <span data-testid="code-badge" className="text-[11px] px-2 py-0.5 rounded-md bg-[var(--c-pos)]/15 text-[var(--c-pos)] flex items-center gap-1">
+                <span data-testid="code-badge" className={K.tag("green")}>
                   <CheckCircle2 size={11} />{cur.tests ? tr("Tested on this phone: {n} passed", { n: cur.tests }) : tr("Ran on this phone")}</span>
-              ) : cur.status === "failing" ? <span data-testid="code-badge" className="text-[11px] px-2 py-0.5 rounded-md bg-[var(--c-neg)]/15 text-[var(--c-neg)]">{tr("Not passing yet")}</span> : null}
+              ) : cur.status === "failing" ? <span data-testid="code-badge" className={K.tag("red")}>{tr("Not passing yet")}</span> : null}
               <span className="ms-auto flex gap-1">
                 {isHtml ? <button onClick={() => setPreviewOpen(!previewOpen)} data-testid="code-view-preview" className={chip(previewOpen)}><Eye size={12} className="inline me-1" />{tr("Preview")}</button> : null}
                 <button onClick={() => setCodeOpen(!codeOpen)} data-testid="code-view-code" className={chip(codeOpen)}><Code2 size={12} className="inline me-1" />{codeOpen ? tr("Hide code") : tr("Show code")}</button>
@@ -354,25 +355,25 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
           <RunOutput res={res} lang={cur.lang} code={cur.code} />
 
           <div className="flex flex-wrap gap-1.5">
-            <button onClick={runOnly} disabled={busy || !cur.code} data-testid="code-run" className="px-4 min-h-[40px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold flex items-center gap-1.5 disabled:opacity-40">
+            <button onClick={runOnly} disabled={busy || !cur.code} data-testid="code-run" className="px-4 min-h-[44px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold flex items-center gap-1.5 disabled:opacity-40">
               {isHtml ? <Eye size={14} /> : <Play size={14} />}{isHtml ? tr("Check the page") : tr("Run")}</button>
             {verdict && !verdict.passed ? (
-              <button onClick={() => run({})} disabled={busy} data-testid="code-fix" className="px-3 min-h-[40px] rounded-full bg-[var(--c-warn)]/15 border border-[var(--c-warn)]/50 text-[var(--c-warn)] text-[13px] flex items-center gap-1 disabled:opacity-40"><Wrench size={13} />{tr("Fix it automatically")}</button>
+              <button onClick={() => run({})} disabled={busy} data-testid="code-fix" className="px-3 min-h-[44px] rounded-full bg-[var(--c-warn)]/15 border border-[var(--c-warn)]/50 text-[var(--c-warn)] text-[13px] flex items-center gap-1 disabled:opacity-40"><Wrench size={13} />{tr("Fix it automatically")}</button>
             ) : null}
-            <button onClick={() => { try { navigator.clipboard.writeText(cur.code); } catch (e) {} flash(tr("Copied")); }} className="px-3 min-h-[40px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] flex items-center gap-1"><Copy size={13} />{tr("Copy")}</button>
-            <button onClick={save} data-testid="code-save" className="px-3 min-h-[40px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] flex items-center gap-1"><Save size={13} />{tr("Save .{e}", { e: ext })}</button>
-            {share ? <button onClick={() => share(cur.code)} className="px-3 min-h-[40px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] flex items-center gap-1"><Share2 size={13} />{tr("Share")}</button> : null}
-            {busy ? <button onClick={doStop} data-testid="code-stop" className="ms-auto px-3 min-h-[40px] rounded-full bg-[var(--c-neg)]/15 border border-[var(--c-neg)]/50 text-[var(--c-neg)] text-[13px] flex items-center gap-1.5"><Square size={12} />{tr("Stop")}</button> : null}
+            <button onClick={() => { try { navigator.clipboard.writeText(cur.code); } catch (e) {} flash(tr("Copied")); }} className="px-3 min-h-[44px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] flex items-center gap-1"><Copy size={13} />{tr("Copy")}</button>
+            <button onClick={save} data-testid="code-save" className="px-3 min-h-[44px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] flex items-center gap-1"><Save size={13} />{tr("Save .{e}", { e: ext })}</button>
+            {share ? <button onClick={() => share(cur.code)} className="px-3 min-h-[44px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[13px] flex items-center gap-1"><Share2 size={13} />{tr("Share")}</button> : null}
+            {busy ? <button onClick={doStop} data-testid="code-stop" className="ms-auto px-3 min-h-[44px] rounded-full bg-[var(--c-neg)]/15 border border-[var(--c-neg)]/50 text-[var(--c-neg)] text-[13px] flex items-center gap-1.5"><Square size={12} />{tr("Stop")}</button> : null}
           </div>
           {pyLine}
 
           {/* ask for a change, like the next message to the coder */}
-          <div className="sticky bottom-3 z-10 flex gap-1.5 items-center bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-full ps-4 pe-1.5 py-1.5 shadow-xl shadow-black/40 focus-within:border-[var(--c-acc)]">
+          <div className="sticky bottom-3 z-10 flex gap-1.5 items-center bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-full ps-4 pe-1.5 py-1.5 shadow-[0_4px_18px_rgba(0,0,0,0.18)] focus-within:border-[var(--c-acc)]">
             <input value={change} onChange={(e) => setChange(e.target.value)} data-testid="code-change" dir="auto"
               onKeyDown={(e) => { if (e.key === "Enter" && change.trim() && !busy) run({ changeText: change.trim() }); }}
               placeholder={tr("Ask for a change… e.g. “also show the total in EGP”")} className="flex-1 min-w-0 bg-transparent py-2 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
             <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Change")}
-              className="w-10 h-10 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center disabled:opacity-40"><Send size={15} /></button>
+              className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center disabled:opacity-40"><Send size={15} /></button>
           </div>
         </>
       )}

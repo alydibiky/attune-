@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Plus, Camera, Share2 } from "lucide-react";
 import * as B from "./books.js";
 import * as O from "./books-ops.js";
-import { L, isAr, useBooks, useTheme, Card, Stat, Section, Money, Badge, Empty, Field, Input, Select, Chips, Sheet, BTN, btnPrimary, today, fmtDate } from "./books-kit.jsx";
+import { L, isAr, useBooks, useTheme, Card, Stat, Section, Money, Badge, Empty, Field, Input, Select, Chips, Sheet, BTN, btnPrimary, POS, NEG, today, fmtDate } from "./books-kit.jsx";
 import { shareStatement, reminderText } from "./books-docs.jsx";
 import { ProMoney, PRO_MONEY } from "./books-pro-ui.jsx";   // v6.44: fixed assets, payroll, recurring, bank reconciliation, instalments
 
@@ -49,13 +49,13 @@ export function ReceiptForm({ customer: c0, onClose }) {
         {customer ? (open.length ? (
           <Section title={L("Settles these invoices (oldest first)", "بيسدّد الفواتير دي (الأقدم الأول)")}>
             <Card className="divide-y" testid="receipt-plan">{open.map((o) => { const row = plan.rows.find((r) => r.doc === o.number); return (
-              <div key={o.number} className="px-3 py-2 text-[13px]">
-                <div className="flex justify-between"><span>{o.number}</span><span className={th.sub}>{L("open", "متبقي")} <Money v={o.open} /></span></div>
-                <div className="flex items-center gap-2 mt-1"><span className={`text-[11px] ${th.sub} flex-1`}>{row ? <>{L("pays", "يسدّد")} <Money v={row.amount} />{row.wht ? <> + {L("withheld", "منبع")} <Money v={row.wht} /></> : null}</> : L("not covered", "مش متغطية")}</span>
-                  <input value={wht[o.number] || ""} onChange={(e) => setWht({ ...wht, [o.number]: e.target.value })} placeholder={L("withheld by customer", "المخصوم من المنبع")} inputMode="decimal" className={`w-36 rounded border px-2 py-1 text-[12px] ${th.input}`} /></div>
+              <div key={o.number} className="px-3.5 py-3 text-[13.5px]">
+                <div className="flex justify-between gap-3"><span className="font-extrabold">{o.number}</span><span className={th.sub}>{L("open", "متبقي")} <Money v={o.open} /></span></div>
+                <div className="flex items-center gap-2 mt-1.5"><span className={`text-[12px] ${th.sub} flex-1 min-w-0`}>{row ? <>{L("pays", "يسدّد")} <Money v={row.amount} />{row.wht ? <> + {L("withheld", "منبع")} <Money v={row.wht} /></> : null}</> : L("not covered", "مش متغطية")}</span>
+                  <input value={wht[o.number] || ""} onChange={(e) => setWht({ ...wht, [o.number]: e.target.value })} placeholder={L("withheld by customer", "المخصوم من المنبع")} inputMode="decimal" className={`w-36 shrink-0 min-h-[44px] rounded-[12px] border px-2.5 py-1.5 text-[13px] font-semibold focus:outline-none ${th.input}`} /></div>
               </div>); })}</Card>
-            {plan.onAccount > 0 ? <p className={`text-[12px] mt-1.5 ${th.sub}`}>{L("Left on account (customer deposit):", "المتبقي كدفعة مقدمة:")} <Money v={plan.onAccount} bold /></p> : null}
-          </Section>) : <p className={`text-[12px] ${th.sub}`}>{L("This customer has no open invoices — the money will be kept on account.", "العميل ده مالوش فواتير مفتوحة — المبلغ هيتسجل كدفعة مقدمة.")}</p>) : null}
+            {plan.onAccount > 0 ? <p className={`text-[12.5px] mt-2 ${th.sub}`}>{L("Left on account (customer deposit):", "المتبقي كدفعة مقدمة:")} <Money v={plan.onAccount} bold /></p> : null}
+          </Section>) : <p className={`text-[12.5px] leading-relaxed ${th.sub}`}>{L("This customer has no open invoices — the money will be kept on account.", "العميل ده مالوش فواتير مفتوحة — المبلغ هيتسجل كدفعة مقدمة.")}</p>) : null}
       </div>
     </Sheet>
   );
@@ -76,7 +76,7 @@ export function SupplierPayForm({ supplier: s0, onClose }) {
         <Field label={L("Supplier", "المورد")}><Select value={supplier} onChange={setSupplier}><option value="">{L("— choose —", "— اختار —")}</option>{s.suppliers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>
         <div className="grid grid-cols-2 gap-2"><Field label={L("Amount paid", "المبلغ المدفوع")}><Input value={amount} onChange={setAmount} inputMode="decimal" data-testid="supplier-pay-amount" /></Field><Field label={L("Date", "التاريخ")}><Input type="date" value={date} onChange={setDate} /></Field></div>
         <Field label={L("How was it paid", "طريقة الدفع")}><Select value={method} onChange={setMethod}>{methodOpts()}</Select></Field>
-        {supplier ? <Card className="divide-y">{open.length ? open.map((o) => <div key={o.number} className="flex justify-between px-3 py-2 text-[13px]"><span>{o.number} · {fmtDate(o.due)}</span><Money v={o.open} /></div>) : <p className="p-3 text-[12px]">{L("Nothing owed to this supplier.", "مفيش مستحقات للمورد ده.")}</p>}</Card> : null}
+        {supplier ? <Card className="divide-y">{open.length ? open.map((o) => <div key={o.number} className="flex justify-between gap-3 px-3.5 py-3 text-[13.5px]"><span className="font-semibold">{o.number} · {fmtDate(o.due)}</span><Money v={o.open} bold /></div>) : <p className="p-4 m-0 text-[13px] text-[var(--c-mut)]">{L("Nothing owed to this supplier.", "مفيش مستحقات للمورد ده.")}</p>}</Card> : null}
       </div>
     </Sheet>
   );
@@ -103,7 +103,7 @@ export function ExpenseForm({ onClose }) {
         <Field label={L("Category", "النوع")}><Select value={cat} onChange={setCat}>{CATS.map(([en, ar]) => <option key={en} value={en}>{L(en, ar)}</option>)}</Select></Field>
         <Field label={L("Paid from", "دُفع من")}><Select value={method} onChange={setMethod}>{methodOpts()}</Select></Field>
         <Field label={L("Note", "ملاحظة")}><Input value={memo} onChange={setMemo} /></Field>
-        <div className="flex items-center gap-3">{photo ? <img src={photo} alt="" className="h-16 rounded border" /> : null}<button onClick={() => fileRef.current && fileRef.current.click()} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Camera size={14} />{photo ? L("Change photo", "غيّر الصورة") : L("Photo of the receipt", "صورة الإيصال")}</button><input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => pick(e.target.files && e.target.files[0])} /></div>
+        <div className="flex items-center gap-3">{photo ? <img src={photo} alt="" className="h-16 rounded-[14px] border border-[var(--c-ln)]" /> : null}<button onClick={() => fileRef.current && fileRef.current.click()} className={`${BTN} border border-dashed ${th.line} flex items-center gap-1.5 hover:border-[var(--c-acc)]`}><Camera size={16} className="text-[var(--c-acc)]" />{photo ? L("Change photo", "غيّر الصورة") : L("Photo of the receipt", "صورة الإيصال")}</button><input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => pick(e.target.files && e.target.files[0])} /></div>
       </div>
     </Sheet>
   );
@@ -124,12 +124,12 @@ export function AgeingView() {
   const rows = Object.entries(age.byCustomer).map(([id, z]) => ({ id, name: (s.customers.find((c) => c.id === id) || {}).name || id, z, tot: B.AGE_BUCKETS.reduce((a, k) => a + z[k], 0) })).sort((a, b) => b.tot - a.tot);
   return (
     <div data-testid="ageing">
-      <Card className="p-3 mb-3"><div className="grid grid-cols-5 gap-1 text-center">{B.AGE_BUCKETS.map((k) => <div key={k}><p className={`text-[10px] ${th.sub}`}>{L(...AGE_LABELS[k])}</p><p className={`text-[12px] font-semibold ${k !== "notDue" && age.total[k] ? "text-red-600" : ""}`} dir="ltr">{B.fmt(age.total[k])}</p></div>)}</div>
-        <div className={`flex justify-between border-t mt-2 pt-2 text-[13px] ${th.line}`}><span>{L("Total owed to you", "إجمالي المستحق لك")}</span><Money v={age.grand} bold /></div></Card>
+      <Card className="p-4 mb-3"><div className="grid grid-cols-5 gap-1.5 text-center">{B.AGE_BUCKETS.map((k) => <div key={k} className="rounded-[14px] bg-[var(--c-surf-2)] px-1 py-2 min-w-0"><p className={`text-[10.5px] font-bold truncate m-0 ${th.sub}`}>{L(...AGE_LABELS[k])}</p><p className={`text-[12px] font-extrabold tabular-nums truncate mt-0.5 mb-0 ${k !== "notDue" && age.total[k] ? NEG : ""}`} dir="ltr">{B.fmt(age.total[k])}</p></div>)}</div>
+        <div className={`flex justify-between items-baseline gap-3 border-t mt-3 pt-3 text-[13.5px] font-extrabold ${th.line}`}><span>{L("Total owed to you", "إجمالي المستحق لك")}</span><Money v={age.grand} bold className="text-[19px] font-black tracking-tight" /></div></Card>
       {!rows.length ? <Empty title={L("Nobody owes you anything", "مفيش حد عليه فلوس ليك")} /> : <Card className="divide-y">{rows.map((r) => (
-        <div key={r.id} className="relative"><button onClick={() => setStmt(r.id)} className="w-full px-3 py-2.5 text-start" data-testid="ageing-row"><div className="flex justify-between text-[13.5px] font-medium"><span>{r.name}</span><Money v={r.tot} bold /></div>
-          <div className={`flex gap-3 text-[11px] mt-0.5 ${th.sub}`}>{B.AGE_BUCKETS.filter((k) => r.z[k]).map((k) => <span key={k} className={k !== "notDue" ? "text-red-600" : ""}>{L(...AGE_LABELS[k])}: {B.fmt(r.z[k])}</span>)}</div></button>
-          {B.AGE_BUCKETS.slice(1).some((k) => r.z[k]) ? <button onClick={() => remind(r.id, B.AGE_BUCKETS.slice(1).reduce((a, k) => a + r.z[k], 0))} className="absolute bottom-2 end-3 text-[11px] px-2 py-1 rounded-md bg-emerald-600 text-white" data-testid="remind">{L("Remind", "ذكّره")}</button> : null}</div>))}</Card>}
+        <div key={r.id} className="relative"><button onClick={() => setStmt(r.id)} className={`w-full min-h-[56px] px-3.5 py-3 text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[22px] last:rounded-b-[22px] ${B.AGE_BUCKETS.slice(1).some((k) => r.z[k]) ? "pb-14" : ""}`} data-testid="ageing-row"><div className="flex justify-between gap-3 text-[14px] font-extrabold"><span className="min-w-0 truncate">{r.name}</span><Money v={r.tot} bold /></div>
+          <div className={`flex flex-wrap gap-x-3 gap-y-0.5 text-[12px] tabular-nums mt-1 ${th.sub}`}>{B.AGE_BUCKETS.filter((k) => r.z[k]).map((k) => <span key={k} className={k !== "notDue" ? NEG + " font-bold" : ""}>{L(...AGE_LABELS[k])}: {B.fmt(r.z[k])}</span>)}</div></button>
+          {B.AGE_BUCKETS.slice(1).some((k) => r.z[k]) ? <button onClick={() => remind(r.id, B.AGE_BUCKETS.slice(1).reduce((a, k) => a + r.z[k], 0))} className="absolute bottom-2 end-3 min-h-[44px] h-11 px-4 rounded-[14px] text-[13px] font-extrabold bg-[var(--c-acc)] text-[var(--c-on-acc)]" data-testid="remind">{L("Remind", "ذكّره")}</button> : null}</div>))}</Card>}
       {stmt ? <StatementView customer={stmt} onClose={() => setStmt(null)} /> : null}
     </div>
   );
@@ -143,10 +143,10 @@ export function StatementView({ customer, onClose }) {
   return (
     <Sheet title={`${L("Statement", "كشف حساب")} · ${c.name}`} onClose={onClose} testid="statement" footer={<button onClick={() => shareStatement({ s, customer, statement: st, from, to, flash })} className={`${btnPrimary} w-full flex items-center justify-center gap-1.5`} data-testid="statement-share"><Share2 size={14} />{L("Share / PDF", "مشاركة / PDF")}</button>}>
       <div className="grid grid-cols-2 gap-2 mb-3"><Field label={L("From", "من")}><Input type="date" value={from} onChange={setFrom} /></Field><Field label={L("To", "إلى")}><Input type="date" value={to} onChange={setTo} /></Field></div>
-      <Card className="divide-y text-[13px]">
-        <div className="flex justify-between px-3 py-2"><span className={th.sub}>{L("Opening balance", "رصيد أول المدة")}</span><Money v={st.opening} /></div>
-        {st.lines.map((l, i) => <div key={i} className="px-3 py-2"><div className="flex justify-between"><span>{l.ref} <span className={`text-[11px] ${th.sub}`}>{fmtDate(l.date)}</span></span><span className="flex gap-3"><Money v={l.debit ? l.debit : -l.credit} /><span className={th.sub}><Money v={l.balance} /></span></span></div></div>)}
-        <div className="flex justify-between px-3 py-2 font-bold"><span>{L("Closing balance", "الرصيد الختامي")}</span><Money v={st.closing} /></div>
+      <Card className="divide-y text-[13.5px]">
+        <div className="flex justify-between gap-3 px-3.5 py-3 bg-[var(--c-surf-2)] rounded-t-[22px]"><span className={th.sub}>{L("Opening balance", "رصيد أول المدة")}</span><Money v={st.opening} /></div>
+        {st.lines.map((l, i) => <div key={i} className="px-3.5 py-2.5"><div className="flex justify-between gap-3"><span className="font-semibold">{l.ref} <span className={`text-[12px] font-normal ${th.sub}`}>{fmtDate(l.date)}</span></span><span className="flex gap-3 shrink-0"><Money v={l.debit ? l.debit : -l.credit} className="font-bold" /><span className={th.sub}><Money v={l.balance} /></span></span></div></div>)}
+        <div className="flex justify-between gap-3 px-3.5 py-3 font-black text-[15px] bg-[var(--c-surf-2)] rounded-b-[22px]"><span>{L("Closing balance", "الرصيد الختامي")}</span><Money v={st.closing} /></div>
       </Card>
     </Sheet>
   );
@@ -167,15 +167,15 @@ export function MoneyModule() {
   items.sort((a, b) => (a.date < b.date ? 1 : -1));
   return (
     <div data-testid="books-money">
-      <div className="grid grid-cols-3 gap-2 mb-3"><Stat label={L("Cash", "خزنة")} value={<Money v={cash.cash} />} /><Stat label={L("Bank", "بنك")} value={<Money v={cash.bank} />} /><Stat label={L("Total", "الإجمالي")} value={<Money v={cash.total} />} /></div>
-      <div className="grid grid-cols-3 gap-2 mb-3">
+      <div className="grid grid-cols-3 gap-2.5 mb-3"><Stat label={L("Cash", "خزنة")} value={<Money v={cash.cash} />} /><Stat label={L("Bank", "بنك")} value={<Money v={cash.bank} />} /><Stat label={L("Total", "الإجمالي")} value={<Money v={cash.total} />} /></div>
+      <div className="grid grid-cols-3 gap-2 mb-4">
         <button onClick={() => setForm("receipt")} className={btnPrimary} data-testid="money-new-receipt">{L("+ Receipt", "+ تحصيل")}</button>
         <button onClick={() => setForm("pay")} className={btnPrimary} data-testid="money-new-pay">{L("+ Pay supplier", "+ سداد مورد")}</button>
         <button onClick={() => setForm("expense")} className={btnPrimary} data-testid="money-new-expense">{L("+ Expense", "+ مصروف")}</button>
       </div>
-      <div className="mb-2"><Chips value={view} onChange={setView} options={[["in", L("Received", "تحصيلات")], ["out", L("Paid to suppliers", "سداد موردين")], ["exp", L("Expenses", "مصروفات")], ["age", L("Who owes you", "المديونيات")], ...PRO_MONEY()]} /></div>
+      <div className="mb-3"><Chips value={view} onChange={setView} options={[["in", L("Received", "تحصيلات")], ["out", L("Paid to suppliers", "سداد موردين")], ["exp", L("Expenses", "مصروفات")], ["age", L("Who owes you", "المديونيات")], ...PRO_MONEY()]} /></div>
       {view === "age" ? <AgeingView /> : PRO_MONEY().some(([k]) => k === view) ? <ProMoney view={view} /> : !items.length ? <Empty title={L("Nothing here yet", "مفيش حاجة لسه")} /> : (
-        <Card className="divide-y" testid="money-list">{items.map((x) => <div key={x.k} className="flex items-center gap-3 px-3 py-2.5"><div className="min-w-0 flex-1"><p className="text-[13.5px] font-medium truncate">{x.who}</p><p className={`text-[11.5px] ${th.sub}`}>{x.ref} · {fmtDate(x.date)}</p></div>{x.photo ? <img src={x.photo} alt="" className="h-9 w-9 rounded object-cover border" /> : null}<span className={x.sign > 0 ? "text-emerald-600 font-semibold" : "font-semibold"}><Money v={x.sign > 0 ? x.amt : -x.amt} /></span></div>)}</Card>)}
+        <Card className="divide-y" testid="money-list">{items.map((x) => <div key={x.k} className="min-h-[56px] flex items-center gap-3 px-3.5 py-3"><div className="min-w-0 flex-1"><p className="text-[14px] font-extrabold truncate m-0">{x.who}</p><p className={`text-[12px] truncate m-0 ${th.sub}`}>{x.ref} · {fmtDate(x.date)}</p></div>{x.photo ? <img src={x.photo} alt="" className="h-10 w-10 rounded-[12px] object-cover border border-[var(--c-ln)] shrink-0" /> : null}<span className={`shrink-0 ${x.sign > 0 ? POS + " font-extrabold" : "font-extrabold"}`}><Money v={x.sign > 0 ? x.amt : -x.amt} /></span></div>)}</Card>)}
       {form === "receipt" ? <ReceiptForm onClose={() => setForm(null)} /> : form === "pay" ? <SupplierPayForm onClose={() => setForm(null)} /> : form === "expense" ? <ExpenseForm onClose={() => setForm(null)} /> : null}
     </div>
   );

@@ -279,7 +279,7 @@ export function TravelPage(p) {
           {/* v6.27 computer layout A: the question on the left, the answer on the right */}
           <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start"><div className="space-y-2">
           <textarea value={travelQ} onChange={(e) => setTravelQ(e.target.value)} rows={3} dir="auto"
-            placeholder={tr("e.g. the taxi driver won't turn the meter on, what do I say? / is this price fair for a carpet? / can I drink the tap water?")} className={field + " w-full resize-none"} style={st} />
+            placeholder={tr("e.g. the taxi driver won't turn the meter on, what do I say? / is this price fair for a carpet? / can I drink the tap water?")} className={K.area + " resize-none"} style={st} />
           <div className="flex flex-wrap gap-1.5">{["Is this price fair?", "How do I get a taxi?", "What should I not do here?", "How do I ask for directions?"].map((q) => (
             <button key={q} onClick={() => setTravelQ(q)} className={K.chip(false) + " cursor-pointer"}>{tr(q)}</button>))}</div>
           <button onClick={askTravel} disabled={!travelQ.trim() || loading} className={K.btnP + " w-full"}>{loading ? <Loader2 size={15} className="animate-spin" /> : <Plane size={15} />}{loading ? "…" : tr("Ask")}</button>
@@ -313,7 +313,7 @@ export function TravelPage(p) {
 
       {/* a phrase shown big, to hand the phone to a driver or a waiter */}
       {big ? (
-        <div className="fixed inset-0 z-50 grid place-items-center p-6" style={{ background: "var(--c-bg)" }} onClick={() => setBig(null)} data-testid="travel-bigview">
+        <div className="calm fixed inset-0 z-50 grid place-items-center p-6" style={{ background: "var(--c-bg)" }} onClick={() => setBig(null)} data-testid="travel-bigview">
           <button className="absolute top-4 end-4 c-ic !w-11 !h-11 !rounded-[14px] border-0 cursor-pointer" aria-label={tr("Close")}><X size={16} /></button>
           <div className="text-center space-y-4">
             <p className="font-bold m-0" style={{ fontSize: "clamp(32px, 9vw, 64px)", lineHeight: 1.2, color: "var(--c-ink)" }} dir={RTL_LANGS.has(pack.lang) ? "rtl" : "ltr"}>{big.loc}</p>

@@ -226,7 +226,7 @@ function Presenter({ deck, close }) {
   const tr0 = TRANSITIONS_OK[deck.transition] ? deck.transition : null;
   const note = list[pos.i].slide.notes;
   return (
-    <div className="fixed inset-0 z-[70] bg-black flex flex-col" data-testid="presenter">
+    <div className="calm fixed inset-0 z-[70] bg-black! flex flex-col" data-testid="presenter">
       <style>{TRANS_CSS}</style>
       <div className="flex items-center justify-between px-3 py-2 text-[var(--c-ink)] text-[12.5px]">
         <span data-testid="presenter-count">{pos.i + 1} / {list.length}{steps.length && deck.trigger !== "auto" ? " · " + tr("tap for the next item") : ""}</span>

@@ -13,6 +13,7 @@ import { loadLedger } from "./myledger.js";
 import { homeCurrency } from "./locale.js";
 import { fmt } from "./money-calm.js";
 import { loadGuardian, saveGuardian, markSaved } from "./guardian.js";
+import * as U from "./ui-kit.jsx";
 
 const SIGN = { USD: "$", EUR: "€", GBP: "£" };
 export const money = (n, c) => (SIGN[c] ? SIGN[c] + fmt(n) : fmt(n) + (c ? " " + c : ""));
@@ -38,22 +39,22 @@ function line(f) {
 function Row({ f, open, toggle, act }) {
   const L = line(f), src = f.src || {}, cancel = f.kind === "trial" || f.kind === "renewal" ? cancelLink({ kind: f.kind, title: f.name, note: src.text, app: src.app }) : null;
   return (
-    <div className="py-2.5" style={{ borderTop: "1px solid var(--c-ln)" }} data-testid="overpay-row" data-kind={f.kind}>
-      <button className="w-full text-start flex items-start gap-3" onClick={toggle}>
-        <div className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{L.t}</b><div className="c-sub truncate" dir="auto">{L.d}</div></div>
-        <span className={"c-pill " + L.tone}><span className="c-num">{L.pill}</span></span>
+    <div className="py-1 border-t border-[var(--c-ln)]" data-testid="overpay-row" data-kind={f.kind}>
+      <button className="w-full min-h-[48px] py-1.5 text-start flex items-center gap-3" onClick={toggle}>
+        <div className="flex-1 min-w-0"><b className="block text-[14px] font-extrabold" dir="auto">{L.t}</b><div className={"truncate text-[12.5px] " + U.muted} dir="auto">{L.d}</div></div>
+        <span className={U.tag(L.tone === "late" ? "red" : L.tone === "due" ? "amber" : L.tone === "pos" ? "green" : "gray")}><span className="tabular-nums">{L.pill}</span></span>
       </button>
       {open ? <div className="mt-2 space-y-2" data-testid="overpay-detail">
-        <div className="c-sub text-[12px] rounded-lg p-2" style={{ background: "var(--c-bg)" }} dir="auto">
+        <div className={"text-[12px] rounded-[14px] p-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] " + U.muted} dir="auto">
           <div className="flex items-center gap-2"><span>{tr(SRC[src.kind] || "Source")}{src.at ? " · " + day(src.at) : ""}</span>
-            {src.link ? <button className="c-acc ms-auto flex items-center gap-1" onClick={() => openLink(src.title || "Gmail", src.link)} data-testid="overpay-source"><ExternalLink size={13} />{tr("Open the email")}</button> : null}</div>
+            {src.link ? <button className="ms-auto min-h-[44px] px-1 font-bold text-[var(--c-acc)] flex items-center gap-1" onClick={() => openLink(src.title || "Gmail", src.link)} data-testid="overpay-source"><ExternalLink size={13} />{tr("Open the email")}</button> : null}</div>
           {src.title || src.text ? <div className="mt-1 line-clamp-3">{src.title && src.kind === "email" ? <b>{src.title}. </b> : null}{src.kind === "email" ? (src.text || "").slice(src.title ? src.title.length + 3 : 0, 220) : (src.text || "").slice(0, 220)}</div> : null}
         </div>
-        {f.kind === "overlap" ? <div className="c-sub text-[12.5px]">{f.items.map((i) => <div key={i.name} className="flex justify-between"><span>{i.name}</span><span className="c-num">{money(i.perMonth, i.currency)} {tr("a month")}</span></div>)}<div className="mt-1">{tr("Keep one, and the others cost {a} a year", { a: money(f.perYear, f.currency) })}</div></div> : null}
+        {f.kind === "overlap" ? <div className={"text-[12.5px] " + U.muted}>{f.items.map((i) => <div key={i.name} className="flex justify-between py-0.5"><span dir="auto">{i.name}</span><span className="tabular-nums font-bold text-[var(--c-ink)]">{money(i.perMonth, i.currency)} {tr("a month")}</span></div>)}<div className="mt-1">{tr("Keep one, and the others cost {a} a year", { a: money(f.perYear, f.currency) })}</div></div> : null}
         <div className="flex flex-wrap gap-2">
-          <button className="c-btn flex items-center gap-1.5" onClick={() => act(f, true)} data-testid="overpay-yes"><Check size={14} />{tr(DONE[f.kind][0])}</button>
-          {cancel ? <button className="c-sub px-1" onClick={() => openLink(cancel.label, cancel.url)} data-testid="overpay-cancel">{tr("Where to cancel")}</button> : null}
-          <button className="c-sub flex items-center gap-1" onClick={() => act(f, false)} data-testid="overpay-no"><X size={14} />{tr(DONE[f.kind][1])}</button>
+          <button className={U.btnP} onClick={() => act(f, true)} data-testid="overpay-yes"><Check size={14} />{tr(DONE[f.kind][0])}</button>
+          {cancel ? <button className={U.btnS} onClick={() => openLink(cancel.label, cancel.url)} data-testid="overpay-cancel">{tr("Where to cancel")}</button> : null}
+          <button className={U.btnS + " " + U.muted} onClick={() => act(f, false)} data-testid="overpay-no"><X size={14} />{tr(DONE[f.kind][1])}</button>
         </div>
       </div> : null}
     </div>);
@@ -107,44 +108,44 @@ export function OverpayCheck({ pro, openPlan, flash, remind, unremind }) {
   };
   const ch = Object.entries(snap.change || {}).filter(([, v]) => v);
   return (
-    <div className="c-card" data-testid="overpay">
-      <span className="c-lbl">{tr("You pay a month")}</span>
-      <div className="c-amt" data-testid="overpay-total">{R.subs.length ? totals(R.perMonth) : "—"}</div>
-      <div className="c-sub">{R.subs.length === 1 ? tr("1 subscription") : tr("{n} subscriptions", { n: R.subs.length })}
-        {Object.keys(R.atStake).length ? <> · <span className="c-warn">{tr("{a} a year to save", { a: totals(R.atStake) })}</span></> : null}
+    <div className={U.cardPad} data-testid="overpay">
+      <span className={U.label}>{tr("You pay a month")}</span>
+      <div className="mt-1 tabular-nums text-[28px] font-black tracking-tight" dir="ltr" data-testid="overpay-total">{R.subs.length ? totals(R.perMonth) : "—"}</div>
+      <div className={"text-[12.5px] " + U.muted}>{R.subs.length === 1 ? tr("1 subscription") : tr("{n} subscriptions", { n: R.subs.length })}
+        {Object.keys(R.atStake).length ? <> · <span className="font-bold text-[var(--c-warn)]">{tr("{a} a year to save", { a: totals(R.atStake) })}</span></> : null}
         {ch.length ? <> · {ch.map(([c, v]) => tr("{p}% since last month", { p: (v > 0 ? "+" : "") + v })).join(" · ")}</> : null}</div>
-      {!R.count && R.subs.length ? <p className="c-sub mt-2" data-testid="overpay-clean">{tr("No trials, price rises or overlaps right now.")}</p> : null}
-      {!R.subs.length && !R.count ? <p className="c-sub mt-2" data-testid="overpay-empty">{tr("Nothing yet. It reads your payments as they come in — add a Gmail export below to look back 12 months.")}</p> : null}
+      {!R.count && R.subs.length ? <p className={"mt-2 text-[13px] " + U.muted} data-testid="overpay-clean">{tr("No trials, price rises or overlaps right now.")}</p> : null}
+      {!R.subs.length && !R.count ? <p className={"mt-2 text-[13px] " + U.muted} data-testid="overpay-empty">{tr("Nothing yet. It reads your payments as they come in — add a Gmail export below to look back 12 months.")}</p> : null}
       {sections.map(([title, list]) => (
         <div key={title} className="mt-3" data-testid="overpay-section">
-          <div className="c-lbl mb-1">{tr(title)}</div>
+          <div className={U.label + " mb-1"}>{tr(title)}</div>
           {list.map((f) => <Row key={f.id} f={f} open={open === f.id} toggle={() => setOpen(open === f.id ? "" : f.id)} act={act} />)}
         </div>))}
-      {locked ? <button className="w-full text-start mt-3 flex items-center gap-2" onClick={openPlan} data-testid="overpay-locked"><Crown size={15} className="c-warn" /><b>{locked === 1 ? tr("1 more finding") : tr("{n} more findings", { n: locked })}</b><span className="c-sub ms-auto">Pro</span></button> : null}
+      {locked ? <button className="w-full min-h-[48px] text-start mt-3 flex items-center gap-2 rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 hover:border-[var(--c-acc)]" onClick={openPlan} data-testid="overpay-locked"><Crown size={15} className="text-[var(--c-acc-2)] shrink-0" /><b className="font-extrabold">{locked === 1 ? tr("1 more finding") : tr("{n} more findings", { n: locked })}</b><span className={U.tag("blue") + " ms-auto"}>Pro</span></button> : null}
       {R.subs.length ? <div className="mt-3">
-        <button className="c-lbl flex items-center gap-1" onClick={() => setAll(!all)} data-testid="overpay-all">{tr("All subscriptions")} ({R.subs.length})<ChevronDown size={13} style={{ transform: all ? "rotate(180deg)" : "" }} /></button>
+        <button className={U.label + " min-h-[44px] flex items-center gap-1"} onClick={() => setAll(!all)} data-testid="overpay-all">{tr("All subscriptions")} ({R.subs.length})<ChevronDown size={13} style={{ transform: all ? "rotate(180deg)" : "" }} /></button>
         {all ? R.subs.map((s) => (
-          <div key={s.id} className="flex items-center gap-3 py-2" style={{ borderTop: "1px solid var(--c-ln)" }} data-testid="overpay-sub">
-            <div className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{s.name}</b><div className="c-sub">{tr("Since {d}", { d: s.since })} · {tr("next {d}", { d: s.next })}</div></div>
-            <span className="c-num text-[13px]">{money(s.amount, s.currency)} <span className="c-sub">{tr(CAD[s.cadence])}</span></span>
-            {s.src && s.src.link ? <button className="c-acc" onClick={() => openLink(s.name, s.src.link)} aria-label={tr("Open the email")}><ExternalLink size={14} /></button> : null}
+          <div key={s.id} className="flex items-center gap-3 py-2 border-t border-[var(--c-ln)]" data-testid="overpay-sub">
+            <div className="flex-1 min-w-0"><b className="block text-[14px] font-extrabold" dir="auto">{s.name}</b><div className={"text-[12.5px] " + U.muted}>{tr("Since {d}", { d: s.since })} · {tr("next {d}", { d: s.next })}</div></div>
+            <span className="tabular-nums font-bold text-[13px] text-end">{money(s.amount, s.currency)} <span className={"font-normal " + U.muted}>{tr(CAD[s.cadence])}</span></span>
+            {s.src && s.src.link ? <button className="w-11 h-11 shrink-0 grid place-items-center rounded-[14px] text-[var(--c-acc)]" onClick={() => openLink(s.name, s.src.link)} aria-label={tr("Open the email")}><ExternalLink size={14} /></button> : null}
           </div>)) : null}
       </div> : null}
       {/* where it looks */}
-      <div className="mt-4 pt-3 space-y-2" style={{ borderTop: "1px solid var(--c-ln)" }}>
-        <div className="c-sub text-[12px]" data-testid="overpay-sources">{tr("Reads: your payments and money notifications{e}. On this phone only.", { e: o.emails.length ? tr(", {n} emails", { n: o.emails.length }) : "" })}</div>
+      <div className="mt-4 pt-3 space-y-2 border-t border-[var(--c-ln)]">
+        <div className={"text-[12px] " + U.muted} data-testid="overpay-sources">{tr("Reads: your payments and money notifications{e}. On this phone only.", { e: o.emails.length ? tr(", {n} emails", { n: o.emails.length }) : "" })}</div>
         <div className="flex flex-wrap gap-2">
-          <button className="c-sub flex items-center gap-1" onClick={() => fileRef.current && fileRef.current.click()} data-testid="overpay-mbox"><Mail size={14} />{tr("Add a Gmail export")}</button>
-          <button className="c-sub flex items-center gap-1" onClick={() => setPaste(paste == null ? "" : null)} data-testid="overpay-paste"><ClipboardPaste size={14} />{tr("Paste an email")}</button>
-          <button className={"flex items-center gap-1 " + (o.monthly ? "c-acc" : "c-sub")} onClick={toggleMonthly} data-testid="overpay-monthly"><Bell size={14} />{o.monthly ? tr("Checks on the 1st of every month") : tr("Check on the 1st of every month")}</button>
+          <button className={U.btnS} onClick={() => fileRef.current && fileRef.current.click()} data-testid="overpay-mbox"><Mail size={14} />{tr("Add a Gmail export")}</button>
+          <button className={U.btnS} onClick={() => setPaste(paste == null ? "" : null)} data-testid="overpay-paste"><ClipboardPaste size={14} />{tr("Paste an email")}</button>
+          <button className={U.chip(!!o.monthly)} onClick={toggleMonthly} data-testid="overpay-monthly"><Bell size={14} />{o.monthly ? tr("Checks on the 1st of every month") : tr("Check on the 1st of every month")}</button>
         </div>
-        {busy ? <div className="c-sub" data-testid="overpay-busy">{busy}</div> : null}
+        {busy ? <div className={U.muted} data-testid="overpay-busy">{busy}</div> : null}
         {paste != null ? <div className="space-y-2">
-          <textarea className="w-full rounded-lg p-2 text-[13px]" rows={4} style={{ background: "var(--c-bg)", border: "1px solid var(--c-ln)", color: "inherit" }} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder={tr("Paste a receipt, a trial or a price-change email")} dir="auto" data-testid="overpay-paste-text" />
-          <button className="c-btn" onClick={addPaste} data-testid="overpay-paste-add">{tr("Add")}</button></div> : null}
-        <details className="c-sub text-[12px]"><summary>{tr("How to export Gmail")}</summary>
+          <textarea className={U.area} rows={4} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder={tr("Paste a receipt, a trial or a price-change email")} dir="auto" data-testid="overpay-paste-text" />
+          <button className={U.btnP} onClick={addPaste} data-testid="overpay-paste-add">{tr("Add")}</button></div> : null}
+        <details className={"text-[12px] " + U.muted}><summary className="min-h-[44px] py-3 cursor-pointer font-bold">{tr("How to export Gmail")}</summary>
           <div className="mt-1">{tr("Google Takeout → Deselect all → Mail → Export. Open the .mbox file here. Attune reads only emails about money from the last 12 months, and keeps a link to each one.")}</div>
-          <button className="c-acc mt-1" onClick={() => openLink("Google Takeout", "https://takeout.google.com/settings/takeout/custom/gmail")}>takeout.google.com</button>
+          <button className="mt-1 min-h-[44px] font-bold text-[var(--c-acc)]" onClick={() => openLink("Google Takeout", "https://takeout.google.com/settings/takeout/custom/gmail")}>takeout.google.com</button>
           <div className="mt-1">{tr("Gmail sign-in is coming: Attune will read new emails by itself.")}</div></details>
         <input ref={fileRef} type="file" accept=".mbox,application/mbox,text/plain,*/*" className="hidden" onChange={(e) => { onFile(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="overpay-file" />
       </div>

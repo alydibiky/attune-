@@ -9,8 +9,9 @@ import { loadArtifacts } from "./spaces.js";
 import { keepPicture, thumbGet } from "./mind-ui.jsx";
 import { Search, ImagePlus, Bell, Loader2, X, Copy, Trash2, ShieldCheck, Sparkles, Download } from "lucide-react";
 import * as M from "./meaning.js";
+import { card as kCard, btnP, btnS, btnDanger, chip as kChip } from "./ui-kit.jsx";
 
-const card = "rounded-2xl border border-[var(--c-ln)] bg-[var(--c-surf)]";
+const card = kCard;
 const readJson = (f) => { try { const v = JSON.parse(f() || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
 
 // a picture file → { data (base64 JPEG, at most 1600 px), media }
@@ -27,7 +28,7 @@ function shrinkFile(file, px = 1600) {
 function Thumb({ id }) {
   const [u, setU] = useState(null);
   useEffect(() => { let on = true; thumbGet(id).then((x) => { if (on) setU(x); }); return () => { on = false; }; }, [id]);
-  return u ? <img src={u} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" /> : <div className="w-14 h-14 rounded-lg bg-[var(--c-surf-2)] shrink-0" />;
+  return u ? <img src={u} alt="" className="w-14 h-14 rounded-[14px] object-cover shrink-0" /> : <div className="w-14 h-14 rounded-[14px] bg-[var(--c-surf-2)] shrink-0" />;
 }
 
 /** v6.45 Recall phase 2: the meaning model's state and its download (Embedder.kt). */
@@ -126,42 +127,42 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
   const when = (ts) => { try { return new Date(ts).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + " " + new Date(ts).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
   const chip = (k, label) => (
     <button key={k || "all"} onClick={() => setOnly(k)} data-testid={"recall-kind-" + (k || "all")}
-      className={`text-[11px] px-2.5 py-1 rounded-full border shrink-0 ${only === k ? "border-[var(--c-acc)] text-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{label}</button>
+      className={kChip(only === k) + " shrink-0"}>{label}</button>
   );
 
   return (
-    <div className="space-y-3" data-testid="recall-page">
-      <div className={card + " p-3 space-y-2"}>
-        <div className="flex items-center gap-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl px-3">
+    <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="recall-page">
+      <div className={card + " p-4 space-y-2.5"}>
+        <div className="flex items-center gap-2 min-h-[48px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[16px] ps-3.5 pe-1 focus-within:border-[var(--c-acc)] transition-colors duration-150">
           <Search size={16} className="text-[var(--c-mut)]" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} dir="auto" data-testid="recall-q" className="flex-1 bg-transparent py-2.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none"
+          <input value={q} onChange={(e) => setQ(e.target.value)} dir="auto" data-testid="recall-q" className="flex-1 min-w-0 bg-transparent py-2.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none"
             placeholder={tr("Find anything… e.g. the wifi password from a screenshot, the address Ahmed sent")} />
-          {q ? <button onClick={() => setQ("")} className="text-[var(--c-mut)]"><X size={15} /></button> : null}
+          {q ? <button onClick={() => setQ("")} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)]"><X size={16} /></button> : null}
         </div>
-        <div className="att-chips flex gap-1.5 overflow-x-auto">
+        <div className="att-chips flex gap-1.5 overflow-x-auto pb-1">
           {chip(null, tr("All"))}
           {Object.keys(KINDS).filter((k) => counts[k]).map((k) => chip(k, (ar ? KINDS[k].ar : tr(KINDS[k].en)) + " " + counts[k]))}
         </div>
         {q && (res.ask.from != null || res.ask.kind || res.ask.app) ? (
-          <p className="text-[11px] text-[var(--c-mut)]" data-testid="recall-understood">{tr("Looking in")}: {[res.ask.kind ? (ar ? KINDS[res.ask.kind].ar : tr(KINDS[res.ask.kind].en)) : null, res.ask.from != null ? new Date(res.ask.from).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + " – " + new Date(res.ask.to - 1).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) : null].filter(Boolean).join(" · ")}</p>
+          <p className="text-[11.5px] font-semibold text-[var(--c-mut)]" data-testid="recall-understood">{tr("Looking in")}: {[res.ask.kind ? (ar ? KINDS[res.ask.kind].ar : tr(KINDS[res.ask.kind].en)) : null, res.ask.from != null ? new Date(res.ask.from).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + " – " + new Date(res.ask.to - 1).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) : null].filter(Boolean).join(" · ")}</p>
         ) : null}
       </div>
 
       <div className="space-y-2" data-testid="recall-results">
         {res.hits.length ? res.hits.slice(0, 40).map(({ doc: d, snip, by }) => (
-          <button key={d.id} onClick={() => tap(d)} data-testid="recall-hit" className={card + " w-full p-2.5 flex gap-2.5 text-start"}>
+          <button key={d.id} onClick={() => tap(d)} data-testid="recall-hit" className={card + " w-full p-3 flex gap-3 text-start hover:border-[var(--c-acc)]"}>
             {d.kind === "photo" && d.thumb ? <Thumb id={d.thumb} /> : null}
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-[var(--c-mut)]">{ar ? KINDS[d.kind].ar : tr(KINDS[d.kind].en)}{d.app ? " · " + d.app : ""}{d.ts ? " · " + when(d.ts) : ""}{by === "meaning" ? <span className="text-[var(--c-acc)]" data-testid="recall-by-meaning"> · {tr("by meaning")}</span> : null}</p>
-              <p className="text-sm text-[var(--c-ink)] truncate" dir="auto">{d.title || snip}</p>
+              <p className="text-[11px] font-bold tabular-nums text-[var(--c-mut)]">{ar ? KINDS[d.kind].ar : tr(KINDS[d.kind].en)}{d.app ? " · " + d.app : ""}{d.ts ? " · " + when(d.ts) : ""}{by === "meaning" ? <span className="text-[var(--c-acc)]" data-testid="recall-by-meaning"> · {tr("by meaning")}</span> : null}</p>
+              <p className="text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{d.title || snip}</p>
               {snip && snip !== d.title ? <p className="text-[12px] text-[var(--c-mut)] line-clamp-2" dir="auto">{snip}</p> : null}
             </div>
           </button>
-        )) : <p className="text-sm text-[var(--c-mut)] text-center py-6" data-testid="recall-none">{docs.length ? tr("Nothing found — try other words, or fewer") : tr("Nothing to search yet — add screenshots or keep your notifications below")}</p>}
+        )) : <p className={card + " text-sm text-[var(--c-mut)] text-center p-6 m-0"} data-testid="recall-none">{docs.length ? tr("Nothing found — try other words, or fewer") : tr("Nothing to search yet — add screenshots or keep your notifications below")}</p>}
       </div>
 
-      <div className={card + " p-3 space-y-2.5"}>
-        <label className="flex items-center gap-2 text-sm text-[var(--c-ink)] cursor-pointer" data-testid="recall-add">
+      <div className={card + " p-4 space-y-3"}>
+        <label className="flex items-center gap-2.5 min-h-[44px] text-[14px] font-bold text-[var(--c-ink)] cursor-pointer" data-testid="recall-add">
           {busy ? <Loader2 size={17} className="animate-spin text-[var(--c-acc)]" /> : <ImagePlus size={17} className="text-[var(--c-acc)]" />}
           <span className="flex-1">{busy || tr("Add screenshots and photos")}</span>
           <input type="file" accept="image/*" multiple className="hidden" disabled={!!busy} data-testid="recall-add-file" onChange={(e) => { addShots(e.target.files); e.target.value = ""; }} />
@@ -169,34 +170,34 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
         <p className="text-[11px] text-[var(--c-mut)]">{tr("Their text is read on the phone, so “the receipt from Carrefour” finds them. They are kept in Mind.")}</p>
         {native && native.recallNotesOn ? (
           <>
-            <button onClick={toggleNotes} className="w-full flex items-center gap-2 text-sm text-[var(--c-ink)]" data-testid="recall-notes-toggle">
+            <button onClick={toggleNotes} className="w-full min-h-[44px] flex items-center gap-2.5 text-[14px] font-bold text-[var(--c-ink)]" data-testid="recall-notes-toggle">
               <Bell size={17} className="text-[var(--c-acc)]" /><span className="flex-1 text-start">{tr("Keep my notifications for 30 days")}</span>
-              <span className={`w-9 h-5 rounded-full relative ${notesOn ? "bg-[var(--c-acc)]" : "bg-[var(--c-surf-2)]"}`}><span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white ${notesOn ? "end-0.5" : "start-0.5"}`} /></span>
+              <span className={`w-9 h-5 rounded-full relative shrink-0 ${notesOn ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]"}`}><span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm ${notesOn ? "end-0.5" : "start-0.5"}`} /></span>
             </button>
             <p className="text-[11px] text-[var(--c-mut)]">{tr("WhatsApp, email, deliveries, banks — so you can find what someone sent. Never SMS. Turning it off forgets them.")}{notesOn && !access ? " " + tr("Needs Notification access (the same switch as Money).") : ""}</p>
           </>
         ) : null}
         {native && native.embedStatus ? <div className="border-t border-[var(--c-ln)] pt-2.5 space-y-1.5" data-testid="recall-meaning">
-          <div className="flex items-center gap-2 text-sm text-[var(--c-ink)]"><Sparkles size={17} className="text-[var(--c-acc)]" /><span className="flex-1">{tr("Search by meaning (Arabic ↔ English)")}</span>
-            {mean.on ? <span className="text-[11px] text-[var(--c-acc)]" data-testid="recall-meaning-on">{indexing || tr("On")}</span> : null}</div>
+          <div className="flex items-center gap-2.5 min-h-[44px] text-[14px] font-bold text-[var(--c-ink)]"><Sparkles size={17} className="text-[var(--c-acc)]" /><span className="flex-1">{tr("Search by meaning (Arabic ↔ English)")}</span>
+            {mean.on ? <span className="inline-flex items-center text-[11px] font-extrabold rounded-full px-2.5 py-0.5 bg-[var(--c-soft)] text-[var(--c-acc)] border border-[var(--c-acc)]/30 tabular-nums" data-testid="recall-meaning-on">{indexing || tr("On")}</span> : null}</div>
           <p className="text-[11px] text-[var(--c-mut)]">{tr("«فاتورة الكهربا» finds “electricity bill”, “where did I park” finds «ركنت العربية». A {mb} MB model, downloaded once (Wi-Fi), runs on the phone.", { mb: Math.round(M.MODEL.bytes / 1e6) })}</p>
-          {mean.dl ? <div className="space-y-1"><div className="h-1.5 rounded-full bg-[var(--c-surf-2)]"><div className="h-1.5 rounded-full bg-[var(--c-acc)]" style={{ width: (mean.dl.pct || 0) + "%" }} /></div>
-            <div className="flex items-center gap-2 text-[11px] text-[var(--c-mut)]"><span className="flex-1">{mean.dl.detail}</span><button onClick={mean.stop} className="text-[var(--c-ink)] underline" data-testid="recall-meaning-stop">{tr("Stop")}</button></div></div>
-            : mean.on ? <button onClick={mean.remove} className="text-[12px] text-[var(--c-neg)] flex items-center gap-1" data-testid="recall-meaning-remove"><Trash2 size={13} />{tr("Remove the model")}</button>
-            : <button onClick={() => mean.install(flash)} className="px-3 py-2 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-semibold flex items-center gap-1.5" data-testid="recall-meaning-get"><Download size={15} />{tr("Download ({mb} MB)", { mb: Math.round(M.MODEL.bytes / 1e6) })}</button>}
+          {mean.dl ? <div className="space-y-1"><div className="h-1.5 rounded-full bg-[var(--c-ln)]"><div className="h-1.5 rounded-full bg-[var(--c-acc)]" style={{ width: (mean.dl.pct || 0) + "%" }} /></div>
+            <div className="flex items-center gap-2 text-[11px] tabular-nums text-[var(--c-mut)]"><span className="flex-1">{mean.dl.detail}</span><button onClick={mean.stop} className="min-h-[44px] px-2 font-bold text-[var(--c-ink)] underline" data-testid="recall-meaning-stop">{tr("Stop")}</button></div></div>
+            : mean.on ? <button onClick={mean.remove} className={btnDanger} data-testid="recall-meaning-remove"><Trash2 size={13} />{tr("Remove the model")}</button>
+            : <button onClick={() => mean.install(flash)} className={btnP} data-testid="recall-meaning-get"><Download size={15} />{tr("Download ({mb} MB)", { mb: Math.round(M.MODEL.bytes / 1e6) })}</button>}
         </div> : null}
         <p className="text-[11px] text-[var(--c-pos)] flex items-center gap-1.5"><ShieldCheck size={13} />{tr("Everything stays on this phone.")}</p>
       </div>
 
       {open ? (
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={() => setOpen(null)}>
-          <div className="w-full bg-[var(--c-surf)] rounded-t-2xl p-4 space-y-3 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} data-testid="recall-open">
-            <p className="text-[11px] text-[var(--c-mut)]">{d0(open, ar)}{open.app ? " · " + open.app : ""} · {when(open.ts)}</p>
-            <p className="text-[var(--c-ink)] font-medium" dir="auto">{open.title}</p>
+          <div className="calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[22px] p-4 space-y-3 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} data-testid="recall-open">
+            <p className="text-[11.5px] font-bold tabular-nums text-[var(--c-mut)]">{d0(open, ar)}{open.app ? " · " + open.app : ""} · {when(open.ts)}</p>
+            <p className="text-[16px] text-[var(--c-ink)] font-extrabold" dir="auto">{open.title}</p>
             <p className="text-sm text-[var(--c-ink)] whitespace-pre-wrap" dir="auto" style={{ userSelect: "text" }}>{open.text}</p>
             <div className="flex gap-2">
-              <button onClick={() => { try { navigator.clipboard.writeText(open.text); flash && flash(tr("Copied")); } catch (e) {} }} className="flex-1 px-3 py-2 rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] text-sm flex items-center justify-center gap-1.5"><Copy size={15} />{tr("Copy")}</button>
-              {open.kind === "note" ? <button onClick={() => forget(open)} data-testid="recall-forget" className="px-3 py-2 rounded-xl border border-[var(--c-ln)] text-[var(--c-neg)] text-sm flex items-center gap-1.5"><Trash2 size={15} />{tr("Forget")}</button> : null}
+              <button onClick={() => { try { navigator.clipboard.writeText(open.text); flash && flash(tr("Copied")); } catch (e) {} }} className={btnS + " flex-1"}><Copy size={15} />{tr("Copy")}</button>
+              {open.kind === "note" ? <button onClick={() => forget(open)} data-testid="recall-forget" className={btnDanger}><Trash2 size={15} />{tr("Forget")}</button> : null}
             </div>
           </div>
         </div>

@@ -21,6 +21,7 @@ import * as Y from "./fityazio.js";
 import * as MI from "./fitmicro.js";
 import * as CARE from "./care.js";
 import { WatchCard, AutoTracking, Grades, DayQuality, RamadanCard, InsulinCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
+import { chip } from "./ui-kit.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as H from "./fithome.js";
 import { weeklyAdapt } from "./fitcoach.js";
@@ -48,8 +49,8 @@ export function lastFoodPhrase(v) {
 const MACRO = [["p", "Protein", "بروتين", "#38BDF8"], ["c", "Carbs", "كربوهيدرات", "#FBBF24"], ["f", "Fat", "دهون", "#FB7185"]];
 function Macros({ L, x, kcal = true, only, className = "" }) {
   return (
-    <div className={"flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-slate-400 tabular-nums " + className} data-testid="fit-macros">
-      {kcal ? <b className="text-slate-200 font-semibold">{r0(x.kcal)} {L("kcal", "سعرة")}</b> : null}
+    <div className={"flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-[var(--c-mut)] tabular-nums " + className} data-testid="fit-macros">
+      {kcal ? <b className="text-[var(--c-ink)] font-semibold">{r0(x.kcal)} {L("kcal", "سعرة")}</b> : null}
       {MACRO.filter(([k]) => !only || only.includes(k)).map(([k, en, ar, col]) => (
         <span key={k} className="inline-flex items-center gap-1 whitespace-nowrap"><i className="inline-block w-2 h-2 rounded-full" style={{ background: col }} />{L(en, ar)} {r0(x[k])} {L("g", "جم")}</span>))}
     </div>);
@@ -98,8 +99,8 @@ function Ring({ value, max, size = 132, children }) {
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={R} stroke="currentColor" className="text-slate-800" strokeWidth="10" fill="none" />
-        <circle cx={size / 2} cy={size / 2} r={R} stroke="currentColor" className={over ? "text-rose-400" : "text-emerald-400"} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
+        <circle cx={size / 2} cy={size / 2} r={R} stroke="currentColor" className="text-[var(--c-ln)]" strokeWidth="10" fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={R} stroke="currentColor" className={over ? "text-[var(--c-neg)]" : "text-[var(--c-acc)]"} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>
     </div>
@@ -109,8 +110,8 @@ function Bar({ label, v, max, cls }) {
   const pct = max > 0 ? Math.min(100, (v / max) * 100) : 0;
   return (
     <div className="min-w-0">
-      <div className="flex justify-between text-[11px] text-slate-400"><span className="truncate">{label}</span><span className="tabular-nums">{r0(v)}/{r0(max)}</span></div>
-      <div className="h-1.5 rounded-full bg-slate-800 mt-1"><div className={"h-1.5 rounded-full " + cls} style={{ width: pct + "%" }} /></div>
+      <div className="flex justify-between text-[11px] text-[var(--c-mut)]"><span className="truncate">{label}</span><span className="tabular-nums">{r0(v)}/{r0(max)}</span></div>
+      <div className="h-1.5 rounded-full bg-[var(--c-surf-2)] mt-1"><div className={"h-1.5 rounded-full " + cls} style={{ width: pct + "%" }} /></div>
     </div>
   );
 }
@@ -122,11 +123,11 @@ function Bar({ label, v, max, cls }) {
 function PlateRuler({ L }) {
   const [cm, setCm] = useState(() => F.myPlateCm() || "");
   return (
-    <div className="text-[11.5px] text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-1" data-testid="fit-ruler">
+    <div className="text-[11.5px] text-[var(--c-mut)] flex flex-wrap items-center gap-x-2 gap-y-1" data-testid="fit-ruler">
       <span>{L("📏 Exact portions: put a bank card next to the plate — or", "📏 عشان الكمية تبقى مظبوطة: حط كارت بنك جنب الطبق — أو")}</span>
       <label className="flex items-center gap-1">{L("my plate", "طبقي")}
         <input value={cm} inputMode="decimal" data-testid="fit-plate-cm" onChange={(e) => { setCm(e.target.value); F.setMyPlateCm(e.target.value); }}
-          placeholder="26" className="w-12 rounded-md bg-slate-800 px-1.5 py-0.5 text-center text-slate-100 placeholder:text-slate-600" />{L("cm wide", "سم عرض")}</label>
+          placeholder="26" className="w-12 rounded-md bg-[var(--c-surf-2)] px-1.5 py-0.5 text-center text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" />{L("cm wide", "سم عرض")}</label>
     </div>
   );
 }
@@ -534,55 +535,55 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const Tabs = [["today", L("Today", "النهارده"), Apple], ["recipes", L("Recipes", "وصفات"), Star], ["move", L("Move", "رياضة"), Dumbbell], ["progress", L("Progress", "التقدم"), BarChart3]];
 
   // the first-visit screens hide Attune's bars too, so they get Fit's own way back
-  const exitBar = onExit ? <div className="max-w-md mx-auto px-2" style={{ paddingTop: "env(safe-area-inset-top)" }}><button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-300" aria-label={L("Back to Attune", "ارجع لـ Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button></div> : null;
+  const exitBar = onExit ? <div className="max-w-md mx-auto px-2" style={{ paddingTop: "env(safe-area-inset-top)" }}><button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--c-mut)]" aria-label={L("Back to Attune", "ارجع لـ Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:rotate-180">←</span></button></div> : null;
   // v6.18: Ali's three looks (Fresh by default), chosen in Fit's settings — every Fit screen takes it
   const look = LK.lookOf(st), lookCls = "fit-look-" + look;
-  if (!st.profile && !fullForm) return <div className={lookCls}><LookStyle look={look} />{exitBar}<QuickSetup {...{ t, L, ar, save: quickSave }} full={() => setFullForm(true)} /></div>;
-  if (!st.profile) return <div className={lookCls}><LookStyle look={look} />{exitBar}<ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={null} extra={null} /></div>;
-  if (editProfile) return <div className={lookCls}><LookStyle look={look} /><ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} /></div>;
+  if (!st.profile && !fullForm) return <div className={"calm fit-calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)] " + lookCls}><LookStyle look={look} />{exitBar}<QuickSetup {...{ t, L, ar, save: quickSave }} full={() => setFullForm(true)} /></div>;
+  if (!st.profile) return <div className={"calm fit-calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)] " + lookCls}><LookStyle look={look} />{exitBar}<ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={null} extra={null} /></div>;
+  if (editProfile) return <div className={"calm fit-calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)] " + lookCls}><LookStyle look={look} /><ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} /></div>;
 
   const designA = minimal && look === "fresh";   // v6.43: Ali's design A (the default look)
   return (
-    <div className={"max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4 " + lookCls + (minimal ? " fit-min" : "") + (designA ? " fit-design-a" : "")} data-testid="fit-app" data-look={look}>
+    <div className={"calm fit-calm bg-[var(--c-bg)] text-[var(--c-ink)] max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4 " + lookCls + (minimal ? " fit-min" : "") + (designA ? " fit-design-a" : "")} data-testid="fit-app" data-look={look}>
       <LookStyle look={look} />
       {/* v6.16c (Ali picked look A): Fit & Food is its own app — its own top bar and bottom bar; Attune's are hidden while it's open */}
-      <div className="sticky top-0 z-30 -mx-4 px-2 bg-slate-950/95 backdrop-blur flex items-center gap-1 min-h-[52px]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        {onExit ? <button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-300" aria-label={L("Back to Attune", "ارجع لـ Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button> : null}
-        <h2 className="flex-1 min-w-0 truncate text-[17px] font-semibold text-white flex items-center gap-2"><Apple size={18} className="text-emerald-300 shrink-0" />{minimal ? L("Fit & Food", "الأكل واللياقة") : ({ today: L("Diary", "اليوميات"), fast: L("Fasting", "الصيام"), recipes: L("Recipes", "الوصفات"), progress: L("Progress", "التقدم"), me: L("Me", "أنا"), move: L("Workouts", "التمارين") })[tab] || L("Fit & Food", "الأكل واللياقة")}</h2>
-        {openEngine && !modelReady ? <button onClick={openEngine} className="min-h-[36px] rounded-full border border-slate-700 px-3 text-[12px] text-slate-300" data-testid="fit-engine">{L("No model", "مفيش نموذج")}</button> : null}
+      <div className="sticky top-0 z-30 -mx-4 px-2 bg-[var(--c-bg)] flex items-center gap-1 min-h-[52px]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+        {onExit ? <button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--c-mut)]" aria-label={L("Back to Attune", "ارجع لـ Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:rotate-180">←</span></button> : null}
+        <h2 className="flex-1 min-w-0 truncate text-[17px] font-semibold text-[var(--c-ink)] flex items-center gap-2"><Apple size={18} className="text-[var(--c-acc)] shrink-0" />{minimal ? L("Fit & Food", "الأكل واللياقة") : ({ today: L("Diary", "اليوميات"), fast: L("Fasting", "الصيام"), recipes: L("Recipes", "الوصفات"), progress: L("Progress", "التقدم"), me: L("Me", "أنا"), move: L("Workouts", "التمارين") })[tab] || L("Fit & Food", "الأكل واللياقة")}</h2>
+        {openEngine && !modelReady ? <button onClick={openEngine} className="min-h-[36px] rounded-full border border-[var(--c-ln)] px-3 text-[12px] text-[var(--c-mut)]" data-testid="fit-engine">{L("No model", "مفيش نموذج")}</button> : null}
       </div>
       {designA ? (<>
         {/* v6.43 (Ali picked design A): its own bottom bar — Diary · Recipes · Fasting · Progress · Me — and a round + above it */}
-        <nav className="att-shift fixed bottom-0 inset-x-0 z-[60] bg-slate-900 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
+        <nav className="att-shift fixed bottom-0 inset-x-0 z-[60] bg-[var(--c-surf)] border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
           <div className="max-w-2xl mx-auto grid grid-cols-5 h-[66px]">
             {[["today", L("Diary", "اليوميات"), Apple], ["recipes", L("Recipes", "الوصفات"), Star], ["fast", L("Fasting", "الصيام"), Timer], ["progress", L("Progress", "التقدم"), BarChart3], ["me", L("Me", "أنا"), User]].map(([k, label, Ic]) => {
               const on = tab === k || (k === "me" && tab === "move");
               return <button key={k} onClick={() => { setTab(k); setAdding(null); setDraft(null); }} data-testid={"fit-tab-" + k} aria-current={on ? "page" : undefined}
-                className={"flex flex-col items-center justify-center gap-0.5 text-[11.5px] " + (on ? "text-emerald-300 font-extrabold" : "text-slate-500 font-bold")}><Ic size={22} strokeWidth={on ? 2.4 : 2} />{label}</button>; })}
+                className={"flex flex-col items-center justify-center gap-0.5 text-[11.5px] " + (on ? "text-[var(--c-acc)] font-extrabold" : "text-[var(--c-mut)] font-bold")}><Ic size={22} strokeWidth={on ? 2.4 : 2} />{label}</button>; })}
           </div>
         </nav>
         {!adding && !undo && (tab === "today" || tab === "fast") ? <button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} data-testid="fit-add" aria-label={L("Log food", "سجّل أكل")}
-          className="att-shift fixed end-5 z-[60] w-[60px] h-[60px] rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 flex items-center justify-center active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(84px + env(safe-area-inset-bottom))" }}>
+          className="att-shift fixed end-5 z-[60] w-[60px] h-[60px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-lg shadow-black/20 flex items-center justify-center active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(84px + env(safe-area-inset-bottom))" }}>
           <Plus size={28} strokeWidth={2.8} /></button> : null}
       </>) : minimal ? (<>
         {/* v6.32 (Ali picked B): no bottom bar — thin tabs on top like the rest of the app, and one "Log food" button */}
-        <div role="tablist" className="att-hscroll sticky z-30 -mx-4 px-4 flex gap-6 overflow-x-auto border-b-2 border-slate-700 bg-slate-950" style={{ top: "calc(52px + env(safe-area-inset-top))" }} data-testid="fit-nav">
+        <div role="tablist" className="att-hscroll sticky z-30 -mx-4 px-4 flex gap-6 overflow-x-auto border-b-2 border-[var(--c-ln)] bg-[var(--c-bg)]" style={{ top: "calc(52px + env(safe-area-inset-top))" }} data-testid="fit-nav">
           {[["today", L("Diary", "اليوميات")], ["recipes", L("Recipes", "الوصفات")], ["progress", L("Progress", "التقدم")], ["me", L("Me", "أنا")]].map(([k, label]) => {
             const on = tab === k || (k === "me" && tab === "move");
             return <button key={k} role="tab" aria-selected={on} aria-current={on ? "page" : undefined} onClick={() => { setTab(k); setAdding(null); setDraft(null); }} data-testid={"fit-tab-" + k}
-              className={"shrink-0 h-11 -mb-[2px] text-[15px] whitespace-nowrap " + (on ? "border-b-[3px] border-emerald-500 text-white font-bold" : "text-slate-300 font-medium")}>{label}</button>; })}
+              className={"shrink-0 h-11 -mb-[2px] text-[15px] whitespace-nowrap " + (on ? "border-b-[3px] border-[var(--c-acc-2)] text-[var(--c-ink)] font-bold" : "text-[var(--c-mut)] font-medium")}>{label}</button>; })}
         </div>
         {!adding ? <button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} data-testid="fit-add"
-          className="att-shift fixed end-4 z-[60] h-14 ps-4 pe-5 rounded-full bg-emerald-700 text-white text-[16px] font-bold shadow-lg shadow-black/30 flex items-center gap-2 active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+          className="att-shift fixed end-4 z-[60] h-14 ps-4 pe-5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[16px] font-bold shadow-lg shadow-black/30 flex items-center gap-2 active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(20px + env(safe-area-inset-bottom))" }}>
           <Plus size={22} strokeWidth={2.8} />{L("Log food", "سجّل أكل")}</button> : null}
       </>) : (
-      <nav className="att-shift fixed bottom-0 inset-x-0 z-[60] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
+      <nav className="att-shift fixed bottom-0 inset-x-0 z-[60] bg-[var(--c-bg)] border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
         <div className="max-w-2xl mx-auto grid grid-cols-5 items-end h-[62px]">
           {[["today", L("Diary", "اليوميات"), Apple], ["recipes", L("Recipes", "الوصفات"), Star], ["add"], ["progress", L("Progress", "التقدم"), BarChart3], ["me", L("Me", "أنا"), User]].map(([k, label, Ic]) => k === "add" ? (
-            <div key={k} className="flex justify-center pb-2"><button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} className="w-14 h-14 -mt-6 rounded-full bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-900/40 flex items-center justify-center active:scale-95 motion-safe:transition-transform" aria-label={L("Add food", "ضيف أكل")} data-testid="fit-add"><Plus size={28} strokeWidth={2.6} /></button></div>
+            <div key={k} className="flex justify-center pb-2"><button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} className="w-14 h-14 -mt-6 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-lg shadow-black/20 flex items-center justify-center active:scale-95 motion-safe:transition-transform" aria-label={L("Add food", "ضيف أكل")} data-testid="fit-add"><Plus size={28} strokeWidth={2.6} /></button></div>
           ) : (
             <button key={k} onClick={() => { setTab(k); setAdding(null); setDraft(null); }} data-testid={"fit-tab-" + k} aria-current={tab === k || (k === "me" && tab === "move") ? "page" : undefined}
-              className={"h-full flex flex-col items-center justify-center gap-0.5 text-[11px] " + (tab === k || (k === "me" && tab === "move") ? "text-emerald-300" : "text-slate-500")}><Ic size={21} />{label}</button>))}
+              className={"h-full flex flex-col items-center justify-center gap-0.5 text-[11px] " + (tab === k || (k === "me" && tab === "move") ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")}><Ic size={21} />{label}</button>))}
         </div>
       </nav>
       )}
@@ -594,8 +595,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       {pick ? (
         <div className="fixed inset-0 z-[80] flex items-end" data-testid="fit-pick">
           <button className="absolute inset-0 bg-black/40" aria-label={L("Close", "قفل")} onClick={() => setPick(null)} />
-          <div className="relative w-full max-w-2xl mx-auto rounded-t-3xl bg-slate-900 p-4 space-y-2" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
-            <div className="text-[17px] font-black text-white px-1 pb-1">{pick === "photo" ? L("Photo of your food", "صورة أكلك") : L("Barcode", "الباركود")}</div>
+          <div className="relative w-full max-w-2xl mx-auto rounded-t-3xl bg-[var(--c-surf)] p-4 space-y-2" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
+            <div className="text-[17px] font-black text-[var(--c-ink)] px-1 pb-1">{pick === "photo" ? L("Photo of your food", "صورة أكلك") : L("Barcode", "الباركود")}</div>
             {(pick === "photo" ? [
               ["camera", Camera, L("Take a photo", "صوّر دلوقتي"), () => { setPick(null); camRef.current && camRef.current.click(); }],
               ["gallery", ImageIcon, L("Choose from the gallery", "اختار من المعرض"), () => { setPick(null); autoRead.current = true; fileRef.current && fileRef.current.click(); }],
@@ -605,29 +606,29 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                 ["gallery", ImageIcon, L("A barcode photo from the gallery", "صورة باركود من المعرض"), () => { setPick(null); codeGalRef.current && codeGalRef.current.click(); }]] : []),
               ["type", Search, L("Type the number", "اكتب الرقم"), () => { setPick(null); setAdding((a) => a || mealNow()); setDraft(null); setSearchFocus((n) => n + 1); }],
             ]).map(([k, Ic, label, go]) => (
-              <button key={k} onClick={go} data-testid={"fit-pick-" + k} className="w-full min-h-[56px] rounded-2xl bg-slate-800 px-4 flex items-center gap-3 text-start text-[15px] font-bold text-white"><Ic size={20} className="text-emerald-300 shrink-0" />{label}</button>))}
+              <button key={k} onClick={go} data-testid={"fit-pick-" + k} className="w-full min-h-[56px] rounded-2xl bg-[var(--c-surf-2)] px-4 flex items-center gap-3 text-start text-[15px] font-bold text-[var(--c-ink)]"><Ic size={20} className="text-[var(--c-acc)] shrink-0" />{label}</button>))}
           </div>
         </div>) : null}
       {adding ? (
-        <div className={designA ? "space-y-4 pt-1" : "rounded-2xl border border-slate-700 bg-slate-900/70 p-3 space-y-3"} data-testid="fit-log">
+        <div className={designA ? "space-y-4 pt-1" : "rounded-2xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-3"} data-testid="fit-log">
           {designA ? (<>
             {/* v6.43 design A: a page of its own — "What did you eat?", one big box, the meal as a chip */}
             <div className="flex items-center justify-between gap-2">
-              <button onClick={() => { setAdding(null); setDraft(null); }} className="w-11 h-11 -ms-2 grid place-items-center text-white" aria-label={L("Close", "قفل")} data-testid="fit-log-close"><ChevronLeft size={24} className="rtl:rotate-180" /></button>
-              <select value={adding} onChange={(e) => setAdding(e.target.value)} className="h-10 rounded-full bg-emerald-950 px-4 text-[14px] font-extrabold text-emerald-300" aria-label={L("Meal", "الوجبة")} data-testid="fit-log-meal">
+              <button onClick={() => { setAdding(null); setDraft(null); }} className="w-11 h-11 -ms-2 grid place-items-center text-[var(--c-ink)]" aria-label={L("Close", "قفل")} data-testid="fit-log-close"><ChevronLeft size={24} className="rtl:rotate-180" /></button>
+              <select value={adding} onChange={(e) => setAdding(e.target.value)} className="h-10 rounded-full bg-[var(--c-soft)] px-4 text-[14px] font-extrabold text-[var(--c-acc)]" aria-label={L("Meal", "الوجبة")} data-testid="fit-log-meal">
                 {F.MEALS.map((m) => <option key={m} value={m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</option>)}
               </select>
             </div>
-            {!draft && !busy && !hold ? <div><h2 className="text-[28px] leading-tight font-black text-white">{L("What did you eat?", "أكلت إيه؟")}</h2>
-              <p className="text-[13px] font-bold text-slate-500 mt-1">{L("Write it like you'd say it — English, Arabic or Franco. Amounts if you know them.", "اكتبها زي ما بتقولها — عربي أو إنجليزي أو فرانكو. والكمية لو تعرفها.")}</p></div> : null}
+            {!draft && !busy && !hold ? <div><h2 className="text-[28px] leading-tight font-black text-[var(--c-ink)]">{L("What did you eat?", "أكلت إيه؟")}</h2>
+              <p className="text-[13px] font-bold text-[var(--c-mut)] mt-1">{L("Write it like you'd say it — English, Arabic or Franco. Amounts if you know them.", "اكتبها زي ما بتقولها — عربي أو إنجليزي أو فرانكو. والكمية لو تعرفها.")}</p></div> : null}
           </>) : (
           <div className="flex items-center justify-between">
-            <div className="text-white font-medium">{L("Add to", "ضيف على")}{" "}
-              <select value={adding} onChange={(e) => setAdding(e.target.value)} className="bg-slate-800 rounded px-1 text-white" data-testid="fit-log-meal">
+            <div className="text-[var(--c-ink)] font-medium">{L("Add to", "ضيف على")}{" "}
+              <select value={adding} onChange={(e) => setAdding(e.target.value)} className="bg-[var(--c-surf-2)] rounded px-1 text-[var(--c-ink)]" data-testid="fit-log-meal">
                 {F.MEALS.map((m) => <option key={m} value={m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</option>)}
               </select>
             </div>
-            <button onClick={() => { setAdding(null); setDraft(null); }} className="text-slate-400 min-h-[44px] min-w-[44px] -me-2 grid place-items-center" aria-label={L("Close", "قفل")} data-testid="fit-log-close"><X size={20} /></button>
+            <button onClick={() => { setAdding(null); setDraft(null); }} className="text-[var(--c-mut)] min-h-[44px] min-w-[44px] -me-2 grid place-items-center" aria-label={L("Close", "قفل")} data-testid="fit-log-close"><X size={20} /></button>
           </div>)}
           {busy || hold ? (
             <div data-testid={photo ? "fit-photo-loading" : "fit-skeleton"}><PulseLoader url={photo && photo.url} stage={busy ? stage : draft && draft.length ? L(`Found ${draft.length} ${draft.length === 1 ? "food" : "foods"}`, `لقيت ${draft.length} ${draft.length === 1 ? "صنف" : draft.length === 2 ? "صنفين" : "أصناف"}`) : L("Reading your meal…", "بقرا وجبتك…")} L={L} ar={ar} label={t("Recognising the food…")} /></div>
@@ -636,25 +637,25 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                barcode and microphone inside it; what you type also searches the foods; Recent · Favourites · My meals as one list
                with a + on each row (one tap logs it); everything else under More. */
             <div className="space-y-3" data-testid="fit-add-min">
-              <div className={designA ? "rounded-3xl bg-slate-900 border-2 border-emerald-500 p-3.5 flex flex-col gap-2" : "rounded-2xl bg-slate-800 flex items-start gap-1 ps-3 pe-1 py-1.5"}>
+              <div className={designA ? "rounded-3xl bg-[var(--c-surf)] border-2 border-[var(--c-acc)] p-3.5 flex flex-col gap-2" : "rounded-2xl bg-[var(--c-surf-2)] flex items-start gap-1 ps-3 pe-1 py-1.5"}>
                 <textarea value={text} onChange={(e) => { const v = e.target.value; setText(v); setQ(lastFoodPhrase(v)); }}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && text.trim()) { e.preventDefault(); readMeal(); } }}
                   rows={designA ? 3 : text.length > 38 ? 3 : 1} data-testid="fit-log-text" placeholder={designA ? L("e.g. 150 g chicken Alfredo pasta and 7 chicken strips", "مثلًا: طبق كشري كبير وكوباية شاي بسكر") : L("What did you eat?", "أكلت إيه؟")}
-                  className={designA ? "w-full min-h-[84px] resize-none bg-transparent text-[17px] font-semibold leading-snug text-white placeholder:text-slate-400 placeholder:font-normal focus:outline-none" : "flex-1 min-w-0 resize-none bg-transparent py-2 text-[15px] text-white placeholder:text-slate-400 focus:outline-none"} />
+                  className={designA ? "w-full min-h-[84px] resize-none bg-transparent text-[17px] font-semibold leading-snug text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none" : "flex-1 min-w-0 resize-none bg-transparent py-2 text-[15px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none"} />
                 <div className={designA ? "flex justify-end gap-2" : "contents"}>
                 {[["photo", Camera, L("Photo", "صورة")], ["barcode", Barcode, t("Barcode")], ["voice", Mic, listening ? L("Listening…", "بسمعك…") : L("Say it", "اتكلم")]].map(([k, Ic, lb]) => (
                   <button key={k} onClick={bar[k]} aria-label={lb} title={lb} data-testid={"fit-lb-" + k}
-                    className={(designA ? "w-11 h-11 border border-slate-700 " : "w-10 h-10 ") + "shrink-0 rounded-full grid place-items-center " + (k === "voice" && listening ? "bg-rose-600 text-white" : designA && k === "voice" ? "bg-emerald-950 text-emerald-300 border-transparent" : "text-slate-300 active:bg-slate-700")}><Ic size={designA ? 20 : 19} /></button>))}
+                    className={(designA ? "w-11 h-11 border border-[var(--c-ln)] " : "w-10 h-10 ") + "shrink-0 rounded-full grid place-items-center " + (k === "voice" && listening ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : designA && k === "voice" ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-transparent" : "text-[var(--c-mut)] active:bg-[var(--c-ln)]")}><Ic size={designA ? 20 : 19} /></button>))}
                 </div>
               </div>
               {photo && !busy ? <div className="relative w-24"><img src={photo.url} className="rounded-lg w-24 h-24 object-cover" /><button onClick={() => setPhoto(null)} className="absolute top-1 right-1 rounded-full p-0.5" style={{ background: "rgba(0,0,0,.6)", color: "#fff" }} aria-label={L("Remove", "شيل")}><X size={14} /></button></div> : null}
-              {text.trim() || photo ? <button onClick={readMeal} disabled={busy} className={(designA ? "min-h-[56px] rounded-full bg-emerald-500 text-[17px] font-black" : "min-h-[48px] rounded-xl bg-emerald-600 text-[14.5px] font-semibold") + " w-full disabled:opacity-40 text-white flex items-center justify-center gap-1.5"} data-testid="fit-read">
+              {text.trim() || photo ? <button onClick={readMeal} disabled={busy} className={(designA ? "min-h-[56px] rounded-full bg-[var(--c-acc)] text-[17px] font-black" : "min-h-[48px] rounded-xl bg-[var(--c-acc)] text-[14.5px] font-semibold") + " w-full disabled:opacity-40 text-[var(--c-on-acc)] flex items-center justify-center gap-1.5"} data-testid="fit-read">
                 <Sparkles size={16} />{designA ? L("Find the foods", "طلّع الأكل") : L("Add it", "ضيفه")}</button> : null}
-              {results.length ? <div className="rounded-xl bg-slate-900/60 divide-y divide-slate-800" data-testid="fit-min-results">
-                {text.trim().split(/\s+/).length > 3 ? <div className="px-3 py-1.5 text-[12px] font-bold text-slate-500" data-testid="fit-search-label">{L(`Foods for “${q}” — tap one, or Find the foods for the whole meal`, `أكلات لـ «${q}» — اختار واحدة، أو «طلّع الأكل» للوجبة كلها`)}</div> : null}
+              {results.length ? <div className="rounded-xl bg-[var(--c-surf)] divide-y divide-[var(--c-ln)]" data-testid="fit-min-results">
+                {text.trim().split(/\s+/).length > 3 ? <div className="px-3 py-1.5 text-[12px] font-bold text-[var(--c-mut)]" data-testid="fit-search-label">{L(`Foods for “${q}” — tap one, or Find the foods for the whole meal`, `أكلات لـ «${q}» — اختار واحدة، أو «طلّع الأكل» للوجبة كلها`)}</div> : null}
                 {results.slice(0, 6).map((fd) => (
                   <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex items-center gap-2 text-start px-3 py-2.5" data-testid={"fit-food-" + fd.id}>
-                    <span className="flex-1 min-w-0 truncate text-[14px] text-slate-100">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[12px] text-slate-400 tabular-nums">{fd.kcal} kcal/100g</span></button>))}
+                    <span className="flex-1 min-w-0 truncate text-[14px] text-[var(--c-ink)]">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[12px] text-[var(--c-mut)] tabular-nums">{fd.kcal} kcal/100g</span></button>))}
               </div> : null}
               {!text.trim() && !photo ? (() => {
                 const recent = H.frequentChips(st.days, { limit: 8 }).map((c) => ({ key: c.key, item: c.item }));
@@ -665,144 +666,144 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                 const cur = lists[tabsHere.some(([k]) => k === addTab) ? addTab : "recent"];
                 const add = (x) => { const its = x.items || [x.item]; logNow(adding, its.map((y) => ({ ...y })), L(`Added ${x.item.name} · ${r0(x.item.kcal)} kcal`, `اتضاف ${x.item.ar || x.item.name} · ${r0(x.item.kcal)} سعرة`)); setAdding(null); };
                 return <div>
-                  {tabsHere.length > 1 ? <div className="flex gap-4 border-b border-slate-800 mb-1" role="tablist">{tabsHere.map(([k, lb]) => (
+                  {tabsHere.length > 1 ? <div className="flex gap-4 border-b border-[var(--c-ln)] mb-1" role="tablist">{tabsHere.map(([k, lb]) => (
                     <button key={k} role="tab" aria-selected={addTab === k} onClick={() => setAddTab(k)} data-testid={"fit-add-tab-" + k}
-                      className={"h-9 -mb-px text-[13.5px] border-b-2 " + (addTab === k ? "border-emerald-500 text-white font-semibold" : "border-transparent text-slate-400")}>{lb}</button>))}</div> : null}
+                      className={"h-9 -mb-px text-[13.5px] border-b-2 " + (addTab === k ? "border-[var(--c-acc-2)] text-[var(--c-ink)] font-semibold" : "border-transparent text-[var(--c-mut)]")}>{lb}</button>))}</div> : null}
                   {cur.length ? cur.slice(0, 8).map((x) => (
                     <div key={x.key} className="flex items-center gap-2 py-1.5" data-testid="fit-add-row">
-                      <span className="flex-1 min-w-0"><span className="block truncate text-[14px] text-slate-100">{ar && x.item.ar ? x.item.ar : x.item.name}</span>
-                        <span className="block text-[12px] text-slate-400 tabular-nums">{r0(x.item.kcal)} kcal{x.item.grams ? ` · ${x.item.grams} g` : ""}</span></span>
-                      <button onClick={() => add(x)} aria-label={L("Add", "ضيف")} className="w-10 h-10 shrink-0 rounded-full bg-emerald-600 text-white grid place-items-center" data-testid="fit-add-row-plus"><Plus size={18} /></button>
-                    </div>)) : <p className="text-[13px] text-slate-400 py-2">{L("What you log shows here — one tap to add it again.", "اللي بتسجله بيظهر هنا — ضغطة وتضيفه تاني.")}</p>}
+                      <span className="flex-1 min-w-0"><span className="block truncate text-[14px] text-[var(--c-ink)]">{ar && x.item.ar ? x.item.ar : x.item.name}</span>
+                        <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{r0(x.item.kcal)} kcal{x.item.grams ? ` · ${x.item.grams} g` : ""}</span></span>
+                      <button onClick={() => add(x)} aria-label={L("Add", "ضيف")} className="w-10 h-10 shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center" data-testid="fit-add-row-plus"><Plus size={18} /></button>
+                    </div>)) : <p className="text-[13px] text-[var(--c-mut)] py-2">{L("What you log shows here — one tap to add it again.", "اللي بتسجله بيظهر هنا — ضغطة وتضيفه تاني.")}</p>}
                 </div>;
               })() : null}
               <details data-testid="fit-add-more">
-                <summary className="cursor-pointer select-none text-[13px] text-slate-400 flex items-center gap-1"><ChevronDown size={14} />{L("More", "أكتر")}</summary>
+                <summary className="cursor-pointer select-none text-[13px] text-[var(--c-mut)] flex items-center gap-1"><ChevronDown size={14} />{L("More", "أكتر")}</summary>
                 <div className="space-y-2 mt-2">
                   <QuickLog {...{ L, ar, st, upd, adding, dayKey, flash }} toolsOnly addToDraft={(items) => setDraft((d) => [...(d || []), ...items.map((x) => ({ ...x }))])} />
                   <div className="flex flex-wrap gap-1.5">
-                    {fetchJson && q.trim().length >= 2 ? <button onClick={searchOnline} disabled={searching} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300 flex items-center gap-1" data-testid="fit-search-online">{searching ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}{L("Search millions of foods", "دوّر في ملايين الأكلات")}</button> : null}
+                    {fetchJson && q.trim().length >= 2 ? <button onClick={searchOnline} disabled={searching} className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-acc)] flex items-center gap-1" data-testid="fit-search-online">{searching ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}{L("Search millions of foods", "دوّر في ملايين الأكلات")}</button> : null}
                     {photo && !clipOn && photoClip ? <button disabled={!!fastDl} onClick={async () => { setFastDl(L("Downloading…", "بنزّل…")); try { await photoClip.install((pct) => setFastDl(Math.round(pct || 0) + "%")); setClipOn(true); flash && flash(L("Fast photo recognition is ready", "التعرّف السريع جاهز")); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 100)); } finally { setFastDl(""); } }}
-                      className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300" data-testid="fit-fast-get">{fastDl || L("Faster photos (≈200 MB)", "صور أسرع (حوالي 200 ميجا)")}</button> : null}
+                      className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-acc)]" data-testid="fit-fast-get">{fastDl || L("Faster photos (≈200 MB)", "صور أسرع (حوالي 200 ميجا)")}</button> : null}
                   </div>
                 </div>
               </details>
-              {packBg ? <p className="text-[11.5px] text-emerald-300 flex items-center gap-1.5" data-testid="fit-pack-bg"><Loader2 size={12} className="animate-spin" />{L(`Getting the food database on Wi-Fi… ${(packBg.count || 0).toLocaleString("en")} foods so far`, `بنزّل قاعدة الأكل على الواي فاي… ${(packBg.count || 0).toLocaleString("en")} أكلة لحد دلوقتي`)}</p> : null}
+              {packBg ? <p className="text-[11.5px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="fit-pack-bg"><Loader2 size={12} className="animate-spin" />{L(`Getting the food database on Wi-Fi… ${(packBg.count || 0).toLocaleString("en")} foods so far`, `بنزّل قاعدة الأكل على الواي فاي… ${(packBg.count || 0).toLocaleString("en")} أكلة لحد دلوقتي`)}</p> : null}
             </div>
           ) : !draft ? (<>
             {!photo && !text.trim() ? <LogBar {...{ t, L, ar, bar, listening, st }} onAgain={(item) => { logNow(adding, [item], L(`Added ${item.name} · ${r0(item.kcal)} kcal`, `اتضاف ${item.ar || item.name} · ${r0(item.kcal)} سعرة`)); setAdding(null); }} /> : null}
             <QuickLog {...{ L, ar, st, upd, adding, dayKey, flash }} addToDraft={(items) => setDraft((d) => [...(d || []), ...items.map((x) => ({ ...x }))])} />
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} data-testid="fit-log-text"
               placeholder={L("What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful", "أكلت إيه؟ مثلًا: ٢ بيض ورغيف عيش وطبق فول")}
-              className="w-full rounded-xl bg-slate-800 p-2.5 text-[14px] text-white placeholder:text-slate-500" />
+              className="w-full rounded-xl bg-[var(--c-surf-2)] p-2.5 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" />
             {photo && !busy && <div className="relative w-28"><img src={photo.url} className="rounded-lg w-28 h-28 object-cover" /><button onClick={() => setPhoto(null)} className="absolute top-1 right-1 rounded-full p-0.5" style={{ background: "rgba(0,0,0,.6)", color: "#fff" }}><X size={14} /></button></div>}
             {photo && !busy ? <PlateRuler L={L} /> : null}
             {text.trim() || photo || busy ? <div className="flex gap-2">
-              <button onClick={() => speak("text")} className={"rounded-xl px-3 py-2 text-[13px] flex items-center gap-1.5 shrink-0 " + (listening === "text" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-200")} data-testid="fit-mic"><Mic size={16} />{listening === "text" ? L("Listening…", "بسمعك…") : L("Say it", "اتكلم")}</button>
-              <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-xl bg-slate-800 px-3 py-2 text-[13px] text-slate-200 flex items-center gap-1.5 shrink-0" data-testid="fit-photo"><Camera size={16} />{L("Photo", "صورة")}</button>
-              {photo && !clipOn && photoClip ? <div className="w-full basis-full rounded-xl border border-sky-800 bg-sky-500/10 p-2 text-[12px] text-sky-100" data-testid="fit-fast-offer">
+              <button onClick={() => speak("text")} className={"rounded-xl px-3 py-2 text-[13px] flex items-center gap-1.5 shrink-0 " + (listening === "text" ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]")} data-testid="fit-mic"><Mic size={16} />{listening === "text" ? L("Listening…", "بسمعك…") : L("Say it", "اتكلم")}</button>
+              <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-xl bg-[var(--c-surf-2)] px-3 py-2 text-[13px] text-[var(--c-ink)] flex items-center gap-1.5 shrink-0" data-testid="fit-photo"><Camera size={16} />{L("Photo", "صورة")}</button>
+              {photo && !clipOn && photoClip ? <div className="w-full basis-full rounded-xl border border-[var(--c-ln)] bg-[var(--c-soft)] p-2 text-[12px] text-[var(--c-ink)]" data-testid="fit-fast-offer">
                 {L("Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈200 MB, once) and a photo is read in a few seconds.", "الصور بتاخد 20–30 ثانية مع موديل الشات. نزّل «التعرّف السريع على الصور» (حوالي 200 ميجا مرة واحدة) والصورة تتقري في ثواني.")}
                 <button disabled={!!fastDl} onClick={async () => { setFastDl(L("Downloading…", "بنزّل…")); try { await photoClip.install((pct) => setFastDl(Math.round(pct || 0) + "%")); setClipOn(true); flash && flash(L("Fast photo recognition is ready", "التعرّف السريع جاهز")); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 100)); } finally { setFastDl(""); } }}
-                  className="ms-2 rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold" data-testid="fit-fast-get">{fastDl || L("Get it", "نزّله")}</button></div> : null}
-              <button onClick={readMeal} disabled={busy || (!text.trim() && !photo)} className="flex-1 rounded-xl bg-emerald-600 disabled:opacity-40 py-2 text-[14px] font-medium text-white flex items-center justify-center gap-1.5" data-testid="fit-read">
+                  className="ms-2 rounded-lg bg-[var(--c-soft)] text-[var(--c-acc)] px-2.5 py-1 font-semibold" data-testid="fit-fast-get">{fastDl || L("Get it", "نزّله")}</button></div> : null}
+              <button onClick={readMeal} disabled={busy || (!text.trim() && !photo)} className="flex-1 rounded-xl bg-[var(--c-acc)] disabled:opacity-40 py-2 text-[14px] font-medium text-[var(--c-on-acc)] flex items-center justify-center gap-1.5" data-testid="fit-read">
                 {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{busy ? stage || L("Reading…", "بقرا…") : L("Read it", "اقراها")}
               </button>
             </div> : null}
             <div className="relative">
-              <Search size={15} className="absolute top-2.5 start-2.5 text-slate-500" />
-              <input ref={searchRef} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchOnline(); }} data-testid="fit-search" placeholder={L("Or search foods, brands or a barcode…", "أو دوّر على أكل أو ماركة أو باركود…")} className="w-full rounded-xl bg-slate-800 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" />
+              <Search size={15} className="absolute top-2.5 start-2.5 text-[var(--c-mut)]" />
+              <input ref={searchRef} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchOnline(); }} data-testid="fit-search" placeholder={L("Or search foods, brands or a barcode…", "أو دوّر على أكل أو ماركة أو باركود…")} className="w-full rounded-xl bg-[var(--c-surf-2)] py-2 ps-8 pe-2 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" />
             </div>
-            {packBg ? <p className="text-[11.5px] text-emerald-300 flex items-center gap-1.5" data-testid="fit-pack-bg"><Loader2 size={12} className="animate-spin" />{L(`Getting the food database on Wi-Fi… ${(packBg.count || 0).toLocaleString("en")} foods so far`, `بنزّل قاعدة الأكل على الواي فاي… ${(packBg.count || 0).toLocaleString("en")} أكلة لحد دلوقتي`)}</p> : null}
+            {packBg ? <p className="text-[11.5px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="fit-pack-bg"><Loader2 size={12} className="animate-spin" />{L(`Getting the food database on Wi-Fi… ${(packBg.count || 0).toLocaleString("en")} foods so far`, `بنزّل قاعدة الأكل على الواي فاي… ${(packBg.count || 0).toLocaleString("en")} أكلة لحد دلوقتي`)}</p> : null}
             <div className="flex gap-2">
-              {fetchJson && q.trim().length >= 2 ? <button onClick={searchOnline} disabled={searching} className="flex-1 rounded-lg bg-sky-700 py-1.5 text-[12.5px] text-white flex items-center justify-center gap-1" data-testid="fit-search-online">{searching ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}{L("Search millions of foods", "دوّر في ملايين الأكلات")}</button> : null}
-              {scanBarcode ? <button onClick={() => codeRef.current && codeRef.current.click()} disabled={searching} className="flex-1 rounded-lg bg-slate-800 py-1.5 text-[12.5px] text-slate-200 flex items-center justify-center gap-1" data-testid="fit-barcode"><Camera size={14} />{L("Scan a barcode", "صوّر الباركود")}</button> : null}
+              {fetchJson && q.trim().length >= 2 ? <button onClick={searchOnline} disabled={searching} className="flex-1 rounded-lg bg-[var(--c-soft)] py-1.5 text-[12.5px] text-[var(--c-acc)] flex items-center justify-center gap-1" data-testid="fit-search-online">{searching ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}{L("Search millions of foods", "دوّر في ملايين الأكلات")}</button> : null}
+              {scanBarcode ? <button onClick={() => codeRef.current && codeRef.current.click()} disabled={searching} className="flex-1 rounded-lg bg-[var(--c-surf-2)] py-1.5 text-[12.5px] text-[var(--c-ink)] flex items-center justify-center gap-1" data-testid="fit-barcode"><Camera size={14} />{L("Scan a barcode", "صوّر الباركود")}</button> : null}
             </div>
             {results.map((fd) => (
-              <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-slate-800" data-testid={"fit-food-" + fd.id}>
-                <span className="text-[13.5px] text-slate-200 truncate">{ar && fd.ar ? fd.ar : fd.en}{fd.src === "off" ? <span className="ms-1 text-[10px] text-sky-300">{fd.egypt ? "🇪🇬 " : ""}{L("product", "منتج")}</span> : fd.src === "usda" ? <span className="ms-1 text-[10px] text-violet-300">USDA</span> : null}{fd.check ? <span className="ms-1 text-[10px] text-amber-300">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}<Grades x={fd} L={L} /></span><span className="text-[12px] text-slate-500 shrink-0 tabular-nums">{fd.kcal} kcal/100g</span>
+              <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-[var(--c-surf-2)]" data-testid={"fit-food-" + fd.id}>
+                <span className="text-[13.5px] text-[var(--c-ink)] truncate">{ar && fd.ar ? fd.ar : fd.en}{fd.src === "off" ? <span className="ms-1 text-[10px] text-[var(--c-acc)]">{fd.egypt ? "🇪🇬 " : ""}{L("product", "منتج")}</span> : fd.src === "usda" ? <span className="ms-1 text-[10px] text-[var(--c-acc)]">USDA</span> : null}{fd.check ? <span className="ms-1 text-[10px] text-[var(--c-warn)]">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}<Grades x={fd} L={L} /></span><span className="text-[12px] text-[var(--c-mut)] shrink-0 tabular-nums">{fd.kcal} kcal/100g</span>
               </button>
             ))}
           </>) : (
             <div className={designA ? "space-y-2.5" : "space-y-2"} data-testid="fit-draft">
               {designA && draft.length ? (() => { const tt = F.sumN(draft.filter((x) => x.kcal != null)); return (<>
-                <div className="flex items-baseline justify-between gap-2 px-0.5"><h2 className="text-[20px] font-black text-white">{L(`Found ${draft.length} ${draft.length === 1 ? "food" : "foods"}`, `لقيت ${draft.length} ${draft.length === 1 ? "صنف" : draft.length === 2 ? "صنفين" : "أصناف"}`)}</h2></div>
+                <div className="flex items-baseline justify-between gap-2 px-0.5"><h2 className="text-[20px] font-black text-[var(--c-ink)]">{L(`Found ${draft.length} ${draft.length === 1 ? "food" : "foods"}`, `لقيت ${draft.length} ${draft.length === 1 ? "صنف" : draft.length === 2 ? "صنفين" : "أصناف"}`)}</h2></div>
                 <div className="grid grid-cols-4 gap-2 text-center" data-testid="fit-draft-totals">
                   {[[tt.kcal, L("kcal", "سعرة"), ""], [Math.round(tt.c) + " g", L("carbs", "كارب"), "#1F6BBF"], [Math.round(tt.p) + " g", L("protein", "بروتين"), "#B35C0F"], [Math.round(tt.f) + " g", L("fat", "دهون"), "#6B4FB8"]].map(([v, lb, col]) =>
-                    <div key={lb} className="rounded-2xl bg-slate-900 shadow-[0_1px_3px_rgba(16,32,28,0.08)] py-2.5 px-1 flex flex-col"><span className="text-[18px] font-black tabular-nums text-white" style={col ? { color: col } : undefined}>{v}</span><span className="text-[11.5px] font-bold text-slate-500">{lb}</span></div>)}
+                    <div key={lb} className="rounded-2xl bg-[var(--c-surf)] shadow-[0_1px_3px_rgba(16,32,28,0.08)] py-2.5 px-1 flex flex-col"><span className="text-[18px] font-black tabular-nums text-[var(--c-ink)]" style={col ? { color: col } : undefined}>{v}</span><span className="text-[11.5px] font-bold text-[var(--c-mut)]">{lb}</span></div>)}
                 </div></>); })() : null}
               {photo && draft.length ? <PhotoMarks look={look} url={photo.url} items={draft} L={L} ar={ar} /> : null}
-              <div className="text-[12.5px] text-slate-400">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
-              {draft.some((x) => x.ruler === "card") ? <div className="text-[12px] text-emerald-300" data-testid="fit-ruler-card">{L("📏 Measured against your card", "📏 اتقاس على الكارت")}</div>
-                : draft.some((x) => x.ruler === "plate") ? <div className="text-[12px] text-emerald-300" data-testid="fit-ruler-plate">{L(`📏 Measured with your ${F.myPlateCm()} cm plate`, `📏 اتقاس على طبقك (${F.myPlateCm()} سم)`)}</div> : null}
-              {refining ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5" data-testid="fit-refining"><span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse" />{L("The AI is double-checking the photo — you can save now.", "الذكاء الاصطناعي بيراجع الصورة — تقدر تحفظ دلوقتي.")}</div> : null}
-              {aiAlt && aiAlt.length ? <div className="rounded-xl bg-sky-500/10 border border-sky-800 p-2 text-[12.5px] text-sky-100" data-testid="fit-ai-alt">
+              <div className="text-[12.5px] text-[var(--c-mut)]">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
+              {draft.some((x) => x.ruler === "card") ? <div className="text-[12px] text-[var(--c-acc)]" data-testid="fit-ruler-card">{L("📏 Measured against your card", "📏 اتقاس على الكارت")}</div>
+                : draft.some((x) => x.ruler === "plate") ? <div className="text-[12px] text-[var(--c-acc)]" data-testid="fit-ruler-plate">{L(`📏 Measured with your ${F.myPlateCm()} cm plate`, `📏 اتقاس على طبقك (${F.myPlateCm()} سم)`)}</div> : null}
+              {refining ? <div className="text-[12px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="fit-refining"><span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse" />{L("The AI is double-checking the photo — you can save now.", "الذكاء الاصطناعي بيراجع الصورة — تقدر تحفظ دلوقتي.")}</div> : null}
+              {aiAlt && aiAlt.length ? <div className="rounded-xl bg-[var(--c-soft)] border border-[var(--c-ln)] p-2 text-[12.5px] text-[var(--c-ink)]" data-testid="fit-ai-alt">
                 {L("The AI sees: ", "الذكاء الاصطناعي شايف: ")}<b>{aiAlt.map((x) => (ar && x.ar) || x.name).join(" · ")}</b>
-                <div className="flex gap-2 mt-1.5"><button onClick={() => { setDraft(aiAlt); setAiAlt(null); }} className="rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold">{L("Use this", "استخدم ده")}</button><button onClick={() => setAiAlt(null)} className="rounded-lg bg-slate-800 px-2.5 py-1">{L("Keep mine", "خلّي اختياري")}</button></div></div> : null}
-              {busy && stage ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{stage}</div> : null}
-              {(() => { const ask = AQ.askFirst(draft); return ask.length ? <div className="text-[12.5px] text-amber-200" data-testid="fit-ask-note">{L(`One tap each: how much is on your plate? (${ask.length})`, `ضغطة لكل صنف: الكمية في طبقك قد إيه؟ (${ask.length})`)}</div> : null; })()}
+                <div className="flex gap-2 mt-1.5"><button onClick={() => { setDraft(aiAlt); setAiAlt(null); }} className="rounded-lg bg-[var(--c-soft)] text-[var(--c-acc)] px-2.5 py-1 font-semibold">{L("Use this", "استخدم ده")}</button><button onClick={() => setAiAlt(null)} className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1">{L("Keep mine", "خلّي اختياري")}</button></div></div> : null}
+              {busy && stage ? <div className="text-[12px] text-[var(--c-acc)] flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{stage}</div> : null}
+              {(() => { const ask = AQ.askFirst(draft); return ask.length ? <div className="text-[12.5px] text-[var(--c-warn)]" data-testid="fit-ask-note">{L(`One tap each: how much is on your plate? (${ask.length})`, `ضغطة لكل صنف: الكمية في طبقك قد إيه؟ (${ask.length})`)}</div> : null; })()}
               {(() => { pinNo.current = look === "night" && photo ? Object.fromEntries(LK.placeMarks(draft).marks.map((m, k) => [m.i, k + 1])) : {}; return null; })()}
               {draft.map((x, i) => (
-                <div key={i} className={(designA ? "rounded-2xl bg-slate-900 shadow-[0_1px_3px_rgba(16,32,28,0.08)] px-3 py-2.5 space-y-1.5 " : "rounded-lg bg-slate-800/70 px-2 py-1.5 space-y-1.5 ") + (AQ.askFirst(draft).includes(i) ? "ring-1 ring-amber-500/70" : "")} data-testid="fit-draft-item">
+                <div key={i} className={(designA ? "rounded-2xl bg-[var(--c-surf)] shadow-[0_1px_3px_rgba(16,32,28,0.08)] px-3 py-2.5 space-y-1.5 " : "rounded-lg bg-[var(--c-surf-2)] px-2 py-1.5 space-y-1.5 ") + (AQ.askFirst(draft).includes(i) ? "ring-1 ring-[var(--c-warn)]" : "")} data-testid="fit-draft-item">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13.5px] text-white truncate">
+                      <div className="text-[13.5px] text-[var(--c-ink)] truncate">
                         {x.conf != null ? <span className={"inline-block w-2 h-2 rounded-full me-1.5 " + (x.conf >= 0.75 ? "bg-emerald-400" : x.conf >= 0.5 ? "bg-amber-400" : "bg-rose-400")} title={L("how sure", "متأكد قد إيه")} /> : null}
-                        {pinNo.current[i] ? <span className="inline-flex w-5 h-5 me-1.5 rounded-full bg-emerald-500 text-slate-950 text-[11px] font-extrabold items-center justify-center align-middle" data-testid="fit-pin-no">{pinNo.current[i]}</span> : null}
+                        {pinNo.current[i] ? <span className="inline-flex w-5 h-5 me-1.5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[11px] font-extrabold items-center justify-center align-middle" data-testid="fit-pin-no">{pinNo.current[i]}</span> : null}
                         {ar && x.ar ? x.ar : x.name}
-                        {x.hidden ? <span className="ms-1 text-[10.5px] text-sky-300" data-testid="fit-hidden">{L("easy to miss", "سهل يتنسي")}</span> : null}
-                        {x.learned ? <span className="ms-1 text-[10.5px] text-violet-300">{L("as you corrected it", "زي ما صحّحته")}</span> : null}
-                        {x.flag ? <span className="ms-1 text-[10.5px] text-amber-300" data-testid="fit-flag">{x.flag === "amount" ? L(`check the amount (${x.was} g written)`, `راجع الكمية (المكتوب ${x.was} جم)`) : L("check the portion", "راجع الكمية")}</span> : null}
-                        {x.zoomed ? <span className="ms-1 text-[10.5px] text-sky-300">{L("looked closer", "اتبص عليها أقرب")}</span> : null}
-                        {x.from === "photo-text" ? <span className="ms-1 text-[10.5px] text-emerald-300" data-testid="fit-as-printed">{L("calories as printed in the photo", "السعرات زي ما هي مكتوبة في الصورة")}</span> : null}
-                        {x.estimate && <span className="ms-1 text-[10.5px] text-amber-300">{x.unknown ? L("unknown", "مش معروف") : L("estimate", "تقدير")}</span>}
-                        {x.check ? <span className="ms-1 text-[10.5px] text-amber-300">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}
+                        {x.hidden ? <span className="ms-1 text-[10.5px] text-[var(--c-acc)]" data-testid="fit-hidden">{L("easy to miss", "سهل يتنسي")}</span> : null}
+                        {x.learned ? <span className="ms-1 text-[10.5px] text-[var(--c-acc)]">{L("as you corrected it", "زي ما صحّحته")}</span> : null}
+                        {x.flag ? <span className="ms-1 text-[10.5px] text-[var(--c-warn)]" data-testid="fit-flag">{x.flag === "amount" ? L(`check the amount (${x.was} g written)`, `راجع الكمية (المكتوب ${x.was} جم)`) : L("check the portion", "راجع الكمية")}</span> : null}
+                        {x.zoomed ? <span className="ms-1 text-[10.5px] text-[var(--c-acc)]">{L("looked closer", "اتبص عليها أقرب")}</span> : null}
+                        {x.from === "photo-text" ? <span className="ms-1 text-[10.5px] text-[var(--c-acc)]" data-testid="fit-as-printed">{L("calories as printed in the photo", "السعرات زي ما هي مكتوبة في الصورة")}</span> : null}
+                        {x.estimate && <span className="ms-1 text-[10.5px] text-[var(--c-warn)]">{x.unknown ? L("unknown", "مش معروف") : L("estimate", "تقدير")}</span>}
+                        {x.check ? <span className="ms-1 text-[10.5px] text-[var(--c-warn)]">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}
                         <Grades x={x} L={L} />
                       </div>
                       <Macros L={L} x={x} className="mt-0.5" />
                     </div>
-                    {x.quick ? null : <><input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 min-h-[38px] rounded bg-slate-900 px-1.5 py-1 text-[14px] text-white text-end" data-testid="fit-draft-grams" />
-                    <span className="text-[11px] text-slate-500">{L("g", "جم")}</span></>}
+                    {x.quick ? null : <><input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 min-h-[38px] rounded bg-[var(--c-surf)] px-1.5 py-1 text-[14px] text-[var(--c-ink)] text-end" data-testid="fit-draft-grams" />
+                    <span className="text-[11px] text-[var(--c-mut)]">{L("g", "جم")}</span></>}
                     {x.id ? <button onClick={() => { const on = P.isFav(st.favFoods, x.id); upd((s) => ({ ...s, favFoods: P.toggleFav(s.favFoods, x) })); flash && flash(on ? L("Removed from favorites", "اتشالت من المفضلة") : L(`★ ${x.name} — ${x.grams} g, one tap next time`, `★ ${x.ar || x.name} — ${x.grams} جم، ضغطة واحدة المرة الجاية`)); }}
-                      className={"min-h-[40px] min-w-[36px] grid place-items-center " + (P.isFav(st.favFoods, x.id) ? "text-amber-300" : "text-slate-500")} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={17} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
-                    <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-slate-500 min-h-[40px] min-w-[36px] grid place-items-center" aria-label={L("Remove", "شيل")} data-testid="fit-draft-remove"><Trash2 size={17} /></button>
+                      className={"min-h-[40px] min-w-[36px] grid place-items-center " + (P.isFav(st.favFoods, x.id) ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]")} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={17} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
+                    <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-[var(--c-mut)] min-h-[40px] min-w-[36px] grid place-items-center" aria-label={L("Remove", "شيل")} data-testid="fit-draft-remove"><Trash2 size={17} /></button>
                   </div>
-                  {designA && openAlt !== i && (((x.alts && x.alts.length > 1) || x.from === "text") || x.base) ? <button onClick={() => setOpenAlt(i)} className="text-[12.5px] font-bold text-emerald-300 min-h-[32px]" data-testid="fit-draft-change"><Pencil size={13} className="inline -mt-0.5 me-1" />{L("Not right? Change it", "مش مظبوط؟ غيّره")}</button> : null}
+                  {designA && openAlt !== i && (((x.alts && x.alts.length > 1) || x.from === "text") || x.base) ? <button onClick={() => setOpenAlt(i)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="fit-draft-change"><Pencil size={13} className="inline -mt-0.5 me-1" />{L("Not right? Change it", "مش مظبوط؟ غيّره")}</button> : null}
                   {designA && openAlt !== i ? null : (x.alts && x.alts.length > 1) || x.from === "text" ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">
-                      <span className="text-[11px] text-slate-500 self-center">{L("Is it:", "قصدك:")}</span>
-                      {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={"rounded-full px-2 py-0.5 text-[11.5px] " + (a.food.id === x.id ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
-                      <button onClick={() => { setReplaceAt(i); setDraft((d) => d); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-slate-900 text-sky-300" data-testid="fit-alt-other">{L("something else…", "حاجة تانية…")}</button>
+                      <span className="text-[11px] text-[var(--c-mut)] self-center">{L("Is it:", "قصدك:")}</span>
+                      {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={chip(a.food.id === x.id)} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
+                      <button onClick={() => { setReplaceAt(i); setDraft((d) => d); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-[var(--c-surf)] text-[var(--c-acc)]" data-testid="fit-alt-other">{L("something else…", "حاجة تانية…")}</button>
                     </div>) : null}
                   {(() => { const aq = x.from === "text" ? null : AQ.amountQuestion(x); if (!aq) return null;
                     return <div className="flex flex-wrap gap-1 items-center" data-testid="fit-amount">
-                      <span className="text-[11.5px] text-amber-200 me-0.5">{L(aq.en.replace(/ \(.*\)$/, ""), aq.ar.replace(/ \(.*\)$/, ""))}</span>
+                      <span className="text-[11.5px] text-[var(--c-warn)] me-0.5">{L(aq.en.replace(/ \(.*\)$/, ""), aq.ar.replace(/ \(.*\)$/, ""))}</span>
                       {aq.choices.map((c, k) => <button key={k} onClick={() => setDraft((d) => d.map((y, j) => (j === i ? AQ.answerAmount(y, c.grams) : y)))}
-                        className={"rounded-full px-2.5 py-1 text-[12px] " + (x.answered && k === aq.at ? "bg-amber-500 text-slate-950 font-semibold" : k === aq.at ? "bg-slate-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-amount-choice">{L(c.en, c.ar)}</button>)}
+                        className={"rounded-full px-2.5 py-1 text-[12px] " + (x.answered && k === aq.at ? "bg-[var(--c-warn)] text-[var(--c-on-acc)] font-semibold" : k === aq.at ? "bg-[var(--c-ln)] text-[var(--c-ink)]" : "bg-[var(--c-surf)] text-[var(--c-mut)]")} data-testid="fit-amount-choice">{L(c.en, c.ar)}</button>)}
                     </div>; })()}
                   {designA && openAlt !== i ? null : x.base && (x.from === "text" || !AQ.amountQuestion(x)) ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-portions">
-                      {[0.5, 0.75, 1, 1.5, 2].map((k) => <button key={k} onClick={() => scaleAt(i, k)} className={"rounded min-w-[40px] min-h-[34px] px-2 py-0.5 text-[12px] " + ((x.k || 1) === k ? "bg-sky-700 text-white" : "bg-slate-900 text-slate-300")} data-testid={"fit-portion-" + k}>{k === 1 ? (x.from === "text" ? L("as written", "زي ما كتبت") : L("as seen", "زي الصورة")) : "×" + k}</button>)}
+                      {[0.5, 0.75, 1, 1.5, 2].map((k) => <button key={k} onClick={() => scaleAt(i, k)} className={chip((x.k || 1) === k) + " min-w-[40px] justify-center"} data-testid={"fit-portion-" + k}>{k === 1 ? (x.from === "text" ? L("as written", "زي ما كتبت") : L("as seen", "زي الصورة")) : "×" + k}</button>)}
                     </div>) : null}
                 </div>
               ))}
               {replaceAt >= 0 ? (
                 <div className="space-y-1" data-testid="fit-replace">
-                  <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-slate-500" />
-                    <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchOnline(); }} placeholder={L("What is it really?", "هو إيه بالظبط؟")} className="w-full rounded-xl bg-slate-900 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" data-testid="fit-replace-q" /></div>
-                  {results.map((fd) => <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-slate-800" data-testid={"fit-food-" + fd.id}><span className="text-[13px] text-slate-200 truncate">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[11.5px] text-slate-500 shrink-0">{fd.kcal} kcal/100g</span></button>)}
+                  <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-[var(--c-mut)]" />
+                    <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchOnline(); }} placeholder={L("What is it really?", "هو إيه بالظبط؟")} className="w-full rounded-xl bg-[var(--c-surf)] py-2 ps-8 pe-2 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" data-testid="fit-replace-q" /></div>
+                  {results.map((fd) => <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-[var(--c-surf-2)]" data-testid={"fit-food-" + fd.id}><span className="text-[13px] text-[var(--c-ink)] truncate">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[11.5px] text-[var(--c-mut)] shrink-0">{fd.kcal} kcal/100g</span></button>)}
                 </div>) : null}
               <div className="flex gap-2" data-testid="fit-cmd-row">
                 <input value={cmd} onChange={(e) => setCmd(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && cmd.trim()) runCmd(); }} placeholder={L("Change something: “remove the cola”, “rice 200 g”…", "عدّل حاجة: «شيل البيبسي»، «الرز ٢٠٠ جرام»…")}
-                  className="flex-1 min-w-0 rounded-lg bg-slate-900 px-2 py-1.5 text-[13px] text-white placeholder:text-slate-500" data-testid="fit-cmd" />
-                <button onClick={() => speak("cmd")} aria-label={L("Say it", "قولها")} className={"rounded-lg min-w-[44px] grid place-items-center px-2.5 " + (listening === "cmd" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-300")} data-testid="fit-cmd-mic"><Mic size={15} /></button>
-                <button onClick={() => cmd.trim() && runCmd()} className="rounded-lg bg-sky-700 px-3 text-[12.5px] text-white" data-testid="fit-cmd-go">{L("Do it", "نفّذ")}</button>
+                  className="flex-1 min-w-0 rounded-lg bg-[var(--c-surf)] px-2 py-1.5 text-[13px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" data-testid="fit-cmd" />
+                <button onClick={() => speak("cmd")} aria-label={L("Say it", "قولها")} className={"rounded-lg min-w-[44px] grid place-items-center px-2.5 " + (listening === "cmd" ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="fit-cmd-mic"><Mic size={15} /></button>
+                <button onClick={() => cmd.trim() && runCmd()} className="rounded-lg bg-[var(--c-soft)] px-3 text-[12.5px] text-[var(--c-acc)]" data-testid="fit-cmd-go">{L("Do it", "نفّذ")}</button>
               </div>
-              {cmdNote ? <div className="text-[12px] text-sky-300" data-testid="fit-cmd-note">{cmdNote}</div> : null}
+              {cmdNote ? <div className="text-[12px] text-[var(--c-acc)]" data-testid="fit-cmd-note">{cmdNote}</div> : null}
               {draft.length ? <SaveMyMeal {...{ L, draft, upd, flash }} /> : null}
               {/* the Save button stays in reach above Fit's bottom bar however long the list is */}
-              <div className={"flex gap-2 sticky z-10 -mx-3 px-3 py-2 " + (designA ? "bg-slate-950" : "bg-slate-900")} style={{ bottom: designA ? "calc(68px + env(safe-area-inset-bottom))" : minimal ? "env(safe-area-inset-bottom)" : "calc(92px + env(safe-area-inset-bottom))" }} data-testid="fit-save-bar">
-                <button onClick={() => setDraft(null)} className={designA ? "rounded-full bg-slate-800 px-4 min-h-[52px] text-[14px] font-bold text-white" : "rounded-xl bg-slate-800 px-3 py-2.5 text-[13px] text-slate-300"}>{L("Back", "رجوع")}</button>
-                <button onClick={confirm} disabled={!draft.length} className={(designA ? "rounded-full bg-emerald-500 min-h-[52px] text-[16px] font-black" : "rounded-xl bg-emerald-600 py-2.5 text-[14px] font-medium") + " flex-1 disabled:opacity-40 text-white flex items-center justify-center gap-1.5"} data-testid="fit-confirm"><Check size={16} />{designA ? L("Add to " + MEAL_NAMES[adding][0], "ضيف على " + MEAL_NAMES[adding][1]) : L("Save", "احفظ")} · {F.sumN(draft.filter((x) => x.kcal != null)).kcal} {L("kcal", "سعرة")}</button>
+              <div className={"flex gap-2 sticky z-10 -mx-3 px-3 py-2 " + (designA ? "bg-[var(--c-bg)]" : "bg-[var(--c-surf)]")} style={{ bottom: designA ? "calc(68px + env(safe-area-inset-bottom))" : minimal ? "env(safe-area-inset-bottom)" : "calc(92px + env(safe-area-inset-bottom))" }} data-testid="fit-save-bar">
+                <button onClick={() => setDraft(null)} className={designA ? "rounded-full bg-[var(--c-surf-2)] px-4 min-h-[52px] text-[14px] font-bold text-[var(--c-ink)]" : "rounded-xl bg-[var(--c-surf-2)] px-3 py-2.5 text-[13px] text-[var(--c-mut)]"}>{L("Back", "رجوع")}</button>
+                <button onClick={confirm} disabled={!draft.length} className={(designA ? "rounded-full bg-[var(--c-acc)] min-h-[52px] text-[16px] font-black" : "rounded-xl bg-[var(--c-acc)] py-2.5 text-[14px] font-medium") + " flex-1 disabled:opacity-40 text-[var(--c-on-acc)] flex items-center justify-center gap-1.5"} data-testid="fit-confirm"><Check size={16} />{designA ? L("Add to " + MEAL_NAMES[adding][0], "ضيف على " + MEAL_NAMES[adding][1]) : L("Save", "احفظ")} · {F.sumN(draft.filter((x) => x.kcal != null)).kcal} {L("kcal", "سعرة")}</button>
               </div>
             </div>
           )}
@@ -813,10 +814,10 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       {tab === "fast" && !adding && <Today {...{ L, t, ar, st, upd, tg: tg && st.profile.cycleExtra ? { ...tg, kcal: Y.dayGoal(tg.kcal, dayKey, st.profile.cycleExtra) } : tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, minimal, a: true, only: "fast", openMove: () => setTab("move") }} />}
       {undo ? (
         <div role="status" aria-live="polite" className="att-shift fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 pointer-events-none" data-testid="fit-undo-bar">
-          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-slate-800 border border-slate-700 ps-4 pe-1 py-1 shadow-xl max-w-md w-full motion-safe:animate-[fitup_.2s_ease-out]">
-            <Check size={16} className="text-emerald-300 shrink-0" />
-            <span className="flex-1 min-w-0 truncate text-[13.5px] text-white" data-testid="fit-undo-text">{undo.label}</span>
-            <button onClick={() => { undo.revert(); setUndo(null); }} className="min-h-[48px]! px-4 rounded-xl text-[14px] font-semibold text-emerald-300 flex items-center gap-1.5" data-testid="fit-undo"><Undo2 size={16} />{t("Undo")}</button>
+          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-[var(--c-surf-2)] border border-[var(--c-ln)] ps-4 pe-1 py-1 shadow-xl max-w-md w-full motion-safe:animate-[fitup_.2s_ease-out]">
+            <Check size={16} className="text-[var(--c-acc)] shrink-0" />
+            <span className="flex-1 min-w-0 truncate text-[13.5px] text-[var(--c-ink)]" data-testid="fit-undo-text">{undo.label}</span>
+            <button onClick={() => { undo.revert(); setUndo(null); }} className="min-h-[48px]! px-4 rounded-xl text-[14px] font-semibold text-[var(--c-acc)] flex items-center gap-1.5" data-testid="fit-undo"><Undo2 size={16} />{t("Undo")}</button>
           </div>
         </div>) : null}
       {tab === "recipes" && !adding && <Recipes {...{ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, flash, share, pro, openPlan }} />}
@@ -825,10 +826,10 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
         const top = <>
           <DayQuality {...{ L, day, tg }} isToday={dayKey === F.today()} />
           <Micros {...{ L, ar, day, sex: (st.profile || {}).sex }} />
-          {F.dayTips(tot, tg, ar ? "ar" : "en").map((tp, i) => <div key={i} className="rounded-xl bg-amber-500/10 border border-amber-800 px-3 py-2 text-[12.5px] text-amber-100">{tp}</div>)}
+          {F.dayTips(tot, tg, ar ? "ar" : "en").map((tp, i) => <div key={i} className="rounded-xl bg-[var(--c-warn)]/10 border border-[var(--c-warn)]/40 px-3 py-2 text-[12.5px] text-[var(--c-warn)]">{tp}</div>)}
         </>;
         // v6.32 minimal: today's quality, vitamins and tips go under "More" with the rest
-        { const cc = coach ? <div className={"rounded-2xl border p-3 text-[13px] " + (coach.ready ? "border-emerald-800 bg-emerald-500/10 text-emerald-100" : "border-slate-800 bg-slate-900/60 text-slate-300")} data-testid="fit-coach">
+        { const cc = coach ? <div className={"rounded-2xl border p-3 text-[13px] " + (coach.ready ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)] text-[var(--c-ink)]" : "border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-mut)]")} data-testid="fit-coach">
             <div className="font-semibold mb-0.5">{L("Your coach this week", "مدربك الأسبوع ده")}</div>{coach.text}
             {st.profile.adapt ? <button className="block mt-1.5 text-[11.5px] underline opacity-80" data-testid="fit-coach-reset" onClick={() => upd((s) => ({ ...s, profile: { ...s.profile, adapt: null } }))}>{L("Go back to the formula", "ارجع للمعادلة")}</button> : null}</div> : null;
         return minimal ? <>{cc}<Progress {...{ L, ar, st, upd, tg, pro, openPlan, share, minimal }} extraTop={top} /></> : <>{cc}{top}<Progress {...{ L, ar, st, upd, tg, pro, openPlan, share }} /></>; }
@@ -845,7 +846,7 @@ function LogBar({ t, L, ar, bar, listening, st, onAgain }) {
   const nm = (x) => (ar && x.ar ? x.ar : x.name);
   const Act = ({ k, Ic, label, primary }) => (
     <button onClick={bar[k]} data-testid={"fit-lb-" + k} aria-label={label}
-      className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-emerald-600 text-white" : listening && k === "voice" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-100")}>
+      className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : listening && k === "voice" ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]")}>
       <Ic size={19} aria-hidden="true" /><span>{label}</span></button>);
   return (<>
     <div className="grid grid-cols-4 gap-2" data-testid="fit-logbar" role="group" aria-label={t("Log a meal")}>
@@ -856,13 +857,13 @@ function LogBar({ t, L, ar, bar, listening, st, onAgain }) {
     </div>
     {chips.length ? (
       <section aria-labelledby="fit-chips-h">
-        <h3 id="fit-chips-h" className="text-[11.5px] uppercase tracking-wide text-slate-500 mb-1.5">{t("One tap to add again")}</h3>
+        <h3 id="fit-chips-h" className="text-[11.5px] uppercase tracking-wide text-[var(--c-mut)] mb-1.5">{t("One tap to add again")}</h3>
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]" data-testid="fit-chips">
           {chips.map((c) => (
             <button key={c.key} onClick={() => onAgain(c.item)} data-testid={"fit-chip-" + c.key.replace(/[^a-z0-9]+/gi, "_")}
-              className="shrink-0 min-h-[48px]! rounded-full bg-slate-800 border border-slate-700 px-3.5 text-[13px] text-slate-100 flex items-center gap-1.5 active:scale-[.97] motion-safe:transition-transform"
+              className="shrink-0 min-h-[48px]! rounded-full bg-[var(--c-surf-2)] border border-[var(--c-ln)] px-3.5 text-[13px] text-[var(--c-ink)] flex items-center gap-1.5 active:scale-[.97] motion-safe:transition-transform"
               aria-label={L(`Add ${c.item.name}, ${c.item.grams} g, ${r0(c.item.kcal)} kcal`, `ضيف ${c.item.ar || c.item.name}، ${c.item.grams} جم، ${r0(c.item.kcal)} سعرة`)}>
-              <Plus size={15} className="text-emerald-300" aria-hidden="true" /><span className="max-w-[10rem] truncate">{nm(c.item)}</span><span className="text-slate-400 tabular-nums">· {r0(c.item.kcal)}</span>
+              <Plus size={15} className="text-[var(--c-acc)]" aria-hidden="true" /><span className="max-w-[10rem] truncate">{nm(c.item)}</span><span className="text-[var(--c-mut)] tabular-nums">· {r0(c.item.kcal)}</span>
             </button>))}
         </div>
       </section>) : null}
@@ -875,15 +876,15 @@ function MeTab({ L, ar, st, tg, openPlanForm, openMove, settings, watches }) {
   const goal = { lose: L("Lose weight", "أخسّ"), maintain: L("Keep my weight", "أحافظ على وزني"), gain: L("Gain muscle", "أبني عضل") }[pf.goal] || "";
   return (
     <div className="space-y-3 lg:space-y-0 lg:columns-2 lg:gap-6 lg:[&>*]:break-inside-avoid lg:[&>*]:mb-4" data-testid="fit-me">
-      <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-4 space-y-2">
-        <div className="text-[12px] text-slate-400">{L("My plan", "خطتي")}{goal ? " · " + goal : ""}</div>
-        {tg ? <div className="text-[22px] font-semibold text-white tabular-nums" data-testid="fit-me-kcal">{tg.kcal} <span className="text-[13px] font-normal text-slate-400">{L("kcal a day", "سعرة في اليوم")}</span></div> : null}
-        {tg ? <div className="text-[12.5px] text-slate-300 tabular-nums">{L("Protein", "بروتين")} {tg.protein} g · {L("Water", "مية")} {(tg.water / 1000).toFixed(1)} L{pf.kg ? ` · ${pf.kg} kg` : ""}</div> : null}
-        <button onClick={openPlanForm} className="w-full min-h-[48px] rounded-xl bg-emerald-600 text-white font-medium" data-testid="fit-edit-profile">{L("Change my plan", "عدّل خطتي")}</button>
+      <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 space-y-2">
+        <div className="text-[12px] text-[var(--c-mut)]">{L("My plan", "خطتي")}{goal ? " · " + goal : ""}</div>
+        {tg ? <div className="text-[22px] font-semibold text-[var(--c-ink)] tabular-nums" data-testid="fit-me-kcal">{tg.kcal} <span className="text-[13px] font-normal text-[var(--c-mut)]">{L("kcal a day", "سعرة في اليوم")}</span></div> : null}
+        {tg ? <div className="text-[12.5px] text-[var(--c-mut)] tabular-nums">{L("Protein", "بروتين")} {tg.protein} g · {L("Water", "مية")} {(tg.water / 1000).toFixed(1)} L{pf.kg ? ` · ${pf.kg} kg` : ""}</div> : null}
+        <button onClick={openPlanForm} className="w-full min-h-[48px] rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] font-medium" data-testid="fit-edit-profile">{L("Change my plan", "عدّل خطتي")}</button>
       </div>
-      <button onClick={openMove} className="w-full min-h-[52px] rounded-2xl bg-slate-900/70 border border-slate-800 px-4 text-start text-white flex items-center gap-2" data-testid="fit-me-move"><Dumbbell size={17} className="text-emerald-300" />{L("Workouts and steps", "التمارين والخطوات")}</button>
-      {watches ? <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-4">{watches}</div> : null}
-      <div className="text-[11.5px] uppercase tracking-wide text-slate-500 pt-1">{L("Settings", "الإعدادات")}</div>
+      <button onClick={openMove} className="w-full min-h-[52px] rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-4 text-start text-[var(--c-ink)] flex items-center gap-2" data-testid="fit-me-move"><Dumbbell size={17} className="text-[var(--c-acc)]" />{L("Workouts and steps", "التمارين والخطوات")}</button>
+      {watches ? <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-4">{watches}</div> : null}
+      <div className="text-[11.5px] uppercase tracking-wide text-[var(--c-mut)] pt-1">{L("Settings", "الإعدادات")}</div>
       {settings}
     </div>
   );
@@ -893,43 +894,43 @@ function ProfileForm({ pf, setPf, save, L, cancel, extra }) {
   const set = (k, v) => setPf((p) => ({ ...p, [k]: v }));
   const tg = H.targetsOf(pf);
   const Sel = (k, opts) => (
-    <div className="flex flex-wrap gap-1.5">{opts.map(([v, label]) => <button key={v} onClick={() => set(k, v)} data-testid={`fit-pf-${k}-${v}`} className={"rounded-full px-3 py-1.5 text-[12.5px] " + (pf[k] === v ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300")}>{label}</button>)}</div>
+    <div className="flex flex-wrap gap-1.5">{opts.map(([v, label]) => <button key={v} onClick={() => set(k, v)} data-testid={`fit-pf-${k}-${v}`} className={chip(pf[k] === v)}>{label}</button>)}</div>
   );
   const Num = (k, label) => (
-    <label key={k} className="flex-1 min-w-0 text-[12px] text-slate-400">{label}
-      <input type="number" inputMode="decimal" value={pf[k]} onChange={(e) => set(k, e.target.value)} data-testid={"fit-pf-" + k} className="mt-1 w-full rounded-lg bg-slate-800 px-2 py-2 text-[14px] text-white" />
+    <label key={k} className="flex-1 min-w-0 text-[12px] text-[var(--c-mut)]">{label}
+      <input type="number" inputMode="decimal" value={pf[k]} onChange={(e) => set(k, e.target.value)} data-testid={"fit-pf-" + k} className="mt-1 w-full rounded-lg bg-[var(--c-surf-2)] px-2 py-2 text-[14px] text-[var(--c-ink)]" />
     </label>
   );
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 space-y-4" data-testid="fit-profile">
-      <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Apple size={19} className="text-emerald-300" />{L("Your plan", "خطتك")}</h2>
-      <p className="text-[12.5px] text-slate-400">{L("Your daily calories and protein are worked out by the Mifflin-St Jeor formula — the one dietitians use. Everything stays on your phone.", "السعرات والبروتين بيتحسبوا بمعادلة ميفلين-سان جيور اللي بيستخدمها أخصائيين التغذية. وكل حاجة بتفضل على موبايلك.")}</p>
+      <h2 className="text-lg font-semibold text-[var(--c-ink)] flex items-center gap-2"><Apple size={19} className="text-[var(--c-acc)]" />{L("Your plan", "خطتك")}</h2>
+      <p className="text-[12.5px] text-[var(--c-mut)]">{L("Your daily calories and protein are worked out by the Mifflin-St Jeor formula — the one dietitians use. Everything stays on your phone.", "السعرات والبروتين بيتحسبوا بمعادلة ميفلين-سان جيور اللي بيستخدمها أخصائيين التغذية. وكل حاجة بتفضل على موبايلك.")}</p>
       {Sel("sex", [["m", L("Male", "ذكر")], ["f", L("Female", "أنثى")]])}
       <div className="flex gap-2">{Num("age", L("Age", "السن"))}{Num("cm", L("Height (cm)", "الطول (سم)"))}{Num("kg", L("Weight (kg)", "الوزن (كجم)"))}</div>
-      <div className="text-[12px] text-slate-400">{L("How active are you?", "نشاطك قد إيه؟")}</div>
+      <div className="text-[12px] text-[var(--c-mut)]">{L("How active are you?", "نشاطك قد إيه؟")}</div>
       {Sel("activity", [["sedentary", L("Desk, little walking", "مكتب، مشي قليل")], ["light", L("Light", "خفيف")], ["moderate", L("Moderate", "متوسط")], ["active", L("Active", "نشيط")], ["very", L("Very active", "نشيط جداً")]])}
-      <div className="text-[12px] text-slate-400">{L("Goal", "الهدف")}</div>
+      <div className="text-[12px] text-[var(--c-mut)]">{L("Goal", "الهدف")}</div>
       {Sel("goal", [["lose", L("Lose weight", "أخسّ")], ["maintain", L("Keep my weight", "أحافظ على وزني")], ["gain", L("Gain muscle", "أبني عضل")]])}
       {pf.goal !== "maintain" && <div className="flex gap-2">{Num("goalKg", L("Goal weight (kg)", "الوزن المطلوب (كجم)"))}
-        <label className="flex-1 text-[12px] text-slate-400">{L("Pace (kg a week)", "السرعة (كجم في الأسبوع)")}
-          <select value={pf.rate} onChange={(e) => set("rate", +e.target.value)} className="mt-1 w-full rounded-lg bg-slate-800 px-2 py-2 text-[14px] text-white">{[0.25, 0.5, 0.75, 1].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <label className="flex-1 text-[12px] text-[var(--c-mut)]">{L("Pace (kg a week)", "السرعة (كجم في الأسبوع)")}
+          <select value={pf.rate} onChange={(e) => set("rate", +e.target.value)} className="mt-1 w-full rounded-lg bg-[var(--c-surf-2)] px-2 py-2 text-[14px] text-[var(--c-ink)]">{[0.25, 0.5, 0.75, 1].map((v) => <option key={v} value={v}>{v}</option>)}</select>
         </label></div>}
-      <div className="text-[12px] text-slate-400">{L("Eating style", "نظام الأكل")}</div>
+      <div className="text-[12px] text-[var(--c-mut)]">{L("Eating style", "نظام الأكل")}</div>
       {Sel("diet", Object.entries(F.DIETS).map(([k, en]) => [k, L(en, { balanced: "متوازن", "high-protein": "بروتين عالي", "low-carb": "كارب قليل", keto: "كيتو", vegetarian: "نباتي" }[k])]))}
-      <label className="block text-[12px] text-slate-400">{L("My own daily calorie target (optional)", "هدفي اليومي من السعرات (اختياري)")}
-        <input type="number" inputMode="numeric" value={pf.kcalGoal || ""} onChange={(e) => set("kcalGoal", e.target.value)} data-testid="fit-pf-kcalGoal" className="mt-1 w-full rounded-lg bg-slate-800 px-2 py-2 text-[14px] text-white" /></label>
-      {pf.sex === "f" && <label className="flex items-center gap-2 text-[13px] text-slate-300"><input type="checkbox" checked={!!pf.pregnant} onChange={(e) => set("pregnant", e.target.checked)} />{L("Pregnant or breastfeeding", "حامل أو بترضّعي")}</label>}
+      <label className="block text-[12px] text-[var(--c-mut)]">{L("My own daily calorie target (optional)", "هدفي اليومي من السعرات (اختياري)")}
+        <input type="number" inputMode="numeric" value={pf.kcalGoal || ""} onChange={(e) => set("kcalGoal", e.target.value)} data-testid="fit-pf-kcalGoal" className="mt-1 w-full rounded-lg bg-[var(--c-surf-2)] px-2 py-2 text-[14px] text-[var(--c-ink)]" /></label>
+      {pf.sex === "f" && <label className="flex items-center gap-2 text-[13px] text-[var(--c-mut)]"><input type="checkbox" checked={!!pf.pregnant} onChange={(e) => set("pregnant", e.target.checked)} />{L("Pregnant or breastfeeding", "حامل أو بترضّعي")}</label>}
       {tg && (
-        <div className="rounded-xl border border-emerald-800 bg-emerald-500/10 p-3 text-[13px] text-emerald-100 space-y-1" data-testid="fit-pf-result">
+        <div className="rounded-xl border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3 text-[13px] text-[var(--c-ink)] space-y-1" data-testid="fit-pf-result">
           <div className="text-[15px] font-semibold">{tg.kcal} kcal · {L("protein", "بروتين")} {tg.protein} g · {L("water", "مية")} {(tg.water / 1000).toFixed(1)} L</div>
-          {tg.bmi ? <div className="text-emerald-200/80">BMI {tg.bmi} · {L("burns", "بتحرق")} ~{tg.tdee} kcal/{L("day", "يوم")}{tg.weeks ? ` · ${L("goal in", "توصل للهدف في")} ~${tg.weeks} ${L("weeks", "أسبوع")}` : ""}</div> : null}
-          {tg.notes.map((n, i) => <div key={i} className="text-amber-200">• {L(n.en, n.ar)}</div>)}
+          {tg.bmi ? <div className="text-[var(--c-ink)]">BMI {tg.bmi} · {L("burns", "بتحرق")} ~{tg.tdee} kcal/{L("day", "يوم")}{tg.weeks ? ` · ${L("goal in", "توصل للهدف في")} ~${tg.weeks} ${L("weeks", "أسبوع")}` : ""}</div> : null}
+          {tg.notes.map((n, i) => <div key={i} className="text-[var(--c-warn)]">• {L(n.en, n.ar)}</div>)}
         </div>
       )}
       {extra}
       <div className="flex gap-2">
-        {cancel && <button onClick={cancel} className="rounded-xl bg-slate-800 px-4 py-2.5 text-slate-300">{L("Cancel", "إلغاء")}</button>}
-        <button onClick={save} className="flex-1 rounded-xl bg-emerald-600 py-2.5 font-medium text-white" data-testid="fit-pf-save">{L("Save my plan", "احفظ خطتي")}</button>
+        {cancel && <button onClick={cancel} className="rounded-xl bg-[var(--c-surf-2)] px-4 py-2.5 text-[var(--c-mut)]">{L("Cancel", "إلغاء")}</button>}
+        <button onClick={save} className="flex-1 rounded-xl bg-[var(--c-acc)] py-2.5 font-medium text-[var(--c-on-acc)]" data-testid="fit-pf-save">{L("Save my plan", "احفظ خطتي")}</button>
       </div>
     </div>
   );
@@ -944,65 +945,65 @@ function QuickSetup({ t, L, ar, save, full }) {
   const set = (k, v) => setA((p) => ({ ...p, [k]: v }));
   const Pick = ({ k, v, children, tid }) => (
     <button onClick={() => set(k, v)} aria-pressed={a[k] === v} data-testid={tid}
-      className={"min-h-[48px]! rounded-xl px-4 text-[14px] text-start transition-colors " + (a[k] === v ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-200")}>{children}</button>);
+      className={"min-h-[48px]! rounded-xl px-4 text-[14px] text-start transition-colors " + (a[k] === v ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold" : "bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)]")}>{children}</button>);
   const Num = (k, label) => (
-    <label key={k} className="flex-1 min-w-0 text-[12px] text-slate-400">{label}
-      <input type="number" inputMode="decimal" value={a[k]} onChange={(e) => set(k, e.target.value)} data-testid={"fit-qs-" + k} className="mt-1 w-full min-h-[48px]! rounded-xl bg-slate-800 px-3 text-[15px] text-white" />
+    <label key={k} className="flex-1 min-w-0 text-[12px] text-[var(--c-mut)]">{label}
+      <input type="number" inputMode="decimal" value={a[k]} onChange={(e) => set(k, e.target.value)} data-testid={"fit-qs-" + k} className="mt-1 w-full min-h-[48px]! rounded-xl bg-[var(--c-surf-2)] px-3 text-[15px] text-[var(--c-ink)]" />
     </label>);
   const can = step === 0 ? !!a.goal : step === 1 ? (a.mode === "kcal" ? +a.kcal > 0 : +a.age > 0 && +a.cm > 0 && +a.kg > 0) : true;
   const next = () => { if (step < 2) { setStep(step + 1); return; } const r = H.quickProfile(a); if (r.error) { save(a); return; } setPlan(H.targetsOf(r.profile)); };
   const countries = useMemo(() => Object.entries(F.COUNTRIES).sort((x, y) => (ar ? x[1].ar.localeCompare(y[1].ar, "ar") : x[1].en.localeCompare(y[1].en))), [ar]);
   if (intro) return (
     <div className="max-w-md lg:max-w-xl att-keep mx-auto px-4 py-6 lg:py-10 space-y-5" data-testid="fit-qs-welcome">
-      <div className="h-40 rounded-3xl bg-gradient-to-br from-emerald-700/50 via-slate-900 to-slate-950 border border-emerald-900 flex items-center justify-center" aria-hidden="true"><Apple size={64} className="text-emerald-300" /></div>
+      <div className="h-40 rounded-3xl bg-gradient-to-br from-[var(--c-soft)] to-[var(--c-surf)] border border-[var(--c-ln)] flex items-center justify-center" aria-hidden="true"><Apple size={64} className="text-[var(--c-acc)]" /></div>
       <div className="space-y-2">
-        <h2 className="text-[24px] leading-tight font-semibold text-white">{t("Welcome to Fit & Food")}</h2>
-        <p className="text-[14px] text-slate-300">{L("Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”.", "احسب أكلك من غير تعب: صوّر طبقك أو المنيو، أو صوّر الباركود، أو اكتب «بيضتين ورغيف عيش».")}</p>
+        <h2 className="text-[24px] leading-tight font-semibold text-[var(--c-ink)]">{t("Welcome to Fit & Food")}</h2>
+        <p className="text-[14px] text-[var(--c-mut)]">{L("Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”.", "احسب أكلك من غير تعب: صوّر طبقك أو المنيو، أو صوّر الباركود، أو اكتب «بيضتين ورغيف عيش».")}</p>
       </div>
-      <ul className="space-y-2 text-[13.5px] text-slate-200">
-        <li className="flex gap-2.5 items-start"><Camera size={18} className="text-emerald-300 shrink-0 mt-0.5" />{L("Photos, barcodes and your voice — the calories are worked out for you", "الصور والباركود وصوتك — والسعرات بتتحسب لوحدها")}</li>
-        <li className="flex gap-2.5 items-start"><Sparkles size={18} className="text-emerald-300 shrink-0 mt-0.5" />{L("A daily target made for your body and goal", "هدف يومي معمول لجسمك وهدفك")}</li>
-        <li className="flex gap-2.5 items-start"><Check size={18} className="text-emerald-300 shrink-0 mt-0.5" />{L("Everything stays on your phone", "كل حاجة بتفضل على موبايلك")}</li>
+      <ul className="space-y-2 text-[13.5px] text-[var(--c-ink)]">
+        <li className="flex gap-2.5 items-start"><Camera size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" />{L("Photos, barcodes and your voice — the calories are worked out for you", "الصور والباركود وصوتك — والسعرات بتتحسب لوحدها")}</li>
+        <li className="flex gap-2.5 items-start"><Sparkles size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" />{L("A daily target made for your body and goal", "هدف يومي معمول لجسمك وهدفك")}</li>
+        <li className="flex gap-2.5 items-start"><Check size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" />{L("Everything stays on your phone", "كل حاجة بتفضل على موبايلك")}</li>
       </ul>
-      <button onClick={() => setIntro(false)} className="w-full min-h-[52px]! rounded-2xl bg-emerald-600 text-[16px] font-semibold text-white" data-testid="fit-qs-start">{L("Get started", "ابدأ")}</button>
-      <p className="text-center text-[12px] text-slate-500">{L("Takes under a minute · you can change it later in Me", "أقل من دقيقة · وتقدر تغيّره بعدين من «أنا»")}</p>
+      <button onClick={() => setIntro(false)} className="w-full min-h-[52px]! rounded-2xl bg-[var(--c-acc)] text-[16px] font-semibold text-[var(--c-on-acc)]" data-testid="fit-qs-start">{L("Get started", "ابدأ")}</button>
+      <p className="text-center text-[12px] text-[var(--c-mut)]">{L("Takes under a minute · you can change it later in Me", "أقل من دقيقة · وتقدر تغيّره بعدين من «أنا»")}</p>
     </div>
   );
   if (plan) return (
     <div className="max-w-md lg:max-w-xl att-keep mx-auto px-4 py-6 lg:py-10 space-y-5" data-testid="fit-qs-plan">
-      <h2 className="text-[22px] font-semibold text-white">{L("Your plan is ready", "خطتك جاهزة")}</h2>
-      <div className="rounded-3xl bg-emerald-500/10 border border-emerald-800 p-5 text-center space-y-1">
-        <div className="text-[13px] text-emerald-200">{L("Your daily target", "هدفك اليومي")}</div>
-        <div className="text-[44px] leading-none font-bold text-white tabular-nums" data-testid="fit-qs-kcal">{plan.kcal}</div>
-        <div className="text-[13px] text-slate-300">{L("calories a day", "سعرة في اليوم")}</div>
+      <h2 className="text-[22px] font-semibold text-[var(--c-ink)]">{L("Your plan is ready", "خطتك جاهزة")}</h2>
+      <div className="rounded-3xl bg-[var(--c-soft)] border border-[var(--c-acc)]/40 p-5 text-center space-y-1">
+        <div className="text-[13px] text-[var(--c-ink)]">{L("Your daily target", "هدفك اليومي")}</div>
+        <div className="text-[44px] leading-none font-bold text-[var(--c-ink)] tabular-nums" data-testid="fit-qs-kcal">{plan.kcal}</div>
+        <div className="text-[13px] text-[var(--c-mut)]">{L("calories a day", "سعرة في اليوم")}</div>
       </div>
       <div className="grid grid-cols-2 gap-2 text-center">
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-3"><div className="text-[20px] font-semibold text-white tabular-nums">{plan.protein} g</div><div className="text-[12px] text-slate-400">{L("protein", "بروتين")}</div></div>
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-3"><div className="text-[20px] font-semibold text-white tabular-nums">{(plan.water / 1000).toFixed(1)} L</div><div className="text-[12px] text-slate-400">{L("water", "مية")}</div></div>
+        <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3"><div className="text-[20px] font-semibold text-[var(--c-ink)] tabular-nums">{plan.protein} g</div><div className="text-[12px] text-[var(--c-mut)]">{L("protein", "بروتين")}</div></div>
+        <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3"><div className="text-[20px] font-semibold text-[var(--c-ink)] tabular-nums">{(plan.water / 1000).toFixed(1)} L</div><div className="text-[12px] text-[var(--c-mut)]">{L("water", "مية")}</div></div>
       </div>
-      {plan.weeks ? <p className="text-[13px] text-slate-300 text-center">{L(`At this pace you reach your goal in about ${plan.weeks} weeks.`, `بالمعدل ده هتوصل لهدفك في حوالي ${plan.weeks} أسبوع.`)}</p> : null}
+      {plan.weeks ? <p className="text-[13px] text-[var(--c-mut)] text-center">{L(`At this pace you reach your goal in about ${plan.weeks} weeks.`, `بالمعدل ده هتوصل لهدفك في حوالي ${plan.weeks} أسبوع.`)}</p> : null}
       <div className="flex gap-2">
-        <button onClick={() => setPlan(null)} className="min-h-[52px]! rounded-2xl bg-slate-800 px-4 text-slate-300" data-testid="fit-qs-back">{L("Back", "رجوع")}</button>
-        <button onClick={() => save(a)} className="flex-1 min-h-[52px]! rounded-2xl bg-emerald-600 text-[16px] font-semibold text-white" data-testid="fit-qs-next">{t("Start logging")}</button>
+        <button onClick={() => setPlan(null)} className="min-h-[52px]! rounded-2xl bg-[var(--c-surf-2)] px-4 text-[var(--c-mut)]" data-testid="fit-qs-back">{L("Back", "رجوع")}</button>
+        <button onClick={() => save(a)} className="flex-1 min-h-[52px]! rounded-2xl bg-[var(--c-acc)] text-[16px] font-semibold text-[var(--c-on-acc)]" data-testid="fit-qs-next">{t("Start logging")}</button>
       </div>
     </div>
   );
   return (
     <div className="max-w-md lg:max-w-xl att-keep mx-auto px-4 py-5 lg:py-10 space-y-4" data-testid="fit-qs">
       <div className="flex items-center gap-2">
-        <Apple size={19} className="text-emerald-300" /><h2 className="text-lg font-semibold text-white flex-1">{t("Welcome to Fit & Food")}</h2>
-        <span className="text-[12px] text-slate-400 tabular-nums" data-testid="fit-qs-step">{step + 1}/3</span>
+        <Apple size={19} className="text-[var(--c-acc)]" /><h2 className="text-lg font-semibold text-[var(--c-ink)] flex-1">{t("Welcome to Fit & Food")}</h2>
+        <span className="text-[12px] text-[var(--c-mut)] tabular-nums" data-testid="fit-qs-step">{step + 1}/3</span>
       </div>
-      <div className="flex gap-1" aria-hidden="true">{[0, 1, 2].map((i) => <div key={i} className={"h-1 flex-1 rounded-full " + (i <= step ? "bg-emerald-500" : "bg-slate-800")} />)}</div>
+      <div className="flex gap-1" aria-hidden="true">{[0, 1, 2].map((i) => <div key={i} className={"h-1 flex-1 rounded-full " + (i <= step ? "bg-[var(--c-acc)]" : "bg-[var(--c-surf-2)]")} />)}</div>
       {step === 0 ? (<section className="space-y-2" aria-labelledby="qs0">
-        <h3 id="qs0" className="text-[16px] text-white font-medium">{t("What is your goal?")}</h3>
+        <h3 id="qs0" className="text-[16px] text-[var(--c-ink)] font-medium">{t("What is your goal?")}</h3>
         <div className="grid gap-2">
           <Pick k="goal" v="lose" tid="fit-qs-goal-lose">{L("Lose weight", "أخسّ")}</Pick>
           <Pick k="goal" v="maintain" tid="fit-qs-goal-maintain">{L("Keep my weight", "أحافظ على وزني")}</Pick>
           <Pick k="goal" v="gain" tid="fit-qs-goal-gain">{L("Gain muscle", "أبني عضل")}</Pick>
         </div>
       </section>) : step === 1 ? (<section className="space-y-3" aria-labelledby="qs1">
-        <h3 id="qs1" className="text-[16px] text-white font-medium">{t("About you")}</h3>
+        <h3 id="qs1" className="text-[16px] text-[var(--c-ink)] font-medium">{t("About you")}</h3>
         <div className="grid grid-cols-2 gap-2">
           <Pick k="mode" v="body" tid="fit-qs-mode-body">{t("Height, weight, age")}</Pick>
           <Pick k="mode" v="kcal" tid="fit-qs-mode-kcal">{t("Just a calorie target")}</Pick>
@@ -1012,17 +1013,17 @@ function QuickSetup({ t, L, ar, save, full }) {
           <div className="flex gap-2">{Num("age", L("Age", "السن"))}{Num("cm", L("Height (cm)", "الطول (سم)"))}{Num("kg", L("Weight (kg)", "الوزن (كجم)"))}</div>
         </>)}
       </section>) : (<section className="space-y-2" aria-labelledby="qs2">
-        <h3 id="qs2" className="text-[16px] text-white font-medium">{t("Whose food do you eat?")}</h3>
-        <p className="text-[12.5px] text-slate-400">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "الاقتراحات والبحث والوجبات المكتوبة والصور بتبدأ بأكل البلد دي.")}</p>
-        <select value={a.country} onChange={(e) => set("country", e.target.value)} data-testid="fit-qs-country" aria-labelledby="qs2" className="w-full min-h-[48px]! rounded-xl bg-slate-800 px-3 text-[15px] text-white">
+        <h3 id="qs2" className="text-[16px] text-[var(--c-ink)] font-medium">{t("Whose food do you eat?")}</h3>
+        <p className="text-[12.5px] text-[var(--c-mut)]">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "الاقتراحات والبحث والوجبات المكتوبة والصور بتبدأ بأكل البلد دي.")}</p>
+        <select value={a.country} onChange={(e) => set("country", e.target.value)} data-testid="fit-qs-country" aria-labelledby="qs2" className="w-full min-h-[48px]! rounded-xl bg-[var(--c-surf-2)] px-3 text-[15px] text-[var(--c-ink)]">
           {countries.map(([k, c]) => <option key={k} value={k}>{c.flag} {ar ? c.ar : c.en}</option>)}
         </select>
       </section>)}
       <div className="flex gap-2 pt-1">
-        {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[48px]! rounded-xl bg-slate-800 px-4 text-slate-300" data-testid="fit-qs-back">{L("Back", "رجوع")}</button> : null}
-        <button onClick={next} disabled={!can} className="flex-1 min-h-[48px]! rounded-xl bg-emerald-600 disabled:opacity-40 font-medium text-white" data-testid="fit-qs-next">{t("Next")}</button>
+        {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[48px]! rounded-xl bg-[var(--c-surf-2)] px-4 text-[var(--c-mut)]" data-testid="fit-qs-back">{L("Back", "رجوع")}</button> : null}
+        <button onClick={next} disabled={!can} className="flex-1 min-h-[48px]! rounded-xl bg-[var(--c-acc)] disabled:opacity-40 font-medium text-[var(--c-on-acc)]" data-testid="fit-qs-next">{t("Next")}</button>
       </div>
-      <button onClick={full} className="w-full min-h-[48px]! text-[13px] text-slate-400 underline" data-testid="fit-qs-full">{t("Set up the full plan instead (activity, pace, eating style)")}</button>
+      <button onClick={full} className="w-full min-h-[48px]! text-[13px] text-[var(--c-mut)] underline" data-testid="fit-qs-full">{t("Set up the full plan instead (activity, pace, eating style)")}</button>
     </div>
   );
 }
@@ -1043,16 +1044,16 @@ function LogRow({ t, ar, x, onDelete, onEdit, onCopy, testid }) {
   return (
     <div className="relative overflow-hidden rounded-lg" data-testid={testid}>
       <div className="absolute inset-y-0 end-0 flex" aria-hidden={!open} style={{ visibility: open || dx !== 0 ? "visible" : "hidden" }}>
-        <button tabIndex={open ? 0 : -1} onClick={act(onCopy)} className="w-14 bg-slate-600 text-white flex items-center justify-center" aria-label={ar ? "نسخ" : "Copy"} data-testid="fit-row-copy"><Copy size={16} /></button>
-        <button tabIndex={open ? 0 : -1} onClick={act(onEdit)} className="w-14 bg-sky-700 text-white flex items-center justify-center" aria-label={t("Edit")} data-testid="fit-row-edit"><Pencil size={16} /></button>
-        <button tabIndex={open ? 0 : -1} onClick={act(onDelete)} className="w-14 bg-rose-600 text-white flex items-center justify-center" aria-label={t("Delete")} data-testid="fit-row-delete"><Trash2 size={16} /></button>
+        <button tabIndex={open ? 0 : -1} onClick={act(onCopy)} className="w-14 bg-[var(--c-ln)] text-[var(--c-ink)] flex items-center justify-center" aria-label={ar ? "نسخ" : "Copy"} data-testid="fit-row-copy"><Copy size={16} /></button>
+        <button tabIndex={open ? 0 : -1} onClick={act(onEdit)} className="w-14 bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center" aria-label={t("Edit")} data-testid="fit-row-edit"><Pencil size={16} /></button>
+        <button tabIndex={open ? 0 : -1} onClick={act(onDelete)} className="w-14 bg-[var(--c-neg)] text-[var(--c-on-acc)] flex items-center justify-center" aria-label={t("Delete")} data-testid="fit-row-delete"><Trash2 size={16} /></button>
       </div>
       <div onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ transform: `translateX(${shown}px)`, touchAction: "pan-y" }}
-        className={"relative bg-slate-900 flex items-center gap-2 min-h-[48px]! px-1 text-[13.5px] " + (start.current ? "" : "motion-safe:transition-transform motion-safe:duration-200")}>
-        <span className="w-11 shrink-0 text-[11.5px] text-slate-500 tabular-nums">{time}</span>
-        <span className="flex-1 min-w-0 truncate text-slate-200">{ar && x.ar ? x.ar : x.name} <span className="text-slate-500 tabular-nums">{x.grams} {ar ? "جم" : "g"}</span></span>
-        <span className="text-slate-400 tabular-nums shrink-0">{r0(x.kcal)}</span>
-        <button onClick={() => setOpen((o) => !o)} className="min-h-[44px] min-w-[36px] text-slate-500 flex items-center justify-center shrink-0" aria-label={t("Edit or delete")} aria-expanded={open} data-testid="fit-row-more"><ChevronLeft size={16} className={ar ? "rotate-180" : ""} /></button>
+        className={"relative bg-[var(--c-surf)] flex items-center gap-2 min-h-[48px]! px-1 text-[13.5px] " + (start.current ? "" : "motion-safe:transition-transform motion-safe:duration-200")}>
+        <span className="w-11 shrink-0 text-[11.5px] text-[var(--c-mut)] tabular-nums">{time}</span>
+        <span className="flex-1 min-w-0 truncate text-[var(--c-ink)]">{ar && x.ar ? x.ar : x.name} <span className="text-[var(--c-mut)] tabular-nums">{x.grams} {ar ? "جم" : "g"}</span></span>
+        <span className="text-[var(--c-mut)] tabular-nums shrink-0">{r0(x.kcal)}</span>
+        <button onClick={() => setOpen((o) => !o)} className="min-h-[44px] min-w-[36px] text-[var(--c-mut)] flex items-center justify-center shrink-0" aria-label={t("Edit or delete")} aria-expanded={open} data-testid="fit-row-more"><ChevronLeft size={16} className={ar ? "rotate-180" : ""} /></button>
       </div>
     </div>
   );
@@ -1075,22 +1076,22 @@ function EditFood({ L, ar, x, meal, onClose, onSave }) {
   };
   const ok = +gs > 0 && String(name).trim();
   const Num = ({ k, label }) => (
-    <label className="flex-1 min-w-0 text-[11.5px] text-slate-400">{label}
-      <input type="number" inputMode="decimal" value={nums[k]} onChange={(e) => onNum(k, e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-slate-800 border border-slate-700 px-2 text-end text-white tabular-nums" data-testid={"fit-edit-" + k} />
+    <label className="flex-1 min-w-0 text-[11.5px] text-[var(--c-mut)]">{label}
+      <input type="number" inputMode="decimal" value={nums[k]} onChange={(e) => onNum(k, e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-[var(--c-surf-2)] border border-[var(--c-ln)] px-2 text-end text-[var(--c-ink)] tabular-nums" data-testid={"fit-edit-" + k} />
     </label>);
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={onClose}>
-      <div className="w-full max-h-[90vh] overflow-y-auto rounded-t-2xl bg-slate-900 border-t border-slate-700 p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="fit-edit-sheet">
+      <div className="w-full max-h-[90vh] overflow-y-auto rounded-t-2xl bg-[var(--c-surf)] border-t border-[var(--c-ln)] p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="fit-edit-sheet">
         <div className="flex items-center justify-between gap-2">
-          <div className="text-white font-medium">{L("Edit food", "عدّل الأكل")}</div>
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400" aria-label={L("Close", "قفل")}><X size={18} /></button>
+          <div className="text-[var(--c-ink)] font-medium">{L("Edit food", "عدّل الأكل")}</div>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--c-mut)]" aria-label={L("Close", "قفل")}><X size={18} /></button>
         </div>
-        <label className="block text-[11.5px] text-slate-400">{L("Name", "الاسم")}
-          <input value={name} onChange={(e) => setName(e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-slate-800 border border-slate-700 px-2 text-white" data-testid="fit-edit-name" />
+        <label className="block text-[11.5px] text-[var(--c-mut)]">{L("Name", "الاسم")}
+          <input value={name} onChange={(e) => setName(e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-[var(--c-surf-2)] border border-[var(--c-ln)] px-2 text-[var(--c-ink)]" data-testid="fit-edit-name" />
         </label>
         <div className="flex gap-2">
-          <label className="flex-1 min-w-0 text-[11.5px] text-slate-400">{L("Amount (g)", "الكمية (جم)")}
-            <input type="number" inputMode="numeric" value={gs} onChange={(e) => onGrams(e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-slate-800 border border-slate-700 px-2 text-end text-white tabular-nums" data-testid="fit-row-grams" />
+          <label className="flex-1 min-w-0 text-[11.5px] text-[var(--c-mut)]">{L("Amount (g)", "الكمية (جم)")}
+            <input type="number" inputMode="numeric" value={gs} onChange={(e) => onGrams(e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-[var(--c-surf-2)] border border-[var(--c-ln)] px-2 text-end text-[var(--c-ink)] tabular-nums" data-testid="fit-row-grams" />
           </label>
           {Num({ k: "kcal", label: L("Calories", "السعرات") })}
         </div>
@@ -1100,14 +1101,14 @@ function EditFood({ L, ar, x, meal, onClose, onSave }) {
           {Num({ k: "f", label: L("Fat g", "دهون جم") })}
           {Num({ k: "fib", label: L("Fibre g", "ألياف جم") })}
         </div>
-        <div className="text-[11.5px] text-slate-500">{L("Changing the amount changes the numbers with it. You can also type the numbers from the label.", "لما تغيّر الكمية الأرقام بتتغير معاها. وتقدر تكتب الأرقام من الملصق.")}</div>
+        <div className="text-[11.5px] text-[var(--c-mut)]">{L("Changing the amount changes the numbers with it. You can also type the numbers from the label.", "لما تغيّر الكمية الأرقام بتتغير معاها. وتقدر تكتب الأرقام من الملصق.")}</div>
         <div>
-          <div className="text-[11.5px] text-slate-400 mb-1">{L("Meal", "الوجبة")}</div>
+          <div className="text-[11.5px] text-[var(--c-mut)] mb-1">{L("Meal", "الوجبة")}</div>
           <div className="flex gap-1.5 flex-wrap">
-            {F.MEALS.map((m) => <button key={m} onClick={() => setTo(m)} className={"rounded-lg px-2.5 py-1.5 text-[12.5px] border " + (to === m ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")} data-testid={"fit-edit-meal-" + m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</button>)}
+            {F.MEALS.map((m) => <button key={m} onClick={() => setTo(m)} className={chip(to === m)} data-testid={"fit-edit-meal-" + m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</button>)}
           </div>
         </div>
-        <button disabled={!ok} onClick={() => onSave(H.editedFood(x, base, { name, grams: gs, ...nums }), to)} className="w-full min-h-[48px] rounded-xl bg-emerald-600 text-white font-medium disabled:opacity-40" data-testid="fit-row-save">{L("Save", "احفظ")}</button>
+        <button disabled={!ok} onClick={() => onSave(H.editedFood(x, base, { name, grams: gs, ...nums }), to)} className="w-full min-h-[48px] rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] font-medium disabled:opacity-40" data-testid="fit-row-save">{L("Save", "احفظ")}</button>
       </div>
     </div>);
 }
@@ -1153,40 +1154,40 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
     const pm = !items.length && plan && plan.meals[m] && isToday ? plan.meals[m] : null;
     const ms = LK.MEAL_STYLE[m], vivid = variant === "meals" || variant === "tiles";
     return (
-      <div key={m} className={variant === "classic" ? "p-3" : variant === "rings" ? "rounded-2xl bg-slate-900 p-3.5" : "rounded-2xl bg-slate-900 p-3.5 shadow-sm"} style={vivid ? { borderInlineStart: "6px solid " + ms.col } : undefined} data-testid={"fit-meal-" + m}>
+      <div key={m} className={variant === "classic" ? "p-3" : variant === "rings" ? "rounded-2xl bg-[var(--c-surf)] p-3.5" : "rounded-2xl bg-[var(--c-surf)] p-3.5 shadow-sm"} style={vivid ? { borderInlineStart: "6px solid " + ms.col } : undefined} data-testid={"fit-meal-" + m}>
         <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0"><div className="text-white font-medium">{variant !== "classic" && variant !== "rings" ? <span className="me-1.5" aria-hidden="true">{ms.em}</span> : null}{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])} <span className="text-[12px] text-slate-400 tabular-nums">{sum.kcal} {L("kcal", "سعرة")}{onInsulin && items.length ? <b className="ms-1.5 text-amber-200" data-testid="fit-meal-carbs">· {Math.round(sum.c || 0)} {L("g carbs", "جم كربوهيدرات")}</b> : null}</span></div></div>
+          <div className="min-w-0"><div className="text-[var(--c-ink)] font-medium">{variant !== "classic" && variant !== "rings" ? <span className="me-1.5" aria-hidden="true">{ms.em}</span> : null}{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])} <span className="text-[12px] text-[var(--c-mut)] tabular-nums">{sum.kcal} {L("kcal", "سعرة")}{onInsulin && items.length ? <b className="ms-1.5 text-[var(--c-warn)]" data-testid="fit-meal-carbs">· {Math.round(sum.c || 0)} {L("g carbs", "جم كربوهيدرات")}</b> : null}</span></div></div>
           <span className="flex items-center gap-1.5 shrink-0">
-            {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="min-h-[48px]! min-w-[48px] rounded-full bg-slate-800 text-slate-300 flex items-center justify-center" aria-label={L("Copy to another day", "انسخ ليوم تاني")} data-testid={"fit-copy-" + m}><Copy size={17} /></button> : null}
-            <button onClick={() => setAdding(m)} className={"min-h-[48px]! min-w-[48px] rounded-full flex items-center justify-center shrink-0 " + (vivid ? "text-white" : minimal ? "bg-emerald-600 text-white" : "bg-emerald-600/20 text-emerald-300")} style={vivid ? { background: ms.col } : undefined} data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `ضيف على ${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
+            {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="min-h-[48px]! min-w-[48px] rounded-full bg-[var(--c-surf-2)] text-[var(--c-mut)] flex items-center justify-center" aria-label={L("Copy to another day", "انسخ ليوم تاني")} data-testid={"fit-copy-" + m}><Copy size={17} /></button> : null}
+            <button onClick={() => setAdding(m)} className={"min-h-[48px]! min-w-[48px] rounded-full flex items-center justify-center shrink-0 " + (vivid ? "text-[var(--c-ink)]" : minimal ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-soft)] text-[var(--c-acc)]")} style={vivid ? { background: ms.col } : undefined} data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `ضيف على ${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
           </span>
         </div>
         {items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={() => setEditing({ m, i })} onCopy={() => setCopyOf({ slot: m, item: x })} />)}
         {pm && minimal ? (
           <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
-            className="mt-0.5 w-full min-h-[44px]! text-start text-[13.5px] text-slate-400" data-testid={"fit-suggest-" + m}>
+            className="mt-0.5 w-full min-h-[44px]! text-start text-[13.5px] text-[var(--c-ink)]" data-testid={"fit-suggest-" + m}>
             {L("Try", "جرّب")}: {ar ? pm.recipe.ar : pm.recipe.en} · {pm.kcal} {L("kcal", "سعرة")}
           </button>) : pm ? (
           <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
-            className="mt-1 w-full min-h-[48px]! text-start rounded-lg bg-slate-800/60 px-2.5 py-2 text-[12.5px] text-slate-300" data-testid={"fit-suggest-" + m}>
-            <span className="text-emerald-300">{L("Suggested", "مقترح")}:</span> {ar ? pm.recipe.ar : pm.recipe.en}{pm.x !== 1 ? ` ×${pm.x}` : ""} · {pm.kcal} {L("kcal", "سعرة")} — <u>{L("I ate this", "أكلت ده")}</u>
+            className="mt-1 w-full min-h-[48px]! text-start rounded-lg bg-[var(--c-surf-2)] px-2.5 py-2 text-[12.5px] text-[var(--c-ink)]" data-testid={"fit-suggest-" + m}>
+            <span className="text-[var(--c-acc)]">{L("Suggested", "مقترح")}:</span> {ar ? pm.recipe.ar : pm.recipe.en}{pm.x !== 1 ? ` ×${pm.x}` : ""} · {pm.kcal} {L("kcal", "سعرة")} — <u>{L("I ate this", "أكلت ده")}</u>
           </button>) : null}
       </div>);
   };
   const Act = ({ k, Ic, label, primary }) => (
     <button onClick={bar[k]} data-testid={"fit-lb-" + k} aria-label={label}
-      className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-emerald-600 text-white" : listening && k === "voice" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-100")}>
+      className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : listening && k === "voice" ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]")}>
       <Ic size={19} aria-hidden="true" /><span>{label}</span></button>);
   const fastCard = (
-<div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-fast">
-        <div className="text-[13px] text-white flex items-center gap-1.5"><Timer size={15} className="text-violet-300" />{L("Fasting", "صيام")}</div>
+<div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="fit-fast">
+        <div className="text-[13px] text-[var(--c-ink)] flex items-center gap-1.5"><Timer size={15} className="text-[var(--c-acc)]" />{L("Fasting", "صيام")}</div>
         {fs ? (<>
-          <div className={"text-xl font-semibold tabular-nums mt-1 " + (fs.reached ? "text-emerald-300" : "text-white")}>{hm(fs.done)} <span className="text-[12px] text-slate-400">/ {st.fast.hours}h</span></div>
-          <div className="h-1.5 rounded-full bg-slate-800 mt-1"><div className="h-1.5 rounded-full bg-violet-400" style={{ width: fs.pct + "%" }} /></div>
-          {(() => { const sg = Y.fastStage(fs.done / 3600e3); return <div className="text-[11.5px] text-violet-200 mt-1.5" data-testid="fit-fast-stage">{L(sg.now[1], sg.now[2])}{sg.next ? <span className="text-slate-500"> · {L(`next in ${sg.inH} h`, `اللي بعده كمان ${sg.inH} ساعة`)}</span> : null}</div>; })()}
-          <button onClick={() => upd((s) => ({ ...s, fast: null }))} className="mt-2 w-full min-h-[44px] rounded-lg bg-slate-800 text-[12.5px] text-slate-200">{L("End fast", "خلّص الصيام")}</button>
+          <div className={"text-xl font-semibold tabular-nums mt-1 " + (fs.reached ? "text-[var(--c-acc)]" : "text-[var(--c-ink)]")}>{hm(fs.done)} <span className="text-[12px] text-[var(--c-mut)]">/ {st.fast.hours}h</span></div>
+          <div className="h-1.5 rounded-full bg-[var(--c-surf-2)] mt-1"><div className="h-1.5 rounded-full bg-violet-400" style={{ width: fs.pct + "%" }} /></div>
+          {(() => { const sg = Y.fastStage(fs.done / 3600e3); return <div className="text-[11.5px] text-[var(--c-ink)] mt-1.5" data-testid="fit-fast-stage">{L(sg.now[1], sg.now[2])}{sg.next ? <span className="text-[var(--c-mut)]"> · {L(`next in ${sg.inH} h`, `اللي بعده كمان ${sg.inH} ساعة`)}</span> : null}</div>; })()}
+          <button onClick={() => upd((s) => ({ ...s, fast: null }))} className="mt-2 w-full min-h-[44px] rounded-lg bg-[var(--c-surf-2)] text-[12.5px] text-[var(--c-ink)]">{L("End fast", "خلّص الصيام")}</button>
         </>) : (
-          <div className="flex flex-wrap gap-1.5 mt-2">{Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} className="min-h-[44px] rounded-lg bg-slate-800 px-3 text-[12.5px] text-slate-200" data-testid={"fit-fast-" + h}>{k}</button>)}</div>
+          <div className="flex flex-wrap gap-1.5 mt-2">{Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} className="min-h-[44px] rounded-lg bg-[var(--c-surf-2)] px-3 text-[12.5px] text-[var(--c-ink)]" data-testid={"fit-fast-" + h}>{k}</button>)}</div>
         )}
       </div>);
   // ---- v6.43 design A (Ali picked "A · Fresh" on the design canvas, 19 Oct): a big "Today", one ring card with eaten | left |
@@ -1202,32 +1203,32 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
   </>);
   if (a && only === "fast") {
     // design A's Fasting tab: one big timer ring; the plans as cards; the body's stages with the current one marked
-    const cardA = "rounded-3xl bg-slate-900 shadow-[0_1px_3px_rgba(16,32,28,0.08)]";
+    const cardA = "rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
     const hours = fs ? fs.done / 3600e3 : 0, sg = fs ? Y.fastStage(hours) : null;
     const PLAN_TXT = { 12: ["Easy start", "بداية سهلة"], 14: ["Gentle", "خفيف"], 16: ["The classic", "الأشهر"], 18: ["Stronger", "أقوى"], 20: ["Warrior", "المحارب"], 23: ["One meal a day", "وجبة واحدة في اليوم"], 36: ["Long fast — check with a doctor", "صيام طويل — استشير دكتور"] };
     return (
       <div className="space-y-4 fit-a" data-testid="fit-fast-tab">
-        <h2 className="text-[28px] font-black text-white pt-1">{L("Fasting", "الصيام")}</h2>
+        <h2 className="text-[28px] font-black text-[var(--c-ink)] pt-1">{L("Fasting", "الصيام")}</h2>
         <div className={cardA + " p-5 flex flex-col items-center gap-3"} data-testid="fit-fast">
-          <div className="w-[210px] h-[210px] rounded-full grid place-items-center" style={{ background: `conic-gradient(${fs && fs.reached ? "#1E9E6A" : "#7C5CD6"} 0 ${fs ? fs.pct : 0}%, #ECE8F8 ${fs ? fs.pct : 0}% 100%)` }}>
-            <div className="w-[180px] h-[180px] rounded-full bg-slate-900 flex flex-col items-center justify-center text-center">
-              {fs ? <><span className="text-[13px] font-bold text-slate-500">{fs.reached ? L("Done! 🎉", "خلصت!") : L("Fasting for", "صايم بقالك")}</span>
-                <span className="text-[40px] font-black tabular-nums text-white leading-none my-1">{hm(fs.done)}</span>
-                <span className="text-[13px] font-bold text-slate-500">/ {st.fast.hours}h</span></>
-                : <><span className="text-[15px] font-extrabold text-white">{L("Not fasting", "مش صايم")}</span><span className="text-[12.5px] text-slate-500 mt-1 px-4">{L("Pick a plan below to start", "اختار خطة تحت وابدأ")}</span></>}
+          <div className="w-[210px] h-[210px] rounded-full grid place-items-center" style={{ background: `conic-gradient(${fs && fs.reached ? "var(--c-acc)" : "#7C5CD6"} 0 ${fs ? fs.pct : 0}%, var(--c-ln) ${fs ? fs.pct : 0}% 100%)` }}>
+            <div className="w-[180px] h-[180px] rounded-full bg-[var(--c-surf)] flex flex-col items-center justify-center text-center">
+              {fs ? <><span className="text-[13px] font-bold text-[var(--c-mut)]">{fs.reached ? L("Done! 🎉", "خلصت!") : L("Fasting for", "صايم بقالك")}</span>
+                <span className="text-[40px] font-black tabular-nums text-[var(--c-ink)] leading-none my-1">{hm(fs.done)}</span>
+                <span className="text-[13px] font-bold text-[var(--c-mut)]">/ {st.fast.hours}h</span></>
+                : <><span className="text-[15px] font-extrabold text-[var(--c-ink)]">{L("Not fasting", "مش صايم")}</span><span className="text-[12.5px] text-[var(--c-mut)] mt-1 px-4">{L("Pick a plan below to start", "اختار خطة تحت وابدأ")}</span></>}
             </div>
           </div>
-          {fs ? <><div className="text-[14px] font-extrabold text-violet-300 text-center" data-testid="fit-fast-stage">{L(sg.now[1], sg.now[2])}{sg.next ? <span className="block text-[12.5px] font-bold text-slate-500">{L(`Next: ${sg.next[1]} in ${sg.inH} h`, `اللي بعده: ${sg.next[2]} بعد ${sg.inH} س`)}</span> : null}</div>
-            <button onClick={() => upd((s) => ({ ...s, fast: null }))} className="w-full min-h-[52px] rounded-full bg-slate-800 text-[15px] font-extrabold text-white">{L("End fast", "خلّص الصيام")}</button></> : null}
+          {fs ? <><div className="text-[14px] font-extrabold text-[var(--c-acc)] text-center" data-testid="fit-fast-stage">{L(sg.now[1], sg.now[2])}{sg.next ? <span className="block text-[12.5px] font-bold text-[var(--c-mut)]">{L(`Next: ${sg.next[1]} in ${sg.inH} h`, `اللي بعده: ${sg.next[2]} بعد ${sg.inH} س`)}</span> : null}</div>
+            <button onClick={() => upd((s) => ({ ...s, fast: null }))} className="w-full min-h-[52px] rounded-full bg-[var(--c-surf-2)] text-[15px] font-extrabold text-[var(--c-ink)]">{L("End fast", "خلّص الصيام")}</button></> : null}
         </div>
         {!fs ? <div className="grid grid-cols-2 gap-3">
           {Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} data-testid={"fit-fast-" + h}
-            className={cardA + " p-4 text-start flex flex-col gap-0.5 min-h-[84px]"}><span className="text-[22px] font-black text-white">{k}</span><span className="text-[12.5px] font-bold text-slate-500">{L((PLAN_TXT[h] || ["", ""])[0], (PLAN_TXT[h] || ["", ""])[1])}</span></button>)}
+            className={cardA + " p-4 text-start flex flex-col gap-0.5 min-h-[84px]"}><span className="text-[22px] font-black text-[var(--c-ink)]">{k}</span><span className="text-[12.5px] font-bold text-[var(--c-mut)]">{L((PLAN_TXT[h] || ["", ""])[0], (PLAN_TXT[h] || ["", ""])[1])}</span></button>)}
         </div> : null}
         <div className={cardA + " p-4"}>
-          <div className="text-[15px] font-black text-white mb-2">{L("What happens in your body", "إيه اللي بيحصل في جسمك")}</div>
+          <div className="text-[15px] font-black text-[var(--c-ink)] mb-2">{L("What happens in your body", "إيه اللي بيحصل في جسمك")}</div>
           {Y.FAST_STAGES.map((g, k) => { const on = fs && sg && sg.now === g; return (
-            <div key={k} className={"flex gap-3 py-1.5 text-[13px] " + (on ? "font-extrabold text-white" : "text-slate-500")}><span className="w-10 shrink-0 tabular-nums font-bold">{g[0]} h</span><span>{L(g[1], g[2])}</span></div>); })}
+            <div key={k} className={"flex gap-3 py-1.5 text-[13px] " + (on ? "font-extrabold text-[var(--c-ink)]" : "text-[var(--c-mut)]")}><span className="w-10 shrink-0 tabular-nums font-bold">{g[0]} h</span><span>{L(g[1], g[2])}</span></div>); })}
         </div>
       </div>);
   }
@@ -1241,31 +1242,31 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
       dinner: ["#ECE8F8", "#6B4FB8", <><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></>],
       snacks: ["#FCE7EE", "#B83260", <><path d="M12 7c-3-2-8-1-8 5 0 4 3 9 6 9 1 0 1.5-.5 2-.5s1 .5 2 .5c3 0 6-5 6-9 0-6-5-7-8-5zM12 7c0-2 1-4 3-4" /></>],
     };
-    const card = "rounded-3xl bg-slate-900 shadow-[0_1px_3px_rgba(16,32,28,0.08)]";
+    const card = "rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
     const macro = (label, v, mx, col, soft) => { const p2 = mx > 0 ? Math.min(100, Math.round(((v || 0) / mx) * 100)) : 0; return (
-      <div className="min-w-0 flex flex-col gap-1.5"><span className="text-[12.5px] font-extrabold text-white">{label}</span>
+      <div className="min-w-0 flex flex-col gap-1.5"><span className="text-[12.5px] font-extrabold text-[var(--c-ink)]">{label}</span>
         <div className="h-1.5 rounded-full" style={{ background: soft }}><div className="h-1.5 rounded-full" style={{ width: p2 + "%", background: col }} /></div>
-        <span className="text-[12px] text-slate-500 tabular-nums">{Math.round(v || 0)} / {mx} {L("g", "جم")}</span></div>); };
+        <span className="text-[12px] text-[var(--c-mut)] tabular-nums">{Math.round(v || 0)} / {mx} {L("g", "جم")}</span></div>); };
     return (
       <div className="space-y-3 fit-a" data-testid="fit-today">
         <div className="flex items-end justify-between gap-2 pt-1">
-          <div className="min-w-0"><div className="text-[13px] font-bold text-slate-500 truncate">{dateLine}</div>
-            <div className="text-[28px] leading-tight font-black text-white" data-testid="fit-day">{isToday ? L("Today", "النهارده") : dayKey}</div></div>
+          <div className="min-w-0"><div className="text-[13px] font-bold text-[var(--c-mut)] truncate">{dateLine}</div>
+            <div className="text-[28px] leading-tight font-black text-[var(--c-ink)]" data-testid="fit-day">{isToday ? L("Today", "النهارده") : dayKey}</div></div>
           <div className="flex gap-1.5 shrink-0">
-            <button onClick={() => shift(-1)} className={"w-11 h-11 rounded-full flex items-center justify-center text-white " + card} aria-label={t("Previous day")}><ChevronLeft size={19} className="rtl:rotate-180" /></button>
-            <button onClick={() => shift(1)} disabled={isToday} className={"w-11 h-11 rounded-full flex items-center justify-center text-white disabled:opacity-30 " + card} aria-label={t("Next day")}><ChevronLeft size={19} className="rotate-180 rtl:rotate-0" /></button>
+            <button onClick={() => shift(-1)} className={"w-11 h-11 rounded-full flex items-center justify-center text-[var(--c-ink)] " + card} aria-label={t("Previous day")}><ChevronLeft size={19} className="rtl:rotate-180" /></button>
+            <button onClick={() => shift(1)} disabled={isToday} className={"w-11 h-11 rounded-full flex items-center justify-center text-[var(--c-ink)] disabled:opacity-30 " + card} aria-label={t("Next day")}><ChevronLeft size={19} className="rotate-180 rtl:rotate-0" /></button>
           </div>
         </div>
 
         <div className={card + " p-4 space-y-4"} data-testid="fit-ring">
           <div className="flex items-center justify-between gap-2">
-            <div className="w-[72px] flex flex-col items-center"><span className="text-[19px] font-extrabold text-white tabular-nums" data-testid="fit-eaten">{tot.kcal}</span><span className="text-[12px] font-semibold text-slate-500">{L("eaten", "أكلت")}</span></div>
-            <div className="w-[150px] h-[150px] rounded-full grid place-items-center shrink-0" style={{ background: `conic-gradient(${left < 0 ? "#D9534F" : "#1E9E6A"} 0 ${pct}%, #E3ECE7 ${pct}% 100%)` }}>
-              <div className="w-[124px] h-[124px] rounded-full bg-slate-900 flex flex-col items-center justify-center">
-                <span className={"text-[34px] font-black tabular-nums leading-none " + (left < 0 ? "text-rose-300" : "text-white")} data-testid="fit-left">{Math.abs(left)}</span>
-                <span className="text-[13px] font-bold text-slate-500 mt-1">{left < 0 ? L("kcal over", "سعرة زيادة") : L("kcal left", "سعرة فاضلة")}</span></div>
+            <div className="w-[72px] flex flex-col items-center"><span className="text-[19px] font-extrabold text-[var(--c-ink)] tabular-nums" data-testid="fit-eaten">{tot.kcal}</span><span className="text-[12px] font-semibold text-[var(--c-mut)]">{L("eaten", "أكلت")}</span></div>
+            <div className="w-[150px] h-[150px] rounded-full grid place-items-center shrink-0" style={{ background: `conic-gradient(${left < 0 ? "var(--c-neg)" : "var(--c-acc)"} 0 ${pct}%, var(--c-ln) ${pct}% 100%)` }}>
+              <div className="w-[124px] h-[124px] rounded-full bg-[var(--c-surf)] flex flex-col items-center justify-center">
+                <span className={"text-[34px] font-black tabular-nums leading-none " + (left < 0 ? "text-[var(--c-neg)]" : "text-[var(--c-ink)]")} data-testid="fit-left">{Math.abs(left)}</span>
+                <span className="text-[13px] font-bold text-[var(--c-mut)] mt-1">{left < 0 ? L("kcal over", "سعرة زيادة") : L("kcal left", "سعرة فاضلة")}</span></div>
             </div>
-            <div className="w-[72px] flex flex-col items-center"><span className="text-[19px] font-extrabold text-white tabular-nums">{tot.burned}</span><span className="text-[12px] font-semibold text-slate-500">{L("burned", "حرقت")}</span></div>
+            <div className="w-[72px] flex flex-col items-center"><span className="text-[19px] font-extrabold text-[var(--c-ink)] tabular-nums">{tot.burned}</span><span className="text-[12px] font-semibold text-[var(--c-mut)]">{L("burned", "حرقت")}</span></div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {macro(L("Carbs", "كارب"), tot.c, tg.carbs, "#2F7FD8", "#E8EEF6")}
@@ -1276,8 +1277,8 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         {st.ramadan && st.ramadan.on && isToday ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
         {isToday ? <InsulinCard {...{ L, ar, day }} carbsToday={tot.c} /> : null}
 
-        <h3 className="text-[18px] font-black text-white px-1 pt-1">{L("Meals", "الوجبات")}</h3>
-        <div className={card + " divide-y divide-slate-800"} data-testid="fit-meals">
+        <h3 className="text-[18px] font-black text-[var(--c-ink)] px-1 pt-1">{L("Meals", "الوجبات")}</h3>
+        <div className={card + " divide-y divide-[var(--c-ln)]"} data-testid="fit-meals">
           {F.MEALS.map((m) => {
             const items = (day.meals || {})[m] || [], sum = F.sumN(items.filter((x) => x.kcal != null));
             const pm = !items.length && plan && plan.meals[m] && isToday ? plan.meals[m] : null;
@@ -1287,15 +1288,15 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
                 <div className="flex items-center gap-3">
                   <span className="w-11 h-11 rounded-2xl grid place-items-center shrink-0" style={{ background: soft }} aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icon}</svg></span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[15.5px] font-extrabold text-white">{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}{onInsulin && sum.c ? <span className="ms-1.5 text-[12px] font-semibold text-slate-500 tabular-nums" data-testid="fit-meal-carbs">{Math.round(sum.c)} {L("g carbs", "جم كارب")}</span> : null}</div>
-                    {items.length ? <div className="text-[13px] text-slate-500 truncate">{items.map(nm).join(ar ? "، " : ", ")}</div>
+                    <div className="text-[15.5px] font-extrabold text-[var(--c-ink)]">{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}{onInsulin && sum.c ? <span className="ms-1.5 text-[12px] font-semibold text-[var(--c-mut)] tabular-nums" data-testid="fit-meal-carbs">{Math.round(sum.c)} {L("g carbs", "جم كارب")}</span> : null}</div>
+                    {items.length ? <div className="text-[13px] text-[var(--c-mut)] truncate">{items.map(nm).join(ar ? "، " : ", ")}</div>
                       : pm ? <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
-                          className="block max-w-full text-start text-[13px] text-slate-500 truncate" data-testid={"fit-suggest-" + m}>{L("Try", "جرّب")}: {ar ? pm.recipe.ar : pm.recipe.en} · {pm.kcal}</button>
-                      : <div className="text-[13px] text-slate-500">{L("Nothing yet", "لسه مفيش")}</div>}
+                          className="block max-w-full text-start text-[13px] text-[var(--c-ink)] truncate" data-testid={"fit-suggest-" + m}>{L("Try", "جرّب")}: {ar ? pm.recipe.ar : pm.recipe.en} · {pm.kcal}</button>
+                      : <div className="text-[13px] text-[var(--c-mut)]">{L("Nothing yet", "لسه مفيش")}</div>}
                   </div>
-                  {items.length ? <span className="text-[15px] font-extrabold text-white tabular-nums">{sum.kcal}</span> : null}
-                  {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="w-9 h-9 rounded-full grid place-items-center text-slate-500" aria-label={L("Copy to another day", "انسخ ليوم تاني")} data-testid={"fit-copy-" + m}><Copy size={16} /></button> : null}
-                  <button onClick={() => setAdding(m)} className="w-10 h-10 rounded-full grid place-items-center shrink-0 bg-emerald-950 text-emerald-300" aria-label={L("Add to " + MEAL_NAMES[m][0], "ضيف على " + MEAL_NAMES[m][1])} data-testid={"fit-add-" + m}><Plus size={20} strokeWidth={2.6} /></button>
+                  {items.length ? <span className="text-[15px] font-extrabold text-[var(--c-ink)] tabular-nums">{sum.kcal}</span> : null}
+                  {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="w-9 h-9 rounded-full grid place-items-center text-[var(--c-mut)]" aria-label={L("Copy to another day", "انسخ ليوم تاني")} data-testid={"fit-copy-" + m}><Copy size={16} /></button> : null}
+                  <button onClick={() => setAdding(m)} className="w-10 h-10 rounded-full grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]" aria-label={L("Add to " + MEAL_NAMES[m][0], "ضيف على " + MEAL_NAMES[m][1])} data-testid={"fit-add-" + m}><Plus size={20} strokeWidth={2.6} /></button>
                 </div>
                 {items.length ? <div className="mt-1.5 ms-14">{items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={() => setEditing({ m, i })} onCopy={() => setCopyOf({ slot: m, item: x })} />)}</div> : null}
               </div>);
@@ -1304,34 +1305,34 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
 
         <div className="grid grid-cols-2 gap-3">
           <div className={card + " p-3.5 flex flex-col gap-1.5"} data-testid="fit-water">
-            <span className="text-[12.5px] font-bold text-slate-500">{L("Water", "مية")}</span>
-            <span className="text-[20px] font-black text-white tabular-nums">{(tot.water / 1000).toFixed(2)} <span className="text-[13px] font-bold text-slate-500">/ {(tg.water / 1000).toFixed(1)} L</span></span>
+            <span className="text-[12.5px] font-bold text-[var(--c-mut)]">{L("Water", "مية")}</span>
+            <span className="text-[20px] font-black text-[var(--c-ink)] tabular-nums">{(tot.water / 1000).toFixed(2)} <span className="text-[13px] font-bold text-[var(--c-mut)]">/ {(tg.water / 1000).toFixed(1)} L</span></span>
             <div className="flex gap-1" aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <span key={i} className="flex-1 h-2 rounded-full" style={{ background: (tot.water || 0) >= ((i + 1) * tg.water) / 5 ? "#3BA3E6" : "#E3EEF6" }} />)}</div>
             <div className="flex gap-1.5 mt-0.5">
-              <button onClick={() => setDay((d) => ({ ...d, water: Math.max(0, (d.water || 0) - 250) }))} className="w-11 h-10 rounded-full bg-slate-800 text-white text-[18px]" aria-label={t("One glass less")}>−</button>
-              <button onClick={() => { setDay((d) => ({ ...d, water: (d.water || 0) + 250 })); tick(); }} className="flex-1 h-10 rounded-full bg-sky-600 text-white text-[13.5px] font-bold" data-testid="fit-water-add">+ {L("glass", "كوب")}</button>
+              <button onClick={() => setDay((d) => ({ ...d, water: Math.max(0, (d.water || 0) - 250) }))} className="w-11 h-10 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] text-[18px]" aria-label={t("One glass less")}>−</button>
+              <button onClick={() => { setDay((d) => ({ ...d, water: (d.water || 0) + 250 })); tick(); }} className="flex-1 h-10 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)] text-[13.5px] font-bold" data-testid="fit-water-add">+ {L("glass", "كوب")}</button>
             </div>
           </div>
           <div className={card + " p-3.5 flex flex-col gap-1.5"} data-testid="fit-exercise">
-            <span className="text-[12.5px] font-bold text-slate-500">{w ? L("From your watch", "من ساعتك") : L("Activity", "النشاط")}</span>
-            <span className="text-[20px] font-black text-white tabular-nums">{w ? <span data-testid="fit-steps">{(w.steps || 0).toLocaleString("en-US")}</span> : tot.burned} <span className="text-[13px] font-bold text-slate-500">{w ? L("steps", "خطوة") : L("kcal", "سعرة")}</span></span>
-            <span className="text-[12px] font-bold text-emerald-300 truncate">{w ? (w.activeKcal || 0) + " " + L("kcal burned", "سعرة محروقة") : L("Connect a watch in Me", "اربط ساعة من «أنا»")}</span>
-            <button onClick={openMove} className="mt-auto h-10 rounded-full bg-slate-800 text-white text-[13.5px] font-bold" data-testid="fit-open-move">{L("Workouts", "التمارين")}</button>
+            <span className="text-[12.5px] font-bold text-[var(--c-mut)]">{w ? L("From your watch", "من ساعتك") : L("Activity", "النشاط")}</span>
+            <span className="text-[20px] font-black text-[var(--c-ink)] tabular-nums">{w ? <span data-testid="fit-steps">{(w.steps || 0).toLocaleString("en-US")}</span> : tot.burned} <span className="text-[13px] font-bold text-[var(--c-mut)]">{w ? L("steps", "خطوة") : L("kcal", "سعرة")}</span></span>
+            <span className="text-[12px] font-bold text-[var(--c-acc)] truncate">{w ? (w.activeKcal || 0) + " " + L("kcal burned", "سعرة محروقة") : L("Connect a watch in Me", "اربط ساعة من «أنا»")}</span>
+            <button onClick={openMove} className="mt-auto h-10 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] text-[13.5px] font-bold" data-testid="fit-open-move">{L("Workouts", "التمارين")}</button>
           </div>
         </div>
 
         <div className={card + " p-3.5"} data-testid="fit-week">
-          <div className="text-[12.5px] font-bold text-slate-500 mb-1.5">{t("This week")}</div>
+          <div className="text-[12.5px] font-bold text-[var(--c-mut)] mb-1.5">{t("This week")}</div>
           <div className="flex items-end gap-1.5 h-14" role="img" aria-label={t("Calories in the last 7 days")}>
             {week.map((wk) => (
               <div key={wk.d} className="flex-1 flex flex-col items-center gap-0.5 h-full justify-end">
-                <div className="w-full rounded-md" style={{ height: Math.max(3, Math.round((wk.kcal / wMax) * 40)) + "px", background: wk.kcal > tg.kcal * 1.1 ? "#E07A1F" : wk.d === dayKey ? "#1E9E6A" : "#BFE3CF" }} />
-                <span className="text-[11px] text-slate-500">{DAY_LETTERS[ar ? "ar" : "en"][wk.day]}</span>
+                <div className="w-full rounded-md" style={{ height: Math.max(3, Math.round((wk.kcal / wMax) * 40)) + "px", background: wk.kcal > tg.kcal * 1.1 ? "var(--c-warn)" : wk.d === dayKey ? "var(--c-acc)" : "color-mix(in srgb, var(--c-acc) 35%, transparent)" }} />
+                <span className="text-[11px] text-[var(--c-mut)]">{DAY_LETTERS[ar ? "ar" : "en"][wk.day]}</span>
               </div>))}
           </div>
         </div>
         {F.MEALS.some((m) => ((day.meals || {})[m] || []).length) ? (
-          <button onClick={() => setCopyOf({ slot: null })} className="w-full min-h-[44px] text-[13px] font-bold text-slate-500 flex items-center justify-center gap-1.5" data-testid="fit-copy-day">
+          <button onClick={() => setCopyOf({ slot: null })} className="w-full min-h-[44px] text-[13px] font-bold text-[var(--c-mut)] flex items-center justify-center gap-1.5" data-testid="fit-copy-day">
             <Copy size={14} />{isToday ? L("Copy today's food to another day", "انسخ أكل النهارده ليوم تاني") : L("Copy this day's food to another day", "انسخ أكل اليوم ده ليوم تاني")}</button>) : null}
         {sheets}
       </div>);
@@ -1339,26 +1340,26 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
   return (
     <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] lg:gap-x-6 lg:gap-y-3 lg:items-start" data-testid="fit-today">
       <div className="space-y-3 lg:col-start-1">
-      <div className="flex items-center justify-between gap-2 text-[13px] text-slate-300">
+      <div className="flex items-center justify-between gap-2 text-[13px] text-[var(--c-mut)]">
         <button onClick={() => shift(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg" aria-label={t("Previous day")}><ChevronLeft size={18} className="rtl:rotate-180" /></button>
-        <span data-testid="fit-day" className="font-medium text-white">{isToday ? L("Today", "النهارده") : dayKey}</span>
+        <span data-testid="fit-day" className="font-medium text-[var(--c-ink)]">{isToday ? L("Today", "النهارده") : dayKey}</span>
         <button onClick={() => shift(1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg disabled:opacity-30" disabled={isToday} aria-label={t("Next day")}><ChevronLeft size={18} className="rotate-180 rtl:rotate-0" /></button>
       </div>
 
       {/* v6.27: the summary and the meals, in the look's own layout (classic · colour per meal · rings · tiles) */}
       {layout === "rings" ? (<>
-        <div className="rounded-3xl p-4 text-white" style={{ background: "linear-gradient(135deg,#0EA5E9,#8B5CF6)" }} data-testid="fit-ring">
+        <div className="rounded-3xl p-4 text-[var(--c-ink)]" style={{ background: "linear-gradient(135deg,#0EA5E9,#8B5CF6)" }} data-testid="fit-ring">
           <div className="text-[13px] opacity-90">{left < 0 ? L("Over today", "زيادة النهارده") : L("Left today", "الفاضل النهارده")}</div>
           <div className="text-[34px] font-extrabold tabular-nums leading-tight"><span data-testid="fit-left">{Math.abs(left)}</span> <span className="text-[15px] font-semibold">{L("kcal", "سعرة")}</span></div>
           <div className="text-[12.5px] opacity-90 tabular-nums">{L("Eaten", "أكلت")} <b data-testid="fit-eaten">{tot.kcal}</b> · {L("Burned", "حرقت")} {tot.burned} · {L("Goal", "الهدف")} {tg.kcal}</div>
         </div>
-        <div className="rounded-3xl bg-slate-900 p-4 grid grid-cols-4 gap-1" data-testid="fit-rings">
+        <div className="rounded-3xl bg-[var(--c-surf)] p-4 grid grid-cols-4 gap-1" data-testid="fit-rings">
           {[["Protein", "بروتين", tot.p, tg.protein, "#38BDF8"], ["Carbs", "كربوهيدرات", tot.c, tg.carbs, "#FBBF24"], ["Fat", "دهون", tot.f, tg.fat, "#FB7185"], ["Fibre", "ألياف", tot.fib, tg.fibre, "#34D399"]].map(([en, a2, v, mx, col]) => {
             const pct = mx > 0 ? Math.min(100, Math.round(((v || 0) / mx) * 100)) : 0;
-            return (<div key={en} className="flex flex-col items-center gap-1.5 text-[12px] text-slate-300">
+            return (<div key={en} className="flex flex-col items-center gap-1.5 text-[12px] text-[var(--c-mut)]">
               <div className="w-[66px] h-[66px] rounded-full grid place-items-center" style={{ background: `conic-gradient(${col} 0 ${pct}%, var(--color-slate-800) ${pct}% 100%)` }}>
-                <div className="w-[52px] h-[52px] rounded-full bg-slate-900 grid place-items-center text-[13px] font-bold text-white tabular-nums">{Math.round(v || 0)}{L("g", "جم")}</div></div>
-              <span>{L(en, a2)}</span><span className="text-[10.5px] text-slate-500 tabular-nums -mt-1">/ {mx} {L("g", "جم")}</span></div>);
+                <div className="w-[52px] h-[52px] rounded-full bg-[var(--c-surf)] grid place-items-center text-[13px] font-bold text-[var(--c-ink)] tabular-nums">{Math.round(v || 0)}{L("g", "جم")}</div></div>
+              <span>{L(en, a2)}</span><span className="text-[10.5px] text-[var(--c-mut)] tabular-nums -mt-1">/ {mx} {L("g", "جم")}</span></div>);
           })}
         </div>
       </>) : layout === "tiles" ? (
@@ -1371,13 +1372,13 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           </div>
         </div>
       ) : (
-      <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-4 flex items-center gap-4" data-testid="fit-ring">
+      <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 flex items-center gap-4" data-testid="fit-ring">
         <Ring value={tot.kcal} max={tg.kcal + tot.burned}>
-          <div className={"text-2xl font-bold tabular-nums " + (left < 0 ? "text-rose-300" : "text-white")} data-testid="fit-left">{Math.abs(left)}</div>
-          <div className="text-[11px] text-slate-400">{left < 0 ? L("kcal over", "سعرة زيادة") : L("kcal left", "سعرة فاضلة")}</div>
+          <div className={"text-2xl font-bold tabular-nums " + (left < 0 ? "text-[var(--c-neg)]" : "text-[var(--c-ink)]")} data-testid="fit-left">{Math.abs(left)}</div>
+          <div className="text-[11px] text-[var(--c-mut)]">{left < 0 ? L("kcal over", "سعرة زيادة") : L("kcal left", "سعرة فاضلة")}</div>
         </Ring>
         <div className="flex-1 min-w-0 space-y-2">
-          <div className="text-[12px] text-slate-400 tabular-nums">{L("Eaten", "أكلت")} <b className="text-white" data-testid="fit-eaten">{tot.kcal}</b> · {L("Burned", "حرقت")} <b className="text-white">{tot.burned}</b> · {L("Goal", "الهدف")} {tg.kcal}</div>
+          <div className="text-[12px] text-[var(--c-mut)] tabular-nums">{L("Eaten", "أكلت")} <b className="text-[var(--c-ink)]" data-testid="fit-eaten">{tot.kcal}</b> · {L("Burned", "حرقت")} <b className="text-[var(--c-ink)]">{tot.burned}</b> · {L("Goal", "الهدف")} {tg.kcal}</div>
           <Bar label={L("Protein", "بروتين")} v={tot.p} max={tg.protein} cls="bg-sky-400" />
           <Bar label={L("Carbs", "كربوهيدرات")} v={tot.c} max={tg.carbs} cls="bg-amber-400" />
           <Bar label={L("Fat", "دهون")} v={tot.f} max={tg.fat} cls="bg-rose-400" />
@@ -1410,7 +1411,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         </div>
         {openTile ? mealView(openTile, "tiles") : null}
       </>) : layout === "classic" ? (
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 divide-y divide-slate-800" data-testid="fit-meals">
+        <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] divide-y divide-[var(--c-ln)]" data-testid="fit-meals">
           {F.MEALS.map((m) => mealView(m, "classic"))}
         </div>
       ) : (
@@ -1418,7 +1419,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
       )}
 
       {F.MEALS.some((m) => ((day.meals || {})[m] || []).length) ? (
-        <button onClick={() => setCopyOf({ slot: null })} className="w-full min-h-[48px]! rounded-xl border border-slate-800 bg-slate-900/40 text-[13px] text-slate-300 flex items-center justify-center gap-1.5" data-testid="fit-copy-day">
+        <button onClick={() => setCopyOf({ slot: null })} className="w-full min-h-[48px]! rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] text-[var(--c-mut)] flex items-center justify-center gap-1.5" data-testid="fit-copy-day">
           <Copy size={14} />{isToday ? L("Copy today's food to another day", "انسخ أكل النهارده ليوم تاني") : L("Copy this day's food to another day", "انسخ أكل اليوم ده ليوم تاني")}</button>) : null}
       {editing && ((day.meals || {})[editing.m] || [])[editing.i] ? <EditFood key={editing.m + editing.i} {...{ L, ar, x: day.meals[editing.m][editing.i], meal: editing.m, onClose: () => setEditing(null), onSave: (x, to) => saveEdit(editing.m, editing.i, x, to) }} /> : null}
       {copyOf ? <CopySheet {...{ L, ar, from: dayKey, slot: copyOf.slot, item: copyOf.item, onClose: () => setCopyOf(null), onCopy: (toKey, toSlot) => {
@@ -1433,35 +1434,35 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         <div className="flex flex-wrap gap-2" data-testid="fit-extras">
           {[["water", Droplet, L("Water", "مية") + " " + drunk + "/" + glasses], ["move", Dumbbell, L("Move", "الحركة") + (tot.burned ? " −" + tot.burned : "")], ["fast", Timer, fs ? hm(fs.done) : L("Fasting", "صيام")]].map(([k, Ic, label]) =>
             <button key={k} onClick={() => setExtra(extra === k ? null : k)} aria-expanded={extra === k} data-testid={"fit-chip-" + k}
-              className={"min-h-[44px] px-4 rounded-full border-2 text-[14px] font-semibold flex items-center gap-1.5 tabular-nums " + (extra === k ? "border-emerald-600 bg-emerald-950 text-white" : "border-slate-600 bg-slate-900 text-white")}><Ic size={16} />{label}</button>)}
+              className={chip(extra === k) + " tabular-nums"}><Ic size={16} />{label}</button>)}
         </div>) : null}
       {/* water and the week */}
-      {!minimal || extra === "water" ? <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-3" data-testid="fit-water">
+      {!minimal || extra === "water" ? <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-3" data-testid="fit-water">
         <div className="flex items-center justify-between gap-2">
-          <div className="text-[13px] text-white flex items-center gap-1.5"><Droplet size={15} className="text-sky-300" />{L("Water", "مية")} <span className="text-slate-400 tabular-nums">{(tot.water / 1000).toFixed(2)} / {(tg.water / 1000).toFixed(1)} L</span></div>
+          <div className="text-[13px] text-[var(--c-ink)] flex items-center gap-1.5"><Droplet size={15} className="text-[var(--c-acc)]" />{L("Water", "مية")} <span className="text-[var(--c-mut)] tabular-nums">{(tot.water / 1000).toFixed(2)} / {(tg.water / 1000).toFixed(1)} L</span></div>
           <div className="flex gap-1.5">
-            <button onClick={() => setDay((d) => ({ ...d, water: Math.max(0, (d.water || 0) - 250) }))} className="min-h-[44px] min-w-[44px] rounded-lg bg-slate-800 text-slate-300" aria-label={t("One glass less")}>−</button>
-            <button onClick={() => { setDay((d) => ({ ...d, water: (d.water || 0) + 250 })); tick(); }} className="min-h-[44px] rounded-lg bg-sky-600 px-3 text-white" data-testid="fit-water-add">+ {L("glass", "كوب")}</button>
+            <button onClick={() => setDay((d) => ({ ...d, water: Math.max(0, (d.water || 0) - 250) }))} className="min-h-[44px] min-w-[44px] rounded-lg bg-[var(--c-surf-2)] text-[var(--c-mut)]" aria-label={t("One glass less")}>−</button>
+            <button onClick={() => { setDay((d) => ({ ...d, water: (d.water || 0) + 250 })); tick(); }} className="min-h-[44px] rounded-lg bg-[var(--c-soft)] px-3 text-[var(--c-acc)]" data-testid="fit-water-add">+ {L("glass", "كوب")}</button>
           </div>
         </div>
-        <div className="flex gap-1" aria-hidden="true">{Array.from({ length: glasses }, (_, i) => <button key={i} tabIndex={-1} onClick={() => setDay((d) => ({ ...d, water: (i + 1) * 250 === (d.water || 0) ? i * 250 : (i + 1) * 250 }))} className={"flex-1 h-7 rounded-md motion-safe:transition-colors " + (i < drunk ? "bg-sky-400" : "bg-slate-800")} data-testid="fit-glass" />)}</div>
+        <div className="flex gap-1" aria-hidden="true">{Array.from({ length: glasses }, (_, i) => <button key={i} tabIndex={-1} onClick={() => setDay((d) => ({ ...d, water: (i + 1) * 250 === (d.water || 0) ? i * 250 : (i + 1) * 250 }))} className={"flex-1 h-7 rounded-md motion-safe:transition-colors " + (i < drunk ? "bg-sky-400" : "bg-[var(--c-surf-2)]")} data-testid="fit-glass" />)}</div>
         <div data-testid="fit-week">
-          <div className="text-[11.5px] text-slate-500 mb-1">{t("This week")}</div>
+          <div className="text-[11.5px] text-[var(--c-mut)] mb-1">{t("This week")}</div>
           <div className="flex items-end gap-1.5 h-14" role="img" aria-label={t("Calories in the last 7 days")}>
             {week.map((w) => (
               <div key={w.d} className="flex-1 flex flex-col items-center gap-0.5 h-full justify-end">
-                <div className={"w-full rounded-sm " + (w.kcal > tg.kcal * 1.1 ? "bg-rose-400" : w.d === dayKey ? "bg-emerald-400" : "bg-emerald-700")} style={{ height: Math.max(2, Math.round((w.kcal / wMax) * 40)) + "px" }} />
-                <span className="text-[11px] text-slate-500">{DAY_LETTERS[ar ? "ar" : "en"][w.day]}</span>
+                <div className={"w-full rounded-sm " + (w.kcal > tg.kcal * 1.1 ? "bg-rose-400" : w.d === dayKey ? "bg-emerald-400" : "bg-[var(--c-acc)]/45")} style={{ height: Math.max(2, Math.round((w.kcal / wMax) * 40)) + "px" }} />
+                <span className="text-[11px] text-[var(--c-mut)]">{DAY_LETTERS[ar ? "ar" : "en"][w.day]}</span>
               </div>))}
           </div>
         </div>
       </div> : null}
 
       {/* exercise: steps and workouts from the watch, and the workouts page one tap away */}
-      {!minimal || extra === "move" ? <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-exercise">
+      {!minimal || extra === "move" ? <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-2" data-testid="fit-exercise">
         <div className="flex items-center justify-between gap-2">
-          <div className="text-[13px] text-white flex items-center gap-1.5"><Dumbbell size={15} className="text-emerald-300" />{L("Exercise", "الرياضة")} <span className="text-slate-400 tabular-nums">{tot.burned ? `−${tot.burned} kcal` : ""}</span></div>
-          <button onClick={openMove} className="min-h-[44px] rounded-lg bg-slate-800 px-3 text-[12.5px] text-emerald-300" data-testid="fit-open-move">{L("Workouts", "التمارين")}</button>
+          <div className="text-[13px] text-[var(--c-ink)] flex items-center gap-1.5"><Dumbbell size={15} className="text-[var(--c-acc)]" />{L("Exercise", "الرياضة")} <span className="text-[var(--c-mut)] tabular-nums">{tot.burned ? `−${tot.burned} kcal` : ""}</span></div>
+          <button onClick={openMove} className="min-h-[44px] rounded-lg bg-[var(--c-surf-2)] px-3 text-[12.5px] text-[var(--c-acc)]" data-testid="fit-open-move">{L("Workouts", "التمارين")}</button>
         </div>
         <WatchCard {...{ L, ar, health, st, upd, dayKey }} compact />
       </div> : null}
@@ -1512,42 +1513,42 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
     const fav = st.favs.includes(open.id);
     return (
       <div className="space-y-3" data-testid="fit-recipe">
-        <button onClick={() => setOpen(null)} className="text-[13px] text-slate-400 flex items-center gap-1"><ChevronLeft size={15} className="rtl:rotate-180" />{L("Recipes", "الوصفات")}</button>
+        <button onClick={() => setOpen(null)} className="text-[13px] text-[var(--c-mut)] flex items-center gap-1"><ChevronLeft size={15} className="rtl:rotate-180" />{L("Recipes", "الوصفات")}</button>
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-white font-semibold text-[16px]">{ar && open.ar ? open.ar : open.en}</h3>
-          <button onClick={() => upd((s) => ({ ...s, favs: fav ? s.favs.filter((x) => x !== open.id) : [...s.favs, open.id] }))} className={fav ? "text-amber-300" : "text-slate-500"}><Star size={18} /></button>
+          <h3 className="text-[var(--c-ink)] font-semibold text-[16px]">{ar && open.ar ? open.ar : open.en}</h3>
+          <button onClick={() => upd((s) => ({ ...s, favs: fav ? s.favs.filter((x) => x !== open.id) : [...s.favs, open.id] }))} className={fav ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]"}><Star size={18} /></button>
         </div>
-        <div className="text-[12.5px] text-slate-400">{open.mins ? <>{open.mins} {L("min", "دقيقة")} · </> : null}{open.dish ? <>{L("one serving", "حصة واحدة")} · </> : <>{L("serves", "تكفي")} {open.serves} · </>} <b className="text-white">{n.kcal} {L("kcal", "سعرة")}</b> {L("a serving", "للفرد")}</div>
+        <div className="text-[12.5px] text-[var(--c-mut)]">{open.mins ? <>{open.mins} {L("min", "دقيقة")} · </> : null}{open.dish ? <>{L("one serving", "حصة واحدة")} · </> : <>{L("serves", "تكفي")} {open.serves} · </>} <b className="text-[var(--c-ink)]">{n.kcal} {L("kcal", "سعرة")}</b> {L("a serving", "للفرد")}</div>
         <Macros L={L} x={n} kcal={false} />
-        <div className="rounded-xl bg-slate-900/60 p-3 space-y-1">
-          {open.items.map(([id, g], i) => { const fd = F.food(id); return <div key={i} className="flex justify-between text-[13px]"><span className="text-slate-200">{fd ? (ar ? fd.ar : fd.en) : id}</span><span className="text-slate-400 tabular-nums">{g} g</span></div>; })}
-          {(open.unknown || []).map((u, i) => <div key={"u" + i} className="flex justify-between text-[13px]"><span className="text-amber-200">{u.name}</span><span className="text-slate-500">{u.grams} g · {L("not counted", "مش محسوب")}</span></div>)}
+        <div className="rounded-xl bg-[var(--c-surf)] p-3 space-y-1">
+          {open.items.map(([id, g], i) => { const fd = F.food(id); return <div key={i} className="flex justify-between text-[13px]"><span className="text-[var(--c-ink)]">{fd ? (ar ? fd.ar : fd.en) : id}</span><span className="text-[var(--c-mut)] tabular-nums">{g} g</span></div>; })}
+          {(open.unknown || []).map((u, i) => <div key={"u" + i} className="flex justify-between text-[13px]"><span className="text-[var(--c-warn)]">{u.name}</span><span className="text-[var(--c-mut)]">{u.grams} g · {L("not counted", "مش محسوب")}</span></div>)}
         </div>
-        <ol className="list-decimal ps-5 space-y-1 text-[13.5px] text-slate-200">{open.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
+        <ol className="list-decimal ps-5 space-y-1 text-[13.5px] text-[var(--c-ink)]">{open.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
         <button onClick={() => { addItems(mealNow(), [{ name: open.en, ar: open.ar, grams: n.grams, kcal: n.kcal, p: n.p, c: n.c, f: n.f, fib: n.fib, recipe: open.id }]); flash && flash(L("Logged one serving", "اتسجلت حصة")); }}
-          className="w-full rounded-xl bg-emerald-600 py-2.5 font-medium text-white" data-testid="fit-recipe-log">{L("I ate one serving", "أكلت حصة")}</button>
+          className="w-full rounded-xl bg-[var(--c-acc)] py-2.5 font-medium text-[var(--c-on-acc)]" data-testid="fit-recipe-log">{L("I ate one serving", "أكلت حصة")}</button>
       </div>
     );
   }
   if (week) return <WeekPlanView {...{ L, ar, tg, diet: st.profile.diet, share }} close={() => setWeek(false)} />;
   return (
     <div className="space-y-3" data-testid="fit-recipes">
-      <button onClick={() => (pro ? setWeek(true) : openPlan && openPlan())} className="w-full rounded-xl bg-emerald-700 py-2.5 text-[13.5px] font-medium text-white" data-testid="fit-week-open">📅 {L("Plan my week + shopping list", "خطط أسبوعي + قايمة المشتريات")}{pro ? "" : " · Pro"}</button>
-      <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-slate-500" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="fit-recipe-search" placeholder={L(`Search ${(all.length + GENERATED_COUNT).toLocaleString()} recipes or an ingredient…`, `دوّر في ${(all.length + GENERATED_COUNT).toLocaleString("en")} وصفة أو مكوّن…`)} className="w-full rounded-xl bg-slate-800 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" /></div>
-      <div className="flex gap-1.5 overflow-x-auto pb-1">{tags.map(([k, en, a]) => <button key={k} onClick={() => setTag(k)} className={"shrink-0 rounded-full px-3 py-1 text-[12px] " + (tag === k ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300")}>{L(en, a)}</button>)}</div>
-      <div className="rounded-xl border border-slate-800 p-2.5 flex gap-2">
-        <input value={have} onChange={(e) => setHave(e.target.value)} placeholder={L("What's in your fridge? AI makes a recipe", "عندك إيه في التلاجة؟ الذكاء الاصطناعي يعملك وصفة")} className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder:text-slate-500" data-testid="fit-invent-text" />
-        <button onClick={invent} disabled={busy} className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[12.5px] text-white flex items-center gap-1" data-testid="fit-invent">{busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}{L("Create", "اعمل")}</button>
+      <button onClick={() => (pro ? setWeek(true) : openPlan && openPlan())} className="w-full rounded-xl bg-[var(--c-acc)] py-2.5 text-[13.5px] font-medium text-[var(--c-on-acc)]" data-testid="fit-week-open">📅 {L("Plan my week + shopping list", "خطط أسبوعي + قايمة المشتريات")}{pro ? "" : " · Pro"}</button>
+      <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-[var(--c-mut)]" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="fit-recipe-search" placeholder={L(`Search ${(all.length + GENERATED_COUNT).toLocaleString()} recipes or an ingredient…`, `دوّر في ${(all.length + GENERATED_COUNT).toLocaleString("en")} وصفة أو مكوّن…`)} className="w-full rounded-xl bg-[var(--c-surf-2)] py-2 ps-8 pe-2 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" /></div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1">{tags.map(([k, en, a]) => <button key={k} onClick={() => setTag(k)} className={chip(tag === k)}>{L(en, a)}</button>)}</div>
+      <div className="rounded-xl border border-[var(--c-ln)] p-2.5 flex gap-2">
+        <input value={have} onChange={(e) => setHave(e.target.value)} placeholder={L("What's in your fridge? AI makes a recipe", "عندك إيه في التلاجة؟ الذكاء الاصطناعي يعملك وصفة")} className="flex-1 min-w-0 bg-transparent text-[13px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" data-testid="fit-invent-text" />
+        <button onClick={invent} disabled={busy} className="shrink-0 rounded-lg bg-[var(--c-soft)] px-3 py-1.5 text-[12.5px] text-[var(--c-acc)] flex items-center gap-1" data-testid="fit-invent">{busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}{L("Create", "اعمل")}</button>
       </div>
       <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3" data-testid="fit-recipe-grid">
       {list.map((rc) => { const n = F.recipeNutrients(rc); return (
-        <button key={rc.id} onClick={() => setOpen(rc)} className="w-full text-start rounded-xl bg-slate-900/60 border border-slate-800 px-3 py-2.5" data-testid={"fit-rc-" + rc.id}>
-          <div className="text-[14px] text-white">{ar && rc.ar ? rc.ar : rc.en}</div>
-          <div className="text-[12px] text-slate-400 tabular-nums">{n.kcal} {L("kcal", "سعرة")} · <span className="inline-flex items-center gap-1"><i className="inline-block w-2 h-2 rounded-full" style={{ background: MACRO[0][3] }} />{L("Protein", "بروتين")} {n.p} {L("g", "جم")}</span>{rc.mins ? <> · {rc.mins} {L("min", "دقيقة")}</> : <> · {n.grams} {L("g", "جم")}</>}</div>
+        <button key={rc.id} onClick={() => setOpen(rc)} className="w-full text-start rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-3 py-2.5" data-testid={"fit-rc-" + rc.id}>
+          <div className="text-[14px] text-[var(--c-ink)]">{ar && rc.ar ? rc.ar : rc.en}</div>
+          <div className="text-[12px] text-[var(--c-mut)] tabular-nums">{n.kcal} {L("kcal", "سعرة")} · <span className="inline-flex items-center gap-1"><i className="inline-block w-2 h-2 rounded-full" style={{ background: MACRO[0][3] }} />{L("Protein", "بروتين")} {n.p} {L("g", "جم")}</span>{rc.mins ? <> · {rc.mins} {L("min", "دقيقة")}</> : <> · {n.grams} {L("g", "جم")}</>}</div>
         </button>); })}
       </div>
-      {!list.length && <div className="text-center text-[13px] text-slate-500 py-6">{L("No recipe matches", "مفيش وصفة مطابقة")}</div>}
+      {!list.length && <div className="text-center text-[13px] text-[var(--c-mut)] py-6">{L("No recipe matches", "مفيش وصفة مطابقة")}</div>}
     </div>
   );
 }
@@ -1583,15 +1584,15 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
   if (sess && !sess.finished) {
     const cur = sess.steps[sess.i], e = cur.id ? F.exercise(cur.id) : null;
     return (
-      <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-5 text-center space-y-3" data-testid="fit-session">
-        <div className="text-[12px] text-slate-400">{sess.i + 1} / {sess.steps.length}</div>
-        <div className="text-2xl font-semibold text-white">{cur.rest ? L("Rest", "راحة") : e ? (ar ? e.ar : e.en) : cur.id}</div>
-        {!cur.rest && <div className="text-slate-300">{L("Set", "مجموعة")} {cur.set}/{cur.sets} · {typeof cur.reps === "number" ? `${cur.reps} ${L("reps", "عدّة")}` : cur.reps}</div>}
-        {e && !cur.rest && e.how && <div className="text-[12.5px] text-slate-400">{e.how}</div>}
-        {sess.left > 0 && <div className="text-5xl font-bold tabular-nums text-emerald-300">{Math.floor(sess.left / 60)}:{String(sess.left % 60).padStart(2, "0")}</div>}
+      <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-5 text-center space-y-3" data-testid="fit-session">
+        <div className="text-[12px] text-[var(--c-mut)]">{sess.i + 1} / {sess.steps.length}</div>
+        <div className="text-2xl font-semibold text-[var(--c-ink)]">{cur.rest ? L("Rest", "راحة") : e ? (ar ? e.ar : e.en) : cur.id}</div>
+        {!cur.rest && <div className="text-[var(--c-mut)]">{L("Set", "مجموعة")} {cur.set}/{cur.sets} · {typeof cur.reps === "number" ? `${cur.reps} ${L("reps", "عدّة")}` : cur.reps}</div>}
+        {e && !cur.rest && e.how && <div className="text-[12.5px] text-[var(--c-mut)]">{e.how}</div>}
+        {sess.left > 0 && <div className="text-5xl font-bold tabular-nums text-[var(--c-acc)]">{Math.floor(sess.left / 60)}:{String(sess.left % 60).padStart(2, "0")}</div>}
         <div className="flex gap-2">
-          <button onClick={() => setSess(null)} className="rounded-xl bg-slate-800 px-4 py-2.5 text-slate-300"><Square size={16} /></button>
-          <button onClick={() => setSess((s) => next(s))} className="flex-1 rounded-xl bg-emerald-600 py-2.5 font-medium text-white" data-testid="fit-session-next">{sess.left > 0 ? L("Skip", "عدّي") : L("Done — next", "خلصت — اللي بعده")}</button>
+          <button onClick={() => setSess(null)} className="rounded-xl bg-[var(--c-surf-2)] px-4 py-2.5 text-[var(--c-mut)]"><Square size={16} /></button>
+          <button onClick={() => setSess((s) => next(s))} className="flex-1 rounded-xl bg-[var(--c-acc)] py-2.5 font-medium text-[var(--c-on-acc)]" data-testid="fit-session-next">{sess.left > 0 ? L("Skip", "عدّي") : L("Done — next", "خلصت — اللي بعده")}</button>
         </div>
       </div>
     );
@@ -1599,30 +1600,30 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
   const planList = aiPlan ? [...F.PLANS, ...aiPlan.days.map((d, i) => ({ id: "ai-" + i, en: aiPlan.name + " — " + d.name, ar: aiPlan.name + " — " + d.name, workout: d.exercises.map((x) => [x.id || x.name, x.sets, x.reps, x.rest]) }))] : F.PLANS;
   return (
     <div className="space-y-3" data-testid="fit-move">
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2">
-        <div className="text-[13px] text-white">{L("Log an activity", "سجّل نشاط")}</div>
+      <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-2">
+        <div className="text-[13px] text-[var(--c-ink)]">{L("Log an activity", "سجّل نشاط")}</div>
         <div className="flex gap-2">
-          <input value={what} onChange={(e) => setWhat(e.target.value)} placeholder={L("walking, football, swimming…", "مشي، كورة، سباحة…")} className="flex-1 min-w-0 rounded-lg bg-slate-800 px-2 py-2 text-[14px] text-white" data-testid="fit-act" />
-          <input type="number" value={mins} onChange={(e) => setMins(+e.target.value || 0)} className="w-16 rounded-lg bg-slate-800 px-2 py-2 text-[14px] text-white" data-testid="fit-act-min" />
-          <span className="self-center text-[12px] text-slate-400">{L("min", "د")}</span>
+          <input value={what} onChange={(e) => setWhat(e.target.value)} placeholder={L("walking, football, swimming…", "مشي، كورة، سباحة…")} className="flex-1 min-w-0 rounded-lg bg-[var(--c-surf-2)] px-2 py-2 text-[14px] text-[var(--c-ink)]" data-testid="fit-act" />
+          <input type="number" value={mins} onChange={(e) => setMins(+e.target.value || 0)} className="w-16 rounded-lg bg-[var(--c-surf-2)] px-2 py-2 text-[14px] text-[var(--c-ink)]" data-testid="fit-act-min" />
+          <span className="self-center text-[12px] text-[var(--c-mut)]">{L("min", "د")}</span>
         </div>
-        {ex && <button onClick={() => { logIt(ar ? ex.ar : ex.en, mins, F.burned(ex.met, kg, mins)); setWhat(""); }} className="w-full rounded-lg bg-emerald-600 py-2 text-[13px] text-white" data-testid="fit-act-log">
+        {ex && <button onClick={() => { logIt(ar ? ex.ar : ex.en, mins, F.burned(ex.met, kg, mins)); setWhat(""); }} className="w-full rounded-lg bg-[var(--c-acc)] py-2 text-[13px] text-[var(--c-on-acc)]" data-testid="fit-act-log">
           {ar ? ex.ar : ex.en} · {mins} {L("min", "د")} ≈ {F.burned(ex.met, kg, mins)} kcal — {L("log it", "سجّل")}</button>}
-        {what.trim().length > 2 && !ex && <div className="text-[12px] text-slate-500">{L("Not in the list yet — try a simpler name", "مش موجود في القايمة — جرّب اسم أبسط")}</div>}
+        {what.trim().length > 2 && !ex && <div className="text-[12px] text-[var(--c-mut)]">{L("Not in the list yet — try a simpler name", "مش موجود في القايمة — جرّب اسم أبسط")}</div>}
       </div>
-      <div className="text-[13px] text-slate-400">{L("Guided workouts — the timer walks you through", "تمارين مع مدرب — التايمر معاك")}</div>
+      <div className="text-[13px] text-[var(--c-mut)]">{L("Guided workouts — the timer walks you through", "تمارين مع مدرب — التايمر معاك")}</div>
       {planList.map((p) => { const c = F.planCost(p.workout, kg); return (
-        <div key={p.id} className="rounded-xl bg-slate-900/60 border border-slate-800 px-3 py-2.5 flex items-center gap-3">
-          <div className="flex-1 min-w-0"><div className="text-[14px] text-white truncate">{ar ? p.ar : p.en}</div><div className="text-[12px] text-slate-400">~{c.minutes} {L("min", "دقيقة")} · ~{c.kcal} kcal</div></div>
-          <button onClick={() => { const s = steps(p); const sec = secsOf(s[0]); setSess({ plan: p, steps: s, i: 0, left: sec, running: sec > 0 }); }} className="shrink-0 rounded-full bg-emerald-600 w-11 h-11 grid place-items-center text-white" aria-label={L("Start", "ابدأ")} data-testid={"fit-start-" + p.id}><Play size={17} /></button>
+        <div key={p.id} className="rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-3 py-2.5 flex items-center gap-3">
+          <div className="flex-1 min-w-0"><div className="text-[14px] text-[var(--c-ink)] truncate">{ar ? p.ar : p.en}</div><div className="text-[12px] text-[var(--c-mut)]">~{c.minutes} {L("min", "دقيقة")} · ~{c.kcal} kcal</div></div>
+          <button onClick={() => { const s = steps(p); const sec = secsOf(s[0]); setSess({ plan: p, steps: s, i: 0, left: sec, running: sec > 0 }); }} className="shrink-0 rounded-full bg-[var(--c-acc)] w-11 h-11 grid place-items-center text-[var(--c-on-acc)]" aria-label={L("Start", "ابدأ")} data-testid={"fit-start-" + p.id}><Play size={17} /></button>
         </div>); })}
       <button disabled={busy} onClick={async () => {
         if (!modelReady) { openEngine && openEngine(); return; }
         setBusy(true);
         try { const p = F.parseWorkout(await llm(F.workoutMessages({ goal: tg.goal === "lose" ? "lose fat" : tg.goal === "gain" ? "build muscle" : "stay fit", level: "beginner", equipment: "none", minutes: 30, days: 3, lang: ar ? "ar" : "en" }), null, { json: true, maxTokens: 900, temperature: 0.3 })); if (p) setAiPlan(p); else flash && flash(L("Couldn't make a plan — try again", "مقدرتش أعمل خطة — جرّب تاني")); }
         catch (e) { flash && flash(L("Couldn't make a plan", "مقدرتش أعمل خطة")); } finally { setBusy(false); }
-      }} className="w-full rounded-xl bg-violet-600 py-2.5 text-[13.5px] text-white flex items-center justify-center gap-1.5" data-testid="fit-ai-plan">{busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}{L("Make me a weekly plan", "اعملّي خطة أسبوعية")}</button>
-      {aiPlan && aiPlan.tips.map((t, i) => <div key={i} className="text-[12.5px] text-slate-400">• {t}</div>)}
+      }} className="w-full rounded-xl bg-[var(--c-soft)] py-2.5 text-[13.5px] text-[var(--c-acc)] flex items-center justify-center gap-1.5" data-testid="fit-ai-plan">{busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}{L("Make me a weekly plan", "اعملّي خطة أسبوعية")}</button>
+      {aiPlan && aiPlan.tips.map((t, i) => <div key={i} className="text-[12.5px] text-[var(--c-mut)]">• {t}</div>)}
     </div>
   );
 }
@@ -1638,41 +1639,41 @@ function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share, minimal = f
   const lo = Math.min(...pts.map((p) => p.kg), st.profile.goalKg ? +st.profile.goalKg : Infinity) - 1, hi = Math.max(...pts.map((p) => p.kg)) + 1;
   const X = (i) => (pts.length < 2 ? 150 : (i / (pts.length - 1)) * 290 + 5), Y = (v) => 110 - ((v - lo) / (hi - lo || 1)) * 100;
   const weightCard = (
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-weight-card">
-        <div className="text-[13px] text-white">{L("Weight", "الوزن")} {tr.length ? <span className="text-slate-400">· {L("trend", "الاتجاه")} {tr[tr.length - 1].avg} kg</span> : null}</div>
+      <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-2" data-testid="fit-weight-card">
+        <div className="text-[13px] text-[var(--c-ink)]">{L("Weight", "الوزن")} {tr.length ? <span className="text-[var(--c-mut)]">· {L("trend", "الاتجاه")} {tr[tr.length - 1].avg} kg</span> : null}</div>
         {pts.length >= 2 && (
           <svg viewBox="0 0 300 120" className="w-full h-28" data-testid="fit-weight-chart">
-            {st.profile.goalKg && <line x1="0" x2="300" y1={Y(+st.profile.goalKg)} y2={Y(+st.profile.goalKg)} stroke="#34d399" strokeDasharray="4 4" strokeWidth="1" />}
+            {st.profile.goalKg && <line x1="0" x2="300" y1={Y(+st.profile.goalKg)} y2={Y(+st.profile.goalKg)} stroke="var(--c-acc)" strokeDasharray="4 4" strokeWidth="1" />}
             <polyline fill="none" stroke="#64748b" strokeWidth="1" points={pts.map((p, i) => `${X(i)},${Y(p.kg)}`).join(" ")} />
             <polyline fill="none" stroke="#38bdf8" strokeWidth="2.5" points={pts.map((p, i) => `${X(i)},${Y(p.avg)}`).join(" ")} />
           </svg>
         )}
         <div className="flex gap-2">
-          <input type="number" inputMode="decimal" value={w} onChange={(e) => setW(e.target.value)} placeholder={L("Today's weight (kg)", "وزن النهارده (كجم)")} className="flex-1 min-w-0 rounded-lg bg-slate-800 px-2 py-2 text-[14px] text-white" data-testid="fit-weight" />
-          <button onClick={() => { const kg = parseFloat(w); if (!(kg > 25 && kg < 400)) return; upd((s) => ({ ...s, weights: [...s.weights.filter((x) => x.d !== F.today()), { d: F.today(), kg }], profile: { ...s.profile, kg } })); setW(""); }} className="shrink-0 rounded-lg bg-sky-600 px-4 text-white" data-testid="fit-weight-save">{L("Save", "احفظ")}</button>
+          <input type="number" inputMode="decimal" value={w} onChange={(e) => setW(e.target.value)} placeholder={L("Today's weight (kg)", "وزن النهارده (كجم)")} className="flex-1 min-w-0 rounded-lg bg-[var(--c-surf-2)] px-2 py-2 text-[14px] text-[var(--c-ink)]" data-testid="fit-weight" />
+          <button onClick={() => { const kg = parseFloat(w); if (!(kg > 25 && kg < 400)) return; upd((s) => ({ ...s, weights: [...s.weights.filter((x) => x.d !== F.today()), { d: F.today(), kg }], profile: { ...s.profile, kg } })); setW(""); }} className="shrink-0 rounded-lg bg-[var(--c-soft)] px-4 text-[var(--c-acc)]" data-testid="fit-weight-save">{L("Save", "احفظ")}</button>
         </div>
-        <div className="text-[11.5px] text-slate-500">{L("The blue line is the 7-entry average — daily weight jumps with water and salt; the average is the truth.", "الخط الأزرق هو المتوسط — الوزن اليومي بيتغير بالمية والملح؛ والمتوسط هو المؤشر الحقيقي.")}</div>
+        <div className="text-[11.5px] text-[var(--c-mut)]">{L("The blue line is the 7-entry average — daily weight jumps with water and salt; the average is the truth.", "الخط الأزرق هو المتوسط — الوزن اليومي بيتغير بالمية والملح؛ والمتوسط هو المؤشر الحقيقي.")}</div>
       </div>
   );
   return (
     <div className="space-y-4 lg:space-y-0 lg:columns-2 lg:gap-6 lg:[&>*]:break-inside-avoid lg:[&>*]:mb-4" data-testid="fit-progress">
       {minimal ? weightCard : null}
       {minimal ? <button onClick={() => setMore((v) => !v)} aria-expanded={more} data-testid="fit-progress-more"
-        className="w-full min-h-[48px] rounded-2xl border-2 border-slate-600 bg-slate-900 text-[14.5px] font-semibold text-white flex items-center justify-center gap-1.5">
+        className="w-full min-h-[48px] rounded-2xl border-2 border-[var(--c-ln)] bg-[var(--c-surf)] text-[14.5px] font-semibold text-[var(--c-ink)] flex items-center justify-center gap-1.5">
         {more ? L("Less", "أقل") : L("More: week, measurements, photos, challenges", "أكتر: الأسبوع والقياسات والصور والتحديات")}<ChevronDown size={16} className={more ? "rotate-180" : ""} /></button> : null}
       {more ? <>{extraTop}<YazioPlus {...{ L, ar, st, upd, tg, share }} />
-      {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-amber-800 bg-amber-500/10 p-3 text-start text-[13px] text-amber-100" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — إيه اللي ماشي كويس وإيه اللي محتاج يتغير — في Pro.")}</button>}
+      {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-start text-[13px] text-[var(--c-warn)]" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — إيه اللي ماشي كويس وإيه اللي محتاج يتغير — في Pro.")}</button>}
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white" data-testid="fit-streak">{strk}</div><div className="text-[11px] text-slate-400">{L("day streak", "يوم ورا بعض")}</div></div>
-        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.avg}</div><div className="text-[11px] text-slate-400">{L("avg kcal (7 d)", "متوسط السعرات")}</div></div>
-        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.change == null ? "—" : (wk.change > 0 ? "+" : "") + wk.change}</div><div className="text-[11px] text-slate-400">{L("kg this week", "كجم الأسبوع ده")}</div></div>
+        <div className="rounded-xl bg-[var(--c-surf)] p-2.5"><div className="text-xl font-semibold text-[var(--c-ink)]" data-testid="fit-streak">{strk}</div><div className="text-[11px] text-[var(--c-mut)]">{L("day streak", "يوم ورا بعض")}</div></div>
+        <div className="rounded-xl bg-[var(--c-surf)] p-2.5"><div className="text-xl font-semibold text-[var(--c-ink)]">{wk.avg}</div><div className="text-[11px] text-[var(--c-mut)]">{L("avg kcal (7 d)", "متوسط السعرات")}</div></div>
+        <div className="rounded-xl bg-[var(--c-surf)] p-2.5"><div className="text-xl font-semibold text-[var(--c-ink)]">{wk.change == null ? "—" : (wk.change > 0 ? "+" : "") + wk.change}</div><div className="text-[11px] text-[var(--c-mut)]">{L("kg this week", "كجم الأسبوع ده")}</div></div>
       </div>
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
-        <div className="text-[13px] text-white mb-2">{L("Last 7 days", "آخر 7 أيام")} <span className="text-slate-400">· {L("on target", "في الهدف")} {wk.onTarget}/{wk.logged}</span></div>
+      <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3">
+        <div className="text-[13px] text-[var(--c-ink)] mb-2">{L("Last 7 days", "آخر 7 أيام")} <span className="text-[var(--c-mut)]">· {L("on target", "في الهدف")} {wk.onTarget}/{wk.logged}</span></div>
         <div className="flex items-end gap-1.5 h-24">{wk.rows.map((r) => (
           <div key={r.day} className="flex-1 flex flex-col items-center justify-end h-full">
             <div className={"w-full rounded-t " + (r.kcal > tg.kcal * 1.1 ? "bg-rose-400" : "bg-emerald-400")} style={{ height: (r.kcal / maxK) * 100 + "%" }} />
-            <div className="text-[10px] text-slate-500 mt-1">{r.day.slice(8)}</div>
+            <div className="text-[10px] text-[var(--c-mut)] mt-1">{r.day.slice(8)}</div>
           </div>))}</div>
       </div>
       {minimal ? null : weightCard}
@@ -1692,17 +1693,17 @@ function CopySheet({ L, ar, from, slot, item, onClose, onCopy }) {
   const nm = item ? (ar && item.ar ? item.ar : item.name) : "";
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={onClose}>
-      <div className="w-full rounded-t-2xl bg-slate-900 border-t border-slate-700 p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="fit-copy-sheet">
-        <div className="text-white font-medium">{item ? L(`Copy ${nm} to…`, `انسخ ${nm} لـ…`) : slot ? L(`Copy ${MEAL_NAMES[slot][0]} to…`, `انسخ ${MEAL_NAMES[slot][1]} لـ…`) : L("Copy the whole day to…", "انسخ اليوم كله لـ…")}</div>
+      <div className="w-full rounded-t-2xl bg-[var(--c-surf)] border-t border-[var(--c-ln)] p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="fit-copy-sheet">
+        <div className="text-[var(--c-ink)] font-medium">{item ? L(`Copy ${nm} to…`, `انسخ ${nm} لـ…`) : slot ? L(`Copy ${MEAL_NAMES[slot][0]} to…`, `انسخ ${MEAL_NAMES[slot][1]} لـ…`) : L("Copy the whole day to…", "انسخ اليوم كله لـ…")}</div>
         <div className="flex gap-2 flex-wrap">
-          {quick.map(([k, lab]) => <button key={k} onClick={() => setTo(k)} className={"rounded-lg px-3 py-1.5 text-[13px] border " + (to === k ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")}>{lab}</button>)}
-          <input type="date" value={to} onChange={(e) => e.target.value && setTo(e.target.value)} className="rounded-lg bg-slate-800 border border-slate-700 px-2 py-1 text-[13px] text-slate-200" data-testid="fit-copy-date" />
+          {quick.map(([k, lab]) => <button key={k} onClick={() => setTo(k)} className={chip(to === k)}>{lab}</button>)}
+          <input type="date" value={to} onChange={(e) => e.target.value && setTo(e.target.value)} className="rounded-lg bg-[var(--c-surf-2)] border border-[var(--c-ln)] px-2 py-1 text-[13px] text-[var(--c-ink)]" data-testid="fit-copy-date" />
         </div>
         {slot ? (
           <div className="flex gap-1.5 flex-wrap">
-            {F.MEALS.map((m) => <button key={m} onClick={() => setToSlot(m)} className={"rounded-lg px-2.5 py-1 text-[12.5px] border " + (toSlot === m ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")} data-testid={"fit-copy-to-" + m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</button>)}
-          </div>) : <div className="text-[12px] text-slate-400">{L("Each meal goes into the same meal on that day, added to what is already there.", "كل وجبة بتتضاف لنفس الوجبة في اليوم ده، مع اللي متسجل فيه.")}</div>}
-        <button disabled={same} onClick={() => onCopy(to, toSlot)} className="w-full rounded-xl bg-emerald-600 py-2.5 text-white font-medium disabled:opacity-40" data-testid="fit-copy-go">{L("Copy", "انسخ")}</button>
+            {F.MEALS.map((m) => <button key={m} onClick={() => setToSlot(m)} className={chip(toSlot === m)} data-testid={"fit-copy-to-" + m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</button>)}
+          </div>) : <div className="text-[12px] text-[var(--c-mut)]">{L("Each meal goes into the same meal on that day, added to what is already there.", "كل وجبة بتتضاف لنفس الوجبة في اليوم ده، مع اللي متسجل فيه.")}</div>}
+        <button disabled={same} onClick={() => onCopy(to, toSlot)} className="w-full rounded-xl bg-[var(--c-acc)] py-2.5 text-[var(--c-on-acc)] font-medium disabled:opacity-40" data-testid="fit-copy-go">{L("Copy", "انسخ")}</button>
       </div>
     </div>);
 }
@@ -1718,41 +1719,41 @@ function YazioPlus({ L, ar, st, upd, tg, share }) {
   const extra = (st.profile && st.profile.cycleExtra) || {};
   const savePhotos = (p) => { setPhotos(p); try { localStorage.setItem("attune:fit:photos", JSON.stringify(p)); } catch (e) { alert(L("Not enough space for more photos — delete an old one.", "مفيش مساحة لصور تانية — امسح صورة قديمة.")); } };
   const addPhoto = (f) => { const r = new FileReader(); r.onload = async () => { try { const u = await Y.shrinkPhoto(String(r.result)); savePhotos([...photos, { d: F.today(), u }].slice(-24)); } catch (e) {} }; r.readAsDataURL(f); };
-  const card = "rounded-2xl bg-slate-900/60 border border-slate-800 p-3";
+  const card = "rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3";
   return (<>
     {avg ? <div className={card} data-testid="fit-averages">
-      <div className="text-[13px] text-white mb-1">{L(`Average of the last ${avg.days} logged days`, `متوسط آخر ${avg.days} أيام مسجّلة`)}</div>
+      <div className="text-[13px] text-[var(--c-ink)] mb-1">{L(`Average of the last ${avg.days} logged days`, `متوسط آخر ${avg.days} أيام مسجّلة`)}</div>
       <div className="grid grid-cols-4 gap-2 text-center text-[12px]">
-        <div><div className="text-white font-semibold tabular-nums">{avg.kcal}</div><div className="text-slate-400">kcal</div></div>
-        <div><div className="text-sky-300 font-semibold tabular-nums">{avg.p} g</div><div className="text-slate-400">{L("Protein", "بروتين")} {avg.split.p}%</div></div>
-        <div><div className="text-amber-300 font-semibold tabular-nums">{avg.c} g</div><div className="text-slate-400">{L("Carbs", "كربوهيدرات")} {avg.split.c}%</div></div>
-        <div><div className="text-rose-300 font-semibold tabular-nums">{avg.f} g</div><div className="text-slate-400">{L("Fat", "دهون")} {avg.split.f}%</div></div>
+        <div><div className="text-[var(--c-ink)] font-semibold tabular-nums">{avg.kcal}</div><div className="text-[var(--c-mut)]">kcal</div></div>
+        <div><div className="text-[var(--c-acc)] font-semibold tabular-nums">{avg.p} g</div><div className="text-[var(--c-mut)]">{L("Protein", "بروتين")} {avg.split.p}%</div></div>
+        <div><div className="text-[var(--c-warn)] font-semibold tabular-nums">{avg.c} g</div><div className="text-[var(--c-mut)]">{L("Carbs", "كربوهيدرات")} {avg.split.c}%</div></div>
+        <div><div className="text-[var(--c-neg)] font-semibold tabular-nums">{avg.f} g</div><div className="text-[var(--c-mut)]">{L("Fat", "دهون")} {avg.split.f}%</div></div>
       </div></div> : null}
     <div className={card} data-testid="fit-measures">
-      <div className="text-[13px] text-white mb-2">{L("Body measurements (cm)", "قياسات الجسم (سم)")}</div>
+      <div className="text-[13px] text-[var(--c-ink)] mb-2">{L("Body measurements (cm)", "قياسات الجسم (سم)")}</div>
       <div className="grid grid-cols-3 gap-1.5">{Y.PARTS.map(([k, en, a]) => <input key={k} inputMode="decimal" value={m[k] || ""} onChange={(e) => setM({ ...m, [k]: e.target.value })} placeholder={L(en, a)} data-testid={"fit-m-" + k}
-        className="rounded-lg bg-slate-800 border border-slate-700 px-2 py-1.5 text-[13px] text-white min-w-0" />)}</div>
-      <button onClick={() => { upd((s) => ({ ...s, measures: Y.addMeasure(s.measures || [], { ...m, d: F.today() }) })); setM({}); }} className="mt-2 w-full rounded-lg bg-emerald-600 py-1.5 text-[13px] text-white" data-testid="fit-m-save">{L("Save today's measurements", "احفظ قياسات النهارده")}</button>
+        className="rounded-lg bg-[var(--c-surf-2)] border border-[var(--c-ln)] px-2 py-1.5 text-[13px] text-[var(--c-ink)] min-w-0" />)}</div>
+      <button onClick={() => { upd((s) => ({ ...s, measures: Y.addMeasure(s.measures || [], { ...m, d: F.today() }) })); setM({}); }} className="mt-2 w-full rounded-lg bg-[var(--c-acc)] py-1.5 text-[13px] text-[var(--c-on-acc)]" data-testid="fit-m-save">{L("Save today's measurements", "احفظ قياسات النهارده")}</button>
       {Object.keys(ch).length ? <div className="mt-2 space-y-0.5 text-[12.5px]" data-testid="fit-m-change">{Y.PARTS.filter(([k]) => ch[k]).map(([k, en, a]) =>
-        <div key={k} className="flex justify-between"><span className="text-slate-300">{L(en, a)}</span><span className="tabular-nums text-slate-200">{ch[k].last} cm <span className={ch[k].change < 0 ? "text-emerald-300" : ch[k].change > 0 ? "text-rose-300" : "text-slate-500"}>({ch[k].change > 0 ? "+" : ""}{ch[k].change} {L("since", "من")} {ch[k].since})</span></span></div>)}</div> : null}
+        <div key={k} className="flex justify-between"><span className="text-[var(--c-mut)]">{L(en, a)}</span><span className="tabular-nums text-[var(--c-ink)]">{ch[k].last} cm <span className={ch[k].change < 0 ? "text-[var(--c-acc)]" : ch[k].change > 0 ? "text-[var(--c-neg)]" : "text-[var(--c-mut)]"}>({ch[k].change > 0 ? "+" : ""}{ch[k].change} {L("since", "من")} {ch[k].since})</span></span></div>)}</div> : null}
     </div>
     <div className={card} data-testid="fit-photos">
-      <div className="flex items-center justify-between"><span className="text-[13px] text-white">{L("Progress photos", "صور التقدم")}</span>
-        <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300" data-testid="fit-photo-add">+ {L("Photo", "صورة")}</button></div>
+      <div className="flex items-center justify-between"><span className="text-[13px] text-[var(--c-ink)]">{L("Progress photos", "صور التقدم")}</span>
+        <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-acc)]" data-testid="fit-photo-add">+ {L("Photo", "صورة")}</button></div>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) addPhoto(f); }} data-testid="fit-progress-photo-input" />
-      {photos.length >= 2 ? <div className="grid grid-cols-2 gap-2 mt-2">{[photos[0], photos[photos.length - 1]].map((x, i) => <figure key={i}><img src={x.u} className="w-full rounded-lg aspect-[3/4] object-cover" /><figcaption className="text-[11px] text-slate-400 text-center mt-0.5">{i ? L("Now", "دلوقتي") : L("Before", "قبل")} · {x.d}</figcaption></figure>)}</div>
-        : photos.length ? <img src={photos[0].u} className="mt-2 w-1/2 rounded-lg" /> : <div className="text-[12px] text-slate-500 mt-1">{L("Photos stay on this phone. Add one now and one in a few weeks to compare.", "الصور بتفضل على الموبايل ده. ضيف صورة دلوقتي وواحدة كمان بعد كام أسبوع وقارن.")}</div>}
-      {photos.length ? <button onClick={() => savePhotos(photos.slice(0, -1))} className="mt-1.5 text-[11.5px] text-slate-500">{L("Delete the latest photo", "امسح آخر صورة")}</button> : null}
+      {photos.length >= 2 ? <div className="grid grid-cols-2 gap-2 mt-2">{[photos[0], photos[photos.length - 1]].map((x, i) => <figure key={i}><img src={x.u} className="w-full rounded-lg aspect-[3/4] object-cover" /><figcaption className="text-[11px] text-[var(--c-mut)] text-center mt-0.5">{i ? L("Now", "دلوقتي") : L("Before", "قبل")} · {x.d}</figcaption></figure>)}</div>
+        : photos.length ? <img src={photos[0].u} className="mt-2 w-1/2 rounded-lg" /> : <div className="text-[12px] text-[var(--c-mut)] mt-1">{L("Photos stay on this phone. Add one now and one in a few weeks to compare.", "الصور بتفضل على الموبايل ده. ضيف صورة دلوقتي وواحدة كمان بعد كام أسبوع وقارن.")}</div>}
+      {photos.length ? <button onClick={() => savePhotos(photos.slice(0, -1))} className="mt-1.5 text-[11.5px] text-[var(--c-mut)]">{L("Delete the latest photo", "امسح آخر صورة")}</button> : null}
     </div>
     {tg ? <div className={card} data-testid="fit-cycle">
-      <div className="text-[13px] text-white">{L("More calories on some days", "سعرات أكتر في أيام معيّنة")}</div>
-      <div className="text-[11.5px] text-slate-400 mb-2">{L("Pick days to eat 300 kcal more (weekends, family dinners). The other days give a little back, so your week — and your weight plan — stays the same.", "اختار أيام تاكل فيها 300 سعرة زيادة (الإجازات، عزومات العيلة). باقي الأيام بتقل شوية، فأسبوعك — وخطة وزنك — يفضلوا زي ما هم.")}</div>
+      <div className="text-[13px] text-[var(--c-ink)]">{L("More calories on some days", "سعرات أكتر في أيام معيّنة")}</div>
+      <div className="text-[11.5px] text-[var(--c-mut)] mb-2">{L("Pick days to eat 300 kcal more (weekends, family dinners). The other days give a little back, so your week — and your weight plan — stays the same.", "اختار أيام تاكل فيها 300 سعرة زيادة (الإجازات، عزومات العيلة). باقي الأيام بتقل شوية، فأسبوعك — وخطة وزنك — يفضلوا زي ما هم.")}</div>
       <div className="flex flex-wrap gap-1.5">{WD.map(([en, a], i) => <button key={i} onClick={() => upd((s) => { const e = { ...((s.profile || {}).cycleExtra || {}) }; if (e[i]) delete e[i]; else e[i] = 300; return { ...s, profile: { ...s.profile, cycleExtra: e } }; })}
-        className={"rounded-lg min-w-[44px] px-2 py-1 text-[12px] border " + (extra[i] ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")} data-testid={"fit-cyc-" + i}>{L(en, a)} {extra[i] ? Y.dayGoal(tg.kcal, (() => { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return F.today(d); })(), extra) : ""}</button>)}</div>
+        className={"rounded-lg min-w-[44px] px-2 py-1 text-[12px] border " + (extra[i] ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-ink)]" : "border-[var(--c-ln)] text-[var(--c-mut)]")} data-testid={"fit-cyc-" + i}>{L(en, a)} {extra[i] ? Y.dayGoal(tg.kcal, (() => { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return F.today(d); })(), extra) : ""}</button>)}</div>
     </div> : null}
     <Challenges {...{ L, st, upd, tg }} />
     <button onClick={() => { const csv = Y.diaryCSV(st.days); if (share) share(csv); else { const a = document.createElement("a"); a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv); a.download = "fit-diary.csv"; a.click(); } }}
-      className="w-full rounded-xl border border-slate-800 bg-slate-900/40 py-2 text-[13px] text-slate-300" data-testid="fit-export">{L("Export my food diary (CSV for Excel)", "صدّر يوميات الأكل (CSV لإكسل)")}</button>
+      className="w-full rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] py-2 text-[13px] text-[var(--c-mut)]" data-testid="fit-export">{L("Export my food diary (CSV for Excel)", "صدّر يوميات الأكل (CSV لإكسل)")}</button>
   </>);
 }
 
@@ -1763,19 +1764,19 @@ function Micros({ L, ar, day, sex }) {
   const m = MI.dayMicros(day, sex === "f" ? "f" : "m");
   if (!m.total) return null;
   return (
-    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-micros">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between text-[13px] text-white">
+    <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="fit-micros">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between text-[13px] text-[var(--c-ink)]">
         <span>{L("Vitamins & minerals", "الفيتامينات والمعادن")}</span>
-        <span className="text-[11.5px] text-slate-400">{m.low.length ? L(`${m.low.length} low`, `${m.low.length} قليلة`) : L("all good so far", "كويسة لحد دلوقتي")} · {open ? "▲" : "▼"}</span>
+        <span className="text-[11.5px] text-[var(--c-mut)]">{m.low.length ? L(`${m.low.length} low`, `${m.low.length} قليلة`) : L("all good so far", "كويسة لحد دلوقتي")} · {open ? "▲" : "▼"}</span>
       </button>
       {open ? <div className="mt-2 space-y-1.5" data-testid="fit-micros-list">
         {m.rows.map((r) => (
           <div key={r.k}>
-            <div className="flex justify-between text-[12px]"><span className="text-slate-300">{L(r.en, r.ar)}</span><span className="tabular-nums text-slate-400">{r.v} / {r.ref} {r.unit} · {r.pct}%</span></div>
-            <div className="h-1.5 rounded-full bg-slate-800"><div className={"h-1.5 rounded-full " + (r.pct >= 100 ? "bg-emerald-400" : r.pct >= 50 ? "bg-sky-400" : "bg-amber-400")} style={{ width: Math.min(100, r.pct) + "%" }} /></div>
-            {r.pct < 50 ? <div className="text-[11px] text-amber-200/80 mt-0.5">{L("Good sources: ", "مصادر كويسة: ")}{MI.bestSources(r.k, 4).map((id) => { const f = F.FOODS.find((x) => x.id === id); return f ? (ar ? f.ar : f.en) : id; }).join(ar ? "، " : ", ")}</div> : null}
+            <div className="flex justify-between text-[12px]"><span className="text-[var(--c-mut)]">{L(r.en, r.ar)}</span><span className="tabular-nums text-[var(--c-mut)]">{r.v} / {r.ref} {r.unit} · {r.pct}%</span></div>
+            <div className="h-1.5 rounded-full bg-[var(--c-surf-2)]"><div className={"h-1.5 rounded-full " + (r.pct >= 100 ? "bg-emerald-400" : r.pct >= 50 ? "bg-sky-400" : "bg-amber-400")} style={{ width: Math.min(100, r.pct) + "%" }} /></div>
+            {r.pct < 50 ? <div className="text-[11px] text-[var(--c-warn)] mt-0.5">{L("Good sources: ", "مصادر كويسة: ")}{MI.bestSources(r.k, 4).map((id) => { const f = F.FOODS.find((x) => x.id === id); return f ? (ar ? f.ar : f.en) : id; }).join(ar ? "، " : ", ")}</div> : null}
           </div>))}
-        <div className="text-[11px] text-slate-500">{L(`Counted from ${m.known} of ${m.total} foods (the ones with known values; USDA data and product labels). A guide, not a lab test.`, `محسوبة من ${m.known} من ${m.total} أكلات (اللي قيمها معروفة؛ بيانات USDA وملصقات المنتجات). دليل تقريبي، مش تحليل معمل.`)}</div>
+        <div className="text-[11px] text-[var(--c-mut)]">{L(`Counted from ${m.known} of ${m.total} foods (the ones with known values; USDA data and product labels). A guide, not a lab test.`, `محسوبة من ${m.known} من ${m.total} أكلات (اللي قيمها معروفة؛ بيانات USDA وملصقات المنتجات). دليل تقريبي، مش تحليل معمل.`)}</div>
       </div> : null}
     </div>);
 }
@@ -1786,16 +1787,16 @@ function Challenges({ L, st, upd, tg }) {
   const active = new Set(run.filter((c) => c.p.state === "on").map((c) => c.id));
   const start = (id) => upd((s) => ({ ...s, challenges: [...(s.challenges || []).filter((c) => c.id !== id), { id, start: F.today() }] }));
   return (
-    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-challenges">
-      <div className="text-[13px] text-white mb-2">{L("Challenges", "التحديات")}</div>
+    <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="fit-challenges">
+      <div className="text-[13px] text-[var(--c-ink)] mb-2">{L("Challenges", "التحديات")}</div>
       {run.map((c) => (
         <div key={c.id} className="mb-2" data-testid={"fit-ch-" + c.id}>
-          <div className="flex justify-between text-[12.5px]"><span className="text-slate-200">{c.p.c.emoji} {L(c.p.c.en[0], c.p.c.ar[0])}</span>
-            <span className={c.p.state === "won" ? "text-emerald-300" : "text-slate-400"}>{c.p.state === "won" ? L("Done! 🎉", "خلصت! 🎉") : c.p.state === "ended" ? L(`Ended · ${c.p.done}/${c.p.days}`, `خلص · ${c.p.done}/${c.p.days}`) : `${c.p.done}/${c.p.days}`}</span></div>
-          <div className="flex gap-1 mt-1">{c.p.marks.map((m, i) => <span key={i} className={"h-2 flex-1 rounded-full " + (m === true ? "bg-emerald-400" : m === false ? "bg-rose-400/60" : "bg-slate-800")} />)}</div>
+          <div className="flex justify-between text-[12.5px]"><span className="text-[var(--c-ink)]">{c.p.c.emoji} {L(c.p.c.en[0], c.p.c.ar[0])}</span>
+            <span className={c.p.state === "won" ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]"}>{c.p.state === "won" ? L("Done! 🎉", "خلصت! 🎉") : c.p.state === "ended" ? L(`Ended · ${c.p.done}/${c.p.days}`, `خلص · ${c.p.done}/${c.p.days}`) : `${c.p.done}/${c.p.days}`}</span></div>
+          <div className="flex gap-1 mt-1">{c.p.marks.map((m, i) => <span key={i} className={"h-2 flex-1 rounded-full " + (m === true ? "bg-emerald-400" : m === false ? "bg-rose-400/60" : "bg-[var(--c-surf-2)]")} />)}</div>
         </div>))}
       <div className="flex flex-wrap gap-1.5">{Y.CHALLENGES.filter((c) => !active.has(c.id)).map((c) => (
-        <button key={c.id} onClick={() => start(c.id)} title={L(c.en[1], c.ar[1])} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200" data-testid={"fit-ch-start-" + c.id}>{c.emoji} {L(c.en[0], c.ar[0])}</button>))}</div>
-      <div className="text-[11px] text-slate-500 mt-1.5">{L("Checked from your diary each day — nothing to tick.", "بتتتابع لوحدها من يومياتك — مش محتاج تسجّل بإيدك.")}</div>
+        <button key={c.id} onClick={() => start(c.id)} title={L(c.en[1], c.ar[1])} className="rounded-lg bg-[var(--c-surf-2)] px-2.5 py-1 text-[12px] text-[var(--c-ink)]" data-testid={"fit-ch-start-" + c.id}>{c.emoji} {L(c.en[0], c.ar[0])}</button>))}</div>
+      <div className="text-[11px] text-[var(--c-mut)] mt-1.5">{L("Checked from your diary each day — nothing to tick.", "بتتتابع لوحدها من يومياتك — مش محتاج تسجّل بإيدك.")}</div>
     </div>);
 }
