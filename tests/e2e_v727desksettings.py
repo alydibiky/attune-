@@ -13,7 +13,7 @@ with sync_playwright() as p:
     pass
     page.click("[data-testid=desk-settings-close]")
     page.fill("[data-testid=side-search]", "fit"); page.wait_for_timeout(200); page.locator("[data-testid=side-tool-hits] [data-testid=side-go-fit]").click(); page.wait_for_timeout(600)
-    page.click("[data-testid=side-plan]"); page.wait_for_selector("[data-testid=upgrade]"); page.wait_for_timeout(300)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-panel',{detail:'plan'}))"); page.wait_for_selector("[data-testid=upgrade]")   # v6.50: Plan opens from the Home box; page.wait_for_timeout(300)
     nav = page.locator("[data-testid=fit-nav]")
     check(nav.count() == 0 or not nav.is_visible(), "Plans over Fit & Food: Fit's bottom bar is hidden")
     bg = page.evaluate("getComputedStyle(document.querySelector('[data-testid=upgrade]')).backgroundColor")

@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
-PLACES = ["assistants", "projects", "home", "shelf", "coach", "money", "health", "learn", "business", "guide", "privacy"]   # v6.36 Ali's board (+ How to use, Privacy at the bottom)  (v6.48: + Shelf, Ali)
+PLACES = ["money", "business", "health", "shelf"]   # v6.50 (Ali picked A: chats + Money · Business · Health · Shelf; the rest from the Home box)
 def shot(page, name):
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, name + ".png"))
 with sync_playwright() as p:
@@ -59,7 +59,7 @@ with sync_playwright() as p:
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
     check(tabs == ["improve", "compress", "humanize", "copilot", "library"], "v6.43: Writing opens with its tabs Improve · Shorten · Humanize · Copilot · Prompt lab: %s" % tabs)
     # Create: Assistants · Skills · Artifacts · Studio · Code
-    page.locator("[data-testid=header-menu]:visible").first.click(); page.click("[data-testid=phone-side] [data-testid=side-go-assistants]"); page.wait_for_timeout(600)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'assistants'}}))"); page.wait_for_timeout(600)   # v6.50: from the box, not the sidebar
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
     check(tabs == ["assistants", "skills", "artifacts", "studio", "code"], "Create: %s" % tabs)
     shot(page, "create-tabs")
@@ -73,8 +73,8 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000)
     ids = page.evaluate("[...document.querySelectorAll('[data-testid=side] [data-testid^=side-go-]')].map(b => b.dataset.testid.slice(8))")
     check(ids == PLACES, "computer: the same places: %s" % ids)
-    page.click("[data-testid=side-go-learn]"); page.wait_for_timeout(400)
-    check(page.locator("[data-testid=hub-tab-memory]").count() == 1 and page.locator("[data-testid=hub-tab-scout]").count() == 1 and page.locator("[data-testid=side-go-learn][class*=bg-slate-800]").count() == 1, "Daily: Learn, Scout, Mind, News… are tabs; the place is lit")
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'learn'}}))"); page.wait_for_timeout(400)
+    check(page.locator("[data-testid=hub-tab-memory]").count() == 1 and page.locator("[data-testid=hub-tab-scout]").count() == 1, "Daily: Learn, Scout, Mind, News… are tabs; the place is lit")
     shot(page, "desk-learn")
     check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
     br.close()

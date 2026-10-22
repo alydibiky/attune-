@@ -79,6 +79,9 @@ import { parseMission } from "./missions.js";
 const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
 const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCircle, students: GraduationCap, money: Wallet, health: Heart, learn: CalendarDays, tools: Briefcase };   // (v6.36 Ali's board)
 // v6.48 (Ali: "put Shelf in the sidebar"): Shelf gets its own row right under Home (it is still a tab of the Home hub)
+// v6.50 (Ali picked A, 22 Oct: "only make money, business, health and shelf on the left sidebar"): the sidebar is chats + these
+// four; every other app opens from the Home box ("/" or "open …"); the "Attune" title goes Home.
+const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Database], ["health", "Health", Heart], ["shelf", "Shelf", BookOpen]];
 const HUB_PLACES = HUBS.flatMap(([id, label, target]) => (id === "home" ? [[target, label, HUB_ICON[id]], ["shelf", "Shelf", BookOpen]] : [[target, label, HUB_ICON[id]]]));
 import { HealthPage } from "./health-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
@@ -7548,7 +7551,9 @@ if (!KNOW_ADMIN) {
 // "/money", «/الفلوس», "open fit", «افتح الفلوس» (commands.js setApps / appNamed). Its name in English, Arabic and the UI language.
 K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[label] || "", local: tr(label) })),
   { id: "food-photo", en: "Food photo", ar: AR_DICT["Food photo"] || "صورة أكل" }, { id: "read", en: "Read it to me", ar: AR_DICT["Read it to me"] || "اقرالي" },
-  { id: "all", en: "All apps", ar: "كل التطبيقات" }, { id: "report", en: "My report", ar: "تقريري" }, { id: "money", en: "Money", ar: AR_DICT["Money"] || "الفلوس" },
+  { id: "all", en: "All apps", ar: "كل التطبيقات" }, { id: "report", en: "My report", ar: "تقريري" },
+  { id: "privacy", en: "Privacy", ar: AR_DICT["Privacy"] || "الخصوصية" }, { id: "panel:profile", en: "Profile", ar: AR_DICT["Profile"] || "البروفايل" },
+  { id: "panel:plan", en: "Plan", ar: AR_DICT["Plan"] || "الباقة" }, { id: "panel:backup", en: "Backup", ar: AR_DICT["Backup"] || "النسخة الاحتياطية" }, { id: "money", en: "Money", ar: AR_DICT["Money"] || "الفلوس" },
   ...(usesFleet() ? [{ id: "fleet-rentals", en: "Fleet & rentals", ar: AR_DICT["Fleet & rentals"] || "" }] : [])]);
 
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
@@ -8525,6 +8530,9 @@ export default function App() {
     try { return !localStorage.getItem("attune:onboarded"); } catch (e) { return true; }
   });
   const [showProfile, setShowProfile] = useState(false);
+  // v6.50: Profile · Plan · Backup open from the Home box too ("/backup", «افتح الباقة») — the sidebar keeps only Settings
+  useEffect(() => { const on = (e) => { const k = e.detail; if (k === "profile") setShowProfile(true); else if (k === "plan") setShowUpgrade(true); else if (k === "backup") setShowBackup(true); };
+    window.addEventListener("attune-panel", on); return () => window.removeEventListener("attune-panel", on); }, []);
   const [libCat, setLibCat] = useState("writing");
   const [syncing, setSyncing] = useState(false);
   const [result, setResult] = useState(null);
@@ -9674,7 +9682,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : HUB_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
+        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
@@ -9684,7 +9692,7 @@ export default function App() {
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
       {!wide && phoneSide ? <Guard name="sidebar"><div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setPhoneSide(false)} data-testid="phone-side">
         <div onClick={(e) => e.stopPropagation()}><DesktopSide touch width="min(86vw, 320px)" mode={mode} canBack={false} onBack={() => {}} navTo={(m) => { setPhoneSide(false); setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : HUB_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
+          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
           tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
           onNewChat={() => { setPhoneSide(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
           onOpenChat={(id) => { setPhoneSide(false); setOpenChatId(id); navTo("chat"); }}

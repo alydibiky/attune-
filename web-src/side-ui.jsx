@@ -106,7 +106,8 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
             (also: the mouse's back button, Alt+←, and Esc for an open panel) */}
         {canBack || depth > 0 ? <button onClick={onBack} className="att-icon-btn border-transparent! bg-transparent! text-slate-300! -ms-2" aria-label={tr("Back")} title={tr("Back") + " (Alt+←)"} data-testid="side-back">
           <span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button> : null}
-        <span className="flex-1 text-[17px] font-semibold text-white tracking-tight">Attune</span>
+        {/* v6.50: the name goes Home (the sidebar has no Home row — Ali: chats + Money · Business · Health · Shelf) */}
+        <button onClick={() => navTo("home")} className="flex-1 text-start text-[17px] font-semibold text-white tracking-tight bg-transparent border-0 p-0" data-testid="side-home" title={tr("Home")}>Attune</button>
         <button onClick={onClose} className="att-icon-btn border-transparent! bg-transparent! text-slate-400!" aria-label={tr("Close sidebar")} title={tr("Close sidebar")} data-testid="side-close"><PanelLeft size={18} /></button>
       </div>
       <div className="px-2.5 space-y-1.5 shrink-0">
@@ -160,17 +161,13 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
         </div>
       </div>
       <div className="shrink-0 border-t border-slate-800 p-2 space-y-0.5">
-        {/* v6.36 (Ali's board: "put How to use and Privacy in settings, at the bottom of the left sidebar") */}
-        <div className="grid grid-cols-2 gap-1" data-testid="side-help">
-          {[["guide", HelpCircle, "How to use Attune"], ["privacy", Lock, "Privacy"]].map(([id, Ic, label]) => (
-            <button key={id} onClick={() => navTo(id)} data-testid={"side-go-" + id} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[12px] text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 text-start">
-              <Ic size={14} className="shrink-0" /><span className="truncate">{tr(label)}</span></button>))}
-        </div>
+        {/* v6.50 (Ali picked A): How to use and Privacy open from the Home box ("/guide", "/privacy") and from Settings */}
         <button onClick={openEngine} data-testid="side-engine" className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-slate-300 hover:bg-slate-800/60">
           <Cpu size={16} className={engineState === "ready" ? "text-teal-300" : engineState === "starting" ? "text-amber-300" : "text-slate-400"} />
           <span className="flex-1 text-start truncate">{engineLabel}</span>{airGap ? <Lock size={13} className="text-teal-300" /> : null}</button>
-        <div className="grid grid-cols-4 gap-1">
-          {[[openProfile, User, "Profile", "side-profile"], [openUpgrade, Crown, "Plan", "side-plan"], [openBackup, ShieldCheck, "Backup", "side-backup"], [openSettings, LayoutGrid, "Settings", "side-settings"]].map(([f, Ic, label, tid]) => (
+        <div className="grid grid-cols-2 gap-1">
+          {/* v6.50 (Ali picked A — Settings at the bottom): Backup stays one tap away (your data); Profile and Plan open from the box */}
+          {[[openBackup, ShieldCheck, "Backup", "side-backup"], [openSettings, LayoutGrid, "Settings", "side-settings"]].map(([f, Ic, label, tid]) => (
             <button key={tid} onClick={f} data-testid={tid} title={tr(label)} aria-label={tr(label)}
               className="flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[10.5px] text-slate-400 hover:bg-slate-800/60 hover:text-slate-200">
               <Ic size={16} />{tr(label)}</button>))}

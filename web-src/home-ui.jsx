@@ -116,7 +116,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
     switch (o.type) {
       case "doit": if (!doOld(o.text)) onAsk(o.text); return;
       case "chat": if (o.web && cmd && cmd.chatWeb) cmd.chatWeb(o.text); else onAsk(o.text); return;
-      case "open": return o.mode === "report" ? setRep(true) : o.mode === "food-photo" ? (openFitAdd ? openFitAdd() : navTo("fit")) : o.mode === "read" ? openRead() : o.mode === "all" ? openAll() : openLine(o.mode);
+      case "open": return /^panel:/.test(o.mode) ? window.dispatchEvent(new CustomEvent("attune-panel", { detail: o.mode.slice(6) })) : o.mode === "report" ? setRep(true) : o.mode === "food-photo" ? (openFitAdd ? openFitAdd() : navTo("fit")) : o.mode === "read" ? openRead() : o.mode === "all" ? openAll() : openLine(o.mode);
       case "job": cmd.jobs.add(o.spec); setFiles([]); return;
       case "todoAdd": cmd.mind.add({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } }); return lines([{ en: `Added to your to-do list: ${o.item}`, ar: `اتضافت للمهام: ${o.item}`, open: "memory" }]);
       case "whereSave": cmd.mind.add(W.whereRecord(o.set)); return lines([{ en: `Got it: ${o.set.thing} — ${o.set.place}.`, ar: `تمام: ${o.set.thing} — ${o.set.place}.`, open: "memory" }]);
