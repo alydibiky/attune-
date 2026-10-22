@@ -55,13 +55,13 @@ export function Attached({ files, onRemove }) {
 }
 
 /** The two quick options in the box (Ali: "make the web search and translate as an option in the chat"). */
-export function BoxOptions({ web, setWeb, tr2, setTr2, onAttach, onCmd }) {
+export function BoxOptions({ web, setWeb, tr2, setTr2, onAttach }) {
   const on = { background: "var(--c-soft)", border: "1px solid var(--c-acc)", color: "var(--c-ink)" };
   return <div className="flex items-center gap-1.5 overflow-x-auto -mx-1 px-1 pb-0.5" data-testid="box-options">
     <button onClick={onAttach} aria-label={tr("Attach a file, photo, video or recording")} className="shrink-0 w-9 h-9 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="box-attach"><Paperclip size={16} /></button>
     <button onClick={() => setWeb(!web)} aria-pressed={web} className={chip + " shrink-0"} style={web ? on : surf} data-testid="box-web"><Globe size={14} className="c-acc" />{tr("Web")}</button>
     <button onClick={() => setTr2(!tr2)} aria-pressed={tr2} className={chip + " shrink-0"} style={tr2 ? on : surf} data-testid="box-translate"><Languages size={14} className="c-acc" />{tr("Translate")}</button>
-    {["/convert", "/remember", "/find"].map((c) => <button key={c} onClick={() => onCmd && onCmd(c)} className="shrink-0 text-[12.5px] font-bold c-acc px-2.5 h-9 rounded-full" style={{ background: "var(--c-soft)" }} data-testid={"box-cmd-" + c.slice(1)}>{c}</button>)}
+    {/* Ali (22 Oct): the commands show only when "/" is typed — no command chips under the box */}
   </div>;
 }
 

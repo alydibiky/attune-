@@ -45,6 +45,8 @@ idea is that **the chat box does most of the work**, so screens stay quiet:
 - **Home:** the box first and biggest. Under it only what is happening now (job cards while something runs; at most ONE "Right
   now" card). Then "Your day" short: at most 3 rows and a "See all". No extra chip rows, no tile grids, no "Needs you" lists on
   the phone — the box answers those ("what do I owe?", "what's on today?").
+- **Commands appear only when "/" is typed** (the "/" list opens above the keyboard). No `/convert` `/remember` `/find` chips
+  under the box — under it only: attach, Web, Translate (and the mic / camera / send buttons).
 - **Every screen:** one main action, 3–4 numbers at most above the fold, the rest one tap away (a tab, "See all", or folded).
   Empty space is part of the design.
 - **Business screens** (Fleet, Books, Shop) may be richer dashboards on the **desktop**; on the **phone** show the 4 KPI tiles and
@@ -79,7 +81,8 @@ Then stop and wait for Ali's pick.
 **Step 1 feedback from Ali (22 Oct):** the visuals and dashboards are impressive — keep that quality. But the Home mock-up shows
 too much at once: redo Home in the picked direction following "Calm, not cluttered" above (box first, jobs, one Right-now card,
 3 rows of Your day). The busy Home you drew becomes **"My report"** (see "Two levels" above), and Fleet → Today's rich
-version becomes **Fleet's Report** — keep both designs.
+version becomes **Fleet's Report** — keep both designs. **Ali picked option C** (calm view + Report on every page and part)
+and: commands only when "/" is typed.
 
 ## Step 2 — screens, in this order (after Ali picks)
 Business (same components everywhere):

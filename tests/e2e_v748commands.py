@@ -16,6 +16,11 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init="try{localStorage.setItem('attune:start','home')}catch(e){}")
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
+    # Ali (22 Oct): commands show only when "/" is typed — no command chips under the box, no list before "/"
+    check(page.locator("[data-testid^=box-cmd-]").count() == 0 and page.locator("[data-testid=slash-menu]").count() == 0
+          and page.locator("[data-testid=box-web]").count() == 1, "no command chips and no / list until / is typed (Web stays)")
+    page.fill("[data-testid=home-ask]", "/"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=slash-menu]").count() == 1, "typing / opens the command list")
     # the / list
     page.fill("[data-testid=home-ask]", "/tr"); page.wait_for_timeout(200)
     ids = page.evaluate("() => [...document.querySelectorAll('[data-testid^=slash-]')].map(e => e.dataset.testid)")
