@@ -39,6 +39,18 @@ a quality bar only. Do not copy their layout, names, colours or assets.** Make s
 11. **One file at a time.** For each screen you redesign, return the **whole file**, plus a short list: what changed, what you
     need from Claude, wording ideas. Don't touch files you weren't asked to.
 
+## Calm, not cluttered (Ali's vision — read before every screen)
+Your job is the **look** (colours, type, cards, tiles, charts, spacing, dark mode) — **not adding more things to a screen**. Attune's
+idea is that **the chat box does most of the work**, so screens stay quiet:
+- **Home:** the box first and biggest. Under it only what is happening now (job cards while something runs; at most ONE "Right
+  now" card). Then "Your day" short: at most 3 rows and a "See all". No extra chip rows, no tile grids, no "Needs you" lists on
+  the phone — the box answers those ("what do I owe?", "what's on today?").
+- **Every screen:** one main action, 3–4 numbers at most above the fold, the rest one tap away (a tab, "See all", or folded).
+  Empty space is part of the design.
+- **Business screens** (Fleet, Books, Shop) may be richer dashboards on the **desktop**; on the **phone** show the 4 KPI tiles and
+  "Needs attention" first, and put charts and long lists behind a tab or "See all".
+- Show the screen with **a normal day's data**, not the busiest possible day.
+
 ## Where you are free (be creative)
 Layout and hierarchy, spacing rhythm, card styles, KPI tiles, tab and chip styles, tables vs. cards on phone, empty states,
 inline-SVG illustrations, chart styling, subtle motion (≤ 200 ms), a "desk" mode for business screens, dark-mode richness,
@@ -52,6 +64,10 @@ Deliver **2–3 named directions** (Ali chooses — his rule is that look-and-fe
   empty state · toast · the Home box and job card;
 - one static mock-up (HTML) of **Fleet → Today** and **Home** in that direction, phone (390 px) and desktop (1280 px).
 Then stop and wait for Ali's pick.
+
+**Step 1 feedback from Ali (22 Oct):** the visuals and dashboards are impressive — keep that quality. But the Home mock-up shows
+too much at once: redo Home in the picked direction following "Calm, not cluttered" above (box first, jobs, one Right-now card,
+3 rows of Your day).
 
 ## Step 2 — screens, in this order (after Ali picks)
 Business (same components everywhere):
