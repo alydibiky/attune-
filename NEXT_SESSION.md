@@ -757,6 +757,16 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AS. 22 Oct 2026 — Ali's design choices for Gemini (read with GEMINI_DESIGN_BRIEF.md)
+- **Direction 2 — Quiet Atelier** (warm stone dark, jade green, terracotta active pill, 22 px corners). Mock-up from Gemini:
+  "Attune v6.50 Step 1" (Ali has the HTML; screenshots were sent in chat).
+- **Option C — two levels on every page and part:** the calm view opens first; its **Report** (Gemini's rich dashboard look) one tap
+  away ("See all" / a Report tab / asking the box). Plus one **"My report"** page joining every area. Business reports at full
+  dashboard quality is a MUST (desktop desk; stacked on phone).
+- **Commands only when "/" is typed** — the /convert /remember /find chips under the Home box were removed (built, tested).
+- Next: Gemini redoes Home calm + My report + Fleet Report, then fleet-ui.jsx; Claude integrates each file (build, all tests,
+  screenshots to Ali) and wires the new Report pages + box words ("my report", «وريني التقرير», "Fleet report").
+
 ## AR. 22 Oct 2026 — v6.49 (HANDOFF §5.100). Read this first, then AQ.
 Ali: "I want the app to be at least 20 languages" → 20. And: Gemini should design the interfaces "in a controlled way" →
 `GEMINI_DESIGN_BRIEF.md` (Ali pastes it into Gemini; Claude integrates and tests what comes back).

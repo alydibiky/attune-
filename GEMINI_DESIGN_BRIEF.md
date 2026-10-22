@@ -81,7 +81,7 @@ Then stop and wait for Ali's pick.
 **Step 1 feedback from Ali (22 Oct):** the visuals and dashboards are impressive — keep that quality. But the Home mock-up shows
 too much at once: redo Home in the picked direction following "Calm, not cluttered" above (box first, jobs, one Right-now card,
 3 rows of Your day). The busy Home you drew becomes **"My report"** (see "Two levels" above), and Fleet → Today's rich
-version becomes **Fleet's Report** — keep both designs. **Ali picked option C** (calm view + Report on every page and part)
+version becomes **Fleet's Report** — keep both designs. **Ali picked Direction 2 — Quiet Atelier** (warm stone dark, jade green, terracotta active pill, 22 px corners) **and option C** (calm view + Report on every page and part)
 and: commands only when "/" is typed.
 
 ## Step 2 — screens, in this order (after Ali picks)
