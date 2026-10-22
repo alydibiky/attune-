@@ -15,7 +15,7 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false 
   if (asBar) return (
     <>
     <div style={{ height: 80 }} aria-hidden="true" />
-    <nav className="fixed bottom-0 inset-x-0 z-[55] bg-[var(--c-surf)] border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} role="tablist" data-testid="hub-tabs">
+    <nav className="calm fixed bottom-0 inset-x-0 z-[55] bg-[var(--c-surf)]! border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} role="tablist" data-testid="hub-tabs">
       <div className="max-w-3xl mx-auto flex h-[66px]">
         {tabs.map((m) => { const I = BAR_ICON[m] || Briefcase; return (
           <button key={m} role="tab" aria-selected={on(m)} onClick={() => { if (m !== mode) navTo(m); }} data-testid={"hub-tab-" + m}
@@ -26,18 +26,18 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false 
     </>);
   return (
     <>
-    <div className="att-hscroll flex gap-5 overflow-x-auto -mx-3 px-3 mb-4 border-b border-[var(--c-ln)]" role="tablist" data-testid="hub-tabs">
+    <div className="calm bg-transparent! att-hscroll flex gap-5 overflow-x-auto -mx-3 px-3 mb-4 border-b border-[var(--c-ln)]" role="tablist" data-testid="hub-tabs">
       {tabs.map((m) => (
         <button key={m} role="tab" aria-selected={on(m)} onClick={() => { if (m !== mode) navTo(m); }} data-testid={"hub-tab-" + m}
-          className={"shrink-0 h-10 -mb-px text-[14px] whitespace-nowrap border-b-2 transition-colors " +
-            (on(m) ? "border-[var(--c-acc)] text-[var(--c-ink)] font-semibold" : "border-transparent text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>
+          className={"shrink-0 h-11 -mb-px text-[14px] whitespace-nowrap border-b-2 transition-colors duration-150 " +
+            (on(m) ? "border-[var(--c-acc-2)] text-[var(--c-ink)] font-extrabold" : "border-transparent text-[var(--c-mut)] font-bold hover:text-[var(--c-ink)]")}>
           {tr(titleOf(m))}</button>))}
     </div>
     {parts.length >= 2 ? (
-      <div className="inline-flex max-w-full overflow-x-auto no-scrollbar rounded-lg border border-[var(--c-ln)] bg-[var(--c-surf)] p-0.5 mb-3" data-testid="hub-parts">
+      <div className="calm inline-flex gap-0.5 max-w-full overflow-x-auto no-scrollbar rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]! p-1 mb-3" data-testid="hub-parts">
         {parts.map((m) => (
           <button key={m} onClick={() => { if (m !== mode) navTo(m); }} aria-pressed={m === mode} data-testid={"hub-part-" + m}
-            className={"shrink-0 whitespace-nowrap rounded-md px-3 py-1 text-[12.5px] " + (m === mode ? "bg-[var(--c-ln)] text-[var(--c-ink)] font-medium" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>
+            className={"shrink-0 whitespace-nowrap min-h-[36px] rounded-full px-3.5 text-[13px] font-bold transition-colors duration-150 " + (m === mode ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>
             {tr(PART_TITLE[m] || titleOf(m))}</button>))}
       </div>) : null}
     </>);

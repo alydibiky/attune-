@@ -16,9 +16,9 @@ export function PrivacyWeek({ readNet }) {
   return (
     <section className="c-card space-y-2" data-testid="privacy-week">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-[15px] font-semibold m-0">{tr("Your week in privacy")}</h3>
+        <h3 className="text-[16px] font-extrabold m-0">{tr("Your week in privacy")}</h3>
         <span className="flex gap-1 text-[12px]">
-          {[0, 1].map((k) => <button key={k} onClick={() => setAgo(k)} className={"px-2 py-0.5 rounded-md " + (ago === k ? "c-pill font-semibold" : "c-sub")} data-testid={"privacy-week-" + k}>{k ? tr("Last week") : tr("This week")}</button>)}
+          {[0, 1].map((k) => <button key={k} onClick={() => setAgo(k)} className={"min-h-[36px] px-3 rounded-full font-bold transition-colors duration-150 " + (ago === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "c-sub")} data-testid={"privacy-week-" + k}>{k ? tr("Last week") : tr("This week")}</button>)}
         </span>
       </div>
       <p className="c-sub text-[12px] m-0">{fmtDay(r.from)} – {fmtDay(r.to)}</p>
@@ -38,14 +38,14 @@ export function PrivacyWeek({ readNet }) {
 export function PrivacyPage({ flash, onVault, readNet } = {}) {
   const ar = getLang() === "ar", P = PRIVACY[ar ? "ar" : "en"];
   return (
-    <div className="calm rounded-2xl p-4 md:p-6 space-y-4 lg:max-w-[76ch]" style={{ minHeight: "70vh" }} data-testid="privacy-page" dir={ar ? "rtl" : "ltr"}>
+    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[22px] p-4 md:p-6 space-y-4 lg:max-w-[76ch]" style={{ minHeight: "70vh" }} data-testid="privacy-page" dir={ar ? "rtl" : "ltr"}>
       <div className="flex items-start gap-3"><span className="c-ic"><ShieldCheck size={17} /></span>
-        <div><h2 className="text-[20px] font-semibold m-0">{tr("Privacy")}</h2><p className="c-sub m-0">{tr("Updated {d}", { d: PRIVACY_UPDATED })}</p></div></div>
+        <div><h2 className="text-[22px] font-black tracking-tight m-0">{tr("Privacy")}</h2><p className="c-sub m-0">{tr("Updated {d}", { d: PRIVACY_UPDATED })}</p></div></div>
       <PrivacyWeek readNet={readNet} />
       <VaultSettings flash={flash} onChange={onVault} />
       {P.map(([h, t], i) => (
         <section key={i} className={i === 0 ? "c-card" : ""}>
-          <h3 className="text-[15px] font-semibold m-0 mb-1">{h}</h3>
+          <h3 className="text-[16px] font-extrabold m-0 mb-1">{h}</h3>
           <p className="text-[14px] leading-relaxed m-0" style={{ color: "var(--c-ink)" }}>{t}</p>
         </section>))}
     </div>);

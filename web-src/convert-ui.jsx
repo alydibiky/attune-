@@ -119,7 +119,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
       onClose={() => { setEditing(false); setFiles(null); setTarget(null); }}
       onDone={(o) => { setEditing(false); setOut(o); }} />);
 
-  const chip = (on) => K.chip(on) + (on ? " decoration-teal-500" : "");   // the inert teal class: tests/e2e_v541.py looks for "teal" on the chosen target
+  const chip = (on) => K.chip(on);
   const targets = files ? targetsOf(files.kind) : [];
   return (
     <div className="calm text-[var(--c-ink)] space-y-4 max-w-2xl mx-auto" data-testid="convert">

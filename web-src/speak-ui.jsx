@@ -3,11 +3,12 @@
 import React, { useState } from "react";
 import { Volume2, Mic, Loader2, ImageIcon, BookOpen, ChevronRight, MessageCircle, RefreshCw } from "lucide-react";
 import { tr } from "./i18n.js";
+import * as UK from "./ui-kit.jsx";
 import { speakNow } from "./lesson-ui.jsx";
 import * as P from "./speak.js";
 import * as K from "./packcourse.js";
 
-const MARK = { good: "var(--c-pos, #2f9e73)", close: "#c98a1b", missed: "var(--c-neg, #d0534f)" };
+const MARK = { good: "var(--c-pos, #2f9e73)", close: "var(--c-warn, #c98a1b)", missed: "var(--c-neg, #d0534f)" };
 const ghost = "rounded-lg px-3 py-1.5 text-[13px] font-medium border inline-flex items-center gap-1.5 disabled:opacity-40";
 const gs = { borderColor: "var(--c-ln)", color: "var(--c-ink)", background: "transparent" };
 
@@ -88,14 +89,14 @@ export function DialogueCard({ lesson, course, native, call, listen, make, busy 
     <div className="c-card space-y-2" data-testid="dialogue">
       <p className="c-lbl m-0 flex items-center gap-1.5"><MessageCircle size={14} />{d.title || tr("A short conversation")}</p>
       {d.lines.map((ln, i) => (
-        <div key={i} className={"rounded-lg px-2.5 py-1.5 " + (ln.who === me ? "ms-6" : "me-6")} style={{ background: at === i ? "rgba(79,194,175,.14)" : "var(--c-bg)", border: "1px solid var(--c-ln)" }} data-testid="dialogue-line">
+        <div key={i} className={"rounded-[16px] px-3 py-2 " + (ln.who === me ? "ms-6" : "me-6")} style={{ background: at === i ? "var(--c-soft)" : "var(--c-bg)", border: "1px solid var(--c-ln)" }} data-testid="dialogue-line">
           <div className="text-[12px] c-sub">{ln.who === me ? tr("You") : tr("The phone")}</div>
           <div dir="auto" className="font-medium">{ln.text}</div>
           {ln.say ? <div dir="auto" className="c-sub text-[12.5px]">{ln.say}</div> : null}
           {scores[i] ? <Scored r={scores[i]} /> : null}
         </div>))}
       <div className="flex flex-wrap gap-2 items-center">
-        <button className="c-btn inline-flex items-center gap-1.5" disabled={at >= 0} onClick={play} data-testid="dialogue-play">{at >= 0 ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />}{listen ? tr("Start — you say the {p} lines", { p: me }) : tr("Listen to it")}</button>
+        <button className={UK.btnP} disabled={at >= 0} onClick={play} data-testid="dialogue-play">{at >= 0 ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />}{listen ? tr("Start — you say the {p} lines", { p: me }) : tr("Listen to it")}</button>
         <button className={ghost} style={gs} disabled={at >= 0} onClick={() => { setMe(me === "A" ? "B" : "A"); setScores({}); }} data-testid="dialogue-swap"><RefreshCw size={13} />{tr("Swap parts")}</button>
         {avg != null && at < 0 ? <span className="c-num" data-testid="dialogue-score">{tr("Your lines: {s}/100", { s: avg })}</span> : null}
       </div>
@@ -108,7 +109,7 @@ export function LessonPicture({ lesson, course, native, call, onPicture, openStu
   const [err, setErr] = useState("");
   let pack = null;
   try { const i = native && native.imageInfo ? JSON.parse(native.imageInfo()) : null; const ps = (i && i.packs) || []; pack = ps.find((p) => p.installed !== false) || null; } catch (e) {}
-  if (lesson.picture) return <img src={lesson.picture} alt="" className="w-full rounded-xl" style={{ maxHeight: 340, objectFit: "cover" }} data-testid="lesson-picture" />;
+  if (lesson.picture) return <img src={lesson.picture} alt="" className="w-full rounded-[22px]" style={{ maxHeight: 340, objectFit: "cover" }} data-testid="lesson-picture" />;
   if (!pack) return openStudio ? <button className={ghost} style={gs} onClick={openStudio}><ImageIcon size={14} />{tr("Draw a picture for this lesson (Studio)")}</button> : null;
   const draw = async () => {
     setBusy(0); setErr("");

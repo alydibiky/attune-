@@ -62,7 +62,7 @@ function ReadSheet({ init, readText, llm, native, remind, flash, onClose }) {
   const big = "min-h-[56px] rounded-2xl px-4 inline-flex items-center justify-center gap-2 text-[16px] font-semibold border-0 cursor-pointer";
   return (
     <div className="calm fixed inset-0 z-[80] flex items-end md:items-center justify-center" style={{ background: "rgba(0,0,0,.45)" }} onClick={() => { stop(); onClose(); }} data-testid="read-sheet" role="dialog" aria-label={tr("Read it to me")}>
-      <div className="w-full md:max-w-2xl max-h-[94vh] overflow-auto rounded-t-3xl md:rounded-3xl p-4 md:p-6 space-y-3" style={{ background: "var(--c-bg)", color: "var(--c-ink)", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full md:max-w-2xl max-h-[94vh] overflow-auto rounded-t-[26px] md:rounded-[26px] p-4 md:p-6 space-y-3" style={{ background: "var(--c-bg)", color: "var(--c-ink)", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between"><b className="text-[18px] flex items-center gap-2"><Volume2 size={20} className="c-acc" />{tr("Read it to me")}</b>
           <button onClick={() => { stop(); onClose(); }} className="c-ic border-0 cursor-pointer" aria-label={tr("Close")} data-testid="read-close"><X size={16} /></button></div>
         <input ref={cam} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { onFile(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="read-camera-input" />
@@ -70,7 +70,7 @@ function ReadSheet({ init, readText, llm, native, remind, flash, onClose }) {
         {!text && !busy ? (<div className="space-y-3 py-2">
           <p className="c-sub m-0 text-[14px]">{tr("Point the camera at any paper — a bill, a letter, a medicine box, a sign. I'll read it to you and tell you what to do.")}</p>
           <div className="grid md:grid-cols-2 gap-3">
-            <button className={big} style={{ background: "var(--c-acc)", color: "#fff" }} onClick={() => cam.current && cam.current.click()} data-testid="read-camera"><Camera size={22} />{tr("Take a photo")}</button>
+            <button className={big} style={{ background: "var(--c-acc)", color: "var(--c-on-acc)" }} onClick={() => cam.current && cam.current.click()} data-testid="read-camera"><Camera size={22} />{tr("Take a photo")}</button>
             <button className={big} style={{ background: "var(--c-soft)", color: "var(--c-acc)" }} onClick={() => pick.current && pick.current.click()} data-testid="read-pick"><ImagePlus size={22} />{tr("Choose a photo")}</button>
           </div></div>) : null}
         {busy ? <div className="flex flex-col items-center gap-3 py-6" aria-busy="true"><span className="w-16 h-16 rounded-full fit-pulse" style={{ background: "var(--c-acc)", opacity: 0.4 }} /><p className="m-0 text-[15px]">{busy}</p></div> : null}
@@ -82,8 +82,8 @@ function ReadSheet({ init, readText, llm, native, remind, flash, onClose }) {
             {ex.actions.length ? <div className="flex flex-wrap gap-2 pt-1">{ex.actions.map((a, i) => { const [Ic, l] = ACT[a.type]; return <button key={i} className="c-btn inline-flex items-center gap-1.5 min-h-[44px]" onClick={() => doAct(a)} data-testid={"read-act-" + a.type}><Ic size={16} />{tr(l)}{a.type === "radar" && a.item.date ? " · " + a.item.date : ""}</button>; })}</div> : null}
           </div>
           <div className="flex gap-2 flex-wrap">
-            <button className={big + " flex-1"} style={{ background: "var(--c-acc)", color: "#fff" }} onClick={() => (playing === "all" ? stop() : play(lines, voiceLang, 0, "all"))} data-testid="read-play">{playing === "all" ? <Pause size={22} /> : <Play size={22} />}{playing === "all" ? tr("Pause") : tr("Read it all")}</button>
-            <button className={big} style={{ background: slow ? "var(--c-acc)" : "var(--c-soft)", color: slow ? "#fff" : "var(--c-acc)" }} onClick={() => setSlow((v) => !v)} aria-pressed={slow} data-testid="read-slow">{tr("Slower")}</button>
+            <button className={big + " flex-1"} style={{ background: "var(--c-acc)", color: "var(--c-on-acc)" }} onClick={() => (playing === "all" ? stop() : play(lines, voiceLang, 0, "all"))} data-testid="read-play">{playing === "all" ? <Pause size={22} /> : <Play size={22} />}{playing === "all" ? tr("Pause") : tr("Read it all")}</button>
+            <button className={big} style={{ background: slow ? "var(--c-acc-2)" : "var(--c-soft)", color: slow ? "var(--c-on-acc-2)" : "var(--c-acc)" }} onClick={() => setSlow((v) => !v)} aria-pressed={slow} data-testid="read-slow">{tr("Slower")}</button>
           </div>
           <div className="flex gap-3 flex-wrap">
             {voiceLang !== ui ? <button className="c-sub underline bg-transparent border-0 p-0 cursor-pointer inline-flex items-center gap-1" onClick={translate} data-testid="read-translate"><Languages size={14} />{tr("Read it in my language")}</button> : null}
@@ -91,9 +91,9 @@ function ReadSheet({ init, readText, llm, native, remind, flash, onClose }) {
             <button className="c-sub underline bg-transparent border-0 p-0 cursor-pointer inline-flex items-center gap-1" onClick={() => { stop(); setText(""); setImg(""); setShown(""); }}><Camera size={14} />{tr("Another paper")}</button>
           </div>
           <div className="c-card space-y-1" data-testid="read-text">
-            {lines.map((s, i) => <p key={i} className="m-0 text-[17px] leading-relaxed rounded-md px-1 cursor-pointer" dir="auto" style={{ background: i === at ? "var(--c-soft)" : "transparent", fontWeight: i === at ? 700 : 400 }} onClick={() => play(lines, voiceLang, i, "all")}>{s}</p>)}
+            {lines.map((s, i) => <p key={i} className="m-0 text-[17px] leading-relaxed rounded-[10px] px-1.5 cursor-pointer" dir="auto" style={{ background: i === at ? "var(--c-soft)" : "transparent", fontWeight: i === at ? 700 : 400 }} onClick={() => play(lines, voiceLang, i, "all")}>{s}</p>)}
           </div>
-          {img ? <img src={img} alt="" className="w-full rounded-2xl max-h-64 object-contain" style={{ background: "var(--c-surf)" }} /> : null}
+          {img ? <img src={img} alt="" className="w-full rounded-[22px] max-h-64 object-contain" style={{ background: "var(--c-surf)" }} /> : null}
         </>) : null}
       </div>
     </div>);

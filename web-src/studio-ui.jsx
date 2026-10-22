@@ -441,7 +441,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
     : busy.stage === "upscale" && busy.total ? tr("Sharpening ×4 — part {n} of {t}", { n: busy.step, t: busy.total }) + (busy.step > 0 && busy.step < busy.total ? " · " + tr("about {m} min left", { m: Math.max(1, Math.round((Date.now() - busy.t0) / busy.step * (busy.total - busy.step) / 60000)) }) : "")
     : busy.stage === "load" && busy.total ? tr("Loading the picture model… {p}%", { p: Math.round(busy.step * 100 / busy.total) })
     : tr(STAGE[busy.stage] || "Working…")) : "";
-  const chip = (on) => K.chip(on) + (on ? " print:bg-violet-500" : "");   // print-only marker: tests/e2e_v59.py counts "bg-violet-500" on the chosen mode
+  const chip = (on) => K.chip(on);
   const btn = K.btnS;
 
   return (

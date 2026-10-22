@@ -14,10 +14,10 @@ export class Guard extends React.Component {
   }
   render() {
     if (!this.state.err) return this.props.children;
-    return React.createElement("div", { className: "rounded-2xl border border-amber-800 bg-amber-500/5 p-4 space-y-2", "data-testid": "screen-error" },
-      React.createElement("p", { className: "text-sm text-amber-200 font-medium" }, tr("Something went wrong on this screen.")),
-      React.createElement("p", { className: "text-[12px] text-slate-400 break-words", dir: "ltr" }, String((this.state.err && this.state.err.message) || this.state.err).slice(0, 300)),
-      React.createElement("p", { className: "text-[12px] text-slate-400" }, tr("Your chats and data are safe. Try again — if it keeps happening, send me this message.")),
-      React.createElement("button", { className: "px-3 py-2 rounded-lg text-xs font-semibold bg-teal-500 text-slate-950", onClick: () => this.setState({ err: null }) }, tr("Try again")));
+    return React.createElement("div", { className: "calm rounded-[22px] border border-[var(--c-warn)]/40 bg-[var(--c-surf)]! text-[var(--c-ink)] p-4 space-y-2", "data-testid": "screen-error" },
+      React.createElement("p", { className: "text-[14.5px] text-[var(--c-warn)] font-extrabold m-0" }, tr("Something went wrong on this screen.")),
+      React.createElement("p", { className: "text-[12px] text-[var(--c-mut)] break-words m-0", dir: "ltr" }, String((this.state.err && this.state.err.message) || this.state.err).slice(0, 300)),
+      React.createElement("p", { className: "text-[12.5px] text-[var(--c-mut)] m-0" }, tr("Your chats and data are safe. Try again — if it keeps happening, send me this message.")),
+      React.createElement("button", { className: "min-h-[44px] h-11 px-5 rounded-[14px] text-[13.5px] font-extrabold bg-[var(--c-acc)] text-[var(--c-on-acc)]", onClick: () => this.setState({ err: null }) }, tr("Try again")));
   }
 }

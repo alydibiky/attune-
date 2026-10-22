@@ -25,7 +25,10 @@
    accent, terracotta active pill (--c-acc-2), 22-px corners. --c-on-acc / --c-on-acc-2 = the text on a jade / terracotta fill
    (near-black in dark, white in light — each ≥ 4.5:1). */
 .calm{--c-bg:#101413;--c-surf:#171D1B;--c-surf-2:#1E2623;--c-ink:#EAEFEC;--c-mut:#9BA8A3;--c-ln:#26302D;--c-acc:#4FC2AF;--c-acc-2:#E07A5F;--c-on-acc:#0B1A17;--c-on-acc-2:#0B1A17;--c-soft:#173530;--c-warn:#E5A93C;--c-pos:#5BC48A;--c-neg:#F07A6E;--c-r:22px;
-  font-family:"Nunito","Figtree","IBM Plex Sans Arabic",system-ui,sans-serif;color:var(--c-ink);background:var(--c-bg);font-size:14px;line-height:1.45}
+}
+/* v7.0: the page look of .calm sits in a layer, so a Tailwind class on the same element wins (a dim sheet backdrop bg-black/60,
+   a card bg-[var(--c-surf)], a text size) — the colour tokens above stay unlayered so every screen has them */
+@layer components { .calm{font-family:"Nunito","Figtree","IBM Plex Sans Arabic",system-ui,sans-serif;color:var(--c-ink);background:var(--c-bg);font-size:14px;line-height:1.45} }
 html.att-light .calm{--c-bg:#F4F7F5;--c-surf:#FFFFFF;--c-surf-2:#EEF3F0;--c-ink:#16201C;--c-mut:#4A5852;--c-ln:#E2EAE5;--c-acc:#157A52;--c-acc-2:#B5543A;--c-on-acc:#FFFFFF;--c-on-acc-2:#FFFFFF;--c-soft:#E3F4EC;--c-warn:#B4560E;--c-pos:#1E7A43;--c-neg:#B33A2E;--c-r:22px}
 /* v6.43 design A (Ali's pick): white cards on a soft grey-green ground, no outline, a soft shadow; Home's app tiles */
 html.att-light .calm .c-card{border-color:transparent;box-shadow:0 1px 3px rgba(16,32,28,.08)}

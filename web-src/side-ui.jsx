@@ -96,27 +96,27 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
   let lastGroup = "";
   const Row = ({ id, label, Icon }) => (
     <button onClick={() => navTo(id)} data-testid={"side-go-" + id}
-      className={"w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] text-start " + ((activePlace || mode) === id ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60")}>
-      <Icon size={17} className={(activePlace || mode) === id ? "text-teal-300" : "text-slate-400"} /><span className="truncate">{tr(label)}</span>
+      className={"w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[14px] text-[14px] font-bold text-start transition-colors duration-150 " + ((activePlace || mode) === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]")}>
+      <Icon size={17} className={(activePlace || mode) === id ? "" : "text-[var(--c-mut)]"} /><span className="truncate">{tr(label)}</span>
     </button>);
   return (
-    <aside className="fixed top-0 bottom-0 start-0 z-[56] flex flex-col bg-slate-900 border-e border-slate-800" style={{ width }} data-testid="side">
-      <div className="flex items-center gap-1 px-3 h-14 shrink-0">
+    <aside className="calm fixed top-0 bottom-0 start-0 z-[56] flex flex-col bg-[var(--c-surf)]! text-[var(--c-ink)] border-e border-[var(--c-ln)]" style={{ width }} data-testid="side">
+      <div className="flex items-center gap-1 px-3 h-16 shrink-0">
         {/* v6.24 (Ali: "there is no back in the app"): a computer has no Back key like a phone — this is it
             (also: the mouse's back button, Alt+←, and Esc for an open panel) */}
-        {canBack || depth > 0 ? <button onClick={onBack} className="att-icon-btn border-transparent! bg-transparent! text-slate-300! -ms-2" aria-label={tr("Back")} title={tr("Back") + " (Alt+←)"} data-testid="side-back">
+        {canBack || depth > 0 ? <button onClick={onBack} className="att-icon-btn border-transparent! bg-transparent! text-[var(--c-ink)]! -ms-2" aria-label={tr("Back")} title={tr("Back") + " (Alt+←)"} data-testid="side-back">
           <span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button> : null}
         {/* v6.50: the name goes Home (the sidebar has no Home row — Ali: chats + Money · Business · Health · Shelf) */}
-        <button onClick={() => navTo("home")} className="flex-1 text-start text-[17px] font-semibold text-white tracking-tight bg-transparent border-0 p-0" data-testid="side-home" title={tr("Home")}>Attune</button>
-        <button onClick={onClose} className="att-icon-btn border-transparent! bg-transparent! text-slate-400!" aria-label={tr("Close sidebar")} title={tr("Close sidebar")} data-testid="side-close"><PanelLeft size={18} /></button>
+        <button onClick={() => navTo("home")} className="flex-1 min-h-[44px] text-start text-[19px] font-black text-[var(--c-ink)] tracking-tight bg-transparent border-0 p-0" data-testid="side-home" title={tr("Home")}>Attune</button>
+        <button onClick={onClose} className="att-icon-btn border-transparent! bg-transparent! text-[var(--c-mut)]!" aria-label={tr("Close sidebar")} title={tr("Close sidebar")} data-testid="side-close"><PanelLeft size={18} /></button>
       </div>
-      <div className="px-2.5 space-y-1.5 shrink-0">
-        <button onClick={onNewChat} data-testid="side-new" className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] text-slate-100 hover:bg-slate-800/60">
-          <span className="w-6 h-6 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center"><Plus size={15} /></span>{tr("New chat")}</button>
-        <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5">
-          <Search size={14} className="text-slate-500" />
+      <div className="px-2.5 space-y-2 shrink-0">
+        <button onClick={onNewChat} data-testid="side-new" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[14px] text-[14px] font-extrabold text-[var(--c-ink)] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150">
+          <span className="w-7 h-7 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center"><Plus size={16} /></span>{tr("New chat")}</button>
+        <div className="flex items-center gap-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 focus-within:border-[var(--c-acc)] transition-colors duration-150">
+          <Search size={15} className="text-[var(--c-mut)]" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search chats and tools")} dir="auto" data-testid="side-search"
-            className="flex-1 min-w-0 bg-transparent py-2 text-[13px] text-slate-200 placeholder-slate-600 focus:outline-none" />
+            className="flex-1 min-w-0 min-h-[44px] bg-transparent py-2 text-[13.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none" />
         </div>
       </div>
       <div className="att-scroll flex-1 overflow-y-auto px-2.5 pt-2 pb-3">
@@ -125,34 +125,34 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
         {!nq ? (<>
           {places.map(([id, label, Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}
           {/* v6.25 (Ali picked A + C): the tools you pin from the Tools page (★), not a list of all 33 */}
-          {showPins && pinned.length ? <p className="px-2.5 pt-3 pb-1 text-[10.5px] uppercase tracking-wider text-slate-500">{tr("Pinned")}</p> : null}
+          {showPins && pinned.length ? <p className="px-3 pt-4 pb-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] m-0">{tr("Pinned")}</p> : null}
           <div data-testid="side-pins">{(showPins ? pinned : []).map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>
         </>) : null}
         <div className="mt-3" data-testid="side-chats">
-          {shown.length === 0 ? <p className="px-2.5 py-2 text-[12px] text-slate-500">{nq ? tr("No chats match.") : tr("No chats yet.")}</p> : shown.map((c) => {
+          {shown.length === 0 ? <p className="px-3 py-2 text-[12.5px] text-[var(--c-mut)] m-0">{nq ? tr("No chats match.") : tr("No chats yet.")}</p> : shown.map((c) => {
             const g = dayGroup(c.updated); const head = g !== lastGroup ? (lastGroup = g) : null;
             const on = mode === "chat" && c.id === activeId;
             return (
               <div key={c.id}>
-                {head ? <p className="px-2.5 pt-2.5 pb-1 text-[10.5px] uppercase tracking-wider text-slate-500">{tr(head)}</p> : null}
-                <div className={"group flex items-center rounded-lg " + (on ? "bg-slate-800" : "hover:bg-slate-800/60")} data-testid="side-chat">
+                {head ? <p className="px-3 pt-4 pb-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] m-0">{tr(head)}</p> : null}
+                <div className={"group flex items-center rounded-[14px] transition-colors duration-150 " + (on ? "bg-[var(--c-soft)]" : "hover:bg-[var(--c-surf-2)]")} data-testid="side-chat">
                   {renaming === c.id ? (
                     <input autoFocus defaultValue={tr(c.title)} dir="auto" data-testid="side-rename"
                       onBlur={(e) => { const v = e.target.value.trim(); if (v) chatCmd({ op: "rename", id: c.id, title: v }); setRenaming(null); }}
                       onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") setRenaming(null); }}
-                      className="flex-1 min-w-0 bg-slate-950 border border-teal-700 rounded-lg px-2 py-1.5 text-[13px] text-slate-100" />
+                      className="flex-1 min-w-0 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-acc)] rounded-[14px] px-3 py-1.5 text-[13.5px] font-semibold text-[var(--c-ink)] focus:outline-none" />
                   ) : confirmDel === c.id ? (
                     <div className="flex-1 flex items-center gap-1 px-2 py-1">
-                      <span className="flex-1 text-[12px] text-rose-200 truncate">{tr("Delete this chat?")}</span>
-                      <button onClick={() => { chatCmd({ op: "delete", id: c.id }); setConfirmDel(null); }} data-testid="side-del-yes" className="px-2 py-1 rounded-md bg-rose-600 text-white text-[11px]">{tr("Delete")}</button>
-                      <button onClick={() => setConfirmDel(null)} className="px-2 py-1 rounded-md border border-slate-700 text-slate-300 text-[11px]">{tr("Cancel")}</button>
+                      <span className="flex-1 text-[12.5px] font-bold text-[var(--c-neg)] truncate">{tr("Delete this chat?")}</span>
+                      <button onClick={() => { chatCmd({ op: "delete", id: c.id }); setConfirmDel(null); }} data-testid="side-del-yes" className="min-h-[36px] px-3 rounded-[12px] bg-[var(--c-neg)] text-[var(--c-on-acc)] text-[12px] font-extrabold">{tr("Delete")}</button>
+                      <button onClick={() => setConfirmDel(null)} className="min-h-[36px] px-3 rounded-[12px] border border-[var(--c-ln)] text-[var(--c-ink)] text-[12px] font-bold">{tr("Cancel")}</button>
                     </div>
                   ) : (<>
-                    <button onClick={() => onOpenChat(c.id)} data-testid="side-open-chat" className="flex-1 min-w-0 text-start px-2.5 py-2 text-[13px] text-slate-200 truncate" dir="auto" title={tr(c.title)}>
+                    <button onClick={() => onOpenChat(c.id)} data-testid="side-open-chat" className="flex-1 min-w-0 min-h-[40px] text-start px-3 py-2 text-[13.5px] font-semibold text-[var(--c-ink)] truncate" dir="auto" title={tr(c.title)}>
                       {c.space ? <span className="me-1">{c.space}</span> : null}{tr(c.title) || tr("New chat")}</button>
                     <span className={(touch ? "flex" : "hidden group-hover:flex group-focus-within:flex") + " items-center pe-1"}>
-                      <button onClick={() => setRenaming(c.id)} className="p-1.5 text-slate-500 hover:text-slate-200" title={tr("Rename")} aria-label={tr("Rename")}><PenLine size={13} /></button>
-                      <button onClick={() => setConfirmDel(c.id)} className="p-1.5 text-slate-500 hover:text-rose-300" title={tr("Delete")} aria-label={tr("Delete")} data-testid="side-del"><Trash2 size={13} /></button>
+                      <button onClick={() => setRenaming(c.id)} className="p-2 rounded-[10px] text-[var(--c-mut)] hover:text-[var(--c-ink)]" title={tr("Rename")} aria-label={tr("Rename")}><PenLine size={13} /></button>
+                      <button onClick={() => setConfirmDel(c.id)} className="p-2 rounded-[10px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" title={tr("Delete")} aria-label={tr("Delete")} data-testid="side-del"><Trash2 size={13} /></button>
                     </span>
                   </>)}
                 </div>
@@ -160,16 +160,16 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
           })}
         </div>
       </div>
-      <div className="shrink-0 border-t border-slate-800 p-2 space-y-0.5">
+      <div className="shrink-0 border-t border-[var(--c-ln)] p-2.5 space-y-1">
         {/* v6.50 (Ali picked A): How to use and Privacy open from the Home box ("/guide", "/privacy") and from Settings */}
-        <button onClick={openEngine} data-testid="side-engine" className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-slate-300 hover:bg-slate-800/60">
-          <Cpu size={16} className={engineState === "ready" ? "text-teal-300" : engineState === "starting" ? "text-amber-300" : "text-slate-400"} />
-          <span className="flex-1 text-start truncate">{engineLabel}</span>{airGap ? <Lock size={13} className="text-teal-300" /> : null}</button>
+        <button onClick={openEngine} data-testid="side-engine" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[14px] text-[13.5px] font-bold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150">
+          <Cpu size={16} className={engineState === "ready" ? "text-[var(--c-acc)]" : engineState === "starting" ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]"} />
+          <span className="flex-1 text-start truncate">{engineLabel}</span>{airGap ? <Lock size={13} className="text-[var(--c-acc)]" /> : null}</button>
         <div className="grid grid-cols-2 gap-1">
           {/* v6.50 (Ali picked A — Settings at the bottom): Backup stays one tap away (your data); Profile and Plan open from the box */}
           {[[openBackup, ShieldCheck, "Backup", "side-backup"], [openSettings, LayoutGrid, "Settings", "side-settings"]].map(([f, Ic, label, tid]) => (
             <button key={tid} onClick={f} data-testid={tid} title={tr(label)} aria-label={tr(label)}
-              className="flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[10.5px] text-slate-400 hover:bg-slate-800/60 hover:text-slate-200">
+              className="min-h-[48px] flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-[14px] text-[11px] font-bold text-[var(--c-mut)] hover:bg-[var(--c-surf-2)] hover:text-[var(--c-ink)] transition-colors duration-150">
               <Ic size={16} />{tr(label)}</button>))}
         </div>
       </div>

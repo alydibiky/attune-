@@ -262,7 +262,7 @@ export function PdfEditor({ file, nativeCall, onClose, onDone, flash }) {
   };
 
   if (err && !doc) return (
-    <section className={"calm " + K.cardPad + " space-y-3"} data-testid="pdfedit">
+    <section className={"calm " + K.cardPad + " bg-[var(--c-surf)]! space-y-3"} data-testid="pdfedit">
       <p className="text-[13px] text-[var(--c-neg)]" data-testid="pdfedit-error">{err}</p>
       <button onClick={onClose} className={K.btnS + " w-full"}>{tr("Back")}</button>
     </section>);
