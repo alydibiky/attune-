@@ -617,7 +617,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         <div className="c-list">
           {neutral(D.READY_COURSES, "courses").map((r) => (
             <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-start-" + r.id} className="w-full text-start p-3.5 min-h-[56px] flex items-center gap-3">
-              <span className="text-2xl">{r.emoji}</span><b className="flex-1 text-[14px]">{r.title[getLang() === "ar" ? 1 : 0]}</b><ChevronRight size={16} className="c-acc rtl:rotate-180" /></button>))}
+              <span className="text-2xl">{r.emoji}</span><b className="flex-1 text-[14.5px] font-extrabold">{r.title[getLang() === "ar" ? 1 : 0]}</b><ChevronRight size={16} className="c-acc rtl:rotate-180" /></button>))}
         </div>
         <button className={btnP + " flex items-center gap-1.5"} onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={15} />{tr("Any topic you like")}</button>
       </>}
