@@ -7,13 +7,16 @@
 import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { Paperclip, MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
-import { nowCard, homeNumbers, noticed, onThisDay } from "./home-now.js";
+import { nowCard, homeNumbers, noticed, onThisDay, weekRhythm } from "./home-now.js";
+import { ReportTiles, WeekChart } from "./report-ui.jsx";   // v7.0 My report (Gemini, Direction 2)
+import { dayTotals } from "./fit.js";
+import { live as fleetLive, kpis as fleetKpis } from "./fleet.js";
 import { safeToSpend } from "./safespend.js";
 import { setChequeStatus } from "./fleet.js";
 import { saveFleet } from "./fleet-store.js";
 import { RecallCard } from "./recall-ui.jsx";
 import { useSubBack } from "./backstack.js";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { loadRadar } from "./deadlines.js";
 import { loadCare } from "./care.js";
@@ -77,6 +80,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       // v6.43 (Ali picked "1 + the Today line"): today across the apps, by time
       line: minimal ? todayLine({ fit, ledger, fleet, care, life: loadLife(), radar: loadRadar(), courses, reminders: readJSON("attune:reminders:v1"), country: myCountry(), now: Date.now() }).line : [],
       // v6.46 Home A (Ali picked it): what you can spend today, for the numbers and "Attune noticed"
+      // v7.0 My report: the last 7 days (spent, eaten) for the week chart
+      week: minimal ? weekRhythm({ ledger, days: fit && fit.days, kcalOf: dayTotals, locale: dateLocale() }) : [],
       safe: minimal && ledger ? (() => { try { return safeToSpend({ ledger, life: loadLife(), radar: loadRadar() }); } catch (e) { return null; } })() : null, scout };
   }, [tick, fleet]);
   const mission = useTopMission();
@@ -148,28 +153,28 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
   return (
     <div className="calm -mx-3 px-4 pt-3 pb-6 space-y-4" style={{ minHeight: "calc(100vh - 60px)" }} data-testid="phone-home">
-      <div className="flex items-start gap-2">
+      {minimal && rep ? null : <div className="flex items-start gap-2">
         {/* v6.29 (Ali: "a sidebar where I can see the history of my chats"): ☰ opens it — chats, search, places, pinned tools */}
         {openSide ? <button onClick={openSide} aria-label={tr("Chats and menu")} className="w-9 h-9 -ms-1.5 mt-1 rounded-full grid place-items-center c-sub shrink-0" data-testid="home-menu"><Menu size={21} /></button> : null}
-        <div className="min-w-0"><p className="c-sub m-0">{date}</p><h1 className="text-[24px] font-bold m-0 tracking-tight">{tr(greeting(now))}{name ? ", " + name : ""}</h1></div></div>
+        <div className="min-w-0"><p className="c-sub m-0">{date}</p><h1 className="text-[24px] font-black m-0 tracking-tight">{tr(greeting(now))}{name ? ", " + name : ""}</h1></div></div>}
       {minimal && rep ? (
-        <div className="flex items-center gap-2" data-testid="my-report">
-          <button onClick={() => setRep(false)} className="h-10 px-3.5 rounded-full text-[13.5px] font-bold inline-flex items-center gap-1" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="my-report-back">
-            <ChevronRight size={16} className="rotate-180 rtl:rotate-0" />{tr("Home")}</button>
-          <h2 className="text-[20px] font-extrabold m-0 ms-1">{tr("My report")}</h2></div>
+        <div className="flex items-center gap-2.5" data-testid="my-report">
+          <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center shrink-0" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="my-report-back">
+            <ChevronRight size={19} className="rotate-180 rtl:rotate-0" /></button>
+          <div className="min-w-0"><h2 className="text-[20px] font-black m-0 tracking-tight">{tr("My report")}</h2><p className="c-sub m-0 text-[12px]">{date}</p></div></div>
       ) : minimal ? (
         /* v6.43 option 1 (Ali): one big box — say anything, Attune does it in every app it touches */
-        <div className="rounded-[26px] p-4 space-y-2" style={{ background: "var(--c-surf)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
+        <div className="rounded-[26px] p-4 space-y-3" style={{ background: "var(--c-surf)", border: "1.5px solid var(--c-acc)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
           <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} dir="auto" data-testid="home-ask" rows={2}
             placeholder={cmd ? tr("Type / for a command, or just say it…") : tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
           {cmd ? <Attached files={files} onRemove={(i) => setFiles((f) => f.filter((_, k) => k !== i))} /> : null}
           {cmd ? <input ref={fileRef} type="file" multiple className="hidden" data-testid="box-file-input" onChange={(e) => { const add = [...(e.target.files || [])].slice(0, 20); e.target.value = ""; if (add.length) setFiles((f) => [...f, ...add].slice(0, 20)); }} /> : null}
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-2 pt-2.5 border-t" style={{ borderColor: "var(--c-ln)" }}>
             {/* v6.50 (Ali: "everything via the Home box"): attach · mic · send — the rest is typed ("/food", "/read", "/money"…) */}
-            {cmd ? <button onClick={() => fileRef.current && fileRef.current.click()} aria-label={tr("Attach a file, photo, video or recording")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="box-attach"><Paperclip size={18} /></button> : null}
+            {cmd ? <button onClick={() => fileRef.current && fileRef.current.click()} aria-label={tr("Attach a file, photo, video or recording")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-surf-2, var(--c-bg))" }} data-testid="box-attach"><Paperclip size={18} /></button> : null}
             <span className="flex-1" />
-            {listen ? <button onClick={speak} aria-label={tr("Speak")} title={tr("Speak")} className={"w-10 h-10 rounded-full grid place-items-center " + (heard ? "animate-pulse" : "c-sub")} style={{ background: heard ? "var(--c-soft)" : "var(--c-bg)" }} data-testid="home-mic"><Mic size={18} /></button> : null}
-            <button onClick={() => send()} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={18} /></button>
+            {listen ? <button onClick={speak} aria-label={tr("Speak")} title={tr("Speak")} className={"w-10 h-10 rounded-full grid place-items-center " + (heard ? "animate-pulse" : "c-sub")} style={{ background: heard ? "var(--c-soft)" : "var(--c-surf-2, var(--c-bg))" }} data-testid="home-mic"><Mic size={18} /></button> : null}
+            <button onClick={() => send()} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="home-send"><ArrowUp size={18} /></button>
           </div>
         </div>) : (
       <div className="flex items-center gap-2 rounded-full px-3 py-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)" }}>
@@ -195,13 +200,16 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
       {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
-      {now1 && !rep ? <div className="rounded-[22px] p-4 space-y-2.5" style={{ background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
+      {now1 && !rep ? <div className="rounded-[22px] p-4 space-y-2.5" style={{ boxShadow: "0 4px 14px rgba(16,32,28,.16)", background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
         <p className="m-0 text-[11.5px] font-extrabold tracking-wide opacity-90">{tr("RIGHT NOW")}{now1.sub ? " · " + now1.sub : ""}</p>
         <button onClick={() => openLine(now1.open)} className="block w-full text-start text-[17px] font-extrabold leading-snug" style={{ color: "inherit" }} dir="auto" data-testid="home-now-title">{now1.title}</button>
         <div className="flex gap-2 flex-wrap">{now1.actions.map((a, i) => (
-          <button key={a.id} onClick={() => act(now1, a)} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={i ? { border: "1px solid currentColor", color: "inherit" } : now1.level === "bad" ? { background: "#fff", color: "#B42318" } : { background: "var(--c-on-acc, #fff)", color: "var(--c-acc)" }} data-testid={"home-now-" + a.id}>{a.label}</button>))}</div>
+          <button key={a.id} onClick={() => act(now1, a)} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={i ? { border: "1px solid currentColor", color: "inherit" } : now1.level === "bad" ? { background: "#fff", color: "#B42318" } : { background: "var(--c-surf)", color: "var(--c-ink)" }} data-testid={"home-now-" + a.id}>{a.label}</button>))}</div>
       </div> : null}
-      {(!minimal || rep) && nums.length ? <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }} data-testid="home-numbers">
+      {minimal && rep ? <><ReportTiles safe={data.safe} spentMonth={data.hasLedger ? data.o.monthOut : null} cur={data.o && data.o.cur} kcal={data.kcal} goal={data.fitOn ? data.goal : 0}
+          fleetK={(() => { try { return fleet && fleetLive(fleet.cranes || []).length ? fleetKpis(fleet) : null; } catch (e) { return null; } })()} />
+        <WeekChart week={data.week} cur={data.o && data.o.cur} /></> : null}
+      {!minimal && nums.length ? <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }} data-testid="home-numbers">
         {nums.map((x) => <button key={x.k} onClick={() => openLine(x.open)} className="c-card text-start p-2.5" data-testid={"home-num-" + x.k}>
           <span className="c-sub block text-[11px] font-bold truncate">{x.label}</span><b className="c-num block text-[16px]">{x.value}</b></button>)}
       </div> : null}
@@ -275,7 +283,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       <MissionsLine go={() => navTo("missions")} /></> : null}
       {/* v6.43: one line for today across the apps — what you ate, spent, and what is still ahead */}
       <div data-testid="home-line">
-        <p className="c-lbl m-0 mb-2">{tr("Your day")}</p>
+        <div className="flex items-center justify-between mb-2"><p className="c-lbl m-0">{tr("Your day")}</p>
+          {!rep ? <button onClick={() => setRep(true)} className="text-[12.5px] font-extrabold c-acc inline-flex items-center gap-1 bg-transparent border-0 p-0" data-testid="home-see-all">{tr("See all")}<ChevronRight size={14} className="rtl:rotate-180" /></button> : null}</div>
         {data.line.length ? <div className="space-y-2">
           {(rep ? data.line : data.line.slice(0, 3)).map((x, i) => (
             <button key={i} onClick={() => openLine(x.open)} className="w-full flex items-start gap-3 text-start" data-testid={"home-line-" + x.app}>
@@ -286,8 +295,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
             </button>))}
         </div> : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you ate, spent or need to remember.")}</p>}
       </div>
-      {!rep ? <button onClick={() => setRep(true)} className="w-full min-h-[48px] rounded-[18px] flex items-center justify-center gap-1.5 text-[14px] font-extrabold c-acc" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)" }} data-testid="home-see-report">
-        {tr("See all")} · {tr("My report")}<ChevronRight size={16} className="rtl:rotate-180" /></button> : null}
+      {!rep ? <button onClick={() => setRep(true)} className="w-full min-h-[50px] rounded-[18px] px-4 flex items-center justify-between gap-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="home-see-report">
+        <span className="font-extrabold text-[14px]">{tr("See all")}</span>
+        <span className="c-sub text-[12.5px] inline-flex items-center gap-1.5">{tr("My report")}<ChevronRight size={16} className="c-acc rtl:rotate-180" /></span></button> : null}
       {/* v6.46 Home A: one thing Attune noticed (home-now.js) — in My report */}
       {seen && rep ? <button onClick={() => (seen.k === "past" && cmd ? cmd.openRecord({ id: seen.id }) : openLine(seen.open))} className="w-full rounded-[18px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
         <Sparkles size={17} className="c-acc shrink-0 mt-0.5" /><span className="text-[13.5px] leading-snug" dir="auto">{seen.text}</span></button> : null}

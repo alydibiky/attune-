@@ -6568,4 +6568,5 @@ export const AR = {
   // v6.50 Home calm + My report; every app from the box
   "My report": "تقريري",
   "See all": "شوف الكل",
+  "Safe today": "تقدر تصرف النهارده",
 };

@@ -101,3 +101,20 @@ export function noticed({ safe = null, mission = null, fleet = null, scout = nul
   if (past) return past;
   return null;
 }
+
+/** v7.0 My report (Gemini's design, Direction 2): the last 7 days, oldest first — what was spent (expenses) and eaten (kcal) each
+    day, for the week chart. ledger = Money's ledger ({ txns: [{ type, amount, date }] }); days = Fit's days ({ "YYYY-MM-DD": day });
+    kcalOf(day) → that day's kcal (fit.js dayTotals). Tests: tests/unit/v750report.test.mjs. */
+export function weekRhythm({ ledger = null, days = null, kcalOf = null, now = Date.now(), locale = undefined } = {}) {
+  const key = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const txns = (ledger && ledger.txns) || [], out = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - i);
+    const k = key(d);
+    const spend = txns.filter((t) => t && t.type === "expense" && t.date === k).reduce((a, t) => a + (Number(t.amount) || 0), 0);
+    let kcal = 0; try { kcal = days && days[k] && kcalOf ? Math.round(kcalOf(days[k]).kcal || 0) : 0; } catch (e) { kcal = 0; }
+    let label = k.slice(5); try { label = d.toLocaleDateString(locale, { weekday: "short" }); } catch (e) {}
+    out.push({ day: k, label: i === 0 ? tr("Today") : label, spend, kcal, today: i === 0 });
+  }
+  return out;
+}
