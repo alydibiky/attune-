@@ -2474,6 +2474,16 @@ count); Shelf in the sidebar; subtitles from any video.
   longer competes with to-dos / where things are).
 - Tests: unit `v748commands`, `v748cmdrun`, `v748jobs`, `v748where`; e2e `e2e_v748commands.py`, `e2e_v748chat.py`.
 
+### 5.100 (22 Oct 2026) — v6.49: 20 interface languages (Ali: "at least 20 languages") + the Gemini design brief
+- 11 new dictionaries, each the same 935 lines as French (the first screen of every page and tool; the rest shows English):
+  `i18n-de|it|ru|zh|ja|ko|fa|bn|vi|th|sw.js`. `i18n.js` LANGS = 20 (Persian right-to-left; Western digits everywhere).
+  Tests: `tests/unit/v736langs.test.mjs` (every dictionary: placeholders kept, no empty lines, keys from the app), `e2e_v736langs.py`.
+- `LANG_NAMES_REVIEW.md`: how each language names the features (Chat, Scout, Mind…) — for Ali to choose (names are his call).
+- `GEMINI_DESIGN_BRIEF.md`: Ali wants Gemini to design the interfaces (business systems + app, one level of professionalism).
+  The brief gives it hard rules (presentation only, keep data-testid / aria, tr() keys, RTL logical classes, tokens light+dark,
+  360 px + desktop, weak-phone performance, lucide icons only, whole files back) and creative freedom; step 1 = 2–3 directions
+  for Ali to pick. Claude integrates and tests what comes back.
+
 ### 5.39 v6.11 (3 Oct 2026) — release candidate: what this session built and measured
 - **Built and tested:** Skills v2 (checklist / facts / offline script / SKILL.md), CV builder + "Edit or improve", Business books (finance core + UI + documents), 25,280 generated recipes (`fit-recipegen.js`) + 148 hand-written, offline food pack (`foodpack.js`, `tools/build_food_pack.py`, workflow `food-pack.yml`, release `food-pack-v1`; ~902k products from Open Food Facts; the USDA merge probes the dated file name), **Ask a PDF** (`docqa.js`, `pdfchat-ui.jsx`; native `pdfText` has a `textOnly` fast path), converter fidelity on the real PDF, plans & billing page, engine lifecycle, exact-length rules, coding restart + date facts.
 - **Release switches:** developer mode (hidden 7 taps on the version number; `devMode()` in billing.js) — OFF by default; Yusr Premium test unlock removed. Tests run in developer mode via `tests/harness.py` (`release=True` = a customer phone; `tests/e2e_v620release.py`).

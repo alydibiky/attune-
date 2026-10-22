@@ -757,6 +757,16 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AR. 22 Oct 2026 — v6.49 (HANDOFF §5.100). Read this first, then AQ.
+Ali: "I want the app to be at least 20 languages" → 20. And: Gemini should design the interfaces "in a controlled way" →
+`GEMINI_DESIGN_BRIEF.md` (Ali pastes it into Gemini; Claude integrates and tests what comes back).
+### Ali's phone checklist (v6.49)
+1. ⬜ Settings → language: 20 choices; try فارسی (right to left), 日本語, Deutsch → back to العربية.
+2. ⬜ `LANG_NAMES_REVIEW.md`: how each language names Chat / Scout / Mind / Instant… — tell Claude any to change.
+3. ⬜ Give Gemini the brief; bring back its 2–3 directions to pick from.
+### Next for languages
+Grow every language past the first screens (Arabic is complete, ~6,500 lines) — the Home box and the new commands first.
+
 ## AQ. 22 Oct 2026 — v6.48 (HANDOFF §5.99, plan `CHAT_RUNS_APP.md`). Read this first, then AP.
 Ali's idea: "make chat responsible for most things in the app" — he picked Home option A. All ten steps built and tested.
 ### Ali's phone checklist (v6.48)
