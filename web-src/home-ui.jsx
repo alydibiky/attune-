@@ -6,12 +6,13 @@
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useState } from "react";
-import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
+import { Paperclip, MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
 import { nowCard, homeNumbers, noticed, onThisDay } from "./home-now.js";
 import { safeToSpend } from "./safespend.js";
 import { setChequeStatus } from "./fleet.js";
 import { saveFleet } from "./fleet-store.js";
 import { RecallCard } from "./recall-ui.jsx";
+import { useSubBack } from "./backstack.js";
 import { tr, getLang } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { loadRadar } from "./deadlines.js";
@@ -79,6 +80,11 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       safe: minimal && ledger ? (() => { try { return safeToSpend({ ledger, life: loadLife(), radar: loadRadar() }); } catch (e) { return null; } })() : null, scout };
   }, [tick, fleet]);
   const mission = useTopMission();
+  // v6.50 option C (Ali): Home is calm (the box, what runs, one Right-now card, 3 lines of the day); "My report" has the rest —
+  // the numbers, what needs you, the whole day, missions, what Attune noticed. Opened by "See all", "/report", «وريني التقرير».
+  const [rep, setRep] = useState(false);
+  useEffect(() => { const on = () => setRep(true); window.addEventListener("attune-my-report", on); return () => window.removeEventListener("attune-my-report", on); }, []);
+  useSubBack(minimal && rep, () => setRep(false));
   const now1 = minimal ? nowCard({ needs: data.items, fleet, country: myCountry(), now: Date.now() }) : null;
   const nums = minimal ? homeNumbers({ safe: data.safe, kcal: data.kcal, kcalGoal: data.fitOn ? data.goal : 0, fleet, mission }) : [];
   const seen = minimal ? noticed({ safe: data.safe, mission, fleet, scout: data.scout, past: cmd && cmd.api ? onThisDay(cmd.api.records()) : null }) : null;
@@ -110,6 +116,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
     switch (o.type) {
       case "doit": if (!doOld(o.text)) onAsk(o.text); return;
       case "chat": if (o.web && cmd && cmd.chatWeb) cmd.chatWeb(o.text); else onAsk(o.text); return;
+      case "open": return o.mode === "report" ? setRep(true) : o.mode === "food-photo" ? (openFitAdd ? openFitAdd() : navTo("fit")) : o.mode === "read" ? openRead() : o.mode === "all" ? openAll() : openLine(o.mode);
       case "job": cmd.jobs.add(o.spec); setFiles([]); return;
       case "todoAdd": cmd.mind.add({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } }); return lines([{ en: `Added to your to-do list: ${o.item}`, ar: `اتضافت للمهام: ${o.item}`, open: "memory" }]);
       case "whereSave": cmd.mind.add(W.whereRecord(o.set)); return lines([{ en: `Got it: ${o.set.thing} — ${o.set.place}.`, ar: `تمام: ${o.set.thing} — ${o.set.place}.`, open: "memory" }]);
@@ -145,17 +152,21 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         {/* v6.29 (Ali: "a sidebar where I can see the history of my chats"): ☰ opens it — chats, search, places, pinned tools */}
         {openSide ? <button onClick={openSide} aria-label={tr("Chats and menu")} className="w-9 h-9 -ms-1.5 mt-1 rounded-full grid place-items-center c-sub shrink-0" data-testid="home-menu"><Menu size={21} /></button> : null}
         <div className="min-w-0"><p className="c-sub m-0">{date}</p><h1 className="text-[24px] font-bold m-0 tracking-tight">{tr(greeting(now))}{name ? ", " + name : ""}</h1></div></div>
-      {minimal ? (
+      {minimal && rep ? (
+        <div className="flex items-center gap-2" data-testid="my-report">
+          <button onClick={() => setRep(false)} className="h-10 px-3.5 rounded-full text-[13.5px] font-bold inline-flex items-center gap-1" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="my-report-back">
+            <ChevronRight size={16} className="rotate-180 rtl:rotate-0" />{tr("Home")}</button>
+          <h2 className="text-[20px] font-extrabold m-0 ms-1">{tr("My report")}</h2></div>
+      ) : minimal ? (
         /* v6.43 option 1 (Ali): one big box — say anything, Attune does it in every app it touches */
         <div className="rounded-[26px] p-4 space-y-2" style={{ background: "var(--c-surf)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
           <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} dir="auto" data-testid="home-ask" rows={2}
             placeholder={cmd ? tr("Type / for a command, or just say it…") : tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
           {cmd ? <Attached files={files} onRemove={(i) => setFiles((f) => f.filter((_, k) => k !== i))} /> : null}
           {cmd ? <input ref={fileRef} type="file" multiple className="hidden" data-testid="box-file-input" onChange={(e) => { const add = [...(e.target.files || [])].slice(0, 20); e.target.value = ""; if (add.length) setFiles((f) => [...f, ...add].slice(0, 20)); }} /> : null}
-          {cmd ? <BoxOptions web={web} setWeb={(v) => { setWeb(v); if (v) setTr2(false); }} tr2={tr2} setTr2={(v) => { setTr2(v); if (v) setWeb(false); }} onAttach={() => fileRef.current && fileRef.current.click()} /> : null}
           <div className="flex items-center justify-end gap-2">
-            <button onClick={() => (openFitAdd ? openFitAdd() : navTo("fit"))} aria-label={tr("Food photo")} title={tr("Food photo")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="home-quick-food"><Apple size={18} /></button>
-            <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="home-read"><Camera size={18} /></button>
+            {/* v6.50 (Ali: "everything via the Home box"): attach · mic · send — the rest is typed ("/food", "/read", "/money"…) */}
+            {cmd ? <button onClick={() => fileRef.current && fileRef.current.click()} aria-label={tr("Attach a file, photo, video or recording")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="box-attach"><Paperclip size={18} /></button> : null}
             <span className="flex-1" />
             {listen ? <button onClick={speak} aria-label={tr("Speak")} title={tr("Speak")} className={"w-10 h-10 rounded-full grid place-items-center " + (heard ? "animate-pulse" : "c-sub")} style={{ background: heard ? "var(--c-soft)" : "var(--c-bg)" }} data-testid="home-mic"><Mic size={18} /></button> : null}
             <button onClick={() => send()} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={18} /></button>
@@ -170,8 +181,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>)}
       {/* v6.36 layout 1A (Ali picked it): one box, three quick starts under it — tools are reached by asking, not from a list */}
-      {minimal && cmd ? <SlashMenu text={text} onPick={(c) => setText("/" + (getLang() === "ar" ? c.ar[0] : c.id) + " ")} /> : null}
-      {minimal && cmd && panel ? (
+      {minimal && !rep && cmd ? <SlashMenu text={text} onPick={(c) => (c.group === "open" ? (setText(""), show({ type: "open", mode: c.app }, "")) : setText("/" + (getLang() === "ar" ? c.ar[0] : c.id) + " "))} /> : null}
+      {minimal && !rep && cmd && panel ? (
         panel.type === "ask" ? <AskCard ask={panel} onPick={pickAsk} onClose={() => setPanel(null)} />
         : panel.type === "confirm" ? <ConfirmCard q={panel.q} onYes={() => show({ type: "whereSave", set: panel.set }, "")} onNo={() => setPanel({ type: "lines", lines: [{ en: `OK — still ${panel.was}.`, ar: `تمام — لسه ${panel.was}.` }] })} />
         : panel.type === "lines" ? <LinesCard lines={panel.lines} onOpen={(m) => { setPanel(null); openLine(m); }} onClose={() => setPanel(null)} />
@@ -179,23 +190,18 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         : panel.type === "map" ? <MapCard place={panel.place} metro={panel.metro} onMap={() => { setPanel(null); cmd.openMap(panel.place); }} onMetro={() => { setPanel(null); cmd.openMetro(panel.metro); }} onClose={() => setPanel(null)} />
         : panel.type === "found" ? <FoundCard q={panel.q} items={panel.items} onOpen={(r) => { setPanel(null); cmd.openRecord(r); }} onClose={() => setPanel(null)} />
         : null) : null}
-      {minimal && cmd ? <JobCards list={jobList} jobs={cmd.jobs} onSave={(f) => cmd.saveFile(f)} onCopy={(t) => cmd.copy(t)} onOpen={(m) => openLine(m)} /> : null}
-      {minimal && cmd && tripLive(trip) ? <TripPin trip={trip} name={cmd.countryName(trip.country)} onOpen={() => navTo("travel")} onEnd={() => { cmd.endTrip(); setTrip(cmd.trip()); }} /> : null}
+      {minimal && !rep && cmd ? <JobCards list={jobList} jobs={cmd.jobs} onSave={(f) => cmd.saveFile(f)} onCopy={(t) => cmd.copy(t)} onOpen={(m) => openLine(m)} /> : null}
+      {minimal && !rep && cmd && tripLive(trip) ? <TripPin trip={trip} name={cmd.countryName(trip.country)} onOpen={() => navTo("travel")} onEnd={() => { cmd.endTrip(); setTrip(cmd.trip()); }} /> : null}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
-      {/* v6.46 Home A (Ali: "integrate the new chat — translate, etc."): Chat's own tools, one tap from Home */}
-      {minimal ? <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-chat-tools">
-        {[[MessageCircle, "Chat", () => navTo("chat"), "home-t-chat"], ...(startCall ? [[Phone, "Call", startCall, "home-t-call"]] : []), [Globe, "Translate", () => navTo("translate"), "home-t-translate"],
-          [Sparkles, "Your life", () => navTo("lifeask"), "home-t-life"], [BookOpen, "Remember", () => navTo("remember"), "home-t-remember"]].map(([I, l, go, id]) => (
-          <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 h-10 text-[13.5px] font-semibold" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={15} className="c-acc" />{tr(l)}</button>))}
-      </div> : null}
+      {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
-      {now1 ? <div className="rounded-[22px] p-4 space-y-2.5" style={{ background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: "#fff" }} data-testid="home-now" data-kind={now1.kind}>
-        <p className="m-0 text-[11.5px] font-extrabold tracking-wide opacity-90">{tr("RIGHT NOW")} · {now1.sub}</p>
-        <button onClick={() => openLine(now1.open)} className="block w-full text-start text-[17px] font-extrabold leading-snug" style={{ color: "#fff" }} dir="auto" data-testid="home-now-title">{now1.title}</button>
+      {now1 && !rep ? <div className="rounded-[22px] p-4 space-y-2.5" style={{ background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
+        <p className="m-0 text-[11.5px] font-extrabold tracking-wide opacity-90">{tr("RIGHT NOW")}{now1.sub ? " · " + now1.sub : ""}</p>
+        <button onClick={() => openLine(now1.open)} className="block w-full text-start text-[17px] font-extrabold leading-snug" style={{ color: "inherit" }} dir="auto" data-testid="home-now-title">{now1.title}</button>
         <div className="flex gap-2 flex-wrap">{now1.actions.map((a, i) => (
-          <button key={a.id} onClick={() => act(now1, a)} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={i ? { border: "1px solid rgba(255,255,255,.65)", color: "#fff" } : { background: "#fff", color: now1.level === "bad" ? "#B42318" : "var(--c-acc)" }} data-testid={"home-now-" + a.id}>{a.label}</button>))}</div>
+          <button key={a.id} onClick={() => act(now1, a)} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={i ? { border: "1px solid currentColor", color: "inherit" } : now1.level === "bad" ? { background: "#fff", color: "#B42318" } : { background: "var(--c-on-acc, #fff)", color: "var(--c-acc)" }} data-testid={"home-now-" + a.id}>{a.label}</button>))}</div>
       </div> : null}
-      {nums.length ? <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }} data-testid="home-numbers">
+      {(!minimal || rep) && nums.length ? <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }} data-testid="home-numbers">
         {nums.map((x) => <button key={x.k} onClick={() => openLine(x.open)} className="c-card text-start p-2.5" data-testid={"home-num-" + x.k}>
           <span className="c-sub block text-[11px] font-bold truncate">{x.label}</span><b className="c-num block text-[16px]">{x.value}</b></button>)}
       </div> : null}
@@ -206,7 +212,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
       {/* v6.28 declutter: a card with nothing to say is not shown (nothing due today, nothing spent and no budget) */}
       {(() => { if (now1 && now1.from !== "fleet") data.items = data.items.filter((x) => x.title !== now1.title); return null; })()}
-      {data.items.length || data.reminders || note ? <div className="c-card" data-testid="home-today">
+      {(!minimal || rep) && (data.items.length || data.reminders || note) ? <div className="c-card" data-testid="home-today">
         <div className="flex items-center mb-1"><span className="c-lbl">{minimal ? tr("Needs you") : tr("Attune suggests")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
         {data.items.length || data.reminders || note ? (
           <>
@@ -264,19 +270,14 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           <button onClick={openAll} className="c-acc text-[13px] font-medium mt-2" data-testid="home-all">{tr("All tools")} →</button>
         </div> : null}
       </> : <>
-      {/* v6.43 option 1: the apps are one row of names (no tiles) */}
-      <div className="flex flex-wrap gap-2" data-testid="home-areas">
-        {[["fit", "Food", "home-area-health"], ["money", "Money", "home-area-money"], ["business", "Business", "home-app-business"], ["learn", "Learn", "home-app-learn"], ["studio", "Photos", "home-app-studio"], ["chat", "Chat", "home-app-chat"], ["scout", "Scout", "home-app-scout"]].map(([m, label, id]) => (
-          <button key={m} onClick={() => navTo(m)} className="home-chip" data-testid={id}>{tr(label)}</button>))}
-        <button onClick={openAll} className="home-chip home-chip-all" data-testid="home-all">{tr("All")}</button>
-      </div>
-      {guardian || null}
-      <MissionsLine go={() => navTo("missions")} />
+      {/* v6.50: no row of app names — type "/" for every app (Ali: "everything in the app available via home chat") */}
+      {rep ? <>{guardian || null}
+      <MissionsLine go={() => navTo("missions")} /></> : null}
       {/* v6.43: one line for today across the apps — what you ate, spent, and what is still ahead */}
       <div data-testid="home-line">
         <p className="c-lbl m-0 mb-2">{tr("Your day")}</p>
         {data.line.length ? <div className="space-y-2">
-          {data.line.map((x, i) => (
+          {(rep ? data.line : data.line.slice(0, 3)).map((x, i) => (
             <button key={i} onClick={() => openLine(x.open)} className="w-full flex items-start gap-3 text-start" data-testid={"home-line-" + x.app}>
               <span className="w-12 shrink-0 pt-3 text-[12.5px] font-extrabold c-sub c-num">{x.hm}</span>
               <span className={"flex-1 min-w-0 c-card p-3 " + (x.ahead ? "opacity-80" : "")}>
@@ -285,8 +286,10 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
             </button>))}
         </div> : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you ate, spent or need to remember.")}</p>}
       </div>
-      {/* v6.46 Home A: one thing Attune noticed (home-now.js) */}
-      {seen ? <button onClick={() => (seen.k === "past" && cmd ? cmd.openRecord({ id: seen.id }) : openLine(seen.open))} className="w-full rounded-[18px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
+      {!rep ? <button onClick={() => setRep(true)} className="w-full min-h-[48px] rounded-[18px] flex items-center justify-center gap-1.5 text-[14px] font-extrabold c-acc" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)" }} data-testid="home-see-report">
+        {tr("See all")} · {tr("My report")}<ChevronRight size={16} className="rtl:rotate-180" /></button> : null}
+      {/* v6.46 Home A: one thing Attune noticed (home-now.js) — in My report */}
+      {seen && rep ? <button onClick={() => (seen.k === "past" && cmd ? cmd.openRecord({ id: seen.id }) : openLine(seen.open))} className="w-full rounded-[18px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
         <Sparkles size={17} className="c-acc shrink-0 mt-0.5" /><span className="text-[13.5px] leading-snug" dir="auto">{seen.text}</span></button> : null}
       </>}
     </div>);

@@ -27,7 +27,7 @@ export function SlashMenu({ text, onPick }) {
   if (!m) return null;
   const list = K.commandsMatching(m[1]);
   if (!list.length) return null;
-  const groups = [["do", "DO", "اعمل"], ["mind", "REMEMBER", "افتكر"]];
+  const groups = [["do", "DO", "اعمل"], ["mind", "REMEMBER", "افتكر"], ["open", "OPEN", "افتح"]];   // v6.50: every app too
   return (
     <div className="rounded-[20px] p-1.5" style={surf} data-testid="slash-menu" role="listbox">
       {groups.map(([g, en, a]) => {
@@ -35,8 +35,9 @@ export function SlashMenu({ text, onPick }) {
         return <div key={g}><p className="m-0 px-2.5 pt-2 pb-1 text-[11px] font-extrabold tracking-wide c-sub">{ar() ? a : en}</p>
           {xs.map((c) => (
             <button key={c.id} onClick={() => onPick(c)} role="option" className="w-full text-start rounded-[14px] px-2.5 py-2 min-h-[48px] flex flex-col justify-center" data-testid={"slash-" + c.id}>
-              <b className="text-[14.5px]"><span className="c-acc">/{ar() ? c.ar[0] : c.id}</span> <span className="font-semibold">{tr(c.hint[0])}</span></b>
-              <span className="c-sub text-[12px]" dir="rtl">{c.hint[1]}</span>
+              {c.group === "open" ? <b className="text-[14.5px]"><span className="c-acc">{ar() ? c.hint[1] : tr(c.hint[0])}</span></b>
+                : <><b className="text-[14.5px]"><span className="c-acc">/{ar() ? c.ar[0] : c.id}</span> <span className="font-semibold">{tr(c.hint[0])}</span></b>
+              <span className="c-sub text-[12px]" dir="rtl">{c.hint[1]}</span></>}
             </button>))}</div>;
       })}
     </div>);

@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { AR as AR_DICT } from "./i18n-ar.js";   // v6.50: Arabic names of the apps for the Home box
+import { usesFleet } from "./industry.js";
 import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
@@ -7484,7 +7486,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.49";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "6.50";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7541,6 +7543,13 @@ if (!KNOW_ADMIN) {
   for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (MORE_TOOLS[i][0] === "knowledge") MORE_TOOLS.splice(i, 1);
   for (const h of HUBS) { const k = h[3].indexOf("knowledge"); if (k >= 0) h[3].splice(k, 1); }
 }
+
+// v6.50 (Ali, 22 Oct: "I want everything in the app to be available via home chat"): every tool can be opened from the Home box —
+// "/money", «/الفلوس», "open fit", «افتح الفلوس» (commands.js setApps / appNamed). Its name in English, Arabic and the UI language.
+K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[label] || "", local: tr(label) })),
+  { id: "food-photo", en: "Food photo", ar: AR_DICT["Food photo"] || "صورة أكل" }, { id: "read", en: "Read it to me", ar: AR_DICT["Read it to me"] || "اقرالي" },
+  { id: "all", en: "All apps", ar: "كل التطبيقات" }, { id: "report", en: "My report", ar: "تقريري" }, { id: "money", en: "Money", ar: AR_DICT["Money"] || "الفلوس" },
+  ...(usesFleet() ? [{ id: "fleet-rentals", en: "Fleet & rentals", ar: AR_DICT["Fleet & rentals"] || "" }] : [])]);
 
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
 // in four named groups instead of one wall of 23 tiles.

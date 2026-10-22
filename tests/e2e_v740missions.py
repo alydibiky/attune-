@@ -15,7 +15,7 @@ with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-    page.click("[data-testid=home-missions]"); page.wait_for_selector("[data-testid=missions-page]")
+    page.click("[data-testid=home-see-report]"); page.click("[data-testid=home-missions]"); page.wait_for_selector("[data-testid=missions-page]")   # v6.50: Missions are in My report
     check(page.locator("[data-testid=mission]").count() == 0, "Home's Missions line opens the page; no missions yet")
     page.fill("[data-testid=missions-input]", "save 52k in 3 months")
     check("Save 52,000" in page.locator("[data-testid=missions-read]").inner_text(), "the goal is read as you type: %s" % page.locator("[data-testid=missions-read]").inner_text())
@@ -29,7 +29,9 @@ with sync_playwright() as p:
     saved = page.evaluate("JSON.parse(localStorage.getItem('attune:missions:v1')).items[0]")
     check(saved["base"]["balance"] > 0 and len(saved["log"]) == 1, "the mission keeps where you started and today's point on the chance line")
     page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=phone-home]")
-    check("save 52k" in page.locator("[data-testid=home-missions]").inner_text().lower(), "Home now shows the mission and its chance")
+    if page.locator("[data-testid=home-missions]").count() == 0: page.click("[data-testid=home-see-report]")
+    check("save 52k" in page.locator("[data-testid=home-missions]").inner_text().lower(), "My report now shows the mission and its chance")
+    if page.locator("[data-testid=my-report-back]").count(): page.click("[data-testid=my-report-back]"); page.wait_for_selector("[data-testid=home-ask]")
     # typed in the Home box → Missions, already filled in
     page.fill("[data-testid=home-ask]", "عايز أخس 4 كيلو خلال شهرين"); page.keyboard.press("Enter")
     page.wait_for_selector("[data-testid=missions-page]", timeout=8000)

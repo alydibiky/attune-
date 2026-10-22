@@ -6565,4 +6565,7 @@ export const AR = {
   // v6.50 Fleet: calm view + Report (option C)
   "Calm view": "العرض الهادي",
   "See the Fleet report": "شوف تقرير الأسطول",
+  // v6.50 Home calm + My report; every app from the box
+  "My report": "تقريري",
+  "See all": "شوف الكل",
 };

@@ -18,9 +18,27 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     # Ali (22 Oct): commands show only when "/" is typed — no command chips under the box, no list before "/"
     check(page.locator("[data-testid^=box-cmd-]").count() == 0 and page.locator("[data-testid=slash-menu]").count() == 0
-          and page.locator("[data-testid=box-web]").count() == 1, "no command chips and no / list until / is typed (Web stays)")
+          and page.locator("[data-testid=box-web]").count() == 0 and page.locator("[data-testid=box-attach]").count() == 1,
+          "v6.50: the box is only attach · mic · send — no chips, no / list until / is typed")
     page.fill("[data-testid=home-ask]", "/"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=slash-menu]").count() == 1, "typing / opens the command list")
+    # v6.50 every app from the box (Ali: "everything in the app available via home chat"): "/mon" lists Money; tap → it opens
+    page.fill("[data-testid=home-ask]", "/mon"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid='slash-open:money']").count() == 1, "typing /mon lists the Money app under Open")
+    page.click("[data-testid='slash-open:money']"); page.wait_for_timeout(500)
+    check(page.locator("[data-testid=phone-home]").count() == 0, "tapping it opens Money")
+    page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
+    # v6.50 option C: Home is calm; "See all" → My report (the numbers, what needs you, the whole day); "my report" from the box too
+    check(page.locator("[data-testid=home-numbers]").count() == 0 and page.locator("[data-testid=home-see-report]").count() == 1, "Home is calm: no number tiles, a See all · My report button")
+    page.click("[data-testid=home-see-report]"); page.wait_for_selector("[data-testid=my-report]", timeout=3000)
+    check(page.locator("[data-testid=home-box]").count() == 0, "My report opens (the box steps aside)")
+    page.click("[data-testid=my-report-back]"); page.wait_for_selector("[data-testid=home-box]", timeout=3000)
+    page.fill("[data-testid=home-ask]", "my report"); page.click("[data-testid=home-send]"); page.wait_for_selector("[data-testid=my-report]", timeout=3000)
+    check(True, "“my report” in the box opens it")
+    page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=home-box]", timeout=3000)
+    page.fill("[data-testid=home-ask]", "open fit"); page.click("[data-testid=home-send]"); page.wait_for_timeout(500)
+    check(page.locator("[data-testid=phone-home]").count() == 0, "“open fit” opens Fit & Food")
+    page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
     # the / list
     page.fill("[data-testid=home-ask]", "/tr"); page.wait_for_timeout(200)
     ids = page.evaluate("() => [...document.querySelectorAll('[data-testid^=slash-]')].map(e => e.dataset.testid)")
@@ -85,9 +103,8 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=job][data-kind=convert] [data-testid=job-save]").count() == 1 and "notes.docx" in page.inner_text("[data-testid=job][data-kind=convert]"), "/convert to word + a .txt → notes.docx, Save")
     box(page, "/convert to pdf")
     check("Attach the file" in page.inner_text("[data-testid=lines-card]"), "/convert with no file → asks for the file")
-    # Web as an option in the box
-    page.click("[data-testid=box-web]")
-    box(page, "price of gold today in Egypt")
+    # Web from the box (v6.50: "/web …" — no Web chip)
+    box(page, "/web price of gold today in Egypt")
     page.wait_for_timeout(500)
     check(page.locator("[data-testid=phone-home]").count() == 0, "Web on → the question goes to Chat with the web search")
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)

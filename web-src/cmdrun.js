@@ -10,6 +10,7 @@
      { type: "found", items, q }              → what Mind kept that fits
      { type: "need", what: "file" | "text", cmd } → the command needs something first
      { type: "chat", text, web?, to? }        → Chat answers (with web search or a language when asked)
+     { type: "open", mode }                   → open that app (v6.50: every app from the box)
      { type: "todoAdd", item } · { type: "whereSave", set } · { type: "travel", code } · { type: "rememberNote", text }
      { type: "rememberFiles", files, label }  → the page saves it in Mind / starts the trip / starts a "remember" job
    The page passes `api` (the apps' own readers and stores), so this file stays testable. Tests: tests/unit/v748cmdrun.test.mjs. */
@@ -145,6 +146,10 @@ function runKind(kind, text, { cmd = null, files = [], api = {}, slash = false }
       if (!q) return { type: "need", what: "text", cmd: "find" };
       const wq = W.parseWhereAsk(q); if (wq && W.whereNow(records, wq.thing)) return runKind("whereAsk", q, { api });
       return { type: "found", q, items: findIn(records, q, api.search) };
+    }
+    case "open": {   // v6.50 every app from the box: "/money", "open fit", «افتح الفلوس»
+      const a = cmd && cmd.app ? K.apps().find((x) => x.id === cmd.app) : K.appNamed(arg.replace(/^\s*show me\s+(?=(my\s+)?report)/i, "").replace(/^\s*(?:please\s+)?(?:open|go to|show me|take me to|افتح|افتحلي|روح على|وديني على|وريني)\s+/i, "").replace(/[.!]$/, ""));
+      return a ? { type: "open", mode: a.id, name: a } : { type: "chat", text: arg };
     }
     case "web": return { type: "chat", text: arg, web: true };
     default: return { type: "chat", text: arg };

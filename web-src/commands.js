@@ -53,11 +53,28 @@ const BY_NAME = (() => {
 })();
 export const commandById = (id) => COMMANDS.find((c) => c.id === id) || null;
 
-/** The commands that start with what was typed after "/" (the list under the box). "" → all of them. */
+// ---- v6.50 every app from the box (Ali, 22 Oct: "I want everything in the app to be available via home chat") ----------------
+// The page gives the list of its apps once (attune.jsx): [{ id, en, ar }]. "/money", «/الفلوس», "open money", «افتح الفلوس» → open it.
+let APPS = [];
+export function setApps(list) { APPS = (list || []).filter((a) => a && a.id && a.en).map((a) => ({ id: a.id, en: a.en, ar: a.ar || "", keys: [a.en, a.ar, a.id].filter(Boolean).map(fold) })); }
+export const apps = () => APPS;
+/** The app a name points to ("fit & food", «الفلوس», "money") — whole name first, then the start of one. */
+const bare = (k) => k.replace(/^(the |my )/, "").replace(/(^| )(ال)/g, "$1");   // "the money", «الفلوس» → "money", «فلوس»
+export function appNamed(name) {
+  const n = bare(fold(String(name || "").replace(/^\//, "")));
+  if (!n) return null;
+  return APPS.find((a) => a.keys.some((k) => bare(k) === n)) || APPS.find((a) => a.keys.some((k) => bare(k).startsWith(n) && n.length >= 3)) || null;
+}
+const appEntry = (a) => ({ id: "open:" + a.id, app: a.id, ar: [a.ar || a.en], group: "open", needs: "", heavy: false, hint: [a.en, a.ar || a.en] });
+
+/** The commands that start with what was typed after "/" (the list under the box). "" → all of them. Apps come after them. */
 export function commandsMatching(prefix) {
   const p = fold(String(prefix || "").replace(/^\//, ""));
   if (!p) return COMMANDS.slice();
-  return COMMANDS.filter((c) => c.id.startsWith(p) || c.ar.some((a) => fold(a).startsWith(p)));
+  const cmds = COMMANDS.filter((c) => c.id.startsWith(p) || c.ar.some((a) => fold(a).startsWith(p)));
+  const bp = bare(p);
+  const opens = APPS.filter((a) => a.keys.some((k) => k.startsWith(p) || bare(k).split(" ").some((w) => w.startsWith(bp)))).slice(0, 8).map(appEntry);
+  return [...cmds, ...opens];
 }
 
 // ---- languages, file formats, countries ----------------------------------------------------------------------------------------
@@ -138,6 +155,7 @@ export function todoText(text) {
 
 // what each kind is called on the two answer buttons
 export const KIND_LABEL = {
+  open: ["Open it", "افتحه"],
   do: ["Do it in the app", "اعملها في التطبيق"], scout: ["Start a Scout search", "ابدأ بحث في الكشّاف"], metro: ["Metro route", "طريق المترو"], map: ["Show it on the map", "وريني على الخريطة"],
   travel: ["Plan a trip", "خطط لسفرية"], todoAdd: ["Add to my to-do list", "ضيفها للمهام"], todoList: ["Show my to-do list", "وريني المهام"], whereSet: ["Remember where it is", "افتكر مكانها"],
   whereAsk: ["Where I keep it", "مكانها فين"], translate: ["Translate it", "ترجمها"], humanize: ["Make it sound like me", "خليها طبيعية"], convert: ["Convert the file", "حوّل الملف"],
@@ -183,6 +201,9 @@ export function guess(text, ctx = {}) {
   if (T(RX.find)) add("find", 0.86);
   if (T(RX.note)) add("remember", 0.7);      // "remember to call mum" → a note in Mind (a sharper reader above wins)
   if (T(RX.web)) add("web", 0.78);
+  { const m = t.match(/^\s*(?:please\s+)?(?:open|go to|show me|take me to)\s+(.{2,40}?)\s*[.!]?$|^\s*(?:افتح|افتحلي|روح على|وديني على|وريني)\s+(.{2,40}?)\s*$/i);
+    if (m && appNamed(m[1] || m[2])) add("open", 0.95);
+    if (/^\s*(?:show me\s+)?(?:my\s+)?(?:daily\s+)?report\s*[?؟.!]?$|^\s*(?:تقريري|التقرير|تقرير اليوم)\s*[?؟]?$/i.test(t) && appNamed("report")) add("open", 0.95); }
   if (ctx.doActions) add("do", sharp ? 0.5 : /[?؟]\s*$/.test(t) ? 0.6 : 0.82);
   add("chat", 0.3);
   // a reminder ("remind me of the passport photo") is a reminder only when it has a time; else it is Find
@@ -225,7 +246,7 @@ export function parseCommand(text) {
   const m = String(text || "").match(/^\s*\/(\S+)\s*([\s\S]*)$/);
   if (!m) return null;
   const c = BY_NAME.get(fold(m[1])) || BY_NAME.get(m[1].toLowerCase());
-  if (!c) return { id: null, name: m[1], arg: m[2].trim() };
+  if (!c) { const a = appNamed(m[1] + (m[2] ? " " + m[2] : "")) || appNamed(m[1]); return a ? { id: "open", app: a.id, arg: "" } : { id: null, name: m[1], arg: m[2].trim() }; }
   const arg = m[2].trim(), out = { id: c.id, cmd: c, arg };
   if (c.id === "translate") { out.to = langIn(arg); out.text = stripLang(arg); }
   if (c.id === "convert") out.format = formatIn(arg);

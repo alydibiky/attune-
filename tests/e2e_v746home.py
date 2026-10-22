@@ -17,7 +17,7 @@ with sync_playwright() as p:
         ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=init)
         page.set_viewport_size({"width": 390, "height": 844})
         page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-        check(page.locator("[data-testid=home-chat-tools] button").count() >= 4, "Chat's tools on Home: Chat · Call · Translate · Your life · Remember")
+        check(page.locator("[data-testid=home-chat-tools]").count() == 0 and page.locator("[data-testid=home-areas]").count() == 0, "v6.50: no rows of tools or apps under the box — the box opens them")
         page.evaluate("""(s) => new Promise((ok) => { const r = indexedDB.open('attune-fleet', 1);
           r.onupgradeneeded = () => r.result.createObjectStore('kv');
           r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); t.objectStore('kv').put(JSON.parse(s), 'state'); t.oncomplete = () => { r.result.close(); ok(); }; }; })""", DEMO)
@@ -25,15 +25,17 @@ with sync_playwright() as p:
         if lang == "en":
             now = page.inner_text("[data-testid=home-now]")
             check(page.get_attribute("[data-testid=home-now]", "data-kind") == "chequeOverdue" and "100245" in now and "40,000" in now, "RIGHT NOW: the overdue cheque 100245 (40,000) — " + now.replace("\n", " ")[:120])
+            page.click("[data-testid=home-see-report]"); page.wait_for_selector("[data-testid=my-report]")   # v6.50: the numbers live in My report
             check(page.locator("[data-testid=home-num-cranes]").count() == 1 and "2 / 3" in page.inner_text("[data-testid=home-num-cranes]"), "the numbers: 2 / 3 cranes out")
             check(page.locator("[data-testid=home-line-fleet]").count() >= 1 and "your day" in page.inner_text("[data-testid=home-line]").lower(), "YOUR DAY: the Fleet lines")
             check(page.get_attribute("[data-testid=home-noticed]", "data-k") == "crane" and "free" in page.inner_text("[data-testid=home-noticed]"), "Attune noticed: the free crane")
+            page.click("[data-testid=my-report-back]"); page.wait_for_selector("[data-testid=home-now]")
             page.click("[data-testid=home-now-cleared]"); page.wait_for_timeout(600)
             st = page.evaluate(READ)
             check(next(q for q in st["cheques"] if q.get("no") == "100245")["status"] == "cleared", "It cleared → saved in Fleet at once")
             check(page.locator("[data-testid=home-now]").count() == 0 or "100245" not in page.inner_text("[data-testid=home-now]"), "…and RIGHT NOW moves on")
-            page.click("[data-testid=home-t-translate]"); page.wait_for_timeout(500)
-            check(page.locator("[data-testid=phone-home]").count() == 0, "Translate opens from Home")
+            page.fill("[data-testid=home-ask]", "open translate"); page.click("[data-testid=home-send]"); page.wait_for_timeout(500)
+            check(page.locator("[data-testid=phone-home]").count() == 0, "“open translate” in the box opens Translate")
         else:
             miss = [m for m in page.evaluate("[...window.__trMiss]") if not m.startswith("[DEMO]") and m != "Attune"]
             check(not miss, "Arabic: Home has no English left: %s" % miss[:8])

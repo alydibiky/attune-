@@ -11,8 +11,8 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     check(page.locator("[data-testid=home-hint]").count() == 0, "Home: no 'Just say it' hint line")
     check("no account, no sign-in" not in page.inner_text("body"), "Home: no footer text")
-    page.click("[data-testid=home-all]"); page.wait_for_selector("[data-testid=tools-page]")
-    check(True, "Home's 'All tools' opens the Tools page")
+    page.fill("[data-testid=home-ask]", "/all"); page.click("[data-testid=home-send]"); page.wait_for_selector("[data-testid=tools-page]")
+    check(True, "“/all” in the Home box opens the Tools page (v6.50: no All button — everything from the box)")
     page.evaluate("window.__attuneBack()"); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'convert'}}))"); page.wait_for_timeout(800)   # v6.36: the Converter is a Students tab
     check(page.locator("[data-intro]:visible").count() == 0, "no intro paragraph under the page title")
     rows = page.locator("[data-testid=convert-tools] [data-testid^=convert-tool-]").count()
