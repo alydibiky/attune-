@@ -7553,7 +7553,7 @@ const MORE_GROUPS = [
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["translate", "convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
-  ["Business (add-on)", ["business", "crane", "field", "fleet"]],
+  ["Business (add-on)", ["business", "field", "fleet"]],   // v6.50: the Crane toolkit opens from Business → Fleet & rentals → More
   ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
 
