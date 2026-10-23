@@ -159,7 +159,7 @@ function DataTab({ sys, table, setSys, llm, flash, goMore }) {
       {full ? <p className="text-[12px] text-[var(--c-warn)] flex items-center gap-1"><Lock size={12} />{tr("The trial keeps {n} records per table — activate this system to add more.", { n: E.FREE_ROWS })}</p> : null}
       <div className="overflow-x-auto rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-grid">
         <table className="text-[12px] text-[var(--c-ink)] min-w-full">
-          <thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11px] uppercase tracking-[0.08em]"><tr>
+          <thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11.5px] tracking-[0.02em]"><tr>
             {shown.map((f) => <th key={f.id} {...lpF.bind(f)} onClick={() => { if (lpF.fired.current) return; toggleSort(f.id); }} className={"font-extrabold px-3.5 py-3 whitespace-nowrap cursor-pointer select-none " + (f.type === "number" || f.type === "money" || f.type === "formula" ? "text-end" : "text-start")} dir="auto" data-testid="erp-col">
               {f.name}{sort && sort.field === f.id ? (sort.dir === "asc" ? " ▲" : " ▼") : ""}</th>)}
           </tr></thead>
@@ -404,7 +404,7 @@ function QueryResult({ sys, res }) {
   if (res.error) return <p className="text-[12px] text-[var(--c-warn)]">{res.error}</p>;
   if (res.groups) return (
     <div className="overflow-x-auto rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-query-result">
-      <table className="text-[12px] text-[var(--c-ink)] min-w-full"><thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11px] uppercase tracking-[0.08em]"><tr>
+      <table className="text-[12px] text-[var(--c-ink)] min-w-full"><thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11.5px] tracking-[0.02em]"><tr>
         <th className="text-start px-2.5 py-2" dir="auto">{res.groupBy.name}</th><th className="text-end px-2.5 py-2">{tr("Count")}</th>{res.sumField ? <th className="text-end px-2.5 py-2" dir="auto">{res.sumField.name}</th> : null}</tr></thead>
         <tbody>{res.groups.map((g) => <tr key={g.group} className="border-t border-[var(--c-ln)]"><td className="px-3.5 py-2.5" dir="auto">{g.group}</td><td className="px-3.5 py-2.5 text-end tabular-nums">{g.count}</td>
           {res.sumField ? <td className="px-3.5 py-2.5 text-end tabular-nums">{E.show(sys, res.sumField.type === "formula" ? { type: "number" } : res.sumField, g.sum)}</td> : null}</tr>)}</tbody>
@@ -413,7 +413,7 @@ function QueryResult({ sys, res }) {
   return (
     <div className="space-y-1">
       <div className="overflow-x-auto rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-query-result">
-        <table className="text-[12px] text-[var(--c-ink)] min-w-full"><thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11px] uppercase tracking-[0.08em]"><tr>{shown.map((f) => <th key={f.id} className="text-start px-2.5 py-2 whitespace-nowrap" dir="auto">{f.name}</th>)}</tr></thead>
+        <table className="text-[12px] text-[var(--c-ink)] min-w-full"><thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11.5px] tracking-[0.02em]"><tr>{shown.map((f) => <th key={f.id} className="text-start px-2.5 py-2 whitespace-nowrap" dir="auto">{f.name}</th>)}</tr></thead>
           <tbody>{res.rows.slice(0, 200).map((r) => <tr key={r._id} className="border-t border-[var(--c-ln)]">{shown.map((f) => <td key={f.id} className="px-3.5 py-2.5 whitespace-nowrap" dir="auto">{f.type === "bool" ? (r[f.id] ? "✓" : "") : E.show(sys, f, r[f.id])}</td>)}</tr>)}
             {!res.rows.length ? <tr><td colSpan={shown.length} className="px-3 py-4 text-center text-[var(--c-mut)]">{tr("No records match")}</td></tr> : null}</tbody>
           {Object.keys(tot).length && res.rows.length > 1 ? <tfoot className="bg-[var(--c-bg)] border-t-2 border-[var(--c-ln)]"><tr>{shown.map((f, i) => <td key={f.id} className="px-3.5 py-2.5 text-end tabular-nums font-semibold">{tot[f.id] != null ? E.show(sys, f.type === "formula" ? { type: "number" } : f, tot[f.id]) : i === 0 ? tr("Total") : ""}</td>)}</tr></tfoot> : null}
@@ -666,7 +666,7 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
           <div className="space-y-2" data-testid="erp-combined-view">
             <p className="text-[12px] text-[var(--c-mut)]">{tr("{n} records · with {l}", { n: cv.rows.length, l: cv.linked.join(", ") })}</p>
             <div className="overflow-x-auto att-scroll rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] max-h-80">
-              <table className="text-[12px] text-[var(--c-ink)]"><thead className="bg-[var(--c-surf-2)] sticky top-0"><tr>{cv.header.map((h) => <th key={h} className="px-3 py-2.5 text-start whitespace-nowrap font-extrabold text-[11px] uppercase tracking-[0.08em] text-[var(--c-mut)]">{h}</th>)}</tr></thead>
+              <table className="text-[12px] text-[var(--c-ink)]"><thead className="bg-[var(--c-surf-2)] sticky top-0"><tr>{cv.header.map((h) => <th key={h} className="px-3 py-2.5 text-start whitespace-nowrap font-extrabold text-[11.5px] tracking-[0.02em] text-[var(--c-mut)]">{h}</th>)}</tr></thead>
                 <tbody>{cv.rows.slice(0, 300).map((r, i) => <tr key={i} className="border-t border-[var(--c-ln)]">{r.map((v, j) => <td key={j} className="px-3 py-2 whitespace-nowrap" dir="auto">{v}</td>)}</tr>)}</tbody></table>
             </div>
             <div className="flex gap-2"><button className={ghost + " flex items-center gap-1"} onClick={saveCombined} data-testid="erp-combined-csv"><Download size={14} />{tr("Save as CSV")}</button><button className={ghost} onClick={() => setCombined(false)}>{tr("Close")}</button></div>

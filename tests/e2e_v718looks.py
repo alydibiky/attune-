@@ -47,8 +47,8 @@ with sync_playwright() as p:
 
     check(page.locator("[data-testid=fit-app]").get_attribute("data-look") == "fresh", "the default look is Fresh (A)")
     bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
-    check(bg == "rgb(244, 247, 245)",   # v6.43 design A
-          "…a light page behind Fit (%s)" % bg)
+    check(bg in ("rgb(16, 20, 19)", "rgb(244, 247, 245)"),   # v7.1: Fit follows the app's Quiet Atelier ground, dark or light
+          "…the app's own page behind Fit (%s)" % bg)
     card = page.evaluate("getComputedStyle(document.querySelector('[data-testid=fit-app]')).getPropertyValue('--color-white').trim()")
     check(card.lower() == "#16201c",   # v6.43 design A
           "…dark writing on light (the palette turned around inside Fit: %s)" % card)

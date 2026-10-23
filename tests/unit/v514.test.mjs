@@ -50,7 +50,7 @@ eq(S.fileNameFor({ title: "خطة الرفع", kind: "doc" }), "خطة-الرف�
 // ---- themes ----
 // v6.27: the default theme is design A "Calm" (Ali's pick) — a green-grey ground and Calm's teal
 const D = S.themeVars({ accent: "teal", bg: "slate" });
-eq([D["--color-slate-950"], D["--color-slate-900"], D["--color-teal-400"]], ["#111416", "#181C1F", "#4FC2AF"], "the default theme is Calm: its ground, cards and teal");
+eq([D["--color-slate-950"], D["--color-slate-900"], D["--color-teal-400"]], ["#101413", "#171D1B", "#4FC2AF"], "the default theme is Quiet Atelier (v7.1): its stone ground, cards and jade");
 const v = S.themeVars({ accent: "violet", bg: "slate" });
 eq(v["--color-teal-500"], S.PALETTES.violet["500"], "an accent theme points teal at the new colour");
 const L = S.themeVars({ accent: "teal", bg: "light" });

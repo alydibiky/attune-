@@ -6029,7 +6029,20 @@ function yusrDocumentHtml() {
     // Byte-exact decode. The document is full of Arabic; a string round-trip
     // through atob alone would mangle every multi-byte character.
     const bytes = Uint8Array.from(atob(el.textContent.trim()), (c) => c.charCodeAt(0));
-    return new TextDecoder("utf-8").decode(bytes);
+    // v7.1 (Ali: "Gemini's interface in everything"): the Money ledger takes Direction 2 "Quiet Atelier" — its own colour
+    // variables pointed at the app's stone / sage-white, jade and terracotta, Nunito, 22-px corners; light follows the app
+    const light = document.documentElement.classList.contains("att-light");
+    const v = light
+      ? "--bg:#F4F7F5;--bg2:#EEF3F0;--card:#FFFFFF;--card2:#EEF3F0;--line:#E2EAE5;--line2:#D3DDD7;--text:#16201C;--muted:#4A5852;--faint:#6B7772;--accent:#157A52;--expense:#B33A2E;--income:#1E7A43;--blue:#2F6FA8;--purple:#7A4FA8"
+      : "--bg:#101413;--bg2:#141917;--card:#171D1B;--card2:#1E2623;--line:#26302D;--line2:#343E3A;--text:#EAEFEC;--muted:#9BA8A3;--faint:#6B7772;--accent:#4FC2AF;--expense:#F07A6E;--income:#5BC48A;--blue:#7FB3E0;--purple:#C59BE8";
+    const face = [400, 600, 700, 800].map((w) => `@font-face{font-family:"Nunito";font-weight:${w};font-display:swap;src:url(fonts/nunito-latin-${w}-normal.woff2) format("woff2")}`).join("");
+    const qa = `<style id="attune-quiet-atelier">${face}:root{${v};--radius:22px;--radius-sm:14px;--font:"Nunito","IBM Plex Sans Arabic",-apple-system,system-ui,sans-serif;--mono:"Nunito","IBM Plex Sans Arabic",system-ui,sans-serif}`
+      + `html{color-scheme:${light ? "light" : "dark"}}body{font-variant-numeric:tabular-nums}`
+      // the balance card and the bottom bar had their own navy / white: now the surface with a soft jade glow, and the app's ground
+      + `.balance{background:linear-gradient(150deg,var(--card),${light ? "#E3F4EC" : "#173530"})!important;box-shadow:0 2px 10px rgba(0,0,0,.06)!important}`
+      + `nav{background:var(--bg)!important;backdrop-filter:none!important}</style>`;
+    const doc = new TextDecoder("utf-8").decode(bytes);
+    return doc.includes("</head>") ? doc.replace("</head>", qa + "</head>") : qa + doc;
   } catch (e) { return null; }
 }
 // srcdoc, deliberately, not a blob: URL. A blob iframe gets an opaque origin,
@@ -11730,7 +11743,7 @@ function Onboard({ profile, setProfile, close, flash }) {
     else { setP((x) => ({ ...x, [st.k]: o })); setTimeout(() => setStep((n) => n + 1), 150); }
   };
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
       <div className="calm bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-[22px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-lg w-full p-5">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-[22px] font-black tracking-tight text-[var(--c-ink)] m-0">{tr("Make Attune yours")}</h2>

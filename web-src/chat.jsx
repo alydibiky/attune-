@@ -206,7 +206,7 @@ function CodeBox({ lang, text }) {
   return (
     <div className="rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] overflow-hidden" data-testid="code-box">
       <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--c-surf)] border-b border-[var(--c-ln)]">
-        <span className="text-[11px] text-[var(--c-mut)] font-extrabold tracking-[0.06em] uppercase">{label}</span>
+        <span className="text-[11px] text-[var(--c-mut)] font-extrabold tracking-[0.02em]">{label}</span>
         <button onClick={copy} className="min-h-[32px] text-[12px] font-bold px-2.5 rounded-full text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)] flex items-center gap-1">
           {done ? <CheckCircle2 size={12} className="text-[var(--c-pos)]" /> : <Copy size={12} />}{done ? tr("Copied") : tr("Copy")}</button>
       </div>

@@ -32,7 +32,7 @@ with sync_playwright() as p:
     check(bars == 0, "Business is its own app: Attune's header and bottom bar are hidden (%d visible)" % bars)
     check(page.locator("[data-testid=biz-intro]").count() == 1 and "Build your own business system" in page.locator("[data-testid=biz-intro]").inner_text(), "the first visit opens with an introduction (3 steps)")
     bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
-    check(bg == "rgb(244, 246, 250)", "a professional light look for the whole of Business (%s)" % bg)
+    check(bg in ("rgb(16, 20, 19)", "rgb(244, 247, 245)"), "v7.1: Business follows the app's Quiet Atelier look, dark or light (%s)" % bg)
     shot(page, "biz-intro")
 
     # ---- the builder: ① Name ----

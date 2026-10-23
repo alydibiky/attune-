@@ -219,12 +219,12 @@ export function GuidePage({ tools, groups, navTo }) {
       <div className="relative"><Search size={15} className="c-sub absolute top-1/2 -translate-y-1/2 start-3" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search the guide…")} className={K.inp + " !ps-9"} dir="auto" data-testid="guide-search" /></div>
       {!q.trim() ? <Gallery ar={ar} nameOf={nameOf} see={(k) => { setSel(k); setTimeout(() => { try { const e = document.querySelector('[data-testid="guide-walk"]'); if (e) e.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (x) {} }, 60); }} /> : null}
-      {startHits.length ? <section data-testid="guide-chapter"><span className={K.label}>{tr("Getting started")}</span>
+      {startHits.length ? <section data-testid="guide-chapter"><span className={"c-lbl " + K.label}>{tr("Getting started")}</span>
         {startHits.map((s) => <Row key={s.id} k={"start:" + s.id} label={ar ? s.title[1] : s.title[0]} sketch={s.sketch} />)}</section> : null}
-      {planHits.length ? <section data-testid="guide-chapter" data-chapter="plan"><span className={K.label}>{pk(G.PLAN_TITLE)}</span>
+      {planHits.length ? <section data-testid="guide-chapter" data-chapter="plan"><span className={"c-lbl " + K.label}>{pk(G.PLAN_TITLE)}</span>
         {G.PLAN.filter((p) => planHits.includes(p.id)).map((p) => <Row key={p.id} k={"plan:" + p.id} label={pk(p.title)} sub={pk(p.when)} icon={PLAN_ICON[p.icon] || Sparkles} />)}</section> : null}
       {chs.map((c) => { const ids = hits ? c.ids.filter((id) => hits.includes(id)) : c.ids, title = Array.isArray(c.title) ? pk(c.title) : tr(c.title); return ids.length ? (
-        <section key={title} data-testid="guide-chapter"><span className={K.label}>{title}</span>
+        <section key={title} data-testid="guide-chapter"><span className={"c-lbl " + K.label}>{title}</span>
           {ids.map((id) => { const t = nameOf(id); return t ? <Row key={id} k={id} label={t[0]} sub={t[1]} sketch={G.TOOLS[id].sketch} /> : null; })}</section>) : null; })}
       {hits && !hits.length && !startHits.length && !planHits.length ? <p className="c-sub" data-testid="guide-none">{tr("Nothing in the guide matches — try another word.")}</p> : null}
     </div>);
