@@ -36,10 +36,10 @@ function greeting(now = new Date()) {
 
 const Card = ({ id, label, sub, Icon, onClick, testid }) => (
   <button onClick={onClick} data-testid={testid || "home-card-" + id}
-    className="text-start rounded-2xl border border-slate-800 bg-slate-900 hover:border-teal-700/70 hover:bg-slate-900/70 p-4 min-h-[118px] flex flex-col transition-colors">
-    <span className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-300 flex items-center justify-center"><Icon size={18} /></span>
-    <span className="mt-3 text-[14.5px] font-semibold text-white leading-tight">{tr(label)}</span>
-    <span className="mt-0.5 text-[12px] text-slate-400 leading-snug line-clamp-2">{tr(sub)}</span>
+    className="text-start rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-[var(--c-acc)] p-4 min-h-[124px] flex flex-col transition-colors duration-150">
+    <span className="w-10 h-10 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={19} /></span>
+    <span className="mt-3 text-[15px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>
+    <span className="mt-0.5 text-[12.5px] text-[var(--c-mut)] leading-snug line-clamp-2">{tr(sub)}</span>
   </button>);
 
 export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
@@ -53,32 +53,32 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) setDone({ ...r, id: Date.now() }); else onAsk(t); };
   const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Plan a weekend trip", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];
   return (
-    <div className="pt-2 pb-10 space-y-5" data-testid="desk-home">
-      <h1 className="text-[26px] font-semibold text-white tracking-tight">{tr(greeting())}{name ? ", " + name : ""}</h1>
+    <div className="calm pt-2 pb-10 space-y-5" data-testid="desk-home">
+      <h1 className="text-[28px] font-black text-[var(--c-ink)] tracking-tight m-0">{tr(greeting())}{name ? ", " + name : ""}</h1>
       <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-900 p-4">
-          <p className="text-[12px] text-slate-400 mb-2">{tr("Ask anything")}</p>
-          <div className="flex items-end gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 focus-within:border-teal-600">
+        <div className="col-span-2 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+          <p className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] mb-2.5 mt-0">{tr("Ask anything")}</p>
+          <div className="flex items-end gap-2 rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 focus-within:border-[var(--c-acc)] transition-colors duration-150">
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="home-ask"
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder={tr("Ask, or tell Attune what happened — «spent 150 on lunch», «had foul for breakfast»…")} className="flex-1 resize-none bg-transparent text-[15px] text-slate-100 placeholder-slate-600 focus:outline-none py-1" />
+              placeholder={tr("Ask, or tell Attune what happened — «spent 150 on lunch», «had foul for breakfast»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
             <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
-              className="w-9 h-9 rounded-lg bg-teal-500 text-slate-950 flex items-center justify-center disabled:opacity-40"><Send size={16} /></button>
+              className="w-11 h-11 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center disabled:opacity-40 transition-opacity duration-150"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>
-          {done ? <div className="calm rounded-2xl mt-3"><DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} /></div> : null}
+          {done ? <div className="calm rounded-[22px] mt-3"><DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} /></div> : null}
           <div className="flex flex-wrap gap-2 mt-3">
             {starters.map(([t, tool]) => <button key={t} onClick={() => (tool === "read" ? openRead() : tool ? navTo(tool) : onAsk(tr(t)))} data-testid={tool === "read" ? "home-read" : undefined}
-              className="rounded-full border border-teal-800/70 text-teal-200 text-[12.5px] px-3 py-1 hover:bg-teal-500/10">{tr(t)}</button>)}
+              className="min-h-[40px] rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold px-4 hover:border-[var(--c-acc)] transition-colors duration-150">{tr(t)}</button>)}
           </div>
         </div>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 space-y-2" data-testid="home-today">
-          <p className="text-[12px] text-slate-400">{tr("Today")}</p>
-          {facts.kcal != null ? <button onClick={() => navTo("fit")} className="flex items-center gap-2 text-start"><Apple size={16} className="text-emerald-300" />
-            <span className="text-[20px] font-semibold text-white tabular-nums">{facts.kcal}</span><span className="text-[12.5px] text-slate-400">{tr("kcal eaten")}</span></button> : null}
-          <button onClick={() => navTo("reminders")} className="flex items-center gap-2 text-[13px] text-slate-300"><Bell size={15} className="text-amber-300" />
+        <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 space-y-2" data-testid="home-today">
+          <p className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
+          {facts.kcal != null ? <button onClick={() => navTo("fit")} className="min-h-[44px] flex items-center gap-2 text-start"><Apple size={16} className="text-[var(--c-pos)]" />
+            <span className="text-[24px] font-black text-[var(--c-ink)] tabular-nums tracking-tight">{facts.kcal}</span><span className="text-[12.5px] text-[var(--c-mut)]">{tr("kcal eaten")}</span></button> : null}
+          <button onClick={() => navTo("reminders")} className="min-h-[44px] flex items-center gap-2 text-[13.5px] font-semibold text-[var(--c-ink)]"><Bell size={15} className="text-[var(--c-warn)]" />
             {facts.reminders ? tr("{n} reminders left today", { n: facts.reminders }) : tr("No more reminders today")}</button>
-          <p className="flex items-center gap-2 text-[13px] text-slate-300"><MessageCircle size={15} className="text-sky-300" />{tr("{n} chats saved", { n: facts.chats })}</p>
-          <p className={"text-[12px] " + (engineReady ? "text-teal-300" : "text-slate-500")}>{engineReady ? tr("The model is ready") : tr("The model wakes when you ask")}</p>
+          <p className="flex items-center gap-2 text-[13.5px] font-semibold text-[var(--c-ink)] m-0 tabular-nums"><MessageCircle size={15} className="text-[var(--c-acc)]" />{tr("{n} chats saved", { n: facts.chats })}</p>
+          <p className={"text-[12.5px] font-bold m-0 pt-1 " + (engineReady ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")}>{engineReady ? tr("The model is ready") : tr("The model wakes when you ask")}</p>
         </div>
       </div>
       <div className="grid grid-cols-4 gap-4" data-testid="home-cards">
@@ -94,13 +94,13 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
   const nq = q.trim().toLowerCase();
   const match = ([id, label, sub]) => !nq || (tr(label) + " " + tr(sub) + " " + label + " " + sub).toLowerCase().includes(nq);
   return (
-    <div className="pt-2 pb-10" data-testid="tools-page">
+    <div className="calm pt-2 pb-10" data-testid="tools-page">
       <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-[24px] font-semibold text-white tracking-tight">{tr("Tools")}</h1>
+        <h1 className="text-[24px] font-black text-[var(--c-ink)] tracking-tight m-0">{tr("Tools")}</h1>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find a tool")} dir="auto" data-testid="tools-find"
-          className="ms-auto w-40 sm:w-72 min-w-0 rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-[13.5px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-700" />
+          className="ms-auto w-40 sm:w-72 min-w-0 min-h-[44px] h-11 rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150" />
       </div>
-      <p className="text-[12.5px] text-slate-400 mb-4">{tr(subtitle || "Every tool on one page — ★ pins it to the sidebar.")}</p>
+      <p className="text-[13px] text-[var(--c-mut)] mt-1 mb-4">{tr(subtitle || "Every tool on one page — ★ pins it to the sidebar.")}</p>
       {/* v6.30 (Ali: "no more than 6 pages"): `pages` = [id, title, what is inside, members] — one card each; searching lists single tools */}
       {pages && !nq ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="tools-pages">
@@ -109,13 +109,13 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
             const names = members.map((m) => tools.find((t) => t[0] === m)).filter(Boolean);
             return (
               <button key={pid} onClick={() => navTo(members[0])} data-testid={"tools-page-" + pid}
-                className="text-start rounded-2xl border border-slate-800 bg-slate-900 hover:border-teal-700/70 transition-colors p-4 flex items-start gap-3">
-                <span className="w-10 h-10 shrink-0 rounded-xl bg-teal-500/10 text-teal-300 flex items-center justify-center"><Icon size={20} /></span>
+                className="text-start rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-[var(--c-acc)] transition-colors duration-150 p-4 flex items-start gap-3">
+                <span className="w-11 h-11 shrink-0 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={20} /></span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[15px] font-semibold text-white leading-tight">{tr(title)}</span>
-                  <span className="block text-[12.5px] text-slate-400 leading-snug mt-1">{tr(sub)}</span>
-                  {names.length > 1 ? <span className="flex flex-wrap gap-1 mt-2">{names.map(([id, label]) => (
-                    <span key={id} className="text-[11px] rounded-full border border-slate-700 text-slate-300 px-2 py-0.5">{tr(label)}</span>))}</span> : null}
+                  <span className="block text-[15.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(title)}</span>
+                  <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-1">{tr(sub)}</span>
+                  {names.length > 1 ? <span className="flex flex-wrap gap-1.5 mt-2.5">{names.map(([id, label]) => (
+                    <span key={id} className="text-[11px] font-bold rounded-full border border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-mut)] px-2.5 py-0.5">{tr(label)}</span>))}</span> : null}
                 </span>
               </button>);
           })}
@@ -123,10 +123,10 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
       ) : pages ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="tools-results">
           {pages.flatMap((p) => p[3]).map((m) => tools.find((t) => t[0] === m)).filter(Boolean).filter(match).map(([id, label, sub, Icon]) => (
-            <button key={id} onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="text-start flex items-start gap-3 p-3 rounded-xl border border-slate-800 bg-slate-900 hover:border-teal-700/70">
-              <span className="w-9 h-9 shrink-0 rounded-xl bg-teal-500/10 text-teal-300 flex items-center justify-center"><Icon size={18} /></span>
-              <span className="min-w-0"><span className="block text-[14px] font-semibold text-white leading-tight">{tr(label)}</span>
-                <span className="block text-[12px] text-slate-400 leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>
+            <button key={id} onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="text-start min-h-[56px] flex items-start gap-3 p-3.5 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
+              <span className="w-10 h-10 shrink-0 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
+              <span className="min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>
+                <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>
             </button>))}
         </div>
       ) : null}
@@ -135,18 +135,18 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
         if (!list.length) return null;
         return (
           <section key={title} className="mb-6" data-testid="tools-group">
-            <h2 className="text-[11.5px] uppercase tracking-wider text-slate-500 mb-2">{tr(title)}</h2>
+            <h2 className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2.5">{tr(title)}</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {list.map(([id, label, sub, Icon]) => (
-                <div key={id} className="group relative rounded-xl border border-slate-800 bg-slate-900 hover:border-teal-700/70 transition-colors">
-                  <button onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="w-full text-start flex items-start gap-3 p-3 pe-10">
-                    <span className="w-9 h-9 shrink-0 rounded-xl bg-teal-500/10 text-teal-300 flex items-center justify-center"><Icon size={18} /></span>
-                    <span className="min-w-0"><span className="block text-[14px] font-semibold text-white leading-tight">{tr(label)}</span>
-                      <span className="block text-[12px] text-slate-400 leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>
+                <div key={id} className="group relative rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
+                  <button onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="w-full min-h-[56px] text-start flex items-start gap-3 p-3.5 pe-11">
+                    <span className="w-10 h-10 shrink-0 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
+                    <span className="min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>
+                      <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>
                   </button>
                   {showPins ? <button onClick={() => togglePin(id)} data-testid={"tools-pin-" + id} aria-pressed={pins.includes(id)}
                     title={pins.includes(id) ? tr("Unpin from the sidebar") : tr("Pin to the sidebar")} aria-label={pins.includes(id) ? tr("Unpin from the sidebar") : tr("Pin to the sidebar")}
-                    className={"absolute top-2 end-2 p-1.5 rounded-md " + (pins.includes(id) ? "text-amber-300" : "text-slate-600 opacity-0 group-hover:opacity-100 focus:opacity-100")}>
+                    className={"absolute top-1.5 end-1.5 w-9 h-9 grid place-items-center rounded-[12px] transition-opacity duration-150 " + (pins.includes(id) ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)] opacity-0 group-hover:opacity-100 focus:opacity-100")}>
                     <Star size={15} className={pins.includes(id) ? "fill-current" : ""} /></button> : null}
                 </div>))}
             </div>

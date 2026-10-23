@@ -9703,43 +9703,43 @@ export default function App() {
       <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide || !LEGACY_NAV ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
-        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>
-          {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
+        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 min-h-[60px] py-2 mb-3 border-b border-slate-800/70" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>
+          {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
-            <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")} data-testid="header-menu"><Menu size={20} /></button>
+            <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Chats")} data-testid="header-menu"><Menu size={20} /></button>
           ) : wide ? null : (<>   {/* v6.25: on a computer Back is the sidebar's ← (one arrow, not two) */}
-            {!LEGACY_NAV ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button> : null}
-            <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
+            {!LEGACY_NAV ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button> : null}
+            <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
           </>)}
           {/* v6.28 (Ali: "the UI is still cluttered"): a page with its own big title doesn't repeat it in the top bar */}
-          <p className="text-base font-semibold text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || "Attune")}</p>
+          <p className="text-base text-[17px] font-extrabold tracking-tight text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
           {/* v6.31 minimal: the model is a small dot and a name, not a big outlined button */}
-          {LEGACY_NAV ? <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
+          {LEGACY_NAV ? <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 min-h-[40px] text-[12px] font-bold px-3 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
             <Cpu size={12} />{engineText}</button>
           : <button onClick={() => setShowEngine(true)} data-testid="header-model" aria-label={tr("Engine") + ": " + engineText}
-              className={`${wide ? "hidden " : ""}flex items-center gap-1.5 text-[12px] h-8 px-2.5 rounded-full bg-slate-900 text-slate-300 shrink-0 max-w-[45%]`}>
+              className={`${wide ? "hidden " : ""}flex items-center gap-1.5 text-[12.5px] font-bold h-10 min-h-[40px] px-3.5 rounded-full bg-slate-900 border border-slate-800 text-slate-200 shrink-0 max-w-[45%]`}>
             <span className={"w-2 h-2 rounded-full shrink-0 " + (modelState === "ready" ? "bg-teal-400" : modelState === "starting" || modelState === "downloading" ? "bg-amber-400 animate-pulse" : "bg-slate-600")} />
             <span className="truncate">{modelState === "ready" || modelState === "starting" || modelState === "downloading" ? engineText : NATIVE && (installedModels || []).length ? tr("Asleep") : tr("No model")}</span></button>}
-          {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="p-2 text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
-          {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
+          {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="w-11 h-11 grid place-items-center rounded-[14px] text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
+          {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
         </header>
 
         {/* The morning line — shown on every tab, once a day, only when there
             is something real to say. Computed, never generated. */}
         {morning && !morningSeen && proActive ? (
-          <div className="mb-5 bg-slate-900 border border-teal-900/60 rounded-2xl p-4">
+          <div className="mb-5 bg-slate-900 border border-slate-800 rounded-[22px] p-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
             <div className="flex items-start gap-3">
-              <Radar size={16} className="text-teal-400 mt-0.5 shrink-0" />
+              <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-teal-500/10 text-teal-300 shrink-0"><Radar size={16} /></span>
               <div className="flex-1 min-w-0">
                 {morning.bits.map((b, i) => (
                   <p key={i} className={`text-sm leading-snug ${
                     b.tone === "bad" ? "text-amber-200" : b.tone === "waiting" ? "text-teal-200" : "text-slate-300"}`}>{b.text}</p>
                 ))}
                 <button onClick={() => { setMode("memory"); dismissMorning(); }}
-                  className="text-[11px] text-teal-400 hover:text-teal-300 mt-1.5">{tr("see them →")}</button>
+                  className="min-h-[36px] text-[12.5px] font-extrabold text-teal-300 hover:text-teal-200 mt-1">{tr("see them →")}</button>
               </div>
-              <button onClick={dismissMorning} className="text-slate-600 hover:text-slate-400"><X size={15} /></button>
+              <button onClick={dismissMorning} className="w-9 h-9 -m-1.5 grid place-items-center rounded-[12px] text-slate-500 hover:text-slate-300"><X size={15} /></button>
             </div>
           </div>
         ) : null}
@@ -9748,7 +9748,7 @@ export default function App() {
         {LEGACY_NAV || (mode === "money" && !wide) || !hubTabsEl ? null : mode === "business" && wide ? <div className="px-4 pt-1 max-w-3xl mx-auto">{hubTabsEl}</div> : hubTabsEl}
         {/* v6.43: Business as its own app — its own icon on the home screen */}
         {mode === "business" && !wide && NATIVE && NATIVE.pinTool ? <div className="px-4 max-w-3xl mx-auto flex justify-end"><button onClick={() => { const ok = NATIVE.pinTool("business", tr("Business")); flash(ok ? tr("Android asks you to add it — then Business has its own icon") : tr("This phone's home screen can't add icons")); }}
-          className="text-[12.5px] font-semibold text-teal-300 py-1" data-testid="biz-pin">{tr("＋ Business icon on my home screen")}</button></div> : null}
+          className="min-h-[40px] text-[12.5px] font-extrabold text-teal-300 py-1" data-testid="biz-pin">{tr("＋ Business icon on my home screen")}</button></div> : null}
         <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
         ) : mode === "home" && !wide ? (
@@ -11279,7 +11279,7 @@ export default function App() {
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
         {!wide && LEGACY_NAV && (mode === "home" || mode === "tools") ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
       </div>
-      {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
+      {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[16px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
@@ -11303,17 +11303,17 @@ export default function App() {
       {moreOpen && wide ? (
         // v6.27 (Ali: "why does settings have this"): on a computer Settings is a settings window — the tools are in the sidebar
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-6" onClick={() => setMoreOpen(false)} data-testid="desk-settings-bg">
-          <div className="att-scroll w-full max-w-3xl max-h-[86vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-6" onClick={(e) => e.stopPropagation()} data-testid="desk-settings" role="dialog" aria-label={tr("Settings")}>
-            <div className="flex items-center justify-between"><h2 className="text-xl font-semibold text-white flex items-center gap-2"><LayoutGrid size={19} className="text-teal-300" />{tr("Settings")}</h2>
-              <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800" aria-label={tr("Close")} data-testid="desk-settings-close"><X size={18} /></button></div>
-            <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full flex items-center gap-3 rounded-xl border border-teal-800/70 bg-teal-500/10 px-4 py-3 text-start hover:border-teal-600" data-testid="desk-guide">
-              <BookOpen size={18} className="text-teal-300 shrink-0" /><span className="flex-1"><span className="block text-[14px] text-slate-100">{tr("How to use Attune")}</span><span className="block text-[12px] text-slate-400">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-teal-300 rtl:-scale-x-100">›</span></button>
+          <div className="calm att-scroll w-full max-w-3xl max-h-[86vh] overflow-y-auto rounded-[22px] bg-[var(--c-surf)]! text-[var(--c-ink)] border border-[var(--c-ln)] p-6 space-y-6 shadow-[0_16px_48px_rgba(0,0,0,0.35)]" onClick={(e) => e.stopPropagation()} data-testid="desk-settings" role="dialog" aria-label={tr("Settings")}>
+            <div className="flex items-center justify-between"><h2 className="text-[22px] font-black tracking-tight text-[var(--c-ink)] flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><LayoutGrid size={18} /></span>{tr("Settings")}</h2>
+              <button onClick={() => setMoreOpen(false)} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150" aria-label={tr("Close")} data-testid="desk-settings-close"><X size={18} /></button></div>
+            <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] flex items-center gap-3 rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 py-3 text-start hover:border-[var(--c-acc)] transition-colors duration-150" data-testid="desk-guide">
+              <BookOpen size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)]">{tr("How to use Attune")}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
             <section data-testid="more-appearance">
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-3">{tr("Appearance")}</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Appearance")}</p>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("App language")}</p><LangSwitch /></div>
-                  <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("Text size")}</p><TextSize /></div>
+                  <div><p className="text-[13.5px] font-bold text-[var(--c-ink)] mt-0 mb-2">{tr("App language")}</p><LangSwitch /></div>
+                  <div><p className="text-[13.5px] font-bold text-[var(--c-ink)] mt-0 mb-2">{tr("Text size")}</p><TextSize /></div>
                   <KeyboardRow />
                   <CountryRow />
                 </div>
@@ -11321,68 +11321,69 @@ export default function App() {
               </div>
             </section>
             <section>
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-3">{tr("Account and this device")}</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Account and this device")}</p>
               <div className="grid grid-cols-4 gap-3" data-testid="more-settings">
-                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 hover:border-teal-700 p-3.5 text-start"><Cpu size={18} className="text-slate-300" /><span className="block text-[13.5px] text-slate-100 mt-2">{tr("Engine & privacy")}</span><span className="block text-[11.5px] text-slate-500 mt-0.5">{tr("The AI model on this device")}</span></button>
-                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 hover:border-teal-700 p-3.5 text-start"><User size={18} className="text-slate-300" /><span className="block text-[13.5px] text-slate-100 mt-2">{tr("Your profile")}</span><span className="block text-[11.5px] text-slate-500 mt-0.5">{tr("Name, country, how Attune talks to you")}</span></button>
-                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 hover:border-teal-700 p-3.5 text-start"><Crown size={18} className="text-amber-300" /><span className="block text-[13.5px] text-slate-100 mt-2">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[11.5px] text-slate-500 mt-0.5">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
+                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Cpu size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Engine & privacy")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5">{tr("The AI model on this device")}</span></button>
+                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><User size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Your profile")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5">{tr("Name, country, how Attune talks to you")}</span></button>
+                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-acc-2)]/15 text-[var(--c-acc-2)]"><Crown size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5 tabular-nums">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
                 {(() => { const nb = backupNudge(); return (
-                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-3.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950 hover:border-teal-700"}`}><ShieldCheck size={18} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[13.5px] text-slate-100 mt-2">{tr("Backup")}</span><span className={`block text-[11.5px] mt-0.5 ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
+                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`min-h-[96px] rounded-[18px] border p-3.5 text-start transition-colors duration-150 ${nb.warn ? "border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)]"}`}><span className={"w-9 h-9 rounded-[12px] grid place-items-center " + (nb.warn ? "bg-[var(--c-warn)]/15 text-[var(--c-warn)]" : "bg-[var(--c-soft)] text-[var(--c-acc)]")}><ShieldCheck size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Backup")}</span><span className={`block text-[12px] mt-0.5 ${nb.warn ? "text-[var(--c-warn)] font-bold" : "text-[var(--c-mut)]"}`}>{nb.text}</span></button>); })()}
               </div>
             </section>
-            <p className="text-center text-[11px] text-slate-600 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
-            <button onClick={() => { setMoreOpen(false); navTo("privacy"); }} className="block mx-auto text-[11px] text-slate-500 underline mt-1" data-testid="more-privacy">{tr("Privacy")}</button>
+            <p className="text-center text-[11.5px] text-[var(--c-mut)] tabular-nums select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
+            <button onClick={() => { setMoreOpen(false); navTo("privacy"); }} className="block mx-auto min-h-[40px] px-3 text-[12.5px] font-bold text-[var(--c-mut)] hover:text-[var(--c-ink)] underline underline-offset-2 mt-1" data-testid="more-privacy">{tr("Privacy")}</button>
           </div>
         </div>
       ) : moreOpen ? (
         <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setMoreOpen(false)}>
-          <div className="att-scroll att-shift absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
+          <div className="calm att-scroll att-shift absolute start-0 end-0 bg-[var(--c-surf)]! text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-2xl rounded-t-[22px]! px-4 pb-4 pt-2 max-h-[75vh] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]"
                style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
+              <span className="block mx-auto mb-3 w-10 h-1.5 rounded-full bg-[var(--c-ln)]" aria-hidden="true" />
               {/* v6.34 (Ali: "I don't want this More page"): without the bottom bar this sheet is Settings only — every tool is in
                   the sidebar's 6 places (How to use is in Tools → Help) */}
               {LEGACY_NAV ? <>
-              <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full mb-4 flex items-center gap-3 rounded-xl border border-teal-800/70 bg-teal-500/10 px-3.5 py-2.5 text-start" data-testid="more-guide">
-                <BookOpen size={18} className="text-teal-300 shrink-0" /><span className="flex-1"><span className="block text-[13.5px] text-slate-100">{tr("How to use Attune")}</span><span className="block text-[11.5px] text-slate-400">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-teal-300 rtl:-scale-x-100">›</span></button>
+              <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] mb-4 flex items-center gap-3 rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-3.5 py-2.5 text-start" data-testid="more-guide">
+                <BookOpen size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14px] font-extrabold text-[var(--c-ink)]">{tr("How to use Attune")}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
               {groupsHere.map(([title, ids], gi) => (
                 <div key={title} className={gi ? "mt-4" : ""} data-testid="more-group">
-                  <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2 px-0.5">{tr(title)}</p>
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2 px-0.5">{tr(title)}</p>
                   <div className="grid grid-cols-3 gap-2">
                     {ids.map((tid) => MORE_TOOLS.find((t) => t[0] === tid)).filter(Boolean).map(([id, label, sub, Icon]) => (
                       <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); navTo(id); setMoreOpen(false); }}
-                        className={`rounded-xl border p-2.5 text-start transition-colors ${mode === id ? "border-teal-600 bg-teal-500/10" : "border-slate-800 bg-slate-950 active:bg-slate-800"}`}>
-                        <Icon size={18} className="text-teal-300" />
-                        <span className="block text-[13px] text-slate-100 mt-1.5 leading-tight">{tr(label)}</span>
-                        <span className="block text-[10px] text-slate-400 leading-tight mt-0.5">{tr(sub)}</span>
+                        className={`min-h-[76px] rounded-[18px] border p-3 text-start transition-colors duration-150 ${mode === id ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)]"}`}>
+                        <Icon size={18} className={mode === id ? "" : "text-[var(--c-acc)]"} />
+                        <span className="block text-[13px] font-extrabold mt-1.5 leading-tight">{tr(label)}</span>
+                        <span className={"block text-[11px] leading-tight mt-0.5 " + (mode === id ? "opacity-90" : "text-[var(--c-mut)]")}>{tr(sub)}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               ))}
               </> : null}
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 mt-4 mb-2 px-0.5">{tr("Settings")}</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-2 px-0.5">{tr("Settings")}</p>
               <div className="grid grid-cols-3 gap-2" data-testid="more-settings">
-                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Cpu size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Engine & privacy")}</span></button>
-                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><User size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Your profile")}</span></button>
-                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Crown size={16} className="text-amber-300" /><span className="block text-[12px] text-slate-200 mt-1">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[10px] text-slate-500">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
+                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><Cpu size={18} className="text-[var(--c-acc)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Engine & privacy")}</span></button>
+                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><User size={18} className="text-[var(--c-acc)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Your profile")}</span></button>
+                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><Crown size={18} className="text-[var(--c-acc-2)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[11px] text-[var(--c-mut)] tabular-nums">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
                 {(() => { const nb = backupNudge(); return (
-                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-2.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950"}`}><ShieldCheck size={16} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[12px] text-slate-200 mt-1">{tr("Backup")}</span><span className={`block text-[10px] ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
+                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`min-h-[76px] rounded-[18px] border p-3 text-start ${nb.warn ? "border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-bg)]"}`}><ShieldCheck size={18} className={nb.warn ? "text-[var(--c-warn)]" : "text-[var(--c-acc)]"} /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Backup")}</span><span className={`block text-[11px] ${nb.warn ? "text-[var(--c-warn)] font-bold" : "text-[var(--c-mut)]"}`}>{nb.text}</span></button>); })()}
               </div>
               {/* v6.28: what this phone can do (its level), and the way back to every tool */}
-              <div className="mt-2 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 flex items-center gap-2 text-[12px]" data-testid="device-level">
-                <Gauge size={15} className="text-teal-300 shrink-0" /><span className="flex-1 text-slate-300">{tr("This device")}: <b className="text-slate-100">{tr("Level {n}", { n: devLevel.level })} · {tr(devLevel.name)}</b><span className="block text-[11px] text-slate-500">{tr(devLevel.what)}</span></span>
-                {devLevel.hide.length ? <button onClick={() => setAllTools(!allTools)} className="text-teal-300 underline shrink-0" data-testid="device-showall">{allTools ? tr("Hide what is too heavy") : tr("Show every tool anyway")}</button> : null}</div>
+              <div className="mt-2 min-h-[56px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 flex items-center gap-2.5 text-[12.5px]" data-testid="device-level">
+                <Gauge size={16} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[var(--c-mut)]">{tr("This device")}: <b className="text-[var(--c-ink)] font-extrabold">{tr("Level {n}", { n: devLevel.level })} · {tr(devLevel.name)}</b><span className="block text-[11.5px] text-[var(--c-mut)]">{tr(devLevel.what)}</span></span>
+                {devLevel.hide.length ? <button onClick={() => setAllTools(!allTools)} className="min-h-[40px] font-bold text-[var(--c-acc)] underline underline-offset-2 shrink-0" data-testid="device-showall">{allTools ? tr("Hide what is too heavy") : tr("Show every tool anyway")}</button> : null}</div>
               {/* v5.29 UX: tools first (what people open More for); appearance settings below */}
-              <div className="mt-4 pt-3 border-t border-slate-800" data-testid="more-appearance">
-                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Appearance")}</p>
-                <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
-                <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
+              <div className="mt-4 pt-4 border-t border-[var(--c-ln)]" data-testid="more-appearance">
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Appearance")}</p>
+                <div className="mb-4"><span className="block text-[13px] font-bold text-[var(--c-ink)] mb-2">{tr("App language")}</span><LangSwitch /></div>
+                <div className="flex items-center justify-between gap-3 mb-3"><span className="text-[13px] font-bold text-[var(--c-ink)]">{tr("Text size")}</span><TextSize /></div>
                 <KeyboardRow />
                 <CountryRow />
                 <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
-              <p className="text-center text-[10px] text-slate-600 mt-3 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
-            <button onClick={() => { setMoreOpen(false); navTo("privacy"); }} className="block mx-auto text-[11px] text-slate-500 underline mt-1" data-testid="more-privacy">{tr("Privacy")}</button>
+              <p className="text-center text-[11px] text-[var(--c-mut)] tabular-nums mt-3 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
+            <button onClick={() => { setMoreOpen(false); navTo("privacy"); }} className="block mx-auto min-h-[40px] px-3 text-[12.5px] font-bold text-[var(--c-mut)] underline underline-offset-2 mt-1" data-testid="more-privacy">{tr("Privacy")}</button>
             </div>
           </div>
         </div>
@@ -11514,102 +11515,102 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
   const [openGroup, setOpenGroup] = useState("");
   return (
     <div className="fixed inset-0 z-50 lg:z-[70] bg-slate-950 lg:bg-black/60 overflow-auto lg:py-8 lg:px-6" data-testid="upgrade" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
-      <div className="max-w-lg lg:max-w-5xl mx-auto min-h-full lg:min-h-0 pb-10 lg:bg-slate-950 lg:rounded-2xl lg:border lg:border-slate-800">
-        <div className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Plans & billing")}</h2>
-          <button onClick={close} className="text-slate-400 hover:text-slate-200 p-1" aria-label={tr("Close")}><X size={20} /></button>
+      <div className="calm max-w-lg lg:max-w-5xl mx-auto min-h-full lg:min-h-0 pb-10 bg-[var(--c-bg)]! text-[var(--c-ink)] lg:rounded-[22px] lg:border lg:border-[var(--c-ln)] lg:overflow-hidden">
+        <div className="sticky top-0 z-10 bg-[var(--c-bg)] border-b border-[var(--c-ln)] px-4 min-h-[60px] py-2 flex items-center justify-between">
+          <h2 className="text-[20px] font-black tracking-tight text-[var(--c-ink)] flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-acc-2)]/15 text-[var(--c-acc-2)]"><Crown size={17} /></span> {tr("Plans & billing")}</h2>
+          <button onClick={close} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <div className="px-4 pt-4 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)] lg:gap-6 lg:items-start">
           {/* v6.27 computer layout A: the plan to choose on the left (stays in view), what you get on the right */}
           <div className="space-y-4 lg:sticky lg:top-20">
           {/* where you are now */}
           {TESTING_ALL_PRO && devMode() && !pro ? (
-            <div className="text-[13px] text-sky-300 rounded-xl border border-sky-900/60 bg-sky-500/5 p-3" data-testid="testing-pro">
+            <div className="text-[13px] text-[var(--c-ink)] rounded-[18px] border border-[var(--c-acc)]/30 bg-[var(--c-soft)] p-3.5" data-testid="testing-pro">
               <p>{testingPro() ? tr("Testing build: every Pro feature is unlocked on this phone.") : tr("Testing build: you are seeing the app as a Free user.")}</p>
-              <button data-testid="testing-toggle" className="mt-2 text-[12px] px-3 py-1.5 rounded-lg border border-sky-700 text-sky-200"
+              <button data-testid="testing-toggle" className="mt-2 min-h-[44px] h-11 text-[13px] font-bold px-4 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]"
                 onClick={() => { try { localStorage.setItem("attune:testing-pro", testingPro() ? "off" : "on"); } catch (e) {} location.reload(); }}>
                 {testingPro() ? tr("See it as a Free user") : tr("Unlock everything again")}</button>
             </div>
           ) : null}
-          {pro ? <div className="rounded-xl border border-emerald-800/60 bg-emerald-500/5 p-3 text-[13px] text-emerald-300" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</div>
-            : trialLeft > 0 ? <div className="rounded-xl border border-amber-800/60 bg-amber-400/5 p-3 text-[13px] text-amber-200" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</div>
-            : <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">{tr("You are on Free: {n} answers a day on every model. Pro removes every limit — and it includes Money.", { n: FREE_LIMITS.answersPerDay })}</div>}
+          {pro ? <div className="rounded-[18px] border border-[var(--c-pos)]/30 bg-[var(--c-soft)] p-3.5 text-[13.5px] font-bold text-[var(--c-pos)]" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</div>
+            : trialLeft > 0 ? <div className="rounded-[18px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[13.5px] font-bold text-[var(--c-ink)]" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</div>
+            : <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: {n} answers a day on every model. Pro removes every limit — and it includes Money.", { n: FREE_LIMITS.answersPerDay })}</div>}
 
           {/* 1 · the plan (what to pay) */}
           {!pro ? (
-            <section className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-400/10 to-transparent p-4" aria-label={tr("Attune Pro")}>
-              <p className="text-[12px] uppercase tracking-wider text-amber-300/90 mb-2">{tr("Attune Pro — the whole app")}</p>
-              <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-950 p-1" role="tablist" data-testid="plans">
+            <section className="rounded-[22px] border border-[var(--c-acc-2)]/40 bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" aria-label={tr("Attune Pro")}>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc-2)] mt-0 mb-3">{tr("Attune Pro — the whole app")}</p>
+              <div className="grid grid-cols-3 gap-1 rounded-[18px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-1" role="tablist" data-testid="plans">
                 {["month", "year", "life"].map((k) => (
                   <button key={k} role="tab" aria-selected={plan === k} onClick={() => setPlan(k)} data-testid={"plan-" + k}
-                    className={`relative rounded-lg py-2 text-[13px] font-medium transition-colors ${plan === k ? "bg-amber-400 text-slate-950" : "text-slate-300"}`}>
+                    className={`relative min-h-[52px] rounded-[14px] py-2 text-[13.5px] font-extrabold transition-colors duration-150 ${plan === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>
                     <span className="block">{tr(PLAN_TEXT[k][0])}</span>
-                    <span className={`block text-[10px] font-normal ${plan === k ? "text-slate-800" : "text-slate-500"}`} dir="ltr">{shown(k)}</span>
-                    {k === "year" ? <span className="absolute -top-2 end-1 text-[9px] px-1.5 rounded-full bg-emerald-400 text-slate-950 font-bold">{tr("Best value")}</span> : null}
+                    <span className={`block text-[11px] font-bold tabular-nums ${plan === k ? "opacity-90" : "text-[var(--c-mut)]"}`} dir="ltr">{shown(k)}</span>
+                    {k === "year" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold">{tr("Best value")}</span> : null}
                   </button>
                 ))}
               </div>
               <div className="text-center mt-4">
-                <p className="text-[clamp(26px,9vw,36px)] font-extrabold text-white leading-none" dir="ltr">{price}</p>
-                <p className="text-[12px] text-slate-400 mt-1.5">{tr(planNote)}</p>
+                <p className="text-[clamp(28px,9vw,38px)] font-black tracking-tight tabular-nums text-[var(--c-ink)] leading-none m-0" dir="ltr">{price}</p>
+                <p className="text-[12.5px] text-[var(--c-mut)] mt-1.5 mb-0">{tr(planNote)}</p>
               </div>
               <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1">
                 {["No daily limits", "Deal Check & Chat X-Ray", "Converters, slides, video", "Fit & Food Pro", "Money (Yusr) included", "Deep research & expert review"].map((b) => (
-                  <li key={b} className="flex items-start gap-1.5 text-[12px] text-slate-200"><Check size={13} className="text-amber-400 mt-0.5 shrink-0" />{tr(b)}</li>))}
+                  <li key={b} className="flex items-start gap-1.5 text-[12.5px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(b)}</li>))}
               </ul>
               {Store.available() ? (
-                <button onClick={storeBuy} disabled={busy} className="mt-4 w-full py-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-[15px] disabled:opacity-60" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
+                <button onClick={storeBuy} disabled={busy} className="mt-4 w-full min-h-[52px] py-3.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15.5px] disabled:opacity-60 transition-opacity duration-150" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
               ) : (
-                <p className="mt-4 text-[12px] text-slate-300 leading-relaxed rounded-lg border border-slate-800 bg-slate-950 p-2.5" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.")}</p>
+                <p className="mt-4 text-[12.5px] text-[var(--c-ink)] leading-relaxed rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.")}</p>
               )}
-              <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">{tr("Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.")}</p>
+              <p className="text-[11.5px] text-[var(--c-mut)] mt-2 mb-0 leading-relaxed">{tr("Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.")}</p>
             </section>
           ) : null}
 
           </div><div className="space-y-4">
           {/* 2 · what you get, app by app */}
           <section>
-            <h3 className="text-[13px] font-semibold text-slate-200 mb-2">{tr("What Pro gives you, app by app")}</h3>
+            <h3 className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2.5">{tr("What Pro gives you, app by app")}</h3>
             <div className="space-y-2">
               {BILLING_GROUPS.map((g) => (
-                <div key={g.id} className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-                  <button onClick={() => setOpenGroup(openGroup === g.id ? "" : g.id)} aria-expanded={openGroup === g.id} className="w-full flex items-center gap-3 px-3.5 py-3 text-start" data-testid={"group-" + g.id}>
-                    <span className="text-lg" aria-hidden="true">{g.icon}</span>
-                    <span className="flex-1 text-[14px] text-slate-100 font-medium">{tr(g.title)}</span>
-                    {g.id === "money" ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300">{tr("Included")}</span> : null}
-                    <span className={`text-slate-500 transition-transform ${openGroup === g.id ? "rotate-90" : "rtl:rotate-180"}`}>›</span>
+                <div key={g.id} className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] overflow-hidden">
+                  <button onClick={() => setOpenGroup(openGroup === g.id ? "" : g.id)} aria-expanded={openGroup === g.id} className="w-full min-h-[52px] flex items-center gap-3 px-3.5 py-3 text-start" data-testid={"group-" + g.id}>
+                    <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-bg)] text-lg" aria-hidden="true">{g.icon}</span>
+                    <span className="flex-1 text-[14.5px] text-[var(--c-ink)] font-extrabold">{tr(g.title)}</span>
+                    {g.id === "money" ? <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-pos)] border border-[var(--c-pos)]/30">{tr("Included")}</span> : null}
+                    <span className={`text-[var(--c-mut)] text-lg transition-transform duration-150 ${openGroup === g.id ? "rotate-90" : "rtl:rotate-180"}`}>›</span>
                   </button>
-                  {openGroup === g.id ? <ul className="px-3.5 pb-3 space-y-1.5">{g.items.map((it) => <li key={it} className="flex items-start gap-2 text-[12.5px] text-slate-300"><Check size={13} className="text-amber-400 mt-0.5 shrink-0" />{tr(it)}</li>)}</ul> : null}
+                  {openGroup === g.id ? <ul className="px-3.5 pb-3 space-y-1.5">{g.items.map((it) => <li key={it} className="flex items-start gap-2 text-[13px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(it)}</li>)}</ul> : null}
                 </div>
               ))}
             </div>
           </section>
 
           {/* 3 · Business systems (a separate, one-time price) */}
-          <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4" data-testid="business-card">
+          <section className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="business-card">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[14px] font-semibold text-white">🏗️ {tr("Business system")}</p>
-                <p className="text-[12px] text-slate-400 mt-0.5 leading-snug">{tr("A system built for your company (a shop, a clinic, a workshop…): unlimited records, Excel and app export.")}</p>
+                <p className="text-[15px] font-extrabold text-[var(--c-ink)] m-0">🏗️ {tr("Business system")}</p>
+                <p className="text-[12.5px] text-[var(--c-mut)] mt-0.5 mb-0 leading-snug">{tr("A system built for your company (a shop, a clinic, a workshop…): unlimited records, Excel and app export.")}</p>
               </div>
               <div className="text-end shrink-0">
-                <p className="text-[15px] font-bold text-white" dir="ltr">{shown("business")}</p>
-                <p className="text-[10px] text-slate-500">{tr(P.businessNote)}</p>
+                <p className="text-[17px] font-black tabular-nums text-[var(--c-ink)] m-0" dir="ltr">{shown("business")}</p>
+                <p className="text-[11px] text-[var(--c-mut)] m-0">{tr(P.businessNote)}</p>
               </div>
             </div>
-            <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">{tr("Trying a system is free (30 records a table). You activate each system once, from its own page in Business.")}</p>
+            <p className="text-[11.5px] text-[var(--c-mut)] mt-2.5 mb-0 leading-relaxed">{tr("Trying a system is free (30 records a table). You activate each system once, from its own page in Business.")}</p>
           </section>
 
           {/* 4 · everything side by side */}
-          <details className="rounded-2xl border border-slate-800 bg-slate-900 p-4" data-testid="compare">
-            <summary className="text-[13px] font-semibold text-slate-200 cursor-pointer select-none">{tr("Compare Free, Pro and Business")}</summary>
+          <details className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="compare">
+            <summary className="min-h-[28px] text-[14px] font-extrabold text-[var(--c-ink)] cursor-pointer select-none">{tr("Compare Free, Pro and Business")}</summary>
             <div className="mt-3 overflow-x-auto">
               <table className="w-full text-[11.5px] border-separate border-spacing-y-1">
-                <thead><tr className="text-slate-400"><th className="text-start font-medium pe-2">{tr("Feature")}</th><th className="font-medium px-1">{tr("Free")}</th><th className="font-medium px-1 text-amber-300">{tr("Pro")}</th><th className="font-medium px-1">{tr("Business")}</th></tr></thead>
+                <thead><tr className="text-[var(--c-mut)]"><th className="text-start font-extrabold pe-2">{tr("Feature")}</th><th className="font-extrabold px-1">{tr("Free")}</th><th className="font-extrabold px-1 text-[var(--c-acc-2)]">{tr("Pro")}</th><th className="font-extrabold px-1">{tr("Business")}</th></tr></thead>
                 <tbody>{COMPARE_ROWS.map((r) => (
-                  <tr key={r[0]} className="text-slate-200">
-                    <td className="pe-2 py-1.5 text-slate-300">{tr(r[0])}</td>
-                    {[1, 2, 3].map((i) => <td key={i} className={`px-1 text-center ${i === 2 ? "text-amber-200" : ""}`}>{tr(r[i])}</td>)}
+                  <tr key={r[0]} className="text-[var(--c-ink)]">
+                    <td className="pe-2 py-1.5 text-[var(--c-ink)]">{tr(r[0])}</td>
+                    {[1, 2, 3].map((i) => <td key={i} className={`px-1 text-center tabular-nums ${i === 2 ? "text-[var(--c-acc-2)] font-bold" : ""}`}>{tr(r[i])}</td>)}
                   </tr>))}</tbody>
               </table>
             </div>
@@ -11617,33 +11618,33 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
 
           {/* 5 · codes, restore */}
           {!pro ? (
-            <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+            <section className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
               {/* v6.29 Google Play's payments policy: on a Play build Pro is bought only through Google Play — no codes or keys */}
-              {!Store.available() ? <button onClick={() => setHaveCode((v) => !v)} className="text-[12px] text-slate-300 underline" data-testid="have-code">{tr("I have an activation code (company deals)")}</button> : null}
+              {!Store.available() ? <button onClick={() => setHaveCode((v) => !v)} className="min-h-[44px] text-[13px] font-bold text-[var(--c-ink)] underline underline-offset-2" data-testid="have-code">{tr("I have an activation code (company deals)")}</button> : null}
               {haveCode && !Store.available() ? <>
-                <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
-                  <span className="text-[11px] text-slate-500">{tr("Your request code")}</span>
-                  <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="font-mono text-sm text-white tracking-wider" data-testid="request-code">{req}</button>
+                <div className="mt-3 flex items-center justify-between rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-1.5">
+                  <span className="text-[11.5px] text-[var(--c-mut)]">{tr("Your request code")}</span>
+                  <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="min-h-[40px] font-mono text-sm font-bold text-[var(--c-ink)] tracking-wider" data-testid="request-code">{req}</button>
                 </div>
                 <div className="mt-3 flex gap-2">
                   <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tr("Paste your activation code (PRO1…)")} data-testid="pro-code"
-                    className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400" />
-                  <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="px-4 py-2 rounded-lg bg-slate-800 text-slate-100 text-sm disabled:opacity-40">{tr("Activate")}</button>
+                    className="flex-1 min-w-0 min-h-[44px] h-11 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
+                  <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="min-h-[44px] h-11 px-5 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[14px] font-extrabold disabled:opacity-40">{tr("Activate")}</button>
                 </div>
               </> : null}
               <div className="flex items-center justify-between mt-3">
-                {!Store.available() && ATTUNE_PUBLIC_KEY ? <button onClick={() => setShowOld((v) => !v)} className="text-[11px] text-slate-500">{tr("I have an older key")}</button> : <span />}
-                {Store.available() ? <button onClick={restore} className="text-[12px] text-slate-300">{tr("Restore purchase")}</button> : null}
+                {!Store.available() && ATTUNE_PUBLIC_KEY ? <button onClick={() => setShowOld((v) => !v)} className="min-h-[40px] text-[12px] font-bold text-[var(--c-mut)]">{tr("I have an older key")}</button> : <span />}
+                {Store.available() ? <button onClick={restore} className="min-h-[44px] h-11 px-4 rounded-[14px] border border-[var(--c-ln)] text-[13px] font-bold text-[var(--c-ink)]">{tr("Restore purchase")}</button> : null}
               </div>
               {showOld && !Store.available() ? (
                 <div className="mt-2 flex gap-2">
-                  <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…" className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200" />
-                  <button onClick={redeemOld} className="px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm">{tr("Activate")}</button>
+                  <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…" className="flex-1 min-w-0 min-h-[44px] h-11 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
+                  <button onClick={redeemOld} className="min-h-[44px] h-11 px-4 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13.5px] font-bold">{tr("Activate")}</button>
                 </div>
               ) : null}
             </section>
           ) : null}
-          <p className="text-[11px] text-slate-600 pb-2">{tr("Everything runs on your phone: no account, nothing uploaded. Your plan is checked on the phone, even offline.")}</p>
+          <p className="text-[11.5px] text-[var(--c-mut)] pb-2 m-0">{tr("Everything runs on your phone: no account, nothing uploaded. Your plan is checked on the phone, even offline.")}</p>
           </div>
         </div>
       </div>
@@ -11664,10 +11665,10 @@ if (typeof window !== "undefined") {
 function TextSize() {
   const [z, setZ] = useState(() => { try { return Number(localStorage.getItem(TEXT_KEY)) || 100; } catch (e) { return 100; } });
   return (
-    <div className="inline-flex rounded-lg border border-slate-700 overflow-hidden text-[12px]" data-testid="text-size">
+    <div className="inline-flex gap-1 p-1 rounded-full border border-[var(--c-ln)] bg-[var(--c-bg)] text-[13px]" data-testid="text-size">
       {[[88, "A−"], [100, "A"], [115, "A+"]].map(([v, label]) => (
         <button key={v} onClick={() => { setZ(v); try { localStorage.setItem(TEXT_KEY, String(v)); } catch (e) {} applyTextZoom(v); }} data-zoom={v}
-          className={`px-3 py-1.5 ${Math.abs(z - v) < 6 ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300"}`}>{label}</button>
+          className={`h-10 min-w-[48px] px-3.5 rounded-full font-extrabold transition-colors duration-150 ${Math.abs(z - v) < 6 ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>{label}</button>
       ))}
     </div>
   );
@@ -11689,19 +11690,19 @@ function KeyboardRow() {
   if (!N || !N.keyboardState) return null;
   return (
     <div className="flex items-center gap-2 mb-3" data-testid="keyboard-row">
-      <span className="flex-1 min-w-0"><span className="block text-[12px] text-slate-300">{tr("Attune keyboard")}</span>
-        <span className="block text-[11px] text-slate-500">{on ? tr("On — pick it from the keyboard button when you type") : tr("Improve, translate, reply and better prompts in every app, offline")}</span></span>
-      <button onClick={() => N.keyboardSetup(on ? "pick" : "settings")} className="shrink-0 rounded-lg border border-teal-700 px-2.5 py-1 text-[12px] text-teal-200" data-testid="keyboard-setup">{on ? tr("Switch to it") : tr("Turn on")}</button>
+      <span className="flex-1 min-w-0"><span className="block text-[13px] font-bold text-[var(--c-ink)]">{tr("Attune keyboard")}</span>
+        <span className="block text-[11.5px] text-[var(--c-mut)]">{on ? tr("On — pick it from the keyboard button when you type") : tr("Improve, translate, reply and better prompts in every app, offline")}</span></span>
+      <button onClick={() => N.keyboardSetup(on ? "pick" : "settings")} className="shrink-0 min-h-[44px] h-11 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] px-4 text-[13px] font-extrabold" data-testid="keyboard-setup">{on ? tr("Switch to it") : tr("Turn on")}</button>
     </div>);
 }
 
 function LangSwitch({ className = "" }) {
   const cur = getLang();
   return (
-    <div className={`inline-flex flex-wrap rounded-lg border border-slate-700 overflow-hidden text-[12px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
+    <div className={`inline-flex flex-wrap gap-1.5 text-[13px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
       {UI_LANGS.map(([id, label]) => (
         <button key={id} onClick={() => { if (id !== cur) setLang(id); }} lang={id} data-lang={id}
-          className={`px-2.5 py-1.5 ${id === cur ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300"}`}>{label}</button>
+          className={`min-h-[44px] h-11 px-3.5 rounded-full border font-extrabold transition-colors duration-150 ${id === cur ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>{label}</button>
       ))}
     </div>
   );
