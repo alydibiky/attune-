@@ -6720,4 +6720,10 @@ export const AR = {
   "{a} of {b} doses this week": "{a} من {b} جرعات الأسبوع ده",
   "{a} → {b} over {n} reports": "{a} ← {b} في {n} تحاليل",
   "{p}%": "{p}%",
+  // v7.4 Chat, Assistants, Projects (Gemini Area 3)
+  "Start a chat": "ابدأ شات",
+  "Standing instructions (used in every chat)": "التعليمات الثابتة (بتتستخدم في كل شات)",
+  "Starters (one tap to ask)": "أسئلة جاهزة (دوسة واحدة)",
+  "A study plan, a home renovation, a small business — keep its chats and files together.": "خطة مذاكرة، تشطيب بيت، مشروع صغير — خلّي الشاتات والملفات بتاعته مع بعض.",
+  "Workspaces": "مساحات الشغل",
 };

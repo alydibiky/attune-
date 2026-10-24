@@ -3,7 +3,14 @@
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 
 ## Where things stand
-- **`main` = v7.3** (versionCode 115) — **Gemini step 2 (Health) is built**: Health opens on a calm view (`health-ui.jsx`
+- **`main` = v7.4** (versionCode 116) — **Gemini step 3 (Chat) is built**: the empty chat is one quiet card (starters with a
+  chevron); the "/" list opens above the Chat box too while "/" is typed (`SlashMenu` from cmdbox-ui.jsx; a command fills the box,
+  an app opens), scrolling in its own box; answers sit in a quiet card (`chat-answer`) with Thought / "Checked by code" as pills;
+  Assistants: cards with the icon and actions on top and the full name under (never cut); on a computer a tap opens the assistant
+  beside the list (instructions, starters, what it learned, Start a chat) — on a phone a tap still starts the chat; Projects:
+  each card shows chats · files · last change, a calm empty state; the sidebar has **Workspaces** (Assistants, Projects, with
+  counts; test ids `side-ws-*`). e2e: `e2e_v770chat.py`. Chat.jsx: markup only (the "/" list is the Home box's own).
+- v7.3 (versionCode 115) — **Gemini step 2 (Health) is built**: Health opens on a calm view (`health-ui.jsx`
   HealthPage): the box first (the SAME reader as the Home box, `doFromHome` — food, a dose, a period…, with Undo; "health
   report" opens level 2; the rest goes to Chat), Fit & Food today ("795 kcal left"), Family health (next doses with **Take**,
   "runs out" + I refilled), Cycle (kind words, never red; computer: Period started today · Calendar), "See all → Health Report".
@@ -58,7 +65,7 @@ Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BR
 
 ## NEXT: the Gemini step (Ali: "when you finish and push we will start the Gemini thing")
 Gemini designs each area creatively as **HTML mock-ups only (no code)**; Ali approves; **Claude builds it into the app himself**
-(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · (Money page,
+(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · (Money page,
 Follow-ups, Guardian, Deal Check) · 2 Health (Fit & Food, Family health, Cycle) · 3 Chat (chat, Assistants, Projects) ·
 4 Business hub + Books + Shop · 5 Mind & learning · 6 Tools · 7 Settings, sidebar, How to use. The message Ali sends Gemini is in the
 last chat; the brief is `GEMINI_DESIGN_BRIEF.md`. When an HTML mock-up arrives: render it locally (Tailwind CDN is blocked — compile

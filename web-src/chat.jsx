@@ -57,8 +57,9 @@ import { factsBlock, checkFacts, keepCovering, packsCover } from "./knowledge.js
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
-  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap, Phone, PhoneOff, Languages,
+  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap, Phone, PhoneOff, Languages, ChevronRight,
 } from "lucide-react";
+import { SlashMenu } from "./cmdbox-ui.jsx";   // v7.4 the "/" list in Chat too (Gemini Area 3)
 import { sayable, endsCall } from "./voicecall.js";   // v6.41 (H2)
 
 import { summary as sideSummary } from "./side-ui.jsx";
@@ -1975,12 +1976,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           <button onClick={() => { setPending(null); setText(""); }} className="mt-4 min-h-[44px] text-[13px] font-bold text-[var(--c-mut)] hover:text-[var(--c-ink)]">{tr("Leave — normal chat")}</button>
         </div>
       ) : messages.length === 0 && MINIMAL ? (
-        <div className="pt-16 px-2" data-testid="chat-empty-min">
-          <p className="text-[26px] text-[var(--c-ink)] font-black tracking-tight">{tr("What can I help with?")}</p>
-          <div className="mt-4 flex flex-col">
+        <div className="pt-12 lg:pt-20 px-1 max-w-[760px] mx-auto" data-testid="chat-empty-min">
+          <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-4 pt-5 pb-2 lg:px-7 lg:pt-7 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+          <p className="text-[24px] lg:text-[28px] text-[var(--c-ink)] font-black tracking-tight m-0">{tr("What can I help with?")}</p>
+          <div className="mt-3 flex flex-col">
             {STARTERS.filter((x) => x[1] !== "Car question" && x[1] !== "Translate" && x[1] !== "Explain simply").map(([, label, seed]) => (
               <button key={label} onClick={() => { setText(tr(seed)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
-                className="h-12 text-start text-[15px] font-semibold text-[var(--c-mut)] hover:text-[var(--c-acc)] border-b border-[var(--c-ln)] last:border-0">{tr(label)}</button>))}
+                className="min-h-[52px] flex items-center justify-between gap-2 text-start text-[15px] font-semibold text-[var(--c-mut)] hover:text-[var(--c-acc)] border-b border-[var(--c-ln)] last:border-0">{tr(label)}<ChevronRight size={16} className="shrink-0 rtl:rotate-180" /></button>))}
+          </div>
           </div>
           {api.trialDays && api.trialDays() > 0 ? <button onClick={() => api.openPlan && api.openPlan()} className="mt-3 min-h-[44px] text-[13px] font-bold text-[var(--c-warn)]" data-testid="home-trial">★ {tr("Pro trial · {n} days left", { n: api.trialDays() })}</button> : null}
         </div>
@@ -2053,10 +2056,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
           </div>
         ) : (
-          <div key={m.id} className="group att-msg">
+          // v7.4 (Gemini's Area 3): an answer sits in a quiet card — its checks as pills on top, the text, then the actions
+          <div key={m.id} className={"group att-msg" + (m.text && !m.streaming ? " rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-4 pt-3.5 pb-2 shadow-[0_2px_10px_rgba(0,0,0,0.05)]" : "")} data-testid="chat-answer">
             {m.thinking ? (
               <div className="mb-2">
-                <button onClick={() => setOpenThought((o) => ({ ...o, [m.id]: !o[m.id] }))} className="flex items-center gap-1.5 text-[12px] text-[var(--c-mut)]">
+                <button onClick={() => setOpenThought((o) => ({ ...o, [m.id]: !o[m.id] }))} className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--c-mut)] min-h-[30px] px-2.5 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf-2)]">
                   <Brain size={13} className={m.streaming && !m.text ? "text-[var(--c-acc)] animate-pulse" : ""} />
                   {m.streaming && !m.text ? tr("Thinking…") : "Thought" + (m.secs ? " for " + m.secs + " s" : "")}
                   <ChevronDown size={13} className={openThought[m.id] ? "rotate-180" : ""} />
@@ -2085,7 +2089,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.verified ? (
               <div className="mt-1.5 text-[11px]" data-testid="verified">
-                <button onClick={() => setOpenThought((o) => ({ ...o, ["v" + m.id]: !o["v" + m.id] }))} className="text-[var(--c-pos)] flex items-center gap-1">
+                <button onClick={() => setOpenThought((o) => ({ ...o, ["v" + m.id]: !o["v" + m.id] }))} className="text-[var(--c-pos)] inline-flex items-center gap-1 min-h-[30px] px-2.5 rounded-full border border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10 font-extrabold">
                   <CheckCircle2 size={12} />{tr("Checked by running code on this phone")} <ChevronDown size={11} className={openThought["v" + m.id] ? "rotate-180" : ""} /></button>
                 {openThought["v" + m.id] ? <Md text={"```python\n" + m.verified.code + "\n```\n\n" + tr("It printed:") + "\n```\n" + String(m.verified.output || "").trim() + "\n```"} /> : null}
               </div>
@@ -2305,6 +2309,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
            while typing — the bottom bar steps aside for the keyboard) ---- */}
       <div ref={composerRef} className={`att-shift fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-[var(--c-bg)] via-[var(--c-bg)] to-transparent`} data-testid="composer"
         style={{ bottom: typing ? "env(safe-area-inset-bottom)" : "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
+        {/* v7.4 (Gemini's Area 3): the "/" list opens above the box only while "/" is typed — a command fills the box, an app opens */}
+        {MINIMAL && /^\/\S*$/.test(text) ? <div className="max-w-2xl mx-auto mb-2 calm bg-transparent! max-h-[46vh] overflow-y-auto att-scroll rounded-[20px] shadow-[0_6px_24px_rgba(0,0,0,0.18)]" data-testid="chat-slash"><SlashMenu text={text}
+          onPick={(c) => { if (c.group === "open") { setText(""); window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: c.app } })); } else { setText("/" + (getLang() === "ar" ? c.ar[0] : c.id) + " "); setTimeout(() => taRef.current && taRef.current.focus(), 30); } }} /></div> : null}
         <div className="max-w-2xl mx-auto bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[22px] p-2 shadow-[0_4px_18px_rgba(0,0,0,0.10)] focus-within:border-[var(--c-acc)] transition-colors duration-150">
           {files.length ? (
             <div className="flex flex-wrap gap-1.5 mb-2 ms-1">

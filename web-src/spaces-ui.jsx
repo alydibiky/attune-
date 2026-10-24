@@ -17,7 +17,7 @@ import {
 } from "./spaces.js";
 import { PANES, GRID3 } from "./desk.jsx";
 import { card as kCard, inp, area, btnP, btnS, label as kLabel, chip } from "./ui-kit.jsx";
-import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain, Upload, Pin, Eraser } from "lucide-react";
+import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain, Upload, Pin, Eraser, ChevronRight } from "lucide-react";
 
 const card = kCard;
 const input = area;
@@ -26,6 +26,7 @@ const btnGhost = btnS;
 const iconBtn = "w-11 h-11 shrink-0 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]";
 const well = "w-11 h-11 shrink-0 rounded-[14px] bg-[var(--c-soft)] flex items-center justify-center";
 
+const wideNow = () => typeof window !== "undefined" && window.innerWidth >= 1024;
 function share(native, flash, text) {
   if (native && native.share) { try { native.share(text); return; } catch (e) {} }
   try { navigator.clipboard.writeText(text); flash && flash(tr("Copied")); } catch (e) {}
@@ -38,6 +39,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
   const [drafting, setDrafting] = useState(false);
   const reload = () => setList(loadAssistants());
   useSubBack(!!edit, () => setEdit(null));   // v5.34: Back closes the edit form first
+  const [sel, setSel] = useState(null);      // v7.4: the assistant open beside the list (computer)
   // v6.40 (C1): an assistant as one file (with what it learned), and opening one
   const [rulesV, setRulesV] = useState(0);
   const importRef = useRef(null);
@@ -107,25 +109,48 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
         <Plus size={16} /> {tr("New assistant")}</button>
       <button onClick={() => importRef.current && importRef.current.click()} className={btnGhost + " w-full lg:w-auto lg:px-5 lg:ms-2 flex items-center justify-center gap-2"} data-testid="assistant-import"><Upload size={15} /> {tr("Open an assistant file")}</button>
       <input ref={importRef} type="file" accept=".json,application/json" className="hidden" data-testid="assistant-import-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; importOne(f); }} />
-      <div className="grid gap-3 lg:grid-cols-3">
+      {/* v7.4 (Gemini's Area 3): a card per assistant (its name never cut); on a computer a tap opens it beside the list —
+          its instructions, starters and what it learned — and "Start a chat"; on a phone a tap starts the chat, as before */}
+      <div className={sel ? "lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-5 lg:items-start" : ""}>
+      <div className={"grid gap-3 " + (sel ? "lg:grid-cols-2" : "lg:grid-cols-3")}>
         {list.map((a) => (
-          <div key={a.id} className={card + " p-3.5 flex items-center gap-2"} data-testid="assistant-item">
-            <button onClick={() => startChat({ assistantId: a.id })} className="flex-1 min-w-0 flex items-center gap-3 text-start">
-              <span className={well + " text-2xl"}>{a.emoji}</span>
-              <span className="min-w-0">
-                <span className="block text-[14.5px] text-[var(--c-ink)] font-extrabold truncate" dir="auto">{tr(a.name)}</span>
-                <span className="block text-[12px] text-[var(--c-mut)] leading-snug line-clamp-2" dir="auto">{tr(a.desc || "")}</span>
-              </span>
+          <div key={a.id} className={card + " p-3.5 flex flex-col gap-2 " + (sel && sel.id === a.id ? "border-[var(--c-acc-2)]!" : "")} data-testid="assistant-item">
+            {/* the icon and the actions on top, the name and what it does under them — so the name is never squeezed */}
+            <div className="flex items-start gap-2">
+              <button onClick={() => (wideNow() ? setSel(a) : startChat({ assistantId: a.id }))} className={well + " text-2xl"} aria-hidden="true" tabIndex={-1}>{a.emoji}</button>
+              <span className="flex-1" />
+              {sel && sel.id === a.id ? <span className="hidden lg:inline-flex self-center text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]">{tr("Open")}</span> : null}
+              <button onClick={() => exportOne(a)} className={iconBtn} title={tr("Save as a file")} data-testid="assistant-export"><Share2 size={15} /></button>
+              {isBuiltinAssistant(a.id) ? (
+                <button onClick={() => setEdit({ ...a, id: undefined, name: tr(a.name) + " (" + tr("mine") + ")", startersText: (a.starters || []).join("\n") })} className={iconBtn} title={tr("Copy and edit")}><Copy size={15} /></button>
+              ) : (<>
+                <button onClick={() => setEdit({ ...a, startersText: (a.starters || []).join("\n") })} className={iconBtn} title={tr("Edit")}><PenLine size={15} /></button>
+                <button onClick={() => { deleteAssistant(a.id); if (sel && sel.id === a.id) setSel(null); reload(); }} className={iconBtn} title={tr("Delete")}><Trash2 size={15} /></button>
+              </>)}
+            </div>
+            <button onClick={() => (wideNow() ? setSel(a) : startChat({ assistantId: a.id }))} className="w-full text-start min-h-[44px]" data-testid="assistant-open">
+              <span className="block text-[15px] text-[var(--c-ink)] font-extrabold leading-snug" dir="auto">{tr(a.name)}</span>
+              <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-0.5" dir="auto">{tr(a.desc || "")}</span>
             </button>
-            <button onClick={() => exportOne(a)} className={iconBtn} title={tr("Save as a file")} data-testid="assistant-export"><Share2 size={15} /></button>
-            {isBuiltinAssistant(a.id) ? (
-              <button onClick={() => setEdit({ ...a, id: undefined, name: tr(a.name) + " (" + tr("mine") + ")", startersText: (a.starters || []).join("\n") })} className={iconBtn} title={tr("Copy and edit")}><Copy size={15} /></button>
-            ) : (<>
-              <button onClick={() => setEdit({ ...a, startersText: (a.starters || []).join("\n") })} className={iconBtn} title={tr("Edit")}><PenLine size={15} /></button>
-              <button onClick={() => { deleteAssistant(a.id); reload(); }} className={iconBtn} title={tr("Delete")}><Trash2 size={15} /></button>
-            </>)}
           </div>
         ))}
+      </div>
+      {sel ? (() => { const a = list.find((x) => x.id === sel.id) || sel, rl = rulesFor(a.id); return (
+        <div className={"hidden lg:block " + card + " p-5 space-y-3 border-[var(--c-acc-2)]!"} data-testid="assistant-detail">
+          <div className="flex items-start gap-3">
+            <span className={well + " text-2xl"}>{a.emoji}</span>
+            <div className="flex-1 min-w-0"><p className="m-0 text-[18px] font-black text-[var(--c-ink)] leading-snug" dir="auto">{tr(a.name)}</p>
+              <p className="m-0 text-[12.5px] text-[var(--c-mut)]" dir="auto">{tr(a.desc || "")}</p></div>
+            <button onClick={() => startChat({ assistantId: a.id })} className={btnMain + " shrink-0"} data-testid="assistant-start">{tr("Start a chat")} →</button>
+          </div>
+          {a.instructions ? <div><p className={kLabel + " mt-1 mb-1.5"}>{tr("Standing instructions (used in every chat)")}</p>
+            <p className="m-0 text-[13px] text-[var(--c-ink)] leading-relaxed whitespace-pre-wrap rounded-[14px] bg-[var(--c-surf-2)] p-3 max-h-56 overflow-y-auto att-scroll" dir="auto">{tr(a.instructions)}</p></div> : null}
+          {(a.starters || []).length ? <div><p className={kLabel + " mb-1.5"}>{tr("Starters (one tap to ask)")}</p>
+            <div className="grid grid-cols-2 gap-2">{a.starters.map((st) => <button key={st} onClick={() => { try { localStorage.setItem("attune:chat:prefill", tr(st)); } catch (e) {} startChat({ assistantId: a.id }); }}
+              className="min-h-[48px] text-start rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 py-2 text-[12.5px] font-bold text-[var(--c-ink)] hover:border-[var(--c-acc)]" dir="auto">{tr(st)}</button>)}</div></div> : null}
+          {rl.length ? <div className="rounded-[14px] bg-[var(--c-surf-2)] p-3"><p className="m-0 mb-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Learned from your corrections")}</p>
+            {rl.map((r, i) => <p key={i} className="m-0 text-[12.5px] text-[var(--c-ink)]" dir="auto">• {r.text}</p>)}</div> : null}
+        </div>); })() : null}
       </div>
     </div>
   );
@@ -143,6 +168,7 @@ export function ProjectsPage({ startChat, openChat, flash }) {
   const fileRef = useRef(null);
   const reload = () => setList(loadProjects());
   const cur = list.find((p) => p.id === openId) || null;
+  const allChats = useMemo(() => loadChats(), [list, openId]);
   const chats = useMemo(() => (cur ? loadChats().filter((c) => c.projectId === cur.id) : []), [openId, list]);
 
   const saveEdit = () => {
@@ -256,13 +282,19 @@ export function ProjectsPage({ startChat, openChat, flash }) {
     <div className="calm att-in space-y-4" data-testid="projects-page">
       <p className="text-[13px] text-[var(--c-mut)] leading-relaxed lg:max-w-[70ch]">{tr("A project keeps related chats together with shared instructions and your own files — like a folder the assistant has read.")}</p>
       <button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [] })} className={btnMain + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-2"} data-testid="project-new"><Plus size={16} /> {tr("New project")}</button>
-      {list.length === 0 ? <p className="text-[13px] text-[var(--c-mut)] text-center py-6">{tr("No projects yet.")}</p> : <div className={GRID3}>{list.map((p) => (
+      {/* v7.4 (Gemini's Area 3): a calm empty state, and each project with its chats, files and when it last changed */}
+      {list.length === 0 ? (
+        <div className={card + " p-6 text-center space-y-2"} data-testid="projects-empty">
+          <span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-[var(--c-soft)] text-2xl">📁</span>
+          <p className="m-0 text-[15px] font-extrabold text-[var(--c-ink)]">{tr("No projects yet.")}</p>
+          <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("A study plan, a home renovation, a small business — keep its chats and files together.")}</p>
+        </div>) : <div className={GRID3}>{list.map((p) => { const cs = allChats.filter((c) => c.projectId === p.id), last = Math.max(p.updated || 0, ...cs.map((c) => c.updated || 0)); return (
         <button key={p.id} onClick={() => setOpenId(p.id)} className={card + " w-full p-3.5 min-h-[64px] flex items-center gap-3 text-start hover:border-[var(--c-acc)]"} data-testid="project-item">
           <span className={well + " text-2xl"}>{p.emoji}</span>
-          <span className="flex-1 min-w-0"><span className="block text-[14.5px] text-[var(--c-ink)] font-extrabold truncate" dir="auto">{p.name}</span>
-            <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{tr("{k} files", { k: (p.knowledge || []).length })}</span></span>
-        </button>
-      ))}</div>}
+          <span className="flex-1 min-w-0"><span className="block text-[14.5px] text-[var(--c-ink)] font-extrabold leading-snug" dir="auto">{p.name}</span>
+            <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{tr("{n} chats · {k} files", { n: cs.length, k: (p.knowledge || []).length })}{last > 0 ? " · " + tr("updated {d}", { d: new Date(last).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) }) : ""}</span></span>
+          <ChevronRight size={16} className="shrink-0 text-[var(--c-mut)] rtl:rotate-180" />
+        </button>); })}</div>}
     </div>
   );
 }

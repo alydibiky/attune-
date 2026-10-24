@@ -3,7 +3,8 @@
 // New chat, search, the main places, every tool, and the recent chats; the open chat or tool
 // fills the rest, and the chat reads in a centred column. Phones keep the bottom bar.
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Search, PanelLeft, ChevronDown, Cpu, User, Crown, ShieldCheck, LayoutGrid, PenLine, Trash2, Lock, HelpCircle } from "lucide-react";
+import { Plus, Search, PanelLeft, ChevronDown, Cpu, User, Crown, ShieldCheck, LayoutGrid, PenLine, Trash2, Lock, HelpCircle, Bot, Folder } from "lucide-react";
+import { loadAssistants, loadProjects } from "./spaces.js";   // v7.4 Workspaces in the sidebar
 import { tr } from "./i18n.js";
 import { useBackDepth } from "./backstack.js";
 
@@ -124,6 +125,13 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
           <div className="mb-2" data-testid="side-tool-hits">{toolHits.slice(0, 8).map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>) : null}
         {!nq ? (<>
           {places.map(([id, label, Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}
+          {/* v7.4 (Gemini's Area 3): Workspaces — your assistants and projects, one tap away, with how many */}
+          <p className="px-3 pt-4 pb-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] m-0">{tr("Workspaces")}</p>
+          {[["assistants", "Assistants", Bot, (() => { try { return loadAssistants().length; } catch (e) { return 0; } })()], ["projects", "Projects", Folder, (() => { try { return loadProjects().length; } catch (e) { return 0; } })()]].map(([id, label, Icon, n]) => (
+            <button key={id} onClick={() => navTo(id)} data-testid={"side-ws-" + id}
+              className={"w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[14px] text-[14px] font-bold text-start transition-colors duration-150 " + (mode === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]")}>
+              <Icon size={17} className={mode === id ? "" : "text-[var(--c-mut)]"} /><span className="flex-1 truncate">{tr(label)}</span>
+              {n ? <span className={"text-[11px] font-extrabold tabular-nums px-2 py-0.5 rounded-full " + (mode === id ? "bg-black/15" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")}>{n}</span> : null}</button>))}
           {/* v6.25 (Ali picked A + C): the tools you pin from the Tools page (★), not a list of all 33 */}
           {showPins && pinned.length ? <p className="px-3 pt-4 pb-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] m-0">{tr("Pinned")}</p> : null}
           <div data-testid="side-pins">{(showPins ? pinned : []).map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>

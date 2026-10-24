@@ -67,9 +67,11 @@ with sync_playwright() as p:
     pre = page.evaluate("() => { const c = getComputedStyle(document.querySelector('[data-testid=code-box] pre')); return [c.overscrollBehaviorY, c.overflowY]; }")
     check(pre[0] == "auto", "same for code boxes (%s)" % pre)
     # a real wheel scroll that starts over the table moves the page
-    page.evaluate("window.scrollTo(0, 0)")
+    # (v7.4: answers sit in a card now, so the table starts lower — bring its top to 150 px first, so the pointer is over the
+    #  table and not over the box at the bottom of the screen)
+    page.evaluate("() => { const t = [...document.querySelectorAll('[data-testid=md-table]')].pop(); window.scrollTo(0, t.getBoundingClientRect().top + window.scrollY - 150); }")
+    page.wait_for_timeout(100)
     box = page.locator("[data-testid=md-table]").last.bounding_box()
-    page.evaluate("window.scrollTo(0, 0)"); page.wait_for_timeout(100)
     y0 = page.evaluate("window.scrollY")
     page.mouse.move(box["x"] + 50, min(box["y"] + 40, 700)); page.mouse.wheel(0, 400); page.wait_for_timeout(400)
     check(page.evaluate("window.scrollY") > y0, "scrolling with the pointer over the table scrolls the page")
