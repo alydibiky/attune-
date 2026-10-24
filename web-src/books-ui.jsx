@@ -14,6 +14,7 @@ import { PurchasesModule } from "./books-purchases.jsx";
 import { StockModule } from "./books-stock.jsx";
 import { MoneyModule } from "./books-money.jsx";
 import { ReportsModule } from "./books-reports.jsx";
+import { SeeAll } from "./biz-dash-ui.jsx";
 import { useSubBack } from "./backstack.js";
 import { EtaSettings, VaultSection, UsersSection, CurrencySection, PriceListSection, UserLock, autoSnapshot, actorCan } from "./books-extras.jsx";
 
@@ -77,7 +78,7 @@ export function BooksApp({ flash, saveFile, share, onBack, openPlan, goCustom })
           </div>
           <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
           <div className="flex-1 min-w-0 overflow-auto pb-4">
-            <div className="max-w-3xl mx-auto px-4 pt-4">
+            <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-4">
               {tab === "home" ? <Home /> : tab === "sales" ? <SalesModule /> : tab === "buy" ? <PurchasesModule /> : tab === "stock" ? <StockModule /> : tab === "money" ? <MoneyModule /> : <ReportsModule />}
             </div>
           </div>
@@ -147,6 +148,8 @@ function Home() {
         </Card>
       </Section>
       </div>
+      {!empty && actorCan("profit") ? <div className="mb-3"><SeeAll testid="books-open-report" onClick={() => goTab("reports")} title={L("See all → Books Report", "شوف الكل ← تقرير الدفاتر")}
+        sub={<>{L("Stock value", "قيمة المخزون")} <Money v={d.stockValue} /> · {L("sales vs purchases, ageing 0–30 / 31–60 / 60+, top customers, Excel", "المبيعات والمشتريات، أعمار الديون، أكبر العملاء، إكسل")}</>} cta={L("Open", "افتح")} /></div> : null}
       <p className={`text-[12px] ${th.sub} pb-4`}>{L("Stock value", "قيمة المخزون")}: <Money v={d.stockValue} /> · {L("Figures come only from your posted documents.", "الأرقام متاخدة من مستنداتك المترحّلة بس.")}</p>
     </div>
   );

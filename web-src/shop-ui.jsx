@@ -17,6 +17,8 @@ import * as CAT from "./catalogue.js";
 import { sharePdf } from "./books-docs.jsx";
 import * as SP from "./shop-pro.js";
 import { ReturnSheet, OffersPanel, ShopReports } from "./shop-pro-ui.jsx";   // v6.44: returns, offers, loyalty, reports
+import { ShopReportView, SeeAll } from "./biz-dash-ui.jsx";   // v7.5: the Shop Report
+import { useSubBack } from "./backstack.js";
 
 const card = K.card;
 const btnP = K.btnP;
@@ -233,13 +235,14 @@ function Staff({ shop, setShop }) {
     </div>);
 }
 
-function Close({ books, shop, setShop, share }) {
+function Close({ books, shop, setShop, share, onReport }) {
   const [counted, setCounted] = useState(""), [float, setFloat] = useState(shop.float != null ? String(B.fromMinor(shop.float)) : "");
   const z = S.dayClose(books, today(), counted === "" ? null : toM(counted), toM(float || 0) || 0);
   const cur = books.currency;
   const text = `${books.company.name} — ${z.day}\n${tr("Sales")}: ${z.count} · ${money(z.sales, cur)}\n${tr("Cash")}: ${money(z.byMethod.cash, cur)} · ${tr("Card")}: ${money(z.byMethod.card, cur)} · ${tr("Wallet")}: ${money(z.byMethod.wallet, cur)} · ${tr("On credit")}: ${money(z.byMethod.credit, cur)}\n${tr("Cash expected")}: ${money(z.expectedCash, cur)}${z.counted != null ? `\n${tr("Counted")}: ${money(z.counted, cur)} (${z.difference >= 0 ? "+" : ""}${money(z.difference, cur)})` : ""}`;
   return (
     <div className="space-y-2" data-testid="shop-close">
+      {onReport ? <SeeAll testid="shop-close-report" onClick={onReport} title={tr("See all → Shop Report")} sub={tr("Today and this week, payment methods, best sellers, staff and closes")} cta={tr("Report")} /> : null}
       <div className={card + " p-4 space-y-1"}>
         <p className={K.label + " m-0"}>{tr("Today")} · {tr("{n} sales", { n: z.count })}</p>
         <p className="text-[28px] font-black tracking-tight tabular-nums m-0 pb-1" dir="ltr" data-testid="shop-close-total">{money(z.sales, cur)}</p>
@@ -264,7 +267,10 @@ const TABS = [["sell", "Sell", ShoppingCart], ["stock", "Stock", Package], ["cus
 export function ShopApp({ onBack, flash, scanBarcode, share }) {
   const [books, setBooksRaw] = useState(null);
   const [shop, setShopRaw] = useState(() => S.loadShop());
-  const [tab, setTab] = useState("sell");
+  const [tab, setTabRaw] = useState("sell");
+  const [report, setReport] = useState(false);   // v7.5: the Shop Report (Gemini's Area 4 mock-up)
+  const setTab = (x) => { setReport(false); setTabRaw(x); };
+  useSubBack(report, () => setReport(false));
   useEffect(() => { loadBooks().then((b) => setBooksRaw(b || Ops.EMPTY())).catch(() => setBooksRaw(Ops.EMPTY())); }, []);
   const setBooks = (b) => { setBooksRaw(b); saveBooks(b).catch(() => flash(tr("Couldn't save — the phone's storage may be full"))); };
   const setShop = (x) => setShopRaw(S.saveShop(x));
@@ -283,15 +289,19 @@ export function ShopApp({ onBack, flash, scanBarcode, share }) {
     } catch (e) { flash(String(e.message || e)); }
   }} /></section>);
   return (
-    <section className="calm min-h-full px-3 pb-24 space-y-3.5 bg-[var(--c-bg)] text-[var(--c-ink)]" data-testid="shop-app">
+    <section className="calm min-h-full px-3 pb-24 lg:pb-8 space-y-3.5 bg-[var(--c-bg)] text-[var(--c-ink)]" data-testid="shop-app">
       {head}
-      {tab === "sell" ? <Sell books={books} setBooks={setBooks} shop={shop} setShop={setShop} scanBarcode={scanBarcode} share={share} flash={flash} /> : null}
-      {tab === "stock" ? <><Stock books={books} setBooks={setBooks} shop={shop} share={share} flash={flash} /><OffersPanel books={books} shop={shop} setShop={setShop} /></> : null}
-      {tab === "customers" ? <Customers books={books} setBooks={setBooks} share={share} flash={flash} /> : null}
-      {tab === "staff" ? <Staff shop={shop} setShop={setShop} /> : null}
-      {tab === "close" ? <Close books={books} shop={shop} setShop={setShop} share={share} /> : null}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-[var(--c-surf)] border-t border-[var(--c-ln)] grid grid-cols-5 px-1" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="shop-nav">
-        {TABS.map(([id, l, Ic]) => <button key={id} onClick={() => setTab(id)} className={"h-16 flex flex-col items-center justify-center gap-0.5 text-[11px] font-extrabold transition-colors duration-150 " + (tab === id ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)]")} data-testid={"shop-tab-" + id}><span className={"w-12 h-7 rounded-full grid place-items-center " + (tab === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "")}><Ic size={18} /></span>{tr(l)}</button>)}
+      {/* v7.5: on a phone the tabs are the bottom bar; on a computer they are pills under the title (Gemini's Area 4 mock-up) */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-[var(--c-surf)] border-t border-[var(--c-ln)] grid grid-cols-5 px-1 lg:static lg:flex lg:flex-wrap lg:gap-2 lg:bg-transparent lg:border-0 lg:px-0" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="shop-nav">
+        {TABS.map(([id, l, Ic]) => <button key={id} onClick={() => setTab(id)} className={"h-16 flex flex-col items-center justify-center gap-0.5 text-[11px] font-extrabold transition-colors duration-150 lg:h-10 lg:flex-row lg:gap-1.5 lg:px-4 lg:rounded-full lg:border lg:text-[13.5px] " + (tab === id && !report ? "text-[var(--c-acc-2)] lg:bg-[var(--c-acc-2)] lg:text-[var(--c-on-acc-2)] lg:border-transparent" : "text-[var(--c-mut)] lg:border-[var(--c-ln)] lg:bg-[var(--c-surf)] lg:hover:text-[var(--c-ink)]")} data-testid={"shop-tab-" + id}><span className={"w-12 h-7 rounded-full grid place-items-center lg:w-auto lg:h-auto " + (tab === id && !report ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] lg:bg-transparent lg:text-inherit" : "")}><Ic size={18} className="lg:w-4 lg:h-4" /></span>{tr(l)}</button>)}
+        <button onClick={() => setReport(true)} className={"hidden lg:inline-flex h-10 items-center gap-1.5 px-4 rounded-full border text-[13.5px] font-extrabold transition-colors duration-150 " + (report ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-acc)]")} data-testid="shop-tab-report"><BarChart3 size={16} />{tr("Report")}</button>
       </nav>
+      {report ? <ShopReportView books={books} shop={shop} today={today()} share={share} onBack={() => setReport(false)} onClose={() => setTab("close")} extra={<ShopReports books={books} day={today()} />} /> : null}
+      {!report && tab === "sell" ? <><Sell books={books} setBooks={setBooks} shop={shop} setShop={setShop} scanBarcode={scanBarcode} share={share} flash={flash} />
+        <SeeAll testid="shop-open-report" onClick={() => setReport(true)} title={tr("See all → Shop Report")} sub={tr("Best sellers, payment methods, staff and this week")} cta={tr("Report")} /></> : null}
+      {!report && tab === "stock" ? <><Stock books={books} setBooks={setBooks} shop={shop} share={share} flash={flash} /><OffersPanel books={books} shop={shop} setShop={setShop} /></> : null}
+      {!report && tab === "customers" ? <Customers books={books} setBooks={setBooks} share={share} flash={flash} /> : null}
+      {!report && tab === "staff" ? <Staff shop={shop} setShop={setShop} /> : null}
+      {!report && tab === "close" ? <Close books={books} shop={shop} setShop={setShop} share={share} onReport={() => setReport(true)} /> : null}
     </section>);
 }

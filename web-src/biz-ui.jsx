@@ -23,6 +23,10 @@ import { LIGHT_BASE, ON_FILL } from "./fitlook.js";
 import * as K from "./ui-kit.jsx";
 import { SystemView, FieldInput, RenameSheet } from "./erp-ui.jsx";
 import { BooksApp } from "./books-ui.jsx";
+import { loadBooks } from "./books-store.js";
+import * as B from "./books.js";
+import * as S from "./shop.js";
+import { hubToday } from "./biz-dash.js";
 import { FleetApp } from "./fleet-ui.jsx";
 import * as V2 from "./erp-v2.js";
 import { PinGate, SystemTools } from "./biz-v2-ui.jsx";
@@ -59,7 +63,7 @@ function saveSys(sys) {
   try {
     localStorage.setItem(KEY + ":" + sys.id, JSON.stringify(sys));
     const idx = loadIndex().filter((x) => x.id !== sys.id);
-    idx.unshift({ id: sys.id, name: sys.name, updated: sys.updated, tables: sys.tables.length, active: E.isActive(sys), color: SC.colorOf(sys) });
+    idx.unshift({ id: sys.id, name: sys.name, updated: sys.updated, tables: sys.tables.length, tableNames: sys.tables.map((x) => x.name).slice(0, 4), active: E.isActive(sys), color: SC.colorOf(sys) });
     localStorage.setItem(KEY, JSON.stringify(idx));
     return true;
   } catch (e) { return false; }
@@ -145,40 +149,79 @@ function IntroHero({ onDone }) {
 }
 
 // ---- the hub: your systems --------------------------------------------------------------------------------------------
+// v7.5 (Gemini's Area 4 mock-up): the hub's calm view — today's numbers first (counter sales, who owes you, what needs attention),
+// then the three ready systems with a status pill each, then the owner's own systems with what is in them.
+const fmtM = (v, cur) => B.fmt(v) + (cur ? " " + cur : "");
+const T = (s) => "\u2066" + s + "\u2069";
+function HubKpi({ label, value, pill, tone, sub, testid, className = "" }) {
+  return <div className={card + " p-3.5 lg:p-4 min-w-0 space-y-1 " + className} data-testid={testid}>
+    <div className="flex items-start justify-between gap-2"><span className="text-[12px] font-bold text-[var(--c-mut)] leading-tight">{label}</span>{pill ? <span className={K.tag(tone === "warn" ? "amber" : tone === "neg" ? "red" : "green") + " shrink-0"}>{pill}</span> : null}</div>
+    <b className={"block tabular-nums text-[clamp(18px,5vw,22px)] font-black tracking-tight leading-tight " + (tone === "pos" ? "text-[var(--c-pos)]" : tone === "warn" ? "text-[var(--c-warn)]" : "")} dir="auto">{value}</b>
+    {sub ? <span className="block text-[11.5px] text-[var(--c-mut)] leading-snug">{sub}</span> : null}
+  </div>;
+}
+function SysCard({ testid, onClick, icon: I, well, title, short, long, pill, tone }) {
+  return <button onClick={onClick} data-testid={testid} className={card + " w-full text-start p-4 min-h-[72px] flex items-center gap-3.5 lg:flex-col lg:items-stretch lg:gap-3 hover:border-[var(--c-acc)] transition-colors duration-150"}>
+    <span className="flex items-center gap-3.5 lg:justify-between shrink-0"><span className={"w-12 h-12 rounded-[16px] grid place-items-center shrink-0 " + well}><I size={21} /></span>
+      {pill ? <span className="hidden lg:block"><span className={K.tag(tone || "gray")}>{pill}</span></span> : null}</span>
+    <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{title}</span>
+      <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug lg:hidden" dir="auto">{short}</span>
+      <span className="hidden lg:block text-[12.5px] text-[var(--c-mut)] leading-snug mt-1">{long}</span></span>
+    {pill ? <span className={K.tag(tone || "gray") + " lg:hidden shrink-0"}>{pill}</span> : <ChevronRight size={18} className="text-[var(--c-mut)] rtl:rotate-180 shrink-0 lg:hidden" />}
+  </button>;
+}
+const whenUpdated = (ms) => { const d = new Date(ms), t = new Date(); const k = (x) => x.toDateString(); if (k(d) === k(t)) return tr("Updated today"); t.setDate(t.getDate() - 1); if (k(d) === k(t)) return tr("Updated yesterday"); return tr("Updated {d}", { d: d.toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short" }) }); };
 function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile, intro, onIntro, onIntroDone }) {
+  const [books, setBooks] = useState(null);
+  useEffect(() => { let on = true; loadBooks().then((b) => on && setBooks(b || null)).catch(() => {}); return () => { on = false; }; }, []);
+  const shop = useMemo(() => S.loadShop(), []);
+  const td = useMemo(() => new Date().toISOString().slice(0, 10), []);   // the same day as Books and Shop
+  const h = useMemo(() => { try { return books ? hubToday(books, td) : null; } catch (e) { return null; } }, [books, td]);
+  const cur = books ? books.currency || "" : "", co = books && books.company ? books.company.name : "";
+  const day = new Date().toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" });
+  const shopPill = shop && h && h.count ? tr("{n} sales", { n: h.count }) : null;
+  const booksPill = h && h.low.length ? tr("{n} low stock", { n: h.low.length }) : h && h.overdueCount ? tr("{n} overdue", { n: h.overdueCount }) : null;
   return (
     <section className="px-4 pb-6 space-y-4" data-testid="business-page">
       <TopBar title={tr("Business")} sub={tr("Your own systems — like Microsoft Access, on your phone")} onBack={onExit} label={tr("Back to Attune")}
         right={intro ? null : <button onClick={onIntro} className={K.btnS + " rounded-full shrink-0"} data-testid="biz-how">{tr("How it works")}</button>} />
       {intro ? <IntroHero onDone={onIntroDone} /> : null}
-      {/* v6.27: a shop's whole day on the phone — the counter, stock, customers, staff, the day's close (shop-ui.jsx) */}
-      <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
-      <button onClick={onShop} data-testid="shop-open" className={card + " w-full text-start p-4 min-h-[72px] flex items-center gap-3.5 hover:border-[var(--c-acc)]"}>
-        <span className="w-12 h-12 rounded-[16px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><ShoppingCart size={21} /></span>
-        <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{tr("Shop in your pocket")}</span>
-          <span data-intro="" className="block text-[12.5px] text-[var(--c-mut)] leading-snug">{tr("Say what your shop is — the counter with barcodes, stock, customers who owe, staff and the end-of-day close, ready in a minute. Every sale goes into your books.")}</span></span>
-      </button>
-      {/* v6.32: Ali's Crane Management + Crane Warehouse apps as one (fleet-ui.jsx) */}
-      <button onClick={onFleet} data-testid="fleet-open" className={card + " w-full text-start p-4 min-h-[72px] flex items-center gap-3.5 hover:border-[var(--c-acc)]"}>
-        <span className="w-12 h-12 rounded-[16px] grid place-items-center shrink-0 bg-[var(--c-acc-2)]/15 text-[var(--c-acc-2)]"><Truck size={21} /></span>
-        <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{tr("Fleet & rentals")}</span>
-          <span data-intro="" className="block text-[12.5px] text-[var(--c-mut)] leading-snug">{tr("Cranes and equipment for hire: job orders by the hour or day, cheques with reminders, client balances, expenses, and a parts store linked to each crane.")}</span></span>
-      </button>
-      <button onClick={onNew} className={btnP + " w-full lg:col-span-2 lg:order-last"} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button>
-      <button onClick={onBooks} data-testid="books-open" className={card + " w-full text-start p-4 min-h-[72px] flex items-center gap-3.5 hover:border-[var(--c-acc)]"}>
-        <span className="w-12 h-12 rounded-[16px] grid place-items-center shrink-0 bg-[var(--c-warn)]/15 text-[var(--c-warn)]"><FileText size={21} /></span>
-        <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{tr("Shop & trading books")}</span>
-          <span data-intro="" className="block text-[12.5px] text-[var(--c-mut)] leading-snug">{tr("Invoices with VAT, payments and overdue tracking, stock and purchasing, reports — your own accounting, on your phone, in English and Arabic.")}</span></span>
-      </button>
+      {h && h.has ? <div data-testid="biz-today">
+        <p className="hidden lg:block text-[22px] font-black tracking-tight m-0">{tr("Business")} · {day}</p>
+        <p className="hidden lg:block text-[13px] text-[var(--c-mut)] m-0 mb-3">{tr("Today's numbers across your shop and books — everything stays on this device")}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 lg:gap-3">
+          <HubKpi testid="biz-kpi-sales" label={shop ? tr("Today's counter sales") : tr("Today's sales")} value={T(fmtM(h.sales, cur))} tone="pos"
+            pill={h.change != null ? T((h.change >= 0 ? "+" : "") + h.change + "%") : null}
+            sub={<>{tr("{n} receipts", { n: h.count })}{co ? " · " : ""}<span dir="auto">{co}</span><span className="hidden lg:inline">{h.count ? " · " + [["cash", "Cash"], ["wallet", "Wallet"], ["card", "Card"]].filter(([k]) => h.by[k] > 0).map(([k, l]) => tr(l) + " " + T(B.fmt(h.by[k]))).join(" · ") : ""}</span></>} />
+          <HubKpi testid="biz-kpi-owed" label={tr("Customers owe you")} value={T(fmtM(h.receivable, cur))} tone={h.overdue ? "warn" : undefined}
+            pill={h.overdueCount ? tr("{n} overdue", { n: h.overdueCount }) : null}
+            sub={h.overdue ? tr("{a} overdue", { a: T(B.fmt(h.overdue)) }) + " · " + tr("{n} customers", { n: h.customers }) : tr("{n} customers", { n: h.customers })} />
+          <HubKpi testid="biz-kpi-attention" className="hidden lg:block" label={tr("Needs attention today")} pill={h.low.length || h.vat > 0 ? tr("Stock & VAT") : null} tone="warn"
+            value={[h.low.length ? (h.low.length === 1 ? tr("1 item at reorder") : tr("{n} items at reorder", { n: h.low.length })) : null, h.vat > 0 ? tr("VAT {a}", { a: T(B.fmt(h.vat)) }) : null].filter(Boolean).join(" · ") || tr("Nothing waiting")}
+            sub={h.low.length ? h.low.slice(0, 2).map((x) => x.name + " (" + T(x.onHand + " / " + x.reorder) + ")").join(" · ") : tr("Stock and VAT are fine")} />
+        </div></div> : null}
+      <p className={K.label + " m-0 hidden lg:block"}>{tr("Ready-to-use systems")}</p>
+      {/* v6.27 Shop · v6.32 Fleet (Ali's crane programs) · Books — each opens its own app */}
+      <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3">
+        <SysCard testid="shop-open" onClick={onShop} icon={ShoppingCart} well="bg-[var(--c-soft)] text-[var(--c-acc)]" title={tr("Shop in your pocket")}
+          short={(shop && co ? co + " · " : "") + tr("Counter, stock, staff & day close")} pill={shopPill || tr("Open counter")} tone={shopPill ? "green" : "blue"}
+          long={tr("Say what your shop is — the counter with barcodes, stock, customers who owe, staff and the end-of-day close, ready in a minute. Every sale goes into your books.")} />
+        <SysCard testid="books-open" onClick={onBooks} icon={FileText} well="bg-[var(--c-warn)]/15 text-[var(--c-warn)]" title={tr("Shop & trading books")}
+          short={(co ? co + " · " : "") + tr("Invoices, VAT, stock & P&L")} pill={booksPill || tr("Open books")} tone={booksPill ? "amber" : "blue"}
+          long={tr("Invoices with VAT, payments and overdue tracking, stock and purchasing, reports — your own accounting, on your phone, in English and Arabic.")} />
+        <SysCard testid="fleet-open" onClick={onFleet} icon={Truck} well="bg-[var(--c-acc-2)]/15 text-[var(--c-acc-2)]" title={tr("Fleet & rentals")}
+          short={tr("Job orders, cheques, client balances & parts store")} pill={tr("Equipment & hire")} tone="gray"
+          long={tr("Cranes and equipment for hire: job orders by the hour or day, cheques with reminders, client balances, expenses, and a parts store linked to each crane.")} />
       </div>
-      <div className="flex items-center justify-between gap-2 pt-1"><p className={K.label + " m-0"}>{tr("Your systems")}</p>
-        <label className="min-h-[44px] px-1 text-[13px] font-bold text-[var(--c-acc)] flex items-center gap-1.5 cursor-pointer" data-testid="erp-open-app"><Upload size={15} />{tr("Open an app file")}
-          <input type="file" accept=".html,.htm,.json,text/html" className="hidden" data-testid="erp-open-app-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) onOpenFile(f); }} /></label></div>
+      <div className="flex items-center gap-x-2 gap-y-2 pt-1 flex-wrap"><p className={K.label + " m-0 flex-1"}>{tr("Your systems")}<span className="hidden lg:inline"> · {tr("built from a sentence")}</span></p>
+        <label className="min-h-[44px] px-1 lg:px-3.5 lg:rounded-full lg:border lg:border-[var(--c-ln)] text-[13px] font-bold text-[var(--c-acc)] flex items-center gap-1.5 cursor-pointer" data-testid="erp-open-app"><Upload size={15} />{tr("Open an app file")}
+          <input type="file" accept=".html,.htm,.json,text/html" className="hidden" data-testid="erp-open-app-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) onOpenFile(f); }} /></label>
+        <button onClick={onNew} className={btnP + " basis-full lg:basis-auto lg:rounded-full lg:!h-11 lg:!min-h-[44px]"} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button></div>
       {index.length ? <div className="space-y-2.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">{index.map((x) => (
         <button key={x.id} onClick={() => open(x.id)} className={card + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)]"} data-testid="erp-system">
           <span className="relative w-11 h-11 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Database size={19} /><i aria-hidden="true" className="absolute -top-0.5 -end-0.5 w-3 h-3 rounded-full border-2 border-[var(--c-surf)]" style={{ background: x.color || "var(--biz)" }} /></span>
           <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15px] truncate" dir="auto">{x.name}</span>
-            <span className="block text-[12px] text-[var(--c-mut)]">{tr("{n} tables", { n: x.tables })} · {new Date(x.updated).toLocaleDateString()}</span></span>
+            <span className="block text-[12px] text-[var(--c-mut)] leading-snug">{tr("{n} tables", { n: x.tables })}{x.tableNames && x.tableNames.length ? <span className="hidden lg:inline" dir="auto"> ({x.tableNames.join(", ")})</span> : null} · {whenUpdated(x.updated)}</span></span>
           {x.active ? <span className={K.tag("green")}>{tr("Active")}</span>
             : <span className={K.tag("gray")}>{tr("Trial")}</span>}
           <ChevronRight size={18} className="text-[var(--c-mut)] rtl:rotate-180 shrink-0" />

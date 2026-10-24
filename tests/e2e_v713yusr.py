@@ -29,6 +29,9 @@ with sync_playwright() as p:
     check(not y.evaluate("document.getElementById('onboard').classList.contains('open')"), "past the welcome screens")
     if not y.evaluate("db.accounts.length"):
         y.evaluate("() => { db.accounts.push({id:'c1',name:'Cash',emoji:'💵',currency:db.currency||'EGP',start:0}); save(); refresh(); }")
+    # v7.2: Money opens on the calm view and Yusr waits behind it — open the ledger to type into Yusr itself
+    if page.locator("[data-testid=money-open-ledger]").count():
+        page.locator("[data-testid=money-open-ledger]").first.click(); page.wait_for_timeout(400)
     # no model loaded: the code reading logs it
     n0 = y.evaluate("db.txns.length")
     y.fill("#write-text", "lunch 150, taxi 60 and got my salary 30000")

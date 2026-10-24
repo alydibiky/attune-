@@ -5,6 +5,7 @@ import * as B from "./books.js";
 import * as O from "./books-ops.js";
 import { EtaReport, actorCan } from "./books-extras.jsx";
 import { ProReport, PRO_REPORTS } from "./books-pro-ui.jsx";   // v6.44: balance sheet, cash flow, month by month, budget
+import { BooksOverview } from "./biz-dash-ui.jsx";   // v7.5: the overview (Gemini's Area 4 mock-up)
 import { L, useBooks, useTheme, Card, Section, Money, Empty, Field, Input, Chips, BTN, btnPrimary, POS, NEG, today, fmtDate } from "./books-kit.jsx";
 
 const iso = (d) => d.toISOString().slice(0, 10);
@@ -21,7 +22,7 @@ const csv = (rows) => rows.map((r) => r.map((c) => { const t = String(c ?? ""); 
 export function ReportsModule() {
   const { s, today: td, saveFile, flash } = useBooks();
   const th = useTheme();
-  const [rep, setRep] = useState(() => (actorCan("profit") ? "pl" : "cust"));
+  const [rep, setRep] = useState(() => { let w = ""; try { w = sessionStorage.getItem("books:report") || ""; sessionStorage.removeItem("books:report"); } catch (e) {} return w || (actorCan("profit") ? "overview" : "cust"); });
   const [per, setPer] = useState("month");
   const [from, setFrom] = useState(""); const [to, setTo] = useState("");
   const P = periods(td);
@@ -33,7 +34,7 @@ export function ReportsModule() {
 
   const isPro = ["bs", "cf", "months", "budget"].includes(rep);
   const data = useMemo(() => {
-    if (rep === "eta" || isPro) return { rows: [] };
+    if (rep === "eta" || rep === "overview" || isPro) return { rows: [] };
     if (rep === "pl") {
       const r = B.profitAndLoss(s.journal, f, t);
       return { rows: [[L("Sales", "المبيعات"), r.sales], [L("Sales returns", "مردودات المبيعات"), -r.salesReturns], [L("Net revenue", "صافي الإيراد"), r.revenue, 1], [L("Cost of goods sold", "تكلفة البضاعة المباعة"), -r.cogs], [L("Gross profit", "مجمل الربح"), r.grossProfit, 1], [L("Expenses", "المصروفات"), -r.expenses], ...(r.fxGain ? [[L("Exchange gain / loss", "فروق تغيير العملة"), r.fxGain]] : []), [L("Net profit", "صافي الربح"), r.netProfit, 2]] };
@@ -60,15 +61,15 @@ export function ReportsModule() {
     const rows = data.cols ? [data.cols, ...data.rows.map((r) => r.map((c, i) => (typeof c === "number" && !(data.stock && i === 1) ? (c / 100).toFixed(2) : c)))] : data.rows.map((r) => [r[0], (r[1] / 100).toFixed(2)]);
     saveFile ? saveFile(`${rep}-${td}.csv`, "﻿" + csv(rows), "text/csv") : flash(L("Saving files works in the Android app", "حفظ الملفات شغال في تطبيق أندرويد"));
   };
-  const list = [...(actorCan("profit") ? [["pl", L("Profit & loss", "الأرباح والخسائر")]] : []), ["cust", L("Sales by customer", "مبيعات بالعميل")], ["item", L("Sales by item", "مبيعات بالصنف")], ["vat", L("VAT", "الضريبة")], ["stock", L("Stock value", "قيمة المخزون")], ["tb", L("Trial balance", "ميزان المراجعة")], ...(actorCan("profit") ? PRO_REPORTS() : []), ["eta", L("E-invoices (ETA)", "الفواتير الإلكترونية")]];
-  const noPeriod = rep === "stock" || rep === "tb" || rep === "months" || rep === "budget";
+  const list = [...(actorCan("profit") ? [["overview", L("Overview", "نظرة عامة")], ["pl", L("Profit & loss", "الأرباح والخسائر")]] : []), ["cust", L("Sales by customer", "مبيعات بالعميل")], ["item", L("Sales by item", "مبيعات بالصنف")], ["vat", L("VAT", "الضريبة")], ["stock", L("Stock value", "قيمة المخزون")], ["tb", L("Trial balance", "ميزان المراجعة")], ...(actorCan("profit") ? PRO_REPORTS() : []), ["eta", L("E-invoices (ETA)", "الفواتير الإلكترونية")]];
+  const noPeriod = rep === "overview" || rep === "stock" || rep === "tb" || rep === "months" || rep === "budget";
   return (
     <div data-testid="books-reports">
       <div className="mb-3"><Chips value={rep} onChange={setRep} options={list} /></div>
       {!noPeriod ? <div className="mb-3"><Chips value={per} onChange={setPer} options={[["month", L("This month", "الشهر ده")], ["last", L("Last month", "الشهر اللي فات")], ["quarter", L("This quarter", "الربع ده")], ["year", L("This year", "السنة دي")], ["all", L("All time", "الكل")], ["custom", L("Dates…", "تواريخ…")]]} /></div> : null}
       {per === "custom" && !noPeriod ? <div className="grid grid-cols-2 gap-2 mb-3"><Field label={L("From", "من")}><Input type="date" value={from} onChange={setFrom} /></Field><Field label={L("To", "إلى")}><Input type="date" value={to} onChange={setTo} /></Field></div> : null}
       {!noPeriod && f ? <p className={`text-[12px] font-bold tabular-nums mb-3 ${th.sub}`}>{fmtDate(f)} → {fmtDate(t)}</p> : null}
-      {rep === "eta" ? <EtaReport from={f} to={t} /> : isPro ? <ProReport rep={rep} from={f} to={t} /> : <>
+      {rep === "overview" ? <BooksOverview s={s} td={td} saveFile={saveFile} flash={flash} canExport={actorCan("export")} /> : rep === "eta" ? <EtaReport from={f} to={t} /> : isPro ? <ProReport rep={rep} from={f} to={t} /> : <>
       <Card className="divide-y overflow-hidden" testid="report-body">
         {data.cols ? <div className={`grid ${data.cols.length === 4 ? "grid-cols-4" : "grid-cols-3"} gap-2 px-3.5 py-2.5 text-[11.5px] font-extrabold tracking-[0.04em] ${th.head}`}>{data.cols.map((c, j) => <span key={c} className={j ? "text-end" : ""}>{c}</span>)}</div> : null}
         {!data.rows.length ? <Empty title={L("Nothing to report for this period", "مفيش بيانات للفترة دي")} /> : data.rows.map((r, i) => data.cols ? (

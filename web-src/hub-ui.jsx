@@ -14,8 +14,8 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false 
   const on = (m) => m === mode || INSIDE[mode] === m;
   if (asBar) return (
     <>
-    <div style={{ height: 80 }} aria-hidden="true" />
-    <nav className="calm fixed bottom-0 inset-x-0 z-[55] bg-[var(--c-surf)]! border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} role="tablist" data-testid="hub-tabs">
+    <div className="att-hubbar" style={{ height: 80 }} aria-hidden="true" />
+    <nav className="att-hubbar calm fixed bottom-0 inset-x-0 z-[55] bg-[var(--c-surf)]! border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} role="tablist" data-testid="hub-tabs">
       <div className="max-w-3xl mx-auto flex h-[66px]">
         {tabs.map((m) => { const I = BAR_ICON[m] || Briefcase; return (
           <button key={m} role="tab" aria-selected={on(m)} onClick={() => { if (m !== mode) navTo(m); }} data-testid={"hub-tab-" + m}

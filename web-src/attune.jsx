@@ -7585,6 +7585,8 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 /* v6.31 minimal (Ali: "make the app minimal so it's not cluttered" → design A): no intro paragraphs under page titles — the How to
    use page explains every tool; set on <html> when the old bottom bar is off */
 .att-min [data-intro] { display: none !important; }
+/* v7.5: the Shop has its own bottom bar (Sell · Stock · Customers · Staff · Day close) — Business's bar steps aside while it is open */
+body:has([data-testid=shop-app]) .att-hubbar { display: none !important; }
 .att-lite *, .att-lite *::before, .att-lite *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; animation-duration: .12s !important; transition-duration: .08s !important; }
 
 /* Someone who has asked their system for less motion means it. */
@@ -7616,7 +7618,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "7.4";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "7.5";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 

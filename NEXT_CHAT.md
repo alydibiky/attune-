@@ -3,7 +3,18 @@
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 
 ## Where things stand
-- **`main` = v7.4** (versionCode 116) — **Gemini step 3 (Chat) is built**: the empty chat is one quiet card (starters with a
+- **`main` = v7.5** (versionCode 117) — **Gemini step 4 (Business hub + Books + Shop) is built**: the hub opens with today's
+  numbers (counter sales vs the same day last week, customers owe you + overdue, and on a computer "Needs attention": items at
+  reorder + VAT), the three systems as cards with a status pill (Shop "{n} sales", Books "{n} low stock" / overdue, Fleet), the
+  owner's systems with tables + "Updated today"; Books → "See all → Books Report" opens Reports on a new **Overview** chip (this
+  month vs the same days last month, net margin, 6 months of sales vs purchases bars + profit line, ageing **not due · 1–30 late ·
+  31+ late** (so overdue never hides in "0–30"), top customers & items, the month in short, CSV); Books is wider on a computer
+  (max-w-5xl); Shop → "See all → Shop Report" (today, this week's 7 bars, cash drawer, staff on shift, payment-method donut, best
+  sellers ×qty, staff & day closes, then the old hourly / by-cashier / returns). Two real bugs fixed: on a phone Business's bottom
+  bar covered the Shop's own bar (CSS `body:has([data-testid=shop-app]) .att-hubbar` hides it), and on a computer the Shop's
+  bottom bar sat under the sidebar ("Sell" unreachable) — Shop tabs are now pills under the title on a computer, with Report.
+  Numbers: `web-src/biz-dash.js` (pure; unit `v780bizdash`), UI `web-src/biz-dash-ui.jsx`; e2e `e2e_v780business.py`.
+- v7.4 (versionCode 116) — **Gemini step 3 (Chat) is built**: the empty chat is one quiet card (starters with a
   chevron); the "/" list opens above the Chat box too while "/" is typed (`SlashMenu` from cmdbox-ui.jsx; a command fills the box,
   an app opens), scrolling in its own box; answers sit in a quiet card (`chat-answer`) with Thought / "Checked by code" as pills;
   Assistants: cards with the icon and actions on top and the full name under (never cut); on a computer a tap opens the assistant
@@ -65,7 +76,7 @@ Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BR
 
 ## NEXT: the Gemini step (Ali: "when you finish and push we will start the Gemini thing")
 Gemini designs each area creatively as **HTML mock-ups only (no code)**; Ali approves; **Claude builds it into the app himself**
-(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · (Money page,
+(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · ~~4 Business~~ (v7.5) · (Money page,
 Follow-ups, Guardian, Deal Check) · 2 Health (Fit & Food, Family health, Cycle) · 3 Chat (chat, Assistants, Projects) ·
 4 Business hub + Books + Shop · 5 Mind & learning · 6 Tools · 7 Settings, sidebar, How to use. The message Ali sends Gemini is in the
 last chat; the brief is `GEMINI_DESIGN_BRIEF.md`. When an HTML mock-up arrives: render it locally (Tailwind CDN is blocked — compile
@@ -79,7 +90,7 @@ its classes with `tailwindcss@3.4.17` in the scratchpad, see how it was done for
 
 ## Also still to do
 - Desktop two-pane Home from Gemini's mock-up (box on one side, Your day on the other) — phone Home is done.
-- Reports for Money / Health / Books / Shop in the option-C style (Fleet and My report exist).
+- Reports in the option-C style now exist for Money, Health, Books, Shop, Fleet and My report.
 - Grow the other 18 languages for new strings (Arabic is complete; others fall back to English for the newest lines).
 
 ## Hard-won lessons from this round

@@ -74,6 +74,8 @@ with sync_playwright() as p:
 
     # ---- reports
     tab(page, "reports")
+    check(page.locator("[data-testid=books-overview]").count() == 1, "v7.5: Reports opens on the overview")
+    page.click("text=Profit & loss"); page.wait_for_timeout(200)
     body = page.locator("[data-testid=report-body]").inner_text()
     check("1,000.00" in body and "600.00" in body and "400.00" in body, "profit & loss shows sales 1,000.00, cost 600.00, profit 400.00")
 
