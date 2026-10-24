@@ -2,7 +2,7 @@
    pieces (Mind's numbers + "Do now", the streak) and the reports: Mind Report, Learning Report, Homework Report, Remember's
    library numbers and the Recall index. Every number from learning-report.js (code). Phone and computer, Arabic too. */
 import React from "react";
-import { ArrowLeft, Check, Hourglass, Sparkles, Flame, ShieldCheck, Brain } from "lucide-react";
+import { ArrowLeft, Check, Hourglass, Sparkles, Flame, ShieldCheck, Brain, Search, ChevronRight } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { Bars, SeeAll } from "./biz-dash-ui.jsx";
 import * as U from "./ui-kit.jsx";
@@ -30,7 +30,7 @@ export const ReportHead = ({ title, sub, back, testid }) => <div className="flex
 
 // ---- Mind -----------------------------------------------------------------------------------------------------------------------------
 /** Mind's calm top: three numbers (computer) and the one promise to do now. */
-export function MindCalmTop({ rep, wide, onDone, openPromises }) {
+export function MindCalmTop({ rep, wide, onDone, openPromises, openRecall = null }) {
   const p = rep.promises.find((x) => x.status === "late" || x.status === "today");
   return <div className="space-y-3" data-testid="mind-calm">
     {wide ? <div className="grid grid-cols-3 gap-3">
@@ -44,6 +44,11 @@ export function MindCalmTop({ rep, wide, onDone, openPromises }) {
         <button onClick={() => onDone(p.id)} className={U.btnP + " h-10! min-h-[40px]! rounded-full shrink-0"} data-testid="mind-do-now-done"><Check size={16} />{tr("Done")}</button></div>
       {p.whenText ? <p className="m-0 text-[12px] c-sub" dir="auto">{p.whenText}</p> : null}
     </div> : null}
+    {/* v7.9 (Ali: "some features require extensive searching to find"): Recall lives in Mind — one row to it */}
+    {openRecall ? <button onClick={openRecall} className={U.card + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)]"} data-testid="mind-open-recall">
+      <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Search size={18} /></span>
+      <span className="flex-1 min-w-0"><b className="block text-[14.5px] font-extrabold">{tr("Recall")}</b><span className="c-sub block text-[12.5px] truncate">{tr("Find anything you kept, by what it meant")}</span></span>
+      <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" /></button> : null}
   </div>;
 }
 export function MindReport({ rep, back, open, onDone, compact = false }) {

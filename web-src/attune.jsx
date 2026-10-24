@@ -6491,7 +6491,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />
       {addOpen ? <AddSheet L={ledgerNow} onSave={addFromSheet} onDebt={() => openLedger("debt")} onClose={() => setAddOpen(false)} /> : null}
-      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "biz-invoices") { setMoreOpen(false); if (goTo) { goTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "books" })), 80); } return; } openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
+      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "biz-invoices") { setMoreOpen(false); if (goTo) { goTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "books" })), 80); } return; } openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
           <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl rounded-t-[22px]! p-4 max-h-[88%] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
@@ -10169,7 +10169,7 @@ export default function App() {
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "memory" ? (
           // v6.8: Memory → Mind (mind-ui.jsx). Promises and Your words are its other two tabs.
-          <MindPage records={memoryLive} remember={remember} update={updateRec} forget={forget} togglePin={togglePin}
+          <MindPage openRecall={() => navTo("recall")} records={memoryLive} remember={remember} update={updateRec} forget={forget} togglePin={togglePin}
             search={(q, n) => memSearch(memory, memIndex, q, { now: Date.now(), limit: n || 30 })}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })}
             modelReady={modelUsable}

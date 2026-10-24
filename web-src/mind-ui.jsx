@@ -279,7 +279,7 @@ const saveSpaces = (v) => { try { localStorage.setItem(SPACES_KEY, JSON.stringif
  * llm(messages, image, o): the on-phone model. ask(question, found): "ask your memory" answer text.
  * promisesPanel / wordsPanel: the old Memory screen's other two parts, shown as tabs.
  */
-export function MindPage({ records, remember, update, forget, togglePin, search, llm, modelReady, ask, findCommitments, scheduleReminder, pro, openPlan, openEngine, flash, promisesPanel, wordsPanel, promiseCount, shareBanner, note, external, clearExternal, commits = [], onPromiseDone = null }) {
+export function MindPage({ records, remember, update, forget, togglePin, search, llm, modelReady, ask, findCommitments, scheduleReminder, pro, openPlan, openEngine, flash, promisesPanel, wordsPanel, promiseCount, shareBanner, note, external, clearExternal, commits = [], onPromiseDone = null, openRecall = null }) {
   const ar = getLang() === "ar";
   const [tab, setTab] = useState("mind");
   const wide = useDesktopWide();
@@ -490,7 +490,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
 
           {filterOn ? <p className="text-[11.5px] font-semibold tabular-nums text-[var(--c-mut)]" data-testid="mind-count">{shown.length} {tr(shown.length === 1 ? "item" : "items")}</p> : null}
 
-          {!filterOn && !answer ? <MindCalmTop rep={mrep} wide={wide} onDone={(id) => onPromiseDone && onPromiseDone(id)} /> : null}
+          {!filterOn && !answer ? <MindCalmTop rep={mrep} wide={wide} onDone={(id) => onPromiseDone && onPromiseDone(id)} openRecall={openRecall} /> : null}
           {!wide && !filterOn && records.length ? <SeeAll testid="mind-open-report" onClick={() => setRep(true)} title={tr("See all → Mind Report")} sub={T2("{w} kept this week · {d} promises due", { w: mrep.week, d: mrep.due })} cta={tr("Report")} /> : null}
           {/* the wall — v7.7: on a computer the Mind Report sits beside it */}
           <div className={wide && records.length ? "grid grid-cols-[minmax(0,1fr)_380px] gap-4 items-start" : ""}><div className="min-w-0">

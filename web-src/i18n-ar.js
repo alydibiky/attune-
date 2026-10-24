@@ -6998,4 +6998,6 @@ export const AR = {
   "Money note": "ملاحظة فلوس",
   "Due: {d}": "الميعاد: {d}",
   "Now in Business → Books": "بقت في البيزنس ← الحسابات",
+  "Find anything you kept, by what it meant": "لاقي أي حاجة حفظتها، بمعناها",
+  "When money comes in or goes out, do something by itself": "لما فلوس تدخل أو تخرج، يعمل حاجة لوحده",
 };

@@ -73,7 +73,7 @@ function TwoPayments({ txns }) {
     {txns.map((t, i) => <div key={t.id || i} className="flex items-start gap-2 px-3 py-2 text-[12.5px]" data-testid="guardian-pair-row">
       <span className="font-extrabold tabular-nums shrink-0">{i + 1}</span>
       <span className="min-w-0 flex-1"><span className="block font-bold truncate" dir="auto">{t.note || tr("Payment")}</span>
-        <span className={"block " + U.muted} dir="auto">{[t.date, when(t), acc(t.account) ? acc(t.account).name : null, tr(SRC[t.source] || "Typed by hand")].filter(Boolean).join(" · ")}</span></span>
+        <span className={"block " + U.muted} dir="auto">{[t.date, when(t), acc(t.account) ? acc(t.account).name : null, t.source ? tr(SRC[t.source] || "Logged in Attune") : null   /* a payment saved before v7.9 has no source — none is guessed */].filter(Boolean).join(" · ")}</span></span>
       <span className="font-extrabold tabular-nums shrink-0">{fmt(t.amount)}</span></div>)}
   </div>;
 }
