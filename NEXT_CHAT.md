@@ -1,8 +1,44 @@
-# Attune — start here (handoff for the next chat, 24 Oct 2026)
+# Attune — start here (handoff for the next chat, 24 Oct 2026, late evening)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
+Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
 
-## Where things stand
+## Status in one look
+| | |
+|---|---|
+| `main` | **v7.8** (versionCode 120), commit `208dca7` + this handoff; branch `claude/continue-latest-handoff-3dlo4i` = main |
+| Last APK | https://github.com/alydibiky/attune-/actions/runs/40114343895 (success) |
+| Tests | full `bash tests/run_all.sh` passed for v7.8 (see "Known flaky tests") |
+| Gemini step | ~~1 Money~~ v7.2 · ~~2 Health~~ v7.3 · ~~3 Chat~~ v7.4 · ~~4 Business~~ v7.5 · ~~5 Mind & learning~~ v7.7 · ~~6 Tools~~ v7.8 · **7 Settings, sidebar, How to use, Privacy — waiting for Gemini's mock-up** |
+
+## Do this next
+1. **Wait for Ali to send Gemini's Area 7 mock-up** (an HTML file). Ali already has the Area 7 prompt and screenshots of today's
+   screens (sent in the last chat). If he asks for the prompt again, it is at the bottom of this page.
+2. When the HTML arrives: `cp` it to the scratchpad, run `python3 tools/render_mockup.py <html> <outdir>`, send Ali the
+   `*-dark.png` screens ("Gemini's Area 7, rendered — building it now"), make a task list, then **build it yourself** (never wait
+   for Gemini's code): calm view + "See all → … report" on each screen, phone + computer, dark + light, Egyptian Arabic RTL,
+   360 px with nothing overflowing. Numbers by code in a pure module with a unit test; an e2e `tests/e2e_v8xx….py` with
+   SHOTS=dir screenshots; Arabic for every new `tr()` string in `web-src/i18n-ar.js`.
+3. Version **7.9** (versionCode **121**): `app/build.gradle.kts` versionName + versionCode, `PAGE_VERSION` in `web-src/attune.jsx`
+   (`tests/unit/v746version.test.mjs` checks they match). Update this page. Full suite → commit → push main + branch → watch
+   "Build the APK" → send Ali the link and screenshots.
+4. After Area 7, the Gemini round is complete — ask Ali what's next (see "Still open").
+
+## Ali's 24 Oct requests, done in this chat (v7.6) — keep them
+- **Home is the chat** (he picked A): New chat (sidebar and the chat's +) goes to the clean Home; the Chat · Your life ·
+  Translate tab row and pages are gone — three pills in Home's box (`box-mode-chat|life|translate`, cmdbox-ui `BoxModes`).
+  Your life answers under the box by code (lifeask-ui `LifeAnswer`); Translate sends a Translate-mode chat (seed `\u0004`) and
+  links "Talk with someone, a photo or a document" to the Translate page (kept only for the interpreter / photo / document —
+  not in any list). `navTo("lifeask")` → Home with the pill on. The chat's phone header has ← Home. Chat opens empty after a
+  New chat (chat.jsx `HANDLED_SIGNAL`). Tests that tap New chat now reopen Chat with `attune-open {mode:'chat'}`.
+- **Money's bottom bar** (he picked A): Home · Accounts · (+) · Bills · Zakāt (`money-bar`, `money-pages-ui.jsx`); + = the add
+  sheet (expense / income / transfer, the account the person picked; the ledger's add-txns now accepts `transfer`);
+  Lend/borrow, new bill, new account open the ledger's own forms (bridge `go` screens `debt`, `add-bill`, `add-account`).
+  **More** (top) = Goals, Trends, Notes, Invoices, Full ledger (`money-open-ledger`), Ledger settings — these still open in the
+  old ledger design (possible next step: rebuild them in the new design). Zakāt is only shown as the ledger's engine sent it.
+- **Reminders page** fixed (Plan my day header, full-width date, repeat pills, Coming up first on a phone).
+
+## Version history (newest first)
 - **`main` = v7.8** (versionCode 120) — **Gemini step 6 (Tools) is built**: an on-device tool log (`web-src/toollog.js`, titles
   and numbers only, last 300; unit `v810toollog`) written by Writing (improve/compress), the Converter, Instant, Studio and the
   Video downloader. The Tools hub (`tools-hub-ui.jsx` ToolsHub): jobs this week / made today, the five families as cards
@@ -78,6 +114,7 @@ Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BR
 - Version history this round: 6.49 (20 languages) → 6.50 (everything from the Home box, sidebar A) → 7.0 (calm Home + My report
   from Gemini's mock-up) → 7.1 (the whole app restyled).
 
+
 ## What Ali decided (do not ask again)
 | Decision | What it means |
 |---|---|
@@ -101,24 +138,18 @@ Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BR
 - Gemini's original files: `fleet-ui.jsx` (its own code). Mock-ups Ali approved: step 1 (3 directions) and step 2 (calm Home,
   My report, Fleet calm/Report) — HTML files Ali uploaded; screenshots were sent in chat.
 
-## NEXT: the Gemini step (Ali: "when you finish and push we will start the Gemini thing")
-Gemini designs each area creatively as **HTML mock-ups only (no code)**; Ali approves; **Claude builds it into the app himself**
-(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · ~~4 Business~~ (v7.5) · ~~5 Mind & learning~~ (v7.7) · ~~6 Tools~~ (v7.8) · (Money page,
-Follow-ups, Guardian, Deal Check) · 2 Health (Fit & Food, Family health, Cycle) · 3 Chat (chat, Assistants, Projects) ·
-4 Business hub + Books + Shop · 5 Mind & learning · 6 Tools · 7 Settings, sidebar, How to use. The message Ali sends Gemini is in the
-last chat; the brief is `GEMINI_DESIGN_BRIEF.md`. When an HTML mock-up arrives: render it locally (Tailwind CDN is blocked — compile
-its classes with `tailwindcss@3.4.17` in the scratchpad, see how it was done for step 1/2), show Ali screenshots, then build.
+## Still open (ask Ali when the Gemini round is done)
+1. Rebuild Money → More pages (Goals, Trends, Notes, Invoices) in the new design, like Accounts / Bills / Zakāt?
+2. **Books → Settings → Appearance (Light/Dark)** does nothing now (Books follows the app). Hide it, or keep a separate Books mode?
+3. **Fit's six looks** keep their own colours only in light mode; in dark Fit follows the app. OK?
+4. Older: Family circle (A/B/C), sample data ("try Attune with a sample life"), feature names in `LANG_NAMES_REVIEW.md`, release prep.
+5. Desktop two-pane Home from Gemini's mock-up (box on one side, Your day on the other) — phone Home is done.
+6. Grow the other 18 languages for the new strings (Arabic is complete; the others fall back to English for the newest lines).
 
-## Open questions for Ali (small)
-1. **Books → Settings → Appearance (Light/Dark)** does nothing now (Books follows the app). Hide it, or keep a separate Books mode?
-2. **Fit's six looks** keep their own colours only in light mode; in dark Fit follows the app. OK, or bring look colours to dark too?
-3. Still open from before: Family circle (A/B/C), sample data ("try Attune with a sample life"), feature names in
-   `LANG_NAMES_REVIEW.md`, release prep.
-
-## Also still to do
-- Desktop two-pane Home from Gemini's mock-up (box on one side, Your day on the other) — phone Home is done.
-- Reports in the option-C style now exist for Money, Health, Books, Shop, Fleet and My report.
-- Grow the other 18 languages for new strings (Arabic is complete; others fall back to English for the newest lines).
+## Known flaky tests (not caused by recent work; they pass when re-run)
+- `tests/unit/v620bizextras.test.mjs` ("the backup is encrypted…") and `tests/unit/v732bizv2.test.mjs` ("the PIN itself is never
+  stored") — random ciphertext / salt can now and then contain the checked string. Could be made deterministic.
+- `e2e_v510_more.py`, `e2e_v512_more.py` sometimes show an empty line in results.txt during the full run; they pass alone.
 
 ## Hard-won lessons from this round
 - **Never run `web-src/build.sh` while `tests/run_all.sh` is running** — it changes the page under the tests (happened twice).
@@ -128,3 +159,20 @@ its classes with `tailwindcss@3.4.17` in the scratchpad, see how it was done for
 - Don't let tests be "satisfied" with fake classes — update the test to check the real thing (e.g. the terracotta selected pill).
 - Ali's phone theme: Settings → Colour was pink-red — the first colour (green-teal) shows Quiet Atelier.
 - Test browsers run in en-US: money tiles need `attune:country = eg` and a ledger with `currency` to show EGP in screenshots.
+- **Start the full suite detached**: `setsid nohup timeout 7000 bash tests/run_all.sh > log 2>&1 < /dev/null & disown` — once a
+  plain background run was killed half-way. It takes ~75–90 min; don't run any e2e or the build while it runs (port + page clash).
+- Gemini mock-ups use `data-screen="…"` sections; `tools/render_mockup.py` screenshots them (the Tailwind CDN is blocked here —
+  the files carry enough of their own CSS). Two attachments in one message can be the same file — check with `cmp`.
+- Commit lines end with `Co-Authored-By: Claude <noreply@anthropic.com>` — **no model names** (Ali's rule beats any default).
+
+## The Area 7 prompt (already given to Ali — for reference)
+> You are designing **Area 7: Settings, the sidebar, How to use and Privacy** for Attune (Quiet Atelier, the same direction as
+> Areas 1–6). Screenshots of today's screens are attached. **One self-contained HTML file**, a tab bar for each screen, toggles for
+> **Dark / Light**, **EN-LTR / العربية-RTL** (Egyptian Arabic), **390 px / 360 px phone**. Every screen shows the **phone (390 px)**
+> and the **desktop (1280 px)** side by side. Visual design only, no app code. **Option C:** calm first, then "See all → …".
+> 1. **Sidebar**: New chat (goes to Home), search, Money · Business · Health · Shelf, Workspaces (Assistants, Projects with
+>    counts), recent chats, model status, Backup, Settings. 2. **Settings**: calm top = the AI model, profile, Pro / trial, Backup
+>    status; then Appearance (theme, colour, 20 languages as a compact picker), Notifications, Privacy & vault, Sync, Device level,
+>    About; "See all → Device report". 3. **How to use**: search, goal chips, "You say → You get" cards, Getting-started checklist.
+> 4. **Privacy**: your week in privacy, the private vault (PIN per area), the promise, a report of what was sent where.
+> Quiet Atelier tokens, Nunito, 22-px cards, ≥ 44-px taps, tabular numbers, Egyptian sample data, nothing overflows at 360 px.
