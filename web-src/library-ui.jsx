@@ -9,6 +9,8 @@ import * as L from "./library.js";
 import { readSourceFile } from "./knowledge-ui.jsx";
 import { askConfirm } from "./confirm.jsx";
 import { page, cardPad, btnP, btnS, inp, area, label, h1 } from "./ui-kit.jsx";
+import { libraryStats } from "./learning-report.js";   // v7.7 (Gemini's Area 5): what the library holds
+import { LibraryNumbers } from "./learning-report-ui.jsx";
 
 const joinPages = (src) => (src.pages ? src.pages.map((p) => p.text).join("\n\n") : String(src.text || ""));
 
@@ -68,6 +70,7 @@ export function LibraryPage({ knowledge, nativeCall, flash, askChat }) {
         <textarea value={paste.text} onChange={(e) => setPaste({ ...paste, text: e.target.value })} rows={6} dir="auto" placeholder={tr("Paste the article, the notes or the chapter here")} className={area} data-testid="lib-paste-text" />
         <button className={btnP} onClick={addPaste} disabled={!!busy} data-testid="lib-paste-save">{tr("Remember it")}</button></div> : null}
       {busy ? <p className="c-sub m-0 flex items-center gap-2" data-testid="lib-busy"><Loader2 size={15} className="animate-spin" />{busy}</p> : null}
+      {rows.length ? <LibraryNumbers s={libraryStats(rows)} /> : null}
       <section className="space-y-2" data-testid="lib-list">
         <span className={label}>{tr("What Attune remembers")}</span>
         {rows.length ? rows.map((s) => (

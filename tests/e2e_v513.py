@@ -182,7 +182,7 @@ with sync_playwright() as p:
       plan: ['Lesson 1', 'Lesson 2'], lessons: [], quizzes: [], review: [], streak: 0, created: 1 }]));""")
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     open_more(page, "Learn daily", "learn-page")
-    page.locator("text=Turkish").first.click(); page.wait_for_selector("[data-testid=learn-time]", timeout=5000)
+    page.locator("[data-testid=learn-course]:has-text('Turkish'), [data-testid^=learn-start-]:has-text('Turkish')").first.click(); page.wait_for_selector("[data-testid=learn-time]", timeout=5000)
     h = page.evaluate("() => { const el = [...document.querySelectorAll('span')].find(s => s.textContent.trim() === 'Daily notification'); return el ? el.getBoundingClientRect().height : -1; }")
     check(0 < h < 40, "'Daily notification' reads on one line, not one letter per line (height %d px)" % h)
     w = page.evaluate("() => { const r = document.querySelector('[data-testid=learn-time]').getBoundingClientRect(); return [r.right, window.innerWidth]; }")

@@ -2,6 +2,8 @@
    Add screenshots → their text is read on the phone (ML Kit) and they are kept in Mind as photos; "Keep my notifications"
    → the phone keeps them 30 days (RecallLog.kt, never SMS). Nothing leaves the phone. */
 import React, { useState, useEffect, useMemo } from "react";
+import { recallStats } from "./learning-report.js";   // v7.7 the Recall index
+import { RecallReport } from "./learning-report-ui.jsx";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { recallDocs, recallSearch, shotTitle, KINDS } from "./lookback.js";
 import { loadChats } from "./chat.jsx";
@@ -47,6 +49,13 @@ function useMeaning(native, call) {
   return { st, dl, install, stop, remove, on: !!(st && st.installed) };
 }
 
+/** v7.7 (Gemini's Area 5): the words that matched, highlighted in the snippet. */
+function marked(text, q) {
+  const words = String(q || "").toLowerCase().split(/\s+/).filter((w) => w.length >= 3).slice(0, 6);
+  if (!words.length) return text;
+  const rx = new RegExp("(" + words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")", "ig");
+  return String(text).split(rx).map((part, i) => (i % 2 ? <mark key={i} className="rounded px-0.5 font-bold" style={{ background: "var(--c-soft)", color: "var(--c-acc)", boxShadow: "inset 0 -1px 0 var(--c-acc)" }}>{part}</mark> : part));
+}
 export function RecallPage({ memory = [], remember, native, call, readText, openRec, openChat, openArtifact, flash }) {
   const ar = getLang() === "ar";
   const [q, setQ] = useState("");
@@ -155,12 +164,13 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-bold tabular-nums text-[var(--c-mut)]">{ar ? KINDS[d.kind].ar : tr(KINDS[d.kind].en)}{d.app ? " · " + d.app : ""}{d.ts ? " · " + when(d.ts) : ""}{by === "meaning" ? <span className="text-[var(--c-acc)]" data-testid="recall-by-meaning"> · {tr("by meaning")}</span> : null}</p>
               <p className="text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{d.title || snip}</p>
-              {snip && snip !== d.title ? <p className="text-[12px] text-[var(--c-mut)] line-clamp-2" dir="auto">{snip}</p> : null}
+              {snip && snip !== d.title ? <p className="text-[12px] text-[var(--c-mut)] line-clamp-2" dir="auto">{marked(snip, q)}</p> : null}
             </div>
           </button>
         )) : <p className={card + " text-sm text-[var(--c-mut)] text-center p-6 m-0"} data-testid="recall-none">{docs.length ? tr("Nothing found — try other words, or fewer") : tr("Nothing to search yet — add screenshots or keep your notifications below")}</p>}
       </div>
 
+      {!q && docs.length ? <RecallReport s={recallStats(docs)} labels={Object.fromEntries(Object.keys(KINDS).map((k) => [k, ar ? KINDS[k].ar : tr(KINDS[k].en)]))} notesOn={native && native.recallNotesOn ? notesOn : null} /> : null}
       <div className={card + " p-4 space-y-3"}>
         <label className="flex items-center gap-2.5 min-h-[44px] text-[14px] font-bold text-[var(--c-ink)] cursor-pointer" data-testid="recall-add">
           {busy ? <Loader2 size={17} className="animate-spin text-[var(--c-acc)]" /> : <ImagePlus size={17} className="text-[var(--c-acc)]" />}

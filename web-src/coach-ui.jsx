@@ -3,6 +3,9 @@
    the lesson player (pictures + the phone's voice + "your turn"), a badge that says how the answer was checked, and
    "Practise 3 like this" (made and marked by code). Teach-first (default) or show-the-answers. Tests: tests/e2e_v727coach.py. */
 import React, { useEffect, useRef, useState } from "react";
+import { coachReport } from "./learning-report.js";   // v7.7 the Homework Report
+import { HomeworkReport, SeeAll } from "./learning-report-ui.jsx";
+import { useSubBack } from "./backstack.js";
 import { GraduationCap, Camera, Pencil, Check, X, ShieldCheck, AlertTriangle } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as C from "./coach.js";
@@ -49,6 +52,10 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
   const [marked, setMarked] = useState(null);   // v6.41 (S1) the marked worksheet
   const fileRef = useRef(null);
   const weak = C.weakTopics(state);
+  // v7.7 (Gemini's Area 5): the Homework Report
+  const [rep, setRep] = useState(false);
+  useSubBack(rep, () => setRep(false));
+  const hrep = coachReport(state);
 
   const readPage = (t) => { const ps = C.splitProblems(t); setItems(ps); setActive(null); setMarked(null); if (!ps.length) flash && flash(tr("No problems found — type it instead")); };
   const fromPhoto = async (url) => {
@@ -81,6 +88,7 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
     setActive({ i, lesson: { title: p.text, lang: getLang(), steps: [...m.steps, ...(m.steps[m.steps.length - 1].text === answer ? [] : [{ text: answer, rule: tr("The answer") }])] }, checked, by, answer, topic: "other", src: p.text });
   };
 
+  if (rep) return <div className={page + " rounded-[22px] p-4 md:p-6"} style={{ minHeight: "70vh" }} data-testid="coach-page"><HomeworkReport rep={hrep} back={() => setRep(false)} names={C.TOPIC_NAMES || {}} /></div>;
   return (
     <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="coach-page">
       <div><h2 className={h1 + " flex items-center gap-2"}><GraduationCap size={21} className="c-acc" />{tr("Homework Coach")}</h2>
@@ -101,6 +109,7 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
           <button className={btnP} disabled={!text.trim()} onClick={() => readPage(text)} data-testid="coach-go">{tr("Start")}</button>
         </div>) : null}
       {weak.length && !items.length ? <div className={cardPad} data-testid="coach-weak"><span className={label}>{tr("Needs practice")}</span><p className="m-0 mt-1 font-semibold">{weak.map((w) => tr(C.TOPIC_NAMES[w] || w)).join(" · ")}</p></div> : null}
+      {!items.length ? <SeeAll testid="coach-open-report" onClick={() => setRep(true)} title={tr("See all → Homework Report")} sub={hrep.week ? tr("{n} solved this week · {p}% first try", { n: hrep.week, p: hrep.pct }) : tr("What you solved, and what to practise")} cta={tr("Report")} /> : null}
       {busy ? <p className="c-sub" data-testid="coach-busy">{busy}</p> : null}
       {photo && items.length ? <img src={photo} alt="" className="max-h-40 rounded-[18px] border border-[var(--c-ln)]" /> : null}
       {items.length ? (

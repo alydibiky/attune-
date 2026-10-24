@@ -4,6 +4,8 @@
    "daily-learn-…" / "daily-news-…") and the home-screen widget's text.    */
 import { neutral } from "./industry.js";   // v6.50 a neutral app
 import React, { useState, useEffect, useRef } from "react";
+import { learnReport } from "./learning-report.js";   // v7.7 the Learning Report
+import { LearningReport, StreakPill, SeeAll } from "./learning-report-ui.jsx";
 import { GraduationCap, Newspaper, Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Loader2, Bell, RefreshCw, Sparkles, ImageIcon, CheckCircle2, AlertTriangle, Clock, Layers, BookOpen, HelpCircle } from "lucide-react";
 import { getLang, tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
@@ -590,13 +592,25 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
     if (!p.left) return tr("All done for today ✓");
     return p.steps.filter((x) => !x.done).map((x) => x.kind === "review" ? tr("Review {c}", { c: cardsWord(x.n) }) : x.kind === "quiz" ? tr("Quiz time") : tr("Lesson {n}", { n: (x.lesson ? x.lesson.n : x.n) + 1 })).join(" · ");
   };
+  // v7.7 (Gemini's Area 5): the streak in the title, today's lesson first, and "See all → Learning Report"
+  const lrep = learnReport(courses);
+  if (view === "report") return frame(<LearningReport rep={lrep} back={() => setView("list")} />, "learn-frame");
+  const firstToday = (() => { for (const c of courses) { const s = D.todayPlan(c).steps.find((x) => x.kind === "lesson" && !x.done); if (s) return { c, s }; } return null; })();
   return frame(
     <section className="space-y-4" data-testid="learn-page">
       <div className="flex items-start gap-3">
         <span className="w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><GraduationCap size={19} /></span>
-        <div className="min-w-0"><h2 className={h1}>{tr("Learn daily")}</h2>
+        <div className="min-w-0 flex-1"><h2 className={h1}>{tr("Learn daily")}</h2>
           <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("A short lesson a day, cards that come back until you know them, and a quiz every few lessons.")}</p></div>
+        <StreakPill n={lrep.streak} />
       </div>
+      {firstToday ? <div className="rounded-[22px] p-4 space-y-2.5 border-2" style={{ borderColor: "var(--c-acc)", background: "var(--c-surf)" }} data-testid="learn-today">
+        <div className="flex items-center justify-between gap-2"><span className="inline-flex items-center rounded-full px-2.5 h-6 text-[11.5px] font-extrabold" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }}>{tr("Today's lesson · about 5 min")}</span>
+          <span className="c-sub text-[12px] font-bold tabular-nums">{tr("Lesson {n} of {m}", { n: (firstToday.s.lesson ? firstToday.s.lesson.n : firstToday.s.n) + 1, m: firstToday.c.plan.length })}</span></div>
+        <b className="block text-[17px] font-black leading-snug" dir="auto">{firstToday.s.lesson ? firstToday.s.lesson.title : firstToday.s.title}</b>
+        <p className="c-sub m-0 text-[12.5px]" dir="auto">{firstToday.c.title || firstToday.c.topic}</p>
+        <button className={btnP + " w-full"} onClick={() => { setCur(firstToday.c.id); setView("course"); }} data-testid="learn-today-start">{tr("Start today's lesson")}</button>
+      </div> : null}
       {courses.length ? <>
         <p className="c-lbl m-0">{tr("Today")}</p>
         <div className="c-list">
@@ -612,6 +626,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             </button>; })}
         </div>
         <button className={cGhost + " flex items-center gap-1.5"} style={gs} onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={15} />{tr("New course")}</button>
+        <SeeAll testid="learn-open-report" onClick={() => setView("report")} title={tr("See all → Learning Report")} sub={tr("Days studied, quiz scores, words learned and weak points")} cta={tr("Report")} />
       </> : <>
         <p className="c-lbl m-0">{tr("Ready courses")}</p>
         <div className="c-list">

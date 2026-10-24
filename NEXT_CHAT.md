@@ -3,6 +3,13 @@
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 
 ## Where things stand
+- **`main` = v7.7** (versionCode 119) — **Gemini step 5 (Mind & learning) is built**: Mind's calm top (on a computer three
+  numbers: everything kept, promises due, auto spaces) and "Do now" (the promise due today / late, with Done → state done);
+  "See all → Mind Report" on a phone, the Mind Report beside the wall on a computer (kept this week by kind, promises due or
+  late, most-used tags, things you forgot you have); Learn daily: the streak pill, today's lesson card, "See all → Learning
+  Report" (days studied this month, quiz accuracy over time, learned, weak points, courses); Homework Coach: "See all →
+  Homework Report" (this week, first-try %, by topic); Remember: the library's numbers; Recall: matched words highlighted and the
+  on-phone index. Numbers: `web-src/learning-report.js` (unit `v800learnreport`), UI `learning-report-ui.jsx`, e2e `e2e_v800mind.py`.
 - **`main` = v7.6** (versionCode 118) — Ali's 24 Oct requests (all decided by him, options A/A):
   - **Home is the chat**: New chat (sidebar, the chat's +) goes to the clean Home; the Chat · Your life · Translate tab row is
     gone — three pills in Home's box (`box-mode-chat|life|translate`, cmdbox-ui `BoxModes`); Your life answers under the box
@@ -90,7 +97,7 @@ Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BR
 
 ## NEXT: the Gemini step (Ali: "when you finish and push we will start the Gemini thing")
 Gemini designs each area creatively as **HTML mock-ups only (no code)**; Ali approves; **Claude builds it into the app himself**
-(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · ~~4 Business~~ (v7.5) · **5 Mind & learning: Gemini's mock-up arrived 24 Oct, rendered, build in progress (v7.7) — Area-5 sources were set aside in the scratchpad while v7.6 shipped** · (Money page,
+(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · ~~4 Business~~ (v7.5) · ~~5 Mind & learning~~ (v7.7) · (Money page,
 Follow-ups, Guardian, Deal Check) · 2 Health (Fit & Food, Family health, Cycle) · 3 Chat (chat, Assistants, Projects) ·
 4 Business hub + Books + Shop · 5 Mind & learning · 6 Tools · 7 Settings, sidebar, How to use. The message Ali sends Gemini is in the
 last chat; the brief is `GEMINI_DESIGN_BRIEF.md`. When an HTML mock-up arrives: render it locally (Tailwind CDN is blocked — compile

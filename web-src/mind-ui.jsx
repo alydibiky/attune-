@@ -10,6 +10,9 @@ import * as M from "./mind.js";
 import { useSubBack } from "./backstack.js";
 import { Md } from "./chat.jsx";
 import { page, btnP, btnS, btnDanger, inp, area, label as kLabel, h1, chip as kChip } from "./ui-kit.jsx";
+import { mindReport } from "./learning-report.js";   // v7.7 (Gemini's Area 5): the Mind Report
+import { MindCalmTop, MindReport, SeeAll } from "./learning-report-ui.jsx";
+import { useDesktopWide } from "./side-ui.jsx";
 
 /* ---- thumbnails: small JPEGs in IndexedDB (the records stay small text in localStorage) ---- */
 let dbP = null;
@@ -276,9 +279,13 @@ const saveSpaces = (v) => { try { localStorage.setItem(SPACES_KEY, JSON.stringif
  * llm(messages, image, o): the on-phone model. ask(question, found): "ask your memory" answer text.
  * promisesPanel / wordsPanel: the old Memory screen's other two parts, shown as tabs.
  */
-export function MindPage({ records, remember, update, forget, togglePin, search, llm, modelReady, ask, findCommitments, scheduleReminder, pro, openPlan, openEngine, flash, promisesPanel, wordsPanel, promiseCount, shareBanner, note, external, clearExternal }) {
+export function MindPage({ records, remember, update, forget, togglePin, search, llm, modelReady, ask, findCommitments, scheduleReminder, pro, openPlan, openEngine, flash, promisesPanel, wordsPanel, promiseCount, shareBanner, note, external, clearExternal, commits = [], onPromiseDone = null }) {
   const ar = getLang() === "ar";
   const [tab, setTab] = useState("mind");
+  const wide = useDesktopWide();
+  const [rep, setRep] = useState(false);   // v7.7: the Mind Report (phone); on a computer it sits beside the wall
+  useSubBack(rep, () => setRep(false));
+  const mrep = useMemo(() => mindReport(records, commits, Date.now()), [records, commits]);
   const [add, setAdd] = useState("");
   const [q, setQ] = useState("");
   const [tag, setTag] = useState(null);
@@ -422,7 +429,8 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
         {auto.map((t) => <button key={t.tag} onClick={() => { setTab("mind"); setTag(tag === t.tag ? null : t.tag); setKind(null); }} className={chip(tab === "mind" && tag === t.tag)} dir="auto">#{t.tag}</button>)}
       </div>
 
-      {tab === "promises" ? promisesPanel : tab === "words" ? wordsPanel : (
+      {rep && !wide ? <MindReport rep={mrep} back={() => setRep(false)} open={(id) => { setRep(false); setOpenId(id); }} onDone={onPromiseDone} />
+        : tab === "promises" ? promisesPanel : tab === "words" ? wordsPanel : (
         <>
           {/* keep anything — v6.15 (look C): a sheet from the + button */}
           {adding ? <div className="fixed inset-0 z-[60] bg-black/60 flex items-end" onClick={() => setAdding(false)}>
@@ -482,7 +490,10 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
 
           {filterOn ? <p className="text-[11.5px] font-semibold tabular-nums text-[var(--c-mut)]" data-testid="mind-count">{shown.length} {tr(shown.length === 1 ? "item" : "items")}</p> : null}
 
-          {/* the wall */}
+          {!filterOn && !answer ? <MindCalmTop rep={mrep} wide={wide} onDone={(id) => onPromiseDone && onPromiseDone(id)} /> : null}
+          {!wide && !filterOn && records.length ? <SeeAll testid="mind-open-report" onClick={() => setRep(true)} title={tr("See all → Mind Report")} sub={T2("{w} kept this week · {d} promises due", { w: mrep.week, d: mrep.due })} cta={tr("Report")} /> : null}
+          {/* the wall — v7.7: on a computer the Mind Report sits beside it */}
+          <div className={wide && records.length ? "grid grid-cols-[minmax(0,1fr)_380px] gap-4 items-start" : ""}><div className="min-w-0">
           {shown.length ? (
             <div className="columns-2 sm:columns-3 lg:columns-4 gap-2.5" data-testid="mind-board">
               {past.length && !hidePast && !filterOn ? (() => { const { rec, why } = past[0]; return (
@@ -504,6 +515,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
               {records.length ? tr("Nothing matches that.") : <>{tr("Your Mind is empty.")}<br /><span className="text-xs">{tr("Keep a note, a link or a photo with + — or share anything to Attune from another app.")}</span></>}
             </p>
           )}
+          </div>{wide && records.length ? <div className={"calm rounded-[22px] border border-[var(--c-acc)]/50 bg-[var(--c-surf-2)] p-3"}><MindReport compact rep={mrep} open={(id) => setOpenId(id)} onDone={onPromiseDone} /></div> : null}</div>
         </>
       )}
 
@@ -516,5 +528,6 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
     </div>
   );
 }
+const T2 = (k, v) => tr(k, Object.fromEntries(Object.entries(v).map(([a, b]) => [a, "\u2066" + b + "\u2069"])));
 // a kind chip adds its word to the search, so the same parser does all the filtering
 function kindWord(k) { return { note: "notes", link: "links", photo: "photos", quote: "quotes", product: "products", recipe: "recipes", todo: "tasks", contact: "contacts", place: "places", code: "code", answer: "answers" }[k] || ""; }
