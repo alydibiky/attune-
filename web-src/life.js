@@ -31,7 +31,7 @@ export function amountsIn(text, cur) {
     // not money: a count ("12 installments", "36 شهر"), a day ("on the 5th", "يوم 5") or a turn ("my turn is 4", "month 4")
     const after = t.slice(m.index + m[0].length, m.index + m[0].length + 22), before = t.slice(Math.max(0, m.index - 14), m.index);
     if (!m[3] && !m[2] && (new RegExp("^\\s*(?:st|nd|rd|th|er|º|ª|\\.)?\\s*(?:monthly\\s+|weekly\\s+)?(?:" + UNITS + "|weeks?|years?|days?|اسابيع|سنين|سنوات|ايام|semanas?|semaines?|wochen|settimane|hafta|minggu|años?|ans?|anos?|jahre?|anni|yıl|tahun|días?|jours?|dias?|tage?|giorni|gün|hari)(?![\\p{L}])", "iu").test(after)
-      || /(?:on the|day|يوم|turn is|turn|month|دوري|الشهر رقم|is)\s*$/i.test(before) || /^(?:st|nd|rd|th)\b/.test(after)
+      || /(?:on the|\bday|يوم|turn is|\bturn|\bmonth|دوري|الشهر رقم|\bis)\s*$/i.test(before)   /* v7.9: a whole word — "Saturday 600" is money */ || /^(?:st|nd|rd|th)\b/.test(after)
       || nextToMonth(before, after))) continue;
     if (m[3]) { out.push({ value: /الفين|ألفين/.test(m[3]) ? 2000 : 1000, at: m.index }); continue; }
     let v = payNumber(m[1], cur); if (!isFinite(v)) continue;
@@ -276,12 +276,26 @@ export function addCommitment(data, c, now = Date.now()) {
 export function togglePaid(data, id, i) {
   return { ...data, items: data.items.map((c) => c.id !== id ? c : { ...c, paid: (c.paid || []).includes(i) ? c.paid.filter((x) => x !== i) : [...(c.paid || []), i].sort((a, b) => a - b) }) };
 }
+/** v7.9 (Ali: "People & plans did not ask me with a checkbox if the maid came"): who comes on a day and is paid each time,
+ *  and today is their day, not answered yet. → [{ c, i, date, amount }] */
+export function askToday(data, now = Date.now()) {
+  const today = iso(new Date(now)), out = [];
+  for (const c of (data && data.items) || []) {
+    if (c.kind !== "regular" || c.dir !== "out") continue;
+    for (const s of scheduleOf(c, now)) if (s.date === today && !s.paid && !(c.skip || []).includes(s.i)) out.push({ c, i: s.i, date: s.date, amount: s.amount });
+  }
+  return out;
+}
+/** "Didn't come" on day i: nothing is paid, and the day isn't asked again (untick with `on` = false). */
+export function skipDay(data, id, i, on = true) {
+  return { ...data, items: data.items.map((c) => c.id !== id ? c : { ...c, skip: on ? [...new Set([...(c.skip || []), i])] : (c.skip || []).filter((x) => x !== i) }) };
+}
 export function removeCommitment(data, id) { return { ...data, items: data.items.filter((c) => c.id !== id) }; }
 
 /** What is due soon across everything (for Home's "Today" and reminders): [{ c, i, date, amount, late }] within `days`. */
 export function dueSoon(data, now = Date.now(), days = 7) {
   const today = iso(new Date(now)), until = iso(new Date(now + days * 86400000)), out = [];
-  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && s.date <= until && (c.kind !== "regular" || s.date === today)) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
+  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && !(c.skip || []).includes(s.i) && s.date <= until && (c.kind !== "regular" || s.date === today)) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 

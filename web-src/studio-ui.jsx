@@ -217,6 +217,11 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   }, []);
   useEffect(() => { if (incoming && incoming.prompt != null) { setIdea(incoming.prompt); setMode("create"); clearIncoming && clearIncoming(); } }, [incoming]);
 
+  // v7.9: every hook sits above the early returns (opening the report skipped these and the page showed an error)
+  const keepRef = useRef(null);
+  const autoSharpen = useRef(null);
+  const autoFast = useRef(false);
+  const userStop = useRef(false);
   // v7.8 (Gemini's Area 6): the Studio report — pictures made and the time each took, on this device
   if (rep) return <div className="calm text-[var(--c-ink)]" data-testid="studio-page"><FamilyReport fam="studio" back={() => setRep(false)} /></div>;
   if (!info) return <div className="calm space-y-3" data-testid="studio-page"><p className="p-4 m-0 text-sm text-[var(--c-mut)] rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)]">{tr("Studio works in the Android app.")}</p><FamilySeeAll fam="studio" onClick={() => setRep(true)} /></div>;
@@ -259,7 +264,6 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   const erasePhoto = (file) => { if (!file) return; const r = new FileReader(); r.onload = () => openErase({ src: r.result, photo: r.result }); r.readAsDataURL(file); };
   const keep = (list) => { setGallery(list); saveStudio(list); };
   // adds one picture to the newest gallery (safe from a delayed call — v5.34 auto-sharpen)
-  const keepRef = useRef(null);
   keepRef.current = (item) => setGallery((g) => { const l = [item, ...g]; saveStudio(l); return l; });
 
   const install = async (packId) => {
@@ -390,8 +394,6 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       if (next) setTimeout(() => (autoFast.current && native.sharpenFast ? sharpenFast(next, true) : sharpen(next, true)), 50);
     }
   };
-  const autoSharpen = useRef(null);
-  const autoFast = useRef(false);
   const onGpu = (b) => !!b && !/cpu/i.test(String(b));
   /** Minutes the ×4 AI sharpen needs on the processor: ~25 s for each 128-px part. */
   const cpuMinutes = (p) => Math.max(1, Math.round(Math.ceil((p.w || 512) / 128) * Math.ceil((p.h || 512) / 128) * 25 / 60));
@@ -433,7 +435,6 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
     try { setRef(await shrink(cur.url)); setMode("edit"); setIdea(""); }
     catch (e) { setErr(tr("Could not open that picture")); }
   };
-  const userStop = useRef(false);
   // v5.19: pictures are stopped only by this button (cancelImage), never by
   // a cancel meant for something else.
   const stop = () => { userStop.current = true; notePending(null); if (LIVE.pick) { LIVE.pick(-1); return; } const id = callId.current || LIVE.callId; if (!LIVE.busy || LIVE.busy.stage === "resume") setBusy(null); try { if (native.cancelImage) native.cancelImage(id); else native.cancel(id); } catch (e) {} };

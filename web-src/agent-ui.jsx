@@ -56,8 +56,8 @@ export function BookingDetails() {
         className={inp} data-testid={"booking-" + k} /></label>);
   return (
     <div className={"calm mt-4 " + cardPad + " bg-[var(--c-surf)]!"} data-testid="booking-details">
-      <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[44px] text-start text-[15px] text-[var(--c-ink)] font-extrabold flex items-center justify-between gap-2">{tr("Booking details")}<span className="text-[var(--c-acc)] text-[13px] font-bold">{open ? tr("Hide") : tr("Edit")}</span></button>
-      <p className={"text-[12px] mt-1 m-0 " + muted}>{tr("Used only when you tap “Fill my details” on a booking site. Kept on this phone; never sent anywhere by Attune.")}</p>
+      <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[44px] text-start text-[15px] text-[var(--c-ink)] font-extrabold flex items-center justify-between gap-2">{tr("Booking details — flights & hotels")}<span className="text-[var(--c-acc)] text-[13px] font-bold">{open ? tr("Hide") : tr("Edit")}</span></button>
+      <p className={"text-[12px] mt-1 m-0 " + muted}>{tr("When you ask Attune to book a flight or a hotel (“book me a flight to Dubai on the 5th”), it opens the booking site and fills your name, passport and phone for you with one tap on “Fill my details”. Kept on this phone; never sent anywhere by Attune.")}</p>
       {open ? (
         <div className="grid grid-cols-2 gap-3 mt-4">
           {[["first", "First name"], ["last", "Last name"], ["email", "Email", "email"], ["phone", "Phone (with country code)", "tel"], ["birth", "Date of birth", "date"], ["nationality", "Nationality"],

@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, Check, X } from "lucide-react";
 import { tr } from "./i18n.js";
-import { inbox, toTxns, autoPick, appendToLedger } from "./paylog.js";
+import { inbox, toTxns, autoPick, appendToLedger, alreadyIn } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
 import { payOpts } from "./locale.js";
 import * as U from "./ui-kit.jsx";
@@ -46,9 +46,10 @@ export function runAutoPay(N) {
   let on = false; try { on = N.payAccess(); } catch (e) {}
   if (!on) return 0;
   let q = []; try { q = JSON.parse(N.payQueue() || "[]"); } catch (e) {}
-  const sure = autoPick(inbox(q, readDone(), payOpts()));
-  if (!sure.length) return 0;
   const led = loadLedger(); if (!led) return 0;
+  // v7.9: one already in Money (typed by hand, or read before) is never added by itself — it waits as "Already in Money?"
+  const sure = autoPick(inbox(q, readDone(), payOpts())).filter((e) => !alreadyIn(e, led));
+  if (!sure.length) return 0;
   const r = appendToLedger(led, toTxns(sure));
   if (!r.ids.length) return 0;
   try { localStorage.setItem("ledger.v3", JSON.stringify(r.ledger)); } catch (e) { return 0; }
@@ -71,7 +72,6 @@ export function PayInbox({ N, onAdd, ready = true }) {
   };
   useEffect(() => { load(); const f = () => load(); window.addEventListener("focus", f); document.addEventListener("visibilitychange", f);
     return () => { window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", f); }; }, []);
-  if (!can) return null;
   const finish = (list) => {
     const ids = list.map((e) => e.id);
     markDone(N, ids);
@@ -83,10 +83,11 @@ export function PayInbox({ N, onAdd, ready = true }) {
   // by itself, with Money open: the sure ones go in through Money; the rest wait here for a tap
   useEffect(() => {
     if (!on || !auto || !ready) return;   // only once Money is loaded, so nothing is marked done before Money has it
-    const sure = autoPick(items);
+    const led = loadLedger(), sure = autoPick(items).filter((e) => !alreadyIn(e, led));   // v7.9: never a second copy by itself
     if (sure.length) { const t = setTimeout(() => { add(sure); logAuto(sure); setAutoN((n) => n + sure.length); }, 1500); return () => clearTimeout(t); }
   }, [on, auto, ready, items.length]);
   const toggleAuto = () => { const v = !auto; setAuto(v); try { localStorage.setItem(AUTO_KEY, v ? "1" : "0"); } catch (e) {} };
+  if (!can) return null;   // v7.9: after every hook (React needs the same hooks on every render)
   if (!on) {
     if (notNow) return null;
     return (
@@ -104,6 +105,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
     <div className="calm shrink-0 px-2 py-2" data-testid="paylog-auto-done"><div className={U.card + " px-3.5 py-1 flex items-center gap-2"}>
       <Check size={15} className="text-[var(--c-pos)] shrink-0" /><span className="flex-1 text-[13.5px] font-semibold">{tr("{n} payments added by themselves", { n: autoN })}</span>
       <button onClick={toggleAuto} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted} data-testid="paylog-auto-toggle">{auto ? tr("Ask me first") : tr("Add by themselves")}</button></div></div>) : null;
+  const ledgerNow = open ? loadLedger() : null;
   return (
     <div className="calm shrink-0 px-2 py-2" data-testid="paylog"><div className={U.card}>
       <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[52px] flex items-center gap-2 px-3.5 py-2.5 text-start" data-testid="paylog-open">
@@ -114,7 +116,8 @@ export function PayInbox({ N, onAdd, ready = true }) {
           {items.slice(0, 30).map((e) => (
             <div key={e.id} className="flex items-center gap-2 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item">
               <span className="flex-1 min-w-0"><b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "text-[var(--c-ink)]")} dir="ltr">{e.direction === "in" ? "+" : "−"}{e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} {e.currency}</b>
-                <span className={"block text-[12px] truncate " + U.muted} dir="auto">{[e.party, e.app, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span></span>
+                <span className={"block text-[12px] truncate " + U.muted} dir="auto">{[e.party, e.app, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span>
+                {alreadyIn(e, ledgerNow) ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-already">{tr("Already in Money?")}</span> : null}</span>
               <button onClick={() => add([e])} aria-label={tr("Add")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center" data-testid="paylog-add"><Check size={15} /></button>
               <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] grid place-items-center" data-testid="paylog-dismiss"><X size={15} /></button>
             </div>))}

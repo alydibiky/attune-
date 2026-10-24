@@ -4,9 +4,9 @@
    check → saved. Each commitment shows its payments as checkboxes; ticking one offers to add it to Money (the same
    sentence Money reads from a bank message, confirmed there). Tests: tests/e2e_v727life.py.                                    */
 import React, { useMemo, useState } from "react";
-import { Users, Check, Trash2, Wallet, Sparkles } from "lucide-react";
+import { Users, Check, Trash2, Wallet, Sparkles, X } from "lucide-react";
 import { tr } from "./i18n.js";
-import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, lifeModelPrompt, readLifeModel, nextReminder } from "./life.js";
+import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { loadGuardian, saveGuardian, collected } from "./guardian.js";
 import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -133,7 +133,8 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     if (on && toMoney && window.confirm(tr("Add it to Money? {t}", { t: tickText(c, i) }))) toMoney(tickText(c, i));
   };
   const remove = (c) => { if (window.confirm(tr("Delete this?"))) { put(removeCommitment(data, c.id)); unremind && unremind("life-" + c.id); } };
-  const soon = dueSoon(data);
+  const soon = dueSoon(data).filter((x) => !(x.c.kind === "regular" && x.c.dir === "out"));   // those are asked above
+  const asks = askToday(data);
   const groups = [["People", data.items.filter((c) => c.kind === "debt" || (c.kind === "installment" && c.person))],
     ["Installments", data.items.filter((c) => c.kind === "installment" && !c.person)], ["Savings circles", data.items.filter((c) => c.kind === "circle")],
     ["Bills, rent and subscriptions", data.items.filter((c) => ["bill", "rent", "subscription"].includes(c.kind))], ["Comes regularly", data.items.filter((c) => c.kind === "regular")]].filter((g) => g[1].length);
@@ -160,6 +161,15 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
           <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(draft)}{draft.start ? " · " + tr("from {d}", { d: draft.start }) : ""}</div></>}
           <div className="flex gap-2 mt-3"><button className={U.btnP} onClick={save} data-testid="life-save">{tr("Save")}</button><button className={U.btnS} onClick={() => setDraft(null)}>{tr("Cancel")}</button></div>
         </div>) : null}
+      {/* v7.9 (Ali): on their day, a plain question with a real checkbox — ticked = came and paid (in Money by itself) */}
+      {asks.map((x) => (
+        <div key={x.c.id + ":" + x.i} className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-acc)]")} data-testid="life-ask-today">
+          <b className="block font-extrabold text-[15px]" dir="auto">{tr("{t} — today", { t: heading(x.c) })}</b>
+          <label className="flex items-center gap-3 mt-2 min-h-[48px] cursor-pointer">
+            <input type="checkbox" checked={false} onChange={() => tick(x.c, x.i, true)} className="w-6 h-6 shrink-0 accent-[var(--c-acc)]" data-testid="life-ask-came" />
+            <span className="text-[14px] font-bold" dir="auto">{tr("Came today — paid {a}", { a: fmt(x.amount) + (x.c.currency ? " " + x.c.currency : "") })}</span></label>
+          <button onClick={() => { put(skipDay(data, x.c.id, x.i)); flash && flash(tr("Noted — nothing paid today")); }} className={U.btnS + " mt-1 " + U.muted} data-testid="life-ask-skip"><X size={14} />{tr("Didn't come")}</button>
+        </div>))}
       {soon.length ? (
         <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-warn)]")} data-testid="life-soon">
           <div className="flex items-center justify-between gap-2"><span className="font-extrabold text-[14.5px]">⏰ {tr("Due this week")}</span>

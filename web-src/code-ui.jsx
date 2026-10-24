@@ -130,6 +130,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
   const [cur, setCur] = useState(() => loadProjects()[0] || null);
   const [task, setTask] = useState("");
   const [langPick, setLangPick] = useState("auto");
+  const [allProj, setAllProj] = useState(false);   // v7.9 "Your programs": 4, then "Show all"
   const [busy, setBusy] = useState(false);
   const [steps, setSteps] = useState([]);
   const [live, setLive] = useState("");
@@ -292,10 +293,13 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
               </button>))}
           </div>
           {projects.length ? <>
-            <p className={K.label + " -mb-2"}>{tr("Your programs")}</p>
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none]" data-testid="code-projects">
-              {projects.slice(0, 12).map((p) => (
-                <div key={p.id} className="shrink-0 w-40 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5">
+            {/* v7.9 (Ali: "fix the interface of the code page"): the title no longer sits under the cards, and the programs are a grid
+                like the starters (a sideways row always showed a cut card on a phone) — 4, then "Show all" */}
+            <div className="flex items-center justify-between gap-2 pt-1"><p className={K.label + " m-0"}>{tr("Your programs")}</p>
+              {projects.length > 4 ? <button onClick={() => setAllProj((v) => !v)} className="min-h-[44px] px-1 text-[12.5px] font-bold text-[var(--c-acc)]" data-testid="code-projects-all">{allProj ? tr("Show less") : tr("Show all {n}", { n: projects.length })}</button> : null}</div>
+            <div className="grid grid-cols-2 gap-2" data-testid="code-projects">
+              {projects.slice(0, allProj ? 30 : 4).map((p) => (
+                <div key={p.id} className="min-w-0 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3">
                   <button onClick={() => openProject(p)} className="w-full text-start">
                     <span className="block text-[13px] text-[var(--c-ink)] font-medium truncate" dir="auto">{p.title || tr("Untitled")}</span>
                     <span className={`block text-[11px] mt-0.5 ${p.status === "passed" ? "text-[var(--c-pos)]" : p.status === "failing" ? "text-[var(--c-neg)]" : "text-[var(--c-mut)]"}`}>{tr((LANGS[p.lang] || LANGS.python).label)} · {p.status === "passed" ? tr("passing") : p.status === "failing" ? tr("not passing") : tr("draft")}</span>
@@ -308,12 +312,15 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
             <textarea value={task} onChange={(e) => setTask(e.target.value)} rows={3} data-testid="code-task" dir="auto"
               placeholder={tr("What should it do? e.g. “A function that splits a restaurant bill between friends, with the tip”")}
               className="w-full bg-transparent p-1.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] resize-none focus:outline-none" />
-            <div className="flex flex-wrap items-center gap-1.5">
-              {[["auto", "Auto"], ["python", "Python"], ["javascript", "JavaScript"], ["html", "Web page"]].map(([k, l]) => (
-                <button key={k} onClick={() => setLangPick(k)} className={chip(langPick === k)} data-testid={"code-lang-" + k}>{tr(l)}</button>
-              ))}
+            {/* v7.9: the language pills on their own row, "Build & test" full width under them on a phone (beside them on a computer) */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                {[["auto", "Auto"], ["python", "Python"], ["javascript", "JavaScript"], ["html", "Web page"]].map(([k, l]) => (
+                  <button key={k} onClick={() => setLangPick(k)} className={chip(langPick === k)} data-testid={"code-lang-" + k}>{tr(l)}</button>
+                ))}
+              </div>
               <button onClick={() => run({ fresh: true })} disabled={!task.trim()} data-testid="code-build"
-                className="ms-auto px-5 min-h-[44px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-sm font-extrabold disabled:opacity-40 flex items-center gap-1.5"><Wrench size={14} />{tr("Build & test")}</button>
+                className="sm:ms-auto w-full sm:w-auto shrink-0 justify-center px-5 min-h-[48px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[15px] font-extrabold disabled:opacity-40 flex items-center gap-1.5"><Wrench size={15} />{tr("Build & test")}</button>
             </div>
           </div>
           {pyLine}

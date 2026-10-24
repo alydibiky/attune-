@@ -114,7 +114,8 @@ function score(f, q) {
   if (list.includes(qn)) return 30 + (f.src === "table" ? 4 : 0);                 // the exact name first
   const hit = words.filter((w) => names.includes(w)).length;
   if (!hit) return -1;
-  return hit / words.length * 10 + (names.startsWith(qn) ? 3 : 0) + (f.egypt ? 2 : 0) + (f.src === "table" ? 4 : f.src === "usda" ? 1 : 0) - (f.check ? 3 : 0) + countryBonus(f);
+  // v7.9 (Ali: "Mango cake" came under "Mango" and "Cake"): a food with EVERY word typed always beats one with some of them
+  return hit / words.length * 10 + (hit === words.length && words.length > 1 ? 8 : 0) + (names.startsWith(qn) ? 3 : 0) + (f.egypt ? 2 : 0) + (f.src === "table" ? 4 : f.src === "usda" ? 1 : 0) - (f.check ? 3 : 0) + countryBonus(f);
 }
 // v6.10: the chosen country's dishes rank higher, another country's dishes lower (Egypt: as before)
 function countryBonus(f) { if (!f.cc) return 0; const cc = getCountry(); return f.cc !== cc ? -2 : cc !== "eg" ? 3 : 0; }
@@ -131,6 +132,8 @@ export function searchOffline(q, n = 30) {
   const all = [...FOODS.map((f) => ({ ...f, src: "table" })), ...Object.values(loadCache())];
   return rank(all, q).slice(0, n);
 }
+/** v7.9: rank foods from several places together (the table, the phone's cache, the offline pack, online) — best first. */
+export const rankFoods = (list, q) => rank(list, q);
 function rank(list, q) {
   const seen = new Set();
   return list.map((f) => [f, score(f, q)]).filter(([, s]) => s > 0).sort((a, b) => b[1] - a[1]).map(([f]) => f)

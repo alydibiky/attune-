@@ -214,12 +214,15 @@ export function decide(bank, ranked, auto = (bank && bank.auto) || AUTO) {
   if (!ranked || !ranked.length) return { status: "notfood", items: [] };
   const top = bank.items[ranked[0].i];
   if (top.kind === "not") return { status: "notfood", items: [], top };
-  const alts = F.uniqAlts(ranked.map((r) => entryFood(bank.items[r.i])).filter(Boolean).map((fd) => ({ label: fd.en, food: fd })));   // v6.12: no "Fried egg · Fried egg"
+  let alts = F.uniqAlts(ranked.map((r) => entryFood(bank.items[r.i])).filter(Boolean).map((fd) => ({ label: fd.en, food: fd })));   // v6.12: no "Fried egg · Fried egg"
+  // v7.9 (Ali's mango cake): a dish and a flavour among the guesses → the dish with its flavour ("Mango cake") first
+  const comp = F.composeDish(alts);
+  if (comp) alts = F.uniqAlts([{ label: comp.food.en, food: comp.food }, ...alts]);
   const p = ranked[0].p, conf = Math.round(Math.min(0.99, Math.max(0.3, p)) * 100) / 100;
   const status = p >= auto ? "auto" : "guess";
   // v6.18: what the person corrected last time (the food they chose, their usual amount) is used for this dish at once
   const lf = F.learned(top.en), lfd = lf ? (F.food(lf.id) || lf.food) : null;
-  const fd = lfd || entryFood(top);
+  const fd0 = lfd || entryFood(top), fd = !lfd && comp && fd0 && fd0.id === comp.dishId ? comp.food : fd0;
   let item;
   if (fd) {
     const base = defaultItem(fd), g = lf ? Math.max(1, Math.round(base.grams * lf.ratio)) : base.grams;

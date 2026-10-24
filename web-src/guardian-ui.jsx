@@ -2,9 +2,9 @@
    Pro: every finding with its action, and the counter "Attune saved you X this month". Free: the first finding in full and the
    others as a total ("3 more ways to save 2,280 EGP") with "Get Pro" — the counter is what Pro is sold on.            */
 import React, { useMemo, useState } from "react";
-import { ShieldCheck, Send, Check, X, Crown } from "lucide-react";
+import { ShieldCheck, Send, Check, X, Crown, Trash2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
-import { findings, loadGuardian, saveGuardian, markSaved, dismiss, savedTotals, noteReminded } from "./guardian.js";
+import { findings, loadGuardian, saveGuardian, markSaved, dismiss, savedTotals, noteReminded, removeTxn } from "./guardian.js";
 import { loadLedger } from "./myledger.js";
 import { loadLife } from "./life.js";
 import { fmt } from "./money-calm.js";
@@ -63,6 +63,21 @@ function PriceMemory({ flash }) {
     </div>);
 }
 
+// v7.9 (Ali: "I don't know where that came from"): the two payments behind a "twice" card — day, time, account, and where
+// each came from — so the person sees exactly what the Guardian matched.
+const SRC = { notification: "From a notification", attune: "Logged in Attune" };
+function TwoPayments({ txns }) {
+  const L = loadLedger(), acc = (id) => ((L && L.accounts) || []).find((a) => a.id === id);
+  const when = (t) => t.at ? new Date(t.at).toLocaleTimeString(getLang() === "ar" ? "ar-EG" : undefined, { hour: "numeric", minute: "2-digit" }) : null;
+  return <div className="mt-2.5 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] divide-y divide-[var(--c-ln)]" data-testid="guardian-pair">
+    {txns.map((t, i) => <div key={t.id || i} className="flex items-start gap-2 px-3 py-2 text-[12.5px]" data-testid="guardian-pair-row">
+      <span className="font-extrabold tabular-nums shrink-0">{i + 1}</span>
+      <span className="min-w-0 flex-1"><span className="block font-bold truncate" dir="auto">{t.note || tr("Payment")}</span>
+        <span className={"block " + U.muted} dir="auto">{[t.date, when(t), acc(t.account) ? acc(t.account).name : null, tr(SRC[t.source] || "Typed by hand")].filter(Boolean).join(" · ")}</span></span>
+      <span className="font-extrabold tabular-nums shrink-0">{fmt(t.amount)}</span></div>)}
+  </div>;
+}
+
 export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
   const { g, put, F: all, totals } = useGuardian();
   const F = all.filter((f) => f.kind !== "subs" && f.kind !== "creep");   // v6.32: subscriptions and price rises live in the Overpaying check above
@@ -78,6 +93,13 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
     }
     if (f.kind === "fees" || f.kind === "due") { put(dismiss(g, f.id)); return; }
     put(markSaved(g, f)); flash && flash(tr("Counted as saved"));
+  };
+  // a payment logged twice (a notification and a typed one): the later copy goes, nothing is counted as saved
+  const removeCopy = (f) => {
+    const t = f.txns && f.txns[1], L = removeTxn(loadLedger(), t && t.id);
+    if (!L) { flash && flash(tr("Open Money to remove it")); return; }
+    try { localStorage.setItem("ledger.v3", JSON.stringify(L)); } catch (e) { return; }
+    put(dismiss(g, f.id)); flash && flash(tr("Removed — it's logged once now"));
   };
   const shown = pro ? F : F.slice(0, 1), hidden = pro ? [] : F.slice(1);
   return (
@@ -100,10 +122,12 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
           <div className="flex items-start gap-3"><div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]" dir="auto">{f.T ? tr(f.T[0], f.T[1]) : f.title}</b><div className={"text-[12.5px] " + U.muted} dir="auto">{f.D ? tr(f.D[0], f.D[1]) : f.detail}</div></div>
             <span className={U.tag(f.kind === "late" || f.kind === "double" ? "red" : "amber")}><span className="tabular-nums">{fmt(f.amount)}</span></span></div>
           {f.kind === "late" ? <p className={"mt-2 text-[12.5px] rounded-[14px] p-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] " + U.muted} dir="auto" data-testid="guardian-message">{f.message}</p> : null}
+          {f.kind === "double" && f.txns ? <TwoPayments txns={f.txns} /> : null}
           <div className="flex flex-wrap gap-2 mt-3">
-            <button className={U.btnP} onClick={() => act(f, true)} data-testid="guardian-yes">{f.kind === "late" ? <Send size={14} /> : <Check size={14} />}{tr(DONE[f.kind][0])}</button>
+            {f.kind === "double" && !f.sure ? <button className={U.btnP} onClick={() => removeCopy(f)} data-testid="guardian-remove-copy"><Trash2 size={14} />{tr("Logged twice — remove one")}</button>
+            : <button className={U.btnP} onClick={() => act(f, true)} data-testid="guardian-yes">{f.kind === "late" ? <Send size={14} /> : <Check size={14} />}{tr(DONE[f.kind][0])}</button>}
             {f.kind === "double" ? <button className={U.btnS} onClick={() => openOwed({ letter: { title: "Ask for it back", text: disputeLetter({ merchant: (f.T && f.T[1] && f.T[1].m) || "", amount: fmt(f.amount), currency: "", dates: f.D && f.D[1] && f.D[1].d ? [f.D[1].d] : [] }, { lang: getLang() === "ar" ? "ar" : "en" }) } })} data-testid="guardian-dispute"><Send size={14} />{tr("Ask for it back")}</button> : null}
-            {DONE[f.kind][1] ? <button className={U.btnS + " " + U.muted} onClick={() => act(f, false)} data-testid="guardian-no"><X size={14} />{tr(DONE[f.kind][1])}</button> : null}
+            {DONE[f.kind][1] ? <button className={U.btnS + " " + U.muted} onClick={() => act(f, false)} data-testid="guardian-no"><X size={14} />{tr(f.kind === "double" && !f.sure ? "Both are real" : DONE[f.kind][1])}</button> : null}
           </div>
         </div>))}
       {hidden.length ? (

@@ -834,7 +834,10 @@ function photoItem(it, extra = {}, plate = "dinner plate", ruler = null) {
   if (geo && grams) { if (Math.max(geo, grams) / Math.min(geo, grams) > 2.5) portionFlag = !(ruler && ruler.by === "card"); grams = Math.round(ruler && ruler.by === "card" ? geo ** 0.75 * grams ** 0.25 : Math.sqrt(geo * grams)); }
   else if (geo) grams = geo;
   if (lf && grams) grams *= lf.ratio;
-  const alts = uniqAlts([name, ...(Array.isArray(it.alternatives) ? it.alternatives : [])].map((a) => ({ label: String(a || ""), food: matchFood(String(a || "")) }))).slice(0, 3);
+  let alts = uniqAlts([name, ...(Array.isArray(it.alternatives) ? it.alternatives : [])].map((a) => ({ label: String(a || ""), food: matchFood(String(a || "")) }))).slice(0, 3);
+  // v7.9: "cake" + "mango" among the guesses → "Mango cake" first (and the item's name when the dish was the first guess)
+  const comp = composeDish(alts);
+  if (comp) { alts = uniqAlts([{ label: comp.food.en, food: comp.food }, ...alts]).slice(0, 4); if (fd && fd.id === comp.dishId && !lf) fd = comp.food; }
   const conf = Math.max(0, Math.min(1, num(it.confidence) ?? 0.6));
   let item;
   if (fd) { const g = Math.round(grams || gramsOf(fd, 1, "serving")); item = { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", qty: 1, unit: "g", grams: g, ...nutrients(fd, g), estimate: false }; }
@@ -871,6 +874,21 @@ export function jsonLoose(raw) {
     try { return JSON.parse(head + open.reverse().map((c) => (c === "{" ? "}" : "]")).join("")); } catch (e) {}
   }
   return null;
+}
+/** v7.9 (Ali's mango cake: Attune said "Cake" with "Mango" as another guess; Yazio said "Mango sponge cake"): when the guesses
+ *  hold a dish (a cake, a tart, a juice…) AND a flavour (a fruit, chocolate…), the dish is named with it — "Mango cake",
+ *  «كيك مانجا» — a food the tables know by that name when there is one, else the dish's own numbers under the full name.
+ *  alts = [{ label, food }] best first → { food, dishId } or null. */
+const DISH_W = /\b(cake|cheesecake|tart|pie|juice|smoothie|milkshake|ice cream|yog(h)?urt|pudding|muffin|cupcake|crepe|pancakes?|waffle|mousse|trifle|gateau)\b/i;
+const FLAVOUR_W = /^(chocolate|vanilla|caramel|pistachio|lotus|nutella|coffee|coconut|hazelnut|cinnamon)$/i;
+export function composeDish(alts) {
+  const foods = (alts || []).map((a) => a && a.food).filter(Boolean).slice(0, 5);
+  const dish = foods.find((f) => f.group !== "fruit" && DISH_W.test(f.en || "")), flav = foods.find((f) => f !== dish && (f.group === "fruit" || FLAVOUR_W.test(f.en || "")));
+  if (!dish || !flav || normT(dish.en).includes(normT(flav.en))) return null;
+  const word = (DISH_W.exec(dish.en) || [dish.en])[0].toLowerCase(), en = flav.en + " " + word;
+  const known = matchFood(en);
+  if (known && normT(known.en) === normT(en)) return { food: known, dishId: dish.id };
+  return { food: { ...dish, en, ar: [dish.ar, flav.ar].filter(Boolean).join(" "), names: [en, ...(dish.names || [])], of: [dish.id, flav.id] }, dishId: dish.id };
 }
 /** v6.12: "Is it:" chips without repeats — Ali saw "Fried egg · Fried egg": two guesses ("fried egg", "Fried eggs") that are one food.
  *  A chip is dropped when its food (or, for an unknown food, its words) is already on the list. */

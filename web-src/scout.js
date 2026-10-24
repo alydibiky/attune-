@@ -147,6 +147,20 @@ export function modelOf(g) {
   const must = [...new Set(toks)].slice(0, 6);
   return { must, avoid: VARIANTS.filter((v) => !must.includes(v)) };
 }
+// v7.9: the same place in English and Arabic ("6th of october" = «اكتوبر», "new cairo" = «التجمع») — an ad isn't marked
+// "not in the place" because it wrote the other language
+const SAME_PLACE = [["new cairo", "التجمع", "التجمع الخامس", "fifth settlement"], ["maadi", "المعادي"], ["zamalek", "الزمالك"], ["heliopolis", "مصر الجديده", "مصر الجديدة"],
+  ["nasr city", "مدينه نصر", "مدينة نصر"], ["dokki", "الدقي"], ["mohandessin", "المهندسين"], ["sheikh zayed", "الشيخ زايد", "zayed", "زايد"],
+  ["6th of october", "october", "اكتوبر", "أكتوبر", "6 اكتوبر", "6 أكتوبر"], ["shorouk", "الشروق"], ["madinaty", "مدينتي"], ["rehab", "الرحاب"], ["obour", "العبور"],
+  ["giza", "الجيزه", "الجيزة"], ["haram", "الهرم"], ["faisal", "فيصل"], ["downtown", "وسط البلد"], ["garden city", "جاردن سيتي"], ["mokattam", "المقطم"], ["shubra", "شبرا"],
+  ["ain shams", "عين شمس"], ["helwan", "حلوان"], ["alexandria", "اسكندريه", "الإسكندرية", "اسكندرية"], ["smouha", "سموحه"], ["sidi gaber", "سيدي جابر"], ["north coast", "الساحل", "sahel"],
+  ["hurghada", "الغردقه", "الغردقة"], ["sharm", "شرم"], ["ain sokhna", "السخنه", "العين السخنة"], ["new capital", "العاصمه الاداريه", "العاصمة الإدارية"], ["mansoura", "المنصوره", "المنصورة"],
+  ["tanta", "طنطا"], ["zagazig", "الزقازيق"], ["cairo", "القاهره", "القاهرة"], ["dubai", "دبي"], ["riyadh", "الرياض"], ["jeddah", "جده", "جدة"], ["doha", "الدوحه"], ["kuwait", "الكويت"]].map((g) => g.map(fold));
+export function samePlace(a, b) {
+  const x = fold(a || ""), y = fold(b || ""); if (!x || !y) return false;
+  if (x === y || x.includes(y) || y.includes(x)) return true;
+  return SAME_PLACE.some((g) => g.some((p) => x.includes(p)) && g.some((p) => y.includes(p)));
+}
 export function placeOf(text) {
   const t = fold(text);
   const hit = PLACES.filter((p) => t.includes(fold(p))).sort((a, b) => b.length - a.length)[0];
@@ -204,7 +218,7 @@ const KNOWN_AD_SITE = /(^|\.)(olx\.com\.eg|dubizzle\.com\.eg|aqarmap\.com\.eg|pr
 const LIST_TITLE = /\b(for sale in|for rent in|vehicles for sale|cars for sale|properties for|apartments for|\d[\d,]*\s+(ads|results|listings|properties|cars)|buy (&|and) sell|best prices? (in|online))\b|للبيع في مصر|للايجار في|للإيجار في|اعلان|إعلان مبوب/i;
 // v6.46 (Ali, 21 Oct: "scouting is absolutely useless" — a Tucson search "compared" nfl.com, calculator.io and a Malaysian forum):
 // sites that never carry a sale ad, and an unknown site counts only when its price is written WITH a currency
-const NOT_AD = /(^|\.)(wikipedia\.org|wikihow\.com|youtube\.com|youtu\.be|nfl\.com|espn\.com|fifa\.com|imdb\.com|reddit\.com|quora\.com|medium\.com|pinterest\.com|tiktok\.com|instagram\.com|x\.com|twitter\.com|linkedin\.com(?!\/jobs)|github\.com|stackoverflow\.com|bbc\.(com|co\.uk)|cnn\.com|reuters\.com|aljazeera\.(net|com)|youm7\.com|masrawy\.com|almasryalyoum\.com|caranddriver\.com|motortrend\.com|edmunds\.com|kbb\.com|cars\.com|autotrader\.com|carwow\.co\.uk)$|calculator|forum|blog|news|wiki|weather|dictionary|translate/i;
+const NOT_AD = /(^|\.)(bartleby\.com|studocu\.com|coursehero\.com|chegg\.com|ipl\.org|ukessays\.com|gradesaver\.com|sparknotes\.com|scribd\.com|academia\.edu|researchgate\.net|essaytyper\.com|papersowl\.com|brainly\.[a-z.]+|slideshare\.net|wikipedia\.org|wikihow\.com|youtube\.com|youtu\.be|nfl\.com|espn\.com|fifa\.com|imdb\.com|reddit\.com|quora\.com|medium\.com|pinterest\.com|tiktok\.com|instagram\.com|x\.com|twitter\.com|linkedin\.com(?!\/jobs)|github\.com|stackoverflow\.com|bbc\.(com|co\.uk)|cnn\.com|reuters\.com|aljazeera\.(net|com)|youm7\.com|masrawy\.com|almasryalyoum\.com|caranddriver\.com|motortrend\.com|edmunds\.com|kbb\.com|cars\.com|autotrader\.com|carwow\.co\.uk)$|calculator|forum|blog|news|wiki|weather|dictionary|translate/i;
 export const isAdPage = (url, text, title = "") => {
   if (NOT_AD.test(siteOf(url)) || /\/(forum|forums|thread|threads|news|blog|wiki)\//i.test(String(url))) return false;
   if (AD_URL.some((re) => re.test(url))) return true;
@@ -301,7 +315,7 @@ export function readAd(hit, g) {
   if (flag) out.redFlag = snip(text, Math.max(0, latin(text).toLowerCase().indexOf(flag[0])), flag[0].length, 18) || flag[0];
   out.short = text.replace(/\s+/g, " ").trim().length < 160;
   out.item = normItem(out.title + " " + text.slice(0, 300));
-  out.facts.place = (g && g.place && f.includes(fold(g.place))) ? g.place : placeOf(text.slice(0, 600));
+  out.facts.place = (g && g.place && (f.includes(fold(g.place)) || samePlace(placeOf(text.slice(0, 600)), g.place))) ? g.place : placeOf(text.slice(0, 600));
   if (out.facts.place) q("place", out.facts.place);
   return out;
 }
@@ -339,7 +353,7 @@ export function check(ad, g) {
   }
   // a rent: a price a monthly rent can't be (a sale ad) is out
   if (g.kind === "rent" && F.price && F.price > 300000 && (!g.max || g.max < 300000)) line({ k: "price", say: ["a monthly rent (this is a sale price)", "إيجار شهري (هذا سعر بيع)"] }, false, Q.price);
-  if (g.place) line({ k: "place", say: [`in ${g.place}`, `في ${g.place}`] }, F.place ? fold(F.place) === fold(g.place) || fold(F.place).includes(fold(g.place)) || fold(g.place).includes(fold(F.place)) : null, Q.place);
+  if (g.place) line({ k: "place", say: [`in ${g.place}`, `في ${g.place}`] }, F.place ? samePlace(F.place, g.place) : null, Q.place);
   for (const w of g.wish) {
     let r = null;
     if (w.k === "beds") r = F.beds == null ? null : F.beds >= w.min;
@@ -500,12 +514,30 @@ export function learn(taste, ad, up) {
   return t;
 }
 
+// ---- v7.9 (Ali: "fix the scout part, what are all these ads" — essays and mobile-phone ads for a flat search): an ad must be
+// ABOUT what was asked — the car's make or model, a home word for a rent or a home, the item's own words otherwise
+const HOME_W = /\b(apartments?|flats?|villas?|studios?|chalets?|duplex|penthouse|rooms?|house|townhouse|twin ?house|roof|loft|residence|unit)\b|شقه|شقة|شقق|فيلا|فلل|ستوديو|استوديو|شاليه|دوبلكس|بنتهاوس|غرفه|غرفة|اوضه|اوضة|بيت|منزل|تاون ?هاوس|توين ?هاوس|روف|وحده سكنيه|وحدة سكنية/i;
+const STOP = new Set(["for", "the", "and", "with", "near", "used", "new", "sale", "rent", "price", "cheap", "best", "egypt", "cairo", "in", "on", "at", "of", "to", "a", "an", "my", "me",
+  "في", "من", "على", "علي", "مع", "جديد", "مستعمل", "للبيع", "للايجار", "للإيجار", "سعر", "رخيص", "مصر", "القاهره", "عايز", "محتاج"]);
+export function aboutIt(ad, g, text = "") {
+  if (!ad || !g) return true;
+  const hay = " " + fold([ad.title, ad.item, text.slice(0, 1500)].filter(Boolean).join(" ")).replace(/[^\p{L}\p{N}]+/gu, " ") + " ";
+  const words = hay.trim().split(" ");
+  const has = (w) => { w = fold(w); return !!w && (hay.includes(" " + w + " ") || (w.length >= 5 && !/\d/.test(w) && words.some((x) => Math.abs(x.length - w.length) <= 1 && close1(x, w)))); };
+  if (g.kind === "car" && g.car) return [g.car.make, ...String(g.car.model).split(" "), g.car.makeAr, g.car.modelAr].filter(Boolean).some(has);
+  if (g.kind === "rent" || g.kind === "buy-home") return HOME_W.test(hay) || HOME_W.test(String(ad.title || ""));
+  if (g.kind === "gold") return true;
+  const key = (g.model && g.model.must.length ? g.model.must : fold(g.what || g.raw || "").replace(/[^\p{L}\p{N}]+/gu, " ").split(" "))
+    .filter((w) => w && w.length >= 3 && !STOP.has(w) && !/^\d+$/.test(w) && !(g.place && fold(g.place).includes(w)));
+  return !key.length || key.some(has);
+}
+
 // ---- 8. one run of a goal --------------------------------------------------------------------------------------------------------------
 /** hits from the searches → this run's results, merged with what was seen before.
  *  goal = { id, g, seen: [ad], taste, votes: {id: 1|-1} } → { found: [ad with check/fair/score], fresh: [ids new this run], seen }. */
 export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
   const g = goal.g, seenIds = new Set((goal.seen || []).map((s) => s.id));
-  const ads = mergeTwins((hits || []).filter((h) => h && h.url && isAdPage(h.url, h.text || "", h.title || "")).map((h) => readAd(h, g)));
+  const ads = mergeTwins((hits || []).filter((h) => h && h.url && isAdPage(h.url, h.text || "", h.title || "")).map((h) => { const a = readAd(h, g); return { ...a, about: aboutIt(a, g, String(h.text || "")) }; }));
   // v6.46: what earlier runs kept is checked again with today's rules (an old run kept list pages, forums and "151 EGP" Tucsons)
   const band = BIG[g.kind] ? BAND[g.kind] : null;
   const adUrl = (s) => AD_URL.some((re) => re.test(s.url));
@@ -521,7 +553,7 @@ export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
     const risks = risksOf(r0, seen);
     // a find with a warning never ranks as a top match; a followed ad always stays in the list
     return { ...r0, risks, score: Math.max(0, r0.score - 12 * risks.filter((x) => x.k === "cheap" || x.k === "money" || x.k === "phone").length) };
-  }).filter((a) => !a.check.out || a.followed).sort((a, b) => (b.followed - a.followed) || b.score - a.score);
+  }).filter((a) => a.followed || (!a.check.out && (a.about != null ? a.about : aboutIt(a, g)))).sort((a, b) => (b.followed - a.followed) || b.score - a.score);
   // a product: the same item in several stores → the cheapest is marked (and ranks first among equals)
   if (g.kind === "product") {
     const priced = found.filter((a) => a.facts.price && a.check.ok.some((x) => x.k === "model"));

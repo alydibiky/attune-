@@ -42,18 +42,26 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
       T: [days === 1 ? "{p} is 1 day late" : "{p} is {n} days late", { p: c.person, n: days }], D: ["{a} due since {d}", { a: `${money(amt)} ${c.currency || cur}`, d: late[0].date }] });
   }
   // double: the same amount at the same merchant within 10 minutes
+  // v7.9 (Ali: "I don't know where that came from"): each finding carries the two payments (shown on the card). "Charged twice"
+  // is said only when both have a time and they are minutes apart and neither was typed by hand; without times, or when one
+  // came from a notification and the other was typed, it ASKS ("Same payment twice?") — logged twice is far more likely.
+  const tm = (t) => t.ts || t.created || 0;
+  const brief = (t) => ({ id: t.id, date: t.date, amount: t.amount, note: t.note || "", account: t.account || "", at: tm(t) || null, source: t.source || "" });
   const byM = new Map();
   for (const t of exp) { const k = merchantOf(t.note) + "|" + t.amount; (byM.get(k) || byM.set(k, []).get(k)).push(t); }
   for (const [k, list] of byM) {
     if (list.length < 2 || !k.split("|")[0]) continue;
-    list.sort((a, b) => (a.ts || Date.parse(a.date)) - (b.ts || Date.parse(b.date)));
+    list.sort((a, b) => (tm(a) || Date.parse(a.date)) - (tm(b) || Date.parse(b.date)));
     for (let i = 1; i < list.length; i++) {
-      const a = list[i - 1], b = list[i], gap = Math.abs((b.ts || 0) - (a.ts || 0));
-      if (a.date === b.date && (a.ts && b.ts ? gap <= 10 * 60000 : a.note === b.note && a.id !== b.id && sameMinuteNote(a, b))) {
-        add({ id: "double:" + (b.id || k + b.date), kind: "double", amount: b.amount, title: `Charged twice at ${titleCase(merchantOf(b.note))}`,
-          detail: `${money(b.amount)} ${cur} twice on ${b.date} — ask your bank to refund one`, action: "dispute",
-          T: ["Charged twice at {m}", { m: titleCase(merchantOf(b.note)) }], D: ["{a} twice on {d} — ask your bank to refund one", { a: `${money(b.amount)} ${cur}`, d: b.date }] });
-      }
+      const a = list[i - 1], b = list[i], timed = !!(tm(a) && tm(b)), gap = Math.abs(tm(b) - tm(a));
+      if (a.date !== b.date || a.id === b.id || (timed ? gap > 10 * 60000 : a.note !== b.note)) continue;
+      const mixed = (a.source === "notification") !== (b.source === "notification");
+      const sure = timed && !mixed, m = titleCase(merchantOf(b.note)), amt = `${money(b.amount)} ${cur}`;
+      add({ id: "double:" + (b.id || k + b.date), kind: "double", sure, amount: b.amount, txns: [brief(a), brief(b)],
+        title: sure ? `Charged twice at ${m}` : `Same payment twice at ${m}?`,
+        detail: sure ? `${amt} twice on ${b.date} — ask your bank to refund one` : `${amt} twice on ${b.date} — logged twice, or charged twice?`, action: "dispute",
+        T: [sure ? "Charged twice at {m}" : "Same payment twice at {m}?", { m }],
+        D: [sure ? "{a} twice on {d} — ask your bank to refund one" : "{a} twice on {d} — logged twice, or charged twice?", { a: amt, d: b.date }] });
     }
   }
   // creep: a payment made every month to the same merchant went up ≥ 5 %
@@ -96,7 +104,12 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
   const order = { late: 0, double: 1, due: 2, creep: 3, fees: 4, subs: 5 };
   return out.sort((a, b) => order[a.kind] - order[b.kind] || b.amount - a.amount);
 }
-const sameMinuteNote = (a, b) => a.note === b.note;
+/** v7.9: "Logged twice — remove one": the ledger without that payment (Money is not open on the Guardian page, so its saved
+ *  ledger is written directly, the way the notification reader does). → the new ledger, or null when it isn't there. */
+export function removeTxn(ledger, id) {
+  if (!ledger || !Array.isArray(ledger.txns) || !id || !ledger.txns.some((t) => t && t.id === id)) return null;
+  return { ...ledger, txns: ledger.txns.filter((t) => !(t && t.id === id)) };
+}
 const titleCase = (s) => String(s || "").replace(/\b\p{L}/gu, (c) => c.toUpperCase());
 
 /** A polite reminder in the person's language (Egyptian Arabic for an Arabic name, else English) — written by code. */

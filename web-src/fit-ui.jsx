@@ -479,7 +479,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     if (q.trim().length < 2) return [];
     const base = online && online.q === q.trim() ? online.foods : DB.searchOffline(q, 12);
     const seen = new Set(base.map((f) => f.barcode || f.id));
-    return [...base, ...packHits.filter((f) => !seen.has(f.barcode || f.id))];
+    // v7.9: the offline pack's foods are ranked WITH the rest (they were added at the end — "Mango cake" came last)
+    return DB.rankFoods([...base, ...packHits.filter((f) => !seen.has(f.barcode || f.id))], q);
   }, [q, online, packHits]);
 
   // v6.10 home — the log bar: Photo · Barcode · Say it · Search, each one tap from the home

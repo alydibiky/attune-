@@ -49,6 +49,8 @@ import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
+import { loadBooks, saveBooks } from "./books-store.js";   // v7.9 Money's invoices → Business → Books
+import { invoicesToBooks } from "./yusr-to-books.js";
 import { MoneyCalm, MoneyReport, MoneyBox, MoneyPhoneHead, RightNow } from "./money-calm-ui.jsx";   // v7.2 Money in two levels (Gemini Area 1)
 import { moneyReport, zakatFromSnapshot, ledgerCsv } from "./money-report.js";
 import { findings as guardianFindings, loadGuardian } from "./guardian.js";
@@ -6489,7 +6491,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />
       {addOpen ? <AddSheet L={ledgerNow} onSave={addFromSheet} onDebt={() => openLedger("debt")} onClose={() => setAddOpen(false)} /> : null}
-      {moreOpen ? <MoreSheet open={(sc) => openLedger(sc)} onClose={() => setMoreOpen(false)} /> : null}
+      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "biz-invoices") { setMoreOpen(false); if (goTo) { goTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "books" })), 80); } return; } openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
           <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl rounded-t-[22px]! p-4 max-h-[88%] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
@@ -7648,7 +7650,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "7.8";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "7.9";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7701,7 +7703,9 @@ const MORE_TOOLS = [
 // not the users"): the Knowledge screen, "Add to Knowledge" and "Teach this to my model" exist only in developer mode (Ali's
 // test builds: tap the version 7 times); for everyone else the packs install and answer quietly, cited in the answer.
 const KNOW_ADMIN = devMode();
-if (!KNOW_ADMIN) {
+// v7.9 (Ali, 24 Oct: "remove knowledge, I want me the developer to be the only one to add it"): the Knowledge page is in no list,
+// search or "/" for anyone (developer mode keeps only "Add to Knowledge" and "Teach this to my model"); the packs still answer
+{
   for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (MORE_TOOLS[i][0] === "knowledge") MORE_TOOLS.splice(i, 1);
   for (const h of HUBS) { const k = h[3].indexOf("knowledge"); if (k >= 0) h[3].splice(k, 1); }
 }
@@ -7722,7 +7726,7 @@ K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[lab
 const MORE_GROUPS = [
   ["Money & people", ["scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
-  ["Mind & learning", ["coach", "learn", "memory", "remember", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
+  ["Mind & learning", ["coach", "learn", "memory", "remember", "shelf", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
@@ -8586,6 +8590,33 @@ export default function App() {
     const t = setTimeout(run, 2500);
     document.addEventListener("visibilitychange", run);
     return () => { clearTimeout(t); document.removeEventListener("visibilitychange", run); };
+  }, []);
+  // v7.9 (Ali, 24 Oct: "remove notes in the money app and invoices should be transferred to business"): once, Money's invoices
+  // are copied into Business → Books (posted, with their customers and payments) and its notes into Mind (tag "money").
+  // Nothing is deleted in Money; each copy runs once (attune:moved:*), and an invoice copied before is never copied twice.
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      let led = null; try { led = loadLedger(); } catch (e) {}
+      if (!led) return;
+      try {
+        if (!localStorage.getItem("attune:moved:invoices") && (led.invoices || []).length) {
+          const r = invoicesToBooks(await loadBooks(), led, { at: new Date().toISOString() });
+          if (!r.moved.length || (await saveBooks(r.state))) {
+            localStorage.setItem("attune:moved:invoices", JSON.stringify({ at: Date.now(), moved: r.moved.map((m) => [m.num, m.number]), skipped: r.skipped }));
+            if (r.moved.length) flash(tr("{n} invoices moved from Money to Business → Books", { n: r.moved.length }));
+          }
+        }
+      } catch (e) {}
+      try {
+        if (!localStorage.getItem("attune:moved:notes") && (led.notes || []).length) {
+          const recs = led.notes.map((n) => memMake({ kind: "note", title: String(n.title || n.body || tr("Money note")).slice(0, 60), output: "", tags: ["money"],
+            text: [n.body, ...(n.items || []).map((i) => (i.done ? "☑ " : "☐ ") + i.text), n.due ? tr("Due: {d}", { d: n.due }) : ""].filter(Boolean).join("\n") }));
+          setMemory((m) => memPrune([...recs, ...m], MEM_MAX).records);
+          localStorage.setItem("attune:moved:notes", String(recs.length));
+        }
+      } catch (e) {}
+    }, 3000);
+    return () => clearTimeout(t);
   }, []);
   // v6.27 "Do it for me": open the chosen link — inside Attune (level 2, Android), else the person's app (search copied) or the site
   useEffect(() => {

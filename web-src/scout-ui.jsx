@@ -132,7 +132,10 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
   const [data, setData] = useState(() => S.loadScout());
   // (v6.32: every change hands tonight's searches to the phone, so Scout keeps looking with Attune closed)
   const put = (d) => { setData(S.saveScout(d)); try { const N = window.AttuneNative; N && N.scoutNightPlan && N.scoutNightPlan(JSON.stringify(S.nightPlan(d))); } catch (e) {} };
-  const [sel, setSel] = useState(() => (S.loadScout().goals[0] || {}).id || null);
+  // v7.9 (Ali: Home's "Scout found 4 new" didn't take him to the ads): the goal with new finds opens first, its new ads marked
+  // "New", first in the list, and scrolled to
+  const [sel, setSel] = useState(() => { const gs = S.loadScout().goals; return ((gs.find((x) => (x.unseen || []).length) || gs[0]) || {}).id || null; });
+  const [fresh] = useState(() => { const gs = S.loadScout().goals; const g0 = gs.find((x) => (x.unseen || []).length); return g0 ? g0.unseen : []; });
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(null);   // { id, i, n, q }
   const [copied, setCopied] = useState("");
@@ -154,7 +157,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     put({ ...d, goals: d.goals.map((x) => (x.id !== goal.id ? x : { ...x, votes: { ...(x.votes || {}), [ad.id]: up ? 1 : -1 }, taste: S.learn(x.taste, ad, up) })) });
   };
   const view = goal ? S.runGoal(goal, [], { now: Date.now(), market: S.loadMarket() }) : null;
-  const found = view ? view.found : [];
+  const found = view ? [...view.found].sort((a, b) => fresh.includes(b.id) - fresh.includes(a.id)) : [];
+  useEffect(() => { if (!fresh.length) return; const t = setTimeout(() => { const el = document.querySelector("[data-testid=scout-ad][data-new]"); if (el && el.scrollIntoView) el.scrollIntoView({ block: "start", behavior: "smooth" }); }, 250); return () => clearTimeout(t); }, [sel]);
   const cmp = view ? view.compare : null;
   // v6.37 (D2): wait or buy — how long ads of this search stay up and how often their price drops (the market book)
   const book = goal ? (S.loadMarket()[S.marketKey(goal.g)] || []) : [];
@@ -211,7 +215,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         const vote0 = (goal.votes || {})[a.id];
         const msg = S.sellerMessage(a, goal.g, { ar });
         return (
-          <div key={a.id} className={K.cardPad + " space-y-2.5"} data-testid="scout-ad">
+          <div key={a.id} className={K.cardPad + " space-y-2.5"} data-testid="scout-ad" data-new={fresh.includes(a.id) ? "1" : undefined}>
+            {fresh.includes(a.id) ? <span className={K.tag("green")} data-testid="scout-ad-new">{tr("New")}</span> : null}
             <div className="flex items-start gap-3">
               {a.image ? <img src={a.image} alt="" className="w-20 h-16 object-cover rounded-[14px] shrink-0" /> : null}
               <div className="flex-1 min-w-0">

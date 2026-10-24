@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only Studio's pictures and files the page made for sharing (an invoice PDF) can be shared, nothing else. -->
+<!-- Only Studio's pictures, files the page made for sharing (an invoice PDF) and the camera's photo for the page, nothing else. -->
 <paths>
     <files-path name="studio" path="studio/" />
     <files-path name="shared" path="shared/" />
+    <!-- v7.9: a photo the camera app writes for the page ("Take a photo") -->
+    <cache-path name="camera" path="camera/" />
 </paths>

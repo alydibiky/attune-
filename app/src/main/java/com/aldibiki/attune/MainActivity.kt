@@ -51,6 +51,33 @@ class MainActivity : AppCompatActivity() {
         fileCallback = null
         cb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res.resultCode, res.data))
     }
+    // v7.9 (Ali: "take a photo still opens the gallery"): a WebView ignores capture="environment", so when the page asks
+    // for the camera the app opens the camera itself; the photo is written to the app's cache and handed to the page.
+    private var cameraFile: java.io.File? = null
+    private var cameraUri: Uri? = null
+    private val takePhoto = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val cb = fileCallback
+        fileCallback = null
+        val f = cameraFile; val u = cameraUri
+        cameraFile = null; cameraUri = null
+        cb?.onReceiveValue(if (res.resultCode == RESULT_OK && f != null && u != null && f.length() > 0) arrayOf(u) else null)
+    }
+    private fun cameraIntent(params: WebChromeClient.FileChooserParams): Intent? {
+        if (!params.isCaptureEnabled) return null
+        val types = params.acceptTypes.filter { it.isNotBlank() }
+        if (types.isNotEmpty() && types.none { it.startsWith("image") }) return null
+        return try {
+            val dir = java.io.File(cacheDir, "camera").apply { mkdirs() }
+            dir.listFiles()?.forEach { if (System.currentTimeMillis() - it.lastModified() > 86_400_000L) it.delete() }
+            val f = java.io.File(dir, "photo-" + System.currentTimeMillis() + ".jpg")
+            val u = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.files", f)
+            val i = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE).putExtra(android.provider.MediaStore.EXTRA_OUTPUT, u)
+                .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            if (i.resolveActivity(packageManager) == null) return null
+            cameraFile = f; cameraUri = u
+            i
+        } catch (e: Exception) { null }
+    }
 
     // Android's "Save to…" picker, for backups. The MIME type is given per call
     // through a tiny contract subclass, because CreateDocument fixes it at registration.
@@ -323,6 +350,9 @@ class MainActivity : AppCompatActivity() {
             ): Boolean {
                 fileCallback?.onReceiveValue(null)
                 fileCallback = callback
+                cameraIntent(params)?.let { cam ->
+                    try { takePhoto.launch(cam); return true } catch (e: Exception) { cameraFile = null; cameraUri = null }
+                }
                 return try {
                     pickFiles.launch(params.createIntent())
                     true

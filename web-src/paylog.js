@@ -6,6 +6,7 @@
    Pure logic; tests: tests/unit/v727paylog.test.mjs.                                                                         */
 import { parsePayment } from "./yusr/paytext.js";
 import { catOf } from "./yusr/logtext.js";
+import { merchantOf } from "./guardian.js";   // v7.9 the shop a payment was made to (alreadyIn)
 
 // merchants Money's own words don't know yet → its categories. v6.27: worldwide chains first, then by region
 // (Egypt, the Gulf, Europe, the Americas, South & South-East Asia, Africa). Add more freely: one regex per category.
@@ -62,7 +63,17 @@ export function toTxns(entries) {
   const iso = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   return (entries || []).filter((e) => e.amount > 0).slice(0, 50).map((e) => ({
     type: e.direction === "in" ? "income" : "expense", amount: Math.round(e.amount * 100) / 100, currency: e.currency || "", cat: categorise([e.party, e.text].join(" "), e.direction),
-    note: [e.party, e.app].filter(Boolean).join(" · ").slice(0, 80) || "Payment", date: iso(e.ts), source: "notification" }));
+    note: [e.party, e.app].filter(Boolean).join(" · ").slice(0, 80) || "Payment", date: iso(e.ts), source: "notification", ts: e.ts || undefined }));
+}
+
+/** v7.9 (Ali: a 599 "charged twice" that was one payment): is this notification already in Money? The same amount and day, and
+ *  either typed by hand / logged from the box (no notification behind it), or a notification minutes apart, or the same shop
+ *  when there are no times. Such an entry is never added by itself — it waits in the list as "Already in Money?". */
+export function alreadyIn(entry, ledger) {
+  if (!entry || !(entry.amount > 0) || !ledger || !Array.isArray(ledger.txns)) return null;
+  const type = entry.direction === "in" ? "income" : "expense", day = toTxns([entry])[0].date, shop = merchantOf(entry.party || "");
+  return ledger.txns.find((t) => t && t.type === type && t.date === day && Math.abs((Number(t.amount) || 0) - entry.amount) < 0.005
+    && (t.source !== "notification" ? true : (t.created && entry.ts) ? Math.abs(t.created - entry.ts) <= 10 * 60000 : !!shop && merchantOf(t.note) === shop)) || null;
 }
 
 /** v6.27 "by itself": only what the reader is sure of is added without a tap (high confidence, a direction, an amount). */
@@ -78,7 +89,7 @@ export function appendToLedger(ledger, txns, now = Date.now()) {
     if (!(a > 0 && a < 1e9) || (t.type !== "expense" && t.type !== "income")) continue;
     const acc = L.accounts.find((x) => t.currency && x.currency === t.currency) || L.accounts[0];
     const id = "n" + now.toString(36) + Math.random().toString(36).slice(2, 6) + ids.length;
-    L.txns.push({ id, type: t.type, amount: Math.round(a * 100) / 100, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80) });
+    L.txns.push({ id, type: t.type, amount: Math.round(a * 100) / 100, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) });
     ids.push(id);
   }
   return { ledger: L, ids };
