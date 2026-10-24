@@ -20,7 +20,7 @@ await rejects(V.setUser(sys, { name: "Ali", role: "owner", pin: "12" }), /4 to 8
 let t = await V.setUser(sys, { name: "Ali", role: "owner", pin: "2468" });
 t = await V.setUser(t, { name: "Sayed", role: "editor", pin: "1357", tables: [S.id] });
 t = await V.setUser(t, { name: "Mona", role: "viewer", pin: "9999" });
-ok(V.teamOf(t).length === 3 && !JSON.stringify(t.team).includes("2468"), "three people; the PIN itself is never stored");
+ok(V.teamOf(t).length === 3 && V.teamOf(t).every((u) => !("pin" in u) && /^[0-9a-f]{64}$/.test(u.pinHash)), "three people; the PIN itself is never stored");
 await rejects(V.setUser(t, { name: "X", role: "viewer", pin: "1357" }), /already uses/, "two people can't share a PIN");
 const ali = await V.login(t, "2468"), sayed = await V.login(t, "1357"), mona = await V.login(t, "9999");
 ok(ali.role === "owner" && sayed.role === "editor" && mona.role === "viewer" && (await V.login(t, "0000")) === null, "signing in by PIN finds the right person; a wrong PIN finds no one");
