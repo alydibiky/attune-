@@ -1237,10 +1237,10 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
     const w = day.watch || null;
     let dateLine = dayKey; try { dateLine = new Date(dayKey + "T12:00:00").toLocaleDateString(ar ? "ar-EG" : "en-GB", { weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
     const MEAL_SIGN = {
-      breakfast: ["#FFF4D6", "#B7791F", <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>],
-      lunch: ["#E3F4EC", "#157A52", <><path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4" /></>],
-      dinner: ["#ECE8F8", "#6B4FB8", <><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></>],
-      snacks: ["#FCE7EE", "#B83260", <><path d="M12 7c-3-2-8-1-8 5 0 4 3 9 6 9 1 0 1.5-.5 2-.5s1 .5 2 .5c3 0 6-5 6-9 0-6-5-7-8-5zM12 7c0-2 1-4 3-4" /></>],
+      breakfast: ["color-mix(in srgb, var(--c-chart-3) 16%, transparent)", "var(--c-chart-3)", <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>],
+      lunch: ["color-mix(in srgb, var(--c-chart-1) 16%, transparent)", "var(--c-chart-1)", <><path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4" /></>],
+      dinner: ["color-mix(in srgb, var(--c-chart-4) 16%, transparent)", "var(--c-chart-4)", <><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></>],
+      snacks: ["color-mix(in srgb, var(--c-chart-2) 16%, transparent)", "var(--c-chart-2)", <><path d="M12 7c-3-2-8-1-8 5 0 4 3 9 6 9 1 0 1.5-.5 2-.5s1 .5 2 .5c3 0 6-5 6-9 0-6-5-7-8-5zM12 7c0-2 1-4 3-4" /></>],
     };
     const card = "rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
     const macro = (label, v, mx, col, soft) => { const p2 = mx > 0 ? Math.min(100, Math.round(((v || 0) / mx) * 100)) : 0; return (
@@ -1261,17 +1261,17 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         <div className={card + " p-4 space-y-4"} data-testid="fit-ring">
           <div className="flex items-center justify-between gap-2">
             <div className="w-[72px] flex flex-col items-center"><span className="text-[19px] font-extrabold text-[var(--c-ink)] tabular-nums" data-testid="fit-eaten">{tot.kcal}</span><span className="text-[12px] font-semibold text-[var(--c-mut)]">{L("eaten", "أكلت")}</span></div>
-            <div className="w-[150px] h-[150px] rounded-full grid place-items-center shrink-0" style={{ background: `conic-gradient(${left < 0 ? "var(--c-neg)" : "var(--c-acc)"} 0 ${pct}%, var(--c-ln) ${pct}% 100%)` }}>
+            <div className="w-[150px] h-[150px] rounded-full grid place-items-center shrink-0" style={{ background: `conic-gradient(${left < 0 ? "var(--c-warn)" : "var(--c-acc)"} 0 ${pct}%, var(--c-ln) ${pct}% 100%)` }}>
               <div className="w-[124px] h-[124px] rounded-full bg-[var(--c-surf)] flex flex-col items-center justify-center">
-                <span className={"text-[34px] font-black tabular-nums leading-none " + (left < 0 ? "text-[var(--c-neg)]" : "text-[var(--c-ink)]")} data-testid="fit-left">{Math.abs(left)}</span>
+                <span className={"text-[34px] font-black tabular-nums leading-none " + (left < 0 ? "text-[var(--c-warn)]" : "text-[var(--c-ink)]")} data-testid="fit-left">{Math.abs(left)}</span>
                 <span className="text-[13px] font-bold text-[var(--c-mut)] mt-1">{left < 0 ? L("kcal over", "سعرة زيادة") : L("kcal left", "سعرة فاضلة")}</span></div>
             </div>
             <div className="w-[72px] flex flex-col items-center"><span className="text-[19px] font-extrabold text-[var(--c-ink)] tabular-nums">{tot.burned}</span><span className="text-[12px] font-semibold text-[var(--c-mut)]">{L("burned", "حرقت")}</span></div>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            {macro(L("Carbs", "كارب"), tot.c, tg.carbs, "#2F7FD8", "#E8EEF6")}
-            {macro(L("Protein", "بروتين"), tot.p, tg.protein, "#E07A1F", "#F7EBDF")}
-            {macro(L("Fat", "دهون"), tot.f, tg.fat, "#8B5CC9", "#EFE7F7")}
+            {macro(L("Carbs", "كارب"), tot.c, tg.carbs, "var(--c-chart-4)", "var(--c-surf-2)")}
+            {macro(L("Protein", "بروتين"), tot.p, tg.protein, "var(--c-chart-1)", "var(--c-surf-2)")}
+            {macro(L("Fat", "دهون"), tot.f, tg.fat, "var(--c-chart-2)", "var(--c-surf-2)")}
           </div>
         </div>
         {st.ramadan && st.ramadan.on && isToday ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
@@ -1307,7 +1307,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           <div className={card + " p-3.5 flex flex-col gap-1.5"} data-testid="fit-water">
             <span className="text-[12.5px] font-bold text-[var(--c-mut)]">{L("Water", "مية")}</span>
             <span className="text-[20px] font-black text-[var(--c-ink)] tabular-nums">{(tot.water / 1000).toFixed(2)} <span className="text-[13px] font-bold text-[var(--c-mut)]">/ {(tg.water / 1000).toFixed(1)} L</span></span>
-            <div className="flex gap-1" aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <span key={i} className="flex-1 h-2 rounded-full" style={{ background: (tot.water || 0) >= ((i + 1) * tg.water) / 5 ? "#3BA3E6" : "#E3EEF6" }} />)}</div>
+            <div className="flex gap-1" aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <span key={i} className="flex-1 h-2 rounded-full" style={{ background: (tot.water || 0) >= ((i + 1) * tg.water) / 5 ? "var(--c-chart-4)" : "var(--c-surf-2)" }} />)}</div>
             <div className="flex gap-1.5 mt-0.5">
               <button onClick={() => setDay((d) => ({ ...d, water: Math.max(0, (d.water || 0) - 250) }))} className="w-11 h-10 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] text-[18px]" aria-label={t("One glass less")}>−</button>
               <button onClick={() => { setDay((d) => ({ ...d, water: (d.water || 0) + 250 })); tick(); }} className="flex-1 h-10 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)] text-[13.5px] font-bold" data-testid="fit-water-add">+ {L("glass", "كوب")}</button>
@@ -1374,7 +1374,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
       ) : (
       <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 flex items-center gap-4" data-testid="fit-ring">
         <Ring value={tot.kcal} max={tg.kcal + tot.burned}>
-          <div className={"text-2xl font-bold tabular-nums " + (left < 0 ? "text-[var(--c-neg)]" : "text-[var(--c-ink)]")} data-testid="fit-left">{Math.abs(left)}</div>
+          <div className={"text-2xl font-bold tabular-nums " + (left < 0 ? "text-[var(--c-warn)]" : "text-[var(--c-ink)]")} data-testid="fit-left">{Math.abs(left)}</div>
           <div className="text-[11px] text-[var(--c-mut)]">{left < 0 ? L("kcal over", "سعرة زيادة") : L("kcal left", "سعرة فاضلة")}</div>
         </Ring>
         <div className="flex-1 min-w-0 space-y-2">

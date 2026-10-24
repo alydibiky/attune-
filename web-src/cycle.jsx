@@ -323,7 +323,7 @@ export function parseExtract(raw, now) {
 }
 
 // ---- the screen ----------------------------------------------------------------
-const FLOW_BG = { spotting: "bg-rose-300/30 text-[var(--c-ink)]", light: "bg-rose-400/40 text-[var(--c-ink)]", medium: "bg-rose-500/70 text-[var(--c-ink)]", heavy: "bg-rose-600 text-white" };
+const FLOW_BG = { spotting: "bg-[var(--c-acc-2)]/25 text-[var(--c-ink)]", light: "bg-[var(--c-acc-2)]/45 text-[var(--c-ink)]", medium: "bg-[var(--c-acc-2)]/75 text-[var(--c-ink)]", heavy: "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" };
 const FLOWS = [["spotting", "Spotting"], ["light", "Light"], ["medium", "Medium"], ["heavy", "Heavy"]];
 
 export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall }) {
@@ -378,9 +378,9 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
   const cellStyle = (k) => {
     const dk = dayKind(cycle, stats, k, todayKey);
     if (dk.kind === "period" || dk.kind === "spotting") return FLOW_BG[dk.flow] || FLOW_BG.medium;
-    if (dk.kind === "predicted") return "border border-dashed border-rose-400/70 text-[var(--c-ink)]";
-    if (dk.kind === "ovulation") return "bg-teal-500/40 text-[var(--c-ink)]";
-    if (dk.kind === "fertile") return "bg-teal-500/15 text-[var(--c-ink)]";
+    if (dk.kind === "predicted") return "border border-dashed border-[var(--c-acc-2)] text-[var(--c-ink)]";
+    if (dk.kind === "ovulation") return "bg-[var(--c-acc)]/45 text-[var(--c-ink)]";
+    if (dk.kind === "fertile") return "bg-[var(--c-acc)]/15 text-[var(--c-ink)]";
     return "text-[var(--c-ink)]";
   };
 
@@ -451,10 +451,10 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
           ) : <span key={"p" + i} />)}
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[11px] text-[var(--c-mut)]">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-rose-500/70" /> {tr("Period")}</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-dashed border-rose-400" /> {tr("Expected")}</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-500/15" /> {tr("Fertile")}</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-500/40" /> {tr("Ovulation (est.)")}</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-[var(--c-acc-2)]/75" /> {tr("Period")}</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-dashed border-[var(--c-acc-2)]" /> {tr("Expected")}</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-[var(--c-acc)]/15" /> {tr("Fertile")}</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-[var(--c-acc)]/45" /> {tr("Ovulation (est.)")}</span>
           <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[var(--c-warn)]" /> {tr("Symptoms")}</span>
         </div>
       </section>
@@ -470,7 +470,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
           <div className="grid grid-cols-4 gap-1.5">
             {FLOWS.map(([k, l]) => (
               <button key={k} onClick={() => upd((c) => cycleSetDay(c, sel, { flow: selDay.flow === k ? null : k }))}
-                className={`min-h-[44px] rounded-[14px] text-[12.5px] font-bold border ${selDay.flow === k ? "border-rose-400 " + FLOW_BG[k] : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-mut)]"}`}>{tr(l)}</button>
+                className={`min-h-[44px] rounded-[14px] text-[12.5px] font-bold border ${selDay.flow === k ? "border-[var(--c-acc-2)] " + FLOW_BG[k] : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-mut)]"}`}>{tr(l)}</button>
             ))}
           </div>
           <div className="flex gap-1.5 mt-2">

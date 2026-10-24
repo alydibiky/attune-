@@ -7616,7 +7616,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "7.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "7.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -10516,7 +10516,9 @@ export default function App() {
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
             openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
         ) : mode === "health" ? (
-          <HealthPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} cycleOn={cycleOn} />
+          <HealthPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} cycleOn={cycleOn} doIt={doFromHome}
+            onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }}
+            listen={NATIVE && NATIVE.listen ? async (langTag) => { const r = await nativeCall("listen", langTag || "", () => {}); return r && r.text; } : null} />
         ) : mode === "scout" ? (
           <ScoutPage search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 }) : null} flash={flash}
             remind={(r) => scheduleReminder({ ...r, created: Date.now(), source: "scout" })} incoming={scoutIn} clearIncoming={() => setScoutIn(null)}
