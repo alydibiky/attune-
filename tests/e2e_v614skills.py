@@ -53,10 +53,10 @@ with sync_playwright() as p:
     check(u.startswith("50 t crane for 3 days") and "/quote" not in u.split("(Your saved skills")[0], "the /quote command itself is not sent to the model")
 
     # ---- a question that fits is matched by itself
-    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300)
+    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     send(page, "I need a price offer for a crane rental job next week")
     check("Crane rental quote" in last_user(page), "a question that fits the description picks the skill by itself")
-    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300)
+    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     send(page, "What is the capital of France")
     check("Your saved skills" not in last_user(page), "an unrelated question gets no skill")
 
@@ -66,7 +66,7 @@ with sync_playwright() as p:
     page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     if page.locator("textarea[placeholder='Message Attune']").count() == 0:
         page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)
-    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300)
+    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     send(page, "I need a price offer for a crane rental job next week")
     check("Your saved skills" not in last_user(page), "a switched-off skill adds nothing")
 

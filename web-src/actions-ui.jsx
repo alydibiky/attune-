@@ -123,7 +123,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
   return (
     <div className="calm mt-3 space-y-4 text-[var(--c-ink)]" data-testid="reminders-panel">
       {/* v6.27 computer layout (option A): what it is and "add one" on the left, what is set on the right as cards */}
-      <div className={PANES}><div className={LEFT}>
+      <div className={"flex flex-col gap-4 lg:gap-0 " + PANES}><div className={LEFT}>
       <div className={cardPad}>
         <p className="text-[16px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><Bell size={16} className="text-[var(--c-acc)]" />{tr("Reminders & actions")}</p>
         <p className={"text-[12.5px] mt-1.5 mb-0 " + muted}>{tr("Just say it in Chat: “remind me tomorrow at 9 to call Ahmed”, “صحيني الساعة 6”, “ابعت لمحمود على الواتساب إني هتأخر”. You always confirm first.")}</p>
@@ -140,16 +140,16 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
       <div className={cardPad + " space-y-2.5"}>
         <p className={label + " m-0"}>{tr("Add one")}</p>
         <input dir="auto" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr("What to remind you about")} className={field + " w-full"} data-testid="rem-title" />
-        <div className="flex gap-2">
-          <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} className={field + " flex-1 min-w-0"} dir="ltr" data-testid="rem-at" />
-          <select value={repeat} onChange={(e) => setRepeat(e.target.value)} className={field}>
-            {Object.keys(REPEAT_LABEL).map((k) => <option key={k} value={k}>{tr(REPEAT_LABEL[k])}</option>)}
-          </select>
+        {/* v7.6 (Ali: "fix the interface in the reminders page"): the date and time get the whole row; how often is a row of pills */}
+        <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} className={field + " w-full"} dir="ltr" data-testid="rem-at" />
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr("Repeat")} data-testid="rem-repeat">
+          {Object.keys(REPEAT_LABEL).map((k) => <button key={k} type="button" role="radio" aria-checked={repeat === k} onClick={() => setRepeat(k)} data-testid={"rem-repeat-" + k}
+            className={"min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold transition-colors duration-150 " + (repeat === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>{tr(REPEAT_LABEL[k])}</button>)}
         </div>
         <button onClick={add} className={btnP + " w-full"} data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
       </div>
       <PrayerPlanner onSchedule={onSchedule} flash={flash} />
-      </div><div className={RIGHT}>
+      </div><div className={"order-first lg:order-none " + RIGHT}>
       <div className={cardPad}>
         <p className={label + " mt-0 mb-2.5"}>{tr("Coming up")} · <span className="tabular-nums">{upcoming.length}</span></p>
         {upcoming.length === 0 ? <p className="text-sm text-[var(--c-mut)]">{tr("Nothing set.")}</p> : (

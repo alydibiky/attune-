@@ -9,7 +9,7 @@ export const HUBS = [
   // Money, Health, Daily, Work; How to use + Privacy at the bottom of the sidebar, next to Settings (side-ui.jsx)
   ["create", "Create", "assistants", ["assistants", "skills", "artifacts", "studio", "code"]],
   ["projects", "Projects", "projects", ["projects"]],
-  ["home", "Home", "home", ["home", "missions", "recall", "automations", "chat", "lifeask", "translate", "instant", "shelf"]],
+  ["home", "Home", "home", ["home", "missions", "recall", "automations", "chat", "instant", "shelf"]],
   ["students", "Students", "coach", ["coach", "convert", "pdfchat", "slides", "cv"]],
   ["money", "Money", "money", ["money", "reminders", "timeline", "xray", "radar", "life", "guardian", "deal"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
@@ -21,12 +21,12 @@ export const HUBS = [
 export const GROUPS = [
   // the tab rows (v6.36, Ali's board): Chat · Ask your life · Translate; Work = Business · Team records · Reports · Tools
   // (v6.50, Ali: "the app must be neutral — not a crane app": the Crane toolkit lives inside Business → Fleet & rentals → More)
-  ["talk", "Chat", ["chat", "lifeask", "translate"]],
+  // v7.6 (Ali, 24 Oct): no Chat · Your life · Translate tabs — all three live in Home's box (chips under it); Chat opens on Home
   ["work", "Work", ["business", "fleet", "field", "tools"]],
   // v6.43 (Ali: "put the tools that improve a prompt or humanize in the same page"): Writing = Improve · Shorten · Humanize · Copilot · Prompt lab
   ["write", "Writing", ["improve", "compress", "humanize", "copilot", "library"]],
   // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")
-  ...["missions", "recall", "automations", "instant", "shelf", "projects", "video", "ask", "guide", "privacy", "home"].map((m) => ["solo-" + m, m, [m]]),
+  ...["missions", "recall", "automations", "instant", "shelf", "projects", "video", "ask", "guide", "privacy", "home", "chat", "translate"].map((m) => ["solo-" + m, m, [m]]),
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */

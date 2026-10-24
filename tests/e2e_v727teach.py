@@ -16,7 +16,7 @@ def to_chat(page):
     page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     if page.locator("textarea[placeholder='Message Attune']").count() == 0:
         page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)
-    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300)
+    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
 
 def send(page, text, answer):
     page.evaluate("(a) => { const M = window.__mock; M.bodies = []; M.fakeQueue = [a, a, a]; }", answer)

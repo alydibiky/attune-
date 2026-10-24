@@ -34,6 +34,9 @@ with sync_playwright() as p:
         page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(600)
         page.evaluate("() => { const b = [...document.querySelectorAll('button')].find(x => /new chat/i.test(x.title || x.getAttribute('aria-label') || '')); b && b.click(); }")
         page.wait_for_timeout(400)
+        # v7.6 (Ali): New chat goes to the clean Home; the chat opens again from there
+        check(page.locator("[data-testid=phone-home]").count() == 1, tag + "New chat → the clean Home")
+        page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(500)
         if page.locator("[data-testid=chat-empty-min]").count():
             check(page.locator("[data-testid=chat-empty-min] button svg").count() >= 3, tag + "the empty chat: the starters in one card, each with a chevron")
         page.fill("[data-testid=chat-input]", "/"); page.wait_for_timeout(200)

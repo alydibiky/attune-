@@ -18,8 +18,8 @@ def install(page):
     page.wait_for_selector("text=Running now", timeout=10000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
 def open_tr(page):
-    page.locator("nav button").last.click(); page.wait_for_timeout(300)
-    page.locator(".rounded-t-2xl button:has-text('Translate')").first.click()
+    # v7.6 (Ali): Translate is no longer a page in the lists — Home's Translate pill opens it ("Talk with someone, a photo or a document")
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'translate'}}))")
     page.wait_for_selector("[data-testid=translate-page]", timeout=5000)
 with sync_playwright() as p:
     br = p.chromium.launch()

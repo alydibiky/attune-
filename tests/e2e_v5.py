@@ -484,7 +484,7 @@ def sec_fast(br):
     page.wait_for_timeout(500)
     # v7.2: Money opens on its calm view; the ledger (Yusr) is one tap away and fills the screen
     check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", "Money opens on the calm view")
-    page.locator("[data-testid=money-open-ledger]").click(); page.wait_for_timeout(500)
+    page.locator("[data-testid=money-more]").first.click(); page.locator("[data-testid=money-open-ledger]").click(); page.wait_for_timeout(500)
     box = page.locator("[data-testid=money-page] iframe").bounding_box()
     vh = page.evaluate("innerHeight")
     check(box["height"] > vh * 0.7, "Yusr fills the screen (%d of %d px)" % (box["height"], vh))

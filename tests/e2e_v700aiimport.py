@@ -29,7 +29,7 @@ with sync_playwright() as p:
     check("I read your conversation with Gemini" in txt and "Lynk & Co 900 trims" in txt, "the chat says what it read")
     sysmsg = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2).pop().messages[0].content")
     check("EARLIER CONVERSATION the user had with Gemini" in sysmsg and "CNY 309,900" in sysmsg, "the question written with the link is answered WITH the conversation as context")
-    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300)
+    page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     pasted = "You said: Compare the Liebherr LTM 1100-4.2 and the Grove GMK5250L for wind turbine work, with capacities and boom lengths.\n\nChatGPT said: The LTM 1100-4.2 lifts 100 t with a 60 m boom; the GMK5250L lifts 250 t with a 79 m main boom, so it suits turbine work better.\n\nYou said: and the price?\n\nChatGPT said: Roughly 1.1 million euros new for the Grove."
     send(page, pasted); page.wait_for_timeout(800)
     check("I read your conversation with ChatGPT" in page.locator("body").inner_text(), "pasted 'You said / ChatGPT said' text is imported too")

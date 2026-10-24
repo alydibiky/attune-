@@ -3,6 +3,20 @@
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 
 ## Where things stand
+- **`main` = v7.6** (versionCode 118) — Ali's 24 Oct requests (all decided by him, options A/A):
+  - **Home is the chat**: New chat (sidebar, the chat's +) goes to the clean Home; the Chat · Your life · Translate tab row is
+    gone — three pills in Home's box (`box-mode-chat|life|translate`, cmdbox-ui `BoxModes`); Your life answers under the box
+    by code (lifeask-ui `LifeAnswer`); Translate sends a Translate-mode chat (seed `\u0004`) and links "Talk with someone, a photo
+    or a document" to the Translate page (still there for the interpreter/photos, not in any list); `navTo("lifeask")` → Home
+    with the pill on; the chat's phone header has ← Home. Chat opens empty after a New chat (chat.jsx `HANDLED_SIGNAL`).
+  - **Money's bottom bar**: Home · Accounts · (+) · Bills · Zakāt (`money-bar`, money-pages-ui.jsx); + = the add sheet
+    (expense / income / transfer through the bridge with the account the person picked — the ledger now takes `transfer`
+    in add-txns; Lend/borrow, new bill, new account open the ledger's own forms via new `go` screens `debt`, `add-bill`,
+    `add-account`); More (top) = Goals, Trends, Notes, Invoices, Full ledger (`money-open-ledger`), Ledger settings.
+    Accounts / Bills / Zakāt calm + report (money-pages.js, unit `v790moneypages`, e2e `e2e_v790money`). Zakāt is shown only
+    as the ledger's engine sent it. Fixed "-162% of it kept" → "Spent X more than earned".
+  - **Follow-ups → Reminders** fixed: "Plan my day" no longer one letter per line, the date gets the whole row, how often is
+    pills, Coming up first on a phone.
 - **`main` = v7.5** (versionCode 117) — **Gemini step 4 (Business hub + Books + Shop) is built**: the hub opens with today's
   numbers (counter sales vs the same day last week, customers owe you + overdue, and on a computer "Needs attention": items at
   reorder + VAT), the three systems as cards with a status pill (Shop "{n} sales", Books "{n} low stock" / overdue, Fleet), the
@@ -76,7 +90,7 @@ Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BR
 
 ## NEXT: the Gemini step (Ali: "when you finish and push we will start the Gemini thing")
 Gemini designs each area creatively as **HTML mock-ups only (no code)**; Ali approves; **Claude builds it into the app himself**
-(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · ~~4 Business~~ (v7.5) · (Money page,
+(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · ~~4 Business~~ (v7.5) · **5 Mind & learning: Gemini's mock-up arrived 24 Oct, rendered, build in progress (v7.7) — Area-5 sources were set aside in the scratchpad while v7.6 shipped** · (Money page,
 Follow-ups, Guardian, Deal Check) · 2 Health (Fit & Food, Family health, Cycle) · 3 Chat (chat, Assistants, Projects) ·
 4 Business hub + Books + Shop · 5 Mind & learning · 6 Tools · 7 Settings, sidebar, How to use. The message Ali sends Gemini is in the
 last chat; the brief is `GEMINI_DESIGN_BRIEF.md`. When an HTML mock-up arrives: render it locally (Tailwind CDN is blocked — compile

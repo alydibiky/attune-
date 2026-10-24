@@ -461,6 +461,7 @@ function CallScreen({ ask, busy, last, api, tag, close, stop }) {
     </div>);
 }
 
+let HANDLED_SIGNAL = 0;   // v7.6: the last New chat this screen acted on (it outlives the screen)
 export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, composerSeed, clearComposerSeed, spaceSeed, clearSpaceSeed, openChatId, clearOpenChat }) {
   const [plusOpen, setPlusOpen] = useState(false);   // v6.31 minimal: the composer's "+" menu
   const [chats, setChats] = useState(() => loadChats());
@@ -607,15 +608,22 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const seenSignal = useRef(newChatSignal);
   useEffect(() => {
     if (newChatSignal === seenSignal.current) return;
-    seenSignal.current = newChatSignal;
+    seenSignal.current = newChatSignal; HANDLED_SIGNAL = newChatSignal;
     stop(); setActiveId(null); setText(""); setImage(null); setPending(null);
   }, [newChatSignal]);
+  // v7.6 (Ali: "New chat takes me to Home"): a New chat tapped while Chat was closed still means the next Chat opens empty —
+  // unless it opens for a chat picked from the list, an assistant / project, or a question sent from Home.
+  useEffect(() => {
+    if (newChatSignal !== HANDLED_SIGNAL && !openChatId && !spaceSeed && !composerSeed) { setActiveId(null); setPending(null); }
+    HANDLED_SIGNAL = newChatSignal;
+  }, []);
   const [newAsk, setNewAsk] = useState(null);
   useEffect(() => { if (newAsk && !activeId && !busy) { const t = newAsk; setNewAsk(null); ask(t, { now: true }); } }, [newAsk, activeId, busy]);
   useEffect(() => { if (pendingAsk && chat && chat.imported && !busy) { const t = pendingAsk; setPendingAsk(null); ask(t, { now: true }); } }, [pendingAsk, chat, busy]);
   useEffect(() => {
     if (!composerSeed) return;
     if (composerSeed.startsWith("\u0002")) { const t = composerSeed.slice(1); clearComposerSeed && clearComposerSeed(); stop(); setActiveId(null); setPending(null); setText(t); setNewAsk(t); return; }   // v6.25: from the computer's Home: a NEW chat, sent at once (kept in the box if it cannot be sent yet, e.g. no model)
+    if (composerSeed.startsWith("\u0004")) { const t = composerSeed.slice(1); clearComposerSeed && clearComposerSeed(); stop(); setActiveId(null); setPending(null); setTrMode(true); setText(t); setNewAsk(t); return; }   // v7.6: Home's Translate pill — a new chat in Translate mode, sent at once
     if (composerSeed === "\u0003call") { clearComposerSeed && clearComposerSeed(); stop(); setActiveId(null); setPending(null); setCall(true); return; }   // v6.46: Home's "Call" chip — a new hands-free call
     if (composerSeed.startsWith("\u0001")) { const t = composerSeed.slice(1); clearComposerSeed && clearComposerSeed(); setTimeout(() => ask(t, { now: true }), 80); return; }   // v6.12: sent at once (a shared AI conversation)
     setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50);

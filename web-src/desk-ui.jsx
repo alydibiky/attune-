@@ -1,11 +1,14 @@
 // v6.25 — the computer's own pages (Ali picked "A + C"): Home (ask box, your day, your tools) and Tools (every tool on one
 // full-width page; ★ pins a tool to the sidebar). Phones keep Chat as home and the More sheet.
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Send, Star, LayoutGrid, Bell, Apple, Brain, MessageCircle } from "lucide-react";
 import { openRead } from "./readaloud-ui.jsx";
 import { DoResult } from "./doit-ui.jsx";
 import { tr } from "./i18n.js";
 import { usePins, recentTools } from "./side-ui.jsx";
+import { BoxModes, takeBoxMode, BOX_HINT } from "./cmdbox-ui.jsx";
+import { LifeAnswer } from "./lifeask-ui.jsx";
+import * as LA from "./lifeask.js";
 
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
 const todayKey = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -50,7 +53,16 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
   // v6.27 (Ali: "I don't want Maps with Money"): the main cards are Money, Business and Mind; Maps lives in Tools / pinned
   const core = ["money", "business", "memory"].map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
   const cards = [...core, ...recent.filter((t) => !core.includes(t))].slice(0, 7);
-  const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) setDone({ ...r, id: Date.now() }); else onAsk(t); };
+  // v7.6 (Ali): Chat · Your life · Translate as pills in the box (the separate pages are gone)
+  const [boxMode, setBoxMode] = useState(takeBoxMode);
+  const [life, setLife] = useState(null);
+  useEffect(() => { const on = (e) => { setBoxMode(takeBoxMode() || e.detail); setLife(null); }; window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
+  const send = () => {
+    const t = text.trim(); if (!t) return; setText(""); setLife(null); setDone(null);
+    if (boxMode === "life") { let a = null; try { a = LA.askLife(t, LA.loadStores()); } catch (e) { a = null; } return setLife({ q: t, a }); }
+    if (boxMode === "translate") return onAsk("\u0004" + t, true);
+    let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) setDone({ ...r, id: Date.now() }); else onAsk(t);
+  };
   const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Plan a weekend trip", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];
   return (
     <div className="calm pt-2 pb-10 space-y-5" data-testid="desk-home">
@@ -61,11 +73,14 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
           <div className="flex items-end gap-2 rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 focus-within:border-[var(--c-acc)] transition-colors duration-150">
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="home-ask"
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder={tr("Ask, or tell Attune what happened — «spent 150 on lunch», «had foul for breakfast»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
+              placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : tr("Ask, or tell Attune what happened — «spent 150 on lunch», «had foul for breakfast»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
             <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
               className="w-11 h-11 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center disabled:opacity-40 transition-opacity duration-150"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>
+          <div className="mt-3"><BoxModes mode={boxMode} setMode={(m) => { setBoxMode(m); setLife(null); }} /></div>
           {done ? <div className="calm rounded-[22px] mt-3"><DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} /></div> : null}
+          {life ? <div className="mt-3"><LifeAnswer res={life} navTo={navTo} askChat={(q) => { setLife(null); onAsk(q); }} onClose={() => setLife(null)} /></div> : null}
+          {boxMode === "translate" ? <button onClick={() => navTo("translate")} className="mt-2 min-h-[40px] text-[13px] font-bold text-[var(--c-acc)] inline-flex items-center gap-1" data-testid="box-translate-more">{tr("Talk with someone, a photo or a document")} →</button> : null}
           <div className="flex flex-wrap gap-2 mt-3">
             {starters.map(([t, tool]) => <button key={t} onClick={() => (tool === "read" ? openRead() : tool ? navTo(tool) : onAsk(tr(t)))} data-testid={tool === "read" ? "home-read" : undefined}
               className="min-h-[40px] rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold px-4 hover:border-[var(--c-acc)] transition-colors duration-150">{tr(t)}</button>)}

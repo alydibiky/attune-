@@ -7,7 +7,7 @@ ok(new Set(all).size === all.length, "every page lives in exactly one place");
 ok(hubOf("guardian") === "money" && hubOf("fit") === "health" && hubOf("humanize") === "tools" && hubOf("assistants") === "create"
   && hubOf("scout") === "learn" && hubOf("map") === "learn" && hubOf("chat") === "home" && hubOf("pdfchat") === "students" && hubOf("studio") === "create", "pages find their place");
 ok(tabsFor("studio").join() === "assistants,skills,artifacts,studio,code", "Create: Assistants · Skills · Artifacts · Studio · Code");
-ok(tabsFor("chat").join() === "chat,lifeask,translate", "Home's Chat has Ask your life and Translate as tabs");
+ok(tabsFor("chat").length === 0 && tabsFor("translate").length === 0, "v7.6 (Ali): no Chat · Your life · Translate tab row — they are pills in Home's box");
 ok(tabsFor("home").length === 0 && tabsFor("instant").length === 0 && tabsFor("shelf").length === 0 && tabsFor("projects").length === 0, "Home, Instant, Shelf, Projects: no tab row");
 ok(tabsFor("coach").join() === "coach,convert,pdfchat,slides,cv", "Students: Homework · Convert · Doc chat · Slides · CV");
 ok(tabsFor("money").join() === "money,life,guardian,deal", "Money (v7.2, Gemini's Area 1): Money · Follow-ups · Guardian · Deal Check (" + tabsFor("money") + ")");

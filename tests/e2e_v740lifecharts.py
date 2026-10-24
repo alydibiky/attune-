@@ -21,10 +21,11 @@ with sync_playwright() as p:
     for lang in ("en", "ar"):
         ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + ("localStorage.setItem('attune:ui:lang','ar');" if lang == "ar" else ""))
         page.goto(env.url); page.wait_for_timeout(1200)
+        # v7.6 (Ali): Your life is a pill in Home's box
         page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'lifeask'}}))")
-        page.wait_for_selector("[data-testid=lifeask-q]", timeout=8000)
-        page.fill("[data-testid=lifeask-q]", "How did my food spending change since Ramadan?" if lang == "en" else "مصاريف الأكل اتغيرت ازاي من رمضان؟")
-        page.click("[data-testid=lifeask-go]")
+        page.wait_for_selector("[data-testid=box-mode-life][aria-checked=true]", timeout=8000)
+        page.fill("[data-testid=home-ask]", "How did my food spending change since Ramadan?" if lang == "en" else "مصاريف الأكل اتغيرت ازاي من رمضان؟")
+        page.click("[data-testid=home-send]")
         page.wait_for_selector("[data-testid=lifeask-chart]", timeout=6000)
         t = page.locator("[data-testid=lifeask-text]").inner_text()
         ok = ("3,000" in t and "4,500" in t and "+50%" in t) and (("before Ramadan" in t) if lang == "en" else ("قبل رمضان" in t))

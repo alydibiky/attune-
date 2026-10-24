@@ -2220,11 +2220,15 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
     // v6.27: Attune's computer layout opens a screen (its own tabs: Transactions, Bills, People & debts, Zakat, Reports)
     // v6.27 "Money tracks itself": payments the person confirmed in Attune (read from notifications) — checked here again
     if(m.type==='add-txns'){ try{ var L=(m.data&&m.data.txns)||[], n=0; for(var i=0;i<L.length&&i<50;i++){ var t=L[i]||{}, a=parseFloat(t.amount);
-        if(!(a>0&&a<1e9)||(t.type!=='expense'&&t.type!=='income'))continue;
+        if(!(a>0&&a<1e9)||(t.type!=='expense'&&t.type!=='income'&&t.type!=='transfer'))continue;
+        if(t.type==='transfer'){ var fa=(db.accounts||[]).find(function(x){return x.id===t.account;}), ta=(db.accounts||[]).find(function(x){return x.id===t.toAccount;});
+          if(!fa||!ta||fa.id===ta.id||fa.currency!==ta.currency)continue;
+          db.txns.push({id:uid(),type:'transfer',amount:Math.round(a*100)/100,account:fa.id,toAccount:ta.id,cat:'other',date:/^\d{4}-\d{2}-\d{2}$/.test(t.date||'')?t.date:toISODate(new Date()),note:String(t.note||'').slice(0,80)}); n++; continue; }
         var acc=(t.account&&(db.accounts||[]).find(function(x){return x.id===t.account;}))||(db.accounts||[]).find(function(x){return t.currency&&x.currency===t.currency;})||(db.accounts||[])[0]; if(!acc)continue;
         db.txns.push({id:uid(),type:t.type,amount:Math.round(a*100)/100,cat:/^[a-z_]{2,20}$/.test(t.cat||'')?t.cat:'other',account:acc.id,date:/^\d{4}-\d{2}-\d{2}$/.test(t.date||'')?t.date:toISODate(new Date()),note:String(t.note||'').slice(0,80)}); n++; }
       if(n){ save(); try{refresh();}catch(e){} toast(db.lang==='ar'?('أُضيفت '+n):('Added '+n)); } send('txns-added',{n:n}); }catch(e){} return; }
-    if(m.type==='go'){ var sc=m.data&&m.data.screen; if(['home','trends','accounts','bills','goals','zakat','notes','invoices'].indexOf(sc)>=0){ try{go(sc);}catch(e){} } return; }
+    if(m.type==='go'){ var sc=m.data&&m.data.screen; if(['home','trends','accounts','bills','goals','zakat','notes','invoices','settings'].indexOf(sc)>=0){ try{go(sc);}catch(e){} }
+      else if(sc==='add-bill'){ try{go('bills');openRecurring();}catch(e){} } else if(sc==='debt'){ try{go('home');openDebt();}catch(e){} } else if(sc==='add-account'){ try{go('accounts');openAccount();}catch(e){} } return; }
     if(m.type==='request'){
       if(m.data&&m.data.kind==='ready') send('ready',{app:'yusr'});
       else snapshot(m.data&&m.data.kind);

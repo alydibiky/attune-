@@ -91,7 +91,7 @@ with sync_playwright() as p:
 
     # ---- 3b. v5.15: a comparison carries its answer recipe to the model ----
     queue(page, ["**No — they are different.**\n\n| Point | Demag | Grove |\n|---|---|---|\n| Maker | Tadano | Manitowoc |"])
-    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200)   # (a new chat: no photo carried over)
+    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat · (a new chat: no photo carried over)
     send(page, "Is a Demag crane the same as a Grove crane?")
     done(page, 1)
     last = str(bodies(page)[-1]["messages"][-1]["content"])

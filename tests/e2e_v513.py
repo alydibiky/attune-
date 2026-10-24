@@ -114,6 +114,7 @@ with sync_playwright() as p:
 
     # ---- 6. a sum that doesn't add up is re-done by running code ----
     page.click("header button[aria-label='New chat']") if page.locator("header button[aria-label='New chat']").count() else None
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     page.wait_for_timeout(200)
     WRONG = "Days: 5 - 1 = 4\nRent: 25,000 × 4 = **10,000 EGP**\nVAT: 10,000 × 0.04% = 40\n**Total: 10,040 EGP**"
     PROG = "```python\ndays = 5\nrate = 25000\nrent = days * rate\nvat = rent * 14 / 100\nprint(rent, vat, rent + vat)\nprint('ANSWER: 125000 EGP rent, 142500 EGP with VAT')\n```"

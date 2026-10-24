@@ -73,7 +73,7 @@ with sync_playwright() as p:
     page.locator("[data-testid=artifact-close]").click()
 
     # ---- 2. "And with 5 cranes" after an instant sum: worked out with the first question ----
-    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200)
+    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     send(page, "3 cranes × 4 days × 25,000 EGP + 14% VAT")
     page.wait_for_selector("text=342,000", timeout=15000)
     queue(page, ["```python\nprint('ANSWER: 570000')\n```", "**570,000 EGP**\n\n1. 5 × 4 × 25,000 = 500,000\n2. 14% of 500,000 = 70,000\n3. 500,000 + 70,000 = 570,000"])

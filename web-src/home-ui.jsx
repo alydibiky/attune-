@@ -36,13 +36,15 @@ import { loadFleet } from "./fleet-store.js";
 import { route as cmdRoute } from "./cmdrun.js";
 import * as K from "./commands.js";
 import * as W from "./whereis.js";
-import { SlashMenu, Attached, BoxOptions, AskCard, ConfirmCard, LinesCard, TodoCard, MapCard, FoundCard, JobCards, TripPin, tripLive, useJobs, say } from "./cmdbox-ui.jsx";
+import { SlashMenu, Attached, BoxOptions, AskCard, ConfirmCard, LinesCard, TodoCard, MapCard, FoundCard, JobCards, TripPin, tripLive, useJobs, say, BoxModes, takeBoxMode, BOX_HINT } from "./cmdbox-ui.jsx";
+import { LifeAnswer } from "./lifeask-ui.jsx";
+import * as LA from "./lifeask.js";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
 
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
-const START_TOOLS = ["scout", "learn", "slides", "convert", "lifeask"];
+const START_TOOLS = ["scout", "learn", "slides", "convert", "memory"];
 const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"];
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
 const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };
@@ -52,7 +54,11 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   // v6.48 Chat runs the app (CHAT_RUNS_APP.md, option A): "/" commands, files, the two box options, the answer card, the jobs
   const [files, setFiles] = useState([]);
   const [web, setWeb] = useState(false);
-  const [tr2, setTr2] = useState(false);
+  // v7.6 (Ali): Chat · Your life · Translate are three pills in the box (the separate pages are gone)
+  const [boxMode, setBoxMode] = useState(takeBoxMode);
+  const [life, setLife] = useState(null);   // { q, a } — Your life's answer, under the box
+  useEffect(() => { const on = (e) => { setBoxMode(takeBoxMode() || e.detail); setLife(null); }; window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
+  const tr2 = boxMode === "translate";
   const [panel, setPanel] = useState(null);       // the outcome being shown (cmdrun.js)
   const fileRef = React.useRef(null);
   const jobList = useJobs(cmd && cmd.jobs);
@@ -136,6 +142,12 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const send = (kindPicked) => {
     let t = text.trim();
     if (!t && !files.length && !kindPicked) return;
+    setLife(null);
+    if (boxMode === "life" && t && !t.startsWith("/")) {
+      setText(""); setPanel(null); setDone(null);
+      let a = null; try { a = LA.askLife(t, LA.loadStores()); } catch (e) { a = null; }
+      setLife({ q: t, a }); return;
+    }
     if (minimal && cmd) {
       if (tr2 && t && !t.startsWith("/")) t = "/translate " + t;
       if (web && t && !t.startsWith("/")) { setText(""); show({ type: "chat", text: t, web: true }, t); return; }
@@ -166,9 +178,10 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         /* v6.43 option 1 (Ali): one big box — say anything, Attune does it in every app it touches */
         <div className="rounded-[26px] p-4 space-y-3" style={{ background: "var(--c-surf)", border: "1.5px solid var(--c-acc)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
           <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} dir="auto" data-testid="home-ask" rows={2}
-            placeholder={cmd ? tr("Type / for a command, or just say it…") : tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
+            placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : cmd ? tr("Type / for a command, or just say it…") : tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
           {cmd ? <Attached files={files} onRemove={(i) => setFiles((f) => f.filter((_, k) => k !== i))} /> : null}
           {cmd ? <input ref={fileRef} type="file" multiple className="hidden" data-testid="box-file-input" onChange={(e) => { const add = [...(e.target.files || [])].slice(0, 20); e.target.value = ""; if (add.length) setFiles((f) => [...f, ...add].slice(0, 20)); }} /> : null}
+          <BoxModes mode={boxMode} setMode={(m) => { setBoxMode(m); setLife(null); }} />
           <div className="flex items-center justify-end gap-2 pt-2.5 border-t" style={{ borderColor: "var(--c-ln)" }}>
             {/* v6.50 (Ali: "everything via the Home box"): attach · mic · send — the rest is typed ("/food", "/read", "/money"…) */}
             {cmd ? <button onClick={() => fileRef.current && fileRef.current.click()} aria-label={tr("Attach a file, photo, video or recording")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-surf-2, var(--c-bg))" }} data-testid="box-attach"><Paperclip size={18} /></button> : null}
@@ -195,6 +208,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         : panel.type === "map" ? <MapCard place={panel.place} metro={panel.metro} onMap={() => { setPanel(null); cmd.openMap(panel.place); }} onMetro={() => { setPanel(null); cmd.openMetro(panel.metro); }} onClose={() => setPanel(null)} />
         : panel.type === "found" ? <FoundCard q={panel.q} items={panel.items} onOpen={(r) => { setPanel(null); cmd.openRecord(r); }} onClose={() => setPanel(null)} />
         : null) : null}
+      {minimal && !rep && life ? <LifeAnswer res={life} navTo={(m) => { setLife(null); navTo(m); }} askChat={(q) => { setLife(null); onAsk(q); }} onClose={() => setLife(null)} /> : null}
+      {minimal && !rep && boxMode === "translate" ? <button onClick={() => navTo("translate")} className="-mt-1 min-h-[40px] text-[13px] font-bold c-acc inline-flex items-center gap-1" data-testid="box-translate-more">{tr("Talk with someone, a photo or a document")}<ChevronRight size={15} className="rtl:rotate-180" /></button> : null}
       {minimal && !rep && cmd ? <JobCards list={jobList} jobs={cmd.jobs} onSave={(f) => cmd.saveFile(f)} onCopy={(t) => cmd.copy(t)} onOpen={(m) => openLine(m)} /> : null}
       {minimal && !rep && cmd && tripLive(trip) ? <TripPin trip={trip} name={cmd.countryName(trip.country)} onOpen={() => navTo("travel")} onEnd={() => { cmd.endTrip(); setTrip(cmd.trip()); }} /> : null}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />

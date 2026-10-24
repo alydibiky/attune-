@@ -271,6 +271,7 @@ with sync_playwright() as pw:
 
     # 9. history drawer, new chat, persistence
     page.locator("header button[aria-label='New chat']").click(); page.wait_for_timeout(200)
+    nav.locator("button:has-text('Chat')").click(); page.wait_for_timeout(300)   # v7.6: New chat goes to Home; Chat opens fresh from there
     check(page.locator("text=What can I help with?").count() == 1, "New chat starts fresh")
     page.reload(); page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(500)
     page.locator("header button[aria-label='Chats']").click()

@@ -2,7 +2,7 @@
    where it came from and opens that tool. Phone: the question, examples, then the answer. Computer (layout A): asking on the left,
    the answer on the right. Logic: lifeask.js. Tests: tests/e2e_v731lifeask.py.                                                    */
 import React, { useState } from "react";
-import { Sparkles, Search, Mic, ChevronRight, MessageSquare, Lock } from "lucide-react";
+import { Sparkles, Search, Mic, ChevronRight, MessageSquare, Lock, X } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as A from "./lifeask.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -60,9 +60,23 @@ export function LifeAskPage({ navTo, askChat, listen }) {
         <div className="mt-1 space-y-1">{recent.map((x) => <button key={x} onClick={() => ask(x)} className={"block w-full min-h-[44px] text-start text-[13.5px] py-2 hover:text-[var(--c-ink)] " + muted} dir="auto">{x}</button>)}</div></div> : null}
       <p className="c-sub text-[12px] m-0 flex gap-1.5 items-start"><Lock size={13} className="shrink-0 mt-0.5" />{tr("Answered from your own records on this device, by code — nothing is sent anywhere, and every number can be checked in the tool it came from.")}</p>
     </div>);
-  const answer = res ? (res.a ? (
+  const answer = res ? <LifeAnswer res={res} navTo={navTo} askChat={askChat} /> : null;
+  return (
+    <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="lifeask-page">
+      <div><h2 className={h1 + " flex items-center gap-2"}><Sparkles size={20} className="text-[var(--c-acc)]" />{tr("Ask your life")}</h2>
+        <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + muted}>{tr("One question, answered from everything Attune keeps for you — money, debts, medicines, lab results, meals, deadlines and notes.")}</p></div>
+      <div className={PANES}><div className={LEFT}>{left}</div>
+        <div className={RIGHT}>{answer || <div className="hidden lg:block"><DeskEmpty icon={Sparkles} title={tr("Your answer appears here")} testid="lifeask-empty" /></div>}</div></div>
+    </div>);
+}
+
+/** v7.6: the answer card — on the old page, and under Home's box when "Your life" is picked. */
+export function LifeAnswer({ res, navTo, askChat, onClose }) {
+  const ar = getLang() === "ar";
+  const close = onClose ? <button onClick={onClose} aria-label={tr("Close")} className="w-9 h-9 -mt-1 -me-1 grid place-items-center rounded-full c-sub shrink-0" data-testid="lifeask-close"><X size={15} /></button> : null;
+  return res.a ? (
     <div className={cardPad + " space-y-3"} data-testid="lifeask-answer" data-kind={res.a.kind}>
-      <span className={label} dir="auto">{res.q}</span>
+      <div className="flex items-start gap-2"><span className={label + " flex-1"} dir="auto">{res.q}</span>{close}</div>
       <p className="text-[17px] leading-snug m-0 font-medium" dir="auto" data-testid="lifeask-text">{(ar ? res.a.ar : res.a.en).replace(/\*\*/g, "")}</p>
       {res.a.chart ? <AnswerChart chart={res.a.chart} ar={ar} /> : null}
       {(res.a.rows || []).length ? <table className="w-full text-[13.5px] c-num" data-testid="lifeask-rows"><tbody>{res.a.rows.map(([k, v], i) => <tr key={i} className="border-t" style={{ borderColor: "var(--c-ln)" }}><td className="py-1.5 pe-3 c-sub whitespace-nowrap align-top" dir="auto">{k}</td><td className="py-1.5" dir="auto">{v}</td></tr>)}</tbody></table> : null}
@@ -72,14 +86,7 @@ export function LifeAskPage({ navTo, askChat, listen }) {
       </div>
     </div>) : (
     <div className={cardPad + " space-y-3"} data-testid="lifeask-none">
-      <p className="m-0" dir="auto">{tr("Nothing in your own data answers this. Chat can answer general questions.")}</p>
+      <div className="flex items-start gap-2"><p className="m-0 flex-1" dir="auto">{tr("Nothing in your own data answers this. Chat can answer general questions.")}</p>{close}</div>
       {askChat ? <button className={btnP} onClick={() => askChat(res.q)} data-testid="lifeask-chat"><MessageSquare size={15} />{tr("Ask Chat")}</button> : null}
-    </div>)) : null;
-  return (
-    <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="lifeask-page">
-      <div><h2 className={h1 + " flex items-center gap-2"}><Sparkles size={20} className="text-[var(--c-acc)]" />{tr("Ask your life")}</h2>
-        <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + muted}>{tr("One question, answered from everything Attune keeps for you — money, debts, medicines, lab results, meals, deadlines and notes.")}</p></div>
-      <div className={PANES}><div className={LEFT}>{left}</div>
-        <div className={RIGHT}>{answer || <div className="hidden lg:block"><DeskEmpty icon={Sparkles} title={tr("Your answer appears here")} testid="lifeask-empty" /></div>}</div></div>
     </div>);
 }

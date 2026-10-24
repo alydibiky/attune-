@@ -40,8 +40,8 @@ export function PrayerPlanner({ onSchedule, flash }) {
   return (
     <div className={"calm " + card + " p-4 space-y-3"} data-testid="prayer-planner">
       <div className="flex items-center gap-2">
-        <p className="m-0 text-[15px] font-extrabold flex items-center gap-2 flex-1"><CalendarDays size={16} className="text-[var(--c-acc)]" />{tr("Plan my day")}{ramadan ? " · " + tr("Ramadan") : ""}</p>
-        <select value={st.city} onChange={(e) => put({ city: e.target.value })} className={field + " w-auto text-[13px]"} aria-label={tr("City")} data-testid="prayer-city">
+        <p className="m-0 text-[15px] font-extrabold flex items-center gap-2 flex-1 min-w-0 whitespace-nowrap"><CalendarDays size={16} className="text-[var(--c-acc)] shrink-0" />{tr("Plan my day")}{ramadan ? " · " + tr("Ramadan") : ""}</p>
+        <select value={st.city} onChange={(e) => put({ city: e.target.value })} className={field + " !w-auto shrink-0 max-w-[48%] !min-h-[40px] !h-10 text-[13px]"} aria-label={tr("City")} data-testid="prayer-city">
           {Object.entries(CITIES).map(([k, v]) => <option key={k} value={k}>{ar ? v.ar : v.en}</option>)}
         </select>
       </div>

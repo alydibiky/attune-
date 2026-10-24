@@ -57,6 +57,7 @@ import { fmt as fmtMoneyPlain } from "./money-calm.js";
 import { loadLife as loadLifeMoney } from "./life.js";
 import { LifePage } from "./life-ui.jsx";
 import { PhoneHome } from "./home-ui.jsx";
+import { MoneyBar, AddSheet, MoreSheet, AccountsPane, BillsPane, ZakatPane } from "./money-pages-ui.jsx";   // v7.6 Money's bottom bar
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
@@ -6113,6 +6114,12 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // ledger itself (Yusr) one more. Yusr stays loaded behind them (hidden), so the box, a shared payment and the Zakāt figures work.
   const [view, setView] = React.useState("calm");          // calm | report | ledger
   useSubBack(view !== "calm", () => setView("calm"));
+  // v7.6 (Ali, layout A): the bottom bar Home · Accounts · + · Bills · Zakāt; More = the ledger's other pages
+  const [pane, setPaneRaw] = React.useState("home");
+  const setPane = (p) => { setPaneRaw(p); setView("calm"); };
+  useSubBack(pane !== "home" && view === "calm", () => setPaneRaw("home"));
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [moreOpen, setMoreOpen] = React.useState(false);
   const [account, setAccount] = React.useState(null);      // the account pill: null = all accounts
   const [ver, setVer] = React.useState(0);
   const [boxBusy, setBoxBusy] = React.useState(false);
@@ -6383,7 +6390,19 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 <h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${esc(tr("Account"))}</th><th>${esc(tr("Amount"))}</th></tr>${rep.rows.map((t) => `<tr><td>${t.date}</td><td>${esc(t.note || t.catName)}</td><td>${esc(t.catName)}</td><td>${esc(t.account)}</td><td class="n">${t.type === "expense" ? "−" : "+"}${f(t.amount)} ${t.currency}</td></tr>`).join("")}</table></body></html>`;
     sharePdf({ html, name: "attune-money-" + rep.month.from.slice(0, 7), text: tr("Money Report"), flash });
   };
-  const openLedger = (sc) => { setView("ledger"); if (sc && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(sc); };
+  const openLedger = (sc) => { setMoreOpen(false); setAddOpen(false); setView("ledger"); if (sc && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(sc); };
+  const saveText = async (name, text, mime) => {
+    try { if (NATIVE) { await nativeCall("saveFile", { name, mime, text }); flash(tr("Saved {n}", { n: name })); return; } } catch (e) {}
+    try { const url = URL.createObjectURL(new Blob([text], { type: mime })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); } catch (e) {}
+  };
+  const ledgerNow = React.useMemo(() => loadLedger() || { accounts: [], txns: [] }, [ver, view, pane]);
+  const addFromSheet = (txn) => {
+    const r = bridgeRef.current && bridgeRef.current.addTxns ? bridgeRef.current.addTxns([txn]) : null;
+    if (r && r.ok === false) { flash(tr("Couldn't add it: {w}", { w: r.why })); return; }
+    setAddOpen(false); flash(txn.type === "income" ? tr("Income added") : txn.type === "transfer" ? tr("Transfer added") : tr("Expense added"));
+    setTimeout(() => setVer((x) => x + 1), 400);
+  };
+  const billsLate = React.useMemo(() => { try { return (ledgerNow.recurring || []).some((r) => r.active !== false && r.type !== "income" && r.nextDate && r.nextDate < new Date().toISOString().slice(0, 10)); } catch (e) { return false; } }, [ledgerNow]);
   const zakNow = zakatFromSnapshot(snapshot);
   // the computer's one "right now": the Guardian's first catch, else the first bill due
   const rightNow = React.useMemo(() => {
@@ -6411,7 +6430,10 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // v7.2: the calm view and the Money Report come first; the ledger (Yusr) is the third level and stays loaded behind them.
   const ledgerOn = view === "ledger";
   const inbox = <PayInbox N={NATIVE} ready={ready} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); setTimeout(() => setVer((x) => x + 1), 400); }} />;
-  const body = view === "report"
+  const paneBody = pane === "accounts" ? <AccountsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
+    : pane === "bills" ? <BillsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
+    : pane === "zakat" ? <ZakatPane L={ledgerNow} snap={snapshot} wide={wide} openLedger={openLedger} /> : null;
+  const body = paneBody ? paneBody : view === "report"
     ? <MoneyReport rep={rep} all={allRep} wide={wide} account={account} back={() => setView("calm")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf}
         openLedger={() => openLedger("home")} openZakat={() => openLedger("zakat")} />
     : <MoneyCalm rep={rep} all={allRep} account={account} setAccount={setAccount} wide={wide} zak={zakNow} inbox={inbox}
@@ -6429,15 +6451,17 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
           {view === "calm" ? <div className="flex items-end justify-between gap-4 mb-4"><div><h2 className="text-[22px] font-black tracking-tight m-0">{tr("Money & Zakāt")}</h2>
             <p className="m-0 mt-0.5 text-[13px] font-semibold text-[var(--c-mut)]">{new Date().toLocaleDateString(arUI ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" })}</p></div>
             <div className="flex gap-2"><button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setSheet(true)} data-testid="money-tools">{tr("Import a payment")}</button>
-              <button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => openLedger("home")} data-testid="money-open-ledger">{tr("Ledger")}</button></div></div> : null}
+              <button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setMoreOpen(true)} data-testid="money-more">{tr("More")}</button></div></div> : null}
+          {view === "calm" ? <MoneyBar wide pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /> : null}
           {body}
         </>) : (
         <>
           <div className="shrink-0 px-3.5 pt-3">
-            <MoneyPhoneHead onMenu={onMenu} onImport={() => setSheet(true)} onLedger={() => openLedger("home")} ready={ready} />
-            {tabs ? <div className="pt-2">{tabs}</div> : <div className="h-3" />}
+            <MoneyPhoneHead onMenu={onMenu} onImport={() => setSheet(true)} onLedger={() => setMoreOpen(true)} ready={ready} />
+            {tabs && pane === "home" ? <div className="pt-2">{tabs}</div> : <div className="h-3" />}
           </div>
           <div className="att-scroll flex-1 min-h-0 overflow-y-auto px-3.5 pb-8">{body}</div>
+          <MoneyBar pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} />
         </>)) : (
       <>
       <div className={"shrink-0 flex items-center gap-2 px-2 h-14 " + (wide ? "calm bg-[var(--c-surf)] border-b border-[var(--c-ln)]" : "bg-slate-950 border-b border-slate-800")}>
@@ -6460,6 +6484,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       </>)}
       {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />
+      {addOpen ? <AddSheet L={ledgerNow} onSave={addFromSheet} onDebt={() => openLedger("debt")} onClose={() => setAddOpen(false)} /> : null}
+      {moreOpen ? <MoreSheet open={(sc) => openLedger(sc)} onClose={() => setMoreOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
           <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl rounded-t-[22px]! p-4 max-h-[88%] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
@@ -7618,7 +7644,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "7.5";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "7.6";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7692,9 +7718,9 @@ K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[lab
 const MORE_GROUPS = [
   ["Money & people", ["scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
-  ["Mind & learning", ["lifeask", "coach", "learn", "memory", "remember", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
+  ["Mind & learning", ["coach", "learn", "memory", "remember", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
-  ["Files", ["translate", "convert", "video", "pdfchat", "slides", "cv"]],
+  ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
   ["Business (add-on)", ["business", "field", "fleet"]],   // v6.50: the Crane toolkit opens from Business → Fleet & rentals → More
   ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
@@ -7763,7 +7789,8 @@ export default function App() {
   // (Android's rule); being SENT from one screen to another (Learn → Studio) is what Back retraces
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
-  const navTo = (m) => { if (m === "notes") m = "shelf"; noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
+  // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
+  const navTo = (m) => { if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -9813,7 +9840,7 @@ export default function App() {
       {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
         places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
-        onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
+        onNewChat={() => { setMoreOpen(false); navTo("home"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
         chatCmd={(c) => { try { window.dispatchEvent(new CustomEvent("attune-chat-cmd", { detail: c })); } catch (e) {} }}
         onClose={() => side.setOpen(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
@@ -9823,7 +9850,7 @@ export default function App() {
         <div onClick={(e) => e.stopPropagation()}><DesktopSide touch width="min(86vw, 320px)" mode={mode} canBack={false} onBack={() => {}} navTo={(m) => { setPhoneSide(false); setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
           places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
           tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
-          onNewChat={() => { setPhoneSide(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
+          onNewChat={() => { setPhoneSide(false); navTo("home"); setNewChatSignal((n) => n + 1); }}
           onOpenChat={(id) => { setPhoneSide(false); setOpenChatId(id); navTo("chat"); }}
           chatCmd={applyChatCmd}
           onClose={() => setPhoneSide(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
@@ -9835,7 +9862,10 @@ export default function App() {
         <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 min-h-[60px] py-2 mb-3 border-b border-slate-800/70" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>
           {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
+            <>
             <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Chats")} data-testid="header-menu"><Menu size={20} /></button>
+            {/* v7.6: the chat is part of Home — ← goes back to the clean Home */}
+            <button onClick={() => navTo("home")} aria-label={tr("Home")} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" data-testid="chat-home"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button></>
           ) : wide ? null : (<>   {/* v6.25: on a computer Back is the sidebar's ← (one arrow, not two) */}
             {!LEGACY_NAV ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button> : null}
             <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
@@ -9851,7 +9881,7 @@ export default function App() {
             <span className={"w-2 h-2 rounded-full shrink-0 " + (modelState === "ready" ? "bg-teal-400" : modelState === "starting" || modelState === "downloading" ? "bg-amber-400 animate-pulse" : "bg-slate-600")} />
             <span className="truncate">{modelState === "ready" || modelState === "starting" || modelState === "downloading" ? engineText : NATIVE && (installedModels || []).length ? tr("Asleep") : tr("No model")}</span></button>}
           {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="w-11 h-11 grid place-items-center rounded-[14px] text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
-          {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
+          {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); navTo("home"); }} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("New chat")} data-testid="chat-new-home"><Plus size={20} /></button> : null}
         </header>
 
         {/* The morning line — shown on every tab, once a day, only when there
@@ -9885,7 +9915,7 @@ export default function App() {
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
-            onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
+            onAsk={(t, raw) => { setChatSeed(raw ? t : "\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
           LEGACY_NAV ? <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
           : <ToolsPage tools={[...MORE_TOOLS, ["privacy", "Privacy", "What stays on your phone, and what is sent when you use a feature", ShieldCheck]]} groups={[]} showPins={false}

@@ -62,7 +62,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=queued]").count() == 0, "'Send now' stops the answer and sends the waiting message at once")
 
     # ---- 2. follow-up suggestions fit the answer ----
-    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200)
+    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     page.evaluate("(q) => { const M = window.__mock; M.fakeQueue = q; M.bodies = []; }", ["**No — different models.**\n\n| Point | A | B |\n|---|---|---|\n| Capacity | 100 t | 90 t |"])
     type_send(page, "Is the LTM 1100 the same as the LTM 1090?")
     done(page)
@@ -70,7 +70,7 @@ with sync_playwright() as p:
     check("Which should I choose?" in chips, "after a comparison, the suggestions offer 'Which should I choose?' (%s)" % chips.replace("\n", " · "))
 
     # ---- 3. a maths follow-up keeps the earlier question ----
-    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200)
+    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     page.evaluate("(q) => { const M = window.__mock; M.fakeQueue = q; M.bodies = []; }",
                   ["```python\nprint('ANSWER: 342000')\n```", "**342,000 EGP**", "```python\nprint('ANSWER: 570000')\n```", "**570,000 EGP**"] * 2)
     type_send(page, "3 cranes × 4 days × 25,000 EGP a day + 14% VAT — total?")
@@ -84,7 +84,7 @@ with sync_playwright() as p:
     # ---- 4. lighter screen while streaming ----
     src = open(HERE + "/../web-src/chat.jsx", encoding="utf-8").read()
     check("export const Md = React.memo(MdView)" in src, "answers already on screen are not redrawn while a new one streams")
-    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200)
+    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)   # v7.6: New chat → Home, then Chat
     page.evaluate("(q) => { const M = window.__mock; M.fakeQueue = q; M.slowQueue = 5; }", ["word " * 2000])
     page.evaluate("""() => { window.__muts = 0; const mo = new MutationObserver((l) => { window.__muts += 1; });
       mo.observe(document.body, { subtree: true, childList: true, characterData: true }); window.__mo = mo; }""")

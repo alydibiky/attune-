@@ -66,6 +66,19 @@ export function BoxOptions({ web, setWeb, tr2, setTr2, onAttach }) {
   </div>;
 }
 
+/** v7.6 (Ali, 24 Oct: "your life and translate integrated in Home in a minimal way"): what the box does with a sentence —
+    Chat (ask / do anything), Your life (answered by code from your own records), Translate. One small row of pills in the box. */
+export const BOX_MODES = [["chat", "Chat", "شات"], ["life", "Your life", "حياتك"], ["translate", "Translate", "ترجمة"]];
+export function takeBoxMode() { try { const v = localStorage.getItem("attune:box:mode"); localStorage.removeItem("attune:box:mode"); return BOX_MODES.some((m) => m[0] === v) ? v : "chat"; } catch (e) { return "chat"; } }
+export function BoxModes({ mode, setMode }) {
+  return <div className="flex items-center gap-1 p-1 rounded-full w-fit max-w-full" style={{ background: "var(--c-bg)", border: "1px solid var(--c-ln)" }} role="radiogroup" aria-label={tr("What the box does")} data-testid="box-modes">
+    {BOX_MODES.map(([id, en, a]) => <button key={id} role="radio" aria-checked={mode === id} onClick={() => setMode(id)} data-testid={"box-mode-" + id}
+      className={"min-h-[34px] px-3.5 rounded-full text-[13px] whitespace-nowrap transition-colors duration-150 " + (mode === id ? "font-extrabold" : "font-semibold c-sub")}
+      style={mode === id ? { background: "var(--c-acc-2, var(--c-acc))", color: "var(--c-on-acc-2, #fff)" } : null}>{ar() ? a : tr(en)}</button>)}
+  </div>;
+}
+export const BOX_HINT = { chat: null, life: "Ask about your money, health, people, meals or deadlines…", translate: "Type or paste — Arabic ↔ English, or say «to French …»" };
+
 /** Ali: "if the prompt can mean 2 things it asks him with the 2 options and he ticks what he means". */
 export function AskCard({ ask, onPick, onClose }) {
   const [sel, setSel] = useState(null);

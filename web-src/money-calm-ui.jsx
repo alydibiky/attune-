@@ -144,7 +144,7 @@ export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, cl
   const top2 = rep.month.cats.filter((c) => c.id !== "_rest").slice(0, 2).map((c) => c.name + " " + c.pct + "%").join(" · ");
   const spent = <Tile label={tr("Spent · This month")} mark={<span className="text-[var(--c-neg)]">↓</span>} value={amt(rep.month.out, rep.cur)} tone="neg" sub={top2 || tr("Nothing spent yet")} testid="money-kpi-out" />;
   const earned = <Tile label={wide ? T("Earned · {m}", { m: monthLabel(rep.month.from.slice(0, 7)) }) : tr("Earned · This month")} mark={<span className="text-[var(--c-pos)]">↑</span>} value={amt(rep.month.in, rep.cur)} tone="pos"
-    sub={wide ? T("Net saved: {a}", { a: amt(rep.month.net, rep.cur) }) : rep.month.rate != null ? T("{p}% of it kept", { p: rep.month.rate }) : tr("No income logged yet")} testid="money-kpi-in" />;
+    sub={wide ? T("Net saved: {a}", { a: amt(rep.month.net, rep.cur) }) : rep.month.rate != null ? (rep.month.rate >= 0 ? T("{p}% of it kept", { p: rep.month.rate }) : T("Spent {a} more than earned", { a: amt(-rep.month.net, rep.cur) })) : tr("No income logged yet")} testid="money-kpi-in" />;
   if (!wide) return (
     <div className="flex flex-col gap-3" data-testid="money-calm">
       {box}
@@ -362,7 +362,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
       {head}
       <div className="grid grid-cols-2 gap-2.5">
         <Tile label={tr("Spent · This month")} value={amt(rep.month.out, rep.cur)} tone="neg" sub={T("{n} entries", { n: rep.month.count })} testid="money-rep-out" />
-        <Tile label={tr("Earned · This month")} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? T("{p}% of it kept", { p: rep.month.rate }) : "—"} testid="money-rep-in" />
+        <Tile label={tr("Earned · This month")} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? (rep.month.rate >= 0 ? T("{p}% of it kept", { p: rep.month.rate }) : T("Spent {a} more than earned", { a: amt(-rep.month.net, rep.cur) })) : "—"} testid="money-rep-in" />
       </div>
       <WhereItWent rep={rep} />
       <Weeks rep={rep} />
@@ -398,7 +398,7 @@ export function MoneyPhoneHead({ onMenu, onImport, onLedger, ready }) {
       </div>
       <div className="flex items-center gap-1.5">
         <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onImport} data-testid="money-tools"><Upload size={14} />{tr("Import")}</button>
-        <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onLedger} data-testid="money-open-ledger" aria-label={tr("Ledger")}><BookOpen size={15} />{tr("Ledger")}</button>
+        <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onLedger} data-testid="money-more" aria-label={tr("More")}><BookOpen size={15} />{tr("More")}</button>
       </div>
     </div>);
 }

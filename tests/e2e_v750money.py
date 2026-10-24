@@ -98,7 +98,7 @@ with sync_playwright() as p:
             page.mouse.wheel(0, 900); page.wait_for_timeout(200); shot(page, "money-report-phone-dark-2")
             page.click("[data-testid=money-report-back]"); page.wait_for_timeout(200)
             check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", tag + "Back returns to the calm view")
-            page.click("[data-testid=money-open-ledger]"); page.wait_for_timeout(600)
+            page.click("[data-testid=money-more]"); page.click("[data-testid=money-open-ledger]"); page.wait_for_timeout(600)
             check(page.locator("[data-testid=money-yusr]").is_visible(), tag + "Ledger opens Money itself (Yusr)")
             fr = [f for f in page.frames if f != page.main_frame and "Yusr" in (f.title() or "")]
             n = fr[0].evaluate("db.txns.length") if fr else 0
@@ -149,7 +149,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=money-rep-bills]").count() == 1 and page.locator("[data-testid=money-cashflow]").count() == 1, tag + "the Report desk: 4 totals, cashflow, donut, Zakāt, ledger")
         shot(page, "money-report-desktop-" + theme)
         page.click("[data-testid=money-report-back]"); page.wait_for_timeout(200)
-        page.click("[data-testid=money-open-ledger]"); page.wait_for_timeout(1200)
+        page.click("[data-testid=money-more]"); page.click("[data-testid=money-open-ledger]"); page.wait_for_timeout(1200)
         check(page.locator("[data-testid=money-yusr]").is_visible(), tag + "the ledger opens inside Money")
         fr = [f for f in page.frames if f != page.main_frame and "Yusr" in (f.title() or "")]
         check(bool(fr), tag + "…Yusr itself")

@@ -50,7 +50,7 @@ const BRIDGE_NS = "yusr-bridge";
 //                 holds no model and never will: inference lives in exactly
 //                 one place, so there is one prompt to audit, not two.
 const OUT_TYPES = new Set(["propose-txn", "request", "ai-result", "entitlement", "go", "add-txns"]);   // v6.27: go (open a screen), add-txns (confirmed / sure payments read from notifications)
-const GO_SCREENS = new Set(["home", "trends", "accounts", "bills", "goals", "zakat", "notes", "invoices"]);
+const GO_SCREENS = new Set(["home", "trends", "accounts", "bills", "goals", "zakat", "notes", "invoices", "settings", "add-bill", "debt", "add-account"]);   // v7.6: Money's bottom bar opens the ledger's own forms
 const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "error", "ai-request", "open-plan"]);
 
 // What Yusr is allowed to ask the model for. A closed list, because "run this
@@ -154,7 +154,9 @@ function validateOut(type, data) {
     if (!Array.isArray(L) || !L.length || L.length > 50) return { ok: false, why: "add-txns needs 1–50 entries" };
     for (const t of L) {
       if (!t || num(t.amount) === null || t.amount <= 0) return { ok: false, why: "each entry needs a positive amount" };
-      if (!["expense", "income"].includes(t.type)) return { ok: false, why: "type must be expense or income" };
+      if (!["expense", "income", "transfer"].includes(t.type)) return { ok: false, why: "type must be expense, income or transfer" };
+      // v7.6: a transfer comes only from Money's + sheet, where the person picked both accounts
+      if (t.type === "transfer" && (t.byUser !== true || !t.account || !t.toAccount)) return { ok: false, why: "a transfer needs both accounts, picked by the person" };
       // the same rules as a proposal: Yusr picks the account (by currency), and never a zakat entry from outside —
       // v7.2: unless the PERSON chose it (the account pill they tapped on the calm view, or the account they named: "taxi 60 from cash")
       if (t.account && t.byUser !== true) return { ok: false, why: "Attune must not choose the account" };
