@@ -50,7 +50,7 @@ with sync_playwright() as p:
     check(tabs == ["business", "fleet", "field", "tools"], "Work opens Business with tabs Business · Team records · Reports · Tools (v6.50: the Crane toolkit lives inside Business → Fleet): %s" % tabs)
     page.click("[data-testid=hub-tab-tools]"); page.wait_for_selector("[data-testid=tools-page]")
     cards = page.evaluate("[...document.querySelectorAll('[data-testid^=tools-page-]')].map(b => b.dataset.testid.slice(11))")
-    check(cards == ["improve", "video", "ask"], "Tools: Writing (v6.43: five writing tools on one page), Video, Ask: %s" % cards)
+    check(cards[:5] == ["improve", "convert", "instant", "studio", "video"], "Tools (v7.8, Gemini's Area 6): the five families first — Writing, Files, Instant, Studio, Video: %s" % cards)
     page.fill("[data-testid=tools-find]", "humanize"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=tools-open-humanize]").count() == 1, "searching still finds a tool")
     page.fill("[data-testid=tools-find]", "")

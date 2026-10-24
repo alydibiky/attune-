@@ -2,6 +2,8 @@
    The picture engine and its models are described in studio.js / ImageEngine.kt. */
 import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
+import { logTool } from "./toollog.js";
+import { FamilyReport, FamilySeeAll } from "./tools-hub-ui.jsx";   // v7.8 the Studio report
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap, Eraser } from "lucide-react";
 import { keepInMask } from "./erase-ui.jsx";
 import { PhotoEditor } from "./photoedit-ui.jsx";
@@ -121,6 +123,8 @@ const PENDING = "attune:studio:pending";
 const notePending = (v) => { try { if (v) localStorage.setItem(PENDING, JSON.stringify(v)); else localStorage.removeItem(PENDING); } catch (e) {} };
 const readPending = () => { try { return JSON.parse(localStorage.getItem(PENDING) || "null"); } catch (e) { return null; } };
 function commitPic(item) {
+  // v7.8 (Gemini's Area 6): the Studio report — what was made and how long it took (never the picture itself)
+  try { logTool({ mode: "studio", title: String(item.idea || "").slice(0, 70), kind: item.erased ? "edit" : item.style || "picture", secs: item.ms ? Math.round(item.ms / 100) / 10 : 0 }); } catch (e) {}
   const list = [item, ...loadStudio().filter((x) => x.file !== item.file)];
   saveStudio(list); LIVE.cur = item;
   if (LIVE.hub) { LIVE.hub.setGallery(list); LIVE.hub.setCur(item); }
@@ -132,6 +136,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   const erasePick = useRef(null);
   useEffect(() => () => { try { native && native.eraserRelease && native.eraserRelease(); } catch (e) {} }, []);   // the eraser model leaves memory with Studio
   const [info, setInfo] = useState(readInfo);
+  const [rep, setRep] = useState(false);
+  useSubBack(rep, () => setRep(false));
   const [mode, setMode] = useSticky("studio:mode", "create");
   useSubBack(mode === "edit", () => setMode("create"));   // v5.34: Back leaves photo editing
   const [idea, setIdea] = useState("");
@@ -211,7 +217,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   }, []);
   useEffect(() => { if (incoming && incoming.prompt != null) { setIdea(incoming.prompt); setMode("create"); clearIncoming && clearIncoming(); } }, [incoming]);
 
-  if (!info) return <div className="calm p-4 text-sm text-[var(--c-mut)]" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
+  // v7.8 (Gemini's Area 6): the Studio report — pictures made and the time each took, on this device
+  if (rep) return <div className="calm text-[var(--c-ink)]" data-testid="studio-page"><FamilyReport fam="studio" back={() => setRep(false)} /></div>;
+  if (!info) return <div className="calm space-y-3" data-testid="studio-page"><p className="p-4 m-0 text-sm text-[var(--c-mut)] rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)]">{tr("Studio works in the Android app.")}</p><FamilySeeAll fam="studio" onClick={() => setRep(true)} /></div>;
   // v6.19: the device facts (cores, big cores, platform) join the picture facts for the per-device recommendation
   let dev = info; try { dev = { ...JSON.parse(native.info()), ...info }; } catch (e) {}
   const gpuOk = gpuWorks(info);
@@ -597,6 +605,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
           ))}
         </div>
       ) : null}
+      <FamilySeeAll fam="studio" onClick={() => setRep(true)} />
       </div>
 
       {info.built && info.gpuBuilt && info.cpuOnly ? (

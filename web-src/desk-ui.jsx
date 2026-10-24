@@ -103,7 +103,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
     </div>);
 }
 
-export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pages = null }) {
+export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pages = null, top = null }) {
   const [pins, togglePin] = usePins();
   const [q, setQ] = useState("");
   const nq = q.trim().toLowerCase();
@@ -116,6 +116,7 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
           className="ms-auto w-40 sm:w-72 min-w-0 min-h-[44px] h-11 rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150" />
       </div>
       <p className="text-[13px] text-[var(--c-mut)] mt-1 mb-4">{tr(subtitle || "Every tool on one page — ★ pins it to the sidebar.")}</p>
+      {top && !nq ? top : null}
       {/* v6.30 (Ali: "no more than 6 pages"): `pages` = [id, title, what is inside, members] — one card each; searching lists single tools */}
       {pages && !nq ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="tools-pages">
@@ -137,7 +138,7 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
         </div>
       ) : pages ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="tools-results">
-          {pages.flatMap((p) => p[3]).map((m) => tools.find((t) => t[0] === m)).filter(Boolean).filter(match).map(([id, label, sub, Icon]) => (
+          {(top ? tools : pages.flatMap((p) => p[3]).map((m) => tools.find((t) => t[0] === m)).filter(Boolean)).filter(match).map(([id, label, sub, Icon]) => (
             <button key={id} onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="text-start min-h-[56px] flex items-start gap-3 p-3.5 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
               <span className="w-10 h-10 shrink-0 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
               <span className="min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>

@@ -22,6 +22,9 @@ with sync_playwright() as p:
     box.fill("a short launch video for our crane rental company in Cairo")
     bad = []
     for label, must in NEW.items():
+        # v7.8 (Gemini's Area 6): five target chips; the rest sit under "More targets"
+        if page.locator("[data-testid=improve-all-targets]").count() == 0 and page.locator("[data-testid=improve-more-targets]").count():
+            page.click("[data-testid=improve-more-targets]"); page.wait_for_timeout(80)
         b = page.locator(f"button:text-is('{label}')")
         if not b.count(): bad.append(label + ": no button"); continue
         b.first.click(); page.wait_for_timeout(80)
@@ -29,6 +32,7 @@ with sync_playwright() as p:
         out = page.locator("pre").last.inner_text()
         if "crane rental" not in out or (must and must not in out): bad.append(f"{label}: {out[:90]!r}")
     check(not bad, "all %d new AI tools build a prompt with the task and their own shape%s" % (len(NEW), ("  ✗ " + "; ".join(bad[:4])) if bad else ""))
+    if page.locator("[data-testid=improve-all-targets]").count() == 0: page.click("[data-testid=improve-more-targets]"); page.wait_for_timeout(80)
     check(page.locator("text=Code & apps").count() >= 1 and page.locator("text=Images & video").count() >= 1, "tools are grouped: chat, agents, code & apps, images & video, music/voice/slides")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
     page.locator("nav button").last.click(); page.wait_for_timeout(200)

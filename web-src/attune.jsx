@@ -4,7 +4,7 @@ import { usesFleet } from "./industry.js";
 import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
-import { TrainFront, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
+import { TrainFront, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase, ChevronDown } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts, homeCurrency } from "./locale.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -57,6 +57,9 @@ import { fmt as fmtMoneyPlain } from "./money-calm.js";
 import { loadLife as loadLifeMoney } from "./life.js";
 import { LifePage } from "./life-ui.jsx";
 import { PhoneHome } from "./home-ui.jsx";
+import { logTool } from "./toollog.js";   // v7.8 the Tools report
+import { ToolsHub, FamilyReport, FamilySeeAll, StudioOffDevice } from "./tools-hub-ui.jsx";
+const wordCount = (s) => String(s || "").trim().split(/\s+/).filter(Boolean).length;
 import { MoneyBar, AddSheet, MoreSheet, AccountsPane, BillsPane, ZakatPane } from "./money-pages-ui.jsx";   // v7.6 Money's bottom bar
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
@@ -2311,6 +2314,7 @@ const FAMILIES = [
   { key: "audio", label: "Music, voice & slides", icon: Palette, keys: ["suno", "udio", "elevenlabs", "gamma", "canva"] },
 ];
 const TONES = ["Auto", "Formal", "Casual", "Technical", "Friendly"];
+const TARGET_PINS = ["claude", "chatgpt", "gemini", "cursor", "notebooklm"];   // v7.8: the compact chips
 const AUDIENCES = ["General", "Beginner", "Expert", "Executive"];
 const LANGS = [
   { k: "match", label: "Match input" }, { k: "en", label: "English" }, { k: "ar", label: "العربية" },
@@ -7644,7 +7648,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "7.7";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "7.8";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7927,6 +7931,11 @@ export default function App() {
   const [input, setInput] = useState("");
   const [context, setContext] = useState("");
   const [tool, setTool] = useState("claude");
+  const [moreTargets, setMoreTargets] = useState(false);   // v7.8 the full list of targets
+  const [writeRep, setWriteRep] = useState(false);          // v7.8 the Writing report
+  useSubBack(writeRep, () => setWriteRep(false));
+  const [instRep, setInstRep] = useState(false);            // v7.8 the Instant report
+  useSubBack(instRep, () => setInstRep(false));
   const [taskOverride, setTaskOverride] = useState("auto");
   const [tone, setTone] = useState("Auto");
   const [audience, setAudience] = useState("General");
@@ -8789,6 +8798,7 @@ export default function App() {
     const r = tailor({ input, context, tool, taskOverride, tone, audience, lang, pack, opts });
     if (!r) return; setResult(r); setFills({}); setVariant("lean"); setCopied(false);
     setHistory((h) => [{ id: Date.now(), input: input.trim(), tool, fav: false }, ...h].slice(0, TIER_LIMITS[tier].history));
+    logTool({ mode: "improve", title: input.trim().slice(0, 70), target: tool, kind: "structure", before: wordCount(input), after: wordCount(r.lean) });   // v7.8 the Tools report
   };
   const aiRewriteAction = async () => {
     if (!input.trim() || loading) return; if (!canUseAI()) return;
@@ -8800,6 +8810,7 @@ export default function App() {
       setResult({ lean: txt, detailed: txt, ai: true, reads: `Rewritten by AI to fit ${TOOLS[tool].label}.`, hint: TOOLS[tool].hint });
       setFills({}); setVariant("lean"); setCopied(false);
       setHistory((h) => [{ id: Date.now(), input: input.trim(), tool, fav: false }, ...h].slice(0, TIER_LIMITS[tier].history));
+      logTool({ mode: "improve", title: input.trim().slice(0, 70), target: tool, kind: "ai", before: wordCount(input), after: wordCount(txt) });
     } catch (e) { flash(tr("AI unavailable — showing structured version")); forge(); } finally { setLoading(false); }
   };
   const currentText = useMemo(() => (result ? applyFills(result[variant], fills) : ""), [result, variant, fills]);
@@ -8809,7 +8820,8 @@ export default function App() {
   const saveTemplate = () => { if (!input.trim()) return; if (templates.length >= TIER_LIMITS[tier].templates) return setShowUpgrade(true); const name = input.trim().slice(0, 28) + (input.trim().length > 28 ? "…" : ""); setTemplates((t) => [{ id: Date.now(), name, input: input.trim(), context, tool, tone, audience, lang, pack, opts }, ...t]); flash(tr("Saved as template")); };
   const applyTemplate = (t) => { setInput(t.input); setContext(t.context || ""); setTool(t.tool); setTone(t.tone); setAudience(t.audience); setLang(t.lang); setPack(t.pack || "none"); setOpts(t.opts); setMode("improve"); flash(tr("Template loaded")); };
 
-  const doCompress = () => { const r = compressPrompt(cPrompt, cHistory); setCResult(r ? { ...r, kind: "compress" } : null); setCCopied(false); };
+  const doCompress = () => { const r = compressPrompt(cPrompt, cHistory); setCResult(r ? { ...r, kind: "compress" } : null); setCCopied(false);
+    if (r) logTool({ mode: "compress", title: cPrompt.trim().slice(0, 70), kind: "trim", before: r.beforeW || wordCount(cPrompt), after: r.afterW || wordCount(r.text) }); };
   const aiCompressAction = async () => {
     if (!cPrompt.trim() || loading) return; if (!canUseAI()) return;
     setLoading(true);
@@ -8820,6 +8832,7 @@ export default function App() {
       const pct = beforeW ? Math.max(0, Math.round((1 - afterW / beforeW) * 100)) : 0;
       capture("compress", cPrompt, txt);
       setCResult({ kind: "aicompress", text: txt, beforeW, afterW, pct, removed: 0 }); setCCopied(false);
+      logTool({ mode: "compress", title: cPrompt.trim().slice(0, 70), kind: "ai", before: beforeW, after: afterW });
     } catch (e) { flash(tr("AI unavailable — showing trimmed version")); doCompress(); } finally { setLoading(false); }
   };
   const doPort = () => gate(() => { setCResult({ kind: "port", text: contextPort(cPrompt, cHistory, tool) }); setCCopied(false); });
@@ -8990,6 +9003,7 @@ export default function App() {
       if (!t) throw new Error("empty");
       spendIfFree(); setInResult(t); setInSource(transcript); setCheckState("");
       setInstantHistory((h) => [{ id: Date.now(), action: label, kind: "photo", input: "(photo)", output: t }, ...h].slice(0, 12));
+      logTool({ mode: "instant", title: label, kind: label });
       { const mr = remember({ kind: "photo", title: label + " — photo", text: transcript, output: t, tags: [label], meta: { thumb: true, mindKind: "photo" } }); if (mr && mr.id && inImage) keepPicture(mr.id, inImage); }
       setChecks({ issues: auditOutput(transcript, t, { structural: true }), stakes: stakes.level, verified: false });
       if (stakes.level === "high") runChecks(transcript, t, label, stakes, { structural: true });
@@ -9141,6 +9155,7 @@ export default function App() {
   const finishInstantText = (text, label, t, stakes, instruction) => {
     spendIfFree(); setInResult(t); setInSource(text); setCheckState("");
     setInstantHistory((h) => [{ id: Date.now(), action: label, kind: "text", input: text.slice(0, 80), output: t }, ...h].slice(0, 12));
+    logTool({ mode: "instant", title: label + " · " + text.slice(0, 50), kind: label });
     const rec = remember({ kind: "instant", title: label + " — " + text.slice(0, 60), text, output: t,
                            lang: inKind && inKind.kind === "foreign" ? inKind.label : lang, tags: [label] });
     // Promises in the text are found in the background, and give way the
@@ -9249,6 +9264,7 @@ export default function App() {
       const pct = bw ? Math.max(0, Math.round((1 - aw / bw) * 100)) : 0;
       capture("compress", cPrompt, txt);
       setCResult({ kind: "aicompress", text: txt, beforeW: bw, afterW: aw, pct, removed: 0, target: cPct });
+      logTool({ mode: "compress", title: cPrompt.trim().slice(0, 70), kind: "ai", before: bw, after: aw });
     } catch (e) { console.error(e); flash(String(e && e.message || e).slice(0, 90)); }
     finally { setLoading(false); }
   };
@@ -9918,9 +9934,8 @@ export default function App() {
             onAsk={(t, raw) => { setChatSeed(raw ? t : "\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
           LEGACY_NAV ? <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
-          : <ToolsPage tools={[...MORE_TOOLS, ["privacy", "Privacy", "What stays on your phone, and what is sent when you use a feature", ShieldCheck]]} groups={[]} showPins={false}
-            pages={toolPages([...groupsHere.flatMap((g) => g[1])])}
-            subtitle="Pick a tool."
+          : <ToolsHub tools={[...MORE_TOOLS, ["privacy", "Privacy", "What stays on your phone, and what is sent when you use a feature", ShieldCheck]]} groups={[]}
+            pages={toolPages([...groupsHere.flatMap((g) => g[1])]).filter((p) => !p[3].some((m) => ["improve", "video", "convert", "instant", "studio"].includes(m)))}
             navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "chat" ? (
           <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}
@@ -10445,7 +10460,7 @@ export default function App() {
             <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}
               chatReady={modelState === "ready" || (engineInfo && engineInfo.state === "ready")} enhanceMs={enhanceWaitMs(getPower())}
               llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
-          ) : <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300" data-testid="studio-page">{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</div>
+          ) : <StudioOffDevice />
         ) : mode === "learn" ? (
           <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             modelReady={modelUsable}
@@ -10621,6 +10636,8 @@ export default function App() {
             openTranslate={(lang) => { try { localStorage.setItem("attune:translate:to", lang); } catch (e) {} navTo("translate"); }}
             openMap={() => navTo("map")}
             openAgent={(link) => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link, plan: null, inApp: !!(NATIVE && NATIVE.agentOpen) } }))} />
+        ) : mode === "instant" && instRep ? (
+          <div className="calm max-w-2xl mx-auto"><FamilyReport fam="instant" back={() => setInstRep(false)} navTo={navTo} /></div>
         ) : mode === "instant" ? (
           <div className="space-y-4 max-w-2xl lg:max-w-none mx-auto">
             <div className={PANES}><div className={LEFT}>
@@ -10903,6 +10920,7 @@ export default function App() {
               </section>
             ) : null}
             </div></div>
+            <FamilySeeAll fam="instant" onClick={() => setInstRep(true)} />
             <p className="flex items-center justify-center gap-1.5 text-[11px] text-teal-500/60"><ShieldCheck size={12} /> {tr("Runs on your phone · works with no signal")}</p>
           </div>
         ) : mode === "fleet" ? (
@@ -11289,6 +11307,8 @@ export default function App() {
             </div>
             <p className="text-xs text-slate-600 mt-4">{tr("Recipes ship with the app and work offline.")}</p>
           </div></>
+        ) : mode === "improve" && writeRep ? (
+          <FamilyReport fam="writing" back={() => setWriteRep(false)} navTo={navTo} names={Object.fromEntries(Object.entries(TOOLS).map(([k, v]) => [k, v.label]))} />
         ) : mode === "improve" ? (
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
@@ -11312,8 +11332,12 @@ export default function App() {
                 {PACKS[pack].starters.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">{PACKS[pack].starters.map((s) => <button key={s} onClick={() => setInput(s)} className="text-xs px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{s.trim()}…</button>)}</div>}
               </div>
               <div className="mt-4">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Target tool")}</p>
-                <div className="space-y-3">{FAMILIES.map((fam) => { const Icon = fam.icon; return (<div key={fam.key}><div className="flex items-center gap-1.5 text-slate-500 text-xs mb-1.5"><Icon size={13} />{tr(fam.label)}</div><div className="flex flex-wrap gap-2">{fam.keys.map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{tr(TOOLS[k].label)}</button>)}</div></div>); })}</div>
+                {/* v7.8 (Gemini's Area 6): compact target chips — the five most used, the rest under "More targets" */}
+                <div className="flex items-center justify-between mb-2"><p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 m-0">{tr("Target AI")}</p>
+                  <span className="text-[11px] text-slate-500">{tr("{n} more under More targets", { n: FAMILIES.reduce((s, f) => s + f.keys.length, 0) - TARGET_PINS.length })}</span></div>
+                <div className="flex flex-wrap gap-2" data-testid="improve-targets">{[...TARGET_PINS, ...(TARGET_PINS.includes(tool) ? [] : [tool])].map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)} data-testid={"target-" + k}>{tr(TOOLS[k].label)}</button>)}
+                  <button onClick={() => setMoreTargets((v) => !v)} className={btn(false) + " flex items-center gap-1"} aria-expanded={moreTargets} data-testid="improve-more-targets">{tr("More targets")}<ChevronDown size={13} className={moreTargets ? "rotate-180" : ""} /></button></div>
+                {moreTargets ? <div className="space-y-3 mt-3" data-testid="improve-all-targets">{FAMILIES.map((fam) => { const Icon = fam.icon; return (<div key={fam.key}><div className="flex items-center gap-1.5 text-slate-500 text-xs mb-1.5"><Icon size={13} />{tr(fam.label)}</div><div className="flex flex-wrap gap-2">{fam.keys.map((k) => <button key={k} onClick={() => { setTool(k); setMoreTargets(false); }} className={btn(tool === k)}>{tr(TOOLS[k].label)}</button>)}</div></div>); })}</div> : null}
                 <p className="text-xs text-slate-600 mt-2">{tr("Optimized for")} {tr(TOOLS[tool].label)} · {TOOLS[tool].version}</p>
               </div>
               <ToolControls tool={tool} opts={opts} setOpt={setOpt} btn={btn} />
@@ -11342,6 +11366,7 @@ export default function App() {
               </div>
               <p className="text-xs text-slate-600 mt-2"><span className="text-slate-400">{tr("Structure")}</span> {tr("= instant on-device scaffolding.")} <span className="text-teal-400">{tr("AI Rewrite")}</span> {tr("= the model rethinks and rephrases your prompt.")}</p>
             </section>
+            <div className="md:col-span-2"><FamilySeeAll fam="writing" onClick={() => setWriteRep(true)} /></div>
 
             <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
               <div className="flex items-center justify-between mb-2">
@@ -11350,6 +11375,11 @@ export default function App() {
               </div>
               {result ? (<>
                 {!result.ai && <div className="flex gap-1 mb-2 bg-slate-950 border border-slate-800 rounded-lg p-1 w-fit">{["lean", "detailed"].map((v) => <button key={v} onClick={() => setVariant(v)} className={`px-3 py-1 rounded-md text-xs capitalize ${variant === v ? "bg-teal-500 text-slate-950 font-medium" : "text-slate-400"}`}>{tr(v)}</button>)}</div>}
+                {/* v7.8 (Gemini's Area 6): what you wrote, struck through, above what it became */}
+                <div className="mb-2 rounded-xl border border-slate-800 bg-slate-950 p-3" data-testid="improve-before">
+                  <p className="text-[10.5px] font-extrabold uppercase tracking-[0.08em] text-slate-500 m-0 mb-1">{tr("Before")} · {tr("{n} words", { n: wordCount(input) })}</p>
+                  <p className="text-[13px] text-slate-500 line-through m-0 whitespace-pre-wrap line-clamp-3" dir="auto">{input}</p></div>
+                <p className="text-[10.5px] font-extrabold uppercase tracking-[0.08em] text-teal-400 m-0 mb-1" data-testid="improve-after">{tr("After")} · {tr("{n} words", { n: wordCount(currentText) })} · {tr("ready to copy")}</p>
                 <pre className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-teal-50 whitespace-pre-wrap overflow-auto min-h-[8rem]">{currentText}</pre>
                 {placeholders.length > 0 && <div className="mt-3"><p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Fill in the blanks")}</p><div className="grid grid-cols-2 gap-2">{placeholders.map((p) => <input key={p} placeholder={p} value={fills[p] || ""} onChange={(e) => setFills((f) => ({ ...f, [p]: e.target.value }))} className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />)}</div></div>}
                 <p className="mt-3 text-xs text-slate-500 italic border-s-2 border-teal-800 ps-2">{tr(result.reads)}</p>
@@ -11427,7 +11457,7 @@ export default function App() {
           </div>
         )}</Guard>
 
-        {history.length > 0 && mode === "improve" && (
+        {history.length > 0 && mode === "improve" && !writeRep && (
           <div className="mt-5 bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><Clock size={13} /> {tr("History")} <span className="text-slate-600 normal-case">· {tier} keeps {TIER_LIMITS[tier].history}</span></p>
             <div className="space-y-1.5">{history.map((h) => <div key={h.id} className="flex items-center gap-2 text-sm"><button onClick={() => setHistory((x) => x.map((y) => y.id === h.id ? { ...y, fav: !y.fav } : y))} className={h.fav ? "text-amber-400" : "text-slate-600 hover:text-amber-400"}><Star size={14} fill={h.fav ? "currentColor" : "none"} /></button><button onClick={() => { setInput(h.input); setTool(h.tool); }} className="flex-1 text-start truncate text-slate-400 hover:text-teal-400">{h.input}</button><span className="text-xs text-slate-600 shrink-0">{tr(TOOLS[h.tool].label)}</span></div>)}</div>

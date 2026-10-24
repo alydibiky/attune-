@@ -3,6 +3,12 @@
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 
 ## Where things stand
+- **`main` = v7.8** (versionCode 120) — **Gemini step 6 (Tools) is built**: an on-device tool log (`web-src/toollog.js`, titles
+  and numbers only, last 300; unit `v810toollog`) written by Writing (improve/compress), the Converter, Instant, Studio and the
+  Video downloader. The Tools hub (`tools-hub-ui.jsx` ToolsHub): jobs this week / made today, the five families as cards
+  (`tools-page-improve|convert|instant|studio|video`) with "{n} this week", recent outputs, "See all → Tools Report";
+  Writing: five compact target chips + More targets, before (struck through) / after, Writing Report; Converter: recent files
+  & results + Converter Report; Instant and Studio reports (Studio in a browser: `StudioOffDevice`). e2e `e2e_v810tools.py`.
 - **`main` = v7.7** (versionCode 119) — **Gemini step 5 (Mind & learning) is built**: Mind's calm top (on a computer three
   numbers: everything kept, promises due, auto spaces) and "Do now" (the promise due today / late, with Done → state done);
   "See all → Mind Report" on a phone, the Mind Report beside the wall on a computer (kept this week by kind, promises due or
@@ -97,7 +103,7 @@ Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BR
 
 ## NEXT: the Gemini step (Ali: "when you finish and push we will start the Gemini thing")
 Gemini designs each area creatively as **HTML mock-ups only (no code)**; Ali approves; **Claude builds it into the app himself**
-(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · ~~4 Business~~ (v7.5) · ~~5 Mind & learning~~ (v7.7) · (Money page,
+(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (v7.2) · ~~2 Health~~ (v7.3) · ~~3 Chat~~ (v7.4) · ~~4 Business~~ (v7.5) · ~~5 Mind & learning~~ (v7.7) · ~~6 Tools~~ (v7.8) · (Money page,
 Follow-ups, Guardian, Deal Check) · 2 Health (Fit & Food, Family health, Cycle) · 3 Chat (chat, Assistants, Projects) ·
 4 Business hub + Books + Shop · 5 Mind & learning · 6 Tools · 7 Settings, sidebar, How to use. The message Ali sends Gemini is in the
 last chat; the brief is `GEMINI_DESIGN_BRIEF.md`. When an HTML mock-up arrives: render it locally (Tailwind CDN is blocked — compile

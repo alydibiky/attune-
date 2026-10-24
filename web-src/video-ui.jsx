@@ -3,6 +3,7 @@
    you pick is saved by Android's DownloadManager to Movies/Attune. Sites that allow downloading only
    (see video.js); YouTube / TikTok / Instagram / Facebook / X links get a clear "not allowed". */
 import React, { useState, useEffect, useRef } from "react";
+import { logTool } from "./toollog.js";
 import { Download, Loader2, X, Check, ClipboardPaste, Play, Film, Music, Link2, Scissors, Captions } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
@@ -171,6 +172,7 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink,
       const d = { id: r.id, name: r.name || name, where: r.where, status: "pending", done: 0, total: c.size || 0, audio: !!c.audio, q: V.qualityText(c) };
       setList((l) => { const n = [d, ...l]; store(n); return n; });
       flash && flash(tr("Downloading — you can close Attune, it keeps going"));
+      try { logTool({ mode: "video", title: String(found.title || d.name).slice(0, 70), kind: c.audio ? "audio" : d.q, mb: c.size ? Math.round((c.size / 1048576) * 10) / 10 : 0 }); } catch (e) {}   // v7.8 the Tools report
       setFound(null); setLink("");
     } catch (e) { setErr(tr(String((e && e.message) || e))); }
   };

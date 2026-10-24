@@ -14,6 +14,8 @@ import * as TR from "./translate.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { PdfEditor } from "./pdfedit-ui.jsx";
 import * as K from "./ui-kit.jsx";
+import { logTool } from "./toollog.js";
+import { FamilyReport, FamilySeeAll, useToolLog } from "./tools-hub-ui.jsx";   // v7.8 the Converter report
 import { runConversion, TARGET_LABEL, KIND_LABEL, ROWS, SUBS, PDF_TOOLS, PHOTO, T_LANGS, langLabel, recode, readB64, readUrl, needsNative as NEEDS_NATIVE } from "./convert-run.js";
 
 // v5.41 (Ali: "give me all the options — how can I merge PDFs?"): every tool shown before a file is picked
@@ -63,6 +65,8 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     el.accept = q.accept || ACCEPT; el.multiple = !!q.multiple; el.click();
   };
   useSubBack(!!files, () => { if (out) setOut(null); else { setFiles(null); setTarget(null); } });
+  const [rep, setRep] = useState(false);   // v7.8 the Converter report
+  useSubBack(rep && !files, () => setRep(false));
 
   const pick = (list) => {
     const arr = [...(list || [])];
@@ -94,11 +98,15 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     if (needsNative(files.kind, target) && !nativeCall) { setErr(tr("PDF files are converted by the Android app — open Attune on your phone.")); return; }
     const id = ++run.current, alive = () => run.current === id;
     setErr(""); setOut(null); setBusy(tr("Reading the file…"));
+    const t0 = Date.now();
     try {
       const o = await runConversion({ files, target, tLang, tFmt, pages, deg },
         { nativeCall, native, llm, modelReady, canReadPhotos, onBusy: (t) => alive() && setBusy(t), alive });
       if (!o || !alive()) return;
       setOut(o);
+      // v7.8 (Gemini's Area 6): recent files and the Converter report — the names and sizes only, never the file
+      try { const L = files.list || [], nm = L.length > 1 ? (L[0].name || "") + " +" + (L.length - 1) : (L[0] && L[0].name) || "";
+        logTool({ mode: "convert", title: nm + " → " + tr(TARGET_LABEL[target] || target), kind: target, mb: Math.round((L.reduce((s, f) => s + (f.size || 0), 0) / 1048576) * 10) / 10, secs: Math.round((Date.now() - t0) / 100) / 10 }); } catch (e) {}
       try { const d = JSON.parse(localStorage.getItem("attune:convert:day") || "{}"); localStorage.setItem("attune:convert:day", JSON.stringify({ [today]: (d[today] || 0) + 1 })); } catch (e) {}
     } catch (e) {
       if (alive()) { setErr(tr(String((e && e.message) || e))); if (e && e.need === "engine" && openEngine) openEngine(); }
@@ -121,6 +129,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
 
   const chip = (on) => K.chip(on);
   const targets = files ? targetsOf(files.kind) : [];
+  if (rep && !files) return <div className="calm text-[var(--c-ink)] max-w-2xl mx-auto" data-testid="convert"><FamilyReport fam="files" back={() => setRep(false)} names={TARGET_LABEL} /></div>;
   return (
     <div className="calm text-[var(--c-ink)] space-y-4 max-w-2xl mx-auto" data-testid="convert">
       <div className="px-1">
@@ -225,6 +234,20 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
       ) : <DeskEmpty icon={FileText} title={tr("The converted file appears here")} text={tr("Choose what it should become, then tap Convert. Nothing is uploaded.")} />}
       </div> : null}
       </div>
+      {/* v7.8 (Gemini's Area 6): recent files and their results, then the Converter report */}
+      {!files ? <ConvertRecent /> : null}
+      {!files ? <FamilySeeAll fam="files" onClick={() => setRep(true)} /> : null}
     </div>
   );
+}
+function ConvertRecent() {
+  const log = useToolLog().filter((e) => e.fam === "files").slice(0, 3);
+  if (!log.length) return null;
+  return <section className={K.cardPad + " space-y-1"} data-testid="convert-recent">
+    <p className={K.label + " m-0 mb-1"}>{tr("Recent files & results")}</p>
+    {log.map((e, i) => <div key={i} className="flex items-center gap-2 py-2 border-t border-[var(--c-ln)] first:border-t-0">
+      <span className="min-w-0 flex-1"><b className="block text-[13.5px] truncate" dir="auto">{e.title}</b>
+        <span className="block text-[11.5px] text-[var(--c-mut)] tabular-nums">{[e.mb ? e.mb + " MB" : "", e.secs ? e.secs + " s" : "", new Date(e.t).toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short" })].filter(Boolean).join(" · ")}</span></span>
+      <span className={K.tag("green") + " shrink-0"}>{tr("Saved on phone")}</span></div>)}
+  </section>;
 }
