@@ -27,8 +27,8 @@ with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, extra_init=INIT)
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
-    page.locator("nav button").last.click(); page.wait_for_timeout(250)
-    page.locator(".rounded-t-2xl button:has-text('Knowledge')").first.click()
+    # v7.9 (Ali: "only the developer adds knowledge"): Knowledge is in no list any more — the developer's test opens it directly
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'knowledge'}}))"); page.wait_for_timeout(250)
     page.wait_for_selector("[data-testid=kn-pack-math]", timeout=6000)
 
     # ---- the cards: what each pack does, no providers; the credits once, at the bottom

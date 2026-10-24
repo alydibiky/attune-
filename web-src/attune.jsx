@@ -6056,7 +6056,7 @@ function yusrDocumentHtml() {
       + `nav{background:var(--bg)!important;backdrop-filter:none!important}`
       // v7.9: Attune draws Yusr's tabs (and the +) itself, under every Yusr screen — Yusr's own bar and + would be a second set;
       // Invoices moved to Business → Books
-      + `body>div>nav,nav:has(button[data-scr]){display:none!important}.fab{display:none!important}#inv-set-btn{display:none!important}</style>`;
+      + `body>div>nav,nav:has(button[data-scr]){display:none!important}.fab{display:none!important}#inv-set-btn{display:none!important}section[id^=scr-]{padding-bottom:96px!important}</style>`;   // room under the last row for the +
     const doc = new TextDecoder("utf-8").decode(bytes);
     return doc.includes("</head>") ? doc.replace("</head>", qa + "</head>") : qa + doc;
   } catch (e) { return null; }

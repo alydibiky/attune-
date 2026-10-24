@@ -84,8 +84,9 @@ with sync_playwright() as p:
     # ---- a category near the map's centre ----
     page.click("[data-testid=map-chip-fuel]")
     page.wait_for_selector("[data-testid=map-hit]", timeout=8000)
-    s = [c for c in page.evaluate("window.__mapmock.calls") if c[0] == "search"][-1][1]
-    check(s.get("kinds") == ["amenity/fuel"] and "Wataniya" in page.locator("[data-testid=map-hit]").first.inner_text(), "Fuel asks the index for fuel stations near the centre")
+    # (moving the map to the results then names the neighbourhoods on it — a second search; the fuel search is the one with fuel)
+    s = ([c[1] for c in page.evaluate("window.__mapmock.calls") if c[0] == "search" and "amenity/fuel" in (c[1].get("kinds") or [])] or [{}])[-1]
+    check(s.get("kinds") == ["amenity/fuel"] and "Wataniya" in page.locator("[data-testid=map-hit]").first.inner_text(), "Fuel asks the index for fuel stations near the centre: %s · %s" % (s, page.locator("[data-testid=map-hit]").first.inner_text().replace("\n", " ")))
     page.locator("[data-testid=map-sheet] button:has-text('Close')").first.click(); page.wait_for_timeout(200)
 
     # ---- updates: a newer Egypt map is offered and installed (the country badge in the search bar opens the list) ----

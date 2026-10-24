@@ -20,10 +20,11 @@ export function PhotoSummary({ url, items, food, goal, L, ar, onScale }) {
               <span><b className="block text-[18px] font-black tabular-nums text-[var(--c-ink)]" data-testid="fit-photo-kcal">{Math.round(sum.kcal)}</b><span className="text-[10.5px] font-bold text-[var(--c-mut)]">{L("kcal", "سعرة")}</span></span></div></div>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2" data-testid="fit-photo-portions">
+      {/* four equal buttons on one row at 360 px: the number big, the word under it */}
+      <div className="grid grid-cols-4 gap-2" data-testid="fit-photo-portions">
         {PORTIONS.map((k) => <button key={k} onClick={() => onScale(k)} data-testid={"fit-photo-portion-" + k}
-          className={"min-h-[44px] px-4 rounded-full text-[14px] font-extrabold border tabular-nums " + (on === k ? "bg-[var(--c-acc-2)] border-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-ink)]")}>
-          {portionLabel(k) + " " + (ar ? w[1] : k > 1 ? w[0] + "s" : w[0])}</button>)}
+          className={"min-h-[52px] min-w-0 rounded-[16px] border flex flex-col items-center justify-center leading-tight " + (on === k ? "bg-[var(--c-acc-2)] border-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-ink)]")}>
+          <b className="text-[16px] font-black tabular-nums">{portionLabel(k)}</b><span className="text-[11px] font-bold truncate max-w-full px-1">{ar ? w[1] : k > 1 ? w[0] + "s" : w[0]}</span></button>)}
       </div>
       <div className="grid grid-cols-3 gap-2 text-center" data-testid="fit-draft-totals">
         {[[Math.round(sum.c) + (ar ? " جم" : " g"), L("Carbs", "كارب")], [Math.round(sum.p) + (ar ? " جم" : " g"), L("Protein", "بروتين")], [Math.round(sum.f) + (ar ? " جم" : " g"), L("Fat", "دهون")]].map(([v, lb]) =>

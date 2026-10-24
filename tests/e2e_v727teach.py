@@ -8,8 +8,8 @@ from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 
 def open_knowledge(page):
-    page.locator("nav button").last.click(); page.wait_for_timeout(250)
-    page.locator(".rounded-t-2xl button:has-text('Knowledge'), .rounded-t-2xl button:has-text('المعرفة')").first.click()
+    # v7.9 (Ali: "only the developer adds knowledge"): Knowledge is in no list any more — the developer's test opens it directly
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'knowledge'}}))"); page.wait_for_timeout(250)
     page.wait_for_selector("[data-testid=knowledge]", timeout=5000)
 
 def to_chat(page):

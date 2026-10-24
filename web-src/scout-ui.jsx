@@ -286,6 +286,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[22px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="scout-page">
       <div><h2 className={K.h1 + " flex items-center gap-2"}><Binoculars size={20} className="c-acc" />{tr("Scout")}</h2>
         <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Say once what you're looking for — a flat, a car, a product, a job, a supplier. Scout searches the sites that matter, checks every wish against what each ad says, tells you if the price is fair, and lets you know when something good appears.")}</p></div>
-      <div className={PANES}><div className={LEFT}>{left}</div><div className={RIGHT}>{results}</div></div>
+      {/* v7.9 (Ali picked the calm list): on a phone the results come first when there is a goal; the form and the goals follow */}
+      <div className={PANES + " flex flex-col"}><div className={LEFT + (goal ? " order-2 lg:order-none mt-4 lg:mt-0" : "")}>{left}</div><div className={RIGHT + (goal ? " order-1 lg:order-none !mt-0" : "")}>{results}</div></div>
     </div>);
 }

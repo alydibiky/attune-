@@ -776,7 +776,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                   {designA && openAlt !== i ? null : (x.alts && x.alts.length > 1) || x.from === "text" ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">
                       <span className="text-[11px] text-[var(--c-mut)] self-center">{L("Is it:", "قصدك:")}</span>
-                      {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={chip(a.food.id === x.id)} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
+                      {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={chip(a.food.id === x.id && (a.food.en || "") === (x.name || ""))} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
                       <button onClick={() => { setReplaceAt(i); setDraft((d) => d); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-[var(--c-surf)] text-[var(--c-acc)]" data-testid="fit-alt-other">{L("something else…", "حاجة تانية…")}</button>
                     </div>) : null}
                   {(() => { const aq = x.from === "text" ? null : AQ.amountQuestion(x); if (!aq) return null;
