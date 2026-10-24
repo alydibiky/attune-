@@ -3,8 +3,24 @@
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 
 ## Where things stand
-- **`main` = v7.1** (versionCode 113, commit `a02795c`), branch `claude/continue-latest-handoff-3dlo4i`. Every test passes
-  (`bash tests/run_all.sh`). APK: https://github.com/alydibiky/attune-/actions/runs/40038883226
+- **`main` = v7.2** (versionCode 114) — **Gemini step 1 (Money) is built**: Gemini's "Area 1: Money" mock-up (Quiet Atelier,
+  option C) is in the app on phone and computer, dark/light, Arabic RTL. Before: v7.1 (versionCode 113, commit `a02795c`).
+- v7.2 in one page:
+  - **Money opens on a calm view** (`money-calm-ui.jsx` MoneyCalm): the box (write "lunch 150, taxi 60" → logged by code through
+    `logtext.js` + the bridge's `add-txns`; a question → answered from the ledger by code), Safe to spend (SafeSpend `card` /
+    `inline`), the balance with the **accounts as pills** (filter the view; the chosen pill is the account the box writes to —
+    the bridge only accepts an account with `byUser: true`), 2 totals (computer: 4 + one "Right now" card from the Guardian),
+    3 latest, "See all → Money Report".
+  - **Money Report** (MoneyReport): donut by category, weeks vs the target (budget ÷ 4.3), 6-month cashflow, Zakāt **only from
+    Yusr's snapshot** (`zakatFromSnapshot`, never recomputed), the month's ledger, Excel (CSV with BOM) and PDF (`sharePdf`).
+  - **Ledger** = Yusr itself, third level; it stays loaded (hidden) behind the calm view so the bridge, the box and Zakāt work.
+    A shared/pasted payment opens the ledger (Yusr's own sheet asks for the account).
+  - Numbers: `money-report.js` (pure, `tests/unit/v750moneyreport.test.mjs`) — mirrors Yusr's accountBalance; gold/silver/
+    livestock accounts are not money; currencies never added together. e2e: `tests/e2e_v750money.py`.
+  - **Money tabs = Money · Follow-ups · Guardian · Deal Check** (hubs.js INSIDE: Follow-ups = People & plans first, with
+    Reminders · Timeline · Dates · Chat X-Ray in its switch; the Guardian is its own tab). Follow-ups ticks show month + amount
+    (paid green, next due amber) with a progress bar; Guardian is two panes on a computer; Deal Check's reply card is jade.
+  - The old computer layout `money-desk.jsx` (and `e2e_v727moneydesk.py`) is gone — phone and computer share MoneyTab now.
 - **v7.1 = Gemini's design (Direction 2 "Quiet Atelier") on every screen**, light and dark, phone and computer.
 - Version history this round: 6.49 (20 languages) → 6.50 (everything from the Home box, sidebar A) → 7.0 (calm Home + My report
   from Gemini's mock-up) → 7.1 (the whole app restyled).
@@ -34,7 +50,7 @@ Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BR
 
 ## NEXT: the Gemini step (Ali: "when you finish and push we will start the Gemini thing")
 Gemini designs each area creatively as **HTML mock-ups only (no code)**; Ali approves; **Claude builds it into the app himself**
-(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: **1 Money** (Money page,
+(do not wait for Gemini's code — that was a mistake once), tests, sends screenshots, ships. Order: ~~1 Money~~ (done in v7.2: Money page,
 Follow-ups, Guardian, Deal Check) · 2 Health (Fit & Food, Family health, Cycle) · 3 Chat (chat, Assistants, Projects) ·
 4 Business hub + Books + Shop · 5 Mind & learning · 6 Tools · 7 Settings, sidebar, How to use. The message Ali sends Gemini is in the
 last chat; the brief is `GEMINI_DESIGN_BRIEF.md`. When an HTML mock-up arrives: render it locally (Tailwind CDN is blocked — compile

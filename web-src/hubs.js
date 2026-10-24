@@ -36,7 +36,10 @@ export const FULL = ["home", "fit", "map"];   // (v6.36: Business shows the Work
     between the two parts. Skills is part of Assistants, Artifacts part of Projects, Reminders part of Radar (both are dates).
     v6.32 (Ali picked it): Compress is part of Improve a prompt, so Create has 6 tabs. */
 // v6.38 (M3): Timeline — everything from the other parts on one list
-export const INSIDE = { timeline: "reminders", radar: "reminders", life: "reminders", xray: "reminders", guardian: "reminders" };
+export const INSIDE = { reminders: "life", timeline: "life", radar: "life", xray: "life" };
+/* v7.2 (Gemini's Area 1 mock-up, Ali sent it 24 Oct 2026): Money = Money · Follow-ups · Guardian · Deal Check. Follow-ups opens on
+   People & plans (debts, installments, savings circles, the maid every Saturday) with Reminders · Timeline · Dates · Chat X-Ray in
+   its switch; the Money Guardian is its own tab again. */
 /* v6.36 (Ali's board: "reminders · tabs inside: xray, radar, life — rename it to a good name"): one Money tab, "Follow-ups", with a
    switch Reminders · Dates · People & plans · Chat X-Ray · Payments (the old Watch). Skills, Artifacts and Compress are their own
    pages again (Create's tabs / the Tools choices). */

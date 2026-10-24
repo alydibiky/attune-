@@ -23,22 +23,22 @@ with sync_playwright() as p:
     shot(page, "side-phone")
     page.click("[data-testid=phone-side] [data-testid=side-go-money]"); page.wait_for_timeout(400)
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
-    check(tabs == ["money", "reminders", "deal"], "Money is one page: Money · Follow-ups · Deal Check: %s" % tabs)
-    check(page.locator("[data-testid=hub-tab-reminders]").inner_text() == "Follow-ups", "…the tab is called Follow-ups")
-    page.click("[data-testid=hub-tab-reminders]"); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=hub-tab-reminders][aria-selected=true]").count() == 1, "a tab opens the sibling, marked as chosen")
+    check(tabs == ["money", "life", "guardian", "deal"], "Money is one page (v7.2, Gemini's Area 1): Money · Follow-ups · Guardian · Deal Check: %s" % tabs)
+    check(page.locator("[data-testid=hub-tab-life]").inner_text() == "Follow-ups" and page.locator("[data-testid=hub-tab-guardian]").inner_text() == "Guardian", "…the tabs are called Follow-ups and Guardian")
+    page.click("[data-testid=hub-tab-life]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=hub-tab-life][aria-selected=true]").count() == 1, "a tab opens the sibling, marked as chosen")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=hub-tab-money][aria-selected=true]").count() == 1, "Back returns to the tab before")
     shot(page, "money-tabs")
-    page.click("[data-testid=hub-tab-reminders]"); page.wait_for_timeout(400)
+    page.click("[data-testid=hub-tab-life]"); page.wait_for_timeout(400)
     parts = page.evaluate("[...document.querySelectorAll('[data-testid=hub-parts] button')].map(b => b.innerText)")
-    check(parts == ["Reminders", "Timeline", "Dates", "People & plans", "Chat X-Ray", "Payments"], "Follow-ups has a switch: %s" % parts)
+    check(parts == ["People & plans", "Reminders", "Timeline", "Dates", "Chat X-Ray"], "Follow-ups opens on People & plans, with a switch: %s" % parts)
     page.click("[data-testid=hub-part-radar]"); page.wait_for_selector("text=Deadline Radar", timeout=5000)
-    check(page.locator("[data-testid=hub-tab-reminders][aria-selected=true]").count() == 1 and page.locator("[data-testid=hub-part-radar][aria-pressed=true]").count() == 1,
+    check(page.locator("[data-testid=hub-tab-life][aria-selected=true]").count() == 1 and page.locator("[data-testid=hub-part-radar][aria-pressed=true]").count() == 1,
           "Dates (the Radar) opens inside the Follow-ups tab")
-    page.click("[data-testid=hub-part-guardian]"); page.wait_for_timeout(400)
-    check(page.locator("[data-testid=hub-tab-reminders][aria-selected=true]").count() == 1 and page.locator("[data-testid=hub-part-guardian][aria-pressed=true]").count() == 1,
-          "Payments too")
+    page.click("[data-testid=hub-tab-guardian]"); page.wait_for_selector("[data-testid=guardian-page]", timeout=5000)
+    check(page.locator("[data-testid=hub-tab-guardian][aria-selected=true]").count() == 1 and page.locator("[data-testid=hub-parts]").count() == 0,
+          "the Money Guardian is its own tab")
     shot(page, "radar-parts")
     # v6.34 (Ali: "I don't want this More page"): Settings in the sidebar is settings only — no grid of every tool
     page.locator("[data-testid=header-menu]:visible").first.click(); page.click("[data-testid=phone-side] [data-testid=side-settings]"); page.wait_for_selector("[data-testid=more-settings]")

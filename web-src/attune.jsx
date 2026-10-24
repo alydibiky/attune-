@@ -49,7 +49,12 @@ import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
-import { MoneyDesk } from "./money-desk.jsx";
+import { MoneyCalm, MoneyReport, MoneyBox, MoneyPhoneHead, RightNow } from "./money-calm-ui.jsx";   // v7.2 Money in two levels (Gemini Area 1)
+import { moneyReport, zakatFromSnapshot, ledgerCsv } from "./money-report.js";
+import { findings as guardianFindings, loadGuardian } from "./guardian.js";
+import { sharePdf } from "./books-docs.jsx";
+import { fmt as fmtMoneyPlain } from "./money-calm.js";
+import { loadLife as loadLifeMoney } from "./life.js";
 import { LifePage } from "./life-ui.jsx";
 import { PhoneHome } from "./home-ui.jsx";
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
@@ -6103,7 +6108,25 @@ function moneyAnalysisPrompt(snapshot, recent, lang) {
     lang ? `Answer in ${lang}.` : ""].filter(Boolean).join("\n");
 }
 
-function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming, openPlan, screen, onMenu, tabs }) {
+function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming, openPlan, screen, onMenu, tabs, wide = false, navTo: goTo = null }) {
+  // v7.2 (Gemini's "Area 1: Money", Ali sent it 24 Oct 2026): Money opens on a calm view; its Money Report is one tap away and the
+  // ledger itself (Yusr) one more. Yusr stays loaded behind them (hidden), so the box, a shared payment and the Zakāt figures work.
+  const [view, setView] = React.useState("calm");          // calm | report | ledger
+  useSubBack(view !== "calm", () => setView("calm"));
+  const [account, setAccount] = React.useState(null);      // the account pill: null = all accounts
+  const [ver, setVer] = React.useState(0);
+  const [boxBusy, setBoxBusy] = React.useState(false);
+  const [boxRes, setBoxRes] = React.useState(null);
+  const [listening, setListening] = React.useState(false);
+  React.useEffect(() => {
+    const on = (e) => { if (!e || !e.key || /ledger\.v3|attune:life|attune:guardian/.test(e.key)) setVer((x) => x + 1); };
+    const vis = () => { if (document.visibilityState === "visible") setVer((x) => x + 1); };
+    window.addEventListener("storage", on); document.addEventListener("visibilitychange", vis);
+    return () => { window.removeEventListener("storage", on); document.removeEventListener("visibilitychange", vis); };
+  }, []);
+  const arUI = getLang() === "ar";
+  const allRep = React.useMemo(() => moneyReport(loadLedger(), { ar: arUI }), [ver, view, arUI]);
+  const rep = React.useMemo(() => (account ? moneyReport(loadLedger(), { account, ar: arUI }) : allRep), [allRep, account]);
   const [ready, setReady] = React.useState(false);
   const [snapshot, setSnapshot] = React.useState(null);
   const [feed, setFeed] = React.useState([]);
@@ -6137,6 +6160,20 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // v6.27: the computer layout's tabs open Yusr's matching screen
   React.useEffect(() => { if (ready && screen && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(screen); }, [ready, screen]);
 
+  // v6.13: Yusr's write-or-ask bar (and, v7.2, the calm view's box). Sums are added up by code from the ledger (myledger.js); the
+  // model only answers what code cannot (advice), and then only from figures code worked out.
+  const askLedger = async (q) => {
+    const ledger = loadLedger();
+    if (myMoneyIntent(q) || catAsked(q) || /\b(spend|spent|spending|earn|earned|income|expenses?|balance)\b|صرفت|مصاريف|دخل|رصيد/i.test(q))
+      return answerMyMoney(q, ledger, { short: true }).text;
+    if (modelStateRef.current === "ready" && ledger) {
+      const facts = answerMyMoney("what did I spend and earn this month", ledger, { short: false }).text;
+      try {
+        return await callClaude(`You are a careful money helper inside a budgeting app. Answer the user's question in 2–4 short sentences, in the user's language. Use ONLY the figures below (from their own records); never invent numbers.\n\n${facts}\n\nQuestion: ${q}`, { prefix: "money", maxTokens: 260, think: false, temperature: 0.3 });
+      } catch (e) { /* the plain hint below */ }
+    }
+    return /[\u0600-\u06FF]/.test(q) ? "يمكنني الإجابة عن أموالك: «كم أنفقت على الطعام هذا الأسبوع؟» أو «كم دخلي هذا الشهر؟»" : "Ask me about your own money, e.g. “how much did I spend on food this week?” or “what did I earn this month?”";
+  };
   React.useEffect(() => {
     if (!html) return;
     const post = (m) => { const f = frameRef.current; if (f && f.contentWindow) f.contentWindow.postMessage(m, "*"); };
@@ -6147,13 +6184,14 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 
     bridge.on("ready", () => { setReady(true); bridge.request("summary"); bridge.sendEntitlement(proRef.current); });
     bridge.on("open-plan", () => { if (openPlanRef.current) openPlanRef.current(); });
-    bridge.on("snapshot", (d) => { setSnapshot(d); snapRef.current = d;
+    bridge.on("snapshot", (d) => { setSnapshot(d); snapRef.current = d; setVer((x) => x + 1);
       if (d.share) setLinked(d.share === "on" ? true : d.share === "off" ? false : null); });
     bridge.on("txn-added", (d) => {
       // A transaction the user confirmed inside Yusr. It goes into Attune's
       // memory as an ordinary record, so it is searchable alongside
       // everything else — and it arrives only AFTER they confirmed it.
       setFeed((f) => [d, ...f].slice(0, 40));
+      setVer((x) => x + 1);
       // The user answered this question inside Yusr, where the money lives.
       // If they said keep it to itself, it is shown here and goes no further.
       if (linkedRef.current === false) { bridge.request("summary"); return; }
@@ -6172,18 +6210,6 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       const reply = (result) => bridge.send("ai-result", { kind: d.kind, id: d.id, result });
       // v6.13: Yusr's write-or-ask bar. Sums are added up by code from the ledger (myledger.js); the model only
       // answers what code cannot (advice), and then only from figures code worked out.
-      const askLedger = async (q) => {
-        const ledger = loadLedger();
-        if (myMoneyIntent(q) || catAsked(q) || /\b(spend|spent|spending|earn|earned|income|expenses?|balance)\b|صرفت|مصاريف|دخل|رصيد/i.test(q))
-          return answerMyMoney(q, ledger, { short: true }).text;
-        if (modelStateRef.current === "ready" && ledger) {
-          const facts = answerMyMoney("what did I spend and earn this month", ledger, { short: false }).text;
-          try {
-            return await callClaude(`You are a careful money helper inside a budgeting app. Answer the user's question in 2–4 short sentences, in the user's language. Use ONLY the figures below (from their own records); never invent numbers.\n\n${facts}\n\nQuestion: ${q}`, { prefix: "money", maxTokens: 260, think: false, temperature: 0.3 });
-          } catch (e) { /* the plain hint below */ }
-        }
-        return /[\u0600-\u06FF]/.test(q) ? "يمكنني الإجابة عن أموالك: «كم أنفقت على الطعام هذا الأسبوع؟» أو «كم دخلي هذا الشهر؟»" : "Ask me about your own money, e.g. “how much did I spend on food this week?” or “what did I earn this month?”";
-      };
       if (d.kind === "money-ask") { reply({ ok: true, answer: await askLedger(d.text) }); return; }
       if (d.kind === "log-text" && isQuestion(d.text)) { reply({ ok: true, answer: await askLedger(d.text) }); return; }
       if (d.kind === "log-text") {
@@ -6262,7 +6288,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
     if (p.declined) { setErr(tr("That payment did not go through, so there is nothing to record.")); return; }
     if (!p.ok) { setErr(`Couldn't be sure of the ${p.missing.join(" or ")}. Open Money and add it by hand.`); return; }
     const r = bridgeRef.current && bridgeRef.current.proposeTransaction(p);
-    if (r && r.ok) flash(tr("Sent to Yusr — pick the account and confirm"));
+    if (r && r.ok) { setView("ledger"); flash(tr("Sent to Yusr — pick the account and confirm")); }
     else setErr((r && r.why) || "Yusr isn't connected yet.");
   };
 
@@ -6311,6 +6337,66 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 
   const zak = zakatExplainContext(snapshot);
 
+  // v7.2 the calm view's box: a question is answered from the ledger (code first); anything else is read as payments
+  // ("lunch 150, taxi 60") — every amount must be in the words (logtext.js) — and goes into Money on the chosen account.
+  const boxSubmit = async (text) => {
+    setBoxRes(null);
+    if (isQuestion(text)) { setBoxBusy(true); try { setBoxRes({ answer: await askLedger(text) }); } catch (e) { setBoxRes({ err: String((e && e.message) || e) }); } setBoxBusy(false); return; }
+    const L = loadLedger() || {};
+    const accs = rep.accounts.length ? rep.accounts : allRep.accounts;
+    if (!accs.length) { setBoxRes({ err: tr("Open the ledger once and add an account first — then write here.") }); return; }
+    const opts = { today: new Date().toISOString().slice(0, 10), currency: allRep.cur, accounts: accs.map((a) => a.name),
+      cats: ["food", "groceries", "transport", "bills", "rent", "shopping", "health", "fun", "coffee", "gifts", "salary", "other", ...((L.customCats || []).map((c) => c.id))] };
+    setBoxBusy(true);
+    let raw = "";
+    if (modelStateRef.current === "ready") { try { raw = await callClaude(logPrompt(text, opts), { prefix: "money", json: true, maxTokens: 700, think: false, temperature: 0.2 }); } catch (e) { raw = ""; } }
+    const out = parseLog(raw, text, opts);
+    setBoxBusy(false);
+    if (!out.ok) { setBoxRes({ err: tr(out.why || "No amount found. Write it like: lunch 150, taxi 60, got salary 30000."), warnings: out.warnings }); return; }
+    // the account: the one the person named in the sentence, else the pill they picked; with neither, Yusr picks (by currency)
+    const picked = account ? accs.find((a) => a.id === account) : null;
+    const items = out.items.map((x) => { const a = (x.account && accs.find((y) => y.name === x.account)) || picked;
+      const { account: _n, ...rest } = x;
+      return a ? { ...rest, account: a.id, byUser: true, currency: a.currency } : { ...rest, currency: allRep.cur }; });
+    const r = bridgeRef.current && bridgeRef.current.addTxns ? bridgeRef.current.addTxns(items) : null;
+    if (!r || !r.ok) { setBoxRes({ err: tr("Money is still starting — try again in a second.") }); return; }
+    setBoxRes({ added: items, warnings: out.warnings });
+    setTimeout(() => setVer((x) => x + 1), 400);
+  };
+  const boxVoice = NATIVE && NATIVE.listen ? async () => {
+    if (listening) return; setListening(true);
+    try { const r = await nativeCall("listen", getLang() === "ar" ? "ar-EG" : "", () => {}); if (r && r.text) boxSubmit(r.text); } catch (e) {}
+    setListening(false);
+  } : null;
+  const exportCsv = async () => {
+    const name = "attune-money-" + rep.month.from.slice(0, 7) + ".csv", text = ledgerCsv(rep, { ar: arUI });
+    try { if (NATIVE) { await nativeCall("saveFile", { name, mime: "text/csv", text }); flash(tr("Saved {n}", { n: name })); return; } } catch (e) {}
+    try { const url = URL.createObjectURL(new Blob([text], { type: "text/csv" })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); } catch (e) {}
+  };
+  const exportPdf = () => {
+    const esc = (x) => String(x == null ? "" : x).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const f = (n) => fmtMoneyPlain(n);
+    const html = `<!doctype html><html dir="${arUI ? "rtl" : "ltr"}"><head><meta charset="utf-8"><style>body{font-family:system-ui,"Noto Sans Arabic",sans-serif;color:#16201C;margin:32px;font-size:12px}h1{font-size:20px;margin:0 0 4px}p{color:#4A5852;margin:0 0 16px}.k{display:inline-block;margin:0 18px 12px 0}.k b{display:block;font-size:16px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:6px 8px;border-bottom:1px solid #E2EAE5;text-align:start}td.n{text-align:end;font-variant-numeric:tabular-nums}</style></head><body>
+<h1>${esc(tr("Money Report"))} · ${esc(rep.month.from.slice(0, 7))}</h1><p>${esc(account ? (rep.accounts.find((a) => a.id === account) || {}).name : tr("All accounts"))}</p>
+<div class="k">${esc(tr("Balance"))}<b>${f(rep.balance)} ${rep.cur}</b></div><div class="k">${esc(tr("Earned this month"))}<b>${f(rep.month.in)} ${rep.cur}</b></div><div class="k">${esc(tr("Spent this month"))}<b>${f(rep.month.out)} ${rep.cur}</b></div>
+<h3>${esc(tr("Spending by category"))}</h3><table>${rep.month.cats.map((c) => `<tr><td>${esc(c.name)}</td><td class="n">${f(c.amount)} ${rep.cur}</td><td class="n">${c.pct}%</td></tr>`).join("")}</table>
+<h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${esc(tr("Account"))}</th><th>${esc(tr("Amount"))}</th></tr>${rep.rows.map((t) => `<tr><td>${t.date}</td><td>${esc(t.note || t.catName)}</td><td>${esc(t.catName)}</td><td>${esc(t.account)}</td><td class="n">${t.type === "expense" ? "−" : "+"}${f(t.amount)} ${t.currency}</td></tr>`).join("")}</table></body></html>`;
+    sharePdf({ html, name: "attune-money-" + rep.month.from.slice(0, 7), text: tr("Money Report"), flash });
+  };
+  const openLedger = (sc) => { setView("ledger"); if (sc && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(sc); };
+  const zakNow = zakatFromSnapshot(snapshot);
+  // the computer's one "right now": the Guardian's first catch, else the first bill due
+  const rightNow = React.useMemo(() => {
+    if (!wide) return null;
+    try {
+      const F = guardianFindings({ ledger: loadLedger(), life: loadLifeMoney(), dismissed: (loadGuardian().dismissed || []), lang: getLang() });
+      const f = F[0];
+      if (f) return { text: (f.T ? tr(f.T[0], f.T[1]) : f.title) + " — " + (f.D ? tr(f.D[0], f.D[1]) : f.detail || ""), tag: fmtMoneyPlain(f.amount) + " " + allRep.cur, action: tr("Open Money Guardian"), go: "guardian" };
+    } catch (e) {}
+    const d = allRep.due[0];
+    return d ? { text: tr("{b} is due {d}: {a}", { b: d.note, d: d.late ? tr("— it's late") : d.date.slice(5), a: fmtMoneyPlain(d.amount) + " " + d.currency }), tag: d.late ? tr("Late") : tr("This week"), action: tr("Open bills"), ledger: "bills" } : null;
+  }, [wide, ver]);
+
   if (!html) return (
     <div className="bg-slate-900 rounded-[22px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
       <p className="text-sm text-slate-300">{tr("Money isn't bundled in this build.")}</p>
@@ -6322,30 +6408,58 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // the top of the screen and the bottom bar, with nothing scrolling around
   // it (two nested scroll areas were what made it feel glitchy). Attune's own
   // extras — reading a payment, asking about the money — slide up over it.
+  // v7.2: the calm view and the Money Report come first; the ledger (Yusr) is the third level and stays loaded behind them.
+  const ledgerOn = view === "ledger";
+  const inbox = <PayInbox N={NATIVE} ready={ready} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); setTimeout(() => setVer((x) => x + 1), 400); }} />;
+  const body = view === "report"
+    ? <MoneyReport rep={rep} all={allRep} wide={wide} account={account} back={() => setView("calm")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf}
+        openLedger={() => openLedger("home")} openZakat={() => openLedger("zakat")} />
+    : <MoneyCalm rep={rep} all={allRep} account={account} setAccount={setAccount} wide={wide} zak={zakNow} inbox={inbox}
+        box={<MoneyBox wide={wide} busy={boxBusy} onSubmit={boxSubmit} onReceipt={fromPhoto} onVoice={boxVoice} listening={listening} />}
+        result={reading ? { answer: tr("Reading the receipt…") } : boxRes} clearResult={() => setBoxRes(null)}
+        openReport={() => setView("report")} openLedger={() => openLedger("home")}
+        rightNow={rightNow ? <RightNow item={rightNow} open={() => (rightNow.go && goTo ? goTo(rightNow.go) : openLedger(rightNow.ledger || "bills"))} /> : null} />;
   return (
-    <div className={screen ? "relative flex flex-col bg-[#0F1218] rounded-xl overflow-hidden" : "att-shift fixed inset-x-0 top-0 z-[45] flex flex-col bg-[#0F1218]"} data-testid="money-page"
-         style={screen ? { height: "calc(100vh - 150px)" } : { bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
-      {/* v6.27: inside the computer layout (screen set) Money is a panel under the Calm tabs, not the whole screen */}
-      <div className="shrink-0 flex items-center gap-2 px-2 h-14 bg-slate-950 border-b border-slate-800" style={screen ? { display: "none" } : null}>
-        {onMenu ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!"><Menu size={20} /></button> : null}
-        <button onClick={() => window.__attuneBack && window.__attuneBack()} aria-label={tr("Back")}
-          className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
-        <p className="flex-1 min-w-0 text-[17px] font-extrabold tracking-tight text-white truncate">{tr("Money & Zakāt")}</p>
+    <div className={wide ? "calm relative flex flex-col rounded-[22px] " + (ledgerOn ? "overflow-hidden border border-[var(--c-ln)] bg-[var(--c-bg)]" : "bg-[var(--c-bg)] text-[var(--c-ink)] p-5 lg:p-6")
+                         : "att-shift fixed inset-x-0 top-0 z-[45] flex flex-col " + (ledgerOn ? "bg-[#0F1218]" : "calm bg-[var(--c-bg)] text-[var(--c-ink)]")}
+         data-testid={wide ? "money-desk" : "money-page"} data-view={view}
+         style={wide ? (ledgerOn ? { height: "calc(100vh - 120px)" } : null) : { bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
+      {!ledgerOn ? (wide ? (
+        <>
+          {view === "calm" ? <div className="flex items-end justify-between gap-4 mb-4"><div><h2 className="text-[22px] font-black tracking-tight m-0">{tr("Money & Zakāt")}</h2>
+            <p className="m-0 mt-0.5 text-[13px] font-semibold text-[var(--c-mut)]">{new Date().toLocaleDateString(arUI ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" })}</p></div>
+            <div className="flex gap-2"><button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setSheet(true)} data-testid="money-tools">{tr("Import a payment")}</button>
+              <button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => openLedger("home")} data-testid="money-open-ledger">{tr("Ledger")}</button></div></div> : null}
+          {body}
+        </>) : (
+        <>
+          <div className="shrink-0 px-3.5 pt-3">
+            <MoneyPhoneHead onMenu={onMenu} onImport={() => setSheet(true)} onLedger={() => openLedger("home")} ready={ready} />
+            {tabs ? <div className="pt-2">{tabs}</div> : <div className="h-3" />}
+          </div>
+          <div className="att-scroll flex-1 min-h-0 overflow-y-auto px-3.5 pb-8">{body}</div>
+        </>)) : (
+      <>
+      <div className={"shrink-0 flex items-center gap-2 px-2 h-14 " + (wide ? "calm bg-[var(--c-surf)] border-b border-[var(--c-ln)]" : "bg-slate-950 border-b border-slate-800")}>
+        {onMenu && !wide ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!"><Menu size={20} /></button> : null}
+        <button onClick={() => setView("calm")} aria-label={tr("Back")} data-testid="money-ledger-back"
+          className={"att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! " + (wide ? "text-[var(--c-ink)]!" : "text-slate-200!")}><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
+        <p className={"flex-1 min-w-0 text-[17px] font-extrabold tracking-tight truncate " + (wide ? "" : "text-white")}>{tr("Money & Zakāt")}</p>
         <span className={`shrink-0 w-2 h-2 rounded-full ${ready ? "bg-teal-400" : "bg-slate-600"}`} title={ready ? tr("Connected") : tr("Starting…")} />
         <button onClick={() => setSheet(true)} data-testid="money-tools"
-          className="shrink-0 min-h-[40px] px-4 rounded-full border border-slate-700 bg-slate-900 text-[12.5px] font-bold text-slate-100">{tr("Payment · Ask")}</button>
+          className={"shrink-0 min-h-[40px] px-4 rounded-full border text-[12.5px] font-bold " + (wide ? "border-[var(--c-ln)] bg-[var(--c-surf)]" : "border-slate-700 bg-slate-900 text-slate-100")}>{tr("Payment · Ask")}</button>
       </div>
-      {tabs && !screen ? <div className="shrink-0 px-3 pt-2 bg-slate-950">{tabs}</div> : null}
+      {tabs && !wide ? <div className="shrink-0 px-3 pt-2 bg-slate-950">{tabs}</div> : null}
       {parsed && parsed.ok && !sheet ? (
         <button onClick={() => setSheet(true)} className="shrink-0 text-start px-3 py-1.5 text-[11px] bg-emerald-500/10 border-b border-emerald-900/60 text-emerald-200">
           {parsed.direction === "out" ? "−" : "+"}{parsed.amount} {parsed.currency || ""}{parsed.party ? " · " + parsed.party : ""} · {tr("read from: “")}{parsed.amountSource}”
         </button>
       ) : null}
-      {/* v6.27 "Money tracks itself": payments read from notifications, to add with one tap */}
       {/* v6.37 (M1): what is safe to spend today, by code */}
-      {!screen ? <SafeSpend /> : null}
-      <PayInbox N={NATIVE} ready={ready} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); }} />
-      <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={{ border: 0 }} />
+      {!wide ? <SafeSpend /> : null}
+      </>)}
+      {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
+      <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
           <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl rounded-t-[22px]! p-4 max-h-[88%] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
@@ -7502,7 +7616,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "7.1";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "7.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8130,7 +8244,7 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { timeline: "Timeline", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
+  const TAB_SHORT = { timeline: "Timeline", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
@@ -10456,14 +10570,9 @@ export default function App() {
             unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }}
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 160, temperature: 0, think: false }) : null} />
         ) : mode === "money" ? (
-          wide ? (
-            // v6.27: design A "Calm" — a real computer layout for Money (money-desk.jsx); the phone keeps Money as it is
-            <MoneyDesk onAsk={() => { setChatSeed("How much did I spend on food this month?"); navTo("chat"); }} onPeople={() => navTo("life")}
-              renderYusr={(screen) => <MoneyTab screen={screen} incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />} />
-          ) : (
+          // v7.2: the same Money on a phone and a computer — the calm view first, the Money Report, then the ledger (Yusr)
           <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)}
-            onMenu={LEGACY_NAV ? null : () => setPhoneSide(true)} tabs={LEGACY_NAV ? null : hubTabsEl} />
-          )
+            wide={wide} navTo={navTo} onMenu={LEGACY_NAV || wide ? null : () => setPhoneSide(true)} tabs={LEGACY_NAV || wide ? null : hubTabsEl} />
         ) : mode === "travel" ? (
           // v6.27: Travel in design A "Calm" — five tabs, everything kept, the trip checked by code (travel-ui.jsx, travel.js)
           <TravelPage CPACKS={CPACKS} activePack={activePack} installedPacks={installedPacks} installPack={installPack} packView={packView}

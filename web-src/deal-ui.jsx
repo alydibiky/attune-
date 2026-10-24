@@ -293,8 +293,8 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
           </div>
 
           {res.msg ? (
-            <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-acc)]/50")} data-testid="deal-message">
-              <p className={U.label + " m-0 mb-2"}>{tr("Your reply, ready to send")}</p>
+            <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-acc)]").replace("bg-[var(--c-surf)]", "bg-[var(--c-soft)]")} data-testid="deal-message">
+              <p className={U.label + " m-0 mb-2 text-[var(--c-acc)]!"}>{tr("Your reply, ready to send")}</p>
               <p dir="auto" className="text-[14px] whitespace-pre-wrap leading-relaxed m-0">{res.msg}</p>
               <div className="flex gap-2 mt-3">
                 <button onClick={() => { try { navigator.clipboard.writeText(res.msg); } catch (e) {} flash && flash(tr("Copied")); }} className={U.btnS}><Copy size={14} />{tr("Copy")}</button>

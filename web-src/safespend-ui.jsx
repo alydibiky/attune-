@@ -50,8 +50,9 @@ function Details({ s, setCushion }) {
     </div>);
 }
 
-/** calm = the computer's Overview card style (money-desk.jsx); else the phone's slim row. */
-export function SafeSpend({ calm = false }) {
+/** calm = a big Overview card; card = the v7.2 Money calm view's card (Gemini's mock-up); inline = inside the computer's balance
+ *  card (the number and its line, at the end); else the phone's slim row. */
+export function SafeSpend({ calm = false, card = false, inline = false }) {
   const [open, setOpen] = useState(false);
   const [nonce, setNonce] = useState(0);
   const s = useSafe(nonce);
@@ -60,6 +61,24 @@ export function SafeSpend({ calm = false }) {
   const line = s.short > 0
     ? tr("Short by {x} before {d}").replace("{x}", s.cur + " " + fmt(s.short)).replace("{d}", dayName(s.income ? s.income.d : s.until))
     : tr("about {x} a day until {d}").replace("{x}", fmt(s.perDay)).replace("{d}", dayName(s.until));
+  const good = s.short > 0 ? "text-[var(--c-warn)]" : "text-[var(--c-pos)]";
+  if (inline) return (
+    <div className="text-end shrink-0" data-testid="safe-spend" title={line}>
+      <div className={"text-[12px] font-bold " + U.muted}>{tr("Safe to spend today")}</div>
+      <div className={"tabular-nums text-[22px] font-black " + good} dir="ltr" data-testid="safe-today">{fmt(s.today)} {s.cur}</div>
+      <div className={"text-[11.5px] max-w-[240px] " + (s.short > 0 ? "font-bold text-[var(--c-warn)]" : U.muted)}>{line}{s.cushion ? " · " + tr("{a} kept aside", { a: fmt(s.cushion) + " " + s.cur }) : ""}</div>
+    </div>);
+  if (card) return (
+    <div className="calm rounded-[18px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="safe-spend">
+      <button className="w-full min-h-[36px] flex items-center justify-between gap-2 text-start" onClick={() => setOpen(!open)} aria-expanded={open} data-testid="safe-spend-toggle">
+        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0">
+          <span className={"text-[12.5px] font-bold " + U.muted}>{tr("Safe to spend today")}</span>
+          <b className={"tabular-nums font-black text-[16px] " + good} dir="ltr" data-testid="safe-today">{fmt(s.today)} {s.cur}</b>
+          <span className={"text-[12px] font-semibold " + (s.short > 0 ? "text-[var(--c-warn)]" : U.muted)}>· {line}</span></span>
+        {open ? <ChevronUp size={15} className={"shrink-0 " + U.muted} /> : <ChevronDown size={15} className={"shrink-0 " + U.muted} />}
+      </button>
+      {open ? <div className="mt-2.5 pt-2.5 border-t border-[var(--c-ln)]"><Details s={s} setCushion={setCushion} /></div> : null}
+    </div>);
   if (calm) return (
     <div className={U.cardPad} data-testid="safe-spend">
       <button className="w-full text-start flex items-start justify-between gap-2" onClick={() => setOpen(!open)} aria-expanded={open}>

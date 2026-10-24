@@ -29,6 +29,9 @@
 /* v7.0: the page look of .calm sits in a layer, so a Tailwind class on the same element wins (a dim sheet backdrop bg-black/60,
    a card bg-[var(--c-surf)], a text size) — the colour tokens above stay unlayered so every screen has them */
 @layer components { .calm{font-family:"Nunito","Figtree","IBM Plex Sans Arabic",system-ui,sans-serif;color:var(--c-ink);background:var(--c-bg);font-size:14px;line-height:1.45} }
+/* v7.2 chart colours (Gemini Area 1: Money): jade, terracotta, amber, blue-grey — the donut slices and the cashflow bars */
+.calm{--c-chart-1:#4FC2AF;--c-chart-2:#E07A5F;--c-chart-3:#E5A93C;--c-chart-4:#639FAB}
+html.att-light .calm{--c-chart-1:#157A52;--c-chart-2:#C85A3B;--c-chart-3:#D97706;--c-chart-4:#2563EB}
 html.att-light .calm{--c-bg:#F4F7F5;--c-surf:#FFFFFF;--c-surf-2:#EEF3F0;--c-ink:#16201C;--c-mut:#4A5852;--c-ln:#E2EAE5;--c-acc:#157A52;--c-acc-2:#B5543A;--c-on-acc:#FFFFFF;--c-on-acc-2:#FFFFFF;--c-soft:#E3F4EC;--c-warn:#B4560E;--c-pos:#1E7A43;--c-neg:#B33A2E;--c-r:22px}
 /* v6.43 design A (Ali's pick): white cards on a soft grey-green ground, no outline, a soft shadow; Home's app tiles */
 html.att-light .calm .c-card{border-color:transparent;box-shadow:0 1px 3px rgba(16,32,28,.08)}

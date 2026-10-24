@@ -24,6 +24,9 @@ const KIND = { installment: "Installments", debt: "Money between people", circle
 const PANES_N = "lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:gap-6 lg:items-start";
 const EVERY = { month: "a month", week: "a week", year: "a year" };
 
+// v7.2 tick labels: "Oct" for a monthly payment, "Sat 24" for a weekly one; amounts short ("1k")
+const tickDay = (d, weekly) => { try { const x = new Date(d + "T12:00:00"); return x.toLocaleDateString(undefined, weekly ? { weekday: "short", day: "numeric" } : { month: "short", year: x.getFullYear() !== new Date().getFullYear() ? "2-digit" : undefined }); } catch (e) { return d.slice(5); } };
+const short = (n) => (n >= 1000 && n % 100 === 0 ? (n / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k" : fmt(n));
 function describe(c) {
   const per = c.every ? " " + tr(EVERY[c.every]) : "";
   if (c.kind === "installment") return tr("{a} {cur}{per} · {n} payments · {t} in all", { a: fmt(c.amount), cur: c.currency, per, n: c.count, t: fmt(c.total) });
@@ -55,14 +58,19 @@ function Item({ c, onTick, onRemove }) {
         {pr.left != null ? <div className="text-end"><span className={U.label}>{tr("Left")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(pr.left)}</div></div> : null}
         <button onClick={() => onRemove(c)} aria-label={tr("Delete")} className={"w-11 h-11 -me-2 -mt-1.5 shrink-0 grid place-items-center rounded-[14px] hover:text-[var(--c-neg)] " + U.muted} data-testid="life-remove"><Trash2 size={15} /></button>
       </div>
+      {c.count > 1 && c.kind !== "regular" ? <div className="flex items-center gap-2 mt-2.5" data-testid="life-progress">
+        <div className="flex-1 h-2 rounded-full bg-[var(--c-surf-2)] border border-[var(--c-ln)] overflow-hidden"><i className="block h-full rounded-full bg-[var(--c-pos)]" style={{ width: Math.min(100, (pr.paidCount / c.count) * 100) + "%" }} /></div>
+        <span className={U.tag("green") + " tabular-nums"}>{tr("{a} / {b} paid", { a: pr.paidCount, b: c.count })}</span></div> : null}
       {show.length > 1 ? (
-        <div className="grid gap-1.5 mt-3" style={{ gridTemplateColumns: "repeat(" + Math.min(12, show.length) + ", minmax(0,1fr))" }}>
-          {show.map((s) => (
+        // v7.2 (Gemini's Area 1): a box per payment with its date and amount — paid green, the next one due amber
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {show.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid; return (
             <button key={s.i} onClick={() => onTick(c, s.i, !s.paid)} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick"
               aria-pressed={s.paid} aria-label={tr("Payment {k}", { k: s.i + 1 }) + " · " + s.date}
-              className="h-11 rounded-[12px] flex items-center justify-center text-[10.5px] font-bold tabular-nums transition-colors duration-150"
-              style={{ background: s.paid ? "var(--c-acc)" : "var(--c-bg)", border: "1.5px solid " + (s.paid || (pr.next && pr.next.i === s.i) ? "var(--c-acc)" : "var(--c-ln)"), color: s.paid ? "var(--c-on-acc)" : "var(--c-mut)" }}>
-              {s.paid ? <Check size={13} /> : s.date.slice(5)}</button>))}
+              className="min-w-[60px] min-h-[44px] px-2 py-1 rounded-[11px] flex flex-col items-center justify-center gap-px text-[11px] font-bold tabular-nums transition-colors duration-150"
+              style={{ background: s.paid ? "color-mix(in srgb, var(--c-pos) 14%, transparent)" : nx ? "color-mix(in srgb, var(--c-warn) 14%, transparent)" : "var(--c-surf)",
+                border: "1.5px solid " + (s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-ln)"), color: s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-mut)" }}>
+              <span>{tickDay(s.date, c.kind === "regular")}</span><span className="flex items-center gap-0.5">{s.paid ? <Check size={11} /> : null}{nx && !s.paid ? tr("Due") + " " : ""}{short(s.amount)}</span></button>); })}
         </div>) : (
         <button onClick={() => onTick(c, 0, !(c.paid || []).includes(0))} className={"mt-3 min-h-[44px] flex items-center gap-2 text-[13.5px] font-bold " + U.muted} data-testid="life-tick">
           <span className="w-6 h-6 rounded-[8px] flex items-center justify-center" style={{ background: (c.paid || []).includes(0) ? "var(--c-acc)" : "transparent", border: "1.5px solid var(--c-acc)", color: "var(--c-on-acc)" }}>{(c.paid || []).includes(0) ? <Check size={12} /> : null}</span>
@@ -134,7 +142,8 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
       <div><h2 className={U.h1}>{tr("People & plans")}</h2><p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
       {/* v6.27 computer layout A: what you type and what's due on the left, the commitments on the right (stacked on a phone) */}
       <div className={PANES_N}><div className={LEFT}>
-      <div className={U.cardPad}>
+      <div className={U.cardPad + " focus-within:border-[var(--c-acc)]"}>
+        <div className={"text-[11.5px] font-bold mb-1.5 " + U.muted}>{tr("One sentence in any language — Attune builds the schedule:")}</div>
         <div className="flex items-end gap-2">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="life-input"
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); read(); } }}
@@ -152,7 +161,9 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
           <div className="flex gap-2 mt-3"><button className={U.btnP} onClick={save} data-testid="life-save">{tr("Save")}</button><button className={U.btnS} onClick={() => setDraft(null)}>{tr("Cancel")}</button></div>
         </div>) : null}
       {soon.length ? (
-        <div className={U.cardPad} data-testid="life-soon"><span className={U.label}>{tr("Due this week")}</span>
+        <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-warn)]")} data-testid="life-soon">
+          <div className="flex items-center justify-between gap-2"><span className="font-extrabold text-[14.5px]">⏰ {tr("Due this week")}</span>
+            <span className={U.tag("amber") + " tabular-nums"}>{tr("{n} items · {a}", { n: soon.length, a: fmt(soon.reduce((a, x) => a + x.amount, 0)) })}</span></div>
           {soon.slice(0, 6).map((x, k) => (
             <div key={k} className="flex items-center gap-2 mt-2"><span className="flex-1 truncate font-semibold" dir="auto">{heading(x.c)}</span>
               <span className={U.tag(x.late ? "red" : "amber")}>{x.late ? tr("Late") : x.date.slice(5)} · <span className="tabular-nums">{fmt(x.amount)}</span></span></div>))}

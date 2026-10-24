@@ -10,8 +10,8 @@ ok(tabsFor("studio").join() === "assistants,skills,artifacts,studio,code", "Crea
 ok(tabsFor("chat").join() === "chat,lifeask,translate", "Home's Chat has Ask your life and Translate as tabs");
 ok(tabsFor("home").length === 0 && tabsFor("instant").length === 0 && tabsFor("shelf").length === 0 && tabsFor("projects").length === 0, "Home, Instant, Shelf, Projects: no tab row");
 ok(tabsFor("coach").join() === "coach,convert,pdfchat,slides,cv", "Students: Homework · Convert · Doc chat · Slides · CV");
-ok(tabsFor("money").join() === "money,reminders,deal", "Money: Money · Follow-ups · Deal Check (" + tabsFor("money") + ")");
-ok(partsOf("radar").join() === "reminders,timeline,radar,life,xray,guardian" && partsOf("money").length === 0, "Follow-ups switch: Reminders · Timeline · Dates · People & plans · Chat X-Ray · Payments");
+ok(tabsFor("money").join() === "money,life,guardian,deal", "Money (v7.2, Gemini's Area 1): Money · Follow-ups · Guardian · Deal Check (" + tabsFor("money") + ")");
+ok(partsOf("radar").join() === "life,reminders,timeline,radar,xray" && partsOf("money").length === 0 && partsOf("guardian").length === 0, "Follow-ups switch (v7.2): People & plans · Reminders · Timeline · Dates · Chat X-Ray; the Guardian is its own tab");
 ok(tabsFor("reminders", ["money", "reminders"]).includes("reminders"), "without the others, Follow-ups stays a tab");
 ok(tabsFor("fit").length === 0 && tabsFor("health").join() === "health,fit,care,cycle", "Health: Health · Fit & Food · Family · Cycle; Fit is full-screen");
 ok(tabsFor("scout").join() === "learn,scout,memory,remember,news,map,metro,travel,knowledge", "Daily: Learn · Scout · Mind · Remember · News · Maps · Metro · Travel (+ Knowledge for Ali)");

@@ -40,7 +40,8 @@ for (const t of ["Paiement refusé: 30,00 € chez FNAC", "Pago rechazado por 20
 // never a currency from a common word
 for (const t of ["le magasin est fermé", "da Roma", "lei è qui", "회원 가입"]) ok(payCurrency(t) === null, "no currency in «" + t + "»");
 // the date: day-first unless the region writes month-first
-const d = (t, o) => new Date(P(t, o).date).toISOString().slice(0, 10);
+// (the local calendar day — toISOString() is UTC and moved the day back east of Greenwich, e.g. in Cairo)
+const d = (t, o) => { const x = new Date(P(t, o).date); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
 ok(d("Paid $5 on 03/04/2026", { order: "mdy" }) === "2026-03-04" && d("Paid 5 EUR on 03/04/2026") === "2026-04-03" && d("Paid $5 on 02/13/2026") === "2026-02-13", "03/04 by region; 02/13 is month-first anywhere");
 
 // ---- People & plans in other languages and currencies ----

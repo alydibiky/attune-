@@ -482,6 +482,9 @@ def sec_fast(br):
     # Money is a full page, not a box in a scrolling page
     page.locator("nav button").nth(2).click(); page.wait_for_selector("[data-testid=money-page]", timeout=5000)
     page.wait_for_timeout(500)
+    # v7.2: Money opens on its calm view; the ledger (Yusr) is one tap away and fills the screen
+    check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", "Money opens on the calm view")
+    page.locator("[data-testid=money-open-ledger]").click(); page.wait_for_timeout(500)
     box = page.locator("[data-testid=money-page] iframe").bounding_box()
     vh = page.evaluate("innerHeight")
     check(box["height"] > vh * 0.7, "Yusr fills the screen (%d of %d px)" % (box["height"], vh))

@@ -84,14 +84,17 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
     <div className={U.page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="guardian-page">
       <div><h2 className={U.h1 + " flex items-center gap-2"}><ShieldCheck size={20} className="text-[var(--c-acc)]" />{tr("Money Guardian")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Finds money in your own payments — on this phone, by code. It only counts what you did.")}</p></div>
+      {/* v7.2 (Gemini's Area 1): on a computer two panes — what to act on at the start, the Price memory at the end */}
+      <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-5 lg:items-start"><div className="space-y-4 min-w-0">
       <div className="grid grid-cols-2 gap-3">
         <U.Kpi label={tr("Saved this month")} value={pro ? fmt(totals.month) : "—"} tone="pos" testid="guardian-month" />
         <U.Kpi label={tr("Saved in all")} value={pro ? fmt(totals.all) : "—"} />
       </div>
       <OverpayCheck pro={pro} openPlan={openPlan} flash={flash} remind={remind} unremind={unremind} />
       {!F.length ? <p className={"text-[13.5px] " + U.muted} data-testid="guardian-empty">{tr("Nothing to fix right now. The Guardian looks again every time a payment comes in.")}</p> : null}
-      {/* v6.27 computer layout A: the findings as cards in 2 columns (one under another on a phone) */}
-      {shown.length || hidden.length ? <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
+      {shown.length || hidden.length ? <div className="space-y-3" data-testid="guardian-act">
+      <div className="flex items-center justify-between gap-2 px-1"><span className="font-extrabold text-[14.5px]">{tr("Act now · {n} quiet catches", { n: F.length })}</span>
+        <span className={U.tag("amber") + " tabular-nums"}>{tr("{a} at stake", { a: fmt(F.reduce((a, f) => a + (f.amount || 0), 0)) })}</span></div>
       {shown.map((f) => (
         <div key={f.id} className={U.cardPad} data-testid="guardian-item">
           <div className="flex items-start gap-3"><div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]" dir="auto">{f.T ? tr(f.T[0], f.T[1]) : f.title}</b><div className={"text-[12.5px] " + U.muted} dir="auto">{f.D ? tr(f.D[0], f.D[1]) : f.detail}</div></div>
@@ -109,6 +112,6 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
           <div className={"mt-1 text-[12.5px] " + U.muted}>{tr("Pro shows them all, and counts what Attune saved you — usually more than it costs.")}</div>
         </button>) : null}
       </div> : null}
-      <PriceMemory flash={flash} />
+      </div><div className="space-y-4 min-w-0"><PriceMemory flash={flash} /></div></div>
     </div>);
 }

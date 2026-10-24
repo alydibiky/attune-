@@ -155,8 +155,9 @@ function validateOut(type, data) {
     for (const t of L) {
       if (!t || num(t.amount) === null || t.amount <= 0) return { ok: false, why: "each entry needs a positive amount" };
       if (!["expense", "income"].includes(t.type)) return { ok: false, why: "type must be expense or income" };
-      // the same rules as a proposal: Yusr picks the account (by currency), and never a zakat entry from outside
-      if (t.account) return { ok: false, why: "Attune must not choose the account" };
+      // the same rules as a proposal: Yusr picks the account (by currency), and never a zakat entry from outside —
+      // v7.2: unless the PERSON chose it (the account pill they tapped on the calm view, or the account they named: "taxi 60 from cash")
+      if (t.account && t.byUser !== true) return { ok: false, why: "Attune must not choose the account" };
       if (t.type === "zakat" || t.cat === "zakat") return { ok: false, why: "Zakat is recorded in Yusr only" };
     }
   }
