@@ -16,6 +16,7 @@ import * as CL from "./fitclip.js";
 import * as AQ from "./fitamount.js";
 import * as LK from "./fitlook.js";
 import { LookStyle, PhotoMarks, PulseLoader } from "./fitlook-ui.jsx";
+import { PhotoSummary } from "./fit-summary-ui.jsx";   // v7.9 the photo meal, design B
 import * as P from "./fitplus.js";
 import * as Y from "./fityazio.js";
 import * as MI from "./fitmicro.js";
@@ -726,13 +727,16 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
             ))}
           </>) : (
             <div className={designA ? "space-y-2.5" : "space-y-2"} data-testid="fit-draft">
-              {designA && draft.length ? (() => { const tt = F.sumN(draft.filter((x) => x.kcal != null)); return (<>
+              {/* v7.9 (Ali picked design B + the slice buttons): a meal read from a photo — the dish, its ring, ½ · 1 · 1½ · 2, the macros */}
+              {photo && draft.length ? <PhotoSummary url={draft.length === 1 ? photo.url : null} items={draft} food={draft.length === 1 && draft[0].id ? F.food(draft[0].id) : null} goal={tg ? tg.kcal : 0} L={L} ar={ar}
+                onScale={(k) => setDraft((d) => d.map((x) => F.scaleItem(x, k)))} />
+              : designA && draft.length ? (() => { const tt = F.sumN(draft.filter((x) => x.kcal != null)); return (<>
                 <div className="flex items-baseline justify-between gap-2 px-0.5"><h2 className="text-[20px] font-black text-[var(--c-ink)]">{L(`Found ${draft.length} ${draft.length === 1 ? "food" : "foods"}`, `لقيت ${draft.length} ${draft.length === 1 ? "صنف" : draft.length === 2 ? "صنفين" : "أصناف"}`)}</h2></div>
                 <div className="grid grid-cols-4 gap-2 text-center" data-testid="fit-draft-totals">
                   {[[tt.kcal, L("kcal", "سعرة"), ""], [Math.round(tt.c) + " g", L("carbs", "كارب"), "#1F6BBF"], [Math.round(tt.p) + " g", L("protein", "بروتين"), "#B35C0F"], [Math.round(tt.f) + " g", L("fat", "دهون"), "#6B4FB8"]].map(([v, lb, col]) =>
                     <div key={lb} className="rounded-2xl bg-[var(--c-surf)] shadow-[0_1px_3px_rgba(16,32,28,0.08)] py-2.5 px-1 flex flex-col"><span className="text-[18px] font-black tabular-nums text-[var(--c-ink)]" style={col ? { color: col } : undefined}>{v}</span><span className="text-[11.5px] font-bold text-[var(--c-mut)]">{lb}</span></div>)}
                 </div></>); })() : null}
-              {photo && draft.length ? <PhotoMarks look={look} url={photo.url} items={draft} L={L} ar={ar} /> : null}
+              {photo && draft.length > 1 ? <PhotoMarks look={look} url={photo.url} items={draft} L={L} ar={ar} /> : null}
               <div className="text-[12.5px] text-[var(--c-mut)]">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
               {draft.some((x) => x.ruler === "card") ? <div className="text-[12px] text-[var(--c-acc)]" data-testid="fit-ruler-card">{L("📏 Measured against your card", "📏 اتقاس على الكارت")}</div>
                 : draft.some((x) => x.ruler === "plate") ? <div className="text-[12px] text-[var(--c-acc)]" data-testid="fit-ruler-plate">{L(`📏 Measured with your ${F.myPlateCm()} cm plate`, `📏 اتقاس على طبقك (${F.myPlateCm()} سم)`)}</div> : null}

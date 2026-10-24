@@ -532,6 +532,28 @@ export function aboutIt(ad, g, text = "") {
   return !key.length || key.some(has);
 }
 
+// ---- v7.9 (Ali picked the calm list "with an option to select more than 1 and make a table"): the picked ads side by side.
+// A row for each fact at least one of them states; the best value in a row is marked (lowest price / km, newest year, most rooms
+// or metres, highest score; a yes beats a no). → { cols: [{ id, title, site, url }], rows: [{ k, en, ar, cells: [{ v, best }] }] }
+const CMP = [["price", "Price", "السعر", "low"], ["score", "Match", "التطابق", "high"], ["year", "Year", "الموديل", "high"], ["km", "km", "الكيلومترات", "low"],
+  ["place", "Place", "المكان", null], ["beds", "Bedrooms", "الغرف", "high"], ["area", "Area m²", "المساحة م²", "high"], ["floor", "Floor", "الدور", null],
+  ["oneOwner", "One owner", "أول مالك", "yes"], ["noAccident", "No accidents", "بدون حوادث", "yes"], ["auto", "Automatic", "أوتوماتيك", "yes"],
+  ["furnished", "Furnished", "مفروش", "yes"], ["elevator", "Elevator", "أسانسير", "yes"], ["parking", "Parking", "جراج", "yes"], ["metro", "Near the metro", "قريب من المترو", "yes"],
+  ["warranty", "Warranty", "ضمان", "yes"], ["remote", "Remote", "عن بعد", "yes"], ["site", "Site", "الموقع", null]];
+export function compareAds(ads) {
+  const list = (ads || []).filter(Boolean).slice(0, 4);
+  const val = (a, k) => (k === "score" ? a.score : k === "site" ? a.site : a.facts ? a.facts[k] : undefined);
+  const rows = [];
+  for (const [k, en, ar, want] of CMP) {
+    const vs = list.map((a) => val(a, k));
+    if (vs.every((v) => v == null || v === "")) continue;
+    const nums = vs.filter((v) => typeof v === "number");
+    const best = want === "low" && nums.length > 1 ? Math.min(...nums) : want === "high" && nums.length > 1 ? Math.max(...nums) : want === "yes" ? true : null;
+    rows.push({ k, en, ar, cells: vs.map((v) => ({ v: v == null ? null : v, best: best != null && v === best && (want !== "yes" || vs.some((x) => x !== true)) })) });
+  }
+  return { cols: list.map((a) => ({ id: a.id, title: a.title || a.site, site: a.site, url: a.url })), rows };
+}
+
 // ---- 8. one run of a goal --------------------------------------------------------------------------------------------------------------
 /** hits from the searches → this run's results, merged with what was seen before.
  *  goal = { id, g, seen: [ad], taste, votes: {id: 1|-1} } → { found: [ad with check/fair/score], fresh: [ids new this run], seen }. */

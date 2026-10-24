@@ -9,6 +9,7 @@ import { tr, getLang } from "./i18n.js";
 import * as G from "./guide.js";
 import { PANES, LEFT, RIGHT } from "./desk.jsx";
 import * as GD from "./guide-demo.js";
+import * as GA from "./guide-areas.js";   // v7.9 life areas, "You say → You get", tried
 import * as K from "./ui-kit.jsx";
 
 // ---- the drawings: a phone screen per kind, with where steps 1–3 happen ----------------------------------------------------------
@@ -187,16 +188,56 @@ function PlanCard({ p, ar, nameOf, open, see }) {
     </div>);
 }
 
+// ---- v7.9 (Ali picked design A "by life area, with a checklist" + C's list of every feature) ---------------------------------------
+/** The progress, the life areas, and an open area's features: tried tick, You say → You get, Try it, How. */
+function LifeAreas({ ar, nameOf, navTo, sel, setSel, walkFor }) {
+  const [area, setArea] = useState(null);
+  const tried = GA.loadTried(), has = (id) => !!nameOf(id), all = GA.progress(tried, null, has), pk = (x) => (ar ? x[1] : x[0]);
+  const A = area && GA.AREAS.find((a) => a.id === area);
+  return (
+    <div className="space-y-3" data-testid="guide-areas">
+      <div className={K.cardPad + " space-y-2"} data-testid="guide-progress">
+        <div className="flex items-center justify-between gap-2"><b className="text-[15px]">{tr("You've tried {a} of {b}", { a: all.tried, b: all.total })}</b>
+          <span className={K.tag("green") + " tabular-nums"}>{Math.round((all.tried / Math.max(1, all.total)) * 100)}%</span></div>
+        <div className="c-bar" aria-hidden="true"><i style={{ width: Math.round((all.tried / Math.max(1, all.total)) * 100) + "%" }} /></div>
+        <p className="m-0 c-sub text-[12.5px]">{tr("Everything Attune can do to make life easier — by part of your life.")}</p>
+      </div>
+      {!A ? <div className="grid grid-cols-2 gap-2.5">
+        {GA.AREAS.map((a) => { const p = GA.progress(tried, a.id, has); return p.total ? (
+          <button key={a.id} onClick={() => setArea(a.id)} className={K.cardPad + " text-start min-h-[104px] hover:border-[var(--c-acc)] transition-colors duration-150"} data-testid={"guide-area-" + a.id}>
+            <span className="w-10 h-10 rounded-[14px] grid place-items-center text-[19px]" style={{ background: "var(--c-soft)" }} aria-hidden="true">{a.icon}</span>
+            <b className="block mt-2 text-[15px] font-extrabold" dir="auto">{pk(a.title)}</b>
+            <span className="block c-sub text-[12px] tabular-nums">{tr("{a} of {b} tried", { a: p.tried, b: p.total })}</span></button>) : null; })}
+      </div> : (
+      <div className="space-y-2.5" data-testid="guide-area-panel" data-id={A.id}>
+        <div className="flex items-center gap-2"><button onClick={() => setArea(null)} className="w-10 h-10 rounded-full grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] shrink-0" aria-label={tr("Back")} data-testid="guide-area-back"><ChevronRight size={17} className="rotate-180 rtl:rotate-0" /></button>
+          <b className="text-[18px] font-black" dir="auto">{A.icon} {pk(A.title)}</b></div>
+        {/* what hasn't been tried first — that is what there is still to discover */}
+        {[...A.ids].filter(has).sort((x, y) => tried.includes(x) - tried.includes(y)).map((id) => { const t = nameOf(id), sg = GA.SAY[id], done = tried.includes(id); return (
+          <div key={id} className={K.cardPad + " space-y-2"} data-testid="guide-feature" data-id={id} data-tried={done ? "1" : "0"}>
+            <div className="flex items-start gap-2.5"><span className={"w-6 h-6 rounded-[7px] border-2 shrink-0 grid place-items-center mt-0.5 " + (done ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "border-[var(--c-ln)]")} aria-label={done ? tr("Tried") : tr("Not tried yet")}>{done ? "✓" : ""}</span>
+              <span className="min-w-0"><b className="block text-[15px] font-extrabold" dir="auto">{t[0]}</b><span className="block c-sub text-[12.5px]" dir="auto">{t[1]}</span></span></div>
+            {sg ? <><p className="m-0 rounded-[14px] px-3 py-2 text-[13px]" style={{ background: "var(--c-surf-2)" }} dir="auto"><b>{tr("You say")}:</b> {pk(sg[0])}</p>
+              <p className="m-0 rounded-[14px] px-3 py-2 text-[13px] border border-dashed border-[var(--c-acc)]" dir="auto"><b>{tr("You get")}:</b> {pk(sg[1])}</p></> : null}
+            <div className="flex gap-2 flex-wrap">
+              {navTo ? <button className={K.btnP + " flex-1"} onClick={() => navTo(id)} data-testid="guide-try">{tr("Try it")}</button> : null}
+              <button className={K.btnS} onClick={() => setSel(sel === id ? "" : id)} aria-expanded={sel === id} data-testid="guide-how">{tr("How")}</button></div>
+            {sel === id ? <div className="pt-1">{walkFor(id)}</div> : null}
+          </div>); })}
+      </div>)}
+    </div>);
+}
+
 export function GuidePage({ tools, groups, navTo }) {
   const ar = getLang() === "ar";
   const [q, setQ] = useState("");
   const [sel, setSel] = useState("start:model");      // the open guide (computer: on the right; phone: opened in place)
+  const [all, setAll] = useState(false);              // v7.9 "See all features" — every feature A–Z
   const [wide, setWide] = useState(() => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } });
   useEffect(() => { try { const m = window.matchMedia("(min-width: 1024px)"); const on = () => setWide(m.matches); m.addEventListener("change", on); return () => m.removeEventListener("change", on); } catch (e) {} }, []);
   const pk = (x) => (ar ? x[1] : x[0]);
   // a tool's [name, purpose] as shown: the app's own tool list, or guide.js NAMES for places that are not in it (Home, Money…)
   const nameOf = (id) => { const n = G.NAMES[id]; if (n) return [pk(n[0]), pk(n[1])]; const t = (tools || []).find((x) => x[0] === id); return t ? [tr(t[1]), tr(t[2])] : null; };
-  const chs = useMemo(() => G.chapters(), [groups]);   // the sidebar's order (hubs.js), not the old All menu
   const hits = useMemo(() => G.searchGuide(q, tools), [q, tools]);
   const startHits = q.trim() ? G.START.filter((s) => (s.title.join(" ") + " " + s.steps.flat().join(" ") + " " + s.tip.join(" ")).toLowerCase().includes(q.trim().toLowerCase())) : G.START;
   const planHits = useMemo(() => G.searchPlan(q), [q]);
@@ -218,14 +259,17 @@ export function GuidePage({ tools, groups, navTo }) {
     <div className="space-y-4" data-testid="guide-list">
       <div className="relative"><Search size={15} className="c-sub absolute top-1/2 -translate-y-1/2 start-3" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search the guide…")} className={K.inp + " !ps-9"} dir="auto" data-testid="guide-search" /></div>
-      {!q.trim() ? <Gallery ar={ar} nameOf={nameOf} see={(k) => { setSel(k); setTimeout(() => { try { const e = document.querySelector('[data-testid="guide-walk"]'); if (e) e.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (x) {} }, 60); }} /> : null}
+      {!q.trim() ? <LifeAreas ar={ar} nameOf={nameOf} navTo={navTo} sel={sel} setSel={setSel} walkFor={walkFor} /> : null}
       {startHits.length ? <section data-testid="guide-chapter"><span className={"c-lbl " + K.label}>{tr("Getting started")}</span>
         {startHits.map((s) => <Row key={s.id} k={"start:" + s.id} label={ar ? s.title[1] : s.title[0]} sketch={s.sketch} />)}</section> : null}
       {planHits.length ? <section data-testid="guide-chapter" data-chapter="plan"><span className={"c-lbl " + K.label}>{pk(G.PLAN_TITLE)}</span>
         {G.PLAN.filter((p) => planHits.includes(p.id)).map((p) => <Row key={p.id} k={"plan:" + p.id} label={pk(p.title)} sub={pk(p.when)} icon={PLAN_ICON[p.icon] || Sparkles} />)}</section> : null}
-      {chs.map((c) => { const ids = hits ? c.ids.filter((id) => hits.includes(id)) : c.ids, title = Array.isArray(c.title) ? pk(c.title) : tr(c.title); return ids.length ? (
-        <section key={title} data-testid="guide-chapter"><span className={"c-lbl " + K.label}>{title}</span>
-          {ids.map((id) => { const t = nameOf(id); return t ? <Row key={id} k={id} label={t[0]} sub={t[1]} sketch={G.TOOLS[id].sketch} /> : null; })}</section>) : null; })}
+      {/* v7.9 (C): every feature A–Z — behind "See all features", and what a search finds */}
+      {!q.trim() ? <button onClick={() => setAll((v) => !v)} className={K.btnS + " w-full"} aria-expanded={all} data-testid="guide-see-all">{all ? tr("Hide the list") : tr("See all features (A–Z)")}</button> : null}
+      {all || q.trim() ? (() => { const ids = Object.keys(G.TOOLS).filter((id) => id !== "knowledge" && nameOf(id) && (!hits || hits.includes(id))).sort((a, b) => nameOf(a)[0].localeCompare(nameOf(b)[0], ar ? "ar" : "en"));
+        const by = {}; ids.forEach((id) => { const L0 = nameOf(id)[0].charAt(0).toUpperCase(); (by[L0] = by[L0] || []).push(id); });
+        return Object.keys(by).map((L0) => <section key={L0} data-testid="guide-chapter" data-chapter={"az-" + L0}><span className={"c-lbl " + K.label}>{L0}</span>
+          {by[L0].map((id) => { const t = nameOf(id), sg = GA.SAY[id]; return <Row key={id} k={id} label={t[0]} sub={sg ? (ar ? sg[0][1] : sg[0][0]) : t[1]} sketch={G.TOOLS[id].sketch} />; })}</section>); })() : null}
       {hits && !hits.length && !startHits.length && !planHits.length ? <p className="c-sub" data-testid="guide-none">{tr("Nothing in the guide matches — try another word.")}</p> : null}
     </div>);
   return (

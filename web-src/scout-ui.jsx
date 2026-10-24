@@ -21,6 +21,7 @@ const EXAMPLES = [
 ];
 const KIND = { gold: ["Gold price", "سعر الدهب"], rent: ["Flat to rent", "شقة للإيجار"], "buy-home": ["Home to buy", "عقار للشراء"], car: ["Car", "سيارة"], product: ["Product", "منتج"], job: ["Job", "وظيفة"], tender: ["Tender", "مناقصة"], service: ["Service / supplier", "خدمة / مورد"] };
 const fmt = (v) => Math.round(v).toLocaleString("en-US");
+const short = (v) => (v >= 1e6 ? (Math.round(v / 1e4) / 100) + "M" : v >= 1e4 ? Math.round(v / 1e3) + "k" : fmt(v));   // v7.9 "1.42M", "14k"
 
 // v6.32 distance to the metro: each ad's area on the offline map pack (no web), its nearest station, kept so it is asked once
 const ST_KEY = "attune:scout:stations:v1";
@@ -135,6 +136,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
   // v7.9 (Ali: Home's "Scout found 4 new" didn't take him to the ads): the goal with new finds opens first, its new ads marked
   // "New", first in the list, and scrolled to
   const [sel, setSel] = useState(() => { const gs = S.loadScout().goals; return ((gs.find((x) => (x.unseen || []).length) || gs[0]) || {}).id || null; });
+  const [openAd, setOpenAd] = useState(null);       // v7.9 calm list: the ad whose details are open
+  const [picking, setPicking] = useState(false), [picked, setPicked] = useState([]), [cmpOn, setCmpOn] = useState(false);   // select several → a table
   const [fresh] = useState(() => { const gs = S.loadScout().goals; const g0 = gs.find((x) => (x.unseen || []).length); return g0 ? g0.unseen : []; });
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(null);   // { id, i, n, q }
@@ -195,37 +198,52 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
       <div className={K.cardPad + " space-y-1.5"}><b className="text-[16px] font-extrabold" dir="auto">{goal.g.what || goal.text}</b>
         <div className="flex flex-wrap gap-1.5 text-[12px]">
           {goal.g.max ? <span className="c-pill">≤ {fmt(goal.g.max)}</span> : null}{goal.g.place ? <span className="c-pill">{goal.g.place}</span> : null}
-          {goal.g.wish.map((w) => <span key={w.k} className="c-pill">{ar ? w.say[1] : w.say[0]}</span>)}</div></div>
+          {goal.g.wish.map((w) => <span key={w.k} className="c-pill">{ar ? w.say[1] : w.say[0]}</span>)}</div>
+        {/* v7.9 (Ali picked the calm list): new · cheapest · fair price, at a glance */}
+        {found.length && goal.g.kind !== "gold" ? (() => { const ps = found.map((a) => a.facts.price).filter((v) => v > 0); return <div className="grid grid-cols-3 gap-2 pt-2" data-testid="scout-numbers">
+          <div><b className="block c-num text-[20px] font-black c-acc">{found.filter((a) => fresh.includes(a.id)).length}</b><span className="c-sub text-[11.5px]">{tr("new")}</span></div>
+          <div><b className="block c-num text-[20px] font-black">{ps.length ? short(Math.min(...ps)) : "—"}</b><span className="c-sub text-[11.5px]">{tr("cheapest")}</span></div>
+          <div><b className="block c-num text-[20px] font-black">{cmp && cmp.med ? short(cmp.med) : "—"}</b><span className="c-sub text-[11.5px]">{tr("fair price")}</span></div></div>; })() : null}</div>
       {goal.g.kind === "gold" ? <div className={K.cardPad + " space-y-1"} data-testid="scout-gold">
         <span className={K.label}>{tr("Gold {k}K, a gram", { k: goal.g.karat || 21 })}</span>
         {(goal.gold || []).length ? <b className="c-amt">{fmt(goal.gold.slice(-1)[0][1])}</b> : <p className="c-sub m-0">{tr("Checking the price…")}</p>}
         <p className="c-sub m-0 text-[12px]">{goal.g.max ? tr("You'll be told when it is at or under {v}", { v: fmt(goal.g.max) }) : goal.g.min ? tr("You'll be told when it is at or over {v}", { v: fmt(goal.g.min) }) : tr("Add a price to be told, e.g. “under 3,500”")}</p>
       </div> : null}
       {goal.g.car && goal.g.car.note ? <p className="c-acc text-[13px] m-0" data-testid="scout-car-note" dir="auto">{ar ? goal.g.car.note[1] : goal.g.car.note[0]}</p> : null}
-      {cmp && (cmp.prices || cmp.n) && goal.g.kind !== "gold" ? (
-        <div className={K.cardPad + " space-y-1.5"} data-testid="scout-compare">
-          <span className={K.label}>{tr("Compared")}</span>
-          <p className="m-0 text-[14px]" dir="auto">{tr("{n} ads from {s} sites", { n: cmp.n, s: Object.keys(cmp.sites).length })}{goal.lastSites && goal.lastSites.length ? <span className="c-sub"> · {tr("{n} sites searched", { n: goal.lastSites.length })}</span> : null}</p>
-          {cmp.low ? <p className="m-0 text-[14px]" data-testid="scout-range" dir="auto">{tr("Usual price")}: <b className="c-num">{fmt(cmp.low)} – {fmt(cmp.high)}</b> · {tr("typical")} <b className="c-num">{fmt(cmp.med)}</b> <span className="c-sub text-[12px]">({tr("from {n} prices, list pages and price guides included", { n: cmp.prices })})</span></p> : null}
-          {cmp.best ? <p className="m-0 text-[13.5px]" data-testid="scout-best" dir="auto">⭐ {tr("Best value")}: {cmp.best.title} — <b className="c-num">{fmt(cmp.best.price)}</b> <span className="c-sub">({cmp.best.site})</span></p> : null}
-          <div className="flex flex-wrap gap-1.5 text-[12px]">{Object.entries(cmp.sites).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([s0, k]) => <span key={s0} className="c-pill">{s0}{k ? " · " + k : ""}</span>)}</div>
-        </div>) : null}
       {!found.length && goal.g.kind !== "gold" ? <p className="c-sub" data-testid="scout-none">{goal.lastRun ? tr("Nothing that matches yet. Scout keeps looking — you'll be told when something good appears.") : tr("Searching…")}</p> : null}
+      {found.length > 1 && goal.g.kind !== "gold" ? <div className="flex items-center justify-between gap-2 px-1">
+        <span className="font-extrabold text-[14.5px]">{tr("{n} matches", { n: found.length })}</span>
+        <button onClick={() => { setPicking((v) => !v); setPicked([]); setCmpOn(false); }} className="min-h-[44px] px-3 font-bold text-[13.5px] c-acc" data-testid="scout-select">{picking ? tr("Cancel") : tr("Select to compare")}</button></div> : null}
+      {cmpOn && picked.length > 1 ? (() => { const T = S.compareAds(picked.map((id) => found.find((a) => a.id === id)).filter(Boolean)); return (
+        <div className={K.cardPad + " space-y-2"} data-testid="scout-compare-table">
+          <div className="flex items-center justify-between gap-2"><span className={K.label}>{tr("Side by side")}</span>
+            <button onClick={() => setCmpOn(false)} className="min-w-[44px] min-h-[44px] grid place-items-center c-sub" aria-label={tr("Close")}><X size={16} /></button></div>
+          <div className="overflow-x-auto -mx-1"><table className="w-full text-[12.5px] border-collapse">
+            <thead><tr><th className="p-1.5" />{T.cols.map((c) => <th key={c.id} className="p-1.5 text-start align-bottom font-extrabold" dir="auto"><span className="line-clamp-2">{c.title}</span></th>)}</tr></thead>
+            <tbody>{T.rows.map((r) => <tr key={r.k} className="border-t border-[var(--c-ln)]" data-testid={"scout-cmp-" + r.k}><td className="p-1.5 c-sub whitespace-nowrap">{ar ? r.ar : r.en}</td>
+              {r.cells.map((c, i) => <td key={i} className={"p-1.5 c-num " + (c.best ? "font-black c-acc" : "")} dir="auto">{c.v === true ? "✓" : c.v === false ? "✗" : c.v == null ? "—" : typeof c.v === "number" && r.k !== "year" ? fmt(c.v) : String(c.v)}</td>)}</tr>)}</tbody>
+          </table></div>
+          <div className="flex flex-wrap gap-2">{T.cols.map((c) => <button key={c.id} className={K.btnS + " !min-h-[44px] !text-[12.5px]"} onClick={() => (openLink ? openLink(c.url, c.title) : window.open(c.url, "_blank"))}><ExternalLink size={13} />{c.site}</button>)}</div>
+        </div>); })() : null}
       {found.slice(0, 30).map((a) => {
         const vote0 = (goal.votes || {})[a.id];
         const msg = S.sellerMessage(a, goal.g, { ar });
         return (
-          <div key={a.id} className={K.cardPad + " space-y-2.5"} data-testid="scout-ad" data-new={fresh.includes(a.id) ? "1" : undefined}>
-            {fresh.includes(a.id) ? <span className={K.tag("green")} data-testid="scout-ad-new">{tr("New")}</span> : null}
-            <div className="flex items-start gap-3">
-              {a.image ? <img src={a.image} alt="" className="w-20 h-16 object-cover rounded-[14px] shrink-0" /> : null}
-              <div className="flex-1 min-w-0">
-                <b className="block text-[14.5px] font-extrabold leading-snug" dir="auto">{a.title || a.site}</b>
-                <span className="c-sub text-[12px]">{a.site}{(a.also || []).length ? " · " + tr("also on {s}", { s: a.also.map((x) => x.site).join(", ") }) : ""}</span>
-              </div>
-              <div className="text-end shrink-0">{a.facts.price ? <div className="c-num tabular-nums font-black text-[16px]" data-testid="scout-price">{fmt(a.facts.price)} <span className="c-sub text-[11px]">{a.facts.cur}</span></div> : null}
-                <div className="c-num tabular-nums text-[12px] font-extrabold c-acc" data-testid="scout-score">{a.score}/100</div></div>
-            </div>
+          <div key={a.id} className={K.cardPad + " space-y-2.5" + (picked.includes(a.id) ? " !border-[var(--c-acc)]" : "")} data-testid="scout-ad" data-new={fresh.includes(a.id) ? "1" : undefined}>
+            {/* v7.9 (Ali picked the calm list): one row — tap for the details, or pick it to compare */}
+            <button className="w-full text-start flex items-center gap-3 min-h-[56px]" data-testid="scout-row" aria-expanded={openAd === a.id}
+              onClick={() => (picking ? setPicked((p) => (p.includes(a.id) ? p.filter((x) => x !== a.id) : p.length >= 4 ? p : [...p, a.id])) : setOpenAd((o) => (o === a.id ? null : a.id)))}>
+              {picking ? <span className={"w-6 h-6 rounded-[7px] border-2 shrink-0 grid place-items-center " + (picked.includes(a.id) ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "border-[var(--c-ln)]")} data-testid="scout-pick">{picked.includes(a.id) ? <Check size={14} /> : null}</span> : null}
+              {a.image ? <img src={a.image} alt="" className="w-[76px] h-[58px] object-cover rounded-[14px] shrink-0" /> : null}
+              <span className="flex-1 min-w-0">
+                {fresh.includes(a.id) ? <span className={K.tag("green") + " mb-0.5"} data-testid="scout-ad-new">{tr("New")}</span> : null}
+                <b className="block text-[14.5px] font-extrabold leading-snug line-clamp-2" dir="auto">{a.title || a.site}</b>
+                <span className="block c-sub text-[12px] truncate" dir="auto">{[a.site, a.facts.km ? fmt(a.facts.km) + " km" : null, a.facts.place].filter(Boolean).join(" · ")}{(a.also || []).length ? " · " + tr("also on {s}", { s: a.also.map((x) => x.site).join(", ") }) : ""}</span>
+              </span>
+              <span className="text-end shrink-0">{a.facts.price ? <span className="block c-num tabular-nums font-black text-[16px]" data-testid="scout-price">{fmt(a.facts.price)} <span className="c-sub text-[11px]">{a.facts.cur}</span></span> : null}
+                <span className="block c-num tabular-nums text-[12px] font-extrabold c-acc" data-testid="scout-score">{a.score}/100</span></span>
+            </button>
+            {openAd !== a.id ? null : <>
             {(() => { const tm = S.timingOf(book, a); return tm && tm.verdict !== "steady" ? <p className={"text-[12.5px] " + (tm.verdict === "buy" ? "c-acc" : "c-sub")} data-testid="scout-timing" dir="auto">{tm.verdict === "buy" ? "⏱ " : "⏳ "}{S.timingText(tm, ar ? "ar" : "en")}</p> : null; })()}
             <div className="flex flex-wrap gap-1.5 text-[12px]">
               {a.fair ? <span className={"c-pill " + (a.fair.verdict === "high" || a.fair.verdict === "too-cheap" ? "late" : a.fair.verdict === "cheap" ? "" : "due")} data-testid="scout-fair" title={tr("Compared with {n} ads of the same thing", { n: a.fair.n })}>{tr(a.fair.verdict === "too-cheap" ? "Suspiciously cheap" : a.fair.verdict === "cheap" ? "Cheap" : a.fair.verdict === "high" ? "Expensive" : "Fair price")} · {a.fair.pct > 0 ? "+" : ""}{a.fair.pct}% · {tr("market {a}–{b}", { a: fmt(a.fair.low), b: fmt(a.fair.high) })}{a.fair.basis === "m2" ? " " + tr("(per m²)") : ""}</span>
@@ -251,7 +269,18 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
                 <button className={"min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] " + (vote0 === 1 ? "c-acc" : "c-sub")} aria-label={tr("Good match")} onClick={() => vote(a, true)} data-testid="scout-up"><ThumbsUp size={15} /></button>
                 <button className={"min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] " + (vote0 === -1 ? "c-neg" : "c-sub")} aria-label={tr("Not for me")} onClick={() => vote(a, false)} data-testid="scout-down"><ThumbsDown size={15} /></button></span>
             </div>
+            </>}
           </div>); })}
+      {picking && picked.length > 1 && !cmpOn ? <button className={K.btnP + " w-full sticky bottom-3 shadow-lg"} onClick={() => setCmpOn(true)} data-testid="scout-compare-go">{tr("Compare {n}", { n: picked.length })}</button> : null}
+      {picking && picked.length < 2 ? <p className="c-sub text-[12.5px] m-0 text-center">{tr("Pick 2 to 4 ads to see them side by side")}</p> : null}
+      {cmp && (cmp.prices || cmp.n) && goal.g.kind !== "gold" ? (
+        <div className={K.cardPad + " space-y-1.5"} data-testid="scout-compare">
+          <span className={K.label}>{tr("Compared")}</span>
+          <p className="m-0 text-[14px]" dir="auto">{tr("{n} ads from {s} sites", { n: cmp.n, s: Object.keys(cmp.sites).length })}{goal.lastSites && goal.lastSites.length ? <span className="c-sub"> · {tr("{n} sites searched", { n: goal.lastSites.length })}</span> : null}</p>
+          {cmp.low ? <p className="m-0 text-[14px]" data-testid="scout-range" dir="auto">{tr("Usual price")}: <b className="c-num">{fmt(cmp.low)} – {fmt(cmp.high)}</b> · {tr("typical")} <b className="c-num">{fmt(cmp.med)}</b> <span className="c-sub text-[12px]">({tr("from {n} prices, list pages and price guides included", { n: cmp.prices })})</span></p> : null}
+          {cmp.best ? <p className="m-0 text-[13.5px]" data-testid="scout-best" dir="auto">⭐ {tr("Best value")}: {cmp.best.title} — <b className="c-num">{fmt(cmp.best.price)}</b> <span className="c-sub">({cmp.best.site})</span></p> : null}
+          <div className="flex flex-wrap gap-1.5 text-[12px]">{Object.entries(cmp.sites).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([s0, k]) => <span key={s0} className="c-pill">{s0}{k ? " · " + k : ""}</span>)}</div>
+        </div>) : null}
     </div>) : <DeskEmpty icon={Binoculars} title={tr("Your finds appear here")} testid="scout-empty" />;
   return (
     <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[22px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="scout-page">

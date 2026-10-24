@@ -53,7 +53,7 @@ export function saveAuto(s, native, lang = "en", ls = typeof localStorage !== "u
   try { native && native.autoSave && native.autoSave(JSON.stringify({ rules: s.rules.map(({ id, words, pct, fixed, pot, on, dir, tell }) => ({ id, words, pct, fixed, pot, on: on !== false, dir, tell })), lang })); } catch (e) {}
   return s;
 }
-export const addRule = (s, p, now = Date.now()) => ({ ...s, rules: [...s.rules, { id: "au" + now.toString(36), ...p, on: true, created: now }], pots: { [p.pot]: 0, ...s.pots } });
+export const addRule = (s, p, now = Date.now()) => ({ ...s, rules: [...s.rules, { id: "au" + now.toString(36) + "-" + s.rules.length, ...p, on: true, created: now }], pots: { [p.pot]: 0, ...s.pots } });
 
 /**
  * The fired events from the phone → money into the pots. Each event is read again with Money's own reader (`read`, paylog.js
@@ -78,3 +78,23 @@ export function applyEvents(s, events, read, now = Date.now()) {
 
 /** Take money out of a pot (spent on what it was for, or moved back). */
 export const takeOut = (s, pot, amount, now = Date.now(), why = "") => ({ ...s, pots: { ...s.pots, [pot]: Math.max(0, (s.pots[pot] || 0) - amount) }, log: [{ pot, amount: -amount, ts: now, text: why }, ...(s.log || [])].slice(0, 100) });
+
+/** v7.9 (Ali picked design A "ready rules + your own", and "the option to make more than one automation"): rules to switch on with
+ *  one tap — only what the phone really does (a payment in → a share into a pot). [id, English, Arabic, icon] */
+export const READY = [
+  ["salary-save", "When my salary arrives, put 20% in Savings", "لما المرتب ينزل حط 20% في التوفير", "💸"],
+  ["salary-emergency", "When my salary arrives, put 10% in the Emergency fund", "لما المرتب ينزل حط 10% في فلوس الطوارئ", "🛟"],
+  ["bonus-save", "When a bonus arrives, put 50% in Savings", "لما المكافأة تنزل حط 50% في التوفير", "🎁"],
+  ["instapay-car", "When InstaPay comes in, put 5% in the Car fund and tell me", "لما انستاباي يوصل حط 5% في فلوس العربية وقولي", "🚗"],
+];
+/** Is this ready rule on already (a rule with the same trigger, share and pot)? */
+export function readyOn(s, text) {
+  const r = parseAutomation(text); if (!r) return null;
+  return (s.rules || []).find((x) => (x.trigger || "").toLowerCase() === (r.trigger || "").toLowerCase() && x.pct === r.pct && x.fixed === r.fixed && clean(x.pot).toLowerCase() === clean(r.pot).toLowerCase()) || null;
+}
+/** Several automations at once: one per line. → { rules: [parsed], bad: [lines it couldn't read] } */
+export function parseMany(text) {
+  const rules = [], bad = [];
+  for (const line of String(text || "").split(/\n+/).map(clean).filter(Boolean)) { const r = parseAutomation(line); if (r) rules.push(r); else bad.push(line); }
+  return { rules, bad };
+}

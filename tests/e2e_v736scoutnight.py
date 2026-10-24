@@ -47,12 +47,16 @@ with sync_playwright() as p:
     page.wait_for_timeout(600)
     ads = page.locator("[data-testid=scout-ad]")
     check(ads.count() == 2 and "Apartment for rent in Maadi Degla" in ads.nth(0).inner_text() + ads.nth(1).inner_text(), "the night's matches are on the goal: %d" % ads.count())
+    # v7.9 (the calm list): the details are one tap away — open both ads (one at a time) and collect what they say
+    seen_ph, seen_m = [], []
+    for i in range(ads.count()):
+        ads.nth(i).locator("[data-testid=scout-row]").click(); page.wait_for_timeout(700)
+        seen_ph += page.locator("[data-testid=scout-photo]").all_inner_texts(); seen_m += page.locator("[data-testid=scout-metro]").all_inner_texts()
     ph = page.locator("[data-testid=scout-photo]")
-    t = [ph.nth(i).inner_text() for i in range(ph.count())]
-    check(ph.count() == 2 and any("dubizzle.com.eg · 8,000" in x for x in t) and any("aqarmap.com.eg · 13,500" in x for x in t), "the same photo in two different ads → both marked: %s" % [ph.nth(i).inner_text() for i in range(ph.count())])
+    t = seen_ph
+    check(len(t) == 2 and any("dubizzle.com.eg · 8,000" in x for x in t) and any("aqarmap.com.eg · 13,500" in x for x in t), "the same photo in two different ads → both marked: %s" % t)
     page.wait_for_timeout(500)
-    m = page.locator("[data-testid=scout-metro]")
-    check(m.count() >= 1 and "Maadi Metro Station" in m.first.inner_text() and "min walk" in m.first.inner_text(), "the nearest metro from the offline map, in minutes on foot: %s" % (m.first.inner_text() if m.count() else None))
+    check(len(seen_m) >= 1 and "Maadi Metro Station" in seen_m[0] and "min walk" in seen_m[0], "the nearest metro from the offline map, in minutes on foot: %s" % (seen_m[0] if seen_m else None))
     n0 = page.evaluate("window.__maps")
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_timeout(200)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_timeout(400)

@@ -41,7 +41,10 @@ const Card = ({ title, right, children, testid }) => <div className={U.card + " 
   {title ? <div className="flex items-center justify-between gap-2 mb-1.5"><p className="text-[15px] font-extrabold m-0">{title}</p>{right}</div> : null}{children}</div>;
 
 // ---- the bar ---------------------------------------------------------------------------------------------------------------------------
-export const PANES = [["home", "Home", HomeIc], ["accounts", "Accounts", Wallet], ["add", "", Plus], ["bills", "Bills", Repeat], ["zakat", "Zakāt", Moon]];
+// v7.9 (Ali, 24 Oct: "Yusr — the new home but with the old app in everything… in the bottom bar like it was before, with Gemini's
+// interface"; he picked A): Yusr's own tabs, in Yusr's order (Notes gone), drawn by Attune in Quiet Atelier. Home = the calm view;
+// every other tab is Yusr's own screen. The + floats over the page.
+export const PANES = [["home", "Home", HomeIc], ["trends", "Trends", TrendingUp], ["accounts", "Accounts", Wallet], ["goals", "Goals", Target], ["bills", "Bills", Repeat], ["zakat", "Zakāt", Moon]];
 /** Phone: the bottom bar with the + in the middle. Computer: the same as pills under the title, with "+ Add". */
 export function MoneyBar({ pane, setPane, onAdd, wide, dots = {} }) {
   if (wide) return <div className="flex flex-wrap items-center gap-2 mb-4" data-testid="money-bar">
@@ -50,15 +53,15 @@ export function MoneyBar({ pane, setPane, onAdd, wide, dots = {} }) {
       <Ic size={15} />{tr(l)}{dots[id] ? <i className="w-2 h-2 rounded-full bg-[var(--c-warn)]" /> : null}</button>)}
     <button onClick={onAdd} className={U.btnP + " h-10! min-h-[40px]! rounded-full ms-auto"} data-testid="money-add"><Plus size={16} />{tr("Add")}</button>
   </div>;
-  return <nav className="shrink-0 grid grid-cols-5 items-end bg-[var(--c-surf)] border-t border-[var(--c-ln)] px-1" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="money-bar">
-    {PANES.map(([id, l, Ic]) => id === "add"
-      ? <div key={id} className="grid place-items-center"><button onClick={onAdd} aria-label={tr("Add an expense, income or transfer")} data-testid="money-add"
-          className="-mt-5 w-14 h-14 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-[0_6px_18px_rgba(0,0,0,0.25)] border-4 border-[var(--c-bg)]"><Plus size={26} strokeWidth={2.6} /></button></div>
-      : <button key={id} onClick={() => setPane(id)} data-testid={"money-bar-" + id} aria-current={pane === id ? "page" : undefined}
-          className={"relative h-16 flex flex-col items-center justify-center gap-0.5 text-[11px] font-extrabold transition-colors duration-150 " + (pane === id ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)]")}>
-          <span className={"w-12 h-7 rounded-full grid place-items-center " + (pane === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "")}><Ic size={18} /></span>{tr(l)}
-          {dots[id] ? <i className="absolute top-2.5 end-[22%] w-2 h-2 rounded-full bg-[var(--c-warn)]" /> : null}</button>)}
-  </nav>;
+  return <div className="shrink-0 relative" style={{ order: 99 }}>
+    <button onClick={onAdd} aria-label={tr("Add an expense, income or transfer")} data-testid="money-add"
+      className="absolute -top-[76px] end-4 w-14 h-14 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-[0_6px_18px_rgba(0,0,0,0.3)] z-10"><Plus size={26} strokeWidth={2.6} /></button>
+    <nav className="grid grid-cols-6 bg-[var(--c-surf)] border-t border-[var(--c-ln)] px-0.5" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="money-bar">
+    {PANES.map(([id, l, Ic]) => <button key={id} onClick={() => setPane(id)} data-testid={"money-bar-" + id} aria-current={pane === id ? "page" : undefined}
+          className={"relative h-16 min-w-0 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-extrabold transition-colors duration-150 " + (pane === id ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)]")}>
+          <span className={"w-11 h-7 rounded-full grid place-items-center " + (pane === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "")}><Ic size={17} /></span><span className="truncate max-w-full px-0.5">{tr(l)}</span>
+          {dots[id] ? <i className="absolute top-2.5 end-[18%] w-2 h-2 rounded-full bg-[var(--c-warn)]" /> : null}</button>)}
+    </nav></div>;
 }
 
 // ---- the + sheet -----------------------------------------------------------------------------------------------------------------------
@@ -110,8 +113,7 @@ export function AddSheet({ L, onSave, onDebt, onClose }) {
 // ---- More ----------------------------------------------------------------------------------------------------------------------------
 export function MoreSheet({ open, onClose }) {
   // v7.9 (Ali): Notes left Money (its notes were copied into Mind), and invoices live in Business → Books now
-  const items = [["goals", "Goals", Target, "Saving for something"], ["trends", "Trends", TrendingUp, "How your spending moves"],
-    ["automations", "Automations", Zap, "When money comes in or goes out, do something by itself"], ["biz-invoices", "Invoices", FileText, "Now in Business → Books"], ["home", "Full ledger", BookOpen, "Every entry, edit or delete"], ["settings", "Ledger settings", Settings, "Currency, categories, budgets, backup"]];
+  const items = [["automations", "Automations", Zap, "When money comes in or goes out, do something by itself"], ["biz-invoices", "Invoices", FileText, "Now in Business → Books"], ["home", "Full ledger", BookOpen, "Every entry, edit or delete"], ["settings", "Ledger settings", Settings, "Currency, categories, budgets, backup"]];
   return <div className="calm fixed inset-0 z-[80] bg-black/55 flex flex-col justify-end lg:items-center lg:justify-center" onClick={onClose} data-testid="money-more-sheet">
     <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[26px] lg:rounded-[26px] w-full lg:max-w-md p-3 pb-5" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
       <div className="flex items-center gap-2 px-1 pb-1"><p className="flex-1 text-[17px] font-black m-0">{tr("More")}</p>

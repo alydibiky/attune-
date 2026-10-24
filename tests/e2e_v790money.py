@@ -1,5 +1,6 @@
-"""v7.6 — Money's bottom bar (Ali, 24 Oct 2026, layout A): Home · Accounts · (+) · Bills · Zakāt, and More (Goals, Trends, Notes,
-Invoices, the full ledger). The + adds an expense / income / transfer to the ledger with the account the person picked; Lend / borrow
+"""v7.6 → v7.9 — Money's bottom bar (Ali, 24 Oct 2026, picked A): Yusr's own tabs Home · Trends · Accounts · Goals · Bills · Zakāt,
+drawn in Quiet Atelier; Home is the calm view, every other tab is Yusr's own screen with the bar under it; the + floats; More =
+Automations, Invoices (in Business now), the full ledger. The + adds an expense / income / transfer to the ledger with the account the person picked; Lend / borrow
 opens the ledger's own form; each page is calm first with "See all → … report". Phone + computer, dark + light, Arabic 360 px.
   PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v790money.py     (SHOTS=dir for screenshots)
 """
@@ -44,7 +45,9 @@ with sync_playwright() as p:
         tag = "[phone %s] " % theme
         bar = page.locator("[data-testid=money-bar]").bounding_box()
         check(bar and bar["y"] + bar["height"] >= 840, tag + "the bar sits at the bottom of the screen")
-        check([page.locator("[data-testid=money-bar] button").nth(i).get_attribute("data-testid") for i in range(5)] == ["money-bar-home", "money-bar-accounts", "money-add", "money-bar-bills", "money-bar-zakat"], tag + "Home · Accounts · + · Bills · Zakāt")
+        ids = [page.locator("[data-testid=money-bar] button").nth(i).get_attribute("data-testid") for i in range(page.locator("[data-testid=money-bar] button").count())]
+        check(ids == ["money-bar-home", "money-bar-trends", "money-bar-accounts", "money-bar-goals", "money-bar-bills", "money-bar-zakat"], tag + "Yusr's tabs, in its order: %s" % ids)
+        check(page.locator("[data-testid=money-add]").is_visible(), tag + "the + floats over the page")
         shot(page, "money-home-phone-" + theme)
         if theme == "dark":
             n0 = len(ledger(page)["txns"])
@@ -65,36 +68,28 @@ with sync_playwright() as p:
             page.click("[data-testid=money-add]"); page.click("[data-testid=add-type-income]"); page.fill("[data-testid=add-amount]", "500"); page.locator("[data-testid=add-account]").nth(0).click(); page.click("[data-testid=add-save]"); page.wait_for_timeout(900)
             t = ledger(page)["txns"][-1]
             check(t["type"] == "income" and t["cat"] == "salary" and t["amount"] == 500, tag + "an income")
-        page.click("[data-testid=money-bar-accounts]"); page.wait_for_selector("[data-testid=money-accounts]")
-        check(page.locator("[data-testid=acc-row]").count() == 2 and page.locator("[data-testid=acc-row-other]").count() == 1, tag + "Accounts: Cash and CIB, and the gold apart (grams, not money)")
-        shot(page, "money-accounts-phone-" + theme, True)
-        page.click("[data-testid=money-accounts-open-report]"); page.wait_for_selector("[data-testid=money-accounts-report]")
-        check(page.locator("[data-testid=acc-rep-trend] rect").count() >= 6, tag + "…its report: the balance month by month")
-        shot(page, "money-accounts-report-phone-" + theme, True)
-        page.click("[data-testid=money-bar-bills]"); page.wait_for_selector("[data-testid=money-bills]")
-        rows = page.locator("[data-testid=bill-row]")
-        check(rows.count() == 3 and "Electricity" in rows.first.inner_text() and "3" in rows.first.inner_text(), tag + "Bills: 3, the next one first (the ledger posts a bill on its day, so none stays late): %s" % rows.first.inner_text().replace("\n", " · "))
-        check("7,500" in page.locator("[data-testid=bills-monthly]").inner_text(), tag + "…7,500 a month (980 + 520 + 6,000)")
-        shot(page, "money-bills-phone-" + theme, True)
-        page.click("[data-testid=money-bills-open-report]"); page.wait_for_selector("[data-testid=money-bills-report]")
-        check(page.locator("[data-testid=bills-rep-chart] rect").count() == 6, tag + "…its report: 6 months of bills")
-        shot(page, "money-bills-report-phone-" + theme, True)
-        page.click("[data-testid=money-bar-zakat]"); page.wait_for_selector("[data-testid=money-zakat]")
-        check(page.locator("[data-testid=zakat-row]").count() == 2 and "3,700" in page.locator("[data-testid=zakat-paid]").inner_text() or "1,200" in page.locator("[data-testid=zakat-paid]").inner_text(), tag + "Zakāt: what was paid, from the ledger's own record")
-        shot(page, "money-zakat-phone-" + theme, True)
+        # every tab but Home is Yusr's own screen, with the bar still under it
+        for pn, scr in [("trends", "trends"), ("accounts", "accounts"), ("goals", "goals"), ("bills", "bills"), ("zakat", "zakat")]:
+            page.click("[data-testid=money-bar-%s]" % pn); page.wait_for_timeout(700)
+            y = page.frame_locator("[data-testid=money-yusr]")
+            check(page.locator("[data-testid=money-yusr]").is_visible() and y.locator("#scr-" + scr).is_visible() and page.locator("[data-testid=money-bar]").is_visible(),
+                  tag + "%s: Yusr's own screen, the bar under it" % pn)
+            check(page.locator("[data-testid=money-bar-%s]" % pn).get_attribute("aria-current") == "page", tag + "…and its tab is marked")
+            if pn in ("accounts", "bills"): shot(page, "money-%s-phone-%s" % (pn, theme))
+        check(not page.frame_locator("[data-testid=money-yusr]").locator("nav").first.is_visible(), tag + "Yusr's own bar is hidden — one bar, not two")
         page.click("[data-testid=money-bar-home]"); page.wait_for_timeout(300)
-        check(page.locator("[data-testid=money-box]").count() == 1, tag + "Home is the calm Money view")
+        check(page.locator("[data-testid=money-box]").count() == 1 and page.locator("[data-testid=money-yusr]").is_hidden(), tag + "Home is the calm Money view")
         page.click("[data-testid=money-more]"); page.wait_for_selector("[data-testid=money-more-sheet]")
-        check(page.locator("[data-testid=money-more-goals]").count() == 1 and page.locator("[data-testid=money-open-ledger]").count() == 1, tag + "More: Goals, Trends, Notes, Invoices, the full ledger")
-        page.click("[data-testid=money-more-goals]"); page.wait_for_timeout(500)
-        check(page.locator("[data-testid=money-page][data-view=ledger]").count() == 1, tag + "…which open in the ledger")
+        check(page.locator("[data-testid=money-more-automations]").count() == 1 and page.locator("[data-testid=money-open-ledger]").count() == 1 and page.locator("[data-testid=money-more-goals]").count() == 0, tag + "More: Automations, Invoices, the full ledger (Goals and Trends are tabs now)")
+        page.click("[data-testid=money-open-ledger]"); page.wait_for_timeout(500)
+        check(page.locator("[data-testid=money-page][data-view=ledger]").count() == 1 and page.locator("[data-testid=money-bar]").is_visible(), tag + "…the full ledger, with the bar under it")
         ctx.close()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + AR)
     page.set_viewport_size({"width": 360, "height": 800})
     page.goto(env.url); open_money(page)
-    for pn in ["accounts", "bills", "zakat"]:
-        page.click("[data-testid=money-bar-%s]" % pn); page.wait_for_timeout(400)
-        over = page.evaluate("() => [...document.querySelectorAll('[data-testid=money-page] *')].filter(e => e.offsetParent && (e.getBoundingClientRect().right > window.innerWidth + 1 || e.getBoundingClientRect().left < -1)).map(e => (e.dataset.testid || e.tagName)).slice(0, 5)")
+    for pn in ["home", "trends", "bills", "zakat"]:
+        page.click("[data-testid=money-bar-%s]" % pn); page.wait_for_timeout(500)
+        over = page.evaluate("() => [...document.querySelectorAll('[data-testid=money-bar] *, [data-testid=money-page] > *')].filter(e => e.offsetParent && (e.getBoundingClientRect().right > window.innerWidth + 1 || e.getBoundingClientRect().left < -1)).map(e => e.textContent.slice(0, 20))")
         check(not over, "[phone ar 360] %s fits, right to left %s" % (pn, over))
         shot(page, "money-%s-phone-ar" % pn)
     page.click("[data-testid=money-add]"); page.wait_for_selector("[data-testid=money-add-sheet]"); shot(page, "money-add-phone-ar")
@@ -105,8 +100,10 @@ with sync_playwright() as p:
         tag = "[computer %s] " % theme
         check(page.locator("[data-testid=money-add]").is_visible(), tag + "the bar is a row of pills with + Add")
         shot(page, "money-home-desktop-" + theme)
-        page.click("[data-testid=money-bar-bills]"); page.wait_for_selector("[data-testid=money-bills]"); shot(page, "money-bills-desktop-" + theme)
-        page.click("[data-testid=money-bar-zakat]"); page.wait_for_selector("[data-testid=money-zakat]"); shot(page, "money-zakat-desktop-" + theme)
+        page.click("[data-testid=money-bar-bills]"); page.wait_for_timeout(700)
+        check(page.locator("[data-testid=money-yusr]").is_visible() and page.locator("[data-testid=money-bar-bills]").is_visible(), tag + "Bills: Yusr's screen, the tabs above it")
+        shot(page, "money-bills-desktop-" + theme)
+        page.click("[data-testid=money-bar-home]"); page.wait_for_timeout(300)
         page.click("[data-testid=money-add]"); page.wait_for_selector("[data-testid=money-add-sheet]"); shot(page, "money-add-desktop-" + theme)
         ctx.close()
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])

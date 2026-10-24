@@ -51,6 +51,7 @@ import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
 import { loadBooks, saveBooks } from "./books-store.js";   // v7.9 Money's invoices → Business → Books
 import { invoicesToBooks } from "./yusr-to-books.js";
+import { markTried } from "./guide-areas.js";
 import { MoneyCalm, MoneyReport, MoneyBox, MoneyPhoneHead, RightNow } from "./money-calm-ui.jsx";   // v7.2 Money in two levels (Gemini Area 1)
 import { moneyReport, zakatFromSnapshot, ledgerCsv } from "./money-report.js";
 import { findings as guardianFindings, loadGuardian } from "./guardian.js";
@@ -62,7 +63,7 @@ import { PhoneHome } from "./home-ui.jsx";
 import { logTool } from "./toollog.js";   // v7.8 the Tools report
 import { ToolsHub, FamilyReport, FamilySeeAll, StudioOffDevice } from "./tools-hub-ui.jsx";
 const wordCount = (s) => String(s || "").trim().split(/\s+/).filter(Boolean).length;
-import { MoneyBar, AddSheet, MoreSheet, AccountsPane, BillsPane, ZakatPane } from "./money-pages-ui.jsx";   // v7.6 Money's bottom bar
+import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES } from "./money-pages-ui.jsx";   // v7.6 Money's bottom bar
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
@@ -6052,7 +6053,10 @@ function yusrDocumentHtml() {
       + `html{color-scheme:${light ? "light" : "dark"}}body{font-variant-numeric:tabular-nums}`
       // the balance card and the bottom bar had their own navy / white: now the surface with a soft jade glow, and the app's ground
       + `.balance{background:linear-gradient(150deg,var(--card),${light ? "#E3F4EC" : "#173530"})!important;box-shadow:0 2px 10px rgba(0,0,0,.06)!important}`
-      + `nav{background:var(--bg)!important;backdrop-filter:none!important}</style>`;
+      + `nav{background:var(--bg)!important;backdrop-filter:none!important}`
+      // v7.9: Attune draws Yusr's tabs (and the +) itself, under every Yusr screen — Yusr's own bar and + would be a second set;
+      // Invoices moved to Business → Books
+      + `body>div>nav,nav:has(button[data-scr]){display:none!important}.fab{display:none!important}#inv-set-btn{display:none!important}</style>`;
     const doc = new TextDecoder("utf-8").decode(bytes);
     return doc.includes("</head>") ? doc.replace("</head>", qa + "</head>") : qa + doc;
   } catch (e) { return null; }
@@ -6119,11 +6123,11 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // v7.2 (Gemini's "Area 1: Money", Ali sent it 24 Oct 2026): Money opens on a calm view; its Money Report is one tap away and the
   // ledger itself (Yusr) one more. Yusr stays loaded behind them (hidden), so the box, a shared payment and the Zakāt figures work.
   const [view, setView] = React.useState("calm");          // calm | report | ledger
-  useSubBack(view !== "calm", () => setView("calm"));
-  // v7.6 (Ali, layout A): the bottom bar Home · Accounts · + · Bills · Zakāt; More = the ledger's other pages
+  // v7.9 (Ali picked A): the bottom bar is Yusr's own tabs — Home (the calm view) · Trends · Accounts · Goals · Bills · Zakāt; every
+  // tab but Home is Yusr's own screen, with this bar under it. More (top) = Automations, Invoices (in Business), the full ledger.
   const [pane, setPaneRaw] = React.useState("home");
-  const setPane = (p) => { setPaneRaw(p); setView("calm"); };
-  useSubBack(pane !== "home" && view === "calm", () => setPaneRaw("home"));
+  useSubBack(view !== "calm", () => { setView("calm"); setPaneRaw("home"); });
+  const setPane = (p) => { setPaneRaw(p); setMoreOpen(false); if (p === "home") { setView("calm"); return; } setView("ledger"); if (bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(p); };
   const [addOpen, setAddOpen] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
   const [account, setAccount] = React.useState(null);      // the account pill: null = all accounts
@@ -6396,7 +6400,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 <h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${esc(tr("Account"))}</th><th>${esc(tr("Amount"))}</th></tr>${rep.rows.map((t) => `<tr><td>${t.date}</td><td>${esc(t.note || t.catName)}</td><td>${esc(t.catName)}</td><td>${esc(t.account)}</td><td class="n">${t.type === "expense" ? "−" : "+"}${f(t.amount)} ${t.currency}</td></tr>`).join("")}</table></body></html>`;
     sharePdf({ html, name: "attune-money-" + rep.month.from.slice(0, 7), text: tr("Money Report"), flash });
   };
-  const openLedger = (sc) => { setMoreOpen(false); setAddOpen(false); setView("ledger"); if (sc && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(sc); };
+  const openLedger = (sc) => { setMoreOpen(false); setAddOpen(false); setPaneRaw(MONEY_PANES.some((x) => x[0] === sc && sc !== "home") ? sc : "home"); setView("ledger"); if (sc && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(sc); };
+  React.useEffect(() => { if (ready && pane !== "home" && view === "ledger" && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(pane); }, [ready]);
   const saveText = async (name, text, mime) => {
     try { if (NATIVE) { await nativeCall("saveFile", { name, mime, text }); flash(tr("Saved {n}", { n: name })); return; } } catch (e) {}
     try { const url = URL.createObjectURL(new Blob([text], { type: mime })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); } catch (e) {}
@@ -6436,10 +6441,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // v7.2: the calm view and the Money Report come first; the ledger (Yusr) is the third level and stays loaded behind them.
   const ledgerOn = view === "ledger";
   const inbox = <PayInbox N={NATIVE} ready={ready} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); setTimeout(() => setVer((x) => x + 1), 400); }} />;
-  const paneBody = pane === "accounts" ? <AccountsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
-    : pane === "bills" ? <BillsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
-    : pane === "zakat" ? <ZakatPane L={ledgerNow} snap={snapshot} wide={wide} openLedger={openLedger} /> : null;
-  const body = paneBody ? paneBody : view === "report"
+  const body = view === "report"
     ? <MoneyReport rep={rep} all={allRep} wide={wide} account={account} back={() => setView("calm")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf}
         openLedger={() => openLedger("home")} openZakat={() => openLedger("zakat")} />
     : <MoneyCalm rep={rep} all={allRep} account={account} setAccount={setAccount} wide={wide} zak={zakNow} inbox={inbox}
@@ -6472,7 +6474,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       <>
       <div className={"shrink-0 flex items-center gap-2 px-2 h-14 " + (wide ? "calm bg-[var(--c-surf)] border-b border-[var(--c-ln)]" : "bg-slate-950 border-b border-slate-800")}>
         {onMenu && !wide ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!"><Menu size={20} /></button> : null}
-        <button onClick={() => setView("calm")} aria-label={tr("Back")} data-testid="money-ledger-back"
+        <button onClick={() => { setView("calm"); setPaneRaw("home"); }} aria-label={tr("Back")} data-testid="money-ledger-back"
           className={"att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! " + (wide ? "text-[var(--c-ink)]!" : "text-slate-200!")}><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
         <p className={"flex-1 min-w-0 text-[17px] font-extrabold tracking-tight truncate " + (wide ? "" : "text-white")}>{tr("Money & Zakāt")}</p>
         <span className={`shrink-0 w-2 h-2 rounded-full ${ready ? "bg-teal-400" : "bg-slate-600"}`} title={ready ? tr("Connected") : tr("Starting…")} />
@@ -6485,8 +6487,10 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
           {parsed.direction === "out" ? "−" : "+"}{parsed.amount} {parsed.currency || ""}{parsed.party ? " · " + parsed.party : ""} · {tr("read from: “")}{parsed.amountSource}”
         </button>
       ) : null}
-      {/* v6.37 (M1): what is safe to spend today, by code */}
-      {!wide ? <SafeSpend /> : null}
+      {/* v6.37 (M1): what is safe to spend today, by code (the full ledger only — a tab shows Yusr's own screen) */}
+      {!wide && pane === "home" ? <SafeSpend /> : null}
+      {wide ? <div className="calm shrink-0 px-4 pt-3 bg-[var(--c-bg)]"><MoneyBar wide pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div>
+        : <div className="calm contents"><MoneyBar pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div>}
       </>)}
       {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />
@@ -7763,6 +7767,7 @@ export default function App() {
   // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
   // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
   const modeRef = useRef(mode); modeRef.current = mode;
+  useEffect(() => { markTried(mode); }, [mode]);   // v7.9 the guide's checklist: a page opened = tried (ids only, on this phone)
   const modeHist = useRef(resumed.current ? resumed.current.hist : []);
   useEffect(() => {
     // only while the app is away: back on screen, the note is dropped (a reload in front of you starts as usual)

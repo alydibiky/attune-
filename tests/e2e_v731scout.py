@@ -39,9 +39,12 @@ with sync_playwright() as p:
     check(any("site:aqarmap.com.eg" in q for q in qs) and any("site:propertyfinder.eg" in q for q in qs) and len(qs) >= 5, "searched the property sites that matter: %d searches" % len(qs))
     ads = page.locator("[data-testid=scout-ad]")
     check(ads.count() == 2, "2 results: the full match and the vague one (ground floor, over budget and the search page left out): %d" % ads.count())
+    # v7.9 (Ali picked the calm list): each ad is one row; a tap opens its details
+    ads.first.locator("[data-testid=scout-row]").click(); page.wait_for_timeout(200)
     a0 = ads.first.inner_text()
     check("Sarayat" in a0 and "14,000" in a0 and "also on propertyfinder.eg" in a0, "the full match first, shown once with its twin on another site")
     check("Floor: 4" in a0 and "metro" in a0.lower() and "Pets allowed" in a0, "every wish ✓ with the ad's own words")
+    ads.nth(1).locator("[data-testid=scout-row]").click(); page.wait_for_timeout(200)
     a1 = ads.nth(1).inner_text()
     check("not stated in the ad" in a1, "the vague ad: what it doesn't say is 'not stated', never assumed")
     notes = page.evaluate("window.__mock.notes.filter(n => n.id.startsWith('scout-')).map(n => n.title + ' | ' + n.body)")

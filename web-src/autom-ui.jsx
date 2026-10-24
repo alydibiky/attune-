@@ -2,7 +2,7 @@
    (AutoRules.kt) with no AI. Pots (صناديق) hold what was set aside. autom.js is the logic. */
 import React, { useState, useEffect } from "react";
 import { tr, getLang } from "./i18n.js";
-import { parseAutomation, ruleText, loadAuto, saveAuto, addRule, applyEvents, takeOut } from "./autom.js";
+import { parseAutomation, ruleText, loadAuto, saveAuto, addRule, applyEvents, takeOut, READY, readyOn, parseMany } from "./autom.js";
 import { readNotification } from "./paylog.js";
 import { Zap, Trash2, Wallet, Bell } from "lucide-react";
 import { card as kCard, btnP, btnS, inp, area, label } from "./ui-kit.jsx";
@@ -28,25 +28,40 @@ export function AutomationsPage({ native, flash }) {
   const [take, setTake] = useState(null);   // { pot, amount }
   const put = (n) => setS(saveAuto(n, native, ar ? "ar" : "en"));
   useEffect(() => { const added = drainAutomations(native); if (added.length) setS(loadAuto()); saveAuto(loadAuto(), native, ar ? "ar" : "en"); }, []);
-  const draft = text.trim() ? parseAutomation(text) : null;
+  // v7.9 (Ali: "the option to make more than one automation"): one per line — every line that reads as a rule is turned on
+  const many = parseMany(text), draft = many.rules[0] || null;
   const access = (() => { try { return !native || !native.payAccess || native.payAccess(); } catch (e) { return true; } })();
   const pots = Object.entries(s.pots || {});
   return (
     <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="auto-page">
+      {/* v7.9 (Ali picked design A): ready rules first — one tap turns one on (or off) */}
+      <div className={card + " space-y-1"} data-testid="auto-ready">
+        <p className={label}>{tr("Turn one on")}</p>
+        {READY.map(([id, en, arT, icon]) => { const on = readyOn(s, ar ? arT : en) || readyOn(s, en); return (
+          <div key={id} className="flex items-center gap-3 min-h-[56px] border-t border-[var(--c-ln)] first-of-type:border-t-0" data-testid="auto-ready-rule" data-id={id}>
+            <span className="w-10 h-10 rounded-[13px] grid place-items-center bg-[var(--c-soft)] shrink-0 text-[18px]" aria-hidden="true">{icon}</span>
+            <span className="flex-1 min-w-0 text-[13.5px] font-bold" dir="auto">{ar ? arT : en}</span>
+            <button onClick={() => { if (on) put({ ...s, rules: s.rules.filter((x) => x.id !== on.id) }); else { put(addRule(s, parseAutomation(ar ? arT : en))); flash && flash(tr("Automation on — it runs on the phone, no AI needed")); } }}
+              aria-pressed={!!on} data-testid="auto-ready-toggle"
+              className={"min-h-[40px] px-3.5 rounded-full text-[13px] font-extrabold border shrink-0 " + (on ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-ink)]")}>{on ? tr("On") : tr("Turn on")}</button>
+          </div>); })}
+      </div>
       <div className={card + " space-y-2"}>
-        <p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-1.5"><Zap size={15} className="text-[var(--c-warn)]" />{tr("Say what should happen")}</p>
+        <p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-1.5"><Zap size={15} className="text-[var(--c-warn)]" />{s.rules.length ? tr("Add another — say what should happen") : tr("Say what should happen")}</p>
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="auto-text"
           placeholder={tr("e.g. When my salary arrives, put 20% in the car fund and tell me")} className={area} />
-        {text.trim() ? (draft ? <div className="text-[13px] font-semibold rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] px-3 py-2" data-testid="auto-draft" dir="auto">{ruleText(draft, /[\u0600-\u06ff]/.test(draft.text))}</div>
+        <p className="m-0 text-[11.5px] text-[var(--c-mut)]">{tr("More than one? Write one per line.")}</p>
+        {text.trim() ? (draft ? <div className="space-y-1.5">{many.rules.map((r, i) => <div key={i} className="text-[13px] font-semibold rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] px-3 py-2" data-testid="auto-draft" dir="auto">{ruleText(r, /[\u0600-\u06ff]/.test(r.text))}</div>)}
+            {many.bad.length ? <p className="text-[12px] text-[var(--c-warn)] m-0" data-testid="auto-unknown" dir="auto">{tr("Not an automation: {l}", { l: many.bad.join(" · ") })}</p> : null}</div>
           : <p className="text-[12px] text-[var(--c-warn)]" data-testid="auto-unknown">{tr("I didn't get that as an automation. Try: When my salary arrives, put 20% in the car fund.")}</p>) : null}
-        <button disabled={!draft} onClick={() => { put(addRule(s, draft)); setText(""); flash && flash(tr("Automation on — it runs on the phone, no AI needed")); }}
-          className={btnP} data-testid="auto-add">{tr("Turn it on")}</button>
+        <button disabled={!draft} onClick={() => { let n = s; for (const r of many.rules) n = addRule(n, r); put(n); setText(""); flash && flash(many.rules.length > 1 ? tr("{n} automations on — they run on the phone, no AI needed", { n: many.rules.length }) : tr("Automation on — it runs on the phone, no AI needed")); }}
+          className={btnP} data-testid="auto-add">{many.rules.length > 1 ? tr("Turn on {n}", { n: many.rules.length }) : tr("Turn it on")}</button>
         <p className="text-[11px] text-[var(--c-mut)]">{tr("It listens to your bank and wallet notifications (never SMS). When one matches, you get a notification at once and the money goes into the pot.")}</p>
         {!access ? <button className="min-h-[44px] text-[12.5px] font-bold text-[var(--c-warn)] underline flex items-center gap-1" onClick={() => { try { native.openPayAccess(); } catch (e) {} }} data-testid="auto-access"><Bell size={13} />{tr("Turn on Notification access for Attune first")}</button> : null}
       </div>
 
       {s.rules.length ? <div className={card + " space-y-2"} data-testid="auto-rules">
-        <p className={label}>{tr("Your automations")}</p>
+        <p className={label}>{tr("On now · {n}", { n: s.rules.filter((r) => r.on !== false).length })}</p>
         {s.rules.map((r) => (
           <div key={r.id} className="flex items-center gap-2 min-h-[48px]" data-testid="auto-rule">
             <span className="flex-1 text-[13px] text-[var(--c-ink)]" dir="auto">{ruleText(r, /[\u0600-\u06ff]/.test(r.text || "") || ar)}</span>
