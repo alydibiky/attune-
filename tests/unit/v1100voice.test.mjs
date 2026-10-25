@@ -62,6 +62,14 @@ ok(V.findPeople("Family", { inbox: gin }).some((p) => p.isGroup && p.key === "g1
 ok(V.findPeople("علي", { inbox: gin }).map((p) => p.name).join() === "Ali Hassan" && !V.findPeople("علي", { inbox: gin }).some((p) => p.name === "Lee"), "«علي» → Ali Hassan only (a short name never matches “Lee” by sound)");
 st = V.newVoiceState(); people = {}; r = V.voiceTurn(st, "tell Ali Hassan I'm here", { inbox: gin, people }); st = r.state; r = V.voiceTurn(st, "English", { inbox: gin, people });
 ok(r.card.to === "Ali Hassan" && r.card.last === "ok" && r.card.direct, "the read-back names the full contact, the app and their last message (to check it is the right person)");
+// ---- 2.2 global: Spanish / Turkish / French replies; no Franco question for a non-Arabic speaker ----
+st = V.newVoiceState(); r = V.voiceTurn(st, "dile a Ana que llego tarde", { inbox: [{ key: "a", app: "whatsapp", who: "Ana", text: "dónde estás?", ts: 1, canReply: true }], people: {} });
+ok(r.card.kind === "readback" && /¿Lo envío\?/.test(r.say) && r.card.text === "llego tarde", "Spanish: no language question, read back «llego tarde» — " + r.say);
+st = V.newVoiceState(); r = V.voiceTurn(st, "Ahmet'e mesaj at ki geç kalacağım", { inbox: [{ key: "t", app: "whatsapp", who: "Ahmet", text: "neredesin?", ts: 1, canReply: true }], people: {} });
+ok(/Göndereyim mi\?/.test(r.say), "Turkish: «… Göndereyim mi?»");
+st = r.state; r = V.voiceTurn(st, "evet", { inbox: [], people: {} }); ok(r.action && r.action.text === "geç kalacağım", "Turkish «evet» → sent");
+st = V.newVoiceState(); r = V.voiceTurn(st, "dis à Marie que je suis en retard", { inbox: [{ key: "f", app: "whatsapp", who: "Marie", text: "tu es où ?", ts: 1, canReply: true }], people: {} });
+ok(/Je l'envoie \?/.test(r.say), "French: «… Je l'envoie ?»");
 // ---- Franco ----
 ok(F.toFranco("الاجتماع اتأجل لبكره الساعة ٣") === "el egtma3 et2agel l bokra el sa3a 3", "Franco: «الاجتماع اتأجل لبكره الساعة ٣» → el egtma3 et2agel l bokra el sa3a 3");
 ok(F.toFranco("أنا في الطريق وجاي بكرة", "gulf") === "ana fe el6ree8 w jay bacher", "Gulf style: jay, bacher, 6 for ط");

@@ -14,6 +14,9 @@ import { SmsSwitch } from "./sms-ui.jsx";
 
 const STYLE_BY_COUNTRY = { EG: "eg", SA: "gulf", AE: "gulf", KW: "gulf", QA: "gulf", BH: "gulf", OM: "gulf", JO: "lev", LB: "lev", SY: "lev", PS: "lev", IQ: "gulf", MA: "maghreb", DZ: "maghreb", TN: "maghreb", LY: "maghreb" };
 const LISTEN_TAG = { eg: "ar-EG", gulf: "ar-SA", lev: "ar-JO", maghreb: "ar-MA" };
+// global (2.2): the languages the mic and the voice speak besides Arabic and English, from the country and the app's language
+const COUNTRY_LANG = { TR: "tr", ES: "es", MX: "es", AR: "es", CO: "es", CL: "es", PE: "es", FR: "fr", BE: "fr", CH: "fr", SN: "fr", CI: "fr" };
+const TAG = { en: "en-US", tr: "tr-TR", es: "es-ES", fr: "fr-FR" };
 const APP_NAME = { whatsapp: "WhatsApp", telegram: "Telegram", messenger: "Messenger", signal: "Signal", instagram: "Instagram" };
 
 export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "EG", flash }) {
@@ -25,7 +28,9 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
   const [card, setCard] = useState(null);
   const [listening, setListening] = useState(false);
   const [typed, setTyped] = useState("");
-  const [speakLang, setSpeakLang] = useState(getLang() === "ar" ? "ar" : "en");   // what the mic listens for
+  const local = COUNTRY_LANG[(country || "").toUpperCase()] || (["tr", "es", "fr"].includes(getLang()) ? getLang() : null);
+  const langs = [...new Set([getLang() === "ar" ? "ar" : local || "en", "ar", "en", ...(local ? [local] : [])])];
+  const [speakLang, setSpeakLang] = useState(langs[0]);   // what the mic listens for (the button cycles through langs)
   const stRef = useRef(st); stRef.current = st;
   // Voice 2.1 car mode (design A's car screen): big buttons, the newest message read aloud by itself, Reply / Navigate by voice
   const [car, setCar] = useState(false);
@@ -38,7 +43,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
   const inbox = () => { try { return N && N.chatInbox ? JSON.parse(N.chatInbox() || "[]") : []; } catch (e) { return []; } };
   const speakOut = async (text, lang) => {
     if (!text) return;
-    const tag = lang === "ar" ? LISTEN_TAG[style] : "en-US";
+    const tag = lang === "ar" ? LISTEN_TAG[style] : TAG[lang] || "en-US";
     try {
       if (N && N.speakWait && nativeCall) { await nativeCall("speakWait", { text, lang: tag }); return; }
       if (N && N.speak) { N.speak(text, tag); return; }
@@ -99,7 +104,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
     if (!N || !nativeCall || !N.listen || listening) return;
     setListening(true); setHeard("");
     try {
-      const tag = speakLang === "ar" ? LISTEN_TAG[style] : "en-US";
+      const tag = speakLang === "ar" ? LISTEN_TAG[style] : TAG[speakLang] || "en-US";
       const res = await nativeCall("listen", tag, (pct, stage, detail) => { if (stage === "partial") setHeard(detail); });
       setListening(false);
       if (res && res.text) await heardDone(res.text);
@@ -161,7 +166,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
         <span className="text-[11.5px] font-extrabold px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)]">{tr("Offline · private")}</span>
         <span className="flex-1" />
         <button onClick={() => setCar(true)} aria-label={ar ? "وضع العربية" : "Car mode"} className="w-10 h-10 rounded-full grid place-items-center border border-[var(--c-ln)]" data-testid="voice-car"><Car size={17} /></button>
-        <button onClick={() => setSpeakLang(speakLang === "ar" ? "en" : "ar")} className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[12.5px] font-extrabold" data-testid="voice-lang">{speakLang === "ar" ? "عربي" : "English"}</button>
+        <button onClick={() => setSpeakLang(langs[(langs.indexOf(speakLang) + 1) % langs.length])} className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[12.5px] font-extrabold" data-testid="voice-lang">{({ ar: "عربي", en: "English", tr: "Türkçe", es: "Español", fr: "Français" })[speakLang]}</button>
         <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 rounded-full grid place-items-center c-sub" data-testid="voice-close"><X size={20} /></button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4 max-w-xl w-full mx-auto">

@@ -55,7 +55,11 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
       🚗 button on the voice screen or by saying «وضع العربية» / "car mode". Android Auto: later
 - [~] 2.2 Dialects: understanding = Egyptian, Gulf, Levantine, Darija, English, Hinglish (75/75); Attune's spoken replies in
       Gulf / Levantine / Darija (voice-cmd.js DIALECT, from the country) + their yes/no («زين», «واخا», «بعتها», «ما بدي»).
-      Still to do: Turkish, Spanish, French, Hindi/Urdu replies and commands; per-country message apps
+      Global: Turkish, Spanish, French commands (send / who / yes / no) and replies (LINES.tr/es/fr, replyLang detects them);
+      the mic and the voice speak tr-TR / es-ES / fr-FR from the country (voice-ui COUNTRY_LANG); a non-Arabic speaker is
+      never asked "Arabic or Franco?" unless the contact writes Arabic/Franco (lang "same" = as said). Accuracy set 90/90.
+      Still to do: Hindi (Devanagari) / Urdu script replies, German, Portuguese, Indonesian; per-country message apps (LINE,
+      KakaoTalk, Viber are already read by Message alerts)
 - [x] 2.3 Nicknames: a name with no such contact → "مين «ماما»؟" with the recent chats + "someone else"; the pick is
       remembered (franco.js aliasFor / rememberAlias, key "~name" in attune:voice:people) and used next time
 ### Phase 3 — "يا أتيون" wake word
@@ -91,7 +95,7 @@ tests/e2e_v727paylog.py. The Money payment reader is separate from the SMS switc
 names bank SMS and the kept evidence).
 
 ## Next steps (for the next chat)
-1. Phase 2.2 rest: Turkish / Spanish / French / Hindi-Urdu commands + replies (global). 2. Phase 3 wake word «يا أتيون».
+1. Phase 2.2 rest: Hindi / Urdu script, German, Portuguese, Indonesian. 2. Phase 3 wake word «يا أتيون».
 3. English translation of an Arabic message when the
 person picks English (state.draft.needs = "translate" — wire to the model with a read-back). 5. "Make it formal" (needs = "formal").
 

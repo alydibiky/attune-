@@ -70,6 +70,13 @@ const SEND_AR = new RegExp("^(?:يا اتيون[،,]?\\s*)?(?:لو سمحت\\s+)
 ].join("|") + ")(?:\\s+(?:رساله|رسالة|مسج|ماسدج|مسدج|كلمه|كلمة))?\\s*(?:ل|لـ|الى|إلى|على)?\\s*", "u");
 const SEP_AR = /\s+(?:وقول(?:ه|ها|لو|له)?|قول(?:ه|ها|لو|له)|ان(?:ي|ه|ها|و|نا)?|إن(?:ي|ه|ها|و|نا)?|انو|إنو|بان|بأن|بإن|بلي|بلّي|إني|اني|يقول|تقول|وقل[ه]?|:)\s+/u;
 const SEND_EN = /^(?:(?:hey |ok |okay )?attune[,]?\s*)?(?:please\s+)?(?:send(?: a)?(?: message| text| whatsapp)?(?: to)?|text|message|whatsapp|tell|let|write to|msg)\s+/i;
+// Voice 2.2 (global): Turkish, Spanish, French
+const SEND_TR = /^(?:lütfen\s+)?(\S+?)(?:'?(?:e|a|ye|ya))\s+(?:mesaj\s+)?(?:at|gönder|yaz|söyle|de)\s*(?:ki|:)?\s+(.+)$/iu;
+const SEND_ES = /^(?:por favor\s+)?(?:dile|dígale|digale|manda(?: un mensaje)?|envía(?: un mensaje)?|envia(?: un mensaje)?|escríbele|escribele|avisa)\s+(?:a\s+)?(.+?)\s+(?:que|diciendo(?: que)?|:)\s+(.+)$/iu;
+const SEND_FR = /^(?:s'il te plaît\s+)?(?:dis|envoie(?: un message)?|écris|ecris|préviens|previens)\s+(?:à|a|au)\s+(.+?)\s+(?:que|qu'|pour dire que|:)\s*(.+)$/iu;
+const WHO_INTL = /(?:^|[\s¿])(kim (?:mesaj attı|yazdı|aradı)|yeni mesaj var mı|mesajlarımı oku|quién me (?:escribió|escribio|mandó|mando)|tengo mensajes|lee mis mensajes|qui m'a écrit|qui m'a ecrit|j'ai des messages|lis mes messages)(?=$|[\s?.!])/iu;
+const YES_INTL = /^(?:evet|gönder|tamam|olur|sí|si|envía|envialo|envíalo|vale|claro|oui|envoie|envoie-le|d'accord|ok d'accord|haan|bhejo|theek hai)[.!]?$/iu;
+const NO_INTL = /^(?:hayır|hayir|iptal|vazgeç|no|cancela|nada|non|annule|laisse tomber|nahi|mat bhejo)[.!]?$/iu;
 const SEP_EN = /\s+(?:that|saying|and say|and tell (?:him|her|them)|know that|know|:|,)\s+/i;
 const WHO = /\b(who (?:messaged|texted|wrote|called)( me)?|any (?:new )?messages|read (?:me )?my messages|my messages|what did i miss|new messages)\b|^(?:مين|منو|شكون|مين اللي)\s+(?:بعت|بعتلي|كلمني|راسلني|ارسل|ارسلي|صيفط)|(?:في|فيه|في اي|اي)\s+رسا[يئ]ل|(?:اقرا|اقرالي|اقري|اقرأ|اقرأ لي)\s+(?:لي\s+)?(?:ال)?رسا[يئ]ل|^رسا[يئ]لي|شو في رسا[يئ]ل|شو صار|kya koi message|koi message/i;
 const READ_AR = /^(?:اقرا|اقرالي|اقرأ|اقرأ لي|اقري)\s+(?:لي\s+)?(?:رساله|رسالة|رسايل|رسائل|مسج)\s+(.+)$/u;
@@ -107,10 +114,10 @@ export function parseVoice(said, ctx = {}) {
   const f = fold(t);
   if (FORMAL.test(t)) return { kind: "formal" };
   const lg = langAnswer(t); if (lg && t.split(/\s+/).length <= 3) return { kind: "lang", lang: lg, always: /دايما|دايمًا|دائما|always/i.test(t) };
-  if (YES.test(f) || YES.test(t)) return { kind: "yes" };
-  if (NO.test(f) || NO.test(t)) return { kind: "no" };
+  if (YES.test(f) || YES.test(t) || YES_INTL.test(t)) return { kind: "yes" };
+  if (NO.test(f) || NO.test(t) || (NO_INTL.test(t) && !/^no\b.+/i.test(t))) return { kind: "no" };
   const ch = CHANGE.exec(t); if (ch && !SEND_AR.test(t) && !SEND_EN.test(t)) return { kind: "change", msg: messageOf(ch[1]) };
-  if (WHO.test(t) || WHO.test(f)) return { kind: "who" };
+  if (WHO.test(t) || WHO.test(f) || WHO_INTL.test(t)) return { kind: "who" };
   let m;
   if ((m = READ_AR.exec(t))) return { kind: "read", from: stripEnd(m[1]) };
   if ((m = SAID_AR.exec(t)) && m[1].split(" ").length <= 3) return { kind: "read", from: m[1] };
@@ -135,6 +142,8 @@ export function parseVoice(said, ctx = {}) {
     const nm = nameAndMessage(rest, SEP_AR, ctx);
     return { kind: "send", to: nm.name, msg: messageOf(nm.msg, nm.sep), app: nm.app };
   }
+  if (!AR.test(t) && (m = SEND_ES.exec(t) || SEND_FR.exec(t))) return { kind: "send", to: m[1].trim(), msg: messageOf(m[2]), app: "" };
+  if (!AR.test(t) && !SEND_EN.test(t) && (m = SEND_TR.exec(t))) return { kind: "send", to: m[1].replace(/'$/, "").trim(), msg: messageOf(m[2]), app: "" };
   if (!AR.test(t) && SEND_EN.test(t) && !/^(?:tell|let) me\b/i.test(t)) {
     // "send Omar a whatsapp that …" / "send Omar a message saying …"
     let rest = t.replace(SEND_EN, ""), app0 = "";
@@ -169,16 +178,28 @@ const DIALECT = {
     sent: "تصيفطات لـ{n}.", cancelled: "تلغات — ما صيفطت والو.", nobody: "ما لقيتش {n} فالمحادثات الأخيرة — غادي نحل ليك {app} والميساج واجد، وختارو نتا.", noLast: "نجاوب شكون؟ قول السمية.",
     noRead: "ما كاين حتى ميساج جديد من {n}.", count: "{k} ميساجات. ", whois: "شكون «{n}»؟", other: "شي واحد آخر" },
 };
-const linesFor = (ui, style) => (ui === "ar" ? { ...LINES.ar, ...(DIALECT[style] || {}) } : LINES.en);
+const linesFor = (ui, style) => (ui === "ar" ? { ...LINES.ar, ...(DIALECT[style] || {}) } : LINES[ui] || LINES.en);
+LINES.tr = { ...LINES.en, who: "Kime göndereyim?", what: "{n}'e ne söyleyeyim?", which: "Hangi {n}? {list}", none: "Yeni mesaj yok.", readback: "{n}'e: “{m}”. Göndereyim mi?",
+  sent: "{n}'e gönderildi.", cancelled: "İptal edildi — hiçbir şey gönderilmedi.", nobody: "Son sohbetlerde {n} yok — {app} mesaj hazır açılıyor, kişiyi sen seç.", noLast: "Kime cevap vereyim? İsmini söyle.",
+  noRead: "{n}'den yeni mesaj yok.", from: "{app} üzerinden {n}: “{m}”", count: "{k} mesaj. ", whois: "“{n}” kim?", other: "Başka biri" };
+LINES.es = { ...LINES.en, who: "¿A quién se lo envío?", what: "¿Qué le digo a {n}?", which: "¿Qué {n}? {list}", none: "No hay mensajes nuevos.", readback: "Para {n}: “{m}”. ¿Lo envío?",
+  sent: "Enviado a {n}.", cancelled: "Cancelado — no se envió nada.", nobody: "No veo a {n} en tus chats recientes — abro {app} con el mensaje listo y tú eliges a la persona.", noLast: "¿A quién respondo? Dime el nombre.",
+  noRead: "No hay mensajes nuevos de {n}.", from: "{n} en {app}: “{m}”", count: "{k} mensajes. ", whois: "¿Quién es “{n}”?", other: "Otra persona" };
+LINES.fr = { ...LINES.en, who: "À qui je l'envoie ?", what: "Qu'est-ce que je dis à {n} ?", which: "Quel {n} ? {list}", none: "Pas de nouveaux messages.", readback: "À {n} : « {m} ». Je l'envoie ?",
+  sent: "Envoyé à {n}.", cancelled: "Annulé — rien n'a été envoyé.", nobody: "Je ne vois pas {n} dans tes discussions récentes — j'ouvre {app} avec le message prêt, choisis la personne.", noLast: "Je réponds à qui ? Dis le nom.",
+  noRead: "Pas de nouveau message de {n}.", from: "{n} sur {app} : « {m} »", count: "{k} messages. ", whois: "Qui est « {n} » ?", other: "Quelqu'un d'autre" };
 const LANG_NAME = { en: { ar: "Arabic", franco: "Franco", en: "English" }, ar: { ar: "عربي", franco: "فرانكو", en: "إنجليزي" } };
+LANG_NAME.tr = LANG_NAME.es = LANG_NAME.fr = LANG_NAME.en;
 const APP_NAME = { whatsapp: "WhatsApp", telegram: "Telegram", messenger: "Messenger", signal: "Signal", instagram: "Instagram", sms: "SMS" };
 const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v[k] != null ? v[k] : ""));
 /** The language Attune answers in: Arabic when spoken in Arabic (or Franco), else English. */
-export const replyLang = (said, prev = "en") => (AR.test(said || "") || isFranco(said || "") ? "ar" : /[a-z]/i.test(said || "") ? "en" : prev);
+const TR_W = /\b(mesaj|gönder|söyle|kim|evet|hayır|tamam|lütfen)\b|[ğış]/i, ES_W = /\b(dile|manda|envía|envia|quién|mensajes?|diciendo|sí|vale|cancela)\b|[ñ¿¡]/i, FR_W = /\b(dis|envoie|écris|qui|messages?|oui|non|annule|d'accord|à)\b|[çàèù]/i;
+export const replyLang = (said, prev = "en") => (AR.test(said || "") || isFranco(said || "") ? "ar" : TR_W.test(said || "") ? "tr" : ES_W.test(said || "") ? "es" : FR_W.test(said || "") && !/^(?:no|ok|yes)$/i.test(said || "") ? "fr" : /[a-z]/i.test(said || "") ? "en" : prev);
 export const newVoiceState = () => ({ step: "idle", draft: null, last: null, ui: "en" });
 
 /** The message in the chosen language: Arabic words → Franco in the person's region style; English needs a translation. */
 export function prepare(msg, lang, style = "eg") {
+  if (lang === "same") return { text: msg, needs: null };
   if (lang === "franco") return { text: AR.test(msg) ? toFranco(msg, style) : msg, needs: null };
   if (lang === "en" && AR.test(msg)) return { text: msg, needs: "translate" };
   return { text: msg, needs: null };
@@ -297,7 +318,10 @@ export function voiceTurn(state0, said, ctx = {}) {
   function next(st, cx, u) {
     const Lx = linesFor(u, cx.style), LNx = LANG_NAME[u], d = st.draft;
     if (!d.msg) { st.step = "msg"; const q = fill(Lx.what, { n: d.target.name }); return { state: st, say: q, card: { kind: "ask", q } }; }
-    const lang = d.lang || langFor(cx.people, d.target.name);
+    // the Arabic / Franco / English question only when it means something: the person speaks Arabic, or the contact writes
+    // Arabic or Franco; anyone else's message goes exactly as said (an English, Turkish, Spanish… speaker is never asked about Franco)
+    const writes = styleOf(d.target.texts || []);
+    const lang = d.lang || langFor(cx.people, d.target.name) || (u !== "ar" && writes !== "ar" && writes !== "franco" ? "same" : null);
     if (!lang) {
       st.step = "lang";
       const guess = styleOf(d.target.texts || []);

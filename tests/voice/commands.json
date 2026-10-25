@@ -517,5 +517,107 @@
    "to": "سارة",
    "msg": "بوصل بعد شوي"
   }
+ },
+ {
+  "say": "Ahmet'e mesaj at ki geç kalacağım",
+  "expect": {
+   "kind": "send",
+   "to": "Ahmet",
+   "msg": "geç kalacağım"
+  }
+ },
+ {
+  "say": "Ayşe'ye söyle yoldayım",
+  "expect": {
+   "kind": "send",
+   "to": "Ayşe",
+   "msg": "yoldayım"
+  }
+ },
+ {
+  "say": "kim mesaj attı?",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "evet",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "hayır",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "dile a Ana que llego tarde",
+  "expect": {
+   "kind": "send",
+   "to": "Ana",
+   "msg": "llego tarde"
+  }
+ },
+ {
+  "say": "manda un mensaje a Luis diciendo que ya salí",
+  "expect": {
+   "kind": "send",
+   "to": "Luis",
+   "msg": "ya salí"
+  }
+ },
+ {
+  "say": "¿quién me escribió?",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "sí",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "cancela",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "dis à Marie que je suis en retard",
+  "expect": {
+   "kind": "send",
+   "to": "Marie",
+   "msg": "je suis en retard"
+  }
+ },
+ {
+  "say": "envoie un message à Paul pour dire que j'arrive",
+  "expect": {
+   "kind": "send",
+   "to": "Paul",
+   "msg": "j'arrive"
+  }
+ },
+ {
+  "say": "qui m'a écrit ?",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "oui",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "non",
+  "expect": {
+   "kind": "no"
+  }
  }
 ]
