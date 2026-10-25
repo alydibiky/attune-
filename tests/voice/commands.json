@@ -1,0 +1,477 @@
+[
+ {
+  "say": "ابعت لأحمد إني هتأخر نص ساعة",
+  "expect": {
+   "kind": "send",
+   "to": "أحمد",
+   "msg": "هتأخر نص ساعة"
+  }
+ },
+ {
+  "say": "ابعت رسالة لماما إني وصلت البيت",
+  "expect": {
+   "kind": "send",
+   "to": "ماما",
+   "msg": "وصلت البيت"
+  }
+ },
+ {
+  "say": "قول لماما هكلمها بعد الشغل",
+  "expect": {
+   "kind": "send",
+   "to": "ماما",
+   "msg": "هكلمها بعد الشغل"
+  }
+ },
+ {
+  "say": "ابعت لأحمد على الواتس إن الاجتماع اتأجل",
+  "expect": {
+   "kind": "send",
+   "to": "أحمد",
+   "msg": "الاجتماع اتأجل",
+   "app": "whatsapp"
+  }
+ },
+ {
+  "say": "ابعت لسارة على التليجرام إني جاية",
+  "expect": {
+   "kind": "send",
+   "to": "سارة",
+   "msg": "جاية",
+   "app": "telegram"
+  }
+ },
+ {
+  "say": "يا أتيون ابعت لخالد إني في الطريق",
+  "expect": {
+   "kind": "send",
+   "to": "خالد",
+   "msg": "في الطريق"
+  }
+ },
+ {
+  "say": "قوله إني جاي بكرة",
+  "expect": {
+   "kind": "send",
+   "to": null,
+   "msg": "جاي بكرة"
+  }
+ },
+ {
+  "say": "ابعتله إني وصلت",
+  "expect": {
+   "kind": "send",
+   "to": null,
+   "msg": "وصلت"
+  }
+ },
+ {
+  "say": "مين بعتلي؟",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "في رسايل جديدة؟",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "اقرالي الرسايل",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "مين كلمني",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "اقرالي رسالة ماما",
+  "expect": {
+   "kind": "read",
+   "from": "ماما"
+  }
+ },
+ {
+  "say": "أحمد قال ايه؟",
+  "expect": {
+   "kind": "read",
+   "from": "أحمد"
+  }
+ },
+ {
+  "say": "رد عليه قوله نص ساعة وجاي",
+  "expect": {
+   "kind": "reply",
+   "to": null,
+   "msg": "نص ساعة وجاي"
+  }
+ },
+ {
+  "say": "رد على ماما إني هكلمها",
+  "expect": {
+   "kind": "reply",
+   "to": "ماما",
+   "msg": "هكلمها"
+  }
+ },
+ {
+  "say": "رد عليها تمام",
+  "expect": {
+   "kind": "reply",
+   "to": null,
+   "msg": "تمام"
+  }
+ },
+ {
+  "say": "ابعت",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "أيوه",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "تمام",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "لا",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "بلاش",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "الغي",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "فرانكو",
+  "expect": {
+   "kind": "lang",
+   "lang": "franco"
+  }
+ },
+ {
+  "say": "عربي",
+  "expect": {
+   "kind": "lang",
+   "lang": "ar"
+  }
+ },
+ {
+  "say": "انجليزي",
+  "expect": {
+   "kind": "lang",
+   "lang": "en"
+  }
+ },
+ {
+  "say": "دايما فرانكو",
+  "expect": {
+   "kind": "lang",
+   "lang": "franco"
+  }
+ },
+ {
+  "say": "غيرها لنص ساعة بالظبط",
+  "expect": {
+   "kind": "change",
+   "msg": "نص ساعة بالظبط"
+  }
+ },
+ {
+  "say": "اكتبها بأدب",
+  "expect": {
+   "kind": "formal"
+  }
+ },
+ {
+  "say": "سجل غدا ١٥٠",
+  "expect": {
+   "kind": "pass"
+  }
+ },
+ {
+  "say": "فكرني أكلم الدكتور بكرة الساعة ١٠",
+  "expect": {
+   "kind": "pass"
+  }
+ },
+ {
+  "say": "افتح أوبر",
+  "expect": {
+   "kind": "pass"
+  }
+ },
+ {
+  "say": "علّم خالد إني وصلت",
+  "expect": {
+   "kind": "send",
+   "to": "خالد",
+   "msg": "وصلت"
+  }
+ },
+ {
+  "say": "ارسل لمحمد إني بتأخر شوي",
+  "expect": {
+   "kind": "send",
+   "to": "محمد",
+   "msg": "بتأخر شوي"
+  }
+ },
+ {
+  "say": "منو راسلني؟",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "زين",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "خبّر سامي إنو جاي",
+  "expect": {
+   "kind": "send",
+   "to": "سامي",
+   "msg": "جاي"
+  }
+ },
+ {
+  "say": "شو في رسايل؟",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "سامي شو قال؟",
+  "expect": {
+   "kind": "read",
+   "from": "سامي"
+  }
+ },
+ {
+  "say": "صيفط لكريم بلي غادي نتعطل",
+  "expect": {
+   "kind": "send",
+   "to": "كريم",
+   "msg": "غادي نتعطل"
+  }
+ },
+ {
+  "say": "شكون صيفط ليا",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "tell Sara I'm running late",
+  "expect": {
+   "kind": "send",
+   "to": "Sara",
+   "msg": "I'm running late"
+  }
+ },
+ {
+  "say": "text Sara that the meeting moved to 6",
+  "expect": {
+   "kind": "send",
+   "to": "Sara",
+   "msg": "the meeting moved to 6"
+  }
+ },
+ {
+  "say": "send a message to Omar saying see you at 7",
+  "expect": {
+   "kind": "send",
+   "to": "Omar",
+   "msg": "see you at 7"
+  }
+ },
+ {
+  "say": "send Omar a whatsapp that I'm outside",
+  "expect": {
+   "kind": "send",
+   "to": "Omar",
+   "msg": "I'm outside"
+  }
+ },
+ {
+  "say": "message mom on whatsapp that I landed",
+  "expect": {
+   "kind": "send",
+   "to": "mom",
+   "msg": "I landed",
+   "app": "whatsapp"
+  }
+ },
+ {
+  "say": "let John know that I'll call him later",
+  "expect": {
+   "kind": "send",
+   "to": "John",
+   "msg": "I'll call him later"
+  }
+ },
+ {
+  "say": "hey attune, tell Lina I'm on my way",
+  "expect": {
+   "kind": "send",
+   "to": "Lina",
+   "msg": "I'm on my way"
+  }
+ },
+ {
+  "say": "who messaged me?",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "any new messages?",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "read my messages",
+  "expect": {
+   "kind": "who"
+  }
+ },
+ {
+  "say": "what did Sara say?",
+  "expect": {
+   "kind": "read",
+   "from": "Sara"
+  }
+ },
+ {
+  "say": "reply saying I'm on my way",
+  "expect": {
+   "kind": "reply",
+   "to": null,
+   "msg": "I'm on my way"
+  }
+ },
+ {
+  "say": "reply to Omar that I agree",
+  "expect": {
+   "kind": "reply",
+   "to": "Omar",
+   "msg": "I agree"
+  }
+ },
+ {
+  "say": "yes",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "send it",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "no",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "cancel",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "Franco",
+  "expect": {
+   "kind": "lang",
+   "lang": "franco"
+  }
+ },
+ {
+  "say": "in English",
+  "expect": {
+   "kind": "lang",
+   "lang": "en"
+  }
+ },
+ {
+  "say": "change it to see you at 8",
+  "expect": {
+   "kind": "change",
+   "msg": "see you at 8"
+  }
+ },
+ {
+  "say": "make it formal",
+  "expect": {
+   "kind": "formal"
+  }
+ },
+ {
+  "say": "remind me to call the doctor tomorrow at 10",
+  "expect": {
+   "kind": "pass"
+  }
+ },
+ {
+  "say": "log lunch 150",
+  "expect": {
+   "kind": "pass"
+  }
+ },
+ {
+  "say": "tell me a joke",
+  "expect": {
+   "kind": "pass"
+  }
+ },
+ {
+  "say": "Ahmed ko bolo ki main late hoon",
+  "expect": {
+   "kind": "send",
+   "to": "Ahmed",
+   "msg": "main late hoon"
+  }
+ },
+ {
+  "say": "Priya ko message karo ki meeting cancel hai",
+  "expect": {
+   "kind": "send",
+   "to": "Priya",
+   "msg": "meeting cancel hai"
+  }
+ },
+ {
+  "say": "koi message aaya?",
+  "expect": {
+   "kind": "who"
+  }
+ }
+]

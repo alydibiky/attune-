@@ -21,19 +21,25 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
 4. **Private.** Voice and messages stay on the phone. Messages are read from notifications (Notification access, already
    used by Money and Message alerts); replies go through the app's own notification reply (RemoteInput) — WhatsApp,
    Telegram, Messenger, Signal… SMS is never read (Attune's promise).
-5. **Measured accuracy.** `tests/voice/commands.json` = real-style commands in every supported dialect with the expected
+5. **The correct contact (Ali, 25 Oct).** A reply uses the conversation's own notification key (exact chat). Two people with
+   the same name → asked. A short name ("Ali") only matches exactly / through ALIAS, never by sound. A person who only wrote in
+   a group is NEVER reached through the group's key (the app opens on them instead); a group only when named as the group.
+   The read-back shows the full name, the app and their last message. No recent chat → the app opens with the text ready and
+   the person picks the contact (no guessing a phone number).
+6. **Measured accuracy.** `tests/voice/commands.json` = real-style commands in every supported dialect with the expected
    result; `tests/unit/v1100voice.test.mjs` scores it and fails under the bar. Add a line for every bug found.
 
 ## Phases and steps (tick as done)
 ### Phase 1 — talk or type, and it acts (no wake word yet)
 - [x] 1.0 This plan (VOICE_PLAN.md)
 - [x] 1.1 Mock-ups for Ali: the voice screen + car mode, 3 options (`design/voice-options.html` + `.png`, sent in chat 25 Oct) —
-      **waiting for Ali's pick** (A calm orb = recommended, B conversation, C one big card)
-- [ ] 1.2 Engine (pure JS, unit-tested): `voice-cmd.js` — send / who messaged me / read / reply / call / open app / log money /
+      **Ali picked A (calm orb)** — "A is good but make sure it sends the correct contact"
+- [x] 1.2 Engine (pure JS, unit-tested): `voice-cmd.js` — send / who messaged me / read / reply / call / open app / log money /
       remind, in Egyptian, Gulf, Levantine, Darija, English (+ Hinglish words); the dialogue (asks language, reads back,
       confirms, picks between two Ahmeds); `franco.js` — Arabic → Franco (Egyptian 3/2/7/5, Gulf variants), Franco detection,
       per-person language memory
-- [ ] 1.3 Accuracy set `tests/voice/commands.json` + scorer
+- [x] 1.3 Accuracy set `tests/voice/commands.json` (68 lines: Egyptian, Gulf, Levantine, Darija, English, Hinglish) + scorer
+      `tests/unit/v1100voice.test.mjs` (must be 68/68 — add a line for every new phrase or bug)
 - [ ] 1.4 Android: recent chat messages from notifications with their reply action (`ChatInbox.kt`), `chatInbox()` /
       `chatReply({key, text})` in NativeBridge; fallback = open the app with the text (PhoneActions whatsapp)
 - [ ] 1.5 Wire it: the Home box (typed) and its mic (spoken) run the voice dialogue; answers are spoken (speak / voicecall.js)
@@ -50,7 +56,9 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
 | Step | Files | Status |
 |---|---|---|
 | 1.0 plan | VOICE_PLAN.md | done |
-| 1.1 mock-ups | design/voice-options.html, design/voice-options.png | sent; Ali to pick A/B/C |
+| 1.1 mock-ups | design/voice-options.html, design/voice-options.png | Ali picked A (calm orb) |
+| 1.2 engine | web-src/voice-cmd.js (parseVoice, voiceTurn, findPeople, skeleton), web-src/franco.js (toFranco eg/gulf/lev/maghreb, isFranco, styleOf, per-person memory `attune:voice:people`), web-src/franco-words.js (built by tools/franco_words.py from Franco.kt) | done, not wired yet |
+| 1.3 accuracy | tests/voice/commands.json, tests/unit/v1100voice.test.mjs | 68/68 + conversation + correct-contact checks |
 
 ## Ideas parked for later (Ali)
 - "Attune Saves" (the app that pays for itself — a monthly "Attune saved you EGP 3,420" with receipts): Ali said "I will do
