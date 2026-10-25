@@ -43,6 +43,7 @@ class AgentBrowser : Activity() {
     private var labels = JSONObject()
     private val result = JSONObject().put("filled", 0).put("offers", 0).put("payment", false)
     private var closed = false
+    private var watchMode = false
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
     private fun L(key: String, def: String) = labels.optString(key, def).ifBlank { def }
@@ -56,6 +57,7 @@ class AgentBrowser : Activity() {
         val url = intent.getStringExtra("url") ?: ""
         profile = intent.getStringExtra("profile") ?: "{}"
         rules = intent.getStringExtra("rules") ?: "{}"
+        watchMode = intent.getBooleanExtra("watch", false)
         labels = try { JSONObject(intent.getStringExtra("labels") ?: "{}") } catch (e: Exception) { JSONObject() }
         if (Prefs.airGapNow || !url.startsWith("https://")) { finishWith("blocked"); return }
         kit = try { assets.open("www/agent-kit.js").bufferedReader(Charsets.UTF_8).use { it.readText() } } catch (e: Exception) { "" }
@@ -116,7 +118,11 @@ class AgentBrowser : Activity() {
                 // an app link (intent://, market://, whatsapp://, tel:): hand it to Android
                 return try { startActivity(Intent(Intent.ACTION_VIEW, u).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); true } catch (e: Exception) { true }
             }
-            override fun onPageFinished(v: WebView, u: String) { if (kit.isNotEmpty()) v.evaluateJavascript(kit, null) }
+            override fun onPageFinished(v: WebView, u: String) {
+                if (kit.isNotEmpty()) v.evaluateJavascript(kit, null)
+                // v8.0 Agents "Check now": a price watch reads the cheapest offer by itself once the results have drawn
+                if (watchMode) for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.best($rules)") }, ms)
+            }
         }
         web.loadUrl(url)
     }
@@ -132,6 +138,8 @@ class AgentBrowser : Activity() {
                 when (o.optString("kind")) {
                     "best" -> {
                         val n = o.optInt("offers"); result.put("offers", n)
+                        // v8.0: the cheapest offer goes back to the page (a price watch keeps the lowest it saw)
+                        if (n > 0 && o.optDouble("price", 0.0) > 0) { val p = o.optDouble("price"); if (!result.has("price") || p < result.optDouble("price")) result.put("price", p).put("currency", o.optString("currency")) }
                         status.text = if (n == 0) L("noOffers", "No offers found on this page yet — search on the site, then tap Best offer.")
                             else L("marked", "Marked the best of {n}: {price}. Check it and tap it.").replace("{n}", n.toString())
                                 .replace("{price}", (o.optString("currency") + " " + o.optDouble("price").let { if (it % 1.0 == 0.0) it.toLong().toString() else it.toString() }).trim())

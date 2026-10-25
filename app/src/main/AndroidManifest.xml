@@ -74,6 +74,9 @@
         <package android:name="me.lyft.android" /><package android:name="sinet.startup.inDriver" /><package android:name="com.olacabs.customer" />
         <package android:name="com.booking" /><package android:name="com.airbnb.android" /><package android:name="net.skyscanner.android.main" />
         <package android:name="com.amazon.mShop.android.shopping" />
+        <!-- v8.0 Agents (Ali: "make sure it can open any app I ask it to — Uber, Booking, Amazon, Talabat…"): every app that has an
+             icon on the home screen can be found by its name and opened -->
+        <intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent>
     </queries>
 
     <application
@@ -186,6 +189,8 @@
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />
         <receiver android:name=".ScoutNightReceiver" android:exported="false" />
+        <!-- v8.0 Agents: the price watches, checked about every 12 hours even with Attune closed -->
+        <receiver android:name=".AgentWatchReceiver" android:exported="false" />
         <!-- Puts reminders back after a restart or an update (Android forgets alarms). -->
         <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>

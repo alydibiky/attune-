@@ -63,11 +63,12 @@ object MessageWatch {
         }
         val app = WatchMatch.appName(sbn.packageName).ifEmpty { try { ctx.packageManager.getApplicationLabel(ctx.packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName } }
         val who = title.substringBefore(" @ ").substringBefore(":").trim().ifEmpty { r.who.firstOrNull() ?: "" }
-        val head = if (ar) "📩 $who بعتلك على $app" else "📩 $who messaged you on $app"
+        // v8.0 Agents: a delivery agent's alert names the order ("📦 Amazon order — AirPods case"), not a sender
+        val head = if (r.id.startsWith("agent-")) "📦 " + label.ifBlank { app } else if (ar) "📩 $who بعتلك على $app" else "📩 $who messaged you on $app"
         // the tap opens the message itself (the app's own intent), else that app
         val open: PendingIntent? = sbn.notification?.contentIntent ?: ctx.packageManager.getLaunchIntentForPackage(sbn.packageName)?.let {
             PendingIntent.getActivity(ctx, sbn.packageName.hashCode(), it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_IMMUTABLE) }
-        val body = text.take(400) + if (label.isNotBlank()) "\n— " + label else ""
+        val body = text.take(400) + if (label.isNotBlank() && !r.id.startsWith("agent-")) "\n— " + label else ""
         val b = (if (Build.VERSION.SDK_INT >= 26) android.app.Notification.Builder(ctx, CHANNEL) else @Suppress("DEPRECATION") android.app.Notification.Builder(ctx))
             .setSmallIcon(R.drawable.ic_stat_reminder).setContentTitle(head).setContentText(text.take(120))
             .setStyle(android.app.Notification.BigTextStyle().bigText(body)).setAutoCancel(true)

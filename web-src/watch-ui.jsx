@@ -12,6 +12,7 @@ const EX = [["Tell me when Ahmed messages me", "لو أحمد بعتلي قول�
 export function WatchPanel({ native: N, flash }) {
   const ar = getLang() === "ar";
   const [rules, setRules] = useState(() => W.loadWatch());
+  const shown = rules.filter((r) => !String(r.id).startsWith("agent-"));   // v8.0: delivery agents live on the Agents page
   const [text, setText] = useState("");
   const [hits, setHits] = useState([]);
   const access = (() => { try { return !N || !N.payAccess || N.payAccess(); } catch (e) { return true; } })();
@@ -36,8 +37,8 @@ export function WatchPanel({ native: N, flash }) {
           className={inp + " flex-1"} />
         <button className={btnP + " !h-11 !min-h-[44px] shrink-0"} data-testid="watch-add">{tr("Add")}</button>
       </form>
-      {!rules.length ? <div className="flex flex-wrap gap-1.5">{EX.map(([en, a]) => <button key={en} onClick={() => add(ar ? a : en)} className={chip(false) + " !h-auto min-h-[40px] py-2 !whitespace-normal text-start"} dir="auto" data-testid="watch-example">{ar ? a : en}</button>)}</div> : null}
-      {rules.length ? <ul className="m-0 p-0 list-none space-y-1.5" data-testid="watch-rules">{rules.map((r) => (
+      {!shown.length ? <div className="flex flex-wrap gap-1.5">{EX.map(([en, a]) => <button key={en} onClick={() => add(ar ? a : en)} className={chip(false) + " !h-auto min-h-[40px] py-2 !whitespace-normal text-start"} dir="auto" data-testid="watch-example">{ar ? a : en}</button>)}</div> : null}
+      {shown.length ? <ul className="m-0 p-0 list-none space-y-1.5" data-testid="watch-rules">{shown.map((r) => (
         <li key={r.id} className="flex items-center gap-2 rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] ps-3 pe-1 min-h-[52px]" data-testid="watch-rule">
           <MessageSquare size={14} className={r.on ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]"} />
           <span className={"flex-1 min-w-0 text-[13px] " + (r.on ? "text-[var(--c-ink)]" : "text-[var(--c-mut)] line-through")} dir="auto">{W.ruleText(r, ar)}</span>

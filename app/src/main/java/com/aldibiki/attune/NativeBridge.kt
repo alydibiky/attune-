@@ -639,10 +639,51 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 .putExtra("rules", a.optJSONObject("rules")?.toString() ?: "{}")
                 .putExtra("labels", a.optJSONObject("labels")?.toString() ?: "{}")
                 .putExtra("search", a.optBoolean("search", true))
+                .putExtra("watch", a.optBoolean("watch", false))
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             ctx.startActivity(i)
         } catch (e: Exception) { AgentBrowser.onDone = null; reject(id, e.message ?: "Could not open it") }
     }
+
+    // ---- v8.0 Agents ------------------------------------------------------------
+    /** Every app with a home-screen icon: [{pkg, label}] — so "open Uber" / «افتح طلبات» finds any app by its name. */
+    @JavascriptInterface
+    fun appsList(): String = try {
+        val pm = ctx.packageManager
+        val main = android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+        val arr = org.json.JSONArray(); val seen = HashSet<String>()
+        for (r in pm.queryIntentActivities(main, 0)) {
+            val pkg = r.activityInfo?.packageName ?: continue
+            if (pkg == ctx.packageName || !seen.add(pkg)) continue
+            arr.put(JSONObject().put("pkg", pkg).put("label", r.loadLabel(pm)?.toString() ?: pkg))
+        }
+        arr.toString()
+    } catch (e: Exception) { "[]" }
+
+    /** Opens an app: {pkg, url, store} — the app if it is on the phone (at the link when the app takes it), else the link
+     *  (website), else its store page. {ok, how: "app" | "link" | "store"}. */
+    @JavascriptInterface
+    fun openAnyApp(json: String): String = try {
+        val a = JSONObject(json); val pkg = a.optString("pkg"); val url = a.optString("url")
+        val pm = ctx.packageManager
+        val installed = pkg.isNotBlank() && try { pm.getPackageInfo(pkg, 0); true } catch (e: Exception) { false }
+        fun go(i: android.content.Intent): Boolean = try { ctx.startActivity(i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)); true } catch (e: Exception) { false }
+        val view = { u: String -> android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(u)) }
+        val how = when {
+            installed && url.isNotBlank() && go(view(url).setPackage(pkg)) -> "app"
+            installed && pm.getLaunchIntentForPackage(pkg)?.let { go(it) } == true -> "app"
+            url.startsWith("https://") && go(view(url)) -> "link"
+            pkg.isNotBlank() && (go(view("market://details?id=$pkg")) || go(view("https://play.google.com/store/apps/details?id=$pkg"))) -> "store"
+            else -> ""
+        }
+        JSONObject().put("ok", how.isNotEmpty()).put("how", how).toString()
+    } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
+
+    /** The price watches to check about every 12 hours with Attune closed (AgentWatch.kt), and what they found. */
+    @JavascriptInterface
+    fun agentWatchPlan(plan: String): String { AgentWatch.setPlan(ctx, plan); return "ok" }
+    @JavascriptInterface
+    fun agentWatchTake(): String = AgentWatch.take(ctx)
 
     // ---- voice -----------------------------------------------------------------
     var voice: Voice? = null

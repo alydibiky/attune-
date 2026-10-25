@@ -67,7 +67,7 @@ import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES } from "./money-pag
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
-import { BookingDetails, loadBooking, agentLabels } from "./agent-ui.jsx";
+import { BookingDetails, loadBooking, agentLabels, myCountry } from "./agent-ui.jsx";
 import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
@@ -93,9 +93,12 @@ const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCi
 // v6.48 (Ali: "put Shelf in the sidebar"): Shelf gets its own row right under Home (it is still a tab of the Home hub)
 // v6.50 (Ali picked A, 22 Oct: "only make money, business, health and shelf on the left sidebar"): the sidebar is chats + these
 // four; every other app opens from the Home box ("/" or "open …"); the "Attune" title goes Home.
-const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Database], ["health", "Health", Heart], ["shelf", "Shelf", BookOpen]];
+// v8.0 (Ali picked Agents design A): Agents joins the sidebar after Shelf
+const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Database], ["health", "Health", Heart], ["shelf", "Shelf", BookOpen], ["agents", "Agents", Radar]];
 const HUB_PLACES = HUBS.flatMap(([id, label, target]) => (id === "home" ? [[target, label, HUB_ICON[id]], ["shelf", "Shelf", BookOpen]] : [[target, label, HUB_ICON[id]]]));
 import { HealthPage } from "./health-ui.jsx";
+import { AgentsPage } from "./agents-ui.jsx";
+import { parseAgent, loadAgents, saveAgents, makeAgent } from "./agents.js";
 import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
 import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan, goldGram } from "./scout.js";
@@ -7667,6 +7670,7 @@ const MORE_TOOLS = [
   ["scout", "Scout", "Hunts for a flat, a car, a product or a job for days — tells you when something good appears", Binoculars],   // v6.28
   ["lifeask", "Ask your life", "One question about your money, people, health, meals and deadlines — answered from your own data", Sparkles],   // v6.28
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
+  ["agents", "Agents", "Watch a price, track a delivery, order your usual, open any app — and Scout", Radar],   // v8.0 (Ali picked A)
   ["radar", "Deadline Radar", "Free trials, renewals, returns, warranties and documents — a warning before each one", Radar],   // v6.27
   ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
@@ -7736,7 +7740,7 @@ K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[lab
 // v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader stays (Ali, 13 Oct),
 // in Files — it saves a file to the phone.
 const MORE_GROUPS = [
-  ["Money & people", ["scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
+  ["Money & people", ["agents", "scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
   ["Mind & learning", ["coach", "learn", "memory", "remember", "shelf", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
@@ -8299,7 +8303,7 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools, STUDIO_OFF ? ["studio"] : []);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { timeline: "Timeline", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
+  const TAB_SHORT = { agents: "Agents", timeline: "Timeline", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
@@ -9655,6 +9659,17 @@ export default function App() {
     // v6.37: a goal with a number and a date («عايز أوفر 60 ألف قبل يونيو», "lose 6 kg before 20 January") → Missions, ready to start
     { const pm = parseMission(text, now); if (pm && pm.deadline) { try { localStorage.setItem("attune:missions:draft", text); } catch (e) {} navTo("missions");
       return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : "Your mission is ready — tap Start the mission", open: "missions" }], undo: null }; } }
+    // v8.0 Agents: "tell me when hotels near the Haram are under 45k…", "tell me when my Amazon order arrives", "order my usual from
+    // Talabat: …" → an agent on the Agents page (asked there if something is missing); "open Uber" opens the app
+    { const ag = parseAgent(text, { now, country: (loadBooking().country || myCountry() || "EG"), usual: loadAgents().usual });
+      if (ag && ["watch", "track", "order"].includes(ag.kind)) {
+        if (ag.ask) { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : "Finish it on the Agents page", open: "agents" }], undo: null }; }
+        const a = makeAgent(ag, now), st0 = loadAgents();
+        saveAgents({ ...st0, usual: ag.kind === "order" ? { ...st0.usual, [ag.app.id]: ag.what } : st0.usual, agents: [a, ...st0.agents] });
+        return { lines: [{ text: (ar ? "وكيل جديد: " : "New agent: ") + ag.title, open: "agents" }], undo: () => { const c = loadAgents(); saveAgents({ ...c, agents: c.agents.filter((x) => x.id !== a.id) }); } };
+      }
+      if (ag && ag.kind === "open" && ag.app && NATIVE && NATIVE.openAnyApp) { try { NATIVE.openAnyApp(JSON.stringify({ pkg: ag.app.pkg || "", url: "" })); } catch (e) {}
+        return { lines: [{ text: (ar ? "بفتح " : "Opening ") + ag.app.label }], undo: null }; } }
     // "find me a flat in Maadi under 15k" / «دورلي على عربية …» → a Scout goal, started at once
     if (looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : "Scout is on it", open: "scout" }], undo: null }; }
     const u = doUnderstand(text, { now, stores: loadLifeStores() });
@@ -10499,6 +10514,9 @@ export default function App() {
                 </p>
               </section>
             } />
+        ) : mode === "agents" ? (
+          <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={loadBooking().country || myCountry() || "EG"}
+            onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }} />
         ) : mode === "studio" ? (
           STUDIO_OFF ? <StudioOffDevice paused /> : NATIVE && NATIVE.imageInfo ? (
             <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}

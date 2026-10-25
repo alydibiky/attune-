@@ -7,7 +7,7 @@ const S = (en, ar) => [en, ar];
 export const AREAS = [
   { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "guardian", "life", "reminders", "radar", "timeline", "deal", "automations", "xray"] },
   { id: "health", icon: "🥗", title: S("Health & food", "الصحة والأكل"), ids: ["health", "fit", "care", "cycle"] },
-  { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "chat", "lifeask", "translate", "instant", "missions", "scout", "shelf", "map", "metro", "travel", "privacy"] },
+  { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "chat", "lifeask", "translate", "instant", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
   { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "slides", "cv", "memory", "remember", "recall", "news"] },
   { id: "work", icon: "💼", title: S("Work & business", "الشغل والبيزنس"), ids: ["business", "fleet", "field", "crane", "tools", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
   { id: "create", icon: "✨", title: S("Create", "اعمل حاجة"), ids: ["assistants", "skills", "artifacts", "studio", "code", "projects"] },
@@ -21,6 +21,7 @@ export const SAY = {
   translate: [S("Hold the mic and speak Arabic to a taxi driver in Istanbul", "دوس على المايك واتكلم عربي مع سواق تاكسي في إسطنبول"), S("He hears it in Turkish; his answer comes back in Arabic", "بيسمعها تركي؛ ورده بيرجعلك عربي")],
   instant: [S("Share a long WhatsApp message to Attune", "شيّر رسالة واتساب طويلة لـ Attune"), S("A short summary, a reply, or the date added to your calendar", "ملخص قصير، أو رد، أو الميعاد يتضاف للتقويم")],
   missions: [S("“Lose 6 kg before 20 January”", "«أخس 6 كيلو قبل 20 يناير»"), S("Your chance in %, and one step a day to keep it on track", "فرصتك بالنسبة المئوية، وخطوة كل يوم")],
+  agents: [S("“Tell me when hotels near the Haram are under 45k for 4 nights from 10 December”", "«نبهني لما فنادق الحرم تبقى أقل من 45 ألف لمدة 4 ليالي من 10 ديسمبر»"), S("An agent checks the price twice a day and tells you when it drops — it also tracks deliveries, keeps your usual order and opens any app", "وكيل بيشيك السعر مرتين في اليوم ويقولك لما ينزل — وكمان بيتابع الشحنات، ويحفظ طلبك المعتاد، ويفتح أي أبلكيشن")],
   scout: [S("“Hyundai Tucson 2022 used under 1.5M”", "«هيونداي توسان 2022 مستعمل أقل من 1.5 مليون»"), S("Real ads from many sites, checked and compared — told when a good one appears", "إعلانات حقيقية من مواقع كتير، متراجعة ومتقارنة — وتتبلغ أول ما يظهر واحد كويس")],
   shelf: [S("Save a book, an article or a podcast", "احفظ كتاب أو مقالة أو بودكاست"), S("A shelf of everything to read or watch, with where you stopped", "رف فيه كل حاجة عايز تقراها أو تشوفها، ووقفت فين")],
   map: [S("Search “pharmacy” with no internet", "دوّر على «صيدلية» من غير نت"), S("The nearest ones on the offline map, and the way there", "الأقرب على الخريطة اللي من غير نت، والطريق ليها")],

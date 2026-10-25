@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
-PLACES = ["money", "business", "health", "shelf"]   # v6.50 (Ali picked A: chats + Money · Business · Health · Shelf; the rest from the Home box)
+PLACES = ["money", "business", "health", "shelf", "agents"]   # v8.0 Agents joined (Ali picked A); v6.50 (Ali picked A: chats + Money · Business · Health · Shelf; the rest from the Home box)
 def shot(page, name):
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, name + ".png"))
 with sync_playwright() as p:

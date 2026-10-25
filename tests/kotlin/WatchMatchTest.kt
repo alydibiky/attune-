@@ -24,5 +24,10 @@ fun main() {
     check(WatchMatch.matches(word, "com.whatsapp", "Client", "محتاج ونش 50 طن"), "any message with the word «ونش»")
     check(!WatchMatch.matches(WatchRule("5", listOf("Ahmed"), on = false), "com.whatsapp", "Ahmed", "hi"), "a paused rule is quiet")
     check(WatchMatch.appName("com.whatsapp.w4b") == "WhatsApp", "WhatsApp Business is WhatsApp")
+    // v8.0 Agents: a delivery agent listens to the store's own app only
+    val amazon = WatchRule("agent-a1", emptyList(), app = "pkgs:com.amazon.mShop.android.shopping|in.amazon.mShop.android.shopping", words = listOf("arriving", "out for delivery", "هيوصل"))
+    check(WatchMatch.matches(amazon, "com.amazon.mShop.android.shopping", "Amazon", "Your package is out for delivery"), "Amazon: out for delivery")
+    check(!WatchMatch.matches(amazon, "com.whatsapp", "Amazon", "arriving today"), "…not a WhatsApp message saying the same")
+    check(!WatchMatch.matches(amazon, "com.amazon.mShop.android.shopping", "Amazon", "Deals of the day"), "…not an Amazon ad")
     if (fails > 0) { println("$fails FAILED"); kotlin.system.exitProcess(1) } else println("ALL PASSED")
 }
