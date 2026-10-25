@@ -98,6 +98,9 @@ export function savePeople(p, s = typeof localStorage !== "undefined" ? localSto
 /** The language remembered for a person (null = ask). */
 export const langFor = (people, name) => ((people || {})[nameKey(name)] || {}).lang || null;
 /** Remember a person's language (and optionally that messages to them go without the read-back — off unless asked). */
+/** Voice 2.3 nicknames: «ماما» → the contact it means ("Fatma ❤️"), learnt the first time the person picks it. */
+export const aliasFor = (people, name) => ((people || {})["~" + nameKey(name)] || {}).is || null;
+export const rememberAlias = (people, name, contact) => ({ ...(people || {}), ["~" + nameKey(name)]: { is: contact } });
 export const rememberLang = (people, name, lang, extra = {}) => ({ ...(people || {}), [nameKey(name)]: { ...((people || {})[nameKey(name)] || {}), lang, ...extra } });
 /** A spoken / typed answer → a language: «فرانكو» / "franco" / «عربي» / "english" / «انجليزي» → "franco" | "ar" | "en" | null. */
 export function langAnswer(text) {

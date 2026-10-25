@@ -29,8 +29,26 @@ turn("change it to see you at 8"); ok(r.card.kind === "readback" && r.card.text 
 turn("yes"); ok(r.action && r.action.text === "see you at 8", "…then yes sends the changed words");
 turn("مين بعتلي"); ok(r.card.kind === "messages" && /4 رسايل/.test(r.say), "«مين بعتلي» → reads the newest messages aloud");
 turn("رد عليه قوله تمام"); ok(r.card.kind === "readback" && r.card.to === "Sara", "«رد عليه» replies to the last one read (Sara)");
-st = V.newVoiceState(); turn("ابعت لعمر إني جاي"); turn("عربي"); turn("ابعت");
-ok(r.action && r.action.key === null && /هفتحلك/.test(r.say), "someone with no recent chat → the app opens with the message ready (the person picks the contact)");
+st = V.newVoiceState(); turn("ابعت لعمر إني جاي");
+ok(r.card.kind === "ask" && /مين «عمر»/.test(r.say) && r.card.options.includes("حد تاني"), "a name it does not know → it asks who that is (recent chats + “someone else”), never guesses");
+turn("حد تاني"); turn("عربي"); turn("ابعت");
+ok(r.action && r.action.key === null && /هفتحلك/.test(r.say), "someone else → the app opens with the message ready (the person picks the contact)");
+// ---- 2.3 nicknames: «ماما» learnt once ----
+const fin = [{ key: "f1", app: "whatsapp", who: "Fatma ❤️", text: "كلمني", ts: 9, canReply: true }, { key: "k9", app: "whatsapp", who: "Karim", text: "yo", ts: 8, canReply: true }];
+st = V.newVoiceState(); people = {};
+r = V.voiceTurn(st, "ابعت لماما إني جاي", { inbox: fin, people }); st = r.state;
+ok(r.card.options.includes("Fatma ❤️"), "«ماما» is not a contact name → it asks who «ماما» is");
+r = V.voiceTurn(st, "Fatma ❤️", { inbox: fin, people }); st = r.state; people = r.people || people;
+ok(r.card.kind === "ask" && /فرانكو/.test(r.say), "…picked Fatma ❤️ → it goes on (language)");
+st = V.newVoiceState(); r = V.voiceTurn(st, "قول لماما هتأخر", { inbox: fin, people });
+ok(r.card.kind === "ask" && /فرانكو/.test(r.say) && r.state.draft.target.key === "f1", "the next time «ماما» goes straight to Fatma ❤️ (the nickname is remembered)");
+// ---- 2.2 dialects: Attune answers the way the person speaks ----
+st = V.newVoiceState(); r = V.voiceTurn(st, "علّم خالد إني وصلت", { inbox: [{ key: "x", app: "whatsapp", who: "خالد", text: "وينك", ts: 1, canReply: true }], people: { "خالد": { lang: "ar", name: "خالد" } }, style: "gulf" });
+ok(/أرسلها؟/.test(r.say), "Gulf: «… أرسلها؟» — " + r.say);
+st = r.state; r = V.voiceTurn(st, "زين", { inbox: [], people: {}, style: "gulf" }); ok(r.action && r.action.kind === "send", "Gulf «زين» = yes → sent");
+st = V.newVoiceState(); r = V.voiceTurn(st, "صيفط لكريم بلي غادي نتعطل", { inbox: [{ key: "y", app: "whatsapp", who: "كريم", text: "fin", ts: 1, canReply: true }], people: { "كريم": { lang: "ar", name: "كريم" } }, style: "maghreb" });
+ok(/نصيفطها؟/.test(r.say), "Darija: «… نصيفطها؟»");
+st = r.state; r = V.voiceTurn(st, "واخا", { inbox: [], people: {}, style: "maghreb" }); ok(r.action && r.action.kind === "send", "Darija «واخا» = yes → sent");
 st = V.newVoiceState(); turn("ابعت لماما إني وصلت"); turn("tell Sara I'm late");
 ok(r.card.kind === "ask" && /Arabic, Franco or English/.test(r.say) === false || r.card.to === "Sara" || /Sara/.test(r.say), "a new command leaves the unanswered question behind");
 // ---- the correct contact (Ali: "make sure it sends the correct contact") ----

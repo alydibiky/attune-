@@ -6,7 +6,7 @@
    Agents, apps — and its answer is spoken. Sending: the chat's own notification reply (ChatInbox.kt, exactly that chat), else
    the app opens with the text ready and the person picks the contact. */
 import React, { useEffect, useRef, useState } from "react";
-import { X, Send, Mic, Check, Pencil } from "lucide-react";
+import { X, Send, Mic, Check, Pencil, Car, MessageCircle, MapPin, Volume2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as V from "./voice-cmd.js";
 import { loadPeople, savePeople } from "./franco.js";
@@ -27,6 +27,11 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
   const [typed, setTyped] = useState("");
   const [speakLang, setSpeakLang] = useState(getLang() === "ar" ? "ar" : "en");   // what the mic listens for
   const stRef = useRef(st); stRef.current = st;
+  // Voice 2.1 car mode (design A's car screen): big buttons, the newest message read aloud by itself, Reply / Navigate by voice
+  const [car, setCar] = useState(false);
+  const [newest, setNewest] = useState(null);
+  const pending = useRef(null);            // what the next words are for: "reply" | "nav" | null
+  const seen = useRef(0);
   const alive = useRef(true);
   useEffect(() => () => { alive.current = false; try { N && N.stopListening && N.stopListening(); N && N.stopSpeaking && N.stopSpeaking(); } catch (e) {} }, []);
 
@@ -53,8 +58,22 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
     try { window.open("https://wa.me/?text=" + encodeURIComponent(a.text), "_blank"); } catch (e) {}
     return true;
   };
+  const navigate = (place) => {
+    const url = "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=" + encodeURIComponent(place);
+    try { if (N && N.openAnyApp) { N.openAnyApp(JSON.stringify({ pkg: "com.google.android.apps.maps", url })); return; } } catch (e) {}
+    try { window.open(url, "_blank"); } catch (e) {}
+  };
+  // words heard (or typed): in car mode they may be the reply or the destination the screen asked for
+  const heardDone = async (said) => {
+    const text = String(said || "").trim(); if (!text) return;
+    const p = pending.current; pending.current = null;
+    if (p === "nav") { setHeard(text); const line = (stRef.current.ui === "ar" ? "رايحين " : "Navigating to ") + text; setSay(line); setCard({ kind: "done", ok: true }); navigate(text); await speakOut(line, stRef.current.ui); return; }
+    if (p === "reply") return turn((stRef.current.ui === "ar" ? "رد عليه " : "reply saying ") + text);
+    return turn(text);
+  };
   const turn = async (said) => {
     const text = String(said || "").trim(); if (!text) return;
+    if (/^(?:وضع العربي[هة]|وضع السواقه|وضع السواقة|car mode|driving mode)$/i.test(text)) { setCar(true); return; }
     setHeard(text);
     const people = loadPeople();
     const r = V.voiceTurn(stRef.current, text, { inbox: inbox(), people, style, defaultApp: "whatsapp" });
@@ -83,19 +102,65 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
       const tag = speakLang === "ar" ? LISTEN_TAG[style] : "en-US";
       const res = await nativeCall("listen", tag, (pct, stage, detail) => { if (stage === "partial") setHeard(detail); });
       setListening(false);
-      if (res && res.text) await turn(res.text);
+      if (res && res.text) await heardDone(res.text);
     } catch (e) { setListening(false); }
   };
   useEffect(() => { if (N && N.listen) listen(); }, []);   // opens listening, like pressing a mic
+  // car mode: a new message (newer than when car mode opened) shows big and is read aloud by itself
+  useEffect(() => {
+    if (!car) return;
+    seen.current = Date.now() - 60000;
+    const tick = async () => {
+      const all = inbox().sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      if (all[0]) setNewest(all[0]);
+      const fresh = all.find((m) => (m.ts || 0) > seen.current);
+      if (fresh) { seen.current = fresh.ts; const ui = stRef.current.ui; await speakOut((ui === "ar" ? `${fresh.who} على ${APP_NAME[fresh.app] || fresh.app}: ` : `${fresh.who} on ${APP_NAME[fresh.app] || fresh.app}: `) + fresh.text, ui); }
+    };
+    tick(); const t = setInterval(tick, 6000); return () => clearInterval(t);
+  }, [car]);
+  const replyTo = (m) => { setSt({ ...stRef.current, step: "idle", draft: null, last: { name: m.who, key: m.group ? null : m.key, app: m.app } }); pending.current = "reply";
+    const q = stRef.current.ui === "ar" ? `أقول لـ${m.who} إيه؟` : `What should I tell ${m.who}?`; setSay(q); setCard({ kind: "ask", q }); speakOut(q, stRef.current.ui).then(() => listen()); };
+  const askPlace = () => { pending.current = "nav"; const q = stRef.current.ui === "ar" ? "رايح فين؟" : "Where to?"; setSay(q); setCard({ kind: "ask", q }); speakOut(q, stRef.current.ui).then(() => listen()); };
 
   const ar = st.ui === "ar";
   const choose = (label) => turn(label);
+  if (car) {
+    const n = inbox().length;
+    const tile = "w-full min-h-[84px] rounded-[26px] bg-[var(--c-surf)] border border-[var(--c-ln)] flex items-center gap-4 px-5 text-[22px] font-black text-start";
+    const well = "w-14 h-14 rounded-[18px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0";
+    return (
+      <div className="calm fixed inset-0 z-[90] bg-[#0b0e0d] text-[var(--c-ink)] flex flex-col" data-testid="car-mode" dir={ar ? "rtl" : "ltr"}>
+        <div className="flex items-center gap-2 px-4 pb-2" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}>
+          <Car size={24} /><b className="text-[22px] font-black flex-1">{ar ? "وضع العربية" : "Car mode"}</b>
+          <button onClick={() => setCar(false)} aria-label={tr("Close")} className="w-12 h-12 rounded-full grid place-items-center c-sub" data-testid="car-close"><X size={24} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3 max-w-xl w-full mx-auto">
+          {newest ? <div className="rounded-[26px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4" data-testid="car-newest">
+            <p className="m-0 text-[13px] font-extrabold c-sub">{newest.who}{newest.group && newest.convo ? " · " + newest.convo : ""} · {APP_NAME[newest.app] || newest.app}</p>
+            <p className="m-0 mt-1 text-[22px] font-extrabold" dir="auto">{newest.text}</p>
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => speakOut(newest.who + ": " + newest.text, st.ui)} className="flex-1 min-h-[56px] rounded-[16px] border border-[var(--c-ln)] text-[17px] font-extrabold inline-flex items-center justify-center gap-2" data-testid="car-read"><Volume2 size={20} />{ar ? "اقرا" : "Read"}</button>
+              <button onClick={() => replyTo(newest)} className="flex-1 min-h-[56px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[17px] font-extrabold inline-flex items-center justify-center gap-2" data-testid="car-reply"><Mic size={20} />{ar ? "رد" : "Reply"}</button>
+            </div></div> : null}
+          {card ? <div className="rounded-[22px] bg-[var(--c-soft)] p-4" data-testid="car-say"><p className="m-0 text-[19px] font-extrabold" dir="auto">{card.kind === "readback" ? `${card.to}: «${card.text}»` : say}</p>
+            {card.kind === "readback" ? <div className="flex gap-2 mt-3"><button onClick={() => turn(ar ? "لا" : "no")} className="flex-1 min-h-[56px] rounded-[16px] border border-[var(--c-ln)] text-[17px] font-extrabold" data-testid="car-cancel">{ar ? "لا" : "No"}</button>
+              <button onClick={() => turn(ar ? "ابعت" : "send")} className="flex-1 min-h-[56px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[17px] font-extrabold" data-testid="car-send">{ar ? "ابعت" : "Send"}</button></div> : null}</div> : null}
+          <button onClick={listen} className={tile} data-testid="car-talk"><span className={well}><Mic size={26} /></span>{ar ? "اتكلم" : "Talk"}</button>
+          <button onClick={() => turn(ar ? "مين بعتلي" : "who messaged me")} className={tile} data-testid="car-messages"><span className={well}><MessageCircle size={26} /></span>{(ar ? "الرسايل" : "Messages") + (n ? " · " + n : "")}</button>
+          <button onClick={askPlace} className={tile} data-testid="car-nav"><span className={well}><MapPin size={26} /></span>{ar ? "ودّيني" : "Navigate"}</button>
+          <form onSubmit={(e) => { e.preventDefault(); const t = typed; setTyped(""); heardDone(t); }} className="flex gap-2 pt-2">
+            <input value={typed} onChange={(e) => setTyped(e.target.value)} dir="auto" placeholder={ar ? "أو اكتب (للي جنبك)…" : "Or type (for a passenger)…"} className="flex-1 min-w-0 min-h-[48px] rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[16px]" data-testid="car-input" />
+            <button aria-label={tr("Send")} className="w-12 h-12 rounded-full grid place-items-center bg-[var(--c-surf-2)]" data-testid="car-type-go"><Send size={18} className="rtl:-scale-x-100" /></button></form>
+        </div>
+      </div>);
+  }
   return (
     <div className="calm fixed inset-0 z-[90] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col" data-testid="voice-screen" dir={ar ? "rtl" : "ltr"}>
       <div className="flex items-center gap-2 px-4 pt-4 pb-2" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}>
         <b className="text-[17px] font-black">{ar ? "يا أتيون" : "Ya Attune"}</b>
         <span className="text-[11.5px] font-extrabold px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)]">{tr("Offline · private")}</span>
         <span className="flex-1" />
+        <button onClick={() => setCar(true)} aria-label={ar ? "وضع العربية" : "Car mode"} className="w-10 h-10 rounded-full grid place-items-center border border-[var(--c-ln)]" data-testid="voice-car"><Car size={17} /></button>
         <button onClick={() => setSpeakLang(speakLang === "ar" ? "en" : "ar")} className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[12.5px] font-extrabold" data-testid="voice-lang">{speakLang === "ar" ? "عربي" : "English"}</button>
         <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 rounded-full grid place-items-center c-sub" data-testid="voice-close"><X size={20} /></button>
       </div>
@@ -130,7 +195,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
         {card && card.kind === "done" ? <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 mt-3 flex gap-2 items-start" data-testid="voice-done">
           {card.ok ? <Check size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" /> : null}<p className="m-0 text-[15px] font-bold" dir="auto">{say}</p></div> : null}
         {!card ? <div className="mt-6 rounded-[18px] border border-[var(--c-ln)] p-3"><SmsSwitch native={N} compact /></div> : null}
-        <form onSubmit={(e) => { e.preventDefault(); const t = typed; setTyped(""); turn(t); }} className="mt-4 flex gap-2">
+        <form onSubmit={(e) => { e.preventDefault(); const t = typed; setTyped(""); heardDone(t); }} className="mt-4 flex gap-2">
           <input value={typed} onChange={(e) => setTyped(e.target.value)} dir="auto" placeholder={ar ? "أو اكتب هنا…" : "Or type here…"} className="flex-1 min-w-0 min-h-[44px] rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[15px]" data-testid="voice-input" />
           <button aria-label={tr("Send")} className="w-11 h-11 rounded-full grid place-items-center bg-[var(--c-surf-2)]" data-testid="voice-type-go"><Send size={16} className="rtl:-scale-x-100" /></button>
         </form>

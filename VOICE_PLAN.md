@@ -49,9 +49,15 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
       (`home-voice`), "/voice", or the `attune-voice` event; not-a-message sentences go to the Home box (doFromHome) and the
       answer is spoken (speakWait → speak → speechSynthesis)
 ### Phase 2 — car mode, more dialects, nicknames
-- [ ] 2.1 Car mode (big buttons, new messages read aloud, voice replies, navigation); Android Auto later
-- [ ] 2.2 Dialect packs: Levantine, Darija (+French), Hinglish / Roman Urdu, Turkish, Spanish…; per-country apps
-- [ ] 2.3 Nicknames ("ماما", "الأستاذ", "mummy") learnt from use
+- [x] 2.1 Car mode — voice-ui.jsx `car` view (design A's car screen): the newest message big + read aloud by itself (polls
+      chatInbox every 6 s), Read / Reply (reply by voice to that person — a group sender never through the group), Talk,
+      Messages · N, Navigate (asks where → Google Maps directions via openAnyApp), a typing box for a passenger; opened by the
+      🚗 button on the voice screen or by saying «وضع العربية» / "car mode". Android Auto: later
+- [~] 2.2 Dialects: understanding = Egyptian, Gulf, Levantine, Darija, English, Hinglish (75/75); Attune's spoken replies in
+      Gulf / Levantine / Darija (voice-cmd.js DIALECT, from the country) + their yes/no («زين», «واخا», «بعتها», «ما بدي»).
+      Still to do: Turkish, Spanish, French, Hindi/Urdu replies and commands; per-country message apps
+- [x] 2.3 Nicknames: a name with no such contact → "مين «ماما»؟" with the recent chats + "someone else"; the pick is
+      remembered (franco.js aliasFor / rememberAlias, key "~name" in attune:voice:people) and used next time
 ### Phase 3 — "يا أتيون" wake word
 - [ ] 3.1 A tiny always-listening model (low power), Egyptian + Gulf + English voices; clear notification + on/off switch
       (Google Play rules on background microphone)
@@ -75,9 +81,18 @@ codes (`PayLog.isOtp` in ChatInbox and MessageWatch). Recall and Automations sti
 (EN + AR, "Messages and SMS notifications (optional)"). Kotlin test: tests/kotlin/WatchMatchTest.kt.
 **Ali must update the Play Console data-safety form** (messages read on device, not shared) before release.
 
+## Money evidence (Ali, 25 Oct: "make sure it reads SMS and logs them to Money if there is an expense — and I want the
+## evidence of the complete real message for confirmation")
+Bank SMS shown as notifications already reach Money through the payment reader (PayListener → PayLog, OTPs never). Now every
+payment keeps `evidence {text (the complete message, ≤2000), from, app, ts}` (paylog.js evidenceOf / toTxns / appendToLedger,
+Yusr add-txns), the review card shows it before Add (paylog-ui.jsx Evidence), "See the messages" lists the auto-added ones
+with theirs, and the transaction sheet in Money shows "The message as it arrived" (Yusr #tx-evidence). Test:
+tests/e2e_v727paylog.py. The Money payment reader is separate from the SMS switch (it was already disclosed; privacy text now
+names bank SMS and the kept evidence).
+
 ## Next steps (for the next chat)
-1. Ali's answer on SMS (above). 2. Phase 2.1 car mode (design A's car screen in design/voice-options.html). 3. Dialect lines
-for Gulf / Levantine replies (Attune speaks Egyptian or English now). 4. English translation of an Arabic message when the
+1. Phase 2.2 rest: Turkish / Spanish / French / Hindi-Urdu commands + replies (global). 2. Phase 3 wake word «يا أتيون».
+3. English translation of an Arabic message when the
 person picks English (state.draft.needs = "translate" — wire to the model with a read-back). 5. "Make it formal" (needs = "formal").
 
 ## Ideas parked for later (Ali)

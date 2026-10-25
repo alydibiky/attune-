@@ -473,5 +473,49 @@
   "expect": {
    "kind": "who"
   }
+ },
+ {
+  "say": "واخا",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "صيفطها",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "بعتها",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "أرسلها",
+  "expect": {
+   "kind": "yes"
+  }
+ },
+ {
+  "say": "ما بدي",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "لا لا",
+  "expect": {
+   "kind": "no"
+  }
+ },
+ {
+  "say": "ارسل لسارة إني بوصل بعد شوي",
+  "expect": {
+   "kind": "send",
+   "to": "سارة",
+   "msg": "بوصل بعد شوي"
+  }
  }
 ]

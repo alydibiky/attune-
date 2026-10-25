@@ -22,6 +22,7 @@ N.chatReply = (j) => { window.__replies.push(JSON.parse(j)); return JSON.stringi
 N.intent = (j) => { window.__intents.push(JSON.parse(j)); return JSON.stringify({ok: true}); };
 N.speakWait = (id, a) => { window.__said = (window.__said || []).concat(JSON.parse(a).text); setTimeout(() => window.__attuneNative.resolve(id, '{}'), 10); };
 delete N.listen; N.listen = undefined;
+window.__opened = []; N.openAnyApp = (j) => { window.__opened.push(JSON.parse(j)); return JSON.stringify({ok: true, how: 'app'}); };
 window.__sms = false; N.smsNotifs = () => window.__sms; N.setSmsNotifs = (on) => { window.__sms = on; };""".replace("= >", "=>") % json.dumps(INBOX).replace("'", "\\'")
 def say(page, text):
     page.fill("[data-testid=voice-input]", text); page.click("[data-testid=voice-type-go]"); page.wait_for_timeout(350)
@@ -65,6 +66,22 @@ with sync_playwright() as p:
     say(page, "سجل غدا ١٥٠")
     check(page.locator("[data-testid=voice-done]").count() == 1, "anything else (log lunch 150) is done by the Home box and spoken: " + page.inner_text("[data-testid=voice-done]")[:80])
     shot(page, "v1100-voice-done")
+    # ---- 2.1 car mode ----
+    page.click("[data-testid=voice-car]"); page.wait_for_selector("[data-testid=car-mode]"); page.wait_for_timeout(500)
+    check("salam" in page.inner_text("[data-testid=car-newest]") and "Family" in page.inner_text("[data-testid=car-newest]"), "car mode: the newest message big (Khaled · Family · WhatsApp)")
+    check(any("salam" in s for s in page.evaluate("window.__said || []")), "…read aloud by itself")
+    page.click("[data-testid=car-reply]"); page.wait_for_timeout(300)
+    page.fill("[data-testid=car-input]", "جاي حالا"); page.click("[data-testid=car-type-go]"); page.wait_for_timeout(300)
+    check("جاي حالا" in page.inner_text("[data-testid=car-say]"), "Reply: the words are read back big before anything goes")
+    n0 = len(page.evaluate("window.__intents"))
+    page.click("[data-testid=car-send]"); page.wait_for_timeout(300)
+    check(len(page.evaluate("window.__intents")) == n0 + 1 and len(page.evaluate("window.__replies")) == 1, "…Send: a group sender is reached in WhatsApp directly, never through the group's reply")
+    page.click("[data-testid=car-nav]"); page.wait_for_timeout(300)
+    page.fill("[data-testid=car-input]", "مطار القاهرة"); page.click("[data-testid=car-type-go]"); page.wait_for_timeout(300)
+    op = page.evaluate("window.__opened")
+    check(op and op[-1]["pkg"] == "com.google.android.apps.maps" and "%D9%85%D8%B7%D8%A7%D8%B1" in op[-1]["url"], "Navigate: «مطار القاهرة» → Google Maps directions")
+    shot(page, "v1100-car")
+    page.click("[data-testid=car-close]"); page.wait_for_selector("[data-testid=voice-screen]")
     page.click("[data-testid=voice-close]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=voice-screen]").count() == 0, "✕ closes it")
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])

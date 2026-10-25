@@ -11,7 +11,7 @@
    voiceTurn(state, said, ctx) runs the conversation: who → what → which language (asked once per person, then remembered)
    → read back → "send" → the action. Never sends without the read-back (VOICE_PLAN rule 2). Pure; tests/unit/v1100voice.test.mjs
    and the accuracy set tests/voice/commands.json.                                                                          */
-import { toFranco, isFranco, styleOf, langFor, rememberLang, langAnswer } from "./franco.js";
+import { toFranco, isFranco, styleOf, langFor, rememberLang, langAnswer, aliasFor, rememberAlias } from "./franco.js";
 
 const A = "[اأإآ]";                                     // any alef
 const AR = /[؀-ۿ]/;
@@ -34,7 +34,7 @@ export function knownPeople(ctx = {}) {
   }
   // a group by its own name ("send to the Family group")
   for (const m of msgs) if (m.group && m.convo) { const k = fold(m.convo); if (!out.has(k)) out.set(k, { name: clean(m.convo), key: m.key || null, app: m.app || "", canReply: !!m.canReply, isGroup: true, last: clean(m.text).slice(0, 80), texts: [] }); }
-  for (const [k, v] of Object.entries(ctx.people || {})) if (!out.has(k) && v && v.name) out.set(k, { name: v.name, key: null, app: v.app || "", canReply: false, texts: [] });
+  for (const [k, v] of Object.entries(ctx.people || {})) if (k[0] !== "~" && !out.has(fold(v && v.name)) && v && v.name) out.set(fold(v.name), { name: v.name, key: null, app: v.app || "", canReply: false, texts: [] });
   return [...out.values()];
 }
 /** A name's sound skeleton, the same for «سمير» and "Samir", «أحمد» and "Ahmed": consonants only, Arabic read the Franco way. */
@@ -51,6 +51,9 @@ const sameWord = (a, b) => { const x = skeleton(a), y = skeleton(b); return x.re
 export function findPeople(name, ctx = {}) {
   const n = fold(name).replace(/^(ال|يا )/, "").trim(); if (!n) return [];
   const all = knownPeople(ctx);
+  // a nickname learnt before («ماما» = "Fatma ❤️") points at exactly one contact
+  const nick = aliasFor(ctx.people, name);
+  if (nick) { const hit = all.filter((p) => fold(p.name) === fold(nick)); if (hit.length) return hit; }
   const exact = all.filter((p) => fold(p.name) === n);
   if (exact.length) return exact;
   const re = new RegExp("(^|\\s)" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|\\s)");
@@ -74,8 +77,8 @@ const SAID_AR = /^(.+?)\s+(?:(?:قال|قالت|بعت|بعتت|كتب|كتبت)
 const READ_EN = /^(?:what did|what has)\s+(.+?)\s+(?:say|write|send|text)\b|^read\s+(.+?)(?:'s)?\s+messages?$/i;
 const REPLY_AR = /^(?:رد|ردّ|رد علي|جاوب)\s*(?:عليها|عليهم|عليه|علي|على|ع)?\s*(.*)$/u;
 const REPLY_EN = /^(?:reply|respond|answer|write back)(?:\s+to\s+(him|her|them|[^,]+?))?(?:\s+(?:saying|that|with|:))?\s+(.*)$/i;
-const YES = /^(?:ابعت(?:ها|ه)?|ابعتها|ايوه|أيوه|ايوا|اه|آه|ايه|إيه|اي|إي|نعم|تمام|ماشي|اوكي|أوكي|يلا|اكيد|أكيد|صح|زين|اوك|wakha|haan|ha|yes|yeah|yep|yup|ok|okay|sure|send(?: it)?|go(?: ahead)?|do it|correct|right|بالظبط|عادي ابعت)[.!]?$/i;
-const NO = /^(?:لا|لأ|لاء|بلاش|الغي|إلغي|الغيها|كنسل|لا خلاص|خلاص لا|stop|cancel|no|nope|don't|dont|nahi|la2|la)[.!]?$/i;
+const YES = /^(?:ابعت(?:ها|ه)?|ابعتها|ارسل(?:ها)?|أرسل(?:ها)?|بعتها|صيفط(?:ها)?|واخا|ايوا|يب|اوكيه|ايوه|أيوه|ايوا|اه|آه|ايه|إيه|اي|إي|نعم|تمام|ماشي|اوكي|أوكي|يلا|اكيد|أكيد|صح|زين|اوك|wakha|haan|ha|yes|yeah|yep|yup|ok|okay|sure|send(?: it)?|go(?: ahead)?|do it|correct|right|بالظبط|عادي ابعت)[.!]?$/i;
+const NO = /^(?:لا لا|ما بدي|مابدي|لا ما تبعت|لا ما ترسل|لا متبعتش|بلا|لا|لأ|لاء|بلاش|الغي|إلغي|الغيها|كنسل|لا خلاص|خلاص لا|stop|cancel|no|nope|don't|dont|nahi|la2|la)[.!]?$/i;
 const CHANGE = /^(?:غيرها|غيّرها|غير|غيّر|خليها|خليه|اكتب|اكتبها|بدلها|change(?: it)?(?: to)?|make it|instead say|say)\s*(?:ل|لـ|to|:)?\s*(.+)$/iu;
 const FORMAL = /(?:اكتبها|خليها|اكتبه)\s+(?:بأدب|بادب|رسمي|رسميه|ألطف|الطف)|make it (?:formal|polite|nicer|professional)/i;
 const APP = [["whatsapp", /\s+(?:على|ع|عن طريق|في|via|on|by)\s+(?:ال)?(?:واتس(?: ?اب)?|whats ?app)(?=\s|$)/iu], ["telegram", /\s+(?:على|ع|on|via)\s+(?:ال)?(?:تليجرام|telegram)(?=\s|$)/iu], ["messenger", /\s+(?:على|ع|on|via)\s+(?:ال)?(?:ماسنجر|messenger)(?=\s|$)/iu], ["sms", /\s+(?:رساله عاديه|sms|text message)(?=\s|$)/iu]];
@@ -148,12 +151,25 @@ const LINES = {
   en: { who: "Who should I send it to?", what: "What should I tell {n}?", lang: "Arabic, Franco or English?", which: "Which {n}? {list}", none: "No new messages.",
     readback: "To {n}: “{m}”. Send it?", sent: "Sent to {n}.", cancelled: "Cancelled — nothing was sent.", nobody: "I don't see {n} in your recent chats — I'll open {app} with the message ready, you pick them.",
     noLast: "Reply to whom? Say the name.", noRead: "No recent message from {n}.", from: "{n} on {app}: “{m}”", count: "{k} messages. ", formal: "I'll write it more politely — check it before it goes.",
-    translate: "I'll put it in English — check it before it goes.", saved: "{n} gets {l} from now on." },
+    translate: "I'll put it in English — check it before it goes.", saved: "{n} gets {l} from now on.", whois: "Who is “{n}”?", other: "Someone else" },
   ar: { who: "أبعتها لمين؟", what: "أقول لـ{n} إيه؟", lang: "أبعتها عربي ولا فرانكو؟", which: "أنهي {n}؟ {list}", none: "مفيش رسايل جديدة.",
     readback: "لـ{n}: «{m}». أبعت؟", sent: "اتبعتت لـ{n}.", cancelled: "اتلغت — مابعتش حاجة.", nobody: "مش لاقي {n} في المحادثات الأخيرة — هفتحلك {app} والرسالة جاهزة، وإنت اختاره.",
     noLast: "أرد على مين؟ قول الاسم.", noRead: "مفيش رسالة جديدة من {n}.", from: "{n} على {app}: «{m}»", count: "{k} رسايل. ", formal: "هكتبها بأدب أكتر — راجعها قبل ما تتبعت.",
-    translate: "هحطها بالإنجليزي — راجعها قبل ما تتبعت.", saved: "{n} هيوصله {l} من هنا ورايح." },
+    translate: "هحطها بالإنجليزي — راجعها قبل ما تتبعت.", saved: "{n} هيوصله {l} من هنا ورايح.", whois: "مين «{n}»؟", other: "حد تاني" },
 };
+// Voice 2.2: Attune answers in the person's own dialect (from their country: Gulf, Levantine, Darija); the rest falls back to Egyptian
+const DIALECT = {
+  gulf: { who: "أرسلها لمين؟", what: "شنو أقول لـ{n}؟", lang: "أرسلها عربي ولا فرانكو؟", which: "أي {n}؟ {list}", none: "ما في رسايل جديدة.", readback: "لـ{n}: «{m}». أرسلها؟",
+    sent: "انرسلت لـ{n}.", cancelled: "تم الإلغاء — ما أرسلت شي.", nobody: "ما لقيت {n} في المحادثات الأخيرة — بفتح لك {app} والرسالة جاهزة، وأنت اختاره.", noLast: "أرد على مين؟ قول الاسم.",
+    noRead: "ما في رسالة جديدة من {n}.", count: "{k} رسايل. ", whois: "مين «{n}»؟", other: "شخص ثاني" },
+  lev: { who: "لمين بدك ابعتها؟", what: "شو بدي قول لـ{n}؟", lang: "بعتها عربي ولا فرانكو؟", which: "أي {n}؟ {list}", none: "ما في رسايل جديدة.", readback: "لـ{n}: «{m}». بعتها؟",
+    sent: "انبعتت لـ{n}.", cancelled: "انلغت — ما بعتت شي.", nobody: "ما لقيت {n} بالمحادثات الأخيرة — رح افتحلك {app} والرسالة جاهزة، وإنت اختارو.", noLast: "رد على مين؟ قول الاسم.",
+    noRead: "ما في رسالة جديدة من {n}.", count: "{k} رسايل. ", whois: "مين «{n}»؟", other: "حدا تاني" },
+  maghreb: { who: "نصيفطها لمن؟", what: "شنو نقول لـ{n}؟", lang: "نصيفطها بالعربية ولا فرانكو؟", which: "شمن {n}؟ {list}", none: "ما كاين حتى ميساج جديد.", readback: "لـ{n}: «{m}». نصيفطها؟",
+    sent: "تصيفطات لـ{n}.", cancelled: "تلغات — ما صيفطت والو.", nobody: "ما لقيتش {n} فالمحادثات الأخيرة — غادي نحل ليك {app} والميساج واجد، وختارو نتا.", noLast: "نجاوب شكون؟ قول السمية.",
+    noRead: "ما كاين حتى ميساج جديد من {n}.", count: "{k} ميساجات. ", whois: "شكون «{n}»؟", other: "شي واحد آخر" },
+};
+const linesFor = (ui, style) => (ui === "ar" ? { ...LINES.ar, ...(DIALECT[style] || {}) } : LINES.en);
 const LANG_NAME = { en: { ar: "Arabic", franco: "Franco", en: "English" }, ar: { ar: "عربي", franco: "فرانكو", en: "إنجليزي" } };
 const APP_NAME = { whatsapp: "WhatsApp", telegram: "Telegram", messenger: "Messenger", signal: "Signal", instagram: "Instagram", sms: "SMS" };
 const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v[k] != null ? v[k] : ""));
@@ -180,7 +196,7 @@ export function voiceTurn(state0, said, ctx = {}) {
   // while a question is open (which person, which language, send?) the conversation keeps its language — tapping "Ahmed Samir"
   // on an Arabic conversation must not switch it to English
   const ui = state.ui = state.step !== "idle" && state.ui ? state.ui : replyLang(said, state.ui || "en");
-  const L = LINES[ui], LN = LANG_NAME[ui];
+  const L = linesFor(ui, ctx.style), LN = LANG_NAME[ui];
   const c = parseVoice(said, ctx);
   const out = (o) => ({ state, ...o });
   const ask = (q, extra = {}) => out({ say: q, card: { kind: "ask", q, ...extra } });
@@ -191,8 +207,18 @@ export function voiceTurn(state0, said, ctx = {}) {
   if (state.step === "pick" && state.draft) {
     const opts = state.draft.options || [];
     const k = /اول|الأول|first|1|واحد/i.test(said) ? 0 : /تاني|التاني|second|2|اتنين/i.test(said) ? 1 : /تالت|third|3/i.test(said) ? 2
-      : opts.findIndex((p) => clean(said).split(" ").some((w) => clean(p.name).split(" ").slice(1).some((pw) => sameWord(w, pw) || fold(w) === fold(pw))));
-    if (k >= 0 && opts[k]) { const o = opts[k]; state.draft = { ...state.draft, target: { name: o.name, key: o.canReply ? o.key : null, app: o.app, texts: o.texts, last: o.last || "", group: o.group || "", isGroup: !!o.isGroup }, options: null }; return next(state, ctx, ui); }
+      : opts.findIndex((p) => clean(said).split(" ").some((w) => clean(p.name).split(" ").slice(state.draft.nick ? 0 : 1).some((pw) => sameWord(w, pw) || fold(w) === fold(pw))));
+    if (state.draft.nick && /حد تاني|شخص ثاني|حدا تاني|شي واحد آخر|someone else|none|مش منهم|ولا واحد|غيرهم/i.test(said)) {
+      state.draft = { ...state.draft, target: { name: state.draft.name, key: null, app: "" }, options: null, nick: false }; return next(state, ctx, ui);
+    }
+    if (k >= 0 && opts[k]) {
+      const o = opts[k];
+      // a nickname answered once is remembered («ماما» = "Fatma ❤️")
+      const people = state.draft.nick ? rememberAlias(ctx.people || {}, state.draft.name, o.name) : null;
+      state.draft = { ...state.draft, target: { name: o.name, key: o.canReply ? o.key : null, app: o.app, texts: o.texts, last: o.last || "", group: o.group || "", isGroup: !!o.isGroup }, options: null, nick: false };
+      if (people) { const r = next(state, { ...ctx, people }, ui); return { ...r, people: r.people || people }; }
+      return next(state, ctx, ui);
+    }
     if (c.kind === "no") { state.step = "idle"; state.draft = null; return out({ say: L.cancelled, card: { kind: "done", ok: false } }); }
     return ask(fill(L.which, { n: state.draft.name, list: opts.map((p) => p.name).join(ui === "ar" ? " ولا " : " or ") }), { options: opts.map((p) => p.name) });
   }
@@ -251,18 +277,25 @@ export function voiceTurn(state0, said, ctx = {}) {
   return out({ say: "", card: null, action: { kind: "pass", text: clean(said) } });
 
   function resolve(st, cx, u) {
-    const Lx = LINES[u];
+    const Lx = linesFor(u, cx.style);
     const ps = findPeople(st.draft.name, cx);
     if (ps.length > 1 && new Set(ps.map((p) => fold(p.name))).size > 1) {
       st.step = "pick"; st.draft = { ...st.draft, options: ps.slice(0, 3) };
       const q = fill(Lx.which, { n: st.draft.name, list: ps.slice(0, 3).map((p) => p.name).join(u === "ar" ? " ولا " : " or ") });
       return { state: st, say: q, card: { kind: "ask", q, options: ps.slice(0, 3).map((p) => p.name) } };
     }
+    // nobody by that name, but recent chats exist: a nickname? ask who it is (and learn it), with "someone else" too
+    if (!ps.length && knownPeople(cx).filter((p) => !p.isGroup).length) {
+      const opts = knownPeople(cx).filter((p) => !p.isGroup).slice(0, 4);
+      st.step = "pick"; st.draft = { ...st.draft, options: opts, nick: true };
+      const q = fill(Lx.whois, { n: st.draft.name });
+      return { state: st, say: q + " " + opts.map((p) => p.name).join(u === "ar" ? "، " : ", ") + (u === "ar" ? "، ولا " : ", or ") + Lx.other + "?", card: { kind: "ask", q, options: [...opts.map((p) => p.name), Lx.other] } };
+    }
     st.draft = { ...st.draft, target: ps[0] ? { name: ps[0].name, key: ps[0].canReply ? ps[0].key : null, app: ps[0].app, texts: ps[0].texts, last: ps[0].last || "", group: ps[0].group || "", isGroup: !!ps[0].isGroup } : { name: st.draft.name, key: null, app: "" } };
     return next(st, cx, u);
   }
   function next(st, cx, u) {
-    const Lx = LINES[u], LNx = LANG_NAME[u], d = st.draft;
+    const Lx = linesFor(u, cx.style), LNx = LANG_NAME[u], d = st.draft;
     if (!d.msg) { st.step = "msg"; const q = fill(Lx.what, { n: d.target.name }); return { state: st, say: q, card: { kind: "ask", q } }; }
     const lang = d.lang || langFor(cx.people, d.target.name);
     if (!lang) {
