@@ -63,7 +63,7 @@ import { PhoneHome } from "./home-ui.jsx";
 import { logTool } from "./toollog.js";   // v7.8 the Tools report
 import { ToolsHub, FamilyReport, FamilySeeAll, StudioOffDevice } from "./tools-hub-ui.jsx";
 const wordCount = (s) => String(s || "").trim().split(/\s+/).filter(Boolean).length;
-import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES } from "./money-pages-ui.jsx";   // v7.6 Money's bottom bar
+import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES, panesFor } from "./money-pages-ui.jsx";   // v7.6 Money's bottom bar
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
@@ -6150,6 +6150,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   }, []);
   const arUI = getLang() === "ar";
   const allRep = React.useMemo(() => moneyReport(loadLedger(), { ar: arUI }), [ver, view, arUI]);
+  const moneyPanes = React.useMemo(() => { try { return panesFor(loadLedger()); } catch (e) { return MONEY_PANES; } }, [ver, view, pane]);
   const rep = React.useMemo(() => (account ? moneyReport(loadLedger(), { account, ar: arUI }) : allRep), [allRep, account]);
   const [ready, setReady] = React.useState(false);
   const [snapshot, setSnapshot] = React.useState(null);
@@ -6467,7 +6468,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
             <p className="m-0 mt-0.5 text-[13px] font-semibold text-[var(--c-mut)]">{new Date().toLocaleDateString(arUI ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" })}</p></div>
             <div className="flex gap-2"><button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setSheet(true)} data-testid="money-tools">{tr("Import a payment")}</button>
               <button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setMoreOpen(true)} data-testid="money-more">{tr("More")}</button></div></div> : null}
-          {view === "calm" ? <MoneyBar wide pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /> : null}
+          {view === "calm" ? <MoneyBar wide panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /> : null}
           {body}
         </>) : (
         <>
@@ -6476,7 +6477,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
             {tabs && pane === "home" ? <div className="pt-2">{tabs}</div> : <div className="h-3" />}
           </div>
           <div className="att-scroll flex-1 min-h-0 overflow-y-auto px-3.5 pb-8">{body}</div>
-          <MoneyBar pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} />
+          <MoneyBar panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} />
         </>)) : (
       <>
       <div className={"shrink-0 flex items-center gap-2 px-2 h-14 " + (wide ? "calm bg-[var(--c-surf)] border-b border-[var(--c-ln)]" : "bg-slate-950 border-b border-slate-800")}>
@@ -6496,8 +6497,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       ) : null}
       {/* v6.37 (M1): what is safe to spend today, by code (the full ledger only — a tab shows Yusr's own screen) */}
       {!wide && pane === "home" ? <SafeSpend /> : null}
-      {wide ? <div className="calm shrink-0 px-4 pt-3 bg-[var(--c-bg)]"><MoneyBar wide pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div>
-        : <div className="calm contents"><MoneyBar pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div>}
+      {wide ? <div className="calm shrink-0 px-4 pt-3 bg-[var(--c-bg)]"><MoneyBar wide panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div>
+        : <div className="calm contents"><MoneyBar panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div>}
       </>)}
       {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />

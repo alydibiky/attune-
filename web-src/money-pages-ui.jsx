@@ -45,10 +45,18 @@ const Card = ({ title, right, children, testid }) => <div className={U.card + " 
 // interface"; he picked A): Yusr's own tabs, in Yusr's order (Notes gone), drawn by Attune in Quiet Atelier. Home = the calm view;
 // every other tab is Yusr's own screen. The + floats over the page.
 export const PANES = [["home", "Home", HomeIc], ["trends", "Trends", TrendingUp], ["accounts", "Accounts", Wallet], ["goals", "Goals", Target], ["bills", "Bills", Repeat], ["zakat", "Zakāt", Moon]];
+/** v8.0 (Ali: Yusr's "Tabs to show" did nothing): the bar follows Money → Ledger settings → Tabs to show — its order, and a tab
+ *  switched off is left out. Home always comes first. L = the ledger (ledger.v3). */
+export function panesFor(L) {
+  const ui = (L && L.ui) || {}, by = Object.fromEntries(PANES.map((p) => [p[0], p]));
+  if (!ui.tabsSet) return PANES;   // never changed there: the bar Ali picked (a new ledger starts with some tabs off)
+  const order = [...(Array.isArray(ui.tabOrder) ? ui.tabOrder : []).filter((k) => by[k] && k !== "home"), ...PANES.map((p) => p[0]).filter((k) => k !== "home")];
+  return [by.home, ...[...new Set(order)].filter((k) => !(ui.tabs && ui.tabs[k] === 0)).map((k) => by[k])];
+}
 /** Phone: the bottom bar with the + in the middle. Computer: the same as pills under the title, with "+ Add". */
-export function MoneyBar({ pane, setPane, onAdd, wide, dots = {} }) {
+export function MoneyBar({ pane, setPane, onAdd, wide, dots = {}, panes = PANES }) {
   if (wide) return <div className="flex flex-wrap items-center gap-2 mb-4" data-testid="money-bar">
-    {PANES.filter((p) => p[0] !== "add").map(([id, l, Ic]) => <button key={id} onClick={() => setPane(id)} data-testid={"money-bar-" + id}
+    {panes.map(([id, l, Ic]) => <button key={id} onClick={() => setPane(id)} data-testid={"money-bar-" + id}
       className={"h-10 px-4 rounded-full border text-[13.5px] font-extrabold inline-flex items-center gap-1.5 transition-colors duration-150 " + (pane === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>
       <Ic size={15} />{tr(l)}{dots[id] ? <i className="w-2 h-2 rounded-full bg-[var(--c-warn)]" /> : null}</button>)}
     <button onClick={onAdd} className={U.btnP + " h-10! min-h-[40px]! rounded-full ms-auto"} data-testid="money-add"><Plus size={16} />{tr("Add")}</button>
@@ -56,8 +64,8 @@ export function MoneyBar({ pane, setPane, onAdd, wide, dots = {} }) {
   return <div className="shrink-0 relative" style={{ order: 99 }}>
     <button onClick={onAdd} aria-label={tr("Add an expense, income or transfer")} data-testid="money-add"
       className="absolute -top-[76px] end-4 w-14 h-14 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-[0_6px_18px_rgba(0,0,0,0.3)] z-10"><Plus size={26} strokeWidth={2.6} /></button>
-    <nav className="grid grid-cols-6 bg-[var(--c-surf)] border-t border-[var(--c-ln)] px-0.5" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="money-bar">
-    {PANES.map(([id, l, Ic]) => <button key={id} onClick={() => setPane(id)} data-testid={"money-bar-" + id} aria-current={pane === id ? "page" : undefined}
+    <nav className="grid bg-[var(--c-surf)] border-t border-[var(--c-ln)] px-0.5" style={{ paddingBottom: "env(safe-area-inset-bottom)", gridTemplateColumns: "repeat(" + panes.length + ", minmax(0, 1fr))" }} data-testid="money-bar">
+    {panes.map(([id, l, Ic]) => <button key={id} onClick={() => setPane(id)} data-testid={"money-bar-" + id} aria-current={pane === id ? "page" : undefined}
           className={"relative h-16 min-w-0 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-extrabold transition-colors duration-150 " + (pane === id ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)]")}>
           <span className={"w-11 h-7 rounded-full grid place-items-center " + (pane === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "")}><Ic size={17} /></span><span className="truncate max-w-full px-0.5">{tr(l)}</span>
           {dots[id] ? <i className="absolute top-2.5 end-[18%] w-2 h-2 rounded-full bg-[var(--c-warn)]" /> : null}</button>)}

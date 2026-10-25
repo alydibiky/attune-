@@ -19,7 +19,11 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
    screen not yet in Quiet Atelier — show options first, then build.
 
 ## v8.0 — Ali's 25 Oct list (5 points)
-1. **"Put this in the settings in Yusr app"** (screenshots of Yusr's Customize / Tabs to show — old gold "Midnight" look with Yusr's
+1. **Yusr settings — answered (25 Oct): Ali meant "inside Yusr's own settings"** — they already are (Money → More → Ledger
+   settings); his phone shows Yusr's old bottom bar = an older APK. Fixed on that screen: Tabs to show now drives Money's bar
+   (`panesFor` in money-pages-ui.jsx, only after the person changes it — `db.ui.tabsSet`, since a new ledger starts with
+   Accounts/Goals off), Notes/Invoices out of the list, 11 labels that had no words ("billsTab" on the Bills screen…).
+   Earlier note: **"Put this in the settings in Yusr app"** (screenshots of Yusr's Customize / Tabs to show — old gold "Midnight" look with Yusr's
    own bottom bar, so probably the standalone Yusr app or an older APK): **asked Ali what he means** (see the chat). Fixed meanwhile:
    the "Show" checkboxes looked empty when on (`.field input` gave them `appearance:none` + full width) — `yusr/index.new.html`.
 2. **Huawei watch "just opened the app"**: the Automatic tracking Huawei tile now says "Not connected yet" and shows the Health

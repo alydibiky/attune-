@@ -57,6 +57,15 @@ with sync_playwright() as p:
     box.scroll_into_view_if_needed()
     look = box.evaluate("e => { const c = getComputedStyle(e); return [c.appearance || c.webkitAppearance, Math.round(e.getBoundingClientRect().width), e.checked]; }")
     check(look[0] != "none" and look[1] <= 26 and look[2], "Tabs to show: a real checkbox with its tick (not an empty 48-px box): %s" % look)
+    labels = fr.locator("#tabs-row .tablabel").all_inner_texts()
+    check("bills" not in labels and "Bills" in labels and "Notes" not in labels, "Tabs to show lists Money's tabs with their names (Bills, not “bills”; no Notes): %s" % labels)
+    fr.locator("#tabs-row .taborow:has-text('Goals') input").evaluate("e => e.click()"); page.wait_for_timeout(800)
+    bar = [x.get_attribute("data-testid") for x in page.locator("[data-testid^=money-bar-]").all()]
+    check("money-bar-goals" in bar and "money-bar-accounts" not in bar and "money-bar-trends" in bar, "once Tabs to show is changed, Money's bar follows it (Goals switched on, Accounts off): %s" % bar)
+    fr.locator("#tabs-row .taborow:has-text('Zakat') .tabmove").first.evaluate("e => e.click()"); page.wait_for_timeout(800)
+    bar2 = [x.get_attribute("data-testid")[10:] for x in page.locator("[data-testid^=money-bar-]").all()]
+    order = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3')).ui.tabOrder")
+    check(bar2.index("zakat") < bar2.index("bills"), "▲ moves Zakāt before Bills on the bar too: %s (order %s)" % (bar2, order))
     shot(page, "v1000-yusr-tabs")
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()
