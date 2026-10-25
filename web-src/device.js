@@ -37,8 +37,20 @@ export const SHOW_ALL_KEY = "attune:device:showall";
 export function showAll() { try { return localStorage.getItem(SHOW_ALL_KEY) === "1"; } catch (e) { return false; } }
 export function setShowAll(on) { try { localStorage.setItem(SHOW_ALL_KEY, on ? "1" : "0"); } catch (e) {} }
 
-/** The tool groups for this device: tools the level hides are left out (unless "show every tool"). Empty groups go too. */
-export function groupsFor(groups, level, all = false) {
-  const hide = all || !level ? [] : level.hide;
+/* v8.0 (Ali, 25 Oct 2026: "the studio restarted the mobile again — remove it from the mobile version until further notice"):
+   Studio's picture engine is paused in the phone app. It is left out of every list (even "Show every tool"), its page says it is
+   paused, and the engine call is refused. Set STUDIO_PHONE_PAUSED to false to bring it back.                                       */
+export const STUDIO_PHONE_PAUSED = true;
+/** native = window.AttuneNative. The phone app pauses Studio; the computer app and a browser never had its engine. */
+export function studioPaused(native) {
+  // "attune:studio:try" = "1" runs it anyway (the browser tests, and a developer trying a fix on a test phone)
+  let tryIt = false; try { tryIt = localStorage.getItem("attune:studio:try") === "1"; } catch (e) {}
+  return STUDIO_PHONE_PAUSED && !!native && !native.desktop && !tryIt;
+}
+
+/** The tool groups for this device: tools the level hides are left out (unless "show every tool"). Empty groups go too.
+ *  paused = tools taken away for now (Studio on a phone) — gone even with "show every tool". */
+export function groupsFor(groups, level, all = false, paused = []) {
+  const hide = [...(all || !level ? [] : level.hide), ...paused];
   return groups.map(([t, ids]) => [t, ids.filter((id) => !hide.includes(id))]).filter(([, ids]) => ids.length);
 }

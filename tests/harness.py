@@ -140,6 +140,8 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False, deskt
     ctx.add_init_script("try{if(localStorage.getItem('attune:web:auto')===null)localStorage.setItem('attune:web:auto','0')}catch(e){}")
     # v6.27: the phone opens on Home now (design A "Calm"); the older tests were written for a Chat start — kept unless a
     # test sets attune:start itself (to "home")
+    # v8.0: Studio is paused in the phone app (device.js); the Studio tests still run it (e2e_v1000fixes.py checks the pause itself)
+    ctx.add_init_script("try{if(localStorage.getItem('attune:studio:try')===null)localStorage.setItem('attune:studio:try','1')}catch(e){}")
     ctx.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}")
     # v6.43: design A (light, green) is the app's default now; the older tests were written for the dark look — kept unless a
     # test sets attune:theme:v1 itself (e2e_v743 checks the light default)

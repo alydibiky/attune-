@@ -467,7 +467,14 @@ export function AutoTracking({ L, ar, health, st, upd }) {
   const status = health ? (() => { try { return health.status(); } catch (e) { return null; } })() : null;
   const have = health && health.installed ? health.installed() : [];
   const hcOn = !!(status && status.available === "ready" && status.granted);
-  const live = (w) => w.k === "hc" ? hcOn : w.k === "huawei" ? hcOn && (have.includes("nl.appyhapps.healthsync") || !!(st.days && Object.values(st.days).some((d) => d && d.watch && (d.watch.sources || []).includes("com.huawei.health")))) : hcOn && [w.pkg, ...(w.alt || [])].some((p) => have.includes(p));
+  // v8.0 (Ali, 25 Oct: "I tried Huawei as I have its watch but it just opened the app"): Huawei is ticked only when its data has
+  // really arrived (directly, or through Health Sync) — having an app installed is not a connection — and its card shows the way in
+  const hwKit = health && health.huawei;
+  const hwS = hwKit ? (() => { try { return hwKit.status(); } catch (e) { return null; } })() : null;
+  const hwDays = Object.entries(st.days || {}).filter(([, d]) => d && d.watch && (d.watch.sources || []).some((x) => x === HUAWEI_HEALTH || x === HEALTH_SYNC)).map(([k]) => k).sort();
+  const hwLast = hwDays.length ? hwDays[hwDays.length - 1] : null;
+  const hwOn = !!hwLast || !!(hwS && hwS.configured && hwS.authorized);
+  const live = (w) => w.k === "hc" ? hcOn : w.k === "huawei" ? hwOn : hcOn && [w.pkg, ...(w.alt || [])].some((p) => have.includes(p));
   const w = open && WATCHES.find((x) => x.k === open);
   return (
     <div className="space-y-2" data-testid="fit-autotrack">
@@ -485,7 +492,15 @@ export function AutoTracking({ L, ar, health, st, upd }) {
         <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-2 text-[12.5px]" data-testid="fit-autotrack-sheet">
           {w.k === "hc" ? <div className="text-[var(--c-ink)]">{hcOn ? L("Connected ✓ — steps, calories burned, workouts and heart rate come into your day by themselves.", "متوصل ✓ — الخطوات والسعرات المحروقة والتمارين والنبض بيدخلوا يومك لوحدهم.")
               : L("Health Connect is Android's shared place for health data. Any watch app that writes to it reaches Attune. Read only; nothing leaves the phone.", "Health Connect هو المكان المشترك في أندرويد لبيانات الصحة. أي تطبيق ساعة بيكتب فيه بيوصل لـ Attune. قراءة بس؛ ولا حاجة بتخرج من الموبايل.")}</div>
-            : w.k === "huawei" ? <div className="text-[var(--c-ink)]">{L("Huawei watches and bands: use the Huawei steps under Exercise → Workouts (Huawei Health directly, or through the free Health Sync app).", "ساعات وباندات هواوي: استخدم خطوات هواوي في الرياضة ← التمارين (Huawei Health على طول، أو عن طريق تطبيق Health Sync المجاني).")}</div>
+            : w.k === "huawei" ? <div className="space-y-2" data-testid="fit-autotrack-huawei">
+                <div className={hwOn ? "text-[var(--c-acc)] font-semibold" : "text-[var(--c-warn)] font-semibold"} data-testid="fit-autotrack-huawei-state">{hwOn
+                  ? (hwLast ? L(`Connected ✓ — the last Huawei data came on ${hwLast}.`, `متوصل ✓ — آخر بيانات من هواوي وصلت يوم ${hwLast}.`) : L("Connected ✓", "متوصل ✓"))
+                  : L("Not connected yet. Opening Huawei Health is not enough: Huawei keeps the watch's data to itself, so it needs one bridge, set up once.", "لسه مش متوصل. فتح Huawei Health لوحده مش كفاية: هواوي بتحتفظ ببيانات الساعة لنفسها، فلازم «كوبري» واحد تظبطه مرة واحدة.")}</div>
+                {hwS && hwS.configured && !hwS.authorized ? (hwS.hms
+                  ? <button onClick={() => hwKit.connect()} className="w-full min-h-[44px] rounded-xl bg-[var(--c-acc)] font-medium text-[var(--c-on-acc)]" data-testid="fit-autotrack-huawei-connect">{L("Connect Huawei Health (sign in with your Huawei ID)", "اربط Huawei Health (ادخل بحساب Huawei ID)")}</button>
+                  : <button onClick={() => health.openApp("com.huawei.hwid")} className="w-full min-h-[44px] rounded-xl bg-[var(--c-surf-2)] text-[var(--c-ink)]" data-testid="fit-autotrack-huawei-hms">{L("First install HMS Core (Huawei's services — free)", "الأول نزّل HMS Core (خدمات هواوي — ببلاش)")}</button>)
+                  : !hwOn ? <HuaweiGuide {...{ L, health, status: { ...(status || {}), healthSync: have.includes(HEALTH_SYNC), huawei: have.includes(HUAWEI_HEALTH) } }} /> : null}
+              </div>
             : <div className="space-y-1"><div className="text-[var(--c-ink)]">{L("1. In the watch's app: ", "١. في تطبيق الساعة: ")}<span className="text-[var(--c-ink)]">{ar ? WATCH_STEP[w.k][1] : WATCH_STEP[w.k][0]}</span></div>
                 <div className="text-[var(--c-ink)]">{L("2. Here: Connect, and allow steps, calories, exercise and heart rate.", "٢. هنا: اربط، ووافق على الخطوات والسعرات والتمارين والنبض.")}</div></div>}
           <div className="flex gap-2">

@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 25 Oct 2026)
+# Attune — start here (handoff for the next chat, 25 Oct 2026 — v8.0)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,7 +6,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v7.9** (versionCode 121) — branch `claude/new-session-bwqrp8` = main |
+| `main` | **v8.0** (versionCode 122) — branch `claude/compassionate-einstein-kdqslx` = main |
 | Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
 | Tests | full `bash tests/run_all.sh` passed for v7.9 (e2e_v59 passed alone; e2e_v740artdata made robust) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
@@ -17,6 +17,29 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
    Quiet Atelier tokens, phones side by side, A/B/C with a recommendation).
 2. Still to design (Ali's item 11 "fix the rest of the interface like Gemini would"): Settings, the sidebar, Privacy, and any
    screen not yet in Quiet Atelier — show options first, then build.
+
+## v8.0 — Ali's 25 Oct list (5 points)
+1. **"Put this in the settings in Yusr app"** (screenshots of Yusr's Customize / Tabs to show — old gold "Midnight" look with Yusr's
+   own bottom bar, so probably the standalone Yusr app or an older APK): **asked Ali what he means** (see the chat). Fixed meanwhile:
+   the "Show" checkboxes looked empty when on (`.field input` gave them `appearance:none` + full width) — `yusr/index.new.html`.
+2. **Huawei watch "just opened the app"**: the Automatic tracking Huawei tile now says "Not connected yet" and shows the Health
+   Sync steps (`HuaweiGuide`), or "Connect Huawei Health" when the direct Health Kit link is configured; ✓ only when Huawei data
+   has really arrived (sources `com.huawei.health` / `nl.appyhapps.healthsync`). The direct link still needs Ali's AppGallery
+   Connect App ID in `gradle.properties` (`attune.hmsAppId`) — see `HuaweiHealth.kt`.
+3. **Studio paused on phones** (`device.js` `STUDIO_PHONE_PAUSED`, `studioPaused(native)`): out of every list / hub / group / "/"
+   even with "Show every tool", its page says paused (`studio-paused`), `nativeCall("imagine")` is refused, Chat's "Draw it in
+   Studio" card and lesson pictures are off. Photo editor (Eraser / Expand) unchanged. `attune:studio:try = 1` runs it anyway
+   (the harness sets it so the old Studio tests still run). Flip the constant to bring Studio back.
+4. **Slides quality** (his deck: AIDA titles, content not matching titles, title repeated as a bullet, 4 same-type slides):
+   plan prompt asks for concrete titles from the topic (no bare framework stages), a comparison slide for "X and Y" topics;
+   slide prompt: every point answers its title, general knowledge where sources are silent (numbers still only from sources);
+   `tidySlide` drops title-only points / title leads and reworded repeats (0.6 overlap); a 4-slide deck gets one other kind;
+   a plan far short of the count is asked once more. Unit `v1000fixes`.
+5. **Agents page** (Scout inside; price watch e.g. Makkah hotels < 45k / 4 nights; order my usual from Talabat; Amazon delivery):
+   options A (Your agents list — recommended) / B (feed of findings) / C (gallery) shown to Ali — **build the one he picks**.
+   Honest limits told to Ali: Booking/Talabat/Amazon have no public consumer API → watch by reading the pages on the phone,
+   Talabat = one tap opens your usual and you press Order (no paying by itself), Amazon = read its notifications / emails.
+- Tests: `tests/e2e_v1000fixes.py`, `tests/unit/v1000fixes.test.mjs`.
 
 ## v7.9 — Ali's 24 Oct phone list + design round 1 (all done, tested)
 - **Camera**: "Take a photo" opens the camera (MainActivity `cameraIntent` → ACTION_IMAGE_CAPTURE into cache/camera via the

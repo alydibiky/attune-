@@ -376,7 +376,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
     s = S.fixSlide(ch.slide, sl.title);
     // the last check: points with numbers the sources don't have, and points repeated from earlier slides
     const earlier = d.slides.slice(0, i).filter((x) => !x.pending).flatMap((x) => S.slideText({ ...x, title: "" }).split("\n"));
-    const td = S.tidySlide(s, hasSrc && strict ? allSrc : "", extra ? [] : earlier);
+    const td = S.tidySlide(s, hasSrc && strict ? allSrc : "", extra ? [] : earlier, d.title);
     s = S.fixSlide(td.slide, sl.title);
     const unsure = S.unbacked(S.slideText(s), allSrc).length;
     return { slide: { ...s, kind: s.kind, title: sl.title }, dropped: ch.dropped + td.dropped, unsure };
@@ -399,7 +399,15 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
       const source = [topic, audience, ...hits.map((h) => h.text), file ? file.text : "", file && file.data ? file.data.text : ""].join("\n");
       setBusy(tr("Planning the slides…"));
       const planSrc = sourceFor(hits, topic, 3000);
-      const outline = S.parseOutline(await llm(S.outlineMessages({ topic, n: count, lang: L, audience, source: planSrc }), null, { maxTokens: 520, temperature: 0.5 }), count, { topic, figures: S.hasFigures(planSrc) });
+      const om = S.outlineMessages({ topic, n: count, lang: L, audience, source: planSrc });
+      let outline = S.parseOutline(await llm(om, null, { maxTokens: 520, temperature: 0.5 }), count, { topic, figures: S.hasFigures(planSrc) });
+      // v8.0 (Ali's 25 Oct deck had 4 slides where 8 were asked): a plan far short of the count is asked for once more
+      if (outline.slides.length < Math.ceil(count * 0.75) && alive()) {
+        try {
+          const again = S.parseOutline(await llm([{ role: "user", content: om[0].content + `\n\nYou wrote only ${outline.slides.length} slides. Write the whole plan again with exactly ${count} numbered slide lines.` }], null, { maxTokens: 620, temperature: 0.4 }), count, { topic, figures: S.hasFigures(planSrc) });
+          if (again.slides.length > outline.slides.length) outline = again;
+        } catch (e) {}
+      }
       if (!alive()) return;
       const did = "d" + Date.now().toString(36);
       hitsRef.current = { id: did, hits };

@@ -10,6 +10,7 @@ import { Bars, SeeAll } from "./biz-dash-ui.jsx";
 import { ToolsPage } from "./desk-ui.jsx";
 import { useSubBack } from "./backstack.js";
 import * as U from "./ui-kit.jsx";
+import { studioPaused } from "./device.js";
 
 const I = (s) => "⁦" + s + "⁩";
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? I(y) : y])) : v);
@@ -64,7 +65,7 @@ export function ToolsHub({ tools, navTo, pages, groups }) {
     </div>
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-4 space-y-3 lg:space-y-0 items-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="tools-families">
-        {FAMS.map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
+        {FAMS.filter(([f]) => f !== "studio" || !studioPaused(typeof window !== "undefined" && window.AttuneNative)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
           className={U.card + " text-start p-4 min-h-[96px] flex items-start gap-3 hover:border-[var(--c-acc)] transition-colors duration-150"}>
           <span className="w-11 h-11 shrink-0 rounded-[14px] grid place-items-center" style={{ background: "var(--c-soft)", color: C[f] }}><Icon size={19} /></span>
           <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="text-[15.5px] font-extrabold leading-tight">{tr(title)}</span>
@@ -116,11 +117,12 @@ export function FamilySeeAll({ fam, onClick }) {
 }
 
 /** Studio where the phone's image chip is not available (a browser): what it does, and its report. */
-export function StudioOffDevice() {
+export function StudioOffDevice({ paused = false }) {
   const [rep, setRep] = useState(false);
   useSubBack(rep, () => setRep(false));
   if (rep) return <div className="calm text-[var(--c-ink)]" data-testid="studio-page"><FamilyReport fam="studio" back={() => setRep(false)} /></div>;
   return <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="studio-page">
-    <p className={U.card + " p-4 m-0 text-[14px]"}>{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</p>
+    {paused ? <p className={U.card + " p-4 m-0 text-[14px]"} data-testid="studio-paused">{tr("Studio is paused on phones for now — drawing pictures made some phones restart. It comes back in an update once that is fixed. The photo editor (Eraser, Expand) still works.")}</p>
+      : <p className={U.card + " p-4 m-0 text-[14px]"}>{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</p>}
     <FamilySeeAll fam="studio" onClick={() => setRep(true)} /></div>;
 }

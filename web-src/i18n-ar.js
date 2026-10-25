@@ -7023,4 +7023,5 @@ export const AR = {
   "{n} automations on — they run on the phone, no AI needed": "اتشغّل {n} أتمتة — بيشتغلوا على الموبايل من غير ذكاء اصطناعي",
   "Turn on {n}": "شغّل {n}",
   "On now · {n}": "شغالة دلوقتي · {n}",
+  "Studio is paused on phones for now — drawing pictures made some phones restart. It comes back in an update once that is fixed. The photo editor (Eraser, Expand) still works.": "«الاستوديو» واقف على الموبايل دلوقتي — رسم الصور كان بيخلّي بعض الموبايلات تعمل ريستارت. هيرجع في تحديث بعد ما نحلها. محرر الصور (الممحاة والتوسيع) لسه شغال.",
 };

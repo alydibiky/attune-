@@ -1,6 +1,7 @@
 /* ---- v6.32 Learn: say it (speaking practice with a score), a spoken dialogue, a picture drawn for the lesson, and a course
    from a Knowledge pack. Logic: speak.js, packcourse.js. Used by daily-ui.jsx (LearnPage). Tests: tests/e2e_v736learn.py.      */
 import React, { useState } from "react";
+import { studioPaused } from "./device.js";
 import { Volume2, Mic, Loader2, ImageIcon, BookOpen, ChevronRight, MessageCircle, RefreshCw } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as UK from "./ui-kit.jsx";
@@ -109,6 +110,7 @@ export function LessonPicture({ lesson, course, native, call, onPicture, openStu
   const [err, setErr] = useState("");
   let pack = null;
   try { const i = native && native.imageInfo ? JSON.parse(native.imageInfo()) : null; const ps = (i && i.packs) || []; pack = ps.find((p) => p.installed !== false) || null; } catch (e) {}
+  if (!lesson.picture && studioPaused(native)) return null;   // v8.0: Studio's engine is paused on phones
   if (lesson.picture) return <img src={lesson.picture} alt="" className="w-full rounded-[22px]" style={{ maxHeight: 340, objectFit: "cover" }} data-testid="lesson-picture" />;
   if (!pack) return openStudio ? <button className={ghost} style={gs} onClick={openStudio}><ImageIcon size={14} />{tr("Draw a picture for this lesson (Studio)")}</button> : null;
   const draw = async () => {

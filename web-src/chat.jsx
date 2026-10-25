@@ -8,6 +8,7 @@
 // shown when Think is on.
 import * as LIB from "./library.js";   // v6.46 "Remember this": chapters of a saved book
 import { shareLink, looksLikeChat, fromPage, fromText, contextBlock } from "./ai-import.js";
+import { studioPaused } from "./device.js";
 import { taskOf, wantsWeb, wantsThink, pickModel, switchLine, needsToday, deepModel, deepLine } from "./router.js";
 import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
@@ -965,7 +966,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
 
     // "Draw a crane at sunset": pictures are made in Studio, on the phone.
-    if (route && !img && looksLikeImageRequest(typed)) {
+    // v8.0: not while Studio is paused on phones (device.js) — the request goes to the model like any other
+    if (route && !img && looksLikeImageRequest(typed) && !studioPaused(typeof window !== "undefined" && window.AttuneNative)) {
       const cid = ensureChat(typed);
       const subject = pictureSubject(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,

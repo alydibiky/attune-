@@ -138,7 +138,7 @@ then exactly ${n} lines, one per slide:
 1. [type] <slide title, at most 7 words>
 
 Types: ${kinds.join("; ")}.
-Rules: tell a story (context → the need → the main content → what to do next); ignore any wishes about colours, design, transitions or animations (the app does those); use at least 3 different types; the LAST slide is [bullets] with the key takeaways; do NOT add a title, agenda or "thank you" slide (the app adds them). Keep the words TITLE, SUBTITLE and the [type] in English. Write the titles in ${S_LANGS[lang] || "English"}.` }];
+Rules: tell a story (context → the need → the main content → what to do next); every title names one concrete part of THIS topic that the sources can fill — a reader should learn what the slide says from its title alone (e.g. for "Solar panels at home": "What a home system costs", "How much it saves a year", "Grid-tied or off-grid") — never the bare stages of a general framework (AIDA, SWOT, 4Ps, "Attract / Interest / Desire / Action") unless the topic asks for that framework; if the topic sets two things side by side (vs, compared, difference, "X and Y"), one slide is [two] or [table] comparing them; no two slides about the same thing; ignore any wishes about colours, design, transitions or animations (the app does those); use at least 3 different types; the LAST slide is [bullets] with the key takeaways; do NOT add a title, agenda or "thank you" slide (the app adds them). Keep the words TITLE, SUBTITLE and the [type] in English. Write the titles in ${S_LANGS[lang] || "English"}.` }];
 }
 
 const KIND_WORDS = { bullet: "bullets", bullets: "bullets", points: "bullets", two: "two", compare: "two", comparison: "two", steps: "steps", step: "steps", process: "steps", timeline: "steps",
@@ -195,6 +195,8 @@ export function parseOutline(reply, n, { topic = "", figures = false } = {}) {
     if (mid[1]) mid[1].kind = "two";
     if (mid[3]) mid[3].kind = "steps";
   }
+  // v8.0 (Ali's 25 Oct deck: four "Key points" slides in a row): a short deck gets one slide of another kind too
+  else if (slides.length === 4 && slides.every((s) => s.kind === "bullets")) slides[2].kind = kindHint(slides[2].title) || "steps";
   return { title, subtitle: cut(subtitle, 110), slides: slides.slice(0, n) };
 }
 
@@ -216,13 +218,13 @@ export function slideMessages({ deckTitle, topic, slide, i, n, others, lang, sou
   const fmt = (detail === "detailed" && DETAILED[slide.kind]) || FORMATS[slide.kind] || FORMATS.bullets;
   return [{ role: "user", content:
 `You write ONE slide of the presentation "${deckTitle}" (topic: ${topic}).${audience ? ` Audience: ${audience}.` : ""}
-This is slide ${i} of ${n}: "${slide.title}". The other slides are: ${others.filter((t) => t !== slide.title).join("; ")} — don't repeat their content.${source ? `\n\nSOURCES — use only these facts; copy every number exactly:\n${source}` : "\n\nDon't invent statistics, prices, dates or quotes; general knowledge only."}
+This is slide ${i} of ${n}: "${slide.title}". The other slides are: ${others.filter((t) => t !== slide.title).join("; ")} — don't repeat their content.${source ? `\n\nSOURCES — take the facts from these and copy every number exactly. Where they say nothing about "${slide.title}", write what is well established about it, but never a number, price, date or quote that is not in them:\n${source}` : "\n\nDon't invent statistics, prices, dates or quotes; general knowledge only."}
 
 Write exactly this format and nothing else:
 ${fmt}
 NOTES: <2–3 sentences the presenter says on this slide>${source ? "\n\nAt the end of each point, row or number, put the number of the source it comes from in brackets, like [2] ([F] for the person's own file)." : ""}
 
-Rules: every sentence must be true and specific to "${slide.title}" — no filler ("plays a vital role", "in today's world"), no vague claims; if you are not sure of a fact, leave it out. Concrete and professional, short lines (a slide is not a page), no ** or # symbols; don't write about the slide design, transitions or animations. Keep the words LEFT, RIGHT, QUOTE, BY, UNIT, TAKEAWAY, NOTES in English. Write the content in ${S_LANGS[lang] || "English"}.` }];
+Rules: every point answers the title "${slide.title}" itself — a point that would fit another slide or the whole topic belongs there, not here; don't use the slide title or "${deckTitle}" as a point or a lead; every sentence must be true and specific to "${slide.title}" — no filler ("plays a vital role", "in today's world"), no vague claims; if you are not sure of a fact, leave it out. Concrete and professional, short lines (a slide is not a page), no ** or # symbols; don't write about the slide design, transitions or animations. Keep the words LEFT, RIGHT, QUOTE, BY, UNIT, TAKEAWAY, NOTES in English. Write the content in ${S_LANGS[lang] || "English"}.` }];
 }
 
 const CITE = /\s*\[\s*((?:\d{1,2}|[Ff])(?:\s*[,،]\s*(?:\d{1,2}|[Ff]))*)\s*\]/g;
@@ -300,14 +302,20 @@ export function figureIssues(s, source) {
 /** The correction sent back to the model when a slide used numbers the sources don't have. */
 export const figureFixNote = (nums) => `These numbers are NOT in the sources: ${nums.join(", ")}. Write the slide again: remove them, or use the exact numbers the sources give. Never estimate.`;
 const normLine = (t) => String(t || "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
-const sameLine = (a, b) => { const A = new Set(normLine(a).split(" ")), B = new Set(normLine(b).split(" ")); if (A.size < 3 || B.size < 3) return normLine(a) === normLine(b); let k = 0; for (const w of A) if (B.has(w)) k++; return k / Math.max(A.size, B.size) >= 0.8; };
+// v8.0: the same point reworded ("Digital marketing spans websites, search, email and apps…" on two slides) counts as a repeat too
+const sameLine = (a, b) => { const A = new Set(normLine(a).split(" ")), B = new Set(normLine(b).split(" ")); if (A.size < 3 || B.size < 3) return normLine(a) === normLine(b); let k = 0; for (const w of A) if (B.has(w)) k++; return k / Math.max(A.size, B.size) >= (Math.min(A.size, B.size) >= 6 ? 0.6 : 0.8); };
+const sameTitle = (a, b) => { const x = normLine(a), y = normLine(b); return !!x && !!y && (x === y || x.startsWith(y + " ") || y.startsWith(x + " ")); };
 /**
  * The last check by code: points (bullets, steps, sides, table rows) that still carry a number the
  * sources don't have are left out when there are sources; points repeated from earlier slides are
  * left out always. → { slide, dropped, repeats }
  */
-export function tidySlide(s, source, earlier = []) {
+export function tidySlide(s, source, earlier = [], deckTitle = "") {
   const hasSrc = !!String(source || "").trim();
+  // v8.0: a lead that only repeats the slide's title ("Generate Interest Now" on "Generate Interest") goes; a point that is only the
+  // slide's or the deck's title (no sentence) goes
+  if (s.bullets) s = { ...s, bullets: s.bullets.map((x) => (x.lead && sameTitle(x.lead, s.title) && x.text ? { ...x, lead: "" } : x))
+    .filter((x) => !(x.text && [s.title, deckTitle].some((t) => t && sameTitle(x.text, t)) && (!x.lead || sameTitle(x.lead, x.text)))) };
   const bad = (t) => hasSrc && unbacked(t, source).length > 0;
   const seen = (t) => earlier.some((e) => sameLine(e, t));
   let dropped = 0, repeats = 0;

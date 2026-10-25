@@ -101,7 +101,7 @@ import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTel
 import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan, goldGram } from "./scout.js";
 import { understand as doUnderstand, apply as doApply } from "./doit.js";
 import { loadStores as loadLifeStores } from "./lifeask.js";
-import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll } from "./device.js";
+import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll, studioPaused } from "./device.js";
 import { TravelPage } from "./travel-ui.jsx";
 import { OwedHost } from "./owed-ui.jsx";
 import { ReadHost } from "./readaloud-ui.jsx";
@@ -1320,6 +1320,7 @@ if (typeof window !== "undefined") {
 function nativeCall(method, arg, onProgress) {
   return new Promise((res, rej) => {
     if (!NATIVE) return rej(new Error("Only available in the Android app"));
+    if (method === "imagine" && studioPaused(NATIVE)) return rej(new Error("Studio is paused on phones for now"));
     const id = "n" + (++NATIVE_SEQ) + "-" + Date.now();
     NATIVE_LAST_ID = id;
     // v6.28: a feature this app version doesn't have (the computer app, an older Android app) says so — it used to throw
@@ -7654,7 +7655,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "7.9";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "8.0";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7712,6 +7713,13 @@ const KNOW_ADMIN = devMode();
 {
   for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (MORE_TOOLS[i][0] === "knowledge") MORE_TOOLS.splice(i, 1);
   for (const h of HUBS) { const k = h[3].indexOf("knowledge"); if (k >= 0) h[3].splice(k, 1); }
+}
+// v8.0 (Ali, 25 Oct: "the studio restarted the mobile again — remove it from the mobile version until further notice"): on the
+// phone Studio is in no list, hub, group or "/" (device.js studioPaused); its page says it is paused and its engine is refused
+const STUDIO_OFF = studioPaused(NATIVE);
+if (STUDIO_OFF) {
+  for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (MORE_TOOLS[i][0] === "studio") MORE_TOOLS.splice(i, 1);
+  for (const h of HUBS) { const k = h[3].indexOf("studio"); if (k >= 0) h[3].splice(k, 1); }
 }
 
 // v6.50 (Ali, 22 Oct: "I want everything in the app to be available via home chat"): every tool can be opened from the Home box —
@@ -8289,7 +8297,7 @@ export default function App() {
   const devLevel = deviceLevel(device);
   const [allTools, setAllToolsRaw] = useState(() => deviceShowAll());
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
-  const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
+  const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools, STUDIO_OFF ? ["studio"] : []);
   // v6.31 minimal: short tab names (the page's own title stays full)
   const TAB_SHORT = { timeline: "Timeline", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
@@ -10492,7 +10500,7 @@ export default function App() {
               </section>
             } />
         ) : mode === "studio" ? (
-          NATIVE && NATIVE.imageInfo ? (
+          STUDIO_OFF ? <StudioOffDevice paused /> : NATIVE && NATIVE.imageInfo ? (
             <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}
               chatReady={modelState === "ready" || (engineInfo && engineInfo.state === "ready")} enhanceMs={enhanceWaitMs(getPower())}
               llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
@@ -10501,7 +10509,7 @@ export default function App() {
           <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken, grammar: o.grammar })}
-            illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
+            illustrate={NATIVE && NATIVE.imageInfo && !STUDIO_OFF ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
         ) : mode === "convert" ? (
           <FileConverter flash={flash} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision}
