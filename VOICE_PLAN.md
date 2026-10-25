@@ -1,0 +1,56 @@
+# "Ya Attune" — the voice assistant (Ali's pick, 25 Oct 2026)
+
+**Read this first if you continue the voice work.** Ali: "start in the most efficient way possible, and after each step upload a
+handoff on GitHub so the next chat knows everything and nothing is lost." → tick the steps below as they land, and keep the
+"State" table true.
+
+## What Ali asked for (his words, summarised)
+- A hands-free assistant you talk to, in your own dialect, that runs your life (Money, reminders, Agents, Health…) and your
+  phone (messages, calls, maps, apps) — offline, private, **really accurate and powerful**.
+- **Franco**: "I tell it in Arabic to send person X something, it asks me which language, I say Franco or Arabic" — and it
+  remembers per person.
+- **Global**: not Egypt-only — every region's dialect and its own "Franco" (Gulf / Levantine Arabizi, Darija + French,
+  Hinglish, Roman Urdu), local apps, currencies and dates.
+
+## Rules for this feature (do not break)
+1. **Code decides, never a guess.** The command is read by code (`web-src/voice-cmd.js`); two people with the same name, a
+   missing message, an unknown app → a question, not an action. The AI model is only a fallback for free chat.
+2. **Read back before sending.** A message is never sent without the person hearing/seeing it and saying "send" (ابعت/send/
+   yes). "Send without asking" is per person and off by default.
+3. **The person's own words.** Only translated / made formal when asked ("اكتبها بأدب", "make it formal").
+4. **Private.** Voice and messages stay on the phone. Messages are read from notifications (Notification access, already
+   used by Money and Message alerts); replies go through the app's own notification reply (RemoteInput) — WhatsApp,
+   Telegram, Messenger, Signal… SMS is never read (Attune's promise).
+5. **Measured accuracy.** `tests/voice/commands.json` = real-style commands in every supported dialect with the expected
+   result; `tests/unit/v1100voice.test.mjs` scores it and fails under the bar. Add a line for every bug found.
+
+## Phases and steps (tick as done)
+### Phase 1 — talk or type, and it acts (no wake word yet)
+- [x] 1.0 This plan (VOICE_PLAN.md)
+- [ ] 1.1 Mock-ups for Ali: the voice screen + car mode, 3 options (`design/voice-options.html`, PNG sent in chat) — Ali picks
+- [ ] 1.2 Engine (pure JS, unit-tested): `voice-cmd.js` — send / who messaged me / read / reply / call / open app / log money /
+      remind, in Egyptian, Gulf, Levantine, Darija, English (+ Hinglish words); the dialogue (asks language, reads back,
+      confirms, picks between two Ahmeds); `franco.js` — Arabic → Franco (Egyptian 3/2/7/5, Gulf variants), Franco detection,
+      per-person language memory
+- [ ] 1.3 Accuracy set `tests/voice/commands.json` + scorer
+- [ ] 1.4 Android: recent chat messages from notifications with their reply action (`ChatInbox.kt`), `chatInbox()` /
+      `chatReply({key, text})` in NativeBridge; fallback = open the app with the text (PhoneActions whatsapp)
+- [ ] 1.5 Wire it: the Home box (typed) and its mic (spoken) run the voice dialogue; answers are spoken (speak / voicecall.js)
+- [ ] 1.6 The voice screen Ali picked (from 1.1)
+### Phase 2 — car mode, more dialects, nicknames
+- [ ] 2.1 Car mode (big buttons, new messages read aloud, voice replies, navigation); Android Auto later
+- [ ] 2.2 Dialect packs: Levantine, Darija (+French), Hinglish / Roman Urdu, Turkish, Spanish…; per-country apps
+- [ ] 2.3 Nicknames ("ماما", "الأستاذ", "mummy") learnt from use
+### Phase 3 — "يا أتيون" wake word
+- [ ] 3.1 A tiny always-listening model (low power), Egyptian + Gulf + English voices; clear notification + on/off switch
+      (Google Play rules on background microphone)
+
+## State (update every step)
+| Step | Files | Status |
+|---|---|---|
+| 1.0 plan | VOICE_PLAN.md | done |
+
+## Ideas parked for later (Ali)
+- "Attune Saves" (the app that pays for itself — a monthly "Attune saved you EGP 3,420" with receipts): Ali said "I will do
+  this idea later". Its plan is in the chat of 25 Oct; the pieces: Guardian (charged twice), Overpaying + Cancel kit, Agents
+  (price drops), Money ledger, Scout fair-price meter, Missions.
