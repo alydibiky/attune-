@@ -679,6 +679,17 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         JSONObject().put("ok", how.isNotEmpty()).put("how", how).toString()
     } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
 
+    /** Voice: the newest chat messages from notifications (ChatInbox.kt) — [{key, app, who, convo, group, text, ts, canReply}]. */
+    @JavascriptInterface
+    fun chatInbox(): String = try { ChatInbox.list(ctx) } catch (e: Exception) { "[]" }
+
+    /** Voice: a reply into exactly one conversation, through its own notification reply — {key, text} → {ok} / {ok:false, error}. */
+    @JavascriptInterface
+    fun chatReply(json: String): String = try {
+        val a = JSONObject(json)
+        ChatInbox.reply(ctx, a.optString("key"), a.optString("text").take(2000)).toString()   // the chat app sends it, not Attune
+    } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
+
     /** The price watches to check about every 12 hours with Attune closed (AgentWatch.kt), and what they found. */
     @JavascriptInterface
     fun agentWatchPlan(plan: String): String { AgentWatch.setPlan(ctx, plan); return "ok" }
