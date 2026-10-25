@@ -35,8 +35,15 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
    slide prompt: every point answers its title, general knowledge where sources are silent (numbers still only from sources);
    `tidySlide` drops title-only points / title leads and reworded repeats (0.6 overlap); a 4-slide deck gets one other kind;
    a plan far short of the count is asked once more. Unit `v1000fixes`.
-5. **Agents page** (Scout inside; price watch e.g. Makkah hotels < 45k / 4 nights; order my usual from Talabat; Amazon delivery):
-   options A (Your agents list — recommended) / B (feed of findings) / C (gallery) shown to Ali — **build the one he picks**.
+5. **Agents page — BUILT (Ali picked A + "it must open any app I ask: Uber, Booking, Amazon, Talabat…")**: `agents.js` (sentence →
+   open / do / watch / track / order / scout / alert, asks what is missing; app catalogue EN+AR + every launcher app via
+   `appsList`), `agents-ui.jsx` (box, chips, cards, Check now, report). Android: `openAnyApp`, `appsList` (manifest `<queries>`
+   LAUNCHER intent), `AgentWatch.kt` (+ receiver, BootReceiver) checks watched pages ~every 12 h with Attune closed,
+   `agentWatchPlan/Take`; delivery = MessageWatch rule `app: "pkgs:…"` (WatchMatch); AgentBrowser `watch` extra returns the
+   cheapest price. Sidebar places now Money · Business · Health · Shelf · Agents. Home box creates agents too. Country = Attune's
+   saved country (country.js) → EGP / Talabat / Uber-Careem-inDrive. Tests `v1000agents`, `e2e_v1000agents.py`.
+   Next ideas (ask Ali): Booking may block the background read (then the card says "tap Check now"); level-3 full phone
+   control (accessibility) is still not done on purpose.
    Honest limits told to Ali: Booking/Talabat/Amazon have no public consumer API → watch by reading the pages on the phone,
    Talabat = one tap opens your usual and you press Order (no paying by itself), Amazon = read its notifications / emails.
 - Tests: `tests/e2e_v1000fixes.py`, `tests/unit/v1000fixes.test.mjs`.

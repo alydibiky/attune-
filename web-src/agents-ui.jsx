@@ -150,7 +150,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
         <ChevronRight size={17} className="c-sub rtl:rotate-180 mt-2" /></button> : null}
       {!r.running ? <p className={U.card + " p-4 m-0 text-[13.5px] c-sub"} data-testid="agents-empty">{tr("No agents yet. Tap an example above, or write your own — a price to watch, a delivery to track, your usual order, or any app to open.")}</p> : null}
       <button onClick={() => setRep(true)} className={U.card + " w-full text-start p-4 flex items-center justify-between font-extrabold"} data-testid="agents-open-report">
-        <span>{tr("See all → Agents report")}</span><span className="c-sub text-[12.5px] font-bold">{T("{n} checks this week", { n: r.checks })}</span></button>
+        <span>{tr("See all → Agents report")}</span><span className="c-sub text-[12.5px] font-bold">{T("Checks this week: {n}", { n: r.checks })}</span></button>
     </div>);
 }
 

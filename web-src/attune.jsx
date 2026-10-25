@@ -98,6 +98,9 @@ const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Databa
 const HUB_PLACES = HUBS.flatMap(([id, label, target]) => (id === "home" ? [[target, label, HUB_ICON[id]], ["shelf", "Shelf", BookOpen]] : [[target, label, HUB_ICON[id]]]));
 import { HealthPage } from "./health-ui.jsx";
 import { AgentsPage } from "./agents-ui.jsx";
+import { myCountry as countryOfPerson } from "./country.js";
+// v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
+const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
 import { parseAgent, loadAgents, saveAgents, makeAgent } from "./agents.js";
 import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
@@ -9661,7 +9664,7 @@ export default function App() {
       return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : "Your mission is ready — tap Start the mission", open: "missions" }], undo: null }; } }
     // v8.0 Agents: "tell me when hotels near the Haram are under 45k…", "tell me when my Amazon order arrives", "order my usual from
     // Talabat: …" → an agent on the Agents page (asked there if something is missing); "open Uber" opens the app
-    { const ag = parseAgent(text, { now, country: (loadBooking().country || myCountry() || "EG"), usual: loadAgents().usual });
+    { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual });
       if (ag && ["watch", "track", "order"].includes(ag.kind)) {
         if (ag.ask) { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : "Finish it on the Agents page", open: "agents" }], undo: null }; }
         const a = makeAgent(ag, now), st0 = loadAgents();
@@ -10515,7 +10518,7 @@ export default function App() {
               </section>
             } />
         ) : mode === "agents" ? (
-          <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={loadBooking().country || myCountry() || "EG"}
+          <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()}
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }} />
         ) : mode === "studio" ? (
           STUDIO_OFF ? <StudioOffDevice paused /> : NATIVE && NATIVE.imageInfo ? (

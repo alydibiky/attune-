@@ -7077,7 +7077,7 @@ export const AR = {
   "{app} said {t}: {m}": "{app} قال {t}: {m}",
   "{d} has passed — from which day?": "{d} عدّى — من يوم كام؟",
   "{n} ads checked": "{n} إعلان اتراجع",
-  "{n} checks this week": "{n} فحص الأسبوع ده",
+  "Checks this week: {n}": "مرات الفحص الأسبوع ده: {n}",
   "{n} new": "{n} جديد",
   "{p} above your limit": "أعلى من الحد بتاعك بـ {p}",
   "in the browser": "في المتصفح",

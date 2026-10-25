@@ -36,7 +36,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=agents-ask]").count() == 1 and "which day" in page.locator("[data-testid=agents-ask]").inner_text(), "no day in the sentence → the agent asks from which day")
     page.fill("[data-testid=agents-answer]", "10 December"); page.click("[data-testid=agents-answer-go]"); page.wait_for_timeout(300)
     card = page.locator("[data-testid=agent-watch]")
-    check(card.count() == 1 and "45,000" in card.inner_text() and "2026-12-10" in card.inner_text() or "12-10" in card.inner_text(), "a price watch: Hotels · Masjid al-Haram · 4 nights, under EGP 45,000: " + card.inner_text()[:120].replace("\n", " · "))
+    check(card.count() == 1 and "EGP 45,000" in card.inner_text() and "2026-12-10" in card.inner_text() or "12-10" in card.inner_text(), "a price watch: Hotels · Masjid al-Haram · 4 nights, under EGP 45,000: " + card.inner_text()[:120].replace("\n", " · "))
     plan = page.evaluate("window.__plan")
     check(plan and len(plan) == 1 and "booking.com" in plan[0]["url"] and plan[0]["below"] == 45000, "the phone gets it to check about every 12 hours, even with Attune closed")
     page.click("[data-testid=agent-check]"); page.wait_for_selector("[data-testid=agent-found]", timeout=4000)
@@ -60,8 +60,9 @@ with sync_playwright() as p:
     opened = [c[1]["pkg"] for c in page.evaluate("window.__calls") if c[0] == "open"]
     check(opened[-3:] == ["com.ubercab", "com.talabat", "com.vodafone.my"], "open Uber / «افتح طلبات» / an app only the phone knows (My Vodafone): %s" % opened[-3:])
     say(page, "uber to cairo airport")
-    check(page.locator("[data-testid=agents-do-link]").first.inner_text().strip() == "Uber", "“Uber to Cairo airport” → Uber with the destination (Careem, inDrive, Maps as other choices)")
-    check("Running" in page.locator("[data-testid=agents-running]").inner_text() and "3" in page.locator("[data-testid=agents-running]").inner_text(), "Running · 3 (watch, delivery, usual order)")
+    lk = [x.strip() for x in page.locator("[data-testid=agents-do-link]").all_inner_texts()]
+    check(lk[:3] == ["Uber", "Careem", "inDrive"], "“Uber to Cairo airport” → Uber with the destination, Careem and inDrive (Egypt's ride apps): %s" % lk)
+    check("running" in page.locator("[data-testid=agents-running]").inner_text().lower() and "3" in page.locator("[data-testid=agents-running]").inner_text(), "Running · 3 (watch, delivery, usual order)")
     shot(page, "v1000-agents")
     # ---- the report ----
     page.click("[data-testid=agents-open-report]"); page.wait_for_selector("[data-testid=agents-report]")
