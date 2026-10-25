@@ -7082,5 +7082,5 @@ export const AR = {
   "{p} above your limit": "أعلى من الحد بتاعك بـ {p}",
   "in the browser": "في المتصفح",
   "by itself": "لوحده",
-  "Watch a price, track a delivery, order your usual, open any app — and Scout": "راقب سعر، تابع شحنة، اطلب المعتاد، افتح أي أبلكيشن — والكشّاف",
+  "Watch a price, track a delivery, order your usual, open any app": "راقب سعر، تابع شحنة، اطلب المعتاد، افتح أي أبلكيشن",
 };

@@ -7673,7 +7673,7 @@ const MORE_TOOLS = [
   ["scout", "Scout", "Hunts for a flat, a car, a product or a job for days — tells you when something good appears", Binoculars],   // v6.28
   ["lifeask", "Ask your life", "One question about your money, people, health, meals and deadlines — answered from your own data", Sparkles],   // v6.28
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
-  ["agents", "Agents", "Watch a price, track a delivery, order your usual, open any app — and Scout", Radar],   // v8.0 (Ali picked A)
+  ["agents", "Agents", "Watch a price, track a delivery, order your usual, open any app", Radar],   // v8.0 (Ali picked A)
   ["radar", "Deadline Radar", "Free trials, renewals, returns, warranties and documents — a warning before each one", Radar],   // v6.27
   ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],

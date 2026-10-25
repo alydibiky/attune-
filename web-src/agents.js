@@ -158,8 +158,10 @@ export function parseAgent(text, opts = {}) {
       if (!checkout) return { ...d, ask: "For how many nights?" };
       return { ...d, url: hotelLinks(f)[0].url };
     }
-    // a product: "tell me when the iPhone 16 on Amazon is under 40,000"
+    // a product in a store: "tell me when the iPhone 16 on Amazon is under 40,000" (a car, a flat or anything for sale with no
+    // store named is Scout's: "tell me when a Tucson 2022 is under 1.5M")
     const store = app && app.kind === "shop" ? app : null;
+    if (!store) return looksLikeGoal(t0) || /\b(used|for sale|rent|flat|apartment|car)\b|مستعمل|للبيع|ايجار|إيجار|شقه|شقة|عربيه|عربية/iu.test(t) ? { kind: "scout", text: t0, title: t0.slice(0, 80) } : null;
     const what = t0.replace(/https:\/\/\S+/g, "").replace(/^(?:please\s+)?(?:tell|notify|alert|ping|let|warn)\s+me\s+(?:when|if|once)\s+(?:the\s+)?|^(?:قولي|نبهني|عرفني|بلغني)\s+(?:لما|لو)\s+/iu, "")
       .replace(/\s+(?:on|at|from|في|على|من)\s+(?:amazon|noon|jumia|امازون|أمازون|نون|جوميا)\b.*$/iu, "")
       .replace(/\s+(?:is|are|goes|gets|drops|becomes|يبقي|يبقى|ينزل|تنزل|بقي|بقى)?\s*(?:under|below|less than|cheaper than|lower than|اقل من|أقل من|تحت).*$/iu, "").trim().slice(0, 70);
