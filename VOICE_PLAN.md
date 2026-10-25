@@ -27,7 +27,8 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
 ## Phases and steps (tick as done)
 ### Phase 1 — talk or type, and it acts (no wake word yet)
 - [x] 1.0 This plan (VOICE_PLAN.md)
-- [ ] 1.1 Mock-ups for Ali: the voice screen + car mode, 3 options (`design/voice-options.html`, PNG sent in chat) — Ali picks
+- [x] 1.1 Mock-ups for Ali: the voice screen + car mode, 3 options (`design/voice-options.html` + `.png`, sent in chat 25 Oct) —
+      **waiting for Ali's pick** (A calm orb = recommended, B conversation, C one big card)
 - [ ] 1.2 Engine (pure JS, unit-tested): `voice-cmd.js` — send / who messaged me / read / reply / call / open app / log money /
       remind, in Egyptian, Gulf, Levantine, Darija, English (+ Hinglish words); the dialogue (asks language, reads back,
       confirms, picks between two Ahmeds); `franco.js` — Arabic → Franco (Egyptian 3/2/7/5, Gulf variants), Franco detection,
@@ -49,6 +50,7 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
 | Step | Files | Status |
 |---|---|---|
 | 1.0 plan | VOICE_PLAN.md | done |
+| 1.1 mock-ups | design/voice-options.html, design/voice-options.png | sent; Ali to pick A/B/C |
 
 ## Ideas parked for later (Ali)
 - "Attune Saves" (the app that pays for itself — a monthly "Attune saved you EGP 3,420" with receipts): Ali said "I will do

@@ -1,0 +1,72 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Voice options</title>
+<style>
+@font-face{font-family:Nunito;src:url(file:///home/user/attune-/app/src/main/assets/www/fonts/nunito-latin-400-normal.woff2)}
+@font-face{font-family:Nunito;font-weight:800;src:url(file:///home/user/attune-/app/src/main/assets/www/fonts/nunito-latin-800-normal.woff2)}
+:root{--bg:#101413;--surf:#171D1B;--surf2:#1E2623;--ink:#EAEFEC;--mut:#9BA8A3;--ln:#26302D;--acc:#4FC2AF;--acc2:#E07A5F;--on:#0B1A17;--soft:#173530;--warn:#E5A93C}
+*{box-sizing:border-box}body{margin:0;background:#0a0d0c;font-family:Nunito,"Noto Sans Arabic",system-ui,sans-serif;color:var(--ink);padding:22px}
+.opt{margin-bottom:26px}.opt h2{margin:0 0 4px;font-size:22px;font-weight:800}.opt p.d{margin:0 0 12px;color:var(--mut);font-size:14px;max-width:820px}
+.rec{background:var(--acc2);color:var(--on);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:800;margin-inline-start:6px}
+.row{display:flex;gap:22px}.cap{font-size:12px;color:var(--mut);font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.ph{width:360px;height:720px;background:var(--bg);border-radius:32px;border:1px solid var(--ln);padding:18px 16px;position:relative;overflow:hidden}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-weight:800}.top .x{margin-inline-start:auto;color:var(--mut);font-size:20px}
+.pill{display:inline-block;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:800;background:var(--soft);color:var(--acc)}
+.orb{width:190px;height:190px;border-radius:50%;margin:40px auto 18px;background:radial-gradient(circle at 40% 35%,#7fe0cf,#2c8f80 60%,#173530);box-shadow:0 0 0 18px rgba(79,194,175,.12),0 0 0 40px rgba(79,194,175,.06)}
+.heard{text-align:center;font-size:19px;font-weight:800;margin:0 10px}.sub{text-align:center;color:var(--mut);font-size:13px;margin-top:6px}
+.card{background:var(--surf);border:1px solid var(--ln);border-radius:22px;padding:13px 14px;margin-top:12px}
+.k{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.msg{font-size:17px;font-weight:800;margin:6px 0}.btns{display:flex;gap:8px;margin-top:8px}
+.b{flex:1;text-align:center;border-radius:14px;padding:11px;font-weight:800;font-size:14px;border:1px solid var(--ln)}.bp{background:var(--acc);color:var(--on);border-color:transparent}
+.seg{display:flex;gap:6px;margin-top:8px}.seg span{flex:1;text-align:center;border:1px solid var(--ln);border-radius:99px;padding:7px;font-size:13px;font-weight:800}.seg .on{background:var(--acc2);color:var(--on);border-color:transparent}
+.mic{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);width:74px;height:74px;border-radius:50%;background:var(--acc);display:grid;place-items:center;color:var(--on);font-size:30px;font-weight:800}
+.bub{max-width:80%;padding:10px 13px;border-radius:18px;margin:8px 0;font-size:14.5px;line-height:1.35}.me{background:var(--acc2);color:var(--on);margin-inline-start:auto;border-end-end-radius:6px}.it{background:var(--surf);border:1px solid var(--ln);border-end-start-radius:6px}
+.big{font-size:22px;font-weight:800}.car{background:#0b0e0d}
+.tile{border-radius:26px;padding:20px;margin-top:12px;font-weight:800;font-size:22px;display:flex;align-items:center;gap:14px;background:var(--surf);border:1px solid var(--ln)}
+.tile i{font-style:normal;width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:var(--soft);font-size:26px}
+.ar{direction:rtl;text-align:right}
+</style></head><body><div data-screen="voice">
+
+<div class="opt"><h2>A · Calm orb <span class="rec">Recommended</span></h2>
+<p class="d">One quiet screen: a breathing jade orb while it listens, your words under it, then one card that asks or reads back. Car mode = three giant buttons and the newest message read aloud.</p>
+<div class="row">
+<div><p class="cap">Listening</p><div class="ph"><div class="top">Ya Attune <span class="pill">Offline · private</span><span class="x">✕</span></div>
+<div class="orb"></div><p class="heard ar">«ابعت لأحمد إني هتأخر نص ساعة»</p><p class="sub">Egyptian Arabic · listening…</p></div></div>
+<div><p class="cap">Asks the language, reads back</p><div class="ph"><div class="top">Ya Attune <span class="x">✕</span></div>
+<div class="orb" style="width:110px;height:110px;margin:16px auto 10px"></div>
+<div class="card"><div class="k">To Ahmed Samir · WhatsApp</div><div class="msg ar">أبعتها عربي ولا فرانكو؟</div><div class="seg"><span>عربي</span><span class="on">Franco</span><span>English</span></div></div>
+<div class="card"><div class="k">Read back</div><div class="msg">Ana hat2akhar nos sa3a</div><div class="sub" style="text-align:start">Ahmed writes in Franco — remembered for next time</div><div class="btns"><span class="b">Change</span><span class="b bp">Send ➤</span></div></div>
+<div class="mic">🎙</div></div></div>
+<div><p class="cap">Car mode</p><div class="ph car"><div class="top big">🚗 Car mode <span class="x">✕</span></div>
+<div class="card"><div class="k">New · WhatsApp · 2 min</div><div class="msg ar">أحمد: هتيجي الشغل امتى؟</div><div class="btns"><span class="b">🔊 Read</span><span class="b bp">🎙 Reply</span></div></div>
+<div class="tile"><i>🎙</i>Talk</div><div class="tile"><i>💬</i>Messages · 3</div><div class="tile"><i>🧭</i>Navigate</div></div></div>
+</div></div>
+
+<div class="opt"><h2>B · Conversation</h2>
+<p class="d">The talk shows as bubbles (like a chat), the read-back is a bubble with buttons; the mic sits at the bottom. Car mode = the new messages as a big list with Reply on each.</p>
+<div class="row">
+<div><p class="cap">Talking</p><div class="ph"><div class="top">Ya Attune <span class="pill">Offline</span><span class="x">✕</span></div>
+<div class="bub me ar">ابعت لأحمد إني هتأخر نص ساعة</div><div class="bub it ar">أبعتها عربي ولا فرانكو؟</div><div class="bub me ar">فرانكو</div>
+<div class="bub it"><b>Ana hat2akhar nos sa3a</b><br><span style="color:var(--mut);font-size:12.5px">To Ahmed Samir · WhatsApp</span><div class="btns"><span class="b">Change</span><span class="b bp">Send</span></div></div>
+<div class="mic">🎙</div></div></div>
+<div><p class="cap">Who messaged me</p><div class="ph"><div class="top">Ya Attune <span class="x">✕</span></div>
+<div class="bub me ar">مين بعتلي؟</div><div class="bub it ar">٣ رسايل: أحمد «هتيجي امتى؟»، ماما «كلمني»، CIB: خصم ١٬٢٠٠ في كارفور.</div><div class="bub me ar">رد على ماما قولها هكلمك بعد الشغل</div><div class="bub it ar"><b>هكلمك بعد الشغل</b><div class="btns"><span class="b">غيّر</span><span class="b bp">ابعت</span></div></div>
+<div class="mic">🎙</div></div></div>
+<div><p class="cap">Car mode</p><div class="ph car"><div class="top big">🚗 Car mode <span class="x">✕</span></div>
+<div class="card"><div class="msg ar">أحمد · هتيجي الشغل امتى؟</div><div class="btns"><span class="b bp">🎙 Reply</span></div></div>
+<div class="card"><div class="msg ar">ماما · كلمني</div><div class="btns"><span class="b bp">📞 Call</span></div></div>
+<div class="card"><div class="msg">CIB · 1,200 at Carrefour</div><div class="btns"><span class="b">Logged in Money ✓</span></div></div>
+<div class="mic">🎙</div></div></div>
+</div></div>
+
+<div class="opt"><h2>C · One big card</h2>
+<p class="d">Always one huge card for the current step — nothing else on screen; you can answer by voice or tap the big buttons. Car mode = the same card, even bigger, with a giant mic.</p>
+<div class="row">
+<div><p class="cap">The step</p><div class="ph"><div class="top">Ya Attune <span class="x">✕</span></div>
+<div class="card" style="margin-top:40px;padding:22px"><div class="k">You said</div><div class="msg ar" style="font-size:20px">ابعت لأحمد إني هتأخر نص ساعة</div></div>
+<div class="card" style="padding:22px"><div class="k">Which language?</div><div class="seg" style="flex-direction:column"><span style="padding:14px;font-size:16px">عربي</span><span class="on" style="padding:14px;font-size:16px">Franco</span><span style="padding:14px;font-size:16px">English</span></div></div></div></div>
+<div><p class="cap">Read back</p><div class="ph"><div class="top">Ya Attune <span class="x">✕</span></div>
+<div class="card" style="margin-top:40px;padding:22px"><div class="k">To Ahmed Samir · WhatsApp</div><div class="msg" style="font-size:24px;margin:14px 0">Ana hat2akhar nos sa3a</div><div class="btns" style="flex-direction:column"><span class="b bp" style="padding:16px;font-size:17px">Send ➤</span><span class="b" style="padding:16px;font-size:17px">Change</span></div></div></div></div>
+<div><p class="cap">Car mode</p><div class="ph car"><div class="top big">🚗 Car mode <span class="x">✕</span></div>
+<div class="card" style="margin-top:30px;padding:22px"><div class="k">New from Ahmed</div><div class="msg ar" style="font-size:26px">هتيجي الشغل امتى؟</div></div>
+<div style="width:150px;height:150px;border-radius:50%;background:var(--acc);margin:50px auto 0;display:grid;place-items:center;font-size:56px;color:var(--on)">🎙</div><p class="sub" style="font-size:16px">Hold to reply</p></div></div>
+</div></div>
+</div><script>function setTheme(){}function setDir(){}</script></body></html>
