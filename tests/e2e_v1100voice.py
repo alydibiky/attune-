@@ -21,7 +21,8 @@ N.chatInbox = () = > '%s';
 N.chatReply = (j) => { window.__replies.push(JSON.parse(j)); return JSON.stringify({ok: true}); };
 N.intent = (j) => { window.__intents.push(JSON.parse(j)); return JSON.stringify({ok: true}); };
 N.speakWait = (id, a) => { window.__said = (window.__said || []).concat(JSON.parse(a).text); setTimeout(() => window.__attuneNative.resolve(id, '{}'), 10); };
-delete N.listen; N.listen = undefined;""".replace("= >", "=>") % json.dumps(INBOX).replace("'", "\\'")
+delete N.listen; N.listen = undefined;
+window.__sms = false; N.smsNotifs = () => window.__sms; N.setSmsNotifs = (on) => { window.__sms = on; };""".replace("= >", "=>") % json.dumps(INBOX).replace("'", "\\'")
 def say(page, text):
     page.fill("[data-testid=voice-input]", text); page.click("[data-testid=voice-type-go]"); page.wait_for_timeout(350)
 with sync_playwright() as p:
@@ -31,6 +32,9 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("[data-testid=home-voice]", timeout=15000)
     page.click("[data-testid=home-voice]"); page.wait_for_selector("[data-testid=voice-screen]")
     check(page.locator("[data-testid=voice-orb]").count() == 1, "the orb opens “Ya Attune” (design A)")
+    check(page.locator("[data-testid=sms-switch-input]").count() == 1 and not page.locator("[data-testid=sms-switch-input]").is_checked(), "SMS (Ali picked B): a switch, off by default")
+    page.click("[data-testid=sms-switch-input]")
+    check(page.evaluate("window.__sms") is True, "…switching it on tells the phone (setSmsNotifs)")
     say(page, "ابعت لأحمد إني هتأخر نص ساعة")
     opts = page.locator("[data-testid=voice-option]").all_inner_texts()
     check(opts == ["Ahmed Samir", "Ahmed Ali"], "two Ahmeds → it asks which one: %s" % opts)
