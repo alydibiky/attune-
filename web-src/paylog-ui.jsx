@@ -19,7 +19,7 @@ const markDone = (N, ids) => {
 };
 const logAuto = (entries) => {
   let log = []; try { log = JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch (e) {}
-  log = [...entries.map((e) => ({ amount: e.amount, currency: e.currency, direction: e.direction, party: e.party, app: e.app, ts: e.ts, at: Date.now() })), ...log].slice(0, 50);
+  log = [...entries.map((e) => ({ amount: e.amount, currency: e.currency, direction: e.direction, party: e.party, app: e.app, ts: e.ts, at: Date.now(), text: e.full || e.text || "", from: e.from || "" })), ...log].slice(0, 50);
   try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch (e) {}
 };
 /** v6.27 "by itself" while Money is NOT open: the sure payments go straight into Money's ledger (the same way Money adds
@@ -57,6 +57,14 @@ export function runAutoPay(N) {
   return r.ids.length;
 }
 
+/** The complete message a payment was read from — exactly as it arrived (Ali: "the evidence of the complete real message"). */
+export function Evidence({ e, testid = "paylog-evidence" }) {
+  const text = (e && (e.full || e.text)) || ""; if (!text) return null;
+  return <div className="mt-1.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 py-2" data-testid={testid}>
+    <p className={"m-0 text-[11px] font-extrabold " + U.muted}>{tr("The message as it arrived")}{e.from ? " · " + e.from : ""}{e.app ? " · " + e.app : ""}</p>
+    <p className="m-0 mt-1 text-[13px] leading-snug whitespace-pre-wrap select-text" dir="auto">{text}</p></div>;
+}
+
 export function PayInbox({ N, onAdd, ready = true }) {
   const can = payReader(N);
   const [on, setOn] = useState(() => { try { return can && N.payAccess(); } catch (e) { return false; } });
@@ -80,6 +88,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
   const add = (list) => { onAdd(toTxns(list)); finish(list); };
   const [auto, setAuto] = useState(autoOn);
   const [autoN, setAutoN] = useState(0);
+  const [showAuto, setShowAuto] = useState(false);
   // by itself, with Money open: the sure ones go in through Money; the rest wait here for a tap
   useEffect(() => {
     if (!on || !auto || !ready) return;   // only once Money is loaded, so nothing is marked done before Money has it
@@ -101,9 +110,11 @@ export function PayInbox({ N, onAdd, ready = true }) {
         <RestrictedHelp N={N} />
       </div></div>);
   }
+  if (!items.length && autoN && showAuto) return <AutoList n={autoN} close={() => setShowAuto(false)} />;
   if (!items.length) return autoN ? (
     <div className="calm shrink-0 px-2 py-2" data-testid="paylog-auto-done"><div className={U.card + " px-3.5 py-1 flex items-center gap-2"}>
       <Check size={15} className="text-[var(--c-pos)] shrink-0" /><span className="flex-1 text-[13.5px] font-semibold">{tr("{n} payments added by themselves", { n: autoN })}</span>
+      <button onClick={() => setShowAuto(true)} className="min-h-[44px] px-1 text-[12.5px] font-bold underline text-[var(--c-acc)]" data-testid="paylog-auto-see">{tr("See the messages")}</button>
       <button onClick={toggleAuto} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted} data-testid="paylog-auto-toggle">{auto ? tr("Ask me first") : tr("Add by themselves")}</button></div></div>) : null;
   const ledgerNow = open ? loadLedger() : null;
   return (
@@ -114,15 +125,29 @@ export function PayInbox({ N, onAdd, ready = true }) {
       {open ? (
         <div className="px-3.5 pb-3.5 space-y-2">
           {items.slice(0, 30).map((e) => (
-            <div key={e.id} className="flex items-center gap-2 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item">
+            <div key={e.id} className="rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item"><div className="flex items-center gap-2">
               <span className="flex-1 min-w-0"><b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "text-[var(--c-ink)]")} dir="ltr">{e.direction === "in" ? "+" : "−"}{e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} {e.currency}</b>
                 <span className={"block text-[12px] truncate " + U.muted} dir="auto">{[e.party, e.app, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span>
                 {alreadyIn(e, ledgerNow) ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-already">{tr("Already in Money?")}</span> : null}</span>
               <button onClick={() => add([e])} aria-label={tr("Add")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center" data-testid="paylog-add"><Check size={15} /></button>
               <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] grid place-items-center" data-testid="paylog-dismiss"><X size={15} /></button>
+            </div><Evidence e={e} />
             </div>))}
           <label className={"flex items-center gap-2 text-[12.5px] min-h-[44px] pt-1 " + U.muted}><input type="checkbox" checked={auto} onChange={toggleAuto} className="w-5 h-5 shrink-0 accent-[var(--c-acc)]" data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank and InstaPay messages with a name)")}</label>
           {items.length > 1 ? <button onClick={() => add(items)} className={U.btnP + " w-full"} data-testid="paylog-add-all">{tr("Add all {n}", { n: items.length })}</button> : null}
         </div>) : null}
     </div></div>);
+}
+
+/** The payments added by themselves, newest first, each with the complete message it came from. */
+function AutoList({ n, close }) {
+  let log = []; try { log = JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch (e) {}
+  return <div className="calm shrink-0 px-2 py-2" data-testid="paylog-auto-list"><div className={U.card + " p-3.5 space-y-2"}>
+    <div className="flex items-center gap-2"><b className="flex-1 text-[14px] font-extrabold">{tr("{n} payments added by themselves", { n })}</b>
+      <button onClick={close} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted}>{tr("Hide")}</button></div>
+    {log.slice(0, n).map((e, i) => <div key={i} className="rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2">
+      <b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "")} dir="ltr">{e.direction === "in" ? "+" : "−"}{Number(e.amount).toLocaleString("en-US")} {e.currency}</b>
+      <span className={"block text-[12px] " + U.muted} dir="auto">{[e.party, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span>
+      <Evidence e={{ full: e.text, from: e.from, app: e.app }} testid="paylog-auto-evidence" /></div>)}
+  </div></div>;
 }

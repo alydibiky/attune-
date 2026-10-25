@@ -27,7 +27,10 @@ class PayListener : NotificationListenerService() {
             WatchMatch.smsAllowed = Prefs.smsNotifs(applicationContext)   // the SMS switch (off unless the person turned it on)
             val ex = sbn.notification?.extras ?: return
             val title = ex.getCharSequence("android.title")?.toString().orEmpty()
-            val text = (ex.getCharSequence("android.bigText") ?: ex.getCharSequence("android.text"))?.toString().orEmpty()
+            var text = (ex.getCharSequence("android.bigText") ?: ex.getCharSequence("android.text"))?.toString().orEmpty()
+            // the complete message (Ali: "I want the evidence of the complete real message"): an SMS / chat app's newest message
+            // in full when the notification's own line is shorter
+            try { (ex.getParcelableArray("android.messages")?.lastOrNull() as? android.os.Bundle)?.getCharSequence("text")?.toString()?.let { if (it.length > text.length) text = it } } catch (e: Exception) { }
             val all = "$title $text"
             // v6.40: the message alerts the person asked for ("tell me when Ahmed messages me") — before the money check
             try { MessageWatch.check(applicationContext, sbn, title, text) } catch (e: Exception) { }
@@ -41,7 +44,7 @@ class PayListener : NotificationListenerService() {
             PayLog.add(applicationContext, JSONObject()
                 .put("id", sbn.packageName + ":" + sbn.postTime + ":" + all.hashCode())
                 .put("pkg", sbn.packageName).put("app", label)
-                .put("title", title.take(200)).put("text", text.take(1000)).put("ts", sbn.postTime))
+                .put("title", title.take(200)).put("text", text.take(2000)).put("ts", sbn.postTime))
         } catch (e: Exception) { }
     }
 }

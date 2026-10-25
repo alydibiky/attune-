@@ -7088,4 +7088,6 @@ export const AR = {
   "Could not send — opened the app instead": "مقدرتش أبعتها — فتحت الأبلكيشن بدالها",
   "Read SMS notifications": "قراءة إشعارات SMS",
   "For message alerts, “who messaged me” and replying by voice. Off by default — Attune never reads your SMS inbox and never keeps one-time codes.": "لتنبيهات الرسائل و«مين بعتلي» والرد بصوتك. مقفولة من الأول — Attune عمره ما يقرا صندوق رسايلك، وعمره ما يحتفظ بأكواد التحقق.",
+  "The message as it arrived": "الرسالة زي ما وصلت",
+  "See the messages": "شوف الرسايل",
 };

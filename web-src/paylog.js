@@ -41,8 +41,9 @@ export function readNotification(n, opts) {
   if (!text || OTP.test(text) || BALANCE_ONLY.test(text) || FUTURE.test(text) || (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text))) return null;
   const p = parsePayment(text, { ...(opts || {}), now: n.ts || undefined });
   if (!p || !p.ok || !(p.amount > 0) || !p.direction || p.confidence === "low") return null;
+  // full / from: the complete message as it arrived and who sent it — kept with the payment as its evidence (Ali, 25 Oct)
   return { id: n.id, app: n.app || n.pkg || "", amount: p.amount, currency: p.currency || "", direction: p.direction, party: p.party || "",
-    ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), confidence: p.confidence };
+    ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), full: String(n.text || "").slice(0, 2000), from: String(n.title || "").slice(0, 200), confidence: p.confidence };
 }
 
 /** All stored notifications → entries, newest first; the same payment twice (same direction and amount within
@@ -63,7 +64,13 @@ export function toTxns(entries) {
   const iso = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   return (entries || []).filter((e) => e.amount > 0).slice(0, 50).map((e) => ({
     type: e.direction === "in" ? "income" : "expense", amount: Math.round(e.amount * 100) / 100, currency: e.currency || "", cat: categorise([e.party, e.text].join(" "), e.direction),
-    note: [e.party, e.app].filter(Boolean).join(" · ").slice(0, 80) || "Payment", date: iso(e.ts), source: "notification", ts: e.ts || undefined }));
+    note: [e.party, e.app].filter(Boolean).join(" · ").slice(0, 80) || "Payment", date: iso(e.ts), source: "notification", ts: e.ts || undefined,
+    evidence: evidenceOf(e) }));
+}
+/** The proof kept on a payment read from a notification: the complete message as it arrived, who sent it, the app, the time. */
+export function evidenceOf(e) {
+  const text = String((e && (e.full || e.text)) || "").slice(0, 2000);
+  return text ? { text, from: String(e.from || "").slice(0, 200), app: String(e.app || "").slice(0, 80), ts: e.ts || 0 } : undefined;
 }
 
 /** v7.9 (Ali: a 599 "charged twice" that was one payment): is this notification already in Money? The same amount and day, and
@@ -89,7 +96,7 @@ export function appendToLedger(ledger, txns, now = Date.now()) {
     if (!(a > 0 && a < 1e9) || (t.type !== "expense" && t.type !== "income")) continue;
     const acc = L.accounts.find((x) => t.currency && x.currency === t.currency) || L.accounts[0];
     const id = "n" + now.toString(36) + Math.random().toString(36).slice(2, 6) + ids.length;
-    L.txns.push({ id, type: t.type, amount: Math.round(a * 100) / 100, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) });
+    L.txns.push({ id, type: t.type, amount: Math.round(a * 100) / 100, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0 } } : {}) });
     ids.push(id);
   }
   return { ledger: L, ids };
