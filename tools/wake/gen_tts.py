@@ -10,12 +10,22 @@ WAKE_PH = ["jˈaː ʔatjˈuːn", "jˈa ʔatjˈuːn", "jaː ʔattjˈuːn", "jˈa�
 NEG_PH = ["jˈaː ʔustˈaːz", "jˈaː ʔitnˈeːn", "jˈaː ʔantˈoːn", "jˈaː ʕatˈijja", "jˈaː ʕˈamr", "jˈaː tˈuːna", "jˈaː ʔabˈuːna", "jˈaː ʔamˈiːn",
           "jˈaː ʔˈaħmad", "jˈaː salˈiːm", "jˈaː batˈuːl", "jˈaː maʔmˈuːn", "jˈaː ʕatˈuːf", "jˈaː ʔaljˈuːm", "jˈaː taʕbˈaːn", "ʔatjˈuːb",
           "jˈaː ʔatˈuːr", "jˈaː ʔajjˈuːb", "ʔˈana tˈaʕbaːn", "jˈaː ʔaljˈuːn", "jˈaː maʔmuːn", "jˈaː maʕˈiːn", "jˈaː ʔantˈuːn", "jˈaː ʔaθˈiːr",
-          "jˈaː ʔatˈiːf", "jˈaː ʔatˈiːja", "jaː ʔatˈjaːm", "jˈaː saʕdˈuːn"]
+          "jˈaː ʔatˈiːf", "jˈaː ʔatˈiːja", "jaː ʔatˈjaːm", "jˈaː saʕdˈuːn",
+          "jˈaː maʔmˈuːn", "jˈaː zajtˈuːn", "jˈaː lajmˈuːn", "jˈaː hˈaːruːn", "jˈaː kaːnˈuːn", "jˈaː ʕajjˈuːn", "jˈaː ʔafjˈuːn", "jˈaː ʃamˈʕuːn",
+          "jˈaː ʔantˈuːn", "jˈaː ʔabdˈuːn", "jˈaː tˈuːt", "jˈaː ʕatjˈuːr", "jˈaː ʔattˈuːr", "jˈaː ʔidʒˈuːn", "jˈaː maʒnˈuːn",
+          "ʔatjˈuːb", "batˈuːn", "tʃatˈuːn", "jˈaː ʔaːtiː", "jˈaː ʔaltˈuːn", "jˈaː ʔamˈuːn", "jˈaː ʔamˈuːra", "jˈaː ʕˈaliː", "jˈaː ʔumm aħmad",
+          "jaː rˈaːjiq", "jˈaː ʕˈamm", "jˈaː bˈaːʃa", "jˈaː ʔˈuːsta", "jˈaː ʃˈabaːb", "jˈaː ħabˈiːbiː", "jˈaː saːtˈir", "jˈaː rˈabb",
+          "jˈaː ʔaxˈuːja", "jˈaː ʔabˈuːja", "jˈaː ʔatˈiːm", "jˈaː ʔatjˈaːf", "jˈaː ʔatˈtˤuːr", "jˈaː maʔtˈuːn", "jˈaː saʕˈiːd", "jˈaː nˈuːn"]
 NEG_TXT = ["a tune", "attend", "at noon", "attitude", "Hey Anthony", "Hey, a tuna", "Yeah, a tune", "ya tuna", "you attend", "fortune",
            "at June", "a tooth", "hey tune", "attain", "attack", "Antoine", "Hey Siri", "OK Google", "Alexa", "Hey Google", "costume", "commune",
            "yeah at noon", "the tune", "Attila", "Hey Anton", "yeah I attended", "hey, at two", "I want a tuna sandwich", "to tune the radio",
            "Hey Antonio", "a tomb", "hey Attila", "ya Allah", "ya habibi", "yeah, a tutu", "hey, attention please", "pay attention", "Hey Autumn",
-           "Hey Adam", "yeah Arthur", "ya Ahmed, tell Mohamed", "you are a tool", "a tuner", "at you", "Jay attune"]
+           "Hey Adam", "yeah Arthur", "ya Ahmed, tell Mohamed", "you are a tool", "a tuner", "at you", "Jay attune",
+           "it's a tune", "attuned", "the attendant", "a tunic", "a cartoon", "a platoon", "a balloon", "a raccoon", "Hey Ethan", "Hey Aiden",
+           "Hey Antoine", "yeah, at ten", "hey, it's June", "A to Z", "attitude problem", "ya know what", "yeah, a tooth", "hey, the tunes",
+           "fortunately", "opportune", "a few", "attorney", "attic", "Ottoman", "Hey Tony", "Hey Tom", "yo, a tune", "ah, tune in",
+           "I attune myself", "aye aye captain", "ya ya ya", "hey there", "hey you", "hey, a toon", "hey Atlas", "hey Athena", "Hey Cortana",
+           "Hey Bixby", "Hey Meta", "Hey Alexa", "OK Siri", "Hey Gemini", "Hey Claude", "Hey Assistant", "a tea", "a tube", "at the tube station"]
 CMDS = ["send a message to Ahmed", "who messaged me", "call mom", "what's the time", "open Money", "remind me at nine", "navigate home"]
 CMD_PH = ["ʔibʕˈat rˈisaːla li ʔˈaħmad", "mˈiːn baʕatˈliː", "kˈallim mˈaːma", "ʔissˈaːʕa kˈaːm", "ʔiftˈaħ ilfˈiluːs", "fakkˈarni bukra"]
 VOICES = {}

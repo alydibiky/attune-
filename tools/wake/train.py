@@ -94,35 +94,45 @@ def export(model, path):
     m = helper.make_model(g, opset_imports=[helper.make_opsetid("", 13)]); m.ir_version = 8
     onnx.checker.check_model(m); onnx.save(m, path)
 if __name__ == "__main__":
+    TEST = {"neg_ar_eg_test.npy", "neg_en_us_validation.npy"}
     pos_tr = sum([load(p) for p in sorted(glob.glob(F + "pos_train_*.npy"))], [])
     neg_tts = sum([load(p) for p in sorted(glob.glob(F + "neg_train_*.npy"))], [])
-    fl_tr = sum([load(F + "neg_%s.npy" % n) for n in ["ar_eg_validation", "tr_tr_validation", "fr_fr_validation", "es_419_validation"]], [])
-    en = load(F + "neg_en_us_validation.npy"); fl_tr += en[:300]; en_te = en[300:]
+    speech = []
+    for p in sorted(glob.glob(F + "neg_*.npy")):
+        n = p.split("/")[-1]
+        if n.startswith("neg_train_") or n.startswith("neg_test_") or n in TEST: continue
+        speech += load(p)
+    en = load(F + "neg_en_us_validation.npy"); speech += en[:300]; en_te = en[300:]
     ar_te = load(F + "neg_ar_eg_test.npy")
     pos_te, pos_ar = load(F + "pos_test_900000.npy"), load(F + "pos_test_ar_910000.npy"); neg_te = load(F + "neg_test_920000.npy")
+    print("speech hours for training %.1f" % hours(speech), flush=True)
     Pp, Pn = pos_windows(pos_tr)
-    Nt = neg_windows([c[0] for c in neg_tts]); Nf = neg_windows(fl_tr, stride=2)
+    Nt = neg_windows([c[0] for c in neg_tts])
+    # a random sample of the speech windows (all of it is searched for hard negatives every round)
+    sample = [speech[j] for j in rng.choice(len(speech), min(len(speech), 2500), replace=False)]
+    Nf = neg_windows(sample, stride=3)
     print("positives", len(Pp), "neg (in pos clips)", len(Pn), "neg tts", len(Nt), "neg speech", len(Nf), flush=True)
     X = np.concatenate([Pp, Pn, Nt, Nf]); y = np.concatenate([np.ones(len(Pp)), np.zeros(len(Pn) + len(Nt) + len(Nf))]).astype(np.float32)
     w = np.concatenate([np.full(len(Pp), 1.0), np.full(len(Pn), 1.0), np.full(len(Nt), 2.0), np.full(len(Nf), 1.0)]).astype(np.float32)
     w[y == 1] *= (w[y == 0].sum() / w[y == 1].sum()) * 0.5
-    model = MLP()
-    for rnd in range(3):
+    model = MLP(tuple(int(x) for x in (sys.argv[1] if len(sys.argv) > 1 else "1536,128,64,1").split(",")))
+    ROUNDS = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+    for rnd in range(ROUNDS):
         train(model, X, y, w, epochs=6 if rnd == 0 else 3)
-        # hard negatives: the speech windows it scores high
         hard = []
-        for seq in fl_tr:
+        for seq in speech + [c[0] for c in neg_tts]:
             e = seq.astype(np.float32)
             if len(e) < 17: continue
             W_ = wins(e, list(range(15, len(e)))); p = model.predict(W_)
-            hard.append(W_[p > 0.2])
+            if (p > 0.1).any(): hard.append(W_[p > 0.1])
         hard = np.concatenate(hard) if hard else np.zeros((0, 16, 96), np.float32)
-        print("round", rnd, "hard negatives", len(hard), flush=True)
+        if len(hard) > 60000: hard = hard[rng.choice(len(hard), 60000, replace=False)]
+        print("round", rnd, "hard negatives", len(hard), " test: recall_ar %.3f fa_ar/h %.1f" % (clip_detect(model, pos_ar, 0.5, 2), stream_triggers(model, ar_te, 0.5, 2) / hours(ar_te)), flush=True)
         if len(hard):
             X = np.concatenate([X, hard]); y = np.concatenate([y, np.zeros(len(hard), np.float32)]); w = np.concatenate([w, np.full(len(hard), 3.0, np.float32)])
     res = {}
-    for thr in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-        for pat in [1, 2, 3]:
+    for thr in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]:
+        for pat in [1, 2, 3, 4]:
             r = dict(thr=thr, patience=pat, recall_en=clip_detect(model, pos_te, thr, pat), recall_ar=clip_detect(model, pos_ar, thr, pat),
                      fa_ar_per_h=stream_triggers(model, ar_te, thr, pat) / hours(ar_te), fa_en_per_h=stream_triggers(model, en_te, thr, pat) / hours(en_te),
                      fa_soundalike=stream_triggers(model, [c[0] for c in neg_te], thr, pat) / len(neg_te))
