@@ -711,17 +711,43 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun listen(id: String, lang: String) {
         val v = voice ?: return reject(id, "Voice input is not available")
+        // voice phase 3: the wake-word service lets the mic go while Attune listens itself, and takes it back after
+        WakeService.selfListening = true; WakeService.resumeLater(ctx, 0)
         val sink = object : Voice.Sink {
             override fun partial(text: String) = progress(id, 0, "partial", text)
-            override fun done(text: String) = resolve(id, JSONObject().put("text", text))
-            override fun failed(message: String) = reject(id, message)
+            override fun done(text: String) { WakeService.selfListening = false; WakeService.resumeLater(ctx, 400); resolve(id, JSONObject().put("text", text)) }
+            override fun failed(message: String) { WakeService.selfListening = false; WakeService.resumeLater(ctx, 400); reject(id, message) }
         }
         lastVoiceSink = sink
         v.start(lang, sink) { askMic?.invoke() }
     }
 
     @JavascriptInterface
-    fun stopListening() { voice?.stop() }
+    fun stopListening() { voice?.stop(); WakeService.selfListening = false; WakeService.resumeLater(ctx, 400) }
+
+    /** Voice phase 3 «يا أتيون»: {on, when, sensitivity, mic, overlay, paused, score, error}. */
+    @JavascriptInterface
+    fun wakeState(): String = try { WakeService.state(ctx) } catch (e: Exception) { "{}" }
+    /** Switch the wake word on / off (asks for the microphone first when it is not allowed yet). */
+    @JavascriptInterface
+    fun setWake(on: Boolean) {
+        if (on && ctx.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) { Prefs.setWake(ctx, true); askMic?.invoke(); return }
+        web.post { WakeService.set(ctx, on) }
+    }
+    /** {when: always|screen|charging, sensitivity: low|normal|high} */
+    @JavascriptInterface
+    fun setWakeOpts(json: String) {
+        try { val o = JSONObject(json); Prefs.setWakeOpts(ctx, o.optString("when", "").ifEmpty { null }, o.optString("sensitivity", "").ifEmpty { null }) } catch (e: Exception) {}
+        web.post { WakeService.resume(ctx) }
+    }
+    /** The voice screen closed: the wake word listens again. */
+    @JavascriptInterface
+    fun wakeResume() { WakeService.selfListening = false; web.post { WakeService.resume(ctx) } }
+    /** "Open by itself over other apps" — Android's own page for it (otherwise a tap-to-talk notification appears). */
+    @JavascriptInterface
+    fun wakeOverlay() {
+        try { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:" + ctx.packageName)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) {}
+    }
 
     // ---- slow calls ------------------------------------------------------------
 

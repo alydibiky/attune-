@@ -266,7 +266,8 @@ with sync_playwright() as pw:
     page.wait_for_selector("text=Payment found", timeout=5000)
     page.get_by_role("button", name="Add to Money").click()
     page.wait_for_timeout(2500)
-    check(page.locator("text=read from:").count() >= 1, "Add to Money reads it into the ledger sheet")
+    check(page.locator("[data-testid=money-add-sheet]").count() == 1 and page.locator("[data-testid=add-evidence]").count() == 1 and "2500" in page.locator("[data-testid=money-add-sheet] input[inputmode=decimal]").first.input_value(), "Add to Money reads it into Attune's add sheet (2,500, the message kept as evidence)")
+    page.click("[data-testid=money-add-close]"); page.wait_for_timeout(200)
     nav.locator("button:has-text('Chat')").click(); page.wait_for_timeout(200)
 
     # 9. history drawer, new chat, persistence

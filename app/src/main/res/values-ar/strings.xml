@@ -17,4 +17,15 @@
     <string name="widget_fit_left">سعرة فاضلة النهارده</string>
     <string name="widget_fit_empty">افتح «الأكل واللياقة» عشان تظبط هدفك</string>
     <string name="tile_instant">Attune فوري</string>
+    <string name="wake_channel">يا أتيون (مستني يسمعها)</string>
+    <string name="wake_channel_heard">يا أتيون — سمعتك</string>
+    <string name="wake_on_title">مستني «يا أتيون»</string>
+    <string name="wake_wait_title">«يا أتيون» شغّالة (مستنية)</string>
+    <string name="wake_paused_title">«يا أتيون» واقفة ساعة</string>
+    <string name="wake_on_text">على الموبايل ده بس — مفيش حاجة بتتسجّل أو بتتبعت</string>
+    <string name="wake_pause">وقّفها ساعة</string>
+    <string name="wake_resume">اسمع تاني</string>
+    <string name="wake_off">اقفلها</string>
+    <string name="wake_heard_title">أيوه؟ دوس واتكلم</string>
+    <string name="wake_heard_text">قلت «يا أتيون»</string>
 </resources>

@@ -99,11 +99,11 @@ with sync_playwright() as p:
             page.click("[data-testid=money-report-back]"); page.wait_for_timeout(200)
             check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", tag + "Back returns to the calm view")
             page.click("[data-testid=money-more]"); page.click("[data-testid=money-open-ledger]"); page.wait_for_timeout(600)
-            check(page.locator("[data-testid=money-yusr]").is_visible(), tag + "Ledger opens Money itself (Yusr)")
+            check(page.locator("[data-testid=money-list]").count() == 1 and page.locator("[data-testid=money-yusr]").is_hidden(), tag + "Ledger opens Attune's own list (never the old ledger)")
             fr = [f for f in page.frames if f != page.main_frame and "Yusr" in (f.title() or "")]
             n = fr[0].evaluate("db.txns.length") if fr else 0
             check(n == 9, tag + "…which has the 2 entries the box wrote: %s" % n)
-            page.click("[data-testid=money-ledger-back]"); page.wait_for_timeout(200)
+            page.click("[data-testid=money-bar-home]"); page.wait_for_timeout(200)
             check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", tag + "…and back")
             page.click("[data-testid=hub-tab-life]"); page.wait_for_selector("[data-testid=life-page]", timeout=4000)
             check(page.locator("[data-testid=hub-part-life]").count() == 1 and page.locator("[data-testid=hub-part-reminders]").count() == 1, tag + "Follow-ups opens on People & plans, Reminders in its switch")
@@ -150,9 +150,9 @@ with sync_playwright() as p:
         shot(page, "money-report-desktop-" + theme)
         page.click("[data-testid=money-report-back]"); page.wait_for_timeout(200)
         page.click("[data-testid=money-more]"); page.click("[data-testid=money-open-ledger]"); page.wait_for_timeout(1200)
-        check(page.locator("[data-testid=money-yusr]").is_visible(), tag + "the ledger opens inside Money")
+        check(page.locator("[data-testid=money-list]").count() == 1 and page.locator("[data-testid=money-yusr]").is_hidden(), tag + "the ledger opens inside Money as Attune's own list (never the old screen)")
         fr = [f for f in page.frames if f != page.main_frame and "Yusr" in (f.title() or "")]
-        check(bool(fr), tag + "…Yusr itself")
+        check(bool(fr), tag + "…Yusr still runs underneath as the engine")
         for t in ["life", "guardian", "deal"]:
             page.click("[data-testid=hub-tab-" + t + "]"); page.wait_for_timeout(700); shot(page, t + "-desktop-" + theme)
         ctx.close()

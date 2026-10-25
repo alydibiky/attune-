@@ -49,9 +49,14 @@ const BRIDGE_NS = "yusr-bridge";
 //   ai-request    Yusr asks Attune to run the on-device model for it. Yusr
 //                 holds no model and never will: inference lives in exactly
 //                 one place, so there is one prompt to audit, not two.
-const OUT_TYPES = new Set(["propose-txn", "request", "ai-result", "entitlement", "go", "add-txns"]);   // v6.27: go (open a screen), add-txns (confirmed / sure payments read from notifications)
+const OUT_TYPES = new Set(["propose-txn", "request", "ai-result", "entitlement", "go", "add-txns", "do"]);   // v8.0: do = a change the person made in Attune's own Money screens, applied by Yusr's own forms   // v6.27: go (open a screen), add-txns (confirmed / sure payments read from notifications)
 const GO_SCREENS = new Set(["home", "trends", "accounts", "bills", "goals", "zakat", "notes", "invoices", "settings", "add-bill", "debt", "add-account"]);   // v7.6: Money's bottom bar opens the ledger's own forms
-const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "error", "ai-request", "open-plan"]);
+const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "error", "ai-request", "open-plan", "done"]);
+// v8.0 (Ali: no more old screens): what Attune's Money screens may ask Yusr to do — each one fills Yusr's own form and presses
+// Yusr's own Save. Never a zakat FIGURE: zakat-pay is the person's record of a payment they made; zakat-set changes the
+// calculation's inputs (prices, school); what is due is still computed by Yusr alone (rule 1).
+const DO_OPS = new Set(["tx-edit", "tx-delete", "acct-save", "acct-delete", "rec-save", "rec-delete", "goal-save", "goal-delete", "goal-add",
+  "debt-save", "debt-delete", "debt-pay", "zakat-pay", "zakat-set", "cat-add", "project-add", "prefs", "rates", "export", "import"]);
 
 // What Yusr is allowed to ask the model for. A closed list, because "run this
 // arbitrary prompt" would let a future screen quietly route a fiqh question
@@ -163,6 +168,12 @@ function validateOut(type, data) {
       if (t.type === "zakat" || t.cat === "zakat") return { ok: false, why: "Zakat is recorded in Yusr only" };
     }
   }
+  if (type === "do") {
+    if (!data || !DO_OPS.has(data.op)) return { ok: false, why: "unknown change " + (data && data.op) };
+    const a = data.args || {};
+    if ("due" in a || "zakatDue" in a || "nisab" in a) return { ok: false, why: "a zakat figure never comes from outside" };
+    if (a.amount != null && (num(a.amount) === null || a.amount <= 0)) return { ok: false, why: "an amount must be a positive number" };
+  }
   if (type === "entitlement") {
     if (!data || typeof data.pro !== "boolean") return { ok: false, why: "entitlement needs pro: true or false" };
   }
@@ -226,6 +237,8 @@ function createBridge(post, opts) {
     go(screen) { return send("go", { screen: String(screen || "home") }); },
     /** v6.27: payments the person confirmed (read from notifications) → Money: [{type, amount, currency, note, date}] */
     addTxns(txns) { return send("add-txns", { txns: (txns || []).slice(0, 50) }); },
+    /** v8.0: a change made in Attune's own Money screens → Yusr applies it with its own form ({op, args}); answers "done". */
+    doIt(op, args) { return send("do", { op, args: args || {} }); },
     // Handshake, not hope. The child can finish loading and announce itself
     // before the parent has attached its listener — a race that shows up
     // exactly once in ten launches and is miserable to debug. So the parent

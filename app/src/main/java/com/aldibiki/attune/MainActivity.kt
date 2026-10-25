@@ -139,6 +139,7 @@ class MainActivity : AppCompatActivity() {
     }
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
+        if (granted && Prefs.wake(this)) WakeService.set(this, true)   // voice phase 3: the wake word was waiting for the mic
     }
     // v6.12: Maps → "my location": the page asks (navigator.geolocation), Android asks the person once
     private var geoPending: Pair<String, android.webkit.GeolocationPermissions.Callback>? = null
@@ -423,6 +424,8 @@ class MainActivity : AppCompatActivity() {
     // saves the chat on the way out and refreshes what it shows on return).
     override fun onResume() {
         super.onResume()
+        visible = true
+        try { WakeService.ensure(this) } catch (e: Exception) {}   // voice phase 3: back on if it was on (the service may have been stopped)
         if (::web.isInitialized) {
             web.onResume(); web.resumeTimers()
             web.postInvalidate()
@@ -438,7 +441,11 @@ class MainActivity : AppCompatActivity() {
     // of memory while Attune is in the background, the model (several GB) is let go — unless something
     // is being written or drawn — and it comes back by itself when Attune is opened again.
     // times the page's renderer was lost in the last minute (kept across recreate())
-    private companion object { val pageLosses = mutableListOf<Long>() }
+    companion object {
+        internal val pageLosses = mutableListOf<Long>()
+        /** On screen right now (the wake word may open the voice screen directly then). */
+        @Volatile var visible = false
+    }
 
     private var freedForMemory = false
     @Suppress("DEPRECATION")
@@ -465,6 +472,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        visible = false
         if (::web.isInitialized) web.evaluateJavascript("window.dispatchEvent(new Event('attune-pause'))", null)
         super.onPause()
     }
@@ -510,6 +518,7 @@ class MainActivity : AppCompatActivity() {
         // v6.37: open one page (the Instant quick-settings tile, InstantTile.kt)
         intent?.getStringExtra(EXTRA_OPEN_PAGE)?.let { mode ->
             intent.removeExtra(EXTRA_OPEN_PAGE)
+            if (intent.getBooleanExtra(WakeService.EXTRA_WAKE, false)) { intent.removeExtra(WakeService.EXTRA_WAKE); WakeService.unlockFirst(this) }
             val p = JSONObject().put("kind", "open").put("mode", mode)
             if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
             return

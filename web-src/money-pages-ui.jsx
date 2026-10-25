@@ -73,26 +73,29 @@ export function MoneyBar({ pane, setPane, onAdd, wide, dots = {}, panes = PANES 
 }
 
 // ---- the + sheet -----------------------------------------------------------------------------------------------------------------------
-export function AddSheet({ L, onSave, onDebt, onClose }) {
+export function AddSheet({ L, onSave, onDebt, onClose, prefill = null }) {
   const accs = ((L && L.accounts) || []).filter((a) => !["gold", "silver", "camels", "cattle", "sheep"].includes(a.kind));
-  const [type, setType] = useState("expense");
-  const [amount, setAmount] = useState("");
-  const [cat, setCat] = useState("food");
+  const [type, setType] = useState(prefill && prefill.type === "income" ? "income" : "expense");
+  const [amount, setAmount] = useState(prefill && prefill.amount ? String(prefill.amount) : "");
+  const [cat, setCat] = useState(prefill && prefill.type === "income" ? "salary" : "food");
   const [account, setAccount] = useState(accs[0] ? accs[0].id : "");
   const [toAccount, setTo] = useState("");
-  const [date, setDate] = useState(isoDay(Date.now()));
-  const [note, setNote] = useState("");
+  const [date, setDate] = useState(prefill && prefill.date ? prefill.date : isoDay(Date.now()));
+  const [note, setNote] = useState(prefill && prefill.note ? prefill.note : "");
   const [err, setErr] = useState("");
   const cats = useMemo(() => sheetCats(L, type, ar()), [L, type]);
   const from = accs.find((a) => a.id === account);
   const tos = accs.filter((a) => a.id !== account && (!from || (a.currency || "") === (from.currency || "")));
   const pick = (t) => { setType(t); setErr(""); if (t === "income") setCat("salary"); else if (t === "expense") setCat("food"); };
-  const save = () => { const r = sheetTxn({ type, amount, cat, account, toAccount, date, note }); if (!r.ok) return setErr(tr(r.why)); onSave(r.txn); };
+  const save = () => { const r = sheetTxn({ type, amount, cat, account, toAccount, date, note }); if (!r.ok) return setErr(tr(r.why)); onSave(prefill && prefill.evidence ? { ...r.txn, evidence: prefill.evidence } : r.txn); };
   const pill = (on) => "min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold whitespace-nowrap transition-colors duration-150 " + (on ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]");
   return <div className="calm fixed inset-0 z-[80] bg-black/55 flex flex-col justify-end lg:items-center lg:justify-center" onClick={onClose} data-testid="money-add-sheet">
     <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[26px] lg:rounded-[26px] w-full lg:max-w-lg max-h-[92vh] overflow-y-auto p-4 pb-6 space-y-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
       <div className="flex items-center gap-2"><p className="flex-1 text-[18px] font-black m-0">{tr("Add to Money")}</p>
-        <button onClick={onClose} aria-label={tr("Close")} className="w-10 h-10 rounded-full grid place-items-center c-sub"><X size={18} /></button></div>
+        <button onClick={onClose} aria-label={tr("Close")} className="w-10 h-10 rounded-full grid place-items-center c-sub" data-testid="money-add-close"><X size={18} /></button></div>
+      {prefill && prefill.evidence && prefill.evidence.text ? <details className="rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 py-2" data-testid="add-evidence">
+        <summary className="text-[12.5px] font-extrabold c-sub cursor-pointer">{tr("Read from the message — check it")}</summary>
+        <p className="m-0 mt-1.5 text-[13px] whitespace-pre-wrap break-words" dir="auto">{prefill.evidence.text}</p></details> : null}
       <div className="grid grid-cols-4 gap-1 p-1 rounded-full bg-[var(--c-bg)] border border-[var(--c-ln)]" role="radiogroup" data-testid="add-type">
         {[["expense", "Expense"], ["income", "Income"], ["transfer", "Transfer"], ["debt", "Lend / borrow"]].map(([id, l]) => <button key={id} role="radio" aria-checked={type === id}
           onClick={() => (id === "debt" ? onDebt() : pick(id))} data-testid={"add-type-" + id}
@@ -118,6 +121,8 @@ export function AddSheet({ L, onSave, onDebt, onClose }) {
     </div></div>;
 }
 
+// v8.0: what a page needs to draw its own header and cards (used by money-sheets-ui.jsx)
+export { Head as MoneyHead, Card as MoneyCard };
 // ---- More ----------------------------------------------------------------------------------------------------------------------------
 export function MoreSheet({ open, onClose }) {
   // v7.9 (Ali): Notes left Money (its notes were copied into Mind), and invoices live in Business → Books now
@@ -161,11 +166,11 @@ export function AccountsPane({ L, wide, openLedger, saveFile }) {
       {a.totals.filter((x) => x.currency !== cur).map((x) => <span key={x.currency} className="me-3 text-[13px] font-bold c-sub tabular-nums" dir="ltr">{amt(x.balance, x.currency)}</span>)}</div>
     <div className={wide ? "grid grid-cols-2 gap-3" : "space-y-3"}>
       <Card title={tr("Money accounts")}>
-        {a.money.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={x.last ? T("{n} entries · last {d}", { n: x.count, d: dayLabel(x.last) }) : tr("No entries yet")} end={amt(x.balance, x.currency)} tone={x.balance < 0 ? "neg" : undefined} onClick={() => openLedger("accounts")} testid="acc-row" />)}
+        {a.money.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={x.last ? T("{n} entries · last {d}", { n: x.count, d: dayLabel(x.last) }) : tr("No entries yet")} end={amt(x.balance, x.currency)} tone={x.balance < 0 ? "neg" : undefined} onClick={() => openLedger("account:" + x.id)} testid="acc-row" />)}
         {!a.money.length ? <p className="text-[13px] c-sub m-0 py-2">{tr("No account yet.")}</p> : null}
       </Card>
       {a.other.length ? <Card title={tr("Gold, silver & livestock")}>
-        {a.other.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={x.unit} end={fmt(x.balance) + " " + (x.kind === "herd" ? tr("head") : tr("g"))} onClick={() => openLedger("accounts")} testid="acc-row-other" />)}</Card> : null}
+        {a.other.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={x.unit} end={fmt(x.balance) + " " + (x.kind === "herd" ? tr("head") : tr("g"))} onClick={() => openLedger("account:" + x.id)} testid="acc-row-other" />)}</Card> : null}
     </div>
     <SeeAll testid="money-accounts-open-report" onClick={() => setRep(true)} title={tr("See all → Accounts report")} sub={tr("Balance month by month, money in and out of each account")} cta={tr("Report")} />
   </div>;
@@ -198,7 +203,7 @@ export function BillsPane({ L, wide, openLedger, saveFile }) {
       <Tile label={tr("Due in 7 days")} value={amt(b.dueTotal, cur)} tone={b.late ? "warn" : undefined} pill={b.late ? T("{n} late", { n: b.late }) : null} sub={b.due7.length === 1 ? tr("1 bill") : T("{n} bills", { n: b.due7.length })} testid="bills-due" />
     </div>
     <Card title={tr("Coming up")} testid="bills-list">
-      {b.list.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={tr(FREQ[x.freq] || x.freq) + (x.account ? " · " + x.account : "")} end={amt(x.amount, x.currency)} endSub={whenText(x)} tone={x.late ? "warn" : undefined} onClick={() => openLedger("bills")} testid="bill-row" />)}
+      {b.list.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={tr(FREQ[x.freq] || x.freq) + (x.account ? " · " + x.account : "")} end={amt(x.amount, x.currency)} endSub={whenText(x)} tone={x.late ? "warn" : undefined} onClick={() => openLedger("bill:" + x.id)} testid="bill-row" />)}
       {!b.list.length ? <p className="text-[13px] c-sub m-0 py-2" data-testid="bills-empty">{tr("No bills yet — add rent, internet, school fees… and Attune posts them on their day.")}</p> : null}
     </Card>
     <SeeAll testid="money-bills-open-report" onClick={() => setRep(true)} title={tr("See all → Bills report")} sub={tr("What bills cost each month, and what was paid")} cta={tr("Report")} />
@@ -227,8 +232,8 @@ export function ZakatPane({ L, snap, wide, openLedger }) {
   return <div className="space-y-3" data-testid="money-zakat">
     <Head title={tr("Zakāt")} />
     <div className={U.card + " p-4 space-y-2.5"} data-testid="zakat-status">
-      {!s ? <><p className="m-0 text-[14.5px] font-bold">{tr("Zakāt is worked out by the ledger's own Zakāt engine.")}</p><p className="m-0 text-[13px] c-sub">{tr("Open it once to set your madhhab and gold price — then the figures show here.")}</p></>
-        : s.noPrice ? <p className="m-0 text-[14.5px] font-bold">{tr("Add today's gold price in the Zakāt calculator to see the niṣāb.")}</p>
+      {!s ? <><p className="m-0 text-[14.5px] font-bold">{tr("Zakāt is worked out by the ledger's own Zakāt engine.")}</p><p className="m-0 text-[13px] c-sub">{tr("Set your madhhab and today's gold price in Zakāt settings — then the figures show here.")}</p></>
+        : s.noPrice ? <p className="m-0 text-[14.5px] font-bold">{tr("Add today's gold price in Zakāt settings to see the niṣāb.")}</p>
         : <>
           <div className="flex items-start justify-between gap-2"><span className="text-[12px] font-bold c-sub">{s.due ? tr("Zakāt due") : tr("Not due yet")}</span>
             {z.hawlDays != null ? <span className={U.tag(s.due ? "amber" : "gray")}>{z.hawlDays > 0 ? T("ḥawl ends in {n} days", { n: z.hawlDays }) : tr("ḥawl complete")}</span> : null}</div>
@@ -241,12 +246,12 @@ export function ZakatPane({ L, snap, wide, openLedger }) {
           {why ? <div className="text-[12.5px] leading-relaxed c-sub space-y-1" dir="auto"><p className="m-0 whitespace-pre-line">{z.basis}</p>{z.sources.map((x, i) => <p key={i} className="m-0">· {x}</p>)}</div> : null}
         </>}
       <div className="grid grid-cols-2 gap-2 pt-1">
-        <button className={U.btnP} onClick={() => openLedger("zakat")} data-testid="zakat-open">{tr("Zakāt calculator")}</button>
-        <button className={U.btnS + " h-12! min-h-[48px]!"} onClick={() => openLedger("zakat")} data-testid="zakat-pay">{tr("Record a payment")}</button></div>
+        <button className={U.btnP} onClick={() => openLedger("zakat-settings")} data-testid="zakat-open">{tr("Zakāt settings")}</button>
+        <button className={U.btnS + " h-12! min-h-[48px]!"} onClick={() => openLedger("zakat-pay")} data-testid="zakat-pay">{tr("Record a payment")}</button></div>
       <p className="m-0 text-[11.5px] c-sub">{tr("The rulings and the numbers come from the ledger's Zakāt engine, unchanged — Attune only shows them.")}</p>
     </div>
     <Card title={tr("Paid")} right={<span className="text-[12.5px] font-bold c-sub tabular-nums">{T("last 12 months: {a}", { a: amt(z.paidYear, cur) })}</span>} testid="zakat-paid">
-      {z.payments.slice(0, 4).map((p) => <Row key={p.id || p.date + p.amount} icon="☪" title={p.to || tr("Zakāt")} sub={dayLabel(p.date)} end={amt(p.amount, cur)} onClick={() => openLedger("zakat")} testid="zakat-row" />)}
+      {z.payments.slice(0, 4).map((p) => <Row key={p.id || p.date + p.amount} icon="☪" title={p.to || tr("Zakāt")} sub={dayLabel(p.date)} end={amt(p.amount, cur)} onClick={() => openLedger("home")} testid="zakat-row" />)}
       {!z.payments.length ? <p className="text-[13px] c-sub m-0 py-2">{tr("No payment recorded yet.")}</p> : null}</Card>
     <SeeAll testid="money-zakat-open-report" onClick={() => setRep(true)} title={tr("See all → Zakāt report")} sub={tr("What you paid each year, every payment")} cta={tr("Report")} />
   </div>;

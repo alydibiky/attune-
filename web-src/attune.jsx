@@ -63,7 +63,9 @@ import { PhoneHome } from "./home-ui.jsx";
 import { logTool } from "./toollog.js";   // v7.8 the Tools report
 import { ToolsHub, FamilyReport, FamilySeeAll, StudioOffDevice } from "./tools-hub-ui.jsx";
 const wordCount = (s) => String(s || "").trim().split(/\s+/).filter(Boolean).length;
-import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES, panesFor } from "./money-pages-ui.jsx";   // v7.6 Money's bottom bar
+import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES, panesFor, AccountsPane, BillsPane, ZakatPane, MoneyHead, MoneyCard } from "./money-pages-ui.jsx";
+import { AccountSheet, BillSheet, TxSheet, TxListPane, GoalsPane, DebtSheet, ZakatPaySheet, ZakatSetSheet, LedgerSettings } from "./money-sheets-ui.jsx";
+import { sheetCats as moneyCats } from "./money-pages.js";   // v7.6 Money's bottom bar
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
@@ -6135,7 +6137,19 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // tab but Home is Yusr's own screen, with this bar under it. More (top) = Automations, Invoices (in Business), the full ledger.
   const [pane, setPaneRaw] = React.useState("home");
   useSubBack(view !== "calm", () => { setView("calm"); setPaneRaw("home"); });
-  const setPane = (p) => { setPaneRaw(p); setMoreOpen(false); if (p === "home") { setView("calm"); return; } setView("ledger"); if (bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(p); };
+  // v8.0 (Ali: "Money redirects me to the old app — I don't want that at all"): every tab is Attune's own page now; Yusr stays
+  // hidden underneath as the engine (its data, its Zakāt) and changes go to it through the bridge ("do")
+  const setPane = (p) => { setPaneRaw(p); setMoreOpen(false); setView(p === "home" ? "calm" : "pane"); };
+  const [msheet, setMsheet] = React.useState(null);    // {k: account|bill|tx|debt|zakat-pay|zakat-set, id}
+  const [listAcc, setListAcc] = React.useState(null);  // the entries list, for one account or all
+  const [addPrefill, setAddPrefill] = React.useState(null);
+  const doQueue = React.useRef([]);
+  const runDo = (op, args) => new Promise((resolve) => {
+    const r = bridgeRef.current && bridgeRef.current.doIt ? bridgeRef.current.doIt(op, args) : { ok: false, why: "not ready" };
+    if (!r || r.ok === false) return resolve({ ok: false, error: (r && r.why) || "not ready" });
+    const entry = { resolve, t: setTimeout(() => { doQueue.current = doQueue.current.filter((x) => x !== entry); resolve({ ok: false, error: "timeout" }); }, 6000) };
+    doQueue.current.push(entry);
+  });
   const [addOpen, setAddOpen] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
   const [account, setAccount] = React.useState(null);      // the account pill: null = all accounts
@@ -6210,6 +6224,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 
     bridge.on("ready", () => { setReady(true); bridge.request("summary"); bridge.sendEntitlement(proRef.current); });
     bridge.on("open-plan", () => { if (openPlanRef.current) openPlanRef.current(); });
+    bridge.on("done", (d) => { const e = doQueue.current.shift(); if (e) { clearTimeout(e.t); e.resolve(d || { ok: false }); } setTimeout(() => setVer((x) => x + 1), 150); });
     bridge.on("snapshot", (d) => { setSnapshot(d); snapRef.current = d; setVer((x) => x + 1);
       if (d.share) setLinked(d.share === "on" ? true : d.share === "off" ? false : null); });
     bridge.on("txn-added", (d) => {
@@ -6313,9 +6328,9 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
     if (!p) { setErr(tr("Nothing to read in that.")); return; }
     if (p.declined) { setErr(tr("That payment did not go through, so there is nothing to record.")); return; }
     if (!p.ok) { setErr(`Couldn't be sure of the ${p.missing.join(" or ")}. Open Money and add it by hand.`); return; }
-    const r = bridgeRef.current && bridgeRef.current.proposeTransaction(p);
-    if (r && r.ok) { setView("ledger"); flash(tr("Sent to Yusr — pick the account and confirm")); }
-    else setErr((r && r.why) || "Yusr isn't connected yet.");
+    // v8.0: Attune's own add sheet, filled in (the person picks the account and saves); the message is kept as its evidence
+    setSheet(false); setAddPrefill({ type: p.direction === "in" ? "income" : "expense", amount: p.amount, note: [p.party, p.ref ? "#" + p.ref : ""].filter(Boolean).join(" ").slice(0, 80), date: p.date ? new Date(p.date).toISOString().slice(0, 10) : undefined, evidence: { text: String(src).slice(0, 2000), from: "", app: tr("Shared"), ts: Date.now() } });
+    setAddOpen(true); flash(tr("Check it, pick the account and save"));
   };
 
   const askMoney = async () => {
@@ -6409,8 +6424,20 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 <h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${esc(tr("Account"))}</th><th>${esc(tr("Amount"))}</th></tr>${rep.rows.map((t) => `<tr><td>${t.date}</td><td>${esc(t.note || t.catName)}</td><td>${esc(t.catName)}</td><td>${esc(t.account)}</td><td class="n">${t.type === "expense" ? "−" : "+"}${f(t.amount)} ${t.currency}</td></tr>`).join("")}</table></body></html>`;
     sharePdf({ html, name: "attune-money-" + rep.month.from.slice(0, 7), text: tr("Money Report"), flash });
   };
-  const openLedger = (sc) => { setMoreOpen(false); setAddOpen(false); setPaneRaw(MONEY_PANES.some((x) => x[0] === sc && sc !== "home") ? sc : "home"); setView("ledger"); if (sc && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(sc); };
-  React.useEffect(() => { if (ready && pane !== "home" && view === "ledger" && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(pane); }, [ready]);
+  const openLedger = (sc) => {
+    setMoreOpen(false); setAddOpen(false); const s = String(sc || "home");
+    if (s.startsWith("tx:")) return setMsheet({ k: "tx", id: s.slice(3) });
+    if (s.startsWith("account:")) return setMsheet({ k: "account", id: s.slice(8) });
+    if (s.startsWith("bill:")) return setMsheet({ k: "bill", id: s.slice(5) });
+    if (s === "add-account") return setMsheet({ k: "account" });
+    if (s === "add-bill") return setMsheet({ k: "bill" });
+    if (s === "debt") return setMsheet({ k: "debt" });
+    if (s === "zakat-pay") return setMsheet({ k: "zakat-pay" });
+    if (s === "zakat-settings") return setMsheet({ k: "zakat-set" });
+    if (s === "settings") { setView("settings"); return; }
+    if (MONEY_PANES.some((x) => x[0] === s && s !== "home")) return setPane(s);
+    setListAcc(null); setView("list");
+  };
   const saveText = async (name, text, mime) => {
     try { if (NATIVE) { await nativeCall("saveFile", { name, mime, text }); flash(tr("Saved {n}", { n: name })); return; } } catch (e) {}
     try { const url = URL.createObjectURL(new Blob([text], { type: mime })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); } catch (e) {}
@@ -6436,6 +6463,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
     return d ? { text: tr("{b} is due {d}: {a}", { b: d.note, d: d.late ? tr("— it's late") : d.date.slice(5), a: fmtMoneyPlain(d.amount) + " " + d.currency }), tag: d.late ? tr("Late") : tr("This week"), action: tr("Open bills"), ledger: "bills" } : null;
   }, [wide, ver]);
 
+  const mcats = React.useMemo(() => Object.fromEntries([...moneyCats(ledgerNow, "expense", arUI), ...moneyCats(ledgerNow, "income", arUI)].map((c) => [c.id, c])), [ledgerNow, arUI]);
   if (!html) return (
     <div className="bg-slate-900 rounded-[22px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
       <p className="text-sm text-slate-300">{tr("Money isn't bundled in this build.")}</p>
@@ -6448,9 +6476,18 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // it (two nested scroll areas were what made it feel glitchy). Attune's own
   // extras — reading a payment, asking about the money — slide up over it.
   // v7.2: the calm view and the Money Report come first; the ledger (Yusr) is the third level and stays loaded behind them.
-  const ledgerOn = view === "ledger";
+  const ledgerOn = false;   // v8.0: the old ledger screen is never shown (Yusr stays hidden as the engine)
   const inbox = <PayInbox N={NATIVE} ready={ready} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); setTimeout(() => setVer((x) => x + 1), 400); }} />;
-  const body = view === "report"
+  const paneBody = pane === "trends" ? <MoneyReport rep={rep} all={allRep} wide={wide} account={account} back={() => setPane("home")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf} openLedger={openLedger} openZakat={() => setPane("zakat")} />
+    : pane === "accounts" ? <AccountsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
+    : pane === "goals" ? <GoalsPane L={ledgerNow} run={runDo} flash={flash} Head={MoneyHead} Card={MoneyCard} />
+    : pane === "bills" ? <BillsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
+    : pane === "zakat" ? <ZakatPane L={ledgerNow} snap={snapshot} wide={wide} openLedger={openLedger} />
+    : null;
+  const body = view === "pane" && paneBody ? paneBody
+    : view === "list" ? <TxListPane L={ledgerNow} cats={mcats} account={listAcc} onOpen={(id) => setMsheet({ k: "tx", id })} back={() => setView("calm")} Head={MoneyHead} />
+    : view === "settings" ? <LedgerSettings L={ledgerNow} run={runDo} flash={flash} back={() => setView("calm")} Head={MoneyHead} Card={MoneyCard} />
+    : view === "report"
     ? <MoneyReport rep={rep} all={allRep} wide={wide} account={account} back={() => setView("calm")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf}
         openLedger={() => openLedger("home")} openZakat={() => openLedger("zakat")} />
     : <MoneyCalm rep={rep} all={allRep} account={account} setAccount={setAccount} wide={wide} zak={zakNow} inbox={inbox}
@@ -6469,7 +6506,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
             <p className="m-0 mt-0.5 text-[13px] font-semibold text-[var(--c-mut)]">{new Date().toLocaleDateString(arUI ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" })}</p></div>
             <div className="flex gap-2"><button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setSheet(true)} data-testid="money-tools">{tr("Import a payment")}</button>
               <button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setMoreOpen(true)} data-testid="money-more">{tr("More")}</button></div></div> : null}
-          {view === "calm" ? <MoneyBar wide panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /> : null}
+          {view === "calm" || view === "pane" ? <MoneyBar wide panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /> : null}
           {body}
         </>) : (
         <>
@@ -6503,7 +6540,10 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       </>)}
       {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />
-      {addOpen ? <AddSheet L={ledgerNow} onSave={addFromSheet} onDebt={() => openLedger("debt")} onClose={() => setAddOpen(false)} /> : null}
+      {addOpen ? <AddSheet L={ledgerNow} prefill={addPrefill} onSave={(t) => { setAddPrefill(null); addFromSheet(t); }} onDebt={() => openLedger("debt")} onClose={() => { setAddOpen(false); setAddPrefill(null); }} /> : null}
+      {msheet ? (() => { const close = (msg) => { setMsheet(null); if (msg) flash(msg); setTimeout(() => setVer((x) => x + 1), 200); }; const P = { L: ledgerNow, run: runDo, onClose: close, id: msheet.id };
+        return msheet.k === "account" ? <AccountSheet {...P} /> : msheet.k === "bill" ? <BillSheet {...P} /> : msheet.k === "tx" ? <TxSheet {...P} /> : msheet.k === "debt" ? <DebtSheet {...P} />
+          : msheet.k === "zakat-pay" ? <ZakatPaySheet {...P} /> : msheet.k === "zakat-set" ? <ZakatSetSheet {...P} /> : null; })() : null}
       {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "biz-invoices") { setMoreOpen(false); if (goTo) { goTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "books" })), 80); } return; } openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>

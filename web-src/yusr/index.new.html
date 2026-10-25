@@ -2201,6 +2201,42 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
     var d=_pending; _pending=null; _waits=0; openProposal(d);
   }
 
+  function doOp(op,a){
+    var $=function(id){return document.getElementById(id);};
+    var setv=function(id,v){ if(v!=null&&$(id)) $(id).value=String(v); };
+    var setSel=function(id,v){ var el=$(id); if(v==null||!el) return; if(![].some.call(el.options||[],function(o){return o.value===String(v);})){ var o=document.createElement('option'); o.value=String(v); o.textContent=String(v); el.appendChild(o);} el.value=String(v); };
+    var before=JSON.stringify(db), _c=window.confirm, id=null; window.confirm=function(){return true;};
+    try{
+      if(op==='tx-edit'){ var tx=db.txns.find(function(x){return x.id===a.id;}); if(!tx) return {ok:false,error:'not-found'};
+        if(['expense','income','transfer'].indexOf(tx.type)<0) return {ok:false,error:'edit-elsewhere'};
+        openTx(a.id); setv('tx-amount',a.amount); setv('tx-date',a.date); if(tx.type!=='transfer') setv('tx-note',a.note); if(a.account) setSel('tx-account',a.account); if(a.toAccount) setSel('tx-to-account',a.toAccount); if(a.cat) state.txCat=a.cat; saveTx(); }
+      else if(op==='tx-delete'){ state.editingTx=a.id; deleteTx(); }
+      else if(op==='acct-save'){ openAccount(a.id||undefined); if(a.kind&&!a.id){ setv('acct-kind',a.kind); acctKindChanged(); } setv('acct-name',a.name); if(a.currency) setSel('acct-currency',a.currency); setv('acct-start',a.start); if(a.karat) setv('acct-karat',a.karat); if(a.emoji) state.acctEmoji=a.emoji; saveAccount(); }
+      else if(op==='acct-delete'){ state.editingAcct=a.id; deleteAccount(); }
+      else if(op==='rec-save'){ openRecurring(a.id||undefined); if(a.type) state.recType=a.type; if(a.cat) state.recCat=a.cat; setv('rec-amount',a.amount); if(a.account) setSel('rec-account',a.account); if(a.freq) setv('rec-freq',a.freq); setv('rec-next',a.nextDate); setv('rec-note',a.note); saveRecurring(); }
+      else if(op==='rec-delete'){ state.editingRec=a.id; deleteRecurring(); }
+      else if(op==='goal-save'){ openGoal(a.id||undefined); setv('goal-name',a.name); setv('goal-target',a.target); if(a.emoji) state.goalEmoji=a.emoji; saveGoal(); }
+      else if(op==='goal-delete'){ state.editingGoal=a.id; deleteGoal(); }
+      else if(op==='goal-add'){ openContrib(a.id); setv('contrib-amount',a.amount); saveContrib(); }
+      else if(op==='debt-save'){ openDebt(a.id||undefined); if(a.type&&!a.id) state.debtType=a.type; setv('debt-person',a.person); setv('debt-amount',a.amount); if(a.account) setSel('debt-account',a.account); setv('debt-note',a.note); if(a.doubtful!=null&&$('debt-doubtful')) $('debt-doubtful').checked=!!a.doubtful; saveDebt(); }
+      else if(op==='debt-delete'){ state.editingDebt=a.id; deleteDebt(); }
+      else if(op==='debt-pay'){ openPay(a.id); setv('pay-amount',a.amount); setv('pay-date',a.date); setv('pay-note',a.note); if(a.account!=null) setSel('pay-account',a.account); savePayment(); }
+      // the person's own record of a zakat payment they made (never a zakat figure: Yusr alone computes what is due)
+      else if(op==='zakat-pay'){ openPayZakat(); setv('pz-amount',a.amount); if(a.cat) setSel('pz-cat',a.cat); setv('pz-to',a.to); setv('pz-date',a.date); setSel('pz-account',a.account==null?'':a.account); savePayZakat(); }
+      // the INPUTS of the zakat calculation (prices, school, basis) — Yusr computes the result
+      else if(op==='zakat-set'){ openZakat(); setv('z-gold',a.goldPrice); setv('z-goldg',a.goldGrams); setv('z-goldkarat',a.goldKarat); setv('z-premium',a.goldPremium); if(a.madhhab) setSel('z-madhhab',a.madhhab); if(a.mode) setSel('z-mode',a.mode); if(a.basis) setSel('z-basis',a.basis); saveZakat(); }
+      else if(op==='cat-add'){ openCat(); setv('cat-emoji',a.emoji); setv('cat-label',a.label); saveCat(); }
+      else if(op==='project-add'){ openProject(); setv('proj-name',a.name); saveProject(); }
+      else if(op==='prefs'){ if(a.period) setUI('period',a.period); if(a.wk) setUI('wk',a.wk); if(a.dec!=null) setUI('dec',a.dec?1:0); if(a.country) setCountry(a.country); if(a.currency) setCurrency(a.currency); if(a.lang&&(a.lang==='ar'||a.lang==='en')) setLang(a.lang); if(a.budget!=null){ db.budgets=db.budgets||{overall:0,cats:{}}; db.budgets.overall=Math.max(0,+a.budget||0); save(); }
+        const _vt=['trends','accounts','goals','zakat','bills']; if(a.tabs&&typeof a.tabs==='object'){ db.ui.tabs=db.ui.tabs||{}; _vt.forEach(k=>{ if(a.tabs[k]!=null) db.ui.tabs[k]=a.tabs[k]?1:0; }); db.ui.tabsSet=1; save(); applyUI(); }
+        if(Array.isArray(a.tabOrder)){ const o=a.tabOrder.filter(k=>_vt.includes(k)); _vt.forEach(k=>{ if(!o.includes(k)) o.push(k); }); db.ui.tabOrder=o; db.ui.tabsSet=1; save(); applyUI(); } }
+      else if(op==='rates'){ updateRates(); return {ok:true}; }
+      else if(op==='export'){ if(a.kind==='csv') exportCSV(); else if(a.kind==='share') shareBackup(); else exportData(); return {ok:true}; }
+      else if(op==='import'){ var f=new File([String(a.json||'')],'backup.json',{type:'application/json'}); importData({target:{files:[f],value:''}}); return {ok:true}; }
+      else return {ok:false,error:'unknown-op'};
+    } finally { window.confirm=_c; try{closeSheets();}catch(e){} try{refresh();}catch(e){} }
+    return {ok:JSON.stringify(db)!==before};
+  }
   // A proposal opens the ordinary transaction sheet, prefilled. Deliberately
   // no account is set: the user picks it, exactly as when adding by hand.
   function propose(d){
@@ -2234,6 +2270,10 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
         var acc=(t.account&&(db.accounts||[]).find(function(x){return x.id===t.account;}))||(db.accounts||[]).find(function(x){return t.currency&&x.currency===t.currency;})||(db.accounts||[])[0]; if(!acc)continue;
         db.txns.push({id:uid(),type:t.type,amount:Math.round(a*100)/100,cat:/^[a-z_]{2,20}$/.test(t.cat||'')?t.cat:'other',account:acc.id,date:/^\d{4}-\d{2}-\d{2}$/.test(t.date||'')?t.date:toISODate(new Date()),note:String(t.note||'').slice(0,80),created:(typeof t.ts==='number'&&t.ts>0)?t.ts:Date.now(),source:t.source==='notification'?'notification':'attune',evidence:(t.evidence&&typeof t.evidence.text==='string'&&t.evidence.text)?{text:String(t.evidence.text).slice(0,2000),from:String(t.evidence.from||'').slice(0,200),app:String(t.evidence.app||'').slice(0,80),ts:+t.evidence.ts||0}:undefined}); n++; }
       if(n){ save(); try{refresh();}catch(e){} toast(db.lang==='ar'?('أُضيفت '+n):('Added '+n)); } send('txns-added',{n:n}); }catch(e){} return; }
+    // v8.0 (Ali: "Money redirects me to the old app — I don't want that at all"): Attune's own screens make every change; this
+    // fills Yusr's OWN form for it and presses Yusr's OWN Save, so every rule (balances, debts moving money, zakat records) stays
+    // exactly Yusr's. Reports back whether the ledger really changed (a refused form changes nothing).
+    if(m.type==='do'){ var dd=m.data||{}, res; try{ res=doOp(dd.op, dd.args||{}); }catch(e){ res={ok:false,error:String((e&&e.message)||e)}; } send('done',{op:dd.op,ok:!!res.ok,error:res.error||'',id:res.id||''}); return; }
     if(m.type==='go'){ var sc=m.data&&m.data.screen; if(['home','trends','accounts','bills','goals','zakat','notes','invoices','settings'].indexOf(sc)>=0){ try{go(sc);}catch(e){} }
       else if(sc==='add-bill'){ try{go('bills');openRecurring();}catch(e){} } else if(sc==='debt'){ try{go('home');openDebt();}catch(e){} } else if(sc==='add-account'){ try{go('accounts');openAccount();}catch(e){} } return; }
     if(m.type==='request'){

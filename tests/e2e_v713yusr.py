@@ -30,9 +30,9 @@ with sync_playwright() as p:
     if not y.evaluate("db.accounts.length"):
         y.evaluate("() => { db.accounts.push({id:'c1',name:'Cash',emoji:'💵',currency:db.currency||'EGP',start:0}); save(); refresh(); }")
     # v7.2: Money opens on the calm view and Yusr waits behind it — open the ledger to type into Yusr itself
-    if page.locator("[data-testid=money-more]").count():
-        page.locator("[data-testid=money-more]").first.click(); page.wait_for_timeout(200)
-        page.locator("[data-testid=money-open-ledger]").first.click(); page.wait_for_timeout(400)
+    # v8.0: the old ledger screen is never shown — Yusr is the engine underneath. Its own writing box is still tested, so the
+    # test (only) shows the hidden frame to type into it.
+    page.evaluate("() => { const f = document.querySelector('[data-testid=money-yusr]'); f.style.display = 'block'; f.style.height = '800px'; }"); page.wait_for_timeout(300)
     # no model loaded: the code reading logs it
     n0 = y.evaluate("db.txns.length")
     y.fill("#write-text", "lunch 150, taxi 60 and got my salary 30000")

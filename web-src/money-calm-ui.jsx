@@ -60,7 +60,7 @@ function BoxResult({ res, clear, openLedger }) {
         </div>
         <button className={"shrink-0 min-h-[32px] px-2 text-[12px] font-bold " + U.muted} onClick={clear} aria-label={tr("Close")}>✕</button>
       </div>
-      {res.added ? <button className="mt-1 min-h-[36px] text-[12.5px] font-bold text-[var(--c-acc)]" onClick={openLedger}>{tr("Change it in the ledger")}</button> : null}
+      {res.added ? <button className="mt-1 min-h-[36px] text-[12.5px] font-bold text-[var(--c-acc)]" onClick={() => openLedger("home")}>{tr("Change it in the ledger")}</button> : null}
     </div>);
 }
 
@@ -121,9 +121,9 @@ function Recent({ rep, openLedger, title }) {
     <div className={U.cardPad} data-testid="money-recent">
       <div className="flex items-center justify-between gap-2 mb-3">
         <span className="font-extrabold text-[14.5px]">{title}</span>
-        <button onClick={openLedger} className={U.tag("gray") + " tabular-nums min-h-[28px]"} data-testid="money-recent-count">{T("{n} this month", { n: rep.month.count })}</button>
+        <button onClick={() => openLedger("home")} className={U.tag("gray") + " tabular-nums min-h-[28px]"} data-testid="money-recent-count">{T("{n} this month", { n: rep.month.count })}</button>
       </div>
-      {rep.recent.length ? <div className="flex flex-col gap-2">{rep.recent.map((t) => <TxRow key={t.id} t={t} cur={rep.cur} onClick={openLedger} />)}</div>
+      {rep.recent.length ? <div className="flex flex-col gap-2">{rep.recent.map((t) => <TxRow key={t.id} t={t} cur={rep.cur} onClick={() => openLedger("tx:" + t.id)} />)}</div>
         : <p className={"m-0 text-[13px] " + U.muted}>{tr("Nothing logged yet — write it in the box above: “lunch 150, taxi 60”.")}</p>}
     </div>);
 }
@@ -168,9 +168,9 @@ export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, cl
         <div className={U.cardPad} data-testid="money-recent">
           <div className="flex items-center justify-between gap-2 mb-3">
             <span className="font-extrabold text-[14.5px]">{T("Recent activity ({a} of {b})", { a: rep.recent.length, b: rep.month.count })}</span>
-            <button onClick={openLedger} className="min-h-[36px] px-2.5 rounded-[10px] text-[12.5px] font-bold text-[var(--c-acc)] hover:bg-[var(--c-soft)] inline-flex items-center gap-1" data-testid="money-recent-count">{tr("Full ledger")}<Arrow size={13} /></button>
+            <button onClick={() => openLedger("home")} className="min-h-[36px] px-2.5 rounded-[10px] text-[12.5px] font-bold text-[var(--c-acc)] hover:bg-[var(--c-soft)] inline-flex items-center gap-1" data-testid="money-recent-count">{tr("Full ledger")}<Arrow size={13} /></button>
           </div>
-          {rep.recent.length ? <div className="flex flex-col gap-2">{rep.recent.map((t) => <TxRow key={t.id} t={t} cur={rep.cur} onClick={openLedger} />)}</div>
+          {rep.recent.length ? <div className="flex flex-col gap-2">{rep.recent.map((t) => <TxRow key={t.id} t={t} cur={rep.cur} onClick={() => openLedger("tx:" + t.id)} />)}</div>
             : <p className={"m-0 text-[13px] " + U.muted}>{tr("Nothing logged yet — write it in the box above: “lunch 150, taxi 60”.")}</p>}
         </div>
       </div>
@@ -316,7 +316,7 @@ function Ledger({ rep, openLedger, wide }) {
     <div className={U.cardPad} data-testid="money-ledger">
       <div className="flex items-center justify-between gap-2 mb-2">
         <span className="font-extrabold text-[14.5px]">{T("{m} ledger ({n} entries)", { m: monthLabel(rep.month.from.slice(0, 7)), n: rep.rows.length })}</span>
-        <button className="min-h-[36px] px-2 text-[12.5px] font-bold text-[var(--c-acc)] inline-flex items-center gap-1" onClick={openLedger}>{tr("Edit in the ledger")}<Arrow size={13} /></button>
+        <button className="min-h-[36px] px-2 text-[12.5px] font-bold text-[var(--c-acc)] inline-flex items-center gap-1" onClick={() => openLedger("home")}>{tr("Edit in the ledger")}<Arrow size={13} /></button>
       </div>
       {rep.rows.length && !wide ? <div className="divide-y divide-[var(--c-ln)]">{rep.rows.slice(0, 60).map((t) => (
         // a phone: one line per entry, the amount always in sight (a 5-column table would scroll sideways)

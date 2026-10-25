@@ -63,8 +63,16 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
 - [x] 2.3 Nicknames: a name with no such contact → "مين «ماما»؟" with the recent chats + "someone else"; the pick is
       remembered (franco.js aliasFor / rememberAlias, key "~name" in attune:voice:people) and used next time
 ### Phase 3 — "يا أتيون" wake word
-- [ ] 3.1 A tiny always-listening model (low power), Egyptian + Gulf + English voices; clear notification + on/off switch
-      (Google Play rules on background microphone)
+- [~] 3.1 A tiny always-listening model (low power), Egyptian + Gulf + English voices; clear notification + on/off switch
+      (Google Play rules on background microphone). **Built (26 Oct):** `WakeWord.kt` WakeService (foreground service type
+      microphone, notification with Pause 1 h / Turn off, off by default, When = always / screen on / charging, sensitivity
+      low / normal / high, gives the mic to Attune's own listening and back, opens the voice screen — after unlock on a locked
+      phone; from another app only with "open over other apps", else a tap-to-talk notification); `web-src/wake-ui.jsx`
+      WakeSwitch on the voice screen (+ live "Say it now" meter); NativeBridge wakeState / setWake / setWakeOpts / wakeResume /
+      wakeOverlay. The model: openWakeWord's two Apache-2.0 feature models + Attune's own classifier trained in `tools/wake/`
+      (README there: data, licences, how to retrain). Test: tests/e2e_v1200wake.py. Real phone check by Ali still needed.
+      sherpa-onnx open-vocabulary keyword spotting (Apache-2.0, 3 MB) was measured first and rejected: ~50 % recall on
+      "Hey/Ya Attune", 0 % on Arabic voices.
 
 ## State (update every step)
 | Step | Files | Status |

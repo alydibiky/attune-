@@ -49,20 +49,20 @@ with sync_playwright() as p:
     page.click("[data-testid=fit-tab-me]"); page.wait_for_selector("[data-testid=fit-autotrack]", timeout=5000)
     page.click("button[data-testid=fit-autotrack-huawei]"); page.wait_for_selector("[data-testid=fit-autotrack-huawei-state]")
     check("2026-10-24" in page.locator("[data-testid=fit-autotrack-huawei-state]").inner_text() and "✓" in page.locator("button[data-testid=fit-autotrack-huawei]").inner_text(), "Huawei data arrived → ticked, with the day it last came")
-    # ---- Yusr settings: the Show checkboxes ----
+    # ---- Money settings (v8.0: Attune's own, never the old ledger): Tabs to show ----
     go(page, "money", "[data-testid=money-more]")
-    page.click("[data-testid=money-more]"); page.click("[data-testid=money-more-settings]"); page.wait_for_timeout(1200)
-    fr = page.frame_locator("[data-testid=money-yusr]")
-    box = fr.locator("#tabs-row input[type=checkbox]").first
+    page.click("[data-testid=money-more]"); page.click("[data-testid=money-more-settings]"); page.wait_for_selector("[data-testid=money-settings]", timeout=5000)
+    check(page.locator("[data-testid=money-yusr]").is_hidden(), "Money settings are Attune's own page (the old ledger stays hidden)")
+    box = page.locator("[data-testid=set-tab-show-goals]")
     box.scroll_into_view_if_needed()
     look = box.evaluate("e => { const c = getComputedStyle(e); return [c.appearance || c.webkitAppearance, Math.round(e.getBoundingClientRect().width), e.checked]; }")
-    check(look[0] != "none" and look[1] <= 26 and look[2], "Tabs to show: a real checkbox with its tick (not an empty 48-px box): %s" % look)
-    labels = fr.locator("#tabs-row .tablabel").all_inner_texts()
-    check("bills" not in labels and "Bills" in labels and "Notes" not in labels, "Tabs to show lists Money's tabs with their names (Bills, not “bills”; no Notes): %s" % labels)
-    fr.locator("#tabs-row .taborow:has-text('Goals') input").evaluate("e => e.click()"); page.wait_for_timeout(800)
+    check(look[0] != "none" and look[1] <= 26 and look[2], "Tabs to show: a real checkbox with its tick: %s" % look)
+    labels = page.locator("[data-testid=set-tabs] span").all_inner_texts()
+    check("Bills" in labels and "Notes" not in labels and "Home" not in labels, "Tabs to show lists Money's tabs with their names (no Notes; Home is always first): %s" % labels)
+    page.click("[data-testid=set-tab-show-accounts]"); page.wait_for_timeout(900)
     bar = [x.get_attribute("data-testid") for x in page.locator("[data-testid^=money-bar-]").all()]
-    check("money-bar-goals" in bar and "money-bar-accounts" not in bar and "money-bar-trends" in bar, "once Tabs to show is changed, Money's bar follows it (Goals switched on, Accounts off): %s" % bar)
-    fr.locator("#tabs-row .taborow:has-text('Zakat') .tabmove").first.evaluate("e => e.click()"); page.wait_for_timeout(800)
+    check("money-bar-goals" in bar and "money-bar-accounts" not in bar and "money-bar-trends" in bar, "once Tabs to show is changed, Money's bar follows it (Accounts off): %s" % bar)
+    page.click("[data-testid=set-tab-up-zakat]"); page.wait_for_timeout(900)
     bar2 = [x.get_attribute("data-testid")[10:] for x in page.locator("[data-testid^=money-bar-]").all()]
     order = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3')).ui.tabOrder")
     check(bar2.index("zakat") < bar2.index("bills"), "▲ moves Zakāt before Bills on the bar too: %s (order %s)" % (bar2, order))

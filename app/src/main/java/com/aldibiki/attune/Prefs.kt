@@ -11,6 +11,19 @@ object Prefs {
     fun smsNotifs(ctx: Context): Boolean = sp(ctx).getBoolean("sms_notifs", false)
     fun setSmsNotifs(ctx: Context, on: Boolean) { sp(ctx).edit().putBoolean("sms_notifs", on).apply(); WatchMatch.smsAllowed = on }
 
+    /** Voice phase 3: «يا أتيون» heard by the phone itself (WakeService) — off by default; when = always | screen | charging;
+     *  sensitivity = low | normal | high. */
+    fun wake(ctx: Context): Boolean = sp(ctx).getBoolean("wake", false)
+    fun setWake(ctx: Context, on: Boolean) { sp(ctx).edit().putBoolean("wake", on).apply() }
+    fun wakeWhen(ctx: Context): String = sp(ctx).getString("wake_when", "always") ?: "always"
+    fun wakeSensitivity(ctx: Context): String = sp(ctx).getString("wake_sens", "normal") ?: "normal"
+    fun setWakeOpts(ctx: Context, `when`: String?, sens: String?) {
+        val e = sp(ctx).edit()
+        if (`when` in listOf("always", "screen", "charging")) e.putString("wake_when", `when`)
+        if (sens in listOf("low", "normal", "high")) e.putString("wake_sens", sens)
+        e.apply()
+    }
+
     /** Offline lock: when on, nothing inside the app may reach the network. */
     fun airGap(ctx: Context): Boolean = sp(ctx).getBoolean("air_gap", false).also { airGapNow = it }
     fun setAirGap(ctx: Context, on: Boolean) {

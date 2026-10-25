@@ -22,4 +22,15 @@
     <string name="widget_fit_desc">Calories left today and water</string>
     <string name="widget_fit_left">kcal left today</string>
     <string name="widget_fit_empty">Open Fit &amp; Food to set your goal</string>
+    <string name="wake_channel">Ya Attune (listening for it)</string>
+    <string name="wake_channel_heard">Ya Attune — heard</string>
+    <string name="wake_on_title">Listening for “Ya Attune”</string>
+    <string name="wake_wait_title">“Ya Attune” is on (waiting)</string>
+    <string name="wake_paused_title">“Ya Attune” is paused for an hour</string>
+    <string name="wake_on_text">On this phone only — nothing is recorded or sent</string>
+    <string name="wake_pause">Pause 1 hour</string>
+    <string name="wake_resume">Listen again</string>
+    <string name="wake_off">Turn off</string>
+    <string name="wake_heard_title">Yes? Tap to talk</string>
+    <string name="wake_heard_text">You said “Ya Attune”</string>
 </resources>

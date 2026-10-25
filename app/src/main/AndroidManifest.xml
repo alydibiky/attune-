@@ -32,6 +32,10 @@
          if the person switches apps (GenService; stops when the answer ends). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Voice phase 3: «يا أتيون» — the mic in a foreground service with its notification, only while the person has it on -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <!-- optional: "open by itself over other apps" when the wake word is heard (otherwise a tap-to-talk notification) -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- v6.3 Fit & Food: READ steps, calories burned, distance, heart rate and workouts from Health
          Connect (the watch apps write them there). Nothing is written. -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
@@ -170,6 +174,7 @@
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
         </service>
+        <service android:name=".WakeService" android:exported="false" android:foregroundServiceType="microphone" />
         <service android:name=".GenService" android:exported="false" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="On-device AI model writing an answer the user asked for" />

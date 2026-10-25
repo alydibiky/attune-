@@ -68,21 +68,19 @@ with sync_playwright() as p:
             page.click("[data-testid=money-add]"); page.click("[data-testid=add-type-income]"); page.fill("[data-testid=add-amount]", "500"); page.locator("[data-testid=add-account]").nth(0).click(); page.click("[data-testid=add-save]"); page.wait_for_timeout(900)
             t = ledger(page)["txns"][-1]
             check(t["type"] == "income" and t["cat"] == "salary" and t["amount"] == 500, tag + "an income")
-        # every tab but Home is Yusr's own screen, with the bar still under it
-        for pn, scr in [("trends", "trends"), ("accounts", "accounts"), ("goals", "goals"), ("bills", "bills"), ("zakat", "zakat")]:
-            page.click("[data-testid=money-bar-%s]" % pn); page.wait_for_timeout(700)
-            y = page.frame_locator("[data-testid=money-yusr]")
-            check(page.locator("[data-testid=money-yusr]").is_visible() and y.locator("#scr-" + scr).is_visible() and page.locator("[data-testid=money-bar]").is_visible(),
-                  tag + "%s: Yusr's own screen, the bar under it" % pn)
+        # v8.0 (Ali: "no old app at all"): every tab is Attune's own page, the bar under it; Yusr stays hidden
+        for pn, tid in [("trends", "money-report"), ("accounts", "money-accounts"), ("goals", "money-goals"), ("bills", "money-bills"), ("zakat", "money-zakat")]:
+            page.click("[data-testid=money-bar-%s]" % pn); page.wait_for_timeout(500)
+            check(page.locator("[data-testid=%s]" % tid).count() >= 1 and page.locator("[data-testid=money-yusr]").is_hidden() and page.locator("[data-testid=money-bar]").is_visible(),
+                  tag + "%s: Attune's own page (never the old ledger), the bar under it" % pn)
             check(page.locator("[data-testid=money-bar-%s]" % pn).get_attribute("aria-current") == "page", tag + "…and its tab is marked")
             if pn in ("accounts", "bills"): shot(page, "money-%s-phone-%s" % (pn, theme))
-        check(not page.frame_locator("[data-testid=money-yusr]").locator("nav").first.is_visible(), tag + "Yusr's own bar is hidden — one bar, not two")
         page.click("[data-testid=money-bar-home]"); page.wait_for_timeout(300)
         check(page.locator("[data-testid=money-box]").count() == 1 and page.locator("[data-testid=money-yusr]").is_hidden(), tag + "Home is the calm Money view")
         page.click("[data-testid=money-more]"); page.wait_for_selector("[data-testid=money-more-sheet]")
-        check(page.locator("[data-testid=money-more-automations]").count() == 1 and page.locator("[data-testid=money-open-ledger]").count() == 1 and page.locator("[data-testid=money-more-goals]").count() == 0, tag + "More: Automations, Invoices, the full ledger (Goals and Trends are tabs now)")
+        check(page.locator("[data-testid=money-more-automations]").count() == 1 and page.locator("[data-testid=money-open-ledger]").count() == 1 and page.locator("[data-testid=money-more-goals]").count() == 0, tag + "More: Automations, Invoices, the full ledger, settings")
         page.click("[data-testid=money-open-ledger]"); page.wait_for_timeout(500)
-        check(page.locator("[data-testid=money-page][data-view=ledger]").count() == 1 and page.locator("[data-testid=money-bar]").is_visible(), tag + "…the full ledger, with the bar under it")
+        check(page.locator("[data-testid=money-list]").count() == 1 and page.locator("[data-testid=money-yusr]").is_hidden() and page.locator("[data-testid=money-bar]").is_visible(), tag + "…the full ledger is Attune's own list (search, by month), the bar under it")
         ctx.close()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + AR)
     page.set_viewport_size({"width": 360, "height": 800})
@@ -101,7 +99,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=money-add]").is_visible(), tag + "the bar is a row of pills with + Add")
         shot(page, "money-home-desktop-" + theme)
         page.click("[data-testid=money-bar-bills]"); page.wait_for_timeout(700)
-        check(page.locator("[data-testid=money-yusr]").is_visible() and page.locator("[data-testid=money-bar-bills]").is_visible(), tag + "Bills: Yusr's screen, the tabs above it")
+        check(page.locator("[data-testid=money-bills]").count() == 1 and page.locator("[data-testid=money-yusr]").is_hidden() and page.locator("[data-testid=money-bar-bills]").is_visible(), tag + "Bills: Attune's own page, the tabs above it")
         shot(page, "money-bills-desktop-" + theme)
         page.click("[data-testid=money-bar-home]"); page.wait_for_timeout(300)
         page.click("[data-testid=money-add]"); page.wait_for_selector("[data-testid=money-add-sheet]"); shot(page, "money-add-desktop-" + theme)
