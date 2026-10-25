@@ -35,6 +35,7 @@ object MessageWatch {
 
     fun check(ctx: Context, sbn: StatusBarNotification, title: String, text: String) {
         val n = sbn.notification ?: return
+        if (WatchMatch.isSms(sbn.packageName) && (PayLog.isOtp(text) || PayLog.isOtp(title))) return   // never a one-time code
         if ((n.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0) return   // "3 new messages" summaries: the message itself comes too
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val arr = try { JSONArray(p.getString("rules", "[]")) } catch (e: Exception) { return }

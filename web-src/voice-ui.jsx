@@ -10,6 +10,7 @@ import { X, Send, Mic, Check, Pencil } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as V from "./voice-cmd.js";
 import { loadPeople, savePeople } from "./franco.js";
+import { SmsSwitch } from "./sms-ui.jsx";
 
 const STYLE_BY_COUNTRY = { EG: "eg", SA: "gulf", AE: "gulf", KW: "gulf", QA: "gulf", BH: "gulf", OM: "gulf", JO: "lev", LB: "lev", SY: "lev", PS: "lev", IQ: "gulf", MA: "maghreb", DZ: "maghreb", TN: "maghreb", LY: "maghreb" };
 const LISTEN_TAG = { eg: "ar-EG", gulf: "ar-SA", lev: "ar-JO", maghreb: "ar-MA" };
@@ -45,6 +46,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
       if (r.ok) return true;
     }
     // no reply action (no recent chat, or Attune restarted): the app opens with the text ready — the person picks the contact
+    if (a.app === "sms") { try { if (N && N.intent) { const r = JSON.parse(N.intent(JSON.stringify({ kind: "sms", phone: "", message: a.text })) || "{}"); return r.ok !== false; } } catch (e) {} }
     try {
       if (N && N.intent) { const r = JSON.parse(N.intent(JSON.stringify({ kind: "whatsapp", phone: "", message: a.text })) || "{}"); return r.ok !== false; }
     } catch (e) {}
@@ -127,6 +129,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
         </div> : null}
         {card && card.kind === "done" ? <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 mt-3 flex gap-2 items-start" data-testid="voice-done">
           {card.ok ? <Check size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" /> : null}<p className="m-0 text-[15px] font-bold" dir="auto">{say}</p></div> : null}
+        {!card ? <div className="mt-6 rounded-[18px] border border-[var(--c-ln)] p-3"><SmsSwitch native={N} compact /></div> : null}
         <form onSubmit={(e) => { e.preventDefault(); const t = typed; setTyped(""); turn(t); }} className="mt-4 flex gap-2">
           <input value={typed} onChange={(e) => setTyped(e.target.value)} dir="auto" placeholder={ar ? "أو اكتب هنا…" : "Or type here…"} className="flex-1 min-w-0 min-h-[44px] rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[15px]" data-testid="voice-input" />
           <button aria-label={tr("Send")} className="w-11 h-11 rounded-full grid place-items-center bg-[var(--c-surf-2)]" data-testid="voice-type-go"><Send size={16} className="rtl:-scale-x-100" /></button>

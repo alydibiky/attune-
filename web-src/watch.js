@@ -11,6 +11,7 @@ const APP_WORDS = [
   ["telegram", /\btelegram\b|تليجرام|التليجرام/i],
   ["messenger", /\bmessenger\b|ماسنجر|الماسنجر/i],
   ["instagram", /\b(instagram|insta)\b|انستا|انستجرام|الانستا/i],
+  ["sms", /\bsms\b|رساله عاديه|رسالة عادية|مسدج عادي|ماسدج عادي|الرسايل العاديه|الرسايل العادية/i],   // only works with the SMS switch on
 ];
 const ASK_EN = /\b(tell|notify|alert|ping|let)\s+me\b|\bwarn me\b|\bgive me a (heads[- ]up|shout)\b/i;
 const ASK_AR = /(قولي|قول لي|نبهني|نبّهني|عرفني|عرّفني|بلغني|ابعتلي اشعار|ابعتلي إشعار|نبهيني|فكرني|ولّعلي|خليني اعرف|خليني أعرف)/;
@@ -46,7 +47,7 @@ export function parseWatch(text) {
   return { who, app, words, once, label: t.slice(0, 120) };
 }
 
-const AP = { any: ["any app", "أي أبلكيشن"], whatsapp: ["WhatsApp", "الواتساب"], gmail: ["Gmail", "الجيميل"], email: ["email", "الإيميل"], telegram: ["Telegram", "التليجرام"], messenger: ["Messenger", "الماسنجر"], instagram: ["Instagram", "الانستجرام"] };
+const AP = { sms: ["SMS", "الرسايل العادية"], any: ["any app", "أي أبلكيشن"], whatsapp: ["WhatsApp", "الواتساب"], gmail: ["Gmail", "الجيميل"], email: ["email", "الإيميل"], telegram: ["Telegram", "التليجرام"], messenger: ["Messenger", "الماسنجر"], instagram: ["Instagram", "الانستجرام"] };
 /** One line about a rule: "Ahmed · WhatsApp" / «أحمد · الواتساب · فيها: ونش». */
 export function ruleText(r, ar = false) {
   const a = AP[r.app] || AP.any;

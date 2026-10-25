@@ -6,6 +6,11 @@ object Prefs {
     private const val NAME = "attune"
     private fun sp(ctx: Context) = ctx.getSharedPreferences(NAME, Context.MODE_PRIVATE)
 
+    /** SMS (Ali picked B, 25 Oct 2026): the SMS app's notifications are read for Message alerts, "who messaged me" and voice
+     *  replies ONLY when the person switches this on (off by default). Never the SMS inbox, never one-time codes. */
+    fun smsNotifs(ctx: Context): Boolean = sp(ctx).getBoolean("sms_notifs", false)
+    fun setSmsNotifs(ctx: Context, on: Boolean) { sp(ctx).edit().putBoolean("sms_notifs", on).apply(); WatchMatch.smsAllowed = on }
+
     /** Offline lock: when on, nothing inside the app may reach the network. */
     fun airGap(ctx: Context): Boolean = sp(ctx).getBoolean("air_gap", false).also { airGapNow = it }
     fun setAirGap(ctx: Context, on: Boolean) {

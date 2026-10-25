@@ -66,13 +66,14 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
 | 1.5–1.6 wiring + screen A | web-src/voice-ui.jsx, attune.jsx (voiceOpen, navTo "voice", /voice app, overlay), home-ui.jsx (orb button) | e2e tests/e2e_v1100voice.py passes |
 | 1.3 accuracy | tests/voice/commands.json, tests/unit/v1100voice.test.mjs | 68/68 + conversation + correct-contact checks |
 
-## Open question for Ali (25 Oct): SMS
-Ali: "why not SMS? it will make the app more useful". Answer given: possible WITHOUT SMS permissions — read the SMS app's
-notifications (like WhatsApp) and reply through the SMS app's own notification Reply; never the SMS inbox, never one-time codes.
-But Attune's privacy policy promises "SMS are never read" (privacy.js, WatchMatch.isSms, PayListener, RecallLog), so it needs
-Ali's decision: (A) keep no SMS, (B) an opt-in switch "Read SMS notifications" (off by default; banks' SMS into Money too; OTPs
-never), (C) on by default. Recommended B. If B: change WatchMatch.isSms checks behind the switch, ChatInbox.isChat, privacy text
-(EN + AR), and the Play data-safety form.
+## SMS — Ali picked B (25 Oct): an opt-in switch, off by default
+"Read SMS notifications" (`web-src/sms-ui.jsx` SmsSwitch, in Message alerts and on the voice screen) → `Prefs.smsNotifs` /
+`setSmsNotifs` (NativeBridge `smsNotifs()` / `setSmsNotifs(on)`) → `WatchMatch.smsAllowed` (set by PayListener on every
+notification). With it on: Message alerts ("any" or "sms" rules), ChatInbox ("who messaged me", voice replies through the SMS
+app's own Reply; no recent chat → the SMS app opens with the text). Never the SMS inbox (no SMS permission), never one-time
+codes (`PayLog.isOtp` in ChatInbox and MessageWatch). Recall and Automations still never read SMS. Privacy policy updated
+(EN + AR, "Messages and SMS notifications (optional)"). Kotlin test: tests/kotlin/WatchMatchTest.kt.
+**Ali must update the Play Console data-safety form** (messages read on device, not shared) before release.
 
 ## Next steps (for the next chat)
 1. Ali's answer on SMS (above). 2. Phase 2.1 car mode (design A's car screen in design/voice-options.html). 3. Dialect lines

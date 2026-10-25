@@ -679,6 +679,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         JSONObject().put("ok", how.isNotEmpty()).put("how", how).toString()
     } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
 
+    /** SMS notifications on / off (Ali picked B: off by default; never the inbox, never one-time codes). */
+    @JavascriptInterface
+    fun smsNotifs(): Boolean = try { Prefs.smsNotifs(ctx) } catch (e: Exception) { false }
+    @JavascriptInterface
+    fun setSmsNotifs(on: Boolean) { try { Prefs.setSmsNotifs(ctx, on) } catch (e: Exception) {} }
+
     /** Voice: the newest chat messages from notifications (ChatInbox.kt) — [{key, app, who, convo, group, text, ts, canReply}]. */
     @JavascriptInterface
     fun chatInbox(): String = try { ChatInbox.list(ctx) } catch (e: Exception) { "[]" }

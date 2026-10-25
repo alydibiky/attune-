@@ -6,6 +6,7 @@ import { MessageSquare, Trash2, AlertTriangle, BellRing } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as W from "./watch.js";
 import { cardPad, btnP, inp, label, chip } from "./ui-kit.jsx";
+import { SmsSwitch } from "./sms-ui.jsx";
 
 const EX = [["Tell me when Ahmed messages me", "لو أحمد بعتلي قولي"], ["Alert me when I get an email from the bank", "نبهني لو جالي إيميل من البنك"], ["Any WhatsApp with the word urgent — tell me", "أي رسالة على الواتس فيها كلمة ضروري نبهني"]];
 
@@ -29,9 +30,10 @@ export function WatchPanel({ native: N, flash }) {
   return (
     <div className={"calm " + cardPad + " space-y-3"} data-testid="watch-panel">
       <div><p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><BellRing size={16} className="text-[var(--c-acc)]" />{tr("Message alerts")}</p>
-        <p className="text-[12px] text-[var(--c-mut)] mt-1 mb-0">{tr("Tell Attune whose message you are waiting for — on WhatsApp, Gmail or any email app — and it tells you the moment it arrives. Checked on this phone; SMS are never read.")}</p></div>
+        <p className="text-[12px] text-[var(--c-mut)] mt-1 mb-0">{tr("Tell Attune whose message you are waiting for — on WhatsApp, Gmail or any email app — and it tells you the moment it arrives. Checked on this phone; SMS only if you switch it on below.")}</p></div>
       {N && !access ? <button onClick={() => { try { N.openPayAccess && N.openPayAccess(); } catch (e) {} }} className="w-full text-start min-h-[44px] rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12.5px] font-semibold text-[var(--c-warn)] flex gap-2" data-testid="watch-access">
         <AlertTriangle size={14} className="shrink-0 mt-0.5" />{tr("Turn on Notification access for Attune so it can see new messages (Settings opens). If it is grey, see “restricted setting” in Money → Payments.")}</button> : null}
+      <SmsSwitch native={N} compact />
       <form onSubmit={(e) => { e.preventDefault(); add(); }} className="flex gap-2">
         <input value={text} onChange={(e) => setText(e.target.value)} dir="auto" placeholder={tr("e.g. tell me when Ahmed messages me")} data-testid="watch-input"
           className={inp + " flex-1"} />

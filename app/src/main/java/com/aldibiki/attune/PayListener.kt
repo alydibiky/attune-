@@ -24,6 +24,7 @@ class PayListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         try {
             if (sbn == null || sbn.packageName == packageName) return
+            WatchMatch.smsAllowed = Prefs.smsNotifs(applicationContext)   // the SMS switch (off unless the person turned it on)
             val ex = sbn.notification?.extras ?: return
             val title = ex.getCharSequence("android.title")?.toString().orEmpty()
             val text = (ex.getCharSequence("android.bigText") ?: ex.getCharSequence("android.text"))?.toString().orEmpty()
@@ -59,6 +60,8 @@ object PayLog {
 
     // v6.29 (privacy policy + Play review): one-time codes are never kept, even when the message also names an amount
     private val OTP = Regex("""(?i)\b(otp|one[- ]time (pass(word|code)?|code)|verification code|security code|passcode|auth(entication)? code|2fa)\b|رمز التحقق|كود التحقق|رمز التفعيل|كلمة المرور لمرة واحدة|الرمز السري|كود التفعيل|رقم سري""")
+    /** A one-time code (OTP) — never kept anywhere, SMS or not. */
+    fun isOtp(s: String): Boolean = OTP.containsMatchIn(s)
     fun looksLikeMoney(s: String): Boolean = s.length in 8..2000 && !OTP.containsMatchIn(s) && (CUR.containsMatchIn(s) || (WORD.containsMatchIn(s) && NUM.containsMatchIn(s)))
 
     @Synchronized fun add(ctx: Context, item: JSONObject) {

@@ -26,7 +26,7 @@ object ChatInbox {
     private val replies = HashMap<String, Notification.Action>()
 
     /** The chat apps (Message alerts' list); SMS apps are never read. */
-    fun isChat(pkg: String) = pkg in WatchMatch.ANY && !WatchMatch.isSms(pkg)
+    fun isChat(pkg: String) = (pkg in WatchMatch.ANY && !WatchMatch.isSms(pkg)) || (WatchMatch.isSms(pkg) && WatchMatch.smsAllowed)   // SMS: only with the switch on
 
     private fun appId(pkg: String) = when {
         pkg in (WatchMatch.APPS["whatsapp"] ?: emptySet()) -> "whatsapp"
@@ -35,6 +35,7 @@ object ChatInbox {
         pkg in (WatchMatch.APPS["instagram"] ?: emptySet()) -> "instagram"
         pkg in (WatchMatch.APPS["signal"] ?: emptySet()) -> "signal"
         pkg in (WatchMatch.APPS["email"] ?: emptySet()) -> "email"
+        WatchMatch.isSms(pkg) -> "sms"
         else -> pkg
     }
 
@@ -73,6 +74,7 @@ object ChatInbox {
         if (title.contains(" @ ")) { group = true; who = title.substringBefore(" @ ").trim(); convo = title.substringAfter(" @ ").trim() }
         else if (group && who == title) { val m = Regex("^([^:]{1,40}):\\s+(.*)$").find(text); if (m != null) { who = m.groupValues[1].trim(); text = m.groupValues[2] } }
         if (who.isBlank() || text.isBlank()) return
+        if (PayLog.isOtp(text) || PayLog.isOtp(title)) return                        // one-time codes are never kept
         // one key per conversation: the chat's reply goes to that chat only
         val key = pkg + "|" + (if (group) "g:" + convo else "p:" + who)
         replyAction(n)?.let { replies[key] = it }

@@ -41,8 +41,11 @@ object WatchMatch {
         return Regex("(^|\\s)" + Regex.escape(n) + "($|\\s)").containsMatchIn(hay)
     }
 
+    /** SMS notifications may be read (the person's switch, Prefs.smsNotifs — off by default). Set by PayListener. */
+    @Volatile var smsAllowed: Boolean = false
+
     fun appOk(rule: WatchRule, pkg: String): Boolean {
-        if (isSms(pkg)) return false
+        if (isSms(pkg)) return smsAllowed && (rule.app == "any" || rule.app == "sms")
         // v8.0 Agents: "pkgs:com.amazon.mShop.android.shopping|com.noon.buyerapp" — a delivery agent listens to those apps only
         if (rule.app.startsWith("pkgs:")) return pkg in rule.app.removePrefix("pkgs:").split('|').filter { it.isNotBlank() }
         return if (rule.app == "any") pkg in ANY else pkg in (APPS[rule.app] ?: emptySet())

@@ -29,5 +29,12 @@ fun main() {
     check(WatchMatch.matches(amazon, "com.amazon.mShop.android.shopping", "Amazon", "Your package is out for delivery"), "Amazon: out for delivery")
     check(!WatchMatch.matches(amazon, "com.whatsapp", "Amazon", "arriving today"), "…not a WhatsApp message saying the same")
     check(!WatchMatch.matches(amazon, "com.amazon.mShop.android.shopping", "Amazon", "Deals of the day"), "…not an Amazon ad")
+    // SMS (Ali picked B): only with the switch on, and then only for "any" / "sms" rules
+    val anyAhmed = WatchRule("s1", listOf("Ahmed"))
+    check(!WatchMatch.matches(anyAhmed, "com.google.android.apps.messaging", "Ahmed", "hi"), "SMS switch off (default): not watched")
+    WatchMatch.smsAllowed = true
+    check(WatchMatch.matches(anyAhmed, "com.google.android.apps.messaging", "Ahmed", "hi"), "SMS switch on: an SMS from Ahmed is watched")
+    check(!WatchMatch.matches(WatchRule("s2", listOf("Ahmed"), app = "whatsapp"), "com.google.android.apps.messaging", "Ahmed", "hi"), "…but not by a WhatsApp-only rule")
+    WatchMatch.smsAllowed = false
     if (fails > 0) { println("$fails FAILED"); kotlin.system.exitProcess(1) } else println("ALL PASSED")
 }

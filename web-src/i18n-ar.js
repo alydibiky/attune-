@@ -5642,7 +5642,7 @@ export const AR = {
   "Copy all": "انسخ الكل",
   "not published": "مش منشور",
   "Message alerts": "تنبيهات الرسائل",
-  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail or any email app — and it tells you the moment it arrives. Checked on this phone; SMS are never read.": "قول لـ Attune رسالة مين مستنيها — على الواتس أو الجيميل أو أي أبلكيشن إيميل — وهو يقولك أول ما توصل. كله على الموبايل ده، والـ SMS عمرها ما بتتقري.",
+  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail or any email app — and it tells you the moment it arrives. Checked on this phone; SMS only if you switch it on below.": "قول لـ Attune رسالة مين مستنيها — على الواتس أو الجيميل أو أي أبلكيشن إيميل — وهو يقولك أول ما توصل. كله على الموبايل ده، والـ SMS بس لو شغّلتها تحت.",
   "Turn on Notification access for Attune so it can see new messages (Settings opens). If it is grey, see “restricted setting” in Money → Payments.": "شغّل «الوصول للإشعارات» لـ Attune عشان يشوف الرسايل الجديدة (هتفتح الإعدادات). لو الزرار رمادي، شوف «إعداد مقيّد» في الفلوس ← المدفوعات.",
   "e.g. tell me when Ahmed messages me": "مثلاً: لو أحمد بعتلي قولي",
   "Say who, like: tell me when Ahmed messages me": "قول مين، كده: لو أحمد بعتلي قولي",
@@ -7086,4 +7086,6 @@ export const AR = {
   "Offline · private": "أوفلاين · خاص",
   "Ya Attune — talk to it": "يا أتيون — كلّمه",
   "Could not send — opened the app instead": "مقدرتش أبعتها — فتحت الأبلكيشن بدالها",
+  "Read SMS notifications": "قراءة إشعارات SMS",
+  "For message alerts, “who messaged me” and replying by voice. Off by default — Attune never reads your SMS inbox and never keeps one-time codes.": "لتنبيهات الرسائل و«مين بعتلي» والرد بصوتك. مقفولة من الأول — Attune عمره ما يقرا صندوق رسايلك، وعمره ما يحتفظ بأكواد التحقق.",
 };
