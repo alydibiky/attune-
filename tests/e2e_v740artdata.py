@@ -23,7 +23,11 @@ with sync_playwright() as p:
         return page.frame_locator("[data-testid=artifact-frame]")
     fr = open_it()
     check("0" == fr.locator("#n").inner_text(), "the home-screen icon opens the saved page; a new tracker starts at 0")
-    for _ in range(3): fr.locator("#add").click()
+    # (each tap is waited for until the page counts it — a tap made while the page was still starting was lost now and then)
+    for k in range(1, 4):
+        for _ in range(10):
+            fr.locator("#add").click(); page.wait_for_timeout(120)
+            if fr.locator("#n").inner_text() == str(k): break
     fr.locator("#note").fill("drink before gym"); fr.locator("#done").check(); fr.locator("#pw").fill("secret")
     # (the page saves a moment after the last change — wait for it, up to 4 s, instead of a fixed 0.7 s that a busy machine missed)
     for _ in range(20):

@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 24 Oct 2026, late evening)
+# Attune — start here (handoff for the next chat, 25 Oct 2026)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,23 +6,43 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v7.8** (versionCode 120), commit `208dca7` + this handoff; branch `claude/continue-latest-handoff-3dlo4i` = main |
-| Last APK | https://github.com/alydibiky/attune-/actions/runs/40114343895 (success) |
-| Tests | full `bash tests/run_all.sh` passed for v7.8 (see "Known flaky tests") |
-| Gemini step | ~~1 Money~~ v7.2 · ~~2 Health~~ v7.3 · ~~3 Chat~~ v7.4 · ~~4 Business~~ v7.5 · ~~5 Mind & learning~~ v7.7 · ~~6 Tools~~ v7.8 · **7 Settings, sidebar, How to use, Privacy — waiting for Gemini's mock-up** |
+| `main` | **v7.9** (versionCode 121) — branch `claude/new-session-bwqrp8` = main |
+| Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
+| Tests | full `bash tests/run_all.sh` passed for v7.9 (e2e_v59 passed alone; e2e_v740artdata made robust) |
+| Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
 ## Do this next
-1. **Wait for Ali to send Gemini's Area 7 mock-up** (an HTML file). Ali already has the Area 7 prompt and screenshots of today's
-   screens (sent in the last chat). If he asks for the prompt again, it is at the bottom of this page.
-2. When the HTML arrives: `cp` it to the scratchpad, run `python3 tools/render_mockup.py <html> <outdir>`, send Ali the
-   `*-dark.png` screens ("Gemini's Area 7, rendered — building it now"), make a task list, then **build it yourself** (never wait
-   for Gemini's code): calm view + "See all → … report" on each screen, phone + computer, dark + light, Egyptian Arabic RTL,
-   360 px with nothing overflowing. Numbers by code in a pure module with a unit test; an e2e `tests/e2e_v8xx….py` with
-   SHOTS=dir screenshots; Arabic for every new `tr()` string in `web-src/i18n-ar.js`.
-3. Version **7.9** (versionCode **121**): `app/build.gradle.kts` versionName + versionCode, `PAGE_VERSION` in `web-src/attune.jsx`
-   (`tests/unit/v746version.test.mjs` checks they match). Update this page. Full suite → commit → push main + branch → watch
-   "Build the APK" → send Ali the link and screenshots.
-4. After Area 7, the Gemini round is complete — ask Ali what's next (see "Still open").
+1. Ask Ali for his next list (he said he has more). Keep his rule: **ask before anything subjective** — show 2–4 options
+   (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
+   Quiet Atelier tokens, phones side by side, A/B/C with a recommendation).
+2. Still to design (Ali's item 11 "fix the rest of the interface like Gemini would"): Settings, the sidebar, Privacy, and any
+   screen not yet in Quiet Atelier — show options first, then build.
+
+## v7.9 — Ali's 24 Oct phone list + design round 1 (all done, tested)
+- **Camera**: "Take a photo" opens the camera (MainActivity `cameraIntent` → ACTION_IMAGE_CAPTURE into cache/camera via the
+  FileProvider; `<queries>` IMAGE_CAPTURE). The WebView ignores `capture=` by itself.
+- **Studio report crash**: hooks below an early return (also PayInbox). `tests/unit/v900hooks.test.mjs` scans every page.
+- **Guardian "twice"**: shows the two payments (`f.txns`); "Charged twice" only when both have times minutes apart and neither was
+  typed (`f.sure`), else "Same payment twice?" + *Logged twice — remove one* (`removeTxn`). Payments now keep `created` + `source`
+  (Yusr add-txns, paylog appendToLedger); `alreadyIn()` stops a notification already in Money being added by itself.
+- **Maid**: People & plans asks on her day with a real checkbox (`askToday`, `skipDay` "Didn't come"); "Saturday 600" is money now.
+- **Scout**: essay sites in NOT_AD, `aboutIt()` (an ad must be about the goal), `samePlace()` (Arabic = English places), Home's
+  "found N new" opens on the new ads. Design A: goal numbers, one row per ad (tap = details), "Select to compare" → `compareAds()` table.
+- **Food photo**: `composeDish()` ("Cake" + "Mango" → "Mango cake"); search ranks foods with every word first (`rankFoods`, the pack
+  ranked with the rest). Design B + slices: `fit-summary-ui.jsx` PhotoSummary (dish, ring, ½·1·1½·2, macros), `fit-summary.js`.
+- **Code page**: "Your programs" above a 2-column grid; Build & test full width on a phone.
+- **Knowledge**: in no list for anyone (dev tools stay in developer mode). **Booking details** explains itself.
+- **Invoices → Business**: `yusr-to-books.js` copies Yusr invoices into Books once (posted, customers, receipts; totals match);
+  notes copied into Mind (tag money). Flags `attune:moved:invoices|notes`. Nothing deleted in Yusr.
+- **Hidden features**: Automations in Money → More; Recall row in Mind; Missions already on Home → My report.
+- **How to use** (A + C): `guide-areas.js` (AREAS, SAY "You say → You get" for all 53 pages, tried = pages opened `markTried`),
+  life-area cards with ticks, Try it / How, "See all features (A–Z)". `tests/unit/v900guide.test.mjs` fails if a page has no entry.
+- **Automations** (A + many): READY rules (one tap), several of your own (one per line, `parseMany`), unique rule ids.
+- **Money** (A): the bar is Yusr's tabs Home · Trends · Accounts · Goals · Bills · Zakāt (Attune draws it; Yusr's inner nav, + and
+  Invoices button hidden by CSS in `yusrDocumentHtml`); every tab but Home shows Yusr's screen with the bar under it; floating +.
+  The v7.6 Accounts/Bills/Zakāt pages are no longer used. More = Automations · Invoices (→ Business) · Full ledger · Settings.
+- Tests: `e2e_v900fixes.py`, `e2e_v910design.py`, units `v900*`; updated v731guide, v731scout, v736scoutnight, v790money,
+  v620knowledge / v727teach / v732packdl (open Knowledge directly), v722maps (finds the fuel search), v740artdata (waits per tap).
 
 ## Ali's 24 Oct requests, done in this chat (v7.6) — keep them
 - **Home is the chat** (he picked A): New chat (sidebar and the chat's +) goes to the clean Home; the Chat · Your life ·
