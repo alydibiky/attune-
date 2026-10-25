@@ -7083,4 +7083,7 @@ export const AR = {
   "in the browser": "في المتصفح",
   "by itself": "لوحده",
   "Watch a price, track a delivery, order your usual, open any app": "راقب سعر، تابع شحنة، اطلب المعتاد، افتح أي أبلكيشن",
+  "Offline · private": "أوفلاين · خاص",
+  "Ya Attune — talk to it": "يا أتيون — كلّمه",
+  "Could not send — opened the app instead": "مقدرتش أبعتها — فتحت الأبلكيشن بدالها",
 };

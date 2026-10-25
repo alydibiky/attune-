@@ -177,7 +177,9 @@ export function prepare(msg, lang, style = "eg") {
  */
 export function voiceTurn(state0, said, ctx = {}) {
   const state = { ...(state0 || newVoiceState()) };
-  const ui = state.ui = replyLang(said, state.ui || "en");
+  // while a question is open (which person, which language, send?) the conversation keeps its language — tapping "Ahmed Samir"
+  // on an Arabic conversation must not switch it to English
+  const ui = state.ui = state.step !== "idle" && state.ui ? state.ui : replyLang(said, state.ui || "en");
   const L = LINES[ui], LN = LANG_NAME[ui];
   const c = parseVoice(said, ctx);
   const out = (o) => ({ state, ...o });

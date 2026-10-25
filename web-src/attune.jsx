@@ -98,6 +98,7 @@ const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Databa
 const HUB_PLACES = HUBS.flatMap(([id, label, target]) => (id === "home" ? [[target, label, HUB_ICON[id]], ["shelf", "Shelf", BookOpen]] : [[target, label, HUB_ICON[id]]]));
 import { HealthPage } from "./health-ui.jsx";
 import { AgentsPage } from "./agents-ui.jsx";
+import { VoiceScreen } from "./voice-ui.jsx";
 import { myCountry as countryOfPerson } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
 const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
@@ -7734,7 +7735,7 @@ if (STUDIO_OFF) {
 // "/money", «/الفلوس», "open fit", «افتح الفلوس» (commands.js setApps / appNamed). Its name in English, Arabic and the UI language.
 K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[label] || "", local: tr(label) })),
   { id: "food-photo", en: "Food photo", ar: AR_DICT["Food photo"] || "صورة أكل" }, { id: "read", en: "Read it to me", ar: AR_DICT["Read it to me"] || "اقرالي" },
-  { id: "all", en: "All apps", ar: "كل التطبيقات" }, { id: "report", en: "My report", ar: "تقريري" },
+  { id: "all", en: "All apps", ar: "كل التطبيقات" }, { id: "voice", en: "Ya Attune (voice)", ar: "يا أتيون (صوت)" }, { id: "report", en: "My report", ar: "تقريري" },
   { id: "privacy", en: "Privacy", ar: AR_DICT["Privacy"] || "الخصوصية" }, { id: "panel:profile", en: "Profile", ar: AR_DICT["Profile"] || "البروفايل" },
   { id: "panel:plan", en: "Plan", ar: AR_DICT["Plan"] || "الباقة" }, { id: "panel:backup", en: "Backup", ar: AR_DICT["Backup"] || "النسخة الاحتياطية" }, { id: "money", en: "Money", ar: AR_DICT["Money"] || "الفلوس" },
   ...(usesFleet() ? [{ id: "fleet-rentals", en: "Fleet & rentals", ar: AR_DICT["Fleet & rentals"] || "" }] : [])]);
@@ -7819,7 +7820,7 @@ export default function App() {
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
   // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
-  const navTo = (m) => { if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -8675,6 +8676,9 @@ export default function App() {
   // v6.27 Read it to me hands a prescription to Family health and a bill to Money
   const [careIn, setCareIn] = useState(null);
   const [scoutIn, setScoutIn] = useState(null);   // v6.28: a goal typed on Home → Scout starts it
+  // Voice (VOICE_PLAN.md, design A): "Ya Attune" — opened from the Home box's orb, "/voice", or an "attune-voice" event
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  useEffect(() => { const on = () => setVoiceOpen(true); window.addEventListener("attune-voice", on); return () => window.removeEventListener("attune-voice", on); }, []);
   // v6.28 Scout: goals due (each at most twice a day) are checked a little after Attune opens; a strong new find → a notification
   useEffect(() => {
     if (!NATIVE || !NATIVE.search) return;
@@ -11534,6 +11538,7 @@ export default function App() {
       </div>
       {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[16px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
+      {voiceOpen ? <Guard name="voice"><VoiceScreen native={NATIVE} nativeCall={nativeCall} onClose={() => setVoiceOpen(false)} doIt={doFromHome} country={agentCountry()} flash={flash} /></Guard> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">

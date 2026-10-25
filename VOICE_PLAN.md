@@ -40,10 +40,14 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
       per-person language memory
 - [x] 1.3 Accuracy set `tests/voice/commands.json` (68 lines: Egyptian, Gulf, Levantine, Darija, English, Hinglish) + scorer
       `tests/unit/v1100voice.test.mjs` (must be 68/68 — add a line for every new phrase or bug)
-- [ ] 1.4 Android: recent chat messages from notifications with their reply action (`ChatInbox.kt`), `chatInbox()` /
+- [x] 1.4 Android: recent chat messages from notifications with their reply action (`ChatInbox.kt`), `chatInbox()` /
       `chatReply({key, text})` in NativeBridge; fallback = open the app with the text (PhoneActions whatsapp)
-- [ ] 1.5 Wire it: the Home box (typed) and its mic (spoken) run the voice dialogue; answers are spoken (speak / voicecall.js)
-- [ ] 1.6 The voice screen Ali picked (from 1.1)
+- [x] 1.5 Wire it: the Home box (typed) and its mic (spoken) run the voice dialogue; answers are spoken (speak / voicecall.js)
+- [x] 1.6 The voice screen Ali picked (A, calm orb): `web-src/voice-ui.jsx` VoiceScreen — orb, heard words, one card (ask with
+      option buttons / read-back with full contact + app + their last message + Change (inline edit) / Send / messages /
+      done), typing box, mic; hands-free loop (listens again while a question is open); opened by the orb button in the Home box
+      (`home-voice`), "/voice", or the `attune-voice` event; not-a-message sentences go to the Home box (doFromHome) and the
+      answer is spoken (speakWait → speak → speechSynthesis)
 ### Phase 2 — car mode, more dialects, nicknames
 - [ ] 2.1 Car mode (big buttons, new messages read aloud, voice replies, navigation); Android Auto later
 - [ ] 2.2 Dialect packs: Levantine, Darija (+French), Hinglish / Roman Urdu, Turkish, Spanish…; per-country apps
@@ -58,7 +62,22 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
 | 1.0 plan | VOICE_PLAN.md | done |
 | 1.1 mock-ups | design/voice-options.html, design/voice-options.png | Ali picked A (calm orb) |
 | 1.2 engine | web-src/voice-cmd.js (parseVoice, voiceTurn, findPeople, skeleton), web-src/franco.js (toFranco eg/gulf/lev/maghreb, isFranco, styleOf, per-person memory `attune:voice:people`), web-src/franco-words.js (built by tools/franco_words.py from Franco.kt) | done, not wired yet |
+| 1.4 android | ChatInbox.kt (+PayListener hook), NativeBridge chatInbox / chatReply | CI compile check run 40227788489 |
+| 1.5–1.6 wiring + screen A | web-src/voice-ui.jsx, attune.jsx (voiceOpen, navTo "voice", /voice app, overlay), home-ui.jsx (orb button) | e2e tests/e2e_v1100voice.py passes |
 | 1.3 accuracy | tests/voice/commands.json, tests/unit/v1100voice.test.mjs | 68/68 + conversation + correct-contact checks |
+
+## Open question for Ali (25 Oct): SMS
+Ali: "why not SMS? it will make the app more useful". Answer given: possible WITHOUT SMS permissions — read the SMS app's
+notifications (like WhatsApp) and reply through the SMS app's own notification Reply; never the SMS inbox, never one-time codes.
+But Attune's privacy policy promises "SMS are never read" (privacy.js, WatchMatch.isSms, PayListener, RecallLog), so it needs
+Ali's decision: (A) keep no SMS, (B) an opt-in switch "Read SMS notifications" (off by default; banks' SMS into Money too; OTPs
+never), (C) on by default. Recommended B. If B: change WatchMatch.isSms checks behind the switch, ChatInbox.isChat, privacy text
+(EN + AR), and the Play data-safety form.
+
+## Next steps (for the next chat)
+1. Ali's answer on SMS (above). 2. Phase 2.1 car mode (design A's car screen in design/voice-options.html). 3. Dialect lines
+for Gulf / Levantine replies (Attune speaks Egyptian or English now). 4. English translation of an Arabic message when the
+person picks English (state.draft.needs = "translate" — wire to the model with a read-back). 5. "Make it formal" (needs = "formal").
 
 ## Ideas parked for later (Ali)
 - "Attune Saves" (the app that pays for itself — a monthly "Attune saved you EGP 3,420" with receipts): Ali said "I will do

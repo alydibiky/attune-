@@ -1,0 +1,139 @@
+/* ---- Voice step 1.5–1.6 (VOICE_PLAN.md) — "Ya Attune", design A (Ali's pick, 25 Oct 2026: the calm orb).
+   A quiet full screen: the jade orb breathes while it listens, your words under it, then ONE card — a question (which person,
+   which language) or the read-back (the full contact, the app, their last message, Change / Send) or the messages read aloud.
+   Hands-free: after Attune speaks it listens again until the conversation ends. Typing works too (a box under the orb).
+   The brain is voice-cmd.js (code, no guessing); anything that is not a message goes to the Home box (doIt) — money, reminders,
+   Agents, apps — and its answer is spoken. Sending: the chat's own notification reply (ChatInbox.kt, exactly that chat), else
+   the app opens with the text ready and the person picks the contact. */
+import React, { useEffect, useRef, useState } from "react";
+import { X, Send, Mic, Check, Pencil } from "lucide-react";
+import { tr, getLang } from "./i18n.js";
+import * as V from "./voice-cmd.js";
+import { loadPeople, savePeople } from "./franco.js";
+
+const STYLE_BY_COUNTRY = { EG: "eg", SA: "gulf", AE: "gulf", KW: "gulf", QA: "gulf", BH: "gulf", OM: "gulf", JO: "lev", LB: "lev", SY: "lev", PS: "lev", IQ: "gulf", MA: "maghreb", DZ: "maghreb", TN: "maghreb", LY: "maghreb" };
+const LISTEN_TAG = { eg: "ar-EG", gulf: "ar-SA", lev: "ar-JO", maghreb: "ar-MA" };
+const APP_NAME = { whatsapp: "WhatsApp", telegram: "Telegram", messenger: "Messenger", signal: "Signal", instagram: "Instagram" };
+
+export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "EG", flash }) {
+  const style = STYLE_BY_COUNTRY[(country || "EG").toUpperCase()] || "eg";
+  const [st, setSt] = useState(() => ({ ...V.newVoiceState(), ui: getLang() === "ar" ? "ar" : "en" }));
+  const [edit, setEdit] = useState(null);   // the read-back's words being changed by hand
+  const [heard, setHeard] = useState("");
+  const [say, setSay] = useState("");
+  const [card, setCard] = useState(null);
+  const [listening, setListening] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [speakLang, setSpeakLang] = useState(getLang() === "ar" ? "ar" : "en");   // what the mic listens for
+  const stRef = useRef(st); stRef.current = st;
+  const alive = useRef(true);
+  useEffect(() => () => { alive.current = false; try { N && N.stopListening && N.stopListening(); N && N.stopSpeaking && N.stopSpeaking(); } catch (e) {} }, []);
+
+  const inbox = () => { try { return N && N.chatInbox ? JSON.parse(N.chatInbox() || "[]") : []; } catch (e) { return []; } };
+  const speakOut = async (text, lang) => {
+    if (!text) return;
+    const tag = lang === "ar" ? LISTEN_TAG[style] : "en-US";
+    try {
+      if (N && N.speakWait && nativeCall) { await nativeCall("speakWait", { text, lang: tag }); return; }
+      if (N && N.speak) { N.speak(text, tag); return; }
+      if (typeof window !== "undefined" && window.speechSynthesis) await new Promise((res) => { const u = new SpeechSynthesisUtterance(text); u.lang = tag; u.onend = res; u.onerror = res; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); setTimeout(res, 15000); });
+    } catch (e) {}
+  };
+  const send = async (a) => {
+    if (a.key && N && N.chatReply) {
+      let r = {}; try { r = JSON.parse(N.chatReply(JSON.stringify({ key: a.key, text: a.text })) || "{}"); } catch (e) {}
+      if (r.ok) return true;
+    }
+    // no reply action (no recent chat, or Attune restarted): the app opens with the text ready — the person picks the contact
+    try {
+      if (N && N.intent) { const r = JSON.parse(N.intent(JSON.stringify({ kind: "whatsapp", phone: "", message: a.text })) || "{}"); return r.ok !== false; }
+    } catch (e) {}
+    try { window.open("https://wa.me/?text=" + encodeURIComponent(a.text), "_blank"); } catch (e) {}
+    return true;
+  };
+  const turn = async (said) => {
+    const text = String(said || "").trim(); if (!text) return;
+    setHeard(text);
+    const people = loadPeople();
+    const r = V.voiceTurn(stRef.current, text, { inbox: inbox(), people, style, defaultApp: "whatsapp" });
+    if (r.people) savePeople(r.people);
+    setSt(r.state);
+    if (r.action && r.action.kind === "pass") {
+      // not a message: the Home box does it (money, reminders, Agents, apps) and its answer is spoken
+      let line = "";
+      try { const res = doIt ? await doIt(text) : null; line = res ? (res.answer || (res.lines || []).map((l) => l.text).join(" · ")) : ""; } catch (e) {}
+      const ui = r.state.ui;
+      line = line || (ui === "ar" ? "مفهمتش — قولها تاني بشكل تاني، أو اكتبها." : "I didn't get that — say it another way, or type it.");
+      setSay(line); setCard({ kind: "done", ok: !!line });
+      await speakOut(line, ui);
+      return;
+    }
+    setSay(r.say || ""); setCard(r.card || null);
+    if (r.action && r.action.kind === "send") { const ok = await send(r.action); if (!ok && flash) flash(tr("Could not send — opened the app instead")); }
+    await speakOut(r.say, r.state.ui);
+    // hands-free: keep listening while Attune is waiting for an answer
+    if (alive.current && r.state.step !== "idle") listen();
+  };
+  const listen = async () => {
+    if (!N || !nativeCall || !N.listen || listening) return;
+    setListening(true); setHeard("");
+    try {
+      const tag = speakLang === "ar" ? LISTEN_TAG[style] : "en-US";
+      const res = await nativeCall("listen", tag, (pct, stage, detail) => { if (stage === "partial") setHeard(detail); });
+      setListening(false);
+      if (res && res.text) await turn(res.text);
+    } catch (e) { setListening(false); }
+  };
+  useEffect(() => { if (N && N.listen) listen(); }, []);   // opens listening, like pressing a mic
+
+  const ar = st.ui === "ar";
+  const choose = (label) => turn(label);
+  return (
+    <div className="calm fixed inset-0 z-[90] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col" data-testid="voice-screen" dir={ar ? "rtl" : "ltr"}>
+      <div className="flex items-center gap-2 px-4 pt-4 pb-2" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}>
+        <b className="text-[17px] font-black">{ar ? "يا أتيون" : "Ya Attune"}</b>
+        <span className="text-[11.5px] font-extrabold px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)]">{tr("Offline · private")}</span>
+        <span className="flex-1" />
+        <button onClick={() => setSpeakLang(speakLang === "ar" ? "en" : "ar")} className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[12.5px] font-extrabold" data-testid="voice-lang">{speakLang === "ar" ? "عربي" : "English"}</button>
+        <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 rounded-full grid place-items-center c-sub" data-testid="voice-close"><X size={20} /></button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 pb-4 max-w-xl w-full mx-auto">
+        <div className={"mx-auto rounded-full transition-all duration-500 " + (listening ? "animate-pulse" : "")} data-testid="voice-orb"
+          style={{ width: card ? 110 : 190, height: card ? 110 : 190, margin: card ? "16px auto 10px" : "40px auto 18px", background: "radial-gradient(circle at 40% 35%,#7fe0cf,#2c8f80 60%,#173530)", boxShadow: "0 0 0 18px rgba(79,194,175,.12),0 0 0 40px rgba(79,194,175,.06)" }} />
+        {heard ? <p className="text-center text-[18px] font-extrabold m-0 px-2" dir="auto" data-testid="voice-heard">«{heard}»</p> : null}
+        <p className="text-center text-[13px] c-sub mt-1.5 mb-0">{listening ? (speakLang === "ar" ? "بسمعك…" : "Listening…") : ""}</p>
+        {card && card.kind === "ask" ? <div className={"rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 mt-3"} data-testid="voice-ask">
+          <p className="m-0 text-[16px] font-extrabold" dir="auto">{card.q}</p>
+          {card.options ? <div className="flex gap-2 mt-3 flex-wrap">{card.options.map((o, i) => <button key={o} onClick={() => choose(o)} data-testid="voice-option"
+            className={"flex-1 min-h-[44px] px-3 rounded-full border text-[14px] font-extrabold " + (card.suggest && ["ar", "franco", "en"][i] === card.suggest ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "border-[var(--c-ln)]")}>{o}</button>)}</div> : null}
+        </div> : null}
+        {card && card.kind === "readback" ? <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 mt-3" data-testid="voice-readback">
+          <p className="m-0 text-[13px] font-extrabold c-sub" data-testid="voice-to" dir="auto">{(card.isGroup ? (ar ? "جروب " : "Group ") : (ar ? "إلى " : "To ")) + card.to} · {APP_NAME[card.app] || card.app}</p>
+          {card.last ? <p className="m-0 mt-1 text-[12.5px] c-sub" dir="auto">{ar ? "آخر رسالة منه: " : "Their last message: "}«<bdi>{card.last}</bdi>»</p> : null}
+          {card.onlyInGroup ? <p className="m-0 mt-1 text-[12.5px] text-[var(--c-warn)]" data-testid="voice-group-note">{ar ? `كتب في جروب «${card.onlyInGroup}» بس — هفتح الأبلكيشن عليه هو، مش الجروب.` : `They only wrote in the “${card.onlyInGroup}” group — the app opens on them, not the group.`}</p> : null}
+          {edit != null ? <form onSubmit={(e) => { e.preventDefault(); const t = edit.trim(); setEdit(null); if (t) turn((ar ? "غيرها ل " : "change it to ") + t); }} className="my-2 flex gap-2">
+            <input autoFocus value={edit} onChange={(e) => setEdit(e.target.value)} dir="auto" className="flex-1 min-w-0 min-h-[44px] rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-acc)] px-3 text-[16px] font-bold" data-testid="voice-edit" />
+            <button className="min-h-[44px] px-4 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" data-testid="voice-edit-ok">{ar ? "تمام" : "OK"}</button></form>
+            : <p className="m-0 my-2 text-[19px] font-extrabold" dir="auto" data-testid="voice-text">{card.text}</p>}
+          {!card.direct ? <p className="m-0 text-[12px] c-sub">{ar ? "مفيش محادثة حديثة معاه — هفتح الأبلكيشن والرسالة جاهزة، وإنت اختار الشخص." : "No recent chat with them — the app opens with the message ready; you pick the person."}</p> : null}
+          <div className="flex gap-2 mt-3">
+            <button onClick={() => setEdit(card.text)} className="flex-1 min-h-[46px] rounded-[14px] border border-[var(--c-ln)] font-extrabold inline-flex items-center justify-center gap-1.5" data-testid="voice-change"><Pencil size={15} />{ar ? "غيّر" : "Change"}</button>
+            <button onClick={() => turn(ar ? "ابعت" : "send")} className="flex-1 min-h-[46px] rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold inline-flex items-center justify-center gap-1.5" data-testid="voice-send"><Send size={15} className="rtl:-scale-x-100" />{ar ? "ابعت" : "Send"}</button>
+          </div>
+        </div> : null}
+        {card && card.kind === "messages" ? <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 mt-3 space-y-2" data-testid="voice-messages">
+          {(card.items || []).length ? card.items.map((m, i) => <div key={i} className="border-t border-[var(--c-ln)] first:border-t-0 pt-2 first:pt-0"><p className="m-0 text-[12px] font-extrabold c-sub">{m.who}{m.group && m.convo ? " · " + m.convo : ""} · {APP_NAME[m.app] || m.app}</p><p className="m-0 text-[15px]" dir="auto">{m.text}</p></div>)
+            : <p className="m-0 text-[14px] c-sub">{say}</p>}
+        </div> : null}
+        {card && card.kind === "done" ? <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 mt-3 flex gap-2 items-start" data-testid="voice-done">
+          {card.ok ? <Check size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" /> : null}<p className="m-0 text-[15px] font-bold" dir="auto">{say}</p></div> : null}
+        <form onSubmit={(e) => { e.preventDefault(); const t = typed; setTyped(""); turn(t); }} className="mt-4 flex gap-2">
+          <input value={typed} onChange={(e) => setTyped(e.target.value)} dir="auto" placeholder={ar ? "أو اكتب هنا…" : "Or type here…"} className="flex-1 min-w-0 min-h-[44px] rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[15px]" data-testid="voice-input" />
+          <button aria-label={tr("Send")} className="w-11 h-11 rounded-full grid place-items-center bg-[var(--c-surf-2)]" data-testid="voice-type-go"><Send size={16} className="rtl:-scale-x-100" /></button>
+        </form>
+      </div>
+      <div className="pb-6 pt-2 grid place-items-center" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+        <button onClick={listen} disabled={!N || !N.listen} aria-label={tr("Speak")} className={"w-[74px] h-[74px] rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-lg disabled:opacity-40 " + (listening ? "animate-pulse" : "")} data-testid="voice-mic"><Mic size={30} /></button>
+      </div>
+    </div>);
+}

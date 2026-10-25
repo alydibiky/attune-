@@ -186,6 +186,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
             {/* v6.50 (Ali: "everything via the Home box"): attach · mic · send — the rest is typed ("/food", "/read", "/money"…) */}
             {cmd ? <button onClick={() => fileRef.current && fileRef.current.click()} aria-label={tr("Attach a file, photo, video or recording")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-surf-2, var(--c-bg))" }} data-testid="box-attach"><Paperclip size={18} /></button> : null}
             <span className="flex-1" />
+            {/* Voice (design A): the orb opens "Ya Attune" — talk and it acts, messages included */}
+            <button onClick={() => window.dispatchEvent(new CustomEvent("attune-voice"))} aria-label={tr("Ya Attune — talk to it")} title={tr("Ya Attune — talk to it")} data-testid="home-voice"
+              className="w-10 h-10 rounded-full grid place-items-center"><span className="w-6 h-6 rounded-full block" style={{ background: "radial-gradient(circle at 40% 35%,#7fe0cf,#2c8f80 60%,#173530)", boxShadow: "0 0 0 4px rgba(79,194,175,.15)" }} /></button>
             {listen ? <button onClick={speak} aria-label={tr("Speak")} title={tr("Speak")} className={"w-10 h-10 rounded-full grid place-items-center " + (heard ? "animate-pulse" : "c-sub")} style={{ background: heard ? "var(--c-soft)" : "var(--c-surf-2, var(--c-bg))" }} data-testid="home-mic"><Mic size={18} /></button> : null}
             <button onClick={() => send()} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="home-send"><ArrowUp size={18} /></button>
           </div>
