@@ -106,13 +106,23 @@ object Subtitles {
     /** One piece → text with the on-device recogniser (on the main thread, as Android wants); "" when nothing was heard. */
     @androidx.annotation.RequiresApi(33)
     private fun recognise(act: Activity, file: File, lang: String): String {
-        var text = ""; var err: String? = null
+        // v8.2 (Ali: "the transcriber is not working"): when the phone's offline recogniser can't run at all (some phones have
+        // none that takes a file), the phone's normal recogniser does the rest of the video
+        val first = recogniseWith(act, file, lang, !useNormal)
+        if (first.second != null && !useNormal && !Prefs.airGapNow && SpeechRecognizer.isRecognitionAvailable(act)) { useNormal = true; return recogniseWith(act, file, lang, false).first }
+        return first.first
+    }
+    @Volatile private var useNormal = false
+    /** → (text, the recogniser's error code when it failed for another reason than silence). */
+    @androidx.annotation.RequiresApi(33)
+    private fun recogniseWith(act: Activity, file: File, lang: String, onDevice: Boolean): Pair<String, Int?> {
+        var text = ""; var err: String? = null; var code: Int? = null
         val done = CountDownLatch(1)
         var rec: SpeechRecognizer? = null
         val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
         act.runOnUiThread {
             try {
-                val r = SpeechRecognizer.createOnDeviceSpeechRecognizer(act); rec = r
+                val r = if (onDevice) SpeechRecognizer.createOnDeviceSpeechRecognizer(act) else SpeechRecognizer.createSpeechRecognizer(act); rec = r
                 r.setRecognitionListener(object : RecognitionListener {
                     override fun onReadyForSpeech(p: Bundle?) {}
                     override fun onBeginningOfSpeech() {}
@@ -124,6 +134,7 @@ object Subtitles {
                     override fun onResults(b: Bundle?) { text = b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull() ?: ""; done.countDown() }
                     override fun onError(e: Int) {
                         if (e == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED || e == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE) err = "The phone's offline speech pack for this language is missing — add it in the phone's Settings → Speech"
+                        else if (e != SpeechRecognizer.ERROR_NO_MATCH && e != SpeechRecognizer.ERROR_SPEECH_TIMEOUT) code = e
                         done.countDown()
                     }
                 })
@@ -136,13 +147,15 @@ object Subtitles {
                     .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, AudioFormat.ENCODING_PCM_16BIT)
                     .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_SAMPLING_RATE, RATE)
                 r.startListening(i)
-            } catch (e: Throwable) { err = e.message; done.countDown() }
+            } catch (e: Throwable) { if (onDevice) code = -1 else err = e.message; done.countDown() }
         }
         val ok = done.await(60, TimeUnit.SECONDS)
         act.runOnUiThread { try { rec?.destroy() } catch (e: Throwable) {} }
         try { pfd.close() } catch (e: Throwable) {}
-        err?.let { throw IllegalStateException(it) }
-        return if (ok) text else ""
+        if (code != null) try { File(act.filesDir, "engine.log").appendText("\nSubtitles: recogniser error $code (" + (if (onDevice) "offline" else "normal") + ", $lang)") } catch (e: Exception) {}
+        if (err != null && !(onDevice && err!!.startsWith("The phone's offline"))) throw IllegalStateException(err)
+        if (err != null && (useNormal || Prefs.airGapNow)) throw IllegalStateException(err)
+        return Pair(if (ok) text else "", if (err != null) -2 else code)
     }
 
     /** The whole video → [{start, end, text}] (ms), with progress (pieces done / all). */

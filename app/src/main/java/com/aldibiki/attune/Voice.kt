@@ -54,7 +54,7 @@ class Voice(private val activity: Activity) {
                 return@runOnUiThread
             }
             stop()
-            val onDevice = step < 2 && Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(activity)
+            val onDevice = (step < 2 || step == 3) && Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(activity)
             if (!onDevice && Prefs.airGapNow) {
                 sink.failed("This phone has no offline speech recogniser, and the offline lock is on")
                 return@runOnUiThread
@@ -92,6 +92,17 @@ class Voice(private val activity: Activity) {
                             else -> { val asked = getPack(lang); sink.failed(if (asked) "Android is downloading the offline speech pack for this language — try again when it finishes" else "That language isn't installed for offline voice — add it in the phone's Settings → Google → Speech → Offline languages"); return }
                         }
                     }
+                    // v8.2 (Ali, 26 Oct: "the voice is not working at all"): every failure goes into the engine log with its code,
+                    // and the phone's offline recogniser failing for any other reason than silence hands over to the normal one;
+                    // a busy microphone (the wake word letting go of it) is tried once more
+                    log("error $error (" + (if (onDevice) "offline" else "normal") + " recogniser, $lang, step $step)")
+                    val silent = error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
+                    if ((error == SpeechRecognizer.ERROR_AUDIO || error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) && step != 3 && step != 4) {
+                        release(); android.os.Handler(activity.mainLooper).postDelayed({ start(lang, sink, if (onDevice) 3 else 4, askPermission) }, 700); return
+                    }
+                    if (onDevice && !silent && error != SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS && !Prefs.airGapNow && SpeechRecognizer.isRecognitionAvailable(activity)) {
+                        release(); start(lang, sink, 2, askPermission); return
+                    }
                     sink.failed(when (error) {
                         SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Didn't catch that — try again"
                         SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Voice needs the phone's offline speech pack for this language"
@@ -107,8 +118,12 @@ class Voice(private val activity: Activity) {
                 .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                 .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
             if (lang.isNotBlank()) i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang)
-            try { r.startListening(i) } catch (e: Exception) { sink.failed(e.message ?: "Voice input failed"); release() }
+            try { r.startListening(i) } catch (e: Exception) { log("start failed: " + e.message); sink.failed(e.message ?: "Voice input failed"); release() }
         }
+    }
+
+    private fun log(msg: String) {
+        try { java.io.File(activity.filesDir, "engine.log").appendText("\nVoice (" + java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date()) + "): " + msg) } catch (e: Exception) {}
     }
 
     /** Asks Android for the offline speech pack of `lang` (once a run of the app per language). True when a download screen was shown. */

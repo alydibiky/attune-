@@ -720,7 +720,8 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             override fun failed(message: String) { WakeService.selfListening = false; WakeService.resumeLater(ctx, 400); reject(id, message) }
         }
         lastVoiceSink = sink
-        v.start(lang, sink) { askMic?.invoke() }
+        // v8.2: when the wake word holds the mic, it lets go first (its loop stops within ~0.4 s) — then Attune listens
+        if (Prefs.wake(ctx)) web.postDelayed({ v.start(lang, sink) { askMic?.invoke() } }, 450) else v.start(lang, sink) { askMic?.invoke() }
     }
 
     @JavascriptInterface
