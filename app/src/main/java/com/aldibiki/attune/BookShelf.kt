@@ -99,17 +99,17 @@ object BookShelf {
         val d = db(ctx); val name = a.optString("name").trim().take(60)
         when (a.optString("op")) {
             "add" -> if (name.isNotEmpty()) d.insertWithOnConflict("topics", null, ContentValues().apply { put("name", name); put("created", System.currentTimeMillis()) }, SQLiteDatabase.CONFLICT_IGNORE)
-            "rename" -> { val to = a.optString("to").trim().take(60); if (to.isNotEmpty()) { d.execSQL("UPDATE topics SET name=? WHERE name=?", arrayOf(to, name)); d.execSQL("UPDATE books SET topic=? WHERE topic=?", arrayOf(to, name)) } }
-            "delete" -> { d.execSQL("DELETE FROM topics WHERE name=?", arrayOf(name)); d.execSQL("UPDATE books SET topic='' WHERE topic=?", arrayOf(name)) }   // the books stay, without a topic
-            "move" -> d.execSQL("UPDATE books SET topic=? WHERE id=?", arrayOf(name, a.optLong("book")))
+            "rename" -> { val to = a.optString("to").trim().take(60); if (to.isNotEmpty()) { d.execSQL("UPDATE topics SET name=? WHERE name=?", arrayOf<Any>(to, name)); d.execSQL("UPDATE books SET topic=? WHERE topic=?", arrayOf<Any>(to, name)) } }
+            "delete" -> { d.execSQL("DELETE FROM topics WHERE name=?", arrayOf<Any>(name)); d.execSQL("UPDATE books SET topic='' WHERE topic=?", arrayOf<Any>(name)) }   // the books stay, without a topic
+            "move" -> d.execSQL("UPDATE books SET topic=? WHERE id=?", arrayOf<Any>(name, a.optLong("book")))
         }
         return state(ctx)
     }
     fun remove(ctx: Context, id: Long): JSONObject {
         val d = db(ctx)
-        d.execSQL("UPDATE books SET state='cancel' WHERE id=? AND state IN ('queued','reading')", arrayOf(id))
-        d.execSQL("DELETE FROM chunks WHERE book=?", arrayOf(id.toString()))
-        d.execSQL("DELETE FROM books WHERE id=?", arrayOf(id))
+        d.execSQL("UPDATE books SET state='cancel' WHERE id=? AND state IN ('queued','reading')", arrayOf<Any>(id))
+        d.execSQL("DELETE FROM chunks WHERE book=?", arrayOf<Any>(id.toString()))
+        d.execSQL("DELETE FROM books WHERE id=?", arrayOf<Any>(id))
         return state(ctx)
     }
 
@@ -127,7 +127,7 @@ object BookShelf {
             val bytes = sizeOf(ctx, u)
             // the same book again (same name and size) is not read twice — it only moves to this topic
             val dup = d.rawQuery("SELECT id FROM books WHERE name=? AND bytes=?", arrayOf(name, bytes.toString())).use { c -> if (c.moveToFirst()) c.getLong(0) else -1L }
-            if (dup >= 0) { if (topic.isNotEmpty()) d.execSQL("UPDATE books SET topic=? WHERE id=?", arrayOf(topic, dup)); continue }
+            if (dup >= 0) { if (topic.isNotEmpty()) d.execSQL("UPDATE books SET topic=? WHERE id=?", arrayOf<Any>(topic, dup)); continue }
             d.insert("books", null, ContentValues().apply { put("name", name); put("topic", topic); put("kind", kind); put("uri", u.toString()); put("bytes", bytes); put("state", "queued"); put("added", now) })
         }
         BookIngestService.start(ctx)
@@ -153,16 +153,16 @@ object BookShelf {
         val d = db(ctx)
         var name = ""; var kind = ""; var uri = ""; var done = 0
         d.rawQuery("SELECT name, kind, uri, done FROM books WHERE id=?", arrayOf(id.toString())).use { c -> if (!c.moveToFirst()) return true; name = c.getString(0); kind = c.getString(1); uri = c.getString(2); done = c.getInt(3) }
-        d.execSQL("UPDATE books SET state='reading', err=NULL WHERE id=?", arrayOf(id))
+        d.execSQL("UPDATE books SET state='reading', err=NULL WHERE id=?", arrayOf<Any>(id))
         val batch = ArrayList<Pair<Int, String>>(); var chunksAdded = 0; var scans = 0; var lastPage = done
         fun flush(total: Int) {
-            if (batch.isEmpty()) { d.execSQL("UPDATE books SET pages=?, done=? WHERE id=?", arrayOf(total, lastPage, id)); return }
+            if (batch.isEmpty()) { d.execSQL("UPDATE books SET pages=?, done=? WHERE id=?", arrayOf<Any>(total, lastPage, id)); return }
             d.beginTransaction()
             try {
                 for ((page, text) in batch) for (ch in chunks(text)) {
                     d.insert("chunks", null, ContentValues().apply { put("norm", norm(ch)); put("text", ch); put("book", id.toString()); put("page", page.toString()) }); chunksAdded++
                 }
-                d.execSQL("UPDATE books SET pages=?, done=?, chunks=chunks+?, scans=scans+? WHERE id=?", arrayOf(total, lastPage, chunksAdded, scans, id))
+                d.execSQL("UPDATE books SET pages=?, done=?, chunks=chunks+?, scans=scans+? WHERE id=?", arrayOf<Any>(total, lastPage, chunksAdded, scans, id))
                 d.setTransactionSuccessful()
             } finally { d.endTransaction() }
             batch.clear(); chunksAdded = 0; scans = 0
@@ -192,10 +192,10 @@ object BookShelf {
                 flush(total)
                 if (cancelled()) return true
                 if (lastPage < total) return false   // stopped part way: resumes from `done`
-                d.execSQL("UPDATE books SET state='done', pages=? WHERE id=?", arrayOf(total, id))
+                d.execSQL("UPDATE books SET state='done', pages=? WHERE id=?", arrayOf<Any>(total, id))
             }
         } catch (e: Throwable) {
-            d.execSQL("UPDATE books SET state='error', err=? WHERE id=?", arrayOf((e.message ?: e.javaClass.simpleName).take(200), id))
+            d.execSQL("UPDATE books SET state='error', err=? WHERE id=?", arrayOf<Any>((e.message ?: e.javaClass.simpleName).take(200), id))
         }
         job = JSONObject()
         return true
