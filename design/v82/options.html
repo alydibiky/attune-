@@ -1,0 +1,70 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+:root{--bg:#F2F4F1;--surf:#fff;--ink:#16211C;--mut:#5E6B64;--acc:#2F7A55;--soft:#E3F1E8;--ln:#DCE3DE;--warn:#B5651D;--red:#B23B3B}
+*{box-sizing:border-box}body{margin:0;font-family:Nunito,system-ui,sans-serif;background:#E9ECE8;color:var(--ink)}
+section{padding:22px 26px}h1{font-size:24px;margin:0 0 4px}h2{font-size:15px;color:var(--mut);margin:0 0 16px;font-weight:600}
+.row{display:flex;gap:22px;align-items:flex-start}.opt{width:340px}.lab{font-weight:900;font-size:17px;margin:0 0 6px}.lab .rec{background:var(--acc);color:#fff;font-size:11px;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle}
+.desc{font-size:12.5px;color:var(--mut);margin:0 0 10px;min-height:52px}
+.ph{background:var(--bg);border-radius:30px;border:8px solid #1d2420;height:640px;overflow:hidden;padding:14px 12px}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:19px;margin-bottom:10px}
+.card{background:var(--surf);border:1px solid var(--ln);border-radius:18px;padding:11px 12px;margin-bottom:9px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.chip{border:1px solid var(--ln);background:#fff;border-radius:99px;padding:5px 10px;font-size:11.5px;font-weight:800}.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.g{font-size:10.5px;font-weight:900;letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin:10px 2px 6px}
+.it{display:flex;gap:9px;align-items:center}.dot{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:15px;flex:none}
+.t{font-size:13px;font-weight:800}.s{font-size:11px;color:var(--mut)}.amt{margin-left:auto;font-weight:900;font-size:13px}
+.tag{font-size:10px;font-weight:900;padding:2px 7px;border-radius:99px;background:var(--soft);color:var(--acc)}.tag.w{background:#F8E9DA;color:var(--warn)}.tag.r{background:#F6E0E0;color:var(--red)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.tile{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:10px}.tile b{font-size:20px;display:block}
+.seg{display:flex;background:#fff;border:1px solid var(--ln);border-radius:14px;padding:3px;margin-bottom:10px}.seg span{flex:1;text-align:center;font-size:11px;font-weight:800;padding:6px 0;border-radius:11px}.seg .on{background:var(--acc);color:#fff}
+.btn{background:var(--acc);color:#fff;border-radius:12px;padding:7px 11px;font-size:12px;font-weight:900;display:inline-block}.btn.g2{background:#fff;color:var(--ink);border:1px solid var(--ln)}
+.step{font-size:11.5px;display:flex;gap:6px;align-items:center;margin:3px 0}.ok{color:var(--acc);font-weight:900}
+.bub{border-radius:16px;padding:8px 10px;font-size:12px;margin:6px 0;max-width:88%}.me{background:var(--acc);color:#fff;margin-left:auto}.ai{background:#fff;border:1px solid var(--ln)}
+.cite{display:inline-block;font-size:10px;font-weight:900;background:var(--soft);color:var(--acc);border-radius:7px;padding:1px 6px;margin:2px 2px 0 0}
+.book{width:44px;height:62px;border-radius:5px;display:inline-block;margin-right:5px;color:#fff;font-size:8px;font-weight:900;padding:4px;vertical-align:top}
+.box{border:1px dashed var(--warn);background:#FBF3EA;border-radius:12px;padding:7px 9px;font-size:11.5px;margin-top:6px}
+input.fake{width:100%;border:1px solid var(--ln);border-radius:14px;padding:9px 11px;font-size:12px;background:#fff;color:var(--mut)}
+</style></head><body>
+
+<section data-screen="followups"><h1>1 · Follow-ups + Guardian + Reminders + Timeline + Dates — one page</h1><h2>Everything you must pay, collect, remember or watch, in one place</h2><div class="row">
+<div class="opt"><p class="lab">A · One list by day <span class="rec">Recommended</span></p><p class="desc">One list: Late, Today, This week, Later. Every item says what it is (debt, installment, reminder, date, Guardian alert). Chips on top filter it. One sentence box adds anything.</p>
+<div class="ph"><div class="top">Follow-ups <span class="btn">+ Add</span></div><input class="fake" value="Ahmed owes me 12,000, 1,000 a month…"><div class="chips" style="margin-top:8px"><span class="chip on">All 14</span><span class="chip">Money 6</span><span class="chip">Reminders 4</span><span class="chip">Dates 2</span><span class="chip">Guardian 2</span></div>
+<div class="g">Late</div><div class="card it"><span class="dot" style="background:#F6E0E0">⚠️</span><div><div class="t">Netflix charged twice</div><div class="s"><span class="tag r">Guardian</span> 23 Oct · 2 × 240</div></div><span class="amt">240</span></div>
+<div class="g">Today</div><div class="card it"><span class="dot" style="background:#E3F1E8">👥</span><div><div class="t">Sheikh — payment 2 of 9</div><div class="s"><span class="tag">Owed to you</span> ☐ tick when paid</div></div><span class="amt">2,444</span></div>
+<div class="card it"><span class="dot" style="background:#E3F1E8">🧹</span><div><div class="t">Maid — Saturday</div><div class="s"><span class="tag">Regular</span> came? ☐</div></div><span class="amt">600</span></div>
+<div class="card it"><span class="dot" style="background:#EEF">⏰</span><div><div class="t">Call the crane client 5 pm</div><div class="s"><span class="tag">Reminder</span></div></div></div>
+<div class="g">This week</div><div class="card it"><span class="dot" style="background:#F8E9DA">📅</span><div><div class="t">Car licence renewal</div><div class="s"><span class="tag w">Date</span> Thu 30 Oct</div></div></div></div></div>
+
+<div class="opt"><p class="lab">B · Numbers first</p><p class="desc">Four tiles on top: owed to you, you owe, today, alerts. A tap on a tile filters the list. Under them, "Next up".</p>
+<div class="ph"><div class="top">Follow-ups <span class="btn">+ Add</span></div><div class="tiles"><div class="tile"><span class="s">Owed to you</span><b>34,000</b><span class="tag">3 people</span></div><div class="tile"><span class="s">You owe</span><b>8,200</b><span class="tag w">2 due</span></div><div class="tile"><span class="s">Today</span><b>3</b><span class="tag">reminders</span></div><div class="tile"><span class="s">Guardian</span><b>2</b><span class="tag r">alerts</span></div></div>
+<div class="g">Next up</div><div class="card it"><span class="dot" style="background:#E3F1E8">👥</span><div><div class="t">Sheikh — 2 of 9</div><div class="s">today</div></div><span class="amt">2,444</span></div><div class="card it"><span class="dot" style="background:#F6E0E0">⚠️</span><div><div class="t">Netflix charged twice</div><div class="s">Guardian</div></div><span class="amt">240</span></div><div class="card it"><span class="dot" style="background:#F8E9DA">📅</span><div><div class="t">Car licence renewal</div><div class="s">Thu</div></div></div>
+<div class="g">Timeline</div><div class="card"><div class="s">Oct ▮▮▯▮▮▮▯ Nov ▮▯▮ — every payment and date on one line</div></div></div></div>
+
+<div class="opt"><p class="lab">C · One page, parts on top</p><p class="desc">One page with a switch: People · Reminders · Dates · Guardian · Timeline. Closest to today's page, but all five are together.</p>
+<div class="ph"><div class="top">Follow-ups</div><div class="seg"><span class="on">People</span><span>Reminders</span><span>Dates</span><span>Guardian</span><span>Timeline</span></div><input class="fake" value="One sentence — Attune builds the schedule">
+<div class="g">People</div><div class="card it"><span class="dot" style="background:#E3F1E8">👥</span><div><div class="t">Sheikh owes you</div><div class="s">9 monthly · 1 of 9 paid</div></div><span class="amt">19,556</span></div><div class="card it"><span class="dot" style="background:#E3F1E8">🧹</span><div><div class="t">Maid</div><div class="s">600 every Saturday</div></div></div><div class="card it"><span class="dot" style="background:#E3F1E8">👥</span><div><div class="t">You owe Karim</div><div class="s">due 1 Nov</div></div><span class="amt">5,000</span></div></div></div>
+</div></section>
+
+<section data-screen="agents"><h1>2 · Smarter agents</h1><h2>Your hotel sentence: Masjid al-Haram · under 45k · 4 nights between 10 Dec and 29 Jan · 4–5 stars</h2><div class="row">
+<div class="opt"><p class="lab">A · It plans, then shows the best 3 <span class="rec">Recommended</span></p><p class="desc">The agent shows its plan and does every step: 6 start days → 4–5★ within 1 km → compares → the best 3 hotels with price, stars, distance and days. "Open it" fills your details. It checks again twice a day.</p>
+<div class="ph"><div class="top">Agents</div><div class="card"><div class="t">Hotels · Masjid al-Haram · 4 nights · 4–5★</div><div class="s">under EGP 45,000 · any 4 nights 10 Dec – 29 Jan</div>
+<div class="step"><span class="ok">✓</span> 6 start days checked on Booking</div><div class="step"><span class="ok">✓</span> only 4–5★, within 1 km</div><div class="step"><span class="ok">✓</span> 41 hotels compared</div><div class="step">⏳ next check 9 pm</div></div>
+<div class="g">Best 3 right now</div><div class="card"><div class="it"><div><div class="t">Swissôtel Makkah ★★★★★</div><div class="s">150 m · 7 → 11 Jan · 9.1 rating</div></div><span class="amt">41,800</span></div><span class="btn" style="margin-top:6px">Open it</span> <span class="btn g2">Not this one</span></div>
+<div class="card it"><div><div class="t">Hilton Suites ★★★★★</div><div class="s">300 m · 16 → 20 Jan</div></div><span class="amt">43,900</span></div><div class="card it"><div><div class="t">Al Safwah Royale ★★★★</div><div class="s">450 m · 10 → 14 Dec</div></div><span class="amt">44,600</span></div></div></div>
+
+<div class="opt"><p class="lab">B · Talk to the agent</p><p class="desc">Each agent is a small chat. You change it by talking ("only 5 stars", "what about after 15 Jan?"), and it answers with its findings.</p>
+<div class="ph"><div class="top">Hotel agent</div><div class="bub ai">I checked 6 start days. Cheapest 5★ within 1 km: Swissôtel, 41,800 for 7–11 Jan.</div><div class="bub me">only after 15 January, and breakfast included</div><div class="bub ai">Done — from 15 Jan with breakfast: Hilton Suites 43,900 (16–20 Jan). Want me to keep watching for under 40k?</div><div class="bub me">yes</div><div class="bub ai">Watching twice a day. I'll tell you the moment one is under 40,000.</div><input class="fake" value="Tell the agent…" style="margin-top:120px"></div></div>
+
+<div class="opt"><p class="lab">C · One morning report</p><p class="desc">Agents work quietly. Every morning Home gets one card with everything they found, and the decisions waiting for you.</p>
+<div class="ph"><div class="top">Good morning, Ali</div><div class="card"><div class="t">Your agents overnight</div><div class="step"><span class="ok">●</span> Hotel: Swissôtel 41,800 — under your 45k</div><div class="step"><span class="ok">●</span> Amazon order: arriving today</div><div class="step"><span class="ok">●</span> Scout: 2 new Tucson 2022 under 1.3M</div><div style="margin-top:8px"><span class="btn">See the hotel</span> <span class="btn g2">Later</span></div></div><div class="card"><div class="t">Waiting for you</div><div class="s">Approve: keep watching hotels after the price rose?</div></div></div></div>
+</div></section>
+
+<section data-screen="books"><h1>3 · Your books — ask, compare, chat</h1><h2>Add 10 history PDFs you trust; ask; it reads them all, compares, cites book + page, and you keep chatting</h2><div class="row">
+<div class="opt"><p class="lab">A · A Library page <span class="rec">Recommended</span></p><p class="desc">A shelf of your books. Ask anything: the answer uses all of them, cites book + page, and says where the books disagree. Follow-up questions in the same chat.</p>
+<div class="ph"><div class="top">Library <span class="btn">+ Books</span></div><div><span class="book" style="background:#7A4B2F">Ibn Kathir</span><span class="book" style="background:#2F5B7A">Hourani</span><span class="book" style="background:#5B2F7A">Al-Tabari</span><span class="book" style="background:#2F7A55">Lapidus</span><span class="book" style="background:#7A2F3D">+6</span></div>
+<div class="bub me" style="margin-top:10px">What happened at the Battle of Ain Jalut?</div><div class="bub ai">In 1260 the Mamluks under Qutuz and Baybars defeated the Mongols near Ain Jalut in Palestine <span class="cite">Hourani p. 84</span><span class="cite">Lapidus p. 291</span>…<div class="box">The books disagree: Al-Tabari's continuators give 10,000 Mongols, Lapidus about 20,000.</div></div><div class="bub me">and why did the Mongols lose?</div><input class="fake" value="Ask your books…" style="margin-top:8px"></div></div>
+
+<div class="opt"><p class="lab">B · A Project in Chat</p><p class="desc">Put the books in a Project. Chat as usual; every answer inside that Project uses the books and shows citation chips.</p>
+<div class="ph"><div class="top">📁 History</div><div class="card"><div class="s">10 books · 4,812 pages · read on this phone</div></div><div class="bub me">Who founded the Mamluk state?</div><div class="bub ai">Shajar al-Durr and Aybak, 1250 <span class="cite">Hourani p. 83</span> <span class="cite">Ibn Kathir v.13 p. 180</span></div><input class="fake" value="Message…" style="margin-top:300px"></div></div>
+
+<div class="opt"><p class="lab">C · A switch in Chat</p><p class="desc">In any chat, "Answer from my books" picks which books to use. Lightest, but the books are not one place you can see.</p>
+<div class="ph"><div class="top">Chat</div><div class="bub me">Why did the Abbasids fall?</div><div class="bub ai">From your books: … <span class="cite">Hourani p. 37</span></div><div class="card" style="margin-top:330px"><div class="chips" style="margin:0"><span class="chip on">📚 From my books (10)</span><span class="chip">Web</span></div><input class="fake" value="Message…"></div></div></div>
+</div></section>
+<script>function setTheme(){}function setDir(){}</script></body></html>

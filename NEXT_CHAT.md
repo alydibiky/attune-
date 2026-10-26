@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 26 Oct 2026 — v8.1)
+# Attune — start here (handoff for the next chat, 26 Oct 2026 — v8.2)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -11,10 +11,24 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | full `bash tests/run_all.sh` passed for v7.9 (e2e_v59 passed alone; e2e_v740artdata made robust) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## v8.2 — 26 Oct: Ali's 17-point phone list (branch `claude/youthful-davinci-fe3400`)
+Done and tested (unit `tests/unit/v820fixes.test.mjs`, e2e additions in `e2e_fithome.py` + `e2e_v727agent.py`, hub test updated):
+Tools is its own place in the sidebar (`hubs.js` toolbox); Instant + Ask (classic) retired (`RETIRED` → Chat; shared photo → a new chat
+with it attached, `\u0005` seed in chat.jsx; quick tile → Chat); Convert only in Tools; Ask a PDF card in Tools; hotel agent window +
+stars + near (agents.js); installments sentence (life.js); cheese samosa / breadsticks + tap a food to see how it was read (fit-ui
+ReadDetail); watch numbers per source + estimate from steps + WatchTop strip (Health.kt, fit.js); Speed switches dev-only; Scout reads
+the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge.listen waits for the wake word to free the mic);
+"Slow screen …" lines in the log (attune.jsx PerformanceObserver); Your details (agent-ui.jsx: trips / daily life / booking forms,
+`bookingLine` → every prompt via profileLine, agents use the trip prefs).
+**Waiting for Ali (show him `design/v82/*.png`):** 1 Follow-ups one page A/B/C (rec. A) · 2 smarter agents A/B/C (rec. A) ·
+3 book library A/B/C (rec. A). Build the pick. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
+Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
+laggy moment ("Slow screen …" lines say where).
+
 ## ⚠️ OPEN NOW — Ali's 26 Oct list, part 1 (v8.1 on his phone) — NOT FIXED YET
 Ali's deal (26 Oct): **after every big change, update this file and push**, so if the session limit ends another AI carries on.
 Ali said "read this first, then I'll upload more" — part 2 may follow below. Tick each item here when done.
-- [ ] 1. **"The app glitches and makes the phone glitch a lot."** Clues in his log: one kill at **3680 MB rss** (24 Oct 17:36,
+- [~] 1. (v8.2: 'Slow screen <page>: froze N ms' lines now go to the log; in the browser at 4× slower CPU only start-up (1.2 s) and Money (0.25 s) freeze — need Ali's log after a laggy moment) **"The app glitches and makes the phone glitch a lot."** Clues in his log: one kill at **3680 MB rss** (24 Oct 17:36,
       LowMem) and 2409 MB (25 Oct), "excessive binder traffic during cached" (25 Oct 14:57 — something keeps calling the
       system while Attune is in the background: suspects = AgentWatch, WakeWord service, MessageWatch, appsList),
       LowMemQuick kill while a fg-service ran (26 Oct 15:40), React error #300 in Studio (hooks after an early return).
@@ -33,7 +47,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
       a WINDOW → search every 4-night start in the window (or flexible dates) and report the cheapest that fits; read
       stars (4 or 5 / ٤ أو ٥ نجوم) → Booking `nflt=class=4;class=5`; distance to the Haram. Also he wants agents "complex
       and actually useful" — **subjective: show Ali 2–4 options** for what a smarter agent does (plan, multi-step, report).
-- [ ] 5. **Assistants shows 5 next to it but there are only 4** — find the count (hubs / sidebar) and count what is shown.
+- [~] 5. (checked: sidebar count and page both show 5 incl. Crane expert when Fleet is used — asked Ali) **Assistants shows 5 next to it but there are only 4** — find the count (hubs / sidebar) and count what is shown.
 - [x] 6. (DONE v8.2: life.js PER_AMOUNT + lowercase names) **People & plans (screenshot 5)**: "sheikh owes me 22,000 to be paid in installments monthly for 9 months" only saved
       "owes you 22,000" — the installment plan (9 × 2,444.44 monthly, due dates) was lost. Fix the sentence reader
       (EN + Egyptian Arabic + Franco: "على 9 شهور", "قسط شهري").
@@ -42,13 +56,13 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 ### Ali's 26 Oct list, part 2 (more may follow)
 - [x] 7. (DONE v8.2: hubs.js `toolbox` place + RETIRED=[instant, ask] → navTo sends them to Chat; shared photo → Chat with it attached (seed \u0005); quick tile opens Chat) **Tools becomes its own page in the left sidebar.** Remove **Instant** everywhere (tools list, Home, "/", hubs): normal
       Chat should do that job. Also remove **"Ask (classic)"** (`hubs.js:85`, `attune.jsx:7753`, the earlier Ask screen).
-- [ ] 8. **"Ask a PDF" (PDF chat): where is it, how do I find it?** It is the Students hub (`hubs.js:13`: coach = Homework,
+- [x] 8. (DONE: Ask a PDF card in Tools too; it also stays in Students) **"Ask a PDF" (PDF chat): where is it, how do I find it?** It is the Students hub (`hubs.js:13`: coach = Homework,
       convert, pdfchat, slides, cv). Make it findable (sidebar search / Tools page / Chat "ask this PDF"). Explain to Ali.
 - [x] 9. (DONE v8.2: convert only in Tools; Ask a PDF card added to Tools) **Convert is duplicated** (Students → Convert AND Tools → Files & Converter). Keep it in one place only (recommend: Tools,
       and Students links there; or ask Ali).
-- [ ] 10. **One page for Follow-ups + Guardian + Reminders + Timeline + Dates**, organized and centralized. Layout is subjective:
+- [~] 10. (options A/B/C in design/v82/followups.png — waiting for Ali) **One page for Follow-ups + Guardian + Reminders + Timeline + Dates**, organized and centralized. Layout is subjective:
       **show Ali 2–3 options first**, then build.
-- [ ] 11. **Voice does not work at all**: not the transcriber, not the voice chat/call, not anything voice. Test every voice path on
+- [~] 11. (v8.2: fallbacks + log lines; needs Ali's phone) **Voice does not work at all**: not the transcriber, not the voice chat/call, not anything voice. Test every voice path on
       Android (mic permission, Whisper / STT model download, WakeWord service, TTS) and fix the root cause.
 - [x] 12. (DONE v8.2: fit-foods breadsticks + cheese/meat sambousek, matchFood last-word rule + FILLER, fitread whole-name rule, fit-ui ReadDetail on tap) **Food from text**: he typed "4 plain bread sticks and 6 cheese samosas" → got "White cheese 180 g" + "bread stick 150 g".
       "Cheese samosa" became "white cheese" (wrong match; count 6 lost). Fix the matcher (compound dishes like samosa / sambousek,
@@ -61,10 +75,11 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
       watch said 6,442 steps · 406 kcal ("Heat") · 5.74 km · HR 54/80/117. Burned calories must be at the TOP of Diary, and
       Refresh must pull fresh numbers (Health Connect read of today: steps, distance, active + total calories from Huawei
       via Health Sync — check which record types / time range we read; 0.2 km vs 5.74 km = wrong source or wrong range).
-- [ ] 15. **Book library you can talk to**: upload e.g. 10 trusted history PDFs, ask anything; it reads them fast, compares what
+- [~] 15. (options A/B/C in design/v82/books.png — waiting for Ali; build on multidoc.js + docqa.js + recall) **Book library you can talk to**: upload e.g. 10 trusted history PDFs, ask anything; it reads them fast, compares what
       the books say, cites the book + page, says where they disagree, and you can keep chatting with follow-ups like a
       normal AI. Build on "Remember" (v6.46) + Recall (bge-m3 meaning search) — multi-book index, compare step, chat thread.
-- [ ] 16. **Whole app smarter and smoother** (ongoing; tie to item 1 performance work).
+- [~] 16. **Whole app smarter and smoother** (ongoing; tie to item 1 performance work).
+- [x] 17. (DONE v8.2) **Your details** (Ali, mid-list): Booking details expanded — trips / daily life / booking forms, private, used by answers + agents.
 
 ## Do this next
 1. Ask Ali for his next list (he said he has more). Keep his rule: **ask before anything subjective** — show 2–4 options
