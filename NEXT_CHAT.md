@@ -20,8 +20,8 @@ ReadDetail); watch numbers per source + estimate from steps + WatchTop strip (He
 the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge.listen waits for the wake word to free the mic);
 "Slow screen …" lines in the log (attune.jsx PerformanceObserver); Your details (agent-ui.jsx: trips / daily life / booking forms,
 `bookingLine` → every prompt via profileLine, agents use the trip prefs).
-**Waiting for Ali (show him `design/v82/*.png`):** 1 Follow-ups one page A/B/C (rec. A) · 2 smarter agents A/B/C (rec. A) ·
-3 book library A/B/C (rec. A). Build the pick. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
+**Ali picked (26 Oct): 1A Follow-ups = one list by day · 2A agents plan then show the best 3 · 3A a Library page** (mock-ups in
+`design/v82/*.png`). Build them as v8.3 — see "v8.3 build" below for progress. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
 
