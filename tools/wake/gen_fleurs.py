@@ -11,10 +11,11 @@ def work(blobs):
 if __name__ == "__main__":
     for name in sys.argv[1:]:
         f = "/tmp/claude-0/wake/data/%s.parquet" % name
-        col = pq.read_table(f, columns=["audio"]).column("audio").to_pylist()
-        blobs = [r["bytes"] for r in col]; del col
-        jobs = [blobs[i:i + 25] for i in range(0, len(blobs), 25)]
-        with Pool(4) as p: res = [e for r in p.map(work, jobs) for e in r]
+        pf = pq.ParquetFile(f)
+        def jobs():
+            for b in pf.iter_batches(batch_size=25, columns=["audio"]):
+                yield [r["bytes"] for r in b.column("audio").to_pylist()]
+        with Pool(4) as p: res = [e for r in p.imap(work, jobs()) for e in r]
         np.save("/tmp/claude-0/wake/feat/neg_%s.npy" % name, np.array(res, dtype=object), allow_pickle=True)
         print(name, len(res), sum(len(x) for x in res) * 0.08 / 3600, "hours", flush=True)
     # also keep raw audio of a few for babble backgrounds
