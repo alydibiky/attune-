@@ -38,6 +38,23 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
       "owes you 22,000" — the installment plan (9 × 2,444.44 monthly, due dates) was lost. Fix the sentence reader
       (EN + Egyptian Arabic + Franco: "على 9 شهور", "قسط شهري").
 
+
+### Ali's 26 Oct list, part 2 (more may follow)
+- [ ] 7. **Tools becomes its own page in the left sidebar.** Remove **Instant** everywhere (tools list, Home, "/", hubs): normal
+      Chat should do that job. Also remove **"Ask (classic)"** (`hubs.js:85`, `attune.jsx:7753`, the earlier Ask screen).
+- [ ] 8. **"Ask a PDF" (PDF chat): where is it, how do I find it?** It is the Students hub (`hubs.js:13`: coach = Homework,
+      convert, pdfchat, slides, cv). Make it findable (sidebar search / Tools page / Chat "ask this PDF"). Explain to Ali.
+- [ ] 9. **Convert is duplicated** (Students → Convert AND Tools → Files & Converter). Keep it in one place only (recommend: Tools,
+      and Students links there; or ask Ali).
+- [ ] 10. **One page for Follow-ups + Guardian + Reminders + Timeline + Dates**, organized and centralized. Layout is subjective:
+      **show Ali 2–3 options first**, then build.
+- [ ] 11. **Voice does not work at all**: not the transcriber, not the voice chat/call, not anything voice. Test every voice path on
+      Android (mic permission, Whisper / STT model download, WakeWord service, TTS) and fix the root cause.
+- [ ] 12. **Food from text**: he typed "4 plain bread sticks and 6 cheese samosas" → got "White cheese 180 g" + "bread stick 150 g".
+      "Cheese samosa" became "white cheese" (wrong match; count 6 lost). Fix the matcher (compound dishes like samosa / sambousek,
+      counts × piece weight). Also: **tapping an item opens it** and shows everything it read (the words it matched, the food
+      from the pack, grams per piece, how the kcal was worked out).
+
 ## Do this next
 1. Ask Ali for his next list (he said he has more). Keep his rule: **ask before anything subjective** — show 2–4 options
    (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
