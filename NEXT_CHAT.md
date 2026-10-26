@@ -55,6 +55,17 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
       counts × piece weight). Also: **tapping an item opens it** and shows everything it read (the words it matched, the food
       from the pack, grams per piece, how the kcal was worked out).
 
+
+### Ali's 26 Oct list, part 3 (his last: "that's all")
+- [ ] 14. **Watch numbers stale / wrong place**: Fit & Food showed 6,017 steps · 8 active kcal · 0.2 km after Refresh while the
+      watch said 6,442 steps · 406 kcal ("Heat") · 5.74 km · HR 54/80/117. Burned calories must be at the TOP of Diary, and
+      Refresh must pull fresh numbers (Health Connect read of today: steps, distance, active + total calories from Huawei
+      via Health Sync — check which record types / time range we read; 0.2 km vs 5.74 km = wrong source or wrong range).
+- [ ] 15. **Book library you can talk to**: upload e.g. 10 trusted history PDFs, ask anything; it reads them fast, compares what
+      the books say, cites the book + page, says where they disagree, and you can keep chatting with follow-ups like a
+      normal AI. Build on "Remember" (v6.46) + Recall (bge-m3 meaning search) — multi-book index, compare step, chat thread.
+- [ ] 16. **Whole app smarter and smoother** (ongoing; tie to item 1 performance work).
+
 ## Do this next
 1. Ask Ali for his next list (he said he has more). Keep his rule: **ask before anything subjective** — show 2–4 options
    (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
