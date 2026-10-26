@@ -55,7 +55,7 @@ def train(model, X, y, w, epochs, bs=512, lr=1e-3):
     for ep in range(epochs):
         idx = rng.permutation(n)
         for i in range(0, n, bs):
-            j = idx[i:i+bs]; model.step(X[j], y[j], w[j], lr=lr * (0.5 ** (ep // max(1, epochs // 3))))
+            j = idx[i:i+bs]; model.step(X[j].astype(np.float32), y[j], w[j], lr=lr * (0.5 ** (ep // max(1, epochs // 3))))
 def stream_triggers(model, seqs, thr, patience, debounce=25):
     """How many times it would wake on these sequences (sound streamed as on the phone)."""
     hits = 0
@@ -94,7 +94,7 @@ def export(model, path):
     m = helper.make_model(g, opset_imports=[helper.make_opsetid("", 13)]); m.ir_version = 8
     onnx.checker.check_model(m); onnx.save(m, path)
 if __name__ == "__main__":
-    TEST = {"neg_ar_eg_test.npy", "neg_en_us_validation.npy"}
+    TEST = {"neg_ar_eg_test.npy", "neg_en_us_validation.npy", "neg_fl_ar_eg_train.npy", "neg_ls_other_3.npy"}
     pos_tr = sum([load(p) for p in sorted(glob.glob(F + "pos_train_*.npy"))], [])
     neg_tts = sum([load(p) for p in sorted(glob.glob(F + "neg_train_*.npy"))], [])
     speech = []
@@ -103,17 +103,21 @@ if __name__ == "__main__":
         if n.startswith("neg_train_") or n.startswith("neg_test_") or n in TEST: continue
         speech += load(p)
     en = load(F + "neg_en_us_validation.npy"); speech += en[:300]; en_te = en[300:]
-    ar_te = load(F + "neg_ar_eg_test.npy")
+    eg = load(F + "neg_fl_ar_eg_train.npy"); speech += eg[:len(eg) // 2]
+    ar_te = load(F + "neg_ar_eg_test.npy") + eg[len(eg) // 2:]      # ≈4.3 h of Egyptian Arabic never trained on
+    en_te = en_te + load(F + "neg_ls_other_3.npy")                    # + 7.8 h of English audiobooks
     pos_te, pos_ar = load(F + "pos_test_900000.npy"), load(F + "pos_test_ar_910000.npy"); neg_te = load(F + "neg_test_920000.npy")
     print("speech hours for training %.1f" % hours(speech), flush=True)
     Pp, Pn = pos_windows(pos_tr)
-    Nt = neg_windows([c[0] for c in neg_tts])
+    Nt = neg_windows([c[0] for c in neg_tts], stride=2).astype(np.float16)
     # a random sample of the speech windows (all of it is searched for hard negatives every round)
     sample = [speech[j] for j in rng.choice(len(speech), min(len(speech), 2500), replace=False)]
-    Nf = neg_windows(sample, stride=3)
+    Nf = neg_windows(sample, stride=3).astype(np.float16)
     print("positives", len(Pp), "neg (in pos clips)", len(Pn), "neg tts", len(Nt), "neg speech", len(Nf), flush=True)
-    X = np.concatenate([Pp, Pn, Nt, Nf]); y = np.concatenate([np.ones(len(Pp)), np.zeros(len(Pn) + len(Nt) + len(Nf))]).astype(np.float32)
-    w = np.concatenate([np.full(len(Pp), 1.0), np.full(len(Pn), 1.0), np.full(len(Nt), 2.0), np.full(len(Nf), 1.0)]).astype(np.float32)
+    nP, nPn, nT, nF = len(Pp), len(Pn), len(Nt), len(Nf)
+    X = np.concatenate([Pp.astype(np.float16), Pn.astype(np.float16), Nt, Nf]); del Nt, Nf, Pn
+    y = np.concatenate([np.ones(nP), np.zeros(nPn + nT + nF)]).astype(np.float32)
+    w = np.concatenate([np.full(nP, 1.0), np.full(nPn, 1.0), np.full(nT, 2.0), np.full(nF, 1.0)]).astype(np.float32)
     w[y == 1] *= (w[y == 0].sum() / w[y == 1].sum()) * 0.5
     model = MLP(tuple(int(x) for x in (sys.argv[1] if len(sys.argv) > 1 else "1536,128,64,1").split(",")))
     ROUNDS = int(sys.argv[2]) if len(sys.argv) > 2 else 5
@@ -129,9 +133,9 @@ if __name__ == "__main__":
         if len(hard) > 60000: hard = hard[rng.choice(len(hard), 60000, replace=False)]
         print("round", rnd, "hard negatives", len(hard), " test: recall_ar %.3f fa_ar/h %.1f" % (clip_detect(model, pos_ar, 0.5, 2), stream_triggers(model, ar_te, 0.5, 2) / hours(ar_te)), flush=True)
         if len(hard):
-            X = np.concatenate([X, hard]); y = np.concatenate([y, np.zeros(len(hard), np.float32)]); w = np.concatenate([w, np.full(len(hard), 3.0, np.float32)])
+            X = np.concatenate([X, hard.astype(np.float16)]); y = np.concatenate([y, np.zeros(len(hard), np.float32)]); w = np.concatenate([w, np.full(len(hard), 3.0, np.float32)])
     res = {}
-    for thr in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]:
+    for thr in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
         for pat in [1, 2, 3, 4]:
             r = dict(thr=thr, patience=pat, recall_en=clip_detect(model, pos_te, thr, pat), recall_ar=clip_detect(model, pos_ar, thr, pat),
                      fa_ar_per_h=stream_triggers(model, ar_te, thr, pat) / hours(ar_te), fa_en_per_h=stream_triggers(model, en_te, thr, pat) / hours(en_te),
