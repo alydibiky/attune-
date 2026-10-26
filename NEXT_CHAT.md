@@ -30,7 +30,14 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
   - 3A `booklib.js` (passages from every book, the compare prompt, citations, "Where the books disagree") + `booklib-ui.jsx` (mode
     `booklib`, Students tab next to PDF chat, Tools card, "/"): several files at once, text kept in Ask a PDF's IndexedDB library
     (text only, no file copy), chat with follow-ups (searchText adds the previous question), tap a citation = the book's own words.
-  Tests: unit v830library, v820fixes; e2e_v830.py (all three). Old e2e_v3/v4 Instant parts removed. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
+  Tests: unit v830library, v820fixes; e2e_v830.py (all three). Old e2e_v3/v4 Instant parts removed.
+  - Ali (26 Oct, after 1A): "write what he actually paid and it reschedules the rest" → life.js `payAmount` (c.got[i]) + `rebalance`
+    in scheduleOf (rest spread evenly over unpaid payments; paid early → done; still owed after the last → one more next month);
+    `PayBox` (life-ui.jsx) asks "How much did Sheikh pay?" from People & plans and from Follow-ups' tick. Ali: "make each entry
+    openable and put in a schedule" → life-ui Item has "Open the schedule" → a table (#, date, amount, status). (Regular = the maid
+    keeps its day boxes.)
+  - Ali: "books fast and smooth, writes, huge context" → booklib-ui streams the answer (onToken), keeps each book's index in memory
+    (IDX), and "Read deeper" (booklib.js deepRounds → notesMessages per round → fromNotesMessages) for big questions. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
 
