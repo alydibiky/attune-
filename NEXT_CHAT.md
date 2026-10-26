@@ -6,9 +6,9 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v8.0** (versionCode 122) — branch `claude/compassionate-einstein-kdqslx` = main |
+| `main` | **v8.3** (versionCode 125) — branch `claude/youthful-davinci-fe3400` = main (pushed 26 Oct, APK built green on the branch first) |
 | Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
-| Tests | full `bash tests/run_all.sh` passed for v7.9 (e2e_v59 passed alone; e2e_v740artdata made robust) |
+| Tests | v8.3: every unit + e2e file passes (old Instant / Money / sidebar expectations updated; e2e_v727guardian dates now relative to today) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
 ## v8.2 — 26 Oct: Ali's 17-point phone list (branch `claude/youthful-davinci-fe3400`)
