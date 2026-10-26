@@ -10654,7 +10654,7 @@ export default function App() {
             initialFile={pdfIn} clearInitial={() => setPdfIn(null)}
             llm={(messages, a, b) => { const image = b ? a : null, o = b || a || {}; return callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, onToken: o.onToken }); }} />
         ) : mode === "booklib" ? (
-          <BookLibPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null} navTo={navTo}
+          <BookLibPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null} navTo={navTo} ctx={LocalEngine.ctx || (LocalEngine.tier && LocalEngine.tier.ctx) || 8192}
             llm={(messages, o) => callChat(messages, null, { maxTokens: (o && o.maxTokens) || 1400, temperature: (o && o.temperature) ?? 0.2, think: false, onToken: o && o.onToken })} />
         ) : mode === "cv" ? (
           <CVPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null} native={NATIVE ? { N: NATIVE, call: nativeCall } : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}

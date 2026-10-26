@@ -37,7 +37,16 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
     openable and put in a schedule" → life-ui Item has "Open the schedule" → a table (#, date, amount, status). (Regular = the maid
     keeps its day boxes.)
   - Ali: "books fast and smooth, writes, huge context" → booklib-ui streams the answer (onToken), keeps each book's index in memory
-    (IDX), and "Read deeper" (booklib.js deepRounds → notesMessages per round → fromNotesMessages) for big questions. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
+    (IDX), and "Read deeper" (booklib.js deepRounds → notesMessages per round → fromNotesMessages) for big questions.
+  - Ali: "topics (History) + handle 20 GB + don't overload the model or the phone" → **BookShelf.kt** (NEW, needs the APK build to
+    confirm it compiles): books.db = topics, books, FTS4 `chunks` (normalised Arabic/English, 900-char passages with book+page) +
+    fts4aux `chunks_terms` (rare words first); BookIngestService (foreground dataSync) reads queued files/folders page by page
+    (DocTools.pdfEachPage = PDFBox temp-file, never the whole file in memory; epub/docx/html/txt too), commits every 20 pages,
+    resumes, waits while GenService is busy, stops on battery ≤15 % not charging (BookIngestService.resumeIfPending on resume);
+    search = FTS MATCH (AND of the rarest 4, then OR) → BM25 from matchinfo('pcnalx') → best per book. Bridge: booksPick /
+    booksState / booksTopic / booksRemove / booksSearch. Page: booklib-ui topics row, + Books / + A folder, live progress, per-topic
+    chats, passages cut by `budgetFor(model ctx)`, Read deeper ≤ 8 rounds. Browser fallback = Ask a PDF's IndexedDB (topics in
+    localStorage). Tests: e2e_v831books.py (phone path with a stand-in), e2e_v830.py, unit v830library. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
 

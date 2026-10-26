@@ -51,6 +51,14 @@ class MainActivity : AppCompatActivity() {
         fileCallback = null
         cb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res.resultCode, res.data))
     }
+    // v8.3 Library: books (or a whole folder of them) picked for a topic → BookShelf reads them in the background
+    private var bookTopic = ""
+    private val pickBooksDoc = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val uris = ArrayList<Uri>()
+        val d = res.data
+        if (res.resultCode == RESULT_OK && d != null) { val c = d.clipData; if (c != null) for (i in 0 until c.itemCount) uris.add(c.getItemAt(i).uri) else d.data?.let { uris.add(it) } }
+        if (uris.isNotEmpty()) Thread { try { BookShelf.enqueue(this, uris, bookTopic) } catch (e: Exception) {} }.start()
+    }
     // v7.9 (Ali: "take a photo still opens the gallery"): a WebView ignores capture="environment", so when the page asks
     // for the camera the app opens the camera itself; the photo is written to the app's cache and handed to the page.
     private var cameraFile: java.io.File? = null
@@ -252,6 +260,14 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this)
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        bridge.pickBooks = { topic, folder -> runOnUiThread {
+            bookTopic = topic
+            val i = if (folder) Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                else Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    .putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/pdf", "application/epub+zip", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "text/html"))
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            try { pickBooksDoc.launch(i) } catch (e: Exception) {}
+        } }
         bridge.authorizeDrive = { cb -> authorizeDrive(cb) }
         bridge.askLocalNet = { try { askLocalNetPermission.launch("android.permission.ACCESS_LOCAL_NETWORK") } catch (e: Exception) {} }
         bridge.askHealth = { runOnUiThread { try { askHealthPermission.launch(Health.PERMISSIONS) } catch (e: Exception) {} } }
@@ -425,7 +441,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         visible = true
-        try { WakeService.ensure(this) } catch (e: Exception) {}   // voice phase 3: back on if it was on (the service may have been stopped)
+        try { WakeService.ensure(this) } catch (e: Exception) {}
+        try { BookIngestService.resumeIfPending(this) } catch (e: Exception) {}   // v8.3: books still waiting are read on   // voice phase 3: back on if it was on (the service may have been stopped)
         if (::web.isInitialized) {
             web.onResume(); web.resumeTimers()
             web.postInvalidate()

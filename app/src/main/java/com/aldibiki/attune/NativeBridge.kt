@@ -703,6 +703,25 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun agentWatchTake(): String = AgentWatch.take(ctx)
 
+    // ---- v8.3 Library at scale (BookShelf.kt): topics, books read natively into a full-text index, fast search ----------------
+    var pickBooks: ((String, Boolean) -> Unit)? = null   // (topic, a whole folder?) — MainActivity opens Android's picker
+    /** Pick books (files, or a whole folder with folder=true) for a topic; they are read in the background. */
+    @JavascriptInterface
+    fun booksPick(json: String) { val a = try { JSONObject(json) } catch (e: Exception) { JSONObject() }; pickBooks?.invoke(a.optString("topic"), a.optBoolean("folder", false)) }
+    /** {topics, books:[{id, name, topic, pages, done, chunks, scans, state, err}], job:{book, name, page, pages}, dbBytes} */
+    @JavascriptInterface
+    fun booksState(): String = try { BookShelf.state(ctx).toString() } catch (e: Exception) { "{}" }
+    /** {op: add|rename|delete|move, name, to?, book?} → the state */
+    @JavascriptInterface
+    fun booksTopic(json: String): String = try { BookShelf.topic(ctx, JSONObject(json)).toString() } catch (e: Exception) { "{}" }
+    @JavascriptInterface
+    fun booksRemove(id: String): String = try { BookShelf.remove(ctx, id.toLong()).toString() } catch (e: Exception) { "{}" }
+    /** {q, topic, k, perBook} → {passages:[{book, title, topic, page, text, score}], searched, ms} (off the page's thread) */
+    @JavascriptInterface
+    fun booksSearch(id: String, json: String) {
+        pool.execute { try { resolve(id, BookShelf.search(ctx, JSONObject(json))) } catch (e: Throwable) { reject(id, e.message ?: "Search failed") } }
+    }
+
     // ---- voice -----------------------------------------------------------------
     var voice: Voice? = null
     var askMic: (() -> Unit)? = null

@@ -489,6 +489,25 @@ object DocTools {
     }
 
     /** Pages as JPEG data URLs, `width` px wide. `pages` = 1-based page numbers (empty = all, up to `max`). */
+    /** v8.3 Library: a PDF of any size, one page at a time — PDFBox keeps the file in a temp file, never all in memory. onPage
+     *  (n, total, text) returns false to stop. Arabic is rebuilt the same way as everywhere else (LayoutStripper). → page count */
+    fun pdfEachPage(ctx: Context, input: java.io.InputStream, onPage: (Int, Int, String) -> Boolean): Int {
+        pdfBox(ctx)
+        val doc = try { com.tom_roush.pdfbox.pdmodel.PDDocument.load(input, com.tom_roush.pdfbox.io.MemoryUsageSetting.setupTempFileOnly()) }
+            catch (e: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) { throw java.io.IOException("This PDF is locked with a password") }
+        doc.use { d ->
+            val total = d.numberOfPages
+            val strip = LayoutStripper().apply { sortByPosition = true; setAddMoreFormatting(true); setParagraphEnd("\n") }
+            for (i in 1..total) {
+                strip.startPage = i; strip.endPage = i
+                strip.words.clear(); strip.texts.clear(); strip.fonts.clear(); strip.colours.clear(); strip.glyphs.clear()
+                val t = try { strip.getText(d) } catch (e: Exception) { "" } catch (e: OutOfMemoryError) { "" }
+                if (!onPage(i, total, t.replace("\r", "").trim())) break
+            }
+            return total
+        }
+    }
+
     fun pdfImages(ctx: Context, bytes: ByteArray, pages: List<Int>, width: Int, max: Int = 60): JSONArray {
         val f = File(ctx.cacheDir, "convert-" + System.nanoTime() + ".pdf").apply { writeBytes(bytes) }
         val out = JSONArray()

@@ -6,7 +6,7 @@
 import * as Q from "./docqa.js";
 
 export const LIB_KEY = "attune:booklib:v1";
-export const loadLib = (s = typeof localStorage !== "undefined" ? localStorage : null) => { try { const v = JSON.parse((s && s.getItem(LIB_KEY)) || "null"); if (v && Array.isArray(v.ids)) return { chat: [], ...v }; } catch (e) {} return { ids: [], chat: [] }; };
+export const loadLib = (s = typeof localStorage !== "undefined" ? localStorage : null) => { try { const v = JSON.parse((s && s.getItem(LIB_KEY)) || "null"); if (v && Array.isArray(v.ids)) return { chat: [], topics: [], topicOf: {}, ...v }; } catch (e) {} return { ids: [], chat: [], topics: [], topicOf: {} }; };
 export const saveLib = (v, s = typeof localStorage !== "undefined" ? localStorage : null) => { try { s && s.setItem(LIB_KEY, JSON.stringify({ ...v, chat: (v.chat || []).slice(-40) })); } catch (e) {} return v; };
 
 /** A book's short title for citations: "ibn-kathir_al-bidaya-vol13.pdf" → "ibn kathir al bidaya vol13" (40 characters at most). */
@@ -98,3 +98,27 @@ export function fromNotesMessages(question, notes, history = []) {
   m[m.length - 1] = { role: "user", content: `Notes taken from my books (each with its [Book, p. N]):\n\n${found.map((f) => f.text).join("\n\n")}\n\nQuestion: ${String(question).trim()}\n\nAnswer from these notes only, keeping their citations [Book, p. N]; compare the books.` };
   return m;
 }
+
+// ---- v8.3 (Ali: "make the code strong so it does not overload the model or the phone") ------------------------------------------
+/** How many characters of passages fit this model: its context minus the rules, the last turns and the answer (~3 characters a
+    token for English and Arabic together), never under 2,500 or over 24,000. */
+export function budgetFor(ctxTokens) {
+  const ctx = +ctxTokens > 0 ? +ctxTokens : 8192;
+  return Math.max(2500, Math.min(24000, Math.floor((ctx - 3400) * 2.8)));   // (3,400 tokens: the rules, the last turns and the answer)
+}
+/** Passages (already ranked) cut to a budget, best first, never a passage in pieces. */
+export function fit(found, budget) {
+  const out = []; let used = 0;
+  for (const p of found || []) { const n = String(p.text || "").length; if (used + n > budget) continue; out.push(p); used += n; }
+  return out;
+}
+/** Many passages (from the phone's index) → rounds that each fit the model, in book and page order; at most `maxRounds`. */
+export function roundsOf(found, budget, maxRounds = 8) {
+  const list = [...(found || [])].sort((a, b) => String(a.title).localeCompare(String(b.title)) || a.page - b.page);
+  const rounds = []; let cur = [], used = 0;
+  for (const p of list) { const n = String(p.text || "").length; if (used + n > budget && cur.length) { rounds.push(cur); cur = []; used = 0; } if (n <= budget) { cur.push(p); used += n; } }
+  if (cur.length) rounds.push(cur);
+  return rounds.slice(0, maxRounds);
+}
+/** The phone's search result → passages with short titles (the same shape as passages()). */
+export const fromNative = (r) => ((r && r.passages) || []).map((p) => ({ book: String(p.book), title: titleOf(p.title), topic: p.topic || "", page: +p.page || 0, text: String(p.text || ""), score: +p.score || 0 }));
