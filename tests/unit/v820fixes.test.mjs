@@ -33,4 +33,19 @@ ok(H.RETIRED.includes("instant") && H.RETIRED.includes("ask") && !H.HUBS.some((h
 const d3 = A.parseAgent("tell me when hotels in Makkah are under 45k for 4 nights from 10 Dec", { now, prefs: { hotelStars: "4", nearCentre: true, adults: "3" } });
 ok(d3.fields.stars.join() === "4,5" && d3.fields.near && d3.fields.adults === 3, "a hotel watch takes the person's own stars, 'near the centre' and travellers when the sentence doesn't say");
 ok(A.parseAgent("hotels in Makkah under 45k for 4 nights from 10 Dec, 5 stars", { now, prefs: { hotelStars: "3" } }).fields.stars.join() === "5", "what the sentence says wins over the saved details");
+// v8.3 (Ali: "write what he actually paid and it reschedules the rest")
+let ld = L.addCommitment({ items: [] }, L.parseLife("sheikh owes me 22,000 to be paid in installments monthly for 9 months", { currency: "EGP" }));
+const sid = ld.items[0].id;
+ok(L.progressOf(ld.items[0]).left === 22000, "the plan's total stays exactly 22,000");
+ld = L.payAmount(ld, sid, 0, 5000);
+let sc = L.scheduleOf(ld.items[0]);
+ok(sc[0].amount === 5000 && sc.slice(1).every((x) => x.amount === 2125) && L.progressOf(ld.items[0]).left === 17000, "paid 5,000 → the other 8 become 2,125 each (17,000 left)");
+ld = L.payAmount(ld, sid, 1, 17000);
+ok(L.scheduleOf(ld.items[0]).length === 2 && L.progressOf(ld.items[0]).left === 0, "paid the rest early → the plan is done");
+let ad = L.addCommitment({ items: [] }, L.parseLife("Ahmed owes me 5000", { currency: "EGP" }));
+ad = L.payAmount(ad, ad.items[0].id, 0, 2000);
+const as = L.scheduleOf(ad.items[0]);
+ok(as.length === 2 && as[1].amount === 3000 && !as[1].paid, "a debt paid in part → the 3,000 left is due next month");
+ad = L.togglePaid(ad, ad.items[0].id, 0);
+ok(!(ad.items[0].got || {})[0] && L.scheduleOf(ad.items[0]).length === 1, "unticking forgets the amount");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

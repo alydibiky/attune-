@@ -17,7 +17,8 @@ now_ms = int(time.time() * 1000)
 TX = [{"id": "x1", "type": "expense", "amount": 350, "cat": "groceries", "account": "c", "date": T.isoformat(), "note": "CARREFOUR · CIB", "ts": now_ms - 120000},
       {"id": "x2", "type": "expense", "amount": 350, "cat": "groceries", "account": "c", "date": T.isoformat(), "note": "CARREFOUR · CIB", "ts": now_ms - 60000}]
 for k in (3, 2, 1):
-    TX.append({"id": "s%d" % k, "type": "expense", "amount": 120, "cat": "bills", "account": "c", "date": mo(k), "note": "Shahid · CIB"})
+    # (v8.3: counted back from today — "the 5th of the last 3 months" was 51 days old late in a month and the test failed on those days)
+    TX.append({"id": "s%d" % k, "type": "expense", "amount": 120, "cat": "bills", "account": "c", "date": d(30 * (k - 1) + 5), "note": "Shahid · CIB"})
 LEDGER = {"currency": "EGP", "accounts": [{"id": "c", "name": "Cash", "currency": "EGP", "start": 0}], "budgets": {"overall": 0, "cats": {}}, "txns": TX, "recurring": [], "debts": []}
 
 def init(pro):
@@ -56,7 +57,9 @@ with sync_playwright() as p:
     page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     page.locator("nav button").last.click(); page.wait_for_timeout(300)
     page.locator(".rounded-t-2xl button:has-text('People & plans')").first.click(); page.wait_for_selector("[data-testid=life-page]", timeout=5000)
-    page.locator("[data-testid=life-tick]").first.click(); page.wait_for_timeout(300)
+    if page.locator("[data-testid=life-open]").count(): page.locator("[data-testid=life-open]").first.click(); page.wait_for_timeout(150)
+    page.locator("[data-testid=life-row], [data-testid=life-tick]").first.click(); page.wait_for_timeout(200)
+    if page.locator("[data-testid=life-pay-go]").count(): page.click("[data-testid=life-pay-go]"); page.wait_for_timeout(300)
     g = page.evaluate("JSON.parse(localStorage.getItem('attune:guardian:v1'))")
     check(sum(s["amount"] for s in g["saved"]) == 1350, "Ahmed paid after the reminder: 1,000 more counted (%s)" % [s["amount"] for s in g["saved"]])
     ctx.close()

@@ -6,7 +6,8 @@ import { CalendarDays, Bell, Radar, Users, Wallet, MessageSquare, AlertTriangle,
 import { tr, getLang } from "./i18n.js";
 import { timeline, byDay, totals, daysFrom, GROUP_OF } from "./timeline.js";
 import { findings as guardianFindings, loadGuardian, saveGuardian, collected } from "./guardian.js";
-import { loadLife, saveLife, togglePaid, progressOf } from "./life.js";
+import { loadLife, saveLife, payAmount, progressOf } from "./life.js";
+import { PayBox } from "./life-ui.jsx";
 import { loadReminders } from "./actions.js";
 import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
@@ -33,6 +34,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
   const [v, setV] = useState(0);
   const [chip, setChip] = useState("all");
   const [say, setSay] = useState("");
+  const [pay, setPay] = useState(null);   // { key, i, v } — v8.3: what really came for this payment
   useEffect(() => { const on = () => { if (document.visibilityState === "visible") setV((x) => x + 1); }; document.addEventListener("visibilitychange", on); return () => document.removeEventListener("visibilitychange", on); }, []);
   const all = useMemo(() => {
     const ledger = j("ledger.v3", null), life = j("attune:life:v1", null);
@@ -51,11 +53,13 @@ export function TimelinePage({ navTo, doIt, flash }) {
     else flash && flash(tr("I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”"));
   };
   // a payment with someone: tick it here when it is paid
-  const tick = (x) => {
-    const [, id, i] = x.id.split(":"); const d = loadLife(), c = (d.items || []).find((y) => y.id === id); if (!c) return;
-    saveLife(togglePaid(d, id, +i)); setV((y) => y + 1); flash && flash(tr("Marked as paid"));
+  const lifeOf = (x) => { const [, id, i] = x.id.split(":"); const c = (loadLife().items || []).find((y) => y.id === id); return c ? { c, i: +i } : null; };
+  const paid = (c, i, v) => {
+    const d = payAmount(loadLife(), c.id, i, v); saveLife(d); setV((y) => y + 1); setPay(null);
     // (as on People & plans: a late payment that came back counts as saved by the Guardian)
-    if (c.dir === "in") { try { const sc = progressOf(c).schedule[+i]; saveGuardian(collected(loadGuardian(), c.id, +i, sc ? sc.amount : c.amount)); } catch (e) {} }
+    if (c.dir === "in") { try { saveGuardian(collected(loadGuardian(), c.id, i, v)); } catch (e) {} }
+    const pr = progressOf(d.items.find((y) => y.id === c.id));
+    flash && flash(pr.left > 0.004 ? tr("Recorded {a} — {l} left, next {d}: {n}", { a: fmt(v), l: fmt(pr.left), d: pr.next ? pr.next.date : "—", n: pr.next ? fmt(pr.next.amount) : "—" }) : tr("Recorded {a} — all paid", { a: fmt(v) }));
   };
   const sum = (o) => Object.entries(o).map(([c, a]) => (c ? c + " " : "") + fmt(a)).join(" · ");
   return (
@@ -100,7 +104,8 @@ export function TimelinePage({ navTo, doIt, flash }) {
                         {x.D ? tr(x.D[0], x.D[1]) + " — " : ""}{tr(x.slip[0], { amount: money(x) || "", who: x.who || "" })}</span>
                     </span>
                   </button>
-                  {x.page === "life" && /^p:/.test(x.id) && ["debt", "installment", "circle"].includes(x.ck) ? <button onClick={() => tick(x)} className="mt-1 ms-12 min-h-[36px] px-3 rounded-[12px] border border-[var(--c-ln)] text-[12.5px] font-bold inline-flex items-center gap-1.5" data-testid="fu-tick"><Check size={14} />{tr(x.kind === "collect" ? "Got it — mark as paid" : "Paid — tick it")}</button> : null}
+                  {x.page === "life" && /^p:/.test(x.id) && ["debt", "installment", "circle"].includes(x.ck) ? <button onClick={() => { const l = lifeOf(x); if (l) setPay({ key: x.id, c: l.c, i: l.i, v: String(x.amount) }); }} className="mt-1 ms-12 min-h-[36px] px-3 rounded-[12px] border border-[var(--c-ln)] text-[12.5px] font-bold inline-flex items-center gap-1.5" data-testid="fu-tick"><Check size={14} />{tr(x.kind === "collect" ? "Got it — mark as paid" : "Paid — tick it")}</button> : null}
+                  {pay && pay.key === x.id ? <div className="ms-12"><PayBox c={pay.c} ed={{ i: pay.i, v: pay.v }} setEd={(e) => (e ? setPay({ ...pay, v: e.v }) : setPay(null))} onPay={paid} /></div> : null}
                 </li>); })}
             </ul>
           </section>))}

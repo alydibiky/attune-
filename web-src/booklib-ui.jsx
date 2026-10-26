@@ -13,6 +13,7 @@ import { Md } from "./chat.jsx";
 import * as U from "./ui-kit.jsx";
 
 let LIB = null;
+const IDX = new Map();   // v8.3 (Ali: "fast and smooth"): each book is indexed once per run — opening the Library again is instant
 const lib = () => LIB || (LIB = R.library(R.idbKV("attune-reader")));
 const SPINES = ["#7A4B2F", "#2F5B7A", "#5B2F7A", "#2F7A55", "#7A2F3D", "#6B6B2F", "#2F6F7A", "#7A5F2F"];
 const readB64 = (f) => new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = () => bad(new Error("Couldn't read that file")); r.readAsDataURL(f); });
@@ -52,7 +53,10 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
   const [busy, setBusy] = useState("");
   const [q, setQ] = useState("");
   const [asking, setAsking] = useState(false);
-  const [open, setOpen] = useState(null);            // { m, c } a citation opened under its answer
+  const [open, setOpen] = useState(null);
+  const [deep, setDeep] = useState(false);           // Read deeper: many more pages, in rounds (slower)
+  const [live, setLive] = useState("");              // the answer as it is being written
+  const [stage, setStage] = useState("");            // { m, c } a citation opened under its answer
   const fileRef = useRef(null), endRef = useRef(null);
   const put = (v) => { setSt(v); B.saveLib(v); };
   const refresh = async () => { try { setDocs(await lib().list()); } catch (e) { setDocs([]); } };
@@ -60,7 +64,13 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
   // the library's books, indexed once (BM25 per book, on this phone)
   useEffect(() => { let alive = true; (async () => {
     const out = [];
-    for (const id of st.ids) { const d = await lib().get(id).catch(() => null), m = docs.find((x) => x.id === id); if (d && d.pages) out.push({ id, name: (m && m.name) || id, count: (m && m.count) || d.pages.length, index: Q.buildIndex(d.pages) }); await new Promise((r) => setTimeout(r, 0)); }
+    for (const id of st.ids) {
+      const m = docs.find((x) => x.id === id);
+      if (IDX.has(id)) { out.push({ id, name: (m && m.name) || id, count: (m && m.count) || 0, index: IDX.get(id) }); continue; }
+      const d = await lib().get(id).catch(() => null);
+      if (d && d.pages) { const index = Q.buildIndex(d.pages); IDX.set(id, index); out.push({ id, name: (m && m.name) || id, count: (m && m.count) || d.pages.length, index }); }
+      await new Promise((r) => setTimeout(r, 0));   // one book at a time: the screen never freezes
+    }
     if (alive) setBooks(out);
   })(); return () => { alive = false; }; }, [st.ids.join(), docs.length]);
   useEffect(() => { try { endRef.current && endRef.current.scrollIntoView({ block: "end" }); } catch (e) {} }, [st.chat.length, asking]);
@@ -87,13 +97,28 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
     const text = String(text0 || q).trim(); if (!text || asking) return;
     if (!books.length) { flash && flash(tr("Add a book first")); return; }
     if (!modelReady) { openEngine && openEngine(); return; }
-    const found = B.passages(books, text, { history: st.chat });
     const chat = [...st.chat, { role: "user", text }];
-    put({ ...st, chat }); setQ(""); setAsking(true);
-    let out = "";
-    try { out = String(await llm(B.libraryMessages(text, found, st.chat), { maxTokens: 1400, temperature: 0.2 }) || "").trim(); }
+    put({ ...st, chat }); setQ(""); setAsking(true); setLive(""); setStage("");
+    let out = "", found = [];
+    const write = (t) => setLive(String(t || ""));   // (onToken gives the whole answer so far)
+    try {
+      if (deep) {
+        const rounds = B.deepRounds(books, text, { history: st.chat });
+        found = rounds.flat();
+        const notes = [];
+        for (let i = 0; i < rounds.length; i++) {
+          setStage(tr("Reading part {i} of {n} ({p} passages)", { i: i + 1, n: rounds.length, p: rounds[i].length }));
+          notes.push(String(await llm(B.notesMessages(text, rounds[i]), { maxTokens: 700, temperature: 0.1 }) || "").trim());
+        }
+        setStage(tr("Comparing the books…"));
+        out = String(await llm(B.fromNotesMessages(text, notes, st.chat), { maxTokens: 1600, temperature: 0.2, onToken: write }) || "").trim();
+      } else {
+        found = B.passages(books, text, { history: st.chat });
+        out = String(await llm(B.libraryMessages(text, found, st.chat), { maxTokens: 1400, temperature: 0.2, onToken: write }) || "").trim();
+      }
+    }
     catch (e) { out = String((e && e.message) || e); }
-    setAsking(false);
+    setAsking(false); setLive(""); setStage("");
     put({ ...st, chat: [...chat, { role: "ai", text: out || tr("No answer — try again"), found: found.map((p) => ({ title: p.title, page: p.page, text: p.text.slice(0, 900) })), books: [...new Set(found.map((p) => p.title))] }] });
   };
   const inLib = docs.filter((d) => st.ids.includes(d.id)), others = docs.filter((d) => !st.ids.includes(d.id));
@@ -125,10 +150,13 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
             {open && open.m === i ? (() => { const p = B.passageFor(open.c, m.found); return <div className="rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2 text-[12.5px]" data-testid="booklib-quote"><b>{open.c.title} · {tr("p.")} {open.c.page}</b><p className="m-0 mt-1 whitespace-pre-wrap" dir="auto">{p ? p.text : tr("That page wasn't among the passages read for this answer.")}</p></div>; })() : null}
             {m.books && m.books.length ? <p className="m-0 text-[11.5px] text-[var(--c-mut)]">{tr("Read from: {b}", { b: m.books.join(" · ") })}</p> : null}
           </div>; })())}
-        {asking ? <p className="m-0 text-[13px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="booklib-asking"><Loader2 size={13} className="animate-spin" />{tr("Reading your {n} books…", { n: books.length })}</p> : null}
+        {asking && live ? <div className={U.card + " me-4 px-3.5 py-3 text-[14px] leading-relaxed"} data-testid="booklib-live"><Md text={B.noCites(live)} runnable={false} /></div> : null}
+        {asking && !live ? <p className="m-0 text-[13px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="booklib-asking"><Loader2 size={13} className="animate-spin" />{stage || tr("Reading your {n} books…", { n: books.length })}</p> : null}
         <div ref={endRef} />
       </div>
       {st.chat.length ? <button onClick={() => put({ ...st, chat: [] })} className="text-[12px] underline text-[var(--c-mut)]" data-testid="booklib-new">{tr("New question (clear the chat)")}</button> : null}
+      <div className="flex flex-wrap gap-1.5"><button onClick={() => setDeep(false)} aria-pressed={!deep} className={U.chip(!deep)} data-testid="booklib-fast">{tr("Fast answer")}</button>
+        <button onClick={() => setDeep(true)} aria-pressed={deep} className={U.chip(deep)} data-testid="booklib-deep">{tr("Read deeper (more pages, slower)")}</button></div>
       <form onSubmit={(e) => { e.preventDefault(); ask(); }} className={U.card + " flex items-center gap-2 p-1.5 ps-3.5 sticky bottom-2"} data-testid="booklib-form">
         <BookOpen size={16} className="text-[var(--c-mut)] shrink-0" />
         <input value={q} onChange={(e) => setQ(e.target.value)} dir="auto" placeholder={st.chat.length ? tr("Ask a follow-up…") : tr("Ask your books…")} className="flex-1 min-w-0 bg-transparent outline-none text-[14px] min-h-[44px]" data-testid="booklib-input" />

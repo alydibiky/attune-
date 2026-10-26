@@ -196,7 +196,8 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
       const split = /\b(?:in|over|en|sur|em|in|auf|su|dalam)\s+\d+|عل[يى]\s*\d+/.test(t) || /(owes me|عليه|عليها|me debe|me doit|me deve|schuldet mir|mi deve)\s*\S*\s*\d/.test(t) && !small && !PER_AMOUNT.test(latin(t));
       const each1 = amts.length === 1 && !split && every;
       const n = count || (small ? Math.round(big / small) : 0), each = each1 ? big : small && small < big ? small : n ? Math.round((big / n) * 100) / 100 : big;
-      if (n > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: each, count: n, total: Math.round(each * n * 100) / 100, every: every || "month" };
+      // (a total split in n: the total stays exact — 22,000 over 9 is 22,000, not 9 × 2,444.44 = 21,999.96)
+      if (n > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: each, count: n, total: !each1 && !(small && small < big) ? big : Math.round(each * n * 100) / 100, every: every || "month" };
     }
     return { ...base, kind: "debt", dir: dirIn ? "in" : "out", amount: big, count: 1, total: big, every: null };
   }
@@ -230,11 +231,25 @@ export function scheduleOf(c, now = Date.now()) {
   let d = c.start ? new Date(c.start + "T12:00:00") : new Date(now);
   if (!c.start) { d.setHours(12, 0, 0, 0); if (c.every === "month") d = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12); }
   const out = [];
-  for (let i = 0; i < n; i++) {
-    const x = new Date(d);
-    if (c.every === "month") x.setMonth(d.getMonth() + i); else if (c.every === "week") x.setDate(d.getDate() + 7 * i); else if (c.every === "year") x.setFullYear(d.getFullYear() + i);
-    out.push({ i, date: iso(x), amount: c.amount, paid: (c.paid || []).includes(i) });
-  }
+  const dateOf = (i) => { const x = new Date(d); if (c.every === "month") x.setMonth(d.getMonth() + i); else if (c.every === "week") x.setDate(d.getDate() + 7 * i); else if (c.every === "year") x.setFullYear(d.getFullYear() + i); else if (i > 0) x.setMonth(d.getMonth() + i); return iso(x); };
+  for (let i = 0; i < n; i++) out.push({ i, date: dateOf(i), amount: c.amount, paid: (c.paid || []).includes(i) });
+  return rebalance(c, out, dateOf);
+}
+/* v8.3 (Ali, 26 Oct: "make it customizable — write what he actually paid, and it reschedules the rest based on that"): a payment can
+   be ticked with the amount really paid (c.got[i]). What is still owed is then spread evenly over the payments not paid yet; paid in
+   full early → the rest disappear; still something left after the last one → one more payment the next month. */
+const r2 = (v) => Math.round(v * 100) / 100;
+function rebalance(c, out, dateOf) {
+  const got = c.got || {};
+  if (!Object.keys(got).length || c.kind === "regular" || c.kind === "circle") return out;
+  const total = c.total || (c.count > 0 ? c.amount * c.count : c.amount);
+  for (const x of out) if (x.paid && got[x.i] != null) { x.amount = +got[x.i]; x.actual = true; }
+  const paidSum = out.filter((x) => x.paid).reduce((a, x) => a + x.amount, 0);
+  const rest = r2(total - paidSum), open = out.filter((x) => !x.paid);
+  if (rest <= 0.004) return out.filter((x) => x.paid);
+  if (!open.length) { const i = out.length; return [...out, { i, date: dateOf(i), amount: rest, paid: false, extra: true }]; }
+  const each = r2(rest / open.length);
+  open.forEach((x, k) => { x.amount = k === open.length - 1 ? r2(rest - each * (open.length - 1)) : each; x.moved = true; });
   return out;
 }
 
@@ -279,7 +294,13 @@ export function addCommitment(data, c, now = Date.now()) {
   return { ...data, items: [...data.items, { ...c, id, created: now, paid: c.paid || [] }] };
 }
 export function togglePaid(data, id, i) {
-  return { ...data, items: data.items.map((c) => c.id !== id ? c : { ...c, paid: (c.paid || []).includes(i) ? c.paid.filter((x) => x !== i) : [...(c.paid || []), i].sort((a, b) => a - b) }) };
+  return { ...data, items: data.items.map((c) => { if (c.id !== id) return c; const on = (c.paid || []).includes(i); const got = { ...(c.got || {}) }; if (on) delete got[i];
+    return { ...c, paid: on ? c.paid.filter((x) => x !== i) : [...(c.paid || []), i].sort((a, b) => a - b), got }; }) };
+}
+/** v8.3: payment i was paid with this amount (more or less than due) — the rest of the plan is worked out again (scheduleOf). */
+export function payAmount(data, id, i, amount) {
+  const v = Math.round((+amount || 0) * 100) / 100; if (!(v >= 0)) return data;
+  return { ...data, items: data.items.map((c) => (c.id !== id ? c : { ...c, paid: [...new Set([...(c.paid || []), i])].sort((a, b) => a - b), got: { ...(c.got || {}), [i]: v } })) };
 }
 /** v7.9 (Ali: "People & plans did not ask me with a checkbox if the maid came"): who comes on a day and is paid each time,
  *  and today is their day, not answered yet. → [{ c, i, date, amount }] */

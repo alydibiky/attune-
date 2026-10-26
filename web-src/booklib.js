@@ -66,3 +66,35 @@ export function splitDisagree(text) {
 }
 /** The answer without its "[Book, p. N]" marks (they are shown as chips under it). */
 export const noCites = (text) => String(text || "").replace(/\s*\[([^\[\]\n]{1,60}?),?\s*(?:p{1,2}\.|page|ص)\s*[\d٠-٩]+(?:\s*[-–,]\s*[\d٠-٩]+)*\]/g, "");
+
+// ---- v8.3 (Ali: "make sure it's fast and smooth, writes, and can handle huge context"): Read deeper — many more pages per book,
+// read in rounds that each fit the model (notes with citations), then one answer that compares the notes. -----------------------
+/** All the useful passages (up to perBook per book), cut into rounds of about `budget` characters. → [[passage]] */
+export function deepRounds(books, question, { history = [], perBook = 10, budget = 6000, maxRounds = 8 } = {}) {
+  const q = searchText(question, history), all = [];
+  for (const b of books || []) {
+    if (!b || !b.index) continue;
+    const hits = Q.rank(b.index, q, { k: perBook });
+    for (const h of hits) all.push({ book: b.id, title: titleOf(b.name), page: h.chunk.page, text: h.chunk.text, score: h.score });
+  }
+  if (!all.length) return [];
+  const best = Math.max(...all.map((x) => x.score));
+  const keep = all.filter((x) => x.score >= best * 0.15).sort((a, b) => a.title.localeCompare(b.title) || a.page - b.page);
+  const rounds = []; let cur = [], used = 0;
+  for (const p of keep) { if (used + p.text.length > budget && cur.length) { rounds.push(cur); cur = []; used = 0; } cur.push(p); used += p.text.length; }
+  if (cur.length) rounds.push(cur);
+  return rounds.slice(0, maxRounds);
+}
+/** One round → notes: every fact that helps answer, each with its [Book, p. N]. */
+export function notesMessages(question, round) {
+  const body = round.map((p) => `[${p.title}, p. ${p.page}]\n${p.text}`).join("\n\n---\n\n");
+  return [{ role: "system", content: "You take notes for a researcher. From the passages, write short bullet notes of every fact that helps answer the question — names, dates, numbers, causes, and where books say different things. After every note write its source exactly like [Book, p. N]. Only what the passages say. If nothing helps, write: nothing." },
+    { role: "user", content: `Question: ${String(question).trim()}\n\nPassages:\n\n${body}` }];
+}
+/** The notes of all rounds → the final answer, compared and cited (same rules as a normal answer). */
+export function fromNotesMessages(question, notes, history = []) {
+  const found = (notes || []).filter((n) => n && !/^\s*nothing\.?\s*$/i.test(n)).map((n, i) => ({ title: "notes " + (i + 1), page: 0, text: n }));
+  const m = libraryMessages(question, [], history);
+  m[m.length - 1] = { role: "user", content: `Notes taken from my books (each with its [Book, p. N]):\n\n${found.map((f) => f.text).join("\n\n")}\n\nQuestion: ${String(question).trim()}\n\nAnswer from these notes only, keeping their citations [Book, p. N]; compare the books.` };
+  return m;
+}

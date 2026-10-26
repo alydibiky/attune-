@@ -4,9 +4,9 @@
    check → saved. Each commitment shows its payments as checkboxes; ticking one offers to add it to Money (the same
    sentence Money reads from a bank message, confirmed there). Tests: tests/e2e_v727life.py.                                    */
 import React, { useMemo, useState } from "react";
-import { Users, Check, Trash2, Wallet, Sparkles, X } from "lucide-react";
-import { tr } from "./i18n.js";
-import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder } from "./life.js";
+import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown } from "lucide-react";
+import { tr, getLang } from "./i18n.js";
+import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { loadGuardian, saveGuardian, collected } from "./guardian.js";
 import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -43,8 +43,25 @@ function heading(c) {
   return (c.title ? c.title[0].toUpperCase() + c.title.slice(1) : tr(KIND[c.kind]));
 }
 
-function Item({ c, onTick, onRemove }) {
+/** "How much did Sheikh pay?" — the amount really paid (prefilled with what was due); the rest is worked out again. */
+export function PayBox({ c, ed, setEd, onPay }) {
+  return <form onSubmit={(e) => { e.preventDefault(); const v = +String(ed.v).replace(/[^\d.]/g, ""); if (v >= 0) { onPay(c, ed.i, v); setEd(null); } }} className="mt-2.5 rounded-[14px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-2.5 space-y-2" data-testid="life-paybox">
+    <p className="m-0 text-[13px] font-bold" dir="auto">{c.dir === "in" ? tr("How much did {p} pay?", { p: c.person }) : tr("How much did you pay {p}?", { p: c.person })}</p>
+    <div className="flex gap-2"><input value={ed.v} onChange={(e) => setEd({ ...ed, v: e.target.value })} inputMode="decimal" className={"flex-1 min-w-0 min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[15px] tabular-nums"} data-testid="life-pay-amount" autoFocus />
+      <button type="submit" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[13px]" data-testid="life-pay-go">{tr("Paid")}</button>
+      <button type="button" onClick={() => setEd(null)} className="min-h-[44px] px-3 rounded-[12px] border border-[var(--c-ln)] text-[13px] font-bold">{tr("Cancel")}</button></div>
+    <p className="m-0 text-[11.5px] text-[var(--c-mut)]">{tr("More or less than due? Type what came — the rest is spread over the payments left.")}</p>
+  </form>;
+}
+const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const longDay = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG" : "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
+function Item({ c, onTick, onRemove, onPay }) {
   const pr = useMemo(() => progressOf(c), [c]);
+  // v8.3 (Ali: "write what he actually paid and it reschedules the rest"): a person's payment asks how much came first
+  const [ed, setEd] = useState(null);   // { i, v }
+  const [open, setOpen] = useState(false);
+  const asks = !!(onPay && c.person && ["debt", "installment"].includes(c.kind));
+  const tap = (i, paid, amount) => (asks && !paid ? setEd({ i, v: String(amount) }) : onTick(c, i, !paid));
   // a regular (the maid every Saturday): the last few days and the next one — ticked = she came, and it's in Money
   const show = c.kind === "regular" ? pr.schedule.slice(Math.max(0, pr.schedule.length - 6)) : pr.schedule.slice(0, 24);
   return (
@@ -61,21 +78,43 @@ function Item({ c, onTick, onRemove }) {
       {c.count > 1 && c.kind !== "regular" ? <div className="flex items-center gap-2 mt-2.5" data-testid="life-progress">
         <div className="flex-1 h-2 rounded-full bg-[var(--c-surf-2)] border border-[var(--c-ln)] overflow-hidden"><i className="block h-full rounded-full bg-[var(--c-pos)]" style={{ width: Math.min(100, (pr.paidCount / c.count) * 100) + "%" }} /></div>
         <span className={U.tag("green") + " tabular-nums"}>{tr("{a} / {b} paid", { a: pr.paidCount, b: c.count })}</span></div> : null}
-      {show.length > 1 ? (
+      {c.kind !== "regular" && show.length > 1 ? (
+        // v8.3 (Ali: "make each entry openable and put it in a schedule — easier and visually better"): a tap opens the plan as a
+        // table — one row per payment: number, date, amount, paid / due / late; a row's tap records it (with the amount that came)
+        <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="mt-2.5 w-full min-h-[44px] rounded-[12px] border border-[var(--c-ln)] px-3 flex items-center justify-between text-[13px] font-bold" data-testid="life-open">
+          <span>{open ? tr("Hide the schedule") : tr("Open the schedule")}</span><ChevronDown size={16} className={"transition-transform " + (open ? "rotate-180" : "")} /></button>) : null}
+      {c.kind !== "regular" && show.length > 1 && open ? (
+        <div className="mt-2 rounded-[14px] border border-[var(--c-ln)] overflow-hidden" data-testid="life-schedule">
+          <div className={"grid grid-cols-[34px_1fr_auto_auto] gap-x-2 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] bg-[var(--c-surf-2)] " + U.muted}><span>#</span><span>{tr("Date")}</span><span className="text-end">{tr("Amount")}</span><span className="text-end">{tr("Status")}</span></div>
+          {pr.schedule.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid, late = !s.paid && s.date < todayIso(); return (
+            <React.Fragment key={s.i}>
+            <button onClick={() => tap(s.i, s.paid, s.amount)} data-testid="life-row" aria-pressed={s.paid}
+              className={"w-full grid grid-cols-[34px_1fr_auto_auto] gap-x-2 items-center px-3 min-h-[46px] text-[13px] text-start border-t border-[var(--c-ln)] tabular-nums " + (nx ? "bg-[color-mix(in_srgb,var(--c-warn)_8%,transparent)]" : "")}>
+              <span className={"font-bold " + U.muted}>{s.i + 1}</span>
+              <span dir="auto">{longDay(s.date)}</span>
+              <span className={"text-end font-extrabold " + (s.moved || s.extra ? "text-[var(--c-acc)]" : "")}>{fmt(s.amount)}</span>
+              <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var(--c-warn)]" : U.muted)}>{s.paid ? "✓ " + (s.actual ? tr("Paid") : tr("Paid")) : late ? tr("Late") : nx ? tr("Due") : tr("Later")}</span>
+            </button>
+            {ed && ed.i === s.i ? <div className="px-2 pb-2"><PayBox c={c} ed={ed} setEd={setEd} onPay={onPay} /></div> : null}
+            </React.Fragment>); })}
+        </div>) : null}
+      {c.kind === "regular" && show.length > 1 ? (
         // v7.2 (Gemini's Area 1): a box per payment with its date and amount — paid green, the next one due amber
         <div className="flex flex-wrap gap-1.5 mt-3">
           {show.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid; return (
-            <button key={s.i} onClick={() => onTick(c, s.i, !s.paid)} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick"
+            <button key={s.i} onClick={() => tap(s.i, s.paid, s.amount)} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick"
               aria-pressed={s.paid} aria-label={tr("Payment {k}", { k: s.i + 1 }) + " · " + s.date}
               className="min-w-[60px] min-h-[44px] px-2 py-1 rounded-[11px] flex flex-col items-center justify-center gap-px text-[11px] font-bold tabular-nums transition-colors duration-150"
               style={{ background: s.paid ? "color-mix(in srgb, var(--c-pos) 14%, transparent)" : nx ? "color-mix(in srgb, var(--c-warn) 14%, transparent)" : "var(--c-surf)",
                 border: "1.5px solid " + (s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-ln)"), color: s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-mut)" }}>
               <span>{tickDay(s.date, c.kind === "regular")}</span><span className="flex items-center gap-0.5">{s.paid ? <Check size={11} /> : null}{nx && !s.paid ? tr("Due") + " " : ""}{short(s.amount)}</span></button>); })}
-        </div>) : (
-        <button onClick={() => onTick(c, 0, !(c.paid || []).includes(0))} className={"mt-3 min-h-[44px] flex items-center gap-2 text-[13.5px] font-bold " + U.muted} data-testid="life-tick">
+        </div>) : show.length <= 1 ? (
+        <button onClick={() => tap(0, (c.paid || []).includes(0), c.amount)} className={"mt-3 min-h-[44px] flex items-center gap-2 text-[13.5px] font-bold " + U.muted} data-testid="life-tick">
           <span className="w-6 h-6 rounded-[8px] flex items-center justify-center" style={{ background: (c.paid || []).includes(0) ? "var(--c-acc)" : "transparent", border: "1.5px solid var(--c-acc)", color: "var(--c-on-acc)" }}>{(c.paid || []).includes(0) ? <Check size={12} /> : null}</span>
-          {(c.paid || []).includes(0) ? tr("Settled") : c.dir === "in" ? tr("Mark as paid back") : tr("Mark as paid")}</button>)}
+          {(c.paid || []).includes(0) ? tr("Settled") : c.dir === "in" ? tr("Mark as paid back") : tr("Mark as paid")}</button>) : null}
+      {ed && !open ? <PayBox c={c} ed={ed} setEd={setEd} onPay={onPay} /> : null}
       {pr.next && show.length > 1 ? <div className={"mt-2 text-[12.5px] tabular-nums " + U.muted}>{tr("Next: {d} · {a}", { d: pr.next.date, a: fmt(pr.next.amount) })}</div> : null}
+      {pr.schedule.some((x) => x.moved || x.extra) ? <div className="mt-1 text-[12px] text-[var(--c-acc)]" data-testid="life-moved">{tr("The rest is spread again: {n} × {a}", { n: pr.schedule.filter((x) => !x.paid).length, a: fmt(pr.next ? pr.next.amount : 0) })}</div> : null}
     </div>);
 }
 
@@ -132,6 +171,14 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     if (on) { try { const s = progressOf(c).schedule[i]; saveGuardian(collected(loadGuardian(), c.id, i, s ? s.amount : c.amount)); } catch (e) {} }
     if (on && toMoney && window.confirm(tr("Add it to Money? {t}", { t: tickText(c, i) }))) toMoney(tickText(c, i));
   };
+  // v8.3: a person's payment with the amount that really came — the rest of the plan is spread again
+  const pay = (c, i, v) => {
+    const d = payAmount(data, c.id, i, v); put(d); const c2 = d.items.find((x) => x.id === c.id); remindFor(c2);
+    if (c.dir === "in") { try { saveGuardian(collected(loadGuardian(), c.id, i, v)); } catch (e) {} }
+    const pr = progressOf(c2);
+    if (toMoney && window.confirm(tr("Add it to Money? {t}", { t: tickText(c2, i) }))) { toMoney(tickText(c2, i)); return; }
+    flash && flash(pr.left > 0.004 ? tr("Recorded {a} — {l} left, next {d}: {n}", { a: fmt(v), l: fmt(pr.left), d: pr.next ? pr.next.date : "—", n: pr.next ? fmt(pr.next.amount) : "—" }) : tr("Recorded {a} — all paid", { a: fmt(v) }));
+  };
   const remove = (c) => { if (window.confirm(tr("Delete this?"))) { put(removeCommitment(data, c.id)); unremind && unremind("life-" + c.id); } };
   const soon = dueSoon(data).filter((x) => !(x.c.kind === "regular" && x.c.dir === "out"));   // those are asked above
   const asks = askToday(data);
@@ -182,7 +229,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
       </div><div className={groups.length || gold.items.length || car.log.length ? RIGHT : "min-w-0"}>
       {groups.map(([g, items]) => (
         <div key={g} className="space-y-2"><span className={U.label}>{tr(g)}</span>
-          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{items.map((c) => <Item key={c.id} c={c} onTick={tick} onRemove={remove} />)}</div></div>))}
+          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{items.map((c) => <Item key={c.id} c={c} onTick={tick} onRemove={remove} onPay={pay} />)}</div></div>))}
       {gold.items.length || car.log.length ? <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
         {gold.items.length ? <GoldCard data={gold} put={putGold} flash={flash} /> : null}
         {car.log.length ? <CarCard car={car} put={putCar} /> : null}</div> : null}
