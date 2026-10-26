@@ -177,8 +177,11 @@ export function parseAgent(text, opts = {}) {
       const win = nights > 0 && span > nights ? { from: dates[0], to: dates[1] } : null;
       const checkin = dates[0] || "";
       const checkout = win || !dates[1] ? (checkin && nights ? isoDay(Date.parse(checkin + "T12:00:00") + nights * DAY) : "") : dates[1];
-      const adults = +((/(\d{1,2})\s*(?:adults?|people|persons?|guests?|اشخاص|أشخاص|افراد|أفراد)/i.exec(t) || [])[1] || 2);
-      const stars = starsIn(t), near = !!place && NEAR.test(t) || /\b(walking distance|close to|next to|near)\b|جنب|قريب|قدام|ماشي/iu.test(t);
+      const adults = +((/(\d{1,2})\s*(?:adults?|people|persons?|guests?|اشخاص|أشخاص|افراد|أفراد)/i.exec(t) || [])[1] || (+(opts.prefs || {}).adults > 0 ? +opts.prefs.adults : 2));
+      // v8.2: what the sentence doesn't say comes from the person's own trip details (Profile → Your details)
+      const pr = opts.prefs || {}, said = starsIn(t);
+      const stars = said.length ? said : +pr.hotelStars >= 1 ? Array.from({ length: 6 - +pr.hotelStars }, (_, i) => +pr.hotelStars + i) : [];
+      const near = !!place && NEAR.test(t) || /\b(walking distance|close to|next to|near)\b|جنب|قريب|قدام|ماشي/iu.test(t) || !!pr.nearCentre;
       const f = { city, checkin, checkout, adults, rooms: 1, cheapest: true, nights, ...(stars.length ? { stars } : {}), ...(near ? { near: true } : {}), ...(win ? { window: win } : {}) };
       const d = { kind: "watch", site: "Booking.com", fields: f, below: limit, currency: cur, title: "Hotels · " + (city.split(",")[0] || "?") + (nights ? " · " + nights + " nights" : "") + (stars.length ? " · " + stars.join("–") + "★" : "") };
       if (!city) return { ...d, ask: "Hotels in which city or area?" };

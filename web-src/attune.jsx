@@ -69,7 +69,7 @@ import { sheetCats as moneyCats } from "./money-pages.js";   // v7.6 Money's bot
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
-import { BookingDetails, loadBooking, agentLabels, myCountry } from "./agent-ui.jsx";
+import { BookingDetails, loadBooking, agentLabels, myCountry, bookingLine } from "./agent-ui.jsx";
 import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
@@ -185,7 +185,13 @@ const EMPTY_PROFILE = { on: false, field: "", role: "", expertise: "", detail: "
 // profile as text keeps working.
 const multiHas = (v, o) => String(v || "").split(", ").includes(o);
 const multiToggle = (v, o) => { const a = String(v || "").split(", ").filter(Boolean); return (a.includes(o) ? a.filter((x) => x !== o) : [...a, o]).join(", "); };
+// v8.2 (Ali): the person's own details (Profile → Your details) make every answer fit them — on the phone only
 function profileLine(p) {
+  const own = bookingLine();
+  const base = profileLine0(p);
+  return [base, own].filter(Boolean).join(" ");
+}
+function profileLine0(p) {
   if (!p || !p.on) return "";
   const bits = [];
   if (p.field) bits.push("works in " + p.field);
@@ -8716,6 +8722,19 @@ export default function App() {
   // v6.27 Job ready: a missing skill starts a Learn daily course on it
   // v6.28: a card in Chat ("Open Money", "Open Family health" — Ask your life) opens that tool
   useEffect(() => { const on = (e) => { const m = e.detail && e.detail.mode; if (m && /^[a-z]+$/.test(m)) navTo(m); }; window.addEventListener("attune-open", on); return () => window.removeEventListener("attune-open", on); }, []);
+  // v8.2 (Ali, 26 Oct: "the app glitches and makes the phone glitch a lot"): a freeze of the page (a long task ≥ 400 ms) is written
+  // to the log with the screen it happened on — so the next phone log says WHERE it stutters (at most one line every 15 s)
+  useEffect(() => {
+    if (!(NATIVE && NATIVE.logLine) || typeof PerformanceObserver === "undefined") return undefined;
+    let last = 0, sum = 0, n = 0;
+    let ob = null;
+    try {
+      ob = new PerformanceObserver((l) => { for (const e of l.getEntries()) { if (e.duration < 400) continue; n++; sum += e.duration; const now = Date.now();
+        if (now - last > 15000) { last = now; try { NATIVE.logLine("Slow screen " + modeRef.current + ": froze " + Math.round(e.duration) + " ms (" + n + " freezes, " + Math.round(sum / 1000) + " s since the last line)"); } catch (x) {} n = 0; sum = 0; } } });
+      ob.observe({ type: "longtask", buffered: false });
+    } catch (e) {}
+    return () => { try { ob && ob.disconnect(); } catch (e) {} };
+  }, []);
   useEffect(() => { const on = (e) => { try { localStorage.setItem("attune:learn:seed", (e.detail && e.detail.topic) || ""); } catch (x) {} navTo("learn"); }; window.addEventListener("attune-learn", on); return () => window.removeEventListener("attune-learn", on); }, []);
   // v6.27 Read it to me hands a prescription to Family health and a bill to Money
   const [careIn, setCareIn] = useState(null);
@@ -9715,7 +9734,7 @@ export default function App() {
       return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : "Your mission is ready — tap Start the mission", open: "missions" }], undo: null }; } }
     // v8.0 Agents: "tell me when hotels near the Haram are under 45k…", "tell me when my Amazon order arrives", "order my usual from
     // Talabat: …" → an agent on the Agents page (asked there if something is missing); "open Uber" opens the app
-    { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual });
+    { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() });
       if (ag && ["watch", "track", "order"].includes(ag.kind)) {
         if (ag.ask) { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : "Finish it on the Agents page", open: "agents" }], undo: null }; }
         const a = makeAgent(ag, now), st0 = loadAgents();
@@ -12118,7 +12137,7 @@ function ProfileModal({ profile, setProfile, close, flash }) {
         <textarea value={p.detail} onChange={(e) => set("detail", e.target.value)} placeholder={tr("e.g. I run a small bakery; I write supplier orders and price lists")}
           className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 h-24 resize-none leading-relaxed" />
         <BookingDetails />
-        {p.on && profileLine(p) ? <p className="text-[12px] text-[var(--c-mut)] mt-2 border-s-2 border-[var(--c-acc)]/40 ps-2.5">{tr("Applied to prompts:")} {profileLine(p).replace("About the user (use this to make the prompt specific and domain-aware, but never mention it): ", "")}</p> : null}
+        {p.on && profileLine0(p) ? <p className="text-[12px] text-[var(--c-mut)] mt-2 border-s-2 border-[var(--c-acc)]/40 ps-2.5">{tr("Applied to prompts:")} {profileLine0(p).replace("About the user (use this to make the prompt specific and domain-aware, but never mention it): ", "")}</p> : null}
         <div className="flex gap-2 mt-4">
           <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Save")}</button>
           <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); setP({ ...EMPTY_PROFILE }); flash(tr("Profile cleared")); }} className="min-h-[48px] px-5 rounded-[16px] border border-[var(--c-ln)] text-[var(--c-mut)] hover:border-[var(--c-neg)] hover:text-[var(--c-neg)] text-[13.5px] font-bold transition-colors duration-150">{tr("Clear")}</button>

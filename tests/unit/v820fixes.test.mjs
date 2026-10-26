@@ -29,4 +29,8 @@ ok(F.watchBurn({ steps: 6017, activeKcal: 8 }).est && F.watchBurn({ steps: 6017,
 ok(F.watchKm({ steps: 6017, distanceM: 200 }).est && F.watchKm({ steps: 6000, distanceM: 4800 }).km === 4.8, "watch: 0.2 km for 6,017 steps is worked out from the steps");
 ok(F.dayTotals({ meals: {}, watch: { steps: 6017, activeKcal: 8 } }).burned > 200, "burned on the summary uses it");
 ok(H.RETIRED.includes("instant") && H.RETIRED.includes("ask") && !H.HUBS.some((h) => h[3].includes("instant")), "Instant and Ask (classic) are gone from every place");
+// Your details (Ali: "expand Booking details … for more useful answers, while explicitly saying it stays private")
+const d3 = A.parseAgent("tell me when hotels in Makkah are under 45k for 4 nights from 10 Dec", { now, prefs: { hotelStars: "4", nearCentre: true, adults: "3" } });
+ok(d3.fields.stars.join() === "4,5" && d3.fields.near && d3.fields.adults === 3, "a hotel watch takes the person's own stars, 'near the centre' and travellers when the sentence doesn't say");
+ok(A.parseAgent("hotels in Makkah under 45k for 4 nights from 10 Dec, 5 stars", { now, prefs: { hotelStars: "3" } }).fields.stars.join() === "5", "what the sentence says wins over the saved details");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Send, Building2 as Hotel, Package, Utensils as UtensilsCrossed, Car, LayoutGrid as AppWindow, BellRing, Trash2, RefreshCw, ExternalLink, ChevronRight, ArrowLeft, AlertTriangle, Check } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as A from "./agents.js";
+import { loadBooking } from "./agent-ui.jsx";
 import * as W from "./watch.js";
 import { loadScout } from "./scout.js";
 import { agentLabels } from "./agent-ui.jsx";
@@ -43,7 +44,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
   // a sentence started on Home that still needs an answer continues here
   useEffect(() => {
     let d0 = ""; try { d0 = localStorage.getItem("attune:agents:draft") || ""; localStorage.removeItem("attune:agents:draft"); } catch (e) {}
-    if (d0) { setText(d0); const d = A.parseAgent(d0, { country, installed, usual: st.usual }); if (d && d.ask) setDraft({ text: d0, d }); }
+    if (d0) { setText(d0); const d = A.parseAgent(d0, { country, installed, usual: st.usual, prefs: loadBooking() }); if (d && d.ask) setDraft({ text: d0, d }); }
   }, []);
   // the phone's checks (AgentWatch.kt) come in; the price watches and the delivery rules go out
   useEffect(() => {
@@ -115,8 +116,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
     put({ ...st, usual, agents: [a, ...st.agents] });
     flash && flash(d.kind === "watch" ? T("Watching {t} — I'll tell you under {p}", { t: d.title, p: money(d.below, d.currency) }) : d.kind === "track" ? T("I'll tell you when your {app} order is on its way and arriving", { app: d.app.label }) : T("Saved: {t}", { t: d.title }));
   };
-  const submit = (s) => { const sentence = (s || text).trim(); if (!sentence) return; start(sentence, A.parseAgent(sentence, { country, installed, usual: st.usual })); };
-  const reply = () => { if (!draft) return; const s = A.withAnswer(draft.text, draft.d.ask, answer); start(s, A.parseAgent(s, { country, installed, usual: st.usual })); };
+  const submit = (s) => { const sentence = (s || text).trim(); if (!sentence) return; start(sentence, A.parseAgent(sentence, { country, installed, usual: st.usual, prefs: loadBooking() })); };
+  const reply = () => { if (!draft) return; const s = A.withAnswer(draft.text, draft.d.ask, answer); start(s, A.parseAgent(s, { country, installed, usual: st.usual, prefs: loadBooking() })); };
 
   if (rep) return <AgentsReport st={st} scout={scout} alerts={alerts} back={() => setRep(false)} />;
   const r = A.agentsReport(st, scout, alerts);
