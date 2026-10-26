@@ -74,7 +74,7 @@ object AgentWatch {
         if (Prefs.airGap(ctx)) return
         val out = read(ctx)
         val hits = ArrayList<String>()
-        for (i in 0 until minOf(plan.length(), 8)) {
+        for (i in 0 until minOf(plan.length(), 12)) {   // v8.2: a hotel window is several start days
             val w = plan.optJSONObject(i) ?: continue
             val url = w.optString("url"); if (!url.startsWith("https://")) continue
             val low = lowest(url)

@@ -144,7 +144,7 @@ export const PLAN = [
     items: [{ tool: "fit", text: S("Snap your plate before you eat (Home → Food photo).", "صوّر طبقك قبل ما تاكل (الرئيسية ← صورة أكل).") },
             { tool: "home", text: S("Spent something? One sentence on Home: “koshary 80”, “InstaPay 500 to Sara”.", "صرفت حاجة؟ جملة واحدة في الرئيسية: «كشري 80»، «InstaPay 500 لسارة».") },
             { tool: "reminders", text: S("Promised something? “Remind me at 5 to pay the electricity”.", "وعدت بحاجة؟ «فكّرني الساعة 5 أدفع الكهربا».") },
-            { tool: "instant", text: S("A long message or a photo of a paper? Share it to Attune — Instant replies, translates or adds it to the calendar.", "رسالة طويلة أو صورة ورقة؟ اعملها مشاركة لـ Attune — «فوري» يرد أو يترجم أو يضيفها للتقويم.") }],
+            { tool: "chat", text: S("A long message or a photo of a paper? Share it to Attune — it opens in Chat; ask it to reply, translate or add it to the calendar.", "رسالة طويلة أو صورة ورقة؟ اعملها مشاركة لـ Attune — هتفتح في الشات؛ قوله يرد أو يترجم أو يضيفها للتقويم.") }],
     tip: S("Log it the moment it happens — at night you will forget half.", "سجّلها ساعتها — بالليل هتنسى نصها.") },
   { id: "evening", icon: "evening", title: S("Every evening — close the day", "كل يوم بالليل — اقفل يومك"), when: S("Before bed", "قبل ما تنام"),
     items: [{ tool: "fit", text: S("Look at your Fit & Food summary: calories and protein left; plan tomorrow's breakfast.", "بص على ملخص الأكل واللياقة: السعرات والبروتين اللي فاضلين؛ وخطط فطار بكرة.") },

@@ -7,7 +7,7 @@ const S = (en, ar) => [en, ar];
 export const AREAS = [
   { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "guardian", "life", "reminders", "radar", "timeline", "deal", "automations", "xray"] },
   { id: "health", icon: "🥗", title: S("Health & food", "الصحة والأكل"), ids: ["health", "fit", "care", "cycle"] },
-  { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "chat", "lifeask", "translate", "instant", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
+  { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "chat", "lifeask", "translate", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
   { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "slides", "cv", "memory", "remember", "recall", "news"] },
   { id: "work", icon: "💼", title: S("Work & business", "الشغل والبيزنس"), ids: ["business", "fleet", "field", "crane", "tools", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
   { id: "create", icon: "✨", title: S("Create", "اعمل حاجة"), ids: ["assistants", "skills", "artifacts", "studio", "code", "projects"] },

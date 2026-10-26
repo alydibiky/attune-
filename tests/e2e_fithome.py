@@ -144,6 +144,17 @@ with sync_playwright() as p:
     check("egg" in page.locator("[data-testid=fit-draft]").inner_text().lower(), "what was said is read into the meal")
     page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(200)
     check(eaten(page) > before, "the spoken meal is logged")
+    # v8.2 (Ali, 26 Oct): "4 plain bread sticks and 6 cheese samosas" was "white cheese 180 g" + a guessed bread stick;
+    # a tap on a food opens how it was read
+    page.evaluate("window.__mock.said = ['4 plain bread sticks and 6 cheese samosas']")
+    page.locator("[data-testid=fit-add]").click(); page.locator("[data-testid=fit-lb-voice]").click()
+    page.wait_for_selector("[data-testid=fit-draft-item]", timeout=6000)
+    dt = page.locator("[data-testid=fit-draft]").inner_text()
+    check("sambousek" in dt.lower() and "breadsticks" in dt.lower() and "white cheese" not in dt.lower(), "cheese samosas are cheese sambousek, bread sticks are breadsticks: " + dt[:160].replace("\n", " · "))
+    page.locator("[data-testid=fit-draft-name]").nth(1).click(); page.wait_for_timeout(150)
+    rd = page.locator("[data-testid=fit-read-detail]")
+    check(rd.count() == 1 and "cheese samosas" in rd.inner_text() and "6 × 35 g = 210 g" in rd.inner_text() and "÷ 100" in rd.inner_text(), "a tap on the food shows what it read: " + (rd.inner_text()[:200].replace("\n", " · ") if rd.count() else "none"))
+    page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(200)
 
     # ---- water + week
     w0 = page.locator("[data-testid=fit-glass].bg-sky-400").count()

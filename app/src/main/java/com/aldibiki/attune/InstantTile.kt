@@ -16,7 +16,7 @@ const val EXTRA_OPEN_ARTIFACT = "attune_artifact"   // v6.40: a saved page pinne
 class InstantTile : TileService() {
     override fun onClick() {
         super.onClick()
-        val i = Intent(this, MainActivity::class.java).putExtra(EXTRA_OPEN_PAGE, "instant")
+        val i = Intent(this, MainActivity::class.java).putExtra(EXTRA_OPEN_PAGE, "chat")   // v8.2: Instant is gone — the tile opens a chat
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         try {
             if (Build.VERSION.SDK_INT >= 34) {

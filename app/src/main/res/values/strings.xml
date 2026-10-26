@@ -16,7 +16,7 @@
     <string name="widget_name">Attune · Today</string>
     <string name="widget_fit_name">Attune · Fit &amp; Food</string>
     <string name="kb_name">Attune keyboard</string>
-    <string name="tile_instant">Attune Instant</string>
+    <string name="tile_instant">Attune Chat</string>
     <string name="kb_subtype_en">English</string>
     <string name="kb_subtype_ar">العربية</string>
     <string name="widget_fit_desc">Calories left today and water</string>

@@ -9,12 +9,16 @@ export const HUBS = [
   // Money, Health, Daily, Work; How to use + Privacy at the bottom of the sidebar, next to Settings (side-ui.jsx)
   ["create", "Create", "assistants", ["assistants", "skills", "artifacts", "studio", "code"]],
   ["projects", "Projects", "projects", ["projects"]],
-  ["home", "Home", "home", ["home", "missions", "recall", "automations", "chat", "instant", "shelf"]],
-  ["students", "Students", "coach", ["coach", "convert", "pdfchat", "slides", "cv"]],
+  // v8.2 (Ali, 26 Oct: "instant should be removed overall — the normal chat should do its job"): no Instant anywhere
+  ["home", "Home", "home", ["home", "missions", "recall", "automations", "chat", "shelf"]],
+  // v8.2 (Ali: "convert is duplicated, remove it from one page"): the converter lives in Tools only (Files & Converter)
+  ["students", "Students", "coach", ["coach", "pdfchat", "slides", "cv"]],
   ["money", "Money", "money", ["money", "reminders", "timeline", "xray", "radar", "life", "guardian", "deal"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
   ["learn", "Daily", "learn", ["learn", "scout", "memory", "remember", "news", "map", "metro", "travel", "knowledge"]],   // v6.42: Metro next to Maps (Ali)
-  ["tools", "Work", "business", ["business", "fleet", "crane", "field", "tools", "improve", "compress", "humanize", "copilot", "library", "video", "ask", "guide", "privacy"]],
+  ["tools", "Work", "business", ["business", "fleet", "crane", "field", "guide", "privacy"]],
+  // v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools is its own place, not a tab of Work; "Ask (classic)" is gone
+  ["toolbox", "Tools", "tools", ["tools", "convert", "improve", "compress", "humanize", "copilot", "library", "video"]],
 ];
 
 /** Inside Tools, the pages that are one page with tabs (the smallest group a page is in gives its tabs). */
@@ -22,11 +26,11 @@ export const GROUPS = [
   // the tab rows (v6.36, Ali's board): Chat · Ask your life · Translate; Work = Business · Team records · Reports · Tools
   // (v6.50, Ali: "the app must be neutral — not a crane app": the Crane toolkit lives inside Business → Fleet & rentals → More)
   // v7.6 (Ali, 24 Oct): no Chat · Your life · Translate tabs — all three live in Home's box (chips under it); Chat opens on Home
-  ["work", "Work", ["business", "fleet", "field", "tools"]],
+  ["work", "Work", ["business", "fleet", "field"]],
   // v6.43 (Ali: "put the tools that improve a prompt or humanize in the same page"): Writing = Improve · Shorten · Humanize · Copilot · Prompt lab
   ["write", "Writing", ["improve", "compress", "humanize", "copilot", "library"]],
   // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")
-  ...["missions", "recall", "automations", "instant", "shelf", "projects", "video", "ask", "guide", "privacy", "home", "chat", "translate"].map((m) => ["solo-" + m, m, [m]]),
+  ...["missions", "recall", "automations", "shelf", "projects", "video", "tools", "convert", "guide", "privacy", "home", "chat", "translate"].map((m) => ["solo-" + m, m, [m]]),
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */
@@ -82,8 +86,9 @@ export const TOOL_PAGES = [
   // v6.43 (Ali: "integrate the tools that improve a prompt or humanize in the same page"): one card, one page with five tabs
   ["improve", "Writing", "Improve a prompt · Shorten · Humanize · Copilot · Prompt lab", ["improve", "compress", "humanize", "copilot", "library"]],
   ["video", "Video Downloader", "Paste a video link, pick the quality, save it to your phone", ["video"]],
-  ["ask", "Ask (classic)", "The earlier Ask screen", ["ask"]],
 ];
+/** v8.2 (Ali, 26 Oct): pages taken out of the app — every way in (lists, "/", search, old links, shares) goes to Chat instead. */
+export const RETIRED = ["instant", "ask"];
 
 /** The pages a device shows: members it doesn't have are dropped; a page with none left is not shown. */
 export function toolPages(available = null) {

@@ -48,6 +48,22 @@ export function lastFoodPhrase(v) {
 }
 // v6.27 (Ali: "c p f is just lame"): nutrients always in full words, each with its own colour (the Diary bars' colours)
 const MACRO = [["p", "Protein", "بروتين", "#38BDF8"], ["c", "Carbs", "كربوهيدرات", "#FBBF24"], ["f", "Fat", "دهون", "#FB7185"]];
+/** v8.2 (Ali, 26 Oct: "when I press on how it read the food, it opens and shows me the whole thing it read"): what was written,
+    the food it was matched to, the amount → grams, the values per 100 g and how the calories were worked out. */
+function ReadDetail({ x, L, ar }) {
+  const fd = x.id ? F.food(x.id) : null, per = fd || (x.grams ? { kcal: Math.round((x.kcal || 0) * 100 / x.grams), p: (x.p || 0) * 100 / x.grams, c: (x.c || 0) * 100 / x.grams, f: (x.f || 0) * 100 / x.grams } : null);
+  const each = x.qty > 0 && x.unit !== "g" && x.unit !== "ml" ? Math.round(x.grams / x.qty) : 0;
+  const n1 = (v) => Math.round(v * 10) / 10;
+  const row = (k, v, id) => <div className="flex gap-2 py-1 border-t border-[var(--c-ln)] first:border-t-0" data-testid={id}><span className="w-[38%] shrink-0 text-[var(--c-mut)]">{k}</span><span className="flex-1 min-w-0 break-words text-[var(--c-ink)]" dir="auto">{v}</span></div>;
+  return <div className="rounded-xl bg-[var(--c-soft)] px-3 py-2 text-[12.5px]" data-testid="fit-read-detail">
+    {x.said ? row(L("You wrote", "إنت كتبت"), "«" + x.said + "»" + (x.qty ? " · " + L("amount", "الكمية") + " " + x.qty : ""), "fit-read-said") : null}
+    {row(L("Read as", "اتقرت على إنها"), (fd ? (ar && fd.ar ? fd.ar + " — " : "") + fd.en : x.name) + (x.estimate ? " · " + L("not in the food table — the AI's estimate", "مش في جدول الأكل — تقدير الذكاء الاصطناعي") : x.learned ? " · " + L("as you corrected it before", "زي ما صحّحته قبل كده") : ""), "fit-read-food")}
+    {row(L("Amount", "الكمية"), each ? `${x.qty} × ${each} g = ${x.grams} g` : `${x.grams} ${x.unit === "ml" ? "ml" : "g"}`, "fit-read-grams")}
+    {per ? row(L("Per 100 g", "لكل ١٠٠ جم"), `${Math.round(per.kcal)} kcal · ${L("protein", "بروتين")} ${n1(per.p)} g · ${L("carbs", "كارب")} ${n1(per.c)} g · ${L("fat", "دهون")} ${n1(per.f)} g`, "fit-read-per100") : null}
+    {per && x.kcal != null ? row(L("Calories", "السعرات"), `${x.grams} g ÷ 100 × ${Math.round(per.kcal)} = ${x.kcal} kcal`, "fit-read-calc") : null}
+    {fd ? row(L("Source", "المصدر"), L("Attune's food table (USDA / Egyptian tables), on this phone", "جدول الأكل في Attune (USDA / الجداول المصرية)، على الموبايل"), "fit-read-src") : null}
+  </div>;
+}
 function Macros({ L, x, kcal = true, only, className = "" }) {
   return (
     <div className={"flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-[var(--c-mut)] tabular-nums " + className} data-testid="fit-macros">
@@ -491,6 +507,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const [searchFocus, setSearchFocus] = useState(0);
   const [addTab, setAddTab] = useState("recent");
   const [openAlt, setOpenAlt] = useState(-1);
+  const [readAt, setReadAt] = useState(-1);   // v8.2 (Ali: "when I press on it, it opens and shows me the whole thing it read")
   const [pick, setPick] = useState(null);   // v6.43: "photo" | "barcode" — the camera-or-gallery sheet
   useSubBack(!!pick, () => setPick(null));
   const camRef = useRef(null), codeGalRef = useRef(null);   // v6.43 design A: a found food's other choices and portion buttons open on "Change"
@@ -751,7 +768,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                 <div key={i} className={(designA ? "rounded-2xl bg-[var(--c-surf)] shadow-[0_1px_3px_rgba(16,32,28,0.08)] px-3 py-2.5 space-y-1.5 " : "rounded-lg bg-[var(--c-surf-2)] px-2 py-1.5 space-y-1.5 ") + (AQ.askFirst(draft).includes(i) ? "ring-1 ring-[var(--c-warn)]" : "")} data-testid="fit-draft-item">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13.5px] text-[var(--c-ink)] truncate">
+                      <button type="button" onClick={() => setReadAt((v) => (v === i ? -1 : i))} aria-expanded={readAt === i} className="block w-full text-start text-[13.5px] text-[var(--c-ink)] break-words bg-transparent border-0 p-0" data-testid="fit-draft-name">
                         {x.conf != null ? <span className={"inline-block w-2 h-2 rounded-full me-1.5 " + (x.conf >= 0.75 ? "bg-emerald-400" : x.conf >= 0.5 ? "bg-amber-400" : "bg-rose-400")} title={L("how sure", "متأكد قد إيه")} /> : null}
                         {pinNo.current[i] ? <span className="inline-flex w-5 h-5 me-1.5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[11px] font-extrabold items-center justify-center align-middle" data-testid="fit-pin-no">{pinNo.current[i]}</span> : null}
                         {ar && x.ar ? x.ar : x.name}
@@ -763,7 +780,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                         {x.estimate && <span className="ms-1 text-[10.5px] text-[var(--c-warn)]">{x.unknown ? L("unknown", "مش معروف") : L("estimate", "تقدير")}</span>}
                         {x.check ? <span className="ms-1 text-[10.5px] text-[var(--c-warn)]">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}
                         <Grades x={x} L={L} />
-                      </div>
+                        <ChevronDown size={13} className={"inline ms-1 text-[var(--c-mut)] transition-transform " + (readAt === i ? "rotate-180" : "")} />
+                      </button>
                       <Macros L={L} x={x} className="mt-0.5" />
                     </div>
                     {x.quick ? null : <><input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 min-h-[38px] rounded bg-[var(--c-surf)] px-1.5 py-1 text-[14px] text-[var(--c-ink)] text-end" data-testid="fit-draft-grams" />
@@ -772,6 +790,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                       className={"min-h-[40px] min-w-[36px] grid place-items-center " + (P.isFav(st.favFoods, x.id) ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]")} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={17} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
                     <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-[var(--c-mut)] min-h-[40px] min-w-[36px] grid place-items-center" aria-label={L("Remove", "شيل")} data-testid="fit-draft-remove"><Trash2 size={17} /></button>
                   </div>
+                  {readAt === i ? <ReadDetail x={x} L={L} ar={ar} /> : null}
                   {designA && openAlt !== i && (((x.alts && x.alts.length > 1) || x.from === "text") || x.base) ? <button onClick={() => setOpenAlt(i)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="fit-draft-change"><Pencil size={13} className="inline -mt-0.5 me-1" />{L("Not right? Change it", "مش مظبوط؟ غيّره")}</button> : null}
                   {designA && openAlt !== i ? null : (x.alts && x.alts.length > 1) || x.from === "text" ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">

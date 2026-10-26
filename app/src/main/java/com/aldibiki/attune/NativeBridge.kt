@@ -640,6 +640,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 .putExtra("labels", a.optJSONObject("labels")?.toString() ?: "{}")
                 .putExtra("search", a.optBoolean("search", true))
                 .putExtra("watch", a.optBoolean("watch", false))
+                .putExtra("autoClose", a.optBoolean("autoClose", false))   // v8.2: a round of several days closes each page by itself
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             ctx.startActivity(i)
         } catch (e: Exception) { AgentBrowser.onDone = null; reject(id, e.message ?: "Could not open it") }

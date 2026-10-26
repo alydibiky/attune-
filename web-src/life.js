@@ -123,6 +123,9 @@ function personOf(raw, t) {
     /\b(?:lent|loaned|gave|owe|paid|pay|to|from|with|lend|Lent)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b/,
   ];
   for (const re of tries) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
+  // v8.2 (Ali typed "sheikh owes me 22,000 …" in small letters): the word before "owes" is the name, capitalised
+  const low = /(?:^|[\s,.])([a-z][a-z'-]{1,20})\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed)\b/i.exec(raw);
+  if (low && !NOT_NAME.test(low[1]) && !/^(also|still|now|friend|brother|sister|cousin|neighbou?r|uncle|aunt|boss|client|customer)$/i.test(low[1])) return low[1][0].toUpperCase() + low[1].slice(1).toLowerCase();
   // v6.27: Spanish, French, Portuguese, German, Italian, Turkish, Indonesian
   const N = "(\\p{Lu}[\\p{Ll}'’-]+(?:\\s\\p{Lu}[\\p{Ll}'’-]+)?)";
   const world = [
@@ -145,6 +148,8 @@ const CIRCLE = /\b(savings circle|money circle|rosca|tanda|susu|chit fund|hui|ar
 const SUBS = /\b(netflix|spotify|shahid|osn|youtube premium|icloud|google one|chatgpt|gym|subscription|membership|disney\+?|hulu|hbo|max|paramount\+?|prime video|apple (?:tv|music|one)|deezer|crunchyroll|xbox|playstation plus|game pass|microsoft 365|office 365|dropbox|notion|duolingo|audible|kindle unlimited|linkedin premium|suscripción|suscripcion|abonnement|assinatura|abo|abbonamento|abonelik|langganan|gimnasio|salle de sport|academia|fitnessstudio|palestra|spor salonu)\b|اشتراك|نتفليكس|شاهد|الجيم|جيم/i;
 const RENT = /\b(rent|alquiler|arriendo|loyer|aluguel|miete|affitto|kira|sewa)\b|ايجار|الايجار/i;
 const BILL = /\b(bill|electricity|water|gas bill|internet|phone bill|due|factura|recibo|facture|conta de|rechnung|bolletta|fatura|tagihan|luz|électricité|strom|elettricità|elektrik|listrik)\b|فاتوره|فاتورة|الكهربا|كهربا|الكهرباء|المياه|الميه|النت|الانترنت|التليفون|الغاز/i;
+// v8.2: an amount said WITH "a month" ("1,000 a month", «1000 في الشهر») is each payment; "owes me 22,000 … monthly for 9 months" is a total
+const PER_AMOUNT = /\d\s*(?:k|egp|le|usd|sar|aed|\$|جنيه|ج|ريال|درهم)?\s*(?:(?:a|per|every|each)\s+(?:month|week)|monthly|weekly|كل\s*(?:ال)?(?:شهر|اسبوع)|في\s*(?:ال)?(?:شهر|اسبوع)|بال(?:شهر|اسبوع)|شهريا|اسبوعيا)/;
 const IN_W = /me debe|me doit|me deve|schuldet mir|mi deve|bana borçlu|berutang (?:kepada|ke|pada) saya|le presté|lui ai prêté|j'ai prêté|emprestei|habe .{0,30}geliehen|ho prestato|borç verdim|meminjamkan|me tiene que pagar|doit me rendre|vai me pagar|zahlt mir/i;
 const OUT_W = /\b(le debo|je dois|eu devo|ich schulde|gli devo|le devo|borçluyum|saya berutang|pedí prestado|j'ai emprunté|peguei emprestado|habe mir .{0,30}geliehen|ho preso in prestito|borç aldım|saya meminjam|mi cuota|ma mensualité|minha parcela|meine rate|la mia rata|taksitim|cicilan saya)\b/i;
 const IN_ = /\bowes me\b|\bwill pay me\b|\bpays me\b|\bi lent\b|\bi loaned\b|(?:^|\s)lent\s+(?!me\b)|\blent\b.*\bto\b|سيدفع|سيسدد|هيسدد|هيدفع(?!ل)|\bto pay me back\b|\bi gave\b.*\b(loan|borrow)|عليه|عليها|هيدفعلي|يدفعلي|هيرجعلي|سلفت|اسلفت|اقرضت|ادينت|استلف مني|اخد مني|خد مني|مديون ليا|مدين لي/i;
@@ -188,7 +193,7 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
     const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0;
     if (count || every || (small && small < big)) {
       // one amount said "a month" is each payment ("pays me 1,000 a month for a year"); "in 12" / "على 12" splits a total
-      const split = /\b(?:in|over|en|sur|em|in|auf|su|dalam)\s+\d+|عل[يى]\s*\d+/.test(t) || /(owes me|عليه|عليها|me debe|me doit|me deve|schuldet mir|mi deve)\s*\S*\s*\d/.test(t) && !small && !EVERY_M.test(t) && !EVERY_W.test(t);
+      const split = /\b(?:in|over|en|sur|em|in|auf|su|dalam)\s+\d+|عل[يى]\s*\d+/.test(t) || /(owes me|عليه|عليها|me debe|me doit|me deve|schuldet mir|mi deve)\s*\S*\s*\d/.test(t) && !small && !PER_AMOUNT.test(latin(t));
       const each1 = amts.length === 1 && !split && every;
       const n = count || (small ? Math.round(big / small) : 0), each = each1 ? big : small && small < big ? small : n ? Math.round((big / n) * 100) / 100 : big;
       if (n > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: each, count: n, total: Math.round(each * n * 100) / 100, every: every || "month" };

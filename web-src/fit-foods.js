@@ -84,6 +84,10 @@ export const MORE_FOODS = [
   ["pita-brown", "Whole wheat pita (small)", "عيش سن|عيش بني صغير", 250, 9.5, 50, 1.7, 7, { loaf: 55, piece: 55 }, "grains"],
   ["kaiser", "Burger bun", "عيش برجر|بان", 280, 9, 50, 4.5, 2.3, { piece: 60 }, "grains"],
   ["samoli", "Samoli bread", "عيش سمولي|سمولي", 270, 9, 53, 2.5, 2.5, { piece: 90 }, "grains"],
+  // v8.2 (Ali, 26 Oct: "4 plain bread sticks and 6 cheese samosas" read as "white cheese 180 g" + a guessed bread stick)
+  ["breadsticks", "Breadsticks (grissini)|bread stick|bread sticks|breadstick|grissini|plain bread sticks", "عيش استيك|بريد ستيك|جريسيني|عيش اصابع", 410, 12, 68, 9.5, 3, { piece: 10 }, "grains"],
+  ["sambousek-cheese", "Cheese sambousek (cheese samosa)|cheese samosa|cheese samosas|cheese sambosa|cheese sambousek|cheese samboosa", "سمبوسة جبنة|سمبوسك جبنة|سمبوسة بالجبنة|سمبوسك بالجبنة", 300, 9, 30, 16, 1.5, { piece: 35 }, "dishes"],
+  ["sambousek-meat", "Meat sambousek (meat samosa)|meat samosa|meat samosas|meat sambosa|meat sambousek", "سمبوسة لحمة|سمبوسك لحمة|سمبوسة باللحمة", 295, 10, 27, 16, 1.5, { piece: 40 }, "dishes"],
   ["crackers", "Crackers / rusk (bakery)", "بقسماط|كراكرز|كريكرز", 420, 10, 72, 9, 3, { piece: 10 }, "grains"],
   ["kahk", "Kahk (Eid cookies)", "كحك", 480, 6, 55, 26, 1, { piece: 30 }, "sweets"],
   ["ghorayeba", "Ghorayeba", "غريبة", 500, 5, 55, 29, 1, { piece: 20 }, "sweets"],

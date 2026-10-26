@@ -44,6 +44,8 @@ class AgentBrowser : Activity() {
     private val result = JSONObject().put("filled", 0).put("offers", 0).put("payment", false)
     private var closed = false
     private var watchMode = false
+    private var autoClose = false
+    private var autoArmed = false
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
     private fun L(key: String, def: String) = labels.optString(key, def).ifBlank { def }
@@ -58,6 +60,7 @@ class AgentBrowser : Activity() {
         profile = intent.getStringExtra("profile") ?: "{}"
         rules = intent.getStringExtra("rules") ?: "{}"
         watchMode = intent.getBooleanExtra("watch", false)
+        autoClose = intent.getBooleanExtra("autoClose", false)
         labels = try { JSONObject(intent.getStringExtra("labels") ?: "{}") } catch (e: Exception) { JSONObject() }
         if (Prefs.airGapNow || !url.startsWith("https://")) { finishWith("blocked"); return }
         kit = try { assets.open("www/agent-kit.js").bufferedReader(Charsets.UTF_8).use { it.readText() } } catch (e: Exception) { "" }
@@ -122,6 +125,8 @@ class AgentBrowser : Activity() {
                 if (kit.isNotEmpty()) v.evaluateJavascript(kit, null)
                 // v8.0 Agents "Check now": a price watch reads the cheapest offer by itself once the results have drawn
                 if (watchMode) for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.best($rules)") }, ms)
+                // v8.2: a hotel window checks several start days in a row — each page closes itself once its prices are read
+                if (watchMode && autoClose && !autoArmed) { autoArmed = true; v.postDelayed({ if (!closed) finishWith("done") }, 11000L) }
             }
         }
         web.loadUrl(url)

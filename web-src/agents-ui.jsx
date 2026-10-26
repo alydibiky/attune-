@@ -49,7 +49,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
   useEffect(() => {
     try {
       const got = N && N.agentWatchTake ? JSON.parse(N.agentWatchTake() || "{}") : {};
-      if (Object.keys(got).length) put({ ...st, agents: st.agents.map((a) => (got[a.id] || []).reduce((x, c) => A.addCheck(x, { ...c, how: "auto" }), a)) });
+      if (Object.keys(got).length) put({ ...st, agents: A.takeChecks(st.agents, got) });
     } catch (e) {}
   }, []);
   useEffect(() => {
@@ -81,10 +81,18 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
     if (N && N.agentOpen && nativeCall) {
       setBusy(a.id);
       try {
-        const r = await nativeCall("agentOpen", { url: a.url, title: a.title, profile: {}, rules: { cheapest: true }, labels: agentLabels(), search: true, watch: true });
-        const next = A.addCheck(a, { price: r && r.price, how: "browser" });
+        // v8.2: a hotel window → every start day in turn (4 nights from 10 Dec, 19 Dec … inside 10 Dec – 29 Jan); the cheapest wins
+        const tries = a.tries && a.tries.length ? a.tries : [{ url: a.url }];
+        let best = null;
+        for (let i = 0; i < tries.length; i++) {
+          if (tries.length > 1) flash && flash(T("Checking {i} of {n}: {d}", { i: i + 1, n: tries.length, d: tries[i].checkin }));
+          const r = await nativeCall("agentOpen", { url: tries[i].url, title: a.title + (tries[i].checkin ? " · " + tries[i].checkin : ""), profile: {}, rules: { cheapest: true }, labels: agentLabels(), search: true, watch: true, autoClose: tries.length > 1 });
+          if (r && r.price > 0 && (!best || r.price < best.price)) best = { price: r.price, checkin: tries[i].checkin, checkout: tries[i].checkout };
+          if (r && r.reason === "closed") break;   // the person closed the browser: stop the round
+        }
+        const next = A.addCheck(a, { price: best && best.price, how: "browser", ...(best && best.checkin ? { checkin: best.checkin, checkout: best.checkout } : {}) });
         put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? next : x)) });
-        flash && flash(r && r.price ? T("Cheapest now: {p}", { p: money(r.price, a.currency) }) : tr("No prices on that page — search on the site, then tap Best offer"));
+        flash && flash(best ? (best.checkin ? T("Cheapest now: {p} ({d})", { p: money(best.price, a.currency), d: best.checkin + " → " + best.checkout }) : T("Cheapest now: {p}", { p: money(best.price, a.currency) })) : tr("No prices on that page — search on the site, then tap Best offer"));
       } catch (e) { flash && flash(String((e && e.message) || e)); }
       finally { setBusy(""); }
       return;
@@ -165,8 +173,9 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle 
     return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-watch">
       <div className="flex gap-3 items-start"><Ico k="watch" /><div className="min-w-0 flex-1">
         <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.title}</p>
-        <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.site} · {T("under {p}", { p: money(a.below, a.currency) })}{a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
-        <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
+        <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.site} · {T("under {p}", { p: money(a.below, a.currency) })}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
+        {a.fields && (a.fields.stars || a.fields.near) ? <p className="m-0 text-[12.5px] c-sub" data-testid="agent-filters">{[a.fields.stars ? T("{s} stars only", { s: a.fields.stars.join(" " + tr("or") + " ") }) : "", a.fields.near ? tr("within 1 km") : "", a.tries ? T("{n} start days checked", { n: a.tries.length }) : ""].filter(Boolean).join(" · ")}</p> : null}
+        <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) + (last.checkin ? " (" + last.checkin + " → " + last.checkout + ")" : "") : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
         {a.found ? <span className={U.tag("amber") + " mt-1.5"} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}</span>
           : <span className={U.tag("blue") + " mt-1.5"}>{a.on ? tr("Watching · twice a day") : tr("Paused")}</span>}
         {w.last && w.gap > 0 ? <span className="block text-[11.5px] c-sub mt-1">{T("{p} above your limit", { p: money(w.gap, a.currency) })}</span> : null}

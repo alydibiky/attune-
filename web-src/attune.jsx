@@ -4,7 +4,7 @@ import { usesFleet } from "./industry.js";
 import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
-import { TrainFront, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase, ChevronDown } from "lucide-react";
+import { TrainFront, Wrench, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase, ChevronDown } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts, homeCurrency } from "./locale.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -76,7 +76,7 @@ import { GuidePage } from "./guide-ui.jsx";
 import { PrivacyPage } from "./privacy-ui.jsx";
 import { VaultGate } from "./vault-ui.jsx";
 import { loadVault, vaulted, stillOpen } from "./vault.js";
-import { HUBS, hubOf, tabsFor, toolPages, partsOf } from "./hubs.js";
+import { HUBS, hubOf, tabsFor, toolPages, partsOf, RETIRED } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 import { SafeSpend } from "./safespend-ui.jsx";
 import { MissionsPage } from "./missions-ui.jsx";
@@ -91,12 +91,13 @@ import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
 const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
-const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCircle, students: GraduationCap, money: Wallet, health: Heart, learn: CalendarDays, tools: Briefcase };   // (v6.36 Ali's board)
+const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCircle, students: GraduationCap, money: Wallet, health: Heart, learn: CalendarDays, tools: Briefcase, toolbox: Wrench };   // (v6.36 Ali's board)
 // v6.48 (Ali: "put Shelf in the sidebar"): Shelf gets its own row right under Home (it is still a tab of the Home hub)
 // v6.50 (Ali picked A, 22 Oct: "only make money, business, health and shelf on the left sidebar"): the sidebar is chats + these
 // four; every other app opens from the Home box ("/" or "open …"); the "Attune" title goes Home.
 // v8.0 (Ali picked Agents design A): Agents joins the sidebar after Shelf
-const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Database], ["health", "Health", Heart], ["shelf", "Shelf", BookOpen], ["agents", "Agents", Radar]];
+// v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools after Agents
+const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Database], ["health", "Health", Heart], ["shelf", "Shelf", BookOpen], ["agents", "Agents", Radar], ["tools", "Tools", Wrench]];
 const HUB_PLACES = HUBS.flatMap(([id, label, target]) => (id === "home" ? [[target, label, HUB_ICON[id]], ["shelf", "Shelf", BookOpen]] : [[target, label, HUB_ICON[id]]]));
 import { HealthPage } from "./health-ui.jsx";
 import { AgentsPage } from "./agents-ui.jsx";
@@ -7730,7 +7731,7 @@ const MORE_TOOLS = [
   ["assistants", "Assistants", "Experts that follow your instructions", Bot],
   ["projects", "Projects", "Chats, files & instructions together", Folder],
   ["artifacts", "Artifacts", "Saved pages, documents & programs", Layers],
-  ["instant", "Instant", "Quick actions on text & photos", Zap], ["studio", "Studio", "Pictures made on your phone", Palette],
+  ["studio", "Studio", "Pictures made on your phone", Palette],   // v8.2: no Instant (Ali: Chat does its job)
   ["coach", "Homework Coach", "Snap the homework — taught step by step with pictures and a voice", GraduationCap],   // v6.27
   ["learn", "Learn daily", "A lesson a day, with quizzes", GraduationCap],
   ["news", "Daily news", "Topics you follow, every morning", Newspaper],
@@ -7750,7 +7751,6 @@ const MORE_TOOLS = [
   ["fleet", "Fleet", "Equipment health", Gauge], ["improve", "Improve a prompt", "For ChatGPT, Claude, Gemini…", Wand2],
   ["compress", "Compress", "Shorter prompts", Scissors], ["humanize", "Humanize", "Sound like you", PenLine],
   ["copilot", "Copilot", "Work with another AI", MessageSquare], ["library", "Library", "Prompt recipes", Package],
-  ["ask", "Ask (classic)", "The earlier Ask screen", MessageSquare],
   ["guide", "How to use Attune", "Every tool in three steps, with pictures", BookOpen],   // v6.28: opened from the top of All and from Settings
 ];
 
@@ -7789,11 +7789,11 @@ const MORE_GROUPS = [
   ["Money & people", ["agents", "scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
   ["Mind & learning", ["coach", "learn", "memory", "remember", "shelf", "news"]],
-  ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
+  ["Chat", ["assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
   ["Business (add-on)", ["business", "field", "fleet"]],   // v6.50: the Crane toolkit opens from Business → Fleet & rentals → More
-  ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
+  ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library"]],
 ];
 
 // Records from Memory, attached to a chat message about the user's own past.
@@ -7813,7 +7813,7 @@ export default function App() {
   // v6.43: after Android closed the app in the background, it reopens on the screen that was open (takeResume)
   const resumed = useRef(undefined);
   if (resumed.current === undefined) resumed.current = takeResume();
-  const [mode, setModeRaw] = useState(() => { if (resumed.current) return resumed.current.mode; let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
+  const [mode, setModeRaw] = useState(() => { if (resumed.current) return RETIRED.includes(resumed.current.mode) ? "chat" : resumed.current.mode; let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
   // v6.32 Private vault: locked places open with the fingerprint / screen lock (or a PIN); they lock again after a minute away
   const [vaultCfg, setVaultCfg] = useState(() => loadVault());
   const [vaultSess, setVaultSess] = useState({ open: false });
@@ -7861,7 +7861,7 @@ export default function App() {
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
   // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
-  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -8607,9 +8607,10 @@ export default function App() {
       // document): it opens in Instant, ready for "Add to Money", "Translate"…
       if (d.kind === "image" && d.image) {
         const url = String(d.image);
-        setInImage({ data: url.split(",")[1], media: "image/jpeg", url }); setInResult(""); setInAction(""); setInLogged(null);
-        navTo("instant");
-        showToast(tr("Photo received — a receipt? tap “Add to Money”"), 3500);
+        // v8.2 (Ali: "Instant removed — the normal chat should do its job"): the photo is attached in a new chat
+        setChatSeed("\u0005" + JSON.stringify({ photo: { data: url.split(",")[1], media: "image/jpeg", url } }));
+        navTo("chat");
+        showToast(tr("Photo received — ask anything about it (a receipt? say “add to Money”)"), 3500);
         return;
       }
       // v5.35: WhatsApp → Export chat → Attune: the chat opens in Chat X-Ray
@@ -8634,8 +8635,8 @@ export default function App() {
       // v6.12: a conversation shared from Gemini / ChatGPT / Claude… (Share → Attune) opens in Chat as its context
       if (shareLink(shared)) { setChatSeed("\u0001" + shared); navTo("chat"); return; }
       if (d.kind === "selection") {
-        setInText(shared); setInResult(""); navTo("instant");
-        showToast(tr("Your selected text is ready — pick what to do with it"), 3000);
+        setChatSeed(shared); navTo("chat");
+        showToast(tr("Your selected text is in the chat box — say what to do with it"), 3000);
         return;
       }
       const r = memMake({ kind: "note", title: shared.slice(0, 60), text: shared, output: "", tags: ["shared"] });
@@ -10265,7 +10266,7 @@ export default function App() {
                 <p className="text-sm text-teal-300 font-medium mb-1">{tr("Saved from another app")}</p>
                 <p className="text-xs text-slate-400 line-clamp-2 mb-2">{shareIn.text.slice(0, 180)}{shareIn.text.length > 180 ? "…" : ""}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  <button onClick={() => { setInText(shareIn.text); setInResult(""); setMode("instant"); setShareIn(null); }}
+                  <button onClick={() => { setChatSeed(shareIn.text); setMode("chat"); setShareIn(null); }}
                     className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 font-extrabold">{tr("Do something with it")}</button>
                   <button data-testid="share-to-shelf" onClick={() => {   // v6.12: a note shared from the phone's Notebook app → Shelf
                     let sh = SH.loadShelf(localStorage); let bk = sh.books.find((b) => b.imported);
@@ -10666,7 +10667,7 @@ export default function App() {
           <>{/* v6.40: Message alerts first — "tell me when Ahmed messages me" */}<div className="mt-3"><WatchPanel native={NATIVE} flash={flash} /></div>
           <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} /></>
         ) : mode === "cycle" ? (
-          <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} native={NATIVE} nativeCall={nativeCall} />
+          <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("chat")} native={NATIVE} nativeCall={nativeCall} />
         ) : mode === "metro" ? (
           <MetroPage />
         ) : mode === "map" ? (

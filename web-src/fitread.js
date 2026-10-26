@@ -284,6 +284,20 @@ export function readMealText(text, cc = getCountry()) {
       else unknown.push(words);
       continue;
     }
+    // v8.2 (Ali: "6 cheese samosas" became 180 g of white cheese): one known word inside a longer name is not the food — when the
+    // whole name is a food of its own ("cheese samosa", "cheese sambousek"), that food wins
+    if (ms.length === 1) {
+      const whole = ch.replace(/@(\d+)@/g, (_, i) => " " + marks[+i].n + " ").replace(/\d+(\.\d+)?|(^|\s)(g|ml)(?=\s|$)/g, " ").split(" ")
+        .filter((w) => w && WORDN[w] == null && !UNIT_RX.some(([rx]) => rx.test(" " + w + " ")) && !SIZE.some(([rx]) => rx.test(" " + w + " ")) && !/^(of|the|some|a|an|من|شويه|حبه)$/.test(w)).join(" ");
+      if (whole.split(" ").length > String(ms[0].n).split(" ").length) {
+        const fd = /^[a-z ]+$/.test(whole) ? matchFood(whole) : null;
+        if (fd && fd.id !== ms[0].id && normA(fd.en).split(/[\s()|,/]+/).some((w) => w.length > 3 && !normA(ms[0].n).includes(w) && whole.includes(w.replace(/s$/, "")))) {
+          const g = gramsFor(fd, qty ?? 1, unit, {}) * (size && !(fd.portions || {})[size] ? sizeK : 1);
+          items.push({ ...makeItem(fd, qty ?? 1, unit || "serving", g), said: whole, explicit: qty != null || unit === "g" || unit === "ml" }); lastFood = fd;
+          continue;
+        }
+      }
+    }
     // each food gets the amount written just before it (or, for the last one, just after it)
     const segs = ch.split(/@\d+@/);
     const amountOf = (seg) => {

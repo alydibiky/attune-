@@ -106,6 +106,30 @@ const curIn = (t, country) => /\$|usd|dollar|دولار/i.test(t) ? "USD" : /€
 // places people say for Makkah / Madinah hotels → what Booking understands
 const PLACES = [[/(masjid|masged|masgid|al|el)?\s*-?\s*haram|الحرم|المسجد الحرام|مكه|مكة|makkah|mecca|makka/i, "Masjid al-Haram, Makkah"], [/nabawi|المسجد النبوي|madinah|medina|المدينه|المدينة/i, "Al-Masjid an-Nabawi, Madinah"]];
 
+/** "4 or 5 stars", "5-star", «٤ أو ٥ نجوم», "4+ stars" → [4, 5] (sorted, 1–5); none → []. */
+export function starsIn(text) {
+  const t = fold(text);
+  const two = /([1-5])\s*(?:or|او|أو|-|–|to|و|,|\/)\s*([1-5])\s*[-\s]?(?:stars?|نجوم|نجمه|نجمة|★)/iu.exec(t);
+  if (two) { const a = +two[1], b = +two[2]; const lo = Math.min(a, b), hi = Math.max(a, b); return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i); }
+  const plus = /([1-5])\s*\+\s*(?:stars?|نجوم|★)|(?:at least|minimum|min)\s*([1-5])\s*[-\s]?stars?|([1-5])\s*(?:stars?|نجوم)\s*(?:or (?:more|above|better)|و?فوق|او اكتر|أو أكتر)/iu.exec(t);
+  if (plus) { const a = +(plus[1] || plus[2] || plus[3]); return Array.from({ length: 6 - a }, (_, i) => a + i); }
+  const one = /([1-5])\s*[-\s]?(?:stars?|نجوم|نجمه|نجمة|★)/iu.exec(t);
+  return one ? [+one[1]] : [];
+}
+const NEAR = /\b(near|close|next to|walking|by the)\b|جنب|قريب|قدام|عند/iu;
+/** Booking's search page for these fields: the stars and "within 1 km" as Booking's own filters, cheapest first. */
+export function bookingUrl(f) {
+  const nflt = [...(f.stars || []).map((n) => "class=" + n), ...(f.near ? ["distance=1000"] : [])].join(";");
+  return hotelLinks(f)[0].url + (nflt ? "&nflt=" + encodeURIComponent(nflt) : "");
+}
+/** The start days to try inside a window: up to 6, spread evenly from the first possible day to the last. */
+export function windowStarts(w, nights, max = 6) {
+  const a = Date.parse(w.from + "T12:00:00"), last = Date.parse(w.to + "T12:00:00") - nights * DAY;
+  if (!(last >= a)) return [w.from];
+  const n = Math.min(max, Math.floor((last - a) / DAY) + 1), step = n > 1 ? (last - a) / (n - 1) : 0;
+  return [...new Set(Array.from({ length: n }, (_, i) => isoDay(a + Math.round(step * i / DAY) * DAY)))];
+}
+
 /** The sentence → an agent draft: { kind, … , ask? } (ask = the one thing still missing, as a question) | null. */
 export function parseAgent(text, opts = {}) {
   const t0 = String(text || "").replace(/\s+/g, " ").trim(); if (!t0 || t0.length > 400) return null;
@@ -147,16 +171,22 @@ export function parseAgent(text, opts = {}) {
       const city = place || (m ? m[1].trim() : "");
       const nights = +((/(\d{1,2})\s*(?:nights?|ليالي|ليله|ليلة)/i.exec(t) || [])[1] || 0);
       const dates = tripDates(t0, { now });
+      // v8.2 (Ali, 26 Oct: "4 nights from 10 December to 29 January … it did all 40 days — it should understand"): when the two days
+      // are further apart than the nights, they are a WINDOW — any N nights inside it; the agent checks several start days
+      const span = dates[0] && dates[1] ? Math.round((Date.parse(dates[1] + "T12:00:00") - Date.parse(dates[0] + "T12:00:00")) / DAY) : 0;
+      const win = nights > 0 && span > nights ? { from: dates[0], to: dates[1] } : null;
       const checkin = dates[0] || "";
-      const checkout = dates[1] || (checkin && nights ? isoDay(Date.parse(checkin + "T12:00:00") + nights * DAY) : "");
+      const checkout = win || !dates[1] ? (checkin && nights ? isoDay(Date.parse(checkin + "T12:00:00") + nights * DAY) : "") : dates[1];
       const adults = +((/(\d{1,2})\s*(?:adults?|people|persons?|guests?|اشخاص|أشخاص|افراد|أفراد)/i.exec(t) || [])[1] || 2);
-      const f = { city, checkin, checkout, adults, rooms: 1, cheapest: true, nights };
-      const d = { kind: "watch", site: "Booking.com", fields: f, below: limit, currency: cur, title: "Hotels · " + (city.split(",")[0] || "?") + (nights ? " · " + nights + " nights" : "") };
+      const stars = starsIn(t), near = !!place && NEAR.test(t) || /\b(walking distance|close to|next to|near)\b|جنب|قريب|قدام|ماشي/iu.test(t);
+      const f = { city, checkin, checkout, adults, rooms: 1, cheapest: true, nights, ...(stars.length ? { stars } : {}), ...(near ? { near: true } : {}), ...(win ? { window: win } : {}) };
+      const d = { kind: "watch", site: "Booking.com", fields: f, below: limit, currency: cur, title: "Hotels · " + (city.split(",")[0] || "?") + (nights ? " · " + nights + " nights" : "") + (stars.length ? " · " + stars.join("–") + "★" : "") };
       if (!city) return { ...d, ask: "Hotels in which city or area?" };
       if (!checkin) return { ...d, ask: "From which day? (e.g. from 10 December)" };
       if (checkin < isoDay(now)) return { ...d, ask: "{d} has passed — from which day?", v: { d: checkin } };
       if (!checkout) return { ...d, ask: "For how many nights?" };
-      return { ...d, url: hotelLinks(f)[0].url };
+      const tries = win ? windowStarts(win, nights).map((ci) => { const co = isoDay(Date.parse(ci + "T12:00:00") + nights * DAY); return { checkin: ci, checkout: co, url: bookingUrl({ ...f, checkin: ci, checkout: co }) }; }) : null;
+      return { ...d, url: bookingUrl(f), ...(tries ? { tries } : {}) };
     }
     // a product in a store: "tell me when the iPhone 16 on Amazon is under 40,000" (a car, a flat or anything for sale with no
     // store named is Scout's: "tell me when a Tucson 2022 is under 1.5M")
@@ -199,21 +229,32 @@ export function loadAgents(s = typeof localStorage !== "undefined" ? localStorag
 export function saveAgents(st, s = typeof localStorage !== "undefined" ? localStorage : null) { try { s && s.setItem(AGENTS_KEY, JSON.stringify(st)); } catch (e) {} return st; }
 export function makeAgent(d, now = Date.now()) {
   const a = { id: "ag" + now.toString(36) + Math.floor(Math.random() * 1e4).toString(36), kind: d.kind, title: d.title || "", on: true, created: now, checks: [] };
-  if (d.kind === "watch") Object.assign(a, { url: d.url, site: d.site, below: d.below, currency: d.currency, fields: d.fields || null, what: d.what || "" });
+  if (d.kind === "watch") Object.assign(a, { url: d.url, site: d.site, below: d.below, currency: d.currency, fields: d.fields || null, what: d.what || "", ...(d.tries ? { tries: d.tries } : {}) });
   if (d.kind === "track") Object.assign(a, { app: d.app, what: d.what || "" });
   if (d.kind === "order") Object.assign(a, { app: d.app, what: d.what || "" });
   return a;
 }
 /** A check's result kept on its agent (the last 30); found = at or under the limit. */
 export function addCheck(a, c) {
-  const row = { at: c.at || Date.now(), ...(c.price > 0 ? { price: Math.round(c.price) } : { blocked: true }), how: c.how || "auto" };
+  const row = { at: c.at || Date.now(), ...(c.price > 0 ? { price: Math.round(c.price) } : { blocked: true }), how: c.how || "auto", ...(c.checkin ? { checkin: c.checkin, checkout: c.checkout } : {}) };
   const checks = [...(a.checks || []), row].slice(-30);
-  const found = row.price > 0 && a.below > 0 && row.price <= a.below;
-  return { ...a, checks, ...(found ? { found: { at: row.at, price: row.price } } : {}) };
+  const found = row.price > 0 && a.below > 0 && row.price <= a.below && !(a.found && a.found.price <= row.price && a.found.at > row.at - 2 * DAY);
+  return { ...a, checks, ...(found ? { found: { at: row.at, price: row.price, ...(row.checkin ? { checkin: row.checkin, checkout: row.checkout } : {}) } } : {}) };
 }
 /** The price watches the phone checks with Attune closed (AgentWatch.kt). */
-export const watchPlan = (st) => (st.agents || []).filter((a) => a.on && a.kind === "watch" && /^https:\/\//.test(a.url || "")).slice(0, 8)
-  .map((a) => ({ id: a.id, title: a.title, url: a.url, below: a.below || 0, currency: a.currency || "" }));
+// v8.2: a hotel window sends each start day as its own check ("id~2"); takeChecks folds them back into the agent
+export const watchPlan = (st) => (st.agents || []).filter((a) => a.on && a.kind === "watch" && /^https:\/\//.test(a.url || ""))
+  .flatMap((a) => (a.tries && a.tries.length ? a.tries.map((x, i) => ({ id: a.id + "~" + i, title: a.title + " · " + x.checkin, url: x.url, below: a.below || 0, currency: a.currency || "" }))
+    : [{ id: a.id, title: a.title, url: a.url, below: a.below || 0, currency: a.currency || "" }])).slice(0, 12);
+/** The phone's checks ({id or "id~i": [rows]}) → the agents with them added (a window's row keeps its days). */
+export function takeChecks(agents, got) {
+  return agents.map((a) => {
+    const rows = Object.entries(got || {}).filter(([k]) => k === a.id || k.startsWith(a.id + "~"))
+      .flatMap(([k, list]) => { const x = k.includes("~") && a.tries ? a.tries[+k.split("~")[1]] : null; return (list || []).map((c) => ({ ...c, ...(x ? { checkin: x.checkin, checkout: x.checkout } : {}) })); })
+      .sort((p, q) => (p.at || 0) - (q.at || 0));
+    return rows.reduce((x, c) => addCheck(x, { ...c, how: "auto" }), a);
+  });
+}
 /** A delivery agent as a Message-alert rule the phone checks against every notification of that store's app. */
 export const trackRule = (a) => ({ id: "agent-" + a.id, on: a.on, created: a.created, who: [], app: "pkgs:" + [a.app.pkg, ...(a.app.alt || [])].filter(Boolean).join("|"),
   words: ["arriving", "arrives", "arrive", "delivered", "delivery", "out for delivery", "shipped", "dispatched", "on its way", "on the way", "يصل", "هيوصل", "توصيل", "التوصيل", "الطريق", "تم الشحن", "تم التوصيل", "شحن", "وصل"],

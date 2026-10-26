@@ -220,8 +220,11 @@ export function exactFood(name) {
   const ex = nameIx().get(q); return (ex && ex.find((fd) => !fd.cc)) || null;   // a country's own dish ("New York cheesecake") is not a generic name
 }
 const DISH_HEADS = new Set(["soup", "salad", "sandwich", "stew", "cake", "sauce", "pie", "juice", "pasta", "curry", "pizza", "burger", "wrap", "omelette", "omelet", "pudding", "shorba", "شوربه", "سلطه", "عصير", "ساندوتش"].map((w) => stem(w)));
+// v8.2: words that describe a food without changing it ("plain bread sticks" is bread sticks)
+const FILLER = /\b(plain|fresh|homemade|home made|regular|normal|simple|small|big|large|little|mini|hot|cold|warm)\b/g;
 export function matchFood(name, cc = CZ.getCountry()) {
-  const q = normT(name); if (!q) return null;
+  const q0 = normT(name); if (!q0) return null;
+  const q = nameIx().get(q0) || GENERIC[q0] ? q0 : normT(q0.replace(FILLER, " ")) || q0;
   if (GENERIC[q]) { const g = food(GENERIC[q]); if (g) return g; }
   const exact = nameIx().get(q);
   const mine = countryFoodIds(cc);
@@ -241,6 +244,8 @@ export function matchFood(name, cc = CZ.getCountry()) {
       let s = hit / nw.length + hit / Math.max(qw.length, 1) * 0.6 + (q.includes(n) ? 0.5 : 0);
       // v6.42: the kind of dish decides — "chicken soup" is a soup, not chicken breast; "mushroom soup" not mushrooms
       if (qHeads.some((h) => !nw.includes(h))) s -= 1;
+      // v8.2: in English the last word is the food ("cheese samosa" is a samosa, never a cheese sandwich)
+      if (/^[a-z ]+$/.test(q) && qw.length > 1 && !nw.includes(qw[qw.length - 1])) s -= 1;
       if (s > bestS) { bestS = s; best = fd; }
     }
   }

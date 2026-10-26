@@ -89,7 +89,7 @@ const RAW = {
     ["masoub", "Masoub (banana and bread mash)|maasoob", "معصوب", "معصوب", 300, 261, 5, 40, 9, "b", "veg sweet"],
     ["tamees", "Tamees bread|tamis", "تميس", "تميس|خبز تميس", 120, 268, 8, 50, 4, "b", "veg bread"],
     ["shawarma=shawarma-sandwich", "Chicken shawarma|shawarma", "شاورما دجاج", "شاورما دجاج", 200, 217, 12, 22, 9, "ls", "chicken street"],
-    ["sambosa", "Sambousek|sambosa|samboosa", "سمبوسة", "سمبوسة|سمبوسك", 60, 292, 9, 28, 16, "s", "meat"],
+    ["sambosa", "Sambousek|sambosa|samboosa|samosa|samosas", "سمبوسة", "سمبوسة|سمبوسك", 60, 292, 9, 28, 16, "s", "meat"],
     ["luqaimat=zalabya", "Luqaimat", "لقيمات", "لقيمات", 100, 363, 5, 52, 15, "s", "sweet"],
     ["areeka", "Areeka (dates, bread and ghee)", "عريكة", "عريكة", 200, 341, 6, 50, 13, "b", "veg sweet"],
     ["haneeth", "Haneeth (slow-roasted lamb with rice)|hanith", "حنيذ", "حنيذ", 400, 201, 13, 17, 9, "l", "meat rice"],

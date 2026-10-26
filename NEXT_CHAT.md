@@ -27,30 +27,30 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
       prediction switch. Ali: **make them work, or remove them so users never see them (and not in the notes either)**.
       Default plan: hide NPU line + MTP switch for normal users (developer mode only); keep GPU only if it works on his
       HONOR (SM8850 / Adreno 840), otherwise hide too.
-- [ ] 4. **Agents too basic / "too stupid"**. His sentence: hotel near Masjid al-Haram, under 45k, **4 nights between 10 Dec and
+- [x] 4. (part 1 DONE v8.2: window of dates → 6 start days, `starsIn` → Booking `nflt=class=4;class=5`, near → `distance=1000`, Check now runs every start day (AgentBrowser autoClose), card shows the cheapest days; `agents.js` bookingUrl/windowStarts/takeChecks. STILL OPEN: options for 'smarter agents') **Agents too basic / "too stupid"**. His sentence: hotel near Masjid al-Haram, under 45k, **4 nights between 10 Dec and
       29 Jan**, **4 or 5 stars**. Bugs found in `agents.js` ~line 148: two dates become checkin/checkout (40 nights, wrong);
       stars are not read; the Booking search is sorted cheapest instead of filtered by stars. Fix: "N nights from A to B" =
       a WINDOW → search every 4-night start in the window (or flexible dates) and report the cheapest that fits; read
       stars (4 or 5 / ٤ أو ٥ نجوم) → Booking `nflt=class=4;class=5`; distance to the Haram. Also he wants agents "complex
       and actually useful" — **subjective: show Ali 2–4 options** for what a smarter agent does (plan, multi-step, report).
 - [ ] 5. **Assistants shows 5 next to it but there are only 4** — find the count (hubs / sidebar) and count what is shown.
-- [ ] 6. **People & plans (screenshot 5)**: "sheikh owes me 22,000 to be paid in installments monthly for 9 months" only saved
+- [x] 6. (DONE v8.2: life.js PER_AMOUNT + lowercase names) **People & plans (screenshot 5)**: "sheikh owes me 22,000 to be paid in installments monthly for 9 months" only saved
       "owes you 22,000" — the installment plan (9 × 2,444.44 monthly, due dates) was lost. Fix the sentence reader
       (EN + Egyptian Arabic + Franco: "على 9 شهور", "قسط شهري").
 
 
 ### Ali's 26 Oct list, part 2 (more may follow)
-- [ ] 7. **Tools becomes its own page in the left sidebar.** Remove **Instant** everywhere (tools list, Home, "/", hubs): normal
+- [x] 7. (DONE v8.2: hubs.js `toolbox` place + RETIRED=[instant, ask] → navTo sends them to Chat; shared photo → Chat with it attached (seed \u0005); quick tile opens Chat) **Tools becomes its own page in the left sidebar.** Remove **Instant** everywhere (tools list, Home, "/", hubs): normal
       Chat should do that job. Also remove **"Ask (classic)"** (`hubs.js:85`, `attune.jsx:7753`, the earlier Ask screen).
 - [ ] 8. **"Ask a PDF" (PDF chat): where is it, how do I find it?** It is the Students hub (`hubs.js:13`: coach = Homework,
       convert, pdfchat, slides, cv). Make it findable (sidebar search / Tools page / Chat "ask this PDF"). Explain to Ali.
-- [ ] 9. **Convert is duplicated** (Students → Convert AND Tools → Files & Converter). Keep it in one place only (recommend: Tools,
+- [x] 9. (DONE v8.2: convert only in Tools; Ask a PDF card added to Tools) **Convert is duplicated** (Students → Convert AND Tools → Files & Converter). Keep it in one place only (recommend: Tools,
       and Students links there; or ask Ali).
 - [ ] 10. **One page for Follow-ups + Guardian + Reminders + Timeline + Dates**, organized and centralized. Layout is subjective:
       **show Ali 2–3 options first**, then build.
 - [ ] 11. **Voice does not work at all**: not the transcriber, not the voice chat/call, not anything voice. Test every voice path on
       Android (mic permission, Whisper / STT model download, WakeWord service, TTS) and fix the root cause.
-- [ ] 12. **Food from text**: he typed "4 plain bread sticks and 6 cheese samosas" → got "White cheese 180 g" + "bread stick 150 g".
+- [x] 12. (DONE v8.2: fit-foods breadsticks + cheese/meat sambousek, matchFood last-word rule + FILLER, fitread whole-name rule, fit-ui ReadDetail on tap) **Food from text**: he typed "4 plain bread sticks and 6 cheese samosas" → got "White cheese 180 g" + "bread stick 150 g".
       "Cheese samosa" became "white cheese" (wrong match; count 6 lost). Fix the matcher (compound dishes like samosa / sambousek,
       counts × piece weight). Also: **tapping an item opens it** and shows everything it read (the words it matched, the food
       from the pack, grams per piece, how the kcal was worked out).
