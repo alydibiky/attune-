@@ -19,7 +19,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
       system while Attune is in the background: suspects = AgentWatch, WakeWord service, MessageWatch, appsList),
       LowMemQuick kill while a fg-service ran (26 Oct 15:40), React error #300 in Studio (hooks after an early return).
       Find what holds memory / spins in the background; measure, then fix.
-- [ ] 2. **Scout: most ads show no price** (screenshots: only 3arabyat has 1,250,000; contactcars / yallamotor / dubizzle rows
+- [x] 2. (DONE v8.2: runScoutGoal reads up to 8 new + 4 kept unpriced ads' own pages (readPage = fetchText); no price → «No price shown — open the ad» and −15 score) **Scout: most ads show no price** (screenshots: only 3arabyat has 1,250,000; contactcars / yallamotor / dubizzle rows
       have none) → "how will I know if it found something useful". Read the price from the ad page / snippet (contactcars,
       dubizzle, yallamotor, opensooq), show it on every row, say "price not shown — open the ad" when truly absent, and rank
       priced ads first. List pages ("12 Used Hyundai Tucson…") are not ads — show them apart or drop them.

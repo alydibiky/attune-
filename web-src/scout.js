@@ -569,7 +569,8 @@ export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
   for (const a of ads) { const i = seen.findIndex((s) => s.id === a.id); const rec = { ...a, firstSeen: i >= 0 ? seen[i].firstSeen : now, lastSeen: now, history: [...((i >= 0 && seen[i].history) || []), ...(a.facts.price ? [[now, a.facts.price]] : [])].slice(-30) }; if (i >= 0) seen[i] = rec; else seen.push(rec); }
   const found = seen.filter((a) => a.lastSeen >= now - 14 * 86400000 && (goal.votes || {})[a.id] !== -1).map((a) => {
     const c = check(a, g), fair = fairness(a, seen, g, market ? market[marketKey(g)] : []);
-    const score = Math.max(0, Math.min(100, c.score + tasteNudge(a, goal.taste) + (fair && fair.pct <= -5 ? 8 : fair && fair.pct >= 15 ? -8 : 0) + ((goal.votes || {})[a.id] === 1 ? 20 : 0)));
+    // v8.2 (Ali: "how will I know if it found something useful"): an ad with no price can't be judged — it ranks under the priced ones
+    const score = Math.max(0, Math.min(100, c.score + tasteNudge(a, goal.taste) + (fair && fair.pct <= -5 ? 8 : fair && fair.pct >= 15 ? -8 : 0) + ((goal.votes || {})[a.id] === 1 ? 20 : 0)) - (a.facts.price ? 0 : 15));
     const dropped = a.history && a.history.length >= 2 && a.history[a.history.length - 1][1] < a.history[0][1] ? a.history[0][1] - a.history[a.history.length - 1][1] : 0;
     const r0 = { ...a, check: c, fair, score, dropped, followed: !!(goal.follow || {})[a.id] };
     const risks = risksOf(r0, seen);

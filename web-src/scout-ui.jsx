@@ -107,6 +107,16 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now(), { rea
   if (!hits.some((h) => S.isAdPage(h.url, h.text || "", h.title || ""))) {
     for (const q of S.fallbackSearches(goal.g)) { try { const r = await search(q); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) {} }
   }
+  // v8.2 (Ali, 26 Oct: "in the scout it does not write the price, so how will I know if it found something useful"): a search
+  // result often has no price in its few lines — the ad's own page is read for it (up to 8 new ads + 4 kept ones, 4 at a time)
+  if (readPage) {
+    const need = hits.filter((h) => S.isAdPage(h.url, h.text || "", h.title || "") && !S.readAd(h, goal.g).facts.price).slice(0, 8);
+    const old = (goal.seen || []).filter((a) => !a.sold && !(a.facts && a.facts.price) && !need.some((h) => h.url === a.url)).slice(-4);
+    const jobs = [...need.map((h) => async () => { const p = await readPage(h.url); if (p && p.text) h.text = String(p.text).slice(0, 8000) + "\n" + (h.text || ""); }),
+      ...old.map((a) => async () => { const p = await readPage(a.url); const pr = p && p.text ? S.readAd({ url: a.url, title: a.title, text: p.text }, goal.g).facts : null;
+        if (pr && pr.price) goal = { ...goal, seen: (goal.seen || []).map((x) => (x.id === a.id ? { ...x, facts: { ...x.facts, price: pr.price, cur: pr.cur } } : x)) }; })];
+    for (let i = 0; i < jobs.length; i += 4) await Promise.all(jobs.slice(i, i + 4).map((j) => j().catch(() => {})));
+  }
   return finishRun(goal, hits, now);
 }
 /** v6.32: the same ending for a run's hits, whether searched now or found by the night run (ScoutNight.kt). */
@@ -240,7 +250,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
                 <b className="block text-[14.5px] font-extrabold leading-snug line-clamp-2" dir="auto">{a.title || a.site}</b>
                 <span className="block c-sub text-[12px] truncate" dir="auto">{[a.site, a.facts.km ? fmt(a.facts.km) + " km" : null, a.facts.place].filter(Boolean).join(" · ")}{(a.also || []).length ? " · " + tr("also on {s}", { s: a.also.map((x) => x.site).join(", ") }) : ""}</span>
               </span>
-              <span className="text-end shrink-0">{a.facts.price ? <span className="block c-num tabular-nums font-black text-[16px]" data-testid="scout-price">{fmt(a.facts.price)} <span className="c-sub text-[11px]">{a.facts.cur}</span></span> : null}
+              <span className="text-end shrink-0">{a.facts.price ? <span className="block c-num tabular-nums font-black text-[16px]" data-testid="scout-price">{fmt(a.facts.price)} <span className="c-sub text-[11px]">{a.facts.cur}</span></span>
+                : <span className="block c-sub text-[11.5px] font-bold max-w-[92px] leading-tight" data-testid="scout-noprice">{tr("No price shown — open the ad")}</span>}
                 <span className="block c-num tabular-nums text-[12px] font-extrabold c-acc" data-testid="scout-score">{a.score}/100</span></span>
             </button>
             {openAd !== a.id ? null : <>
