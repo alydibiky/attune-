@@ -244,6 +244,30 @@ export function addCheck(a, c) {
   const found = row.price > 0 && a.below > 0 && row.price <= a.below && !(a.found && a.found.price <= row.price && a.found.at > row.at - 2 * DAY);
   return { ...a, checks, ...(found ? { found: { at: row.at, price: row.price, ...(row.checkin ? { checkin: row.checkin, checkout: row.checkout } : {}) } } : {}) };
 }
+/** v8.2 (Ali picked 2A): every offer a round saw ([{ name, price, currency, text, checkin, checkout, url }]) → the best 3 by price, one
+    per name (the cheapest days for that hotel), without the ones the person said "Not this one" to. */
+export function bestThree(offers, skip = []) {
+  const by = new Map();
+  for (const o of offers || []) {
+    if (!(o && o.price > 0)) continue;
+    const k = String(o.name || o.text || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 40) || String(o.price);
+    if ((skip || []).includes(k)) continue;
+    if (!by.has(k) || by.get(k).price > o.price) by.set(k, { ...o, key: k });
+  }
+  return [...by.values()].sort((a, b) => a.price - b.price).slice(0, 3);
+}
+/** The plan the card shows, step by step (2A): what it checks and what it found. */
+export function planSteps(a, now = Date.now()) {
+  const f = a.fields || {}, last = [...(a.checks || [])].reverse()[0];
+  const out = [];
+  if (a.tries && a.tries.length) out.push({ done: !!last, en: "{n} start days checked on {site}", v: { n: a.tries.length, site: a.site } });
+  else out.push({ done: !!last, en: "Checked on {site}", v: { site: a.site } });
+  if (f.stars || f.near) out.push({ done: !!last, en: f.stars && f.near ? "only {s}★, within 1 km" : f.stars ? "only {s}★" : "within 1 km", v: { s: (f.stars || []).join("–") } });
+  if (a.compared) out.push({ done: true, en: "{n} offers compared", v: { n: a.compared } });
+  const next = (last ? last.at : a.created) + 12 * 3600e3;
+  out.push({ done: false, en: next <= now ? "next check: now — tap Check now" : "next check about {t}", v: { t: new Date(next).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) } });
+  return out;
+}
 /** The price watches the phone checks with Attune closed (AgentWatch.kt). */
 // v8.2: a hotel window sends each start day as its own check ("id~2"); takeChecks folds them back into the agent
 export const watchPlan = (st) => (st.agents || []).filter((a) => a.on && a.kind === "watch" && /^https:\/\//.test(a.url || ""))

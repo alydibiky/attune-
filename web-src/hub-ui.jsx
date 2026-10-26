@@ -7,7 +7,7 @@ import { INSIDE } from "./hubs.js";
 
 // parts = [main, ...inside] of a merged page (hubs.js INSIDE, e.g. Assistants · Skills; Watch = Payments · Dates · Reminders):
 // a small switch under the tabs. A part can have its own short name (the tab "Watch" is "Payments" in its switch).
-const PART_TITLE = { guardian: "Payments", radar: "Dates", reminders: "Reminders", life: "People & plans", xray: "Chat X-Ray", timeline: "Timeline" };   // (v6.36 Follow-ups)
+const PART_TITLE = { guardian: "Payments", radar: "Dates", reminders: "Reminders", life: "People & plans", xray: "Chat X-Ray", timeline: "All" };   // (v6.36 Follow-ups)
 // v6.43 (Ali: "the business apps on their own"): on a phone, Business is its own app — its parts are a bottom bar with icons
 const BAR_ICON = { business: Briefcase, fleet: Truck, crane: Building2, field: HardHat, tools: Wrench };
 export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false }) {

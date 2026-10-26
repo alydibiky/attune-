@@ -26,7 +26,7 @@ export function nextRing(r, now) {
  * kind: reminder | trial | renewal | return | warranty | expiry | other | pay | collect | bill | owe | owed | promise
  * page: the page that owns it (reminders, radar, life, money, xray). `slip` is an English sentence for tr() with its values.
  */
-export function timeline({ reminders = [], radar = null, life = null, ledger = null, xray = [], now = Date.now(), days = 30, back = 14 } = {}) {
+export function timeline({ reminders = [], radar = null, life = null, ledger = null, xray = [], guardian = [], now = Date.now(), days = 30, back = 14 } = {}) {
   const today = iso(now), until = iso(now + days * DAY), from = iso(now - back * DAY), out = [];
   const add = (x) => { if (x.date >= from && x.date <= until) out.push({ ...x, late: x.date < today }); };
   for (const r of reminders || []) {
@@ -54,7 +54,7 @@ export function timeline({ reminders = [], radar = null, life = null, ledger = n
       if (p.paid) continue;
       if (c.kind === "regular" && p.date < today) continue;   // a regular day that passed = they didn't come, not late
       const who = c.person || "";
-      add({ id: "p:" + c.id + ":" + p.i, date: p.date, kind: c.dir === "in" ? "collect" : "pay", what: [who, c.title || c.kind].filter(Boolean).join(" · "), amount: num(p.amount), cur: c.currency, page: "life",
+      add({ id: "p:" + c.id + ":" + p.i, date: p.date, kind: c.dir === "in" ? "collect" : "pay", what: [who, c.title || c.kind].filter(Boolean).join(" · "), amount: num(p.amount), cur: c.currency, page: "life", ck: c.kind,
         slip: c.dir === "in" ? (who ? ["{who} pays you {amount} — ask if it doesn't come."] : ["{amount} should come in — ask if it doesn't."]) : (who ? ["You pay {who} {amount} — late, and trust drops."] : ["{amount} to pay — late fees or a cut service."]), who });
       if (c.kind !== "regular" && p.date >= today) break;   // only the next one ahead of an installment plan
     }
@@ -81,10 +81,19 @@ export function timeline({ reminders = [], radar = null, life = null, ledger = n
         slip: ["{who} promised this — follow up, or it slips."] });
     }
   }
+  // v8.2 (Ali picked 1A: "follow-ups, guardian, reminders, timeline and dates in one page"): what the Guardian caught is on the list
+  // today (a person late with a payment is already here as a late payment, so not twice)
+  for (const f of guardian || []) {
+    if (!f || f.kind === "late") continue;
+    add({ id: "g:" + f.id, date: today, kind: "guardian", what: f.title || "Guardian", T: f.T || null, D: f.D || null, detail: f.detail || "", amount: num(f.amount), cur: f.currency, page: "guardian", slip: ["The Guardian caught this — check it before it costs you."] });
+  }
   return out.sort((a, b) => a.date.localeCompare(b.date) || (a.time || 0) - (b.time || 0) || b.amount - a.amount);
 }
 
 /** The list cut into days: [{ date, items }]; with the totals going out / coming in per currency for the window. */
+/** v8.2 the chips on top of Follow-ups: which group an item is in. */
+export const GROUP_OF = { pay: "money", collect: "money", bill: "money", owe: "money", owed: "money", promise: "money", reminder: "reminders",
+  trial: "dates", renewal: "dates", return: "dates", warranty: "dates", expiry: "dates", other: "dates", guardian: "guardian" };
 export function byDay(list) {
   const days = [];
   for (const x of list) { const d = days[days.length - 1]; if (d && d.date === x.date) d.items.push(x); else days.push({ date: x.date, items: [x] }); }

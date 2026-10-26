@@ -1,10 +1,10 @@
 // v7.9 (Ali: "the guide must have everything that can be done in the app"): every page of the app sits in a life area of the
 // guide with what you say and what you get; tried = opened, counted by area.
 import { AREAS, SAY, areaOf, markTried, loadTried, progress } from "../../web-src/guide-areas.js";
-import { HUBS } from "../../web-src/hubs.js";
+import { HUBS, RETIRED } from "../../web-src/hubs.js";
 import { TOOLS } from "../../web-src/guide.js";
 let fail = 0; const ok = (c, w) => { console.log((c ? "PASS " : "FAIL ") + w); if (!c) fail++; };
-const SKIP = new Set(["guide", "knowledge"]);   // the guide itself; Knowledge is the developer's only (v7.9)
+const SKIP = new Set(["guide", "knowledge", ...RETIRED]);   // (v8.2: Instant / Ask classic are gone)   // the guide itself; Knowledge is the developer's only (v7.9)
 const pages = [...new Set([...HUBS.flatMap((h) => h[3]), ...Object.keys(TOOLS)])].filter((m) => !SKIP.has(m));
 const noArea = pages.filter((m) => !areaOf(m)), noSay = pages.filter((m) => !SAY[m]);
 ok(!noArea.length, "every page of the app has a life area" + (noArea.length ? ": missing " + noArea.join(", ") : ` (${pages.length})`));

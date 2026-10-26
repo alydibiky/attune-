@@ -14,12 +14,13 @@ import { studioPaused } from "./device.js";
 
 const I = (s) => "⁦" + s + "⁩";
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? I(y) : y])) : v);
-const C = { writing: "var(--c-chart-1)", files: "var(--c-chart-2)", instant: "var(--c-chart-3)", pdf: "var(--c-chart-3)", studio: "var(--c-chart-4)", video: "var(--c-acc)" };
+const C = { writing: "var(--c-chart-1)", files: "var(--c-chart-2)", instant: "var(--c-chart-3)", pdf: "var(--c-chart-3)", library: "var(--c-chart-4)", studio: "var(--c-chart-4)", video: "var(--c-acc)" };
 export const FAMS = [
   ["writing", "improve", "Writing", "Improve a prompt · Shorten · Humanize · Copilot · Prompt lab", Sparkles],
   ["files", "convert", "Files & Converter", "Edit a PDF · PDF → Word · Photos → PDF · Merge", FileText],
   // v8.2 (Ali, 26 Oct): no Instant (Chat does it); "Ask a PDF" here too so it is easy to find (it also lives in Students)
   ["pdf", "pdfchat", "Ask a PDF", "Read a PDF or book and chat with it — every answer shows its page", BookOpen],
+  ["library", "booklib", "Library", "Your own books — ask them all at once, compared, with the book and page", BookOpen],
   ["studio", "studio", "Studio", "Pictures drawn on the phone's own chip · Eraser · Expand", ImageIcon],
   ["video", "video", "Video Downloader", "Paste a link, pick the quality, save it to your phone", Film]];
 const FAM_NAME = { instant: "Chat", ...Object.fromEntries(FAMS.map((f) => [f[0], f[2]])) };   // v8.2: old Instant jobs still show

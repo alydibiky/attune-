@@ -143,6 +143,7 @@ class AgentBrowser : Activity() {
                 when (o.optString("kind")) {
                     "best" -> {
                         val n = o.optInt("offers"); result.put("offers", n)
+                        o.optJSONArray("top")?.let { if (it.length() > 0) result.put("top", it) }   // v8.2: the best 3 for the agent's card
                         // v8.0: the cheapest offer goes back to the page (a price watch keeps the lowest it saw)
                         if (n > 0 && o.optDouble("price", 0.0) > 0) { val p = o.optDouble("price"); if (!result.has("price") || p < result.optDouble("price")) result.put("price", p).put("currency", o.optString("currency")) }
                         status.text = if (n == 0) L("noOffers", "No offers found on this page yet — search on the site, then tap Best offer.")

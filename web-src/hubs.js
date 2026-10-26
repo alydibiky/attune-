@@ -12,7 +12,7 @@ export const HUBS = [
   // v8.2 (Ali, 26 Oct: "instant should be removed overall — the normal chat should do its job"): no Instant anywhere
   ["home", "Home", "home", ["home", "missions", "recall", "automations", "chat", "shelf"]],
   // v8.2 (Ali: "convert is duplicated, remove it from one page"): the converter lives in Tools only (Files & Converter)
-  ["students", "Students", "coach", ["coach", "pdfchat", "slides", "cv"]],
+  ["students", "Students", "coach", ["coach", "pdfchat", "booklib", "slides", "cv"]],   // v8.3 (Ali picked 3A): Library next to Ask a PDF
   ["money", "Money", "money", ["money", "reminders", "timeline", "xray", "radar", "life", "guardian", "deal"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
   ["learn", "Daily", "learn", ["learn", "scout", "memory", "remember", "news", "map", "metro", "travel", "knowledge"]],   // v6.42: Metro next to Maps (Ali)
@@ -40,7 +40,9 @@ export const FULL = ["home", "fit", "map"];   // (v6.36: Business shows the Work
     between the two parts. Skills is part of Assistants, Artifacts part of Projects, Reminders part of Radar (both are dates).
     v6.32 (Ali picked it): Compress is part of Improve a prompt, so Create has 6 tabs. */
 // v6.38 (M3): Timeline — everything from the other parts on one list
-export const INSIDE = { reminders: "life", timeline: "life", radar: "life", xray: "life" };
+// v8.2 (Ali picked 1A, 26 Oct): Follow-ups opens on ONE list by day (the timeline) — People & plans, Reminders, Dates, Chat X-Ray and the
+// Guardian are its parts; Money = Money · Follow-ups · Deal Check
+export const INSIDE = { life: "timeline", reminders: "timeline", radar: "timeline", xray: "timeline", guardian: "timeline" };
 /* v7.2 (Gemini's Area 1 mock-up, Ali sent it 24 Oct 2026): Money = Money · Follow-ups · Guardian · Deal Check. Follow-ups opens on
    People & plans (debts, installments, savings circles, the maid every Saturday) with Reminders · Timeline · Dates · Chat X-Ray in
    its switch; the Money Guardian is its own tab again. */

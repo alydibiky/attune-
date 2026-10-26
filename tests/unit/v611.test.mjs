@@ -28,7 +28,7 @@ eq(F.itemFromFood(m, 1, "serving").kcal, 258, "one Molto (60 g) = 258 kcal");
 
 // ---- photos ----
 const ph = F.parsePhoto(JSON.stringify({ kind: "meal", items: [{ food: "pasta", alternatives: ["koshari", "rice with lentils"], grams: 300, confidence: 0.45 }] }));
-eq([ph.items[0].id, ph.items[0].grams, ph.items[0].alts.map((a) => a.food && a.food.id), ph.items[0].conf], ["pasta", 300, ["pasta", "koshari", "rice"], 0.45], "a plate item with its guesses and how sure the model is");
+eq([ph.items[0].id, ph.items[0].grams, ph.items[0].alts.map((a) => a.food && a.food.id), ph.items[0].conf], ["pasta", 300, ["pasta", "koshari", "mujadara"], 0.45], "a plate item with its guesses and how sure the model is (v8.2: rice with lentils is mujadara)");
 eq(F.parseHidden(JSON.stringify({ items: [{ food: "olive oil", grams: 10 }, { food: "pasta", grams: 50 }, { food: "ghee", grams: 900 }] }), ph.items).map((x) => [x.id, x.hidden]), [["olive-oil", true]], "the second look: oil added; the pasta not twice; an absurd 900 g ghee dropped");
 const k = F.scaleItem(F.chooseFood(ph.items[0], F.food("koshari")), 1.5);
 eq([k.id, k.grams, k.kcal], ["koshari", 450, Math.round(F.food("koshari").kcal * 4.5)], "pick Koshari, ×1.5 → 450 g");

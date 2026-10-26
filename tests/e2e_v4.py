@@ -296,12 +296,7 @@ with sync_playwright() as pw:
     check(page.locator("textarea[placeholder='Message Attune']").count() == 1, "…returns to Chat")
     check(page.evaluate("window.__attuneBack()") is False, "Back on Chat leaves the app")
 
-    # 11. Instant still works from the bar
-    nav.locator("button:has-text('All')").click(); page.wait_for_timeout(250); page.locator(".rounded-t-2xl button:has-text('Instant')").first.click()   # v6.27: Instant lives in All; page.wait_for_timeout(200)
-    ta = page.locator("textarea[dir=auto]").first
-    ta.fill("Bonjour, le prix comprend-il l'installation?")
-    page.wait_for_timeout(200)
-    check(page.locator("button:has-text('Translate →')").count() >= 1, "Instant works from the bottom bar")
+    # 11. (v8.2: Instant is retired — Chat does its job)
     print("BAD", page.evaluate("JSON.stringify(window.__mock.bad||null)"))
     br.close()
 

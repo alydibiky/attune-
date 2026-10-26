@@ -9,10 +9,10 @@ ok(hubOf("guardian") === "money" && hubOf("fit") === "health" && hubOf("humanize
 ok(tabsFor("studio").join() === "assistants,skills,artifacts,studio,code", "Create: Assistants · Skills · Artifacts · Studio · Code");
 ok(tabsFor("chat").length === 0 && tabsFor("translate").length === 0, "v7.6 (Ali): no Chat · Your life · Translate tab row — they are pills in Home's box");
 ok(tabsFor("home").length === 0 && tabsFor("shelf").length === 0 && tabsFor("projects").length === 0, "Home, Shelf, Projects: no tab row");
-ok(tabsFor("coach").join() === "coach,pdfchat,slides,cv" && tabsFor("convert").length === 0, "v8.2 (Ali: Convert was in two places): Students = Homework · Doc chat · Slides · CV; Convert lives in Tools");
+ok(tabsFor("coach").join() === "coach,pdfchat,booklib,slides,cv" && tabsFor("convert").length === 0, "v8.2 (Ali: Convert was in two places): Students = Homework · Doc chat · Library (v8.3) · Slides · CV; Convert lives in Tools");
 ok(RETIRED.join() === "instant,ask" && RETIRED.every((m) => !HUBS.some((h) => h[3].includes(m)) && !GROUPS.some((g) => g[2].includes(m))), "v8.2 (Ali): Instant and Ask (classic) are in no place and no group");
-ok(tabsFor("money").join() === "money,life,guardian,deal", "Money (v7.2, Gemini's Area 1): Money · Follow-ups · Guardian · Deal Check (" + tabsFor("money") + ")");
-ok(partsOf("radar").join() === "life,reminders,timeline,radar,xray" && partsOf("money").length === 0 && partsOf("guardian").length === 0, "Follow-ups switch (v7.2): People & plans · Reminders · Timeline · Dates · Chat X-Ray; the Guardian is its own tab");
+ok(tabsFor("money").join() === "money,timeline,deal", "Money (v8.2, Ali picked 1A): Money · Follow-ups (one list) · Deal Check (" + tabsFor("money") + ")");
+ok(partsOf("radar").join() === "timeline,life,reminders,radar,xray,guardian" && partsOf("money").length === 0 && partsOf("guardian")[0] === "timeline", "Follow-ups (v8.2, 1A): All (one list) · People & plans · Reminders · Dates · Chat X-Ray · Guardian");
 ok(tabsFor("reminders", ["money", "reminders"]).includes("reminders"), "without the others, Follow-ups stays a tab");
 ok(tabsFor("fit").length === 0 && tabsFor("health").join() === "health,fit,care,cycle", "Health: Health · Fit & Food · Family · Cycle; Fit is full-screen");
 ok(tabsFor("scout").join() === "learn,scout,memory,remember,news,map,metro,travel,knowledge", "Daily: Learn · Scout · Mind · Remember · News · Maps · Metro · Travel (+ Knowledge for Ali)");

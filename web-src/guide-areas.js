@@ -8,7 +8,7 @@ export const AREAS = [
   { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "guardian", "life", "reminders", "radar", "timeline", "deal", "automations", "xray"] },
   { id: "health", icon: "🥗", title: S("Health & food", "الصحة والأكل"), ids: ["health", "fit", "care", "cycle"] },
   { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "chat", "lifeask", "translate", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
-  { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "slides", "cv", "memory", "remember", "recall", "news"] },
+  { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "booklib", "slides", "cv", "memory", "remember", "recall", "news"] },
   { id: "work", icon: "💼", title: S("Work & business", "الشغل والبيزنس"), ids: ["business", "fleet", "field", "crane", "tools", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
   { id: "create", icon: "✨", title: S("Create", "اعمل حاجة"), ids: ["assistants", "skills", "artifacts", "studio", "code", "projects"] },
 ];
@@ -44,6 +44,7 @@ export const SAY = {
   learn: [S("“Turkish from zero”", "«تركي من الصفر»"), S("A five-minute lesson every day with a quiz, and a streak", "درس 5 دقايق كل يوم باختبار، وأيام متتالية")],
   coach: [S("A photo of a math question", "صورة مسألة رياضة"), S("Hints step by step — the answer only when you ask, checked by code", "تلميحات خطوة بخطوة — والحل لما تطلب بس، ومتراجع بالكود")],
   convert: [S("A PDF of your report", "PDF بتاع تقريرك"), S("A Word file with the same layout, made on the phone", "ملف Word بنفس الشكل، معمول على الموبايل")],
+  booklib: [S("“What happened at Ain Jalut?” + your 10 history books", "«إيه اللي حصل في عين جالوت؟» + كتب التاريخ العشرة بتاعتك"), S("One answer from all the books, each fact with its book and page, and where the books disagree", "إجابة واحدة من كل الكتب، كل معلومة بكتابها وصفحتها، وفين الكتب مختلفة")],
   pdfchat: [S("“What's the penalty in this contract?” + the PDF", "«الشرط الجزائي في العقد ده إيه؟» + الـ PDF"), S("The answer with the page it came from", "الإجابة ومعاها الصفحة اللي جت منها")],
   slides: [S("“10 slides on VGG for my seminar”", "«10 شرايح عن VGG للسيمينار»"), S("A deck you can edit and save as PowerPoint", "عرض تقدر تعدّله وتحفظه PowerPoint")],
   cv: [S("Paste a job ad", "الزق إعلان الوظيفة"), S("Your CV fitted to it, and a mock interview", "السي في بتاعك متظبط عليه، ومقابلة تجريبية")],

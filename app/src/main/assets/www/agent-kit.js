@@ -63,7 +63,10 @@
     if (mark) { mark.style.outline = mark.__o || ""; }
     mark = top.el; mark.__o = mark.style.outline; mark.style.outline = "3px solid #0F7B6C"; mark.style.outlineOffset = "2px";
     try { mark.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
-    const out = { kind: "best", offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), why: [r.cheapest !== false ? "cheapest" : "", r.direct ? "direct" : "", r.time || ""].filter(Boolean).join(", ") };
+    // v8.2 (Ali picked 2A: "it plans, then shows the best 3"): the three best offers by the same rules, each with its name (the card's
+    // first line) and its text, so an agent can list them
+    const top3 = rank(list, r).slice(0, 3).map((o) => ({ price: o.price, currency: o.currency, name: String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x))[0] || "").slice(0, 80), text: o.text.slice(0, 200) }));
+    const out = { kind: "best", offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: top3, why: [r.cheapest !== false ? "cheapest" : "", r.direct ? "direct" : "", r.time || ""].filter(Boolean).join(", ") };
     report(out); return out;
   }
 

@@ -173,7 +173,7 @@ with sync_playwright() as pw:
     page.get_by_role("button", name="Start using Attune").click(); page.wait_for_timeout(300)
     prof = page.evaluate("JSON.parse(localStorage.getItem('attune:profile')||'{}')")
     check(prof.get("field") == "Heavy equipment / construction, Business / trading", "two fields saved: %s" % prof.get("field"))
-    check(set(prof.get("uses", [])) >= {"cycle", "money", "instant"}, "uses saved")
+    check(set(prof.get("uses", [])) >= {"cycle", "money"}, "uses saved")
     # v5.13 (Ali): the period tracker is not on the home screen — it stays in More.
     check(page.locator("nav button:has-text('Cycle')").count() == 0, "Cycle is kept off the bottom bar (it lives in More)")
 
@@ -191,86 +191,8 @@ with sync_playwright() as pw:
     page.wait_for_selector("text=Running now", timeout=10000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
 
-    # 3. model still loading: a request waits and shows progress, then answers
-    page.evaluate("""(() => { const m = window.__mock; m.engine = { ...m.engine, state: 'starting', phase: 'Reading the model file', loadingFor: 7 };
-       window.dispatchEvent(new CustomEvent('attune-engine', { detail: { ...m.engine } })); })()""")
-    go("Instant")
-    ta = page.locator("textarea[dir=auto]").first
-    ta.fill("Summarise this: the crane arrives Thursday at 7am, payment half upfront and half after the job.")
-    page.get_by_role("button", name="Go").click()
-    page.wait_for_selector("text=Loading the model · Reading the model file · 7 s", timeout=5000)
-    check(True, "while the model loads, the answer area says so with the phase and seconds")
-    check(page.locator("header >> text=Loading 7s").count() >= 1, "header chip shows loading seconds")
-    page.evaluate("""(() => { const m = window.__mock; m.engine = { ...m.engine, state: 'ready', phase: '', loadingFor: 0 };
-       window.dispatchEvent(new CustomEvent('attune-engine', { detail: { ...m.engine } })); })()""")
-    page.wait_for_selector("button:has-text('Copy')", timeout=60000)
-    check(page.locator("text=Answer").count() >= 1, "then the answer arrives")
-    # (v5.32: the Pro trial's background helpers may ask the model after Instant — find Instant's own request)
-    b = page.evaluate("window.__mock.bodies.filter(x => JSON.stringify(x.messages).includes('crane arrives Thursday')).shift()")
-    check(b.get("stream") is True, "Instant answers stream")
-    check("Work out what they want" in b["messages"][-1]["content"], "Go with no button = the model works out the task")
-
-    # 4. language-aware buttons
-    page.get_by_role("button", name="English", exact=True).click()
-    check(page.locator("button:has-text('Answer (English)')").count() >= 1,
-          "buttons say which language the answer will be in")
-    page.get_by_role("button", name="العربية").click()
-    check(page.locator("button:has-text('(Arabic)')").count() >= 1, "changing 'Answer in' relabels the buttons")
-    ta.fill("Bonjour, je voudrais savoir si le prix comprend l'installation et la livraison jeudi prochain.")
-    page.wait_for_timeout(200)
-    check(page.locator("button:has-text('Translate → Arabic')").count() >= 1, "translate button names its target language")
-
-    # 5. stop, and switch while running
-    page.evaluate("window.__mock.slow = true")
-    ta.fill("Write a detailed maintenance report for a 50 tonne crane covering hydraulics, wire ropes, brakes and electrics.")
-    page.get_by_role("button", name="Go").click()
-    page.wait_for_selector("button:has-text('Stop')", timeout=5000)
-    check(ta.is_enabled(), "the text box stays editable while it works")
-    page.wait_for_selector("text=▍", timeout=15000)
-    check(True, "Instant answer appears progressively")
-    chats_before = page.evaluate("window.__mock.chats")
-    page.locator("button:has-text('Improve the writing')").first.click()   # switch mid-answer
-    page.wait_for_timeout(400)
-    check(page.evaluate("window.__mock.chats") == chats_before + 1, "tapping another action mid-answer starts it at once")
-    if page.locator("button:has-text('Stop')").count(): page.locator("button:has-text('Stop')").first.click()
-    page.wait_for_selector("button:has-text('Go')", timeout=10000)
-    check(True, "Stop ends it")
-    page.evaluate("window.__mock.slow = false")
-
-    # 6. thinking shown
-    page.locator("button[title='Think harder']").click()
-    ta.fill("How many 20 tonne loads can a crane with 18 t capacity at 22 m lift at that radius?")
-    page.get_by_role("button", name="Go").click()
-    page.wait_for_timeout(150)
-    print("DBG", page.evaluate("JSON.stringify((window.__mock.lastBody||{}).chat_template_kwargs)"), page.locator("button[title='Think harder']").inner_text())
-    page.screenshot(path=HERE + "/dbg-think.png")
-    # The mock's thinking lasts ~0.25 s; if the engine was still finishing the
-    # stopped answer above, it can be over before we look. Either the live
-    # thinking or the finished "How it thought" proves it was shown.
-    page.locator("text=work this").or_(page.locator("text=How it thought")).first.wait_for(timeout=30000)
-    check(True, "the model's thinking is shown while it thinks")
-    page.wait_for_selector("button:has-text('Copy')", timeout=60000)
-    b = page.evaluate("window.__mock.bodies.filter(x => JSON.stringify(x.messages).includes('20 tonne loads') && x.chat_template_kwargs && x.chat_template_kwargs.enable_thinking).pop() || window.__mock.lastBody")
-    check(b["chat_template_kwargs"]["enable_thinking"] is True and b.get("thinking_budget_tokens", 0) > 0, "Think asks for thinking with a budget (%s)" % b.get("thinking_budget_tokens"))
-    check(page.locator("text=How it thought").count() == 1, "thinking can be reopened after the answer")
-    page.locator("button[title='Think harder']").click()
-
-    # 7. voice
-    page.locator("button[title='Speak']").click(); page.wait_for_timeout(300)
-    check("hello from voice" in ta.input_value(), "voice input fills the box")
-
-    # 8. period log from Instant
-    ta.fill("I got a period 2 hours ago and it was heavy")
-    check(page.locator("text=Looks like a period log").count() == 1, "recognised as a period log before sending")
-    n0 = page.evaluate("window.__mock.chats")
-    page.get_by_role("button", name="Go").click()
-    page.wait_for_selector("text=Period logged", timeout=5000)
-    check(page.evaluate("window.__mock.chats") == n0, "logged on the phone without calling the model")
-    check(page.locator("text=heavy flow").count() >= 1, "flow read as heavy")
-    page.get_by_role("button", name="Open the calendar").click()
-    page.wait_for_selector("text=/Period · day [12]/", timeout=5000)   # (day 2 when "2 hours ago" crosses midnight)
-    check(True, "Cycle tab shows day 1 of the period")
-    page.screenshot(path=HERE + "/v3-cycle.png", full_page=True)
+    # 3–8 (v8.2, Ali: "Instant should be removed overall — the normal chat should do its job"): the Instant screen is retired;
+    # Chat's own tests cover loading, streaming, stop, thinking and voice
 
     # 9. payment shared from another app -> Money
     page.evaluate("""window.dispatchEvent(new MessageEvent('attune-share', {data: {text: 'تم تحويل مبلغ 1,500.00 جنيه إلى AHMED MOHAMED. رقم العملية 987654321', kind: 'share'}}))""")
@@ -283,19 +205,16 @@ with sync_playwright() as pw:
     if page.locator("[data-testid=money-sheet]").count(): page.locator("[data-testid=money-sheet] button[aria-label='Close']").click()
     page.screenshot(path=HERE + "/v3-money.png")
 
-    # 10. shared image -> Instant with Add to Money
+    # 10. shared image -> a new chat with the photo attached (v8.2: Instant is gone)
     img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
     page.evaluate("(u) => window.dispatchEvent(new MessageEvent('attune-share', {data: {kind: 'image', image: u, text: ''}}))", img)
-    page.wait_for_timeout(300)
-    check(page.locator("button:has-text('Add to Money')").count() == 1, "a shared photo opens in Instant with Add to Money")
+    page.wait_for_timeout(600)
+    check(page.locator("img[src^='data:image/png']").count() >= 1, "a shared photo opens a chat with the photo attached")
 
     # 11. Improve: domain packs have names
     go("Improve a prompt"); page.wait_for_timeout(300)
     check(page.locator("button:has-text('Heavy Equipment')").count() >= 1 and page.locator("button:has-text('Islamic Studies')").count() >= 1, "domain pack buttons show their names")
 
-    # 12. Instant screenshot for the record
-    go("Instant"); page.wait_for_timeout(200)
-    page.screenshot(path=HERE + "/v3-instant.png")
     br.close()
 
 httpd.shutdown()

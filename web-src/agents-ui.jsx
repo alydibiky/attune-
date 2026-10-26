@@ -84,14 +84,17 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
       try {
         // v8.2: a hotel window → every start day in turn (4 nights from 10 Dec, 19 Dec … inside 10 Dec – 29 Jan); the cheapest wins
         const tries = a.tries && a.tries.length ? a.tries : [{ url: a.url }];
-        let best = null;
+        let best = null, seen = [], compared = 0;
         for (let i = 0; i < tries.length; i++) {
           if (tries.length > 1) flash && flash(T("Checking {i} of {n}: {d}", { i: i + 1, n: tries.length, d: tries[i].checkin }));
           const r = await nativeCall("agentOpen", { url: tries[i].url, title: a.title + (tries[i].checkin ? " · " + tries[i].checkin : ""), profile: {}, rules: { cheapest: true }, labels: agentLabels(), search: true, watch: true, autoClose: tries.length > 1 });
           if (r && r.price > 0 && (!best || r.price < best.price)) best = { price: r.price, checkin: tries[i].checkin, checkout: tries[i].checkout };
+          compared += (r && r.offers) || 0;
+          for (const o of (r && r.top) || []) seen.push({ ...o, checkin: tries[i].checkin, checkout: tries[i].checkout, url: tries[i].url || a.url });
           if (r && r.reason === "closed") break;   // the person closed the browser: stop the round
         }
-        const next = A.addCheck(a, { price: best && best.price, how: "browser", ...(best && best.checkin ? { checkin: best.checkin, checkout: best.checkout } : {}) });
+        const next0 = A.addCheck(a, { price: best && best.price, how: "browser", ...(best && best.checkin ? { checkin: best.checkin, checkout: best.checkout } : {}) });
+        const next = seen.length ? { ...next0, best3: A.bestThree(seen, a.skip), compared } : compared ? { ...next0, compared } : next0;
         put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? next : x)) });
         flash && flash(best ? (best.checkin ? T("Cheapest now: {p} ({d})", { p: money(best.price, a.currency), d: best.checkin + " → " + best.checkout }) : T("Cheapest now: {p}", { p: money(best.price, a.currency) })) : tr("No prices on that page — search on the site, then tap Best offer"));
       } catch (e) { flash && flash(String((e && e.message) || e)); }
@@ -100,6 +103,12 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
     }
     try { window.open(a.url, "_blank"); } catch (e) {}
   };
+  // v8.2 (2A): one of the best 3 — opens in Attune's browser on those days, ready for "Fill my details" (you choose and pay)
+  const openBest = async (a, o) => {
+    if (N && N.agentOpen && nativeCall) { try { await nativeCall("agentOpen", { url: o.url || a.url, title: o.name || a.title, profile: loadBooking(), rules: { cheapest: true }, labels: agentLabels(), search: true }); } catch (e) {} return; }
+    try { window.open(o.url || a.url, "_blank"); } catch (e) {}
+  };
+  const skipBest = (a, o) => put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, skip: [...(x.skip || []), o.key], best3: (x.best3 || []).filter((y) => y.key !== o.key) } : x)) });
   const remove = (a) => put({ ...st, agents: st.agents.filter((x) => x.id !== a.id) });
   const toggle = (a) => put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, on: !x.on } : x)) });
 
@@ -147,7 +156,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
         <AlertTriangle size={14} className="shrink-0 mt-0.5" />{tr("Delivery agents read the store app's notifications: turn on Notification access for Attune (Settings opens).")}</button> : null}
 
       <p className="text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] m-0 pt-1" data-testid="agents-running">{T("Running · {n}", { n: r.running })}</p>
-      {st.agents.map((a) => <AgentCard key={a.id} a={a} hits={hits} busy={busy === a.id} {...{ checkNow, orderNow, openApp, remove, toggle }} />)}
+      {st.agents.map((a) => <AgentCard key={a.id} a={a} hits={hits} busy={busy === a.id} {...{ checkNow, orderNow, openApp, remove, toggle, openBest, skipBest }} />)}
       {scout.map((g) => <button key={g.id} onClick={() => navTo && navTo("scout")} className={U.card + " w-full text-start p-3.5 flex gap-3 items-start"} data-testid="agents-scout">
         <Ico k="scout" /><span className="min-w-0 flex-1"><span className="block font-extrabold text-[14.5px]" dir="auto">{tr("Scout")} · {g.text}</span>
           <span className="block text-[12.5px] c-sub">{T("{n} ads checked", { n: (g.seen || []).length })}{g.lastRun ? " · " + ago(g.lastRun) : ""}</span>
@@ -165,7 +174,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
 
 function Ico({ k }) { return <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0">{React.createElement(KIND_ICON[k] || AppWindow, { size: 18 })}</span>; }
 
-function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle }) {
+function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle, openBest, skipBest }) {
   const small = "min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold inline-flex items-center gap-1.5 border border-[var(--c-ln)]";
   const ctl = <span className="flex gap-1.5 ms-auto"><button onClick={() => toggle(a)} className={small} data-testid="agent-toggle">{a.on ? tr("Pause") : tr("Resume")}</button>
     <button onClick={() => remove(a)} aria-label={tr("Delete")} className={small} data-testid="agent-delete"><Trash2 size={14} /></button></span>;
@@ -175,12 +184,23 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle 
       <div className="flex gap-3 items-start"><Ico k="watch" /><div className="min-w-0 flex-1">
         <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.title}</p>
         <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.site} · {T("under {p}", { p: money(a.below, a.currency) })}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
-        {a.fields && (a.fields.stars || a.fields.near) ? <p className="m-0 text-[12.5px] c-sub" data-testid="agent-filters">{[a.fields.stars ? T("{s} stars only", { s: a.fields.stars.join(" " + tr("or") + " ") }) : "", a.fields.near ? tr("within 1 km") : "", a.tries ? T("{n} start days checked", { n: a.tries.length }) : ""].filter(Boolean).join(" · ")}</p> : null}
         <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) + (last.checkin ? " (" + last.checkin + " → " + last.checkout + ")" : "") : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
         {a.found ? <span className={U.tag("amber") + " mt-1.5"} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}</span>
           : <span className={U.tag("blue") + " mt-1.5"}>{a.on ? tr("Watching · twice a day") : tr("Paused")}</span>}
         {w.last && w.gap > 0 ? <span className="block text-[11.5px] c-sub mt-1">{T("{p} above your limit", { p: money(w.gap, a.currency) })}</span> : null}
+        {/* v8.2 (Ali picked 2A): its plan, step by step */}
+        <div className="mt-2 space-y-0.5" data-testid="agent-plan">{A.planSteps(a).map((p, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={p.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{p.done ? "✓" : "⏳"}</span><span className={p.done ? "" : "c-sub"}>{T(p.en, p.v)}</span></p>)}</div>
       </div></div>
+      {(a.best3 || []).length ? <div className="space-y-1.5" data-testid="agent-best3">
+        <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Best 3 right now")}</p>
+        {a.best3.map((o, k) => <div key={k} className="rounded-[14px] border border-[var(--c-ln)] px-3 py-2" data-testid="agent-best">
+          <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><p className="m-0 text-[13.5px] font-extrabold" dir="auto">{o.name || a.site}</p>
+            <p className="m-0 text-[11.5px] c-sub line-clamp-2" dir="auto">{[o.checkin ? o.checkin + " → " + o.checkout : "", o.text && o.text !== o.name ? o.text.replace(o.name, "").slice(0, 110) : ""].filter(Boolean).join(" · ")}</p></div>
+            <b className="tabular-nums text-[14px] shrink-0">{money(o.price, a.currency)}</b></div>
+          <div className="flex gap-1.5 mt-1.5"><button onClick={() => openBest(a, o)} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-best-open"><ExternalLink size={13} />{tr("Open it")}</button>
+            <button onClick={() => skipBest(a, o)} className={small} data-testid="agent-best-skip">{tr("Not this one")}</button></div>
+        </div>)}
+      </div> : null}
       <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => checkNow(a)} disabled={busy} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-check"><RefreshCw size={14} className={busy ? "animate-spin" : ""} />{tr("Check now")}</button>
         <button onClick={() => openApp({ pkg: /booking\.com/.test(a.url) ? "com.booking" : /amazon\./.test(a.url) ? "com.amazon.mShop.android.shopping" : "", label: a.site, web: a.url }, a.url)} className={small} data-testid="agent-open"><ExternalLink size={14} />{T("Open {app}", { app: a.site })}</button>{ctl}</div>
     </div>;

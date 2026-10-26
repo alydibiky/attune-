@@ -83,6 +83,7 @@ import { MissionsPage } from "./missions-ui.jsx";
 import { MicButton, SitePhotos } from "./site-ui.jsx";
 import { fold as foldNet, loadNetWeek, saveNetWeek } from "./netreport.js";
 import { TimelinePage } from "./timeline-ui.jsx";
+import { BookLibPage } from "./booklib-ui.jsx";
 import { RecallCard } from "./recall-ui.jsx";
 import { WatchPanel } from "./watch-ui.jsx";
 import { PromptLab } from "./promptlab-ui.jsx";
@@ -7704,14 +7705,14 @@ function tierOfInstalled(m) {
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
 const OWN_TITLE = new Set(["privacy", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
-const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "8.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "8.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7744,6 +7745,7 @@ const MORE_TOOLS = [
   ["business", "Business", "Your own ERP — tables you can reshape", Database],
   ["skills", "Skills", "Your own recipes for the AI — create, import, share", Sparkles],
   ["pdfchat", "Ask a PDF", "Read a PDF or book and chat with it — every answer shows its page", FileText],
+  ["booklib", "Library", "Your own books — ask them all at once, compared, with the book and page", BookOpen],   // v8.3 (Ali picked 3A)
   ["cv", "CV / Resume", "Build, tailor and export a CV — English or Arabic", FileText],
   ["code", "Code", "Programs tested on your phone", Code2],
   ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
@@ -7794,7 +7796,7 @@ K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[lab
 const MORE_GROUPS = [
   ["Money & people", ["agents", "scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
-  ["Mind & learning", ["coach", "learn", "memory", "remember", "shelf", "news"]],
+  ["Mind & learning", ["coach", "learn", "booklib", "memory", "remember", "shelf", "news"]],
   ["Chat", ["assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
@@ -8355,8 +8357,8 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools, STUDIO_OFF ? ["studio"] : []);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { agents: "Agents", timeline: "Timeline", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
-    pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
+  const TAB_SHORT = { agents: "Agents", timeline: "Follow-ups", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
+    pdfchat: "PDF chat", booklib: "Library", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
   const hubTabsEl = (() => {
@@ -10651,6 +10653,9 @@ export default function App() {
           <PdfChatPage flash={flash} addToKnowledge={KNOW_ADMIN ? async (d) => { const r = await knowledge.add(d); return r; } : null} openEngine={() => setShowEngine(true)} modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision} nativeCall={NATIVE ? nativeCall : null}
             initialFile={pdfIn} clearInitial={() => setPdfIn(null)}
             llm={(messages, a, b) => { const image = b ? a : null, o = b || a || {}; return callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, onToken: o.onToken }); }} />
+        ) : mode === "booklib" ? (
+          <BookLibPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null} navTo={navTo}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: (o && o.maxTokens) || 1400, temperature: (o && o.temperature) ?? 0.2, think: false })} />
         ) : mode === "cv" ? (
           <CVPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null} native={NATIVE ? { N: NATIVE, call: nativeCall } : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.3, think: false, json: !!o.json })}
@@ -10732,7 +10737,7 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 900, temperature: 0.2, think: false }) : null}
             verify={modelState === "ready" ? async (q) => { if (!(await pythonAvailable())) return null; const r = await verifyMath({ question: q, llm: (m, o) => callChat(m, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false }), runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), explain: false }); return r && r.ok ? { ok: true, answer: r.answer } : null; } : null} />
         ) : mode === "timeline" ? (
-          <TimelinePage navTo={navTo} />
+          <TimelinePage navTo={navTo} doIt={doFromHome} flash={flash} />
         ) : mode === "missions" ? (
           <MissionsPage flash={flash} />
         ) : mode === "automations" ? (
