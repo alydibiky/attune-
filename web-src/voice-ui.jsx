@@ -18,9 +18,16 @@ const LISTEN_TAG = { eg: "ar-EG", gulf: "ar-SA", lev: "ar-JO", maghreb: "ar-MA" 
 // global (2.2): the languages the mic and the voice speak besides Arabic and English, from the country and the app's language
 const COUNTRY_LANG = { TR: "tr", ES: "es", MX: "es", AR: "es", CO: "es", CL: "es", PE: "es", FR: "fr", BE: "fr", CH: "fr", SN: "fr", CI: "fr" };
 const TAG = { en: "en-US", tr: "tr-TR", es: "es-ES", fr: "fr-FR" };
+/** The tag the mic listens in for this country and app language (the quiet orb uses the same one). */
+export function voiceTag(country = "EG") {
+  const style = STYLE_BY_COUNTRY[(country || "EG").toUpperCase()] || "eg";
+  const local = COUNTRY_LANG[(country || "").toUpperCase()] || (["tr", "es", "fr"].includes(getLang()) ? getLang() : null);
+  const l = getLang() === "ar" ? "ar" : local || "en";
+  return l === "ar" ? LISTEN_TAG[style] : TAG[l] || "en-US";
+}
 const APP_NAME = { whatsapp: "WhatsApp", telegram: "Telegram", messenger: "Messenger", signal: "Signal", instagram: "Instagram" };
 
-export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "EG", flash }) {
+export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "EG", flash, initialText = "" }) {
   const style = STYLE_BY_COUNTRY[(country || "EG").toUpperCase()] || "eg";
   const [st, setSt] = useState(() => ({ ...V.newVoiceState(), ui: getLang() === "ar" ? "ar" : "en" }));
   const [edit, setEdit] = useState(null);   // the read-back's words being changed by hand
@@ -111,7 +118,8 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
       if (res && res.text) await heardDone(res.text);
     } catch (e) { setListening(false); }
   };
-  useEffect(() => { if (N && N.listen) listen(); }, []);   // opens listening, like pressing a mic
+  // opens listening, like pressing a mic — or, opened by the quiet orb (voice option C), starts with the words it heard
+  useEffect(() => { if (initialText) heardDone(initialText); else if (N && N.listen) listen(); }, []);
   // car mode: a new message (newer than when car mode opened) shows big and is read aloud by itself
   useEffect(() => {
     if (!car) return;
@@ -200,7 +208,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
         </div> : null}
         {card && card.kind === "done" ? <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 mt-3 flex gap-2 items-start" data-testid="voice-done">
           {card.ok ? <Check size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" /> : null}<p className="m-0 text-[15px] font-bold" dir="auto">{say}</p></div> : null}
-        {!card ? <div className="mt-6 rounded-[18px] border border-[var(--c-ln)] p-3 space-y-3"><WakeSwitch native={N} compact /><SmsSwitch native={N} compact /></div> : null}
+        {!card ? <div className="mt-6 rounded-[18px] border border-[var(--c-ln)] p-3 space-y-3"><WakeSwitch native={N} compact tag={speakLang === "ar" ? LISTEN_TAG[style] : TAG[speakLang] || "en-US"} /><SmsSwitch native={N} compact /></div> : null}
         <form onSubmit={(e) => { e.preventDefault(); const t = typed; setTyped(""); heardDone(t); }} className="mt-4 flex gap-2">
           <input value={typed} onChange={(e) => setTyped(e.target.value)} dir="auto" placeholder={ar ? "أو اكتب هنا…" : "Or type here…"} className="flex-1 min-w-0 min-h-[44px] rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[15px]" data-testid="voice-input" />
           <button aria-label={tr("Send")} className="w-11 h-11 rounded-full grid place-items-center bg-[var(--c-surf-2)]" data-testid="voice-type-go"><Send size={16} className="rtl:-scale-x-100" /></button>

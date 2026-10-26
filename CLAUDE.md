@@ -1,7 +1,7 @@
 # Attune — read this first (every session)
 
 00000. **Voice assistant in progress — read `VOICE_PLAN.md` (Ali's pick, 25 Oct: "Ya Attune", Franco per person, global) and continue its next unticked step.**
-0000. Read **`NEXT_CHAT.md`** first (25 Oct 2026: v8.0 — Studio paused on phones, Huawei card, better slides, the Agents page (design A); Yusr settings fixed (Tabs to show drives Money's bar); next = Ali's next list).
+0000. Read **`NEXT_CHAT.md`** first (26 Oct 2026: v8.1 — Money is Attune's own everywhere (no old Yusr screens); «يا أتيون» wake word, option C: teach your voice + quiet wake; before: v8.0 Agents page, Studio paused on phones; next = Ali's phone test + his next list).
 000. Read **`CHAT_RUNS_APP.md`** (Ali's 21 Oct plan: chat runs the app, Home option A, steps S1–S10 with ticks) and carry it on.
 00. Read **`VISION.md`** first of all: Ali's vision (a global app people live in, AI + very strong code) and the roadmap
    phases. Every change serves it.

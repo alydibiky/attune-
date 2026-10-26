@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 25 Oct 2026 — v8.0)
+# Attune — start here (handoff for the next chat, 26 Oct 2026 — v8.1)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -17,6 +17,16 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
    Quiet Atelier tokens, phones side by side, A/B/C with a recommendation).
 2. Still to design (Ali's item 11 "fix the rest of the interface like Gemini would"): Settings, the sidebar, Privacy, and any
    screen not yet in Quiet Atelier — show options first, then build.
+
+## v8.1 — 26 Oct: Money is Attune's own everywhere + «يا أتيون» (voice phase 3, option C)
+- **Money (Ali: "it redirects me to the old app — I don't want that at all")**: no Money path shows Yusr's screens any more.
+  `web-src/money-sheets-ui.jsx` = Attune's own sheets (account, bill, goal, debt + pay, Zakāt payment + settings, entry edit /
+  delete, the full list with search, ledger settings incl. Tabs to show). Each change goes to Yusr (hidden, the engine) through
+  the bridge's "do" message (`yusr-bridge.js` DO_OPS, `yusr/index.new.html` doOp) = Yusr's own forms and Save. Chat's
+  "Add to Money" opens Attune's add sheet with the message as evidence. Tests: e2e_v800moneysheets (+ v790/v750/v713/v5/v4 updated).
+- **«يا أتيون»** (VOICE_PLAN.md phase 3): WakeWord.kt (service, Voiceprint, QuietOrb), wake-ui.jsx (switch, teach your voice,
+  QuietWake), assets/wake/*.onnx + config.json, tools/wake/ (how the model was trained, licences, numbers). Ali must test it on
+  his phone and add the Play Console "foreground service: microphone" declaration before release.
 
 ## v8.0 — Ali's 25 Oct list (5 points)
 1. **Yusr settings — answered (25 Oct): Ali meant "inside Yusr's own settings"** — they already are (Money → More → Ledger

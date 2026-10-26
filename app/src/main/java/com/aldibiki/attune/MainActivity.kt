@@ -516,10 +516,18 @@ class MainActivity : AppCompatActivity() {
             return
         }
         // v6.37: open one page (the Instant quick-settings tile, InstantTile.kt)
+        // voice phase 3, option C: «يا أتيون» heard while Attune is on screen → the page's own quiet orb (listens 4 s)
+        if (intent?.getBooleanExtra(WakeService.EXTRA_QUIET, false) == true) {
+            intent.removeExtra(WakeService.EXTRA_QUIET)
+            val p = JSONObject().put("kind", "wake")
+            if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
+            return
+        }
         intent?.getStringExtra(EXTRA_OPEN_PAGE)?.let { mode ->
             intent.removeExtra(EXTRA_OPEN_PAGE)
             if (intent.getBooleanExtra(WakeService.EXTRA_WAKE, false)) { intent.removeExtra(WakeService.EXTRA_WAKE); WakeService.unlockFirst(this) }
             val p = JSONObject().put("kind", "open").put("mode", mode)
+            intent.getStringExtra(WakeService.EXTRA_VOICE_TEXT)?.let { t -> intent.removeExtra(WakeService.EXTRA_VOICE_TEXT); p.put("text", t.take(500)) }   // the words the quiet orb heard
             if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
             return
         }

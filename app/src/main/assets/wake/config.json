@@ -1,0 +1,2 @@
+{"threshold": 0.4, "patience": 2, "verify": 0.125,
+ "_why": "tools/wake/verify.py (26 Oct 2026): unseen Arabic voice 93% caught; false wakes per hour of real speech without a taught voice 2.1 (Egyptian) / 1.9 (English), with the person's voice 0.7 / 1.2"}

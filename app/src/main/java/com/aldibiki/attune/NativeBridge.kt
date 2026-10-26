@@ -737,9 +737,15 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     /** {when: always|screen|charging, sensitivity: low|normal|high} */
     @JavascriptInterface
     fun setWakeOpts(json: String) {
-        try { val o = JSONObject(json); Prefs.setWakeOpts(ctx, o.optString("when", "").ifEmpty { null }, o.optString("sensitivity", "").ifEmpty { null }) } catch (e: Exception) {}
+        try { val o = JSONObject(json); Prefs.setWakeOpts(ctx, o.optString("when", "").ifEmpty { null }, o.optString("sensitivity", "").ifEmpty { null }, o.optString("lang", "").ifEmpty { null }) } catch (e: Exception) {}
         web.post { WakeService.resume(ctx) }
     }
+    /** Option C: teach it the person's voice — recording i (0..2); the page polls wakeState().enrol {i, state: listening|ok|unclear}. */
+    @JavascriptInterface
+    fun wakeEnrol(i: Int) { WakeService.selfListening = false; web.post { WakeService.enrol(ctx, i) } }
+    /** Forget the taught voice (then any voice wakes it). */
+    @JavascriptInterface
+    fun wakeForget() { try { WakeService.forgetVoice(ctx) } catch (e: Exception) {} }
     /** The voice screen closed: the wake word listens again. */
     @JavascriptInterface
     fun wakeResume() { WakeService.selfListening = false; web.post { WakeService.resume(ctx) } }

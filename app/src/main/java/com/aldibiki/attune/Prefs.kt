@@ -17,8 +17,11 @@ object Prefs {
     fun setWake(ctx: Context, on: Boolean) { sp(ctx).edit().putBoolean("wake", on).apply() }
     fun wakeWhen(ctx: Context): String = sp(ctx).getString("wake_when", "always") ?: "always"
     fun wakeSensitivity(ctx: Context): String = sp(ctx).getString("wake_sens", "normal") ?: "normal"
-    fun setWakeOpts(ctx: Context, `when`: String?, sens: String?) {
+    /** the language the quiet orb listens in (the voice screen's, e.g. ar-EG) */
+    fun wakeLang(ctx: Context): String = sp(ctx).getString("wake_lang", "ar-EG") ?: "ar-EG"
+    fun setWakeOpts(ctx: Context, `when`: String?, sens: String?, lang: String? = null) {
         val e = sp(ctx).edit()
+        if (lang != null && Regex("^[a-z]{2,3}(-[A-Z]{2})?$").matches(lang)) e.putString("wake_lang", lang)
         if (`when` in listOf("always", "screen", "charging")) e.putString("wake_when", `when`)
         if (sens in listOf("low", "normal", "high")) e.putString("wake_sens", sens)
         e.apply()

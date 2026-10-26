@@ -63,7 +63,7 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
 - [x] 2.3 Nicknames: a name with no such contact → "مين «ماما»؟" with the recent chats + "someone else"; the pick is
       remembered (franco.js aliasFor / rememberAlias, key "~name" in attune:voice:people) and used next time
 ### Phase 3 — "يا أتيون" wake word
-- [~] 3.1 A tiny always-listening model (low power), Egyptian + Gulf + English voices; clear notification + on/off switch
+- [x] 3.1 A tiny always-listening model (low power), Egyptian + Gulf + English voices; clear notification + on/off switch
       (Google Play rules on background microphone). **Built (26 Oct):** `WakeWord.kt` WakeService (foreground service type
       microphone, notification with Pause 1 h / Turn off, off by default, When = always / screen on / charging, sensitivity
       low / normal / high, gives the mic to Attune's own listening and back, opens the voice screen — after unlock on a locked
@@ -71,6 +71,17 @@ handoff on GitHub so the next chat knows everything and nothing is lost." → ti
       WakeSwitch on the voice screen (+ live "Say it now" meter); NativeBridge wakeState / setWake / setWakeOpts / wakeResume /
       wakeOverlay. The model: openWakeWord's two Apache-2.0 feature models + Attune's own classifier trained in `tools/wake/`
       (README there: data, licences, how to retrain). Test: tests/e2e_v1200wake.py. Real phone check by Ali still needed.
+      **Ali picked C (26 Oct): teach it your voice + the quiet wake.** Shipped model = round 2 (MLP 1536→128→64, 149 h of real
+      speech in 14 languages + LibriSpeech, ~285k sound-alike windows, 5 hard-negative rounds), config threshold 0.4 · patience 2
+      · voice check 0.125 (`app/src/main/assets/wake/config.json`). Measured (tools/wake/verify.py, an Arabic voice never trained
+      on, 4.3 h Egyptian + 8 h English held-out speech): 93 % caught; false wakes/hour 2.1 (eg) / 1.9 (en) without a taught voice,
+      0.7 / 1.2 with it; "Only when clear" 87 % · 0.5 / 0.5. The voice check is NOT a speaker lock (other people still pass ~80 %):
+      it removes TV / chatter / sound-alikes. Option C pieces: `Voiceprint` (3 templates in files/wake/me_*.bin, DTW ±4 frames),
+      enrolment ACTION_ENROL (best window of 4.5 s, min score 0.2) → NativeBridge wakeEnrol(i) / wakeForget(); `QuietOrb` (overlay
+      orb from other apps, its own SpeechRecognizer, 4 s of silence → gone; words → MainActivity EXTRA_VOICE_TEXT → the voice screen
+      starts with them); in Attune: EXTRA_QUIET → share kind "wake" → `QuietWake` (wake-ui.jsx). Locked phone → no orb, unlock first.
+      Kotlin streaming checked against training features (max diff 4.5e-5). Next: real recordings from Ali to retrain; round 3
+      (MLP 256-128) was paused mid-way in /tmp — rerun tools/wake/train.py if wanted.
       sherpa-onnx open-vocabulary keyword spotting (Apache-2.0, 3 MB) was measured first and rejected: ~50 % recall on
       "Hey/Ya Attune", 0 % on Arabic voices.
 
@@ -103,7 +114,8 @@ tests/e2e_v727paylog.py. The Money payment reader is separate from the SMS switc
 names bank SMS and the kept evidence).
 
 ## Next steps (for the next chat)
-1. Phase 2.2 rest: Hindi / Urdu script, German, Portuguese, Indonesian. 2. Phase 3 wake word «يا أتيون».
+1. Phase 2.2 rest: Hindi / Urdu script, German, Portuguese, Indonesian. 2. Wake word: Ali tries it on his phone (teach the voice,
+then a day of normal use) — real «يا أتيون» recordings and any false wakes → retrain (tools/wake/README.md).
 3. English translation of an Arabic message when the
 person picks English (state.draft.needs = "translate" — wire to the model with a read-back). 5. "Make it formal" (needs = "formal").
 

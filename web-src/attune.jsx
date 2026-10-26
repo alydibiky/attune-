@@ -100,7 +100,8 @@ const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Databa
 const HUB_PLACES = HUBS.flatMap(([id, label, target]) => (id === "home" ? [[target, label, HUB_ICON[id]], ["shelf", "Shelf", BookOpen]] : [[target, label, HUB_ICON[id]]]));
 import { HealthPage } from "./health-ui.jsx";
 import { AgentsPage } from "./agents-ui.jsx";
-import { VoiceScreen } from "./voice-ui.jsx";
+import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
+import { QuietWake } from "./wake-ui.jsx";
 import { myCountry as countryOfPerson } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
 const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
@@ -8592,6 +8593,8 @@ export default function App() {
       const d = (e && e.data) || {};
       if (d.kind === "privacy") { navTo("privacy"); return; }
       if (d.kind === "artifact" && d.id) { const a = loadArtifacts().find((x) => x.id === d.id); if (a) setArtifact(a); else flash(tr("That page was deleted")); return; }   // v6.40 a page pinned to the home screen
+      if (d.kind === "wake") { setQuietWake(true); return; }   // voice option C: «يا أتيون» heard with Attune on screen → the quiet orb
+      if (d.kind === "open" && d.mode === "voice" && d.text) { setVoiceText(String(d.text)); setVoiceOpen(true); return; }   // the quiet orb heard words
       if (d.kind === "open" && d.mode) { navTo(String(d.mode)); return; }   // v6.37 the Instant quick-settings tile   // v6.29 Health Connect: "why this app reads your data"
       if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }
@@ -8718,6 +8721,8 @@ export default function App() {
   const [scoutIn, setScoutIn] = useState(null);   // v6.28: a goal typed on Home → Scout starts it
   // Voice (VOICE_PLAN.md, design A): "Ya Attune" — opened from the Home box's orb, "/voice", or an "attune-voice" event
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [voiceText, setVoiceText] = useState("");     // words the quiet orb heard (the voice screen starts with them)
+  const [quietWake, setQuietWake] = useState(false);
   useEffect(() => { const on = () => setVoiceOpen(true); window.addEventListener("attune-voice", on); return () => window.removeEventListener("attune-voice", on); }, []);
   // v6.28 Scout: goals due (each at most twice a day) are checked a little after Attune opens; a strong new find → a notification
   useEffect(() => {
@@ -11578,7 +11583,8 @@ export default function App() {
       </div>
       {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[16px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
-      {voiceOpen ? <Guard name="voice"><VoiceScreen native={NATIVE} nativeCall={nativeCall} onClose={() => setVoiceOpen(false)} doIt={doFromHome} country={agentCountry()} flash={flash} /></Guard> : null}
+      {voiceOpen ? <Guard name="voice"><VoiceScreen native={NATIVE} nativeCall={nativeCall} onClose={() => { setVoiceOpen(false); setVoiceText(""); }} doIt={doFromHome} country={agentCountry()} flash={flash} initialText={voiceText} /></Guard> : null}
+      {quietWake && !voiceOpen ? <QuietWake native={NATIVE} nativeCall={nativeCall} tag={voiceTag(agentCountry())} onDone={(text) => { setQuietWake(false); if (text != null) { setVoiceText(text); setVoiceOpen(true); } }} /> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
