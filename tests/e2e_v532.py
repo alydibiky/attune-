@@ -80,14 +80,8 @@ with sync_playwright() as p:
     # ---- 4. More: four named groups; Instant explains itself and hands places to the map ----
     page.locator("nav button").last.click(); page.wait_for_timeout(300)
     check(page.locator("[data-testid=more-group]").count() == 8, "All shows its tools by area: six areas + two add-ons (v6.27 tool map)")
-    page.locator(".rounded-t-2xl button:has-text('Instant')").first.click(); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=instant-about]").count() == 1, "Instant says what it is for")
-    page.evaluate("() => { window.__mock.fakeQueue = ['Head to the nearest fuel station.']; }")
-    page.locator("textarea").first.fill("I want to go to fuel up and I am at emerald park compound now what shall i do")
-    page.get_by_role("button", name="Go").first.click()
-    page.wait_for_selector("[data-testid=instant-map]", timeout=20000)
-    href = page.locator("[data-testid=instant-map]").get_attribute("href")
-    check("google.com/maps/search" in href and "gas%20station%20near%20emerald%20park%20compound" in href, "a place request gets one tap to Google Maps, near where he is")
+    # (v8.2: Instant is retired — Chat does its job)
+    page.keyboard.press("Escape"); page.wait_for_timeout(200)
 
     # ---- 5. Engine: installed models never show vendor names ----
     page.evaluate("""() => { const M = window.__mock; M.models = M.models.map((m) => ({ ...m, label: "Gemma 4 E4B-it", source: "litert-community/gemma-4-E4B-it-litert-lm" }));

@@ -198,21 +198,23 @@ with sync_playwright() as pw:
     page.evaluate("""window.dispatchEvent(new MessageEvent('attune-share', {data: {text: 'تم تحويل مبلغ 1,500.00 جنيه إلى AHMED MOHAMED. رقم العملية 987654321', kind: 'share'}}))""")
     page.wait_for_timeout(2500)
     check(page.locator("text=Money & Zakāt").count() >= 1, "a shared bank SMS opens Money")
-    check(page.locator("text=read from:").count() >= 1, "the payment is read (amount and where it came from)")
-    # v5.6: Money is a full page; its payment tools slide up from "Payment · Ask".
-    if page.locator("[data-testid=money-tools]").count(): page.locator("[data-testid=money-tools]").click(); page.wait_for_timeout(200)
-    check(page.locator("text=From a photo").count() == 1, "payments can also come from a photo")
-    if page.locator("[data-testid=money-sheet]").count(): page.locator("[data-testid=money-sheet] button[aria-label='Close']").click()
+    # v8.1: Money is Attune's own — a shared payment opens "Add to Money" filled in, with the message as evidence
+    vals = page.evaluate("[...document.querySelectorAll('input')].map((i) => i.value)")
+    check(page.locator("text=Read from the message").count() >= 1 and "1500" in vals and any(v.startswith("AHMED MOHAMED") for v in vals),
+          "the payment is read (1,500 to AHMED MOHAMED) and shown with the message it came from")
     page.screenshot(path=HERE + "/v3-money.png")
+    page.locator("button[aria-label='Close']:visible").last.click(); page.wait_for_timeout(250)
+    page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)   # (Money is a full page: back to the bar)
 
     # 10. shared image -> a new chat with the photo attached (v8.2: Instant is gone)
     img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
     page.evaluate("(u) => window.dispatchEvent(new MessageEvent('attune-share', {data: {kind: 'image', image: u, text: ''}}))", img)
     page.wait_for_timeout(600)
     check(page.locator("img[src^='data:image/png']").count() >= 1, "a shared photo opens a chat with the photo attached")
+    page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
 
     # 11. Improve: domain packs have names
-    go("Improve a prompt"); page.wait_for_timeout(300)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'improve'}}))"); page.wait_for_timeout(400)
     check(page.locator("button:has-text('Heavy Equipment')").count() >= 1 and page.locator("button:has-text('Islamic Studies')").count() >= 1, "domain pack buttons show their names")
 
     br.close()
