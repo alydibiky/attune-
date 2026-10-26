@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 26 Oct 2026 — v8.2)
+# Attune — start here (handoff for the next chat, 26 Oct 2026 — v8.3)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -21,7 +21,16 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
 "Slow screen …" lines in the log (attune.jsx PerformanceObserver); Your details (agent-ui.jsx: trips / daily life / booking forms,
 `bookingLine` → every prompt via profileLine, agents use the trip prefs).
 **Ali picked (26 Oct): 1A Follow-ups = one list by day · 2A agents plan then show the best 3 · 3A a Library page** (mock-ups in
-`design/v82/*.png`). Build them as v8.3 — see "v8.3 build" below for progress. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
+`design/v82/*.png`). **BUILT as v8.3 (versionCode 125):**
+  - 1A `timeline-ui.jsx` is Follow-ups' "All" (hubs.js INSIDE main = timeline; Money tabs = Money · Follow-ups · Deal Check; the switch =
+    All · People & plans · Reminders · Dates · Chat X-Ray · Guardian); chips (timeline.js GROUP_OF), an Add box (= Home's doFromHome),
+    a tick for people's payments (togglePaid + Guardian collected), Guardian findings on the list (timeline({guardian})).
+  - 2A agent-kit.js `best()` returns `top` (3 offers with names); AgentBrowser passes it; agents.js `bestThree` / `planSteps`; the card
+    shows the plan (✓ steps, next check) and Best 3 right now with Open it (Attune's browser, Fill my details) / Not this one (`skip`).
+  - 3A `booklib.js` (passages from every book, the compare prompt, citations, "Where the books disagree") + `booklib-ui.jsx` (mode
+    `booklib`, Students tab next to PDF chat, Tools card, "/"): several files at once, text kept in Ask a PDF's IndexedDB library
+    (text only, no file copy), chat with follow-ups (searchText adds the previous question), tap a citation = the book's own words.
+  Tests: unit v830library, v820fixes; e2e_v830.py (all three). Old e2e_v3/v4 Instant parts removed. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
 
