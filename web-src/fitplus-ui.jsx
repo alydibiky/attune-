@@ -386,7 +386,7 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
       const d = P.mergeWatch(P.watchHasData(a) ? a : null, P.watchHasData(b) ? b : null);
       if (b && b.empty && !P.watchHasData(a)) setNote(L("Huawei Health sent nothing — open Huawei Health once so the watch syncs, and check Attune is still allowed in Huawei Health → Me → Privacy → Data sharing.", "Huawei Health مبعتش حاجة — افتح Huawei Health مرة عشان الساعة تتزامن، واتأكد إن Attune لسه مسموح له في Huawei Health ← أنا ← الخصوصية ← مشاركة البيانات."));
       else setNote("");
-      if (d && (d.steps != null || d.activeKcal != null || d.workouts)) upd((x) => { const day = x.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...x, watchOn: true, days: { ...x.days, [dayKey]: { ...day, watch: { steps: d.steps || 0, activeKcal: d.activeKcal || 0, totalKcal: d.totalKcal || 0, distanceM: d.distanceM || 0, hrAvg: d.hrAvg || null, hrMax: d.hrMax || null, workouts: d.workouts || [], sources: d.sources || [], at: Date.now() } } } }; });
+      if (d && (d.steps != null || d.activeKcal != null || d.workouts)) upd((x) => { const day = x.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...x, watchOn: true, days: { ...x.days, [dayKey]: { ...day, watch: { steps: d.steps || 0, activeKcal: d.activeKcal || 0, totalKcal: d.totalKcal || 0, distanceM: d.distanceM || 0, hrAvg: d.hrAvg || null, hrMax: d.hrMax || null, workouts: d.workouts || [], sources: d.sources || [], lastAt: d.lastAt || null, at: Date.now() } } } }; });
     } catch (e) {} finally { setBusy(false); }
   };
   useEffect(() => { refresh(); const on = (e) => { if (e && e.detail && e.detail.huawei === false) setNote(e.detail.error ? L(`Huawei sign-in didn't open: ${e.detail.error} — install HMS Core (below) and try again.`, `تسجيل الدخول لهواوي مفتحش: ${e.detail.error} — نزّل HMS Core (تحت) وجرّب تاني.`) : L("Huawei Health wasn't allowed — tap Connect again and allow steps, calories, distance and heart rate.", "Huawei Health مإدّاش الإذن — اضغط «اربط» تاني ووافق على الخطوات والسعرات والمسافة والنبض.")); refresh(); }; window.addEventListener("attune-resume", on); window.addEventListener("attune-health-permission", on); return () => { window.removeEventListener("attune-resume", on); window.removeEventListener("attune-health-permission", on); }; }, [dayKey]);
@@ -420,7 +420,8 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
           </div>)}
       </div>);
   }
-  const km = w && w.distanceM ? (w.distanceM / 1000).toFixed(1) : null;
+  const wb = w ? F.watchBurn(w, st && st.profile && st.profile.kg) : null, wk = w ? F.watchKm(w) : null;
+  const km = wk && wk.km ? wk.km.toFixed(1) : null;
   return (
     <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-1.5" data-testid="fit-watch">
       <div className="flex items-center justify-between"><span className="text-[13px] text-[var(--c-ink)]">⌚ {L("From your watch", "من ساعتك")}</span>
@@ -433,9 +434,11 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
       {w ? <>
         <div className="grid grid-cols-3 gap-2 text-center">
           <div><div className="text-lg font-semibold text-[var(--c-ink)] tabular-nums" data-testid="fit-steps">{(w.steps || 0).toLocaleString("en-US")}</div><div className="text-[10.5px] text-[var(--c-mut)]">{L("steps", "خطوة")}</div></div>
-          <div><div className="text-lg font-semibold text-[var(--c-ink)] tabular-nums" data-testid="fit-watch-kcal">{w.activeKcal || 0}</div><div className="text-[10.5px] text-[var(--c-mut)]">{L("active kcal", "سعر نشاط")}</div></div>
-          <div><div className="text-lg font-semibold text-[var(--c-ink)] tabular-nums">{km ?? "—"}</div><div className="text-[10.5px] text-[var(--c-mut)]">km</div></div>
+          <div><div className="text-lg font-semibold text-[var(--c-ink)] tabular-nums" data-testid="fit-watch-kcal">{wb.est ? "≈" : ""}{wb.kcal}</div><div className="text-[10.5px] text-[var(--c-mut)]">{L("active kcal", "سعر نشاط")}</div></div>
+          <div><div className="text-lg font-semibold text-[var(--c-ink)] tabular-nums" data-testid="fit-watch-km">{km ? (wk.est ? "≈" : "") + km : "—"}</div><div className="text-[10.5px] text-[var(--c-mut)]">km</div></div>
         </div>
+        {wb.est || wk.est ? <div className="text-[10.5px] text-[var(--c-warn)]" data-testid="fit-watch-est">{L("≈ worked out from your steps — your watch app didn't send its calories / distance. In Health Sync, switch on Calories and Distance too.", "≈ اتحسبت من خطواتك — تطبيق الساعة مبعتش السعرات / المسافة. في Health Sync شغّل السعرات والمسافة كمان.")}</div> : null}
+        {w.lastAt ? <div className="text-[10.5px] text-[var(--c-mut)]" data-testid="fit-watch-last">{L("Latest from the watch: ", "آخر حاجة وصلت من الساعة: ")}{new Date(w.lastAt).toLocaleTimeString(L("en-GB", "ar-EG"), { hour: "numeric", minute: "2-digit" })}{Date.now() - w.lastAt > 30 * 60000 ? L(" — open Huawei Health / Health Sync so it sends the newest steps", " — افتح Huawei Health / Health Sync عشان يبعت آخر خطوات") : ""}</div> : null}
         {w.hrAvg ? <div className="text-[11.5px] text-[var(--c-mut)]">❤ {L(`heart rate ${w.hrAvg} avg · ${w.hrMax} max`, `النبض ${w.hrAvg} متوسط · ${w.hrMax} أقصى`)}</div> : null}
         {(w.workouts || []).length && !compact ? <div className="text-[12px] text-[var(--c-mut)]">{w.workouts.map((x, i) => <div key={i}>• {x.title || L("Workout", "تمرين")} · {x.minutes} {L("min", "د")}</div>)}</div> : null}
         <div className="text-[10.5px] text-[var(--c-mut)]">{L("Burned calories count the watch or your logged workouts — whichever is more, never both.", "السعرات المحروقة بتتحسب من الساعة أو من التمارين اللي سجلتها — الأكبر فيهم، مش الاتنين.")}</div>

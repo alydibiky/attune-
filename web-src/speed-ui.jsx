@@ -14,6 +14,7 @@ import { Gauge, Loader2, AlertTriangle, Download, Zap } from "lucide-react";
 import { tr, fmtNum } from "./i18n.js";
 import * as K from "./ui-kit.jsx";
 import { heatLevel, heatWarning } from "./heat.js";
+import { devMode } from "./billing.js";
 
 export const BENCH_KEY = "attune:bench:v1";
 export const DRAFT_SPEC = { id: "draft-qwen35-08b", label: "Spark (helper)", repo: "unsloth/Qwen3.5-0.8B-GGUF", quant: "Q4_K_M", vision: false, ctx: 4096, draft: true };
@@ -63,6 +64,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
   const [bench, setBench] = useState(loadBench);
   const [doc, setDoc] = useState(null);
   if (!sp) return null;
+  const DEV = devMode();
 
   const apply = async (patch, msg) => {
     setBusy(msg);
@@ -94,18 +96,20 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
   return (
     <div className={"calm " + box} data-testid="speed-panel">
       <p className={head}>{tr("Speed")}</p>
-      {sp.npuNote ? <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5 mb-2" data-testid="npu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.npuNote)}</p> : null}
-      {sp.gpuNote ? (
+      {/* v8.2 (Ali, 26 Oct: "if these won't work, remove them — not visible to users, nor the notes"): the NPU / GPU / multi-token
+          switches and their warnings are for developer mode only; everyone else gets the engine Attune picks by itself */}
+      {DEV && sp.npuNote ? <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5 mb-2" data-testid="npu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.npuNote)}</p> : null}
+      {DEV && sp.gpuNote ? (
         <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5 mb-2" data-testid="gpu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.gpuNote)}</p>
       ) : null}
       {sp.engine === "litert" ? (
         <div className="space-y-1.5" data-testid="fast-panel">
           <p className="text-[12px] text-[var(--c-warn)] flex items-center gap-1.5"><Zap size={13} className="shrink-0" />
-            {tr(sp.fastBackend === "GPU" ? "Fast engine on the graphics chip" : "Fast engine on the CPU")}{sp.fastMtp ? " · " + tr("multi-token prediction on") : ""}</p>
-          {sp.fastNote ? <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5" data-testid="fast-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.fastNote)}</p> : null}
-          {row(!sp.fastCpu, () => !busy && apply({ fastCpu: !sp.fastCpu }, tr("Restarting the engine…")), "Use the graphics chip",
+            {tr(sp.fastBackend === "GPU" ? "Fast engine on the graphics chip" : "Fast engine on the CPU")}{DEV && sp.fastMtp ? " · " + tr("multi-token prediction on") : ""}</p>
+          {DEV && sp.fastNote ? <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5" data-testid="fast-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.fastNote)}</p> : null}
+          {DEV && row(!sp.fastCpu, () => !busy && apply({ fastCpu: !sp.fastCpu }, tr("Restarting the engine…")), "Use the graphics chip",
             "On: the model runs on the GPU — first words in about a second. Off: the CPU, slower, only for phones whose GPU driver misbehaves.")}
-          {row(!!sp.fastMtpPref, () => !busy && apply({ fastMtp: !sp.fastMtpPref }, tr("Restarting the engine…")), "Multi-token prediction (faster writing)",
+          {DEV && row(!!sp.fastMtpPref, () => !busy && apply({ fastMtp: !sp.fastMtpPref }, tr("Restarting the engine…")), "Multi-token prediction (faster writing)",
             "Off by default: on some phones it doubles words and digits (“ItIt is is”, “20205”). Turn it on only if answers stay correct.")}
         </div>
       ) : (<>
@@ -118,13 +122,13 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
         </button>
       ) : null}
       <div className="space-y-1.5">
-        {sp.gpuBuilt ? row(sp.gpu, () => !busy && apply({ gpu: !sp.gpu }, tr("Restarting the engine…")), "Use the GPU",
+        {!DEV ? null : sp.gpuBuilt ? row(sp.gpu, () => !busy && apply({ gpu: !sp.gpu }, tr("Restarting the engine…")), "Use the GPU",
           sp.gpuName ? tr("Running on {g}.", { g: sp.gpuName }) : "Runs the model on the phone's graphics chip (Adreno). Often faster at reading long prompts; test it below. Switches itself back to the CPU if anything goes wrong.")
           : <p className="text-[11px] text-[var(--c-mut)] px-1">{tr("This build has no GPU engine — it will come with the next APK built on GitHub.")}</p>}
         {/* v6.34 (Ali: lighter, faster, cooler): the Snapdragon NPU — llama.cpp's experimental Hexagon backend; off unless turned on */}
-        {sp.npuBuilt ? row(sp.npu, () => !busy && apply({ npu: !sp.npu }, tr("Restarting the engine…")), "Use the NPU (experimental)",
+        {DEV && sp.npuBuilt ? row(sp.npu, () => !busy && apply({ npu: !sp.npu }, tr("Restarting the engine…")), "Use the NPU (experimental)",
           sp.npuDev ? tr("Running on the NPU ({d}).", { d: sp.npuDev }) : "Runs the model on the Snapdragon NPU (Hexagon): much cooler, often faster at reading. Works best with Core Max (8-bit). Switches itself back to the CPU if anything goes wrong.") : null}
-        {sp.mtpMode ? (
+        {DEV && sp.mtpMode ? (
           <div className="rounded-[18px] border border-[var(--c-ln)] px-3.5 py-3" data-testid="mtp-setting">
             <span className="block text-sm font-extrabold text-[var(--c-ink)]">{tr("Faster writing (MTP)")}</span>
             <div className="flex gap-1.5 mt-1.5" role="radiogroup" aria-label={tr("Faster writing (MTP)")}>

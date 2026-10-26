@@ -378,13 +378,24 @@ export function targets(pr) {
 // ---- 3. the day ----
 export const MEALS = ["breakfast", "lunch", "dinner", "snacks"];
 export const today = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+/** v8.2 (Ali, 26 Oct: Attune said 8 active kcal and 0.2 km for 6,017 steps; his watch said 406 kcal and 5.74 km): when the watch
+    app sends steps but (almost) no calories or distance, they are worked out from the steps — marked as estimated. */
+export function watchBurn(w, kg = 70) {
+  const a = (w && w.activeKcal) || 0, st = (w && w.steps) || 0;
+  const fromSteps = Math.round(st * 0.04 * Math.max(40, Math.min(200, kg || 70)) / 70);
+  return st >= 1000 && a < fromSteps * 0.3 ? { kcal: fromSteps, est: true } : { kcal: a, est: false };
+}
+export function watchKm(w) {
+  const m = (w && w.distanceM) || 0, st = (w && w.steps) || 0, fromSteps = st * 0.75;
+  return st >= 1000 && m < fromSteps * 0.3 ? { km: Math.round(fromSteps / 100) / 10, est: true } : { km: Math.round(m / 100) / 10, est: false };
+}
 export function dayTotals(day) {
   const items = MEALS.flatMap((m) => ((day && day.meals && day.meals[m]) || []));
   const eaten = sumN(items.filter((x) => x.kcal != null));
   const logged = ((day && day.workouts) || []).reduce((a, w) => a + (w.kcal || 0), 0);
   // v6.3: the watch's active calories (Health Connect) already include any workout it recorded —
   // so the larger of the two is used, never both added (a logged walk the watch also saw is not counted twice)
-  const watch = (day && day.watch && day.watch.activeKcal) || 0;
+  const watch = day && day.watch ? watchBurn(day.watch).kcal : 0;
   const burned = Math.max(logged, watch);
   return { ...eaten, burned, burnedFrom: watch > logged ? "watch" : logged ? "logged" : "", steps: (day && day.watch && day.watch.steps) || 0, water: (day && day.water) || 0, unknown: items.filter((x) => x.kcal == null).length };
 }

@@ -23,7 +23,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
       have none) → "how will I know if it found something useful". Read the price from the ad page / snippet (contactcars,
       dubizzle, yallamotor, opensooq), show it on every row, say "price not shown — open the ad" when truly absent, and rank
       priced ads first. List pages ("12 Used Hyundai Tucson…") are not ads — show them apart or drop them.
-- [ ] 3. **Engine → Speed (speed-ui.jsx)**: "NPU could not be used", "GPU closed the app last time", GPU switch, Multi-token
+- [x] 3. (DONE v8.2: speed-ui.jsx — NPU/GPU/MTP switches + their warnings only in developer mode) **Engine → Speed (speed-ui.jsx)**: "NPU could not be used", "GPU closed the app last time", GPU switch, Multi-token
       prediction switch. Ali: **make them work, or remove them so users never see them (and not in the notes either)**.
       Default plan: hide NPU line + MTP switch for normal users (developer mode only); keep GPU only if it works on his
       HONOR (SM8850 / Adreno 840), otherwise hide too.
@@ -57,7 +57,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 
 
 ### Ali's 26 Oct list, part 3 (his last: "that's all")
-- [ ] 14. **Watch numbers stale / wrong place**: Fit & Food showed 6,017 steps · 8 active kcal · 0.2 km after Refresh while the
+- [x] 14. (DONE v8.2, needs Ali's phone check: Health.kt reads each source alone and keeps the biggest number + lastAt; fit.js watchBurn/watchKm estimate from steps when the app sends ~0 kcal / km; WatchTop strip under the summary) **Watch numbers stale / wrong place**: Fit & Food showed 6,017 steps · 8 active kcal · 0.2 km after Refresh while the
       watch said 6,442 steps · 406 kcal ("Heat") · 5.74 km · HR 54/80/117. Burned calories must be at the TOP of Diary, and
       Refresh must pull fresh numbers (Health Connect read of today: steps, distance, active + total calories from Huawei
       via Health Sync — check which record types / time range we read; 0.2 km vs 5.74 km = wrong source or wrong range).

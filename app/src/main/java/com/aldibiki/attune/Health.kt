@@ -131,6 +131,22 @@ object Health {
                 a[HeartRateRecord.BPM_AVG]?.let { out.put("hrAvg", it) }
                 a[HeartRateRecord.BPM_MAX]?.let { out.put("hrMax", it) }
                 out.put("sources", JSONArray(a.dataOrigins.map { it.packageName }))
+                // v8.2 (Ali, 26 Oct: Attune showed 6,017 steps · 8 kcal · 0.2 km while his watch said 6,442 · 406 kcal · 5.74 km):
+                // Health Connect's merged total can take the phone's own small numbers over the watch's. Each app is read on its
+                // own and, per number, the app that saw the most wins (one wearer, so the biggest count is the real one)
+                if (a.dataOrigins.size > 1) for (o in a.dataOrigins) try {
+                    val b = client.aggregate(AggregateRequest(metrics = metrics, timeRangeFilter = range, dataOriginFilter = setOf(o)))
+                    fun more(key: String, v: Long?) { if (v != null && v > out.optLong(key, -1L)) out.put(key, v) }
+                    more("steps", b[StepsRecord.COUNT_TOTAL])
+                    more("activeKcal", b[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.let { Math.round(it.inKilocalories) })
+                    more("totalKcal", b[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.let { Math.round(it.inKilocalories) })
+                    more("distanceM", b[DistanceRecord.DISTANCE_TOTAL]?.let { Math.round(it.inMeters) })
+                } catch (e: Exception) {}
+                // when the newest steps arrived (Health Sync sends the watch's data every so often, not live)
+                if (HealthPermission.getReadPermission(StepsRecord::class) in have) try {
+                    val last = client.readRecords(ReadRecordsRequest(StepsRecord::class, timeRangeFilter = range, ascendingOrder = false, pageSize = 1)).records.firstOrNull()
+                    if (last != null) out.put("lastAt", last.endTime.toEpochMilli())
+                } catch (e: Exception) {}
             }
             if (HealthPermission.getReadPermission(ExerciseSessionRecord::class) in have) {
                 val w = JSONArray()

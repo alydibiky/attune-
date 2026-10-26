@@ -48,6 +48,16 @@ export function lastFoodPhrase(v) {
 }
 // v6.27 (Ali: "c p f is just lame"): nutrients always in full words, each with its own colour (the Diary bars' colours)
 const MACRO = [["p", "Protein", "بروتين", "#38BDF8"], ["c", "Carbs", "كربوهيدرات", "#FBBF24"], ["f", "Fat", "دهون", "#FB7185"]];
+/** v8.2 (Ali, 26 Oct: "make the calories burned at the top"): under the day's summary — burned, steps, distance, how fresh. */
+function WatchTop({ w, tot, L, ar }) {
+  if (!w || !(w.steps || w.activeKcal)) return null;
+  const b = F.watchBurn(w), k = F.watchKm(w);
+  return <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 flex items-center gap-3 flex-wrap" data-testid="fit-watch-top">
+    <span className="text-[15px] font-black text-[var(--c-ink)] tabular-nums">🔥 {tot.burned} <span className="text-[12px] font-bold text-[var(--c-mut)]">{L("kcal burned", "سعرة محروقة")}{tot.burnedFrom === "watch" && b.est ? " ≈" : ""}</span></span>
+    <span className="text-[12.5px] text-[var(--c-mut)] tabular-nums">⌚ {(w.steps || 0).toLocaleString("en-US")} {L("steps", "خطوة")}{k.km ? " · " + (k.est ? "≈" : "") + k.km.toFixed(1) + " km" : ""}{w.hrAvg ? " · ❤ " + w.hrAvg : ""}</span>
+    {w.lastAt ? <span className="text-[11px] text-[var(--c-mut)] ms-auto">{L("updated ", "اتحدث ")}{new Date(w.lastAt).toLocaleTimeString(ar ? "ar-EG" : "en-GB", { hour: "numeric", minute: "2-digit" })}</span> : null}
+  </div>;
+}
 /** v8.2 (Ali, 26 Oct: "when I press on how it read the food, it opens and shows me the whole thing it read"): what was written,
     the food it was matched to, the amount → grams, the values per 100 g and how the calories were worked out. */
 function ReadDetail({ x, L, ar }) {
@@ -1298,6 +1308,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
             {macro(L("Fat", "دهون"), tot.f, tg.fat, "var(--c-chart-2)", "var(--c-surf-2)")}
           </div>
         </div>
+        <WatchTop w={w} tot={tot} L={L} ar={ar} />
         {st.ramadan && st.ramadan.on && isToday ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
         {isToday ? <InsulinCard {...{ L, ar, day }} carbsToday={tot.c} /> : null}
 
@@ -1340,7 +1351,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           <div className={card + " p-3.5 flex flex-col gap-1.5"} data-testid="fit-exercise">
             <span className="text-[12.5px] font-bold text-[var(--c-mut)]">{w ? L("From your watch", "من ساعتك") : L("Activity", "النشاط")}</span>
             <span className="text-[20px] font-black text-[var(--c-ink)] tabular-nums">{w ? <span data-testid="fit-steps">{(w.steps || 0).toLocaleString("en-US")}</span> : tot.burned} <span className="text-[13px] font-bold text-[var(--c-mut)]">{w ? L("steps", "خطوة") : L("kcal", "سعرة")}</span></span>
-            <span className="text-[12px] font-bold text-[var(--c-acc)] truncate">{w ? (w.activeKcal || 0) + " " + L("kcal burned", "سعرة محروقة") : L("Connect a watch in Me", "اربط ساعة من «أنا»")}</span>
+            <span className="text-[12px] font-bold text-[var(--c-acc)] truncate">{w ? (F.watchBurn(w).est ? "≈" : "") + F.watchBurn(w).kcal + " " + L("kcal burned", "سعرة محروقة") : L("Connect a watch in Me", "اربط ساعة من «أنا»")}</span>
             <button onClick={openMove} className="mt-auto h-10 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] text-[13.5px] font-bold" data-testid="fit-open-move">{L("Workouts", "التمارين")}</button>
           </div>
         </div>
@@ -1410,6 +1421,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         </div>
       </div>
       )}
+      <WatchTop w={day.watch || null} tot={tot} L={L} ar={ar} />
 
       {st.ramadan && st.ramadan.on && isToday ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
       {isToday ? <InsulinCard {...{ L, ar, day }} carbsToday={tot.c} /> : null}
