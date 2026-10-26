@@ -132,6 +132,10 @@ if __name__ == "__main__":
         hard = np.concatenate(hard) if hard else np.zeros((0, 16, 96), np.float32)
         if len(hard) > 60000: hard = hard[rng.choice(len(hard), 60000, replace=False)]
         print("round", rnd, "hard negatives", len(hard), " test: recall_ar %.3f fa_ar/h %.1f" % (clip_detect(model, pos_ar, 0.5, 2), stream_triggers(model, ar_te, 0.5, 2) / hours(ar_te)), flush=True)
+        np.save("/tmp/claude-0/wake/model_r%d.npy" % rnd, np.array([model.W, model.b], dtype=object), allow_pickle=True)
+        export(model, "/tmp/claude-0/wake/attune_wake_r%d.onnx" % rnd)
+        for thr, pat in [(0.4, 3), (0.5, 2), (0.5, 3), (0.6, 2)]:
+            print("   r%d thr %.1f pat %d: recall_ar %.3f recall_en %.3f fa_ar/h %.2f" % (rnd, thr, pat, clip_detect(model, pos_ar, thr, pat), clip_detect(model, pos_te, thr, pat), stream_triggers(model, ar_te, thr, pat) / hours(ar_te)), flush=True)
         if len(hard):
             X = np.concatenate([X, hard.astype(np.float16)]); y = np.concatenate([y, np.zeros(len(hard), np.float32)]); w = np.concatenate([w, np.full(len(hard), 3.0, np.float32)])
     res = {}
