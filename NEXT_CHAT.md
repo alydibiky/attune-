@@ -11,6 +11,33 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | full `bash tests/run_all.sh` passed for v7.9 (e2e_v59 passed alone; e2e_v740artdata made robust) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ⚠️ OPEN NOW — Ali's 26 Oct list, part 1 (v8.1 on his phone) — NOT FIXED YET
+Ali's deal (26 Oct): **after every big change, update this file and push**, so if the session limit ends another AI carries on.
+Ali said "read this first, then I'll upload more" — part 2 may follow below. Tick each item here when done.
+- [ ] 1. **"The app glitches and makes the phone glitch a lot."** Clues in his log: one kill at **3680 MB rss** (24 Oct 17:36,
+      LowMem) and 2409 MB (25 Oct), "excessive binder traffic during cached" (25 Oct 14:57 — something keeps calling the
+      system while Attune is in the background: suspects = AgentWatch, WakeWord service, MessageWatch, appsList),
+      LowMemQuick kill while a fg-service ran (26 Oct 15:40), React error #300 in Studio (hooks after an early return).
+      Find what holds memory / spins in the background; measure, then fix.
+- [ ] 2. **Scout: most ads show no price** (screenshots: only 3arabyat has 1,250,000; contactcars / yallamotor / dubizzle rows
+      have none) → "how will I know if it found something useful". Read the price from the ad page / snippet (contactcars,
+      dubizzle, yallamotor, opensooq), show it on every row, say "price not shown — open the ad" when truly absent, and rank
+      priced ads first. List pages ("12 Used Hyundai Tucson…") are not ads — show them apart or drop them.
+- [ ] 3. **Engine → Speed (speed-ui.jsx)**: "NPU could not be used", "GPU closed the app last time", GPU switch, Multi-token
+      prediction switch. Ali: **make them work, or remove them so users never see them (and not in the notes either)**.
+      Default plan: hide NPU line + MTP switch for normal users (developer mode only); keep GPU only if it works on his
+      HONOR (SM8850 / Adreno 840), otherwise hide too.
+- [ ] 4. **Agents too basic / "too stupid"**. His sentence: hotel near Masjid al-Haram, under 45k, **4 nights between 10 Dec and
+      29 Jan**, **4 or 5 stars**. Bugs found in `agents.js` ~line 148: two dates become checkin/checkout (40 nights, wrong);
+      stars are not read; the Booking search is sorted cheapest instead of filtered by stars. Fix: "N nights from A to B" =
+      a WINDOW → search every 4-night start in the window (or flexible dates) and report the cheapest that fits; read
+      stars (4 or 5 / ٤ أو ٥ نجوم) → Booking `nflt=class=4;class=5`; distance to the Haram. Also he wants agents "complex
+      and actually useful" — **subjective: show Ali 2–4 options** for what a smarter agent does (plan, multi-step, report).
+- [ ] 5. **Assistants shows 5 next to it but there are only 4** — find the count (hubs / sidebar) and count what is shown.
+- [ ] 6. **People & plans (screenshot 5)**: "sheikh owes me 22,000 to be paid in installments monthly for 9 months" only saved
+      "owes you 22,000" — the installment plan (9 × 2,444.44 monthly, due dates) was lost. Fix the sentence reader
+      (EN + Egyptian Arabic + Franco: "على 9 شهور", "قسط شهري").
+
 ## Do this next
 1. Ask Ali for his next list (he said he has more). Keep his rule: **ask before anything subjective** — show 2–4 options
    (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
