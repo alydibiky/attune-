@@ -48,4 +48,14 @@ const as = L.scheduleOf(ad.items[0]);
 ok(as.length === 2 && as[1].amount === 3000 && !as[1].paid, "a debt paid in part → the 3,000 left is due next month");
 ad = L.togglePaid(ad, ad.items[0].id, 0);
 ok(!(ad.items[0].got || {})[0] && L.scheduleOf(ad.items[0]).length === 1, "unticking forgets the amount");
+// v8.4 (Ali, 27 Oct): "total" is the whole sum, wherever "monthly" is; an unsure sentence offers the other reading
+for (const t of ["22,000 total for the next 9 months to be paid in installments monthly", "22,000 total for the next 9 months to be paid in monthly installments", "the car: 22000 to be paid monthly over 9 months"]) {
+  const c = L.parseLife(t, { currency: "EGP" });
+  ok(c && c.kind === "installment" && c.count === 9 && c.total === 22000 && Math.round(c.amount) === 2444, "«" + t + "» → 9 × 2,444.44 (22,000 in all)");
+}
+const un = L.parseLife("the car: 22000 to be paid monthly over 9 months", { currency: "EGP" });
+ok(!un.alt, "'over 9 months' is clearly a total — no second reading");
+const un2 = L.parseLife("car 22000 to be paid in installments monthly for 9 months", { currency: "EGP" });
+ok(un2 && un2.alt && un2.alt.amount === 22000 && un2.alt.total === 198000, "unsure ('22000 … in installments monthly for 9 months') → 2,444.44 a month, or 22,000 each month offered");
+ok(!("alt" in L.addCommitment({ items: [] }, un2).items[0]), "the other reading is not saved");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

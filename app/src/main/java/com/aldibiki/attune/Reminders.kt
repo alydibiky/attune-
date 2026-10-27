@@ -115,7 +115,13 @@ object Reminders {
                     c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY ||
                     c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SATURDAY)
                 "monthly" -> c.add(java.util.Calendar.MONTH, 1)   // v6.32: the Overpaying check on the 1st
-                else -> return from
+                else -> {
+                    // v8.4 "days:0,2,4" (0 = Sunday, as on the page): the next of those weekdays, same time of day
+                    if (!repeat.startsWith("days:")) return from
+                    val ds = repeat.removePrefix("days:").split(",").mapNotNull { it.trim().toIntOrNull() }.filter { it in 0..6 }.toSet()
+                    if (ds.isEmpty()) return from
+                    do { c.add(java.util.Calendar.DAY_OF_MONTH, 1) } while ((c.get(java.util.Calendar.DAY_OF_WEEK) - 1) !in ds)
+                }
             }
         }
         return c.timeInMillis

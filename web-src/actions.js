@@ -302,7 +302,14 @@ export function buildAction(json, text, nowIn) {
   if ((kind === "whatsapp" || kind === "call") && !phone && !contact) problems.push("Who should it go to?");
   const message = cleanText(j.message, 300) || (kind === "whatsapp" ? messageFrom(text) : "");
   let title = cleanText(j.title, 60) || titleFrom(text, kind, contact);
-  const repeat = ["daily", "weekly", "weekdays"].includes(j.repeat) ? j.repeat : repeatIn(text);
+  const repeat0 = repeatIn(text), repeat = /^days:/.test(repeat0) ? repeat0 : ["daily", "weekly", "weekdays"].includes(j.repeat) ? j.repeat : repeat0;
+  // several weekdays: the first ring is the next of those days, at the time said (9 am when no time is said)
+  if (/^days:/.test(repeat) && (kind === "reminder" || kind === "alarm" || kind === "none")) {
+    const ds = repeat.slice(5).split(",").map(Number), tm = t && t.said && t.said.time !== undefined && t.said.time !== null ? new Date(t.at) : null;
+    const first = firstOnDays(ds, now, tm ? tm.getHours() : 9, tm ? tm.getMinutes() : 0);
+    if (first) { t = { at: first, allDay: false, said: { day: "days", time: tm ? "said" : "default" } }; for (let i = problems.length - 1; i >= 0; i--) if (/^When\?|already passed/.test(problems[i])) problems.splice(i, 1); }
+    if (kind === "none") kind = "reminder";
+  }
   const minutes = kind === "calendar" ? (j.minutes > 0 && j.minutes <= 24 * 60 ? j.minutes : 60) : 0;
   if (kind === "none") problems.push("This doesn't look like something to set on the phone.");
   return { kind, title, at: t ? t.at : null, allDay: !!(t && t.allDay), repeat, durationSec, minutes, contact, phone, message,
@@ -322,8 +329,35 @@ function guessKind(text) {
   if (/remind|فكرني|فكّرني|ذكرني|ذكّرني/i.test(s)) return "reminder";
   return "none";
 }
+/* v8.4 (Ali, 27 Oct: "make the reminder free text — every Sunday, Tuesday and Thursday remind me to train"): several weekdays in
+   one sentence → repeat "days:0,2,4" (0 = Sunday). Names in English (full or short), Egyptian / formal Arabic, with or without «ال»,
+   glued to «و» («وتلات») — a bare Arabic day name counts only after «كل» / «و» / a comma, so «اربع» (four) is never a day by itself. */
+const DAY_RE = [
+  [/\bsun(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:حد|احد|أحد)(?=$|[\s,،])/, 0],
+  [/\bmon(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:اتنين|اثنين|إثنين)(?=$|[\s,،])/, 1],
+  [/\btue(s|sday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:تلات|ثلاثاء|تلاتاء)(?=$|[\s,،])/, 2],
+  [/\bwed(nesday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:اربع|أربع|اربعاء|أربعاء)(?=$|[\s,،])/, 3],
+  [/\bthu(rs|rsday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)خميس(?=$|[\s,،])/, 4],
+  [/\bfri(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:جمعة|جمعه)(?=$|[\s,،])/, 5],
+  [/\bsat(urday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)سبت(?=$|[\s,،])/, 6],
+];
+/** The weekdays a sentence names, sorted (0 = Sunday). */
+export function daysIn(text) {
+  const s = " " + normDigits(String(text || "")).replace(/[،,]/g, " , ") + " ";
+  return DAY_RE.filter(([en, ar]) => en.test(s) || ar.test(s)).map((x) => x[2]);
+}
+const DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** "days:0,2,4" → "Sun · Tue · Thu" (any other repeat → ""). */
+export const daysText = (repeat) => (/^days:/.test(String(repeat || "")) ? String(repeat).slice(5).split(",").map((d) => DAY_SHORT[+d]).filter(Boolean).join(" · ") : "");
+/** The first time at or after `from` on one of the days, at the given hour and minute. */
+export function firstOnDays(days, from, hour = 9, minute = 0) {
+  const d = new Date(from); d.setHours(hour, minute, 0, 0);
+  for (let i = 0; i < 8; i++) { if (days.includes(d.getDay()) && d.getTime() > from) return d.getTime(); d.setDate(d.getDate() + 1); d.setHours(hour, minute, 0, 0); }
+  return null;
+}
 function repeatIn(text) {
   const s = String(text || "");
+  { const ds = daysIn(s); if (ds.length >= 2 && ds.length < 7) return "days:" + ds.join(","); }
   if (/every ?day|daily|كل يوم|يوميا|يوميًا/i.test(s)) return "daily";
   if (/weekdays|every weekday|أيام الشغل|ايام الشغل/i.test(s)) return "weekdays";
   if (/every (week|sun|mon|tue|wed|thu|fri|sat)|weekly|كل اسبوع|كل أسبوع|أسبوعيا|اسبوعيا/i.test(s)) return "weekly";
@@ -335,11 +369,18 @@ function messageFrom(text) {
   return m ? cleanText(m[1], 300) : "";
 }
 function titleFrom(text, kind, contact) {
+  // v8.4: "remind me" anywhere (not only first), "to" as a word ("remind me tomorrow" became "morrow"), the days and times said
   let s = String(text || "")
-    .replace(/^(please |can you |could you )?(remind me( to)?|set (an? )?(alarm|timer|reminder)( for)?|wake me( up)?|add|put|schedule)\s*/i, "")
-    .replace(/^(فكرني|فكّرني|ذكرني|ذكّرني|صحيني|صحّيني|حطلي|حط|اعمل|اعملي)\s*/, "")
-    .replace(/\b(tomorrow|today|tonight|at \d{1,2}(:\d{2})?\s*(am|pm)?|in \d+ \w+)\b/gi, "")
-    .replace(/(بكرة|بكره|النهارده|الساعة \d{1,2}|بعد \d+ \S+)/g, "");
+    .replace(/^(please |can you |could you )?(set (an? )?(alarm|timer|reminder)( for)?|wake me( up)?|add|put|schedule)\s+/i, "")
+    .replace(/\b(please )?remind me( to\b)?/gi, " ")
+    .replace(/(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|صحيني|صحّيني)(\s+(ب|إن|ان|اني|إني))?/g, " ").replace(/^\s*(حطلي|حط|اعمل|اعملي)\s+/, "")
+    .replace(/\b(every|each|on)\s+((sun|mon|tue|tues|wed|thu|thurs|fri|sat)[a-z]*\.?(\s*(,|and|&)?\s*))+/gi, " ")
+    .replace(/\b(every ?day|daily|every week|weekly|every weekday|weekdays)\b/gi, " ")
+    .replace(/\b(tomorrow|today|tonight|in the (morning|evening|afternoon))\b|\bat \d{1,2}([:.]\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?|\b\d{1,2}([:.]\d{2})?\s*(am|pm)\b|\bin \d+ \w+/gi, " ")
+    .replace(/كل\s+((يوم\s+)?(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(\s*(،|,|و)\s*(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت))*)/g, " ")
+    .replace(/(^|\s)(و)?(ال)?(حد|اتنين|تلات|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
+    .replace(/(كل يوم|يوميا|بكرة|بكره|النهارده|الساعة \d{1,2}([:.]\d{2})?( ونص| وربع| الا ربع)?|بعد \d+ \S+|بالليل|الصبح|الضهر|العصر|المغرب|مساء|صباحا)/g, " ")
+    .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "");
   s = cleanText(s, 60);
   if (!s && contact) s = (kind === "call" ? "Call " : "Message ") + contact;
   return s || { reminder: "Reminder", alarm: "Alarm", timer: "Timer", calendar: "Appointment", whatsapp: "WhatsApp", call: "Call" }[kind] || "Reminder";
@@ -364,6 +405,7 @@ export function nextOccurrence(r, after) {
     else if (r.repeat === "weekly") d.setDate(d.getDate() + 7);
     else if (r.repeat === "weekdays") { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 5 || d.getDay() === 6); } // Egypt: Fri + Sat off
     else if (r.repeat === "monthly") d.setMonth(d.getMonth() + 1);   // v6.32: the Overpaying check on the 1st
+    else if (/^days:/.test(r.repeat)) { const ds = r.repeat.slice(5).split(",").map(Number); if (!ds.length) return t; do { d.setDate(d.getDate() + 1); } while (!ds.includes(d.getDay())); }   // v8.4
     else return t;
     t = d.getTime();
   }

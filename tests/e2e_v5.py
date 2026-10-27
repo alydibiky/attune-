@@ -300,6 +300,12 @@ def sec_actions(br):
     check(page.locator("[data-testid=confirm]").count() == 1 and len(page.evaluate("window.__mock.notes")) == 2, "deleting a reminder asks first (v5.28)")
     page.click("[data-testid=confirm-yes]"); page.wait_for_timeout(200)
     check(len(page.evaluate("window.__mock.notes")) == 1, "deleting it cancels it on the phone")
+    # v8.4 (Ali, 27 Oct): free text — several weekdays in one sentence
+    page.fill("[data-testid=rem-say]", "every Sunday, Tuesday and Thursday at 7 pm remind me to train"); page.click("[data-testid=rem-say-go]"); page.wait_for_timeout(250)
+    nn = page.evaluate("window.__mock.notes")
+    it = page.locator("[data-testid=rem-item]").filter(has_text="train")
+    check(len(nn) == 2 and nn[-1].get("repeat") == "days:0,2,4" and it.count() == 1 and "Sun · Tue · Thu" in it.inner_text(), "free text: 'every Sunday, Tuesday and Thursday at 7 pm … train' → one reminder on Sun · Tue · Thu: %s" % (it.inner_text().replace("\n", " · ") if it.count() else nn[-1:]))
+    page.locator("[data-testid=rem-item]").filter(has_text="train").locator("button").click(); page.click("[data-testid=confirm-yes]"); page.wait_for_timeout(200)
     page.evaluate("window.__mock.inexact = true"); page.evaluate("window.__attuneBack()"); open_more(page)
     page.locator(".rounded-t-2xl button:has-text('Reminders')").first.click(); page.wait_for_timeout(200)
     page.locator("[data-testid=ask-exact]").click()

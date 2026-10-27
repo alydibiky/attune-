@@ -49,7 +49,12 @@ class MainActivity : AppCompatActivity() {
     private val pickFiles = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
         val cb = fileCallback
         fileCallback = null
-        cb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res.resultCode, res.data))
+        // v8.4 (Ali, 27 Oct: "Photos → PDF, I choose more than one photo and nothing happens"): several files come back in
+        // clipData, which parseResult ignores (it only reads one) — so the page got nothing. Every picked file is handed over.
+        val d = res.data
+        val clip = d?.clipData
+        val many = if (res.resultCode == RESULT_OK && clip != null && clip.itemCount > 0) Array(clip.itemCount) { clip.getItemAt(it).uri } else null
+        cb?.onReceiveValue(many ?: WebChromeClient.FileChooserParams.parseResult(res.resultCode, d))
     }
     // v8.3 Library: books (or a whole folder of them) picked for a topic → BookShelf reads them in the background
     private var bookTopic = ""

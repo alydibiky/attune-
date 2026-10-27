@@ -149,7 +149,19 @@ const SUBS = /\b(netflix|spotify|shahid|osn|youtube premium|icloud|google one|ch
 const RENT = /\b(rent|alquiler|arriendo|loyer|aluguel|miete|affitto|kira|sewa)\b|ايجار|الايجار/i;
 const BILL = /\b(bill|electricity|water|gas bill|internet|phone bill|due|factura|recibo|facture|conta de|rechnung|bolletta|fatura|tagihan|luz|électricité|strom|elettricità|elektrik|listrik)\b|فاتوره|فاتورة|الكهربا|كهربا|الكهرباء|المياه|الميه|النت|الانترنت|التليفون|الغاز/i;
 // v8.2: an amount said WITH "a month" ("1,000 a month", «1000 في الشهر») is each payment; "owes me 22,000 … monthly for 9 months" is a total
-const PER_AMOUNT = /\d\s*(?:k|egp|le|usd|sar|aed|\$|جنيه|ج|ريال|درهم)?\s*(?:(?:a|per|every|each)\s+(?:month|week)|monthly|weekly|كل\s*(?:ال)?(?:شهر|اسبوع)|في\s*(?:ال)?(?:شهر|اسبوع)|بال(?:شهر|اسبوع)|شهريا|اسبوعيا)/;
+const PER_AMOUNT = /(?:\d|الف|ألف|آلاف|الاف|مية|ميه|thousand|hundred)\s*(?:k|egp|le|usd|sar|aed|\$|جنيه|ج|ريال|درهم)?\s*(?:(?:a|per|every|each)\s+(?:month|week)|monthly|weekly|كل\s*(?:ال)?(?:شهر|اسبوع)|في\s*(?:ال)?(?:شهر|اسبوع)|بال(?:شهر|اسبوع)|شهريا|اسبوعيا)/;
+// v8.4 (Ali, 27 Oct: "22,000 total for the next 9 months to be paid in installments" was read as 22,000 a month): "total" is the
+// whole sum; one amount is each payment only when the per-month words are ON it ("1,000 a month"); else, when "monthly" is
+// somewhere in the sentence, it could be either — the preview offers both readings (alt) and the person picks
+const TOTAL_W = /\b(total|in total|in all|altogether|all together|the whole|whole amount|overall|full amount)\b|اجمالي|الاجمالي|كله|كلهم|بالكامل|المبلغ الكلي/;
+function oneAmount(t) {
+  if (TOTAL_W.test(t)) return "total";
+  if (/\b(?:in|over|en|sur|em|auf|su|dalam)\s+\d+|عل[يى]\s*\d+/.test(t)) return "total";
+  if (PER_AMOUNT.test(latin(t))) return "each";
+  if (EVERY_M.test(t) || EVERY_W.test(t)) return "unsure";
+  return "total";
+}
+const PAY_V = /\b(pay|paid|paying|pays|pay back|repay|settle)\b|ادفع|يدفع|هدفع|هيدفع|دفع|اسدد|يسدد|سداد|هسدد/;
 const IN_W = /me debe|me doit|me deve|schuldet mir|mi deve|bana borçlu|berutang (?:kepada|ke|pada) saya|le presté|lui ai prêté|j'ai prêté|emprestei|habe .{0,30}geliehen|ho prestato|borç verdim|meminjamkan|me tiene que pagar|doit me rendre|vai me pagar|zahlt mir/i;
 const OUT_W = /\b(le debo|je dois|eu devo|ich schulde|gli devo|le devo|borçluyum|saya berutang|pedí prestado|j'ai emprunté|peguei emprestado|habe mir .{0,30}geliehen|ho preso in prestito|borç aldım|saya meminjam|mi cuota|ma mensualité|minha parcela|meine rate|la mia rata|taksitim|cicilan saya)\b/i;
 const IN_ = /\bowes me\b|\bwill pay me\b|\bpays me\b|\bi lent\b|\bi loaned\b|(?:^|\s)lent\s+(?!me\b)|\blent\b.*\bto\b|سيدفع|سيسدد|هيسدد|هيدفع(?!ل)|\bto pay me back\b|\bi gave\b.*\b(loan|borrow)|عليه|عليها|هيدفعلي|يدفعلي|هيرجعلي|سلفت|اسلفت|اقرضت|ادينت|استلف مني|اخد مني|خد مني|مديون ليا|مدين لي/i;
@@ -193,11 +205,12 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
     const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0;
     if (count || every || (small && small < big)) {
       // one amount said "a month" is each payment ("pays me 1,000 a month for a year"); "in 12" / "على 12" splits a total
-      const split = /\b(?:in|over|en|sur|em|in|auf|su|dalam)\s+\d+|عل[يى]\s*\d+/.test(t) || /(owes me|عليه|عليها|me debe|me doit|me deve|schuldet mir|mi deve)\s*\S*\s*\d/.test(t) && !small && !PER_AMOUNT.test(latin(t));
-      const each1 = amts.length === 1 && !split && every;
+      const how = amts.length === 1 ? oneAmount(t) : "";
+      const split = how === "total" || how === "unsure" || /(owes me|عليه|عليها|me debe|me doit|me deve|schuldet mir|mi deve)\s*\S*\s*\d/.test(t) && !small && how !== "each";
+      const each1 = amts.length === 1 && how === "each" && every;
       const n = count || (small ? Math.round(big / small) : 0), each = each1 ? big : small && small < big ? small : n ? Math.round((big / n) * 100) / 100 : big;
       // (a total split in n: the total stays exact — 22,000 over 9 is 22,000, not 9 × 2,444.44 = 21,999.96)
-      if (n > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: each, count: n, total: !each1 && !(small && small < big) ? big : Math.round(each * n * 100) / 100, every: every || "month" };
+      if (n > 1) return withAlt({ ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: each, count: n, total: !each1 && !(small && small < big) ? big : Math.round(each * n * 100) / 100, every: every || "month" }, how);
     }
     return { ...base, kind: "debt", dir: dirIn ? "in" : "out", amount: big, count: 1, total: big, every: null };
   }
@@ -213,15 +226,22 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
   if (RENT.test(raw) || RENT.test(t)) return { ...base, kind: "rent", dir: dirIn && /tenant|المستاجر|بيدفعلي|inquilino|locataire|mieter|affittuario|kiracı|penyewa/.test(t) ? "in" : "out", amount: amts[0], count: count || 0, total: 0, every: every || "month", title: "Rent" };
   if (SUBS.test(raw) || SUBS.test(t)) { const m = SUBS.exec(raw) || SUBS.exec(t); return { ...base, kind: "subscription", dir: "out", amount: amts[0], count: 0, total: 0, every: every || "month", title: nameBefore(raw, m[0][0].toUpperCase() + m[0].slice(1)) }; }
   if (BILL.test(raw) || BILL.test(t)) { const m = BILL.exec(raw) || BILL.exec(t); return { ...base, kind: "bill", dir: "out", amount: amts[0], count: every ? 0 : 1, total: every ? 0 : amts[0], every, title: nameBefore(raw, m[0]) }; }
-  if (/installments?|instalments?|قسط|اقساط/.test(t) && (count || every)) {
-    const split = /\b(?:in|over)\s+\d+|عل[يى]\s*\d+/.test(t), each1 = amts.length === 1 && !split && /\b(a|per|every|each) (month|week)\b|\bmonthly\b|\bweekly\b|كل شهر|شهريا|في الشهر|بالشهر|كل اسبوع/.test(t);
-    if (each1 && count > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: amts[0], count, total: amts[0] * count, every: every || "month", title: (/(car|phone|laptop|عربيه|العربيه|موبايل|تليفون|لابتوب)/.exec(t) || [""])[0] };
+  // installments — or "22,000 to be paid monthly over 9 months" (a payment over months is installments even without the word)
+  if ((/installments?|instalments?|قسط|اقساط/.test(t) || (PAY_V.test(t) && count > 1)) && (count || every)) {
+    const how = amts.length === 1 ? oneAmount(t) : "", title = (/(car|phone|laptop|عربيه|العربيه|موبايل|تليفون|لابتوب)/.exec(t) || [""])[0];
+    if (how === "each" && count > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: amts[0], count, total: amts[0] * count, every: every || "month", title };
     const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0, n = count || (small ? Math.round(big / small) : 0);
-    if (n > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: small || Math.round((big / n) * 100) / 100, count: n, total: small ? small * n : big, every: every || "month", title: (/(car|phone|laptop|عربيه|العربيه|موبايل|تليفون|لابتوب)/.exec(t) || [""])[0] };
+    if (n > 1) return withAlt({ ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: small || Math.round((big / n) * 100) / 100, count: n, total: small ? small * n : big, every: every || "month", title }, how);
   }
   return null;
 }
 
+/** The other reading of an unsure sentence: the same plan with the amount as EACH payment (the preview offers it). */
+function withAlt(c, how) {
+  if (how !== "unsure" || !(c.count > 1)) return c;
+  const each = c.total;   // (the one amount said)
+  return { ...c, alt: { ...c, amount: each, total: Math.round(each * c.count * 100) / 100 } };
+}
 /** A commitment's dates: [{ i, date, amount, paid }] — `count` payments (or the next 12 for an open-ended one). */
 export function scheduleOf(c, now = Date.now()) {
   let n = c.count > 0 ? c.count : c.every ? 12 : 1;
@@ -291,7 +311,8 @@ export function saveLife(data, store = typeof localStorage !== "undefined" ? loc
 }
 export function addCommitment(data, c, now = Date.now()) {
   const id = "c" + now.toString(36) + Math.random().toString(36).slice(2, 6);
-  return { ...data, items: [...data.items, { ...c, id, created: now, paid: c.paid || [] }] };
+  const { alt, altOf, ...keep } = c;   // (the other reading of an unsure sentence is not kept)
+  return { ...data, items: [...data.items, { ...keep, id, created: now, paid: c.paid || [] }] };
 }
 export function togglePaid(data, id, i) {
   return { ...data, items: data.items.map((c) => { if (c.id !== id) return c; const on = (c.paid || []).includes(i); const got = { ...(c.got || {}) }; if (on) delete got[i];

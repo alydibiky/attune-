@@ -206,6 +206,11 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
           <span className={U.label}>{tr(KIND[draft.kind])}{draft.model ? " · " + tr("read by AI") : ""}</span>
           <div className="mt-1 font-extrabold text-[15px]" dir="auto">{heading(draft)}</div>
           <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(draft)}{draft.start ? " · " + tr("from {d}", { d: draft.start }) : ""}</div></>}
+          {/* v8.4: a sentence that could mean either — "22,000 … monthly for 9 months": the whole sum, or each month? one tap */}
+          {draft.alt || draft.altOf ? <div className="mt-2.5 rounded-[12px] bg-[var(--c-soft)] px-3 py-2 text-[12.5px]" data-testid="life-alt">
+            <span className="font-bold">{tr("Did you mean:")}</span>{" "}
+            <button onClick={() => setDraft(draft.alt ? { ...draft.alt, source: draft.source, altOf: { ...draft, alt: undefined } } : { ...draft.altOf, source: draft.source, alt: { ...draft, altOf: undefined } })} className="underline font-extrabold text-[var(--c-acc)]" data-testid="life-alt-pick">
+              {draft.alt ? tr("{a} EACH month ({t} in all)", { a: fmt(draft.alt.amount), t: fmt(draft.alt.total) }) : tr("{t} in all ({a} a month)", { t: fmt(draft.altOf.total), a: fmt(draft.altOf.amount) })}</button></div> : null}
           <div className="flex gap-2 mt-3"><button className={U.btnP} onClick={save} data-testid="life-save">{tr("Save")}</button><button className={U.btnS} onClick={() => setDraft(null)}>{tr("Cancel")}</button></div>
         </div>) : null}
       {/* v7.9 (Ali): on their day, a plain question with a real checkbox — ticked = came and paid (in Money by itself) */}
