@@ -182,6 +182,11 @@ export function repairFigures(answer, sources) {
 
 const NOT_GIVEN = /\b(the )?(passages?|sources?|articles?|search results?|pages?)\b[^.\n]{0,40}\b(do(es)? not|don't|doesn't|did not|didn't|not)\b[^.\n]{0,20}\b(provide|give|mention|include|specify|list|contain|say|state|offer|cover)|\bnot (provided|mentioned|specified|listed|given|available) in the (passages?|sources?)|\b(I )?(can(no|')t|could not|couldn't) find\b[^.\n]{0,60}\b(passages?|sources?)|لم (تذكر|يذكر|توضح|يوضح) (المصادر|الفقرات|النصوص)|المصادر (لا|ما) (تذكر|بتذكرش)/i;
 
+// v8.4 (Ali's Lynk & Co answer: "Prices in Egypt in EGP are available for the Lynk & Co 900 2026 [1]." — and no price): a line
+// that only says figures EXIST, without giving one, is dropped
+const EMPTY_CLAIM = /\b(prices?|pricing|costs?|figures?|specs?|specifications?|details?|range|consumption)\b[^\n]{0,80}\b(are|is|were|was)\s+(also\s+)?(available|listed|given|published|provided|shown|found|mentioned|announced|offered)\b|\b(can|may) be found\b|\bcheck (the )?(official )?(dealer|website|site)\b|(الأسعار|الاسعار|السعر|المواصفات)\s+(متاحة|متاحه|متوفرة|متوفره|موجودة|موجوده|منشورة)/i;
+const isEmptyClaim = (l) => !/^\s*\|/.test(l) && EMPTY_CLAIM.test(l) && !/\d/.test(l.replace(/\[\d{1,2}\]/g, "").replace(/\b(19|20)\d\d\b/g, "").replace(/\b\d{3}\b(?=[^\n]*\b(lynk|model|series)\b)/gi, "").replace(/(?<=[A-Za-z]\s?)\d+/g, ""));
+
 /** Tidy a finished answer: bold, citations, duplicate bullets, tables, "not provided" lines. */
 export function tidyAnswer(answer) {
   const tidy = tidyInner(answer);
@@ -245,6 +250,7 @@ function tidyInner(answer) {
     l = l.replace(/\*\*\s*\*\*/g, "").replace(/\(\s*\*\*/g, "**(");
     // "the passages don't provide …": dropped (the gaps are searched for instead)
     if (NOT_GIVEN.test(l) && !/\|/.test(l)) continue;
+    if (isEmptyClaim(l)) continue;
     l = l.replace(/\bthe passages\b/gi, "the sources").replace(/\bpassages\b/gi, "sources");
     // the same bullet again (ignoring citations and bold) → dropped
     const key = lc(l).replace(/\[\d+\]/g, "").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -278,6 +284,8 @@ function tidyInner(answer) {
       out[j] = "| " + c.slice(0, w).join(" | ") + " |";
     }
   }
+  // a last line cut in the middle of a sentence ("… for the model years given are not") goes
+  while (out.length && /\b(are|is|was|were|not|the|and|or|of|for|to|with|a|an|in|that|which)\s*$/i.test(out[out.length - 1]) && !/^\s*\|/.test(out[out.length - 1])) out.pop();
   return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 

@@ -46,6 +46,7 @@ import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
+import { makerNote, fixMakerCountry } from "./makers.js";
 import { fillBlanks } from "./tableblanks.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
@@ -1141,7 +1142,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const carP = kindT === "vehicle" ? Promise.all([
           api.carSpecs ? api.carSpecs(question).catch(() => []) : Promise.resolve([]),
           api.fxRates ? api.fxRates().catch(() => null) : Promise.resolve(null),
-        ]).then(([specs, fx]) => officialSpecsNote(specs) + (fx ? fxNote(fx, question) : "")).catch(() => "") : Promise.resolve("");
+        ]).then(([specs, fx]) => makerNote(question) + officialSpecsNote(specs) + (fx ? fxNote(fx, question) : "")).catch(() => makerNote(question)) : Promise.resolve("");
         // v6.20 (Ali: "Reading 10 pages… 5 min 19 s — when will it end"): sized to this phone's measured speed — read in ≈35 s,
         // written in ≈70 s (twice that when the person asked for detail); "More detail" gets the long version
         const tb = timeBudget(api.speed && api.speed(), deep || wantsDeep(typed) || /more detail|in detail|full (answer|version|report)|بتفصيل|تفاصيل|بالتفصيل/i.test(typed) ? { readSecs: 70, writeSecs: 180 } : undefined);
@@ -1201,7 +1202,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           tplUsed = shaped && !speedBrief ? answerTemplate(question, kindT) : "";   // a slow phone: the short version first, "More detail" for the rest
           const carNote = await carP;
           content = api.groundedPrompt(asked, ranked) + figs.block + carNote + ask0 + tplUsed + photoNote;
-          webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + ask0 + photoNote };
+          webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + carNote + ask0 + photoNote };
         } else if (toRead.length && api.webPages) {
           const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
           const seenUrls = new Set(lists.flat().map((h) => h.url));
@@ -1688,9 +1689,19 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v5.41: "Lynk & Co 90" when the question and the sources say 900 — the name is put back first
         const fm = fixModelNames(answer, (webCtx && webCtx.question) || typed, sources);
         if (fm.fixed.length) { answer = fm.text; extra.namesFixed = fm.fixed.length; }
+        // v8.4: "an SUV from South Korea" for a Chinese brand — the maker's country is a fact the app knows (makers.js)
+        const mc = fixMakerCountry(answer, (webCtx && webCtx.question) || typed);
+        if (mc.fixed) { answer = mc.text; extra.makerFixed = mc.fixed; }
         const rf = repairFigures(answer, sources);
         if (rf.fixed.length) extra.figuresFixed = rf.fixed.length;
         answer = tidyAnswer(rf.text);
+      }
+      // v8.4 (Ali's Lynk & Co 900: "I found no web page" + a table of "—" and citations [2] to nothing): an answer written
+      // without pages gets the same clean-up — the wrong maker country fixed, citations with no source removed, empty columns gone
+      if (webEmpty && !sources && answer && String(answer).trim()) {
+        const q0 = typed || userMsg.text;
+        const mc0 = fixMakerCountry(answer, q0);
+        answer = fillBlanks(tidyAnswer(mc0.text.replace(/\s?\[\d{1,2}\]/g, "")), [], { ar: /[؀-ۿ]/.test(q0 || "") }).md;
       }
       // A web answer with a number no source contains ("June 200005"): asked
       // once more, told exactly which numbers were not in the sources.
