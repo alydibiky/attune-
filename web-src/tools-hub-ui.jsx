@@ -16,7 +16,7 @@ const I = (s) => "⁦" + s + "⁩";
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? I(y) : y])) : v);
 const C = { writing: "var(--c-chart-1)", files: "var(--c-chart-2)", instant: "var(--c-chart-3)", pdf: "var(--c-chart-3)", library: "var(--c-chart-4)", studio: "var(--c-chart-4)", video: "var(--c-acc)" };
 export const FAMS = [
-  ["writing", "improve", "Writing", "Improve a prompt · Shorten · Humanize · Copilot · Prompt lab", Sparkles],
+  ["writing", "write", "Writing", "One box: Improve · Shorten · Humanize — and Copilot · Prompt lab", Sparkles],
   ["files", "convert", "Files & Converter", "Edit a PDF · PDF → Word · Photos → PDF · Merge", FileText],
   // v8.2 (Ali, 26 Oct): no Instant (Chat does it); "Ask a PDF" here too so it is easy to find (it also lives in Students)
   ["pdf", "pdfchat", "Ask a PDF", "Read a PDF or book and chat with it — every answer shows its page", BookOpen],
@@ -61,10 +61,11 @@ export function ToolsHub({ tools, navTo, pages, groups }) {
     <Recent items={log.slice(0, 8)} navTo={navTo} />
   </div>;
   const top = <div className="space-y-3 mb-4" data-testid="tools-hub">
-    <div className="grid grid-cols-2 gap-2.5">
+    {/* v8.5 (I1): the two counters appear once a tool has made something */}
+    {r.week || r.today ? <div className="grid grid-cols-2 gap-2.5">
       <Tile testid="tools-kpi-week" label={tr("Jobs this week")} value={String(r.week)} pill={r.change != null ? I((r.change >= 0 ? "+" : "") + r.change + "%") : null} sub={tr("100% private on this device")} />
       <Tile testid="tools-kpi-today" label={tr("Made today")} value={String(r.today)} sub={r.recent[0] ? r.recent[0].title : tr("Nothing yet today")} />
-    </div>
+    </div> : null}
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-4 space-y-3 lg:space-y-0 items-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="tools-families">
         {FAMS.filter(([f]) => f !== "studio" || !studioPaused(typeof window !== "undefined" && window.AttuneNative)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}

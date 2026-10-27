@@ -16,6 +16,8 @@ const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null")
 const ICON = { reminders: Bell, radar: Radar, life: Users, money: Wallet, xray: MessageSquare, guardian: ShieldAlert };
 // v8.2 (Ali picked 1A): the chips on top — All · Money · Reminders · Dates · Guardian
 const CHIPS = [["all", "All"], ["money", "Money"], ["reminders", "Reminders"], ["dates", "Dates"], ["guardian", "Guardian"]];
+// the parts' own pages [page, name, the chip it belongs to]
+const PAGES = [["life", "People & plans", "money"], ["reminders", "Reminders", "reminders"], ["radar", "Dates", "dates"], ["xray", "Chat X-Ray", ""], ["guardian", "Guardian", "guardian"]];
 const KIND = { reminder: "Reminder", trial: "Free trial", renewal: "Renewal", return: "Return window", warranty: "Warranty", expiry: "Document expiry", other: "Date",
   pay: "You pay", collect: "Comes in", bill: "Bill", owe: "You owe", owed: "Owed to you", promise: "Promise", guardian: "Guardian" };
 const RANGES = [[7, "7 days"], [30, "30 days"], [90, "3 months"]];
@@ -74,6 +76,11 @@ export function TimelinePage({ navTo, doIt, flash }) {
       <div className="flex flex-wrap items-center gap-1.5" data-testid="fu-chips">
         {CHIPS.map(([c, l]) => <button key={c} onClick={() => setChip(c)} aria-pressed={chip === c} className={U.chip(chip === c)} data-testid={"fu-chip-" + c}>{tr(l)} {count(c)}</button>)}
       </div>
+      {/* v8.5 (E2, Ali agreed): no switch on top — each part's own page opens from here, the chip's page first */}
+      {navTo ? <div className={"flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] " + U.muted} data-testid="fu-pages">
+        <span>{tr("Open:")}</span>
+        {PAGES.slice().sort((a, b) => (b[2] === chip) - (a[2] === chip)).map(([pg, l, c]) => <button key={pg} onClick={() => navTo(pg)} className={"underline underline-offset-2 min-h-[32px] " + (c === chip ? "font-extrabold text-[var(--c-acc)]" : "font-bold")} data-testid={"fu-open-" + pg}>{tr(l)}</button>)}
+      </div> : null}
       <div className="flex flex-wrap items-center gap-1.5">
         {RANGES.map(([d, l]) => <button key={d} onClick={() => setDays(d)} aria-pressed={days === d} className={U.chip(days === d)} data-testid={"timeline-range-" + d}>{tr(l)}</button>)}
       </div>

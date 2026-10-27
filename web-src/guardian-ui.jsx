@@ -108,10 +108,11 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Finds money in your own payments — on this phone, by code. It only counts what you did.")}</p></div>
       {/* v7.2 (Gemini's Area 1): on a computer two panes — what to act on at the start, the Price memory at the end */}
       <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-5 lg:items-start"><div className="space-y-4 min-w-0">
-      <div className="grid grid-cols-2 gap-3">
+      {/* v8.5 (I1): no row of zeros before the Guardian has saved anything */}
+      {!pro || totals.all > 0 ? <div className="grid grid-cols-2 gap-3">
         <U.Kpi label={tr("Saved this month")} value={pro ? fmt(totals.month) : "—"} tone="pos" testid="guardian-month" />
         <U.Kpi label={tr("Saved in all")} value={pro ? fmt(totals.all) : "—"} />
-      </div>
+      </div> : null}
       <OverpayCheck pro={pro} openPlan={openPlan} flash={flash} remind={remind} unremind={unremind} />
       {!F.length ? <p className={"text-[13.5px] " + U.muted} data-testid="guardian-empty">{tr("Nothing to fix right now. The Guardian looks again every time a payment comes in.")}</p> : null}
       {shown.length || hidden.length ? <div className="space-y-3" data-testid="guardian-act">

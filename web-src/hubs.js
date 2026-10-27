@@ -10,15 +10,25 @@ export const HUBS = [
   ["create", "Create", "assistants", ["assistants", "skills", "artifacts", "studio", "code"]],
   ["projects", "Projects", "projects", ["projects"]],
   // v8.2 (Ali, 26 Oct: "instant should be removed overall — the normal chat should do its job"): no Instant anywhere
-  ["home", "Home", "home", ["home", "missions", "recall", "automations", "chat", "shelf"]],
+  // v8.5 (Ali agreed to the 27 Oct review): Recall lives inside Mind (R2); Shelf moved to Saved (W2)
+  ["home", "Home", "home", ["home", "missions", "automations", "chat"]],
   // v8.2 (Ali: "convert is duplicated, remove it from one page"): the converter lives in Tools only (Files & Converter)
-  ["students", "Students", "coach", ["coach", "pdfchat", "booklib", "slides", "cv"]],   // v8.3 (Ali picked 3A): Library next to Ask a PDF
-  ["money", "Money", "money", ["money", "reminders", "timeline", "xray", "radar", "life", "guardian", "deal"]],
+  // v8.5 (W3): Ask a PDF and the Library are one "Documents" tab — its switch: Many books · One file
+  ["students", "Students", "coach", ["coach", "booklib", "slides", "cv"]],
+  // v8.5 (W1): Follow-ups is its own place (reminders aren't money); its parts are chips on its one list (E2), no switch
+  ["money", "Money", "money", ["money", "deal"]],
+  ["followups", "Follow-ups", "timeline", ["timeline", "life", "reminders", "radar", "xray", "guardian"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
-  ["learn", "Daily", "learn", ["learn", "scout", "memory", "remember", "news", "map", "metro", "travel", "knowledge"]],   // v6.42: Metro next to Maps (Ali)
-  ["tools", "Work", "business", ["business", "fleet", "crane", "field", "guide", "privacy"]],
+  // v8.5 (E1): Daily's 9 tabs split — Daily (Learn, News) and Go (Travel, Scout, Metro, Maps); Knowledge went to Settings (R3)
+  ["learn", "Daily", "learn", ["learn", "news"]],
+  ["go", "Go", "travel", ["travel", "scout", "metro", "map"]],
+  // v8.5 (W2): one place for what you keep — Notes (Shelf) · Books & pages (Remember) · Mind
+  ["saved", "Saved", "shelf", ["shelf", "remember", "memory"]],
+  // v8.5 (R4): the Crane toolkit opens from Business → Fleet & rentals → More only
+  ["tools", "Work", "business", ["business", "fleet", "field", "guide", "privacy"]],
   // v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools is its own place, not a tab of Work; "Ask (classic)" is gone
-  ["toolbox", "Tools", "tools", ["tools", "convert", "improve", "compress", "humanize", "copilot", "library", "video"]],
+  // v8.5 (E3): Writing is one box with Improve · Shorten · Humanize buttons (the three pages open from it, no tab row)
+  ["toolbox", "Tools", "tools", ["tools", "convert", "write", "improve", "compress", "humanize", "copilot", "library", "video"]],
 ];
 
 /** Inside Tools, the pages that are one page with tabs (the smallest group a page is in gives its tabs). */
@@ -28,9 +38,9 @@ export const GROUPS = [
   // v7.6 (Ali, 24 Oct): no Chat · Your life · Translate tabs — all three live in Home's box (chips under it); Chat opens on Home
   ["work", "Work", ["business", "fleet", "field"]],
   // v6.43 (Ali: "put the tools that improve a prompt or humanize in the same page"): Writing = Improve · Shorten · Humanize · Copilot · Prompt lab
-  ["write", "Writing", ["improve", "compress", "humanize", "copilot", "library"]],
+  ["write", "Writing", ["write", "copilot", "library"]],
   // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")
-  ...["missions", "recall", "automations", "shelf", "projects", "video", "tools", "convert", "guide", "privacy", "home", "chat", "translate"].map((m) => ["solo-" + m, m, [m]]),
+  ...["missions", "automations", "projects", "video", "tools", "convert", "guide", "privacy", "home", "chat", "translate", "improve", "compress", "humanize", "knowledge", "crane"].map((m) => ["solo-" + m, m, [m]]),
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */
@@ -42,7 +52,8 @@ export const FULL = ["home", "fit", "map"];   // (v6.36: Business shows the Work
 // v6.38 (M3): Timeline — everything from the other parts on one list
 // v8.2 (Ali picked 1A, 26 Oct): Follow-ups opens on ONE list by day (the timeline) — People & plans, Reminders, Dates, Chat X-Ray and the
 // Guardian are its parts; Money = Money · Follow-ups · Deal Check
-export const INSIDE = { life: "timeline", reminders: "timeline", radar: "timeline", xray: "timeline", guardian: "timeline" };
+export const INSIDE = { life: "timeline", reminders: "timeline", radar: "timeline", xray: "timeline", guardian: "timeline",
+  pdfchat: "booklib", recall: "memory" };   // v8.5: Documents = Many books · One file (W3); Mind · Recall (R2)
 /* v7.2 (Gemini's Area 1 mock-up, Ali sent it 24 Oct 2026): Money = Money · Follow-ups · Guardian · Deal Check. Follow-ups opens on
    People & plans (debts, installments, savings circles, the maid every Saturday) with Reminders · Timeline · Dates · Chat X-Ray in
    its switch; the Money Guardian is its own tab again. */
@@ -63,9 +74,11 @@ export function partsOf(mode, available = null) {
   return has(main) && inner.length ? [main, ...inner] : [];
 }
 
+// v8.5: pages in no tab row still belong to a place (the sidebar lights it): Knowledge → Tools (it opens from Settings), Crane → Work
+const PARENT = { knowledge: "toolbox", crane: "tools" };
 /** The sidebar place a page belongs to ("tools" for anything unknown, so nothing is lost). */
 export function hubOf(mode) {
-  const h = HUBS.find((x) => x[3].includes(mode));
+  const h = HUBS.find((x) => x[3].includes(mode)) || (INSIDE[mode] && HUBS.find((x) => x[3].includes(INSIDE[mode]))) || (PARENT[mode] && HUBS.find((x) => x[0] === PARENT[mode]));
   return h ? h[0] : "tools";
 }
 
@@ -86,7 +99,7 @@ export const TOOL_PAGES = [
   // v6.36 (Ali: "improve, compress, humanize, copilot, library, video downloader — under a tab called Tools in Business, as
   // choices, not tabs"): one card each
   // v6.43 (Ali: "integrate the tools that improve a prompt or humanize in the same page"): one card, one page with five tabs
-  ["improve", "Writing", "Improve a prompt · Shorten · Humanize · Copilot · Prompt lab", ["improve", "compress", "humanize", "copilot", "library"]],
+  ["write", "Writing", "One box: Improve · Shorten · Humanize — and Copilot · Prompt lab", ["write", "improve", "compress", "humanize", "copilot", "library"]],
   ["video", "Video Downloader", "Paste a video link, pick the quality, save it to your phone", ["video"]],
 ];
 /** v8.2 (Ali, 26 Oct): pages taken out of the app — every way in (lists, "/", search, old links, shares) goes to Chat instead. */

@@ -92,16 +92,18 @@ import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
 const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
-const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCircle, students: GraduationCap, money: Wallet, health: Heart, learn: CalendarDays, tools: Briefcase, toolbox: Wrench };   // (v6.36 Ali's board)
+const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCircle, students: GraduationCap, money: Wallet, followups: Bell, health: Heart, learn: CalendarDays, go: Plane, saved: BookOpen, tools: Briefcase, toolbox: Wrench };   // (v6.36 Ali's board)
 // v6.48 (Ali: "put Shelf in the sidebar"): Shelf gets its own row right under Home (it is still a tab of the Home hub)
 // v6.50 (Ali picked A, 22 Oct: "only make money, business, health and shelf on the left sidebar"): the sidebar is chats + these
 // four; every other app opens from the Home box ("/" or "open …"); the "Attune" title goes Home.
 // v8.0 (Ali picked Agents design A): Agents joins the sidebar after Shelf
 // v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools after Agents
-const SIDE_PLACES = [["money", "Money", Wallet], ["business", "Business", Database], ["health", "Health", Heart], ["shelf", "Shelf", BookOpen], ["agents", "Agents", Radar], ["tools", "Tools", Wrench]];
-const HUB_PLACES = HUBS.flatMap(([id, label, target]) => (id === "home" ? [[target, label, HUB_ICON[id]], ["shelf", "Shelf", BookOpen]] : [[target, label, HUB_ICON[id]]]));
+// v8.5 (Ali agreed to the 27 Oct review): Follow-ups is its own place (W1); Shelf + Remember + Mind are one place, Saved (W2)
+const SIDE_PLACES = [["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["business", "Business", Database], ["health", "Health", Heart], ["shelf", "Saved", BookOpen], ["agents", "Agents", Radar], ["tools", "Tools", Wrench]];
+const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
 import { HealthPage } from "./health-ui.jsx";
 import { AgentsPage } from "./agents-ui.jsx";
+import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { QuietWake } from "./wake-ui.jsx";
 import { myCountry as countryOfPerson } from "./country.js";
@@ -7706,13 +7708,13 @@ function tierOfInstalled(m) {
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
 const OWN_TITLE = new Set(["privacy", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
-  cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
+  cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "8.4";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "8.5";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7758,7 +7760,8 @@ const MORE_TOOLS = [
   ["map", "Maps", "Offline places", MapPin], ["metro", "Metro", "Cairo Metro — line, direction, stops, ticket", TrainFront], ["field", "Site reports", "Incident & maintenance docs", HardHat],
   ["fleet", "Fleet", "Equipment health", Gauge], ["improve", "Improve a prompt", "For ChatGPT, Claude, Gemini…", Wand2],
   ["compress", "Compress", "Shorter prompts", Scissors], ["humanize", "Humanize", "Sound like you", PenLine],
-  ["copilot", "Copilot", "Work with another AI", MessageSquare], ["library", "Library", "Prompt recipes", Package],
+  ["copilot", "Copilot", "Work with another AI", MessageSquare], ["library", "Prompt lab", "Prompt recipes", Package],
+  ["write", "Writing", "One box: improve, shorten or humanize any text", PenLine],   // v8.5 (E3)
   ["guide", "How to use Attune", "Every tool in three steps, with pictures", BookOpen],   // v6.28: opened from the top of All and from Settings
 ];
 
@@ -7801,7 +7804,7 @@ const MORE_GROUPS = [
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
   ["Business (add-on)", ["business", "field", "fleet"]],   // v6.50: the Crane toolkit opens from Business → Fleet & rentals → More
-  ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library"]],
+  ["Create (add-on)", ["studio", "code", "write", "improve", "compress", "humanize", "copilot", "library"]],
 ];
 
 // Records from Memory, attached to a chat message about the user's own past.
@@ -8358,12 +8361,16 @@ export default function App() {
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools, STUDIO_OFF ? ["studio"] : []);
   // v6.31 minimal: short tab names (the page's own title stays full)
   const TAB_SHORT = { agents: "Agents", timeline: "Follow-ups", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
-    pdfchat: "PDF chat", booklib: "Library", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
+    pdfchat: "One file", booklib: "Documents", write: "Writing", shelf: "Notes", remember: "Books & pages", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
   const hubTabsEl = (() => {
     const avail = [...new Set([...groupsHere.flatMap((g) => g[1]), "chat", "money", "health", "home", "tools", "privacy", "guide"])];
     const t = tabsFor(mode, avail);
+    // v8.5 (E2, Ali agreed): Follow-ups has no switch — its one list has chips; a part opened from a chip gets a way back to the list
+    if (!t.length) { const pp = partsOf(mode, avail); if (pp.length && pp[0] !== mode) return (
+      <button onClick={() => navTo(pp[0])} data-testid="part-back" className="calm inline-flex items-center gap-1 min-h-[36px] rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]! px-3.5 mb-3 text-[13px] font-bold text-[var(--c-mut)] hover:text-[var(--c-ink)]">
+        <ChevronLeft size={15} />{tr(pp[0] === "timeline" ? "All follow-ups" : TAB_SHORT[pp[0]] || MODE_TITLES[pp[0]] || pp[0])}</button>); }
     return t.length ? <HubTabs mode={mode} tabs={t} parts={partsOf(mode, avail)} titleOf={(m) => TAB_SHORT[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
       navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} asBar={!wide && t.includes("business") && t.includes("fleet")} /> : null;
   })();
@@ -9390,7 +9397,14 @@ export default function App() {
       logTool({ mode: "compress", title: cPrompt.trim().slice(0, 70), kind: "ai", before: bw, after: aw });
     } catch (e) { console.error(e); flash(String(e && e.message || e).slice(0, 90)); }
     finally { setLoading(false); }
-  };
+  };  // v8.5 (E3): the Writing box opens a tool with the text in it and runs it once the tool is on screen
+  const [writeRun, setWriteRun] = useState(null);
+  useEffect(() => {
+    if (!writeRun || writeRun !== mode) return;
+    setWriteRun(null);
+    if (mode === "improve") aiRewriteAction(); else if (mode === "compress") doCompressTarget(); else if (mode === "humanize") doHumanize();
+  }, [mode, writeRun]);
+
   const checkUpdates = async () => { setSyncing(true); const res = await syncLibrary(library.version); setSyncing(false); if (res) { setLibrary(res); flash("Library updated to v" + res.version); } else if (res === null) flash("Library up to date (v" + library.version + ")"); else flash("Offline — using bundled library v" + library.version); };
 
   // Copilot (context-aware conversation loop)
@@ -11277,6 +11291,8 @@ export default function App() {
               ) : null}
             </section>
           </div>
+        ) : mode === "write" ? (
+          <WritingBox onGo={(k, t) => { if (k === "improve") setInput(t); else if (k === "compress") setCPrompt(t); else setHzText(t); setWriteRun(k); navTo(k); }} />
         ) : mode === "humanize" ? (
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">

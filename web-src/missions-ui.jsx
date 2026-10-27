@@ -122,7 +122,7 @@ export function MissionsPage({ flash }) {
         <p data-intro="" className="c-sub text-[12.5px] m-0">{tr("Say a goal with a deadline. Attune works on it every day: it reads your money, food and Scout ads, gives your real chance, and the one step for today.")}</p>
       </div>
       <div className={cardPad + " space-y-2.5"}>
-        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="missions-input" placeholder={tr("e.g. «عايز أوفر 60 ألف قبل يونيو»")}
+        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="missions-input" placeholder={tr("e.g. “Save 60,000 by June”")}
           className={area} />
         {text.trim() ? (parsed
           ? <p className="text-[12.5px] c-sub" data-testid="missions-read">{tr(READ[parsed.kind] || "Buy it for {t} or less", { t: n(parsed.target), c: tr(CAT_NAME[parsed.cat] || "everything") })}{parsed.deadline ? " · " + tr("by {d}", { d: parsed.deadline }) : " · " + tr("add a date (e.g. by June)")}</p>

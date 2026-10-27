@@ -1,17 +1,22 @@
 /* ---- v6.30 the tab row on top of a combined page (hubs.js): the tools that belong together are one page — a tab opens the
    sibling. Scrolls sideways on a phone; Back still walks the pages you opened. */
-import React from "react";
-import { Briefcase, Truck, Building2, HardHat, Wrench } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Briefcase, Truck, Building2, HardHat, Wrench, ChevronRight } from "lucide-react";
 import { tr } from "./i18n.js";
 import { INSIDE } from "./hubs.js";
 
 // parts = [main, ...inside] of a merged page (hubs.js INSIDE, e.g. Assistants · Skills; Watch = Payments · Dates · Reminders):
 // a small switch under the tabs. A part can have its own short name (the tab "Watch" is "Payments" in its switch).
-const PART_TITLE = { guardian: "Guardian", radar: "Dates", reminders: "Reminders", life: "People & plans", xray: "Chat X-Ray", timeline: "All" };   // (v6.36 Follow-ups)
+const PART_TITLE = { guardian: "Guardian", radar: "Dates", reminders: "Reminders", life: "People & plans", xray: "Chat X-Ray", timeline: "All",
+  booklib: "Many books", pdfchat: "One file", memory: "Mind", recall: "Recall" };   // v8.5: Documents (W3), Mind · Recall (R2)   // (v6.36 Follow-ups)
 // v6.43 (Ali: "the business apps on their own"): on a phone, Business is its own app — its parts are a bottom bar with icons
 const BAR_ICON = { business: Briefcase, fleet: Truck, crane: Building2, field: HardHat, tools: Wrench };
 export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false }) {
   const on = (m) => m === mode || INSIDE[mode] === m;
+  const rowRef = useRef(null);
+  const [more, setMore] = useState(false);
+  const check = () => { const el = rowRef.current; if (!el) return; setMore(el.scrollWidth - el.clientWidth - Math.abs(el.scrollLeft) > 8); };
+  useEffect(() => { check(); const t = setTimeout(check, 300); window.addEventListener("resize", check); return () => { clearTimeout(t); window.removeEventListener("resize", check); }; }, [tabs.join(), mode]);
   if (asBar) return (
     <>
     <div className="att-hubbar" style={{ height: 80 }} aria-hidden="true" />
@@ -26,12 +31,17 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false 
     </>);
   return (
     <>
-    <div className="calm bg-transparent! att-hscroll flex gap-5 overflow-x-auto -mx-3 px-3 mb-4 border-b border-[var(--c-ln)]" role="tablist" data-testid="hub-tabs">
+    <div className="relative">
+    <div ref={rowRef} onScroll={check} className="calm bg-transparent! att-hscroll flex gap-5 overflow-x-auto -mx-3 px-3 mb-4 border-b border-[var(--c-ln)]" role="tablist" data-testid="hub-tabs">
       {tabs.map((m) => (
         <button key={m} role="tab" aria-selected={on(m)} onClick={() => { if (m !== mode) navTo(m); }} data-testid={"hub-tab-" + m}
           className={"shrink-0 h-11 -mb-px text-[14px] whitespace-nowrap border-b-2 transition-colors duration-150 " +
             (on(m) ? "border-[var(--c-acc-2)] text-[var(--c-ink)] font-extrabold" : "border-transparent text-[var(--c-mut)] font-bold hover:text-[var(--c-ink)]")}>
           {tr(titleOf(m))}</button>))}
+    </div>
+    {/* v8.5 (I3 of the 27 Oct review): a row that goes on past the screen shows it — a fade and "›" at its end (tap = scroll on) */}
+    {more ? <button aria-label={tr("More")} onClick={() => { const el = rowRef.current; if (el) el.scrollBy({ left: (document.dir === "rtl" ? -1 : 1) * el.clientWidth * 0.7, behavior: "smooth" }); }} data-testid="hub-tabs-more"
+      className="absolute top-0 end-0 -me-3 h-11 w-12 grid place-items-center text-[var(--c-mut)] bg-gradient-to-l rtl:bg-gradient-to-r from-[var(--c-bg)] via-[var(--c-bg)] to-transparent"><ChevronRight size={18} className="rtl:-scale-x-100" /></button> : null}
     </div>
     {parts.length >= 2 ? (
       <div className="calm inline-flex gap-0.5 max-w-full overflow-x-auto no-scrollbar rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]! p-1 mb-3" data-testid="hub-parts">

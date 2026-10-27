@@ -57,6 +57,9 @@ export function SafeSpend({ calm = false, card = false, inline = false }) {
   const [nonce, setNonce] = useState(0);
   const s = useSafe(nonce);
   if (!s) return null;
+  // v8.5 (I1 of the 27 Oct review): with nothing written yet, one first step instead of "0 a day"
+  if (!((j("ledger.v3", {}).txns || []).length) && !s.income && !(s.today > 0)) return (
+    <div className={(calm || card ? U.card + " p-4 " : "") + "text-[13px] " + U.muted} data-testid="safe-empty">{tr("Write what you spend or earn above — then Attune shows what is safe to spend each day.")}</div>);
   const setCushion = (v) => { try { localStorage.setItem(KEY, JSON.stringify({ ...j(KEY, {}), cushion: v })); } catch (e) {} setNonce((x) => x + 1); };
   const line = s.short > 0
     ? tr("Short by {x} before {d}").replace("{x}", s.cur + " " + fmt(s.short)).replace("{d}", dayName(s.income ? s.income.d : s.until))

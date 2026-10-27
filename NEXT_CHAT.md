@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 27 Oct 2026 — v8.4)
+# Attune — start here (handoff for the next chat, 27 Oct 2026 — v8.5)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,7 +6,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v8.4** (versionCode 126) — branch `claude/youthful-davinci-fe3400` = main (27 Oct) |
+| `main` | **v8.5** (versionCode 127) — branch `claude/youthful-davinci-fe3400` = main (27 Oct) |
 | Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
 | Tests | v8.3: every unit + e2e file passes (old Instant / Money / sidebar expectations updated; e2e_v727guardian dates now relative to today) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
@@ -49,6 +49,29 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
     localStorage). Tests: e2e_v831books.py (phone path with a stand-in), e2e_v830.py, unit v830library. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
+
+## v8.5 — Ali's answer to the review (27 Oct): "A — but from reputable sites that hold the whole information, or YouTube; quality,
+## not quantity" + "as per all your recommendations I agree"
+- [x] Web A — `trusted.js`: TRUSTED sites per kind (vehicle: auto-data.net, ultimatespecs, ev-database, carnewschina = specs;
+      hatla2ee, contactcars, yallamotor = Egypt price; topgear, autocar, carwow… = review; gadget + machine lists too).
+      chat.jsx asks them first (`trustedQueries` → "site:auto-data.net Lynk & Co 900"), research.js ranks them first (+2, and a spec
+      site may give 4 pages = 4 versions). Code builds **Specs by version** (`specCards`: one column per spec page, rows from the page's
+      own "Spec | Value" table) and **Prices in Egypt** (`egyptPrices`), under the answer; the model gets `CARDS_NOTE` (overview, what
+      reviewers say, pros, cons, which version, rivals — no tables). YouTube: `WebTools.videoReviews` (search "<q> site:youtube.com",
+      captions via YouTube's app API, then the watch page) → NativeBridge `videoReviews` → api.webVideos → `videoPages` join the reading
+      list. Tests: unit v850trusted, e2e_v850trusted.py. **Not tried against the live sites yet (no internet in the build box) —
+      Ali's phone test decides; if a site's page shape differs, specCard's label regexes (factsheet ATTRS) are the place to adjust.**
+- [x] Review picks (REVIEW_2026-10-27.md §B), hubs.js + attune.jsx:
+      R1 "New chat" already opens Home (kept the empty chat screen for translate / call / assistants). R2 Recall = Mind's switch
+      (INSIDE recall→memory). R3 Knowledge was already hidden (v7.9, developer only). R4 Crane only from Fleet → More.
+      I1 zeros → a first step (safespend-ui `safe-empty`, guardian KPIs hidden at 0, Tools counters hidden at 0). I3 tab rows show a
+      fade + "›" (hub-ui `hub-tabs-more`). I4 Missions example in the app's language.
+      E1 Daily = Learn · News; **Go** = Travel · Scout · Metro · Maps. E2 Follow-ups: no switch; chips + "Open: People & plans ·
+      Reminders · Dates · Chat X-Ray · Guardian" (timeline-ui `fu-pages`), a part page has "‹ All follow-ups" (`part-back`).
+      E3 **Writing** = one box (writing-ui.jsx, mode `write`) → Improve / Shorten / Humanize open with the text and run.
+      W1 Follow-ups its own sidebar place. W2 **Saved** = Notes (Shelf) · Books & pages (Remember) · Mind. W3 Students' **Documents**
+      = Many books (Library) · One file (Ask a PDF).
+      Sidebar: Money · Follow-ups · Business · Health · Saved · Agents · Tools.
 
 ## v8.4 — Ali's 27 Oct list (on v8.3) — DONE, waiting for his phone test and his picks
 Review for Ali (walkthrough + options): **`REVIEW_2026-10-27.md`** (sheets `design/v84/walk-0..5.png`).

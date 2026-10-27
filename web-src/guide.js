@@ -121,6 +121,7 @@ export const TOOLS = {
   tools: { sketch: "list", steps: [S("Work → Tools is a list of choices: Improve a prompt, Compress, Humanize, Copilot, Library, Video and Ask.", "شغل ← الأدوات قايمة اختيارات: حسّن طلب، اضغط، خليه طبيعي، المساعد، المكتبة، الفيديو، واسأل."), S("Tap a card to open it on its own page.", "دوس على أي كارت يفتح في صفحة لوحده."), S("Back brings you to the list again.", "الرجوع بيرجعك للقايمة تاني.")], tip: S("Use them before you send something to ChatGPT or a client.", "استخدمها قبل ما تبعت حاجة لـ ChatGPT أو لعميل.") },
   improve: { sketch: "type", steps: [S("Paste a rough prompt you will send to ChatGPT, Claude or Gemini.", "الزق طلب مبدئي هتبعته لـ ChatGPT أو Claude أو Gemini."), S("Pick the AI it is for.", "اختار هتبعته لأنهي واحد."), S("Copy the better prompt.", "انسخ الطلب المتظبط.")], tip: S("Compress makes it shorter; Humanize makes text sound like you.", "«اضغط» بيقصّره، و«خليه طبيعي» بيخلي الكلام بأسلوبك.") },
   compress: { sketch: "type", steps: [S("Paste a long prompt.", "الزق طلب طويل."), S("Attune keeps every requirement and drops the rest.", "Attune بيسيب كل المطلوب ويشيل الباقي."), S("Copy the short version.", "انسخ النسخة القصيرة.")], tip: S("Shorter prompts cost less on paid AIs.", "الطلبات الأقصر أرخص في الخدمات المدفوعة.") },
+  write: { sketch: "type", steps: [S("Paste or type any text — a prompt, an email, a message.", "الزق أو اكتب أي نص — طلب، إيميل، رسالة."), S("Tap Improve, Shorten or Humanize.", "دوس «حسّن» أو «اختصر» أو «خلّيه طبيعي»."), S("The tool opens with your text and does it.", "الأداة بتفتح بالنص بتاعك وتعملها.")], tip: S("Copilot and the Prompt lab are the tabs next to Writing.", "«مساعد» و«معمل الطلبات» هما التابات اللي جنب «الكتابة».") },
   humanize: { sketch: "type", steps: [S("Paste text that sounds robotic.", "الزق كلام شكله آلي."), S("Pick a tone.", "اختار الأسلوب."), S("Get it back in a natural voice.", "خده تاني بكلام طبيعي.")], tip: S("Put a sample of your writing in your Profile for your own style.", "حط عينة من كتابتك في «البروفايل» عشان يطلع بأسلوبك.") },
   copilot: { sketch: "chat", steps: [S("Paste what another AI said.", "الزق اللي قاله ذكاء اصطناعي تاني."), S("Attune checks it and suggests the next prompt.", "Attune بيراجعه ويقترح الطلب اللي بعده."), S("Go back and forth until it is right.", "روح وتعالى لحد ما يظبط.")], tip: S("Good for long jobs on another AI.", "مفيد للشغلانات الطويلة على ذكاء تاني.") },
   library: { sketch: "list", steps: [S("Browse prompt recipes by job.", "اتفرج على وصفات الطلبات حسب الشغلانة."), S("Fill in the blanks.", "املا الفراغات."), S("Send it to Chat or copy it.", "ابعتها للشات أو انسخها.")], tip: S("Prompt lab (top of Library): write two versions, run both on the same text, keep the better one in My prompts.", "معمل الطلبات (فوق المكتبة): اكتب نسختين، شغّلهم على نفس الكلام، واحتفظ بالأحسن في طلباتي.") },
@@ -190,12 +191,12 @@ export function chapters(hubs = HUBS) {
 
 /** Where a tool lives, as the app's own labels: ["Money", "Follow-ups", "Dates"]. */
 const PART = { guardian: "Payments", radar: "Dates", reminders: "Reminders", life: "People & plans", xray: "Chat X-Ray" };
-const TOOL_CHOICES = ["improve", "compress", "humanize", "copilot", "library", "video", "ask"];
+const TOOL_CHOICES = ["write", "improve", "compress", "humanize", "copilot", "library", "video", "ask"];
 export function whereOf(id, hubs = HUBS) {
   if (id === "privacy" || id === "guide") return [];
   const h = hubs.find((x) => x[3].includes(id));
   if (!h) return [];
-  if (PART[id] && (INSIDE[id] || id === "reminders")) return [h[1], "Follow-ups", PART[id]];
+  if (PART[id] && (INSIDE[id] || id === "reminders")) return h[0] === "followups" ? ["Follow-ups", PART[id]] : [h[1], "Follow-ups", PART[id]];   // v8.5: Follow-ups is its own place
   if (TOOL_CHOICES.includes(id)) return h[1] === "Tools" ? ["Tools"] : [h[1], "Tools"];   // v8.2: Tools is its own place in the sidebar
   return [h[1]];
 }
