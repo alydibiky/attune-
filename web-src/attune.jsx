@@ -9603,6 +9603,7 @@ export default function App() {
     pro: () => proActive,          // v5.29: Pro or the 7-day trial (expert review, deep research)
     // v5.20 deep research: pages in full, and the passages of one page / of all
     webPages: NATIVE ? (q, pages) => webLookupRaw(q, pages) : null,
+    webVideos: NATIVE ? (q, n = 2) => nativeCall("videoReviews", { q, n }).then((r) => (r && r.hits) || []).catch(() => []) : null,   // v8.5: YouTube review transcripts
     // v6.16: a car question also gets the Cars pack's official figures and today's exchange rates (cached 6 h)
     // the specs, then the same car's recalls and owner complaints (NHTSA) — reliability in every car answer
     carSpecs: NATIVE && NATIVE.knowSearch ? async (q) => {

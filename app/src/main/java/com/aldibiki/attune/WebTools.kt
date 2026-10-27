@@ -360,6 +360,79 @@ object WebTools {
         return JSONObject().put("hits", arr).put("via", via).put("why", why)
     }
 
+    // ---- v8.5 YouTube reviews (Ali: "why not from YouTube videos — quality, not quantity") -------------------------
+    /** The id of a YouTube video address, or null. */
+    fun youtubeId(url: String): String? =
+        Regex("(?:youtube\\.com/(?:watch\\?(?:.*&)?v=|shorts/|embed/)|youtu\\.be/)([A-Za-z0-9_-]{11})").find(url)?.groupValues?.get(1)
+
+    /** The caption tracks of a video: [{baseUrl, languageCode, kind}] — YouTube's app API first, then the watch page. */
+    private fun captionTracks(id: String): JSONArray? {
+        try {
+            val body = JSONObject().put("videoId", id).put("context", JSONObject().put("client", JSONObject()
+                .put("clientName", "ANDROID").put("clientVersion", "19.09.37").put("androidSdkVersion", 30).put("hl", "en")))
+            val r = Jsoup.connect("https://www.youtube.com/youtubei/v1/player?prettyPrint=false").ignoreContentType(true)
+                .userAgent("com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip").header("Content-Type", "application/json")
+                .requestBody(body.toString()).method(org.jsoup.Connection.Method.POST).timeout(8_000).execute().body()
+            val t = JSONObject(r).optJSONObject("captions")?.optJSONObject("playerCaptionsTracklistRenderer")?.optJSONArray("captionTracks")
+            if (t != null && t.length() > 0) return t
+        } catch (e: Exception) { }
+        return try {
+            val html = Jsoup.connect("https://www.youtube.com/watch?v=$id&hl=en").userAgent(UA).header("Accept-Language", "en,ar;q=0.8")
+                .timeout(8_000).ignoreContentType(true).execute().body()
+            val i = html.indexOf("\"captionTracks\":"); if (i < 0) return null
+            val start = html.indexOf('[', i); var depth = 0; var end = start
+            while (end < html.length) { val c = html[end]; if (c == '[') depth++ else if (c == ']') { depth--; if (depth == 0) break }; end++ }
+            JSONArray(html.substring(start, end + 1))
+        } catch (e: Exception) { null }
+    }
+
+    /** A video's words (its captions; a person's own captions before automatic ones; English or Arabic first). "" when it has none. */
+    fun youtubeTranscript(id: String, maxChars: Int = 16_000): String {
+        Prefs.requireOnline("https://www.youtube.com/", "reading a YouTube review")
+        val tracks = captionTracks(id) ?: return ""
+        val list = (0 until tracks.length()).map { tracks.getJSONObject(it) }
+        fun lang(o: JSONObject) = o.optString("languageCode")
+        val pick = list.firstOrNull { lang(it).startsWith("en") && it.optString("kind") != "asr" }
+            ?: list.firstOrNull { lang(it).startsWith("ar") && it.optString("kind") != "asr" }
+            ?: list.firstOrNull { lang(it).startsWith("en") } ?: list.firstOrNull { lang(it).startsWith("ar") } ?: list.firstOrNull() ?: return ""
+        val base = pick.optString("baseUrl").replace("\\u0026", "&"); if (!base.startsWith("http")) return ""
+        return try {
+            val xml = Jsoup.connect(base.replace(Regex("&fmt=[^&]*"), "")).userAgent(UA).ignoreContentType(true).timeout(8_000).execute().body()
+            val doc = Jsoup.parse(xml, "", org.jsoup.parser.Parser.xmlParser())
+            val sb = StringBuilder()
+            for (el in doc.select("text, p")) {
+                val t = org.jsoup.parser.Parser.unescapeEntities(el.text(), false).replace(Regex("\\s+"), " ").trim()
+                if (t.isEmpty() || t.startsWith("[")) continue
+                sb.append(t).append(if (t.endsWith(".") || t.endsWith("?") || t.endsWith("!")) "\n" else " ")
+                if (sb.length >= maxChars) break
+            }
+            sb.toString().trim().take(maxChars)
+        } catch (e: Exception) { "" }
+    }
+
+    /**
+     * The top review videos for a subject, with their transcripts — read like web pages. The videos are found with the normal
+     * search engines ("<q> site:youtube.com"), at most `n`, waited for at most ~10 s together. → {hits:[{title,url,text,source}]}
+     */
+    fun videoReviews(q: String, n: Int = 2): JSONObject {
+        val found = LinkedHashMap<String, Hit>()
+        val sq = "$q site:youtube.com"
+        val dj = pool.submit(Callable { try { duckduckgo(sq, 10) } catch (e: Exception) { emptyList<Hit>() } })
+        val bj = pool.submit(Callable { try { bing(sq, 10) } catch (e: Exception) { emptyList<Hit>() } })
+        for (l in listOf(dj, bj).map { try { it.get(8, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() } })
+            for (h in l) { val id = youtubeId(h.url) ?: continue; if (!found.containsKey(id)) found[id] = h }
+        val want = found.entries.take(n + 2).toList()
+        val jobs = want.map { (id, h) -> pool.submit(Callable { Triple(id, h, try { youtubeTranscript(id) } catch (e: Exception) { "" }) }) }
+        val arr = JSONArray(); val t0 = System.currentTimeMillis()
+        for (j in jobs) {
+            val r = try { j.get(maxOf(1L, 12_000 - (System.currentTimeMillis() - t0)), TimeUnit.MILLISECONDS) } catch (e: Exception) { null } ?: continue
+            if (r.third.length < 200) continue
+            arr.put(JSONObject().put("title", r.second.title).put("url", "https://www.youtube.com/watch?v=" + r.first).put("text", r.third).put("source", "youtube"))
+            if (arr.length() >= n) break
+        }
+        return JSONObject().put("hits", arr).put("found", found.size)
+    }
+
     // ---- News: the last day's articles on a topic ------------------------------
     /**
      * Google News' public RSS search gives headlines WITH their time and

@@ -42,11 +42,12 @@ import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteF
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp , learnRule } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote, subjectOf } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
 import { makerNote, fixMakerCountry } from "./makers.js";
+import { TRUSTED, trustedQueries, specCards, egyptPrices, CARDS_NOTE, videoPages } from "./trusted.js";
 import { fillBlanks } from "./tableblanks.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
@@ -1137,7 +1138,15 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v6.12: a detail question about a car, a crane, a phone, a place, a company → the searches that fill every section, and
         // the answer's shape (research.js answerTemplate) — what makes Gemini's answers complete
         const kindT = topicKind(question), shaped = api.webPages && wantsShape(typed, kindT);
-        if (shaped) { const cmpQ = compareSearches(question, kindT); queries = [...new Set([...queries, ...(cmpQ.length ? cmpQ : topicSearches(query, kindT, kindT === "vehicle" ? 6 : 4))])].slice(0, cmpQ.length ? 7 : kindT === "vehicle" ? 7 : 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8, cmpQ.length || kindT === "vehicle" ? 10 : 0); }
+        // v8.5 (Ali: "from reputable sites that hold the whole information — quality, not quantity"): the trusted spec / price /
+        // review sites are asked first ("site:auto-data.net Lynk & Co 900"), then only one or two general searches (trusted.js)
+        const trustedKind = shaped && TRUSTED[kindT] ? kindT : null;
+        if (shaped) { const cmpQ = compareSearches(question, kindT);
+          const cmpP = cmpQ.length ? compareParts(question) : null;
+          const tq = !trustedKind ? [] : cmpP ? cmpP.flatMap((x) => trustedQueries(subjectOf(x), kindT, { n: 1 })) : trustedQueries(subjectOf(query), kindT);
+          queries = [...new Set([queries[0], ...tq, ...queries.slice(1), ...(cmpQ.length ? cmpQ : topicSearches(query, kindT, kindT === "vehicle" ? 6 : 4))])].slice(0, cmpQ.length ? 8 : tq.length ? 8 : kindT === "vehicle" ? 7 : 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8, cmpQ.length || kindT === "vehicle" ? 10 : 0); }
+        // v8.5: the top YouTube reviews, their transcripts read like pages — fetched while the web is searched
+        const vidP = trustedKind && api.webVideos && !compareParts(question) ? api.webVideos(subjectOf(query) + " review", 2).catch(() => []) : Promise.resolve([]);
         // v6.16 (Ali): a car → the official test figures from the Cars pack and today's exchange rates, fetched while the web is searched
         const carP = kindT === "vehicle" ? Promise.all([
           api.carSpecs ? api.carSpecs(question).catch(() => []) : Promise.resolve([]),
@@ -1180,6 +1189,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           if (t2.length && !t2.offTopic) { toRead = t2; queries.push(...alt); lists.push(...again.map((r) => (r && r.hits) || [])); }
           else if (toRead.offTopic) toRead = [];   // nothing about the subject: better no pages than pages about something else
         }
+        // v8.5: the YouTube reviews join the reading list (waited for at most 4 s more)
+        if (toRead.length && trustedKind) {
+          const vids = videoPages(await Promise.race([vidP, new Promise((ok) => setTimeout(() => ok([]), 4000))]));
+          if (runRef.current !== run) return;
+          if (vids.length) { toRead = [...toRead, ...vids.slice(0, 2)]; queries.push("YouTube: " + subjectOf(query) + " review"); }
+        }
+        // v8.5: code builds the versions' spec table and the Egyptian prices from the trusted pages — the model then only talks
+        const codeHas = trustedKind ? { specs: specCards(toRead).cards.length, price: egyptPrices(toRead).rows.length } : null;
         if (toRead.length && api.webPages && !deepMode) {
           // FAST: code ranks the passages of every page into the window, cross-checks the
           // figures across sites, and ONE model pass writes the answer
@@ -1194,15 +1211,15 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const figs = confirmedFigures(ranked);
           sources = ranked; via = look.via;
           research = { pages: toRead.length, withFacts: ranked.length, searches: queries.length, confirmed: figs.list.length, fast: true,
-            log: { queries: queries.slice(0, 6), read: toRead.slice(0, 12).map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url })) } };
+            log: { queries: queries.slice(0, 10), read: toRead.slice(0, 12).map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url })) } };
           // v5.34: when code can build the facts sheet (exact figures, tables), the model writes
           // the answer and what it means — the figures come from the sheet, not re-typed by the model
           const sheet0 = factSheet(question, ranked, /[؀-ۿ]/.test(typed));
           const ask0 = sheet0.md ? SHEET_NOTE : deep ? FAST_REPORT_ADD : "";
-          tplUsed = shaped && !speedBrief ? answerTemplate(question, kindT) : "";   // a slow phone: the short version first, "More detail" for the rest
+          tplUsed = shaped && !speedBrief ? (codeHas && codeHas.specs && !compareParts(question) ? CARDS_NOTE : answerTemplate(question, kindT)) : "";   // a slow phone: the short version first, "More detail" for the rest
           const carNote = await carP;
           content = api.groundedPrompt(asked, ranked) + figs.block + carNote + ask0 + tplUsed + photoNote;
-          webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + carNote + ask0 + photoNote };
+          webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + carNote + ask0 + photoNote, codeHas };
         } else if (toRead.length && api.webPages) {
           const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
           const seenUrls = new Set(lists.flat().map((h) => h.url));
@@ -1656,7 +1673,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // the trims, the specs) is searched for ONCE more, and the answer written again with
       // the new pages — instead of "the sources do not provide the price". (answerfix.js)
       if (sources && webCtx && api.webPages && answer && String(answer).trim()) {
-        const gaps = gapsOf(typed, answer);
+        // v8.5: what code puts in its own tables (the versions' specs, the Egyptian prices) is not a gap
+        const ch = webCtx.codeHas || {};
+        const gaps = gapsOf(typed, answer).filter((g) => !(ch.price && /price|سعر/.test(g)) && !(ch.specs && /spec|trim|مواصفات|فئات/.test(g)));
         if (gaps.length) {
           extra.gapSearch = gaps;
           patchMsg(cid, aiId, { phase: tr("Searching again for: {what}…", { what: gaps.join(", ") }) });
@@ -1735,10 +1754,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const seen = new Set(sources.map((x) => x.url));
         const extraPages = [...full.values()].filter((h) => h.url && !seen.has(h.url));
         const forSheet = [...sources.map((x) => (full.has(x.url) ? { ...x, text: full.get(x.url).text } : x)), ...extraPages];
-        const fs = factSheet((webCtx && webCtx.question) || typed, forSheet, /[؀-ۿ]/.test(typed || ""), compareParts((webCtx && webCtx.question) || typed));
+        const arS = /[؀-ۿ]/.test(typed || "");
+        // v8.5: from the trusted spec / price sites, code's own tables — one column per version, the Egyptian prices (trusted.js);
+        // with them, the mixed "key figures" list is not needed (it mixed the versions' figures)
+        const cards = webCtx && webCtx.codeHas ? specCards(forSheet, { ar: arS }) : { md: "", cards: [] };
+        const eg = webCtx && webCtx.codeHas ? egyptPrices(forSheet, { ar: arS }) : { md: "", rows: [] };
+        const fs0 = factSheet((webCtx && webCtx.question) || typed, forSheet, arS, compareParts((webCtx && webCtx.question) || typed));
+        const fs = cards.cards.length ? { ...fs0, md: [cards.md, eg.md].filter(Boolean).join("\n\n"), rows: [], tables: cards.cards } : eg.md ? { ...fs0, md: [eg.md, fs0.md].filter(Boolean).join("\n\n") } : fs0;
         const nBefore = sources.length;
         if (fs.md) {
-          answer = String(answer).trim() + "\n\n" + fs.md; extra.factSheet = fs.rows.length + fs.tables.length;
+          answer = String(answer).trim() + "\n\n" + fs.md; extra.factSheet = fs.rows.length + fs.tables.length + eg.rows.length;
           if (extraPages.length) sources = [...sources, ...extraPages.map((h) => ({ ...h, text: String(h.text || "").slice(0, 600) }))];
         }
         // v6.38 (Ali: "the research still leaves blanks"): every "—" cell is filled from the pages read, by code; a column or

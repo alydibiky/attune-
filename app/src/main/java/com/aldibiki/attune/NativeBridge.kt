@@ -992,6 +992,16 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v8.5: YouTube review videos with their transcripts {q, n} → {hits} (read like pages; only the subject leaves the phone). */
+    @JavascriptInterface
+    fun videoReviews(id: String, arg: String) {
+        if (blockedByAirGap(id, "YouTube reviews")) return
+        pool.execute {
+            try { val a = JSONObject(arg); resolve(id, WebTools.videoReviews(a.getString("q"), a.optInt("n", 2).coerceIn(1, 4))) }
+            catch (e: Exception) { reject(id, e.message ?: "YouTube reviews failed") }
+        }
+    }
+
     /** The last day's news on a topic (Daily → News). */
     @JavascriptInterface
     fun news(id: String, arg: String) {

@@ -11,6 +11,7 @@
      5. the final answer is written from all the notes, complete and cited.
    Pure helpers here (unit-tested in tests/unit/v520.test.mjs); the loop is in chat.jsx.  */
 import { homeCurrency } from "./locale.js";
+import { trustedOf } from "./trusted.js";
 
 
 export const NOTES_SYS = `You read ONE web page for a question and write NOTES — every fact on the page that helps answer it.
@@ -103,6 +104,7 @@ export function sourceScore(url, question = "") {
   let s = 0;
   if (/\.(gov|edu|int)(\.[a-z]{2})?$|\.gov\.eg$|\.org\.eg$/.test(h)) s += 2;
   if (GOOD.test(h)) s += 1.5;
+  if (trustedOf(url)) s += 2;   // v8.5 (Ali: "quality, not quantity"): the sites that hold a whole spec sheet / the Egyptian price (trusted.js)
   if (LOW.test(h)) s -= 2;
   // the brand's own site ("lynkco.com" for "Lynk & Co", "liebherr.com" for "Liebherr")
   const names = String(question || "").split(/\s+/).filter((w) => /^[A-Z]/.test(w) && w.length > 2).map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, ""));
@@ -191,7 +193,9 @@ export function mergeHits(lists, cap, question = "", perSite = 2, strict = false
         const h = q.shift();
         const u = String(h.url).replace(/#.*$/, "").replace(/\/$/, "");
         const site = host(u);
-        if (seen.has(u) || (per.get(site) || 0) >= perSite) continue;
+        // v8.5: a spec site keeps one page per version (auto-data.net has a page for each trim) — up to 4 of them
+        const cap1 = trustedOf(u) && trustedOf(u).role === "specs" ? Math.max(perSite, 4) : perSite;
+        if (seen.has(u) || (per.get(site) || 0) >= cap1) continue;
         seen.add(u); per.set(site, (per.get(site) || 0) + 1);
         picked.push({ h, round, s: sourceScore(h.url, question) });
         break;
@@ -199,7 +203,7 @@ export function mergeHits(lists, cap, question = "", perSite = 2, strict = false
     }
   }
   // quality moves a page up at most one round; social media / Q&A go last
-  const out = picked.map((p, i) => ({ ...p, k: p.round - Math.min(1, p.s / 2) + (p.s <= -2 ? 100 : 0) + i / 1000 }))
+  const out = picked.map((p, i) => ({ ...p, k: p.round - Math.min(1, p.s / 2) - (trustedOf(p.h.url) ? 2 : 0) + (p.s <= -2 ? 100 : 0) + i / 1000 }))
     .sort((a, b) => a.k - b.k).slice(0, cap).map((p) => p.h);
   if (offTopic) out.offTopic = true;
   return out;
@@ -391,6 +395,10 @@ export function topicKind(q) {
   const t = String(q || "");
   for (const k of ["machine", "vehicle", "gadget", "place", "org"]) if (KIND_RX[k].test(t)) return k;
   return "general";
+}
+/** v8.5: the bare subject of a question ("Lynk & Co 900 specs in Egypt" → "Lynk & Co 900"). */
+export function subjectOf(q) {
+  return topicOf(q).replace(FACET_WORDS, " ").replace(/\b(in|of|for)?\s*egypt\b|في مصر|بمصر/gi, " ").replace(/\s+/g, " ").replace(/(^|\s)(و|and)(?=\s|$)/gi, " ").replace(/\s+/g, " ").trim() || topicOf(q);
 }
 /** The extra searches that fill each section (on top of expandQueries). */
 export function topicSearches(q, kind = topicKind(q), n = 4) {
