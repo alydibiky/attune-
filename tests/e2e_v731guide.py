@@ -53,7 +53,7 @@ with sync_playwright() as p:
     # a Follow-ups part says where it lives and explains the Cancel kit
     page.click("[data-testid=guide-row-radar]"); page.wait_for_timeout(200)
     wh = page.locator("[data-testid=guide-where]").inner_text()
-    check("Money" in wh and "Follow-ups" in wh and "Dates" in wh, "Dates says where it lives: " + wh)
+    check("Follow-ups" in wh and "Dates" in wh, "Dates says where it lives (v8.5: Follow-ups is its own place): " + wh)
     check("Cancel kit" in page.locator("[data-testid=guide-walk]").inner_text(), "Dates explains the Cancel kit")
     page.click("[data-testid=guide-row-radar]"); page.wait_for_timeout(100)
     # a tool, opened in place

@@ -9,7 +9,7 @@ export const AREAS = [
   { id: "health", icon: "🥗", title: S("Health & food", "الصحة والأكل"), ids: ["health", "fit", "care", "cycle"] },
   { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "chat", "lifeask", "translate", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
   { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "booklib", "slides", "cv", "memory", "remember", "recall", "news"] },
-  { id: "work", icon: "💼", title: S("Work & business", "الشغل والبيزنس"), ids: ["business", "fleet", "field", "crane", "tools", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
+  { id: "work", icon: "💼", title: S("Work & business", "الشغل والبيزنس"), ids: ["business", "fleet", "field", "crane", "tools", "write", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
   { id: "create", icon: "✨", title: S("Create", "اعمل حاجة"), ids: ["assistants", "skills", "artifacts", "studio", "code", "projects"] },
 ];
 
@@ -59,6 +59,7 @@ export const SAY = {
   tools: [S("Open Work → Tools", "افتح الشغل ← الأدوات"), S("Writing, files, video — every tool in one place", "الكتابة والملفات والفيديو — كل الأدوات في مكان واحد")],
   improve: [S("“write me an email to my landlord” (rough)", "«اكتبلي إيميل لصاحب الشقة» (على السريع)"), S("A clear prompt that gets a far better answer", "طلب واضح بيجيب إجابة أحسن بكتير")],
   compress: [S("Paste a long text", "الزق نص طويل"), S("The same meaning in half the words", "نفس المعنى في نص الكلام")],
+  write: [S("Any text, then Improve, Shorten or Humanize", "أي نص، وبعدين حسّن أو اختصر أو خلّيه طبيعي"), S("The tool opens with your text and does it", "الأداة بتفتح بالنص بتاعك وتعملها")],
   humanize: [S("Paste text that sounds like a robot", "الزق كلام شكله كلام آلي"), S("The same text in a natural voice", "نفس الكلام بأسلوب طبيعي")],
   copilot: [S("Write anywhere with the Attune keyboard", "اكتب في أي حتة بكيبورد Attune"), S("Improve, translate or reply in one tap — offline", "حسّن أو ترجم أو رد بضغطة — من غير نت")],
   library: [S("Save a prompt that worked", "احفظ طلب نفع معاك"), S("Your own library to reuse it any time", "مكتبتك انت تستعمله أي وقت")],

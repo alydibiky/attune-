@@ -21,7 +21,7 @@ export const HUBS = [
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
   // v8.5 (E1): Daily's 9 tabs split — Daily (Learn, News) and Go (Travel, Scout, Metro, Maps); Knowledge went to Settings (R3)
   ["learn", "Daily", "learn", ["learn", "news"]],
-  ["go", "Go", "travel", ["travel", "scout", "metro", "map"]],
+  ["go", "Go", "travel", ["travel", "scout", "map", "metro"]],   // (v6.42 Ali: Metro right after Maps)
   // v8.5 (W2): one place for what you keep — Notes (Shelf) · Books & pages (Remember) · Mind
   ["saved", "Saved", "shelf", ["shelf", "remember", "memory"]],
   // v8.5 (R4): the Crane toolkit opens from Business → Fleet & rentals → More only

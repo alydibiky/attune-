@@ -56,7 +56,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", tag + "Money opens on the calm view (level 1)")
         check(page.locator("[data-testid=money-yusr]").is_hidden(), tag + "…with the ledger (Yusr) loaded behind it, hidden")
         tabs = [t.get_attribute("data-testid")[8:] for t in page.locator("[data-testid=hub-tabs] [role=tab]").all()]
-        check(tabs == ["money", "timeline", "deal"], tag + "tabs Money · Follow-ups · Deal Check (v8.2): %s" % tabs)
+        check(tabs == ["money", "deal"], tag + "tabs Money · Deal Check (v8.5: Follow-ups is its own place): %s" % tabs)
         check(page.locator("[data-testid=money-box-input]").is_visible(), tag + "the box comes first")
         b = page.locator("[data-testid=money-balance]").inner_text()
         check(num(b) == BAL, tag + "the balance, by code from the ledger: %s (want %d)" % (b, BAL))
@@ -105,12 +105,12 @@ with sync_playwright() as p:
             check(n == 9, tag + "…which has the 2 entries the box wrote: %s" % n)
             page.click("[data-testid=money-bar-home]"); page.wait_for_timeout(200)
             check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", tag + "…and back")
-            page.click("[data-testid=hub-tab-timeline]"); page.wait_for_selector("[data-testid=timeline-page]", timeout=4000)
-            check(page.locator("[data-testid=hub-part-life]").count() == 1 and page.locator("[data-testid=hub-part-reminders]").count() == 1, tag + "Follow-ups opens on its one list (v8.2, 1A), People & plans and Reminders in its switch")
-            page.click("[data-testid=hub-part-life]"); page.wait_for_selector("[data-testid=life-page]", timeout=4000)
+            page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'timeline'}}))"); page.wait_for_selector("[data-testid=timeline-page]", timeout=4000)
+            check(page.locator("[data-testid=fu-open-life]").count() == 1 and page.locator("[data-testid=fu-open-reminders]").count() == 1, tag + "Follow-ups opens on its one list; People & plans and Reminders open from it (v8.5)")
+            page.click("[data-testid=fu-open-life]"); page.wait_for_selector("[data-testid=life-page]", timeout=4000)
             check(page.locator("[data-testid=life-progress]").count() == 2 and "4 / 12 paid" in page.locator("[data-testid=life-item]").first.inner_text(), tag + "each plan shows how much is paid (4 / 12)")
             shot(page, "followups-phone-dark")
-            page.click("[data-testid=hub-part-guardian]"); page.wait_for_selector("[data-testid=guardian-page]", timeout=4000)
+            page.click("[data-testid=part-back]"); page.click("[data-testid=fu-open-guardian]"); page.wait_for_selector("[data-testid=guardian-page]", timeout=4000)
             check(True, tag + "the Guardian is inside Follow-ups (v8.2)")
         else:
             page.click("[data-testid=money-open-report]"); page.wait_for_selector("[data-testid=money-report]"); page.wait_for_timeout(300)
@@ -154,7 +154,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=money-list]").count() == 1 and page.locator("[data-testid=money-yusr]").is_hidden(), tag + "the ledger opens inside Money as Attune's own list (never the old screen)")
         fr = [f for f in page.frames if f != page.main_frame and "Yusr" in (f.title() or "")]
         check(bool(fr), tag + "…Yusr still runs underneath as the engine")
-        for t in ["timeline", "deal"]:
+        for t in ["deal"]:
             page.click("[data-testid=hub-tab-" + t + "]"); page.wait_for_timeout(700); shot(page, t + "-desktop-" + theme)
         ctx.close()
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])

@@ -18,5 +18,5 @@ ok(markTried("fit", mem) && !markTried("fit", mem) && !markTried("nonsense", mem
 markTried("care", mem);
 const h = progress(loadTried(mem), "health"), all = progress(loadTried(mem));
 ok(h.tried === 2 && h.total === 4 && all.tried === 2 && all.total === AREAS.reduce((a, x) => a + x.ids.length, 0), "progress by area and in all: " + JSON.stringify([h, all]));
-ok(progress([], "work", (id) => id !== "crane").total === 11, "a feature this device doesn't have isn't counted (the crane toolkit for non-fleet users)");
+ok(progress([], "work", (id) => id !== "crane").total === 12, "a feature this device doesn't have isn't counted (the crane toolkit for non-fleet users)");
 console.log(fail ? "FAILED " + fail : "ALL PASSED");

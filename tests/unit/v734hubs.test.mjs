@@ -15,7 +15,7 @@ ok(tabsFor("money").join() === "money,deal" && tabsFor("timeline").length === 0,
 ok(partsOf("radar").join() === "timeline,life,reminders,radar,xray,guardian" && partsOf("money").length === 0 && partsOf("guardian")[0] === "timeline", "Follow-ups (v8.2, 1A): All (one list) · People & plans · Reminders · Dates · Chat X-Ray · Guardian");
 ok(tabsFor("reminders").length === 0, "E2: no switch or tabs on Follow-ups' parts (a back chip instead)");
 ok(tabsFor("fit").length === 0 && tabsFor("health").join() === "health,fit,care,cycle", "Health: Health · Fit & Food · Family · Cycle; Fit is full-screen");
-ok(tabsFor("scout").join() === "travel,scout,metro,map" && tabsFor("learn").join() === "learn,news", "v8.5 (E1): Daily = Learn · News; Go = Travel · Scout · Metro · Maps");
+ok(tabsFor("scout").join() === "travel,scout,map,metro" && tabsFor("learn").join() === "learn,news", "v8.5 (E1): Daily = Learn · News; Go = Travel · Scout · Maps · Metro");
 ok(tabsFor("metro").join() === tabsFor("scout").join() && hubOf("metro") === "go", "Metro is in Go, next to Maps");
 ok(tabsFor("slides", ["coach", "slides"]).join() === "coach,slides", "a tool the device hides is not a tab");
 ok(tabsFor("business").join() === "business,fleet,field" && tabsFor("tools").length === 0, "Work: Business · Team records · Reports; Tools is its own page now (v8.2)");

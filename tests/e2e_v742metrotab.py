@@ -14,7 +14,7 @@ with sync_playwright() as p:
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))")
     page.wait_for_timeout(500)
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
-    check("metro" in tabs and tabs.index("metro") == tabs.index("map") + 1, "the Daily tab row has Metro right after Maps: %s" % tabs)
+    check("metro" in tabs and tabs.index("metro") == tabs.index("map") + 1, "the Go tab row (v8.5) has Metro right after Maps: %s" % tabs)
     page.click("[data-testid=hub-tab-metro]")
     page.wait_for_selector("[data-testid=metro-page]", timeout=5000)
     page.fill("[data-testid=metro-from]", "Maadi")

@@ -6,7 +6,7 @@ export const LOG_KEY = "attune:toollog:v1";
 const DAY = 86400000;
 export const FAMILIES = ["writing", "files", "instant", "studio", "video"];
 /** Which family a tool (mode) belongs to. */
-export const familyOf = (mode) => ({ improve: "writing", compress: "writing", humanize: "writing", copilot: "writing", library: "writing",
+export const familyOf = (mode) => ({ write: "writing", improve: "writing", compress: "writing", humanize: "writing", copilot: "writing", library: "writing",
   convert: "files", pdfchat: "files", instant: "instant", studio: "studio", video: "video" }[mode] || null);
 
 export function loadLog(store = typeof localStorage !== "undefined" ? localStorage : null) {

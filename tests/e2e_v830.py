@@ -33,10 +33,9 @@ with sync_playwright() as p:
 
     # ---- 1A Follow-ups: one list by day ----
     page.evaluate("""() => { localStorage.setItem('attune:life:v1', JSON.stringify({ items: [] })); }""")
-    go(page, "life", "[data-testid=hub-parts]")
-    check(page.locator("[data-testid=hub-part-timeline]").count() == 1 and page.locator("[data-testid=hub-part-guardian]").count() == 1, "Follow-ups: All · People & plans · Reminders · Dates · Chat X-Ray · Guardian in one switch")
-    page.click("[data-testid=hub-part-timeline]"); page.wait_for_selector("[data-testid=timeline-page]")
-    check(page.locator("[data-testid=hub-tab-timeline]").count() == 1 and page.locator("[data-testid=hub-tab-guardian]").count() == 0, "Money's tabs: Money · Follow-ups · Deal Check (the Guardian is inside Follow-ups)")
+    go(page, "life", "[data-testid=part-back]")
+    page.click("[data-testid=part-back]"); page.wait_for_selector("[data-testid=timeline-page]")
+    check(all(page.locator("[data-testid=fu-open-%s]" % x).count() == 1 for x in ["life", "reminders", "radar", "xray", "guardian"]), "Follow-ups (v8.5): its one list opens People & plans · Reminders · Dates · Chat X-Ray · Guardian")
     page.fill("[data-testid=fu-add]", "sheikh owes me 22,000 to be paid in installments monthly for 9 months"); page.click("[data-testid=fu-add-go]"); page.wait_for_timeout(500)
     items = page.locator("[data-testid=timeline-item]")
     check(items.count() >= 1 and "Sheikh" in page.locator("[data-testid=timeline-page]").inner_text(), "one sentence in the Add box → Sheikh's 9 payments are on the list")
@@ -53,7 +52,7 @@ with sync_playwright() as p:
     it0 = page.evaluate("JSON.parse(localStorage.getItem('attune:life:v1')).items[0]")
     check(n0 >= 1 and it0["paid"] == [0] and it0.get("got", {}).get("0") == 5000, "paid 5,000 instead of 2,444.44 is kept (%s, %s)" % (it0["paid"], it0.get("got")))
     # People & plans: the entry opens into its schedule, the rest spread again (17,000 over 8 = 2,125)
-    page.click("[data-testid=hub-part-life]"); page.wait_for_selector("[data-testid=life-item]")
+    page.click("[data-testid=fu-open-life]"); page.wait_for_selector("[data-testid=life-item]")
     page.click("[data-testid=life-open]"); page.wait_for_timeout(150)
     rows = page.locator("[data-testid=life-row]")
     check(rows.count() == 9 and "5,000" in rows.nth(0).inner_text() and "2,125" in rows.nth(1).inner_text() and "17,000" in page.locator("[data-testid=life-item]").inner_text(), "the schedule: payment 1 = 5,000 paid, the 8 left are 2,125 each, 17,000 left")
