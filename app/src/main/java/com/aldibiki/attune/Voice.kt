@@ -2,6 +2,7 @@ package com.aldibiki.attune
 
 import android.Manifest
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -28,6 +29,8 @@ class Voice(private val activity: Activity) {
     }
 
     private var rec: SpeechRecognizer? = null
+    /** v8.4: the last way to listen — Android's own voice-typing popup (set by MainActivity; false when nothing can open it). */
+    var popup: ((Intent, (String?) -> Unit) -> Boolean)? = null
     private var pending: (() -> Unit)? = null
 
     fun hasPermission(): Boolean =
@@ -59,12 +62,21 @@ class Voice(private val activity: Activity) {
                 sink.failed("This phone has no offline speech recogniser, and the offline lock is on")
                 return@runOnUiThread
             }
+            if (step == 5) { usePopup(lang, sink); return@runOnUiThread }
             if (!onDevice && !SpeechRecognizer.isRecognitionAvailable(activity)) {
-                sink.failed("This phone has no speech recogniser installed")
+                log("no speech recogniser on the phone — trying Android's voice popup")
+                usePopup(lang, sink, "This phone has no speech recogniser installed")
                 return@runOnUiThread
             }
-            val r = if (onDevice) SpeechRecognizer.createOnDeviceSpeechRecognizer(activity)
-                    else SpeechRecognizer.createSpeechRecognizer(activity)
+            // v8.4 (Ali, 27 Oct: "the voice isn't working still"): phones whose default recogniser is the maker's own (Honor,
+            // Huawei, Xiaomi) often refuse other apps — Google's recogniser is used by name when it is installed
+            val google = if (onDevice) null else googleService()
+            val r = try {
+                if (onDevice) SpeechRecognizer.createOnDeviceSpeechRecognizer(activity)
+                else if (google != null) SpeechRecognizer.createSpeechRecognizer(activity, google)
+                else SpeechRecognizer.createSpeechRecognizer(activity)
+            } catch (e: Throwable) { log("could not create the recogniser: " + e.message); usePopup(lang, sink, e.message ?: "Voice input failed"); return@runOnUiThread }
+            log("listening: " + (if (onDevice) "offline" else (google?.packageName ?: "default")) + " recogniser, $lang, step $step")
             rec = r
             r.setRecognitionListener(object : RecognitionListener {
                 override fun onReadyForSpeech(params: Bundle?) {}
@@ -89,6 +101,7 @@ class Voice(private val activity: Activity) {
                         when {
                             step == 0 && base != lang && base.isNotBlank() -> { start(base, sink, 1, askPermission); return }
                             !Prefs.airGapNow && SpeechRecognizer.isRecognitionAvailable(activity) -> { getPack(lang); start(lang, sink, 2, askPermission); return }
+                            !Prefs.airGapNow -> { start(lang, sink, 5, askPermission); return }
                             else -> { val asked = getPack(lang); sink.failed(if (asked) "Android is downloading the offline speech pack for this language — try again when it finishes" else "That language isn't installed for offline voice — add it in the phone's Settings → Google → Speech → Offline languages"); return }
                         }
                     }
@@ -102,6 +115,10 @@ class Voice(private val activity: Activity) {
                     }
                     if (onDevice && !silent && error != SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS && !Prefs.airGapNow && SpeechRecognizer.isRecognitionAvailable(activity)) {
                         release(); start(lang, sink, 2, askPermission); return
+                    }
+                    // the normal recogniser failed too (not silence, not permission): Android's own voice popup is the last try
+                    if (!onDevice && !silent && step != 5 && error != SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS && !Prefs.airGapNow) {
+                        release(); start(lang, sink, 5, askPermission); return
                     }
                     sink.failed(when (error) {
                         SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Didn't catch that — try again"
@@ -120,6 +137,29 @@ class Voice(private val activity: Activity) {
             if (lang.isNotBlank()) i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang)
             try { r.startListening(i) } catch (e: Exception) { log("start failed: " + e.message); sink.failed(e.message ?: "Voice input failed"); release() }
         }
+    }
+
+    /** Google's recogniser service, when the phone has it (the Google app, or Speech Services by Google). */
+    private fun googleService(): ComponentName? = try {
+        val list = activity.packageManager.queryIntentServices(Intent("android.speech.RecognitionService"), 0)
+        val pick = list.firstOrNull { it.serviceInfo.packageName == "com.google.android.googlequicksearchbox" }
+            ?: list.firstOrNull { it.serviceInfo.packageName == "com.google.android.tts" }
+        pick?.let { ComponentName(it.serviceInfo.packageName, it.serviceInfo.name) }
+    } catch (e: Throwable) { null }
+
+    /** Android's own voice-typing popup (Google's "Speak now" box) — works on phones where the in-app recogniser is refused. */
+    private fun usePopup(lang: String, sink: Sink, why: String = "Voice input failed") {
+        val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        if (lang.isNotBlank()) i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang)
+        val ok = popup?.invoke(i) { text ->
+            if (text != null) { log("popup heard " + text.length + " characters"); sink.done(text) }
+            else { log("popup closed with nothing"); sink.failed("Didn't catch that — try again") }
+        } ?: false
+        if (!ok) {
+            log("popup not available: $why")
+            sink.failed("$why. Install \"Speech Services by Google\" (or the Google app) from the Play Store, then try again")
+        } else log("opened Android's voice popup")
     }
 
     private fun log(msg: String) {

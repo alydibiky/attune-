@@ -58,6 +58,12 @@ class MainActivity : AppCompatActivity() {
     }
     // v8.3 Library: books (or a whole folder of them) picked for a topic → BookShelf reads them in the background
     private var bookTopic = ""
+    // v8.4: Android's own voice-typing popup — the last way to listen when the in-app recogniser is refused (Voice.usePopup)
+    private var voicePopupCb: ((String?) -> Unit)? = null
+    private val voicePopup = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val t = if (res.resultCode == RESULT_OK) res.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull() else null
+        val cb = voicePopupCb; voicePopupCb = null; cb?.invoke(t)
+    }
     private val pickBooksDoc = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
         val uris = ArrayList<Uri>()
         val d = res.data
@@ -262,7 +268,7 @@ class MainActivity : AppCompatActivity() {
 
         bridge = NativeBridge(this, web)
         bridge.billing.activity = this
-        voice = Voice(this)
+        voice = Voice(this).also { v -> v.popup = { i, cb -> try { voicePopupCb = cb; voicePopup.launch(i); true } catch (e: Exception) { voicePopupCb = null; false } } }
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
         bridge.pickBooks = { topic, folder -> runOnUiThread {

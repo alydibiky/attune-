@@ -66,6 +66,8 @@
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
+        <!-- v8.4: Android's voice-typing popup, the last way to listen -->
+        <intent><action android:name="android.speech.action.RECOGNIZE_SPEECH" /></intent>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
