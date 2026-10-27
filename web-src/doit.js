@@ -38,6 +38,11 @@ const WORKOUT = [["walk-brisk", /\b(brisk walk|power walk)\b|مشي سريع/i],
 const DOSE = /\b(took|taken|take|had)\b[^.]{0,30}\b(pills?|tablets?|meds?|medicine|medication|dose|insulin|shot|injection)\b|\b(took|taken)\s+my\b|خدت|اخدت|أخدت|خدت الدوا|اخدت الحقنه|ضربت الحقنه|خدت الانسولين|خدت الإنسولين/i;
 const SUGAR = /\b(blood sugar|glucose|sugar(?: level| reading| was| is)?)\b|سكري|السكر|قست السكر|نسبه السكر/i;
 const NOTE = /^(note|remember|keep in mind|save this|write down)\b[:\s]|^(افتكر|خلي في بالك|احفظ|سجل ملاحظه|ملاحظه)\s*[:\s]/i;
+const EVENT = /\b(meeting|appointment|dentist|doctor'?s?|interview|call with|class|lesson|exam|flight|match)\b|ميعاد|موعد|معاد|اجتماع|دكتور|الدكتور|امتحان|مقابله|مقابلة|درس|طياره|طيارة/i;
+// v8.6: «سكر 110», "sugar 140 this morning" — a reading, not 110 g of sugar (no grams / spoons after the number)
+const SUGAR_N = /(^|\s)(سكر|sugar)\s*[:=]?\s*\d{2,3}(?:\.\d)?(?!\s*(?:g\b|gm|gr|grams?|جم|جرام|معلق|spoons?|tsp|tbsp|cubes?|مكعب))/i;
+// v8.6: "milk tomorrow", «فراخ بكرة» — something for later is not eaten now
+const FUTURE = /\b(tomorrow|tonight|next (week|month)|later|need to buy|to buy)\b|بكره|بكرة|بعدين|الاسبوع الجاي|الأسبوع الجاي|محتاج اشتري|لازم اشتري/i;
 const PERIOD = /\b(period|menstruation|my cycle)\b|الدوره|الدورة|البيريود/i;
 
 function minutesIn(t) {
@@ -84,9 +89,15 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     if (a && ["reminder", "alarm", "timer"].includes(a.kind) && !a.problems.length) return { actions: [{ kind: "reminder", action: a }] };
     return { actions: [], chat: true };
   }
+  // v8.6 (the whole-app test): "meeting with Ali Tuesday 3pm", «ميعاد الدكتور بكرة الساعة 5» — an appointment with a day and a time
+  // is a reminder even without "remind me" (it did nothing before)
+  if (EVENT.test(t) && /\d/.test(latin(t)) && (/\b(today|tonight|tomorrow|mon|tue|wed|thu|fri|sat|sun)\w*\b|\d{1,2}\s*(am|pm|:\d{2})|الساعه|الساعة|النهارده|بكره|بكرة|السبت|الحد|الاحد|الاتنين|التلات|الاربع|الخميس|الجمعه|الجمعة/i.test(t))) {
+    const a = quickAction((/[\u0600-\u06ff]/.test(t) ? "فكرني " : "remind me ") + t, now);
+    if (a && a.kind === "reminder" && !a.problems.length) return { actions: [{ kind: "reminder", action: a }] };
+  }
   if (PERIOD.test(t)) return { actions: [{ kind: "period", text: t }] };
   // blood sugar
-  if (SUGAR.test(t) && !/hba1c|a1c|التراكمي/i.test(t)) {
+  if ((SUGAR.test(t) || SUGAR_N.test(latin(t))) && !/hba1c|a1c|التراكمي/i.test(t)) {
     const m = /(\d+(?:\.\d+)?)\s*(mmol|mg)?/i.exec(latin(t));
     if (m) { const v = +m[1], unit = /mmol/i.test(t) || (v < 35 && !/mg/i.test(t)) ? "mmol/L" : "mg/dL"; if ((unit === "mg/dL" && v >= 20 && v <= 600) || (unit === "mmol/L" && v >= 1 && v <= 33)) return { actions: [{ kind: "sugar", value: v, unit }] }; }
   }
@@ -127,6 +138,7 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   const foods = (meal.items || []).filter((x) => x.kcal != null);
   const money = MONEY_VERB.test(rest) || CURRENCY.test(rest);
   const today = isoDay(now);
+  if (foods.length && FUTURE.test(t) && !EAT.test(t)) return { actions: [], chat: true };
   if (foods.length && (EAT.test(t) || !money)) {
     // the eaten foods are counted; a price said with them ("80 pounds") is the money part
     actions.push({ kind: "food", meal: mealOf(t, now), items: foods, unknown: meal.unknown || [] });

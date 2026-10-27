@@ -47,5 +47,17 @@ with sync_playwright() as p:
     v = page.evaluate("Object.fromEntries([...document.querySelectorAll('input')].map(e => [e.name, e.value]))")
     check(v["name"] == "Aly Aldibiki" and v["company"] == "" and v["username"] == "", "a field called just 'Name' gets the full name; 'Company name' and 'Username' are left alone: %s" % v)
     check(v["ar_mail"] == "aly@example.com" and v["ar_phone"] == "+201001234567" and v["ar_hotel"] == "" and v["ar_card"] == "", "Arabic labels: email and mobile filled, the hotel name and the card number not: %s" % v)
+    # v8.6 buy agent: each offer carries its own link; on the product page it presses Buy now ONCE — never Place order / Pay
+    page.set_content("""<html><body><div class=r><a href="https://shop.example/dp/A1"><b>Apple AirPods Pro 2 USB-C</b></a><div>EGP 8,900</div></div>
+<div class=r><a href="https://shop.example/dp/C9"><b>Silicone case for AirPods Pro 2</b></a><div>EGP 250</div></div></body></html>""")
+    page.add_script_tag(path=KIT)
+    r = page.evaluate("window.__attuneAgent.best({cheapest:true, many:true})")
+    check(any(o["href"] == "https://shop.example/dp/A1" and "AirPods Pro 2" in o["name"] for o in r["top"]), "offers carry their product link and name: %s" % r["top"])
+    page.set_content("""<html><body><button id=po onclick="window.__po=1">Place order</button><button id=pay onclick="window.__pay=1">Pay</button>
+<button id=cart onclick="window.__cart=1">Add to Cart</button><button id=bn onclick="window.__bn=(window.__bn||0)+1">Buy Now</button></body></html>""")
+    page.add_script_tag(path=KIT)
+    r = page.evaluate("window.__attuneAgent.buy()"); page.wait_for_timeout(700); page.evaluate("window.__attuneAgent.buy()"); page.wait_for_timeout(600)
+    check(r["clicked"] == "Buy Now" and page.evaluate("window.__bn") == 1, "Buy now pressed once (not twice): %s" % r)
+    check(not page.evaluate("window.__po") and not page.evaluate("window.__pay") and not page.evaluate("window.__cart"), "Place order / Pay are never pressed — the person pays")
     br.close()
 finish()

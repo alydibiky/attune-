@@ -183,3 +183,39 @@ export function piecesOf(text) {
 /** v6.41 (H4): the speech-recogniser tag for a language (the phone listens in that language). */
 const TAGS = { en: "en-US", ar: "ar-EG", fr: "fr-FR", es: "es-ES", de: "de-DE", it: "it-IT", pt: "pt-BR", tr: "tr-TR", ru: "ru-RU", uk: "uk-UA", pl: "pl-PL", nl: "nl-NL", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR", hi: "hi-IN", ur: "ur-PK", fa: "fa-IR", he: "he-IL", id: "id-ID", ms: "ms-MY", th: "th-TH", vi: "vi-VN", bn: "bn-BD", sw: "sw-KE" };
 export const speechTag = (code) => TAGS[code] || code || "en-US";
+
+// ---- v8.6 (Ali, 27 Oct: "the 2-language translator took a lot of time to just translate hello" — and a small model wrote «إلو»)
+// Everyday phrases are translated by CODE at once from this phrasebook (exact, offline); only real sentences go to the model.
+const PB = [
+  // key: [english variants…] → per language
+  [["hello", "hi", "hey", "hello there"], { en: "Hello", ar: "أهلاً", fr: "Bonjour", es: "Hola", de: "Hallo", it: "Ciao", pt: "Olá", tr: "Merhaba", ru: "Здравствуйте", zh: "你好", ja: "こんにちは", ko: "안녕하세요", hi: "नमस्ते", ur: "سلام", id: "Halo", ms: "Helo", fa: "سلام", nl: "Hallo", el: "Γεια σας", he: "שלום", th: "สวัสดี", vi: "Xin chào", sw: "Habari", pl: "Cześć", uk: "Привіт", sv: "Hej", bn: "হ্যালো", tl: "Kumusta" }],
+  [["good morning"], { en: "Good morning", ar: "صباح الخير", fr: "Bonjour", es: "Buenos días", de: "Guten Morgen", it: "Buongiorno", pt: "Bom dia", tr: "Günaydın", ru: "Доброе утро", zh: "早上好", ja: "おはようございます", ko: "좋은 아침입니다", hi: "सुप्रभात", ur: "صبح بخیر", id: "Selamat pagi", fa: "صبح بخیر" }],
+  [["good evening", "good night"], { en: "Good evening", ar: "مساء الخير", fr: "Bonsoir", es: "Buenas noches", de: "Guten Abend", it: "Buonasera", pt: "Boa noite", tr: "İyi akşamlar", ru: "Добрый вечер", zh: "晚上好", ja: "こんばんは", ko: "안녕하세요", hi: "शुभ संध्या", ur: "شام بخیر", id: "Selamat malam", fa: "عصر بخیر" }],
+  [["thank you", "thanks", "thank you very much", "thanks a lot"], { en: "Thank you", ar: "شكراً", fr: "Merci", es: "Gracias", de: "Danke", it: "Grazie", pt: "Obrigado", tr: "Teşekkür ederim", ru: "Спасибо", zh: "谢谢", ja: "ありがとうございます", ko: "감사합니다", hi: "धन्यवाद", ur: "شکریہ", id: "Terima kasih", ms: "Terima kasih", fa: "ممنون", nl: "Dank u", el: "Ευχαριστώ", he: "תודה", th: "ขอบคุณ", vi: "Cảm ơn", sw: "Asante", pl: "Dziękuję", uk: "Дякую", sv: "Tack" }],
+  [["yes"], { en: "Yes", ar: "أيوه", fr: "Oui", es: "Sí", de: "Ja", it: "Sì", pt: "Sim", tr: "Evet", ru: "Да", zh: "是", ja: "はい", ko: "네", hi: "हाँ", ur: "جی ہاں", id: "Ya", fa: "بله" }],
+  [["no"], { en: "No", ar: "لأ", fr: "Non", es: "No", de: "Nein", it: "No", pt: "Não", tr: "Hayır", ru: "Нет", zh: "不", ja: "いいえ", ko: "아니요", hi: "नहीं", ur: "نہیں", id: "Tidak", fa: "نه" }],
+  [["please"], { en: "Please", ar: "لو سمحت", fr: "S'il vous plaît", es: "Por favor", de: "Bitte", it: "Per favore", pt: "Por favor", tr: "Lütfen", ru: "Пожалуйста", zh: "请", ja: "お願いします", ko: "부탁합니다", hi: "कृपया", ur: "براہ کرم", id: "Tolong", fa: "لطفاً" }],
+  [["sorry", "i am sorry", "i'm sorry", "excuse me"], { en: "Sorry", ar: "آسف", fr: "Pardon", es: "Perdón", de: "Entschuldigung", it: "Scusi", pt: "Desculpe", tr: "Pardon", ru: "Извините", zh: "对不起", ja: "すみません", ko: "죄송합니다", hi: "माफ़ कीजिए", ur: "معاف کیجیے", id: "Maaf", fa: "ببخشید" }],
+  [["how are you", "how are you doing"], { en: "How are you?", ar: "إزيك؟", fr: "Comment allez-vous ?", es: "¿Cómo estás?", de: "Wie geht es Ihnen?", it: "Come sta?", pt: "Como vai?", tr: "Nasılsınız?", ru: "Как дела?", zh: "你好吗？", ja: "お元気ですか？", ko: "어떻게 지내세요?", hi: "आप कैसे हैं?", ur: "آپ کیسے ہیں؟", id: "Apa kabar?", fa: "حال شما چطور است؟" }],
+  [["goodbye", "bye", "see you"], { en: "Goodbye", ar: "مع السلامة", fr: "Au revoir", es: "Adiós", de: "Auf Wiedersehen", it: "Arrivederci", pt: "Tchau", tr: "Hoşça kalın", ru: "До свидания", zh: "再见", ja: "さようなら", ko: "안녕히 가세요", hi: "अलविदा", ur: "خدا حافظ", id: "Sampai jumpa", fa: "خداحافظ" }],
+  [["how much is this", "how much", "how much does it cost"], { en: "How much is this?", ar: "بكام ده؟", fr: "Combien ça coûte ?", es: "¿Cuánto cuesta?", de: "Wie viel kostet das?", it: "Quanto costa?", pt: "Quanto custa?", tr: "Bu ne kadar?", ru: "Сколько это стоит?", zh: "这个多少钱？", ja: "これはいくらですか？", ko: "이거 얼마예요?", hi: "यह कितने का है?", ur: "یہ کتنے کا ہے؟", id: "Berapa harganya?", fa: "این چند است؟" }],
+  [["where is the bathroom", "where is the toilet"], { en: "Where is the bathroom?", ar: "الحمام فين؟", fr: "Où sont les toilettes ?", es: "¿Dónde está el baño?", de: "Wo ist die Toilette?", it: "Dov'è il bagno?", pt: "Onde fica o banheiro?", tr: "Tuvalet nerede?", ru: "Где туалет?", zh: "洗手间在哪里？", ja: "トイレはどこですか？", ko: "화장실이 어디예요?", hi: "शौचालय कहाँ है?", ur: "باتھ روم کہاں ہے؟", id: "Di mana toilet?", fa: "دستشویی کجاست؟" }],
+  [["i don't understand", "i do not understand"], { en: "I don't understand", ar: "مش فاهم", fr: "Je ne comprends pas", es: "No entiendo", de: "Ich verstehe nicht", it: "Non capisco", pt: "Não entendo", tr: "Anlamıyorum", ru: "Я не понимаю", zh: "我不明白", ja: "わかりません", ko: "이해가 안 돼요", hi: "मैं नहीं समझा", ur: "میں نہیں سمجھا", id: "Saya tidak mengerti", fa: "متوجه نمی‌شوم" }],
+  [["welcome", "you're welcome", "you are welcome"], { en: "You're welcome", ar: "العفو", fr: "De rien", es: "De nada", de: "Gern geschehen", it: "Prego", pt: "De nada", tr: "Rica ederim", ru: "Пожалуйста", zh: "不客气", ja: "どういたしまして", ko: "천만에요", hi: "आपका स्वागत है", ur: "کوئی بات نہیں", id: "Sama-sama", fa: "خواهش می‌کنم" }],
+  [["ok", "okay"], { en: "OK", ar: "تمام", fr: "D'accord", es: "Vale", de: "Okay", it: "Va bene", pt: "Tudo bem", tr: "Tamam", ru: "Хорошо", zh: "好的", ja: "わかりました", ko: "알겠어요", hi: "ठीक है", ur: "ٹھیک ہے", id: "Oke", fa: "باشه" }],
+  [["what is your name", "what's your name"], { en: "What is your name?", ar: "اسمك إيه؟", fr: "Comment vous appelez-vous ?", es: "¿Cómo te llamas?", de: "Wie heißen Sie?", it: "Come ti chiami?", pt: "Qual é o seu nome?", tr: "Adınız ne?", ru: "Как вас зовут?", zh: "你叫什么名字？", ja: "お名前は何ですか？", ko: "이름이 뭐예요?", hi: "आपका नाम क्या है?", ur: "آپ کا نام کیا ہے؟", id: "Siapa nama Anda?", fa: "اسم شما چیست؟" }],
+  [["nice to meet you"], { en: "Nice to meet you", ar: "اتشرفت بمعرفتك", fr: "Enchanté", es: "Mucho gusto", de: "Freut mich", it: "Piacere", pt: "Prazer em conhecê-lo", tr: "Tanıştığımıza memnun oldum", ru: "Приятно познакомиться", zh: "很高兴认识你", ja: "はじめまして", ko: "만나서 반갑습니다", hi: "आपसे मिलकर खुशी हुई", ur: "آپ سے مل کر خوشی ہوئی", id: "Senang bertemu Anda", fa: "از آشنایی با شما خوشحالم" }],
+];
+const pbNorm = (s) => String(s || "").toLowerCase().normalize("NFKC").replace(/[ً-ْـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[.,!?؟¿¡،。！？、\s]+/g, " ").trim();
+// every phrase in every language → its row (so Arabic «شكرا» or French «merci» are found too); Arabic extras people say
+const PB_INDEX = (() => {
+  const m = new Map();
+  PB.forEach(([en, tr], i) => { en.forEach((w) => m.set(pbNorm(w), i)); Object.values(tr).forEach((w) => { if (!m.has(pbNorm(w))) m.set(pbNorm(w), i); }); });
+  [["اهلا", 0], ["السلام عليكم", 0], ["مرحبا", 0], ["هاي", 0], ["شكرا", 3], ["متشكر", 3], ["ميرسي", 3], ["ايوه", 4], ["نعم", 4], ["اه", 4], ["لا", 5], ["لو سمحت", 6], ["من فضلك", 6], ["اسف", 7], ["معلش", 7], ["ازيك", 8], ["عامل ايه", 8], ["كيف حالك", 8], ["مع السلامه", 9], ["باي", 9], ["بكام", 10], ["بكام ده", 10], ["كم السعر", 10], ["الحمام فين", 11], ["مش فاهم", 12], ["لا افهم", 12], ["العفو", 13], ["تمام", 14], ["ماشي", 14], ["اسمك ايه", 15], ["فرصه سعيده", 16]].forEach(([w, i]) => m.set(pbNorm(w), i));
+  return m;
+})();
+/** An everyday phrase → its translation at once (null when it isn't one, or the language isn't in the phrasebook). */
+export function quickPhrase(text, to) {
+  const i = PB_INDEX.get(pbNorm(text)); if (i == null) return null;
+  return PB[i][1][to] || null;
+}

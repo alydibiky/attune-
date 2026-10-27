@@ -78,6 +78,15 @@ const WHEN = /\b(tell|notify|alert|ping|let|warn)\s+me\b|\b(when|once|if)\b.*\b(
 const PRICE_WORD = /\b(under|below|less than|cheaper than|lower than|drops? (?:to|below|under)|at most|max(?:imum)?|or less)\b|اقل من|أقل من|تحت|ينزل (?:عن|ل|تحت)|يبقي اقل|يبقى أقل|ميعديش|مايعديش|بحد اقصي|بحد أقصى/iu;
 const ARRIVE = /\b(arriv\w*|deliver\w*|delivery|shipp\w*|out for delivery|dispatch\w*|track\w*|comes?|reach\w*)\b|يوصل|هيوصل|توصل|هتوصل|وصل|التوصيل|توصيل|الشحنه|الشحنة|اتشحن|في الطريق|يجي|هيجي|امتي|إمتى|امتى/iu;
 const ORDER_W = /\b(order|get me|reorder)\b|اطلب|اطلبلي|اطلب لي|هاتلي/iu;
+const BUY_W = /^\s*(?:please\s+)?(?:(?:can you\s+)?(?:buy|purchase|order|get)\s+(?:me\s+|for me\s+)?|find (?:and|&) (?:buy|order)\s+|i want to buy\s+|اشتريلي|اشتري لي|اشتري|اطلبلي|اطلب لي|هاتلي|جيبلي|عايز اشتري|عاوز اشتري|عايزه اشتري)/iu;
+/** The product in a buy sentence: no verb, store, limit or "when it's…" left. */
+export function buyWhat(t0) {
+  return String(t0 || "").replace(BUY_W, "").replace(/https:\/\/\S+/g, "")
+    .replace(/\s+(?:when|once|if|لما|لو)\b.*$/iu, "")
+    .replace(/\s*(?:for|at|بـ|ب|بسعر)?\s*(?:under|below|less than|cheaper than|max(?:imum)?|at most|بأقل من|باقل من|اقل من|أقل من|تحت|بحد اقصي|بحد أقصى)\s.*$/iu, "")
+    .replace(/\s+(?:on|from|at|in|في|على|من)\s+(?:amazon|noon|jumia|امازون|أمازون|نون|جوميا)\b.*$/iu, "")
+    .replace(/^\s*(?:a|an|the|one|واحد|واحده|واحدة)\s+/i, "").replace(/[.!؟?]+$/, "").trim().slice(0, 80);
+}
 const USUAL = /\b(usual|favou?rite|my regular|same as last time|the same)\b|المعتاد|المفضل|اللي بحبه|اللي بطلبه|بتاعي المعتاد|زي كل مره|زي كل مرة|أكلي المفضل|اكلي المفضل/iu;
 
 /** "45k", "45,000", "45 ألف", "٤٥ الف", "1.2m" → 45000 / 1200000 (the number next to the price words, else the biggest). */
@@ -159,6 +168,23 @@ export function parseAgent(text, opts = {}) {
     return { kind: "order", app: { id: a.id, label: a.label, pkg: a.pkg, web: a.web }, what: (what || saved).trim(), title: "My usual from " + a.label,
       ...(what || saved ? {} : { ask: "What is your usual from {app}? (the place and the dish, e.g. Koshary Abou Tarek — large + rice pudding)" }) };
   }
+  // v8.6 (Ali, 27 Oct: "agents strong enough to order something after my confirmation — when they find the item they come to me
+  // for confirmation"): "buy me AirPods Pro 2 under 9,000", "order an iPhone 16 128GB from Amazon when it's under 40k",
+  // «اشتريلي سماعة ايربودز برو 2 بأقل من 9000» → a BUY agent: it searches the stores, picks the closest real match (not a case or
+  // a cable), asks the person, and only after "Order it" opens the product, presses Buy now and fills the details — the person pays
+  const bm = BUY_W.exec(t0);
+  if (bm && !USUAL.test(t) && !/:\s*\S/.test(t0) && !(app && ["food", "ride", "travel"].includes(app.kind)) && !/\b(hotels?|rooms?|flights?|tickets?)\b|فندق|فنادق|طياره|طيارة|تذكره|تذكرة/iu.test(t)) {
+    // a number in the product's name ("PS5", "iPhone 16", "S24") is not a price: only a number after under / less than / max is
+    const lim = PRICE_WORD.test(t) ? limitIn(t0) : 0, store = app && app.kind === "shop" ? app : null;
+    const what = buyWhat(t0);
+    if (what && !/^(something|anything|stuff|it|this|that|حاجه|حاجة|اي حاجه|أي حاجة|ده|دي)$/iu.test(what)) {
+      const links = shopLinks({ what, store: store ? store.id : "" }, country).filter((l) => !/google/i.test(l.label));
+      const tries = (store ? links.filter((l) => l.label.toLowerCase().startsWith(store.label.toLowerCase().slice(0, 4))) : links).slice(0, 2).map((l) => ({ url: l.url, site: l.label }));
+      const use = tries.length ? tries : links.slice(0, 1).map((l) => ({ url: l.url, site: l.label }));
+      return { kind: "buy", what, below: lim, currency: curIn(t, country), url: use[0].url, site: use.map((x) => x.site).join(" · "), tries: use, title: (lim ? "Buy · " : "Find & buy · ") + what };
+    }
+    return { kind: "buy", what: "", ask: "What should I buy? (the exact product, e.g. AirPods Pro 2, or iPhone 16 128GB black)" };
+  }
   // a price watch: "tell me when hotels near the Haram are under 45k for 4 nights from 10 Dec"
   const limit = limitIn(t0);
   if ((WHEN.test(t) || PRICE_WORD.test(t)) && PRICE_WORD.test(t) && limit > 0) {
@@ -217,6 +243,7 @@ export function parseAgent(text, opts = {}) {
 /** An answer to the agent's question goes back into the sentence it asked about. */
 export function withAnswer(text, ask, answer) {
   const a = String(answer || "").trim(); if (!a) return text;
+  if (/should I buy/.test(ask || "")) return "buy " + a;
   if (/usual/.test(ask || "")) return text.replace(/\s*:.*$/, "") + ": " + a;
   if (/nights/.test(ask || "")) return text + " for " + (/^\d+$/.test(a) ? a + " nights" : a);
   if (/day/.test(ask || "")) return text + " from " + a;
@@ -235,6 +262,7 @@ export function makeAgent(d, now = Date.now()) {
   if (d.kind === "watch") Object.assign(a, { url: d.url, site: d.site, below: d.below, currency: d.currency, fields: d.fields || null, what: d.what || "", ...(d.tries ? { tries: d.tries } : {}) });
   if (d.kind === "track") Object.assign(a, { app: d.app, what: d.what || "" });
   if (d.kind === "order") Object.assign(a, { app: d.app, what: d.what || "" });
+  if (d.kind === "buy") Object.assign(a, { url: d.url, site: d.site, tries: d.tries || [], what: d.what, below: d.below || 0, currency: d.currency, step: "search" });
   return a;
 }
 /** A check's result kept on its agent (the last 30); found = at or under the limit. */
@@ -270,7 +298,7 @@ export function planSteps(a, now = Date.now()) {
 }
 /** The price watches the phone checks with Attune closed (AgentWatch.kt). */
 // v8.2: a hotel window sends each start day as its own check ("id~2"); takeChecks folds them back into the agent
-export const watchPlan = (st) => (st.agents || []).filter((a) => a.on && a.kind === "watch" && /^https:\/\//.test(a.url || ""))
+export const watchPlan = (st) => (st.agents || []).filter((a) => a.on && (a.kind === "watch" || (a.kind === "buy" && a.below > 0 && a.step === "search")) && /^https:\/\//.test(a.url || ""))
   .flatMap((a) => (a.tries && a.tries.length ? a.tries.map((x, i) => ({ id: a.id + "~" + i, title: a.title + " · " + x.checkin, url: x.url, below: a.below || 0, currency: a.currency || "" }))
     : [{ id: a.id, title: a.title, url: a.url, below: a.below || 0, currency: a.currency || "" }])).slice(0, 12);
 /** The phone's checks ({id or "id~i": [rows]}) → the agents with them added (a window's row keeps its days). */
@@ -299,4 +327,51 @@ export function agentsReport(st, scoutGoals = [], alerts = [], now = Date.now())
   const by = { watch: 0, track: 0, order: 0, scout: scoutGoals.filter((g) => g.on !== false).length, alert: alerts.filter((r) => r.on !== false && !String(r.id).startsWith("agent-")).length };
   for (const a of ag) if (a.on && by[a.kind] != null) by[a.kind]++;
   return { running: by.watch + by.track + by.order + by.scout + by.alert, found, checks, by };
+}
+
+// ---- v8.6 buy agents: the closest real match, then the person decides --------------------------------------------------------------
+const STOP = new Set(["a", "an", "the", "for", "with", "of", "and", "new", "original", "me", "my", "to", "in", "on", "جديد", "اصلي", "أصلي", "ال"]);
+const ACCESSORY = /\b(case|cover|protector|screen guard|glass|skin|sticker|strap|band|cable|charger|adapter|stand|holder|mount|sleeve|pouch|replacement|compatible with|for apple|for samsung|fits)\b|جراب|اسكرينه|اسكرينة|حامي|شاحن|كابل|وصله|وصلة|غطاء|استاند/iu;
+const wordsOf = (s) => fold(s).replace(/[^\p{L}\p{N} ]+/gu, " ").split(/\s+/).filter((w) => w && !STOP.has(w));
+/** How well an offer is the product asked for: 0–1 (every number / model word must be there; accessories are 0 unless asked). */
+export function matchScore(what, o) {
+  const want = wordsOf(what), name = fold((o && (o.name || "")) + " " + ((o && o.text) || "")).replace(/[^\p{L}\p{N} ]+/gu, " ");
+  if (!want.length || !o) return 0;
+  const has = (w) => new RegExp("(^|\\s)" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/^\d+$/.test(w) ? "(st|nd|rd|th)?" : "(s|es)?") + "(?=\\s|$)", "u").test(name) || (w.length > 4 && name.includes(w));
+  const VAR = /^(pro|max|plus|ultra|mini|lite|se|air|fe)$/;
+  const hard = want.filter((w) => /\d/.test(w) || VAR.test(w));
+  if (hard.some((w) => !has(w))) return 0;
+  // an accessory FOR the product ("Silicone case for AirPods Pro 2") is not the product — unless an accessory was asked for
+  if (!ACCESSORY.test(fold(what))) {
+    const am = ACCESSORY.exec(name), first = Math.min(...want.map((w) => { const i = name.indexOf(w); return i < 0 ? 1e9 : i; }));
+    if (am && (am.index < first || /\b(for|compatible with|fits)\s/.test(name.slice(0, first)))) return 0;
+  }
+  // the base model asked ("iPhone 16") is not a bigger one ("16 Pro Max"): a model word the person didn't say rules it out
+  const said = new Set(want), after = name.split(/\s+/);
+  for (let i = 0; i < after.length; i++) if (VAR.test(after[i]) && !said.has(after[i]) && i > 0 && want.some((w) => /\d/.test(w) && (after[i - 1] === w || after[i - 2] === w))) return 0;
+  return want.filter(has).length / want.length;
+}
+/** A round's offers → the best match (≥ 0.75 alike, under the limit when there is one, cheapest first); null = nothing fits. */
+export function pickBuy(a, offers, skip = []) {
+  const ok = (offers || []).filter((o) => o && o.price > 0 && !(skip || []).includes(String(o.href || o.name || "").slice(0, 120)))
+    .map((o) => ({ ...o, score: matchScore(a.what, o) })).filter((o) => o.score >= 0.75 && (!(a.below > 0) || o.price <= a.below));
+  return ok.sort((x, y) => x.price - y.price || y.score - x.score)[0] || null;
+}
+/** After a round: waiting for the person ("confirm") with the offer, or still searching (with the cheapest close one it saw). */
+export function takeBuyRound(a, offers, now = Date.now()) {
+  const pick = pickBuy(a, offers, a.skip);
+  const near = (offers || []).filter((o) => o && o.price > 0 && matchScore(a.what, o) >= 0.75).sort((x, y) => x.price - y.price)[0] || null;
+  const checks = [...(a.checks || []), { at: now, how: "browser", ...(near ? { price: Math.round(near.price) } : { blocked: true }) }].slice(-30);
+  if (pick) return { ...a, checks, step: "confirm", pending: { name: pick.name || a.what, price: Math.round(pick.price), currency: pick.currency || a.currency, href: pick.href || "", url: pick.url || a.url, site: pick.site || a.site, text: String(pick.text || "").slice(0, 200), at: now } };
+  return { ...a, checks, step: "search", pending: null, nearest: near ? { name: near.name, price: Math.round(near.price), site: near.site || a.site } : a.nearest || null };
+}
+/** The buy agent's plan, step by step (what the card shows). */
+export function buySteps(a) {
+  const s = a.step || "search";
+  return [
+    { done: (a.checks || []).length > 0, en: "Search {site}", v: { site: a.site } },
+    { done: s !== "search", en: a.below > 0 ? "Find the exact product under {p}" : "Find the exact product, cheapest first", v: { p: Math.round(a.below).toLocaleString("en-US") } },
+    { done: s === "ordering" || s === "ordered", en: "Ask you before anything is bought" },
+    { done: s === "ordered", en: "Open it, press Buy now and fill your details — you pay" },
+  ];
 }

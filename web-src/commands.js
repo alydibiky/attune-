@@ -161,6 +161,7 @@ export const KIND_LABEL = {
   whereAsk: ["Where I keep it", "مكانها فين"], translate: ["Translate it", "ترجمها"], humanize: ["Make it sound like me", "خليها طبيعية"], convert: ["Convert the file", "حوّل الملف"],
   remember: ["Keep it in Mind", "احفظها في العقل"], find: ["Find what I kept", "هات اللي حفظته"], web: ["Search the web", "دوّر على النت"], chat: ["Ask Chat", "اسأل الشات"],
   automation: ["Make an automation", "اعمل أتمتة"], watch: ["Tell me when they message", "قولي لما يبعت"], mission: ["Start a mission", "ابدأ مهمة"],
+  agent: ["Give it to an agent (find, watch, order)", "اديها لوكيل (يدور، يراقب، يطلب)"], note: ["Save it as a note", "احفظها كملاحظة"],
 };
 
 /**
@@ -205,11 +206,28 @@ export function guess(text, ctx = {}) {
     if (m && appNamed(m[1] || m[2])) add("open", 0.95);
     if (/^\s*(?:show me\s+)?(?:my\s+)?(?:daily\s+)?report\s*[?؟.!]?$|^\s*(?:تقريري|التقرير|تقرير اليوم)\s*[?؟]?$/i.test(t) && appNamed("report")) add("open", 0.95); }
   if (ctx.doActions) add("do", sharp ? 0.5 : /[?؟]\s*$/.test(t) ? 0.6 : 0.82);
-  add("chat", 0.3);
+  // v8.6 (Ali: "differentiate whether it's an order, a command or a request"): an ORDER ("buy me…", "order my usual…", "tell me when
+  // the price drops…") is an agent's; a COMMAND (remind, log, open, convert…) is a tool's (above); a REQUEST (a question, "explain…")
+  // is Chat's — and a question is never taken for a command
+  if (ctx.agent) add("agent", ctx.agent === "buy" || ctx.agent === "order" ? 0.9 : 0.84);
+  if (shapeOf(t) === "question") for (const x of c) if (x.kind !== "web" && x.kind !== "metro" && x.kind !== "map" && x.kind !== "open" && x.kind !== "whereAsk" && x.kind !== "find" && x.kind !== "todoList") x.score = Math.min(x.score, 0.55);
+  add("chat", shapeOf(t) === "question" || shapeOf(t) === "request" ? 0.6 : 0.3);
   // a reminder ("remind me of the passport photo") is a reminder only when it has a time; else it is Find
   return c.sort((a, b) => b.score - a.score);
 }
 
+/** v8.6: what kind of sentence it is, by its shape — "question" (asks something), "request" (asks Attune to explain / write / help),
+    "instruction" (tells Attune to do something), "greeting", or "unclear" (a few words that could be anything: "milk tomorrow"). */
+export function shapeOf(text) {
+  const t = String(text || "").trim(), f = fold(t);
+  if (!t) return "unclear";
+  if (/^(hi|hello|hey|thanks|thank you|good (morning|evening|night)|السلام عليكم|سلام|اهلا|ازيك|صباح الخير|مساء الخير|شكرا|متشكر)\b/i.test(f) && f.split(" ").length <= 4) return "greeting";
+  if (/[?؟]\s*$/.test(t) || /^(what|why|how|who|whom|which|when|where|is|are|was|were|do|does|did|can|could|should|would|will|am|have|has|ايه|إيه|ليه|ازاي|إزاي|مين|امتى|إمتى|امتي|فين|هل|كام|انهي|أنهي|ما هو|ما هي|كيف|لماذا|متى|اين|أين)\b/i.test(f)) return "question";
+  if (/^(please\s+)?(explain|tell me about|write|draft|summari[sz]e|compare|help me|teach me|give me (ideas|tips|a list)|suggest|recommend|اشرح|اشرحلي|اكتب|اكتبلي|لخص|لخصلي|قارن|ساعدني|علمني|اقترح|اديني افكار|اديني نصايح)\b/i.test(f)) return "request";
+  const words = f.split(" ").filter(Boolean);
+  if (words.length <= 4 && !/^(add|remind|open|buy|order|log|record|save|remember|convert|translate|find|send|call|set|start|stop|ضيف|فكرني|افتح|اشتري|اطلب|سجل|احفظ|افتكر|حول|ترجم|دور|ابعت|كلم|اتصل|شغل|وقف)/i.test(f)) return "unclear";
+  return "instruction";
+}
 /** The kinds a sentence of this shape is about, plus its first words — what a choice is remembered by. */
 export function signature(text, kinds) {
   const words = fold(text).replace(/[^\p{L}\p{N}\s]/gu, " ").split(" ").filter(Boolean).slice(0, 2).join(" ");
@@ -231,14 +249,24 @@ export const learned = (prefs, sig) => { const o = (prefs || {})[sig]; return o 
  * Ask only when two real meanings are close (within 0.15, both ≥ 0.5) and he has not taught Attune this kind of sentence.
  */
 export function decide(cands, prefs, text) {
-  const list = (cands || []).filter((x) => x.kind !== "chat" || cands.length === 1);
+  const all = (cands || []).slice().sort((x, y) => y.score - x.score);
+  const list = all.filter((x) => x.kind !== "chat" || all.length === 1 || x.score >= 0.5);
+  // v8.6 (Ali: "if it doesn't understand, give me more than one option"): nothing read it, and it is not a question or a request —
+  // a few words that could be a to-do, a note, something to look up or a question → he picks (and Attune learns it)
+  const shape = shapeOf(text);
+  if ((!list.length || (list.length === 1 && list[0].kind === "chat" && list[0].score < 0.5)) && (shape === "unclear" || shape === "instruction")) {
+    const opts = ["todoAdd", "note", "web", "chat"], sig = signature(text, opts), k = learned(prefs, sig);
+    return k ? { kind: k, learned: true } : { ask: opts, sig };
+  }
   if (!list.length) return { kind: "chat" };
-  const [a, b] = list;
+  const [a, b, c] = list;
   if (!b || a.score - b.score > 0.15 || b.score < 0.5) return { kind: a.kind };
-  const sig = signature(text, [a.kind, b.kind]);
+  // two or three real meanings close together → ask with all of them
+  const opts = [a.kind, b.kind, ...(c && a.score - c.score <= 0.2 && c.score >= 0.5 ? [c.kind] : [])];
+  const sig = signature(text, opts);
   const k = learned(prefs, sig);
-  if (k === a.kind || k === b.kind) return { kind: k, learned: true };
-  return { ask: [a.kind, b.kind], sig };
+  if (opts.includes(k)) return { kind: k, learned: true };
+  return { ask: opts, sig };
 }
 
 /** "/translate to Turkish good morning" → { id, cmd, arg, to?, format?, country? }; null when it is not a command. */

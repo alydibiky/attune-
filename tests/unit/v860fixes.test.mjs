@@ -30,4 +30,32 @@ const V = await import("../../web-src/voice-talk.js");
 ok(/How can I help/.test(V.smallTalk("hello")) && /وعليكم السلام/.test(V.smallTalk("السلام عليكم", "ar")) && /العفو/.test(V.smallTalk("شكرا")), "«hello» / «السلام عليكم» / «شكرا» are answered at once, no model needed");
 ok(V.smallTalk("what is the capital of France") === "", "a real question is not small talk (it goes to the AI)");
 ok(V.forSpeech("**Paris** is the capital.\n- It has 2M people [1].\nMore. And more. And more. Extra.") === "Paris is the capital. It has 2M people . More. And more.", "the model's answer: no markdown, lists or [n], at most 4 sentences");
+// 9. buy agents: find the exact product, ask, then order
+const AG = await import("../../web-src/agents.js");
+const b = AG.parseAgent("buy me AirPods Pro 2 under 9000", { now: Date.parse("2026-10-27") });
+ok(b.kind === "buy" && b.what === "AirPods Pro 2" && b.below === 9000 && b.tries.length === 2, "'buy me AirPods Pro 2 under 9000' → a buy agent on Amazon and noon, limit 9,000");
+ok(AG.parseAgent("اشتريلي ايربودز برو 2 بأقل من 9000").what === "ايربودز برو 2" && AG.parseAgent("buy me something").ask, "Arabic works; 'something' is asked about, never guessed");
+ok(AG.parseAgent("order my usual from Talabat").kind === "order" && AG.parseAgent("open Uber").kind === "open", "the usual order and opening apps are unchanged");
+ok(AG.matchScore("AirPods Pro 2", { name: "Silicone case for AirPods Pro 2" }) === 0 && AG.matchScore("iPhone 16", { name: "Apple iPhone 16 Pro Max" }) === 0 && AG.matchScore("AirPods Pro 2", { name: "Apple AirPods Pro (2nd generation)" }) === 1, "a case is not the product; 'iPhone 16' is not the Pro Max; '2nd generation' is 2");
+const ag = AG.makeAgent(b, 1);
+const r1 = AG.takeBuyRound(ag, [{ name: "Case for AirPods Pro 2", price: 200 }, { name: "AirPods Pro 2", price: 9900, site: "noon" }]);
+ok(r1.step === "search" && !r1.pending && r1.nearest.price === 9900, "nothing under the limit → keeps looking, tells the closest (9,900)");
+const r2 = AG.takeBuyRound(r1, [{ name: "Apple AirPods Pro 2 USB-C", price: 8900, href: "https://www.amazon.eg/dp/X", site: "Amazon" }]);
+ok(r2.step === "confirm" && r2.pending.price === 8900 && r2.pending.href.endsWith("/dp/X"), "found under the limit → waits for the person's 'Order it' (never buys by itself)");
+// 10. the Home box: an order, a command, a request — and choices when it can't tell
+globalThis.localStorage.removeItem("attune:intent:prefs");
+const K = await import("../../web-src/commands.js");
+const CR = await import("../../web-src/cmdrun.js");
+const det = (t) => ({ doActions: /^(lunch|spent|paid)\b/i.test(t) ? 1 : 0, agent: /^buy me|^order my usual/i.test(t) ? (/^buy/i.test(t) ? "buy" : "order") : "" });
+const go = (t) => CR.route(t, { api: { records: () => [], detect: det } });
+ok(K.shapeOf("what is the capital of France?") === "question" && K.shapeOf("explain inflation") === "request" && K.shapeOf("milk tomorrow") === "unclear" && K.shapeOf("hello") === "greeting", "the sentence's shape: question / request / unclear / greeting");
+ok(go("buy me AirPods Pro 2 under 9000").type === "doit", "an ORDER ('buy me…') goes to an agent");
+ok(go("why do prices go up?").type === "chat" && go("explain inflation simply").type === "chat", "a REQUEST or a question goes to Chat, never taken for a command");
+const u = go("milk tomorrow");
+ok(u.type === "ask" && u.options.length === 4 && u.options.includes("todoAdd") && u.options.includes("note"), "can't tell ('milk tomorrow') → 4 choices (to-do, note, web, Chat), not a silent guess: " + JSON.stringify(u.options));
+ok(go("hello").type === "chat", "a greeting is just answered");
+// 7. the translator: everyday phrases at once, by code
+const T = await import("../../web-src/translate.js");
+ok(T.quickPhrase("hello", "ar") === "أهلاً" && T.quickPhrase("Hello!", "tr") === "Merhaba" && T.quickPhrase("شكراً", "en") === "Thank you" && T.quickPhrase("بكام ده؟", "en") === "How much is this?", "hello / شكرا / بكام ده → instant, exact (no «إلو»)");
+ok(T.quickPhrase("the meeting moved to Tuesday", "ar") === null, "a real sentence still goes to the model");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

@@ -13,7 +13,7 @@
   const visible = (el) => { if (!el || !el.getBoundingClientRect) return false; const r = el.getBoundingClientRect(), s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && +s.opacity !== 0; };
 
   // ---- prices ------------------------------------------------------------------------------------------------------------
-  const CUR = "(?:[$€£¥₹₺₽₩₦₱฿₫৳₪]|R\\$|US\\$|C\\$|A\\$|[A-Z]{3}|EGP|جنيه|ج\\.م|ريال|درهم|دينار|Rp|RM|Rs\\.?|kr|zł|Kč)";
+  const CUR = "(?:[$€£¥₹₺₽₩₦₱฿₫৳₪]|R\\$|US\\$|C\\$|A\\$|(?:USD|EUR|GBP|EGP|SAR|AED|KWD|QAR|BHD|OMR|JOD|TRY|INR|PKR|IDR|MYR|PHP|THB|VND|NGN|KES|ZAR|MAD|DZD|TND|JPY|CNY|KRW|RUB|BRL|MXN|CAD|AUD|CHF|SEK|NOK|DKK|PLN|CZK|HUF|ILS|LBP|IQD)(?![A-Za-z])|جنيه|ج\\.م|ريال|درهم|دينار|Rp|RM|Rs\\.?|kr|zł|Kč)";
   const NUM = "(\\d{1,3}(?:[,. '  ]\\d{3})+(?:[.,]\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?)";
   const PRICE = new RegExp("(" + CUR + ")\\s?" + NUM + "|" + NUM + "\\s?(" + CUR + ")", "u");
   const num = (raw) => {
@@ -65,7 +65,11 @@
     try { mark.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
     // v8.2 (Ali picked 2A: "it plans, then shows the best 3"): the three best offers by the same rules, each with its name (the card's
     // first line) and its text, so an agent can list them
-    const top3 = rank(list, r).slice(0, 3).map((o) => ({ price: o.price, currency: o.currency, name: String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x))[0] || "").slice(0, 80), text: o.text.slice(0, 200) }));
+    // v8.6: each with its own link (the product page a buy agent opens after the person says "Order it"); a buy round asks for
+    // more than 3 (r.many) so the closest match — not only the cheapest — can be picked
+    const nameOf = (o) => String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
+    const hrefOf = (o) => { const a = o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
+    const top3 = rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameOf(o), text: o.text.slice(0, 200), href: hrefOf(o) }));
     const out = { kind: "best", offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: top3, why: [r.cheapest !== false ? "cheapest" : "", r.direct ? "direct" : "", r.time || ""].filter(Boolean).join(", ") };
     report(out); return out;
   }
@@ -144,6 +148,22 @@
     const out = { kind: "fill", filled, refused, skipped, payment: payment() };
     report(out); return out;
   }
+  // ---- v8.6 buy: on a product page the person said "Order it" to — press Buy now (else Add to cart) ONCE. Never "Place order" / Pay.
+  const BUY_NOW = /^\s*(buy now|buy it now|اشتري الآن|اشتر الآن|اشتري دلوقتي|شراء الآن|comprar ahora|acheter maintenant|jetzt kaufen|hemen al|beli sekarang)\s*$/i;
+  const ADD_CART = /^\s*(add to (cart|basket|bag)|أضف إلى (العربة|عربة التسوق|السلة)|اضف الى (العربة|عربة التسوق|السلة)|أضف للسلة|اضف للعربة|añadir al carrito|ajouter au panier|in den warenkorb|sepete ekle|tambah ke keranjang)\s*$/i;
+  const NEVER = /place (your )?order|pay|confirm (order|purchase)|complete (order|purchase)|submit order|تأكيد الطلب|ادفع|إتمام الشراء|اتمام الشراء/i;
+  let bought = false;
+  function buy() {
+    if (bought) return { kind: "buy", clicked: "" };
+    const els = [...document.querySelectorAll("button, input[type=submit], input[type=button], a[role=button], [role=button]")].filter(visible);
+    const label = (el) => String(el.innerText || el.value || el.getAttribute("aria-label") || el.title || "").replace(/\s+/g, " ").trim().slice(0, 60);
+    const pick = els.find((el) => BUY_NOW.test(label(el)) && !NEVER.test(label(el))) || els.find((el) => ADD_CART.test(label(el)) && !NEVER.test(label(el)));
+    if (!pick) { const out = { kind: "buy", clicked: "" }; report(out); return out; }
+    bought = true; const l = label(pick);
+    pick.style.outline = "3px solid #0F7B6C"; try { pick.scrollIntoView({ block: "center" }); } catch (e) {}
+    setTimeout(() => { try { pick.click(); } catch (e) {} }, 400);
+    const out = { kind: "buy", clicked: l, cart: ADD_CART.test(l) }; report(out); return out;
+  }
   // ---- payment: the person's turn ----
   function payment() {
     const f = [...document.querySelectorAll("input")].some((el) => visible(el) && (/^cc-/.test((el.getAttribute("autocomplete") || "").toLowerCase()) || /card.?num|cardnumber|cvv|cvc|security.?code/i.test(labelOf(el))));
@@ -153,6 +173,6 @@
   let lastPay = null, t = null;
   const watch = () => { clearTimeout(t); t = setTimeout(() => { const pay = payment(); if (pay !== lastPay) { lastPay = pay; report({ kind: "page", payment: pay, offers: offers().length }); } }, 500); };
   try { new MutationObserver(watch).observe(document.documentElement, { childList: true, subtree: true }); } catch (e) {}
-  window.__attuneAgent = { offers: () => offers().map((o) => ({ price: o.price, currency: o.currency, hour: o.hour, stops: o.stops, text: o.text })), best, fill, payment, rank };
+  window.__attuneAgent = { offers: () => offers().map((o) => ({ price: o.price, currency: o.currency, hour: o.hour, stops: o.stops, text: o.text })), best, fill, payment, rank, buy };
   watch();
 })();

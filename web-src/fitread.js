@@ -36,7 +36,11 @@ const A = [
   ["baladi bread|baladi|egyptian bread|aish|عيش بلدي|عيش|رغيف|خبز بلدي|خبز", "baladi", { unit: "loaf" }], ["pita|shami|عيش شامي|شامي", "shami", { unit: "loaf" }],
   ["brown toast|toast brown|توست اسمر|توست بني", "toast-brown", { unit: "slice" }], ["toast|توست", "toast-white", { unit: "slice" }], ["fino|فينو", "fino"],
   ["croissant|كرواسون|كرواسان", "croissant"], ["feteer|fetir|فطير|فطيره|فطير مشلتت|فطيره مشلتته|مشلتت", "feteer"],
-  ["falafel|taameya|ta3meya|طعميه|فلافل", "taameya", { unit: "piece", bare: 4 }],
+  ["falafel|taameya|ta3meya|tamiya|tamia|ta3mia|ta3meyya|طعميه|فلافل", "taameya", { unit: "piece", bare: 4 }],
+  // v8.6 (the whole-app test): plant milk is a drink, not dry oats; a frappuccino is not a 96-kcal cappuccino; a shawarma wrap is one sandwich
+  ["oat milk|almond milk|soy milk|soya milk|plant milk|لبن شوفان|لبن لوز|لبن صويا|حليب الشوفان|حليب اللوز", "milk-plant", { unit: "glass" }],
+  ["caramel frappuccino|mocha frappuccino|java chip frappuccino|frappuccino|frappucino|frappe|فرابتشينو|فرابيه|فرابيتشينو", "frappuccino", { unit: "cup" }],
+  ["shawarma wrap|chicken shawarma wrap|shawarma chicken wrap|beef shawarma wrap|شاورما راب", "shawarma-sandwich"],
   ["ful with oil|ful bil zeit|فول بالزيت الحار|فول بالزيت|فول بالزيت الحار والكمون", "ful-oil", { unit: "plate" }], ["ful|foul|fava beans|فول|فول مدمس", "ful", { unit: "plate" }],
   ["boiled eggs|boiled egg|hard boiled egg|بيض مسلوق|بيضه مسلوقه", "egg", { unit: "piece" }], ["fried eggs|fried egg|sunny side|بيض مقلي|بيضه مقليه|بيض عيون", "egg-fried", { unit: "piece" }],
   ["scrambled eggs|scrambled|بيض مخفوق|بيض اسكرامبل", "egg-scrambled"], ["omelette|omelet|اومليت|أومليت|عجه", "egg", { unit: "piece", eggs: true }],
@@ -104,7 +108,7 @@ const A = [
   ["negresco|نجرسكو", "pasta-negresco"], ["lasagna|لازانيا", "lasagna"], ["pasta|spaghetti|macaroni|مكرونه|اسباجتي", "pasta", { unit: "plate" }],
   ["rice|white rice|رز|ارز|رز ابيض", "rice", { unit: "plate", side: 180 }], ["basmati|بسمتي", "basmati"],
   ["club sandwich|كلوب ساندوتش", "club-sandwich"], ["tuna sandwich|ساندوتش تونه", "tuna-sandwich"], ["cheese sandwich|ساندوتش جبنه", "cheese-sandwich"],
-  ["ful sandwich|ساندوتش فول|سندوتش فول", "ful-sandwich"], ["falafel sandwich|taameya sandwich|ساندوتش طعميه|سندوتش طعميه", "taameya-sandwich"],
+  ["ful sandwich|ساندوتش فول|سندوتش فول", "ful-sandwich"], ["falafel sandwich|taameya sandwich|tamiya sandwich|tamia sandwich|ta3meya sandwich|ساندوتش طعميه|سندوتش طعميه", "taameya-sandwich"],
   ["crepe|كريب", "crepe"], ["waffle|وافل", "waffle"], ["pancakes|pancake|بان كيك", "pancake", { unit: "piece" }], ["donut|doughnut|دونات", "donut"],
   // sweets / snacks
   ["milk chocolate|milk chocolate bar|chocolate bar|شوكولاته باللبن|شوكولاته بالحليب", "chocolate", { unit: "bar" }],
@@ -211,6 +215,8 @@ function gramsFor(fd, qty, unit, opt = {}) {
   if (unit === "g" || unit === "ml") return qty;
   if (unit === "kg" || unit === "l") return qty * 1000;
   if (unit && pick(unit) != null) return qty * pick(unit);
+  // v8.6: "a cheesecake slice", "2 pieces of basbousa" — a dish's own portion, not the 30 g bread slice
+  if ((unit === "slice" || unit === "piece") && /sweets|dishes/.test(fd.group || "")) { const v = Object.values(P).find((x) => x >= 40 && x <= 300); if (v) return qty * v; }
   if (unit === "spoon") return qty * (fd.id === "sugar" || fd.id === "honey" && false ? 4 : 15);
   return gramsOf(fd, qty, unit || "serving");
 }
@@ -280,7 +286,7 @@ export function readMealText(text, cc = getCountry()) {
       if (!words && lastFood && qty != null) { const it = items[items.length - 1]; const g = gramsFor(lastFood, qty, unit || it.unit); items[items.length - 1] = { ...makeItem(lastFood, qty, unit || it.unit, g), said: it.said, explicit: true }; continue; }
       if (!words) continue;
       const lw = learned("t:" + words), fd = lw ? food(lw.id) || lw.food : matchFood(words);
-      if (fd) { const g = gramsFor(fd, qty ?? 1, unit, {}) * (size && !(fd.portions || {})[size] ? sizeK : 1); items.push({ ...makeItem(fd, qty ?? 1, unit || "serving", g), said: words, explicit: qty != null || unit === "g" || unit === "ml", ...ownOf(words, fd) }); lastFood = fd; }
+      if (fd) { const g = gramsFor(fd, qty ?? 1, unit, {}) * (size && !(fd.portions || {})[size] ? sizeK : 1); items.push({ ...makeItem(fd, qty ?? 1, unit || "serving", g), said: words, explicit: qty != null || unit === "g" || unit === "ml", ...ownOf(words, fd, CA.list) }); lastFood = fd; }
       else unknown.push(words);
       continue;
     }
@@ -355,10 +361,10 @@ export function readMealText(text, cc = getCountry()) {
       if (o.small && !unit && !qty && items.length) g = o.small;                    // "…with hummus" → a side portion
       if (size && !((fd.portions || {})[size]) && u !== "g" && u !== "ml") g *= sizeK;
       // "coffee with milk", «نسكافيه بلبن»: milk in a hot drink with no amount of its own is a splash
-      if (/^milk/.test(fd.id) && !am.any && items.some((x) => /^(tea|coffee|nescafe|turkish-coffee)$/.test(x.id))) g = 50;
+      if (/^milk/.test(fd.id) && !am.any && items.some((x) => /^(tea|coffee|nescafe|turkish-coffee|cappuccino|latte|flat-white|americano)$/.test(x.id))) g = 50;
       // v8.6 (Ali: "I wrote homemade chicken pizza", it showed "Chicken ranch pizza"): one food in this part → the person's own words
       // name it (Yazio-style); the table food only gives the numbers ("Read as" says which)
-      const own = ms.filter((x) => !x.skip).length === 1 ? ownOf(wordsOf(ch.replace(/@(\d+)@/g, (_, i) => " " + marks[+i].n + " ")), fd) : {};
+      const own = ms.filter((x) => !x.skip).length === 1 ? ownOf(wordsOf(ch.replace(/@(\d+)@/g, (_, i) => " " + marks[+i].n + " ")), fd, CA.list) : {};
       items.push({ ...makeItem(fd, q, u || "serving", g), said: own.own || m.n, explicit: am.q != null || am.u === "g" || am.u === "ml", ...own }); lastFood = fd;
     });
   }
@@ -375,11 +381,14 @@ function wordsOf(ch) {
     .filter((w) => w && WORDN[w] == null && !UNIT_RX.some(([rx]) => rx.test(" " + w + " ")) && !SIZE.some(([rx]) => rx.test(" " + w + " ")) && !/^(of|the|some|a|an|من|شويه|حبه|[,،.;!?؛])$/.test(w)).join(" ").trim();
 }
 /** {own} when the person's words say more than the table food's name ("homemade chicken pizza" → Chicken pizza) — up to 6 words. */
-export function ownOf(words, fd) {
+export function ownOf(words, fd, list = ALIAS) {
   const w = String(words || "").trim(); if (!w || !fd) return {};
   const ws = w.split(/\s+/); if (ws.length > 6) return {};
-  const tbl = normA((fd.en || "") + " " + (fd.ar || "")).toLowerCase();
-  const extra = ws.filter((x) => x.length > 2 && !tbl.includes(x.replace(/(es|s)$/, "")) && !/^(with|and|مع)$/.test(x));
+  // the food's own other names count as the table's ("falafel" IS taameya, «فراخ» is chicken) — only new words rename it
+  const syn = list.filter((a) => a.id === fd.id || a.id + "-sandwich" === fd.id || fd.id + "-sandwich" === a.id).map((a) => a.n).join(" ");
+  const tbl = normA((fd.en || "") + " " + (fd.ar || "") + " " + syn).toLowerCase();
+  // words that change nothing ("plain", "fresh", "regular") don't rename a food; "homemade", "mum's", a brand do
+  const extra = ws.filter((x) => x.length > 2 && !tbl.includes(x.replace(/(es|s)$/, "")) && !/^(with|and|مع|plain|fresh|regular|normal|simple|some|small|big|large|little|hot|cold|warm|عادي|ساده|سادة|صغير|كبير|سخن|ساقع)$/.test(x));
   return extra.length ? { own: w } : {};
 }
 function named(it, own) {

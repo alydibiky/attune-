@@ -46,6 +46,8 @@ class AgentBrowser : Activity() {
     private var watchMode = false
     private var autoClose = false
     private var autoArmed = false
+    private var buyMode = false        // v8.6: the person said "Order it" — press Buy now once, then fill their details on each page
+    private var buyArmed = false
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
     private fun L(key: String, def: String) = labels.optString(key, def).ifBlank { def }
@@ -61,6 +63,7 @@ class AgentBrowser : Activity() {
         rules = intent.getStringExtra("rules") ?: "{}"
         watchMode = intent.getBooleanExtra("watch", false)
         autoClose = intent.getBooleanExtra("autoClose", false)
+        buyMode = intent.getBooleanExtra("buy", false)
         labels = try { JSONObject(intent.getStringExtra("labels") ?: "{}") } catch (e: Exception) { JSONObject() }
         if (Prefs.airGapNow || !url.startsWith("https://")) { finishWith("blocked"); return }
         kit = try { assets.open("www/agent-kit.js").bufferedReader(Charsets.UTF_8).use { it.readText() } } catch (e: Exception) { "" }
@@ -127,6 +130,12 @@ class AgentBrowser : Activity() {
                 if (watchMode) for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.best($rules)") }, ms)
                 // v8.2: a hotel window checks several start days in a row — each page closes itself once its prices are read
                 if (watchMode && autoClose && !autoArmed) { autoArmed = true; v.postDelayed({ if (!closed) finishWith("done") }, 11000L) }
+                // v8.6 buy agent, after the person's "Order it": Buy now (or Add to cart) on the product page, once; then the
+                // checkout pages get the person's details — the payment itself stays the person's (the kit never touches it)
+                if (buyMode) {
+                    if (!buyArmed) { buyArmed = true; v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.buy()") }, 2500L) }
+                    else v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.fill($profile)") }, 2000L)
+                }
             }
         }
         web.loadUrl(url)
@@ -156,6 +165,11 @@ class AgentBrowser : Activity() {
                         if (o.optBoolean("payment")) payment()
                     }
                     "page" -> if (o.optBoolean("payment")) payment()
+                    "buy" -> {
+                        val c = o.optString("clicked"); result.put("bought", c)
+                        status.text = if (c.isEmpty()) L("noBuy", "No Buy now button here — tap it yourself, I'll fill your details on the next pages.")
+                            else L("pressed", "Pressed “{b}” — check the order; the payment is yours.").replace("{b}", c)
+                    }
                 }
             }
         }

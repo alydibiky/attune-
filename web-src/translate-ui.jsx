@@ -3,7 +3,7 @@
    script, nothing left untranslated, your glossary; "Extra careful" translates back and compares. Flagged pieces are shown,
    never hidden. Tests: tests/e2e_v727translate.py.                                                                         */
 import React, { useEffect, useRef, useState } from "react";
-import { Languages, Camera, FileText, Copy, Volume2, Shuffle, ShieldCheck, AlertTriangle, Plus, Trash2, Download } from "lucide-react";
+import { Languages, Camera, ImageIcon, FileText, Copy, Volume2, Shuffle, ShieldCheck, AlertTriangle, Plus, Trash2, Download } from "lucide-react";
 import { openRead } from "./readaloud-ui.jsx";
 import { tr, getLang } from "./i18n.js";
 import * as T from "./translate.js";
@@ -74,10 +74,11 @@ function Interpreter({ llm, native, flash, gloss, close }) {
   const [busy, setBusy] = useState(null);                 // "a" | "b" | null
   const [log, setLog] = useState([]);
   useSubBack(true, close);   // Back closes the interpreter
+  // v8.6 (Ali: "took a lot of time to just translate hello"): the model is woken while the first person is still speaking
+  useEffect(() => { if (llm) Promise.resolve().then(() => llm([{ role: "user", content: "hi" }], { maxTokens: 1 })).catch(() => {}); }, []);
   useEffect(() => { try { localStorage.setItem("attune:interp:v1", JSON.stringify(langs)); } catch (e) {} }, [langs]);
   const turn = async (side) => {
     if (busy) return;
-    if (!llm) { flash && flash(tr("Install a model in Engine to translate")); return; }
     if (!native || !native.call || !native.N || !native.N.listen) { flash && flash(tr("Voice input works in the Android app")); return; }
     const other = side === "a" ? "b" : "a";
     setBusy(side); setSaid((x) => ({ ...x, [side]: "" }));
@@ -87,7 +88,10 @@ function Interpreter({ llm, native, flash, gloss, close }) {
       if (!text) { setBusy(null); return; }
       setSaid((x) => ({ ...x, [side]: text }));
       setHeard((x) => ({ ...x, [other]: "…" }));
-      const out = await T.translatePieces([text], (m, o) => llm(m, o), { lang: langs[other], language: T.LANGS[langs[other]] || langs[other], glossary: gloss || [], sourceLanguage: T.LANGS[langs[side]] || "" });
+      // v8.6: "hello", «شكرا», "how much is this?" — the phrasebook answers at once; the model only for real sentences
+      const quick = T.quickPhrase(text, langs[other]);
+      if (!quick && !llm) { setHeard((x) => ({ ...x, [other]: "" })); flash && flash(tr("Install a model in Engine to translate")); setBusy(null); return; }
+      const out = quick ? [{ text: quick, ok: true }] : await T.translatePieces([text], (m, o) => llm(m, o), { lang: langs[other], language: T.LANGS[langs[other]] || langs[other], glossary: gloss || [], sourceLanguage: T.LANGS[langs[side]] || "" });
       const t = out && out[0] ? out[0].text : "";
       setHeard((x) => ({ ...x, [other]: t }));
       setLog((l) => [{ side, from: text, to: t, ok: out && out[0] ? out[0].ok : true }, ...l].slice(0, 40));
@@ -127,10 +131,11 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   const [gloss, setGloss] = useState(() => { try { return JSON.parse(localStorage.getItem(GKEY) || "[]"); } catch (e) { return []; } });
   const [showG, setShowG] = useState(false);
   const [photo, setPhoto] = useState(null);   // { src, out }
-  const fileRef = useRef(null);
+  const fileRef = useRef(null), galRef = useRef(null);
   useEffect(() => { try { localStorage.setItem(LKEY, to); } catch (e) {} }, [to]);
   const saveG = (g) => { setGloss(g); try { localStorage.setItem(GKEY, JSON.stringify(g)); } catch (e) {} };
   const run = async (pieces, from) => {
+    if (pieces.length === 1) { const q = T.quickPhrase(pieces[0], to); if (q) return [{ src: pieces[0], text: q, ok: true, why: "" }]; }
     if (!llm) { flash && flash(tr("Install a model in Engine to translate")); return null; }
     const out = await T.translatePieces(pieces, (m, o) => llm(m, o), { lang: to, language: T.LANGS[to] || to, glossary: gloss, careful, sourceLanguage: T.LANGS[from] || "the original language",
       onProgress: (i, n) => setBusy(tr("Translating — part {i} of {n}…", { i: i + 1, n })) });
@@ -180,8 +185,14 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
         </div>) : null}
       {tab === "photo" ? (
         <div className="space-y-2">
-          <button className={cardPad + " w-full text-center py-6 border-dashed hover:border-[var(--c-acc)]"} onClick={() => fileRef.current && fileRef.current.click()} data-testid="tr-photo"><span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Camera size={22} /></span><span className="block text-[13.5px] font-semibold mt-2">{tr("Photo of a menu, a sign, a document…")}</span></button>
+          {/* v8.6 (Ali: "add the ability to add a photo from the gallery also"): take one, or pick one already on the phone */}
+          <div className="grid grid-cols-2 gap-2">
+            <button className={cardPad + " w-full text-center py-6 border-dashed hover:border-[var(--c-acc)]"} onClick={() => fileRef.current && fileRef.current.click()} data-testid="tr-photo"><span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Camera size={22} /></span><span className="block text-[13.5px] font-semibold mt-2">{tr("Take a photo")}</span></button>
+            <button className={cardPad + " w-full text-center py-6 border-dashed hover:border-[var(--c-acc)]"} onClick={() => galRef.current && galRef.current.click()} data-testid="tr-gallery"><span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><ImageIcon size={22} /></span><span className="block text-[13.5px] font-semibold mt-2">{tr("From the gallery")}</span></button>
+          </div>
+          <p className={muted + " text-center m-0"}>{tr("Photo of a menu, a sign, a document…")}</p>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { goPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="tr-file" />
+          <input ref={galRef} type="file" accept="image/*" className="hidden" onChange={(e) => { goPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="tr-gallery-file" />
           {photo && photo.out ? <div className="space-y-2" data-testid="tr-overlay"><img src={photo.out} alt="" className="w-full rounded-[16px] border border-[var(--c-ln)]" />
             <a href={photo.out} download="translated.jpg" className={btnS}><Download size={14} />{tr("Save the picture")}</a></div> : photo ? <img src={photo.src} alt="" className="max-h-56 rounded-[16px] border border-[var(--c-ln)]" /> : null}
         </div>) : null}

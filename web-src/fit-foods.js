@@ -124,6 +124,8 @@ export const MORE_FOODS = [
   ["fried-rice", "Chinese fried rice", "رز صيني|فرايد رايس", 175, 5, 25, 6, 1, { plate: 300 }, "dishes"],
   ["sweet-sour", "Sweet & sour chicken", "فراخ سويت اند ساور", 220, 11, 25, 8.5, 0.7, { plate: 300 }, "dishes"],
   ["tacos", "Tacos (beef)", "تاكو", 226, 9, 20, 12, 3, { piece: 100 }, "dishes"],
+  ["milk-plant", "Plant milk (oat / almond / soy)", "لبن نباتي (شوفان / لوز / صويا)", 45, 1, 6.5, 1.5, 0.6, { glass: 250, cup: 240 }, "drinks"],
+  ["frappuccino", "Frappuccino (coffee, milk, syrup, whipped cream)", "فرابتشينو", 80, 1.2, 14, 2.4, 0, { cup: 473, tall: 355, grande: 473, venti: 590 }, "drinks"],
   ["burrito", "Burrito (chicken)", "بوريتو", 190, 10, 22, 7, 2.5, { piece: 300 }, "dishes"],
   ["caesar", "Caesar salad (with chicken)", "سلطة سيزر", 150, 11, 6, 9.5, 1.5, { plate: 300 }, "veg"],
   ["greek-salad", "Greek salad", "سلطة يوناني", 110, 3.5, 5, 8.5, 1.5, { plate: 250 }, "veg"],

@@ -7714,7 +7714,7 @@ const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", 
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "8.5";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "8.6";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9752,8 +9752,8 @@ export default function App() {
     // v8.0 Agents: "tell me when hotels near the Haram are under 45k…", "tell me when my Amazon order arrives", "order my usual from
     // Talabat: …" → an agent on the Agents page (asked there if something is missing); "open Uber" opens the app
     { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() });
-      if (ag && ["watch", "track", "order"].includes(ag.kind)) {
-        if (ag.ask) { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : "Finish it on the Agents page", open: "agents" }], undo: null }; }
+      if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) {
+        if (ag.ask || ag.kind === "buy") { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); if (ag.kind === "buy" && !ag.ask) return { lines: [{ text: (ar ? "وكيل شراء: " : "Buy agent: ") + ag.what + (ar ? " — هسألك قبل ما أشتري" : " — I'll ask you before buying"), open: "agents" }], undo: null }; return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : "Finish it on the Agents page", open: "agents" }], undo: null }; }
         const a = makeAgent(ag, now), st0 = loadAgents();
         saveAgents({ ...st0, usual: ag.kind === "order" ? { ...st0.usual, [ag.app.id]: ag.what } : st0.usual, agents: [a, ...st0.agents] });
         return { lines: [{ text: (ar ? "وكيل جديد: " : "New agent: ") + ag.title, open: "agents" }], undo: () => { const c = loadAgents(); saveAgents({ ...c, agents: c.agents.filter((x) => x.id !== a.id) }); } };
@@ -9890,7 +9890,9 @@ export default function App() {
         // a plain "remember …" note is Mind's job here (to-dos, where things are, /remember read it better) — the rest counts
         try { doActions = doUnderstand(text, { now, stores: loadLifeStores() }).actions.filter((a) => a.kind !== "note").length; } catch (e) {}
         let mission = false; try { const pm = parseMission(text, now); mission = !!(pm && pm.deadline); } catch (e) {}
-        return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text), watch: !!parseWatch(text), mission };
+        // v8.6: an order for an agent ("buy me …", "order my usual …", "tell me when … is under …", "track my Amazon order")
+        let agent = ""; try { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["buy", "order", "watch", "track"].includes(ag.kind)) agent = ag.kind; } catch (e) {}
+        return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text), watch: !!parseWatch(text), mission, agent };
       },
       metroAsk: (text) => metroAsk(text) || (() => { const st = findStation(placeOf(text).replace(/\b(metro|station|stop)\b|محطه|محطة|مترو/gi, "").trim()); return st ? { to: st } : null; })(),
       translateTo: (text) => (/[\u0600-\u06ff]/.test(text) ? "en" : getLang() !== "en" ? getLang() : "ar"),

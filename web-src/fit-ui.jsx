@@ -414,7 +414,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       try { const r = F.writtenItem(await llm(F.writtenMessages(amt), null, { json: true, maxTokens: 220, temperature: 0 }), t.replace(/^\d+(\.\d+)?\s*/, ""), x); if (r) { DB.keepFoods([r.food]); it = r.item; } } catch (e) {}
       finally { setWriting(false); }
     }
-    if (!it) { const r = R.readMealText(amt); if (r.items.length === 1 && !r.unknown.length) { const nm = t.replace(/^\d+(\.\d+)?\s*/, ""); const title = nm.charAt(0).toUpperCase() + nm.slice(1); it = { ...r.items[0], name: title, ar: title, own: nm, said: nm, table: r.items[0].table || r.items[0].name, from: "text", alts: [] }; } }
+    // without the model: the reader's foods ("pizza with extra cheese" = pizza + cheese) added up into ONE food under his words
+    if (!it) { const r = R.readMealText(amt); const known = r.items.filter((y) => y.kcal != null); if (known.length) { const nm = t.replace(/^\d+(\.\d+)?\s*/, ""); const title = nm.charAt(0).toUpperCase() + nm.slice(1); const sum = F.sumN(known), g = known.reduce((a, y) => a + (y.grams || 0), 0);
+      it = { ...known[0], ...sum, kcal: Math.round(sum.kcal), grams: g, id: known.length === 1 ? known[0].id : "", name: title, ar: title, own: nm, said: nm, table: known.map((y) => y.table || y.name).join(" + "), estimate: known.length > 1 || !!r.unknown.length, from: "text", alts: [], base: g }; } }
     if (!it) { flash && flash(L("To estimate a food the table doesn't know, load an AI model (Engine) — or pick one from the list.", "عشان أقدّر أكلة مش في الجدول، شغّل موديل ذكاء اصطناعي (المحرك) — أو اختار من القايمة.")); return; }
     setDraft((d) => d.map((y, j) => (j === i ? it : y))); setReplaceAt(-1); setQ("");
   };
@@ -1086,12 +1088,13 @@ function QuickSetup({ t, L, ar, save, full }) {
 /** One logged food on the timeline: swipe it sideways for Edit and Delete (the buttons are also reachable by keyboard). */
 function LogRow({ t, ar, x, onDelete, onEdit, onCopy, testid }) {
   const [dx, setDx] = useState(0), [open, setOpen] = useState(false);
+  const [info, setInfo] = useState(false);   // v8.6 (Ali: "when I press on a meal I can't see its whole info"): a tap opens everything
   const start = useRef(null);
   const dir = ar ? 1 : -1;   // the actions sit at the end side: left in English, right in Arabic
   const W = 168;             // v6.23: Copy · Edit · Delete
   const onDown = (e) => { start.current = { x: e.clientX, y: e.clientY, dx: open ? dir * W : 0, moved: false }; };
   const onMove = (e) => { const s = start.current; if (!s) return; const mx = e.clientX - s.x; if (!s.moved && Math.abs(mx) < 8) return; if (!s.moved && Math.abs(e.clientY - s.y) > Math.abs(mx)) { start.current = null; return; } if (!s.moved) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} } s.moved = true; setDx(Math.max(-W, Math.min(W, s.dx + mx)) * (dir * Math.sign(s.dx + mx) >= 0 ? 1 : 0)); };
-  const onUp = () => { const s = start.current; start.current = null; if (!s || !s.moved) return; const o = Math.abs(dx) > 50; setOpen(o); setDx(0); };
+  const onUp = (e) => { const s = start.current; start.current = null; if (s && !s.moved && !(e && e.target && e.target.closest && e.target.closest("button"))) { if (open) setOpen(false); else setInfo((v) => !v); return; } if (!s || !s.moved) return; const o = Math.abs(dx) > 50; setOpen(o); setDx(0); };
   const tm = x.t ? new Date(x.t) : null;
   const time = tm && x.t > 1e11 ? String(tm.getHours()).padStart(2, "0") + ":" + String(tm.getMinutes()).padStart(2, "0") : "";
   const shown = open ? dir * W : dx;
@@ -1110,8 +1113,24 @@ function LogRow({ t, ar, x, onDelete, onEdit, onCopy, testid }) {
         <span className="text-[var(--c-mut)] tabular-nums shrink-0">{r0(x.kcal)}</span>
         <button onClick={() => setOpen((o) => !o)} className="min-h-[44px] min-w-[36px] text-[var(--c-mut)] flex items-center justify-center shrink-0" aria-label={t("Edit or delete")} aria-expanded={open} data-testid="fit-row-more"><ChevronLeft size={16} className={ar ? "rotate-180" : ""} /></button>
       </div>
+      {info ? <FoodInfo x={x} ar={ar} time={time} onEdit={() => { setInfo(false); onEdit(); }} /> : null}
     </div>
   );
+}
+
+/** v8.6: everything about one logged food — its full name, amount, calories, every nutrient it has, and how it was read. */
+function FoodInfo({ x, ar, time, onEdit }) {
+  const L = (en, a) => (ar ? a : en);
+  const n1 = (v) => (v == null ? "—" : Math.round(v * 10) / 10);
+  const grid = [[L("Calories", "السعرات"), x.kcal == null ? "—" : Math.round(x.kcal) + " kcal"], [L("Protein", "بروتين"), n1(x.p) + " g"], [L("Carbs", "كربوهيدرات"), n1(x.c) + " g"], [L("Fat", "دهون"), n1(x.f) + " g"],
+    ...(x.fib ? [[L("Fibre", "ألياف"), n1(x.fib) + " g"]] : []), ...(x.sug != null ? [[L("Sugar", "سكر"), n1(x.sug) + " g"]] : []), ...(x.sat != null ? [[L("Saturated fat", "دهون مشبعة"), n1(x.sat) + " g"]] : []), ...(x.salt != null ? [[L("Salt", "ملح"), n1(x.salt) + " g"]] : [])];
+  return <div className="px-2 pb-2.5 pt-1 space-y-2 bg-[var(--c-surf)]" data-testid="fit-food-info">
+    <div className="text-[14px] font-bold text-[var(--c-ink)] break-words" dir="auto">{ar && x.ar ? x.ar : x.name}</div>
+    <div className="text-[12px] text-[var(--c-mut)]">{x.qty && x.unit && x.unit !== "g" && x.unit !== "ml" ? `${x.qty} × ${x.unit} · ` : ""}{x.grams} {x.unit === "ml" ? "ml" : L("g", "جم")}{time ? " · " + L("logged at ", "اتسجلت ") + time : ""}{x.estimate ? " · " + L("estimate", "تقدير") : ""}</div>
+    <div className="grid grid-cols-2 gap-1.5">{grid.map(([k, v]) => <div key={k} className="rounded-lg bg-[var(--c-soft)] px-2.5 py-1.5"><div className="text-[11px] text-[var(--c-mut)]">{k}</div><div className="text-[14px] font-bold text-[var(--c-ink)] tabular-nums">{v}</div></div>)}</div>
+    <ReadDetail x={x} L={L} ar={ar} />
+    <button onClick={onEdit} className="w-full min-h-[40px] rounded-lg bg-[var(--c-surf-2)] text-[13px] font-semibold text-[var(--c-acc)]" data-testid="fit-food-info-edit">{L("Edit this food", "عدّل الأكلة دي")}</button>
+  </div>;
 }
 
 /* v6.23 — edit everything about a logged food (Ali: "I can't edit anything after I press save except the grams"):

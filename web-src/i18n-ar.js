@@ -4353,6 +4353,7 @@ export const AR = {
   "Read it to me": "اقراهالي",
   "Point the camera at any paper — a bill, a letter, a medicine box, a sign. I'll read it to you and tell you what to do.": "وجّه الكاميرا على أي ورقة — فاتورة، جواب، علبة دوا، يافطة. هقراهالك وأقولك تعمل إيه.",
   "Take a photo": "صوّر",
+  "From the gallery": "من المعرض",
   "Choose a photo": "اختار صورة",
   "Explained by the AI from the paper — check anything important with someone you trust.": "شرح من الذكاء الاصطناعي من الورقة — اتأكد من أي حاجة مهمة مع حد بتثق فيه.",
   "Read it all": "اقراها كلها",
