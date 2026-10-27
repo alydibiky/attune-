@@ -155,6 +155,8 @@ export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, cl
       {inbox}
       <Recent rep={rep} openLedger={openLedger} title={tr("Recent activity")} />
       <ReportCta onClick={openReport} />
+      {/* v8.6: room under the last card, so the round + button never sits on the Money Report link */}
+      <div aria-hidden className="h-20" />
     </div>);
   // the computer: two calm panes — the box, the balance and the latest on one side; the totals, one "right now" and the Report on the other
   const safe = <SafeSpend inline />;

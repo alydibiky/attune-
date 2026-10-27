@@ -8731,6 +8731,9 @@ export default function App() {
   // v6.27 Job ready: a missing skill starts a Learn daily course on it
   // v6.28: a card in Chat ("Open Money", "Open Family health" — Ask your life) opens that tool
   useEffect(() => { const on = (e) => { const m = e.detail && e.detail.mode; if (m && /^[a-z]+$/.test(m)) navTo(m); }; window.addEventListener("attune-open", on); return () => window.removeEventListener("attune-open", on); }, []);
+  // v8.6: a save that didn't fit is never silent — the person is told once a minute at most, and where to make room
+  useEffect(() => { let last = 0; const on = () => { if (Date.now() - last < 60000) return; last = Date.now(); flash(tr("Your phone's space for Attune is full — the last change may not be saved. Settings → Backup, then delete old photos or chats.")); };
+    window.addEventListener("attune-storage-full", on); return () => window.removeEventListener("attune-storage-full", on); }, []);
   // v8.2 (Ali, 26 Oct: "the app glitches and makes the phone glitch a lot"): a freeze of the page (a long task ≥ 400 ms) is written
   // to the log with the screen it happened on — so the next phone log says WHERE it stutters (at most one line every 15 s)
   useEffect(() => {
@@ -11904,7 +11907,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                 <p className="text-[12.5px] text-[var(--c-mut)] mt-1.5 mb-0">{tr(planNote)}</p>
               </div>
               <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1">
-                {["No daily limits", "Deal Check & Chat X-Ray", "Converters, slides, video", "Fit & Food Pro", "Money (Yusr) included", "Deep research & expert review"].map((b) => (
+                {["No daily limits", "Deal Check & Chat X-Ray", "Converters, slides, video", "Fit & Food Pro", "Money included", "Deep research & expert review"].map((b) => (
                   <li key={b} className="flex items-start gap-1.5 text-[12.5px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(b)}</li>))}
               </ul>
               {Store.available() ? (

@@ -70,7 +70,7 @@ with sync_playwright() as p:
     # two meanings → ask, and the ticked one runs
     box(page, "where is the umbrella")
     check(page.locator("[data-testid=ask-card]").count() == 1 and page.locator("[data-testid=ask-map]").count() == 1 and page.locator("[data-testid=ask-whereAsk]").count() == 1, "“where is the umbrella” → What did you mean? (the map / where I keep it)")
-    page.click("[data-testid=ask-whereAsk]"); page.click("[data-testid=ask-go]"); page.wait_for_timeout(250)
+    page.click("[data-testid=ask-whereAsk]"); page.wait_for_timeout(250)   # v8.6: one tap does it
     check("don't know where the umbrella" in page.inner_text("[data-testid=lines-card]"), "he ticks “where I keep it” → it says it doesn't know yet")
     prefs = page.evaluate("JSON.parse(localStorage.getItem('attune:intent:prefs') || '{}')")
     check(any(v.get("kind") == "whereAsk" for v in prefs.values()), "his answer is remembered")

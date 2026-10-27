@@ -87,11 +87,10 @@ export function AskCard({ ask, onPick, onClose }) {
       <button onClick={onClose} aria-label={tr("Close")} className="w-8 h-8 -mt-1 -me-1 grid place-items-center c-sub"><X size={15} /></button></div>
     <p className="c-sub m-0 text-[12.5px]" dir="auto">«{ask.text}»</p>
     {ask.options.map((k) => (
-      <button key={k} role="radio" aria-checked={sel === k} onClick={() => setSel(k)} className="w-full min-h-[46px] rounded-[14px] px-3 flex items-center gap-2.5 text-start" style={sel === k ? { background: "var(--c-soft)", border: "1px solid var(--c-acc)" } : surf} data-testid={"ask-" + k}>
+      <button key={k} role="radio" aria-checked={sel === k} onClick={() => { setSel(k); onPick(k); }} className="w-full min-h-[46px] rounded-[14px] px-3 flex items-center gap-2.5 text-start" style={sel === k ? { background: "var(--c-soft)", border: "1px solid var(--c-acc)" } : surf} data-testid={"ask-" + k}>
         <span className="w-5 h-5 rounded-full grid place-items-center shrink-0" style={{ border: "2px solid var(--c-acc)", background: sel === k ? "var(--c-acc)" : "transparent" }}>{sel === k ? <Check size={12} color="#fff" /> : null}</span>
         <span className="text-[14px] font-semibold">{pick2(K.KIND_LABEL[k] || [k, k])}</span></button>))}
-    <div className="flex items-center gap-2"><span className="c-sub text-[11.5px] flex-1">{tr("Attune learns what you usually mean.")}</span>
-      <button disabled={!sel} onClick={() => onPick(sel)} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold disabled:opacity-40" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="ask-go">{tr("Do it")}</button></div>
+    <div className="flex items-center gap-2"><span className="c-sub text-[11.5px] flex-1">{tr("Tap what you meant — Attune learns what you usually mean.")}</span></div>
   </div>;
 }
 

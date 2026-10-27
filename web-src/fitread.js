@@ -388,7 +388,7 @@ export function ownOf(words, fd, list = ALIAS) {
   const syn = list.filter((a) => a.id === fd.id || a.id + "-sandwich" === fd.id || fd.id + "-sandwich" === a.id).map((a) => a.n).join(" ");
   const tbl = normA((fd.en || "") + " " + (fd.ar || "") + " " + syn).toLowerCase();
   // words that change nothing ("plain", "fresh", "regular") don't rename a food; "homemade", "mum's", a brand do
-  const extra = ws.filter((x) => x.length > 2 && !tbl.includes(x.replace(/(es|s)$/, "")) && !/^(with|and|مع|plain|fresh|regular|normal|simple|some|small|big|large|little|hot|cold|warm|عادي|ساده|سادة|صغير|كبير|سخن|ساقع)$/.test(x));
+  const extra = ws.filter((x) => x.length > 2 && !tbl.includes(x.replace(/(es|s)$/, "")) && !DUALS[x] && !/(تين|ين|ات)$/.test(x) && !/^(with|and|مع|plain|fresh|regular|normal|simple|some|small|big|large|little|hot|cold|warm|عادي|ساده|سادة|صغير|كبير|سخن|ساقع)$/.test(x));
   return extra.length ? { own: w } : {};
 }
 function named(it, own) {

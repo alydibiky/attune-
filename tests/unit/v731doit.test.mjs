@@ -21,7 +21,8 @@ ok(bf.length === 2 && bf.every((x) => x.kcal > 0 && x.t === now) && r.open === "
 r = D.apply(act("spent 150 on lunch")[0], stores, { now });
 const tx = r.stores["ledger.v3"].txns;
 ok(tx.length === 1 && tx[0].amount === 150 && tx[0].type === "expense" && tx[0].cat === "food" && tx[0].account === "c", "money: an expense of 150 (food) in the Money ledger");
-ok(D.apply(act("spent 150 on lunch")[0], { ...stores, ledger: null }, { now }).need === "money-setup", "money with no ledger yet → Money opens to set it up (nothing invented)");
+{ const r0 = D.apply(act("spent 150 on lunch")[0], { ...stores, ledger: null }, { now }), L0 = r0.stores["ledger.v3"];
+  ok(L0 && L0.accounts.length === 1 && L0.accounts[0].name === "Cash" && L0.txns.length === 1 && L0.txns[0].amount === 150, "v8.6: money with no ledger yet → the first entry starts the book (one Cash account) and is recorded, not lost"); }
 r = D.apply(act("took my Lantus")[0], stores, { now });
 ok(r.stores["attune:care:v1"].taken["m1|2026-10-14|09:00"] === now, "dose: the nearest Lantus dose (09:00) is ticked");
 r = D.apply(act("drank 2 glasses of water")[0], stores, { now }); ok(r.stores["attune:fit:v1"].days["2026-10-14"].water === 500, "water: +500 ml");

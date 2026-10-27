@@ -76,7 +76,23 @@ laggy moment ("Slow screen …" lines say where).
       ratios (5,085 steps → 311 kcal, 4.4 km exactly). The steps gap (4,173 vs 5,085) is Health Sync's delay (the card says
       when the latest came; open Huawei Health / Health Sync to push it) — the direct Huawei link still needs his AppGallery
       App ID (`attune.hmsAppId`).
-- [ ] 5. Ali has more fixes coming — wait for part 2.
+- [x] Part 2 (same evening): 6. tap a logged food → everything about it (fit-ui `FoodInfo`: name, amount, every nutrient,
+      how it was read, Edit) + **HUAWEI_SETUP.md** (Yazio reads Huawei Health Kit directly; our HuaweiHealth.kt does the same once
+      Ali registers in AppGallery Connect and puts the App ID in `attune.hmsAppId` — test-key SHA-256 inside).
+      7. interpreter slow on "hello": `translate.js quickPhrase` (17 everyday phrases × 15–28 languages, by code, instant; no
+      more «إلو») + the model is woken when the interpreter opens. 8. Translate → Photo: Take a photo · From the gallery.
+      9. **Buy agents** (agents.js `buy` kind, `buyWhat / matchScore / pickBuy / takeBuyRound / buySteps`; agents-ui `BuyCard`;
+      agent-kit `buy()` + offer links; AgentBrowser `buy` extra): "buy me AirPods Pro 2 under 9000" → searches Amazon + noon, picks
+      the exact product (not a case, not the Pro Max), **asks** (Found it — Order it / Not this one) → opens the product, presses
+      Buy now once, fills the details on each checkout page, stops at payment (never Place order / Pay).
+      10. Home box: commands.js `shapeOf` (question / request / instruction / unclear / greeting), agent kind from parseAgent,
+      up to 3 close meanings asked, "can't tell" → 4 choices (Remind me first when a time is said), one tap = do it, learned.
+      11. **The 7-way review: `REVIEW_2026-10-27b.md`** (18 bugs fixed — first expense lost, USD for Egyptians, sugar 110 as food,
+      appointments ignored, PS5 limit, oat milk, frappuccino, Fit's silent storage failure, USB-C price…; Play blocker fixed:
+      "Report this answer" on every AI answer — **Ali must set `SUPPORT_EMAIL` in billing.js**). **Waiting for Ali's picks A–E**
+      at the end of that file. Tests: unit v860fixes (+ v731doit updated), e2e_v860voice, e2e_v860report, e2e_v727agentkit (buy),
+      e2e_fithome (homemade pizza), e2e_v748commands (one tap).
+- [ ] Ali may send more — and his picks A–E from REVIEW_2026-10-27b.md.
 
 ## v8.5 — Ali's answer to the review (27 Oct): "A — but from reputable sites that hold the whole information, or YouTube; quality,
 ## not quantity" + "as per all your recommendations I agree"

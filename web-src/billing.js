@@ -15,6 +15,9 @@
    Pure helpers; tests in tests/unit/v529.test.mjs.                                           */
 
 export const TRIAL_DAYS = 7;
+/** v8.6: where a reported AI answer is e-mailed (Google Play's AI-content policy). ALI: put the app's support e-mail here before release —
+    empty = the report is only kept on the phone (Settings can show it). */
+export const SUPPORT_EMAIL = "";
 
 /** v5.32 — Ali is testing: every Pro feature is unlocked on every phone. Set to false before
     the public release (then the 7-day trial, Free limits and Pro codes apply again). */
@@ -50,6 +53,8 @@ export const proFromOwned = (items) => (items || []).find((x) => x && x.purchase
 /** "EG" for phones set to Egypt (time zone or Arabic-Egypt locale), else "US" prices. */
 export function region(tz, lang) {
   const z = String(tz || ""), l = String(lang || "");
+  // v8.6: the country the person chose in Attune comes first (a phone in Egypt set to en-US + UTC still pays Egyptian prices)
+  try { const c = typeof localStorage !== "undefined" && localStorage.getItem("attune:country"); if (c) return c === "eg" ? "EG" : "US"; } catch (e) {}
   return /Africa\/Cairo/i.test(z) || /-EG\b/i.test(l) ? "EG" : "US";
 }
 export function pricesFor(tz, lang) { return PRICES[region(tz, lang)]; }
@@ -85,7 +90,7 @@ export const BILLING_GROUPS = [
     "File converters, including scanned paper → editable Word", "Presentations (PowerPoint) and reports (Word / PDF)", "Studio pictures" ] },
   { id: "fit", icon: "🥗", title: "Fit & Food", items: [
     "Unlimited photo meals", "The week's meal plan and shopping list", "The week report" ] },
-  { id: "money", icon: "💰", title: "Money (Yusr)", items: [
+  { id: "money", icon: "💰", title: "Money", items: [
     "Receipt photos on transactions", "Sync, PDF export and projects", "Every Money Premium feature — included, no second plan" ] },
   { id: "biz", icon: "🏗️", title: "Business systems", items: [
     "Unlimited records while you try a system", "Excel and app export", "Activating a system for good is a separate, one-time price (below)" ] },

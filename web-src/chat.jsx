@@ -60,8 +60,9 @@ import { factsBlock, checkFacts, keepCovering, packsCover } from "./knowledge.js
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
-  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap, Phone, PhoneOff, Languages, ChevronRight,
+  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap, Phone, PhoneOff, Languages, ChevronRight, AlertTriangle,
 } from "lucide-react";
+import { SUPPORT_EMAIL } from "./billing.js";
 import { SlashMenu } from "./cmdbox-ui.jsx";   // v7.4 the "/" list in Chat too (Gemini Area 3)
 import { sayable, endsCall } from "./voicecall.js";   // v6.41 (H2)
 
@@ -480,6 +481,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const attached = files[0] || null;
   const setAttached = (v) => setFiles(v ? [v] : []);
   const [teaching, setTeaching] = useState(null);     // { id, corrected, note } — 👎 → the right answer
+  // v8.6 (Play launch review): Google Play's AI-generated content policy — every AI answer can be reported from inside the app
+  const [reporting, setReporting] = useState(null);   // { id, why }
+  const sendReport = (m, why) => {
+    const row = { at: Date.now(), why, text: String(m.text || "").slice(0, 1500), model: (m.stats && m.stats.model) || "" };
+    try { const all = JSON.parse(localStorage.getItem("attune:ai-reports") || "[]"); localStorage.setItem("attune:ai-reports", JSON.stringify([row, ...all].slice(0, 50))); } catch (e) {}
+    if (SUPPORT_EMAIL) { try { window.open("mailto:" + SUPPORT_EMAIL + "?subject=" + encodeURIComponent("Attune — reported answer (" + why + ")") + "&body=" + encodeURIComponent(row.text), "_blank"); } catch (e) {} }
+    setReporting(null); api.flash(tr("Thanks — reported. Attune will avoid answers like this."));
+  };
   const [toPack, setToPack] = useState(null);         // v6.16 «علّم هذا لنموذجي»: { id, packs: [names], name }
   // 👎 → a correction is checked before it is learned: people can be wrong too.
   const saveTeach = (m, idx, corrected, note, checked) => {
@@ -2287,12 +2296,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                   onClick={async () => setToPack(toPack && toPack.id === m.id ? null : { id: m.id, packs: await api.knowledge.myPacks(), name: "" })}><GraduationCap size={15} /></button> : null}
                 {api.teach ? <button onClick={() => setTeaching(teaching && teaching.id === m.id ? null : { id: m.id, corrected: "", note: "" })} data-testid="teach"
                   className={`w-11 h-11 grid place-items-center rounded-full hover:bg-[var(--c-surf-2)] hover:text-[var(--c-ink)] ${m.taught ? "text-[var(--c-acc)]" : ""}`} title={tr("Wrong? Teach the right answer")}><ThumbsDown size={15} /></button> : null}
+                <button onClick={() => setReporting(reporting && reporting.id === m.id ? null : { id: m.id })} data-testid="report-answer" className="w-11 h-11 grid place-items-center rounded-full hover:bg-[var(--c-surf-2)] hover:text-[var(--c-ink)]" title={tr("Report this answer")} aria-label={tr("Report this answer")}><AlertTriangle size={15} /></button>
                 {sourceLine(m, tr) ? <span className="text-[10px] text-[var(--c-mut)] ms-1 truncate" data-testid="answer-source" dir="auto">{sourceLine(m, tr)}</span> : null}
                 {m.stats && m.stats.tps && !(m.stats.tokens && m.stats.tokens < 16) ? <span className="text-[10px] text-[var(--c-mut)] ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
                 {m.stats && m.stats.cut ? <span className="text-[10px] text-[var(--c-warn)] ms-1" data-testid="cut-note">{tr("long answer — tap Continue")}</span> : null}
                 {m.stats && m.stats.looped ?<span className="text-[10px] text-[var(--c-warn)] ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
                 {m.stats && m.stats.tps != null && m.stats.tps < 3 && !(m.stats.tokens && m.stats.tokens < 40) && !m.image && api.openSpeed ? (
                   <button onClick={api.openSpeed} className="text-[10px] text-[var(--c-warn)] underline underline-offset-2 ms-1" data-testid="slow-hint">{tr("unusually slow — why?")}</button>) : null}
+              </div>
+            ) : null}
+            {reporting && reporting.id === m.id ? (
+              <div className="flex flex-wrap items-center gap-1.5 mt-1" data-testid="report-reasons">
+                <span className="text-[12px] text-[var(--c-mut)]">{tr("What's wrong with it?")}</span>
+                {[["offensive", "Offensive or hateful"], ["harmful", "Harmful or dangerous"], ["sexual", "Sexual content"], ["false", "False or misleading"], ["other", "Something else"]].map(([k, l]) =>
+                  <button key={k} onClick={() => sendReport(m, k)} className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[12.5px]" data-testid={"report-" + k}>{tr(l)}</button>)}
               </div>
             ) : null}
           </div>

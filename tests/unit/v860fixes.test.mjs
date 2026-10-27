@@ -52,7 +52,7 @@ ok(K.shapeOf("what is the capital of France?") === "question" && K.shapeOf("expl
 ok(go("buy me AirPods Pro 2 under 9000").type === "doit", "an ORDER ('buy me…') goes to an agent");
 ok(go("why do prices go up?").type === "chat" && go("explain inflation simply").type === "chat", "a REQUEST or a question goes to Chat, never taken for a command");
 const u = go("milk tomorrow");
-ok(u.type === "ask" && u.options.length === 4 && u.options.includes("todoAdd") && u.options.includes("note"), "can't tell ('milk tomorrow') → 4 choices (to-do, note, web, Chat), not a silent guess: " + JSON.stringify(u.options));
+ok(u.type === "ask" && u.options.length === 4 && u.options[0] === "remind" && u.options.includes("todoAdd") && u.options.includes("note"), "can't tell ('milk tomorrow') → 4 choices (to-do, note, web, Chat), not a silent guess: " + JSON.stringify(u.options));
 ok(go("hello").type === "chat", "a greeting is just answered");
 // 7. the translator: everyday phrases at once, by code
 const T = await import("../../web-src/translate.js");

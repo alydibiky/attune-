@@ -32,7 +32,10 @@ import { Barcode, Undo2, Pencil, User, ImageIcon } from "lucide-react";
 const KEY = "attune:fit:v1";
 const EMPTY = { profile: null, days: {}, weights: [], fast: null, myRecipes: [], favs: [], favFoods: [] };
 const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); return v && typeof v === "object" ? { ...EMPTY, ...v } : EMPTY; } catch (e) { return EMPTY; } };
-const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} };
+// v8.6 (the 2-months test): a full save used to fail SILENTLY once the page's storage was full (a year of meals with their
+// alternatives) — now the person is told, and logged foods no longer carry the draft's swap list (≈1 KB each)
+const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) { try { window.dispatchEvent(new CustomEvent("attune-storage-full", { detail: "fit" })); } catch (x) {} } };
+const slim = (x) => { const { alts, box, readBase, ...keep } = x || {}; return keep; };
 const MEAL_NAMES0 = { breakfast: ["Breakfast", "فطار"], lunch: ["Lunch", "غدا"], dinner: ["Dinner", "عشا"], snacks: ["Snacks", "سناك"] };
 let MEAL_NAMES = MEAL_NAMES0;   // v6.2: Ramadan mode renames the slots (Suhoor, Iftar, After Taraweeh)
 const mealNow = () => { const h = new Date().getHours(); return h < 11 ? "breakfast" : h < 16 ? "lunch" : h < 21 ? "dinner" : "snacks"; };
@@ -201,7 +204,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const tick = () => { try { if (native && native.haptic) native.haptic("tick"); else if (navigator.vibrate) navigator.vibrate(12); } catch (e) {} };
   const logNow = (meal, items, label) => {
     const stamp = Date.now(), key = dayKey;
-    upd((s) => { const d = s.days[key] || { meals: {}, water: 0, workouts: [] }; return { ...s, days: { ...s.days, [key]: { ...d, meals: { ...d.meals, [meal]: [...((d.meals || {})[meal] || []), ...items.map((x) => ({ ...x, t: stamp }))] } } } }; });
+    upd((s) => { const d = s.days[key] || { meals: {}, water: 0, workouts: [] }; return { ...s, days: { ...s.days, [key]: { ...d, meals: { ...d.meals, [meal]: [...((d.meals || {})[meal] || []), ...items.map((x) => ({ ...slim(x), t: stamp }))] } } } }; });
     tick();
     setUndo({ id: stamp, label, revert: () => upd((s) => { const d = s.days[key]; if (!d) return s; return { ...s, days: { ...s.days, [key]: { ...d, meals: { ...d.meals, [meal]: ((d.meals || {})[meal] || []).filter((x) => x.t !== stamp) } } } }; }) });
   };

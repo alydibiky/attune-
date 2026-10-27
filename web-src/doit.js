@@ -18,6 +18,8 @@ import { EXERCISES, burned, today as fitToday } from "./fit.js";
 import { markTaken, addGlucose, isInsulin, isoDay } from "./care.js";
 import { appendToLedger } from "./paylog.js";
 import { chatAsk, askLife } from "./lifeask.js";
+import { homeCurrency } from "./locale.js";
+import { savedCountry } from "./country.js";
 
 const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const latin = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/٫/g, ".");
@@ -158,6 +160,13 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
 // ---- doing it ------------------------------------------------------------------------------------------------------------------------
 const MEAL_AR = { breakfast: "الفطار", lunch: "الغداء", dinner: "العشاء", snacks: "السناكس" };
 const EMPTY_DAY = { meals: {}, water: 0, workouts: [] };
+/** The same empty money book Money (Yusr) makes on its first open — Yusr fills in the rest of its settings when it loads it. */
+export function starterLedger(now = Date.now()) {
+  const cur = homeCurrency(null), c = (savedCountry() || "").toUpperCase();
+  return { lang: "en", premium: { active: false }, theme: "midnight", ui: { accent: "", fs: "m", tabs: { trends: 1, accounts: 1, goals: 1, notes: 1, zakat: 1, bills: 1 }, title: "Yusr", period: "month", dec: 1, wk: "mon" },
+    country: c, currency: cur, pin: null, accounts: [{ id: "a" + now.toString(36), name: "Cash", emoji: "💵", currency: cur, start: 0 }], txns: [], budgets: { overall: 0, cats: {} },
+    recurring: [], customCats: [], goals: [], debts: [], projects: [] };
+}
 /** Apply one action to the stores → { stores: { key: value }, done: { en, ar }, open, need?: "reminder" | "note" | "period" | "money-setup" } */
 export function apply(a, stores, { now = Date.now() } = {}) {
   const day = fitToday(new Date(now));
@@ -186,9 +195,11 @@ export function apply(a, stores, { now = Date.now() } = {}) {
         done: { en: `Workout logged: ${ex.en}, ${a.minutes} min — about ${kcal} kcal burned.`, ar: `سُجّل التمرين: ${ex.ar}، ${a.minutes} دقيقة — حرقت نحو ${kcal} سعر.` } };
     }
     case "money": {
-      if (!stores.ledger) return { stores: {}, need: "money-setup", open: "money", done: { en: "Money isn't set up yet — opening it to add this.", ar: "المال غير مُعدّ بعد — سأفتحه لتضيف هذا." } };
-      const r = appendToLedger(stores.ledger, a.items, now);
-      const sum = a.items.reduce((s, x) => s + x.amount, 0), cur = stores.ledger.currency || "";
+      // v8.6 (the first-day test: "spent 250 on lunch" on Home opened Money and recorded NOTHING — the money book only exists after
+      // Money is opened once): a new person's first entry starts the book here, with one Cash account in their own currency
+      const ledger = stores.ledger || starterLedger(now);
+      const r = appendToLedger(ledger, a.items, now);
+      const sum = a.items.reduce((s, x) => s + x.amount, 0), cur = ledger.currency || "";
       const out = a.items.every((x) => x.type === "expense");
       return { stores: { "ledger.v3": r.ledger }, open: "money",
         done: { en: `${out ? "Expense" : "Money"} added: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join(", ")}.`, ar: `${out ? "أُضيف مصروف" : "أُضيف مبلغ"}: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join("، ")}.` } };

@@ -161,7 +161,7 @@ export const KIND_LABEL = {
   whereAsk: ["Where I keep it", "مكانها فين"], translate: ["Translate it", "ترجمها"], humanize: ["Make it sound like me", "خليها طبيعية"], convert: ["Convert the file", "حوّل الملف"],
   remember: ["Keep it in Mind", "احفظها في العقل"], find: ["Find what I kept", "هات اللي حفظته"], web: ["Search the web", "دوّر على النت"], chat: ["Ask Chat", "اسأل الشات"],
   automation: ["Make an automation", "اعمل أتمتة"], watch: ["Tell me when they message", "قولي لما يبعت"], mission: ["Start a mission", "ابدأ مهمة"],
-  agent: ["Give it to an agent (find, watch, order)", "اديها لوكيل (يدور، يراقب، يطلب)"], note: ["Save it as a note", "احفظها كملاحظة"],
+  remind: ["Remind me", "فكرني"], agent: ["Give it to an agent (find, watch, order)", "اديها لوكيل (يدور، يراقب، يطلب)"], note: ["Save it as a note", "احفظها كملاحظة"],
 };
 
 /**
@@ -210,6 +210,8 @@ export function guess(text, ctx = {}) {
   // the price drops…") is an agent's; a COMMAND (remind, log, open, convert…) is a tool's (above); a REQUEST (a question, "explain…")
   // is Chat's — and a question is never taken for a command
   if (ctx.agent) add("agent", ctx.agent === "buy" || ctx.agent === "order" ? 0.9 : 0.84);
+  // "buy me AirPods under 9000" is an order for an agent, not an expense already spent (Money reads "buy" too)
+  if (ctx.agent === "buy" || ctx.agent === "order") for (const x of c) if (x.kind === "do") x.score = Math.min(x.score, 0.6);
   if (shapeOf(t) === "question") for (const x of c) if (x.kind !== "web" && x.kind !== "metro" && x.kind !== "map" && x.kind !== "open" && x.kind !== "whereAsk" && x.kind !== "find" && x.kind !== "todoList") x.score = Math.min(x.score, 0.55);
   add("chat", shapeOf(t) === "question" || shapeOf(t) === "request" ? 0.6 : 0.3);
   // a reminder ("remind me of the passport photo") is a reminder only when it has a time; else it is Find
@@ -255,7 +257,8 @@ export function decide(cands, prefs, text) {
   // a few words that could be a to-do, a note, something to look up or a question → he picks (and Attune learns it)
   const shape = shapeOf(text);
   if ((!list.length || (list.length === 1 && list[0].kind === "chat" && list[0].score < 0.5)) && (shape === "unclear" || shape === "instruction")) {
-    const opts = ["todoAdd", "note", "web", "chat"], sig = signature(text, opts), k = learned(prefs, sig);
+    const timed = /\b(today|tonight|tomorrow|morning|evening|at \d|\d{1,2}\s*(am|pm)|mon|tue|wed|thu|fri|sat|sun)\w*\b|النهارده|بكره|بكرة|الصبح|بالليل|الساعه|الساعة|السبت|الحد|الاتنين|التلات|الاربع|الخميس|الجمعه/i.test(fold(text));
+    const opts = timed ? ["remind", "todoAdd", "note", "chat"] : ["todoAdd", "note", "web", "chat"], sig = signature(text, opts), k = learned(prefs, sig);
     return k ? { kind: k, learned: true } : { ask: opts, sig };
   }
   if (!list.length) return { kind: "chat" };

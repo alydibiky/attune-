@@ -77,7 +77,8 @@ function runKind(kind, text, { cmd = null, files = [], api = {}, slash = false }
   const records = (api.records && api.records()) || [];
   const arg = String(text || "").trim();
   switch (kind) {
-    case "do": case "metro": case "automation": case "watch": case "mission": case "remind": case "agent":
+    case "remind": return { type: "doit", text: /remind|alarm|فكرني|ذكرني|نبهني/i.test(arg) ? arg : (/[\u0600-\u06ff]/.test(arg) ? "فكرني " : "remind me ") + arg };
+    case "do": case "metro": case "automation": case "watch": case "mission": case "agent":
       return { type: "doit", text: arg };
     case "note": return arg ? { type: "rememberNote", text: arg } : { type: "need", what: "text", cmd: "remember" };
     case "scout":
