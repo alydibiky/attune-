@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 26 Oct 2026 — v8.3)
+# Attune — start here (handoff for the next chat, 27 Oct 2026 — v8.4)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,7 +6,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v8.3** (versionCode 125) — branch `claude/youthful-davinci-fe3400` = main (pushed 26 Oct, APK built green on the branch first) |
+| `main` | **v8.4** (versionCode 126) — branch `claude/youthful-davinci-fe3400` = main (27 Oct) |
 | Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
 | Tests | v8.3: every unit + e2e file passes (old Instant / Money / sidebar expectations updated; e2e_v727guardian dates now relative to today) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
@@ -50,18 +50,22 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
 
-## ⚠️ OPEN NOW — Ali's 27 Oct list (on v8.3) — NOT FIXED YET
-- [ ] 1. **Web search "still stupid and wrong" — he wants ideas to fix it for good.** His case: "Lynk and co 900 specs" → "an SUV from
-      South Korea" (wrong: Lynk & Co is Chinese, Geely), "I found no specific web page", the trims table mostly "—", "Prices in Egypt
-      in EGP are available" without the price. Investigate research.js / webrank.js / the car path; fix the measurable bugs; show Ali
-      2–3 options for the bigger redesign.
-- [ ] 2. **Photos → PDF with more than one photo: pick, Add — nothing happens.** (Converter page "Photos → PDF".)
-- [ ] 3. **People & plans still doesn't understand**: "22,000 total for the next 9 months to be paid in installments" → read as
-      22,000 a MONTH × 9 = 198,000. "total" must mean the whole sum.
-- [ ] 4. **Reminders in free text**: "every Sunday, Tuesday and Thursday remind me to train" → one reminder on those days.
-- [ ] 5. **Voice still not working** (v8.3 has "Voice … error N" lines in the log — ask Ali for the log; look for the real cause).
-- [ ] 6. **Test the whole app like a normal user** → suggest what to remove, improve, make easier or rewire (a written review; the
-      subjective parts as options for Ali).
+## v8.4 — Ali's 27 Oct list (on v8.3) — DONE, waiting for his phone test and his picks
+Review for Ali (walkthrough + options): **`REVIEW_2026-10-27.md`** (sheets `design/v84/walk-0..5.png`).
+- [x] 1. Web search. Code fixes: `makers.js` (brand → maker + country; `makerNote` goes into the car prompt in chat.jsx carP,
+      `fixMakerCountry` after fixModelNames), answerfix.js `EMPTY_CLAIM` ("prices are available" with no figure → dropped) + a last line
+      cut mid-sentence dropped, research.js TPL vehicle table line clean, chat.jsx: a webEmpty answer gets tidy + fillBlanks + no
+      fake [n]. Test `tests/unit/v840web.test.mjs`. **Waiting for Ali: Option A / B / C in REVIEW §C (recommend A: code-built tables
+      from known spec sites).**
+- [x] 2. Photos → PDF several photos: MainActivity pickFiles reads `clipData` (several picks reach the page).
+- [x] 3. "22,000 total for 9 months": life.js `oneAmount` (total / each / unsure) + `withAlt` ("Did you mean:" both readings).
+- [x] 4. Reminders free text on weekdays: actions.js `daysIn` / `repeat "days:0,2,4"` / `firstOnDays`; actions-ui free-text box +
+      day chips; Reminders.kt next() handles `days:`. Test in e2e_v5.py + v820fixes.
+- [x] 5. Voice: Voice.kt uses Google's recogniser by name when installed (`googleService`), and Android's voice popup as the last try
+      (`usePopup`, MainActivity `voicePopup` launcher, manifest query RECOGNIZE_SPEECH); every step logged. Real cause still needs
+      Ali's log if it fails ("Voice (…)" lines).
+- [x] 6. Whole-app walk: 3 small fixes done (page names in the bar, Prompt lab name, Cycle "Instant" text); suggestions R1–R4,
+      I1–I4, E1–E3, W1–W3 **wait for Ali's picks** (REVIEW §B).
 
 ## (done in v8.2/8.3) Ali's 26 Oct list, part 1 (v8.1 on his phone) — NOT FIXED YET
 Ali's deal (26 Oct): **after every big change, update this file and push**, so if the session limit ends another AI carries on.

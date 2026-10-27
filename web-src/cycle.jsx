@@ -362,7 +362,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
   // v5.31: every headline goes through tr() with its numbers and dates as {vars} (Arabic too)
   const headline = (() => {
     const day = (k, o) => fromKey(k).toLocaleDateString(dateLocale(), o);
-    if (!stats.last) return { big: tr("Log your first period"), small: tr("Tap a day below, or type it in Instant: “my period started yesterday, light”.") };
+    if (!stats.last) return { big: tr("Log your first period"), small: tr("Tap a day below, or type it on Home: “my period started yesterday, light”.") };
     if (stats.inPeriod) {
       const d = diffDays(stats.last.start, todayKey) + 1;
       return { big: tr("Period · day {d}", { d }), small: tr("Usually lasts about {n} days for you.", { n: stats.periodLen }) };
