@@ -50,7 +50,20 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
 
-## ⚠️ OPEN NOW — Ali's 26 Oct list, part 1 (v8.1 on his phone) — NOT FIXED YET
+## ⚠️ OPEN NOW — Ali's 27 Oct list (on v8.3) — NOT FIXED YET
+- [ ] 1. **Web search "still stupid and wrong" — he wants ideas to fix it for good.** His case: "Lynk and co 900 specs" → "an SUV from
+      South Korea" (wrong: Lynk & Co is Chinese, Geely), "I found no specific web page", the trims table mostly "—", "Prices in Egypt
+      in EGP are available" without the price. Investigate research.js / webrank.js / the car path; fix the measurable bugs; show Ali
+      2–3 options for the bigger redesign.
+- [ ] 2. **Photos → PDF with more than one photo: pick, Add — nothing happens.** (Converter page "Photos → PDF".)
+- [ ] 3. **People & plans still doesn't understand**: "22,000 total for the next 9 months to be paid in installments" → read as
+      22,000 a MONTH × 9 = 198,000. "total" must mean the whole sum.
+- [ ] 4. **Reminders in free text**: "every Sunday, Tuesday and Thursday remind me to train" → one reminder on those days.
+- [ ] 5. **Voice still not working** (v8.3 has "Voice … error N" lines in the log — ask Ali for the log; look for the real cause).
+- [ ] 6. **Test the whole app like a normal user** → suggest what to remove, improve, make easier or rewire (a written review; the
+      subjective parts as options for Ali).
+
+## (done in v8.2/8.3) Ali's 26 Oct list, part 1 (v8.1 on his phone) — NOT FIXED YET
 Ali's deal (26 Oct): **after every big change, update this file and push**, so if the session limit ends another AI carries on.
 Ali said "read this first, then I'll upload more" — part 2 may follow below. Tick each item here when done.
 - [~] 1. (v8.2: 'Slow screen <page>: froze N ms' lines now go to the log; in the browser at 4× slower CPU only start-up (1.2 s) and Money (0.25 s) freeze — need Ali's log after a laggy moment) **"The app glitches and makes the phone glitch a lot."** Clues in his log: one kill at **3680 MB rss** (24 Oct 17:36,
