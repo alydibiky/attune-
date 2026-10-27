@@ -307,6 +307,33 @@ export function mealItem(name, qty, unit, est = {}) {
   const grams = Math.round(gramsOf(null, qty, unit));
   return { name: name.trim(), qty, unit: unitNorm(unit), grams, ...nutrients({ kcal: k, p, c, f, fib: 0 }, grams), estimate: true };
 }
+/** v8.6 (Ali, 27 Oct: "'something else' should be free text — read it as it is, understand it and estimate its calories like
+    Yazio"): one food exactly as the person wrote it ("homemade chicken pizza", "my mum's mahshi", "Cook Door chicken crepe") —
+    homemade / restaurant / brand / cooking method / size all count; the name is never swapped for a table food. */
+export function writtenMessages(text) {
+  return [
+    { role: "system", content: `You are a nutritionist estimating ONE food exactly as the person wrote it. Homemade vs restaurant, the brand, the cooking method, the filling and the size all change the numbers — use them. Use typical recipe values (like a nutrition app such as Yazio or MyFitnessPal would). Reply with ONLY a JSON object:
+{"qty": number of pieces/servings written (1 if none), "unit": "piece|slice|plate|bowl|cup|glass|sandwich|serving|g|ml", "grams_each": typical grams of ONE unit, "kcal_per_100g": number, "protein_per_100g": number, "carbs_per_100g": number, "fat_per_100g": number}` },
+    { role: "user", content: String(text || "") },
+  ];
+}
+/** The model's reply for a written food → an item named with the person's words (or null when the numbers make no sense). */
+export function writtenItem(raw, name, fallback = {}) {
+  const j = jsonLoose(raw); if (!j || Array.isArray(j)) return null;
+  const k = num(j.kcal_per_100g); if (!(k > 0 && k <= 900)) return null;
+  let p = num(j.protein_per_100g) ?? 0, c = num(j.carbs_per_100g) ?? 0, f = num(j.fat_per_100g) ?? 0;
+  const byMacros = p * 4 + c * 4 + f * 9;
+  if (byMacros > 0 && Math.abs(byMacros - k) / k > 0.25) { const s = k / byMacros; p *= s; c *= s; f *= s; }
+  const unit = unitNorm(String(j.unit || fallback.unit || "serving")), qty = num(j.qty) > 0 ? num(j.qty) : fallback.qty || 1;
+  let each = num(j.grams_each); if (!(each > 0 && each < 3000)) each = unit === "g" || unit === "ml" ? 1 : gramsOf(null, 1, unit);
+  const grams = Math.max(1, Math.round(unit === "g" || unit === "ml" ? (qty > 1 ? qty : each) : qty * each));
+  const nm = String(name || "").trim(); const title = nm.charAt(0).toUpperCase() + nm.slice(1);
+  const per = { kcal: Math.round(k), p: r1(p), c: r1(c), f: r1(f), fib: 0 };
+  // kept like a food from the databases, so the next time the same words are typed it is known at once (learnFix)
+  const id = "w:" + normT(nm).replace(/\s+/g, "-").slice(0, 60);
+  const fd = { id, en: title, ar: title, ...per, portions: unit === "g" || unit === "ml" ? {} : { [unit]: Math.round(each) }, src: "written" };
+  return { item: { name: title, ar: title, id, src: "written", qty, unit, grams, ...nutrients(per, grams), estimate: true, said: nm, own: nm, from: "text", base: grams, explicit: true, alts: [] }, food: fd };
+}
 /** Without a model: "2 eggs, 1 baladi bread and a plate of ful" / «٢ بيض ورغيف عيش وطبق فول» → items (table foods only). */
 export function quickParse(text) {
   const t = String(text || "").replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
@@ -379,14 +406,55 @@ export function targets(pr) {
 export const MEALS = ["breakfast", "lunch", "dinner", "snacks"];
 export const today = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 /** v8.2 (Ali, 26 Oct: Attune said 8 active kcal and 0.2 km for 6,017 steps; his watch said 406 kcal and 5.74 km): when the watch
-    app sends steps but (almost) no calories or distance, they are worked out from the steps — marked as estimated. */
-export function watchBurn(w, kg = 70) {
-  const a = (w && w.activeKcal) || 0, st = (w && w.steps) || 0;
-  const fromSteps = Math.round(st * 0.04 * Math.max(40, Math.min(200, kg || 70)) / 70);
-  return st >= 1000 && a < fromSteps * 0.3 ? { kcal: fromSteps, est: true } : { kcal: a, est: false };
+    app sends steps but (almost) no calories or distance, they are worked out from the steps — marked as estimated.
+    v8.6 (Ali, 27 Oct: "the watch is not read accurately… it is always lower" — Attune 4,173 steps · 167 kcal · 3.1 km, his Huawei
+    5,085 · 311 kcal · 4.40 km): the old estimate used 70 kg and 0.75 m a step for everyone (0.04 kcal a step; his watch counts
+    0.061). Now, in this order: (1) the watch's own active calories; (2) the watch's TOTAL calories minus your resting burn so far
+    today (Health Sync often sends total, not active); (3) your own watch's numbers per step — learnt from a day it sent real
+    calories / distance, or from "Match my watch" (you type what the watch shows once); (4) your body: stride from your height
+    (0.415 × height, 0.413 for women) and ~0.8 kcal per kg per km on foot (what watches show as "active"; 70 kg · 170 cm = the old 0.04 a step). */
+let ME = { kg: 70, cm: 170, male: true, age: 30, cal: null };
+/** Fit page: who is wearing the watch (profile) and their own watch's ratios ({kcalPerStep, mPerStep}). */
+export function setWatchMe(profile, cal) {
+  const p = profile || {};
+  ME = { kg: +p.kg > 25 ? +p.kg : 70, cm: +p.cm > 100 ? +p.cm : 170, male: p.sex !== "f", age: +p.age >= 10 ? +p.age : 30, cal: cal && (cal.kcalPerStep > 0 || cal.mPerStep > 0) ? cal : null };
+}
+const strideM = () => (ME.cal && ME.cal.mPerStep > 0.3 && ME.cal.mPerStep < 1.6 ? ME.cal.mPerStep : ME.cm / 100 * (ME.male ? 0.415 : 0.413));
+const perStep = (kg) => (ME.cal && ME.cal.kcalPerStep > 0.01 && ME.cal.kcalPerStep < 0.2 ? ME.cal.kcalPerStep * (kg || ME.kg) / ME.kg : 0.8 * (kg || ME.kg) * strideM() / 1000);
+/** Your resting burn from midnight to `at` (Mifflin-St Jeor), to turn a watch's total calories into active ones. */
+function restSoFar(at) {
+  const bmr = 10 * ME.kg + 6.25 * ME.cm - 5 * ME.age + (ME.male ? 5 : -161), d = new Date(at || Date.now());
+  const frac = (d.getHours() * 60 + d.getMinutes()) / 1440;
+  return Math.round(bmr * frac);
+}
+/** A day the watch app sent real numbers → its ratios, so the days it doesn't are estimated like YOUR watch counts. */
+export function learnWatch(w, old) {
+  const st = (w && w.steps) || 0; if (st < 2000) return old || null;
+  const c = { ...(old || {}) };
+  if (w.activeKcal > st * 0.02) c.kcalPerStep = Math.round(w.activeKcal / st * 10000) / 10000;
+  if (w.distanceM > st * 0.4) c.mPerStep = Math.round(w.distanceM / st * 1000) / 1000;
+  return c.kcalPerStep || c.mPerStep ? c : old || null;
+}
+/** "Match my watch": what the watch shows right now → {kcalPerStep, mPerStep, by: "you"}. */
+export function matchWatch(steps, kcal, km) {
+  const s = +steps; if (!(s >= 500)) return null;
+  const c = { by: "you" };
+  if (+kcal > 0) c.kcalPerStep = Math.round(+kcal / s * 10000) / 10000;
+  if (+km > 0) c.mPerStep = Math.round(+km * 1000 / s * 1000) / 1000;
+  return c.kcalPerStep || c.mPerStep ? c : null;
+}
+// the other pages (Home, Health report) read the day too — who wears the watch comes from the saved Fit state
+try { const v = typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("attune:fit:v1") || "null") : null; if (v) setWatchMe(v.profile, v.watchCal); } catch (e) {}
+export function watchBurn(w, kg) {
+  const a = (w && w.activeKcal) || 0, st = (w && w.steps) || 0, t = (w && w.totalKcal) || 0;
+  const fromSteps = Math.round(st * perStep(kg ? +kg : 0));
+  if (!(st >= 1000 && a < fromSteps * 0.3)) return { kcal: a, est: false };
+  // (2) total calories from the watch: today's resting burn so far comes off — what is left is what you moved
+  if (t > 0) { const act = t - restSoFar(w.lastAt || w.at); if (act >= fromSteps * 0.3 && act < fromSteps * 4) return { kcal: Math.round(act), est: false, from: "total" }; }
+  return { kcal: fromSteps, est: true, from: ME.cal && ME.cal.kcalPerStep ? "yours" : "body" };
 }
 export function watchKm(w) {
-  const m = (w && w.distanceM) || 0, st = (w && w.steps) || 0, fromSteps = st * 0.75;
+  const m = (w && w.distanceM) || 0, st = (w && w.steps) || 0, fromSteps = st * strideM();
   return st >= 1000 && m < fromSteps * 0.3 ? { km: Math.round(fromSteps / 100) / 10, est: true } : { km: Math.round(m / 100) / 10, est: false };
 }
 export function dayTotals(day) {

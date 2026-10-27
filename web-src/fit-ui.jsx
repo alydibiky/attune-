@@ -67,7 +67,7 @@ function ReadDetail({ x, L, ar }) {
   const row = (k, v, id) => <div className="flex gap-2 py-1 border-t border-[var(--c-ln)] first:border-t-0" data-testid={id}><span className="w-[38%] shrink-0 text-[var(--c-mut)]">{k}</span><span className="flex-1 min-w-0 break-words text-[var(--c-ink)]" dir="auto">{v}</span></div>;
   return <div className="rounded-xl bg-[var(--c-soft)] px-3 py-2 text-[12.5px]" data-testid="fit-read-detail">
     {x.said ? row(L("You wrote", "إنت كتبت"), "«" + x.said + "»" + (x.qty ? " · " + L("amount", "الكمية") + " " + x.qty : ""), "fit-read-said") : null}
-    {row(L("Read as", "اتقرت على إنها"), (fd ? (ar && fd.ar ? fd.ar + " — " : "") + fd.en : x.name) + (x.estimate ? " · " + L("not in the food table — the AI's estimate", "مش في جدول الأكل — تقدير الذكاء الاصطناعي") : x.learned ? " · " + L("as you corrected it before", "زي ما صحّحته قبل كده") : ""), "fit-read-food")}
+    {row(L("Read as", "اتقرت على إنها"), (x.src === "written" ? x.name : fd ? (ar && fd.ar ? fd.ar + " — " : "") + fd.en : x.name) + (x.src === "written" ? " · " + L("as you wrote it — the AI's estimate for this exact food", "زي ما كتبتها — تقدير الذكاء الاصطناعي للأكلة دي بالظبط") : x.estimate ? " · " + L("not in the food table — the AI's estimate", "مش في جدول الأكل — تقدير الذكاء الاصطناعي") : x.learned ? " · " + L("as you corrected it before", "زي ما صحّحته قبل كده") : ""), "fit-read-food")}
     {row(L("Amount", "الكمية"), each ? `${x.qty} × ${each} g = ${x.grams} g` : `${x.grams} ${x.unit === "ml" ? "ml" : "g"}`, "fit-read-grams")}
     {per ? row(L("Per 100 g", "لكل ١٠٠ جم"), `${Math.round(per.kcal)} kcal · ${L("protein", "بروتين")} ${n1(per.p)} g · ${L("carbs", "كارب")} ${n1(per.c)} g · ${L("fat", "دهون")} ${n1(per.f)} g`, "fit-read-per100") : null}
     {per && x.kcal != null ? row(L("Calories", "السعرات"), `${x.grams} g ÷ 100 × ${Math.round(per.kcal)} = ${x.kcal} kcal`, "fit-read-calc") : null}
@@ -168,6 +168,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const upd = (fn) => setSt((s) => { const n = fn(s); save(n); return n; });
   // v6.10: the food of the chosen country (Settings → «Food from»); the phone's own country until one is chosen
   const country = F.setCountry(st.country || F.defaultCountry());
+  F.setWatchMe(st.profile, st.watchCal);   // v8.6: the watch's numbers are worked out for YOUR body and YOUR watch
   const [tab, setTab] = useSticky("fit:tab", "today");
   const [dayKey, setDayKey] = useState(F.today());
   const day = st.days[dayKey] || { meals: {}, water: 0, workouts: [] };
@@ -400,6 +401,23 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   };
   const scaleAt = (i, k) => setDraft((d) => d.map((x, j) => (j === i ? F.scaleItem(x, k) : x)));
   const chooseAt = (i, fd) => setDraft((d) => d.map((x, j) => (j === i ? F.chooseFood(x, fd) : x)));
+  // v8.6 (Ali: "'something else' should be free text — read it as it is, understand it and estimate its calories like Yazio"):
+  // the words typed stay the food's name; the AI on the phone estimates that exact food (homemade / restaurant / brand / size);
+  // without a model the reader's nearest table food gives the numbers, still under the person's own name
+  const [writing, setWriting] = useState(false);
+  const useWritten = async (i, typed) => {
+    const t = String(typed || "").trim(), x = draft && draft[i]; if (!t || !x) return;
+    const amt = /\d/.test(t) ? t : x.qty && x.unit !== "g" && x.unit !== "ml" ? x.qty + " " + t : t;
+    let it = null;
+    if (modelReady && llm) {
+      setWriting(true);
+      try { const r = F.writtenItem(await llm(F.writtenMessages(amt), null, { json: true, maxTokens: 220, temperature: 0 }), t.replace(/^\d+(\.\d+)?\s*/, ""), x); if (r) { DB.keepFoods([r.food]); it = r.item; } } catch (e) {}
+      finally { setWriting(false); }
+    }
+    if (!it) { const r = R.readMealText(amt); if (r.items.length === 1 && !r.unknown.length) { const nm = t.replace(/^\d+(\.\d+)?\s*/, ""); const title = nm.charAt(0).toUpperCase() + nm.slice(1); it = { ...r.items[0], name: title, ar: title, own: nm, said: nm, table: r.items[0].table || r.items[0].name, from: "text", alts: [] }; } }
+    if (!it) { flash && flash(L("To estimate a food the table doesn't know, load an AI model (Engine) — or pick one from the list.", "عشان أقدّر أكلة مش في الجدول، شغّل موديل ذكاء اصطناعي (المحرك) — أو اختار من القايمة.")); return; }
+    setDraft((d) => d.map((y, j) => (j === i ? it : y))); setReplaceAt(-1); setQ("");
+  };
   // search: the table + foods kept on the phone at once; the big databases on demand
   const searchOnline = async () => {
     const qq = q.trim(); if (!qq) return;
@@ -806,7 +824,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">
                       <span className="text-[11px] text-[var(--c-mut)] self-center">{L("Is it:", "قصدك:")}</span>
                       {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={chip(a.food.id === x.id && (a.food.en || "") === (x.name || ""))} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
-                      <button onClick={() => { setReplaceAt(i); setDraft((d) => d); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-[var(--c-surf)] text-[var(--c-acc)]" data-testid="fit-alt-other">{L("something else…", "حاجة تانية…")}</button>
+                      <button onClick={() => { setReplaceAt(i); setQ(x.own || x.said || ""); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-[var(--c-surf)] text-[var(--c-acc)]" data-testid="fit-alt-other">{L("something else…", "حاجة تانية…")}</button>
                     </div>) : null}
                   {(() => { const aq = x.from === "text" ? null : AQ.amountQuestion(x); if (!aq) return null;
                     return <div className="flex flex-wrap gap-1 items-center" data-testid="fit-amount">
@@ -823,7 +841,10 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               {replaceAt >= 0 ? (
                 <div className="space-y-1" data-testid="fit-replace">
                   <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-[var(--c-mut)]" />
-                    <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchOnline(); }} placeholder={L("What is it really?", "هو إيه بالظبط؟")} className="w-full rounded-xl bg-[var(--c-surf)] py-2 ps-8 pe-2 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" data-testid="fit-replace-q" /></div>
+                    <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") useWritten(replaceAt, q); }} placeholder={L("Write it as it is, e.g. homemade chicken pizza", "اكتبها زي ما هي، مثلًا بيتزا فراخ بيتي")} className="w-full rounded-xl bg-[var(--c-surf)] py-2 ps-8 pe-2 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)]" data-testid="fit-replace-q" /></div>
+                  {q.trim() ? <div className="flex gap-2">
+                    <button onClick={() => useWritten(replaceAt, q)} disabled={writing} className="flex-1 min-w-0 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] px-3 py-2 text-[13px] font-bold text-start truncate disabled:opacity-60" data-testid="fit-replace-written">{writing ? L("Estimating…", "بقدّر…") : L(`Use «${q.trim()}» as I wrote it`, `استخدم «${q.trim()}» زي ما كتبتها`)}</button>
+                    <button onClick={searchOnline} className="rounded-xl bg-[var(--c-surf-2)] px-3 py-2 text-[12px] text-[var(--c-mut)] shrink-0" data-testid="fit-replace-search">{L("Search databases", "دوّر في القواعد")}</button></div> : null}
                   {results.map((fd) => <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-[var(--c-surf-2)]" data-testid={"fit-food-" + fd.id}><span className="text-[13px] text-[var(--c-ink)] truncate">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[11.5px] text-[var(--c-mut)] shrink-0">{fd.kcal} kcal/100g</span></button>)}
                 </div>) : null}
               <div className="flex gap-2" data-testid="fit-cmd-row">

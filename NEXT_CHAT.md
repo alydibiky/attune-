@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 27 Oct 2026 — v8.5)
+# Attune — start here (handoff for the next chat, 27 Oct 2026 — v8.6)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,7 +6,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v8.5** (versionCode 127) — branch `claude/youthful-davinci-fe3400` = main (27 Oct) |
+| `main` | **v8.6** (versionCode 128; branch `claude/affectionate-ptolemy-nmr0bh`) — before: **v8.5** (versionCode 127) — branch `claude/youthful-davinci-fe3400` = main (27 Oct) |
 | Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
 | Tests | v8.3: every unit + e2e file passes (old Instant / Money / sidebar expectations updated; e2e_v727guardian dates now relative to today) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
@@ -49,6 +49,34 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
     localStorage). Tests: e2e_v831books.py (phone path with a stand-in), e2e_v830.py, unit v830library. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
+
+## v8.6 — Ali's 27 Oct evening list, part 1 (he said "read this first, then I will upload more" — part 2 may follow below)
+- [x] 1. CLAUDE.md rule (from a post he liked): **for unfamiliar features, don't write from scratch — first search GitHub for
+      open-source projects, compare approaches, then start** (commercial-safe licence; name the project in the handoff).
+- [x] 2. **Voice "fix it for good or remove it"** — his screenshot: «hello» was heard fine, then "I didn't get that" (with a ✓).
+      Cause: anything that is not a command (send / remind / open…) went only to the Home box, which has no answer for chat.
+      Now (`voice-ui.jsx` turn → `voice-talk.js`): small talk by code at once (hello / السلام عليكم / thanks / how are you, EN + AR),
+      everything else → the phone's AI model (`ask` prop from attune.jsx = callChat, short spoken answer, last 8 turns kept,
+      `forSpeech` strips markdown / lists / [n], ≤ 4 sentences), then it listens again (a conversation, like a call). No model →
+      it says how to get one (commands still work). Arabic words → Arabic answer. Tests: unit v860fixes, e2e_v860voice.py.
+      **Ali's phone decides** whether it stays; if he still wants it removed: hide `home-voice` + the wake switch.
+- [x] 3. **Food: "I wrote homemade chicken pizza, it showed Chicken ranch pizza"**. (a) the table's `pizza-chicken` was named
+      "Chicken ranch pizza" → "Chicken pizza"; (b) `fitread.js ownOf/named`: when the person's words say more than the table
+      food's name (homemade, mum's, brand…), the item is NAMED with their words (Yazio-style) and the table food only gives the
+      numbers ("Read as" shows which); (c) "something else…" is **free text**: it opens with his words, Enter / «Use "…" as I
+      wrote it» → `fit.js writtenMessages / writtenItem`: the AI estimates THAT exact food (homemade / restaurant / brand /
+      size; macros checked against kcal), kept as a food (`w:` id, DB.keepFoods + learnFix) so the same words are known next
+      time; without a model the reader's nearest food under his name. "Search databases" is still a button next to it.
+- [x] 4. **Watch always lower** (Attune 4,173 steps · 167 kcal · 3.1 km at 17:31; his Huawei at 18:03: 5,085 · 311 kcal ("Heat")
+      · 4.40 km). 167 and 3.1 were both the old step estimate (70 kg, 0.75 m a step for everyone → 0.04 kcal a step; his
+      watch counts 0.061). `fit.js`: `setWatchMe(profile, watchCal)` (Fit page + saved state) → stride from height
+      (0.415 / 0.413 × cm), ~0.8 kcal per kg per km; Health Sync's TOTAL calories minus resting burn so far when active ones
+      are missing; `learnWatch` learns the watch's own kcal / m per step from any day it sends them; **"Match my watch"**
+      (`fitplus-ui MatchWatch`, under the watch card when numbers are estimated) — type what the watch shows once → his
+      ratios (5,085 steps → 311 kcal, 4.4 km exactly). The steps gap (4,173 vs 5,085) is Health Sync's delay (the card says
+      when the latest came; open Huawei Health / Health Sync to push it) — the direct Huawei link still needs his AppGallery
+      App ID (`attune.hmsAppId`).
+- [ ] 5. Ali has more fixes coming — wait for part 2.
 
 ## v8.5 — Ali's answer to the review (27 Oct): "A — but from reputable sites that hold the whole information, or YouTube; quality,
 ## not quantity" + "as per all your recommendations I agree"

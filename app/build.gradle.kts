@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 37   // v6.35: Android 17 (API 37); minSdk 28 keeps Android 9 – 16 phones. Checked against Google's "behavior changes for apps targeting 17": no writable native libraries, no background activity starts, no widget bitmaps, no SMS
-        versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 127   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
-        versionName = "8.5"
+        versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 128   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
+        versionName = "8.6"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it

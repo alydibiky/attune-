@@ -12,6 +12,7 @@ import * as V from "./voice-cmd.js";
 import { loadPeople, savePeople } from "./franco.js";
 import { SmsSwitch } from "./sms-ui.jsx";
 import { WakeSwitch } from "./wake-ui.jsx";
+import { smallTalk, forSpeech } from "./voice-talk.js";
 
 const STYLE_BY_COUNTRY = { EG: "eg", SA: "gulf", AE: "gulf", KW: "gulf", QA: "gulf", BH: "gulf", OM: "gulf", JO: "lev", LB: "lev", SY: "lev", PS: "lev", IQ: "gulf", MA: "maghreb", DZ: "maghreb", TN: "maghreb", LY: "maghreb" };
 const LISTEN_TAG = { eg: "ar-EG", gulf: "ar-SA", lev: "ar-JO", maghreb: "ar-MA" };
@@ -27,7 +28,7 @@ export function voiceTag(country = "EG") {
 }
 const APP_NAME = { whatsapp: "WhatsApp", telegram: "Telegram", messenger: "Messenger", signal: "Signal", instagram: "Instagram" };
 
-export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "EG", flash, initialText = "" }) {
+export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country = "EG", flash, initialText = "" }) {
   const style = STYLE_BY_COUNTRY[(country || "EG").toUpperCase()] || "eg";
   const [st, setSt] = useState(() => ({ ...V.newVoiceState(), ui: getLang() === "ar" ? "ar" : "en" }));
   const [edit, setEdit] = useState(null);   // the read-back's words being changed by hand
@@ -40,6 +41,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
   const langs = [...new Set([getLang() === "ar" ? "ar" : local || "en", "ar", "en", ...(local ? [local] : [])])];
   const [speakLang, setSpeakLang] = useState(langs[0]);   // what the mic listens for (the button cycles through langs)
   const stRef = useRef(st); stRef.current = st;
+  const history = useRef([]);              // the last turns of a free conversation (sent to the model with the next question)
   // Voice 2.1 car mode (design A's car screen): big buttons, the newest message read aloud by itself, Reply / Navigate by voice
   const [car, setCar] = useState(false);
   const [newest, setNewest] = useState(null);
@@ -94,12 +96,24 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, country = "E
     setSt(r.state);
     if (r.action && r.action.kind === "pass") {
       // not a message: the Home box does it (money, reminders, Agents, apps) and its answer is spoken
-      let line = "";
+      let line = "", talk = false;
       try { const res = doIt ? await doIt(text) : null; line = res ? (res.answer || (res.lines || []).map((l) => l.text).join(" · ")) : ""; } catch (e) {}
-      const ui = r.state.ui;
-      line = line || (ui === "ar" ? "مفهمتش — قولها تاني بشكل تاني، أو اكتبها." : "I didn't get that — say it another way, or type it.");
-      setSay(line); setCard({ kind: "done", ok: !!line });
+      const ui = /[\u0600-\u06ff]/.test(text) ? "ar" : r.state.ui;
+      // v8.6 (Ali: "fix the voice part for good"): not an action → a real conversation — small talk by code at once, anything
+      // else to the AI model on the phone (short spoken answer, the last turns kept), never a dead "I didn't get that"
+      if (!line) { line = smallTalk(text, ui); talk = !!line; }
+      if (!line && ask) {
+        setSay(ui === "ar" ? "بفكر…" : "Thinking…"); setCard({ kind: "done", ok: false });
+        try { line = forSpeech(await ask(text, history.current, ui)); talk = !!line; } catch (e) { line = ""; }
+      }
+      if (line && talk) history.current = [...history.current, { role: "user", content: text }, { role: "assistant", content: line }].slice(-8);
+      const ok = !!line;
+      line = line || (ask ? (ui === "ar" ? "معرفتش أرد دلوقتي — جرّب تاني." : "I couldn't answer just now — try again.")
+        : (ui === "ar" ? "علشان أرد على أي سؤال، نزّل موديل ذكاء اصطناعي من «المحرك». الأوامر (ابعت لـ… · فكرني… · افتح…) شغالة من غيره." : "To answer any question, install an AI model in Engine. Commands (send…, remind me…, open…) work without one."));
+      setSay(line); setCard({ kind: "done", ok });
       await speakOut(line, ui);
+      // a conversation keeps going hands-free, like a call
+      if (talk && alive.current) listen();
       return;
     }
     setSay(r.say || ""); setCard(r.card || null);

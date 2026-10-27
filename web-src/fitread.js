@@ -280,7 +280,7 @@ export function readMealText(text, cc = getCountry()) {
       if (!words && lastFood && qty != null) { const it = items[items.length - 1]; const g = gramsFor(lastFood, qty, unit || it.unit); items[items.length - 1] = { ...makeItem(lastFood, qty, unit || it.unit, g), said: it.said, explicit: true }; continue; }
       if (!words) continue;
       const lw = learned("t:" + words), fd = lw ? food(lw.id) || lw.food : matchFood(words);
-      if (fd) { const g = gramsFor(fd, qty ?? 1, unit, {}) * (size && !(fd.portions || {})[size] ? sizeK : 1); items.push({ ...makeItem(fd, qty ?? 1, unit || "serving", g), said: words, explicit: qty != null || unit === "g" || unit === "ml" }); lastFood = fd; }
+      if (fd) { const g = gramsFor(fd, qty ?? 1, unit, {}) * (size && !(fd.portions || {})[size] ? sizeK : 1); items.push({ ...makeItem(fd, qty ?? 1, unit || "serving", g), said: words, explicit: qty != null || unit === "g" || unit === "ml", ...ownOf(words, fd) }); lastFood = fd; }
       else unknown.push(words);
       continue;
     }
@@ -356,7 +356,10 @@ export function readMealText(text, cc = getCountry()) {
       if (size && !((fd.portions || {})[size]) && u !== "g" && u !== "ml") g *= sizeK;
       // "coffee with milk", «نسكافيه بلبن»: milk in a hot drink with no amount of its own is a splash
       if (/^milk/.test(fd.id) && !am.any && items.some((x) => /^(tea|coffee|nescafe|turkish-coffee)$/.test(x.id))) g = 50;
-      items.push({ ...makeItem(fd, q, u || "serving", g), said: m.n, explicit: am.q != null || am.u === "g" || am.u === "ml" }); lastFood = fd;
+      // v8.6 (Ali: "I wrote homemade chicken pizza", it showed "Chicken ranch pizza"): one food in this part → the person's own words
+      // name it (Yazio-style); the table food only gives the numbers ("Read as" says which)
+      const own = ms.filter((x) => !x.skip).length === 1 ? ownOf(wordsOf(ch.replace(/@(\d+)@/g, (_, i) => " " + marks[+i].n + " ")), fd) : {};
+      items.push({ ...makeItem(fd, q, u || "serving", g), said: own.own || m.n, explicit: am.q != null || am.u === "g" || am.u === "ml", ...own }); lastFood = fd;
     });
   }
   // a fast-food meal: the sandwich comes with fries and a drink
@@ -364,7 +367,25 @@ export function readMealText(text, cc = getCountry()) {
     if (!items.some((x) => /fries/.test(x.id))) items.push(makeItem(food("fries"), 1, "portion", food("fries").portions.portion));
     if (!items.some((x) => /cola|juice|water/.test(x.id))) items.push(makeItem(food("cola"), 1, "can", 330));
   }
-  return { items: mergeSame(items).map(checkAmount).map(applyLearned), unknown };
+  return { items: mergeSame(items).map(checkAmount).map((x) => named(applyLearned(x), x.own)), unknown };
+}
+// the words of a part without amounts, units, sizes and little words
+function wordsOf(ch) {
+  return String(ch).replace(/\d+(\.\d+)?|(^|\s)(g|ml)(?=\s|$)/g, " ").split(/\s+/)
+    .filter((w) => w && WORDN[w] == null && !UNIT_RX.some(([rx]) => rx.test(" " + w + " ")) && !SIZE.some(([rx]) => rx.test(" " + w + " ")) && !/^(of|the|some|a|an|من|شويه|حبه|[,،.;!?؛])$/.test(w)).join(" ").trim();
+}
+/** {own} when the person's words say more than the table food's name ("homemade chicken pizza" → Chicken pizza) — up to 6 words. */
+export function ownOf(words, fd) {
+  const w = String(words || "").trim(); if (!w || !fd) return {};
+  const ws = w.split(/\s+/); if (ws.length > 6) return {};
+  const tbl = normA((fd.en || "") + " " + (fd.ar || "")).toLowerCase();
+  const extra = ws.filter((x) => x.length > 2 && !tbl.includes(x.replace(/(es|s)$/, "")) && !/^(with|and|مع)$/.test(x));
+  return extra.length ? { own: w } : {};
+}
+function named(it, own) {
+  if (!own) return it;
+  const nm = own.charAt(0).toUpperCase() + own.slice(1);
+  return { ...it, own, name: nm, ar: nm, table: it.name };
 }
 
 /**

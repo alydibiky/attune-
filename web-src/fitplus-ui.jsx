@@ -386,7 +386,7 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
       const d = P.mergeWatch(P.watchHasData(a) ? a : null, P.watchHasData(b) ? b : null);
       if (b && b.empty && !P.watchHasData(a)) setNote(L("Huawei Health sent nothing — open Huawei Health once so the watch syncs, and check Attune is still allowed in Huawei Health → Me → Privacy → Data sharing.", "Huawei Health مبعتش حاجة — افتح Huawei Health مرة عشان الساعة تتزامن، واتأكد إن Attune لسه مسموح له في Huawei Health ← أنا ← الخصوصية ← مشاركة البيانات."));
       else setNote("");
-      if (d && (d.steps != null || d.activeKcal != null || d.workouts)) upd((x) => { const day = x.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...x, watchOn: true, days: { ...x.days, [dayKey]: { ...day, watch: { steps: d.steps || 0, activeKcal: d.activeKcal || 0, totalKcal: d.totalKcal || 0, distanceM: d.distanceM || 0, hrAvg: d.hrAvg || null, hrMax: d.hrMax || null, workouts: d.workouts || [], sources: d.sources || [], lastAt: d.lastAt || null, at: Date.now() } } } }; });
+      if (d && (d.steps != null || d.activeKcal != null || d.workouts)) upd((x) => { const day = x.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...x, watchOn: true, watchCal: x.watchCal && x.watchCal.by === "you" ? x.watchCal : F.learnWatch(d, x.watchCal), days: { ...x.days, [dayKey]: { ...day, watch: { steps: d.steps || 0, activeKcal: d.activeKcal || 0, totalKcal: d.totalKcal || 0, distanceM: d.distanceM || 0, hrAvg: d.hrAvg || null, hrMax: d.hrMax || null, workouts: d.workouts || [], sources: d.sources || [], lastAt: d.lastAt || null, at: Date.now() } } } }; });
     } catch (e) {} finally { setBusy(false); }
   };
   useEffect(() => { refresh(); const on = (e) => { if (e && e.detail && e.detail.huawei === false) setNote(e.detail.error ? L(`Huawei sign-in didn't open: ${e.detail.error} — install HMS Core (below) and try again.`, `تسجيل الدخول لهواوي مفتحش: ${e.detail.error} — نزّل HMS Core (تحت) وجرّب تاني.`) : L("Huawei Health wasn't allowed — tap Connect again and allow steps, calories, distance and heart rate.", "Huawei Health مإدّاش الإذن — اضغط «اربط» تاني ووافق على الخطوات والسعرات والمسافة والنبض.")); refresh(); }; window.addEventListener("attune-resume", on); window.addEventListener("attune-health-permission", on); return () => { window.removeEventListener("attune-resume", on); window.removeEventListener("attune-health-permission", on); }; }, [dayKey]);
@@ -441,9 +441,32 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
         {w.lastAt ? <div className="text-[10.5px] text-[var(--c-mut)]" data-testid="fit-watch-last">{L("Latest from the watch: ", "آخر حاجة وصلت من الساعة: ")}{new Date(w.lastAt).toLocaleTimeString(L("en-GB", "ar-EG"), { hour: "numeric", minute: "2-digit" })}{Date.now() - w.lastAt > 30 * 60000 ? L(" — open Huawei Health / Health Sync so it sends the newest steps", " — افتح Huawei Health / Health Sync عشان يبعت آخر خطوات") : ""}</div> : null}
         {w.hrAvg ? <div className="text-[11.5px] text-[var(--c-mut)]">❤ {L(`heart rate ${w.hrAvg} avg · ${w.hrMax} max`, `النبض ${w.hrAvg} متوسط · ${w.hrMax} أقصى`)}</div> : null}
         {(w.workouts || []).length && !compact ? <div className="text-[12px] text-[var(--c-mut)]">{w.workouts.map((x, i) => <div key={i}>• {x.title || L("Workout", "تمرين")} · {x.minutes} {L("min", "د")}</div>)}</div> : null}
+        {!compact && (wb.est || wk.est || st.watchCal) ? <MatchWatch {...{ L, w, st, upd }} /> : null}
         <div className="text-[10.5px] text-[var(--c-mut)]">{L("Burned calories count the watch or your logged workouts — whichever is more, never both.", "السعرات المحروقة بتتحسب من الساعة أو من التمارين اللي سجلتها — الأكبر فيهم، مش الاتنين.")}</div>
       </> : <div className="text-[12px] text-[var(--c-mut)]">{L("Nothing from the watch today yet — open its app once so it syncs.", "مفيش حاجة وصلت من الساعة النهارده لسه — افتح تطبيقها مرة عشان تتزامن.")}</div>}
     </div>);
+}
+
+/** v8.6 (Ali, 27 Oct: "the watch is not read accurately… always lower"): type what the watch shows right now, once — Attune keeps
+    YOUR watch's calories and metres per step and works out the days it doesn't send them the same way. */
+function MatchWatch({ L, w, st, upd }) {
+  const [open, setOpen] = useState(false);
+  const [v, setV] = useState({ steps: "", kcal: "", km: "" });
+  const c = st.watchCal;
+  const inp = (k, ph) => <input value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value.replace(/[^\d.]/g, "") })} inputMode="decimal" placeholder={ph}
+    className="w-full min-w-0 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] px-2 py-1.5 text-[13px] tabular-nums" data-testid={"fit-match-" + k} />;
+  if (!open) return <div className="flex items-center gap-2 text-[11px]">
+    {c ? <span className="text-[var(--c-mut)] flex-1" data-testid="fit-match-on">{L("Matched to your watch", "متظبط على ساعتك")}{c.kcalPerStep ? " · " + Math.round(c.kcalPerStep * 1000) + L(" kcal / 1,000 steps", " سعرة / ١٠٠٠ خطوة") : ""}{c.mPerStep ? " · " + c.mPerStep + L(" m a step", " م للخطوة") : ""}</span> : <span className="flex-1" />}
+    <button onClick={() => { setV({ steps: String(w && w.steps || ""), kcal: "", km: "" }); setOpen(true); }} className="text-[var(--c-acc)] underline" data-testid="fit-match-open">{c ? L("Match again", "ظبط تاني") : L("Numbers lower than your watch? Match it", "الأرقام أقل من ساعتك؟ ظبطها")}</button></div>;
+  const save = () => { const m = F.matchWatch(v.steps, v.kcal, v.km); if (!m) return; upd((x) => ({ ...x, watchCal: m })); setOpen(false); };
+  return <div className="rounded-xl bg-[var(--c-soft)] p-2.5 space-y-2" data-testid="fit-match">
+    <div className="text-[11.5px] text-[var(--c-ink)]">{L("Look at your watch now and type what it shows — Attune will count like your watch from now on.", "بص على ساعتك دلوقتي واكتب اللي ظاهر عليها — Attune هيحسب زي ساعتك من هنا ورايح.")}</div>
+    <div className="grid grid-cols-3 gap-2 text-[10.5px] text-[var(--c-mut)]">
+      <label>{L("Steps", "الخطوات")}{inp("steps", "5085")}</label><label>{L("kcal (Heat / Active)", "السعرات (Heat / نشاط)")}{inp("kcal", "311")}</label><label>km{inp("km", "4.4")}</label></div>
+    <div className="flex gap-2"><button onClick={save} disabled={!F.matchWatch(v.steps, v.kcal, v.km)} className="flex-1 rounded-lg bg-[var(--c-acc)] text-[var(--c-on-acc)] py-1.5 text-[12.5px] font-bold disabled:opacity-40" data-testid="fit-match-save">{L("Save", "احفظ")}</button>
+      {c ? <button onClick={() => { upd((x) => ({ ...x, watchCal: null })); setOpen(false); }} className="rounded-lg bg-[var(--c-surf-2)] px-3 text-[12px]" data-testid="fit-match-clear">{L("Forget", "انسى")}</button> : null}
+      <button onClick={() => setOpen(false)} className="rounded-lg bg-[var(--c-surf-2)] px-3 text-[12px]">{L("Cancel", "إلغاء")}</button></div>
+  </div>;
 }
 
 /* ---- v6.43 (Ali, with Yazio's Profile screenshot: "Do the Watch connect to food and fit app") ----------------------------

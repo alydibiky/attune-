@@ -94,7 +94,7 @@ export const MORE_FOODS = [
   ["petit-four", "Petit four", "بيتي فور", 490, 6, 60, 25, 1.5, { piece: 12 }, "sweets"],
   ["pie-cheese", "Cheese pastry (fatayer)", "فطاير جبنة|فطيرة جبنة|بف باستري", 330, 10, 32, 18, 1.2, { piece: 80 }, "grains"],
   ["pizza-pepperoni", "Pepperoni pizza", "بيتزا بيبروني", 290, 12, 32, 12.5, 2, { slice: 110 }, "dishes"],
-  ["pizza-chicken", "Chicken ranch pizza", "بيتزا فراخ|بيتزا تشيكن رانش", 265, 13, 30, 10, 1.8, { slice: 110 }, "dishes"],
+  ["pizza-chicken", "Chicken pizza", "بيتزا فراخ|بيتزا تشيكن رانش", 265, 13, 30, 10, 1.8, { slice: 110 }, "dishes"],
   ["manakish", "Manakish (zaatar)", "مناقيش|مناقيش زعتر", 330, 8, 40, 15, 3, { piece: 120 }, "grains"],
   ["bagel", "Bagel", "بيجل", 257, 10, 50, 1.6, 2.3, { piece: 100 }, "grains"],
   ["muffin", "Muffin", "مافن|كب كيك", 380, 5.5, 52, 17, 1.5, { piece: 110 }, "sweets"],

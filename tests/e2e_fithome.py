@@ -155,6 +155,21 @@ with sync_playwright() as p:
     rd = page.locator("[data-testid=fit-read-detail]")
     check(rd.count() == 1 and "cheese samosas" in rd.inner_text() and "6 × 35 g = 210 g" in rd.inner_text() and "÷ 100" in rd.inner_text(), "a tap on the food shows what it read: " + (rd.inner_text()[:200].replace("\n", " · ") if rd.count() else "none"))
     page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(200)
+    # v8.6 (Ali, 27 Oct): "I wrote homemade chicken pizza, it showed Chicken ranch pizza" — his words stay the name;
+    # "something else…" is free text, used as written
+    page.evaluate("window.__mock.said = ['homemade chicken pizza 4']")
+    page.locator("[data-testid=fit-add]").click(); page.locator("[data-testid=fit-lb-voice]").click()
+    page.wait_for_selector("[data-testid=fit-draft-item]", timeout=6000)
+    dt = page.locator("[data-testid=fit-draft]").inner_text()
+    check("Homemade chicken pizza" in dt and "ranch" not in dt.lower(), "his words name the food: " + dt[:120].replace("\n", " · "))
+    if page.locator("[data-testid=fit-draft-change]").count(): page.locator("[data-testid=fit-draft-change]").first.click()
+    page.locator("[data-testid=fit-alt-other]").first.click(); page.wait_for_timeout(150)
+    check(page.locator("[data-testid=fit-replace-q]").input_value() == "homemade chicken pizza", "'something else…' opens with his own words, ready to change")
+    page.fill("[data-testid=fit-replace-q]", "homemade chicken pizza with extra cheese")
+    page.locator("[data-testid=fit-replace-written]").click(); page.wait_for_timeout(1500)
+    dt = page.locator("[data-testid=fit-draft]").inner_text()
+    check("Homemade chicken pizza with extra cheese" in dt, "free text is used as written (the AI estimates it, or the table's nearest food without a model): " + dt[:120].replace("\n", " · "))
+    page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(200)
 
     # ---- water + week
     w0 = page.locator("[data-testid=fit-glass].bg-sky-400").count()
