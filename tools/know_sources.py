@@ -1802,6 +1802,132 @@ def build_wikidata(a):
         "notice_ar": "بيانات يحررها المتطوعون، أُخذ منها ما له مصدر فقط؛ وفي الأمور المهمة راجع المصدر المذكور.",
         "sources": [{"title": "Wikidata — sourced statements only", "url": "https://www.wikidata.org/", "license": "CC0"}], "retrieved": time.strftime("%Y-%m-%d")})
 
+# ---- v8.7 people (persona 8 M-B, Ali: "in p8 do as you recommend"): an offline who's who — CC0 (Wikidata) -------------------------------
+# The small model on a phone gets Egyptian singers, actors and history wrong ("who sang …"). This pack is the people themselves:
+# every well-known person of Egypt and the Arab world (sitelinks ≥ 6 — articles in several languages, a cheap fame signal) and the
+# very famous worldwide (≥ 60 sitelinks, per occupation so each query stays under Wikidata's 60 s), with Arabic + English names,
+# Wikidata's own short description, occupations, birth / death (date and place), citizenship, and for singers / actors / writers
+# their works: the songs, albums and films that name them as performer / cast member / author (P175 / P161 / P50 on the work).
+# (Scanning every human at once is over the 60 s limit — the comment above — so: one query per country, one per occupation.)
+# Sourcing — Ali's rule for Wikidata (10 Oct 2026, "if B is reliable then ok"): EVERY fact (occupation, citizenship, birth, death,
+# place, a song / film / book) is kept only when Wikidata cites an outside source for it (not Wikipedia), exactly as in the
+# wikidata pack. Only the person's own name and Wikidata's one-line description come without a reference (a name is not a claim).
+PEOPLE_COUNTRIES = {"Q79": "Egypt", "Q851": "Saudi Arabia", "Q878": "United Arab Emirates", "Q1028": "Morocco", "Q262": "Algeria",
+    "Q948": "Tunisia", "Q822": "Lebanon", "Q858": "Syria", "Q810": "Jordan", "Q796": "Iraq", "Q817": "Kuwait", "Q846": "Qatar",
+    "Q398": "Bahrain", "Q842": "Oman", "Q805": "Yemen", "Q1049": "Sudan", "Q1016": "Libya", "Q219060": "Palestine"}
+PEOPLE_OCCUPATIONS = {"Q177220": "singer", "Q33999": "actor", "Q937857": "footballer", "Q82955": "politician", "Q36180": "writer",
+    "Q901": "scientist", "Q49757": "poet", "Q36834": "composer", "Q2526255": "film director", "Q639669": "musician", "Q1930187": "journalist",
+    "Q43845": "businessperson", "Q116": "monarch", "Q39631": "physician", "Q1622272": "university teacher"}
+WORK_LINKS = [("P175", "songs and albums"), ("P161", "films and series"), ("P50", "books")]
+
+def people_scope_query(scope):
+    """→ SPARQL for one country (P27) or one occupation (P106): the people, their names, descriptions and fame."""
+    kind, qid = scope
+    cond = f"?item wdt:P27 wd:{qid} . ?item wikibase:sitelinks ?n . FILTER(?n >= 6)" if kind == "country" else f"?item wdt:P106 wd:{qid} . ?item wikibase:sitelinks ?n . FILTER(?n >= 60)"
+    return f"""SELECT ?item ?n ?en ?ar ?enD ?arD WHERE {{
+  {cond} ?item wdt:P31 wd:Q5 .
+  OPTIONAL {{ ?item rdfs:label ?en FILTER(LANG(?en) = 'en') }} OPTIONAL {{ ?item rdfs:label ?ar FILTER(LANG(?ar) = 'ar') }}
+  OPTIONAL {{ ?item schema:description ?enD FILTER(LANG(?enD) = 'en') }} OPTIONAL {{ ?item schema:description ?arD FILTER(LANG(?arD) = 'ar') }}
+}} ORDER BY DESC(?n) LIMIT 4000"""
+
+def people_facts_query(qids):
+    """→ SPARQL for a batch of people: occupations and citizenship (labels), birth / death with sourced dates and places."""
+    vals = " ".join("wd:" + q for q in qids)
+    return f"""SELECT DISTINCT ?item ?p ?v ?vl ?vla ?prec WHERE {{
+  VALUES ?item {{ {vals} }}
+  {{ ?item p:P106 ?st . ?st ps:P106 ?v . BIND("occupation" AS ?p) }} UNION {{ ?item p:P27 ?st . ?st ps:P27 ?v . BIND("citizenship" AS ?p) }}
+  UNION {{ ?item p:P569 ?st . ?st psv:P569 [ wikibase:timeValue ?v ; wikibase:timePrecision ?prec ] . BIND("born" AS ?p) }}
+  UNION {{ ?item p:P570 ?st . ?st psv:P570 [ wikibase:timeValue ?v ; wikibase:timePrecision ?prec ] . BIND("died" AS ?p) }}
+  UNION {{ ?item p:P19 ?st . ?st ps:P19 ?v . BIND("place of birth" AS ?p) }}
+  ?st wikibase:rank ?rank . FILTER(?rank != wikibase:DeprecatedRank)
+  ?st prov:wasDerivedFrom ?ref . {{ ?ref pr:P854 ?url . FILTER(!CONTAINS(LCASE(STR(?url)), "wikipedia.org") && !CONTAINS(LCASE(STR(?url)), "wikimedia.org") && !CONTAINS(LCASE(STR(?url)), "wikidata.org")) }} UNION {{ ?ref pr:P248 ?stated . FILTER NOT EXISTS {{ ?stated wdt:P31 wd:Q10876391 }} }}
+  OPTIONAL {{ ?v rdfs:label ?vl FILTER(LANG(?vl) = 'en') }} OPTIONAL {{ ?v rdfs:label ?vla FILTER(LANG(?vla) = 'ar') }}
+}}"""
+
+def people_works_query(qids, prop):
+    vals = " ".join("wd:" + q for q in qids)
+    return f"""SELECT DISTINCT ?item ?w ?wl ?wla ?d WHERE {{
+  VALUES ?item {{ {vals} }} ?w p:{prop} ?st . ?st ps:{prop} ?item .
+  ?st prov:wasDerivedFrom ?ref . {{ ?ref pr:P854 ?url . FILTER(!CONTAINS(LCASE(STR(?url)), "wikipedia.org") && !CONTAINS(LCASE(STR(?url)), "wikimedia.org") && !CONTAINS(LCASE(STR(?url)), "wikidata.org")) }} UNION {{ ?ref pr:P248 ?stated . FILTER NOT EXISTS {{ ?stated wdt:P31 wd:Q10876391 }} }}
+  OPTIONAL {{ ?w rdfs:label ?wl FILTER(LANG(?wl) = 'en') }} OPTIONAL {{ ?w rdfs:label ?wla FILTER(LANG(?wla) = 'ar') }}
+  OPTIONAL {{ ?w wdt:P577 ?d }}
+}} LIMIT 20000"""
+
+def people_rows(people, facts, works):
+    """people: {qid: {en, ar, enD, arD, n}}; facts: [(qid, p, value text)]; works: [(qid, label, title, year)] → passages."""
+    F = {}
+    for qid, p, v in facts:
+        if v: F.setdefault(qid, {}).setdefault(p, [])
+        if v and v not in F[qid][p]: F[qid][p].append(v)
+    W = {}
+    for qid, label, title, year in works:
+        if title: W.setdefault(qid, {}).setdefault(label, []).append(title + (f" ({year})" if year else ""))
+    rows = []
+    for qid, it in sorted(people.items(), key=lambda kv: -kv[1].get("n", 0)):
+        en, ar = it.get("en") or "", it.get("ar") or ""
+        if not (en or ar): continue
+        name = en + (f" ({ar})" if ar and en else ar if not en else "")
+        f, w = F.get(qid, {}), W.get(qid, {})
+        parts = []
+        if it.get("enD") or it.get("arD"): parts.append(" / ".join(x for x in (it.get("enD"), it.get("arD")) if x))
+        for p in ("occupation", "citizenship"):
+            if f.get(p): parts.append(f"{p}: " + ", ".join(f[p][:5]))
+        for p in ("born", "place of birth", "died"):
+            if f.get(p): parts.append(f"{p}: " + "; ".join(f[p][:2]))
+        for label, items in w.items():
+            seen = []
+            for x in items:
+                if x not in seen: seen.append(x)
+            parts.append(f"{label}: " + "; ".join(seen[:25]) + (f" … and {len(seen) - 25} more" if len(seen) > 25 else ""))
+        if len(parts) < 2: continue
+        rows.append({"t": f"{name} — who's who (Wikidata)", "x": f"{name}: " + " | ".join(parts) + ".", "u": f"https://www.wikidata.org/wiki/{qid}", "l": "ar" if ar and not en else "en"})
+    return rows
+
+def build_people(a):
+    import urllib.parse
+    B = _bk()
+    def run(q):
+        d = json.loads(B.get(WDQS + "?" + urllib.parse.urlencode({"query": q, "format": "json"}), 120, accept="application/sparql-results+json").decode("utf-8"))
+        time.sleep(2); return d["results"]["bindings"]
+    g = lambda b, k: (b.get(k) or {}).get("value", "")
+    people = {}
+    scopes = [("country", q) for q in PEOPLE_COUNTRIES] + [("occupation", q) for q in PEOPLE_OCCUPATIONS]
+    for sc in scopes:
+        try: rows = run(people_scope_query(sc))
+        except BaseException as e: print(f"people: {sc} failed ({e})"); continue
+        for b in rows:
+            q = g(b, "item").rsplit("/", 1)[-1]
+            it = people.setdefault(q, {"n": int(g(b, "n") or 0)})
+            for k in ("en", "ar", "enD", "arD"):
+                if g(b, k) and not it.get(k): it[k] = g(b, k)
+        print(f"people: {sc[0]} {PEOPLE_COUNTRIES.get(sc[1]) or PEOPLE_OCCUPATIONS.get(sc[1])}: {len(rows)} (total {len(people)})")
+    qids = list(people); facts, works = [], []
+    for i in range(0, len(qids), 250):
+        batch = qids[i:i + 250]
+        try:
+            for b in run(people_facts_query(batch)):
+                p, v = g(b, "p"), g(b, "v")
+                if p in ("born", "died"): b2 = dict(b); txt = wd_fmt(b2, "time")
+                else: txt = g(b, "vl") or g(b, "vla")
+                if p == "place of birth": txt = g(b, "vl") or g(b, "vla")
+                facts.append((g(b, "item").rsplit("/", 1)[-1], p, txt))
+        except BaseException as e: print(f"people: facts batch {i} failed ({e})")
+        for prop, label in WORK_LINKS:
+            try:
+                for b in run(people_works_query(batch, prop)):
+                    t = g(b, "wl") or g(b, "wla"); t = t + (f" / {g(b, 'wla')}" if g(b, "wl") and g(b, "wla") and g(b, "wla") != g(b, "wl") else "")
+                    works.append((g(b, "item").rsplit("/", 1)[-1], label, t, (g(b, "d") or "")[:4]))
+            except BaseException as e: print(f"people: works {label} batch {i} failed ({e})")
+        print(f"people: details {min(i + 250, len(qids))}/{len(qids)}")
+    rows = people_rows(people, facts, works)
+    B.write_pack(a.out, "people", rows, {
+        "name": "Who's who (Wikidata)", "name_ar": "مين هو (ويكي بيانات)",
+        "license": "CC0 (Wikidata)",
+        "attribution": "Wikidata (wikidata.org), CC0 — the people of Egypt and the Arab world, and the very famous worldwide. Only facts that cite an outside source (not Wikipedia): occupation, citizenship, birth, death, place of birth, and their songs, films and books.",
+        "notice": "Crowd-edited data, kept only where it cites a source; for anything important, check the source.",
+        "notice_ar": "بيانات يحررها المتطوعون، أُخذ منها ما له مصدر فقط؛ وفي الأمور المهمة راجع المصدر.",
+        "sources": [{"title": "Wikidata", "url": "https://www.wikidata.org/", "license": "CC0"}], "retrieved": time.strftime("%Y-%m-%d")})
+
 # ---- v6.20 Q&A packs: the Stack Exchange network (CC BY-SA, commercial use allowed with credit) ----------------------------------
 # Ali: "add huge databases for knowledge packs so the app doesn't do a lot of internet searching". No Wikipedia (his rule).
 # Stack Exchange's questions and answers are written and voted by people who do the work (mechanics, electricians, cooks, IT
@@ -1882,4 +2008,4 @@ def build_stackexchange(a, pid):
         "notice_ar": "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.",
         "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
 
-BUILDERS = {"wikidata": build_wikidata, "science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, "islamlib": build_islamlib, "dictionary": build_dictionary, "medicines": build_medicines, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}, **{k: (lambda a, k=k: build_stackexchange(a, k)) for k in SE_PACKS}}
+BUILDERS = {"wikidata": build_wikidata, "people": build_people, "science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, "islamlib": build_islamlib, "dictionary": build_dictionary, "medicines": build_medicines, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}, **{k: (lambda a, k=k: build_stackexchange(a, k)) for k in SE_PACKS}}

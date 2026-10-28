@@ -11,6 +11,7 @@ name: Build a knowledge pack
 #   math physics chemistry biology history business economics society   OpenStax books (CC BY), formulas and worked examples kept
 #   geography Factbook geography + GeoNames physical features    coding    Python docs, MDN, Kotlin docs
 #   wikidata  Wikidata, ONLY statements citing an outside source (CC0)
+#   people    v8.7 who's who: Egypt + the Arab world + the very famous worldwide, with their songs / films / books (Wikidata, CC0)
 #   medicines openFDA drug labels (CC0)    dictionary Open English WordNet (CC BY) + لسان العرب، مختار الصحاح    islamlib تفسير ابن كثير آيةً آية، رياض الصالحين، بلوغ المرام
 #   cars      car specs: US EPA (public domain, 2000–now) + EEA new-car data (CC BY 4.0, 2010–now, incl. Chinese brands)
 #   qa-*      v6.20 Q&A from Stack Exchange (CC BY-SA 4.0): tech, cars, home, science, life, language, code — top-voted answers
@@ -41,7 +42,7 @@ jobs:
       - id: p
         run: |
           packs="${{ github.event.inputs.packs }}"
-          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib wikidata qa-tech qa-cars qa-home qa-science qa-life qa-language qa-code"; fi
+          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib wikidata qa-tech qa-cars qa-home qa-science qa-life qa-language qa-code people"; fi
           echo "list=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1].split()))' "$packs")" >> $GITHUB_OUTPUT
 
   pack:

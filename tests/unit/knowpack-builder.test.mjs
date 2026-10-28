@@ -30,3 +30,17 @@ ok(out.law.length === 2 && out.law[0].t === "قانون الإيجار 4 لسن�
 ok(out.skip.join() === "true,true,false", "the repealed 1971 constitution and other countries' laws are left out; the civil code is kept");
 ok(out.rows.concat(out.law).every((r) => !/wiki/i.test(r.u)), "no passage links to Wikipedia");
 console.log(`knowpack-builder: ${n} checks passed`);
+// v8.7 (persona 8 M-B) the who's-who pack: one passage per person, every fact under Ali's sourced-only rule
+{
+  const py2 = `import sys, json; sys.path.insert(0, ${JSON.stringify(root + "tools")})
+import know_sources as K
+people = {"Q1": {"en": "Umm Kulthum", "ar": "أم كلثوم", "enD": "Egyptian singer", "arD": "مطربة مصرية", "n": 80}, "Q2": {"ar": "شخص", "n": 7}}
+facts = [("Q1", "occupation", "singer"), ("Q1", "citizenship", "Egypt"), ("Q1", "born", "31 December 1898")]
+works = [("Q1", "songs and albums", "Enta Omri / إنت عمري", "1964"), ("Q1", "songs and albums", "Enta Omri / إنت عمري", "1964")]
+rows = K.people_rows(people, facts, works)
+print(json.dumps({"rows": rows, "fq": K.people_facts_query(["Q1"]), "wq": K.people_works_query(["Q1"], "P175"), "cq": K.people_scope_query(("country", "Q79"))}))`;
+  const o = JSON.parse(execFileSync("python3", ["-c", py2], { encoding: "utf8" }));
+  ok(o.rows.length === 1 && /Umm Kulthum \(أم كلثوم\): Egyptian singer \/ مطربة مصرية \| occupation: singer \| citizenship: Egypt \| born: 31 December 1898 \| songs and albums: Enta Omri \/ إنت عمري \(1964\)\.$/.test(o.rows[0].x), "people: one passage per person, a work listed once (" + (o.rows[0] || {}).x + ")");
+  ok(["fq", "wq"].every((k) => o[k].includes("pr:P854") && o[k].includes("wikipedia.org") && o[k].includes("pr:P248")), "people: every fact and every work needs an outside source (not Wikipedia) — Ali's rule");
+  ok(o.cq.includes("wdt:P27 wd:Q79") && wf.includes(" people\""), "people: Egypt is a scope, and the monthly workflow builds the pack");
+}

@@ -492,6 +492,12 @@ export const CATALOG = [
     about: "Countries, big cities, mountains, rivers, lakes and the chemical elements — only facts backed by an outside reference, each shown with it. The other packs always come first.",
     about_ar: "الدول والمدن الكبرى والجبال والأنهار والبحيرات والعناصر الكيميائية — الحقائق الموثّقة بمرجع خارجي فقط، ومع كل حقيقة مرجعها. والحزم الأخرى لها الأولوية دائمًا.",
     notice: "Crowd-edited data, kept only where it cites a source; for anything important, check the source named.", notice_ar: "بيانات يحررها المتطوعون، أُخذ منها ما له مصدر فقط؛ وفي الأمور المهمة راجع المصدر المذكور." },
+  // v8.7 (persona 8 M-B): the people — Egyptian singers, actors, footballers, writers… and the very famous worldwide, with their
+  // songs, films and books, so "who sang «إنت عمري»?" is answered on the phone without the internet
+  { id: "people", name: "Who's who", name_ar: "مين هو", size: "≈ 6 MB", size_ar: "≈ ٦ ميجابايت", license: "CC0 (Wikidata)", license_ar: "ملكية عامة (ويكي بيانات)",
+    about: "The well-known people of Egypt and the Arab world and the most famous worldwide — what they do, when they were born, and their songs, films and books: only facts that cite an outside source, as in Sourced facts.",
+    about_ar: "المشاهير من مصر والعالم العربي والأشهر في العالم — بأسمائهم بالعربي والإنجليزي، وبيعملوا إيه، واتولدوا إمتى، وأغانيهم وأفلامهم وكتبهم.",
+    notice: "Crowd-edited data, kept only where it cites a source; for anything important, check the source.", notice_ar: "بيانات يحررها المتطوعون، أُخذ منها ما له مصدر فقط؛ وفي الأمور المهمة راجع المصدر." },
   { id: "cities", name: "Countries & cities", name_ar: "الدول والمدن", size: "≈ 5 MB", size_ar: "≈ ٥ ميجابايت", license: "CC BY 4.0 (GeoNames)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (جيونيمز)",
     about: "Every city over 15,000 people (with Arabic names), each country's capital, currency, calling code and languages.",
     about_ar: "كل مدينة يزيد سكانها على ١٥ ألفًا (بأسمائها العربية)، وعاصمة كل دولة وعملتها ورمز الاتصال ولغاتها." },
