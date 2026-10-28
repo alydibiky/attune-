@@ -231,7 +231,7 @@ with sync_playwright() as p:
     page.evaluate("window.__trMiss = new Set()")
     open_shelf(page)
     check(page.evaluate("document.documentElement.dir") == "rtl", "Arabic: the page is right-to-left")
-    check(titles(page)[0] == "كتابي" and "رف" in page.locator("[data-testid=shelf-bar]").inner_text(), "Arabic: «رف» and «كتابي»")
+    check(titles(page)[0] == "كتابي" and "الملاحظات" in page.locator("[data-testid=shelf-bar]").inner_text(), "Arabic: «الملاحظات» (v8.7: named like its tab) and «كتابي»")
     g = page.locator("[data-testid=shelf-cover]")
     check(g.nth(0).bounding_box()["x"] > g.nth(1).bounding_box()["x"], "Arabic: the first book is on the right")
     miss = [m for m in page.evaluate("[...window.__trMiss]") if m != "Attune"]

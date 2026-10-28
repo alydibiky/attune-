@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
-PLACES = ["money", "timeline", "business", "health", "shelf", "agents", "tools"]   # v8.5: Follow-ups (W1), Saved = shelf (W2);   # v8.0 Agents joined (Ali picked A); v6.50 (Ali picked A: chats + Money · Business · Health · Shelf; the rest from the Home box)
+PLACES = ["home", "chat", "money", "timeline", "health", "agents", "coach", "learn", "shelf", "travel", "business", "tools"]   # v8.7 (Ali picked P2-E option 1): every place, in 3 groups
 def shot(page, name):
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, name + ".png"))
 with sync_playwright() as p:
@@ -23,7 +23,7 @@ with sync_playwright() as p:
     shot(page, "side-phone")
     page.click("[data-testid=phone-side] [data-testid=side-go-money]"); page.wait_for_timeout(400)
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
-    check(tabs == ["money", "deal"], "Money (v8.5, W1): Money · Deal Check: %s" % tabs)
+    check(tabs == ["money", "planner", "deal"], "Money (v8.7): Money · Month plan · Deal Check: %s" % tabs)
     page.click("[data-testid=hub-tab-deal]"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=hub-tab-deal][aria-selected=true]").count() == 1, "a tab opens the sibling, marked as chosen")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)

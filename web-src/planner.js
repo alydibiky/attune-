@@ -21,9 +21,10 @@ export function loadPots(store = typeof localStorage !== "undefined" ? localStor
 }
 export function savePots(data, store = typeof localStorage !== "undefined" ? localStorage : null) { try { store.setItem(POTS_KEY, JSON.stringify(data)); } catch (e) {} return data; }
 
-/** A pot: { id, name, kind: emergency|travel|car|eid|school|wedding|other, target, by: "YYYY-MM" | "", saved, log: [{d, a}] } */
+/** A pot: { id, name, kind: emergency|travel|car|eid|school|wedding|other, target, by: "YYYY-MM" | "", saved, log: [{d, a}],
+ *  per: a fixed amount every month (v8.7, Ali: "I write I want to save 4000 for travelling, so at the end of the year I save 48000") } */
 export function addPot(data, p, now = Date.now()) {
-  const pot = { id: "pot" + now.toString(36), name: String(p.name || "").slice(0, 40) || "Savings", kind: p.kind || "other", target: Math.max(0, +p.target || 0), by: p.by || "", saved: Math.max(0, +p.saved || 0), log: [], created: now };
+  const pot = { id: "pot" + now.toString(36), name: String(p.name || "").slice(0, 40) || "Savings", kind: p.kind || "other", target: Math.max(0, +p.target || 0), by: p.by || "", saved: Math.max(0, +p.saved || 0), per: Math.max(0, +p.per || 0), log: [], created: now };
   // one pot per name — and one emergency pot (EN and AR names are the same pot)
   return { ...data, pots: [...(data.pots || []).filter((x) => x.name.toLowerCase() !== pot.name.toLowerCase() && !(pot.kind !== "other" && x.kind === pot.kind)), pot] };
 }
@@ -87,11 +88,20 @@ export function planMonth({ ledger, life, pots, now = Date.now(), income: inc = 
   // pots: this month's share of each target
   const avg = averages(ledger, now);
   const potList = ((pots && pots.pots) || []).map((p) => {
+    const putThisMonth = (p.log || []).filter((x) => x.d >= from && x.d <= to).reduce((a, x) => a + x.a, 0);
+    // v8.7 a fixed amount a month ("save 4000 a month for travel"): the month's share is that amount; the year adds up to ×12
+    const monthsLeftYear = 12 - n.getMonth();
+    if (p.per > 0) {
+      const target = +p.target || 0, left = target ? Math.max(0, target - (p.saved || 0)) : 0;
+      return { ...p, target, left, months: monthsTo(p.by, now) || monthsLeftYear, monthly: target && left < p.per ? left : p.per, putThisMonth, onTrack: putThisMonth >= p.per,
+        yearly: p.per * 12, byYearEnd: r0((p.saved || 0) + p.per * Math.max(0, monthsLeftYear - (putThisMonth >= p.per ? 1 : 0))) };
+    }
     const target = p.kind === "emergency" && !(p.target > 0) ? r0(avg.total * 3) : +p.target || 0;
     const left = Math.max(0, target - (p.saved || 0)), months = monthsTo(p.by, now) || (p.kind === "emergency" ? 12 : 12);
-    const putThisMonth = (p.log || []).filter((x) => x.d >= from && x.d <= to).reduce((a, x) => a + x.a, 0);
     const monthly = left > 0 ? Math.ceil(left / months) : 0;
-    return { ...p, target, left, months, monthly, putThisMonth, onTrack: putThisMonth >= monthly };
+    const inYear = Math.min(months, monthsLeftYear);
+    return { ...p, target, left, months, monthly, putThisMonth, onTrack: putThisMonth >= monthly,
+      yearly: monthly * 12, byYearEnd: r0(Math.min(target || Infinity, (p.saved || 0) + monthly * Math.max(0, inYear - (putThisMonth >= monthly ? 1 : 0)))) };
   });
   const potsTotal = potList.reduce((a, p) => a + p.monthly, 0);
   // flexible: the last 3 months' average per category (fixed categories left out)
@@ -111,7 +121,9 @@ export function planMonth({ ledger, life, pots, now = Date.now(), income: inc = 
   if (short > 0) tips.push(["Your fixed costs and goals are {a} more than your income — move a goal's date, or lower a target.", { a: short }]);
   if (!potList.some((p) => p.kind === "emergency") && avg.total > 0) tips.push(["No emergency pot yet: 3 months of your spending is about {a}.", { a: r0(avg.total * 3) }]);
   if (!income) tips.push(["Add your income (say “salary 25,000”) to plan the month.", {}]);
-  return { month: from.slice(0, 7), income, incomeCame: r0(inc0.came), fixed, fixedTotal, pots: potList, potsTotal, flexible, flexTotal,
+  // v8.7 the year: each goal's monthly share ×12, and what will be saved by 31 December at this pace
+  const year = { savedPerYear: potList.reduce((a, p) => a + (p.yearly || 0), 0), byYearEnd: potList.reduce((a, p) => a + (p.byYearEnd || 0), 0), incomeYear: income * 12, year: n.getFullYear() };
+  return { year, month: from.slice(0, 7), income, incomeCame: r0(inc0.came), fixed, fixedTotal, pots: potList, potsTotal, flexible, flexTotal,
     free: Math.max(0, r0(free)), short: r0(short), tips, basedOn: avg.months };
 }
 const at12 = (d) => Date.parse(d + "T12:00:00");
@@ -136,5 +148,7 @@ export function potIntent(text, now = Date.now()) {
   if (mo >= 0) { const y = /\b(20\d\d)\b/.exec(t); const yy = y ? +y[1] : mo < n.getMonth() || (mo === n.getMonth()) ? n.getFullYear() + 1 : n.getFullYear(); by = `${yy}-${String(mo + 1).padStart(2, "0")}`; }
   else { const inM = /\bin (\d{1,2}) months?\b|(?:في|خلال|على) (\d{1,2}) (?:شهر|شهور)/i.exec(t); if (inM) { const d = new Date(n.getFullYear(), n.getMonth() + +(inM[1] || inM[2]) - 1, 1); by = iso(d).slice(0, 7); } }
   const ar = /[؀-ۿ]/.test(t);
+  // v8.7 "4000 a month" / «4000 كل شهر» / «4000 في الشهر»: a fixed monthly amount (the year = ×12), no target needed
+  if (/\b(a|per|every|each) month\b|\bmonthly\b|كل شهر|في الشهر|شهريا|شهرياً/i.test(t) && target > 0) return { name: NAMES[kind][ar ? 1 : 0], kind, target: 0, per: target, by };
   return { name: NAMES[kind][ar ? 1 : 0], kind, target, by };
 }

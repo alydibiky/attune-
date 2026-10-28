@@ -56,11 +56,11 @@ with sync_playwright() as p:
     dish = page.locator("[data-testid=fit-photo-dish]").inner_text()
     k1 = int(page.locator("[data-testid=fit-photo-kcal]").inner_text())
     check(dish == "Mango cake" and 250 <= k1 <= 350, "a cake with mango among the guesses is named \"Mango cake\": %s · %d kcal" % (dish, k1))
-    check(page.locator("[data-testid=fit-photo-portion-1][class*=acc-2]").count() == 1 and "slice" in page.locator("[data-testid=fit-photo-portions]").inner_text(), "the portion buttons say slices, 1 slice on")
+    check(page.locator("[data-testid=fit-photo-portion-1][class*=c-soft]").count() == 1 and "slice" in page.locator("[data-testid=fit-photo-portions]").inner_text(), "the portion buttons say slices, 1 slice on")
     shot(page, "v910-food-photo")
     page.click("[data-testid=fit-photo-portion-2]"); page.wait_for_timeout(200)
     k2 = int(page.locator("[data-testid=fit-photo-kcal]").inner_text())
-    check(abs(k2 - 2 * k1) <= 2 and page.locator("[data-testid=fit-photo-portion-2][class*=acc-2]").count() == 1, "2 slices → twice the calories: %d → %d" % (k1, k2))
+    check(abs(k2 - 2 * k1) <= 2 and page.locator("[data-testid=fit-photo-portion-2][class*=c-soft]").count() == 1, "2 slices → twice the calories: %d → %d" % (k1, k2))
     check(page.locator("[data-testid=fit-draft-item]").count() == 1, "…the part it saw is under it, with its own Change")
     # ---- Scout: pick two, compare them in a table ----
     go(page, "scout", "[data-testid=scout-ad]")

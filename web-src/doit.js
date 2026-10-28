@@ -359,7 +359,8 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const data = addPot(loadPots(), a.pot, now), p = data.pots[data.pots.length - 1];
       const plan = planMonth({ ledger: stores.ledger, life: stores.life, pots: data, now }), pp = plan.pots.find((x) => x.id === p.id) || {};
       const by = p.by ? ` by ${p.by}` : "", byAr = p.by ? ` لحد ${p.by}` : "";
-      return { stores: { [POTS_KEY]: data }, open: "money", done: { en: `Saving for ${p.name}: ${num(pp.target || p.target)}${by} — ${num(pp.monthly || 0)} a month. Safe to spend keeps it aside.`, ar: `تحويش ${p.name}: ${num(pp.target || p.target)}${byAr} — ${num(pp.monthly || 0)} في الشهر. «تقدر تصرف» هيسيبهم على جنب.` } };
+      if (p.per > 0) return { stores: { [POTS_KEY]: data }, open: "planner", done: { en: `Saving ${num(p.per)} a month for ${p.name} — ${num(p.per * 12)} a year, ${num(pp.byYearEnd || 0)} by 31 December. Safe to spend keeps it aside.`, ar: `هتحوّش ${num(p.per)} كل شهر لـ${p.name} — ${num(p.per * 12)} في السنة، و${num(pp.byYearEnd || 0)} لحد 31 ديسمبر. «تقدر تصرف» هيسيبهم على جنب.` } };
+      return { stores: { [POTS_KEY]: data }, open: "planner", done: { en: `Saving for ${p.name}: ${num(pp.target || p.target)}${by} — ${num(pp.monthly || 0)} a month. Safe to spend keeps it aside.`, ar: `تحويش ${p.name}: ${num(pp.target || p.target)}${byAr} — ${num(pp.monthly || 0)} في الشهر. «تقدر تصرف» هيسيبهم على جنب.` } };
     }
     case "sugar": {
       const care = stores.care || { members: [], meds: [], labs: [], taken: {} };

@@ -133,7 +133,7 @@ with sync_playwright() as pw:
     page.locator("[data-testid=studio-gallery] button").nth(1).click()
     page.click("[data-testid=studio-edit-this]")
     page.wait_for_selector("[data-testid=studio-ref]", timeout=40000)
-    check("bg-[var(--c-acc-2)]" in page.locator("[data-testid=studio-mode-edit]").get_attribute("class"), "Edit this switches to editing, with the picture as the reference")
+    check("bg-[var(--c-soft)]" in page.locator("[data-testid=studio-mode-edit]").get_attribute("class"), "Edit this switches to editing, with the picture as the reference")
     page.fill("[data-testid=studio-idea]", "make it rain, wet ground with reflections")
     page.evaluate("window.__mock.bodies = []")
     page.click("[data-testid=studio-go]")

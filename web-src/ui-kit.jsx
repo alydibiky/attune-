@@ -5,7 +5,7 @@
    --c-on-acc --c-on-acc-2 --c-soft --c-pos --c-warn --c-neg), so light and dark both work. A page's root gets the class "calm".
    Rules (GEMINI_DESIGN_BRIEF.md): logical classes only (ps/pe/ms/me/start/end), touch targets ≥ 44 px, no blur on big areas. */
 import React from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Camera, Mic, ArrowUp, Loader2 } from "lucide-react";
 
 export const page = "calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)]";
 export const card = "rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
@@ -75,5 +75,32 @@ export function EmptyStart({ title, sub, examples = [], onPick, testid = "empty-
       {sub ? <p className={"m-0 text-[13px] " + muted}>{sub}</p> : null}
       {examples.length ? <div className="flex flex-wrap justify-center gap-1.5 pt-1">{examples.map((x) => (
         <button key={x} type="button" onClick={() => onPick && onPick(x)} className="min-h-[40px] px-3.5 rounded-full border border-[var(--c-ln)] bg-[var(--c-bg)] text-[13px] font-bold text-[var(--c-ink)] hover:border-[var(--c-acc)]" dir="auto" data-testid={testid + "-ex"}>“{x}”</button>))}</div> : null}
+    </div>);
+}
+
+/** v8.7 (Ali picked P5-C, "in a good and clear way"): the SAME box on every page — Home's shape: a green-edged card, the text,
+ *  then camera · mic on one side and a round send on the other. Only the hint (and what happens after) is the page's own.
+ *  Every page's box also understands everything Home does: what isn't the page's own (a reminder typed on Money) goes to
+ *  Home's reader (window.__attuneDo) and says where it went. ids = the page's test ids { box, input, photo, voice, go }. */
+export function PageBox({ hint, label, onSend, value = null, setValue = null, busy = false, onPhoto = null, onCamera = null, photoLabel = "", onVoice = null, listening = false, ids = {}, sendLabel = "" }) {
+  const [own, setOwn] = React.useState("");
+  const text = setValue ? value || "" : own, setText = setValue || setOwn;   // (a page that fills the box itself — chips, examples — passes value + setValue)
+  const go = async () => { const t = text.trim(); if (!t || busy) return; setText(""); const r = await onSend(t); if (r === false) setText(t); };   // false = not done, the words come back
+  const fileRef = React.useRef(null);
+  const round = "w-10 h-10 rounded-full grid place-items-center shrink-0 border border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-ink)] hover:border-[var(--c-acc)]";
+  return (
+    <div className="rounded-[20px] p-3.5 space-y-2.5 bg-[var(--c-surf)] border-[1.5px] border-[var(--c-acc)] shadow-[0_2px_10px_rgba(16,32,28,.10)]" data-testid={ids.box}>
+      <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go(); }} dir="auto" data-testid={ids.input}
+        placeholder={hint} aria-label={label || hint}
+        className="w-full min-w-0 min-h-[40px] bg-transparent border-0 outline-none text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-medium" />
+      <div className="flex items-center gap-2 pt-2 border-t border-[var(--c-ln)]">
+        {onCamera ? <button type="button" className={round} onClick={onCamera} aria-label={photoLabel} title={photoLabel} data-testid={ids.photo}><Camera size={17} /></button> : null}
+        {onPhoto && !onCamera ? <><button type="button" className={round} onClick={() => fileRef.current && fileRef.current.click()} aria-label={photoLabel} title={photoLabel} data-testid={ids.photo}><Camera size={17} /></button>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) onPhoto(f); }} /></> : null}
+        {onVoice ? <button type="button" className={round + (listening ? " border-[var(--c-neg)]! text-[var(--c-neg)]!" : "")} onClick={async () => { const t = await onVoice(); if (typeof t === "string" && t) setText(t); }} aria-label={listening ? "…" : "Mic"} data-testid={ids.voice}><Mic size={17} /></button> : null}
+        <span className="flex-1" />
+        <button type="button" onClick={go} disabled={busy || !text.trim()} aria-label={sendLabel || "Send"} title={sendLabel} data-testid={ids.go}
+          className="w-11 h-11 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] disabled:opacity-40 shrink-0">{busy ? <Loader2 size={17} className="animate-spin" /> : <ArrowUp size={19} strokeWidth={2.6} />}</button>
+      </div>
     </div>);
 }

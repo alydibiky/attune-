@@ -45,3 +45,12 @@ t("the morning card says what is due, safe to spend, yesterday's food and an age
   assert.equal(M.morningReminder({}, Date.parse("2026-10-15T21:00:00")), null);
 });
 console.log(`v870plan (+ morning): ${n} checks passed`);
+{ // v8.7 (Ali: "I write I want to save 4000 for travelling, so at the end of the year I save 48000")
+  const P = await import("../../web-src/planner.js"), now = new Date(2026, 0, 10).getTime();
+  const pi = P.potIntent("save 4000 a month for travel", now); assert.equal(pi.per, 4000); assert.equal(P.potIntent("حوّش 4000 كل شهر للسفر", now).per, 4000);
+  const d = P.addPot({ pots: [] }, pi, now), pl = P.planMonth({ ledger: { txns: [{ type: "income", date: "2026-01-02", amount: 20000 }] }, pots: d, now });
+  assert.equal(pl.pots[0].monthly, 4000); assert.equal(pl.pots[0].yearly, 48000); assert.equal(pl.year.byYearEnd, 48000); assert.equal(pl.year.savedPerYear, 48000);
+  const late = P.planMonth({ ledger: { txns: [] }, pots: d, now: new Date(2026, 9, 10).getTime() });   // from October: 3 months left
+  assert.equal(late.pots[0].byYearEnd, 12000);
+  console.log("v870plan (+ year): monthly 4000 → 48,000 a year");
+}

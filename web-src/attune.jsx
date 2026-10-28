@@ -6421,7 +6421,12 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     if (modelStateRef.current === "ready") { try { raw = await callClaude(logPrompt(text, opts), { prefix: "money", json: true, maxTokens: 700, think: false, temperature: 0.2 }); } catch (e) { raw = ""; } }
     const out = parseLog(raw, text, opts);
     setBoxBusy(false);
-    if (!out.ok) { setBoxRes({ err: tr(out.why || "No amount found. Write it like: lunch 150, taxi 60, got salary 30000."), warnings: out.warnings }); return; }
+    if (!out.ok) {
+      // v8.7 (Ali picked P5-C: every box understands everything): not a payment → Home's reader (a reminder, food, a debt…)
+      let r = null; try { r = window.__attuneDo ? window.__attuneDo(text) : null; } catch (e) {}
+      if (r && r.lines && r.lines.length) { setBoxRes({ answer: r.lines.map((l) => l.text).join(" · ") }); return; }
+      if (r && r.answer) { setBoxRes({ answer: typeof r.answer === "string" ? r.answer : (getLang() === "ar" ? r.answer.ar : r.answer.en) || "" }); return; }
+      setBoxRes({ err: tr(out.why || "No amount found. Write it like: lunch 150, taxi 60, got salary 30000."), warnings: out.warnings }); return; }
     // the account: the one the person named in the sentence, else the pill they picked; with neither, Yusr picks (by currency)
     const picked = account ? accs.find((a) => a.id === account) : null;
     const items = out.items.map((x) => { const a = (x.account && accs.find((y) => y.name === x.account)) || picked;
@@ -7749,7 +7754,7 @@ const MORE_TOOLS = [
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
   ["agents", "Agents", "Watch a price, track a delivery, order your usual, open any app", Radar],   // v8.0 (Ali picked A)
   ["radar", "Deadline Radar", "Free trials, renewals, returns, warranties and documents — a warning before each one", Radar],   // v6.27
-  ["planner", "Month plan", "Plans your month: bills, savings for travel and emergencies, everyday spending — and what's free", Wallet],   // v8.7
+  ["planner", "Month plan", "Plans your month: bills, savings goals (trips, emergencies), everyday spending — and what's free", Wallet],   // v8.7
   ["family", "Family", "One shopping list, who paid what for the house, reminders for the parents — shared with your family's phones", Users],   // v8.7
   ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
@@ -9821,6 +9826,8 @@ export default function App() {
   // v6.28 "Do it from Home" (doit.js): Ali — "I just type on Home 'I ate that for breakfast' and it happens in the food app — for the
   // whole app". Code reads it; each action writes into its tool's own store (the old values kept for Undo); a question about your
   // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
+  // v8.7 (P5-C): every page's box reaches Home's reader for what isn't its own (Money's box: "remind me tomorrow at 9")
+  useEffect(() => { window.__attuneDo = (t) => { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask || u.actions.some((a) => a.kind !== "note") ? doFromHome(t) : null; }; return () => { try { delete window.__attuneDo; } catch (e) {} }; });
   const doFromHome = (text) => {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
     // v6.41 D5: «مترو من المعادي للعتبة» → the route, by code

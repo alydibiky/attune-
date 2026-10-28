@@ -20,27 +20,15 @@ export const Arrow = ({ back, size = 15 }) => back ? <ArrowLeft size={size} clas
 /** The box: write it or ask it. `onSubmit(text)` returns a promise of { lines:[{text, open}], undo } | { answer } | null. */
 export function HealthBox({ onSubmit, onPhoto, onVoice, listening, wide }) {
   const [text, setText] = useState(""), [busy, setBusy] = useState(false), [res, setRes] = useState(null);
-  const go = async () => { const t = text.trim(); if (!t || busy) return; setBusy(true); setRes(null); let r = null; try { r = await onSubmit(t); } catch (e) { r = { answer: String((e && e.message) || e) }; } setBusy(false); setText(""); setRes(r); };
-  const tools = (
-    <>
-      {onPhoto ? <button type="button" className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onPhoto} data-testid="health-box-photo" style={{ whiteSpace: "nowrap" }}><Camera size={15} />{tr("Meal photo")}</button> : null}
-      {onVoice ? <button type="button" className={U.btnS + " h-10! min-h-[40px]! px-3! " + (listening ? "border-[var(--c-neg)]! text-[var(--c-neg)]!" : "")} onClick={async () => { const t = await onVoice(); if (t) setText(t); }} data-testid="health-box-voice"><Mic size={15} />{listening ? tr("Listening…") : tr("Say it")}</button> : null}
-    </>);
-  const send = <button type="button" onClick={go} disabled={busy || !text.trim()} data-testid="health-box-go"
-    className="min-h-[44px] h-11 px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] inline-flex items-center gap-1.5 disabled:opacity-40">
-    {busy ? <Loader2 size={15} className="animate-spin" /> : null}{tr("Log")}<Arrow /></button>;
+  // v8.7 (Ali picked P5-C): the same box as Home and every page — only the hint is Health's
+  const box = <U.PageBox hint={wide ? tr("Write or ask… “had koshari 85”, “Mom took her Metformin”, “period started today”") : tr("Write or ask… “had koshari 85”, “Mom took her Metformin”")}
+    label={tr("Write what you ate, a dose or your period — or ask")} busy={busy} sendLabel={tr("Log")}
+    onSend={async (t) => { setBusy(true); setRes(null); let r = null; try { r = await onSubmit(t); } catch (e) { r = { answer: String((e && e.message) || e) }; } setBusy(false); setRes(r); }}
+    onCamera={onPhoto || null} photoLabel={tr("Meal photo")} onVoice={onVoice} listening={listening}
+    ids={{ box: "health-box", input: "health-box-input", photo: "health-box-photo", voice: "health-box-voice", go: "health-box-go" }} />;
   return (
     <div className="space-y-2.5">
-      <div className={U.card + " p-3.5 focus-within:border-[var(--c-acc)] transition-colors duration-150"} data-testid="health-box">
-        <div className="flex items-center gap-2">
-          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go(); }} dir="auto" data-testid="health-box-input"
-            placeholder={wide ? tr("Write or ask… “had koshari 85”, “Mom took her Metformin”, “period started today”") : tr("Write or ask… “had koshari 85”, “Mom took her Metformin”")}
-            aria-label={tr("Write what you ate, a dose or your period — or ask")}
-            className="flex-1 min-w-0 min-h-[40px] bg-transparent border-0 outline-none text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-medium" />
-          {wide ? <>{tools}{send}</> : null}
-        </div>
-        {!wide ? <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-[var(--c-ln)]"><div className="flex items-center gap-1.5">{tools}</div>{send}</div> : null}
-      </div>
+      {box}
       {res ? (
         <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-acc)]")} data-testid="health-box-result">
           <div className="flex items-start gap-2">

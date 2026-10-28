@@ -182,10 +182,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agents-page">
       <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
-      <form onSubmit={(e) => { e.preventDefault(); submit(); }} className={U.card + " flex items-center gap-2 p-2 ps-4"}>
-        <input value={text} onChange={(e) => setText(e.target.value)} dir="auto" placeholder={tr("Tell an agent what to do…")} className="flex-1 min-w-0 bg-transparent outline-none text-[15px] min-h-[44px]" data-testid="agents-input" />
-        <button aria-label={tr("Send")} className="w-11 h-11 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] shrink-0" data-testid="agents-go"><Send size={17} className="rtl:-scale-x-100" /></button>
-      </form>
+      {/* v8.7 (Ali picked P5-C): the same box as Home and every page — only the hint is the Agents' */}
+      <U.PageBox value={text} setValue={setText} onSend={(t) => submit(t)} hint={tr("Tell an agent what to do…")} sendLabel={tr("Send")} ids={{ box: "agents-box", input: "agents-input", go: "agents-go" }} />
       <div className="flex flex-wrap gap-2" data-testid="agents-chips">
         {CHIPS.map(([k, l, en, a]) => <button key={k} onClick={() => { setText(ar ? a : en); setDraft(null); }} className={U.chip(false)} data-testid={"agents-chip-" + k}>{React.createElement(KIND_ICON[k], { size: 15 })}{tr(l)}</button>)}
       </div>

@@ -47,15 +47,15 @@ export function TimelinePage({ navTo, doIt, flash }) {
   const list = chip === "all" ? all : all.filter((x) => GROUP_OF[x.kind] === chip);
   const groups = byDay(list), t = totals(list), late = list.filter((x) => x.late).length;
   // one sentence adds anything — the same reader as Home's box (a payment plan, a reminder, a date, an agent…)
-  const add = () => {
-    const text = say.trim(); if (!text || !doIt) return;
+  const add = (t0) => {
+    const text = (t0 != null ? t0 : say).trim(); if (!text || !doIt) return false;
     let r = null; try { r = doIt(text); } catch (e) {}
     // v8.6 (persona 5: "call mom tomorrow at 6pm" here said "I couldn't read that"): on Follow-ups, anything with a day or a time is a
     // reminder even without "remind me"
     if (!r && /\b(today|tonight|tomorrow|mon|tue|wed|thu|fri|sat|sun)\w*\b|\b\d{1,2}\s*(am|pm)\b|\d{1,2}:\d{2}|النهارده|بكره|بكرة|الساعه|الساعة|السبت|الحد|الاتنين|التلات|الاربع|الخميس|الجمعه|الجمعة/i.test(text)) { try { r = doIt((/[\u0600-\u06ff]/.test(text) ? "فكرني " : "remind me ") + text); } catch (e) {} }
     if (r && r.lines && r.lines.length) { flash && flash(r.lines.map((x) => x.text).join(" · ")); setSay(""); setV((x) => x + 1); }
     else if (r && r.answer) flash && flash(r.answer);
-    else flash && flash(tr("I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”"));
+    else { flash && flash(tr("I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”")); return false; }
   };
   // a payment with someone: tick it here when it is paid
   const lifeOf = (x) => { const [, id, i] = x.id.split(":"); const c = (loadLife().items || []).find((y) => y.id === id); return c ? { c, i: +i } : null; };
@@ -72,10 +72,9 @@ export function TimelinePage({ navTo, doIt, flash }) {
       <div className="flex items-start gap-3"><span className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><CalendarDays size={18} /></span>
         <div className="min-w-0"><h2 className={U.h1}>{tr("Follow-ups")}</h2>
           <p className={"m-0 mt-0.5 text-[13px] " + U.muted}>{tr("Everything you must pay, collect, remember or watch — on one list.")}</p></div></div>
-      {doIt ? <form onSubmit={(e) => { e.preventDefault(); add(); }} className={U.card + " flex items-center gap-2 p-1.5 ps-3.5"} data-testid="fu-add-form">
-        <input value={say} onChange={(e) => setSay(e.target.value)} dir="auto" placeholder={tr("Add anything — “Ahmed owes me 12,000, 1,000 a month”")} className="flex-1 min-w-0 bg-transparent outline-none text-[14px] min-h-[44px]" data-testid="fu-add" />
-        <button type="submit" disabled={!say.trim()} className="min-h-[40px] px-3.5 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[13px] inline-flex items-center gap-1 disabled:opacity-40" data-testid="fu-add-go"><Plus size={15} />{tr("Add")}</button>
-      </form> : null}
+      {/* v8.7 (Ali picked P5-C): the same box as Home and every page — only the hint is Follow-ups' */}
+      {doIt ? <U.PageBox value={say} setValue={setSay} onSend={(t) => add(t)} hint={tr("Add anything — “Ahmed owes me 12,000, 1,000 a month”")} sendLabel={tr("Add")}
+        ids={{ box: "fu-add-form", input: "fu-add", go: "fu-add-go" }} /> : null}
       <div className="flex flex-wrap items-center gap-1.5" data-testid="fu-chips">
         {CHIPS.map(([c, l]) => <button key={c} onClick={() => setChip(c)} aria-pressed={chip === c} className={U.chip(chip === c)} data-testid={"fu-chip-" + c}>{tr(l)} {count(c)}</button>)}
       </div>

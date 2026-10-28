@@ -20,7 +20,7 @@ export function PlannerPage({ flash }) {
   const [pots, setPots] = useState(() => loadPots());
   const [tick, setTick] = useState(0);
   const [adding, setAdding] = useState(false);
-  const [name, setName] = useState(""), [target, setTarget] = useState(""), [by, setBy] = useState("");
+  const [name, setName] = useState(""), [target, setTarget] = useState(""), [by, setBy] = useState(""), [how, setHow] = useState("month");   // how: "month" (a fixed amount each month) | "target"
   const [put, setPut] = useState({});
   const ar = getLang() === "ar";
   const ledger = useMemo(() => loadLedger(), [tick]), cur = homeCurrency(ledger);
@@ -32,7 +32,8 @@ export function PlannerPage({ flash }) {
   const nm = (p) => (KIND_NAME[p.kind] ? KIND_NAME[p.kind][ar ? 1 : 0] : p.name);
   const addGoal = () => {
     const t = +String(target).replace(/,/g, ""); if (!name.trim() || !(t > 0)) return;
-    save(addPot(pots, { name: name.trim(), kind: "other", target: t, by: /^\d{4}-\d{2}$/.test(by) ? by : "" })); setName(""); setTarget(""); setBy(""); setAdding(false);
+    save(addPot(pots, how === "month" ? { name: name.trim(), kind: "other", target: 0, per: t } : { name: name.trim(), kind: "other", target: t, by: /^\d{4}-\d{2}$/.test(by) ? by : "" }));
+    setName(""); setTarget(""); setBy(""); setAdding(false);
   };
   return (
     <div className={U.page + " rounded-2xl p-4 md:p-6 space-y-3.5 lg:space-y-[18px]"} data-testid="planner-page">
@@ -46,13 +47,19 @@ export function PlannerPage({ flash }) {
           {plan.short > 0 ? <p className="m-0 text-[13px] font-bold text-[var(--c-warn)]">{tr("Short by {a} this month", { a: fmt(plan.short) + " " + cur })}</p> : null}
           {plan.tips.map(([t, v], i) => <p key={i} className={"m-0 text-[12.5px] " + U.muted} data-testid="planner-tip">{tr(t, Object.fromEntries(Object.entries(v).map(([k, x]) => [k, typeof x === "number" && k !== "p" ? fmt(x) + " " + cur : x])))}</p>)}
         </div>
+        {plan.pots.length ? <div className={U.cardPad + " space-y-1.5"} data-testid="planner-year">
+          <p className={U.label + " m-0"}>{tr("This year ({y})", { y: plan.year.year })}</p>
+          <div className="flex items-baseline justify-between text-[14px] font-semibold"><span>{tr("Saved in a year at this pace")}</span><b className="tabular-nums text-[18px] c-acc" dir="ltr">{fmt(plan.year.savedPerYear)} {cur}</b></div>
+          <div className="flex items-baseline justify-between text-[14px] font-semibold"><span>{tr("Saved by 31 December")}</span><b className="tabular-nums" dir="ltr">{fmt(plan.year.byYearEnd)} {cur}</b></div>
+          {plan.pots.map((p) => <div key={p.id} className={"flex justify-between text-[12.5px] " + U.muted}><span dir="auto">{nm(p)}</span><span className="tabular-nums" dir="ltr">{fmt(p.monthly)} × 12 = {fmt(p.yearly)}</span></div>)}
+        </div> : null}
         <div className="space-y-2.5" data-testid="planner-goals">
           <p className={U.label + " m-0"}>{tr("Savings goals")}</p>
           {plan.pots.map((p) => (
             <div key={p.id} className={U.cardPad + " space-y-1.5"} data-testid="planner-goal">
               <div className="flex items-baseline justify-between gap-2"><b className="text-[15px] font-extrabold" dir="auto">{nm(p)}</b><span className="text-[14px] font-black tabular-nums c-acc" dir="ltr">{fmt(p.monthly)} {tr("/ month")}</span></div>
               <div className="h-2 rounded-full bg-[var(--c-surf-2)] overflow-hidden"><i className="block h-2 rounded-full bg-[var(--c-acc)]" style={{ width: Math.min(100, p.target ? ((p.saved || 0) / p.target) * 100 : 0) + "%" }} /></div>
-              <div className={"text-[12.5px] " + U.muted}>{tr("{a} of {b}", { a: fmt(p.saved || 0), b: fmt(p.target) })}{p.by ? " · " + tr("by {d}", { d: new Date(p.by + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "long", year: "numeric" }) }) : ""}{p.kind === "emergency" ? " · " + tr("3 months of spending") : ""}</div>
+              <div className={"text-[12.5px] " + U.muted}>{p.per > 0 && !p.target ? tr("{a} saved · {y} a year · {e} by 31 Dec", { a: fmt(p.saved || 0), y: fmt(p.yearly), e: fmt(p.byYearEnd) }) : tr("{a} of {b}", { a: fmt(p.saved || 0), b: fmt(p.target) })}{p.by ? " · " + tr("by {d}", { d: new Date(p.by + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "long", year: "numeric" }) }) : ""}{p.kind === "emergency" ? " · " + tr("3 months of spending") : ""}</div>
               <div className="flex gap-2 pt-0.5">
                 <input className={U.inp + " h-10! min-h-[40px]!"} inputMode="decimal" placeholder={fmt(p.monthly || 0)} value={put[p.id] || ""} onChange={(e) => setPut({ ...put, [p.id]: e.target.value })} aria-label={tr("Amount")} data-testid="planner-put-amount" />
                 <button className={U.btnS + " h-10! min-h-[40px]! shrink-0"} onClick={() => { const a = +String(put[p.id] || p.monthly || 0).replace(/,/g, ""); if (a > 0) { save(fundPot(pots, p.id, a)); setPut({ ...put, [p.id]: "" }); flash && flash(tr("Put aside — Safe to spend keeps it apart")); } }} data-testid="planner-put">{tr("Put money in")}</button>
@@ -60,8 +67,11 @@ export function PlannerPage({ flash }) {
             </div>))}
           {adding ? <div className={U.cardPad + " space-y-2"} data-testid="planner-new">
             <input className={U.inp} value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("Goal (car, Eid, school…)")} dir="auto" data-testid="planner-new-name" />
-            <div className="grid grid-cols-2 gap-2"><input className={U.inp} inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} placeholder={tr("Target")} data-testid="planner-new-target" />
-              <input type="month" className={U.inp} value={by} onChange={(e) => setBy(e.target.value)} aria-label={tr("By")} data-testid="planner-new-by" /></div>
+            <div className="flex gap-1.5">{[["month", tr("Every month")], ["target", tr("A total by a date")]].map(([k, l]) => <button key={k} type="button" className={U.chip(how === k)} onClick={() => setHow(k)} data-testid={"planner-how-" + k}>{l}</button>)}</div>
+            {how === "month" ? <><input className={U.inp} inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} placeholder={tr("Amount every month")} data-testid="planner-new-target" />
+              {+String(target).replace(/,/g, "") > 0 ? <p className={"m-0 text-[12.5px] " + U.muted} data-testid="planner-new-year">{tr("= {y} in a year", { y: fmt(+String(target).replace(/,/g, "") * 12) })}</p> : null}</>
+            : <div className="grid grid-cols-2 gap-2"><input className={U.inp} inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} placeholder={tr("Target")} data-testid="planner-new-target" />
+              <input type="month" className={U.inp} value={by} onChange={(e) => setBy(e.target.value)} aria-label={tr("By")} data-testid="planner-new-by" /></div>}
             <button className={U.btnP + " w-full"} onClick={addGoal} data-testid="planner-new-save">{tr("Save goal")}</button>
           </div> : <button className={U.btnS + " w-full"} onClick={() => setAdding(true)} data-testid="planner-new-open"><Plus size={16} />{tr("New goal (car, Eid, school…)")}</button>}
           {!plan.pots.some((p) => p.kind === "emergency") ? <button className={U.btnS + " w-full " + U.muted} onClick={() => save(addPot(pots, { name: ar ? "الطوارئ" : "Emergency", kind: "emergency", target: 0 }))} data-testid="planner-emergency">{tr("Start an emergency fund (3 months of spending)")}</button> : null}

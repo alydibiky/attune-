@@ -22,29 +22,10 @@ const Arrow = ({ back, size = 15 }) => back ? <ArrowLeft size={size} className="
 
 /** The one box: write payments ("lunch 150, taxi 60") or ask ("how much on food this week?"). */
 export function MoneyBox({ onSubmit, busy, onReceipt, onVoice, listening, wide }) {
-  const [text, setText] = useState("");
-  const go = () => { const t = text.trim(); if (!t || busy) return; onSubmit(t); setText(""); };
-  const fileRef = React.useRef(null);
-  const tools = (
-    <>
-      <button type="button" className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={() => fileRef.current && fileRef.current.click()} data-testid="money-box-receipt"><Camera size={15} />{tr("Receipt")}</button>
-      {onVoice ? <button type="button" className={U.btnS + " h-10! min-h-[40px]! px-3! " + (listening ? "border-[var(--c-neg)]! text-[var(--c-neg)]!" : "")} onClick={onVoice} data-testid="money-box-voice"><Mic size={15} />{listening ? tr("Listening…") : tr("Voice")}</button> : null}
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { onReceipt(e.target.files && e.target.files[0]); e.target.value = ""; }} />
-    </>);
-  const send = <button type="button" onClick={go} disabled={busy || !text.trim()} data-testid="money-box-go"
-    className="min-h-[44px] h-11 px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] inline-flex items-center gap-1.5 disabled:opacity-40">
-    {busy ? <Loader2 size={15} className="animate-spin" /> : null}{tr(wide ? "Record" : "Add")}<Arrow /></button>;
-  return (
-    <div className={U.card + " p-3.5 focus-within:border-[var(--c-acc)] transition-colors duration-150"} data-testid="money-box">
-      <div className="flex items-center gap-2">
-        <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go(); }} dir="auto" data-testid="money-box-input"
-          placeholder={wide ? tr("Write a payment or ask… «lunch 150, taxi 60»") : tr("Write or ask… lunch 150, taxi 60")}
-          aria-label={tr("Write a payment or ask a question")}
-          className="flex-1 min-w-0 min-h-[40px] bg-transparent border-0 outline-none text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-medium" />
-        {wide ? <>{tools}{send}</> : null}
-      </div>
-      {!wide ? <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-[var(--c-ln)]"><div className="flex items-center gap-1.5">{tools}</div>{send}</div> : null}
-    </div>);
+  // v8.7 (Ali picked P5-C): the same box as Home and every page — only the hint is Money's
+  return <U.PageBox hint={wide ? tr("Write a payment or ask… «lunch 150, taxi 60»") : tr("Write or ask… lunch 150, taxi 60")} label={tr("Write a payment or ask a question")}
+    onSend={onSubmit} busy={busy} onPhoto={onReceipt} photoLabel={tr("Receipt")} onVoice={onVoice} listening={listening} sendLabel={tr(wide ? "Record" : "Add")}
+    ids={{ box: "money-box", input: "money-box-input", photo: "money-box-receipt", voice: "money-box-voice", go: "money-box-go" }} />;
 }
 
 /** What the box did: the answer to a question, or the entries it added (with a way to the ledger to change them). */

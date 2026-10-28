@@ -31,7 +31,7 @@ with sync_playwright() as p:
     page.click("[data-testid=wake-when-charging]"); page.click("[data-testid=wake-sens-high]"); page.wait_for_timeout(200)
     calls = page.evaluate("window.__calls")
     check(["opts", {"when": "charging"}] in calls and ["opts", {"sensitivity": "high"}] in calls, "When = while charging, How easily = easily (noisy car): sent to the phone")
-    check("bg-[var(--c-acc-2)]" in page.locator("[data-testid=wake-when-charging]").get_attribute("class"), "…and shown as picked")
+    check("bg-[var(--c-soft)]" in page.locator("[data-testid=wake-when-charging]").get_attribute("class"), "…and shown as picked")
     page.click("[data-testid=wake-overlay]")
     check(["overlay"] in page.evaluate("window.__calls"), "“open over other apps” opens Android's page for it")
     page.click("[data-testid=wake-test]"); page.evaluate("window.__w.score = 0.86"); page.wait_for_timeout(600)

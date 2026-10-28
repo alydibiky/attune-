@@ -81,7 +81,7 @@ with sync_playwright() as p:
     check(bool(mult) and "pdf" in mult, "Merge opens a picker for several PDFs")
     page.set_input_files("[data-testid=convert-file]", files=[{"name": "a.pdf", "mimeType": "application/pdf", "buffer": b"%PDF-1.4 a"}, {"name": "b.pdf", "mimeType": "application/pdf", "buffer": b"%PDF-1.4 b"}])
     page.wait_for_timeout(200)
-    check("--c-acc-2" in (page.locator("[data-testid=convert-to-merge]").get_attribute("class") or ""), "…and “Merge into one PDF” is already chosen")
+    check("--c-soft" in (page.locator("[data-testid=convert-to-merge]").get_attribute("class") or ""), "…and “Merge into one PDF” is already chosen")
     shot(page, "02-convert")
 
     # ---- #15 Back: a screen you were SENT to returns to where you came from, which reopens where you were ----

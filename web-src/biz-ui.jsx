@@ -627,6 +627,7 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
   return (
     <section className="calm pb-28 min-h-screen bg-[var(--c-bg)] text-[var(--c-ink)]" style={accentVars(c)} data-testid="biz-system" data-layout="phone">
       <div aria-hidden="true" className="h-1.5 rounded-b-full" style={{ background: c }} />
+      <>
       <div className="px-3 pt-2.5 pb-3 border-b border-[var(--c-ln)]">
         <div className="flex items-center gap-2">{backBtn}<span className="flex-1" />{undoBtn}{toolsBtn}{designBtn}</div>
         <p className="text-[24px] font-black tracking-tight mt-2.5 px-1 m-0 flex items-center gap-2" dir="auto" data-testid="biz-system-title"><i aria-hidden="true" className="w-3 h-3 rounded-full shrink-0" style={{ background: c }} />{sys.name}</p>
@@ -637,6 +638,7 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
         <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k}
           className={"shrink-0 h-10 px-3.5 rounded-full border inline-flex items-center gap-1.5 text-[13px] font-extrabold whitespace-nowrap transition-colors duration-150 " + (tab === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)]")}><I size={15} />{l}</button>))}
       </nav>
+      </>
       <div className="px-3 pt-3">{body}</div>
       {fab}
       {chatSheet}{toolsSheet}

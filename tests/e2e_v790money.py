@@ -44,7 +44,7 @@ with sync_playwright() as p:
         page.goto(env.url); open_money(page)
         tag = "[phone %s] " % theme
         bar = page.locator("[data-testid=money-bar]").bounding_box()
-        check(bar and bar["y"] + bar["height"] >= 840, tag + "the bar sits at the bottom of the screen")
+        check(bar and bar["y"] < 300, tag + "v8.7 (Ali picked P5-A option 2): the parts are tabs at the top, no bottom bar (y %s)" % (bar and round(bar["y"])))
         ids = [page.locator("[data-testid=money-bar] button").nth(i).get_attribute("data-testid") for i in range(page.locator("[data-testid=money-bar] button").count())]
         check(ids == ["money-bar-home", "money-bar-trends", "money-bar-accounts", "money-bar-goals", "money-bar-bills", "money-bar-zakat"], tag + "Yusr's tabs, in its order: %s" % ids)
         check(page.locator("[data-testid=money-add]").is_visible(), tag + "the + floats over the page")
@@ -87,7 +87,7 @@ with sync_playwright() as p:
     page.goto(env.url); open_money(page)
     for pn in ["home", "trends", "bills", "zakat"]:
         page.click("[data-testid=money-bar-%s]" % pn); page.wait_for_timeout(500)
-        over = page.evaluate("() => [...document.querySelectorAll('[data-testid=money-bar] *, [data-testid=money-page] > *')].filter(e => e.offsetParent && (e.getBoundingClientRect().right > window.innerWidth + 1 || e.getBoundingClientRect().left < -1)).map(e => e.textContent.slice(0, 20))")
+        over = page.evaluate("() => [...document.querySelectorAll('[data-testid=money-page] > *')].filter(e => e.offsetParent && (e.getBoundingClientRect().right > window.innerWidth + 1 || e.getBoundingClientRect().left < -1)).map(e => e.textContent.slice(0, 20))")
         check(not over, "[phone ar 360] %s fits, right to left %s" % (pn, over))
         shot(page, "money-%s-phone-ar" % pn)
     page.click("[data-testid=money-add]"); page.wait_for_selector("[data-testid=money-add-sheet]"); shot(page, "money-add-phone-ar")

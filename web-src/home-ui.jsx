@@ -7,6 +7,7 @@
 import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { EmptyStart } from "./ui-kit.jsx";
+import { loadAgents } from "./agents.js";
 import { Paperclip, MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
 import { nowCard, homeNumbers, noticed, onThisDay, weekRhythm } from "./home-now.js";
 import { ReportTiles, WeekChart } from "./report-ui.jsx";   // v7.0 My report (Gemini, Direction 2)
@@ -60,6 +61,37 @@ const freshApp = () => { try {
   return !n(j("ledger.v3"), "txns") && !n(j("attune:fit:v1"), "days") && !n(j("attune:reminders:v1"), "items") && !n(j("attune:life:v1"), "items")
     && !n(j("attune:radar:v1"), "items") && !n(j("attune:agents:v1"), "agents");
 } catch (e) { return false; } };
+/** v8.7 P3-7: Money & Follow-ups · Fit & Food · Agents — one live line each, a tap opens the place. */
+function HeroCards({ data, navTo }) {
+  const ar = getLang() === "ar", f = (v) => Math.round(v || 0).toLocaleString("en-US");
+  const cards = [];
+  // 1 — money and what to follow
+  const safe = data.safe, first = (data.items || [])[0];
+  cards.push({ k: "money", label: tr("Money & Follow-ups"), col: "#157A52", open: "money",
+    big: safe && data.hasLedger ? tr("{a} safe to spend today", { a: f(safe.today) }) : tr("Write what you spend — Attune keeps the count"),
+    sub: first ? first.title : tr("Nothing to follow today") });
+  // 2 — food against the goal
+  cards.push({ k: "fit", label: tr("Fit & Food"), col: "#B4560E", open: "fit",
+    big: data.fitOn && data.goal ? tr("{a} of {b} kcal", { a: f(data.kcal), b: f(data.goal) }) : data.kcal ? tr("{a} kcal today", { a: f(data.kcal) }) : tr("Snap your lunch"),
+    sub: data.fitOn && data.goal > 0 ? (data.goal > data.kcal ? tr("{a} left today", { a: f(data.goal - data.kcal) }) : tr("Goal reached today")) : tr("A photo, a barcode or “2 eggs and foul”") });
+  // 3 — agents: one waiting for an OK first, else the newest find
+  let A = []; try { A = (loadAgents().agents || []).filter((a) => a.on !== false); } catch (e) {}
+  const wait = A.find((a) => a.pending && a.step === "confirm"), found = A.filter((a) => a.found).sort((a, b) => (b.found.at || 0) - (a.found.at || 0))[0];
+  cards.push({ k: "agents", label: tr("Agents"), col: "#3B5BA9", open: "agents",
+    big: wait ? `${wait.pending.name}: ${f(wait.pending.price)}` : found ? `${found.title || found.what}: ${f(found.found.price)}` : A.length ? tr("{n} agents watching", { n: A.length }) : tr("Watch a price, track a delivery"),
+    sub: wait ? tr("Waiting for your OK to buy") : found ? tr("Found for you") : A.length ? tr("They tell you when something changes") : tr("“Find me AirPods under 9,000”") });
+  return (
+    <div className="space-y-2" data-testid="home-hero">
+      {cards.map((c) => (
+        <button key={c.k} onClick={() => navTo(c.open)} className="c-card w-full text-start p-3.5 flex items-center gap-3" data-testid={"home-hero-" + c.k}>
+          <span className="flex-1 min-w-0">
+            <span className="block text-[12px] font-extrabold tracking-wide" style={{ color: c.col }}>{c.label.toUpperCase()}</span>
+            <b className="block text-[16px] font-extrabold truncate" dir="auto">{c.big}</b>
+            <span className="c-sub block text-[13px] truncate" dir="auto">{c.sub}</span></span>
+          <ChevronRight size={18} className="c-acc shrink-0 rtl:-scale-x-100" /></button>))}
+    </div>);
+}
+
 export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null, trial = null }) {
   const [text, setText] = useState("");
   // v6.48 Chat runs the app (CHAT_RUNS_APP.md, option A): "/" commands, files, the two box options, the answer card, the jobs
@@ -246,6 +278,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <div className="flex gap-2 flex-wrap">{now1.actions.map((a, i) => (
           <button key={a.id} onClick={() => act(now1, a)} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={i ? { border: "1px solid currentColor", color: "inherit" } : now1.level === "bad" ? { background: "#fff", color: "#B42318" } : { background: "var(--c-surf)", color: "var(--c-ink)" }} data-testid={"home-now-" + a.id}>{a.label}</button>))}</div>
       </div> : null}
+      {/* v8.7 (Ali agreed P3-7, option A done lightly): the 3 hero jobs as 3 live cards — the same three the store page and the
+          paywall promise. The box, "Right now" and "Your day" stay. */}
+      {minimal && !rep && !freshApp() ? <HeroCards data={data} navTo={navTo} /> : null}
       {minimal && rep ? <><ReportTiles safe={data.safe} spentMonth={data.hasLedger ? data.o.monthOut : null} cur={data.o && data.o.cur} kcal={data.kcal} goal={data.fitOn ? data.goal : 0}
           fleetK={(() => { try { return fleet && fleetLive(fleet.cranes || []).length ? fleetKpis(fleet) : null; } catch (e) { return null; } })()} />
         <WeekChart week={data.week} cur={data.o && data.o.cur} /></> : null}

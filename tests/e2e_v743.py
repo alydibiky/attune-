@@ -52,7 +52,7 @@ with sync_playwright() as p:
     check(p2.evaluate("document.documentElement.classList.contains('att-light')"), "a new install opens in design A's light look")
     check(p2.locator("[data-testid=home-areas]").count() == 0 and p2.locator("[data-testid=home-box]").count() == 1, "v6.50: Home is the box — every app opens from it (no row of apps)")
     # option 1 (Ali): one sentence → Food AND Money, and both on the Today line
-    check(p2.locator("[data-testid=home-line-empty]").count() == 1, "an empty day says what to tell the box")
+    check(p2.locator("[data-testid=home-line-empty], [data-testid=home-empty]").count() == 1, "an empty day says what to tell the box (v8.7: on a new install, with examples)")
     p2.fill("[data-testid=home-ask]", "I had koshari for lunch and paid 85 pounds"); p2.click("[data-testid=home-send]")
     p2.wait_for_selector("[data-testid=home-line-money]", timeout=5000)
     check(p2.locator("[data-testid=do-line]").count() == 2 and "Koshari" in p2.inner_text("[data-testid=home-line-fit]") and "85" in p2.inner_text("[data-testid=home-line-money]"), "one sentence: logged in Food and in Money, both on Today's line")

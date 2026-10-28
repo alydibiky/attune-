@@ -56,7 +56,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", tag + "Money opens on the calm view (level 1)")
         check(page.locator("[data-testid=money-yusr]").is_hidden(), tag + "…with the ledger (Yusr) loaded behind it, hidden")
         tabs = [t.get_attribute("data-testid")[8:] for t in page.locator("[data-testid=hub-tabs] [role=tab]").all()]
-        check(tabs == ["money", "deal"], tag + "tabs Money · Deal Check (v8.5: Follow-ups is its own place): %s" % tabs)
+        check(tabs == ["money", "planner", "deal"], tag + "tabs Money · Month plan · Deal Check (v8.7): %s" % tabs)
         check(page.locator("[data-testid=money-box-input]").is_visible(), tag + "the box comes first")
         b = page.locator("[data-testid=money-balance]").inner_text()
         check(num(b) == BAL, tag + "the balance, by code from the ledger: %s (want %d)" % (b, BAL))
