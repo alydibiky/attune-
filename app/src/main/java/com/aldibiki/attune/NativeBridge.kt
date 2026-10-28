@@ -494,6 +494,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     var askNotify: (() -> Unit)? = null
     var askHealth: (() -> Unit)? = null
     var askHealthTemp: (() -> Unit)? = null   // v6.41 (F4)
+    var askHealthVitals: (() -> Unit)? = null   // v8.7 the watch's vitals
     var askHuawei: (() -> Unit)? = null
     val billing = Billing(ctx)
 
@@ -524,6 +525,17 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         pool.execute {
             try { resolve(id, Health.nights(ctx, try { JSONObject(arg).optInt("days", 120) } catch (e: Exception) { 120 })) }
             catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the temperature") }
+        }
+    }
+
+    /** v8.7: Health → "From your watch" — ask for the vitals permissions; read the last {days} days of vitals. */
+    @JavascriptInterface
+    fun healthVitalsConnect() { if (Health.availability(ctx) == "update") healthConnect() else askHealthVitals?.invoke() }
+    @JavascriptInterface
+    fun healthVitals(id: String, arg: String) {
+        pool.execute {
+            try { resolve(id, Health.vitals(ctx, try { JSONObject(arg).optInt("days", 30) } catch (e: Exception) { 30 })) }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the watch") }
         }
     }
 

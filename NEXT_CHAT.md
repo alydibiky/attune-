@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 28 Oct 2026 — v8.6)
+# Attune — start here (handoff for the next chat, 28 Oct 2026 — v8.7)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,7 +6,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v8.6** (versionCode 128; branch `claude/affectionate-ptolemy-nmr0bh`) — before: **v8.5** (versionCode 127) — branch `claude/youthful-davinci-fe3400` = main (27 Oct) |
+| `main` | **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128; branch `claude/affectionate-ptolemy-nmr0bh`) — before: **v8.5** (versionCode 127) — branch `claude/youthful-davinci-fe3400` = main (27 Oct) |
 | Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
 | Tests | v8.3: every unit + e2e file passes (old Instant / Money / sidebar expectations updated; e2e_v727guardian dates now relative to today) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
@@ -49,6 +49,31 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
     localStorage). Tests: e2e_v831books.py (phone path with a stand-in), e2e_v830.py, unit v830library. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
+
+## v8.7 — Ali's answers to the nine reviews (28 Oct) — the plan with ticks is `ALI_LIST_2026-10-28.md`
+Everything Ali said "do" is built and tested; everything subjective is on ONE design canvas waiting for his picks:
+**https://claude.ai/artifact/WPVFc6FLsWecRwK8DxDtWS** (P5-A..G layout, V-A..D visuals, P3-7 the 3 hero jobs, P2-E, the money planner
+screen A/B/C). Source of the canvas boards: the session scratchpad `canvas/project/*.dc.html` (not in the repo).
+- Fixes: P1 (BP / sleep, bank loans, typos, negative, filler) · P6 (last Friday monthly, "expires next month", 10 % 3, renews on the 5th) ·
+  P2-A..D (country + brain on first run, Engine recommended first, a waiting question answered by itself, model pill only on Chat) ·
+  P7 the Play flavor (`play`: no overlay, no Video Downloader, keyboard later) · P8 stop-gap (`answerfix.js` egyptianize) ·
+  P9 H-A..E (safe to spend from this month's income, open loans never late, one card per person, "paid today?", month review).
+- P3 business (all but 7): trial from first use, Free = unlimited answers, outcome paywall, lifetime only at launch (LIFETIME_UNTIL),
+  Business off the paywall, day-5 note (`trialuse.js`), «جنيه», STORE_LISTING.md, referral (friend's month; the giver's month needs codes).
+- E: deep research = code reads the pages, the AI writes once (Pro/Master keep page notes) · money planner `planner.js` (+ «خطة الشهر»).
+- P4, in Ali's order: share to Attune · morning card (`morning.js`) · home-screen box widget (`BoxWidget.kt`) · agents learn taste +
+  price history · warm the model · "what Home didn't understand" log · one smart camera (`smartcam.js`) · Attune Saves · ask anything
+  over your life · voice "what's left today" · **bills autopilot** (`bills.js`: usual day + median amount per home bill → Guardian
+  "40% higher — check the meter", "hasn't come", morning card, «فواتيري») · **health from the watch** (`Health.vitals` in Health.kt:
+  BP, SpO₂, sleep, resting HR, HRV, glucose, weight → `vitals.js`: week lines against the person's own usual, BP into Family health,
+  sleep into Fit, Doctor PDF, morning card) · **family space** (`family.js` + `family-ui.jsx`, mode `family` in Follow-ups: shared list,
+  who paid what + fewest transfers (Spliit's idea, MIT), reminders for the parents; travels as a file locked with the family code) ·
+  **Home router** (`homeroute.js`, naive Bayes, 95 % on unseen sentences) in SHADOW mode — recorded next to "what Home didn't
+  understand", not acted on until it is measured on Ali's phone.
+- Still open: P4-16 cloud boost (needs Ali: a provider and a key) · P8 M-B who's-who pack (Wikidata is blocked from the cloud
+  session → build it in a GitHub workflow) · P7 optional packs on first use (the 26 MB Python engine) · the giver side of referral.
+Tests: `tests/unit/v870*.test.mjs` (p1, p3, p6, p9, plan, bills, vitals, family, homeroute) + e2e_v519 (research change) + harness
+(trial / morning notes go to `S.sys`, not the person's reminders).
 
 ## v8.6 part 2 + the nine-persona review (28 Oct) — waiting for Ali's picks
 Ali's points 6–10 done (meal info on tap, translator "hello" at once, Translate photo from the gallery, buy agents that come back
@@ -204,7 +229,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 - [x] 17. (DONE v8.2) **Your details** (Ali, mid-list): Booking details expanded — trips / daily life / booking forms, private, used by answers + agents.
 
 ## Do this next
-1. Get Ali's picks from the nine reviews (list above) and build them; then ask for his next list. Keep his rule: **ask before anything subjective** — show 2–4 options
+1. Get Ali's picks from the canvas (v8.7 section above) and build them; then ask for his next list. Keep his rule: **ask before anything subjective** — show 2–4 options
    (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
    Quiet Atelier tokens, phones side by side, A/B/C with a recommendation).
 2. Still to design (Ali's item 11 "fix the rest of the interface like Gemini would"): Settings, the sidebar, Privacy, and any

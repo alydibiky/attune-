@@ -51,13 +51,20 @@ export function spanOf(q, now = Date.now()) {
     if (n > 0 && n < 400) { const days = n * unit; return { from: iso(back(days)), to: iso(today), label: [`the last ${n} ${unit === 7 ? "week" : unit === 30 ? "month" : "day"}${n > 1 ? "s" : ""}`, `آخر ${n} ${unit === 7 ? "أسبوع" : unit === 30 ? "شهر" : n > 2 && n < 11 ? "أيام" : "يوم"}`] };
     }
   }
-  if (/\btoday\b|النهار ?ده|النهارده|اليوم/.test(t)) return { from: iso(today), to: iso(today), label: ["today", "اليوم"] };
-  if (/\byesterday\b|امبارح|أمس|البارحة/.test(t)) { const y = back(2); return { from: iso(y), to: iso(y), label: ["yesterday", "أمس"] }; }
-  if (/\bthis week\b|الأسبوع ده|الاسبوع ده|هذا الأسبوع/.test(t)) { const f = new Date(today); f.setDate(f.getDate() - ((f.getDay() + 1) % 7)); return { from: iso(f), to: iso(today), label: ["this week", "هذا الأسبوع"] }; }   // the week starts Saturday in Egypt
-  if (/\blast week\b|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي/.test(t)) { const e = new Date(today); e.setDate(e.getDate() - ((e.getDay() + 1) % 7) - 1); const f = new Date(e); f.setDate(f.getDate() - 6); return { from: iso(f), to: iso(e), label: ["last week", "الأسبوع الماضي"] }; }
-  if (/\blast month\b|الشهر اللي فات|الشهر الماضي/.test(t)) { const f = new Date(today.getFullYear(), today.getMonth() - 1, 1), e = new Date(today.getFullYear(), today.getMonth(), 0); return { from: iso(f), to: iso(e), label: ["last month", "الشهر الماضي"] }; }
-  if (/\bthis year\b|السنة دي|هذا العام|السنه دي/.test(t)) return { from: `${today.getFullYear()}-01-01`, to: iso(today), label: ["this year", "هذه السنة"] };
-  return { from: iso(new Date(today.getFullYear(), today.getMonth(), 1)), to: iso(today), label: ["this month", "هذا الشهر"] };
+  if (/\btoday\b|النهار ?ده|النهارده|اليوم/.test(t)) return { from: iso(today), to: iso(today), label: ["today", "النهارده"] };
+  if (/\byesterday\b|امبارح|أمس|البارحة/.test(t)) { const y = back(2); return { from: iso(y), to: iso(y), label: ["yesterday", "امبارح"] }; }
+  if (/\bthis week\b|الأسبوع ده|الاسبوع ده|هذا الأسبوع/.test(t)) { const f = new Date(today); f.setDate(f.getDate() - ((f.getDay() + 1) % 7)); return { from: iso(f), to: iso(today), label: ["this week", "الأسبوع ده"] }; }   // the week starts Saturday in Egypt
+  if (/\blast week\b|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي/.test(t)) { const e = new Date(today); e.setDate(e.getDate() - ((e.getDay() + 1) % 7) - 1); const f = new Date(e); f.setDate(f.getDate() - 6); return { from: iso(f), to: iso(e), label: ["last week", "الأسبوع اللي فات"] }; }
+  if (/\blast month\b|الشهر اللي فات|الشهر الماضي/.test(t)) { const f = new Date(today.getFullYear(), today.getMonth() - 1, 1), e = new Date(today.getFullYear(), today.getMonth(), 0); return { from: iso(f), to: iso(e), label: ["last month", "الشهر اللي فات"] }; }
+  if (/\bthis year\b|السنة دي|هذا العام|السنه دي/.test(t)) return { from: `${today.getFullYear()}-01-01`, to: iso(today), label: ["this year", "السنة دي"] };
+  // v8.7 (persona 4, idea 5 — "how much did I spend on uber in September?" was answered for this month): a month by name is that
+  // month (this year's, or last year's when it hasn't come yet)
+  { const EN = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], AR = ["يناير", "فبراير", "مارس", "أبريل|ابريل", "مايو", "يونيو", "يوليو", "أغسطس|اغسطس", "سبتمبر", "أكتوبر|اكتوبر", "نوفمبر", "ديسمبر"];
+    let mo = EN.findIndex((m) => new RegExp("\\b(in|for|during|of|on)?\\s*" + m + "[a-z]*\\b").test(t) && new RegExp("\\b" + m + "(uary|ruary|ch|il|e|y|ust|tember|ober|ember)?\\b").test(t));
+    if (mo < 0) mo = AR.findIndex((m) => new RegExp("(?:^|\\s|في|ف)(" + m + ")(?![\\u0621-\\u064A])").test(t));
+    if (mo >= 0) { const y = mo > today.getMonth() ? today.getFullYear() - 1 : today.getFullYear(), f = new Date(y, mo, 1), e = new Date(y, mo + 1, 0);
+      const name = f.toLocaleDateString("en-GB", { month: "long" }); return { from: iso(f), to: iso(e > today ? today : e), label: ["in " + name, "في " + AR[mo].split("|")[0]] }; } }
+  return { from: iso(new Date(today.getFullYear(), today.getMonth(), 1)), to: iso(today), label: ["this month", "الشهر ده"] };
 }
 
 /** The Money ledger as the Money tab saved it, or null. */

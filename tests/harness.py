@@ -34,7 +34,7 @@ V5_EXTRA = r"""
   N.stashGet = (n) => sessionStorage.getItem("mockstash:" + n) || "";
   N.stashDel = (n) => { sessionStorage.removeItem("mockstash:" + n); return true; };
   // reminders & phone actions
-  N.schedule = (json) => { const a = JSON.parse(json); S.notes.push(a); return JSON.stringify({ ok: true, id: a.id }); };
+  N.schedule = (json) => { const a = JSON.parse(json); if (/^(trial-|daily-morning)/.test(a.id || "")) { (S.sys = S.sys || []).push(a); return JSON.stringify({ ok: true, id: a.id }); } S.notes.push(a); return JSON.stringify({ ok: true, id: a.id }); };   // v8.7: the app's own notes (trial, morning card) apart from the person's reminders
   N.unschedule = (id) => { S.notes = S.notes.filter((n) => n.id !== id); return true; };
   N.scheduled = () => JSON.stringify(S.notes);
   N.intent = (json) => { const a = JSON.parse(json); S.intents.push(a); return JSON.stringify({ ok: true }); };

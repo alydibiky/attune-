@@ -35,3 +35,9 @@ t("P8 M-A stop-gap: formal → Egyptian words when the person wrote Egyptian", (
   assert.equal(AF.egyptianize("لماذا لا تجرب المشي الآن؟ وسوف يكون هذا جيد. قال «لماذا»"), "ليه لا تجرب المشي دلوقتي؟ وهيكون ده كويس. قال «لماذا»");
 });
 console.log(`v870p1 (+P8): ${n} checks passed`);
+t("voice: what's left today, by code", () => {
+  const s0 = st(); s0.fit = { days: { [new Date(now).toISOString().slice(0, 10)]: { meals: { lunch: [{ kcal: 700 }] } } }, goal: 2000 };
+  const u = D.understand("what's left today?", { now, stores: s0 }); assert.equal(u.ask.kind, "today"); assert.match(u.ask.en, /700 of 2,000 kcal eaten — 1,300 left/);
+  assert.equal(D.understand("ايه اللي فاضل النهارده؟", { now, stores: st() }).ask.kind, "today");
+});
+console.log(`v870p1 (+ voice day): ${n} checks passed`);

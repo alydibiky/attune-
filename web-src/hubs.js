@@ -17,7 +17,7 @@ export const HUBS = [
   ["students", "Students", "coach", ["coach", "booklib", "slides", "cv"]],
   // v8.5 (W1): Follow-ups is its own place (reminders aren't money); its parts are chips on its one list (E2), no switch
   ["money", "Money", "money", ["money", "deal"]],
-  ["followups", "Follow-ups", "timeline", ["timeline", "life", "reminders", "radar", "xray", "guardian"]],
+  ["followups", "Follow-ups", "timeline", ["timeline", "life", "family", "reminders", "radar", "xray", "guardian"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
   // v8.5 (E1): Daily's 9 tabs split — Daily (Learn, News) and Go (Travel, Scout, Metro, Maps); Knowledge went to Settings (R3)
   ["learn", "Daily", "learn", ["learn", "news"]],
@@ -52,7 +52,7 @@ export const FULL = ["home", "fit", "map"];   // (v6.36: Business shows the Work
 // v6.38 (M3): Timeline — everything from the other parts on one list
 // v8.2 (Ali picked 1A, 26 Oct): Follow-ups opens on ONE list by day (the timeline) — People & plans, Reminders, Dates, Chat X-Ray and the
 // Guardian are its parts; Money = Money · Follow-ups · Deal Check
-export const INSIDE = { life: "timeline", reminders: "timeline", radar: "timeline", xray: "timeline", guardian: "timeline",
+export const INSIDE = { life: "timeline", family: "timeline", reminders: "timeline", radar: "timeline", xray: "timeline", guardian: "timeline",
   pdfchat: "booklib", recall: "memory" };   // v8.5: Documents = Many books · One file (W3); Mind · Recall (R2)
 /* v7.2 (Gemini's Area 1 mock-up, Ali sent it 24 Oct 2026): Money = Money · Follow-ups · Guardian · Deal Check. Follow-ups opens on
    People & plans (debts, installments, savings circles, the maid every Saturday) with Reminders · Timeline · Dates · Chat X-Ray in

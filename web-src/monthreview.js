@@ -3,6 +3,7 @@
    "October: spent 15,350 · earned 32,000 · 52 % kept · food the most (26 %) · Sara still owes you 9,369 · 22 days of meals".
    Pure: stores in, numbers out — the card and the notification only print them.                                               */
 import { progressOf } from "./life.js";
+import { savedIn } from "./guardian.js";
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const MONTHS = { en: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
@@ -10,7 +11,7 @@ const MONTHS = { en: ["January", "February", "March", "April", "May", "June", "J
 
 /** Last month (or the month before `now`): { month, from, to, spent, earned, keptPct, top: {cat, pct}, owedToYou: [{who, left}],
     youOwe, mealDays, kg: {from, to} } — or null when nothing was written that month. */
-export function monthReview({ ledger, life, fit } = {}, now = Date.now()) {
+export function monthReview({ ledger, life, fit, guardian } = {}, now = Date.now()) {
   const n = new Date(now), first = new Date(n.getFullYear(), n.getMonth() - 1, 1, 12), last = new Date(n.getFullYear(), n.getMonth(), 0, 12);
   const from = iso(first), to = iso(last), inM = (d) => d >= from && d <= to;
   const tx = ((ledger && ledger.txns) || []).filter((t) => inM(t.date || ""));
@@ -31,7 +32,7 @@ export function monthReview({ ledger, life, fit } = {}, now = Date.now()) {
   return { month: first.getMonth(), year: first.getFullYear(), from, to, spent: Math.round(spent), earned: Math.round(earned),
     keptPct: earned > 0 ? Math.round(((earned - spent) / earned) * 100) : null, top: topCat ? { cat: topCat[0], pct: Math.round((topCat[1] / (spent || 1)) * 100) } : null,
     owedToYou: [...people.values()].sort((a, b) => b.left - a.left).slice(0, 3).map((x) => ({ ...x, left: Math.round(x.left) })), youOwe: Math.round(youOwe),
-    mealDays, kg: w.length ? { from: w[0].kg, to: w[w.length - 1].kg } : null };
+    mealDays, kg: w.length ? { from: w[0].kg, to: w[w.length - 1].kg } : null, saved: guardian ? savedIn(guardian, from.slice(0, 7)) : null };
 }
 
 /** The review as short lines for the card / the notification, in English or Egyptian Arabic. */
@@ -41,6 +42,9 @@ export function reviewLines(r, lang = "en", cur = "") {
   const CAT = { food: ["food", "الأكل"], groceries: ["groceries", "البقالة"], transport: ["transport", "المواصلات"], bills: ["bills", "الفواتير"], rent: ["rent", "الإيجار"], shopping: ["shopping", "التسوق"], health: ["health", "الصحة"], fun: ["fun", "الخروج"], coffee: ["coffee", "القهوة"], gifts: ["gifts", "الهدايا"], other: ["other", "حاجات تانية"] };
   const out = [];
   if (r.spent || r.earned) out.push(ar ? `${m}: صرفت ${f(r.spent)} ${cur}${r.earned ? ` · دخلك ${f(r.earned)}` : ""}${r.keptPct != null ? ` · حوّشت ${r.keptPct}%` : ""}` : `${m}: spent ${f(r.spent)} ${cur}${r.earned ? ` · earned ${f(r.earned)}` : ""}${r.keptPct != null ? ` · ${r.keptPct}% kept` : ""}`);
+  // v8.7 (persona 4, idea 2): "Attune saved you 3,420 — a trial cancelled, a price drop, a debt collected"
+  if (r.saved && r.saved.total > 0) { const K = { subs: ["a subscription cancelled", "اشتراك اتلغى"], double: ["a double charge refunded", "خصم مكرر رجع"], creep: ["a price rise fixed", "زيادة اتصلحت"], late: ["a debt collected", "دين اتحصّل"], agent: ["a better price found", "سعر أرخص"], fees: ["fees avoided", "رسوم اتوفرت"] };
+    out.push(ar ? `أتيون وفّرلك ${f(r.saved.total)} — ${r.saved.parts.map((p) => (K[p.kind] || [p.kind, p.kind])[1]).join("، ")}` : `Attune saved you ${f(r.saved.total)} — ${r.saved.parts.map((p) => (K[p.kind] || [p.kind])[0]).join(", ")}`); }
   if (r.top) out.push(ar ? `أكتر حاجة: ${(CAT[r.top.cat] || [r.top.cat, r.top.cat])[1]} (${r.top.pct}%)` : `Most went on ${(CAT[r.top.cat] || [r.top.cat])[0]} (${r.top.pct}%)`);
   for (const p of r.owedToYou) out.push(ar ? `لسه على ${p.who} ليك ${f(p.left)}` : `${p.who} still owes you ${f(p.left)}`);
   if (r.youOwe) out.push(ar ? `لسه عليك ${f(r.youOwe)}` : `You still owe ${f(r.youOwe)}`);

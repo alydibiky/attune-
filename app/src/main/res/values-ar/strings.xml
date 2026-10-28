@@ -28,4 +28,8 @@
     <string name="wake_off">اقفلها</string>
     <string name="wake_heard_title">أيوه؟ دوس واتكلم</string>
     <string name="wake_heard_text">قلت «يا أتيون»</string>
+    <string name="widget_box_name">Attune · الخانة</string>
+    <string name="widget_box_desc">اكتب أو قول أي حاجة — وأتيون يحطها في مكانها</string>
+    <string name="widget_box_hint">اكتب لأتيون أي حاجة…</string>
+    <string name="widget_box_mic">اتكلم</string>
 </resources>

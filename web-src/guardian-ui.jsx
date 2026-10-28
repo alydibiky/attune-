@@ -14,7 +14,7 @@ import { OverpayCheck } from "./overpay-ui.jsx";
 import * as U from "./ui-kit.jsx";
 import { parsePrice, loadPrices, savePrices, addPrice, allRecords, overview } from "./pricememory.js";
 
-const DONE = { late: ["Send reminder", "Not now"], double: ["I got it back", "Not a mistake"], creep: ["I fixed it", "It's fine"], subs: ["I cancelled it", "I use it"], fees: ["Got it", null], due: ["Paid", null] };
+const DONE = { late: ["Send reminder", "Not now"], double: ["I got it back", "Not a mistake"], creep: ["I fixed it", "It's fine"], subs: ["I cancelled it", "I use it"], fees: ["Got it", null], due: ["Paid", null], bill: ["Got it", null] };
 
 function useGuardian() {
   const [g, setG] = useState(() => loadGuardian());
@@ -91,7 +91,7 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
       flash && flash(tr("When it comes back, tick it in People & plans — it counts as saved"));
       return;
     }
-    if (f.kind === "fees" || f.kind === "due") { put(dismiss(g, f.id)); return; }
+    if (f.kind === "fees" || f.kind === "due" || f.kind === "bill") { put(dismiss(g, f.id)); return; }
     put(markSaved(g, f)); flash && flash(tr("Counted as saved"));
   };
   // a payment logged twice (a notification and a typed one): the later copy goes, nothing is counted as saved
@@ -121,7 +121,7 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
       {shown.map((f) => (
         <div key={f.id} className={U.cardPad} data-testid="guardian-item">
           <div className="flex items-start gap-3"><div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]" dir="auto">{f.T ? tr(f.T[0], f.T[1]) : f.title}</b><div className={"text-[12.5px] " + U.muted} dir="auto">{f.D ? tr(f.D[0], f.D[1]) : f.detail}</div></div>
-            <span className={U.tag(f.kind === "late" || f.kind === "double" ? "red" : "amber")}><span className="tabular-nums">{fmt(f.amount)}</span></span></div>
+            {f.amount > 0 ? <span className={U.tag(f.kind === "late" || f.kind === "double" ? "red" : "amber")}><span className="tabular-nums">{fmt(f.amount)}</span></span> : null}</div>
           {f.kind === "late" ? <p className={"mt-2 text-[12.5px] rounded-[14px] p-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] " + U.muted} dir="auto" data-testid="guardian-message">{f.message}</p> : null}
           {f.kind === "double" && f.txns ? <TwoPayments txns={f.txns} /> : null}
           <div className="flex flex-wrap gap-2 mt-3">

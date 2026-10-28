@@ -49,6 +49,14 @@
     <!-- v6.41 (F4): Cycle reads the watch's night temperature (asked only from Cycle) -->
     <uses-permission android:name="android.permission.health.READ_SKIN_TEMPERATURE" />
     <uses-permission android:name="android.permission.health.READ_BASAL_BODY_TEMPERATURE" />
+    <!-- v8.7: the watch's vitals (Health → From your watch), read only -->
+    <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" />
+    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
+    <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE" />
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
 
     <!-- Lets the app find the phone's speech recogniser (Android 11+). -->
     <queries>
@@ -222,6 +230,13 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_fit_info" />
+        </receiver>
+        <!-- v8.7: the Attune box on the home screen (BoxWidget.kt): tap to type, the mic to speak. -->
+        <receiver android:name=".BoxWidget" android:exported="true" android:label="@string/widget_box_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_box_info" />
         </receiver>
         <!-- Sharing a Studio picture with another app (read-only, one picture at a time). -->
         <provider

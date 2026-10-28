@@ -290,7 +290,7 @@ def sec_actions(br):
 
     # H. the Reminders screen
     open_more(page)
-    page.locator(".rounded-t-2xl button:has-text('Reminders')").first.click()
+    page.locator(".rounded-t-2xl button").filter(has=page.locator("text='Reminders'")).first.click()
     page.wait_for_selector("[data-testid=reminders-panel]", timeout=5000)
     check(page.locator("[data-testid=rem-item]").count() == 1 and "Call Ahmed" in page.locator("[data-testid=rem-item]").inner_text(), "Reminders lists the one set from chat")
     page.fill("[data-testid=rem-title]", "Pay the crane insurance")
@@ -307,7 +307,7 @@ def sec_actions(br):
     check(len(nn) == 2 and nn[-1].get("repeat") == "days:0,2,4" and it.count() == 1 and "Sun · Tue · Thu" in it.inner_text(), "free text: 'every Sunday, Tuesday and Thursday at 7 pm … train' → one reminder on Sun · Tue · Thu: %s" % (it.inner_text().replace("\n", " · ") if it.count() else nn[-1:]))
     page.locator("[data-testid=rem-item]").filter(has_text="train").locator("button").click(); page.click("[data-testid=confirm-yes]"); page.wait_for_timeout(200)
     page.evaluate("window.__mock.inexact = true"); page.evaluate("window.__attuneBack()"); open_more(page)
-    page.locator(".rounded-t-2xl button:has-text('Reminders')").first.click(); page.wait_for_timeout(200)
+    page.locator(".rounded-t-2xl button").filter(has=page.locator("text='Reminders'")).first.click(); page.wait_for_timeout(200)
     page.locator("[data-testid=ask-exact]").click()
     check(page.evaluate("window.__mock.askedExact") is True, "without “Alarms & reminders” it says so and opens the setting")
     page.screenshot(path=HERE + "/v5-reminders.png")

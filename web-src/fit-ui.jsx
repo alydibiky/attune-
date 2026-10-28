@@ -249,7 +249,12 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const fileRef = useRef(null);
   const codeRef = useRef(null);
   const run = useRef(0);
-  useEffect(() => { if (incoming) { if (incoming !== "\u0001add") setText(incoming); setAdding(mealNow()); setTab("today"); clearIncoming && clearIncoming(); } }, [incoming]);   // (v6.36 "\u0001add": Home's Food photo button opens the add sheet)
+  useEffect(() => { if (incoming) {
+    // v8.7 (idea 9): the smart camera hands over a plate photo (read at once) or a barcode photo (looked up)
+    if (typeof incoming === "object" && incoming.file) { const f = incoming.file; clearIncoming && clearIncoming(); setTab("today"); setAdding(mealNow());
+      if (incoming.barcode) { scanCode(f); return; }
+      readPhoto(f).then((ph) => { setDraft(null); setPhoto(ph); setGo((n) => n + 1); }).catch(() => flash && flash(L("Couldn't open that picture", "مقدرتش أفتح الصورة"))); return; }
+    if (incoming !== "\u0001add") setText(incoming); setAdding(mealNow()); setTab("today"); clearIncoming && clearIncoming(); } }, [incoming]);   // (v6.36 "\u0001add": Home's Food photo button opens the add sheet)
   // v6.28: a meal tapped on Home / Health opens straight on adding to it
   useEffect(() => { let m = ""; try { m = localStorage.getItem("attune:fit:openAdd") || ""; localStorage.removeItem("attune:fit:openAdd"); } catch (e) {} if (F.MEALS.includes(m)) { setTab("today"); setAdding(m); } }, []);
 

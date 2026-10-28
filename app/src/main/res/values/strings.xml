@@ -33,4 +33,8 @@
     <string name="wake_off">Turn off</string>
     <string name="wake_heard_title">Yes? Tap to talk</string>
     <string name="wake_heard_text">You said “Ya Attune”</string>
+    <string name="widget_box_name">Attune · the box</string>
+    <string name="widget_box_desc">Type or say anything — Attune puts it where it belongs</string>
+    <string name="widget_box_hint">Ask or tell Attune…</string>
+    <string name="widget_box_mic">Speak</string>
 </resources>

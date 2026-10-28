@@ -222,10 +222,45 @@ function search(q, s) {
     rows: top.map((x) => [x.date || "—", x.what]), open: top[0].src, sources: [...new Set(top.map((x) => x.src))] };
 }
 
+/* v8.7 (persona 4, idea 5 — "ask anything over your own life", numbers by code): three questions the readers above got wrong —
+   "what did I spend most on this year?" (a ranking), "how much did I spend on uber in September?" (a word in the notes, not its
+   whole category), "how much did I give Sara this year?" (People & plans, not only Money). → an answer or null. */
+function moneyExtra(q, s, now) {
+  const t = latinQ(q), ar = /[\u0600-\u06FF]/.test(q), L = s.ledger, cur = (L && L.currency) || "", span = spanOf(q, now);
+  const tx = ((L && L.txns) || []).filter((x) => x.type === "expense" && x.date >= span.from && x.date <= span.to);
+  if (/\b(spend|spent|spending)\b.*\b(most|biggest|the most)\b|\b(most|biggest)\b.*\b(spend|spent|spending|expense)/i.test(t) || /(صرفت|بصرف|مصاريفي)\s*(أكتر|اكتر|اكثر|أكثر)|(أكتر|اكتر)\s*حاجة\s*(صرفت|بصرف)/.test(t)) {
+    if (!tx.length) return null;
+    const by = {}; for (const x of tx) by[x.cat || "other"] = (by[x.cat || "other"] || 0) + (+x.amount || 0);
+    const rows = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = tx.reduce((a, x) => a + (+x.amount || 0), 0);
+    const CA = { food: "الأكل", groceries: "البقالة", transport: "المواصلات", bills: "الفواتير", rent: "الإيجار", shopping: "التسوق", health: "الصحة", fun: "الخروج", coffee: "القهوة", gifts: "الهدايا", other: "حاجات تانية" };
+    return { kind: "money", en: `Most went on ${rows[0][0]} ${span.label[0]}: ${num(rows[0][1])} ${cur} (${Math.round((rows[0][1] / tot) * 100)}% of ${num(tot)}).`,
+      ar: `أكتر حاجة صرفت عليها ${span.label[1]}: ${CA[rows[0][0]] || rows[0][0]} — ${num(rows[0][1])} ${cur} (${Math.round((rows[0][1] / tot) * 100)}% من ${num(tot)}).`,
+      rows: rows.map(([c, a]) => [ar ? CA[c] || c : c, `${num(a)} ${cur} · ${Math.round((a / tot) * 100)}%`]), open: "money", sources: ["money"] };
+  }
+  const term = termOf(q).replace(/\b(in|on|for|during)\s+\w+$/i, "").replace(/\s*(?:في|ف)\s+\S+$/, "").trim();
+  if (!term || term.length < 2 || /^(food|groceries|transport|bills|rent|shopping|health|fun|coffee|gifts|other|everything|all|money)$/i.test(term)) return null;
+  const f = fold(term);
+  // a person in People & plans: what was lent / paid to them in the span
+  const ppl = ((s.life && s.life.items) || []).filter((c) => c.person && fold(c.person).split(/\s+/)[0] === f.split(/\s+/)[0]);
+  if (ppl.length) {
+    const made = ppl.filter((c) => { const d = new Date(c.created || 0); const iso0 = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; return iso0 >= span.from && iso0 <= span.to; });
+    const lent = made.filter((c) => c.dir === "in").reduce((a, c) => a + (+c.total || +c.amount || 0), 0), left = ppl.filter((c) => c.dir === "in").reduce((a, c) => a + (progressOf(c, now).left || 0), 0);
+    const who = ppl[0].person;
+    return { kind: "paid-for", en: `You lent ${who} ${num(lent)} ${cur} ${span.label[0]} (${made.length} time${made.length === 1 ? "" : "s"}) — ${num(left)} still owed.`,
+      ar: `سلّفت ${who} ${num(lent)} ${cur} ${span.label[1]} (${made.length === 1 ? "مرة واحدة" : made.length === 2 ? "مرتين" : made.length + " مرات"}) — لسه عليه ${num(left)}.`, open: "life", sources: ["life"] };
+  }
+  // a word in the notes ("uber", «البنزين»)
+  const hit = tx.filter((x) => fold(`${x.note || ""} ${x.src || ""}`).includes(f));
+  if (hit.length) { const sum = hit.reduce((a, x) => a + (+x.amount || 0), 0);
+    return { kind: "paid-for", en: `You spent ${num(sum)} ${cur} on “${term}” ${span.label[0]} — ${hit.length} payment${hit.length === 1 ? "" : "s"}.`,
+      ar: `صرفت ${num(sum)} ${cur} على «${term}» ${span.label[1]} — ${hit.length} دفعة.`, rows: hit.slice(-12).reverse().map((x) => [x.date, `${num(x.amount)} · ${x.note || x.cat}`]), open: "money", sources: ["money"] }; }
+  return null;
+}
 /** The answer, or null when nothing in your data fits (the page then offers Chat). */
 export function askLife(question, stores = {}, { now = Date.now() } = {}) {
   const q = String(question || "").trim(); if (!q) return null;
   const k = kindOf(q, stores);
+  if (k === "money" || k === "paid-for") { const x = moneyExtra(q, stores, now); if (x) return x; }
   if (k === "money") {
     const trend = moneyTrend(q, stores.ledger || null, now);   // v6.38 (H3): "since Ramadan", "by month" → a chart
     if (trend) return trend;
@@ -250,7 +285,7 @@ export function loadStores(ls = typeof localStorage !== "undefined" ? localStora
   const mem = memKey ? j(memKey, []) : [];
   const rem = j("attune:reminders:v1", []);
   return { ledger: j("ledger.v3", null), life: j("attune:life:v1", { items: [] }), care: j("attune:care:v1", { members: [], meds: [], labs: [], taken: {} }), radar: j("attune:radar:v1", { items: [] }),
-    fit: j("attune:fit:v1", { days: {} }), reminders: Array.isArray(rem) ? rem : (rem && rem.items) || [], memory: Array.isArray(mem) ? mem : (mem && (mem.records || mem.items)) || [] };
+    fit: j("attune:fit:v1", { days: {} }), family: j("attune:family:v1", null), reminders: Array.isArray(rem) ? rem : (rem && rem.items) || [], memory: Array.isArray(mem) ? mem : (mem && (mem.records || mem.items)) || [] };
 }
 
 /** Example questions for the page (each answered from a different tool). */

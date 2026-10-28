@@ -12,6 +12,7 @@
    Tests: tests/unit/v727guardian.test.mjs.                                                                              */
 import { progressOf } from "./life.js";
 import { homeCurrency } from "./locale.js";
+import { billsOf, billLine } from "./bills.js";
 
 const DAY = 86400000;
 const iso = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
@@ -101,7 +102,16 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
       add({ id: "due:" + (r.id || r.note) + ":" + r.nextDate, kind: "due", amount: Number(r.amount) || 0, title: `${r.note || "A bill"} due ${r.nextDate === iso(now) ? "today" : r.nextDate}`, detail: "Pay it before the late fee", action: "pay",
         T: r.nextDate === iso(now) ? ["{b} due today", { b: r.note || "A bill" }] : ["{b} due {d}", { b: r.note || "A bill", d: r.nextDate }], D: ["Pay it before the late fee", {}] });
   }
-  const order = { late: 0, double: 1, due: 2, creep: 3, fees: 4, subs: 5 };
+  // v8.7 bills autopilot: a home bill much higher than usual, or one that hasn't come this month (bills.js)
+  for (const b of billsOf(ledger, now)) {
+    if (b.status !== "high" && b.status !== "late") continue;
+    const mo = iso(now).slice(0, 7), what = billLine(b, "en", cur), whatAr = billLine(b, "ar", cur);
+    add({ id: "bill:" + b.kind + ":" + b.status + ":" + mo, kind: "bill", amount: b.status === "high" ? b.thisMonth - b.usual : 0,   // (a bill not come yet is not money at stake)
+      title: what.split(" — ")[0], detail: what.split(" — ")[1] || "", ar: whatAr, bill: b, action: "review",
+      T: b.status === "high" ? ["{b} is {n}% higher than usual", { b: b.label, n: b.pct }] : ["{b} hasn't come this month", { b: b.label }],
+      D: b.status === "high" ? ["{a} vs {u} usually — check the meter reading", { a: money(b.thisMonth), u: `${money(b.usual)} ${cur}` }] : ["It usually comes around day {d} — about {u}", { d: b.usualDay, u: `${money(b.usual)} ${cur}` }] });
+  }
+  const order = { late: 0, double: 1, due: 2, bill: 2.5, creep: 3, fees: 4, subs: 5 };
   return out.sort((a, b) => order[a.kind] - order[b.kind] || b.amount - a.amount);
 }
 /** v7.9: "Logged twice — remove one": the ledger without that payment (Money is not open on the Guardian page, so its saved
@@ -146,6 +156,23 @@ export function savedTotals(g, now = Date.now()) {
     } else { all += s.amount; if (iso(s.at).slice(0, 7) === mo) month += s.amount; }
   }
   return { month: Math.round(month), all: Math.round(all) };
+}
+/** v8.7 (persona 4, idea 2 "Attune Saves"): an agent bought or found something cheaper than the first price it saw — the difference
+    counts as saved. */
+export function agentSaved(g, agent, price, now = Date.now()) {
+  const first = ((agent && agent.checks) || []).find((c) => c.price > 0), id = "agent:" + (agent && agent.id);
+  if (!first || !(price > 0) || first.price - price < 1 || g.saved.some((x) => x.id === id)) return g;
+  return { ...g, saved: [...g.saved, { id, kind: "agent", amount: Math.round(first.price - price), at: now, what: agent.title || agent.what || "Agent" }] };
+}
+/** What was saved in a month (YYYY-MM), by kind: { total, parts: [{kind, amount, n}] } — for "Attune saved you …". */
+export function savedIn(g, month) {
+  const by = {};
+  for (const s of (g && g.saved) || []) {
+    const inM = s.kind === "subs" || s.kind === "creep" ? iso(s.at).slice(0, 7) <= month : iso(s.at).slice(0, 7) === month;
+    if (!inM) continue; (by[s.kind] = by[s.kind] || { kind: s.kind, amount: 0, n: 0 }); by[s.kind].amount += s.amount; by[s.kind].n++;
+  }
+  const parts = Object.values(by).map((x) => ({ ...x, amount: Math.round(x.amount) })).sort((a, b) => b.amount - a.amount);
+  return { total: parts.reduce((a, x) => a + x.amount, 0), parts };
 }
 /** "Collected": a late payment that came back after a reminder counts as saved — called when People & plans ticks it. */
 export function collected(g, commitmentId, i, amount, now = Date.now()) {

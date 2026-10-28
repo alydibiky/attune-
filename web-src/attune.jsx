@@ -69,6 +69,8 @@ import { sheetCats as moneyCats } from "./money-pages.js";   // v7.6 Money's bot
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { categorise } from "./paylog.js";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
+import { FamilyPage } from "./family-ui.jsx";
+import { guess as guessRoute } from "./homeroute.js";   // v8.7 the Home router, shadow mode: recorded, not acted on yet   // v8.7 (persona 4, idea 13)
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels, myCountry, bookingLine } from "./agent-ui.jsx";
 import { CoachPage } from "./coach-ui.jsx";
@@ -116,6 +118,9 @@ import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTel
 import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan, goldGram } from "./scout.js";
 import { understand as doUnderstand, apply as doApply } from "./doit.js";
 import { PLAY_BUILD, NOT_IN_PLAY } from "./buildflags.js";
+import { morningReminder } from "./morning.js";
+import { photoKind, KIND_SAY } from "./smartcam.js";
+import { readDeadlines, addDeadline, loadRadar, saveRadar } from "./deadlines.js";
 import { loadStores as loadLifeStores } from "./lifeask.js";
 import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll, studioPaused } from "./device.js";
 import { TravelPage } from "./travel-ui.jsx";
@@ -7710,7 +7715,7 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["privacy", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const OWN_TITLE = new Set(["privacy", "family", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
 const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
@@ -7734,6 +7739,7 @@ const MORE_TOOLS = [
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
   ["agents", "Agents", "Watch a price, track a delivery, order your usual, open any app", Radar],   // v8.0 (Ali picked A)
   ["radar", "Deadline Radar", "Free trials, renewals, returns, warranties and documents — a warning before each one", Radar],   // v6.27
+  ["family", "Family", "One shopping list, who paid what for the house, reminders for the parents — shared with your family's phones", Users],   // v8.7
   ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
   ["fit", "Fit & Food", "Calories from a sentence or a photo, 50+ recipes, workouts", Apple],
@@ -7803,7 +7809,7 @@ K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[lab
 // v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader stays (Ali, 13 Oct),
 // in Files — it saves a file to the phone.
 const MORE_GROUPS = [
-  ["Money & people", ["agents", "scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
+  ["Money & people", ["agents", "scout", "guardian", "radar", "life", "family", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
   ["Mind & learning", ["coach", "learn", "booklib", "memory", "remember", "shelf", "news"]],
   ["Chat", ["assistants", "skills", "projects", "artifacts", "xray"]],
@@ -7918,6 +7924,22 @@ export default function App() {
     }
     return res;
   };
+  // v8.7 (persona 4, idea 1): the morning card — tomorrow 8:00, written by code from what is on the phone now; written again each
+  // time the app opens or goes to the background (the same id replaces it). Not in the reminders list (it is not a to-do).
+  // Off with localStorage "attune:morning-card" = "off".
+  useEffect(() => {
+    const plan = () => {
+      try {
+        if (!NATIVE || !NATIVE.schedule || localStorage.getItem("attune:morning-card") === "off") return;
+        const g = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
+        const r = morningReminder({ ledger: g("ledger.v3", null), life: g("attune:life:v1", { items: [] }), radar: g("attune:radar:v1", { items: [] }), fit: g("attune:fit:v1", null), agents: loadAgents(), reminders: loadReminders(), vitals: g("attune:vitals:v1", null) }, Date.now(), getLang() === "ar" ? "ar" : "en");
+        if (r) NATIVE.schedule(JSON.stringify({ id: r.id, at: r.at, title: r.title, body: r.body, repeat: "none" }));
+        else if (NATIVE.unschedule) NATIVE.unschedule("daily-morning");
+      } catch (e) {}
+    };
+    plan(); const on = () => { if (document.visibilityState === "hidden") plan(); };
+    document.addEventListener("visibilitychange", on); return () => document.removeEventListener("visibilitychange", on);
+  }, []);
   // A confirmed promise with a date becomes a notification: 9:00 on the day
   // it is due (or in an hour, if it is due today and 9:00 has passed).
   const remindForPromise = (c, force) => {
@@ -8008,7 +8030,7 @@ export default function App() {
   });
   // (and the day-5 notification: "2 days of Pro left — see what you used it for", Ali picked persona 3's point 6)
   const startTrial = () => { try { if (localStorage.getItem(FIRST_RUN_KEY)) return; const t0 = Date.now(); localStorage.setItem(FIRST_RUN_KEY, String(t0));
-    if (!isPro(tier) && !testingPro()) { const d5 = new Date(t0 + 5 * 86400000); d5.setHours(10, 0, 0, 0); scheduleReminder({ id: "trial-day5", at: d5.getTime(), repeat: "none", title: tr("2 days of Pro left"), body: tr("See what you used it for — and keep it if it helps."), created: t0, source: "trial" }); } } catch (e) {} };
+    if (!isPro(tier) && !testingPro()) { const d5 = new Date(t0 + 5 * 86400000); d5.setHours(10, 0, 0, 0); if (NATIVE && NATIVE.schedule) NATIVE.schedule(JSON.stringify({ id: "trial-day5", at: d5.getTime(), repeat: "none", title: tr("2 days of Pro left"), body: tr("See what you used it for — and keep it if it helps.") })); } } catch (e) {} };   // (a phone notification only — not a to-do in Reminders)
   // v5.32: TESTING_ALL_PRO (billing.js) unlocks everything while Ali tests; the trial
   // now really unlocks every Pro feature (before, most gates checked the paid plan only)
   const proActive = testingPro() || isPro(tier) || trialLeft > 0;
@@ -8240,6 +8262,20 @@ export default function App() {
       const q = new URLSearchParams(window.location.search);
       const shared = q.get("share") || q.get("text") || q.get("title");
       if (!shared || !shared.trim()) return;
+      // v8.7 (persona 4, idea 10 — Ali: "do all"): text shared from another app that the Home reader understands ("Ahmed owes me 500",
+      // "remind me tomorrow at 9…", "lunch 150, taxi 60") opens on Home as ONE line with Yes — instead of landing in notes
+      if (d.kind !== "chatnote" && !d.asNote && shared.length <= 300) {
+        let u = null; try { u = doUnderstand(shared, { now: Date.now(), stores: loadLifeStores() }); } catch (e) {}
+        if (u && !u.ask && u.actions && u.actions.length) {
+          const ar = /[\u0600-\u06FF]/.test(shared) || getLang() === "ar";
+          const what = { money: ["Add to Money", "أضيفه للفلوس"], life: ["Save in People & plans", "احفظه في الناس والالتزامات"], reminder: ["Set a reminder", "اظبط تذكير"], food: ["Log it in Fit & Food", "سجّله في الأكل واللياقة"],
+            deadline: ["Watch this date", "راقب الميعاد ده"], water: ["Log the water", "سجّل المية"], workout: ["Log the workout", "سجّل التمرين"], pot: ["Start this savings goal", "ابدأ هدف التحويش ده"], bp: ["Save the blood pressure", "احفظ الضغط"], sleep: ["Save the sleep", "احفظ النوم"] };
+          const k = u.actions[0].kind, w = what[k] || ["Do it", "نفّذها"];
+          navTo("home");
+          setTimeout(() => { try { window.dispatchEvent(new CustomEvent("attune-home-shared", { detail: { text: shared, q: { en: `${w[0]}? «${shared.slice(0, 120)}»`, ar: `${w[1]}؟ «${shared.slice(0, 120)}»` } } })); } catch (e) {} }, 250);
+          return;
+        }
+      }
       const r = memMake({ kind: "note", title: shared.slice(0, 60), text: shared, output: "", tags: ["shared"] });
       setMemory((m) => (m.some((x) => x.id === r.id) ? m : memPrune([r, ...m], MEM_MAX).records));
       setMode("memory"); setShareIn({ text: shared, id: r.id });
@@ -8477,6 +8513,14 @@ export default function App() {
     return () => clearTimeout(t);
   }, [engineInfo && engineInfo.state, engineInfo && engineInfo.modelId]);
   const [installedModels, setInstalledModels] = useState(() => ((nativeJSON("models") || {}).models || []));
+  // v8.7 (persona 4, idea 8): the model wakes when the person is about to ask — Chat, Translate or the voice screen opens — instead
+  // of on the first message (the load is several seconds the person no longer waits for). Only an installed, asleep model.
+  const wakeFor = useRef(0);
+  const wakeModel = () => {
+    if (!NATIVE || modelState === "ready" || modelState === "starting" || modelState === "downloading" || Date.now() - wakeFor.current < 60000) return;
+    const m = (installedModels || []).find((x) => x.active) || null; if (!m) return;
+    wakeFor.current = Date.now(); useInstalled(m.id).catch(() => {});
+  };
   // A model is "usable" when it is running OR installed and asleep: the engine wakes it by itself the
   // moment a tool sends a request (LocalEngine.waitReady), so no tool should send the user to Engine.
   const modelUsable = modelState === "ready" || (NATIVE && ((engineInfo && engineInfo.state === "ready") || (installedModels || []).length > 0));
@@ -8632,6 +8676,11 @@ export default function App() {
       if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }
       if (d.kind === "reminder" && /^daily-fit-/.test(d.id || "")) { navTo("fit"); return; }
+      if (d.kind === "reminder" && d.id === "daily-morning") { navTo("home"); return; }   // v8.7 the morning card
+      if (d.kind === "reminder" && d.id === "trial-day5") { setShowUpgrade(true); return; }   // v8.7 the day-5 trial note
+      // v8.7 (persona 4, idea 11): the box widget — Home with the box ready to type, or the voice screen
+      if (d.kind === "reminder" && d.id === "box-widget-voice") { setVoiceOpen(true); return; }
+      if (d.kind === "reminder" && d.id === "box-widget") { navTo("home"); setTimeout(() => { try { const b = document.querySelector("[data-testid=home-ask]"); if (b) b.focus(); } catch (e) {} }, 350); return; }
       if (d.kind === "reminder" && /^med-/.test(d.id || "")) { navTo("care"); return; }      // v6.27 a medicine reminder → Family health
       if (d.kind === "reminder" && /^missions-/.test(d.id || "")) { navTo("missions"); return; }   // v6.37 the morning debrief
       if (d.kind === "reminder" && /^radar-/.test(d.id || "")) { navTo("radar"); return; }  // v6.27 a deadline → the Radar   // v6.14: the Fit widget and Fit reminders
@@ -8771,6 +8820,7 @@ export default function App() {
   const [scoutIn, setScoutIn] = useState(null);   // v6.28: a goal typed on Home → Scout starts it
   // Voice (VOICE_PLAN.md, design A): "Ya Attune" — opened from the Home box's orb, "/voice", or an "attune-voice" event
   const [voiceOpen, setVoiceOpen] = useState(false);
+  useEffect(() => { if (mode === "chat" || mode === "translate" || voiceOpen) wakeModel(); }, [mode, voiceOpen]);   // v8.7 idea 8
   const [voiceText, setVoiceText] = useState("");     // words the quiet orb heard (the voice screen starts with them)
   const [quietWake, setQuietWake] = useState(false);
   useEffect(() => { const on = () => setVoiceOpen(true); window.addEventListener("attune-voice", on); return () => window.removeEventListener("attune-voice", on); }, []);
@@ -9783,7 +9833,9 @@ export default function App() {
     if (looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : "Scout is on it", open: "scout" }], undo: null }; }
     const u = doUnderstand(text, { now, stores: loadLifeStores() });
     if (u.ask) return { answer: u.ask, ar };
-    if (!u.actions.length) return null;
+    // v8.7 (persona 4, idea 6 — code first): what the code couldn't read is kept ON THE PHONE (the last 100, never sent), so Ali can
+    // copy it from Engine → Details and each one becomes a new reader instead of a 2–10 s wait for the model
+    if (!u.actions.length) { try { const k = "attune:fell-to-model", l = JSON.parse(localStorage.getItem(k) || "[]"); localStorage.setItem(k, JSON.stringify([...l.filter((x) => x.t !== text), { t: String(text).slice(0, 200), at: now, g: guessRoute(text) }].slice(-100))); } catch (e) {} return null; }
     const before = {}, extra = [], lines = [];
     startTrial();   // the first thing logged starts the 7-day trial
     for (const a of u.actions) {
@@ -9945,7 +9997,31 @@ export default function App() {
       } catch (e) { flash(String((e && e.message) || e)); }
     },
     copy: (t) => { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} },
+    smartPhoto: (f) => smartPhotoRef.current && smartPhotoRef.current(f),   // v8.7 idea 9
   }), [jobs, CPACKS, airGap]);
+  // v8.7 (persona 4, idea 9): one camera that knows what it sees — the text is read on the phone, code decides (smartcam.js)
+  const smartPhotoRef = useRef(null);
+  smartPhotoRef.current = async (file) => {
+    const ar = getLang() === "ar";
+    try {
+      const dataUrl = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = bad; r.readAsDataURL(file); });
+      const b64 = dataUrl.split(",")[1];
+      let ocr = {}, codes = [];
+      if (NATIVE && NATIVE.readText) { try { ocr = await nativeCall("readText", JSON.stringify({ b64 })); } catch (e) {} }
+      if (NATIVE && NATIVE.scanBarcode) { try { const r = await nativeCall("scanBarcode", JSON.stringify({ b64 })); codes = (r && r.codes) || []; } catch (e) {} }
+      const k = photoKind(ocr, codes, ar ? "ar" : "en").kind, say = KIND_SAY[k][ar ? 1 : 0];
+      showToast(say, 2500);
+      const photo = { data: b64, media: file.type || "image/jpeg", url: dataUrl };
+      if (k === "plate" || k === "barcode") { setFitIn({ file, barcode: k === "barcode" }); navTo("fit"); return; }
+      if (k === "bill") {
+        const dl = readDeadlines(String(ocr.text || ""), { now: Date.now() }).filter((d) => d.date >= new Date().toISOString().slice(0, 10))[0];
+        if (dl) { const r = addDeadline(loadRadar(), { ...dl, source: "camera" }, Date.now()); saveRadar(r.data); navTo("timeline"); return; }
+      }
+      const ask = { receipt: ar ? "ضيف الإيصال ده للفلوس" : "Add this receipt to Money", bill: ar ? "الفاتورة دي بكام وميعادها امتى؟ فكرني بيها" : "How much is this bill and when is it due? Remind me",
+        document: ar ? "إيه المستند ده؟ لخصهولي" : "What is this document? Sum it up", sign: ar ? "ترجم الكلام اللي في الصورة للعربي" : "Translate the text in this photo to English" }[k];
+      setChatSeed("\u0005" + JSON.stringify({ photo, text: ask, send: true })); navTo("chat");
+    } catch (e) { flash(tr("Couldn't open that picture")); }
+  };
   // v6.48: the same memory actions in the Chat page — to-dos, where things are, find, a note, a "/" job — as an answer card.
   // Only what Mind does by code; everything else (and anything that needs a choice) stays Chat's. → card | null
   cmdLocalRef.current = (text) => cmdLocal(text);
@@ -10746,7 +10822,7 @@ export default function App() {
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
             openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
         ) : mode === "health" ? (
-          <HealthPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} cycleOn={cycleOn} doIt={doFromHome}
+          <HealthPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} cycleOn={cycleOn} doIt={doFromHome}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }}
             listen={NATIVE && NATIVE.listen ? async (langTag) => { const r = await nativeCall("listen", langTag || "", () => {}); return r && r.text; } : null} />
         ) : mode === "scout" ? (
@@ -10794,6 +10870,8 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" })}
             unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
+        ) : mode === "family" ? (
+          <FamilyPage flash={flash} cur={(() => { try { return homeCurrency(JSON.parse(localStorage.getItem("ledger.v3") || "null")); } catch (e) { return ""; } })()} remind={scheduleReminder} />
         ) : mode === "guardian" ? (
           <GuardianPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} remind={scheduleReminder} unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
         ) : mode === "life" ? (
@@ -12277,6 +12355,8 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
           {e.modelId ? <MenuItem testid="engine-restart" onClick={async () => { try { await nativeCall("restart", ""); flash(tr("Engine restarted")); } catch (err) { flash(String(err.message || err)); } }}>{tr("Restart engine")}</MenuItem> : null}
           <MenuItem testid="engine-show-log" onClick={() => { let t = ""; try { t = NATIVE.log(); } catch (err) {} setLog(log === null ? (t || "The log is empty.") : null); }}>{log === null ? tr("Engine log") : tr("Hide log")}</MenuItem>
           <MenuItem testid="engine-details" onClick={() => setDetails(!details)}>{details ? tr("Hide details") : tr("Details")}</MenuItem>
+          <MenuItem testid="engine-fell" onClick={async () => { let l = []; try { l = JSON.parse(localStorage.getItem("attune:fell-to-model") || "[]"); } catch (e) {} const t = l.map((x) => x.t + (x.g ? `  → router: ${x.g.kind} ${Math.round(x.g.p * 100)}%` : "")).join("\n");
+            try { await navigator.clipboard.writeText(t); flash(tr("Copied {n} sentences Home didn't read by itself", { n: l.length })); } catch (e) { flash(tr("Nothing to copy")); } }}>{tr("Copy what Home didn't understand")}</MenuItem>
         </Pop> : null}
       </div>
       {e.error ? <p className="text-[12px] text-amber-300 px-1 leading-snug">{e.error}</p> : null}

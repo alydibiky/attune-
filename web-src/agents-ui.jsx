@@ -2,6 +2,7 @@
    agent as one calm card (what it watches, the last check, what it found) — Scout and Message alerts among them — and
    "See all → Agents report". Any app opens by its name ("open Uber", «افتح طلبات»). Agents never sign in, book or pay: a price
    is read, an order is copied into the app, a delivery is read from the store app's own notification. Logic: agents.js. */
+import * as G from "./guardian.js";
 import { noteProUse } from "./trialuse.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCrossed, Car, LayoutGrid as AppWindow, BellRing, Trash2, RefreshCw, ExternalLink, ChevronRight, ArrowLeft, AlertTriangle, Check } from "lucide-react";
@@ -97,7 +98,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
           if (r && r.reason === "closed") break;   // the person closed the browser: stop the round
         }
         const next0 = A.addCheck(a, { price: best && best.price, how: "browser", ...(best && best.checkin ? { checkin: best.checkin, checkout: best.checkout } : {}) });
-        const next = seen.length ? { ...next0, best3: A.bestThree(seen, a.skip), compared } : compared ? { ...next0, compared } : next0;
+        const next = seen.length ? { ...next0, best3: A.bestThree(seen, a.skip, a.taste), compared } : compared ? { ...next0, compared } : next0;
         put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? next : x)) });
         flash && flash(best ? (best.checkin ? T("Cheapest now: {p} ({d})", { p: money(best.price, a.currency), d: best.checkin + " → " + best.checkout }) : T("Cheapest now: {p}", { p: money(best.price, a.currency) })) : tr("No prices on that page — search on the site, then tap Best offer"));
       } catch (e) { flash && flash(String((e && e.message) || e)); }
@@ -141,14 +142,18 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
     }
     try { window.open(p.href || p.url, "_blank"); } catch (e) {}
   };
-  const notThis = (a) => { const k = String(a.pending.href || a.pending.name || "").slice(0, 120); upd(a.id, (y) => ({ ...y, skip: [...(y.skip || []), k], pending: null, step: "search" })); };
-  const markDone = (a) => upd(a.id, (y) => ({ ...y, step: "ordered", on: false }));
+  // v8.7 (persona 4, idea 3): each "Not this one" is remembered with what it was; two alike → the agent learns it and says so once
+  const learn = (y, o) => { const skipped = [...(y.skipped || []), { name: o.name, text: o.text, site: o.site, rating: o.rating }].slice(-10), taste = A.learnTaste(skipped);
+    const news = A.tasteNews(y.taste || {}, taste); if (news.length) setTimeout(() => flash && flash(tr(news[0][0], news[0][1])), 50); return { skipped, taste }; };
+  const notThis = (a) => { const k = String(a.pending.href || a.pending.name || "").slice(0, 120); upd(a.id, (y) => ({ ...y, ...learn(y, a.pending), skip: [...(y.skip || []), k], pending: null, step: "search" })); };
+  // v8.7 (idea 2 "Attune Saves"): ordered below the first price seen → the difference is counted as saved (Guardian's log)
+  const markDone = (a) => { try { if (a.pending && a.pending.price > 0) G.saveGuardian(G.agentSaved(G.loadGuardian(), a, a.pending.price)); } catch (e) {} upd(a.id, (y) => ({ ...y, step: "ordered", on: false })); };
   // v8.2 (2A): one of the best 3 — opens in Attune's browser on those days, ready for "Fill my details" (you choose and pay)
   const openBest = async (a, o) => {
     if (N && N.agentOpen && nativeCall) { try { await nativeCall("agentOpen", { url: o.url || a.url, title: o.name || a.title, profile: loadBooking(), rules: { cheapest: true }, labels: agentLabels(), search: true }); } catch (e) {} return; }
     try { window.open(o.url || a.url, "_blank"); } catch (e) {}
   };
-  const skipBest = (a, o) => put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, skip: [...(x.skip || []), o.key], best3: (x.best3 || []).filter((y) => y.key !== o.key) } : x)) });
+  const skipBest = (a, o) => put({ ...st, agents: st.agents.map((x) => { if (x.id !== a.id) return x; const l = learn(x, o); return { ...x, ...l, skip: [...(x.skip || []), o.key], best3: (x.best3 || []).filter((y) => y.key !== o.key && A.fitsTaste(y, l.taste)) }; }) });
   const remove = (a) => put({ ...st, agents: st.agents.filter((x) => x.id !== a.id) });
   const toggle = (a) => put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, on: !x.on } : x)) });
 
@@ -259,6 +264,8 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
         {a.found ? <span className={U.tag("amber") + " mt-1.5"} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}</span>
           : <span className={U.tag("blue") + " mt-1.5"}>{a.on ? tr("Watching · twice a day") : tr("Paused")}</span>}
         {w.last && w.gap > 0 ? <span className="block text-[11.5px] c-sub mt-1">{T("{p} above your limit", { p: money(w.gap, a.currency) })}</span> : null}
+        {/* v8.7 (persona 4, idea 4): its price over time, the lowest seen, and the cheapest weekday once there are 2 weeks of checks */}
+        <PriceLine a={a} />
         {/* v8.2 (Ali picked 2A): its plan, step by step */}
         <div className="mt-2 space-y-0.5" data-testid="agent-plan">{A.planSteps(a).map((p, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={p.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{p.done ? "✓" : "⏳"}</span><span className={p.done ? "" : "c-sub"}>{T(p.en, p.v)}</span></p>)}</div>
       </div></div>
@@ -312,3 +319,19 @@ function AgentsReport({ st, scout, alerts, back }) {
     </div>)}
   </div>;
 }
+
+const WD = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], WD_AR = ["الحد", "الاتنين", "التلات", "الأربع", "الخميس", "الجمعة", "السبت"];
+function PriceLine({ a }) {
+  const h = A.priceHistory(a); if (!h) return null;
+  const W = 220, H = 40, xs = h.points.map((p) => p.at), ys = h.points.map((p) => p.price), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const X = (v) => (x1 === x0 ? W / 2 : ((v - x0) / (x1 - x0)) * (W - 8) + 4), Y = (v) => (y1 === y0 ? H / 2 : H - 4 - ((v - y0) / (y1 - y0)) * (H - 8));
+  const ar = getLang() === "ar";
+  return <div className="mt-2" data-testid="agent-history">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tr("Price over time")}><polyline points={h.points.map((p) => `${X(p.at)},${Y(p.price)}`).join(" ")} fill="none" stroke="var(--c-acc)" strokeWidth="2" />
+      <circle cx={X(h.low.at)} cy={Y(h.low.price)} r="3.5" fill="var(--c-pos, #1E7A43)" /></svg>
+    <p className="m-0 text-[12px] c-sub">{tr("Lowest {p} on {d}", { p: money(h.low.price, a.currency), d: new Date(h.low.at).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }) })}
+      {" · "}{h.trend === "down" ? tr("going down ({c}%)", { c: h.change }) : h.trend === "up" ? tr("going up (+{c}%)", { c: h.change }) : tr("about the same")}
+      {h.lowDay != null ? " · " + tr("usually cheapest on {d}", { d: (ar ? WD_AR : WD)[h.lowDay] }) : ""}</p>
+  </div>;
+}
+

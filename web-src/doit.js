@@ -12,6 +12,9 @@
 import { readMealText } from "./fitread.js";
 import { readLocal, CAT_WORDS, fixTypos } from "./yusr/logtext.js";
 import { potIntent, addPot, loadPots, planMonth, POTS_KEY } from "./planner.js";
+import { morningCard } from "./morning.js";
+import { billsIntent, billsAnswer } from "./bills.js";
+import { familyIntent, addItems as famItems, addExpense as famExpense, balances as famBalances, listNow as famList, FAMILY_KEY } from "./family.js";
 import { quickAction, looksLikeAction } from "./actions.js";
 import { chatLifeIntent, addCommitment, scheduleOf, payAmount, togglePaid, progressOf } from "./life.js";
 import { chatDeadlineIntent, addDeadline } from "./deadlines.js";
@@ -91,6 +94,30 @@ const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتر
 export function understand(text, { now = Date.now(), stores = {} } = {}) {
   const t = fixTypos(String(text || "").trim());   // persona 1: "spnt 200 on lunh"
   if (!t) return { actions: [] };
+  // v8.7 (persona 4, idea 12 — voice in the car and the kitchen): "what's left today?", «إيه اللي فاضل النهارده؟» → the day in a few
+  // lines, by code (the morning card's reader), ready to be read out
+  // v8.7 the family space (family.js): "add milk to the family list", "I paid 450 for the family groceries", "who owes whom?"
+  { const fi = familyIntent(t); if (fi) {
+    const fam = stores.family || null;
+    if (fi.kind === "show") {
+      if (!fam || !fam.me) return { actions: [], ask: { kind: "family", en: "No family space yet — open Family to start one.", ar: "لسه مفيش مساحة للعيلة — افتح «العيلة» وابدأ." } };
+      const { moves } = famBalances(fam), items = famList(fam).filter((x) => !x.done).map((x) => x.what);
+      const en = [items.length ? `List: ${items.join(", ")}` : "The list is empty", moves.length ? moves.map((m) => `${m.fromName} owes ${m.toName} ${num(m.amount)}`).join("; ") : "Nobody owes anybody"];
+      const ar = [items.length ? `القايمة: ${items.join("، ")}` : "القايمة فاضية", moves.length ? moves.map((m) => `${m.fromName} عليه لـ${m.toName} ${num(m.amount)}`).join("؛ ") : "محدش عليه حاجة لحد"];
+      return { actions: [], ask: { kind: "family", en: en.join(". ") + ".", ar: ar.join(". ") + "." } };
+    }
+    return { actions: [{ kind: "family", fam: fi }] };
+  } }
+  // v8.7 bills autopilot: "my bills" / «فواتيري» — when each home bill comes and how much, learned by code from Money
+  if (billsIntent(t)) { const cur = homeCurrency(stores.ledger); return { actions: [], ask: { kind: "bills", en: billsAnswer(stores.ledger, now, "en", cur), ar: billsAnswer(stores.ledger, now, "ar", cur) } }; }
+  if (/\b(what'?s left (for )?today|what is left today|how'?s my day|how is my day|my day today|what do i have today|what'?s on today)\b|(?:ايه|إيه)\s+(?:اللي\s+)?(?:فاضل|ورايا|عندي)\s+(?:النهارده|انهارده)|يومي\s+(?:عامل|شكله)\s+(?:ايه|إيه)/i.test(t)) {
+    const c = morningCard({ ledger: stores.ledger, life: stores.life, radar: stores.radar, fit: stores.fit, reminders: stores.reminders }, now, "en"), ca = morningCard({ ledger: stores.ledger, life: stores.life, radar: stores.radar, fit: stores.fit, reminders: stores.reminders }, now, "ar");
+    const en = c.lines.filter((l) => !/^Yesterday/.test(l)), ar = ca.lines.filter((l) => !/^امبارح/.test(l));
+    { const fd = stores.fit && stores.fit.days && stores.fit.days[isoDay(now)], goal = stores.fit && (stores.fit.goal || (stores.fit.profile && stores.fit.profile.kcal));
+      if (fd && goal) { const k = Math.round(Object.values(fd.meals || {}).flat().reduce((a, x) => a + (+(x && x.kcal) || 0), 0)), left = Math.max(0, Math.round(goal - k));
+        en.push(`${num(k)} of ${num(goal)} kcal eaten — ${num(left)} left`); ar.push(`أكلت ${num(k)} من ${num(goal)} سعرة — فاضل ${num(left)}`); } }
+    return { actions: [], ask: { kind: "today", en: en.length ? en.join(". ") + "." : "Nothing due today — a free day.", ar: ar.length ? ar.join(". ") + "." : "مفيش حاجة مستحقة النهارده — يوم فاضي.", open: "timeline", sources: ["life", "money"] } };
+  }
   // a question: about your own data → answered here; otherwise → Chat
   if (QUESTION.test(t) && !looksLikeAction(t)) {
     const a = chatAsk(t, stores, { now }) || (() => { const r = askLife(t, stores, { now }); return r && r.kind !== "search" ? r : null; })();
@@ -320,6 +347,13 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const fit = stores.fit || { days: {} }, day = isoDay(now), d0 = (fit.days || {})[day] || EMPTY_DAY;
       const nd = { ...fit, days: { ...(fit.days || {}), [day]: { ...d0, sleep: a.minutes } } }, h = Math.floor(a.minutes / 60), m = a.minutes % 60;
       return { stores: { "attune:fit:v1": nd }, open: "fit", done: { en: `Sleep saved: ${h} h${m ? ` ${m} min` : ""}.`, ar: `اتحفظ النوم: ${h} ساعة${m ? ` و${m} دقيقة` : ""}.` } };
+    }
+    case "family": {
+      const fam = stores.family && stores.family.me ? stores.family : null;
+      if (!fam) return { stores: {}, open: "family", done: { en: "Start the family space first (Family → your name) — then this goes on the shared list.", ar: "ابدأ مساحة العيلة الأول (العيلة ← اسمك) — وبعدها ده يروح على القايمة المشتركة." } };
+      if (a.fam.kind === "items") { const r = famItems(fam, a.fam.text, "", now); return { stores: { [FAMILY_KEY]: r.f }, open: "family", done: r.added.length ? { en: `On the family list: ${r.added.join(", ")}.`, ar: `اتضاف لقايمة البيت: ${r.added.join("، ")}.` } : { en: "Already on the family list.", ar: "موجود في قايمة البيت." } }; }
+      const n = famExpense(fam, { amount: a.fam.amount, what: a.fam.what }, now);
+      return { stores: { [FAMILY_KEY]: n }, open: "family", done: { en: `You paid ${num(a.fam.amount)} for the house${a.fam.what ? ` (${a.fam.what})` : ""} — shared by the family.`, ar: `دفعت ${num(a.fam.amount)} للبيت${a.fam.what ? ` (${a.fam.what})` : ""} — متقسمة على العيلة.` } };
     }
     case "pot": {
       const data = addPot(loadPots(), a.pot, now), p = data.pots[data.pots.length - 1];

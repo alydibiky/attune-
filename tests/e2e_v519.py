@@ -72,20 +72,18 @@ with sync_playwright() as p:
     rl = page.locator("[data-testid=research-log]").last.inner_text()
     check("Searched" in rl and "Lynk & Co 900 specifications" in rl and "Read 2 pages" in rl, "'How I researched' shows the searches and the pages read")
 
-    # v5.20 DEEP research, when asked for: every page into checked notes, then the report
-    NOTES = "- Lynk & Co 900 Pro: Power 598 hp; Torque 1,000 Nm; Price CNY 309,900\n- Lynk & Co 900 Ultra: Power 845 hp; Torque 1,200 Nm; Price CNY 369,900\n- Lynk & Co 900 Max: Price CNY 999,999"
-    page.evaluate("(n) => { const M = window.__mock; M.fakeQueue = ['Lynk & Co 900 specifications\\nLynk & Co 900 price China 2025', n, 'NONE', 'NONE', '**Two trims** [1]: Pro 598 hp, Ultra 845 hp.']; M.bodies = []; M.searchLog = []; }", NOTES)
+    # v5.20 DEEP research, when asked for — v8.7 (Ali: "search with agents, the AI does the work at the end"): below Pro/Master
+    # power, CODE reads each page and keeps its best passages; the model plans, checks and writes ONCE (no note per page)
+    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['Lynk & Co 900 specifications\\nLynk & Co 900 price China 2025', 'NONE', 'NONE', '**Two trims** [1]: Pro 598 hp, Ultra 845 hp.']; M.bodies = []; M.searchLog = []; }")
     send(page, "Deep research: Lynk & Co 900 all trims with hp, torque and price")
     page.wait_for_function("() => document.querySelectorAll(\"button[title='Regenerate']\").length >= 2", timeout=60000)
     bs = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2).map(x => String(x.messages[0].content).slice(0, 60))")
     check(any(b.startswith("You plan web research") for b in bs), "deep research is planned by the model first")
-    check(sum(1 for b in bs if b.startswith("You read ONE web page")) == 2, "each page is read on its own, into notes (%d pages)" % sum(1 for b in bs if b.startswith("You read ONE web page")))
-    check(any(b.startswith("You check research notes") for b in bs), "…then it checks what is still missing")
+    check(sum(1 for b in bs if b.startswith("You read ONE web page")) == 0, "v8.7: code reads the pages — no model call per page (%d)" % sum(1 for b in bs if b.startswith("You read ONE web page")))
     prompt = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2).pop().messages.slice(-1)[0].content")
     prompt = json.dumps(prompt) if not isinstance(prompt, str) else prompt
-    check("CNY 999,999" not in prompt, "a note with a number that isn't on the page is dropped")
+    check("845 hp" in prompt and "CNY 369,900" in prompt, "…the passages code kept reach the one writing pass")
     check("complete, expert research report" in prompt and "Where sources differ" in prompt, "the deep report: direct answer, sections, disagreements, gaps")
-    check(page.locator("text=read 2 pages one by one").count() >= 1, "the answer says it read the pages one by one")
     page.locator("button:has-text('Web')").first.click()
 
     # v5.31 — Web off, a question about prices: the answer offers a web search, one tap does it

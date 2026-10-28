@@ -3,7 +3,7 @@
    meals — tap one to add to it), Family health (the next dose, late doses, a medicine running out, the last blood sugar) and Cycle.
    FitToday is also the card on Home. Everything is read from each tool's own data by code. Tests: tests/e2e_v732health.py.     */
 import React, { useState } from "react";
-import { Apple, Heart, Droplet, Plus, ChevronRight, AlertTriangle, Pill, Check } from "lucide-react";
+import { Apple, Heart, Droplet, Plus, ChevronRight, AlertTriangle, Pill, Check, Watch } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as F from "./fit.js";
 import { targetsOf } from "./fithome.js";
@@ -14,6 +14,7 @@ import { HealthBox, HealthReport, HealthReportCta } from "./health-calm-ui.jsx";
 import { healthReport } from "./health-report.js";
 import { useSubBack } from "./backstack.js";
 import { sharePdf } from "./books-docs.jsx";
+import { loadVitals, saveVitals, mergeVitals, bpIntoCare, sleepIntoFit, vitalsWeek } from "./vitals.js";
 
 const MEAL = { breakfast: ["Breakfast", "الفطار"], lunch: ["Lunch", "الغداء"], dinner: ["Dinner", "العشاء"], snacks: ["Snacks", "سناكس"] };
 const readFit = () => { try { return JSON.parse(localStorage.getItem("attune:fit:v1") || "null"); } catch (e) { return null; } };
@@ -106,7 +107,48 @@ function CycleToday({ navTo, wide, onLog }) {
 }
 
 /** v7.3 Health in two levels (Gemini's "Area 2: Health"): the calm view first, its Health Report one tap away. */
-export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd }) {
+/** v8.7 (persona 4, idea 15): "From your watch" — what the watch already measures (blood pressure, SpO₂, sleep, resting heart
+ *  rate, HRV = stress, glucose, weight) comes in by itself through Health Connect; code says the week in a few lines and flags
+ *  only what is off against the person's own usual. BP goes into Family health and sleep into Fit, so nothing is typed twice. */
+export function WatchVitals({ native, nativeCall, onChange }) {
+  const [vit, setVit] = useState(() => loadVitals());
+  const [state, setState] = useState(null);   // {available, granted, of}
+  const ar = getLang() === "ar";
+  const can = !!(native && native.healthVitals && nativeCall);
+  const read = async () => {
+    if (!can) return;
+    try {
+      const r = await nativeCall("healthVitals", { days: 45 });
+      if (!r || r.error) return;
+      setState(r);
+      if (!r.days) return;
+      const v = saveVitals(mergeVitals(loadVitals(), r));
+      setVit(v);
+      // (only a real change refreshes the cards around it — the card itself sits inside them: a refresh every time looped)
+      let changed = false;
+      try { const c0 = loadCare(), c1 = bpIntoCare(c0, v); if (c1.labs.length !== (c0.labs || []).length) { saveCare(c1); changed = true; } } catch (e) {}
+      try { const f = readFit(); if (f) { const a = JSON.stringify(f), b = JSON.stringify(sleepIntoFit(f, v)); if (a !== b) { localStorage.setItem("attune:fit:v1", b); changed = true; } } } catch (e) {}
+      if (changed && onChange) onChange();
+    } catch (e) {}
+  };
+  React.useEffect(() => { read(); const on = () => read(); window.addEventListener("attune-health-permission", on); return () => window.removeEventListener("attune-health-permission", on); }, []);
+  const w = React.useMemo(() => vitalsWeek(vit), [vit]);
+  if (!can && !w.has) return null;
+  const none = state && state.available === "none";
+  if (none && !w.has) return null;
+  const col = { red: "text-[var(--c-neg)]", amber: "text-[var(--c-warn)]", ok: "" };
+  return (
+    <div className={cardPad} data-testid="watch-vitals">
+      <div className="flex items-center justify-between gap-2 mb-1.5"><b className="font-extrabold text-[14.5px] flex items-center gap-1.5"><Watch size={16} className="c-acc" />{tr("From your watch")}</b>
+        {state && state.granted > 0 ? <span className="text-[11.5px] c-sub font-semibold">{tr("{n} of {m} measures shared", { n: state.granted, m: state.of })}</span> : null}</div>
+      {w.has ? <ul className="m-0 p-0 list-none space-y-1">{w.lines.map((l, i) => <li key={i} className={"text-[13px] font-semibold leading-snug " + col[l.level]} dir="auto" data-testid="vital-line">{ar ? l.ar : l.en}</li>)}</ul>
+        : <p className="m-0 text-[13px] c-sub">{tr("Blood pressure, oxygen, sleep, resting heart rate and stress come in by themselves from your watch — nothing to type.")}</p>}
+      {can && (!state || !state.granted || state.granted < state.of) ? <button className="mt-2 min-h-[44px] text-[13px] font-bold text-[var(--c-acc)] underline" onClick={() => { try { native.healthVitalsConnect(); } catch (e) {} }} data-testid="watch-vitals-connect">
+        {state && state.granted ? tr("Share more from the watch") : tr("Connect the watch")}</button> : null}
+    </div>);
+}
+
+export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd, native, nativeCall }) {
   const [rep, setRep] = useState(false);
   const [tick, setTick] = useState(0);
   useSubBack(rep, () => setRep(false));
@@ -129,7 +171,7 @@ export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd }) 
   const report = React.useMemo(() => {
     if (!rep) return null;
     const j = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
-    return healthReport({ fit: j("attune:fit:v1"), care: loadCare(), cycle: cycleLoad(), cycleStats });
+    return { ...healthReport({ fit: j("attune:fit:v1"), care: loadCare(), cycle: cycleLoad(), cycleStats }), vitals: vitalsWeek(loadVitals()) };
   }, [rep, tick]);
   const range = (() => { const f = (d) => d.toLocaleDateString(ar ? "ar-EG" : undefined, { day: "numeric", month: "short" }); const a = new Date(); a.setDate(a.getDate() - 6); return f(a) + " – " + f(new Date()); })();
   const printPdf = () => {
@@ -142,6 +184,7 @@ export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd }) 
 ${w ? `<h3>${esc(tr("Weight trend"))}</h3><table>${w.points.map((p) => `<tr><td>${p.d}</td><td class="n">${p.kg} kg</td><td class="n">${p.avg} kg</td></tr>`).join("")}</table>` : ""}
 ${m.rows.length ? `<h3>${esc(tr("Family medicines & labs"))}</h3><table>${m.rows.map((r) => `<tr><td>${esc((r.member ? r.member.name + " · " : "") + r.med.name + " " + (r.med.dose || ""))}</td><td class="n">${r.taken}/${r.due}</td><td class="n">${r.pct == null ? "" : r.pct + "%"}</td></tr>`).join("")}</table>` : ""}
 ${report.lab ? `<h3>${esc(report.lab.test)}</h3><table>${report.lab.list.map((l) => `<tr><td>${esc(l.date)}</td><td class="n">${l.value} ${esc(l.unit || "")}</td></tr>`).join("")}</table>` : ""}
+${report.vitals && report.vitals.has ? `<h3>${esc(tr("From your watch"))}</h3>${report.vitals.lines.map((l) => `<p>${esc(ar ? l.ar : l.en)}</p>`).join("")}<table>${report.vitals.rows.map((r) => `<tr><td>${r.day}</td><td class="n">${esc(r.bp)}</td><td class="n">${r.spo2 ? r.spo2 + "%" : ""}</td><td class="n">${r.sleep}</td><td class="n">${r.restHr ? r.restHr + " bpm" : ""}</td><td class="n">${r.hrv ? r.hrv + " ms" : ""}</td></tr>`).join("")}</table>` : ""}
 <p>${esc(tr("Worked out on this phone from your own entries. Not medical advice."))}</p></body></html>`;
     sharePdf({ html, name: "attune-health-report", text: tr("Health Report") });
   };
@@ -159,7 +202,8 @@ ${report.lab ? `<h3>${esc(report.lab.test)}</h3><table>${report.lab.list.map((l)
       <HealthBox wide={wide} onSubmit={submit} onPhoto={openFitAdd || (() => navTo("fit"))} onVoice={voice} listening={listening} />
       <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4 lg:items-start" key={tick}>
         <FitToday openFit={() => navTo("fit")} />
-        <FamilyToday navTo={navTo} wide={wide} tick={tick} />
+        <div className="space-y-3 lg:space-y-4"><FamilyToday navTo={navTo} wide={wide} tick={tick} />
+          <WatchVitals native={native} nativeCall={nativeCall} onChange={() => setTick((n) => n + 1)} /></div>
         <div className="space-y-3 lg:space-y-4">
           {cycleOn || hasCycle ? <CycleToday navTo={navTo} wide={wide} onLog={async () => { await submit(ar ? "الدورة جات النهارده" : "period started today"); setTick((n) => n + 1); }} /> : null}
           <HealthReportCta onClick={() => setRep(true)} wide={wide} />

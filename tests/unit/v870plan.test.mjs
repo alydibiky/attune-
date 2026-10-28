@@ -33,3 +33,15 @@ t("money put into a pot counts for this month", () => {
   const p = P.planMonth({ ledger, life: { items: [] }, pots, now }).pots[0]; assert.equal(p.saved, 1000); assert.equal(p.onTrack, true);
 });
 console.log(`v870plan: ${n} checks passed`);
+const M = await import("../../web-src/morning.js");
+t("the morning card says what is due, safe to spend, yesterday's food and an agent's find", () => {
+  const day = Date.parse("2026-10-16T07:00:00");
+  const fit = { days: { "2026-10-15": { meals: { lunch: [{ name: "Koshari", kcal: 700, p: 20, c: 120, f: 10 }] } } }, goal: 2000 };
+  const c = M.morningCard({ ledger, life: { items: [] }, fit, agents: { agents: [{ on: true, title: "AirPods", found: { at: day - 3600e3, price: 8700 } }] } }, day, "en");
+  assert.ok(c.lines.some((l) => /^Safe to spend today/.test(l)), c.lines.join("|"));
+  assert.ok(c.lines.includes("Yesterday: 700 of 2,000 kcal")); assert.ok(c.lines.includes("Agent found AirPods: 8,700"));
+  const r = M.morningReminder({ ledger, fit }, Date.parse("2026-10-15T21:00:00"), "en");
+  assert.equal(new Date(r.at).getDate(), 16); assert.equal(new Date(r.at).getHours(), 8); assert.equal(r.id, "daily-morning");
+  assert.equal(M.morningReminder({}, Date.parse("2026-10-15T21:00:00")), null);
+});
+console.log(`v870plan (+ morning): ${n} checks passed`);

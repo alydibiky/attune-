@@ -63,6 +63,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   useEffect(() => { const on = (e) => { setBoxMode(takeBoxMode() || e.detail); setLife(null); }; window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
   const tr2 = boxMode === "translate";
   const [panel, setPanel] = useState(null);       // the outcome being shown (cmdrun.js)
+  // v8.7 (persona 4, idea 10): something shared from another app — one line, Yes does it, No keeps it as a note
+  useEffect(() => { const on = (e) => { const d = e.detail || {}; if (d.text) setPanel({ type: "shared", text: d.text, q: d.q }); };
+    window.addEventListener("attune-home-shared", on); return () => window.removeEventListener("attune-home-shared", on); }, []);
   const fileRef = React.useRef(null);
   const jobList = useJobs(cmd && cmd.jobs);
   const [trip, setTrip] = useState(() => (cmd && cmd.trip ? cmd.trip() : null));
@@ -201,6 +204,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} dir="auto" data-testid="home-ask"
           placeholder={tr("Ask or add anything…")} className="flex-1 min-w-0 bg-transparent focus:outline-none text-[15px]" style={{ color: "var(--c-ink)" }} />
         {/* v6.27 Read it to me: any paper read aloud, explained and acted on */}
+        {/* v8.7 (persona 4, idea 9): one camera that knows what it sees — receipt, plate, bill, page, sign, barcode */}
+        {cmd && cmd.smartPhoto ? <label aria-label={tr("Smart camera")} title={tr("Smart camera")} className="w-8 h-8 rounded-full grid place-items-center c-sub cursor-pointer" data-testid="home-smartcam"><ImageIcon size={17} />
+          <input type="file" accept="image/*" capture="environment" className="hidden" data-testid="home-smartcam-input" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) cmd.smartPhoto(f); }} /></label> : null}
         <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-8 h-8 rounded-full grid place-items-center c-sub" data-testid="home-read"><Camera size={17} /></button>
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>)}
@@ -208,6 +214,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {minimal && !rep && cmd ? <SlashMenu text={text} onPick={(c) => (c.group === "open" ? (setText(""), show({ type: "open", mode: c.app }, "")) : setText("/" + (getLang() === "ar" ? c.ar[0] : c.id) + " "))} /> : null}
       {minimal && !rep && cmd && panel ? (
         panel.type === "ask" ? <AskCard ask={panel} onPick={pickAsk} onClose={() => setPanel(null)} />
+        : panel.type === "shared" ? <ConfirmCard q={panel.q} onYes={() => { const t = panel.text; setPanel(null); doOld(t); }}
+            onNo={() => { const t = panel.text; setPanel({ type: "lines", lines: [{ en: "Kept as a note in Mind.", ar: "اتحفظت ملاحظة في «العقل»." }] }); try { window.dispatchEvent(new MessageEvent("attune-share", { data: { kind: "share", text: t, asNote: true } })); } catch (e) {} }} />
         : panel.type === "confirm" ? <ConfirmCard q={panel.q} onYes={() => show({ type: "whereSave", set: panel.set }, "")} onNo={() => setPanel({ type: "lines", lines: [{ en: `OK — still ${panel.was}.`, ar: `تمام — لسه ${panel.was}.` }] })} />
         : panel.type === "lines" ? <LinesCard lines={panel.lines} onOpen={(m) => { setPanel(null); openLine(m); }} onClose={() => setPanel(null)} />
         : panel.type === "todos" ? <TodoCard items={panel.items} onTick={(x) => cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} onOpen={() => { setPanel(null); navTo("memory"); }} onClose={() => setPanel(null)} />
@@ -335,7 +343,8 @@ function MonthCard() {
   const lines = useMemo(() => {
     if (n.getDate() > 3) return [];
     let fit = null; try { fit = JSON.parse(localStorage.getItem("attune:fit:v1") || "null"); } catch (e) {}
-    const L = loadLedger(); return reviewLines(monthReview({ ledger: L, life: loadLife(), fit }), getLang() === "ar" ? "ar" : "en", (L && L.currency) || "");
+    let guardian = null; try { guardian = JSON.parse(localStorage.getItem("attune:guardian:v1") || "null"); } catch (e) {}
+    const L = loadLedger(); return reviewLines(monthReview({ ledger: L, life: loadLife(), fit, guardian }), getLang() === "ar" ? "ar" : "en", (L && L.currency) || "");
   }, []);
   if (hidden || !lines.length) return null;
   return <div className="c-card space-y-1" data-testid="home-month-review">

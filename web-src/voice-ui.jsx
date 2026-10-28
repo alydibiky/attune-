@@ -97,8 +97,9 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
     if (r.action && r.action.kind === "pass") {
       // not a message: the Home box does it (money, reminders, Agents, apps) and its answer is spoken
       let line = "", talk = false;
-      try { const res = doIt ? await doIt(text) : null; line = res ? (res.answer || (res.lines || []).map((l) => l.text).join(" · ")) : ""; } catch (e) {}
       const ui = /[\u0600-\u06ff]/.test(text) ? "ar" : r.state.ui;
+      // (v8.7: an answer from your data is an {en, ar} — it was read out as nothing)
+      try { const res = doIt ? await doIt(text) : null; line = res ? (res.answer ? (typeof res.answer === "string" ? res.answer : (ui === "ar" ? res.answer.ar : res.answer.en) || "") : (res.lines || []).map((l) => l.text).join(" · ")) : ""; } catch (e) {}
       // v8.6 (Ali: "fix the voice part for good"): not an action → a real conversation — small talk by code at once, anything
       // else to the AI model on the phone (short spoken answer, the last turns kept), never a dead "I didn't get that"
       if (!line) { line = smallTalk(text, ui); talk = !!line; }

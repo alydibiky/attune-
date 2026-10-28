@@ -11,6 +11,13 @@ import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.BasalBodyTemperatureRecord
 import androidx.health.connect.client.records.SkinTemperatureRecord
+import androidx.health.connect.client.records.BloodPressureRecord
+import androidx.health.connect.client.records.OxygenSaturationRecord
+import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.RestingHeartRateRecord
+import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.BloodGlucoseRecord
+import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -45,6 +52,74 @@ object Health {
         HealthPermission.getReadPermission(SkinTemperatureRecord::class),
         HealthPermission.getReadPermission(BasalBodyTemperatureRecord::class),
     )
+
+    /** v8.7 (persona 4, idea 15 — Ali: "some watches measure a lot of these already"): what the watch measures about the body —
+     *  blood pressure, oxygen (SpO2), sleep, resting heart rate, heart-rate variability (the stress signal), glucose, weight.
+     *  Asked only from Health → "From your watch"; each one is read only when granted (most watches measure some, not all). */
+    val VITAL_PERMISSIONS: Set<String> = setOf(
+        HealthPermission.getReadPermission(BloodPressureRecord::class),
+        HealthPermission.getReadPermission(OxygenSaturationRecord::class),
+        HealthPermission.getReadPermission(SleepSessionRecord::class),
+        HealthPermission.getReadPermission(RestingHeartRateRecord::class),
+        HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
+        HealthPermission.getReadPermission(BloodGlucoseRecord::class),
+        HealthPermission.getReadPermission(WeightRecord::class),
+    )
+
+    /**
+     * v8.7: the last `days` days of vitals → {available, granted, of, days: [{day, bp: [{sys, dia, at}], spo2, spo2Min, sleepMin,
+     * restHr, hrv, glucose: [{mgdl, at}], kg}]}. A night's sleep belongs to the day it ends on. Averages are per day.
+     */
+    fun vitals(ctx: Context, days: Int): JSONObject {
+        val out = JSONObject().put("available", availability(ctx))
+        if (out.getString("available") != "ready") return out
+        val have = granted(ctx)
+        out.put("granted", VITAL_PERMISSIONS.count { it in have }).put("of", VITAL_PERMISSIONS.size)
+        val client = HealthConnectClient.getOrCreate(ctx)
+        val zone = ZoneId.systemDefault()
+        val end = Instant.now(); val start = end.minusSeconds(days.coerceIn(1, 120) * 86400L)
+        val range = TimeRangeFilter.between(start, end)
+        val by = sortedMapOf<String, JSONObject>()
+        fun dayOf(t: Instant): JSONObject { val d = t.atZone(zone).toLocalDate().toString(); return by.getOrPut(d) { JSONObject().put("day", d) } }
+        fun ok(p: String) = p in have
+        val avg = HashMap<String, MutableList<Double>>()   // "day|key" → values
+        fun note(t: Instant, key: String, v: Double) { val d = dayOf(t).getString("day"); avg.getOrPut("$d|$key") { mutableListOf() }.add(v) }
+        if (ok(HealthPermission.getReadPermission(BloodPressureRecord::class))) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(BloodPressureRecord::class, timeRangeFilter = range)) }.records) {
+                val o = dayOf(r.time); val a = o.optJSONArray("bp") ?: JSONArray().also { o.put("bp", it) }
+                a.put(JSONObject().put("sys", Math.round(r.systolic.inMillimetersOfMercury)).put("dia", Math.round(r.diastolic.inMillimetersOfMercury)).put("at", r.time.toEpochMilli()))
+            }
+        } catch (e: Exception) { out.put("bpError", e.message ?: "") }
+        if (ok(HealthPermission.getReadPermission(OxygenSaturationRecord::class))) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(OxygenSaturationRecord::class, timeRangeFilter = range)) }.records) note(r.time, "spo2", r.percentage.value)
+        } catch (e: Exception) { out.put("spo2Error", e.message ?: "") }
+        if (ok(HealthPermission.getReadPermission(SleepSessionRecord::class))) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, timeRangeFilter = range)) }.records) {
+                val o = dayOf(r.endTime); o.put("sleepMin", o.optInt("sleepMin", 0) + ((r.endTime.toEpochMilli() - r.startTime.toEpochMilli()) / 60000L).toInt())
+            }
+        } catch (e: Exception) { out.put("sleepError", e.message ?: "") }
+        if (ok(HealthPermission.getReadPermission(RestingHeartRateRecord::class))) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(RestingHeartRateRecord::class, timeRangeFilter = range)) }.records) note(r.time, "restHr", r.beatsPerMinute.toDouble())
+        } catch (e: Exception) { out.put("restHrError", e.message ?: "") }
+        if (ok(HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class))) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(HeartRateVariabilityRmssdRecord::class, timeRangeFilter = range)) }.records) note(r.time, "hrv", r.heartRateVariabilityMillis)
+        } catch (e: Exception) { out.put("hrvError", e.message ?: "") }
+        if (ok(HealthPermission.getReadPermission(BloodGlucoseRecord::class))) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(BloodGlucoseRecord::class, timeRangeFilter = range)) }.records) {
+                val o = dayOf(r.time); val a = o.optJSONArray("glucose") ?: JSONArray().also { o.put("glucose", it) }
+                a.put(JSONObject().put("mgdl", Math.round(r.level.inMilligramsPerDeciliter)).put("at", r.time.toEpochMilli()))
+            }
+        } catch (e: Exception) { out.put("glucoseError", e.message ?: "") }
+        if (ok(HealthPermission.getReadPermission(WeightRecord::class))) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(WeightRecord::class, timeRangeFilter = range)) }.records) dayOf(r.time).put("kg", Math.round(r.weight.inKilograms * 10) / 10.0)
+        } catch (e: Exception) { out.put("weightError", e.message ?: "") }
+        for ((k, v) in avg) {
+            val (d, key) = k.split("|"); val o = by[d] ?: continue
+            o.put(key, Math.round(v.average() * 10) / 10.0)
+            if (key == "spo2") o.put("spo2Min", v.minOrNull() ?: 0.0)
+        }
+        return out.put("days", JSONArray(by.values.toList()))
+    }
 
     /**
      * v6.41 (F4): one number a night for the last `days` days → {available, granted, nights: [{day, t, kind}]}.

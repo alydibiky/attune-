@@ -272,12 +272,40 @@ export function addCheck(a, c) {
   const found = row.price > 0 && a.below > 0 && row.price <= a.below && !(a.found && a.found.price <= row.price && a.found.at > row.at - 2 * DAY);
   return { ...a, checks, ...(found ? { found: { at: row.at, price: row.price, ...(row.checkin ? { checkin: row.checkin, checkout: row.checkout } : {}) } } : {}) };
 }
+/* ---- v8.7 (persona 4, idea 3 — Ali: "do all"): agents learn your taste ---------------------------------------------------------
+   After two "Not this one" that share something — both refurbished / used, both from the same seller or site, both rated under 4★ —
+   the agent leaves that kind out from then on, and says so once. `skipped` = the offers said no to ([{name, text, site, rating}]). */
+const USED = /\b(refurbished|renewed|used|open box|pre-?owned|second hand|like new|grade [ab])\b|مستعمل|مجدد|استيراد مستعمل/i;
+export function learnTaste(skipped = []) {
+  const list = (skipped || []).filter(Boolean), taste = { used: false, sites: [], minRating: 0 };
+  if (list.filter((o) => USED.test(`${o.name || ""} ${o.text || ""}`)).length >= 2) taste.used = true;
+  const bySite = {}; for (const o of list) { const k = String(o.site || o.seller || "").toLowerCase().trim(); if (k) bySite[k] = (bySite[k] || 0) + 1; }
+  taste.sites = Object.keys(bySite).filter((k) => bySite[k] >= 2);
+  if (list.filter((o) => +o.rating > 0 && +o.rating < 4).length >= 2) taste.minRating = 4;
+  return taste;
+}
+/** Does an offer fit what the person showed they don't want? */
+export function fitsTaste(o, taste) {
+  if (!taste || !o) return true;
+  if (taste.used && USED.test(`${o.name || ""} ${o.text || ""}`)) return false;
+  if ((taste.sites || []).includes(String(o.site || o.seller || "").toLowerCase().trim())) return false;
+  if (taste.minRating && +o.rating > 0 && +o.rating < taste.minRating) return false;
+  return true;
+}
+/** What changed in the taste, said once: [[text, vars]] for tr(). */
+export function tasteNews(before = {}, after = {}) {
+  const out = [];
+  if (after.used && !before.used) out.push(["You skip refurbished and used ones — I'll leave them out", {}]);
+  for (const s of after.sites || []) if (!(before.sites || []).includes(s)) out.push(["You skip {s} — I'll leave its offers out", { s }]);
+  if (after.minRating && !before.minRating) out.push(["You skip offers under 4★ — I'll leave them out", {}]);
+  return out;
+}
 /** v8.2 (Ali picked 2A): every offer a round saw ([{ name, price, currency, text, checkin, checkout, url }]) → the best 3 by price, one
     per name (the cheapest days for that hotel), without the ones the person said "Not this one" to. */
-export function bestThree(offers, skip = []) {
+export function bestThree(offers, skip = [], taste = null) {
   const by = new Map();
   for (const o of offers || []) {
-    if (!(o && o.price > 0)) continue;
+    if (!(o && o.price > 0) || !fitsTaste(o, taste)) continue;
     const k = String(o.name || o.text || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 40) || String(o.price);
     if ((skip || []).includes(k)) continue;
     if (!by.has(k) || by.get(k).price > o.price) by.set(k, { ...o, key: k });
@@ -353,7 +381,7 @@ export function matchScore(what, o) {
 }
 /** A round's offers → the best match (≥ 0.75 alike, under the limit when there is one, cheapest first); null = nothing fits. */
 export function pickBuy(a, offers, skip = []) {
-  const ok = (offers || []).filter((o) => o && o.price > 0 && !(skip || []).includes(String(o.href || o.name || "").slice(0, 120)))
+  const ok = (offers || []).filter((o) => o && o.price > 0 && fitsTaste(o, a.taste) && !(skip || []).includes(String(o.href || o.name || "").slice(0, 120)))
     .map((o) => ({ ...o, score: matchScore(a.what, o) })).filter((o) => o.score >= 0.75 && (!(a.below > 0) || o.price <= a.below));
   return ok.sort((x, y) => x.price - y.price || y.score - x.score)[0] || null;
 }
@@ -362,7 +390,7 @@ export function takeBuyRound(a, offers, now = Date.now()) {
   const pick = pickBuy(a, offers, a.skip);
   const near = (offers || []).filter((o) => o && o.price > 0 && matchScore(a.what, o) >= 0.75).sort((x, y) => x.price - y.price)[0] || null;
   const checks = [...(a.checks || []), { at: now, how: "browser", ...(near ? { price: Math.round(near.price) } : { blocked: true }) }].slice(-30);
-  if (pick) return { ...a, checks, step: "confirm", pending: { name: pick.name || a.what, price: Math.round(pick.price), currency: pick.currency || a.currency, href: pick.href || "", url: pick.url || a.url, site: pick.site || a.site, text: String(pick.text || "").slice(0, 200), at: now } };
+  if (pick) return { ...a, checks, step: "confirm", pending: { name: pick.name || a.what, price: Math.round(pick.price), currency: pick.currency || a.currency, href: pick.href || "", url: pick.url || a.url, site: pick.site || a.site, text: String(pick.text || "").slice(0, 200), rating: pick.rating || 0, at: now } };
   return { ...a, checks, step: "search", pending: null, nearest: near ? { name: near.name, price: Math.round(near.price), site: near.site || a.site } : a.nearest || null };
 }
 /** The buy agent's plan, step by step (what the card shows). */
@@ -375,3 +403,18 @@ export function buySteps(a) {
     { done: s === "ordered", en: "Open it, press Buy now and fill your details — you pay" },
   ];
 }
+
+/* ---- v8.7 (persona 4, idea 4): the price history of an agent's checks, and when it was cheapest ------------------------------
+   → { points: [{at, price}], low: {at, price}, high, last, change: % vs the first check, trend: "down"|"up"|"flat", lowDay } or null */
+export function priceHistory(a) {
+  const pts = ((a && a.checks) || []).filter((c) => c.price > 0).map((c) => ({ at: c.at, price: c.price }));
+  if (pts.length < 2) return null;
+  const low = pts.reduce((m, p) => (p.price < m.price ? p : m), pts[0]), high = pts.reduce((m, p) => (p.price > m.price ? p : m), pts[0]);
+  const first = pts[0], last = pts[pts.length - 1], change = Math.round(((last.price - first.price) / first.price) * 100);
+  // the weekday the price was lowest on average (needs 2+ weeks of checks to mean anything)
+  let lowDay = null;
+  if (last.at - first.at >= 14 * DAY) { const by = {}; for (const p of pts) { const d = new Date(p.at).getDay(); (by[d] = by[d] || []).push(p.price); }
+    const avg = Object.entries(by).map(([d, l]) => [+d, l.reduce((x, y) => x + y, 0) / l.length]).sort((x, y) => x[1] - y[1]); if (avg.length >= 3) lowDay = avg[0][0]; }
+  return { points: pts, low, high, last, change, trend: change <= -2 ? "down" : change >= 2 ? "up" : "flat", lowDay };
+}
+
