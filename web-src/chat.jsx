@@ -1248,8 +1248,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               onStatus(tr("Reading page {i} of {n} — {t}", { i: i + 1, n: list.length, t: String(h.title || h.url).slice(0, 48) }));
               const pass = api.rankOne(question, h);
               if (!pass || pass.length < 60) continue;
+              // v8.7 (Ali: "search with agents, and the AI does the work at the end"): the code reads each page and keeps the passages
+              // that answer the question, word for word — the AI writes ONCE, at the end, from them. Before, the phone's AI wrote notes
+              // for every page (up to 700 words each ≈ 2 minutes a page at phone speed, and notes can be wrong); reading is ~10×
+              // faster than writing. Expert review keeps the page-by-page notes.
+              if (!pwR.expert) { read++; notesSrc.push({ title: h.title, url: h.url, text: pass.slice(0, 2400), source: h.source, exact: true }); continue; }
               let notes = "";
-              try { notes = await api.run(notesMessages(question, { ...h, text: pass }), null, { think: false, maxTokens: pwR.expert ? 1000 : (pwR.level || 3) <= 2 ? 450 : 700, temperature: 0.1, copy: true }); }
+              try { notes = await api.run(notesMessages(question, { ...h, text: pass }), null, { think: false, maxTokens: 1000, temperature: 0.1, copy: true }); }
               catch (e) { if (String(e && e.message) === "Stopped") throw e; continue; }
               if (runRef.current !== run) return false;
               read++;

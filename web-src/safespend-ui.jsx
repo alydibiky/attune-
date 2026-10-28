@@ -1,6 +1,7 @@
 /* ---- v6.37 (upgrade M1): the "Safe to spend today" line on Money (phone: a slim row above the ledger; computer: a card on
    Overview). The number is code (safespend.js) from the ledger, People & plans and the Radar — the same data Money shows.
    A tap opens what it counted: everything due until the next income, so the number is never a mystery. */
+import { planMonth, loadPots } from "./planner.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -26,7 +27,9 @@ function useSafe(nonce) {
     const ledger = j("ledger.v3", null);
     if (!ledger || !(ledger.accounts || []).length) return null;
     const cfg = j(KEY, {});
-    return { ...safeToSpend({ ledger, life: j("attune:life:v1", { items: [] }), radar: j("attune:radar:v1", { items: [] }), cushion: cfg.cushion || 0 }), cushion: cfg.cushion || 0 };
+    // v8.7 the money planner: this month's share of each savings pot not put in yet is kept aside too
+    const life = j("attune:life:v1", { items: [] }), pots = planMonth({ ledger, life, pots: loadPots(), now: Date.now() }).pots.reduce((a, p) => a + Math.max(0, p.monthly - (p.putThisMonth || 0)), 0);
+    return { ...safeToSpend({ ledger, life, radar: j("attune:radar:v1", { items: [] }), cushion: (cfg.cushion || 0) + pots }), cushion: cfg.cushion || 0, pots };
   }, [v, nonce]);
 }
 
@@ -70,7 +73,7 @@ export function SafeSpend({ calm = false, card = false, inline = false }) {
     <div className="text-end shrink-0" data-testid="safe-spend" title={line}>
       <div className={"text-[12px] font-bold " + U.muted}>{tr("Safe to spend today")}</div>
       <div className={"tabular-nums text-[22px] font-black " + good} dir="ltr" data-testid="safe-today">{fmt(s.today)} {s.cur}</div>
-      <div className={"text-[11.5px] max-w-[240px] " + (s.short > 0 ? "font-bold text-[var(--c-warn)]" : U.muted)}>{line}{s.cushion ? " · " + tr("{a} kept aside", { a: fmt(s.cushion) + " " + s.cur }) : ""}</div>
+      <div className={"text-[11.5px] max-w-[240px] " + (s.short > 0 ? "font-bold text-[var(--c-warn)]" : U.muted)}>{line}{s.cushion ? " · " + tr("{a} kept aside", { a: fmt(s.cushion) + " " + s.cur }) : ""}{s.pots ? " · " + tr("{a} for your savings goals", { a: fmt(s.pots) }) : ""}</div>
     </div>);
   if (card) return (
     <div className="calm rounded-[18px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="safe-spend">

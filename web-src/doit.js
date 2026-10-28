@@ -11,6 +11,7 @@
    Tests: tests/unit/v731doit.test.mjs, tests/e2e_v731doit.py.                                                                    */
 import { readMealText } from "./fitread.js";
 import { readLocal, CAT_WORDS, fixTypos } from "./yusr/logtext.js";
+import { potIntent, addPot, loadPots, planMonth, POTS_KEY } from "./planner.js";
 import { quickAction, looksLikeAction } from "./actions.js";
 import { chatLifeIntent, addCommitment, scheduleOf, payAmount, togglePaid, progressOf } from "./life.js";
 import { chatDeadlineIntent, addDeadline } from "./deadlines.js";
@@ -96,6 +97,19 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     return a ? { actions: [], ask: a } : { actions: [], chat: true };
   }
   if (NOTE.test(t)) return { actions: [{ kind: "note", text: t.replace(NOTE, "").trim() || t }] };
+  // v8.7 the money planner (Ali): «حوّش ٢٠ الف للسفر لحد يونيو», "save 20000 for travel by June", "emergency fund" → a pot
+  { const p = potIntent(t, now); if (p) return { actions: [{ kind: "pot", pot: p }] }; }
+  // "plan my month", «خطط مصاريف الشهر», «خطة الشهر» → the month's plan, worked out here
+  if (/\b(plan my (month|money|spending|budget)|my (monthly )?(plan|budget)|budget (for )?(this|the|next) month|monthly plan)\b|خطة الشهر|خطه الشهر|خطط (مصاريف|فلوس|ميزانية|ميزانيه)|ميزانية الشهر|ميزانيه الشهر|ظبطلي الشهر/i.test(t)) {
+    const pl = planMonth({ ledger: stores.ledger, life: stores.life, pots: loadPots(), now }), ar = /[\u0600-\u06FF]/.test(t), f = (v) => num(v);
+    const CAT_AR = { food: "الأكل", groceries: "البقالة", transport: "المواصلات", shopping: "التسوق", health: "الصحة", fun: "الخروج", coffee: "القهوة", gifts: "الهدايا", other: "حاجات تانية" };
+    const rows = [[ar ? "الدخل" : "Income", f(pl.income)], [ar ? "ثابت (فواتير وأقساط)" : "Fixed (bills, instalments)", f(pl.fixedTotal)],
+      ...pl.pots.map((p) => [(ar ? "تحويش: " : "Save: ") + p.name, f(p.monthly)]), ...pl.flexible.slice(0, 6).map((x) => [ar ? CAT_AR[x.cat] || x.cat : x.cat[0].toUpperCase() + x.cat.slice(1), f(x.plan)]),
+      [ar ? "حر تصرفه" : "Free to spend", f(pl.free)]];
+    const tip = pl.tips[0] ? " " + pl.tips[0][0].replace(/\{(\w+)\}/g, (_, k) => f(pl.tips[0][1][k])) : "";
+    return { actions: [], ask: { kind: "plan", en: `Your plan for ${pl.month}: ${f(pl.income)} in — ${f(pl.fixedTotal)} fixed, ${f(pl.potsTotal)} to savings goals, ${f(pl.flexTotal)} everyday, ${f(pl.free)} free.${tip}`,
+      ar: `خطة ${pl.month}: دخل ${f(pl.income)} — ${f(pl.fixedTotal)} ثابت، ${f(pl.potsTotal)} للتحويش، ${f(pl.flexTotal)} مصاريف عادية، ${f(pl.free)} حر.`, rows, open: "money", sources: ["money", "life"] } };
+  }
   // a reminder / alarm / timer
   if (looksLikeAction(t) && /remind|alarm|wake me|timer|فكرني|ذكرني|صحيني|منبه|تايمر|نبهني/i.test(t)) {
     const a = quickAction(t, now);
@@ -306,6 +320,12 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const fit = stores.fit || { days: {} }, day = isoDay(now), d0 = (fit.days || {})[day] || EMPTY_DAY;
       const nd = { ...fit, days: { ...(fit.days || {}), [day]: { ...d0, sleep: a.minutes } } }, h = Math.floor(a.minutes / 60), m = a.minutes % 60;
       return { stores: { "attune:fit:v1": nd }, open: "fit", done: { en: `Sleep saved: ${h} h${m ? ` ${m} min` : ""}.`, ar: `اتحفظ النوم: ${h} ساعة${m ? ` و${m} دقيقة` : ""}.` } };
+    }
+    case "pot": {
+      const data = addPot(loadPots(), a.pot, now), p = data.pots[data.pots.length - 1];
+      const plan = planMonth({ ledger: stores.ledger, life: stores.life, pots: data, now }), pp = plan.pots.find((x) => x.id === p.id) || {};
+      const by = p.by ? ` by ${p.by}` : "", byAr = p.by ? ` لحد ${p.by}` : "";
+      return { stores: { [POTS_KEY]: data }, open: "money", done: { en: `Saving for ${p.name}: ${num(pp.target || p.target)}${by} — ${num(pp.monthly || 0)} a month. Safe to spend keeps it aside.`, ar: `تحويش ${p.name}: ${num(pp.target || p.target)}${byAr} — ${num(pp.monthly || 0)} في الشهر. «تقدر تصرف» هيسيبهم على جنب.` } };
     }
     case "sugar": {
       const care = stores.care || { members: [], meds: [], labs: [], taken: {} };

@@ -7402,4 +7402,5 @@ export const AR = {
   "Try Attune — a private AI on your phone for your money, meals and reminders. With my link you get a month of Pro free: {l}": "جرّب أتيون — مساعد ذكي خاص على موبايلك لفلوسك وأكلك ومواعيدك. باللينك بتاعي هتاخد شهر Pro ببلاش: {l}",
   "Link copied — send it to a friend": "اللينك اتنسخ — ابعته لصاحبك",
   "Give a friend a month of Pro": "هادي صاحبك شهر Pro",
+  "{a} for your savings goals": "{a} لأهداف التحويش",
 };
