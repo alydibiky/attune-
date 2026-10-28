@@ -10,12 +10,12 @@
    values for Undo, and does what code can't do alone: schedule a reminder, file a note in Mind, log a period).
    Tests: tests/unit/v731doit.test.mjs, tests/e2e_v731doit.py.                                                                    */
 import { readMealText } from "./fitread.js";
-import { readLocal, CAT_WORDS } from "./yusr/logtext.js";
+import { readLocal, CAT_WORDS, fixTypos } from "./yusr/logtext.js";
 import { quickAction, looksLikeAction } from "./actions.js";
 import { chatLifeIntent, addCommitment, scheduleOf, payAmount, togglePaid, progressOf } from "./life.js";
 import { chatDeadlineIntent, addDeadline } from "./deadlines.js";
 import { EXERCISES, burned, today as fitToday } from "./fit.js";
-import { markTaken, addGlucose, isInsulin, isoDay } from "./care.js";
+import { markTaken, addGlucose, addBloodPressure, bpLevel, isInsulin, isoDay } from "./care.js";
 import { appendToLedger } from "./paylog.js";
 import { chatAsk, askLife } from "./lifeask.js";
 import { homeCurrency } from "./locale.js";
@@ -88,7 +88,7 @@ function numLost(t) {
 const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتراك", circle: "جمعية", savings: "تحويش", regular: "كل فترة", bill: "فاتورة" };
 /** What the sentence asks Attune to do. ctx: { now, stores } */
 export function understand(text, { now = Date.now(), stores = {} } = {}) {
-  const t = String(text || "").trim();
+  const t = fixTypos(String(text || "").trim());   // persona 1: "spnt 200 on lunh"
   if (!t) return { actions: [] };
   // a question: about your own data → answered here; otherwise → Chat
   if (QUESTION.test(t) && !looksLikeAction(t)) {
@@ -109,6 +109,20 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     if (a && a.kind === "reminder" && !a.problems.length) return { actions: [{ kind: "reminder", action: a }] };
   }
   if (PERIOD.test(t)) return { actions: [{ kind: "period", text: t }] };
+  // persona 1 (Ali: "fix the still open"): blood pressure «ضغطي 120/80», "bp 135 over 85" → Family health; sleep "slept 7 hours",
+  // «نمت ٦ ساعات ونص» → Fit's day
+  { const L0 = latin(t), bp = /\b(blood pressure|bp|pressure)\b|ضغطي|الضغط|ضغط/i.test(L0) && /(\d{2,3})\s*(?:\/|\\|-|over|على|علي)\s*(\d{2,3})(?!\d)/i.exec(L0);
+    if (bp) { const sys = +bp[1], dia = +bp[2], pulse = (/(?:pulse|نبض|النبض)\D{0,6}(\d{2,3})/i.exec(L0) || [])[1];
+      if (sys >= 60 && sys <= 260 && dia >= 30 && dia <= 160 && sys > dia) return { actions: [{ kind: "bp", sys, dia, pulse: pulse ? +pulse : 0 }] }; } }
+  { const L0 = latin(t);
+    if (/\b(slept|sleep|sleeping|nap(ped)?)\b|نمت|نوم|النوم/i.test(L0) && !/\b(remind|alarm|wake me)\b|فكرني|صحيني/i.test(L0)) {
+      let h = 0;
+      const m = /(\d+(?:\.\d+)?)\s*(?:h\b|hrs?\b|hours?\b|ساعات|ساعه|ساعة)/i.exec(L0), mm = /(\d+)\s*(?:min|mins|minutes?|دقيقه|دقيقة|دقايق)/i.exec(L0);
+      if (m) h = +m[1]; else if (/ساعتين/.test(L0)) h = 2;
+      if (/(?:و\s*نص|and a half|½)/i.test(L0)) h += 0.5;
+      const min = Math.round(h * 60 + (mm ? +mm[1] : 0));
+      if (min >= 20 && min <= 16 * 60) return { actions: [{ kind: "sleep", minutes: min }] };
+    } }
   // blood sugar
   if ((SUGAR.test(t) || SUGAR_N.test(latin(t))) && !/hba1c|a1c|التراكمي/i.test(t)) {
     const m = /(\d+(?:\.\d+)?)\s*(mmol|mg)?/i.exec(latin(t));
@@ -241,7 +255,7 @@ export function apply(a, stores, { now = Date.now() } = {}) {
     }
     case "water": {
       const nd = fitDay((d) => ({ ...d, water: (d.water || 0) + a.ml }));
-      return { stores: { "attune:fit:v1": nd }, open: "fit", done: { en: `Water +${a.ml} ml — ${(nd.days[day].water / 1000).toFixed(2).replace(/0$/, "")} L today.`, ar: `ماء +${a.ml} مل — ${(nd.days[day].water / 1000).toFixed(2).replace(/0$/, "")} لتر اليوم.` } };
+      return { stores: { "attune:fit:v1": nd }, open: "fit", done: { en: `Water +${a.ml} ml — ${(nd.days[day].water / 1000).toFixed(2).replace(/0$/, "")} L today.`, ar: `مية +${a.ml} مل — ${(nd.days[day].water / 1000).toFixed(2).replace(/0$/, "")} لتر النهارده.` } };
     }
     case "weight":
       return { stores: { "attune:fit:v1": { ...fit, weights: [...(fit.weights || []).filter((x) => x.d !== day), { d: day, kg: a.kg }], profile: fit.profile ? { ...fit.profile, kg: a.kg } : fit.profile } }, open: "fit",
@@ -281,6 +295,18 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       if (!t) return { stores: {}, open: "care", done: { en: `Every ${m.name} dose today is already ticked.`, ar: `كل جرعات ${m.name} اليوم مُعلَّمة بالفعل.` } };
       return { stores: { "attune:care:v1": markTaken(care, `${m.id}|${dayKey}|${t}`, now) }, open: "care", done: { en: `Ticked: ${m.name} (the ${t} dose).`, ar: `عُلّمت: ${m.name} (جرعة ${t}).` } };
     }
+    case "bp": {
+      const care = stores.care || { members: [], meds: [], labs: [], taken: {} };
+      const me = (care.members || [])[0];
+      const n = addBloodPressure(care, me ? me.id : "", a.sys, a.dia, a.pulse, now), x = bpLevel(a.sys, a.dia);
+      const say = { high2: ["— very high. If you have chest pain, a headache or blurred vision, get help now.", "— عالي جدًا. لو عندك ألم في الصدر أو صداع أو زغللة، اطلب مساعدة دلوقتي."], high: ["— high; check it again later.", "— عالي؛ قيسه تاني بعد شوية."], low: ["— low.", "— واطي."], ok: ["", ""] }[x];
+      return { stores: { "attune:care:v1": n }, open: "care", done: { en: `Blood pressure saved: ${a.sys}/${a.dia}${a.pulse ? `, pulse ${a.pulse}` : ""} ${say[0]}`.trim(), ar: `اتحفظ الضغط: ${a.sys}/${a.dia}${a.pulse ? `، النبض ${a.pulse}` : ""} ${say[1]}`.trim() } };
+    }
+    case "sleep": {
+      const fit = stores.fit || { days: {} }, day = isoDay(now), d0 = (fit.days || {})[day] || EMPTY_DAY;
+      const nd = { ...fit, days: { ...(fit.days || {}), [day]: { ...d0, sleep: a.minutes } } }, h = Math.floor(a.minutes / 60), m = a.minutes % 60;
+      return { stores: { "attune:fit:v1": nd }, open: "fit", done: { en: `Sleep saved: ${h} h${m ? ` ${m} min` : ""}.`, ar: `اتحفظ النوم: ${h} ساعة${m ? ` و${m} دقيقة` : ""}.` } };
+    }
     case "sugar": {
       const care = stores.care || { members: [], meds: [], labs: [], taken: {} };
       const me = (care.members || [])[0];
@@ -294,7 +320,10 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const life = stores.life || { v: 1, items: [] };
       const r = addCommitment(life, a.c, now), c = a.c;
       const amt = c.amount ? `${num(c.amount)} ${c.currency || ""}${c.every ? " / " + c.every : ""}` : "";
-      return { stores: { "attune:life:v1": r }, open: "life", done: { en: `Saved in People & plans: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}.`, ar: `اتحفظ في الناس والالتزامات: ${[c.person, c.title || KIND_AR[c.kind] || c.kind, amt].filter(Boolean).join(" · ")}.` } };
+      // persona 9 (Ali picked H-D 2): the first "netflix 250" sets up the plan (from next month) — and asks whether this month's
+      // was paid today, one tap (the money total was 250 short)
+      const followUp = c.kind === "subscription" && c.amount > 0 ? { en: "Paid today", ar: "اتدفع النهارده", actions: [{ kind: "money", items: [{ type: "expense", amount: c.amount, cat: "bills", note: c.title || c.person || "subscription", date: isoDay(now) }] }] } : null;
+      return { stores: { "attune:life:v1": r }, open: "life", followUp, done: { en: `Saved in People & plans: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}.`, ar: `اتحفظ في الناس والالتزامات: ${[c.person, c.title || KIND_AR[c.kind] || c.kind, amt].filter(Boolean).join(" · ")}.` } };
     }
     case "deadline": {
       const r = addDeadline(stores.radar || { items: [], seen: [] }, { ...a.d, source: "home" }, now);

@@ -25,7 +25,7 @@ export const normDigits = (s) => String(s || "").replace(/[٠-٩۰-۹٫٬]/g, (c
 // (persona 9: «فول وطعمية» was a water bill — «مية» inside «طعمية»; short Arabic words now match only as whole words,
 //  with و / ب / ال in front allowed)
 export const CAT_WORDS = {
-  food: /\b(food|eating|lunch|dinner|breakfast|food|meal|restaurant|pizza|burger|shawarma|koshary|sandwich|snack|delivery|talabat|kfc|mcdonald'?s?)\b|غدا|غداء|عشا|عشاء|فطار|فطور|أكل|اكل|مطعم|بيتزا|برجر|شاورما|كشري|سندوتش|ساندوتش|طلبات|دليفري|فول|طعمية|طعميه|فلافل|كبدة|كبده|حواوشي|مكرونة|مكرونه|فطير|كباب|كفتة|كفته/i,
+  food: /\b(food|eating|lunch|dinner|breakfast|food|meal|restaurant|pizza|burger|shawarma|koshary|sandwich|snack|delivery|talabat|kfc|mcdonald'?s?)\b|غدا|غداء|عشا|عشاء|فطار|فطور|أكل|اكل|مطعم|بيتزا|برجر|شاورما|كشري|سندوتش|ساندوتش|طلبات|دليفري|\b(?:akl|a2l|ghada|8ada|3asha|fetar|fe6ar)\b|فول|طعمية|طعميه|فلافل|كبدة|كبده|حواوشي|مكرونة|مكرونه|فطير|كباب|كفتة|كفته/i,
   groceries: /\b(groceries|grocery|supermarket|market|vegetables|fruit|milk|bread|eggs|carrefour|spinneys|hyper)\b|بقالة|سوبر ?ماركت|خضار|فاكهة|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?لبن(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?عيش(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?بيض(?![ء-ي])|كارفور|هايبر/i,
   transport: /\b(transport|transportation|commute|taxi|uber|careem|didi|indrive|bus|metro|train|fuel|petrol|gas|benzine|parking|toll|car wash|ticket)\b|تاكسي|أوبر|اوبر|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?كريم(?![ء-ي])|ميكروباص|اتوبيس|أتوبيس|مترو|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?قطر(?![ء-ي])|بنزين|سولار|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?جاز(?![ء-ي])|ركنة|باركينج|كارتة|غسيل العربية|مواصلات/i,
   bills: /\b(bill|bills|electricity|water|internet|wifi|phone|mobile|recharge|subscription|netflix|spotify|we|vodafone|orange|etisalat|gas bill)\b|فاتورة|فواتير|كهرباء|كهربا|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?مية(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?ماء(?![ء-ي])|انترنت|إنترنت|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?نت(?![ء-ي])|رصيد|شحن|اشتراك|نتفلكس/i,
@@ -92,7 +92,24 @@ export function dateIn(text, today) {
 /** The category id for a piece of text (one of `ids`, else "other"). */
 export function catOf(text, ids = Object.keys(CAT_WORDS).concat("other")) {
   for (const [id, re] of Object.entries(CAT_WORDS)) if (ids.includes(id) && re.test(text)) return id;
+  // persona 1 ("spnt 200 on lunh"): a word one letter away from a category word ("lunh" → lunch, "texi" → taxi)
+  const words = String(text || "").toLowerCase().match(/[a-z]{4,}/g) || [];
+  for (const w of words) for (const [id, list] of CAT_LIST) if (ids.includes(id) && list.some((k) => k.length >= 4 && near1(w, k))) return id;
   return ids.includes("other") ? "other" : ids[0];
+}
+// the plain English words of each category (from CAT_WORDS), for the one-letter-off match above
+const CAT_LIST = Object.entries(CAT_WORDS).map(([id, re]) => [id, ((re.source.match(/\\b\(([^)]*)\)\\b/) || [])[1] || "").split("|").filter((w) => /^[a-z]+$/.test(w))]);
+function near1(a, b) {
+  if (a === b) return true; if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0, j = 0, d = 0;
+  while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++d > 1) return false;
+    if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } }
+  return d + (a.length - i) + (b.length - j) <= 1;
+}
+/** persona 1: the money verbs as people mistype them — "spnt", "payed", "boght" — and Franco «3ala» before a food word. */
+export function fixTypos(text) {
+  return String(text || "").replace(/\b(spnt|spnet|sepnt|spet|spemt|soent|spentt)\b/gi, "spent").replace(/\b(payed|paied|piad|pyd)\b/gi, "paid")
+    .replace(/\b(boght|bougth|bougt|baught|brought(?= \d))\b/gi, "bought");
 }
 
 /** The account named in the text ("from the bank", «من الكاش»), matched against his account names. */
@@ -106,7 +123,10 @@ export function accountIn(text, accounts = []) {
   return best;
 }
 
-const noteOf = (clause, amountRaw) => clause.replace(amountRaw, " ").replace(/\b(EGP|LE|L\.E\.?|pounds?|egp|usd|\$|sar|aed|جنيه|ج\.م|جم|ج|ريال|درهم|دولار)\b/gi, " ")
+// (persona 1: notes kept "last friday", "da3et 3ala el", a "-" — the words that say when / paid are not what it was)
+const noteOf = (clause, amountRaw) => clause.replace(amountRaw, " ").replace(/(^|\s)[-–−](?=\s|$)/g, " ")
+  .replace(/\b(last|this|next) (sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|\b(last|this) (week|month|night)\b|\b\d+ days? ago\b|\b(on )?(sun|mon|tues?|wed(nes)?|thu(rs)?|fri|satur)day\b/gi, " ")
+  .replace(/\b(da3et|dafa3t|dafa3et|saraft|sraft|shtaret|eshtaret|3ala|3la|el|fe|f|b)\b/gi, " ").replace(/\b(EGP|LE|L\.E\.?|pounds?|egp|usd|\$|sar|aed|جنيه|ج\.م|جم|ج|ريال|درهم|دولار)\b/gi, " ")
   .replace(/\b(spent|paid|bought|for|on|today|yesterday|got|received|i|my|the|a)\b|صرفت|دفعت|اشتريت|النهارده|امبارح|على|في|ب(?=\s)/gi, " ")
   .replace(/\s+/g, " ").trim().slice(0, 80);
 

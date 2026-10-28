@@ -104,11 +104,14 @@ export function ConfirmCard({ q, onYes, onNo }) {
 }
 
 export function LinesCard({ lines, onOpen, onClose }) {
+  const [done, setDone] = React.useState({});   // a follow-up tapped: its answer replaces the button
   return <div className="c-card space-y-1.5" data-testid="lines-card">
-    {lines.map((l, i) => <div key={i} className="flex items-start gap-2">
+    {lines.map((l, i) => <div key={i} className="space-y-1"><div className="flex items-start gap-2">
       <CheckCircle2 size={16} className="c-acc shrink-0 mt-0.5" />
       <p className="m-0 flex-1 text-[14px]" dir="auto" data-testid="lines-text">{say(l)}</p>
-      {l.open ? <button onClick={() => onOpen(l.open)} className="text-[12.5px] font-extrabold c-acc shrink-0" data-testid="lines-open">{tr("Open")}</button> : null}</div>)}
+      {l.open ? <button onClick={() => onOpen(l.open)} className="text-[12.5px] font-extrabold c-acc shrink-0" data-testid="lines-open">{tr("Open")}</button> : null}</div>
+      {l.act ? (done[i] ? <p className="m-0 ps-6 text-[13px] c-sub" dir="auto" data-testid="lines-act-done">{done[i]}</p>
+        : <button onClick={() => { let out = ""; try { out = l.act.run() || ""; } catch (e) {} setDone((d) => ({ ...d, [i]: out || "✓" })); }} className="ms-6 h-9 px-4 rounded-full text-[13px] font-extrabold" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }} data-testid="lines-act">{l.act.label}</button>) : null}</div>)}
     <button onClick={onClose} className="c-sub text-[12px]" data-testid="lines-close">{tr("Close")}</button>
   </div>;
 }

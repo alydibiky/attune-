@@ -15,7 +15,9 @@ export const KIND_LABEL = { reminder: "Reminder", alarm: "Alarm", timer: "Timer"
 const REPEAT_LABEL = { none: "Once", daily: "Every day", weekly: "Every week", weekdays: "Working days (Sun–Thu)", monthly: "Every month", days: "On these days" };
 const DAY_BTN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 // "days:0,2,4" → "Sun · Tue · Thu"; the rest by name
-const repeatLabel = (r) => (/^days:/.test(String(r || "")) ? daysText(r).split(" · ").map((d) => tr(d)).join(" · ") : tr(REPEAT_LABEL[r] || ""));
+const LAST_DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const repeatLabel = (r) => (/^days:/.test(String(r || "")) ? daysText(r).split(" · ").map((d) => tr(d)).join(" · ")
+  : /^last:\d$/.test(String(r || "")) ? tr("Last {d} of every month", { d: (getLang() === "ar" ? ["حد", "اتنين", "تلات", "أربع", "خميس", "جمعة", "سبت"] : LAST_DAY)[+String(r).slice(5)] }) : tr(REPEAT_LABEL[r] || ""));
 
 const pad = (n) => String(n).padStart(2, "0");
 export function toLocalInput(ms) { if (!ms) return ""; const d = new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }

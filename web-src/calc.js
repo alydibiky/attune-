@@ -98,6 +98,11 @@ const show = (toks) => toks.map((k) => (k.t === "n" ? k.raw || fmt(k.v) : k.t ==
  * { value, unit, steps: [text…], markdown }
  */
 export function calculate(text) {
+  // persona 6: "10 % 3" (spaces on both sides) and "10 mod 3" are the remainder (1), as a programmer means it; "10% 3",
+  // "10% of 3" stay percentages
+  { const m = /^\s*(-?\d+(?:\.\d+)?)\s+(?:%|mod|modulo)\s+(-?\d+(?:\.\d+)?)\s*[=?]?\s*$/i.exec(digits(text));
+    if (m && +m[2] !== 0) { const v = ((+m[1] % +m[2]) + +m[2]) % +m[2], step = `${m[1]} mod ${m[2]} = **${fmt(v)}** (the remainder)`;
+      return { value: v, unit: "", steps: [step], markdown: `**Total: ${fmt(v)}**\n\n1. ${step}` }; } }
   const all = lex(text);
   // Words between two numbers with no operator ("3 cranes 4 days") → not a sum.
   const core = [];

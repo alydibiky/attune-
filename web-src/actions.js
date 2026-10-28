@@ -325,6 +325,15 @@ export function buildAction(json, text, nowIn) {
     if (first) { t = { at: first, allDay: false, said: { day: "days", time: tm ? "said" : "default" } }; for (let i = problems.length - 1; i >= 0; i--) if (/^When\?|already passed/.test(problems[i])) problems.splice(i, 1); }
     if (kind === "none") kind = "reminder";
   }
+  // "every last Friday of the month": the first ring is this month's last Friday if it is still ahead, else next month's
+  if (/^last:\d$/.test(repeat) && (kind === "reminder" || kind === "alarm" || kind === "none")) {
+    const wd = +repeat.slice(5), tm = t && t.said && t.said.time && t.said.time !== "relative" ? new Date(t.at) : null, n0 = new Date(nowIn || Date.now());
+    const lastOf = (y, m) => { const d = new Date(y, m + 1, 0, tm ? tm.getHours() : 9, tm ? tm.getMinutes() : 0, 0, 0); while (d.getDay() !== wd) d.setDate(d.getDate() - 1); return d; };
+    let first = lastOf(n0.getFullYear(), n0.getMonth()); if (first.getTime() <= n0.getTime()) first = lastOf(n0.getFullYear(), n0.getMonth() + 1);
+    t = { at: first.getTime(), allDay: false, said: { day: "last", time: tm ? "said" : "default" } };
+    for (let i = problems.length - 1; i >= 0; i--) if (/^When\?|already passed/.test(problems[i])) problems.splice(i, 1);
+    if (kind === "none") kind = "reminder";
+  }
   const minutes = kind === "calendar" ? (j.minutes > 0 && j.minutes <= 24 * 60 ? j.minutes : 60) : 0;
   if (kind === "none") problems.push("This doesn't look like something to set on the phone.");
   return { kind, title, at: t ? t.at : null, allDay: !!(t && t.allDay), repeat, durationSec, minutes, contact, phone, message,
@@ -370,8 +379,19 @@ export function firstOnDays(days, from, hour = 9, minute = 0) {
   for (let i = 0; i < 8; i++) { if (days.includes(d.getDay()) && d.getTime() > from) return d.getTime(); d.setDate(d.getDate() + 1); d.setHours(hour, minute, 0, 0); }
   return null;
 }
+// persona 6: "every last Friday of the month", «آخر جمعة في الشهر» → "last:5" (0 = Sunday)
+const LAST_WD = [["sun|الحد|الأحد|الاحد", 0], ["mon|الاتنين|الإثنين|الاثنين", 1], ["tue|التلات|الثلاثاء", 2], ["wed|الاربع|الأربع|الأربعاء|الاربعاء", 3], ["thu|الخميس", 4], ["fri|الجمعه|الجمعة|جمعه|جمعة", 5], ["sat|السبت", 6]];
+function lastWeekdayIn(s) {
+  const m = String(s || "").match(/\blast (sun|mon|tue|wed|thu|fri|sat)[a-z]*\b(?: (?:of|in) (?:the|every|each) month)?|(?:آخر|اخر) (\S+) (?:في|من|ف|ب)? ?(?:ال)?شهر/i);
+  if (!m || !(/month|شهر/i.test(s))) return -1;
+  const w = (m[1] || m[2] || "").toLowerCase();
+  const hit = LAST_WD.find(([re]) => new RegExp("^(" + re + ")").test(w));
+  return hit ? hit[1] : -1;
+}
 function repeatIn(text) {
   const s = String(text || "");
+  { const lw = lastWeekdayIn(s); if (lw >= 0) return "last:" + lw; }
+  if (/\bevery month\b|\bmonthly\b|كل شهر|شهريا|شهريًا/i.test(s)) return "monthly";
   { const ds = daysIn(s); if (ds.length >= 2 && ds.length < 7) return "days:" + ds.join(","); }
   if (/every ?day|daily|كل يوم|يوميا|يوميًا/i.test(s)) return "daily";
   if (/weekdays|every weekday|أيام الشغل|ايام الشغل/i.test(s)) return "weekdays";
@@ -390,7 +410,8 @@ function titleFrom(text, kind, contact) {
     .replace(/\b(please )?remind me( to\b)?/gi, " ")
     .replace(/(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|صحيني|صحّيني)(\s+(ب|إن|ان|اني|إني))?/g, " ").replace(/^\s*(حطلي|حط|اعمل|اعملي)\s+/, "")
     .replace(/\b(every|each|on)\s+((sun|mon|tue|tues|wed|thu|thurs|fri|sat)[a-z]*\.?(\s*(,|and|&)?\s*))+/gi, " ")
-    .replace(/\b(every ?day|daily|every week|weekly|every weekday|weekdays)\b/gi, " ")
+    .replace(/\b(every ?day|daily|every week|weekly|every weekday|weekdays|every month|monthly)\b/gi, " ")
+    .replace(/\b(every |each |on the )?last (sun|mon|tue|wed|thu|fri|sat)[a-z]* (of|in) (the|every|each) month\b|(كل )?(آخر|اخر) \S+ (في|من|ف|ب)? ?(ال)?شهر|كل شهر/gi, " ")
     .replace(/\b(tomorrow|today|tonight|in the (morning|evening|afternoon))\b|\bat \d{1,2}([:.]\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?|\b\d{1,2}([:.]\d{2})?\s*(am|pm)\b|\bin \d+ \w+/gi, " ")
     .replace(/كل\s+((يوم\s+)?(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(\s*(،|,|و)\s*(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت))*)/g, " ")
     .replace(/(^|\s)(و)?(ال)?(حد|اتنين|تلات|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
@@ -422,6 +443,7 @@ export function nextOccurrence(r, after) {
     else if (r.repeat === "weekly") d.setDate(d.getDate() + 7);
     else if (r.repeat === "weekdays") { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 5 || d.getDay() === 6); } // Egypt: Fri + Sat off
     else if (r.repeat === "monthly") d.setMonth(d.getMonth() + 1);   // v6.32: the Overpaying check on the 1st
+    else if (/^last:\d$/.test(r.repeat)) { const wd = +r.repeat.slice(5); d.setDate(1); d.setMonth(d.getMonth() + 2); d.setDate(0); while (d.getDay() !== wd) d.setDate(d.getDate() - 1); }   // persona 6: "every last Friday"
     else if (/^days:/.test(r.repeat)) { const ds = r.repeat.slice(5).split(",").map(Number); if (!ds.length) return t; do { d.setDate(d.getDate() + 1); } while (!ds.includes(d.getDay())); }   // v8.4
     else return t;
     t = d.getTime();

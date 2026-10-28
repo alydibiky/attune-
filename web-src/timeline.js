@@ -51,7 +51,7 @@ export function timeline({ reminders = [], radar = null, life = null, ledger = n
     if (c.done) continue;
     const s = scheduleOf(c, c.kind === "regular" ? now + days * DAY : now);
     for (const p of s) {
-      if (p.paid) continue;
+      if (p.paid || p.open) continue;   // (an open loan, no date: never late — persona 9)
       if (c.kind === "regular" && p.date < today) continue;   // a regular day that passed = they didn't come, not late
       const who = c.person || "";
       add({ id: "p:" + c.id + ":" + p.i, date: p.date, kind: c.dir === "in" ? "collect" : "pay", what: [who, c.title || c.kind].filter(Boolean).join(" · "), amount: num(p.amount), cur: c.currency, page: "life", ck: c.kind,

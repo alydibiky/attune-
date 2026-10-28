@@ -121,6 +121,7 @@ function personOf(raw, t) {
   const tries = [
     /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(?:owes|will pay|is paying|pays|borrowed|has to pay|must pay)\b/,
     /\b(?:lent|loaned|gave|owe|paid|pay|to|from|with|lend|Lent)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b/,
+    /\b(?:owe|from|to)\s+([A-Z]{2,5})\b/,   // a bank's short name: CIB, NBE, QNB
   ];
   for (const re of tries) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
   // v8.2 (Ali typed "sheikh owes me 22,000 …" in small letters): the word before "owes" is the name, capitalised
@@ -193,7 +194,24 @@ function nameBefore(raw, fallback) {
  * One sentence → a commitment, or null when the rules can't read it (then a model may try, with the same fields).
  * now: for dates; currency: the default currency.
  */
+const BANKS = "bank|cib|nbe|banque misr|qnb|hsbc|aaib|alex bank|adib|emirates nbd|banque du caire|البنك|بنك|بنك مصر|البنك الأهلي|البنك الاهلي";
+function bankLoan(t0) {
+  const t = String(t0 || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  if (!/\bloan\b|قرض|سلفة من البنك/i.test(t)) return t0;
+  const bank = new RegExp("(?:from|with|at|من)\\s+((?:the\\s+)?(?:" + BANKS + ")(?:\\s+[A-Z][\\w]*)?)", "i").exec(t);
+  if (bank && /^[a-z]{2,5}$/i.test(bank[1]) && !/^bank$/i.test(bank[1])) bank[1] = bank[1].toUpperCase();
+  const amt = /(\d[\d,.]*)\s*(k|الف|ألف|thousand)?/i.exec(t.replace(/\b(\d{1,3})\s*(months?|years?|شهر|شهور|سنين|سنة|سنه|سنوات)\b/gi, " "));
+  const per = /(?:for|over|on|in|على|علي|لمدة|مدة)?\s*(\d{1,3})\s*(months?|شهر|شهور|years?|سنين|سنة|سنه|سنوات)/i.exec(t);
+  if (!bank || !amt || !per) return t0;
+  const n = +amt[1].replace(/,/g, "") * (amt[2] ? 1000 : 1), months = +per[1] * (/year|سن/i.test(per[2]) ? 12 : 1);
+  if (!(n > 0) || !(months >= 2 && months <= 360)) return t0;
+  const who = bank[1].replace(/^the\s+/i, "").replace(/^(bank|البنك|بنك)$/i, (b) => (/[ء-ي]/.test(b) ? "البنك" : "Bank"));
+  return `I owe ${who} ${n} over ${months} months`;
+}
 export function parseLife(text, { now = Date.now(), currency = homeCurrency() } = {}) {
+  // persona 1: a bank loan — "loan 5000 from the bank, 12 months", "a loan of 60000 from CIB for 24 months", «قرض ١٠٠ الف من البنك
+  // على ٣ سنين» — is money you owe the bank in monthly payments (the principal; interest can be added on its page)
+  text = bankLoan(text);
   const raw = String(text || "").trim(); if (!raw) return null;
   const t = fold(raw).toLowerCase();
   // v6.27: the currency as the payment reader sees it (any currency in the world), else the person's own
@@ -253,6 +271,9 @@ function withAlt(c, how) {
   return { ...c, alt: { ...c, amount: each, total: Math.round(each * c.count * 100) / 100 } };
 }
 /** A commitment's dates: [{ i, date, amount, paid }] — `count` payments (or the next 12 for an open-ended one). */
+/** persona 9 (Ali picked H-B 1): "Sara owes me 2026" with no date and no instalments is OPEN — it never shows as late or due
+    until a date is set (it used to be "late" for a whole year). */
+export const isOpenLoan = (c) => !!c && c.kind === "debt" && !c.start && !(c.count > 1) && !c.every;
 export function scheduleOf(c, now = Date.now()) {
   let n = c.count > 0 ? c.count : c.every ? 12 : 1;
   // a "regular" (the maid every Saturday) never ends: every day from its start up to the next one ahead
@@ -270,7 +291,9 @@ export function scheduleOf(c, now = Date.now()) {
   for (let i = 0; i < n; i++) out.push({ i, date: dateOf(i), amount: c.amount, paid: (c.paid || []).includes(i) });
   // v8.6 (persona 6: "22,000 over 9 months" added up to 21,999.96): the last payment takes the cents, so the plan adds up exactly
   if (c.total > 0 && c.count > 1 && n === c.count && !Object.keys(c.got || {}).length) { const rest = r2(c.total - c.amount * (n - 1)); if (Math.abs(rest - c.amount) < 1) out[n - 1].amount = rest; }
-  return rebalance(c, out, dateOf);
+  const res = rebalance(c, out, dateOf);
+  if (isOpenLoan(c)) for (const x of res) x.open = true;
+  return res;
 }
 /* v8.3 (Ali, 26 Oct: "make it customizable — write what he actually paid, and it reschedules the rest based on that"): a payment can
    be ticked with the amount really paid (c.got[i]). What is still owed is then spread evenly over the payments not paid yet; paid in
@@ -361,7 +384,7 @@ export function removeCommitment(data, id) { return { ...data, items: data.items
 /** What is due soon across everything (for Home's "Today" and reminders): [{ c, i, date, amount, late }] within `days`. */
 export function dueSoon(data, now = Date.now(), days = 7) {
   const today = iso(new Date(now)), until = iso(new Date(now + days * 86400000)), out = [];
-  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && !(c.skip || []).includes(s.i) && s.date <= until && (c.kind !== "regular" || s.date === today)) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
+  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && !s.open && !(c.skip || []).includes(s.i) && s.date <= until && (c.kind !== "regular" || s.date === today)) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 

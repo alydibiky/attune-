@@ -6,7 +6,7 @@
 import React, { useMemo, useState } from "react";
 import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
-import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder } from "./life.js";
+import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder, isOpenLoan } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { loadGuardian, saveGuardian, collected } from "./guardian.js";
 import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -55,6 +55,24 @@ export function PayBox({ c, ed, setEd, onPay }) {
 }
 const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const longDay = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG" : "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
+// persona 9 (Ali picked H-C 1): Sara borrowed four times — one card for Sara with what she owes in all, her loans inside
+const pkey = (c) => String(c.person || "").replace(/[أإآ]/g, "ا").replace(/ة$/, "ه").toLowerCase().trim() + "|" + c.dir;
+function byPerson(items) { const m = new Map(); for (const c of items) { const k = c.person ? pkey(c) : c.id; m.set(k, [...(m.get(k) || []), c]); } return [...m.values()]; }
+function PersonCard({ list, onTick, onRemove, onPay }) {
+  const [open, setOpen] = useState(false);
+  const c0 = list[0], left = list.reduce((a, c) => a + (progressOf(c).left || 0), 0);
+  return (
+    <div className={U.cardPad} data-testid="life-person">
+      <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="w-full flex items-start gap-3 text-start">
+        <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
+        <div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c0)}</b>
+          <div className={"text-[12.5px] " + U.muted}>{tr("{n} loans", { n: list.length })} · {open ? tr("Hide them") : tr("See each one")}</div></div>
+        <div className="text-end"><span className={U.label}>{tr("Left")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(left)}</div></div>
+        <ChevronDown size={16} className={"mt-3 shrink-0 transition-transform " + (open ? "rotate-180" : "")} />
+      </button>
+      {open ? <div className="mt-3 space-y-2" data-testid="life-person-list">{list.map((c) => <Item key={c.id} c={c} onTick={onTick} onRemove={onRemove} onPay={onPay} />)}</div> : null}
+    </div>);
+}
 function Item({ c, onTick, onRemove, onPay }) {
   const pr = useMemo(() => progressOf(c), [c]);
   // v8.3 (Ali: "write what he actually paid and it reschedules the rest"): a person's payment asks how much came first
@@ -70,7 +88,7 @@ function Item({ c, onTick, onRemove, onPay }) {
         <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
         <div className="flex-1 min-w-0">
           <b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c)}</b>
-          <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(c)}</div>
+          <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(c)}{isOpenLoan(c) ? " · " + tr("open — no date") : ""}</div>
         </div>
         {pr.left != null ? <div className="text-end"><span className={U.label}>{tr("Left")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(pr.left)}</div></div> : null}
         <button onClick={() => onRemove(c)} aria-label={tr("Delete")} className={"w-11 h-11 -me-2 -mt-1.5 shrink-0 grid place-items-center rounded-[14px] hover:text-[var(--c-neg)] " + U.muted} data-testid="life-remove"><Trash2 size={15} /></button>
@@ -234,7 +252,9 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
       </div><div className={groups.length || gold.items.length || car.log.length ? RIGHT : "min-w-0"}>
       {groups.map(([g, items]) => (
         <div key={g} className="space-y-2"><span className={U.label}>{tr(g)}</span>
-          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{items.map((c) => <Item key={c.id} c={c} onTick={tick} onRemove={remove} onPay={pay} />)}</div></div>))}
+          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{(g === "People" ? byPerson(items) : items.map((c) => [c])).map((list) => (list.length > 1
+            ? <PersonCard key={list[0].id} list={list} onTick={tick} onRemove={remove} onPay={pay} />
+            : <Item key={list[0].id} c={list[0]} onTick={tick} onRemove={remove} onPay={pay} />))}</div></div>))}
       {gold.items.length || car.log.length ? <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
         {gold.items.length ? <GoldCard data={gold} put={putGold} flash={flash} /> : null}
         {car.log.length ? <CarCard car={car} put={putCar} /> : null}</div> : null}

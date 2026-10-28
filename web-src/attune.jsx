@@ -9784,7 +9784,9 @@ export default function App() {
       else if (r.need === "period") { const prev = cycle; const pr = applyPeriodLog(cycle, parsePeriodText(a.text, now)); setCycle(cycleSave(pr.state)); enableCycle(true); extra.push(() => setCycle(cycleSave(prev))); }
       else if (r.need === "money-setup") { sendToMoney(text, ""); return { lines: [{ text: ar ? r.done.ar : r.done.en, open: "money" }], undo: null }; }
       if (a.kind === "sugar" && r.low) scheduleReminder({ id: "sugar-recheck", at: now + 15 * 60000, repeat: "none", title: tr("Check your blood sugar again"), body: tr("15 minutes since a low reading. Under 70 mg/dL: another 15 g of fast sugar."), created: now, source: "home" });
-      lines.push({ text: ar ? r.done.ar : r.done.en, open: r.open, low: !!r.low });
+      lines.push({ text: ar ? r.done.ar : r.done.en, open: r.open, low: !!r.low,
+        // a one-tap follow-up ("Paid today" after a new subscription): its actions run when tapped, and the line says so
+        act: r.followUp ? { label: ar ? r.followUp.ar : r.followUp.en, run: () => r.followUp.actions.map((fa) => { const fr = doApply(fa, loadLifeStores(), { now: Date.now() }); for (const [k, v] of Object.entries(fr.stores || {})) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } return ar ? fr.done.ar : fr.done.en; }).join(" ") } : null });
     }
     const undo = () => { for (const [k, v] of Object.entries(before)) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } extra.forEach((f) => { try { f(); } catch (e) {} }); };
     return { lines, undo };

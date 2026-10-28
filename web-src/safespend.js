@@ -67,7 +67,7 @@ export function safeToSpend({ ledger: L, life = null, radar = null, now = Date.n
   for (const c of (life && life.items) || []) {
     if (c.dir !== "out" || !mine(c.currency) || c.done) continue;
     // a regular (the maid every Saturday) is listed only up to its next day — ask for its days up to `until`
-    for (const s of scheduleOf(c, c.kind === "regular" ? at12(until) : now)) if (!s.paid && s.date >= today && s.date <= until) due.push({ what: [c.person, c.title || c.kind].filter(Boolean).join(" · "), date: s.date, amount: Number(s.amount) || 0, from: "plans" });
+    for (const s of scheduleOf(c, c.kind === "regular" ? at12(until) : now)) if (!s.paid && !s.open && s.date >= today && s.date <= until) due.push({ what: [c.person, c.title || c.kind].filter(Boolean).join(" · "), date: s.date, amount: Number(s.amount) || 0, from: "plans" });
   }
   for (const x of (radar && radar.items) || []) {
     if (x.status !== "active" || !(Number(x.amount) > 0) || !mine(x.currency) || !(x.kind === "trial" || x.kind === "renewal")) continue;
@@ -81,9 +81,18 @@ export function safeToSpend({ ledger: L, life = null, radar = null, now = Date.n
   due.sort((a, b) => a.date.localeCompare(b.date) || b.amount - a.amount);
   const dueTotal = due.reduce((a, x) => a + x.amount, 0);
   // today's spending is already out of the balance; put it back to share the whole period fairly
-  const pool = balance + spentToday - dueTotal - (Number(cushion) || 0);
+  let pool = balance + spentToday - dueTotal - (Number(cushion) || 0);
+  // persona 9 (Ali picked H-A 1): after a year the balance was 182,585 and "safe to spend" said 45,646 a day — savings are not
+  // spending money. When income was logged this month, only this month's income − what was spent before today − what is due
+  // counts (and never more than the balance itself).
+  const monthStart = iso(new Date(n.getFullYear(), n.getMonth(), 1, 12));
+  const inMonth = (t) => t.date >= monthStart && t.date <= today && mine(curOf(t.account));
+  const incomeMonth = txns.filter((t) => t.type === "income" && inMonth(t)).reduce((a, t) => a + (Number(t.amount) || 0), 0);
+  const spentBefore = txns.filter((t) => t.type === "expense" && inMonth(t) && t.date < today).reduce((a, t) => a + (Number(t.amount) || 0), 0);
+  let basis = "balance", kept = 0;
+  if (incomeMonth > 0) { const monthPool = incomeMonth - spentBefore - dueTotal - (Number(cushion) || 0); if (monthPool < pool) { kept = pool - Math.max(0, monthPool); pool = monthPool; basis = "month"; } }
   const perDay = pool > 0 ? pool / days : 0;
   const r2 = (v) => Math.round(v * 100) / 100;
   return { cur, balance: r2(balance), perDay: Math.floor(perDay), today: Math.max(0, Math.floor(perDay - spentToday)), spentToday: r2(spentToday),
-    until, days, due, dueTotal: r2(dueTotal), short: pool < 0 ? r2(-pool) : 0, income: nextIncome };
+    until, days, due, dueTotal: r2(dueTotal), short: pool < 0 ? r2(-pool) : 0, income: nextIncome, basis, kept: r2(kept), incomeMonth: r2(incomeMonth) };
 }

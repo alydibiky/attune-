@@ -73,7 +73,7 @@ function LabDetail({ list }) {
       <svg viewBox="0 0 330 120" className="w-full" aria-hidden="true">
         {h.last.low != null && h.last.high != null ? <rect x="20" y={Y(h.last.high)} width="300" height={Math.max(1, Y(h.last.low) - Y(h.last.high))} fill="var(--c-soft)" /> : null}
         <polyline points={list.map((x, i) => `${X(i)},${Y(x.value)}`).join(" ")} fill="none" stroke="var(--c-acc)" strokeWidth="2" />
-        {list.map((x, i) => <g key={i}><circle cx={X(i)} cy={Y(x.value)} r="3.5" fill="var(--c-acc)" /><text x={X(i)} y={Y(x.value) - 7} fontSize="10" textAnchor="middle" fill="currentColor">{x.value}</text>
+        {list.map((x, i) => <g key={i}><circle cx={X(i)} cy={Y(x.value)} r="3.5" fill="var(--c-acc)" /><text x={X(i)} y={Y(x.value) - 7} fontSize="10" textAnchor="middle" fill="currentColor">{x.value}{x.value2 ? "/" + x.value2 : ""}</text>
           <text x={X(i)} y="114" fontSize="9" textAnchor="middle" fill="currentColor" opacity="0.6">{x.date.slice(0, 7)}</text></g>)}
       </svg>
       <p className="text-[13px] m-0" dir="auto" data-testid="care-lab-words">{tr("{n} results in {y} years: {a} → {b} {u} ({c}).", { n: h.n, y: h.years, a: h.first.value, b: h.last.value, u: h.last.unit || "", c: (h.change > 0 ? "+" : "") + h.change + (h.pct != null ? ", " + (h.pct > 0 ? "+" : "") + h.pct + "%" : "") })}
@@ -250,7 +250,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
               <div className={cardPad + " flex items-center gap-3 cursor-pointer"} data-testid="care-lab" onClick={() => setOpenLab(openLab === t ? null : t)}>
                 <div className="flex-1 min-w-0"><b className="block">{tr(t)}</b><span className="c-sub text-[12.5px]">{L.date}{L.low != null || L.high != null ? " · " + tr("report range") + " " + [L.low, L.high].filter((x) => x != null).join("–") : ""}</span></div>
                 <Spark list={tr0} />
-                <div className="text-end"><div className="c-num font-bold">{L.value} <span className="c-sub text-[11px]">{L.unit}</span></div>{L.flag ? <span className={"c-pill " + (L.flag === "in range" ? "" : "late")} data-testid="care-flag">{tr(L.flag)}</span> : null}</div>
+                <div className="text-end"><div className="c-num font-bold">{L.value}{L.value2 ? "/" + L.value2 : ""} <span className="c-sub text-[11px]">{L.unit}</span></div>{L.flag ? <span className={"c-pill " + (L.flag === "in range" ? "" : "late")} data-testid="care-flag">{tr(L.flag)}</span> : null}</div>
               </div>
               {openLab === t ? <LabDetail list={tr0} /> : null}
               </React.Fragment>); })}

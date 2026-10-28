@@ -245,6 +245,9 @@ export function supplyReminder(x, now = Date.now()) {
 }
 /** Blood sugar in mg/dL from a reading (a value under 35 is taken as mmol/L). */
 export const mgdl = (v, unit) => (/mmol/i.test(unit || "") || (!unit && v < 35) ? Math.round(v * 18) : Math.round(v));
+/** persona 1: a blood pressure reading (mmHg) — kept with the lab results, value = systolic, value2 = diastolic. */
+export const bpLevel = (sys, dia) => (sys >= 180 || dia >= 120 ? "high2" : sys >= 140 || dia >= 90 ? "high" : sys < 90 || dia < 60 ? "low" : "ok");
+export const addBloodPressure = (d, member, sys, dia, pulse = 0, now = Date.now()) => ({ ...d, labs: [...(d.labs || []), { test: "Blood pressure", value: +sys, value2: +dia, pulse: +pulse || 0, unit: "mmHg", low: 90, high: 140, flag: { high2: "high", high: "high", low: "low", ok: "" }[bpLevel(sys, dia)], member, date: isoDay(now), at: now, source: "quick" }] });
 export const addGlucose = (d, member, value, unit, now = Date.now()) => ({ ...d, labs: [...(d.labs || []), { test: "Glucose", value: +value, unit: unit || "mg/dL", low: null, high: null, flag: mgdl(+value, unit) < 70 ? "low" : "", member, date: isoDay(now), at: now, source: "quick" }] });
 /** What Fit & Food needs to know: { onInsulin, insulins, low (supply), sugar: { value, mgdl, at, low } | null, takenToday }. */
 export function insulinState(data, now = Date.now()) {

@@ -83,6 +83,14 @@ export function datesIn(text, { now = Date.now(), order = "dmy" } = {}) {
   while ((m = RE7.exec(t))) { if (overlaps(out, m.index)) continue; const mo = +m[2] - 1, d = +m[1]; push(yearFor(mo, d, now), mo, d, m.index, m[0].length, "daymonth"); }
   const RE6 = /(?<![\d\/.-])(0?[1-9]|1[0-2])\s?\/\s?(\d{4}|\d{2})(?![\d\/.-])/g;
   while ((m = RE6.exec(t))) { if (overlaps(out, m.index)) continue; const y = yr(m[2]); push(y, +m[1] - 1, lastDay(y, +m[1] - 1), m.index, m[0].length, "monthyear"); }
+  // persona 6: "insurance expires next month" → the 1st of next month (early rather than late; the person can set the day);
+  // "warranty ends 2028" → 1 January 2028 — only next to words that say "ends / until / in"
+  if (!out.length) {
+    const nm = /(?<![\p{L}])(?:next month|الشهر الجاي|الشهر اللي جاي|الشهر القادم|le mois prochain|el mes que viene|el próximo mes|nächsten monat)(?![\p{L}])/iu.exec(t);
+    if (nm) { const n = new Date(now); push(n.getMonth() === 11 ? n.getFullYear() + 1 : n.getFullYear(), (n.getMonth() + 1) % 12, 1, nm.index, nm[0].length, "month"); }
+    const yo = /(?:ends?|ending|expires?|expiring|until|till|in|by|valid (?:until|to)|ينتهي|بينتهي|تنتهي|بتنتهي|لحد|حتى|سنة|سنه)\s+(?:in\s+|سنة\s+|سنه\s+)?(20[2-9]\d)(?![\d\/.-])/iu.exec(t);
+    if (yo && +yo[1] > new Date(now).getFullYear()) push(+yo[1], 0, 1, yo.index + yo[0].length - 4, 4, "year");
+  }
   return out.sort((a, b) => a.at - b.at);
 }
 const lastDay = (y, m) => new Date(y, m + 1, 0).getDate();
@@ -177,6 +185,14 @@ export function readDeadlines(text, opts = {}) {
   if (!out.length && RENEW.test(t)) {
     const d = after(RENEW) || dates.find((d) => d.t > now - DAY);
     if (d) add("renewal", d.t, { why: "date" });
+    else {
+      // persona 6: "netflix renews on the 5th", «بيتجدد يوم ٥» — a day of the month alone: the next time it comes
+      const dm = /\bon the (\d{1,2})(?:st|nd|rd|th)?\b|(?:^|\s)يوم\s+(\d{1,2})(?!\d)/i.exec(t.replace(/[٠-٩]/g, (c) => "٠١٢٣٤٥٦٧٨٩".indexOf(c)));
+      const day = dm ? +(dm[1] || dm[2]) : 0;
+      if (day >= 1 && day <= 31) { const n = new Date(now); let x = new Date(n.getFullYear(), n.getMonth(), Math.min(day, lastDay(n.getFullYear(), n.getMonth())), 12);
+        if (x.getTime() < now - DAY / 2) x = new Date(n.getFullYear(), n.getMonth() + 1, Math.min(day, lastDay(n.getFullYear(), n.getMonth() + 1)), 12);
+        add("renewal", x.getTime(), { why: "day", monthly: true }); }
+    }
   }
   if (RETURN.test(t)) {
     const d = after(/(?:return(?:s|able)?|refund|retour|devoluci[oó]n|devolver|devolução|rückgabe|reso|iade|pengembalian|الاسترجاع|إرجاع|ارجاع)[^\d]{0,40}?(?:by|until|before|till|closes?(?: on)?|ends?(?: on)?|expires?(?: on)?|jusqu'au|avant|hasta|antes del?|até|bis|entro il|kadar|sebelum|حتى|قبل)(?![\p{L}])/iu);

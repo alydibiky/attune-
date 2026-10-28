@@ -18,6 +18,7 @@ import { RecallCard } from "./recall-ui.jsx";
 import { useSubBack } from "./backstack.js";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { loadLife } from "./life.js";
+import { monthReview, reviewLines } from "./monthreview.js";
 import { loadRadar } from "./deadlines.js";
 import { loadCare } from "./care.js";
 import { waitingList, toolLine, todayLine } from "./home.js";
@@ -216,6 +217,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {minimal && !rep && cmd ? <JobCards list={jobList} jobs={cmd.jobs} onSave={(f) => cmd.saveFile(f)} onCopy={(t) => cmd.copy(t)} onOpen={(m) => openLine(m)} /> : null}
       {minimal && !rep && cmd && tripLive(trip) ? <TripPin trip={trip} name={cmd.countryName(trip.country)} onOpen={() => navTo("travel")} onEnd={() => { cmd.endTrip(); setTrip(cmd.trip()); }} /> : null}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
+      {/* persona 9 (Ali picked H-E): on the 1st–3rd, last month in one card (monthreview.js); × hides it for that month */}
+      {!rep ? <MonthCard /> : null}
       {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
       {now1 && !rep ? <div className="rounded-[22px] p-4 space-y-2.5" style={{ boxShadow: "0 4px 14px rgba(16,32,28,.16)", background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
@@ -321,4 +324,20 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <Sparkles size={17} className="c-acc shrink-0 mt-0.5" /><span className="text-[13.5px] leading-snug" dir="auto">{seen.text}</span></button> : null}
       </>}
     </div>);
+}
+
+function MonthCard() {
+  const n = new Date(), key = "attune:month-review:" + n.getFullYear() + "-" + n.getMonth();
+  const [hidden, setHidden] = useState(() => { try { return !!localStorage.getItem(key); } catch (e) { return false; } });
+  const lines = useMemo(() => {
+    if (n.getDate() > 3) return [];
+    let fit = null; try { fit = JSON.parse(localStorage.getItem("attune:fit:v1") || "null"); } catch (e) {}
+    const L = loadLedger(); return reviewLines(monthReview({ ledger: L, life: loadLife(), fit }), getLang() === "ar" ? "ar" : "en", (L && L.currency) || "");
+  }, []);
+  if (hidden || !lines.length) return null;
+  return <div className="c-card space-y-1" data-testid="home-month-review">
+    <div className="flex items-center gap-2"><b className="flex-1 text-[14px]">{tr("Last month in one look")}</b>
+      <button onClick={() => { try { localStorage.setItem(key, "1"); } catch (e) {} setHidden(true); }} className="c-sub text-[12px] min-h-[36px] px-2" data-testid="home-month-hide">{tr("Hide")}</button></div>
+    {lines.map((l, i) => <p key={i} className={"m-0 text-[13.5px] " + (i ? "c-sub" : "font-bold")} dir="auto">{l}</p>)}
+  </div>;
 }

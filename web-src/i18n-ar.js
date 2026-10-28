@@ -7366,4 +7366,12 @@ export const AR = {
   "One file": "ملف واحد",
   "Today's free answers are used up — Pro removes the limit": "خلصت إجابات النهارده المجانية — Pro بيشيل الحد",
   "That's today's {n} free answers. They come back tomorrow, or Pro removes the limit.": "دي كانت الـ{n} إجابة المجانية بتوع النهارده. بيرجعوا بكرة، أو Pro بيشيل الحد.",
+  "Last {d} of every month": "آخر {d} في كل شهر",
+  "Blood pressure": "الضغط",
+  "from this month's income — savings not counted": "من دخل الشهر ده — من غير التحويش",
+  "{n} loans": "{n} مرات سلف",
+  "Hide them": "اخفيهم",
+  "See each one": "شوف كل واحدة",
+  "open — no date": "مفتوح — من غير ميعاد",
+  "Last month in one look": "الشهر اللي فات في لمحة",
 };

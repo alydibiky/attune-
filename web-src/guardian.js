@@ -33,7 +33,7 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
   // late: People & plans — someone owes you and the date has passed
   for (const c of (life && life.items) || []) {
     if (c.dir !== "in" || !c.person) continue;
-    const late = progressOf(c, now).schedule.filter((s) => !s.paid && s.date < iso(now));
+    const late = progressOf(c, now).schedule.filter((s) => !s.paid && !s.open && s.date < iso(now));
     if (!late.length) continue;
     const amt = late.reduce((a, s) => a + s.amount, 0), days = Math.round((now - Date.parse(late[0].date + "T12:00:00")) / DAY);
     add({ id: "late:" + c.id + ":" + late[0].i, kind: "late", amount: amt, person: c.person, days, commitment: c.id,

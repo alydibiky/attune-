@@ -63,7 +63,8 @@ export function SafeSpend({ calm = false, card = false, inline = false }) {
   const setCushion = (v) => { try { localStorage.setItem(KEY, JSON.stringify({ ...j(KEY, {}), cushion: v })); } catch (e) {} setNonce((x) => x + 1); };
   const line = s.short > 0
     ? tr("Short by {x} before {d}").replace("{x}", s.cur + " " + fmt(s.short)).replace("{d}", dayName(s.income ? s.income.d : s.until))
-    : tr("about {x} a day until {d}").replace("{x}", fmt(s.perDay)).replace("{d}", dayName(s.until));
+    : tr("about {x} a day until {d}").replace("{x}", fmt(s.perDay)).replace("{d}", dayName(s.until))
+      + (s.basis === "month" ? " · " + tr("from this month's income — savings not counted") : "");
   const good = s.short > 0 ? "text-[var(--c-warn)]" : "text-[var(--c-pos)]";
   if (inline) return (
     <div className="text-end shrink-0" data-testid="safe-spend" title={line}>
