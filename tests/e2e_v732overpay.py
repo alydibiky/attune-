@@ -9,7 +9,10 @@ from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
 T = datetime.date.today()
-mo = lambda k, dd: (T.replace(day=1) - datetime.timedelta(days=28 * k)).replace(day=dd).isoformat()
+# calendar months back (28 days × k landed 51 days back at the end of a month, and Google One then read as stopped)
+# (k = 1 is the latest charge: this month's if its day has passed, else last month's)
+_back = lambda k, dd: k - 1 if T.day > dd else k
+mo = lambda k, dd: datetime.date(T.year + (T.month - 1 - _back(k, dd)) // 12, (T.month - 1 - _back(k, dd)) % 12 + 1, dd).isoformat()
 TX = []
 for k in (3, 2, 1):
     TX.append({"id": "n%d" % k, "type": "expense", "amount": 165, "cat": "bills", "account": "c", "date": mo(k, 12), "note": "Netflix.com · NBE"})
