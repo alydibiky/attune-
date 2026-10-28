@@ -197,9 +197,9 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
               <span className="c-sub text-[12px]">{tr(KIND[x.g.kind] ? KIND[x.g.kind][0] : "Search")}{x.g.max ? " · ≤ " + fmt(x.g.max) : ""}{x.g.place ? " · " + x.g.place : ""} · {x.lastRun ? tr("{n} matches", { n: x.lastCount || 0 }) + " · " + new Date(x.lastRun).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" }) : tr("not run yet")}{x.on === false ? " · " + tr("paused") : ""}</span>
               {busy && busy.id === x.id ? <span className="c-acc text-[12px] flex items-center gap-1 mt-0.5" data-testid="scout-busy"><Loader2 size={12} className="animate-spin" />{tr("Searching {i} of {n}…", { i: busy.i, n: busy.n })}</span> : null}
             </button>
-            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] hover:text-[var(--c-acc)]" aria-label={tr("Check now")} title={tr("Check now")} disabled={!!busy} onClick={() => run(x)} data-testid="scout-run"><RefreshCw size={15} /></button>
-            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] hover:text-[var(--c-acc)]" aria-label={x.on === false ? tr("Resume") : tr("Pause")} title={x.on === false ? tr("Resume") : tr("Pause")} onClick={() => put({ ...data, goals: data.goals.map((y) => (y.id === x.id ? { ...y, on: y.on === false } : y)) })}>{x.on === false ? <Play size={15} /> : <Pause size={15} />}</button>
-            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] hover:text-[var(--c-neg)]" aria-label={tr("Delete")} onClick={() => { put({ ...data, goals: data.goals.filter((y) => y.id !== x.id) }); if (sel === x.id) setSel(null); }}><Trash2 size={15} /></button>
+            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check now")} title={tr("Check now")} disabled={!!busy} onClick={() => run(x)} data-testid="scout-run"><RefreshCw size={15} /></button>
+            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={x.on === false ? tr("Resume") : tr("Pause")} title={x.on === false ? tr("Resume") : tr("Pause")} onClick={() => put({ ...data, goals: data.goals.map((y) => (y.id === x.id ? { ...y, on: y.on === false } : y)) })}>{x.on === false ? <Play size={15} /> : <Pause size={15} />}</button>
+            <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-neg)]" aria-label={tr("Delete")} onClick={() => { put({ ...data, goals: data.goals.filter((y) => y.id !== x.id) }); if (sel === x.id) setSel(null); }}><Trash2 size={15} /></button>
           </div>))}</div> : null}
       <p data-intro="" className="c-sub text-[12px] m-0">{tr("Scout checks each goal when you open Attune (at most twice a day), once at night on the phone, and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.")}</p>
     </div>);
@@ -243,8 +243,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             {/* v7.9 (Ali picked the calm list): one row — tap for the details, or pick it to compare */}
             <button className="w-full text-start flex items-center gap-3 min-h-[56px]" data-testid="scout-row" aria-expanded={openAd === a.id}
               onClick={() => (picking ? setPicked((p) => (p.includes(a.id) ? p.filter((x) => x !== a.id) : p.length >= 4 ? p : [...p, a.id])) : setOpenAd((o) => (o === a.id ? null : a.id)))}>
-              {picking ? <span className={"w-6 h-6 rounded-[7px] border-2 shrink-0 grid place-items-center " + (picked.includes(a.id) ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "border-[var(--c-ln)]")} data-testid="scout-pick">{picked.includes(a.id) ? <Check size={14} /> : null}</span> : null}
-              {a.image ? <img src={a.image} alt="" className="w-[76px] h-[58px] object-cover rounded-[14px] shrink-0" /> : null}
+              {picking ? <span className={"w-6 h-6 rounded-[12px] border-2 shrink-0 grid place-items-center " + (picked.includes(a.id) ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "border-[var(--c-ln)]")} data-testid="scout-pick">{picked.includes(a.id) ? <Check size={14} /> : null}</span> : null}
+              {a.image ? <img src={a.image} alt="" className="w-[76px] h-[58px] object-cover rounded-[12px] shrink-0" /> : null}
               <span className="flex-1 min-w-0">
                 {fresh.includes(a.id) ? <span className={K.tag("green") + " mb-0.5"} data-testid="scout-ad-new">{tr("New")}</span> : null}
                 <b className="block text-[14.5px] font-extrabold leading-snug line-clamp-2" dir="auto">{a.title || a.site}</b>
@@ -277,8 +277,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
               {S.offerFor(a) && S.offerFor(a) < a.facts.price ? <span className="c-sub text-[12px]" data-testid="scout-offer">{tr("Offer {v}", { v: fmt(S.offerFor(a)) })}</span> : null}
               <button className={"min-h-[44px] inline-flex items-center gap-1 px-1.5 font-bold " + (a.followed ? "c-acc" : "c-sub")} onClick={() => follow(a)} data-testid="scout-follow">{a.followed ? <BellOff size={14} /> : <Bell size={14} />}{a.followed ? tr("Unfollow") : tr("Follow price")}</button>
               <span className="ms-auto flex gap-1">
-                <button className={"min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] " + (vote0 === 1 ? "c-acc" : "c-sub")} aria-label={tr("Good match")} onClick={() => vote(a, true)} data-testid="scout-up"><ThumbsUp size={15} /></button>
-                <button className={"min-w-[44px] min-h-[44px] grid place-items-center rounded-[14px] " + (vote0 === -1 ? "c-neg" : "c-sub")} aria-label={tr("Not for me")} onClick={() => vote(a, false)} data-testid="scout-down"><ThumbsDown size={15} /></button></span>
+                <button className={"min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] " + (vote0 === 1 ? "c-acc" : "c-sub")} aria-label={tr("Good match")} onClick={() => vote(a, true)} data-testid="scout-up"><ThumbsUp size={15} /></button>
+                <button className={"min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] " + (vote0 === -1 ? "c-neg" : "c-sub")} aria-label={tr("Not for me")} onClick={() => vote(a, false)} data-testid="scout-down"><ThumbsDown size={15} /></button></span>
             </div>
             </>}
           </div>); })}
@@ -294,7 +294,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         </div>) : null}
     </div>) : <DeskEmpty icon={Binoculars} title={tr("Your finds appear here")} testid="scout-empty" />;
   return (
-    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[22px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="scout-page">
+    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[20px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="scout-page">
       <div><h2 className={K.h1 + " flex items-center gap-2"}><Binoculars size={20} className="c-acc" />{tr("Scout")}</h2>
         <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Say once what you're looking for — a flat, a car, a product, a job, a supplier. Scout searches the sites that matter, checks every wish against what each ad says, tells you if the price is fair, and lets you know when something good appears.")}</p></div>
       {/* v7.9 (Ali picked the calm list): on a phone the results come first when there is a goal; the form and the goals follow */}

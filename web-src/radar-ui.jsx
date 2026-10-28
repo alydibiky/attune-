@@ -87,7 +87,7 @@ function Form({ init, onSave, onCancel, photo }) {
         <input value={f.currency} onChange={(e) => set("currency", e.target.value.toUpperCase().slice(0, 3))} className={field + " max-w-[5.5rem]"} style={st} aria-label={tr("Currency")} />
       </div>
       <input value={f.note} onChange={(e) => set("note", e.target.value)} placeholder={tr("Note (optional): order number, where to cancel…")} className={field} style={st} dir="auto" />
-      {photo ? <img src={photo} alt="" className="max-h-28 rounded-[14px] border border-[var(--c-ln)]" /> : null}
+      {photo ? <img src={photo} alt="" className="max-h-28 rounded-[12px] border border-[var(--c-ln)]" /> : null}
       <div className="flex gap-2 pt-1">
         <button className={U.btnP} disabled={!okDate || !f.title.trim()} onClick={() => onSave({ ...f, amount: parseFloat(String(f.amount).replace(",", ".")) || 0, title: f.title.trim() })} data-testid="radar-save">{tr("Save and remind me")}</button>
         <button className={U.btnS} onClick={onCancel}>{tr("Cancel")}</button>
@@ -102,7 +102,7 @@ function Item({ x, onDone, onEdit, onDelete }) {
   return (
     <div className={U.cardPad} data-testid="radar-item">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Bell size={17} /></div>
+        <div className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Bell size={17} /></div>
         <div className="flex-1 min-w-0">
           <b className="block font-extrabold text-[14.5px]" dir="auto">{x.title || tr(KIND_LABEL[x.kind])}</b>
           <div className={"text-[12.5px] tabular-nums " + U.muted}>{tr(KIND_LABEL[x.kind])}{x.doc ? " · " + tr(DOC_LABEL[x.doc] || x.doc) : ""} · {x.date}{x.amount ? " · " + fmt(x.amount) + " " + (x.currency || "") : ""}</div>
@@ -110,7 +110,7 @@ function Item({ x, onDone, onEdit, onDelete }) {
         <span className={U.tag(x.status === "done" ? "gray" : left <= 2 ? "red" : left <= D.alertDays(x) ? "amber" : "green")} data-testid="radar-when">{x.status === "done" ? tr("done") : when}</span>
       </div>
       {x.note ? <p className={"text-[12.5px] mt-1.5 " + U.muted} dir="auto">{x.note}</p> : null}
-      {img ? <img src={img} alt="" className="mt-2 max-h-64 rounded-[14px] border border-[var(--c-ln)]" /> : null}
+      {img ? <img src={img} alt="" className="mt-2 max-h-64 rounded-[12px] border border-[var(--c-ln)]" /> : null}
       {x.status !== "done" ? (
         <div className="flex flex-wrap gap-2 mt-2.5">
           {(DONE_ACTS[x.kind] || DONE_ACTS.other).map(([o, l], i) => <button key={o} className={i === 0 ? U.btnP : U.btnS} onClick={() => onDone(x, o)} data-testid={"radar-" + o}>{i === 0 ? <Check size={14} /> : null}{tr(l)}</button>)}
@@ -123,7 +123,7 @@ function Item({ x, onDone, onEdit, onDelete }) {
         </div>) : null}
       {/* v6.37 (M5): the cancel kit — the steps and a ready message */}
       {K ? (
-        <div className="mt-2.5 rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[12.5px] grid gap-2" data-testid="radar-kit-panel">
+        <div className="mt-2.5 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[12.5px] grid gap-2" data-testid="radar-kit-panel">
           <ol className="m-0 ps-5 grid gap-1">{K.steps.map((st, i) => <li key={i} dir="auto">{st}</li>)}</ol>
           <p className={U.muted} dir="auto" data-testid="radar-kit-msg">{K.message}</p>
           <div className="flex flex-wrap gap-2">
@@ -207,7 +207,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const rightHas = data.items.length > 3 || (!V.soon.length && !V.later.length && !drafts.length && mode !== "form") || [V.soon, V.later, V.done.slice(0, 20)].some((l) => l.filter(match).length);
 
   return (
-    <div className={U.page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="radar-page">
+    <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="radar-page">
       <div><h2 className={U.h1 + " flex items-center gap-2"}><Radar size={20} className="text-[var(--c-acc)]" />{tr("Deadline Radar")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
 

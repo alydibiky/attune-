@@ -125,7 +125,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
       {open ? (
         <div className="px-3.5 pb-3.5 space-y-2">
           {items.slice(0, 30).map((e) => (
-            <div key={e.id} className="rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item"><div className="flex items-center gap-2">
+            <div key={e.id} className="rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item"><div className="flex items-center gap-2">
               <span className="flex-1 min-w-0"><b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "text-[var(--c-ink)]")} dir="ltr">{e.direction === "in" ? "+" : "−"}{e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} {e.currency}</b>
                 <span className={"block text-[12px] truncate " + U.muted} dir="auto">{[e.party, e.app, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span>
                 {alreadyIn(e, ledgerNow) ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-already">{tr("Already in Money?")}</span> : null}</span>
@@ -145,7 +145,7 @@ function AutoList({ n, close }) {
   return <div className="calm shrink-0 px-2 py-2" data-testid="paylog-auto-list"><div className={U.card + " p-3.5 space-y-2"}>
     <div className="flex items-center gap-2"><b className="flex-1 text-[14px] font-extrabold">{tr("{n} payments added by themselves", { n })}</b>
       <button onClick={close} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted}>{tr("Hide")}</button></div>
-    {log.slice(0, n).map((e, i) => <div key={i} className="rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2">
+    {log.slice(0, n).map((e, i) => <div key={i} className="rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2">
       <b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "")} dir="ltr">{e.direction === "in" ? "+" : "−"}{Number(e.amount).toLocaleString("en-US")} {e.currency}</b>
       <span className={"block text-[12px] " + U.muted} dir="auto">{[e.party, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span>
       <Evidence e={{ full: e.text, from: e.from, app: e.app }} testid="paylog-auto-evidence" /></div>)}

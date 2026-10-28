@@ -58,7 +58,7 @@ function Card({ m, e, onChange, onDelete, openScout }) {
   return (
     <div className={cardPad + " space-y-3"} data-testid="mission">
       <div className="flex items-start gap-3">
-        <span className="w-10 h-10 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)]"><Target size={18} className="c-acc" /></span>
+        <span className="w-10 h-10 rounded-[12px] grid place-items-center shrink-0 bg-[var(--c-soft)]"><Target size={18} className="c-acc" /></span>
         <div className="flex-1 min-w-0">
           <b className="block text-[15px] font-extrabold leading-snug" dir="auto">{m.title}</b>
           <span className="c-sub text-[12px] tabular-nums">{m.deadline ? tr("{d} days left", { d: e.days }) + " · " + m.deadline : tr("No deadline")}</span>
@@ -73,13 +73,13 @@ function Card({ m, e, onChange, onDelete, openScout }) {
         <span className="text-[13px]">{e.chance == null ? <span className="c-sub">{tr("No forecast yet")}</span> : <><span className="c-sub">{tr("Chance by the deadline")}</span> <b className="c-num tabular-nums text-[16px] font-black" data-testid="mission-chance">{Math.round(e.chance * 100)}%</b></>}</span>
         <span className="c-acc"><Spark log={m.log} /></span>
       </div>
-      {e.step ? <p className="text-[13.5px] rounded-[16px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b>{ar ? e.step.ar : e.step.en}</p> : null}
+      {e.step ? <p className="text-[13.5px] rounded-[20px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b>{ar ? e.step.ar : e.step.en}</p> : null}
       <div className="flex flex-wrap items-center gap-2">
-        <button className="min-h-[44px] px-2 rounded-[14px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => setWhy(!why)} aria-expanded={why} data-testid="mission-why">{why ? <ChevronUp size={14} /> : <ChevronDown size={14} />}{tr("Why")}</button>
-        {m.kind === "buy" ? <button className="min-h-[44px] px-2 rounded-[14px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => openScout(m)} data-testid="mission-scout"><Binoculars size={14} />{tr("Ads in Scout")}</button> : null}
-        <button className="min-h-[44px] px-2 rounded-[14px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => onChange({ ...m, status: m.status === "paused" ? "active" : "paused" })} data-testid="mission-pause">{m.status === "paused" ? <Play size={14} /> : <Pause size={14} />}{tr(m.status === "paused" ? "Resume" : "Pause")}</button>
+        <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => setWhy(!why)} aria-expanded={why} data-testid="mission-why">{why ? <ChevronUp size={14} /> : <ChevronDown size={14} />}{tr("Why")}</button>
+        {m.kind === "buy" ? <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => openScout(m)} data-testid="mission-scout"><Binoculars size={14} />{tr("Ads in Scout")}</button> : null}
+        <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => onChange({ ...m, status: m.status === "paused" ? "active" : "paused" })} data-testid="mission-pause">{m.status === "paused" ? <Play size={14} /> : <Pause size={14} />}{tr(m.status === "paused" ? "Resume" : "Pause")}</button>
         {e.state === "done" ? <button className={btnP + " !h-11 !min-h-[44px] !text-[14px]"} onClick={() => onChange({ ...m, status: "done" })} data-testid="mission-done"><Check size={15} />{tr("Mark done")}</button> : null}
-        <button className="w-11 h-11 grid place-items-center rounded-[14px] c-sub hover:text-[var(--c-neg)] ms-auto" aria-label={tr("Delete")} onClick={() => onDelete(m)}><Trash2 size={15} /></button>
+        <button className="w-11 h-11 grid place-items-center rounded-[12px] c-sub hover:text-[var(--c-neg)] ms-auto" aria-label={tr("Delete")} onClick={() => onDelete(m)}><Trash2 size={15} /></button>
       </div>
       {why ? <ul className="c-sub text-[12.5px] m-0 ps-5 grid gap-1" data-testid="mission-evidence">{e.evidence.map((x, i) => <li key={i} dir="auto">{ar ? x.ar : x.en}</li>)}
         {e.perDayNeed != null && e.left > 0 ? <li dir="auto">{m.kind === "weight" ? tr("Needed from now: {x} kg a week", { x: n(e.perDayNeed * 7, 1) }) : tr("Needed from now: {x} a month", { x: n(e.perDayNeed * 30) })}</li> : null}</ul> : null}
@@ -116,7 +116,7 @@ export function MissionsPage({ flash }) {
   const conflict = M.conflicts(data.items, d, now);
   const ar = getLang() === "ar";
   return (
-    <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="missions-page">
+    <div className={page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="missions-page">
       <div>
         <h2 className={h1}>{tr("Missions")}</h2>
         <p data-intro="" className="c-sub text-[12.5px] m-0">{tr("Say a goal with a deadline. Attune works on it every day: it reads your money, food and Scout ads, gives your real chance, and the one step for today.")}</p>
@@ -171,7 +171,7 @@ function DecisionLab() {
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button>
       {open ? <>
         <div className="grid sm:grid-cols-2 gap-2">{opts.map((o, i) => (
-          <div key={i} className="rounded-[18px] border bg-[var(--c-bg)] p-3 space-y-2" style={{ borderColor: "var(--c-ln)" }}>
+          <div key={i} className="rounded-[20px] border bg-[var(--c-bg)] p-3 space-y-2" style={{ borderColor: "var(--c-ln)" }}>
             {field(i, "name", "Option name")}
             <label className="text-[11.5px] c-sub block">{tr("Pay now")}{field(i, "now", "0")}</label>
             <div className="grid grid-cols-2 gap-1.5"><label className="text-[11.5px] c-sub">{tr("Then every month")}{field(i, "monthly", "0")}</label><label className="text-[11.5px] c-sub">{tr("For months")}{field(i, "months", "0")}</label></div>
@@ -219,13 +219,13 @@ export function MissionsLine({ go }) {
   const data = M.loadMissions(), act = data.items.filter((m) => m.status === "active"), ar = getLang() === "ar";
   if (!act.length) return (
     <button onClick={go} className={kCard + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)]"} data-testid="home-missions">
-      <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] shrink-0"><Target size={18} className="c-acc" /></span>
+      <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0"><Target size={18} className="c-acc" /></span>
       <span className="flex-1 min-w-0"><b className="block text-[14.5px] font-extrabold">{tr("Missions")}</b><span className="c-sub block text-[12.5px] truncate">{tr("A goal with a date — Attune works on it every day")}</span></span>
     </button>);
   const d = dataNow(), rows = act.map((m) => ({ m, e: M.evaluate(m, d) })).sort((a, b) => (a.e.chance ?? 1) - (b.e.chance ?? 1)), r = rows[0];
   return (
     <button onClick={go} className={kCard + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)]"} data-testid="home-missions">
-      <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] shrink-0"><Target size={18} className="c-acc" /></span>
+      <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0"><Target size={18} className="c-acc" /></span>
       <span className="flex-1 min-w-0"><b className="block text-[14.5px] font-extrabold truncate" dir="auto">{r.m.title}</b>
         <span className="c-sub block text-[12.5px] tabular-nums truncate" dir="auto">{r.e.chance == null ? tr("Needs data") : tr("{c}% chance", { c: Math.round(r.e.chance * 100) })}{r.e.step ? " · " + (ar ? r.e.step.ar : r.e.step.en) : ""}</span></span>
       {act.length > 1 ? <span className="c-sub text-[11px] shrink-0">+{act.length - 1}</span> : null}

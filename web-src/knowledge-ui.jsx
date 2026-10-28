@@ -116,7 +116,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
             className={"shrink-0 w-11 h-6 rounded-full relative transition-colors duration-150 after:absolute after:-inset-2.5 after:content-[''] " + (on ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]")}>
             <span className={"absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-150 " + (on ? "start-[1.375rem]" : "start-0.5")} /></button>
         </div>
-        <p className="text-[13px] font-bold tabular-nums rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] px-3 py-2" data-testid="kn-stats">{tr("{mb} — {c} passages from {s} sources", { mb: mb(stats.bytes), c: stats.chunks, s: stats.sources })}</p>
+        <p className="text-[13px] font-bold tabular-nums rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] px-3 py-2" data-testid="kn-stats">{tr("{mb} — {c} passages from {s} sources", { mb: mb(stats.bytes), c: stats.chunks, s: stats.sources })}</p>
         <p data-intro="" className="text-[11.5px] text-[var(--c-mut)]">{tr("What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a second and nothing leaves the phone.")}</p>
       </div>
 
@@ -166,7 +166,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
             <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><FileText size={15} /></span>
             <div className="flex-1 min-w-0"><p className="text-[13.5px] font-bold text-[var(--c-ink)] truncate" dir="auto">{s.title}</p>
               <p className="text-[11.5px] tabular-nums text-[var(--c-mut)]">{tr(KIND[s.kind] || "Note")} · {mb(s.bytes)} · {tr("{c} passages", { c: s.chunks })}{s.pages ? " · " + tr("{p} pages", { p: s.pages }) : ""}</p></div>
-            <button onClick={() => remove(s)} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Remove")} data-testid="kn-remove"><Trash2 size={15} /></button>
+            <button onClick={() => remove(s)} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Remove")} data-testid="kn-remove"><Trash2 size={15} /></button>
           </div>))}
         {!own.length && !live.some((r) => r.chunks) ? <p className="text-[12px] text-[var(--c-mut)] py-2" data-testid="kn-empty">{tr("Nothing here yet — paste a text or add a file.")}</p> : null}
       </div>

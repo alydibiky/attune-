@@ -53,7 +53,7 @@ export function LibraryPage({ knowledge, nativeCall, flash, askChat }) {
   const remove = async (s) => { if (!(await askConfirm("Forget this? Chat won't answer from it any more.", { yes: "Forget" }))) return; await knowledge.remove(s.id); load(); };
   const ask = (s) => askChat && askChat(s.chapters ? tr("In “{t}”, what happens in chapter 1?", { t: s.title.replace(/\.[a-z0-9]{2,4}$/i, "") }) : tr("In “{t}”, ", { t: s.title.replace(/\.[a-z0-9]{2,4}$/i, "") }));
   return (
-    <div className={page + " rounded-[22px] p-4 space-y-4"} data-testid="library-page">
+    <div className={page + " rounded-[20px] p-4 space-y-4"} data-testid="library-page">
       <div><h2 className={h1 + " flex items-center gap-2"}><BookOpen size={20} className="c-acc" />{tr("Remember")}</h2>
         <p className="c-sub m-0 mt-1">{tr("Give Attune a book, an article or the news to remember. Then ask Chat about it any time — even “what happens in chapter 3?”.")}</p></div>
       <div className="flex flex-wrap gap-2">
@@ -78,7 +78,7 @@ export function LibraryPage({ knowledge, nativeCall, flash, askChat }) {
             <span className="flex-1 min-w-0"><b className="block truncate text-[14.5px]" dir="auto">{s.title}</b>
               <span className="c-sub block text-[12.5px] tabular-nums">{[s.chapters ? tr("{n} chapters", { n: s.chapters }) : s.pages ? tr("{n} pages", { n: s.pages }) : "", new Date(s.added).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })].filter(Boolean).join(" · ")}</span></span>
             <button onClick={() => ask(s)} className={btnS + " shrink-0"} data-testid="lib-ask"><MessageCircle size={14} className="c-acc" />{tr("Ask")}</button>
-            <button onClick={() => remove(s)} aria-label={tr("Forget")} className="w-11 h-11 rounded-[14px] grid place-items-center c-sub hover:text-[var(--c-neg)] shrink-0" data-testid="lib-remove"><Trash2 size={15} /></button>
+            <button onClick={() => remove(s)} aria-label={tr("Forget")} className="w-11 h-11 rounded-[12px] grid place-items-center c-sub hover:text-[var(--c-neg)] shrink-0" data-testid="lib-remove"><Trash2 size={15} /></button>
           </div>)) : <p className={cardPad + " c-sub m-0 text-center"} data-testid="lib-empty">{tr("Nothing yet. Add a book, an article or a page above.")}</p>}
       </section>
       <p className="c-sub text-[12px] m-0 flex items-center gap-1.5"><ShieldCheck size={13} />{tr("Kept on this phone only. Chat answers from it and says where.")}</p>

@@ -40,7 +40,7 @@ export function ActionCard({ msg, onDo, onCancel, onAnswer }) {
   const [busy, setBusy] = useState(false);
   if (msg.status === "reading") {
     return (
-      <div className="rounded-[22px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-4 text-sm text-[var(--c-ink)] flex items-center gap-2" data-testid="action-card">
+      <div className="rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-4 text-sm text-[var(--c-ink)] flex items-center gap-2" data-testid="action-card">
         <Loader2 size={15} className="animate-spin text-[var(--c-acc)]" /> {tr("Reading what you want set…")}
       </div>
     );
@@ -55,7 +55,7 @@ export function ActionCard({ msg, onDo, onCancel, onAnswer }) {
     (a.kind === "timer" && !a.durationSec) || (a.kind === "call" && !a.phone);
   const field = inp;
   return (
-    <div className={`rounded-[22px] border p-4 text-[var(--c-ink)] ${done ? "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10" : cancelled ? "border-[var(--c-ln)] bg-[var(--c-surf)] opacity-60" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`} data-testid="action-card">
+    <div className={`rounded-[20px] border p-4 text-[var(--c-ink)] ${done ? "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10" : cancelled ? "border-[var(--c-ln)] bg-[var(--c-surf)] opacity-60" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`} data-testid="action-card">
       <p className="text-[15px] font-extrabold text-[var(--c-ink)] flex items-center gap-2 m-0">
         <span className="text-base">{KIND_ICON[a.kind]}</span>{tr(KIND_LABEL[a.kind])}
         {msg.via ? <span className="ms-auto text-[10px] text-[var(--c-mut)]">{msg.via === "model" ? tr("read by the model · checked by the app") : tr("read on the phone")}</span> : null}
@@ -97,7 +97,7 @@ export function ActionCard({ msg, onDo, onCancel, onAnswer }) {
               {{ reminder: tr("Set reminder"), alarm: tr("Open in Clock"), timer: tr("Start in Clock"), calendar: tr("Add to calendar"), whatsapp: tr("Open WhatsApp"), call: tr("Open the dialer"), none: tr("Set it") }[a.kind]}
             </button>
             <button onClick={onCancel} className={btnS} data-testid="act-cancel">{tr("Cancel")}</button>
-            <button onClick={onAnswer} className={"min-h-[44px] px-3 rounded-[14px] text-[13.5px] font-bold hover:text-[var(--c-ink)] " + muted}>{tr("Just answer")}</button>
+            <button onClick={onAnswer} className={"min-h-[44px] px-3 rounded-[12px] text-[13.5px] font-bold hover:text-[var(--c-ink)] " + muted}>{tr("Just answer")}</button>
           </div>
         </div>
       )}
@@ -148,11 +148,11 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
         <p className="text-[16px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><Bell size={16} className="text-[var(--c-acc)]" />{tr("Reminders & actions")}</p>
         <p className={"text-[12.5px] mt-1.5 mb-0 " + muted}>{tr("Just say it in Chat: “remind me tomorrow at 9 to call Ahmed”, “صحيني الساعة 6”, “ابعت لمحمود على الواتساب إني هتأخر”. You always confirm first.")}</p>
         {native && !notify ? (
-          <button onClick={() => native.askNotifications && native.askNotifications()} className="mt-3 w-full min-h-[44px] text-start rounded-[14px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12.5px] font-semibold text-[var(--c-warn)] flex items-start gap-2"><AlertTriangle size={14} className="mt-0.5 shrink-0" />
+          <button onClick={() => native.askNotifications && native.askNotifications()} className="mt-3 w-full min-h-[44px] text-start rounded-[12px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12.5px] font-semibold text-[var(--c-warn)] flex items-start gap-2"><AlertTriangle size={14} className="mt-0.5 shrink-0" />
             {tr("Notifications are off for Attune — tap to allow them, or reminders can't appear.")}</button>
         ) : null}
         {native && !exact ? (
-          <button onClick={() => native.askExact && native.askExact()} className="mt-2 w-full min-h-[44px] text-start rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[12.5px] text-[var(--c-ink)]" data-testid="ask-exact">
+          <button onClick={() => native.askExact && native.askExact()} className="mt-2 w-full min-h-[44px] text-start rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[12.5px] text-[var(--c-ink)]" data-testid="ask-exact">
             {tr("Reminders may come up to 10 minutes late. Tap to allow “Alarms & reminders” for Attune so they ring on the minute.")}</button>
         ) : null}
         {!native ? <p className="mt-2 text-[11px] text-[var(--c-mut)]">{tr("In the browser reminders are only listed — the Android app rings them.")}</p> : null}
@@ -168,7 +168,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
         <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} className={field + " w-full"} dir="ltr" data-testid="rem-at" />
         <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr("Repeat")} data-testid="rem-repeat">
           {Object.keys(REPEAT_LABEL).map((k) => <button key={k} type="button" role="radio" aria-checked={repeat === k} onClick={() => setRepeat(k)} data-testid={"rem-repeat-" + k}
-            className={"min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold transition-colors duration-150 " + (repeat === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>{tr(REPEAT_LABEL[k])}</button>)}
+            className={"min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold transition-colors duration-150 " + (repeat === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>{tr(REPEAT_LABEL[k])}</button>)}
         </div>
         {repeat === "days" ? <div className="flex flex-wrap gap-1.5" data-testid="rem-days">{DAY_BTN.map((d, i) => <button key={d} type="button" aria-pressed={days.includes(i)} onClick={() => setDays((x) => (x.includes(i) ? x.filter((y) => y !== i) : [...x, i]))} data-testid={"rem-day-" + i}
           className={"min-h-[40px] min-w-[48px] px-2.5 rounded-full border text-[13px] font-bold " + (days.includes(i) ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]")}>{tr(d)}</button>)}</div> : null}
@@ -181,7 +181,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
         {upcoming.length === 0 ? <p className="text-sm text-[var(--c-mut)]">{tr("Nothing set.")}</p> : (
           <div className="space-y-1.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">
             {upcoming.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item">
+              <div key={r.id} className="flex items-center gap-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item">
                 <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0">🔔</span>
                 <div className="flex-1 min-w-0">
                   <p dir="auto" className="text-[14px] font-bold text-[var(--c-ink)] truncate m-0">{r.title}</p>

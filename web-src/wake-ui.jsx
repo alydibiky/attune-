@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import { tr } from "./i18n.js";
 
 const read = (N) => { try { return JSON.parse(N.wakeState() || "{}"); } catch (e) { return {}; } };
-const pill = (on) => "min-h-[36px] px-3 rounded-full border text-[12.5px] font-bold whitespace-nowrap " + (on ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]");
+const pill = (on) => "min-h-[36px] px-3 rounded-full border text-[12.5px] font-bold whitespace-nowrap " + (on ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]");
 
 /** Option C (Ali, 26 Oct): teach it your voice — say «يا أتيون» 3 times; after that only a sound close to yours wakes it. */
 function TeachVoice({ N, s }) {
@@ -31,7 +31,7 @@ function TeachVoice({ N, s }) {
     }, 250);
   };
   const n = +s.voice || 0;
-  return <div className="rounded-[14px] border border-[var(--c-ln)] p-2.5" data-testid="wake-voice">
+  return <div className="rounded-[12px] border border-[var(--c-ln)] p-2.5" data-testid="wake-voice">
     <span className="block font-extrabold">{tr("Your voice")} · <span data-testid="wake-voice-n">{n}/3</span></span>
     <span className="block c-sub mb-2">{n ? tr("Only a voice like yours wakes it (fewer false wakes).") : tr("Say «يا أتيون» 3 times so it wakes for you, not the TV or people around you.")}</span>
     {step >= 0 && step < 3 ? <p className="m-0 mb-2 font-extrabold text-[var(--c-acc)]" data-testid="wake-voice-say">{tr("Say «يا أتيون» now")} ({step + 1}/3)</p> : null}

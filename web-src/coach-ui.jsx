@@ -88,9 +88,9 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
     setActive({ i, lesson: { title: p.text, lang: getLang(), steps: [...m.steps, ...(m.steps[m.steps.length - 1].text === answer ? [] : [{ text: answer, rule: tr("The answer") }])] }, checked, by, answer, topic: "other", src: p.text });
   };
 
-  if (rep) return <div className={page + " rounded-[22px] p-4 md:p-6"} style={{ minHeight: "70vh" }} data-testid="coach-page"><HomeworkReport rep={hrep} back={() => setRep(false)} names={C.TOPIC_NAMES || {}} /></div>;
+  if (rep) return <div className={page + " rounded-[20px] p-4 md:p-6"} style={{ minHeight: "70vh" }} data-testid="coach-page"><HomeworkReport rep={hrep} back={() => setRep(false)} names={C.TOPIC_NAMES || {}} /></div>;
   return (
-    <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="coach-page">
+    <div className={page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="coach-page">
       <div><h2 className={h1 + " flex items-center gap-2"}><GraduationCap size={21} className="c-acc" />{tr("Homework Coach")}</h2>
         <p data-intro="" className="c-sub m-0 mt-1 lg:max-w-[70ch]">{tr("Snap the homework — Attune teaches it step by step, with pictures and a voice. Maths is checked by code before you see it.")}</p></div>
       {/* v6.27 computer layout A: the homework and its problems on the left, the lesson on the right (stacked on a phone) */}
@@ -99,8 +99,8 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
         {[[true, "Teach me first"], [false, "Show the answers"]].map(([v, l]) => <button key={l} className={chip(teach === v)} aria-pressed={teach === v} onClick={() => put({ ...state, settings: { ...(state.settings || {}), teach: v } })} data-testid={v ? "coach-teach" : "coach-answers"}>{tr(l)}</button>)}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <button className={card + " text-center py-4 min-h-[88px] hover:border-[var(--c-acc)]"} onClick={() => fileRef.current && fileRef.current.click()} data-testid="coach-photo"><span className="mx-auto w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)]"><Camera size={18} className="c-acc" /></span><span className="block text-[13.5px] font-bold mt-1.5">{tr("Photo of the homework")}</span></button>
-        <button className={card + " text-center py-4 min-h-[88px] hover:border-[var(--c-acc)]"} onClick={() => setTyping((v) => !v)} data-testid="coach-type"><span className="mx-auto w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)]"><Pencil size={18} className="c-acc" /></span><span className="block text-[13.5px] font-bold mt-1.5">{tr("Type a problem")}</span></button>
+        <button className={card + " text-center py-4 min-h-[88px] hover:border-[var(--c-acc)]"} onClick={() => fileRef.current && fileRef.current.click()} data-testid="coach-photo"><span className="mx-auto w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)]"><Camera size={18} className="c-acc" /></span><span className="block text-[13.5px] font-bold mt-1.5">{tr("Photo of the homework")}</span></button>
+        <button className={card + " text-center py-4 min-h-[88px] hover:border-[var(--c-acc)]"} onClick={() => setTyping((v) => !v)} data-testid="coach-type"><span className="mx-auto w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)]"><Pencil size={18} className="c-acc" /></span><span className="block text-[13.5px] font-bold mt-1.5">{tr("Type a problem")}</span></button>
       </div>
       <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" data-testid="coach-file" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) fromPhoto(await shrink(f)); }} />
       {typing ? (
@@ -111,7 +111,7 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
       {weak.length && !items.length ? <div className={cardPad} data-testid="coach-weak"><span className={label}>{tr("Needs practice")}</span><p className="m-0 mt-1 font-semibold">{weak.map((w) => tr(C.TOPIC_NAMES[w] || w)).join(" · ")}</p></div> : null}
       {!items.length ? <SeeAll testid="coach-open-report" onClick={() => setRep(true)} title={tr("See all → Homework Report")} sub={hrep.week ? tr("{n} solved this week · {p}% first try", { n: hrep.week, p: hrep.pct }) : tr("What you solved, and what to practise")} cta={tr("Report")} /> : null}
       {busy ? <p className="c-sub" data-testid="coach-busy">{busy}</p> : null}
-      {photo && items.length ? <img src={photo} alt="" className="max-h-40 rounded-[18px] border border-[var(--c-ln)]" /> : null}
+      {photo && items.length ? <img src={photo} alt="" className="max-h-40 rounded-[20px] border border-[var(--c-ln)]" /> : null}
       {items.length ? (
         <div className="space-y-2" data-testid="coach-items"><span className={label}>{tr("Check it was read right, then tap Teach me")}</span>
           {/* v6.41 (S1): the child's written answers, marked by the maths engine */}

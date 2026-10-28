@@ -115,7 +115,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
       ) : (<>
       {fastTier && onFast ? (
         <button onClick={() => !busy && !dlBusy && onFast(fastTier)} disabled={!!busy || dlBusy} data-testid="fast-install"
-          className="w-full mb-2 min-h-[56px] flex items-center gap-3 px-3.5 py-2.5 rounded-[18px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-start disabled:opacity-50">
+          className="w-full mb-2 min-h-[56px] flex items-center gap-3 px-3.5 py-2.5 rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-start disabled:opacity-50">
           <Zap size={18} className="text-[var(--c-warn)] shrink-0" />
           <span className="min-w-0"><span className="block text-sm text-[var(--c-warn)] font-extrabold">{tr("Switch to the fast engine")}</span>
             <span className="block text-[11px] text-[var(--c-mut)]">{tr("Blaze on the graphics chip: first words in about a second, many times faster than this engine. {s} GB, once.", { s: fastTier.sizeGB.toFixed(1) })}</span></span>
@@ -129,13 +129,13 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
         {DEV && sp.npuBuilt ? row(sp.npu, () => !busy && apply({ npu: !sp.npu }, tr("Restarting the engine…")), "Use the NPU (experimental)",
           sp.npuDev ? tr("Running on the NPU ({d}).", { d: sp.npuDev }) : "Runs the model on the Snapdragon NPU (Hexagon): much cooler, often faster at reading. Works best with Core Max (8-bit). Switches itself back to the CPU if anything goes wrong.") : null}
         {DEV && sp.mtpMode ? (
-          <div className="rounded-[18px] border border-[var(--c-ln)] px-3.5 py-3" data-testid="mtp-setting">
+          <div className="rounded-[20px] border border-[var(--c-ln)] px-3.5 py-3" data-testid="mtp-setting">
             <span className="block text-sm font-extrabold text-[var(--c-ink)]">{tr("Faster writing (MTP)")}</span>
             <div className="flex gap-1.5 mt-1.5" role="radiogroup" aria-label={tr("Faster writing (MTP)")}>
               {[["auto", "Auto"], ["on", "On"], ["off", "Off"]].map(([v, l]) => (
                 <button key={v} role="radio" aria-checked={sp.mtpMode === v} data-testid={"mtp-" + v} disabled={!!busy}
                   onClick={() => sp.mtpMode !== v && !busy && apply({ mtp: v }, tr("Restarting the engine…"))}
-                  className={"flex-1 min-h-[40px] px-2 rounded-full border text-[13px] font-bold disabled:opacity-50 transition-colors duration-150 " + (sp.mtpMode === v ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] text-[var(--c-ink)]")}>{tr(l)}</button>
+                  className={"flex-1 min-h-[40px] px-2 rounded-full border text-[13px] font-bold disabled:opacity-50 transition-colors duration-150 " + (sp.mtpMode === v ? "border-transparent bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-ink)]")}>{tr(l)}</button>
               ))}
             </div>
             <span className="block text-[11px] text-[var(--c-mut)] mt-1.5">{tr("Same answers, faster for code, tables, JSON, emails and summaries; roughly the same or slightly slower for free-form explanations.")}</span>
@@ -143,7 +143,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
           </div>
         ) : null}
         {sp.safe ? (
-          <div className="mt-2 rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12px] text-[var(--c-warn)]" data-testid="safe-mode">
+          <div className="mt-2 rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12px] text-[var(--c-warn)]" data-testid="safe-mode">
             {tr("Safe mode is on for this model: it once wrote nonsense on this phone, so it runs without speed tricks and with full-precision memory (a little slower, same answers).")}
             <button disabled={!!busy} onClick={() => !busy && apply({ safe: false }, tr("Restarting the engine…"))} className="block mt-1.5 min-h-[40px] px-3 rounded-[12px] font-bold border border-[var(--c-warn)]/50 text-[var(--c-warn)] disabled:opacity-50" data-testid="safe-off">{tr("Turn safe mode off")}</button>
           </div>) : null}
@@ -153,7 +153,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
       </>)}
       {busy ? <p className="text-[12px] text-[var(--c-acc)] mt-2 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{busy}{pct ? " " + pct + "%" : ""}</p> : null}
 
-      <div className="mt-3 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5" data-testid="doctor">
+      <div className="mt-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5" data-testid="doctor">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-extrabold text-[var(--c-ink)] flex items-center gap-1.5"><AlertTriangle size={15} className="text-[var(--c-warn)]" />{tr("Why is it slow?")}</span>
           <button onClick={() => { try { setDoc(JSON.parse(native.doctor())); } catch (e) { flash(tr("Not available in this build")); } }} data-testid="doctor-run"
@@ -172,7 +172,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
         ) : <p className="text-[11px] text-[var(--c-mut)] mt-1">{tr("Reads the phone's heat, battery saver, free memory and the engine's own log, and says in plain words what is slowing answers down.")}</p>}
       </div>
 
-      <div className="mt-3 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5">
+      <div className="mt-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-extrabold text-[var(--c-ink)] flex items-center gap-1.5"><Gauge size={15} className="text-[var(--c-acc)]" />{tr("Speed test")}</span>
           <button onClick={test} disabled={!!busy || !engineReady} data-testid="bench-run"

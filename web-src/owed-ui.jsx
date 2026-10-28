@@ -27,7 +27,7 @@ function Sheet({ children, onClose, label }) {
   useEffect(() => { const k = (e) => e.key === "Escape" && onClose(); window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, [onClose]);
   return (
     <div className="calm fixed inset-0 z-[80] flex items-end md:items-center justify-center" style={{ background: "rgba(0,0,0,.45)" }} onClick={onClose} data-testid="owed-sheet" role="dialog" aria-label={label}>
-      <div className="w-full md:max-w-lg max-h-[92vh] overflow-auto rounded-t-[28px] md:rounded-[28px] border border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-ink)] p-4 md:p-6 space-y-3 shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full md:max-w-lg max-h-[92vh] overflow-auto rounded-t-[20px] md:rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-ink)] p-4 md:p-6 space-y-3 shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-2"><b className="text-[17px] font-black flex items-center gap-2"><ShieldCheck size={18} className="text-[var(--c-acc)] shrink-0" />{label}</b>
           <button onClick={onClose} className="w-11 h-11 shrink-0 rounded-full grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)] cursor-pointer" aria-label={tr("Close")} data-testid="owed-close"><X size={16} /></button></div>
         {children}

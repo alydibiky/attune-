@@ -5,7 +5,7 @@
 const S = (en, ar) => [en, ar];
 
 export const AREAS = [
-  { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "guardian", "life", "reminders", "radar", "timeline", "deal", "automations", "xray"] },
+  { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "planner", "guardian", "life", "family", "reminders", "radar", "timeline", "deal", "automations", "xray"] },
   { id: "health", icon: "🥗", title: S("Health & food", "الصحة والأكل"), ids: ["health", "fit", "care", "cycle"] },
   { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "chat", "lifeask", "translate", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
   { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "booklib", "slides", "cv", "memory", "remember", "recall", "news"] },
@@ -30,6 +30,8 @@ export const SAY = {
   privacy: [S("Open Privacy", "افتح الخصوصية"), S("What stayed on your phone this week, and a PIN for any part", "إيه اللي فضل على موبايلك الأسبوع ده، ورقم سري لأي جزء")],
   money: [S("“Spent 85 on koshary”", "«صرفت 85 على كشري»"), S("In Money, with safe to spend today and where it all went", "في الفلوس، ومعاه تقدر تصرف كام النهارده وراحت فين")],
   guardian: [S("Nothing — it reads your payments by itself", "ولا حاجة — بيقرا مدفوعاتك لوحده"), S("A double charge, a price rise or a forgotten subscription, with what to do", "خصم مرتين، أو سعر زاد، أو اشتراك ناسيه، ومعاه تعمل إيه")],
+  planner: [S("“Save 20000 for travel by June”", "«حوّش 20000 للسفر لحد يونيو»"), S("This month's share for each goal, and what is free to spend", "نصيب الشهر ده لكل هدف، واللي فاضل حر تصرفه")],
+  family: [S("“Add milk to the family list”", "«ضيف لبن لقايمة البيت»"), S("One list for the house, who owes whom, reminders for the parents", "قايمة واحدة للبيت، مين عليه لمين، وتفكير للوالدين")],
   life: [S("«الشغالة كل سبت 600»", "«الشغالة كل سبت 600»"), S("A tick every Saturday — ticked goes into Money by itself", "علامة كل سبت — لما تعلّم بتتسجل في الفلوس لوحدها")],
   reminders: [S("“Remind me at 5 to pay the electricity”", "«فكّرني الساعة 5 أدفع الكهربا»"), S("A reminder at 5 — on the phone, no internet needed", "تنبيه الساعة 5 — على الموبايل، من غير نت")],
   radar: [S("A free trial or a warranty in your messages", "تجربة مجانية أو ضمان في رسايلك"), S("The date kept, a warning before it ends, and how to cancel", "الميعاد يتحفظ، وتنبيه قبل ما يخلص، وإزاي تلغي")],

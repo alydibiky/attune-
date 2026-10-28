@@ -39,7 +39,7 @@ ok([...Object.values(G.TOOLS), ...G.START].every((g) => sketches.has(g.sketch)),
 const ch = G.chapters();
 ok(ch.map((c) => (Array.isArray(c.title) ? c.title[0] : c.title)).join() === "Create,Projects,Home,Students,Money,Follow-ups,Health,Daily,Go,Saved,Work,Tools,Bottom of the sidebar", "chapters follow the sidebar (v8.5: Follow-ups, Go, Saved): " + ch.map((c) => c.title));
 const money = ch.find((c) => c.title === "Money");
-ok(money.ids.join() === "money,deal" && ch.find((c) => c.title === "Follow-ups").ids.join() === "timeline,life,family,reminders,radar,xray,guardian", "Money: Money, Deal Check; Follow-ups its own chapter: " + money.ids);
+ok(money.ids.join() === "money,deal,planner" && ch.find((c) => c.title === "Follow-ups").ids.join() === "timeline,life,family,reminders,radar,xray,guardian", "Money: Money, Deal Check; Follow-ups its own chapter: " + money.ids);
 ok(ch.find((c) => c.title === "Work").ids.slice(0, 3).join() === "business,fleet,field" && ch.find((c) => c.title === "Tools").ids[0] === "tools" && !ch.flatMap((c) => c.ids).includes("guide"), "Work: Business, Team records, Reports (Crane opens from Fleet, v8.5); Tools its own chapter");
 const test = G.chapters([["money", "Money", "money", ["money", "deal", "radar"]], ["health", "Health", "health", ["fit", "care"]]]);
 ok(test[0].ids.join() === "money,radar,deal" && test[1].ids.join() === "fit,care" && test.length === 2, "chapters only hold what the sidebar has");

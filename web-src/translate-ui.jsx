@@ -102,7 +102,7 @@ function Interpreter({ llm, native, flash, gloss, close }) {
   const Half = ({ side, flip }) => (
     <div className={"flex-1 flex flex-col p-4 gap-3 min-h-0 " + (side === "b" ? "bg-[var(--c-surf)]" : "bg-[var(--c-bg)]")} style={flip ? { transform: "rotate(180deg)" } : {}} data-testid={"interp-" + side}>
       <div className="flex items-center gap-2">
-        <select value={langs[side]} onChange={(e) => setLangs({ ...langs, [side]: e.target.value })} className="min-h-[44px] rounded-[14px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] text-[var(--c-ink)] text-[14px] font-bold px-3" data-testid={"interp-lang-" + side}>
+        <select value={langs[side]} onChange={(e) => setLangs({ ...langs, [side]: e.target.value })} className="min-h-[44px] rounded-[12px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] text-[var(--c-ink)] text-[14px] font-bold px-3" data-testid={"interp-lang-" + side}>
           {Object.entries(T.LANGS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <span className="flex-1" />
         {side === "a" ? <button onClick={close} className={btnS} data-testid="interp-close">{tr("Close")}</button> : null}
@@ -110,7 +110,7 @@ function Interpreter({ llm, native, flash, gloss, close }) {
       <p className="flex-1 overflow-y-auto text-[26px] leading-snug text-[var(--c-ink)] m-0" dir={RTL.has(langs[side]) ? "rtl" : "ltr"} data-testid={"interp-heard-" + side}>{heard[side]}</p>
       {said[side] ? <p className="text-[13px] text-[var(--c-mut)] m-0" dir="auto" data-testid={"interp-said-" + side}>{said[side]}</p> : null}
       <button onClick={() => turn(side)} disabled={!!busy && busy !== side} data-testid={"interp-mic-" + side}
-        className={"w-full min-h-[56px] py-4 rounded-[22px] text-lg font-extrabold flex items-center justify-center gap-2 disabled:opacity-40 " + (busy === side ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-acc)] text-[var(--c-on-acc)]")}>
+        className={"w-full min-h-[56px] py-4 rounded-[20px] text-lg font-extrabold flex items-center justify-center gap-2 disabled:opacity-40 " + (busy === side ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-acc)] text-[var(--c-on-acc)]")}>
         <Volume2 size={20} />{busy === side ? T.LANGS[langs[side]] + " …" : (T.LANGS[langs[side]] || langs[side])}</button>
     </div>);
   return (
@@ -158,7 +158,7 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   };
   if (tab === "talk") return <Interpreter llm={llm} native={native} flash={flash} gloss={gloss} close={() => setTab("text")} />;
   return (
-    <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="translate-page">
+    <div className={page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="translate-page">
       <div><h2 className={h1 + " flex items-center gap-2"}><Languages size={20} className="text-[var(--c-acc)]" />{tr("Translate")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + muted}>{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
       <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" role="tablist">
@@ -193,8 +193,8 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
           <p className={muted + " text-center m-0"}>{tr("Photo of a menu, a sign, a document…")}</p>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { goPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="tr-file" />
           <input ref={galRef} type="file" accept="image/*" className="hidden" onChange={(e) => { goPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="tr-gallery-file" />
-          {photo && photo.out ? <div className="space-y-2" data-testid="tr-overlay"><img src={photo.out} alt="" className="w-full rounded-[16px] border border-[var(--c-ln)]" />
-            <a href={photo.out} download="translated.jpg" className={btnS}><Download size={14} />{tr("Save the picture")}</a></div> : photo ? <img src={photo.src} alt="" className="max-h-56 rounded-[16px] border border-[var(--c-ln)]" /> : null}
+          {photo && photo.out ? <div className="space-y-2" data-testid="tr-overlay"><img src={photo.out} alt="" className="w-full rounded-[20px] border border-[var(--c-ln)]" />
+            <a href={photo.out} download="translated.jpg" className={btnS}><Download size={14} />{tr("Save the picture")}</a></div> : photo ? <img src={photo.src} alt="" className="max-h-56 rounded-[20px] border border-[var(--c-ln)]" /> : null}
         </div>) : null}
       {tab === "photo" && photo && photo.text ? <button className={btnS} onClick={() => openRead({ text: photo.text, image: photo.src })} data-testid="tr-read"><Volume2 size={14} />{tr("Read it to me")}</button> : null}
       {tab === "doc" ? (

@@ -16,8 +16,8 @@ import * as U from "./ui-kit.jsx";
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? "\u2066" + y + "\u2069" : y])) : v);
 const SLICE = ["var(--c-chart-1)", "var(--c-chart-2)", "var(--c-chart-3)", "var(--c-chart-4)"];
 const amt = (n, cur, o) => fmt(n, o) + (cur ? " " + cur : "");
-const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short" }); } catch (e) { return iso; } };
-const monthLabel = (key, long) => { try { return new Date(key + "-15T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, long ? { month: "long", year: "numeric" } : { month: "short" }); } catch (e) { return key; } };
+const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }); } catch (e) { return iso; } };
+const monthLabel = (key, long) => { try { return new Date(key + "-15T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, long ? { month: "long", year: "numeric" } : { month: "short" }); } catch (e) { return key; } };
 const Arrow = ({ back, size = 15 }) => back ? <ArrowLeft size={size} className="rtl:-scale-x-100" /> : <ArrowRight size={size} className="rtl:-scale-x-100" />;
 
 /** The one box: write payments ("lunch 150, taxi 60") or ask ("how much on food this week?"). */
@@ -32,7 +32,7 @@ export function MoneyBox({ onSubmit, busy, onReceipt, onVoice, listening, wide }
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { onReceipt(e.target.files && e.target.files[0]); e.target.value = ""; }} />
     </>);
   const send = <button type="button" onClick={go} disabled={busy || !text.trim()} data-testid="money-box-go"
-    className="min-h-[44px] h-11 px-4 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] inline-flex items-center gap-1.5 disabled:opacity-40">
+    className="min-h-[44px] h-11 px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] inline-flex items-center gap-1.5 disabled:opacity-40">
     {busy ? <Loader2 size={15} className="animate-spin" /> : null}{tr(wide ? "Record" : "Add")}<Arrow /></button>;
   return (
     <div className={U.card + " p-3.5 focus-within:border-[var(--c-acc)] transition-colors duration-150"} data-testid="money-box">
@@ -105,7 +105,7 @@ function Tile({ label, mark, value, tone, sub, testid }) {
 
 function TxRow({ t, cur, onClick }) {
   return (
-    <button onClick={onClick} className="w-full text-start flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-[14px] bg-[var(--c-surf-2)] border border-transparent hover:border-[var(--c-ln)] min-h-[56px]" data-testid="money-tx">
+    <button onClick={onClick} className="w-full text-start flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-[12px] bg-[var(--c-surf-2)] border border-transparent hover:border-[var(--c-ln)] min-h-[56px]" data-testid="money-tx">
       <span className="flex items-center gap-2.5 min-w-0">
         <span className="w-[38px] h-[38px] shrink-0 rounded-[12px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] text-[16px]" aria-hidden="true">{t.emoji}</span>
         <span className="min-w-0"><span className="block truncate font-bold text-[13.5px]" dir="auto">{t.note || t.catName}</span>
@@ -170,7 +170,7 @@ export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, cl
         <div className={U.cardPad} data-testid="money-recent">
           <div className="flex items-center justify-between gap-2 mb-3">
             <span className="font-extrabold text-[14.5px]">{T("Recent activity ({a} of {b})", { a: rep.recent.length, b: rep.month.count })}</span>
-            <button onClick={() => openLedger("home")} className="min-h-[36px] px-2.5 rounded-[10px] text-[12.5px] font-bold text-[var(--c-acc)] hover:bg-[var(--c-soft)] inline-flex items-center gap-1" data-testid="money-recent-count">{tr("Full ledger")}<Arrow size={13} /></button>
+            <button onClick={() => openLedger("home")} className="min-h-[36px] px-2.5 rounded-[12px] text-[12.5px] font-bold text-[var(--c-acc)] hover:bg-[var(--c-soft)] inline-flex items-center gap-1" data-testid="money-recent-count">{tr("Full ledger")}<Arrow size={13} /></button>
           </div>
           {rep.recent.length ? <div className="flex flex-col gap-2">{rep.recent.map((t) => <TxRow key={t.id} t={t} cur={rep.cur} onClick={() => openLedger("tx:" + t.id)} />)}</div>
             : <p className={"m-0 text-[13px] " + U.muted}>{tr("Nothing logged yet — write it in the box above: “lunch 150, taxi 60”.")}</p>}
@@ -232,7 +232,7 @@ function WhereItWent({ rep, wide }) {
           <Donut rep={rep} size={wide ? 96 : 112} />
           <div className={wide ? "flex-1 grid grid-cols-2 gap-2" : "flex-1 flex flex-col gap-2"}>
             {rep.month.cats.map((c, i) => wide ? (
-              <div key={c.id} className="p-2 rounded-[10px] bg-[var(--c-surf-2)] min-w-0"><div className={"flex items-center gap-1.5 text-[12px] font-bold truncate " + U.muted}><i className="w-2 h-2 rounded-full shrink-0" style={{ background: SLICE[i % 4] }} />{c.name}</div>
+              <div key={c.id} className="p-2 rounded-[12px] bg-[var(--c-surf-2)] min-w-0"><div className={"flex items-center gap-1.5 text-[12px] font-bold truncate " + U.muted}><i className="w-2 h-2 rounded-full shrink-0" style={{ background: SLICE[i % 4] }} />{c.name}</div>
                 <div className="tabular-nums font-extrabold text-[14px]" dir="ltr">{fmt(c.amount)} <span className={"text-[12px] font-semibold " + U.muted}>({c.pct}%)</span></div></div>
             ) : (
               <div key={c.id} className="flex items-center justify-between gap-2 text-[12.5px]">
@@ -353,7 +353,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
   const head = (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2 min-w-0">
-        <button className="w-11 h-11 shrink-0 rounded-[14px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] hover:border-[var(--c-acc)]" onClick={back} aria-label={tr("Back")} data-testid="money-report-back"><Arrow back size={17} /></button>
+        <button className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] hover:border-[var(--c-acc)]" onClick={back} aria-label={tr("Back")} data-testid="money-report-back"><Arrow back size={17} /></button>
         <div className="min-w-0"><h2 className={(wide ? "text-[21px]" : "text-[17px]") + " font-black tracking-tight m-0 truncate"}>{wide ? T("Money Report · {m}", { m: monthLabel(rep.month.from.slice(0, 7), true) }) : tr("Money Report")}</h2>
           <div className={"text-[12px] font-semibold truncate " + U.muted}>{wide ? (accName ? accName : tr("All accounts")) + " · " + tr("updated from your entries") : sub}</div></div>
       </div>

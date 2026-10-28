@@ -127,7 +127,7 @@ export function VaultSection({ onClose }) {
       <p className={`text-[12.5px] leading-relaxed mb-2 ${th.sub}`}>{L("Every time the books are opened with a PIN and something changed, an encrypted copy is kept on this phone (last 7 + one per month). It opens only with the PIN used that day.", "كل مرة الدفاتر تتفتح بالرقم السري ويحصل تغيير، بتتحفظ نسخة متشفرة على الموبايل (آخر ٧ نسخ + نسخة كل شهر). ومش بتتفتح غير بالرقم السري اللي اتفتحت بيه اليوم ده.")}</p>
       <Card className="divide-y mb-2" testid="vault-list">
         {!list.length ? <p className={`px-3.5 py-3 m-0 text-[12.5px] ${th.sub}`}>{L("No automatic copies yet — set a PIN (above) to turn them on.", "مفيش نسخ تلقائية لسه — حط رقم سري (فوق) عشان تشتغل.")}</p>
-          : list.map((x) => <button key={x.name} onClick={() => actorCan("restore") ? setPick({ text: stash.get(x.name), name: x.name }) : flash(L("Only the owner can restore", "المالك بس هو اللي يقدر يسترجع"))} className="w-full min-h-[48px] flex justify-between items-center gap-3 px-3.5 py-2.5 text-[13.5px] font-semibold text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[22px] last:rounded-b-[22px]" data-testid="vault-row"><span>{fmtDate(x.date)}{x.who ? ` · ${x.who}` : ""}</span><span className={th.sub}>{x.docs != null ? `${x.docs} ${L("docs", "مستند")}` : ""}</span></button>)}
+          : list.map((x) => <button key={x.name} onClick={() => actorCan("restore") ? setPick({ text: stash.get(x.name), name: x.name }) : flash(L("Only the owner can restore", "المالك بس هو اللي يقدر يسترجع"))} className="w-full min-h-[48px] flex justify-between items-center gap-3 px-3.5 py-2.5 text-[13.5px] font-semibold text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[20px] last:rounded-b-[20px]" data-testid="vault-row"><span>{fmtDate(x.date)}{x.who ? ` · ${x.who}` : ""}</span><span className={th.sub}>{x.docs != null ? `${x.docs} ${L("docs", "مستند")}` : ""}</span></button>)}
       </Card>
       <Field label={L("Passphrase for a backup file to keep elsewhere", "كلمة سر لنسخة تحفظها برا الموبايل")}><Input value={pass} onChange={setPass} type="password" data-testid="vault-pass" /></Field>
       <div className="flex flex-wrap gap-2 mt-2">
@@ -190,7 +190,7 @@ export function UsersSection() {
     <Section title={L("Users & roles", "المستخدمون والصلاحيات")}>
       <Card className="divide-y mb-2" testid="users-list">{(s.users || []).map((u) => (
         <div key={u.id} className="min-h-[52px] flex items-center justify-between gap-3 px-3.5 py-1.5 text-[13.5px] font-semibold"><span>{u.name} <Badge tone={u.role === "owner" ? "blue" : "gray"}>{L(M.ROLES[u.role].en, M.ROLES[u.role].ar)}</Badge></span>
-          {actorCan("users") ? <button onClick={() => run((st) => O2.removeUser(st, u.id))} className={`w-11 h-11 rounded-[14px] grid place-items-center shrink-0 hover:bg-[var(--c-surf-2)] ${NEG}`} aria-label={L("Remove", "شيل")}><Trash2 size={14} /></button> : null}</div>))}
+          {actorCan("users") ? <button onClick={() => run((st) => O2.removeUser(st, u.id))} className={`w-11 h-11 rounded-[12px] grid place-items-center shrink-0 hover:bg-[var(--c-surf-2)] ${NEG}`} aria-label={L("Remove", "شيل")}><Trash2 size={14} /></button> : null}</div>))}
         {!(s.users || []).length ? <p className={`px-3.5 py-3 m-0 text-[12.5px] leading-relaxed ${th.sub}`}>{L("One owner, no users. Add the owner first, then the staff — each with their own PIN.", "مالك واحد ومفيش مستخدمين. ضيف المالك الأول، وبعدين الموظفين — كل واحد برقمه السري.")}</p> : null}
       </Card>
       {actorCan("users") ? <div className="grid grid-cols-3 gap-2">
@@ -198,7 +198,7 @@ export function UsersSection() {
         <Select value={f.role} onChange={(v) => setF({ ...f, role: v })} data-testid="user-role">{Object.entries(M.ROLES).map(([k, r]) => <option key={k} value={k}>{L(r.en, r.ar)}</option>)}</Select>
         <Input value={f.pin} onChange={(v) => setF({ ...f, pin: v.replace(/\D/g, "").slice(0, 6) })} placeholder={L("PIN", "الرقم السري")} inputMode="numeric" data-testid="user-pin" />
         <button onClick={add} className={`${BTN} border ${th.line} col-span-3`} data-testid="user-add">{L("Add user", "ضيف مستخدم")}</button></div> : null}
-      <div className={`overflow-x-auto mt-3 rounded-[18px] border ${th.line} bg-[var(--c-surf)]`}><table className="w-full text-[12px]" data-testid="perm-matrix"><thead><tr className={HEAD}><th className="text-start px-2.5 py-2"></th>{Object.values(M.ROLES).map((r) => <th key={r.en} className="px-2.5 py-2 font-extrabold whitespace-nowrap">{L(r.en, r.ar)}</th>)}</tr></thead>
+      <div className={`overflow-x-auto mt-3 rounded-[20px] border ${th.line} bg-[var(--c-surf)]`}><table className="w-full text-[12px]" data-testid="perm-matrix"><thead><tr className={HEAD}><th className="text-start px-2.5 py-2"></th>{Object.values(M.ROLES).map((r) => <th key={r.en} className="px-2.5 py-2 font-extrabold whitespace-nowrap">{L(r.en, r.ar)}</th>)}</tr></thead>
         <tbody>{M.permMatrix().map((row) => <tr key={row.perm} className={`border-t ${th.line}`}><td className="px-2.5 py-2 font-semibold">{L(...P[row.perm])}</td>{Object.keys(M.ROLES).map((k) => <td key={k} className={`px-2.5 py-2 text-center font-black ${row[k] ? POS : th.sub}`}>{row[k] ? "✓" : "—"}</td>)}</tr>)}</tbody></table></div>
     </Section>
   );
@@ -211,7 +211,7 @@ export function UserLock({ s, onOk, onBack }) {
   return (
     <div className={`fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 p-6 ${th.page}`} data-testid="books-lock">
       <p className="text-[17px] font-extrabold text-center m-0">{L("Enter your PIN", "اكتب رقمك السري")}</p>
-      <input value={pin} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setPin(v); if (v.length >= 4 && O2.userByPin(s, v)) tryPin(v); }} type="password" inputMode="numeric" autoFocus data-testid="books-pin" className={`w-44 min-h-[52px] text-center tracking-[0.5em] text-xl font-black tabular-nums rounded-[16px] border px-3 py-2 focus:outline-none ${th.input}`} />
+      <input value={pin} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setPin(v); if (v.length >= 4 && O2.userByPin(s, v)) tryPin(v); }} type="password" inputMode="numeric" autoFocus data-testid="books-pin" className={`w-44 min-h-[52px] text-center tracking-[0.5em] text-xl font-black tabular-nums rounded-[20px] border px-3 py-2 focus:outline-none ${th.input}`} />
       {bad ? <p className={`text-[12.5px] font-bold m-0 ${NEG}`}>{L("Wrong PIN", "الرقم غلط")}</p> : null}
       <button onClick={() => tryPin(pin)} className={`${btnPrimary} min-w-[160px]`} disabled={pin.length < 4}>{L("Open", "افتح")}</button>
       <button onClick={onBack} className={`min-h-[44px] px-4 text-[13px] font-bold ${th.sub}`}>{L("Back", "رجوع")}</button>
@@ -266,7 +266,7 @@ export function PriceListSection() {
   return (
     <Section title={L("Price lists", "قوائم الأسعار")}>
       <p className={`text-[12.5px] leading-relaxed mb-2 ${th.sub}`}>{L("Give a customer a group (in the customer's card), then a list for that group. The newest list in force on the invoice date wins; quantity breaks lower the price.", "حدّد للعميل مجموعة (في كارت العميل)، وبعدين اعمل قايمة للمجموعة دي. أحدث قايمة شغالة في تاريخ الفاتورة هي اللي بتتطبق، وشرايح الكمية بتنزّل السعر.")}</p>
-      <Card className="divide-y mb-2" testid="pl-list">{(s.priceLists || []).map((l) => <button key={l.id} onClick={() => setEd(l)} className="w-full min-h-[48px] flex justify-between items-center gap-3 px-3.5 py-2.5 text-[13.5px] font-semibold text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[22px] last:rounded-b-[22px]"><span>{l.name} · {l.group}</span><span className={th.sub}>{l.from ? fmtDate(l.from) : "…"} → {l.to ? fmtDate(l.to) : "…"}</span></button>)}</Card>
+      <Card className="divide-y mb-2" testid="pl-list">{(s.priceLists || []).map((l) => <button key={l.id} onClick={() => setEd(l)} className="w-full min-h-[48px] flex justify-between items-center gap-3 px-3.5 py-2.5 text-[13.5px] font-semibold text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[20px] last:rounded-b-[20px]"><span>{l.name} · {l.group}</span><span className={th.sub}>{l.from ? fmtDate(l.from) : "…"} → {l.to ? fmtDate(l.to) : "…"}</span></button>)}</Card>
       <button onClick={() => setEd({ name: "", group: groups[0] || "", from: today(), to: "", prices: {} })} className={`${BTN} border ${th.line} flex items-center gap-1.5`} data-testid="pl-add"><Plus size={14} />{L("New price list", "قائمة أسعار جديدة")}</button>
       {ed ? <PriceListEditor list={ed} onClose={() => setEd(null)} /> : null}
     </Section>
@@ -294,7 +294,7 @@ function PriceListEditor({ list, onClose }) {
             <Select value={r.item} onChange={(v) => setRows(rows.map((x, j) => (j === i ? { ...x, item: v } : x)))} data-testid="pl-item">{s.items.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}</Select>
             <Input value={r.minQty} onChange={(v) => setRows(rows.map((x, j) => (j === i ? { ...x, minQty: v } : x)))} inputMode="decimal" placeholder={L("from qty", "من كمية")} data-testid="pl-min" />
             <Input value={r.price} onChange={(v) => setRows(rows.map((x, j) => (j === i ? { ...x, price: v } : x)))} inputMode="decimal" placeholder={L("price", "السعر")} data-testid="pl-price" />
-            <button onClick={() => setRows(rows.filter((_, j) => j !== i))} className={`w-11 h-11 rounded-[14px] grid place-items-center shrink-0 hover:bg-[var(--c-surf-2)] ${NEG}`} aria-label={L("Remove", "شيل")}><Trash2 size={14} /></button>
+            <button onClick={() => setRows(rows.filter((_, j) => j !== i))} className={`w-11 h-11 rounded-[12px] grid place-items-center shrink-0 hover:bg-[var(--c-surf-2)] ${NEG}`} aria-label={L("Remove", "شيل")}><Trash2 size={14} /></button>
           </div>))}
         <button onClick={() => setRows([...rows, { item: (s.items[0] || {}).id || "", minQty: "0", price: "" }])} className={`${BTN} border ${th.line} w-full`} data-testid="pl-row-add">{L("Add a price", "ضيف سعر")}</button>
       </div>

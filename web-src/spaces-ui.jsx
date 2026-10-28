@@ -23,8 +23,8 @@ const card = kCard;
 const input = area;
 const btnMain = btnP;
 const btnGhost = btnS;
-const iconBtn = "w-11 h-11 shrink-0 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]";
-const well = "w-11 h-11 shrink-0 rounded-[14px] bg-[var(--c-soft)] flex items-center justify-center";
+const iconBtn = "w-11 h-11 shrink-0 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]";
+const well = "w-11 h-11 shrink-0 rounded-[12px] bg-[var(--c-soft)] flex items-center justify-center";
 
 const wideNow = () => typeof window !== "undefined" && window.innerWidth >= 1024;
 function share(native, flash, text) {
@@ -114,12 +114,12 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
       <div className={sel ? "lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-5 lg:items-start" : ""}>
       <div className={"grid gap-3 " + (sel ? "lg:grid-cols-2" : "lg:grid-cols-3")}>
         {list.map((a) => (
-          <div key={a.id} className={card + " p-3.5 flex flex-col gap-2 " + (sel && sel.id === a.id ? "border-[var(--c-acc-2)]!" : "")} data-testid="assistant-item">
+          <div key={a.id} className={card + " p-3.5 flex flex-col gap-2 " + (sel && sel.id === a.id ? "border-[var(--c-acc)]!" : "")} data-testid="assistant-item">
             {/* the icon and the actions on top, the name and what it does under them — so the name is never squeezed */}
             <div className="flex items-start gap-2">
               <button onClick={() => (wideNow() ? setSel(a) : startChat({ assistantId: a.id }))} className={well + " text-2xl"} aria-hidden="true" tabIndex={-1}>{a.emoji}</button>
               <span className="flex-1" />
-              {sel && sel.id === a.id ? <span className="hidden lg:inline-flex self-center text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]">{tr("Open")}</span> : null}
+              {sel && sel.id === a.id ? <span className="hidden lg:inline-flex self-center text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)]">{tr("Open")}</span> : null}
               <button onClick={() => exportOne(a)} className={iconBtn} title={tr("Save as a file")} data-testid="assistant-export"><Share2 size={15} /></button>
               {isBuiltinAssistant(a.id) ? (
                 <button onClick={() => setEdit({ ...a, id: undefined, name: tr(a.name) + " (" + tr("mine") + ")", startersText: (a.starters || []).join("\n") })} className={iconBtn} title={tr("Copy and edit")}><Copy size={15} /></button>
@@ -136,7 +136,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
         ))}
       </div>
       {sel ? (() => { const a = list.find((x) => x.id === sel.id) || sel, rl = rulesFor(a.id); return (
-        <div className={"hidden lg:block " + card + " p-5 space-y-3 border-[var(--c-acc-2)]!"} data-testid="assistant-detail">
+        <div className={"hidden lg:block " + card + " p-5 space-y-3 border-[var(--c-acc)]!"} data-testid="assistant-detail">
           <div className="flex items-start gap-3">
             <span className={well + " text-2xl"}>{a.emoji}</span>
             <div className="flex-1 min-w-0"><p className="m-0 text-[18px] font-black text-[var(--c-ink)] leading-snug" dir="auto">{tr(a.name)}</p>
@@ -144,11 +144,11 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
             <button onClick={() => startChat({ assistantId: a.id })} className={btnMain + " shrink-0"} data-testid="assistant-start">{tr("Start a chat")} →</button>
           </div>
           {a.instructions ? <div><p className={kLabel + " mt-1 mb-1.5"}>{tr("Standing instructions (used in every chat)")}</p>
-            <p className="m-0 text-[13px] text-[var(--c-ink)] leading-relaxed whitespace-pre-wrap rounded-[14px] bg-[var(--c-surf-2)] p-3 max-h-56 overflow-y-auto att-scroll" dir="auto">{tr(a.instructions)}</p></div> : null}
+            <p className="m-0 text-[13px] text-[var(--c-ink)] leading-relaxed whitespace-pre-wrap rounded-[12px] bg-[var(--c-surf-2)] p-3 max-h-56 overflow-y-auto att-scroll" dir="auto">{tr(a.instructions)}</p></div> : null}
           {(a.starters || []).length ? <div><p className={kLabel + " mb-1.5"}>{tr("Starters (one tap to ask)")}</p>
             <div className="grid grid-cols-2 gap-2">{a.starters.map((st) => <button key={st} onClick={() => { try { localStorage.setItem("attune:chat:prefill", tr(st)); } catch (e) {} startChat({ assistantId: a.id }); }}
-              className="min-h-[48px] text-start rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 py-2 text-[12.5px] font-bold text-[var(--c-ink)] hover:border-[var(--c-acc)]" dir="auto">{tr(st)}</button>)}</div></div> : null}
-          {rl.length ? <div className="rounded-[14px] bg-[var(--c-surf-2)] p-3"><p className="m-0 mb-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Learned from your corrections")}</p>
+              className="min-h-[48px] text-start rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 py-2 text-[12.5px] font-bold text-[var(--c-ink)] hover:border-[var(--c-acc)]" dir="auto">{tr(st)}</button>)}</div></div> : null}
+          {rl.length ? <div className="rounded-[12px] bg-[var(--c-surf-2)] p-3"><p className="m-0 mb-1 text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Learned from your corrections")}</p>
             {rl.map((r, i) => <p key={i} className="m-0 text-[12.5px] text-[var(--c-ink)]" dir="auto">• {r.text}</p>)}</div> : null}
         </div>); })() : null}
       </div>
@@ -227,9 +227,9 @@ export function ProjectsPage({ startChat, openChat, flash }) {
           <p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><Brain size={16} className="text-[var(--c-acc)]" />{tr("Project brain")}</p>
           {!any ? <p className="text-[12px] text-[var(--c-mut)]">{tr("As you chat in this project, what you decide, what is still open and the dates coming up collect here — and the assistant keeps to them.")}</p> : null}
           {[["decisions", "Decided", "text-[var(--c-pos)]"], ["open", "Still open", "text-[var(--c-warn)]"]].map(([k, label, col]) => b[k].length ? (
-            <div key={k} data-testid={"project-brain-" + k}><p className={"text-[11px] font-extrabold uppercase tracking-[0.08em] mb-1 " + col}>{tr(label)}</p>
+            <div key={k} data-testid={"project-brain-" + k}><p className={"text-[12px] font-extrabold uppercase tracking-[0.08em] mb-1 " + col}>{tr(label)}</p>
               <ul className="m-0 p-0 list-none space-y-1">{b[k].map((x, i) => <li key={i}><button onClick={() => openChat(x.chat)} className="text-start min-h-[36px] text-[13.5px] text-[var(--c-ink)] hover:text-[var(--c-acc)]" dir="auto">• {x.text}</button></li>)}</ul></div>) : null)}
-          {b.dates.length ? <div data-testid="project-brain-dates"><p className="text-[11px] font-extrabold uppercase tracking-[0.08em] mb-1 text-[var(--c-acc)]">{tr("Dates")}</p>
+          {b.dates.length ? <div data-testid="project-brain-dates"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] mb-1 text-[var(--c-acc)]">{tr("Dates")}</p>
             <ul className="m-0 p-0 list-none space-y-1">{b.dates.map((x, i) => <li key={i} className="text-[13px] text-[var(--c-ink)]" dir="auto"><b className="tabular-nums" dir="ltr">{x.date}</b> · {x.text}</li>)}</ul></div> : null}
         </div>); })()}
 
@@ -267,7 +267,7 @@ export function ProjectsPage({ startChat, openChat, flash }) {
       <div className={card + " p-2"}>
         <p className="text-[15px] text-[var(--c-ink)] font-extrabold px-2 pt-2 pb-1 m-0">{tr("Chats")}</p>
         {chats.length === 0 ? <p className="text-[12px] text-[var(--c-mut)] px-2 pb-2">{tr("No chats in this project yet.")}</p> : chats.map((c) => (
-          <button key={c.id} onClick={() => openChat(c.id)} className="w-full min-h-[48px] text-start px-2.5 py-2.5 rounded-[14px] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="project-chat">
+          <button key={c.id} onClick={() => openChat(c.id)} className="w-full min-h-[48px] text-start px-2.5 py-2.5 rounded-[12px] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="project-chat">
             <span className="block text-[14px] font-bold text-[var(--c-ink)] truncate" dir="auto">{c.title}</span>
             <span className="block text-[11.5px] text-[var(--c-mut)] tabular-nums">{new Date(c.updated).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {tr("{n} messages", { n: c.messages.length })}</span>
           </button>
@@ -375,15 +375,15 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
   return (
     <div className="calm att-shift fixed inset-0 z-[70] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col" data-testid="artifact-viewer" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--c-ln)] bg-[var(--c-surf)]">
-        <button onClick={close} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" title={tr("Close")} data-testid="artifact-close"><X size={20} /></button>
+        <button onClick={close} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" title={tr("Close")} data-testid="artifact-close"><X size={20} /></button>
         <div className="flex-1 min-w-0">
           <p className="text-[15px] text-[var(--c-ink)] font-extrabold truncate m-0" dir="auto">{meta.title}</p>
           <p className="text-[11.5px] text-[var(--c-mut)] m-0">{meta.kind === "html" ? tr("Web page") : meta.kind === "doc" ? tr("Document") : tr("Program")}{versions.length > 1 ? " · " + tr("version {v} of {n}", { v: vi + 1, n: versions.length }) : ""}</p>
         </div>
         {meta.kind === "html" ? (
           <div className="flex gap-1 p-1 rounded-full border border-[var(--c-ln)] bg-[var(--c-bg)] text-[12.5px] font-extrabold">
-            <button onClick={() => setView("preview")} className={`min-h-[36px] px-3 rounded-full ${view === "preview" ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "text-[var(--c-mut)]"}`}>{tr("Preview")}</button>
-            <button onClick={() => setView("code")} className={`min-h-[36px] px-3 rounded-full ${view === "code" ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "text-[var(--c-mut)]"}`} data-testid="artifact-code">{tr("Code")}</button>
+            <button onClick={() => setView("preview")} className={`min-h-[36px] px-3 rounded-full ${view === "preview" ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "text-[var(--c-mut)]"}`}>{tr("Preview")}</button>
+            <button onClick={() => setView("code")} className={`min-h-[36px] px-3 rounded-full ${view === "code" ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "text-[var(--c-mut)]"}`} data-testid="artifact-code">{tr("Code")}</button>
           </div>
         ) : null}
       </div>
@@ -405,12 +405,12 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
           </div>
         ) : null}
         <div className="flex gap-1.5 justify-around">
-          <button onClick={() => { if (persist(content)) flash && flash(tr("Saved to Artifacts")); }} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[14px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-save"><Save size={17} />{item ? tr("Saved") : tr("Save")}</button>
-          <button onClick={() => { try { navigator.clipboard.writeText(content); flash && flash(tr("Copied")); } catch (e) {} }} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[14px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]"><Copy size={17} />{tr("Copy")}</button>
-          <button onClick={() => share(native, flash, content)} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[14px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]"><Share2 size={17} />{tr("Share")}</button>
-          <button onClick={download} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[14px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-download"><Download size={17} />{tr("File")}</button>
-          {meta.kind === "html" && native && native.pinPage ? <button onClick={pin} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[14px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-pin"><Pin size={17} />{tr("Home screen")}</button> : null}
-          {hasData ? <button onClick={clearData} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[14px] text-[11px] font-bold text-[var(--c-warn)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-clear-data"><Eraser size={17} />{tr("Clear data")}</button> : null}
+          <button onClick={() => { if (persist(content)) flash && flash(tr("Saved to Artifacts")); }} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-save"><Save size={17} />{item ? tr("Saved") : tr("Save")}</button>
+          <button onClick={() => { try { navigator.clipboard.writeText(content); flash && flash(tr("Copied")); } catch (e) {} }} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]"><Copy size={17} />{tr("Copy")}</button>
+          <button onClick={() => share(native, flash, content)} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]"><Share2 size={17} />{tr("Share")}</button>
+          <button onClick={download} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-download"><Download size={17} />{tr("File")}</button>
+          {meta.kind === "html" && native && native.pinPage ? <button onClick={pin} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-pin"><Pin size={17} />{tr("Home screen")}</button> : null}
+          {hasData ? <button onClick={clearData} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-warn)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-clear-data"><Eraser size={17} />{tr("Clear data")}</button> : null}
         </div>
       </div>
     </div>

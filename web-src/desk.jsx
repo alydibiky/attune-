@@ -14,8 +14,8 @@ export const GRID3 = "lg:grid lg:grid-cols-3 lg:gap-4 space-y-3 lg:space-y-0";
 /** The right panel before there is an answer — only on a computer (a phone shows nothing there). */
 export function DeskEmpty({ icon: Icon, title, text, testid }) {
   return (
-    <div className="hidden lg:flex flex-col items-center justify-center text-center rounded-[22px] border border-dashed border-slate-800 min-h-[360px] p-10 text-slate-500" data-testid={testid || "desk-empty"}>
-      {Icon ? <span className="mb-3 w-14 h-14 rounded-[18px] grid place-items-center bg-teal-500/10 text-teal-300"><Icon size={26} /></span> : null}
+    <div className="hidden lg:flex flex-col items-center justify-center text-center rounded-[20px] border border-dashed border-slate-800 min-h-[360px] p-10 text-slate-500" data-testid={testid || "desk-empty"}>
+      {Icon ? <span className="mb-3 w-14 h-14 rounded-[20px] grid place-items-center bg-teal-500/10 text-teal-300"><Icon size={26} /></span> : null}
       {title ? <p className="text-[15px] text-slate-200 font-extrabold m-0">{title}</p> : null}
       {text ? <p className="text-[13px] mt-1.5 max-w-sm m-0 leading-relaxed">{text}</p> : null}
     </div>);

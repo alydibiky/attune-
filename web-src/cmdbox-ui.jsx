@@ -34,7 +34,7 @@ export function SlashMenu({ text, onPick }) {
         const xs = list.filter((c) => c.group === g); if (!xs.length) return null;
         return <div key={g}><p className="m-0 px-2.5 pt-2 pb-1 text-[11px] font-extrabold tracking-wide c-sub">{ar() ? a : en}</p>
           {xs.map((c) => (
-            <button key={c.id} onClick={() => onPick(c)} role="option" className="w-full text-start rounded-[14px] px-2.5 py-2 min-h-[48px] flex flex-col justify-center" data-testid={"slash-" + c.id}>
+            <button key={c.id} onClick={() => onPick(c)} role="option" className="w-full text-start rounded-[12px] px-2.5 py-2 min-h-[48px] flex flex-col justify-center" data-testid={"slash-" + c.id}>
               {c.group === "open" ? <b className="text-[14.5px]"><span className="c-acc">{ar() ? c.hint[1] : tr(c.hint[0])}</span></b>
                 : <><b className="text-[14.5px]"><span className="c-acc">/{ar() ? c.ar[0] : c.id}</span> <span className="font-semibold">{tr(c.hint[0])}</span></b>
               <span className="c-sub text-[12px]" dir="rtl">{c.hint[1]}</span></>}
@@ -74,7 +74,7 @@ export function BoxModes({ mode, setMode }) {
   return <div className="flex items-center gap-1 p-1 rounded-full w-fit max-w-full" style={{ background: "var(--c-bg)", border: "1px solid var(--c-ln)" }} role="radiogroup" aria-label={tr("What the box does")} data-testid="box-modes">
     {BOX_MODES.map(([id, en, a]) => <button key={id} role="radio" aria-checked={mode === id} onClick={() => setMode(id)} data-testid={"box-mode-" + id}
       className={"min-h-[34px] px-3.5 rounded-full text-[13px] whitespace-nowrap transition-colors duration-150 " + (mode === id ? "font-extrabold" : "font-semibold c-sub")}
-      style={mode === id ? { background: "var(--c-acc-2, var(--c-acc))", color: "var(--c-on-acc-2, #fff)" } : null}>{ar() ? a : tr(en)}</button>)}
+      style={mode === id ? { background: "var(--c-soft)", color: "var(--c-acc)", borderColor: "var(--c-acc)" } : null}>{ar() ? a : tr(en)}</button>)}
   </div>;
 }
 export const BOX_HINT = { chat: null, life: "Ask about your money, health, people, meals or deadlines…", translate: "Type or paste — Arabic ↔ English, or say «to French …»" };
@@ -87,7 +87,7 @@ export function AskCard({ ask, onPick, onClose }) {
       <button onClick={onClose} aria-label={tr("Close")} className="w-8 h-8 -mt-1 -me-1 grid place-items-center c-sub"><X size={15} /></button></div>
     <p className="c-sub m-0 text-[12.5px]" dir="auto">«{ask.text}»</p>
     {ask.options.map((k) => (
-      <button key={k} role="radio" aria-checked={sel === k} onClick={() => { setSel(k); onPick(k); }} className="w-full min-h-[46px] rounded-[14px] px-3 flex items-center gap-2.5 text-start" style={sel === k ? { background: "var(--c-soft)", border: "1px solid var(--c-acc)" } : surf} data-testid={"ask-" + k}>
+      <button key={k} role="radio" aria-checked={sel === k} onClick={() => { setSel(k); onPick(k); }} className="w-full min-h-[46px] rounded-[12px] px-3 flex items-center gap-2.5 text-start" style={sel === k ? { background: "var(--c-soft)", border: "1px solid var(--c-acc)" } : surf} data-testid={"ask-" + k}>
         <span className="w-5 h-5 rounded-full grid place-items-center shrink-0" style={{ border: "2px solid var(--c-acc)", background: sel === k ? "var(--c-acc)" : "transparent" }}>{sel === k ? <Check size={12} color="#fff" /> : null}</span>
         <span className="text-[14px] font-semibold">{pick2(K.KIND_LABEL[k] || [k, k])}</span></button>))}
     <div className="flex items-center gap-2"><span className="c-sub text-[11.5px] flex-1">{tr("Tap what you meant — Attune learns what you usually mean.")}</span></div>

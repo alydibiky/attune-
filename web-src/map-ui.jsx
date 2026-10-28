@@ -413,7 +413,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
             the map was drawn but never seen (Ali, Oct 2026) */}
         <div ref={box} style={{ position: "absolute", inset: 0 }} data-testid="map-canvas" />
         {!active && !fail ? (
-          <div className="absolute inset-x-4 top-24 z-10 mx-auto max-w-sm rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 shadow-sm text-center" data-testid="map-empty">
+          <div className="absolute inset-x-4 top-24 z-10 mx-auto max-w-sm rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 shadow-sm text-center" data-testid="map-empty">
             <p className="text-[15px] font-bold text-[var(--c-ink)]">{tr("No map on this device yet")}</p>
             <p className="text-[12.5px] text-[var(--c-mut)] mt-1 leading-relaxed">{tr("Download the world map to see every country, or your country's map for streets, places and offline search.")}</p>
             {dl && dl.code === OM.WORLD ? <p className="text-[12px] text-[var(--c-mut)] mt-2 tabular-nums" data-testid="map-world-progress">{dl.pct || 0}% · {dl.detail}</p>
@@ -450,12 +450,12 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-[4]" data-testid="map-add-cross" aria-hidden="true">
             <svg width="34" height="44" viewBox="0 0 34 44"><path d="M17 43C17 43 32 27 32 16A15 15 0 0 0 2 16C2 27 17 43 17 43Z" fill="#059669" stroke="#fff" strokeWidth="3" /><circle cx="17" cy="16" r="5" fill="#fff" /></svg></div>
           <form onSubmit={(e) => { e.preventDefault(); const n = adding.trim(); if (!n) return; const c = center(); savePlace({ name: n, lat: c.lat, lon: c.lon }); setAdding(null); }}
-            className="absolute inset-x-3 z-[6] rounded-[22px] bg-[var(--c-surf)] shadow-[0_4px_18px_rgba(17,24,39,.2)] p-3 space-y-2" style={{ bottom: "calc(118px + 12px)" }} data-testid="map-add-form">
+            className="absolute inset-x-3 z-[6] rounded-[20px] bg-[var(--c-surf)] shadow-[0_4px_18px_rgba(17,24,39,.2)] p-3 space-y-2" style={{ bottom: "calc(118px + 12px)" }} data-testid="map-add-form">
             <p className="text-[13px] text-[var(--c-mut)]">{tr("Move the map so the pin is on the place, then name it. It is saved on this phone and found by search, offline.")}</p>
             <div className="flex gap-2"><input autoFocus value={adding} onChange={(e) => setAdding(e.target.value)} dir="auto" placeholder={tr("The place's name")} data-testid="map-add-name"
-              className="flex-1 min-w-0 h-11 rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 text-[15px] font-semibold text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)]" />
-              <button type="submit" disabled={!adding.trim()} data-testid="map-add-save" className="h-11 px-4 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold disabled:opacity-40">{tr("Save")}</button>
-              <button type="button" onClick={() => setAdding(null)} aria-label={tr("Cancel")} className="w-11 h-11 rounded-[14px] bg-[var(--c-surf-2)] text-[var(--c-mut)] flex items-center justify-center"><X size={18} /></button></div>
+              className="flex-1 min-w-0 h-11 rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 text-[15px] font-semibold text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)]" />
+              <button type="submit" disabled={!adding.trim()} data-testid="map-add-save" className="h-11 px-4 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold disabled:opacity-40">{tr("Save")}</button>
+              <button type="button" onClick={() => setAdding(null)} aria-label={tr("Cancel")} className="w-11 h-11 rounded-[12px] bg-[var(--c-surf-2)] text-[var(--c-mut)] flex items-center justify-center"><X size={18} /></button></div>
           </form></> : null}
         {/* the sheet */}
         <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-[var(--c-surf)] shadow-[0_-4px_18px_rgba(17,24,39,.16)] flex flex-col transition-[height] duration-200 z-[5]" style={{ height: sheetH, paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="map-sheet">
@@ -464,7 +464,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
             <span className="w-10 h-1.5 rounded-full bg-[var(--c-ln)]" /></button>
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
             {updates.length && !sel && hits == null ? (
-              <button onClick={() => install(updates[0].code)} className="w-full text-start rounded-[22px] bg-[var(--c-soft)] border border-[var(--c-pos)]/50 p-3 text-[13px] text-[var(--c-pos)]" data-testid="map-update-banner">
+              <button onClick={() => install(updates[0].code)} className="w-full text-start rounded-[20px] bg-[var(--c-soft)] border border-[var(--c-pos)]/50 p-3 text-[13px] text-[var(--c-pos)]" data-testid="map-update-banner">
                 <RefreshCw size={13} className="inline me-1.5" />{tr("A newer map of {c} is ready (data of {d}) — tap to update", { c: cname(OM.countryOf(updates[0].code)), d: remote[updates[0].code].date })}</button>) : null}
 
             {trip ? (
@@ -477,11 +477,11 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                 <div className="flex gap-2" role="group" aria-label={tr("Travel by")}>
                   {[["car", tr("Car"), "🚗"], ["walk", tr("Walk"), "🚶"]].map(([k, l, e]) => (
                     <button key={k} onClick={() => goTrip(trip.to, k)} aria-pressed={trip.mode === k} data-testid={"map-mode-" + k}
-                      className={`flex-1 h-11 rounded-full text-[14px] font-bold ${trip.mode === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]"}`}>{e} {l}</button>))}
+                      className={`flex-1 h-11 rounded-full text-[14px] font-bold ${trip.mode === k ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-ink)]"}`}>{e} {l}</button>))}
                 </div>
                 {trip.busy ? <p className="text-[13.5px] text-[var(--c-mut)] flex items-center gap-2"><Loader2 size={16} className="animate-spin" />{tr("Finding the way…")}</p> : null}
                 {trip.res ? <>
-                  <div className="rounded-[22px] bg-[var(--c-soft)] p-3.5" data-testid="map-trip-summary">
+                  <div className="rounded-[20px] bg-[var(--c-soft)] p-3.5" data-testid="map-trip-summary">
                     <p className="text-[24px] font-black tabular-nums text-[var(--c-acc)] leading-tight">{mins(trip.res.seconds)}</p>
                     <p className="text-[13px] text-[var(--c-acc)]">{km(trip.res.metres / 1000)} · {trip.mode === "car" ? tr("by car, without traffic") : tr("on foot")} · {tr("offline")}</p>
                   </div>
@@ -497,7 +497,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                   </ol>
                 </> : null}
                 {trip.need === "routes" ? (
-                  <div className="rounded-[22px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] p-3 space-y-2" data-testid="map-trip-need-routes">
+                  <div className="rounded-[20px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] p-3 space-y-2" data-testid="map-trip-need-routes">
                     <p className="text-[13.5px] text-[var(--c-ink)]">{tr("Directions work inside Attune, with no signal, once the directions of {c} are on the phone.", { c: cname(OM.countryOf(trip.code)) })}</p>
                     {dl && dl.code === trip.code ? <p className="text-[13px] text-[var(--c-acc)]">{tr("Downloading…")} {dl.pct}% {dl.detail}</p>
                       : <button onClick={() => getRoutes(trip.code)} data-testid="map-get-routes" className="w-full h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px]">{tr("Download directions")}{remote[trip.code] && (remote[trip.code].files || []).find((x) => /-route\.bin$/.test(x.name)) ? " · " + OM.prettyMB((remote[trip.code].files || []).find((x) => /-route\.bin$/.test(x.name)).bytes) : ""}</button>}
@@ -554,7 +554,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                 <div className="flex rounded-full bg-[var(--c-surf-2)] p-1" role="tablist">
                   {[["places", tr("Your places")], ["offline", tr("Offline maps") + (updates.length ? " •" : "")]].map(([k, l]) => (
                     <button key={k} role="tab" aria-selected={tab === k} onClick={() => { setTab(k); if (sheet === "peek") setSheet("half"); }} data-testid={"map-tab-" + k}
-                      className={`flex-1 h-10 rounded-full text-[13.5px] ${tab === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold shadow-sm" : "text-[var(--c-mut)] font-bold"}`}>{l}</button>))}
+                      className={`flex-1 h-10 rounded-full text-[13.5px] ${tab === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold shadow-sm" : "text-[var(--c-mut)] font-bold"}`}>{l}</button>))}
                 </div>
                 {tab === "places" ? (
                   st.places.length ? st.places.map((p) => (
@@ -566,12 +566,12 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                   <div className="space-y-2" data-testid="map-offline">
                     <p className="text-[12.5px] text-[var(--c-mut)] leading-relaxed">{tr("Download a country once: roads, buildings, shops and search, with no signal. A new map comes every week.")}</p>
                     <input value={cq} onChange={(e) => setCq(e.target.value)} dir="auto" data-testid="map-country-find" aria-label={tr("Find a country")}
-                      placeholder={tr("Find a country — {n} available", { n: OM.COUNTRIES.length })} className="w-full h-12 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-4 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
+                      placeholder={tr("Find a country — {n} available", { n: OM.COUNTRIES.length })} className="w-full h-12 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-4 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
                     {onlineOk ? <p className="text-[12.5px] text-[var(--c-pos)] leading-relaxed" data-testid="map-online-note">{tr("With signal, every country here shows online without downloading — every street, compound and place. Download only to use it with no signal.")}</p> : null}
                     {countryList.map((c) => {
                       const have = packs.find((p) => p.code === c.code), rm = remote[c.code], upd = have && OM.isNewer(rm, have), mine = dl && dl.code === c.code;
                       return (
-                        <div key={c.code} className={`rounded-[22px] border-[1.5px] p-3 ${active === c.code ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`} data-testid={"map-country-" + c.code}>
+                        <div key={c.code} className={`rounded-[20px] border-[1.5px] p-3 ${active === c.code ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`} data-testid={"map-country-" + c.code}>
                           <div className="flex items-center gap-2">
                             <button onClick={() => (have ? usePack(c.code) : onlineOk ? usePack("net:" + c.code) : null)} className="flex-1 min-w-0 text-start" data-testid={"map-view-" + c.code}>
                               <span className="block text-[15px] text-[var(--c-ink)] font-bold truncate">{cname(c)}</span>

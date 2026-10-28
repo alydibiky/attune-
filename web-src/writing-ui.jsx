@@ -12,7 +12,7 @@ const ACTIONS = [["improve", "Improve", "A clear, complete prompt for ChatGPT, C
 export function WritingBox({ onGo, start = "" }) {
   const [text, setText] = useState(start);
   return (
-    <div className={U.page + " rounded-[22px] p-4 md:p-6 space-y-4 lg:max-w-[80ch]"} data-testid="writing-page">
+    <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4 lg:max-w-[80ch]"} data-testid="writing-page">
       <div><h2 className={U.h1}>{tr("Writing")}</h2>
         <p className={"m-0 mt-0.5 text-[13px] " + U.muted}>{tr("Paste or type any text, then pick what to do with it.")}</p></div>
       <textarea value={text} onChange={(e) => setText(e.target.value)} dir="auto" rows={7} placeholder={tr("Your text — a prompt, an email, a message, a paragraph…")}

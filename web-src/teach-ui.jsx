@@ -48,7 +48,7 @@ function Sheet({ knowledge, start, onClose, onDone, flash, readOther }) {
   };
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end" onClick={onClose} data-testid="teach-sheet">
-      <div className="calm w-full max-w-2xl mx-auto rounded-t-[22px] bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] p-4 space-y-3 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="calm w-full max-w-2xl mx-auto rounded-t-[20px] bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] p-4 space-y-3 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <p className={h2}>{start ? tr("Add to “{n}”", { n: start }) : tr("New pack")}</p>
         {!start ? (
           <label className={"block " + label}>{tr("Pack name")}
@@ -64,7 +64,7 @@ function Sheet({ knowledge, start, onClose, onDone, flash, readOther }) {
         <label className={"min-h-[44px] text-[13px] font-bold text-[var(--c-acc)] inline-flex items-center gap-1.5 cursor-pointer" + (!ready || busy ? " opacity-40 pointer-events-none" : "")}><Folder size={14} />{tr("Pick a whole folder")}
           <input type="file" className="hidden" webkitdirectory="" directory="" multiple data-testid="teach-folder" onChange={(e) => { const f = e.target.files; fromFiles(f).finally(() => { e.target.value = ""; }); }} /></label>
         {mode === "chats" ? (
-          <div className="space-y-1 max-h-60 overflow-y-auto border border-[var(--c-ln)] rounded-[16px] bg-[var(--c-bg)] p-2.5" data-testid="teach-chat-list">
+          <div className="space-y-1 max-h-60 overflow-y-auto border border-[var(--c-ln)] rounded-[20px] bg-[var(--c-bg)] p-2.5" data-testid="teach-chat-list">
             <button className="min-h-[44px] text-[13px] font-bold text-[var(--c-acc)]" onClick={() => setPicked(picked.size === chats.length ? new Set() : new Set(chats.map((c) => c.id)))}>{picked.size === chats.length ? tr("Clear") : tr("All my chats ({n})", { n: chats.length })}</button>
             {chats.map((c) => (
               <label key={c.id} className="flex items-center gap-2 min-h-[44px] text-[13.5px] font-semibold text-[var(--c-ink)]">
@@ -127,7 +127,7 @@ export function MyPacks({ knowledge, flash, saveFile, readOther }) {
         <p data-intro="" className="text-[12px] text-[var(--c-mut)]">{tr("Knowledge packs you make from your chats and files — the model reads them when it answers, like the public packs.")}</p>
       </div>
       {packs.map((p) => (
-        <div key={p.name} className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 space-y-2.5" data-testid="my-pack">
+        <div key={p.name} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 space-y-2.5" data-testid="my-pack">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0"><p className="text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{p.name}</p>
               <p className="text-[11.5px] tabular-nums text-[var(--c-mut)]">{tr("{c} chats · {f} files · {p} passages", { c: p.chats, f: p.files, p: p.chunks })}</p></div>

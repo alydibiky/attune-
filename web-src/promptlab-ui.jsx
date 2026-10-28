@@ -39,10 +39,10 @@ export function PromptLab({ run, ready, openEngine, onUse, flash }) {
         <button onClick={go} disabled={!!busy} className={btnP + " w-full"} data-testid="promptlab-run">
           {busy ? <Loader2 size={15} className="animate-spin" /> : null}{busy || tr("Run both")}</button>
         {res ? <div className="grid sm:grid-cols-2 gap-2">{["a", "b"].map((k) => res[k] ? (
-          <div key={k} className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 space-y-1.5" data-testid={"promptlab-res-" + k}>
+          <div key={k} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 space-y-1.5" data-testid={"promptlab-res-" + k}>
             <p className="text-[11px] font-bold tabular-nums text-[var(--c-mut)] m-0">{k.toUpperCase()} · {(res[k].ms / 1000).toFixed(1)} s · {tr("{n} words", { n: c ? c[k].words : "…" })}{c && c.faster === k ? " · " + tr("faster") : ""}</p>
             <p className="text-[13px] text-[var(--c-ink)] whitespace-pre-wrap m-0 max-h-60 overflow-auto" dir="auto">{res[k].text}</p>
-            <button onClick={() => { setMine(PL.keep(k === "a" ? a : b, "")); flash && flash(tr("Kept in My prompts")); }} className="min-h-[44px] text-[13px] font-bold px-3 rounded-[14px] border border-[var(--c-acc)]/40 text-[var(--c-acc)] flex items-center gap-1" data-testid={"promptlab-keep-" + k}><Check size={12} />{tr("Keep {k}", { k: k.toUpperCase() })}</button>
+            <button onClick={() => { setMine(PL.keep(k === "a" ? a : b, "")); flash && flash(tr("Kept in My prompts")); }} className="min-h-[44px] text-[13px] font-bold px-3 rounded-[12px] border border-[var(--c-acc)]/40 text-[var(--c-acc)] flex items-center gap-1" data-testid={"promptlab-keep-" + k}><Check size={12} />{tr("Keep {k}", { k: k.toUpperCase() })}</button>
           </div>) : null)}</div> : null}
       </> : null}
       {mine.length ? <div className="space-y-1" data-testid="promptlab-mine"><p className={label + " m-0"}>{tr("My prompts")}</p>

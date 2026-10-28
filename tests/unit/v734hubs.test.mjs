@@ -11,7 +11,7 @@ ok(tabsFor("chat").length === 0 && tabsFor("translate").length === 0, "v7.6 (Ali
 ok(tabsFor("home").length === 0 && tabsFor("shelf").join() === "shelf,remember,memory" && tabsFor("projects").length === 0, "Home, Projects: no tab row; Saved = Notes · Books & pages · Mind (W2)");
 ok(tabsFor("coach").join() === "coach,booklib,slides,cv" && partsOf("pdfchat").join() === "booklib,pdfchat" && tabsFor("convert").length === 0, "v8.5 (W3): Students = Homework · Documents (Many books · One file) · Slides · CV; Convert lives in Tools");
 ok(RETIRED.join() === "instant,ask" && RETIRED.every((m) => !HUBS.some((h) => h[3].includes(m)) && !GROUPS.some((g) => g[2].includes(m))), "v8.2 (Ali): Instant and Ask (classic) are in no place and no group");
-ok(tabsFor("money").join() === "money,deal" && tabsFor("timeline").length === 0, "v8.5 (W1): Money = Money · Deal Check; Follow-ups is its own place with no tab row (" + tabsFor("money") + ")");
+ok(tabsFor("money").join() === "money,planner,deal" && tabsFor("timeline").length === 0, "v8.5 (W1): Money = Money · Deal Check; Follow-ups is its own place with no tab row (" + tabsFor("money") + ")");
 ok(partsOf("radar").join() === "timeline,life,family,reminders,radar,xray,guardian" && partsOf("money").length === 0 && partsOf("guardian")[0] === "timeline", "Follow-ups (v8.2, 1A): All (one list) · People & plans · Reminders · Dates · Chat X-Ray · Guardian");
 ok(tabsFor("reminders").length === 0, "E2: no switch or tabs on Follow-ups' parts (a back chip instead)");
 ok(tabsFor("fit").length === 0 && tabsFor("health").join() === "health,fit,care,cycle", "Health: Health · Fit & Food · Family · Cycle; Fit is full-screen");

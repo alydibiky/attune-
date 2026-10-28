@@ -17,7 +17,7 @@ export function DoResult({ r, navTo, onClose, onUndo }) {
         <p className="m-0 text-[15px] font-medium" dir="auto">{(r.ar ? a.ar : a.en).replace(/\*\*/g, "")}</p>
         {(a.rows || []).length ? <div className="space-y-0.5">{a.rows.slice(0, 6).map(([k, v], i) => <div key={i} className="flex gap-3 text-[13px]"><span className="c-sub shrink-0" dir="auto">{k}</span><span className="c-num tabular-nums font-semibold" dir="auto">{v}</span></div>)}</div> : null}
         <div className="flex items-center gap-2">{a.open && TOOL_NAME[a.open] ? <button className={btnP + " !h-11 !min-h-[44px] !text-[14px]"} onClick={() => navTo(a.open)} data-testid="do-open">{tr("Open {t}", { t: tr(TOOL_NAME[a.open]) })}<ChevronRight size={16} className="rtl:rotate-180" /></button> : null}
-          <button className={"ms-auto min-h-[44px] px-3 rounded-[14px] text-[13.5px] font-bold " + muted} onClick={onClose}>{tr("Close")}</button></div>
+          <button className={"ms-auto min-h-[44px] px-3 rounded-[12px] text-[13.5px] font-bold " + muted} onClick={onClose}>{tr("Close")}</button></div>
       </div>);
   }
   return (
@@ -31,7 +31,7 @@ export function DoResult({ r, navTo, onClose, onUndo }) {
       <div className="flex items-center gap-2 pt-1">
         {r.undo && !undone ? <button className={btnS} onClick={() => { r.undo(); setUndone(true); onUndo && onUndo(); }} data-testid="do-undo"><Undo2 size={14} />{tr("Undo")}</button> : null}
         {undone ? <span className="c-sub text-[13px]" data-testid="do-undone">{tr("Undone")}</span> : null}
-        <button className={"ms-auto min-h-[44px] px-3 rounded-[14px] text-[13.5px] font-bold " + muted} onClick={onClose}>{tr("Close")}</button>
+        <button className={"ms-auto min-h-[44px] px-3 rounded-[12px] text-[13.5px] font-bold " + muted} onClick={onClose}>{tr("Close")}</button>
       </div>
     </div>);
 }

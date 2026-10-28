@@ -39,7 +39,7 @@ export function AutomationsPage({ native, flash }) {
         <p className={label}>{tr("Turn one on")}</p>
         {READY.map(([id, en, arT, icon]) => { const on = readyOn(s, ar ? arT : en) || readyOn(s, en); return (
           <div key={id} className="flex items-center gap-3 min-h-[56px] border-t border-[var(--c-ln)] first-of-type:border-t-0" data-testid="auto-ready-rule" data-id={id}>
-            <span className="w-10 h-10 rounded-[13px] grid place-items-center bg-[var(--c-soft)] shrink-0 text-[18px]" aria-hidden="true">{icon}</span>
+            <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0 text-[18px]" aria-hidden="true">{icon}</span>
             <span className="flex-1 min-w-0 text-[13.5px] font-bold" dir="auto">{ar ? arT : en}</span>
             <button onClick={() => { if (on) put({ ...s, rules: s.rules.filter((x) => x.id !== on.id) }); else { put(addRule(s, parseAutomation(ar ? arT : en))); flash && flash(tr("Automation on — it runs on the phone, no AI needed")); } }}
               aria-pressed={!!on} data-testid="auto-ready-toggle"
@@ -51,7 +51,7 @@ export function AutomationsPage({ native, flash }) {
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="auto-text"
           placeholder={tr("e.g. When my salary arrives, put 20% in the car fund and tell me")} className={area} />
         <p className="m-0 text-[11.5px] text-[var(--c-mut)]">{tr("More than one? Write one per line.")}</p>
-        {text.trim() ? (draft ? <div className="space-y-1.5">{many.rules.map((r, i) => <div key={i} className="text-[13px] font-semibold rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] px-3 py-2" data-testid="auto-draft" dir="auto">{ruleText(r, /[\u0600-\u06ff]/.test(r.text))}</div>)}
+        {text.trim() ? (draft ? <div className="space-y-1.5">{many.rules.map((r, i) => <div key={i} className="text-[13px] font-semibold rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] px-3 py-2" data-testid="auto-draft" dir="auto">{ruleText(r, /[\u0600-\u06ff]/.test(r.text))}</div>)}
             {many.bad.length ? <p className="text-[12px] text-[var(--c-warn)] m-0" data-testid="auto-unknown" dir="auto">{tr("Not an automation: {l}", { l: many.bad.join(" · ") })}</p> : null}</div>
           : <p className="text-[12px] text-[var(--c-warn)]" data-testid="auto-unknown">{tr("I didn't get that as an automation. Try: When my salary arrives, put 20% in the car fund.")}</p>) : null}
         <button disabled={!draft} onClick={() => { let n = s; for (const r of many.rules) n = addRule(n, r); put(n); setText(""); flash && flash(many.rules.length > 1 ? tr("{n} automations on — they run on the phone, no AI needed", { n: many.rules.length }) : tr("Automation on — it runs on the phone, no AI needed")); }}
@@ -67,7 +67,7 @@ export function AutomationsPage({ native, flash }) {
             <span className="flex-1 text-[13px] text-[var(--c-ink)]" dir="auto">{ruleText(r, /[\u0600-\u06ff]/.test(r.text || "") || ar)}</span>
             <button onClick={() => put({ ...s, rules: s.rules.map((x) => (x.id === r.id ? { ...x, on: x.on === false } : x)) })} data-testid="auto-toggle"
               className={`w-9 h-5 rounded-full relative shrink-0 after:absolute after:-inset-3 after:content-[''] ${r.on !== false ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]"}`}><span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm ${r.on !== false ? "end-0.5" : "start-0.5"}`} /></button>
-            <button onClick={() => put({ ...s, rules: s.rules.filter((x) => x.id !== r.id) })} className="text-[var(--c-mut)] hover:text-[var(--c-neg)] w-11 h-11 grid place-items-center rounded-[14px]" aria-label={tr("Delete")}><Trash2 size={15} /></button>
+            <button onClick={() => put({ ...s, rules: s.rules.filter((x) => x.id !== r.id) })} className="text-[var(--c-mut)] hover:text-[var(--c-neg)] w-11 h-11 grid place-items-center rounded-[12px]" aria-label={tr("Delete")}><Trash2 size={15} /></button>
           </div>))}
       </div> : null}
 

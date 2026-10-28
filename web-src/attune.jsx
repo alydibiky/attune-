@@ -70,6 +70,7 @@ import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { categorise } from "./paylog.js";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { FamilyPage } from "./family-ui.jsx";
+import { PlannerPage } from "./planner-ui.jsx";   // v8.7 (Ali picked the planner's option A)
 import { guess as guessRoute } from "./homeroute.js";   // v8.7 the Home router, shadow mode: recorded, not acted on yet   // v8.7 (persona 4, idea 13)
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels, myCountry, bookingLine } from "./agent-ui.jsx";
@@ -102,7 +103,12 @@ const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCi
 // v8.0 (Ali picked Agents design A): Agents joins the sidebar after Shelf
 // v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools after Agents
 // v8.5 (Ali agreed to the 27 Oct review): Follow-ups is its own place (W1); Shelf + Remember + Mind are one place, Saved (W2)
-const SIDE_PLACES = [["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["business", "Business", Database], ["health", "Health", Heart], ["shelf", "Saved", BookOpen], ["agents", "Agents", Radar], ["tools", "Tools", Wrench]];
+// v8.7 (Ali picked P2-E option 1, 28 Oct: "but I want the headings of the groups in another colour for easy tracking"): every place
+// back in the list, in 3 short groups — ["@", heading] is a group heading (side-ui.jsx draws it in the accent colour)
+const SIDE_PLACES = [["home", "Home", House], ["chat", "Chat", MessageCircle],
+  ["@", "My life"], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["health", "Health", Heart], ["agents", "Agents", Radar],
+  ["@", "Learn & daily"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "Saved", BookOpen],
+  ["@", "Go & work"], ["travel", "Go", Plane], ["business", "Work & Business", Database], ["tools", "Tools", Wrench]];
 const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
 import { HealthPage } from "./health-ui.jsx";
 import { AgentsPage } from "./agents-ui.jsx";
@@ -6161,6 +6167,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
   const [msheet, setMsheet] = React.useState(null);    // {k: account|bill|tx|debt|zakat-pay|zakat-set, id}
   const [listAcc, setListAcc] = React.useState(null);  // the entries list, for one account or all
   const [addPrefill, setAddPrefill] = React.useState(null);
+  // v8.7 (Ali picked P5-F): "Add my income" on the Safe-to-spend card opens the + sheet on Income
+  React.useEffect(() => { const on = (e) => { setAddPrefill((e && e.detail) || null); setAddOpen(true); }; window.addEventListener("attune-money-add", on); return () => window.removeEventListener("attune-money-add", on); }, []);
   const doQueue = React.useRef([]);
   const runDo = (op, args) => new Promise((resolve) => {
     const r = bridgeRef.current && bridgeRef.current.doIt ? bridgeRef.current.doIt(op, args) : { ok: false, why: "not ready" };
@@ -6485,7 +6493,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
 
   const mcats = React.useMemo(() => Object.fromEntries([...moneyCats(ledgerNow, "expense", arUI), ...moneyCats(ledgerNow, "income", arUI)].map((c) => [c.id, c])), [ledgerNow, arUI]);
   if (!html) return (
-    <div className="bg-slate-900 rounded-[22px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+    <div className="bg-slate-900 rounded-[20px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
       <p className="text-sm text-slate-300">{tr("Money isn't bundled in this build.")}</p>
       <p className="text-xs text-slate-500 mt-1">{tr("The Yusr document wasn't embedded. On the phone it loads from local assets.")}</p>
     </div>
@@ -6516,14 +6524,14 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
         openReport={() => setView("report")} openLedger={() => openLedger("home")}
         rightNow={rightNow ? <RightNow item={rightNow} open={() => (rightNow.go && goTo ? goTo(rightNow.go) : openLedger(rightNow.ledger || "bills"))} /> : null} />;
   return (
-    <div className={wide ? "calm relative flex flex-col rounded-[22px] " + (ledgerOn ? "overflow-hidden border border-[var(--c-ln)] bg-[var(--c-bg)]" : "bg-[var(--c-bg)] text-[var(--c-ink)] p-5 lg:p-6")
+    <div className={wide ? "calm relative flex flex-col rounded-[20px] " + (ledgerOn ? "overflow-hidden border border-[var(--c-ln)] bg-[var(--c-bg)]" : "bg-[var(--c-bg)] text-[var(--c-ink)] p-5 lg:p-6")
                          : "att-shift fixed inset-x-0 top-0 z-[45] flex flex-col " + (ledgerOn ? "bg-[#0F1218]" : "calm bg-[var(--c-bg)] text-[var(--c-ink)]")}
          data-testid={wide ? "money-desk" : "money-page"} data-view={view}
          style={wide ? (ledgerOn ? { height: "calc(100vh - 120px)" } : null) : { bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
       {!ledgerOn ? (wide ? (
         <>
           {view === "calm" ? <div className="flex items-end justify-between gap-4 mb-4"><div><h2 className="text-[22px] font-black tracking-tight m-0">{tr("Money & Zakāt")}</h2>
-            <p className="m-0 mt-0.5 text-[13px] font-semibold text-[var(--c-mut)]">{new Date().toLocaleDateString(arUI ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" })}</p></div>
+            <p className="m-0 mt-0.5 text-[13px] font-semibold text-[var(--c-mut)]">{new Date().toLocaleDateString(arUI ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "long" })}</p></div>
             <div className="flex gap-2"><button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setSheet(true)} data-testid="money-tools">{tr("Import a payment")}</button>
               <button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setMoreOpen(true)} data-testid="money-more">{tr("More")}</button></div></div> : null}
           {view === "calm" || view === "pane" ? <MoneyBar wide panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /> : null}
@@ -6532,22 +6540,24 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
         <>
           <div className="shrink-0 px-3.5 pt-3">
             <MoneyPhoneHead onMenu={onMenu} onImport={() => setSheet(true)} onLedger={() => setMoreOpen(true)} ready={ready} />
-            {tabs && pane === "home" ? <div className="pt-2">{tabs}</div> : <div className="h-3" />}
+            {tabs && pane === "home" ? <div className="pt-2">{tabs}</div> : null}
+            <MoneyBar panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} />
+            <div className="h-3" />
           </div>
-          <div className="att-scroll flex-1 min-h-0 overflow-y-auto px-3.5 pb-8">{body}</div>
-          <MoneyBar panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} />
+          <div className="att-scroll flex-1 min-h-0 overflow-y-auto px-3.5 pb-24">{body}</div>
         </>)) : (
       <>
       <div className={"shrink-0 flex items-center gap-2 px-2 h-14 " + (wide ? "calm bg-[var(--c-surf)] border-b border-[var(--c-ln)]" : "bg-slate-950 border-b border-slate-800")}>
-        {onMenu && !wide ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!"><Menu size={20} /></button> : null}
+        {onMenu && !wide ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!"><Menu size={20} /></button> : null}
         <button onClick={() => { setView("calm"); setPaneRaw("home"); }} aria-label={tr("Back")} data-testid="money-ledger-back"
-          className={"att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! " + (wide ? "text-[var(--c-ink)]!" : "text-slate-200!")}><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
+          className={"att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! " + (wide ? "text-[var(--c-ink)]!" : "text-slate-200!")}><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
         <p className={"flex-1 min-w-0 text-[17px] font-extrabold tracking-tight truncate " + (wide ? "" : "text-white")}>{tr("Money & Zakāt")}</p>
         <span className={`shrink-0 w-2 h-2 rounded-full ${ready ? "bg-teal-400" : "bg-slate-600"}`} title={ready ? tr("Connected") : tr("Starting…")} />
         <button onClick={() => setSheet(true)} data-testid="money-tools"
           className={"shrink-0 min-h-[40px] px-4 rounded-full border text-[12.5px] font-bold " + (wide ? "border-[var(--c-ln)] bg-[var(--c-surf)]" : "border-slate-700 bg-slate-900 text-slate-100")}>{tr("Payment · Ask")}</button>
       </div>
       {tabs && !wide ? <div className="shrink-0 px-3 pt-2 bg-slate-950">{tabs}</div> : null}
+      {!wide ? <div className="calm shrink-0 px-3.5 pb-2 bg-[var(--c-bg)]"><MoneyBar panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div> : null}
       {parsed && parsed.ok && !sheet ? (
         <button onClick={() => setSheet(true)} className="shrink-0 text-start px-3 py-1.5 text-[11px] bg-emerald-500/10 border-b border-emerald-900/60 text-emerald-200">
           {parsed.direction === "out" ? "−" : "+"}{parsed.amount} {parsed.currency || ""}{parsed.party ? " · " + parsed.party : ""} · {tr("read from: “")}{parsed.amountSource}”
@@ -6556,7 +6566,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       {/* v6.37 (M1): what is safe to spend today, by code (the full ledger only — a tab shows Yusr's own screen) */}
       {!wide && pane === "home" ? <SafeSpend /> : null}
       {wide ? <div className="calm shrink-0 px-4 pt-3 bg-[var(--c-bg)]"><MoneyBar wide panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div>
-        : <div className="calm contents"><MoneyBar panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /></div>}
+        : null}
       </>)}
       {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />
@@ -6567,27 +6577,27 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "biz-invoices") { setMoreOpen(false); if (goTo) { goTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "books" })), 80); } return; } openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
-          <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl rounded-t-[22px]! p-4 max-h-[88%] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
+          <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl rounded-t-[20px]! p-4 max-h-[88%] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[17px] font-black tracking-tight text-slate-100 m-0">{tr("Money tools")}</p>
-              <button onClick={() => setSheet(false)} className="w-11 h-11 -m-2 grid place-items-center rounded-[14px] text-slate-400 hover:bg-slate-800" aria-label={tr("Close")}><X size={18} /></button>
+              <button onClick={() => setSheet(false)} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:bg-slate-800" aria-label={tr("Close")}><X size={18} /></button>
             </div>
             <p className="text-[11px] text-slate-500 mb-3">{tr("Your ledger and every zakāt ruling live here, unchanged, and free forever. Attune adds memory and plain language on top — it never calculates zakāt and never moves money on its own.")}</p>
         <div className="space-y-5">
-          <div className="bg-slate-900 rounded-[22px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+          <div className="bg-slate-900 rounded-[20px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
             <p className="text-[15px] font-extrabold text-slate-100 mt-0 mb-1">{tr("Share a payment")}</p>
             <p className="text-xs text-slate-500 mb-3">
               {tr("An InstaPay confirmation, a bank SMS, a wallet receipt or a photo of one. Attune reads the amount and who it was, then opens your own transaction sheet with it filled in. You pick the account.")}
             </p>
             <textarea value={share} onChange={(e) => setShare(e.target.value)} rows={3}
               placeholder={tr("تم تحويل مبلغ 1,500.00 جنيه إلى AHMED MOHAMED. رقم العملية 987654321")}
-              className="w-full bg-slate-950 border border-slate-800 rounded-[14px] p-3 text-[14.5px] font-semibold text-slate-100 placeholder:text-slate-500 placeholder:font-normal focus:outline-none focus:border-teal-400" />
+              className="w-full bg-slate-950 border border-slate-800 rounded-[12px] p-3 text-[14.5px] font-semibold text-slate-100 placeholder:text-slate-500 placeholder:font-normal focus:outline-none focus:border-teal-400" />
             <div className="flex gap-2 mt-2">
               <button onClick={() => doShare()} disabled={!ready || !share.trim()}
-                className="min-h-[44px] px-4 rounded-[14px] bg-teal-400 text-slate-950 text-[14px] font-extrabold disabled:opacity-40">
+                className="min-h-[44px] px-4 rounded-[12px] bg-teal-400 text-slate-950 text-[14px] font-extrabold disabled:opacity-40">
                 {tr("Read it")}
               </button>
-              <label className={`min-h-[44px] px-4 rounded-[14px] border border-slate-700 bg-slate-900 text-slate-200 text-[13.5px] font-bold flex items-center gap-1.5 cursor-pointer ${reading ? "opacity-50" : ""}`}>
+              <label className={`min-h-[44px] px-4 rounded-[12px] border border-slate-700 bg-slate-900 text-slate-200 text-[13.5px] font-bold flex items-center gap-1.5 cursor-pointer ${reading ? "opacity-50" : ""}`}>
                 {reading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />} {reading ? tr("Reading…") : tr("From a photo")}
                 <input type="file" accept="image/*" className="hidden" disabled={reading} onChange={(e) => { fromPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} />
               </label>
@@ -6595,7 +6605,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
             <p className="text-[11px] text-slate-500 mt-2 leading-snug">
               {tr("Three ways, all fine: share the SMS, WhatsApp message or screenshot to Attune from any app (it lands here by itself) · paste it above · or take/pick a photo of the receipt.")}</p>
             {parsed && parsed.ok ? (
-              <div className="mt-3 text-xs bg-slate-950 border border-slate-800 rounded-[14px] p-3 space-y-1">
+              <div className="mt-3 text-xs bg-slate-950 border border-slate-800 rounded-[12px] p-3 space-y-1">
                 <div className="text-slate-200">
                   {parsed.direction === "out" ? "−" : "+"}{parsed.amount} {parsed.currency || "?"}
                   {parsed.party ? " · " + parsed.party : ""}
@@ -6612,7 +6622,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
             {err ? <p className="mt-2 text-xs text-amber-400">{tr(err)}</p> : null}
           </div>
 
-          <div className="bg-slate-900 rounded-[22px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+          <div className="bg-slate-900 rounded-[20px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
             <div className="flex items-start justify-between gap-2 mb-1">
               <p className="text-[15px] font-extrabold text-slate-100 m-0">{tr("Talk to your money")}</p>
               {/* The link is Yusr's decision, made where the money lives.
@@ -6635,7 +6645,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
               <div className="mb-3 space-y-2.5 max-h-72 overflow-auto pe-1">
                 {chat.map((m, i) => (
                   <div key={i} className={m.who === "you" ? "text-end" : ""}>
-                    <div className={`inline-block text-sm leading-relaxed whitespace-pre-wrap rounded-[18px] px-3.5 py-2.5 max-w-[92%] text-start ${
+                    <div className={`inline-block text-sm leading-relaxed whitespace-pre-wrap rounded-[20px] px-3.5 py-2.5 max-w-[92%] text-start ${
                       m.who === "you" ? "bg-teal-500/10 text-teal-100 border border-teal-900/50"
                                       : "bg-slate-950 text-slate-200 border border-slate-800"}`}>
                       {m.text}
@@ -6651,14 +6661,14 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
             <input value={q} onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") askMoney(); }}
               placeholder={chat.length ? tr("ask a follow-up…") : "هل عليّ زكاة السنة دي؟"}
-              className="w-full bg-slate-950 border border-slate-800 rounded-[14px] p-3 text-[14.5px] font-semibold text-slate-100 placeholder:text-slate-500 placeholder:font-normal focus:outline-none focus:border-teal-400" />
+              className="w-full bg-slate-950 border border-slate-800 rounded-[12px] p-3 text-[14.5px] font-semibold text-slate-100 placeholder:text-slate-500 placeholder:font-normal focus:outline-none focus:border-teal-400" />
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <button onClick={askMoney} disabled={thinking || modelState !== "ready" || !q.trim()}
-                className="min-h-[44px] px-4 rounded-[14px] bg-teal-400 text-slate-950 text-[14px] font-extrabold disabled:opacity-40">
+                className="min-h-[44px] px-4 rounded-[12px] bg-teal-400 text-slate-950 text-[14px] font-extrabold disabled:opacity-40">
                 {thinking ? tr("Thinking…") : tr("Ask")}
               </button>
               <button onClick={analyse} disabled={analysing || modelState !== "ready" || !snapshot}
-                className="min-h-[44px] px-4 rounded-[14px] border border-slate-700 bg-slate-900 text-slate-200 text-[13.5px] font-bold disabled:opacity-40">
+                className="min-h-[44px] px-4 rounded-[12px] border border-slate-700 bg-slate-900 text-slate-200 text-[13.5px] font-bold disabled:opacity-40">
                 {analysing ? tr("Reading…") : tr("What do you make of this?")}
               </button>
               {chat.length ? (
@@ -6671,7 +6681,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
             ) : null}
             {analysis ? (
               <div className="mt-3 border-t border-slate-800 pt-3">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1">{tr("What stands out")}</p>
+                <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1">{tr("What stands out")}</p>
                 <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{analysis}</p>
                 <p className="text-[10px] text-slate-600 mt-1.5">
                   {tr("Every figure here is one Yusr calculated — the model may not produce a new number.")}
@@ -6681,7 +6691,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
           </div>
 
           {zak ? (
-            <div className="bg-slate-900 rounded-[22px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+            <div className="bg-slate-900 rounded-[20px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
               <p className="text-[15px] font-extrabold text-slate-100 mt-0 mb-2">{tr("What the AI is allowed to see")}</p>
               {/* Shown on purpose. A privacy promise you can read is worth
                   more than one you are asked to believe. */}
@@ -6693,7 +6703,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
           ) : null}
 
           {feed.length ? (
-            <div className="bg-slate-900 rounded-[22px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+            <div className="bg-slate-900 rounded-[20px] border border-slate-800 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
               <p className="text-[15px] font-extrabold text-slate-100 mt-0 mb-2">{tr("Added to memory")}</p>
               <div className="space-y-1.5">
                 {feed.slice(0, 6).map((d, i) => (
@@ -7470,7 +7480,7 @@ function MapTab({ remember, flash, myLang }) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+      <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <p className="text-[17px] font-black tracking-tight text-slate-100 m-0">{tr("Maps")}</p>
@@ -7485,14 +7495,14 @@ function MapTab({ remember, flash, myLang }) {
         </div>
       </div>
 
-      <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+      <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
         <div className="flex gap-2 flex-wrap">
           <input value={q} onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
             placeholder={online ? tr("Search a place — مدينة نصر، القاهرة") : tr("Search your saved places")}
-            className="flex-1 min-w-[12rem] min-h-[44px] bg-slate-950 border border-slate-800 rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold text-slate-100 placeholder:text-slate-500 placeholder:font-normal focus:outline-none focus:border-teal-400" />
+            className="flex-1 min-w-[12rem] min-h-[44px] bg-slate-950 border border-slate-800 rounded-[12px] px-3.5 py-2.5 text-[14.5px] font-semibold text-slate-100 placeholder:text-slate-500 placeholder:font-normal focus:outline-none focus:border-teal-400" />
           <button onClick={doSearch} disabled={busy || !q.trim()}
-            className="min-h-[44px] px-5 rounded-[14px] bg-teal-400 text-slate-950 text-[14px] font-extrabold disabled:opacity-40">
+            className="min-h-[44px] px-5 rounded-[12px] bg-teal-400 text-slate-950 text-[14px] font-extrabold disabled:opacity-40">
             {busy ? "…" : tr("Search")}
           </button>
         </div>
@@ -7500,7 +7510,7 @@ function MapTab({ remember, flash, myLang }) {
         {hits.length ? (
           <div className="mt-2 space-y-1">
             {hits.map((r, i) => (
-              <div key={i} className="flex items-center gap-2 min-h-[48px] text-xs bg-slate-950 border border-slate-800 rounded-[14px] px-3 py-2">
+              <div key={i} className="flex items-center gap-2 min-h-[48px] text-xs bg-slate-950 border border-slate-800 rounded-[12px] px-3 py-2">
                 <button onClick={() => { setView({ lat: r.lat, lon: r.lon, z: Math.max(zNow, 16) }); setHits([]); setSel(r.local ? r : { ...r, found: true }); }}
                   className="flex-1 text-start text-slate-200 min-w-0" data-testid="map-hit">
                   <span className="block truncate" dir="auto">{r.name}</span>
@@ -7515,7 +7525,7 @@ function MapTab({ remember, flash, myLang }) {
         ) : null}
       </div>
 
-      <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] overflow-hidden">
         <div ref={boxRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}
           onPointerCancel={onUp}
           className="relative overflow-hidden bg-[#0b1220] touch-none select-none cursor-grab active:cursor-grabbing"
@@ -7552,9 +7562,9 @@ function MapTab({ remember, flash, myLang }) {
           </div>
 
           <div className="absolute top-2 end-2 flex flex-col gap-1">
-            <button onClick={() => zoomBy(1)} className="w-11 h-11 rounded-[14px] bg-slate-950/90 border border-slate-700 text-slate-100 shadow-sm text-lg leading-none">+</button>
-            <button onClick={() => zoomBy(-1)} className="w-11 h-11 rounded-[14px] bg-slate-950/90 border border-slate-700 text-slate-100 shadow-sm text-lg leading-none">−</button>
-            <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className="w-11 h-11 rounded-[14px] bg-slate-950/90 border border-slate-700 text-slate-100 shadow-sm text-base leading-none">{locating ? "…" : "◎"}</button>
+            <button onClick={() => zoomBy(1)} className="w-11 h-11 rounded-[12px] bg-slate-950/90 border border-slate-700 text-slate-100 shadow-sm text-lg leading-none">+</button>
+            <button onClick={() => zoomBy(-1)} className="w-11 h-11 rounded-[12px] bg-slate-950/90 border border-slate-700 text-slate-100 shadow-sm text-lg leading-none">−</button>
+            <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className="w-11 h-11 rounded-[12px] bg-slate-950/90 border border-slate-700 text-slate-100 shadow-sm text-base leading-none">{locating ? "…" : "◎"}</button>
           </div>
           {me ? (() => { const pos = pinPos(me); return <div className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 rounded-full bg-sky-500 border-2 border-white shadow" style={{ left: pos.left, top: pos.top }} data-testid="map-me" />; })() : null}
 
@@ -7585,7 +7595,7 @@ function MapTab({ remember, flash, myLang }) {
       </div>
 
       {sel ? (
-        <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+        <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[15px] font-extrabold text-slate-100 break-words m-0">{tr(sel.name)}</p>
@@ -7613,12 +7623,12 @@ function MapTab({ remember, flash, myLang }) {
       ) : null}
 
       {st.places.length ? (
-        <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+        <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
           <p className="text-[15px] font-extrabold text-slate-100 mt-0 mb-2">{tr("Your places")} <span className="text-slate-500 text-xs">({st.places.length})</span></p>
           <div className="space-y-1 max-h-56 overflow-auto">
             {st.places.map((p) => (
               <button key={p.id} onClick={() => { setView({ lat: p.lat, lon: p.lon, z: Math.max(zNow, 15) }); setSel(p); }}
-                className="w-full min-h-[44px] text-start text-[13px] font-semibold bg-slate-950 border border-slate-800 rounded-[14px] px-3 py-2 text-slate-200 truncate hover:border-teal-700">
+                className="w-full min-h-[44px] text-start text-[13px] font-semibold bg-slate-950 border border-slate-800 rounded-[12px] px-3 py-2 text-slate-200 truncate hover:border-teal-700">
                 📍 {tr(p.name)}
               </button>
             ))}
@@ -7715,7 +7725,7 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["privacy", "family", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const OWN_TITLE = new Set(["privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
 const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
@@ -7739,6 +7749,7 @@ const MORE_TOOLS = [
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
   ["agents", "Agents", "Watch a price, track a delivery, order your usual, open any app", Radar],   // v8.0 (Ali picked A)
   ["radar", "Deadline Radar", "Free trials, renewals, returns, warranties and documents — a warning before each one", Radar],   // v6.27
+  ["planner", "Month plan", "Plans your month: bills, savings for travel and emergencies, everyday spending — and what's free", Wallet],   // v8.7
   ["family", "Family", "One shopping list, who paid what for the house, reminders for the parents — shared with your family's phones", Users],   // v8.7
   ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
@@ -7809,7 +7820,7 @@ K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[lab
 // v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader stays (Ali, 13 Oct),
 // in Files — it saves a file to the phone.
 const MORE_GROUPS = [
-  ["Money & people", ["agents", "scout", "guardian", "radar", "life", "family", "deal", "reminders", "timeline"]],
+  ["Money & people", ["agents", "scout", "guardian", "planner", "radar", "life", "family", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
   ["Mind & learning", ["coach", "learn", "booklib", "memory", "remember", "shelf", "news"]],
   ["Chat", ["assistants", "skills", "projects", "artifacts", "xray"]],
@@ -7962,6 +7973,13 @@ export default function App() {
   const [artifact, setArtifact] = useState(null);        // the full-screen artifact viewer
   const [theme, setTheme] = useState(() => loadTheme());
   useEffect(() => { applyTheme(theme); }, []);
+  // v8.7 (Ali picked V-B): "Follow my phone" — when the phone turns dark (at night, or in its settings), Attune turns too
+  useEffect(() => {
+    if ((theme || {}).bg !== "auto" || typeof matchMedia !== "function") return;
+    const mq = matchMedia("(prefers-color-scheme: dark)"), on = () => applyTheme(theme);
+    try { mq.addEventListener("change", on); } catch (e) { try { mq.addListener(on); } catch (e2) {} }
+    return () => { try { mq.removeEventListener("change", on); } catch (e) { try { mq.removeListener(on); } catch (e2) {} } };
+  }, [theme && theme.bg, theme && theme.accent]);
   useEffect(() => {
     const on = (e) => { if (e && e.detail) setArtifact(e.detail); };
     window.addEventListener("attune-artifact", on);
@@ -8426,7 +8444,7 @@ export default function App() {
       <button onClick={() => navTo(pp[0])} data-testid="part-back" className="calm inline-flex items-center gap-1 min-h-[36px] rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]! px-3.5 mb-3 text-[13px] font-bold text-[var(--c-mut)] hover:text-[var(--c-ink)]">
         <ChevronLeft size={15} />{tr(pp[0] === "timeline" ? "All follow-ups" : TAB_SHORT[pp[0]] || MODE_TITLES[pp[0]] || pp[0])}</button>); }
     return t.length ? <HubTabs mode={mode} tabs={t} parts={partsOf(mode, avail)} titleOf={(m) => TAB_SHORT[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
-      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} asBar={!wide && t.includes("business") && t.includes("fleet")} /> : null;
+      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} asBar={false} /> : null;   // v8.7 (P5-A option 2): no bottom bars — Business too has its tabs on top
   })();
   // (no bottom bar → the panels pinned above it sit on the bottom edge)
   useEffect(() => { if (!LEGACY_NAV) try { document.documentElement.style.setProperty("--nav-h", "0px"); document.documentElement.classList.add("att-min"); } catch (e) {} }, []);
@@ -10105,7 +10123,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
+        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "chat" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("home"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
@@ -10115,7 +10133,7 @@ export default function App() {
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
       {!wide && phoneSide ? <Guard name="sidebar"><div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setPhoneSide(false)} data-testid="phone-side">
         <div onClick={(e) => e.stopPropagation()}><DesktopSide touch width="min(86vw, 320px)" mode={mode} canBack={false} onBack={() => {}} navTo={(m) => { setPhoneSide(false); setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
+          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "chat" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
           tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
           onNewChat={() => { setPhoneSide(false); navTo("home"); setNewChatSignal((n) => n + 1); }}
           onOpenChat={(id) => { setPhoneSide(false); setOpenChatId(id); navTo("chat"); }}
@@ -10127,15 +10145,15 @@ export default function App() {
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
         <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 min-h-[60px] py-2 mb-3 border-b border-slate-800/70" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>
-          {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
+          {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
             <>
-            <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Chats")} data-testid="header-menu"><Menu size={20} /></button>
+            <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Chats")} data-testid="header-menu"><Menu size={20} /></button>
             {/* v7.6: the chat is part of Home — ← goes back to the clean Home */}
-            <button onClick={() => navTo("home")} aria-label={tr("Home")} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" data-testid="chat-home"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button></>
+            <button onClick={() => navTo("home")} aria-label={tr("Home")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" data-testid="chat-home"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button></>
           ) : wide ? null : (<>   {/* v6.25: on a computer Back is the sidebar's ← (one arrow, not two) */}
-            {!LEGACY_NAV ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button> : null}
-            <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
+            {!LEGACY_NAV ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button> : null}
+            <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
           </>)}
           {/* v6.28 (Ali: "the UI is still cluttered"): a page with its own big title doesn't repeat it in the top bar */}
           <p className="text-[17px] font-extrabold tracking-tight text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || "Attune")}</p>
@@ -10148,14 +10166,14 @@ export default function App() {
               className={`${wide ? "hidden " : ""}flex items-center gap-1.5 text-[12.5px] font-bold h-10 min-h-[40px] px-3.5 rounded-full bg-slate-900 border border-slate-800 text-slate-200 shrink-0 max-w-[45%]`}>
             <span className={"w-2 h-2 rounded-full shrink-0 " + (modelState === "ready" ? "bg-teal-400" : modelState === "starting" || modelState === "downloading" ? "bg-amber-400 animate-pulse" : "bg-slate-600")} />
             <span className="truncate">{modelState === "ready" || modelState === "starting" || modelState === "downloading" ? engineText : NATIVE && (installedModels || []).length ? tr("Asleep") : tr("No model")}</span></button>}
-          {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="w-11 h-11 grid place-items-center rounded-[14px] text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
-          {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); navTo("home"); }} className="att-icon-btn h-11! min-w-[44px]! rounded-[14px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("New chat")} data-testid="chat-new-home"><Plus size={20} /></button> : null}
+          {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="w-11 h-11 grid place-items-center rounded-[12px] text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
+          {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); navTo("home"); }} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("New chat")} data-testid="chat-new-home"><Plus size={20} /></button> : null}
         </header>
 
         {/* The morning line — shown on every tab, once a day, only when there
             is something real to say. Computed, never generated. */}
         {morning && !morningSeen && proActive ? (
-          <div className="mb-5 bg-slate-900 border border-slate-800 rounded-[22px] p-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+          <div className="mb-5 bg-slate-900 border border-slate-800 rounded-[20px] p-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
             <div className="flex items-start gap-3">
               <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-teal-500/10 text-teal-300 shrink-0"><Radar size={16} /></span>
               <div className="flex-1 min-w-0">
@@ -10203,7 +10221,7 @@ export default function App() {
           <ArtifactsPage open={(a) => setArtifact(a)} />
         ) : mode === "ask" ? (
           <div className="att-in">
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
               {askTurns.length === 0 ? (
                 <div className="text-center py-6">
                   <p className="text-sm text-slate-300">{tr("Ask it anything.")}</p>
@@ -10305,7 +10323,7 @@ export default function App() {
                                       flash(tr("Saved — next time it starts from your version"));
                                     }}
                                     disabled={!correctDraft.trim()}
-                                    className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 font-extrabold disabled:opacity-40">
+                                    className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[12px] bg-teal-400 text-slate-950 font-extrabold disabled:opacity-40">
                                     {tr("Save the correction")}
                                   </button>
                                   <button onClick={() => { setCorrecting(null); setCorrectDraft(""); setCorrectWhy(""); }}
@@ -10406,7 +10424,7 @@ export default function App() {
                 <p className="text-xs text-slate-400 line-clamp-2 mb-2">{shareIn.text.slice(0, 180)}{shareIn.text.length > 180 ? "…" : ""}</p>
                 <div className="flex flex-wrap gap-1.5">
                   <button onClick={() => { setChatSeed(shareIn.text); setMode("chat"); setShareIn(null); }}
-                    className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 font-extrabold">{tr("Do something with it")}</button>
+                    className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[12px] bg-teal-400 text-slate-950 font-extrabold">{tr("Do something with it")}</button>
                   <button data-testid="share-to-shelf" onClick={() => {   // v6.12: a note shared from the phone's Notebook app → Shelf
                     let sh = SH.loadShelf(localStorage); let bk = sh.books.find((b) => b.imported);
                     if (!bk) { const r = SH.addBook(sh, tr("Imported notes"), "ocean"); bk = { ...r.book, imported: true }; sh = { ...r.shelf, books: r.shelf.books.map((b) => (b.id === bk.id ? bk : b)) }; SH.saveShelf(localStorage, sh); }
@@ -10430,7 +10448,7 @@ export default function App() {
               </div>
             ) : null}
             wordsPanel={
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium text-slate-300 flex items-center gap-1.5"><Languages size={14} className="text-teal-400" /> {tr("Your words")}</p>
                 <span className="text-[11px] text-slate-600">{lexicon.length} {tr("learned")}</span>
@@ -10448,7 +10466,7 @@ export default function App() {
                   placeholder={tr("how you want it written")}
                   className="flex-1 min-w-[9rem] bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
                 <button onClick={() => { teach({ ...lexDraft }); setLexDraft({ term: "", mine: "", note: "" }); }}
-                  className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 font-extrabold">{tr("Teach it")}</button>
+                  className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[12px] bg-teal-400 text-slate-950 font-extrabold">{tr("Teach it")}</button>
               </div>
               <button onClick={() => { if (!lexDraft.term.trim()) return flash(tr("Write the rule in the first box")); teach({ ...lexDraft, kind: "style" }); setLexDraft({ term: "", mine: "", note: "" }); }}
                 className="text-[11px] text-slate-500 hover:text-teal-400 mb-3">{tr("or save the first box as a writing rule — “always state VAT separately”")}</button>
@@ -10483,7 +10501,7 @@ export default function App() {
 
               {lexNeedsReview.length ? (
                 <div className="mb-3 bg-slate-950 border border-slate-800 rounded-xl p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Worth a second look")}</p>
+                  <p className="text-[12px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Worth a second look")}</p>
                   {lexNeedsReview.slice(0, 4).map((e) => (
                     <div key={e.id} className="flex items-center gap-2 py-1">
                       <p className="text-xs text-slate-400 flex-1 min-w-0 truncate">
@@ -10499,7 +10517,7 @@ export default function App() {
 
               {mined.length ? (
                 <div className="mb-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("You keep using these — should it know them?")}</p>
+                  <p className="text-[12px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("You keep using these — should it know them?")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {mined.map((m) => (
                       <button key={m.term} onClick={() => setLexDraft({ term: m.term, mine: "", note: "" })}
@@ -10633,7 +10651,7 @@ export default function App() {
             </section>
             }
             promisesPanel={
-              <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+              <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-slate-300">{tr("Things you said you'd do")}</p>
                   {memBusy ? <Loader2 size={13} className="animate-spin text-teal-500" /> : null}
@@ -10641,7 +10659,7 @@ export default function App() {
 
                 {suggested.length ? (
                   <div className="mb-3">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Found — is this real?")}</p>
+                    <p className="text-[12px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Found — is this real?")}</p>
                     <div className="space-y-1.5">
                       {suggested.map((c) => (
                         <div key={c.id} className="bg-slate-950 border border-teal-900/50 rounded-lg px-3 py-2">
@@ -10870,6 +10888,8 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" })}
             unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
+        ) : mode === "planner" ? (
+          <PlannerPage flash={flash} />
         ) : mode === "family" ? (
           <FamilyPage flash={flash} cur={(() => { try { return homeCurrency(JSON.parse(localStorage.getItem("ledger.v3") || "null")); } catch (e) { return ""; } })()} remind={scheduleReminder} />
         ) : mode === "guardian" ? (
@@ -10903,7 +10923,7 @@ export default function App() {
             <div className={PANES}><div className={LEFT}>
             {/* v5.32 — Ali: "I still don't know what Instant is about" */}
             <p className="text-[12.5px] text-slate-400 leading-relaxed px-1" data-testid="instant-about">{tr("Instant does one quick job on any text or photo — answer it, rewrite it, translate it, summarise it — without starting a chat. For a conversation use Chat; for places near you, Instant hands you to the map.")}</p>
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
               {photoMode ? (
                 <div>
                   <div className="relative bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
@@ -10940,7 +10960,7 @@ export default function App() {
                     <Square size={14} /> {tr("Stop")}</button>
                 ) : (
                   <button onClick={() => (photoMode ? runPhoto(tr("Explain it"), PHOTO_ACTIONS[3][1], "out") : runSmart())} disabled={!photoMode && !inText.trim()}
-                    className="ms-auto flex items-center gap-1.5 px-5 min-h-[48px] py-2.5 rounded-[16px] bg-teal-400 text-slate-950 text-[14.5px] font-extrabold disabled:opacity-40 active:scale-95">
+                    className="ms-auto flex items-center gap-1.5 px-5 min-h-[48px] py-2.5 rounded-[20px] bg-teal-400 text-slate-950 text-[14.5px] font-extrabold disabled:opacity-40 active:scale-95">
                     <Send size={15} /> {tr("Go")}</button>
                 )}
               </div>
@@ -11044,12 +11064,12 @@ export default function App() {
                 <p className="text-sm text-teal-200 font-medium flex items-center gap-1.5"><CheckCircle2 size={15} /> {tr(inLogged.title)}</p>
                 <p className="text-sm text-slate-300 mt-1.5 leading-relaxed whitespace-pre-wrap">{tr(inLogged.detail)}</p>
                 <div className="flex gap-2 mt-3">
-                  <button onClick={() => setMode(inLogged.tab)} className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 font-extrabold">{inLogged.open}</button>
+                  <button onClick={() => setMode(inLogged.tab)} className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[12px] bg-teal-400 text-slate-950 font-extrabold">{inLogged.open}</button>
                   {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash(tr("Removed")); }} className="text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-300">{tr("Undo")}</button> : null}
                 </div>
               </section>
             ) : (inResult || inBusy || inThinking) ? (
-              <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+              <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
                 <div className="flex items-center justify-between mb-2 gap-2">
                   <span className="text-sm font-medium text-slate-300 truncate">{inAction || tr("Answer")}</span>
                   {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash(tr("Copied")); }} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300"><Copy size={14} /> {tr("Copy")}</button> : null}
@@ -11142,14 +11162,14 @@ export default function App() {
                           <input value={fixing.right} onChange={(e) => setFixing({ ...fixing, right: e.target.value })}
                             placeholder={tr("you say…")} className="flex-1 min-w-[8rem] bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-100" />
                           <button onClick={() => { teach({ term: fixing.wrong, mine: fixing.right, note: "corrected by you" }); setFixing(null); }}
-                            className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 font-extrabold">{tr("Remember it")}</button>
+                            className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[12px] bg-teal-400 text-slate-950 font-extrabold">{tr("Remember it")}</button>
                           <button onClick={() => setFixing(null)} className="text-xs px-2 py-1.5 text-slate-500">cancel</button>
                         </div>
                         <p className="text-[11px] text-slate-600 mt-2">{tr("It'll use your word every time from now on — here, in documents, in translations.")}</p>
                       </div>
                     ) : null}
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500">{tr("Not quite right?")}</p>
+                      <p className="text-[12px] uppercase tracking-wider text-slate-500">{tr("Not quite right?")}</p>
                       <button onClick={() => setFixing({ wrong: "", right: "" })}
                         className="text-[11px] text-slate-500 hover:text-teal-400 flex items-center gap-1"><PenLine size={11} /> {tr("a word is wrong")}</button>
                     </div>
@@ -11166,8 +11186,8 @@ export default function App() {
             ) : <DeskEmpty icon={Zap} testid="instant-empty" title={tr("The answer appears here")} text={tr("Paste text or add a photo on the left, pick a job, and the result shows here.")} />}
 
             {instantHistory.length > 0 && !inBusy ? (
-              <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5"><History size={12} /> {tr("Recent")}</p>
+              <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3">
+                <p className="text-[12px] uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5"><History size={12} /> {tr("Recent")}</p>
                 <div className="space-y-0.5">
                   {instantHistory.slice(0, 5).map((h) => (
                     <button key={h.id} onClick={() => { setInResult(h.output); setInAction(h.action); setInThinking(""); setInLogged(null); }}
@@ -11186,7 +11206,7 @@ export default function App() {
         ) : mode === "fleet" ? (
           <div className="space-y-5">
             {/* sync bar — the answer to "how do records connect" */}
-            <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+            <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-2 text-sm text-slate-300">
                   <Users size={15} className="text-teal-400" />
@@ -11206,18 +11226,18 @@ export default function App() {
             {/* the ROI number */}
             {health.length > 0 ? (
               <div className="grid sm:grid-cols-3 gap-3">
-                <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Assets tracked")}</p>
+                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Assets tracked")}</p>
                   <p className="text-3xl font-bold text-white mt-1">{health.length}</p>
                   <p className="text-[11px] text-slate-600 mt-1">{records.length} records</p>
                 </div>
-                <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Needs attention")}</p>
+                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Needs attention")}</p>
                   <p className="text-3xl font-bold text-rose-400 mt-1">{health.filter((a) => a.band !== "ok").length}</p>
                   <p className="text-[11px] text-slate-600 mt-1">{health.reduce((n, a) => n + a.open, 0)} {tr("open actions")}</p>
                 </div>
-                <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Downtime logged")}</p>
+                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Downtime logged")}</p>
                   <p className="text-3xl font-bold text-amber-400 mt-1">{cost.hours}h</p>
                   <p className="text-[11px] text-slate-600 mt-1">
                     {Number(org.rate) > 0 ? `≈ ${cost.cost.toLocaleString()} ${org.currency || "EGP"}` : <button onClick={() => setShowOrg(true)} className="underline hover:text-teal-400">{tr("set hourly rate to price this")}</button>}
@@ -11227,8 +11247,8 @@ export default function App() {
             ) : null}
 
             {/* asset health */}
-            <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-3 flex items-center gap-1.5"><Gauge size={13} /> {tr("Asset health")}</p>
+            <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-3 flex items-center gap-1.5"><Gauge size={13} /> {tr("Asset health")}</p>
               {health.length === 0 ? (
                 <p className="text-sm text-slate-600">{tr("No assets yet. Create records in Field and they appear here — including records synced from your team.")}</p>
               ) : (
@@ -11258,9 +11278,9 @@ export default function App() {
             </div>
 
             {findings.length > 0 ? (
-              <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+              <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5"><Radar size={13} /> {tr("Patterns across the team")}</p>
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5"><Radar size={13} /> {tr("Patterns across the team")}</p>
                   <button onClick={runBrief} disabled={loading} className="text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{loading ? "…" : tr("What does this mean?")}</button>
                 </div>
                 <div className="space-y-1.5">
@@ -11277,7 +11297,7 @@ export default function App() {
           </div>
         ) : mode === "field" ? (
           <div className="grid md:grid-cols-2 gap-5">
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-slate-300">{tr("What happened / what's needed")}</label>
                 {/* v6.37 (W3): a real microphone — the phone's speech recognition */}
@@ -11295,7 +11315,7 @@ export default function App() {
                   className="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
               </div>
 
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-4 mb-2">{tr("Document")}</p>
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-4 mb-2">{tr("Document")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {Object.entries(FIELD_DOCS).map(([k, d]) => (
                   <button key={k} onClick={() => setFdDoc(k)} className={btn(fdDoc === k)}>{d.icon} {tr(d.label)}</button>
@@ -11303,7 +11323,7 @@ export default function App() {
               </div>
               <p className="text-[11px] text-slate-600 mt-2">{tr("Needs:")} {FIELD_DOCS[fdDoc].need.map((x) => tr(x)).join(" · ")}{tr(". Only genuinely essential gaps are flagged — today's date and your name are filled in automatically.")}</p>
 
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-4 mb-2 flex items-center gap-1.5"><Languages size={13} /> {tr("Produce it in")}</p>
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-4 mb-2 flex items-center gap-1.5"><Languages size={13} /> {tr("Produce it in")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {["match", "en", "ar", "hi", "ur", "bn", "tr", "fr", "ru"].map((k) => (
                   <button key={k} onClick={() => toggleFdLang(k)} className={btn(fdLangs.includes(k))}>
@@ -11338,7 +11358,7 @@ export default function App() {
               <SitePhotos photos={fdPhotos} setPhotos={setFdPhotos} title={tr(FIELD_DOCS[fdDoc].label)} text={fdResult || ""} by={fdBy} flash={flash} />
             </section>
 
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-slate-300">{tr(FIELD_DOCS[fdDoc].label)}{fdLangs.length > 1 ? ` · ${fdLangs.length} languages` : ""}</label>
                 {fdResult ? <button onClick={() => { try { navigator.clipboard.writeText(fdResult); } catch (e) {} flash(tr("Copied")); }} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><Copy size={14} /> {tr("Copy")}</button> : null}
@@ -11357,7 +11377,7 @@ export default function App() {
               {records.length > 0 ? (
                 <div className="mt-4 border-t border-slate-800 pt-4">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5">
+                    <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5">
                       <Radar size={13} /> {tr("Site memory ·")} {records.length} record{records.length > 1 ? "s" : ""}
                     </p>
                     {findings.length > 0 ? (
@@ -11388,7 +11408,7 @@ export default function App() {
 
                   {brief ? (
                     <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3">
-                      <p className="text-[10px] uppercase tracking-wider text-teal-400 mb-1.5">{tr("Reviewer's read")}</p>
+                      <p className="text-[12px] uppercase tracking-wider text-teal-400 mb-1.5">{tr("Reviewer's read")}</p>
                       <pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{tr(brief)}</pre>
                     </div>
                   ) : null}
@@ -11400,7 +11420,7 @@ export default function App() {
           <WritingBox onGo={(k, t) => { if (k === "improve") setInput(t); else if (k === "compress") setCPrompt(t); else setHzText(t); setWriteRun(k); navTo(k); }} />
         ) : mode === "humanize" ? (
           <div className="grid md:grid-cols-2 gap-5">
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
               <label className="block text-sm font-medium text-slate-300 mb-2">{tr("Text to rewrite")}</label>
               <textarea value={hzText} onChange={(e) => setHzText(e.target.value)} placeholder={tr("Paste AI-generated or stiff text — it comes back sounding like a person wrote it.")}
                 className="w-full h-36 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
@@ -11410,14 +11430,14 @@ export default function App() {
               <button onClick={doHumanize} disabled={!hzText.trim() || loading} className={`mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${hzText.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <PenLine size={16} />}{loading ? tr("Rewriting…") : tr("Humanize")}</button>
               <p className="text-xs text-slate-600 mt-2">{tr("Keeps your meaning and facts exactly — changes only how it reads. The writing sample is optional but makes the biggest difference.")}</p>
             </section>
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
               <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Rewritten")}</label>{hzResult ? <button onClick={() => { try { navigator.clipboard.writeText(hzResult); } catch (e) {} flash(tr("Copied")); }} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><Copy size={14} /> {tr("Copy")}</button> : null}</div>
               {hzResult ? <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 overflow-auto min-h-[12rem]"><p className="text-sm text-teal-50 whitespace-pre-wrap leading-relaxed">{hzResult}</p></div>
                 : <div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[14rem] p-6">{tr("Paste stiff or AI-sounding text, add a sample of your own writing, and it comes back in your voice — same meaning, human rhythm.")}</div>}
             </section>
           </div>
         ) : mode === "copilot" ? (
-          <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+          <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
             <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
               <p className="text-sm text-slate-300">{tr("Chat through Attune — it reads the whole conversation and sharpens every next prompt.")}</p>
               {convo.length > 0 ? <button onClick={cpReset} className="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-400 hover:border-rose-500 hover:text-rose-400">{tr("Reset")}</button> : null}
@@ -11483,7 +11503,7 @@ export default function App() {
 
             {cpVariants.length ? (
               <div className="mb-4 att-in">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">{tr("Three ways to go next — pick one")}</p>
+                <p className="text-[12px] uppercase tracking-wider text-slate-500 mb-2">{tr("Three ways to go next — pick one")}</p>
                 <div className="grid md:grid-cols-3 gap-2">
                   {cpVariants.map((v) => (
                     <button key={v.k} onClick={() => cpChoose(v)}
@@ -11503,7 +11523,7 @@ export default function App() {
                   <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash(tr("Copied")); }} className="text-xs px-2 py-1 rounded-lg border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400 flex items-center gap-1"><Copy size={13} /> {tr("Copy")}</button><button onClick={cpSendPending} className="text-xs px-2 py-1 rounded-lg border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400 flex items-center gap-1"><ExternalLink size={13} /> {tr("Open")}</button></div>
                 </div>
                 <pre className="text-sm font-mono text-teal-50 whitespace-pre-wrap">{cpPending}</pre>
-                <button onClick={cpSendPending} data-testid="cp-send" className="mt-3 w-full flex items-center justify-center gap-1.5 min-h-[48px] py-2.5 rounded-[16px] bg-teal-400 text-slate-950 text-[14.5px] font-extrabold">
+                <button onClick={cpSendPending} data-testid="cp-send" className="mt-3 w-full flex items-center justify-center gap-1.5 min-h-[48px] py-2.5 rounded-[20px] bg-teal-400 text-slate-950 text-[14.5px] font-extrabold">
                   <ExternalLink size={14} /> {tr("Copy & open {t}", { t: tr(TOOLS[tool].label) })}</button>
                 {cpReturned ? (
                   <button onClick={async () => { setCpReturned(false); await cpGrabClipboard(); }}
@@ -11550,7 +11570,7 @@ export default function App() {
           <PromptLab ready={modelState === "ready"} openEngine={() => setShowEngine(true)} flash={flash}
             run={(prompt) => callChat([{ role: "user", content: prompt }], null, { maxTokens: 600, temperature: 0.3, think: false })}
             onUse={(m) => { setInput(m.template); setResult(null); setMode("improve"); flash(tr("Prompt loaded")); }} />
-          <div className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+          <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <p className="text-sm text-slate-300">{tr("Ready prompt recipes — pick one, fill the blanks, then")} <span className="text-teal-400">{tr("AI Rewrite")}</span> {tr("to tailor it.")}</p>
               <button onClick={checkUpdates} disabled={syncing} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-400 hover:border-teal-600 hover:text-teal-400">{syncing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} v{library.version} {tr("· check updates")}</button>
@@ -11563,7 +11583,7 @@ export default function App() {
                   <p className="text-xs text-slate-500 mt-1">{tr(r.tip)}</p>
                   <pre className="mt-2 text-xs font-mono text-slate-400 whitespace-pre-wrap line-clamp-3 flex-1">{r.template}</pre>
                   {r.basis ? <p className="text-[10px] text-teal-500/70 mt-2 border-s border-teal-900/60 ps-1.5">◆ {tr(r.basis)}</p> : null}
-                  <button onClick={() => useRecipe(r)} className="mt-3 min-h-[44px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 text-[14px] font-extrabold hover:bg-teal-300">{tr("Use recipe")}</button>
+                  <button onClick={() => useRecipe(r)} className="mt-3 min-h-[44px] px-4 py-2 rounded-[12px] bg-teal-400 text-slate-950 text-[14px] font-extrabold hover:bg-teal-300">{tr("Use recipe")}</button>
                 </div>
               ))}
             </div>
@@ -11573,7 +11593,7 @@ export default function App() {
           <FamilyReport fam="writing" back={() => setWriteRep(false)} navTo={navTo} names={Object.fromEntries(Object.entries(TOOLS).map(([k, v]) => [k, v.label]))} />
         ) : mode === "improve" ? (
           <div className="grid md:grid-cols-2 gap-5">
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
               <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Your prompt")}</label><button onClick={() => flash(tr("Voice input runs in the installed app"))} className="-m-2 p-2 rounded-full text-slate-500 hover:text-teal-400" title={tr("Voice (app build)")} aria-label={tr("Voice (app build)")}><Mic size={16} /></button></div>
               <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder={tr("e.g. i need you to like maybe compare laptops and stuff, the top ones, for uni")} className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               {input.trim() && (
@@ -11588,14 +11608,14 @@ export default function App() {
               <label className="block text-sm font-medium text-slate-300 mt-4 mb-2">{tr("Background")} <span className="text-slate-500 font-normal">{tr("(optional)")}</span></label>
               <textarea value={context} onChange={(e) => setContext(e.target.value)} placeholder={tr("Any context the tool should know first")} className="w-full h-14 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               <div className="mt-4">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1 flex items-center gap-1.5"><Package size={13} /> {tr("Domain pack")}</p>
+                <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1 flex items-center gap-1.5"><Package size={13} /> {tr("Domain pack")}</p>
                 <p className="text-[11px] text-slate-500 mb-2 leading-snug">{tr("Adds an expert's framing for your field to the rewritten prompt — e.g. Heavy Equipment makes it ask for load capacities, safety factors and specs. Tap one, then use a starter below.")}</p>
                 <div className="flex flex-wrap gap-1.5">{Object.entries(PACKS).map(([k, p]) => <button key={k} onClick={() => selectPack(k)} className={`${btn(pack === k)} flex items-center gap-1`}>{p.pro && !proActive && <Lock size={11} />}{tr(p.label)}</button>)}</div>
                 {PACKS[pack].starters.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">{PACKS[pack].starters.map((s) => <button key={s} onClick={() => setInput(s)} className="text-xs px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{s.trim()}…</button>)}</div>}
               </div>
               <div className="mt-4">
                 {/* v7.8 (Gemini's Area 6): compact target chips — the five most used, the rest under "More targets" */}
-                <div className="flex items-center justify-between mb-2"><p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 m-0">{tr("Target AI")}</p>
+                <div className="flex items-center justify-between mb-2"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 m-0">{tr("Target AI")}</p>
                   <span className="text-[11px] text-slate-500">{tr("{n} more under More targets", { n: FAMILIES.reduce((s, f) => s + f.keys.length, 0) - TARGET_PINS.length })}</span></div>
                 <div className="flex flex-wrap gap-2" data-testid="improve-targets">{[...TARGET_PINS, ...(TARGET_PINS.includes(tool) ? [] : [tool])].map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)} data-testid={"target-" + k}>{tr(TOOLS[k].label)}</button>)}
                   <button onClick={() => setMoreTargets((v) => !v)} className={btn(false) + " flex items-center gap-1"} aria-expanded={moreTargets} data-testid="improve-more-targets">{tr("More targets")}<ChevronDown size={13} className={moreTargets ? "rotate-180" : ""} /></button></div>
@@ -11630,7 +11650,7 @@ export default function App() {
             </section>
             <div className="md:col-span-2"><FamilySeeAll fam="writing" onClick={() => setWriteRep(true)} /></div>
 
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-slate-300 flex items-center gap-2">{tr("Tailored for")} {tr(TOOLS[tool].label)}{result && result.ai && <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-900/60">{result.engine === "device" ? tr("ON-DEVICE") : tr("AI")}</span>}</label>
                 {result && <div className="flex gap-1.5"><button onClick={copy} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? tr("Copied") : tr("Copy")}</button><button onClick={openIn} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><ExternalLink size={14} /> {tr("Open")}</button></div>}
@@ -11639,26 +11659,26 @@ export default function App() {
                 {!result.ai && <div className="flex gap-1 mb-2 bg-slate-950 border border-slate-800 rounded-lg p-1 w-fit">{["lean", "detailed"].map((v) => <button key={v} onClick={() => setVariant(v)} className={`px-3 py-1 rounded-md text-xs capitalize ${variant === v ? "bg-teal-500 text-slate-950 font-medium" : "text-slate-400"}`}>{tr(v)}</button>)}</div>}
                 {/* v7.8 (Gemini's Area 6): what you wrote, struck through, above what it became */}
                 <div className="mb-2 rounded-xl border border-slate-800 bg-slate-950 p-3" data-testid="improve-before">
-                  <p className="text-[10.5px] font-extrabold uppercase tracking-[0.08em] text-slate-500 m-0 mb-1">{tr("Before")} · {tr("{n} words", { n: wordCount(input) })}</p>
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-500 m-0 mb-1">{tr("Before")} · {tr("{n} words", { n: wordCount(input) })}</p>
                   <p className="text-[13px] text-slate-500 line-through m-0 whitespace-pre-wrap line-clamp-3" dir="auto">{input}</p></div>
-                <p className="text-[10.5px] font-extrabold uppercase tracking-[0.08em] text-teal-400 m-0 mb-1" data-testid="improve-after">{tr("After")} · {tr("{n} words", { n: wordCount(currentText) })} · {tr("ready to copy")}</p>
+                <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-teal-400 m-0 mb-1" data-testid="improve-after">{tr("After")} · {tr("{n} words", { n: wordCount(currentText) })} · {tr("ready to copy")}</p>
                 <pre className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-teal-50 whitespace-pre-wrap overflow-auto min-h-[8rem]">{currentText}</pre>
-                {placeholders.length > 0 && <div className="mt-3"><p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Fill in the blanks")}</p><div className="grid grid-cols-2 gap-2">{placeholders.map((p) => <input key={p} placeholder={p} value={fills[p] || ""} onChange={(e) => setFills((f) => ({ ...f, [p]: e.target.value }))} className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />)}</div></div>}
+                {placeholders.length > 0 && <div className="mt-3"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Fill in the blanks")}</p><div className="grid grid-cols-2 gap-2">{placeholders.map((p) => <input key={p} placeholder={p} value={fills[p] || ""} onChange={(e) => setFills((f) => ({ ...f, [p]: e.target.value }))} className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />)}</div></div>}
                 <p className="mt-3 text-xs text-slate-500 italic border-s-2 border-teal-800 ps-2">{tr(result.reads)}</p>
                 <div className="mt-3 flex items-start gap-2 text-xs text-teal-400/90 bg-teal-500/5 border border-teal-900/50 rounded-lg p-2"><Zap size={13} className="mt-0.5 shrink-0" /><span>{tr("Tip:")} {tr(result.hint)}</span></div>
               </>) : (<div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[12rem] p-6">{tr("Write a rough prompt, then hit")} <span className="text-teal-400 mx-1">{tr("AI Rewrite")}</span> {tr("to see the model rethink it — or Structure for an instant offline version.")}</div>)}
-              {templates.length > 0 && <div className="mt-4"><p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Saved templates")}</p><div className="flex flex-wrap gap-1.5">{templates.map((t) => <span key={t.id} className="flex items-center gap-1 text-xs bg-slate-950 border border-slate-800 rounded-md ps-2 pe-1 py-1"><button onClick={() => applyTemplate(t)} className="text-slate-300 hover:text-teal-400">{tr(t.name)}</button><button onClick={() => setTemplates((x) => x.filter((y) => y.id !== t.id))} className="text-slate-600 hover:text-rose-400"><X size={12} /></button></span>)}</div></div>}
+              {templates.length > 0 && <div className="mt-4"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Saved templates")}</p><div className="flex flex-wrap gap-1.5">{templates.map((t) => <span key={t.id} className="flex items-center gap-1 text-xs bg-slate-950 border border-slate-800 rounded-md ps-2 pe-1 py-1"><button onClick={() => applyTemplate(t)} className="text-slate-300 hover:text-teal-400">{tr(t.name)}</button><button onClick={() => setTemplates((x) => x.filter((y) => y.id !== t.id))} className="text-slate-600 hover:text-rose-400"><X size={12} /></button></span>)}</div></div>}
             </section>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-5">
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
               <label className="block text-sm font-medium text-slate-300 mb-2">{tr("Your new prompt")}</label>
               <textarea value={cPrompt} onChange={(e) => setCPrompt(e.target.value)} placeholder={tr("Paste a long, wordy prompt — AI Compress will think and shrink it.")} className="w-full h-28 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               <label className="block text-sm font-medium text-slate-300 mt-4 mb-2">{tr("Chat history")} <span className="text-slate-500 font-normal">{tr("(optional)")}</span></label>
               <textarea value={cHistory} onChange={(e) => setCHistory(e.target.value)} placeholder={tr("Paste the earlier messages — anything already established gets dropped.")} className="w-full h-36 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               <div className="mt-4">
-                <div className="flex items-center justify-between mb-2"><p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Compress to")}</p><span className="text-sm font-semibold text-teal-400">{cPct}{tr("% of original")}</span></div>
+                <div className="flex items-center justify-between mb-2"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Compress to")}</p><span className="text-sm font-semibold text-teal-400">{cPct}{tr("% of original")}</span></div>
                 <input type="range" min="10" max="90" step="5" value={cPct} onChange={(e) => setCPct(Number(e.target.value))} className="w-full accent-teal-500" />
                 <div className="flex justify-between text-[10px] text-slate-600"><span>{tr("10% · brutal")}</span><span>{tr("50% · half")}</span><span>{tr("90% · light")}</span></div>
                 <button onClick={doCompressTarget} disabled={!cPrompt.trim() || loading} className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Compressing…") : tr("Compress to {p}%", { p: cPct })}</button>
@@ -11667,7 +11687,7 @@ export default function App() {
                   compression measurable instead of a feeling. */}
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Compressing for")}</p>
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Compressing for")}</p>
                   <span className="text-[11px] text-slate-600">{tr(cmpTargetObj.note)}</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -11701,7 +11721,7 @@ export default function App() {
                   </p>
                 </div>
               </div>
-              <div className="mt-4"><p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Port context to")}</p><div className="flex flex-wrap gap-1.5">{["claude", "chatgpt", "gemini", "perplexity"].map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{tr(TOOLS[k].label)}</button>)}</div></div>
+              <div className="mt-4"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Port context to")}</p><div className="flex flex-wrap gap-1.5">{["claude", "chatgpt", "gemini", "perplexity"].map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{tr(TOOLS[k].label)}</button>)}</div></div>
               <div className="flex flex-wrap gap-2 mt-4">
                 <button onClick={doCompress} disabled={!cPrompt.trim()} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border ${cPrompt.trim() ? "border-slate-700 bg-slate-950 text-slate-200 hover:border-slate-600" : "border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"}`}><Scissors size={16} /> {tr("Trim")}</button>
                 <button onClick={aiCompressAction} disabled={!cPrompt.trim() || loading} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Thinking…") : tr("AI Compress")}</button>
@@ -11709,7 +11729,7 @@ export default function App() {
               </div>
               <p className="text-xs text-slate-600 mt-2"><span className="text-slate-400">{tr("Trim")}</span> {tr("= instant filler removal (offline).")} <span className="text-teal-400">{tr("AI Compress")}</span> {tr("= the model rewrites it far shorter while keeping the meaning.")}</p>
             </section>
-            <section className="bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
               <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{cResult ? (cResult.kind === "port" ? tr("Ported context") : cResult.kind === "aicompress" ? tr("AI-compressed") : tr("Trimmed")) : tr("Result")}</label>{cResult && <button onClick={copyC} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{cCopied ? <Check size={14} /> : <Copy size={14} />}{cCopied ? tr("Copied") : tr("Copy")}</button>}</div>
               {cResult ? (<>
                 {(cResult.kind === "compress" || cResult.kind === "aicompress") && <div className="flex gap-2 mb-2 text-xs flex-wrap"><span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">{cResult.beforeW} → {cResult.afterW} words</span><span className="px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300">−{cResult.pct}%</span>{cResult.target ? <span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">target {cResult.target}%</span> : null}{cResult.removed > 0 && <span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">{cResult.removed} {tr("known line")}{cResult.removed > 1 ? "s" : ""} dropped</span>}</div>}
@@ -11720,15 +11740,15 @@ export default function App() {
         )}</Guard>
 
         {history.length > 0 && mode === "improve" && !writeRep && (
-          <div className="mt-5 bg-slate-900 rounded-[22px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><Clock size={13} /> {tr("History")} <span className="text-slate-600 normal-case">· {tier} keeps {TIER_LIMITS[tier].history}</span></p>
+          <div className="mt-5 bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><Clock size={13} /> {tr("History")} <span className="text-slate-600 normal-case">· {tier} keeps {TIER_LIMITS[tier].history}</span></p>
             <div className="space-y-1.5">{history.map((h) => <div key={h.id} className="flex items-center gap-2 text-sm"><button onClick={() => setHistory((x) => x.map((y) => y.id === h.id ? { ...y, fav: !y.fav } : y))} className={h.fav ? "text-amber-400" : "text-slate-600 hover:text-amber-400"}><Star size={14} fill={h.fav ? "currentColor" : "none"} /></button><button onClick={() => { setInput(h.input); setTool(h.tool); }} className="flex-1 text-start truncate text-slate-400 hover:text-teal-400">{h.input}</button><span className="text-xs text-slate-600 shrink-0">{tr(TOOLS[h.tool].label)}</span></div>)}</div>
           </div>
         )}
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
         {!wide && LEGACY_NAV && (mode === "home" || mode === "tools") ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
       </div>
-      {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[16px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
+      {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[20px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
       {voiceOpen ? <Guard name="voice"><VoiceScreen native={NATIVE} nativeCall={nativeCall} onClose={() => { setVoiceOpen(false); setVoiceText(""); }} doIt={doFromHome} country={agentCountry()} flash={flash} initialText={voiceText}
         ask={modelUsable ? (q, past, ui) => callChat([{ role: "system", content: "You are Attune, a friendly voice assistant on the user's phone. You are being spoken to: answer in 1 to 3 short sentences that sound natural when read aloud — no lists, no tables, no markdown, no links. " + (ui === "ar" ? "Answer in Egyptian Arabic." : "Answer in the language the user speaks.") + " If you do not know, say so briefly." }, ...(past || []), { role: "user", content: q }], null, { maxTokens: 200, temperature: 0.5, think: false }) : null} /></Guard> : null}
@@ -11755,13 +11775,13 @@ export default function App() {
       {moreOpen && wide ? (
         // v6.27 (Ali: "why does settings have this"): on a computer Settings is a settings window — the tools are in the sidebar
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-6" onClick={() => setMoreOpen(false)} data-testid="desk-settings-bg">
-          <div className="calm att-scroll w-full max-w-3xl max-h-[86vh] overflow-y-auto rounded-[22px] bg-[var(--c-surf)]! text-[var(--c-ink)] border border-[var(--c-ln)] p-6 space-y-6 shadow-[0_16px_48px_rgba(0,0,0,0.35)]" onClick={(e) => e.stopPropagation()} data-testid="desk-settings" role="dialog" aria-label={tr("Settings")}>
+          <div className="calm att-scroll w-full max-w-3xl max-h-[86vh] overflow-y-auto rounded-[20px] bg-[var(--c-surf)]! text-[var(--c-ink)] border border-[var(--c-ln)] p-6 space-y-6 shadow-[0_16px_48px_rgba(0,0,0,0.35)]" onClick={(e) => e.stopPropagation()} data-testid="desk-settings" role="dialog" aria-label={tr("Settings")}>
             <div className="flex items-center justify-between"><h2 className="text-[22px] font-black tracking-tight text-[var(--c-ink)] flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><LayoutGrid size={18} /></span>{tr("Settings")}</h2>
-              <button onClick={() => setMoreOpen(false)} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150" aria-label={tr("Close")} data-testid="desk-settings-close"><X size={18} /></button></div>
-            <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] flex items-center gap-3 rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 py-3 text-start hover:border-[var(--c-acc)] transition-colors duration-150" data-testid="desk-guide">
+              <button onClick={() => setMoreOpen(false)} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150" aria-label={tr("Close")} data-testid="desk-settings-close"><X size={18} /></button></div>
+            <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 py-3 text-start hover:border-[var(--c-acc)] transition-colors duration-150" data-testid="desk-guide">
               <BookOpen size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)]">{tr("How to use Attune")}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
             <section data-testid="more-appearance">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Appearance")}</p>
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Appearance")}</p>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div><p className="text-[13.5px] font-bold text-[var(--c-ink)] mt-0 mb-2">{tr("App language")}</p><LangSwitch /></div>
@@ -11773,13 +11793,13 @@ export default function App() {
               </div>
             </section>
             <section>
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Account and this device")}</p>
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Account and this device")}</p>
               <div className="grid grid-cols-4 gap-3" data-testid="more-settings">
-                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Cpu size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Engine & privacy")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5">{tr("The AI model on this device")}</span></button>
-                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><User size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Your profile")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5">{tr("Name, country, how Attune talks to you")}</span></button>
-                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-acc-2)]/15 text-[var(--c-acc-2)]"><Crown size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5 tabular-nums">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
+                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Cpu size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Engine & privacy")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5">{tr("The AI model on this device")}</span></button>
+                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><User size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Your profile")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5">{tr("Name, country, how Attune talks to you")}</span></button>
+                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150 p-3.5 text-start"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-acc-2)]/15 text-[var(--c-acc-2)]"><Crown size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[12px] text-[var(--c-mut)] mt-0.5 tabular-nums">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
                 {(() => { const nb = backupNudge(); return (
-                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`min-h-[96px] rounded-[18px] border p-3.5 text-start transition-colors duration-150 ${nb.warn ? "border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)]"}`}><span className={"w-9 h-9 rounded-[12px] grid place-items-center " + (nb.warn ? "bg-[var(--c-warn)]/15 text-[var(--c-warn)]" : "bg-[var(--c-soft)] text-[var(--c-acc)]")}><ShieldCheck size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Backup")}</span><span className={`block text-[12px] mt-0.5 ${nb.warn ? "text-[var(--c-warn)] font-bold" : "text-[var(--c-mut)]"}`}>{nb.text}</span></button>); })()}
+                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`min-h-[96px] rounded-[20px] border p-3.5 text-start transition-colors duration-150 ${nb.warn ? "border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)]"}`}><span className={"w-9 h-9 rounded-[12px] grid place-items-center " + (nb.warn ? "bg-[var(--c-warn)]/15 text-[var(--c-warn)]" : "bg-[var(--c-soft)] text-[var(--c-acc)]")}><ShieldCheck size={17} /></span><span className="block text-[14px] font-extrabold text-[var(--c-ink)] mt-2.5">{tr("Backup")}</span><span className={`block text-[12px] mt-0.5 ${nb.warn ? "text-[var(--c-warn)] font-bold" : "text-[var(--c-mut)]"}`}>{nb.text}</span></button>); })()}
               </div>
             </section>
             <p className="text-center text-[11.5px] text-[var(--c-mut)] tabular-nums select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
@@ -11788,22 +11808,22 @@ export default function App() {
         </div>
       ) : moreOpen ? (
         <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setMoreOpen(false)}>
-          <div className="calm att-scroll att-shift absolute start-0 end-0 bg-[var(--c-surf)]! text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-2xl rounded-t-[22px]! px-4 pb-4 pt-2 max-h-[75vh] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]"
+          <div className="calm att-scroll att-shift absolute start-0 end-0 bg-[var(--c-surf)]! text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-2xl rounded-t-[20px]! px-4 pb-4 pt-2 max-h-[75vh] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]"
                style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
               <span className="block mx-auto mb-3 w-10 h-1.5 rounded-full bg-[var(--c-ln)]" aria-hidden="true" />
               {/* v6.34 (Ali: "I don't want this More page"): without the bottom bar this sheet is Settings only — every tool is in
                   the sidebar's 6 places (How to use is in Tools → Help) */}
               {LEGACY_NAV ? <>
-              <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] mb-4 flex items-center gap-3 rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-3.5 py-2.5 text-start" data-testid="more-guide">
+              <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] mb-4 flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-3.5 py-2.5 text-start" data-testid="more-guide">
                 <BookOpen size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14px] font-extrabold text-[var(--c-ink)]">{tr("How to use Attune")}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
               {groupsHere.map(([title, ids], gi) => (
                 <div key={title} className={gi ? "mt-4" : ""} data-testid="more-group">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2 px-0.5">{tr(title)}</p>
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2 px-0.5">{tr(title)}</p>
                   <div className="grid grid-cols-3 gap-2">
                     {ids.map((tid) => MORE_TOOLS.find((t) => t[0] === tid)).filter(Boolean).map(([id, label, sub, Icon]) => (
                       <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); navTo(id); setMoreOpen(false); }}
-                        className={`min-h-[76px] rounded-[18px] border p-3 text-start transition-colors duration-150 ${mode === id ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)]"}`}>
+                        className={`min-h-[76px] rounded-[20px] border p-3 text-start transition-colors duration-150 ${mode === id ? "border-transparent bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)]"}`}>
                         <Icon size={18} className={mode === id ? "" : "text-[var(--c-acc)]"} />
                         <span className="block text-[13px] font-extrabold mt-1.5 leading-tight">{tr(label)}</span>
                         <span className={"block text-[11px] leading-tight mt-0.5 " + (mode === id ? "opacity-90" : "text-[var(--c-mut)]")}>{tr(sub)}</span>
@@ -11813,21 +11833,21 @@ export default function App() {
                 </div>
               ))}
               </> : null}
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-2 px-0.5">{tr("Settings")}</p>
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-2 px-0.5">{tr("Settings")}</p>
               <div className="grid grid-cols-3 gap-2" data-testid="more-settings">
-                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><Cpu size={18} className="text-[var(--c-acc)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Engine & privacy")}</span></button>
-                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><User size={18} className="text-[var(--c-acc)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Your profile")}</span></button>
-                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><Crown size={18} className="text-[var(--c-acc-2)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[11px] text-[var(--c-mut)] tabular-nums">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
+                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><Cpu size={18} className="text-[var(--c-acc)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Engine & privacy")}</span></button>
+                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><User size={18} className="text-[var(--c-acc)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Your profile")}</span></button>
+                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><Crown size={18} className="text-[var(--c-acc-2)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[11px] text-[var(--c-mut)] tabular-nums">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
                 {(() => { const nb = backupNudge(); return (
-                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`min-h-[76px] rounded-[18px] border p-3 text-start ${nb.warn ? "border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-bg)]"}`}><ShieldCheck size={18} className={nb.warn ? "text-[var(--c-warn)]" : "text-[var(--c-acc)]"} /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Backup")}</span><span className={`block text-[11px] ${nb.warn ? "text-[var(--c-warn)] font-bold" : "text-[var(--c-mut)]"}`}>{nb.text}</span></button>); })()}
+                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`min-h-[76px] rounded-[20px] border p-3 text-start ${nb.warn ? "border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-bg)]"}`}><ShieldCheck size={18} className={nb.warn ? "text-[var(--c-warn)]" : "text-[var(--c-acc)]"} /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Backup")}</span><span className={`block text-[11px] ${nb.warn ? "text-[var(--c-warn)] font-bold" : "text-[var(--c-mut)]"}`}>{nb.text}</span></button>); })()}
               </div>
               {/* v6.28: what this phone can do (its level), and the way back to every tool */}
-              <div className="mt-2 min-h-[56px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 flex items-center gap-2.5 text-[12.5px]" data-testid="device-level">
+              <div className="mt-2 min-h-[56px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 flex items-center gap-2.5 text-[12.5px]" data-testid="device-level">
                 <Gauge size={16} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[var(--c-mut)]">{tr("This device")}: <b className="text-[var(--c-ink)] font-extrabold">{tr("Level {n}", { n: devLevel.level })} · {tr(devLevel.name)}</b><span className="block text-[11.5px] text-[var(--c-mut)]">{tr(devLevel.what)}</span></span>
                 {devLevel.hide.length ? <button onClick={() => setAllTools(!allTools)} className="min-h-[40px] font-bold text-[var(--c-acc)] underline underline-offset-2 shrink-0" data-testid="device-showall">{allTools ? tr("Hide what is too heavy") : tr("Show every tool anyway")}</button> : null}</div>
               {/* v5.29 UX: tools first (what people open More for); appearance settings below */}
               <div className="mt-4 pt-4 border-t border-[var(--c-ln)]" data-testid="more-appearance">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Appearance")}</p>
+                <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Appearance")}</p>
                 <div className="mb-4"><span className="block text-[13px] font-bold text-[var(--c-ink)] mb-2">{tr("App language")}</span><LangSwitch /></div>
                 <div className="flex items-center justify-between gap-3 mb-3"><span className="text-[13px] font-bold text-[var(--c-ink)]">{tr("Text size")}</span><TextSize /></div>
                 <KeyboardRow />
@@ -11855,23 +11875,23 @@ export default function App() {
                            airGap, setAirGap, enginePrefs, updateEnginePrefs, searchCfg, saveSearchCfg } : null} />}
       {showCustom && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setShowCustom(false)}>
-          <div className="calm bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-[22px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-md w-full p-5" onClick={(e) => e.stopPropagation()}>
+          <div className="calm bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-md w-full p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-[20px] font-black tracking-tight text-[var(--c-ink)] m-0">{tr("Your own action")}</h2>
-              <button onClick={() => setShowCustom(false)} className="w-11 h-11 -m-2 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
+              <button onClick={() => setShowCustom(false)} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
             </div>
             <p data-intro="" className="text-[12.5px] text-[var(--c-mut)] mt-1 mb-4">{tr("Make the app do the thing you do over and over — one tap, every time. Yours only, stored on this device.")}</p>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-1.5">{tr("Button name")}</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-1.5">{tr("Button name")}</p>
             <input value={newAct.label} onChange={(e) => setNewAct((a) => ({ ...a, label: e.target.value }))}
-              placeholder={tr("e.g. Reply in Arabic")} className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150" />
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-1.5">{tr("What should it do?")}</p>
+              placeholder={tr("e.g. Reply in Arabic")} className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150" />
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-1.5">{tr("What should it do?")}</p>
             <textarea value={newAct.instruction} onChange={(e) => setNewAct((a) => ({ ...a, instruction: e.target.value }))} rows={3}
               placeholder={tr("e.g. Write a short polite reply in Egyptian Arabic, friendly but professional.")}
-              className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 resize-none leading-relaxed" />
-            <button onClick={saveCustomAction} className="mt-4 w-full min-h-[48px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Save action")}</button>
+              className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 resize-none leading-relaxed" />
+            <button onClick={saveCustomAction} className="mt-4 w-full min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Save action")}</button>
             {customActions.length > 0 ? (
               <div className="mt-4">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Your actions")}</p>
+                <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Your actions")}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {customActions.map((c) => (
                     <span key={c.id} className="flex items-center gap-1 text-[13px] font-bold bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-full ps-3.5 pe-1 min-h-[40px] text-[var(--c-ink)]">
@@ -11970,38 +11990,38 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
   const [openGroup, setOpenGroup] = useState("");
   return (
     <div className="fixed inset-0 z-50 lg:z-[70] bg-slate-950 lg:bg-black/60 overflow-auto lg:py-8 lg:px-6" data-testid="upgrade" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
-      <div className="calm max-w-lg lg:max-w-5xl mx-auto min-h-full lg:min-h-0 pb-10 bg-[var(--c-bg)]! text-[var(--c-ink)] lg:rounded-[22px] lg:border lg:border-[var(--c-ln)] lg:overflow-hidden">
+      <div className="calm max-w-lg lg:max-w-5xl mx-auto min-h-full lg:min-h-0 pb-10 bg-[var(--c-bg)]! text-[var(--c-ink)] lg:rounded-[20px] lg:border lg:border-[var(--c-ln)] lg:overflow-hidden">
         <div className="sticky top-0 z-10 bg-[var(--c-bg)] border-b border-[var(--c-ln)] px-4 min-h-[60px] py-2 flex items-center justify-between">
           <h2 className="text-[20px] font-black tracking-tight text-[var(--c-ink)] flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-acc-2)]/15 text-[var(--c-acc-2)]"><Crown size={17} /></span> {tr("Plans & billing")}</h2>
-          <button onClick={close} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
+          <button onClick={close} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <div className="px-4 pt-4 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)] lg:gap-6 lg:items-start">
           {/* v6.27 computer layout A: the plan to choose on the left (stays in view), what you get on the right */}
           <div className="space-y-4 lg:sticky lg:top-20">
           {/* where you are now */}
           {TESTING_ALL_PRO && devMode() && !pro ? (
-            <div className="text-[13px] text-[var(--c-ink)] rounded-[18px] border border-[var(--c-acc)]/30 bg-[var(--c-soft)] p-3.5" data-testid="testing-pro">
+            <div className="text-[13px] text-[var(--c-ink)] rounded-[20px] border border-[var(--c-acc)]/30 bg-[var(--c-soft)] p-3.5" data-testid="testing-pro">
               <p>{testingPro() ? tr("Testing build: every Pro feature is unlocked on this phone.") : tr("Testing build: you are seeing the app as a Free user.")}</p>
-              <button data-testid="testing-toggle" className="mt-2 min-h-[44px] h-11 text-[13px] font-bold px-4 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]"
+              <button data-testid="testing-toggle" className="mt-2 min-h-[44px] h-11 text-[13px] font-bold px-4 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]"
                 onClick={() => { try { localStorage.setItem("attune:testing-pro", testingPro() ? "off" : "on"); } catch (e) {} location.reload(); }}>
                 {testingPro() ? tr("See it as a Free user") : tr("Unlock everything again")}</button>
             </div>
           ) : null}
-          {pro ? <div className="rounded-[18px] border border-[var(--c-pos)]/30 bg-[var(--c-soft)] p-3.5 text-[13.5px] font-bold text-[var(--c-pos)]" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</div>
-            : trialLeft > 0 ? <div className="rounded-[18px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[13.5px] font-bold text-[var(--c-ink)]" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</div>
-            : <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, photo meals, Deal Check, Chat X-Ray, reports and exports.")}</div>}
+          {pro ? <div className="rounded-[20px] border border-[var(--c-pos)]/30 bg-[var(--c-soft)] p-3.5 text-[13.5px] font-bold text-[var(--c-pos)]" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</div>
+            : trialLeft > 0 ? <div className="rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[13.5px] font-bold text-[var(--c-ink)]" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</div>
+            : <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, photo meals, Deal Check, Chat X-Ray, reports and exports.")}</div>}
 
           {/* 1 · the plan (what to pay) */}
           {!pro ? (
-            <section className="rounded-[22px] border border-[var(--c-acc-2)]/40 bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" aria-label={tr("Attune Pro")}>
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc-2)] mt-0 mb-3">{tr("Attune Pro — the whole app")}</p>
-              <div className={(lifetimeOffer() ? "grid-cols-3" : "grid-cols-2") + " grid gap-1 rounded-[18px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-1"} role="tablist" data-testid="plans">
+            <section className="rounded-[20px] border border-[var(--c-acc-2)]/40 bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" aria-label={tr("Attune Pro")}>
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc-2)] mt-0 mb-3">{tr("Attune Pro — the whole app")}</p>
+              <div className={(lifetimeOffer() ? "grid-cols-3" : "grid-cols-2") + " grid gap-1 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-1"} role="tablist" data-testid="plans">
                 {["month", "year", ...(lifetimeOffer() ? ["life"] : [])].map((k) => (
                   <button key={k} role="tab" aria-selected={plan === k} onClick={() => setPlan(k)} data-testid={"plan-" + k}
-                    className={`relative min-h-[52px] rounded-[14px] py-2 text-[13.5px] font-extrabold transition-colors duration-150 ${plan === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>
+                    className={`relative min-h-[52px] rounded-[12px] py-2 text-[13.5px] font-extrabold transition-colors duration-150 ${plan === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>
                     <span className="block">{tr(PLAN_TEXT[k][0])}</span>
                     <span className={`block text-[11px] font-bold tabular-nums ${plan === k ? "opacity-90" : "text-[var(--c-mut)]"}`} dir="ltr">{shown(k)}</span>
-                    {k === "life" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold">{tr("Launch offer")}</span> : null}
+                    {k === "life" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold">{tr("Launch offer")}</span> : null}
                     {k === "year" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold">{tr("Best value")}</span> : null}
                   </button>
                 ))}
@@ -12016,9 +12036,9 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                   <li key={b} className="flex items-start gap-1.5 text-[12.5px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(b)}</li>))}
               </ul>
               {Store.available() ? (
-                <button onClick={storeBuy} disabled={busy} className="mt-4 w-full min-h-[52px] py-3.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15.5px] disabled:opacity-60 transition-opacity duration-150" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
+                <button onClick={storeBuy} disabled={busy} className="mt-4 w-full min-h-[52px] py-3.5 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15.5px] disabled:opacity-60 transition-opacity duration-150" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
               ) : (
-                <p className="mt-4 text-[12.5px] text-[var(--c-ink)] leading-relaxed rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.")}</p>
+                <p className="mt-4 text-[12.5px] text-[var(--c-ink)] leading-relaxed rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.")}</p>
               )}
               <p className="text-[11.5px] text-[var(--c-mut)] mt-2 mb-0 leading-relaxed">{tr("Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.")}</p>
             </section>
@@ -12027,10 +12047,10 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
           </div><div className="space-y-4">
           {/* 2 · what you get, app by app */}
           <section>
-            <h3 className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2.5">{tr("What Pro gives you, app by app")}</h3>
+            <h3 className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2.5">{tr("What Pro gives you, app by app")}</h3>
             <div className="space-y-2">
               {BILLING_GROUPS.map((g) => (
-                <div key={g.id} className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] overflow-hidden">
+                <div key={g.id} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] overflow-hidden">
                   <button onClick={() => setOpenGroup(openGroup === g.id ? "" : g.id)} aria-expanded={openGroup === g.id} className="w-full min-h-[52px] flex items-center gap-3 px-3.5 py-3 text-start" data-testid={"group-" + g.id}>
                     <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-bg)] text-lg" aria-hidden="true">{g.icon}</span>
                     <span className="flex-1 text-[14.5px] text-[var(--c-ink)] font-extrabold">{tr(g.title)}</span>
@@ -12048,14 +12068,14 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
               try { if (NATIVE && NATIVE.share) { NATIVE.share(msg); return; } } catch (e) {}
               try { if (navigator.share) { navigator.share({ text: msg }); return; } } catch (e) {}
               try { navigator.clipboard.writeText(msg); flash(tr("Link copied — send it to a friend")); } catch (e) {} }}
-            className="w-full min-h-[48px] rounded-[18px] border border-[var(--c-acc)] bg-[var(--c-soft)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="referral-share">
+            className="w-full min-h-[48px] rounded-[20px] border border-[var(--c-acc)] bg-[var(--c-soft)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="referral-share">
             <span>🎁 {tr("Give a friend a month of Pro")}</span><ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" /></button>
           {/* v8.7 (Ali picked persona 3's point 5): Business has its own page and its own sales — one line here, no 14,999 next to 299 */}
-          <button onClick={() => { close(); try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "business" } })); } catch (e) {} }} className="w-full min-h-[48px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="business-card">
+          <button onClick={() => { close(); try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "business" } })); } catch (e) {} }} className="w-full min-h-[48px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="business-card">
             <span>🏗️ {tr("Running a company? See Business")}</span><ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" /></button>
 
           {/* 4 · everything side by side */}
-          <details className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="compare">
+          <details className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="compare">
             <summary className="min-h-[28px] text-[14px] font-extrabold text-[var(--c-ink)] cursor-pointer select-none">{tr("Compare Free, Pro and Business")}</summary>
             <div className="mt-3 overflow-x-auto">
               <table className="w-full text-[11.5px] border-separate border-spacing-y-1">
@@ -12071,28 +12091,28 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
 
           {/* 5 · codes, restore */}
           {!pro ? (
-            <section className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+            <section className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
               {/* v6.29 Google Play's payments policy: on a Play build Pro is bought only through Google Play — no codes or keys */}
               {!Store.available() ? <button onClick={() => setHaveCode((v) => !v)} className="min-h-[44px] text-[13px] font-bold text-[var(--c-ink)] underline underline-offset-2" data-testid="have-code">{tr("I have an activation code (company deals)")}</button> : null}
               {haveCode && !Store.available() ? <>
-                <div className="mt-3 flex items-center justify-between rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-1.5">
+                <div className="mt-3 flex items-center justify-between rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-1.5">
                   <span className="text-[11.5px] text-[var(--c-mut)]">{tr("Your request code")}</span>
                   <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="min-h-[40px] font-mono text-sm font-bold text-[var(--c-ink)] tracking-wider" data-testid="request-code">{req}</button>
                 </div>
                 <div className="mt-3 flex gap-2">
                   <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tr("Paste your activation code (PRO1…)")} data-testid="pro-code"
-                    className="flex-1 min-w-0 min-h-[44px] h-11 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
-                  <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="min-h-[44px] h-11 px-5 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[14px] font-extrabold disabled:opacity-40">{tr("Activate")}</button>
+                    className="flex-1 min-w-0 min-h-[44px] h-11 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
+                  <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="min-h-[44px] h-11 px-5 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[14px] font-extrabold disabled:opacity-40">{tr("Activate")}</button>
                 </div>
               </> : null}
               <div className="flex items-center justify-between mt-3">
                 {!Store.available() && ATTUNE_PUBLIC_KEY ? <button onClick={() => setShowOld((v) => !v)} className="min-h-[40px] text-[12px] font-bold text-[var(--c-mut)]">{tr("I have an older key")}</button> : <span />}
-                {Store.available() ? <button onClick={restore} className="min-h-[44px] h-11 px-4 rounded-[14px] border border-[var(--c-ln)] text-[13px] font-bold text-[var(--c-ink)]">{tr("Restore purchase")}</button> : null}
+                {Store.available() ? <button onClick={restore} className="min-h-[44px] h-11 px-4 rounded-[12px] border border-[var(--c-ln)] text-[13px] font-bold text-[var(--c-ink)]">{tr("Restore purchase")}</button> : null}
               </div>
               {showOld && !Store.available() ? (
                 <div className="mt-2 flex gap-2">
-                  <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…" className="flex-1 min-w-0 min-h-[44px] h-11 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
-                  <button onClick={redeemOld} className="min-h-[44px] h-11 px-4 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13.5px] font-bold">{tr("Activate")}</button>
+                  <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…" className="flex-1 min-w-0 min-h-[44px] h-11 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
+                  <button onClick={redeemOld} className="min-h-[44px] h-11 px-4 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13.5px] font-bold">{tr("Activate")}</button>
                 </div>
               ) : null}
             </section>
@@ -12121,7 +12141,7 @@ function TextSize() {
     <div className="inline-flex gap-1 p-1 rounded-full border border-[var(--c-ln)] bg-[var(--c-bg)] text-[13px]" data-testid="text-size">
       {[[88, "A−"], [100, "A"], [115, "A+"]].map(([v, label]) => (
         <button key={v} onClick={() => { setZ(v); try { localStorage.setItem(TEXT_KEY, String(v)); } catch (e) {} applyTextZoom(v); }} data-zoom={v}
-          className={`h-10 min-w-[48px] px-3.5 rounded-full font-extrabold transition-colors duration-150 ${Math.abs(z - v) < 6 ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>{label}</button>
+          className={`h-10 min-w-[48px] px-3.5 rounded-full font-extrabold transition-colors duration-150 ${Math.abs(z - v) < 6 ? "bg-[var(--c-soft)] text-[var(--c-acc)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>{label}</button>
       ))}
     </div>
   );
@@ -12147,7 +12167,7 @@ function KeyboardRowIn() {
     <div className="flex items-center gap-2 mb-3" data-testid="keyboard-row">
       <span className="flex-1 min-w-0"><span className="block text-[13px] font-bold text-[var(--c-ink)]">{tr("Attune keyboard")}</span>
         <span className="block text-[11.5px] text-[var(--c-mut)]">{on ? tr("On — pick it from the keyboard button when you type") : tr("Improve, translate, reply and better prompts in every app, offline")}</span></span>
-      <button onClick={() => N.keyboardSetup(on ? "pick" : "settings")} className="shrink-0 min-h-[44px] h-11 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] px-4 text-[13px] font-extrabold" data-testid="keyboard-setup">{on ? tr("Switch to it") : tr("Turn on")}</button>
+      <button onClick={() => N.keyboardSetup(on ? "pick" : "settings")} className="shrink-0 min-h-[44px] h-11 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] px-4 text-[13px] font-extrabold" data-testid="keyboard-setup">{on ? tr("Switch to it") : tr("Turn on")}</button>
     </div>);
 }
 
@@ -12157,7 +12177,7 @@ function LangSwitch({ className = "" }) {
     <div className={`inline-flex flex-wrap gap-1.5 text-[13px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
       {UI_LANGS.map(([id, label]) => (
         <button key={id} onClick={() => { if (id !== cur) setLang(id); }} lang={id} data-lang={id}
-          className={`min-h-[44px] h-11 px-3.5 rounded-full border font-extrabold transition-colors duration-150 ${id === cur ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>{label}</button>
+          className={`min-h-[44px] h-11 px-3.5 rounded-full border font-extrabold transition-colors duration-150 ${id === cur ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>{label}</button>
       ))}
     </div>
   );
@@ -12190,16 +12210,16 @@ function Onboard({ profile, setProfile, close, flash, brain = null }) {
   };
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
-      <div className="calm bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-[22px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-lg w-full p-5">
+      <div className="calm bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-lg w-full p-5">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-[22px] font-black tracking-tight text-[var(--c-ink)] m-0">{tr("Make Attune yours")}</h2>
-          <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); close(); }} className="min-h-[44px] text-[var(--c-mut)] text-[13.5px] font-bold px-3 rounded-[14px] hover:text-[var(--c-ink)]">{tr("Skip")}</button>
+          <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); close(); }} className="min-h-[44px] text-[var(--c-mut)] text-[13.5px] font-bold px-3 rounded-[12px] hover:text-[var(--c-ink)]">{tr("Skip")}</button>
         </div>
         <p className="text-[12.5px] text-[var(--c-mut)] mt-0 mb-3">{tr("A few quick questions. Stays on your phone — change it any time from your profile.")}</p>
-        {step === 0 ? <div className="mb-4"><span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mb-2">{tr("App language")}</span><LangSwitch />
+        {step === 0 ? <div className="mb-4"><span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mb-2">{tr("App language")}</span><LangSwitch />
           {/* persona 2 (Ali: P2-A): the country decides the currency, prices, holidays and the weekend — asked first, not discovered */}
-          <span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-3 mb-2">{tr("Your country")}</span>
-          <select value={ctry} onChange={(e) => { setCtry(e.target.value); setCountrySaved(e.target.value); }} className="w-full min-h-[48px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 text-[14px] font-semibold text-[var(--c-ink)]" data-testid="onboard-country">
+          <span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-3 mb-2">{tr("Your country")}</span>
+          <select value={ctry} onChange={(e) => { setCtry(e.target.value); setCountrySaved(e.target.value); }} className="w-full min-h-[48px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 text-[14px] font-semibold text-[var(--c-ink)]" data-testid="onboard-country">
             {countryList.map(([k, nm]) => <option key={k} value={k}>{nm}</option>)}</select>
           <span className="block text-[11.5px] text-[var(--c-mut)] mt-1">{tr("Money, VAT, holidays and the weekend follow it")}</span></div> : null}
         <div className="flex gap-1 mb-4">{Array.from({ length: N + 1 }).map((_, i) => <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors duration-150 ${i <= step ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]"}`} />)}</div>
@@ -12210,31 +12230,31 @@ function Onboard({ profile, setProfile, close, flash, brain = null }) {
             <div className="flex flex-wrap gap-2">
               {st.opts.map(([id, label]) => (
                 <button key={id} onClick={() => tap(id)}
-                  className={`min-h-[44px] px-4 rounded-full text-[13.5px] font-extrabold border transition-colors duration-150 ${isOn(id) ? "bg-[var(--c-acc-2)] border-transparent text-[var(--c-on-acc-2)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>
+                  className={`min-h-[44px] px-4 rounded-full text-[13.5px] font-extrabold border transition-colors duration-150 ${isOn(id) ? "bg-[var(--c-soft)] border-[var(--c-acc)] text-[var(--c-acc)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>
                   {isOn(id) && st.multi ? "✓ " : ""}{tr(label)}</button>
               ))}
             </div>
             <div className="flex items-center justify-between mt-5">
-              {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-mut)] px-3 rounded-[14px] hover:text-[var(--c-ink)]">{tr("← Back")}</button> : <span />}
-              {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px] px-6">{tr("Next")}</button> : null}
+              {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-mut)] px-3 rounded-[12px] hover:text-[var(--c-ink)]">{tr("← Back")}</button> : <span />}
+              {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px] px-6">{tr("Next")}</button> : null}
             </div>
           </>
         ) : (
           <>
             <p className="text-[16px] font-extrabold text-[var(--c-ink)] mt-0 mb-2">{tr("Anything else worth knowing? (optional)")}</p>
             <textarea value={p.detail} onChange={(e) => setP((x) => ({ ...x, detail: e.target.value }))} placeholder={tr("e.g. I run a small bakery and deal with suppliers and wedding orders")}
-              className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 h-24 resize-none leading-relaxed" />
+              className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 h-24 resize-none leading-relaxed" />
             {/* persona 2 (Ali: P2-A): the one thing the app needs — its AI — offered here, not discovered through an error */}
-            {brain && brain.rec && brain.rec.tier && !brain.ready ? <div className="mt-4 rounded-[18px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-3.5 space-y-2" data-testid="onboard-brain">
+            {brain && brain.rec && brain.rec.tier && !brain.ready ? <div className="mt-4 rounded-[20px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-3.5 space-y-2" data-testid="onboard-brain">
               <p className="m-0 text-[14.5px] font-extrabold">{tr("Get Attune's brain")}</p>
               <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("The AI that answers, reads photos and writes — on your phone, private. {s}. Best on Wi-Fi.", { s: brain.rec.size })}</p>
               {brainOn ? <p className="m-0 text-[13px] font-bold text-[var(--c-acc)]" data-testid="onboard-brain-started">{tr("Downloading — you can use the app meanwhile.")}</p>
-                : <div className="flex gap-2"><button onClick={() => { setBrainOn(true); brain.go(); }} className="min-h-[44px] px-4 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold" data-testid="onboard-brain-now">{tr("Download now")}</button>
+                : <div className="flex gap-2"><button onClick={() => { setBrainOn(true); brain.go(); }} className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold" data-testid="onboard-brain-now">{tr("Download now")}</button>
                   <span className="self-center text-[12.5px] text-[var(--c-mut)]">{tr("or later, from Engine")}</span></div>}
             </div> : null}
             <div className="flex items-center justify-between mt-4 gap-2">
-              <button onClick={() => setStep(step - 1)} className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-mut)] px-3 rounded-[14px] hover:text-[var(--c-ink)]">{tr("← Back")}</button>
-              <button onClick={finish} className="flex-1 min-h-[48px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Start using Attune")}</button>
+              <button onClick={() => setStep(step - 1)} className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-mut)] px-3 rounded-[12px] hover:text-[var(--c-ink)]">{tr("← Back")}</button>
+              <button onClick={finish} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Start using Attune")}</button>
             </div>
           </>
         )}
@@ -12246,49 +12266,49 @@ function Onboard({ profile, setProfile, close, flash, brain = null }) {
 function ProfileModal({ profile, setProfile, close, flash }) {
   const [p, setP] = useState(profile);
   const set = (k, v) => setP((x) => ({ ...x, [k]: v }));
-  const btn = (a) => `min-h-[44px] px-4 rounded-full text-[13.5px] font-extrabold border transition-colors duration-150 ${a ? "bg-[var(--c-acc-2)] border-transparent text-[var(--c-on-acc-2)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`;
+  const btn = (a) => `min-h-[44px] px-4 rounded-full text-[13.5px] font-extrabold border transition-colors duration-150 ${a ? "bg-[var(--c-soft)] border-[var(--c-acc)] text-[var(--c-acc)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`;
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
-      <div className="calm bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-[22px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-lg lg:max-w-4xl w-full p-5 lg:p-7 my-8" onClick={(e) => e.stopPropagation()}>
+      <div className="calm bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-lg lg:max-w-4xl w-full p-5 lg:p-7 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-[22px] font-black tracking-tight text-[var(--c-ink)] flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><User size={17} /></span> {tr("Your profile")}</h2>
-          <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
+          <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p className="text-[12.5px] text-[var(--c-mut)] mt-1 mb-4">{tr("Used to make every prompt specific to your work. Never leaves your device.")}</p>
-        <button onClick={() => set("on", !p.on)} className={`w-full min-h-[52px] flex items-center justify-between px-4 py-2.5 rounded-[18px] border text-[14px] font-extrabold mb-5 transition-colors duration-150 ${p.on ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)] text-[var(--c-ink)]" : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-mut)]"}`}>
+        <button onClick={() => set("on", !p.on)} className={`w-full min-h-[52px] flex items-center justify-between px-4 py-2.5 rounded-[20px] border text-[14px] font-extrabold mb-5 transition-colors duration-150 ${p.on ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)] text-[var(--c-ink)]" : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-mut)]"}`}>
           <span>{tr("Personalized prompting")}</span>
           <span className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-150 ${p.on ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]"}`}><span className={`block w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-150 ${p.on ? "translate-x-5 rtl:-translate-x-5" : ""}`} /></span>
         </button>
         <div className="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start" data-testid="profile-grid">
           <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Field")}</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Field")}</p>
           <div className="flex flex-wrap gap-1.5 mb-3">{FIELDS.map((f) => <button key={f} onClick={() => set("field", multiToggle(p.field, f))} className={btn(multiHas(p.field, f))}>{tr(f)}</button>)}</div>
           </div>
           <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Role")}</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Role")}</p>
           <div className="flex flex-wrap gap-1.5 mb-3">{ROLE_LEVELS.map((r) => <button key={r} onClick={() => set("role", multiToggle(p.role, r))} className={btn(multiHas(p.role, r))}>{tr(r)}</button>)}</div>
           </div>
           <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Use it for")}</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Use it for")}</p>
           <div className="flex flex-wrap gap-1.5 mb-3">{USES.map(([id, l]) => { const on = (p.uses || []).includes(id); return <button key={id} onClick={() => set("uses", on ? (p.uses || []).filter((x) => x !== id) : [...(p.uses || []), id])} className={btn(on)}>{tr(l)}</button>; })}</div>
           </div>
           <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Languages")}</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Languages")}</p>
           <div className="flex flex-wrap gap-1.5 mb-3">{SPEAKS.map((l) => { const on = (p.speaks || []).includes(l); return <button key={l} onClick={() => set("speaks", on ? (p.speaks || []).filter((x) => x !== l) : [...(p.speaks || []), l])} className={btn(on)}>{tr(l)}</button>; })}</div>
           </div>
           <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("AI experience")}</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("AI experience")}</p>
           <div className="flex flex-wrap gap-1.5 mb-3">{EXPERTISE.map((e) => <button key={e} onClick={() => set("expertise", e)} className={btn(p.expertise === e)}>{tr(e)}</button>)}</div>
           </div>
         </div>
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-1 mb-2">{tr("More about your work")}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-1 mb-2">{tr("More about your work")}</p>
         <textarea value={p.detail} onChange={(e) => set("detail", e.target.value)} placeholder={tr("e.g. I run a small bakery; I write supplier orders and price lists")}
-          className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 h-24 resize-none leading-relaxed" />
+          className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 h-24 resize-none leading-relaxed" />
         <BookingDetails />
         {p.on && profileLine0(p) ? <p className="text-[12px] text-[var(--c-mut)] mt-2 border-s-2 border-[var(--c-acc)]/40 ps-2.5">{tr("Applied to prompts:")} {profileLine0(p).replace("About the user (use this to make the prompt specific and domain-aware, but never mention it): ", "")}</p> : null}
         <div className="flex gap-2 mt-4">
-          <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Save")}</button>
-          <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); setP({ ...EMPTY_PROFILE }); flash(tr("Profile cleared")); }} className="min-h-[48px] px-5 rounded-[16px] border border-[var(--c-ln)] text-[var(--c-mut)] hover:border-[var(--c-neg)] hover:text-[var(--c-neg)] text-[13.5px] font-bold transition-colors duration-150">{tr("Clear")}</button>
+          <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Save")}</button>
+          <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); setP({ ...EMPTY_PROFILE }); flash(tr("Profile cleared")); }} className="min-h-[48px] px-5 rounded-[20px] border border-[var(--c-ln)] text-[var(--c-mut)] hover:border-[var(--c-neg)] hover:text-[var(--c-neg)] text-[13.5px] font-bold transition-colors duration-150">{tr("Clear")}</button>
         </div>
       </div>
     </div>
@@ -12327,15 +12347,15 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
   };
   const stateText = { ready: "Running", starting: "Loading the model…", error: "Stopped", idle: "Not running" }[e.state] || "Not running";
   const row = (on, onClick, label, sub) => (
-    <button onClick={onClick} className={`w-full min-h-[52px] flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-[16px] border text-start transition-colors duration-150 ${on ? "border-teal-700 bg-teal-500/10" : "border-slate-800 bg-slate-900"}`}>
+    <button onClick={onClick} className={`w-full min-h-[52px] flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-[20px] border text-start transition-colors duration-150 ${on ? "border-teal-700 bg-teal-500/10" : "border-slate-800 bg-slate-900"}`}>
       <span className="min-w-0"><span className="block text-[14px] font-bold text-slate-100">{tr(label)}</span>
         {sub ? <span className="block text-[12px] text-slate-400 leading-snug">{tr(sub)}</span> : null}</span>
       <span className={`shrink-0 w-11 h-6 rounded-full p-0.5 transition-colors duration-150 ${on ? "bg-teal-400" : "bg-slate-700"}`}>
         <span className={`block w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-150 ${on ? "translate-x-5 rtl:-translate-x-5" : ""}`} /></span>
     </button>
   );
-  const box = "bg-slate-950 border border-slate-800 rounded-[18px] p-3.5";
-  const head = "text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2";
+  const box = "bg-slate-950 border border-slate-800 rounded-[20px] p-3.5";
+  const head = "text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2";
   const small = "min-h-[36px] text-[12px] font-bold px-3 py-1 rounded-full border border-slate-800 bg-slate-900 text-slate-200 hover:border-teal-600 transition-colors duration-150";
   // v6.34 (Ali: "I want this page to be more minimal", he picked A): one line for what runs (⋯ = restart, log, details), a thin
   // bar for a download, and each model as one row — tap it to use it; Fingerprint and Delete in its ⋯. The old page stays for
@@ -12426,7 +12446,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
           <div className="flex gap-2"><input value={custom} onChange={(ev) => setCustom(ev.target.value)} placeholder={tr("user/model-GGUF:Q4_K_M   or   https://…/model.gguf")}
             className="flex-1 min-w-0 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
           <button disabled={!custom.trim() || busy || n.airGap} onClick={() => { const v = custom.trim(); n.installNative(v.startsWith("https://") ? { url: v } : { spec: v, vision: true }, null); }}
-            className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 font-extrabold disabled:opacity-40">{tr("Install")}</button></div></div>
+            className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[12px] bg-teal-400 text-slate-950 font-extrabold disabled:opacity-40">{tr("Install")}</button></div></div>
         <div className="mt-3">{NATIVE && NATIVE.speed ? <SpeedPanel native={NATIVE} nativeCall={nativeCall} runBench={runBench} flash={flash} box={box} head={head} row={row} engineReady={e.state === "ready"}
         busy={!!busy} fastTier={MODEL_TIERS.find((t) => t.id === "fast-e2b")}
         onFast={(t) => n.installNative({ id: t.id, label: brandOf(t).brand, url: t.url, ctx: t.ctx || 8192 }, t)} /> : null}</div>
@@ -12535,7 +12555,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
             className="flex-1 min-w-0 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
           <button disabled={!custom.trim() || busy || n.airGap}
             onClick={() => { const v = custom.trim(); n.installNative(v.startsWith("https://") ? { url: v } : { spec: v, vision: true }, null); }}
-            className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[14px] bg-teal-400 text-slate-950 font-extrabold disabled:opacity-40">{tr("Install")}</button>
+            className="min-h-[44px] text-[13.5px] px-4 py-2 rounded-[12px] bg-teal-400 text-slate-950 font-extrabold disabled:opacity-40">{tr("Install")}</button>
         </div>
         <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">{tr("Any GGUF on Hugging Face as")} <span className="font-mono">{tr("owner/repo:QUANT")}</span>{tr(", or a direct https link. Specialist and fine-tuned models install the same way — the photo reader is fetched too when the repo has one.")}</p>
       </details>
@@ -12632,10 +12652,10 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
   ];
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
-      <div className="calm bg-slate-900 text-slate-200 border border-slate-800 rounded-[22px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
+      <div className="calm bg-slate-900 text-slate-200 border border-slate-800 rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-[22px] font-black tracking-tight text-white flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-teal-500/10 text-teal-300"><Cpu size={17} /></span> {tr("Engine")}</h2>
-          <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[14px] text-slate-400 hover:text-slate-200 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
+          <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:text-slate-200 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p data-intro="" className="text-[12.5px] text-slate-400 mt-1 mb-4">{tr("Run the AI on your own hardware. Nothing leaves the device, nothing costs per use.")}</p>
 
@@ -12649,15 +12669,15 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
           const rec = recommendEngine(device);
           if (!rec) return null;
           if (rec.none) return (
-            <div className="rounded-[22px] border border-amber-900/60 bg-amber-500/5 p-4 mb-5">
+            <div className="rounded-[20px] border border-amber-900/60 bg-amber-500/5 p-4 mb-5">
               <p className="text-sm text-amber-200">{tr(rec.headline)}</p>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">{tr(rec.why)}</p>
             </div>
           );
           const already = activeTier && activeTier.id === rec.tier.id;
           return (
-            <div className="rounded-[22px] border border-teal-700/70 bg-teal-500/10 p-4 mb-5">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-teal-300 mb-1">{tr("Recommended for this device")}</p>
+            <div className="rounded-[20px] border border-teal-700/70 bg-teal-500/10 p-4 mb-5">
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-teal-300 mb-1">{tr("Recommended for this device")}</p>
               <p className="text-base text-slate-100 font-extrabold">{tr(rec.headline)}</p>
               <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{tr(rec.why)}</p>
               <p className="text-xs text-slate-300 mt-2 leading-relaxed">{tr(rec.tier.quality)}</p>
@@ -12667,21 +12687,21 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
                 ) : (
                   <button onClick={() => { setTierId(rec.tier.id); downloadModel(rec.tier); }}
                     disabled={modelState === "downloading"}
-                    className="min-h-[48px] px-5 rounded-[16px] bg-teal-400 text-slate-950 text-[14.5px] font-extrabold disabled:opacity-40">
+                    className="min-h-[48px] px-5 rounded-[20px] bg-teal-400 text-slate-950 text-[14.5px] font-extrabold disabled:opacity-40">
                     {modelState === "downloading" ? tr("Installing… {p}%", { p: dlPct }) : tr("Install · {s}", { s: rec.size })}
                   </button>
                 )}
                 {rec.stronger ? (
                   <button onClick={() => { setTierId(rec.stronger.id); downloadModel(rec.stronger); }}
                     disabled={modelState === "downloading"}
-                    className="min-h-[48px] px-4 rounded-[16px] border border-slate-700 bg-slate-900 text-slate-200 text-[13.5px] font-bold disabled:opacity-40">
+                    className="min-h-[48px] px-4 rounded-[20px] border border-slate-700 bg-slate-900 text-slate-200 text-[13.5px] font-bold disabled:opacity-40">
                     {rec.stronger.fast ? tr("Stronger ·") : tr("Stronger, slower ·")} {tr(rec.stronger.label)} · {rec.stronger.sizeGB.toFixed(1)} {tr("GB")}
                   </button>
                 ) : null}
                 {rec.lighter && !rec.stronger ? (
                   <button onClick={() => { setTierId(rec.lighter.id); downloadModel(rec.lighter); }}
                     disabled={modelState === "downloading"}
-                    className="min-h-[48px] px-4 rounded-[16px] border border-slate-700 bg-slate-900 text-slate-200 text-[13.5px] font-bold disabled:opacity-40">
+                    className="min-h-[48px] px-4 rounded-[20px] border border-slate-700 bg-slate-900 text-slate-200 text-[13.5px] font-bold disabled:opacity-40">
                     {tr("Smaller ·")} {rec.lighter.sizeGB.toFixed(2)} {tr("GB")}
                   </button>
                 ) : null}
@@ -12694,8 +12714,8 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
 
         {/* persona 2 (Ali: P2-B): the device details fold under "Details" — the Install button comes first */}
         <details className="mb-4" data-testid="engine-device-details"><summary className="cursor-pointer select-none text-[13px] font-bold text-slate-400 min-h-[40px] flex items-center">{tr("Details")} · {tr("This device")}</summary>
-        <div className="bg-slate-950 border border-slate-800 rounded-[18px] p-3.5 mb-4">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><HardDrive size={13} /> {tr("This device")}</p>
+        <div className="bg-slate-950 border border-slate-800 rounded-[20px] p-3.5 mb-4">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><HardDrive size={13} /> {tr("This device")}</p>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 capitalize">{tr(device.platform)}</span>
             <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">
@@ -12732,14 +12752,14 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
         </details>
 
         {/* model tiers */}
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Or choose yourself")}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Or choose yourself")}</p>
         <p className="text-[11px] text-slate-600 mb-2">{tr(QUANT_FLOOR_NOTE)}</p>
         <div className="space-y-2 mb-4">
           {listTiers.map((t) => {
             const ok = fits(t); const maybe = !ok && plausible(t); const on = activeTier && activeTier.id === t.id;
             return (
               <button key={t.id} onClick={() => setTierId(t.id)} data-testid={"tier-" + t.id}
-                className={`w-full text-start rounded-[18px] border p-3.5 transition-colors duration-150 ${on ? "border-teal-400 bg-teal-500/10 ring-1 ring-teal-400/40" : ok ? "border-slate-800 bg-slate-950 hover:border-slate-600" : maybe ? "border-amber-900/50 bg-slate-950 hover:border-amber-700" : "border-slate-900 bg-slate-950 opacity-70 hover:border-slate-700"}`}>
+                className={`w-full text-start rounded-[20px] border p-3.5 transition-colors duration-150 ${on ? "border-teal-400 bg-teal-500/10 ring-1 ring-teal-400/40" : ok ? "border-slate-800 bg-slate-950 hover:border-slate-600" : maybe ? "border-amber-900/50 bg-slate-950 hover:border-amber-700" : "border-slate-900 bg-slate-950 opacity-70 hover:border-slate-700"}`}>
                 <div className="flex items-center justify-between">
                   <span className="text-[15px] font-extrabold text-white">{brandOf(t).brand} <span className="text-[10.5px] font-extrabold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 align-middle">{tr(brandOf(t).levelName)}</span>
                     <span className="block text-[11px] font-normal text-slate-500">{t.params}</span>
@@ -12783,8 +12803,8 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
 
         {/* memory plan */}
         {plan && !native ? (
-          <div className="bg-slate-950 border border-slate-800 rounded-[18px] p-3.5 mb-4">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Working memory")}</p>
+          <div className="bg-slate-950 border border-slate-800 rounded-[20px] p-3.5 mb-4">
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Working memory")}</p>
             <div className="flex flex-wrap gap-2 text-xs">
               <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-400">weights {plan.weights} {tr("GB (mmap)")}</span>
               <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-400">{tr("KV")} {plan.kvFp16} → {plan.kvInt4} {tr("GB")}</span>
@@ -12798,8 +12818,8 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
 
         {/* compute backends — the Android app shows the real engine settings above instead */}
         {!native ? (
-        <div className="bg-slate-950 border border-slate-800 rounded-[18px] p-3.5 mb-4">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Compute")}</p>
+        <div className="bg-slate-950 border border-slate-800 rounded-[20px] p-3.5 mb-4">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Compute")}</p>
           <div className="flex flex-wrap gap-1.5">
             {detectBackends(device).map((b) => (
               <span key={b.id} className={`text-[11px] px-2 py-1 rounded-full border ${b.id === "cpu" ? "bg-slate-900 border-slate-800 text-slate-500" : "bg-teal-500/10 border-teal-900/60 text-teal-300"}`}>{tr(b.label)} <span className="opacity-60">· {tr(b.role)}</span></span>
@@ -12811,8 +12831,8 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
 
         {/* task adapters */}
         {activeTier && !native ? (
-          <div className="bg-slate-950 border border-slate-800 rounded-[18px] p-3.5 mb-4">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Task adapters")}</p>
+          <div className="bg-slate-950 border border-slate-800 rounded-[20px] p-3.5 mb-4">
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Task adapters")}</p>
             <p className="text-[11px] text-slate-500 mb-2">{tr("Small fine-tunes for each job — this is what makes a phone-sized model punch above its weight. Loaded over the base model, a few MB each.")}</p>
             <div className="flex flex-wrap gap-1.5">
               {TASK_ADAPTERS.map((a) => (
@@ -12823,10 +12843,10 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
         ) : null}
 
         {/* training data + eval */}
-        <div className="bg-slate-950 border border-slate-800 rounded-[18px] p-3.5 mb-4">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Training data")}</p>
+        <div className="bg-slate-950 border border-slate-800 rounded-[20px] p-3.5 mb-4">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Training data")}</p>
           <p className="text-[11px] text-slate-500 mb-2">{tr("Each cloud answer is a worked example. Collected, they train the small adapters that bring on-device quality up to cloud level — and a slice is held back to prove it. Stored on this device only.")}</p>
-          <button onClick={() => setCollect(!collect)} className={`w-full min-h-[52px] flex items-center justify-between px-3.5 py-2.5 rounded-[16px] border text-[14px] font-bold mb-3 transition-colors duration-150 ${collect ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-900 text-slate-400"}`}>
+          <button onClick={() => setCollect(!collect)} className={`w-full min-h-[52px] flex items-center justify-between px-3.5 py-2.5 rounded-[20px] border text-[14px] font-bold mb-3 transition-colors duration-150 ${collect ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-900 text-slate-400"}`}>
             <span>{tr("Save my prompts as training data")}</span>
             <span className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-150 ${collect ? "bg-teal-400" : "bg-slate-700"}`}><span className={`block w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-150 ${collect ? "translate-x-5 rtl:-translate-x-5" : ""}`} /></span>
           </button>
@@ -12854,11 +12874,11 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
 
         {/* engine mode */}
         {!native ? (<>
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Where it runs")}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Where it runs")}</p>
         <div className="space-y-1.5 mb-4">
           {modes.map((m) => (
             <button key={m.k} onClick={() => setEngineMode(m.k)}
-              className={`w-full min-h-[52px] flex items-center justify-between rounded-[16px] border px-3.5 py-2.5 text-start ${engineMode === m.k ? "border-teal-500 bg-teal-500/5" : "border-slate-800 bg-slate-950 hover:border-slate-600"}`}>
+              className={`w-full min-h-[52px] flex items-center justify-between rounded-[20px] border px-3.5 py-2.5 text-start ${engineMode === m.k ? "border-teal-500 bg-teal-500/5" : "border-slate-800 bg-slate-950 hover:border-slate-600"}`}>
               <span><span className="text-sm text-slate-200">{tr(m.label)}</span><span className="block text-[11px] text-slate-500">{tr(m.desc)}</span></span>
               {engineMode === m.k ? <Check size={15} className="text-teal-400 shrink-0" /> : null}
             </button>
@@ -12877,31 +12897,31 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
             <div className="space-y-2 mb-2" data-testid="engine-selected">
               {rt ? <p className="text-[12px] text-slate-400">{tr("Running now: {m}. You picked {p}.", { m: brandOf(rt).brand, p: brandOf(activeTier).brand })}</p> : null}
               {mine ? (
-                <button onClick={() => native.useInstalled(mine.id)} className="w-full min-h-[52px] flex items-center justify-center gap-2 py-3 rounded-[16px] font-extrabold text-[15px] bg-teal-400 text-slate-950" data-testid="engine-use-selected">
+                <button onClick={() => native.useInstalled(mine.id)} className="w-full min-h-[52px] flex items-center justify-center gap-2 py-3 rounded-[20px] font-extrabold text-[15px] bg-teal-400 text-slate-950" data-testid="engine-use-selected">
                   <Check size={16} /> {tr("Use {m} (already on this phone)", { m: brandOf(activeTier).brand })}</button>
               ) : (
-                <button onClick={() => downloadModel(activeTier)} className="w-full min-h-[52px] flex items-center justify-center gap-2 py-3 rounded-[16px] font-extrabold text-[15px] bg-teal-400 text-slate-950" data-testid="engine-download-selected">
+                <button onClick={() => downloadModel(activeTier)} className="w-full min-h-[52px] flex items-center justify-center gap-2 py-3 rounded-[20px] font-extrabold text-[15px] bg-teal-400 text-slate-950" data-testid="engine-download-selected">
                   <Download size={16} /> {tr("Download {m} · {s} GB", { m: brandOf(activeTier).brand, s: activeTier.sizeGB })}</button>
               )}
             </div>
           );
         })()}
         {modelState === "starting" ? (
-          <div className="flex items-center gap-2 text-sm text-slate-300 bg-slate-950 border border-slate-800 rounded-[18px] p-3.5">
+          <div className="flex items-center gap-2 text-sm text-slate-300 bg-slate-950 border border-slate-800 rounded-[20px] p-3.5">
             <Loader2 size={16} className="animate-spin" /> {tr("Loading the model into memory — large models take a minute")}
           </div>
         ) : modelState === "ready" ? (
-          <div className="flex items-center gap-2 text-sm text-teal-300 bg-teal-500/10 border border-teal-900/60 rounded-[18px] p-3.5 font-bold" data-testid="engine-loaded">
+          <div className="flex items-center gap-2 text-sm text-teal-300 bg-teal-500/10 border border-teal-900/60 rounded-[20px] p-3.5 font-bold" data-testid="engine-loaded">
             <Check size={16} /> {(() => { const r = native && (native.installedModels || []).find((m) => m.active); const t = r ? tierOfInstalled(r) : activeTier; return t ? brandOf(t).brand : tr("Model"); })()} {tr("loaded — running locally")}
           </div>
         ) : modelState === "downloading" ? (
-          <div className="bg-slate-950 border border-slate-800 rounded-[18px] p-3.5">
+          <div className="bg-slate-950 border border-slate-800 rounded-[20px] p-3.5">
             <div className="flex items-center justify-between text-xs text-slate-400 mb-2"><span>{tr("Downloading model…")}</span><span className="tabular-nums font-bold">{dlPct}%</span></div>
             <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-teal-500 transition-all" style={{ width: dlPct + "%" }} /></div>
           </div>
         ) : (
           <button onClick={downloadModel} disabled={!activeTier}
-            className={`w-full min-h-[52px] flex items-center justify-center gap-2 py-3 rounded-[16px] font-extrabold text-[15px] ${activeTier ? "bg-teal-400 text-slate-950 hover:bg-teal-300" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>
+            className={`w-full min-h-[52px] flex items-center justify-center gap-2 py-3 rounded-[20px] font-extrabold text-[15px] ${activeTier ? "bg-teal-400 text-slate-950 hover:bg-teal-300" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>
             <Download size={16} /> {activeTier ? tr("Download {m} · {s} GB", { m: brandOf(activeTier).brand, s: activeTier.sizeGB }) : tr("No model fits this device")}
           </button>
         )}
@@ -12914,49 +12934,49 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
 function OrgModal({ org, setOrg, close, flash }) {
   const [o, setO] = useState(org);
   const set = (k, v) => setO((x) => ({ ...x, [k]: v }));
-  const field = "w-full min-h-[44px] bg-slate-950 border border-slate-800 rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold text-slate-100 placeholder-slate-500 placeholder:font-normal focus:outline-none focus:border-teal-400 transition-colors duration-150";
+  const field = "w-full min-h-[44px] bg-slate-950 border border-slate-800 rounded-[12px] px-3.5 py-2.5 text-[14.5px] font-semibold text-slate-100 placeholder-slate-500 placeholder:font-normal focus:outline-none focus:border-teal-400 transition-colors duration-150";
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
-      <div className="calm bg-slate-900 text-slate-200 border border-slate-800 rounded-[22px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
+      <div className="calm bg-slate-900 text-slate-200 border border-slate-800 rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-[22px] font-black tracking-tight text-white flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-teal-500/10 text-teal-300"><Building2 size={17} /></span> {tr("Company terminology")}</h2>
-          <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[14px] text-slate-400 hover:text-slate-200 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
+          <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:text-slate-200 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p data-intro="" className="text-[12.5px] text-slate-400 mt-1 mb-4">{tr("Your real names for your real things. Every document then uses them correctly — no invented equipment names, no wrong site spellings. Stays on your devices.")}</p>
 
-        <button onClick={() => set("on", !o.on)} className={`w-full min-h-[52px] flex items-center justify-between px-4 py-2.5 rounded-[18px] border text-[14px] font-extrabold mb-5 transition-colors duration-150 ${o.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
+        <button onClick={() => set("on", !o.on)} className={`w-full min-h-[52px] flex items-center justify-between px-4 py-2.5 rounded-[20px] border text-[14px] font-extrabold mb-5 transition-colors duration-150 ${o.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
           <span>{tr("Use company terminology")}</span>
           <span className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-150 ${o.on ? "bg-teal-400" : "bg-slate-700"}`}><span className={`block w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-150 ${o.on ? "translate-x-5 rtl:-translate-x-5" : ""}`} /></span>
         </button>
 
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Company name")}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Company name")}</p>
         <input value={o.name} onChange={(e) => set("name", e.target.value)} placeholder={tr("e.g. Adrighem & Aldibiki")} className={field} />
 
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-3 mb-1.5">{tr("Sites / locations")}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-3 mb-1.5">{tr("Sites / locations")}</p>
         <textarea value={o.sites} onChange={(e) => set("sites", e.target.value)} rows={2}
           placeholder={tr("e.g. North Gate Yard, October Depot, Site B — Sheikh Zayed")} className={field + " resize-none"} />
 
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-3 mb-1.5">{tr("Equipment / assets")}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-3 mb-1.5">{tr("Equipment / assets")}</p>
         <textarea value={o.assets} onChange={(e) => set("assets", e.target.value)} rows={2}
           placeholder={tr("e.g. LTM 1200 (unit 3), Demag AC 100, XCMG QY50KA — 'Crane 3' means unit 3")} className={field + " resize-none"} />
 
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-3 mb-1.5">{tr("Internal terms & abbreviations")}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-3 mb-1.5">{tr("Internal terms & abbreviations")}</p>
         <textarea value={o.terms} onChange={(e) => set("terms", e.target.value)} rows={2}
           placeholder={tr("e.g. PTW = permit to work, 'the yard' = North Gate, LO = lift operation")} className={field + " resize-none"} />
 
         <div className="flex gap-2 mt-3">
           <div className="flex-1">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Downtime cost / hour")}</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Downtime cost / hour")}</p>
             <input value={o.rate} onChange={(e) => set("rate", e.target.value)} placeholder="e.g. 1800" inputMode="decimal" className={field} />
           </div>
           <div className="w-24">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Currency")}</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-1.5">{tr("Currency")}</p>
             <input value={o.currency} onChange={(e) => set("currency", e.target.value)} placeholder={tr("EGP")} className={field} />
           </div>
         </div>
         <p className="text-[11px] text-slate-600 mt-1">{tr("Turns logged downtime into a figure you can put in front of management.")}</p>
 
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-3 mb-1.5">{tr("Reporting rules")}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-3 mb-1.5">{tr("Reporting rules")}</p>
         <textarea value={o.rules} onChange={(e) => set("rules", e.target.value)} rows={2}
           placeholder={tr("e.g. every incident must state whether work was stopped; always record permit number")} className={field + " resize-none"} />
 
@@ -12967,8 +12987,8 @@ function OrgModal({ org, setOrg, close, flash }) {
         ) : null}
 
         <div className="flex gap-2 mt-4">
-          <button onClick={() => { setOrg(o); flash(tr("Company terminology saved")); close(); }} className="flex-1 min-h-[48px] rounded-[16px] bg-teal-400 text-slate-950 font-extrabold text-[15px]">{tr("Save")}</button>
-          <button onClick={() => { setOrg({ ...EMPTY_ORG }); setO({ ...EMPTY_ORG }); flash(tr("Cleared")); }} className="min-h-[48px] px-5 rounded-[16px] border border-slate-800 text-slate-400 hover:border-rose-500 hover:text-rose-400 text-[13.5px] font-bold transition-colors duration-150">{tr("Clear")}</button>
+          <button onClick={() => { setOrg(o); flash(tr("Company terminology saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-teal-400 text-slate-950 font-extrabold text-[15px]">{tr("Save")}</button>
+          <button onClick={() => { setOrg({ ...EMPTY_ORG }); setO({ ...EMPTY_ORG }); flash(tr("Cleared")); }} className="min-h-[48px] px-5 rounded-[20px] border border-slate-800 text-slate-400 hover:border-rose-500 hover:text-rose-400 text-[13.5px] font-bold transition-colors duration-150">{tr("Clear")}</button>
         </div>
       </div>
     </div>
@@ -12981,21 +13001,21 @@ function MemoryModal({ records, findings, closeFollowUp, close }) {
   const days = (ts) => Math.round((Date.now() - ts) / 86400000);
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
-      <div className="calm bg-slate-900 text-slate-200 border border-slate-800 rounded-[22px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-2xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
+      <div className="calm bg-slate-900 text-slate-200 border border-slate-800 rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] max-w-2xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-[22px] font-black tracking-tight text-white flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-teal-500/10 text-teal-300"><Radar size={17} /></span> {tr("Site memory")}</h2>
-          <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[14px] text-slate-400 hover:text-slate-200 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
+          <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:text-slate-200 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p data-intro="" className="text-[12.5px] text-slate-400 mt-1 mb-4">{tr("Every record stays on this device. The connections between them are what a single report can never show you.")}</p>
 
         {open.length > 0 ? (
           <div className="mb-5">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Open actions ·")} {open.length}</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Open actions ·")} {open.length}</p>
             <div className="space-y-1.5">
               {open.map(({ r, f, i }, k) => {
                 const age = days(r.ts);
                 return (
-                  <div key={k} className={`flex items-start gap-2.5 rounded-[14px] px-3 py-2.5 border text-[12.5px] ${
+                  <div key={k} className={`flex items-start gap-2.5 rounded-[12px] px-3 py-2.5 border text-[12.5px] ${
                     age >= 14 ? "bg-rose-500/10 border-rose-900/60" : age >= 7 ? "bg-amber-500/10 border-amber-900/60" : "bg-slate-950 border-slate-800"}`}>
                     <button onClick={() => closeFollowUp(r.id, i)} title={tr("Mark done")}
                       className="w-9 h-9 -m-1.5 grid place-items-center rounded-[12px] text-slate-500 hover:text-teal-300 shrink-0"><CheckCircle2 size={17} /></button>
@@ -13014,10 +13034,10 @@ function MemoryModal({ records, findings, closeFollowUp, close }) {
 
         {findings.length > 0 ? (
           <div className="mb-5">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Patterns")}</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Patterns")}</p>
             <div className="space-y-1.5">
               {findings.map((f, i) => (
-                <div key={i} className={`text-[12.5px] rounded-[14px] px-3 py-2.5 border ${
+                <div key={i} className={`text-[12.5px] rounded-[12px] px-3 py-2.5 border ${
                   f.severity === "high" ? "bg-rose-500/10 border-rose-900/60 text-rose-200"
                   : f.severity === "medium" ? "bg-amber-500/10 border-amber-900/60 text-amber-200"
                   : "bg-slate-950 border-slate-800 text-slate-400"}`}>{tr(f.summary)}</div>
@@ -13026,10 +13046,10 @@ function MemoryModal({ records, findings, closeFollowUp, close }) {
           </div>
         ) : null}
 
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Records ·")} {records.length}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Records ·")} {records.length}</p>
         <div className="space-y-1.5 max-h-56 overflow-auto">
           {[...records].reverse().map((r) => (
-            <div key={r.id} className="bg-slate-950 border border-slate-800 rounded-[14px] px-3 py-2.5">
+            <div key={r.id} className="bg-slate-950 border border-slate-800 rounded-[12px] px-3 py-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-300 capitalize">{r.doc.replace("_", " ")}{r.asset ? ` · ${r.asset}` : ""}</span>
                 <span className="text-[11px] tabular-nums text-slate-500">{days(r.ts)}{tr("d ago")}</span>

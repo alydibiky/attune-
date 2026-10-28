@@ -224,7 +224,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   const userStop = useRef(false);
   // v7.8 (Gemini's Area 6): the Studio report — pictures made and the time each took, on this device
   if (rep) return <div className="calm text-[var(--c-ink)]" data-testid="studio-page"><FamilyReport fam="studio" back={() => setRep(false)} /></div>;
-  if (!info) return <div className="calm space-y-3" data-testid="studio-page"><p className="p-4 m-0 text-sm text-[var(--c-mut)] rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)]">{tr("Studio works in the Android app.")}</p><FamilySeeAll fam="studio" onClick={() => setRep(true)} /></div>;
+  if (!info) return <div className="calm space-y-3" data-testid="studio-page"><p className="p-4 m-0 text-sm text-[var(--c-mut)] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)]">{tr("Studio works in the Android app.")}</p><FamilySeeAll fam="studio" onClick={() => setRep(true)} /></div>;
   // v6.19: the device facts (cores, big cores, platform) join the picture facts for the per-device recommendation
   let dev = info; try { dev = { ...JSON.parse(native.info()), ...info }; } catch (e) {}
   const gpuOk = gpuWorks(info);
@@ -456,12 +456,12 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   return (
     <div className={"calm text-[var(--c-ink)] space-y-3 pb-24 " + SPLIT} data-testid="studio-page">
       {!info.built ? (
-        <div className="rounded-[22px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[12px] text-[var(--c-warn)] lg:col-start-1" data-testid="studio-no-engine">
+        <div className="rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[12px] text-[var(--c-warn)] lg:col-start-1" data-testid="studio-no-engine">
           {tr("This APK has no picture engine yet — it comes with the next APK built on GitHub.")}</div>
       ) : null}
 
       {!drawReady ? (
-        <div className="rounded-[22px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 lg:col-start-1" data-testid="studio-install">
+        <div className="rounded-[20px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 lg:col-start-1" data-testid="studio-install">
           <p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-1.5"><Palette size={16} className="text-[var(--c-acc)]" />{tr("Pictures made on your phone")}</p>
           {dp.why === "cpu" ? <p className="text-[12px] text-[var(--c-warn)] mt-1 leading-relaxed" data-testid="studio-why-turbo">{tr("This phone's graphics chip isn't working with Studio, so the Pro model would take 10–20 minutes a picture on the CPU. Studio Turbo makes a picture in about a minute.")}</p> : null}
           <p className="text-[12px] text-[var(--c-ink)] mt-1 leading-relaxed">{tr(P.quality)}</p>
@@ -501,7 +501,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
           <div className="mb-2">
             {ref ? (
               <div className="relative inline-block">
-                <img src={ref.dataUrl} alt="" className="max-h-40 rounded-[14px] border border-[var(--c-ln)]" data-testid="studio-ref" />
+                <img src={ref.dataUrl} alt="" className="max-h-40 rounded-[12px] border border-[var(--c-ln)]" data-testid="studio-ref" />
                 <button onClick={() => setRef(null)} className="absolute top-1 end-1 w-11 h-11 grid place-items-center rounded-full bg-black/60 text-white"><X size={14} /></button>
               </div>
             ) : (
@@ -600,7 +600,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       {gallery.length > 1 ? (
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-1.5" data-testid="studio-gallery">
           {gallery.slice(0, 30).map((g) => (
-            <button key={g.file + g.at} onClick={() => setCur(g)} className={`rounded-[14px] overflow-hidden border-2 ${cur && cur.file === g.file ? "border-[var(--c-acc-2)]" : "border-[var(--c-ln)]"}`}>
+            <button key={g.file + g.at} onClick={() => setCur(g)} className={`rounded-[12px] overflow-hidden border-2 ${cur && cur.file === g.file ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`}>
               <img src={g.url} alt="" className="w-full aspect-square object-cover bg-[var(--c-bg)]" loading="lazy" />
             </button>
           ))}
@@ -610,14 +610,14 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       </div>
 
       {info.built && info.gpuBuilt && info.cpuOnly ? (
-        <div className="rounded-[22px] border border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10 p-3.5 space-y-2 lg:col-start-1" data-testid="studio-gpu-card">
+        <div className="rounded-[20px] border border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10 p-3.5 space-y-2 lg:col-start-1" data-testid="studio-gpu-card">
           <p className="text-[13px] text-[var(--c-warn)]">{tr("Studio is drawing on the processor (slow). This phone has a graphics chip — try it: pictures and ×4 sharpening are many times faster there.")}</p>
-          <button className="min-h-[44px] px-4 rounded-[14px] bg-[var(--c-warn)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold" data-testid="studio-gpu-on"
+          <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-warn)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold" data-testid="studio-gpu-on"
             onClick={() => { native.setImageCpu(false); setInfo(readInfo()); flash(tr("The next picture uses the graphics chip")); }}>{tr("Use the graphics chip")}</button>
         </div>
       ) : null}
       {info.built ? (
-        <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 text-[11px] text-[var(--c-mut)] space-y-1 lg:col-start-1">
+        <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 text-[11px] text-[var(--c-mut)] space-y-1 lg:col-start-1">
           {info.note ? <p className="text-[var(--c-warn)]" data-testid="studio-note">{tr(info.note)}</p> : null}
           {info.gpuBuilt ? (
             <label className="flex items-center gap-2 text-[var(--c-ink)]"><input type="checkbox" checked={!info.cpuOnly} data-testid="studio-gpu"

@@ -51,8 +51,8 @@ function Tile({ label, value, pill, tone, sub, testid }) {
     {sub ? <span className="block text-[11.5px] text-[var(--c-mut)] leading-snug">{sub}</span> : null}
   </div>;
 }
-const monthLabel = (ym) => new Date(ym + "-15T12:00:00").toLocaleDateString(isAr() ? "ar-EG" : "en-US", { month: "short" });
-const dayLabel = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(isAr() ? "ar-EG" : "en-GB", { weekday: "short" });
+const monthLabel = (ym) => new Date(ym + "-15T12:00:00").toLocaleDateString(isAr() ? "ar-EG-u-nu-latn" : "en-US", { month: "short" });
+const dayLabel = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(isAr() ? "ar-EG-u-nu-latn" : "en-GB", { weekday: "short" });
 const pctPill = (p) => (p == null ? null : T((p >= 0 ? "+" : "") + p + "%"));
 
 // ---- Books Report: the overview ----------------------------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ export function BooksOverview({ s, td, saveFile, flash, canExport = true }) {
       <div className={card + " p-4 space-y-3 min-w-0"} data-testid="ov-ageing">
         <div className="flex items-start justify-between gap-2"><p className="text-[15px] font-extrabold m-0">{LL("Receivables ageing", "أعمار الديون")} <span className="text-[var(--c-mut)] font-bold tabular-nums" dir="ltr">({B.fmt(o.ageing.total)})</span></p>
           {o.ageing.overdueCount ? <span className={K.tag("amber") + " shrink-0"}>{LL(o.ageing.overdueCount + " overdue", o.ageing.overdueCount + " متأخرة")}</span> : null}</div>
-        <div className="grid grid-cols-3 gap-2">{o.ageing.buckets.map((b, i) => <div key={b.id} className="rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-2.5 min-w-0" data-testid={"ov-age-" + b.id}>
+        <div className="grid grid-cols-3 gap-2">{o.ageing.buckets.map((b, i) => <div key={b.id} className="rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-2.5 min-w-0" data-testid={"ov-age-" + b.id}>
           <p className="text-[11px] font-extrabold m-0" style={{ color: [C1, C3, C2][i] }}>{BL[b.id]}</p>
           <p className="text-[clamp(12.5px,3.5vw,15px)] font-black tabular-nums m-0 mt-0.5 whitespace-nowrap" dir="ltr">{B.fmt(b.amount)}</p>
           <p className="text-[11px] text-[var(--c-mut)] m-0 truncate" dir="auto">{b.top || "—"}</p>

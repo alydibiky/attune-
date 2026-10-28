@@ -49,7 +49,7 @@ export function FitToday({ openFit, compact = false }) {
       {!compact ? <div className="flex justify-between gap-2 text-[12px] c-sub c-num whitespace-nowrap"><span>{tr("Protein")} <b style={{ color: "var(--c-ink)" }}>{fmt(tot.p)}</b>/{fmt(tg.protein)} g</span><span>{tr("Carbs")} <b style={{ color: "var(--c-ink)" }}>{fmt(tot.c)}</b>/{fmt(tg.carbs)} g</span><span>{tr("Fat")} <b style={{ color: "var(--c-ink)" }}>{fmt(tot.f)}</b>/{fmt(tg.fat)} g</span></div> : null}
       <div className="grid grid-cols-4 gap-1.5" data-testid="fit-today-meals">
         {F.MEALS.map((m) => { const items = (day.meals || {})[m] || [], k = items.reduce((a, x) => a + (x.kcal || 0), 0);
-          return <button key={m} onClick={() => open(m)} className="rounded-[16px] border px-1.5 py-2 min-h-[52px] text-center transition-colors duration-150" style={{ borderColor: items.length ? "var(--c-acc)" : "var(--c-ln)", background: items.length ? "var(--c-soft)" : "transparent", color: "var(--c-ink)" }} data-testid={"fit-today-" + m}>
+          return <button key={m} onClick={() => open(m)} className="rounded-[20px] border px-1.5 py-2 min-h-[52px] text-center transition-colors duration-150" style={{ borderColor: items.length ? "var(--c-acc)" : "var(--c-ln)", background: items.length ? "var(--c-soft)" : "transparent", color: "var(--c-ink)" }} data-testid={"fit-today-" + m}>
             <span className="block text-[11px] c-sub truncate" style={{ wordBreak: "keep-all" }}>{ar ? MEAL[m][1] : MEAL[m][0]}</span>
             {items.length ? <span className="block c-num tabular-nums text-[13px] font-extrabold">{fmt(k)}</span> : <Plus size={15} className="mx-auto c-acc" />}</button>; })}
       </div>
@@ -74,7 +74,7 @@ function FamilyToday({ navTo, wide, tick }) {
       {!any ? <span className="c-sub text-[12.5px] block">{tr("Medicines and reminders for the family, lab results over time")}</span> : <>
         {!next.length ? <span className="block text-[13.5px] c-pos font-bold">{tr("Every dose today is taken")}</span> : null}
         {(wide ? doses.filter((d) => !d.taken).slice(0, 2) : next.slice(0, 1)).map((d) => (
-          <div key={d.key} className="flex items-center justify-between gap-2 rounded-[14px] px-3 py-2.5 min-h-[52px]" style={{ background: "var(--c-surf-2)" }} data-testid="health-dose">
+          <div key={d.key} className="flex items-center justify-between gap-2 rounded-[12px] px-3 py-2.5 min-h-[52px]" style={{ background: "var(--c-surf-2)" }} data-testid="health-dose">
             <span className="min-w-0" dir="auto"><span className="block text-[13.5px] font-extrabold truncate">{d === next[0] ? tr("Next") + ": " : ""}<span className="tabular-nums">{d.time}</span> · {d.med.name}{d.med.dose ? " " + d.med.dose : ""}</span>
               {who(d) || d.late ? <span className={"block text-[12px] " + (d.late ? "c-warn font-bold" : "c-sub")}>{who(d)}{who(d) && d.late ? " · " : ""}{d.late ? tr("late") : ""}</span> : null}</span>
             <button className="shrink-0 min-h-[36px] px-3 rounded-full text-[12.5px] font-extrabold border inline-flex items-center gap-1" style={{ borderColor: "var(--c-acc)", color: "var(--c-acc)", background: "var(--c-soft)" }} onClick={() => take(d)} data-testid="health-dose-take"><Check size={13} />{tr("Take")}</button>
@@ -93,7 +93,7 @@ function CycleToday({ navTo, wide, onLog }) {
   const cyc = (() => { try { const st = cycleLoad(); return Object.keys(st.days || {}).length ? cycleStats(st, cycleKey(new Date())) : null; } catch (e) { return null; } })();
   const daysTo = cyc && cyc.nextStart ? Math.round((Date.parse(cyc.nextStart + "T12:00:00") - Date.parse(cycleKey(new Date()) + "T12:00:00")) / 86400000) : null;
   const status = !cyc ? "" : cyc.inPeriod ? tr("Period — day {n}", { n: cyc.cycleDay }) : cyc.late ? tr("{n} days late", { n: cyc.late }) : daysTo != null ? tr("Next period in {n} days", { n: daysTo }) : "";
-  const exp = cyc && cyc.nextStart ? (() => { try { return new Date(cyc.nextStart + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "long" }); } catch (e) { return cyc.nextStart; } })() : "";
+  const exp = cyc && cyc.nextStart ? (() => { try { return new Date(cyc.nextStart + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "long" }); } catch (e) { return cyc.nextStart; } })() : "";
   return (
     <div className={cardPad + " w-full space-y-2"} data-testid="health-cycle">
       <button className="w-full min-h-[40px] flex items-center gap-2 text-start" onClick={() => navTo("cycle")} data-testid="health-cycle-open">
@@ -155,7 +155,7 @@ export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd, na
   const [listening, setListening] = useState(false);
   const wide = typeof window !== "undefined" && window.innerWidth >= 1024;
   const ar = getLang() === "ar";
-  const date = new Date().toLocaleDateString(ar ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" });
+  const date = new Date().toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "long" });
   const hasCycle = (() => { try { return Object.keys(cycleLoad().days || {}).length > 0; } catch (e) { return false; } })();
   // the box: the same reader as the Home box (food, a dose, a period, money, a reminder…); "health report" opens level 2; the rest → Chat
   const submit = async (t) => {
@@ -173,7 +173,7 @@ export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd, na
     const j = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
     return { ...healthReport({ fit: j("attune:fit:v1"), care: loadCare(), cycle: cycleLoad(), cycleStats }), vitals: vitalsWeek(loadVitals()) };
   }, [rep, tick]);
-  const range = (() => { const f = (d) => d.toLocaleDateString(ar ? "ar-EG" : undefined, { day: "numeric", month: "short" }); const a = new Date(); a.setDate(a.getDate() - 6); return f(a) + " – " + f(new Date()); })();
+  const range = (() => { const f = (d) => d.toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }); const a = new Date(); a.setDate(a.getDate() - 6); return f(a) + " – " + f(new Date()); })();
   const printPdf = () => {
     if (!report) return;
     const esc = (x) => String(x == null ? "" : x).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -197,7 +197,7 @@ ${report.vitals && report.vitals.has ? `<h3>${esc(tr("From your watch"))}</h3>${
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0"><h2 className={h1 + " flex items-center gap-2"}><Heart size={20} className="c-acc" />{tr("Health")}</h2>
           <p className="m-0 mt-0.5 text-[13px] font-semibold c-sub hidden lg:block">{date} · {tr("Today in one calm look")}</p></div>
-        <span className={tag("blue") + " lg:hidden"}>{new Date().toLocaleDateString(ar ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span>
+        <span className={tag("blue") + " lg:hidden"}>{new Date().toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span>
       </div>
       <HealthBox wide={wide} onSubmit={submit} onPhoto={openFitAdd || (() => navTo("fit"))} onVoice={voice} listening={listening} />
       <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4 lg:items-start" key={tick}>

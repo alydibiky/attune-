@@ -18,8 +18,8 @@ import { PLAY, pricesFor } from "./billing.js";
 import { BooksApp } from "./books-ui.jsx";
 
 const KEY = "attune:erp:v1";
-const field = "w-full min-w-0 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 py-2 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] focus:bg-[var(--c-surf)] transition-colors duration-150";
-const btn = "min-h-[44px] px-3.5 py-2 rounded-[14px] text-[13.5px] font-bold disabled:opacity-40 transition-colors duration-150";
+const field = "w-full min-w-0 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 py-2 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] focus:bg-[var(--c-surf)] transition-colors duration-150";
+const btn = "min-h-[44px] px-3.5 py-2 rounded-[12px] text-[13.5px] font-bold disabled:opacity-40 transition-colors duration-150";
 const primary = btn + " bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold";
 const ghost = btn + " border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]";
 
@@ -44,7 +44,7 @@ export function RenameSheet({ title, value, onSave, onClose, extra }) {
   const [v, setV] = useState(value || "");
   return (
     <div className="calm fixed inset-0 z-[80] bg-black/60 flex items-end" onClick={onClose}>
-      <div className="w-full bg-[var(--c-bg)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[28px] p-5 space-y-3.5 shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="erp-rename"
+      <div className="w-full bg-[var(--c-bg)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[20px] p-5 space-y-3.5 shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="erp-rename"
         style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
         <p className="text-[18px] font-extrabold text-[var(--c-ink)] m-0" dir="auto">{title}</p>
         <input autoFocus value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && v.trim()) onSave(v.trim()); }} className={field + " text-base"} dir="auto" data-testid="erp-rename-input" />
@@ -104,17 +104,17 @@ export function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, shar
       </div>
       <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-3 px-3" data-testid="erp-tables">
         {sys.tables.map((t) => (
-          <button key={t.id} {...lp.bind(t)} onClick={() => { if (lp.fired.current) return; if (t.id === (table && table.id)) { setRen({ kind: "table", tid: t.id, value: t.name }); return; } setTid(t.id); if (tab === "more") setTab("data"); }} data-testid="erp-table-chip" className={`shrink-0 min-h-[40px] h-10 px-4 rounded-full text-[13.5px] font-extrabold whitespace-nowrap border transition-colors duration-150 ${t.id === (table && table.id) ? "bg-[var(--c-acc-2)] border-transparent text-[var(--c-on-acc-2)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`} dir="auto">
+          <button key={t.id} {...lp.bind(t)} onClick={() => { if (lp.fired.current) return; if (t.id === (table && table.id)) { setRen({ kind: "table", tid: t.id, value: t.name }); return; } setTid(t.id); if (tab === "more") setTab("data"); }} data-testid="erp-table-chip" className={`shrink-0 min-h-[40px] h-10 px-4 rounded-full text-[13.5px] font-extrabold whitespace-nowrap border transition-colors duration-150 ${t.id === (table && table.id) ? "bg-[var(--c-soft)] border-[var(--c-acc)] text-[var(--c-acc)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`} dir="auto">
             {t.name} <span className="opacity-75 tabular-nums">{(sys.rows[t.id] || []).length}</span></button>))}
         <button onClick={() => { const r = apply([{ op: "addTable", table: tr("New table"), fields: [{ name: tr("Name"), type: "text" }] }]); if (r.done.length) { setTid(r.sys.tables[r.sys.tables.length - 1].id); setTab("design"); } }}
           className="shrink-0 w-10 h-10 grid place-items-center rounded-full border border-dashed border-[var(--c-mut)] text-[var(--c-mut)] hover:text-[var(--c-acc)] hover:border-[var(--c-acc)]" title={tr("Add a table")} data-testid="erp-add-table"><Plus size={16} /></button>
       </div>
       <p className="text-[11px] text-[var(--c-mut)] -mt-1">{tr("Tap the selected table again (or hold any table) to rename it.")}</p>
-      <div className="grid grid-cols-3 gap-1 rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-1">
+      <div className="grid grid-cols-3 gap-1 rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-1">
         {[["data", "Data", Database], ["design", "Design", Wrench], ["queries", "Queries", Search], ["forms", "Forms", FileText], ["summary", "Summary", BarChart3], ["more", "More", KeyRound]].map(([k, l, I]) => (
-          <button key={k} onClick={() => setTab(k)} data-testid={"erp-tab-" + k} className={`min-h-[44px] h-11 rounded-full text-[13px] font-extrabold flex items-center justify-center gap-1.5 transition-colors duration-150 ${tab === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}><I size={15} />{tr(l)}</button>))}
+          <button key={k} onClick={() => setTab(k)} data-testid={"erp-tab-" + k} className={`min-h-[44px] h-11 rounded-full text-[13px] font-extrabold flex items-center justify-center gap-1.5 transition-colors duration-150 ${tab === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}><I size={15} />{tr(l)}</button>))}
       </div>
-      {!table ? <p className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-6 text-center text-[14px] font-semibold text-[var(--c-mut)]">{tr("No tables — add one with +.")}</p>
+      {!table ? <p className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-6 text-center text-[14px] font-semibold text-[var(--c-mut)]">{tr("No tables — add one with +.")}</p>
         : tab === "data" ? <DataTab sys={sys} table={table} setSys={setSys} llm={modelReady ? llm : null} flash={flash} goMore={() => setTab("more")} />
         : tab === "design" ? <DesignTab sys={sys} table={table} apply={apply} llm={modelReady ? llm : null} flash={flash} />
         : tab === "queries" ? <QueriesTab sys={sys} setSys={setSys} llm={modelReady ? llm : null} flash={flash} />
@@ -149,7 +149,7 @@ function DataTab({ sys, table, setSys, llm, flash, goMore }) {
       {forms.length ? (
         <div className="flex gap-1.5 overflow-x-auto" data-testid="erp-form-pick">
           <span className="text-[11px] text-[var(--c-mut)] self-center shrink-0">{tr("New record with:")}</span>
-          {[{ id: null, title: tr("All fields") }, ...forms].map((x) => <button key={x.id || "all"} onClick={() => setFormId(x.id)} className={`shrink-0 min-h-[40px] h-10 px-3.5 text-[12.5px] font-extrabold rounded-full border transition-colors duration-150 ${formId === x.id ? "bg-[var(--c-acc-2)] border-transparent text-[var(--c-on-acc-2)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{x.title}</button>)}
+          {[{ id: null, title: tr("All fields") }, ...forms].map((x) => <button key={x.id || "all"} onClick={() => setFormId(x.id)} className={`shrink-0 min-h-[40px] h-10 px-3.5 text-[12.5px] font-extrabold rounded-full border transition-colors duration-150 ${formId === x.id ? "bg-[var(--c-soft)] border-[var(--c-acc)] text-[var(--c-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{x.title}</button>)}
         </div>) : null}
       <div className="flex gap-2">
         <label className="relative flex-1 min-w-0"><Search size={16} className="absolute start-3.5 top-3.5 text-[var(--c-mut)]" />
@@ -157,7 +157,7 @@ function DataTab({ sys, table, setSys, llm, flash, goMore }) {
         <button className={primary + " flex items-center gap-1 shrink-0"} onClick={() => (full ? goMore() : setEditing("new"))} data-testid="erp-add-row"><Plus size={14} />{tr("Record")}</button>
       </div>
       {full ? <p className="text-[12px] text-[var(--c-warn)] flex items-center gap-1"><Lock size={12} />{tr("The trial keeps {n} records per table — activate this system to add more.", { n: E.FREE_ROWS })}</p> : null}
-      <div className="overflow-x-auto rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-grid">
+      <div className="overflow-x-auto rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-grid">
         <table className="text-[12px] text-[var(--c-ink)] min-w-full">
           <thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11.5px] tracking-[0.02em]"><tr>
             {shown.map((f) => <th key={f.id} {...lpF.bind(f)} onClick={() => { if (lpF.fired.current) return; toggleSort(f.id); }} className={"font-extrabold px-3.5 py-3 whitespace-nowrap cursor-pointer select-none " + (f.type === "number" || f.type === "money" || f.type === "formula" ? "text-end" : "text-start")} dir="auto" data-testid="erp-col">
@@ -231,7 +231,7 @@ function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone, form }) {
       <div className="flex items-center gap-2"><button onClick={onDone} className="min-h-[44px] text-[var(--c-mut)] hover:text-[var(--c-ink)] text-[14px] font-bold flex items-center gap-1"><ChevronLeft size={18} className="rtl:rotate-180" />{table.name}</button>
         <span className="text-[12px] text-[var(--c-mut)] ms-auto">{row ? tr("Edit record") : tr("New record")}</span></div>
       {llm && !row ? (
-        <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 space-y-2">
+        <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 space-y-2">
           <textarea value={aiText} onChange={(e) => setAiText(e.target.value)} rows={2} dir="auto" className={field} data-testid="erp-ai-fill-text"
             placeholder={tr("Say it in a sentence — e.g. “LTM 1100 for Orascom at New Capital from 1 to 5 October, 25,000 a day”")} />
           <button className={ghost + " flex items-center gap-1"} disabled={aiBusy || aiText.trim().length < 5} onClick={fillAI} data-testid="erp-ai-fill">
@@ -253,7 +253,7 @@ function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone, form }) {
       </div>
       {row && confirmDel && used ? <p className="text-[12px] text-[var(--c-warn)]">{tr("{n} records in other tables link to this one; they will show “(deleted)”.", { n: used })}</p> : null}
       {row ? E.relatedRows(sys, table.id, row._id).map((g) => (
-        <div key={g.table.id + g.field} className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5" data-testid="erp-related">
+        <div key={g.table.id + g.field} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5" data-testid="erp-related">
           <p className="text-[12px] text-[var(--c-mut)] mb-1" dir="auto">{tr("Linked {t} ({n})", { t: g.table.name, n: g.rows.length })} <span className="text-[var(--c-mut)]">· {g.field}</span></p>
           {g.rows.slice(0, 20).map((r) => <p key={r._id} className="text-[13px] text-[var(--c-ink)] truncate" dir="auto">• {E.displayOf(g.table, r)}</p>)}
         </div>)) : null}
@@ -262,8 +262,8 @@ function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone, form }) {
 }
 
 export function FieldInput({ sys, f, value, set, computed }) {
-  if (f.type === "formula") return <div className="px-3.5 py-2.5 min-h-[44px] text-[14px] font-semibold text-[var(--c-ink)] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[14px]" dir="ltr">{computed != null ? E.show(sys, { type: "number" }, computed) : "—"}</div>;
-  if (f.type === "auto") return <div className="px-3.5 py-2.5 min-h-[44px] text-[14px] font-semibold text-[var(--c-ink)] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[14px]">{value || tr("(given when saved)")}</div>;
+  if (f.type === "formula") return <div className="px-3.5 py-2.5 min-h-[44px] text-[14px] font-semibold text-[var(--c-ink)] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[12px]" dir="ltr">{computed != null ? E.show(sys, { type: "number" }, computed) : "—"}</div>;
+  if (f.type === "auto") return <div className="px-3.5 py-2.5 min-h-[44px] text-[14px] font-semibold text-[var(--c-ink)] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[12px]">{value || tr("(given when saved)")}</div>;
   if (f.type === "bool") return <button type="button" onClick={() => set(!value)} className={`min-h-[44px] px-4 py-2 rounded-full text-[14px] font-extrabold border transition-colors duration-150 ${value ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-mut)]"}`}>{value ? tr("Yes") : tr("No")}</button>;
   if (f.type === "choice") return (
     <select value={value} onChange={(e) => set(e.target.value)} className={field} dir="auto">
@@ -303,7 +303,7 @@ function DesignTab({ sys, table, apply, llm, flash }) {
   const rels = E.relationships(sys);
   return (
     <div className="space-y-3" data-testid="erp-design">
-      <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5" data-testid="erp-relationships">
+      <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5" data-testid="erp-relationships">
         <p className="text-[12px] text-[var(--c-ink)] font-medium mb-1">{tr("Connections between tables")}</p>
         {rels.length ? rels.map((r, i) => <p key={i} className="text-[12px] text-[var(--c-mut)]" dir="auto">{r.fromName} · <span className="text-[var(--c-ink)]">{r.fieldName}</span> → <span className="text-[var(--c-acc)]">{r.toName}</span></p>)
           : <p className="text-[12px] text-[var(--c-mut)]">{tr("None yet — add a field of type “Link to another table”, or ask below: “connect Jobs to Customers”.")}</p>}
@@ -314,14 +314,14 @@ function DesignTab({ sys, table, apply, llm, flash }) {
           }}><Sparkles size={13} />{tr("Connect the tables for me ({n})", { n: ops.length })}</button>) : null; })()}
       </div>
       {llm ? (
-        <div className="rounded-[18px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3.5 space-y-2">
+        <div className="rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3.5 space-y-2">
           <p className="text-[12px] text-[var(--c-acc)] flex items-center gap-1"><Sparkles size={13} />{tr("Say the change — you'll see it before anything changes")}</p>
           <textarea value={ask} onChange={(e) => setAsk(e.target.value)} rows={2} dir="auto" className={field} data-testid="erp-ask"
             placeholder={tr("e.g. add the driver's phone to Jobs, and a Paid date to Invoices")} />
           <button className={primary + " flex items-center gap-1"} disabled={busy || ask.trim().length < 4} onClick={propose} data-testid="erp-ask-go">
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}{busy ? tr("Working it out…") : tr("Show me the change")}</button>
           {proposal ? (
-            <div className="rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[13px] space-y-1" data-testid="erp-proposal">
+            <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-[13px] space-y-1" data-testid="erp-proposal">
               {proposal.done.length ? proposal.done.map((d, i) => <p key={i} className="text-[var(--c-ink)] flex gap-1.5"><Check size={14} className="text-[var(--c-acc)] shrink-0 mt-0.5" /><span dir="auto">{d}</span></p>)
                 : <p className="text-[var(--c-mut)]">{tr("No design change found in that.")}</p>}
               {proposal.errors.map((d, i) => <p key={"e" + i} className="text-[var(--c-warn)] flex gap-1.5"><AlertTriangle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{d}</span></p>)}
@@ -340,7 +340,7 @@ function DesignTab({ sys, table, apply, llm, flash }) {
 
       <div className="space-y-2">
         {table.fields.map((f, i) => (
-          <div key={f.id} className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 space-y-2" data-testid="erp-field">
+          <div key={f.id} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 space-y-2" data-testid="erp-field">
             <div className="flex gap-1.5 items-center">
               <input defaultValue={f.name} key={f.id + f.name} onBlur={(e) => e.target.value.trim() && e.target.value.trim() !== f.name && apply([{ op: "renameField", table: table.id, field: f.id, to: e.target.value.trim() }])}
                 className={field + " flex-1"} dir="auto" data-testid="erp-field-name" />
@@ -371,7 +371,7 @@ function DesignTab({ sys, table, apply, llm, flash }) {
       </div>
 
       {adding ? (
-        <div className="rounded-[18px] border border-[var(--c-acc)]/40 bg-[var(--c-surf)] p-3.5 space-y-2" data-testid="erp-new-field">
+        <div className="rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-surf)] p-3.5 space-y-2" data-testid="erp-new-field">
           <input value={adding.name} onChange={(e) => setAdding({ ...adding, name: e.target.value })} placeholder={tr("Field name")} className={field} dir="auto" data-testid="erp-new-field-name" autoFocus />
           {adding.replace ? null : <select value={adding.type} onChange={(e) => setAdding({ ...adding, type: e.target.value })} className={field} data-testid="erp-new-field-type">
             {Object.entries(E.FIELD_TYPES).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select>}
@@ -403,7 +403,7 @@ function QueryResult({ sys, res }) {
   if (!res) return null;
   if (res.error) return <p className="text-[12px] text-[var(--c-warn)]">{res.error}</p>;
   if (res.groups) return (
-    <div className="overflow-x-auto rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-query-result">
+    <div className="overflow-x-auto rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-query-result">
       <table className="text-[12px] text-[var(--c-ink)] min-w-full"><thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11.5px] tracking-[0.02em]"><tr>
         <th className="text-start px-2.5 py-2" dir="auto">{res.groupBy.name}</th><th className="text-end px-2.5 py-2">{tr("Count")}</th>{res.sumField ? <th className="text-end px-2.5 py-2" dir="auto">{res.sumField.name}</th> : null}</tr></thead>
         <tbody>{res.groups.map((g) => <tr key={g.group} className="border-t border-[var(--c-ln)]"><td className="px-3.5 py-2.5" dir="auto">{g.group}</td><td className="px-3.5 py-2.5 text-end tabular-nums">{g.count}</td>
@@ -412,7 +412,7 @@ function QueryResult({ sys, res }) {
   const shown = res.table.fields.slice(0, 8), tot = E.totals(res.table, res.rows);
   return (
     <div className="space-y-1">
-      <div className="overflow-x-auto rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-query-result">
+      <div className="overflow-x-auto rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="erp-query-result">
         <table className="text-[12px] text-[var(--c-ink)] min-w-full"><thead className="bg-[var(--c-surf-2)] text-[var(--c-mut)] text-[11.5px] tracking-[0.02em]"><tr>{shown.map((f) => <th key={f.id} className="text-start px-2.5 py-2 whitespace-nowrap" dir="auto">{f.name}</th>)}</tr></thead>
           <tbody>{res.rows.slice(0, 200).map((r) => <tr key={r._id} className="border-t border-[var(--c-ln)]">{shown.map((f) => <td key={f.id} className="px-3.5 py-2.5 whitespace-nowrap" dir="auto">{f.type === "bool" ? (r[f.id] ? "✓" : "") : E.show(sys, f, r[f.id])}</td>)}</tr>)}
             {!res.rows.length ? <tr><td colSpan={shown.length} className="px-3 py-4 text-center text-[var(--c-mut)]">{tr("No records match")}</td></tr> : null}</tbody>
@@ -438,7 +438,7 @@ function QueriesTab({ sys, setSys, llm, flash }) {
   return (
     <div className="space-y-3" data-testid="erp-queries">
       {llm ? (
-        <div className="rounded-[18px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3.5 space-y-2">
+        <div className="rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3.5 space-y-2">
           <p className="text-[12px] text-[var(--c-acc)] flex items-center gap-1"><Sparkles size={13} />{tr("Ask your data — like an Access query, in words")}</p>
           <textarea value={ask} onChange={(e) => setAsk(e.target.value)} rows={2} dir="auto" className={field} data-testid="erp-query-ask"
             placeholder={tr("e.g. unpaid invoices over 50,000 · jobs this month by customer · top 5 cranes by revenue")} />
@@ -455,7 +455,7 @@ function QueriesTab({ sys, setSys, llm, flash }) {
         <div className="space-y-1.5">
           <p className="text-[12px] text-[var(--c-mut)]">{tr("Saved queries")}</p>
           {saved.map((q) => (
-            <div key={q.id} className="flex items-center gap-2 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] px-3.5 py-2.5 min-h-[52px]" data-testid="erp-saved-query">
+            <div key={q.id} className="flex items-center gap-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] px-3.5 py-2.5 min-h-[52px]" data-testid="erp-saved-query">
               <button className="flex-1 text-start text-[13px] text-[var(--c-ink)] truncate" dir="auto" onClick={() => setCur({ query: q, res: E.runQuery(sys, q), saved: true })}>{q.title}</button>
               <button className="w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)]" onClick={() => setSys(E.removeSaved(sys, "queries", q.id))} title={tr("Delete")}><Trash2 size={14} /></button>
             </div>))}
@@ -483,7 +483,7 @@ function FormsTab({ sys, setSys, llm, flash, goTable }) {
   return (
     <div className="space-y-3" data-testid="erp-forms">
       {llm ? (
-        <div className="rounded-[18px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3.5 space-y-2">
+        <div className="rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3.5 space-y-2">
           <p className="text-[12px] text-[var(--c-acc)] flex items-center gap-1"><Sparkles size={13} />{tr("Describe a form — the fields to fill, in order")}</p>
           <textarea value={ask} onChange={(e) => setAsk(e.target.value)} rows={2} dir="auto" className={field} data-testid="erp-form-ask"
             placeholder={tr("e.g. a quick job form for the site: customer, crane, start date, days — status New")} />
@@ -491,7 +491,7 @@ function FormsTab({ sys, setSys, llm, flash, goTable }) {
             {busy ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}{busy ? tr("Working it out…") : tr("Make the form")}</button>
         </div>) : <p className="text-[12px] text-[var(--c-mut)]">{tr("Load a model to make forms in words.")}</p>}
       {draft ? (
-        <div className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 space-y-1.5" data-testid="erp-form-draft">
+        <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 space-y-1.5" data-testid="erp-form-draft">
           <p className="text-[15px] text-[var(--c-ink)] font-extrabold m-0" dir="auto">{draft.title} <span className="text-[var(--c-mut)] text-[12px]">· {tname(draft.table)}</span></p>
           {draft.fields.map((id, i) => <p key={id} className="text-[13px] text-[var(--c-ink)]" dir="auto">{i + 1}. {fname(draft)(id)}{draft.defaults[id] != null ? <span className="text-[var(--c-mut)]"> = {String(draft.defaults[id])}</span> : null}</p>)}
           <div className="flex gap-2 pt-1">
@@ -500,7 +500,7 @@ function FormsTab({ sys, setSys, llm, flash, goTable }) {
           </div>
         </div>) : null}
       {forms.map((f) => (
-        <div key={f.id} className="flex items-center gap-2 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] px-3.5 py-2.5 min-h-[52px]" data-testid="erp-saved-form">
+        <div key={f.id} className="flex items-center gap-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] px-3.5 py-2.5 min-h-[52px]" data-testid="erp-saved-form">
           <button className="flex-1 text-start min-w-0" onClick={() => goTable(f.table)}><span className="block text-[13px] text-[var(--c-ink)] truncate" dir="auto">{f.title}</span>
             <span className="block text-[11px] text-[var(--c-mut)] truncate" dir="auto">{tname(f.table)} · {f.fields.map(fname(f)).join(", ")}</span></button>
           <button className="w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)]" onClick={() => setSys(E.removeSaved(sys, "forms", f.id))} title={tr("Delete")}><Trash2 size={14} /></button>
@@ -531,7 +531,7 @@ function SummaryTab({ sys, table }) {
           <select value={s} onChange={(e) => setS(e.target.value)} className={field}><option value="">{tr("Count only")}</option>{summable.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select></label>
       </div>
       {list.map((x) => (
-        <div key={x.group} className="rounded-[18px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="erp-summary-row">
+        <div key={x.group} className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="erp-summary-row">
           <div className="flex justify-between text-[13px] gap-2"><span className="text-[var(--c-ink)] truncate" dir="auto">{x.group}</span>
             <span className="text-[var(--c-ink)] tabular-nums shrink-0">{s ? E.show(sys, sf.type === "formula" ? { type: "number" } : sf, x.sum) : ""} <span className="text-[var(--c-mut)]">· {x.count}</span></span></div>
           <div className="h-1.5 rounded bg-[var(--c-surf-2)] mt-1.5"><div className="h-1.5 rounded bg-[var(--c-acc)]" style={{ width: `${Math.round(((s ? Math.abs(x.sum) : x.count) / max) * 100)}%` }} /></div>
@@ -652,10 +652,10 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
   const requestText = tr("Attune Business — please activate my system “{name}”. Request code: {code}", { name: sys.name, code: req });
   return (
     <div className="space-y-3" data-testid="erp-more">
-      <div className="rounded-[18px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3 space-y-2" data-testid="erp-connect">
+      <div className="rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3 space-y-2" data-testid="erp-connect">
         <p className="text-[15px] font-extrabold text-[var(--c-ink)] m-0">{tr("Combine your data")}</p>
         {sugs.length ? sugs.slice(0, 4).map((g) => (
-          <div key={g.tid + g.fid} className="rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3 space-y-1.5" data-testid="erp-link-sug">
+          <div key={g.tid + g.fid} className="rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3 space-y-1.5" data-testid="erp-link-sug">
             <p className="text-[12.5px] text-[var(--c-ink)]">{tr("{t} › {f} holds {to} names ({m} of {n} found).", { t: g.table, f: g.field, to: g.to, m: g.matched, n: g.total })}{g.missing.length ? " " + tr("Not in {to} yet: {x}", { to: g.to, x: g.missing.slice(0, 4).join(", ") + (g.missing.length > 4 ? "…" : "") }) : ""}</p>
             <button className={primary + " text-[12.5px]"} data-testid="erp-link-go" onClick={() => { const r = E.linkColumn(sys, g); if (!r.done.length) { flash(r.errors[0] || tr("Couldn't link them")); return; }
               setSys(r.sys, tr("Linked: {t} › {f} → {to}", { t: g.table, f: g.field, to: g.to }) + (r.added ? " · " + tr("{n} added to {to}", { n: r.added, to: g.to }) : "")); }}>{tr("Link them")}</button>
@@ -665,7 +665,7 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
         {cv ? (
           <div className="space-y-2" data-testid="erp-combined-view">
             <p className="text-[12px] text-[var(--c-mut)]">{tr("{n} records · with {l}", { n: cv.rows.length, l: cv.linked.join(", ") })}</p>
-            <div className="overflow-x-auto att-scroll rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] max-h-80">
+            <div className="overflow-x-auto att-scroll rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] max-h-80">
               <table className="text-[12px] text-[var(--c-ink)]"><thead className="bg-[var(--c-surf-2)] sticky top-0"><tr>{cv.header.map((h) => <th key={h} className="px-3 py-2.5 text-start whitespace-nowrap font-extrabold text-[11.5px] tracking-[0.02em] text-[var(--c-mut)]">{h}</th>)}</tr></thead>
                 <tbody>{cv.rows.slice(0, 300).map((r, i) => <tr key={i} className="border-t border-[var(--c-ln)]">{r.map((v, j) => <td key={j} className="px-3 py-2 whitespace-nowrap" dir="auto">{v}</td>)}</tr>)}</tbody></table>
             </div>
@@ -673,7 +673,7 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
           </div>) : null}
       </div>
 
-      <div className={`rounded-[22px] border p-4 space-y-2 ${active ? "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10" : "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10"}`} data-testid="erp-licence">
+      <div className={`rounded-[20px] border p-4 space-y-2 ${active ? "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10" : "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10"}`} data-testid="erp-licence">
         <p className="text-[15px] font-extrabold flex items-center gap-1.5 text-[var(--c-ink)] m-0"><KeyRound size={15} />{active ? tr("Activated") : tr("Trial — {n} records per table", { n: E.FREE_ROWS })}</p>
         {active ? <p className="text-[12px] text-[var(--c-mut)]">{tr("This system is paid for: no limits. The design stays yours to change any time.")}</p> : <>
           <p className="text-[12px] text-[var(--c-ink)]">{tr("Each system is paid for once. Designing and trying it is free; activation removes the record limit for this system.")}</p>
@@ -692,7 +692,7 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
         </>}
       </div>
 
-      <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-2">
+      <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-2">
         <p className="text-[15px] font-extrabold text-[var(--c-ink)] m-0">{tr("Import & export")}</p>
         <p className="text-[12px] text-[var(--c-mut)]">{tr("Bring a sheet from Excel or Access (saved as .xlsx or .csv) in as a new table — the column types are worked out for you.")}</p>
         <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xlsm,.xls,.json" className="hidden" onChange={pick} data-testid="erp-import-file" />
@@ -701,7 +701,7 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
           <button className={ghost + " flex items-center gap-1"} onClick={exportCSV} data-testid="erp-export-csv"><Download size={14} />{tr("{t} as CSV", { t: table.name })}</button>
           {saveFile ? <button className={ghost + " flex items-center gap-1"} onClick={exportAll}><Download size={14} />{tr("Whole system")}</button> : null}
         </div>
-        <div className="rounded-[18px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3.5 space-y-2">
+        <div className="rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-3.5 space-y-2">
           <p className="text-[12px] text-[var(--c-acc)]">{tr("Give it to your team as an app: one file with all the data inside — it opens in any phone or computer browser, no Attune needed. When something needs changing, open the file here (Business → Open an app file), ask the AI, and send the new app back.")}</p>
           <div className="flex flex-wrap gap-2">
             <button className={primary + " flex items-center gap-1"} onClick={exportApp} data-testid="erp-export-app"><Download size={14} />{tr("Export as an app")}</button>
@@ -709,7 +709,7 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
           </div>
         </div>
         {imp ? (
-          <div className="rounded-[18px] border border-[var(--c-acc)]/40 bg-[var(--c-bg)] p-3.5 space-y-2" data-testid="erp-import">
+          <div className="rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-bg)] p-3.5 space-y-2" data-testid="erp-import">
             <p className="text-[13px] text-[var(--c-ink)]">{tr("{n} rows, {c} columns: {cols}", { n: imp.rows.length, c: imp.header.length, cols: imp.header.slice(0, 8).join(", ") })}</p>
             <div className="flex flex-wrap gap-2">
               <button className={primary} data-testid="erp-import-new" onClick={() => { const r = E.tableFromData(sys, imp.name, imp.header, imp.rows);
@@ -725,7 +725,7 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
           </div>) : null}
       </div>
 
-      <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-2">
+      <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-2">
         <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("System name")}</span>
           <input defaultValue={sys.name} key={sys.name} onBlur={(e) => e.target.value.trim() && e.target.value.trim() !== sys.name && setSys({ ...sys, name: e.target.value.trim(), updated: Date.now() }, tr("Saved"))} className={field} dir="auto" /></label>
         {onDelete ? <button className={`${btn} border ${confirmDel ? "border-[var(--c-neg)]/50 bg-[var(--c-neg)]/15 text-[var(--c-neg)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"} flex items-center gap-1`} data-testid="erp-delete-system"

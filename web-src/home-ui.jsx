@@ -6,6 +6,7 @@
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useState } from "react";
+import { EmptyStart } from "./ui-kit.jsx";
 import { Paperclip, MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
 import { nowCard, homeNumbers, noticed, onThisDay, weekRhythm } from "./home-now.js";
 import { ReportTiles, WeekChart } from "./report-ui.jsx";   // v7.0 My report (Gemini, Direction 2)
@@ -52,6 +53,13 @@ const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pd
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
 const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
+// v8.7 (V-D): nothing written anywhere yet — no money, food, reminders, people & plans, dates or agents
+const freshApp = () => { try {
+  const j = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+  const n = (v, k) => (v ? (Array.isArray(v) ? v.length : Array.isArray(v[k]) ? v[k].length : Object.keys(v[k] || {}).length) : 0);
+  return !n(j("ledger.v3"), "txns") && !n(j("attune:fit:v1"), "days") && !n(j("attune:reminders:v1"), "items") && !n(j("attune:life:v1"), "items")
+    && !n(j("attune:radar:v1"), "items") && !n(j("attune:agents:v1"), "agents");
+} catch (e) { return false; } };
 export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null, trial = null }) {
   const [text, setText] = useState("");
   // v6.48 Chat runs the app (CHAT_RUNS_APP.md, option A): "/" commands, files, the two box options, the answer card, the jobs
@@ -166,7 +174,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const pickAsk = (kind) => { const a = panel; K.savePrefs(K.learn(K.loadPrefs(), a.sig, kind)); let o = null; try { o = cmdRoute(a.text, { files, api: cmd.api, kind }); } catch (e) {} show(o, a.text); };
   // Fleet & rentals is a view inside Business: open Business, then ask it for the Fleet view (as a shared crane order does)
   const openLine = (m) => { if (!m) return; if (m !== "fleet-rentals") return navTo(m); navTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "fleet" })), 80); };
-  const date = now.toLocaleDateString(ar ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" });
+  const date = now.toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "long" });
   const ICON = { scout: Binoculars, learn: GraduationCap, care: Pill };
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
   return (
@@ -182,7 +190,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           <div className="min-w-0"><h2 className="text-[20px] font-black m-0 tracking-tight">{tr("My report")}</h2><p className="c-sub m-0 text-[12px]">{date}</p></div></div>
       ) : minimal ? (
         /* v6.43 option 1 (Ali): one big box — say anything, Attune does it in every app it touches */
-        <div className="rounded-[26px] p-4 space-y-3" style={{ background: "var(--c-surf)", border: "1.5px solid var(--c-acc)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
+        <div className="rounded-[20px] p-4 space-y-3" style={{ background: "var(--c-surf)", border: "1.5px solid var(--c-acc)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
           <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} dir="auto" data-testid="home-ask" rows={2}
             placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : cmd ? tr("Type / for a command, or just say it…") : tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
           {cmd ? <Attached files={files} onRemove={(i) => setFiles((f) => f.filter((_, k) => k !== i))} /> : null}
@@ -232,7 +240,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {!rep && trial ? <TrialLine trial={trial} /> : null}
       {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
-      {now1 && !rep ? <div className="rounded-[22px] p-4 space-y-2.5" style={{ boxShadow: "0 4px 14px rgba(16,32,28,.16)", background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
+      {now1 && !rep ? <div className="rounded-[20px] p-4 space-y-2.5" style={{ boxShadow: "0 4px 14px rgba(16,32,28,.16)", background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
         <p className="m-0 text-[11.5px] font-extrabold tracking-wide opacity-90">{tr("RIGHT NOW")}{now1.sub ? " · " + now1.sub : ""}</p>
         <button onClick={() => openLine(now1.open)} className="block w-full text-start text-[17px] font-extrabold leading-snug" style={{ color: "inherit" }} dir="auto" data-testid="home-now-title">{now1.title}</button>
         <div className="flex gap-2 flex-wrap">{now1.actions.map((a, i) => (
@@ -325,13 +333,16 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
                 <span className="block text-[11px] font-extrabold tracking-wide" style={{ color: LINE_COL[x.app] || "var(--c-acc)" }}>{tr(LINE_APP[x.app] || x.app).toUpperCase()}</span>
                 <b className="block text-[14px] truncate" dir="auto">{x.title}</b>{x.sub ? <span className="c-sub block text-[12.5px] truncate" dir="auto">{x.sub}</span> : null}</span>
             </button>))}
-        </div> : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you ate, spent or need to remember.")}</p>}
+        </div> : freshApp() ? <EmptyStart testid="home-empty" title={tr("Your day starts here")} sub={tr("Write anything the way you'd say it — Attune puts it where it belongs.")}
+            examples={ar ? ["غدا 150، تاكسي 60", "أحمد عليه 500", "فكرني بكرة الساعة 9"] : ["lunch 150, taxi 60", "Ahmed owes me 500", "remind me tomorrow at 9"]}
+            onPick={(x) => { setText(x); try { const el = document.querySelector("[data-testid=home-box] textarea"); if (el) el.focus(); } catch (e) {} }} />
+          : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you ate, spent or need to remember.")}</p>}
       </div>
-      {!rep ? <button onClick={() => setRep(true)} className="w-full min-h-[50px] rounded-[18px] px-4 flex items-center justify-between gap-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="home-see-report">
+      {!rep ? <button onClick={() => setRep(true)} className="w-full min-h-[50px] rounded-[20px] px-4 flex items-center justify-between gap-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="home-see-report">
         <span className="font-extrabold text-[14px]">{tr("See all")}</span>
         <span className="c-sub text-[12.5px] inline-flex items-center gap-1.5">{tr("My report")}<ChevronRight size={16} className="c-acc rtl:rotate-180" /></span></button> : null}
       {/* v6.46 Home A: one thing Attune noticed (home-now.js) — in My report */}
-      {seen && rep ? <button onClick={() => (seen.k === "past" && cmd ? cmd.openRecord({ id: seen.id }) : openLine(seen.open))} className="w-full rounded-[18px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
+      {seen && rep ? <button onClick={() => (seen.k === "past" && cmd ? cmd.openRecord({ id: seen.id }) : openLine(seen.open))} className="w-full rounded-[20px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
         <Sparkles size={17} className="c-acc shrink-0 mt-0.5" /><span className="text-[13.5px] leading-snug" dir="auto">{seen.text}</span></button> : null}
       </>}
     </div>);

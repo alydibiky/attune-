@@ -58,7 +58,7 @@ function Insights({ sys }) {
   return <div className="space-y-3" data-testid="biz-insights">
     {I.series.some((x) => x.total) ? <div className={card + " p-4"} data-testid="biz-insights-trend">
       <p className="text-[15px] font-extrabold mb-3 m-0">{tr("The last 6 months")}{I.change != null ? <span className={"ms-2 font-semibold " + (I.change >= 0 ? "text-[var(--c-pos)]" : "text-[var(--c-neg)]")}>{I.change >= 0 ? "+" : ""}{I.change}% {tr("vs last month")}</span> : null}</p>
-      <div className="flex items-end gap-2 h-28 border-b border-[var(--c-ln)] pb-1">{I.series.map((x, i) => <div key={x.ym} className="flex-1 flex flex-col items-center justify-end gap-1 h-full"><span className="w-full max-w-[44px] rounded-t-[8px]" style={{ height: Math.max(2, (x.total / top) * 80), background: "var(--c-acc)", opacity: i === I.series.length - 1 ? 1 : 0.55 }} /><span className={"text-[11px] font-bold " + muted}>{tr(M[+x.ym.slice(5, 7) - 1])}</span></div>)}</div>
+      <div className="flex items-end gap-2 h-28 border-b border-[var(--c-ln)] pb-1">{I.series.map((x, i) => <div key={x.ym} className="flex-1 flex flex-col items-center justify-end gap-1 h-full"><span className="w-full max-w-[44px] rounded-t-[12px]" style={{ height: Math.max(2, (x.total / top) * 80), background: "var(--c-acc)", opacity: i === I.series.length - 1 ? 1 : 0.55 }} /><span className={"text-[11px] font-bold " + muted}>{tr(M[+x.ym.slice(5, 7) - 1])}</span></div>)}</div>
       <p className={"text-[12.5px] mt-2 m-0 " + muted}>{tr("This month")}: <b className="tabular-nums text-[var(--c-ink)]" dir="ltr">{money(sys, I.thisMonth)}</b></p></div> : null}
     {I.top.length ? <div className={card + " p-4"} data-testid="biz-insights-top"><p className="text-[15px] font-extrabold mb-1.5 m-0">{tr("Top this year")}</p>
       {I.top.map((x, i) => <p key={i} className="flex justify-between gap-2 text-[13.5px] py-2 m-0 border-t border-[var(--c-ln)] first-of-type:border-t-0"><span className="truncate font-semibold" dir="auto">{i + 1}. {x.name} <span className={muted}>· {tr("{n} records", { n: x.count })}</span></span><b className="tabular-nums shrink-0" dir="ltr">{money(sys, x.total)}</b></p>)}</div> : null}
@@ -141,7 +141,7 @@ function Sheet({ title, onClose, wide, children, testid }) {
   useSubBack(true, onClose);
   return (
     <div className={"calm fixed inset-0 z-[70] bg-black/60 flex " + (wide ? "items-center justify-center p-6" : "items-end")} onClick={onClose}>
-      <div className={"bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] w-full max-h-[92vh] overflow-y-auto p-5 space-y-3.5 shadow-2xl " + (wide ? "max-w-2xl rounded-[26px]" : "rounded-t-[28px] pb-8")} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" data-testid={testid}>
+      <div className={"bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] w-full max-h-[92vh] overflow-y-auto p-5 space-y-3.5 shadow-2xl " + (wide ? "max-w-2xl rounded-[20px]" : "rounded-t-[20px] pb-8")} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" data-testid={testid}>
         <div className="flex items-center gap-2 pb-1 border-b border-[var(--c-ln)]"><p className="flex-1 text-[18px] font-extrabold m-0" dir="auto">{title}</p>
           <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center shrink-0"><X size={18} /></button></div>
         {children}

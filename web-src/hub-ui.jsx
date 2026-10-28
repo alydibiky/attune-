@@ -36,7 +36,7 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false 
       {tabs.map((m) => (
         <button key={m} role="tab" aria-selected={on(m)} onClick={() => { if (m !== mode) navTo(m); }} data-testid={"hub-tab-" + m}
           className={"shrink-0 h-11 -mb-px text-[14px] whitespace-nowrap border-b-2 transition-colors duration-150 " +
-            (on(m) ? "border-[var(--c-acc-2)] text-[var(--c-ink)] font-extrabold" : "border-transparent text-[var(--c-mut)] font-bold hover:text-[var(--c-ink)]")}>
+            (on(m) ? "border-[var(--c-acc)] text-[var(--c-ink)] font-extrabold" : "border-transparent text-[var(--c-mut)] font-bold hover:text-[var(--c-ink)]")}>
           {tr(titleOf(m))}</button>))}
     </div>
     {/* v8.5 (I3 of the 27 Oct review): a row that goes on past the screen shows it — a fade and "›" at its end (tap = scroll on) */}
@@ -47,7 +47,7 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false 
       <div className="calm inline-flex gap-0.5 max-w-full overflow-x-auto no-scrollbar rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]! p-1 mb-3" data-testid="hub-parts">
         {parts.map((m) => (
           <button key={m} onClick={() => { if (m !== mode) navTo(m); }} aria-pressed={m === mode} data-testid={"hub-part-" + m}
-            className={"shrink-0 whitespace-nowrap min-h-[36px] rounded-full px-3.5 text-[13px] font-bold transition-colors duration-150 " + (m === mode ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>
+            className={"shrink-0 whitespace-nowrap min-h-[36px] rounded-full px-3.5 text-[13px] font-bold transition-colors duration-150 " + (m === mode ? "bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>
             {tr(PART_TITLE[m] || titleOf(m))}</button>))}
       </div>) : null}
     </>);

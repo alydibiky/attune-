@@ -33,14 +33,14 @@ export function PinGate({ sys, onIn, onBack, color }) {
   return (
     <section className="calm min-h-[80vh] flex flex-col items-center justify-center px-6 gap-5 bg-[var(--c-bg)] text-[var(--c-ink)]" data-testid="biz-pin">
       <button onClick={onBack} aria-label={tr("Back")} className="self-start w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center"><ChevronLeft size={20} className="rtl:rotate-180" /></button>
-      <span className="relative w-14 h-14 rounded-[18px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Lock size={24} /><i aria-hidden="true" className="absolute -top-1 -end-1 w-3.5 h-3.5 rounded-full border-2 border-[var(--c-bg)]" style={{ background: color }} /></span>
+      <span className="relative w-14 h-14 rounded-[20px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Lock size={24} /><i aria-hidden="true" className="absolute -top-1 -end-1 w-3.5 h-3.5 rounded-full border-2 border-[var(--c-bg)]" style={{ background: color }} /></span>
       <p className="text-[22px] font-black tracking-tight text-center m-0" dir="auto">{sys.name}</p>
       <p className={"text-[14px] -mt-3 " + muted}>{tr("Enter your PIN")}</p>
       <div className="flex gap-2.5 h-4" aria-hidden="true">{[0, 1, 2, 3].map((i) => <span key={i} className={"w-3.5 h-3.5 rounded-full " + (i < pin.length ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]")} />)}</div>
       {bad ? <p className="text-[13px] text-[var(--c-neg)]">{tr("Wrong PIN")}</p> : null}
       <input value={pin} onChange={(e) => { setPin(e.target.value.replace(/\D/g, "").slice(0, 8)); setBad(false); }} onKeyDown={(e) => { if (e.key === "Enter") go(pin); }} inputMode="numeric" type="password" className="sr-only" data-testid="biz-pin-input" aria-label={tr("PIN")} autoFocus />
       <div className="grid grid-cols-3 gap-3 w-64" dir="ltr">{["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map((d, i) => d === "" ? <span key={i} /> :
-        <button key={i} onClick={() => (d === "⌫" ? setPin(pin.slice(0, -1)) : press(d))} className="h-14 rounded-[18px] bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] text-[20px] font-black tabular-nums hover:border-[var(--c-acc)] transition-colors duration-150">{d}</button>)}</div>
+        <button key={i} onClick={() => (d === "⌫" ? setPin(pin.slice(0, -1)) : press(d))} className="h-14 rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] text-[20px] font-black tabular-nums hover:border-[var(--c-acc)] transition-colors duration-150">{d}</button>)}</div>
       {pin.length >= 4 ? <button className={btnP + " w-64"} onClick={() => go(pin)} data-testid="biz-pin-go">{tr("Sign in")}</button> : null}
     </section>);
 }
@@ -57,7 +57,7 @@ export function SystemTools({ sys, setSys, user, onSignIn, onClose, flash, saveF
     ["project", Download, "Export as a project", tr("A folder: the app, a phone web app, a Windows program, the data")]].filter((x) => !(site && x[0] === "project"));
   return (
     <div className={"calm fixed inset-0 z-[70] bg-black/60 flex " + (wide ? "items-center justify-center p-6" : "items-end")} onClick={onClose}>
-      <div className={"bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] w-full max-h-[92vh] overflow-y-auto p-5 space-y-3.5 shadow-2xl " + (wide ? "max-w-xl rounded-[26px]" : "rounded-t-[28px] pb-8")} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" data-testid="biz-tools">
+      <div className={"bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] w-full max-h-[92vh] overflow-y-auto p-5 space-y-3.5 shadow-2xl " + (wide ? "max-w-xl rounded-[20px]" : "rounded-t-[20px] pb-8")} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" data-testid="biz-tools">
         <div className="flex items-center gap-2 pb-1 border-b border-[var(--c-ln)]">
           {sec ? <button onClick={() => setSec(null)} aria-label={tr("Back")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center shrink-0"><ChevronLeft size={18} className="rtl:rotate-180" /></button> : null}
           <p className="flex-1 text-[18px] font-extrabold m-0">{sec ? tr(S.find((x) => x[0] === sec)[2]) : tr("Team & tools")}</p>
@@ -65,7 +65,7 @@ export function SystemTools({ sys, setSys, user, onSignIn, onClose, flash, saveF
         {user ? <p className={"text-[12.5px] " + muted}>{tr("Signed in as {n} ({r})", { n: user.name, r: roleName(user.role) })}</p> : null}
         {!sec ? S.map(([k, I, l, sub]) => (
           <button key={k} onClick={() => setSec(k)} disabled={!owner && k !== "project"} data-testid={"biz-tools-" + k} className={card + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)] disabled:opacity-50"}>
-            <span className="w-10 h-10 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><I size={18} /></span>
+            <span className="w-10 h-10 rounded-[12px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><I size={18} /></span>
             <span className="min-w-0"><span className="block font-extrabold text-[14.5px]">{tr(l)}</span><span className={"block text-[12.5px] truncate " + muted} dir="auto">{sub}</span></span></button>))
           : sec === "team" ? <Team sys={sys} setSys={setSys} flash={flash} onSignIn={onSignIn} />
           : sec === "money" ? <Money sys={sys} setSys={setSys} flash={flash} />

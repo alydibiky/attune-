@@ -23,11 +23,11 @@ export const ThemeCtx = createContext(THEMES.light);
 export const useTheme = () => useContext(ThemeCtx);
 export const themeFor = (name) => THEMES[name] || THEMES.light;
 
-export const BTN = "min-h-[44px] px-3.5 py-2 rounded-[14px] text-[13.5px] font-bold disabled:opacity-40 transition-colors duration-150 cursor-pointer";
+export const BTN = "min-h-[44px] px-3.5 py-2 rounded-[12px] text-[13.5px] font-bold disabled:opacity-40 transition-colors duration-150 cursor-pointer";
 export const btnPrimary = BTN + " bg-[var(--c-acc)] text-[var(--c-on-acc)]";
 export function btnGhost(t) { return BTN + " border " + t.line + " " + t.sub + " hover:bg-[var(--c-surf-2)]"; }
 /** What is selected: Gemini's terracotta pill. */
-export const SEL = "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent shadow-sm";
+export const SEL = "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)] shadow-sm";
 /** Status colours (one meaning each): good / due soon / overdue. */
 /** A quiet table header row (no capitals: tests read the words as written). */
 export const HEAD = "text-[11.5px] font-extrabold tracking-[0.04em] text-[var(--c-mut)] bg-[var(--c-surf-2)]";
@@ -42,7 +42,7 @@ export function Money({ v, cur, bold, className = "" }) {
 export function Card({ children, className = "", onClick, testid }) {
   const t = useTheme();
   const C = onClick ? "button" : "div";
-  return <C onClick={onClick} data-testid={testid} className={`rounded-[22px] border ${t.card} divide-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ${onClick ? "text-start w-full min-h-[44px] hover:border-[var(--c-acc)] transition-colors duration-150" : ""} ${className}`}>{children}</C>;
+  return <C onClick={onClick} data-testid={testid} className={`rounded-[20px] border ${t.card} divide-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ${onClick ? "text-start w-full min-h-[44px] hover:border-[var(--c-acc)] transition-colors duration-150" : ""} ${className}`}>{children}</C>;
 }
 /** A KPI tile: a quiet label, a big tabular number, one quiet line. */
 export function Stat({ label, value, sub, tone, onClick, testid }) {
@@ -70,7 +70,7 @@ export function Field({ label, children, hint }) {
   const t = useTheme();
   return <label className="block min-w-0"><span className={`block text-[12px] font-bold mb-1.5 ${t.sub}`}>{label}</span>{children}{hint ? <span className={`block text-[11.5px] mt-1 ${t.sub}`}>{hint}</span> : null}</label>;
 }
-const FIELD = "w-full min-w-0 min-h-[44px] rounded-[14px] border px-3.5 py-2 text-[15px] font-semibold focus:outline-none transition-colors duration-150";
+const FIELD = "w-full min-w-0 min-h-[44px] rounded-[12px] border px-3.5 py-2 text-[15px] font-semibold focus:outline-none transition-colors duration-150";
 export function Input({ value, onChange, ...p }) {
   const t = useTheme();
   return <input value={value ?? ""} onChange={(e) => onChange(e.target.value)} className={`${FIELD} ${t.input}`} {...p} />;

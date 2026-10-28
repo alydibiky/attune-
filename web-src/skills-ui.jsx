@@ -19,9 +19,9 @@ function Sheet({ title, onClose, children, footer, testid }) {
   return (
     <div className="calm att-shift fixed inset-0 z-[70] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col" data-testid={testid}>
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--c-ln)] bg-[var(--c-surf)]">
-        <button onClick={onClose} className="w-11 h-11 grid place-items-center -ms-1 rounded-[14px] text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
+        <button onClick={onClose} className="w-11 h-11 grid place-items-center -ms-1 rounded-[12px] text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
         <h2 className="text-[16px] font-extrabold text-[var(--c-ink)] flex-1 truncate m-0">{title}</h2>
-        <button onClick={onClose} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={18} /></button>
+        <button onClick={onClose} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={18} /></button>
       </div>
       <div className="flex-1 overflow-auto p-4"><div className="lg:max-w-5xl lg:mx-auto">{children}</div></div>
       {footer ? <div className="border-t border-[var(--c-ln)] bg-[var(--c-surf)] p-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}><div className="lg:max-w-5xl lg:mx-auto">{footer}</div></div> : null}
@@ -118,14 +118,14 @@ function Import({ onSave, onClose, flash }) {
       <label className={ghost + " mt-2 inline-flex items-center gap-1.5 cursor-pointer"}><Upload size={14} />{tr("Pick a file")}<input type="file" accept=".md,.txt,.json,text/plain" className="hidden" onChange={(e) => { pick(e.target.files && e.target.files[0]); e.target.value = ""; }} /></label>
       {err ? <p className="text-[12px] text-[var(--c-warn)] mt-3">{tr(err)}</p> : null}
       {sk ? (
-        <div className="mt-3 rounded-[22px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-4" data-testid="skill-import-preview">
+        <div className="mt-3 rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-4" data-testid="skill-import-preview">
           <p className="text-[13px] font-semibold text-[var(--c-ink)]">{sk.name} <span className="text-[11px] text-[var(--c-acc)]" dir="ltr">{sk.command}</span></p>
           {sk.when ? <p className="text-[12px] text-[var(--c-mut)] mt-1">{tr("Used when")}: {sk.when}</p> : null}
           <p className={lbl + " mt-3 mb-0"}>{tr("It will add this to your questions")}</p>
           <p className="text-[12.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap">{sk.instructions}</p>
           {sk.checklist ? <><p className={lbl + " mt-3 mb-0"}>{tr("Checklist")}</p><p className="text-[12.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap">{sk.checklist}</p></> : null}
           {sk.reference ? <><p className={lbl + " mt-3 mb-0"}>{tr("Facts")}</p><p className="text-[12.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap max-h-40 overflow-auto">{sk.reference}</p></> : null}
-          {sk.script ? <div className="mt-2 rounded-[14px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2" data-testid="skill-import-script"><p className="text-[11px] uppercase tracking-wide text-[var(--c-warn)]">{tr("It also runs this small program on your phone (offline, in a locked box — no internet, no files, no access to the app)")}</p><pre className="text-[11.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap max-h-48 overflow-auto" dir="ltr">{sk.script.code}</pre></div> : null}
+          {sk.script ? <div className="mt-2 rounded-[12px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2" data-testid="skill-import-script"><p className="text-[12px] uppercase tracking-wide text-[var(--c-warn)]">{tr("It also runs this small program on your phone (offline, in a locked box — no internet, no files, no access to the app)")}</p><pre className="text-[11.5px] text-[var(--c-ink)] mt-1 whitespace-pre-wrap max-h-48 overflow-auto" dir="ltr">{sk.script.code}</pre></div> : null}
         </div>
       ) : null}
     </Sheet>
@@ -148,7 +148,7 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
   return (
     <section className={page + " p-4 space-y-4"} data-testid="skills-page">
       <div className="flex items-start gap-3">
-        <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Sparkles size={20} /></span>
+        <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Sparkles size={20} /></span>
         <div className="min-w-0">
           <h2 className={h1}>{tr("Skills")}</h2>
           <p data-intro="" className="m-0 mt-0.5 text-[13px] text-[var(--c-mut)] lg:max-w-[70ch]">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>

@@ -91,7 +91,7 @@ function CoverPicker({ value, onPick, flash }) {
 function Sheet({ title, close, children, testid }) {
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={close}>
-      <div data-testid={testid} className="calm w-full max-w-xl mx-auto bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[22px] p-4 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div data-testid={testid} className="calm w-full max-w-xl mx-auto bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[20px] p-4 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center mb-3"><p className="flex-1 text-[16px] text-[var(--c-ink)] font-extrabold">{title}</p><button onClick={close} aria-label={tr("Close")} className="w-11 h-11 -me-2 grid place-items-center rounded-full text-[var(--c-mut)]"><X size={18} /></button></div>
         {children}
       </div>
@@ -126,7 +126,7 @@ function Sketch({ done, close }) {
   const move = (e) => { if (!drawing.current) return; const x = ref.current.getContext("2d"); const [a, b] = pt(e); x.lineTo(a, b); x.stroke(); };
   return (
     <Sheet title={tr("Sketch")} close={close} testid="shelf-sketch">
-      <canvas ref={ref} width={720} height={720} data-testid="shelf-sketch-canvas" className="w-full aspect-square rounded-[18px] bg-white border border-[var(--c-ln)] touch-none"
+      <canvas ref={ref} width={720} height={720} data-testid="shelf-sketch-canvas" className="w-full aspect-square rounded-[20px] bg-white border border-[var(--c-ln)] touch-none"
         onPointerDown={down} onPointerMove={move} onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} />
       <div className="flex items-center gap-2 mt-3">
         {["#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"].map((c) => <button key={c} onClick={() => setColor(c)} aria-label={c === "#ffffff" ? tr("Eraser") : tr("Colour")} className={`w-8 h-8 rounded-full border-2 ${color === c ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`} style={{ background: c }} />)}
@@ -213,9 +213,9 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
       </div>
       <div className="flex items-center gap-0.5 px-2 pt-1.5 border-t border-[var(--c-ln)] overflow-x-auto lg:px-[max(1rem,calc((100%-46rem)/2))]" data-testid="shelf-format" dir="ltr">
         {[["bold", <b>B</b>], ["italic", <i>I</i>], ["strike", <s>S</s>], ["h1", "H1"], ["h2", "H2"], ["bullet", "•"], ["number", "1."], ["check", "☐"], ["quote", "❝"]].map(([k, l]) => (
-          <button key={k} onMouseDown={(e) => e.preventDefault()} onClick={() => fmt(k)} data-testid={"shelf-fmt-" + k} className="min-w-[40px] min-h-[40px] px-2 rounded-[10px] text-sm font-bold text-[var(--c-ink)] active:bg-[var(--c-surf-2)]">{l}</button>))}
-        <button onClick={undoT} aria-label={tr("Undo")} data-testid="shelf-undo-text" className="min-w-[40px] min-h-[40px] grid place-items-center rounded-[10px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)]"><Undo2 size={16} /></button>
-        <button onClick={redoT} aria-label={tr("Redo")} data-testid="shelf-redo-text" className="min-w-[40px] min-h-[40px] grid place-items-center rounded-[10px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)]"><Undo2 size={16} className="-scale-x-100" /></button>
+          <button key={k} onMouseDown={(e) => e.preventDefault()} onClick={() => fmt(k)} data-testid={"shelf-fmt-" + k} className="min-w-[40px] min-h-[40px] px-2 rounded-[12px] text-sm font-bold text-[var(--c-ink)] active:bg-[var(--c-surf-2)]">{l}</button>))}
+        <button onClick={undoT} aria-label={tr("Undo")} data-testid="shelf-undo-text" className="min-w-[40px] min-h-[40px] grid place-items-center rounded-[12px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)]"><Undo2 size={16} /></button>
+        <button onClick={redoT} aria-label={tr("Redo")} data-testid="shelf-redo-text" className="min-w-[40px] min-h-[40px] grid place-items-center rounded-[12px] text-[var(--c-ink)] active:bg-[var(--c-surf-2)]"><Undo2 size={16} className="-scale-x-100" /></button>
       </div>
       <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-[var(--c-bg)] lg:justify-center" data-testid="shelf-editor-bar">
         <button className={btn} onClick={() => setSheet("more")} data-testid="shelf-note-more"><MoreVertical size={13} />{tr("More")}</button>
@@ -406,7 +406,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
     body = (<div data-testid="shelf-search">
       {header(tr("Search all books"), backBtn(() => setView(null)))}
       <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} dir="auto" placeholder={tr("Search every book…")} data-testid="shelf-search-input"
-        className={inp + " !bg-[var(--c-surf)] !min-h-[48px] !h-12 !rounded-[16px] mb-3"} />
+        className={inp + " !bg-[var(--c-surf)] !min-h-[48px] !h-12 !rounded-[20px] mb-3"} />
       {q.trim() && !hits.length ? <p className="text-sm text-[var(--c-mut)]">{tr("Nothing found")}</p> : null}
       <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">{hits.map(({ rec: r, book: b }) => (
         <button key={r.id} onClick={() => { setBookId(b && b.id); setNoteId(r.id); }} data-testid="shelf-hit" className={card + " w-full text-start p-3.5 hover:border-[var(--c-acc)]"}>
@@ -420,7 +420,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
       {!ups.length ? <p className="text-sm text-[var(--c-mut)]">{tr("No reminders yet. Open a note and tap the bell.")}</p> : null}
       <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">{ups.map(({ rec: r, at, book: b }) => (
         <button key={r.id} onClick={() => { setBookId(b && b.id); setNoteId(r.id); }} data-testid="shelf-reminder" className={card + " w-full text-start p-3.5 min-h-[56px] flex gap-3 items-center hover:border-[var(--c-acc)]"}>
-          <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><AlarmClock size={18} /></span>
+          <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><AlarmClock size={18} /></span>
           <span className="flex-1 min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
             <span className="block text-[12px] tabular-nums text-[var(--c-mut)]" dir="auto">{fmtWhen(at)} · {bookName(b)}</span></span></button>))}</div>
     </div>);
@@ -455,7 +455,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
         return (
           <button key={r.id} data-testid="shelf-note" onClick={() => { if (sel) { const s = new Set(sel); on ? s.delete(r.id) : s.add(r.id); setSel(s); } else setNoteId(r.id); }}
             style={r.meta && r.meta.color && !on ? { background: r.meta.color + "66" } : undefined}
-            className={`w-full text-start rounded-[22px] p-3.5 border flex gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-colors duration-150 ${on ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)]"}`}>
+            className={`w-full text-start rounded-[20px] p-3.5 border flex gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-colors duration-150 ${on ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)]"}`}>
             {sel ? (on ? <Check size={18} className="text-[var(--c-acc)] shrink-0" /> : <Square size={18} className="text-[var(--c-mut)] shrink-0" />) : null}
             <span className="flex-1 min-w-0">
               <span className="flex items-center gap-1">{r.pinned ? <Star size={12} className="text-[var(--c-warn)] shrink-0" fill="currentColor" /> : null}
@@ -486,8 +486,9 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
     </div>);
   } else {
     body = (<div data-testid="shelf-home">
-      {header(tr("Shelf"),
-        <button onClick={() => setView("books")} aria-label={tr("Menu")} className={ib} data-testid="shelf-menu"><Menu size={22} /></button>,
+      {/* v8.7 (Ali picked V-C, one header style): named like its tab ("Notes"), and no second ☰ — the books list has its own icon */}
+      {header(tr("Notes"),
+        <button onClick={() => setView("books")} aria-label={tr("All books")} className={ib} data-testid="shelf-menu"><BookOpen size={21} /></button>,
         <><button onClick={() => setView("reminders")} aria-label={tr("Reminders")} className={ib + " relative"} data-testid="shelf-alarm"><AlarmClock size={21} />{ups.length ? <span className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-[var(--c-neg)]" /> : null}</button>
           <button onClick={() => { setQ(""); setView("search"); }} aria-label={tr("Search")} className={ib} data-testid="shelf-search-open"><Search size={21} /></button>
           <button onClick={() => setSheet({ kind: "new" })} aria-label={tr("New book")} className={ib} data-testid="shelf-add"><Plus size={22} /></button>
@@ -607,7 +608,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
       ) : null}
       {undo ? (
         <div className="att-shift fixed inset-x-0 z-[65] flex justify-center px-4" style={{ bottom: "calc(140px + env(safe-area-inset-bottom))" }} data-testid="shelf-undo">
-          <div className="flex items-center gap-3 bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[16px] ps-4 pe-1.5 py-1 shadow-xl">
+          <div className="flex items-center gap-3 bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[20px] ps-4 pe-1.5 py-1 shadow-xl">
             <span className="text-sm text-[var(--c-ink)]">{undo.text}</span>
             <button onClick={() => { undo.run(); setUndo(null); }} data-testid="shelf-undo-btn" className="min-h-[44px] px-3 rounded-[12px] text-sm font-extrabold text-[var(--c-acc)]"><Undo2 size={14} className="inline me-1" />{tr("Undo")}</button>
           </div>
@@ -625,13 +626,13 @@ function ShelfReview({ records, shelf }) {
   const cur = due[0];
   const rate = (g) => { setSt(R.saveReview(R.grade(st, cur.id, g))); setShown(false); };
   if (!open) return (
-    <button onClick={() => setOpen(true)} className="w-full mb-3 rounded-[22px] border border-[var(--c-acc)]/30 bg-[var(--c-soft)] p-3.5 min-h-[56px] text-start flex items-center gap-3" data-testid="shelf-review">
+    <button onClick={() => setOpen(true)} className="w-full mb-3 rounded-[20px] border border-[var(--c-acc)]/30 bg-[var(--c-soft)] p-3.5 min-h-[56px] text-start flex items-center gap-3" data-testid="shelf-review">
       <Brain size={18} className="text-[var(--c-acc)] shrink-0" />
       <span className="flex-1 min-w-0"><b className="block text-[14.5px] font-extrabold text-[var(--c-ink)]">{tr("Remember your notes")}</b>
         <span className="block text-[12px] tabular-nums text-[var(--c-mut)]">{tr("{n} notes to look at again today · about a minute", { n: due.length })}</span></span>
     </button>);
   return (
-    <div className="mb-3 rounded-[22px] border border-[var(--c-acc)]/40 bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-3" data-testid="shelf-review-card">
+    <div className="mb-3 rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-3" data-testid="shelf-review-card">
       {cur ? <>
         <p className={label + " tabular-nums"}>{tr("{n} left", { n: due.length })}{cur.isNew ? " · " + tr("first time") : ""}</p>
         <p className="text-[17px] font-extrabold text-[var(--c-ink)]" dir="auto">{cur.title}</p>

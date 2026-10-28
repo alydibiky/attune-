@@ -22,7 +22,7 @@ export function ProReport({ rep, from, to }) {
   const [y, setY] = useState(+td.slice(0, 4));
   if (rep === "bs") {
     const bs = P.balanceSheet(s.journal, to || td);
-    const part = (title, rows, total) => <Section title={title}><Card className="divide-y">{rows.length ? rows.map((r) => <Row key={r.account} label={aName(r)} v={r.amount} />) : <p className={`px-3.5 py-2.5 m-0 text-[12.5px] ${th.sub}`}>—</p>}<Row label={L("Total", "الإجمالي")} v={total} bold tone="bg-[var(--c-surf-2)] rounded-b-[22px]" /></Card></Section>;
+    const part = (title, rows, total) => <Section title={title}><Card className="divide-y">{rows.length ? rows.map((r) => <Row key={r.account} label={aName(r)} v={r.amount} />) : <p className={`px-3.5 py-2.5 m-0 text-[12.5px] ${th.sub}`}>—</p>}<Row label={L("Total", "الإجمالي")} v={total} bold tone="bg-[var(--c-surf-2)] rounded-b-[20px]" /></Card></Section>;
     return <div data-testid="books-bs">
       <p className={`text-[12px] font-bold mb-3 ${th.sub}`}>{L("As of", "في")} {fmtDate(bs.asOf)}</p>
       {part(L("Assets — what the company has", "الأصول — اللي الشركة تملكه"), bs.assets, bs.totals.assets)}
@@ -35,10 +35,10 @@ export function ProReport({ rep, from, to }) {
     const cf = P.cashFlow(s.journal, from, to || td);
     const K = { customers: ["Customers", "العملاء"], suppliers: ["Suppliers", "الموردين"], expenses: ["Expenses", "المصروفات"], payroll: ["Payroll", "المرتبات"], taxes: ["Taxes", "الضرايب"], assets: ["Fixed assets", "الأصول الثابتة"], owner: ["Owner", "المالك"], other: ["Other", "أخرى"] };
     return <div data-testid="books-cf"><Card className="divide-y">
-      <Row label={L("Cash + bank at the start", "الخزنة + البنك في الأول")} v={cf.opening} bold tone="bg-[var(--c-surf-2)] rounded-t-[22px]" />
+      <Row label={L("Cash + bank at the start", "الخزنة + البنك في الأول")} v={cf.opening} bold tone="bg-[var(--c-surf-2)] rounded-t-[20px]" />
       {P.FLOW_KINDS.filter((k) => cf.flows[k].in || cf.flows[k].out).map((k) => <div key={k} className="flex justify-between gap-3 px-3.5 py-2.5 text-[13.5px]"><span>{L(...K[k])}</span><span className="flex gap-3 font-bold tabular-nums">{cf.flows[k].in ? <span className={POS}>+<Money v={cf.flows[k].in} /></span> : null}{cf.flows[k].out ? <span className={NEG}>−<Money v={cf.flows[k].out} /></span> : null}</span></div>)}
       <Row label={L("Net change", "صافي التغيير")} v={cf.net} bold />
-      <Row label={L("Cash + bank at the end", "الخزنة + البنك في الآخر")} v={cf.closing} bold tone="bg-[var(--c-soft)] text-[15px] font-black rounded-b-[22px]" /></Card>
+      <Row label={L("Cash + bank at the end", "الخزنة + البنك في الآخر")} v={cf.closing} bold tone="bg-[var(--c-soft)] text-[15px] font-black rounded-b-[20px]" /></Card>
       <p className={`text-[12px] leading-relaxed mt-2 ${th.sub}`}>{L("Moving money between the cash box and the bank is not counted — it stays in the company.", "تحويل الفلوس بين الخزنة والبنك مش بيتحسب — هي جوه الشركة.")}</p></div>;
   }
   if (rep === "months") {

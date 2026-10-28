@@ -270,10 +270,10 @@ export function PdfEditor({ file, nativeCall, onClose, onDone, flash }) {
   return (
     <div className="calm text-[var(--c-ink)] flex flex-col max-w-3xl mx-auto" data-testid="pdfedit">
       <div className="flex items-center gap-2 px-1 pb-2">
-        <button onClick={leave} aria-label={tr("Back")} className="w-11 h-11 -ms-1 grid place-items-center rounded-[14px] text-[var(--c-ink)]" data-testid="pdfedit-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
+        <button onClick={leave} aria-label={tr("Back")} className="w-11 h-11 -ms-1 grid place-items-center rounded-[12px] text-[var(--c-ink)]" data-testid="pdfedit-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
         <p className="flex-1 truncate text-[15px] font-extrabold text-[var(--c-ink)]">{file.name}</p>
-        <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"w-11 h-11 grid place-items-center rounded-[14px] " + (hist.length ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")} data-testid="pdfedit-undo"><Undo2 size={17} /></button>
-        <button onClick={save} disabled={!dirty || !!busy} className={"min-h-[44px] px-4 rounded-[14px] text-[13.5px] font-extrabold " + (dirty && !busy ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-save">{tr("Save")}</button>
+        <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"w-11 h-11 grid place-items-center rounded-[12px] " + (hist.length ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")} data-testid="pdfedit-undo"><Undo2 size={17} /></button>
+        <button onClick={save} disabled={!dirty || !!busy} className={"min-h-[44px] px-4 rounded-[12px] text-[13.5px] font-extrabold " + (dirty && !busy ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-save">{tr("Save")}</button>
       </div>
       {busy ? <p className="flex items-center gap-2 text-[12.5px] text-[var(--c-acc)] px-1 pb-2" data-testid="pdfedit-busy"><Loader2 size={14} className="animate-spin" />{busy}</p> : null}
       {err ? <p className="text-[12.5px] text-[var(--c-neg)] px-1 pb-2" data-testid="pdfedit-error">{err}</p> : null}
@@ -309,9 +309,9 @@ export function PdfEditor({ file, nativeCall, onClose, onDone, flash }) {
             <div className="absolute inset-0 overflow-hidden pointer-events-none [&_button]:pointer-events-auto [&_span]:pointer-events-auto">{shown.map(layer)}{live ? layer({ ...live, id: "live" }, "live") : null}</div>
           </div>
           <div className="flex items-center justify-center gap-4 mt-2 text-[12.5px] text-[var(--c-mut)]">
-            <button onClick={() => { setAt((a) => Math.max(0, a - 1)); setPop(null); setPicked(null); }} disabled={at === 0} className="w-11 h-11 grid place-items-center rounded-[14px] disabled:opacity-30" aria-label={tr("Previous page")} data-testid="pdfedit-prev"><ChevronLeft size={18} className="rtl:-scale-x-100" /></button>
+            <button onClick={() => { setAt((a) => Math.max(0, a - 1)); setPop(null); setPicked(null); }} disabled={at === 0} className="w-11 h-11 grid place-items-center rounded-[12px] disabled:opacity-30" aria-label={tr("Previous page")} data-testid="pdfedit-prev"><ChevronLeft size={18} className="rtl:-scale-x-100" /></button>
             <span data-testid="pdfedit-at">{tr("Page {n} of {m}", { n: at + 1, m: order.length })}</span>
-            <button onClick={() => { setAt((a) => Math.min(order.length - 1, a + 1)); setPop(null); setPicked(null); }} disabled={at >= order.length - 1} className="w-11 h-11 grid place-items-center rounded-[14px] disabled:opacity-30" aria-label={tr("Next page")} data-testid="pdfedit-next"><ChevronRight size={18} className="rtl:-scale-x-100" /></button>
+            <button onClick={() => { setAt((a) => Math.min(order.length - 1, a + 1)); setPop(null); setPicked(null); }} disabled={at >= order.length - 1} className="w-11 h-11 grid place-items-center rounded-[12px] disabled:opacity-30" aria-label={tr("Next page")} data-testid="pdfedit-next"><ChevronRight size={18} className="rtl:-scale-x-100" /></button>
           </div>
           <p className="text-center text-[12px] text-[var(--c-mut)] mt-1" data-testid="pdfedit-hint">{tr(
             tool === "text" ? (lines.length ? "Tap a line to change it, or an empty spot to add text" : "Tap where the text should go")
@@ -326,13 +326,13 @@ export function PdfEditor({ file, nativeCall, onClose, onDone, flash }) {
       )}
 
       {pop ? (
-        <div className="fixed inset-x-0 bottom-0 z-[60] p-3 bg-[var(--c-surf)] border-t border-[var(--c-ln)] lg:static lg:mt-2 lg:rounded-[22px] lg:border rounded-t-[22px]" data-testid="pdfedit-pop">
+        <div className="fixed inset-x-0 bottom-0 z-[60] p-3 bg-[var(--c-surf)] border-t border-[var(--c-ln)] lg:static lg:mt-2 lg:rounded-[20px] lg:border rounded-t-[20px]" data-testid="pdfedit-pop">
           <input autoFocus dir="auto" value={pop.draft.text} onChange={(e) => setDraft({ text: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") donePop(); }}
             placeholder={tr("Type the text")} className={K.inp + " !border-[var(--c-acc)]"} data-testid="pdfedit-input" />
           <div className="flex items-center gap-2 mt-2 text-[12.5px] text-[var(--c-ink)]">
-            <button onClick={() => setDraft({ size: Math.max(0.006, pop.draft.size * 0.9) })} className="min-w-[44px] min-h-[44px] rounded-[14px] border border-[var(--c-ln)] font-bold" aria-label={tr("Smaller")}>A−</button>
-            <button onClick={() => setDraft({ size: Math.min(0.08, pop.draft.size * 1.1) })} className="min-w-[44px] min-h-[44px] rounded-[14px] border border-[var(--c-ln)] font-bold" aria-label={tr("Bigger")}>A+</button>
-            <button onClick={() => setDraft({ bold: !pop.draft.bold })} className={"min-w-[44px] min-h-[44px] rounded-[14px] border font-bold " + (pop.draft.bold ? "bg-[var(--c-acc-2)] border-transparent text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)]")}>B</button>
+            <button onClick={() => setDraft({ size: Math.max(0.006, pop.draft.size * 0.9) })} className="min-w-[44px] min-h-[44px] rounded-[12px] border border-[var(--c-ln)] font-bold" aria-label={tr("Smaller")}>A−</button>
+            <button onClick={() => setDraft({ size: Math.min(0.08, pop.draft.size * 1.1) })} className="min-w-[44px] min-h-[44px] rounded-[12px] border border-[var(--c-ln)] font-bold" aria-label={tr("Bigger")}>A+</button>
+            <button onClick={() => setDraft({ bold: !pop.draft.bold })} className={"min-w-[44px] min-h-[44px] rounded-[12px] border font-bold " + (pop.draft.bold ? "bg-[var(--c-soft)] border-[var(--c-acc)] text-[var(--c-acc)]" : "border-[var(--c-ln)]")}>B</button>
             {["#000000", "#1e3a8a", "#b91c1c"].map((c) => <button key={c} onClick={() => setDraft({ color: c })} aria-label={c} className={"shrink-0 p-0 rounded-full border-2 " + (pop.draft.color === c ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]")} style={{ background: c, width: 22, height: 22, minWidth: 22, minHeight: 22 }} />)}
             <span className="flex-1" />
             {pop.old || pop.draft.kind === "retext" ? <button onClick={dropPop} className="min-h-[44px] text-[var(--c-neg)] font-bold px-1" data-testid="pdfedit-pop-undo">{tr(pop.old ? "Remove" : "Cancel")}</button> : null}
@@ -341,7 +341,7 @@ export function PdfEditor({ file, nativeCall, onClose, onDone, flash }) {
         </div>
       ) : (
         <div className="sticky bottom-0 z-10 bg-[var(--c-bg)] border-t border-[var(--c-ln)] flex justify-around py-2.5 mt-1" data-testid="pdfedit-tools">
-          {TOOLS.map(([k, label]) => <button key={k} onClick={() => { setTool(k); setPicked(null); }} className={"min-h-[40px] px-3.5 rounded-full text-[13.5px] font-bold " + (tool === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold" : "text-[var(--c-mut)]")} data-testid={"pdfedit-tool-" + k}>{tr(label)}</button>)}
+          {TOOLS.map(([k, label]) => <button key={k} onClick={() => { setTool(k); setPicked(null); }} className={"min-h-[40px] px-3.5 rounded-full text-[13.5px] font-bold " + (tool === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold" : "text-[var(--c-mut)]")} data-testid={"pdfedit-tool-" + k}>{tr(label)}</button>)}
         </div>
       )}
 
@@ -373,15 +373,15 @@ function SignPad({ onCancel, onUse }) {
   };
   return (
     <div className="calm fixed inset-0 z-[70] bg-black/60! flex items-end sm:items-center justify-center p-3" data-testid="pdfedit-signpad">
-      <div className="w-full max-w-md rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4">
+      <div className="w-full max-w-md rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4">
         <p className="text-[16px] font-extrabold text-[var(--c-ink)] mb-2">{tr("Sign with your finger")}</p>
-        <canvas ref={cv} className="w-full h-44 rounded-[16px] bg-white" style={{ touchAction: "none" }} data-testid="pdfedit-signcanvas"
+        <canvas ref={cv} className="w-full h-44 rounded-[20px] bg-white" style={{ touchAction: "none" }} data-testid="pdfedit-signcanvas"
           onPointerDown={(ev) => { last.current = at(ev); try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {} }} onPointerMove={draw} onPointerUp={() => { last.current = null; }} />
         <p className="text-[11.5px] text-[var(--c-mut)] mt-1.5">{tr("Kept only on this device, for the next time you sign.")}</p>
         <div className="flex justify-end gap-2 mt-3">
-          <button onClick={() => { const c = cv.current; c.getContext("2d").clearRect(0, 0, c.width, c.height); setAny(false); }} className="min-h-[44px] px-3 rounded-[14px] font-bold text-[var(--c-ink)] text-sm">{tr("Clear")}</button>
+          <button onClick={() => { const c = cv.current; c.getContext("2d").clearRect(0, 0, c.width, c.height); setAny(false); }} className="min-h-[44px] px-3 rounded-[12px] font-bold text-[var(--c-ink)] text-sm">{tr("Clear")}</button>
           <button onClick={onCancel} className={K.btnS}>{tr("Cancel")}</button>
-          <button onClick={use} disabled={!any} className={"min-h-[44px] px-4 rounded-[14px] text-sm font-extrabold " + (any ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-sign-use">{tr("Use this signature")}</button>
+          <button onClick={use} disabled={!any} className={"min-h-[44px] px-4 rounded-[12px] text-sm font-extrabold " + (any ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-sign-use">{tr("Use this signature")}</button>
         </div>
       </div>
     </div>

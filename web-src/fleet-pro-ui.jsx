@@ -140,7 +140,7 @@ export function TeamPane({ s, run, money, setSheet }) {
   return <div className="space-y-3" data-testid="fleet-team">
     {people.length ? <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0">{people.map((p) => { const left = p.licenceExp ? F.daysBetween(t, p.licenceExp) : null;
       return <Row key={p.id} onClick={() => setSheet({ kind: "person", rec: p })} testid="fleet-person">
-        <span className="w-10 h-10 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Users size={18} /></span>
+        <span className="w-10 h-10 rounded-[12px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Users size={18} /></span>
         <span className="flex-1 min-w-0"><span className="block font-bold text-[14.5px] truncate" dir="auto">{p.name}</span>
           <span className="flex items-center gap-1.5 mt-0.5 flex-wrap"><Tag tone="blue">{tr(ROLE_L[p.role] || p.role)}</Tag>{p.crane ? <span className={"text-[12px] truncate " + muted} dir="auto">{nameOf(s.cranes, p.crane)}</span> : null}
             {left != null && left < 0 ? <Tag tone="red">{tr("Licence expired")}</Tag> : left != null && left <= 30 ? <Tag tone="amber">{tr("Licence: {d} days", { d: left })}</Tag> : null}</span></span>

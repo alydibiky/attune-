@@ -15,7 +15,7 @@ export function RecallCard({ text, navTo, className = "" }) {
   const found = useMemo(() => { try { return String(t || "").trim().length >= 3 ? recallFor(t, storesNow()) : []; } catch (e) { return []; } }, [t]);
   if (!found.length) return null;
   return (
-    <div className={"rounded-[18px] border border-[var(--c-acc)]/30 bg-[var(--c-soft)] p-3 space-y-1.5 " + className} data-testid="recall-card">
+    <div className={"rounded-[20px] border border-[var(--c-acc)]/30 bg-[var(--c-soft)] p-3 space-y-1.5 " + className} data-testid="recall-card">
       {found.map((p) => (
         <div key={p.person}>
           <p className="text-[12px] text-[var(--c-acc)] font-extrabold flex items-center gap-1.5 m-0"><Brain size={13} />{tr("Remembered about {p}", { p: p.person })}</p>

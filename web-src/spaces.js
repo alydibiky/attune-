@@ -254,16 +254,22 @@ export const ACCENTS = [
   ["teal", "Teal"], ["violet", "Violet"], ["blue", "Blue"], ["indigo", "Indigo"], ["emerald", "Green"], ["amber", "Amber"], ["orange", "Orange"], ["rose", "Rose"],
 ];
 export const BACKGROUNDS = [
+  ["auto", "Follow my phone"],   // v8.7 (Ali picked V-B): light by day, dark when the phone is dark — the default
   ["slate", "Midnight"], ["black", "Black (OLED)"], ["zinc", "Graphite"], ["stone", "Warm"], ["light", "Light"],
 ];
 // v6.43 (Ali picked design A on the design canvas): light, green — the new default. A theme still at the old default (teal on
 // dark slate) moves to A once; a look chosen in Settings → Theme afterwards is kept.
 export function loadTheme() {
   let t = read(THEME_KEY, null);
-  if (!t || ((t.accent || "teal") === "teal" && (t.bg || "slate") === "slate" && !t.a43)) { t = { accent: "emerald", bg: "light", a43: 1 }; write(THEME_KEY, t); }
-  return { accent: t.accent || "emerald", bg: t.bg || "light" };
+  if (!t || ((t.accent || "teal") === "teal" && (t.bg || "slate") === "slate" && !t.a43)) { t = { accent: "emerald", bg: "auto", a43: 1, v87: 1 }; write(THEME_KEY, t); }
+  // v8.7 (Ali picked V-B): the old default (green on light) now follows the phone, once; a look chosen after this is kept
+  if (t.a43 && !t.v87 && t.accent === "emerald" && t.bg === "light") { t = { ...t, bg: "auto", v87: 1 }; write(THEME_KEY, t); }
+  return { accent: t.accent || "emerald", bg: t.bg || "auto" };
 }
-export function saveTheme(t) { write(THEME_KEY, { accent: t.accent || "emerald", bg: t.bg || "light", a43: 1 }); }
+export function saveTheme(t) { write(THEME_KEY, { accent: t.accent || "emerald", bg: t.bg || "auto", a43: 1, v87: 1 }); }
+/** "auto" → "light" or "slate" (dark), from the phone's own setting right now. */
+export const phoneDark = () => { try { return !!(typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches); } catch (e) { return false; } };
+export const resolveBg = (bg) => (bg === "auto" ? (phoneDark() ? "slate" : "light") : bg);
 
 /**
  * The CSS variables for a theme, as { "--color-teal-300": "oklch(…)", … }.
@@ -275,7 +281,7 @@ export function saveTheme(t) { write(THEME_KEY, { accent: t.accent || "emerald",
 export function themeVars(theme) {
   const t = theme || {};
   const accent = PALETTES[t.accent] ? t.accent : "teal";
-  const bg = t.bg || "slate";
+  const bg = resolveBg(t.bg || "slate");
   const vars = {};
   const light = bg === "light";
   const flip = (i) => (light ? SHADES.length - 1 - i : i);
@@ -306,11 +312,11 @@ export function applyTheme(theme, doc) {
   for (const k of APPLIED) if (!(k in vars)) root.style.removeProperty(k);
   APPLIED.clear();
   for (const [k, v] of Object.entries(vars)) { root.style.setProperty(k, v); APPLIED.add(k); }
-  const light = (theme || {}).bg === "light";
+  const bgNow = resolveBg((theme || {}).bg), light = bgNow === "light";
   root.classList.toggle("att-light", light);
   root.style.colorScheme = light ? "light" : "dark";
   try {
-    const bgc = light ? "#F4F5F3" : (theme || {}).bg === "black" ? "#000000" : getComputedStyle(root).getPropertyValue("--color-slate-950") || "#020618";
+    const bgc = light ? "#F4F5F3" : bgNow === "black" ? "#000000" : getComputedStyle(root).getPropertyValue("--color-slate-950") || "#020618";
     let m = d.querySelector('meta[name="theme-color"]');
     if (!m) { m = d.createElement("meta"); m.name = "theme-color"; d.head.appendChild(m); }
     m.content = bgc.trim();

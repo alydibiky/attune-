@@ -39,12 +39,12 @@ export function SitePhotos({ photos, setPhotos, title, text, by, flash }) {
   return (
     <div className="mt-3 space-y-2" data-testid="site-photos">
       <div className="flex items-center gap-2">
-        <button onClick={() => ref.current && ref.current.click()} className="shrink-0 min-h-[44px] flex items-center gap-1.5 text-[13px] font-bold px-3.5 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]" data-testid="site-photo-add"><Camera size={15} className="text-[var(--c-acc)]" />{tr("Add photos")}</button>
+        <button onClick={() => ref.current && ref.current.click()} className="shrink-0 min-h-[44px] flex items-center gap-1.5 text-[13px] font-bold px-3.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]" data-testid="site-photo-add"><Camera size={15} className="text-[var(--c-acc)]" />{tr("Add photos")}</button>
         <span className="text-[12px] text-[var(--c-mut)]">{tr("Each photo gets the time and the place")}</span>
         <input ref={ref} type="file" accept="image/*" capture="environment" multiple className="hidden" data-testid="site-photo-file" onChange={(e) => { add([...(e.target.files || [])]); e.target.value = ""; }} />
       </div>
       {photos.length ? <div className="grid grid-cols-2 gap-2">{photos.map((p, i) => (
-        <div key={i} className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2 space-y-1.5" data-testid="site-photo">
+        <div key={i} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2 space-y-1.5" data-testid="site-photo">
           <div className="relative"><img src={p.url} alt="" className="w-full h-24 object-cover rounded-[12px]" />
             <button onClick={() => setPhotos(photos.filter((_, j) => j !== i))} aria-label={tr("Remove")} className="absolute top-0.5 end-0.5 w-11 h-11 grid place-items-center"><span className="w-7 h-7 rounded-full grid place-items-center bg-black/60 text-white"><X size={13} /></span></button></div>
           <p className="text-[11px] text-[var(--c-mut)] tabular-nums m-0" dir="auto" data-testid="site-photo-stamp">{stampLine(p, i, ar ? "ar" : "en")}</p>
@@ -52,7 +52,7 @@ export function SitePhotos({ photos, setPhotos, title, text, by, flash }) {
             className="w-full min-h-[40px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-2.5 py-1.5 text-[13px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
         </div>))}</div> : null}
       {text ? <button disabled={busy} onClick={async () => { setBusy(true); await sharePdf({ html: reportHtml({ title, text, by, photos, lang: ar ? "ar" : "en" }), name: String(title || "report").replace(/[^\w؀-ۿ-]+/g, "_"), flash }); setBusy(false); }}
-        className="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] disabled:opacity-40" data-testid="site-pdf">
+        className="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] disabled:opacity-40" data-testid="site-pdf">
         {busy ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}{photos.length ? tr("Report with {n} photos (PDF)", { n: photos.length }) : tr("Report as PDF")}</button> : null}
     </div>);
 }

@@ -24,10 +24,10 @@ import { QuotesPane, QuoteForm, QuoteView, OrdersPane, POForm, POView, VendorsPa
 import { PortalForm, TableOut, TodayCash, RatesForm, SitesPane, QueryPane, StoreKpis, StoreFilters, HistorySheet, RefIssues, ListsPane } from "./fleet-desk-ui.jsx";   // v6.45 from Ali's desktop programs
 import { InvoicesPane, InvoiceForm, InvoiceView, AgingPane, ReportsPane, TeamPane, PersonForm, AdvanceForm, CraneMore, PaperForm, RepairForm, FuelForm, DOC_L } from "./fleet-pro-ui.jsx";
 
-export const card = "rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-colors duration-150";
-export const btnP = "min-h-[48px] h-12 px-5 rounded-[16px] text-[var(--c-on-acc)] font-extrabold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2 transition-opacity duration-150 cursor-pointer";
-export const btnS = "min-h-[44px] h-11 px-3.5 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)] text-[13.5px] font-bold flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors duration-150 cursor-pointer";
-export const inp = "w-full min-w-0 min-h-[44px] h-11 rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] focus:bg-[var(--c-surf)] transition-colors duration-150";
+export const card = "rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-colors duration-150";
+export const btnP = "min-h-[48px] h-12 px-5 rounded-[20px] text-[var(--c-on-acc)] font-extrabold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2 transition-opacity duration-150 cursor-pointer";
+export const btnS = "min-h-[44px] h-11 px-3.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)] text-[13.5px] font-bold flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors duration-150 cursor-pointer";
+export const inp = "w-full min-w-0 min-h-[44px] h-11 rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] focus:bg-[var(--c-surf)] transition-colors duration-150";
 export const muted = "text-[var(--c-mut)]";
 const WIDE = "(min-width: 900px)";
 function useWide() {
@@ -96,7 +96,7 @@ export function Evidence({ value, onChange, flash, required }) {
 function Sheet({ title, onClose, children, wide }) {
   useSubBack(true, onClose);
   return <div className={"calm fixed inset-0 z-[70] bg-black/60 flex " + (wide ? "items-center justify-center p-6" : "items-end")} onClick={onClose}>
-    <div className={"bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] w-full max-h-[92vh] overflow-y-auto p-5 space-y-3.5 shadow-2xl " + (wide ? "max-w-xl rounded-[26px]" : "rounded-t-[28px] pb-8")} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" data-testid="fleet-sheet">
+    <div className={"bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] w-full max-h-[92vh] overflow-y-auto p-5 space-y-3.5 shadow-2xl " + (wide ? "max-w-xl rounded-[20px]" : "rounded-t-[20px] pb-8")} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" data-testid="fleet-sheet">
       <div className="flex items-center gap-2 pb-1 border-b border-[var(--c-ln)]"><p className="flex-1 text-[18px] font-extrabold m-0" dir="auto">{title}</p>
         <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center shrink-0"><X size={18} /></button></div>
       {children}
@@ -172,8 +172,8 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
     </div>);
   const tabs = (vertical) => TABS.map(([k, l, I]) => (
     <button key={k} onClick={() => { setOpen(null); setTab(k); }} data-testid={"fleet-tab-" + k}
-      className={vertical ? "w-full min-h-[44px] h-11 px-3.5 rounded-[16px] flex items-center gap-2.5 text-[14.5px] font-extrabold transition-colors duration-150 " + (tab === k && !open ? "text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf)]")
-        : "flex-1 min-w-0 min-h-[44px] h-11 rounded-[16px] flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-extrabold transition-colors duration-150 " + (tab === k && !open ? "text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)]")}
+      className={vertical ? "w-full min-h-[44px] h-11 px-3.5 rounded-[20px] flex items-center gap-2.5 text-[14.5px] font-extrabold transition-colors duration-150 " + (tab === k && !open ? "text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf)]")
+        : "flex-1 min-w-0 min-h-[44px] h-11 rounded-[20px] flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-extrabold transition-colors duration-150 " + (tab === k && !open ? "text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)]")}
       style={tab === k && !open ? { background: "var(--c-acc-2, #E07A5F)" } : null}><I size={vertical ? 18 : 16} />{tr(l)}</button>));
   return (
     <section className="calm min-h-screen pb-10 bg-[var(--c-bg)] text-[var(--c-ink)]" data-testid="fleet-app">
@@ -252,7 +252,7 @@ function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
           <div className="space-y-2.5"><p className="text-[15px] font-extrabold m-0">{tr("Active now")}</p>
             {act.length ? act.map((a) => (
               <Row key={a.job.id} onClick={() => setOpen({ kind: "job", id: a.job.id })} testid="fleet-active">
-                <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Truck size={18} /></span>
+                <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Truck size={18} /></span>
                 <span className="flex-1 min-w-0"><span className="block font-extrabold text-[14.5px] truncate" dir="auto">{(a.crane || {}).name}</span>
                   <span className={"block text-[12.5px] truncate " + muted} dir="auto">{(a.client || {}).name} · {(a.site || {}).name}</span></span>
                 <span className="text-[13.5px] font-extrabold tabular-nums" dir="ltr">{money(a.total)}</span></Row>))
@@ -342,7 +342,7 @@ function FleetTab({ s, run, money, setSheet, setOpen }) {
       {seg === "team" ? <TeamPane s={s} run={run} money={money} setSheet={setSheet} /> : !rows.length ? <Empty>{tr("Nothing here yet.")}</Empty> : <div className="space-y-2.5 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">{rows.map((r) => {
         if (seg === "cranes") { const w = F.whereIs(s, r.id), p = F.craneProfit(s, r.id, { from: ym + "-01" });
           return <Row key={r.id} onClick={() => setOpen({ kind: "crane", id: r.id })} testid="fleet-crane">
-            <span className="w-10 h-10 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Truck size={18} /></span>
+            <span className="w-10 h-10 rounded-[12px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Truck size={18} /></span>
             <span className="flex-1 min-w-0"><span className="block font-extrabold text-[14.5px] truncate" dir="auto">{r.name}</span>
               <span className="flex items-center gap-1.5 mt-0.5"><Tag tone={w.kind === "site" ? "green" : "gray"}>{w.kind === "site" ? tr("At site") : tr("In garage")}</Tag><span className={"text-[12px] truncate " + muted} dir="auto">{w.name}</span></span></span>
             <span className={"text-[13px] font-extrabold tabular-nums " + (p.profit < 0 ? "text-[var(--c-neg)]" : "")} dir="ltr">{money(p.profit)}</span></Row>; }
@@ -351,7 +351,7 @@ function FleetTab({ s, run, money, setSheet, setOpen }) {
             <span className="flex-1 min-w-0 font-extrabold text-[14.5px] truncate" dir="auto">{r.name}</span>{r.inactive ? <Tag>{tr("Inactive")}</Tag> : null}
             <span className={"text-[13.5px] font-extrabold tabular-nums " + (b.balance > 0 ? "text-[var(--c-warn)]" : "text-[var(--c-pos)]")} dir="ltr">{money(b.balance)}</span></Row>; }
         return <Row key={r.id} onClick={() => setSheet({ kind: "list", coll: seg, rec: r })} testid="fleet-place">
-          <span className="w-10 h-10 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]">{seg === "banks" ? <Building2 size={18} /> : <MapPin size={18} />}</span>
+          <span className="w-10 h-10 rounded-[12px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]">{seg === "banks" ? <Building2 size={18} /> : <MapPin size={18} />}</span>
           <span className="flex-1 min-w-0"><span className="block font-extrabold text-[14.5px] truncate" dir="auto">{r.name}</span>{r.address ? <span className={"block text-[12px] truncate " + muted} dir="auto">{r.address}</span> : null}</span></Row>;
       })}</div>}
     </div>);

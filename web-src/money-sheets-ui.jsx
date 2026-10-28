@@ -14,8 +14,8 @@ import * as U from "./ui-kit.jsx";
 
 const ar = () => getLang() === "ar";
 const amt = (n, cur) => fmt(n) + (cur ? " " + cur : "");
-const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(ar() ? "ar-EG" : undefined, { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
-const pill = (on) => "min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold whitespace-nowrap transition-colors duration-150 " + (on ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-ink)]");
+const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(ar() ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
+const pill = (on) => "min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold whitespace-nowrap transition-colors duration-150 " + (on ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-ink)]");
 const cashAccounts = (L) => ((L && L.accounts) || []).filter((a) => !["gold", "silver", "camels", "cattle", "sheep"].includes(a.kind));
 const accName = (L, id) => { const a = ((L && L.accounts) || []).find((x) => x.id === id); return a ? (a.emoji || "") + " " + a.name : ""; };
 export const ASNAF = [["fuqara", "The poor", "الفقراء"], ["masakin", "The needy", "المساكين"], ["amilin", "Zakāt workers", "العاملين عليها"], ["muallafah", "Hearts to be reconciled", "المؤلفة قلوبهم"],
@@ -24,7 +24,7 @@ export const ASNAF = [["fuqara", "The poor", "الفقراء"], ["masakin", "The
 /** The frame every sheet uses: a bottom sheet on a phone, a window on a computer. */
 export function Sheet({ title, onClose, children, testid, danger }) {
   return <div className="calm fixed inset-0 z-[85] bg-black/55 flex flex-col justify-end lg:items-center lg:justify-center" onClick={onClose} data-testid={testid}>
-    <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[26px] lg:rounded-[26px] w-full lg:max-w-lg max-h-[92vh] overflow-y-auto p-4 pb-6 space-y-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+    <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[20px] lg:rounded-[20px] w-full lg:max-w-lg max-h-[92vh] overflow-y-auto p-4 pb-6 space-y-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
       <div className="flex items-center gap-2"><p className="flex-1 text-[18px] font-black m-0">{title}</p>{danger}
         <button onClick={onClose} aria-label={tr("Close")} className="w-10 h-10 rounded-full grid place-items-center c-sub" data-testid="sheet-close"><X size={18} /></button></div>
       {children}
@@ -65,7 +65,7 @@ export function AccountSheet({ L, id, run, onClose }) {
     danger={a && (L.accounts || []).length > 1 ? <Del onClick={() => confirmDel(a.name) && s.go("acct-delete", { id }, tr("Deleted"))} /> : null}>
     {!a ? <Field label={tr("Kind")}><Pills value={kind} onChange={setKind} testid="acc-kind" items={[["cash", tr("Money")], ["gold", tr("Gold")], ["silver", tr("Silver")], ["camels", tr("Camels")], ["cattle", tr("Cattle")], ["sheep", tr("Sheep & goats")]]} /></Field> : null}
     <Field label={tr("Name")}><input value={name} onChange={(e) => setName(e.target.value)} dir="auto" className={U.inp} placeholder={tr("e.g. CIB, Cash, Vodafone Cash")} data-testid="acc-name" /></Field>
-    <div className="flex flex-wrap gap-1.5">{EMOJI_ACC.map((e) => <button key={e} type="button" onClick={() => setEmoji(e)} className={"w-11 h-11 rounded-[14px] text-[20px] border " + (emoji === e ? "border-[var(--c-acc-2)] bg-[var(--c-soft)]" : "border-[var(--c-ln)]")}>{e}</button>)}</div>
+    <div className="flex flex-wrap gap-1.5">{EMOJI_ACC.map((e) => <button key={e} type="button" onClick={() => setEmoji(e)} className={"w-11 h-11 rounded-[12px] text-[20px] border " + (emoji === e ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)]")}>{e}</button>)}</div>
     {kind === "cash" ? <Field label={tr("Currency")}><input value={currency} onChange={(e) => setCur(e.target.value.toUpperCase().slice(0, 3))} className={U.inp + " uppercase"} dir="ltr" data-testid="acc-currency" /></Field> : null}
     {kind === "gold" ? <Field label={tr("Karat")}><Pills value={karat} onChange={setKarat} items={[["24", "24"], ["21", "21"], ["18", "18"]]} /></Field> : null}
     <Field label={["camels", "cattle", "sheep"].includes(kind) ? tr("How many head") : ["gold", "silver"].includes(kind) ? tr("Grams you have") : tr("Starting balance")}>
@@ -122,7 +122,7 @@ export function TxSheet({ L, id, run, onClose }) {
       <div className="grid grid-cols-[auto_1fr] gap-2"><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={U.inp + " !w-auto"} dir="ltr" data-testid="tx-date" />
         {t.type !== "transfer" ? <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={tr("Note (optional)")} className={U.inp} dir="auto" data-testid="tx-note" /> : <span />}</div>
     </> : <p className="m-0 text-[15px]" dir="auto"><b className="tabular-nums" dir="ltr">{amt(t.amount, (L.currency || ""))}</b> · {dayLabel(t.date)}{t.person ? " · " + t.person : ""}{t.to ? " · " + t.to : ""}<br /><span className="text-[13px] c-sub">{tr("This entry belongs to a debt, a goal or Zakāt — change it there.")}</span></p>}
-    {ev && ev.text ? <div className="rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="tx-evidence">
+    {ev && ev.text ? <div className="rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="tx-evidence">
       <p className="m-0 text-[11.5px] font-extrabold c-sub">{tr("The message as it arrived")}{ev.from ? " · " + ev.from : ""}{ev.app ? " · " + ev.app : ""}</p>
       <p className="m-0 mt-1 text-[14px] leading-snug whitespace-pre-wrap select-text" dir="auto">{ev.text}</p></div> : null}
     <Err err={s.err} />
@@ -148,7 +148,7 @@ export function TxListPane({ L, cats, onOpen, account, back, Head }) {
     <div className="flex gap-1.5 overflow-x-auto pb-1"><button onClick={() => setMonth("")} className={pill(!month)}>{tr("All")}</button>{months.map((m) => <button key={m} onClick={() => setMonth(m)} className={pill(month === m)}>{m}</button>)}</div>
     <div className={U.card + " px-3"}>
       {rows.map((t) => <button key={t.id} onClick={() => onOpen(t.id)} className="w-full text-start flex items-center gap-3 min-h-[60px] py-2 border-t border-[var(--c-ln)] first:border-t-0" data-testid="money-list-row">
-        <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-bg)] border border-[var(--c-ln)] shrink-0 text-[17px]">{t.type === "zakat" ? "☪" : t.type === "transfer" ? "⇄" : t.type === "debt" ? "🤝" : (cats[t.cat] || {}).emoji || "•"}</span>
+        <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-bg)] border border-[var(--c-ln)] shrink-0 text-[17px]">{t.type === "zakat" ? "☪" : t.type === "transfer" ? "⇄" : t.type === "debt" ? "🤝" : (cats[t.cat] || {}).emoji || "•"}</span>
         <span className="min-w-0 flex-1"><span className="block text-[14.5px] font-bold truncate" dir="auto">{t.note || t.person || t.to || (cats[t.cat] || {}).name || tr("Entry")}</span>
           <span className="block text-[12px] c-sub truncate">{dayLabel(t.date)} · {accName(L, t.account)}{t.evidence ? " · 📩" : ""}</span></span>
         <b className={"tabular-nums text-[14.5px] shrink-0 " + (sign(t) === "+" ? "text-[var(--c-pos)]" : "")} dir="ltr">{sign(t)}{fmt(t.amount)}</b>
@@ -195,7 +195,7 @@ export function GoalSheet({ L, id, run, onClose }) {
   const s = useSave(run, onClose);
   return <Sheet title={g ? tr("Edit goal") : tr("New goal")} onClose={() => onClose()} testid="money-goal-sheet" danger={g ? <Del onClick={() => confirmDel(g.name) && s.go("goal-delete", { id }, tr("Deleted"))} /> : null}>
     <Field label={tr("Saving for")}><input value={name} onChange={(e) => setName(e.target.value)} dir="auto" className={U.inp} placeholder={tr("e.g. A car, Umrah, Emergency fund")} data-testid="goal-name" /></Field>
-    <div className="flex flex-wrap gap-1.5">{["🎯", "🚗", "🕋", "🏠", "✈️", "🎓", "💍", "🛟"].map((e) => <button key={e} type="button" onClick={() => setEmoji(e)} className={"w-11 h-11 rounded-[14px] text-[20px] border " + (emoji === e ? "border-[var(--c-acc-2)] bg-[var(--c-soft)]" : "border-[var(--c-ln)]")}>{e}</button>)}</div>
+    <div className="flex flex-wrap gap-1.5">{["🎯", "🚗", "🕋", "🏠", "✈️", "🎓", "💍", "🛟"].map((e) => <button key={e} type="button" onClick={() => setEmoji(e)} className={"w-11 h-11 rounded-[12px] text-[20px] border " + (emoji === e ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)]")}>{e}</button>)}</div>
     <Field label={tr("Target")}><input value={target} onChange={(e) => setTarget(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} placeholder="0" data-testid="goal-target" /></Field>
     <Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go("goal-save", { id: id || undefined, name: name.trim(), target: parseFloat(target), emoji }, tr("Saved"))} />
   </Sheet>;
@@ -279,8 +279,8 @@ function TabsCard({ ui, doIt, Card }) {
   return <Card title={tr("Tabs to show")}>
     <p className="m-0 mb-2 text-[12.5px] c-sub">{tr("The tabs on Money's bar and their order. Home is always first.")}</p>
     <div className="flex flex-col gap-1.5" data-testid="set-tabs">{order.map((k, i) => <div key={k} className={"flex items-center gap-2 " + (shown(k) ? "" : "opacity-60")} data-testid={"set-tab-" + k}>
-      <button className="w-9 h-9 rounded-[10px] grid place-items-center border border-[var(--c-ln)] disabled:opacity-30" disabled={i === 0} onClick={() => move(i, -1)} aria-label={tr("Move up")} data-testid={"set-tab-up-" + k}><ChevronUp size={16} /></button>
-      <button className="w-9 h-9 rounded-[10px] grid place-items-center border border-[var(--c-ln)] disabled:opacity-30" disabled={i === order.length - 1} onClick={() => move(i, 1)} aria-label={tr("Move down")} data-testid={"set-tab-down-" + k}><ChevronDown size={16} /></button>
+      <button className="w-9 h-9 rounded-[12px] grid place-items-center border border-[var(--c-ln)] disabled:opacity-30" disabled={i === 0} onClick={() => move(i, -1)} aria-label={tr("Move up")} data-testid={"set-tab-up-" + k}><ChevronUp size={16} /></button>
+      <button className="w-9 h-9 rounded-[12px] grid place-items-center border border-[var(--c-ln)] disabled:opacity-30" disabled={i === order.length - 1} onClick={() => move(i, 1)} aria-label={tr("Move down")} data-testid={"set-tab-down-" + k}><ChevronDown size={16} /></button>
       <span className="flex-1 text-[14px] font-bold">{tr(names[k])}</span>
       <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={shown(k)} onChange={() => flip(k)} className="w-5 h-5 accent-[var(--c-acc)]" data-testid={"set-tab-show-" + k} />{tr("Show")}</label>
     </div>)}</div>

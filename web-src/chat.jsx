@@ -209,7 +209,7 @@ function CodeBox({ lang, text }) {
   };
   const label = LANG_LABEL[String(lang || "").trim().toLowerCase()] || (lang ? String(lang).trim() : tr("Code"));
   return (
-    <div className="rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] overflow-hidden" data-testid="code-box">
+    <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] overflow-hidden" data-testid="code-box">
       <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--c-surf)] border-b border-[var(--c-ln)]">
         <span className="text-[11px] text-[var(--c-mut)] font-extrabold tracking-[0.02em]">{label}</span>
         <button onClick={copy} className="min-h-[32px] text-[12px] font-bold px-2.5 rounded-full text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)] flex items-center gap-1">
@@ -299,7 +299,7 @@ function MdView({ text, runnable = true, sources = null }) {
           </div>
         );
         if (b.t === "table") return (
-          <div key={k} className="att-hscroll overflow-x-auto rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-surf)]" data-testid="md-table">
+          <div key={k} className="att-hscroll overflow-x-auto rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)]" data-testid="md-table">
             <table className="min-w-full text-[13px] tabular-nums" dir="auto">
               <thead className="bg-[var(--c-surf-2)]"><tr>{b.head.map((h, i) => <th key={i} className="px-3 py-2 text-start text-[12px] font-extrabold text-[var(--c-mut)] whitespace-nowrap">{inline(h, k + "h" + i, sources)}</th>)}</tr></thead>
               <tbody>{b.rows.map((r, ri) => <tr key={ri} className="border-t border-[var(--c-ln)]">{r.map((c, ci) => <td key={ci} className="px-3 py-2 align-top text-[var(--c-ink)]">{inline(c, k + "c" + ri + ci, sources)}</td>)}</tr>)}</tbody>
@@ -1985,11 +1985,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         <div className="fixed inset-0 z-50 flex" onClick={() => setDrawerOpen(false)}>
           <div className="calm w-[86%] max-w-sm h-full bg-[var(--c-surf)]! text-[var(--c-ink)] border-e border-[var(--c-ln)] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-3 border-b border-[var(--c-ln)] flex items-center gap-2">
-              <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 min-h-[48px] flex items-center gap-2 px-4 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[15px] font-extrabold"><Plus size={16} /> {tr("New chat")}</button>
+              <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 min-h-[48px] flex items-center gap-2 px-4 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[15px] font-extrabold"><Plus size={16} /> {tr("New chat")}</button>
               <button onClick={() => setDrawerOpen(false)} className="att-icon-btn"><X size={18} /></button>
             </div>
             <div className="px-3 pt-3">
-              <div className="flex items-center gap-2 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 focus-within:border-[var(--c-acc)]">
+              <div className="flex items-center gap-2 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 focus-within:border-[var(--c-acc)]">
                 <Search size={14} className="text-[var(--c-mut)]" />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search chats")} dir="auto"
                   className="flex-1 min-w-0 bg-transparent py-2.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none" />
@@ -1997,11 +1997,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             </div>
             <div className="att-scroll flex-1 overflow-y-auto p-2">
               {shownChats.length === 0 ? <p className="text-xs text-[var(--c-mut)] p-3">{tr("No chats yet.")}</p> : shownChats.map((c) => (
-                <div key={c.id} className={`group flex items-center gap-1 rounded-[14px] ${c.id === activeId ? "bg-[var(--c-soft)]" : "hover:bg-[var(--c-surf-2)]"}`}>
+                <div key={c.id} className={`group flex items-center gap-1 rounded-[12px] ${c.id === activeId ? "bg-[var(--c-soft)]" : "hover:bg-[var(--c-surf-2)]"}`}>
                   {renaming === c.id ? (
                     <input autoFocus defaultValue={c.title} dir="auto" onBlur={(e) => { const v = e.target.value.trim(); if (v) patchChat(c.id, (x) => ({ ...x, title: v })); setRenaming(null); }}
                       onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-                      className="flex-1 min-w-0 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-acc)] rounded-[14px] px-3 text-[15px] font-semibold text-[var(--c-ink)] focus:outline-none" />
+                      className="flex-1 min-w-0 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-acc)] rounded-[12px] px-3 text-[15px] font-semibold text-[var(--c-ink)] focus:outline-none" />
                   ) : (
                     <button onClick={() => { setActiveId(c.id); setDrawerOpen(false); }} className="flex-1 min-w-0 min-h-[48px] text-start px-3 py-2.5">
                       <span dir="auto" className="block text-[14px] font-bold text-[var(--c-ink)] truncate">{c.projectId || c.assistantId ? <span className="me-1" data-testid="chat-space-mark">{c.projectId ? "📁" : "✨"}</span> : null}{tr(c.title)}</span>
@@ -2034,7 +2034,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       {/* ---- empty state ---- */}
       {messages.length === 0 && (assistant || project) ? (
         <div className="pt-6 text-center" data-testid="space-empty">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-[18px] bg-[var(--c-soft)] text-3xl mb-3">{(assistant || project).emoji}</div>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-[20px] bg-[var(--c-soft)] text-3xl mb-3">{(assistant || project).emoji}</div>
           <p className="text-[20px] text-[var(--c-ink)] font-black tracking-tight m-0" dir="auto">{tr((assistant || project).name)}</p>
           {assistant && project ? <p className="text-[12px] text-[var(--c-mut)] mt-0.5">{tr("in")} {project.emoji} {project.name}</p> : null}
           <p className="text-xs text-[var(--c-mut)] mt-1 max-w-xs mx-auto leading-relaxed" dir="auto">
@@ -2043,7 +2043,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             <div className="grid gap-2 mt-5 text-start">
               {assistant.starters.map((st) => (
                 <button key={st} onClick={() => { setText(tr(st)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
-                  className="rounded-[16px] min-h-[48px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 py-3 text-[14px] font-semibold text-[var(--c-ink)] hover:border-[var(--c-acc)] active:border-[var(--c-acc)]" dir="auto">{tr(st)}</button>
+                  className="rounded-[20px] min-h-[48px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 py-3 text-[14px] font-semibold text-[var(--c-ink)] hover:border-[var(--c-acc)] active:border-[var(--c-acc)]" dir="auto">{tr(st)}</button>
               ))}
             </div>
           ) : null}
@@ -2051,7 +2051,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         </div>
       ) : messages.length === 0 && MINIMAL ? (
         <div className="pt-12 lg:pt-20 px-1 max-w-[760px] mx-auto" data-testid="chat-empty-min">
-          <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-4 pt-5 pb-2 lg:px-7 lg:pt-7 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+          <div className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-4 pt-5 pb-2 lg:px-7 lg:pt-7 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
           <p className="text-[24px] lg:text-[28px] text-[var(--c-ink)] font-black tracking-tight m-0">{tr("What can I help with?")}</p>
           <div className="mt-3 flex flex-col">
             {STARTERS.filter((x) => x[1] !== "Car question" && x[1] !== "Translate" && x[1] !== "Explain simply").map(([, label, seed]) => (
@@ -2063,7 +2063,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         </div>
       ) : messages.length === 0 ? (
         <div className="pt-6 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-[16px] bg-[var(--c-soft)] text-[var(--c-acc)] mb-3"><Sparkles size={22} /></div>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-[20px] bg-[var(--c-soft)] text-[var(--c-acc)] mb-3"><Sparkles size={22} /></div>
           <p className="text-[20px] text-[var(--c-ink)] font-black tracking-tight">{tr("What can I help with?")}</p>
           <p className="text-xs text-[var(--c-mut)] mt-1 max-w-xs mx-auto leading-relaxed">{tr("Type, speak or add a photo. Runs on your phone — works with no signal.")}</p>
           {/* v5.29 UX: where am I — the model (and its level) and the Pro trial, one tap to Plan */}
@@ -2076,7 +2076,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           <div className="grid grid-cols-2 gap-2 mt-5 text-start">
             {STARTERS.map(([ic, label, seed]) => (
               <button key={label} onClick={() => { setText(tr(seed)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
-                className="rounded-[22px] min-h-[88px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 hover:border-[var(--c-acc)] active:border-[var(--c-acc)]">
+                className="rounded-[20px] min-h-[88px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 hover:border-[var(--c-acc)] active:border-[var(--c-acc)]">
                 <span className="inline-grid place-items-center w-9 h-9 rounded-[12px] bg-[var(--c-soft)] text-lg">{tr(ic)}</span>
                 <span className="block text-[14px] font-bold text-[var(--c-ink)] mt-2">{tr(label)}</span>
               </button>
@@ -2095,11 +2095,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       <div className="space-y-4 pt-2">
         {messages.map((m, idx) => m.role === "user" ? (
           <div key={m.id} className="att-msg flex flex-col items-end">
-            {m.images && m.images.length > 1 ? <div className="flex flex-wrap justify-end gap-1.5 mb-1.5 max-w-[80%]">{m.images.map((u, i) => <img key={i} src={u} alt="" className="h-24 rounded-[16px] border border-[var(--c-ln)] object-cover" />)}</div>
-              : m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-[22px] mb-1.5 border border-[var(--c-ln)] object-cover" /> : null}
+            {m.images && m.images.length > 1 ? <div className="flex flex-wrap justify-end gap-1.5 mb-1.5 max-w-[80%]">{m.images.map((u, i) => <img key={i} src={u} alt="" className="h-24 rounded-[20px] border border-[var(--c-ln)] object-cover" />)}</div>
+              : m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-[20px] mb-1.5 border border-[var(--c-ln)] object-cover" /> : null}
             {!m.image && m.hadImage ? <span className="mb-1.5 text-[11.5px] text-[var(--c-mut)] px-2.5 py-1 rounded-full border border-[var(--c-ln)]">🖼 {tr("photo (removed to save space)")}</span> : null}
             {m.file ? <span className="mb-1.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[12.5px] font-semibold text-[var(--c-ink)]"><FileText size={13} className="text-[var(--c-acc)]" />{m.file}</span> : null}
-            {m.text ? <div dir="auto" className="max-w-[85%] bg-[var(--c-soft)] text-[var(--c-ink)] rounded-[22px] rounded-ee-[8px] px-4 py-3 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
+            {m.text ? <div dir="auto" className="max-w-[85%] bg-[var(--c-soft)] text-[var(--c-ink)] rounded-[20px] rounded-ee-[12px] px-4 py-3 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
             {!busy ? <button onClick={() => editFrom(idx)} className="mt-0.5 min-h-[32px] text-[11.5px] font-bold text-[var(--c-mut)] hover:text-[var(--c-ink)] flex items-center gap-1 px-1.5"><PenLine size={11} /> {tr("Edit")}</button> : null}
           </div>
         ) : m.actionCard ? (
@@ -2117,21 +2117,21 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               setTimeout(() => ask(m.askText, { history: hist, noRoute: true }), 0);
             }} />
         ) : m.card ? (
-          <div key={m.id} data-testid={"card-" + (m.card.tone || "")} className={`rounded-[22px] border p-4 ${m.card.tone === "rose" ? "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10" : m.card.tone === "violet" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10"}`}>
+          <div key={m.id} data-testid={"card-" + (m.card.tone || "")} className={`rounded-[20px] border p-4 ${m.card.tone === "rose" ? "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10" : m.card.tone === "violet" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10"}`}>
             <p dir="auto" className="text-[15px] font-extrabold text-[var(--c-ink)] flex items-center gap-2 m-0"><CheckCircle2 size={16} className={m.card.tone === "rose" ? "text-[var(--c-neg)]" : m.card.tone === "violet" ? "text-[var(--c-acc)]" : "text-[var(--c-pos)]"} /> {tr(m.card.title)}</p>
             {m.card.detail ? <p dir="auto" className="text-sm text-[var(--c-ink)] mt-1 whitespace-pre-wrap leading-relaxed">{tr(m.card.detail)}</p> : null}
             {(m.card.actions || []).length ? (
               <div className="flex gap-2 mt-3 flex-wrap">
                 {m.card.actions.map(([label, act], i) => (
                   <button key={act} onClick={() => cardAction(m, act)}
-                    className={`min-h-[44px] text-[13.5px] font-bold px-4 rounded-[14px] ${i === 0 ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"}`}>{tr(label)}</button>
+                    className={`min-h-[44px] text-[13.5px] font-bold px-4 rounded-[12px] ${i === 0 ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"}`}>{tr(label)}</button>
                 ))}
               </div>
             ) : null}
           </div>
         ) : (
           // v7.4 (Gemini's Area 3): an answer sits in a quiet card — its checks as pills on top, the text, then the actions
-          <div key={m.id} className={"group att-msg" + (m.text && !m.streaming ? " rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-4 pt-3.5 pb-2 shadow-[0_2px_10px_rgba(0,0,0,0.05)]" : "")} data-testid="chat-answer">
+          <div key={m.id} className={"group att-msg" + (m.text && !m.streaming ? " rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-4 pt-3.5 pb-2 shadow-[0_2px_10px_rgba(0,0,0,0.05)]" : "")} data-testid="chat-answer">
             {m.thinking ? (
               <div className="mb-2">
                 <button onClick={() => setOpenThought((o) => ({ ...o, [m.id]: !o[m.id] }))} className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--c-mut)] min-h-[30px] px-2.5 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf-2)]">
@@ -2150,7 +2150,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.webImages && m.webImages.length && !m.streaming ? (   /* v6.12: pictures from the pages read, like Gemini — tap opens the page */
               <div className="flex gap-1.5 overflow-x-auto mb-2 -mx-1 px-1" data-testid="web-images">
-                {m.webImages.map((w, i) => <a key={i} href={w.url} target="_blank" rel="noopener noreferrer" className="shrink-0"><img src={w.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} className="h-24 w-32 object-cover rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-surf)]" /></a>)}
+                {m.webImages.map((w, i) => <a key={i} href={w.url} target="_blank" rel="noopener noreferrer" className="shrink-0"><img src={w.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} className="h-24 w-32 object-cover rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)]" /></a>)}
               </div>) : null}
             {m.text ? <Md text={m.text + (m.streaming ? " ▍" : "")} sources={m.sources} /> : null}
             {m.calc ? (
@@ -2207,8 +2207,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               const kindLabel = art.kind === "html" ? tr("Web page") : art.kind === "doc" ? tr("Document") : tr("Program");
               return (
                 <button data-testid="artifact-card" onClick={() => window.dispatchEvent(new CustomEvent("attune-artifact", { detail: { ...art, chatId: chat && chat.id } }))}
-                  className="mt-2 w-full min-h-[64px] flex items-center gap-3 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5 text-start hover:border-[var(--c-acc)] active:border-[var(--c-acc)]">
-                  <span className="w-10 h-10 shrink-0 rounded-[14px] bg-[var(--c-soft)] flex items-center justify-center text-lg">{art.kind === "html" ? "🌐" : art.kind === "doc" ? "📄" : "⌨️"}</span>
+                  className="mt-2 w-full min-h-[64px] flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5 text-start hover:border-[var(--c-acc)] active:border-[var(--c-acc)]">
+                  <span className="w-10 h-10 shrink-0 rounded-[12px] bg-[var(--c-soft)] flex items-center justify-center text-lg">{art.kind === "html" ? "🌐" : art.kind === "doc" ? "📄" : "⌨️"}</span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{art.title}</span>
                     <span className="block text-[12px] text-[var(--c-mut)]">{kindLabel} · {tr("tap to open full screen")}</span>
@@ -2224,45 +2224,45 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.error ? <p className="text-sm text-[var(--c-warn)] mt-1">{m.error}</p> : null}
             {toPack && toPack.id === m.id ? (
-              <div className="mt-2 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2.5" data-testid="teach-to-pack-sheet">
+              <div className="mt-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2.5" data-testid="teach-to-pack-sheet">
                 <p className="text-[15px] font-extrabold text-[var(--c-ink)] m-0">{tr("Save this chat in a pack")}</p>
                 <p className="text-[11.5px] text-[var(--c-mut)]">{tr("The model will read it when it answers — your questions and its answers, kept together.")}</p>
                 {toPack.packs.map((p) => (
-                  <button key={p.name} className="w-full text-start px-3.5 min-h-[44px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] text-[13.5px] font-bold text-[var(--c-ink)] hover:border-[var(--c-acc)]" dir="auto" data-testid="teach-to-pack-pick"
+                  <button key={p.name} className="w-full text-start px-3.5 min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] text-[13.5px] font-bold text-[var(--c-ink)] hover:border-[var(--c-acc)]" dir="auto" data-testid="teach-to-pack-pick"
                     onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const r = await api.knowledge.teachChat(c, p.name); setToPack(null); api.flash(tr("Saved in “{n}” ({p} passages)", { n: p.name, p: r.passages })); }}>{p.name}</button>))}
                 <div className="flex gap-2">
                   <input value={toPack.name} onChange={(e) => setToPack({ ...toPack, name: e.target.value })} placeholder={tr("New pack…")} dir="auto" data-testid="teach-to-pack-new"
-                    className="flex-1 min-w-0 min-h-[44px] rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
-                  <button className="min-h-[44px] px-4 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold disabled:opacity-40" disabled={!toPack.name.trim()} data-testid="teach-to-pack-save"
+                    className="flex-1 min-w-0 min-h-[44px] rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
+                  <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold disabled:opacity-40" disabled={!toPack.name.trim()} data-testid="teach-to-pack-save"
                     onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.knowledge.teachChat(c, n); setToPack(null); api.flash(tr("Saved in “{n}” ({p} passages)", { n, p: r.passages })); }}>{tr("Save")}</button>
                 </div>
               </div>) : null}
             {teaching && teaching.id === m.id ? (
-              <div className="mt-2 rounded-[22px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-4" data-testid="teach-form">
+              <div className="mt-2 rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-soft)] p-4" data-testid="teach-form">
                 <p className="text-[13px] font-semibold text-[var(--c-acc)] m-0">{tr("What should it have said? Attune double-checks your correction first, and learns it only if it holds up.")}</p>
                 <textarea value={teaching.corrected} onChange={(e) => setTeaching({ ...teaching, corrected: e.target.value })} rows={3} dir="auto" data-testid="teach-right"
-                  placeholder={tr("The right answer")} className="w-full mt-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 py-2.5 text-[15px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
+                  placeholder={tr("The right answer")} className="w-full mt-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 py-2.5 text-[15px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
                 <input value={teaching.note} onChange={(e) => setTeaching({ ...teaching, note: e.target.value })} dir="auto" data-testid="teach-why"
-                  placeholder={tr("Why (optional) — e.g. “the marble falls out when the glass is turned over”")} className="w-full mt-2 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
+                  placeholder={tr("Why (optional) — e.g. “the marble falls out when the glass is turned over”")} className="w-full mt-2 min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
                 {teaching.result ? (() => { const r = teaching.result; const tone = r.verdict === "wrong" ? "amber" : r.verdict === "partly" ? "sky" : "slate";
                   const label = { wrong: "Checked — I don't think the correction is right", partly: "Checked — your correction is partly right", unsure: "Couldn't confirm your correction" }[r.verdict] || "Checked";
                   return (
-                  <div className={`mt-2.5 rounded-[16px] border p-3 text-[13px] ${tone === "amber" ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)]" : tone === "sky" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] bg-[var(--c-surf-2)] text-[var(--c-ink)]"}`} data-testid="teach-verdict">
+                  <div className={`mt-2.5 rounded-[20px] border p-3 text-[13px] ${tone === "amber" ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)]" : tone === "sky" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] bg-[var(--c-surf-2)] text-[var(--c-ink)]"}`} data-testid="teach-verdict">
                     <p className="font-extrabold m-0">{tr(label)}{r.how === "computed" ? " · " + tr("computed on this phone") : ""}</p>
                     {r.reason ? <p className="mt-1" dir="auto">{r.reason}</p> : null}
                     {r.answer && r.verdict !== "unsure" ? <p className="mt-1" dir="auto"><span className="text-[var(--c-mut)]">{tr("Checked answer")}: </span><b>{r.answer}</b></p> : null}
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {r.verdict === "partly" && r.answer ? <button data-testid="teach-save-checked" className="min-h-[44px] px-4 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold"
+                      {r.verdict === "partly" && r.answer ? <button data-testid="teach-save-checked" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold"
                         onClick={() => saveTeach(m, idx, r.answer, r.reason, r.verdict)}>{tr("Learn the checked answer")}</button> : null}
-                      <button data-testid="teach-force" className="min-h-[44px] px-3.5 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold"
+                      <button data-testid="teach-force" className="min-h-[44px] px-3.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold"
                         onClick={() => saveTeach(m, idx, teaching.corrected.trim(), teaching.note.trim(), "kept")}>{tr("I'm sure — learn mine anyway")}</button>
-                      <button onClick={() => setTeaching({ ...teaching, result: null })} className="min-h-[44px] px-3.5 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold">{tr("Edit my correction")}</button>
+                      <button onClick={() => setTeaching({ ...teaching, result: null })} className="min-h-[44px] px-3.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold">{tr("Edit my correction")}</button>
                     </div>
                   </div>); })() : (
                 <div className="flex flex-wrap gap-2 mt-2.5 items-center">
-                  <button disabled={!teaching.corrected.trim() || teaching.checking} data-testid="teach-save" className="min-h-[44px] px-4 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold disabled:opacity-40"
+                  <button disabled={!teaching.corrected.trim() || teaching.checking} data-testid="teach-save" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold disabled:opacity-40"
                     onClick={() => checkTeach(m, idx)}>{teaching.checking ? tr("Checking…") : tr("Check & teach")}</button>
-                  <button onClick={() => setTeaching(null)} className="min-h-[44px] px-3.5 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold">{tr("Cancel")}</button>
+                  <button onClick={() => setTeaching(null)} className="min-h-[44px] px-3.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold">{tr("Cancel")}</button>
                   {teaching.checking ? <span className="text-[11px] text-[var(--c-acc)]" data-testid="teach-step">{teaching.step || tr("Double-checking your correction…")}</span> : null}
                 </div>)}
               </div>
@@ -2338,7 +2338,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           <div className="flex flex-col items-end gap-1.5" data-testid="queued">
             {queued.map((q) => (
               <div key={q.id} className="max-w-[85%] flex flex-col items-end">
-                <div dir="auto" className="bg-[var(--c-surf)] border border-dashed border-[var(--c-ln)] text-[var(--c-ink)] rounded-[22px] rounded-ee-[8px] px-4 py-2.5 text-[15px] whitespace-pre-wrap">{q.text}</div>
+                <div dir="auto" className="bg-[var(--c-surf)] border border-dashed border-[var(--c-ln)] text-[var(--c-ink)] rounded-[20px] rounded-ee-[12px] px-4 py-2.5 text-[15px] whitespace-pre-wrap">{q.text}</div>
                 <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--c-mut)]">
                   <span>{tr("Waiting — read when this answer is done")}</span>
                   <button onClick={() => { const all = queued.map((x) => x.text).join("\n\n"); setQueued([]); ask(all, { queuedDuring: true, now: true }); }} className="min-h-[36px] px-1 font-bold text-[var(--c-acc)]" data-testid="queued-now">{tr("Send now")}</button>
@@ -2394,7 +2394,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         {/* v7.4 (Gemini's Area 3): the "/" list opens above the box only while "/" is typed — a command fills the box, an app opens */}
         {MINIMAL && /^\/\S*$/.test(text) ? <div className="max-w-2xl mx-auto mb-2 calm bg-transparent! max-h-[46vh] overflow-y-auto att-scroll rounded-[20px] shadow-[0_6px_24px_rgba(0,0,0,0.18)]" data-testid="chat-slash"><SlashMenu text={text}
           onPick={(c) => { if (c.group === "open") { setText(""); window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: c.app } })); } else { setText("/" + (getLang() === "ar" ? c.ar[0] : c.id) + " "); setTimeout(() => taRef.current && taRef.current.focus(), 30); } }} /></div> : null}
-        <div className="max-w-2xl mx-auto bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[22px] p-2 shadow-[0_4px_18px_rgba(0,0,0,0.10)] focus-within:border-[var(--c-acc)] transition-colors duration-150">
+        <div className="max-w-2xl mx-auto bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[20px] p-2 shadow-[0_4px_18px_rgba(0,0,0,0.10)] focus-within:border-[var(--c-acc)] transition-colors duration-150">
           {files.length ? (
             <div className="flex flex-wrap gap-1.5 mb-2 ms-1">
               {files.map((f, i) => (
@@ -2409,7 +2409,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             <div className="flex flex-wrap gap-2 mb-2 ms-1" data-testid="attached-photos">
               {photos.map((p, i) => (
                 <div key={i} className="relative inline-block">
-                  <img src={p.url} alt="" className="h-16 rounded-[14px] border border-[var(--c-ln)]" />
+                  <img src={p.url} alt="" className="h-16 rounded-[12px] border border-[var(--c-ln)]" />
                   {photos.length > 1 ? <span className="absolute bottom-0.5 start-0.5 bg-[var(--c-neg)] text-[var(--c-on-acc)] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{i + 1}</span> : null}
                   <button onClick={() => setPhotos((x) => x.filter((_, j) => j !== i))} className="absolute -top-2 -end-2 bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-full p-1 text-[var(--c-ink)] shadow-sm"><X size={13} /></button>
                 </div>))}
@@ -2442,25 +2442,25 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 {/* v6.31 minimal (design A, like ChatGPT/Gemini): one "+" holds photo, file, think and web; what is on shows as a chip */}
                 <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
                   className={"w-11 h-11 rounded-full flex items-center justify-center border transition-colors duration-150 " + (plusOpen ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]")}><Plus size={18} /></button>
-                {trMode ? <button onClick={() => setTrMode(false)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" data-testid="chip-translate"><Languages size={13} />{tr("Translate")}<X size={12} /></button> : null}
-                {deep ? <button onClick={() => setDeep(false)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" data-testid="chip-deep"><Sparkles size={13} />{tr("Deep answer")}<X size={12} /></button> : null}
-                {think ? <button onClick={() => setThink(false)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" data-testid="chip-think"><Brain size={13} />{tr("Think")}<X size={12} /></button> : null}
-                {api.webOn || api.webAuto ? <button onClick={api.toggleWeb} data-testid="web-toggle" className={"h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 " + (api.webOn ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "bg-[var(--c-soft)] text-[var(--c-acc)]")}><Globe size={13} />{api.webAuto ? tr("Web · Auto") : tr("Web")}</button> : null}
+                {trMode ? <button onClick={() => setTrMode(false)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 bg-[var(--c-soft)] text-[var(--c-acc)]" data-testid="chip-translate"><Languages size={13} />{tr("Translate")}<X size={12} /></button> : null}
+                {deep ? <button onClick={() => setDeep(false)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 bg-[var(--c-soft)] text-[var(--c-acc)]" data-testid="chip-deep"><Sparkles size={13} />{tr("Deep answer")}<X size={12} /></button> : null}
+                {think ? <button onClick={() => setThink(false)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 bg-[var(--c-soft)] text-[var(--c-acc)]" data-testid="chip-think"><Brain size={13} />{tr("Think")}<X size={12} /></button> : null}
+                {api.webOn || api.webAuto ? <button onClick={api.toggleWeb} data-testid="web-toggle" className={"h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 " + (api.webOn ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "bg-[var(--c-soft)] text-[var(--c-acc)]")}><Globe size={13} />{api.webAuto ? tr("Web · Auto") : tr("Web")}</button> : null}
                 {plusOpen ? createPortal(
-                  <div className="calm fixed start-3 bottom-[calc(var(--kb,0px)+7.5rem)] z-[70] pointer-events-auto w-64 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)]! text-[var(--c-ink)] p-1.5 shadow-[0_6px_24px_rgba(0,0,0,0.18)]" data-testid="composer-menu" onClick={() => setPlusOpen(false)}>
-                    <label htmlFor="att-pick-photo" className="flex items-center gap-3 h-11 px-3 rounded-[14px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)] cursor-pointer"><ImagePlus size={17} className="text-[var(--c-mut)]" />{tr("Photo")}</label>
-                    <label htmlFor="att-pick-file" className="flex items-center gap-3 h-11 px-3 rounded-[14px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)] cursor-pointer"><Paperclip size={17} className="text-[var(--c-mut)]" />{tr("File")}</label>
-                    <button onClick={() => setThink((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-[14px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="menu-think"><Brain size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Think first")}</span>{think ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
-                    <button onClick={() => setDeep((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-[14px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="menu-deep"><Sparkles size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Deep answer")}<span className="block text-[11px] text-[var(--c-mut)]">{tr("Your strongest model, slow and careful")}</span></span>{deep ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
-                    <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-[14px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="menu-web"><Globe size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Search the web")}</span><span className="text-[11px] text-[var(--c-mut)]">{api.webOn ? tr("On") : api.webAuto ? tr("Auto") : tr("Off")}</span></button>
-                    <button onClick={() => setTrMode((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-[14px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="menu-translate"><Languages size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Translate my messages")}</span>{trMode ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
+                  <div className="calm fixed start-3 bottom-[calc(var(--kb,0px)+7.5rem)] z-[70] pointer-events-auto w-64 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)]! text-[var(--c-ink)] p-1.5 shadow-[0_6px_24px_rgba(0,0,0,0.18)]" data-testid="composer-menu" onClick={() => setPlusOpen(false)}>
+                    <label htmlFor="att-pick-photo" className="flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)] cursor-pointer"><ImagePlus size={17} className="text-[var(--c-mut)]" />{tr("Photo")}</label>
+                    <label htmlFor="att-pick-file" className="flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)] cursor-pointer"><Paperclip size={17} className="text-[var(--c-mut)]" />{tr("File")}</label>
+                    <button onClick={() => setThink((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="menu-think"><Brain size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Think first")}</span>{think ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
+                    <button onClick={() => setDeep((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="menu-deep"><Sparkles size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Deep answer")}<span className="block text-[11px] text-[var(--c-mut)]">{tr("Your strongest model, slow and careful")}</span></span>{deep ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
+                    <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="menu-web"><Globe size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Search the web")}</span><span className="text-[11px] text-[var(--c-mut)]">{api.webOn ? tr("On") : api.webAuto ? tr("Auto") : tr("Off")}</span></button>
+                    <button onClick={() => setTrMode((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="menu-translate"><Languages size={17} className="text-[var(--c-mut)]" /><span className="flex-1 text-start">{tr("Translate my messages")}</span>{trMode ? <CheckCircle2 size={15} className="text-[var(--c-acc)]" /> : null}</button>
                   </div>, document.body) : null}
               </>
             ) : (
               <>
-            <button onClick={() => setThink((v) => !v)} className={`h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 border ${think ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`} title={tr("Think first")}>
+            <button onClick={() => setThink((v) => !v)} className={`h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 border ${think ? "border-transparent bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`} title={tr("Think first")}>
               <Brain size={14} /> {tr("Think")}</button>
-            <button onClick={api.toggleWeb} data-testid="web-toggle" className={`h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 border ${api.webOn ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : api.webAuto ? "border-[var(--c-acc)]/40 text-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`} title={tr("Search the web")}>
+            <button onClick={api.toggleWeb} data-testid="web-toggle" className={`h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 border ${api.webOn ? "border-transparent bg-[var(--c-soft)] text-[var(--c-acc)]" : api.webAuto ? "border-[var(--c-acc)]/40 text-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`} title={tr("Search the web")}>
               <Globe size={14} /> {api.webAuto ? tr("Web · Auto") : tr("Web")}</button>
               </>
             )}

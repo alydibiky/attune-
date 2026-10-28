@@ -200,7 +200,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
         {doCard.plan.missing.length ? <p className="m-0 text-[13px] text-[var(--c-warn)]">{doCard.plan.missing.map((m) => (typeof m === "string" ? tr(m) : tr(m.t, m.v))).join(" · ")}</p>
           : <div className="flex flex-wrap gap-2">{doCard.plan.links.map((l) => <button key={l.label} onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: l, plan: doCard.plan } }))} className={U.btnS} data-testid="agents-do-link"><ExternalLink size={14} />{l.label}</button>)}</div>}
         <p className="m-0 text-[11.5px] c-sub">{tr("The app opens with your search ready — you choose and pay there.")}</p></div> : null}
-      {N && !access && st.agents.some((a) => a.kind === "track") ? <button onClick={() => { try { N.openPayAccess && N.openPayAccess(); } catch (e) {} }} className="w-full text-start min-h-[44px] rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12.5px] font-semibold text-[var(--c-warn)] flex gap-2" data-testid="agents-access">
+      {N && !access && st.agents.some((a) => a.kind === "track") ? <button onClick={() => { try { N.openPayAccess && N.openPayAccess(); } catch (e) {} }} className="w-full text-start min-h-[44px] rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12.5px] font-semibold text-[var(--c-warn)] flex gap-2" data-testid="agents-access">
         <AlertTriangle size={14} className="shrink-0 mt-0.5" />{tr("Delivery agents read the store app's notifications: turn on Notification access for Attune (Settings opens).")}</button> : null}
 
       <p className="text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] m-0 pt-1" data-testid="agents-running">{T("Running · {n}", { n: r.running })}</p>
@@ -220,7 +220,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
     </div>);
 }
 
-function Ico({ k }) { return <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0">{React.createElement(KIND_ICON[k] || AppWindow, { size: 18 })}</span>; }
+function Ico({ k }) { return <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0">{React.createElement(KIND_ICON[k] || AppWindow, { size: 18 })}</span>; }
 
 /** v8.6 a buy agent: its plan, what it found, and the person's decision (Order it / Not this one) — nothing is bought without it. */
 function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, toggle }) {
@@ -232,8 +232,8 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
       <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.site}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{last ? " · " + T("checked {t}", { t: ago(last.at) }) : ""}</p>
       <div className="mt-2 space-y-0.5" data-testid="agent-buy-plan">{A.buySteps(a).map((s, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={s.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{s.done ? "✓" : "⏳"}</span><span className={s.done ? "" : "c-sub"}>{T(s.en, s.v)}</span></p>)}</div>
     </div></div>
-    {p && a.step !== "ordered" ? <div className="rounded-[16px] border-2 border-[var(--c-acc)] p-3 space-y-2" data-testid="agent-buy-confirm">
-      <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-acc)]">{tr("Found it — do you want it?")}</p>
+    {p && a.step !== "ordered" ? <div className="rounded-[20px] border-2 border-[var(--c-acc)] p-3 space-y-2" data-testid="agent-buy-confirm">
+      <p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-acc)]">{tr("Found it — do you want it?")}</p>
       <div className="flex items-start gap-2"><p className="m-0 flex-1 min-w-0 text-[14px] font-extrabold" dir="auto">{p.name}</p><b className="tabular-nums text-[15px] shrink-0">{money(p.price, p.currency)}</b></div>
       <p className="m-0 text-[11.5px] c-sub" dir="auto">{p.site}{p.text && p.text !== p.name ? " · " + p.text.replace(p.name, "").slice(0, 100) : ""}</p>
       <div className="flex gap-1.5 flex-wrap"><button onClick={() => confirmBuy(a)} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-buy-yes"><Check size={14} />{tr("Order it")}</button>
@@ -270,8 +270,8 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
         <div className="mt-2 space-y-0.5" data-testid="agent-plan">{A.planSteps(a).map((p, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={p.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{p.done ? "✓" : "⏳"}</span><span className={p.done ? "" : "c-sub"}>{T(p.en, p.v)}</span></p>)}</div>
       </div></div>
       {(a.best3 || []).length ? <div className="space-y-1.5" data-testid="agent-best3">
-        <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Best 3 right now")}</p>
-        {a.best3.map((o, k) => <div key={k} className="rounded-[14px] border border-[var(--c-ln)] px-3 py-2" data-testid="agent-best">
+        <p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Best 3 right now")}</p>
+        {a.best3.map((o, k) => <div key={k} className="rounded-[12px] border border-[var(--c-ln)] px-3 py-2" data-testid="agent-best">
           <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><p className="m-0 text-[13.5px] font-extrabold" dir="auto">{o.name || a.site}</p>
             <p className="m-0 text-[11.5px] c-sub line-clamp-2" dir="auto">{[o.checkin ? o.checkin + " → " + o.checkout : "", o.text && o.text !== o.name ? o.text.replace(o.name, "").slice(0, 110) : ""].filter(Boolean).join(" · ")}</p></div>
             <b className="tabular-nums text-[14px] shrink-0">{money(o.price, a.currency)}</b></div>
@@ -313,7 +313,7 @@ function AgentsReport({ st, scout, alerts, back }) {
     <div className={U.cardPad}>{Object.entries(r.by).map(([k, n]) => <div key={k} className="flex justify-between py-2 border-t border-[var(--c-ln)] first:border-t-0 text-[14px]"><span>{tr(KN[k])}</span><b className="tabular-nums">{n}</b></div>)}</div>
     {st.agents.filter((a) => a.kind === "watch").map((a) => <div key={a.id} className={U.cardPad + " space-y-1"} data-testid="agents-report-watch">
       <p className="m-0 font-extrabold" dir="auto">{a.title}</p>
-      {(a.checks || []).slice().reverse().slice(0, 8).map((c, i) => <div key={i} className="flex justify-between text-[13px] c-sub"><span>{new Date(c.at).toLocaleString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · {tr(c.how === "browser" ? "in the browser" : "by itself")}</span>
+      {(a.checks || []).slice().reverse().slice(0, 8).map((c, i) => <div key={i} className="flex justify-between text-[13px] c-sub"><span>{new Date(c.at).toLocaleString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · {tr(c.how === "browser" ? "in the browser" : "by itself")}</span>
         <b className={c.price && c.price <= a.below ? "text-[var(--c-pos)]" : ""}>{c.price ? money(c.price, a.currency) : tr("no prices shown")}</b></div>)}
       {!(a.checks || []).length ? <p className="m-0 text-[13px] c-sub">{tr("Not checked yet — tap Check now")}</p> : null}
     </div>)}

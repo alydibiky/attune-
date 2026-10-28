@@ -143,12 +143,12 @@ export function LessonPlayer({ lesson, native, onDone, autoplay = false }) {
         {result === "right" ? <p className="c-pos text-[13px] m-0" data-testid="lesson-right"><Check size={13} className="inline -mt-0.5" /> {tr("Right!")}</p> : null}
       </div>
       <div className="flex items-center gap-2 mt-3">
-        <button className="w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40" aria-label={tr("Back")} onClick={() => go(i - 1)} disabled={i === 0}><ChevronLeft size={18} className="rtl:rotate-180" /></button>
+        <button className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40" aria-label={tr("Back")} onClick={() => go(i - 1)} disabled={i === 0}><ChevronLeft size={18} className="rtl:rotate-180" /></button>
         <button className={btnP + " !h-11 !min-h-[44px]"} onClick={() => { if (playing) { stopSpeaking(native); setPlaying(false); } else setPlaying(true); }} data-testid="lesson-play">
           {playing ? <Pause size={14} /> : <Play size={14} />}{playing ? tr("Pause") : i === 0 ? tr("Play the lesson") : tr("Play")}</button>
-        <button className="w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40" aria-label={tr("Hear it again")} onClick={() => { stopSpeaking(native); speakNow(say(s), { lang, rate, native }); }}><RefreshCw size={15} /></button>
+        <button className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40" aria-label={tr("Hear it again")} onClick={() => { stopSpeaking(native); speakNow(say(s), { lang, rate, native }); }}><RefreshCw size={15} /></button>
         <button className={chip(false) + " tabular-nums !min-h-[44px] !h-11"} onClick={() => setRate((r) => (r >= 1.25 ? 0.75 : r + 0.25))} aria-label={tr("Speed")}>{rate}×</button>
-        <button className={"w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40 ms-auto"} aria-label={tr("Next")} onClick={() => go(i + 1)} disabled={i >= steps.length - 1 || asking} data-testid="lesson-next"><ChevronRight size={18} className="rtl:rotate-180" /></button>
+        <button className={"w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40 ms-auto"} aria-label={tr("Next")} onClick={() => go(i + 1)} disabled={i >= steps.length - 1 || asking} data-testid="lesson-next"><ChevronRight size={18} className="rtl:rotate-180" /></button>
       </div>
     </div>);
 }

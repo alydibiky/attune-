@@ -132,7 +132,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
 
   const tabBtn = (id, label) => (
     <button onClick={() => { setTab(id); setErr(""); setDone(""); setPw(""); setPw2(""); }}
-      className={`flex-1 min-h-[40px] rounded-full text-[13.5px] font-bold transition-colors duration-150 ${tab === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold shadow-sm" : "text-[var(--c-mut)]"}`}>{label}</button>
+      className={`flex-1 min-h-[40px] rounded-full text-[13.5px] font-bold transition-colors duration-150 ${tab === id ? "bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold shadow-sm" : "text-[var(--c-mut)]"}`}>{label}</button>
   );
 
   return (
@@ -160,7 +160,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
               </div>
               <label className="text-[var(--c-mut)] flex items-center gap-1"><input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />{tr("Show")}</label>
             </div>
-            <div className="flex gap-2 items-start rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2.5 text-[11px] text-[var(--c-warn)]">
+            <div className="flex gap-2 items-start rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2.5 text-[11px] text-[var(--c-warn)]">
               <AlertTriangle size={14} className="shrink-0 mt-0.5" />
               <span>{tr("If you forget this password the backup cannot be opened — by anyone. Write it down somewhere safe.")}</span>
             </div>
@@ -177,7 +177,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
               <Download size={16} />{file ? tr("Choose a different file") : tr("Choose backup file")}
             </button>
             {file ? (
-              <div className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 space-y-2">
+              <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 space-y-2">
                 <p className="text-[13px] font-bold text-[var(--c-ink)] break-all">{file.name}</p>
                 <p className="text-[11px] text-[var(--c-mut)]">{tr("Made on {d}", { d: new Date(file.head.created).toLocaleString() })}</p>
                 {file.head.summary ? <Summary s={file.head.summary} /> : null}
@@ -197,7 +197,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
                 <p className="text-[12px] text-[var(--c-acc)] flex items-center gap-1.5"><CheckCircle2 size={14} />{tr("Unlocked. How should it be restored?")}</p>
                 {[["replace", tr("Replace everything on this phone"), tr("This phone becomes exactly like the backup.")],
                   ["merge", tr("Merge"), tr("Keep everything on this phone and add the backup's chats, memory, reminders and cycle days. The Money ledger is only taken from the backup if this phone has none.")]].map(([id, a, b]) => (
-                  <label key={id} className={`block rounded-[16px] border p-3 min-h-[48px] transition-colors duration-150 ${mode === id ? "border-[var(--c-acc-2)] bg-[var(--c-surf-2)]" : "border-[var(--c-ln)]"}`}>
+                  <label key={id} className={`block rounded-[20px] border p-3 min-h-[48px] transition-colors duration-150 ${mode === id ? "border-[var(--c-acc)] bg-[var(--c-surf-2)]" : "border-[var(--c-ln)]"}`}>
                     <span className="flex items-center gap-2 text-sm text-[var(--c-ink)]"><input type="radio" name="rmode" checked={mode === id} onChange={() => { setMode(id); setConfirm(false); }} />{a}</span>
                     <span className="block text-[11px] text-[var(--c-mut)] ms-6">{b}</span>
                   </label>
@@ -205,13 +205,13 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
                 {!confirm ? (
                   <button onClick={() => setConfirm(true)} data-testid="rs-restore" className={K.btnP + " w-full"}>{tr("Restore")}</button>
                 ) : (
-                  <div className="rounded-[18px] border border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10 p-3.5 space-y-2">
+                  <div className="rounded-[20px] border border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10 p-3.5 space-y-2">
                     <p className="text-[12px] text-[var(--c-neg)]">{mode === "replace"
                       ? tr("This phone's {c} chats and {l} ledger entries will be replaced by the backup's. You can undo this once, right after.", { c: now.chats, l: now.ledger })
                       : tr("The backup's items will be added to this phone. You can undo this once, right after.")}</p>
                     <div className="flex gap-2">
                       <button onClick={() => setConfirm(false)} className={K.btnS + " flex-1"}>{tr("Cancel")}</button>
-                      <button onClick={doRestore} data-testid="rs-confirm" className="flex-1 min-h-[44px] bg-[var(--c-neg)] text-[var(--c-on-acc)] font-extrabold rounded-[14px] text-sm">{tr("Yes, restore")}</button>
+                      <button onClick={doRestore} data-testid="rs-confirm" className="flex-1 min-h-[44px] bg-[var(--c-neg)] text-[var(--c-on-acc)] font-extrabold rounded-[12px] text-sm">{tr("Yes, restore")}</button>
                     </div>
                   </div>
                 )}

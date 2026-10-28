@@ -15,8 +15,8 @@ const ar = () => getLang() === "ar";
 const I = (s) => "⁦" + s + "⁩";
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? I(y) : y])) : v);
 const amt = (n, cur) => fmt(n) + (cur ? " " + cur : "");
-const monthLabel = (key) => { try { return new Date(key + "-15T12:00:00").toLocaleDateString(ar() ? "ar-EG" : "en-US", { month: "short" }); } catch (e) { return key; } };
-const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(ar() ? "ar-EG" : undefined, { day: "numeric", month: "short" }); } catch (e) { return iso; } };
+const monthLabel = (key) => { try { return new Date(key + "-15T12:00:00").toLocaleDateString(ar() ? "ar-EG-u-nu-latn" : "en-US", { month: "short" }); } catch (e) { return key; } };
+const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(ar() ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }); } catch (e) { return iso; } };
 const C1 = "var(--c-chart-1)", C2 = "var(--c-chart-2)";
 const FREQ = { daily: "Every day", weekly: "Every week", monthly: "Every month", yearly: "Every year" };
 const csvOf = (rows) => "﻿" + rows.map((r) => r.map((c) => { const s = String(c ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(",")).join("\n");
@@ -33,7 +33,7 @@ const Head = ({ title, back, right, testid }) => <div className="flex items-cent
   <h3 className="flex-1 min-w-0 text-[18px] font-black tracking-tight m-0 truncate">{title}</h3>{right}</div>;
 const Row = ({ icon, title, sub, end, endSub, tone, onClick, testid }) => <button onClick={onClick} data-testid={testid}
   className="w-full text-start flex items-center gap-3 min-h-[60px] py-2.5 px-1 border-t border-[var(--c-ln)] first:border-t-0">
-  <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-bg)] border border-[var(--c-ln)] shrink-0 text-[17px]">{icon}</span>
+  <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-bg)] border border-[var(--c-ln)] shrink-0 text-[17px]">{icon}</span>
   <span className="min-w-0 flex-1"><span className="block text-[14.5px] font-bold truncate" dir="auto">{title}</span>{sub ? <span className="block text-[12px] text-[var(--c-mut)] truncate">{sub}</span> : null}</span>
   <span className="text-end shrink-0"><b className={"block tabular-nums text-[14.5px] " + (tone === "neg" ? "text-[var(--c-neg)]" : tone === "warn" ? "text-[var(--c-warn)]" : "")} dir="ltr">{end}</b>{endSub ? <span className={"block text-[11.5px] " + (tone === "warn" ? "text-[var(--c-warn)] font-bold" : "text-[var(--c-mut)]")}>{endSub}</span> : null}</span>
 </button>;
@@ -57,19 +57,21 @@ export function panesFor(L) {
 export function MoneyBar({ pane, setPane, onAdd, wide, dots = {}, panes = PANES }) {
   if (wide) return <div className="flex flex-wrap items-center gap-2 mb-4" data-testid="money-bar">
     {panes.map(([id, l, Ic]) => <button key={id} onClick={() => setPane(id)} data-testid={"money-bar-" + id}
-      className={"h-10 px-4 rounded-full border text-[13.5px] font-extrabold inline-flex items-center gap-1.5 transition-colors duration-150 " + (pane === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>
+      className={"h-10 px-4 rounded-full border text-[13.5px] font-extrabold inline-flex items-center gap-1.5 transition-colors duration-150 " + (pane === id ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>
       <Ic size={15} />{tr(l)}{dots[id] ? <i className="w-2 h-2 rounded-full bg-[var(--c-warn)]" /> : null}</button>)}
     <button onClick={onAdd} className={U.btnP + " h-10! min-h-[40px]! rounded-full ms-auto"} data-testid="money-add"><Plus size={16} />{tr("Add")}</button>
   </div>;
-  return <div className="shrink-0 relative" style={{ order: 99 }}>
-    <button onClick={onAdd} aria-label={tr("Add an expense, income or transfer")} data-testid="money-add"
-      className="absolute -top-[76px] end-4 w-14 h-14 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-[0_6px_18px_rgba(0,0,0,0.3)] z-10"><Plus size={26} strokeWidth={2.6} /></button>
-    <nav className="grid bg-[var(--c-surf)] border-t border-[var(--c-ln)] px-0.5" style={{ paddingBottom: "env(safe-area-inset-bottom)", gridTemplateColumns: "repeat(" + panes.length + ", minmax(0, 1fr))" }} data-testid="money-bar">
-    {panes.map(([id, l, Ic]) => <button key={id} onClick={() => setPane(id)} data-testid={"money-bar-" + id} aria-current={pane === id ? "page" : undefined}
-          className={"relative h-16 min-w-0 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-extrabold transition-colors duration-150 " + (pane === id ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)]")}>
-          <span className={"w-11 h-7 rounded-full grid place-items-center " + (pane === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "")}><Ic size={17} /></span><span className="truncate max-w-full px-0.5">{tr(l)}</span>
-          {dots[id] ? <i className="absolute top-2.5 end-[18%] w-2 h-2 rounded-full bg-[var(--c-warn)]" /> : null}</button>)}
-    </nav></div>;
+  // v8.7 (Ali picked P5-A option 2: "no bottom bars anywhere"): on a phone the parts are a row of tabs at the top, like Health and
+  // Students; the + is a round button that floats at the bottom corner
+  return <>
+    <div className="att-hscroll flex gap-1.5 overflow-x-auto no-scrollbar -mx-3.5 px-3.5 pt-2.5" role="tablist" data-testid="money-bar">
+      {panes.map(([id, l, Ic]) => <button key={id} role="tab" onClick={() => setPane(id)} data-testid={"money-bar-" + id} aria-selected={pane === id} aria-current={pane === id ? "page" : undefined}
+        className={"relative shrink-0 h-10 px-3.5 rounded-full border text-[13px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors duration-150 " + (pane === id ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)]")}>
+        <Ic size={15} />{tr(l)}{dots[id] ? <i className="w-2 h-2 rounded-full bg-[var(--c-warn)]" /> : null}</button>)}
+    </div>
+    <button onClick={onAdd} aria-label={tr("Add an expense, income or transfer")} data-testid="money-add" style={{ bottom: "calc(16px + env(safe-area-inset-bottom))" }}
+      className="fixed end-4 w-14 h-14 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-[0_6px_18px_rgba(0,0,0,0.3)] z-30"><Plus size={26} strokeWidth={2.6} /></button>
+  </>;
 }
 
 // ---- the + sheet -----------------------------------------------------------------------------------------------------------------------
@@ -88,18 +90,18 @@ export function AddSheet({ L, onSave, onDebt, onClose, prefill = null }) {
   const tos = accs.filter((a) => a.id !== account && (!from || (a.currency || "") === (from.currency || "")));
   const pick = (t) => { setType(t); setErr(""); if (t === "income") setCat("salary"); else if (t === "expense") setCat("food"); };
   const save = () => { const r = sheetTxn({ type, amount, cat, account, toAccount, date, note }); if (!r.ok) return setErr(tr(r.why)); onSave(prefill && prefill.evidence ? { ...r.txn, evidence: prefill.evidence } : r.txn); };
-  const pill = (on) => "min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold whitespace-nowrap transition-colors duration-150 " + (on ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]");
+  const pill = (on) => "min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold whitespace-nowrap transition-colors duration-150 " + (on ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]");
   return <div className="calm fixed inset-0 z-[80] bg-black/55 flex flex-col justify-end lg:items-center lg:justify-center" onClick={onClose} data-testid="money-add-sheet">
-    <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[26px] lg:rounded-[26px] w-full lg:max-w-lg max-h-[92vh] overflow-y-auto p-4 pb-6 space-y-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+    <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[20px] lg:rounded-[20px] w-full lg:max-w-lg max-h-[92vh] overflow-y-auto p-4 pb-6 space-y-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
       <div className="flex items-center gap-2"><p className="flex-1 text-[18px] font-black m-0">{tr("Add to Money")}</p>
         <button onClick={onClose} aria-label={tr("Close")} className="w-10 h-10 rounded-full grid place-items-center c-sub" data-testid="money-add-close"><X size={18} /></button></div>
-      {prefill && prefill.evidence && prefill.evidence.text ? <details className="rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 py-2" data-testid="add-evidence">
+      {prefill && prefill.evidence && prefill.evidence.text ? <details className="rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 py-2" data-testid="add-evidence">
         <summary className="text-[12.5px] font-extrabold c-sub cursor-pointer">{tr("Read from the message — check it")}</summary>
         <p className="m-0 mt-1.5 text-[13px] whitespace-pre-wrap break-words" dir="auto">{prefill.evidence.text}</p></details> : null}
       <div className="grid grid-cols-4 gap-1 p-1 rounded-full bg-[var(--c-bg)] border border-[var(--c-ln)]" role="radiogroup" data-testid="add-type">
         {[["expense", "Expense"], ["income", "Income"], ["transfer", "Transfer"], ["debt", "Lend / borrow"]].map(([id, l]) => <button key={id} role="radio" aria-checked={type === id}
           onClick={() => (id === "debt" ? onDebt() : pick(id))} data-testid={"add-type-" + id}
-          className={"min-h-[38px] rounded-full text-[12.5px] font-extrabold leading-tight px-1 " + (type === id ? (id === "income" ? "bg-[var(--c-pos)] text-white" : id === "expense" ? "bg-[var(--c-neg)] text-white" : "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]") : "c-sub")}>{tr(l)}</button>)}
+          className={"min-h-[38px] rounded-full text-[12.5px] font-extrabold leading-tight px-1 " + (type === id ? (id === "income" ? "bg-[var(--c-pos)] text-white" : id === "expense" ? "bg-[var(--c-neg)] text-white" : "bg-[var(--c-soft)] text-[var(--c-acc)]") : "c-sub")}>{tr(l)}</button>)}
       </div>
       <div className="flex items-baseline gap-2 border-b-2 border-[var(--c-acc)] pb-1">
         <input value={amount} onChange={(e) => { setAmount(e.target.value); setErr(""); }} inputMode="decimal" placeholder="0" autoFocus dir="ltr" data-testid="add-amount"
@@ -128,12 +130,12 @@ export function MoreSheet({ open, onClose }) {
   // v7.9 (Ali): Notes left Money (its notes were copied into Mind), and invoices live in Business → Books now
   const items = [["automations", "Automations", Zap, "When money comes in or goes out, do something by itself"], ["biz-invoices", "Invoices", FileText, "Now in Business → Books"], ["home", "Full ledger", BookOpen, "Every entry, edit or delete"], ["settings", "Ledger settings", Settings, "Currency, categories, budgets, backup"]];
   return <div className="calm fixed inset-0 z-[80] bg-black/55 flex flex-col justify-end lg:items-center lg:justify-center" onClick={onClose} data-testid="money-more-sheet">
-    <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[26px] lg:rounded-[26px] w-full lg:max-w-md p-3 pb-5" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+    <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[20px] lg:rounded-[20px] w-full lg:max-w-md p-3 pb-5" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
       <div className="flex items-center gap-2 px-1 pb-1"><p className="flex-1 text-[17px] font-black m-0">{tr("More")}</p>
         <button onClick={onClose} aria-label={tr("Close")} className="w-10 h-10 rounded-full grid place-items-center c-sub"><X size={18} /></button></div>
       {items.map(([id, l, Ic, sub]) => <button key={id} onClick={() => open(id)} data-testid={id === "home" ? "money-open-ledger" : "money-more-" + id}
-        className="w-full text-start flex items-center gap-3 min-h-[56px] px-2 rounded-[16px] hover:bg-[var(--c-bg)]">
-        <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Ic size={18} /></span>
+        className="w-full text-start flex items-center gap-3 min-h-[56px] px-2 rounded-[20px] hover:bg-[var(--c-bg)]">
+        <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Ic size={18} /></span>
         <span className="min-w-0 flex-1"><span className="block text-[14.5px] font-bold">{tr(l)}</span><span className="block text-[12px] c-sub">{tr(sub)}</span></span>
         <ChevronRight size={17} className="c-sub rtl:rotate-180" /></button>)}
     </div></div>;

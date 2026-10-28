@@ -7,7 +7,7 @@ import { LINES, FARES, findStation, route } from "./metro.js";
 import * as K from "./ui-kit.jsx";
 import { TrainFront, ArrowUpDown, X } from "lucide-react";
 
-const card = "rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)]";
+const card = "rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)]";
 const KEY = "attune:metro:last";
 const lineOf = (id) => LINES.find((l) => l.id === id);
 
@@ -25,8 +25,8 @@ export function MetroPage() {
     const st = k === "from" ? A : B, v = ft[k];
     return (
       <div className="space-y-0.5">
-        <div className={`min-h-[44px] flex items-center gap-2 bg-[var(--c-bg)] border rounded-[14px] px-3 transition-colors duration-150 ${pick === k ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`}>
-          <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] w-10 shrink-0">{label}</span>
+        <div className={`min-h-[44px] flex items-center gap-2 bg-[var(--c-bg)] border rounded-[12px] px-3 transition-colors duration-150 ${pick === k ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`}>
+          <span className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] w-10 shrink-0">{label}</span>
           <input value={v} list="metro-stations" dir="auto" data-testid={"metro-" + k} onFocus={() => setPick(k)} onChange={(e) => set({ ...ft, [k]: e.target.value })}
             placeholder={k === "from" ? tr("e.g. Maadi, التحرير, Ramses") : tr("e.g. Attaba, Cairo University")} className="flex-1 bg-transparent py-2.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
           {v ? <button onClick={() => set({ ...ft, [k]: "" })} className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Clear")}><X size={15} /></button> : null}
@@ -54,9 +54,9 @@ export function MetroPage() {
           {!r.legs.length ? <p className="text-sm text-[var(--c-ink)]">{tr("You're already there")}</p> : (
             <>
               <div className="flex gap-2 text-center">
-                <div className="flex-1 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black">{r.minutes}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("min (about)")}</p></div>
-                <div className="flex-1 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black">{r.stops}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("stops")}</p></div>
-                <div className="flex-1 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black" data-testid="metro-fare">{r.fare}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("EGP ticket")}</p></div>
+                <div className="flex-1 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black">{r.minutes}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("min (about)")}</p></div>
+                <div className="flex-1 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black">{r.stops}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("stops")}</p></div>
+                <div className="flex-1 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black" data-testid="metro-fare">{r.fare}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("EGP ticket")}</p></div>
               </div>
               <ol className="space-y-2">
                 {r.legs.map((l, i) => {

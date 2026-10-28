@@ -110,7 +110,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
 
   const tabBtn = (id, label, Icon, n) => (
     <button key={id} onClick={() => setTab(id)} data-testid={"xray-tab-" + id}
-      className={chip(tab === id) + " shrink-0 lg:rounded-[14px] lg:h-11"}>
+      className={chip(tab === id) + " shrink-0 lg:rounded-[12px] lg:h-11"}>
       <Icon size={14} />{tr(label)}{n != null ? <span className="text-[11px] tabular-nums opacity-80 lg:ms-auto">{n}</span> : null}</button>
   );
   const quote = (x) => (
@@ -129,7 +129,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
           X-ray open, the totals and its sections on the left and the section's content on the right */}
       {!res ? <div className={PANES}><div className={LEFT}>
       {!chat && !res ? (
-        <section className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-3">
+        <section className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-3">
           <ol className="text-[12.5px] text-[var(--c-ink)] space-y-1 list-decimal ps-5">
             <li>{tr("In WhatsApp, open the chat → ⋮ → More → Export chat → Without media.")}</li>
             <li>{tr("Pick Attune in the share list — or save the file and choose it here.")}</li>
@@ -163,7 +163,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
       ) : null}
 
       {chat && !res ? (
-        <section className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-4" data-testid="xray-setup">
+        <section className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-4" data-testid="xray-setup">
           <p className="text-[15px] font-extrabold text-[var(--c-ink)] m-0">{chat.name} · {tr("{n} messages", { n: chat.messages.length.toLocaleString("en-US") })}</p>
           <div>
             <p className={label + " mt-0 mb-2"}>{tr("Which one is you?")}</p>
@@ -198,8 +198,8 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
             {(() => { const owed = res.ledger.filter((r) => r.net > 0), owe = res.ledger.filter((r) => r.net < 0);
               const sum = (rows) => { const m = new Map(); for (const r of rows) m.set(r.currency, (m.get(r.currency) || 0) + Math.abs(r.net)); return [...m.entries()].map(([c, v]) => money(v, c)).join(" · ") || "—"; };
               return <>
-                <div className="rounded-[22px] border border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(--c-pos)] m-0">{tr("Owed to you")}</p><p className="text-[clamp(16px,4.4vw,19px)] font-black tabular-nums text-[var(--c-pos)] mt-1 mb-0" data-testid="xray-owed">{sum(owed)}</p></div>
-                <div className="rounded-[22px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(--c-warn)] m-0">{tr("You owe")}</p><p className="text-[clamp(16px,4.4vw,19px)] font-black tabular-nums text-[var(--c-warn)] mt-1 mb-0">{sum(owe)}</p></div>
+                <div className="rounded-[20px] border border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(--c-pos)] m-0">{tr("Owed to you")}</p><p className="text-[clamp(16px,4.4vw,19px)] font-black tabular-nums text-[var(--c-pos)] mt-1 mb-0" data-testid="xray-owed">{sum(owed)}</p></div>
+                <div className="rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(--c-warn)] m-0">{tr("You owe")}</p><p className="text-[clamp(16px,4.4vw,19px)] font-black tabular-nums text-[var(--c-warn)] mt-1 mb-0">{sum(owe)}</p></div>
               </>; })()}
           </div>
           <div className="att-hscroll flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
@@ -214,7 +214,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
           {tab === "money" ? (
             <div className="space-y-2" data-testid="xray-money">
               {res.ledger.length ? res.ledger.map((r) => (
-                <details key={r.person + r.currency} className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                <details key={r.person + r.currency} className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
                   <summary className="flex items-center justify-between gap-2 min-h-[28px] cursor-pointer list-none">
                     <span className="text-[14.5px] font-extrabold text-[var(--c-ink)] truncate">{r.person}</span>
                     <span className={`text-[14px] font-extrabold tabular-nums shrink-0 ${r.net > 0 ? "text-[var(--c-pos)]" : r.net < 0 ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]"}`}>
@@ -230,7 +230,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
           {tab === "promises" ? (
             <div className="space-y-2" data-testid="xray-promises">
               {res.items.filter((x) => ["promise", "deadline", "order"].includes(x.type)).sort((a, b) => (a.due || "9") < (b.due || "9") ? -1 : 1).map((it, i) => (
-                <div key={i} className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                <div key={i} className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[14px] font-bold text-[var(--c-ink)] m-0">{it.from}{it.what ? ": " + it.what : ""}</p>
                     {it.due ? <span className="text-[11px] font-extrabold tabular-nums px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] border border-[var(--c-acc)]/30 text-[var(--c-acc)] shrink-0">{fmtD(it.due + "T12:00:00")}</span> : null}
@@ -245,7 +245,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
 
           {tab === "unanswered" ? (
             <div className="space-y-2" data-testid="xray-unanswered">
-              {res.unanswered.length ? res.unanswered.map((u, i) => <div key={i} className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">{quote(u)}</div>)
+              {res.unanswered.length ? res.unanswered.map((u, i) => <div key={i} className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">{quote(u)}</div>)
                 : <p className="text-[13px] text-[var(--c-mut)] px-1">{tr("Every question to you got an answer. 👍")}</p>}
             </div>
           ) : null}
@@ -264,7 +264,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
               ) : null}
               {asking ? <p className="text-[12px] text-[var(--c-acc)]">{tr(CX.askKind(q) === "about" ? "Reading messages from the whole chat and writing the main topics…" : "Reading the matching messages…")}</p> : null}
               {ans ? (
-                <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="xray-answer">
+                <div className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="xray-answer">
                   <p dir="auto" className="text-[14px] text-[var(--c-ink)] whitespace-pre-wrap leading-relaxed">{ans.text}</p>
                   <details className="mt-2" open={ans.kind === "mention" && ans.hits.length > 0 && ans.hits.length <= 8}><summary className="text-[12.5px] font-bold text-[var(--c-acc)] cursor-pointer min-h-[32px] flex items-center">{tr(ans.kind === "mention" ? "Where it was said ({n})" : "The messages it read ({n})", { n: ans.hits.length })}</summary>
                     <div className="mt-2 space-y-1.5">{ans.hits.map((m) => <p key={m.i} dir="auto" className="text-[12px] text-[var(--c-ink)]"><span className="text-[var(--c-mut)]">#{m.i} {fmtD(m.t)} {m.who}:</span> {m.text.slice(0, 200)}</p>)}</div></details>
@@ -274,7 +274,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
           ) : null}
 
           {tab === "stats" ? (
-            <div className="rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-2.5 text-[13px]" data-testid="xray-stats">
+            <div className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-2.5 text-[13px]" data-testid="xray-stats">
               <p className="text-[var(--c-ink)]">{tr("{n} messages", { n: res.stats.total.toLocaleString("en-US") })}{res.stats.first ? " · " + fmtD(res.stats.first) + " – " + fmtD(res.stats.last) : ""}</p>
               {res.stats.per.slice(0, 8).map(([p, n]) => {
                 const w = Math.round((n / Math.max(1, res.stats.per[0][1])) * 100);

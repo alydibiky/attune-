@@ -323,7 +323,7 @@ export function parseExtract(raw, now) {
 }
 
 // ---- the screen ----------------------------------------------------------------
-const FLOW_BG = { spotting: "bg-[var(--c-acc-2)]/25 text-[var(--c-ink)]", light: "bg-[var(--c-acc-2)]/45 text-[var(--c-ink)]", medium: "bg-[var(--c-acc-2)]/75 text-[var(--c-ink)]", heavy: "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" };
+const FLOW_BG = { spotting: "bg-[var(--c-acc-2)]/25 text-[var(--c-ink)]", light: "bg-[var(--c-acc-2)]/45 text-[var(--c-ink)]", medium: "bg-[var(--c-acc-2)]/75 text-[var(--c-ink)]", heavy: "bg-[var(--c-soft)] text-[var(--c-acc)]" };
 const FLOWS = [["spotting", "Spotting"], ["light", "Light"], ["medium", "Medium"], ["heavy", "Heavy"]];
 
 export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall }) {
@@ -392,9 +392,9 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
         <p className="text-sm text-[var(--c-mut)] mt-1 leading-snug">{headline.small}</p>
         {stats.last ? (
           <div className="grid grid-cols-3 gap-2 mt-3">
-            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[16px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Cycle")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.cycleLen} days{stats.known ? "" : tr(" (default)")}</p></div>
-            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[16px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Period")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.periodLen} days</p></div>
-            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[16px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Fertile window")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
+            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[20px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Cycle")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.cycleLen} days{stats.known ? "" : tr(" (default)")}</p></div>
+            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[20px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Period")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.periodLen} days</p></div>
+            <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[20px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(--c-mut)] truncate">{tr("Fertile window")}</p><p className="text-[15px] font-black tabular-nums mt-0.5">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
           </div>
         ) : null}
         <CycleChat cycle={cycle} todayKey={todayKey} />
@@ -410,7 +410,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
           <button onClick={goInstant} className={btnS + " text-[var(--c-mut)]"}>{tr("Type it instead")}</button>
         </div>
         {native && native.healthTemps ? (
-          <div className="mt-3 bg-[var(--c-surf-2)] rounded-[16px] p-3 text-[12.5px]" data-testid="cycle-temp">
+          <div className="mt-3 bg-[var(--c-surf-2)] rounded-[20px] p-3 text-[12.5px]" data-testid="cycle-temp">
             {stats.temp && stats.temp.ovulation ? (
               <p className="text-[var(--c-ink)]" data-testid="cycle-temp-line">{tr("Your watch's temperature rose {r} °C: ovulation around {o}, so the period is expected {n}.", { r: stats.temp.rise, o: fromKey(stats.temp.ovulation).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }), n: fromKey(stats.temp.nextStart).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) })}
                 {" "}<span className="text-[var(--c-mut)]">{stats.temp.luteal.own ? tr("(your own {d} days after ovulation)", { d: stats.temp.luteal.days }) : tr("(14 days after ovulation until 2 cycles are measured)")}</span></p>
@@ -470,14 +470,14 @@ export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall
           <div className="grid grid-cols-4 gap-1.5">
             {FLOWS.map(([k, l]) => (
               <button key={k} onClick={() => upd((c) => cycleSetDay(c, sel, { flow: selDay.flow === k ? null : k }))}
-                className={`min-h-[44px] rounded-[14px] text-[12.5px] font-bold border ${selDay.flow === k ? "border-[var(--c-acc-2)] " + FLOW_BG[k] : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-mut)]"}`}>{tr(l)}</button>
+                className={`min-h-[44px] rounded-[12px] text-[12.5px] font-bold border ${selDay.flow === k ? "border-[var(--c-acc-2)] " + FLOW_BG[k] : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-mut)]"}`}>{tr(l)}</button>
             ))}
           </div>
           <div className="flex gap-1.5 mt-2">
             <button onClick={() => upd((c) => cycleSetDay(c, sel, { start: !selDay.start, flow: selDay.flow || "medium" }))}
-              className={`flex-1 min-h-[44px] rounded-[14px] text-[12.5px] font-bold border ${selDay.start ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("First day of a period")}</button>
+              className={`flex-1 min-h-[44px] rounded-[12px] text-[12.5px] font-bold border ${selDay.start ? "border-transparent bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("First day of a period")}</button>
             <button onClick={() => upd((c) => cycleSetDay(c, sel, { end: !selDay.end }))}
-              className={`flex-1 min-h-[44px] rounded-[14px] text-[12.5px] font-bold border ${selDay.end ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("Last day")}</button>
+              className={`flex-1 min-h-[44px] rounded-[12px] text-[12.5px] font-bold border ${selDay.end ? "border-transparent bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("Last day")}</button>
           </div>
           <p className={label + " mt-3 mb-1.5"}>{tr("Symptoms")}</p>
           <div className="flex flex-wrap gap-1.5">
@@ -536,9 +536,9 @@ function CycleChat({ cycle, todayKey }) {
     setQ("");
   };
   return (
-    <div className="mt-3 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3" data-testid="cycle-chat">
-      {log.map((m, i) => m.me ? <p key={i} className="text-[13px] text-[var(--c-ink)] bg-[var(--c-soft)] rounded-[14px] px-3 py-2 my-1 ms-auto w-fit max-w-[85%]">{m.me}</p>
-        : <p key={i} className="text-[13px] text-[var(--c-ink)] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 my-1 w-fit max-w-[90%] whitespace-pre-line" data-testid="cycle-answer">{m.a}</p>)}
+    <div className="mt-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3" data-testid="cycle-chat">
+      {log.map((m, i) => m.me ? <p key={i} className="text-[13px] text-[var(--c-ink)] bg-[var(--c-soft)] rounded-[12px] px-3 py-2 my-1 ms-auto w-fit max-w-[85%]">{m.me}</p>
+        : <p key={i} className="text-[13px] text-[var(--c-ink)] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[12px] px-3 py-2 my-1 w-fit max-w-[90%] whitespace-pre-line" data-testid="cycle-answer">{m.a}</p>)}
       {!log.length ? <div className="flex flex-wrap gap-1.5 mb-1.5">{[tr("When is my next period?"), tr("Am I late?"), tr("When do I ovulate?")].map((x) =>
         <button key={x} onClick={() => ask(x)} className={chip(false)}>{x}</button>)}</div> : null}
       <div className="flex gap-1.5">

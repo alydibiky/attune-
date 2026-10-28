@@ -176,7 +176,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
           className={"att-scroll min-h-[7rem] max-h-[40vh] resize-none " + U.area} />
         {photo ? (
           <div className="relative mt-2 inline-block">
-            <img src={photo.url} alt="" className="max-h-40 rounded-[14px] border border-[var(--c-ln)]" data-testid="deal-photo" />
+            <img src={photo.url} alt="" className="max-h-40 rounded-[12px] border border-[var(--c-ln)]" data-testid="deal-photo" />
             <button onClick={() => setPhoto(null)} aria-label={tr("Remove")} className="absolute -top-3 -end-3 w-11 h-11 grid place-items-center rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)]"><X size={14} /></button>
           </div>
         ) : null}
@@ -185,7 +185,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
             onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; try { setPhoto(await readPhoto(f)); } catch (x) { setErr(tr(x.message)); } }} />
           <button onClick={() => fileRef.current && fileRef.current.click()} className={U.btnS + " h-12 min-h-[48px]"}><ImagePlus size={16} />{tr("Screenshot")}</button>
           <button onClick={busy ? () => { run.current++; setBusy(false); setStep(-1); } : check} disabled={!busy && !text.trim() && !photo} data-testid="deal-go"
-            className={busy ? "flex-1 min-h-[48px] h-12 px-5 rounded-[16px] border border-[var(--c-neg)] text-[var(--c-neg)] bg-transparent font-extrabold text-[15px] inline-flex items-center justify-center gap-2" : U.btnP + " flex-1"}>
+            className={busy ? "flex-1 min-h-[48px] h-12 px-5 rounded-[20px] border border-[var(--c-neg)] text-[var(--c-neg)] bg-transparent font-extrabold text-[15px] inline-flex items-center justify-center gap-2" : U.btnP + " flex-1"}>
             {busy ? <><X size={15} />{tr("Stop")}</> : <><Calculator size={16} />{tr(looksLikeContract(text) && !photo ? "Check this contract" : "Check this deal")}</>}
           </button>
         </div>
@@ -202,7 +202,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
       </section>
 
       {ask && !busy ? (
-        <section className="rounded-[22px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 space-y-3" data-testid="deal-ask">
+        <section className="rounded-[20px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 space-y-3" data-testid="deal-ask">
           <p className="text-[12.5px] font-bold text-[var(--c-acc)] m-0">{L(ask.why)}</p>
           <p className="text-[15px] font-semibold text-[var(--c-ink)] leading-relaxed m-0" dir="auto" data-testid="deal-reading">{ask.reading}</p>
           {!askNo ? (
@@ -225,7 +225,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
         <section className={U.cardPad}>
           <div className="flex items-center justify-between mb-1">
             <p className={U.label + " m-0"}>{tr("Earlier checks")}</p>
-            <button onClick={() => { setHist([]); saveH([]); }} aria-label={tr("Clear")} className={"w-11 h-11 -me-2 grid place-items-center rounded-[14px] hover:text-[var(--c-neg)] " + U.muted}><Trash2 size={14} /></button>
+            <button onClick={() => { setHist([]); saveH([]); }} aria-label={tr("Clear")} className={"w-11 h-11 -me-2 grid place-items-center rounded-[12px] hover:text-[var(--c-neg)] " + U.muted}><Trash2 size={14} /></button>
           </div>
           {hist.slice(0, 8).map((h) => (
             <button key={h.id} onClick={() => setRes(h)} className="w-full min-h-[48px] flex items-center justify-between gap-2 py-2 border-b border-[var(--c-ln)] last:border-0 text-start">
@@ -239,8 +239,8 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
       {contract && !busy ? <ContractReview r={contract} flash={flash} share={sendWhatsApp} /> : null}
       {res ? (
         <section className="space-y-3" data-testid="deal-result">
-          <div className={`rounded-[22px] border p-4 ${lv.cls}`} data-testid="deal-verdict" data-level={res.v.level}>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] opacity-80 m-0" dir="auto">{res.terms.item || tr("This offer")}</p>
+          <div className={`rounded-[20px] border p-4 ${lv.cls}`} data-testid="deal-verdict" data-level={res.v.level}>
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] opacity-80 m-0" dir="auto">{res.terms.item || tr("This offer")}</p>
             <p className="text-[22px] font-black tracking-tight mt-1 m-0 flex items-center gap-2"><span className={`w-2.5 h-2.5 rounded-full ${lv.dot}`} />{L(lv)}</p>
             {res.v.target ? <p className="text-[13.5px] font-semibold mt-1.5 m-0 text-[var(--c-ink)] tabular-nums">{tr("Ask for about {p}", { p: fmt(res.v.target, res.terms.currency) })}</p> : null}
           </div>
@@ -259,7 +259,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
                 : <tr><td className={"py-1.5 " + U.muted}>{tr("Market price")}</td><td className={"py-1.5 text-end " + U.muted}>{webPages ? tr("not found online") : tr("turn on the internet to compare")}</td></tr>}
             </tbody></table>
             {real ? (
-              <div className="mt-3 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3 text-[12.5px] grid gap-2" data-testid="deal-real">
+              <div className="mt-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3 text-[12.5px] grid gap-2" data-testid="deal-real">
                 <p className={"m-0 font-semibold " + (real.cheaper === "plan" ? "text-[var(--c-pos)]" : real.cheaper === "cash" ? "text-[var(--c-warn)]" : "text-[var(--c-ink)]")}>
                   {real.cheaper === "plan" ? tr("Installments are cheaper in real money by {x}: keep the cash in the bank and pay monthly from it.", { x: fmt(real.diff, res.terms.currency) })
                     : real.cheaper === "cash" ? tr("Cash is cheaper in real money by {x}, even after what the bank would pay you.", { x: fmt(real.diff, res.terms.currency) })

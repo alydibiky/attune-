@@ -55,7 +55,7 @@ const btnP = K.btnP;
 const btnG = K.btnS + " min-h-[48px] h-12 px-4 text-[14px]";
 const inp = K.inp + " min-h-[48px] h-12";
 // the selected pill / tab (Gemini's terracotta) and the quiet one beside it
-const selPill = (on) => (on ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border border-transparent shadow-sm" : "bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]");
+const selPill = (on) => (on ? "bg-[var(--c-soft)] text-[var(--c-acc)] border border-transparent shadow-sm" : "bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]");
 
 function loadIndex() { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } }
 function loadSys(id) { try { return JSON.parse(localStorage.getItem(KEY + ":" + id) || "null"); } catch (e) { return null; } }
@@ -135,7 +135,7 @@ function IntroHero({ onDone }) {
   return (
     <div className="space-y-4" data-testid="biz-intro">
       <div className={card + " p-6 space-y-3 bg-[var(--c-surf-2)]"}>
-        <div className="flex gap-1.5" aria-hidden="true"><span className="w-12 h-8 rounded-[10px] bg-[var(--c-acc)]" /><span className="w-16 h-8 rounded-[10px] bg-[var(--c-acc-2)]" /><span className="w-8 h-8 rounded-[10px] bg-[var(--c-warn)]" /></div>
+        <div className="flex gap-1.5" aria-hidden="true"><span className="w-12 h-8 rounded-[12px] bg-[var(--c-acc)]" /><span className="w-16 h-8 rounded-[12px] bg-[var(--c-acc-2)]" /><span className="w-8 h-8 rounded-[12px] bg-[var(--c-warn)]" /></div>
         <p className="text-[26px] font-black tracking-tight leading-tight m-0">{tr("Build your own business system")}</p>
         <p className="text-[14px] leading-relaxed text-[var(--c-mut)] m-0">{tr("For your company, on your phone — no code, and it works without internet.")}</p>
       </div>
@@ -162,7 +162,7 @@ function HubKpi({ label, value, pill, tone, sub, testid, className = "" }) {
 }
 function SysCard({ testid, onClick, icon: I, well, title, short, long, pill, tone }) {
   return <button onClick={onClick} data-testid={testid} className={card + " w-full text-start p-4 min-h-[72px] flex items-center gap-3.5 lg:flex-col lg:items-stretch lg:gap-3 hover:border-[var(--c-acc)] transition-colors duration-150"}>
-    <span className="flex items-center gap-3.5 lg:justify-between shrink-0"><span className={"w-12 h-12 rounded-[16px] grid place-items-center shrink-0 " + well}><I size={21} /></span>
+    <span className="flex items-center gap-3.5 lg:justify-between shrink-0"><span className={"w-12 h-12 rounded-[20px] grid place-items-center shrink-0 " + well}><I size={21} /></span>
       {pill ? <span className="hidden lg:block"><span className={K.tag(tone || "gray")}>{pill}</span></span> : null}</span>
     <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{title}</span>
       <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug lg:hidden" dir="auto">{short}</span>
@@ -170,7 +170,7 @@ function SysCard({ testid, onClick, icon: I, well, title, short, long, pill, ton
     {pill ? <span className={K.tag(tone || "gray") + " lg:hidden shrink-0"}>{pill}</span> : <ChevronRight size={18} className="text-[var(--c-mut)] rtl:rotate-180 shrink-0 lg:hidden" />}
   </button>;
 }
-const whenUpdated = (ms) => { const d = new Date(ms), t = new Date(); const k = (x) => x.toDateString(); if (k(d) === k(t)) return tr("Updated today"); t.setDate(t.getDate() - 1); if (k(d) === k(t)) return tr("Updated yesterday"); return tr("Updated {d}", { d: d.toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short" }) }); };
+const whenUpdated = (ms) => { const d = new Date(ms), t = new Date(); const k = (x) => x.toDateString(); if (k(d) === k(t)) return tr("Updated today"); t.setDate(t.getDate() - 1); if (k(d) === k(t)) return tr("Updated yesterday"); return tr("Updated {d}", { d: d.toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }) }); };
 function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile, intro, onIntro, onIntroDone }) {
   const [books, setBooks] = useState(null);
   useEffect(() => { let on = true; loadBooks().then((b) => on && setBooks(b || null)).catch(() => {}); return () => { on = false; }; }, []);
@@ -178,7 +178,7 @@ function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile,
   const td = useMemo(() => new Date().toISOString().slice(0, 10), []);   // the same day as Books and Shop
   const h = useMemo(() => { try { return books ? hubToday(books, td) : null; } catch (e) { return null; } }, [books, td]);
   const cur = books ? books.currency || "" : "", co = books && books.company ? books.company.name : "";
-  const day = new Date().toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" });
+  const day = new Date().toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "long" });
   const shopPill = shop && h && h.count ? tr("{n} sales", { n: h.count }) : null;
   const booksPill = h && h.low.length ? tr("{n} low stock", { n: h.low.length }) : h && h.overdueCount ? tr("{n} overdue", { n: h.overdueCount }) : null;
   return (
@@ -219,7 +219,7 @@ function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile,
         <button onClick={onNew} className={btnP + " basis-full lg:basis-auto lg:rounded-full lg:!h-11 lg:!min-h-[44px]"} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button></div>
       {index.length ? <div className="space-y-2.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">{index.map((x) => (
         <button key={x.id} onClick={() => open(x.id)} className={card + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)]"} data-testid="erp-system">
-          <span className="relative w-11 h-11 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Database size={19} /><i aria-hidden="true" className="absolute -top-0.5 -end-0.5 w-3 h-3 rounded-full border-2 border-[var(--c-surf)]" style={{ background: x.color || "var(--biz)" }} /></span>
+          <span className="relative w-11 h-11 rounded-[12px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Database size={19} /><i aria-hidden="true" className="absolute -top-0.5 -end-0.5 w-3 h-3 rounded-full border-2 border-[var(--c-surf)]" style={{ background: x.color || "var(--biz)" }} /></span>
           <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15px] truncate" dir="auto">{x.name}</span>
             <span className="block text-[12px] text-[var(--c-mut)] leading-snug">{tr("{n} tables", { n: x.tables })}{x.tableNames && x.tableNames.length ? <span className="hidden lg:inline" dir="auto"> ({x.tableNames.join(", ")})</span> : null} · {whenUpdated(x.updated)}</span></span>
           {x.active ? <span className={K.tag("green")}>{tr("Active")}</span>
@@ -371,7 +371,7 @@ function Interview({ q, sys, step, run, llm, flash }) {
         <div className="space-y-2">
           <div className="flex gap-2"><input value={ask} onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && ask.trim().length > 3) propose(); }} dir="auto" className={inp} data-testid="erp-draft-ask"
             placeholder={step === "screens" ? tr("e.g. make it green and show unpaid invoices on the home screen") : step === "logic" ? tr("e.g. Total = Days × Day rate, and VAT 14%") : tr("e.g. add a fuel log table linked to each crane")} />
-            <button onClick={propose} disabled={busy || ask.trim().length < 4} aria-label={tr("Show me the change")} className="w-12 h-12 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] flex items-center justify-center shrink-0 disabled:opacity-40" style={{ background: "var(--c-acc)" }} data-testid="erp-draft-ask-go">
+            <button onClick={propose} disabled={busy || ask.trim().length < 4} aria-label={tr("Show me the change")} className="w-12 h-12 rounded-[12px] min-h-[44px] text-[var(--c-on-acc)] flex items-center justify-center shrink-0 disabled:opacity-40" style={{ background: "var(--c-acc)" }} data-testid="erp-draft-ask-go">
               {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}</button></div>
           {prop ? <Proposal prop={prop} onApply={() => { run(prop.ops); setProp(null); setAsk(""); }} onCancel={() => setProp(null)} testid="erp-draft-proposal" applyId="erp-draft-apply" /> : null}
         </div>) : null}
@@ -381,12 +381,12 @@ function Interview({ q, sys, step, run, llm, flash }) {
 
 function Proposal({ prop, onApply, onCancel, testid, applyId }) {
   return (
-    <div className="rounded-[16px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] p-3.5 text-[13.5px] space-y-1.5" data-testid={testid}>
+    <div className="rounded-[20px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] p-3.5 text-[13.5px] space-y-1.5" data-testid={testid}>
       {prop.done.length ? prop.done.map((d, i) => <p key={i} className="flex gap-1.5"><Check size={15} className="shrink-0 mt-0.5" style={{ color: "var(--c-acc)" }} /><span dir="auto">{d}</span></p>)
         : <p className="text-[var(--c-mut)]">{tr("No design change found in that.")}</p>}
       {prop.errors.map((d, i) => <p key={"e" + i} className="text-[var(--c-warn)]" dir="auto">⚠ {d}</p>)}
-      {prop.done.length ? <div className="flex gap-2 pt-1.5"><button className="h-10 px-4 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] font-bold" style={{ background: "var(--c-acc)" }} onClick={onApply} data-testid={applyId}>{tr("Apply")}</button>
-        <button className="h-10 px-4 rounded-[14px] min-h-[44px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-semibold" onClick={onCancel}>{tr("Cancel")}</button></div> : null}
+      {prop.done.length ? <div className="flex gap-2 pt-1.5"><button className="h-10 px-4 rounded-[12px] min-h-[44px] text-[var(--c-on-acc)] font-bold" style={{ background: "var(--c-acc)" }} onClick={onApply} data-testid={applyId}>{tr("Apply")}</button>
+        <button className="h-10 px-4 rounded-[12px] min-h-[44px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-semibold" onClick={onCancel}>{tr("Cancel")}</button></div> : null}
     </div>
   );
 }
@@ -415,8 +415,8 @@ function DataStep({ draft, setDraft, run }) {
               <input autoFocus value={addFor.name} onChange={(e) => setAddFor({ ...addFor, name: e.target.value })} placeholder={tr("Field name")} className={inp + " h-11 flex-1"} dir="auto" data-testid="erp-draft-new-field-name" />
               <select value={addFor.type} onChange={(e) => setAddFor({ ...addFor, type: e.target.value })} className={inp + " h-11 w-28"}>
                 {Object.entries(E.FIELD_TYPES).filter(([k]) => k !== "link" && k !== "formula").map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select>
-              <button className="h-11 px-3 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] font-bold disabled:opacity-40" style={{ background: "var(--c-acc)" }} disabled={!addFor.name.trim()} onClick={() => { const r = run([{ op: "addField", table: t.id, name: addFor.name.trim(), type: addFor.type }]); if (r.done.length) setAddFor(null); }} data-testid="erp-draft-new-field-save">{tr("Add")}</button>
-              <button className="h-11 w-11 rounded-[14px] min-h-[44px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] flex items-center justify-center" onClick={() => setAddFor(null)} aria-label={tr("Cancel")}><X size={15} /></button>
+              <button className="h-11 px-3 rounded-[12px] min-h-[44px] text-[var(--c-on-acc)] font-bold disabled:opacity-40" style={{ background: "var(--c-acc)" }} disabled={!addFor.name.trim()} onClick={() => { const r = run([{ op: "addField", table: t.id, name: addFor.name.trim(), type: addFor.type }]); if (r.done.length) setAddFor(null); }} data-testid="erp-draft-new-field-save">{tr("Add")}</button>
+              <button className="h-11 w-11 rounded-[12px] min-h-[44px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] flex items-center justify-center" onClick={() => setAddFor(null)} aria-label={tr("Cancel")}><X size={15} /></button>
             </div>) : null}
         </div>))}
     </div>
@@ -445,7 +445,7 @@ function LogicStep({ draft, run }) {
           <input value={add.name} onChange={(e) => setAdd({ ...add, name: e.target.value })} placeholder={tr("Name, e.g. Total")} className={inp + " h-11"} dir="auto" data-testid="biz-calc-name" /></div>
         <input value={add.formula} onChange={(e) => setAdd({ ...add, formula: e.target.value })} placeholder={tr("e.g. [Days] * [Day rate]")} className={inp + " h-11"} dir="ltr" data-testid="biz-calc-formula" />
         {(() => { const t = draft.tables.find((x) => x.id === add.table); return t ? <p className="text-[11.5px] text-[var(--c-mut)]" dir="auto">{tr("Fields:")} {t.fields.filter((f) => f.type === "number" || f.type === "money" || f.type === "formula").map((f) => `[${f.name}]`).join(" ") || "—"}</p> : null; })()}
-        <button className="h-11 px-4 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] font-bold disabled:opacity-40" style={{ background: "var(--c-acc)" }} disabled={!add.name.trim() || !add.formula.trim()} data-testid="biz-calc-add"
+        <button className="h-11 px-4 rounded-[12px] min-h-[44px] text-[var(--c-on-acc)] font-bold disabled:opacity-40" style={{ background: "var(--c-acc)" }} disabled={!add.name.trim() || !add.formula.trim()} data-testid="biz-calc-add"
           onClick={() => { const r = run([{ op: "addField", table: add.table, name: add.name.trim(), type: "formula", formula: add.formula.trim() }]); if (r.done.length) setAdd({ ...add, name: "", formula: "" }); }}>{tr("Add")}</button>
       </div>
       <Box title={tr("Links between tables")} items={links} empty={tr("No links — a linked field picks a record from another table.")} testid="biz-logic-links" />
@@ -468,7 +468,7 @@ export function ScreensEditor({ sys, run }) {
       <div className="p-1 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] grid grid-cols-2 gap-1" role="tablist" aria-label={tr("Design for")}>
         {[["phone", tr("Phone"), Smartphone], ["computer", tr("Computer"), Monitor]].map(([k, l, I]) => (
           <button key={k} role="tab" aria-selected={dev === k} onClick={() => setDev(k)} data-testid={"biz-device-" + k}
-            className={"min-h-[44px] h-11 rounded-full text-[14px] font-extrabold flex items-center justify-center gap-2 transition-colors duration-150 " + (dev === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}><I size={17} />{l}</button>))}
+            className={"min-h-[44px] h-11 rounded-full text-[14px] font-extrabold flex items-center justify-center gap-2 transition-colors duration-150 " + (dev === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}><I size={17} />{l}</button>))}
       </div>
       <p className="text-[12.5px] text-[var(--c-mut)] px-1" data-testid="biz-device-note">{tr("One system on both: the same tables, rules and records. The phone and the computer can each have their own layout.")}</p>
       <Previews sys={sys} focus={dev} />
@@ -505,7 +505,7 @@ function Previews({ sys, focus = null }) {
   return (
     <div className="flex gap-3 items-end" data-testid="biz-previews" aria-label={tr("Preview")}>
       <div className="w-[34%] max-w-[150px] shrink-0">
-        <div className="rounded-[18px] border-[3px] border-[var(--c-ink)] bg-[var(--c-surf)] overflow-hidden aspect-[9/17] flex flex-col transition-all" style={ring("phone")} data-testid="biz-preview-phone">
+        <div className="rounded-[20px] border-[3px] border-[var(--c-ink)] bg-[var(--c-surf)] overflow-hidden aspect-[9/17] flex flex-col transition-all" style={ring("phone")} data-testid="biz-preview-phone">
           <div className="px-2 py-2 text-[#FFFFFF] text-[8.5px] font-bold truncate" style={{ background: c }}>{sys.name}</div>
           <div className="p-1.5 space-y-1.5 flex-1">
             {hp.includes("alerts") ? <span className="block rounded bg-[var(--c-warn)]/15 px-1 py-0.5 text-[7px] text-[var(--c-warn)] truncate">⚠ {tr("Alerts")}</span> : null}
@@ -578,7 +578,7 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
     : tab === "pro" ? <ProPanel sys={sys} setSys={setSys} flash={flash} saveFile={saveFile} go={go} wide={wide} />
     : tab === "form" ? <AccessForm sys={sys} setSys={setSys} flash={flash} tid={formT} setTid={setFormT} cols={wide ? u.formCols : 1} saveFile={saveFile} />
     : <Reports sys={sys} />;
-  const fab = modelReady ? <button onClick={() => setChat(true)} className="fixed end-4 z-40 min-h-[56px] h-14 ps-4 pe-5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold shadow-lg flex items-center gap-2" style={{ bottom: wide ? "24px" : "calc(84px + env(safe-area-inset-bottom))" }} data-testid="biz-ai-open">
+  const fab = modelReady ? <button onClick={() => setChat(true)} className="fixed end-4 z-40 min-h-[56px] h-14 ps-4 pe-5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold shadow-lg flex items-center gap-2" style={{ bottom: wide ? "24px" : "calc(20px + env(safe-area-inset-bottom))" }} data-testid="biz-ai-open">
     <Sparkles size={18} />{tr("Change with AI")}</button> : null;
   const chatSheet = chat ? <DesignChat sys={sys} setSys={setSys} llm={llm} flash={flash} onClose={() => setChat(false)} /> : null;
   const round = "w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center hover:border-[var(--c-acc)] transition-colors duration-150";
@@ -598,9 +598,9 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
         <p className="text-[20px] font-black tracking-tight px-2 leading-tight m-0 flex items-center gap-2" dir="auto" data-testid="biz-system-title"><i aria-hidden="true" className="w-3 h-3 rounded-full shrink-0" style={{ background: c }} />{sys.name}</p>
         <p className="text-[12.5px] text-[var(--c-mut)] px-2 mb-3 m-0">{sub}</p>
         <nav className="flex flex-col gap-1" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
-          <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"min-h-[44px] h-11 px-3.5 rounded-[16px] flex items-center gap-3 text-[14px] font-extrabold text-start transition-colors duration-150 " + (tab === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]")}><I size={19} />{l}</button>))}</nav>
+          <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"min-h-[44px] h-11 px-3.5 rounded-[20px] flex items-center gap-3 text-[14px] font-extrabold text-start transition-colors duration-150 " + (tab === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]")}><I size={19} />{l}</button>))}</nav>
         <p className={K.label + " px-3 mt-4 mb-1"}>{tr("Tables")}</p>
-        {sys.tables.map((t) => <button key={t.id} onClick={() => go("form", t.id)} className="min-h-[44px] h-11 px-3 rounded-[14px] text-[13.5px] font-semibold text-start truncate hover:bg-[var(--c-surf-2)] flex items-center justify-between gap-2" dir="auto"><span className="truncate">{t.name}</span><span className="text-[var(--c-mut)] tabular-nums">{(sys.rows[t.id] || []).length}</span></button>)}
+        {sys.tables.map((t) => <button key={t.id} onClick={() => go("form", t.id)} className="min-h-[44px] h-11 px-3 rounded-[12px] text-[13.5px] font-semibold text-start truncate hover:bg-[var(--c-surf-2)] flex items-center justify-between gap-2" dir="auto"><span className="truncate">{t.name}</span><span className="text-[var(--c-mut)] tabular-nums">{(sys.rows[t.id] || []).length}</span></button>)}
         <div className="mt-auto pt-3">{designBtn}</div>
       </div>
       <div className="flex-1 min-w-0 px-6 py-5 pb-24"><div className="max-w-6xl mx-auto">{body}</div></div>
@@ -615,7 +615,7 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
           {backBtn}
           <p className="text-[18px] font-black tracking-tight truncate max-w-[30%] m-0 flex items-center gap-2" dir="auto" data-testid="biz-system-title"><i aria-hidden="true" className="w-3 h-3 rounded-full shrink-0" style={{ background: c }} /><span className="truncate">{sys.name}</span></p>
           <nav className="flex gap-1 ms-3 p-1 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)]" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
-            <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"min-h-[40px] h-10 px-3.5 rounded-full flex items-center gap-2 text-[13.5px] font-extrabold whitespace-nowrap transition-colors duration-150 " + (tab === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}><I size={17} />{l}</button>))}</nav>
+            <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"min-h-[40px] h-10 px-3.5 rounded-full flex items-center gap-2 text-[13.5px] font-extrabold whitespace-nowrap transition-colors duration-150 " + (tab === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]")}><I size={17} />{l}</button>))}</nav>
           <span className="flex-1" />{undoBtn}{toolsBtn}{designBtn}
         </div>
       </div>
@@ -632,12 +632,13 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
         <p className="text-[24px] font-black tracking-tight mt-2.5 px-1 m-0 flex items-center gap-2" dir="auto" data-testid="biz-system-title"><i aria-hidden="true" className="w-3 h-3 rounded-full shrink-0" style={{ background: c }} />{sys.name}</p>
         <p className="text-[12.5px] text-[var(--c-mut)] px-1 m-0">{sub}</p>
       </div>
+      {/* v8.7 (Ali picked P5-A option 2: "no bottom bars anywhere"): the system's parts are tabs at the top on a phone too */}
+      <nav className="att-hscroll sticky top-0 z-30 flex gap-1.5 overflow-x-auto no-scrollbar px-3 py-2 bg-[var(--c-bg)] border-b border-[var(--c-ln)]" role="tablist" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
+        <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k}
+          className={"shrink-0 h-10 px-3.5 rounded-full border inline-flex items-center gap-1.5 text-[13px] font-extrabold whitespace-nowrap transition-colors duration-150 " + (tab === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)]")}><I size={15} />{l}</button>))}
+      </nav>
       <div className="px-3 pt-3">{body}</div>
       {fab}
-      <nav className="att-shift fixed bottom-0 inset-x-0 z-40 bg-[var(--c-surf)] border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="biz-nav">
-        <div className="max-w-3xl mx-auto grid grid-cols-5 h-[64px] px-1">{tabs.map(([k, l, I]) => (
-          <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-extrabold transition-colors duration-150 " + (tab === k ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)]")}><span className={"w-12 h-7 rounded-full grid place-items-center " + (tab === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "")}><I size={19} /></span>{l}</button>))}</div>
-      </nav>
       {chatSheet}{toolsSheet}
     </section>
   );
@@ -660,7 +661,7 @@ function HomeDash({ sys, go, askAI, wide = false }) {
       {al.length ? al.map((a, i) => <button key={i} onClick={() => go("form", a.table.id)} className="w-full min-h-[44px] text-start text-[13px] font-semibold text-[var(--c-warn)]" dir="auto">⚠ {a.table.name}: {E.displayOf(a.table, a.row)} — {tr("missing")} {a.missing.join(", ")}</button>) : proAlerts(sys).length ? null : <p className="text-[13px] font-semibold text-[var(--c-pos)] m-0">✓ {tr("Nothing missing")}</p>}</div>,
     tables: <div key="tables" className={wide ? "grid grid-cols-2 gap-2.5 col-span-2" : "space-y-2"} data-testid="biz-home-tables">{sys.tables.map((t) => (
       <button key={t.id} onClick={() => go("form", t.id)} className={card + " w-full p-3.5 min-h-[56px] flex items-center justify-between gap-2 text-start hover:border-[var(--c-acc)]"}><span className="font-extrabold text-[14.5px] truncate" dir="auto">{t.name}</span><span className="text-[13px] tabular-nums text-[var(--c-mut)] shrink-0">{tr("{n} records", { n: (sys.rows[t.id] || []).length })}</span></button>))}</div>,
-    ask: <button key="ask" onClick={askAI} className={card + " w-full p-4 min-h-[56px] text-start flex items-center gap-3 hover:border-[var(--c-acc)]"}><span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Sparkles size={18} /></span><span className="text-[14px] text-[var(--c-mut)]">{tr("Ask the AI to change anything in this system")}</span></button>,
+    ask: <button key="ask" onClick={askAI} className={card + " w-full p-4 min-h-[56px] text-start flex items-center gap-3 hover:border-[var(--c-acc)]"}><span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Sparkles size={18} /></span><span className="text-[14px] text-[var(--c-mut)]">{tr("Ask the AI to change anything in this system")}</span></button>,
   };
   // a computer has room for two columns: the key numbers (top) and the tables (bottom) span both, the rest sit side by side
   return <div className={wide ? "grid grid-cols-2 gap-4 items-start" : "space-y-3"} data-testid="biz-home" data-device={wide ? "computer" : "phone"}>{(wide ? [...parts.filter((p) => p === "kpis"), ...parts.filter((p) => p !== "kpis" && p !== "tables"), ...parts.filter((p) => p === "tables")] : parts).map((p) => part[p]).filter(Boolean)}</div>;
@@ -736,12 +737,12 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1, saveFile
           <button onClick={() => go(at < 0 ? rows.length - 1 : at - 1)} disabled={!rows.length || at === 0} aria-label={tr("Previous record")} className="w-11 h-11 rounded-[12px] disabled:opacity-30 grid place-items-center text-[var(--c-ink)] hover:bg-[var(--c-surf)]" data-testid="biz-form-prev"><ChevronLeft size={20} className="rtl:rotate-180" /></button>
           <span className="flex-1 text-center text-[13px] font-semibold tabular-nums" data-testid="biz-form-pos">{row ? tr("Record {i} of {n}", { i: at + 1, n: rows.length }) : tr("New record") + (rows.length ? " · " + tr("{n} saved", { n: rows.length }) : "")}</span>
           <button onClick={() => go(at + 1)} disabled={at < 0 || at >= rows.length - 1} aria-label={tr("Next record")} className="w-11 h-11 rounded-[12px] disabled:opacity-30 grid place-items-center text-[var(--c-ink)] hover:bg-[var(--c-surf)]" data-testid="biz-form-next"><ChevronRight size={20} className="rtl:rotate-180" /></button>
-          <button onClick={() => go(-1)} aria-label={tr("New record")} className="min-h-[44px] h-11 px-3.5 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold flex items-center gap-1" data-testid="biz-form-new"><Plus size={16} />{tr("New")}</button>
+          <button onClick={() => go(-1)} aria-label={tr("New record")} className="min-h-[44px] h-11 px-3.5 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold flex items-center gap-1" data-testid="biz-form-new"><Plus size={16} />{tr("New")}</button>
         </div>
         <div className={cols > 1 ? "grid gap-x-5 " + (compact ? "p-3 gap-y-2" : "p-4 gap-y-3") : compact ? "p-3 space-y-2" : "p-4 space-y-3"} style={cols > 1 ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : null} data-testid="biz-form-fields" data-cols={cols}>
           {ff.map(({ field: f, section }) => (
             <React.Fragment key={f.id}>
-              {section ? <p className="text-[11px] font-extrabold tracking-[0.08em] uppercase pt-3 m-0 border-t border-[var(--c-ln)]" style={{ color: "var(--c-acc)", gridColumn: "1 / -1" }} dir="auto">{section}</p> : null}
+              {section ? <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase pt-3 m-0 border-t border-[var(--c-ln)]" style={{ color: "var(--c-acc)", gridColumn: "1 / -1" }} dir="auto">{section}</p> : null}
               <label style={f.type === "longtext" && cols > 1 ? { gridColumn: "1 / -1" } : null} className={compact ? "grid grid-cols-[38%_1fr] items-center gap-2" : "block"}>
                 <span className={"block text-[12px] font-bold text-[var(--c-mut)] " + (compact ? "" : "mb-1.5")} dir="auto">{f.name}{f.required ? " *" : ""}</span>
                 <span className="block" onInput={() => setDirty(true)} onChange={() => setDirty(true)}><FieldInput sys={sys} f={f} value={vals[f.id]} set={(v) => { setField(f, v); setDirty(true); }} computed={computed ? computed[f.id] : null} /></span>
@@ -811,7 +812,7 @@ function DesignChat({ sys, setSys, llm, flash, onClose }) {
   };
   return (
     <div className="calm fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={onClose} data-testid="biz-chat">
-      <div className="w-full max-w-3xl mx-auto bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-t-[28px] max-h-[88dvh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className="w-full max-w-3xl mx-auto bg-[var(--c-bg)] text-[var(--c-ink)] border border-[var(--c-ln)] rounded-t-[20px] max-h-[88dvh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="flex items-center gap-2 px-4 pt-3.5 pb-2.5 border-b border-[var(--c-ln)]"><Sparkles size={18} style={{ color: "var(--c-acc)" }} /><p className="flex-1 font-extrabold text-[17px] m-0">{tr("Change with AI")}</p>
           {sys.history && sys.history.length ? <button onClick={() => { const u = E.undo(sys); if (u) { setSys(u.sys, tr("Undone: {w}", { w: u.what })); setLog((l) => [...l, { who: "ai", text: tr("Undone: {w}", { w: u.what }) }]); } }} className={K.btnS + " rounded-full"} data-testid="biz-chat-undo"><Undo2 size={15} />{tr("Undo")}</button> : null}
           <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center shrink-0"><X size={18} /></button></div>
@@ -822,12 +823,12 @@ function DesignChat({ sys, setSys, llm, flash, onClose }) {
           {log.map((m, i) => m.who === "me" ? <p key={i} className="ms-auto max-w-[85%] w-fit rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[var(--c-on-acc)] text-[14px]" style={{ background: "var(--c-acc)" }} dir="auto">{m.text}</p>
             : m.prop ? <div key={i} className="max-w-[92%]"><Proposal prop={m.prop} testid="biz-chat-proposal" applyId="biz-chat-apply" onCancel={() => setLog((l) => l.map((x, j) => (j === i ? { who: "ai", text: tr("Cancelled") } : x)))}
               onApply={() => { const r = E.applyOps(sys, m.prop.ops); if (r.done.length) setSys(r.sys, r.done[r.done.length - 1]); if (r.errors.length) flash(r.errors[0]); setLog((l) => l.map((x, j) => (j === i ? { who: "ai", text: "✓ " + r.done.join(" · ") } : x))); }} /></div>
-            : <p key={i} className="max-w-[92%] rounded-[18px] rounded-es-md bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 text-[13.5px]" dir="auto">{m.text}</p>)}
+            : <p key={i} className="max-w-[92%] rounded-[20px] rounded-es-md bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 text-[13.5px]" dir="auto">{m.text}</p>)}
           {busy ? <p className="text-[13px] text-[var(--c-mut)] flex items-center gap-2"><Loader2 size={15} className="animate-spin" />{tr("Working it out…")}</p> : null}
         </div>
         <div className="p-3 border-t border-[var(--c-ln)] bg-[var(--c-surf)] flex gap-2">
           <input value={ask} onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} dir="auto" placeholder={tr("e.g. make the colour green and show unpaid invoices on the home screen")} className={inp} data-testid="biz-chat-input" />
-          <button onClick={send} disabled={busy || ask.trim().length < 3} aria-label={tr("Send")} className="w-12 h-12 rounded-[14px] min-h-[44px] text-[var(--c-on-acc)] flex items-center justify-center shrink-0 disabled:opacity-40" style={{ background: "var(--c-acc)" }} data-testid="biz-chat-send"><Send size={18} /></button>
+          <button onClick={send} disabled={busy || ask.trim().length < 3} aria-label={tr("Send")} className="w-12 h-12 rounded-[12px] min-h-[44px] text-[var(--c-on-acc)] flex items-center justify-center shrink-0 disabled:opacity-40" style={{ background: "var(--c-acc)" }} data-testid="biz-chat-send"><Send size={18} /></button>
         </div>
       </div>
     </div>

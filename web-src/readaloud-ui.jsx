@@ -62,7 +62,7 @@ function ReadSheet({ init, readText, llm, native, remind, flash, onClose }) {
   const big = "min-h-[56px] rounded-2xl px-4 inline-flex items-center justify-center gap-2 text-[16px] font-semibold border-0 cursor-pointer";
   return (
     <div className="calm fixed inset-0 z-[80] flex items-end md:items-center justify-center" style={{ background: "rgba(0,0,0,.45)" }} onClick={() => { stop(); onClose(); }} data-testid="read-sheet" role="dialog" aria-label={tr("Read it to me")}>
-      <div className="w-full md:max-w-2xl max-h-[94vh] overflow-auto rounded-t-[26px] md:rounded-[26px] p-4 md:p-6 space-y-3" style={{ background: "var(--c-bg)", color: "var(--c-ink)", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full md:max-w-2xl max-h-[94vh] overflow-auto rounded-t-[20px] md:rounded-[20px] p-4 md:p-6 space-y-3" style={{ background: "var(--c-bg)", color: "var(--c-ink)", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between"><b className="text-[18px] flex items-center gap-2"><Volume2 size={20} className="c-acc" />{tr("Read it to me")}</b>
           <button onClick={() => { stop(); onClose(); }} className="c-ic border-0 cursor-pointer" aria-label={tr("Close")} data-testid="read-close"><X size={16} /></button></div>
         <input ref={cam} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { onFile(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="read-camera-input" />
@@ -91,9 +91,9 @@ function ReadSheet({ init, readText, llm, native, remind, flash, onClose }) {
             <button className="c-sub underline bg-transparent border-0 p-0 cursor-pointer inline-flex items-center gap-1" onClick={() => { stop(); setText(""); setImg(""); setShown(""); }}><Camera size={14} />{tr("Another paper")}</button>
           </div>
           <div className="c-card space-y-1" data-testid="read-text">
-            {lines.map((s, i) => <p key={i} className="m-0 text-[17px] leading-relaxed rounded-[10px] px-1.5 cursor-pointer" dir="auto" style={{ background: i === at ? "var(--c-soft)" : "transparent", fontWeight: i === at ? 700 : 400 }} onClick={() => play(lines, voiceLang, i, "all")}>{s}</p>)}
+            {lines.map((s, i) => <p key={i} className="m-0 text-[17px] leading-relaxed rounded-[12px] px-1.5 cursor-pointer" dir="auto" style={{ background: i === at ? "var(--c-soft)" : "transparent", fontWeight: i === at ? 700 : 400 }} onClick={() => play(lines, voiceLang, i, "all")}>{s}</p>)}
           </div>
-          {img ? <img src={img} alt="" className="w-full rounded-[22px] max-h-64 object-contain" style={{ background: "var(--c-surf)" }} /> : null}
+          {img ? <img src={img} alt="" className="w-full rounded-[20px] max-h-64 object-contain" style={{ background: "var(--c-surf)" }} /> : null}
         </>) : null}
       </div>
     </div>);

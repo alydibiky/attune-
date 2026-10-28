@@ -12,7 +12,7 @@ import * as U from "./ui-kit.jsx";
 // numbers inside a translated sentence stay left-to-right in Arabic
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? "⁦" + y + "⁩" : y])) : v);
 const n0 = (n) => Math.round(Number(n) || 0).toLocaleString("en-US");
-const loc = () => (getLang() === "ar" ? "ar-EG" : undefined);
+const loc = () => (getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined);
 const dayShort = (k, today) => { if (today) return tr("Today"); try { return new Date(k + "T12:00:00").toLocaleDateString(loc(), { weekday: "short" }); } catch (e) { return k.slice(5); } };
 const dateLong = (k) => { try { return new Date(k + "T12:00:00").toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return k; } };
 export const Arrow = ({ back, size = 15 }) => back ? <ArrowLeft size={size} className="rtl:-scale-x-100" /> : <ArrowRight size={size} className="rtl:-scale-x-100" />;
@@ -27,7 +27,7 @@ export function HealthBox({ onSubmit, onPhoto, onVoice, listening, wide }) {
       {onVoice ? <button type="button" className={U.btnS + " h-10! min-h-[40px]! px-3! " + (listening ? "border-[var(--c-neg)]! text-[var(--c-neg)]!" : "")} onClick={async () => { const t = await onVoice(); if (t) setText(t); }} data-testid="health-box-voice"><Mic size={15} />{listening ? tr("Listening…") : tr("Say it")}</button> : null}
     </>);
   const send = <button type="button" onClick={go} disabled={busy || !text.trim()} data-testid="health-box-go"
-    className="min-h-[44px] h-11 px-4 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] inline-flex items-center gap-1.5 disabled:opacity-40">
+    className="min-h-[44px] h-11 px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] inline-flex items-center gap-1.5 disabled:opacity-40">
     {busy ? <Loader2 size={15} className="animate-spin" /> : null}{tr("Log")}<Arrow /></button>;
   return (
     <div className="space-y-2.5">
@@ -134,14 +134,14 @@ function Meds({ m, lab, openCare }) {
       {!m.rows.length && !lab ? <p className={"m-0 text-[13px] " + U.muted}>{tr("Add a medicine or a lab report in Family health to see them here.")}</p> : null}
       <div className="flex flex-col gap-2">
         {m.rows.map((r) => (
-          <div key={r.med.id} className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-[14px] bg-[var(--c-surf-2)] min-h-[52px]" data-testid="health-med-row">
+          <div key={r.med.id} className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-[12px] bg-[var(--c-surf-2)] min-h-[52px]" data-testid="health-med-row">
             <span className="min-w-0"><span className="block truncate font-bold text-[13.5px]" dir="auto">{r.member ? r.member.name + " · " : ""}{r.med.name}{r.med.dose ? " · " + r.med.dose : ""}</span>
               <span className={"block truncate text-[11.5px] font-semibold " + U.muted} dir="auto">{T("{a} / {b} doses on time this week", { a: r.taken, b: r.due })}{r.left != null ? " · " + T("{n} left", { n: r.left }) : ""}</span></span>
             {r.days != null && r.days <= 1 ? <span className={U.tag("amber")}>{tr("Refill today")}</span>
               : r.pct != null ? <span className={U.tag(r.pct >= 90 ? "green" : "amber") + " tabular-nums"}>{r.pct}%</span> : null}
           </div>))}
         {lab ? (
-          <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-[14px] bg-[var(--c-surf-2)] min-h-[52px]" data-testid="health-lab-row">
+          <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-[12px] bg-[var(--c-surf-2)] min-h-[52px]" data-testid="health-lab-row">
             <span className="min-w-0"><span className="block truncate font-bold text-[13.5px]" dir="auto">{tr("Latest lab")} · {lab.member ? lab.member + "’s " : ""}{lab.test}</span>
               <span className={"block truncate text-[11.5px] font-semibold " + U.muted} dir="auto">{lab.history ? T("{a} → {b} over {n} reports", { a: lab.history.first.value + (lab.last.unit ? " " + lab.last.unit : ""), b: lab.last.value + (lab.last.unit ? " " + lab.last.unit : ""), n: lab.history.n }) : dateLong(lab.last.date)}</span></span>
             <span className={U.tag(lab.last.high != null && lab.last.value > lab.last.high || lab.last.low != null && lab.last.value < lab.last.low ? "amber" : "green") + " tabular-nums"} dir="ltr">{lab.last.value}{lab.last.unit ? " " + lab.last.unit : ""}</span>
@@ -174,7 +174,7 @@ export function HealthReport({ r, back, openCare, openCycle, openFit, printPdf, 
     <div className="flex flex-col gap-3.5 lg:gap-[18px]" data-testid="health-report">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <button className="w-11 h-11 shrink-0 rounded-[14px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] hover:border-[var(--c-acc)]" onClick={back} aria-label={tr("Back")} data-testid="health-report-back"><Arrow back size={17} /></button>
+          <button className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] hover:border-[var(--c-acc)]" onClick={back} aria-label={tr("Back")} data-testid="health-report-back"><Arrow back size={17} /></button>
           <div className="min-w-0"><h2 className="text-[18px] lg:text-[21px] font-black tracking-tight m-0 truncate">{tr("Health Report")}</h2>
             <div className={"text-[12px] font-semibold truncate " + U.muted}>{rangeLabel} · {tr("this week")}</div></div>
         </div>

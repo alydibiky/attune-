@@ -91,7 +91,7 @@ export function DemoPhone({ demo, step = 0, app, ar }) {
     style: { outline: step === i ? "2.5px solid var(--c-acc)" : "none", outlineOffset: 3, opacity: i > step ? 0.18 : 1, transition: "opacity .35s", background: bg } });
   const IN = { photo: "📷", file: "📄", chat: "💬", pick: "☝️", type: "⌨️" };
   return (
-    <div className="w-full max-w-[250px] mx-auto rounded-[26px] p-2.5 border-2 select-none" style={{ borderColor: "var(--c-ln)", background: "var(--c-bg, #fff)" }} data-testid="guide-demo" data-step={step} aria-label={tr("Sample data — the real screen, playing by itself")}>
+    <div className="w-full max-w-[250px] mx-auto rounded-[20px] p-2.5 border-2 select-none" style={{ borderColor: "var(--c-ln)", background: "var(--c-bg, #fff)" }} data-testid="guide-demo" data-step={step} aria-label={tr("Sample data — the real screen, playing by itself")}>
       <div className="flex items-center gap-1.5 px-1 pb-2"><b className="flex-1 min-w-0 truncate text-[12.5px]" dir="auto">{app}</b>
         <span className="text-[10px] font-bold rounded-full px-2 py-0.5" style={{ background: "var(--c-warn)", color: "var(--c-on-acc)" }}>{tr("Sample")}</span></div>
       <div className="space-y-2 rounded-2xl p-2" style={{ background: "var(--c-soft)" }}>
@@ -125,7 +125,7 @@ function Gallery({ ar, nameOf, see }) {
           <span className={K.label + " block"}>{tr("You say")}</span>
           <p className="g-acc m-0 ms-6 rounded-2xl px-3 py-2 text-[13px] leading-snug" style={{ background: "var(--c-acc)" }} dir="auto">{GD.pickV(d.say, ar)}</p>
           <span className={K.label + " block"}>{tr("You get")} · {n[0]}</span>
-          <div className="rounded-[14px] p-2.5 space-y-1" style={{ background: "var(--c-soft)" }}><b className="block text-[13.5px] leading-tight" dir="auto">{GD.pickV(d.title, ar)}</b>
+          <div className="rounded-[12px] p-2.5 space-y-1" style={{ background: "var(--c-soft)" }}><b className="block text-[13.5px] leading-tight" dir="auto">{GD.pickV(d.title, ar)}</b>
             {d.lines.slice(0, 2).map((l, i) => <div key={i} className="flex gap-2 text-[12px]"><span className="c-sub shrink-0 max-w-[45%]" dir="auto">{ar ? l[1] : l[0]}</span><span className="font-semibold text-end flex-1 min-w-0" dir="auto">{GD.pickV(l[2], ar)}</span></div>)}</div>
           <button className="min-h-[44px] font-extrabold text-[13.5px] inline-flex items-center gap-1" style={{ color: "var(--c-acc)" }} onClick={() => see(key)} data-testid="guide-card-how">{tr("Show me how")}<ChevronRight size={15} className="rtl:-scale-x-100" /></button>
         </div>; })}</div>
@@ -151,7 +151,7 @@ function Walk({ id, title, purpose, where, sketch, steps, tip, open, ar }) {
           <ol className="m-0 p-0 list-none space-y-2">
             {steps.map((s, i) => (
               <li key={i}><button onClick={() => { setStep(i); setPlay(false); }} aria-current={step === i ? "step" : undefined} data-testid="guide-step"
-                className="w-full min-h-[44px] text-start flex gap-3 items-start rounded-[16px] p-2.5 border transition-colors duration-150" style={{ borderColor: step === i ? "var(--c-acc-2)" : "var(--c-ln)", background: step === i ? "var(--c-surf-2)" : "transparent", color: "var(--c-ink)" }}>
+                className="w-full min-h-[44px] text-start flex gap-3 items-start rounded-[20px] p-2.5 border transition-colors duration-150" style={{ borderColor: step === i ? "var(--c-acc-2)" : "var(--c-ln)", background: step === i ? "var(--c-surf-2)" : "transparent", color: "var(--c-ink)" }}>
                 <span className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-[12px] font-bold" style={{ background: step === i ? "var(--c-acc-2)" : "var(--c-ln)", color: step === i ? "var(--c-on-acc-2)" : "var(--c-ink)" }}>{i + 1}</span>
                 <span className="text-[14px] leading-snug" dir="auto">{pick(s)}</span></button></li>))}
           </ol>
@@ -160,7 +160,7 @@ function Walk({ id, title, purpose, where, sketch, steps, tip, open, ar }) {
             <button className={K.btnS} onClick={() => { setStep((s) => (s + 1) % steps.length); setPlay(false); }} data-testid="guide-next">{tr("Next step")}<ChevronRight size={14} className="rtl:-scale-x-100" /></button>
             {open ? <button className={K.btnP + " ms-auto"} onClick={open} data-testid="guide-open">{tr("Open it")}<ChevronRight size={15} className="rtl:-scale-x-100" /></button> : null}
           </div>
-          {tip ? <p className="text-[13px] m-0 rounded-[14px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("Tip")}:</b> {pick(tip)}</p> : null}
+          {tip ? <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("Tip")}:</b> {pick(tip)}</p> : null}
         </div>
       </div>
     </div>);
@@ -178,13 +178,13 @@ function PlanCard({ p, ar, nameOf, open, see }) {
         {p.items.map((it, i) => { const n = it.tool ? nameOf(it.tool) : null, go = it.tool ? (open ? () => open(it.tool) : null) : it.see ? () => see(it.see) : null;
           return (
           <li key={i}><button onClick={go || undefined} disabled={!go} data-testid="guide-plan-item" data-tool={it.tool || it.see || ""}
-            className="w-full min-h-[44px] text-start flex gap-3 items-start rounded-[16px] p-2.5 border hover:border-[var(--c-acc)] transition-colors duration-150" style={{ borderColor: "var(--c-ln)", background: "transparent", color: "var(--c-ink)" }}>
+            className="w-full min-h-[44px] text-start flex gap-3 items-start rounded-[20px] p-2.5 border hover:border-[var(--c-acc)] transition-colors duration-150" style={{ borderColor: "var(--c-ln)", background: "transparent", color: "var(--c-ink)" }}>
             <span className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-[12px] font-bold tabular-nums" style={{ background: "var(--c-acc)", color: "var(--c-on-acc)" }}>{i + 1}</span>
             <span className="flex-1 min-w-0">{n ? <b className="block text-[12.5px]" style={{ color: "var(--c-acc)" }} dir="auto">{n[0]}</b> : null}
               <span className="text-[14px] leading-snug" dir="auto">{pick(it.text)}</span></span>
             {go ? <ChevronRight size={15} className="c-sub shrink-0 mt-1 rtl:-scale-x-100" /> : null}</button></li>); })}
       </ol>
-      <p className="text-[13px] m-0 rounded-[14px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("Tip")}:</b> {pick(p.tip)}</p>
+      <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("Tip")}:</b> {pick(p.tip)}</p>
     </div>);
 }
 
@@ -205,7 +205,7 @@ function LifeAreas({ ar, nameOf, navTo, sel, setSel, walkFor }) {
       {!A ? <div className="grid grid-cols-2 gap-2.5">
         {GA.AREAS.map((a) => { const p = GA.progress(tried, a.id, has); return p.total ? (
           <button key={a.id} onClick={() => setArea(a.id)} className={K.cardPad + " text-start min-h-[104px] hover:border-[var(--c-acc)] transition-colors duration-150"} data-testid={"guide-area-" + a.id}>
-            <span className="w-10 h-10 rounded-[14px] grid place-items-center text-[19px]" style={{ background: "var(--c-soft)" }} aria-hidden="true">{a.icon}</span>
+            <span className="w-10 h-10 rounded-[12px] grid place-items-center text-[19px]" style={{ background: "var(--c-soft)" }} aria-hidden="true">{a.icon}</span>
             <b className="block mt-2 text-[15px] font-extrabold" dir="auto">{pk(a.title)}</b>
             <span className="block c-sub text-[12px] tabular-nums">{tr("{a} of {b} tried", { a: p.tried, b: p.total })}</span></button>) : null; })}
       </div> : (
@@ -215,10 +215,10 @@ function LifeAreas({ ar, nameOf, navTo, sel, setSel, walkFor }) {
         {/* what hasn't been tried first — that is what there is still to discover */}
         {[...A.ids].filter(has).sort((x, y) => tried.includes(x) - tried.includes(y)).map((id) => { const t = nameOf(id), sg = GA.SAY[id], done = tried.includes(id); return (
           <div key={id} className={K.cardPad + " space-y-2"} data-testid="guide-feature" data-id={id} data-tried={done ? "1" : "0"}>
-            <div className="flex items-start gap-2.5"><span className={"w-6 h-6 rounded-[7px] border-2 shrink-0 grid place-items-center mt-0.5 " + (done ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "border-[var(--c-ln)]")} aria-label={done ? tr("Tried") : tr("Not tried yet")}>{done ? "✓" : ""}</span>
+            <div className="flex items-start gap-2.5"><span className={"w-6 h-6 rounded-[12px] border-2 shrink-0 grid place-items-center mt-0.5 " + (done ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "border-[var(--c-ln)]")} aria-label={done ? tr("Tried") : tr("Not tried yet")}>{done ? "✓" : ""}</span>
               <span className="min-w-0"><b className="block text-[15px] font-extrabold" dir="auto">{t[0]}</b><span className="block c-sub text-[12.5px]" dir="auto">{t[1]}</span></span></div>
-            {sg ? <><p className="m-0 rounded-[14px] px-3 py-2 text-[13px]" style={{ background: "var(--c-surf-2)" }} dir="auto"><b>{tr("You say")}:</b> {pk(sg[0])}</p>
-              <p className="m-0 rounded-[14px] px-3 py-2 text-[13px] border border-dashed border-[var(--c-acc)]" dir="auto"><b>{tr("You get")}:</b> {pk(sg[1])}</p></> : null}
+            {sg ? <><p className="m-0 rounded-[12px] px-3 py-2 text-[13px]" style={{ background: "var(--c-surf-2)" }} dir="auto"><b>{tr("You say")}:</b> {pk(sg[0])}</p>
+              <p className="m-0 rounded-[12px] px-3 py-2 text-[13px] border border-dashed border-[var(--c-acc)]" dir="auto"><b>{tr("You get")}:</b> {pk(sg[1])}</p></> : null}
             <div className="flex gap-2 flex-wrap">
               {navTo ? <button className={K.btnP + " flex-1"} onClick={() => navTo(id)} data-testid="guide-try">{tr("Try it")}</button> : null}
               <button className={K.btnS} onClick={() => setSel(sel === id ? "" : id)} aria-expanded={sel === id} data-testid="guide-how">{tr("How")}</button></div>
@@ -250,8 +250,8 @@ export function GuidePage({ tools, groups, navTo }) {
   const Row = ({ k, label, sub, sketch, icon: Ic }) => (
     <div>
       <button onClick={() => setSel(sel === k && !wide ? "" : k)} aria-expanded={sel === k} data-testid={"guide-row-" + k}
-        className="w-full min-h-[52px] flex items-center gap-3 text-start py-2 px-2 rounded-[16px] font-bold" style={{ background: wide && sel === k ? "var(--c-soft)" : "transparent", color: "var(--c-ink)" }}>
-        {Ic ? <span className="w-10 h-10 shrink-0 rounded-[14px] grid place-items-center" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }}><Ic size={17} /></span> : <Sketch kind={sketch} small />}<span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{label}</b>{sub ? <span className="c-sub text-[12.5px] block truncate" dir="auto">{sub}</span> : null}</span>
+        className="w-full min-h-[52px] flex items-center gap-3 text-start py-2 px-2 rounded-[20px] font-bold" style={{ background: wide && sel === k ? "var(--c-soft)" : "transparent", color: "var(--c-ink)" }}>
+        {Ic ? <span className="w-10 h-10 shrink-0 rounded-[12px] grid place-items-center" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }}><Ic size={17} /></span> : <Sketch kind={sketch} small />}<span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{label}</b>{sub ? <span className="c-sub text-[12.5px] block truncate" dir="auto">{sub}</span> : null}</span>
         <ChevronRight size={16} className={"c-sub shrink-0 transition-transform rtl:-scale-x-100 " + (!wide && sel === k ? "rotate-90" : "")} /></button>
       {!wide && sel === k ? <div className="mt-2 mb-3">{walkFor(k)}</div> : null}
     </div>);
@@ -273,7 +273,7 @@ export function GuidePage({ tools, groups, navTo }) {
       {hits && !hits.length && !startHits.length && !planHits.length ? <p className="c-sub" data-testid="guide-none">{tr("Nothing in the guide matches — try another word.")}</p> : null}
     </div>);
   return (
-    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[22px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="guide-page">
+    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[20px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="guide-page">
       <style>{`@keyframes guidePulse{0%{opacity:.9;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}.guide-pulse{transform-box:fill-box;transform-origin:center;animation:guidePulse 1.3s ease-out infinite}.g-acc{color:var(--c-on-acc)}`}</style>
       <div><h2 className={K.h1 + " flex items-center gap-2"}><BookOpen size={20} className="c-acc" />{tr("How to use Attune")}</h2>
         <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("See what Attune can do, then watch each tool work with sample data — and a plan to make Attune part of your day.")}</p></div>

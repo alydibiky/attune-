@@ -45,7 +45,7 @@ function heading(c) {
 
 /** "How much did Sheikh pay?" — the amount really paid (prefilled with what was due); the rest is worked out again. */
 export function PayBox({ c, ed, setEd, onPay }) {
-  return <form onSubmit={(e) => { e.preventDefault(); const v = +String(ed.v).replace(/[^\d.]/g, ""); if (v >= 0) { onPay(c, ed.i, v); setEd(null); } }} className="mt-2.5 rounded-[14px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-2.5 space-y-2" data-testid="life-paybox">
+  return <form onSubmit={(e) => { e.preventDefault(); const v = +String(ed.v).replace(/[^\d.]/g, ""); if (v >= 0) { onPay(c, ed.i, v); setEd(null); } }} className="mt-2.5 rounded-[12px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-2.5 space-y-2" data-testid="life-paybox">
     <p className="m-0 text-[13px] font-bold" dir="auto">{c.dir === "in" ? tr("How much did {p} pay?", { p: c.person }) : tr("How much did you pay {p}?", { p: c.person })}</p>
     <div className="flex gap-2"><input value={ed.v} onChange={(e) => setEd({ ...ed, v: e.target.value })} inputMode="decimal" className={"flex-1 min-w-0 min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[15px] tabular-nums"} data-testid="life-pay-amount" autoFocus />
       <button type="submit" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[13px]" data-testid="life-pay-go">{tr("Paid")}</button>
@@ -54,7 +54,7 @@ export function PayBox({ c, ed, setEd, onPay }) {
   </form>;
 }
 const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
-const longDay = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG" : "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
+const longDay = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
 // persona 9 (Ali picked H-C 1): Sara borrowed four times — one card for Sara with what she owes in all, her loans inside
 const pkey = (c) => String(c.person || "").replace(/[أإآ]/g, "ا").replace(/ة$/, "ه").toLowerCase().trim() + "|" + c.dir;
 function byPerson(items) { const m = new Map(); for (const c of items) { const k = c.person ? pkey(c) : c.id; m.set(k, [...(m.get(k) || []), c]); } return [...m.values()]; }
@@ -64,7 +64,7 @@ function PersonCard({ list, onTick, onRemove, onPay }) {
   return (
     <div className={U.cardPad} data-testid="life-person">
       <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="w-full flex items-start gap-3 text-start">
-        <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
+        <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
         <div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c0)}</b>
           <div className={"text-[12.5px] " + U.muted}>{tr("{n} loans", { n: list.length })} · {open ? tr("Hide them") : tr("See each one")}</div></div>
         <div className="text-end"><span className={U.label}>{tr("Left")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(left)}</div></div>
@@ -85,13 +85,13 @@ function Item({ c, onTick, onRemove, onPay }) {
   return (
     <div className={U.cardPad} data-testid="life-item">
       <div className="flex items-start gap-3">
-        <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
+        <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
         <div className="flex-1 min-w-0">
           <b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c)}</b>
           <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(c)}{isOpenLoan(c) ? " · " + tr("open — no date") : ""}</div>
         </div>
         {pr.left != null ? <div className="text-end"><span className={U.label}>{tr("Left")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(pr.left)}</div></div> : null}
-        <button onClick={() => onRemove(c)} aria-label={tr("Delete")} className={"w-11 h-11 -me-2 -mt-1.5 shrink-0 grid place-items-center rounded-[14px] hover:text-[var(--c-neg)] " + U.muted} data-testid="life-remove"><Trash2 size={15} /></button>
+        <button onClick={() => onRemove(c)} aria-label={tr("Delete")} className={"w-11 h-11 -me-2 -mt-1.5 shrink-0 grid place-items-center rounded-[12px] hover:text-[var(--c-neg)] " + U.muted} data-testid="life-remove"><Trash2 size={15} /></button>
       </div>
       {c.count > 1 && c.kind !== "regular" ? <div className="flex items-center gap-2 mt-2.5" data-testid="life-progress">
         <div className="flex-1 h-2 rounded-full bg-[var(--c-surf-2)] border border-[var(--c-ln)] overflow-hidden"><i className="block h-full rounded-full bg-[var(--c-pos)]" style={{ width: Math.min(100, (pr.paidCount / c.count) * 100) + "%" }} /></div>
@@ -102,8 +102,8 @@ function Item({ c, onTick, onRemove, onPay }) {
         <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="mt-2.5 w-full min-h-[44px] rounded-[12px] border border-[var(--c-ln)] px-3 flex items-center justify-between text-[13px] font-bold" data-testid="life-open">
           <span>{open ? tr("Hide the schedule") : tr("Open the schedule")}</span><ChevronDown size={16} className={"transition-transform " + (open ? "rotate-180" : "")} /></button>) : null}
       {c.kind !== "regular" && show.length > 1 && open ? (
-        <div className="mt-2 rounded-[14px] border border-[var(--c-ln)] overflow-hidden" data-testid="life-schedule">
-          <div className={"grid grid-cols-[34px_1fr_auto_auto] gap-x-2 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] bg-[var(--c-surf-2)] " + U.muted}><span>#</span><span>{tr("Date")}</span><span className="text-end">{tr("Amount")}</span><span className="text-end">{tr("Status")}</span></div>
+        <div className="mt-2 rounded-[12px] border border-[var(--c-ln)] overflow-hidden" data-testid="life-schedule">
+          <div className={"grid grid-cols-[34px_1fr_auto_auto] gap-x-2 px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-[0.05em] bg-[var(--c-surf-2)] " + U.muted}><span>#</span><span>{tr("Date")}</span><span className="text-end">{tr("Amount")}</span><span className="text-end">{tr("Status")}</span></div>
           {pr.schedule.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid, late = !s.paid && s.date < todayIso(); return (
             <React.Fragment key={s.i}>
             <button onClick={() => tap(s.i, s.paid, s.amount)} data-testid="life-row" aria-pressed={s.paid}
@@ -122,13 +122,13 @@ function Item({ c, onTick, onRemove, onPay }) {
           {show.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid; return (
             <button key={s.i} onClick={() => tap(s.i, s.paid, s.amount)} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick"
               aria-pressed={s.paid} aria-label={tr("Payment {k}", { k: s.i + 1 }) + " · " + s.date}
-              className="min-w-[60px] min-h-[44px] px-2 py-1 rounded-[11px] flex flex-col items-center justify-center gap-px text-[11px] font-bold tabular-nums transition-colors duration-150"
+              className="min-w-[60px] min-h-[44px] px-2 py-1 rounded-[12px] flex flex-col items-center justify-center gap-px text-[11px] font-bold tabular-nums transition-colors duration-150"
               style={{ background: s.paid ? "color-mix(in srgb, var(--c-pos) 14%, transparent)" : nx ? "color-mix(in srgb, var(--c-warn) 14%, transparent)" : "var(--c-surf)",
                 border: "1.5px solid " + (s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-ln)"), color: s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-mut)" }}>
               <span>{tickDay(s.date, c.kind === "regular")}</span><span className="flex items-center gap-0.5">{s.paid ? <Check size={11} /> : null}{nx && !s.paid ? tr("Due") + " " : ""}{short(s.amount)}</span></button>); })}
         </div>) : show.length <= 1 ? (
         <button onClick={() => tap(0, (c.paid || []).includes(0), c.amount)} className={"mt-3 min-h-[44px] flex items-center gap-2 text-[13.5px] font-bold " + U.muted} data-testid="life-tick">
-          <span className="w-6 h-6 rounded-[8px] flex items-center justify-center" style={{ background: (c.paid || []).includes(0) ? "var(--c-acc)" : "transparent", border: "1.5px solid var(--c-acc)", color: "var(--c-on-acc)" }}>{(c.paid || []).includes(0) ? <Check size={12} /> : null}</span>
+          <span className="w-6 h-6 rounded-[12px] flex items-center justify-center" style={{ background: (c.paid || []).includes(0) ? "var(--c-acc)" : "transparent", border: "1.5px solid var(--c-acc)", color: "var(--c-on-acc)" }}>{(c.paid || []).includes(0) ? <Check size={12} /> : null}</span>
           {(c.paid || []).includes(0) ? tr("Settled") : c.dir === "in" ? tr("Mark as paid back") : tr("Mark as paid")}</button>) : null}
       {ed && !open ? <PayBox c={c} ed={ed} setEd={setEd} onPay={onPay} /> : null}
       {pr.next && show.length > 1 ? <div className={"mt-2 text-[12.5px] tabular-nums " + U.muted}>{tr("Next: {d} · {a}", { d: pr.next.date, a: fmt(pr.next.amount) })}</div> : null}
@@ -204,7 +204,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     ["Installments", data.items.filter((c) => c.kind === "installment" && !c.person)], ["Savings circles", data.items.filter((c) => c.kind === "circle")],
     ["Bills, rent and subscriptions", data.items.filter((c) => ["bill", "rent", "subscription"].includes(c.kind))], ["Comes regularly", data.items.filter((c) => c.kind === "regular")]].filter((g) => g[1].length);
   return (
-    <div className={U.page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="life-page">
+    <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="life-page">
       <div><h2 className={U.h1}>{tr("People & plans")}</h2><p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
       {/* v6.27 computer layout A: what you type and what's due on the left, the commitments on the right (stacked on a phone) */}
       <div className={PANES_N}><div className={LEFT}>

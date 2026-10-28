@@ -86,6 +86,8 @@ with sync_playwright() as p:
     g = app.locator(".grid").inner_text()
     check("Port Said" in g and "54,000" in g and "JOB-0002" in g, "a record added in the app gets its number and its formula")
     app.reload(); app.wait_for_selector(".tab"); app.locator(".tab:has-text('Jobs')").click()
+    try: app.wait_for_function("() => (document.querySelector('.grid') || {}).innerText.includes('Port Said')", timeout=5000)   # (a busy machine: the saved rows load a moment after the tabs)
+    except Exception: pass
     check("Port Said" in app.locator(".grid").inner_text(), "…and is still there after reopening")
     with app.expect_download() as dl2:
         app.click("#copy")

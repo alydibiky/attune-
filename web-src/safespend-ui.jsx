@@ -4,7 +4,7 @@
 import { planMonth, loadPots } from "./planner.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, getLang } from "./i18n.js";
 import { safeToSpend } from "./safespend.js";
 import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
@@ -62,7 +62,24 @@ export function SafeSpend({ calm = false, card = false, inline = false }) {
   if (!s) return null;
   // v8.5 (I1 of the 27 Oct review): with nothing written yet, one first step instead of "0 a day"
   if (!((j("ledger.v3", {}).txns || []).length) && !s.income && !(s.today > 0)) return (
-    <div className={(calm || card ? U.card + " p-4 " : "") + "text-[13px] " + U.muted} data-testid="safe-empty">{tr("Write what you spend or earn above — then Attune shows what is safe to spend each day.")}</div>);
+    <div data-testid="safe-empty"><U.EmptyStart testid="money-start" title={tr("Your money starts here")} sub={tr("Write what you spend or earn above — then Attune shows what is safe to spend each day.")}
+      examples={getLang() === "ar" ? ["غدا 150", "المرتب 25,000", "تاكسي 60"] : ["lunch 150", "salary 25,000", "taxi 60"]}
+      onPick={(x) => { const m = x.match(/^(.+?)\s+([\d,]+)$/), inc = /salary|مرتب/i.test(x); try { window.dispatchEvent(new CustomEvent("attune-money-add", { detail: { type: inc ? "income" : "expense", amount: +String(m ? m[2] : 0).replace(/,/g, ""), note: m ? m[1].replace(/^ال/, "") : x, ...(inc ? {} : { cat: /taxi|تاكسي/i.test(x) ? "transport" : "food" }) } })); } catch (e) {} }} /></div>);
+  // v8.7 (Ali picked P5-F): day one with no income written — not "0 a day", but one clear step (or "just track spending")
+  const L0 = j("ledger.v3", {}), opts = j(KEY, {});
+  if (!opts.trackOnly && !((L0.txns || []).some((t) => t.type === "income")) && !s.income && !s.incomeMonth) {
+    const hide = () => { try { localStorage.setItem(KEY, JSON.stringify({ ...j(KEY, {}), trackOnly: true })); } catch (e) {} setNonce((x) => x + 1); };
+    return (
+      <div className={(calm || card || !inline ? U.card + " p-4 " : "") + "space-y-2"} data-testid="safe-noincome">
+        <b className="block text-[15px] font-extrabold">{tr("Add your income to see what's safe to spend")}</b>
+        <p className={"m-0 text-[13px] " + U.muted}>{tr("Write it like you'd say it — “salary 25,000 on the 1st”. Attune then shows how much you can spend each day and keeps your bills aside.")}</p>
+        <div className="flex flex-wrap gap-2">
+          <button className={U.btnP + " h-10! min-h-[40px]!"} onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-money-add", { detail: { type: "income" } })); } catch (e) {} }} data-testid="safe-add-income">{tr("Add my income")}</button>
+          <button className={U.btnS + " " + U.muted} onClick={hide} data-testid="safe-track-only">{tr("Just track spending")}</button>
+        </div>
+      </div>);
+  }
+  if (opts.trackOnly && !((L0.txns || []).some((t) => t.type === "income"))) return null;
   const setCushion = (v) => { try { localStorage.setItem(KEY, JSON.stringify({ ...j(KEY, {}), cushion: v })); } catch (e) {} setNonce((x) => x + 1); };
   const line = s.short > 0
     ? tr("Short by {x} before {d}").replace("{x}", s.cur + " " + fmt(s.short)).replace("{d}", dayName(s.income ? s.income.d : s.until))
@@ -76,7 +93,7 @@ export function SafeSpend({ calm = false, card = false, inline = false }) {
       <div className={"text-[11.5px] max-w-[240px] " + (s.short > 0 ? "font-bold text-[var(--c-warn)]" : U.muted)}>{line}{s.cushion ? " · " + tr("{a} kept aside", { a: fmt(s.cushion) + " " + s.cur }) : ""}{s.pots ? " · " + tr("{a} for your savings goals", { a: fmt(s.pots) }) : ""}</div>
     </div>);
   if (card) return (
-    <div className="calm rounded-[18px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="safe-spend">
+    <div className="calm rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]" data-testid="safe-spend">
       <button className="w-full min-h-[36px] flex items-center justify-between gap-2 text-start" onClick={() => setOpen(!open)} aria-expanded={open} data-testid="safe-spend-toggle">
         <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0">
           <span className={"text-[12.5px] font-bold " + U.muted}>{tr("Safe to spend today")}</span>

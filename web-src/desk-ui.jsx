@@ -39,8 +39,8 @@ function greeting(now = new Date()) {
 
 const Card = ({ id, label, sub, Icon, onClick, testid }) => (
   <button onClick={onClick} data-testid={testid || "home-card-" + id}
-    className="text-start rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-[var(--c-acc)] p-4 min-h-[124px] flex flex-col transition-colors duration-150">
-    <span className="w-10 h-10 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={19} /></span>
+    className="text-start rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-[var(--c-acc)] p-4 min-h-[124px] flex flex-col transition-colors duration-150">
+    <span className="w-10 h-10 rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={19} /></span>
     <span className="mt-3 text-[15px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>
     <span className="mt-0.5 text-[12.5px] text-[var(--c-mut)] leading-snug line-clamp-2">{tr(sub)}</span>
   </button>);
@@ -68,17 +68,17 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
     <div className="calm pt-2 pb-10 space-y-5" data-testid="desk-home">
       <h1 className="text-[28px] font-black text-[var(--c-ink)] tracking-tight m-0">{tr(greeting())}{name ? ", " + name : ""}</h1>
       <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
-          <p className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] mb-2.5 mt-0">{tr("Ask anything")}</p>
-          <div className="flex items-end gap-2 rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 focus-within:border-[var(--c-acc)] transition-colors duration-150">
+        <div className="col-span-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+          <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] mb-2.5 mt-0">{tr("Ask anything")}</p>
+          <div className="flex items-end gap-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 focus-within:border-[var(--c-acc)] transition-colors duration-150">
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="home-ask"
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
               placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : tr("Ask, or tell Attune what happened — «spent 150 on lunch», «had foul for breakfast»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
             <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
-              className="w-11 h-11 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center disabled:opacity-40 transition-opacity duration-150"><Send size={17} className="rtl:-scale-x-100" /></button>
+              className="w-11 h-11 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center disabled:opacity-40 transition-opacity duration-150"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>
           <div className="mt-3"><BoxModes mode={boxMode} setMode={(m) => { setBoxMode(m); setLife(null); }} /></div>
-          {done ? <div className="calm rounded-[22px] mt-3"><DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} /></div> : null}
+          {done ? <div className="calm rounded-[20px] mt-3"><DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} /></div> : null}
           {life ? <div className="mt-3"><LifeAnswer res={life} navTo={navTo} askChat={(q) => { setLife(null); onAsk(q); }} onClose={() => setLife(null)} /></div> : null}
           {boxMode === "translate" ? <button onClick={() => navTo("translate")} className="mt-2 min-h-[40px] text-[13px] font-bold text-[var(--c-acc)] inline-flex items-center gap-1" data-testid="box-translate-more">{tr("Talk with someone, a photo or a document")} →</button> : null}
           <div className="flex flex-wrap gap-2 mt-3">
@@ -86,8 +86,8 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
               className="min-h-[40px] rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold px-4 hover:border-[var(--c-acc)] transition-colors duration-150">{tr(t)}</button>)}
           </div>
         </div>
-        <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 space-y-2" data-testid="home-today">
-          <p className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
+        <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 space-y-2" data-testid="home-today">
+          <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
           {facts.kcal != null ? <button onClick={() => navTo("fit")} className="min-h-[44px] flex items-center gap-2 text-start"><Apple size={16} className="text-[var(--c-pos)]" />
             <span className="text-[24px] font-black text-[var(--c-ink)] tabular-nums tracking-tight">{facts.kcal}</span><span className="text-[12.5px] text-[var(--c-mut)]">{tr("kcal eaten")}</span></button> : null}
           <button onClick={() => navTo("reminders")} className="min-h-[44px] flex items-center gap-2 text-[13.5px] font-semibold text-[var(--c-ink)]"><Bell size={15} className="text-[var(--c-warn)]" />
@@ -113,7 +113,7 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-[24px] font-black text-[var(--c-ink)] tracking-tight m-0">{tr("Tools")}</h1>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find a tool")} dir="auto" data-testid="tools-find"
-          className="ms-auto w-40 sm:w-72 min-w-0 min-h-[44px] h-11 rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150" />
+          className="ms-auto w-40 sm:w-72 min-w-0 min-h-[44px] h-11 rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150" />
       </div>
       <p className="text-[13px] text-[var(--c-mut)] mt-1 mb-4">{tr(subtitle || "Every tool on one page — ★ pins it to the sidebar.")}</p>
       {top && !nq ? top : null}
@@ -125,8 +125,8 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
             const names = members.map((m) => tools.find((t) => t[0] === m)).filter(Boolean);
             return (
               <button key={pid} onClick={() => navTo(members[0])} data-testid={"tools-page-" + pid}
-                className="text-start rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-[var(--c-acc)] transition-colors duration-150 p-4 flex items-start gap-3">
-                <span className="w-11 h-11 shrink-0 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={20} /></span>
+                className="text-start rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-[var(--c-acc)] transition-colors duration-150 p-4 flex items-start gap-3">
+                <span className="w-11 h-11 shrink-0 rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={20} /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[15.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(title)}</span>
                   <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-1">{tr(sub)}</span>
@@ -139,8 +139,8 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
       ) : pages ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="tools-results">
           {(top ? tools : pages.flatMap((p) => p[3]).map((m) => tools.find((t) => t[0] === m)).filter(Boolean)).filter(match).map(([id, label, sub, Icon]) => (
-            <button key={id} onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="text-start min-h-[56px] flex items-start gap-3 p-3.5 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
-              <span className="w-10 h-10 shrink-0 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
+            <button key={id} onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="text-start min-h-[56px] flex items-start gap-3 p-3.5 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
+              <span className="w-10 h-10 shrink-0 rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
               <span className="min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>
                 <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>
             </button>))}
@@ -151,12 +151,12 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
         if (!list.length) return null;
         return (
           <section key={title} className="mb-6" data-testid="tools-group">
-            <h2 className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2.5">{tr(title)}</h2>
+            <h2 className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2.5">{tr(title)}</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {list.map(([id, label, sub, Icon]) => (
-                <div key={id} className="group relative rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
+                <div key={id} className="group relative rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
                   <button onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="w-full min-h-[56px] text-start flex items-start gap-3 p-3.5 pe-11">
-                    <span className="w-10 h-10 shrink-0 rounded-[14px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
+                    <span className="w-10 h-10 shrink-0 rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
                     <span className="min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>
                       <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>
                   </button>

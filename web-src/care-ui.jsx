@@ -37,7 +37,7 @@ function MedForm({ init, members, onSave, onCancel }) {
         <option value="">{tr("How often?")}</option>{FREQS.map(([f]) => <option key={f} value={f}>{tr(f)}</option>)}
         {m.freq && !FREQS.some(([f]) => f === m.freq) ? <option value={m.freq}>{m.freq}</option> : null}
       </select>
-      {(m.times || []).length ? <div className="flex flex-wrap gap-1.5 items-center"><span className="c-lbl">{tr("At")}</span>{m.times.map((t, i) => <input key={i} type="time" value={t} onChange={(e) => set("times", m.times.map((x, k) => (k === i ? e.target.value : x)))} className="min-h-[44px] rounded-[14px] px-2 border bg-[var(--c-bg)] text-[13px] tabular-nums" style={st} />)}</div> : null}
+      {(m.times || []).length ? <div className="flex flex-wrap gap-1.5 items-center"><span className="c-lbl">{tr("At")}</span>{m.times.map((t, i) => <input key={i} type="time" value={t} onChange={(e) => set("times", m.times.map((x, k) => (k === i ? e.target.value : x)))} className="min-h-[44px] rounded-[12px] px-2 border bg-[var(--c-bg)] text-[13px] tabular-nums" style={st} />)}</div> : null}
       <div className="grid grid-cols-2 gap-2">
         <label><span className="c-lbl">{tr("For how many days (0 = ongoing)")}</span><input type="number" min="0" value={m.days || 0} onChange={(e) => set("days", Math.max(0, +e.target.value || 0))} className={field} style={st} /></label>
         <label><span className="c-lbl">{tr("Food")}</span><select value={m.food} onChange={(e) => set("food", e.target.value)} className={field} style={st}><option value="">—</option>{["before food", "with food", "after food"].map((f) => <option key={f} value={f}>{tr(f)}</option>)}</select></label>
@@ -170,7 +170,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
         <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start" data-testid="care-insulin">
           {ins.onInsulin ? <div className={cardPad + " space-y-2"}><span className="c-lbl">{tr("Blood sugar now")}</span>
             <div className="flex gap-2"><input type="number" inputMode="decimal" value={sugar} onChange={(e) => setSugar(e.target.value)} className={field} style={st} data-testid="care-sugar" />
-              <select value={sugarUnit} onChange={(e) => setSugarUnit(e.target.value)} className="min-h-[44px] rounded-[14px] px-2 border bg-[var(--c-bg)] text-[13px]" style={st}><option>mg/dL</option><option>mmol/L</option></select>
+              <select value={sugarUnit} onChange={(e) => setSugarUnit(e.target.value)} className="min-h-[44px] rounded-[12px] px-2 border bg-[var(--c-bg)] text-[13px]" style={st}><option>mg/dL</option><option>mmol/L</option></select>
               <button className={btnP} disabled={!sugar} onClick={saveSugar} data-testid="care-sugar-save">{tr("Save")}</button></div>
             {ins.sugar ? <span className="c-sub text-[12.5px]">{tr("Last reading")}: <b className={ins.sugar.low ? "c-neg" : ""}>{ins.sugar.value} {ins.sugar.unit}</b> · {new Date(ins.sugar.at).toTimeString().slice(0, 5)} · {tr("Fit & Food uses it for its tips")}</span> : <span className="c-sub text-[12.5px]">{tr("Fit & Food shows each meal's carbohydrates and warns you when your sugar is low.")}</span>}
           </div> : null}
@@ -221,7 +221,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
                     {prices[m.id].map((x) => <a key={x.site} href={x.url} target="_blank" rel="noreferrer" className="flex justify-between text-[12.5px] gap-2"><span className="truncate" dir="auto">{x.site}</span><b className="c-num">{x.price} {tr("EGP")}</b></a>)}
                     <span className="c-sub text-[11px] block">{tr("Prices from the web — check at the pharmacy; the same box size matters.")}</span></div>
                     : <span className="c-sub text-[12px] block mt-0.5" data-testid="care-prices-none">{tr("No price found online")}</span>) : null}</div>
-                <button className="c-sub min-h-[44px] min-w-[44px] grid place-items-center rounded-[14px] hover:text-[var(--c-neg)]" aria-label={tr("Stop")} onClick={() => stopMed(m)}><Trash2 size={15} /></button>
+                <button className="c-sub min-h-[44px] min-w-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-neg)]" aria-label={tr("Stop")} onClick={() => stopMed(m)}><Trash2 size={15} /></button>
               </div>); })}
           {!data.meds.some((m) => !m.stopped) ? <DeskEmpty icon={Pill} title={tr("Your medicines appear here")} testid="care-desk-empty" /> : null}
           </div></div>
@@ -240,7 +240,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
           {labDraft ? (
             <div className={cardPad + " space-y-2"} data-testid="care-labdraft"><span className="c-lbl">{tr("Check the values, then save")}</span>
               <input type="date" value={labDraft.date} onChange={(e) => setLabDraft({ ...labDraft, date: e.target.value })} className={field} style={st} />
-              {labDraft.rows.map((r, i) => <div key={i} className="flex items-center gap-2 text-[13.5px]"><span className="flex-1">{tr(r.test)}</span><input value={r.value} onChange={(e) => setLabDraft({ ...labDraft, rows: labDraft.rows.map((x, k) => (k === i ? { ...x, value: +e.target.value || 0 } : x)) })} className="w-20 min-h-[44px] rounded-[14px] px-2 border bg-[var(--c-bg)] c-num tabular-nums" style={st} /><span className="c-sub w-16">{r.unit}</span></div>)}
+              {labDraft.rows.map((r, i) => <div key={i} className="flex items-center gap-2 text-[13.5px]"><span className="flex-1">{tr(r.test)}</span><input value={r.value} onChange={(e) => setLabDraft({ ...labDraft, rows: labDraft.rows.map((x, k) => (k === i ? { ...x, value: +e.target.value || 0 } : x)) })} className="w-20 min-h-[44px] rounded-[12px] px-2 border bg-[var(--c-bg)] c-num tabular-nums" style={st} /><span className="c-sub w-16">{r.unit}</span></div>)}
               <button className={btnP} onClick={() => { const d = ensureMember(); put(H.addLabs(d, labDraft.member || d.members[0].id, labDraft.date, labDraft.rows.map((r) => ({ ...r, flag: r.low != null && r.value < r.low ? "low" : r.high != null && r.value > r.high ? "high" : r.low != null || r.high != null ? "in range" : "" })))); setLabDraft(null); }} data-testid="care-lab-save">{tr("Save")}</button>
             </div>) : null}
           </div><div className={tests.length || !labDraft ? R3 : "min-w-0"}>

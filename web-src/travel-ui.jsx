@@ -111,7 +111,7 @@ export function TravelPage(p) {
 
   </>);
   return (
-    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[22px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="travel-page">
+    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[20px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="travel-page">
       {/* the country — one line; the full list opens only when asked */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
@@ -190,7 +190,7 @@ export function TravelPage(p) {
 
           {/* entry rules for this passport */}
           {entry ? (<Section title="Going there — what you need" testid="travel-entry" right={
-              <select value={nationality} onChange={(e) => setNationality(e.target.value)} className="rounded-[14px] min-h-[44px] px-2.5 text-[12.5px] font-semibold border bg-[var(--c-bg)] max-w-[11rem] focus:outline-none focus:border-[var(--c-acc)]" style={st} aria-label={tr("Travelling on a passport from")}>
+              <select value={nationality} onChange={(e) => setNationality(e.target.value)} className="rounded-[12px] min-h-[44px] px-2.5 text-[12.5px] font-semibold border bg-[var(--c-bg)] max-w-[11rem] focus:outline-none focus:border-[var(--c-acc)]" style={st} aria-label={tr("Travelling on a passport from")}>
                 {NATIONALITIES.map((n) => <option key={n.k} value={n.k}>{n.flag} {tr(n.label)}</option>)}</select>}>
             <p className="m-0 flex items-baseline gap-2 flex-wrap">
               <span className="c-sub">{(NATIONALITIES.find((n) => n.k === nationality) || {}).flag} → {entry.flag} {countryShown(activePack, entry.to)}</span>
@@ -267,8 +267,8 @@ export function TravelPage(p) {
                   <span className="c-sub block" dir={dirMine}>{ph.mine}</span>
                   <span className="block text-[16px] font-semibold" dir={RTL_LANGS.has(pack.lang) ? "rtl" : "ltr"}>{ph.loc}</span>
                   <span className="c-sub block">{ph.say}</span></button>
-                <button onClick={() => say(ph)} className="c-ic !w-11 !h-11 !rounded-[14px] border-0 cursor-pointer" aria-label={tr("Say it aloud")} data-testid="travel-say"><Volume2 size={15} /></button>
-                <button onClick={() => setBig(ph)} className="c-ic !w-11 !h-11 !rounded-[14px] border-0 cursor-pointer" aria-label={tr("Show it big")} data-testid="travel-big"><Maximize2 size={15} /></button>
+                <button onClick={() => say(ph)} className="c-ic !w-11 !h-11 !rounded-[12px] border-0 cursor-pointer" aria-label={tr("Say it aloud")} data-testid="travel-say"><Volume2 size={15} /></button>
+                <button onClick={() => setBig(ph)} className="c-ic !w-11 !h-11 !rounded-[12px] border-0 cursor-pointer" aria-label={tr("Show it big")} data-testid="travel-big"><Maximize2 size={15} /></button>
               </div>))}
           </div>
           <p className="c-sub m-0">{tr("Tap to copy. These are written by hand, not generated — so an allergy or emergency phrase can never come out wrong.")}</p>
@@ -292,7 +292,7 @@ export function TravelPage(p) {
         {tab === "know" ? (<div className="space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
             <Languages size={14} className="c-acc" /><span className="c-sub">{tr("Write my tips in")}</span>
-            <select value={myLang} onChange={(e) => setMyLang(e.target.value)} className="rounded-[14px] min-h-[44px] px-2.5 text-[12.5px] font-semibold border bg-[var(--c-bg)] focus:outline-none focus:border-[var(--c-acc)]" style={st}>
+            <select value={myLang} onChange={(e) => setMyLang(e.target.value)} className="rounded-[12px] min-h-[44px] px-2.5 text-[12.5px] font-semibold border bg-[var(--c-bg)] focus:outline-none focus:border-[var(--c-acc)]" style={st}>
               {LANGS.filter((l) => l.k !== "match").map((l) => <option key={l.k} value={l.k}>{tr(l.label)}</option>)}</select>
             {translating ? <span className="c-sub inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" />{tr("translating on your phone…")}</span> : myLang !== "en" ? <span className="c-sub">{tr("saved — this pack now reads in")} {langShown(myLang)}</span> : null}
           </div>
@@ -314,7 +314,7 @@ export function TravelPage(p) {
       {/* a phrase shown big, to hand the phone to a driver or a waiter */}
       {big ? (
         <div className="calm fixed inset-0 z-50 grid place-items-center p-6" style={{ background: "var(--c-bg)" }} onClick={() => setBig(null)} data-testid="travel-bigview">
-          <button className="absolute top-4 end-4 c-ic !w-11 !h-11 !rounded-[14px] border-0 cursor-pointer" aria-label={tr("Close")}><X size={16} /></button>
+          <button className="absolute top-4 end-4 c-ic !w-11 !h-11 !rounded-[12px] border-0 cursor-pointer" aria-label={tr("Close")}><X size={16} /></button>
           <div className="text-center space-y-4">
             <p className="font-bold m-0" style={{ fontSize: "clamp(32px, 9vw, 64px)", lineHeight: 1.2, color: "var(--c-ink)" }} dir={RTL_LANGS.has(pack.lang) ? "rtl" : "ltr"}>{big.loc}</p>
             <p className="c-sub m-0" style={{ fontSize: 16 }}>{big.en}</p>

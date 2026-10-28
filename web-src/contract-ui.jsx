@@ -14,8 +14,8 @@ export function ContractReview({ r, flash, share }) {
   const head = r.level === "serious" ? ["Don't sign it as it is", "border-[var(--c-neg)] bg-[var(--c-neg)]/10 text-[var(--c-neg)]"] : r.level === "check" ? ["Ask for changes first", "border-[var(--c-warn)] bg-[var(--c-warn)]/10 text-[var(--c-warn)]"] : ["No risky terms found", "border-[var(--c-pos)] bg-[var(--c-pos)]/10 text-[var(--c-pos)]"];
   return (
     <section className="space-y-3" data-testid="contract-review" data-level={r.level}>
-      <div className={"rounded-[22px] border p-4 " + head[1]}>
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] opacity-80 m-0">{tr(KIND[r.kind])} · {tr("second opinion")}</p>
+      <div className={"rounded-[20px] border p-4 " + head[1]}>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] opacity-80 m-0">{tr(KIND[r.kind])} · {tr("second opinion")}</p>
         <p className="text-[22px] font-black tracking-tight mt-1 m-0 flex items-center gap-2">{r.level === "ok" ? <ShieldCheck size={18} /> : <AlertTriangle size={18} />}{tr(head[0])}</p>
         <p className="text-[12.5px] mt-1.5 m-0 text-[var(--c-ink)] opacity-80">{tr("Read by code on this phone. A first look, not legal advice — for a big contract, show it to a lawyer.")}</p>
       </div>

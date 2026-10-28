@@ -1,4 +1,4 @@
-// Reminders on the desktop — the phone's Reminders.kt: {id, at (ms), title, body, repeat: none|daily|weekly|weekdays},
+// Reminders on the desktop — the phone's Reminders.kt: {id, at (ms), title, body, repeat: none|daily|weekly|weekdays|monthly|last:N|days:…},
 // the same id replaces; shown as a system notification at its time; a repeating one moves to its next time
 // (Egypt's weekend is Friday + Saturday for "weekdays"). They ring while Attune is open (or in the tray).
 "use strict";
@@ -13,6 +13,16 @@ function next(from, repeat, after) {
     if (repeat === "daily") d.setDate(d.getDate() + 1);
     else if (repeat === "weekly") d.setDate(d.getDate() + 7);
     else if (repeat === "weekdays") { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 5 || d.getDay() === 6); }
+    // v8.7 (Ali: "the fixes on the desktop app too"): the same repeats as the phone's Reminders.kt — it rang once and stopped
+    else if (repeat === "monthly") d.setMonth(d.getMonth() + 1);
+    else if (/^last:\d$/.test(repeat || "")) {   // "every last Friday of the month" (0 = Sunday)
+      const wd = +repeat.slice(5); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setMonth(d.getMonth() + 1, 0);
+      while (d.getDay() !== wd) d.setDate(d.getDate() - 1);
+    } else if (/^days:/.test(repeat || "")) {    // "days:0,2,4" — the next of those weekdays
+      const ds = new Set(repeat.slice(5).split(",").map((x) => +x).filter((x) => x >= 0 && x <= 6));
+      if (!ds.size) return from;
+      do { d.setDate(d.getDate() + 1); } while (!ds.has(d.getDay()));
+    }
     else return from;
   }
   return d.getTime();

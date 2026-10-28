@@ -26,7 +26,7 @@ export const loadCourses = () => load(CKEY);
 export const loadTopics = () => load(NKEY);
 
 const field = inp;
-const btn = "min-h-[44px] px-3.5 py-2 rounded-[14px] text-[13.5px] font-bold disabled:opacity-40 inline-flex items-center justify-center gap-1.5 transition-colors duration-150";
+const btn = "min-h-[44px] px-3.5 py-2 rounded-[12px] text-[13.5px] font-bold disabled:opacity-40 inline-flex items-center justify-center gap-1.5 transition-colors duration-150";
 const primary = btn + " bg-[var(--c-acc)] text-[var(--c-on-acc)]";
 // (v5.13: a field that must NOT stretch — "w-full" beat "w-28" and squeezed
 // the label next to it into one letter per line.)
@@ -103,7 +103,7 @@ function Back({ onClick, label }) {
 }
 function Working({ what, text }) {
   return (
-    <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4" data-testid="daily-working">
+    <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4" data-testid="daily-working">
       <p className="text-[13px] text-[var(--c-acc)] flex items-center gap-1.5"><Loader2 size={14} className="animate-spin" />{what}</p>
       {text ? <p className="text-[12px] text-[var(--c-mut)] mt-1.5 line-clamp-3 break-words" dir="auto">{text.slice(-300)}</p> : null}
     </div>
@@ -115,7 +115,7 @@ export function Visual({ v }) {
   const [flipped, setFlipped] = useState({});
   if (!v) return null;
   const head = v.title ? <p className="text-[12px] font-semibold text-[var(--c-ink)] mb-2" dir="auto">{v.title}</p> : null;
-  const box = "rounded-[18px] border border-[var(--c-acc)]/30 bg-gradient-to-b from-[var(--c-soft)] to-transparent p-3.5";
+  const box = "rounded-[20px] border border-[var(--c-acc)]/30 bg-gradient-to-b from-[var(--c-soft)] to-transparent p-3.5";
   if (v.kind === "table") return (
     <div className={box} data-testid="visual-table">{head}
       <div className="overflow-x-auto"><table className="text-[13px] min-w-full"><thead><tr>{v.columns.map((c, i) => <th key={i} className="text-start px-2 py-1.5 text-[var(--c-acc)] font-semibold border-b border-[var(--c-ln)] whitespace-nowrap" dir="auto">{c}</th>)}</tr></thead>
@@ -125,7 +125,7 @@ export function Visual({ v }) {
     <div className={box} data-testid="visual-steps">{head}
       {v.items.map((x, i) => (
         <div key={i}>
-          <div className="flex gap-2.5 items-start rounded-[14px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5">
+          <div className="flex gap-2.5 items-start rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5">
             <span className="w-6 h-6 shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[12px] font-bold flex items-center justify-center">{i + 1}</span>
             <span className="text-[13px] text-[var(--c-ink)] pt-0.5" dir="auto">{x}</span></div>
           {i < v.items.length - 1 ? <div className="text-center text-[var(--c-acc)] leading-none py-0.5">↓</div> : null}
@@ -135,7 +135,7 @@ export function Visual({ v }) {
     <div className={box} data-testid="visual-cards">{head}<p className="text-[11px] text-[var(--c-mut)] mb-2">{tr("Tap a card to turn it over")}</p>
       <div className="grid grid-cols-2 gap-2">
         {v.items.map((x, i) => (
-          <button key={i} onClick={() => setFlipped((f) => ({ ...f, [i]: !f[i] }))} className={`rounded-[14px] border p-2.5 min-h-[4.5rem] text-start transition-colors duration-150 ${flipped[i] ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`}>
+          <button key={i} onClick={() => setFlipped((f) => ({ ...f, [i]: !f[i] }))} className={`rounded-[12px] border p-2.5 min-h-[4.5rem] text-start transition-colors duration-150 ${flipped[i] ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-ln)] bg-[var(--c-surf)]"}`}>
             {flipped[i] ? <><span className="block text-[13px] text-[var(--c-warn)]" dir="auto">{x.back}</span>{x.note ? <span className="block text-[11px] text-[var(--c-mut)] mt-1" dir="auto">{x.note}</span> : null}</>
               : <span className="block text-[15px] font-semibold text-[var(--c-ink)]" dir="auto">{x.front}</span>}
           </button>))}
@@ -145,7 +145,7 @@ export function Visual({ v }) {
     <div className={box} data-testid="visual-compare">{head}
       <div className="grid grid-cols-2 gap-2">
         {[v.left, v.right].map((s, k) => (
-          <div key={k} className={`rounded-[14px] p-2.5 border ${k ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-acc)]/40 bg-[var(--c-soft)]"}`}>
+          <div key={k} className={`rounded-[12px] p-2.5 border ${k ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10" : "border-[var(--c-acc)]/40 bg-[var(--c-soft)]"}`}>
             <p className={`text-[12px] font-semibold mb-1 ${k ? "text-[var(--c-warn)]" : "text-[var(--c-acc)]"}`} dir="auto">{s.title}</p>
             {s.items.map((x, i) => <p key={i} className="text-[12px] text-[var(--c-ink)] mt-1" dir="auto">• {x}</p>)}
           </div>))}
@@ -178,8 +178,8 @@ export function Visual({ v }) {
    review the cards (made by code from the lessons you read, no model needed) → today's lesson → the quiz. The course plan and the
    settings sit below, small. On a computer the course stays on the left and the lesson, review or quiz opens on the right. */
 const cf = { background: "var(--c-bg)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" };
-const cField = "w-full min-w-0 min-h-[44px] rounded-[14px] px-3.5 py-2.5 text-[15px] font-semibold focus:outline-none";
-const cGhost = "min-h-[44px] rounded-[14px] px-3.5 py-2 text-[13.5px] font-bold border inline-flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors duration-150";
+const cField = "w-full min-w-0 min-h-[44px] rounded-[12px] px-3.5 py-2.5 text-[15px] font-semibold focus:outline-none";
+const cGhost = "min-h-[44px] rounded-[12px] px-3.5 py-2 text-[13.5px] font-bold border inline-flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors duration-150";
 const gs = { borderColor: "var(--c-ln)", color: "var(--c-ink)", background: "transparent" };
 function CBack({ onClick, label }) {
   return <button onClick={onClick} className="c-sub min-h-[44px] pe-2 flex items-center gap-1 text-[13.5px] font-bold"><ChevronLeft size={18} className="rtl:rotate-180" />{label || tr("Back")}</button>;
@@ -208,7 +208,7 @@ function Step({ icon: I, title, sub, done, onClick, testid, disabled }) {
       {!done && !disabled ? <ChevronRight size={16} className="c-acc shrink-0 rtl:rotate-180" /> : null}
     </button>);
 }
-const frame = (el, testid) => <div className={page + " rounded-[22px] p-4 md:p-6"} style={{ minHeight: "70vh" }} data-testid={testid}>{el}</div>;
+const frame = (el, testid) => <div className={page + " rounded-[20px] p-4 md:p-6"} style={{ minHeight: "70vh" }} data-testid={testid}>{el}</div>;
 const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 const cardsWord = (n) => (n === 1 ? tr("1 card") : tr("{n} cards", { n }));
 
@@ -454,7 +454,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             const state = picked == null ? "" : k === q.answer ? "right" : k === picked ? "wrong" : "";
             const col = state === "right" ? "var(--c-pos)" : state === "wrong" ? "var(--c-neg)" : "var(--c-ln)";
             return <button key={k} disabled={picked != null} onClick={() => setQuiz({ ...quiz, picks: { ...quiz.picks, [quiz.i]: k } })} data-testid="quiz-option"
-              className="w-full text-start min-h-[52px] rounded-[16px] border p-3.5 text-[14.5px] font-semibold flex gap-2 items-start transition-colors duration-150" style={{ borderColor: col, background: state ? "var(--c-surf)" : "transparent", color: "var(--c-ink)" }}>
+              className="w-full text-start min-h-[52px] rounded-[20px] border p-3.5 text-[14.5px] font-semibold flex gap-2 items-start transition-colors duration-150" style={{ borderColor: col, background: state ? "var(--c-surf)" : "transparent", color: "var(--c-ink)" }}>
               <span className="c-sub shrink-0">{"ABCDE"[k]}</span><span className="flex-1" dir="auto">{o}</span>
               {state === "right" ? <Check size={16} className="shrink-0 c-pos" /> : state === "wrong" ? <X size={16} className="shrink-0 c-neg" /> : null}</button>;
           })}
@@ -571,7 +571,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
 
         <div className="flex flex-wrap gap-2 items-center c-sub" data-testid="learn-settings">
           <Bell size={14} className="shrink-0" /><span className="whitespace-nowrap">{tr("Daily notification")}</span>
-          <input type="time" value={course.time} onChange={(e) => e.target.value && putCourse({ ...course, time: e.target.value })} className="min-h-[44px] rounded-[14px] px-2.5 py-1 text-[14px] font-semibold tabular-nums w-28 shrink-0 focus:outline-none" style={cf} data-testid="learn-time" />
+          <input type="time" value={course.time} onChange={(e) => e.target.value && putCourse({ ...course, time: e.target.value })} className="min-h-[44px] rounded-[12px] px-2.5 py-1 text-[14px] font-semibold tabular-nums w-28 shrink-0 focus:outline-none" style={cf} data-testid="learn-time" />
           <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== false ? { ...gs, borderColor: "var(--c-acc)", color: "var(--c-acc)" } : gs}>{course.notify !== false ? tr("On") : tr("Off")}</button>
           <button className={cGhost + " shrink-0 flex items-center gap-1"} style={confirmDel ? { ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" } : { ...gs, color: "var(--c-mut)" }}
             onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } setCourses(loadCourses().filter((x) => x.id !== course.id)); setConfirmDel(false); setView("list"); setCur(null); }}>
@@ -599,12 +599,12 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   return frame(
     <section className="space-y-4" data-testid="learn-page">
       <div className="flex items-start gap-3">
-        <span className="w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><GraduationCap size={19} /></span>
+        <span className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><GraduationCap size={19} /></span>
         <div className="min-w-0 flex-1"><h2 className={h1}>{tr("Learn daily")}</h2>
           <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("A short lesson a day, cards that come back until you know them, and a quiz every few lessons.")}</p></div>
         <StreakPill n={lrep.streak} />
       </div>
-      {firstToday ? <div className="rounded-[22px] p-4 space-y-2.5 border-2" style={{ borderColor: "var(--c-acc)", background: "var(--c-surf)" }} data-testid="learn-today">
+      {firstToday ? <div className="rounded-[20px] p-4 space-y-2.5 border-2" style={{ borderColor: "var(--c-acc)", background: "var(--c-surf)" }} data-testid="learn-today">
         <div className="flex items-center justify-between gap-2"><span className="inline-flex items-center rounded-full px-2.5 h-6 text-[11.5px] font-extrabold" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }}>{tr("Today's lesson · about 5 min")}</span>
           <span className="c-sub text-[12px] font-bold tabular-nums">{tr("Lesson {n} of {m}", { n: (firstToday.s.lesson ? firstToday.s.lesson.n : firstToday.s.n) + 1, m: firstToday.c.plan.length })}</span></div>
         <b className="block text-[17px] font-black leading-snug" dir="auto">{firstToday.s.lesson ? firstToday.s.lesson.title : firstToday.s.title}</b>
@@ -699,7 +699,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
     const list = D.newsThreads(topic.digests, topic.query, todayKey);
     if (!list.length) return null;
     return (
-      <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2" data-testid="news-threads">
+      <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2" data-testid="news-threads">
         <p className={kLabel}>{tr("Story threads")}</p>
         {list.map((th) => { const ch = changes[th.id];
           return (
@@ -735,20 +735,20 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
     <section className={page + " p-4 space-y-3 lg:max-w-[76ch]"} data-testid="news-topic">
       <Back onClick={() => { setCur(null); setPast(null); }} label={tr("Daily news")} />
       <div className="flex items-center gap-2"><Newspaper size={20} className="text-[var(--c-warn)] shrink-0" /><h2 className={h1 + " text-[var(--c-ink)] flex-1"} dir="auto">{topic.query}</h2>
-        {todays && !busy && modelReady ? <button className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-ink)]" onClick={() => gather(topic)} title={tr("Refresh")} data-testid="news-refresh"><RefreshCw size={16} /></button> : null}</div>
+        {todays && !busy && modelReady ? <button className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)]" onClick={() => gather(topic)} title={tr("Refresh")} data-testid="news-refresh"><RefreshCw size={16} /></button> : null}</div>
       {busy ? <Working {...busy} /> : todays ? <Digest d={todays} /> : modelReady
         ? <button className={primary + " w-full py-2.5"} onClick={() => gather(topic)} data-testid="news-gather">{tr("Gather today's news")}</button>
         : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model to write the digest")}</button>}
       <p className="text-[11px] text-[var(--c-mut)]">{tr("The articles come from the web when you open this; the digest is written on your phone and cites every line. Check the sources for anything important.")}</p>
       <Threads topic={topic} />
       {topic.digests.filter((d) => d.day !== todayKey).length ? (
-        <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2">
+        <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2">
           <p className={kLabel}>{tr("Earlier days")}</p>
           {topic.digests.filter((d) => d.day !== todayKey).map((d) => (
             <div key={d.day}><button className="min-h-[40px] text-[13.5px] font-bold tabular-nums text-[var(--c-ink)]" onClick={() => setPast(past === d.day ? null : d.day)}>{d.day}</button>
               {past === d.day ? <div className="mt-1"><Digest d={d} /></div> : null}</div>))}
         </div>) : null}
-      <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2">
+      <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4 space-y-2">
         <div className="flex flex-wrap gap-2 items-center">
           <span className="flex items-center gap-1.5 text-[13px] text-[var(--c-ink)] basis-full sm:basis-auto sm:flex-1 whitespace-nowrap"><Bell size={14} className="text-[var(--c-mut)] shrink-0" />{tr("Daily notification")}</span>
           <input type="time" value={topic.time} onChange={(e) => e.target.value && putTopic({ ...topic, time: e.target.value })} className={fieldFixed + " w-32 shrink-0"} />
@@ -774,7 +774,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
           <p data-intro="" className="text-[13px] text-[var(--c-mut)] lg:max-w-[70ch]">{tr("Follow a team, a player, a market, a subject. Each day: what happened in the last 24 hours, with the sources.")}</p></div>
       </div>
       {adding ? (
-        <div className={"rounded-[22px] border border-[var(--c-acc)]/40 bg-[var(--c-surf)] p-4 space-y-2.5" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">
+        <div className={"rounded-[20px] border border-[var(--c-acc)]/40 bg-[var(--c-surf)] p-4 space-y-2.5" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">
           <input value={form.query} onChange={(e) => setForm({ ...form, query: e.target.value })} className={field} dir="auto" placeholder={tr("e.g. Al Ahly, Mohamed Salah, Egypt economy")} data-testid="news-query" autoFocus />
           <div className="flex flex-wrap gap-1.5">{["Al Ahly", "Mohamed Salah", "Premier League", "Egypt economy", "Gold price", "AI", "Real estate"].map((x) =>
             <button key={x} onClick={() => setForm({ ...form, query: tr(x) })} className={chip(false)}>{tr(x)}</button>)}</div>
@@ -789,7 +789,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
         </div>) : <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5" + (side ? "" : " lg:w-auto lg:px-5")} onClick={() => setAdding(true)} data-testid="news-add-btn"><Plus size={16} />{tr("Follow a topic")}</button>}
       <div className={side ? "space-y-3" : GRID3}>
       {topics.map((t) => { const d = t.digests[0]; const fresh = d && d.day === todayKey;
-        return <button key={t.id} onClick={() => { if (side) setPast(null); setCur(t.id); }} className={"w-full text-start rounded-[22px] border p-3.5 min-h-[60px] shadow-[0_2px_10px_rgba(0,0,0,0.06)] lg:hover:border-[var(--c-acc)] " + (side && t.id === cur ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]")} data-testid="news-topic-item">
+        return <button key={t.id} onClick={() => { if (side) setPast(null); setCur(t.id); }} className={"w-full text-start rounded-[20px] border p-3.5 min-h-[60px] shadow-[0_2px_10px_rgba(0,0,0,0.06)] lg:hover:border-[var(--c-acc)] " + (side && t.id === cur ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]")} data-testid="news-topic-item">
           <span className="block text-[14.5px] font-extrabold text-[var(--c-ink)]" dir="auto">{t.query}</span>
           <span className="block text-[11px] text-[var(--c-mut)] truncate" dir="auto">{fresh ? (d.none ? tr("Nothing new today") : String(d.text).split("\n")[0].replace(/\*+/g, "")) : tr("Not gathered today")} · {t.time}</span></button>; })}
       </div>

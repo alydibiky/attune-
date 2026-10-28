@@ -147,7 +147,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
           <>
             {MINIMAL ? (
               <>
-                <button onClick={() => { intentRef.current = null; setIntent(null); if (fileRef.current) { fileRef.current.accept = ACCEPT; fileRef.current.multiple = true; fileRef.current.click(); } }} className="w-full py-8 rounded-[22px] border-2 border-dashed border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col items-center gap-2 hover:border-[var(--c-acc)] transition-colors duration-150" data-testid="convert-pick">
+                <button onClick={() => { intentRef.current = null; setIntent(null); if (fileRef.current) { fileRef.current.accept = ACCEPT; fileRef.current.multiple = true; fileRef.current.click(); } }} className="w-full py-8 rounded-[20px] border-2 border-dashed border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col items-center gap-2 hover:border-[var(--c-acc)] transition-colors duration-150" data-testid="convert-pick">
                   <ImagePlus size={24} className="text-[var(--c-acc)]" /><span className="text-[15px] font-extrabold">{tr("Choose a file")}</span>
                   <span className="text-[12.5px] text-[var(--c-mut)]">{tr("It shows what it can become")}</span></button>
                 <div className="flex flex-col" data-testid="convert-tools">
@@ -164,13 +164,13 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2" data-testid="convert-tools">
               {QUICK.map((q) => (
                 <button key={q.id} onClick={() => startTool(q)} data-testid={"convert-tool-" + q.id}
-                  className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-start hover:border-[var(--c-acc)] active:border-[var(--c-acc)]">
+                  className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 text-start hover:border-[var(--c-acc)] active:border-[var(--c-acc)]">
                   <span className="block text-[18px] leading-none mb-1.5">{q.icon}</span>
                   <span className="block text-[13px] font-semibold text-[var(--c-ink)]">{tr(q.label)}</span>
                   <span className="block text-[11px] text-[var(--c-mut)] leading-snug mt-0.5">{tr(q.desc)}</span>
                 </button>))}
             </div>
-            <button onClick={() => { intentRef.current = null; setIntent(null); if (fileRef.current) { fileRef.current.accept = ACCEPT; fileRef.current.multiple = true; fileRef.current.click(); } }} className="w-full py-4 rounded-[18px] border-2 border-dashed border-[var(--c-ln)] text-[var(--c-ink)] flex flex-col items-center gap-1.5" data-testid="convert-pick">
+            <button onClick={() => { intentRef.current = null; setIntent(null); if (fileRef.current) { fileRef.current.accept = ACCEPT; fileRef.current.multiple = true; fileRef.current.click(); } }} className="w-full py-4 rounded-[20px] border-2 border-dashed border-[var(--c-ln)] text-[var(--c-ink)] flex flex-col items-center gap-1.5" data-testid="convert-pick">
               <ImagePlus size={20} className="text-[var(--c-acc)]" /><span className="text-[13.5px] font-medium">{tr("Or choose any file — see everything it can become")}</span>
               <span className="text-[11px] text-[var(--c-mut)]">{tr("PDF · Word · PowerPoint · Excel · CSV · photos · e-books · web pages · subtitles")}</span>
             </button>
@@ -226,7 +226,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
           {out.note ? <p className="text-[12px] text-[var(--c-warn)]">{out.note}</p> : null}
           {out.preview ? (
             <details><summary className="text-[12px] text-[var(--c-mut)] cursor-pointer flex items-center gap-1"><Eye size={12} />{tr("Preview")}</summary>
-              <pre dir="auto" className="att-scroll mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-[12px] text-[var(--c-ink)] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] p-3" data-testid="convert-preview">{out.preview}</pre></details>
+              <pre dir="auto" className="att-scroll mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-[12px] text-[var(--c-ink)] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] p-3" data-testid="convert-preview">{out.preview}</pre></details>
           ) : null}
           <button onClick={save} className={K.btnP + " w-full"} data-testid="convert-save"><Download size={16} />{tr("Save the file")}</button>
           <button onClick={() => { setFiles(null); setOut(null); }} className={K.btnS + " w-full"}>{tr("Convert another file")}</button>
@@ -247,7 +247,7 @@ function ConvertRecent() {
     <p className={K.label + " m-0 mb-1"}>{tr("Recent files & results")}</p>
     {log.map((e, i) => <div key={i} className="flex items-center gap-2 py-2 border-t border-[var(--c-ln)] first:border-t-0">
       <span className="min-w-0 flex-1"><b className="block text-[13.5px] truncate" dir="auto">{e.title}</b>
-        <span className="block text-[11.5px] text-[var(--c-mut)] tabular-nums">{[e.mb ? e.mb + " MB" : "", e.secs ? e.secs + " s" : "", new Date(e.t).toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short" })].filter(Boolean).join(" · ")}</span></span>
+        <span className="block text-[11.5px] text-[var(--c-mut)] tabular-nums">{[e.mb ? e.mb + " MB" : "", e.secs ? e.secs + " s" : "", new Date(e.t).toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" })].filter(Boolean).join(" · ")}</span></span>
       <span className={K.tag("green") + " shrink-0"}>{tr("Saved on phone")}</span></div>)}
   </section>;
 }

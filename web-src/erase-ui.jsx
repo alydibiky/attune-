@@ -75,7 +75,7 @@ export function EraseSheet({ src, file, photo, nativeCall, onDone, onClose, flas
     <div className="calm fixed inset-0 z-[70] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col" data-testid="erase-sheet">
       <div className="flex items-center justify-between px-3 py-2 text-[var(--c-ink)]">
         <span className="text-[16px] font-extrabold flex items-center gap-1.5"><Eraser size={16} />{tr("Erase")}</span>
-        <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 grid place-items-center rounded-[14px]" data-testid="erase-close"><X size={18} /></button>
+        <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 grid place-items-center rounded-[12px]" data-testid="erase-close"><X size={18} /></button>
       </div>
       <p className="px-3 text-[12px] text-[var(--c-mut)]">{tr("Paint over the person or thing to remove, then tap Remove.")}</p>
       <div className="flex-1 min-h-0 flex items-center justify-center p-3">

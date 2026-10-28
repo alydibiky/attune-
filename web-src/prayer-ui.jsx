@@ -47,7 +47,7 @@ export function PrayerPlanner({ onSchedule, flash }) {
       </div>
       <div className="grid grid-cols-5 gap-1 text-center" data-testid="prayer-times">
         {["fajr", "dhuhr", "asr", "maghrib", "isha"].map((k) => (
-          <div key={k} className={"rounded-[14px] py-1.5 " + (times[k] != null && times[k] > nowMin && !["fajr", "dhuhr", "asr", "maghrib", "isha"].some((j) => times[j] > nowMin && times[j] < times[k]) ? "bg-[var(--c-soft)] text-[var(--c-acc)] border border-[var(--c-acc)]/40" : "bg-[var(--c-bg)] text-[var(--c-mut)] border border-[var(--c-ln)]")}>
+          <div key={k} className={"rounded-[12px] py-1.5 " + (times[k] != null && times[k] > nowMin && !["fajr", "dhuhr", "asr", "maghrib", "isha"].some((j) => times[j] > nowMin && times[j] < times[k]) ? "bg-[var(--c-soft)] text-[var(--c-acc)] border border-[var(--c-acc)]/40" : "bg-[var(--c-bg)] text-[var(--c-mut)] border border-[var(--c-ln)]")}>
             <div className="text-[10.5px] opacity-80">{tr(friday && k === "dhuhr" ? "Jumu'ah" : NAMES[k])}</div><div className="text-[13px] font-extrabold tabular-nums" dir="ltr">{times[k + "At"]}</div></div>))}
       </div>
       <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="prayer-tasks" className={area + " resize-none"}
@@ -59,7 +59,7 @@ export function PrayerPlanner({ onSchedule, flash }) {
       {res ? (
         <div className="space-y-1.5" data-testid="prayer-result">
           {[...res.plan.map((p) => ({ ...p, task: true })), ...res.blocks.filter((b) => b.to > Math.max(8 * 60, nowMin)).map((b) => ({ ...b, title: tr(NAMES[b.name]) }))].sort((a, b) => a.from - b.from).map((x, i) => (
-            <div key={i} className={"flex items-center gap-2 rounded-[14px] px-3 py-2 text-[13px] " + (x.task ? "bg-[var(--c-surf-2)] text-[var(--c-ink)] font-semibold" : "text-[var(--c-mut)]")} data-testid={x.task ? "plan-task" : "plan-prayer"}>
+            <div key={i} className={"flex items-center gap-2 rounded-[12px] px-3 py-2 text-[13px] " + (x.task ? "bg-[var(--c-surf-2)] text-[var(--c-ink)] font-semibold" : "text-[var(--c-mut)]")} data-testid={x.task ? "plan-task" : "plan-prayer"}>
               <span className="w-24 shrink-0 text-[12px] tabular-nums" dir="ltr">{x.fromAt}–{x.toAt}</span><span className="flex-1 truncate" dir="auto">{x.title}</span>
               {x.moved ? <span className="text-[11px] font-bold text-[var(--c-warn)]">{tr("moved after the prayer")}</span> : null}</div>))}
           {res.left.length ? <p className="m-0 text-[12.5px] text-[var(--c-warn)]">{tr("Didn't fit today: {t}", { t: res.left.map((x) => x.title).join(", ") })}</p> : null}

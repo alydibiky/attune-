@@ -85,7 +85,7 @@ export function SyncPanel({ native: N, flash }) {
   };
 
   const tab = (id, I, label) => <button onClick={() => { setWay(id); setErr(""); }} data-testid={"sync-way-" + id}
-    className={`flex-1 min-h-[40px] rounded-full text-[13.5px] font-bold flex items-center justify-center gap-1.5 transition-colors duration-150 ${way === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold shadow-sm" : "text-[var(--c-mut)]"}`}><I size={15} />{label}</button>;
+    className={`flex-1 min-h-[40px] rounded-full text-[13.5px] font-bold flex items-center justify-center gap-1.5 transition-colors duration-150 ${way === id ? "bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold shadow-sm" : "text-[var(--c-mut)]"}`}><I size={15} />{label}</button>;
   const box = K.inp;
   return (
     <div className="calm space-y-3 !bg-transparent" data-testid="sync-panel">
@@ -93,9 +93,9 @@ export function SyncPanel({ native: N, flash }) {
       <div className="flex gap-1 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-full p-1">{tab("wifi", Wifi, tr("Wi-Fi"))}{tab("google", Cloud, tr("Google Drive"))}</div>
       {way === "wifi" ? (
         <div className="space-y-3">
-          {!netOk ? <button onClick={askNet} className="w-full min-h-[44px] rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)] text-[12.5px] font-bold p-3 text-start" data-testid="sync-allow-net">{tr("Allow Attune to find your other device on this Wi-Fi (Android asks once).")}</button> : null}
+          {!netOk ? <button onClick={askNet} className="w-full min-h-[44px] rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)] text-[12.5px] font-bold p-3 text-start" data-testid="sync-allow-net">{tr("Allow Attune to find your other device on this Wi-Fi (Android asks once).")}</button> : null}
           {host ? (
-            <div className="rounded-[22px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 space-y-1.5 text-center" data-testid="sync-host">
+            <div className="rounded-[20px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 space-y-1.5 text-center" data-testid="sync-host">
               <p className="text-[12px] text-[var(--c-mut)]">{tr("On the other device: Backup → Sync → Wi-Fi → Connect, and type:")}</p>
               <p className="text-[13px] text-[var(--c-ink)]">{tr("Address")} <b className="text-[var(--c-ink)] tabular-nums" dir="ltr" data-testid="sync-addr">{host.ip ? host.ip + ":" + host.port : tr("not on Wi-Fi")}</b></p>
               <p className="text-[28px] font-black tracking-[0.15em] text-[var(--c-acc)] tabular-nums" dir="ltr" data-testid="sync-code">{Y.showCode(host.code)}</p>
@@ -111,7 +111,7 @@ export function SyncPanel({ native: N, flash }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {N && N.desktop && (!N.driveSync || (N.driveReady && !N.driveReady())) ? <p className="text-[12px] text-[var(--c-warn)] rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3" data-testid="sync-drive-desktop">{tr("Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.")}</p>
+          {N && N.desktop && (!N.driveSync || (N.driveReady && !N.driveReady())) ? <p className="text-[12px] text-[var(--c-warn)] rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3" data-testid="sync-drive-desktop">{tr("Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.")}</p>
             : N && N.desktop ? <p className="text-[12px] text-[var(--c-mut)]" data-testid="sync-drive-desktop-how">{tr("The first time, Google's sign-in page opens in your browser; after that the computer stays signed in.")}</p> : null}
           <p className="text-[12px] text-[var(--c-mut)]">{tr("One file in your own Google Drive, in a hidden folder only Attune can open. It is locked with your sync passphrase on this device, so Google only stores noise.")}</p>
           {cfg.pass ? <p className="text-[12px] text-[var(--c-pos)] flex items-center gap-1.5" data-testid="sync-pass-set"><CheckCircle2 size={14} />{tr("Sync passphrase set on this device.")} <button className="underline text-[var(--c-mut)]" onClick={() => setCfg(Y.saveSync({ ...Y.loadSync(), pass: "" }))}>{tr("Change")}</button></p> : (

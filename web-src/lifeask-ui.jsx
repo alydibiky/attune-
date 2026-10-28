@@ -62,7 +62,7 @@ export function LifeAskPage({ navTo, askChat, listen }) {
     </div>);
   const answer = res ? <LifeAnswer res={res} navTo={navTo} askChat={askChat} /> : null;
   return (
-    <div className={page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="lifeask-page">
+    <div className={page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="lifeask-page">
       <div><h2 className={h1 + " flex items-center gap-2"}><Sparkles size={20} className="text-[var(--c-acc)]" />{tr("Ask your life")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + muted}>{tr("One question, answered from everything Attune keeps for you — money, debts, medicines, lab results, meals, deadlines and notes.")}</p></div>
       <div className={PANES}><div className={LEFT}>{left}</div>

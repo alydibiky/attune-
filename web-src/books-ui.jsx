@@ -82,9 +82,10 @@ export function BooksApp({ flash, saveFile, share, onBack, openPlan, goCustom })
               {tab === "home" ? <Home /> : tab === "sales" ? <SalesModule /> : tab === "buy" ? <PurchasesModule /> : tab === "stock" ? <StockModule /> : tab === "money" ? <MoneyModule /> : <ReportsModule />}
             </div>
           </div>
-          <nav className={`grid grid-cols-6 gap-1 border-t px-2 pt-1.5 ${th.bar} lg:order-first lg:flex lg:flex-col lg:gap-1.5 lg:w-52 lg:shrink-0 lg:border-t-0 lg:border-e lg:px-3 lg:pt-4`} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+          {/* v8.7 (Ali picked P5-A option 2: "no bottom bars anywhere"): the Books parts sit at the top on a phone */}
+          <nav className={`order-first grid grid-cols-6 gap-1 border-b px-2 pt-1.5 ${th.bar} lg:flex lg:flex-col lg:gap-1.5 lg:w-52 lg:shrink-0 lg:border-b-0 lg:border-e lg:px-3 lg:pt-4`}>
             {TABS.map(([k, Icon, en, ar]) => (
-              <button key={k} onClick={() => setTab(k)} data-testid={"books-tab-" + k} className={`min-w-0 min-h-[48px] mb-1.5 lg:mb-0 lg:min-h-[44px] rounded-[16px] flex flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] font-extrabold transition-colors duration-150 lg:flex-row lg:justify-start lg:gap-2.5 lg:px-3.5 lg:text-[14.5px] ${tab === k ? SEL : th.sub + " hover:text-[var(--c-ink)]"}`}>
+              <button key={k} onClick={() => setTab(k)} data-testid={"books-tab-" + k} className={`min-w-0 min-h-[48px] mb-1.5 lg:mb-0 lg:min-h-[44px] rounded-[20px] flex flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] font-extrabold transition-colors duration-150 lg:flex-row lg:justify-start lg:gap-2.5 lg:px-3.5 lg:text-[14.5px] ${tab === k ? SEL : th.sub + " hover:text-[var(--c-ink)]"}`}>
                 <Icon size={18} className="shrink-0" /><span className="max-w-full truncate">{L(en, ar)}</span></button>))}
           </nav>
           </div>
@@ -269,10 +270,10 @@ function PinLock({ s, onOk, onBack }) {
   const tryPin = (v) => { if (O.checkPin(s, v)) onOk(v); else { setBad((b) => b + 1); setPin(""); } };
   return (
     <div className={`fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 p-6 ${th.page}`} data-testid="books-lock" dir={isAr() ? "rtl" : "ltr"}>
-      <span className="w-16 h-16 rounded-[22px] bg-[var(--c-soft)] grid place-items-center"><Building2 size={30} className={th.brand} /></span>
+      <span className="w-16 h-16 rounded-[20px] bg-[var(--c-soft)] grid place-items-center"><Building2 size={30} className={th.brand} /></span>
       <p className="text-[17px] font-extrabold text-center m-0">{L("Enter your PIN to open the books", "اكتب الرقم السري عشان تفتح الدفاتر")}</p>
       <input value={pin} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setPin(v); if (v.length >= 4 && O.checkPin(s, v)) onOk(v); }} type="password" inputMode="numeric" autoFocus data-testid="books-pin"
-        className={`w-44 min-h-[52px] text-center tracking-[0.5em] text-xl font-black tabular-nums rounded-[16px] border px-3 py-2 focus:outline-none ${th.input}`} />
+        className={`w-44 min-h-[52px] text-center tracking-[0.5em] text-xl font-black tabular-nums rounded-[20px] border px-3 py-2 focus:outline-none ${th.input}`} />
       {bad ? <p className={`text-[12.5px] font-bold m-0 ${NEG}`}>{L("Wrong PIN", "الرقم غلط")}{bad >= 5 ? " · " + L("take a breath and try again", "استنى شوية وجرّب تاني") : ""}</p> : null}
       <button onClick={() => tryPin(pin)} className={`${btnPrimary} min-w-[160px]`} disabled={pin.length < 4}>{L("Open", "افتح")}</button>
       <button onClick={onBack} className={`min-h-[44px] px-4 text-[13px] font-bold ${th.sub}`}>{L("Back", "رجوع")}</button>

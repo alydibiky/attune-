@@ -46,7 +46,7 @@ export function MindCalmTop({ rep, wide, onDone, openPromises, openRecall = null
     </div> : null}
     {/* v7.9 (Ali: "some features require extensive searching to find"): Recall lives in Mind — one row to it */}
     {openRecall ? <button onClick={openRecall} className={U.card + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)]"} data-testid="mind-open-recall">
-      <span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Search size={18} /></span>
+      <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Search size={18} /></span>
       <span className="flex-1 min-w-0"><b className="block text-[14.5px] font-extrabold">{tr("Recall")}</b><span className="c-sub block text-[12.5px] truncate">{tr("Find anything you kept, by what it meant")}</span></span>
       <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" /></button> : null}
   </div>;
@@ -64,7 +64,7 @@ export function MindReport({ rep, back, open, onDone, compact = false }) {
       <Card title={T("What you kept this week by kind ({n} items)", { n: rep.week })} testid="mind-rep-kinds">
         {rep.kinds.length ? <div className="flex items-end gap-3 h-[120px] pt-4">{rep.kinds.map((k, i) => <div key={k.kind} className="flex-1 min-w-0 flex flex-col items-center justify-end gap-1 h-full">
           <span className="text-[12px] font-black tabular-nums">{k.n}</span>
-          <span className="w-full max-w-[56px] rounded-[10px]" style={{ height: Math.max(8, (k.n / max) * 70), background: C[i % C.length] }} />
+          <span className="w-full max-w-[56px] rounded-[12px]" style={{ height: Math.max(8, (k.n / max) * 70), background: C[i % C.length] }} />
           <span className="text-[11px] font-bold c-sub truncate max-w-full">{ar() ? k.labelAr : tr(k.label)}</span></div>)}</div>
           : <p className="m-0 text-[13px] c-sub">{tr("Nothing kept this week yet.")}</p>}
       </Card>
@@ -80,7 +80,7 @@ export function MindReport({ rep, back, open, onDone, compact = false }) {
       </Card>
       <Card title={tr("Things you forgot you have")} testid="mind-rep-forgotten" className="border-[var(--c-acc)]!">
         {rep.forgotten.map((r, i) => <button key={r.id} onClick={() => open(r.id)} className="w-full text-start flex gap-2 py-1.5 text-[13.5px] font-bold min-h-[40px]" dir="auto">
-          <Sparkles size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" /><span className="min-w-0">{i + 1}. {r.title} <span className="c-sub font-semibold">({T("kept {d}", { d: new Date(r.ts).toLocaleDateString(ar() ? "ar-EG" : undefined, { day: "numeric", month: "short" }) })})</span></span></button>)}
+          <Sparkles size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" /><span className="min-w-0">{i + 1}. {r.title} <span className="c-sub font-semibold">({T("kept {d}", { d: new Date(r.ts).toLocaleDateString(ar() ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }) })})</span></span></button>)}
         {!rep.forgotten.length ? <p className="m-0 text-[13px] c-sub">{tr("Nothing old yet — come back in a few weeks.")}</p> : null}
       </Card>
     </div>
@@ -88,7 +88,7 @@ export function MindReport({ rep, back, open, onDone, compact = false }) {
 }
 
 // ---- Learn daily -------------------------------------------------------------------------------------------------------------------
-export const StreakPill = ({ n }) => n ? <span className="inline-flex items-center gap-1 rounded-full px-3 h-8 text-[12.5px] font-extrabold bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" data-testid="learn-streak"><Flame size={13} />{T("{n}-day streak", { n })}</span> : null;
+export const StreakPill = ({ n }) => n ? <span className="inline-flex items-center gap-1 rounded-full px-3 h-8 text-[12.5px] font-extrabold bg-[var(--c-soft)] text-[var(--c-acc)]" data-testid="learn-streak"><Flame size={13} />{T("{n}-day streak", { n })}</span> : null;
 export function LearningReport({ rep, back }) {
   return <div className="space-y-3" data-testid="learn-report">
     <ReportHead title={tr("Learning Report")} sub={tr("Days studied, quiz scores over time, what you learned and what to review")} back={back} />

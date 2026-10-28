@@ -59,7 +59,7 @@ function WatchTop({ w, tot, L, ar }) {
   return <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 flex items-center gap-3 flex-wrap" data-testid="fit-watch-top">
     <span className="text-[15px] font-black text-[var(--c-ink)] tabular-nums">🔥 {tot.burned} <span className="text-[12px] font-bold text-[var(--c-mut)]">{L("kcal burned", "سعرة محروقة")}{tot.burnedFrom === "watch" && b.est ? " ≈" : ""}</span></span>
     <span className="text-[12.5px] text-[var(--c-mut)] tabular-nums">⌚ {(w.steps || 0).toLocaleString("en-US")} {L("steps", "خطوة")}{k.km ? " · " + (k.est ? "≈" : "") + k.km.toFixed(1) + " km" : ""}{w.hrAvg ? " · ❤ " + w.hrAvg : ""}</span>
-    {w.lastAt ? <span className="text-[11px] text-[var(--c-mut)] ms-auto">{L("updated ", "اتحدث ")}{new Date(w.lastAt).toLocaleTimeString(ar ? "ar-EG" : "en-GB", { hour: "numeric", minute: "2-digit" })}</span> : null}
+    {w.lastAt ? <span className="text-[11px] text-[var(--c-mut)] ms-auto">{L("updated ", "اتحدث ")}{new Date(w.lastAt).toLocaleTimeString(ar ? "ar-EG-u-nu-latn" : "en-GB", { hour: "numeric", minute: "2-digit" })}</span> : null}
   </div>;
 }
 /** v8.2 (Ali, 26 Oct: "when I press on how it read the food, it opens and shows me the whole thing it read"): what was written,
@@ -606,22 +606,22 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       <LookStyle look={look} />
       {/* v6.16c (Ali picked look A): Fit & Food is its own app — its own top bar and bottom bar; Attune's are hidden while it's open */}
       <div className="sticky top-0 z-30 -mx-4 px-2 bg-[var(--c-bg)] flex items-center gap-1 min-h-[52px]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        {onExit ? <button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--c-mut)]" aria-label={L("Back to Attune", "ارجع لـ Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:rotate-180">←</span></button> : null}
+        {/* v8.7 (Ali picked P5-B: one back control per screen): while adding food, the page's own ‹ is the only back */}
+        {onExit && !(designA && adding) ? <button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--c-mut)]" aria-label={L("Back to Attune", "ارجع لـ Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:rotate-180">←</span></button> : null}
         <h2 className="flex-1 min-w-0 truncate text-[17px] font-semibold text-[var(--c-ink)] flex items-center gap-2"><Apple size={18} className="text-[var(--c-acc)] shrink-0" />{minimal ? L("Fit & Food", "الأكل واللياقة") : ({ today: L("Diary", "اليوميات"), fast: L("Fasting", "الصيام"), recipes: L("Recipes", "الوصفات"), progress: L("Progress", "التقدم"), me: L("Me", "أنا"), move: L("Workouts", "التمارين") })[tab] || L("Fit & Food", "الأكل واللياقة")}</h2>
         {openEngine && !modelReady ? <button onClick={openEngine} className="min-h-[36px] rounded-full border border-[var(--c-ln)] px-3 text-[12px] text-[var(--c-mut)]" data-testid="fit-engine">{L("No model", "مفيش نموذج")}</button> : null}
       </div>
       {designA ? (<>
-        {/* v6.43 (Ali picked design A): its own bottom bar — Diary · Recipes · Fasting · Progress · Me — and a round + above it */}
-        <nav className="att-shift fixed bottom-0 inset-x-0 z-[60] bg-[var(--c-surf)] border-t border-[var(--c-ln)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
-          <div className="max-w-2xl mx-auto grid grid-cols-5 h-[66px]">
-            {[["today", L("Diary", "اليوميات"), Apple], ["recipes", L("Recipes", "الوصفات"), Star], ["fast", L("Fasting", "الصيام"), Timer], ["progress", L("Progress", "التقدم"), BarChart3], ["me", L("Me", "أنا"), User]].map(([k, label, Ic]) => {
-              const on = tab === k || (k === "me" && tab === "move");
-              return <button key={k} onClick={() => { setTab(k); setAdding(null); setDraft(null); }} data-testid={"fit-tab-" + k} aria-current={on ? "page" : undefined}
-                className={"flex flex-col items-center justify-center gap-0.5 text-[11.5px] " + (on ? "text-[var(--c-acc)] font-extrabold" : "text-[var(--c-mut)] font-bold")}><Ic size={22} strokeWidth={on ? 2.4 : 2} />{label}</button>; })}
-          </div>
-        </nav>
+        {/* v6.43 (Ali picked design A): Diary · Recipes · Fasting · Progress · Me — v8.7 (Ali picked P5-A option 2: "no bottom bars
+            anywhere"): a row of tabs at the top, like the rest of the app; the round + floats at the bottom corner */}
+        <div role="tablist" className="att-hscroll sticky z-30 -mx-4 px-4 flex gap-5 overflow-x-auto border-b-2 border-[var(--c-ln)] bg-[var(--c-bg)]" style={{ top: "calc(52px + env(safe-area-inset-top))" }} data-testid="fit-nav">
+          {[["today", L("Diary", "اليوميات")], ["recipes", L("Recipes", "الوصفات")], ["fast", L("Fasting", "الصيام")], ["progress", L("Progress", "التقدم")], ["me", L("Me", "أنا")]].map(([k, label]) => {
+            const on = tab === k || (k === "me" && tab === "move");
+            return <button key={k} role="tab" aria-selected={on} aria-current={on ? "page" : undefined} onClick={() => { setTab(k); setAdding(null); setDraft(null); }} data-testid={"fit-tab-" + k}
+              className={"shrink-0 h-11 -mb-[2px] text-[15px] whitespace-nowrap " + (on ? "border-b-[3px] border-[var(--c-acc)] text-[var(--c-ink)] font-extrabold" : "text-[var(--c-mut)] font-bold")}>{label}</button>; })}
+        </div>
         {!adding && !undo && (tab === "today" || tab === "fast") ? <button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} data-testid="fit-add" aria-label={L("Log food", "سجّل أكل")}
-          className="att-shift fixed end-5 z-[60] w-[60px] h-[60px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-lg shadow-black/20 flex items-center justify-center active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(84px + env(safe-area-inset-bottom))" }}>
+          className="att-shift fixed end-5 z-[60] w-[60px] h-[60px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-lg shadow-black/20 flex items-center justify-center active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(20px + env(safe-area-inset-bottom))" }}>
           <Plus size={28} strokeWidth={2.8} /></button> : null}
       </>) : minimal ? (<>
         {/* v6.32 (Ali picked B): no bottom bar — thin tabs on top like the rest of the app, and one "Log food" button */}
@@ -629,7 +629,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
           {[["today", L("Diary", "اليوميات")], ["recipes", L("Recipes", "الوصفات")], ["progress", L("Progress", "التقدم")], ["me", L("Me", "أنا")]].map(([k, label]) => {
             const on = tab === k || (k === "me" && tab === "move");
             return <button key={k} role="tab" aria-selected={on} aria-current={on ? "page" : undefined} onClick={() => { setTab(k); setAdding(null); setDraft(null); }} data-testid={"fit-tab-" + k}
-              className={"shrink-0 h-11 -mb-[2px] text-[15px] whitespace-nowrap " + (on ? "border-b-[3px] border-[var(--c-acc-2)] text-[var(--c-ink)] font-bold" : "text-[var(--c-mut)] font-medium")}>{label}</button>; })}
+              className={"shrink-0 h-11 -mb-[2px] text-[15px] whitespace-nowrap " + (on ? "border-b-[3px] border-[var(--c-acc)] text-[var(--c-ink)] font-bold" : "text-[var(--c-mut)] font-medium")}>{label}</button>; })}
         </div>
         {!adding ? <button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} data-testid="fit-add"
           className="att-shift fixed end-4 z-[60] h-14 ps-4 pe-5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[16px] font-bold shadow-lg shadow-black/30 flex items-center gap-2 active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(20px + env(safe-area-inset-bottom))" }}>
@@ -726,7 +726,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                 return <div>
                   {tabsHere.length > 1 ? <div className="flex gap-4 border-b border-[var(--c-ln)] mb-1" role="tablist">{tabsHere.map(([k, lb]) => (
                     <button key={k} role="tab" aria-selected={addTab === k} onClick={() => setAddTab(k)} data-testid={"fit-add-tab-" + k}
-                      className={"h-9 -mb-px text-[13.5px] border-b-2 " + (addTab === k ? "border-[var(--c-acc-2)] text-[var(--c-ink)] font-semibold" : "border-transparent text-[var(--c-mut)]")}>{lb}</button>))}</div> : null}
+                      className={"h-9 -mb-px text-[13.5px] border-b-2 " + (addTab === k ? "border-[var(--c-acc)] text-[var(--c-ink)] font-semibold" : "border-transparent text-[var(--c-mut)]")}>{lb}</button>))}</div> : null}
                   {cur.length ? cur.slice(0, 8).map((x) => (
                     <div key={x.key} className="flex items-center gap-2 py-1.5" data-testid="fit-add-row">
                       <span className="flex-1 min-w-0"><span className="block truncate text-[14px] text-[var(--c-ink)]">{ar && x.item.ar ? x.item.ar : x.item.name}</span>
@@ -923,7 +923,7 @@ function LogBar({ t, L, ar, bar, listening, st, onAgain }) {
     </div>
     {chips.length ? (
       <section aria-labelledby="fit-chips-h">
-        <h3 id="fit-chips-h" className="text-[11.5px] uppercase tracking-wide text-[var(--c-mut)] mb-1.5">{t("One tap to add again")}</h3>
+        <h3 id="fit-chips-h" className="text-[12px] uppercase tracking-wide text-[var(--c-mut)] mb-1.5">{t("One tap to add again")}</h3>
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]" data-testid="fit-chips">
           {chips.map((c) => (
             <button key={c.key} onClick={() => onAgain(c.item)} data-testid={"fit-chip-" + c.key.replace(/[^a-z0-9]+/gi, "_")}
@@ -950,7 +950,7 @@ function MeTab({ L, ar, st, tg, openPlanForm, openMove, settings, watches }) {
       </div>
       <button onClick={openMove} className="w-full min-h-[52px] rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-4 text-start text-[var(--c-ink)] flex items-center gap-2" data-testid="fit-me-move"><Dumbbell size={17} className="text-[var(--c-acc)]" />{L("Workouts and steps", "التمارين والخطوات")}</button>
       {watches ? <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-4">{watches}</div> : null}
-      <div className="text-[11.5px] uppercase tracking-wide text-[var(--c-mut)] pt-1">{L("Settings", "الإعدادات")}</div>
+      <div className="text-[12px] uppercase tracking-wide text-[var(--c-mut)] pt-1">{L("Settings", "الإعدادات")}</div>
       {settings}
     </div>
   );
@@ -1011,7 +1011,7 @@ function QuickSetup({ t, L, ar, save, full, logged = 0 }) {
   const set = (k, v) => setA((p) => ({ ...p, [k]: v }));
   const Pick = ({ k, v, children, tid }) => (
     <button onClick={() => set(k, v)} aria-pressed={a[k] === v} data-testid={tid}
-      className={"min-h-[48px]! rounded-xl px-4 text-[14px] text-start transition-colors " + (a[k] === v ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold" : "bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)]")}>{children}</button>);
+      className={"min-h-[48px]! rounded-xl px-4 text-[14px] text-start transition-colors " + (a[k] === v ? "bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold" : "bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)]")}>{children}</button>);
   const Num = (k, label) => (
     <label key={k} className="flex-1 min-w-0 text-[12px] text-[var(--c-mut)]">{label}
       <input type="number" inputMode="decimal" value={a[k]} onChange={(e) => set(k, e.target.value)} data-testid={"fit-qs-" + k} className="mt-1 w-full min-h-[48px]! rounded-xl bg-[var(--c-surf-2)] px-3 text-[15px] text-[var(--c-ink)]" />
@@ -1288,7 +1288,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
   </>);
   if (a && only === "fast") {
     // design A's Fasting tab: one big timer ring; the plans as cards; the body's stages with the current one marked
-    const cardA = "rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
+    const cardA = "rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
     const hours = fs ? fs.done / 3600e3 : 0, sg = fs ? Y.fastStage(hours) : null;
     const PLAN_TXT = { 12: ["Easy start", "بداية سهلة"], 14: ["Gentle", "خفيف"], 16: ["The classic", "الأشهر"], 18: ["Stronger", "أقوى"], 20: ["Warrior", "المحارب"], 23: ["One meal a day", "وجبة واحدة في اليوم"], 36: ["Long fast — check with a doctor", "صيام طويل — استشير دكتور"] };
     return (
@@ -1320,14 +1320,14 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
   if (a) {
     const pct = Math.max(0, Math.min(100, Math.round((tot.kcal / Math.max(1, tg.kcal + tot.burned)) * 100)));
     const w = day.watch || null;
-    let dateLine = dayKey; try { dateLine = new Date(dayKey + "T12:00:00").toLocaleDateString(ar ? "ar-EG" : "en-GB", { weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
+    let dateLine = dayKey; try { dateLine = new Date(dayKey + "T12:00:00").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
     const MEAL_SIGN = {
       breakfast: ["color-mix(in srgb, var(--c-chart-3) 16%, transparent)", "var(--c-chart-3)", <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>],
       lunch: ["color-mix(in srgb, var(--c-chart-1) 16%, transparent)", "var(--c-chart-1)", <><path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4" /></>],
       dinner: ["color-mix(in srgb, var(--c-chart-4) 16%, transparent)", "var(--c-chart-4)", <><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></>],
       snacks: ["color-mix(in srgb, var(--c-chart-2) 16%, transparent)", "var(--c-chart-2)", <><path d="M12 7c-3-2-8-1-8 5 0 4 3 9 6 9 1 0 1.5-.5 2-.5s1 .5 2 .5c3 0 6-5 6-9 0-6-5-7-8-5zM12 7c0-2 1-4 3-4" /></>],
     };
-    const card = "rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
+    const card = "rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
     const macro = (label, v, mx, col, soft) => { const p2 = mx > 0 ? Math.min(100, Math.round(((v || 0) / mx) * 100)) : 0; return (
       <div className="min-w-0 flex flex-col gap-1.5"><span className="text-[12.5px] font-extrabold text-[var(--c-ink)]">{label}</span>
         <div className="h-1.5 rounded-full" style={{ background: soft }}><div className="h-1.5 rounded-full" style={{ width: p2 + "%", background: col }} /></div>
@@ -1807,7 +1807,7 @@ function YazioPlus({ L, ar, st, upd, tg, share }) {
   const extra = (st.profile && st.profile.cycleExtra) || {};
   const savePhotos = (p) => { setPhotos(p); try { localStorage.setItem("attune:fit:photos", JSON.stringify(p)); } catch (e) { alert(L("Not enough space for more photos — delete an old one.", "مفيش مساحة لصور تانية — امسح صورة قديمة.")); } };
   const addPhoto = (f) => { const r = new FileReader(); r.onload = async () => { try { const u = await Y.shrinkPhoto(String(r.result)); savePhotos([...photos, { d: F.today(), u }].slice(-24)); } catch (e) {} }; r.readAsDataURL(f); };
-  const card = "rounded-[22px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3";
+  const card = "rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3";
   return (<>
     {avg ? <div className={card} data-testid="fit-averages">
       <div className="text-[13px] text-[var(--c-ink)] mb-1">{L(`Average of the last ${avg.days} logged days`, `متوسط آخر ${avg.days} أيام مسجّلة`)}</div>

@@ -68,8 +68,8 @@ function PriceMemory({ flash }) {
 const SRC = { notification: "From a notification", attune: "Logged in Attune" };
 function TwoPayments({ txns }) {
   const L = loadLedger(), acc = (id) => ((L && L.accounts) || []).find((a) => a.id === id);
-  const when = (t) => t.at ? new Date(t.at).toLocaleTimeString(getLang() === "ar" ? "ar-EG" : undefined, { hour: "numeric", minute: "2-digit" }) : null;
-  return <div className="mt-2.5 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] divide-y divide-[var(--c-ln)]" data-testid="guardian-pair">
+  const when = (t) => t.at ? new Date(t.at).toLocaleTimeString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { hour: "numeric", minute: "2-digit" }) : null;
+  return <div className="mt-2.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] divide-y divide-[var(--c-ln)]" data-testid="guardian-pair">
     {txns.map((t, i) => <div key={t.id || i} className="flex items-start gap-2 px-3 py-2 text-[12.5px]" data-testid="guardian-pair-row">
       <span className="font-extrabold tabular-nums shrink-0">{i + 1}</span>
       <span className="min-w-0 flex-1"><span className="block font-bold truncate" dir="auto">{t.note || tr("Payment")}</span>
@@ -103,7 +103,7 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
   };
   const shown = pro ? F : F.slice(0, 1), hidden = pro ? [] : F.slice(1);
   return (
-    <div className={U.page + " rounded-[22px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="guardian-page">
+    <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="guardian-page">
       <div><h2 className={U.h1 + " flex items-center gap-2"}><ShieldCheck size={20} className="text-[var(--c-acc)]" />{tr("Money Guardian")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Finds money in your own payments — on this phone, by code. It only counts what you did.")}</p></div>
       {/* v7.2 (Gemini's Area 1): on a computer two panes — what to act on at the start, the Price memory at the end */}
@@ -122,7 +122,7 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
         <div key={f.id} className={U.cardPad} data-testid="guardian-item">
           <div className="flex items-start gap-3"><div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]" dir="auto">{f.T ? tr(f.T[0], f.T[1]) : f.title}</b><div className={"text-[12.5px] " + U.muted} dir="auto">{f.D ? tr(f.D[0], f.D[1]) : f.detail}</div></div>
             {f.amount > 0 ? <span className={U.tag(f.kind === "late" || f.kind === "double" ? "red" : "amber")}><span className="tabular-nums">{fmt(f.amount)}</span></span> : null}</div>
-          {f.kind === "late" ? <p className={"mt-2 text-[12.5px] rounded-[14px] p-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] " + U.muted} dir="auto" data-testid="guardian-message">{f.message}</p> : null}
+          {f.kind === "late" ? <p className={"mt-2 text-[12.5px] rounded-[12px] p-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] " + U.muted} dir="auto" data-testid="guardian-message">{f.message}</p> : null}
           {f.kind === "double" && f.txns ? <TwoPayments txns={f.txns} /> : null}
           <div className="flex flex-wrap gap-2 mt-3">
             {f.kind === "double" && !f.sure ? <button className={U.btnP} onClick={() => removeCopy(f)} data-testid="guardian-remove-copy"><Trash2 size={14} />{tr("Logged twice — remove one")}</button>

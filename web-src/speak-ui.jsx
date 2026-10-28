@@ -90,7 +90,7 @@ export function DialogueCard({ lesson, course, native, call, listen, make, busy 
     <div className="c-card space-y-2" data-testid="dialogue">
       <p className="c-lbl m-0 flex items-center gap-1.5"><MessageCircle size={14} />{d.title || tr("A short conversation")}</p>
       {d.lines.map((ln, i) => (
-        <div key={i} className={"rounded-[16px] px-3 py-2 " + (ln.who === me ? "ms-6" : "me-6")} style={{ background: at === i ? "var(--c-soft)" : "var(--c-bg)", border: "1px solid var(--c-ln)" }} data-testid="dialogue-line">
+        <div key={i} className={"rounded-[20px] px-3 py-2 " + (ln.who === me ? "ms-6" : "me-6")} style={{ background: at === i ? "var(--c-soft)" : "var(--c-bg)", border: "1px solid var(--c-ln)" }} data-testid="dialogue-line">
           <div className="text-[12px] c-sub">{ln.who === me ? tr("You") : tr("The phone")}</div>
           <div dir="auto" className="font-medium">{ln.text}</div>
           {ln.say ? <div dir="auto" className="c-sub text-[12.5px]">{ln.say}</div> : null}
@@ -111,7 +111,7 @@ export function LessonPicture({ lesson, course, native, call, onPicture, openStu
   let pack = null;
   try { const i = native && native.imageInfo ? JSON.parse(native.imageInfo()) : null; const ps = (i && i.packs) || []; pack = ps.find((p) => p.installed !== false) || null; } catch (e) {}
   if (!lesson.picture && studioPaused(native)) return null;   // v8.0: Studio's engine is paused on phones
-  if (lesson.picture) return <img src={lesson.picture} alt="" className="w-full rounded-[22px]" style={{ maxHeight: 340, objectFit: "cover" }} data-testid="lesson-picture" />;
+  if (lesson.picture) return <img src={lesson.picture} alt="" className="w-full rounded-[20px]" style={{ maxHeight: 340, objectFit: "cover" }} data-testid="lesson-picture" />;
   if (!pack) return openStudio ? <button className={ghost} style={gs} onClick={openStudio}><ImageIcon size={14} />{tr("Draw a picture for this lesson (Studio)")}</button> : null;
   const draw = async () => {
     setBusy(0); setErr("");

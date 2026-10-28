@@ -30,10 +30,10 @@ function LineRow({ line, items, bill, onChange, onRemove, restock, autoPrice }) 
     patch({ item: id, desc: it.name, price: p, vat: it.vat || "S", _auto: !bill });
   };
   return (
-    <div className={`rounded-[18px] border p-3 space-y-2.5 bg-[var(--c-surf)] ${th.line}`} data-testid="doc-line">
+    <div className={`rounded-[20px] border p-3 space-y-2.5 bg-[var(--c-surf)] ${th.line}`} data-testid="doc-line">
       <div className="flex gap-2">
         <div className="flex-1 min-w-0"><Select value={line.item || ""} onChange={pickItem} data-testid="line-item"><option value="">{L("— free text —", "— نص حر —")}</option>{items.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</Select></div>
-        <button onClick={onRemove} className={`w-11 h-11 rounded-[14px] grid place-items-center shrink-0 hover:bg-[var(--c-surf-2)] ${NEG}`} aria-label={L("Remove line", "شيل السطر")}><Trash2 size={16} /></button>
+        <button onClick={onRemove} className={`w-11 h-11 rounded-[12px] grid place-items-center shrink-0 hover:bg-[var(--c-surf-2)] ${NEG}`} aria-label={L("Remove line", "شيل السطر")}><Trash2 size={16} /></button>
       </div>
       <Input value={line.desc || ""} onChange={(v) => patch({ desc: v })} placeholder={L("Description", "الوصف")} data-testid="line-desc" />
       <div className="grid grid-cols-3 gap-2">
@@ -220,7 +220,7 @@ export function SalesModule() {
           <div className="mb-3"><Chips value={filter} onChange={setFilter} options={[["all", L("All", "الكل")], ["invoice", L("Invoices", "فواتير")], ["quote", L("Quotes", "عروض")], ["credit", L("Credit notes", "إشعارات")], ["order", L("Orders", "أوامر بيع")], ["draft", L("Drafts", "مسودات")]]} /></div>
           {!docs.length ? <Empty title={L("No documents yet", "مفيش مستندات لسه")} hint={L("Create your first invoice or quotation.", "اعمل أول فاتورة أو عرض سعر.")} action={<button onClick={() => setNewType("invoice")} className={btnPrimary}>{L("New invoice", "فاتورة جديدة")}</button>} />
             : <Card className="divide-y" testid="sales-list">{docs.map((d) => { const t = B.docTotals(d, s.tax); return (
-              <button key={d.id} onClick={() => setOpenId(d.id)} className="w-full min-h-[60px] flex items-center gap-3 px-3.5 py-3 text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[22px] last:rounded-b-[22px]" data-testid="sales-row">
+              <button key={d.id} onClick={() => setOpenId(d.id)} className="w-full min-h-[60px] flex items-center gap-3 px-3.5 py-3 text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[20px] last:rounded-b-[20px]" data-testid="sales-row">
                 <div className="min-w-0 flex-1"><p className="text-[14px] font-extrabold truncate m-0">{name(d.customer)}</p><p className={`text-[12px] truncate m-0 ${th.sub}`}>{d.number || L("Draft", "مسودة")} · {docLabel(d.type)} · {fmtDate(d.date)}</p></div>
                 <div className="text-end shrink-0 space-y-1"><Money v={t.total} bold /><div><Badge tone={STATUS[d.status][2]}>{L(STATUS[d.status][0], STATUS[d.status][1])}</Badge></div></div></button>); })}</Card>}
         </>
@@ -242,5 +242,5 @@ function CustomerRow({ c, onEdit }) {
   const { s } = useBooks();
   const th = useTheme();
   const owed = useMemo(() => O.openInvoices(s, today()).filter((o) => o.customer === c.id).reduce((a, o) => a + Math.max(0, o.open), 0), [s, c.id]);
-  return <button onClick={onEdit} className="w-full min-h-[56px] flex items-center justify-between gap-3 px-3.5 py-3 text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[22px] last:rounded-b-[22px]" data-testid="customer-row"><div className="min-w-0"><p className="text-[14px] font-extrabold truncate m-0">{c.name}</p><p className={`text-[12px] m-0 ${th.sub}`}>{c.phone || ""}</p></div>{owed ? <div className="text-end shrink-0"><p className={`text-[11px] m-0 ${th.sub}`}>{L("owes", "عليه")}</p><Money v={owed} bold /></div> : null}</button>;
+  return <button onClick={onEdit} className="w-full min-h-[56px] flex items-center justify-between gap-3 px-3.5 py-3 text-start hover:bg-[var(--c-surf-2)] first:rounded-t-[20px] last:rounded-b-[20px]" data-testid="customer-row"><div className="min-w-0"><p className="text-[14px] font-extrabold truncate m-0">{c.name}</p><p className={`text-[12px] m-0 ${th.sub}`}>{c.phone || ""}</p></div>{owed ? <div className="text-end shrink-0"><p className={`text-[11px] m-0 ${th.sub}`}>{L("owes", "عليه")}</p><Money v={owed} bold /></div> : null}</button>;
 }

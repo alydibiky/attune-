@@ -93,7 +93,7 @@ export function FamilyPage({ flash, cur = "", remind }) {
         {/* reminders for the parents */}
         <div className={U.cardPad + " space-y-2"} data-testid="family-reminders">
           <b className="flex items-center gap-1.5 font-extrabold text-[14.5px]"><Bell size={16} className="c-acc" />{tr("Reminders for the family")}</b>
-          {fam.reminders.slice(-5).map((r) => <div key={r.id} className="text-[13px] font-semibold" dir="auto">{r.forName}: {r.title} · <span className={U.muted}>{new Date(r.at).toLocaleTimeString(ar ? "ar-EG" : undefined, { hour: "numeric", minute: "2-digit" })}</span></div>)}
+          {fam.reminders.slice(-5).map((r) => <div key={r.id} className="text-[13px] font-semibold" dir="auto">{r.forName}: {r.title} · <span className={U.muted}>{new Date(r.at).toLocaleTimeString(ar ? "ar-EG-u-nu-latn" : undefined, { hour: "numeric", minute: "2-digit" })}</span></div>)}
           <div className="grid grid-cols-[1fr_1.6fr] gap-2"><input className={U.inp} value={rWho} onChange={(e) => setRWho(e.target.value)} placeholder={ar ? "بابا" : "Dad"} data-testid="family-rem-who" />
             <input className={U.inp} value={rWhat} onChange={(e) => setRWhat(e.target.value)} placeholder={tr("Take the pills")} data-testid="family-rem-what" /></div>
           <div className="flex gap-2"><input type="datetime-local" className={U.inp} value={rAt} onChange={(e) => setRAt(e.target.value)} aria-label={tr("When")} />

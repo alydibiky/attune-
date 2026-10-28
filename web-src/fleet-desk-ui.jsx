@@ -48,10 +48,10 @@ export function TodayCash({ s, money, setOpen }) {
     <button className={btnS + " w-full"} onClick={() => setMore(!more)} data-testid="fleet-cash-more">{more ? <ChevronUp size={15} /> : <ChevronDown size={15} />}{more ? tr("Less") : tr("Last 6 months and who owes most")}</button>
     {more ? <>
       {/* Gemini's chart card: the six months as paired bars (jade = collected, terracotta = spent); the table under it keeps the numbers */}
-      {(() => { const top = Math.max(1, ...six.map((x) => Math.max(x.income, x.expenses))); return <div className="rounded-[18px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3.5" aria-hidden="true" data-chart="six">
+      {(() => { const top = Math.max(1, ...six.map((x) => Math.max(x.income, x.expenses))); return <div className="rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3.5" aria-hidden="true" data-chart="six">
         <div className="flex items-end gap-2 h-32 border-b border-[var(--c-ln)]">{six.map((x, i) => <div key={x.ym} className="flex-1 h-full flex items-end justify-center gap-1">
-          <span className="w-full max-w-[18px] rounded-t-[6px]" style={{ height: Math.max(2, (x.income / top) * 100) + "%", background: "var(--c-acc)", opacity: i === six.length - 1 ? 1 : 0.7 }} />
-          <span className="w-full max-w-[18px] rounded-t-[6px]" style={{ height: Math.max(2, (x.expenses / top) * 100) + "%", background: "var(--c-acc-2)", opacity: i === six.length - 1 ? 1 : 0.7 }} /></div>)}</div>
+          <span className="w-full max-w-[18px] rounded-t-[12px]" style={{ height: Math.max(2, (x.income / top) * 100) + "%", background: "var(--c-acc)", opacity: i === six.length - 1 ? 1 : 0.7 }} />
+          <span className="w-full max-w-[18px] rounded-t-[12px]" style={{ height: Math.max(2, (x.expenses / top) * 100) + "%", background: "var(--c-acc-2)", opacity: i === six.length - 1 ? 1 : 0.7 }} /></div>)}</div>
         <div className="flex gap-2 pt-1.5">{six.map((x) => <span key={x.ym} className={"flex-1 text-center text-[11px] font-bold tabular-nums " + muted} dir="ltr">{x.ym.slice(5)}</span>)}</div></div>; })()}
       <Table head={["Month", "Collected", "Spent", "Profit"]} rows={six.map((x) => [showYm(x.ym), x.income, x.expenses, x.profit])} testid="fleet-six" swatch={[null, "var(--c-acc)", "var(--c-acc-2)", null]} />
       {owe.length ? <div className="space-y-1"><p className="font-extrabold text-[15px] m-0 pb-1">{tr("Who owes most")}</p>

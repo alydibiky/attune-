@@ -45,7 +45,7 @@ function Row({ f, open, toggle, act }) {
         <span className={U.tag(L.tone === "late" ? "red" : L.tone === "due" ? "amber" : L.tone === "pos" ? "green" : "gray")}><span className="tabular-nums">{L.pill}</span></span>
       </button>
       {open ? <div className="mt-2 space-y-2" data-testid="overpay-detail">
-        <div className={"text-[12px] rounded-[14px] p-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] " + U.muted} dir="auto">
+        <div className={"text-[12px] rounded-[12px] p-2.5 bg-[var(--c-bg)] border border-[var(--c-ln)] " + U.muted} dir="auto">
           <div className="flex items-center gap-2"><span>{tr(SRC[src.kind] || "Source")}{src.at ? " · " + day(src.at) : ""}</span>
             {src.link ? <button className="ms-auto min-h-[44px] px-1 font-bold text-[var(--c-acc)] flex items-center gap-1" onClick={() => openLink(src.title || "Gmail", src.link)} data-testid="overpay-source"><ExternalLink size={13} />{tr("Open the email")}</button> : null}</div>
           {src.title || src.text ? <div className="mt-1 line-clamp-3">{src.title && src.kind === "email" ? <b>{src.title}. </b> : null}{src.kind === "email" ? (src.text || "").slice(src.title ? src.title.length + 3 : 0, 220) : (src.text || "").slice(0, 220)}</div> : null}
@@ -121,14 +121,14 @@ export function OverpayCheck({ pro, openPlan, flash, remind, unremind }) {
           <div className={U.label + " mb-1"}>{tr(title)}</div>
           {list.map((f) => <Row key={f.id} f={f} open={open === f.id} toggle={() => setOpen(open === f.id ? "" : f.id)} act={act} />)}
         </div>))}
-      {locked ? <button className="w-full min-h-[48px] text-start mt-3 flex items-center gap-2 rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 hover:border-[var(--c-acc)]" onClick={openPlan} data-testid="overpay-locked"><Crown size={15} className="text-[var(--c-acc-2)] shrink-0" /><b className="font-extrabold">{locked === 1 ? tr("1 more finding") : tr("{n} more findings", { n: locked })}</b><span className={U.tag("blue") + " ms-auto"}>Pro</span></button> : null}
+      {locked ? <button className="w-full min-h-[48px] text-start mt-3 flex items-center gap-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 hover:border-[var(--c-acc)]" onClick={openPlan} data-testid="overpay-locked"><Crown size={15} className="text-[var(--c-acc-2)] shrink-0" /><b className="font-extrabold">{locked === 1 ? tr("1 more finding") : tr("{n} more findings", { n: locked })}</b><span className={U.tag("blue") + " ms-auto"}>Pro</span></button> : null}
       {R.subs.length ? <div className="mt-3">
         <button className={U.label + " min-h-[44px] flex items-center gap-1"} onClick={() => setAll(!all)} data-testid="overpay-all">{tr("All subscriptions")} ({R.subs.length})<ChevronDown size={13} style={{ transform: all ? "rotate(180deg)" : "" }} /></button>
         {all ? R.subs.map((s) => (
           <div key={s.id} className="flex items-center gap-3 py-2 border-t border-[var(--c-ln)]" data-testid="overpay-sub">
             <div className="flex-1 min-w-0"><b className="block text-[14px] font-extrabold" dir="auto">{s.name}</b><div className={"text-[12.5px] " + U.muted}>{tr("Since {d}", { d: s.since })} · {tr("next {d}", { d: s.next })}</div></div>
             <span className="tabular-nums font-bold text-[13px] text-end">{money(s.amount, s.currency)} <span className={"font-normal " + U.muted}>{tr(CAD[s.cadence])}</span></span>
-            {s.src && s.src.link ? <button className="w-11 h-11 shrink-0 grid place-items-center rounded-[14px] text-[var(--c-acc)]" onClick={() => openLink(s.name, s.src.link)} aria-label={tr("Open the email")}><ExternalLink size={14} /></button> : null}
+            {s.src && s.src.link ? <button className="w-11 h-11 shrink-0 grid place-items-center rounded-[12px] text-[var(--c-acc)]" onClick={() => openLink(s.name, s.src.link)} aria-label={tr("Open the email")}><ExternalLink size={14} /></button> : null}
           </div>)) : null}
       </div> : null}
       {/* where it looks */}

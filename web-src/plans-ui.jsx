@@ -46,7 +46,7 @@ export function GoldCard({ data, put, flash }) {
   const hasGold = data.items.some((x) => x.kind === "gold"), hasSilver = data.items.some((x) => x.kind === "silver");
   return (
     <div className={U.cardPad} data-testid="gold-card">
-      <div className="flex items-start gap-3"><span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Wallet size={17} /></span>
+      <div className="flex items-start gap-3"><span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Wallet size={17} /></span>
         <div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]">{tr("Gold & savings")}</b>
           <div className={"text-[12.5px] tabular-nums " + U.muted}>{s.pure ? tr("{g} g of pure gold", { g: s.pure }) : ""}{s.pure && s.silver ? " · " : ""}{s.silver ? tr("{g} g of silver", { g: s.silver }) : ""}</div></div>
         <div className="text-end"><span className={U.label}>{tr("Worth today")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr" data-testid="gold-total">{s.total ? fmt(s.total) : "—"}</div></div></div>
@@ -64,7 +64,7 @@ export function GoldCard({ data, put, flash }) {
         <div key={h.id} className="flex items-center gap-2 text-[13px]" data-testid="gold-item">
           <span className="flex-1 truncate" dir="auto">{h.note}</span>
           <span className={"tabular-nums " + U.muted}>{(s.rows.find((r) => r.id === h.id) || {}).worth != null ? fmt(s.rows.find((r) => r.id === h.id).worth) : ""}</span>
-          <button className={"w-11 h-11 -me-2 shrink-0 grid place-items-center rounded-[14px] hover:text-[var(--c-neg)] " + U.muted} aria-label={tr("Delete")} onClick={() => window.confirm(tr("Delete this?")) && put({ ...data, items: data.items.filter((x) => x.id !== h.id) })}><Trash2 size={13} /></button></div>))}</div>
+          <button className={"w-11 h-11 -me-2 shrink-0 grid place-items-center rounded-[12px] hover:text-[var(--c-neg)] " + U.muted} aria-label={tr("Delete")} onClick={() => window.confirm(tr("Delete this?")) && put({ ...data, items: data.items.filter((x) => x.id !== h.id) })}><Trash2 size={13} /></button></div>))}</div>
       <button className={U.btnP + " mt-3"} data-testid="gold-to-zakat" onClick={() => flash && flash(toZakat(data) ? tr("Sent to Zakat in Money") : tr("Open Money once first, then send"))}><Check size={14} />{tr("Send to Zakat")}</button>
     </div>);
 }
@@ -76,12 +76,12 @@ export function CarCard({ car, put }) {
   const log = [...car.log].reverse();
   return (
     <div className={U.cardPad} data-testid="car-card">
-      <div className="flex items-start gap-3"><span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Car size={17} /></span>
+      <div className="flex items-start gap-3"><span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Car size={17} /></span>
         <div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]">{tr("My car")}</b><div className={"text-[12.5px] tabular-nums " + U.muted}>{s.kmNow ? fmt(s.kmNow) + " km" : ""}</div></div>
         <div className="text-end"><span className={U.label}>{tr("Fuel this month")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(s.fuelMonth)}</div></div></div>
       {s.per100 != null || s.costKm != null ? <div className="grid grid-cols-2 gap-2 mt-3">
-        <div className="rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2"><span className={U.label}>{tr("Litres per 100 km")}</span><div className="tabular-nums font-black text-[17px]" data-testid="car-per100">{s.per100 ?? "—"}</div></div>
-        <div className="rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2"><span className={U.label}>{tr("Fuel cost per km")}</span><div className="tabular-nums font-black text-[17px]">{s.costKm ?? "—"}</div></div></div>
+        <div className="rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2"><span className={U.label}>{tr("Litres per 100 km")}</span><div className="tabular-nums font-black text-[17px]" data-testid="car-per100">{s.per100 ?? "—"}</div></div>
+        <div className="rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2"><span className={U.label}>{tr("Fuel cost per km")}</span><div className="tabular-nums font-black text-[17px]">{s.costKm ?? "—"}</div></div></div>
         : <div className={"mt-2 text-[12.5px] " + U.muted}>{tr("Two fill-ups with the km on the meter, and it works out your fuel use.")}</div>}
       {s.next.length ? <div className="mt-3 space-y-1" data-testid="car-next">{s.next.slice(0, 4).map((n) => (
         <div key={n.service} className="flex items-center gap-2 text-[13px]"><span className="flex-1 font-semibold">{tr(SERVICE[n.service])}</span>
@@ -90,7 +90,7 @@ export function CarCard({ car, put }) {
         <div key={e.id} className={"flex items-center gap-2 text-[12.5px] " + U.muted}>
           <span className="flex-1 truncate">{e.date} · {e.kind === "fuel" ? tr("Fuel") + (e.liters ? " " + e.liters + " L" : "") : e.kind === "service" ? tr(SERVICE[e.service] || "Service") : tr("Odometer")}{e.km ? " · " + fmt(e.km) + " km" : ""}</span>
           <span className="tabular-nums">{e.amount ? fmt(e.amount) : ""}</span>
-          <button className="w-11 h-11 -me-2 shrink-0 grid place-items-center rounded-[14px] hover:text-[var(--c-neg)]" aria-label={tr("Delete")} onClick={() => window.confirm(tr("Delete this?")) && put({ ...car, log: car.log.filter((x) => x.id !== e.id) })}><Trash2 size={12} /></button></div>))}
+          <button className="w-11 h-11 -me-2 shrink-0 grid place-items-center rounded-[12px] hover:text-[var(--c-neg)]" aria-label={tr("Delete")} onClick={() => window.confirm(tr("Delete this?")) && put({ ...car, log: car.log.filter((x) => x.id !== e.id) })}><Trash2 size={12} /></button></div>))}
         {log.length > 3 ? <button className="min-h-[44px] px-1 text-[13px] font-bold text-[var(--c-acc)]" onClick={() => setAll(!all)}>{all ? tr("Show less") : tr("Show all {n}", { n: log.length })}</button> : null}</div> : null}
     </div>);
 }

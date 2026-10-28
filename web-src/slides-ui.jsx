@@ -159,7 +159,7 @@ function SlideCanvas({ shapes, className = "", testid }) {
     const g = c.getContext("2d"); g.clearRect(0, 0, c.width, c.height);
     drawShapes(g, shapes, w / S.SW, () => redraw((x) => x + 1));
   });
-  return <canvas ref={ref} className={"w-full rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] " + className} style={{ aspectRatio: "16 / 9" }} data-testid={testid} />;
+  return <canvas ref={ref} className={"w-full rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] " + className} style={{ aspectRatio: "16 / 9" }} data-testid={testid} />;
 }
 const toImage = (shapes, w, type = "image/jpeg") => { const c = document.createElement("canvas"); c.width = w; c.height = Math.round(w * S.SH / S.SW); drawShapes(c.getContext("2d"), shapes, w / S.SW); return c.toDataURL(type, 0.9); };
 // a report chart as a PNG (white background, blue bars)
@@ -233,7 +233,7 @@ function Presenter({ deck, close }) {
       <div className="flex items-center justify-between px-3 py-2 text-white/80 text-[12.5px]">
         <span data-testid="presenter-count">{pos.i + 1} / {list.length}{steps.length && deck.trigger !== "auto" ? " · " + tr("tap for the next item") : ""}</span>
         <div className="flex items-center gap-2">
-          <button onClick={() => setNotes(!notes)} className={`min-h-[44px] px-3.5 rounded-full border font-bold ${notes ? "border-[var(--c-acc-2)] bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-white/25"}`}>{tr("Notes")}</button>
+          <button onClick={() => setNotes(!notes)} className={`min-h-[44px] px-3.5 rounded-full border font-bold ${notes ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-white/25"}`}>{tr("Notes")}</button>
           <button onClick={close} aria-label={tr("Close")} className="h-11 w-11 rounded-full grid place-items-center border border-white/25" data-testid="presenter-close"><X size={16} /></button>
         </div>
       </div>
@@ -602,34 +602,34 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
       {/* v6.27 computer layout (option A): what to make on the left; recent ones / the slides on the right */}
       {!deck && !report ? <div className={PANES}><div className="space-y-4">
       {!deck && !report ? (
-        <section className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3">
+        <section className="bg-[var(--c-surf)] rounded-[20px] border border-[var(--c-ln)] p-4 space-y-3">
           <div className="grid grid-cols-2 gap-1.5">
             <button onClick={() => setTab("deck")} className={chip(tab === "deck") + " flex items-center justify-center gap-1.5"} data-testid="slides-tab-deck"><Presentation size={15} />{tr("Presentation")}</button>
             <button onClick={() => setTab("report")} className={chip(tab === "report") + " flex items-center justify-center gap-1.5"} data-testid="slides-tab-report"><FileText size={15} />{tr("Report")}</button>
           </div>
           <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} dir="auto" data-testid="slides-prompt"
             placeholder={tab === "deck" ? tr("e.g. A pitch for our café to offices in New Cairo: menu, catering, prices, why us") : tr("e.g. Monthly report on our clinic: patients, waiting times, costs and what to fix next month")}
-            className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] focus:outline-none focus:border-[var(--c-acc)] px-3 py-2.5 text-[14px] text-[var(--c-ink)] leading-relaxed" />
+            className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] focus:outline-none focus:border-[var(--c-acc)] px-3 py-2.5 text-[14px] text-[var(--c-ink)] leading-relaxed" />
           <div className="space-y-2" data-testid="slides-sources">
             {webPages ? (
-              <button onClick={() => setUseWeb(!useWeb)} className={chip(useWeb) + " w-full flex items-center gap-2 text-start !h-auto !min-h-[48px] py-2 !whitespace-normal !rounded-[16px]"} data-testid="slides-web">
+              <button onClick={() => setUseWeb(!useWeb)} className={chip(useWeb) + " w-full flex items-center gap-2 text-start !h-auto !min-h-[48px] py-2 !whitespace-normal !rounded-[20px]"} data-testid="slides-web">
                 <Globe size={15} className="shrink-0" /><span className="flex-1">{tr("Research the web for facts and figures")}<span className="block text-[11px] text-[var(--c-mut)]">{tr("Each slide names its sources, and a Sources slide lists every page")}</span></span>{useWeb ? <Check size={15} /> : null}</button>
             ) : null}
             <input ref={fileRef} type="file" className="hidden" accept=".docx,.pdf,.pptx,.txt,.md,.html,.htm,.xlsx,.csv,.tsv,.ods" data-testid="slides-file" onChange={(e) => { pickFile(e.target.files[0]); e.target.value = ""; }} />
             {file ? (
-              <div className="flex items-center gap-2 rounded-[16px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] px-3 py-2 text-[12.5px] font-bold text-[var(--c-acc)]" data-testid="slides-file-name">
+              <div className="flex items-center gap-2 rounded-[20px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] px-3 py-2 text-[12.5px] font-bold text-[var(--c-acc)]" data-testid="slides-file-name">
                 <Paperclip size={14} className="shrink-0" /><span className="flex-1 truncate">{file.name}{file.data ? " · " + tr("{n} rows — totals and a chart are computed", { n: file.data.rows }) : ""}</span>
                 <button onClick={() => setFile(null)} aria-label={tr("Remove")} className="w-10 h-10 -m-2 grid place-items-center text-[var(--c-mut)]"><X size={15} /></button></div>
             ) : (
-              <button onClick={() => fileRef.current && fileRef.current.click()} className={chip(false) + " w-full flex items-center gap-2 text-start !h-auto !min-h-[48px] py-2 !whitespace-normal !rounded-[16px]"} data-testid="slides-attach">
+              <button onClick={() => fileRef.current && fileRef.current.click()} className={chip(false) + " w-full flex items-center gap-2 text-start !h-auto !min-h-[48px] py-2 !whitespace-normal !rounded-[20px]"} data-testid="slides-attach">
                 <Paperclip size={15} className="shrink-0" /><span className="flex-1">{tr("Base it on my file (Word, PDF, Excel, CSV…)")}</span></button>
             )}
           </div>
           {busy ? busyRow : (
-            <button onClick={tab === "deck" ? makeDeck : makeReport} className="w-full py-2.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="slides-go">
+            <button onClick={tab === "deck" ? makeDeck : makeReport} className="w-full py-2.5 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="slides-go">
               <Wand2 size={16} />{tab === "deck" ? tr("Make the presentation") : tr("Write the report")}</button>
           )}
-          <button onClick={() => setOpts(!opts)} className="w-full min-h-[48px] flex items-center gap-2 text-start rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2 text-[13px] font-semibold text-[var(--c-ink)]" data-testid="slides-options">
+          <button onClick={() => setOpts(!opts)} className="w-full min-h-[48px] flex items-center gap-2 text-start rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2 text-[13px] font-semibold text-[var(--c-ink)]" data-testid="slides-options">
             <SlidersHorizontal size={14} className="text-[var(--c-acc)] shrink-0" />
             <span className="flex-1 min-w-0 truncate">{tab === "deck"
               ? [tr("{n} slides", { n: count }), tr(S.THEMES[theme] ? S.THEMES[theme].name : ""), detail === "detailed" ? tr("Detailed") : tr("Short points"), motion.transition !== "none" || motion.animation !== "none" ? tr("with motion") : "", lang !== "auto" ? langName(lang) : ""].filter(Boolean).join(" · ")
@@ -638,12 +638,12 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
           {opts ? <div className="space-y-3" data-testid="slides-options-box">
           {tab === "deck" ? (
             <>
-              <input value={audience} onChange={(e) => setAudience(e.target.value)} dir="auto" placeholder={tr("Who is it for? (optional) — e.g. investors, clients, my team")} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 text-[13px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slides-audience" />
+              <input value={audience} onChange={(e) => setAudience(e.target.value)} dir="auto" placeholder={tr("Who is it for? (optional) — e.g. investors, clients, my team")} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 py-2 text-[13px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slides-audience" />
               <div><p className={K.label + " mb-2"}>{tr("Slides")}</p>
                 <div className="flex flex-wrap gap-1.5">{[5, 8, 10, 12, 15].map((n) => <button key={n} onClick={() => setCount(n)} className={chip(count === n)} data-testid={"slides-n-" + n}>{n}</button>)}</div></div>
               <div><p className={K.label + " mb-2"}>{tr("Design")}</p>
                 <div className="grid grid-cols-3 min-[380px]:grid-cols-4 gap-1.5">{themeList.map(([k, t]) => (
-                  <button key={k} onClick={() => setTheme(k)} data-testid={"slides-theme-" + k} className={`rounded-[14px] border p-1.5 text-[11px] ${theme === k ? "border-[var(--c-acc-2)] border-2 text-[var(--c-acc-2)] font-bold" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>
+                  <button key={k} onClick={() => setTheme(k)} data-testid={"slides-theme-" + k} className={`rounded-[12px] border p-1.5 text-[11px] ${theme === k ? "border-[var(--c-acc)] border-2 text-[var(--c-acc-2)] font-bold" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>
                     <span className="block h-7 rounded-md mb-1 relative overflow-hidden" style={{ background: "#" + t.cover }}><span className="absolute left-1.5 top-2 h-1 w-5 rounded" style={{ background: "#" + t.accent }} /><span className="absolute right-1 bottom-1 h-3 w-3 rounded-full" style={{ background: "#" + t.accent2 }} /></span>{k === "brand" ? t.name : tr(t.name)}</button>))}</div>
                 <BrandKit brand={brand} setBrand={(b) => { setBrand(b); if (b) setTheme("brand"); else if (theme === "brand") setTheme("ocean"); }} /></div>
               <div><p className={K.label + " mb-2"}>{tr("Words on each point")}</p>
@@ -659,7 +659,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
                 <div className="flex flex-wrap gap-1.5">{Object.entries(LENGTHS).map(([n, l]) => <button key={n} onClick={() => setRLen(+n)} className={chip(rLen === +n)} data-testid={"report-len-" + n}>{tr(l)} · {tr("{n} sections", { n })}</button>)}</div></div>
             </>
           )}
-          <select value={lang} onChange={(e) => setLangPick(e.target.value)} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 text-[13px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slides-lang">
+          <select value={lang} onChange={(e) => setLangPick(e.target.value)} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 py-2 text-[13px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slides-lang">
             <option value="auto">{tr("Language: same as my request")}</option>
             {Object.keys(S.S_LANGS).map((k) => <option key={k} value={k}>{langName(k)}</option>)}
           </select>
@@ -678,7 +678,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
               <button className="flex-1 min-w-0 flex items-center gap-2 text-start" onClick={() => { if (x.deck) setDeck(x.deck); else setReport(x.report); }}>
                 {x.type === "deck" ? <Presentation size={15} className="text-[var(--c-acc)] shrink-0" /> : <FileText size={15} className="text-[var(--c-acc)] shrink-0" />}
                 <span className="truncate text-[14px] font-bold text-[var(--c-ink)]" dir="auto">{x.title}</span></button>
-              <button aria-label={tr("Delete")} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" onClick={async () => { if (await askConfirm(tr("Delete this?"))) { const l = loadList().filter((y) => y.id !== x.id); saveList(l); setList(l); } }}><Trash2 size={14} /></button>
+              <button aria-label={tr("Delete")} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" onClick={async () => { if (await askConfirm(tr("Delete this?"))) { const l = loadList().filter((y) => y.id !== x.id); saveList(l); setList(l); } }}><Trash2 size={14} /></button>
             </div>))}
         </section>
       ) : null}
@@ -697,40 +697,40 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
           {!busy && (deck.dropped || deck.unsure) ? (
             <p className="text-[12px] text-[var(--c-warn)]" data-testid="slides-check-note">{[deck.dropped ? tr("{n} figure(s) weren't in the sources, so they were left out.", { n: deck.dropped }) : "", deck.unsure ? tr(deck.hits.length || file ? "{n} figure(s) on the slides weren't found in the sources — check them before presenting." : "{n} figure(s) came from the AI's memory — check them before presenting.", { n: deck.unsure }) : ""].filter(Boolean).join(" ")}</p>
           ) : null}
-          {!busy ? <button onClick={() => setPlaying(true)} className="w-full min-h-[44px] rounded-[16px] border border-[var(--c-acc)] text-[var(--c-acc)] font-bold flex items-center justify-center gap-2" data-testid="slides-play"><Play size={16} />{tr("Play — see the transitions and animations")}</button> : null}
+          {!busy ? <button onClick={() => setPlaying(true)} className="w-full min-h-[44px] rounded-[20px] border border-[var(--c-acc)] text-[var(--c-acc)] font-bold flex items-center justify-center gap-2" data-testid="slides-play"><Play size={16} />{tr("Play — see the transitions and animations")}</button> : null}
           {!busy ? (
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={savePptx} className="py-2.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="slides-save-pptx"><Download size={16} />{tr("PowerPoint")}</button>
-                <button onClick={saveDeckPdf} className="min-h-[48px] rounded-[16px] bg-[var(--c-surf-2)] text-[var(--c-ink)] font-extrabold text-sm flex items-center justify-center gap-2" data-testid="slides-save-pdf"><Download size={16} />PDF</button>
+                <button onClick={savePptx} className="py-2.5 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="slides-save-pptx"><Download size={16} />{tr("PowerPoint")}</button>
+                <button onClick={saveDeckPdf} className="min-h-[48px] rounded-[20px] bg-[var(--c-surf-2)] text-[var(--c-ink)] font-extrabold text-sm flex items-center justify-center gap-2" data-testid="slides-save-pdf"><Download size={16} />PDF</button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => copyText(S.deckToText(deck))} className="min-h-[44px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13px] flex items-center justify-center gap-1.5" data-testid="slides-copy"><Copy size={14} />{tr("Copy as text")}</button>
-                <button onClick={() => { setDeck(null); setEdit(null); }} className="min-h-[44px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13px]" data-testid="slides-new">{tr("Make another")}</button>
+                <button onClick={() => copyText(S.deckToText(deck))} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13px] flex items-center justify-center gap-1.5" data-testid="slides-copy"><Copy size={14} />{tr("Copy as text")}</button>
+                <button onClick={() => { setDeck(null); setEdit(null); }} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13px]" data-testid="slides-new">{tr("Make another")}</button>
               </div>
             </div>
           ) : null}
-          <div className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-3 space-y-2" data-testid="deck-cmd-box">
+          <div className="bg-[var(--c-surf)] rounded-[20px] border border-[var(--c-ln)] p-3 space-y-2" data-testid="deck-cmd-box">
             <p className="text-[12.5px] text-[var(--c-ink)] flex items-center gap-1.5"><Wand2 size={14} className="text-[var(--c-acc)]" />{tr("Change the presentation")}</p>
             <div className="flex gap-2">
               <input value={cmd} onChange={(e) => setCmd(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runCommand(); }} dir="auto" disabled={!!busy}
-                placeholder={tr("e.g. slide 4: shorter, add prices · delete slide 6 · add a slide about safety after slide 5")} className="flex-1 min-w-0 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] focus:outline-none focus:border-[var(--c-acc)] px-3 py-2 text-[13px] text-[var(--c-ink)]" data-testid="deck-cmd" />
-              <button onClick={runCommand} disabled={!!busy || !cmd.trim()} className="shrink-0 px-3 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm disabled:opacity-40 min-h-[44px]" data-testid="deck-cmd-go">{tr("Apply")}</button>
+                placeholder={tr("e.g. slide 4: shorter, add prices · delete slide 6 · add a slide about safety after slide 5")} className="flex-1 min-w-0 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] focus:outline-none focus:border-[var(--c-acc)] px-3 py-2 text-[13px] text-[var(--c-ink)]" data-testid="deck-cmd" />
+              <button onClick={runCommand} disabled={!!busy || !cmd.trim()} className="shrink-0 px-3 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm disabled:opacity-40 min-h-[44px]" data-testid="deck-cmd-go">{tr("Apply")}</button>
             </div>
             {cmdNote ? <p className="text-[12px] text-[var(--c-acc)]" data-testid="deck-cmd-note">{cmdNote}</p> : null}
           </div>
           <p className={K.label + " px-1 pt-1"}>{tr("Design and motion")}</p>
           <div className="flex gap-1.5 overflow-x-auto att-hscroll pb-1 lg:flex-wrap lg:overflow-visible">{themeList.map(([k, t]) => (
             <button key={k} onClick={() => { setDeck({ ...deck, theme: k, brand: k === "brand" ? brand : deck.brand }); setTheme(k); try { localStorage.setItem("attune:slides:theme", k); } catch (e) {} }} data-testid={"deck-theme-" + k}
-              className={`shrink-0 min-h-[40px] rounded-full border px-3 text-[12px] flex items-center gap-1.5 ${deck.theme === k ? "border-[var(--c-acc-2)] bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-bold" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>
+              className={`shrink-0 min-h-[40px] rounded-full border px-3 text-[12px] flex items-center gap-1.5 ${deck.theme === k ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)] font-bold" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>
               <span className="h-3 w-3 rounded-full" style={{ background: "#" + t.accent }} />{k === "brand" ? t.name : tr(t.name)}</button>))}</div>
           {styleNote ? <p className="text-[11.5px] text-[var(--c-acc)] px-1" data-testid="slides-style-note">{tr("From your request:")} {styleNote}</p> : null}
           <div className="grid grid-cols-2 gap-1.5">
-            <label className="block min-w-0"><span className="block text-[11px] text-[var(--c-mut)] mb-0.5">{tr("Transition")}</span><select value={deck.transition || "none"} onChange={(e) => { const m = { ...motion, transition: e.target.value }; setMotionSaved(m); setDeck({ ...deck, transition: m.transition }); }} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-2 py-1.5 text-[12px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="deck-transition">
+            <label className="block min-w-0"><span className="block text-[11px] text-[var(--c-mut)] mb-0.5">{tr("Transition")}</span><select value={deck.transition || "none"} onChange={(e) => { const m = { ...motion, transition: e.target.value }; setMotionSaved(m); setDeck({ ...deck, transition: m.transition }); }} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-2 py-1.5 text-[12px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="deck-transition">
               {Object.entries(S.TRANSITIONS).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select></label>
-            <label className="block min-w-0"><span className="block text-[11px] text-[var(--c-mut)] mb-0.5">{tr("Animation")}</span><select value={deck.animation || "none"} onChange={(e) => { const m = { ...motion, animation: e.target.value }; setMotionSaved(m); setDeck({ ...deck, animation: m.animation, trigger: deck.trigger || m.trigger }); }} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-2 py-1.5 text-[12px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="deck-animation">
+            <label className="block min-w-0"><span className="block text-[11px] text-[var(--c-mut)] mb-0.5">{tr("Animation")}</span><select value={deck.animation || "none"} onChange={(e) => { const m = { ...motion, animation: e.target.value }; setMotionSaved(m); setDeck({ ...deck, animation: m.animation, trigger: deck.trigger || m.trigger }); }} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-2 py-1.5 text-[12px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="deck-animation">
               {Object.entries(S.ANIMATIONS).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select></label>
-            {deck.animation && deck.animation !== "none" ? <select value={deck.trigger || "click"} onChange={(e) => { const m = { ...motion, trigger: e.target.value }; setMotionSaved(m); setDeck({ ...deck, trigger: m.trigger }); }} className="col-span-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-2 py-1.5 text-[12px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="deck-trigger">
+            {deck.animation && deck.animation !== "none" ? <select value={deck.trigger || "click"} onChange={(e) => { const m = { ...motion, trigger: e.target.value }; setMotionSaved(m); setDeck({ ...deck, trigger: m.trigger }); }} className="col-span-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-2 py-1.5 text-[12px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="deck-trigger">
               <option value="click">{tr("Animations: on tap")}</option><option value="auto">{tr("Animations: by themselves")}</option></select> : null}
           </div>
           </div><div className="space-y-3 mt-3 lg:mt-0 min-w-0">
@@ -768,14 +768,14 @@ function ReportView({ report, busyRow, busy, err, saveDocx, saveReportPdf, toDec
     // v6.27 computer layout (option A): the title, progress and the save buttons on the left; the report itself on the
     // right (placed by the grid, so a phone keeps its order: title, report, buttons)
     <section className={"calm text-[var(--c-ink)] space-y-3 " + SPLIT} data-testid="report-view" dir={rtl ? "rtl" : "ltr"}>
-      <div className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-2 lg:col-start-1">
+      <div className="bg-[var(--c-surf)] rounded-[20px] border border-[var(--c-ln)] p-4 space-y-2 lg:col-start-1">
         <p className="text-[20px] font-black tracking-tight text-[var(--c-ink)]" dir="auto" data-testid="report-title">{report.title}</p>
         {report.subtitle ? <p className="text-[13px] text-[var(--c-mut)]" dir="auto">{report.subtitle}</p> : null}
         <p className="text-[11.5px] text-[var(--c-mut)]">{report.date}</p>
       </div>
       {busyRow ? <div className="lg:col-start-1">{busyRow}</div> : null}
       {err ? <p className="text-[12.5px] text-[var(--c-neg)] lg:col-start-1" data-testid="slides-error">{err}</p> : null}
-      <div className={"bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-1.5 " + SPLIT_R} data-testid="report-body">
+      <div className={"bg-[var(--c-surf)] rounded-[20px] border border-[var(--c-ln)] p-4 space-y-1.5 " + SPLIT_R} data-testid="report-body">
         <p className="text-[15px] font-semibold text-[var(--c-acc)]">{W0.summary}</p>
         {report.summary ? <>{report.summary.text ? <p className="text-[13px] text-[var(--c-ink)] leading-relaxed" dir="auto" data-testid="report-summary">{report.summary.text}</p> : null}
           {report.summary.findings.length ? <ul className="space-y-1">{report.summary.findings.map((f, i) => <li key={i} className="ms-5 list-disc text-[13px] text-[var(--c-ink)]" dir="auto">{f}</li>)}</ul> : null}</>
@@ -793,13 +793,13 @@ function ReportView({ report, busyRow, busy, err, saveDocx, saveReportPdf, toDec
       {!busy ? (
         <div className="space-y-2 lg:col-start-1">
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={saveDocx} className="py-2.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="report-save-docx"><Download size={16} />{tr("Word")}</button>
-            <button onClick={saveReportPdf} className="min-h-[48px] rounded-[16px] bg-[var(--c-surf-2)] text-[var(--c-ink)] font-extrabold text-sm flex items-center justify-center gap-2" data-testid="report-save-pdf"><Download size={16} />PDF</button>
+            <button onClick={saveDocx} className="py-2.5 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="report-save-docx"><Download size={16} />{tr("Word")}</button>
+            <button onClick={saveReportPdf} className="min-h-[48px] rounded-[20px] bg-[var(--c-surf-2)] text-[var(--c-ink)] font-extrabold text-sm flex items-center justify-center gap-2" data-testid="report-save-pdf"><Download size={16} />PDF</button>
           </div>
-          <button onClick={toDeck} className="w-full min-h-[44px] rounded-[16px] border border-[var(--c-acc)] text-[var(--c-acc)] font-bold text-[13px] flex items-center justify-center gap-2" data-testid="report-to-deck"><Presentation size={15} />{tr("Make slides from this report")}</button>
+          <button onClick={toDeck} className="w-full min-h-[44px] rounded-[20px] border border-[var(--c-acc)] text-[var(--c-acc)] font-bold text-[13px] flex items-center justify-center gap-2" data-testid="report-to-deck"><Presentation size={15} />{tr("Make slides from this report")}</button>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={copy} className="min-h-[44px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13px] flex items-center justify-center gap-1.5"><Copy size={14} />{tr("Copy as text")}</button>
-            <button onClick={again} className="min-h-[44px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13px]" data-testid="report-new">{tr("Make another")}</button>
+            <button onClick={copy} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13px] flex items-center justify-center gap-1.5"><Copy size={14} />{tr("Copy as text")}</button>
+            <button onClick={again} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13px]" data-testid="report-new">{tr("Make another")}</button>
           </div>
         </div>
       ) : null}
@@ -830,23 +830,23 @@ function SlideEditor({ deck, index, setDeck, close, busy, busyRow, rewrite, err 
       <div className={SPLIT_R + " lg:sticky lg:top-4"}><SlideCanvas shapes={shapes} testid="slide-editor-canvas" /></div>
       {busyRow ? <div className="lg:col-start-1">{busyRow}</div> : null}
       {err ? <p className="text-[12.5px] text-[var(--c-neg)] lg:col-start-1">{err}</p> : null}
-      <section className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-2.5 lg:col-start-1">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} dir="auto" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 text-[14px] text-[var(--c-ink)] font-semibold focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slide-edit-title" />
-        <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={7} dir="auto" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 text-[13px] text-[var(--c-ink)] leading-relaxed font-mono focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slide-edit-body" />
+      <section className="bg-[var(--c-surf)] rounded-[20px] border border-[var(--c-ln)] p-4 space-y-2.5 lg:col-start-1">
+        <input value={title} onChange={(e) => setTitle(e.target.value)} dir="auto" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 py-2 text-[14px] text-[var(--c-ink)] font-semibold focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slide-edit-title" />
+        <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={7} dir="auto" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 py-2 text-[13px] text-[var(--c-ink)] leading-relaxed font-mono focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slide-edit-body" />
         <p className="text-[11px] text-[var(--c-mut)]">{tr(help || "")}</p>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} dir="auto" placeholder={tr("Speaker notes (what you say on this slide)")} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 text-[12.5px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slide-edit-notes" />
-        <button onClick={apply} disabled={!!busy} className="w-full py-2.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm min-h-[44px]" data-testid="slide-edit-save">{tr("Done")}</button>
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} dir="auto" placeholder={tr("Speaker notes (what you say on this slide)")} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 py-2 text-[12.5px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slide-edit-notes" />
+        <button onClick={apply} disabled={!!busy} className="w-full py-2.5 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm min-h-[44px]" data-testid="slide-edit-save">{tr("Done")}</button>
       </section>
-      <section className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-2.5">
+      <section className="bg-[var(--c-surf)] rounded-[20px] border border-[var(--c-ln)] p-4 space-y-2.5">
         <p className="text-[12.5px] text-[var(--c-ink)] flex items-center gap-1.5"><Wand2 size={14} className="text-[var(--c-acc)]" />{tr("Ask the AI to redo it")}</p>
-        <input value={ask} onChange={(e) => setAsk(e.target.value)} dir="auto" placeholder={tr("e.g. shorter, more about safety, add prices")} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 text-[13px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slide-ai-ask" />
-        <button disabled={!!busy} onClick={() => rewrite(s.kind, ask.trim())} className="w-full min-h-[44px] rounded-[16px] border border-[var(--c-acc)] text-[var(--c-acc)] font-bold text-[13px]" data-testid="slide-ai-redo">{tr("Rewrite this slide")}</button>
+        <input value={ask} onChange={(e) => setAsk(e.target.value)} dir="auto" placeholder={tr("e.g. shorter, more about safety, add prices")} className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 py-2 text-[13px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="slide-ai-ask" />
+        <button disabled={!!busy} onClick={() => rewrite(s.kind, ask.trim())} className="w-full min-h-[44px] rounded-[20px] border border-[var(--c-acc)] text-[var(--c-acc)] font-bold text-[13px]" data-testid="slide-ai-redo">{tr("Rewrite this slide")}</button>
         <p className="text-[11.5px] text-[var(--c-mut)]">{tr("Or turn it into:")}</p>
         <div className="flex flex-wrap gap-1.5">{kinds.filter((x) => x !== s.kind).map((x) => <button key={x} disabled={!!busy} onClick={() => rewrite(x, ask.trim())} className="min-h-[40px] px-3.5 rounded-full border border-[var(--c-ln)] font-bold text-[var(--c-ink)] text-[12px]" data-testid={"slide-kind-" + x}>{tr(KIND_LABEL[x])}</button>)}</div>
       </section>
       <div className="grid grid-cols-3 gap-2">
-        <button onClick={() => move(-1)} disabled={index === 0 || !!busy} className="min-h-[44px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[12.5px] flex items-center justify-center gap-1 disabled:opacity-40" data-testid="slide-up"><ArrowUp size={14} />{tr("Earlier")}</button>
-        <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="min-h-[44px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[12.5px] flex items-center justify-center gap-1 disabled:opacity-40" data-testid="slide-down"><ArrowDown size={14} />{tr("Later")}</button>
+        <button onClick={() => move(-1)} disabled={index === 0 || !!busy} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[12.5px] flex items-center justify-center gap-1 disabled:opacity-40" data-testid="slide-up"><ArrowUp size={14} />{tr("Earlier")}</button>
+        <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[12.5px] flex items-center justify-center gap-1 disabled:opacity-40" data-testid="slide-down"><ArrowDown size={14} />{tr("Later")}</button>
         <button disabled={!!busy || deck.slides.length <= 1} onClick={async () => { if (await askConfirm(tr("Delete this slide?"))) { setDeck({ ...deck, slides: deck.slides.filter((_, j) => j !== index) }); close(); } }} className="py-2 rounded-xl border border-[var(--c-neg)]/50 text-[var(--c-neg)] text-[12.5px] flex items-center justify-center gap-1 disabled:opacity-40" data-testid="slide-delete"><Trash2 size={14} />{tr("Delete")}</button>
       </div>
     </div>
@@ -875,17 +875,17 @@ function BrandKit({ brand, setBrand }) {
     c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); setK((x) => ({ ...x, logo: c.toDataURL("image/png"), lw: c.width, lh: c.height })); }; im.src = r.result; }; r.readAsDataURL(f); };
   if (!open) return <button onClick={() => setOpen(true)} className="mt-2 min-h-[44px] text-[12.5px] font-bold text-[var(--c-acc)]" data-testid="brand-open">{brand ? tr("Edit your brand kit") : tr("+ Your brand kit (logo, colour, name)")}</button>;
   return (
-    <div className="mt-2 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5 space-y-2" data-testid="brand-kit">
-      <input value={k.name} onChange={(e) => setK({ ...k, name: e.target.value })} placeholder={tr("Company name")} dir="auto" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 py-2 text-[13px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="brand-name" />
+    <div className="mt-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5 space-y-2" data-testid="brand-kit">
+      <input value={k.name} onChange={(e) => setK({ ...k, name: e.target.value })} placeholder={tr("Company name")} dir="auto" className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 py-2 text-[13px] text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="brand-name" />
       <div className="flex items-center gap-2">
         <label className="flex items-center gap-2 text-[12px] text-[var(--c-mut)]">{tr("Colour")}<input type="color" value={"#" + String(k.color || "1D4ED8").replace("#", "")} onChange={(e) => setK({ ...k, color: e.target.value.replace("#", "") })} className="h-8 w-10 bg-transparent" data-testid="brand-color" /></label>
-        <button onClick={() => fileRef.current && fileRef.current.click()} className="ms-auto min-h-[44px] rounded-[14px] border border-[var(--c-ln)] px-3.5 text-[12.5px] font-bold text-[var(--c-ink)]" data-testid="brand-logo-pick">{k.logo ? tr("Change logo") : tr("Add logo")}</button>
+        <button onClick={() => fileRef.current && fileRef.current.click()} className="ms-auto min-h-[44px] rounded-[12px] border border-[var(--c-ln)] px-3.5 text-[12.5px] font-bold text-[var(--c-ink)]" data-testid="brand-logo-pick">{k.logo ? tr("Change logo") : tr("Add logo")}</button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files && e.target.files[0])} data-testid="brand-logo" />
         {k.logo ? <img src={k.logo} alt="" className="h-8 max-w-[80px] object-contain rounded bg-white" /> : null}
       </div>
       <div className="flex gap-2">
-        <button onClick={() => { setBrand({ ...k, color: String(k.color || "").replace("#", "") }); setOpen(false); }} disabled={!String(k.name || "").trim()} className="flex-1 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold py-2 text-[13px] disabled:opacity-50 min-h-[44px]" data-testid="brand-save">{tr("Use my brand")}</button>
-        {brand ? <button onClick={() => { setBrand(null); setOpen(false); }} className="min-h-[44px] rounded-[14px] border border-[var(--c-ln)] px-3 text-[12px] font-bold text-[var(--c-mut)]" data-testid="brand-remove">{tr("Remove")}</button> : null}
+        <button onClick={() => { setBrand({ ...k, color: String(k.color || "").replace("#", "") }); setOpen(false); }} disabled={!String(k.name || "").trim()} className="flex-1 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold py-2 text-[13px] disabled:opacity-50 min-h-[44px]" data-testid="brand-save">{tr("Use my brand")}</button>
+        {brand ? <button onClick={() => { setBrand(null); setOpen(false); }} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] px-3 text-[12px] font-bold text-[var(--c-mut)]" data-testid="brand-remove">{tr("Remove")}</button> : null}
       </div>
     </div>);
 }

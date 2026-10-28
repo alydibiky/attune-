@@ -7,8 +7,8 @@ const ICONS = {"Hourglass":[["path",{"d":"M5 22h14"}],["path",{"d":"M5 2h14"}],[
 Object.assign(ICONS, {"ArrowRight":[["path",{"d":"M5 12h14"}],["path",{"d":"m12 5 7 7-7 7"}]],"ArrowLeft":[["path",{"d":"m12 19-7-7 7-7"}],["path",{"d":"M19 12H5"}]],
   "FileDown":[["path",{"d":"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"}],["path",{"d":"M14 2v4a2 2 0 0 0 2 2h4"}],["path",{"d":"M12 18v-6"}],["path",{"d":"m9 15 3 3 3-3"}]]});
 
-// v8.7 Health → From your watch
-Object.assign(ICONS, {"Watch":[["circle",{"cx":"12","cy":"12","r":"6"}],["polyline",{"points":"12 10 12 12 13 13"}],["path",{"d":"m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05"}],["path",{"d":"m7.88 16.36.8 4a2 2 0 0 0 2 1.61h2.72a2 2 0 0 0 2-1.61l.81-4.05"}]]});
+// v8.7 Health → From your watch; the money planner
+Object.assign(ICONS, {"PiggyBank":[["path",{"d":"M11 17h3v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a3.16 3.16 0 0 0 2-2h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-1a5 5 0 0 0-2-4V3a4 4 0 0 0-3.2 1.6l-.3.4H11a6 6 0 0 0-6 6v1a5 5 0 0 0 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1z"}],["path",{"d":"M16 10h.01"}],["path",{"d":"M2 8v1a2 2 0 0 0 2 2h1"}]],"Watch":[["circle",{"cx":"12","cy":"12","r":"6"}],["polyline",{"points":"12 10 12 12 13 13"}],["path",{"d":"m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05"}],["path",{"d":"m7.88 16.36.8 4a2 2 0 0 0 2 1.61h2.72a2 2 0 0 0 2-1.61l.81-4.05"}]]});
 
 const NS = "http://www.w3.org/2000/svg";
 function mk(name) {
@@ -31,6 +31,7 @@ export const Gift = mk("Gift");
 export const Coffee = mk("Coffee");
 export const Heart = mk("Heart");
 export const Watch = mk("Watch");
+export const PiggyBank = mk("PiggyBank");
 
 export const PanelLeft = mk("PanelLeft");
 export const House = mk("House");

@@ -18,7 +18,7 @@ function RunOutput({ res, lang, code }) {
   const v = judge(res, code, lang);
   const lines = [res.stdout, res.stderr].filter(Boolean).join("\n").trim();
   return (
-    <div className="mt-2 rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="code-output" dir="ltr">
+    <div className="mt-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="code-output" dir="ltr">
       <div className={`text-[11px] mb-1 flex items-center gap-1.5 ${v.passed ? "text-[var(--c-pos)]" : "text-[var(--c-neg)]"}`}>
         {v.passed ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
         {v.passed ? (v.tests ? tr("Passed its {n} tests", { n: v.tests }) : tr("Ran without errors (no tests)")) : res.timedOut ? tr("Stopped — took too long") : tr("Failed")}
@@ -65,14 +65,14 @@ function HtmlPreview({ code, onReport }) {
   const errN = logs.filter((l) => l.kind === "error").length;
   const bar = (
     <div className="flex items-center gap-1.5">
-      <div className="flex rounded-[14px] border border-[var(--c-ln)] overflow-hidden" role="group" aria-label={tr("Preview width")}>
+      <div className="flex rounded-[12px] border border-[var(--c-ln)] overflow-hidden" role="group" aria-label={tr("Preview width")}>
         {DEVICES.map(([k, l]) => <button key={k} onClick={() => setDev(k)} aria-pressed={dev === k} data-testid={"code-dev-" + k}
-          className={`px-2.5 min-h-[44px] text-[12.5px] font-bold ${dev === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold" : "text-[var(--c-ink)]"}`}>{tr(l)}</button>)}
+          className={`px-2.5 min-h-[44px] text-[12.5px] font-bold ${dev === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold" : "text-[var(--c-ink)]"}`}>{tr(l)}</button>)}
       </div>
-      <button onClick={() => setGen((g) => g + 1)} aria-label={tr("Reload")} title={tr("Reload")} className="px-2.5 min-h-[44px] rounded-[14px] border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center" data-testid="code-reload"><RefreshCw size={14} /></button>
-      <button onClick={() => setShowLog((v) => !v)} className={`px-2.5 min-h-[44px] rounded-[14px] border text-[12px] ${errN ? "border-[var(--c-neg)]/50 text-[var(--c-neg)]" : "border-[var(--c-ln)] text-[var(--c-ink)]"}`} data-testid="code-console-btn">
+      <button onClick={() => setGen((g) => g + 1)} aria-label={tr("Reload")} title={tr("Reload")} className="px-2.5 min-h-[44px] rounded-[12px] border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center" data-testid="code-reload"><RefreshCw size={14} /></button>
+      <button onClick={() => setShowLog((v) => !v)} className={`px-2.5 min-h-[44px] rounded-[12px] border text-[12px] ${errN ? "border-[var(--c-neg)]/50 text-[var(--c-neg)]" : "border-[var(--c-ln)] text-[var(--c-ink)]"}`} data-testid="code-console-btn">
         {tr("Console")}{logs.length ? ` ${logs.length}` : ""}{errN ? " · " + errN + "✗" : ""}</button>
-      <button onClick={() => setFull((v) => !v)} aria-label={full ? tr("Close") : tr("Full screen")} title={full ? tr("Close") : tr("Full screen")} className="ms-auto px-2.5 min-h-[44px] rounded-[14px] border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center" data-testid="code-full">
+      <button onClick={() => setFull((v) => !v)} aria-label={full ? tr("Close") : tr("Full screen")} title={full ? tr("Close") : tr("Full screen")} className="ms-auto px-2.5 min-h-[44px] rounded-[12px] border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center" data-testid="code-full">
         {full ? <X size={15} /> : <Maximize2 size={14} />}</button>
     </div>);
   const frame = (
@@ -81,7 +81,7 @@ function HtmlPreview({ code, onReport }) {
         style={{ width: devW, maxWidth: "none", height: Math.round(boxH / scale), transform: `scale(${scale})`, transformOrigin: "top left", border: 0, position: "absolute", left: Math.max(0, (boxW - devW * scale) / 2), top: 0 }} />
     </div>);
   const consoleBox = showLog ? (
-    <div className="att-scroll mt-2 max-h-40 overflow-auto rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-2.5 font-mono text-[11.5px]" dir="ltr" data-testid="code-console">
+    <div className="att-scroll mt-2 max-h-40 overflow-auto rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-2.5 font-mono text-[11.5px]" dir="ltr" data-testid="code-console">
       {logs.length ? logs.map((l, i) => <div key={i} className={l.kind === "error" ? "text-[var(--c-neg)]" : "text-[var(--c-ink)]"}>{l.kind === "error" ? "✗ " : "› "}{l.text}</div>)
         : <div className="text-[var(--c-mut)]">{tr("Nothing printed yet")}</div>}
     </div>) : null;
@@ -287,7 +287,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
           </div>
           <div className="grid grid-cols-2 gap-2" data-testid="code-starters">
             {STARTERS.map(([title, ask, lang]) => (
-              <button key={title} onClick={() => { setTask(tr(ask)); setLangPick(lang); }} className="text-start rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 hover:border-[var(--c-acc)]">
+              <button key={title} onClick={() => { setTask(tr(ask)); setLangPick(lang); }} className="text-start rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 hover:border-[var(--c-acc)]">
                 <span className="block text-[13.5px] font-extrabold text-[var(--c-ink)]">{tr(title)}</span>
                 <span className="block text-[11.5px] text-[var(--c-mut)] mt-0.5">{tr((LANGS[lang] || LANGS.python).label)}</span>
               </button>))}
@@ -299,7 +299,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
               {projects.length > 4 ? <button onClick={() => setAllProj((v) => !v)} className="min-h-[44px] px-1 text-[12.5px] font-bold text-[var(--c-acc)]" data-testid="code-projects-all">{allProj ? tr("Show less") : tr("Show all {n}", { n: projects.length })}</button> : null}</div>
             <div className="grid grid-cols-2 gap-2" data-testid="code-projects">
               {projects.slice(0, allProj ? 30 : 4).map((p) => (
-                <div key={p.id} className="min-w-0 rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3">
+                <div key={p.id} className="min-w-0 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3">
                   <button onClick={() => openProject(p)} className="w-full text-start">
                     <span className="block text-[13px] text-[var(--c-ink)] font-medium truncate" dir="auto">{p.title || tr("Untitled")}</span>
                     <span className={`block text-[11px] mt-0.5 ${p.status === "passed" ? "text-[var(--c-pos)]" : p.status === "failing" ? "text-[var(--c-neg)]" : "text-[var(--c-mut)]"}`}>{tr((LANGS[p.lang] || LANGS.python).label)} · {p.status === "passed" ? tr("passing") : p.status === "failing" ? tr("not passing") : tr("draft")}</span>
@@ -308,7 +308,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
                     className="mt-1 min-h-[36px] text-[11.5px] font-bold text-[var(--c-mut)] hover:text-[var(--c-neg)] flex items-center gap-1" aria-label={tr("Delete")}><Trash2 size={11} />{tr("Delete")}</button>
                 </div>))}
             </div></> : null}
-          <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5 space-y-2 focus-within:border-[var(--c-acc)]">
+          <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5 space-y-2 focus-within:border-[var(--c-acc)]">
             <textarea value={task} onChange={(e) => setTask(e.target.value)} rows={3} data-testid="code-task" dir="auto"
               placeholder={tr("What should it do? e.g. “A function that splits a restaurant bill between friends, with the tip”")}
               className="w-full bg-transparent p-1.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] resize-none focus:outline-none" />
@@ -332,7 +332,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
           <Steps list={steps} live={live} working={busy} />
 
           {/* the code, in a card */}
-          <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-bg)] overflow-hidden">
+          <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] overflow-hidden">
             <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-[var(--c-ln)]">
               <span className={K.tag("gray")}>{tr((LANGS[cur.lang] || LANGS.python).label)}</span>
               {lines ? <span className="text-[11px] text-[var(--c-mut)]">{tr("{n} lines", { n: lines })}</span> : null}

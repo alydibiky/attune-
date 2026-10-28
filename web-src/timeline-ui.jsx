@@ -27,7 +27,7 @@ function dayLabel(date) {
   if (n === 0) return tr("Today");
   if (n === 1) return tr("Tomorrow");
   if (n < 0) return tr("{n} days late", { n: -n });
-  try { return new Date(date + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return date; }
+  try { return new Date(date + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return date; }
 }
 const money = (x) => (x.amount ? (x.cur ? x.cur + " " : "") + fmt(x.amount) : "");
 
@@ -68,8 +68,8 @@ export function TimelinePage({ navTo, doIt, flash }) {
   };
   const sum = (o) => Object.entries(o).map(([c, a]) => (c ? c + " " : "") + fmt(a)).join(" · ");
   return (
-    <div className={U.page + " rounded-[22px] p-4 md:p-6 space-y-4 lg:max-w-[80ch]"} style={{ minHeight: "70vh" }} data-testid="timeline-page">
-      <div className="flex items-start gap-3"><span className="w-11 h-11 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><CalendarDays size={18} /></span>
+    <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4 lg:max-w-[80ch]"} style={{ minHeight: "70vh" }} data-testid="timeline-page">
+      <div className="flex items-start gap-3"><span className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><CalendarDays size={18} /></span>
         <div className="min-w-0"><h2 className={U.h1}>{tr("Follow-ups")}</h2>
           <p className={"m-0 mt-0.5 text-[13px] " + U.muted}>{tr("Everything you must pay, collect, remember or watch — on one list.")}</p></div></div>
       {doIt ? <form onSubmit={(e) => { e.preventDefault(); add(); }} className={U.card + " flex items-center gap-2 p-1.5 ps-3.5"} data-testid="fu-add-form">
@@ -80,9 +80,9 @@ export function TimelinePage({ navTo, doIt, flash }) {
         {CHIPS.map(([c, l]) => <button key={c} onClick={() => setChip(c)} aria-pressed={chip === c} className={U.chip(chip === c)} data-testid={"fu-chip-" + c}>{tr(l)} {count(c)}</button>)}
       </div>
       {/* v8.5 (E2, Ali agreed): no switch on top — each part's own page opens from here, the chip's page first */}
-      {navTo ? <div className={"flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] " + U.muted} data-testid="fu-pages">
+      {navTo ? <div className={"flex flex-wrap items-center gap-1.5 text-[12.5px] " + U.muted} data-testid="fu-pages">
         <span>{tr("Open:")}</span>
-        {PAGES.slice().sort((a, b) => (b[2] === chip) - (a[2] === chip)).map(([pg, l, c]) => <button key={pg} onClick={() => navTo(pg)} className={"underline underline-offset-2 min-h-[32px] " + (c === chip ? "font-extrabold text-[var(--c-acc)]" : "font-bold")} data-testid={"fu-open-" + pg}>{tr(l)}</button>)}
+        {PAGES.slice().sort((a, b) => (b[2] === chip) - (a[2] === chip)).map(([pg, l, c]) => <button key={pg} onClick={() => navTo(pg)} className={"min-h-[36px] px-3 rounded-full border inline-flex items-center gap-1 text-[12.5px] whitespace-nowrap bg-[var(--c-surf)] " + (c === chip ? "border-[var(--c-acc)] font-extrabold text-[var(--c-acc)]" : "border-[var(--c-ln)] font-bold text-[var(--c-ink)]")} data-testid={"fu-open-" + pg}>{tr(l)} ›</button>)}
       </div> : null}
       <div className="flex flex-wrap items-center gap-1.5">
         {RANGES.map(([d, l]) => <button key={d} onClick={() => setDays(d)} aria-pressed={days === d} className={U.chip(days === d)} data-testid={"timeline-range-" + d}>{tr(l)}</button>)}
@@ -93,11 +93,16 @@ export function TimelinePage({ navTo, doIt, flash }) {
           {Object.keys(t.out).length ? <span>{tr("Going out: {a}", { a: sum(t.out) })}</span> : null}
           {Object.keys(t.in).length ? <span>{Object.keys(t.out).length ? " · " : ""}{tr("Coming in: {a}", { a: sum(t.in) })}</span> : null}
         </p>) : null}
-      {!list.length ? <p className={"text-[14px] " + U.muted} data-testid="timeline-empty">{tr("Nothing coming up. Add a reminder, a date (a trial, a renewal, a warranty), a payment with someone, or X-ray a chat — it all shows here.")}</p> : null}
+      {/* v8.7 (Ali picked V-D): with nothing at all yet (no people & plans, reminders or dates), a friendly start with examples */}
+      {!list.length && doIt && (() => { try { return !(loadLife().items || []).length && !loadReminders().length && !((JSON.parse(localStorage.getItem("attune:radar:v1") || "null") || {}).items || []).length; } catch (e) { return false; } })()
+        ? <U.EmptyStart testid="timeline-start" title={tr("Nothing to follow yet")} sub={tr("Debts, installments, renewals and reminders — write one and Attune keeps the dates.")}
+            examples={getLang() === "ar" ? ["أحمد عليه 12,000، ألف كل شهر", "نتفليكس بيتجدد يوم 5", "فكرني أدفع النت يوم 1"] : ["Ahmed owes me 12,000, 1,000 a month", "Netflix renews on the 5th", "remind me to pay the internet on the 1st"]}
+            onPick={(x) => setSay(x)} />
+      : !list.length ? <p className={"text-[14px] " + U.muted} data-testid="timeline-empty">{tr("Nothing coming up. Add a reminder, a date (a trial, a renewal, a warranty), a payment with someone, or X-ray a chat — it all shows here.")}</p> : null}
       <div className="space-y-4">
         {groups.map((g) => (
           <section key={g.date} data-testid="timeline-day">
-            <h3 className={"text-[11px] font-extrabold uppercase tracking-[0.08em] m-0 mb-1.5 " + (g.date < groups[0].date || daysFrom(g.date) < 0 ? "text-[var(--c-neg)]" : "text-[var(--c-mut)]")}>{dayLabel(g.date)}</h3>
+            <h3 className={"text-[12px] font-extrabold uppercase tracking-[0.08em] m-0 mb-1.5 " + (g.date < groups[0].date || daysFrom(g.date) < 0 ? "text-[var(--c-neg)]" : "text-[var(--c-mut)]")}>{dayLabel(g.date)}</h3>
             <ul className="m-0 p-0 list-none space-y-1.5">
               {g.items.map((x) => { const I = ICON[x.page] || Bell; return (
                 <li key={x.id}>
@@ -108,7 +113,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
                         <span className="text-[14.5px] font-extrabold truncate" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : x.what}</span>
                         {x.amount ? <span className="tabular-nums font-extrabold text-[13.5px] shrink-0" dir="ltr">{money(x)}</span> : null}
                       </span>
-                      <span className={"block text-[12px] " + U.muted}>{tr(KIND[x.kind] || x.kind)}{x.time ? " · " + new Date(x.time).toLocaleTimeString(getLang() === "ar" ? "ar-EG" : undefined, { hour: "numeric", minute: "2-digit" }) : ""}</span>
+                      <span className={"block text-[12px] " + U.muted}>{tr(KIND[x.kind] || x.kind)}{x.time ? " · " + new Date(x.time).toLocaleTimeString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { hour: "numeric", minute: "2-digit" }) : ""}</span>
                       <span className={"block text-[12px] mt-0.5 " + (x.late ? "font-bold text-[var(--c-neg)]" : U.muted)} data-testid="timeline-slip">
                         {x.late ? <AlertTriangle size={12} className="inline me-1 -mt-0.5" /> : null}
                         {x.D ? tr(x.D[0], x.D[1]) + " — " : ""}{tr(x.slip[0], { amount: money(x) || "", who: x.who || "" })}</span>

@@ -27,7 +27,7 @@ export const FAMS = [
 // v8.7: not in the Play Store build
 const FAMS_SHOWN = FAMS.filter((x) => !NOT_IN_PLAY.has(x[0]));
 const FAM_NAME = { instant: "Chat", ...Object.fromEntries(FAMS.map((f) => [f[0], f[2]])) };   // v8.2: old Instant jobs still show
-const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : new Date(t).toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short" }); };
+const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : new Date(t).toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }); };
 
 export function useToolLog() {
   const [log, setLog] = useState(loadLog);
@@ -73,7 +73,7 @@ export function ToolsHub({ tools, navTo, pages, groups }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="tools-families">
         {FAMS_SHOWN.filter(([f]) => f !== "studio" || !studioPaused(typeof window !== "undefined" && window.AttuneNative)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
           className={U.card + " text-start p-4 min-h-[96px] flex items-start gap-3 hover:border-[var(--c-acc)] transition-colors duration-150"}>
-          <span className="w-11 h-11 shrink-0 rounded-[14px] grid place-items-center" style={{ background: "var(--c-soft)", color: C[f] }}><Icon size={19} /></span>
+          <span className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center" style={{ background: "var(--c-soft)", color: C[f] }}><Icon size={19} /></span>
           <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="text-[15.5px] font-extrabold leading-tight">{tr(title)}</span>
             {r.by[f] ? <span className={U.tag("green") + " shrink-0"}>{T("{n} this week", { n: r.by[f] })}</span> : null}</span>
             <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-1">{tr(sub)}</span></span></button>)}

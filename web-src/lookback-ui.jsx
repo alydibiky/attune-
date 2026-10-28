@@ -30,7 +30,7 @@ function shrinkFile(file, px = 1600) {
 function Thumb({ id }) {
   const [u, setU] = useState(null);
   useEffect(() => { let on = true; thumbGet(id).then((x) => { if (on) setU(x); }); return () => { on = false; }; }, [id]);
-  return u ? <img src={u} alt="" className="w-14 h-14 rounded-[14px] object-cover shrink-0" /> : <div className="w-14 h-14 rounded-[14px] bg-[var(--c-surf-2)] shrink-0" />;
+  return u ? <img src={u} alt="" className="w-14 h-14 rounded-[12px] object-cover shrink-0" /> : <div className="w-14 h-14 rounded-[12px] bg-[var(--c-surf-2)] shrink-0" />;
 }
 
 /** v6.45 Recall phase 2: the meaning model's state and its download (Embedder.kt). */
@@ -142,11 +142,11 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
   return (
     <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="recall-page">
       <div className={card + " p-4 space-y-2.5"}>
-        <div className="flex items-center gap-2 min-h-[48px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[16px] ps-3.5 pe-1 focus-within:border-[var(--c-acc)] transition-colors duration-150">
+        <div className="flex items-center gap-2 min-h-[48px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[20px] ps-3.5 pe-1 focus-within:border-[var(--c-acc)] transition-colors duration-150">
           <Search size={16} className="text-[var(--c-mut)]" />
           <input value={q} onChange={(e) => setQ(e.target.value)} dir="auto" data-testid="recall-q" className="flex-1 min-w-0 bg-transparent py-2.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none"
             placeholder={tr("Find anything… e.g. the wifi password from a screenshot, the address Ahmed sent")} />
-          {q ? <button onClick={() => setQ("")} className="w-11 h-11 grid place-items-center rounded-[14px] text-[var(--c-mut)]"><X size={16} /></button> : null}
+          {q ? <button onClick={() => setQ("")} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)]"><X size={16} /></button> : null}
         </div>
         <div className="att-chips flex gap-1.5 overflow-x-auto pb-1">
           {chip(null, tr("All"))}
@@ -201,7 +201,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
 
       {open ? (
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={() => setOpen(null)}>
-          <div className="calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[22px] p-4 space-y-3 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} data-testid="recall-open">
+          <div className="calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[20px] p-4 space-y-3 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} data-testid="recall-open">
             <p className="text-[11.5px] font-bold tabular-nums text-[var(--c-mut)]">{d0(open, ar)}{open.app ? " · " + open.app : ""} · {when(open.ts)}</p>
             <p className="text-[16px] text-[var(--c-ink)] font-extrabold" dir="auto">{open.title}</p>
             <p className="text-sm text-[var(--c-ink)] whitespace-pre-wrap" dir="auto" style={{ userSelect: "text" }}>{open.text}</p>

@@ -21,8 +21,8 @@ export function VaultGate({ unlock, onOpen }) {
   useEffect(() => { if (way === "bio") ask(); }, []);   // eslint-disable-line
   const tryPin = () => { if (pinOk(cfg, pin)) onOpen(); else { setErr(tr("Wrong PIN")); setPin(""); } };
   return (
-    <div className={U.page + " rounded-[22px] p-6 flex flex-col items-center justify-center gap-4 text-center"} style={{ minHeight: "60vh" }} data-testid="vault-gate">
-      <span className="w-14 h-14 rounded-[18px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Lock size={24} /></span>
+    <div className={U.page + " rounded-[20px] p-6 flex flex-col items-center justify-center gap-4 text-center"} style={{ minHeight: "60vh" }} data-testid="vault-gate">
+      <span className="w-14 h-14 rounded-[20px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><Lock size={24} /></span>
       <h2 className={U.h1}>{tr("Locked")}</h2>
       <p className={"m-0 max-w-[36ch] text-[13.5px] " + U.muted}>{way === "bio" ? tr("Use your fingerprint, face or screen lock to open it.") : tr("Enter your vault PIN.")}</p>
       {way === "bio" ? <button className={U.btnP} onClick={ask} data-testid="vault-unlock">{tr("Unlock")}</button> : (
@@ -46,7 +46,7 @@ export function VaultSettings({ onChange, flash }) {
   };
   return (
     <section className={U.cardPad + " space-y-3"} data-testid="vault-settings">
-      <div className="flex items-center gap-3"><span className="w-10 h-10 rounded-[14px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Lock size={17} /></span>
+      <div className="flex items-center gap-3"><span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Lock size={17} /></span>
         <div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]">{tr("Private vault")}</b><span className={"text-[12.5px] " + U.muted}>{way === "bio" ? tr("Opens with your fingerprint, face or screen lock") : tr("Opens with a PIN on this device")}</span></div>
         <button role="switch" aria-checked={v.on} onClick={toggle} className={v.on ? U.btnP : U.btnS + " h-12 min-h-[48px] px-5"} data-testid="vault-toggle">{v.on ? tr("On") : tr("Off")}</button></div>
       <div className="flex flex-wrap gap-2">{Object.keys(VAULT_AREAS).map((a) => {
