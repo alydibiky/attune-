@@ -41,3 +41,24 @@ try) → the main places one by one.
 - **P2-C** When the AI finishes installing and a question is waiting, answer it by itself (no second Send). *Recommend yes.*
 - **P2-D** Replace the "No model" pill on every page with nothing (and show it only on Chat / AI tools). *Recommend yes.*
 - **P2-E** Sidebar: Students · Daily · Go back in the list, or under "More". *Recommend back in the list.*
+
+## Redone hands-on (28 Oct): an Egyptian's week, typed in Arabic on Home
+**What I did:** the app in Egyptian Arabic, country Egypt, phone size; 14 everyday sentences typed into the Home box the way a
+normal person writes them (no keywords, Arabic digits), screenshots and the reply after each one.
+
+| Typed | Before | Now |
+|---|---|---|
+| «صرفت ٢٥٠ على الغدا» · «تاكسي ٦٠» | ✔ expenses (reply in formal Arabic: «أُضيف مصروف») | ✔ «اتضاف مصروف: 250 EGP — الغدا» |
+| «أحمد عليه ٥٠٠» | saved as «احمد · **debt**» (hamza lost, an English word) | «اتحفظ في الناس والالتزامات: **أحمد · دين** · 500» |
+| «فكرني ادفع الكهربا يوم ١٠» | **"What did you mean?" — with no reminder among the choices** | reminder «ادفع الكهربا», Tue 10 Nov 09:00 (the date in Arabic, Western digits) |
+| «طبق فول وعيش بلدي على الفطار» | ✔ 457 kcal; reply «أعدّ اللياقة… لترى هدفك» | ✔ «اتسجل في الفطار … ظبّط الأكل واللياقة مرة واحدة عشان تشوف هدفك» |
+| «شربت ٣ كوبايات مية» · «وزني ٩٥» · «مشيت نص ساعة» | ✔ | ✔ (Egyptian wording) |
+| «اطلبلي ايربودز برو ٢ بأقل من ٩٠٠٠» | ✔ a buy agent, "I'll ask you before buying" | ✔ |
+| «من المعادي للتحرير» | **"What did you mean?"** (to-do / note / web / chat) | «اركب الخط الأول اتجاه المرج الجديدة، 8 محطات لحد السادات…» — a Metro route when both ends are stations; «من البيت للشغل» still asks |
+| «صرفت كام النهارده؟» · «مين عليه فلوس ليا؟» | ✔ exact, by code | ✔ (the answer now in Egyptian: «شخص واحد عليه ليك 500») |
+| «ترجم صباح الخير للإنجليزي» | **"English: صباح الخير للإنجليزي — translating needs an AI model"** | "Good morning" at once from the phrasebook (no model needed) |
+| «كلم ماما بكرة الساعة ٦» | ✔ reminder Thu 6 pm | ✔ |
+
+**Also fixed while doing it:** every reply of the Home box in formal Arabic (سُجّل، حُفظ، لم يُعرف، ما زال، لا يوجد، سيذكّرك…)
+is now Egyptian, as Ali chose for the whole app. Tests: `tests/unit/v860p2b.test.mjs` (4 checks); `v727life` now expects the
+name as typed («أحمد», «سارة»).

@@ -146,7 +146,10 @@ function personOf(raw, t) {
     /(?:سلفت|اسلفت|اقرضت|ادينت|اديت|عليا ل|علي ل|مديون ل|مدين ل|استلفت من|اخدت من|خدت من|اقترضت من)\s*([ء-ي]{2,})/,
     /(?:^|\s)ل([ء-ي]{2,})\s+(?:عندي|عليا)/,
   ];
-  for (const re of ar) { const m = re.exec(t); if (m && !NOT_NAME.test(m[1])) return m[1].replace(/^ل(?=[ء-ي]{3,})/, ""); }
+  // (persona 2: «أحمد عليه ٥٠٠» was saved as «احمد» — the name is taken back from what was typed, hamza and all)
+  const plain = (x) => String(x).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
+  const asTyped = (n) => String(raw).split(/[\s،,.]+/).map((w) => w.replace(/^ل(?=[ء-ي]{3,})/, "")).find((w) => plain(w) === plain(n)) || n;
+  for (const re of ar) { const m = re.exec(t); if (m && !NOT_NAME.test(m[1])) return asTyped(m[1].replace(/^ل(?=[ء-ي]{3,})/, "")); }
   return "";
 }
 

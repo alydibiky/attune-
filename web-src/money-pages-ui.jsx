@@ -77,7 +77,7 @@ export function AddSheet({ L, onSave, onDebt, onClose, prefill = null }) {
   const accs = ((L && L.accounts) || []).filter((a) => !["gold", "silver", "camels", "cattle", "sheep"].includes(a.kind));
   const [type, setType] = useState(prefill && prefill.type === "income" ? "income" : "expense");
   const [amount, setAmount] = useState(prefill && prefill.amount ? String(prefill.amount) : "");
-  const [cat, setCat] = useState(prefill && prefill.type === "income" ? "salary" : "food");
+  const [cat, setCat] = useState(prefill && prefill.cat ? prefill.cat : prefill && prefill.type === "income" ? "salary" : "food");   // (persona 4: a Carrefour SMS opened as Food)
   const [account, setAccount] = useState(accs[0] ? accs[0].id : "");
   const [toAccount, setTo] = useState("");
   const [date, setDate] = useState(prefill && prefill.date ? prefill.date : isoDay(Date.now()));

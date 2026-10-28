@@ -59,3 +59,19 @@ Each idea: **what it is · why it matters · what already exists · effort.**
 
 ## My top 5 to do first
 1 (morning card) · 2 (Attune Saves) · 9 (one smart camera) · 13 (family space) · 16 (cloud boost add-on).
+
+## Redone hands-on (28 Oct): how close each top idea already is — tried in the app
+**What I did:** checked each idea against what the app really does today, on a phone-size screen in customer mode: shared five
+texts into Attune the way Android hands them over (Share → Attune), looked for the morning card, the widgets, the camera
+entry points and the agents' memory of "Not this one".
+
+| Idea | What is there today (tried) | Gap |
+|---|---|---|
+| **10. Share anything to Attune** | A bank SMS → Money's add sheet, filled in. **Fixed now:** the shop was read as «حسابك بطاقة رقم» and the category as Food — now «كارفور», Groceries. "Ahmed owes me 500…", "Remind me tomorrow at 9…", "lunch 150, taxi 60", "Meeting with Orascom on Thursday at 2pm" all **land in Mind as notes** with a "Do something with it" button | Run shared text through the Home reader and show its one line ("Ahmed owes you 500 — save?") with ✓ — the reader already understands all four. *Small; the biggest quick win.* |
+| **1. Morning card** | Only the Missions "debrief" (missions-…) and per-feature reminders (daily learn / news / fit). Nothing sums up the day | One composer over Follow-ups + Money + Fit + Agents → one notification. *Small.* |
+| **11. Widget with the box** | Two widgets (Daily info, Fit info) — read-only | A third widget that opens the Home box focused. *Small.* |
+| **9. One smart camera** | 39 separate camera / photo / scan buttons across the app | One camera that sorts receipt / plate / barcode / document. *Medium.* |
+| **3. Agents learn taste** | "Not this one" is kept per agent (`skip`) but only hides that exact offer | Learn the pattern after two skips (refurbished, low rating, a seller). *Small.* |
+| **13. Family space** | Family health + Sync exist; money and to-dos are one person's | *Medium-large.* |
+
+**Order I'd build them (unchanged top 5, re-ranked by effort now that it's measured):** 10 → 1 → 11 → 3 → 9.

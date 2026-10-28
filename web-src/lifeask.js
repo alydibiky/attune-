@@ -122,7 +122,7 @@ function owedIn(q, s, now) {
   const items = ((s.life && s.life.items) || []).filter((c) => c.dir === "in");
   const who = items.map((c) => c.person).filter(Boolean).find((p) => fold(q).includes(fold(p)));
   const list = (who ? items.filter((c) => c.person === who) : items).map((c) => ({ c, p: progressOf(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
-  if (!list.length) return { kind: "owed-in", en: who ? `${who} owes you nothing in People & plans.` : "Nobody owes you anything in People & plans.", ar: who ? `لا يوجد على ${who} شيء في الأشخاص والخطط.` : "لا أحد مدين لك في الأشخاص والخطط.", open: "life", sources: ["life"] };
+  if (!list.length) return { kind: "owed-in", en: who ? `${who} owes you nothing in People & plans.` : "Nobody owes you anything in People & plans.", ar: who ? `مفيش على ${who} حاجة في الناس والالتزامات.` : "محدش عليه فلوس ليك في الناس والالتزامات.", open: "life", sources: ["life"] };
   const cur = list[0].c.currency || "";
   const total = list.reduce((a, x) => a + (x.p.left || 0), 0);
   // persona 9 (a year of use: Sara borrowed four times): one row per PERSON with all they still owe — "9 people" was 4 people, 9 loans
@@ -132,15 +132,15 @@ function owedIn(q, s, now) {
   const rows = people.map((g) => [g.name + (g.n > 1 ? (arQ ? (g.n === 2 ? " (مرتين)" : ` (${g.n} مرات)`) : ` (${g.n} loans)`) : ""), `${num(g.left)} ${g.cur}${g.next ? " → " + g.next : ""}`]);
   const np = people.length;
   return { kind: "owed-in", en: who ? `${who} still owes you ${num(total)} ${cur} (${list[0].p.paidCount} payment${list[0].p.paidCount === 1 ? "" : "s"} received so far).` : `${np} ${np === 1 ? "person owes" : "people owe"} you ${num(total)} ${cur} in all.`,
-    ar: who ? `ما زال على ${who} لك ${num(total)} ${cur} (استلمت ${list[0].p.paidCount} دفعة حتى الآن).` : np === 1 ? `شخص واحد مدين لك بـ${num(total)} ${cur}.` : `${np} أشخاص مدينون لك بإجمالي ${num(total)} ${cur}.`, rows, open: "life", sources: ["life"] };
+    ar: who ? `لسه على ${who} ليك ${num(total)} ${cur} (استلمت ${list[0].p.paidCount} دفعة لحد دلوقتي).` : np === 1 ? `شخص واحد عليه ليك ${num(total)} ${cur}.` : `${np} أشخاص عليهم ليك ${num(total)} ${cur} في المجموع.`, rows, open: "life", sources: ["life"] };
 }
 function owedOut(q, s, now) {
   const items = ((s.life && s.life.items) || []).filter((c) => c.dir !== "in").map((c) => ({ c, p: progressOf(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
-  if (!items.length) return { kind: "owed-out", en: "You have no installments or debts in People & plans.", ar: "ليس عليك أقساط أو ديون في الأشخاص والخطط.", open: "life", sources: ["life"] };
+  if (!items.length) return { kind: "owed-out", en: "You have no installments or debts in People & plans.", ar: "مش عليك أقساط أو ديون في الناس والالتزامات.", open: "life", sources: ["life"] };
   const cur = items[0].c.currency || "", left = items.reduce((a, x) => a + (x.p.left || 0), 0);
   const next = items.map((x) => x.p.next).filter(Boolean).sort((a, b) => a.date.localeCompare(b.date))[0];
   return { kind: "owed-out", en: `You still have ${num(left)} ${cur} to pay across ${items.length} commitment${items.length === 1 ? "" : "s"}${next ? `; the next is ${num(next.amount)} ${cur} on ${next.date}` : ""}.`,
-    ar: `ما زال عليك ${num(left)} ${cur} في ${items.length} التزام${next ? `؛ القادم ${num(next.amount)} ${cur} يوم ${next.date}` : ""}.`,
+    ar: `لسه عليك ${num(left)} ${cur} في ${items.length} التزام${next ? `؛ القادم ${num(next.amount)} ${cur} يوم ${next.date}` : ""}.`,
     // v8.6 (the 2-month test showed "netflix · 0 EGP · 0/?"): an open-ended one (a subscription) says what it costs each time
     rows: items.map(({ c, p }) => [c.title || c.person || c.kind, (c.count > 0 || c.kind === "debt" ? `${num(p.left || 0)} ${c.currency || cur} · ${p.paidCount}/${c.count || 1}` : `${num(c.amount || 0)} ${c.currency || cur} ${c.every === "week" ? "a week" : c.every === "year" ? "a year" : "a month"}`) + (p.next ? " → " + p.next.date : "")]), open: "life", sources: ["life"] };
 }
@@ -218,7 +218,7 @@ function search(q, s) {
   found.sort((a, b) => b.n - a.n || String(b.date).localeCompare(String(a.date)));
   const top = found.slice(0, 10);
   return { kind: "search", en: `Found ${found.length} thing${found.length === 1 ? "" : "s"} about this in your data. The closest: ${top[0].what}${top[0].date ? " (" + top[0].date + ")" : ""}.`,
-    ar: `وُجد ${found.length} عنصر عن هذا في بياناتك. الأقرب: ${top[0].what}${top[0].date ? " (" + top[0].date + ")" : ""}.`,
+    ar: `لقيت ${found.length} حاجة عن ده في بياناتك. الأقرب: ${top[0].what}${top[0].date ? " (" + top[0].date + ")" : ""}.`,
     rows: top.map((x) => [x.date || "—", x.what]), open: top[0].src, sources: [...new Set(top.map((x) => x.src))] };
 }
 
@@ -234,7 +234,7 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
     void ar;
     return { kind: "money", en, ar: a, open: "money", sources: ["money"] };
   }
-  if (k === "paid-for") { const term = termOf(q); return paidFor(q, stores, now) || { kind: "paid-for", en: `Nothing in Money mentions “${term}”.`, ar: `لا يوجد في المال ما يذكر «${term}».`, open: "money", sources: ["money"] }; }
+  if (k === "paid-for") { const term = termOf(q); return paidFor(q, stores, now) || { kind: "paid-for", en: `Nothing in Money mentions “${term}”.`, ar: `مفيش حاجة في الفلوس فيها «${term}».`, open: "money", sources: ["money"] }; }
   if (k === "history" || k === "last") return (k === "history" ? history : lastTime)(q, stores, now);   // nothing about it in your data → null (the model answers)
   const f = { "owed-in": owedIn, "owed-out": owedOut, lab, sugar, meds, food, due }[k];
   const r = (f && f(q, stores, now)) || search(q, stores);

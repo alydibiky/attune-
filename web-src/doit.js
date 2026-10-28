@@ -84,6 +84,8 @@ function numLost(t) {
   const items = readMealText(t).items.filter((x) => x.kcal != null);
   return items.length > 0 && !items.some((x) => Math.abs((x.grams || 0) - n) < 1);
 }
+// (persona 2: the Arabic message said «احمد · debt»)
+const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتراك", circle: "جمعية", savings: "تحويش", regular: "كل فترة", bill: "فاتورة" };
 /** What the sentence asks Attune to do. ctx: { now, stores } */
 export function understand(text, { now = Date.now(), stores = {} } = {}) {
   const t = String(text || "").trim();
@@ -235,7 +237,7 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const names = items.map((x) => x.name), namesAr = items.map((x) => x.ar || x.name);
       const left = a.unknown && a.unknown.length ? a.unknown.join(", ") : "";
       return { stores: { "attune:fit:v1": fitDay((d) => ({ ...d, meals: { ...d.meals, [a.meal]: [...((d.meals || {})[a.meal] || []), ...items] } })) }, open: "fit",
-        done: { en: `Logged for ${a.meal}: ${names.join(", ")} — ${kcal} kcal.${left ? ` Not found: ${left} (add it in Fit & Food).` : ""}${fit.profile ? "" : " Set up Fit & Food once to see it against your goal."}`, ar: `سُجّل في ${MEAL_AR[a.meal]}: ${namesAr.join("، ")} — ${kcal} سعر.${left ? ` لم يُعرف: ${left} (أضفه في اللياقة والطعام).` : ""}${fit.profile ? "" : " أعدّ اللياقة والطعام مرة واحدة لترى هدفك."}` } };
+        done: { en: `Logged for ${a.meal}: ${names.join(", ")} — ${kcal} kcal.${left ? ` Not found: ${left} (add it in Fit & Food).` : ""}${fit.profile ? "" : " Set up Fit & Food once to see it against your goal."}`, ar: `اتسجل في ${MEAL_AR[a.meal]}: ${namesAr.join("، ")} — ${kcal} سعر.${left ? ` معرفتش: ${left} (ضيفه في الأكل واللياقة).` : ""}${fit.profile ? "" : " ظبّط الأكل واللياقة مرة واحدة عشان تشوف هدفك."}` } };
     }
     case "water": {
       const nd = fitDay((d) => ({ ...d, water: (d.water || 0) + a.ml }));
@@ -243,12 +245,12 @@ export function apply(a, stores, { now = Date.now() } = {}) {
     }
     case "weight":
       return { stores: { "attune:fit:v1": { ...fit, weights: [...(fit.weights || []).filter((x) => x.d !== day), { d: day, kg: a.kg }], profile: fit.profile ? { ...fit.profile, kg: a.kg } : fit.profile } }, open: "fit",
-        done: { en: `Weight saved: ${a.kg} kg.`, ar: `حُفظ الوزن: ${a.kg} كجم.` } };
+        done: { en: `Weight saved: ${a.kg} kg.`, ar: `اتحفظ الوزن: ${a.kg} كجم.` } };
     case "workout": {
       const ex = EXERCISES.find((e) => e.id === a.id) || EXERCISES[0];
       const kg = (fit.profile && fit.profile.kg) || 70, kcal = burned(ex.met, kg, a.minutes);
       return { stores: { "attune:fit:v1": fitDay((d) => ({ ...d, workouts: [...(d.workouts || []), { name: ex.en, min: a.minutes, kcal, t: now }] })) }, open: "fit",
-        done: { en: `Workout logged: ${ex.en}, ${a.minutes} min — about ${kcal} kcal burned.`, ar: `سُجّل التمرين: ${ex.ar}، ${a.minutes} دقيقة — حرقت نحو ${kcal} سعر.` } };
+        done: { en: `Workout logged: ${ex.en}, ${a.minutes} min — about ${kcal} kcal burned.`, ar: `اتسجل التمرين: ${ex.ar}، ${a.minutes} دقيقة — حرقت نحو ${kcal} سعر.` } };
     }
     case "money": {
       // v8.6 (the first-day test: "spent 250 on lunch" on Home opened Money and recorded NOTHING — the money book only exists after
@@ -258,7 +260,7 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const sum = a.items.reduce((s, x) => s + x.amount, 0), cur = ledger.currency || "";
       const out = a.items.every((x) => x.type === "expense");
       return { stores: { "ledger.v3": r.ledger }, open: "money",
-        done: { en: `${out ? "Expense" : "Money"} added: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join(", ")}.`, ar: `${out ? "أُضيف مصروف" : "أُضيف مبلغ"}: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join("، ")}.` } };
+        done: { en: `${out ? "Expense" : "Money"} added: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join(", ")}.`, ar: `${out ? "اتضاف مصروف" : "اتضاف مبلغ"}: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join("، ")}.` } };
     }
     case "repay": {
       // the amount goes against what is still owed (life.js payAmount on the first unpaid payment; the rest is worked out again)
@@ -272,7 +274,7 @@ export function apply(a, stores, { now = Date.now() } = {}) {
     }
     case "dose": {
       const care = stores.care || { meds: [], taken: {} }, m = (care.meds || []).find((x) => x.id === a.medId);
-      if (!m) return { stores: {}, done: { en: "That medicine isn't in Family health.", ar: "هذا الدواء غير موجود في صحة العائلة." }, open: "care" };
+      if (!m) return { stores: {}, done: { en: "That medicine isn't in Family health.", ar: "الدوا ده مش موجود في صحة العائلة." }, open: "care" };
       const d = new Date(now), hhmm = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`, dayKey = isoDay(now);
       const open = (m.times || []).filter((x) => !(care.taken || {})[`${m.id}|${dayKey}|${x}`]);
       const t = open.sort((x, y) => Math.abs(toMin(x) - toMin(hhmm)) - Math.abs(toMin(y) - toMin(hhmm)))[0];
@@ -285,26 +287,27 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const n = addGlucose(care, me ? me.id : "", a.value, a.unit, now);
       const low = (a.unit === "mmol/L" ? a.value * 18 : a.value) < 70;
       return { stores: { "attune:care:v1": n }, open: "care", low,
-        done: low ? { en: `Saved ${a.value} ${a.unit} — LOW. Take 15 g of fast sugar now (½ cup of juice or 1 tablespoon of honey) and check again in 15 minutes.`, ar: `حُفظت ${a.value} ${a.unit} — منخفضة. تناول ١٥ جرامًا من سكر سريع الآن (نصف كوب عصير أو ملعقة عسل) وقِس بعد ١٥ دقيقة.` }
-          : { en: `Blood sugar saved: ${a.value} ${a.unit}.`, ar: `حُفظت قراءة السكر: ${a.value} ${a.unit}.` } };
+        done: low ? { en: `Saved ${a.value} ${a.unit} — LOW. Take 15 g of fast sugar now (½ cup of juice or 1 tablespoon of honey) and check again in 15 minutes.`, ar: `اتحفظت ${a.value} ${a.unit} — واطية. خد ١٥ جرام سكر سريع دلوقتي (نص كوباية عصير أو معلقة عسل) وقيس تاني بعد ١٥ دقيقة.` }
+          : { en: `Blood sugar saved: ${a.value} ${a.unit}.`, ar: `اتحفظت قراءة السكر: ${a.value} ${a.unit}.` } };
     }
     case "life": {
       const life = stores.life || { v: 1, items: [] };
       const r = addCommitment(life, a.c, now), c = a.c;
       const amt = c.amount ? `${num(c.amount)} ${c.currency || ""}${c.every ? " / " + c.every : ""}` : "";
-      return { stores: { "attune:life:v1": r }, open: "life", done: { en: `Saved in People & plans: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}.`, ar: `حُفظ في الأشخاص والالتزامات: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}.` } };
+      return { stores: { "attune:life:v1": r }, open: "life", done: { en: `Saved in People & plans: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}.`, ar: `اتحفظ في الناس والالتزامات: ${[c.person, c.title || KIND_AR[c.kind] || c.kind, amt].filter(Boolean).join(" · ")}.` } };
     }
     case "deadline": {
       const r = addDeadline(stores.radar || { items: [], seen: [] }, { ...a.d, source: "home" }, now);
-      return { stores: r.dup ? {} : { "attune:radar:v1": r.data }, open: "radar", item: r.item, done: r.dup ? { en: `Already in Deadline Radar: ${r.item.title} (${r.item.date}).`, ar: `موجود بالفعل في رادار المواعيد: ${r.item.title} (${r.item.date}).` } : { en: `Deadline Radar will remind you: ${r.item.title} — ${r.item.date}.`, ar: `سيذكّرك رادار المواعيد: ${r.item.title} — ${r.item.date}.` } };
+      return { stores: r.dup ? {} : { "attune:radar:v1": r.data }, open: "radar", item: r.item, done: r.dup ? { en: `Already in Deadline Radar: ${r.item.title} (${r.item.date}).`, ar: `موجود خلاص في رادار المواعيد: ${r.item.title} (${r.item.date}).` } : { en: `Deadline Radar will remind you: ${r.item.title} — ${r.item.date}.`, ar: `رادار المواعيد هيفكرك: ${r.item.title} — ${r.item.date}.` } };
     }
     case "reminder": {
       const x = a.action, when = x.at ? new Date(x.at) : null;
-      const at = when ? when.toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
-      return { stores: {}, need: "reminder", open: "reminders", done: { en: `${x.kind === "alarm" ? "Alarm" : x.kind === "timer" ? "Timer" : "Reminder"} set: ${x.title}${at ? " — " + at : ""}.`, ar: `${x.kind === "alarm" ? "ضُبط المنبه" : x.kind === "timer" ? "ضُبط المؤقت" : "ضُبط التذكير"}: ${x.title}${at ? " — " + at : ""}.` } };
+      const fmt = { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" };
+      const at = when ? when.toLocaleString(undefined, fmt) : "", atAr = when ? when.toLocaleString("ar-EG-u-nu-latn", fmt) : "";   // (persona 2: an English date in the Arabic line)
+      return { stores: {}, need: "reminder", open: "reminders", done: { en: `${x.kind === "alarm" ? "Alarm" : x.kind === "timer" ? "Timer" : "Reminder"} set: ${x.title}${at ? " — " + at : ""}.`, ar: `${x.kind === "alarm" ? "اتظبط المنبه" : x.kind === "timer" ? "اتظبط التايمر" : "اتظبط التذكير"}: ${x.title}${atAr ? " — " + atAr : ""}.` } };
     }
-    case "note": return { stores: {}, need: "note", open: "memory", done: { en: "Kept in Mind — searchable any time.", ar: "حُفظ في عقلي — يمكنك البحث عنه في أي وقت." } };
-    case "period": return { stores: {}, need: "period", open: "cycle", done: { en: "Logged in Cycle.", ar: "سُجّل في الدورة." } };
+    case "note": return { stores: {}, need: "note", open: "memory", done: { en: "Kept in Mind — searchable any time.", ar: "اتحفظ في عقلي — تقدر تدوّر عليه في أي وقت." } };
+    case "period": return { stores: {}, need: "period", open: "cycle", done: { en: "Logged in Cycle.", ar: "اتسجل في الدورة." } };
     default: return { stores: {}, done: { en: "", ar: "" } };
   }
 }

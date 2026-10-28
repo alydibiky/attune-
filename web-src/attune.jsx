@@ -67,6 +67,7 @@ import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES, panesFor, Accounts
 import { AccountSheet, BillSheet, TxSheet, TxListPane, GoalsPane, DebtSheet, ZakatPaySheet, ZakatSetSheet, LedgerSettings } from "./money-sheets-ui.jsx";
 import { sheetCats as moneyCats } from "./money-pages.js";   // v7.6 Money's bottom bar
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
+import { categorise } from "./paylog.js";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels, myCountry, bookingLine } from "./agent-ui.jsx";
@@ -6341,7 +6342,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     if (p.declined) { setErr(tr("That payment did not go through, so there is nothing to record.")); return; }
     if (!p.ok) { setErr(`Couldn't be sure of the ${p.missing.join(" or ")}. Open Money and add it by hand.`); return; }
     // v8.0: Attune's own add sheet, filled in (the person picks the account and saves); the message is kept as its evidence
-    setSheet(false); setAddPrefill({ type: p.direction === "in" ? "income" : "expense", amount: p.amount, note: [p.party, p.ref ? "#" + p.ref : ""].filter(Boolean).join(" ").slice(0, 80), date: p.date ? new Date(p.date).toISOString().slice(0, 10) : undefined, evidence: { text: String(src).slice(0, 2000), from: "", app: tr("Shared"), ts: Date.now() } });
+    const cat0 = categorise([p.party, src].filter(Boolean).join(" "), p.direction);
+    setSheet(false); setAddPrefill({ type: p.direction === "in" ? "income" : "expense", amount: p.amount, ...(cat0 && cat0 !== "other" ? { cat: cat0 } : {}), note: [p.party, p.ref ? "#" + p.ref : ""].filter(Boolean).join(" ").slice(0, 80), date: p.date ? new Date(p.date).toISOString().slice(0, 10) : undefined, evidence: { text: String(src).slice(0, 2000), from: "", app: tr("Shared"), ts: Date.now() } });
     setAddOpen(true); flash(tr("Check it, pick the account and save"));
   };
 
@@ -8915,8 +8917,9 @@ export default function App() {
     if (proActive || trialLeft > 0) return true;
     const st = trialState(Date.now());
     if (st.left <= 0) {
-      flash(st.rolledBack ? "Today's free runs are used up — Pro removes the limit"
-                          : "That's today's " + TRIAL_PER_DAY + " free runs. They come back tomorrow, or Pro removes the limit.");
+      // (persona 3: this was English-only and said "runs" — a word a customer doesn't use)
+      flash(st.rolledBack ? tr("Today's free answers are used up — Pro removes the limit")
+                          : tr("That's today's {n} free answers. They come back tomorrow, or Pro removes the limit.", { n: TRIAL_PER_DAY }));
       setShowUpgrade(true); return false;
     }
     return true;
@@ -9812,6 +9815,8 @@ export default function App() {
       return { text: String(t).trim() };
     },
     translate: async (job, ctx) => {
+      // persona 2: «ترجم صباح الخير للإنجليزي» with no model — a common phrase comes from the phrasebook at once, model or not
+      { const q = TR.quickPhrase(job.input.text, job.input.to); if (q) return { text: q }; }
       if (!cmdRef.current.modelUsable) throw CR.need(tr("Translating needs an AI model — open Engine and install one."), "engine");
       const pieces = TR.piecesOf(job.input.text);
       let gloss = []; try { gloss = JSON.parse(localStorage.getItem("attune:translate:glossary") || "[]"); } catch (e) {}

@@ -273,6 +273,8 @@ function payRelation(text) {
 
 const PARTY_RE = [
   /\b(?:chez|bei|presso|bij)\s+([A-Z][A-Za-z0-9'’&-]+(?:\s+[A-Z][A-Za-z0-9'’&-]+){0,3})/,
+  // persona 4 (a bank SMS shared to Attune): «… من حسابك بطاقة رقم **1234 لدى كارفور في 28/10» — the shop follows «لدى» / «عند»
+  /(?:لدى|لدي|عند)\s+((?:[ء-يA-Za-z0-9'’&-]+\s*){1,3})/,
   // A Latin name inside an Arabic sentence is the ordinary InstaPay case, and
   // it is followed by an Arabic word rather than punctuation — so the list of
   // terminators has to include those words.
@@ -285,7 +287,7 @@ const PARTY_RE = [
 // kind of small wrongness that makes a user stop trusting the whole feature.
 const PARTY_STOP = /^(egp|usd|eur|sar|aed|gbp|kwd|qar|arabic|english|حساب|حسابك|حسابي|حسابنا|محفظة|محفظتك|محفظتي|رصيد|الرصيد|account|your account|wallet|balance|ref|reference)$/i;
 // Trailing fragments the greedy capture can pick up.
-const PARTY_TRIM = /\s+(on|at|في|بتاريخ|ref|reference|رقم)\b[\s\S]*$/i;
+const PARTY_TRIM = /\s+(?:(on|at|ref|reference)\b|(في|بتاريخ|رقم)(?![ء-ي]))[\s\S]*$/i;   // (\b doesn't end an Arabic word: «كارفور في 28/10» kept «في»)
 
 function payParty(text) {
   const t = payNormalize(text).replace(/\s+/g, " ");
@@ -296,7 +298,7 @@ function payParty(text) {
     name = name.replace(/\s+\d[\d/\-.]*$/, "").trim();   // drop a trailing date or number
     if (name.length < 3) continue;
     if (/^\d+$/.test(name)) continue;
-    if (PARTY_STOP.test(name)) continue;
+    if (PARTY_STOP.test(name) || PARTY_STOP.test(name.split(" ")[0])) continue;   // («حسابك بطاقة رقم» is still "your account")
     return name;
   }
   return null;

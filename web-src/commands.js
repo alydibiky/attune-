@@ -93,7 +93,8 @@ export function langIn(text) {
 /** Removes "to Turkish" / «للتركي» from the text to translate. */
 export function stripLang(text) {
   let t = String(text || "");
-  for (const [, w] of LANG_WORDS) t = t.replace(new RegExp(`(^|\\s)(?:to |into |in )?(?:ل|لل|بال|ب)?(?:${w})(?=$|[\\s.,!?؟:])\\s*:?`, "i"), "$1");
+  // (persona 2: «للإنجليزي» stayed in the text — langIn folds the hamza, this didn't)
+  for (const [, w] of LANG_WORDS) t = t.replace(new RegExp(`(^|\\s)(?:to |into |in )?(?:ل|لل|بال|ب)?(?:${w.replace(/[اأإآ]/g, "[اأإآ]")})(?=$|[\\s.,!?؟:])\\s*:?`, "i"), "$1");
   return t.replace(/^\s*[:\-–]\s*/, "").trim();
 }
 const FMT = [["pdf", /\bpdf\b|بي دي اف/], ["docx", /\b(word|docx?)\b|وورد|ورد/], ["xlsx", /\b(excel|xlsx?|sheet)\b|اكسل|إكسل/], ["pptx", /\b(powerpoint|pptx?|slides)\b|باوربوينت/],

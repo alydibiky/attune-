@@ -7364,4 +7364,6 @@ export const AR = {
   "Documents": "المستندات",
   "Many books": "كتب كتير",
   "One file": "ملف واحد",
+  "Today's free answers are used up — Pro removes the limit": "خلصت إجابات النهارده المجانية — Pro بيشيل الحد",
+  "That's today's {n} free answers. They come back tomorrow, or Pro removes the limit.": "دي كانت الـ{n} إجابة المجانية بتوع النهارده. بيرجعوا بكرة، أو Pro بيشيل الحد.",
 };

@@ -108,7 +108,11 @@ export function metroAsk(text) {
   const t = String(text || "").trim();
   let m = t.match(/(?:metro|subway|underground|train)\b.*?\bfrom\s+(.+?)\s+to\s+(.+?)[?.!]*$/i) || t.match(/^(?:how (?:do i|to) get|go)\s+from\s+(.+?)\s+to\s+(.+?)\s+(?:by|on the)\s+metro/i);
   if (!m) m = t.match(/(?:مترو|المترو)\s*(?:من)\s+(.+?)\s+(?:لـ?|ل|إلى|الى|لحد)\s*(.+?)[؟?.!]*$/) || t.match(/(?:ازاي|إزاي)\s+أروح\s+(?:من\s+)?(.+?)\s+(?:لـ?|ل|إلى|الى)\s*(.+?)\s+(?:بالمترو|مترو)/);
+  // persona 2 (an Arabic week): «من المعادي للتحرير», "from maadi to tahrir" with no "metro" — a route when BOTH ends are stations
+  let bare = false;
+  if (!m && t.length <= 60) { m = t.match(/^(?:from)\s+(.+?)\s+to\s+(.+?)[?.!]*$/i) || t.match(/^(?:من)\s+(.+?)\s+(?:لـ?|إلى|الى|لحد)\s*(.+?)[؟?.!]*$/) || t.match(/^(?:من)\s+(\S+(?:\s\S+)?)\s+(ل\S+(?:\s\S+)?)[؟?.!]*$/); bare = !!m; }
   if (!m) return null;
+  if (bare) { const f = (x) => { const s0 = fold(x.replace(/^ل(?=ل)/, "").replace(/^ل(?=[^ل])/, "")); return ALL.some((s) => fold(s.en) === s0 || fold(s.ar) === s0) || Object.keys(ALIAS).some((k) => fold(k) === s0); }; if (!f(m[1]) || !f(m[2])) return null; }
   const A = findStation(m[1]), B = findStation(m[2].replace(/^ل(?=ل)/, "").replace(/^ل(?=[^ل])/, ""));
   return A && B ? { from: A, to: B } : null;
 }

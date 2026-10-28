@@ -49,3 +49,24 @@ a money app and an AI app. The problems are in *how* it is offered, not *how muc
    word *private / offline* in the first line — it's what no competitor can say.
 9. **Referral**: "Give a friend 1 month, get 1 month" — the Egyptian market moves by WhatsApp word of mouth.
 10. **Price later, not now**: keep EGP 299 / 2,499 until there are reviews; then test EGP 349 / 2,999 on new installs only.
+
+## Redone hands-on (28 Oct): the paywall as a customer — day 1, day 6 and day 9, English and Arabic
+**What I did:** four fresh phones in customer (release) mode, Egypt, with the trial started 0, 5 and 8 days ago; Home and
+Plans & billing captured on each, and on day 9 every place a free user taps (Money, Deal Check, Receipt, Agents, Tools).
+
+**What a customer actually sees:**
+- **Day 1 and day 6 — nothing on Home.** The trial ("7 days left" → "2 days left — everything is unlocked") is only inside
+  Plans & billing, which a normal person never opens. On day 6 there is no reminder that it ends in 2 days.
+- **Day 9 — the trial ends silently.** Home looks exactly the same; nothing says "your trial ended, here's what changed".
+  The first sign is a short message when an AI answer is refused.
+- **That message was English-only and said "runs"** ("That's today's 15 free runs…") — even in Arabic. **Fixed now**:
+  "That's today's 15 free answers. They come back tomorrow, or Pro removes the limit." / «دي كانت الـ15 إجابة المجانية…».
+- **Plans & billing**: clear prices in EGP, yearly selected, "≈ EGP 208 a month — save 30 %"; the benefits still lead with
+  feature names (*Deal Check & Chat X-Ray*, *Converters, slides, video*) and **"No daily limits"** first — confirming points 2
+  and 3 above. In Arabic the same card says "EGP 2,499" and "208 جنيه" (two ways to write the currency).
+- **Business at EGP 14,999** sits right under a EGP 299 plan on the personal paywall (point 5).
+
+**Added to Ali's choices (business, not decided here):**
+- **P3-A Trial on Home**: a small line under the greeting — "Pro trial: 2 days left · see what you used" from day 5, and once on
+  day 8 "Your trial ended — Money, Follow-ups and 15 answers a day stay free" with a Keep Pro button. *Recommend.*
+- **P3-B One currency word** in Arabic prices (all «جنيه» or all EGP). *Recommend «جنيه».*

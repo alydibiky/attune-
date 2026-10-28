@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 27 Oct 2026 — v8.6)
+# Attune — start here (handoff for the next chat, 28 Oct 2026 — v8.6)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -49,6 +49,19 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
     localStorage). Tests: e2e_v831books.py (phone path with a stand-in), e2e_v830.py, unit v830library. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
+
+## v8.6 part 2 + the nine-persona review (28 Oct) — waiting for Ali's picks
+Ali's points 6–10 done (meal info on tap, translator "hello" at once, Translate photo from the gallery, buy agents that come back
+for confirmation and never pay, Home tells order / command / request apart and offers options). Then **nine personas tested the
+app one at a time, hands-on** — each report says what was done, what was measured, what was fixed and what Ali picks:
+`REVIEW_P1_sceptic.md` (60 days of money, to the pound) · `REVIEW_P2_normal_user.md` (+ an Arabic week typed on Home) ·
+`REVIEW_P3_marketer.md` (+ the paywall on day 1 / 6 / 9) · `REVIEW_P4_innovator.md` (+ how close each idea is) ·
+`REVIEW_P5_uiux.md` (accessibility audit, 10 tasks by tapping, visuals & colours) · `REVIEW_P6_logic.md` · `REVIEW_P7_play_launch.md`
+(what only Ali can do before Play) · `REVIEW_P8_ai_model.md` (the real 4 B model: 21/29 alone; maths 5/5 with the app's code) ·
+`REVIEW_P9_heavy_user.md` (a year of daily use: duplicate subscriptions, plans that vanished, طعمية read as water…).
+Tests: `tests/unit/v860p1/p6/p8/p9/p2b.test.mjs` + the e2e files named in each report.
+**Ali's choices waiting** (each report has options + a recommendation): SUPPORT_EMAIL in billing.js · P2-A..E · P3 points 1–10,
+P3-A/B · P4 top 5 (10 → 1 → 11 → 3 → 9) · P5-A..G · V-A..D · P7 risks (Video Downloader, keyboard, overlay) · M-A..C · H-A..E.
 
 ## v8.6 — Ali's 27 Oct evening list, part 1 (he said "read this first, then I will upload more" — part 2 may follow below)
 - [x] 1. CLAUDE.md rule (from a post he liked): **for unfamiliar features, don't write from scratch — first search GitHub for
@@ -191,7 +204,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 - [x] 17. (DONE v8.2) **Your details** (Ali, mid-list): Booking details expanded — trips / daily life / booking forms, private, used by answers + agents.
 
 ## Do this next
-1. Ask Ali for his next list (he said he has more). Keep his rule: **ask before anything subjective** — show 2–4 options
+1. Get Ali's picks from the nine reviews (list above) and build them; then ask for his next list. Keep his rule: **ask before anything subjective** — show 2–4 options
    (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
    Quiet Atelier tokens, phones side by side, A/B/C with a recommendation).
 2. Still to design (Ali's item 11 "fix the rest of the interface like Gemini would"): Settings, the sidebar, Privacy, and any

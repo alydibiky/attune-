@@ -125,6 +125,18 @@ export function parseTime(text, nowIn) {
       }
     }
   }
+  if (!day) {
+    // persona 2 (an Arabic week): «فكرني ادفع الكهربا يوم ١٠», "remind me on the 10th" — a day of the month alone is the next one
+    const dn = s.match(/\bon the (\d{1,2})(?:st|nd|rd|th)?\b|\bon (\d{1,2})(?:st|nd|rd|th)\b|(?:^|\s)(?:يوم|في)\s+([\d٠-٩]{1,2})(?![\d٠-٩:/.])/);
+    if (dn) {
+      const d = +String(dn[1] || dn[2] || dn[3]).replace(/[٠-٩]/g, (c) => "٠١٢٣٤٥٦٧٨٩".indexOf(c));
+      if (d >= 1 && d <= 31) {
+        let cand = new Date(now.getFullYear(), now.getMonth(), d);
+        if (cand < at(now, 0, 0) || cand.getDate() !== d) { cand = new Date(now.getFullYear(), now.getMonth() + 1, d); if (cand.getDate() !== d) cand = new Date(now.getFullYear(), now.getMonth() + 2, 0); }
+        day = cand; dayWord = "date";
+      }
+    }
+  }
 
   // 3. The time of day
   const t = clockIn(s);
@@ -382,7 +394,9 @@ function titleFrom(text, kind, contact) {
     .replace(/\b(tomorrow|today|tonight|in the (morning|evening|afternoon))\b|\bat \d{1,2}([:.]\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?|\b\d{1,2}([:.]\d{2})?\s*(am|pm)\b|\bin \d+ \w+/gi, " ")
     .replace(/كل\s+((يوم\s+)?(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(\s*(،|,|و)\s*(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت))*)/g, " ")
     .replace(/(^|\s)(و)?(ال)?(حد|اتنين|تلات|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
-    .replace(/(كل يوم|يوميا|بكرة|بكره|النهارده|الساعة \d{1,2}([:.]\d{2})?( ونص| وربع| الا ربع)?|بعد \d+ \S+|بالليل|الصبح|الضهر|العصر|المغرب|مساء|صباحا)/g, " ")
+    .replace(/(كل يوم|يوميا|بكرة|بكره|النهارده|الساعة [\d٠-٩]{1,2}([:.][\d٠-٩]{2})?( ونص| وربع| الا ربع)?|بعد [\d٠-٩]+ \S+|بالليل|الصبح|الضهر|العصر|المغرب|مساء|صباحا)/g, " ")
+    // (persona 2: «ادفع الكهربا يوم ١٠», "on the 2nd" — the day of the month is the reminder's date, not its title)
+    .replace(/\bon the \d{1,2}(st|nd|rd|th)?\b|\bon \d{1,2}(st|nd|rd|th)\b|(^|\s)يوم [\d٠-٩]{1,2}(?=\s|$)/gi, " ")
     .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "");
   s = cleanText(s, 60);
   if (!s && contact) s = (kind === "call" ? "Call " : "Message ") + contact;
