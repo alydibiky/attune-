@@ -70,7 +70,8 @@ import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { categorise } from "./paylog.js";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { FamilyPage } from "./family-ui.jsx";
-import { PlannerPage } from "./planner-ui.jsx";   // v8.7 (Ali picked the planner's option A)
+import { PlannerPage } from "./planner-ui.jsx";
+import { inviteReady, inviteHello, inviteRedeem, loadInvite, bonusUntil, addBonus } from "./referral.js";   // v8.7 invite friends (Google account)   // v8.7 (Ali picked the planner's option A)
 import { guess as guessRoute } from "./homeroute.js";   // v8.7 the Home router, shadow mode: recorded, not acted on yet   // v8.7 (persona 4, idea 13)
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels, myCountry, bookingLine } from "./agent-ui.jsx";
@@ -1371,7 +1372,14 @@ if (typeof window !== "undefined") window.__attuneNativeLastId = nativeLastId;  
 if (typeof window !== "undefined" && NATIVE && NATIVE.storeBuy && !window.ATTUNE_STORE) {
   window.ATTUNE_STORE = {
     name: "Google Play",
-    purchase: (sku) => nativeCall("storeBuy", { sku }),
+    // v8.7 the invite: the purchase carries this person's hashed Google account (from the invite server, never the email), and
+    // a Play subscription is told to the server so a friend's month can move its renewal
+    purchase: async (sku) => {
+      let inv = null; try { inv = loadInvite(); } catch (e) {}
+      const r = await nativeCall("storeBuy", { sku, account: (inv && inv.acct) || "" });
+      try { if (r && r.ok && r.purchase && r.purchase.token && inv && inviteReady(NATIVE)) inviteHello(nativeCall, { purchaseToken: r.purchase.token, productId: sku }).catch(() => {}); } catch (e) {}
+      return r;
+    },
     // v6.29: Play not answering throws (it is not "owns nothing"), so a paying user keeps Pro until Play answers again
     owned: async () => { const r = (await nativeCall("storeOwned", {})) || {}; if (r.error) throw new Error(r.error); return r.items || []; },
     products: async () => ((await nativeCall("storeProducts", {})) || {}).items || [],
@@ -8056,7 +8064,8 @@ export default function App() {
     if (!isPro(tier) && !testingPro()) { const d5 = new Date(t0 + 5 * 86400000); d5.setHours(10, 0, 0, 0); if (NATIVE && NATIVE.schedule) NATIVE.schedule(JSON.stringify({ id: "trial-day5", at: d5.getTime(), repeat: "none", title: tr("2 days of Pro left"), body: tr("See what you used it for — and keep it if it helps.") })); } } catch (e) {} };   // (a phone notification only — not a to-do in Reminders)
   // v5.32: TESTING_ALL_PRO (billing.js) unlocks everything while Ali tests; the trial
   // now really unlocks every Pro feature (before, most gates checked the paid plan only)
-  const proActive = testingPro() || isPro(tier) || trialLeft > 0;
+  // v8.7: friends who subscribed through your invite give you Pro days (referral.js, when Play had no renewal to move)
+  const proActive = testingPro() || isPro(tier) || trialLeft > 0 || bonusUntil() > 0;
   const proRef = useRef(proActive); proRef.current = proActive;
   setProSearch(proActive);
   // v6.27: the text in a photo — the phone's own reader (Latin scripts) first, then a photo-reading model on the phone (Arabic…)
@@ -12070,13 +12079,9 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
             </div>
           </section>
 
-          {/* v8.7 (Ali picked persona 3's point 9): give a friend a month of Pro — the Play link carries this phone's code */}
-          <button onClick={() => { const link = referralLink(req), msg = tr("Try Attune — a private AI on your phone for your money, meals and reminders. With my link you get a month of Pro free: {l}", { l: link });
-              try { if (NATIVE && NATIVE.share) { NATIVE.share(msg); return; } } catch (e) {}
-              try { if (navigator.share) { navigator.share({ text: msg }); return; } } catch (e) {}
-              try { navigator.clipboard.writeText(msg); flash(tr("Link copied — send it to a friend")); } catch (e) {} }}
-            className="w-full min-h-[48px] rounded-[20px] border border-[var(--c-acc)] bg-[var(--c-soft)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="referral-share">
-            <span>🎁 {tr("Give a friend a month of Pro")}</span><ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" /></button>
+          {/* v8.7 (Ali picked persona 3's point 9 + "a month free for every friend who subscribes, maximum 3", linked to a Google
+              account): with the invite server on, the card signs in with Google and counts the friends; without it, the friend's month */}
+          <InviteCard req={req} flash={flash} />
           {/* v8.7 (Ali picked persona 3's point 5): Business has its own page and its own sales — one line here, no 14,999 next to 299 */}
           <button onClick={() => { close(); try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "business" } })); } catch (e) {} }} className="w-full min-h-[48px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="business-card">
             <span>🏗️ {tr("Running a company? See Business")}</span><ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" /></button>
@@ -12624,6 +12629,33 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
       </div>
     </div>
   );
+}
+
+/** v8.7 Invite friends: your link gives a friend a month of Pro; each friend who SUBSCRIBES gives you a month (up to 3) — counted by
+ *  the invite server from Google Play, tied to your Google account. */
+function InviteCard({ req, flash }) {
+  const [inv, setInv] = useState(() => { try { return loadInvite(); } catch (e) { return null; } });
+  const [busy, setBusy] = useState(false);
+  const on = inviteReady(NATIVE);
+  const share = (code) => { const link = referralLink(code || req), msg = tr("Try Attune — a private AI on your phone for your money, meals and reminders. With my link you get a month of Pro free: {l}", { l: link });
+    try { if (NATIVE && NATIVE.share) { NATIVE.share(msg); return; } } catch (e) {}
+    try { if (navigator.share) { navigator.share({ text: msg }); return; } } catch (e) {}
+    try { navigator.clipboard.writeText(msg); flash(tr("Link copied — send it to a friend")); } catch (e) {} };
+  const row = "w-full min-h-[48px] rounded-[20px] border border-[var(--c-acc)] bg-[var(--c-soft)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between";
+  if (!on) return <button onClick={() => share(req)} className={row} data-testid="referral-share"><span>🎁 {tr("Give a friend a month of Pro")}</span><ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" /></button>;
+  const start = async () => { setBusy(true); try { setInv(await inviteHello(nativeCall, { ref: localStorage.getItem("attune:referred-by") || "" })); } catch (e) { flash(tr(String(e.message || e))); } setBusy(false); };
+  if (!inv) return <button onClick={start} disabled={busy} className={row} data-testid="referral-start"><span>🎁 {tr("Invite friends — a month free for each who subscribes (up to 3)")}</span>{busy ? <Loader2 size={16} className="animate-spin" /> : <ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" />}</button>;
+  return (
+    <div className="rounded-[20px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-3.5 space-y-2" data-testid="referral-card">
+      <div className="flex items-center justify-between gap-2"><b className="text-[14px] font-extrabold">🎁 {tr("Invite friends")}</b>
+        <span className="text-[13px] font-extrabold c-acc tabular-nums" data-testid="referral-count">{tr("{n} of {m} friends joined", { n: inv.friends || 0, m: inv.max || 3 })}</span></div>
+      <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("Your friend gets a month of Pro. When they subscribe, you get a month free — up to 3 friends. Linked to your Google account.")}</p>
+      <div className="flex flex-wrap gap-2">
+        <button className="h-10 px-4 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold" onClick={() => share(inv.code)} data-testid="referral-share">{tr("Share my link")}</button>
+        <button className="h-10 px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold" onClick={start} disabled={busy} data-testid="referral-refresh">{busy ? "…" : tr("Check")}</button>
+        {inv.days > 0 ? <button className="h-10 px-4 rounded-full border border-[var(--c-acc)] bg-[var(--c-surf)] text-[13px] font-extrabold c-acc" onClick={async () => { setBusy(true); try { const d = await inviteRedeem(nativeCall); setInv(loadInvite()); flash(tr("{n} days of Pro added — thank your friends!", { n: d })); } catch (e) { flash(tr(String(e.message || e))); } setBusy(false); }} data-testid="referral-redeem">{tr("Use my {n} free days", { n: inv.days })}</button> : null}
+      </div>
+    </div>);
 }
 
 function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, plan, engineMode, setEngineMode, modelState, dlPct, downloadModel, trainLog, setTrainLog, collect, setCollect, flash, close, native }) {

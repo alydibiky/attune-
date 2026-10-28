@@ -138,10 +138,12 @@ class MainActivity : AppCompatActivity() {
         try { val res = com.google.android.gms.auth.api.identity.Identity.getAuthorizationClient(this).getAuthorizationResultFromIntent(r.data); cb?.invoke(res.accessToken, null) }
         catch (e: Exception) { cb?.invoke(null, e.message ?: "Google sign-in was cancelled") }
     }
-    fun authorizeDrive(cb: (String?, String?) -> Unit) = runOnUiThread {
+    fun authorizeDrive(cb: (String?, String?) -> Unit) = authorizeScopes(listOf("https://www.googleapis.com/auth/drive.appdata"), cb)
+    // v8.7 (Ali: "can't the referral be linked to a Google account"): the same Google screen, asking only who you are (openid, email)
+    fun authorizeScopes(scopes: List<String>, cb: (String?, String?) -> Unit) = runOnUiThread {
         try {
             val req = com.google.android.gms.auth.api.identity.AuthorizationRequest.builder()
-                .setRequestedScopes(listOf(com.google.android.gms.common.api.Scope("https://www.googleapis.com/auth/drive.appdata"))).build()
+                .setRequestedScopes(scopes.map { com.google.android.gms.common.api.Scope(it) }).build()
             com.google.android.gms.auth.api.identity.Identity.getAuthorizationClient(this).authorize(req)
                 .addOnSuccessListener { res ->
                     val pi = res.pendingIntent
@@ -281,6 +283,7 @@ class MainActivity : AppCompatActivity() {
             try { pickBooksDoc.launch(i) } catch (e: Exception) {}
         } }
         bridge.authorizeDrive = { cb -> authorizeDrive(cb) }
+        bridge.authorizeGoogle = { cb -> authorizeScopes(listOf("openid", "email"), cb) }
         bridge.askLocalNet = { try { askLocalNetPermission.launch("android.permission.ACCESS_LOCAL_NETWORK") } catch (e: Exception) {} }
         bridge.askHealth = { runOnUiThread { try { askHealthPermission.launch(Health.PERMISSIONS) } catch (e: Exception) {} } }
         bridge.askHealthTemp = { runOnUiThread { try { askHealthPermission.launch(Health.TEMP_PERMISSIONS) } catch (e: Exception) {} } }   // v6.41 Cycle

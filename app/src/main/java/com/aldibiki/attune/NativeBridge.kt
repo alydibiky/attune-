@@ -130,6 +130,16 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    // v8.7 the referral linked to a Google account: a short-lived token that only says who you are; the page sends it to the
+    // referral server (its address is in web-src/referral.js), which asks Google who it belongs to. Nothing else is shared.
+    var authorizeGoogle: (((String?, String?) -> Unit) -> Unit)? = null
+    @JavascriptInterface
+    fun googleAccount(id: String, arg: String) {
+        if (blockedByAirGap(id, "Invite friends")) return
+        val auth = authorizeGoogle ?: run { reject(id, "Google sign-in is not available here"); return }
+        auth { token, err -> if (token == null) reject(id, err ?: "Google sign-in was cancelled") else resolve(id, JSONObject().put("token", token)) }
+    }
+
     // v6.32 Scout at night (ScoutNight.kt): the goals' searches for tonight, and what last night found
     @JavascriptInterface
     fun scoutNightPlan(plan: String): String { ScoutNight.setPlan(ctx, plan); return "ok" }
@@ -541,7 +551,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
 
     // ---- v6.7 Google Play Billing -------------------------------------------------------------
     @JavascriptInterface fun storeProducts(id: String, arg: String) { billing.products { resolve(id, it) } }
-    @JavascriptInterface fun storeBuy(id: String, arg: String) { billing.buy(JSONObject(arg).optString("sku")) { resolve(id, it) } }
+    @JavascriptInterface fun storeBuy(id: String, arg: String) { val j = JSONObject(arg); billing.buy(j.optString("sku"), j.optString("account")) { resolve(id, it) } }
     @JavascriptInterface fun storeOwned(id: String, arg: String) { billing.owned { resolve(id, it) } }
     @JavascriptInterface fun storeConsume(id: String, arg: String) { billing.consume(JSONObject(arg).optString("token")) { resolve(id, it) } }
 

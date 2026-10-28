@@ -114,7 +114,9 @@ class Billing(private val ctx: Context) {
     }
 
     /** Play's own purchase sheet for one product. */
-    fun buy(id: String, done: (JSONObject) -> Unit) = ready { err ->
+    // account (v8.7): a hash of the Google account (never the email) — Play keeps it with the purchase, so the referral server can
+    // tell whose purchase it is ("obfuscatedAccountId", Google's own field for this)
+    fun buy(id: String, account: String = "", done: (JSONObject) -> Unit) = ready { err ->
         if (err != null) return@ready done(JSONObject().put("ok", false).put("reason", err))
         val start = start@{
             val d = details[id] ?: return@start done(JSONObject().put("ok", false).put("reason", "This product isn't set up in Google Play yet."))
@@ -130,7 +132,9 @@ class Billing(private val ctx: Context) {
                 try {
                     val c = client ?: throw IllegalStateException("Google Play isn't connected")
                     if (a.isFinishing) throw IllegalStateException("no screen")
-                    val r = c.launchBillingFlow(a, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(pp.build())).build())
+                    val fb = BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(pp.build()))
+                    if (account.isNotEmpty()) fb.setObfuscatedAccountId(account.take(64))
+                    val r = c.launchBillingFlow(a, fb.build())
                     if (r.responseCode != BillingClient.BillingResponseCode.OK) { waiting = null; done(JSONObject().put("ok", false).put("reason", r.debugMessage.ifEmpty { "Play error ${r.responseCode}" })) }
                 } catch (e: Exception) { waiting = null; done(JSONObject().put("ok", false).put("reason", e.message ?: "Play error")) }
             }
