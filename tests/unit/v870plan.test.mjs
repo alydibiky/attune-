@@ -54,3 +54,10 @@ console.log(`v870plan (+ morning): ${n} checks passed`);
   assert.equal(late.pots[0].byYearEnd, 12000);
   console.log("v870plan (+ year): monthly 4000 → 48,000 a year");
 }
+{ // a goal with a total counts in the year only up to what is left
+  const P = await import("../../web-src/planner.js"), now = new Date(2026, 9, 10).getTime();
+  const d = { pots: [{ id: "e", name: "Emergency", kind: "other", target: 11040, saved: 11000, log: [] }, { id: "t", name: "Travel", kind: "travel", target: 20000, by: "2027-06", saved: 2000, log: [] }] };
+  const pl = P.planMonth({ ledger: { txns: [] }, pots: d, now }), e = pl.pots.find((x) => x.id === "e"), t = pl.pots.find((x) => x.id === "t");
+  assert.equal(e.yearMonths, 10); assert.equal(e.yearly, 40); assert.equal(t.yearMonths, 9); assert.equal(t.yearly, 18000);
+  console.log("v870plan (+ year caps): Emergency 40, Travel 18,000");
+}

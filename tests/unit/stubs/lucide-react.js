@@ -1,3 +1,3 @@
 // Test stand-in for the icon library.
 const I = () => null;
-export const CalendarDays = I, ChevronLeft = I, ChevronRight = I, Droplet = I, Trash2 = I, ShieldCheck = I, Plus = I, X = I;
+export const CalendarDays = I, ChevronLeft = I, ChevronRight = I, Droplet = I, Trash2 = I, ShieldCheck = I, Plus = I, X = I, Camera = I, Mic = I, ArrowUp = I, Loader2 = I;

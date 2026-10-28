@@ -51,7 +51,7 @@ export function PlannerPage({ flash }) {
           <p className={U.label + " m-0"}>{tr("This year ({y})", { y: plan.year.year })}</p>
           <div className="flex items-baseline justify-between text-[14px] font-semibold"><span>{tr("Saved in a year at this pace")}</span><b className="tabular-nums text-[18px] c-acc" dir="ltr">{fmt(plan.year.savedPerYear)} {cur}</b></div>
           <div className="flex items-baseline justify-between text-[14px] font-semibold"><span>{tr("Saved by 31 December")}</span><b className="tabular-nums" dir="ltr">{fmt(plan.year.byYearEnd)} {cur}</b></div>
-          {plan.pots.map((p) => <div key={p.id} className={"flex justify-between text-[12.5px] " + U.muted}><span dir="auto">{nm(p)}</span><span className="tabular-nums" dir="ltr">{fmt(p.monthly)} × 12 = {fmt(p.yearly)}</span></div>)}
+          {plan.pots.map((p) => <div key={p.id} className={"flex justify-between text-[12.5px] " + U.muted}><span dir="auto">{nm(p)}</span><span className="tabular-nums" dir="ltr">{fmt(p.monthly)} × {p.yearMonths} = {fmt(p.yearly)}</span></div>)}
         </div> : null}
         <div className="space-y-2.5" data-testid="planner-goals">
           <p className={U.label + " m-0"}>{tr("Savings goals")}</p>

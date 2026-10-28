@@ -94,14 +94,16 @@ export function planMonth({ ledger, life, pots, now = Date.now(), income: inc = 
     if (p.per > 0) {
       const target = +p.target || 0, left = target ? Math.max(0, target - (p.saved || 0)) : 0;
       return { ...p, target, left, months: monthsTo(p.by, now) || monthsLeftYear, monthly: target && left < p.per ? left : p.per, putThisMonth, onTrack: putThisMonth >= p.per,
-        yearly: p.per * 12, byYearEnd: r0((p.saved || 0) + p.per * Math.max(0, monthsLeftYear - (putThisMonth >= p.per ? 1 : 0))) };
+        yearMonths: 12, yearly: p.per * 12, byYearEnd: r0((p.saved || 0) + p.per * Math.max(0, monthsLeftYear - (putThisMonth >= p.per ? 1 : 0))) };
     }
     const target = p.kind === "emergency" && !(p.target > 0) ? r0(avg.total * 3) : +p.target || 0;
     const left = Math.max(0, target - (p.saved || 0)), months = monthsTo(p.by, now) || (p.kind === "emergency" ? 12 : 12);
     const monthly = left > 0 ? Math.ceil(left / months) : 0;
     const inYear = Math.min(months, monthsLeftYear);
+    // a goal with a total stops when it is full: the year counts only the months it still needs
+    const yearMonths = monthly > 0 ? Math.min(12, Math.ceil(left / monthly)) : 0;
     return { ...p, target, left, months, monthly, putThisMonth, onTrack: putThisMonth >= monthly,
-      yearly: monthly * 12, byYearEnd: r0(Math.min(target || Infinity, (p.saved || 0) + monthly * Math.max(0, inYear - (putThisMonth >= monthly ? 1 : 0)))) };
+      yearMonths, yearly: Math.min(left, monthly * yearMonths), byYearEnd: r0(Math.min(target || Infinity, (p.saved || 0) + monthly * Math.max(0, inYear - (putThisMonth >= monthly ? 1 : 0)))) };
   });
   const potsTotal = potList.reduce((a, p) => a + p.monthly, 0);
   // flexible: the last 3 months' average per category (fixed categories left out)
