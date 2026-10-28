@@ -22,30 +22,34 @@ const AR_DIGITS = { "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", "٥":
 export const normDigits = (s) => String(s || "").replace(/[٠-٩۰-۹٫٬]/g, (c) => AR_DIGITS[c]);
 
 // Yusr's own category ids (BASE_CATS in index.new.html) and the words that point to each.
+// (persona 9: «فول وطعمية» was a water bill — «مية» inside «طعمية»; short Arabic words now match only as whole words,
+//  with و / ب / ال in front allowed)
 export const CAT_WORDS = {
-  food: /\b(food|eating|lunch|dinner|breakfast|food|meal|restaurant|pizza|burger|shawarma|koshary|sandwich|snack|delivery|talabat|kfc|mcdonald'?s?)\b|غدا|غداء|عشا|عشاء|فطار|فطور|أكل|اكل|مطعم|بيتزا|برجر|شاورما|كشري|سندوتش|ساندوتش|طلبات|دليفري/i,
-  groceries: /\b(groceries|grocery|supermarket|market|vegetables|fruit|milk|bread|eggs|carrefour|spinneys|hyper)\b|بقالة|سوبر ?ماركت|خضار|فاكهة|لبن|عيش|بيض|كارفور|هايبر/i,
-  transport: /\b(transport|transportation|commute|taxi|uber|careem|didi|indrive|bus|metro|train|fuel|petrol|gas|benzine|parking|toll|car wash|ticket)\b|تاكسي|أوبر|اوبر|كريم|ميكروباص|اتوبيس|أتوبيس|مترو|قطر|بنزين|سولار|جاز|ركنة|باركينج|كارتة|غسيل العربية|مواصلات/i,
-  bills: /\b(bill|bills|electricity|water|internet|wifi|phone|mobile|recharge|subscription|netflix|spotify|we|vodafone|orange|etisalat|gas bill)\b|فاتورة|فواتير|كهرباء|كهربا|مية|ماء|انترنت|إنترنت|نت|رصيد|شحن|اشتراك|نتفلكس/i,
+  food: /\b(food|eating|lunch|dinner|breakfast|food|meal|restaurant|pizza|burger|shawarma|koshary|sandwich|snack|delivery|talabat|kfc|mcdonald'?s?)\b|غدا|غداء|عشا|عشاء|فطار|فطور|أكل|اكل|مطعم|بيتزا|برجر|شاورما|كشري|سندوتش|ساندوتش|طلبات|دليفري|فول|طعمية|طعميه|فلافل|كبدة|كبده|حواوشي|مكرونة|مكرونه|فطير|كباب|كفتة|كفته/i,
+  groceries: /\b(groceries|grocery|supermarket|market|vegetables|fruit|milk|bread|eggs|carrefour|spinneys|hyper)\b|بقالة|سوبر ?ماركت|خضار|فاكهة|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?لبن(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?عيش(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?بيض(?![ء-ي])|كارفور|هايبر/i,
+  transport: /\b(transport|transportation|commute|taxi|uber|careem|didi|indrive|bus|metro|train|fuel|petrol|gas|benzine|parking|toll|car wash|ticket)\b|تاكسي|أوبر|اوبر|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?كريم(?![ء-ي])|ميكروباص|اتوبيس|أتوبيس|مترو|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?قطر(?![ء-ي])|بنزين|سولار|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?جاز(?![ء-ي])|ركنة|باركينج|كارتة|غسيل العربية|مواصلات/i,
+  bills: /\b(bill|bills|electricity|water|internet|wifi|phone|mobile|recharge|subscription|netflix|spotify|we|vodafone|orange|etisalat|gas bill)\b|فاتورة|فواتير|كهرباء|كهربا|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?مية(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?ماء(?![ء-ي])|انترنت|إنترنت|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?نت(?![ء-ي])|رصيد|شحن|اشتراك|نتفلكس/i,
   rent: /\b(rent|landlord|lease)\b|إيجار|ايجار|الإيجار|الايجار/i,
-  shopping: /\b(shopping|clothes|shirt|shoes|jeans|dress|amazon|noon|jumia|bought|watch|bag)\b|تسوق|هدوم|لبس|قميص|جزمة|كوتشي|بنطلون|فستان|أمازون|امازون|نون|جوميا|اشتريت|شنطة|ساعة/i,
-  health: /\b(health|medical|pharmacy|medicine|doctor|clinic|hospital|dentist|lab|x-?ray|gym|vitamins?)\b|صيدلية|دوا|دواء|علاج|دكتور|طبيب|عيادة|مستشفى|دكتور سنان|تحاليل|أشعة|اشعة|جيم/i,
-  fun: /\b(entertainment|cinema|movie|game|games|playstation|outing|trip|concert|club|fun)\b|سينما|فيلم|لعب|بلايستيشن|خروجة|فسحة|رحلة|حفلة|نادي/i,
+  shopping: /\b(shopping|clothes|shirt|shoes|jeans|dress|amazon|noon|jumia|bought|watch|bag)\b|تسوق|هدوم|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?لبس(?![ء-ي])|قميص|جزمة|كوتشي|بنطلون|فستان|أمازون|امازون|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?نون(?![ء-ي])|جوميا|اشتريت|شنطة|ساعة/i,
+  health: /\b(health|medical|pharmacy|medicine|doctor|clinic|hospital|dentist|lab|x-?ray|gym|vitamins?)\b|صيدلية|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?دوا(?![ء-ي])|دواء|علاج|دكتور|طبيب|عيادة|مستشفى|دكتور سنان|تحاليل|أشعة|اشعة|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?جيم(?![ء-ي])/i,
+  fun: /\b(entertainment|cinema|movie|game|games|playstation|outing|trip|concert|club|fun)\b|سينما|فيلم|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?لعب(?![ء-ي])|بلايستيشن|خروجة|فسحة|رحلة|حفلة|نادي/i,
   coffee: /\b(coffee|tea|cafe|café|starbucks|latte|cappuccino|espresso|juice)\b|قهوة|شاي|كافيه|ستاربكس|لاتيه|عصير/i,
   gifts: /\b(gifts|gift|present|eidiya|charity|donation|sadaqa)\b|هدية|هدايا|عيدية|صدقة|تبرع/i,
   salary: /\b(salary|paycheck|payroll|wage|wages)\b|مرتب|راتب|المرتب|الراتب|قبضت/i,
 };
-const INCOME = /\b(salary|paycheck|got paid|received|receive|earned|income|refund(ed)?|sold|bonus|commission|someone paid me|paid me|gave me|got \d|got back)\b|قبضت|مرتب|راتب|استلمت|جالي|جاتلي|اخدت|أخدت|خدت|دخل|بعت|بيعت|ارتجعلي|رجعلي|عمولة|مكافأة|مكافاة|حد ادانى|اداني|ادّاني/i;
-const EXPENSE = /\b(spent|paid|bought|cost|pay|for)\b|صرفت|دفعت|اشتريت|دفعت|بـ|ب /i;
+const INCOME = /\b(salary|paycheck|got paid|received|receive|earned|income|refund(ed)?|sold|bonus|commission|someone paid me|paid me|gave me|got \d+|got back)\b|قبضت|مرتب|راتب|استلمت|جالي|جاتلي|اخدت|أخدت|خدت|دخل|بعت|بيعت|ارتجعلي|رجعلي|عمولة|مكافأة|مكافاة|حد ادانى|اداني|ادّاني/i;
+const EXPENSE = /\b(spent|paid|bought|cost|pay|for|da3et|dafa3t|dafa3et|saraft|sraft|shtaret|eshtaret)\b|صرفت|دفعت|اشتريت|دفعت|بـ|ب /i;
 
 /** The money amounts written in one piece of text, with the multiplier words. "12 ألف" → 12000, "1.5k" → 1500. */
 export function amountsIn(text) {
   const t = normDigits(text);
   const out = [];
-  const re = /(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(k|K|ألف|الف|آلاف|الاف|thousand|مليون|million|m\b|M\b)?/g;
+  // v8.6: a Franco letter-digit inside a word ("da3et", "3ala", "7aga") is not an amount
+  const re = /(?<![A-Za-z])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![A-Za-z](?<![kKmM]))\s*(k|K|ألف|الف|آلاف|الاف|thousand|مليون|million|m\b|M\b)?/g;
   let m;
   while ((m = re.exec(t))) {
-    let v = parseFloat(m[1].replace(/,/g, ""));
+    // v8.6: "1.500" / "12.000" written the European / Egyptian way is thousands (three digits after one dot), not 1.5
+    let v = /^\d{1,3}(\.\d{3})+$/.test(m[1]) ? parseFloat(m[1].replace(/\./g, "")) : parseFloat(m[1].replace(/,/g, ""));
     const mul = m[2] || "";
     if (/^(k|ألف|الف|آلاف|الاف|thousand)$/i.test(mul)) v *= 1000;
     else if (/^(مليون|million|m)$/i.test(mul)) v *= 1e6;
@@ -71,6 +75,10 @@ export function dateIn(text, today) {
   let m = /\b(\d{1,2}) days? ago\b|من (\d{1,2}) (?:أيام|ايام|يوم)/i.exec(t);
   if (m) return back(+(m[1] || m[2]));
   if (/من يومين/.test(t)) return back(2);
+  // v8.6 (the 2-month test: "last friday paid 500 for the doctor" was dated today): last <weekday> / «الجمعة اللي فاتت»
+  { const W = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "الحد": 0, "الأحد": 0, "الاحد": 0, "الاتنين": 1, "الإثنين": 1, "التلات": 2, "الثلاثاء": 2, "الاربع": 3, "الأربعاء": 3, "الخميس": 4, "الجمعه": 5, "الجمعة": 5, "السبت": 6 };
+    const lm = /\blast\s+(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/i.exec(t) || /(الحد|الأحد|الاحد|الاتنين|الإثنين|التلات|الثلاثاء|الاربع|الأربعاء|الخميس|الجمعه|الجمعة|السبت)\s+(?:اللي\s+)?(?:فات|فاتت|الماضي|الماضية)/.exec(t);
+    if (lm) { const w = W[lm[1].toLowerCase()]; let n = (d0.getDay() - w + 7) % 7; if (n === 0) n = 7; return back(n); } }
   if (/\btoday\b|النهارده|انهارده|اليوم/i.test(t)) return today;
   m = /\b(?:on|يوم)\s+(\d{1,2})[/.-](\d{1,2})(?:[/.-](\d{2,4}))?\b/i.exec(t);
   if (m) {

@@ -125,9 +125,14 @@ function owedIn(q, s, now) {
   if (!list.length) return { kind: "owed-in", en: who ? `${who} owes you nothing in People & plans.` : "Nobody owes you anything in People & plans.", ar: who ? `لا يوجد على ${who} شيء في الأشخاص والخطط.` : "لا أحد مدين لك في الأشخاص والخطط.", open: "life", sources: ["life"] };
   const cur = list[0].c.currency || "";
   const total = list.reduce((a, x) => a + (x.p.left || 0), 0);
-  const rows = list.map(({ c, p }) => [c.person || c.title || c.kind, `${num(p.left || 0)} ${c.currency || cur}${p.next ? " → " + p.next.date : ""}`]);
-  return { kind: "owed-in", en: who ? `${who} still owes you ${num(total)} ${cur} (${list[0].p.paidCount} payment${list[0].p.paidCount === 1 ? "" : "s"} received so far).` : `${list.length} ${list.length === 1 ? "person owes" : "people owe"} you ${num(total)} ${cur} in all.`,
-    ar: who ? `ما زال على ${who} لك ${num(total)} ${cur} (استلمت ${list[0].p.paidCount} دفعة حتى الآن).` : list.length === 1 ? `شخص واحد مدين لك بـ${num(total)} ${cur}.` : `${list.length} أشخاص مدينون لك بإجمالي ${num(total)} ${cur}.`, rows, open: "life", sources: ["life"] };
+  // persona 9 (a year of use: Sara borrowed four times): one row per PERSON with all they still owe — "9 people" was 4 people, 9 loans
+  const byWho = new Map();
+  for (const { c, p } of list) { const k = fold(c.person || c.title || c.kind); const g = byWho.get(k) || { name: c.person || c.title || c.kind, left: 0, n: 0, next: "", cur: c.currency || cur }; g.left += p.left || 0; g.n++; if (p.next && (!g.next || p.next.date < g.next)) g.next = p.next.date; byWho.set(k, g); }
+  const people = [...byWho.values()].sort((a, b) => b.left - a.left), arQ = /[\u0600-\u06FF]/.test(q);
+  const rows = people.map((g) => [g.name + (g.n > 1 ? (arQ ? (g.n === 2 ? " (مرتين)" : ` (${g.n} مرات)`) : ` (${g.n} loans)`) : ""), `${num(g.left)} ${g.cur}${g.next ? " → " + g.next : ""}`]);
+  const np = people.length;
+  return { kind: "owed-in", en: who ? `${who} still owes you ${num(total)} ${cur} (${list[0].p.paidCount} payment${list[0].p.paidCount === 1 ? "" : "s"} received so far).` : `${np} ${np === 1 ? "person owes" : "people owe"} you ${num(total)} ${cur} in all.`,
+    ar: who ? `ما زال على ${who} لك ${num(total)} ${cur} (استلمت ${list[0].p.paidCount} دفعة حتى الآن).` : np === 1 ? `شخص واحد مدين لك بـ${num(total)} ${cur}.` : `${np} أشخاص مدينون لك بإجمالي ${num(total)} ${cur}.`, rows, open: "life", sources: ["life"] };
 }
 function owedOut(q, s, now) {
   const items = ((s.life && s.life.items) || []).filter((c) => c.dir !== "in").map((c) => ({ c, p: progressOf(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
@@ -136,7 +141,8 @@ function owedOut(q, s, now) {
   const next = items.map((x) => x.p.next).filter(Boolean).sort((a, b) => a.date.localeCompare(b.date))[0];
   return { kind: "owed-out", en: `You still have ${num(left)} ${cur} to pay across ${items.length} commitment${items.length === 1 ? "" : "s"}${next ? `; the next is ${num(next.amount)} ${cur} on ${next.date}` : ""}.`,
     ar: `ما زال عليك ${num(left)} ${cur} في ${items.length} التزام${next ? `؛ القادم ${num(next.amount)} ${cur} يوم ${next.date}` : ""}.`,
-    rows: items.map(({ c, p }) => [c.title || c.person || c.kind, `${num(p.left || 0)} ${c.currency || cur} · ${p.paidCount}/${c.count || "?"}${p.next ? " → " + p.next.date : ""}`]), open: "life", sources: ["life"] };
+    // v8.6 (the 2-month test showed "netflix · 0 EGP · 0/?"): an open-ended one (a subscription) says what it costs each time
+    rows: items.map(({ c, p }) => [c.title || c.person || c.kind, (c.count > 0 || c.kind === "debt" ? `${num(p.left || 0)} ${c.currency || cur} · ${p.paidCount}/${c.count || 1}` : `${num(c.amount || 0)} ${c.currency || cur} ${c.every === "week" ? "a week" : c.every === "year" ? "a year" : "a month"}`) + (p.next ? " → " + p.next.date : "")]), open: "life", sources: ["life"] };
 }
 function lab(q, s) {
   const care = s.care || {}, test = labTestOf(q), m = memberAsked(q, care.members);

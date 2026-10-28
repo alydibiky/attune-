@@ -40,10 +40,10 @@ const DOCS = [
 
 // ---- the words that say which kind a text is (most specific first) --------------------------------------------------------
 const TRIAL = W("free trial|trial period|trial ends|trial will end|trial expires|your trial|trial of|day trial|month trial|essai gratuit|période d'essai|essai de|prueba gratuita|período de prueba|prueba de|teste grátis|período de teste|avaliação gratuita|teste gratuito|gratis testen|kostenlose testphase|testphase|probezeit|probemonat|prova gratuita|periodo di prova|ücretsiz deneme|deneme süresi|uji coba gratis|masa percobaan|gratis proberen|proefperiode|бесплатный пробный|пробный период|免费试用|试用期|무료 체험|無料体験|無料トライアル|الفترة التجريبية|تجربة مجانية|فترة تجريبية|الفتره التجريبيه");
-const RENEW = W("renews?|will renew|auto-?renew(?:al|s)?|renewal date|next billing date|next billing|next payment|next charge|will be charged|billed on|se renouvelle|renouvellement|prochain prélèvement|prochaine facturation|se renovará|renovación|próximo cargo|próximo cobro|será renovad[oa]|renovação|próxima cobrança|verlängert sich|verlängerung|nächste abbuchung|nächste zahlung|si rinnova|rinnovo|prossimo addebito|yenilenecek|yenileme|sonraki ödeme|diperpanjang|perpanjangan|tagihan berikutnya|wordt verlengd|verlenging|продлится|продление|следующее списание|续订|自动续费|갱신|更新日|سيتم التجديد|يتجدد|التجديد التلقائي|تاريخ التجديد|سيتم خصم");
+const RENEW = W("renews?|renewal|will renew|auto-?renew(?:al|s)?|renewal date|next billing date|next billing|next payment|next charge|will be charged|billed on|se renouvelle|renouvellement|prochain prélèvement|prochaine facturation|se renovará|renovación|próximo cargo|próximo cobro|será renovad[oa]|renovação|próxima cobrança|verlängert sich|verlängerung|nächste abbuchung|nächste zahlung|si rinnova|rinnovo|prossimo addebito|yenilenecek|yenileme|sonraki ödeme|diperpanjang|perpanjangan|tagihan berikutnya|wordt verlengd|verlenging|продлится|продление|следующее списание|续订|自动续费|갱신|更新日|سيتم التجديد|يتجدد|التجديد التلقائي|تاريخ التجديد|سيتم خصم");
 const RETURN = W("return(?:s)? (?:within|by|until|before|window|policy|period)|returnable (?:until|within|by)|free returns|days? to return|money[- ]back guarantee|refund within|retour(?:s)? (?:sous|jusqu'au|gratuit)|retourner (?:sous|avant)|droit de rétractation|délai de rétractation|devoluci[oó]n|devoluciones|devolver (?:en|hasta|antes)|plazo de devolución|devolução|devolver em|direito de arrependimento|rückgabe|rücksendung|widerrufsrecht|umtausch|reso entro|resi gratuiti|restituzione|diritto di recesso|iade (?:süresi|hakkı)|cayma hakkı|pengembalian (?:dalam|barang|dana dalam)|retourneren binnen|herroepingsrecht|возврат в течение|退货|7天无理由|반품|返品|الاسترجاع|الاسترداد خلال|إرجاع|ارجاع|الاستبدال والاسترجاع");
 const WARRANTY = W("warranty|guarantee|guaranteed|garantie|garantía|garantia|gewährleistung|herstellergarantie|garanzia|garanti|garansi|гарантия|保修|保固|보증|保証|ضمان|الضمان|كفالة|الكفالة");
-const EXPIRY = W("expir(?:es|y|ation|e|ed|ing)|exp\\.?(?=\\s*[:\\d])|valid (?:until|thru|through|till|to)|good thru|valid thru|date of expiry|expiry date|date d'expiration|expire le|valable jusqu'au|date de validité|vence|vencimiento|válid[oa] hasta|caducidad|caduca|validade|válid[oa] até|vence em|gültig bis|ablaufdatum|läuft ab|ablauf|scadenza|valid[oa] fino|scade il|son kullanma|geçerlilik|geçerli|berlaku (?:hingga|sampai)|masa berlaku|kedaluwarsa|geldig tot|vervaldatum|действителен до|срок действия|有效期|만료|有効期限|تاريخ الانتهاء|تاريخ الإنتهاء|ينتهي في|ينتهي|تنتهي|صالح حتى|صالحة حتى|صلاحية|تنتهي صلاحية");
+const EXPIRY = W("expir(?:es|y|ation|e|ed|ing)|ends on|ends|runs out|بينتهي|بتنتهي|هينتهي|هتنتهي|بيخلص|بتخلص|exp\\.?(?=\\s*[:\\d])|valid (?:until|thru|through|till|to)|good thru|valid thru|date of expiry|expiry date|date d'expiration|expire le|valable jusqu'au|date de validité|vence|vencimiento|válid[oa] hasta|caducidad|caduca|validade|válid[oa] até|vence em|gültig bis|ablaufdatum|läuft ab|ablauf|scadenza|valid[oa] fino|scade il|son kullanma|geçerlilik|geçerli|berlaku (?:hingga|sampai)|masa berlaku|kedaluwarsa|geldig tot|vervaldatum|действителен до|срок действия|有效期|만료|有効期限|تاريخ الانتهاء|تاريخ الإنتهاء|ينتهي في|ينتهي|تنتهي|صالح حتى|صالحة حتى|صلاحية|تنتهي صلاحية");
 
 // ---- dates ---------------------------------------------------------------------------------------------------------------
 const MONTH_RES = MONTH_NAMES.map((n) => "(?:" + n + ")\\.?");
@@ -54,7 +54,8 @@ const fold = (s) => payNormalize(s).replace(/[أإآ]/g, "ا").replace(/ى/g, "�
  *  order "mdy" reads 03/04 as 4 March (the US), else 3 April; 13/02 and 02/13 are read the only way they can be. */
 export function datesIn(text, { now = Date.now(), order = "dmy" } = {}) {
   const t = fold(text), out = [];
-  const push = (y, m, d, at, len, kind) => { if (m >= 0 && m < 12 && d >= 1 && d <= 31 && y >= 1990 && y <= 2100) out.push({ t: at12(y, m, d), at, len, kind }); };
+  // v8.6 (persona 6: "expires 29/02/2027" became 1 March): a day that month doesn't have is not a date
+  const push = (y, m, d, at, len, kind) => { if (m >= 0 && m < 12 && d >= 1 && d <= lastDay(y, m) && y >= 1990 && y <= 2100) out.push({ t: at12(y, m, d), at, len, kind }); };
   const yr = (s) => (s.length === 2 ? 2000 + +s : +s);
   let m;
   // 2026-11-12, 2026/11/12, 2026.11.12
@@ -77,6 +78,9 @@ export function datesIn(text, { now = Date.now(), order = "dmy" } = {}) {
   // November 2026 / 11/2027 / 03/27 (a card's "valid thru") → the last day of that month
   const RE5 = new RegExp("(?<![\\p{L}\\d])" + MONTH_ANY + "\\s+(\\d{4})(?!\\d)", "giu");
   while ((m = RE5.exec(t))) { const mo = monthIdx(m[1]); if (mo < 0 || overlaps(out, m.index)) continue; push(+m[2], mo, lastDay(+m[2], mo), m.index, m[0].length, "monthyear"); }
+  // v8.6: "renewal 15/12" — a day/month with no year, only when the day can't be a month (13–31): the next time it comes
+  const RE7 = /(?<![\d\/.-])(1[3-9]|2\d|3[01])\s?\/\s?(0?[1-9]|1[0-2])(?![\d\/.-])/g;
+  while ((m = RE7.exec(t))) { if (overlaps(out, m.index)) continue; const mo = +m[2] - 1, d = +m[1]; push(yearFor(mo, d, now), mo, d, m.index, m[0].length, "daymonth"); }
   const RE6 = /(?<![\d\/.-])(0?[1-9]|1[0-2])\s?\/\s?(\d{4}|\d{2})(?![\d\/.-])/g;
   while ((m = RE6.exec(t))) { if (overlaps(out, m.index)) continue; const y = yr(m[2]); push(y, +m[1] - 1, lastDay(y, +m[1] - 1), m.index, m[0].length, "monthyear"); }
   return out.sort((a, b) => a.at - b.at);

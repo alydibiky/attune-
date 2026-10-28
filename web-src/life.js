@@ -126,6 +126,13 @@ function personOf(raw, t) {
   // v8.2 (Ali typed "sheikh owes me 22,000 …" in small letters): the word before "owes" is the name, capitalised
   const low = /(?:^|[\s,.])([a-z][a-z'-]{1,20})\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed)\b/i.exec(raw);
   if (low && !NOT_NAME.test(low[1]) && !/^(also|still|now|friend|brother|sister|cousin|neighbou?r|uncle|aunt|boss|client|customer)$/i.test(low[1])) return low[1][0].toUpperCase() + low[1].slice(1).toLowerCase();
+  // v8.6 (the 2-month test: "I lent mohamed 700", "I owe the grocer 120" became plain expenses): a small-letter name, or "the grocer",
+  // after lent / owe / borrowed from
+  const low2 = /\b(?:lent|loaned|owe|borrowed\s+(?:[\d,.]+\s+)?from)\s+(?:the\s+|my\s+|our\s+)?([a-z][a-z'-]{1,20})\b/i.exec(raw);
+  if (low2 && !NOT_NAME.test(low2[1]) && !/^(me|you|him|her|them|us|money|it|this|that|some|a|an|\d.*)$/i.test(low2[1])) return low2[1][0].toUpperCase() + low2[1].slice(1).toLowerCase();
+  // persona 9 (28 Oct): English with an Arabic-script name — "محمد owes me 1730", "I lent محمد 1603" became plain expenses
+  const mixed = /(?:^|\s)([ء-ي]{2,})\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed)\b/i.exec(raw) || /\b(?:lent|loaned|owe|borrowed\s+(?:[\d,.]+\s+)?from)\s+([ء-ي]{2,})/i.exec(raw);
+  if (mixed && !NOT_NAME.test(mixed[1])) return mixed[1];
   // v6.27: Spanish, French, Portuguese, German, Italian, Turkish, Indonesian
   const N = "(\\p{Lu}[\\p{Ll}'’-]+(?:\\s\\p{Lu}[\\p{Ll}'’-]+)?)";
   const world = [
@@ -248,11 +255,18 @@ export function scheduleOf(c, now = Date.now()) {
   // a "regular" (the maid every Saturday) never ends: every day from its start up to the next one ahead
   // (v6.36: counted from the start DAY — before noon "today 12:00" is still ahead, and the day's box went missing)
   if (c.kind === "regular" && c.start) { const days = Math.max(0, (Date.parse(iso(new Date(now)) + "T12:00:00") - Date.parse(c.start + "T12:00:00")) / 86400000); n = Math.max(2, Math.floor(days / (c.every === "month" ? 30.44 : c.every === "year" ? 365.25 : 7)) + 2); }
-  let d = c.start ? new Date(c.start + "T12:00:00") : new Date(now);
+  // v8.6 (the 2-month test: "Sheikh: 9 monthly payments" saved on 1 Sep still showed its first payment "next month" on 31 Oct — an
+  // undated plan was re-dated to TODAY every day, so nothing ever came due): it counts from the day it was saved
+  let d = c.start ? new Date(c.start + "T12:00:00") : new Date(c.created || now);
   if (!c.start) { d.setHours(12, 0, 0, 0); if (c.every === "month") d = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12); }
+  // persona 9 (a year of use): an open-ended plan (Netflix every month) had 12 months of slots from its start — in its 13th month
+  // nothing was due any more. It keeps a year ahead of today.
+  if (!(c.count > 0) && c.every && c.kind !== "regular") { const per = c.every === "week" ? 7 : c.every === "year" ? 365.25 : 30.44; n = Math.max(n, Math.floor(Math.max(0, now - d.getTime()) / 864e5 / per) + 12); }
   const out = [];
   const dateOf = (i) => { const x = new Date(d); if (c.every === "month") x.setMonth(d.getMonth() + i); else if (c.every === "week") x.setDate(d.getDate() + 7 * i); else if (c.every === "year") x.setFullYear(d.getFullYear() + i); else if (i > 0) x.setMonth(d.getMonth() + i); return iso(x); };
   for (let i = 0; i < n; i++) out.push({ i, date: dateOf(i), amount: c.amount, paid: (c.paid || []).includes(i) });
+  // v8.6 (persona 6: "22,000 over 9 months" added up to 21,999.96): the last payment takes the cents, so the plan adds up exactly
+  if (c.total > 0 && c.count > 1 && n === c.count && !Object.keys(c.got || {}).length) { const rest = r2(c.total - c.amount * (n - 1)); if (Math.abs(rest - c.amount) < 1) out[n - 1].amount = rest; }
   return rebalance(c, out, dateOf);
 }
 /* v8.3 (Ali, 26 Oct: "make it customizable — write what he actually paid, and it reschedules the rest based on that"): a payment can
@@ -264,6 +278,8 @@ function rebalance(c, out, dateOf) {
   if (!Object.keys(got).length || c.kind === "regular" || c.kind === "circle") return out;
   const total = c.total || (c.count > 0 ? c.amount * c.count : c.amount);
   for (const x of out) if (x.paid && got[x.i] != null) { x.amount = +got[x.i]; x.actual = true; }
+  // (persona 9: a subscription paid with its amount vanished — an open-ended plan has no total to spread, each month is its own)
+  if (!(c.total > 0) && !(c.count > 0)) return out;
   const paidSum = out.filter((x) => x.paid).reduce((a, x) => a + x.amount, 0);
   const rest = r2(total - paidSum), open = out.filter((x) => !x.paid);
   if (rest <= 0.004) return out.filter((x) => x.paid);

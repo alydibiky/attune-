@@ -63,7 +63,10 @@ export function checkMath(answer) {
       const a = vals[k], b = vals[k + 1];
       if (a.v == null || b.v == null) continue;
       checked++;
-      const d = decimals(b.p), tol = Math.max(Math.abs(a.v) * 0.005, d ? 0.6 * Math.pow(10, -d) : 0.5);
+      // v8.6 (persona 6: "150000 + 21000 = 171500" passed — 0.5 % of 171,000 is 855): sums of whole numbers (+ − ×) must be exact;
+      // the 0.5 % room is only for rounded results (division, powers, roots, π, decimals)
+      const exact = /^[\d\s,+\-−×*()]+$/.test(a.p.trim()) && Number.isInteger(a.v) && !/[.]/.test(b.p);
+      const d = decimals(b.p), tol = exact ? 0.5 : Math.max(Math.abs(a.v) * 0.005, d ? 0.6 * Math.pow(10, -d) : 0.5);
       if (Math.abs(a.v - b.v) > tol && !(Math.abs(b.v) > 0 && Math.abs(a.v / b.v - 100) < 0.5)) {   // (a fraction written as a % is fine)
         const show = (v) => { const r = Math.abs(v) >= 100 ? v.toFixed(1) : Math.abs(v) >= 1 ? v.toFixed(Math.max(2, d)) : v.toPrecision(4); return String(parseFloat(r)); };
         wrong.push({ line: raw.trim(), expr: a.p.trim(), value: show(a.v), written: b.p.trim() });

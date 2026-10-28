@@ -6512,6 +6512,7 @@ export const AR = {
   "False or misleading": "غلط أو مضللة",
   "Something else": "حاجة تانية",
   "Thanks — reported. Attune will avoid answers like this.": "شكرًا — اتبلّغ. Attune هيتجنب إجابات زي دي.",
+  "Buy agents": "وكلاء الشراء",
   "Tap what you meant — Attune learns what you usually mean.": "دوس على اللي تقصده — Attune بيتعلم إنت عادة تقصد إيه.",
   "Do it": "نفّذ",
   "Your to-do list": "المهام بتاعتك",

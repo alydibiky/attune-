@@ -12,7 +12,8 @@
 
 import { extractBlocks } from "./code.js";
 
-const NUM = /\d/g;
+// Arabic-Indic digits count too: «عندي ٢٢٠٠٠ هتتقسم على ٩ شهور» was not seen as a word problem (persona 8)
+const NUM = /[0-9\u0660-\u0669\u06F0-\u06F9]/g;
 
 /** A question that needs exact working: numbers + a question about them. Plain sums are calc.js's. */
 export function looksLikeMathProblem(text) {
@@ -74,7 +75,7 @@ export function looksLikeCodeTask(text) {
 
 export function solveMessages(question) {
   return [
-    { role: "system", content: "You check word problems by computing them. Write ONE short Python 3 program that solves the problem exactly: define the quantities as variables, use fractions.Fraction or sympy for exact algebra, and compute the answer step by step with a comment on each step. Read the problem literally and watch for tricks (things that happen at the same time, impossible conditions, units). Cranes: \"lifts at N% of its chart capacity\" is the safe-working rule, so the most to plan for is N% of the chart value at that radius (not the full chart value). The LAST line printed must be exactly 'ANSWER: <the answer with units>' — or 'ANSWER: impossible — <short reason>' if no value can satisfy the problem. Reply with the code block only." },
+    { role: "system", content: "You check word problems by computing them. Write ONE short Python 3 program that solves the problem exactly: define the quantities as variables, use fractions.Fraction or sympy for exact algebra, and compute the answer step by step with a comment on each step. Read the problem literally and watch for tricks (things that happen at the same time, impossible conditions, units). Cranes: \"lifts at N% of its chart capacity\" is the safe-working rule, so the most to plan for is N% of the chart value at that radius (not the full chart value). Reversed percentages: a price AFTER a d% discount is original × (1 − d), so the original = that price ÷ (1 − d) (not that price × (1 + d)); a price WITH d% VAT is net × (1 + d), so net = that price ÷ (1 + d). The LAST line printed must be exactly 'ANSWER: <the answer with units>' — or 'ANSWER: impossible — <short reason>' if no value can satisfy the problem. Reply with the code block only." },
     { role: "user", content: String(question || "").trim() },
   ];
 }
@@ -107,6 +108,9 @@ export function explainMessages(question, code, output, answer) {
  */
 export function repairAnswerLines(code) {
   return String(code || "").split("\n").map((l) => {
+    // persona 8 (28 Oct): print("ANSWER: {full_months} months") without the f — the person saw "{full_months} months"
+    const pf = /^(\s*print\(\s*)(["'])(ANSWER\s*[:：][^"']*\{[A-Za-z_][\w.]*(?:[:!][^}]*)?\}[^"']*)\2/.exec(l);
+    if (pf) return l.replace(pf[0], `${pf[1]}f${pf[2]}${pf[3]}${pf[2]}`);
     const m = /^(\s*)ANSWER\s*[:：]\s*(.+?)\s*$/.exec(l);
     if (!m || /^\s*(print|#)/.test(l)) return l;
     const rest = m[2].replace(/\\/g, "\\\\").replace(/"""/g, "\"\"\\\"");

@@ -12,7 +12,7 @@
 import { readMealText } from "./fitread.js";
 import { readLocal, CAT_WORDS } from "./yusr/logtext.js";
 import { quickAction, looksLikeAction } from "./actions.js";
-import { chatLifeIntent, addCommitment } from "./life.js";
+import { chatLifeIntent, addCommitment, scheduleOf, payAmount, togglePaid, progressOf } from "./life.js";
 import { chatDeadlineIntent, addDeadline } from "./deadlines.js";
 import { EXERCISES, burned, today as fitToday } from "./fit.js";
 import { markTaken, addGlucose, isInsulin, isoDay } from "./care.js";
@@ -30,9 +30,9 @@ const num = (v) => (Math.round(v * 100) / 100).toLocaleString("en-US", { maximum
 const QUESTION = /[?؟]\s*$|^(how|what|who|when|which|where|why|is|are|did|do|does|can|should|show|list|tell me)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|ليه|ازاي|إزاي)(?![؀-ۿ])/i;
 const EAT = /\b(ate|eat|eaten|had|have|having|breakfast|lunch|dinner|supper|snack|drank|ate for)\b|اكلت|أكلت|كلت|فطرت|اتغديت|اتعشيت|فطار|فطاري|غدا|غدايا|عشا|عشايا|سناك|تصبيره/i;
 const MEAL_OF = [["breakfast", /\bbreakfast\b|فطار|فطرت|الصبح/i], ["lunch", /\blunch\b|غدا|اتغديت|الضهر|الظهر/i], ["dinner", /\b(dinner|supper)\b|عشا|اتعشيت|بالليل/i], ["snacks", /\bsnacks?\b|سناك|تصبيره/i]];
-const MONEY_VERB = /\b(spent|spend|paid|pay|bought|buy|cost|costs|received|got paid|earned|salary|refund|sold|transferred|sent)\b|صرفت|دفعت|اشتريت|بكام|قبضت|المرتب|مرتبي|استلمت|حولت|بعت فلوس|اخدت فلوس/i;
+const MONEY_VERB = /\b(spent|spend|paid|pay|bought|buy|cost|costs|received|got paid|got|earned|salary|refund|sold|transferred|sent|da3et|dafa3t|dafa3et|saraft|sraft|shtaret|eshtaret|2abadt|abadt)\b|صرفت|دفعت|اشتريت|بكام|قبضت|المرتب|مرتبي|استلمت|حولت|بعت فلوس|اخدت فلوس/i;
 const CURRENCY = /\b(egp|le|l\.e|pounds?|usd|dollars?|eur|euros?|sar|riyals?|aed|dirhams?|kd|qr)\b|\$|€|£|جنيه|جنية|ج\.م|ريال|درهم|دولار|يورو/i;
-const WATER = /(\d+(?:\.\d+)?|a|an|one|two|three|four|five|half|كوبايه|كوبايتين|كوب|كاسه|ازازه|نص|واحد|اتنين|تلاته|اربعه|خمسه)?\s*(glass(?:es)?|cups?|bottles?|litres?|liters?|l|ml|كوب|كوبايه|كوبايات|كوبايتين|كاسات|كاسه|ازازه|ازايز|لتر|مل)?\s*(?:of\s+)?(water|مي[هة]|مياه|ماء)/i;
+const WATER = /(\d+(?:\.\d+)?|a|an|one|two|three|four|five|half|كوبايه|كوبايتين|كوب|كاسه|ازازه|نص|واحد|اتنين|تلاته|اربعه|خمسه)?\s*(glass(?:es)?|cups?|bottles?|litres?|liters?|l|ml|كوب|كوبايه|كوبايات|كوبايتين|كاسات|كاسه|ازازه|ازايز|لتر|مل)?\s*(?:of\s+)?(water|(?<![ء-ي])(?:و|ال|بال|وال)?(?:مي[هة]|مياه|ماء)(?![ء-ي]))/i;   // («طعمية» is not water — persona 9)
 const WEIGHT = /\b(weigh|weighs|weighed|weight|scale)\b|وزني|وزنت|الميزان/i;
 const WORKOUT = [["walk-brisk", /\b(brisk walk|power walk)\b|مشي سريع/i], ["walk", /\b(walk|walked|walking|steps)\b|مشيت|مشي|اتمشيت/i], ["run-8", /\b(ran|run|running|jog|jogged|jogging)\b|جريت|جري/i],
   ["cycle", /\b(cycled|cycling|bike ride|biked)\b|عجله|عجلة|بسكلته/i], ["swim", /\b(swam|swim|swimming)\b|عومت|سباحه|عوم/i], ["football", /\b(football|soccer)\b|كوره|ماتش/i], ["padel", /\b(padel|tennis)\b|بادل|تنس/i],
@@ -40,7 +40,7 @@ const WORKOUT = [["walk-brisk", /\b(brisk walk|power walk)\b|مشي سريع/i],
 const DOSE = /\b(took|taken|take|had)\b[^.]{0,30}\b(pills?|tablets?|meds?|medicine|medication|dose|insulin|shot|injection)\b|\b(took|taken)\s+my\b|خدت|اخدت|أخدت|خدت الدوا|اخدت الحقنه|ضربت الحقنه|خدت الانسولين|خدت الإنسولين/i;
 const SUGAR = /\b(blood sugar|glucose|sugar(?: level| reading| was| is)?)\b|سكري|السكر|قست السكر|نسبه السكر/i;
 const NOTE = /^(note|remember|keep in mind|save this|write down)\b[:\s]|^(افتكر|خلي في بالك|احفظ|سجل ملاحظه|ملاحظه)\s*[:\s]/i;
-const EVENT = /\b(meeting|appointment|dentist|doctor'?s?|interview|call with|class|lesson|exam|flight|match)\b|ميعاد|موعد|معاد|اجتماع|دكتور|الدكتور|امتحان|مقابله|مقابلة|درس|طياره|طيارة/i;
+const EVENT = /\b(meeting|appointment|dentist|doctor'?s?|interview|call with|call|visit|pick up|collect|meet|class|lesson|exam|flight|match)\b|اتصل|كلم|اكلم|زياره|زيارة|اقابل|اجيب|اروح|ميعاد|موعد|معاد|اجتماع|دكتور|الدكتور|امتحان|مقابله|مقابلة|درس|طياره|طيارة/i;
 // v8.6: «سكر 110», "sugar 140 this morning" — a reading, not 110 g of sugar (no grams / spoons after the number)
 const SUGAR_N = /(^|\s)(سكر|sugar)\s*[:=]?\s*\d{2,3}(?:\.\d)?(?!\s*(?:g\b|gm|gr|grams?|جم|جرام|معلق|spoons?|tsp|tbsp|cubes?|مكعب))/i;
 // v8.6: "milk tomorrow", «فراخ بكرة» — something for later is not eaten now
@@ -75,6 +75,15 @@ function waterMl(t) {
   return Math.round((m[1] === "كوبايتين" ? 2 : q) * 250);
 }
 
+/** Persona 9 (a year of daily use, 28 Oct): "vegetables 460", «خضار 415», "koshari 85" were logged as a 300 g mahshi, a vegetable
+    soup, a 450 g koshari — the number thrown away. When the food reader can't use the number (not the grams it took — a "count" of 460 vegetables is not one),
+    the number is the price. "rice 200" (200 g taken) stays food. */
+function numLost(t) {
+  const n = +latin(t).replace(/,/g, "").match(/\d+(?:\.\d+)?/)?.[0];
+  if (!(n >= 20)) return false;
+  const items = readMealText(t).items.filter((x) => x.kcal != null);
+  return items.length > 0 && !items.some((x) => Math.abs((x.grams || 0) - n) < 1);
+}
 /** What the sentence asks Attune to do. ctx: { now, stores } */
 export function understand(text, { now = Date.now(), stores = {} } = {}) {
   const t = String(text || "").trim();
@@ -93,7 +102,7 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   }
   // v8.6 (the whole-app test): "meeting with Ali Tuesday 3pm", «ميعاد الدكتور بكرة الساعة 5» — an appointment with a day and a time
   // is a reminder even without "remind me" (it did nothing before)
-  if (EVENT.test(t) && /\d/.test(latin(t)) && (/\b(today|tonight|tomorrow|mon|tue|wed|thu|fri|sat|sun)\w*\b|\d{1,2}\s*(am|pm|:\d{2})|الساعه|الساعة|النهارده|بكره|بكرة|السبت|الحد|الاحد|الاتنين|التلات|الاربع|الخميس|الجمعه|الجمعة/i.test(t))) {
+  if (EVENT.test(t) && /\d/.test(latin(t)) && !MONEY_VERB.test(t) && !/\b(last|yesterday|ago|was)\b|امبارح|اللي فات|من يومين/i.test(t) && (/\b(today|tonight|tomorrow|mon|tue|wed|thu|fri|sat|sun)\w*\b|\d{1,2}\s*(am|pm|:\d{2})|الساعه|الساعة|النهارده|بكره|بكرة|السبت|الحد|الاحد|الاتنين|التلات|الاربع|الخميس|الجمعه|الجمعة/i.test(t))) {
     const a = quickAction((/[\u0600-\u06ff]/.test(t) ? "فكرني " : "remind me ") + t, now);
     if (a && a.kind === "reminder" && !a.problems.length) return { actions: [{ kind: "reminder", action: a }] };
   }
@@ -111,10 +120,17 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     if (med) return { actions: [{ kind: "dose", medId: med.id, name: med.name }] };
   }
   // weight
-  if (WEIGHT.test(t)) { const m = /(\d{2,3}(?:\.\d+)?)/.exec(latin(t)); if (m && +m[1] > 25 && +m[1] < 400) return { actions: [{ kind: "weight", kg: +m[1] }] }; }
+  if (WEIGHT.test(t)) {
+    const m = /(\d{2,3}(?:\.\d+)?)/.exec(latin(t));
+    // v8.6: "I weigh 200 lbs" was saved as 200 kg; "weight 920" became a 920 EGP expense
+    const lbs = /\b(lbs?|pounds?)\b|رطل/i.test(t) && !/(egp|جنيه)/i.test(t), kg = m ? Math.round((lbs ? +m[1] * 0.4536 : +m[1]) * 10) / 10 : 0;
+    if (m && kg > 25 && kg < 400) return { actions: [{ kind: "weight", kg }] };
+    if (m) return { actions: [], ask: { kind: "check", en: `${m[1]}${lbs ? " lb" : " kg"} doesn't look like a body weight — write it again (e.g. "weight 92.5" or "200 lbs").`, ar: `${m[1]} مش شكل وزن — اكتبه تاني (مثلًا «وزني 92.5»).` } };
+  }
   const actions = [];
   // water (it can come with food: "eggs and 2 glasses of water")
-  const ml = waterMl(t);
+  // (a water BILL is money, not a drink — «دفعت فاتورة المية 200», "water bill 300")
+  const ml = /\b(bill|bills)\b|فاتور|فواتير/i.test(t) ? 0 : waterMl(t);
   // a workout
   const w = WORKOUT.find(([, re]) => re.test(t));
   if (w && !EAT.test(t)) {
@@ -123,11 +139,48 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     if (!min && km) min = Math.round(+km[1] * (w[0] === "walk" || w[0] === "walk-brisk" ? 12 : w[0] === "cycle" ? 3 : 7.5));
     if (min && min > 0 && min <= 600) return { actions: [{ kind: "workout", id: w[0], minutes: min }, ...(ml ? [{ kind: "water", ml }] : [])] };
   }
+  // v8.6 (the 2-month test): "Ahmed paid me back 1000" / «أحمد رجعلي 1000» — the money comes in AND Ahmed's debt goes down
+  { const lifeItems = (stores.life && stores.life.items) || [], first = (s) => fold(s || "").split(/\s+/)[0];
+    const mo = /^\s*(?:i\s+)?(?:paid|gave|returned|paid back)\s+(?:back\s+)?(?:([\d٠-٩][\d٠-٩,.]*)\s+(?:egp\s+|le\s+|pounds?\s+)?to\s+(?:the\s+|my\s+)?([\p{L}]+)|(?:the\s+|my\s+)?([\p{L}]+)\s+([\d٠-٩][\d٠-٩,.]*))|^\s*(?:سددت|رجعت|دفعت)\s+(?:ل|لـ)\s*([\p{L}]+)\s+([\d٠-٩][\d٠-٩,.]*)/iu.exec(t);
+    if (mo) { const who = mo[2] || mo[3] || mo[5], amt = +latin(mo[1] || mo[4] || mo[6] || "0").replace(/,/g, "");
+      const c = lifeItems.find((x) => x.dir !== "in" && first(x.person || x.title) === first(who));
+      if (c && amt) return { actions: [{ kind: "repay", id: c.id, who: c.person || who, amount: amt }, { kind: "money", items: [{ type: "expense", amount: amt, cat: "other", note: (c.person || who) + (/[\u0600-\u06ff]/.test(t) ? " — سداد" : " — paid back"), date: isoDay(now) }] }] }; }
+    const mi = /^\s*([\p{L}]+)\s+(?:paid|gave me|sent me|transferred)\s+(?:me\s+)?([\d٠-٩][\d٠-٩,.]*)/iu.exec(t);
+    if (mi && !/^(i|we|you)$/i.test(mi[1])) { const c = lifeItems.find((x) => x.dir === "in" && first(x.person || x.title) === first(mi[1]));
+      if (c) { const amt = +latin(mi[2]).replace(/,/g, ""); return { actions: [{ kind: "repay", id: c.id, who: c.person || mi[1], amount: amt }, { kind: "money", items: [{ type: "income", amount: amt, cat: "other", note: (c.person || mi[1]) + " paid back", date: isoDay(now) }] }] }; } } }
+  { const m = /^\s*([\p{L}]+(?:\s[\p{L}]+)?)\s+(?:paid me back|paid back|returned|gave me back|settled|رجعلي|رجّعلي|سددلي|سدد|دفعلي|ادالي|اداني)\s*([\d٠-٩][\d٠-٩,.]*)?/iu.exec(t);
+    if (m) { const who = m[1].trim(), amt = m[2] ? +latin(m[2]).replace(/,/g, "") : 0;
+      const items = ((stores.life && stores.life.items) || []).filter((c) => c.dir === "in" && fold(c.person || c.title || "").split(/\s+/)[0] === fold(who).split(/\s+/)[0]);
+      if (items.length || amt) return { actions: [...(items.length ? [{ kind: "repay", id: items[0].id, who, amount: amt }] : []), ...(amt ? [{ kind: "money", items: [{ type: "income", amount: amt, cat: "other", note: who + (/[\u0600-\u06ff]/.test(t) ? " رجّع" : " paid back"), date: isoDay(now) }] }] : [])] }; } }
+  // v8.6 (the 2-month test: "electricity bill 650 due on the 10th" became a 10 EGP expense): a bill with its due day is a bill to
+  // pay — every month on that day, in People & plans — and its amount is the money, not the day
+  { const due = /\b(?:due|by)\b(?:\s+on)?(?:\s+the)?\s+(\d{1,2})(?:st|nd|rd|th)?\b|(?:يستحق|ميعاده|ميعادها|بتتدفع)\s*(?:يوم)?\s*([\d٠-٩]{1,2})/i.exec(latin(t));
+    if (due && /\b(bill|electricity|water|internet|phone|gas|rent|school|fees|subscription|insurance)\b|فاتور|كهربا|ميه|مياه|نت|غاز|ايجار|إيجار|مصاريف|اشتراك|تأمين/i.test(t)) {
+      const day = +(due[1] || latin(due[2] || "")), amt = Math.max(0, ...latin(t).replace(due[0], " ").match(/\d[\d,]*(?:\.\d+)?/g)?.map((x) => +x.replace(/,/g, "")) || [0]);
+      if (amt > 0 && day >= 1 && day <= 31) { const c = chatLifeIntent(latin(t).replace(due[0], " ").replace(/\s+/g, " ").trim() + " every month on the " + day + "th"); if (c) return { actions: [{ kind: "life", c: { ...c, amount: amt } }] }; }
+    } }
   // a debt / installment / savings circle — and a deadline
   const life = chatLifeIntent(t);
+  // persona 9 (a year of daily use): "netflix 250" typed every month made 12 Netflix subscriptions (Safe to spend took all 12 off).
+  // A subscription that is already there is paid this month: the money goes out, the plan's payment is ticked.
+  if (life && life.kind === "subscription") {
+    const nm = (c) => fold(String(c.person || c.title || c.name || "")).trim();
+    const same = ((stores.life && stores.life.items) || []).find((c) => c.kind === "subscription" && nm(c) && nm(c) === nm(life));
+    if (same) { const amt = life.amount || same.amount || 0, who = same.person || same.title || same.name;
+      return { actions: [{ kind: "repay", id: same.id, who, amount: amt, plan: true }, ...(amt ? [{ kind: "money", items: [{ type: "expense", amount: amt, cat: "bills", note: who, date: isoDay(now) }] }] : [])] }; }
+  }
   if (life) return { actions: [{ kind: "life", c: life }] };
   const dl = chatDeadlineIntent(t, { now });
   if (dl) return { actions: [{ kind: "deadline", d: dl }] };
+  // v8.6 (the 2-month test: "fuel 500" was logged as FOOD — ful medames — and "maid 400" went to Chat): a spending word or just
+  // "something + an amount" is money, unless it was eaten ("ate", «اكلت») — the food reader must not take "fuel" for «فول»
+  { const hasNum = /\d/.test(latin(t)), catHit = Object.entries(CAT_WORDS).some(([k, re]) => !["food", "groceries", "coffee", "salary"].includes(k) && re.test(t));
+    const short = /^\s*[\p{L}][\p{L}\s'’-]{1,30}\s+[\d٠-٩][\d٠-٩,.]*\s*(?:egp|le|pounds?|جنيه|ج)?\s*$|^\s*[\d٠-٩][\d٠-٩,.]*\s*(?:egp|le|pounds?|جنيه|ج)?\s+[\p{L}][\p{L}\s'’-]{1,30}$/iu.test(t);
+    if (hasNum && !EAT.test(t) && !ml && !WEIGHT.test(t) && !/شربت|drank/.test(t) && (catHit || (short && !readMealText(t).items.some((x) => x.kcal != null && !/^(ful|ful-sandwich)$/.test(x.id) || false)) || (short && numLost(t)))) {
+      const r = readLocal(t, { today: isoDay(now) }); const lost = short && numLost(t);
+      const items = r.items.filter((x) => x.amount >= 1).map((x) => (lost && x.cat === "other" ? { ...x, cat: "food" } : x));
+      if (items.length) return { actions: [{ kind: "money", items }] };
+    } }
   // food (and money spent on it)
   // (the water phrase is taken out first — "2 glasses of water" is water, not food: "glasses" read as molasses)
   const rest = ml ? fold(t).replace(WATER, " ") : t;
@@ -147,7 +200,10 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     if (money) { const r = readLocal(t, { today }); const it = r.items.filter((x) => x.amount >= 1)[0];
       // (the expense is named after what was eaten: "Koshari", not "paid 85 pounds")
       const named = foods.map((x) => x.name.replace(/\s*\(.*\)$/, "")).slice(0, 3).join(", ");
-      if (it) actions.push({ kind: "money", items: [{ ...it, amount: it.amount, cat: it.cat === "other" ? "food" : it.cat, note: foodText !== rest && named ? named : it.note }] }); }
+      // v8.6 ("spent 200 on lunch and 50 on coffee and 30 tip" kept only the 200): every amount said is its own expense
+      const all = r.items.filter((x) => x.amount >= 1);
+      if (all.length > 1) actions.push({ kind: "money", items: all.map((x) => ({ ...x, cat: x.cat === "other" && x === all[0] ? "food" : x.cat })) });
+      else if (it) actions.push({ kind: "money", items: [{ ...it, amount: it.amount, cat: it.cat === "other" ? "food" : it.cat, note: foodText !== rest && named ? named : it.note }] }); }
   } else if (money || Object.entries(CAT_WORDS).some(([k, re]) => k !== "food" && re.test(rest))) {
     const r = readLocal(rest, { today });
     const items = r.items.filter((x) => x.amount >= 1);
@@ -174,7 +230,7 @@ export function apply(a, stores, { now = Date.now() } = {}) {
   const fitDay = (fn) => ({ ...fit, days: { ...(fit.days || {}), [day]: fn({ ...EMPTY_DAY, ...((fit.days || {})[day] || {}) }) } });
   switch (a.kind) {
     case "food": {
-      const items = a.items.map((x) => ({ ...x, t: now }));
+      const items = a.items.map(({ alts, box, readBase, ...x }) => ({ ...x, t: now }));   // v8.6: no swap lists kept (storage)
       const kcal = Math.round(items.reduce((s, x) => s + (x.kcal || 0), 0));
       const names = items.map((x) => x.name), namesAr = items.map((x) => x.ar || x.name);
       const left = a.unknown && a.unknown.length ? a.unknown.join(", ") : "";
@@ -203,6 +259,16 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const out = a.items.every((x) => x.type === "expense");
       return { stores: { "ledger.v3": r.ledger }, open: "money",
         done: { en: `${out ? "Expense" : "Money"} added: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join(", ")}.`, ar: `${out ? "أُضيف مصروف" : "أُضيف مبلغ"}: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join("، ")}.` } };
+    }
+    case "repay": {
+      // the amount goes against what is still owed (life.js payAmount on the first unpaid payment; the rest is worked out again)
+      const life = stores.life || { items: [] }, c = (life.items || []).find((x) => x.id === a.id);
+      if (!c) return { stores: {}, done: { en: "", ar: "" } };
+      const s = scheduleOf(c, now), nx = s.find((x) => !x.paid); if (!nx) return { stores: {}, open: "life", done: { en: `${a.who} had nothing left to pay.`, ar: `${a.who} مكانش عليه حاجة.` } };
+      const next = a.amount ? payAmount(life, c.id, nx.i, a.amount) : togglePaid(life, c.id, nx.i);
+      const left = progressOf(next.items.find((x) => x.id === c.id), now).left;
+      if (a.plan) return { stores: { "attune:life:v1": next }, open: "life", done: { en: `${a.who}: this month's ${num(a.amount || c.amount || 0)} paid.`, ar: `${a.who}: اتدفع ${num(a.amount || c.amount || 0)} بتوع الشهر ده.` } };
+      return { stores: { "attune:life:v1": next }, open: "life", done: { en: `${a.who}: ${a.amount ? num(a.amount) + " paid back" : "paid"}${left != null ? ` — ${num(left)} still owed` : ""}.`, ar: `${a.who}: رجّع ${a.amount ? num(a.amount) : ""}${left != null ? ` — فاضل ${num(left)}` : ""}.` } };
     }
     case "dose": {
       const care = stores.care || { meds: [], taken: {} }, m = (care.meds || []).find((x) => x.id === a.medId);

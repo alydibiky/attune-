@@ -1128,6 +1128,9 @@ const TZ = { "Africa/Cairo": "eg", "Asia/Riyadh": "sa", "Asia/Dubai": "ae", "Afr
   "America/New_York": "us", "America/Chicago": "us", "America/Denver": "us", "America/Los_Angeles": "us", "America/Phoenix": "us", "America/Anchorage": "us", "Pacific/Honolulu": "us" };
 /** The country to start with: the phone's time zone, else the region of its language ("ar-EG" → eg), else Egypt. */
 export function defaultCountry(tz, lang) {
+  // v8.6 (persona 5: an Egyptian set to English got "Pulled pork sandwich" and "Pancakes with maple syrup" as today's meals): the
+  // country chosen in Attune comes first, then the phone's time zone, then its language
+  if (tz === undefined && lang === undefined) { try { const c = typeof localStorage !== "undefined" && localStorage.getItem("attune:country"); if (c && COUNTRIES[c]) return c; } catch (e) {} }
   if (tz === undefined) { try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { tz = ""; } }
   if (lang === undefined) lang = (typeof navigator !== "undefined" && navigator.language) || "";
   if (TZ[tz]) return TZ[tz];

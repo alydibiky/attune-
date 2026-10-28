@@ -170,11 +170,13 @@ if (want("math")) {
   for (const [q, want_] of probs) {
     let r = await llm(V.solveMessages(q), { maxTokens: 700 });
     const run = (code) => { try { return execFileSync("python3", ["-c", code], { timeout: 20000 }).toString(); } catch (e) { return "ERROR " + String(e.stderr || e.message).slice(-400); } };
-    let code = (r.text.match(/```(?:python)?\n([\s\S]*?)```/) || [])[1] || "";
+    // (the app's own reader: it also turns a bare `ANSWER: {x}` line into the print it meant — repairAnswerLines)
+    const codeOf = (t) => (V.programFrom ? V.programFrom(t) : (t.match(/```(?:python)?\n([\s\S]*?)```/) || [])[1]) || "";
+    let code = codeOf(r.text);
     let printed = run(code);
     if (/^ERROR/.test(printed) && V.fixSolveMessages) {   // the app sends the error back once
       const r2 = await llm(V.fixSolveMessages(q, code, printed), { maxTokens: 700 });
-      code = (r2.text.match(/```(?:python)?\n([\s\S]*?)```/) || [])[1] || code; printed = run(code); r = { text: r.text + "\n\n--- fixed ---\n" + r2.text, secs: r.secs + r2.secs };
+      code = codeOf(r2.text) || code; printed = run(code); r = { text: r.text + "\n\n--- fixed ---\n" + r2.text, secs: r.secs + r2.secs };
     }
     const ans = V.readAnswer ? V.readAnswer(printed) : printed;
     section("Maths", q.slice(0, 40), q, r, { printed: printed.trim().slice(-300) }, [[want_.test(String(ans || printed)), "the program's answer is right"]]);

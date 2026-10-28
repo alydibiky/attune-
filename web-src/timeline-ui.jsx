@@ -50,6 +50,9 @@ export function TimelinePage({ navTo, doIt, flash }) {
   const add = () => {
     const text = say.trim(); if (!text || !doIt) return;
     let r = null; try { r = doIt(text); } catch (e) {}
+    // v8.6 (persona 5: "call mom tomorrow at 6pm" here said "I couldn't read that"): on Follow-ups, anything with a day or a time is a
+    // reminder even without "remind me"
+    if (!r && /\b(today|tonight|tomorrow|mon|tue|wed|thu|fri|sat|sun)\w*\b|\b\d{1,2}\s*(am|pm)\b|\d{1,2}:\d{2}|النهارده|بكره|بكرة|الساعه|الساعة|السبت|الحد|الاتنين|التلات|الاربع|الخميس|الجمعه|الجمعة/i.test(text)) { try { r = doIt((/[\u0600-\u06ff]/.test(text) ? "فكرني " : "remind me ") + text); } catch (e) {} }
     if (r && r.lines && r.lines.length) { flash && flash(r.lines.map((x) => x.text).join(" · ")); setSay(""); setV((x) => x + 1); }
     else if (r && r.answer) flash && flash(r.answer);
     else flash && flash(tr("I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”"));

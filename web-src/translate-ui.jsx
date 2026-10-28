@@ -179,7 +179,7 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} dir="auto" placeholder={tr("Type or paste anything…")} className={field} style={st} data-testid="tr-text" />
           <div className="flex items-center gap-3 flex-wrap">
             <button className={btnP} disabled={!text.trim() || !!busy} onClick={go} data-testid="tr-go">{tr("Translate")}</button>
-            <label className="flex items-center gap-2 min-h-[44px] text-[13.5px] font-semibold"><input type="checkbox" className="w-4 h-4 accent-[var(--c-acc)]" checked={careful} onChange={(e) => setCareful(e.target.checked)} data-testid="tr-careful" />{tr("Extra careful (slower)")}</label>
+            <label className="flex items-center gap-2 min-h-[44px] text-[13.5px] font-semibold"><input type="checkbox" className="w-5 h-5 accent-[var(--c-acc)]" checked={careful} onChange={(e) => setCareful(e.target.checked)} data-testid="tr-careful" />{tr("Extra careful (slower)")}</label>
             <button className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-acc)]" onClick={() => setShowG((v) => !v)} data-testid="tr-glossary">{tr("My words ({n})", { n: gloss.length })}</button>
           </div>
         </div>) : null}

@@ -334,6 +334,18 @@ export function writtenItem(raw, name, fallback = {}) {
   const fd = { id, en: title, ar: title, ...per, portions: unit === "g" || unit === "ml" ? {} : { [unit]: Math.round(each) }, src: "written" };
   return { item: { name: title, ar: title, id, src: "written", qty, unit, grams, ...nutrients(per, grams), estimate: true, said: nm, own: nm, from: "text", base: grams, explicit: true, alts: [] }, food: fd };
 }
+/** Persona 8 (the AI tester, 28 Oct): the phone's model guessed koshari and a shawarma at ~380 kcal per 100 g (real: ~150–250).
+    When the code's own table knows the same food, an estimate more than 1.6× away from it is pulled halfway back to the table
+    (the person's words, homemade or restaurant, still move it) and marked as checked. ref = table items for the same words. */
+export function checkWritten(item, ref) {
+  const known = (ref || []).filter((y) => y && y.kcal > 0 && y.grams > 0);
+  if (!item || !(item.kcal > 0) || !(item.grams > 0) || !known.length) return item;
+  const tk = known.reduce((a, y) => a + y.kcal, 0), tg = known.reduce((a, y) => a + y.grams, 0);
+  const ai = item.kcal / item.grams, table = tk / tg, ratio = ai / table;
+  if (ratio <= 1.6 && ratio >= 1 / 1.6) return { ...item, checked: "table" };
+  const s = Math.sqrt(table / ai);   // halfway on a ratio scale
+  return { ...item, kcal: Math.round(item.kcal * s), p: r1(item.p * s), c: r1(item.c * s), f: r1(item.f * s), checked: "pulled", aiKcal: item.kcal };
+}
 /** Without a model: "2 eggs, 1 baladi bread and a plate of ful" / «٢ بيض ورغيف عيش وطبق فول» → items (table foods only). */
 export function quickParse(text) {
   const t = String(text || "").replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
@@ -724,9 +736,12 @@ const SLOT_TAG = { breakfast: "breakfast", lunch: "lunch", dinner: "dinner", sna
  * (25/35/30/10 %), the recipe that fits the diet, portions scaled in quarters (0.5–2×).
  * seed changes the picks (day of the year → a different day each day). → { meals: {slot: {recipe, x, kcal, p, c, f}}, total }
  */
+const MUSLIM_CC = new Set(["eg", "sa", "ae", "kw", "qa", "bh", "om", "jo", "ps", "iq", "sy", "ye", "ly", "tn", "dz", "ma", "sd", "tr", "pk", "id", "my", "bd", "ir", "af", "lb", "mr", "so", "sn", "ml", "ne", "az", "uz", "kz", "tj", "kg", "tm"]);
 export function mealPlan(tg, { diet = "balanced", seed = 0, avoid = [], country = CZ.getCountry() } = {}) {
   if (!tg) return null;
-  const ok = (rc) => !avoid.includes(rc.id) && (diet !== "vegetarian" || rc.tags.includes("vegetarian")) && (diet === "keto" ? recipeNutrients(rc).c < 12 : diet !== "low-carb" || rc.tags.includes("low-carb") || recipeNutrients(rc).c < 25);
+  // v8.6: the plan never proposes pork in a Muslim-majority country (it can still be searched and logged)
+  const halal = MUSLIM_CC.has(country), porky = (rc) => /\b(pork|bacon|ham|blt|pepperoni|salami|chorizo|prosciutto|lard|sausage roll)\b|خنزير|بيكون/i.test((rc.en || "") + " " + (rc.id || "") + " " + (rc.items || []).map((x) => x[0]).join(" "));
+  const ok = (rc) => !avoid.includes(rc.id) && !(halal && porky(rc)) && (diet !== "vegetarian" || rc.tags.includes("vegetarian")) && (diet === "keto" ? recipeNutrients(rc).c < 12 : diet !== "low-carb" || rc.tags.includes("low-carb") || recipeNutrients(rc).c < 25);
   const meals = {}; const used = new Set();
   // v6.10: breakfast, lunch and dinner from the chosen country's own dishes; the snack (and any meal the country's
   // list can't fill for this diet) from the recipe book's international staples. Egypt: the recipe book, as before.

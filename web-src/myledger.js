@@ -30,6 +30,8 @@ export function myMoneyIntent(q) {
   const inc = /\b(income|earn\w*|received|got paid|salary|revenue)\b/.test(t) || /(دخل|قبضت|كسبت|استلمت|مرتب|راتب)/.test(t);
   const bal = /\b(balance|how much (money )?(do )?i have|net)\b/.test(t) || /(رصيد|معايا كام|عندي كام)/.test(t);
   if (!exp && !inc && !bal) return "";
+  // (persona 9: "when did I last pay netflix?" was answered with this month's bills — a "when" question is People & plans' / Ask's)
+  if (/\b(when did (i|we) last|last time (i|we)|when was the last time)\b/.test(t) || /(امتى|إمتى|امتي)\s+(اخر|آخر)\s+(مره|مرة)/.test(t)) return "";
   if (/\b(how to|tips|should i|advice|budget(ing)? plan|reduce|save more)\b/.test(t) || /(ازاي اقلل|نصايح|ازاي أوفر|ازاي اوفر)/.test(t)) return "";   // advice, not a lookup
   return exp && inc ? "both" : exp ? "expense" : inc ? "income" : "both";
 }

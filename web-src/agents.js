@@ -324,9 +324,9 @@ export function agentsReport(st, scoutGoals = [], alerts = [], now = Date.now())
   const ag = st.agents || [], wk = now - 7 * DAY;
   const checks = ag.reduce((n, a) => n + (a.checks || []).filter((c) => c.at >= wk).length, 0);
   const found = ag.filter((a) => a.found && a.found.at >= wk).length + scoutGoals.reduce((n, g) => n + ((g.unseen || []).length ? 1 : 0), 0);
-  const by = { watch: 0, track: 0, order: 0, scout: scoutGoals.filter((g) => g.on !== false).length, alert: alerts.filter((r) => r.on !== false && !String(r.id).startsWith("agent-")).length };
+  const by = { buy: 0, watch: 0, track: 0, order: 0, scout: scoutGoals.filter((g) => g.on !== false).length, alert: alerts.filter((r) => r.on !== false && !String(r.id).startsWith("agent-")).length };
   for (const a of ag) if (a.on && by[a.kind] != null) by[a.kind]++;
-  return { running: by.watch + by.track + by.order + by.scout + by.alert, found, checks, by };
+  return { running: by.buy + by.watch + by.track + by.order + by.scout + by.alert, found: found + ag.filter((a) => a.kind === "buy" && a.pending).length, checks, by };
 }
 
 // ---- v8.6 buy agents: the closest real match, then the person decides --------------------------------------------------------------

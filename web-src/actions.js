@@ -117,7 +117,10 @@ export function parseTime(text, nowIn) {
       y = y || now.getFullYear();
       let cand = new Date(y, mo, d);
       if (cand.getMonth() === mo && cand.getDate() === d) {
-        if (cand < at(now, 0, 0) && !dm) cand = new Date(y + 1, mo, d);
+        // v8.6 (persona 6: "remind me on 3/4 at 5pm" in October said "already passed"): a day and month without a year is the next
+        // one; only a written year keeps a date in the past (and is then reported)
+        const yearSaid = !!(dm && (dm[0].match(/^\d{4}-/) || dm[3]));
+        if (cand < at(now, 0, 0) && !yearSaid) cand = new Date(y + 1, mo, d);
         day = cand; dayWord = "date";
       }
     }

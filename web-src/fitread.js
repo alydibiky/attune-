@@ -381,14 +381,15 @@ function wordsOf(ch) {
     .filter((w) => w && WORDN[w] == null && !UNIT_RX.some(([rx]) => rx.test(" " + w + " ")) && !SIZE.some(([rx]) => rx.test(" " + w + " ")) && !/^(of|the|some|a|an|من|شويه|حبه|[,،.;!?؛])$/.test(w)).join(" ").trim();
 }
 /** {own} when the person's words say more than the table food's name ("homemade chicken pizza" → Chicken pizza) — up to 6 words. */
+/* (persona 9: «فول وعيش بلدي على الفطار» saved the bread as «عيش بلدي الفطار» — the meal word is not part of the food's name) */
 export function ownOf(words, fd, list = ALIAS) {
-  const w = String(words || "").trim(); if (!w || !fd) return {};
+  const w = String(words || "").replace(/(^|\s)(paid|pay|spent|cost|for|on|egp|le|pounds?|جنيه|دفعت|صرفت|على|ع|breakfast|lunch|dinner|supper|snacks?|فطار|الفطار|فطور|الفطور|غدا|الغدا|غداء|الغداء|عشا|العشا|عشاء|العشاء|سحور|السحور)(?=\s|$)/gi, " ").replace(/\s+/g, " ").trim(); if (!w || !fd) return {};
   const ws = w.split(/\s+/); if (ws.length > 6) return {};
   // the food's own other names count as the table's ("falafel" IS taameya, «فراخ» is chicken) — only new words rename it
   const syn = list.filter((a) => a.id === fd.id || a.id + "-sandwich" === fd.id || fd.id + "-sandwich" === a.id).map((a) => a.n).join(" ");
   const tbl = normA((fd.en || "") + " " + (fd.ar || "") + " " + syn).toLowerCase();
   // words that change nothing ("plain", "fresh", "regular") don't rename a food; "homemade", "mum's", a brand do
-  const extra = ws.filter((x) => x.length > 2 && !tbl.includes(x.replace(/(es|s)$/, "")) && !DUALS[x] && !/(تين|ين|ات)$/.test(x) && !/^(with|and|مع|plain|fresh|regular|normal|simple|some|small|big|large|little|hot|cold|warm|عادي|ساده|سادة|صغير|كبير|سخن|ساقع)$/.test(x));
+  const extra = ws.filter((x) => x.length > 2 && !tbl.includes(x.replace(/(es|s)$/, "")) && !DUALS[x] && !/(تين|ين|ات)$/.test(x) && !/^(paid|pay|spent|cost|for|on|at|egp|le|pounds?|جنيه|دفعت|صرفت|ب|بـ|with|and|مع|plain|fresh|regular|normal|simple|some|small|big|large|little|hot|cold|warm|عادي|ساده|سادة|صغير|كبير|سخن|ساقع)$/.test(x));
   return extra.length ? { own: w } : {};
 }
 function named(it, own) {

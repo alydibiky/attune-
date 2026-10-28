@@ -336,7 +336,10 @@ export const FAST_REPORT_ADD = "\n\n(Write a complete, accurate answer from ALL 
 export function needsWeb(text) {
   const t = String(text || "");
   if (t.length < 8) return false;
-  return /\b(latest|newest|today|tonight|this (week|month|year)|news|current|currently|price|prices|cost|how much|release[ds]?|launch(ed)?|specs?|specifications?|trims?|who won|score|weather|exchange rate|stock|20[2-3]\d)\b|أحدث|احدث|أخبار|اخبار|النهارده|انهارده|سعر|أسعار|اسعار|بكام|مواصفات|فئات|نزل امتى|الطقس|الجو/i.test(t);
+  return /\b(latest|newest|today|tonight|this (week|month|year)|news|current|currently|price|prices|cost|how much|release[ds]?|launch(ed)?|specs?|specifications?|trims?|who won|score|weather|exchange rate|stock|20[2-3]\d)\b|أحدث|احدث|أخبار|اخبار|النهارده|انهارده|سعر|أسعار|اسعار|بكام|مواصفات|فئات|نزل امتى|الطقس|الجو/i.test(t)
+    // persona 8 (28 Oct): the phone's model named the wrong singer for «أنا لك على طول» with full confidence — facts about who made
+    // a song, a book or a film are offered a web check too
+    || /\bwho (sang|sings|wrote|composed|directed|starred|played|painted|invented|founded|discovered)\b|\b(singer|composer|author|director) of\b|مين (اللي )?(غنى|غنا|بيغني|كتب|ألف|الف|لحن|مثل|أخرج|اخرج|اخترع|أسس|اسس)|(مطرب|مؤلف|ملحن|مخرج|كاتب) (أغنية|اغنية|رواية|كتاب|فيلم|مسلسل)/i.test(t);
 }
 
 /** v6.8 — a quick question (one fact: a figure, a name, a date) doesn't need a full window of

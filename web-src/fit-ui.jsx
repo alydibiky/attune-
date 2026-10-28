@@ -414,7 +414,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     let it = null;
     if (modelReady && llm) {
       setWriting(true);
-      try { const r = F.writtenItem(await llm(F.writtenMessages(amt), null, { json: true, maxTokens: 220, temperature: 0 }), t.replace(/^\d+(\.\d+)?\s*/, ""), x); if (r) { DB.keepFoods([r.food]); it = r.item; } } catch (e) {}
+      try { const r = F.writtenItem(await llm(F.writtenMessages(amt), null, { json: true, maxTokens: 220, temperature: 0 }), t.replace(/^\d+(\.\d+)?\s*/, ""), x); if (r) { it = F.checkWritten(r.item, R.readMealText(amt).items); if (it.checked === "pulled") { const s = it.kcal / r.item.kcal; r.food = { ...r.food, kcal: Math.round(r.food.kcal * s), p: Math.round(r.food.p * s * 10) / 10, c: Math.round(r.food.c * s * 10) / 10, f: Math.round(r.food.f * s * 10) / 10 }; } DB.keepFoods([r.food]); } } catch (e) {}
       finally { setWriting(false); }
     }
     // without the model: the reader's foods ("pizza with extra cheese" = pizza + cheese) added up into ONE food under his words
@@ -590,7 +590,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const exitBar = onExit ? <div className="max-w-md mx-auto px-2" style={{ paddingTop: "env(safe-area-inset-top)" }}><button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--c-mut)]" aria-label={L("Back to Attune", "ارجع لـ Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:rotate-180">←</span></button></div> : null;
   // v6.18: Ali's three looks (Fresh by default), chosen in Fit's settings — every Fit screen takes it
   const look = LK.lookOf(st), lookCls = "fit-look-" + look;
-  if (!st.profile && !fullForm) return <div className={"calm fit-calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)] " + lookCls}><LookStyle look={look} />{exitBar}<QuickSetup {...{ t, L, ar, save: quickSave }} full={() => setFullForm(true)} /></div>;
+  if (!st.profile && !fullForm) return <div className={"calm fit-calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)] " + lookCls}><LookStyle look={look} />{exitBar}<QuickSetup {...{ t, L, ar, save: quickSave }} full={() => setFullForm(true)} logged={Object.values(st.days || {}).filter((d) => d && Object.values(d.meals || {}).some((m) => (m || []).length)).length} /></div>;
   if (!st.profile) return <div className={"calm fit-calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)] " + lookCls}><LookStyle look={look} />{exitBar}<ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={null} extra={null} /></div>;
   if (editProfile) return <div className={"calm fit-calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)] " + lookCls}><LookStyle look={look} /><ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} /></div>;
 
@@ -997,7 +997,7 @@ function ProfileForm({ pf, setPf, save, L, cancel, extra }) {
 }
 
 /* v6.10 (item 14) — the first visit: 3 questions instead of the long plan form (that stays under «My plan»). */
-function QuickSetup({ t, L, ar, save, full }) {
+function QuickSetup({ t, L, ar, save, full, logged = 0 }) {
   const [a, setA] = useState({ goal: "", mode: "body", sex: "m", age: "", cm: "", kg: "", kcal: "", country: F.getCountry() });
   const [step, setStep] = useState(0);
   const [intro, setIntro] = useState(true);    // v6.16c (Ali: "I want the introduction like any food app"): a welcome first…
@@ -1025,6 +1025,8 @@ function QuickSetup({ t, L, ar, save, full }) {
         <li className="flex gap-2.5 items-start"><Sparkles size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" />{L("A daily target made for your body and goal", "هدف يومي معمول لجسمك وهدفك")}</li>
         <li className="flex gap-2.5 items-start"><Check size={18} className="text-[var(--c-acc)] shrink-0 mt-0.5" />{L("Everything stays on your phone", "كل حاجة بتفضل على موبايلك")}</li>
       </ul>
+      {/* persona 9 (a year of meals typed on Home, Fit never set up): they were all kept — say so, so the person isn't starting over */}
+      {logged > 0 && <p className="rounded-2xl bg-[var(--c-soft)] px-3 py-2.5 text-[13.5px] font-bold text-[var(--c-ink)]" data-testid="fit-qs-logged">{L(`Your ${logged} day${logged === 1 ? "" : "s"} of meals from Home ${logged === 1 ? "is" : "are"} kept — set your goal and they appear in your diary.`, `أكلك اللي سجلته من الرئيسية (${logged} يوم) محفوظ — حدد هدفك وهيظهر في يومياتك.`)}</p>}
       <button onClick={() => setIntro(false)} className="w-full min-h-[52px]! rounded-2xl bg-[var(--c-acc)] text-[16px] font-semibold text-[var(--c-on-acc)]" data-testid="fit-qs-start">{L("Get started", "ابدأ")}</button>
       <p className="text-center text-[12px] text-[var(--c-mut)]">{L("Takes under a minute · you can change it later in Me", "أقل من دقيقة · وتقدر تغيّره بعدين من «أنا»")}</p>
     </div>

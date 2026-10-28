@@ -6140,7 +6140,7 @@ function moneyAnalysisPrompt(snapshot, recent, lang) {
     lang ? `Answer in ${lang}.` : ""].filter(Boolean).join("\n");
 }
 
-function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming, openPlan, screen, onMenu, tabs, wide = false, navTo: goTo = null }) {
+function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false, incoming, clearIncoming, openPlan, screen, onMenu, tabs, wide = false, navTo: goTo = null }) {
   // v7.2 (Gemini's "Area 1: Money", Ali sent it 24 Oct 2026): Money opens on a calm view; its Money Report is one tap away and the
   // ledger itself (Yusr) one more. Yusr stays loaded behind them (hidden), so the box, a shared payment and the Zakāt figures work.
   const [view, setView] = React.useState("calm");          // calm | report | ledger
@@ -6202,7 +6202,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   React.useEffect(() => { modelStateRef.current = modelState; }, [modelState]);
   React.useEffect(() => { linkedRef.current = linked; }, [linked]);
   // v6.10: Attune Pro includes Money — Yusr is told whether Pro is on, and sends "open-plan" from a locked feature
-  const proNow = isPro(tier) || testingPro();
+  // v8.6 (persona 3, the marketer: the 7-day trial says "everything is unlocked" but Money's Pro parts stayed locked) — the trial counts
+  const proNow = isPro(tier) || testingPro() || trialPro;
   const proRef = React.useRef(proNow);
   const openPlanRef = React.useRef(openPlan);
   React.useEffect(() => { openPlanRef.current = openPlan; }, [openPlan]);
@@ -7722,7 +7723,7 @@ const MORE_TOOLS = [
   ["missions", "Missions", "A goal with a date — Attune works on it every day and shows your real chance", Target],   // v6.37
   ["recall", "Recall", "Find anything on your phone by meaning — screenshots, notifications, chats, notes", Search],   // v6.40 (agent C)
   ["automations", "Automations", "Say what should happen — “when my salary arrives, put 20% in the car fund” — and it runs by itself", Zap],   // v6.41 (C3)
-  ["timeline", "Timeline", "Everything coming up — reminders, dates, payments, promises — on one list", CalendarDays],   // v6.38 (M3)
+  ["timeline", "Follow-ups", "Everything coming up — reminders, dates, payments, promises — on one list", CalendarDays],   // v6.38 (M3)
   ["scout", "Scout", "Hunts for a flat, a car, a product or a job for days — tells you when something good appears", Binoculars],   // v6.28
   ["lifeask", "Ask your life", "One question about your money, people, health, meals and deadlines — answered from your own data", Sparkles],   // v6.28
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
@@ -10781,7 +10782,7 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 160, temperature: 0, think: false }) : null} />
         ) : mode === "money" ? (
           // v7.2: the same Money on a phone and a computer — the calm view first, the Money Report, then the ledger (Yusr)
-          <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)}
+          <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} trialPro={trialLeft > 0} openPlan={() => setShowUpgrade(true)}
             wide={wide} navTo={navTo} onMenu={LEGACY_NAV || wide ? null : () => setPhoneSide(true)} tabs={LEGACY_NAV || wide ? null : hubTabsEl} />
         ) : mode === "travel" ? (
           // v6.27: Travel in design A "Calm" — five tabs, everything kept, the trip checked by code (travel-ui.jsx, travel.js)

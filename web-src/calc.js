@@ -16,14 +16,17 @@ const digits = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR.indexOf(d)).
   .replace(/(\d)\s+(?:في|فى)\s+(?=\d)(?!(?:19|20)\d\d(?!\d))/g, "$1 × ");   // «في 2025» is "in 2025", not × 2025
 
 const CUR = [[/\bEGP\b|جنيه|ج\.م/i, "EGP"], [/\bUSD\b|\$|دولار/i, "USD"], [/\bSAR\b|ريال/i, "SAR"], [/\bAED\b|درهم/i, "AED"], [/\bEUR\b|€|يورو/i, "EUR"]];
-const OPS = { "×": "*", "x": "*", "X": "*", "*": "*", "·": "*", "÷": "/", "/": "/", "+": "+", "-": "-", "−": "-", "–": "-" };
+const OPS = { "^": "^", "×": "*", "x": "*", "X": "*", "*": "*", "·": "*", "÷": "/", "/": "/", "+": "+", "-": "-", "−": "-", "–": "-" };
 
 /** Lexer: numbers, operators, brackets, % — everything else is skipped, but a
  *  word BETWEEN two numbers with no operator means this isn't a sum. */
 function lex(text) {
-  const s = digits(text);
+  // v8.6 (persona 6: "sqrt(144)" answered 144 — silently wrong): square roots are worked out first; any other maths function
+  // (sin, log, …) is left to the model (no answer is better than a wrong one)
+  const s = digits(text).replace(/(?:sqrt|√|جذر)\s*\(?\s*(\d+(?:\.\d+)?)\s*\)?/gi, (_, n) => String(Math.round(Math.sqrt(+n) * 1e10) / 1e10));
+  if (/\b(sin|cos|tan|log|ln|exp|abs|mod|factorial|cbrt)\b|!/i.test(s)) return [{ t: "w", v: "fn" }, { t: "n", v: 0 }, { t: "n", v: 0 }];
   const out = [];
-  const re = /(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)|([×xX*·÷/+\-−–])|([()])|(%)|([^\s\d×xX*·÷/+\-−–()%]+)|\s+/g;
+  const re = /(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)|([×xX*·÷/+\-−–^])|([()])|(%)|([^\s\d×xX*·÷/+\-−–()%^]+)|\s+/g;
   let m;
   while ((m = re.exec(s))) {
     if (m[1]) out.push({ t: "n", v: parseFloat(m[1].replace(/,/g, "")), raw: m[1] });
@@ -50,7 +53,7 @@ export function looksLikeCalc(text) {
   // Only when it is clearly a sum: a times/plus/percent sign, or words that ask
   // for a result. "25/9" (a date) or "10-12 days" alone never trigger it.
   // «في» alone ("5 في 6") is also a date — it counts as × only when the message asks for a result
-  const strong = /[×*÷+%٪]|\d\s*[xX]\s*\d/.test(t.replace(/[٠-٩]/g, "0")) || /(في|فى)\s*(الم|بالم)|بالمي|بالمائ/.test(t);
+  const strong = /[×*÷+%٪^√]|sqrt|\d\s*[xX]\s*\d/.test(t.replace(/[٠-٩]/g, "0")) || /(في|فى)\s*(الم|بالم)|بالمي|بالمائ/.test(t);
   const asks = /\b(total|sum|calculate|how much|equals?)\b|=|كام|احسب|حسبة|اجمالي|إجمالي|مجموع|يساوي/i.test(t);
   if (!strong && !asks) return false;
   if (/\+\s*\d[\d\s-]{7,}/.test(digits(t))) return false;      // a phone number
@@ -61,13 +64,13 @@ export function looksLikeCalc(text) {
 
 // Shunting-yard evaluation over number/op/bracket tokens.
 function evalTokens(toks) {
-  const out = [], st = [], prec = { "+": 1, "-": 1, "*": 2, "/": 2 };
+  const out = [], st = [], prec = { "+": 1, "-": 1, "*": 2, "/": 2, "^": 3 };
   let expectNum = true;
   for (const k of toks) {
     if (k.t === "n") { if (!expectNum) return null; out.push(k.v); expectNum = false; }
     else if (k.t === "op") {
       if (expectNum) { if (k.v === "-") { out.push(0); } else return null; }
-      while (st.length && st[st.length - 1] !== "(" && prec[st[st.length - 1]] >= prec[k.v]) out.push(st.pop());
+      while (st.length && st[st.length - 1] !== "(" && (prec[st[st.length - 1]] > prec[k.v] || (prec[st[st.length - 1]] === prec[k.v] && k.v !== "^"))) out.push(st.pop());
       st.push(k.v); expectNum = true;
     } else if (k.t === "(") { if (!expectNum) return null; st.push("("); }
     else if (k.t === ")") {
@@ -82,13 +85,13 @@ function evalTokens(toks) {
   for (const x of out) {
     if (typeof x === "number") v.push(x);
     else { const b = v.pop(), a = v.pop(); if (a == null || b == null) return null;
-      v.push(x === "+" ? a + b : x === "-" ? a - b : x === "*" ? a * b : b === 0 ? NaN : a / b); }
+      v.push(x === "+" ? a + b : x === "-" ? a - b : x === "*" ? a * b : x === "^" ? Math.pow(a, b) : b === 0 ? NaN : a / b); }
   }
   return v.length === 1 && isFinite(v[0]) ? v[0] : null;
 }
 
 const fmt = (n) => { const r = Math.round(n * 100) / 100; return r.toLocaleString("en-US", { maximumFractionDigits: 2 }); };
-const show = (toks) => toks.map((k) => (k.t === "n" ? k.raw || fmt(k.v) : k.t === "op" ? { "*": "×", "/": "÷", "+": "+", "-": "−" }[k.v] : k.t)).join(" ").replace(/\( /g, "(").replace(/ \)/g, ")");
+const show = (toks) => toks.map((k) => (k.t === "n" ? k.raw || fmt(k.v) : k.t === "op" ? { "*": "×", "/": "÷", "+": "+", "-": "−", "^": "^" }[k.v] : k.t)).join(" ").replace(/\( /g, "(").replace(/ \)/g, ")");
 
 /**
  * The exact result and its working, or null if this isn't plain arithmetic.

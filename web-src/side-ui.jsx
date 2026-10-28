@@ -94,6 +94,11 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
   const nq = q.trim().toLowerCase();
   const shown = useMemo(() => list.filter((c) => !nq || String(tr(c.title)).toLowerCase().includes(nq)).slice(0, 80), [list, nq]);
   const toolHits = nq ? tools.filter(([id, label, sub]) => (tr(label) + " " + tr(sub) + " " + label).toLowerCase().includes(nq)) : [];
+  // v8.6 (persona 2, a normal user: searching "pro", "plan", "language" found nothing): the app's own screens are found too
+  const setHits = nq.length >= 2 ? [["pro plan plans billing subscription upgrade price premium trial اشتراك خطة الخطط برو الدفع", "Plans & billing", Crown, openUpgrade],
+    ["settings language arabic english theme dark light font country لغة اللغة الإعدادات اعدادات الوضع الداكن البلد", "Settings", LayoutGrid, openSettings],
+    ["backup restore export import sync نسخة احتياطية استرجاع", "Backup", ShieldCheck, openBackup],
+    ["profile my name my details account بياناتي اسمي الملف", "Profile", User, openProfile]].filter(([k, l]) => (k + " " + tr(l)).toLowerCase().includes(nq)) : [];
   let lastGroup = "";
   const Row = ({ id, label, Icon }) => (
     <button onClick={() => navTo(id)} data-testid={"side-go-" + id}
@@ -123,6 +128,8 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
       <div className="att-scroll flex-1 overflow-y-auto px-2.5 pt-2 pb-3">
         {toolHits.length ? (
           <div className="mb-2" data-testid="side-tool-hits">{toolHits.slice(0, 8).map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>) : null}
+        {setHits.filter((x) => x[3]).length ? <div className="mb-2" data-testid="side-set-hits">{setHits.filter((x) => x[3]).map(([, label, Icon, go]) => <button key={label} onClick={go} data-testid={"side-set-" + label.split(" ")[0].toLowerCase()}
+          className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[14px] text-[14px] font-bold text-start text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]"><Icon size={17} className="text-[var(--c-mut)]" /><span className="truncate">{tr(label)}</span></button>)}</div> : null}
         {!nq ? (<>
           {places.map(([id, label, Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}
           {/* v7.4 (Gemini's Area 3): Workspaces — your assistants and projects, one tap away, with how many */}

@@ -295,7 +295,7 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
 /** The Agents report: running, found and checks this week; every watch's checks. */
 function AgentsReport({ st, scout, alerts, back }) {
   const r = A.agentsReport(st, scout, alerts);
-  const KN = { watch: "Price watches", track: "Deliveries", order: "Usual orders", scout: "Scout goals", alert: "Message alerts" };
+  const KN = { buy: "Buy agents", watch: "Price watches", track: "Deliveries", order: "Usual orders", scout: "Scout goals", alert: "Message alerts" };
   return <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agents-report">
     <div className="flex items-center gap-2"><button onClick={back} aria-label={tr("Back")} className="w-10 h-10 rounded-full grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)]" data-testid="agents-report-back"><ArrowLeft size={17} className="rtl:-scale-x-100" /></button>
       <U.Head title={tr("Agents report")} sub={tr("What your agents did this week — on this phone")} /></div>
