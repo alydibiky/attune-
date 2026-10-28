@@ -75,6 +75,18 @@ screen A/B/C). Source of the canvas boards: the session scratchpad `canvas/proje
 Tests: `tests/unit/v870*.test.mjs` (p1, p3, p6, p9, plan, bills, vitals, family, homeroute) + e2e_v519 (research change) + harness
 (trial / morning notes go to `S.sys`, not the person's reminders).
 
+**Ali's picks from the canvas (28 Oct evening) — BUILT:** P5-A option 2 (no bottom bars: Money / Fit / Business / Shop / Books parts
+are tabs at the top, the ＋ floats) · P5-B one back on Add food · P5-D labels ≥ 12 px · P5-G Western digits (`ar-EG-u-nu-latn`) ·
+P5-F "Add your income" first step · V-A selected = soft green (`--c-soft` + `--c-acc`), orange/red only for late/warnings · V-B "Follow
+my phone" theme default (spaces.js `resolveBg`) · V-C 3 radii (12/20/pill), chips not underlined links, Notes header · V-D empty states
+(`U.EmptyStart`: Home, Money, Follow-ups; only when NOTHING exists) · P2-E option 1 sidebar in 3 groups with green headings ·
+planner A (`planner-ui.jsx`, Money → Month plan) + yearly ("save 4000 a month" = 48,000 a year; goals with a total stop when full) ·
+P5-C one box on every page (`U.PageBox`; Money's box falls back to Home's reader via `window.__attuneDo`) · P3-7 the 3 hero cards on
+Home (`HeroCards` in home-ui.jsx). Desktop: reminders repeat like the phone (desktop/lib/reminders.js: monthly, last:N, days:).
+**Waiting for Ali:** referral giver side — he asked "can it be linked to a Google account": yes (Google sign-in + a small Firebase
+function that checks the friend's Play purchase and adds a month with Play's own `subscriptions.defer`, max 3); needs his Firebase
+project + Play service-account key. Cloud boost: provider + key.
+
 ## v8.6 part 2 + the nine-persona review (28 Oct) — waiting for Ali's picks
 Ali's points 6–10 done (meal info on tap, translator "hello" at once, Translate photo from the gallery, buy agents that come back
 for confirmation and never pay, Home tells order / command / request apart and offers options). Then **nine personas tested the
