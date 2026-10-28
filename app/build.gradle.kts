@@ -127,6 +127,8 @@ kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarg
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.webkit:webkit:1.12.1")
+    // v8.7 "give a friend a month": Google Play's Install Referrer (Apache-2.0) — the referral code from the Play link, read once
+    implementation("com.android.installreferrer:installreferrer:2.2")
     // Reads DuckDuckGo results and the text of result pages for web lookup.
     implementation("org.jsoup:jsoup:1.18.3")
     // The fast engine: Google's LiteRT-LM (Apache-2.0) runs .litertlm models

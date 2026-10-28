@@ -20,6 +20,7 @@ import { tr, getLang, dateLocale } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { monthReview, reviewLines } from "./monthreview.js";
 import { NOT_IN_PLAY } from "./buildflags.js";
+import { trialNote } from "./trialuse.js";
 import { loadRadar } from "./deadlines.js";
 import { loadCare } from "./care.js";
 import { waitingList, toolLine, todayLine } from "./home.js";
@@ -51,7 +52,7 @@ const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pd
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
 const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
-export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null }) {
+export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null, trial = null }) {
   const [text, setText] = useState("");
   // v6.48 Chat runs the app (CHAT_RUNS_APP.md, option A): "/" commands, files, the two box options, the answer card, the jobs
   const [files, setFiles] = useState([]);
@@ -220,6 +221,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
       {/* persona 9 (Ali picked H-E): on the 1st–3rd, last month in one card (monthreview.js); × hides it for that month */}
       {!rep ? <MonthCard /> : null}
+      {!rep && trial ? <TrialLine trial={trial} /> : null}
       {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
       {now1 && !rep ? <div className="rounded-[22px] p-4 space-y-2.5" style={{ boxShadow: "0 4px 14px rgba(16,32,28,.16)", background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
@@ -340,5 +342,21 @@ function MonthCard() {
     <div className="flex items-center gap-2"><b className="flex-1 text-[14px]">{tr("Last month in one look")}</b>
       <button onClick={() => { try { localStorage.setItem(key, "1"); } catch (e) {} setHidden(true); }} className="c-sub text-[12px] min-h-[36px] px-2" data-testid="home-month-hide">{tr("Hide")}</button></div>
     {lines.map((l, i) => <p key={i} className={"m-0 text-[13.5px] " + (i ? "c-sub" : "font-bold")} dir="auto">{l}</p>)}
+  </div>;
+}
+
+// v8.7 (Ali picked persona 3's P3-A and point 6): the trial on Home — from day 5 "2 days of Pro left · you used it for …",
+// and once when it ends "Money, Follow-ups and unlimited answers stay free" — each with Keep Pro
+function TrialLine({ trial }) {
+  const [seen, setSeen] = useState(() => { try { return !!localStorage.getItem("attune:trial-end-seen"); } catch (e) { return false; } });
+  const ar = getLang() === "ar";
+  const note = trialNote({ ...trial, seenEnd: seen }, ar ? "ar" : "en");
+  if (!note) return null;
+  const close = () => { if (note.kind === "ended") { try { localStorage.setItem("attune:trial-end-seen", "1"); } catch (e) {} setSeen(true); } };
+  return <div className="c-card space-y-1.5" data-testid="home-trial" data-kind={note.kind}>
+    <p className="m-0 text-[14px] font-extrabold" dir="auto">{note.kind === "ending" ? tr(note.left === 1 ? "1 day of Pro left" : "{n} days of Pro left", { n: note.left }) : tr("Your Pro trial ended")}</p>
+    <p className="m-0 text-[13px] c-sub" dir="auto">{note.used ? tr("You used it for {x}.", { x: note.used }) + " " : ""}{note.kind === "ended" ? tr("Money, Follow-ups and unlimited answers stay free.") : ""}</p>
+    <div className="flex gap-2"><button onClick={() => { close(); trial.open(); }} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="home-trial-keep">{tr("Keep Pro")}</button>
+      {note.kind === "ended" ? <button onClick={close} className="h-10 px-3 c-sub text-[13px]" data-testid="home-trial-close">{tr("Not now")}</button> : null}</div>
   </div>;
 }

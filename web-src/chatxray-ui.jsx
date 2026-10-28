@@ -1,6 +1,7 @@
 /* ---- More → Chat X-Ray (v5.35) ---------------------------------------------------------------
    A WhatsApp chat, read on the phone: who owes whom, promises and dates, unanswered questions,
    and "ask this chat". The logic is in chatxray.js; the chat never leaves the phone. */
+import { noteProUse } from "./trialuse.js";
 import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, Loader2, X, Check, Wallet, Clock, AlertTriangle, Search, BarChart3, Bell, FileText, Trash2 } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
@@ -46,6 +47,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
     if (!chat || !me) return;
     if (!modelReady) { openEngine && openEngine(); return; }
     const today = new Date().toISOString().slice(0, 10);
+    noteProUse("xray");
     if (!pro && saved.some((s) => s.day === today)) { flash && flash(tr("Free includes 1 chat X-ray a day — Pro is unlimited")); openPlan && openPlan(); return; }
     const me0 = me, id = ++run.current;
     const days = RANGES.find((r) => r[0] === range)[2];

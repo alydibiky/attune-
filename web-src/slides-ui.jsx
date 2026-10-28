@@ -6,6 +6,7 @@
    Word or PDF, with a chart and computed facts when an Excel / CSV file is given. Facts can come
    from the web or from your own file; figures not found there are never drawn and are flagged.
    Engine + drawing: slides.js. PDFs: Android makePdf. */
+import { noteProUse } from "./trialuse.js";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Presentation, FileText, Loader2, Download, Check, ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Trash2, Wand2, Globe, Paperclip, X, Copy, Eye, BarChart3, Play, SlidersHorizontal } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -297,7 +298,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   useEffect(() => { if (report && !busy) remember({ id: report.id, type: "report", title: report.title, ts: Date.now(), report: { ...report, data: report.data ? { ...report.data, table: report.data.table.slice(0, 12) } : null } }); }, [report, busy]);
 
   const dayUsed = () => { try { return JSON.parse(localStorage.getItem("attune:slides:day") || "{}")[today()] || 0; } catch (e) { return 0; } };
-  const countDay = () => { try { localStorage.setItem("attune:slides:day", JSON.stringify({ [today()]: dayUsed() + 1 })); } catch (e) {} };
+  const countDay = () => { noteProUse("report"); try { localStorage.setItem("attune:slides:day", JSON.stringify({ [today()]: dayUsed() + 1 })); } catch (e) {} };
 
   // a file to base it on: Word / PDF / text → its text; Excel / CSV → computed facts + a chart
   const pickFile = async (f) => {

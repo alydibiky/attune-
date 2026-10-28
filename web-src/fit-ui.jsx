@@ -3,6 +3,7 @@
    Everything that is a number comes from fit.js (the food table, Mifflin-St Jeor, MET) — code, not
    the model. The model only READS: what's on a plate in a photo or in a sentence, then the person
    confirms every item before it's saved. All data stays on the phone (localStorage). */
+import { noteProUse } from "./trialuse.js";
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Mic, Apple, Camera, Search, Plus, Trash2, Loader2, Check, Droplet, Timer, Dumbbell, BarChart3, X, Sparkles, ChevronLeft, Play, Square, Star, Copy, ChevronDown } from "lucide-react";
 import { getLang } from "./i18n.js";
@@ -265,7 +266,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       if (photo) {
         const used = (st.photoUse && st.photoUse.d === F.today() ? st.photoUse.n : 0);
         if (!pro && used >= FREE_PHOTOS_PER_DAY) { flash && flash(L(`${FREE_PHOTOS_PER_DAY} photo meals a day are free — Pro reads every photo. Type or say it meanwhile.`, `${FREE_PHOTOS_PER_DAY} صور وجبات في اليوم ببلاش — وPro بيقرا كل الصور. اكتبها أو قولها لحد كده.`)); setPhoto(null); openPlan && openPlan(); return; }   // the photo goes, so typing the meal works at once
-        await readPhotoMeal(me);
+        noteProUse("photo"); await readPhotoMeal(me);
         if (!pro) upd((s) => ({ ...s, photoUse: { d: F.today(), n: (s.photoUse && s.photoUse.d === F.today() ? s.photoUse.n : 0) + 1 } }));
         return;
       }

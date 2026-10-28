@@ -152,7 +152,7 @@ import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
-import { BILLING_GROUPS, COMPARE_ROWS, pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, devMode, setDevMode, PLAY, proFromOwned } from "./billing.js";
+import { BILLING_GROUPS, COMPARE_ROWS, pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, devMode, setDevMode, PLAY, proFromOwned, lifetimeOffer, referralFrom, referralLink, REFERRAL_DAYS } from "./billing.js";
 import { LICENCE_PUBLIC_KEY, SELLER, setTestingOpen } from "./erp.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
@@ -7994,9 +7994,21 @@ export default function App() {
     return () => { clearInterval(t); document.removeEventListener("visibilitychange", on); };
   }, []);
   // v5.29 — the 7-day Pro trial for every new install (a "reverse trial")
+  // v8.7 (Ali picked persona 3's point 1): the 7 days start at the first REAL use — the first AI answer or the first thing
+  // logged — not at install (people lost 1–2 trial days to the 2.6 GB download). Until then the whole trial is ahead.
   const [trialLeft] = useState(() => {
-    try { let f = Number(localStorage.getItem(FIRST_RUN_KEY)); if (!f) { f = Date.now(); localStorage.setItem(FIRST_RUN_KEY, String(f)); } return trialDaysLeft(f); } catch (e) { return 0; }
+    try {
+      // v8.7 (persona 3, point 9): installed from a friend's link → a month instead of 7 days (read once, on the phone)
+      if (!localStorage.getItem(FIRST_RUN_KEY) && !localStorage.getItem("attune:trial-days") && NATIVE && NATIVE.installReferrer) {
+        const by = referralFrom(NATIVE.installReferrer()); if (by) { localStorage.setItem("attune:trial-days", String(REFERRAL_DAYS)); localStorage.setItem("attune:referred-by", by); }
+      }
+      const days = Number(localStorage.getItem("attune:trial-days")) || TRIAL_DAYS;
+      const f = Number(localStorage.getItem(FIRST_RUN_KEY)); return f ? trialDaysLeft(f, Date.now(), days) : days;
+    } catch (e) { return 0; }
   });
+  // (and the day-5 notification: "2 days of Pro left — see what you used it for", Ali picked persona 3's point 6)
+  const startTrial = () => { try { if (localStorage.getItem(FIRST_RUN_KEY)) return; const t0 = Date.now(); localStorage.setItem(FIRST_RUN_KEY, String(t0));
+    if (!isPro(tier) && !testingPro()) { const d5 = new Date(t0 + 5 * 86400000); d5.setHours(10, 0, 0, 0); scheduleReminder({ id: "trial-day5", at: d5.getTime(), repeat: "none", title: tr("2 days of Pro left"), body: tr("See what you used it for — and keep it if it helps."), created: t0, source: "trial" }); } } catch (e) {} };
   // v5.32: TESTING_ALL_PRO (billing.js) unlocks everything while Ali tests; the trial
   // now really unlocks every Pro feature (before, most gates checked the paid plan only)
   const proActive = testingPro() || isPro(tier) || trialLeft > 0;
@@ -8920,17 +8932,11 @@ export default function App() {
       if (modelState === "downloading") { flash(tr("The model is still downloading — see Engine")); return false; }
       flash(tr("Load a model in Engine first — everything runs on this device")); setShowEngine(true); return false;
     }
-    if (proActive || trialLeft > 0) return true;
-    const st = trialState(Date.now());
-    if (st.left <= 0) {
-      // (persona 3: this was English-only and said "runs" — a word a customer doesn't use)
-      flash(st.rolledBack ? tr("Today's free answers are used up — Pro removes the limit")
-                          : tr("That's today's {n} free answers. They come back tomorrow, or Pro removes the limit.", { n: TRIAL_PER_DAY }));
-      setShowUpgrade(true); return false;
-    }
-    return true;
+    // v8.7 (Ali picked persona 3's point 2): answers run on the phone and cost nothing — Free answers without a daily limit;
+    // Pro is for what acts or matters (agents that act, photo meals, Deal Check, Chat X-Ray, exports, reports, Business)
+    startTrial(); return true;
   };
-  const spendIfFree = () => { if (!proActive) setDayLeft(spendTrial(Date.now()).left); };
+  const spendIfFree = () => {};   // v8.7: answers are not counted any more (Free = unlimited answers)
   // Capture the pair that just happened, if the user opted in.
   const capture = (feature, input, output) => {
     if (!collect) return;
@@ -9578,7 +9584,7 @@ export default function App() {
   const btn = (a) => `px-3 py-1.5 rounded-lg text-sm border transition-colors ${a ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600"}`;
   const strengthColor = strength.score >= 75 ? "bg-teal-500" : strength.score >= 50 ? "bg-amber-500" : "bg-rose-500";
   const creditLabel = modelState === "starting" ? "Loading the model…" : modelState === "downloading" ? "Installing a model…" : modelState !== "ready" ? "No model loaded"
-    : proActive ? "Unlimited · on-device" : tr("{n} free today", { n: dayLeft });
+    : "Unlimited · on-device";
 
   // Everything the Chat screen needs from the rest of the app.
   const chatApi = {
@@ -9779,6 +9785,7 @@ export default function App() {
     if (u.ask) return { answer: u.ask, ar };
     if (!u.actions.length) return null;
     const before = {}, extra = [], lines = [];
+    startTrial();   // the first thing logged starts the 7-day trial
     for (const a of u.actions) {
       const r = doApply(a, loadLifeStores(), { now });
       for (const [k, v] of Object.entries(r.stores)) { if (!(k in before)) { try { before[k] = localStorage.getItem(k); } catch (e) { before[k] = null; } } try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -10096,7 +10103,7 @@ export default function App() {
         <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
         ) : mode === "home" && !wide ? (
-          <PhoneHome cmd={cmd} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
+          <PhoneHome cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), pro: isPro(tier) || testingPro(), open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
@@ -10625,7 +10632,7 @@ export default function App() {
               </section>
             } />
         ) : mode === "agents" ? (
-          <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()}
+          <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()} pro={proActive} openPlan={() => setShowUpgrade(true)}
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }} />
         ) : mode === "studio" ? (
           STUDIO_OFF ? <StudioOffDevice paused /> : NATIVE && NATIVE.imageInfo ? (
@@ -11871,7 +11878,9 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
       if (e) { setTier("pro"); flash(tr("Pro active")); close(); }
     } finally { setBusy(false); }
   };
-  const shown = (k) => playPrice[PLAY[k]] || P[k];
+  // v8.7 (Ali picked P3-B): in Arabic every price says «جنيه» the same way ("EGP 2,499" next to "208 جنيه" before)
+  const egp = (v) => (getLang() === "ar" && typeof v === "string" ? v.replace(/^\s*(?:EGP|E£|LE)\s*([\d.,]+)\s*$/i, "$1 جنيه").replace(/^\s*([\d.,]+)\s*(?:EGP|E£|LE)\s*$/i, "$1 جنيه") : v);
+  const shown = (k) => egp(playPrice[PLAY[k]] || P[k]);
   const price = shown(plan);
   const restore = async () => {
     setBusy(true);
@@ -11902,18 +11911,19 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
           ) : null}
           {pro ? <div className="rounded-[18px] border border-[var(--c-pos)]/30 bg-[var(--c-soft)] p-3.5 text-[13.5px] font-bold text-[var(--c-pos)]" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</div>
             : trialLeft > 0 ? <div className="rounded-[18px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[13.5px] font-bold text-[var(--c-ink)]" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</div>
-            : <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: {n} answers a day on every model. Pro removes every limit — and it includes Money.", { n: FREE_LIMITS.answersPerDay })}</div>}
+            : <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, photo meals, Deal Check, Chat X-Ray, reports and exports.")}</div>}
 
           {/* 1 · the plan (what to pay) */}
           {!pro ? (
             <section className="rounded-[22px] border border-[var(--c-acc-2)]/40 bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" aria-label={tr("Attune Pro")}>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc-2)] mt-0 mb-3">{tr("Attune Pro — the whole app")}</p>
-              <div className="grid grid-cols-3 gap-1 rounded-[18px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-1" role="tablist" data-testid="plans">
-                {["month", "year", "life"].map((k) => (
+              <div className={(lifetimeOffer() ? "grid-cols-3" : "grid-cols-2") + " grid gap-1 rounded-[18px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-1"} role="tablist" data-testid="plans">
+                {["month", "year", ...(lifetimeOffer() ? ["life"] : [])].map((k) => (
                   <button key={k} role="tab" aria-selected={plan === k} onClick={() => setPlan(k)} data-testid={"plan-" + k}
                     className={`relative min-h-[52px] rounded-[14px] py-2 text-[13.5px] font-extrabold transition-colors duration-150 ${plan === k ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] shadow-sm" : "text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>
                     <span className="block">{tr(PLAN_TEXT[k][0])}</span>
                     <span className={`block text-[11px] font-bold tabular-nums ${plan === k ? "opacity-90" : "text-[var(--c-mut)]"}`} dir="ltr">{shown(k)}</span>
+                    {k === "life" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold">{tr("Launch offer")}</span> : null}
                     {k === "year" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold">{tr("Best value")}</span> : null}
                   </button>
                 ))}
@@ -11923,7 +11933,8 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                 <p className="text-[12.5px] text-[var(--c-mut)] mt-1.5 mb-0">{tr(planNote)}</p>
               </div>
               <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1">
-                {["No daily limits", "Deal Check & Chat X-Ray", "Converters, slides, video", "Fit & Food Pro", "Money included", "Deep research & expert review"].map((b) => (
+                {/* v8.7 (Ali picked persona 3's point 3): what Pro does for you first, in plain words — not feature names */}
+                {["An assistant that finds and buys for you", "Lose weight by photo — snap the plate", "Know a deal is fair before you pay", "Who owes you, read from your chats", "Reports, slides and exports", "Deep research & expert review"].map((b) => (
                   <li key={b} className="flex items-start gap-1.5 text-[12.5px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(b)}</li>))}
               </ul>
               {Store.available() ? (
@@ -11954,20 +11965,16 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
             </div>
           </section>
 
-          {/* 3 · Business systems (a separate, one-time price) */}
-          <section className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="business-card">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[15px] font-extrabold text-[var(--c-ink)] m-0">🏗️ {tr("Business system")}</p>
-                <p className="text-[12.5px] text-[var(--c-mut)] mt-0.5 mb-0 leading-snug">{tr("A system built for your company (a shop, a clinic, a workshop…): unlimited records, Excel and app export.")}</p>
-              </div>
-              <div className="text-end shrink-0">
-                <p className="text-[17px] font-black tabular-nums text-[var(--c-ink)] m-0" dir="ltr">{shown("business")}</p>
-                <p className="text-[11px] text-[var(--c-mut)] m-0">{tr(P.businessNote)}</p>
-              </div>
-            </div>
-            <p className="text-[11.5px] text-[var(--c-mut)] mt-2.5 mb-0 leading-relaxed">{tr("Trying a system is free (30 records a table). You activate each system once, from its own page in Business.")}</p>
-          </section>
+          {/* v8.7 (Ali picked persona 3's point 9): give a friend a month of Pro — the Play link carries this phone's code */}
+          <button onClick={() => { const link = referralLink(req), msg = tr("Try Attune — a private AI on your phone for your money, meals and reminders. With my link you get a month of Pro free: {l}", { l: link });
+              try { if (NATIVE && NATIVE.share) { NATIVE.share(msg); return; } } catch (e) {}
+              try { if (navigator.share) { navigator.share({ text: msg }); return; } } catch (e) {}
+              try { navigator.clipboard.writeText(msg); flash(tr("Link copied — send it to a friend")); } catch (e) {} }}
+            className="w-full min-h-[48px] rounded-[18px] border border-[var(--c-acc)] bg-[var(--c-soft)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="referral-share">
+            <span>🎁 {tr("Give a friend a month of Pro")}</span><ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" /></button>
+          {/* v8.7 (Ali picked persona 3's point 5): Business has its own page and its own sales — one line here, no 14,999 next to 299 */}
+          <button onClick={() => { close(); try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "business" } })); } catch (e) {} }} className="w-full min-h-[48px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="business-card">
+            <span>🏗️ {tr("Running a company? See Business")}</span><ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" /></button>
 
           {/* 4 · everything side by side */}
           <details className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="compare">

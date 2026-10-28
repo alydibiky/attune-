@@ -2,6 +2,7 @@
    "Before you pay or sign, ask Attune." Paste an offer / seller's message, or add a screenshot;
    the logic (true cost, real interest, market price, scam signs, verdict) is in deal.js — code,
    not the model. The model reads the offer into fields and writes the reply to the seller. */
+import { noteProUse } from "./trialuse.js";
 import React, { useState, useRef } from "react";
 import { ShieldCheck, ImagePlus, X, Loader2, Check, Copy, Send, AlertTriangle, Trash2, Calculator, Search } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -84,6 +85,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
     // Free: 3 checks a day; Pro: unlimited
     const today = new Date().toISOString().slice(0, 10);
     const usedToday = hist.filter((h) => h.day === today).length;
+    noteProUse("deal");
     if (!pro && usedToday >= 3) { flash && flash(tr("Free includes 3 deal checks a day — Pro is unlimited")); openPlan && openPlan(); return; }
     const me = ++run.current;
     setBusy(true); setErr(""); setRes(null); setStep(0); setAsk(null); setAskNo(false);

@@ -15,6 +15,10 @@
    Pure helpers; tests in tests/unit/v529.test.mjs.                                           */
 
 export const TRIAL_DAYS = 7;
+/** v8.7 (Ali picked persona 3's point 4): Lifetime is a launch offer only — shown until this day (Ali: set it to 30 days after
+ *  the Play launch), then it disappears so it doesn't pull the best customers out of the subscription. */
+export const LIFETIME_UNTIL = "2027-01-31";
+export const lifetimeOffer = (now = Date.now()) => new Date(now).toISOString().slice(0, 10) <= LIFETIME_UNTIL;
 /** v8.6: where a reported AI answer is e-mailed (Google Play's AI-content policy). ALI: put the app's support e-mail here before release —
     empty = the report is only kept on the phone (Settings can show it). */
 export const SUPPORT_EMAIL = "";
@@ -61,7 +65,7 @@ export function pricesFor(tz, lang) { return PRICES[region(tz, lang)]; }
 
 /** What Pro gives — the reasons to pay, in the order people care about. */
 export const PRO_BENEFITS = [
-  "Unlimited answers — no daily limit",
+  "Agents that find, watch and buy for you (you confirm every order)",
   "Unlimited Deal Checks: the real cost, the market price and scam signs before you pay",
   "Unlimited Chat X-Rays: who owes you, promises and unanswered questions in your WhatsApp chats",
   "Unlimited file conversions, including scanned paper → editable Word",
@@ -73,7 +77,8 @@ export const PRO_BENEFITS = [
   "Business systems: unlimited records and Excel / app export",
   "Memory that remembers everything and can search it",
 ];
-export const FREE_LIMITS = { answersPerDay: 15, picturesPerDay: 3 };
+// v8.7 (Ali picked persona 3's point 2): Free answers are unlimited; one agent to try
+export const FREE_LIMITS = { answersPerDay: Infinity, picturesPerDay: 3, agents: 1 };
 /** v6.16c (Ali: "I won't take money from people for the Dorar service"): a hadith question — answered with الدرر السنية's live
  *  search — never counts toward a daily limit, on any plan. Whatever enforces FREE_LIMITS.answersPerDay asks this first. */
 export function countsTowardLimit(question, isHadithQuestion) {
@@ -83,7 +88,7 @@ export function countsTowardLimit(question, isHadithQuestion) {
 /** v6.10 — Plans & billing page: what Pro gives, grouped by the app it belongs to (Money is included in Pro). */
 export const BILLING_GROUPS = [
   { id: "chat", icon: "💬", title: "Chat & answers", items: [
-    "Unlimited answers — no daily limit", "Expert review: strong models check and improve their own answers",
+    "Agents that find, watch and buy for you (you confirm every order)", "Expert review: strong models check and improve their own answers",
     "Deep web research: several searches, more pages, cross-checked facts", "Mind: remembers everything and searches it" ] },
   { id: "tools", icon: "🧰", title: "Tools", items: [
     "Deal Check: the real cost, the market price and scam signs before you pay", "Chat X-Ray: who owes you, promises and unanswered questions in WhatsApp chats",
@@ -97,7 +102,8 @@ export const BILLING_GROUPS = [
 ];
 /** Free / Pro / Business columns for the compare table. */
 export const COMPARE_ROWS = [
-  ["Answers", "15 a day", "Unlimited", "Unlimited"],
+  ["Answers", "Unlimited", "Unlimited", "Unlimited"],
+  ["Agents that find, watch and buy", "1 agent", "Unlimited", "Unlimited"],
   ["Hadith search (Dorar)", "Free, unlimited", "Free, unlimited", "Free, unlimited"],
   ["Deal Check", "3 a day", "Unlimited", "Unlimited"],
   ["Chat X-Ray", "1 a day", "Unlimited", "Unlimited"],
@@ -141,11 +147,21 @@ export async function checkProCode(code, request, publicKey, subtle = (globalThi
 }
 
 /** Days left of the 7-day Pro trial (0 when over). `first` = first run time. */
-export function trialDaysLeft(first, now = Date.now()) {
-  if (!first || !isFinite(+first)) return TRIAL_DAYS;
-  const left = TRIAL_DAYS - Math.floor((now - +first) / 86400000);
-  return Math.max(0, Math.min(TRIAL_DAYS, left));
+export function trialDaysLeft(first, now = Date.now(), days = TRIAL_DAYS) {
+  if (!first || !isFinite(+first)) return days;
+  const left = days - Math.floor((now - +first) / 86400000);
+  return Math.max(0, Math.min(days, left));
 }
+
+/* ---- v8.7 (Ali picked persona 3's point 9): "give a friend a month of Pro" ------------------------------------------------
+   The link is the Play page with referrer=attune_ref=<this phone's request code>; the friend's app reads it once (Install
+   Referrer) and its trial is a month instead of 7 days. The giver's month needs one small server to confirm the friend
+   installed (or a code Ali sends by hand) — see ALI_LIST_2026-10-28.md.                                                     */
+export const REFERRAL_DAYS = 30;
+export const PLAY_PAGE = "https://play.google.com/store/apps/details?id=com.aldibiki.attune";
+export const referralLink = (req) => PLAY_PAGE + "&referrer=" + encodeURIComponent("attune_ref=" + String(req || ""));
+/** The friend's code from the install referrer ("utm_source=…&attune_ref=PRO-ABCD1234"), or "". */
+export function referralFrom(referrer) { const m = /(?:^|&)attune_ref=([A-Z0-9-]{4,20})(?:&|$)/i.exec(String(referrer || "")); return m ? m[1].toUpperCase() : ""; }
 
 /** The message to send the seller for a purchase. */
 export function buyMessage(req, plan, price) {

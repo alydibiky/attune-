@@ -171,6 +171,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     // v8.7: the Play Store build (no Video Downloader, no keyboard, no overlay) — the page hides what isn't there
     @JavascriptInterface
     fun playBuild(): Boolean = try { ctx.resources.getBoolean(R.bool.attune_play) } catch (e: Exception) { false }
+    // v8.7: the Play install referrer ("attune_ref=<code>" when a friend's link was used), or ""
+    @JavascriptInterface
+    fun installReferrer(): String = try { Referrer.get(ctx) } catch (e: Throwable) { "" }
 
     /** Text size for the whole app (percent of normal), kept across launches. */
     @JavascriptInterface

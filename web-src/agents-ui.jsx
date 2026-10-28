@@ -2,6 +2,7 @@
    agent as one calm card (what it watches, the last check, what it found) — Scout and Message alerts among them — and
    "See all → Agents report". Any app opens by its name ("open Uber", «افتح طلبات»). Agents never sign in, book or pay: a price
    is read, an order is copied into the app, a delivery is read from the store app's own notification. Logic: agents.js. */
+import { noteProUse } from "./trialuse.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCrossed, Car, LayoutGrid as AppWindow, BellRing, Trash2, RefreshCw, ExternalLink, ChevronRight, ArrowLeft, AlertTriangle, Check } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -25,7 +26,7 @@ const CHIPS = [["buy", "Find & buy", "Buy me AirPods Pro 2 under 9,000", "اشت
   ["scout", "Scout ads", "Find me a used Hyundai Tucson 2022", "دورلي على هيونداي توسان 2022 مستعملة"],
   ["open", "Open an app", "Open Uber", "افتح أوبر"]];
 
-export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, country = "EG" }) {
+export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, country = "EG", pro = true, openPlan = null }) {
   const ar = getLang() === "ar";
   const [st, setSt] = useState(() => A.loadAgents());
   const [text, setText] = useState("");
@@ -159,7 +160,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
     if (d.kind === "do") { setDoCard(d); return; }
     if (d.kind === "scout") { onScout && onScout(sentence); return; }
     if (d.kind === "alert") { W.saveWatch([W.newRule(d.rule), ...W.loadWatch()], ar ? "ar" : "en"); setSt({ ...st }); flash && flash(T("I'll tell you: {r}", { r: W.ruleText(d.rule, ar) })); return; }
-    const a = A.makeAgent(d);
+    // v8.7 (Ali picked persona 3's point 2): agents that act are Pro — Free keeps one running agent to try
+    if (!pro && st.agents.filter((x) => x.on).length >= 1) { flash && flash(tr("Free includes 1 agent — Pro runs as many as you need")); openPlan && openPlan(); return; }
+    const a = A.makeAgent(d); noteProUse("agent");
     const usual = d.kind === "order" ? { ...st.usual, [d.app.id]: d.what } : st.usual;
     put({ ...st, usual, agents: [a, ...st.agents] });
     if (d.kind === "buy") { flash && flash(T("On it: I'll find {w} and ask you before buying", { w: d.what })); setTimeout(() => buyRound(a), 300); return; }
