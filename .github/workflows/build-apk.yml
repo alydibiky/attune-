@@ -228,7 +228,14 @@ jobs:
           ATTUNE_STORE_PASSWORD: ${{ secrets.ATTUNE_STORE_PASSWORD }}
           ATTUNE_KEY_ALIAS: ${{ secrets.ATTUNE_KEY_ALIAS }}
           ATTUNE_KEY_PASSWORD: ${{ secrets.ATTUNE_KEY_PASSWORD }}
-        run: gradle bundlePlayRelease --no-daemon   # v8.7: the Play flavor (no overlay, keyboard or Video Downloader)
+        # v8.7 (P7): Python for Code moves out of the app and into the on-demand pack (pypack/) — the Play download is 26 MB
+        # smaller and Python downloads the first time it is needed; the APKs above were already built with Python inside
+        run: |
+          if [ -d app/src/main/assets/www/py ] && [ -f app/src/main/assets/www/py/VERSION ]; then
+            mv app/src/main/assets/www/py/* pypack/src/main/assets/py/ && rmdir app/src/main/assets/www/py
+            echo "Python moved into the on-demand pack: $(du -sh pypack/src/main/assets/py | cut -f1)"
+          else echo "::warning::no Python in this build — the pack carries only its README"; fi
+          gradle bundlePlayRelease --no-daemon   # v8.7: the Play flavor (no overlay, keyboard or Video Downloader)
 
       - name: Keep the Play Store bundle (download it for the first upload by hand)
         if: ${{ env.HAS_KEYSTORE == 'true' && github.event_name == 'workflow_dispatch' }}

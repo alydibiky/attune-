@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Code2, Play, Wrench, Terminal, Loader2, Copy, Save, Share2, Square, CheckCircle2, AlertTriangle, Eye, Trash2, Plus, RefreshCw, Maximize2, X, Send } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as K from "./ui-kit.jsx";
-import { runCode, runHtml, htmlDoc, warmUp, pythonAvailable, stop as stopSandbox, LANGS, normLang } from "./sandbox.js";
+import { runCode, runHtml, htmlDoc, warmUp, pythonAvailable, pythonDownloadable, downloadPython, stop as stopSandbox, LANGS, normLang } from "./sandbox.js";
 import { workLoop, guessLang, countTests, judge, errorSummary, loadProjects, saveProjects, PASS_MARK } from "./code.js";
 import { getPower } from "./power.js";
 
@@ -151,7 +151,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
     let on = true;
     pythonAvailable().then((ok) => {
       if (!on) return;
-      if (!ok) { setPy({ state: "missing" }); return; }
+      if (!ok) { setPy({ state: pythonDownloadable() ? "download" : "missing" }); return; }
       setPy({ state: "starting" });
       warmUp("python").then((r) => on && setPy(r.ok ? { state: "ready", version: r.version, ms: r.ms } : { state: "error", error: r.error }));
     });
@@ -268,7 +268,13 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
   const pyLine = (
     <p className="text-[11px] text-[var(--c-mut)]" data-testid="py-status">
       {py.state === "ready" ? tr("Python {v} ready · numpy, pandas, sympy · no internet", { v: "3.14" }) : py.state === "starting" || py.state === "checking" ? tr("Starting Python…")
-        : py.state === "missing" ? tr("Python is not in this build — JavaScript and web pages still work.") : tr("Python could not start: {e}", { e: py.error || "" })}
+        : py.state === "missing" ? tr("Python is not in this build — JavaScript and web pages still work.")
+        : py.state === "download" || py.state === "downloading" ? <>{tr("Python downloads the first time you need it (26 MB).")}{" "}
+            <button className="font-bold text-[var(--c-acc)] underline-offset-2" disabled={py.state === "downloading"} data-testid="py-download"
+              onClick={async () => { setPy({ state: "downloading", pct: 0 }); try { await downloadPython((pct) => setPy({ state: "downloading", pct })); setPy({ state: "starting" });
+                const r = await warmUp("python"); setPy(r.ok ? { state: "ready", version: r.version, ms: r.ms } : { state: "error", error: r.error }); } catch (e) { setPy({ state: "error", error: String(e.message || e) }); } }}>
+              {py.state === "downloading" ? tr("Downloading… {p}%", { p: py.pct || 0 }) : tr("Download Python")}</button></>
+        : tr("Python could not start: {e}", { e: py.error || "" })}
     </p>);
   const openProject = (p) => { setCur(p); setRes(null); setSteps([]); setAsks([]); setCurAsk(""); setView(p.lang === "html" ? "preview" : "none"); };
   const lines = cur && cur.code ? cur.code.split("\n").length : 0;

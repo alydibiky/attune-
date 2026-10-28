@@ -211,6 +211,8 @@ class MainActivity : AppCompatActivity() {
         // updates; /app/ is outside that worker's reach, while the origin —
         // and so all saved data — stays the same.
         val loader = WebViewAssetLoader.Builder()
+            // v8.7 (P7): Python's files — from the Play pack once downloaded, else from the APK (PyPack.kt); first, so it wins
+            .addPathHandler("/app/www/py/", WebViewAssetLoader.PathHandler { p -> PyPack.open(this, p) })
             .addPathHandler("/app/", WebViewAssetLoader.AssetsPathHandler(this))
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             // Studio's pictures, drawn on the phone (ImageEngine).

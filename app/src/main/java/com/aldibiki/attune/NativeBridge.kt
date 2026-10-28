@@ -140,6 +140,16 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         auth { token, err -> if (token == null) reject(id, err ?: "Google sign-in was cancelled") else resolve(id, JSONObject().put("token", token)) }
     }
 
+    // v8.7 (P7): Python for Code, downloaded on first use in the Play build (PyPack.kt); progress comes as 'attune-pypack' events
+    @JavascriptInterface
+    fun pyPackStatus(): String = try { PyPack.status(ctx).toString() } catch (e: Throwable) { JSONObject().put("ready", false).toString() }
+    @JavascriptInterface
+    fun pyPackFetch() {
+        if (Prefs.airGap(ctx)) { emitPyPack(JSONObject().put("error", "Offline mode is on — turn it off to download Python")); return }
+        PyPack.fetch(ctx, billing.activity) { s -> emitPyPack(s) }
+    }
+    private fun emitPyPack(s: JSONObject) { val js = "window.dispatchEvent(new CustomEvent('attune-pypack',{detail:$s}))"; web.post { try { web.evaluateJavascript(js, null) } catch (e: Throwable) {} } }
+
     // v6.32 Scout at night (ScoutNight.kt): the goals' searches for tonight, and what last night found
     @JavascriptInterface
     fun scoutNightPlan(plan: String): String { ScoutNight.setPlan(ctx, plan); return "ok" }

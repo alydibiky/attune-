@@ -66,7 +66,21 @@ export function warmUp(lang = "python") {
 
 /** Is Python in this build? (CI puts it there; a hand-built page may not have it.) */
 export async function pythonAvailable() {
+  // v8.7 (P7): the phone says it (the Play build downloads Python on first use — PyPack.kt)
+  try { const N = typeof window !== "undefined" && window.AttuneNative; if (N && N.pyPackStatus) return !!JSON.parse(N.pyPackStatus()).ready; } catch (e) {}
   try { const r = await fetch(new URL("py/VERSION", document.baseURI).href, { cache: "no-store" }); return r.ok; } catch (e) { return false; }
+}
+
+/** v8.7 (P7): can Python be downloaded now (the Play build, not yet on the phone)? */
+export function pythonDownloadable() { try { const N = typeof window !== "undefined" && window.AttuneNative; return !!(N && N.pyPackFetch && N.pyPackStatus && !JSON.parse(N.pyPackStatus()).ready); } catch (e) { return false; } }
+/** Download Python (26 MB); onPct(0–100); resolves true when it is on the phone. */
+export function downloadPython(onPct) {
+  return new Promise((resolve, reject) => {
+    const on = (e) => { const d = (e && e.detail) || {}; if (d.error) { window.removeEventListener("attune-pypack", on); reject(new Error(d.error)); return; }
+      if (onPct && d.pct != null) onPct(d.pct); if (d.done) { window.removeEventListener("attune-pypack", on); resolve(true); } };
+    window.addEventListener("attune-pypack", on);
+    try { window.AttuneNative.pyPackFetch(); } catch (e) { window.removeEventListener("attune-pypack", on); reject(e); }
+  });
 }
 
 export function stop(lang) { if (lang) kill(lang); else Object.keys(workers).forEach(kill); }

@@ -7523,4 +7523,9 @@ export const AR = {
   "Invites aren't switched on yet": "الدعوات لسه مش شغالة",
   "Google sign-in was cancelled": "تسجيل الدخول بجوجل اتلغى",
   "The invite server didn't answer": "سيرفر الدعوات مردش",
+  "Python downloads the first time you need it (26 MB).": "Python بيتنزّل أول مرة تحتاجه (26 ميجا).",
+  "Download Python": "نزّل Python",
+  "Downloading… {p}%": "بينزل… {p}%",
+  "Python didn't download — try again on Wi-Fi": "Python منزلش — جرّب تاني على الواي فاي",
+  "Offline mode is on — turn it off to download Python": "وضع أوفلاين شغال — اقفله عشان تنزّل Python",
 };

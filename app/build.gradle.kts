@@ -4,6 +4,8 @@ plugins {
 }
 
 android {
+    // v8.7 (P7): the Play bundle carries Python as an on-demand pack (pypack/); APKs ignore packs and keep Python inside
+    assetPacks += listOf(":pypack")
     namespace = "com.aldibiki.attune"
     compileSdk = 36   // v6.36: the API-37 platform (android-37.0) needs AGP 9.1+; targetSdk below is Android 17 all the same
 
@@ -129,6 +131,7 @@ dependencies {
     implementation("androidx.webkit:webkit:1.12.1")
     // v8.7 "give a friend a month": Google Play's Install Referrer (Apache-2.0) — the referral code from the Play link, read once
     implementation("com.android.installreferrer:installreferrer:2.2")
+    implementation("com.google.android.play:asset-delivery:2.3.0")   // v8.7 (P7): Python downloads on first use in the Play build (PyPack.kt)
     // Reads DuckDuckGo results and the text of result pages for web lookup.
     implementation("org.jsoup:jsoup:1.18.3")
     // The fast engine: Google's LiteRT-LM (Apache-2.0) runs .litertlm models

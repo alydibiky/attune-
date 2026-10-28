@@ -7,3 +7,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Attune"
 include(":app")
+include(":pypack")   // v8.7 (P7): Python for Code as a Play on-demand asset pack (the Play build only)
