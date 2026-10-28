@@ -87,6 +87,17 @@ Home (`HeroCards` in home-ui.jsx). Desktop: reminders repeat like the phone (des
 function that checks the friend's Play purchase and adds a month with Play's own `subscriptions.defer`, max 3); needs his Firebase
 project + Play service-account key. Cloud boost: provider + key.
 
+**Then ("Continue"), also built:** (1) **invite friends via a Google account** — `web-src/referral.js` + the card on the Plan
+page (`InviteCard`), `NativeBridge.googleAccount` (Google's own screen, openid email), purchases carry a hashed account id
+(`obfuscatedAccountId`), and the server `server/referral/` (Firebase functions + Firestore, after Google's Play Billing server
+sample): each friend who subscribes = Play moves the inviter's renewal 30 days (`subscriptions.defer`) or 30 days wait in the app;
+max 3. OFF until Ali does the 7 steps in `server/referral/README.md` and sets `REFERRAL_SERVER`. (2) **P7 Python on first use** —
+the Play bundle carries Pyodide as an on-demand asset pack (`pypack/`, `PyPack.kt`, the workflow moves it before
+`bundlePlayRelease`); Code shows "Download Python (26 MB)". (3) **P8 M-B who's-who pack** — `tools/know_sources.py build_people`
+(per-country / per-occupation queries, sourced-only facts per Ali's Wikidata rule), catalogue entry `people`, built by
+know-pack.yml (first run started 28 Oct). Known intermittent test: e2e_v518 fails only inside the full run (passes alone and in
+sequence with its neighbours) — the exported business app's reload; not caused by the v8.7 changes (it failed before them too).
+
 ## v8.6 part 2 + the nine-persona review (28 Oct) — waiting for Ali's picks
 Ali's points 6–10 done (meal info on tap, translator "hello" at once, Translate photo from the gallery, buy agents that come back
 for confirmation and never pay, Home tells order / command / request apart and offers options). Then **nine personas tested the
