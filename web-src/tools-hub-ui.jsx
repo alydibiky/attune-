@@ -5,6 +5,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Sparkles, FileText, Zap, ImageIcon, Film, ArrowLeft, BookOpen } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
+import { NOT_IN_PLAY } from "./buildflags.js";
 import { loadLog, toolsReport, familyReport } from "./toollog.js";
 import { Bars, SeeAll } from "./biz-dash-ui.jsx";
 import { ToolsPage } from "./desk-ui.jsx";
@@ -23,6 +24,8 @@ export const FAMS = [
   ["library", "booklib", "Library", "Your own books — ask them all at once, compared, with the book and page", BookOpen],
   ["studio", "studio", "Studio", "Pictures drawn on the phone's own chip · Eraser · Expand", ImageIcon],
   ["video", "video", "Video Downloader", "Paste a link, pick the quality, save it to your phone", Film]];
+// v8.7: not in the Play Store build
+const FAMS_SHOWN = FAMS.filter((x) => !NOT_IN_PLAY.has(x[0]));
 const FAM_NAME = { instant: "Chat", ...Object.fromEntries(FAMS.map((f) => [f[0], f[2]])) };   // v8.2: old Instant jobs still show
 const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : new Date(t).toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short" }); };
 
@@ -68,7 +71,7 @@ export function ToolsHub({ tools, navTo, pages, groups }) {
     </div> : null}
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-4 space-y-3 lg:space-y-0 items-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="tools-families">
-        {FAMS.filter(([f]) => f !== "studio" || !studioPaused(typeof window !== "undefined" && window.AttuneNative)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
+        {FAMS_SHOWN.filter(([f]) => f !== "studio" || !studioPaused(typeof window !== "undefined" && window.AttuneNative)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
           className={U.card + " text-start p-4 min-h-[96px] flex items-start gap-3 hover:border-[var(--c-acc)] transition-colors duration-150"}>
           <span className="w-11 h-11 shrink-0 rounded-[14px] grid place-items-center" style={{ background: "var(--c-soft)", color: C[f] }}><Icon size={19} /></span>
           <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="text-[15.5px] font-extrabold leading-tight">{tr(title)}</span>

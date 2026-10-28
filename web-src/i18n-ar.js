@@ -5339,7 +5339,7 @@ export const AR = {
   "Dates": "المواعيد",
   "Hide details": "خبّي التفاصيل",
   "Large for this phone: slower answers, a warm phone.": "كبير على الموبايل ده: إجابات أبطأ وموبايل سخن.",
-  "None yet — install the recommended one below.": "لسه مفيش — ثبّت النموذج المقترح تحت.",
+  "None yet — install the recommended one above.": "لسه مفيش — ثبّت النموذج المقترح فوق.",
   "Delete {m}?": "تمسح {m}؟",
   "cores": "أنوية",
   "Paid": "اتدفع",
@@ -7374,4 +7374,9 @@ export const AR = {
   "See each one": "شوف كل واحدة",
   "open — no date": "مفتوح — من غير ميعاد",
   "Last month in one look": "الشهر اللي فات في لمحة",
+  "Get Attune's brain": "نزّل عقل أتيون",
+  "The AI that answers, reads photos and writes — on your phone, private. {s}. Best on Wi-Fi.": "الذكاء الاصطناعي اللي بيجاوب ويقرا الصور ويكتب — على موبايلك وخاص بيك. {s}. الأحسن على الواي فاي.",
+  "Downloading — you can use the app meanwhile.": "بينزل — تقدر تستخدم التطبيق لحد ما يخلص.",
+  "Download now": "نزّله دلوقتي",
+  "or later, from Engine": "أو بعدين من «المحرك»",
 };

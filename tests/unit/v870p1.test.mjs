@@ -29,3 +29,9 @@ t("typos, a negative amount, filler words", () => {
   assert.equal(Y.readLocal("da3et 3ala el akl 120", { today: "2026-10-28" }).items[0].cat, "food");
 });
 console.log(`v870p1: ${n} checks passed`);
+const AF = await import("../../web-src/answerfix.js");
+t("P8 M-A stop-gap: formal → Egyptian words when the person wrote Egyptian", () => {
+  assert.equal(AF.writesEgyptian("انا زهقان ومش عارف اعمل ايه"), true); assert.equal(AF.writesEgyptian("ما هي عاصمة اليابان؟"), false);
+  assert.equal(AF.egyptianize("لماذا لا تجرب المشي الآن؟ وسوف يكون هذا جيد. قال «لماذا»"), "ليه لا تجرب المشي دلوقتي؟ وهيكون ده كويس. قال «لماذا»");
+});
+console.log(`v870p1 (+P8): ${n} checks passed`);

@@ -168,6 +168,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     /** v6.29: true only for builds signed with the test key — the page allows developer mode (Pro unlock for testing) only then. */
     @JavascriptInterface
     fun testBuild(): Boolean = try { ctx.resources.getBoolean(R.bool.attune_test_build) } catch (e: Exception) { false }
+    // v8.7: the Play Store build (no Video Downloader, no keyboard, no overlay) — the page hides what isn't there
+    @JavascriptInterface
+    fun playBuild(): Boolean = try { ctx.resources.getBoolean(R.bool.attune_play) } catch (e: Exception) { false }
 
     /** Text size for the whole app (percent of normal), kept across launches. */
     @JavascriptInterface

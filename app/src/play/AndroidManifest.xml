@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v8.7 The Play Store build (Ali agreed to persona 7's advice, 28 Oct 2026): the payment-notification reader as in "full";
+     the overlay permission and the keyboard are removed for the first Play review (the tap-to-talk notification works without
+     the overlay; the keyboard comes in the second release). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" tools:node="remove" />
+    <application>
+        <service android:name=".PayListener" android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+        <service android:name=".AttuneKeyboard" tools:node="remove" />
+    </application>
+</manifest>

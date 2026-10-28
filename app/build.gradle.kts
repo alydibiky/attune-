@@ -37,8 +37,12 @@ android {
     // reader, for phones whose Play Protect blocks a notification reader installed from a browser / file manager / chat.
     flavorDimensions += "store"
     productFlavors {
-        create("full") { dimension = "store" }
-        create("lite") { dimension = "store" }
+        create("full") { dimension = "store"; resValue("bool", "attune_play", "false") }
+        create("lite") { dimension = "store"; resValue("bool", "attune_play", "false") }
+        // v8.7 (Ali agreed to persona 7's launch advice): the Play Store bundle — the full app without the overlay permission
+        // (the quiet orb over other apps), without the keyboard (the second release) and without the Video Downloader (hidden
+        // by the page when attune_play is true). The APK Ali installs stays "full".
+        create("play") { dimension = "store"; resValue("bool", "attune_play", "true") }
     }
 
     // The NDK llama.cpp's own Android release builds use at the pinned commit.

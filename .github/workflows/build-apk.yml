@@ -228,14 +228,14 @@ jobs:
           ATTUNE_STORE_PASSWORD: ${{ secrets.ATTUNE_STORE_PASSWORD }}
           ATTUNE_KEY_ALIAS: ${{ secrets.ATTUNE_KEY_ALIAS }}
           ATTUNE_KEY_PASSWORD: ${{ secrets.ATTUNE_KEY_PASSWORD }}
-        run: gradle bundleFullRelease --no-daemon
+        run: gradle bundlePlayRelease --no-daemon   # v8.7: the Play flavor (no overlay, keyboard or Video Downloader)
 
       - name: Keep the Play Store bundle (download it for the first upload by hand)
         if: ${{ env.HAS_KEYSTORE == 'true' && github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@v4
         with:
           name: attune-play-bundle
-          path: app/build/outputs/bundle/fullRelease/*.aab
+          path: app/build/outputs/bundle/playRelease/*.aab
           retention-days: 30
 
       # Internal testing on Google Play: testers install Attune from the Play Store (no Play Protect block, updates by
@@ -246,7 +246,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.aldibiki.attune
-          releaseFiles: app/build/outputs/bundle/fullRelease/*.aab
+          releaseFiles: app/build/outputs/bundle/playRelease/*.aab
           track: internal
           status: completed
 
@@ -257,4 +257,4 @@ jobs:
           files: |
             app/build/outputs/apk/full/release/*.apk
             app/build/outputs/apk/lite/release/*.apk
-            app/build/outputs/bundle/fullRelease/*.aab
+            app/build/outputs/bundle/playRelease/*.aab

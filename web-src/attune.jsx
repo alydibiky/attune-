@@ -107,7 +107,7 @@ import { AgentsPage } from "./agents-ui.jsx";
 import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { QuietWake } from "./wake-ui.jsx";
-import { myCountry as countryOfPerson } from "./country.js";
+import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
 const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
 import { parseAgent, loadAgents, saveAgents, makeAgent } from "./agents.js";
@@ -115,6 +115,7 @@ import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
 import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan, goldGram } from "./scout.js";
 import { understand as doUnderstand, apply as doApply } from "./doit.js";
+import { PLAY_BUILD, NOT_IN_PLAY } from "./buildflags.js";
 import { loadStores as loadLifeStores } from "./lifeask.js";
 import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll, studioPaused } from "./device.js";
 import { TravelPage } from "./travel-ui.jsx";
@@ -125,7 +126,7 @@ import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
 import { LibraryPage } from "./library-ui.jsx";
-import { CountryRow } from "./country-ui.jsx";   // v6.47 country packs: Settings → Your country
+import { CountryRow, countryLabel } from "./country-ui.jsx";   // v6.47 country packs: Settings → Your country
 // v6.48 Chat runs the app (CHAT_RUNS_APP.md): the jobs, the conversion code shared with the Convert page, the box's readers
 import { createJobs } from "./jobs.js";
 import * as CR from "./convert-run.js";
@@ -7710,6 +7711,8 @@ function tierOfInstalled(m) {
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
 const OWN_TITLE = new Set(["privacy", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+// persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
+const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
 const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
@@ -7875,7 +7878,7 @@ export default function App() {
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
   // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
-  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -8906,6 +8909,9 @@ export default function App() {
   //         Counted on the device, by date, with no server involved.
   // The only gate. There is no server to ask and no network to wait for:
   // either a model is loaded on this device, or nothing runs.
+  // persona 2 (P2-C): Chat answers a question that was waiting for the AI as soon as it is ready
+  const wasReady = useRef(false);
+  useEffect(() => { const r = modelState === "ready"; if (r && !wasReady.current) { try { window.dispatchEvent(new Event("attune-model-ready")); } catch (e) {} } wasReady.current = r; }, [modelState]);
   const canUseAI = () => {
     // While the model is loading, a request is accepted: it waits for the
     // model and shows the loading progress where the answer will appear.
@@ -10054,6 +10060,7 @@ export default function App() {
           {/* v6.31 minimal: the model is a small dot and a name, not a big outlined button */}
           {LEGACY_NAV ? <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 min-h-[40px] text-[12px] font-bold px-3 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
             <Cpu size={12} />{engineText}</button>
+          : !(AI_MODES.has(mode) || modelState === "starting" || modelState === "downloading") ? null   // persona 2 (P2-D): only where the AI is used
           : <button onClick={() => setShowEngine(true)} data-testid="header-model" aria-label={tr("Engine") + ": " + engineText}
               className={`${wide ? "hidden " : ""}flex items-center gap-1.5 text-[12.5px] font-bold h-10 min-h-[40px] px-3.5 rounded-full bg-slate-900 border border-slate-800 text-slate-200 shrink-0 max-w-[45%]`}>
             <span className={"w-2 h-2 rounded-full shrink-0 " + (modelState === "ready" ? "bg-teal-400" : modelState === "starting" || modelState === "downloading" ? "bg-amber-400 animate-pulse" : "bg-slate-600")} />
@@ -11753,7 +11760,8 @@ export default function App() {
         llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false })}
         saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null} /> : null}
       {showBackup && <BackupPanel close={() => setShowBackup(false)} flash={flash} nativeCall={nativeCall} native={NATIVE} />}
-      {showOnboard && <Onboard profile={profile} setProfile={setProfile} close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} flash={flash} />}
+      {showOnboard && <Onboard profile={profile} setProfile={setProfile} close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} flash={flash}
+        brain={{ rec: recommendEngine(device), ready: modelState === "ready" || modelState === "downloading", go: () => { const r = recommendEngine(device); if (r && r.tier) { setTierId(r.tier.id); downloadModel(r.tier); } } }} />}
       {showEngine && <EngineModal device={device} setRamOverride={setRamOverride} bestTier={bestTier} activeTier={activeTier} setTierId={setTierId} plan={plan}
         engineMode={engineMode} setEngineMode={setEngineMode} modelState={modelState} dlPct={dlPct}
         downloadModel={downloadModel} trainLog={trainLog} setTrainLog={setTrainLog} collect={collect} setCollect={setCollect}
@@ -12037,7 +12045,9 @@ function TextSize() {
 // English | العربية. Switching reloads the page in the other language
 // (the model stays loaded in the engine, so it takes about a second).
 /** v6.32: the Attune keyboard (Android, AttuneKeyboard.kt) — Improve, Translate, Reply and Prompt in every app. Shown only in the app. */
-function KeyboardRow() {
+// v8.7: the keyboard comes in the second Play release — the Play build shows no keyboard row
+function KeyboardRow() { return PLAY_BUILD ? null : <KeyboardRowIn />; }
+function KeyboardRowIn() {
   const N = typeof window !== "undefined" ? window.AttuneNative : null;
   const read = () => { try { return JSON.parse(N.keyboardState()).enabled; } catch (e) { return false; } };
   const [on, setOn] = useState(() => (N && N.keyboardState ? read() : false));
@@ -12068,9 +12078,13 @@ function LangSwitch({ className = "" }) {
   );
 }
 
-function Onboard({ profile, setProfile, close, flash }) {
+function Onboard({ profile, setProfile, close, flash, brain = null }) {
+  const [brainOn, setBrainOn] = useState(false);
   const [step, setStep] = useState(0);
   const [p, setP] = useState({ ...EMPTY_PROFILE, ...profile, on: true });
+  const [ctry, setCtry] = useState(() => countryOfPerson() || "eg");
+  const countryList = useMemo(() => Object.keys(COUNTRY_LIST).map((k) => [k, countryLabel(k)]).sort((a, b) => a[1].localeCompare(b[1])), []);
+  useEffect(() => { setCountrySaved(ctry); }, []);   // the phone's guess is saved as soon as the person sees it and moves on
   const finish = () => { setProfile({ ...p, on: true }); flash(tr("Set up — Attune now fits how you work")); close(); };
   // Every question takes several answers: people work in more than one field
   // and use an assistant for more than one thing.
@@ -12097,7 +12111,12 @@ function Onboard({ profile, setProfile, close, flash }) {
           <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); close(); }} className="min-h-[44px] text-[var(--c-mut)] text-[13.5px] font-bold px-3 rounded-[14px] hover:text-[var(--c-ink)]">{tr("Skip")}</button>
         </div>
         <p className="text-[12.5px] text-[var(--c-mut)] mt-0 mb-3">{tr("A few quick questions. Stays on your phone — change it any time from your profile.")}</p>
-        {step === 0 ? <div className="mb-4"><span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mb-2">{tr("App language")}</span><LangSwitch /></div> : null}
+        {step === 0 ? <div className="mb-4"><span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mb-2">{tr("App language")}</span><LangSwitch />
+          {/* persona 2 (Ali: P2-A): the country decides the currency, prices, holidays and the weekend — asked first, not discovered */}
+          <span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-3 mb-2">{tr("Your country")}</span>
+          <select value={ctry} onChange={(e) => { setCtry(e.target.value); setCountrySaved(e.target.value); }} className="w-full min-h-[48px] rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 text-[14px] font-semibold text-[var(--c-ink)]" data-testid="onboard-country">
+            {countryList.map(([k, nm]) => <option key={k} value={k}>{nm}</option>)}</select>
+          <span className="block text-[11.5px] text-[var(--c-mut)] mt-1">{tr("Money, VAT, holidays and the weekend follow it")}</span></div> : null}
         <div className="flex gap-1 mb-4">{Array.from({ length: N + 1 }).map((_, i) => <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors duration-150 ${i <= step ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]"}`} />)}</div>
         {step < N ? (
           <>
@@ -12120,6 +12139,14 @@ function Onboard({ profile, setProfile, close, flash }) {
             <p className="text-[16px] font-extrabold text-[var(--c-ink)] mt-0 mb-2">{tr("Anything else worth knowing? (optional)")}</p>
             <textarea value={p.detail} onChange={(e) => setP((x) => ({ ...x, detail: e.target.value }))} placeholder={tr("e.g. I run a small bakery and deal with suppliers and wedding orders")}
               className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 h-24 resize-none leading-relaxed" />
+            {/* persona 2 (Ali: P2-A): the one thing the app needs — its AI — offered here, not discovered through an error */}
+            {brain && brain.rec && brain.rec.tier && !brain.ready ? <div className="mt-4 rounded-[18px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-3.5 space-y-2" data-testid="onboard-brain">
+              <p className="m-0 text-[14.5px] font-extrabold">{tr("Get Attune's brain")}</p>
+              <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("The AI that answers, reads photos and writes — on your phone, private. {s}. Best on Wi-Fi.", { s: brain.rec.size })}</p>
+              {brainOn ? <p className="m-0 text-[13px] font-bold text-[var(--c-acc)]" data-testid="onboard-brain-started">{tr("Downloading — you can use the app meanwhile.")}</p>
+                : <div className="flex gap-2"><button onClick={() => { setBrainOn(true); brain.go(); }} className="min-h-[44px] px-4 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold" data-testid="onboard-brain-now">{tr("Download now")}</button>
+                  <span className="self-center text-[12.5px] text-[var(--c-mut)]">{tr("or later, from Engine")}</span></div>}
+            </div> : null}
             <div className="flex items-center justify-between mt-4 gap-2">
               <button onClick={() => setStep(step - 1)} className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-mut)] px-3 rounded-[14px] hover:text-[var(--c-ink)]">{tr("← Back")}</button>
               <button onClick={finish} className="flex-1 min-h-[48px] rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Start using Attune")}</button>
@@ -12262,7 +12289,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
           <pre className="mt-2 max-h-52 overflow-auto text-[10px] text-slate-500 whitespace-pre-wrap break-all select-text" style={{ userSelect: "text", WebkitUserSelect: "text" }} data-testid="engine-log">{full}</pre></div>;
       })() : null}
       <div className="rounded-xl border border-slate-800 divide-y divide-slate-800/80" data-testid="engine-models">
-        {(n.installedModels || []).length === 0 && !busy ? <p className="p-3 text-[13px] text-slate-500">{tr("None yet — install the recommended one below.")}</p> : null}
+        {(n.installedModels || []).length === 0 && !busy ? <p className="p-3 text-[13px] text-slate-500">{tr("None yet — install the recommended one above.")}</p> : null}
         {(n.installedModels || []).map((m) => (
           <div key={m.id} className="relative">
             <div className="flex items-center gap-2 ps-3">
@@ -12525,44 +12552,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
         </div>
         <p data-intro="" className="text-[12.5px] text-slate-400 mt-1 mb-4">{tr("Run the AI on your own hardware. Nothing leaves the device, nothing costs per use.")}</p>
 
-        {native ? <NativeEnginePanel n={{ ...native, device }} modelState={modelState} dlPct={dlPct} flash={flash} /> : null}
-
-        {/* detected hardware */}
-        <div className="bg-slate-950 border border-slate-800 rounded-[18px] p-3.5 mb-4">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><HardDrive size={13} /> {tr("This device")}</p>
-          <div className="flex flex-wrap gap-2 text-xs">
-            <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 capitalize">{tr(device.platform)}</span>
-            <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">
-              {tr("{n} GB RAM", { n: (device.confidence === "exact" ? "" : "~") + device.ram })}
-              {device.ramMin && device.ramMax && device.ramMin !== device.ramMax
-                ? <span className="text-slate-600"> ({device.ramMin}–{device.ramMax})</span> : null}
-            </span>
-            {device.cores ? <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">{tr("{n} cores", { n: device.cores })}</span> : null}
-            <span className={`px-2.5 py-1 rounded-full border ${bestTier ? "bg-teal-500/10 border-teal-900/60 text-teal-300" : "bg-amber-500/10 border-amber-900/60 text-amber-300"}`}>
-              {bestTier ? tr("Can run {m}", { m: bestTier.label }) : tr("Load a model to start")}
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-600 mt-2">
-            {device.confidence === "exact"
-              ? (device.source === "this phone"
-                  ? tr("Read directly from this phone — exact, not estimated.")
-                  : tr("Using the figure you gave."))
-              : "Browsers round memory down to a power of two and cap it at 8 GB, so a 6 GB machine reports 4 and a 64 GB one reports 8. This is an estimate from " + device.source + "."}
-          </p>
-          <div className="flex flex-wrap items-center gap-1.5 mt-2">
-            <span className="text-[11px] text-slate-500">{tr("My machine actually has")}</span>
-            {[4, 6, 8, 12, 16, 32, 64].map((g) => (
-              <button key={g} onClick={() => setRamOverride(g)}
-                className={`text-[11px] px-2 py-1 rounded-full border ${device.confidence === "exact" && device.ram === g
-                  ? "bg-teal-500 border-teal-500 text-slate-950 font-medium"
-                  : "bg-slate-900 border-slate-800 text-slate-400 hover:border-teal-600"}`}>{tr(g)} {tr("GB")}</button>
-            ))}
-            {device.confidence === "exact" ? (
-              <button onClick={() => setRamOverride(0)} className="text-[11px] px-2 py-1 text-slate-500 hover:text-slate-300">{tr("auto")}</button>
-            ) : null}
-          </div>
-        </div>
-
+        {/* persona 2 (Ali: P2-B): "Recommended for this phone — Install" at the very top */}
         {/* The recommendation. Someone opening the app for the first time
             should get a working assistant without learning what a
             quantisation is, so this is one named model, one reason, one
@@ -12613,6 +12603,46 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
             </div>
           );
         })()}
+        {native ? <NativeEnginePanel n={{ ...native, device }} modelState={modelState} dlPct={dlPct} flash={flash} /> : null}
+
+        {/* persona 2 (Ali: P2-B): the device details fold under "Details" — the Install button comes first */}
+        <details className="mb-4" data-testid="engine-device-details"><summary className="cursor-pointer select-none text-[13px] font-bold text-slate-400 min-h-[40px] flex items-center">{tr("Details")} · {tr("This device")}</summary>
+        <div className="bg-slate-950 border border-slate-800 rounded-[18px] p-3.5 mb-4">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><HardDrive size={13} /> {tr("This device")}</p>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 capitalize">{tr(device.platform)}</span>
+            <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">
+              {tr("{n} GB RAM", { n: (device.confidence === "exact" ? "" : "~") + device.ram })}
+              {device.ramMin && device.ramMax && device.ramMin !== device.ramMax
+                ? <span className="text-slate-600"> ({device.ramMin}–{device.ramMax})</span> : null}
+            </span>
+            {device.cores ? <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">{tr("{n} cores", { n: device.cores })}</span> : null}
+            <span className={`px-2.5 py-1 rounded-full border ${bestTier ? "bg-teal-500/10 border-teal-900/60 text-teal-300" : "bg-amber-500/10 border-amber-900/60 text-amber-300"}`}>
+              {bestTier ? tr("Can run {m}", { m: bestTier.label }) : tr("Load a model to start")}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-600 mt-2">
+            {device.confidence === "exact"
+              ? (device.source === "this phone"
+                  ? tr("Read directly from this phone — exact, not estimated.")
+                  : tr("Using the figure you gave."))
+              : "Browsers round memory down to a power of two and cap it at 8 GB, so a 6 GB machine reports 4 and a 64 GB one reports 8. This is an estimate from " + device.source + "."}
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            <span className="text-[11px] text-slate-500">{tr("My machine actually has")}</span>
+            {[4, 6, 8, 12, 16, 32, 64].map((g) => (
+              <button key={g} onClick={() => setRamOverride(g)}
+                className={`text-[11px] px-2 py-1 rounded-full border ${device.confidence === "exact" && device.ram === g
+                  ? "bg-teal-500 border-teal-500 text-slate-950 font-medium"
+                  : "bg-slate-900 border-slate-800 text-slate-400 hover:border-teal-600"}`}>{tr(g)} {tr("GB")}</button>
+            ))}
+            {device.confidence === "exact" ? (
+              <button onClick={() => setRamOverride(0)} className="text-[11px] px-2 py-1 text-slate-500 hover:text-slate-300">{tr("auto")}</button>
+            ) : null}
+          </div>
+        </div>
+
+        </details>
 
         {/* model tiers */}
         <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2">{tr("Or choose yourself")}</p>

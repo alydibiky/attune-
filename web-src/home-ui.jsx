@@ -19,6 +19,7 @@ import { useSubBack } from "./backstack.js";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { monthReview, reviewLines } from "./monthreview.js";
+import { NOT_IN_PLAY } from "./buildflags.js";
 import { loadRadar } from "./deadlines.js";
 import { loadCare } from "./care.js";
 import { waitingList, toolLine, todayLine } from "./home.js";
@@ -46,7 +47,7 @@ function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"
 
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
 const START_TOOLS = ["scout", "learn", "slides", "convert", "memory"];
-const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"];
+const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"].filter((m) => !NOT_IN_PLAY.has(m));
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
 const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };

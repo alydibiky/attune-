@@ -324,3 +324,23 @@ export function wrongLanguage(input, output) {
   if (inEn && lat(o) < ar(o) * 0.25 && ar(o) > 30) return "en";
   return null;
 }
+
+/* ---- v8.7 (persona 8, Ali: "do as you recommend" — M-A stop-gap): the phone's 4 B model understands Egyptian Arabic but often
+   answers in formal Arabic. When the person wrote Egyptian, the commonest formal words in a short answer become the Egyptian ones
+   (لماذا → ليه, الآن → دلوقتي, سوف أساعدك → هساعدك, لا يوجد → مفيش). Code blocks, quotes «…» and "…" are left alone. ---------- */
+const EGY_MARK = /(?<![\p{L}])(ازاي|إزاي|ايه|إيه|عايز|عايزة|عاوز|مش|دلوقتي|بتاع|بتاعت|كده|كدا|اوي|أوي|ليه|فين|امتى|إمتى|ازيك|إزيك|يعني|بقى|خلاص|النهارده|بكرة|بكره|معلش|تمام|اللي|ده|دي|دول|عشان|علشان)(?![\p{L}])/u;
+export const writesEgyptian = (t) => (String(t || "").match(new RegExp(EGY_MARK.source, "gu")) || []).length >= 1 && /[؀-ۿ]/.test(String(t || ""));
+const EGY_WORDS = [["لماذا", "ليه"], ["الآن", "دلوقتي"], ["كيف", "إزاي"], ["ماذا", "إيه"], ["هذا", "ده"], ["هذه", "دي"], ["هؤلاء", "دول"], ["الذي", "اللي"], ["التي", "اللي"],
+  ["الذين", "اللي"], ["لا يوجد", "مفيش"], ["ليس", "مش"], ["ليست", "مش"], ["يمكنك", "تقدر"], ["أستطيع", "أقدر"], ["أريد", "عايز"], ["أيضاً", "كمان"], ["أيضًا", "كمان"], ["أيضا", "كمان"],
+  ["لكن", "بس"], ["جيد", "كويس"], ["جيدة", "كويسة"], ["كثيراً", "كتير"], ["كثيرًا", "كتير"], ["قليلاً", "شوية"], ["قليلًا", "شوية"], ["متى", "إمتى"], ["أين", "فين"], ["لذلك", "عشان كده"]];
+export function egyptianize(answer) {
+  const a = String(answer || "");
+  if (!a || a.length > 1500 || /```/.test(a)) return a;
+  const parts = a.split(/(«[^»]*»|"[^"]*")/);   // quoted parts stay as they are
+  return parts.map((p, i) => {
+    if (i % 2) return p;
+    let x = p.replace(/(?<![\p{L}])(و?)سوف\s+([أاينت])(\p{L}+)/gu, (_, w, f, rest) => w + "ه" + (f === "أ" || f === "ا" ? "" : f) + rest);
+    for (const [f, e] of EGY_WORDS) x = x.replace(new RegExp("(?<![\\p{L}])(و?)" + f + "(?![\\p{L}])", "gu"), (_, w) => w + e);
+    return x;
+  }).join("");
+}

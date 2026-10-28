@@ -43,7 +43,7 @@ import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp , learnRule } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote, subjectOf } from "./research.js";
-import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
+import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage, writesEgyptian, egyptianize } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
 import { makerNote, fixMakerCountry } from "./makers.js";
@@ -740,6 +740,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     return [{ role: "system", content: base + (langRule ? "\n\n" + langRule : "") + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") + (impBlock ? "\n\n" + impBlock : "") + (callRef.current ? "\n\n" + VOICE_RULE : "") }, ...kept, { role: "user", content: userContent }];
   };
 
+  const waitingRef = useRef(null), askRef = useRef(null);
+  useEffect(() => {
+    const go = () => { const w = waitingRef.current; if (!w) return; waitingRef.current = null; setText(""); setTimeout(() => askRef.current && askRef.current(w.raw, w.o), 300); };
+    window.addEventListener("attune-model-ready", go); return () => window.removeEventListener("attune-model-ready", go);
+  }, []);
   const ask = async (raw, opts) => {
     const o = opts || {};
     const typed = String(raw != null ? raw : text).trim();
@@ -1007,7 +1012,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
 
     // 2. The model, with the whole conversation.
-    if (!api.canUseAI()) return;
+    // persona 2 (Ali: P2-C): no AI yet → the question waits and is answered by itself once the AI is ready (no second Send)
+    if (!api.canUseAI()) { if (typed && !img && !fileAtt) waitingRef.current = { raw: typed, o: { ...o } }; return; }
     const cid = ensureChat(typed || "Photo");
     const history = o.history || (chat ? chat.messages : []);
     // A follow-up about a photo sent a moment ago ("what year is it?") gets
@@ -1815,6 +1821,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (fileAtt) extra.fromFile = fileAtt.name || true;   // v6.32: the "From:" line under the answer
       if (spaceRef.current.project && (spaceRef.current.project.knowledge || []).length) extra.projectKnowledge = true;
       if (raf) clearTimeout(raf);
+      // v8.7 (persona 8, M-A stop-gap): the person wrote Egyptian → the formal words of a short answer become Egyptian ones
+      if (answer && typed && writesEgyptian(typed)) answer = egyptianize(answer);
       patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st, ...extra });
       api.spend();
       api.remember({ kind: "chat", title: (typed || "Photo").slice(0, 70), text: typed || "(photo)", output: answer, tags: ["chat"] });
@@ -1834,6 +1842,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   };
 
   // An answer cut by the length limit carries on in the SAME bubble.
+  askRef.current = ask;
   const continueAnswer = async (aiIdx) => {
     const m = messages[aiIdx]; if (!m || busy || !api.canUseAI()) return;
     const cid = chat.id, run = ++runRef.current;
