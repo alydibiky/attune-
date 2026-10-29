@@ -129,6 +129,23 @@ Board 1 the year plan (A one month at a time · **B goals first, recommended** �
 7. **Scout "how do I open the cheapest?"**: the "cheapest" number is a button that opens that ad.
 8. **Books & pages vs Documents** answered (Board 4 above).
 Tests: unit v870personal, v870zakatcalc, v870livefacts; e2e v870personal, v800moneysheets, v830 (one window, 6 rounds), v910design.
+9. **Zakāt settings "in a good way"** (Ali, after the list): five sections — 1 today's gold price (country pre-filled from the
+   app), 2 your school (the niṣāb fine points folded under one summary line + Change), 3 gold & silver you own (worn jewellery
+   box), 4 your Zakāt year, 5 money & debts; Save stays at the bottom. `money-sheets-ui.jsx` ZSec / ZCheck / ZNum.
+
+**Ali's picks (29 Oct): 1B · 2 "A and B in a smart way" · 3 "I don't understand the logic" · 4B — BUILT:**
+- **1B goals first** (`planner-ui.jsx` YearGoals, `yearplan.js` goalsOfYear, `planner.js` potIntent keeps the goal's own name —
+  "Umrah", «العمرة»): The year opens on the goals; one sentence adds a goal spread over its months; a bar a month = what is left
+  free (red = short); "short in Jun" / "on track" per goal; tap a month → its numbers to change (kept like the sheet's cells);
+  "Sheet & Excel" opens the old sheet. Tests: unit v870plan, v870yearplan; e2e v870yearplan.
+- **2 A+B** (`agents.js` offerFacts / compareOffers, `agents-ui.jsx` BestFound): the winner big with why (Cheapest · Closest ·
+  Best rated · Under your limit ✓), each other offer says what it trades ("+2,100 · rated 9.4 · other days"), "Compare side by
+  side" = a table (total, a night, days, walk, rating; the best of each row green). Test: e2e v830.
+- **4B one Library** (`hubs.js`: Saved = Notes · Library · Mind; Library's switch Books & PDFs · One file · Attune remembers;
+  `booklib.js` answerIds / setAnswerFrom / onTopic / libraryBlock; `booklib-ui.jsx` findInLibrary): each book has "Chat and the
+  voice can answer from…" — not copied (books can be GB): Chat and the voice search only those books (BookShelf on the phone,
+  docqa in a browser) and cite [Book, p. N]. Tests: unit v830library, v734hubs; e2e v831books, v746library.
+- **3 (connected app)**: Ali didn't understand the options — explained again in plain words; waiting for his answer.
 
 ## v8.7 — Ali's answers to the nine reviews (28 Oct) — the plan with ticks is `ALI_LIST_2026-10-28.md`
 Everything Ali said "do" is built and tested; everything subjective is on ONE design canvas waiting for his picks:
@@ -332,7 +349,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 - [x] 17. (DONE v8.2) **Your details** (Ali, mid-list): Booking details expanded — trips / daily life / booking forms, private, used by answers + agents.
 
 ## Do this next
-0. Get Ali's picks for the 29 Oct boards (v8.7 part 7: https://claude.ai/artifact/11d8PjSAaYEgY5GFq1jZBR) and build them.
+0. Boards 1, 2 and 4 are built (v8.7 part 7). Board 3 ("all the app connected") waits for Ali after the plain explanation.
 1. Get Ali's picks from the canvas (v8.7 section above) and build them; then ask for his next list. Keep his rule: **ask before anything subjective** — show 2–4 options
    (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
    Quiet Atelier tokens, phones side by side, A/B/C with a recommendation).
