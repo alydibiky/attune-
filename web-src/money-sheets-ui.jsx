@@ -255,11 +255,15 @@ export function ZakatPaySheet({ L, run, onClose }) {
     <Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go("zakat-pay", { amount: parseFloat(amount), cat, to: to.trim(), date, account }, tr("Recorded — may Allah accept it"))} />
   </Sheet>;
 }
+const ZSec = ({ title, sub, children, testid }) => <section className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf-2,transparent)] p-3.5 space-y-3" data-testid={testid}>
+    <div><p className="m-0 text-[15px] font-black">{title}</p>{sub ? <p className="m-0 mt-0.5 text-[12px] c-sub leading-snug">{sub}</p> : null}</div>{children}</section>;
+const ZCheck = ({ on, set, label, testid }) => <label className="flex items-center gap-2.5 min-h-[44px] text-[14px] font-bold"><input type="checkbox" checked={on} onChange={(e) => set(e.target.checked)} className="w-5 h-5 accent-[var(--c-acc)] shrink-0" data-testid={testid} />{label}</label>;
+const ZNum = ({ value, set, testid, ph }) => <input value={value} onChange={(e) => set(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} placeholder={ph || "0"} data-testid={testid} />;
 export function ZakatSetSheet({ L, run, onClose }) {
   // v8.7 (Ali: "some of the zakat settings were removed, like worn jewelry — restore them all"): every input the ledger's own
   // Zakāt sheet has — the country (its live gold price), worn jewellery, gold and silver you own, the year's start, debts…
   const z = L.zakat || {}, ex = new Set(z.excluded || []);
-  const [country, setCountry] = useState(L.country || ""), [premium, setPrem] = useState(String(z.goldPremium || ""));
+  const [country, setCountry] = useState(() => { if (L.country) return L.country; try { const c = (localStorage.getItem("attune:country") || "").toUpperCase(); return REGION_CUR[c] ? c : ""; } catch (e) { return ""; } }), [premium, setPrem] = useState(String(z.goldPremium || ""));
   const [goldPrice, setGP] = useState(String(z.goldPrice || "")), [madhhab, setM] = useState(z.madhhab || "jumhur"), [basis, setB] = useState(z.nisabBasis || "gold"), [mode, setMode] = useState(z.mode || "combined");
   const [nisabCarat, setNC] = useState(String(z.nisabCarat || 24));
   const [jew, setJew] = useState(!!z.jewelryZakat), [jewG, setJewG] = useState(String(z.jewelryGrams || "")), [jewK, setJewK] = useState(String(z.jewelryKarat || 21));
@@ -283,38 +287,58 @@ export function ZakatSetSheet({ L, run, onClose }) {
     setTimeout(() => { try { const L2 = JSON.parse(localStorage.getItem("ledger.v3") || "{}"); const p = L2.zakat && L2.zakat.goldPrice; if (p) { setGP(String(p)); setFetched(tr("Today's price: {p} {c} a gram (24k) — updates by itself twice a day", { p: p.toLocaleString(), c: L2.currency || cur })); } else setFetched(tr("Couldn't fetch the price — type it in")); } catch (e) {} setFetching(false); }, 2500);
   };
   const upd = z.goldPriceUpdated ? new Date(z.goldPriceUpdated).toLocaleString(ar() ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  // v8.7 (Ali: "put the zakat settings in a good way"): five short sections in the order you think of them — today's price,
+  // your school, what you own, your Zakāt year, money and debts — and the scholars' fine points folded under "More choices"
+  const [more, setMore] = useState(false);
+  const MAD = { jumhur: tr("Most scholars"), hanafi: tr("Hanafi"), maliki: tr("Maliki"), shafii: tr("Shafiʿi"), hanbali: tr("Hanbali") };
+  const sumLine = [basis === "silver" ? tr("Silver (595 g)") : tr("Gold (85 g)"), nisabCarat === "21" ? "21k" : "24k", mode === "separate" ? tr("Each on its own") : tr("Counted together")].join(" · ");
   return <Sheet title={tr("Zakāt settings")} onClose={() => onClose()} testid="money-zakatset-sheet">
-    <Field label={tr("Country")}><select value={country} onChange={(e) => setCountry(e.target.value)} className={U.inp} data-testid="zset-country"><option value="">—</option>{countries.map(([c, l]) => <option key={c} value={c}>{l}</option>)}</select></Field>
-    <Field label={tr("Today's price of 1 g of 24k gold") + (cur ? " (" + cur + ")" : "")}>
-      <div className="flex gap-2"><input value={goldPrice} onChange={(e) => setGP(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} data-testid="zset-gold" />
-        <button onClick={fetchNow} disabled={fetching || !country} className={U.btnS + " shrink-0"} data-testid="zset-fetch">{fetching ? tr("Getting…") : tr("Live price")}</button></div>
-      <span className="block mt-1 text-[12px] c-sub" data-testid="zset-gold-note">{fetched || (upd ? tr("Updated by itself: {t} · twice a day", { t: upd }) : country ? tr("Tap “Live price” — then it updates by itself twice a day.") : tr("Choose your country first — the price follows it."))}</span></Field>
-    <Field label={tr("Shop premium on gold (%)")}><input value={premium} onChange={(e) => setPrem(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} placeholder="0" data-testid="zset-premium" /></Field>
-    <Field label={tr("School (madhhab)")}><Pills value={madhhab} onChange={(m) => { setM(m); if (m === "hanafi") { setB("silver"); setJew(true); } else { setB("gold"); setJew(false); } setMode(m === "shafii" ? "separate" : "combined"); }} items={[["jumhur", tr("Most scholars")], ["hanafi", tr("Hanafi")], ["maliki", tr("Maliki")], ["shafii", tr("Shafiʿi")], ["hanbali", tr("Hanbali")]]} testid="zset-madhhab" /></Field>
-    <Field label={tr("Niṣāb based on")}><Pills value={basis} onChange={setB} items={[["gold", tr("Gold (85 g)")], ["silver", tr("Silver (595 g)")]]} /></Field>
-    <Field label={tr("Niṣāb carat")}><Pills value={nisabCarat} onChange={setNC} items={[["24", tr("24k — Islamweb")], ["21", tr("21k — Dār al-Iftāʾ (Egypt)")]]} /></Field>
-    <Field label={tr("Cash, gold and silver")}><Pills value={mode} onChange={setMode} items={[["combined", tr("Counted together")], ["separate", tr("Each on its own")]]} /></Field>
-    <div className="rounded-[16px] border border-[var(--c-ln)] p-3 space-y-2.5" data-testid="zset-jewelry">
-      <label className="flex items-center gap-2 text-[14px] font-bold"><input type="checkbox" checked={jew} onChange={(e) => setJew(e.target.checked)} className="w-5 h-5 accent-[var(--c-acc)]" data-testid="zset-jew" />{tr("Pay Zakāt on worn jewellery")}</label>
-      <p className="m-0 text-[12px] c-sub">{tr("The Hanafi school counts gold you wear; most scholars don't. Your choice is kept.")}</p>
-      {jew ? <div className="grid grid-cols-2 gap-2"><Field label={tr("Grams worn")}><input value={jewG} onChange={(e) => setJewG(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} data-testid="zset-jewg" /></Field>
-        <Field label={tr("Carat")}><Pills value={jewK} onChange={setJewK} items={KAR} /></Field></div> : null}
-    </div>
-    <div className="grid grid-cols-2 gap-2">
-      <Field label={tr("Gold you keep (g)")}><input value={goldG} onChange={(e) => setGoldG(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} data-testid="zset-goldg" /></Field>
-      <Field label={tr("Its carat")}><Pills value={goldK} onChange={setGoldK} items={KAR} /></Field>
-      <Field label={tr("Silver price (1 g)")}><input value={silverP} onChange={(e) => setSP(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} data-testid="zset-silver" /></Field>
-      <Field label={tr("Silver you keep (g)")}><input value={silverG} onChange={(e) => setSG(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} data-testid="zset-silverg" /></Field>
-    </div>
-    <Field label={tr("Your Zakāt year starts (ḥawl)")}><input type="date" value={anniv || ""} onChange={(e) => setAnniv(e.target.value)} className={U.inp} dir="ltr" data-testid="zset-anniv" /></Field>
-    <label className="flex items-center gap-2 text-[14px] font-bold"><input type="checkbox" checked={recv} onChange={(e) => setRecv(e.target.checked)} className="w-5 h-5 accent-[var(--c-acc)]" data-testid="zset-recv" />{tr("Count money people owe me")}</label>
-    <Field label={tr("Debts I owe")}><select value={debt} onChange={(e) => setDebt(e.target.value)} className={U.inp} data-testid="zset-debt">
-      <option value="">{tr("— not chosen yet (nothing is deducted) —")}</option><option value="none">{tr("Do not deduct debts")}</option><option value="year">{tr("Deduct only what falls due this year")}</option><option value="all">{tr("Deduct the whole debt")}</option></select></Field>
-    {debt === "year" ? <Field label={tr("Amount falling due this year")}><input value={debtYear} onChange={(e) => setDebtYear(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} data-testid="zset-debtyear" /></Field> : null}
-    {accs.length ? <Field label={tr("Accounts counted for Zakāt")}><div className="flex flex-col gap-1" data-testid="zset-accounts">{accs.map((a) => <label key={a.id} className="flex items-center gap-2 text-[14px]"><input type="checkbox" checked={!excluded.has(a.id)} onChange={(e) => { const x = new Set(excluded); if (e.target.checked) x.delete(a.id); else x.add(a.id); setEx(x); }} className="w-5 h-5 accent-[var(--c-acc)]" />{(a.emoji || "") + " " + a.name}</label>)}</div></Field> : null}
+    <ZSec title={tr("1 · Today's gold price")} sub={tr("Pick your country once — the price follows it and updates by itself twice a day.")} testid="zset-sec-price">
+      <Field label={tr("Country")}><select value={country} onChange={(e) => setCountry(e.target.value)} className={U.inp} data-testid="zset-country"><option value="">—</option>{countries.map(([c, l]) => <option key={c} value={c}>{l}</option>)}</select></Field>
+      <Field label={tr("1 g of 24k gold") + (cur ? " (" + cur + ")" : "")}>
+        <div className="flex gap-2"><ZNum value={goldPrice} set={setGP} testid="zset-gold" />
+          <button onClick={fetchNow} disabled={fetching || !country} className={U.btnS + " shrink-0"} data-testid="zset-fetch"><RefreshCw size={15} />{fetching ? tr("Getting…") : tr("Live price")}</button></div>
+        <span className="block mt-1 text-[12px] c-sub" data-testid="zset-gold-note">{fetched || (upd ? tr("Updated by itself: {t} · twice a day", { t: upd }) : country ? tr("Tap “Live price” — then it updates by itself twice a day.") : tr("Choose your country first — the price follows it."))}</span></Field>
+      <Field label={tr("Shop premium on gold (%)")}><ZNum value={premium} set={setPrem} testid="zset-premium" /></Field>
+    </ZSec>
+    <ZSec title={tr("2 · Your school")} sub={tr("Choosing it sets the niṣāb and worn jewellery the way that school does. You can still change each one.")} testid="zset-sec-school">
+      <Pills value={madhhab} onChange={(m) => { setM(m); if (m === "hanafi") { setB("silver"); setJew(true); } else { setB("gold"); setJew(false); } setMode(m === "shafii" ? "separate" : "combined"); }} items={Object.entries(MAD)} testid="zset-madhhab" />
+      <button type="button" onClick={() => setMore(!more)} className="w-full min-h-[44px] flex items-center justify-between gap-2 rounded-[12px] px-3 bg-[var(--c-soft)] text-start" data-testid="zset-more" aria-expanded={more}>
+        <span className="min-w-0"><span className="block text-[12px] font-bold c-sub">{tr("Niṣāb")}</span><span className="block text-[13.5px] font-bold truncate">{sumLine}</span></span>
+        <span className="text-[13px] font-extrabold text-[var(--c-acc)] shrink-0 flex items-center gap-1">{more ? tr("Done") : tr("Change")}{more ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</span></button>
+      {more ? <div className="space-y-3">
+        <Field label={tr("Niṣāb based on")}><Pills value={basis} onChange={setB} items={[["gold", tr("Gold (85 g)")], ["silver", tr("Silver (595 g)")]]} /></Field>
+        <Field label={tr("Niṣāb carat")}><Pills value={nisabCarat} onChange={setNC} items={[["24", tr("24k — Islamweb")], ["21", tr("21k — Dār al-Iftāʾ (Egypt)")]]} /></Field>
+        <Field label={tr("Cash, gold and silver")}><Pills value={mode} onChange={setMode} items={[["combined", tr("Counted together")], ["separate", tr("Each on its own")]]} /></Field>
+      </div> : null}
+    </ZSec>
+    <ZSec title={tr("3 · Gold and silver you own")} sub={tr("Put 0 or leave empty what you don't have.")} testid="zset-sec-own">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-end"><Field label={tr("Gold you keep (g)")}><ZNum value={goldG} set={setGoldG} testid="zset-goldg" /></Field>
+        <Field label={tr("Its carat")}><Pills value={goldK} onChange={setGoldK} items={KAR} /></Field></div>
+      <div className="rounded-[14px] bg-[var(--c-soft)] p-3 space-y-2" data-testid="zset-jewelry">
+        <ZCheck on={jew} set={setJew} label={tr("Pay Zakāt on worn jewellery")} testid="zset-jew" />
+        <p className="m-0 text-[12px] c-sub">{tr("The Hanafi school counts gold you wear; most scholars don't. Your choice is kept.")}</p>
+        {jew ? <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-end"><Field label={tr("Grams worn")}><ZNum value={jewG} set={setJewG} testid="zset-jewg" /></Field>
+          <Field label={tr("Carat")}><Pills value={jewK} onChange={setJewK} items={KAR} /></Field></div> : null}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label={tr("Silver you keep (g)")}><ZNum value={silverG} set={setSG} testid="zset-silverg" /></Field>
+        <Field label={tr("Silver price (1 g)")}><ZNum value={silverP} set={setSP} testid="zset-silver" /></Field>
+      </div>
+    </ZSec>
+    <ZSec title={tr("4 · Your Zakāt year")} sub={tr("The day your money first reached the niṣāb (the ḥawl). Zakāt is due one lunar year after it.")} testid="zset-sec-year">
+      <input type="date" value={anniv || ""} onChange={(e) => setAnniv(e.target.value)} className={U.inp} dir="ltr" data-testid="zset-anniv" aria-label={tr("Your Zakāt year starts (ḥawl)")} />
+    </ZSec>
+    <ZSec title={tr("5 · Money and debts")} testid="zset-sec-money">
+      <ZCheck on={recv} set={setRecv} label={tr("Count money people owe me")} testid="zset-recv" />
+      <Field label={tr("Debts I owe")}><select value={debt} onChange={(e) => setDebt(e.target.value)} className={U.inp} data-testid="zset-debt">
+        <option value="">{tr("— not chosen yet (nothing is deducted) —")}</option><option value="none">{tr("Do not deduct debts")}</option><option value="year">{tr("Deduct only what falls due this year")}</option><option value="all">{tr("Deduct the whole debt")}</option></select></Field>
+      {debt === "year" ? <Field label={tr("Amount falling due this year")}><ZNum value={debtYear} set={setDebtYear} testid="zset-debtyear" /></Field> : null}
+      {accs.length ? <Field label={tr("Accounts counted for Zakāt")}><div className="flex flex-col" data-testid="zset-accounts">{accs.map((a) => <ZCheck key={a.id} on={!excluded.has(a.id)} set={(on) => { const x = new Set(excluded); if (on) x.delete(a.id); else x.add(a.id); setEx(x); }} label={(a.emoji || "") + " " + a.name} />)}</div></Field> : null}
+    </ZSec>
     <p className="m-0 text-[12px] c-sub">{tr("These are only the inputs — the Zakāt engine (the rulings and the numbers) is unchanged and works out what is due.")}</p>
-    <Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go("zakat-set", { country, goldPremium: n(premium), goldPrice: n(goldPrice), madhhab, basis, mode, nisabCarat: +nisabCarat, jewelry: jew, jewelryGrams: n(jewG), jewelryKarat: +jewK,
-      goldGrams: n(goldG), goldKarat: +goldK, silverPrice: n(silverP), silverGrams: n(silverG), anniversary: anniv || "", receivables: recv, debtPolicy: debt, debtYearAmount: n(debtYear), excluded: [...excluded] }, tr("Saved"))} />
+    <div className="sticky bottom-0 -mx-4 px-4 pt-2 pb-1 bg-[var(--c-surf)]"><Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go("zakat-set", { country, goldPremium: n(premium), goldPrice: n(goldPrice), madhhab, basis, mode, nisabCarat: +nisabCarat, jewelry: jew, jewelryGrams: n(jewG), jewelryKarat: +jewK,
+      goldGrams: n(goldG), goldKarat: +goldK, silverPrice: n(silverP), silverGrams: n(silverG), anniversary: anniv || "", receivables: recv, debtPolicy: debt, debtYearAmount: n(debtYear), excluded: [...excluded] }, tr("Saved"))} /></div>
   </Sheet>;
 }
 
