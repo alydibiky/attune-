@@ -50,6 +50,9 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
 
+> **Ali (29 Oct): he tests the app first; ALL the Google steps (Gmail verification `docs/GMAIL_VERIFICATION.md`, Firebase
+> invites `server/referral/README.md`, Cloud setup) wait until the version is ready for release. Don't ask him for them before.**
+
 ## v8.7 part 6 — Ali's 29 Oct phone list (5 screenshots) — ALL BUILT, tested
 1. **Earned → a pie of where it came from**: Money Report's "Earned" opens a donut by source (the payer / note, else the
    category) — `money-report.js slices()` + `month.sources`, `money-calm-ui.jsx WhereItWent(income)`.
