@@ -56,7 +56,7 @@ const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "erro
 // Yusr's own Save. Never a zakat FIGURE: zakat-pay is the person's record of a payment they made; zakat-set changes the
 // calculation's inputs (prices, school); what is due is still computed by Yusr alone (rule 1).
 const DO_OPS = new Set(["tx-edit", "tx-delete", "acct-save", "acct-delete", "rec-save", "rec-delete", "goal-save", "goal-delete", "goal-add",
-  "debt-save", "debt-delete", "debt-pay", "zakat-pay", "zakat-set", "cat-add", "project-add", "prefs", "rates", "export", "import"]);
+  "debt-save", "debt-delete", "debt-pay", "zakat-pay", "zakat-set", "gold-fetch", "cat-add", "project-add", "prefs", "rates", "export", "import"]);
 
 // What Yusr is allowed to ask the model for. A closed list, because "run this
 // arbitrary prompt" would let a future screen quietly route a fiqh question

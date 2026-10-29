@@ -87,6 +87,8 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
   const { list, activeId } = useChatList(loadChats);
   const depth = useBackDepth();
   const [q, setQ] = useState("");
+  const [, setSpacesTick] = useState(0);   // v8.7: re-count assistants / projects when one is added or deleted
+  useEffect(() => { const on = () => setSpacesTick((n) => n + 1); window.addEventListener("attune-spaces", on); window.addEventListener("storage", on); return () => { window.removeEventListener("attune-spaces", on); window.removeEventListener("storage", on); }; }, []);
   const [pins] = usePins();
   const pinned = pins.map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
   const [renaming, setRenaming] = useState(null);

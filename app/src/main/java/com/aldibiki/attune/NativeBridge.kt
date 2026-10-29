@@ -752,6 +752,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 .putExtra("watch", a.optBoolean("watch", false))
                 .putExtra("autoClose", a.optBoolean("autoClose", false))   // v8.2: a round of several days closes each page by itself
                 .putExtra("buy", a.optBoolean("buy", false))   // v8.6: a buy agent the person confirmed — Buy now, then their details
+                .putExtra("rounds", a.optJSONArray("rounds")?.toString() ?: "")   // v8.7: several start days in ONE window (no flicker)
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             ctx.startActivity(i)
         } catch (e: Exception) { AgentBrowser.onDone = null; reject(id, e.message ?: "Could not open it") }

@@ -166,8 +166,10 @@ function SysCard({ testid, onClick, icon: I, well, title, short, long, pill, ton
       {pill ? <span className="hidden lg:block"><span className={K.tag(tone || "gray")}>{pill}</span></span> : null}</span>
     <span className="min-w-0 flex-1"><span className="block font-extrabold text-[15.5px]">{title}</span>
       <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug lg:hidden" dir="auto">{short}</span>
+      {/* v8.7 (Ali: "fit the page"): on a phone the pill sits under the words, so the title and the line keep the card's width */}
+      {pill ? <span className="block mt-1.5 lg:hidden"><span className={K.tag(tone || "gray")}>{pill}</span></span> : null}
       <span className="hidden lg:block text-[12.5px] text-[var(--c-mut)] leading-snug mt-1">{long}</span></span>
-    {pill ? <span className={K.tag(tone || "gray") + " lg:hidden shrink-0"}>{pill}</span> : <ChevronRight size={18} className="text-[var(--c-mut)] rtl:rotate-180 shrink-0 lg:hidden" />}
+    <ChevronRight size={18} className="text-[var(--c-mut)] rtl:rotate-180 shrink-0 lg:hidden" />
   </button>;
 }
 const whenUpdated = (ms) => { const d = new Date(ms), t = new Date(); const k = (x) => x.toDateString(); if (k(d) === k(t)) return tr("Updated today"); t.setDate(t.getDate() - 1); if (k(d) === k(t)) return tr("Updated yesterday"); return tr("Updated {d}", { d: d.toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }) }); };
@@ -651,7 +653,7 @@ function HomeDash({ sys, go, askAI, wide = false }) {
   const latest = sys.tables.map((t) => ({ t, r: (sys.rows[t.id] || []).slice(-1)[0] })).filter((x) => x.r).sort((a, b) => (b.r._u || b.r._c || 0) - (a.r._u || a.r._c || 0)).slice(0, 4);
   const part = {
     kpis: <div key="kpis" className={"grid gap-2.5 " + (wide ? "col-span-2" : "grid-cols-3")} style={wide ? { gridTemplateColumns: `repeat(${Math.max(1, Math.min(6, u.kpis.length))}, minmax(0, 1fr))` } : null} data-testid="biz-kpis">{u.kpis.slice(0, 6).map((k, i) => (
-      <div key={i} className={card + " p-3.5 flex flex-col-reverse justify-end gap-1 min-w-0"}><p className="text-[clamp(17px,4.6vw,22px)] font-black tracking-tight tabular-nums leading-tight m-0 truncate" style={i === 0 ? { color: "var(--c-acc)" } : null} dir="ltr">{SC.kpiValue(sys, k).toLocaleString()}</p><p className="text-[12px] font-bold text-[var(--c-mut)] leading-snug m-0 truncate" dir="auto">{k.label}</p></div>))}</div>,
+      <div key={i} className={card + " p-3.5 flex flex-col-reverse justify-end gap-1 min-w-0"}><p className="text-[clamp(17px,4.6vw,22px)] font-black tracking-tight tabular-nums leading-tight m-0 truncate" style={i === 0 ? { color: "var(--c-acc)" } : null} dir="ltr">{SC.kpiValue(sys, k).toLocaleString()}</p><p className="text-[12px] font-bold text-[var(--c-mut)] leading-snug m-0 line-clamp-2 break-words" dir="auto">{k.label}</p></div>))}</div>,
     latest: <div key="latest" className={card + " p-4 space-y-1"} data-testid="biz-latest"><p className={K.label + " m-0 pb-1"}>{tr("Latest records")}</p>
       {latest.length ? latest.map(({ t, r }) => <button key={t.id} onClick={() => go("form", t.id)} className="w-full min-h-[44px] flex items-center justify-between gap-2 text-start text-[13.5px] font-semibold border-t border-[var(--c-ln)] first-of-type:border-t-0"><span className="truncate" dir="auto">{E.displayOf(t, r)}</span><span className="text-[var(--c-mut)] shrink-0">{t.name}</span></button>)
         : <p className="text-[13px] text-[var(--c-mut)]">{tr("No records yet — open the Form tab to add the first one.")}</p>}</div>,

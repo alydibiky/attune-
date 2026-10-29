@@ -17,6 +17,7 @@ import { chatMapIntent } from "./mapintent.js";
 import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_FARES } from "./metro.js";   // v6.41 (D5)
 import { chatLifeIntent } from "./life.js";
 import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
+import { mindAnswer } from "./personal.js";
 import { sourceLine } from "./sourcelabel.js";
 import { priceQuestion, insight as priceInsight, allRecords as priceRecords, loadPrices } from "./pricememory.js";
 import { chatDeadlineIntent } from "./deadlines.js";
@@ -43,7 +44,7 @@ import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp , learnRule } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote, subjectOf } from "./research.js";
-import { isScoreQuestion, fromNotes as liveFromNotes, fromPassages, isMetaAnswer, keyLines } from "./livefacts.js";
+import { isScoreQuestion, fromNotes as liveFromNotes, fromPassages, isMetaAnswer, keyLines, scoreQueries } from "./livefacts.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage, writesEgyptian, egyptianize } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
@@ -917,10 +918,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v6.27 "Do it for me": «book me the cheapest flight to Dubai on Thursday» — read by code into a plan; missing details
     // are asked; the app / site opens filled in (or inside Attune with Best offer / Fill my details); it never pays
     // v6.28 Ask your life: «who owes me money?», «is mum's HbA1c better?» — answered by code from your own data, with its source
-    const mine = route && !img ? chatAsk(typed, lifeStores()) : null;
+    let mine = route && !img ? chatAsk(typed, lifeStores()) : null;
+    // v8.7 (Ali: "tell me about my barber" took 15 s and came from a knowledge pack): your own people and things, from what
+    // you told Attune — at once, by code (personal.js)
+    if (!mine && route && !img) { try { const pm = mindAnswer(typed, lifeStores()); if (pm) mine = { ...pm, rows: [] }; } catch (e) {} }
     if (mine) {
       const ar = /[\u0600-\u06ff]/.test(typed) || getLang() === "ar";
-      const TOOL = { money: "Open Money", life: "Open People & plans", care: "Open Family health", fit: "Open Fit & Food", radar: "Open Deadline Radar", reminders: "Open Reminders", memory: "Open Mind" };
+      const TOOL = { recall: "Open Recall", money: "Open Money", life: "Open People & plans", care: "Open Family health", fit: "Open Fit & Food", radar: "Open Deadline Radar", reminders: "Open Reminders", memory: "Open Mind" };
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed },
@@ -1158,6 +1162,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // Expert / Master models for detail-hungry questions (research.js)
         const deepMode = !!api.webPages && (wantsDeep(typed) || ((pwR.level || 3) >= 4 && deep && (!api.pro || api.pro())));
         let queries = [query];
+        // v8.7 (Ali: "it was in the notification and even if not, it's easy to find on the internet"): a match's score is
+        // searched the way the score sites write it ("Liverpool vs Chelsea score") before the question's own words
         if (nQ > 1) {
           if (deepMode) {
             onStatus(tr("Planning the research…"));
@@ -1166,6 +1172,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             if (runRef.current !== run) return;
           } else queries = expandQueries(query, nQ);
         }
+        const sq = scoreQueries(typed); if (sq.length) queries = [...new Set([...sq, query])];
         // v6.12: a detail question about a car, a crane, a phone, a place, a company → the searches that fill every section, and
         // the answer's shape (research.js answerTemplate) — what makes Gemini's answers complete
         const kindT = topicKind(question), shaped = api.webPages && wantsShape(typed, kindT);
@@ -1539,7 +1546,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }
       // v6.20 Knowledge: a lookup question gets the person's own facts that fit it (word index, < 100 ms), with tags to cite
       let knHits = null;
-      if (answer == null && !chapterDone && typed && !sources && !fileAtt && !pic && !longMsg && api.knowledge && api.knowledge.on()) {
+      if (answer == null && !chapterDone && typed && !sources && !fileAtt && !pic && !longMsg && api.knowledge && api.knowledge.on() && !scoreQueries(typed).length) {   // (v8.7: a match's score is never in the packs)
         // v6.16: code tasks and maths problems look things up too (the coding and subject packs are their reference)
         const solveT = looksLikeCodeTask(typed) || looksLikeMathProblem(typed);
         try { knHits = await api.knowledge.find(typed, solveT ? { solve: true } : undefined); } catch (e) { knHits = null; }

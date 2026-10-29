@@ -5,6 +5,7 @@
 import React, { useState, useMemo } from "react";
 import { House as HomeIc, Wallet, Plus, RefreshCw as Repeat, Moon, X, ChevronRight, ArrowLeft, Target, TrendingUp, FileText, Zap, BookOpen, SlidersHorizontal as Settings, Download, Check } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
+import { KINDS as ZC_KINDS } from "./zakatcalc.js";
 import { fmt } from "./money-calm.js";
 import { accountsPage, billsPage, zakatPage, sheetCats, sheetTxn } from "./money-pages.js";
 import { isoDay } from "./money-report.js";
@@ -252,6 +253,17 @@ export function ZakatPane({ L, snap, wide, openLedger }) {
         <button className={U.btnS + " h-12! min-h-[48px]!"} onClick={() => openLedger("zakat-pay")} data-testid="zakat-pay">{tr("Record a payment")}</button></div>
       <p className="m-0 text-[11.5px] c-sub">{tr("The rulings and the numbers come from the ledger's Zakāt engine, unchanged — Attune only shows them.")}</p>
     </div>
+    {/* v8.7 (Ali: "where is the gold rate, auto-updating for each country?"): today's price, updated by itself twice a day */}
+    {L && L.zakat && L.zakat.goldPrice ? <div className={U.card + " p-4 flex items-center gap-3"} data-testid="zakat-gold">
+      <span className="text-[22px]">🪙</span>
+      <div className="flex-1 min-w-0"><p className="m-0 text-[12px] font-bold c-sub">{tr("Gold today (24k, 1 g)")}</p>
+        <b className="block text-[18px] font-black tabular-nums" dir="ltr">{amt(L.zakat.goldPrice, cur)}</b>
+        <p className="m-0 text-[11.5px] c-sub">{L.zakat.goldPriceUpdated ? T("updated by itself {t} · twice a day", { t: dayLabel(new Date(L.zakat.goldPriceUpdated).toISOString().slice(0, 10)) }) : tr("typed by hand — choose your country in Zakāt settings for the live price")}</p></div>
+      <button className={U.btnS} onClick={() => openLedger("zakat-settings")} data-testid="zakat-gold-change">{tr("Change")}</button></div> : null}
+    {/* v8.7 (Ali: "and the other zakat calculators, restore them all") */}
+    <Card title={tr("More Zakāt calculators")} testid="zakat-calcs">
+      <div className="grid grid-cols-2 gap-2">{ZC_KINDS.map(([k, e, en, a]) => <button key={k} onClick={() => openLedger("zakat-calc:" + k)} className="min-h-[52px] rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 flex items-center gap-2 text-start text-[13.5px] font-bold" data-testid={"zakat-calc-" + k}><span className="text-[20px]">{e}</span>{getLang() === "ar" ? a : tr(en)}</button>)}</div>
+    </Card>
     <Card title={tr("Paid")} right={<span className="text-[12.5px] font-bold c-sub tabular-nums">{T("last 12 months: {a}", { a: amt(z.paidYear, cur) })}</span>} testid="zakat-paid">
       {z.payments.slice(0, 4).map((p) => <Row key={p.id || p.date + p.amount} icon="☪" title={p.to || tr("Zakāt")} sub={dayLabel(p.date)} end={amt(p.amount, cur)} onClick={() => openLedger("home")} testid="zakat-row" />)}
       {!z.payments.length ? <p className="text-[13px] c-sub m-0 py-2">{tr("No payment recorded yet.")}</p> : null}</Card>

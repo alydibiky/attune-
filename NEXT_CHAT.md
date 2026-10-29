@@ -107,6 +107,29 @@ laggy moment ("Slow screen …" lines say where).
    waAdopt / waSave). `wagroups.js addedItems / newGroup`.
 Tests: unit v870wagroups, v870email, v870autobackup, v870livefacts, v870gmail, v870yearplan, v750moneyreport; e2e v870sms, v870gmail, v870yearplan, v727paylog.
 
+## v8.7 part 7 — Ali's 29 Oct list of 8 + 10 screenshots ("finished that's all, fix all") — built, tested
+**Waiting for Ali's picks (subjective, do not build before he answers):** https://claude.ai/artifact/11d8PjSAaYEgY5GFq1jZBR —
+Board 1 the year plan (A one month at a time · **B goals first, recommended** · C sheet + fill a row), Board 2 agent findings
+(**A winner + 2 runners-up, rec.** · B side-by-side table · C price by start day), Board 3 "all the app connected"
+(**A Related chips on every item, rec.** · B one timeline · C when-this-then-that), Board 4 Books & pages vs Documents
+(A clearer names · **B one Library, rec.**). Source: scratchpad `options-29oct.html` (not in the repo).
+1. **Business fits the phone**: the hub's tabs got their side padding; each system card keeps its words full width (the pill moved
+   under the line, a chevron on the side); a system's KPI labels wrap to 2 lines instead of "Visit fee (D…". `biz-ui.jsx`, `attune.jsx`.
+2. **Voice / Chat know your people** (barber took 15 s, voice said "no access"): `personal.js` `personalAsk / mindAnswer` answer from
+   Mind, Recall's kept messages and People & plans by code before any model (0.2 s). Voice uses it before small talk.
+3. **Score "yesterday"** (Liverpool–Chelsea): notification look-back follows the time word (now 6 h, today 24 h, yesterday 48 h,
+   else a week) and the web search adds `scoreQueries` ("A vs B score" …). `livefacts.js`.
+4. **Agents**: Check now reads all start days in ONE window (`AgentBrowser.kt` rounds, every 8 s) — no flicker of 6 windows; the
+   page shows a progress bar, a real browser user agent (Booking was blank), `intent://` falls back to the web, errors are said.
+5. **Zakāt restored** (Ali: "worn jewelry … the other calculators, restore them all"): Money → Zakāt settings has every ledger
+   field again (country, premium, madhhab, basis, niṣāb carat, worn jewellery, gold / silver kept, ḥawl, receivables, debts,
+   accounts) and "More Zakāt calculators" (camels, cattle, sheep, crops, trade, rikāz, Fiṭr — `zakatcalc.js`, the ledger's rulings).
+   **Gold price per country**: Zakāt page → "Gold today" card; "Live price" in settings; it refreshes by itself every 12 h.
+6. **Assistants count** in the sidebar re-counts on every add / delete (`spaces.js` fires `attune-spaces`).
+7. **Scout "how do I open the cheapest?"**: the "cheapest" number is a button that opens that ad.
+8. **Books & pages vs Documents** answered (Board 4 above).
+Tests: unit v870personal, v870zakatcalc, v870livefacts; e2e v870personal, v800moneysheets, v830 (one window, 6 rounds), v910design.
+
 ## v8.7 — Ali's answers to the nine reviews (28 Oct) — the plan with ticks is `ALI_LIST_2026-10-28.md`
 Everything Ali said "do" is built and tested; everything subjective is on ONE design canvas waiting for his picks:
 **https://claude.ai/artifact/WPVFc6FLsWecRwK8DxDtWS** (P5-A..G layout, V-A..D visuals, P3-7 the 3 hero jobs, P2-E, the money planner
@@ -309,6 +332,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 - [x] 17. (DONE v8.2) **Your details** (Ali, mid-list): Booking details expanded — trips / daily life / booking forms, private, used by answers + agents.
 
 ## Do this next
+0. Get Ali's picks for the 29 Oct boards (v8.7 part 7: https://claude.ai/artifact/11d8PjSAaYEgY5GFq1jZBR) and build them.
 1. Get Ali's picks from the canvas (v8.7 section above) and build them; then ask for his next list. Keep his rule: **ask before anything subjective** — show 2–4 options
    (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
    Quiet Atelier tokens, phones side by side, A/B/C with a recommendation).

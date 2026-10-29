@@ -18,7 +18,10 @@ AGENT = """(() => { const N = window.AttuneNative; N.agentWatchPlan = () => 'ok'
     const top = [{ price: 41800 + i * 900, currency: 'EGP', name: 'Swissotel Makkah', text: 'Swissotel Makkah 150 m from Masjid al-Haram 9.1' },
                  { price: 43900 + i * 300, currency: 'EGP', name: 'Hilton Suites Makkah', text: 'Hilton Suites Makkah 300 m' },
                  { price: 44600 - i * 10, currency: 'EGP', name: 'Al Safwah Royale Orchid', text: 'Al Safwah Royale Orchid 450 m' }];
-    setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ reason: 'done', offers: 14, price: top[0].price, currency: 'EGP', top })), 20); };
+    // v8.7: one window reads every start day in turn (rounds) — each offer says which days it was for
+    const rs = a.rounds && a.rounds.length ? a.rounds : null;
+    const all = rs ? rs.flatMap((r, j) => top.map((o) => ({ ...o, price: o.price + j * 900, checkin: r.checkin, checkout: r.checkout, url: r.url }))) : top;
+    setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ reason: 'done', offers: 14 * (rs ? rs.length : 1), price: all[0].price, checkin: rs ? rs[0].checkin : undefined, checkout: rs ? rs[0].checkout : undefined, currency: 'EGP', top: all })), 20); };
 })();"""
 with sync_playwright() as p:
     br = p.chromium.launch()
@@ -69,7 +72,8 @@ with sync_playwright() as p:
     check("6 start days checked" in clean(page.locator("[data-testid=agent-plan]").inner_text()), "its plan, step by step")
     page.click("[data-testid=agent-check]"); page.wait_for_selector("[data-testid=agent-best3]", timeout=8000)
     opens = page.evaluate("window.__opens")
-    check(len(opens) == 6 and all("nflt=class%3D4%3Bclass%3D5" in o["url"] for o in opens) and all(o.get("autoClose") for o in opens), "Check now reads each of the 6 start days with the stars filter, each page closing by itself")
+    rounds = (opens[0].get("rounds") or []) if len(opens) == 1 else []
+    check(len(opens) == 1 and len(rounds) == 6 and all("nflt=class%3D4%3Bclass%3D5" in r["url"] for r in rounds) and all(r.get("checkin") for r in rounds), "Check now reads each of the 6 start days with the stars filter, in one window (no flicker)")
     best = page.locator("[data-testid=agent-best]")
     check(best.count() == 3 and "Swissotel" in best.nth(0).inner_text() and "41,800" in best.nth(0).inner_text(), "the best 3, cheapest first, one per hotel with its days: " + best.nth(0).inner_text()[:100].replace("\n", " · "))
     check("offers compared" in page.locator("[data-testid=agent-plan]").inner_text(), "the plan says how many offers were compared")

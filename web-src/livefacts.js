@@ -54,7 +54,21 @@ const cap = (k) => k.replace(/\b\w/g, (c) => c.toUpperCase());
 const phase = (text) => (/second half|2nd half|الشوط الثاني/i.test(text) ? "second half" : /first half|1st half|الشوط الاول|الشوط الأول/i.test(text) ? "first half" : /half ?time|استراحة/i.test(text) ? "half-time" : /full ?time|\bft\b|انتهت|نهاية المباراة/i.test(text) ? "full time" : /live|مباشر/i.test(text) ? "live" : "");
 
 /** The newest kept notification (last `hours`) with the score. notes = Recall's [{ title, text, ts, app }]. → { en, ar, src, at } | null */
-export function fromNotes(notes, q, { now = Date.now(), hours = 6 } = {}) {
+/** How far back a question looks: "now / live" 6 h · "today / tonight" 24 h · "yesterday / last night" 48 h · else a week. */
+export function hoursFor(q) {
+  const t = String(q || "");
+  if (/\b(now|live|right now|currently)\b|دلوقتي|دلوقت|حالا|مباشر/i.test(t)) return 6;
+  if (/\b(today|tonight|this evening)\b|النهارده|انهارده|الليلة|الليله/i.test(t)) return 24;
+  if (/\b(yesterday|last night)\b|امبارح|إمبارح|البارح|أمس|امس/i.test(t)) return 48;
+  return 24 * 7;
+}
+/** Search words that find a match's result ("Liverpool vs Chelsea score"), or [] when the question isn't about a match. */
+export function scoreQueries(q) {
+  const t = teamsOf(q); if (t.length < 2 || !isScoreQuestion(q)) return [];
+  const [a, b] = t.map(cap);
+  return [`${a} vs ${b} score`, `${a} ${b} result`, `${b} vs ${a}`];
+}
+export function fromNotes(notes, q, { now = Date.now(), hours = hoursFor(q) } = {}) {
   const teams = teamsOf(q); if (teams.length < 2) return null;
   const fresh = (notes || []).filter((n) => n && n.ts && now - n.ts <= hours * 3600e3).sort((a, b) => b.ts - a.ts);
   for (const n of fresh) {

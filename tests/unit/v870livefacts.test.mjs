@@ -17,7 +17,7 @@ t("from the phone first: the notification that has the score", () => {
   const a = F.fromNotes(notes, "What is the score of Chelsea and Liverpool now", { now });
   assert.ok(a); assert.match(a.en, /\*\*Liverpool 1 – 1 Chelsea\*\* \(second half\) — from your Google notification/);
   assert.equal(F.fromNotes(notes, "score of Arsenal and Spurs", { now }), null);
-  assert.equal(F.fromNotes(notes, "score of Chelsea and Liverpool", { now: now + 8 * 3600e3 }), null, "an old notification is not 'now'");
+  assert.equal(F.fromNotes(notes, "score of Chelsea and Liverpool now", { now: now + 8 * 3600e3 }), null, "an old notification is not “now”");
 });
 t("from web pages: the score most pages agree on", () => {
   const ps = [{ title: "Liverpool vs Chelsea LIVE", text: "Liverpool 1-1 Chelsea: Gakpo cancels out the opener, second half under way", url: "https://www.liverpoolecho.co.uk/x" },
@@ -53,4 +53,11 @@ import * as R from "../../web-src/lookback.js";
   }
   assert.match(R.recallSearch(docs, "how hot is it", { now }).hits[0]?.doc.title || "", /21°/, "the weather notification by meaning");
   console.log("v870livefacts: Recall free text finds what you mean");
+}
+{ // v8.7 (Ali: "what was the score … yesterday" — the notification was older than 6 hours)
+  const y = { title: "Liverpool 1 - 1 Chelsea", text: "Full time", ts: now - 20 * 3600e3, app: "Google" };
+  assert.ok(F.fromNotes([y], "What was the score of Liverpool and Chelsea yesterday", { now }), "yesterday looks back 48 h");
+  assert.equal(F.fromNotes([y], "score of Liverpool and Chelsea now", { now }), null, "“now” stays 6 h");
+  assert.deepEqual(F.scoreQueries("What was the score of Liverpool and Chelsea yesterday"), ["Liverpool vs Chelsea score", "Liverpool Chelsea result", "Chelsea vs Liverpool"]);
+  console.log("v870livefacts: yesterday + score searches ok");
 }

@@ -13,6 +13,8 @@ import { loadPeople, savePeople } from "./franco.js";
 import { SmsSwitch } from "./sms-ui.jsx";
 import { WakeSwitch } from "./wake-ui.jsx";
 import { smallTalk, forSpeech } from "./voice-talk.js";
+import { mindAnswer } from "./personal.js";
+import * as LA from "./lifeask.js";
 
 const STYLE_BY_COUNTRY = { EG: "eg", SA: "gulf", AE: "gulf", KW: "gulf", QA: "gulf", BH: "gulf", OM: "gulf", JO: "lev", LB: "lev", SY: "lev", PS: "lev", IQ: "gulf", MA: "maghreb", DZ: "maghreb", TN: "maghreb", LY: "maghreb" };
 const LISTEN_TAG = { eg: "ar-EG", gulf: "ar-SA", lev: "ar-JO", maghreb: "ar-MA" };
@@ -102,6 +104,8 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
       try { const res = doIt ? await doIt(text) : null; line = res ? (res.answer ? (typeof res.answer === "string" ? res.answer : (ui === "ar" ? res.answer.ar : res.answer.en) || "") : (res.lines || []).map((l) => l.text).join(" · ")) : ""; } catch (e) {}
       // v8.6 (Ali: "fix the voice part for good"): not an action → a real conversation — small talk by code at once, anything
       // else to the AI model on the phone (short spoken answer, the last turns kept), never a dead "I didn't get that"
+      // v8.7 (Ali: the voice said "I don't have access to your personal information like your barber" — it was in the app)
+      if (!line) { try { const pm = mindAnswer(text, LA.loadStores()); if (pm) line = ui === "ar" ? pm.ar : pm.en; } catch (e) {} }
       if (!line) { line = smallTalk(text, ui); talk = !!line; }
       if (!line && ask) {
         setSay(ui === "ar" ? "بفكر…" : "Thinking…"); setCard({ kind: "done", ok: false });

@@ -89,7 +89,14 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, count
         // v8.2: a hotel window → every start day in turn (4 nights from 10 Dec, 19 Dec … inside 10 Dec – 29 Jan); the cheapest wins
         const tries = a.tries && a.tries.length ? a.tries : [{ url: a.url }];
         let best = null, seen = [], compared = 0;
-        for (let i = 0; i < tries.length; i++) {
+        // v8.7 (Ali: "it keeps glitching when I press Check now"): several start days are checked in ONE window that moves from
+        // day to day by itself — it used to open and close a window for each day
+        if (tries.length > 1) {
+          const r = await nativeCall("agentOpen", { url: tries[0].url, title: a.title, profile: {}, rules: { cheapest: true }, labels: agentLabels(), search: true, watch: true, rounds: tries.map((x) => ({ url: x.url, checkin: x.checkin || "", checkout: x.checkout || "" })) });
+          if (r && r.price > 0) best = { price: r.price, checkin: r.checkin, checkout: r.checkout };
+          compared = (r && r.offers) || 0;
+          for (const o of (r && r.top) || []) seen.push({ ...o, url: o.url || a.url });
+        } else for (let i = 0; i < tries.length; i++) {
           if (tries.length > 1) flash && flash(T("Checking {i} of {n}: {d}", { i: i + 1, n: tries.length, d: tries[i].checkin }));
           const r = await nativeCall("agentOpen", { url: tries[i].url, title: a.title + (tries[i].checkin ? " · " + tries[i].checkin : ""), profile: {}, rules: { cheapest: true }, labels: agentLabels(), search: true, watch: true, autoClose: tries.length > 1 });
           if (r && r.price > 0 && (!best || r.price < best.price)) best = { price: r.price, checkin: tries[i].checkin, checkout: tries[i].checkout };

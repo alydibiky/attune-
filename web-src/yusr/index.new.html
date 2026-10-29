@@ -2122,7 +2122,7 @@ buildPad();
 window.addEventListener('popstate',()=>{if(appGoBack())history.pushState(null,'');});
 try{history.pushState(null,'');}catch(e){}
 const posted=processRecurring();
-try{if(navigator.onLine){const _gp=db.zakat.goldPrice,_up=db.zakat.goldPriceUpdated||0;if(!_gp||(Date.now()-_up)>7*864e5)fetchGoldPrice(true);}}catch(e){}
+try{if(navigator.onLine){const _gp=db.zakat.goldPrice,_up=db.zakat.goldPriceUpdated||0;if(!_gp||(Date.now()-_up)>12*36e5)fetchGoldPrice(true);   /* v8.7: twice a day, not weekly */}}catch(e){}
 applyTheme();applyI18n();
 if(db.pin)lockNow();
 state.period=(db.ui&&db.ui.period)||'month';document.querySelectorAll('#home-period button').forEach(x=>x.classList.toggle('on',x.dataset.p===state.period));
@@ -2224,7 +2224,21 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
       // the person's own record of a zakat payment they made (never a zakat figure: Yusr alone computes what is due)
       else if(op==='zakat-pay'){ openPayZakat(); setv('pz-amount',a.amount); if(a.cat) setSel('pz-cat',a.cat); setv('pz-to',a.to); setv('pz-date',a.date); setSel('pz-account',a.account==null?'':a.account); savePayZakat(); }
       // the INPUTS of the zakat calculation (prices, school, basis) — Yusr computes the result
-      else if(op==='zakat-set'){ openZakat(); setv('z-gold',a.goldPrice); setv('z-goldg',a.goldGrams); setv('z-goldkarat',a.goldKarat); setv('z-premium',a.goldPremium); if(a.madhhab) setSel('z-madhhab',a.madhhab); if(a.mode) setSel('z-mode',a.mode); if(a.basis) setSel('z-basis',a.basis); saveZakat(); }
+      else if(op==='zakat-set'){ openZakat();
+        // v8.7 (Ali: "some of the zakat settings were removed, like worn jewelry — restore them all"): every input of the sheet
+        if(a.country!=null&&$('z-country')){ setSel('z-country',a.country); zCountryChanged(); }
+        if(a.currency) setSel('z-currency',a.currency);
+        setv('z-gold',a.goldPrice); setv('z-goldg',a.goldGrams); setv('z-goldkarat',a.goldKarat); setv('z-premium',a.goldPremium);
+        if(a.madhhab) setSel('z-madhhab',a.madhhab); if(a.mode) setSel('z-mode',a.mode); if(a.basis) setSel('z-basis',a.basis);
+        if(a.jewelry!=null&&$('z-jew')) $('z-jew').checked=!!a.jewelry; setv('z-jewg',a.jewelryGrams); if(a.jewelryKarat) setSel('z-jewk',a.jewelryKarat);
+        setv('z-silver',a.silverPrice); setv('z-silverg',a.silverGrams); if(a.anniversary!=null) setv('z-anniv',a.anniversary);
+        if(a.receivables!=null&&$('z-recv')) $('z-recv').checked=!!a.receivables;
+        if(a.debtPolicy!=null){ setSel('z-debtpolicy',a.debtPolicy); try{zDebtPolicyChanged();}catch(e){} } setv('z-debtyear',a.debtYearAmount);
+        if(a.nisabCarat) setSel('z-nisabcarat',a.nisabCarat);
+        if(Array.isArray(a.excluded)) document.querySelectorAll('#z-accounts input[data-acc]').forEach(function(c){ c.checked=a.excluded.indexOf(c.dataset.acc)<0; });
+        saveZakat(); }
+      // v8.7 (Ali: "where are the gold rates, auto-updating for each country?"): today's price for the chosen country, now
+      else if(op==='gold-fetch'){ fetchGoldPrice(true).then(function(ok){ try{ save(); }catch(e){} }); return {ok:true,pending:true}; }
       else if(op==='cat-add'){ openCat(); setv('cat-emoji',a.emoji); setv('cat-label',a.label); saveCat(); }
       else if(op==='project-add'){ openProject(); setv('proj-name',a.name); saveProject(); }
       else if(op==='prefs'){ if(a.period) setUI('period',a.period); if(a.wk) setUI('wk',a.wk); if(a.dec!=null) setUI('dec',a.dec?1:0); if(a.country) setCountry(a.country); if(a.currency) setCurrency(a.currency); if(a.lang&&(a.lang==='ar'||a.lang==='en')) setLang(a.lang); if(a.budget!=null){ db.budgets=db.budgets||{overall:0,cats:{}}; db.budgets.overall=Math.max(0,+a.budget||0); save(); }

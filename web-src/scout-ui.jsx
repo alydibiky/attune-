@@ -212,7 +212,11 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         {/* v7.9 (Ali picked the calm list): new · cheapest · fair price, at a glance */}
         {found.length && goal.g.kind !== "gold" ? (() => { const ps = found.map((a) => a.facts.price).filter((v) => v > 0); return <div className="grid grid-cols-3 gap-2 pt-2" data-testid="scout-numbers">
           <div><b className="block c-num text-[20px] font-black c-acc">{found.filter((a) => fresh.includes(a.id)).length}</b><span className="c-sub text-[11.5px]">{tr("new")}</span></div>
-          <div><b className="block c-num text-[20px] font-black">{ps.length ? short(Math.min(...ps)) : "—"}</b><span className="c-sub text-[11.5px]">{tr("cheapest")}</span></div>
+          {/* v8.7 (Ali: "how do I open the cheapest?"): the number is a button — it opens that ad and brings it into view */}
+          {(() => { const lo = ps.length ? found.filter((a) => a.facts.price > 0).reduce((m, a) => (a.facts.price < m.facts.price ? a : m)) : null;
+            return <button type="button" disabled={!lo} className="text-start min-h-[44px] rounded-[12px] hover:text-[var(--c-acc)] disabled:cursor-default" data-testid="scout-open-cheapest"
+              onClick={() => { if (!lo) return; setOpenAd(lo.id); setTimeout(() => { const el = document.querySelector('[data-ad="' + lo.id + '"]'); if (el && el.scrollIntoView) el.scrollIntoView({ block: "start", behavior: "smooth" }); }, 60); }}>
+              <b className="block c-num text-[20px] font-black">{ps.length ? short(Math.min(...ps)) : "—"}</b><span className="c-sub text-[11.5px] underline decoration-dotted underline-offset-2">{tr("cheapest")}{lo ? " ›" : ""}</span></button>; })()}
           <div><b className="block c-num text-[20px] font-black">{cmp && cmp.med ? short(cmp.med) : "—"}</b><span className="c-sub text-[11.5px]">{tr("fair price")}</span></div></div>; })() : null}</div>
       {goal.g.kind === "gold" ? <div className={K.cardPad + " space-y-1"} data-testid="scout-gold">
         <span className={K.label}>{tr("Gold {k}K, a gram", { k: goal.g.karat || 21 })}</span>
@@ -239,7 +243,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         const vote0 = (goal.votes || {})[a.id];
         const msg = S.sellerMessage(a, goal.g, { ar });
         return (
-          <div key={a.id} className={K.cardPad + " space-y-2.5" + (picked.includes(a.id) ? " !border-[var(--c-acc)]" : "")} data-testid="scout-ad" data-new={fresh.includes(a.id) ? "1" : undefined}>
+          <div key={a.id} className={K.cardPad + " space-y-2.5" + (picked.includes(a.id) ? " !border-[var(--c-acc)]" : "")} data-testid="scout-ad" data-ad={a.id} data-new={fresh.includes(a.id) ? "1" : undefined}>
             {/* v7.9 (Ali picked the calm list): one row — tap for the details, or pick it to compare */}
             <button className="w-full text-start flex items-center gap-3 min-h-[56px]" data-testid="scout-row" aria-expanded={openAd === a.id}
               onClick={() => (picking ? setPicked((p) => (p.includes(a.id) ? p.filter((x) => x !== a.id) : p.length >= 4 ? p : [...p, a.id])) : setOpenAd((o) => (o === a.id ? null : a.id)))}>

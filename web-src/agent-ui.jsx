@@ -41,7 +41,7 @@ export function agentCard(text, { now = Date.now(), order = "dmy", inApp = false
 }
 
 /** The labels the in-app browser shows (translated here, where tr() lives). */
-export const agentLabels = () => ({ best: tr("Best offer"), fill: tr("Fill my details"), done: tr("Done"), hint: tr("Attune marks the best offer and fills your details. You choose and pay."),
+export const agentLabels = () => ({ checking: tr("Checking {i} of {n}: {d}"), loadFail: tr("This page didn't load — check the internet, or tap Done."), best: tr("Best offer"), fill: tr("Fill my details"), done: tr("Done"), hint: tr("Attune marks the best offer and fills your details. You choose and pay."),
   noProfile: tr("Add your details first: Profile → Booking details."), noOffers: tr("No offers found on this page yet — search on the site, then tap Best offer."),
   marked: tr("Marked the best of {n}: {price}. Check it and tap it."), filled: tr("Filled {n} fields — check them. Card and password fields are yours."), paying: tr("Payment — your turn. Attune never pays or reads card details."),
   noBuy: tr("No Buy now button here — tap it yourself, I'll fill your details on the next pages."), pressed: tr("Pressed “{b}” — check the order; the payment is yours.") });

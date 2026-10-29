@@ -21,7 +21,8 @@ export const ARTIFACTS_KEY = "attune:artifacts:v1";
 export const THEME_KEY = "attune:theme:v1";
 
 const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
-const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+// v8.7 (Ali: "Assistants has 5 next to it although they are 4"): every save tells the sidebar, so its counts are never stale
+const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); try { window.dispatchEvent(new CustomEvent("attune-spaces")); } catch (e) {} return true; } catch (e) { return false; } };
 export const newSpaceId = (p) => (p || "s") + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 /* ---- Chat helpers ------------------------------------------------------------------ */
