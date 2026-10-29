@@ -3,7 +3,10 @@
     <cloud-backup>
         <include domain="file" path="app_webview" />
     </cloud-backup>
+    <!-- v8.7: Recall's messages (recall.db) move to a new phone too; Google's cloud copy skips them (its 25 MB cap would stop
+         the whole app's backup as they grow for years) — Attune's own daily backup carries them instead (AutoBackup.kt). -->
     <device-transfer>
         <include domain="file" path="app_webview" />
+        <include domain="database" path="recall.db" />
     </device-transfer>
 </data-extraction-rules>

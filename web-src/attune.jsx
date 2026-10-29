@@ -30,6 +30,7 @@ import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { RecallPage } from "./lookback-ui.jsx";
 import { gmailDue, readGmail, markReconnect } from "./gmail.js";
+import { autoDue, loadAuto as loadAutoBackup, runAutoBackup } from "./autobackup.js";
 import { AutomationsPage, drainAutomations } from "./autom-ui.jsx";   // v6.41 C3
 import { parseAutomation, addRule, loadAuto, saveAuto, ruleText as autoRuleText } from "./autom.js";
 import { metroAsk, route as metroRoute, routeText as metroText } from "./metro.js";   // v6.41 D5
@@ -8770,6 +8771,8 @@ export default function App() {
       // v6.27 Deadline Radar: trials and renewals in the notifications are added (and reminded) by themselves
       const k = modeRef.current === "radar" ? 0 : runAutoRadar(NATIVE, { pro: proRef.current, remind: (r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" }) });
       // v8.7 (Ali: "reads Gmail by itself"): once a day, silently (gmail.js)
+      // v8.7 (Ali: "backup like WhatsApp"): once a day, the locked backup into the folder the person picked (autobackup.js)
+      try { const abs = NATIVE && NATIVE.autoBackupState ? JSON.parse(NATIVE.autoBackupState() || "{}") : {}; if (autoDue(loadAutoBackup(), !!abs.set)) runAutoBackup(nativeCall, NATIVE).catch(() => {}); } catch (e) {}
       if (gmailDue()) readGmail(nativeCall, { silent: true }).then((r) => { if (r && r.payments) flash(tr("{n} payments from Gmail are waiting in Money", { n: r.payments })); }).catch(() => markReconnect(true));
       const n = runAutoPay(NATIVE); if (n) flash(tr("{n} payments added to Money by themselves", { n })); else if (k) flash(tr("{n} deadlines added to your Radar by themselves", { n: k })); };
     const t = setTimeout(run, 2500);
@@ -10000,6 +10003,7 @@ export default function App() {
     jobs,
     api: {
       records: () => cmdRef.current.memory || [],
+      write: (messages) => callChat(messages, null, { think: false, maxTokens: 700, temperature: 0.4 }),   // v8.7 the email card
       detect: (text) => {
         const now = Date.now(); let doActions = 0;
         // a plain "remember …" note is Mind's job here (to-dos, where things are, /remember read it better) — the rest counts

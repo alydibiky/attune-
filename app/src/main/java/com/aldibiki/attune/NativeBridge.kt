@@ -157,6 +157,37 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    // v8.7 (Ali: "send with my confirmation, like Gemini"): the email the person just checked and tapped Send on, from their Gmail.
+    // arg = { to: [..], subject, body } → { id }. Google's own screen asks once for "send email on your behalf" (gmail.send).
+    var authorizeGmailSend: (((String?, String?) -> Unit) -> Unit)? = null
+    @JavascriptInterface
+    fun gmailSend(id: String, arg: String) {
+        if (blockedByAirGap(id, "Gmail")) return
+        val a = try { JSONObject(arg) } catch (e: Exception) { JSONObject() }
+        val to = a.optJSONArray("to")?.let { arr -> (0 until arr.length()).map { arr.optString(it) }.filter { it.contains("@") } } ?: emptyList()
+        if (to.isEmpty()) { reject(id, "Who should it go to? Add an email address."); return }
+        val auth = authorizeGmailSend ?: run { reject(id, "Google sign-in is not available here"); return }
+        auth { token, err ->
+            if (token == null) reject(id, err ?: "Gmail sign-in was cancelled")
+            else Thread {
+                try { resolve(id, JSONObject().put("id", GmailRead.send(token, to, a.optString("subject"), a.optString("body")))) }
+                catch (e: Throwable) { reject(id, e.message ?: "Could not send") }
+            }.start()
+        }
+    }
+
+    // v8.7 the daily automatic backup like WhatsApp (AutoBackup.kt): the folder (picked once), and writing a backup into it
+    var pickBackupFolder: (() -> Unit)? = null
+    @JavascriptInterface
+    fun autoBackupState(): String = try { AutoBackup.state(ctx).toString() } catch (e: Throwable) { "{}" }
+    @JavascriptInterface
+    fun autoBackupPick() { try { pickBackupFolder?.invoke() } catch (e: Throwable) { } }
+    @JavascriptInterface
+    fun autoBackupWrite(id: String, arg: String) {
+        val a = try { JSONObject(arg) } catch (e: Exception) { JSONObject() }
+        Thread { try { resolve(id, JSONObject().put("name", AutoBackup.write(ctx, a.optString("name"), a.optString("text")))) } catch (e: Throwable) { reject(id, e.message ?: "Could not save the backup") } }.start()
+    }
+
     // v8.7 (P7): Python for Code, downloaded on first use in the Play build (PyPack.kt); progress comes as 'attune-pypack' events
     @JavascriptInterface
     fun pyPackStatus(): String = try { PyPack.status(ctx).toString() } catch (e: Throwable) { JSONObject().put("ready", false).toString() }
@@ -1412,6 +1443,17 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun recallNotes(): String = try { RecallLog.items(ctx) } catch (e: Throwable) { "[]" }
     @JavascriptInterface
     fun recallForget(idsJson: String) { try { RecallLog.forget(ctx, idsJson) } catch (e: Throwable) { } }
+    // v8.7 (Ali: "messages in Recall stay forever, with backups like WhatsApp"): older ones by words, everything for the backup
+    @JavascriptInterface
+    fun recallFind(termsJson: String, limit: Int): String = try { RecallLog.find(ctx, termsJson, limit) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface
+    fun recallCount(): Long = try { RecallLog.count(ctx) } catch (e: Throwable) { 0L }
+    @JavascriptInterface
+    fun recallExport(): String = try { RecallLog.exportAll(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface
+    fun recallImport(json: String): Int = try { RecallLog.importAll(ctx, json) } catch (e: Throwable) { 0 }
+    @JavascriptInterface
+    fun recallForgetAll() { try { RecallLog.forgetAll(ctx) } catch (e: Throwable) { } }
     @JavascriptInterface
     fun payForget(idsJson: String) { try { PayLog.remove(ctx, idsJson) } catch (e: Throwable) { } }
 

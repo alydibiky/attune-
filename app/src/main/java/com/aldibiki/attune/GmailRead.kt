@@ -31,6 +31,26 @@ object GmailRead {
         } finally { c.disconnect() }
     }
 
+    const val SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send"
+
+    /** v8.7: send ONE email the person has just read and confirmed in Attune (gmail.send — Attune can only send, not read, with it). */
+    fun send(token: String, to: List<String>, subject: String, body: String): String {
+        val enc = { s: String -> "=?UTF-8?B?" + Base64.encodeToString(s.toByteArray(Charsets.UTF_8), Base64.NO_WRAP) + "?=" }
+        val mime = "To: " + to.joinToString(", ") + "\r\nSubject: " + enc(subject) + "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n" +
+            "Content-Transfer-Encoding: base64\r\n\r\n" + Base64.encodeToString(body.toByteArray(Charsets.UTF_8), Base64.DEFAULT)
+        val raw = Base64.encodeToString(mime.toByteArray(Charsets.UTF_8), Base64.URL_SAFE or Base64.NO_WRAP)
+        val c = URL("https://gmail.googleapis.com/gmail/v1/users/me/messages/send").openConnection() as HttpURLConnection
+        c.connectTimeout = 15000; c.readTimeout = 20000; c.requestMethod = "POST"; c.doOutput = true
+        c.setRequestProperty("Authorization", "Bearer $token"); c.setRequestProperty("Content-Type", "application/json")
+        try {
+            c.outputStream.use { it.write(JSONObject().put("raw", raw).toString().toByteArray(Charsets.UTF_8)) }
+            val code = c.responseCode
+            val txt = (if (code in 200..299) c.inputStream else c.errorStream)?.bufferedReader()?.use { it.readText() } ?: ""
+            if (code !in 200..299) throw RuntimeException(if (code == 401 || code == 403) "Gmail said no ($code) — connect Gmail again" else "Gmail answered $code")
+            return JSONObject(txt).optString("id")
+        } finally { c.disconnect() }
+    }
+
     private fun b64(s: String): String = try { String(Base64.decode(s, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING), Charsets.UTF_8) } catch (e: Exception) { "" }
 
     // the readable text: text/plain first, else text/html without its tags

@@ -150,6 +150,17 @@ function near(a, b) {
   return d[a.length][b.length] <= max;
 }
 
+/** v8.7 (Recall keeps messages forever — the phone lists the newest 3000, older ones are asked for by words): the words to ask
+ *  the phone's database for — the question's own words and the words that mean the same (at most 8). */
+export function wordsFor(q, now = Date.now()) {
+  const ask = parseAsk(q, now), out = [];
+  for (const w of ask.terms) {
+    const ph = w.includes("_") ? w.replace(/_/g, " ") : null;
+    for (const x of ph ? [ph] : stems(w)) { if (!out.includes(x)) out.push(x); for (const gi of MEANING_OF.get(x) || []) for (const y of MEANINGS[gi]) if (y.length >= 3 && !out.includes(y)) out.push(y); }
+  }
+  return out.filter((w) => w.length >= 2).slice(0, 8);
+}
+
 /** Everything Recall can find, as one list: [{ id, kind, title, text, ts, app?, pkg?, open? }]. */
 export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pays = [] } = {}) {
   const docs = [];

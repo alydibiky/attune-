@@ -31,7 +31,8 @@ the fallbacks at the bottom need no Google review at all.
 2. **OAuth consent screen** (Google Auth Platform → Branding):
    - App name **Attune**, support email, logo, app home page, **privacy policy link** = the public link of
      `docs/privacy-policy.html` (already updated: Gmail section + Limited Use sentence), authorised domain of that link.
-3. **Data access → Add scope** `https://www.googleapis.com/auth/gmail.readonly`.
+3. **Data access → Add scopes** `https://www.googleapis.com/auth/gmail.readonly` (restricted — the free review below) and
+   `https://www.googleapis.com/auth/gmail.send` (sensitive — free review, never an audit) for "write an email, check it, Send".
 4. **Clients → Create client → Android**: package `com.aldibiki.attune`, SHA-1 of the signing key
    (`keytool -list -v -keystore app/attune-test.keystore`), and later a second one with the **Play app-signing SHA-1**
    (Play Console → Setup → App signing).
@@ -50,6 +51,12 @@ the fallbacks at the bottom need no Google review at all.
 > and it is excluded from the app's sync. The app never sends, modifies or deletes email. No narrower scope works:
 > gmail.metadata has no message body, and the amounts and dates are in the body.
 
+## Text to paste — gmail.send
+> When the user asks Attune to write an email ("email Ahmed that the meeting moved to Sunday"), the app drafts it on the
+> device and shows the exact recipients, subject and text, which the user can edit. The email is sent with gmail.send only
+> when the user taps Send on that screen — one email per tap, never automatically. Without this permission the app opens
+> Gmail's own compose screen instead.
+
 ## Text to paste — Limited Use (if asked)
 > Attune's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy,
 > including the Limited Use requirements. Gmail data is used only to provide the user-facing features described above, is
@@ -63,8 +70,10 @@ the fallbacks at the bottom need no Google review at all.
 4. Open Money → the review list → show one payment with "The message as it arrived" (the email text) → tap Add.
 5. Open the Overpaying check → a subscription / price rise found from an email → tap it → "Open the email".
 6. Open Recall → search "netflix price" → the email is found.
-7. Show **Disconnect** in the card, and myaccount.google.com/permissions to remove access.
-8. Say/caption: "Email content stays on this phone. Attune has no server for it."
+7. Home box: type "email ahmed@example.com that the meeting moved to Sunday" → the email appears → edit a word → tap
+   **Send** → Google asks once for "send email on your behalf" → sent; show it in Gmail's Sent folder.
+8. Show **Disconnect** in the card, and myaccount.google.com/permissions to remove access.
+9. Say/caption: "Email content stays on this phone. Attune has no server for it."
 
 ## If Google still asks for the paid assessment — free ways that need no Google review
 - **Gmail notifications** (already working): Attune reads the Gmail app's notifications like bank notifications — new

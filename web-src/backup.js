@@ -27,7 +27,23 @@ export const LAST_BACKUP_KEY = "attune:backup:last";
 
 // Keys never worth saving: caches that rebuild themselves, and per-launch state.
 const SKIP = [/^attune:net:/, /^attune:store$/, /^attune:loaded$/, /^attune:backend$/, /^attune:barmin$/,
-  /^attune:backup:last$/, /\.pre-import$/];
+  /^attune:backup:last$/, /\.pre-import$/, /^attune:autobackup:/];   // v8.7: the daily backup's own settings (its password) stay on this phone
+
+/* v8.7 (Ali: "messages in Recall stay forever, with offline and online backup like WhatsApp"): Recall's messages live in the
+   phone's own database (RecallLog.kt), not in the page's storage — the backup carries them under one extra key, and a restore
+   hands them back to the phone (merged: nothing kept is lost). */
+export const NATIVE_RECALL = "native:recall";
+export function withPhoneData(keys, native) {
+  const out = { ...keys };
+  try { if (native && native.recallExport) { const r = native.recallExport(); if (r && r !== "[]") out[NATIVE_RECALL] = r; } } catch (e) {}
+  return out;
+}
+/** → the keys without the phone's part (which is given back to the phone), and how many messages came back. */
+export function takePhoneData(keys, native) {
+  const out = { ...keys }; let messages = 0;
+  if (out[NATIVE_RECALL] != null) { try { if (native && native.recallImport) messages = +native.recallImport(out[NATIVE_RECALL]) || 0; } catch (e) {} delete out[NATIVE_RECALL]; }
+  return { keys: out, messages };
+}
 
 export function collectData(storage) {
   const s = storage || localStorage;

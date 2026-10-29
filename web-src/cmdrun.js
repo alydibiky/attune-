@@ -9,12 +9,14 @@
      { type: "job", spec }                    → a job for the queue (jobs.js): convert, humanize, translate
      { type: "found", items, q }              → what Mind kept that fits
      { type: "need", what: "file" | "text", cmd } → the command needs something first
+     { type: "email", text }                  → v8.7 a ready email to check (email-ui.jsx), then Open in Gmail / Send
      { type: "chat", text, web?, to? }        → Chat answers (with web search or a language when asked)
      { type: "open", mode }                   → open that app (v6.50: every app from the box)
      { type: "todoAdd", item } · { type: "whereSave", set } · { type: "travel", code } · { type: "rememberNote", text }
      { type: "rememberFiles", files, label }  → the page saves it in Mind / starts the trip / starts a "remember" job
    The page passes `api` (the apps' own readers and stores), so this file stays testable. Tests: tests/unit/v748cmdrun.test.mjs. */
 import * as K from "./commands.js";
+import { isEmailAsk } from "./emaildraft.js";
 import * as W from "./whereis.js";
 
 const L = (en, ar, open) => ({ en, ar, ...(open ? { open } : {}) });
@@ -65,6 +67,7 @@ export function route(text, { files = [], api = {}, prefs = {}, kind = null } = 
   if (cmd) return runKind(cmd.id, cmd.arg, { cmd, files, api, slash: true });
   if (!t && !files.length) return null;
   if (kind) return runKind(kind, t, { files, api });
+  if (isEmailAsk(t)) return { type: "email", text: t };   // v8.7: "email Ahmed that …" → a ready email to check, then Send
   const det = (api.detect && api.detect(t)) || {};
   const records = (api.records && api.records()) || [];
   const g = K.guess(t, { ...det, hasFile: files.length > 0, things: W.thingsKnown(records) });
@@ -77,6 +80,7 @@ function runKind(kind, text, { cmd = null, files = [], api = {}, slash = false }
   const records = (api.records && api.records()) || [];
   const arg = String(text || "").trim();
   switch (kind) {
+    case "email": return arg ? { type: "email", text: "/email " + arg } : { type: "need", what: "text", cmd: "email" };
     case "remind": return { type: "doit", text: /remind|alarm|فكرني|ذكرني|نبهني/i.test(arg) ? arg : (/[\u0600-\u06ff]/.test(arg) ? "فكرني " : "remind me ") + arg };
     case "do": case "metro": case "automation": case "watch": case "mission": case "agent":
       return { type: "doit", text: arg };

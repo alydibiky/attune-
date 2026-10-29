@@ -13,8 +13,9 @@ import { SyncPanel } from "./sync-ui.jsx";
 import * as K from "./ui-kit.jsx";
 import {
   collectData, summarize, encryptBackup, decryptBackup, readHeader, restoreData, passwordProblem,
-  passwordStrength, backupFileName, LAST_BACKUP_KEY, daysSinceBackup,
+  passwordStrength, backupFileName, LAST_BACKUP_KEY, daysSinceBackup, withPhoneData, takePhoneData,
 } from "./backup.js";
+import { AutoBackupCard } from "./autobackup-ui.jsx";
 
 const UNDO_NAME = "before-restore.json";
 
@@ -66,7 +67,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
     if (p) return setErr(tr(p));
     setErr(""); setDone(""); setBusy(tr("Locking your data…"));
     try {
-      const text = await encryptBackup(collectData(), pw, { app: "5" });
+      const text = await encryptBackup(withPhoneData(collectData(), native), pw, { app: "5" });   // v8.7: + Recall's messages
       const name = backupFileName();
       if (native) {
         setBusy(tr("Choose where to save it…"));
@@ -111,7 +112,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
       const before = collectData();
       const undo = JSON.stringify({ at: Date.now(), keys: before });
       try { if (native && native.stashPut) native.stashPut(UNDO_NAME, undo); else sessionStorage.setItem("attune:undo", undo); } catch (e) {}
-      restoreData(opened, mode);
+      restoreData(takePhoneData(opened, native).keys, mode);   // v8.7: Recall's messages go back to the phone
       flash && flash(tr("Restored — reopening…"));
       setTimeout(() => location.reload(), 600);
       setDone(tr("Restored — reopening…"));
@@ -148,6 +149,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
         {/* v6.37: Sync — Wi-Fi or Google Drive (sync-ui.jsx) */}
         {tab === "sync" ? <SyncPanel native={native} flash={flash} /> : tab === "backup" ? (
           <div className="space-y-3">
+            <AutoBackupCard native={native} nativeCall={nativeCall} flash={flash} />
             <p className={K.label}>{tr("What will be saved")}</p>
             <Summary s={now} />
             <p className="text-[11px] text-[var(--c-mut)]">{since == null ? tr("You have never made a backup.") : since === 0 ? tr("Last backup: today.") : tr("Last backup: {n} days ago.", { n: since })} {tr("Models are not included — download them again from Engine.")}</p>

@@ -80,7 +80,17 @@ laggy moment ("Slow screen …" lines say where).
    is free; the paid audit (CASA) is only for apps that put Gmail data on their servers — Attune keeps it on the phone
    (left out of Sync, Limited Use text in the card and the privacy policy). Ali's steps + texts + demo script:
    `docs/GMAIL_VERIFICATION.md`.
-Tests: unit v870livefacts, v870gmail, v870yearplan, v750moneyreport; e2e v870sms, v870gmail, v870yearplan, v727paylog.
+9. **Recall keeps messages forever** (Ali: "stay forever, with offline and online backup like WhatsApp"): `RecallLog.kt` is now
+   a SQLite database (recall.db, migrated from the old 30-day list), ON by default; the page lists the newest 3000 and a search
+   also asks the phone for older ones by words (`recallFind`, `lookback.js wordsFor`); "Forget everything kept"; turning it
+   off stops keeping new ones (nothing is wiped). The backup file carries the messages (`backup.js withPhoneData /
+   takePhoneData`). **Daily automatic backup** (`AutoBackup.kt`, `autobackup.js`, `autobackup-ui.jsx` in Backup & restore and
+   Recall): a backup password (on this phone only) + a folder picked once with Android's picker — on the phone (offline) or
+   Google Drive (online, no Google setup) → a locked backup every day when Attune opens, newest 3 kept; Gmail data left out.
+10. **Write an email, check it, send** (Ali: "like Gemini"): "email ahmed@x.com that …", «ابعت ايميل لأحمد إن …», "/email" →
+   the email card (To / Subject / Body editable; `emaildraft.js`, `email-ui.jsx`): **Open in Gmail** (Gmail's compose screen
+   filled in — works now) or **Send** (gmail.send, after the Google steps; one email per tap). Nothing leaves before a tap.
+Tests: unit v870email, v870autobackup, v870livefacts, v870gmail, v870yearplan, v750moneyreport; e2e v870sms, v870gmail, v870yearplan, v727paylog.
 
 ## v8.7 — Ali's answers to the nine reviews (28 Oct) — the plan with ticks is `ALI_LIST_2026-10-28.md`
 Everything Ali said "do" is built and tested; everything subjective is on ONE design canvas waiting for his picks:

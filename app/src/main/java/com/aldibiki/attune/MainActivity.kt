@@ -165,6 +165,11 @@ class MainActivity : AppCompatActivity() {
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
         if (granted && Prefs.wake(this)) WakeService.set(this, true)   // voice phase 3: the wake word was waiting for the mic
     }
+    // v8.7 the daily automatic backup: the folder the person picks once (on the phone, or in Google Drive) — AutoBackup.kt
+    private val pickBackupFolder = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val r = AutoBackup.chosen(this, if (res.resultCode == RESULT_OK) res.data?.data else null)
+        if (::web.isInitialized) web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-backup-folder',{detail:$r}))", null)
+    }
     // v8.7 the old bank SMS (full APK): Android asks once; the page hears the answer and reads them (SmsInbox.kt)
     private val askSmsPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (::web.isInitialized) web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-sms-perm',{detail:$granted}))", null)
@@ -283,6 +288,7 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this).also { v -> v.popup = { i, cb -> try { voicePopupCb = cb; voicePopup.launch(i); true } catch (e: Exception) { voicePopupCb = null; false } } }
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        bridge.pickBackupFolder = { runOnUiThread { try { pickBackupFolder.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)) } catch (e: Exception) { } } }
         bridge.askSms = { runOnUiThread { try { askSmsPermission.launch(android.Manifest.permission.READ_SMS) } catch (e: Exception) { } } }
         bridge.pickBooks = { topic, folder -> runOnUiThread {
             bookTopic = topic
@@ -295,6 +301,7 @@ class MainActivity : AppCompatActivity() {
         bridge.authorizeDrive = { cb -> authorizeDrive(cb) }
         bridge.authorizeGoogle = { cb -> authorizeScopes(listOf("openid", "email"), cb) }
         bridge.authorizeGmail = { silent, cb -> authorizeScopes(listOf(GmailRead.SCOPE), silent, cb) }
+        bridge.authorizeGmailSend = { cb -> authorizeScopes(listOf(GmailRead.SEND_SCOPE), cb) }
         bridge.askLocalNet = { try { askLocalNetPermission.launch("android.permission.ACCESS_LOCAL_NETWORK") } catch (e: Exception) {} }
         bridge.askHealth = { runOnUiThread { try { askHealthPermission.launch(Health.PERMISSIONS) } catch (e: Exception) {} } }
         bridge.askHealthTemp = { runOnUiThread { try { askHealthPermission.launch(Health.TEMP_PERMISSIONS) } catch (e: Exception) {} } }   // v6.41 Cycle

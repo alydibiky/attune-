@@ -43,6 +43,7 @@ import * as K from "./commands.js";
 import * as W from "./whereis.js";
 import { SlashMenu, Attached, BoxOptions, AskCard, ConfirmCard, LinesCard, TodoCard, MapCard, FoundCard, JobCards, TripPin, tripLive, useJobs, say, BoxModes, takeBoxMode, BOX_HINT } from "./cmdbox-ui.jsx";
 import { LifeAnswer } from "./lifeask-ui.jsx";
+import { EmailCard } from "./email-ui.jsx";
 import * as LA from "./lifeask.js";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
@@ -255,7 +256,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* v6.36 layout 1A (Ali picked it): one box, three quick starts under it — tools are reached by asking, not from a list */}
       {minimal && !rep && cmd ? <SlashMenu text={text} onPick={(c) => (c.group === "open" ? (setText(""), show({ type: "open", mode: c.app }, "")) : setText("/" + (getLang() === "ar" ? c.ar[0] : c.id) + " "))} /> : null}
       {minimal && !rep && cmd && panel ? (
-        panel.type === "ask" ? <AskCard ask={panel} onPick={pickAsk} onClose={() => setPanel(null)} />
+        panel.type === "email" ? <EmailCard key={panel.text} text={panel.text} write={cmd && cmd.api && cmd.api.write} onClose={() => setPanel(null)} />
+        : panel.type === "ask" ? <AskCard ask={panel} onPick={pickAsk} onClose={() => setPanel(null)} />
         : panel.type === "shared" ? <ConfirmCard q={panel.q} onYes={() => { const t = panel.text; setPanel(null); doOld(t); }}
             onNo={() => { const t = panel.text; setPanel({ type: "lines", lines: [{ en: "Kept as a note in Mind.", ar: "اتحفظت ملاحظة في «العقل»." }] }); try { window.dispatchEvent(new MessageEvent("attune-share", { data: { kind: "share", text: t, asNote: true } })); } catch (e) {} }} />
         : panel.type === "confirm" ? <ConfirmCard q={panel.q} onYes={() => show({ type: "whereSave", set: panel.set }, "")} onNo={() => setPanel({ type: "lines", lines: [{ en: `OK — still ${panel.was}.`, ar: `تمام — لسه ${panel.was}.` }] })} />

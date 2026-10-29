@@ -39,6 +39,8 @@ export const COMMANDS = [
     hint: ["bring back anything you kept", "هات أي حاجة حفظتها"] },
   { id: "todo", ar: ["مهام", "مهمه", "تودو"], needs: "", heavy: false, group: "mind",
     hint: ["add to your to-do list, or see it", "ضيف للمهام أو شوفها"] },
+  { id: "email", ar: ["ايميل", "إيميل", "ميل"], needs: "text", heavy: false, group: "do",
+    hint: ["who and what → a ready email; you check it, then Send", "لمين وتقول إيه ← إيميل جاهز؛ تراجعه وتبعت"] },
   { id: "remind", ar: ["فكرني", "منبه"], needs: "text", heavy: false, group: "mind",
     hint: ["at a time, every day, or when someone messages", "في ميعاد، كل يوم، أو لما حد يبعتلك"] },
   { id: "subtitles", ar: ["ترجمه_فيديو", "سب", "ترجمه-فيديو"], needs: "file", heavy: true, group: "do",

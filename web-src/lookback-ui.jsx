@@ -7,7 +7,9 @@ import { RecallReport } from "./learning-report-ui.jsx";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { recallDocs, recallSearch, shotTitle, KINDS } from "./lookback.js";
 import { gmailNotes } from "./gmail.js";
+import { wordsFor } from "./lookback.js";
 import { GmailCard } from "./gmail-ui.jsx";
+import { AutoBackupCard } from "./autobackup-ui.jsx";
 import { loadChats } from "./chat.jsx";
 import { loadArtifacts } from "./spaces.js";
 import { keepPicture, thumbGet } from "./mind-ui.jsx";
@@ -67,11 +69,15 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
   const [tick, setTick] = useState(0);
   const [open, setOpen] = useState(null);       // a notification / payment opened in full
   const access = (() => { try { return !native || !native.payAccess || native.payAccess(); } catch (e) { return true; } })();
+  // v8.7 (Ali: "messages stay forever"): the phone lists the newest 3000; a search also asks the phone for older ones with its words
+  const [older, setOlder] = useState([]);
+  useEffect(() => { if (!q || !native || !native.recallFind) { setOlder([]); return; }
+    const t = setTimeout(() => { setOlder(readJson(() => native.recallFind(JSON.stringify(wordsFor(q)), 400))); }, 250); return () => clearTimeout(t); }, [q]);
   const docs = useMemo(() => recallDocs({
     memory, chats: loadChats(), pages: loadArtifacts(),
-    notes: [...(native && native.recallNotes ? readJson(() => native.recallNotes()) : []), ...gmailNotes()],   // v8.7: + the emails Gmail read
+    notes: [...(native && native.recallNotes ? readJson(() => native.recallNotes()) : []), ...older, ...gmailNotes()].filter((n, i, a) => a.findIndex((x) => x.id === n.id) === i),   // v8.7: + older ones the phone kept (by the words asked) + the emails Gmail read
     pays: native && native.payQueue ? readJson(() => native.payQueue()) : [],
-  }), [memory, tick]);
+  }), [memory, tick, older]);
   const words = useMemo(() => recallSearch(only ? docs.filter((d) => d.kind === only) : docs, q), [docs, q, only]);
   // v6.45: by meaning too, when the model is on the phone — the things get their numbers once (in the background, newest
   // first), the question gets its own, and the nearest are merged with the word hits.
@@ -126,8 +132,11 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
     if (on && !access) { try { native.openPayAccess(); } catch (e) {} flash && flash(tr("Turn on Notification access for Attune, then come back")); }
     try { native.recallNotesOn(on); } catch (e) {}
     setNotesOn(on); setTick((t) => t + 1);
-    if (!on) flash && flash(tr("Kept notifications forgotten"));
+    if (!on) flash && flash(tr("New notifications are not kept now — the ones kept stay"));
   };
+  const [sure, setSure] = useState(false);
+  const forgetAll = () => { if (!sure) return setSure(true); try { native.recallForgetAll(); } catch (e) {} setSure(false); setTick((t) => t + 1); flash && flash(tr("Kept notifications forgotten")); };
+  const kept = (() => { try { return native && native.recallCount ? +native.recallCount() : 0; } catch (e) { return 0; } })();
   const tap = (d) => {
     if (d.open && d.open.mode === "memory") { const r = memory.find((x) => x.id === d.open.id); if (r && openRec) openRec(r); return; }
     if (d.open && d.open.mode === "chat") { openChat && openChat(d.open.id); return; }
@@ -184,12 +193,14 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
         {native && native.recallNotesOn ? (
           <>
             <button onClick={toggleNotes} className="w-full min-h-[44px] flex items-center gap-2.5 text-[14px] font-bold text-[var(--c-ink)]" data-testid="recall-notes-toggle">
-              <Bell size={17} className="text-[var(--c-acc)]" /><span className="flex-1 text-start">{tr("Keep my notifications for 30 days")}</span>
+              <Bell size={17} className="text-[var(--c-acc)]" /><span className="flex-1 text-start">{tr("Keep my messages and notifications forever")}</span>
               <span className={`w-9 h-5 rounded-full relative shrink-0 ${notesOn ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]"}`}><span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm ${notesOn ? "end-0.5" : "start-0.5"}`} /></span>
             </button>
-            <p className="text-[11px] text-[var(--c-mut)]">{tr("WhatsApp, SMS, email, deliveries, banks — so you can find what someone sent. Never one-time codes. Turning it off forgets them.")}{notesOn && !access ? " " + tr("Needs Notification access (the same switch as Money).") : ""}</p>
+            <p className="text-[11px] text-[var(--c-mut)]">{tr("WhatsApp, SMS, email, deliveries, banks — so you can find what someone sent, years later. Never one-time codes. Backed up with Attune's backup (Backup & restore).")}{kept ? " " + tr("{n} kept.", { n: kept.toLocaleString() }) : ""}{notesOn && !access ? " " + tr("Needs Notification access (the same switch as Money).") : ""}</p>
+            {kept && native.recallForgetAll ? <button onClick={forgetAll} className="min-h-[44px] text-[12px] font-bold underline text-[var(--c-mut)]" data-testid="recall-forget-all">{sure ? tr("Tap again to forget all {n} — this can't be undone", { n: kept.toLocaleString() }) : tr("Forget everything kept")}</button> : null}
           </>
         ) : null}
+        <div className="border-t border-[var(--c-ln)] pt-1"><AutoBackupCard compact native={native} nativeCall={call} flash={flash} /></div>
         <div className="border-t border-[var(--c-ln)] pt-1"><GmailCard compact onRead={() => setTick((x) => x + 1)} /></div>
         {native && native.embedStatus ? <div className="border-t border-[var(--c-ln)] pt-2.5 space-y-1.5" data-testid="recall-meaning">
           <div className="flex items-center gap-2.5 min-h-[44px] text-[14px] font-bold text-[var(--c-ink)]"><Sparkles size={17} className="text-[var(--c-acc)]" /><span className="flex-1">{tr("Search by meaning (Arabic ↔ English)")}</span>
