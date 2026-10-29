@@ -51,7 +51,9 @@ Phone checks needed: voice (log now says "Voice … error N"), watch numbers aft
 laggy moment ("Slow screen …" lines say where).
 
 > **READ_SMS removed (29 Oct): Play Protect blocked the APK ("App blocked to protect your device") because the full build
-> asked for READ_SMS. Never add READ_SMS / RECEIVE_SMS / call-log permissions to an APK Ali installs from a file.**
+> asked for READ_SMS. Never add READ_SMS / RECEIVE_SMS / call-log permissions to an APK Ali installs from a file.
+> Ali: "fix that — but don't remove the feature" → "Bring in your old bank SMS" now reads an SMS BACKUP FILE (SMS Backup &
+> Restore .xml, or JSON) — `smsfile.js`, `paylog-ui.jsx OldSmsCard`; tests unit v870smsfile, e2e v870sms.**
 > **Ali (29 Oct): he tests the app first; ALL the Google steps (Gmail verification `docs/GMAIL_VERIFICATION.md`, Firebase
 > invites `server/referral/README.md`, Cloud setup) wait until the version is ready for release. Don't ask him for them before.**
 

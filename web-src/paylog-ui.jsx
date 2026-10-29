@@ -9,6 +9,7 @@ import { inbox, toTxns, autoPick, appendToLedger, alreadyIn } from "./paylog.js"
 import { loadLedger } from "./myledger.js";
 import { payOpts } from "./locale.js";
 import * as U from "./ui-kit.jsx";
+import { parseSmsBackup, moneySms } from "./smsfile.js";
 
 const DONE_KEY = "attune:paylog:done", OFF_KEY = "attune:paylog:not-now", AUTO_KEY = "attune:paylog:auto", LOG_KEY = "attune:paylog:auto-log";
 const readDone = () => { try { return JSON.parse(localStorage.getItem(DONE_KEY) || "[]"); } catch (e) { return []; } };
@@ -87,16 +88,45 @@ export function importOldSms(N, days = 365) {
 }
 function OldSmsCard({ N, onRead }) {
   const st = smsInboxState(N);
-  const [busy, setBusy] = useState(false), [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false), [msg, setMsg] = useState(""), [steps, setSteps] = useState(false);
+  const fileRef = React.useRef(null);
   let did = false; try { did = !!localStorage.getItem(OLD_DONE); } catch (e) {}
-  if (!st.declared || (did && !msg)) return null;
+  if (did && !msg) return null;
   const go = async () => { setBusy(true); const n = await importOldSms(N); setBusy(false);
     setMsg(n == null ? tr("Android said no — you can allow SMS for Attune in App info.") : tr("{n} bank messages from the last year are waiting below for you to check.", { n })); onRead && onRead(); };
+  // v8.7 (Ali: "fix that — but don't remove the feature"): no SMS permission (Play Protect blocks it) — a backup file instead
+  const fromFile = async (f) => {
+    if (!f) return; setBusy(true);
+    let n = 0; try { n = addOldSms(moneySms(parseSmsBackup(await f.text()))); } catch (e) { n = -1; }
+    setBusy(false);
+    setMsg(n < 0 ? tr("Couldn't read that file — pick the .xml the SMS backup app made.") : n ? tr("{n} bank messages from the last year are waiting below for you to check.", { n }) : tr("No bank or wallet messages from the last year in that file."));
+    onRead && onRead();
+  };
   return <div className="calm shrink-0 px-2 pt-2" data-testid="sms-old"><div className={U.card + " px-3.5 py-2.5"}>
     <p className="m-0 text-[13.5px] font-extrabold">{tr("Bring in your old bank SMS")}</p>
     <p className={"m-0 mt-0.5 text-[12.5px] leading-relaxed " + U.muted}>{msg || tr("Money starts with the last 12 months instead of today. Only bank and wallet messages; never one-time codes; nothing leaves the phone.")}</p>
-    {msg ? null : <button onClick={go} disabled={busy} className={U.btnP + " mt-2"} data-testid="sms-old-go">{busy ? tr("Reading…") : tr("Read my bank SMS")}</button>}
+    {msg ? null : st.declared ? <button onClick={go} disabled={busy} className={U.btnP + " mt-2"} data-testid="sms-old-go">{busy ? tr("Reading…") : tr("Read my bank SMS")}</button>
+      : <>
+        {steps ? <ol className={"m-0 mt-2 ps-5 text-[12.5px] leading-relaxed " + U.muted} data-testid="sms-old-steps">
+          <li>{tr("From Google Play, install a free SMS backup app — e.g. “SMS Backup & Restore”.")}</li>
+          <li>{tr("Open it → Back up → only Messages → save on this phone (Downloads).")}</li>
+          <li>{tr("Come back here and pick the backup file (.xml).")}</li>
+        </ol> : null}
+        <div className="flex flex-wrap gap-2 mt-2">
+          <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy} className={U.btnP} data-testid="sms-old-file">{busy ? tr("Reading…") : tr("Pick the SMS backup file")}</button>
+          {steps ? null : <button onClick={() => setSteps(true)} className={U.btnS} data-testid="sms-old-how">{tr("How?")}</button>}
+        </div>
+        <p className={"m-0 mt-1.5 text-[11.5px] " + U.muted}>{tr("Attune doesn't ask for SMS access (Google blocks apps installed from a file that do) — it reads the backup file instead.")}</p>
+        <input ref={fileRef} type="file" accept=".xml,.json,text/xml,application/xml,application/json,*/*" className="hidden" onChange={(e) => { fromFile(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="sms-old-input" />
+      </>}
   </div></div>;
+}
+/** The messages read from a backup file → the review list's waiting items (never twice, never one already handled). */
+function addOldSms(list) {
+  const have = new Set(readOld().map((x) => x.id)), done = new Set(readDone());
+  const add = (list || []).filter((x) => x && x.id && !have.has(x.id) && !done.has(x.id));
+  try { localStorage.setItem(OLD_KEY, JSON.stringify([...readOld(), ...add].slice(-1500))); localStorage.setItem(OLD_DONE, String(Date.now())); } catch (e) {}
+  return add.length;
 }
 
 export function PayInbox({ N, onAdd, ready = true }) {
@@ -126,7 +156,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
   // by itself, with Money open: the sure ones go in through Money; the rest wait here for a tap
   useEffect(() => {
     if (!on || !auto || !ready) return;   // only once Money is loaded, so nothing is marked done before Money has it
-    const led = loadLedger(), sure = autoPick(items.filter((e) => !String(e.id).startsWith("sms:"))).filter((e) => !alreadyIn(e, led));   // v7.9: never a second copy by itself; v8.7: old SMS wait for a tap
+    const led = loadLedger(), sure = autoPick(items.filter((e) => !/^(sms|smsf|gm):/.test(String(e.id)))).filter((e) => !alreadyIn(e, led));   // v7.9: never a second copy by itself; v8.7: old SMS wait for a tap
     if (sure.length) { const t = setTimeout(() => { add(sure); logAuto(sure); setAutoN((n) => n + sure.length); }, 1500); return () => clearTimeout(t); }
   }, [on, auto, ready, items.length]);
   const toggleAuto = () => { const v = !auto; setAuto(v); try { localStorage.setItem(AUTO_KEY, v ? "1" : "0"); } catch (e) {} };

@@ -38,6 +38,28 @@ with sync_playwright() as p:
     led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3') || '{}')")
     check(any(t.get("amount") == 30000 for t in (led.get("txns") or [])) or any(t.get("amount") == 1250 for t in (led.get("txns") or [])), "a tap adds one to Money")
     check(len(page.evaluate("JSON.parse(localStorage.getItem('attune:sms-old:v1') || '[]')")) == 1, "the handled one leaves the waiting list")
+    ctx.close()
+    # v8.7 (Ali: "fix that — but don't remove the feature"): the APK no longer asks for SMS access (Play Protect blocks it) —
+    # the same card reads a backup file from an SMS backup app instead (SMS Backup & Restore's .xml)
+    import os, tempfile, time as _t
+    nowms = int(_t.time() * 1000)
+    xml = ('<?xml version="1.0" encoding="UTF-8"?><smses count="3">'
+           '<sms address="CIB" date="%d" type="1" body="Your card ending 1234 was charged EGP 850.00 at NOON" />'
+           '<sms address="CIB" date="%d" type="1" body="Your OTP is 482913" />'
+           '<sms address="NBE" date="%d" type="1" body="تم خصم مبلغ 1,250.00 جنيه من حسابك لدى فودافون" /></smses>') % (nowms - 40 * 86400000, nowms - 9 * 86400000, nowms - 20 * 86400000)
+    fx = os.path.join(tempfile.mkdtemp(), "sms-20261029.xml"); open(fx, "w", encoding="utf-8").write(xml)
+    init2 = init.replace("N.smsInboxState = () => JSON.stringify({ declared: true, granted: S.granted });", "N.smsInboxState = () => JSON.stringify({ declared: false, granted: false });")
+    ctx, page = new_page(br, env, errors, extra_init=init2)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    page.locator("nav button:has-text('Money')").click()
+    page.wait_for_selector("[data-testid=sms-old-file]", timeout=8000)
+    check(page.locator("[data-testid=sms-old-go]").count() == 0 and "doesn't ask for SMS access" in page.inner_text("[data-testid=sms-old]"), "without the SMS permission the card offers the backup file (and says why)")
+    page.click("[data-testid=sms-old-how]")
+    check("SMS Backup & Restore" in page.inner_text("[data-testid=sms-old-steps]"), "“How?” shows the 3 steps")
+    page.set_input_files("[data-testid=sms-old-input]", fx)
+    page.wait_for_selector("[data-testid=paylog]", timeout=8000)
+    check("2 bank messages" in page.inner_text("[data-testid=sms-old]") and "2 payments" in page.inner_text("[data-testid=paylog]"), "the two bank payments from the file wait for a tap — the one-time code is never kept")
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()
