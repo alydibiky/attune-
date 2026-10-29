@@ -27,8 +27,8 @@ import argparse, gzip, hashlib, io, json, os, re, shutil, sqlite3, subprocess, s
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_map_pack import normalize
 
-def get(url, timeout=120, accept=None):
-    for i in range(5):
+def get(url, timeout=120, accept=None, tries=5):
+    for i in range(tries):
         try:
             h = {"User-Agent": "attune-know-pack/1.0 (https://github.com/alydibiky/attune-)"}   # Wikidata asks for a descriptive agent
             if accept: h["Accept"] = accept

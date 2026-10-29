@@ -6,6 +6,8 @@ import { recallStats } from "./learning-report.js";   // v7.7 the Recall index
 import { RecallReport } from "./learning-report-ui.jsx";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { recallDocs, recallSearch, shotTitle, KINDS } from "./lookback.js";
+import { gmailNotes } from "./gmail.js";
+import { GmailCard } from "./gmail-ui.jsx";
 import { loadChats } from "./chat.jsx";
 import { loadArtifacts } from "./spaces.js";
 import { keepPicture, thumbGet } from "./mind-ui.jsx";
@@ -67,7 +69,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
   const access = (() => { try { return !native || !native.payAccess || native.payAccess(); } catch (e) { return true; } })();
   const docs = useMemo(() => recallDocs({
     memory, chats: loadChats(), pages: loadArtifacts(),
-    notes: native && native.recallNotes ? readJson(() => native.recallNotes()) : [],
+    notes: [...(native && native.recallNotes ? readJson(() => native.recallNotes()) : []), ...gmailNotes()],   // v8.7: + the emails Gmail read
     pays: native && native.payQueue ? readJson(() => native.payQueue()) : [],
   }), [memory, tick]);
   const words = useMemo(() => recallSearch(only ? docs.filter((d) => d.kind === only) : docs, q), [docs, q, only]);
@@ -158,6 +160,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
       </div>
 
       <div className="space-y-2" data-testid="recall-results">
+        {q && words.loose && res.hits.length ? <p className="text-[11.5px] font-semibold text-[var(--c-mut)]" data-testid="recall-loose">{tr("Nothing had all your words — the closest:")}</p> : null}
         {res.hits.length ? res.hits.slice(0, 40).map(({ doc: d, snip, by }) => (
           <button key={d.id} onClick={() => tap(d)} data-testid="recall-hit" className={card + " w-full p-3 flex gap-3 text-start hover:border-[var(--c-acc)]"}>
             {d.kind === "photo" && d.thumb ? <Thumb id={d.thumb} /> : null}
@@ -184,9 +187,10 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
               <Bell size={17} className="text-[var(--c-acc)]" /><span className="flex-1 text-start">{tr("Keep my notifications for 30 days")}</span>
               <span className={`w-9 h-5 rounded-full relative shrink-0 ${notesOn ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]"}`}><span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm ${notesOn ? "end-0.5" : "start-0.5"}`} /></span>
             </button>
-            <p className="text-[11px] text-[var(--c-mut)]">{tr("WhatsApp, email, deliveries, banks — so you can find what someone sent. Never SMS. Turning it off forgets them.")}{notesOn && !access ? " " + tr("Needs Notification access (the same switch as Money).") : ""}</p>
+            <p className="text-[11px] text-[var(--c-mut)]">{tr("WhatsApp, SMS, email, deliveries, banks — so you can find what someone sent. Never one-time codes. Turning it off forgets them.")}{notesOn && !access ? " " + tr("Needs Notification access (the same switch as Money).") : ""}</p>
           </>
         ) : null}
+        <div className="border-t border-[var(--c-ln)] pt-1"><GmailCard compact onRead={() => setTick((x) => x + 1)} /></div>
         {native && native.embedStatus ? <div className="border-t border-[var(--c-ln)] pt-2.5 space-y-1.5" data-testid="recall-meaning">
           <div className="flex items-center gap-2.5 min-h-[44px] text-[14px] font-bold text-[var(--c-ink)]"><Sparkles size={17} className="text-[var(--c-acc)]" /><span className="flex-1">{tr("Search by meaning (Arabic ↔ English)")}</span>
             {mean.on ? <span className="inline-flex items-center text-[11px] font-extrabold rounded-full px-2.5 py-0.5 bg-[var(--c-soft)] text-[var(--c-acc)] border border-[var(--c-acc)]/30 tabular-nums" data-testid="recall-meaning-on">{indexing || tr("On")}</span> : null}</div>

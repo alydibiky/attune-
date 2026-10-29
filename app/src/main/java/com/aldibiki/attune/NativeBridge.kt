@@ -140,6 +140,23 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         auth { token, err -> if (token == null) reject(id, err ?: "Google sign-in was cancelled") else resolve(id, JSONObject().put("token", token)) }
     }
 
+    // v8.7 (Ali: "reads Gmail by itself"): the money emails, read on the phone (GmailRead.kt). arg = { days, max, silent, q }.
+    // silent = the daily read (never shows Google's screen). → [{ id, kind, from, title, text, at, link }]
+    var authorizeGmail: ((Boolean, (String?, String?) -> Unit) -> Unit)? = null
+    @JavascriptInterface
+    fun gmailRead(id: String, arg: String) {
+        if (blockedByAirGap(id, "Gmail")) return
+        val a = try { JSONObject(arg) } catch (e: Exception) { JSONObject() }
+        val auth = authorizeGmail ?: run { reject(id, "Google sign-in is not available here"); return }
+        auth(a.optBoolean("silent", false)) { token, err ->
+            if (token == null) reject(id, err ?: "Gmail sign-in was cancelled")
+            else Thread {
+                try { resolve(id, JSONObject().put("emails", GmailRead.money(token, a.optInt("days", 30), a.optInt("max", 40), a.optString("q", "")))) }
+                catch (e: Throwable) { reject(id, e.message ?: "Could not read Gmail") }
+            }.start()
+        }
+    }
+
     // v8.7 (P7): Python for Code, downloaded on first use in the Play build (PyPack.kt); progress comes as 'attune-pypack' events
     @JavascriptInterface
     fun pyPackStatus(): String = try { PyPack.status(ctx).toString() } catch (e: Throwable) { JSONObject().put("ready", false).toString() }
@@ -724,6 +741,15 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun smsNotifs(): Boolean = try { Prefs.smsNotifs(ctx) } catch (e: Exception) { false }
     @JavascriptInterface
     fun setSmsNotifs(on: Boolean) { try { Prefs.setSmsNotifs(ctx, on) } catch (e: Exception) {} }
+
+    /** v8.7 the old bank SMS (full APK only, SmsInbox.kt): {declared, granted}; ask once (event 'attune-sms-perm'); the money SMS. */
+    @JavascriptInterface
+    fun smsInboxState(): String = try { JSONObject().put("declared", SmsInbox.declared(ctx)).put("granted", SmsInbox.granted(ctx)).toString() } catch (e: Throwable) { "{}" }
+    var askSms: (() -> Unit)? = null
+    @JavascriptInterface
+    fun smsInboxAsk() { try { askSms?.invoke() } catch (e: Throwable) { } }
+    @JavascriptInterface
+    fun smsInboxMoney(days: Int): String = try { SmsInbox.money(ctx, days) } catch (e: Throwable) { "[]" }
 
     /** Voice: the newest chat messages from notifications (ChatInbox.kt) — [{key, app, who, convo, group, text, ts, canReply}]. */
     @JavascriptInterface

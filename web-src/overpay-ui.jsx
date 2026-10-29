@@ -7,6 +7,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { ChevronDown, ExternalLink, FileText as Mail, ClipboardPaste, Bell, Crown, Check, X } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as O from "./overpay.js";
+import { GmailCard } from "./gmail-ui.jsx";
 import { cancelLink } from "./deadlines.js";
 import { loadRadar } from "./deadlines.js";
 import { loadLedger } from "./myledger.js";
@@ -146,7 +147,8 @@ export function OverpayCheck({ pro, openPlan, flash, remind, unremind }) {
         <details className={"text-[12px] " + U.muted}><summary className="min-h-[44px] py-3 cursor-pointer font-bold">{tr("How to export Gmail")}</summary>
           <div className="mt-1">{tr("Google Takeout → Deselect all → Mail → Export. Open the .mbox file here. Attune reads only emails about money from the last 12 months, and keeps a link to each one.")}</div>
           <button className="mt-1 min-h-[44px] font-bold text-[var(--c-acc)]" onClick={() => openLink("Google Takeout", "https://takeout.google.com/settings/takeout/custom/gmail")}>takeout.google.com</button>
-          <div className="mt-1">{tr("Gmail sign-in is coming: Attune will read new emails by itself.")}</div></details>
+</details>
+        <GmailCard onRead={() => setO(O.loadOverpay())} />
         <input ref={fileRef} type="file" accept=".mbox,application/mbox,text/plain,*/*" className="hidden" onChange={(e) => { onFile(e.target.files && e.target.files[0]); e.target.value = ""; }} data-testid="overpay-file" />
       </div>
     </div>);

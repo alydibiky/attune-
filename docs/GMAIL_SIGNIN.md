@@ -1,4 +1,4 @@
-# Gmail sign-in for the Overpaying check (not built yet: needs Ali's Google Cloud setup)
+# Gmail read by itself (BUILT 29 Oct 2026 — works once Ali does the Google Cloud steps below)
 
 Today the Overpaying check (Money Guardian, `web-src/overpay.js`) reads payments, money notifications, pasted emails and a
 **Gmail export** (Google Takeout → Mail → `.mbox`, read on the phone; each email keeps a Gmail link from its `X-GM-THRID`).
@@ -15,12 +15,15 @@ That needs no Google setup at all. Reading new emails by itself needs Gmail sign
    sign in with no review. To publish it to everyone, Google requires app verification **and a yearly third-party security
    assessment (CASA)**, which costs money and takes weeks. Until then, the Takeout export covers the same 12 months.
 
-## What the code will do (when the steps above are done)
-- Kotlin: Credential Manager / Google Sign-In for the account, then an authorization request for `gmail.readonly`
-  (AuthorizationClient), token kept by the system, never in the page.
-- `NativeBridge.gmailSearch(query)`: `users.messages.list` with
-  `q = "newer_than:1y (receipt OR invoice OR subscription OR renew OR trial OR \"price increase\" OR voucher OR points)"`,
-  then `users.messages.get?format=full` per hit; each one → `{ id, kind: "email", from, title, text, at, link }`
-  (link = `https://mail.google.com/mail/#all/<threadId>`), handed to `overpay.addEmails` — the same path as the export.
-- The monthly reminder on the 1st (`overpay-monthly`) would also run the search first.
-- Respects the Offline lock and the network log like every other network path.
+## What the code does (v8.7, 29 Oct 2026)
+- **Connect Gmail** (the card in Money Guardian's Overpaying check and in Recall, `web-src/gmail-ui.jsx`): Google's own screen asks
+  once for `gmail.readonly` (MainActivity.authorizeScopes → AuthorizationClient). The token stays in Kotlin (`GmailRead.kt`).
+- First read: the last 12 months' money emails (up to 100). Then **once a day, silently** when Attune opens (never Google's
+  screen again; `gmailDue` / `readGmail` in `web-src/gmail.js`): the last days' new ones (up to 40).
+- Search: `newer_than:Nd (receipt OR invoice OR order OR subscription OR renew OR trial OR "price increase" OR payment OR billing
+  OR charged OR debited OR credited OR transfer OR voucher OR points OR إيصال OR فاتورة OR اشتراك OR تجديد OR دفع OR تحويل)`;
+  each hit → `{ id, kind: "email", from, title, text, at, link }`. One-time codes are dropped on the phone.
+- Where they go: the Overpaying check (`overpay.addEmails`, same path as the export), Money's review list for real payments
+  (`isPaymentEmail` — never added by themselves), and Recall (90 days, app "Gmail").
+- Respects Offline mode (`blockedByAirGap`). Tests: `tests/unit/v870gmail.test.mjs`, `tests/e2e_v870gmail.py`.
+- Until the Cloud steps are done, "Connect Gmail" shows Google's error (the app is not registered) — nothing else breaks.

@@ -52,7 +52,7 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     page.locator("nav button:has-text('Money')").click()
     page.wait_for_selector("[data-testid=paylog-setup]", timeout=8000)
-    check("Never SMS" in page.locator("[data-testid=paylog-setup]").inner_text(), "with notification access off: a card that says what it does (never SMS, nothing leaves the phone)")
+    check("Never one-time codes" in page.locator("[data-testid=paylog-setup]").inner_text(), "with notification access off: a card that says what it does (bank SMS too, never one-time codes, nothing leaves the phone)")
     page.click("[data-testid=paylog-turn-on]"); page.wait_for_timeout(200)
     check(page.evaluate("window.__paymock.opened") == 1, "“Turn on” opens Android's Notification access screen")
     ctx.close()

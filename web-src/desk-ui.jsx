@@ -59,7 +59,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
   useEffect(() => { const on = (e) => { setBoxMode(takeBoxMode() || e.detail); setLife(null); }; window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
   const send = () => {
     const t = text.trim(); if (!t) return; setText(""); setLife(null); setDone(null);
-    if (boxMode === "life") { let a = null; try { a = LA.askLife(t, LA.loadStores()); } catch (e) { a = null; } return setLife({ q: t, a }); }
+    if (boxMode === "life") { let a = null; try { a = LA.askLife(t, LA.loadStores()); } catch (e) { a = null; } if (a && a.kind === "world") return onAsk(t); return setLife({ q: t, a }); }   // v8.7: the world → the chat
     if (boxMode === "translate") return onAsk("\u0004" + t, true);
     let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) setDone({ ...r, id: Date.now() }); else onAsk(t);
   };

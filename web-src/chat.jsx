@@ -43,6 +43,7 @@ import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp , learnRule } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote, subjectOf } from "./research.js";
+import { isScoreQuestion, fromNotes as liveFromNotes, fromPassages, isMetaAnswer, keyLines } from "./livefacts.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage, writesEgyptian, egyptianize } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
@@ -1066,6 +1067,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (uSk && uSk.stripped != null) content = uSk.stripped || content;
       let sources = null, via = null, research = null, webCtx = null, webEmpty = false, tplUsed = "", speedCap = null, speedBrief = ""; const extra0 = {};
       const pic = img || carried;
+      // v8.7 (Ali: "Liverpool 1-1 Chelsea" was in his notifications and the chat answered "Passage 1 mentions …"): a live score is
+      // read first from the notifications the phone kept (Recall), by code — no web, no model; "latest" still searches (livefacts.js)
+      if (typed && !img && !fileAtt && isScoreQuestion(typed) && !/\b(latest|update|check the web)\b|آخر نتيجة|اخر نتيجة|دور على النت/i.test(typed) && NATIVE && NATIVE.recallNotes) {
+        let ln = null; try { ln = liveFromNotes(JSON.parse(NATIVE.recallNotes() || "[]"), typed); } catch (e) { ln = null; }
+        if (ln) {
+          const txt = /[\u0600-\u06FF]/.test(typed) ? ln.ar : ln.en;
+          patchMsg(cid, aiId, { text: txt, streaming: false, phase: "", secs: 0, fromNotification: ln.src });
+          api.remember({ kind: "chat", title: typed.slice(0, 70), text: typed, output: txt, tags: ["chat"] });
+          return;
+        }
+      }
       // v6.12: Auto — the best installed model for this kind of question (a quick one keeps the loaded model)
       // v6.32 Deep answer: the strongest model this phone can run at all (also a slow, from-storage one), thinking first;
       // the model that was loaded comes back after the answer
@@ -1738,6 +1750,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const rf = repairFigures(answer, sources);
         if (rf.fixed.length) extra.figuresFixed = rf.fixed.length;
         answer = tidyAnswer(rf.text);
+        // v8.7 (Ali's Liverpool–Chelsea): a score is read from the pages by code (the one most pages agree on) and leads the answer;
+        // an answer that only describes the sources ("Passage 1 mentions …") is replaced by the pages' own lines (livefacts.js)
+        const qL = (webCtx && webCtx.question) || typed, arL = /[\u0600-\u06FF]/.test(typed || "");
+        const live = isScoreQuestion(typed) ? fromPassages([...((webCtx && webCtx.toRead) || []), ...sources], qL) : null;
+        const meta = isMetaAnswer(answer);
+        if (live) answer = (arL ? live.ar : live.en) + (meta ? "" : "\n\n" + answer);
+        else if (meta) { const kl = keyLines(sources, qL); if (kl) { answer = kl; extra.metaFixed = true; } }
       }
       // v8.4 (Ali's Lynk & Co 900: "I found no web page" + a table of "—" and citations [2] to nothing): an answer written
       // without pages gets the same clean-up — the wrong maker country fixed, citations with no source removed, empty columns gone

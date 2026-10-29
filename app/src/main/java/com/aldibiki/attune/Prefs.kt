@@ -8,7 +8,7 @@ object Prefs {
 
     /** SMS (Ali picked B, 25 Oct 2026): the SMS app's notifications are read for Message alerts, "who messaged me" and voice
      *  replies ONLY when the person switches this on (off by default). Never the SMS inbox, never one-time codes. */
-    fun smsNotifs(ctx: Context): Boolean = sp(ctx).getBoolean("sms_notifs", false)
+    fun smsNotifs(ctx: Context): Boolean = sp(ctx).getBoolean("sms_notifs", true)   // v8.7 (Ali, 29 Oct): on unless turned off — never one-time codes
     fun setSmsNotifs(ctx: Context, on: Boolean) { sp(ctx).edit().putBoolean("sms_notifs", on).apply(); WatchMatch.smsAllowed = on }
 
     /** Voice phase 3: «يا أتيون» heard by the phone itself (WakeService) — off by default; when = always | screen | charging;

@@ -10,6 +10,75 @@ import { loadLife } from "./life.js";
 import { homeCurrency } from "./locale.js";
 import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
+import { yearGrid, yearRows, loadYearPlan, saveYearPlan, setCell } from "./yearplan.js";
+import { xlsxFromRows } from "./convert.js";
+
+/** v8.7 (Ali: "a year plan with months, like in Excel, as if I am doing it in Excel"): the year as a sheet — rows × 12 months +
+ *  the total; past months are what happened (grey), coming months the plan; tap any cell to type over it; Excel button. */
+const GROUP_COL = { income: "var(--c-pos)", fixed: "#4A5852", savings: "var(--c-acc)", everyday: "#B4560E" };
+function YearSheet({ ledger, pots, cur, flash }) {
+  const [plan, setPlan] = useState(() => loadYearPlan());
+  const [year, setYear] = useState(() => new Date().getFullYear());
+  const [edit, setEdit] = useState(null);   // { rowId, month, value }
+  const ar = getLang() === "ar";
+  const g = useMemo(() => yearGrid({ ledger, life: loadLife(), pots, plan, year, ar }), [ledger, pots, plan, year]);
+  const put = (rowId, month, v) => setPlan(saveYearPlan(setCell(plan, rowId, month, String(v).replace(/,/g, "").trim())));
+  const mon = (m) => new Date(m + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "short" });
+  const excel = () => {
+    const name = `attune-year-plan-${year}.xlsx`, bytes = xlsxFromRows(yearRows(g, ar), (ar ? "خطة " : "Plan ") + year);
+    let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    const call = typeof window !== "undefined" && window.__attuneNativeCall;
+    (async () => {
+      try { if (call && window.AttuneNative) { await call("saveFile", { name, mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", b64: btoa(s) }); flash && flash(tr("Saved {n}", { n: name })); return; } } catch (e) {}
+      try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([bytes])); a.download = name; a.click(); } catch (e) {}
+    })();
+  };
+  const cellCls = "px-2 py-1.5 text-end tabular-nums whitespace-nowrap border-b border-[var(--c-ln)]";
+  const stick = "sticky start-0 z-10 bg-[var(--c-surf)]";
+  const Cell = ({ r, k }) => {
+    const m = g.months[k], on = edit && edit.rowId === r.id && edit.month === m;
+    if (on) return <td className={cellCls + " bg-[var(--c-soft)]"}><input autoFocus inputMode="decimal" defaultValue={r.cells[k] || ""} className="w-20 bg-transparent text-end outline-none font-bold" data-testid="year-cell-input"
+      onKeyDown={(e) => { if (e.key === "Enter") { put(r.id, m, e.target.value); setEdit(null); } if (e.key === "Escape") setEdit(null); }} onBlur={(e) => { put(r.id, m, e.target.value); setEdit(null); }} /></td>;
+    return <td className={cellCls + (r.actual[k] ? " " + U.muted : "") + (r.typed[k] ? " font-extrabold text-[var(--c-acc)]" : "") + (k === g.nowIdx ? " bg-[var(--c-soft)]/50" : "")}
+      onClick={() => setEdit({ rowId: r.id, month: m })} data-testid={"year-cell-" + r.id + "-" + k}>{r.cells[k] ? fmt(r.cells[k]) : "–"}</td>;
+  };
+  return (
+    <div className="space-y-2.5" data-testid="year-sheet">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <button className={U.btnS + " h-9! min-h-[36px]! px-3!"} onClick={() => setYear(year - 1)} aria-label={tr("Previous year")}>‹</button>
+          <b className="text-[16px] font-black tabular-nums" data-testid="year-label">{year}</b>
+          <button className={U.btnS + " h-9! min-h-[36px]! px-3!"} onClick={() => setYear(year + 1)} aria-label={tr("Next year")}>›</button>
+        </div>
+        <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={excel} data-testid="year-excel">{tr("Excel")}</button>
+      </div>
+      <p className={"m-0 text-[12px] " + U.muted}>{tr("Grey = what happened. The rest is the plan — tap any cell to type your own number, like Excel.")}</p>
+      <div className={U.card + " overflow-x-auto"}>
+        <table className="text-[12.5px] border-separate border-spacing-0 min-w-full" dir={ar ? "rtl" : "ltr"}>
+          <thead><tr>
+            <th className={stick + " " + cellCls + " text-start font-extrabold"}>{tr("Item")}</th>
+            {g.months.map((m, k) => <th key={m} className={cellCls + " font-extrabold " + (k === g.nowIdx ? "text-[var(--c-acc)]" : "")}>{mon(m)}</th>)}
+            <th className={cellCls + " font-black"}>{tr("Year")}</th></tr></thead>
+          <tbody>
+            {g.groups.map((gr) => <React.Fragment key={gr.id}>
+              <tr><td colSpan={14} className="px-2 pt-3 pb-1 text-[12px] font-black uppercase tracking-[0.08em]" style={{ color: GROUP_COL[gr.id] }}>{gr.label}</td></tr>
+              {gr.rows.map((r) => <tr key={r.id} data-testid="year-row">
+                <td className={stick + " " + cellCls + " text-start font-semibold max-w-[150px] truncate"} dir="auto" title={r.label}>{r.label}</td>
+                {r.cells.map((_, k) => <Cell key={k} r={r} k={k} />)}
+                <td className={cellCls + " font-extrabold"}>{fmt(r.total)}</td></tr>)}
+              {!gr.rows.length ? <tr><td colSpan={14} className={"px-2 py-1 text-[12px] " + U.muted}>{tr("Nothing yet")}</td></tr> : null}
+            </React.Fragment>)}
+            {[["in", tr("Total income"), g.income, g.totals.income, "var(--c-pos)"], ["out", tr("Total out (incl. savings)"), g.out, g.totals.out, "var(--c-ink)"], ["free", tr("Free"), g.free, g.totals.free, null]].map(([k, l, arr, tot, col]) => (
+              <tr key={k} data-testid={"year-total-" + k}>
+                <td className={stick + " " + cellCls + " text-start font-black border-t-2"}>{l}</td>
+                {arr.map((v, i) => <td key={i} className={cellCls + " font-extrabold border-t-2"} style={{ color: col || (v < 0 ? "var(--c-neg)" : "var(--c-pos)") }}>{fmt(v)}</td>)}
+                <td className={cellCls + " font-black border-t-2"} style={{ color: col || (tot < 0 ? "var(--c-neg)" : "var(--c-pos)") }}>{fmt(tot)}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+      <p className={"m-0 text-[12.5px] " + U.muted}>{tr("This year you save {s} — and {f} is left free.", { s: fmt(g.totals.savings) + " " + cur, f: fmt(g.totals.free) + " " + cur })}</p>
+    </div>);
+}
 
 const KIND_NAME = { emergency: ["Emergency", "الطوارئ"], travel: ["Travel", "السفر"], car: ["Car", "العربية"], eid: ["Eid", "العيد"], school: ["School", "المدارس"], wedding: ["Wedding", "الجواز"] };
 const CAT_NAME = { food: ["Food", "الأكل"], groceries: ["Groceries", "البقالة"], transport: ["Transport", "المواصلات"], shopping: ["Shopping", "المشتريات"], health: ["Health", "الصحة"],
@@ -22,6 +91,7 @@ export function PlannerPage({ flash }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState(""), [target, setTarget] = useState(""), [by, setBy] = useState(""), [how, setHow] = useState("month");   // how: "month" (a fixed amount each month) | "target"
   const [put, setPut] = useState({});
+  const [view, setView] = useState("month");   // v8.7: "month" | "year" (the sheet)
   const ar = getLang() === "ar";
   const ledger = useMemo(() => loadLedger(), [tick]), cur = homeCurrency(ledger);
   const plan = useMemo(() => planMonth({ ledger, life: loadLife(), pots, now: Date.now() }), [ledger, pots, tick]);
@@ -37,7 +107,11 @@ export function PlannerPage({ flash }) {
   };
   return (
     <div className={U.page + " rounded-2xl p-4 md:p-6 space-y-3.5 lg:space-y-[18px]"} data-testid="planner-page">
-      <h2 className={U.h1 + " flex items-center gap-2"}><PiggyBank size={20} className="c-acc" />{tr("{m} plan", { m: monthName })}</h2>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h2 className={U.h1 + " flex items-center gap-2"}><PiggyBank size={20} className="c-acc" />{view === "year" ? tr("Year plan") : tr("{m} plan", { m: monthName })}</h2>
+        <div className="flex gap-1.5" role="tablist">{[["month", tr("This month")], ["year", tr("The year")]].map(([k, l]) => <button key={k} role="tab" aria-selected={view === k} className={U.chip(view === k) + " h-10! min-h-[40px]!"} onClick={() => setView(k)} data-testid={"planner-view-" + k}>{l}</button>)}</div>
+      </div>
+      {view === "year" ? <YearSheet ledger={ledger} pots={pots} cur={cur} flash={flash} /> : <>
       <div className="space-y-3.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
         <div className={U.cardPad + " space-y-3"} data-testid="planner-split">
           <div className="flex items-baseline justify-between"><span className={U.label}>{tr("Income")}</span><b className="text-[22px] font-black tabular-nums" dir="ltr">{fmt(plan.income)} {cur}</b></div>
@@ -88,5 +162,6 @@ export function PlannerPage({ flash }) {
         <p className={U.label + " m-0 mb-2"}>{tr("Fixed this month")}</p>
         <div className="space-y-1.5">{plan.fixed.map((f, i) => <div key={i} className="flex items-center justify-between text-[14px] font-semibold"><span dir="auto" className={f.paid ? "line-through " + U.muted : ""}>{f.what}</span><b className="tabular-nums" dir="ltr">{fmt(f.amount)}</b></div>)}</div>
       </div> : null}
+      </>}
     </div>);
 }

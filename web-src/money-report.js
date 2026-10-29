@@ -48,7 +48,7 @@ export function catName(L, id, ar = false) {
 }
 
 /** Everything the calm view and the Report show, at `now`, for one account (`account` = its id) or all money accounts.
- *  → { cur, others, accounts, balance, month: { in, out, net, count, rate, from, to, daysLeft, cats, pace }, weeks, months,
+ *  → { cur, others, accounts, balance, month: { in, out, net, count, rate, from, to, daysLeft, cats, sources, pace }, weeks, months,
  *      recent, rows, due, dueTotal } */
 export function moneyReport(L, { now = Date.now(), account = null, ar = false } = {}) {
   const cur = homeCurrency(L);
@@ -65,21 +65,24 @@ export function moneyReport(L, { now = Date.now(), account = null, ar = false } 
   const inMonth = txns.filter((t) => t.date >= monthFrom && t.date <= today);
   const mIn = sum(inMonth, "income"), mOut = sum(inMonth, "expense");
   // where the money went this month: by category, biggest first; past the 4th they are one "other" slice
-  const byCat = {};
-  for (const t of inMonth) if (t.type === "expense") byCat[t.cat || "other"] = r2((byCat[t.cat || "other"] || 0) + (Number(t.amount) || 0));
-  let cats = Object.entries(byCat).map(([id, v]) => ({ id, name: catName(L, id, ar), amount: v })).sort((a, b) => b.amount - a.amount);
-  if (cats.length > 4) {
-    const rest = cats.slice(3).reduce((a, c) => a + c.amount, 0);
-    cats = [...cats.slice(0, 3), { id: "_rest", name: ar ? "أخرى" : "Other", amount: r2(rest) }];
-  }
-  // percentages that add up to 100 (largest remainder), so the donut and the legend agree
-  if (mOut > 0) {
-    const raw = cats.map((c) => (c.amount / mOut) * 100), floor = raw.map(Math.floor);
+  // (v8.7, Ali: "I want earned to have a pie chart to see where it's earned from"): the same for the money that came IN —
+  // grouped by where it came from (the note: the payer / the job), else by category
+  const slices = (type, total, keyOf) => {
+    const by = {};
+    for (const t of inMonth) if (t.type === type) { const [id, name] = keyOf(t); const x = by[id] || (by[id] = { id, name, amount: 0 }); x.amount = r2(x.amount + (Number(t.amount) || 0)); }
+    let list = Object.values(by).sort((a, b) => b.amount - a.amount);
+    if (list.length > 4) list = [...list.slice(0, 3), { id: "_rest", name: ar ? "أخرى" : "Other", amount: r2(list.slice(3).reduce((a, c) => a + c.amount, 0)) }];
+    // percentages that add up to 100 (largest remainder), so the donut and the legend agree
+    if (!(total > 0)) return list.map((c) => ({ ...c, pct: 0 }));
+    const raw = list.map((c) => (c.amount / total) * 100), floor = raw.map(Math.floor);
     let left = 100 - floor.reduce((a, b) => a + b, 0);
-    const order = raw.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0]);
-    for (const [, i] of order) { if (left <= 0) break; floor[i]++; left--; }
-    cats = cats.map((c, i) => ({ ...c, pct: floor[i] }));
-  } else cats = cats.map((c) => ({ ...c, pct: 0 }));
+    const order = raw.map((v, k) => [v - Math.floor(v), k]).sort((a, b) => b[0] - a[0]);
+    for (const [, k] of order) { if (left <= 0) break; floor[k]++; left--; }
+    return list.map((c, k) => ({ ...c, pct: floor[k] }));
+  };
+  const cats = slices("expense", mOut, (t) => [t.cat || "other", catName(L, t.cat || "other", ar)]);
+  const srcName = (t) => { const n = String(t.note || "").replace(/\s+/g, " ").trim().slice(0, 28); return n ? [("n:" + n.toLowerCase()), n.charAt(0).toUpperCase() + n.slice(1)] : [t.cat || "other", catName(L, t.cat || "other", ar)]; };
+  const sources = slices("income", mIn, srcName);
   // pace: spent so far this month against the same days of last month
   const dom = d.getDate(), lastFrom = isoDay(new Date(y, m - 1, 1)), lastTo = isoDay(new Date(y, m - 1, Math.min(dom, new Date(y, m, 0).getDate())));
   const lastSoFar = sum(txns.filter((t) => t.date >= lastFrom && t.date <= lastTo), "expense");
@@ -114,7 +117,7 @@ export function moneyReport(L, { now = Date.now(), account = null, ar = false } 
     cur: acc ? acc.currency : cur, account: acc ? acc.id : null, accounts, balance,
     others: Object.entries(oth).map(([currency, v]) => ({ currency, balance: v })),
     month: { in: mIn, out: mOut, net: r2(mIn - mOut), count: inMonth.length, rate: mIn > 0 ? Math.round(((mIn - mOut) / mIn) * 1000) / 10 : null,
-      from: monthFrom, to: monthEnd, daysLeft: Math.max(0, Math.round((new Date(monthEnd + "T12:00:00") - new Date(today + "T12:00:00")) / DAY)), cats, pace },
+      from: monthFrom, to: monthEnd, daysLeft: Math.max(0, Math.round((new Date(monthEnd + "T12:00:00") - new Date(today + "T12:00:00")) / DAY)), cats, sources, pace },
     weeks, budget, weekTarget: budget ? Math.round(budget / 4.3) : 0, months,
     recent: sorted.slice(0, 3).map(row), rows: sorted.filter((t) => t.date >= monthFrom && t.date <= today).map(row),
     due, dueTotal: r2(due.filter((x) => x.currency === (acc ? acc.currency : cur)).reduce((a, x) => a + x.amount, 0)),

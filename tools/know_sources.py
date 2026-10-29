@@ -1886,8 +1886,8 @@ def people_rows(people, facts, works):
 def build_people(a):
     import urllib.parse
     B = _bk()
-    def run(q):
-        d = json.loads(B.get(WDQS + "?" + urllib.parse.urlencode({"query": q, "format": "json"}), 120, accept="application/sparql-results+json").decode("utf-8"))
+    def run(q, tries=5):
+        d = json.loads(B.get(WDQS + "?" + urllib.parse.urlencode({"query": q, "format": "json"}), 120, accept="application/sparql-results+json", tries=tries).decode("utf-8"))
         time.sleep(2); return d["results"]["bindings"]
     g = lambda b, k: (b.get(k) or {}).get("value", "")
     people = {}
@@ -1901,24 +1901,31 @@ def build_people(a):
             for k in ("en", "ar", "enD", "arD"):
                 if g(b, k) and not it.get(k): it[k] = g(b, k)
         print(f"people: {sc[0]} {PEOPLE_COUNTRIES.get(sc[1]) or PEOPLE_OCCUPATIONS.get(sc[1])}: {len(rows)} (total {len(people)})")
-    qids = list(people); facts, works = [], []
-    for i in range(0, len(qids), 250):
-        batch = qids[i:i + 250]
+    # v8.7 (the first run hit GitHub's 6-hour limit: 250 people a query with the "cites a source" filter times out on Wikidata):
+    # the most known people first, 40 a query, a failed query split in two once, and a time budget — what is read by then is packed
+    qids = sorted(people, key=lambda q: -people[q].get("n", 0)); facts, works = [], []
+    deadline = time.time() + float(os.environ.get("PEOPLE_BUDGET_MIN", "240")) * 60
+    def facts_of(batch, split=True):
         try:
-            for b in run(people_facts_query(batch)):
-                p, v = g(b, "p"), g(b, "v")
-                if p in ("born", "died"): b2 = dict(b); txt = wd_fmt(b2, "time")
-                else: txt = g(b, "vl") or g(b, "vla")
-                if p == "place of birth": txt = g(b, "vl") or g(b, "vla")
+            for b in run(people_facts_query(batch), tries=2):
+                p = g(b, "p")
+                txt = wd_fmt(dict(b), "time") if p in ("born", "died") else (g(b, "vl") or g(b, "vla"))
                 facts.append((g(b, "item").rsplit("/", 1)[-1], p, txt))
-        except BaseException as e: print(f"people: facts batch {i} failed ({e})")
+        except BaseException as e:
+            if split and len(batch) > 1: h = len(batch) // 2; facts_of(batch[:h], False); facts_of(batch[h:], False)
+            else: print(f"people: facts for {len(batch)} failed ({e})")
+    STEP = 40
+    for i in range(0, len(qids), STEP):
+        if time.time() > deadline: print(f"people: time budget reached — packing the {i} most known people"); people = {q: people[q] for q in qids[:i]}; break
+        batch = qids[i:i + STEP]
+        facts_of(batch)
         for prop, label in WORK_LINKS:
             try:
-                for b in run(people_works_query(batch, prop)):
+                for b in run(people_works_query(batch, prop), tries=2):
                     t = g(b, "wl") or g(b, "wla"); t = t + (f" / {g(b, 'wla')}" if g(b, "wl") and g(b, "wla") and g(b, "wla") != g(b, "wl") else "")
                     works.append((g(b, "item").rsplit("/", 1)[-1], label, t, (g(b, "d") or "")[:4]))
             except BaseException as e: print(f"people: works {label} batch {i} failed ({e})")
-        print(f"people: details {min(i + 250, len(qids))}/{len(qids)}")
+        if i % 400 == 0: print(f"people: details {min(i + STEP, len(qids))}/{len(qids)}")
     rows = people_rows(people, facts, works)
     B.write_pack(a.out, "people", rows, {
         "name": "Who's who (Wikidata)", "name_ar": "مين هو (ويكي بيانات)",

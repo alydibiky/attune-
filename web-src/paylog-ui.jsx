@@ -65,6 +65,40 @@ export function Evidence({ e, testid = "paylog-evidence" }) {
     <p className="m-0 mt-1 text-[13px] leading-snug whitespace-pre-wrap select-text" dir="auto">{text}</p></div>;
 }
 
+/* v8.7 (Ali, 29 Oct: "we agreed that it reads SMS, but not one-time codes"): the bank SMS already on the phone, once, in the APK
+   Ali installs (the full build declares READ_SMS; SmsInbox.kt). They wait in the same review list — never added by themselves. */
+const OLD_KEY = "attune:sms-old:v1", OLD_DONE = "attune:sms-old:done";
+const readOld = () => { try { return JSON.parse(localStorage.getItem(OLD_KEY) || "[]"); } catch (e) { return []; } };
+const dropOld = (ids) => { try { localStorage.setItem(OLD_KEY, JSON.stringify(readOld().filter((x) => !ids.includes(x.id)))); } catch (e) {} };
+export function smsInboxState(N) { try { return (N && N.smsInboxState && JSON.parse(N.smsInboxState() || "{}")) || {}; } catch (e) { return {}; } }
+/** Read the money SMS of the last year into the review list. → how many (null = the person said no). */
+export function importOldSms(N, days = 365) {
+  return new Promise((ok) => {
+    const read = () => { let a = []; try { a = JSON.parse(N.smsInboxMoney(days) || "[]"); } catch (e) {}
+      const have = new Set(readOld().map((x) => x.id)), done = new Set(readDone());
+      const add = a.filter((x) => x && x.id && !have.has(x.id) && !done.has(x.id));
+      try { localStorage.setItem(OLD_KEY, JSON.stringify([...readOld(), ...add].slice(-600))); localStorage.setItem(OLD_DONE, String(Date.now())); } catch (e) {}
+      ok(add.length); };
+    if (smsInboxState(N).granted) return read();
+    const on = (e) => { window.removeEventListener("attune-sms-perm", on); if (e.detail) read(); else ok(null); };
+    window.addEventListener("attune-sms-perm", on);
+    try { N.smsInboxAsk(); } catch (e) { window.removeEventListener("attune-sms-perm", on); ok(null); }
+  });
+}
+function OldSmsCard({ N, onRead }) {
+  const st = smsInboxState(N);
+  const [busy, setBusy] = useState(false), [msg, setMsg] = useState("");
+  let did = false; try { did = !!localStorage.getItem(OLD_DONE); } catch (e) {}
+  if (!st.declared || (did && !msg)) return null;
+  const go = async () => { setBusy(true); const n = await importOldSms(N); setBusy(false);
+    setMsg(n == null ? tr("Android said no — you can allow SMS for Attune in App info.") : tr("{n} bank messages from the last year are waiting below for you to check.", { n })); onRead && onRead(); };
+  return <div className="calm shrink-0 px-2 pt-2" data-testid="sms-old"><div className={U.card + " px-3.5 py-2.5"}>
+    <p className="m-0 text-[13.5px] font-extrabold">{tr("Bring in your old bank SMS")}</p>
+    <p className={"m-0 mt-0.5 text-[12.5px] leading-relaxed " + U.muted}>{msg || tr("Money starts with the last 12 months instead of today. Only bank and wallet messages; never one-time codes; nothing leaves the phone.")}</p>
+    {msg ? null : <button onClick={go} disabled={busy} className={U.btnP + " mt-2"} data-testid="sms-old-go">{busy ? tr("Reading…") : tr("Read my bank SMS")}</button>}
+  </div></div>;
+}
+
 export function PayInbox({ N, onAdd, ready = true }) {
   const can = payReader(N);
   const [on, setOn] = useState(() => { try { return can && N.payAccess(); } catch (e) { return false; } });
@@ -76,13 +110,13 @@ export function PayInbox({ N, onAdd, ready = true }) {
     let a = false; try { a = N.payAccess(); } catch (e) {}
     setOn(a);
     let q = []; try { q = JSON.parse(N.payQueue() || "[]"); } catch (e) {}
-    setItems(inbox(q, readDone(), payOpts()));
+    setItems(inbox([...q, ...readOld()], readDone(), payOpts()));
   };
   useEffect(() => { load(); const f = () => load(); window.addEventListener("focus", f); document.addEventListener("visibilitychange", f);
     return () => { window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", f); }; }, []);
   const finish = (list) => {
     const ids = list.map((e) => e.id);
-    markDone(N, ids);
+    markDone(N, ids); dropOld(ids);
     setItems((x) => x.filter((e) => !ids.includes(e.id)));
   };
   const add = (list) => { onAdd(toTxns(list)); finish(list); };
@@ -92,7 +126,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
   // by itself, with Money open: the sure ones go in through Money; the rest wait here for a tap
   useEffect(() => {
     if (!on || !auto || !ready) return;   // only once Money is loaded, so nothing is marked done before Money has it
-    const led = loadLedger(), sure = autoPick(items).filter((e) => !alreadyIn(e, led));   // v7.9: never a second copy by itself
+    const led = loadLedger(), sure = autoPick(items.filter((e) => !String(e.id).startsWith("sms:"))).filter((e) => !alreadyIn(e, led));   // v7.9: never a second copy by itself; v8.7: old SMS wait for a tap
     if (sure.length) { const t = setTimeout(() => { add(sure); logAuto(sure); setAutoN((n) => n + sure.length); }, 1500); return () => clearTimeout(t); }
   }, [on, auto, ready, items.length]);
   const toggleAuto = () => { const v = !auto; setAuto(v); try { localStorage.setItem(AUTO_KEY, v ? "1" : "0"); } catch (e) {} };
@@ -102,7 +136,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
     return (
       <div className="calm shrink-0 px-2 py-2" data-testid="paylog-setup"><div className={U.cardPad}>
         <p className="text-[14px] font-extrabold flex items-center gap-2 m-0"><Bell size={15} className="text-[var(--c-acc)]" />{tr("Log spending by itself")}</p>
-        <p className={"text-[12.5px] mt-1 leading-relaxed m-0 " + U.muted}>{tr("Turn on notification access and Attune reads your bank, InstaPay and wallet notifications on this phone, then asks you to add each payment. Never SMS; nothing leaves the phone.")}</p>
+        <p className={"text-[12.5px] mt-1 leading-relaxed m-0 " + U.muted}>{tr("Turn on notification access and Attune reads your bank, InstaPay and wallet notifications and bank SMS on this phone, then adds each payment. Never one-time codes; nothing leaves the phone.")}</p>
         <div className="flex gap-2 mt-2.5">
           <button onClick={() => openAccess(N)} className={U.btnP} data-testid="paylog-turn-on">{tr("Turn on")}</button>
           <button onClick={() => { setNotNow(true); try { localStorage.setItem(OFF_KEY, "1"); } catch (e) {} }} className={U.btnS + " " + U.muted}>{tr("Not now")}</button>
@@ -110,14 +144,16 @@ export function PayInbox({ N, onAdd, ready = true }) {
         <RestrictedHelp N={N} />
       </div></div>);
   }
+  const oldCard = <OldSmsCard N={N} onRead={load} />;
   if (!items.length && autoN && showAuto) return <AutoList n={autoN} close={() => setShowAuto(false)} />;
+  if (!items.length && !autoN) return oldCard;
   if (!items.length) return autoN ? (
     <div className="calm shrink-0 px-2 py-2" data-testid="paylog-auto-done"><div className={U.card + " px-3.5 py-1 flex items-center gap-2"}>
       <Check size={15} className="text-[var(--c-pos)] shrink-0" /><span className="flex-1 text-[13.5px] font-semibold">{tr("{n} payments added by themselves", { n: autoN })}</span>
       <button onClick={() => setShowAuto(true)} className="min-h-[44px] px-1 text-[12.5px] font-bold underline text-[var(--c-acc)]" data-testid="paylog-auto-see">{tr("See the messages")}</button>
       <button onClick={toggleAuto} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted} data-testid="paylog-auto-toggle">{auto ? tr("Ask me first") : tr("Add by themselves")}</button></div></div>) : null;
   const ledgerNow = open ? loadLedger() : null;
-  return (
+  return (<>{oldCard}
     <div className="calm shrink-0 px-2 py-2" data-testid="paylog"><div className={U.card}>
       <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[52px] flex items-center gap-2 px-3.5 py-2.5 text-start" data-testid="paylog-open">
         <Bell size={15} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[13.5px] font-extrabold">{tr("{n} payments read from your notifications", { n: items.length })}</span>
@@ -136,7 +172,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
           <label className={"flex items-center gap-2 text-[12.5px] min-h-[44px] pt-1 " + U.muted}><input type="checkbox" checked={auto} onChange={toggleAuto} className="w-5 h-5 shrink-0 accent-[var(--c-acc)]" data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank and InstaPay messages with a name)")}</label>
           {items.length > 1 ? <button onClick={() => add(items)} className={U.btnP + " w-full"} data-testid="paylog-add-all">{tr("Add all {n}", { n: items.length })}</button> : null}
         </div>) : null}
-    </div></div>);
+    </div></div></>);
 }
 
 /** The payments added by themselves, newest first, each with the complete message it came from. */

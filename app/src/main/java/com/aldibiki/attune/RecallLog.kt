@@ -8,7 +8,7 @@ import org.json.JSONObject
 /**
  * v6.40 Recall (agent C): when the person switches it on, the notifications they get (chats, email, deliveries, banks) are
  * kept on the phone for 30 days so Recall can find them by meaning later — "the address Ahmed sent", «كود الواي فاي».
- * Never SMS (WatchMatch.isSms), never Attune's own, never ongoing ones (music, downloads, navigation), never "3 new messages"
+ * SMS only with the SMS switch on and never a one-time code (v8.7), never Attune's own, never ongoing ones (music, downloads, navigation), never "3 new messages"
  * summaries. Kept in the app's private storage; nothing leaves the phone. Read by the page through NativeBridge.recallNotes.
  */
 object RecallLog {
@@ -27,7 +27,9 @@ object RecallLog {
     fun add(ctx: Context, sbn: StatusBarNotification, app: String, title: String, text: String) {
         if (!isOn(ctx)) return
         val n = sbn.notification ?: return
-        if (WatchMatch.isSms(sbn.packageName) || sbn.packageName == ctx.packageName || sbn.isOngoing) return
+        if (sbn.packageName == ctx.packageName || sbn.isOngoing) return
+        // v8.7 (Ali: "it reads SMS, but not one-time codes"): SMS with the SMS switch on — a one-time code never
+        if (WatchMatch.isSms(sbn.packageName) && (!WatchMatch.smsAllowed || PayLog.isOtp(title) || PayLog.isOtp(text))) return
         if ((n.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0) return
         if (text.isBlank() || n.category == android.app.Notification.CATEGORY_PROGRESS || n.category == android.app.Notification.CATEGORY_TRANSPORT) return
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

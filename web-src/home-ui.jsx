@@ -192,6 +192,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
     if (boxMode === "life" && t && !t.startsWith("/")) {
       setText(""); setPanel(null); setDone(null);
       let a = null; try { a = LA.askLife(t, LA.loadStores()); } catch (e) { a = null; }
+      // v8.7: a question about the world (a score, the weather) → the chat, with the web
+      if (a && a.kind === "world" && cmd) { show({ type: "chat", text: t, web: true }, t); return; }
       setLife({ q: t, a }); return;
     }
     if (minimal && cmd) {

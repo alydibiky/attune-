@@ -57,3 +57,16 @@ ok(csv.startsWith("﻿Date,") && csv.includes("Koshari") && csv.includes("-85"),
 const E = moneyReport({ currency: "EGP", accounts: [], txns: [] }, { now });
 ok(E.balance === 0 && E.month.cats.length === 0 && E.recent.length === 0, "an empty ledger does not break");
 console.log(fail ? "FAIL " + fail : "PASS all");
+{ // v8.7 (Ali: "I want earned to have a pie chart to see where it's earned from")
+  const M = await import("../../web-src/money-report.js");
+  const d = new Date(), iso = (k) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(k).padStart(2, "0")}`;
+  const L = { currency: "EGP", accounts: [{ id: "a", name: "Bank", currency: "EGP", start: 0 }], txns: [
+    { id: "1", type: "income", amount: 60000, date: iso(1), account: "a", cat: "salary", note: "Salary" },
+    { id: "2", type: "income", amount: 20000, date: iso(1), account: "a", cat: "other", note: "Flat rent" },
+    { id: "3", type: "income", amount: 2000, date: iso(1), account: "a", cat: "other", note: "" },
+    { id: "4", type: "expense", amount: 500, date: iso(1), account: "a", cat: "food" }] };
+  const r = M.moneyReport(L, { now: new Date(d.getFullYear(), d.getMonth(), 2, 12).getTime() });
+  const s = r.month.sources.map((x) => [x.name, x.amount, x.pct]);
+  if (JSON.stringify(s) !== JSON.stringify([["Salary", 60000, 73], ["Flat rent", 20000, 24], ["Other", 2000, 3]])) throw new Error("income sources: " + JSON.stringify(s));
+  console.log("v750moneyreport (+ income sources): Salary 73% · Flat rent 24% · Other 3%");
+}

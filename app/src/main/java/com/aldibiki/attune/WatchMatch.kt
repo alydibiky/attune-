@@ -41,8 +41,8 @@ object WatchMatch {
         return Regex("(^|\\s)" + Regex.escape(n) + "($|\\s)").containsMatchIn(hay)
     }
 
-    /** SMS notifications may be read (the person's switch, Prefs.smsNotifs — off by default). Set by PayListener. */
-    @Volatile var smsAllowed: Boolean = false
+    /** SMS notifications may be read (the person's switch, Prefs.smsNotifs — on by default since 29 Oct; never one-time codes). Set by PayListener. */
+    @Volatile var smsAllowed: Boolean = true
 
     fun appOk(rule: WatchRule, pkg: String): Boolean {
         if (isSms(pkg)) return smsAllowed && (rule.app == "any" || rule.app == "sms")

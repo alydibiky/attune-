@@ -24,7 +24,7 @@ class PayListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         try {
             if (sbn == null || sbn.packageName == packageName) return
-            WatchMatch.smsAllowed = Prefs.smsNotifs(applicationContext)   // the SMS switch (off unless the person turned it on)
+            WatchMatch.smsAllowed = Prefs.smsNotifs(applicationContext)   // the SMS switch (on unless the person turned it off)
             val ex = sbn.notification?.extras ?: return
             val title = ex.getCharSequence("android.title")?.toString().orEmpty()
             var text = (ex.getCharSequence("android.bigText") ?: ex.getCharSequence("android.text"))?.toString().orEmpty()
@@ -36,7 +36,7 @@ class PayListener : NotificationListenerService() {
             try { MessageWatch.check(applicationContext, sbn, title, text) } catch (e: Exception) { }
             // voice step 1.4: the newest chat messages and their reply actions, for "who messaged me?" / "reply to him…"
             try { ChatInbox.add(applicationContext, sbn) } catch (e: Exception) { }
-            // v6.40 Recall: kept for 30 days when the person switched it on (never SMS)
+            // v6.40 Recall: kept for 30 days when the person switched it on (SMS too, never one-time codes)
             try { if (RecallLog.isOn(applicationContext)) RecallLog.add(applicationContext, sbn, try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }, title, text) } catch (e: Exception) { }
             if (!PayLog.looksLikeMoney(all)) return
             val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }

@@ -140,14 +140,17 @@ class MainActivity : AppCompatActivity() {
     }
     fun authorizeDrive(cb: (String?, String?) -> Unit) = authorizeScopes(listOf("https://www.googleapis.com/auth/drive.appdata"), cb)
     // v8.7 (Ali: "can't the referral be linked to a Google account"): the same Google screen, asking only who you are (openid, email)
-    fun authorizeScopes(scopes: List<String>, cb: (String?, String?) -> Unit) = runOnUiThread {
+    fun authorizeScopes(scopes: List<String>, cb: (String?, String?) -> Unit) = authorizeScopes(scopes, false, cb)
+    /** silent: never show Google's screen (the daily Gmail read) — no grant yet → an error instead. */
+    fun authorizeScopes(scopes: List<String>, silent: Boolean, cb: (String?, String?) -> Unit) = runOnUiThread {
         try {
             val req = com.google.android.gms.auth.api.identity.AuthorizationRequest.builder()
                 .setRequestedScopes(scopes.map { com.google.android.gms.common.api.Scope(it) }).build()
             com.google.android.gms.auth.api.identity.Identity.getAuthorizationClient(this).authorize(req)
                 .addOnSuccessListener { res ->
                     val pi = res.pendingIntent
-                    if (res.hasResolution() && pi != null) { drivePending = cb; driveConsent.launch(androidx.activity.result.IntentSenderRequest.Builder(pi.intentSender).build()) }
+                    if (res.hasResolution() && pi != null && silent) cb(null, "Gmail isn't connected yet")
+                    else if (res.hasResolution() && pi != null) { drivePending = cb; driveConsent.launch(androidx.activity.result.IntentSenderRequest.Builder(pi.intentSender).build()) }
                     else cb(res.accessToken, null)
                 }
                 .addOnFailureListener { e -> cb(null, e.message ?: "Google sign-in is not available on this phone") }
@@ -161,6 +164,10 @@ class MainActivity : AppCompatActivity() {
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
         if (granted && Prefs.wake(this)) WakeService.set(this, true)   // voice phase 3: the wake word was waiting for the mic
+    }
+    // v8.7 the old bank SMS (full APK): Android asks once; the page hears the answer and reads them (SmsInbox.kt)
+    private val askSmsPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (::web.isInitialized) web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-sms-perm',{detail:$granted}))", null)
     }
     // v6.12: Maps → "my location": the page asks (navigator.geolocation), Android asks the person once
     private var geoPending: Pair<String, android.webkit.GeolocationPermissions.Callback>? = null
@@ -276,6 +283,7 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this).also { v -> v.popup = { i, cb -> try { voicePopupCb = cb; voicePopup.launch(i); true } catch (e: Exception) { voicePopupCb = null; false } } }
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        bridge.askSms = { runOnUiThread { try { askSmsPermission.launch(android.Manifest.permission.READ_SMS) } catch (e: Exception) { } } }
         bridge.pickBooks = { topic, folder -> runOnUiThread {
             bookTopic = topic
             val i = if (folder) Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
@@ -286,6 +294,7 @@ class MainActivity : AppCompatActivity() {
         } }
         bridge.authorizeDrive = { cb -> authorizeDrive(cb) }
         bridge.authorizeGoogle = { cb -> authorizeScopes(listOf("openid", "email"), cb) }
+        bridge.authorizeGmail = { silent, cb -> authorizeScopes(listOf(GmailRead.SCOPE), silent, cb) }
         bridge.askLocalNet = { try { askLocalNetPermission.launch("android.permission.ACCESS_LOCAL_NETWORK") } catch (e: Exception) {} }
         bridge.askHealth = { runOnUiThread { try { askHealthPermission.launch(Health.PERMISSIONS) } catch (e: Exception) {} } }
         bridge.askHealthTemp = { runOnUiThread { try { askHealthPermission.launch(Health.TEMP_PERMISSIONS) } catch (e: Exception) {} } }   // v6.41 Cycle

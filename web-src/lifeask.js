@@ -10,6 +10,7 @@ import { myMoneyIntent, catAsked, answerMyMoney, spanOf } from "./myledger.js";
 import { progressOf, dueSoon } from "./life.js";
 import { trendOf, labTestOf, dosesOn, activeOn, isoDay, mgdl } from "./care.js";
 import { moneyTrend, chartOfRows } from "./lifecharts.js";
+import { isLive, isScoreQuestion, fromNotes } from "./livefacts.js";
 
 const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const fold = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?=\s|$)/g, "ه").toLowerCase();
@@ -214,6 +215,10 @@ function search(q, s) {
   for (const x of ((s.radar && s.radar.items) || [])) { const n = hit(x.title + " " + (x.note || "")); if (n) found.push({ n, date: x.date, what: x.title, src: "radar" }); }
   for (const c of ((s.life && s.life.items) || [])) { const n = hit([c.person, c.title, c.kind].join(" ")); if (n) found.push({ n, date: c.start || "", what: [c.person, c.title || c.kind, c.amount ? num(c.amount) + " " + (c.currency || "") : ""].filter(Boolean).join(" · "), src: "life" }); }
   for (const m of ((s.care && s.care.meds) || [])) { const n = hit(m.name); if (n) found.push({ n, date: m.start || "", what: `${m.name} ${m.strength || ""} · ${m.dose || ""}`, src: "care" }); }
+  // v8.7 (Ali: "score of Chelsea and Liverpool" → "Found 10 things… the closest: Turkey"): a thing counts only when it has at least
+  // half of the question's words — one shared word is not "about this"
+  const need = Math.max(1, Math.ceil(words.length / 2));
+  for (let i = found.length - 1; i >= 0; i--) if (found[i].n < need) found.splice(i, 1);
   if (!found.length) return null;
   found.sort((a, b) => b.n - a.n || String(b.date).localeCompare(String(a.date)));
   const top = found.slice(0, 10);
@@ -271,6 +276,13 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
   }
   if (k === "paid-for") { const term = termOf(q); return paidFor(q, stores, now) || { kind: "paid-for", en: `Nothing in Money mentions “${term}”.`, ar: `مفيش حاجة في الفلوس فيها «${term}».`, open: "money", sources: ["money"] }; }
   if (k === "history" || k === "last") return (k === "history" ? history : lastTime)(q, stores, now);   // nothing about it in your data → null (the model answers)
+  // v8.7: a question about the world right now (a score, the weather, "today") is not in your data: a score the phone saw in a
+  // notification is answered from it; anything else goes to the web (kind "world" — Home sends it to the chat with the web on)
+  if (k === "search" && (isLive(q) || isScoreQuestion(q))) {
+    const n = fromNotes(stores.notes || [], q, { now });
+    if (n) return { kind: "live", en: n.en, ar: n.ar, sources: ["recall"], open: "recall" };
+    return { kind: "world", en: "That's about the world, not your own data — asking the web.", ar: "ده سؤال عن الدنيا مش عن بياناتك — بسأل النت.", web: true, sources: [] };
+  }
   const f = { "owed-in": owedIn, "owed-out": owedOut, lab, sugar, meds, food, due }[k];
   const r = (f && f(q, stores, now)) || search(q, stores);
   // v6.38 (H3): results over time come with their chart (drawn from the same rows, so it matches the table)
@@ -285,6 +297,7 @@ export function loadStores(ls = typeof localStorage !== "undefined" ? localStora
   const mem = memKey ? j(memKey, []) : [];
   const rem = j("attune:reminders:v1", []);
   return { ledger: j("ledger.v3", null), life: j("attune:life:v1", { items: [] }), care: j("attune:care:v1", { members: [], meds: [], labs: [], taken: {} }), radar: j("attune:radar:v1", { items: [] }),
+    notes: (() => { try { const N = typeof window !== "undefined" && window.AttuneNative; return N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : []; } catch (e) { return []; } })(),
     fit: j("attune:fit:v1", { days: {} }), family: j("attune:family:v1", null), reminders: Array.isArray(rem) ? rem : (rem && rem.items) || [], memory: Array.isArray(mem) ? mem : (mem && (mem.records || mem.items)) || [] };
 }
 

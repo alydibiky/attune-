@@ -189,30 +189,31 @@ export function RightNow({ item, open, testid = "money-right-now" }) {
 }
 
 // ---- level 2: the Money Report ----------------------------------------------------------------------------------------------------
-function Donut({ rep, size = 112 }) {
-  const C = 2 * Math.PI * 44, arcs = donutArcs(rep.month.cats, C);
-  const k = rep.month.out >= 10000 ? fmt(Math.round(rep.month.out / 100) / 10) + "k" : fmt(rep.month.out);
+function Donut({ rep, size = 112, list = rep.month.cats, total = rep.month.out, testid = "money-donut" }) {
+  const C = 2 * Math.PI * 44, arcs = donutArcs(list, C);
+  const k = total >= 10000 ? fmt(Math.round(total / 100) / 10) + "k" : fmt(total);
   return (
-    <svg width={size} height={size} viewBox="0 0 120 120" role="img" aria-label={tr("Spending by category")} className="shrink-0" data-testid="money-donut">
+    <svg width={size} height={size} viewBox="0 0 120 120" role="img" aria-label={tr("Spending by category")} className="shrink-0" data-testid={testid}>
       <circle cx="60" cy="60" r="44" fill="none" stroke="var(--c-surf-2)" strokeWidth="14" />
-      {rep.month.cats.map((c, i) => <circle key={c.id} cx="60" cy="60" r="44" fill="none" stroke={SLICE[i % 4]} strokeWidth="14" strokeDasharray={arcs[i].dash + " " + C} strokeDashoffset={arcs[i].offset} transform="rotate(-90 60 60)" />)}
+      {list.map((c, i) => <circle key={c.id} cx="60" cy="60" r="44" fill="none" stroke={SLICE[i % 4]} strokeWidth="14" strokeDasharray={arcs[i].dash + " " + C} strokeDashoffset={arcs[i].offset} transform="rotate(-90 60 60)" />)}
       <text x="60" y="58" textAnchor="middle" fill="var(--c-ink)" fontSize="15" fontWeight="800" style={{ fontVariantNumeric: "tabular-nums" }}>{k}</text>
       <text x="60" y="74" textAnchor="middle" fill="var(--c-mut)" fontSize="10" fontWeight="700">{rep.cur}</text>
     </svg>);
 }
 
-function WhereItWent({ rep, wide }) {
+function WhereItWent({ rep, wide, income = false }) {
+  const list = income ? rep.month.sources || [] : rep.month.cats, total = income ? rep.month.in : rep.month.out;
   return (
-    <div className={U.cardPad} data-testid="money-cats">
+    <div className={U.cardPad} data-testid={income ? "money-sources" : "money-cats"}>
       <div className="flex items-center justify-between gap-2 mb-3">
-        <span className="font-extrabold text-[14.5px]">{wide ? tr("Spending by category") : T("Where the money went · {m}", { m: monthLabel(rep.month.from.slice(0, 7), true) })}</span>
-        <span className="tabular-nums font-extrabold text-[13px] text-[var(--c-neg)]" dir="ltr">{amt(rep.month.out, rep.cur)}</span>
+        <span className="font-extrabold text-[14.5px]">{income ? T("Where the money came from · {m}", { m: monthLabel(rep.month.from.slice(0, 7), true) }) : wide ? tr("Spending by category") : T("Where the money went · {m}", { m: monthLabel(rep.month.from.slice(0, 7), true) })}</span>
+        <span className={"tabular-nums font-extrabold text-[13px] " + (income ? "text-[var(--c-pos)]" : "text-[var(--c-neg)]")} dir="ltr">{amt(total, rep.cur)}</span>
       </div>
-      {rep.month.cats.length ? (
+      {list.length ? (
         <div className="flex items-center gap-4">
-          <Donut rep={rep} size={wide ? 96 : 112} />
+          <Donut rep={rep} list={list} total={total} testid={income ? "money-donut-in" : "money-donut"} size={wide ? 96 : 112} />
           <div className={wide ? "flex-1 grid grid-cols-2 gap-2" : "flex-1 flex flex-col gap-2"}>
-            {rep.month.cats.map((c, i) => wide ? (
+            {list.map((c, i) => wide ? (
               <div key={c.id} className="p-2 rounded-[12px] bg-[var(--c-surf-2)] min-w-0"><div className={"flex items-center gap-1.5 text-[12px] font-bold truncate " + U.muted}><i className="w-2 h-2 rounded-full shrink-0" style={{ background: SLICE[i % 4] }} />{c.name}</div>
                 <div className="tabular-nums font-extrabold text-[14px]" dir="ltr">{fmt(c.amount)} <span className={"text-[12px] font-semibold " + U.muted}>({c.pct}%)</span></div></div>
             ) : (
@@ -220,7 +221,7 @@ function WhereItWent({ rep, wide }) {
                 <span className="flex items-center gap-1.5 font-bold min-w-0"><i className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: SLICE[i % 4] }} /><span className="truncate">{c.name}</span></span>
                 <span className="tabular-nums font-extrabold shrink-0" dir="ltr">{fmt(c.amount)} <span className={"font-semibold " + U.muted}>({c.pct}%)</span></span></div>))}
           </div>
-        </div>) : <p className={"m-0 text-[13px] " + U.muted}>{tr("Nothing spent this month yet.")}</p>}
+        </div>) : <p className={"m-0 text-[13px] " + U.muted}>{income ? tr("Nothing earned this month yet.") : tr("Nothing spent this month yet.")}</p>}
     </div>);
 }
 
@@ -348,6 +349,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
         <Tile label={tr("Earned · This month")} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? (rep.month.rate >= 0 ? T("{p}% of it kept", { p: rep.month.rate }) : T("Spent {a} more than earned", { a: amt(-rep.month.net, rep.cur) })) : "—"} testid="money-rep-in" />
       </div>
       <WhereItWent rep={rep} />
+      {rep.month.in > 0 ? <WhereItWent rep={rep} income /> : null}
       <Weeks rep={rep} />
       <Cashflow rep={rep} />
       <ZakatCard zak={zak} cur={all.cur} openZakat={openZakat} />
@@ -364,7 +366,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
       </div>
       <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: "minmax(0,1.15fr) minmax(0,0.85fr)" }}>
         <div className="flex flex-col gap-3.5 min-w-0"><Cashflow rep={rep} wide /><ZakatCard zak={zak} cur={all.cur} openZakat={openZakat} /></div>
-        <div className="flex flex-col gap-3.5 min-w-0"><WhereItWent rep={rep} wide /><Weeks rep={rep} /></div>
+        <div className="flex flex-col gap-3.5 min-w-0"><WhereItWent rep={rep} wide />{rep.month.in > 0 ? <WhereItWent rep={rep} wide income /> : null}<Weeks rep={rep} /></div>
       </div>
       <Ledger rep={rep} openLedger={openLedger} wide />
     </div>);

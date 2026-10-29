@@ -29,6 +29,7 @@ import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { RecallPage } from "./lookback-ui.jsx";
+import { gmailDue, readGmail } from "./gmail.js";
 import { AutomationsPage, drainAutomations } from "./autom-ui.jsx";   // v6.41 C3
 import { parseAutomation, addRule, loadAuto, saveAuto, ruleText as autoRuleText } from "./autom.js";
 import { metroAsk, route as metroRoute, routeText as metroText } from "./metro.js";   // v6.41 D5
@@ -106,7 +107,8 @@ const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCi
 // v8.5 (Ali agreed to the 27 Oct review): Follow-ups is its own place (W1); Shelf + Remember + Mind are one place, Saved (W2)
 // v8.7 (Ali picked P2-E option 1, 28 Oct: "but I want the headings of the groups in another colour for easy tracking"): every place
 // back in the list, in 3 short groups — ["@", heading] is a group heading (side-ui.jsx draws it in the accent colour)
-const SIDE_PLACES = [["home", "Home", House], ["chat", "Chat", MessageCircle],
+// (v8.7, Ali 29 Oct: "why is there Home and Chat — we agreed only Home"): Home IS the chat (v7.6, he picked A) — no Chat row
+const SIDE_PLACES = [["home", "Home", House],
   ["@", "My life"], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["health", "Health", Heart], ["agents", "Agents", Radar],
   ["@", "Learn & daily"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "Saved", BookOpen],
   ["@", "Go & work"], ["travel", "Go", Plane], ["business", "Work & Business", Database], ["tools", "Tools", Wrench]];
@@ -6906,6 +6908,7 @@ function groundedPrompt(q, hits, lang) {
   return [GROUNDED_RULES, `- Today is ${today}.`, "", "QUESTION: " + q, "", "PASSAGES:", src, "",
     // v6.8: `lang` is "match" by default — that used to reach the model as "Answer in match."; the web
     // benchmark then got an Arabic first line and an English body. The question's own language wins.
+    "Answer the question itself in the first line (the score, the figure, the name) — never describe the passages (\"Passage 1 mentions …\").",
     `Answer in ${lang && lang !== "match" && LANG_NAMES[lang] ? LANG_NAMES[lang] : /[\u0600-\u06FF]/.test(q) ? "Arabic (the question's language) — every line, headings too" : "English (the question's language)"}.`, "QUESTION: " + q].filter(Boolean).join("\n");
 }
 
@@ -8766,6 +8769,8 @@ export default function App() {
     const run = () => { if (modeRef.current === "money" || document.visibilityState === "hidden") return;
       // v6.27 Deadline Radar: trials and renewals in the notifications are added (and reminded) by themselves
       const k = modeRef.current === "radar" ? 0 : runAutoRadar(NATIVE, { pro: proRef.current, remind: (r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" }) });
+      // v8.7 (Ali: "reads Gmail by itself"): once a day, silently (gmail.js)
+      if (gmailDue()) readGmail(nativeCall, { silent: true }).then((r) => { if (r && r.payments) flash(tr("{n} payments from Gmail are waiting in Money", { n: r.payments })); }).catch(() => {});
       const n = runAutoPay(NATIVE); if (n) flash(tr("{n} payments added to Money by themselves", { n })); else if (k) flash(tr("{n} deadlines added to your Radar by themselves", { n: k })); };
     const t = setTimeout(run, 2500);
     document.addEventListener("visibilitychange", run);
@@ -10139,7 +10144,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "chat" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
+        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "home" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("home"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
@@ -10149,7 +10154,7 @@ export default function App() {
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
       {!wide && phoneSide ? <Guard name="sidebar"><div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setPhoneSide(false)} data-testid="phone-side">
         <div onClick={(e) => e.stopPropagation()}><DesktopSide touch width="min(86vw, 320px)" mode={mode} canBack={false} onBack={() => {}} navTo={(m) => { setPhoneSide(false); setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "chat" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
+          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "home" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
           tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
           onNewChat={() => { setPhoneSide(false); navTo("home"); setNewChatSignal((n) => n + 1); }}
           onOpenChat={(id) => { setPhoneSide(false); setOpenChatId(id); navTo("chat"); }}

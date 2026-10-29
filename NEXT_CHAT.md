@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 28 Oct 2026 — v8.7)
+# Attune — start here (handoff for the next chat, 29 Oct 2026 — v8.7 part 6)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -49,6 +49,31 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
     localStorage). Tests: e2e_v831books.py (phone path with a stand-in), e2e_v830.py, unit v830library. Also ask: does his Assistants page list "Crane expert"? (sidebar 5 = page 5 in tests).
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
+
+## v8.7 part 6 — Ali's 29 Oct phone list (5 screenshots) — ALL BUILT, tested
+1. **Earned → a pie of where it came from**: Money Report's "Earned" opens a donut by source (the payer / note, else the
+   category) — `money-report.js slices()` + `month.sources`, `money-calm-ui.jsx WhereItWent(income)`.
+2. **A year plan like Excel**: Month plan → "The year": rows = income sources, fixed payments, savings goals, everyday spending;
+   columns = Jan…Dec + the year; past months = what really happened, coming months = the plan; tap any cell to type over it;
+   totals + "Free" per month; Excel download (`yearplan.js`, `planner-ui.jsx YearSheet`).
+3. **The chat was "stupid" on Liverpool–Chelsea** (the score was in his notifications; Chat answered "Passage 1 mentions…",
+   Your life answered "Found 10 things… Turkey"): `livefacts.js` — a score question is answered FIRST from the notifications
+   the phone kept (by code, with the time and app); from the web, code reads the score most pages agree on and puts it first;
+   an answer that only describes the sources is replaced by the pages' own lines; the web prompt says "answer in the first
+   line, never describe the passages". Your life: a world question (score, weather, "now") goes to the chat with the web; its
+   data search needs half the question's words (one shared word is not "about this").
+4. **Recall free text**: synonyms for matches / weather / news / messages and every club in EN / Arabic / Franco; typos and
+   cut words ("chelsy liverpol"); nothing with all the words → the closest, said so (`lookback.js`).
+5. **Home is the chat** (agreed 24 Oct, v7.6): the separate "Chat" row is gone from the sidebar.
+6. **SMS read, never one-time codes** (Ali: "we agreed"): the SMS switch is ON by default; SMS notifications reach Money,
+   Recall, Message alerts; one-time codes are dropped on the phone. The APK Ali installs (full) can also **bring in the old bank
+   SMS of the last 12 months** once (READ_SMS, `SmsInbox.kt`; they wait in Money's review list — never added by themselves).
+   The Play build can't ask for READ_SMS (Google allows it only for the default SMS app) — new SMS still come via notifications.
+7. **Gmail read by itself**: "Connect Gmail" (Overpaying check + Recall) → Google asks once (gmail.readonly) → the last year's
+   money emails; then once a day, silently, the new ones → Overpaying, Money's review list (payments only), Recall
+   (`GmailRead.kt`, `gmail.js`, `gmail-ui.jsx`). **Ali must do the Google Cloud steps in `docs/GMAIL_SIGNIN.md` first** (and add
+   himself as a test user); until then Connect shows Google's error.
+Tests: unit v870livefacts, v870gmail, v870yearplan, v750moneyreport; e2e v870sms, v870gmail, v870yearplan, v727paylog.
 
 ## v8.7 — Ali's answers to the nine reviews (28 Oct) — the plan with ticks is `ALI_LIST_2026-10-28.md`
 Everything Ali said "do" is built and tested; everything subjective is on ONE design canvas waiting for his picks:

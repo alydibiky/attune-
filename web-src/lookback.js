@@ -6,6 +6,7 @@
    and every other word also matches the words that mean the same in English, Egyptian Arabic and Franco (receipt = فاتورة =
    bill = fatora). Pure; tests/unit/v740lookback.test.mjs; the page is lookback-ui.jsx.                                  */
 
+import { CLUBS } from "./livefacts.js";
 const DAY = 86400000;
 export const fold = (s) => String(s || "").toLowerCase()
   .replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?![\p{L}])/gu, "ه").replace(/[ً-ْـ]/g, "")
@@ -39,6 +40,14 @@ export const MEANINGS = [
   "internet|data|we|vodafone|orange|etisalat|نت|النت|باقه|الباقه",
   "birthday|عيد ميلاد|عيد الميلاد|3eed milad",
   "gift|present|هديه|الهديه|hedeya",
+  // v8.7 (Ali: "the search should be free text and get me what I mean"): a match, the weather, the news, a delivery on its way
+  "score|scores|match|game|goal|goals|result|live|vs|كوره|الكوره|ماتش|الماتش|مباراه|المباراه|نتيجه|النتيجه|جون|اجوان|اهداف|match|el match|natiga",
+  "football|soccer|league|premier league|كوره|الدوري|دوري",
+  "weather|temperature|hot|cold|warm|degrees|rain|feels|°|حر|برد|الجو|جو|الطقس|طقس|حراره|درجه الحراره|مطر|el gaw",
+  "news|breaking|headline|اخبار|الاخبار|خبر|عاجل|akhbar",
+  "message|messages|texted|wrote|رساله|رسايل|الرساله|مسدج|ماسدج|بعت|massage",
+  "photo|picture|image|صوره|الصوره",
+  ...CLUBS.map((g) => g.join("|")),
 ].map((g) => g.split("|").map(fold));
 const PHRASES = [...new Set(MEANINGS.flat().filter((w) => w.includes(" ")))].sort((a, b) => b.length - a.length);   // «واي فاي», «كلمه السر»
 const MEANING_OF = new Map();
@@ -74,6 +83,8 @@ const MONTHS_AR = ["يناير", "فبراير", "مارس", "ابريل", "ما
 // words that only glue the question together
 const STOP = new Set(("the a an of from to in on at for with my me i you it that this was were is are and or what where when which who how did do " +
   "find show give get last sent send told said about any all one some there here have has had want need " +
+  "saw seen see remember remind got came again latest now just thing things something which whats what's was it " +
+  "شفت شوفت جالي جاتلي وصلي افتكر فاكر حاجه دلوقتي تاني " +
   "اللي الي في من على علي عن مع ده دي دا كان كانت انا انت هو هي ايه إيه فين امتي امتى مين ازاي هات وريني عايز عاوز " +
   "بتاع بتاعت بتوع بتاعي بتاعتي كل حاجه اي او و يا لي ليا بعتهولي بعته بعتلي بعتها قالي قال لقيت دور دورلي فيه " +
   "eh fen meen ely elly men fe 3ala da di").split(/\s+/).map(fold));
@@ -123,6 +134,21 @@ const stems = (w) => {
   return out;
 };
 const tokens = (text) => { const t = new Set(); for (const w of fold(text).split(/[^\p{L}\p{N}@.]+/u)) { const c = w.replace(/^\.+|\.+$/g, ""); if (!c) continue; for (const x of stems(c)) t.add(x); } return t; };
+
+// a typo or a word cut short: the same start (4+ letters) or one/two letters different (Damerau, two only for long words)
+function near(a, b) {
+  if (a === b || b.length < 4) return a === b;
+  if (b.startsWith(a) && a.length >= 4) return true;
+  const max = a.length >= 7 ? 2 : 1;
+  if (Math.abs(a.length - b.length) > max || a[0] !== b[0]) return false;
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+  }
+  return d[a.length][b.length] <= max;
+}
 
 /** Everything Recall can find, as one list: [{ id, kind, title, text, ts, app?, pkg?, open? }]. */
 export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pays = [] } = {}) {
@@ -174,13 +200,14 @@ export function recallSearch(docs, q, { now = Date.now(), limit = 40 } = {}) {
   // a two-word meaning («كلمه السر», "how much") also counts when the text has it as a phrase
   const inText = (x, phr) => phr.some((p) => x.f.includes(" " + p + " "));
   const df = wants.map(({ m, phr }) => toks.filter((x) => [...m.keys()].some((k) => x.t.has(k)) || inText(x, phr)).length);
-  const hits = [];
+  const hits = [], loose = [];
   for (const x of toks) {
     const { d, t, title } = x;
     let s = 0, got = 0; const seen = [];
-    wants.forEach(({ m, phr, num }, i) => {
+    wants.forEach(({ w, m, phr, num }, i) => {
       let best = 0, bw = null; for (const [k, wt] of m) if (t.has(k) && wt > best) { best = wt; bw = k; }
       if (!best && phr.length && inText(x, phr)) { best = 0.7; bw = phr.find((p) => x.f.includes(" " + p + " ")).split(" ")[0]; }
+      if (!best && !num && w.length >= 4 && !w.includes("_")) for (const k of t) if (near(w, k)) { best = 0.6; bw = k; break; }   // v8.7: "chelsy" finds "chelsea", "liverpol" "liverpool"
       if (!best) return;
       got++; seen.push(bw);
       const idf = Math.log(1 + N / (df[i] || 1));
@@ -188,9 +215,12 @@ export function recallSearch(docs, q, { now = Date.now(), limit = 40 } = {}) {
     });
     const need = wants.length <= 2 ? 1 : Math.ceil(wants.length * 0.5);   // most of the words, not every one
     if (got >= need && s > 0) hits.push({ doc: d, score: s * (got / wants.length), snip: snippet(d.text || d.title, seen) });
+    else if (got && s > 0) loose.push({ doc: d, score: s * (got / wants.length) * 0.5, snip: snippet(d.text || d.title, seen) });
   }
-  hits.sort((a, b) => b.score - a.score || b.doc.ts - a.doc.ts);
-  return { ask, hits: hits.slice(0, limit) };
+  // v8.7: nothing has most of the words → the things that have some of them, best first (free text never ends on "nothing")
+  const out = hits.length ? hits : loose;
+  out.sort((a, b) => b.score - a.score || b.doc.ts - a.doc.ts);
+  return { ask, hits: out.slice(0, limit), loose: !hits.length && !!loose.length };
 }
 
 /** A short title for a screenshot from the text read in it: the first line that says something. */
