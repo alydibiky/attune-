@@ -50,6 +50,8 @@ the ad page for its price; voice fallbacks (Voice.kt, Subtitles.kt, NativeBridge
 Phone checks needed: voice (log now says "Voice … error N"), watch numbers after Refresh, Scout prices, and send the log after a
 laggy moment ("Slow screen …" lines say where).
 
+> **READ_SMS removed (29 Oct): Play Protect blocked the APK ("App blocked to protect your device") because the full build
+> asked for READ_SMS. Never add READ_SMS / RECEIVE_SMS / call-log permissions to an APK Ali installs from a file.**
 > **Ali (29 Oct): he tests the app first; ALL the Google steps (Gmail verification `docs/GMAIL_VERIFICATION.md`, Firebase
 > invites `server/referral/README.md`, Cloud setup) wait until the version is ready for release. Don't ask him for them before.**
 

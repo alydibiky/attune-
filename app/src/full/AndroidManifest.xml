@@ -2,9 +2,9 @@
 <!-- The "full" build (the main APK and the Play Store bundle): the payment-notification reader. Installed from Google Play
      (or over USB / with Play Protect's scan paused) it is allowed; the "lite" build leaves it out — see src/main/AndroidManifest.xml. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- v8.7 (Ali: "it reads SMS, but not one-time codes"): the old bank SMS, read once when the person asks (SmsInbox.kt).
-         Only this build — the Play build can't declare it (Google allows READ_SMS only for the default SMS app). -->
-    <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- v8.7: READ_SMS (the one-time import of old bank SMS) was removed the same day — Google Play Protect blocks an APK
+         installed from a file that asks for it ("App blocked to protect your device"). New bank SMS still reach Money through
+         their notifications (PayListener). SmsInbox.kt stays: without the permission declared, the page hides its card. -->
     <application>
         <!-- v6.27 "Money tracks itself": reads payment notifications on the phone, only after the person turns on
              Notification access for Attune in Settings. SMS notifications too (never one-time codes). Nothing leaves the phone (PayListener.kt). -->
