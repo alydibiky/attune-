@@ -36,7 +36,8 @@ object GmailRead {
     // the readable text: text/plain first, else text/html without its tags
     private fun bodyOf(part: JSONObject?): Pair<String, String> {
         if (part == null) return "" to ""
-        val mime = part.optString("mimeType"), data = part.optJSONObject("body")?.optString("data").orEmpty()
+        val mime = part.optString("mimeType")
+        val data = part.optJSONObject("body")?.optString("data").orEmpty()
         var plain = if (mime == "text/plain" && data.isNotEmpty()) b64(data) else ""
         var html = if (mime == "text/html" && data.isNotEmpty()) b64(data) else ""
         val parts = part.optJSONArray("parts")
