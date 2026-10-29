@@ -153,6 +153,9 @@ dependencies {
     implementation("com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1")
     // v6.16c: the text in a food photo (a menu, a delivery app, a label: «Big BAIK … 1000 kcal») read on the phone — Latin model bundled
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    // v8.7 the WhatsApp groups library: what is in each photo ("Couch", "Kitchen", "Lamp") — ML Kit image labels via Play services
+    // (fetched once by the phone, nothing added to the APK), read on the phone (WaGroups.kt)
+    implementation("com.google.android.gms:play-services-mlkit-image-labeling:16.0.8")
     // Fit & Food (v6.3): steps, calories burned and workouts from the watch apps, through Android's
     // Health Connect (read only). Coroutines: its API is suspend functions.
     // (1.1.0 final: compileSdk 36 + AGP 8.9.1, which v6.29 builds with)

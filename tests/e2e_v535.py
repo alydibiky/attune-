@@ -36,8 +36,12 @@ with sync_playwright() as p:
 
     # ---- 1. WhatsApp → Export chat → Attune opens Chat X-Ray with the chat loaded ----
     page.evaluate("(t) => window.dispatchEvent(new MessageEvent('attune-share', { data: { kind: 'chatfile', text: t, name: 'Hassan Crane Co' } }))", CHAT)
+    # v8.7 (Ali: the WhatsApp groups library instead of Chat X-Ray): the shared chat opens in its group; X-Ray's money & promises
+    # are one tap away ("Money & promises in this chat")
+    page.wait_for_selector("[data-testid=wa-group]", timeout=8000)
+    page.locator("[data-testid=wa-xray]").click()
     page.wait_for_selector("[data-testid=xray-setup]", timeout=5000)
-    check("5 messages" in page.locator("[data-testid=xray-setup]").inner_text(), "a shared chat export opens Chat X-Ray with its 5 messages")
+    check("5 messages" in page.locator("[data-testid=xray-setup]").inner_text(), "a shared chat export opens its group; “Money & promises” opens Chat X-Ray with its 5 messages")
     page.locator("[data-testid=xray-me]", has_text="Ali").click()
 
     # ---- 2. the X-ray: only money / promise / question messages go to the model ----

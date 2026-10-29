@@ -231,6 +231,8 @@ class MainActivity : AppCompatActivity() {
             .addPathHandler("/studio/", WebViewAssetLoader.InternalStoragePathHandler(this, ImageEngine.studioDir(this)))
             // v6.10: the photo fast path's model, runtime and name bank (FoodClip), read by the page itself.
             .addPathHandler("/foodclip/", WebViewAssetLoader.InternalStoragePathHandler(this, FoodClip.dir(this)))
+            // v8.7 the WhatsApp groups library's photos (WaGroups.kt)
+            .addPathHandler("/wa/", WebViewAssetLoader.InternalStoragePathHandler(this, WaGroups.dir(this)))
             .build()
         // Any service-worker request for the app's own files is answered from
         // the APK, never from the network (where this address does not exist).
@@ -614,6 +616,8 @@ class MainActivity : AppCompatActivity() {
                     val stream = (if (android.os.Build.VERSION.SDK_INT >= 33)
                         intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
                     else intent.getParcelableExtra(Intent.EXTRA_STREAM)) as Uri?
+                    // v8.7: a WhatsApp export (a .zip with its photos) → the WhatsApp groups library; read away from the screen's thread
+                    if (stream != null && type.contains("zip")) { receiveWa(listOf(stream), intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: ""); return }
                     val chat = stream?.let { readChatExport(it, type) }
                     if (chat != null) {
                         payload.put("kind", "chatfile").put("text", chat)
@@ -628,6 +632,13 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            // v8.7: WhatsApp "Export chat → With media" on many phones shares the chat .txt AND each photo as separate files
+            Intent.ACTION_SEND_MULTIPLE -> {
+                @Suppress("DEPRECATION")
+                val list = (if (android.os.Build.VERSION.SDK_INT >= 33) intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                    else intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)) ?: return
+                receiveWa(list, intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: ""); return
+            }
             Intent.ACTION_PROCESS_TEXT -> {
                 val text = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString() ?: return
                 payload.put("kind", "selection").put("text", text)
@@ -635,6 +646,17 @@ class MainActivity : AppCompatActivity() {
             else -> return
         }
         if (::web.isInitialized && web.progress == 100) deliverShare(payload) else pendingShare = payload
+    }
+
+    /** v8.7 a WhatsApp export → the groups library (WaGroups.kt), on a background thread; a plain chat .txt (no photos) still
+     *  arrives as before ("chatfile" — the page sends it to the library too). */
+    private fun receiveWa(uris: List<Uri>, subject: String) {
+        Thread {
+            val wa = try { WaGroups.receive(this, uris, subject) } catch (e: Throwable) { null }
+            val p = if (wa != null) JSONObject().put("kind", "wagroup").put("gid", wa.optString("gid")).put("name", wa.optString("name")).put("text", wa.optString("text")).put("files", wa.optJSONArray("files"))
+                else uris.firstOrNull()?.let { u -> readChatExport(u, "application/zip")?.let { JSONObject().put("kind", "chatfile").put("text", it).put("name", subject) } }
+            if (p != null) runOnUiThread { if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p }
+        }.start()
     }
 
     /** A shared text file, up to 2 MB; null if it can't be read. */

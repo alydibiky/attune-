@@ -40,6 +40,12 @@ export const MEANINGS = [
   "internet|data|we|vodafone|orange|etisalat|نت|النت|باقه|الباقه",
   "birthday|عيد ميلاد|عيد الميلاد|3eed milad",
   "gift|present|هديه|الهديه|hedeya",
+  "dollar|dollars|usd|الدولار|دولار|دولارات|dolar",
+  "gold|ذهب|الذهب|دهب|الدهب|dahab",
+  "sofa|couch|كنبه|الكنبه|كنب|الكنب|kanaba",
+  "lamp|light|chandelier|نجفه|النجفه|اباجوره|lamba",
+  "curtain|curtains|ستاره|الستاره|ستاير|الستاير",
+  "hadith|حديث|الحديث|احاديث|الاحاديث",
   // v8.7 (Ali: "the search should be free text and get me what I mean"): a match, the weather, the news, a delivery on its way
   "score|scores|match|game|goal|goals|result|live|vs|كوره|الكوره|ماتش|الماتش|مباراه|المباراه|نتيجه|النتيجه|جون|اجوان|اهداف|match|el match|natiga",
   "football|soccer|league|premier league|كوره|الدوري|دوري",

@@ -90,7 +90,14 @@ laggy moment ("Slow screen …" lines say where).
 10. **Write an email, check it, send** (Ali: "like Gemini"): "email ahmed@x.com that …", «ابعت ايميل لأحمد إن …», "/email" →
    the email card (To / Subject / Body editable; `emaildraft.js`, `email-ui.jsx`): **Open in Gmail** (Gmail's compose screen
    filled in — works now) or **Send** (gmail.send, after the Google steps; one email per tap). Nothing leaves before a tap.
-Tests: unit v870email, v870autobackup, v870livefacts, v870gmail, v870yearplan, v750moneyreport; e2e v870sms, v870gmail, v870yearplan, v727paylog.
+11. **WhatsApp groups library instead of Chat X-Ray in the menu** (Ali picked design A — albums like Pinterest, search on top):
+   WhatsApp → Export chat → Include media → Attune (a .zip, or the .txt + photos as several files — `WaGroups.kt`, read off the
+   screen thread, photos kept ≤1600 px in files/wa/<group>, served at /wa/; ML Kit image labels + Latin text per photo,
+   `play-services-mlkit-image-labeling`) → `wagroups.js` (items, kind: design / news / religion / recipes / other, albums:
+   Rooms + Things, news Topics by month, Hadith Themes with narrator / source cards, "More", moves by hand, search) →
+   `wagroups-ui.jsx` (library → group → album → full-screen photo, "Move to another album", "Money & promises in this chat" =
+   Chat X-Ray). Storage: IndexedDB `attune-wa` (`wagroups-store.js`). A shared chat (with or without photos) now opens here.
+Tests: unit v870wagroups, v870email, v870autobackup, v870livefacts, v870gmail, v870yearplan, v750moneyreport; e2e v870sms, v870gmail, v870yearplan, v727paylog.
 
 ## v8.7 — Ali's answers to the nine reviews (28 Oct) — the plan with ticks is `ALI_LIST_2026-10-28.md`
 Everything Ali said "do" is built and tested; everything subjective is on ONE design canvas waiting for his picks:

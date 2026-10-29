@@ -122,11 +122,11 @@ with sync_playwright() as p:
         check(False, "Studio draw button present")
 
     # ---- #4 Chat X-Ray: "was X mentioned?" answered by code at once ----
-    open_tool(page, "Chat X-Ray", "xray")
+    # v8.7: Chat X-Ray opens from a WhatsApp group (the groups library took its place in the menu)
     chat = "\n".join(["27/09/2026, 10:0%d - Hassan: the LTM 1100 is free on Sunday" % 1, "27/09/2026, 10:02 - Ali: ok book it, send the عربون today", "27/09/2026, 10:03 - Hassan: done, 5000 EGP"])
-    ta = page.locator("[data-testid=xray-paste]")
-    if ta.count():
-        ta.fill(chat); page.locator("[data-testid=xray-paste-go]").click(); page.wait_for_timeout(300)
+    page.evaluate("(t) => window.dispatchEvent(new MessageEvent('attune-share', { data: { kind: 'chatfile', text: t, name: 'Hassan' } }))", chat)
+    page.wait_for_selector("[data-testid=wa-group]", timeout=8000); page.locator("[data-testid=wa-xray]").click()
+    page.wait_for_selector("[data-testid=xray-setup]", timeout=5000)
     queue(page, ['{"items": []}'] * 3)
     page.locator("[data-testid=xray-me]", has_text="Ali").click()
     page.locator("[data-testid=xray-go]").click()

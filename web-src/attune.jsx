@@ -42,6 +42,7 @@ import { notesFromText } from "./shelf-import.js";
 import { shareLink } from "./ai-import.js";
 import { wrongLanguage } from "./answerfix.js";
 import { ChatXRay } from "./chatxray-ui.jsx";
+import { WaLibrary } from "./wagroups-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
 import { VideoDownloader } from "./video-ui.jsx";
 import { SlidesReports } from "./slides-ui.jsx";
@@ -7742,13 +7743,13 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const OWN_TITLE = new Set(["groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
 const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
-  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
+  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", groups: "WhatsApp groups", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
@@ -7773,7 +7774,7 @@ const MORE_TOOLS = [
   ["fit", "Fit & Food", "Calories from a sentence or a photo, 50+ recipes, workouts", Apple],
   ["care", "Family health", "Medicines and reminders for the family, lab results over time", Heart],   // v6.27
   ["deal", "Deal Check", "Before you pay or sign", ShieldCheck],
-  ["xray", "Chat X-Ray", "Money, promises & questions in a WhatsApp chat", MessageCircle],
+  ["groups", "WhatsApp groups", "Your groups sorted into albums with their photos — design, news, Hadith… (Chat X-Ray inside)", MessageCircle],   // v8.7 (Ali: instead of Chat X-Ray)
   ["translate", "Translate", "Text, photos and documents — any language, every part checked", Languages],   // v6.27
   ["convert", "File Converter", "PDF, Word, PowerPoint, Excel, photos — 80+ conversions, and translation", FileText],
   ["video", "Video Downloader", "Paste a video link, pick the quality, save it to your phone", Film],
@@ -7840,7 +7841,7 @@ const MORE_GROUPS = [
   ["Money & people", ["agents", "scout", "guardian", "planner", "radar", "life", "family", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
   ["Mind & learning", ["coach", "learn", "booklib", "memory", "remember", "shelf", "news"]],
-  ["Chat", ["assistants", "skills", "projects", "artifacts", "xray"]],
+  ["Chat", ["assistants", "skills", "projects", "artifacts", "groups"]],
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
   ["Business (add-on)", ["business", "field", "fleet"]],   // v6.50: the Crane toolkit opens from Business → Fleet & rentals → More
@@ -7941,6 +7942,7 @@ export default function App() {
   const [coachIn, setCoachIn] = useState(null);         // v6.27: homework handed over from Chat ({ image } or { text })
   const [slidesIn, setSlidesIn] = useState(null);        // v5.40: { prompt, tab } from a Chat chip
   const [videoIn, setVideoIn] = useState("");             // v5.38: a video link shared to Attune
+  const [waIn, setWaIn] = useState(null);                 // v8.7: a WhatsApp export → the groups library
   const [xrayIn, setXrayIn] = useState(null);             // v5.35: a WhatsApp chat export shared to Attune      // "daily-learn-…" / "daily-news-…" from a notification or the widget
   const scheduleReminder = (r) => {
     const list = [...loadReminders().filter((x) => x.id !== r.id), r];
@@ -8732,7 +8734,8 @@ export default function App() {
         return;
       }
       // v5.35: WhatsApp → Export chat → Attune: the chat opens in Chat X-Ray
-      if (d.kind === "chatfile" && d.text) { setXrayIn({ text: String(d.text), name: String(d.name || "") }); navTo("xray"); return; }
+      // v8.7 (Ali: "instead of Chat X-Ray"): a WhatsApp export (with its photos, or the chat alone) → the WhatsApp groups library
+      if ((d.kind === "wagroup" || d.kind === "chatfile") && d.text) { setWaIn({ gid: d.gid || "", name: String(d.name || ""), text: String(d.text), files: d.files || [] }); navTo("groups"); return; }
       const shared = String(d.text || "").trim();
       if (!shared) return;
       // A bank SMS, an InstaPay or wallet confirmation: straight to Money.
@@ -10777,6 +10780,8 @@ export default function App() {
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false })} />
         ) : mode === "video" ? (
           <VideoDownloader subsForFile={(f) => { jobs.add({ kind: "subtitles", heavy: true, title: tr("Subtitles: {n}", { n: f.name }), input: { files: [f], name: f.name, text: "" } }); flash(tr("Working on it — the subtitles show on Home")); }} flash={flash} nativeCall={NATIVE ? nativeCall : null} pro={proActive} openPlan={() => setShowUpgrade(true)} initialLink={videoIn ? videoIn.replace(/#\d+$/, "") : ""} key={videoIn || "v"} />
+        ) : mode === "groups" ? (
+          <WaLibrary incoming={waIn} clearIncoming={() => setWaIn(null)} flash={flash} openXray={(x) => { setXrayIn(x); navTo("xray"); }} />
         ) : mode === "xray" ? (
           <ChatXRay flash={flash} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelUsable}

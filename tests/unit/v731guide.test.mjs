@@ -39,7 +39,7 @@ ok([...Object.values(G.TOOLS), ...G.START].every((g) => sketches.has(g.sketch)),
 const ch = G.chapters();
 ok(ch.map((c) => (Array.isArray(c.title) ? c.title[0] : c.title)).join() === "Create,Projects,Home,Students,Money,Follow-ups,Health,Daily,Go,Saved,Work,Tools,Bottom of the sidebar", "chapters follow the sidebar (v8.5: Follow-ups, Go, Saved): " + ch.map((c) => c.title));
 const money = ch.find((c) => c.title === "Money");
-ok(money.ids.join() === "money,deal,planner" && ch.find((c) => c.title === "Follow-ups").ids.join() === "timeline,life,family,reminders,radar,xray,guardian", "Money: Money, Deal Check; Follow-ups its own chapter: " + money.ids);
+ok(money.ids.join() === "money,deal,planner" && ch.find((c) => c.title === "Follow-ups").ids.join() === "timeline,life,family,reminders,radar,guardian", "Money: Money, Deal Check; Follow-ups its own chapter: " + money.ids);
 ok(ch.find((c) => c.title === "Work").ids.slice(0, 3).join() === "business,fleet,field" && ch.find((c) => c.title === "Tools").ids[0] === "tools" && !ch.flatMap((c) => c.ids).includes("guide"), "Work: Business, Team records, Reports (Crane opens from Fleet, v8.5); Tools its own chapter");
 const test = G.chapters([["money", "Money", "money", ["money", "deal", "radar"]], ["health", "Health", "health", ["fit", "care"]]]);
 ok(test[0].ids.join() === "money,radar,deal" && test[1].ids.join() === "fit,care" && test.length === 2, "chapters only hold what the sidebar has");
@@ -61,7 +61,7 @@ ok(G.PLAN.map((p) => p.id).join() === "morning,day,evening,week,month,work", "th
 const planTools = G.PLAN.flatMap((p) => p.items.map((i) => i.tool)).filter(Boolean);
 ok(planTools.every((t) => G.TOOLS[t]) && G.PLAN.every((p) => p.items.length >= 3 && p.items.every((i) => (i.tool || i.see) && i.text[0] && i.text[1]) && p.tip[0] && p.tip[1]), "every plan line points to a real tool, in English and Arabic");
 ok(["home", "money", "learn", "news", "missions"].every((t) => G.PLAN[0].items.some((i) => i.tool === t)), "morning: Home, Safe to spend, the lesson, news, missions");
-ok(["fit", "reminders", "chat"].every((t) => G.PLAN[1].items.some((i) => i.tool === t)) && ["scout", "guardian", "xray"].every((t) => G.PLAN[3].items.some((i) => i.tool === t)) && G.PLAN[3].items.some((i) => i.see === "start:safe"), "day: food photo, reminders, share to Chat (v8.2: no Instant); week: Scout, Payments, X-Ray, backup");
+ok(["fit", "reminders", "chat"].every((t) => G.PLAN[1].items.some((i) => i.tool === t)) && ["scout", "guardian", "groups"].every((t) => G.PLAN[3].items.some((i) => i.tool === t)) && G.PLAN[3].items.some((i) => i.see === "start:safe"), "day: food photo, reminders, share to Chat (v8.2: no Instant); week: Scout, Payments, X-Ray, backup");
 ok(["money", "radar", "deal"].every((t) => G.PLAN[4].items.some((i) => i.tool === t)) && ["business", "field"].every((t) => G.PLAN[5].items.some((i) => i.tool === t)) && !G.PLAN[5].items.some((i) => i.tool === "crane"), "month: Money, Cancel kit, Deal Check; work: Business from WhatsApp, Reports (the Crane toolkit lives inside Business)");
 ok(G.searchPlan("koshary").join() === "day" && G.searchPlan("").length === 6 && !G.searchPlan("zzqx").length, "the plan is searchable");
 // search

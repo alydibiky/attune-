@@ -17,7 +17,7 @@ export const HUBS = [
   ["students", "Students", "coach", ["coach", "booklib", "slides", "cv"]],
   // v8.5 (W1): Follow-ups is its own place (reminders aren't money); its parts are chips on its one list (E2), no switch
   ["money", "Money", "money", ["money", "planner", "deal"]],
-  ["followups", "Follow-ups", "timeline", ["timeline", "life", "family", "reminders", "radar", "xray", "guardian"]],
+  ["followups", "Follow-ups", "timeline", ["timeline", "life", "family", "reminders", "radar", "guardian"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
   // v8.5 (E1): Daily's 9 tabs split — Daily (Learn, News) and Go (Travel, Scout, Metro, Maps); Knowledge went to Settings (R3)
   ["learn", "Daily", "learn", ["learn", "news"]],

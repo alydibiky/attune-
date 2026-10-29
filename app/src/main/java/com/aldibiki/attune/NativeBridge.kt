@@ -188,6 +188,19 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         Thread { try { resolve(id, JSONObject().put("name", AutoBackup.write(ctx, a.optString("name"), a.optString("text")))) } catch (e: Throwable) { reject(id, e.message ?: "Could not save the backup") } }.start()
     }
 
+    // v8.7 the WhatsApp groups library (WaGroups.kt): look at a group's photos (labels + the words in them), progress as events
+    @JavascriptInterface
+    fun waLook(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                resolve(id, WaGroups.look(ctx, a.optString("gid"), a.optJSONArray("names") ?: JSONArray()) { done, all -> progress(id, if (all > 0) done * 100 / all else 100, "look", "$done/$all") })
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't look at the photos") }
+        }
+    }
+    @JavascriptInterface
+    fun waForget(gid: String) { try { WaGroups.forget(ctx, gid) } catch (e: Throwable) { } }
+
     // v8.7 (P7): Python for Code, downloaded on first use in the Play build (PyPack.kt); progress comes as 'attune-pypack' events
     @JavascriptInterface
     fun pyPackStatus(): String = try { PyPack.status(ctx).toString() } catch (e: Throwable) { JSONObject().put("ready", false).toString() }

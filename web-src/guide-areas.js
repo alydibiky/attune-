@@ -8,7 +8,7 @@ export const AREAS = [
   { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "planner", "guardian", "life", "family", "reminders", "radar", "timeline", "deal", "automations", "xray"] },
   { id: "health", icon: "🥗", title: S("Health & food", "الصحة والأكل"), ids: ["health", "fit", "care", "cycle"] },
   { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "chat", "lifeask", "translate", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
-  { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "booklib", "slides", "cv", "memory", "remember", "recall", "news"] },
+  { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "booklib", "slides", "cv", "memory", "remember", "groups", "recall", "news"] },
   { id: "work", icon: "💼", title: S("Work & business", "الشغل والبيزنس"), ids: ["business", "fleet", "field", "crane", "tools", "write", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
   { id: "create", icon: "✨", title: S("Create", "اعمل حاجة"), ids: ["assistants", "skills", "artifacts", "studio", "code", "projects"] },
 ];
@@ -52,6 +52,7 @@ export const SAY = {
   cv: [S("Paste a job ad", "الزق إعلان الوظيفة"), S("Your CV fitted to it, and a mock interview", "السي في بتاعك متظبط عليه، ومقابلة تجريبية")],
   memory: [S("“Keep this: the plumber's number 0100…”", "«احفظ: رقم السباك 0100…»"), S("Kept in Mind; found again by asking", "اتحفظ في عقلي؛ وتلاقيه تاني لما تسأل")],
   remember: [S("Add a book or today's news", "ضيف كتاب أو أخبار النهارده"), S("“What happens in chapter 3?” answered from the book itself", "«إيه اللي بيحصل في الفصل 3؟» من الكتاب نفسه")],
+  groups: [S("WhatsApp → your design group → Export chat → Include media → Attune", "واتساب ← جروب الديكور ← Export chat ← Include media ← أتيون"), S("Albums by room and by thing — “Living room · 48”, “Sofas · 31” — and search: «كنبة رمادي»", "ألبومات حسب الأوضة والحاجة — «الريسبشن · 48»، «الكنب · 31» — وبحث: «كنبة رمادي»")],
   recall: [S("“That photo of the warranty card”", "«صورة كارت الضمان»"), S("Found by what it meant, even if you never named it", "بتتلاقي بمعناها، حتى لو عمرك ما سمّيتها")],
   news: [S("Pick your topics once", "اختار مواضيعك مرة واحدة"), S("Only those, summed up every morning", "هي بس، ملخّصة كل يوم الصبح")],
   business: [S("“Invoice Nile Bakery: 2 deliveries, 500 each”", "«فاتورة لنايل بيكري: توصيلتين، 500 كل واحدة»"), S("A real invoice with VAT, in your books, and who owes you", "فاتورة حقيقية بالضريبة، في حساباتك، ومين عليه فلوس")],
