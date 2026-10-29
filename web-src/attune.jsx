@@ -29,7 +29,7 @@ import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { RecallPage } from "./lookback-ui.jsx";
-import { gmailDue, readGmail } from "./gmail.js";
+import { gmailDue, readGmail, markReconnect } from "./gmail.js";
 import { AutomationsPage, drainAutomations } from "./autom-ui.jsx";   // v6.41 C3
 import { parseAutomation, addRule, loadAuto, saveAuto, ruleText as autoRuleText } from "./autom.js";
 import { metroAsk, route as metroRoute, routeText as metroText } from "./metro.js";   // v6.41 D5
@@ -8770,7 +8770,7 @@ export default function App() {
       // v6.27 Deadline Radar: trials and renewals in the notifications are added (and reminded) by themselves
       const k = modeRef.current === "radar" ? 0 : runAutoRadar(NATIVE, { pro: proRef.current, remind: (r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" }) });
       // v8.7 (Ali: "reads Gmail by itself"): once a day, silently (gmail.js)
-      if (gmailDue()) readGmail(nativeCall, { silent: true }).then((r) => { if (r && r.payments) flash(tr("{n} payments from Gmail are waiting in Money", { n: r.payments })); }).catch(() => {});
+      if (gmailDue()) readGmail(nativeCall, { silent: true }).then((r) => { if (r && r.payments) flash(tr("{n} payments from Gmail are waiting in Money", { n: r.payments })); }).catch(() => markReconnect(true));
       const n = runAutoPay(NATIVE); if (n) flash(tr("{n} payments added to Money by themselves", { n })); else if (k) flash(tr("{n} deadlines added to your Radar by themselves", { n: k })); };
     const t = setTimeout(run, 2500);
     document.addEventListener("visibilitychange", run);

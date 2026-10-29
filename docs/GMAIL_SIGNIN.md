@@ -11,7 +11,7 @@ That needs no Google setup at all. Reading new emails by itself needs Gmail sign
    RELEASE_6.29.md); scope `https://www.googleapis.com/auth/gmail.readonly`.
 4. **OAuth client ID, type Android**: package `com.aldibiki.attune` + the SHA-1 of the signing key
    (`keytool -list -v -keystore app/attune-test.keystore`, and later the Play app-signing SHA-1 from Play Console).
-5. **Verification.** `gmail.readonly` is a *restricted* scope. While the app is in "Testing", up to 100 named test users can
+5. **Verification — free (Ali's pick, 29 Oct): see `docs/GMAIL_VERIFICATION.md`.** (Old note:) `gmail.readonly` is a *restricted* scope. While the app is in "Testing", up to 100 named test users can
    sign in with no review. To publish it to everyone, Google requires app verification **and a yearly third-party security
    assessment (CASA)**, which costs money and takes weeks. Until then, the Takeout export covers the same 12 months.
 

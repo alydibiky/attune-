@@ -25,3 +25,12 @@ let n = 0;
   assert.deepEqual(calls[1][1], { days: 2, max: 40, silent: true }, "the daily read: silent, only the last days");
   assert.equal(r2.added, 0, "an email is never taken twice"); n += 9; }
 console.log(`v870gmail: ${n} checks passed`);
+import { syncKeys } from "../../web-src/cloud.js";
+{ // Google's free review depends on Gmail content never leaving the phone: Sync leaves it out
+  const k = syncKeys({ "attune:gmail:v1": "{}", "attune:sms-old:v1": "[]", "ledger.v3": "{}",
+    "attune:overpay:v1": JSON.stringify({ emails: [{ id: "gm:1", text: "x" }, { id: "pasted-1", text: "y" }] }) });
+  assert.ok(!("attune:gmail:v1" in k) && !("attune:sms-old:v1" in k) && "ledger.v3" in k);
+  assert.deepEqual(JSON.parse(k["attune:overpay:v1"]).emails.map((e) => e.id), ["pasted-1"]);
+  const s = mem(); G.markReconnect(true, s); assert.equal(G.loadGmail(s).reconnect, true);
+  console.log("v870gmail: Gmail data never syncs; a failed daily read asks to reconnect");
+}

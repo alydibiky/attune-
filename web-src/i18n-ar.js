@@ -5734,6 +5734,8 @@ export const AR = {
   "{n} payments from Gmail are waiting in Money": "{n} دفعات من الجيميل مستنياك في الفلوس",
   "Gmail isn't connected yet": "الجيميل لسه مش متوصّل",
   "Gmail sign-in was cancelled": "تسجيل الدخول للجيميل اتلغى",
+  "Google asks you to confirm again — tap Read now.": "جوجل عايزك تأكد تاني — دوس «اقرا دلوقتي».",
+  "Attune only reads emails about money, on this phone. They never go to Attune, to an AI in the cloud or to anyone else, and are never used for ads. Disconnect any time.": "أتيون بيقرا الإيميلات اللي عن الفلوس بس، على الموبايل ده. عمرها ما بتروح لأتيون ولا لذكاء اصطناعي على النت ولا لأي حد، وعمرها ما بتستخدم في إعلانات. تقدر تفصل في أي وقت.",
   "Nothing had all your words — the closest:": "مفيش حاجة فيها كل كلامك — الأقرب:",
   "Nothing to search yet — add screenshots or keep your notifications below": "لسه مفيش حاجة أدوّر فيها — ضيف سكرينات أو احفظ إشعاراتك تحت",
   "Add screenshots and photos": "ضيف سكرينات وصور",

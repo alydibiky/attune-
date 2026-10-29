@@ -45,9 +45,12 @@ export async function readGmail(call, { silent = false, days, now = Date.now(), 
   const g = loadGmail(s);
   const d = days || (g.last ? Math.min(30, Math.max(2, Math.ceil((now - g.last) / DAY) + 1)) : 365);   // the first read: the last year
   const r = await call("gmailRead", { days: d, max: g.last ? 40 : 100, silent });
-  if (!silent && !g.on) saveGmail({ ...loadGmail(s), on: true }, s);
+  if (!silent) saveGmail({ ...loadGmail(s), on: true, reconnect: false }, s);
   return takeEmails((r && r.emails) || [], { s, now });
 }
+/** The daily read could not sign in silently (Google asks again — while the app is in Google's testing mode that is once a
+ *  week): the card says "Tap to reconnect" instead of failing quietly. */
+export const markReconnect = (on, s = ls()) => saveGmail({ ...loadGmail(s), reconnect: !!on }, s);
 export const disconnectGmail = (s = ls()) => saveGmail({ on: false, last: 0, emails: [] }, s);
 
 /** The kept emails as Recall's notification-like items (app "Gmail"). */

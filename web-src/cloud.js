@@ -22,12 +22,16 @@ export const syncReady = (c = CLOUD) => /\.apps\.googleusercontent\.com$/.test(S
 export const proSearchReady = (c = CLOUD) => /^https:\/\/[^/\s]+/.test(String(c.proSearchUrl || ""));
 
 const SYNC_KEY = "attune:sync:v1";        // { lastSync: ISO, device: id, remoteStamp: ISO } — never synced itself
-export const SYNC_SKIP = [/^attune:sync:/, /^attune:vault:/, /^attune:dev$/, /^attune:testing-pro$/];
+// v8.7: what Gmail gave (and the messages waiting for review) stays on the phone that read it — Google's free review of
+// gmail.readonly depends on email content never leaving the phone (docs/GMAIL_VERIFICATION.md); each phone reads Gmail itself
+export const SYNC_SKIP = [/^attune:sync:/, /^attune:vault:/, /^attune:dev$/, /^attune:testing-pro$/, /^attune:gmail:/, /^attune:sms-old:/];
 
-/** What to send: the backup's keys minus this phone's own settings that must not travel (sync state, the PIN vault). */
+/** What to send: the backup's keys minus this phone's own settings that must not travel (sync state, the PIN vault, Gmail). */
 export function syncKeys(all) {
   const out = {};
   for (const [k, v] of Object.entries(all || {})) if (!SYNC_SKIP.some((re) => re.test(k))) out[k] = v;
+  // the Overpaying check keeps the emails it read: the ones from Gmail ("gm:") stay here; pasted ones and the export may travel
+  if (out["attune:overpay:v1"]) { try { const o = JSON.parse(out["attune:overpay:v1"]); if (o && Array.isArray(o.emails)) { o.emails = o.emails.filter((e) => !String(e && e.id).startsWith("gm:")); out["attune:overpay:v1"] = JSON.stringify(o); } } catch (e) {} }
   return out;
 }
 

@@ -73,6 +73,10 @@ laggy moment ("Slow screen …" lines say where).
    money emails; then once a day, silently, the new ones → Overpaying, Money's review list (payments only), Recall
    (`GmailRead.kt`, `gmail.js`, `gmail-ui.jsx`). **Ali must do the Google Cloud steps in `docs/GMAIL_SIGNIN.md` first** (and add
    himself as a test user); until then Connect shows Google's error.
+8. **Gmail for everyone, free** (Ali: "sign in with their accounts without paying"): Google's restricted-scope verification
+   is free; the paid audit (CASA) is only for apps that put Gmail data on their servers — Attune keeps it on the phone
+   (left out of Sync, Limited Use text in the card and the privacy policy). Ali's steps + texts + demo script:
+   `docs/GMAIL_VERIFICATION.md`.
 Tests: unit v870livefacts, v870gmail, v870yearplan, v750moneyreport; e2e v870sms, v870gmail, v870yearplan, v727paylog.
 
 ## v8.7 — Ali's answers to the nine reviews (28 Oct) — the plan with ticks is `ALI_LIST_2026-10-28.md`
