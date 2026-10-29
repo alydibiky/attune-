@@ -59,3 +59,13 @@ t("search across all groups, in free text", () => {
   assert.equal(W.titleOf("WhatsApp Chat with Design ideas.txt"), "Design ideas");
 });
 console.log(`v870wagroups: ${n} checks passed`);
+{ // v8.7: adding directly — shared photos with a note, a note alone, a group made in Attune
+  const it = W.addedItems({ text: "كنبة رمادي", files: ["add-1.jpg", "add-2.jpg"], t: 1000, who: "Me" });
+  assert.equal(it.length, 2); assert.equal(it[0].text, "كنبة رمادي"); assert.equal(it[1].text, ""); assert.ok(it.every((x) => x.has && x.kind === "photo" && x.added));
+  const note = W.addedItems({ text: "https://pin.it/abc", t: 2000 });
+  assert.equal(note.length, 1); assert.equal(note[0].kind, "link");
+  const g = W.newGroup("Kitchen ideas", "design", 5);
+  assert.equal(g.kind, "design"); assert.ok(g.own && g.id.startsWith("g"));
+  const a = W.albumsOf(it, "design"); assert.ok(a.rows.flatMap((r) => r.albums).some((x) => x.id === "sofas" && x.ids.includes(it[0].id)));
+  console.log("v870wagroups: adding directly ok");
+}

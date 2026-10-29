@@ -97,6 +97,10 @@ laggy moment ("Slow screen …" lines say where).
    Rooms + Things, news Topics by month, Hadith Themes with narrator / source cards, "More", moves by hand, search) →
    `wagroups-ui.jsx` (library → group → album → full-screen photo, "Move to another album", "Money & promises in this chat" =
    Chat X-Ray). Storage: IndexedDB `attune-wa` (`wagroups-store.js`). A shared chat (with or without photos) now opens here.
+12. **Add directly to the groups** (Ali: "the option to add directly to Attune also"): "+ Add photos or a note" in a group, "New
+   group in Attune" (no WhatsApp behind it), and a second share target "Attune · Groups" (activity-alias ShareToGroups → photos
+   kept in files/wa/_inbox → the Add sheet: which group / new one, a note or link, the album or "Let Attune sort it" →
+   waAdopt / waSave). `wagroups.js addedItems / newGroup`.
 Tests: unit v870wagroups, v870email, v870autobackup, v870livefacts, v870gmail, v870yearplan, v750moneyreport; e2e v870sms, v870gmail, v870yearplan, v727paylog.
 
 ## v8.7 — Ali's answers to the nine reviews (28 Oct) — the plan with ticks is `ALI_LIST_2026-10-28.md`

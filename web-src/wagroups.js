@@ -202,6 +202,17 @@ export function searchLibrary(library, q, { limit = 60 } = {}) {
   return recallSearch(docs, q, { limit }).hits.map((h) => ({ group: h.doc.g, item: h.doc.it, score: h.score, snip: h.snip }));
 }
 
+/** v8.7 (Ali: "the option to add directly to Attune also"): what the person adds by hand (shared to "Attune · Groups", or
+ *  "+ Add" in a group) → items. One item per photo (the note is the first photo's caption); a note alone is one item. */
+export function addedItems({ text = "", files = [], t = Date.now(), who = "Me" } = {}) {
+  const note = String(text || "").trim(), out = [];
+  (files || []).forEach((f, i) => out.push({ id: hash("add|" + t + "|" + f), t: t + i, who, text: i === 0 ? note : "", file: f, kind: kindOfFile(f), has: true, added: true }));
+  if (!out.length && note) out.push({ id: hash("add|" + t + "|" + note.slice(0, 200)), t, who, text: note, file: "", kind: URL_RX.test(note) && note.replace(URL_RX, "").trim().length < 20 ? "link" : "text", has: false, added: true });
+  return out;
+}
+/** A group made in Attune (no WhatsApp chat behind it). */
+export const newGroup = (title, kind = "other", now = Date.now()) => ({ id: "g" + hash("own|" + title + "|" + now), title: String(title || "").trim() || "My group", items: [], seen: {}, moves: {}, kind, kindSet: kind, own: true, updated: now });
+
 /** The photos still to be looked at by the phone (labels + words in them). */
 export const unseen = (items, seen) => (items || []).filter((x) => x.kind === "photo" && x.has && !(seen && seen[x.file])).map((x) => x.file);
 export const groupIdOf = (title) => "g" + hash(String(title || "").trim().toLowerCase() || String(Date.now()));

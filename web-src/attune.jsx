@@ -8735,6 +8735,8 @@ export default function App() {
       }
       // v5.35: WhatsApp → Export chat → Attune: the chat opens in Chat X-Ray
       // v8.7 (Ali: "instead of Chat X-Ray"): a WhatsApp export (with its photos, or the chat alone) → the WhatsApp groups library
+      // v8.7 (Ali: "add directly to Attune also"): shared to "Attune · Groups" → the Add sheet (which group, which album)
+      if (d.kind === "waadd") { setWaIn({ kind: "waadd", files: d.files || [], text: String(d.text || "") }); navTo("groups"); return; }
       if ((d.kind === "wagroup" || d.kind === "chatfile") && d.text) { setWaIn({ gid: d.gid || "", name: String(d.name || ""), text: String(d.text), files: d.files || [] }); navTo("groups"); return; }
       const shared = String(d.text || "").trim();
       if (!shared) return;

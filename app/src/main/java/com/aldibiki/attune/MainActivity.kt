@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
 
@@ -595,6 +596,20 @@ class MainActivity : AppCompatActivity() {
         if (intent?.action == "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" || intent?.action == "android.intent.action.VIEW_PERMISSION_USAGE") {
             val p = JSONObject().put("kind", "privacy")
             if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
+            return
+        }
+        // v8.7 (Ali: "add directly to Attune also"): shared to "Attune · Groups" → straight into a groups album (WaGroups.kt)
+        if (intent?.component?.className?.endsWith(".ShareToGroups") == true && (intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_SEND_MULTIPLE)) {
+            @Suppress("DEPRECATION")
+            val uris: List<Uri> = if (intent.action == Intent.ACTION_SEND_MULTIPLE)
+                ((if (android.os.Build.VERSION.SDK_INT >= 33) intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java) else intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)) ?: arrayListOf())
+            else listOfNotNull((if (android.os.Build.VERSION.SDK_INT >= 33) intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java) else intent.getParcelableExtra(Intent.EXTRA_STREAM)) as Uri?)
+            val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+            Thread {
+                val names = try { WaGroups.inbox(this, uris) } catch (e: Throwable) { JSONArray() }
+                val p = JSONObject().put("kind", "waadd").put("files", names).put("text", text)
+                runOnUiThread { if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p }
+            }.start()
             return
         }
         val payload = JSONObject()

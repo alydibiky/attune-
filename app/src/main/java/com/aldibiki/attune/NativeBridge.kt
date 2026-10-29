@@ -200,6 +200,17 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     }
     @JavascriptInterface
     fun waForget(gid: String) { try { WaGroups.forget(ctx, gid) } catch (e: Throwable) { } }
+    // v8.7 adding directly: the shared photos move into the chosen group; a photo picked inside Attune is saved there
+    @JavascriptInterface
+    fun waAdopt(gid: String, namesJson: String): Int = try { WaGroups.adopt(ctx, gid, JSONArray(namesJson)) } catch (e: Throwable) { 0 }
+    @JavascriptInterface
+    fun waSave(id: String, arg: String) {
+        pool.execute {
+            try { val a = JSONObject(arg); val ok = WaGroups.save(ctx, a.optString("gid"), a.optString("name"), android.util.Base64.decode(a.optString("b64"), android.util.Base64.DEFAULT))
+                if (ok) resolve(id, JSONObject().put("ok", true)) else reject(id, "Couldn't keep that photo") }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't keep that photo") }
+        }
+    }
 
     // v8.7 (P7): Python for Code, downloaded on first use in the Play build (PyPack.kt); progress comes as 'attune-pypack' events
     @JavascriptInterface

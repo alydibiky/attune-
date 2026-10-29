@@ -39,6 +39,7 @@ async function readPicked(fileList) {
 }
 
 export function WaLibrary({ incoming, clearIncoming, flash, openXray }) {
+  const [adding, setAdding] = useState(null);           // v8.7 the Add sheet: { gid?, shared?: { files, text }, fresh?: true }
   const ar = getLang() === "ar";
   const [groups, setGroups] = useState(null);
   const [at, setAt] = useState({ at: "home" });          // home · group · album
@@ -82,9 +83,35 @@ export function WaLibrary({ incoming, clearIncoming, flash, openXray }) {
     }
     setBusy("");
   };
+  // v8.7 (Ali: "add directly to Attune also"): what the person adds — shared to "Attune · Groups" (photos already kept on the
+  // phone, in its inbox) or picked here (photos from the gallery, a note or a link) → items in the chosen group (or a new one)
+  const addDirect = async ({ gid, title, kind, text, shared = [], picked = [], album }) => {
+    setAdding(null); setBusy(tr("Adding…"));
+    let g = gid ? (await S.loadGroups()).find((x) => x.id === gid) : null;
+    if (!g) g = W.newGroup(title, kind || "other");
+    const n = N(), files = [];
+    if (shared.length && n && n.waAdopt) { try { n.waAdopt(g.id, JSON.stringify(shared)); } catch (e) {} files.push(...shared); }
+    for (const f of picked) {
+      const name = "add-" + Date.now() + "-" + files.length + ".jpg";
+      if (onPhone() && window.__attuneNativeCall) {
+        const b64 = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = () => ok(""); r.readAsDataURL(f); });
+        try { await window.__attuneNativeCall("waSave", { gid: g.id, name, b64 }); files.push(name); } catch (e) {}
+      } else { await S.putPhoto(g.id, name, f); files.push(name); }
+    }
+    const fresh = W.addedItems({ text, files, who: getLang() === "ar" ? "أنا" : "Me" });
+    if (!fresh.length) { setBusy(""); return; }
+    const m = W.mergeItems(g.items, fresh), moves = { ...(g.moves || {}) };
+    if (album) for (const it of fresh) moves[it.id] = album;
+    g = { ...g, items: m.items, moves, updated: Date.now() };
+    g.kind = g.kindSet || W.kindOf(g.items, { title: g.title, seen: g.seen });
+    await S.saveGroup(g); await reload(); setBusy(""); setAt({ at: "group", gid: g.id });
+    flash && flash(tr("Added to {g}", { g: g.title }));
+    look(g);
+  };
   useEffect(() => {
     if (!incoming) return;
     const d = incoming; clearIncoming && clearIncoming();
+    if (d.kind === "waadd") { setAdding({ shared: { files: d.files || [], text: d.text || "" } }); return; }
     take({ gid: d.gid, name: d.name ? W.titleOf(d.name) : "", text: d.text, files: d.files || [] });
   }, [incoming]);
   const pick = async (list) => {
@@ -138,11 +165,13 @@ export function WaLibrary({ incoming, clearIncoming, flash, openXray }) {
         </section>)}
         {A.more ? <section className="mb-4"><div className="grid grid-cols-2 gap-2.5"><AlbumTile g={g} a={A.more} ar={ar} open={() => setAt({ at: "album", gid: g.id, aid: "more" })} /></div></section> : null}
         <div className="flex flex-wrap gap-2 mt-2">
-          {openXray ? <button onClick={async () => openXray({ text: (await S.loadRaw(g.id)) || "", name: g.title })} className={U.btnS} data-testid="wa-xray"><Wallet size={14} />{tr("Money & promises in this chat")}</button> : null}
+          <button onClick={() => setAdding({ gid: g.id })} className={U.btnP} data-testid="wa-add-here"><Plus size={15} />{tr("Add photos or a note")}</button>
+          {openXray && !g.own ? <button onClick={async () => openXray({ text: (await S.loadRaw(g.id)) || "", name: g.title })} className={U.btnS} data-testid="wa-xray"><Wallet size={14} />{tr("Money & promises in this chat")}</button> : null}
           <button onClick={async () => { if (!window.confirm(tr("Remove {g} from Attune? (WhatsApp keeps it)", { g: g.title }))) return; await S.deleteGroup(g.id); try { N() && N().waForget && N().waForget(g.id); } catch (e) {} await reload(); setAt({ at: "home" }); }} className={U.btnS + " " + U.muted} data-testid="wa-remove"><Trash2 size={14} />{tr("Remove")}</button>
         </div>
       </>}
       {viewer ? <Viewer g={byId[viewer.gid]} item={viewer.item} ar={ar} close={() => setViewer(null)} move={async (it, aid) => { const ng = { ...g, moves: { ...g.moves, [it.id]: aid } }; await S.saveGroup(ng); await reload(); setViewer(null); }} /> : null}
+      {adding ? <AddSheet groups={groups} start={adding} ar={ar} close={() => setAdding(null)} done={addDirect} /> : null}
     </div>;
   }
   // ---- the library
@@ -161,12 +190,49 @@ export function WaLibrary({ incoming, clearIncoming, flash, openXray }) {
           <li>{tr("Choose Attune — it reads everything on this phone and sorts it into albums")}</li>
         </ol>
         <p className={"m-0 text-[12px] " + U.muted}>{tr("Export again any time — only what's new is added.")}</p>
-        <button onClick={() => fileRef.current && fileRef.current.click()} className={U.btnS} data-testid="wa-pick">{tr("Or pick the exported file")}</button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => fileRef.current && fileRef.current.click()} className={U.btnS} data-testid="wa-pick">{tr("Or pick the exported file")}</button>
+          <button onClick={() => setAdding({ fresh: true })} className={U.btnS} data-testid="wa-new">{tr("New group in Attune")}</button>
+        </div>
+        <p className={"m-0 text-[12px] " + U.muted}>{tr("One photo or message: share it from WhatsApp or the gallery to “Attune · Groups”.")}</p>
         <input ref={fileRef} type="file" multiple accept=".zip,.txt,image/*" className="hidden" onChange={(e) => { pick(e.target.files); e.target.value = ""; }} data-testid="wa-file" />
       </div>
     </>}
     {viewer ? <Viewer g={byId[viewer.gid]} item={viewer.item} ar={ar} close={() => setViewer(null)} /> : null}
+    {adding ? <AddSheet groups={groups} start={adding} ar={ar} close={() => setAdding(null)} done={addDirect} /> : null}
   </div>;
+}
+
+/** v8.7 the Add sheet: which group (or a new one), the photos (shared, or picked here), a note or a link, and the album — or
+ *  "Let Attune sort it". Nothing is added before "Add". */
+function AddSheet({ groups, start, ar, close, done }) {
+  const [gid, setGid] = useState(start.gid || (start.fresh ? "" : (groups[0] && groups[0].id) || ""));
+  const [title, setTitle] = useState(""), [kind, setKind] = useState("design");
+  const [text, setText] = useState((start.shared && start.shared.text) || "");
+  const [picked, setPicked] = useState([]), [album, setAlbum] = useState("");
+  const shared = (start.shared && start.shared.files) || [];
+  const g = groups.find((x) => x.id === gid), K = W.KINDS[(g && g.kind) || kind] || W.KINDS.other;
+  const pickRef = useRef(null);
+  const can = (gid || title.trim()) && (shared.length || picked.length || text.trim());
+  return <div className="fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center" onClick={close}>
+    <div className={U.card + " w-full max-w-md p-4 space-y-3 rounded-b-none sm:rounded-b-[20px] max-h-[90vh] overflow-y-auto"} onClick={(e) => e.stopPropagation()} data-testid="wa-add-sheet">
+      <div className="flex items-center"><b className="flex-1 text-[16px] font-extrabold">{tr("Add to a group")}</b><button onClick={close} aria-label={tr("Close")} className="w-11 h-11 grid place-items-center"><X size={18} /></button></div>
+      {start.gid ? null : <label className={"block text-[12px] font-bold " + U.muted}>{tr("Group")}
+        <select value={gid} onChange={(e) => { setGid(e.target.value); setAlbum(""); }} className={U.inp + " mt-1"} data-testid="wa-add-group">
+          {groups.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}<option value="">{tr("+ New group…")}</option></select></label>}
+      {!gid ? <div className="space-y-2">
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr("Name — e.g. “Kitchen ideas”")} dir="auto" className={U.inp} data-testid="wa-add-title" />
+        <div className="flex flex-wrap gap-1.5">{KIND_IDS.map((k) => <button key={k} onClick={() => setKind(k)} className={U.chip(kind === k) + " !min-h-[36px] !h-9 !px-3 !text-[12.5px]"} data-testid={"wa-add-kind-" + k}>{nm(W.KINDS[k], ar)}</button>)}</div>
+      </div> : null}
+      {shared.length ? <p className="m-0 text-[13px] font-bold" data-testid="wa-add-shared">{tr("{n} photos shared", { n: shared.length })}</p>
+        : <div><button onClick={() => pickRef.current && pickRef.current.click()} className={U.btnS} data-testid="wa-add-photos">{picked.length ? tr("{n} photos chosen", { n: picked.length }) : tr("Choose photos")}</button>
+          <input ref={pickRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => setPicked([...(e.target.files || [])])} data-testid="wa-add-file" /></div>}
+      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} dir="auto" placeholder={tr("A note or a link (optional) — “grey sofa for the reception”")} className={U.inp + " !h-auto py-2"} data-testid="wa-add-text" />
+      {K.rows.length ? <label className={"block text-[12px] font-bold " + U.muted}>{tr("Album")}
+        <select value={album} onChange={(e) => setAlbum(e.target.value)} className={U.inp + " mt-1"} data-testid="wa-add-album">
+          <option value="">{tr("Let Attune sort it")}</option>{K.rows.flatMap((r) => r.albums).map((a) => <option key={a.id} value={a.id}>{nm(a, ar)}</option>)}</select></label> : null}
+      <button disabled={!can} onClick={() => done({ gid, title, kind, text, shared, picked, album })} className={U.btnP + " w-full disabled:opacity-50"} data-testid="wa-add-go">{tr("Add")}</button>
+    </div></div>;
 }
 
 function GroupCard({ g, ar, open }) {

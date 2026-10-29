@@ -94,5 +94,26 @@ object WaGroups {
         return JSONObject().put("seen", out)
     }
 
+    // ---- v8.7 (Ali: "the option to add directly to Attune also") ----
+    /** Photos shared to "Attune · Groups": kept (smaller) in files/wa/_inbox until the person picks the group. → their names. */
+    fun inbox(ctx: Context, uris: List<Uri>): JSONArray {
+        val d = File(dir(ctx), "_inbox").apply { mkdirs() }
+        val out = JSONArray()
+        for (u in uris.take(200)) try {
+            val name = "add-" + System.currentTimeMillis() + "-" + out.length() + ".jpg"
+            val b = ctx.contentResolver.openInputStream(u)?.use { it.readBytes() } ?: continue
+            if (b.size < 40_000_000 && keepPhoto(b, File(d, name))) out.put(name)
+        } catch (e: Exception) { }
+        return out
+    }
+    /** The inbox's photos → the chosen group (files/wa/<gid>/). */
+    fun adopt(ctx: Context, gid: String, names: JSONArray): Int {
+        val from = File(dir(ctx), "_inbox"); val to = File(dir(ctx), safe(gid)).apply { mkdirs() }; var n = 0
+        for (i in 0 until names.length()) { val nm = safe(names.optString(i)); val f = File(from, nm); if (f.exists() && f.renameTo(File(to, nm))) n++ }
+        return n
+    }
+    /** A photo added from inside Attune (the page's file picker) → files/wa/<gid>/<name>. */
+    fun save(ctx: Context, gid: String, name: String, bytes: ByteArray): Boolean = keepPhoto(bytes, File(File(dir(ctx), safe(gid)).apply { mkdirs() }, safe(name)))
+
     fun forget(ctx: Context, gid: String) { File(dir(ctx), safe(gid)).deleteRecursively() }
 }

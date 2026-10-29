@@ -109,7 +109,7 @@
         <!-- v6.5 Huawei Health Kit: Attune's App ID (empty until the AppGallery Connect app exists) -->
         <meta-data android:name="com.huawei.hms.client.appid" android:value="appid=${hmsAppId}" />
         <!-- v6.43: Google Play services fetches the live barcode scanner's screen when Attune is installed, so the first scan opens at once -->
-        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui,subject_segment" />
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui,subject_segment,ica" />
         <!-- Unencrypted http is allowed ONLY to 127.0.0.1, where the on-device
              model listens. Every other connection must be https. -->
 
@@ -167,6 +167,29 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+        <!-- v8.7 (Ali: "the option to add directly to Attune also"): a second share target, "Attune · Groups" — a photo, several
+             photos or a message shared from WhatsApp, the gallery or the browser go straight into a WhatsApp-groups album -->
+        <activity-alias
+            android:name=".ShareToGroups"
+            android:targetActivity=".MainActivity"
+            android:label="@string/share_groups"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- The phone's own GPU driver (Adreno), for Engine → Speed → GPU.
              Optional: phones without it install and run on the CPU. -->
