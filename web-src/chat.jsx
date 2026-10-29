@@ -18,6 +18,7 @@ import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_F
 import { chatLifeIntent } from "./life.js";
 import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
 import { mindAnswer } from "./personal.js";
+import { libraryBlock } from "./booklib.js";
 import { sourceLine } from "./sourcelabel.js";
 import { priceQuestion, insight as priceInsight, allRecords as priceRecords, loadPrices } from "./pricememory.js";
 import { chatDeadlineIntent } from "./deadlines.js";
@@ -1565,6 +1566,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         }
         knHits = keepCovering(knHits, typed);   // "Lynk and co 900": passages about other models are not about it
         if (knHits && knHits.length) { content = factsBlock(knHits, typed) + content; extra.knowledgeUsed = knHits.length; }
+      }
+      // v8.7 (Ali picked 4B "one Library"): the books he switched on in the Library are looked into too, cited [Book, p. N]
+      if (answer == null && typed && !sources && !fileAtt && !pic && !longMsg && api.libraryFind) {
+        try { const lf = await api.libraryFind(typed); if (runRef.current !== run) return; if (lf && lf.length) { content = libraryBlock(lf) + content; extra.libraryUsed = lf.map((p) => p.title + " p. " + p.page); } } catch (e) {}
       }
       content += langHint(typed);
       const plain = answer == null;   // written by the model directly (not checked by code / votes)

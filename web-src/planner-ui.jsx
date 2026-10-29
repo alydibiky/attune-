@@ -4,21 +4,20 @@
 import React, { useMemo, useState } from "react";
 import { Plus, PiggyBank } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
-import { loadPots, savePots, addPot, fundPot, planMonth } from "./planner.js";
+import { loadPots, savePots, addPot, fundPot, planMonth, potIntent } from "./planner.js";
 import { loadLedger } from "./myledger.js";
 import { loadLife } from "./life.js";
 import { homeCurrency } from "./locale.js";
 import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
-import { yearGrid, yearRows, loadYearPlan, saveYearPlan, setCell } from "./yearplan.js";
+import { yearGrid, yearRows, loadYearPlan, saveYearPlan, setCell, goalsOfYear } from "./yearplan.js";
 import { xlsxFromRows } from "./convert.js";
 
 /** v8.7 (Ali: "a year plan with months, like in Excel, as if I am doing it in Excel"): the year as a sheet — rows × 12 months +
  *  the total; past months are what happened (grey), coming months the plan; tap any cell to type over it; Excel button. */
 const GROUP_COL = { income: "var(--c-pos)", fixed: "#4A5852", savings: "var(--c-acc)", everyday: "#B4560E" };
-function YearSheet({ ledger, pots, cur, flash }) {
+function YearSheet({ ledger, pots, cur, flash, year, setYear, toGoals }) {
   const [plan, setPlan] = useState(() => loadYearPlan());
-  const [year, setYear] = useState(() => new Date().getFullYear());
   const [edit, setEdit] = useState(null);   // { rowId, month, value }
   const ar = getLang() === "ar";
   const g = useMemo(() => yearGrid({ ledger, life: loadLife(), pots, plan, year, ar }), [ledger, pots, plan, year]);
@@ -50,7 +49,8 @@ function YearSheet({ ledger, pots, cur, flash }) {
           <b className="text-[16px] font-black tabular-nums" data-testid="year-label">{year}</b>
           <button className={U.btnS + " h-9! min-h-[36px]! px-3!"} onClick={() => setYear(year + 1)} aria-label={tr("Next year")}>›</button>
         </div>
-        <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={excel} data-testid="year-excel">{tr("Excel")}</button>
+        <div className="flex gap-1.5"><button className={U.btnS + " h-9! min-h-[36px]!"} onClick={toGoals} data-testid="year-to-goals">{tr("Goals")}</button>
+          <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={excel} data-testid="year-excel">{tr("Excel")}</button></div>
       </div>
       <p className={"m-0 text-[12px] " + U.muted}>{tr("Grey = what happened. The rest is the plan — tap any cell to type your own number, like Excel.")}</p>
       <div className={U.card + " overflow-x-auto"}>
@@ -80,6 +80,72 @@ function YearSheet({ ledger, pots, cur, flash }) {
     </div>);
 }
 
+/** v8.7 (Ali picked 1B — "goals first, Attune spreads them"): the year opens on your goals. Type one sentence ("save 60k for
+ *  Umrah by Sep", «احوش 60 الف للعمرة في سبتمبر»), Attune spreads it over the months; salary and bills come from Money by
+ *  themselves; a bar a month shows what is left free, red where the plan runs short; tap a month to change its numbers.
+ *  The sheet (like Excel) and the Excel file stay one tap away. */
+function YearGoals({ ledger, pots, save, cur, flash, year, setYear, toSheet }) {
+  const [plan, setPlan] = useState(() => loadYearPlan());
+  const [text, setText] = useState(""), [month, setMonth] = useState(null);
+  const ar = getLang() === "ar";
+  const g = useMemo(() => yearGrid({ ledger, life: loadLife(), pots, plan, year, ar }), [ledger, pots, plan, year]);
+  const y = useMemo(() => goalsOfYear(g), [g]);
+  const mon = (k, long) => new Date(g.months[k] + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: long ? "long" : "short" });
+  const put = (rowId, k, v) => setPlan(saveYearPlan(setCell(plan, rowId, g.months[k], String(v).replace(/,/g, "").trim())));
+  const add = () => {
+    const p = potIntent(text) || potIntent((ar ? "احوش " : "save ") + text);
+    if (!p || !(p.target > 0 || p.per > 0)) { flash && flash(tr("Write the amount too, e.g. “save 30k for a sofa by June”")); return; }
+    save(addPot(pots, p)); setText(""); flash && flash(tr("Added — spread over the months"));
+  };
+  const max = Math.max(1, ...g.free.map((v) => Math.abs(v)));
+  const potOf = (id) => ((pots && pots.pots) || []).find((p) => p.id === id) || {};
+  return (
+    <div className="space-y-3" data-testid="year-goals">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <button className={U.btnS + " h-9! min-h-[36px]! px-3!"} onClick={() => { setYear(year - 1); setMonth(null); }} aria-label={tr("Previous year")}>‹</button>
+          <b className="text-[16px] font-black tabular-nums" data-testid="year-label">{year}</b>
+          <button className={U.btnS + " h-9! min-h-[36px]! px-3!"} onClick={() => { setYear(year + 1); setMonth(null); }} aria-label={tr("Next year")}>›</button>
+        </div>
+        <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={toSheet} data-testid="year-to-sheet">{tr("Sheet & Excel")}</button>
+      </div>
+      {y.goals.map((x) => { const p = potOf(x.id), name = KIND_NAME[p.kind] && (p.name === KIND_NAME[p.kind][0] || p.name === KIND_NAME[p.kind][1]) ? KIND_NAME[p.kind][ar ? 1 : 0] : x.name;
+        return <div key={x.id} className={U.cardPad + " space-y-1"} data-testid="year-goal">
+          <div className="flex items-baseline justify-between gap-2"><b className="text-[15px] font-extrabold min-w-0 truncate" dir="auto">{name}</b>
+            <span className="text-[13.5px] font-black tabular-nums shrink-0" dir="ltr">{p.target > 0 ? fmt(p.target) + (p.by ? " · " + new Date(p.by + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "short", year: "numeric" }) : "") : fmt(p.per || x.monthly) + " " + tr("/ month")}</span></div>
+          <p className={"m-0 text-[12.5px] " + U.muted}>{x.months.length ? tr("{a} a month · {f} → {l}", { a: fmt(x.monthly), f: mon(x.first), l: mon(x.last) }) : tr("Nothing to put aside this year")}
+            {" · "}{x.tight.length ? <b className="text-[var(--c-warn)]" data-testid="year-goal-tight">{tr("short in {m}", { m: x.tight.map((k) => mon(k)).join(", ") })}</b> : <b className="text-[var(--c-pos)]">{tr("on track")}</b>}
+            {" · "}<button className={"font-bold underline-offset-2 hover:underline hover:text-[var(--c-neg)] " + U.muted} onClick={() => save({ ...pots, pots: pots.pots.filter((q) => q.id !== x.id) })} data-testid="year-goal-remove">{tr("Remove")}</button></p>
+        </div>; })}
+      <div className="rounded-[18px] border border-dashed border-[var(--c-ln)] p-2.5 flex gap-2 items-center">
+        <input className={U.inp + " border-0! bg-transparent!"} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") add(); }} dir="auto"
+          placeholder={tr("“save 30k for a sofa by June”")} aria-label={tr("Type a goal")} data-testid="year-goal-input" />
+        <button className={U.btnP + " shrink-0 px-4!"} onClick={add} disabled={!text.trim()} data-testid="year-goal-add"><Plus size={16} />{tr("Add")}</button>
+      </div>
+      <div className={U.cardPad + " space-y-2"} data-testid="year-bars">
+        <div className="flex items-baseline justify-between gap-2"><span className={U.label}>{tr("Left free each month")}</span>
+          <b className={"tabular-nums text-[15px] " + (y.freeAvg < 0 ? "text-[var(--c-neg)]" : "c-acc")} dir="ltr" data-testid="year-free-avg">≈ {fmt(y.freeAvg)} {cur}</b></div>
+        <div className="grid grid-cols-12 gap-1 items-end h-[84px]" dir="ltr">{g.free.map((v, k) => <button key={k} onClick={() => setMonth(month === k ? null : k)} aria-label={mon(k, true)} data-testid={"year-bar-" + k}
+          className={"h-full flex items-end rounded-[6px] " + (month === k ? "bg-[var(--c-soft)]" : "")}>
+          <i className="block w-full rounded-t-[5px]" style={{ height: Math.max(6, (Math.abs(v) / max) * 100) + "%", background: v < 0 ? "var(--c-neg)" : y.coming.includes(k) ? "var(--c-acc)" : "var(--c-ln)", opacity: y.coming.includes(k) ? 1 : 0.7 }} /></button>)}</div>
+        <div className="grid grid-cols-12 gap-1 text-center text-[10px] font-bold" dir="ltr">{g.months.map((m, k) => <span key={m} className={k === g.nowIdx ? "c-acc" : U.muted}>{mon(k).slice(0, ar ? 3 : 1)}</span>)}</div>
+        <p className={"m-0 text-[12px] " + U.muted}>{tr("Salary, bills and People & plans come from Money by themselves. Red = a month that runs short. Tap a month to change it.")}</p>
+      </div>
+      {month != null ? <div className={U.cardPad + " space-y-2"} data-testid="year-month">
+        <div className="flex items-baseline justify-between gap-2"><b className="text-[16px] font-black">{mon(month, true)} {year}</b>
+          <b className={"tabular-nums " + (g.free[month] < 0 ? "text-[var(--c-neg)]" : "c-acc")} dir="ltr">{tr("Free")} {fmt(g.free[month])}</b></div>
+        {g.groups.map((gr) => gr.rows.length ? <div key={gr.id} className="space-y-1">
+          <p className="m-0 text-[11.5px] font-black uppercase tracking-[0.08em]" style={{ color: GROUP_COL[gr.id] }}>{gr.label}</p>
+          {gr.rows.map((r) => <label key={r.id + month} className="flex items-center gap-2 text-[13.5px]">
+            <span className="flex-1 min-w-0 truncate font-semibold" dir="auto">{r.label}{r.actual[month] ? <span className={U.muted + " text-[11px] font-bold"}> · {tr("happened")}</span> : null}</span>
+            <input defaultValue={r.cells[month] || ""} placeholder="0" inputMode="decimal" dir="ltr" onBlur={(e) => { if (String(e.target.value) !== String(r.cells[month] || "")) put(r.id, month, e.target.value); }}
+              className={U.inp + " w-28! h-10! min-h-[40px]! text-end tabular-nums " + (r.typed[month] ? "font-extrabold text-[var(--c-acc)]" : "")} data-testid={"year-month-" + r.id} /></label>)}
+        </div> : null)}
+        <p className={"m-0 text-[12px] " + U.muted}>{tr("Your numbers show in green. Empty a box to go back to Attune's plan.")}</p>
+      </div> : null}
+    </div>);
+}
+
 const KIND_NAME = { emergency: ["Emergency", "الطوارئ"], travel: ["Travel", "السفر"], car: ["Car", "العربية"], eid: ["Eid", "العيد"], school: ["School", "المدارس"], wedding: ["Wedding", "الجواز"] };
 const CAT_NAME = { food: ["Food", "الأكل"], groceries: ["Groceries", "البقالة"], transport: ["Transport", "المواصلات"], shopping: ["Shopping", "المشتريات"], health: ["Health", "الصحة"],
   fun: ["Going out", "الخروج"], other: ["Other", "حاجات تانية"], education: ["Education", "التعليم"], home: ["Home", "البيت"], gifts: ["Gifts", "الهدايا"] };
@@ -91,7 +157,8 @@ export function PlannerPage({ flash }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState(""), [target, setTarget] = useState(""), [by, setBy] = useState(""), [how, setHow] = useState("month");   // how: "month" (a fixed amount each month) | "target"
   const [put, setPut] = useState({});
-  const [view, setView] = useState("month");   // v8.7: "month" | "year" (the sheet)
+  const [view, setView] = useState("month");   // v8.7: "month" | "year"
+  const [yearAs, setYearAs] = useState("goals"), [year, setYear] = useState(() => new Date().getFullYear());   // 1B: the year opens on the goals
   const ar = getLang() === "ar";
   const ledger = useMemo(() => loadLedger(), [tick]), cur = homeCurrency(ledger);
   const plan = useMemo(() => planMonth({ ledger, life: loadLife(), pots, now: Date.now() }), [ledger, pots, tick]);
@@ -111,7 +178,8 @@ export function PlannerPage({ flash }) {
         <h2 className={U.h1 + " flex items-center gap-2"}><PiggyBank size={20} className="c-acc" />{view === "year" ? tr("Year plan") : tr("{m} plan", { m: monthName })}</h2>
         <div className="flex gap-1.5" role="tablist">{[["month", tr("This month")], ["year", tr("The year")]].map(([k, l]) => <button key={k} role="tab" aria-selected={view === k} className={U.chip(view === k) + " h-10! min-h-[40px]!"} onClick={() => setView(k)} data-testid={"planner-view-" + k}>{l}</button>)}</div>
       </div>
-      {view === "year" ? <YearSheet ledger={ledger} pots={pots} cur={cur} flash={flash} /> : <>
+      {view === "year" ? (yearAs === "sheet" ? <YearSheet ledger={ledger} pots={pots} cur={cur} flash={flash} year={year} setYear={setYear} toGoals={() => setYearAs("goals")} />
+        : <YearGoals ledger={ledger} pots={pots} save={save} cur={cur} flash={flash} year={year} setYear={setYear} toSheet={() => setYearAs("sheet")} />) : <>
       <div className="space-y-3.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
         <div className={U.cardPad + " space-y-3"} data-testid="planner-split">
           <div className="flex items-baseline justify-between"><span className={U.label}>{tr("Income")}</span><b className="text-[22px] font-black tabular-nums" dir="ltr">{fmt(plan.income)} {cur}</b></div>

@@ -46,6 +46,23 @@ async function readBook(file, nativeCall, onStep) {
   return { id: R.docId(file.name, file.size, pages.slice(0, 2).map((p) => p.text).join(" ").slice(0, 4096)), name: file.name, kind, pages, scans: 0, size: file.size };
 }
 
+/** v8.7 (4B): Chat and the voice look into the books switched on — the phone's index, or the books kept here. → passages */
+export async function findInLibrary(q, nativeCall) {
+  const ids = B.answerIds(); if (!ids.length || !String(q || "").trim()) return [];
+  const N = typeof window !== "undefined" ? window.AttuneNative : null;
+  let found = [];
+  if (N && N.booksSearch && nativeCall) { try { const r = await nativeCall("booksSearch", { q: String(q).slice(0, 400), books: ids, k: 6, perBook: 2 }); found = (r && r.passages) || []; } catch (e) { found = []; } }
+  else {
+    const books = [];
+    for (const id of ids.slice(0, 12)) {
+      if (!IDX.has(id)) { const d = await lib().get(id).catch(() => null); if (d && d.pages) IDX.set(id, Q.buildIndex(d.pages)); }
+      if (IDX.has(id)) { const d = await lib().get(id).catch(() => null); books.push({ id, name: (d && d.name) || id, index: IDX.get(id) }); }
+    }
+    found = B.passages(books, q, { budget: 3500, perBook: 2, maxBooks: 4 });
+  }
+  return B.onTopic(q, found).slice(0, 6).map((p) => ({ title: B.titleOf(p.title || ""), page: p.page, text: String(p.text || "").slice(0, 900) }));
+}
+
 const readNs = () => { try { const v = JSON.parse(window.AttuneNative.booksState() || "{}"); return { topics: v.topics || [], books: v.books || [], job: v.job || {}, dbBytes: v.dbBytes || 0 }; } catch (e) { return { topics: [], books: [], job: {}, dbBytes: 0 }; } };
 const gb = (b) => (b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : Math.max(1, Math.round(b / 1e6)) + " MB");
 
@@ -69,6 +86,7 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
   const [deep, setDeep] = useState(false);
   const [live, setLive] = useState("");
   const [stage, setStage] = useState("");
+  const [answerOn, setAnswerOn] = useState(() => B.answerIds());   // v8.7 (4B): the books Chat and the voice may answer from
   const fileRef = useRef(null), endRef = useRef(null);
   const put = (v) => { setSt(v); B.saveLib({ ...v, chat: [] }); };
   const chat = st.chats[topic] || [];
@@ -197,6 +215,11 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
             <span className="absolute bottom-1 start-1.5 end-1.5 text-[8.5px] opacity-90">{nat && d.state === "reading" ? d.done + "/" + (d.pages || "…") : nat && d.state === "queued" ? tr("waiting") : nat && d.state === "error" ? "⚠ " + tr("error") : (pages || 0) + " " + tr("p.")}</span>
             <button onClick={() => removeBook(id)} aria-label={tr("Remove")} className="absolute top-0.5 end-0.5 w-5 h-5 rounded-full bg-black/30 grid place-items-center" data-testid="booklib-remove"><X size={11} /></button></span>); })}</div>
           : <p className="m-0 text-[13px] text-[var(--c-mut)]">{tr("Add the books you trust (PDF, Word, e-book) — 10 history books, your course, a law… Then ask anything.")}</p>}
+        {shelf.length ? <details className="text-[12.5px]" data-testid="booklib-answer"><summary className="cursor-pointer text-[var(--c-acc)] font-bold">{tr("Chat and the voice can answer from…")}{answerOn.length ? " (" + shelf.filter((d) => answerOn.includes(String(d.id))).length + ")" : ""}</summary>
+          <p className="m-0 mt-1 text-[var(--c-mut)]">{tr("Switch a book on and Chat and the voice look into it too, quoting the book and page.")}</p>
+          <div className="mt-1.5 space-y-0.5">{shelf.slice(0, 200).map((d) => <label key={d.id} className="flex items-center gap-2 min-h-[40px]"><input type="checkbox" className="w-5 h-5 accent-[var(--c-acc)] shrink-0" checked={answerOn.includes(String(d.id))}
+            onChange={(e) => { setAnswerOn(B.setAnswerFrom(d.id, e.target.checked)); flash && flash(e.target.checked ? tr("Chat and the voice can answer from “{b}” now", { b: B.titleOf(d.name) }) : tr("Chat won't look into “{b}”", { b: B.titleOf(d.name) })); }} data-testid="booklib-answer-toggle" />
+            <span className="flex-1 min-w-0 truncate" dir="auto">{B.titleOf(d.name)}</span></label>)}</div></details> : null}
         {topics.length && shelf.length ? <details className="text-[12.5px]"><summary className="cursor-pointer text-[var(--c-acc)] font-bold">{tr("Move books to a topic")}</summary>
           <div className="mt-1.5 space-y-1">{shelf.slice(0, 200).map((d) => <label key={d.id} className="flex items-center gap-2"><span className="flex-1 min-w-0 truncate" dir="auto">{B.titleOf(d.name)}</span>
             <select value={nat ? d.topic : (st.topicOf || {})[d.id] || ""} onChange={(e) => moveBook(d.id, e.target.value)} className="min-h-[36px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-2" data-testid="booklib-move"><option value="">{tr("No topic")}</option>{topics.map((t) => <option key={t} value={t}>{t}</option>)}</select></label>)}</div></details> : null}

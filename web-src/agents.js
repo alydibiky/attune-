@@ -312,6 +312,38 @@ export function bestThree(offers, skip = [], taste = null) {
   }
   return [...by.values()].sort((a, b) => a.price - b.price).slice(0, 3);
 }
+/** v8.7 (Ali picked "A and B in a smart way"): the best offers side by side — what each one is (total, a night, the days, how far,
+ *  its rating), the best value of each row, why the first one wins, and what each other one trades ("+2,100 · rated 9.4").
+ *  Read from the page's own words (o.text: "150 m from …", "Scored 9.1", "1.2 km") by code; nothing is guessed. */
+export function offerFacts(o) {
+  const t = " " + String((o && o.text) || "") + " ";
+  const d = /(\d+(?:[.,]\d+)?)\s*(km|كم|m\b|متر|م\b)/i.exec(t);
+  const dist = d ? Math.round(parseFloat(d[1].replace(",", ".")) * (/km|كم/i.test(d[2]) ? 1000 : 1)) : null;
+  const r = /(?:scored|rating|rated|تقييم)?\s*(\d(?:[.,]\d)?|10(?:[.,]0)?)\s*(?:\/\s*10|★)?(?=\s|$)/gi; let rating = null, m;
+  while ((m = r.exec(t.replace(/(\d+(?:[.,]\d+)?)\s*(km|كم|m\b|متر|م\b)/gi, " ")))) { const v = parseFloat(m[1].replace(",", ".")); if (v >= 1 && v <= 10 && /[.,]/.test(m[1])) { rating = v; break; } }
+  const nights = o && o.checkin && o.checkout ? Math.round((Date.parse(o.checkout) - Date.parse(o.checkin)) / 864e5) : 0;
+  return { dist, rating, nights: nights > 0 ? nights : 0, perNight: nights > 0 ? Math.round(o.price / nights) : null };
+}
+export function compareOffers(list, { below = 0 } = {}) {
+  const rows = (list || []).map((o) => ({ o, f: offerFacts(o) }));
+  if (!rows.length) return { rows, best: {}, why: [], trade: [] };
+  const pick = (fn, lo) => { const v = rows.map((r) => fn(r)).filter((x) => x != null); return v.length > 1 || (v.length && rows.length === 1) ? (lo ? Math.min(...v) : Math.max(...v)) : null; };
+  const best = { price: pick((r) => r.o.price, true), perNight: pick((r) => r.f.perNight, true), dist: pick((r) => r.f.dist, true), rating: pick((r) => r.f.rating, false) };
+  const w = rows[0], why = [];
+  if (rows.length > 1 && w.o.price === best.price) why.push(["Cheapest", {}]);
+  if (rows.length > 1 && w.f.dist != null && w.f.dist === best.dist) why.push(["Closest", {}]);
+  if (rows.length > 1 && w.f.rating != null && w.f.rating === best.rating) why.push(["Best rated", {}]);
+  if (below > 0 && w.o.price <= below) why.push(["Under your limit ✓", {}]);
+  // each other one: how much more, and what it gives for it
+  const trade = rows.slice(1).map((r) => {
+    const out = [["+{a}", { a: Math.round(r.o.price - w.o.price) }]];
+    if (r.f.dist != null && w.f.dist != null && r.f.dist < w.f.dist) out.push(["closer: {d}", { d: r.f.dist >= 1000 ? (r.f.dist / 1000).toFixed(1) + " km" : r.f.dist + " m" }]);
+    if (r.f.rating != null && w.f.rating != null && r.f.rating > w.f.rating) out.push(["rated {r}", { r: r.f.rating }]);
+    if (r.o.checkin && r.o.checkin !== w.o.checkin) out.push(["other days: {d}", { d: r.o.checkin.slice(5) + " → " + String(r.o.checkout || "").slice(5) }]);
+    return out;
+  });
+  return { rows, best, why, trade };
+}
 /** The plan the card shows, step by step (2A): what it checks and what it found. */
 export function planSteps(a, now = Date.now()) {
   const f = a.fields || {}, last = [...(a.checks || [])].reverse()[0];

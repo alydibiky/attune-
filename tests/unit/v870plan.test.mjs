@@ -12,6 +12,9 @@ t("reads savings goals in English and Egyptian", () => {
   assert.deepEqual(P.potIntent("احوش ١٠ الاف للعيد في ٥ شهور", now), { name: "العيد", kind: "eid", target: 10000, by: "2027-02" });
   assert.equal(P.potIntent("emergency fund", now).target, 0);
   assert.equal(P.potIntent("how can I save money?", now), null);
+  // v8.7 (1B goals first): the goal keeps its own name
+  assert.equal(P.potIntent("save 60k for Umrah by Sep", now).name, "Umrah"); assert.equal(P.potIntent("save 60k for Umrah by Sep", now).by, "2027-09");
+  assert.equal(P.potIntent("احوش 60 الف للعمرة في سبتمبر", now).name, "العمرة"); assert.equal(P.potIntent("حوش 5000 كل شهر عشان الجهاز", now).name, "الجهاز");
 });
 t("the month's plan: income − fixed − goals − everyday = free", () => {
   let pots = P.addPot({ v: 1, pots: [] }, { name: "Travel", kind: "travel", target: 9000, by: "2027-06" }, now);

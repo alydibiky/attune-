@@ -91,7 +91,8 @@ import { MissionsPage } from "./missions-ui.jsx";
 import { MicButton, SitePhotos } from "./site-ui.jsx";
 import { fold as foldNet, loadNetWeek, saveNetWeek } from "./netreport.js";
 import { TimelinePage } from "./timeline-ui.jsx";
-import { BookLibPage } from "./booklib-ui.jsx";
+import { BookLibPage, findInLibrary } from "./booklib-ui.jsx";
+import { libraryBlock } from "./booklib.js";
 import { RecallCard } from "./recall-ui.jsx";
 import { WatchPanel } from "./watch-ui.jsx";
 import { PromptLab } from "./promptlab-ui.jsx";
@@ -8454,7 +8455,7 @@ export default function App() {
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools, STUDIO_OFF ? ["studio"] : []);
   // v6.31 minimal: short tab names (the page's own title stays full)
   const TAB_SHORT = { agents: "Agents", timeline: "Follow-ups", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
-    pdfchat: "One file", booklib: "Documents", write: "Writing", shelf: "Notes", remember: "Books & pages", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
+    pdfchat: "One file", booklib: "Library", write: "Writing", shelf: "Notes", remember: "Attune remembers", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
   const hubTabsEl = (() => {
@@ -9750,6 +9751,7 @@ export default function App() {
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
+    libraryFind: (q) => findInLibrary(q, NATIVE ? nativeCall : null),   // v8.7 (4B): the Library books switched on for Chat
     knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch,
       // v6.46 "Remember this": the person's own saved books and articles, and a source's whole text (for a chapter)
       mine: async () => (await knowledge.sources()).filter((s) => s.collection === LIB_MINE), textOf: (id) => knowledge.textOf(id),
@@ -11784,7 +11786,8 @@ export default function App() {
       {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[20px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
       {voiceOpen ? <Guard name="voice"><VoiceScreen native={NATIVE} nativeCall={nativeCall} onClose={() => { setVoiceOpen(false); setVoiceText(""); }} doIt={doFromHome} country={agentCountry()} flash={flash} initialText={voiceText}
-        ask={modelUsable ? (q, past, ui) => callChat([{ role: "system", content: "You are Attune, a friendly voice assistant on the user's phone. You are being spoken to: answer in 1 to 3 short sentences that sound natural when read aloud — no lists, no tables, no markdown, no links. " + (ui === "ar" ? "Answer in Egyptian Arabic." : "Answer in the language the user speaks.") + " If you do not know, say so briefly." }, ...(past || []), { role: "user", content: q }], null, { maxTokens: 200, temperature: 0.5, think: false }) : null} /></Guard> : null}
+        ask={modelUsable ? async (q, past, ui) => { let lb = ""; try { lb = libraryBlock(await findInLibrary(q, NATIVE ? nativeCall : null)).replace("cite each fact as [Book, p. N]", "say which book it is from"); } catch (e) {}   // v8.7 (4B): the books switched on in the Library
+          return callChat([{ role: "system", content: "You are Attune, a friendly voice assistant on the user's phone. You are being spoken to: answer in 1 to 3 short sentences that sound natural when read aloud — no lists, no tables, no markdown, no links. " + (ui === "ar" ? "Answer in Egyptian Arabic." : "Answer in the language the user speaks.") + " If you do not know, say so briefly." }, ...(past || []), { role: "user", content: lb + q }], null, { maxTokens: 200, temperature: 0.5, think: false }); } : null} /></Guard> : null}
       {quietWake && !voiceOpen ? <QuietWake native={NATIVE} nativeCall={nativeCall} tag={voiceTag(agentCountry())} onDone={(text) => { setQuietWake(false); if (text != null) { setVoiceText(text); setVoiceOpen(true); } }} /> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>

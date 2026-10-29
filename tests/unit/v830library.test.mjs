@@ -33,4 +33,11 @@ const nm = B.notesMessages("Ain Jalut?", rounds[0]);
 ok(/\[Book, p\. N\]/.test(nm[0].content) && /\[big history, p\. \d+\]/.test(nm[1].content), "each round → notes that keep [Book, p. N]");
 const fm = B.fromNotesMessages("Ain Jalut?", ["- Qutuz won [big history, p. 1]", "nothing"]);
 ok(/Qutuz won/.test(fm[fm.length - 1].content) && !/\nnothing\n/.test(fm[fm.length - 1].content) && /Where the books disagree/.test(fm[0].content), "the notes → one answer that compares the books");
+// v8.7 (Ali picked 4B "one Library"): books switched on for Chat and the voice
+const mem = { v: {}, getItem(k) { return this.v[k] ?? null; }, setItem(k, x) { this.v[k] = x; } };
+B.setAnswerFrom(7, true, mem); B.setAnswerFrom("9", true, mem); B.setAnswerFrom(7, false, mem);
+ok(B.answerIds(mem).join() === "9", "switch a book on and off: " + B.answerIds(mem).join());
+const ps = [{ title: "Big history", page: 3, text: "In 1260 at Ain Jalut the Mamluks under Qutuz beat the Mongols." }, { title: "Cooking", page: 9, text: "Mamluk sweets are made with honey." }];
+ok(B.onTopic("What happened at Ain Jalut?", ps).length === 1 && B.onTopic("hi", ps).length === 0, "only passages really about the question reach Chat (not a hello)");
+ok(/\[Big history, p\. 3\]/.test(B.libraryBlock(ps.slice(0, 1))) && B.libraryBlock([]) === "", "the block cites [Book, p. N]");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

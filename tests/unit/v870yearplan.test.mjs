@@ -1,6 +1,6 @@
 // v8.7 (Ali: "a year plan with months, like in Excel"): the year as a sheet
 import assert from "node:assert/strict";
-import { yearGrid, yearRows, setCell } from "../../web-src/yearplan.js";
+import { yearGrid, yearRows, setCell, goalsOfYear } from "../../web-src/yearplan.js";
 let n = 0; const t = (name, f) => { f(); n++; };
 const now = new Date(2026, 9, 15, 12).getTime();   // 15 Oct 2026
 const tx = (date, type, amount, cat, note = "") => ({ id: date + note + amount, type, date, amount, cat, note, account: "a" });
@@ -34,5 +34,14 @@ t("type over any cell, like Excel — the totals follow", () => {
   assert.equal(sal.cells[11], 45000); assert.equal(sal.typed[11], true);
   assert.equal(setCell(plan, "src:salary", "2026-12", "").cells["src:salary|2026-12"], undefined, "empty = back to the plan");
   const rows = yearRows(g); assert.equal(rows[0].length, 14); assert.equal(rows[rows.length - 1][0], "Free");
+});
+t("1B goals first: each goal's months, and the months it runs short", () => {
+  const pots2 = { pots: [...pots.pots, { id: "umrah", name: "Umrah", kind: "other", target: 90000, by: "2026-12", saved: 0, log: [] }] };
+  const g = yearGrid({ ledger, life, pots: pots2, plan: { cells: {} }, now }), y = goalsOfYear(g, now);
+  const u = y.goals.find((x) => x.id === "umrah"), tr = y.goals.find((x) => x.id === "trip");
+  assert.equal(u.name, "Umrah"); assert.equal(u.monthly, 30000); assert.deepEqual(u.months, [9, 10, 11]);
+  assert.equal(tr.monthly, 4000); assert.deepEqual(y.coming, [9, 10, 11]);
+  assert.ok(u.tight.length > 0, "90k in 3 months is more than this salary leaves: the plan says which months run short");
+  assert.equal(y.freeAvg, Math.round((g.free[9] + g.free[10] + g.free[11]) / 3));
 });
 console.log(`v870yearplan: ${n} checks passed`);

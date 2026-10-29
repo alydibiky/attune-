@@ -14,7 +14,7 @@ export const HUBS = [
   ["home", "Home", "home", ["home", "missions", "automations", "chat"]],
   // v8.2 (Ali: "convert is duplicated, remove it from one page"): the converter lives in Tools only (Files & Converter)
   // v8.5 (W3): Ask a PDF and the Library are one "Documents" tab — its switch: Many books · One file
-  ["students", "Students", "coach", ["coach", "booklib", "slides", "cv"]],
+  ["students", "Students", "coach", ["coach", "slides", "cv"]],
   // v8.5 (W1): Follow-ups is its own place (reminders aren't money); its parts are chips on its one list (E2), no switch
   ["money", "Money", "money", ["money", "planner", "deal"]],
   ["followups", "Follow-ups", "timeline", ["timeline", "life", "family", "reminders", "radar", "guardian"]],
@@ -23,7 +23,8 @@ export const HUBS = [
   ["learn", "Daily", "learn", ["learn", "news"]],
   ["go", "Go", "travel", ["travel", "scout", "map", "metro"]],   // (v6.42 Ali: Metro right after Maps)
   // v8.5 (W2): one place for what you keep — Notes (Shelf) · Books & pages (Remember) · Mind
-  ["saved", "Saved", "shelf", ["shelf", "remember", "memory"]],
+  // v8.7 (Ali picked 4B "one Library"): Documents and Books & pages are one Library here — Books & PDFs · One file · Attune remembers
+  ["saved", "Saved", "shelf", ["shelf", "booklib", "memory"]],
   // v8.5 (R4): the Crane toolkit opens from Business → Fleet & rentals → More only
   ["tools", "Work", "business", ["business", "fleet", "field", "guide", "privacy"]],
   // v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools is its own place, not a tab of Work; "Ask (classic)" is gone
@@ -53,7 +54,7 @@ export const FULL = ["home", "fit", "map"];   // (v6.36: Business shows the Work
 // v8.2 (Ali picked 1A, 26 Oct): Follow-ups opens on ONE list by day (the timeline) — People & plans, Reminders, Dates, Chat X-Ray and the
 // Guardian are its parts; Money = Money · Follow-ups · Deal Check
 export const INSIDE = { life: "timeline", family: "timeline", reminders: "timeline", radar: "timeline", xray: "timeline", guardian: "timeline",
-  pdfchat: "booklib", recall: "memory" };   // v8.5: Documents = Many books · One file (W3); Mind · Recall (R2)
+  pdfchat: "booklib", remember: "booklib", recall: "memory" };   // v8.5: Documents = Many books · One file (W3); Mind · Recall (R2)
 /* v7.2 (Gemini's Area 1 mock-up, Ali sent it 24 Oct 2026): Money = Money · Follow-ups · Guardian · Deal Check. Follow-ups opens on
    People & plans (debts, installments, savings circles, the maid every Saturday) with Reminders · Timeline · Dates · Chat X-Ray in
    its switch; the Money Guardian is its own tab again. */

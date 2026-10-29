@@ -5,7 +5,7 @@
 import * as G from "./guardian.js";
 import { noteProUse } from "./trialuse.js";
 import React, { useEffect, useMemo, useState } from "react";
-import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCrossed, Car, LayoutGrid as AppWindow, BellRing, Trash2, RefreshCw, ExternalLink, ChevronRight, ArrowLeft, AlertTriangle, Check } from "lucide-react";
+import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCrossed, Car, LayoutGrid as AppWindow, BellRing, Trash2, RefreshCw, ExternalLink, ChevronRight, ArrowLeft, AlertTriangle, Check, X } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as A from "./agents.js";
 import { loadBooking } from "./agent-ui.jsx";
@@ -255,6 +255,47 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
   </div>;
 }
 
+/** v8.7 (Ali picked "A and B in a smart way"): the winner big, with why it wins; under it the others, each saying what it trades
+ *  ("+2,100 · rated 9.4"); and "Compare side by side" opens them as a table, the best of each row in green. */
+function BestFound({ a, small, openBest, skipBest }) {
+  const [table, setTable] = useState(false);
+  const c = A.compareOffers(a.best3, { below: a.below || 0 }), w = c.rows[0];
+  const far = (d) => (d == null ? "—" : d >= 1000 ? (d / 1000).toFixed(1) + " km" : d + " m");
+  const day = (o) => (o.checkin ? o.checkin.slice(5).replace("-", "/") + " → " + String(o.checkout || "").slice(5).replace("-", "/") : "—");
+  const tv = (x) => (x[1].a != null ? { a: Math.round(x[1].a).toLocaleString("en-US") } : x[1]);
+  const green = "text-[var(--c-acc)] font-black";
+  return <div className="space-y-2" data-testid="agent-best3">
+    <div className="flex items-baseline justify-between gap-2"><p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Best found")}</p>
+      {c.rows.length > 1 ? <button onClick={() => setTable(!table)} className="text-[12.5px] font-extrabold text-[var(--c-acc)] min-h-[36px]" data-testid="agent-compare" aria-expanded={table}>{table ? tr("Hide the table") : tr("Compare side by side")}</button> : null}</div>
+    {table ? <div className="overflow-x-auto rounded-[12px] border border-[var(--c-ln)]" data-testid="agent-compare-table">
+      <table className="w-full text-[12px] border-collapse">
+        <thead><tr><th className="text-start px-2 py-1.5"></th>{c.rows.map((r, k) => <th key={k} className="px-2 py-1.5 text-end font-extrabold max-w-[110px] truncate" dir="auto">{r.o.name || a.site}</th>)}</tr></thead>
+        <tbody>{[["Total", (r) => r.o.price, (v) => money(v), "price"], ["A night", (r) => r.f.perNight, (v) => (v == null ? "—" : money(v)), "perNight"], ["Days", (r) => r.o, day, null],
+          ["Walk", (r) => r.f.dist, far, "dist"], ["Rating", (r) => r.f.rating, (v) => (v == null ? "—" : v), "rating"]].filter(([l, get]) => l !== "A night" || c.rows.some((r) => r.f.perNight)).filter(([l, get]) => !["Walk", "Rating"].includes(l) || c.rows.some((r) => get(r) != null))
+          .map(([l, get, show, key]) => <tr key={l} className="border-t border-[var(--c-ln)]"><td className="px-2 py-1.5 font-bold c-sub">{tr(l)}</td>
+            {c.rows.map((r, k) => <td key={k} className={"px-2 py-1.5 text-end tabular-nums " + (key && get(r) != null && get(r) === c.best[key] ? green : "")}>{show(get(r))}</td>)}</tr>)}
+          <tr className="border-t border-[var(--c-ln)]"><td></td>{c.rows.map((r, k) => <td key={k} className="px-2 py-1.5 text-end"><button onClick={() => openBest(a, r.o)} className="text-[12px] font-extrabold text-[var(--c-acc)] min-h-[32px]" data-testid="agent-compare-open">{tr("Open")}</button></td>)}</tr></tbody>
+      </table></div>
+    : <>
+      <div className="rounded-[14px] border-2 border-[var(--c-acc)] px-3 py-2.5 space-y-1.5" data-testid="agent-best">
+        <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><p className="m-0 text-[15px] font-black" dir="auto">{w.o.name || a.site}</p>
+          <p className="m-0 text-[12px] c-sub" dir="auto">{[w.f.dist != null ? far(w.f.dist) : "", w.f.rating != null ? "★ " + w.f.rating : "", w.o.checkin ? day(w.o) + (w.f.nights ? " · " + tr("{n} nights", { n: w.f.nights }) : "") : ""].filter(Boolean).join(" · ") || (w.o.text || "").slice(0, 110)}</p></div>
+          <div className="text-end shrink-0"><b className="block tabular-nums text-[16px] text-[var(--c-acc)]">{money(w.o.price, a.currency)}</b>{w.f.perNight ? <span className="block text-[11px] c-sub tabular-nums">{money(w.f.perNight)} {tr("a night")}</span> : null}</div></div>
+        {c.why.length ? <div className="flex flex-wrap gap-1" data-testid="agent-why">{c.why.map(([t, v], k) => <span key={k} className={U.tag("green")}>{tr(t, v)}</span>)}</div> : null}
+        <div className="flex gap-1.5"><button onClick={() => openBest(a, w.o)} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-best-open"><ExternalLink size={13} />{tr("Open this offer")}</button>
+          <button onClick={() => skipBest(a, w.o)} className={small} data-testid="agent-best-skip">{tr("Not this one")}</button></div>
+      </div>
+      {c.rows.slice(1).map((r, k) => <div key={k} className="rounded-[12px] border border-[var(--c-ln)] px-3 py-2 flex items-center gap-2" data-testid="agent-best">
+        <div className="min-w-0 flex-1"><p className="m-0 text-[13.5px] font-extrabold truncate" dir="auto">{r.o.name || a.site}</p>
+          <p className="m-0 text-[11.5px] c-sub" data-testid="agent-trade">{c.trade[k].map((x) => tr(x[0], tv(x))).join(" · ")}</p></div>
+        <b className="tabular-nums text-[13.5px] shrink-0">{money(r.o.price)}</b>
+        <button onClick={() => openBest(a, r.o)} className="w-10 h-10 rounded-[12px] grid place-items-center border border-[var(--c-ln)] shrink-0" aria-label={tr("Open it")} data-testid="agent-best-open"><ExternalLink size={14} /></button>
+        <button onClick={() => skipBest(a, r.o)} className="w-10 h-10 rounded-[12px] grid place-items-center c-sub shrink-0" aria-label={tr("Not this one")} data-testid="agent-best-skip"><X size={15} /></button>
+      </div>)}
+    </>}
+  </div>;
+}
+
 function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle, openBest, skipBest }) {
   const small = "min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold inline-flex items-center gap-1.5 border border-[var(--c-ln)]";
   const ctl = <span className="flex gap-1.5 ms-auto"><button onClick={() => toggle(a)} className={small} data-testid="agent-toggle">{a.on ? tr("Pause") : tr("Resume")}</button>
@@ -274,16 +315,7 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
         {/* v8.2 (Ali picked 2A): its plan, step by step */}
         <div className="mt-2 space-y-0.5" data-testid="agent-plan">{A.planSteps(a).map((p, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={p.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{p.done ? "✓" : "⏳"}</span><span className={p.done ? "" : "c-sub"}>{T(p.en, p.v)}</span></p>)}</div>
       </div></div>
-      {(a.best3 || []).length ? <div className="space-y-1.5" data-testid="agent-best3">
-        <p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Best 3 right now")}</p>
-        {a.best3.map((o, k) => <div key={k} className="rounded-[12px] border border-[var(--c-ln)] px-3 py-2" data-testid="agent-best">
-          <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><p className="m-0 text-[13.5px] font-extrabold" dir="auto">{o.name || a.site}</p>
-            <p className="m-0 text-[11.5px] c-sub line-clamp-2" dir="auto">{[o.checkin ? o.checkin + " → " + o.checkout : "", o.text && o.text !== o.name ? o.text.replace(o.name, "").slice(0, 110) : ""].filter(Boolean).join(" · ")}</p></div>
-            <b className="tabular-nums text-[14px] shrink-0">{money(o.price, a.currency)}</b></div>
-          <div className="flex gap-1.5 mt-1.5"><button onClick={() => openBest(a, o)} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-best-open"><ExternalLink size={13} />{tr("Open it")}</button>
-            <button onClick={() => skipBest(a, o)} className={small} data-testid="agent-best-skip">{tr("Not this one")}</button></div>
-        </div>)}
-      </div> : null}
+      {(a.best3 || []).length ? <BestFound a={a} small={small} openBest={openBest} skipBest={skipBest} /> : null}
       <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => checkNow(a)} disabled={busy} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-check"><RefreshCw size={14} className={busy ? "animate-spin" : ""} />{tr("Check now")}</button>
         <button onClick={() => openApp({ pkg: /booking\.com/.test(a.url) ? "com.booking" : /amazon\./.test(a.url) ? "com.amazon.mShop.android.shopping" : "", label: a.site, web: a.url }, a.url)} className={small} data-testid="agent-open"><ExternalLink size={14} />{T("Open {app}", { app: a.site })}</button>{ctl}</div>
     </div>;

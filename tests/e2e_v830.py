@@ -77,6 +77,13 @@ with sync_playwright() as p:
     best = page.locator("[data-testid=agent-best]")
     check(best.count() == 3 and "Swissotel" in best.nth(0).inner_text() and "41,800" in best.nth(0).inner_text(), "the best 3, cheapest first, one per hotel with its days: " + best.nth(0).inner_text()[:100].replace("\n", " · "))
     check("offers compared" in page.locator("[data-testid=agent-plan]").inner_text(), "the plan says how many offers were compared")
+    # v8.7 (Ali picked "A and B in a smart way"): the winner with why, the others with what they trade, a table on a tap
+    check("Cheapest" in page.inner_text("[data-testid=agent-why]") and "150 m" in best.nth(0).inner_text(), "the winner says why it wins (Cheapest) and how far it is")
+    check(page.locator("[data-testid=agent-trade]").count() == 2 and "+" in page.locator("[data-testid=agent-trade]").first.inner_text(), "each other one says what it costs more: " + page.locator("[data-testid=agent-trade]").first.inner_text())
+    page.click("[data-testid=agent-compare]"); page.wait_for_timeout(150)
+    tb = page.locator("[data-testid=agent-compare-table]")
+    check(tb.count() == 1 and "Swissotel" in tb.inner_text() and "Walk" in tb.inner_text() and "Rating" in tb.inner_text(), "Compare side by side: total, a night, days, walk, rating")
+    page.click("[data-testid=agent-compare]"); page.wait_for_timeout(150)
     best.nth(0).locator("[data-testid=agent-best-skip]").click(); page.wait_for_timeout(200)
     check(page.locator("[data-testid=agent-best]").count() == 2 and "Swissotel" not in page.locator("[data-testid=agent-best3]").inner_text(), "Not this one takes it off")
     shot(page, "v830-agent")

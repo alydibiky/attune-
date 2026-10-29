@@ -128,3 +128,19 @@ export function yearRows(g, ar = false) {
   rows.push([ar ? "الحر" : "Free", ...g.free, g.totals.free]);
   return rows;
 }
+
+/** v8.7 (Ali picked 1B: "goals first, Attune spreads them"): each goal as the year sees it — how much a month, from which month
+ *  to which, and the months where the plan runs short (free < 0) while it is saving. → [{ id, name, monthly, first, last,
+ *  months: [k…], tight: [k…], total }] and the average free money a month after the goals (coming months only). */
+export function goalsOfYear(g, now = Date.now()) {
+  const sav = (g.groups.find((x) => x.id === "savings") || { rows: [] }).rows;
+  const goals = sav.filter((r) => r.id.startsWith("pot:")).map((r) => {
+    const months = r.cells.map((v, k) => (v > 0 && !r.actual[k] ? k : -1)).filter((k) => k >= 0);
+    return { id: r.id.slice(4), name: r.label.replace(/^(Save: |تحويش: )/, ""), monthly: months.length ? Math.max(...months.map((k) => r.cells[k])) : 0,
+      first: months.length ? months[0] : -1, last: months.length ? months[months.length - 1] : -1, months, tight: months.filter((k) => g.free[k] < 0), total: r.total };
+  });
+  const later = g.nowIdx < 0 && g.year > new Date(now).getFullYear();
+  const coming = g.months.map((_, k) => k).filter((k) => (g.nowIdx >= 0 ? k >= g.nowIdx : later));
+  const freeAvg = coming.length ? Math.round(coming.reduce((a, k) => a + g.free[k], 0) / coming.length) : 0;
+  return { goals, freeAvg, coming };
+}

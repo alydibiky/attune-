@@ -54,7 +54,7 @@ export function LibraryPage({ knowledge, nativeCall, flash, askChat }) {
   const ask = (s) => askChat && askChat(s.chapters ? tr("In “{t}”, what happens in chapter 1?", { t: s.title.replace(/\.[a-z0-9]{2,4}$/i, "") }) : tr("In “{t}”, ", { t: s.title.replace(/\.[a-z0-9]{2,4}$/i, "") }));
   return (
     <div className={page + " rounded-[20px] p-4 space-y-4"} data-testid="library-page">
-      <div><h2 className={h1 + " flex items-center gap-2"}><BookOpen size={20} className="c-acc" />{tr("Remember")}</h2>
+      <div><h2 className={h1 + " flex items-center gap-2"}><BookOpen size={20} className="c-acc" />{tr("Attune remembers")}</h2>
         <p className="c-sub m-0 mt-1">{tr("Give Attune a book, an article or the news to remember. Then ask Chat about it any time — even “what happens in chapter 3?”.")}</p></div>
       <div className="flex flex-wrap gap-2">
         <button className={btnP} disabled={!!busy} onClick={() => fileRef.current && fileRef.current.click()} data-testid="lib-add-file"><Upload size={15} />{tr("A book or file")}</button>

@@ -150,7 +150,14 @@ export function potIntent(text, now = Date.now()) {
   if (mo >= 0) { const y = /\b(20\d\d)\b/.exec(t); const yy = y ? +y[1] : mo < n.getMonth() || (mo === n.getMonth()) ? n.getFullYear() + 1 : n.getFullYear(); by = `${yy}-${String(mo + 1).padStart(2, "0")}`; }
   else { const inM = /\bin (\d{1,2}) months?\b|(?:في|خلال|على) (\d{1,2}) (?:شهر|شهور)/i.exec(t); if (inM) { const d = new Date(n.getFullYear(), n.getMonth() + +(inM[1] || inM[2]) - 1, 1); by = iso(d).slice(0, 7); } }
   const ar = /[؀-ۿ]/.test(t);
+  // v8.7 (Ali picked 1B, goals first): "save 60k for Umrah by Sep" → the goal is called "Umrah", not "Savings"
+  let own = "";
+  if (kind === "other") {
+    const m = /\bfor (?:a |an |the |my |our )?([^\d,.]+?)(?=\s+(?:by|in|before|until|till|every|each|a month|per)\b|\s*$|[,.])/i.exec(t) || /(?:عشان|علشان)\s+([؀-ۿ ]+?)(?=\s+(?:قبل|في|خلال|على|كل|بحلول)\b|\s*$)/.exec(t) || /(?:^|\s)لل([؀-ۿ]{2,}(?:\s[؀-ۿ]{2,})?)(?=\s+(?:قبل|في|خلال|على|كل|بحلول)|\s*$)/.exec(t);
+    if (m) { const w = m[1].trim(); if (w && w.length <= 30) own = /^[؀-ۿ]/.test(w) && !/^ال/.test(w) && m[0].includes("لل") ? "ال" + w : w.charAt(0).toUpperCase() + w.slice(1); }
+  }
+  const nameOf = own || NAMES[kind][ar ? 1 : 0];
   // v8.7 "4000 a month" / «4000 كل شهر» / «4000 في الشهر»: a fixed monthly amount (the year = ×12), no target needed
-  if (/\b(a|per|every|each) month\b|\bmonthly\b|كل شهر|في الشهر|شهريا|شهرياً/i.test(t) && target > 0) return { name: NAMES[kind][ar ? 1 : 0], kind, target: 0, per: target, by };
-  return { name: NAMES[kind][ar ? 1 : 0], kind, target, by };
+  if (/\b(a|per|every|each) month\b|\bmonthly\b|كل شهر|في الشهر|شهريا|شهرياً/i.test(t) && target > 0) return { name: nameOf, kind, target: 0, per: target, by };
+  return { name: nameOf, kind, target, by };
 }

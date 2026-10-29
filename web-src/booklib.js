@@ -122,3 +122,29 @@ export function roundsOf(found, budget, maxRounds = 8) {
 }
 /** The phone's search result → passages with short titles (the same shape as passages()). */
 export const fromNative = (r) => ((r && r.passages) || []).map((p) => ({ book: String(p.book), title: titleOf(p.title), topic: p.topic || "", page: +p.page || 0, text: String(p.text || ""), score: +p.score || 0 }));
+
+/* v8.7 (Ali picked 4B "one Library"): a book you switch on is also read by Chat and the voice — not copied (books can be
+   gigabytes): Chat searches just those books with the same index (BookShelf on the phone, docqa here) and quotes [Book, p. N]. */
+export const ANSWER_KEY = "attune:booklib:answer:v1";
+const ls = () => (typeof localStorage !== "undefined" ? localStorage : null);
+export function answerIds(st = ls()) { try { const v = JSON.parse((st && st.getItem(ANSWER_KEY)) || "[]"); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } }
+export function setAnswerFrom(id, on, st = ls()) {
+  const k = String(id), cur = answerIds(st).filter((x) => x !== k), next = on ? [...cur, k] : cur;
+  try { st && st.setItem(ANSWER_KEY, JSON.stringify(next.slice(-200))); } catch (e) {}
+  return next;
+}
+const STOP = /^(the|and|for|with|that|this|what|which|when|where|who|how|why|does|did|about|from|into|tell|me|you|your|are|was|were|is|in|on|of|to|a|an|it|في|من|على|عن|الى|إلى|ما|ماذا|ايه|إيه|هو|هي|ده|دي|اللي|ازاي|إزاي|ليه|مين)$/i;
+const fold = (t) => String(t || "").toLowerCase().normalize("NFKD").replace(/[\u064B-\u0652\u0640]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+/** Only passages that really are about the question: at least two of its words (or its one long word) are in the passage. */
+export function onTopic(question, passages) {
+  const ws = [...new Set(fold(question).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 3 && !STOP.test(w)))];
+  if (!ws.length) return [];
+  const need = ws.length === 1 ? 1 : 2;
+  return (passages || []).filter((p) => { const t = fold(p.text); return ws.filter((w) => t.includes(w)).length >= need; });
+}
+/** The block Chat puts before the question: the passages with their book and page, and the rule to cite them. */
+export function libraryBlock(found) {
+  if (!found || !found.length) return "";
+  return "From the user's own Library (books they trust). Use these passages where they answer the question and cite each fact as [Book, p. N]; don't invent pages.\n"
+    + found.map((p) => `[${p.title}, p. ${p.page}] ${String(p.text).replace(/\s+/g, " ").trim()}`).join("\n") + "\n\n";
+}
