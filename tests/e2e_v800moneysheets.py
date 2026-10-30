@@ -107,6 +107,18 @@ with sync_playwright() as p:
     page.click("[data-testid=zakat-calc-sheep]"); page.wait_for_selector("[data-testid=money-zakatcalc-sheet]")
     page.fill("[data-testid=zcalc-head]", "130"); page.wait_for_timeout(150)
     check("2 ×" in page.inner_text("[data-testid=zcalc-result]"), "the calculators are back: 130 sheep → 2 sheep due: %s" % page.inner_text("[data-testid=zcalc-result]").replace("\n", " "))
+    # v8.8 (Ali: "the Zakāt rulings for everything, like in the old app"): conditions + the ruling's evidence, no technical line
+    check("free-grazing" in page.inner_text("[data-testid=zcalc-note]") and "«فِي أَرْبَعِينَ شَاةً شَاةٌ" in page.inner_text("[data-testid=zakat-evidence-sheep]") and "Bukhārī" in page.inner_text("[data-testid=zakat-evidence-sheep]"),
+          "the sheep calculator: its conditions, the hadith and its source")
+    check("engine" not in page.inner_text("[data-testid=money-zakatcalc-sheet]"), "no technical line about the engine")
+    page.click("[data-testid=sheet-close]"); page.wait_for_timeout(300)
+    page.click("[data-testid=zakat-calc-rikaz]"); page.wait_for_selector("[data-testid=money-zakatcalc-sheet]")
+    check(page.locator("[data-testid=zcalc-empty]").count() == 1 and "niṣāb" not in page.inner_text("[data-testid=zcalc-result]"), "rikāz with an empty box: “type the numbers”, not “below the niṣāb” (it has none)")
+    page.fill("[data-testid=zcalc-value]", "10000"); page.wait_for_timeout(150)
+    check("2,000" in page.inner_text("[data-testid=zcalc-result]"), "rikāz 10,000 → 2,000 (a fifth)")
+    page.click("[data-testid=sheet-close]"); page.wait_for_timeout(300)
+    page.click("[data-testid=zakat-rulings-open]"); page.wait_for_selector("[data-testid=money-zakatrules-sheet]")
+    check(page.locator("[data-testid^=zakat-evidence-]").count() == 14, "Rulings & sources: all 14 rulings with their evidence")
     page.click("[data-testid=sheet-close]"); page.wait_for_timeout(300)
     # a transaction: open it from the full ledger, change the amount, then delete it
     page.click("[data-testid=money-more]"); page.click("[data-testid=money-open-ledger]"); page.wait_for_selector("[data-testid=money-list]")

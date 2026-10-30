@@ -264,6 +264,9 @@ export function ZakatPane({ L, snap, wide, openLedger }) {
     <Card title={tr("More Zakāt calculators")} testid="zakat-calcs">
       <div className="grid grid-cols-2 gap-2">{ZC_KINDS.map(([k, e, en, a]) => <button key={k} onClick={() => openLedger("zakat-calc:" + k)} className="min-h-[52px] rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 flex items-center gap-2 text-start text-[13.5px] font-bold" data-testid={"zakat-calc-" + k}><span className="text-[20px]">{e}</span>{getLang() === "ar" ? a : tr(en)}</button>)}</div>
     </Card>
+    {/* v8.8 (Ali: "the Zakāt rulings for everything, like in the old app") */}
+    <button onClick={() => openLedger("zakat-rulings")} className="w-full min-h-[52px] rounded-[16px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 flex items-center justify-between gap-2 text-start" data-testid="zakat-rulings-open">
+      <span><b className="block text-[14px]">📖 {tr("Zakāt rulings & sources")}</b><span className="block text-[12px] c-sub">{tr("Niṣāb, the year, the rate, livestock, crops, jewellery, the eight recipients — with the evidence")}</span></span><span className="c-acc text-[18px]">›</span></button>
     <Card title={tr("Paid")} right={<span className="text-[12.5px] font-bold c-sub tabular-nums">{T("last 12 months: {a}", { a: amt(z.paidYear, cur) })}</span>} testid="zakat-paid">
       {z.payments.slice(0, 4).map((p) => <Row key={p.id || p.date + p.amount} icon="☪" title={p.to || tr("Zakāt")} sub={dayLabel(p.date)} end={amt(p.amount, cur)} onClick={() => openLedger("home")} testid="zakat-row" />)}
       {!z.payments.length ? <p className="text-[13px] c-sub m-0 py-2">{tr("No payment recorded yet.")}</p> : null}</Card>

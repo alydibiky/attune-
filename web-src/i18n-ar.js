@@ -7797,4 +7797,10 @@ export const AR = {
   "Open Recall": "افتح الذاكرة",
   "Nothing worth your time right now — I'll tell you when something is.": "مفيش حاجة تستاهل وقتك دلوقتي — هقولك لما يبقى فيه.",
   "Your people, places and things — everything about each one": "ناسك وأماكنك وحاجاتك — كل حاجة عن كل واحد",
+  "Evidence": "الدليل",
+  "Zakāt rulings & sources": "أحكام الزكاة ومصادرها",
+  "Each ruling with its evidence from the Qur'an and Sunnah and where it is taken from (Islamweb, Ibn Baz, al-Durar al-Saniyya). Your school in Zakāt settings decides where the schools differ.": "كل حكم بدليله من القرآن والسنة ومصدره (إسلام ويب، ابن باز، الدرر السنية). المذهب اللي اخترته في إعدادات الزكاة بيحدد لما المذاهب تختلف.",
+  "Type the numbers above — the Zakāt due shows here.": "اكتب الأرقام فوق — والزكاة المستحقة هتظهر هنا.",
+  "The ruling and its evidence": "الحكم ودليله",
+  "Niṣāb, the year, the rate, livestock, crops, jewellery, the eight recipients — with the evidence": "النصاب، والحول، والمقدار، والأنعام، والزروع، والحلي، والمصارف الثمانية — بالدليل",
 };

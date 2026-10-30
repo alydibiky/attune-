@@ -336,9 +336,31 @@ export function ZakatSetSheet({ L, run, onClose }) {
       {debt === "year" ? <Field label={tr("Amount falling due this year")}><ZNum value={debtYear} set={setDebtYear} testid="zset-debtyear" /></Field> : null}
       {accs.length ? <Field label={tr("Accounts counted for Zakāt")}><div className="flex flex-col" data-testid="zset-accounts">{accs.map((a) => <ZCheck key={a.id} on={!excluded.has(a.id)} set={(on) => { const x = new Set(excluded); if (on) x.delete(a.id); else x.add(a.id); setEx(x); }} label={(a.emoji || "") + " " + a.name} />)}</div></Field> : null}
     </ZSec>
-    <p className="m-0 text-[12px] c-sub">{tr("These are only the inputs — the Zakāt engine (the rulings and the numbers) is unchanged and works out what is due.")}</p>
+    <Evidence k="jewelry" />
     <div className="sticky bottom-0 -mx-4 px-4 pt-2 pb-1 bg-[var(--c-surf)]"><Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go("zakat-set", { country, goldPremium: n(premium), goldPrice: n(goldPrice), madhhab, basis, mode, nisabCarat: +nisabCarat, jewelry: jew, jewelryGrams: n(jewG), jewelryKarat: +jewK,
       goldGrams: n(goldG), goldKarat: +goldK, silverPrice: n(silverP), silverGrams: n(silverG), anniversary: anniv || "", receivables: recv, debtPolicy: debt, debtYearAmount: n(debtYear), excluded: [...excluded] }, tr("Saved"))} /></div>
+  </Sheet>;
+}
+
+
+// v8.8 (Ali: "I want the Zakāt rulings for everything, like in the old app"): a ruling with its evidence — the text as the source
+// has it (Arabic), its meaning, and the source — the old ledger's own (zakatcalc.js EVIDENCE)
+function Evidence({ k, open: open0 = false }) {
+  const e = ZC.EVIDENCE.find((x) => x[0] === k); const [open, setOpen] = useState(open0); if (!e) return null;
+  return <div className="rounded-[14px] border border-[var(--c-ln)]" data-testid={"zakat-evidence-" + k}>
+    <button type="button" onClick={() => setOpen(!open)} className="w-full min-h-[44px] px-3 flex items-center justify-between gap-2 text-start" aria-expanded={open}>
+      <span className="text-[13.5px] font-extrabold">{ar() ? e[2] : tr(e[1])}</span><span className="text-[var(--c-acc)] text-[12px] font-extrabold shrink-0">{open ? "−" : tr("Evidence")}</span></button>
+    {open ? <div className="px-3 pb-3 space-y-1.5">
+      <p className="m-0 text-[15px] leading-loose font-semibold" dir="rtl" lang="ar">{e[3]}</p>
+      {!ar() ? <p className="m-0 text-[13px] italic c-sub">{tr(e[4])}</p> : null}
+      <p className="m-0 text-[12px] c-sub" dir="auto">{ar() ? e[5] : tr(e[6])}</p></div> : null}
+  </div>;
+}
+/** Money → Zakāt → "Rulings & sources": every ruling the Zakāt pages rest on, with its evidence (as in the old ledger). */
+export function ZakatRulingsSheet({ onClose }) {
+  return <Sheet title={tr("Zakāt rulings & sources")} onClose={() => onClose()} testid="money-zakatrules-sheet">
+    <p className="m-0 text-[12.5px] c-sub">{tr("Each ruling with its evidence from the Qur'an and Sunnah and where it is taken from (Islamweb, Ibn Baz, al-Durar al-Saniyya). Your school in Zakāt settings decides where the schools differ.")}</p>
+    {ZC.EVIDENCE.map((e) => <Evidence key={e[0]} k={e[0]} />)}
   </Sheet>;
 }
 
@@ -350,7 +372,9 @@ export function ZakatCalcSheet({ L, kind, onClose, nisab = 0 }) {
   const inp = (key, label) => <Field label={label}><input value={v[key] || ""} onChange={(e) => setV({ ...v, [key]: e.target.value })} inputMode="decimal" dir="ltr" className={U.inp} data-testid={"zcalc-" + key} /></Field>;
   const money = (x) => (Math.round(x * 100) / 100).toLocaleString(ar() ? "ar-EG-u-nu-latn" : undefined) + " " + cur;
   const animal = (key) => (ar() ? ZC.ANIMALS[key][1] : tr(ZC.ANIMALS[key][0]));
+  const note = ZC.NOTES[k[0]];
   return <Sheet title={k[1] + " " + (ar() ? k[3] : tr(k[2]))} onClose={() => onClose()} testid="money-zakatcalc-sheet">
+    {note ? <p className="m-0 text-[13px] leading-relaxed rounded-[12px] bg-[var(--c-bg)] px-3 py-2" data-testid="zcalc-note">{ar() ? note[1] : tr(note[0])}</p> : null}
     {["camels", "cattle", "sheep"].includes(k[0]) ? inp("head", tr("How many (grazing freely most of the year)")) : null}
     {k[0] === "crops" ? <>{inp("kg", tr("Harvest (kg)"))}<Field label={tr("Watered by")}><Pills value={v.rain === false ? "irr" : "rain"} onChange={(x) => setV({ ...v, rain: x === "rain" })} items={[["rain", tr("Rain or rivers — 10%")], ["irr", tr("Irrigation you pay for — 5%")]]} /></Field></> : null}
     {k[0] === "trade" ? <>{inp("stock", tr("Stock at its selling price"))}{inp("cash", tr("Business cash"))}{inp("owedToYou", tr("Money customers owe you"))}{inp("youOwe", tr("Money you owe suppliers"))}</> : null}
@@ -359,10 +383,12 @@ export function ZakatCalcSheet({ L, kind, onClose, nisab = 0 }) {
     <div className="rounded-[16px] bg-[var(--c-soft)] p-3.5" data-testid="zcalc-result">
       {r.options ? <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p>{r.options.map((o, i) => <p key={i} className="m-0 text-[17px] font-black">{i ? tr("or") + " " : ""}{o.map(([q, a]) => q + " × " + animal(a)).join(" + ")}</p>)}</>
         : r.noPrice ? <p className="m-0 text-[14px] font-bold">{tr("Add today's gold price in Zakāt settings first — the niṣāb comes from it.")}</p>
+        : r.empty ? <p className="m-0 text-[14px] font-bold c-sub" data-testid="zcalc-empty">{tr("Type the numbers above — the Zakāt due shows here.")}</p>
         : !r.due ? <p className="m-0 text-[15px] font-black">{tr("Below the niṣāb — nothing is due")}{r.need ? " · " + tr("{n} more to reach it", { n: r.unit === "kg" ? Math.round(r.need).toLocaleString() + " kg" : money(r.need) }) : ""}</p>
         : <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p><p className="m-0 text-[22px] font-black text-[var(--c-acc)] tabular-nums">{r.kg != null ? r.kg.toLocaleString() + " kg" : money(r.amount)}</p>{r.rate ? <p className="m-0 text-[12px] c-sub">{r.rate}%</p> : null}</>}
     </div>
-    <p className="m-0 text-[12px] c-sub">{tr("The rulings are the ledger's Zakāt engine's, unchanged.")}</p>
+    <div className="space-y-2" data-testid="zcalc-rulings"><p className={U.label + " m-0"}>{tr("The ruling and its evidence")}</p>
+      {(ZC.EVIDENCE_OF[k[0]] || []).map((e, i) => <Evidence key={e} k={e} open={i === 0} />)}</div>
   </Sheet>;
 }
 

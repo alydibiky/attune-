@@ -67,7 +67,7 @@ import { logTool } from "./toollog.js";   // v7.8 the Tools report
 import { ToolsHub, FamilyReport, FamilySeeAll, StudioOffDevice } from "./tools-hub-ui.jsx";
 const wordCount = (s) => String(s || "").trim().split(/\s+/).filter(Boolean).length;
 import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES, panesFor, AccountsPane, BillsPane, ZakatPane, MoneyHead, MoneyCard } from "./money-pages-ui.jsx";
-import { AccountSheet, BillSheet, TxSheet, TxListPane, GoalsPane, DebtSheet, ZakatPaySheet, ZakatSetSheet, ZakatCalcSheet, LedgerSettings } from "./money-sheets-ui.jsx";
+import { AccountSheet, BillSheet, TxSheet, TxListPane, GoalsPane, DebtSheet, ZakatPaySheet, ZakatSetSheet, ZakatCalcSheet, ZakatRulingsSheet, LedgerSettings } from "./money-sheets-ui.jsx";
 import { sheetCats as moneyCats, zakatPage } from "./money-pages.js";   // v7.6 Money's bottom bar
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { categorise } from "./paylog.js";
@@ -6482,7 +6482,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     if (s === "debt") return setMsheet({ k: "debt" });
     if (s === "zakat-pay") return setMsheet({ k: "zakat-pay" });
     if (s === "zakat-settings") return setMsheet({ k: "zakat-set" });
-    if (s.startsWith("zakat-calc:")) return setMsheet({ k: "zakat-calc", id: s.slice(11) });   // v8.7 the 7 calculators
+    if (s.startsWith("zakat-calc:")) return setMsheet({ k: "zakat-calc", id: s.slice(11) });
+    if (s === "zakat-rulings") return setMsheet({ k: "zakat-rulings" });   // v8.7 the 7 calculators
     if (s === "settings") { setView("settings"); return; }
     if (MONEY_PANES.some((x) => x[0] === s && s !== "home")) return setPane(s);
     setListAcc(null); setView("list");
@@ -6596,7 +6597,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       {addOpen ? <AddSheet L={ledgerNow} prefill={addPrefill} onSave={(t) => { setAddPrefill(null); addFromSheet(t); }} onDebt={() => openLedger("debt")} onClose={() => { setAddOpen(false); setAddPrefill(null); }} /> : null}
       {msheet ? (() => { const close = (msg) => { setMsheet(null); if (msg) flash(msg); setTimeout(() => setVer((x) => x + 1), 200); }; const P = { L: ledgerNow, run: runDo, onClose: close, id: msheet.id };
         return msheet.k === "account" ? <AccountSheet {...P} /> : msheet.k === "bill" ? <BillSheet {...P} /> : msheet.k === "tx" ? <TxSheet {...P} /> : msheet.k === "debt" ? <DebtSheet {...P} />
-          : msheet.k === "zakat-pay" ? <ZakatPaySheet {...P} /> : msheet.k === "zakat-set" ? <ZakatSetSheet {...P} /> : msheet.k === "zakat-calc" ? <ZakatCalcSheet {...P} kind={msheet.id} nisab={(() => { try { const zs = zakatPage(ledgerNow, snapRef.current || snapshot); return (zs && zs.status && zs.status.nisab) || 0; } catch (e) { return 0; } })()} /> : null; })() : null}
+          : msheet.k === "zakat-pay" ? <ZakatPaySheet {...P} /> : msheet.k === "zakat-set" ? <ZakatSetSheet {...P} /> : msheet.k === "zakat-rulings" ? <ZakatRulingsSheet {...P} /> : msheet.k === "zakat-calc" ? <ZakatCalcSheet {...P} kind={msheet.id} nisab={(() => { try { const zs = zakatPage(ledgerNow, snapRef.current || snapshot); return (zs && zs.status && zs.status.nisab) || 0; } catch (e) { return 0; } })()} /> : null; })() : null}
       {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "biz-invoices") { setMoreOpen(false); if (goTo) { goTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "books" })), 80); } return; } openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
