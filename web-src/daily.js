@@ -397,8 +397,8 @@ export function lessonNotice(c) {
   const n = next ? next.n : nextIndex(c);
   const title = next ? next.title : c.plan[n] || "";
   const cards = cardsDue(c, nextAt(c.time) + 60000).length;
-  const extra = (quizDue(c) ? (c.lang === "ar" ? " — ومعه اختبار قصير" : " — and a short quiz") : "") + (cards ? (c.lang === "ar" ? ` · ${cards === 1 ? "بطاقة واحدة" : cards + " بطاقات"} للمراجعة` : ` · ${cards} card${cards === 1 ? "" : "s"} to review`) : "");
-  return { title: `${c.topic} · ${c.lang === "ar" ? "الدرس" : "Lesson"} ${n + 1}`, body: title ? title + extra : (c.lang === "ar" ? "درس اليوم جاهز" : "Today's lesson is waiting") + extra };
+  const extra = (quizDue(c) ? (c.lang === "ar" ? " — ومعه اختبار قصير" : tr(" — and a short quiz")) : "") + (cards ? (c.lang === "ar" ? ` · ${cards === 1 ? "بطاقة واحدة" : cards + " بطاقات"} للمراجعة` : ` · ${cards} card${cards === 1 ? "" : "s"} to review`) : "");
+  return { title: `${c.topic} · ${c.lang === "ar" ? "الدرس" : tr("Lesson")} ${n + 1}`, body: title ? title + extra : (c.lang === "ar" ? "درس اليوم جاهز" : tr("Today's lesson is waiting")) + extra };
 }
 
 // ---- news -------------------------------------------------------------------------------------
@@ -429,8 +429,8 @@ export function digestMessages(topic, items, { now = Date.now() } = {}) {
   const ar = topic.lang === "ar";
   return [
     { role: "system", content: `You write a short daily news digest about "${topic.query}" from the articles below ONLY. Today is ${new Date(now).toDateString()}.
-Rules: use only facts stated in the articles; never add facts from memory; every bullet ends with its source numbers like [2] or [1][4]; if articles disagree, say so; attribute claims to whoever made them and keep the wording neutral — no opinions of your own; skip articles that are not really about "${topic.query}". ${ar ? "اكتب بالعربية." : "Write in English."}
-Format: a one-line headline summary in bold, then 3–6 bullets (most important first), then — only if something is scheduled — a line starting "${ar ? "القادم:" : "Coming up:"}". No other text. If none of the articles is really about the topic, reply exactly: NOTHING NEW` },
+Rules: use only facts stated in the articles; never add facts from memory; every bullet ends with its source numbers like [2] or [1][4]; if articles disagree, say so; attribute claims to whoever made them and keep the wording neutral — no opinions of your own; skip articles that are not really about "${topic.query}". ${ar ? "اكتب بالعربية." : tr("Write in English.")}
+Format: a one-line headline summary in bold, then 3–6 bullets (most important first), then — only if something is scheduled — a line starting "${ar ? "القادم:" : tr("Coming up:")}". No other text. If none of the articles is really about the topic, reply exactly: NOTHING NEW` },
     { role: "user", content: items.map((it, i) => `[${i + 1}] ${it.title}${it.source ? " — " + it.source : ""}${it.date ? " (" + new Date(it.date).toISOString().slice(0, 16).replace("T", " ") + " UTC)" : ""}\n${it.text || ""}`).join("\n\n") },
   ];
 }
@@ -448,7 +448,7 @@ export function addDigest(t, d) {
 export function newsNotice(t) {
   const d = t.digests[0];
   const head = d && d.text ? clean(String(d.text).split("\n")[0].replace(/\*+/g, ""), 140) : "";
-  return { title: `${t.query} · ${t.lang === "ar" ? "أخبار اليوم" : "today's news"}`, body: head && d.day === dayKey() ? head : (t.lang === "ar" ? "افتح لجمع أخبار آخر 24 ساعة" : "Tap to gather the last 24 hours") };
+  return { title: `${t.query} · ${t.lang === "ar" ? "أخبار اليوم" : tr("today's news")}`, body: head && d.day === dayKey() ? head : (t.lang === "ar" ? "افتح لجمع أخبار آخر 24 ساعة" : tr("Tap to gather the last 24 hours")) };
 }
 
 /* ---- v6.34 (Ali): every lesson shows a diagram AND flashcards; a course is not stuck at 30 lessons ---------------------------- */
@@ -636,7 +636,7 @@ export function changeMessages(th, lang = "en") {
   const [d1, d0] = th.days;
   const list = [...(th.byDay[d0] || []).map((x) => ({ ...x, when: "before" })), ...(th.byDay[d1] || []).map((x) => ({ ...x, when: "latest" }))];
   return { items: list, messages: [
-    { role: "system", content: `Say what is NEW in the latest articles compared with the earlier ones, about one news story. Use ONLY the articles. 2–4 bullets, most important first, each ending with its source numbers like [3]. If sources disagree or tell it differently, say who says what. Neutral wording, no opinions. ${lang === "ar" ? "اكتب بالعربية المصرية البسيطة." : "Write in English."} If nothing is really new, reply exactly: NOTHING NEW` },
+    { role: "system", content: `Say what is NEW in the latest articles compared with the earlier ones, about one news story. Use ONLY the articles. 2–4 bullets, most important first, each ending with its source numbers like [3]. If sources disagree or tell it differently, say who says what. Neutral wording, no opinions. ${lang === "ar" ? "اكتب بالعربية المصرية البسيطة." : tr("Write in English.")} If nothing is really new, reply exactly: NOTHING NEW` },
     { role: "user", content: list.map((x, i) => `[${i + 1}] (${x.when === "latest" ? d1 : d0}) ${x.title}${x.source ? " — " + x.source : ""}\n${x.text || ""}`).join("\n\n") },
   ] };
 }

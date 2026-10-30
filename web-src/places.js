@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v5.32: "where is the nearest …" → the map ------------------------------------------------
    Ali in Instant: "I want to go to fuel up and I am at Emerald Park compound, what shall I do"
    → the answer "Go to the nearest fuel station" helps nobody. A phone model can't know what is
@@ -31,6 +32,6 @@ export function placeFor(text) {
     || t.match(/(?:انا|أنا)\s+(?:في|عند)\s+([^\s،.؟?][^،.؟?\n]{2,40}?)(?=\s*(?:دلوقتي|،|\.|؟|\?|$)|\s+و)/);   // «و» only as its own word («كمبوند» has a و inside)
   const near = at ? at[1].trim() : "";
   const what = ar ? k[2] : k[1];
-  const q = near ? what + (ar ? " قريب من " : " near ") + near : what + (ar ? " قريبة" : " near me");
+  const q = near ? what + (ar ? " قريب من " : tr(" near ")) + near : what + (ar ? " قريبة" : tr(" near me"));
   return { what, near, query: q, url: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q) };
 }

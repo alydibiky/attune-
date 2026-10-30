@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.37 (upgrade W3): voice site report — speak it on site (Arabic or English), add photos; every photo is stamped
    with its time and place (GPS when the phone gives it), and the finished record + photos become ONE PDF to send.
    Pure (tests/unit/v740sitereport.test.mjs); the page is site-ui.jsx. */
@@ -7,7 +8,7 @@ export const stampPlace = (lat, lon) => (lat == null || lon == null ? "" : `${(+
 /** The line printed under a photo: "Photo 2 · 18/10/2026 14:05 · 30.04442, 31.23571 · crack near the outrigger". */
 export function stampLine(p, i, lang = "en") {
   const where = stampPlace(p.lat, p.lon);
-  return [(lang === "ar" ? "صورة " : "Photo ") + (i + 1), stampTime(p.at), where, String(p.note || "").trim()].filter(Boolean).join(" · ");
+  return [(lang === "ar" ? "صورة " : tr("Photo ")) + (i + 1), stampTime(p.at), where, String(p.note || "").trim()].filter(Boolean).join(" · ");
 }
 const esc = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 /** The report + its photos → printable HTML (A4), two photos per row, each with its stamp; a map link per located photo. */

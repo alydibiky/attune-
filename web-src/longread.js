@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- Every message gets answered, however long (v5.27) --------------------------------------
    Ali: "I don't want to send anything, no matter how long, that doesn't get answered — even if
    it takes time on small models." A phone model has a fixed window (8k–32k tokens). Until now
@@ -95,7 +96,7 @@ export function continueMessages(system, question, soFar, ar, tailChars = 2600) 
     { role: "user", content: String(question || "").slice(0, 2500) },
     { role: "assistant", content: (soFar.length > tail.length ? "…" : "") + tail },
     { role: "user", content: ar ? "كمّل من المكان اللي وقفت عنده بالظبط. متكررش أي حاجة كتبتها، وابدأ بالكلمة اللي بعدها على طول."
-      : "Continue exactly where you stopped. Do not repeat anything you already wrote — start with the very next word." },
+      : tr("Continue exactly where you stopped. Do not repeat anything you already wrote — start with the very next word.") },
   ];
 }
 

@@ -13,6 +13,7 @@
    - Excel: every table as a sheet.
    All found from names (English and Arabic) and types; the owner can switch each rule off (sys.pro.off).
    Pure; unit tested in tests/unit/v732pro.test.mjs.                                                                   */
+import { tr } from "./i18n.js";
 import * as E from "./erp.js";
 
 export const BIN_DAYS = 7, SOON_DAYS = 7;
@@ -308,7 +309,7 @@ export function loadDemo(sys0, { today = new Date().toISOString().slice(0, 10), 
             : /product|item|ingredient|material|part|good|منتج|صنف|مادة|قطعة/i.test(nm) || /product|item|stock|ingredient|منتج|أصناف|مخزن/i.test(t.name) && t.fields.indexOf(f) <= 1 ? (ar ? ITEMS_AR : ITEMS)[i % 8]
             : /city|area|address|site|location|مدينة|منطقة|عنوان|موقع/i.test(nm) ? (ar ? CITIES_AR : CITIES)[(i * 3) % 6]
             : (t.fields.indexOf(f) <= 1 ? (ar ? t.name + " " : t.name.replace(/s$/i, "") + " ") + (i + 1) : ""); break;
-          case "longtext": v[f.id] = i % 3 === 0 ? (ar ? "ملاحظة تجريبية" : "Sample note") : ""; break;
+          case "longtext": v[f.id] = i % 3 === 0 ? (ar ? "ملاحظة تجريبية" : tr("Sample note")) : ""; break;
           case "phone": v[f.id] = "010" + String(10000000 + Math.floor(rnd() * 89999999)); break;
           case "email": v[f.id] = "demo" + (i + 1) + "@example.com"; break;
           case "number": v[f.id] = stockOpen.has(f.id) ? (i === 1 ? 4 : 20 + Math.floor(rnd() * 60)) : reorders.has(f.id) ? 15 : RE.qty.test(nm) ? (isIn ? 10 + Math.floor(rnd() * 20) : 1 + Math.floor(rnd() * 5)) : /year|سنة/i.test(nm) ? 2015 + Math.floor(rnd() * 10) : 1 + Math.floor(rnd() * 20); break;

@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v5.34: the facts sheet — figures copied from the web by CODE ---------------------------
    Ali: "the web search is still shit — make it a beast". The weak link was never the search: it
    was a small phone model re-typing dozens of figures from long pages ("1.2.93-metres",
@@ -128,7 +129,7 @@ export function factSheet(question, sources, ar = false, parts = null) {
     const m = found.get(id); if (!m) continue;
     const vals = [...m.values()].sort((a, b) => b.srcs.size - a.srcs.size).slice(0, 3);
     const cite = (s) => [...s].sort((a, b) => a - b).slice(0, 4).map((n) => "[" + n + "]").join("");
-    const cell = vals.map((v, j) => (j ? (ar ? "أو " : "or ") : "") + v.shown + (v.srcs.size >= 2 ? " ✓" : "") + " " + cite(v.srcs)).join(" · ");
+    const cell = vals.map((v, j) => (j ? (ar ? "أو " : tr("or ")) : "") + v.shown + (v.srcs.size >= 2 ? " ✓" : "") + " " + cite(v.srcs)).join(" · ");
     rows.push({ id, label: ar ? arl : en, cell, asked: asked.has(id), confirmed: vals[0].srcs.size >= 2 });
   }
   rows.sort((a, b) => (b.asked - a.asked) || (b.confirmed - a.confirmed));
@@ -148,15 +149,15 @@ export function factSheet(question, sources, ar = false, parts = null) {
   if (keepRows.length < 2 && !tables.length) return { md: "", rows: keepRows, tables };
   let md = "";
   if (keepRows.length >= 2) {
-    md += (ar ? "### الأرقام من المصادر (منقولة بالحرف)\n" : "### Key figures (copied exactly from the sources)\n") +
-      (ar ? "| البند | القيمة | \n| --- | --- |\n" : "| Spec | Value |\n| --- | --- |\n") +
+    md += (ar ? "### الأرقام من المصادر (منقولة بالحرف)\n" : tr("### Key figures (copied exactly from the sources)\n")) +
+      (ar ? "| البند | القيمة | \n| --- | --- |\n" : tr("| Spec | Value |\n| --- | --- |\n")) +
       keepRows.map((r) => "| " + r.label + " | " + r.cell.replace(/\|/g, "/") + " |").join("\n") + "\n" +
-      (keepRows.some((r) => /✓/.test(r.cell)) ? (ar ? "\n✓ = الرقم نفسه في موقعين أو أكثر.\n" : "\n✓ = the same figure on 2 or more sites.\n") : "");
+      (keepRows.some((r) => /✓/.test(r.cell)) ? (ar ? "\n✓ = الرقم نفسه في موقعين أو أكثر.\n" : tr("\n✓ = the same figure on 2 or more sites.\n")) : "");
   }
   for (const t of tables) {
     const w = Math.max(...t.rows.map((r) => r.length));
     const pad = (r) => { const c = r.map((x) => String(x || "—").replace(/\|/g, "/")); while (c.length < w) c.push("—"); return c; };
-    md += "\n" + (ar ? "#### جدول من " : "#### Table from ") + (t.site || "source") + " [" + t.src + "]\n" +
+    md += "\n" + (ar ? "#### جدول من " : tr("#### Table from ")) + (t.site || "source") + " [" + t.src + "]\n" +
       "| " + pad(t.rows[0]).join(" | ") + " |\n|" + Array(w).fill(" --- ").join("|") + "|\n" +
       t.rows.slice(1).map((r) => "| " + pad(r).join(" | ") + " |").join("\n") + "\n";
   }
@@ -237,9 +238,9 @@ export function headToHead(sources, [a, b], ar = false) {
   rows.sort((x, y) => y.both - x.both);
   const keep = rows.slice(0, 16);
   if (keep.filter((r) => r.both).length < 2) return { md: "", rows: [] };
-  const md = (ar ? "### وجهًا لوجه (الأرقام منقولة من المصادر)\n" : "### Head to head (figures copied from the sources)\n") +
-    "| " + (ar ? "البند" : "Spec") + " | " + a + " | " + b + " | " + (ar ? "الأفضل" : "Better") + " |\n| --- | --- | --- | --- |\n" +
+  const md = (ar ? "### وجهًا لوجه (الأرقام منقولة من المصادر)\n" : tr("### Head to head (figures copied from the sources)\n")) +
+    "| " + (ar ? "البند" : tr("Spec")) + " | " + a + " | " + b + " | " + (ar ? "الأفضل" : tr("Better")) + " |\n| --- | --- | --- | --- |\n" +
     keep.map((r) => "| " + r.label + " | " + r.a + " | " + r.b + " | " + (r.better || "") + " |").join("\n") + "\n" +
-    (ar ? "\n✓ = الرقم نفسه في موقعين أو أكثر. «الأفضل» للأرقام وحدها (الأقل للسعر والتسارع والاستهلاك)." : "\n✓ = the same figure on 2 or more sites. \"Better\" is by the number only (lower for price, 0–100 and fuel use).");
+    (ar ? "\n✓ = الرقم نفسه في موقعين أو أكثر. «الأفضل» للأرقام وحدها (الأقل للسعر والتسارع والاستهلاك)." : tr("\n✓ = the same figure on 2 or more sites. \"Better\" is by the number only (lower for price, 0–100 and fuel use)."));
   return { md, rows: keep };
 }

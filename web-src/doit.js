@@ -9,6 +9,7 @@
    apply(action, stores, ctx) → { stores: { key: newValue }, done: { en, ar }, open }   (pure; the page writes the keys, keeps the old
    values for Undo, and does what code can't do alone: schedule a reminder, file a note in Mind, log a period).
    Tests: tests/unit/v731doit.test.mjs, tests/e2e_v731doit.py.                                                                    */
+import { tr } from "./i18n.js";
 import { readMealText } from "./fitread.js";
 import { readLocal, CAT_WORDS, fixTypos } from "./yusr/logtext.js";
 import { potIntent, addPot, loadPots, planMonth, POTS_KEY } from "./planner.js";
@@ -72,7 +73,7 @@ function waterMl(t) {
   const m = WATER.exec(fold(t)); if (!m) return 0;
   const W = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, half: 0.5, "نص": 0.5, "واحد": 1, "اتنين": 2, "تلاته": 3, "اربعه": 4, "خمسه": 5, "كوبايتين": 2 };
   const q = m[1] == null ? 1 : W[m[1]] != null ? W[m[1]] : +m[1] || 1;
-  const unit = m[2] || (m[1] === "كوبايتين" ? "كوب" : "glass");
+  const unit = m[2] || (m[1] === "كوبايتين" ? "كوب" : tr("glass"));
   if (/^(l|litres?|liters?|لتر)$/.test(unit)) return Math.round(q * 1000);
   if (/^(ml|مل)$/.test(unit)) return Math.round(q);
   if (/^(bottles?|ازازه|ازايز)$/.test(unit)) return Math.round(q * 500);
@@ -130,9 +131,9 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   if (/\b(plan my (month|money|spending|budget)|my (monthly )?(plan|budget)|budget (for )?(this|the|next) month|monthly plan)\b|خطة الشهر|خطه الشهر|خطط (مصاريف|فلوس|ميزانية|ميزانيه)|ميزانية الشهر|ميزانيه الشهر|ظبطلي الشهر/i.test(t)) {
     const pl = planMonth({ ledger: stores.ledger, life: stores.life, pots: loadPots(), now }), ar = /[\u0600-\u06FF]/.test(t), f = (v) => num(v);
     const CAT_AR = { food: "الأكل", groceries: "البقالة", transport: "المواصلات", shopping: "التسوق", health: "الصحة", fun: "الخروج", coffee: "القهوة", gifts: "الهدايا", other: "حاجات تانية" };
-    const rows = [[ar ? "الدخل" : "Income", f(pl.income)], [ar ? "ثابت (فواتير وأقساط)" : "Fixed (bills, instalments)", f(pl.fixedTotal)],
-      ...pl.pots.map((p) => [(ar ? "تحويش: " : "Save: ") + p.name, f(p.monthly)]), ...pl.flexible.slice(0, 6).map((x) => [ar ? CAT_AR[x.cat] || x.cat : x.cat[0].toUpperCase() + x.cat.slice(1), f(x.plan)]),
-      [ar ? "حر تصرفه" : "Free to spend", f(pl.free)]];
+    const rows = [[ar ? "الدخل" : tr("Income"), f(pl.income)], [ar ? "ثابت (فواتير وأقساط)" : tr("Fixed (bills, instalments)"), f(pl.fixedTotal)],
+      ...pl.pots.map((p) => [(ar ? "تحويش: " : tr("Save: ")) + p.name, f(p.monthly)]), ...pl.flexible.slice(0, 6).map((x) => [ar ? CAT_AR[x.cat] || x.cat : x.cat[0].toUpperCase() + x.cat.slice(1), f(x.plan)]),
+      [ar ? "حر تصرفه" : tr("Free to spend"), f(pl.free)]];
     const tip = pl.tips[0] ? " " + pl.tips[0][0].replace(/\{(\w+)\}/g, (_, k) => f(pl.tips[0][1][k])) : "";
     return { actions: [], ask: { kind: "plan", en: `Your plan for ${pl.month}: ${f(pl.income)} in — ${f(pl.fixedTotal)} fixed, ${f(pl.potsTotal)} to savings goals, ${f(pl.flexTotal)} everyday, ${f(pl.free)} free.${tip}`,
       ar: `خطة ${pl.month}: دخل ${f(pl.income)} — ${f(pl.fixedTotal)} ثابت، ${f(pl.potsTotal)} للتحويش، ${f(pl.flexTotal)} مصاريف عادية، ${f(pl.free)} حر.`, rows, open: "money", sources: ["money", "life"] } };
@@ -146,7 +147,7 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   // v8.6 (the whole-app test): "meeting with Ali Tuesday 3pm", «ميعاد الدكتور بكرة الساعة 5» — an appointment with a day and a time
   // is a reminder even without "remind me" (it did nothing before)
   if (EVENT.test(t) && /\d/.test(latin(t)) && !MONEY_VERB.test(t) && !/\b(last|yesterday|ago|was)\b|امبارح|اللي فات|من يومين/i.test(t) && (/\b(today|tonight|tomorrow|mon|tue|wed|thu|fri|sat|sun)\w*\b|\d{1,2}\s*(am|pm|:\d{2})|الساعه|الساعة|النهارده|بكره|بكرة|السبت|الحد|الاحد|الاتنين|التلات|الاربع|الخميس|الجمعه|الجمعة/i.test(t))) {
-    const a = quickAction((/[\u0600-\u06ff]/.test(t) ? "فكرني " : "remind me ") + t, now);
+    const a = quickAction((/[\u0600-\u06ff]/.test(t) ? "فكرني " : tr("remind me ")) + t, now);
     if (a && a.kind === "reminder" && !a.problems.length) return { actions: [{ kind: "reminder", action: a }] };
   }
   if (PERIOD.test(t)) return { actions: [{ kind: "period", text: t }] };
@@ -201,14 +202,14 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     const mo = /^\s*(?:i\s+)?(?:paid|gave|returned|paid back)\s+(?:back\s+)?(?:([\d٠-٩][\d٠-٩,.]*)\s+(?:egp\s+|le\s+|pounds?\s+)?to\s+(?:the\s+|my\s+)?([\p{L}]+)|(?:the\s+|my\s+)?([\p{L}]+)\s+([\d٠-٩][\d٠-٩,.]*))|^\s*(?:سددت|رجعت|دفعت)\s+(?:ل|لـ)\s*([\p{L}]+)\s+([\d٠-٩][\d٠-٩,.]*)/iu.exec(t);
     if (mo) { const who = mo[2] || mo[3] || mo[5], amt = +latin(mo[1] || mo[4] || mo[6] || "0").replace(/,/g, "");
       const c = lifeItems.find((x) => x.dir !== "in" && first(x.person || x.title) === first(who));
-      if (c && amt) return { actions: [{ kind: "repay", id: c.id, who: c.person || who, amount: amt }, { kind: "money", items: [{ type: "expense", amount: amt, cat: "other", note: (c.person || who) + (/[\u0600-\u06ff]/.test(t) ? " — سداد" : " — paid back"), date: isoDay(now) }] }] }; }
+      if (c && amt) return { actions: [{ kind: "repay", id: c.id, who: c.person || who, amount: amt }, { kind: "money", items: [{ type: "expense", amount: amt, cat: "other", note: (c.person || who) + (/[\u0600-\u06ff]/.test(t) ? " — سداد" : tr(" — paid back")), date: isoDay(now) }] }] }; }
     const mi = /^\s*([\p{L}]+)\s+(?:paid|gave me|sent me|transferred)\s+(?:me\s+)?([\d٠-٩][\d٠-٩,.]*)/iu.exec(t);
     if (mi && !/^(i|we|you)$/i.test(mi[1])) { const c = lifeItems.find((x) => x.dir === "in" && first(x.person || x.title) === first(mi[1]));
       if (c) { const amt = +latin(mi[2]).replace(/,/g, ""); return { actions: [{ kind: "repay", id: c.id, who: c.person || mi[1], amount: amt }, { kind: "money", items: [{ type: "income", amount: amt, cat: "other", note: (c.person || mi[1]) + " paid back", date: isoDay(now) }] }] }; } } }
   { const m = /^\s*([\p{L}]+(?:\s[\p{L}]+)?)\s+(?:paid me back|paid back|returned|gave me back|settled|رجعلي|رجّعلي|سددلي|سدد|دفعلي|ادالي|اداني)\s*([\d٠-٩][\d٠-٩,.]*)?/iu.exec(t);
     if (m) { const who = m[1].trim(), amt = m[2] ? +latin(m[2]).replace(/,/g, "") : 0;
       const items = ((stores.life && stores.life.items) || []).filter((c) => c.dir === "in" && fold(c.person || c.title || "").split(/\s+/)[0] === fold(who).split(/\s+/)[0]);
-      if (items.length || amt) return { actions: [...(items.length ? [{ kind: "repay", id: items[0].id, who, amount: amt }] : []), ...(amt ? [{ kind: "money", items: [{ type: "income", amount: amt, cat: "other", note: who + (/[\u0600-\u06ff]/.test(t) ? " رجّع" : " paid back"), date: isoDay(now) }] }] : [])] }; } }
+      if (items.length || amt) return { actions: [...(items.length ? [{ kind: "repay", id: items[0].id, who, amount: amt }] : []), ...(amt ? [{ kind: "money", items: [{ type: "income", amount: amt, cat: "other", note: who + (/[\u0600-\u06ff]/.test(t) ? " رجّع" : tr(" paid back")), date: isoDay(now) }] }] : [])] }; } }
   // v8.6 (the 2-month test: "electricity bill 650 due on the 10th" became a 10 EGP expense): a bill with its due day is a bill to
   // pay — every month on that day, in People & plans — and its amount is the money, not the day
   { const due = /\b(?:due|by)\b(?:\s+on)?(?:\s+the)?\s+(\d{1,2})(?:st|nd|rd|th)?\b|(?:يستحق|ميعاده|ميعادها|بتتدفع)\s*(?:يوم)?\s*([\d٠-٩]{1,2})/i.exec(latin(t));

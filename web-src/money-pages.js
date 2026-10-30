@@ -3,6 +3,7 @@
    The numbers for the Accounts, Bills and Zakāt pages, by code from the ledger Money (Yusr) keeps ("ledger.v3"). Pure (no DOM).
    Rules kept: currencies are never added together; gold / silver / livestock are not money (grams and head) — listed apart; Zakāt is
    NEVER computed here — the page shows Yusr's own snapshot and Yusr's own record of what was paid. Tests: tests/unit/v790moneypages.test.mjs */
+import { tr } from "./i18n.js";
 import { homeCurrency } from "./locale.js";
 import { accountBalance, catName, CAT_EMOJI, isoDay, zakatFromSnapshot } from "./money-report.js";
 
@@ -24,7 +25,7 @@ export function accountsPage(L, { now = Date.now(), ar = false } = {}) {
     const sum = (type) => r2(month.filter((t) => t.type === type && t.account === a.id).reduce((s, t) => s + (Number(t.amount) || 0), 0));
     const last = mine.map((t) => t.date).filter(Boolean).sort().pop() || null;
     return { id: a.id, name: a.name || a.id, emoji: a.emoji || (k === "metal" ? "🪙" : k === "herd" ? "🐑" : "💵"), kind: k, sub: a.kind || "",
-      currency: k === "money" ? a.currency || cur : "", unit: k === "metal" ? (ar ? "جم" : "g") + (a.kind === "gold" ? " · " + (a.karat || 24) + (ar ? " قيراط" : "k") : "") : k === "herd" ? (ar ? "رأس" : "head") : "",
+      currency: k === "money" ? a.currency || cur : "", unit: k === "metal" ? (ar ? "جم" : "g") + (a.kind === "gold" ? " · " + (a.karat || 24) + (ar ? " قيراط" : "k") : "") : k === "herd" ? (ar ? "رأس" : tr("head")) : "",
       balance: accountBalance(L, a.id), in: sum("income"), out: sum("expense"), count: mine.length, last };
   });
   const money = all.filter((a) => a.kind === "money"), other = all.filter((a) => a.kind !== "money");

@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.45 How to use, redesigned (Ali chose A + C, 20 Oct 2026: "with demo data in the visuals so people understand the
    app's capabilities more"). Pure data, unit-tested (tests/unit/v745guidedemo.test.mjs).
    A — every guide plays a small copy of its screen with SAMPLE data: step 1 = what you give it (typed, a photo, a file),
@@ -234,4 +235,4 @@ export const GOALS = [
 /** The demo for a guide key ("start:model" or a tool id). */
 export const demoFor = (key) => DEMOS[String(key || "").replace(/^start:/, "")] || null;
 /** A value in the language: a plain string, or [en, ar]. */
-export const pickV = (v, ar) => (Array.isArray(v) ? (ar ? v[1] : v[0]) : v);
+export const pickV = (v, ar) => (Array.isArray(v) ? (ar ? v[1] : tr(v[0])) : v);

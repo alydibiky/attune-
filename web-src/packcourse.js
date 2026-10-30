@@ -4,6 +4,7 @@
    words, shortened and with its source — so it works with NO model and is never made up; with a model the lesson is rewritten
    simply from that text only. Definitions in the text ("Inflation is …") become review cards (FSRS, fsrs.js).
    Pure code. The phone reads the pack (KnowPacks.toc / section). Tests: tests/unit/v736packcourse.test.mjs.                       */
+import { tr } from "./i18n.js";
 import { newCourse } from "./daily.js";
 
 const clean = (s, n = 200) => String(s == null ? "" : s).replace(/\s+/g, " ").trim().slice(0, n);
@@ -107,7 +108,7 @@ export function codeQuiz(lessons, { max = 5, ar = false } = {}) {
     if (pick.length < 2) continue;
     const opts = [d.term, ...pick.map((x) => x.term)];
     const at = i % opts.length, options = [...opts.slice(1, at + 1), d.term, ...opts.slice(at + 1)];
-    out.push({ q: (ar ? "أي مصطلح معناه: " : "Which term means: ") + d.mean, options, answer: options.indexOf(d.term), why: d.term + ": " + d.mean });
+    out.push({ q: (ar ? "أي مصطلح معناه: " : tr("Which term means: ")) + d.mean, options, answer: options.indexOf(d.term), why: d.term + ": " + d.mean });
   }
   return out;
 }

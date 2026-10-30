@@ -3,6 +3,7 @@
    ATTRS) and the version is the other; a source sentence that mentions that version AND gives that spec's value fills it,
    with the source's number [n]. A column (or row) that NO source fills is dropped; what is still unknown after that is
    written "not published" instead of a bare dash. Pure; tests/unit/v740tableblanks.test.mjs.                               */
+import { tr } from "./i18n.js";
 import { ATTRS } from "./factsheet.js";
 
 const BLANK = /^\s*(?:—|–|-|\?|n\/?a|na|tbd|tba|unknown|not (?:stated|given|available|listed|found)|غير متوفر|غير معروف|غير مذكور)?\s*$/i;
@@ -41,7 +42,7 @@ export function findValue(sources, name, attr) {
 /** Fill / prune every markdown table in `md`. → { md, filled, dropped, left } */
 export function fillBlanks(md, sources, { ar = false } = {}) {
   const lines = String(md || "").split("\n"); let filled = 0, dropped = 0, left = 0;
-  const NP = ar ? "مش منشور" : "not published";
+  const NP = ar ? "مش منشور" : tr("not published");
   const out = [];
   for (let i = 0; i < lines.length; ) {
     if (!(lines[i].includes("|") && i + 1 < lines.length && isSep(lines[i + 1]))) { out.push(lines[i++]); continue; }

@@ -9,7 +9,7 @@ import * as K from "./commands.js";
 import { shown as jobsShown } from "./jobs.js";
 
 const ar = () => getLang() === "ar";
-const pick2 = (pair) => (ar() ? pair[1] : pair[0]);
+const pick2 = (pair) => (ar() ? pair[1] : tr(pair[0]));
 export const say = (l) => (l ? (ar() ? l.ar || l.en : l.en) : "");
 const chip = "inline-flex items-center gap-1.5 rounded-full px-3 h-9 text-[13px] font-semibold";
 const surf = { background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" };

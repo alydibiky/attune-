@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.28 Scout — goals that hunt for days (Ali: "I like Scout if it is made correctly, very strong, very accurate and works with
    everything"). You say once what you are looking for — a flat, a car, a product, a job, a supplier, a tender — and Scout searches the
    sites that matter for it, reads each ad, checks EVERY wish against what the ad itself says (quoting it), merges the same ad seen on
@@ -656,7 +657,7 @@ export function sellerMessage(ad, g, { ar = true } = {}) {
   // v6.35 (Ali: Egyptian Arabic, and the offer from the market): the first offer is offerFor() — code, not a guess
   const F = ad.facts, fair = ad.fair, offer = offerFor(ad);
   const what = ad.title || g.what;
-  const like = fair ? (fair.basis === "m2" ? num(fair.median) + (ar ? " للمتر" : " per m²") : num(fair.median)) : "";
+  const like = fair ? (fair.basis === "m2" ? num(fair.median) + (ar ? " للمتر" : tr(" per m²")) : num(fair.median)) : "";
   if (ar) return [`السلام عليكم، بخصوص إعلان «${what}»${ad.site ? " على " + ad.site : ""}.`,
     `لسه متاح؟${F.price ? ` والسعر ${num(F.price)} فيه فصال؟` : ""}`,
     fair && fair.pct > 0 ? `الإعلانات اللي زيه${fair.basis === "m2" ? " في نفس المنطقة" : ""} في حدود ${like}، ينفع ${num(offer)}؟` : offer ? `ينفع ${num(offer)}؟` : "",

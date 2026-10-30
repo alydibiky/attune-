@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.41 (upgrade C3) — automations you describe. "When my salary arrives, put 20% in the car fund and tell me" /
    «لما المرتب ينزل حط 20% في صندوق العربية وقولي» is read ONCE by code into a rule; the phone checks every money notification with
    it (AutoRules.kt, no AI, never SMS), alerts at once, and the money goes into the pot (a named savings pot, صندوق) when Attune
@@ -34,7 +35,7 @@ export function parseAutomation(text) {
   if (pct && (pct <= 0 || pct > 100)) return null;
   const tell = /tell|notify|let me know|ping|قولي|قوللي|بلغني|نبهني|عرفني|2oly|olli/i.test(t) || true;   // always tell — the person sees what ran
   const rest1 = ar && /^ل[^ا\s]/.test(rest) && /\sلل/.test(" " + t.slice(t.lastIndexOf(rest) - 1)) ? "ال" + rest.slice(1) : rest;   // «للطوارئ» = ل + الطوارئ
-  const pot = potName(String(rest1).replace(/^(?:ال)?صندوق\s+/, "").replace(/^(?:sandou2|sandou)\s+(?:el\s*)?/i, "")) || (ar ? "التوفير" : "Savings");
+  const pot = potName(String(rest1).replace(/^(?:ال)?صندوق\s+/, "").replace(/^(?:sandou2|sandou)\s+(?:el\s*)?/i, "")) || (ar ? "التوفير" : tr("Savings"));
   return { words: wordsOf(trig), pct, fixed, pot, tell, dir: "in", text: clean(text), trigger: clean(trig) };
 }
 

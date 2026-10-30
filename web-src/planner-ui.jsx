@@ -24,7 +24,7 @@ function YearSheet({ ledger, pots, cur, flash, year, setYear, toGoals }) {
   const put = (rowId, month, v) => setPlan(saveYearPlan(setCell(plan, rowId, month, String(v).replace(/,/g, "").trim())));
   const mon = (m) => new Date(m + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "short" });
   const excel = () => {
-    const name = `attune-year-plan-${year}.xlsx`, bytes = xlsxFromRows(yearRows(g, ar), (ar ? "خطة " : "Plan ") + year);
+    const name = `attune-year-plan-${year}.xlsx`, bytes = xlsxFromRows(yearRows(g, ar), (ar ? "خطة " : tr("Plan ")) + year);
     let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
     const call = typeof window !== "undefined" && window.__attuneNativeCall;
     (async () => {
@@ -93,7 +93,7 @@ function YearGoals({ ledger, pots, save, cur, flash, year, setYear, toSheet }) {
   const mon = (k, long) => new Date(g.months[k] + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: long ? "long" : "short" });
   const put = (rowId, k, v) => setPlan(saveYearPlan(setCell(plan, rowId, g.months[k], String(v).replace(/,/g, "").trim())));
   const add = () => {
-    const p = potIntent(text) || potIntent((ar ? "احوش " : "save ") + text);
+    const p = potIntent(text) || potIntent((ar ? "احوش " : tr("save ")) + text);
     if (!p || !(p.target > 0 || p.per > 0)) { flash && flash(tr("Write the amount too, e.g. “save 30k for a sofa by June”")); return; }
     save(addPot(pots, p)); setText(""); flash && flash(tr("Added — spread over the months"));
   };
@@ -216,7 +216,7 @@ export function PlannerPage({ flash }) {
               <input type="month" className={U.inp} value={by} onChange={(e) => setBy(e.target.value)} aria-label={tr("By")} data-testid="planner-new-by" /></div>}
             <button className={U.btnP + " w-full"} onClick={addGoal} data-testid="planner-new-save">{tr("Save goal")}</button>
           </div> : <button className={U.btnS + " w-full"} onClick={() => setAdding(true)} data-testid="planner-new-open"><Plus size={16} />{tr("New goal (car, Eid, school…)")}</button>}
-          {!plan.pots.some((p) => p.kind === "emergency") ? <button className={U.btnS + " w-full " + U.muted} onClick={() => save(addPot(pots, { name: ar ? "الطوارئ" : "Emergency", kind: "emergency", target: 0 }))} data-testid="planner-emergency">{tr("Start an emergency fund (3 months of spending)")}</button> : null}
+          {!plan.pots.some((p) => p.kind === "emergency") ? <button className={U.btnS + " w-full " + U.muted} onClick={() => save(addPot(pots, { name: ar ? "الطوارئ" : tr("Emergency"), kind: "emergency", target: 0 }))} data-testid="planner-emergency">{tr("Start an emergency fund (3 months of spending)")}</button> : null}
         </div>
       </div>
       <div className={U.cardPad} data-testid="planner-everyday">

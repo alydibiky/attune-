@@ -300,12 +300,12 @@ export function Builder({ llm, modelReady, openEngine, flash, onBack, onCreate, 
         <div className="grid grid-cols-5 gap-1.5" aria-hidden="true">{BS.STEPS.map((s, i) => <span key={s.id} className="h-1.5 rounded-full" style={{ background: i <= step ? "var(--c-acc)" : "var(--c-ln)", opacity: i < step ? 0.55 : 1 }} />)}</div>
         <div className="grid grid-cols-5 gap-1.5" role="tablist">
           {BS.STEPS.map((s, i) => <button key={s.id} role="tab" aria-selected={step === i} disabled={!draft && i > 0} onClick={() => setStep(i)} data-testid={"biz-step-" + s.id}
-            className={"min-h-[44px] h-11 px-1 rounded-full text-[11.5px] font-extrabold truncate disabled:opacity-40 transition-colors duration-150 " + selPill(step === i)}>{ar ? s.ar : s.en}</button>)}
+            className={"min-h-[44px] h-11 px-1 rounded-full text-[11.5px] font-extrabold truncate disabled:opacity-40 transition-colors duration-150 " + selPill(step === i)}>{ar ? s.ar : tr(s.en)}</button>)}
         </div>
       </div>
       <div className="px-4 pt-4 space-y-4">
         {/* B: the interview — one question, tappable answers */}
-        <Interview q={ar ? S.q.ar : S.q.en} sys={draft} step={S.id} run={run} llm={modelReady ? llm : null} flash={flash} />
+        <Interview q={ar ? S.q.ar : tr(S.q.en)} sys={draft} step={S.id} run={run} llm={modelReady ? llm : null} flash={flash} />
         {S.id === "name" ? (
           <div className="space-y-3">
             {draft ? <label className="block"><span className="block text-[12px] font-bold mb-1.5 text-[var(--c-mut)]">{tr("System name")}</span>

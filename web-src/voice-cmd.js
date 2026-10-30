@@ -11,6 +11,7 @@
    voiceTurn(state, said, ctx) runs the conversation: who → what → which language (asked once per person, then remembered)
    → read back → "send" → the action. Never sends without the read-back (VOICE_PLAN rule 2). Pure; tests/unit/v1100voice.test.mjs
    and the accuracy set tests/voice/commands.json.                                                                          */
+import { tr } from "./i18n.js";
 import { toFranco, isFranco, styleOf, langFor, rememberLang, langAnswer, aliasFor, rememberAlias } from "./franco.js";
 
 const A = "[اأإآ]";                                     // any alef
@@ -241,7 +242,7 @@ export function voiceTurn(state0, said, ctx = {}) {
       return next(state, ctx, ui);
     }
     if (c.kind === "no") { state.step = "idle"; state.draft = null; return out({ say: L.cancelled, card: { kind: "done", ok: false } }); }
-    return ask(fill(L.which, { n: state.draft.name, list: opts.map((p) => p.name).join(ui === "ar" ? " ولا " : " or ") }), { options: opts.map((p) => p.name) });
+    return ask(fill(L.which, { n: state.draft.name, list: opts.map((p) => p.name).join(ui === "ar" ? " ولا " : tr(" or ")) }), { options: opts.map((p) => p.name) });
   }
   if (state.step === "who" && state.draft && c.kind !== "no") { state.draft = { ...state.draft, name: stripEnd(said) }; return resolve(state, ctx, ui); }
   if (state.step === "msg" && state.draft && c.kind !== "no") { state.draft = { ...state.draft, msg: messageOf(c.kind === "change" ? c.msg : said) }; return next(state, ctx, ui); }
@@ -302,7 +303,7 @@ export function voiceTurn(state0, said, ctx = {}) {
     const ps = findPeople(st.draft.name, cx);
     if (ps.length > 1 && new Set(ps.map((p) => fold(p.name))).size > 1) {
       st.step = "pick"; st.draft = { ...st.draft, options: ps.slice(0, 3) };
-      const q = fill(Lx.which, { n: st.draft.name, list: ps.slice(0, 3).map((p) => p.name).join(u === "ar" ? " ولا " : " or ") });
+      const q = fill(Lx.which, { n: st.draft.name, list: ps.slice(0, 3).map((p) => p.name).join(u === "ar" ? " ولا " : tr(" or ")) });
       return { state: st, say: q, card: { kind: "ask", q, options: ps.slice(0, 3).map((p) => p.name) } };
     }
     // nobody by that name, but recent chats exist: a nickname? ask who it is (and learn it), with "someone else" too
@@ -310,7 +311,7 @@ export function voiceTurn(state0, said, ctx = {}) {
       const opts = knownPeople(cx).filter((p) => !p.isGroup).slice(0, 4);
       st.step = "pick"; st.draft = { ...st.draft, options: opts, nick: true };
       const q = fill(Lx.whois, { n: st.draft.name });
-      return { state: st, say: q + " " + opts.map((p) => p.name).join(u === "ar" ? "، " : ", ") + (u === "ar" ? "، ولا " : ", or ") + Lx.other + "?", card: { kind: "ask", q, options: [...opts.map((p) => p.name), Lx.other] } };
+      return { state: st, say: q + " " + opts.map((p) => p.name).join(u === "ar" ? "، " : ", ") + (u === "ar" ? "، ولا " : tr(", or ")) + Lx.other + "?", card: { kind: "ask", q, options: [...opts.map((p) => p.name), Lx.other] } };
     }
     st.draft = { ...st.draft, target: ps[0] ? { name: ps[0].name, key: ps[0].canReply ? ps[0].key : null, app: ps[0].app, texts: ps[0].texts, last: ps[0].last || "", group: ps[0].group || "", isGroup: !!ps[0].isGroup } : { name: st.draft.name, key: null, app: "" } };
     return next(st, cx, u);

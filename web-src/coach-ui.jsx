@@ -32,7 +32,7 @@ function Practice({ src, onResult, native }) {
           {res[i] === true ? <Check size={18} className="c-pos" /> : (
             <button className={btnP + " !h-11 !min-h-[44px] !px-4 !text-[14px]"} disabled={!a[i]} data-testid="coach-practice-check" onClick={() => {
               const okk = answerMatches(a[i], q.answer.replace(/^[a-z] = /, "")); setRes((x) => ({ ...x, [i]: okk })); onResult(okk, q.text);
-              speakNow(okk ? (getLang() === "ar" ? "صحيح" : "Correct") : (getLang() === "ar" ? "حاول مرة أخرى" : "Try again"), { lang: getLang(), native });
+              speakNow(okk ? (getLang() === "ar" ? "صحيح" : tr("Correct")) : (getLang() === "ar" ? "حاول مرة أخرى" : tr("Try again")), { lang: getLang(), native });
             }}>{tr("Check")}</button>)}
           {res[i] === false ? <span className="c-neg text-[12px]">{tr("answer: {a}", { a: q.answer })}</span> : null}
         </div>))}

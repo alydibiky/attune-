@@ -50,7 +50,7 @@ function readPhoto(file) {
 
 export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady, pro, openPlan }) {
   const ar = getLang() === "ar";
-  const L = (x) => (ar ? x.ar : x.en);
+  const L = (x) => (ar ? x.ar : tr(x.en));
   const [text, setText] = useSticky("deal:text", "");
   const [photo, setPhoto] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -207,15 +207,15 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
           <p className="text-[15px] font-semibold text-[var(--c-ink)] leading-relaxed m-0" dir="auto" data-testid="deal-reading">{ask.reading}</p>
           {!askNo ? (
             <div className="flex gap-2">
-              <button onClick={() => check({ resume: ask })} className={U.btnP + " flex-1"} data-testid="deal-yes">{ar ? "أيوه، مظبوط" : "Yes, that's right"}</button>
-              <button onClick={() => setAskNo(true)} className={U.btnS + " flex-1 h-12 min-h-[48px]"} data-testid="deal-no">{ar ? "لأ" : "No"}</button>
+              <button onClick={() => check({ resume: ask })} className={U.btnP + " flex-1"} data-testid="deal-yes">{ar ? "أيوه، مظبوط" : tr("Yes, that's right")}</button>
+              <button onClick={() => setAskNo(true)} className={U.btnS + " flex-1 h-12 min-h-[48px]"} data-testid="deal-no">{ar ? "لأ" : tr("No")}</button>
             </div>
           ) : (
             <div className="space-y-2">
               <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} dir="auto" data-testid="deal-note"
-                placeholder={ar ? "وضّح ما تقصده، مثلًا: «السعر 38,000 نقدًا، و12,400 هي المقدّم»" : "Explain what you mean, e.g. “the price is 38,000 cash; 12,400 is the down payment”"}
+                placeholder={ar ? "وضّح ما تقصده، مثلًا: «السعر 38,000 نقدًا، و12,400 هي المقدّم»" : tr("Explain what you mean, e.g. “the price is 38,000 cash; 12,400 is the down payment”")}
                 className={U.area} />
-              <button onClick={() => { if (note.trim()) { check({ note: note.trim() }); setNote(""); } }} disabled={!note.trim()} className={U.btnP + " w-full"} data-testid="deal-note-go">{ar ? "إعادة قراءة العرض بهذا التوضيح" : "Read the offer again with this"}</button>
+              <button onClick={() => { if (note.trim()) { check({ note: note.trim() }); setNote(""); } }} disabled={!note.trim()} className={U.btnP + " w-full"} data-testid="deal-note-go">{ar ? "إعادة قراءة العرض بهذا التوضيح" : tr("Read the offer again with this")}</button>
             </div>
           )}
         </section>

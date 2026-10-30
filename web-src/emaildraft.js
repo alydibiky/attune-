@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v8.7 (Ali, 29 Oct: "I want the app to draft the emails in Gmail and send with my confirmation, like Gemini") ------------
    "email Ahmed@x.com that the meeting moved to Sunday", «ابعت ايميل لمدير الموقع إن الونش اتأخر», "/email …".
    1. isEmailAsk(text)      a request to write an email (not a question about email)
@@ -56,7 +57,7 @@ export function readDraft(answer, ask) {
 export function fallbackDraft(ask, got = {}) {
   const ar = ask.lang === "ar", about = String(ask.about || "").trim();
   const cap = about.charAt(0).toUpperCase() + about.slice(1);
-  const subject = (got.subject || (about ? cap.split(/[.,،\n]/)[0].slice(0, 60) : ar ? "رسالة" : "Message")).replace(/\s+/g, " ");
+  const subject = (got.subject || (about ? cap.split(/[.,،\n]/)[0].slice(0, 60) : ar ? "رسالة" : tr("Message"))).replace(/\s+/g, " ");
   const body = got.body || (ar ? `${ask.toName ? "أهلاً " + ask.toName + "،" : "أهلاً،"}\n\n${about}\n\nمع التحية`
     : `${ask.toName ? "Hi " + ask.toName + "," : "Hi,"}\n\n${cap}${/[.!?]$/.test(cap) ? "" : "."}\n\nBest regards`);
   return { subject, body };

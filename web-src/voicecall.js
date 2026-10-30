@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.41 (upgrade H2) — talking to Chat like a phone call. The answer is read aloud a sentence at a time, so it starts
    speaking at once and a tap stops it between (and inside) sentences; code, tables and links are not read out — the person is
    told they are on the screen. Pure; tests/unit/v741voicecall.test.mjs; the call screen is in chat.jsx (CallScreen). */
@@ -5,7 +6,7 @@
 /** An answer → the sentences to say: markdown removed, code / tables / links replaced by a short note, ≤ 220 letters each. */
 export function sayable(text, ar = false) {
   let t = String(text || "");
-  const note = ar ? "التفاصيل على الشاشة." : "The details are on the screen.";
+  const note = ar ? "التفاصيل على الشاشة." : tr("The details are on the screen.");
   let hadExtra = false;
   t = t.replace(/```[\s\S]*?(```|$)/g, () => { hadExtra = true; return "\n"; });
   t = t.split("\n").filter((l) => { if (/^\s*\|.*\|\s*$/.test(l)) { hadExtra = true; return false; } return true; }).join("\n");

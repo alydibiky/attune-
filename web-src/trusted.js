@@ -8,6 +8,7 @@
    3. egyptPrices: price rows from the Egyptian price sites (trim → EGP price), copied as written.
    4. YouTube reviews (WebTools.videoReviews): the transcripts of the top review videos, read like pages — "what reviewers say".
    Pure; tests/unit/v850trusted.test.mjs.                                                                                      */
+import { tr } from "./i18n.js";
 import { ATTRS } from "./factsheet.js";
 
 const host = (u) => String(u || "").replace(/^https?:\/\//i, "").split(/[/?#]/)[0].replace(/^www\./, "").toLowerCase();
@@ -95,7 +96,7 @@ export function specCards(pages, { ar = false, max = 5 } = {}) {
   const cell = (s) => String(s).replace(/\|/g, "/");
   const sites = [...new Set(use.map((c) => c.site))].join(", ");
   const md = (ar ? `### المواصفات لكل فئة (منقولة بالحرف من ${sites})\n` : `### Specs by version (copied exactly from ${sites})\n`) +
-    "| " + (ar ? "البند" : "Spec") + " | " + use.map((c) => cell(c.name) + " [" + c.n + "]").join(" | ") + " |\n" +
+    "| " + (ar ? "البند" : tr("Spec")) + " | " + use.map((c) => cell(c.name) + " [" + c.n + "]").join(" | ") + " |\n" +
     "|" + Array(use.length + 1).fill(" --- ").join("|") + "|\n" +
     rows.map((id) => "| " + label(id) + " | " + use.map((c) => cell(c.values.get(id) || "—")).join(" | ") + " |").join("\n");
   return { md, cards: use };
@@ -119,7 +120,7 @@ export function egyptPrices(pages, { ar = false, max = 10 } = {}) {
   });
   const use = rows.slice(0, max);
   if (!use.length) return { md: "", rows: [] };
-  const md = (ar ? "### الأسعار في مصر (منقولة بالحرف)\n| الفئة | السعر | الموقع |\n| --- | --- | --- |\n" : "### Prices in Egypt (copied exactly)\n| Version | Price | Site |\n| --- | --- | --- |\n") +
+  const md = (ar ? "### الأسعار في مصر (منقولة بالحرف)\n| الفئة | السعر | الموقع |\n| --- | --- | --- |\n" : tr("### Prices in Egypt (copied exactly)\n| Version | Price | Site |\n| --- | --- | --- |\n")) +
     use.map((r) => `| ${r.trim.replace(/\|/g, "/")} | ${r.price} | ${r.site} [${r.n}] |`).join("\n");
   return { md, rows: use };
 }

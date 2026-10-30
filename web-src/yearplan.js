@@ -8,6 +8,7 @@
      any cell         can be typed over, like Excel (overrides, kept on the phone) — the totals follow
    Pure: stores in, the sheet out. The page draws it and saves it as an .xlsx (convert.js xlsxFromRows).
    Tests: tests/unit/v870yearplan.test.mjs.                                                                                  */
+import { tr } from "./i18n.js";
 import { scheduleOf } from "./life.js";
 import { averages, monthsTo } from "./planner.js";
 import { catName } from "./money-report.js";
@@ -60,7 +61,7 @@ export function yearGrid({ ledger, life, pots, plan, year, now = Date.now(), ar 
   // (typed rows the person added by hand: plan.extra = [{ id, group, label }])
   const extra = (plan && plan.extra) || [];
   for (const x of extra.filter((x) => x.group === "income")) incRows.push(row(x.id, x.label, () => 0, null));
-  groups.push({ id: "income", label: ar ? "الدخل" : "Income", rows: incRows });
+  groups.push({ id: "income", label: ar ? "الدخل" : tr("Income"), rows: incRows });
   // ---- fixed: People & plans' payments on their dates + Money's repeating bills
   const fixed = [];
   for (const c of (life && life.items) || []) {
@@ -80,7 +81,7 @@ export function yearGrid({ ledger, life, pots, plan, year, now = Date.now(), ar 
     }, null));
   }
   for (const x of extra.filter((x) => x.group === "fixed")) fixed.push(row(x.id, x.label, () => 0, null));
-  groups.push({ id: "fixed", label: ar ? "الثابت" : "Fixed", rows: fixed });
+  groups.push({ id: "fixed", label: ar ? "الثابت" : tr("Fixed"), rows: fixed });
   // ---- savings goals: a fixed amount a month, or what is left of the target spread over the months to its date
   const avg = averages(ledger, now);
   const sav = ((pots && pots.pots) || []).map((p) => {
@@ -88,7 +89,7 @@ export function yearGrid({ ledger, life, pots, plan, year, now = Date.now(), ar 
     let left = Math.max(0, target - (p.saved || 0));
     const per = p.per > 0 ? p.per : left > 0 ? Math.ceil(left / (monthsTo(p.by, now) || 12)) : 0;
     const putIn = {}; for (const x of p.log || []) putIn[String(x.d).slice(0, 7)] = (putIn[String(x.d).slice(0, 7)] || 0) + (+x.a || 0);
-    return row("pot:" + p.id, (ar ? "تحويش: " : "Save: ") + p.name, (mo, k) => {
+    return row("pot:" + p.id, (ar ? "تحويش: " : tr("Save: ")) + p.name, (mo, k) => {
       if (mo < nowYm) return 0;
       if (p.by && mo > p.by) return 0;
       if (p.per > 0 && !target) return per;
@@ -98,7 +99,7 @@ export function yearGrid({ ledger, life, pots, plan, year, now = Date.now(), ar 
     }, (mo) => putIn[mo] || 0);
   });
   for (const x of extra.filter((x) => x.group === "savings")) sav.push(row(x.id, x.label, () => 0, null));
-  groups.push({ id: "savings", label: ar ? "التحويش" : "Savings", rows: sav });
+  groups.push({ id: "savings", label: ar ? "التحويش" : tr("Savings"), rows: sav });
   // ---- everyday spending by category: past = actual, coming = the last 3 months' average
   const SKIP = new Set(["rent", "bills", "salary", "invoice"]);
   const spent = {};
@@ -106,7 +107,7 @@ export function yearGrid({ ledger, life, pots, plan, year, now = Date.now(), ar 
   const cats = [...new Set([...Object.keys(avg.by).filter((c) => !SKIP.has(c)), ...Object.keys(spent)])];
   const every = cats.map((c) => row("cat:" + c, catName(ledger, c, ar), () => avg.by[c] || 0, (mo) => (spent[c] || {})[mo] || 0)).filter((r) => r.total > 0).sort((a, b) => b.total - a.total);
   for (const x of extra.filter((x) => x.group === "everyday")) every.push(row(x.id, x.label, () => 0, null));
-  groups.push({ id: "everyday", label: ar ? "المصاريف العادية" : "Everyday", rows: every });
+  groups.push({ id: "everyday", label: ar ? "المصاريف العادية" : tr("Everyday"), rows: every });
   // ---- the totals and what is free each month
   const col = (gid) => months.map((_, k) => groups.find((g) => g.id === gid).rows.reduce((a, r) => a + r.cells[k], 0));
   const income = col("income"), fx = col("fixed"), sv = col("savings"), ev = col("everyday");
@@ -117,15 +118,15 @@ export function yearGrid({ ledger, life, pots, plan, year, now = Date.now(), ar 
 
 /** The sheet as rows for Excel (convert.js xlsxFromRows): a header, each group's rows, the totals and Free. */
 export function yearRows(g, ar = false) {
-  const head = [ar ? "البند" : "Item", ...g.months.map((m) => new Date(m + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en", { month: "short" })), ar ? "إجمالي السنة" : "Year"];
+  const head = [ar ? "البند" : tr("Item"), ...g.months.map((m) => new Date(m + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en", { month: "short" })), ar ? "إجمالي السنة" : tr("Year")];
   const rows = [head];
   for (const gr of g.groups) {
     rows.push([gr.label.toUpperCase(), ...g.months.map(() => ""), ""]);
     for (const r of gr.rows) rows.push(["  " + r.label, ...r.cells, r.total]);
   }
-  rows.push([ar ? "إجمالي الدخل" : "Total income", ...g.income, g.totals.income]);
-  rows.push([ar ? "إجمالي المصروف والتحويش" : "Total out (incl. savings)", ...g.out, g.totals.out]);
-  rows.push([ar ? "الحر" : "Free", ...g.free, g.totals.free]);
+  rows.push([ar ? "إجمالي الدخل" : tr("Total income"), ...g.income, g.totals.income]);
+  rows.push([ar ? "إجمالي المصروف والتحويش" : tr("Total out (incl. savings)"), ...g.out, g.totals.out]);
+  rows.push([ar ? "الحر" : tr("Free"), ...g.free, g.totals.free]);
   return rows;
 }
 

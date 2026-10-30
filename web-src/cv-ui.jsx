@@ -210,7 +210,7 @@ function CheckTab({ cv }) {
       {!items.length ? <div className="rounded-[20px] border border-[var(--c-pos)]/50 bg-[var(--c-pos)]/10 p-4 text-sm text-[var(--c-pos)] flex items-center gap-2"><Check size={16} />{tr("Nothing to fix — this CV looks complete.")}</div>
         : items.map((x, i) => (
           <div key={i} className={`rounded-[20px] border p-3 text-[13px] flex gap-2 ${x.level === "warn" ? "border-[var(--c-warn)]/50 bg-[var(--c-warn)]/10 text-[var(--c-warn)]" : "border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]"}`}>
-            {x.level === "warn" ? <AlertTriangle size={14} className="mt-0.5 shrink-0" /> : <Info size={14} className="mt-0.5 shrink-0 text-[var(--c-mut)]" />}<span>{getLang() === "ar" ? x.ar : x.en}</span>
+            {x.level === "warn" ? <AlertTriangle size={14} className="mt-0.5 shrink-0" /> : <Info size={14} className="mt-0.5 shrink-0 text-[var(--c-mut)]" />}<span>{getLang() === "ar" ? x.ar : tr(x.en)}</span>
           </div>))}
     </div>
   );
@@ -371,7 +371,7 @@ function AITab({ cv, setCV, llm, modelReady, openEngine, flash, onCopyFor, onNew
       <div className="space-y-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5">
         <p className="text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Translate")}</p>
         <p className="text-[12px] text-[var(--c-mut)]">{tr("Makes a new CV in the other language. Names, companies and numbers stay.")}</p>
-        <Btn k="tr" testid="cv-ai-translate" onClick={() => run("tr", async () => { const to = cv.lang === "ar" ? "en" : "ar"; const texts = A.collectTexts(JSON.parse(JSON.stringify(cv))).map((x) => x.text); const c = A.applyTranslation(cv, to, await ask(A.translateMessages(texts, to), 1800)); onNewCV({ ...V.copyFor(c, to === "ar" ? "عربي" : "English") }); })}>{cv.lang === "ar" ? tr("Make an English copy") : tr("Make an Arabic copy")}</Btn>
+        <Btn k="tr" testid="cv-ai-translate" onClick={() => run("tr", async () => { const to = cv.lang === "ar" ? "en" : "ar"; const texts = A.collectTexts(JSON.parse(JSON.stringify(cv))).map((x) => x.text); const c = A.applyTranslation(cv, to, await ask(A.translateMessages(texts, to), 1800)); onNewCV({ ...V.copyFor(c, to === "ar" ? "عربي" : tr("English")) }); })}>{cv.lang === "ar" ? tr("Make an English copy") : tr("Make an Arabic copy")}</Btn>
       </div>
       <div className="space-y-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5">
         <p className="text-[14px] font-extrabold text-[var(--c-ink)]">{tr("For a specific job")}</p>
@@ -499,7 +499,7 @@ export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, na
           <div key={c.id} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3" data-testid="cv-row">
             <button className="w-full text-start" onClick={() => setOpenId(c.id)}>
               <p className="text-[14.5px] font-extrabold text-[var(--c-ink)]">{c.name}</p>
-              <p className="text-[12px] text-[var(--c-mut)]">{c.basics.name || tr("(no name yet)")} · {c.layout === "modern" ? tr("Modern") : tr("ATS-safe")} · {c.lang === "ar" ? "العربية" : "English"} · {c.page}</p>
+              <p className="text-[12px] text-[var(--c-mut)]">{c.basics.name || tr("(no name yet)")} · {c.layout === "modern" ? tr("Modern") : tr("ATS-safe")} · {c.lang === "ar" ? "العربية" : tr("English")} · {c.page}</p>
             </button>
             <div className="flex gap-2 mt-2.5">
               <button className={ghost + " flex items-center gap-1"} onClick={() => { const n = V.copyFor(c); setList([n, ...list]); flash(tr("Copied as “{n}”", { n: n.name })); }}><Copy size={12} />{tr("Duplicate")}</button>

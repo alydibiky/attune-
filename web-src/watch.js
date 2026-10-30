@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.40 Message alerts (Ali: "I tell the app: if X sends me a message tell me — from Gmail or any email notification").
    "tell me when Ahmed messages me", "notify me if HR emails me", "alert me when I get an email from CIB about the statement",
    «لو أحمد بعتلي قولي», «نبهني لما ماما تكلمني على الواتس», «لو جالي إيميل من البنك عرفني», «أي رسالة فيها كلمة ونش نبهني» → a rule
@@ -51,7 +52,7 @@ const AP = { sms: ["SMS", "الرسايل العادية"], any: ["any app", "أ
 /** One line about a rule: "Ahmed · WhatsApp" / «أحمد · الواتساب · فيها: ونش». */
 export function ruleText(r, ar = false) {
   const a = AP[r.app] || AP.any;
-  return [r.who.length ? r.who.join(ar ? " أو " : " or ") : (ar ? "أي حد" : "anyone"), ar ? a[1] : a[0], r.words.length ? (ar ? "فيها: " : "with: ") + r.words.join(", ") : "", r.once ? (ar ? "مرة واحدة" : "once") : ""].filter(Boolean).join(" · ");
+  return [r.who.length ? r.who.join(ar ? " أو " : tr(" or ")) : (ar ? "أي حد" : tr("anyone")), ar ? a[1] : tr(a[0]), r.words.length ? (ar ? "فيها: " : tr("with: ")) + r.words.join(", ") : "", r.once ? (ar ? "مرة واحدة" : tr("once")) : ""].filter(Boolean).join(" · ");
 }
 export function loadWatch(s = typeof localStorage !== "undefined" ? localStorage : null) { try { const v = JSON.parse((s && s.getItem(WATCH_KEY)) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 /** Saves the rules here and hands them to the phone (watchSave) — the phone checks them even when Attune is closed. */

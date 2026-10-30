@@ -3,6 +3,7 @@
    is and what to do — and does it (a due date → Deadline Radar, a medicine → Family health, a bill → Money).
    Everything here is CODE: the kind of paper, the amount, the dates, the dose. A loaded model may add a plain explanation,
    always labelled and never replacing what the paper says. Tests: tests/unit/v727read.test.mjs.                              */
+import { tr } from "./i18n.js";
 import { readDeadlines, datesIn, isoDay } from "./deadlines.js";
 import { readPrescription, readRxLine } from "./care.js";
 import { payAmount, payCurrency } from "./yusr/paytext.js";
@@ -68,7 +69,7 @@ export function explain(f, lang = "en") {
     official: ["An official paper (government, court, tax or police).", "هذه ورقة رسمية (حكومة أو محكمة أو ضرائب أو شرطة)."], letter: ["A letter.", "هذه رسالة."], sign: ["A sign or a notice.", "هذه لافتة أو إعلان."], other: ["A paper with writing on it.", "ورقة مكتوب عليها."] };
   const say = [WHAT[f.kind][ar ? 1 : 0]], todo = [], actions = [];
   if (money) say.push(ar ? `المبلغ: ${money}.` : `The amount: ${money}.`);
-  if (f.due) { say.push(ar ? `آخر موعد للدفع: ${day(f.due)}.` : `Pay by ${day(f.due)}.`); actions.push({ type: "radar", item: { kind: "other", title: (ar ? "دفع " : "Pay ") + (money || (ar ? "فاتورة" : "the bill")), date: f.due, amount: f.amount, currency: f.currency } }); }
+  if (f.due) { say.push(ar ? `آخر موعد للدفع: ${day(f.due)}.` : `Pay by ${day(f.due)}.`); actions.push({ type: "radar", item: { kind: "other", title: (ar ? "دفع " : tr("Pay ")) + (money || (ar ? "فاتورة" : tr("the bill"))), date: f.due, amount: f.amount, currency: f.currency } }); }
   if ((f.kind === "bill" || f.kind === "receipt") && money) actions.push({ type: "money" });
   for (const m of f.meds) {
     const parts = [m.name, m.strength, m.dose, m.freq].filter(Boolean).join(" · ");
@@ -80,8 +81,8 @@ export function explain(f, lang = "en") {
     if (d.kind === "expiry") { say.push(ar ? `ينتهي في ${day(d.date)}.` : `It expires on ${day(d.date)}.`); actions.push({ type: "radar", item: d }); }
     if (d.kind === "return" || d.kind === "warranty") actions.push({ type: "radar", item: d });
   }
-  if (f.kind === "official") todo.push(ar ? "ورقة رسمية: إن كان فيها موعد أو غرامة، لا تتجاهلها — اعرضها على شخص تثق به أو على الجهة نفسها." : "An official paper: if it has a date or a fine, don't ignore it — show it to someone you trust or to the office itself.");
-  if (f.kind === "school" && f.dates.length) { say.push(ar ? `فيها تاريخ: ${day(f.dates[0])}.` : `It mentions a date: ${day(f.dates[0])}.`); actions.push({ type: "radar", item: { kind: "other", title: ar ? "المدرسة" : "School", date: f.dates[0] } }); }
+  if (f.kind === "official") todo.push(ar ? "ورقة رسمية: إن كان فيها موعد أو غرامة، لا تتجاهلها — اعرضها على شخص تثق به أو على الجهة نفسها." : tr("An official paper: if it has a date or a fine, don't ignore it — show it to someone you trust or to the office itself."));
+  if (f.kind === "school" && f.dates.length) { say.push(ar ? `فيها تاريخ: ${day(f.dates[0])}.` : `It mentions a date: ${day(f.dates[0])}.`); actions.push({ type: "radar", item: { kind: "other", title: ar ? "المدرسة" : tr("School"), date: f.dates[0] } }); }
   // one Radar action per date
   const seen = new Set(); const acts = actions.filter((a) => (a.type !== "radar" ? true : !seen.has(a.item.date) && seen.add(a.item.date)));
   return { say, todo, actions: acts };

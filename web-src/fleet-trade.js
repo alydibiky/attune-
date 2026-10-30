@@ -10,6 +10,7 @@
    3. Suppliers (الموردين): a record each (phone, opening balance) — what is owed = opening + what came into the store from
       them − what was paid to them (Money → Paid out, not bounced); a statement with the running balance.
    Pure. Tests: tests/unit/v744fleettrade.test.mjs.                                                                     */
+import { tr } from "./i18n.js";
 import { live, byId, r2, isoDay, readDate, showDate, daysBetween, addDays, addJob, addIncoming, FleetError } from "./fleet.js";
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -176,7 +177,7 @@ export function quoteHTML(s, id, { rtl = false } = {}) {
   const L = rtl ? { t: "عرض سعر", no: "رقم العرض", date: "التاريخ", valid: "سارٍ حتى", to: "السادة", d: "البيان", q: "الكمية", r: "السعر", a: "القيمة", sub: "الإجمالي قبل الضريبة", vat: "ضريبة القيمة المضافة", total: "الإجمالي", mob: "النقل والتركيب", h: "ساعة", day: "يوم", period: "فترة", sign: "التوقيع والختم", site: "الموقع", start: "البدء المتوقع" }
     : { t: "Quotation", no: "Quote no.", date: "Date", valid: "Valid until", to: "To", d: "Description", q: "Qty", r: "Rate", a: "Amount", sub: "Subtotal", vat: "VAT", total: "Total", mob: "Mobilisation", h: "hours", day: "days", period: "periods", sign: "Signature & stamp", site: "Site", start: "Expected start" };
   const unit = q.mode === "hourly" ? L.h : q.mode === "daily" ? L.day : L.period;
-  const what = (cr ? cr.name : q.tons ? q.tons + " t" : rtl ? "ونش" : "Crane") + (cr && cr.tons ? ` (${cr.tons} t)` : "");
+  const what = (cr ? cr.name : q.tons ? q.tons + " t" : rtl ? "ونش" : tr("Crane")) + (cr && cr.tons ? ` (${cr.tons} t)` : "");
   const site = (byId(s.sites, q.site) || {}).name || q.siteText;
   return page(rtl, q.no, `<div style="display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap"><div><h1>${esc(S.company || "")}</h1>${S.taxNo ? `<p class="m">${esc(S.taxNo)}</p>` : ""}</div><div><h1>${L.t}</h1><p class="m">${L.no}: <b>${esc(q.no)}</b></p><p class="m">${L.date}: ${showDate(q.date)} · ${L.valid}: ${showDate(q.validUntil)}</p></div></div>
 <p class="m" style="margin-top:14px">${L.to}: <b>${esc(c.name || "")}</b>${site ? " · " + L.site + ": " + esc(site) : ""}${q.start ? " · " + L.start + ": " + showDate(q.start) : ""}</p>`,

@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.32: Contract "second opinion" (roadmap: "paste a contract or offer → code flags risky terms", grows out of Deal Check) ----
    Code reads the contract — no model, so it works on any phone, offline, in a second. For each risky term it shows the exact
    sentence, what it means in plain words, and what to ask for instead. It also says what a contract of that kind usually has
@@ -139,8 +140,8 @@ export function reviewContract(text) {
 /** The message to send back asking for the changes (one line per flag), in the contract's language. */
 export function changeRequest(r, lang = "en") {
   const ar = lang === "ar";
-  const lines = r.flags.map((x, i) => `${i + 1}. ${ar ? x.ask.ar : x.ask.en}`);
+  const lines = r.flags.map((x, i) => `${i + 1}. ${ar ? x.ask.ar : tr(x.ask.en)}`);
   const miss = r.missing.map((m) => (ar ? "• " + m.ar : "• " + m.en));
-  return [ar ? "قبل التوقيع، أرجو تعديل الآتي:" : "Before I sign, I'd like these changes:", ...lines,
-    ...(miss.length ? [ar ? "وأرجو أن يذكر العقد أيضًا:" : "Please also add:", ...miss] : [])].join("\n");
+  return [ar ? "قبل التوقيع، أرجو تعديل الآتي:" : tr("Before I sign, I'd like these changes:"), ...lines,
+    ...(miss.length ? [ar ? "وأرجو أن يذكر العقد أيضًا:" : tr("Please also add:"), ...miss] : [])].join("\n");
 }

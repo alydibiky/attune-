@@ -3,6 +3,7 @@
    to spend today, yesterday's food against the goal, and what an agent found. People open apps that tell them something new.
    Android shows the text stored when the reminder was set, so the app writes TOMORROW's card each time it opens (and on the
    way out) — with the data of that moment. Pure: stores in, { title, lines } out.                                              */
+import { tr } from "./i18n.js";
 import { timeline } from "./timeline.js";
 import { safeToSpend } from "./safespend.js";
 import { dayTotals } from "./fit.js";
@@ -21,7 +22,7 @@ export function morningCard({ ledger, life, radar, fit, agents, reminders = [], 
   // what is due today, and what is late
   let tl = []; try { tl = timeline({ life, radar, ledger, reminders, now: d0.getTime(), days: 0, back: 30 }); } catch (e) {}
   const late = tl.filter((x) => x.late && x.kind !== "reminder"), due = tl.filter((x) => x.date === today && !x.late);
-  for (const x of due.slice(0, 3)) lines.push((ar ? "النهارده: " : "Today: ") + x.what + (x.amount ? ` · ${f(x.amount)}` : ""));
+  for (const x of due.slice(0, 3)) lines.push((ar ? "النهارده: " : tr("Today: ")) + x.what + (x.amount ? ` · ${f(x.amount)}` : ""));
   if (late.length) lines.push(ar ? `${late.length} متأخرين — ${late[0].what}` : `${late.length} late — ${late[0].what}${late.length > 1 ? " and more" : ""}`);
   // v8.7 bills autopilot: higher than usual, not come yet, coming in a few days
   try { for (const b of billsOf(ledger, d0.getTime()).filter((b) => b.status !== "ok").slice(0, 2)) lines.push(billLine(b, lang, homeCurrency(ledger))); } catch (e) {}
@@ -34,11 +35,11 @@ export function morningCard({ ledger, life, radar, fit, agents, reminders = [], 
     lines.push(goal ? (ar ? `امبارح أكلت ${f(k)} من ${f(goal)} سعرة` : `Yesterday: ${f(k)} of ${f(goal)} kcal`) : (ar ? `امبارح أكلت ${f(k)} سعرة` : `Yesterday: ${f(k)} kcal`));
   }
   // v8.7 the watch: one line when something is off (low oxygen, high blood pressure, short sleep, stress)
-  try { const w = vitals && vitalsWeek(vitals, d0.getTime()), l = w && w.lines.find((x) => x.level !== "ok"); if (l) lines.push(ar ? l.ar : l.en); } catch (e) {}
+  try { const w = vitals && vitalsWeek(vitals, d0.getTime()), l = w && w.lines.find((x) => x.level !== "ok"); if (l) lines.push(ar ? l.ar : tr(l.en)); } catch (e) {}
   // what an agent found (the newest find in the last 2 days)
   const found = ((agents && agents.agents) || []).filter((a) => a.on !== false && a.found && a.found.at > d0.getTime() - 2 * DAY).sort((a, b) => b.found.at - a.found.at)[0];
   if (found) lines.push(ar ? `الوكيل لقى ${found.title || found.what}: ${f(found.found.price)}` : `Agent found ${found.title || found.what}: ${f(found.found.price)}`);
-  return { title: ar ? "صباح الخير — يومك في سطور" : "Good morning — your day in a few lines", lines: lines.slice(0, 5), count: lines.length };
+  return { title: ar ? "صباح الخير — يومك في سطور" : tr("Good morning — your day in a few lines"), lines: lines.slice(0, 5), count: lines.length };
 }
 
 /** The reminder for tomorrow 8:00 (or `hour`) — or null when the card would say nothing. id is fixed: each one replaces the last. */

@@ -9,6 +9,7 @@
      - the verdict and the price to ask for.
    The model only reads the offer into fields and writes the negotiation message.
    Pure functions; tests in tests/unit/v533.test.mjs.                                            */
+import { tr } from "./i18n.js";
 import { homeCurrency } from "./locale.js";
 import { payCurrency } from "./yusr/paytext.js";
 
@@ -259,7 +260,7 @@ function labelledPart(text, v) {
 /** What was understood, in one sentence the buyer can say yes or no to. */
 export function readingOf(t, lang) {
   const ar = lang === "ar", cur = t.currency ? " " + t.currency : "";
-  const item = t.item || (ar ? "هذا العرض" : "this");
+  const item = t.item || (ar ? "هذا العرض" : tr("this"));
   const cash = t.cash || t.price;
   const parts = [];
   if (cash) parts.push(ar ? `${item} بسعر ${fmtN(cash)}${cur} كاش` : `${item} for ${fmtN(cash)}${cur} cash`);
@@ -269,7 +270,7 @@ export function readingOf(t, lang) {
     const total = (t.down || 0) + t.monthly * t.months;
     parts.push(ar ? `أو بالتقسيط: ${down}${t.months} × ${fmtN(t.monthly)}${cur} (المجموع ${fmtN(total)}${cur})` : `or in installments: ${down}${t.months} × ${fmtN(t.monthly)}${cur} (${fmtN(total)}${cur} in total)`);
   } else if (t.monthly) parts.push(ar ? `وقسط ${fmtN(t.monthly)}${cur} شهريًا (عدد الأشهر غير مذكور)` : `and ${fmtN(t.monthly)}${cur} a month (the number of months isn't written)`);
-  return (ar ? "قصدك: " : "Do you mean: ") + parts.join(ar ? "، " : ", ") + (ar ? "؟" : "?");
+  return (ar ? "قصدك: " : tr("Do you mean: ")) + parts.join(ar ? "، " : ", ") + (ar ? "؟" : "?");
 }
 /**
  * Is the reading doubtful enough to ask first? → { en, ar } (why) or null.
@@ -314,7 +315,7 @@ export function messageMessages(t, v, lang, questions) {
   return [
     { role: "system", content: ar
       ? "اكتب رسالة قصيرة ومهذبة بالعامية المصرية للبائع (٣–٥ سطور)، جاهزة للإرسال على واتساب. من غير مقدمات ولا شرح — الرسالة نفسها بس."
-      : "Write a short, polite message to the seller (3–5 lines), ready to send on WhatsApp. No preamble, no explanation — only the message." },
+      : tr("Write a short, polite message to the seller (3–5 lines), ready to send on WhatsApp. No preamble, no explanation — only the message.") },
     { role: "user", content: `Item: ${t.item || "the item"}\nAsked price: ${t.price || "?"} ${t.currency || ""}\n` +
       (v.target ? `Ask for about: ${v.target} ${t.currency || ""}\n` : "") +
       `Verdict: ${v.level}\nPoints: ${v.reasons.map((r) => r.en).join(" · ")}\nQuestions to include: ${questions.map((q) => q.en).join(" · ")}` +

@@ -27,7 +27,7 @@ export function FamilyPage({ flash, cur = "", remind }) {
       <h2 className={U.h1 + " flex items-center gap-2"}><Users size={20} className="c-acc" />{tr("Family")}</h2>
       <div className={U.cardPad + " space-y-2.5"}>
         <p className={"m-0 text-[13.5px] " + U.muted}>{tr("One shopping list, who paid what for the house, and reminders for your parents — shared with your family's phones only, locked with a family code. No account, no server.")}</p>
-        <label className="block text-[13px] font-bold">{tr("Your name in the family")}<input className={U.inp + " mt-1"} value={me} onChange={(e) => setMeName(e.target.value)} placeholder={ar ? "علي" : "Ali"} data-testid="family-me" /></label>
+        <label className="block text-[13px] font-bold">{tr("Your name in the family")}<input className={U.inp + " mt-1"} value={me} onChange={(e) => setMeName(e.target.value)} placeholder={ar ? "علي" : tr("Ali")} data-testid="family-me" /></label>
         <button className={U.btnP + " w-full"} disabled={!me.trim()} onClick={() => put(F.setMe(fam, me))} data-testid="family-start">{tr("Start the family space")}</button>
       </div>
     </div>);
@@ -67,7 +67,7 @@ export function FamilyPage({ flash, cur = "", remind }) {
         {/* the shared list */}
         <div className={U.cardPad + " space-y-2"} data-testid="family-list">
           <b className="flex items-center gap-1.5 font-extrabold text-[14.5px]"><ShoppingCart size={16} className="c-acc" />{tr("Shopping list")} · <span className="tabular-nums">{list.filter((x) => !x.done).length}</span></b>
-          <div className="flex gap-2"><input className={U.inp} value={item} onChange={(e) => setItem(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addItem(); }} placeholder={ar ? "لبن، عيش وبيض" : "milk, bread and eggs"} data-testid="family-item" />
+          <div className="flex gap-2"><input className={U.inp} value={item} onChange={(e) => setItem(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addItem(); }} placeholder={ar ? "لبن، عيش وبيض" : tr("milk, bread and eggs")} data-testid="family-item" />
             <button className={U.btnS} onClick={addItem} aria-label={tr("Add")} data-testid="family-item-add"><Plus size={16} /></button></div>
           {list.length ? <ul className="m-0 p-0 list-none space-y-1">{list.map((x) => (
             <li key={x.id}><button className="w-full min-h-[44px] flex items-center gap-2.5 text-start" onClick={() => put(F.tickItem(fam, x.id))} data-testid="family-item-row">
@@ -94,7 +94,7 @@ export function FamilyPage({ flash, cur = "", remind }) {
         <div className={U.cardPad + " space-y-2"} data-testid="family-reminders">
           <b className="flex items-center gap-1.5 font-extrabold text-[14.5px]"><Bell size={16} className="c-acc" />{tr("Reminders for the family")}</b>
           {fam.reminders.slice(-5).map((r) => <div key={r.id} className="text-[13px] font-semibold" dir="auto">{r.forName}: {r.title} · <span className={U.muted}>{new Date(r.at).toLocaleTimeString(ar ? "ar-EG-u-nu-latn" : undefined, { hour: "numeric", minute: "2-digit" })}</span></div>)}
-          <div className="grid grid-cols-[1fr_1.6fr] gap-2"><input className={U.inp} value={rWho} onChange={(e) => setRWho(e.target.value)} placeholder={ar ? "بابا" : "Dad"} data-testid="family-rem-who" />
+          <div className="grid grid-cols-[1fr_1.6fr] gap-2"><input className={U.inp} value={rWho} onChange={(e) => setRWho(e.target.value)} placeholder={ar ? "بابا" : tr("Dad")} data-testid="family-rem-who" />
             <input className={U.inp} value={rWhat} onChange={(e) => setRWhat(e.target.value)} placeholder={tr("Take the pills")} data-testid="family-rem-what" /></div>
           <div className="flex gap-2"><input type="datetime-local" className={U.inp} value={rAt} onChange={(e) => setRAt(e.target.value)} aria-label={tr("When")} />
             <select className={U.inp + " w-auto!"} value={rRep} onChange={(e) => setRRep(e.target.value)} aria-label={tr("Repeat")}><option value="none">{tr("Once")}</option><option value="daily">{tr("Every day")}</option><option value="weekly">{tr("Every week")}</option></select>

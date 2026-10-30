@@ -10,6 +10,7 @@
    The SAVED counter only counts what the person did and marked (honest: it is the number Pro is sold on).
    Pure logic; store "attune:guardian:v1" = { saved: [{id, kind, amount, at, what}], dismissed: [ids] }.
    Tests: tests/unit/v727guardian.test.mjs.                                                                              */
+import { tr } from "./i18n.js";
 import { progressOf } from "./life.js";
 import { homeCurrency } from "./locale.js";
 import { billsOf, billLine } from "./bills.js";
@@ -132,7 +133,7 @@ const REMIND = {
 export function reminderText(c, s, days, lang) {
   const amt = money(s.amount) + " " + (c.currency || homeCurrency()), ar = lang === "ar" || /[؀-ۿ]/.test(c.person || "");
   const which = c.kind === "installment" ? (ar ? ` (القسط ${s.i + 1} من ${c.count})` : ` (installment ${s.i + 1} of ${c.count})`) : "";
-  return (ar ? REMIND.ar : REMIND.en)(c.person, amt, which, s.date);
+  return (ar ? REMIND.ar : tr(REMIND.en))(c.person, amt, which, s.date);
 }
 
 // ---- the honest counter ----

@@ -14,7 +14,7 @@ export function DoResult({ r, navTo, onClose, onUndo }) {
     const a = r.answer;
     return (
       <div className={cardPad + " space-y-2.5"} data-testid="do-answer">
-        <p className="m-0 text-[15px] font-medium" dir="auto">{(r.ar ? a.ar : a.en).replace(/\*\*/g, "")}</p>
+        <p className="m-0 text-[15px] font-medium" dir="auto">{(r.ar ? a.ar : tr(a.en)).replace(/\*\*/g, "")}</p>
         {(a.rows || []).length ? <div className="space-y-0.5">{a.rows.slice(0, 6).map(([k, v], i) => <div key={i} className="flex gap-3 text-[13px]"><span className="c-sub shrink-0" dir="auto">{k}</span><span className="c-num tabular-nums font-semibold" dir="auto">{v}</span></div>)}</div> : null}
         <div className="flex items-center gap-2">{a.open && TOOL_NAME[a.open] ? <button className={btnP + " !h-11 !min-h-[44px] !text-[14px]"} onClick={() => navTo(a.open)} data-testid="do-open">{tr("Open {t}", { t: tr(TOOL_NAME[a.open]) })}<ChevronRight size={16} className="rtl:rotate-180" /></button> : null}
           <button className={"ms-auto min-h-[44px] px-3 rounded-[12px] text-[13.5px] font-bold " + muted} onClick={onClose}>{tr("Close")}</button></div>

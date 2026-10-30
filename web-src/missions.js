@@ -13,6 +13,7 @@
      learn    "finish the Turkish course by December" — a Learn course's lessons done
      revenue  «عايز الأسطول يجيب 500 ألف الشهر ده» — company: Fleet's work entries (crane income)
      collect  "collect 200k from clients by the end of the month" — company: Fleet's incoming payments + cheques due  */
+import { tr } from "./i18n.js";
 import { homeCurrency } from "./locale.js";
 
 const DAY = 86400000;
@@ -399,8 +400,8 @@ export function debrief(missions, data, now = Date.now(), lang = "en") {
   const ar = lang === "ar";
   return (missions || []).filter((m) => m.status === "active").map((m) => {
     const e = evaluate(m, data, now);
-    const head = e.state === "done" ? (ar ? "خلصت ✔" : "done ✔") : e.chance == null ? (ar ? "محتاج بيانات" : "needs data") : (ar ? `فرصتك ${pc(e.chance)}` : `${pc(e.chance)} chance`);
-    const step = e.step ? (ar ? e.step.ar : e.step.en) : "";
+    const head = e.state === "done" ? (ar ? "خلصت ✔" : tr("done ✔")) : e.chance == null ? (ar ? "محتاج بيانات" : tr("needs data")) : (ar ? `فرصتك ${pc(e.chance)}` : `${pc(e.chance)} chance`);
+    const step = e.step ? (ar ? e.step.ar : tr(e.step.en)) : "";
     return { id: m.id, title: m.title, head, step, e };
   });
 }

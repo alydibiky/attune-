@@ -402,7 +402,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   // (Attune's header and bottom bar are hidden while it is open), a bright map, one white search bar with ← back,
   // the country badge opens Offline maps, a white sheet for your places, results and the picked place.
   const sheetH = sheet === "full" ? "88%" : sheet === "half" ? "50%" : "118px";
-  const cname = (c) => (lang === "ar" ? c.ar : c.en);
+  const cname = (c) => (lang === "ar" ? c.ar : tr(c.en));
   const chipCls = "shrink-0 h-10 px-4 rounded-full bg-[var(--c-surf)] text-[13.5px] font-semibold text-[var(--c-ink)] shadow-[0_2px_8px_rgba(17,24,39,.14)]";
   const fab = "w-12 h-12 rounded-full bg-[var(--c-surf)] text-[var(--c-ink)] flex items-center justify-center shadow-[0_3px_10px_rgba(17,24,39,.2)]";
   const others = sel && sel.from ? sel.from.filter((r) => r !== sel.src).slice(0, 3) : [];

@@ -10,6 +10,7 @@
      every "month" | "week" | "year" | null (once)
    Pure logic; stored in localStorage "attune:life:v1" by the UI. Tests: tests/unit/v727life.test.mjs.                          */
 
+import { tr } from "./i18n.js";
 import { payCurrency, payNumber } from "./yusr/paytext.js";
 import { homeCurrency } from "./locale.js";
 
@@ -205,7 +206,7 @@ function bankLoan(t0) {
   if (!bank || !amt || !per) return t0;
   const n = +amt[1].replace(/,/g, "") * (amt[2] ? 1000 : 1), months = +per[1] * (/year|سن/i.test(per[2]) ? 12 : 1);
   if (!(n > 0) || !(months >= 2 && months <= 360)) return t0;
-  const who = bank[1].replace(/^the\s+/i, "").replace(/^(bank|البنك|بنك)$/i, (b) => (/[ء-ي]/.test(b) ? "البنك" : "Bank"));
+  const who = bank[1].replace(/^the\s+/i, "").replace(/^(bank|البنك|بنك)$/i, (b) => (/[ء-ي]/.test(b) ? "البنك" : tr("Bank")));
   return `I owe ${who} ${n} over ${months} months`;
 }
 export function parseLife(text, { now = Date.now(), currency = homeCurrency() } = {}) {

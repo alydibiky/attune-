@@ -3,6 +3,7 @@
    meals, custom foods), food quality (sugar, saturated fat, salt, Nutri-Score, NOVA), Ramadan mode
    (real Fajr / Maghrib times — Egyptian General Authority angles), body fat from measurements
    (US Navy), a 7-day plan with one shopping list, a day score and a weekly report.           */
+import { tr } from "./i18n.js";
 import { MEALS, RECIPES, food, recipeNutrients, mealPlan, dayTotals, today, sumN } from "./fit.js";
 
 const r1 = (v) => Math.round(v * 10) / 10;
@@ -204,7 +205,7 @@ export function shoppingList(week) {
 }
 export function shoppingText(list, lang = "en") {
   const ar = lang === "ar";
-  return (ar ? "🛒 قايمة المشتريات للأسبوع" : "🛒 Shopping list for the week") + "\n" + list.map((g) => `\n${ar ? g.ar : g.en}:\n` + g.items.map((x) => `• ${ar ? x.ar : x.en} — ${x.grams >= 1000 ? (x.grams / 1000).toFixed(1) + (ar ? " كجم" : " kg") : x.grams + (ar ? " جم" : " g")}`).join("\n")).join("\n");
+  return (ar ? "🛒 قايمة المشتريات للأسبوع" : tr("🛒 Shopping list for the week")) + "\n" + list.map((g) => `\n${ar ? g.ar : tr(g.en)}:\n` + g.items.map((x) => `• ${ar ? x.ar : tr(x.en)} — ${x.grams >= 1000 ? (x.grams / 1000).toFixed(1) + (ar ? " كجم" : tr(" kg")) : x.grams + (ar ? " جم" : " g")}`).join("\n")).join("\n");
 }
 
 // ---- 6. the day's score and the week's report ----

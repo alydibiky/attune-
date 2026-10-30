@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.10: the CV / Resume page — one set of content, two looks, English or Arabic ---------------------------------------
    Pure logic (no screen, no model): the data model, the HTML of the page (an ATS-safe single column, or a modern
    two-column with a sidebar), a Word version for ATS tools, plain text, and a checker that finds gaps and weak lines
@@ -38,7 +39,7 @@ export function newCV(lang = "en", name = "") {
   const ar = lang === "ar";
   const sec = (type, items) => ({ id: id("s"), type, title: SECTION_TYPES[type][ar ? "ar" : "en"], visible: true, items });
   return {
-    id: id("cv"), name: name || (ar ? "سيرتي الذاتية" : "My CV"), lang, page: "A4", layout: "ats", theme: "teal", font: ar ? "naskh" : "sans", fontSize: 10.5,
+    id: id("cv"), name: name || (ar ? "سيرتي الذاتية" : tr("My CV")), lang, page: "A4", layout: "ats", theme: "teal", font: ar ? "naskh" : "sans", fontSize: 10.5,
     spacing: "normal", margin: 14, fit: 1, photo: "", showPhoto: false, updated: Date.now(),
     basics: { name: "", title: "", email: "", phone: "", city: "", links: [] },
     sections: [sec("summary", [{ text: "" }]), sec("experience", []), sec("education", []), sec("skills", [{ name: "", items: [] }]), sec("languages", []), sec("certs", [])],
@@ -77,7 +78,7 @@ export function fmtDate(v, lang = "en") {
   return t;
 }
 export function fmtRange(it, lang = "en") {
-  const a = fmtDate(it.start, lang), b = it.current ? (lang === "ar" ? "حتى الآن" : "Present") : fmtDate(it.end, lang);
+  const a = fmtDate(it.start, lang), b = it.current ? (lang === "ar" ? "حتى الآن" : tr("Present")) : fmtDate(it.end, lang);
   return a && b ? `${a} – ${b}` : a || b;
 }
 const monthIndex = (v) => { const m = /^(\d{4})-(\d{1,2})$/.exec(String(v || "")); return m ? +m[1] * 12 + (+m[2] - 1) : /^\d{4}$/.test(String(v || "")) ? +v * 12 : null; };

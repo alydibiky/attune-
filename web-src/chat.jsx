@@ -883,7 +883,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed },
-        { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Attune noticed"), detail: L.length ? L.map((x) => "• " + (ar ? x.ar : x.en)).join("\n") : tr("Nothing worth your time right now — I'll tell you when something is."), actions: [["Just answer", "answer"]] } }] }));
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Attune noticed"), detail: L.length ? L.map((x) => "• " + (ar ? x.ar : tr(x.en))).join("\n") : tr("Nothing worth your time right now — I'll tell you when something is."), actions: [["Just answer", "answer"]] } }] }));
       setText("");
       return;
     }
@@ -904,7 +904,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed },
-        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? cx.answer.ar : cx.answer.en) + (cx.items.length ? "\n" + cx.items.slice(0, 5).map((x) => "• " + x.title + (x.amount ? " — " + Math.round(x.amount).toLocaleString("en-US") : "") + (x.ts ? " · " + new Date(x.ts).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short" }) : "")).join("\n") : ""),
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? cx.answer.ar : tr(cx.answer.en)) + (cx.items.length ? "\n" + cx.items.slice(0, 5).map((x) => "• " + x.title + (x.amount ? " — " + Math.round(x.amount).toLocaleString("en-US") : "") + (x.ts ? " · " + new Date(x.ts).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short" }) : "")).join("\n") : ""),
           actions: [...cx.people.slice(0, 1).map((p) => [p.name, "person:" + p.id]), ...opens.map((o) => [OPEN[o], "open:" + o]), ["Just answer", "answer"]] } }] }));
       setText("");
     };
@@ -968,7 +968,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed },
-        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? mine.ar : mine.en).replace(/\*\*/g, "") + ((mine.rows || []).length ? "\n" + mine.rows.slice(0, 8).map(([a, b]) => "• " + a + " — " + b).join("\n") : ""),
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? mine.ar : tr(mine.en)).replace(/\*\*/g, "") + ((mine.rows || []).length ? "\n" + mine.rows.slice(0, 8).map(([a, b]) => "• " + a + " — " + b).join("\n") : ""),
           actions: [...(mine.open && TOOL[mine.open] ? [[TOOL[mine.open], "open:" + mine.open]] : []), ["Just answer", "answer"]] } }] }));
       setText("");
       return;
@@ -1116,7 +1116,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (typed && !img && !fileAtt && isScoreQuestion(typed) && !/\b(latest|update|check the web)\b|آخر نتيجة|اخر نتيجة|دور على النت/i.test(typed) && NATIVE && NATIVE.recallNotes) {
         let ln = null; try { ln = liveFromNotes(JSON.parse(NATIVE.recallNotes() || "[]"), typed); } catch (e) { ln = null; }
         if (ln) {
-          const txt = /[\u0600-\u06FF]/.test(typed) ? ln.ar : ln.en;
+          const txt = /[\u0600-\u06FF]/.test(typed) ? ln.ar : tr(ln.en);
           patchMsg(cid, aiId, { text: txt, streaming: false, phase: "", secs: 0, fromNotification: ln.src });
           api.remember({ kind: "chat", title: typed.slice(0, 70), text: typed, output: txt, tags: ["chat"] });
           return;
@@ -1681,7 +1681,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           // v6.38 (Ali: "it writes the whole answer then removes it and rewrites it"): say why before it is written again
           onStatus(want === "ar" ? tr("The answer came in English — writing it again in Arabic…") : tr("The answer came in the wrong language — writing it again in English…"));
           try {
-            const again = await api.run(buildMessages(history, content + (want === "ar" ? "\n\n(اكتب الرد كله بالعربي — Write the whole answer in Arabic.)" : "\n\n(Write the whole answer in English.)")), pic, { onToken, onStatus, think: false, copy: !!fileAtt });
+            const again = await api.run(buildMessages(history, content + (want === "ar" ? "\n\n(اكتب الرد كله بالعربي — Write the whole answer in Arabic.)" : tr("\n\n(Write the whole answer in English.)"))), pic, { onToken, onStatus, think: false, copy: !!fileAtt });
             if (runRef.current !== run) return;
             if (again && !wrongLanguage(typed || q, again)) answer = again;
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
@@ -1808,7 +1808,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const qL = (webCtx && webCtx.question) || typed, arL = /[\u0600-\u06FF]/.test(typed || "");
         const live = isScoreQuestion(typed) ? fromPassages([...((webCtx && webCtx.toRead) || []), ...sources], qL) : null;
         const meta = isMetaAnswer(answer);
-        if (live) answer = (arL ? live.ar : live.en) + (meta ? "" : "\n\n" + answer);
+        if (live) answer = (arL ? live.ar : tr(live.en)) + (meta ? "" : "\n\n" + answer);
         else if (meta) { const kl = keyLines(sources, qL); if (kl) { answer = kl; extra.metaFixed = true; } }
       }
       // v8.4 (Ali's Lynk & Co 900: "I found no web page" + a table of "—" and citations [2] to nothing): an answer written

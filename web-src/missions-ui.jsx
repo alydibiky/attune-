@@ -73,7 +73,7 @@ function Card({ m, e, onChange, onDelete, openScout }) {
         <span className="text-[13px]">{e.chance == null ? <span className="c-sub">{tr("No forecast yet")}</span> : <><span className="c-sub">{tr("Chance by the deadline")}</span> <b className="c-num tabular-nums text-[16px] font-black" data-testid="mission-chance">{Math.round(e.chance * 100)}%</b></>}</span>
         <span className="c-acc"><Spark log={m.log} /></span>
       </div>
-      {e.step ? <p className="text-[13.5px] rounded-[20px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b>{ar ? e.step.ar : e.step.en}</p> : null}
+      {e.step ? <p className="text-[13.5px] rounded-[20px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b>{ar ? e.step.ar : tr(e.step.en)}</p> : null}
       <div className="flex flex-wrap items-center gap-2">
         <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => setWhy(!why)} aria-expanded={why} data-testid="mission-why">{why ? <ChevronUp size={14} /> : <ChevronDown size={14} />}{tr("Why")}</button>
         {m.kind === "buy" ? <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => openScout(m)} data-testid="mission-scout"><Binoculars size={14} />{tr("Ads in Scout")}</button> : null}
@@ -81,7 +81,7 @@ function Card({ m, e, onChange, onDelete, openScout }) {
         {e.state === "done" ? <button className={btnP + " !h-11 !min-h-[44px] !text-[14px]"} onClick={() => onChange({ ...m, status: "done" })} data-testid="mission-done"><Check size={15} />{tr("Mark done")}</button> : null}
         <button className="w-11 h-11 grid place-items-center rounded-[12px] c-sub hover:text-[var(--c-neg)] ms-auto" aria-label={tr("Delete")} onClick={() => onDelete(m)}><Trash2 size={15} /></button>
       </div>
-      {why ? <ul className="c-sub text-[12.5px] m-0 ps-5 grid gap-1" data-testid="mission-evidence">{e.evidence.map((x, i) => <li key={i} dir="auto">{ar ? x.ar : x.en}</li>)}
+      {why ? <ul className="c-sub text-[12.5px] m-0 ps-5 grid gap-1" data-testid="mission-evidence">{e.evidence.map((x, i) => <li key={i} dir="auto">{ar ? x.ar : tr(x.en)}</li>)}
         {e.perDayNeed != null && e.left > 0 ? <li dir="auto">{m.kind === "weight" ? tr("Needed from now: {x} kg a week", { x: n(e.perDayNeed * 7, 1) }) : tr("Needed from now: {x} a month", { x: n(e.perDayNeed * 30) })}</li> : null}</ul> : null}
     </div>);
 }
@@ -193,7 +193,7 @@ function DecisionLab() {
               <td className="pe-2">{fmt(x.at[1].p50)}</td><td className="pe-2">{fmt(x.at[3].p50)}</td><td className="pe-2">{fmt(x.at[5].p50)}</td><td>{fmt(x.worth5)}</td></tr>)}</tbody></table></div>
           <p className={kLabel + " m-0 pt-1"}>{tr("Stress tests: chance cash never runs out")}</p>
           <div className="overflow-x-auto"><table className="w-full text-[12.5px] c-num tabular-nums" data-testid="lifesim-stress"><tbody>
-            {LS.STRESS.map((sc) => <tr key={sc.id} className="border-t" style={{ borderColor: "var(--c-ln)" }}><td className="py-1 pe-2" dir="auto">{ar ? sc.ar : sc.en}</td>
+            {LS.STRESS.map((sc) => <tr key={sc.id} className="border-t" style={{ borderColor: "var(--c-ln)" }}><td className="py-1 pe-2" dir="auto">{ar ? sc.ar : tr(sc.en)}</td>
               {res.sim.results.filter((x) => !x.base).map((x) => { const st = x.stress.find((y) => y.id === sc.id); return <td key={x.name} className={"pe-2 " + (st.ok < 0.9 ? "c-neg" : "")}>{x.name}: {Math.round(st.ok * 100)}%</td>; })}</tr>)}
           </tbody></table></div>
           <p className="c-sub text-[11px] m-0">{tr("Median of 2,000 futures in today's {c}, from your last {d} days in Money. Installments are fixed, so inflation makes them smaller each month; savings earn the certificate rate. A model, not a promise.", { c: res.cur, d: res.months })}</p>
@@ -210,7 +210,7 @@ export function useTopMission() {
     try {
       const act = M.loadMissions().items.filter((m) => m.status === "active"); if (!act.length) return null;
       const d = dataNow(), r = act.map((m) => ({ m, e: M.evaluate(m, d) })).sort((a, b) => (a.e.chance ?? 1) - (b.e.chance ?? 1))[0];
-      return { title: r.m.title, chance: r.e.chance, step: r.e.step ? (getLang() === "ar" ? r.e.step.ar : r.e.step.en) : "" };
+      return { title: r.m.title, chance: r.e.chance, step: r.e.step ? (getLang() === "ar" ? r.e.step.ar : tr(r.e.step.en)) : "" };
     } catch (e) { return null; }
   }, [fleet]);
 }
@@ -227,7 +227,7 @@ export function MissionsLine({ go }) {
     <button onClick={go} className={kCard + " w-full text-start p-3.5 min-h-[56px] flex items-center gap-3 hover:border-[var(--c-acc)]"} data-testid="home-missions">
       <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0"><Target size={18} className="c-acc" /></span>
       <span className="flex-1 min-w-0"><b className="block text-[14.5px] font-extrabold truncate" dir="auto">{r.m.title}</b>
-        <span className="c-sub block text-[12.5px] tabular-nums truncate" dir="auto">{r.e.chance == null ? tr("Needs data") : tr("{c}% chance", { c: Math.round(r.e.chance * 100) })}{r.e.step ? " · " + (ar ? r.e.step.ar : r.e.step.en) : ""}</span></span>
+        <span className="c-sub block text-[12.5px] tabular-nums truncate" dir="auto">{r.e.chance == null ? tr("Needs data") : tr("{c}% chance", { c: Math.round(r.e.chance * 100) })}{r.e.step ? " · " + (ar ? r.e.step.ar : tr(r.e.step.en)) : ""}</span></span>
       {act.length > 1 ? <span className="c-sub text-[11px] shrink-0">+{act.length - 1}</span> : null}
     </button>);
 }

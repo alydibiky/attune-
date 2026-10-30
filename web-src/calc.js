@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- instant calculations ------------------------------------------------------
    "3 cranes × 4 days × 12,500 EGP a day + 14% VAT — total?" is arithmetic, not a
    language problem. A phone model takes seconds to minutes and can still get it
@@ -174,7 +175,7 @@ export function calculate(text) {
   const s = String(text);
   const unit = (CUR.find(([re]) => re.test(s)) || [])[1] || "";
   const isAr = /[؀-ۿ]/.test(s);
-  const label = isAr ? "الإجمالي" : "Total";
+  const label = isAr ? "الإجمالي" : tr("Total");
   const shownUnit = isAr ? ({ EGP: "جنيه", USD: "دولار", SAR: "ريال", AED: "درهم", EUR: "يورو" }[unit] || unit) : unit;
   const markdown = `**${label}: ${fmt(value)}${shownUnit ? " " + shownUnit : ""}**\n\n` + steps.map((x, i) => `${i + 1}. ${x}`).join("\n");
   return { value, unit, steps, markdown };

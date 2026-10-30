@@ -98,7 +98,7 @@ export function WaLibrary({ incoming, clearIncoming, flash, openXray }) {
         try { await window.__attuneNativeCall("waSave", { gid: g.id, name, b64 }); files.push(name); } catch (e) {}
       } else { await S.putPhoto(g.id, name, f); files.push(name); }
     }
-    const fresh = W.addedItems({ text, files, who: getLang() === "ar" ? "أنا" : "Me" });
+    const fresh = W.addedItems({ text, files, who: getLang() === "ar" ? "أنا" : tr("Me") });
     if (!fresh.length) { setBusy(""); return; }
     const m = W.mergeItems(g.items, fresh), moves = { ...(g.moves || {}) };
     if (album) for (const it of fresh) moves[it.id] = album;

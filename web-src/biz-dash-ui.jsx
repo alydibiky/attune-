@@ -9,7 +9,7 @@ import { tr, getLang } from "./i18n.js";
 import * as K from "./ui-kit.jsx";
 
 const isAr = () => getLang() === "ar";
-const LL = (en, ar) => (isAr() ? ar : en);
+const LL = (en, ar) => (isAr() ? ar : tr(en));
 const T = (s) => "⁦" + s + "⁩";
 const M = (v, cur) => B.fmt(v || 0) + (cur ? " " + cur : "");
 const card = K.card;

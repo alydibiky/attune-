@@ -3,13 +3,13 @@
    matters (documents) and following the app language on screen. No logic here: that is books.js / books-ops.js. */
 import React, { useState, createContext, useContext } from "react";
 import { X, ChevronLeft, Search } from "lucide-react";
-import { getLang } from "./i18n.js";
+import { getLang, tr } from "./i18n.js";
 import * as B from "./books.js";
 import { tag, chip } from "./ui-kit.jsx";
 
 export const isAr = () => getLang() === "ar";
 /** Pick the language of the screen: L("Invoice", "فاتورة"). */
-export const L = (en, ar) => (isAr() ? ar : en);
+export const L = (en, ar) => (isAr() ? ar : tr(en));
 
 // v7.0 Gemini's Direction 2 "Quiet Atelier" (Ali's pick, 22 Oct 2026): every Books screen is drawn with the theme tokens of
 // build/tw.css (.calm), so it follows the app's light AND dark look. Both names keep working (the Settings choice is kept).

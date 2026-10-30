@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v8.7 (persona 4, idea 14 — Ali: "do all"): the bills autopilot ------------------------------------------------------------
    Code learns each home bill from Money's own payments (no model, no server): which day of the month it usually comes, how much
    it usually is. Then it says, in time:
@@ -59,7 +60,7 @@ export function billLine(b, lang = "en", cur = "") {
 /** "my bills" / «فواتيري» — every learned bill: when it comes, how much, this month. */
 export function billsAnswer(ledger, now = Date.now(), lang = "en", cur = "") {
   const list = billsOf(ledger, now), ar = lang === "ar";
-  if (!list.length) return ar ? "لسه معرفتش فواتيرك — بعد ٣ شهور من تسجيل الكهربا والمية والنت في الفلوس هقولك ميعاد كل واحدة وقيمتها." : "I don't know your bills yet — after 3 months of electricity, water or internet in Money I'll tell you when each comes and how much.";
+  if (!list.length) return ar ? "لسه معرفتش فواتيرك — بعد ٣ شهور من تسجيل الكهربا والمية والنت في الفلوس هقولك ميعاد كل واحدة وقيمتها." : tr("I don't know your bills yet — after 3 months of electricity, water or internet in Money I'll tell you when each comes and how much.");
   return list.map((b) => billLine(b, lang, cur) || (ar ? `${b.ar}: يوم ${b.usualDay} عادةً، حوالي ${f(b.usual)}${b.paid ? ` — اتدفعت ${f(b.thisMonth)}` : ""}` : `${b.label}: around the ${nth(b.usualDay)}, about ${f(b.usual)}${b.paid ? ` — paid ${f(b.thisMonth)}` : ""}`)).join("\n");
 }
 export const billsIntent = (q) => /^\s*(?:what are |show |list )?(?:my |the )?(?:home |monthly )?bills\s*\??\s*$|\bwhen (?:does|do) (?:my |the )?\w+ bills? come\b|^\s*(?:ايه )?فواتيري\s*[؟?]?\s*$|^\s*الفواتير\s*[؟?]?\s*$/i.test(String(q || ""));

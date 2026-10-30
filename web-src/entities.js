@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v8.8 The connected memory, part 1: your people (and places and things) — Ali, 30 Oct 2026: "the chat should be very smart
    and connect everything together"; "for names an option to add a referable name the first time or a contact, so when I say
    Ahmed it asks me which Ahmed if there is more than one"; "contact names are not always good — give me both: add his contact
@@ -167,7 +168,7 @@ export function seedFrom(dir, { life = null, voicePeople = null } = {}, now = Da
   const has = (name) => d.items.some((p) => keysOf(p).includes(fold(name).trim().split(" ").map(canon).join(" ")));
   for (const c of (life && life.items) || []) {
     const nm = clean(c.person); if (!nm || has(nm)) continue;
-    d = addCard(d, { name: nm, role: /maid|خادم|شغال|دادة|داده|نظافه|cleaner/i.test([c.title, c.kind].join(" ")) ? (/[؀-ۿ]/.test(nm) ? "الشغالة" : "maid") : "" }, now).dir;
+    d = addCard(d, { name: nm, role: /maid|خادم|شغال|دادة|داده|نظافه|cleaner/i.test([c.title, c.kind].join(" ")) ? (/[؀-ۿ]/.test(nm) ? "الشغالة" : tr("maid")) : "" }, now).dir;
   }
   for (const [k, v] of Object.entries(voicePeople || {})) {
     if (!k.startsWith("~") || !v || !v.is) continue;

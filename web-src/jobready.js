@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.27 Job ready — from your CV to a job, inside CV / Resume (a "Job ready" tab, no new tool). All CODE:
    · roleOf / skillsCheck: the job you want → the skills employers usually ask for, which your CV already shows and which it
      doesn't (each missing one can start a Learn daily course).
@@ -158,10 +159,10 @@ export function scorecard(rows, lang = "en") {
   const c = { total: avg("total"), structure: avg("structure"), fillers: avg("fillersScore"), pace: avg("paceScore"), confidence: avg("confidence"), n: done.length };
   const weak = [["structure", c.structure], ["fillers", c.fillers], ["confidence", c.confidence], ["pace", c.pace]].filter(([, v]) => v != null).sort((a, b) => a[1] - b[1])[0];
   const ar = lang === "ar";
-  const TIP = { structure: ar ? "احكي كل إجابة كقصة: إيه اللي حصل، إنت عملت إيه، والنتيجة برقم." : "Tell every answer as a story: what happened, what YOU did, and the result with a number.",
-    fillers: ar ? "بدل «يعني» و«اه» — سكتة صغيرة. السكوت ثانية أحسن من الحشو." : "Replace “um” and “like” with a short pause — a second of silence sounds more confident.",
-    confidence: ar ? "قول «عملت» و«نجحت» بدل «أظن» و«ممكن»." : "Say “I did” and “it worked” instead of “I think” and “maybe”.",
-    pace: ar ? "خلي سرعتك متوسطة: 110–170 كلمة في الدقيقة." : "Keep a steady pace: 110–170 words a minute." };
+  const TIP = { structure: ar ? "احكي كل إجابة كقصة: إيه اللي حصل، إنت عملت إيه، والنتيجة برقم." : tr("Tell every answer as a story: what happened, what YOU did, and the result with a number."),
+    fillers: ar ? "بدل «يعني» و«اه» — سكتة صغيرة. السكوت ثانية أحسن من الحشو." : tr("Replace “um” and “like” with a short pause — a second of silence sounds more confident."),
+    confidence: ar ? "قول «عملت» و«نجحت» بدل «أظن» و«ممكن»." : tr("Say “I did” and “it worked” instead of “I think” and “maybe”."),
+    pace: ar ? "خلي سرعتك متوسطة: 110–170 كلمة في الدقيقة." : tr("Keep a steady pace: 110–170 words a minute.") };
   return { ...c, weakest: weak ? weak[0] : null, tip: weak ? TIP[weak[0]] : "" };
 }
 /** The better answer: the same facts, told as a clear story — nothing invented. */

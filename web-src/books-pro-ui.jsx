@@ -1,6 +1,7 @@
 /* ---- v6.44 Books in depth — the screens for books-pro.js, inside Books' own tabs (no new layout):
    Reports → Balance sheet · Cash flow · Month by month · Budget vs actual; Money → Fixed assets · Payroll · Recurring ·
    Bank reconciliation · Instalments. Bilingual inline (L(en, ar)) like the rest of Books. Tests: tests/e2e_v744bookspro.py. */
+import { tr } from "./i18n.js";
 import React, { useMemo, useState } from "react";
 import { Plus, Upload, Check } from "lucide-react";
 import * as B from "./books.js";
@@ -10,7 +11,7 @@ import { L, isAr, useBooks, useTheme, Card, Stat, Section, Money, Badge, Empty, 
 
 const MONTHS = [["Jan", "يناير"], ["Feb", "فبراير"], ["Mar", "مارس"], ["Apr", "أبريل"], ["May", "مايو"], ["Jun", "يونيو"], ["Jul", "يوليو"], ["Aug", "أغسطس"], ["Sep", "سبتمبر"], ["Oct", "أكتوبر"], ["Nov", "نوفمبر"], ["Dec", "ديسمبر"]];
 const mName = (ym) => L(...MONTHS[+ym.slice(5, 7) - 1]);
-const aName = (r) => (isAr() ? r.ar : r.en);
+const aName = (r) => (isAr() ? r.ar : tr(r.en));
 const Row = ({ label, v, bold, tone }) => <div className={`flex justify-between items-baseline gap-3 px-3.5 py-2.5 text-[13.5px] ${bold ? "font-extrabold" : ""} ${tone || ""}`}><span>{label}</span><Money v={v} /></div>;
 const YearPick = ({ y, setY }) => <div className="flex items-center gap-2 mb-3"><button className={`${BTN} border border-[var(--c-ln)] bg-[var(--c-surf)] w-11 !px-0 text-[18px] rtl:rotate-180`} onClick={() => setY(y - 1)} aria-label={L("Previous year", "السنة اللي فاتت")}>‹</button><b className="tabular-nums text-[17px] font-black min-w-[56px] text-center" dir="ltr">{y}</b><button className={`${BTN} border border-[var(--c-ln)] bg-[var(--c-surf)] w-11 !px-0 text-[18px] rtl:rotate-180`} onClick={() => setY(y + 1)} aria-label={L("Next year", "السنة الجاية")}>›</button></div>;
 

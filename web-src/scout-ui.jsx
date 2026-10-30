@@ -130,8 +130,8 @@ export function finishRun(goal, hits, now = Date.now()) {
   return { goal: { ...goal, seen: run.seen, listSeen: run.listSeen, lastRun: now, lastCount: run.found.length, lastHits: hits.length, lastSites: [...new Set(hits.map((h) => S.siteOf(h.url)))].slice(0, 30), unseen }, tell: S.worthTelling(run), run };
 }
 export function tellText(goal, tell, ar) {
-  if (tell[0] && tell[0].gold) return { title: ar ? `الدهب عيار ${tell[0].karat} وصل لهدفك` : `Gold ${tell[0].karat}K reached your price`, body: (ar ? "الجرام دلوقتي " : "A gram now ") + fmt(tell[0].perGram) };
-  if (tell[0] && tell[0].sold) return { title: ar ? "الإعلان اللي بتتابعه اتباع" : "An ad you follow has sold", body: tell[0].title || "" };
+  if (tell[0] && tell[0].gold) return { title: ar ? `الدهب عيار ${tell[0].karat} وصل لهدفك` : `Gold ${tell[0].karat}K reached your price`, body: (ar ? "الجرام دلوقتي " : tr("A gram now ")) + fmt(tell[0].perGram) };
+  if (tell[0] && tell[0].sold) return { title: ar ? "الإعلان اللي بتتابعه اتباع" : tr("An ad you follow has sold"), body: tell[0].title || "" };
   const a = tell[0], price = a.facts.price ? fmt(a.facts.price) + " " + (a.facts.cur || "") : "";
   const why = a.dropped > 0 ? (ar ? `انخفض ${fmt(a.dropped)}` : `dropped ${fmt(a.dropped)}`) : a.fair && a.fair.pct <= -5 ? (ar ? `أقل ${-a.fair.pct}% من المشابه` : `${-a.fair.pct}% below similar`) : "";
   return { title: (ar ? "الكشّاف: " + tell.length + " نتيجة جديدة قوية" : `Scout: ${tell.length} strong new find${tell.length === 1 ? "" : "s"}`) + " — " + (goal.g.what || goal.text).slice(0, 40),
@@ -208,7 +208,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
       <div className={K.cardPad + " space-y-1.5"}><b className="text-[16px] font-extrabold" dir="auto">{goal.g.what || goal.text}</b>
         <div className="flex flex-wrap gap-1.5 text-[12px]">
           {goal.g.max ? <span className="c-pill">≤ {fmt(goal.g.max)}</span> : null}{goal.g.place ? <span className="c-pill">{goal.g.place}</span> : null}
-          {goal.g.wish.map((w) => <span key={w.k} className="c-pill">{ar ? w.say[1] : w.say[0]}</span>)}</div>
+          {goal.g.wish.map((w) => <span key={w.k} className="c-pill">{ar ? w.say[1] : tr(w.say[0])}</span>)}</div>
         {/* v7.9 (Ali picked the calm list): new · cheapest · fair price, at a glance */}
         {found.length && goal.g.kind !== "gold" ? (() => { const ps = found.map((a) => a.facts.price).filter((v) => v > 0); return <div className="grid grid-cols-3 gap-2 pt-2" data-testid="scout-numbers">
           <div><b className="block c-num text-[20px] font-black c-acc">{found.filter((a) => fresh.includes(a.id)).length}</b><span className="c-sub text-[11.5px]">{tr("new")}</span></div>
@@ -223,7 +223,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         {(goal.gold || []).length ? <b className="c-amt">{fmt(goal.gold.slice(-1)[0][1])}</b> : <p className="c-sub m-0">{tr("Checking the price…")}</p>}
         <p className="c-sub m-0 text-[12px]">{goal.g.max ? tr("You'll be told when it is at or under {v}", { v: fmt(goal.g.max) }) : goal.g.min ? tr("You'll be told when it is at or over {v}", { v: fmt(goal.g.min) }) : tr("Add a price to be told, e.g. “under 3,500”")}</p>
       </div> : null}
-      {goal.g.car && goal.g.car.note ? <p className="c-acc text-[13px] m-0" data-testid="scout-car-note" dir="auto">{ar ? goal.g.car.note[1] : goal.g.car.note[0]}</p> : null}
+      {goal.g.car && goal.g.car.note ? <p className="c-acc text-[13px] m-0" data-testid="scout-car-note" dir="auto">{ar ? goal.g.car.note[1] : tr(goal.g.car.note[0])}</p> : null}
       {!found.length && goal.g.kind !== "gold" ? <p className="c-sub" data-testid="scout-none">{goal.lastRun ? tr("Nothing that matches yet. Scout keeps looking — you'll be told when something good appears.") : tr("Searching…")}</p> : null}
       {found.length > 1 && goal.g.kind !== "gold" ? <div className="flex items-center justify-between gap-2 px-1">
         <span className="font-extrabold text-[14.5px]">{tr("{n} matches", { n: found.length })}</span>
@@ -234,7 +234,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             <button onClick={() => setCmpOn(false)} className="min-w-[44px] min-h-[44px] grid place-items-center c-sub" aria-label={tr("Close")}><X size={16} /></button></div>
           <div className="overflow-x-auto -mx-1"><table className="w-full text-[12.5px] border-collapse">
             <thead><tr><th className="p-1.5" />{T.cols.map((c) => <th key={c.id} className="p-1.5 text-start align-bottom font-extrabold" dir="auto"><span className="line-clamp-2">{c.title}</span></th>)}</tr></thead>
-            <tbody>{T.rows.map((r) => <tr key={r.k} className="border-t border-[var(--c-ln)]" data-testid={"scout-cmp-" + r.k}><td className="p-1.5 c-sub whitespace-nowrap">{ar ? r.ar : r.en}</td>
+            <tbody>{T.rows.map((r) => <tr key={r.k} className="border-t border-[var(--c-ln)]" data-testid={"scout-cmp-" + r.k}><td className="p-1.5 c-sub whitespace-nowrap">{ar ? r.ar : tr(r.en)}</td>
               {r.cells.map((c, i) => <td key={i} className={"p-1.5 c-num " + (c.best ? "font-black c-acc" : "")} dir="auto">{c.v === true ? "✓" : c.v === false ? "✗" : c.v == null ? "—" : typeof c.v === "number" && r.k !== "year" ? fmt(c.v) : String(c.v)}</td>)}</tr>)}</tbody>
           </table></div>
           <div className="flex flex-wrap gap-2">{T.cols.map((c) => <button key={c.id} className={K.btnS + " !min-h-[44px] !text-[12.5px]"} onClick={() => (openLink ? openLink(c.url, c.title) : window.open(c.url, "_blank"))}><ExternalLink size={13} />{c.site}</button>)}</div>
@@ -269,11 +269,11 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
               {a.dropped > 0 ? <span className="c-pill" data-testid="scout-drop"><TrendingDown size={11} className="inline" /> {tr("dropped {v}", { v: fmt(a.dropped) })}</span> : null}
             </div>
             <ul className="m-0 p-0 list-none space-y-0.5 text-[13px]" data-testid="scout-checks">
-              {a.check.ok.map((x) => <li key={"o" + x.k} className="flex gap-1.5"><Check size={14} className="c-pos shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
-              {a.check.bad.map((x) => <li key={"b" + x.k} className="flex gap-1.5"><X size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
-              {S.risksOf(a, goal.seen || [], twins[a.id] || []).filter((x) => x.k !== "photo").map((x) => <li key={"r" + x.k} className="flex gap-1.5" data-testid="scout-risk"><AlertTriangle size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}</span></li>)}
+              {a.check.ok.map((x) => <li key={"o" + x.k} className="flex gap-1.5"><Check size={14} className="c-pos shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : tr(x.en)}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
+              {a.check.bad.map((x) => <li key={"b" + x.k} className="flex gap-1.5"><X size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : tr(x.en)}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
+              {S.risksOf(a, goal.seen || [], twins[a.id] || []).filter((x) => x.k !== "photo").map((x) => <li key={"r" + x.k} className="flex gap-1.5" data-testid="scout-risk"><AlertTriangle size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : tr(x.en)}</span></li>)}
               {(twins[a.id] || []).slice(0, 1).map((x) => <li key="photo" className="flex gap-1.5" data-testid="scout-photo"><AlertTriangle size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{tr("The same photo is in another ad ({s}{p}) — it may be copied; ask for a new photo or a video call", { s: x.site || "", p: x.price ? " · " + fmt(x.price) : "" })}</span></li>)}
-              {a.check.unknown.map((x) => <li key={"u" + x.k} className="flex gap-1.5 c-sub"><HelpCircle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en} — {tr("not stated in the ad")}</span></li>)}
+              {a.check.unknown.map((x) => <li key={"u" + x.k} className="flex gap-1.5 c-sub"><HelpCircle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : tr(x.en)} — {tr("not stated in the ad")}</span></li>)}
             </ul>
             <div className="flex flex-wrap gap-2 items-center pt-1">
               <button className={K.btnP + " !h-11 !min-h-[44px] !px-4 !text-[13.5px]"} onClick={() => (openLink ? openLink(a.url, a.title) : window.open(a.url, "_blank"))} data-testid="scout-open"><ExternalLink size={14} />{tr("Open the ad")}</button>

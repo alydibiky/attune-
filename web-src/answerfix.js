@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v5.32: web answers checked and repaired by CODE, like Gemini's grounding ------------
    Ali's phone test: "0-inch" (10-inch), "range of 4 km" (40), "0kg", "The 0 features",
    "sixseater", "rotate180degrees", "**Winner Sky (V10)****", the same bullet twice, a table
@@ -298,10 +299,10 @@ const CUR = /(\$|US\$|USD|EGP|E£|LE\b|€|EUR|£|GBP|¥|CNY|RMB|yuan|AED|SAR|di
 export function gapsOf(question, answer) {
   const q = String(question || ""), a = String(answer || "");
   const gaps = [];
-  if (/\b(price|prices|cost|how much)\b|سعر|أسعار|اسعار|بكام|تمن/i.test(q) && !CUR.test(a)) gaps.push(/[؀-ۿ]/.test(q) ? "سعر" : "price");
+  if (/\b(price|prices|cost|how much)\b|سعر|أسعار|اسعار|بكام|تمن/i.test(q) && !CUR.test(a)) gaps.push(/[؀-ۿ]/.test(q) ? "سعر" : tr("price"));
   const rows = (a.match(/^\s*\|.*\|\s*$/gm) || []).length;
-  if (/\b(trims?|versions?|variants?|all models)\b|فئات|فئة|نسخ/i.test(q) && rows < 4) gaps.push(/[؀-ۿ]/.test(q) ? "الفئات" : "trims versions");
-  if (/\b(specs?|specifications?|detailed)\b|مواصفات/i.test(q) && ((a.match(/\d[\d,.]*\s?(hp|kw|nm|km|kg|mm|kwh|mph|km\/h|v|ah|w|l)\b/gi) || []).length < 4)) gaps.push(/[؀-ۿ]/.test(q) ? "المواصفات" : "specifications");
+  if (/\b(trims?|versions?|variants?|all models)\b|فئات|فئة|نسخ/i.test(q) && rows < 4) gaps.push(/[؀-ۿ]/.test(q) ? "الفئات" : tr("trims versions"));
+  if (/\b(specs?|specifications?|detailed)\b|مواصفات/i.test(q) && ((a.match(/\d[\d,.]*\s?(hp|kw|nm|km|kg|mm|kwh|mph|km\/h|v|ah|w|l)\b/gi) || []).length < 4)) gaps.push(/[؀-ۿ]/.test(q) ? "المواصفات" : tr("specifications"));
   return gaps;
 }
 

@@ -6254,7 +6254,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
         return await callClaude(`You are a careful money helper inside a budgeting app. Answer the user's question in 2–4 short sentences, in the user's language. Use ONLY the figures below (from their own records); never invent numbers.\n\n${facts}\n\nQuestion: ${q}`, { prefix: "money", maxTokens: 260, think: false, temperature: 0.3 });
       } catch (e) { /* the plain hint below */ }
     }
-    return /[\u0600-\u06FF]/.test(q) ? "يمكنني الإجابة عن أموالك: «كم أنفقت على الطعام هذا الأسبوع؟» أو «كم دخلي هذا الشهر؟»" : "Ask me about your own money, e.g. “how much did I spend on food this week?” or “what did I earn this month?”";
+    return /[\u0600-\u06FF]/.test(q) ? "يمكنني الإجابة عن أموالك: «كم أنفقت على الطعام هذا الأسبوع؟» أو «كم دخلي هذا الشهر؟»" : tr("Ask me about your own money, e.g. “how much did I spend on food this week?” or “what did I earn this month?”");
   };
   React.useEffect(() => {
     if (!html) return;
@@ -6440,7 +6440,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       // v8.7 (Ali picked P5-C: every box understands everything): not a payment → Home's reader (a reminder, food, a debt…)
       let r = null; try { r = window.__attuneDo ? window.__attuneDo(text) : null; } catch (e) {}
       if (r && r.lines && r.lines.length) { setBoxRes({ answer: r.lines.map((l) => l.text).join(" · ") }); return; }
-      if (r && r.answer) { setBoxRes({ answer: typeof r.answer === "string" ? r.answer : (getLang() === "ar" ? r.answer.ar : r.answer.en) || "" }); return; }
+      if (r && r.answer) { setBoxRes({ answer: typeof r.answer === "string" ? r.answer : (getLang() === "ar" ? r.answer.ar : tr(r.answer.en)) || "" }); return; }
       setBoxRes({ err: tr(out.why || "No amount found. Write it like: lunch 150, taxi 60, got salary 30000."), warnings: out.warnings }); return; }
     // the account: the one the person named in the sentence, else the pill they picked; with neither, Yusr picks (by currency)
     const picked = account ? accs.find((a) => a.id === account) : null;
@@ -9865,28 +9865,28 @@ export default function App() {
     { const mq = metroAsk(text); if (mq) return { lines: [{ text: metroText(metroRoute(mq.from, mq.to), ar) }], undo: null }; }
     // v6.41 C3: "when my salary arrives, put 20% in the car fund" → an automation, on at once
     { const pa = parseAutomation(text); if (pa) { const st = addRule(loadAuto(), pa, now); saveAuto(st, NATIVE, ar ? "ar" : "en");
-      return { lines: [{ text: (ar ? "اشتغل: " : "On: ") + autoRuleText(pa, ar), open: "automations" }], undo: () => { const c = loadAuto(); saveAuto({ ...c, rules: c.rules.filter((x) => x.id !== st.rules[st.rules.length - 1].id) }, NATIVE, ar ? "ar" : "en"); } }; } }
+      return { lines: [{ text: (ar ? "اشتغل: " : tr("On: ")) + autoRuleText(pa, ar), open: "automations" }], undo: () => { const c = loadAuto(); saveAuto({ ...c, rules: c.rules.filter((x) => x.id !== st.rules[st.rules.length - 1].id) }, NATIVE, ar ? "ar" : "en"); } }; } }
     // v6.40: "tell me when Ahmed messages me" / «لو أحمد بعتلي قولي» → a message alert, on at once
     { const pw = parseWatch(text); if (pw) { const r = newRule(pw, now); saveWatch([r, ...loadWatch()], ar ? "ar" : "en");
       const okAccess = !NATIVE || !NATIVE.payAccess || (() => { try { return NATIVE.payAccess(); } catch (e) { return true; } })();
-      return { lines: [{ text: (ar ? "هقولك أول ما توصل: " : "I'll tell you the moment it comes: ") + ruleText(pw, ar) + (okAccess ? "" : (ar ? " — شغّل «الوصول للإشعارات» الأول" : " — turn on Notification access first")), open: "reminders" }],
+      return { lines: [{ text: (ar ? "هقولك أول ما توصل: " : tr("I'll tell you the moment it comes: ")) + ruleText(pw, ar) + (okAccess ? "" : (ar ? " — شغّل «الوصول للإشعارات» الأول" : tr(" — turn on Notification access first"))), open: "reminders" }],
         undo: () => saveWatch(loadWatch().filter((x) => x.id !== r.id), ar ? "ar" : "en") }; } }
     // v6.37: a goal with a number and a date («عايز أوفر 60 ألف قبل يونيو», "lose 6 kg before 20 January") → Missions, ready to start
     { const pm = parseMission(text, now); if (pm && pm.deadline) { try { localStorage.setItem("attune:missions:draft", text); } catch (e) {} navTo("missions");
-      return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : "Your mission is ready — tap Start the mission", open: "missions" }], undo: null }; } }
+      return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : tr("Your mission is ready — tap Start the mission"), open: "missions" }], undo: null }; } }
     // v8.0 Agents: "tell me when hotels near the Haram are under 45k…", "tell me when my Amazon order arrives", "order my usual from
     // Talabat: …" → an agent on the Agents page (asked there if something is missing); "open Uber" opens the app
     { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() });
       if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) {
-        if (ag.ask || ag.kind === "buy") { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); if (ag.kind === "buy" && !ag.ask) return { lines: [{ text: (ar ? "وكيل شراء: " : "Buy agent: ") + ag.what + (ar ? " — هسألك قبل ما أشتري" : " — I'll ask you before buying"), open: "agents" }], undo: null }; return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : "Finish it on the Agents page", open: "agents" }], undo: null }; }
+        if (ag.ask || ag.kind === "buy") { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); if (ag.kind === "buy" && !ag.ask) return { lines: [{ text: (ar ? "وكيل شراء: " : tr("Buy agent: ")) + ag.what + (ar ? " — هسألك قبل ما أشتري" : tr(" — I'll ask you before buying")), open: "agents" }], undo: null }; return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : tr("Finish it on the Agents page"), open: "agents" }], undo: null }; }
         const a = makeAgent(ag, now), st0 = loadAgents();
         saveAgents({ ...st0, usual: ag.kind === "order" ? { ...st0.usual, [ag.app.id]: ag.what } : st0.usual, agents: [a, ...st0.agents] });
-        return { lines: [{ text: (ar ? "وكيل جديد: " : "New agent: ") + ag.title, open: "agents" }], undo: () => { const c = loadAgents(); saveAgents({ ...c, agents: c.agents.filter((x) => x.id !== a.id) }); } };
+        return { lines: [{ text: (ar ? "وكيل جديد: " : tr("New agent: ")) + ag.title, open: "agents" }], undo: () => { const c = loadAgents(); saveAgents({ ...c, agents: c.agents.filter((x) => x.id !== a.id) }); } };
       }
       if (ag && ag.kind === "open" && ag.app && NATIVE && NATIVE.openAnyApp) { try { NATIVE.openAnyApp(JSON.stringify({ pkg: ag.app.pkg || "", url: "" })); } catch (e) {}
-        return { lines: [{ text: (ar ? "بفتح " : "Opening ") + ag.app.label }], undo: null }; } }
+        return { lines: [{ text: (ar ? "بفتح " : tr("Opening ")) + ag.app.label }], undo: null }; } }
     // "find me a flat in Maadi under 15k" / «دورلي على عربية …» → a Scout goal, started at once
-    if (looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : "Scout is on it", open: "scout" }], undo: null }; }
+    if (looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : tr("Scout is on it"), open: "scout" }], undo: null }; }
     const u = doUnderstand(text, { now, stores: loadLifeStores() });
     if (u.ask) return { answer: u.ask, ar };
     // v8.7 (persona 4, idea 6 — code first): what the code couldn't read is kept ON THE PHONE (the last 100, never sent), so Ali can
@@ -9903,11 +9903,11 @@ export default function App() {
         else chatApi.doAction(x);
       } else if (r.need === "note") { const rec = remember({ kind: "note", title: a.text.slice(0, 70), text: a.text, tags: ["home"] }); extra.push(() => setMemory((m) => m.filter((y) => y.id !== rec.id))); }
       else if (r.need === "period") { const prev = cycle; const pr = applyPeriodLog(cycle, parsePeriodText(a.text, now)); setCycle(cycleSave(pr.state)); enableCycle(true); extra.push(() => setCycle(cycleSave(prev))); }
-      else if (r.need === "money-setup") { sendToMoney(text, ""); return { lines: [{ text: ar ? r.done.ar : r.done.en, open: "money" }], undo: null }; }
+      else if (r.need === "money-setup") { sendToMoney(text, ""); return { lines: [{ text: ar ? r.done.ar : tr(r.done.en), open: "money" }], undo: null }; }
       if (a.kind === "sugar" && r.low) scheduleReminder({ id: "sugar-recheck", at: now + 15 * 60000, repeat: "none", title: tr("Check your blood sugar again"), body: tr("15 minutes since a low reading. Under 70 mg/dL: another 15 g of fast sugar."), created: now, source: "home" });
-      lines.push({ text: ar ? r.done.ar : r.done.en, open: r.open, low: !!r.low,
+      lines.push({ text: ar ? r.done.ar : tr(r.done.en), open: r.open, low: !!r.low,
         // a one-tap follow-up ("Paid today" after a new subscription): its actions run when tapped, and the line says so
-        act: r.followUp ? { label: ar ? r.followUp.ar : r.followUp.en, run: () => r.followUp.actions.map((fa) => { const fr = doApply(fa, loadLifeStores(), { now: Date.now() }); for (const [k, v] of Object.entries(fr.stores || {})) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } return ar ? fr.done.ar : fr.done.en; }).join(" ") } : null });
+        act: r.followUp ? { label: ar ? r.followUp.ar : tr(r.followUp.en), run: () => r.followUp.actions.map((fa) => { const fr = doApply(fa, loadLifeStores(), { now: Date.now() }); for (const [k, v] of Object.entries(fr.stores || {})) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } return ar ? fr.done.ar : tr(fr.done.en); }).join(" ") } : null });
     }
     const undo = () => { for (const [k, v] of Object.entries(before)) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } extra.forEach((f) => { try { f(); } catch (e) {} }); };
     return { lines, undo };
@@ -10074,8 +10074,8 @@ export default function App() {
         const dl = readDeadlines(String(ocr.text || ""), { now: Date.now() }).filter((d) => d.date >= new Date().toISOString().slice(0, 10))[0];
         if (dl) { const r = addDeadline(loadRadar(), { ...dl, source: "camera" }, Date.now()); saveRadar(r.data); navTo("timeline"); return; }
       }
-      const ask = { receipt: ar ? "ضيف الإيصال ده للفلوس" : "Add this receipt to Money", bill: ar ? "الفاتورة دي بكام وميعادها امتى؟ فكرني بيها" : "How much is this bill and when is it due? Remind me",
-        document: ar ? "إيه المستند ده؟ لخصهولي" : "What is this document? Sum it up", sign: ar ? "ترجم الكلام اللي في الصورة للعربي" : "Translate the text in this photo to English" }[k];
+      const ask = { receipt: ar ? "ضيف الإيصال ده للفلوس" : tr("Add this receipt to Money"), bill: ar ? "الفاتورة دي بكام وميعادها امتى؟ فكرني بيها" : tr("How much is this bill and when is it due? Remind me"),
+        document: ar ? "إيه المستند ده؟ لخصهولي" : tr("What is this document? Sum it up"), sign: ar ? "ترجم الكلام اللي في الصورة للعربي" : tr("Translate the text in this photo to English") }[k];
       setChatSeed("\u0005" + JSON.stringify({ photo, text: ask, send: true })); navTo("chat");
     } catch (e) { flash(tr("Couldn't open that picture")); }
   };

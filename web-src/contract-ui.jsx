@@ -23,13 +23,13 @@ export function ContractReview({ r, flash, share }) {
         <div key={i} className={U.cardPad + " space-y-2"} data-testid="contract-flag" data-id={f.id}>
           <span className={"inline-flex text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border " + LV[f.level][1]}>{tr(LV[f.level][0])}</span>
           {f.quote ? <p className={"text-[13px] border-s-2 border-[var(--c-ln)] ps-2.5 m-0 " + U.muted} dir="auto">{f.quote}</p> : null}
-          <p className="text-[14px] font-semibold m-0" dir="auto">{ar ? f.means.ar : f.means.en}</p>
-          <p className="text-[13px] font-bold text-[var(--c-acc)] m-0" dir="auto">{tr("Ask for")}: {ar ? f.ask.ar : f.ask.en}</p>
+          <p className="text-[14px] font-semibold m-0" dir="auto">{ar ? f.means.ar : tr(f.means.en)}</p>
+          <p className="text-[13px] font-bold text-[var(--c-acc)] m-0" dir="auto">{tr("Ask for")}: {ar ? f.ask.ar : tr(f.ask.en)}</p>
         </div>))}
       {r.missing.length ? (
         <div className={U.cardPad} data-testid="contract-missing">
           <p className={U.label + " m-0"}>{tr("It doesn't say")}</p>
-          <ul className="mt-2 space-y-1">{r.missing.map((m, i) => <li key={i} className="text-[13.5px]" dir="auto">• {ar ? m.ar : m.en}</li>)}</ul>
+          <ul className="mt-2 space-y-1">{r.missing.map((m, i) => <li key={i} className="text-[13.5px]" dir="auto">• {ar ? m.ar : tr(m.en)}</li>)}</ul>
         </div>) : null}
       {r.flags.length || r.missing.length ? (
         <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-acc)]/50")} data-testid="contract-message">

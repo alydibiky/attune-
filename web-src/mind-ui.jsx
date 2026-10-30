@@ -69,7 +69,7 @@ function useThumb(rec) {
   return url;
 }
 const dateText = (ts) => new Date(ts).toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short", year: new Date(ts).getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
-const kindLabel = (k) => { const x = M.KINDS[k] || M.KINDS.note; return getLang() === "ar" ? x.ar : x.en; };
+const kindLabel = (k) => { const x = M.KINDS[k] || M.KINDS.note; return getLang() === "ar" ? x.ar : tr(x.en); };
 
 /* ---- one card on the wall (v6.32 look A, Ali: "Mind page: A"): each kind looks like what it is — a photo or a link's
    preview on top, a small kind label, the title, one line under it. A photo's main colour is read once from its thumbnail. */
@@ -523,7 +523,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
         <Detail rec={openRec} close={() => setOpenId(null)} update={update} forget={doForget} togglePin={togglePin} openRec={(r) => setOpenId(r.id)}
           search={search} scheduleReminder={scheduleReminder} flash={flash}
           findPromises={(r) => (pro ? findCommitments(r.text, r.id) : openPlan())}
-          askAbout={(r) => { setOpenId(null); setQ(""); const qq = ar ? "ما أهم شيء في هذا؟" : "What matters in this?"; if (pro) doAsk(qq, r); else openPlan(); }} />
+          askAbout={(r) => { setOpenId(null); setQ(""); const qq = ar ? "ما أهم شيء في هذا؟" : tr("What matters in this?"); if (pro) doAsk(qq, r); else openPlan(); }} />
       ) : null}
     </div>
   );

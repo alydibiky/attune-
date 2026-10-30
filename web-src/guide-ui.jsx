@@ -101,7 +101,7 @@ export function DemoPhone({ demo, step = 0, app, ar }) {
         <div {...part(1, "var(--c-bg, #fff)")} className="rounded-xl p-2 space-y-1">
           <b className="block text-[13px] leading-tight" dir="auto" data-testid="guide-demo-title">{pv(demo.title)}</b>
           {demo.bar != null ? <div className="h-1.5 rounded-full" style={{ background: "var(--c-ln)" }}><div className="h-1.5 rounded-full" style={{ width: Math.round(demo.bar * 100) + "%", background: "var(--c-acc)" }} /></div> : null}
-          {demo.lines.map((l, i) => <div key={i} className="flex gap-2 text-[11.5px] leading-snug" data-testid="guide-demo-line"><span className="c-sub flex-1 min-w-0" dir="auto">{ar ? l[1] : l[0]}</span><span className="font-semibold text-end max-w-[58%]" dir="auto">{pv(l[2])}</span></div>)}</div>
+          {demo.lines.map((l, i) => <div key={i} className="flex gap-2 text-[11.5px] leading-snug" data-testid="guide-demo-line"><span className="c-sub flex-1 min-w-0" dir="auto">{ar ? l[1] : tr(l[0])}</span><span className="font-semibold text-end max-w-[58%]" dir="auto">{pv(l[2])}</span></div>)}</div>
         <div {...part(2)} className="rounded-xl p-1.5 flex gap-1.5 flex-wrap">
           {demo.act.map((a, i) => <span key={i} className={"text-[11.5px] font-bold rounded-lg px-2.5 py-1.5" + (i ? "" : " g-acc")} style={i ? { border: "1px solid var(--c-ln)" } : { background: "var(--c-acc)" }} dir="auto">{pv(a)}</span>)}</div>
       </div>
@@ -112,7 +112,7 @@ export function DemoPhone({ demo, step = 0, app, ar }) {
 /** v6.45 (Ali's choice C): "What Attune can do" — pick a goal, see what you say and what you get, open its guide. */
 function Gallery({ ar, nameOf, see }) {
   const [g, setG] = useState(GD.GOALS[0].id);
-  const pk = (x) => (ar ? x[1] : x[0]), goal = GD.GOALS.find((x) => x.id === g) || GD.GOALS[0];
+  const pk = (x) => (ar ? x[1] : tr(x[0])), goal = GD.GOALS.find((x) => x.id === g) || GD.GOALS[0];
   return (
     <section className="space-y-2.5" data-testid="guide-gallery">
       <b className="block text-[17px] font-extrabold">{tr("What Attune can do")}</b>
@@ -126,7 +126,7 @@ function Gallery({ ar, nameOf, see }) {
           <p className="g-acc m-0 ms-6 rounded-2xl px-3 py-2 text-[13px] leading-snug" style={{ background: "var(--c-acc)" }} dir="auto">{GD.pickV(d.say, ar)}</p>
           <span className={K.label + " block"}>{tr("You get")} · {n[0]}</span>
           <div className="rounded-[12px] p-2.5 space-y-1" style={{ background: "var(--c-soft)" }}><b className="block text-[13.5px] leading-tight" dir="auto">{GD.pickV(d.title, ar)}</b>
-            {d.lines.slice(0, 2).map((l, i) => <div key={i} className="flex gap-2 text-[12px]"><span className="c-sub shrink-0 max-w-[45%]" dir="auto">{ar ? l[1] : l[0]}</span><span className="font-semibold text-end flex-1 min-w-0" dir="auto">{GD.pickV(l[2], ar)}</span></div>)}</div>
+            {d.lines.slice(0, 2).map((l, i) => <div key={i} className="flex gap-2 text-[12px]"><span className="c-sub shrink-0 max-w-[45%]" dir="auto">{ar ? l[1] : tr(l[0])}</span><span className="font-semibold text-end flex-1 min-w-0" dir="auto">{GD.pickV(l[2], ar)}</span></div>)}</div>
           <button className="min-h-[44px] font-extrabold text-[13.5px] inline-flex items-center gap-1" style={{ color: "var(--c-acc)" }} onClick={() => see(key)} data-testid="guide-card-how">{tr("Show me how")}<ChevronRight size={15} className="rtl:-scale-x-100" /></button>
         </div>; })}</div>
     </section>);
@@ -140,7 +140,7 @@ function Walk({ id, title, purpose, where, sketch, steps, tip, open, ar }) {
   const [play, setPlay] = useState(!!demo);          // v6.45: a guide with sample data plays by itself; tapping a step stops it
   useEffect(() => { setStep(0); setPlay(!!demo); }, [id]);
   useEffect(() => { if (!play) return; const t = setInterval(() => setStep((s) => (s + 1) % steps.length), 2600); return () => clearInterval(t); }, [play, steps.length]);
-  const pick = (p) => (ar ? p[1] : p[0]);
+  const pick = (p) => (ar ? p[1] : tr(p[0]));
   return (
     <div className={K.cardPad + " space-y-3"} data-testid="guide-walk" data-id={id}>
       <div><b className="block text-[17px] font-extrabold" dir="auto">{title}</b>{purpose ? <span className="c-sub text-[13px]" dir="auto">{purpose}</span> : null}
@@ -169,7 +169,7 @@ function Walk({ id, title, purpose, where, sketch, steps, tip, open, ar }) {
 /** v6.37 One part of "Get the most of Attune": when, then each habit with the tool that does it (tap to open it). */
 const PLAN_ICON = { morning: Coffee, day: Clock, evening: Star, week: CalendarDays, month: BarChart3, work: Briefcase };
 function PlanCard({ p, ar, nameOf, open, see }) {
-  const pick = (x) => (ar ? x[1] : x[0]), Ic = PLAN_ICON[p.icon] || Sparkles;
+  const pick = (x) => (ar ? x[1] : tr(x[0])), Ic = PLAN_ICON[p.icon] || Sparkles;
   return (
     <div className={K.cardPad + " space-y-3"} data-testid="guide-plan" data-id={"plan:" + p.id}>
       <div className="flex items-center gap-3"><span className="c-ic"><Ic size={18} /></span>
@@ -192,7 +192,7 @@ function PlanCard({ p, ar, nameOf, open, see }) {
 /** The progress, the life areas, and an open area's features: tried tick, You say → You get, Try it, How. */
 function LifeAreas({ ar, nameOf, navTo, sel, setSel, walkFor }) {
   const [area, setArea] = useState(null);
-  const tried = GA.loadTried(), has = (id) => !!nameOf(id), all = GA.progress(tried, null, has), pk = (x) => (ar ? x[1] : x[0]);
+  const tried = GA.loadTried(), has = (id) => !!nameOf(id), all = GA.progress(tried, null, has), pk = (x) => (ar ? x[1] : tr(x[0]));
   const A = area && GA.AREAS.find((a) => a.id === area);
   return (
     <div className="space-y-3" data-testid="guide-areas">
@@ -235,14 +235,14 @@ export function GuidePage({ tools, groups, navTo }) {
   const [all, setAll] = useState(false);              // v7.9 "See all features" — every feature A–Z
   const [wide, setWide] = useState(() => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } });
   useEffect(() => { try { const m = window.matchMedia("(min-width: 1024px)"); const on = () => setWide(m.matches); m.addEventListener("change", on); return () => m.removeEventListener("change", on); } catch (e) {} }, []);
-  const pk = (x) => (ar ? x[1] : x[0]);
+  const pk = (x) => (ar ? x[1] : tr(x[0]));
   // a tool's [name, purpose] as shown: the app's own tool list, or guide.js NAMES for places that are not in it (Home, Money…)
   const nameOf = (id) => { const n = G.NAMES[id]; if (n) return [pk(n[0]), pk(n[1])]; const t = (tools || []).find((x) => x[0] === id); return t ? [tr(t[1]), tr(t[2])] : null; };
   const hits = useMemo(() => G.searchGuide(q, tools), [q, tools]);
   const startHits = q.trim() ? G.START.filter((s) => (s.title.join(" ") + " " + s.steps.flat().join(" ") + " " + s.tip.join(" ")).toLowerCase().includes(q.trim().toLowerCase())) : G.START;
   const planHits = useMemo(() => G.searchPlan(q), [q]);
   const walkFor = (key) => {
-    if (key.startsWith("start:")) { const s = G.START.find((x) => "start:" + x.id === key); return s ? <Walk key={key} id={key} title={ar ? s.title[1] : s.title[0]} sketch={s.sketch} steps={s.steps} tip={s.tip} ar={ar} /> : null; }
+    if (key.startsWith("start:")) { const s = G.START.find((x) => "start:" + x.id === key); return s ? <Walk key={key} id={key} title={ar ? s.title[1] : tr(s.title[0])} sketch={s.sketch} steps={s.steps} tip={s.tip} ar={ar} /> : null; }
     if (key.startsWith("plan:")) { const p = G.PLAN.find((x) => "plan:" + x.id === key); return p ? <PlanCard key={key} p={p} ar={ar} nameOf={nameOf} open={navTo} see={setSel} /> : null; }
     const g = G.TOOLS[key], t = nameOf(key); if (!g || !t) return null;
     return <Walk key={key} id={key} title={t[0]} purpose={t[1]} where={G.whereOf(key).map((w) => tr(w))} sketch={g.sketch} steps={g.steps} tip={g.tip} ar={ar} open={navTo ? () => navTo(key) : null} />;
@@ -261,7 +261,7 @@ export function GuidePage({ tools, groups, navTo }) {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search the guide…")} className={K.inp + " !ps-9"} dir="auto" data-testid="guide-search" /></div>
       {!q.trim() ? <LifeAreas ar={ar} nameOf={nameOf} navTo={navTo} sel={sel} setSel={setSel} walkFor={walkFor} /> : null}
       {startHits.length ? <section data-testid="guide-chapter"><span className={"c-lbl " + K.label}>{tr("Getting started")}</span>
-        {startHits.map((s) => <Row key={s.id} k={"start:" + s.id} label={ar ? s.title[1] : s.title[0]} sketch={s.sketch} />)}</section> : null}
+        {startHits.map((s) => <Row key={s.id} k={"start:" + s.id} label={ar ? s.title[1] : tr(s.title[0])} sketch={s.sketch} />)}</section> : null}
       {planHits.length ? <section data-testid="guide-chapter" data-chapter="plan"><span className={"c-lbl " + K.label}>{pk(G.PLAN_TITLE)}</span>
         {G.PLAN.filter((p) => planHits.includes(p.id)).map((p) => <Row key={p.id} k={"plan:" + p.id} label={pk(p.title)} sub={pk(p.when)} icon={PLAN_ICON[p.icon] || Sparkles} />)}</section> : null}
       {/* v7.9 (C): every feature A–Z — behind "See all features", and what a search finds */}

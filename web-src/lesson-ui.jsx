@@ -29,7 +29,7 @@ export function spokenMath(s, lang) {
   const ar = lang === "ar";
   const W = ar ? { "×": " ضرب ", "÷": " قسمة ", "+": " زائد ", "−": " ناقص ", "=": " يساوي ", "✓": " صحيح ", "%": " في المئة ", "^2": " تربيع ", "^3": " تكعيب ", "/": " على " }
     : { "×": " times ", "÷": " divided by ", "+": " plus ", "−": " minus ", "=": " equals ", "✓": " correct. ", "%": " percent ", "^2": " squared ", "^3": " cubed ", "/": " over " };
-  return String(s || "").replace(/\(−/g, ar ? "(سالب " : "(negative ").replace(/^−/, ar ? "سالب " : "negative ")
+  return String(s || "").replace(/\(−/g, ar ? "(سالب " : tr("(negative ")).replace(/^−/, ar ? "سالب " : tr("negative "))
     .replace(/\^2|\^3/g, (m) => W[m]).replace(/[×÷+−=✓%]/g, (m) => W[m]).replace(/(\d)\/(\d)/g, (m, a, b) => a + W["/"] + b).replace(/[()]/g, " ").replace(/\s+/g, " ").trim();
 }
 
@@ -120,7 +120,7 @@ export function LessonPlayer({ lesson, native, onDone, autoplay = false }) {
   const check = () => {
     const ok = answerMatches(answer, s.ask.answer);
     setResult(ok ? "right" : "wrong"); setTries((t) => t + 1);
-    speakNow(ok ? (lang === "ar" ? "أحسنت!" : "Well done!") : (lang === "ar" ? "ليس بعد. حاول مرة أخرى." : "Not yet. Try again."), { lang, rate, native });
+    speakNow(ok ? (lang === "ar" ? "أحسنت!" : tr("Well done!")) : (lang === "ar" ? "ليس بعد. حاول مرة أخرى." : tr("Not yet. Try again.")), { lang, rate, native });
   };
   if (!steps.length) return null;
   return (

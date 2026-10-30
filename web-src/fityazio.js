@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- v6.14: Fit & Food — everything Yazio has, and more ----------------------------------------------------------------------
    Ali: "everything in Yazio should be in my app, and my app should have features Yazio doesn't". The gaps found by comparing
    with Yazio: quick-add calories, body measurements over time, progress photos, a different calorie goal per weekday,
@@ -9,7 +10,7 @@ export function quickItem({ kcal, p = 0, c = 0, f = 0, name = "" } = {}, ar = fa
   const k = Math.round(Number(kcal));
   if (!(k > 0 && k < 5000)) return null;
   const n = (x) => Math.max(0, Math.round(Number(x) * 10) / 10 || 0);
-  const label = String(name || "").trim().slice(0, 60) || (ar ? "إضافة سريعة" : "Quick add");
+  const label = String(name || "").trim().slice(0, 60) || (ar ? "إضافة سريعة" : tr("Quick add"));
   return { name: label, ar: label, quick: true, grams: 0, kcal: k, p: n(p), c: n(c), f: n(f), fib: 0, src: "quick" };
 }
 

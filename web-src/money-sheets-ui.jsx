@@ -433,7 +433,7 @@ export function LedgerSettings({ L, run, flash, back, Head, Card }) {
       <button className={U.btnS + " mt-3"} onClick={() => doIt("rates", {}, tr("Updating exchange rates…"))} data-testid="set-rates"><RefreshCw size={14} />{tr("Update exchange rates")}</button>
     </Card>
     <Card title={tr("Your own categories")}>
-      <div className="flex flex-wrap gap-1.5 mb-2">{(L.customCats || []).map((c) => <span key={c.id} className={pill(false)}>{c.e} {ar() ? c.ar : c.en}</span>)}</div>
+      <div className="flex flex-wrap gap-1.5 mb-2">{(L.customCats || []).map((c) => <span key={c.id} className={pill(false)}>{c.e} {ar() ? c.ar : tr(c.en)}</span>)}</div>
       <div className="flex gap-2"><input value={cat.emoji} onChange={(e) => setCat({ ...cat, emoji: e.target.value.slice(0, 2) })} placeholder="🙂" className={U.inp + " !w-16 text-center"} />
         <input value={cat.label} onChange={(e) => setCat({ ...cat, label: e.target.value })} placeholder={tr("e.g. Car, Kids, Charity")} dir="auto" className={U.inp} data-testid="set-cat-label" />
         <button className={U.btnS} onClick={async () => { if (!cat.label.trim()) return; const r = await doIt("cat-add", { emoji: cat.emoji || "✦", label: cat.label.trim() }); if (r && r.ok) setCat({ emoji: "", label: "" }); }} data-testid="set-cat-add"><Plus size={15} /></button></div>

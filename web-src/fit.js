@@ -158,6 +158,7 @@ const F = [
   ["karkadeh", "Hibiscus (karkadeh), sweetened", "كركديه", 40, 0, 10, 0, 0, { glass: 250, cup: 250 }, "drinks"],
   ["water", "Water", "مية|مياه|ماء", 0, 0, 0, 0, 0, { glass: 250, cup: 250, bottle: 500 }, "drinks"],
 ];
+import { tr } from "./i18n.js";
 import { MORE_FOODS, MORE_RECIPES } from "./fit-foods.js";
 import { EXTRA_RECIPES } from "./fit-recipes2.js";
 import * as CZ from "./fit-cuisines.js";
@@ -707,8 +708,8 @@ export function dayTips(tot, tg, lang) {
   const left = tg.kcal - tot.kcal + (tot.burned || 0);
   if (tot.kcal > 0 && tot.p < tg.protein * 0.6 && new Date().getHours() >= 15) out.push(ar ? `البروتين حتى الآن ${Math.round(tot.p)} من ${tg.protein} جم — أضف دجاجًا أو بيضًا أو زبادي يونانيًا.` : `Protein is at ${Math.round(tot.p)} of ${tg.protein} g — add chicken, eggs or Greek yogurt.`);
   if (left < -200) out.push(ar ? `عديت هدفك بـ ${-left} سعر — مشي 30 دقيقة بيحرق حوالي ${burned(4.3, tg.kg || 70, 30)}.` : `You're ${-left} kcal over — a 30-minute brisk walk burns about ${burned(4.3, tg.kg || 70, 30)}.`);
-  if (tot.water < tg.water * 0.5 && new Date().getHours() >= 14) out.push(ar ? "الماء أقل من نصف هدفك — اشرب كوبين الآن." : "Water is under half your goal — drink two glasses now.");
-  if (tot.fib < tg.fibre * 0.5 && tot.kcal > tg.kcal * 0.6) out.push(ar ? "الألياف قليلة — فول، عدس، خضار أو شوفان." : "Fibre is low — ful, lentils, vegetables or oats help.");
+  if (tot.water < tg.water * 0.5 && new Date().getHours() >= 14) out.push(ar ? "الماء أقل من نصف هدفك — اشرب كوبين الآن." : tr("Water is under half your goal — drink two glasses now."));
+  if (tot.fib < tg.fibre * 0.5 && tot.kcal > tg.kcal * 0.6) out.push(ar ? "الألياف قليلة — فول، عدس، خضار أو شوفان." : tr("Fibre is low — ful, lentils, vegetables or oats help."));
   return out.slice(0, 2);
 }
 

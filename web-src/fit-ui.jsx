@@ -166,7 +166,7 @@ function PlateRuler({ L }) {
 export const FREE_PHOTOS_PER_DAY = 3;
 export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, scanLive, readText, native, onExit, share, listen, health, pro = true, openPlan, photoClip, minimal = false }) {
   const ar = getLang() === "ar";
-  const L = (en, a) => (ar ? a : en);
+  const L = (en, a) => (ar ? a : tr(en));
   const [st, setSt] = useState(load);
   MEAL_NAMES = st.ramadan && st.ramadan.on ? RAMADAN_NAMES : MEAL_NAMES0;
   const upd = (fn) => setSt((s) => { const n = fn(s); save(n); return n; });
@@ -713,7 +713,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                 {text.trim().split(/\s+/).length > 3 ? <div className="px-3 py-1.5 text-[12px] font-bold text-[var(--c-mut)]" data-testid="fit-search-label">{L(`Foods for “${q}” — tap one, or Find the foods for the whole meal`, `أكلات لـ «${q}» — اختار واحدة، أو «طلّع الأكل» للوجبة كلها`)}</div> : null}
                 {results.slice(0, 6).map((fd) => (
                   <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex items-center gap-2 text-start px-3 py-2.5" data-testid={"fit-food-" + fd.id}>
-                    <span className="flex-1 min-w-0 truncate text-[14px] text-[var(--c-ink)]">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[12px] text-[var(--c-mut)] tabular-nums">{fd.kcal} kcal/100g</span></button>))}
+                    <span className="flex-1 min-w-0 truncate text-[14px] text-[var(--c-ink)]">{ar && fd.ar ? fd.ar : tr(fd.en)}</span><span className="text-[12px] text-[var(--c-mut)] tabular-nums">{fd.kcal} kcal/100g</span></button>))}
               </div> : null}
               {!text.trim() && !photo ? (() => {
                 const recent = H.frequentChips(st.days, { limit: 8 }).map((c) => ({ key: c.key, item: c.item }));
@@ -778,7 +778,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
             </div>
             {results.map((fd) => (
               <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-[var(--c-surf-2)]" data-testid={"fit-food-" + fd.id}>
-                <span className="text-[13.5px] text-[var(--c-ink)] truncate">{ar && fd.ar ? fd.ar : fd.en}{fd.src === "off" ? <span className="ms-1 text-[10px] text-[var(--c-acc)]">{fd.egypt ? "🇪🇬 " : ""}{L("product", "منتج")}</span> : fd.src === "usda" ? <span className="ms-1 text-[10px] text-[var(--c-acc)]">USDA</span> : null}{fd.check ? <span className="ms-1 text-[10px] text-[var(--c-warn)]">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}<Grades x={fd} L={L} /></span><span className="text-[12px] text-[var(--c-mut)] shrink-0 tabular-nums">{fd.kcal} kcal/100g</span>
+                <span className="text-[13.5px] text-[var(--c-ink)] truncate">{ar && fd.ar ? fd.ar : tr(fd.en)}{fd.src === "off" ? <span className="ms-1 text-[10px] text-[var(--c-acc)]">{fd.egypt ? "🇪🇬 " : ""}{L("product", "منتج")}</span> : fd.src === "usda" ? <span className="ms-1 text-[10px] text-[var(--c-acc)]">USDA</span> : null}{fd.check ? <span className="ms-1 text-[10px] text-[var(--c-warn)]">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}<Grades x={fd} L={L} /></span><span className="text-[12px] text-[var(--c-mut)] shrink-0 tabular-nums">{fd.kcal} kcal/100g</span>
               </button>
             ))}
           </>) : (
@@ -834,7 +834,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                   {designA && openAlt !== i ? null : (x.alts && x.alts.length > 1) || x.from === "text" ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">
                       <span className="text-[11px] text-[var(--c-mut)] self-center">{L("Is it:", "قصدك:")}</span>
-                      {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={chip(a.food.id === x.id && (a.food.en || "") === (x.name || ""))} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
+                      {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={chip(a.food.id === x.id && (a.food.en || "") === (x.name || ""))} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : tr(a.food.en)}</button> : null)}
                       <button onClick={() => { setReplaceAt(i); setQ(x.own || x.said || ""); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-[var(--c-surf)] text-[var(--c-acc)]" data-testid="fit-alt-other">{L("something else…", "حاجة تانية…")}</button>
                     </div>) : null}
                   {(() => { const aq = x.from === "text" ? null : AQ.amountQuestion(x); if (!aq) return null;
@@ -856,7 +856,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                   {q.trim() ? <div className="flex gap-2">
                     <button onClick={() => useWritten(replaceAt, q)} disabled={writing} className="flex-1 min-w-0 rounded-xl bg-[var(--c-acc)] text-[var(--c-on-acc)] px-3 py-2 text-[13px] font-bold text-start truncate disabled:opacity-60" data-testid="fit-replace-written">{writing ? L("Estimating…", "بقدّر…") : L(`Use «${q.trim()}» as I wrote it`, `استخدم «${q.trim()}» زي ما كتبتها`)}</button>
                     <button onClick={searchOnline} className="rounded-xl bg-[var(--c-surf-2)] px-3 py-2 text-[12px] text-[var(--c-mut)] shrink-0" data-testid="fit-replace-search">{L("Search databases", "دوّر في القواعد")}</button></div> : null}
-                  {results.map((fd) => <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-[var(--c-surf-2)]" data-testid={"fit-food-" + fd.id}><span className="text-[13px] text-[var(--c-ink)] truncate">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[11.5px] text-[var(--c-mut)] shrink-0">{fd.kcal} kcal/100g</span></button>)}
+                  {results.map((fd) => <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-[var(--c-surf-2)]" data-testid={"fit-food-" + fd.id}><span className="text-[13px] text-[var(--c-ink)] truncate">{ar && fd.ar ? fd.ar : tr(fd.en)}</span><span className="text-[11.5px] text-[var(--c-mut)] shrink-0">{fd.kcal} kcal/100g</span></button>)}
                 </div>) : null}
               <div className="flex gap-2" data-testid="fit-cmd-row">
                 <input value={cmd} onChange={(e) => setCmd(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && cmd.trim()) runCmd(); }} placeholder={L("Change something: “remove the cola”, “rice 200 g”…", "عدّل حاجة: «شيل البيبسي»، «الرز ٢٠٠ جرام»…")}
@@ -1084,7 +1084,7 @@ function QuickSetup({ t, L, ar, save, full, logged = 0 }) {
         <h3 id="qs2" className="text-[16px] text-[var(--c-ink)] font-medium">{t("Whose food do you eat?")}</h3>
         <p className="text-[12.5px] text-[var(--c-mut)]">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "الاقتراحات والبحث والوجبات المكتوبة والصور بتبدأ بأكل البلد دي.")}</p>
         <select value={a.country} onChange={(e) => set("country", e.target.value)} data-testid="fit-qs-country" aria-labelledby="qs2" className="w-full min-h-[48px]! rounded-xl bg-[var(--c-surf-2)] px-3 text-[15px] text-[var(--c-ink)]">
-          {countries.map(([k, c]) => <option key={k} value={k}>{c.flag} {ar ? c.ar : c.en}</option>)}
+          {countries.map(([k, c]) => <option key={k} value={k}>{c.flag} {ar ? c.ar : tr(c.en)}</option>)}
         </select>
       </section>)}
       <div className="flex gap-2 pt-1">
@@ -1113,7 +1113,7 @@ function LogRow({ t, ar, x, onDelete, onEdit, onCopy, testid }) {
   return (
     <div className="relative overflow-hidden rounded-lg" data-testid={testid}>
       <div className="absolute inset-y-0 end-0 flex" aria-hidden={!open} style={{ visibility: open || dx !== 0 ? "visible" : "hidden" }}>
-        <button tabIndex={open ? 0 : -1} onClick={act(onCopy)} className="w-14 bg-[var(--c-ln)] text-[var(--c-ink)] flex items-center justify-center" aria-label={ar ? "نسخ" : "Copy"} data-testid="fit-row-copy"><Copy size={16} /></button>
+        <button tabIndex={open ? 0 : -1} onClick={act(onCopy)} className="w-14 bg-[var(--c-ln)] text-[var(--c-ink)] flex items-center justify-center" aria-label={ar ? "نسخ" : tr("Copy")} data-testid="fit-row-copy"><Copy size={16} /></button>
         <button tabIndex={open ? 0 : -1} onClick={act(onEdit)} className="w-14 bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center" aria-label={t("Edit")} data-testid="fit-row-edit"><Pencil size={16} /></button>
         <button tabIndex={open ? 0 : -1} onClick={act(onDelete)} className="w-14 bg-[var(--c-neg)] text-[var(--c-on-acc)] flex items-center justify-center" aria-label={t("Delete")} data-testid="fit-row-delete"><Trash2 size={16} /></button>
       </div>
@@ -1131,7 +1131,7 @@ function LogRow({ t, ar, x, onDelete, onEdit, onCopy, testid }) {
 
 /** v8.6: everything about one logged food — its full name, amount, calories, every nutrient it has, and how it was read. */
 function FoodInfo({ x, ar, time, onEdit }) {
-  const L = (en, a) => (ar ? a : en);
+  const L = (en, a) => (ar ? a : tr(en));
   const n1 = (v) => (v == null ? "—" : Math.round(v * 10) / 10);
   const grid = [[L("Calories", "السعرات"), x.kcal == null ? "—" : Math.round(x.kcal) + " kcal"], [L("Protein", "بروتين"), n1(x.p) + " g"], [L("Carbs", "كربوهيدرات"), n1(x.c) + " g"], [L("Fat", "دهون"), n1(x.f) + " g"],
     ...(x.fib ? [[L("Fibre", "ألياف"), n1(x.fib) + " g"]] : []), ...(x.sug != null ? [[L("Sugar", "سكر"), n1(x.sug) + " g"]] : []), ...(x.sat != null ? [[L("Saturated fat", "دهون مشبعة"), n1(x.sat) + " g"]] : []), ...(x.salt != null ? [[L("Salt", "ملح"), n1(x.salt) + " g"]] : [])];
@@ -1251,11 +1251,11 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         {pm && minimal ? (
           <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
             className="mt-0.5 w-full min-h-[44px]! text-start text-[13.5px] text-[var(--c-ink)]" data-testid={"fit-suggest-" + m}>
-            {L("Try", "جرّب")}: {ar ? pm.recipe.ar : pm.recipe.en} · {pm.kcal} {L("kcal", "سعرة")}
+            {L("Try", "جرّب")}: {ar ? pm.recipe.ar : tr(pm.recipe.en)} · {pm.kcal} {L("kcal", "سعرة")}
           </button>) : pm ? (
           <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
             className="mt-1 w-full min-h-[48px]! text-start rounded-lg bg-[var(--c-surf-2)] px-2.5 py-2 text-[12.5px] text-[var(--c-ink)]" data-testid={"fit-suggest-" + m}>
-            <span className="text-[var(--c-acc)]">{L("Suggested", "مقترح")}:</span> {ar ? pm.recipe.ar : pm.recipe.en}{pm.x !== 1 ? ` ×${pm.x}` : ""} · {pm.kcal} {L("kcal", "سعرة")} — <u>{L("I ate this", "أكلت ده")}</u>
+            <span className="text-[var(--c-acc)]">{L("Suggested", "مقترح")}:</span> {ar ? pm.recipe.ar : tr(pm.recipe.en)}{pm.x !== 1 ? ` ×${pm.x}` : ""} · {pm.kcal} {L("kcal", "سعرة")} — <u>{L("I ate this", "أكلت ده")}</u>
           </button>) : null}
       </div>);
   };
@@ -1377,7 +1377,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
                     <div className="text-[15.5px] font-extrabold text-[var(--c-ink)]">{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}{onInsulin && sum.c ? <span className="ms-1.5 text-[12px] font-semibold text-[var(--c-mut)] tabular-nums" data-testid="fit-meal-carbs">{Math.round(sum.c)} {L("g carbs", "جم كارب")}</span> : null}</div>
                     {items.length ? <div className="text-[13px] text-[var(--c-mut)] truncate">{items.map(nm).join(ar ? "، " : ", ")}</div>
                       : pm ? <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
-                          className="block max-w-full text-start text-[13px] text-[var(--c-ink)] truncate" data-testid={"fit-suggest-" + m}>{L("Try", "جرّب")}: {ar ? pm.recipe.ar : pm.recipe.en} · {pm.kcal}</button>
+                          className="block max-w-full text-start text-[13px] text-[var(--c-ink)] truncate" data-testid={"fit-suggest-" + m}>{L("Try", "جرّب")}: {ar ? pm.recipe.ar : tr(pm.recipe.en)} · {pm.kcal}</button>
                       : <div className="text-[13px] text-[var(--c-mut)]">{L("Nothing yet", "لسه مفيش")}</div>}
                   </div>
                   {items.length ? <span className="text-[15px] font-extrabold text-[var(--c-ink)] tabular-nums">{sum.kcal}</span> : null}
@@ -1603,13 +1603,13 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
       <div className="space-y-3" data-testid="fit-recipe">
         <button onClick={() => setOpen(null)} className="text-[13px] text-[var(--c-mut)] flex items-center gap-1"><ChevronLeft size={15} className="rtl:rotate-180" />{L("Recipes", "الوصفات")}</button>
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-[var(--c-ink)] font-semibold text-[16px]">{ar && open.ar ? open.ar : open.en}</h3>
+          <h3 className="text-[var(--c-ink)] font-semibold text-[16px]">{ar && open.ar ? open.ar : tr(open.en)}</h3>
           <button onClick={() => upd((s) => ({ ...s, favs: fav ? s.favs.filter((x) => x !== open.id) : [...s.favs, open.id] }))} className={fav ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]"}><Star size={18} /></button>
         </div>
         <div className="text-[12.5px] text-[var(--c-mut)]">{open.mins ? <>{open.mins} {L("min", "دقيقة")} · </> : null}{open.dish ? <>{L("one serving", "حصة واحدة")} · </> : <>{L("serves", "تكفي")} {open.serves} · </>} <b className="text-[var(--c-ink)]">{n.kcal} {L("kcal", "سعرة")}</b> {L("a serving", "للفرد")}</div>
         <Macros L={L} x={n} kcal={false} />
         <div className="rounded-xl bg-[var(--c-surf)] p-3 space-y-1">
-          {open.items.map(([id, g], i) => { const fd = F.food(id); return <div key={i} className="flex justify-between text-[13px]"><span className="text-[var(--c-ink)]">{fd ? (ar ? fd.ar : fd.en) : id}</span><span className="text-[var(--c-mut)] tabular-nums">{g} g</span></div>; })}
+          {open.items.map(([id, g], i) => { const fd = F.food(id); return <div key={i} className="flex justify-between text-[13px]"><span className="text-[var(--c-ink)]">{fd ? (ar ? fd.ar : tr(fd.en)) : id}</span><span className="text-[var(--c-mut)] tabular-nums">{g} g</span></div>; })}
           {(open.unknown || []).map((u, i) => <div key={"u" + i} className="flex justify-between text-[13px]"><span className="text-[var(--c-warn)]">{u.name}</span><span className="text-[var(--c-mut)]">{u.grams} g · {L("not counted", "مش محسوب")}</span></div>)}
         </div>
         <ol className="list-decimal ps-5 space-y-1 text-[13.5px] text-[var(--c-ink)]">{open.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
@@ -1632,7 +1632,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
       <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3" data-testid="fit-recipe-grid">
       {list.map((rc) => { const n = F.recipeNutrients(rc); return (
         <button key={rc.id} onClick={() => setOpen(rc)} className="w-full text-start rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-3 py-2.5" data-testid={"fit-rc-" + rc.id}>
-          <div className="text-[14px] text-[var(--c-ink)]">{ar && rc.ar ? rc.ar : rc.en}</div>
+          <div className="text-[14px] text-[var(--c-ink)]">{ar && rc.ar ? rc.ar : tr(rc.en)}</div>
           <div className="text-[12px] text-[var(--c-mut)] tabular-nums">{n.kcal} {L("kcal", "سعرة")} · <span className="inline-flex items-center gap-1"><i className="inline-block w-2 h-2 rounded-full" style={{ background: MACRO[0][3] }} />{L("Protein", "بروتين")} {n.p} {L("g", "جم")}</span>{rc.mins ? <> · {rc.mins} {L("min", "دقيقة")}</> : <> · {n.grams} {L("g", "جم")}</>}</div>
         </button>); })}
       </div>
@@ -1660,7 +1660,7 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
     return () => clearInterval(t);
   }, [sess && sess.running]);
   // the last step done → the workout is logged once (outside the timer's state update)
-  useEffect(() => { if (sess && sess.finished) { const c = F.planCost(sess.plan.workout, kg); logIt(ar ? sess.plan.ar : sess.plan.en, c.minutes, c.kcal); setSess(null); } }, [sess && sess.finished]);
+  useEffect(() => { if (sess && sess.finished) { const c = F.planCost(sess.plan.workout, kg); logIt(ar ? sess.plan.ar : tr(sess.plan.en), c.minutes, c.kcal); setSess(null); } }, [sess && sess.finished]);
   const steps = (plan) => plan.workout.flatMap(([id, sets, reps, rest]) => Array.from({ length: sets }, (_, k) => [{ id, reps, set: k + 1, sets }, rest ? { rest } : null]).flat().filter(Boolean));
   const secsOf = (st) => (st.rest ? st.rest : typeof st.reps === "string" ? (/m$/.test(st.reps) ? parseFloat(st.reps) * 60 : parseFloat(st.reps)) : 0);
   function next(s) {
@@ -1674,7 +1674,7 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
     return (
       <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-5 text-center space-y-3" data-testid="fit-session">
         <div className="text-[12px] text-[var(--c-mut)]">{sess.i + 1} / {sess.steps.length}</div>
-        <div className="text-2xl font-semibold text-[var(--c-ink)]">{cur.rest ? L("Rest", "راحة") : e ? (ar ? e.ar : e.en) : cur.id}</div>
+        <div className="text-2xl font-semibold text-[var(--c-ink)]">{cur.rest ? L("Rest", "راحة") : e ? (ar ? e.ar : tr(e.en)) : cur.id}</div>
         {!cur.rest && <div className="text-[var(--c-mut)]">{L("Set", "مجموعة")} {cur.set}/{cur.sets} · {typeof cur.reps === "number" ? `${cur.reps} ${L("reps", "عدّة")}` : cur.reps}</div>}
         {e && !cur.rest && e.how && <div className="text-[12.5px] text-[var(--c-mut)]">{e.how}</div>}
         {sess.left > 0 && <div className="text-5xl font-bold tabular-nums text-[var(--c-acc)]">{Math.floor(sess.left / 60)}:{String(sess.left % 60).padStart(2, "0")}</div>}
@@ -1695,14 +1695,14 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
           <input type="number" value={mins} onChange={(e) => setMins(+e.target.value || 0)} className="w-16 rounded-lg bg-[var(--c-surf-2)] px-2 py-2 text-[14px] text-[var(--c-ink)]" data-testid="fit-act-min" />
           <span className="self-center text-[12px] text-[var(--c-mut)]">{L("min", "د")}</span>
         </div>
-        {ex && <button onClick={() => { logIt(ar ? ex.ar : ex.en, mins, F.burned(ex.met, kg, mins)); setWhat(""); }} className="w-full rounded-lg bg-[var(--c-acc)] py-2 text-[13px] text-[var(--c-on-acc)]" data-testid="fit-act-log">
-          {ar ? ex.ar : ex.en} · {mins} {L("min", "د")} ≈ {F.burned(ex.met, kg, mins)} kcal — {L("log it", "سجّل")}</button>}
+        {ex && <button onClick={() => { logIt(ar ? ex.ar : tr(ex.en), mins, F.burned(ex.met, kg, mins)); setWhat(""); }} className="w-full rounded-lg bg-[var(--c-acc)] py-2 text-[13px] text-[var(--c-on-acc)]" data-testid="fit-act-log">
+          {ar ? ex.ar : tr(ex.en)} · {mins} {L("min", "د")} ≈ {F.burned(ex.met, kg, mins)} kcal — {L("log it", "سجّل")}</button>}
         {what.trim().length > 2 && !ex && <div className="text-[12px] text-[var(--c-mut)]">{L("Not in the list yet — try a simpler name", "مش موجود في القايمة — جرّب اسم أبسط")}</div>}
       </div>
       <div className="text-[13px] text-[var(--c-mut)]">{L("Guided workouts — the timer walks you through", "تمارين مع مدرب — التايمر معاك")}</div>
       {planList.map((p) => { const c = F.planCost(p.workout, kg); return (
         <div key={p.id} className="rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-3 py-2.5 flex items-center gap-3">
-          <div className="flex-1 min-w-0"><div className="text-[14px] text-[var(--c-ink)] truncate">{ar ? p.ar : p.en}</div><div className="text-[12px] text-[var(--c-mut)]">~{c.minutes} {L("min", "دقيقة")} · ~{c.kcal} kcal</div></div>
+          <div className="flex-1 min-w-0"><div className="text-[14px] text-[var(--c-ink)] truncate">{ar ? p.ar : tr(p.en)}</div><div className="text-[12px] text-[var(--c-mut)]">~{c.minutes} {L("min", "دقيقة")} · ~{c.kcal} kcal</div></div>
           <button onClick={() => { const s = steps(p); const sec = secsOf(s[0]); setSess({ plan: p, steps: s, i: 0, left: sec, running: sec > 0 }); }} className="shrink-0 rounded-full bg-[var(--c-acc)] w-11 h-11 grid place-items-center text-[var(--c-on-acc)]" aria-label={L("Start", "ابدأ")} data-testid={"fit-start-" + p.id}><Play size={17} /></button>
         </div>); })}
       <button disabled={busy} onClick={async () => {
@@ -1862,7 +1862,7 @@ function Micros({ L, ar, day, sex }) {
           <div key={r.k}>
             <div className="flex justify-between text-[12px]"><span className="text-[var(--c-mut)]">{L(r.en, r.ar)}</span><span className="tabular-nums text-[var(--c-mut)]">{r.v} / {r.ref} {r.unit} · {r.pct}%</span></div>
             <div className="h-1.5 rounded-full bg-[var(--c-surf-2)]"><div className={"h-1.5 rounded-full " + (r.pct >= 100 ? "bg-emerald-400" : r.pct >= 50 ? "bg-sky-400" : "bg-amber-400")} style={{ width: Math.min(100, r.pct) + "%" }} /></div>
-            {r.pct < 50 ? <div className="text-[11px] text-[var(--c-warn)] mt-0.5">{L("Good sources: ", "مصادر كويسة: ")}{MI.bestSources(r.k, 4).map((id) => { const f = F.FOODS.find((x) => x.id === id); return f ? (ar ? f.ar : f.en) : id; }).join(ar ? "، " : ", ")}</div> : null}
+            {r.pct < 50 ? <div className="text-[11px] text-[var(--c-warn)] mt-0.5">{L("Good sources: ", "مصادر كويسة: ")}{MI.bestSources(r.k, 4).map((id) => { const f = F.FOODS.find((x) => x.id === id); return f ? (ar ? f.ar : tr(f.en)) : id; }).join(ar ? "، " : ", ")}</div> : null}
           </div>))}
         <div className="text-[11px] text-[var(--c-mut)]">{L(`Counted from ${m.known} of ${m.total} foods (the ones with known values; USDA data and product labels). A guide, not a lab test.`, `محسوبة من ${m.known} من ${m.total} أكلات (اللي قيمها معروفة؛ بيانات USDA وملصقات المنتجات). دليل تقريبي، مش تحليل معمل.`)}</div>
       </div> : null}

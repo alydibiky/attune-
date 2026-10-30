@@ -15,6 +15,7 @@
      { type: "todoAdd", item } · { type: "whereSave", set } · { type: "travel", code } · { type: "rememberNote", text }
      { type: "rememberFiles", files, label }  → the page saves it in Mind / starts the trip / starts a "remember" job
    The page passes `api` (the apps' own readers and stores), so this file stays testable. Tests: tests/unit/v748cmdrun.test.mjs. */
+import { tr } from "./i18n.js";
 import * as K from "./commands.js";
 import { isEmailAsk } from "./emaildraft.js";
 import * as W from "./whereis.js";
@@ -81,7 +82,7 @@ function runKind(kind, text, { cmd = null, files = [], api = {}, slash = false }
   const arg = String(text || "").trim();
   switch (kind) {
     case "email": return arg ? { type: "email", text: "/email " + arg } : { type: "need", what: "text", cmd: "email" };
-    case "remind": return { type: "doit", text: /remind|alarm|فكرني|ذكرني|نبهني/i.test(arg) ? arg : (/[\u0600-\u06ff]/.test(arg) ? "فكرني " : "remind me ") + arg };
+    case "remind": return { type: "doit", text: /remind|alarm|فكرني|ذكرني|نبهني/i.test(arg) ? arg : (/[\u0600-\u06ff]/.test(arg) ? "فكرني " : tr("remind me ")) + arg };
     case "do": case "metro": case "automation": case "watch": case "mission": case "agent":
       return { type: "doit", text: arg };
     case "note": return arg ? { type: "rememberNote", text: arg } : { type: "need", what: "text", cmd: "remember" };

@@ -186,7 +186,7 @@ function Rules({ sys, setSys, wide, onClose }) {
       {P.RULES.map((r) => { const mine = all.filter((x) => x.rule === r); if (!mine.length) return null; return (
         <div key={r} className={card + " p-3.5 space-y-1.5"} data-testid={"biz-pro-rule-" + r}>
           <label className="min-h-[44px] flex items-center gap-2.5 text-[14px] font-extrabold"><input type="checkbox" checked={!off.has(r)} onChange={(e) => setSys(P.setRule(sys, r, e.target.checked))} className="w-5 h-5 accent-[var(--c-acc)]" />{name[r]}</label>
-          {mine.map((x, i) => <p key={i} className={"text-[12.5px] " + muted} dir="auto">{ar() ? x.ar : x.en}</p>)}
+          {mine.map((x, i) => <p key={i} className={"text-[12.5px] " + muted} dir="auto">{ar() ? x.ar : tr(x.en)}</p>)}
         </div>); })}
       {!all.length ? <p className={"text-[13px] " + muted}>{tr("This system has no stock, balances, due dates or bookings yet. Ask the AI to add them, e.g. \"add a Payments table linked to Invoices\".")}</p> : null}
     </Sheet>);

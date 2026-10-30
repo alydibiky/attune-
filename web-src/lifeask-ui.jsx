@@ -77,7 +77,7 @@ export function LifeAnswer({ res, navTo, askChat, onClose }) {
   return res.a ? (
     <div className={cardPad + " space-y-3"} data-testid="lifeask-answer" data-kind={res.a.kind}>
       <div className="flex items-start gap-2"><span className={label + " flex-1"} dir="auto">{res.q}</span>{close}</div>
-      <p className="text-[17px] leading-snug m-0 font-medium" dir="auto" data-testid="lifeask-text">{(ar ? res.a.ar : res.a.en).replace(/\*\*/g, "")}</p>
+      <p className="text-[17px] leading-snug m-0 font-medium" dir="auto" data-testid="lifeask-text">{(ar ? res.a.ar : tr(res.a.en)).replace(/\*\*/g, "")}</p>
       {res.a.chart ? <AnswerChart chart={res.a.chart} ar={ar} /> : null}
       {(res.a.rows || []).length ? <table className="w-full text-[13.5px] c-num" data-testid="lifeask-rows"><tbody>{res.a.rows.map(([k, v], i) => <tr key={i} className="border-t" style={{ borderColor: "var(--c-ln)" }}><td className="py-1.5 pe-3 c-sub whitespace-nowrap align-top" dir="auto">{k}</td><td className="py-1.5" dir="auto">{v}</td></tr>)}</tbody></table> : null}
       <div className="flex flex-wrap gap-2 items-center">

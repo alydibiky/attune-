@@ -316,7 +316,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         {[[Apple, "Food photo", () => (openFitAdd ? openFitAdd() : navTo("fit")), "home-quick-food"], [FileText, "A file", () => navTo("pdfchat"), "home-quick-file"], [Binoculars, "Find for me", () => navTo("scout"), "home-quick-scout"]].map(([I, l, go, id]) => (
           <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px]" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={14} className="c-acc" />{tr(l)}</button>))}
       </div>}
-      {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
+      {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : tr(hint[0])}»</p>}
       {/* v6.28 declutter: a card with nothing to say is not shown (nothing due today, nothing spent and no budget) */}
       {(() => { if (now1 && now1.from !== "fleet") data.items = data.items.filter((x) => x.title !== now1.title); return null; })()}
       {(!minimal || rep) && (data.items.length || data.reminders || note) ? <div className="c-card" data-testid="home-today">
@@ -449,7 +449,7 @@ function TrialLine({ trial }) {
 function SmartRow({ x, ar, open, drop, testid }) {
   return <div className="w-full rounded-[20px] p-3 flex items-start gap-2.5" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid={testid} data-k={x.k}>
     <Sparkles size={17} className="c-acc shrink-0 mt-1" />
-    <button onClick={() => open(x)} className="flex-1 min-w-0 text-start text-[13.5px] leading-snug min-h-[40px]" dir="auto">{ar ? x.ar : x.en}</button>
+    <button onClick={() => open(x)} className="flex-1 min-w-0 text-start text-[13.5px] leading-snug min-h-[40px]" dir="auto">{ar ? x.ar : tr(x.en)}</button>
     <button onClick={() => drop(x)} className="w-9 h-9 grid place-items-center c-sub shrink-0" aria-label={tr("Not useful")} title={tr("Not useful")} data-testid="home-smart-drop"><X size={15} /></button>
   </div>;
 }

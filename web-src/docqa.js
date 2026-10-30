@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 /* ---- Ask a PDF: read a document, chat with it, every answer pointing at its pages (v6.18) --------------------------------------------
    A phone model cannot hold a 300-page book, and re-reading all of it for every question is slow and wasteful. So the document is
    cut into passages that remember their page, and each question gets only the few passages that fit it (BM25 over normalised
@@ -232,7 +233,7 @@ export function suggestions(index, ar = false) {
   const text = index.pages.slice(0, 3).map((p) => p.text).join(" ");
   const money = /\b(EGP|USD|SAR|AED|EUR|LE|جنيه|ريال|دولار)\b|[$€£]\s?\d/.test(text), dates = /\b(19|20)\d\d\b/.test(text);
   const base = ar ? ["لخّص الملف", "ما النقاط الرئيسية؟", "أنشئ فهرسًا للمحتويات"] : ["Summarise this document", "What are the key points?", "Make an outline with page numbers"];
-  if (money) base.push(ar ? "اذكر كل المبالغ والأرقام المهمة" : "List every amount and important figure");
-  if (dates) base.push(ar ? "اذكر كل التواريخ والمواعيد" : "List all dates and deadlines");
+  if (money) base.push(ar ? "اذكر كل المبالغ والأرقام المهمة" : tr("List every amount and important figure"));
+  if (dates) base.push(ar ? "اذكر كل التواريخ والمواعيد" : tr("List all dates and deadlines"));
   return base.slice(0, 5);
 }

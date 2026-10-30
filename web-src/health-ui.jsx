@@ -141,7 +141,7 @@ export function WatchVitals({ native, nativeCall, onChange }) {
     <div className={cardPad} data-testid="watch-vitals">
       <div className="flex items-center justify-between gap-2 mb-1.5"><b className="font-extrabold text-[14.5px] flex items-center gap-1.5"><Watch size={16} className="c-acc" />{tr("From your watch")}</b>
         {state && state.granted > 0 ? <span className="text-[11.5px] c-sub font-semibold">{tr("{n} of {m} measures shared", { n: state.granted, m: state.of })}</span> : null}</div>
-      {w.has ? <ul className="m-0 p-0 list-none space-y-1">{w.lines.map((l, i) => <li key={i} className={"text-[13px] font-semibold leading-snug " + col[l.level]} dir="auto" data-testid="vital-line">{ar ? l.ar : l.en}</li>)}</ul>
+      {w.has ? <ul className="m-0 p-0 list-none space-y-1">{w.lines.map((l, i) => <li key={i} className={"text-[13px] font-semibold leading-snug " + col[l.level]} dir="auto" data-testid="vital-line">{ar ? l.ar : tr(l.en)}</li>)}</ul>
         : <p className="m-0 text-[13px] c-sub">{tr("Blood pressure, oxygen, sleep, resting heart rate and stress come in by themselves from your watch — nothing to type.")}</p>}
       {can && (!state || !state.granted || state.granted < state.of) ? <button className="mt-2 min-h-[44px] text-[13px] font-bold text-[var(--c-acc)] underline" onClick={() => { try { native.healthVitalsConnect(); } catch (e) {} }} data-testid="watch-vitals-connect">
         {state && state.granted ? tr("Share more from the watch") : tr("Connect the watch")}</button> : null}
@@ -184,7 +184,7 @@ export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd, na
 ${w ? `<h3>${esc(tr("Weight trend"))}</h3><table>${w.points.map((p) => `<tr><td>${p.d}</td><td class="n">${p.kg} kg</td><td class="n">${p.avg} kg</td></tr>`).join("")}</table>` : ""}
 ${m.rows.length ? `<h3>${esc(tr("Family medicines & labs"))}</h3><table>${m.rows.map((r) => `<tr><td>${esc((r.member ? r.member.name + " · " : "") + r.med.name + " " + (r.med.dose || ""))}</td><td class="n">${r.taken}/${r.due}</td><td class="n">${r.pct == null ? "" : r.pct + "%"}</td></tr>`).join("")}</table>` : ""}
 ${report.lab ? `<h3>${esc(report.lab.test)}</h3><table>${report.lab.list.map((l) => `<tr><td>${esc(l.date)}</td><td class="n">${l.value} ${esc(l.unit || "")}</td></tr>`).join("")}</table>` : ""}
-${report.vitals && report.vitals.has ? `<h3>${esc(tr("From your watch"))}</h3>${report.vitals.lines.map((l) => `<p>${esc(ar ? l.ar : l.en)}</p>`).join("")}<table>${report.vitals.rows.map((r) => `<tr><td>${r.day}</td><td class="n">${esc(r.bp)}</td><td class="n">${r.spo2 ? r.spo2 + "%" : ""}</td><td class="n">${r.sleep}</td><td class="n">${r.restHr ? r.restHr + " bpm" : ""}</td><td class="n">${r.hrv ? r.hrv + " ms" : ""}</td></tr>`).join("")}</table>` : ""}
+${report.vitals && report.vitals.has ? `<h3>${esc(tr("From your watch"))}</h3>${report.vitals.lines.map((l) => `<p>${esc(ar ? l.ar : tr(l.en))}</p>`).join("")}<table>${report.vitals.rows.map((r) => `<tr><td>${r.day}</td><td class="n">${esc(r.bp)}</td><td class="n">${r.spo2 ? r.spo2 + "%" : ""}</td><td class="n">${r.sleep}</td><td class="n">${r.restHr ? r.restHr + " bpm" : ""}</td><td class="n">${r.hrv ? r.hrv + " ms" : ""}</td></tr>`).join("")}</table>` : ""}
 <p>${esc(tr("Worked out on this phone from your own entries. Not medical advice."))}</p></body></html>`;
     sharePdf({ html, name: "attune-health-report", text: tr("Health Report") });
   };
@@ -205,7 +205,7 @@ ${report.vitals && report.vitals.has ? `<h3>${esc(tr("From your watch"))}</h3>${
         <div className="space-y-3 lg:space-y-4"><FamilyToday navTo={navTo} wide={wide} tick={tick} />
           <WatchVitals native={native} nativeCall={nativeCall} onChange={() => setTick((n) => n + 1)} /></div>
         <div className="space-y-3 lg:space-y-4">
-          {cycleOn || hasCycle ? <CycleToday navTo={navTo} wide={wide} onLog={async () => { await submit(ar ? "الدورة جات النهارده" : "period started today"); setTick((n) => n + 1); }} /> : null}
+          {cycleOn || hasCycle ? <CycleToday navTo={navTo} wide={wide} onLog={async () => { await submit(ar ? "الدورة جات النهارده" : tr("period started today")); setTick((n) => n + 1); }} /> : null}
           <HealthReportCta onClick={() => setRep(true)} wide={wide} />
         </div>
       </div>

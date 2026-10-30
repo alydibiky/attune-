@@ -1,5 +1,6 @@
 /* v6.18 — Fit & Food's looks (fitlook.js): the style tag, the loading screen with nutrition facts, the photo with a
    label and an arrow on each food, and the look picker in Fit's settings. */
+import { tr } from "./i18n.js";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as LK from "./fitlook.js";
 
@@ -37,8 +38,8 @@ export function PulseLoader({ url, stage, L, ar, label }) {
       <p className="text-[15px] font-bold text-[var(--c-ink)] text-center m-0" data-testid="fit-loading-stage">{stage || L("Reading your meal…", "جارٍ قراءة وجبتك…")}</p>
       <div key={k} className="fit-pop w-full rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4 space-y-1.5" data-testid="fit-fact" aria-live="polite">
         <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-acc)] m-0">{L("DID YOU KNOW?", "هل تعلم؟")}</p>
-        <p className="text-[15px] leading-relaxed font-semibold text-[var(--c-ink)] m-0">{ar ? f.ar : f.en}</p>
-        <p className="text-[11.5px] text-[var(--c-mut)] m-0">{ar ? f.src.ar : f.src.en}</p>
+        <p className="text-[15px] leading-relaxed font-semibold text-[var(--c-ink)] m-0">{ar ? f.ar : tr(f.en)}</p>
+        <p className="text-[11.5px] text-[var(--c-mut)] m-0">{ar ? f.src.ar : tr(f.src.en)}</p>
       </div>
     </div>
   );
@@ -109,8 +110,8 @@ export function LookPicker({ st, upd, L, ar }) {
           <button key={l.id} onClick={() => upd((s) => ({ ...s, look: l.id }))} aria-pressed={cur === l.id} data-testid={"fit-look-" + l.id}
             className={"rounded-[20px] p-2 text-start border-2 bg-[var(--c-surf)] transition-colors duration-150 " + (cur === l.id ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]")}>
             <span className="flex h-9 rounded-lg overflow-hidden mb-1.5" aria-hidden="true">{l.swatch.map((c, i) => <span key={i} className="flex-1" style={{ background: c }} />)}</span>
-            <span className="block text-[13px] font-extrabold text-[var(--c-ink)]">{ar ? l.ar : l.en}{l.id === LK.DEFAULT_LOOK ? <span className="text-[10.5px] text-[var(--c-mut)] font-normal"> · {L("default", "الافتراضي")}</span> : null}</span>
-            <span className="block text-[11px] text-[var(--c-mut)] leading-snug">{ar ? l.hint.ar : l.hint.en}</span>
+            <span className="block text-[13px] font-extrabold text-[var(--c-ink)]">{ar ? l.ar : tr(l.en)}{l.id === LK.DEFAULT_LOOK ? <span className="text-[10.5px] text-[var(--c-mut)] font-normal"> · {L("default", "الافتراضي")}</span> : null}</span>
+            <span className="block text-[11px] text-[var(--c-mut)] leading-snug">{ar ? l.hint.ar : tr(l.hint.en)}</span>
           </button>))}
       </div>
     </div>

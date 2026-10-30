@@ -4,6 +4,7 @@
    Rules kept from money-calm.js: amounts in different currencies are never added together (the report is in the ledger's main
    currency; other currencies are listed apart), and gold / silver / livestock accounts are not money (grams and head, not EGP).
    Zakāt is NOT computed here: the Report shows only what Yusr's own zakāt engine sent (its snapshot), as Yusr calculated it.  */
+import { tr } from "./i18n.js";
 import { homeCurrency } from "./locale.js";
 
 const DAY = 86400000;
@@ -42,9 +43,9 @@ export const CAT_EMOJI = { food: "🍲", groceries: "🛒", transport: "🚗", b
   gifts: "🎁", salary: "💼", other: "✦" };
 export function catName(L, id, ar = false) {
   const c = ((L && L.customCats) || []).find((x) => x.id === id);
-  if (c) return (ar ? c.ar : c.en) || c.name || c.en || id;
+  if (c) return (ar ? c.ar : tr(c.en)) || c.name || c.en || id;
   const n = CAT_NAMES[id];
-  return n ? n[ar ? 1 : 0] : (id ? id[0].toUpperCase() + id.slice(1) : ar ? "أخرى" : "Other");
+  return n ? n[ar ? 1 : 0] : (id ? id[0].toUpperCase() + id.slice(1) : ar ? "أخرى" : tr("Other"));
 }
 
 /** Everything the calm view and the Report show, at `now`, for one account (`account` = its id) or all money accounts.
@@ -71,7 +72,7 @@ export function moneyReport(L, { now = Date.now(), account = null, ar = false } 
     const by = {};
     for (const t of inMonth) if (t.type === type) { const [id, name] = keyOf(t); const x = by[id] || (by[id] = { id, name, amount: 0 }); x.amount = r2(x.amount + (Number(t.amount) || 0)); }
     let list = Object.values(by).sort((a, b) => b.amount - a.amount);
-    if (list.length > 4) list = [...list.slice(0, 3), { id: "_rest", name: ar ? "أخرى" : "Other", amount: r2(list.slice(3).reduce((a, c) => a + c.amount, 0)) }];
+    if (list.length > 4) list = [...list.slice(0, 3), { id: "_rest", name: ar ? "أخرى" : tr("Other"), amount: r2(list.slice(3).reduce((a, c) => a + c.amount, 0)) }];
     // percentages that add up to 100 (largest remainder), so the donut and the legend agree
     if (!(total > 0)) return list.map((c) => ({ ...c, pct: 0 }));
     const raw = list.map((c) => (c.amount / total) * 100), floor = raw.map(Math.floor);

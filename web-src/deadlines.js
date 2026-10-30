@@ -9,6 +9,7 @@
    An item: { id, kind, title, date (YYYY-MM-DD: the deadline), amount, currency, doc, base (purchase/notice date), note,
               source, status: "active"|"done", outcome, created }
    Pure logic; store "attune:radar:v1" = { items: [...], seen: [notification ids] }. Tests: tests/unit/v727radar.test.mjs. */
+import { tr } from "./i18n.js";
 import { payAmount, payCurrency, payNormalize } from "./yusr/paytext.js";
 import { MONTH_NAMES } from "./life.js";
 
@@ -345,7 +346,7 @@ const STEPS = {
 };
 export function cancelKit(x, lang = "en") {
   if (!x || (x.kind !== "trial" && x.kind !== "renewal")) return null;
-  const L = lang === "ar" ? "ar" : "en", t = x.title || (L === "ar" ? "الاشتراك" : "the subscription");
+  const L = lang === "ar" ? "ar" : "en", t = x.title || (L === "ar" ? "الاشتراك" : tr("the subscription"));
   const link = cancelLink(x), hay = [x.title, x.note, x.app].join(" ");
   const way = link && /play\.google/.test(link.url) && /google play/i.test(hay) ? "play" : link && /apps\.apple/.test(link.url) ? "apple" : link ? (/play\.google/.test(link.url) ? "play" : "web") : "ask";
   const steps = STEPS[way][L].map((s) => s.replace("{t}", t).replace("{d}", x.date));
