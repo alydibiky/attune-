@@ -28,12 +28,13 @@ import { BN } from "./i18n-bn.js";
 import { VI } from "./i18n-vi.js";
 import { TH } from "./i18n-th.js";
 import { SW } from "./i18n-sw.js";
+import { ARB } from "./i18n-arb.js";   // v8.8 (Ali: "Egyptian Arabic and normal Arabic"): Modern Standard Arabic
 
 export const LANG_KEY = "attune:ui:lang";
 /** v6.32 more interface languages (roadmap: "more UI languages after English + Arabic"). [id, its own name, locale for dates and
     numbers]. Arabic is complete; the others cover the screens people see first and show English where a line has no translation
     yet (tests/unit/v736langs.test.mjs measures each one's share). A new language = a dictionary file + one row here. */
-export const LANGS = [["en", "English", "en-US"], ["ar", "العربية", "ar-EG-u-nu-latn"], ["fr", "Français", "fr-FR"], ["es", "Español", "es-ES"], ["tr", "Türkçe", "tr-TR"],
+export const LANGS = [["en", "English", "en-US"], ["ar", "العربية (مصري)", "ar-EG-u-nu-latn"], ["arb", "العربية الفصحى", "ar-u-nu-latn"], ["fr", "Français", "fr-FR"], ["es", "Español", "es-ES"], ["tr", "Türkçe", "tr-TR"],
   // v6.47 (VISION phase 4): Portuguese (Brazil), Hindi, Indonesian, Urdu (right-to-left, like Arabic)
   ["pt", "Português", "pt-BR"], ["hi", "हिन्दी", "hi-IN-u-nu-latn"], ["id", "Bahasa Indonesia", "id-ID"], ["ur", "اردو", "ur-PK-u-nu-latn"],
   // v6.49 (Ali: "at least 20 languages"): German, Italian, Russian, Chinese, Japanese, Korean, Persian (right-to-left), Bengali,
@@ -41,8 +42,8 @@ export const LANGS = [["en", "English", "en-US"], ["ar", "العربية", "ar-E
   ["de", "Deutsch", "de-DE"], ["it", "Italiano", "it-IT"], ["ru", "Русский", "ru-RU"], ["zh", "简体中文", "zh-CN"], ["ja", "日本語", "ja-JP"],
   ["ko", "한국어", "ko-KR"], ["fa", "فارسی", "fa-IR-u-nu-latn"], ["bn", "বাংলা", "bn-BD-u-nu-latn"], ["vi", "Tiếng Việt", "vi-VN"],
   ["th", "ไทย", "th-TH-u-nu-latn"], ["sw", "Kiswahili", "sw-KE"]];
-const DICTS = { ar: AR, fr: FR, es: ES, tr: TRK, pt: PT, hi: HI, id: IDN, ur: UR, de: DE, it: IT, ru: RU, zh: ZH, ja: JA, ko: KO, fa: FA, bn: BN, vi: VI, th: TH, sw: SW };
-const RTL = new Set(["ar", "ur", "fa", "he"]);
+const DICTS = { ar: AR, arb: ARB, fr: FR, es: ES, tr: TRK, pt: PT, hi: HI, id: IDN, ur: UR, de: DE, it: IT, ru: RU, zh: ZH, ja: JA, ko: KO, fa: FA, bn: BN, vi: VI, th: TH, sw: SW };
+const RTL = new Set(["ar", "arb", "ur", "fa", "he"]);
 const known = (l) => LANGS.some((x) => x[0] === l);
 
 function initialLang() {
@@ -74,7 +75,7 @@ export function setLang(l, opts = {}) {
     const raw = localStorage.getItem("ledger.v3");
     if (raw) {
       const db = JSON.parse(raw);
-      const yl = LANG === "ar" ? "ar" : "en";      // (Yusr itself is English or Arabic)
+      const yl = LANG === "ar" || LANG === "arb" ? "ar" : "en";      // (Yusr itself is English or Arabic)
       if (db && typeof db === "object" && db.lang !== yl) { db.lang = yl; localStorage.setItem("ledger.v3", JSON.stringify(db)); }
     }
   } catch (e) {}

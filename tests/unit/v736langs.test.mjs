@@ -18,7 +18,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log("FAIL", m); } else console
 globalThis.localStorage = { _s: {}, getItem(k) { return this._s[k] ?? null; }, setItem(k, v) { this._s[k] = String(v); } };
 const I = await import("../../web-src/i18n.js");
 
-ok(I.LANGS.map((x) => x[0]).join(",") === "en,ar,fr,es,tr,pt,hi,id,ur,de,it,ru,zh,ja,ko,fa,bn,vi,th,sw", "twenty languages in the switch (v6.49, Ali: at least 20)");
+ok(I.LANGS.map((x) => x[0]).join(",") === "en,ar,arb,fr,es,tr,pt,hi,id,ur,de,it,ru,zh,ja,ko,fa,bn,vi,th,sw", "21 languages in the switch (v6.49 at least 20; v8.8 Egyptian + Standard Arabic)");
 const ph = (s) => (s.match(/\{\w+\}/g) || []).sort().join(",");
 for (const [name, d] of [["fr", FR], ["es", ES], ["tr", TRK], ["pt", PT], ["hi", HI], ["id", IDN], ["ur", UR], ...Object.entries(NEW)]) {
   const keys = Object.keys(d);
