@@ -7796,4 +7796,5 @@ export const AR = {
   "Open Agents": "افتح الوكلاء",
   "Open Recall": "افتح الذاكرة",
   "Nothing worth your time right now — I'll tell you when something is.": "مفيش حاجة تستاهل وقتك دلوقتي — هقولك لما يبقى فيه.",
+  "Your people, places and things — everything about each one": "ناسك وأماكنك وحاجاتك — كل حاجة عن كل واحد",
 };
