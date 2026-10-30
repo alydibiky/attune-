@@ -8,7 +8,7 @@ import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { EmptyStart } from "./ui-kit.jsx";
 import { loadAgents } from "./agents.js";
-import { Paperclip, MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
+import { Paperclip, MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles, X } from "lucide-react";
 import { nowCard, homeNumbers, noticed, onThisDay, weekRhythm } from "./home-now.js";
 import { ReportTiles, WeekChart } from "./report-ui.jsx";   // v7.0 My report (Gemini, Direction 2)
 import { dayTotals } from "./fit.js";
@@ -45,7 +45,10 @@ import { SlashMenu, Attached, BoxOptions, AskCard, ConfirmCard, LinesCard, TodoC
 import { LifeAnswer } from "./lifeask-ui.jsx";
 import { EmailCard } from "./email-ui.jsx";
 import * as LA from "./lifeask.js";
-import { connectNow, pickPerson } from "./connected.js";
+import { connectNow, pickPerson, allStores } from "./connected.js";
+import { insights, loadSeen, saveSeen, dismiss as dismissSeen } from "./insights.js";
+import { loadDir } from "./entities.js";
+import { notesMoneyNow } from "./notes-money-ui.jsx";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -146,6 +149,14 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   useSubBack(minimal && rep, () => setRep(false));
   const now1 = minimal ? nowCard({ needs: data.items, fleet, country: myCountry(), now: Date.now() }) : null;
   const nums = minimal ? homeNumbers({ safe: data.safe, kcal: data.kcal, kcalGoal: data.fitOn ? data.goal : 0, fleet, mission }) : [];
+  // v8.8 (Ali: "make Attune noticed very very smart"): what a careful friend with your notebook would point out (insights.js)
+  const [seenS, setSeenS] = useState(() => loadSeen());
+  const [fresh, setFresh] = useState(0);   // read again when Home is opened again / the app comes back
+  useEffect(() => { const f = () => setFresh((n) => n + 1); const v = () => { if (!document.hidden) f(); }; window.addEventListener("attune-open", f); window.addEventListener("focus", f); document.addEventListener("visibilitychange", v);
+    return () => { window.removeEventListener("attune-open", f); window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", v); }; }, []);
+  const smart = useMemo(() => { if (!minimal) return []; try { return insights(allStores(), loadDir(), { seen: seenS, notesPending: notesMoneyNow().length }); } catch (e) { return []; } }, [minimal, tick, rep, seenS, fresh]);
+  const openSmart = (x) => { if (x.person) { try { localStorage.setItem("attune:people:open", x.person); } catch (e) {} navTo("people"); return; } openLine(x.open); };
+  const dropSmart = (x) => setSeenS(saveSeen(dismissSeen(seenS, x)));
   const seen = minimal ? noticed({ safe: data.safe, mission, fleet, scout: data.scout, past: cmd && cmd.api ? onThisDay(cmd.api.records()) : null }) : null;
   const [heard, setHeard] = useState(false);
   // the mic: the phone listens and writes what you said into the box (then Send does it, like typing)
@@ -390,6 +401,11 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <span className="font-extrabold text-[14px]">{tr("See all")}</span>
         <span className="c-sub text-[12.5px] inline-flex items-center gap-1.5">{tr("My report")}<ChevronRight size={16} className="c-acc rtl:rotate-180" /></span></button> : null}
       {/* v6.46 Home A: one thing Attune noticed (home-now.js) — in My report */}
+      {/* v8.8: the most urgent finding on Home itself (charged twice, the barber due, a bill late) — the rest in My report */}
+      {!rep && smart[0] && smart[0].score >= 75 ? <SmartRow x={smart[0]} ar={ar} open={openSmart} drop={dropSmart} testid="home-smart" /> : null}
+      {rep && smart.length ? <div className="space-y-2" data-testid="home-smart-list">
+        <p className="m-0 text-[12px] font-extrabold tracking-[0.08em] uppercase c-sub">{tr("Attune noticed")}</p>
+        {smart.slice(0, 5).map((x) => <SmartRow key={x.id} x={x} ar={ar} open={openSmart} drop={dropSmart} testid="home-smart-item" />)}</div> : null}
       {seen && rep ? <button onClick={() => (seen.k === "past" && cmd ? cmd.openRecord({ id: seen.id }) : openLine(seen.open))} className="w-full rounded-[20px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
         <Sparkles size={17} className="c-acc shrink-0 mt-0.5" /><span className="text-[13.5px] leading-snug" dir="auto">{seen.text}</span></button> : null}
       </>}
@@ -426,5 +442,14 @@ function TrialLine({ trial }) {
     <p className="m-0 text-[13px] c-sub" dir="auto">{note.used ? tr("You used it for {x}.", { x: note.used }) + " " : ""}{note.kind === "ended" ? tr("Money, Follow-ups and unlimited answers stay free.") : ""}</p>
     <div className="flex gap-2"><button onClick={() => { close(); trial.open(); }} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="home-trial-keep">{tr("Keep Pro")}</button>
       {note.kind === "ended" ? <button onClick={close} className="h-10 px-3 c-sub text-[13px]" data-testid="home-trial-close">{tr("Not now")}</button> : null}</div>
+  </div>;
+}
+
+/** v8.8 one "Attune noticed" finding: what it saw (with the numbers), tap → where it is; ✕ → not useful (gone for 30 days). */
+function SmartRow({ x, ar, open, drop, testid }) {
+  return <div className="w-full rounded-[20px] p-3 flex items-start gap-2.5" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid={testid} data-k={x.k}>
+    <Sparkles size={17} className="c-acc shrink-0 mt-1" />
+    <button onClick={() => open(x)} className="flex-1 min-w-0 text-start text-[13.5px] leading-snug min-h-[40px]" dir="auto">{ar ? x.ar : x.en}</button>
+    <button onClick={() => drop(x)} className="w-9 h-9 grid place-items-center c-sub shrink-0" aria-label={tr("Not useful")} title={tr("Not useful")} data-testid="home-smart-drop"><X size={15} /></button>
   </div>;
 }

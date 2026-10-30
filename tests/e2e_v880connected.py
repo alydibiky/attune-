@@ -61,6 +61,17 @@ with sync_playwright() as p:
     page.fill("[data-testid=home-ask]", "how much did I pay my barber?"); page.click("[data-testid=home-send]")
     page.wait_for_function("() => document.body.innerText.includes('you paid 500')", timeout=8000)
     check(True, "“my barber” → Osama's card → 500 in 2 payments, from Money")
+    # ---- Attune noticed: a double charge today is the one urgent thing on Home; My report lists the rest; ✕ = not useful
+    page.evaluate("""() => { const L = JSON.parse(localStorage.getItem('ledger.v3')); const d = new Date().toISOString().slice(0, 10);
+      L.txns.push({ id: 'c1', type: 'expense', amount: 1200, date: d, note: 'Carrefour', cat: 'groceries', account: 'a' }, { id: 'c2', type: 'expense', amount: 1200, date: d, note: 'Carrefour', cat: 'groceries', account: 'a' });
+      localStorage.setItem('ledger.v3', JSON.stringify(L)); }""")
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=home-smart]", timeout=8000)
+    check("Carrefour twice" in page.inner_text("[data-testid=home-smart]"), "Home: «charged twice?» — the one urgent thing Attune noticed")
+    page.click("[data-testid=home-see-report]"); page.wait_for_selector("[data-testid=home-smart-list]", timeout=5000)
+    kinds = page.locator("[data-testid=home-smart-item]").evaluate_all("els => els.map((e) => e.dataset.k)")
+    check("twice" in kinds and "notes" in kinds and len(kinds) >= 2, "My report → Attune noticed: %s" % kinds)
+    page.locator("[data-testid=home-smart-item][data-k=twice] [data-testid=home-smart-drop]").click(); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=home-smart-item][data-k=twice]").count() == 0, "✕ Not useful → gone")
     # ---- a note that says money moved → Money asks once (Ali: "read the notes I write")
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'money'}}))"); page.wait_for_selector("[data-testid=notes-money-row]", timeout=12000)
     check("650" in page.inner_text("[data-testid=notes-money]"), "Money → From your notes: “paid the electrician 650” waits for a tap")

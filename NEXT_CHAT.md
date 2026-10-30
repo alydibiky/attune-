@@ -133,6 +133,26 @@ Tests: unit v870personal, v870zakatcalc, v870livefacts; e2e v870personal, v800mo
    app), 2 your school (the niṣāb fine points folded under one summary line + Change), 3 gold & silver you own (worn jewellery
    box), 4 your Zakāt year, 5 money & debts; Save stays at the bottom. `money-sheets-ui.jsx` ZSec / ZCheck / ZNum.
 
+## v8.8 — 30 Oct: the connected memory (Ali: "chat should be very smart and connect everything together — not just names, everything";
+## "add his contact and refer to him as X"; "when I say Ahmed it asks which Ahmed"; "read the notes I write"; "Attune noticed very very smart")
+Agreed with Ali in chat before building (his answers: contact AND his own name; ask only when unsure; Saved → People; tap a name → card).
+- **People cards** (`entities.js`, `people-ui.jsx`, Saved → People): your name for them, other names, role, phone contact via Android's
+  own picker (`contactPick` in NativeBridge / MainActivity — NO contacts permission, Play Protect safe). Names in any sentence (EN / AR /
+  Franco spellings folded: Mohamed = Muhammad = «محمد»; a role like "the barber" / «الحلاق» finds the card). «Which Ahmed?» only when two
+  cards fit and the sentence doesn't tell; every pick is learnt. Same phone = one card. «Who is this?» lists names Money / notes met.
+  The people already in People & plans and the voice's nicknames become cards once.
+- **Connected memory** (`links.js`, `connected.js`): every item (Money, Follow-ups, notes, Mind, messages Recall kept, reminders, dates,
+  goals, medicines, agents) on one list, marked with its people / 17 topics (wedding, Umrah, car, flat, repairs, school, health, travel…) /
+  goals; `connect(question)` gathers everything linked, sums money and debts by code. Chat (code card at once, or the model gets the
+  linked facts), Home's box («Which Ahmed?» card) and the voice (asks out loud, understands "the plumber" / "the first one").
+- **Notes → Money** (`notesmoney.js`, `notes-money-ui.jsx`): "paid the plumber 300" / «دفعت للسباك ٣٠٠» in a Shelf / Mind note waits
+  in Money → From your notes (Add / Not money); never twice (same amount within 3 days = already in).
+- **Attune noticed, smart** (`insights.js`): rhythms (the barber every ~21 days → next due; a bill late), money owed for weeks, a topic
+  far above its usual, a bill / person costing more, charged twice, a big one-off, a name written twice with no card, notes money not in
+  Money, a goal behind its pace, an agent's find vs a goal. Ranked; the urgent one on Home, the top 5 in My report; ✕ = gone 30 days and
+  that kind shown less after 3. Chat: "what did you notice?".
+Tests: unit v880entities, v880links, v880notesmoney, v880insights; e2e v880connected.
+
 **Ali's picks (29 Oct): 1B · 2 "A and B in a smart way" · 3 "I don't understand the logic" · 4B — BUILT:**
 - **1B goals first** (`planner-ui.jsx` YearGoals, `yearplan.js` goalsOfYear, `planner.js` potIntent keeps the goal's own name —
   "Umrah", «العمرة»): The year opens on the goals; one sentence adds a goal spread over its months; a bar a month = what is left
@@ -349,7 +369,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 - [x] 17. (DONE v8.2) **Your details** (Ali, mid-list): Booking details expanded — trips / daily life / booking forms, private, used by answers + agents.
 
 ## Do this next
-0. Boards 1, 2 and 4 are built (v8.7 part 7). Board 3 ("all the app connected") waits for Ali after the plain explanation.
+0. v8.8 connected memory is built (above) — Ali's phone test next; ideas to grow it: WhatsApp groups items in links.js (IndexedDB), places/things from Maps, reminders from «Attune noticed» rhythms (one tap).
 1. Get Ali's picks from the canvas (v8.7 section above) and build them; then ask for his next list. Keep his rule: **ask before anything subjective** — show 2–4 options
    (`tools/render_mockup.py` renders a mock-up HTML with `data-screen` sections; see `scratchpad mock/round1.html` style:
    Quiet Atelier tokens, phones side by side, A/B/C with a recommendation).

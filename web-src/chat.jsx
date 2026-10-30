@@ -19,7 +19,9 @@ import { chatLifeIntent } from "./life.js";
 import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
 import { mindAnswer } from "./personal.js";
 import { libraryBlock } from "./booklib.js";
-import { connectNow, pickPerson } from "./connected.js";
+import { connectNow, pickPerson, allStores } from "./connected.js";
+import { insights as smartInsights, loadSeen } from "./insights.js";
+import { loadDir } from "./entities.js";
 import { sourceLine } from "./sourcelabel.js";
 import { priceQuestion, insight as priceInsight, allRecords as priceRecords, loadPrices } from "./pricememory.js";
 import { chatDeadlineIntent } from "./deadlines.js";
@@ -874,6 +876,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v6.12: "what did I spend this week" — summed from the Money ledger by code, never by the model.
     // v8.8 (Ali: "chat should be very smart and connect everything together"): what the question names — a person on your
     // cards, a topic (the wedding, the car), a goal — and everything linked to it in every part of the app (connected.js)
+    // v8.8 "what did you notice?" → Attune noticed, in Chat (insights.js)
+    if (route && !img && /\b(what did you notice|anything (?:i should|to) know|what should i know|any(?:thing)? (?:new|unusual))\b|لاحظت ايه|لاحظت إيه|ايه اللي لاحظته|إيه اللي لاحظته|في حاجه لازم اعرفها|فيه حاجة لازم أعرفها/i.test(typed)) {
+      let L = []; try { L = smartInsights(allStores(), loadDir(), { seen: loadSeen() }).slice(0, 5); } catch (e) {}
+      const ar = /[\u0600-\u06ff]/.test(typed) || getLang() === "ar";
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Attune noticed"), detail: L.length ? L.map((x) => "• " + (ar ? x.ar : x.en)).join("\n") : tr("Nothing worth your time right now — I'll tell you when something is."), actions: [["Just answer", "answer"]] } }] }));
+      setText("");
+      return;
+    }
     const cx = !img ? connectNow(typed) : null;
     if (route && cx && cx.ask) {
       const cid = ensureChat(typed);
