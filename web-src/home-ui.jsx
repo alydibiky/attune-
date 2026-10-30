@@ -45,6 +45,7 @@ import { SlashMenu, Attached, BoxOptions, AskCard, ConfirmCard, LinesCard, TodoC
 import { LifeAnswer } from "./lifeask-ui.jsx";
 import { EmailCard } from "./email-ui.jsx";
 import * as LA from "./lifeask.js";
+import { connectNow, pickPerson } from "./connected.js";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -202,6 +203,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       if (web && t && !t.startsWith("/")) { setText(""); show({ type: "chat", text: t, web: true }, t); return; }
       setText("");
       let o = null; try { o = cmdRoute(t, { files, api: cmd.api, prefs: K.loadPrefs() }); } catch (e) { o = null; }
+      // v8.8: a question for Chat that names someone two cards could be — «Which Ahmed?» here first, then Chat answers for him
+      if (o && o.type === "chat" && !o.web) { const cx = connectNow(o.text || t); if (cx && cx.ask) { setPanel({ type: "who", text: o.text || t, ask: cx.ask }); return; } }
       show(o, t); return;
     }
     if (!t) return; setText(""); if (!doOld(t)) onAsk(t);
@@ -258,6 +261,12 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {minimal && !rep && cmd && panel ? (
         panel.type === "email" ? <EmailCard key={panel.text} text={panel.text} write={cmd && cmd.api && cmd.api.write} onClose={() => setPanel(null)} />
         : panel.type === "ask" ? <AskCard ask={panel} onPick={pickAsk} onClose={() => setPanel(null)} />
+        : panel.type === "who" ? <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5 space-y-2" data-testid="home-who">
+            <p className="m-0 text-[15px] font-black">{tr("Which {n}?", { n: panel.ask.key.replace(/^./, (x) => x.toUpperCase()) })}</p>
+            <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("You have more than one — pick him and I'll remember for next time.")}</p>
+            <div className="flex flex-wrap gap-1.5">{panel.ask.choices.map((c) => <button key={c.id} className="min-h-[44px] px-3.5 rounded-full border border-[var(--c-ln)] text-[13.5px] font-extrabold hover:border-[var(--c-acc)]" data-testid="home-who-pick"
+              onClick={() => { pickPerson(panel.text, c.id); const q = panel.text; setPanel(null); onAsk(q); }} dir="auto">{c.label}</button>)}
+              <button className="min-h-[44px] px-3 text-[13px] font-bold text-[var(--c-mut)]" onClick={() => { setPanel(null); navTo("people"); }}>{tr("Someone else")}</button></div></div>
         : panel.type === "shared" ? <ConfirmCard q={panel.q} onYes={() => { const t = panel.text; setPanel(null); doOld(t); }}
             onNo={() => { const t = panel.text; setPanel({ type: "lines", lines: [{ en: "Kept as a note in Mind.", ar: "اتحفظت ملاحظة في «العقل»." }] }); try { window.dispatchEvent(new MessageEvent("attune-share", { data: { kind: "share", text: t, asNote: true } })); } catch (e) {} }} />
         : panel.type === "confirm" ? <ConfirmCard q={panel.q} onYes={() => show({ type: "whereSave", set: panel.set }, "")} onNo={() => setPanel({ type: "lines", lines: [{ en: `OK — still ${panel.was}.`, ar: `تمام — لسه ${panel.was}.` }] })} />

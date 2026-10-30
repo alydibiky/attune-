@@ -8,7 +8,7 @@ ok(hubOf("guardian") === "followups" && hubOf("fit") === "health" && hubOf("huma
   && hubOf("scout") === "go" && hubOf("map") === "go" && hubOf("chat") === "home" && hubOf("pdfchat") === "saved" && hubOf("remember") === "saved" && hubOf("studio") === "create", "pages find their place");
 ok(tabsFor("studio").join() === "assistants,skills,artifacts,studio,code", "Create: Assistants · Skills · Artifacts · Studio · Code");
 ok(tabsFor("chat").length === 0 && tabsFor("translate").length === 0, "v7.6 (Ali): no Chat · Your life · Translate tab row — they are pills in Home's box");
-ok(tabsFor("home").length === 0 && tabsFor("shelf").join() === "shelf,booklib,memory" && tabsFor("projects").length === 0, "Home, Projects: no tab row; Saved = Notes · Library · Mind (W2, v8.7 4B)");
+ok(tabsFor("home").length === 0 && tabsFor("shelf").join() === "shelf,booklib,people,memory" && tabsFor("projects").length === 0, "Home, Projects: no tab row; Saved = Notes · Library · Mind (W2, v8.7 4B)");
 ok(tabsFor("coach").join() === "coach,slides,cv" && partsOf("pdfchat").join() === "booklib,pdfchat,remember" && partsOf("remember").join() === "booklib,pdfchat,remember" && tabsFor("convert").length === 0, "v8.5 (W3): Students = Homework · Documents (Many books · One file) · Slides · CV; Convert lives in Tools");
 ok(RETIRED.join() === "instant,ask" && RETIRED.every((m) => !HUBS.some((h) => h[3].includes(m)) && !GROUPS.some((g) => g[2].includes(m))), "v8.2 (Ali): Instant and Ask (classic) are in no place and no group");
 ok(tabsFor("money").join() === "money,planner,deal" && tabsFor("timeline").length === 0, "v8.5 (W1): Money = Money · Deal Check; Follow-ups is its own place with no tab row (" + tabsFor("money") + ")");

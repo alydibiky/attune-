@@ -93,6 +93,8 @@ import { fold as foldNet, loadNetWeek, saveNetWeek } from "./netreport.js";
 import { TimelinePage } from "./timeline-ui.jsx";
 import { BookLibPage, findInLibrary } from "./booklib-ui.jsx";
 import { libraryBlock } from "./booklib.js";
+import { PeoplePage } from "./people-ui.jsx";
+import { NotesMoney } from "./notes-money-ui.jsx";
 import { RecallCard } from "./recall-ui.jsx";
 import { WatchPanel } from "./watch-ui.jsx";
 import { PromptLab } from "./promptlab-ui.jsx";
@@ -6524,7 +6526,9 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
   // extras — reading a payment, asking about the money — slide up over it.
   // v7.2: the calm view and the Money Report come first; the ledger (Yusr) is the third level and stays loaded behind them.
   const ledgerOn = false;   // v8.0: the old ledger screen is never shown (Yusr stays hidden as the engine)
-  const inbox = <PayInbox N={NATIVE} ready={ready} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); setTimeout(() => setVer((x) => x + 1), 400); }} />;
+  const addTxnsNow = (txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); setTimeout(() => setVer((x) => x + 1), 400); };
+  // v8.8 (Ali: "read the notes I write when I put an expense or income"): money a note says moved, one tap to add
+  const inbox = <><NotesMoney onAdd={addTxnsNow} /><PayInbox N={NATIVE} ready={ready} onAdd={addTxnsNow} /></>;
   const paneBody = pane === "trends" ? <MoneyReport rep={rep} all={allRep} wide={wide} account={account} back={() => setPane("home")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf} openLedger={openLedger} openZakat={() => setPane("zakat")} />
     : pane === "accounts" ? <AccountsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
     : pane === "goals" ? <GoalsPane L={ledgerNow} run={runDo} flash={flash} Head={MoneyHead} Card={MoneyCard} />
@@ -7749,7 +7753,7 @@ const OWN_TITLE = new Set(["groups", "privacy", "family", "planner", "health", "
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
 const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
-  cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
+  cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", groups: "WhatsApp groups", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
 // v5.17: the page's own version, and the installed app's (from the page
@@ -7798,6 +7802,7 @@ const MORE_TOOLS = [
   ["shelf", "Shelf", "Your notes, in books", BookOpen],
   ["memory", "Mind", "Everything you keep — it files itself", Brain],
   ["remember", "Remember", "Books, articles, the news — ask Chat about them", BookOpen],
+  ["people", "People", "Your people, places and things — everything about each one", Users],
   ["knowledge", "Knowledge", "Your facts — Chat looks them up before it answers", Database],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
   ["map", "Maps", "Offline places", MapPin], ["metro", "Metro", "Cairo Metro — line, direction, stops, ticket", TrainFront], ["field", "Site reports", "Incident & maintenance docs", HardHat],
@@ -7842,7 +7847,7 @@ K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[lab
 const MORE_GROUPS = [
   ["Money & people", ["agents", "scout", "guardian", "planner", "radar", "life", "family", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
-  ["Mind & learning", ["coach", "learn", "booklib", "memory", "remember", "shelf", "news"]],
+  ["Mind & learning", ["coach", "learn", "booklib", "memory", "remember", "people", "shelf", "news"]],
   ["Chat", ["assistants", "skills", "projects", "artifacts", "groups"]],
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
@@ -8455,7 +8460,7 @@ export default function App() {
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools, STUDIO_OFF ? ["studio"] : []);
   // v6.31 minimal: short tab names (the page's own title stays full)
   const TAB_SHORT = { agents: "Agents", timeline: "Follow-ups", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
-    pdfchat: "One file", booklib: "Library", write: "Writing", shelf: "Notes", remember: "Attune remembers", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
+    pdfchat: "One file", booklib: "Library", people: "People", write: "Writing", shelf: "Notes", remember: "Attune remembers", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
   const hubTabsEl = (() => {
@@ -10852,6 +10857,8 @@ export default function App() {
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken })}
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
+        ) : mode === "people" ? (
+          <PeoplePage nativeCall={NATIVE ? nativeCall : null} navTo={navTo} flash={flash} />
         ) : mode === "remember" ? (
           <LibraryPage knowledge={knowledge} nativeCall={NATIVE ? nativeCall : null} flash={flash}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }} />

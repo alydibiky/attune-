@@ -61,6 +61,21 @@ class MainActivity : AppCompatActivity() {
     private var bookTopic = ""
     // v8.4: Android's own voice-typing popup — the last way to listen when the in-app recogniser is refused (Voice.usePopup)
     private var voicePopupCb: ((String?) -> Unit)? = null
+    // v8.8 (Ali: "add his contact and refer to him as X"): Android's own contact picker — it hands back only the one contact picked,
+    // so Attune needs no contacts permission (nothing for Play Protect to block)
+    private var contactCb: ((org.json.JSONObject?) -> Unit)? = null
+    private val pickContactL = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val cb = contactCb; contactCb = null
+        val uri = if (res.resultCode == RESULT_OK) res.data?.data else null
+        if (uri == null) { cb?.invoke(null); return@registerForActivityResult }
+        var out: org.json.JSONObject? = null
+        try {
+            contentResolver.query(uri, arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER), null, null, null)?.use { c ->
+                if (c.moveToFirst()) out = org.json.JSONObject().put("name", c.getString(0) ?: "").put("phone", c.getString(1) ?: "")
+            }
+        } catch (e: Exception) {}
+        cb?.invoke(out)
+    }
     private val voicePopup = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
         val t = if (res.resultCode == RESULT_OK) res.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull() else null
         val cb = voicePopupCb; voicePopupCb = null; cb?.invoke(t)
@@ -293,6 +308,9 @@ class MainActivity : AppCompatActivity() {
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
         bridge.pickBackupFolder = { runOnUiThread { try { pickBackupFolder.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)) } catch (e: Exception) { } } }
         bridge.askSms = { runOnUiThread { try { askSmsPermission.launch(android.Manifest.permission.READ_SMS) } catch (e: Exception) { } } }
+        bridge.pickContact = { cb -> runOnUiThread {
+            try { contactCb = cb; pickContactL.launch(Intent(Intent.ACTION_PICK, android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI)) } catch (e: Exception) { contactCb = null; cb(null) }
+        } }
         bridge.pickBooks = { topic, folder -> runOnUiThread {
             bookTopic = topic
             val i = if (folder) Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)

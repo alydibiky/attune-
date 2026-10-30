@@ -24,7 +24,7 @@ export const HUBS = [
   ["go", "Go", "travel", ["travel", "scout", "map", "metro"]],   // (v6.42 Ali: Metro right after Maps)
   // v8.5 (W2): one place for what you keep — Notes (Shelf) · Books & pages (Remember) · Mind
   // v8.7 (Ali picked 4B "one Library"): Documents and Books & pages are one Library here — Books & PDFs · One file · Attune remembers
-  ["saved", "Saved", "shelf", ["shelf", "booklib", "memory"]],
+  ["saved", "Saved", "shelf", ["shelf", "booklib", "people", "memory"]],   // v8.8: + People (the connected memory)
   // v8.5 (R4): the Crane toolkit opens from Business → Fleet & rentals → More only
   ["tools", "Work", "business", ["business", "fleet", "field", "guide", "privacy"]],
   // v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools is its own place, not a tab of Work; "Ask (classic)" is gone

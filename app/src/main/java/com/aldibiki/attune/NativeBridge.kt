@@ -825,6 +825,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun agentWatchTake(): String = AgentWatch.take(ctx)
 
     // ---- v8.3 Library at scale (BookShelf.kt): topics, books read natively into a full-text index, fast search ----------------
+    var pickContact: (((JSONObject?) -> Unit) -> Unit)? = null   // v8.8: Android's contact picker (no permission) → {name, phone}
+    @JavascriptInterface
+    fun contactPick(id: String) {
+        val p = pickContact ?: return reject(id, "Not available")
+        p { r -> if (r == null) reject(id, "Cancelled") else resolve(id, r) }
+    }
     var pickBooks: ((String, Boolean) -> Unit)? = null   // (topic, a whole folder?) — MainActivity opens Android's picker
     /** Pick books (files, or a whole folder with folder=true) for a topic; they are read in the background. */
     @JavascriptInterface

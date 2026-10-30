@@ -14,6 +14,7 @@ import { SmsSwitch } from "./sms-ui.jsx";
 import { WakeSwitch } from "./wake-ui.jsx";
 import { smallTalk, forSpeech } from "./voice-talk.js";
 import { mindAnswer } from "./personal.js";
+import { connectNow, pickPerson } from "./connected.js";
 import * as LA from "./lifeask.js";
 
 const STYLE_BY_COUNTRY = { EG: "eg", SA: "gulf", AE: "gulf", KW: "gulf", QA: "gulf", BH: "gulf", OM: "gulf", JO: "lev", LB: "lev", SY: "lev", PS: "lev", IQ: "gulf", MA: "maghreb", DZ: "maghreb", TN: "maghreb", LY: "maghreb" };
@@ -86,6 +87,14 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
     const p = pending.current; pending.current = null;
     if (p === "nav") { setHeard(text); const line = (stRef.current.ui === "ar" ? "رايحين " : "Navigating to ") + text; setSay(line); setCard({ kind: "done", ok: true }); navigate(text); await speakOut(line, stRef.current.ui); return; }
     if (p === "reply") return turn((stRef.current.ui === "ar" ? "رد عليه " : "reply saying ") + text);
+    // v8.8 «Which Ahmed?» answered out loud: "the plumber" / «بتاع الشغل» / "the first one" → him, remembered, then the question
+    if (p && p.who) {
+      const f = (x) => ` ${String(x || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/[^\p{L}\p{N}]+/gu, " ")} `, said = f(text);
+      const nth = /\b(first|one|1)\b|الاول|الأول|اول|واحد/.test(said) ? 0 : /\b(second|two|2)\b|التاني|الثاني|اتنين/.test(said) ? 1 : /\b(third|three|3)\b|التالت|الثالث/.test(said) ? 2 : -1;
+      const score = (c) => f(c.label).split(" ").filter((w) => w.length >= 3 && said.includes(" " + w + " ")).length;
+      const best = nth >= 0 ? p.who.choices[nth] : [...p.who.choices].sort((a, b) => score(b) - score(a))[0];
+      if (best && (nth >= 0 || score(best) > 0)) { pickPerson(p.who.q, best.id); return turn(p.who.q); }
+    }
     return turn(text);
   };
   const turn = async (said) => {
@@ -105,6 +114,12 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
       // v8.6 (Ali: "fix the voice part for good"): not an action → a real conversation — small talk by code at once, anything
       // else to the AI model on the phone (short spoken answer, the last turns kept), never a dead "I didn't get that"
       // v8.7 (Ali: the voice said "I don't have access to your personal information like your barber" — it was in the app)
+      // v8.8 the connected memory: what the question names, summed and linked by code — or «Which Ahmed?» out loud
+      if (!line) { try { const cx = connectNow(text);
+        if (cx && cx.ask) { const opts = cx.ask.choices.slice(0, 3).map((c) => c.label.replace(" · ", ", ")); line = ui === "ar" ? `أنهي ${cx.ask.key}؟ ${opts.join("، ولا ")}؟` : `Which ${cx.ask.key}? ${opts.join(", or ")}?`;
+          setSay(line); setCard({ kind: "done", ok: true }); await speakOut(line, ui); pending.current = { who: { q: text, choices: cx.ask.choices } }; if (alive.current) listen(); return; }
+        if (cx && cx.answer) line = ui === "ar" ? cx.answer.ar : cx.answer.en;
+      } catch (e) {} }
       if (!line) { try { const pm = mindAnswer(text, LA.loadStores()); if (pm) line = ui === "ar" ? pm.ar : pm.en; } catch (e) {} }
       if (!line) { line = smallTalk(text, ui); talk = !!line; }
       if (!line && ask) {

@@ -19,6 +19,7 @@ import { chatLifeIntent } from "./life.js";
 import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
 import { mindAnswer } from "./personal.js";
 import { libraryBlock } from "./booklib.js";
+import { connectNow, pickPerson } from "./connected.js";
 import { sourceLine } from "./sourcelabel.js";
 import { priceQuestion, insight as priceInsight, allRecords as priceRecords, loadPrices } from "./pricememory.js";
 import { chatDeadlineIntent } from "./deadlines.js";
@@ -871,6 +872,30 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
 
     // v6.12: "what did I spend this week" — summed from the Money ledger by code, never by the model.
+    // v8.8 (Ali: "chat should be very smart and connect everything together"): what the question names — a person on your
+    // cards, a topic (the wedding, the car), a goal — and everything linked to it in every part of the app (connected.js)
+    const cx = !img ? connectNow(typed) : null;
+    if (route && cx && cx.ask) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Which {n}?", { n: cx.ask.key.replace(/^./, (x) => x.toUpperCase()) }), detail: tr("You have more than one — pick him and I'll remember for next time."),
+          actions: [...cx.ask.choices.map((c) => [c.label, "who:" + c.id]), ["Someone else", "open:people"]] }, askText: typed }] }));
+      setText("");
+      return;
+    }
+    const cxCard = () => {
+      const ar = /[\u0600-\u06ff]/.test(typed) || getLang() === "ar";
+      const OPEN = { money: "Open Money", life: "Open People & plans", memory: "Open Mind", recall: "Open Recall", planner: "Open the plan", reminders: "Open Reminders", radar: "Open Dates", care: "Open Family health", agents: "Open Agents" };
+      const opens = [...new Set(cx.items.map((x) => x.open))].filter((o) => OPEN[o]).slice(0, 2);
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? cx.answer.ar : cx.answer.en) + (cx.items.length ? "\n" + cx.items.slice(0, 5).map((x) => "• " + x.title + (x.amount ? " — " + Math.round(x.amount).toLocaleString("en-US") : "") + (x.ts ? " · " + new Date(x.ts).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short" }) : "")).join("\n") : ""),
+          actions: [...cx.people.slice(0, 1).map((p) => [p.name, "person:" + p.id]), ...opens.map((o) => [OPEN[o], "open:" + o]), ["Just answer", "answer"]] } }] }));
+      setText("");
+    };
+    if (route && cx && cx.answer && (cx.people.length || cx.goals.length)) { cxCard(); return; }
     if (route && !img && myMoneyIntent(typed)) {
       const m = answerMyMoney(typed, loadLedger(), { ar: /[\u0600-\u06FF]/.test(typed) });
       const cid = ensureChat(typed);
@@ -919,6 +944,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v6.27 "Do it for me": «book me the cheapest flight to Dubai on Thursday» — read by code into a plan; missing details
     // are asked; the app / site opens filled in (or inside Attune with Best offer / Fill my details); it never pays
     // v6.28 Ask your life: «who owes me money?», «is mum's HbA1c better?» — answered by code from your own data, with its source
+    if (route && cx && cx.answer) { cxCard(); return; }   // a topic ("the wedding so far") after Money's own reader
     let mine = route && !img ? chatAsk(typed, lifeStores()) : null;
     // v8.7 (Ali: "tell me about my barber" took 15 s and came from a knowledge pack): your own people and things, from what
     // you told Attune — at once, by code (personal.js)
@@ -1567,6 +1593,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         knHits = keepCovering(knHits, typed);   // "Lynk and co 900": passages about other models are not about it
         if (knHits && knHits.length) { content = factsBlock(knHits, typed) + content; extra.knowledgeUsed = knHits.length; }
       }
+      // v8.8: everything in the app linked to what the question names (people, topics, goals) — the model answers from it
+      if (answer == null && cx && cx.block && !sources && !fileAtt && !longMsg) { content = cx.block + content; extra.connected = cx.items.length; }
       // v8.7 (Ali picked 4B "one Library"): the books he switched on in the Library are looked into too, cited [Book, p. N]
       if (answer == null && typed && !sources && !fileAtt && !pic && !longMsg && api.libraryFind) {
         try { const lf = await api.libraryFind(typed); if (runRef.current !== run) return; if (lf && lf.length) { content = libraryBlock(lf) + content; extra.libraryUsed = lf.map((p) => p.title + " p. " + p.page); } } catch (e) {}
@@ -1920,6 +1948,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "where-yes") { if (m.whereSet && api.whereYes) api.whereYes(m.whereSet); patchMsg(chat.id, m.id, { card: { ...m.card, title: tr("Got it"), detail: m.whereSet ? m.whereSet.thing + " — " + m.whereSet.place : "", actions: [] } }); }
     else if (act === "where-no") patchMsg(chat.id, m.id, { card: { ...m.card, title: tr("OK — nothing changed."), detail: "", actions: [] } });
     else if (act.startsWith("rec:")) { if (api.openRecord) api.openRecord(act.slice(4)); }
+    else if (act.startsWith("person:")) { try { localStorage.setItem("attune:people:open", act.slice(7)); } catch (e) {} window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "people" } })); }
+    else if (act.startsWith("who:")) {   // v8.8 "Which Ahmed?" → this one: remembered, and the question answered for him
+      const q = m.askText || ""; pickPerson(q, act.slice(4));
+      const at = messages.findIndex((x) => x.id === m.id), hist = messages.slice(0, Math.max(0, at - 1));
+      patchChat(chat.id, (c) => ({ ...c, messages: hist }));
+      setTimeout(() => ask(q, { history: hist }), 0);
+    }
     else if (act === "life") window.dispatchEvent(new CustomEvent("attune-life", { detail: { text: m.lifeText || "" } }));
     else if (/^agent(-in)?:\d+$/.test(act)) { const i = +act.split(":")[1], p = m.agentPlan; if (p && p.links[i]) window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: p.links[i], plan: p, inApp: act.startsWith("agent-in") } })); }
     else if (act === "owed") openOwed({ flight: m.owedFlight || {} });
