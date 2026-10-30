@@ -120,6 +120,9 @@ function validateIn(msg) {
         base: num(d.zakat.base), hawlEndsISO: str(d.zakat.hawlEndsISO, 30),
         madhhab: str(d.zakat.madhhab, 30), basis: str(d.zakat.basis, 1200),
         sources: Array.isArray(d.zakat.sources) ? d.zakat.sources.slice(0, 12).map((x) => str(x, 200)).filter(Boolean) : [],
+        // v8.8 (Ali: "restore the worn gold — I don't know where it went"): what the ledger counted, part by part
+        parts: d.zakat.parts && typeof d.zakat.parts === "object" ? { cash: num(d.zakat.parts.cash), gold: num(d.zakat.parts.gold), jewelry: num(d.zakat.parts.jewelry),
+          jewelryOn: !!d.zakat.parts.jewelryOn, jewelryGrams: num(d.zakat.parts.jewelryGrams), silver: num(d.zakat.parts.silver), recv: num(d.zakat.parts.recv), owe: num(d.zakat.parts.owe) } : null,
       } : null,
     };
     if (!clean.kind) return { ok: false, why: "snapshot has no kind" };

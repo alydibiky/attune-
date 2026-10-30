@@ -7803,4 +7803,12 @@ export const AR = {
   "Type the numbers above — the Zakāt due shows here.": "اكتب الأرقام فوق — والزكاة المستحقة هتظهر هنا.",
   "The ruling and its evidence": "الحكم ودليله",
   "Niṣāb, the year, the rate, livestock, crops, jewellery, the eight recipients — with the evidence": "النصاب، والحول، والمقدار، والأنعام، والزروع، والحلي، والمصارف الثمانية — بالدليل",
+  "Cash in your accounts": "الكاش في حساباتك",
+  "Gold you keep": "الدهب اللي عندك",
+  "Worn jewellery": "الدهب الملبوس",
+  "Money people owe you": "فلوسك عند الناس",
+  "Debts deducted": "الديون المخصومة",
+  "What's counted": "اللي بيتحسب",
+  "Not counted — your school": "مش بيتحسب — حسب مذهبك",
+  "Worn jewellery is counted in the Hanafi school. To count it, turn it on in Zakāt settings → Gold and silver you own.": "الدهب الملبوس بيتحسب عند الحنفية. عشان تحسبه، شغّله من إعدادات الزكاة ← الدهب والفضة اللي عندك.",
 };

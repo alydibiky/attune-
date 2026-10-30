@@ -2177,6 +2177,7 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
       } else if(st){
         z={due:!!st.isDue, amount:(st.amount==null?null:Math.round(st.amount*100)/100),
            nisab:st.N, base:(st.bd?st.bd.net:null), hawlEndsISO:st.due||null,
+           parts:(st.bd?{cash:st.bd.cash,gold:st.bd.goldV-jewelryValue(),jewelry:jewelryValue(),jewelryOn:!!(db.zakat&&db.zakat.jewelryZakat),jewelryGrams:(db.zakat&&db.zakat.jewelryGrams)||0,silver:st.bd.silverV,recv:st.bd.recv,owe:st.bd.owe}:null),
            madhhab:(db.zakat&&db.zakat.madhhab)||'majority',
            basis:(db.lang==='ar'
              ? 'تجب الزكاة إذا بلغ المال النصاب وحال عليه الحول. النصاب قيمة 85 جرامًا من الذهب أو 595 جرامًا من الفضة، والمقدار ربع العشر (2.5%). هذه الأرقام حسبها تطبيق يُسر.'

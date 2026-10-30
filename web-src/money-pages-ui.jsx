@@ -251,8 +251,20 @@ export function ZakatPane({ L, snap, wide, openLedger }) {
       <div className="grid grid-cols-2 gap-2 pt-1">
         <button className={U.btnP} onClick={() => openLedger("zakat-settings")} data-testid="zakat-open">{tr("Zakāt settings")}</button>
         <button className={U.btnS + " h-12! min-h-[48px]!"} onClick={() => openLedger("zakat-pay")} data-testid="zakat-pay">{tr("Record a payment")}</button></div>
-      <p className="m-0 text-[11.5px] c-sub">{tr("The rulings and the numbers come from the ledger's Zakāt engine, unchanged — Attune only shows them.")}</p>
     </div>
+    {/* v8.8 (Ali: "restore the worn gold — I don't know where it went"): what is counted, part by part, as in the old ledger */}
+    {(() => { const P = (snap && snap.zakat && snap.zakat.parts) || null, Z = (L && L.zakat) || {};
+      const jewOn = P ? P.jewelryOn : !!Z.jewelryZakat, jewG = P ? P.jewelryGrams : +Z.jewelryGrams || 0;
+      const jewV = P ? P.jewelry : jewOn ? (+Z.jewelryGrams || 0) * ((+Z.jewelryKarat || 24) / 24) * (+Z.goldPrice || 0) : 0;
+      const rows = [["💵", tr("Cash in your accounts"), P && P.cash], ["🪙", tr("Gold you keep"), P ? P.gold : null], ["💍", tr("Worn jewellery"), jewOn ? jewV : null, !jewOn],
+        ["🥈", tr("Silver"), P && P.silver], ["🤝", tr("Money people owe you"), P && P.recv], ["➖", tr("Debts deducted"), P && P.owe ? -P.owe : null]];
+      return <Card title={tr("What's counted")} right={<button className="text-[13px] font-bold c-acc min-h-[36px]" onClick={() => openLedger("zakat-settings")} data-testid="zakat-parts-edit">{tr("Change")}</button>} testid="zakat-parts">
+        {rows.map(([e, l, v, off], i) => (v != null && (v !== 0 || i === 0)) || off ? <div key={l} className="flex items-center gap-2 text-[13.5px] py-2 border-t border-[var(--c-ln)] first:border-t-0" data-testid={"zakat-part-" + i}>
+          <span className="w-6 text-center">{e}</span><span className="flex-1 min-w-0">{l}{i === 2 && jewG ? <span className="c-sub text-[12px]"> · {jewG} g</span> : null}</span>
+          {off ? <span className="c-sub text-[12px] text-end">{tr("Not counted — your school")}</span> : <b className="tabular-nums" dir="ltr">{amt(v, cur)}</b>}</div> : null)}
+        {!jewOn ? <p className="m-0 pt-1 text-[12px] c-sub">{tr("Worn jewellery is counted in the Hanafi school. To count it, turn it on in Zakāt settings → Gold and silver you own.")}</p> : null}
+        {s && s.base != null ? <div className="flex justify-between text-[14px] font-extrabold pt-2 border-t-2 border-[var(--c-ln)]"><span>{tr("Your zakatable wealth")}</span><b className="tabular-nums" dir="ltr">{amt(s.base, cur)}</b></div> : null}
+      </Card>; })()}
     {/* v8.7 (Ali: "where is the gold rate, auto-updating for each country?"): today's price, updated by itself twice a day */}
     {L && L.zakat && L.zakat.goldPrice ? <div className={U.card + " p-4 flex items-center gap-3"} data-testid="zakat-gold">
       <span className="text-[22px]">🪙</span>
