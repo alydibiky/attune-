@@ -6,7 +6,7 @@
 import { noteProUse } from "./trialuse.js";
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Mic, Apple, Camera, Search, Plus, Trash2, Loader2, Check, Droplet, Timer, Dumbbell, BarChart3, X, Sparkles, ChevronLeft, Play, Square, Star, Copy, ChevronDown } from "lucide-react";
-import { getLang } from "./i18n.js";
+import { getLang, tr } from "./i18n.js";
 import * as F from "./fit.js";
 import { searchGenerated, getGenerated, GENERATED_COUNT } from "./fit-recipegen.js";
 import * as DB from "./fitdb.js";
@@ -1719,16 +1719,16 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
 function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share, minimal = false, extraTop = null }) {
   const [w, setW] = useState("");
   const [more, setMore] = useState(!minimal);   // v6.32 minimal: weight first; the rest one tap away
-  const tr = F.trend(st.weights);
+  const wtr = F.trend(st.weights);
   const wk = F.weekSummary(st.days, st.weights, tg);
   const strk = F.streak(st.days);
   const maxK = Math.max(tg.kcal * 1.2, ...wk.rows.map((r) => r.kcal));
-  const pts = tr.slice(-30);
+  const pts = wtr.slice(-30);
   const lo = Math.min(...pts.map((p) => p.kg), st.profile.goalKg ? +st.profile.goalKg : Infinity) - 1, hi = Math.max(...pts.map((p) => p.kg)) + 1;
   const X = (i) => (pts.length < 2 ? 150 : (i / (pts.length - 1)) * 290 + 5), Y = (v) => 110 - ((v - lo) / (hi - lo || 1)) * 100;
   const weightCard = (
       <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 space-y-2" data-testid="fit-weight-card">
-        <div className="text-[13px] text-[var(--c-ink)]">{L("Weight", "الوزن")} {tr.length ? <span className="text-[var(--c-mut)]">· {L("trend", "الاتجاه")} {tr[tr.length - 1].avg} kg</span> : null}</div>
+        <div className="text-[13px] text-[var(--c-ink)]">{L("Weight", "الوزن")} {wtr.length ? <span className="text-[var(--c-mut)]">· {L("trend", "الاتجاه")} {wtr[wtr.length - 1].avg} kg</span> : null}</div>
         {pts.length >= 2 && (
           <svg viewBox="0 0 300 120" className="w-full h-28" data-testid="fit-weight-chart">
             {st.profile.goalKg && <line x1="0" x2="300" y1={Y(+st.profile.goalKg)} y2={Y(+st.profile.goalKg)} stroke="var(--c-acc)" strokeDasharray="4 4" strokeWidth="1" />}

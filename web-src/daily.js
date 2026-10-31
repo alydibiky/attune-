@@ -12,6 +12,7 @@
           short digest that cites every line — nothing from its own memory.
 
    Pure logic, no React — unit tested in tests/unit/daily.test.mjs.          */
+import { tr } from "./i18n.js";
 import { review as fsrsReview, isLearned } from "./fsrs.js";
 
 import { jsonFrom } from "./erp.js";
@@ -594,7 +595,7 @@ export async function writeLesson(llm, c, n, { onToken, onStage } = {}) {
   // still missing → made by code from the lesson itself
   if (!(best.keyPoints || []).length) best.keyPoints = codeKeyPoints(best.body);
   if ((best.cards || []).length < 2) best.cards = cardsFromLesson(best);
-  if (!/^#{2,3}\s+(try it|جرّب|جرب)/im.test(best.body)) { const tr = codeTryIt(best, c); if (tr) best.body += "\n\n" + tr; }
+  if (!/^#{2,3}\s+(try it|جرّب|جرب)/im.test(best.body)) { const tryIt = codeTryIt(best, c); if (tryIt) best.body += "\n\n" + tryIt; }
   const { problems, ...lesson } = best;
   return { ...lesson, checked: problems };
 }
