@@ -1,3 +1,5 @@
+IMPORTANT: Translate EVERY line yourself, by meaning, into the language named below. Do not use code, scripts, word-swapping or dictionaries to produce the translation. Never leave a line in English and never mix in another language (e.g. no Portuguese in Italian), except the brand names, codes and names the rules allow.
+
 You are translating the interface of Attune, a phone app, into Bengali (language code bn).
 
 # Translating Attune's interface — the brief every translator follows
@@ -153,6 +155,2590 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 
 ## Lines (bn-03)
 [
+{
+"en": "Download Python",
+"ar": "نزّل Python"
+},
+{
+"en": "Downloading… {p}%",
+"ar": "بينزل… {p}%"
+},
+{
+"en": "Python didn't download — try again on Wi-Fi"
+},
+{
+"en": "Offline mode is on — turn it off to download Python"
+},
+{
+"en": "Where the money came from · {m}"
+},
+{
+"en": "Nothing earned this month yet."
+},
+{
+"en": "Year plan",
+"ar": "خطة السنة"
+},
+{
+"en": "The year",
+"ar": "السنة"
+},
+{
+"en": "Grey = what happened. The rest is the plan — tap any cell to type your own number, like Excel."
+},
+{
+"en": "Nothing yet",
+"ar": "لسه مفيش"
+},
+{
+"en": "Total income",
+"ar": "إجمالي الدخل"
+},
+{
+"en": "Total out (incl. savings)",
+"ar": "إجمالي المصروف والتحويش"
+},
+{
+"en": "This year you save {s} — and {f} is left free."
+},
+{
+"en": "This page didn't load — check the internet, or tap Done."
+},
+{
+"en": "No Buy now button here — tap it yourself, I'll fill your details on the next pages."
+},
+{
+"en": "Pressed “{b}” — check the order; the payment is yours."
+},
+{
+"en": "Couldn't see that exact product yet — I'll keep looking."
+},
+{
+"en": "Taken to checkout — your details are filled; you pay there. Tap Done here once ordered."
+},
+{
+"en": "Not finished — tap Order it again whenever you want."
+},
+{
+"en": "Found it — do you want it?"
+},
+{
+"en": "Order it",
+"ar": "اطلبه"
+},
+{
+"en": "Order it opens the product, presses Buy now and fills your details. You check and pay — Attune never pays."
+},
+{
+"en": "Ordered — at checkout",
+"ar": "اتطلب — في صفحة الدفع"
+},
+{
+"en": "Look again",
+"ar": "دوّر تاني"
+},
+{
+"en": "Search now",
+"ar": "دوّر دلوقتي"
+},
+{
+"en": "Set your madhhab and today's gold price in Zakāt settings — then the figures show here."
+},
+{
+"en": "Add today's gold price in Zakāt settings to see the niṣāb."
+},
+{
+"en": "Gold today (24k, 1 g)"
+},
+{
+"en": "typed by hand — choose your country in Zakāt settings for the live price"
+},
+{
+"en": "More Zakāt calculators",
+"ar": "حاسبات زكاة تانية"
+},
+{
+"en": "Delete {w}?",
+"ar": "تمسح {w}؟"
+},
+{
+"en": "{p} paid you back",
+"ar": "{p} رجّعلك فلوسك"
+},
+{
+"en": "You paid {p}",
+"ar": "إنت دفعت لـ {p}"
+},
+{
+"en": "Today's price: {p} {c} a gram (24k) — updates by itself twice a day"
+},
+{
+"en": "Couldn't fetch the price — type it in"
+},
+{
+"en": "Country",
+"ar": "البلد"
+},
+{
+"en": "Getting…",
+"ar": "بجيبه…"
+},
+{
+"en": "Live price",
+"ar": "السعر دلوقتي"
+},
+{
+"en": "Updated by itself: {t} · twice a day"
+},
+{
+"en": "Tap “Live price” — then it updates by itself twice a day."
+},
+{
+"en": "Choose your country first — the price follows it."
+},
+{
+"en": "Shop premium on gold (%)"
+},
+{
+"en": "Niṣāb carat",
+"ar": "عيار النصاب"
+},
+{
+"en": "24k — Islamweb",
+"ar": "عيار 24 — إسلام ويب"
+},
+{
+"en": "21k — Dār al-Iftāʾ (Egypt)"
+},
+{
+"en": "Pay Zakāt on worn jewellery"
+},
+{
+"en": "The Hanafi school counts gold you wear; most scholars don't. Your choice is kept."
+},
+{
+"en": "Grams worn",
+"ar": "جرامات الملبوس"
+},
+{
+"en": "Carat",
+"ar": "العيار"
+},
+{
+"en": "Gold you keep (g)",
+"ar": "الدهب اللي عندك (جرام)"
+},
+{
+"en": "Its carat",
+"ar": "عياره"
+},
+{
+"en": "Silver price (1 g)",
+"ar": "سعر الفضة (الجرام)"
+},
+{
+"en": "Silver you keep (g)",
+"ar": "الفضة اللي عندك (جرام)"
+},
+{
+"en": "Your Zakāt year starts (ḥawl)"
+},
+{
+"en": "Count money people owe me"
+},
+{
+"en": "Debts I owe",
+"ar": "الديون اللي عليّا"
+},
+{
+"en": "— not chosen yet (nothing is deducted) —"
+},
+{
+"en": "Do not deduct debts",
+"ar": "ما تخصمش الديون"
+},
+{
+"en": "Deduct only what falls due this year"
+},
+{
+"en": "Deduct the whole debt",
+"ar": "اخصم الدين كله"
+},
+{
+"en": "Amount falling due this year"
+},
+{
+"en": "Accounts counted for Zakāt",
+"ar": "الحسابات اللي بتدخل في الزكاة"
+},
+{
+"en": "How many (grazing freely most of the year)"
+},
+{
+"en": "Harvest (kg)",
+"ar": "المحصول (كيلو)"
+},
+{
+"en": "Watered by",
+"ar": "بيتسقي بـ"
+},
+{
+"en": "Rain or rivers — 10%"
+},
+{
+"en": "Irrigation you pay for — 5%"
+},
+{
+"en": "Stock at its selling price"
+},
+{
+"en": "Business cash",
+"ar": "كاش الشغل"
+},
+{
+"en": "Money customers owe you",
+"ar": "فلوسك عند الزباين"
+},
+{
+"en": "Money you owe suppliers",
+"ar": "فلوس الموردين اللي عليك"
+},
+{
+"en": "What the treasure is worth"
+},
+{
+"en": "People you pay for",
+"ar": "عدد الأفراد اللي بتطلّع عنهم"
+},
+{
+"en": "Amount per person (your country's official figure)"
+},
+{
+"en": "Add today's gold price in Zakāt settings first — the niṣāb comes from it."
+},
+{
+"en": "Below the niṣāb — nothing is due"
+},
+{
+"en": "{n} more to reach it"
+},
+{
+"en": "The rulings are the ledger's Zakāt engine's, unchanged."
+},
+{
+"en": "1 · Today's gold price"
+},
+{
+"en": "Pick your country once — the price follows it and updates by itself twice a day."
+},
+{
+"en": "1 g of 24k gold"
+},
+{
+"en": "2 · Your school",
+"ar": "٢ · مذهبك"
+},
+{
+"en": "Choosing it sets the niṣāb and worn jewellery the way that school does. You can still change each one."
+},
+{
+"en": "3 · Gold and silver you own"
+},
+{
+"en": "Put 0 or leave empty what you don't have."
+},
+{
+"en": "4 · Your Zakāt year"
+},
+{
+"en": "The day your money first reached the niṣāb (the ḥawl). Zakāt is due one lunar year after it."
+},
+{
+"en": "5 · Money and debts"
+},
+{
+"en": "Write the amount too, e.g. “save 30k for a sofa by June”"
+},
+{
+"en": "Added — spread over the months"
+},
+{
+"en": "Sheet & Excel",
+"ar": "الجدول وإكسل"
+},
+{
+"en": "{a} a month · {f} → {l}"
+},
+{
+"en": "Nothing to put aside this year"
+},
+{
+"en": "short in {m}",
+"ar": "ناقص في {m}"
+},
+{
+"en": "on track",
+"ar": "ماشي تمام"
+},
+{
+"en": "“save 30k for a sofa by June”"
+},
+{
+"en": "Type a goal",
+"ar": "اكتب هدف"
+},
+{
+"en": "Left free each month",
+"ar": "اللي بيفضل كل شهر"
+},
+{
+"en": "Salary, bills and People & plans come from Money by themselves. Red = a month that runs short. Tap a month to change it."
+},
+{
+"en": "happened",
+"ar": "حصل"
+},
+{
+"en": "Your numbers show in green. Empty a box to go back to Attune's plan."
+},
+{
+"en": "Best found",
+"ar": "أحسن حاجة لقيتها"
+},
+{
+"en": "Hide the table",
+"ar": "اخفي الجدول"
+},
+{
+"en": "Compare side by side",
+"ar": "قارن جنب بعض"
+},
+{
+"en": "a night",
+"ar": "في الليلة"
+},
+{
+"en": "A night",
+"ar": "الليلة"
+},
+{
+"en": "Open this offer",
+"ar": "افتح العرض ده"
+},
+{
+"en": "Rating",
+"ar": "التقييم"
+},
+{
+"en": "Cheapest",
+"ar": "الأرخص"
+},
+{
+"en": "Closest",
+"ar": "الأقرب"
+},
+{
+"en": "Best rated",
+"ar": "الأعلى تقييم"
+},
+{
+"en": "Under your limit ✓",
+"ar": "تحت حدّك ✓"
+},
+{
+"en": "+{a}",
+"ar": "+{a}"
+},
+{
+"en": "closer: {d}",
+"ar": "أقرب: {d}"
+},
+{
+"en": "rated {r}",
+"ar": "تقييمه {r}"
+},
+{
+"en": "other days: {d}",
+"ar": "أيام تانية: {d}"
+},
+{
+"en": "Books & PDFs",
+"ar": "الكتب والـ PDF"
+},
+{
+"en": "Chat and the voice can answer from…"
+},
+{
+"en": "Switch a book on and Chat and the voice look into it too, quoting the book and page."
+},
+{
+"en": "Chat and the voice can answer from “{b}” now"
+},
+{
+"en": "Chat won't look into “{b}”"
+},
+{
+"en": "Attune remembers",
+"ar": "أتيون فاكر"
+},
+{
+"en": "Picking a contact works in the Android app"
+},
+{
+"en": "A person",
+"ar": "شخص"
+},
+{
+"en": "A place",
+"ar": "مكان"
+},
+{
+"en": "A thing",
+"ar": "حاجة"
+},
+{
+"en": "What you call him / her"
+},
+{
+"en": "What you call it",
+"ar": "بتسميها إيه"
+},
+{
+"en": "e.g. Ahmed the plumber",
+"ar": "مثلاً أحمد السباك"
+},
+{
+"en": "e.g. the flat in Maadi"
+},
+{
+"en": "e.g. the Kia",
+"ar": "مثلاً الكيا"
+},
+{
+"en": "You already have {n} — add what tells them apart (plumber, work…), and Attune will ask which one when it isn't clear."
+},
+{
+"en": "Who / what is it to you"
+},
+{
+"en": "plumber, barber, work, my brother…"
+},
+{
+"en": "Other names you use (optional)"
+},
+{
+"en": "e.g. Hamada, الحلاق",
+"ar": "مثلاً حمادة، الحلاق"
+},
+{
+"en": "Remove the contact",
+"ar": "شيل جهة الاتصال"
+},
+{
+"en": "Link a phone contact",
+"ar": "اربط جهة اتصال من التليفون"
+},
+{
+"en": "Optional — Attune keeps using your name for them."
+},
+{
+"en": "Added — Attune links everything about {n} now"
+},
+{
+"en": "All people",
+"ar": "كل الناس"
+},
+{
+"en": "Add who they are to you — it helps Attune tell people apart"
+},
+{
+"en": "Same person as…",
+"ar": "نفس الشخص اللي…"
+},
+{
+"en": "Delete {n}'s card? Nothing else is deleted — only the link."
+},
+{
+"en": "One card now",
+"ar": "بقوا كارت واحد"
+},
+{
+"en": "You paid",
+"ar": "دفعت"
+},
+{
+"en": "You got",
+"ar": "جالك"
+},
+{
+"en": "Everything about {n}",
+"ar": "كل حاجة عن {n}"
+},
+{
+"en": "Nothing linked yet. When you write {n} (or another name of theirs) in Money, a note or a message, it shows here."
+},
+{
+"en": "The people, places and things in your life. Attune links everything about each one — payments, notes, messages, follow-ups — and Chat answers from it. Two with the same name? It asks which one."
+},
+{
+"en": "Who is this?",
+"ar": "مين ده؟"
+},
+{
+"en": "New person",
+"ar": "شخص جديد"
+},
+{
+"en": "{a} = {b}",
+"ar": "{a} = {b}"
+},
+{
+"en": "It's…",
+"ar": "ده…"
+},
+{
+"en": "Not a person",
+"ar": "مش شخص"
+},
+{
+"en": "Search people",
+"ar": "دوّر في الناس"
+},
+{
+"en": "No one yet",
+"ar": "لسه مفيش حد"
+},
+{
+"en": "Add the people you deal with — your barber, the plumber, Ahmed from work — with your own name for each."
+},
+{
+"en": "From your notes",
+"ar": "من ملاحظاتك"
+},
+{
+"en": "You wrote these in your notes — add them to Money?"
+},
+{
+"en": "Not money",
+"ar": "مش فلوس"
+},
+{
+"en": "Which {n}?",
+"ar": "أنهي {n}؟"
+},
+{
+"en": "You have more than one — pick him and I'll remember for next time."
+},
+{
+"en": "Someone else",
+"ar": "حد تاني"
+},
+{
+"en": "Attune noticed",
+"ar": "أتيون لاحظ"
+},
+{
+"en": "Not useful",
+"ar": "مش مفيد"
+},
+{
+"en": "Open the plan",
+"ar": "افتح الخطة"
+},
+{
+"en": "Open Dates",
+"ar": "افتح المواعيد"
+},
+{
+"en": "Open Agents",
+"ar": "افتح الوكلاء"
+},
+{
+"en": "Open Recall",
+"ar": "افتح الذاكرة"
+},
+{
+"en": "Nothing worth your time right now — I'll tell you when something is."
+},
+{
+"en": "Your people, places and things — everything about each one"
+},
+{
+"en": "Zakāt rulings & sources",
+"ar": "أحكام الزكاة ومصادرها"
+},
+{
+"en": "Each ruling with its evidence from the Qur'an and Sunnah and where it is taken from (Islamweb, Ibn Baz, al-Durar al-Saniyya). Your school in Zakāt settings decides where the schools differ."
+},
+{
+"en": "Type the numbers above — the Zakāt due shows here."
+},
+{
+"en": "The ruling and its evidence"
+},
+{
+"en": "Niṣāb, the year, the rate, livestock, crops, jewellery, the eight recipients — with the evidence"
+},
+{
+"en": "Remind me tomorrow at 9 to call Ahmed"
+},
+{
+"en": "next Thursday",
+"ar": "بعد ساعتين"
+},
+{
+"en": "in 20 minutes",
+"ar": "بعد ساعتين"
+},
+{
+"en": "9 pm",
+"ar": "الساعة 9"
+},
+{
+"en": "set a timer for 10 minutes"
+},
+{
+"en": "\\bcall [A-Za-z]",
+"ar": "فكرني"
+},
+{
+"en": "Call Ahmed",
+"ar": "اجتماع مع المهندس"
+},
+{
+"en": "tomorrow at 9",
+"ar": "بكرة الساعة 9"
+},
+{
+"en": "CAI",
+"ar": "cairo|القاهره|القاهرة|مصر الجديده"
+},
+{
+"en": "HRG",
+"ar": "hurghada|الغردقه|الغردقة"
+},
+{
+"en": "SSH",
+"ar": "sharm el sheikh|sharm|شرم الشيخ|شرم"
+},
+{
+"en": "HBE",
+"ar": "alexandria|borg el arab|اسكندريه|الاسكندريه|الإسكندرية|برج العرب"
+},
+{
+"en": "LXR",
+"ar": "luxor|الاقصر|الأقصر"
+},
+{
+"en": "ASW",
+"ar": "aswan|اسوان|أسوان"
+},
+{
+"en": "RMF",
+"ar": "marsa alam|مرسي علم|مرسى علم"
+},
+{
+"en": "SPX",
+"ar": "sphinx|سفنكس"
+},
+{
+"en": "DXB",
+"ar": "dubai|دبي"
+},
+{
+"en": "AUH",
+"ar": "abu dhabi|ابوظبي|أبوظبي|ابو ظبي"
+},
+{
+"en": "SHJ",
+"ar": "sharjah|الشارقه|الشارقة"
+},
+{
+"en": "DOH",
+"ar": "doha|qatar|الدوحه|الدوحة|قطر"
+},
+{
+"en": "RUH",
+"ar": "riyadh|الرياض"
+},
+{
+"en": "JED",
+"ar": "jeddah|jedda|جده|جدة"
+},
+{
+"en": "DMM",
+"ar": "dammam|الدمام"
+},
+{
+"en": "MED",
+"ar": "medina|madinah|المدينه|المدينة المنورة|المدينه المنوره"
+},
+{
+"en": "KWI",
+"ar": "kuwait|الكويت"
+},
+{
+"en": "BAH",
+"ar": "bahrain|manama|البحرين|المنامه"
+},
+{
+"en": "MCT",
+"ar": "muscat|oman|مسقط|عمان مسقط"
+},
+{
+"en": "AMM",
+"ar": "amman|عمان"
+},
+{
+"en": "BEY",
+"ar": "beirut|بيروت"
+},
+{
+"en": "BGW",
+"ar": "baghdad|بغداد"
+},
+{
+"en": "EBL",
+"ar": "erbil|اربيل|أربيل"
+},
+{
+"en": "CMN",
+"ar": "casablanca|الدار البيضاء"
+},
+{
+"en": "RAK",
+"ar": "marrakech|marrakesh|مراكش"
+},
+{
+"en": "TUN",
+"ar": "tunis|تونس"
+},
+{
+"en": "ALG",
+"ar": "algiers|الجزائر"
+},
+{
+"en": "KRT",
+"ar": "khartoum|الخرطوم"
+},
+{
+"en": "IST",
+"ar": "istanbul|اسطنبول|إسطنبول"
+},
+{
+"en": "AYT",
+"ar": "antalya|انطاليا|أنطاليا"
+},
+{
+"en": "ESB",
+"ar": "ankara|انقره|أنقرة"
+},
+{
+"en": "LHR",
+"ar": "london|heathrow|لندن"
+},
+{
+"en": "MAN",
+"ar": "manchester|مانشستر"
+},
+{
+"en": "DUB",
+"ar": "dublin|دبلن"
+},
+{
+"en": "CDG",
+"ar": "paris|باريس"
+},
+{
+"en": "NCE",
+"ar": "nice airport|nice france|nice côte d'azur|côte d'azur|نيس"
+},
+{
+"en": "LYS",
+"ar": "lyon|ليون"
+},
+{
+"en": "FRA",
+"ar": "frankfurt|فرانكفورت"
+},
+{
+"en": "MUC",
+"ar": "munich|münchen|ميونخ"
+},
+{
+"en": "BER",
+"ar": "berlin|برلين"
+},
+{
+"en": "HAM",
+"ar": "hamburg|هامبورغ"
+},
+{
+"en": "AMS",
+"ar": "amsterdam|امستردام|أمستردام"
+},
+{
+"en": "BRU",
+"ar": "brussels|bruxelles|بروكسل"
+},
+{
+"en": "ZRH",
+"ar": "zurich|zürich|زيورخ"
+},
+{
+"en": "GVA",
+"ar": "geneva|genève|جنيف"
+},
+{
+"en": "VIE",
+"ar": "vienna|wien|فيينا"
+},
+{
+"en": "FCO",
+"ar": "rome|roma|روما"
+},
+{
+"en": "MXP",
+"ar": "milan|milano|ميلانو"
+},
+{
+"en": "VCE",
+"ar": "venice|venezia|البندقيه"
+},
+{
+"en": "MAD",
+"ar": "madrid|مدريد"
+},
+{
+"en": "BCN",
+"ar": "barcelona|برشلونه|برشلونة"
+},
+{
+"en": "LIS",
+"ar": "lisbon|lisboa|لشبونه"
+},
+{
+"en": "ATH",
+"ar": "athens|athína|اثينا|أثينا"
+},
+{
+"en": "CPH",
+"ar": "copenhagen|كوبنهاجن"
+},
+{
+"en": "ARN",
+"ar": "stockholm|ستوكهولم"
+},
+{
+"en": "OSL",
+"ar": "oslo|اوسلو"
+},
+{
+"en": "WAW",
+"ar": "warsaw|warszawa|وارسو"
+},
+{
+"en": "PRG",
+"ar": "prague|praha|براغ"
+},
+{
+"en": "BUD",
+"ar": "budapest|بودابست"
+},
+{
+"en": "TBS",
+"ar": "tbilisi|تبليسي"
+},
+{
+"en": "GYD",
+"ar": "baku|باكو"
+},
+{
+"en": "SVO",
+"ar": "moscow|moskva|москва|موسكو"
+},
+{
+"en": "JFK",
+"ar": "new york|nyc|نيويورك"
+},
+{
+"en": "LAX",
+"ar": "los angeles|لوس انجلوس"
+},
+{
+"en": "ORD",
+"ar": "chicago|شيكاغو"
+},
+{
+"en": "MIA",
+"ar": "miami|ميامي"
+},
+{
+"en": "IAD",
+"ar": "washington|واشنطن"
+},
+{
+"en": "IAH",
+"ar": "houston|هيوستن"
+},
+{
+"en": "YYZ",
+"ar": "toronto|تورنتو"
+},
+{
+"en": "YUL",
+"ar": "montreal|montréal|مونتريال"
+},
+{
+"en": "GRU",
+"ar": "são paulo|sao paulo|ساو باولو"
+},
+{
+"en": "DEL",
+"ar": "delhi|new delhi|دلهي"
+},
+{
+"en": "BOM",
+"ar": "mumbai|bombay|مومباي"
+},
+{
+"en": "KHI",
+"ar": "karachi|كراتشي"
+},
+{
+"en": "LHE",
+"ar": "lahore|لاهور"
+},
+{
+"en": "ISB",
+"ar": "islamabad|اسلام اباد"
+},
+{
+"en": "DAC",
+"ar": "dhaka|دكا"
+},
+{
+"en": "MLE",
+"ar": "malé|maldives|المالديف"
+},
+{
+"en": "BKK",
+"ar": "bangkok|بانكوك"
+},
+{
+"en": "HKT",
+"ar": "phuket|بوكيت"
+},
+{
+"en": "KUL",
+"ar": "kuala lumpur|كوالالمبور"
+},
+{
+"en": "SIN",
+"ar": "singapore|سنغافوره|سنغافورة"
+},
+{
+"en": "CGK",
+"ar": "jakarta|جاكرتا"
+},
+{
+"en": "DPS",
+"ar": "bali|denpasar|بالي"
+},
+{
+"en": "MNL",
+"ar": "manila|مانيلا"
+},
+{
+"en": "HKG",
+"ar": "hong kong|هونغ كونغ"
+},
+{
+"en": "PEK",
+"ar": "beijing|بكين"
+},
+{
+"en": "PVG",
+"ar": "shanghai|شنغهاي"
+},
+{
+"en": "CAN",
+"ar": "guangzhou|قوانغتشو"
+},
+{
+"en": "ICN",
+"ar": "seoul|سيول"
+},
+{
+"en": "NRT",
+"ar": "tokyo|طوكيو"
+},
+{
+"en": "SYD",
+"ar": "sydney|سيدني"
+},
+{
+"en": "MEL",
+"ar": "melbourne|ملبورن"
+},
+{
+"en": "JNB",
+"ar": "johannesburg|جوهانسبرغ"
+},
+{
+"en": "CPT",
+"ar": "cape town|كيب تاون"
+},
+{
+"en": "NBO",
+"ar": "nairobi|نيروبي"
+},
+{
+"en": "ADD",
+"ar": "addis ababa|اديس ابابا|أديس أبابا"
+},
+{
+"en": "LOS",
+"ar": "lagos|لاغوس"
+},
+{
+"en": "ZNZ",
+"ar": "zanzibar|زنجبار"
+},
+{
+"en": "MRU",
+"ar": "mauritius|موريشيوس"
+},
+{
+"en": "Buy me AirPods Pro 2 under 9,000"
+},
+{
+"en": "Tell me when hotels near the Haram are under 45k for 4 nights from 10 December"
+},
+{
+"en": "Tell me when my Amazon order arrives"
+},
+{
+"en": "Find me a used Hyundai Tucson 2022"
+},
+{
+"en": "Open Uber",
+"ar": "افتح أوبر"
+},
+{
+"en": "on the way",
+"ar": "يصل"
+},
+{
+"en": "trims versions",
+"ar": "الفئات"
+},
+{
+"en": "in Arabic",
+"ar": "بالانجليزي"
+},
+{
+"en": "in English",
+"ar": "بالعربي"
+},
+{
+"en": "translate to English",
+"ar": "لخصلي ده"
+},
+{
+"en": "Save in People & plans"
+},
+{
+"en": "Set a reminder",
+"ar": "اظبط تذكير"
+},
+{
+"en": "Log it in Fit & Food"
+},
+{
+"en": "Watch this date",
+"ar": "راقب الميعاد ده"
+},
+{
+"en": "Log the water",
+"ar": "سجّل المية"
+},
+{
+"en": "Log the workout",
+"ar": "سجّل التمرين"
+},
+{
+"en": "Start this savings goal",
+"ar": "ابدأ هدف التحويش ده"
+},
+{
+"en": "Save the blood pressure",
+"ar": "احفظ الضغط"
+},
+{
+"en": "Save the sleep",
+"ar": "احفظ النوم"
+},
+{
+"en": "All apps",
+"ar": "كل التطبيقات"
+},
+{
+"en": "Ya Attune (voice)",
+"ar": "يا أتيون (صوت)"
+},
+{
+"en": "Ask me about your own money, e.g. “how much did I spend on food this week?” or “what did I earn this month?”"
+},
+{
+"en": "On: ",
+"ar": "اشتغل: "
+},
+{
+"en": "I'll tell you the moment it comes: "
+},
+{
+"en": " — turn on Notification access first"
+},
+{
+"en": "Your mission is ready — tap Start the mission"
+},
+{
+"en": "Buy agent: ",
+"ar": "وكيل شراء: "
+},
+{
+"en": " — I'll ask you before buying"
+},
+{
+"en": "Finish it on the Agents page"
+},
+{
+"en": "New agent: ",
+"ar": "وكيل جديد: "
+},
+{
+"en": "Opening ",
+"ar": "بفتح "
+},
+{
+"en": "Scout is on it",
+"ar": "بدأ الكشّاف البحث"
+},
+{
+"en": "Add this receipt to Money"
+},
+{
+"en": "How much is this bill and when is it due? Remind me"
+},
+{
+"en": "What is this document? Sum it up"
+},
+{
+"en": "Translate the text in this photo to English"
+},
+{
+"en": "Shared"
+},
+{
+"en": "Check it, pick the account and save"
+},
+{
+"en": "Couldn't open that picture"
+},
+{
+"en": "Account and this device"
+},
+{
+"en": "The AI model on this device"
+},
+{
+"en": "Name, country, how Attune talks to you"
+},
+{
+"en": "Payment pending — Pro turns on by itself as soon as Google confirms it."
+},
+{
+"en": "Google Play: {e}"
+},
+{
+"en": "SHA-256"
+},
+{
+"en": "owner/repo:QUANT"
+},
+{
+"en": "With more than one model installed: quick questions use the one already running; code, maths, reasoning and long reports move to your strongest model that runs smoothly here, and photos to one that sees. A switch takes 10–30 s."
+},
+{
+"en": "The model itself never uses the network. The log lists every connection the app made or refused, host and reason only — the proof behind \\\"nothing leaves this phone\\\"."
+},
+{
+"en": "When my salary arrives, put 20% in Savings"
+},
+{
+"en": "When my salary arrives, put 10% in the Emergency fund"
+},
+{
+"en": "When a bonus arrives, put 50% in Savings"
+},
+{
+"en": "When InstaPay comes in, put 5% in the Car fund and tell me"
+},
+{
+"en": "Gas",
+"ar": "الغاز"
+},
+{
+"en": "Mobile",
+"ar": "الموبايل"
+},
+{
+"en": "I don't know your bills yet — after 3 months of electricity, water or internet in Money I'll tell you when each comes and how much."
+},
+{
+"en": "Your role cannot export",
+"ar": "دورك مش بيسمح بالتصدير"
+},
+{
+"en": "1–30 days late",
+"ar": "متأخرة ١–٣٠ يوم"
+},
+{
+"en": "Over 30 days late",
+"ar": "متأخرة أكتر من ٣٠ يوم"
+},
+{
+"en": "Net sales (this month)",
+"ar": "صافي المبيعات (الشهر ده)"
+},
+{
+"en": "Cost of goods",
+"ar": "تكلفة البضاعة"
+},
+{
+"en": "Net profit (this month)",
+"ar": "صافي الربح (الشهر ده)"
+},
+{
+"en": " margin",
+"ar": "هامش "
+},
+{
+"en": "6 months",
+"ar": "٦ شهور"
+},
+{
+"en": "Stock value (at cost)",
+"ar": "قيمة المخزون (بالتكلفة)"
+},
+{
+"en": "VAT to pay",
+"ar": "ضريبة مستحقة"
+},
+{
+"en": "VAT to recover",
+"ar": "ضريبة مستردة"
+},
+{
+"en": "Output",
+"ar": "على المبيعات"
+},
+{
+"en": "Input",
+"ar": "على المشتريات"
+},
+{
+"en": "Sales vs purchases & profit (6 months)"
+},
+{
+"en": "Purchases",
+"ar": "مشتريات"
+},
+{
+"en": "Net profit",
+"ar": "صافي الربح"
+},
+{
+"en": "Receivables ageing",
+"ar": "أعمار الديون"
+},
+{
+"en": "Customers who owe you more than 30 days get a polite WhatsApp statement from Money → Remind."
+},
+{
+"en": "Top customers & items (this month)"
+},
+{
+"en": "No sales this month yet."
+},
+{
+"en": "Net sales",
+"ar": "صافي المبيعات"
+},
+{
+"en": "Cost of goods sold",
+"ar": "تكلفة البضاعة المباعة"
+},
+{
+"en": "Export to Excel (CSV)",
+"ar": "صدّر لإكسل (CSV)"
+},
+{
+"en": "This system has no stock, balances, due dates or bookings yet. Ask the AI to add them, e.g. \\\"add a Payments table linked to Invoices\\\"."
+},
+{
+"en": "What is your business, and what should the system be called?"
+},
+{
+"en": "These are the tables I made. Anything to add?"
+},
+{
+"en": "Logic",
+"ar": "المنطق"
+},
+{
+"en": "Which calculations and rules should it handle for you?"
+},
+{
+"en": "Screens",
+"ar": "الشاشات"
+},
+{
+"en": "How should it look on a phone and on a computer?"
+},
+{
+"en": "Launch",
+"ar": "التشغيل"
+},
+{
+"en": "Ready. Create it, try it, and share it with your team."
+},
+{
+"en": "Show a chart on the home screen"
+},
+{
+"en": "Show alerts (missing information) on the home screen"
+},
+{
+"en": "Show more on a computer's bigger screen (chart and alerts too)"
+},
+{
+"en": "The system has no tables"
+},
+{
+"en": "No table links to another — link related records (e.g. an invoice to its customer)"
+},
+{
+"en": "Built from the \\\"{k}\\\" template in a second — change anything you like"
+},
+{
+"en": "TAX INVOICE",
+"ar": "فاتورة ضريبية"
+},
+{
+"en": "QUOTATION",
+"ar": "عرض سعر"
+},
+{
+"en": "CREDIT NOTE",
+"ar": "إشعار دائن"
+},
+{
+"en": "STATEMENT OF ACCOUNT",
+"ar": "كشف حساب"
+},
+{
+"en": "DELIVERY NOTE",
+"ar": "إذن تسليم"
+},
+{
+"en": "SALES ORDER",
+"ar": "أمر بيع"
+},
+{
+"en": "Disc.",
+"ar": "خصم"
+},
+{
+"en": "Reference",
+"ar": "المرجع"
+},
+{
+"en": "Qty delivered",
+"ar": "الكمية المسلّمة"
+},
+{
+"en": "Unit",
+"ar": "الوحدة"
+},
+{
+"en": "Unsigned ETA document(s). To submit, sign with your company's ETA certificate (USB token) and send with your own ETA portal credentials — this app does not sign or submit."
+},
+{
+"en": "ETA file saved (unsigned)",
+"ar": "ملف المصلحة اتحفظ (من غير توقيع)"
+},
+{
+"en": "Export for ETA",
+"ar": "تصدير للضرائب"
+},
+{
+"en": "ETA e-invoice",
+"ar": "الفاتورة الإلكترونية"
+},
+{
+"en": "Valid — the file was saved."
+},
+{
+"en": "Not ready — fix these first:"
+},
+{
+"en": "Documents in the period",
+"ar": "مستندات الفترة"
+},
+{
+"en": "Need fixing",
+"ar": "محتاجة تتصلح"
+},
+{
+"en": "Export all for ETA",
+"ar": "تصدير الكل للضرائب"
+},
+{
+"en": "E-invoice (Tax Authority)",
+"ar": "الفاتورة الإلكترونية (مصلحة الضرائب)"
+},
+{
+"en": "Activity code (4 digits)",
+"ar": "كود النشاط (٤ أرقام)"
+},
+{
+"en": "Branch no.",
+"ar": "رقم الفرع"
+},
+{
+"en": "Governorate",
+"ar": "المحافظة"
+},
+{
+"en": "City / area",
+"ar": "المدينة / المنطقة"
+},
+{
+"en": "Street",
+"ar": "الشارع"
+},
+{
+"en": "Building no.",
+"ar": "رقم المبنى"
+},
+{
+"en": "A backup passphrase needs at least 8 characters"
+},
+{
+"en": "Encrypted backups",
+"ar": "نسخ احتياطية متشفرة"
+},
+{
+"en": "Every time the books are opened with a PIN and something changed, an encrypted copy is kept on this phone (last 7 + one per month). It opens only with the PIN used that day."
+},
+{
+"en": "No automatic copies yet — set a PIN (above) to turn them on."
+},
+{
+"en": "Only the owner can restore"
+},
+{
+"en": "Passphrase for a backup file to keep elsewhere"
+},
+{
+"en": "Save encrypted copy",
+"ar": "احفظ نسخة متشفرة"
+},
+{
+"en": "Restore a file",
+"ar": "استرجع من ملف"
+},
+{
+"en": "Sales documents",
+"ar": "مستندات البيع"
+},
+{
+"en": "Receipts",
+"ar": "المقبوضات"
+},
+{
+"en": "Ledger entries",
+"ar": "قيود اليومية"
+},
+{
+"en": "Replace ALL current books with this backup?"
+},
+{
+"en": "Replace my books with this copy"
+},
+{
+"en": "PIN or passphrase of that copy"
+},
+{
+"en": "Open and compare (nothing changes yet)"
+},
+{
+"en": "Integrity checked: fingerprint, audit log and balance are all good."
+},
+{
+"en": "This copy fails the integrity check — it will not be restored."
+},
+{
+"en": "Made",
+"ar": "تم"
+},
+{
+"en": "This copy is the same as your books — nothing to restore."
+},
+{
+"en": "User saved",
+"ar": "المستخدم اتحفظ"
+},
+{
+"en": "Sell & receive",
+"ar": "بيع وتحصيل"
+},
+{
+"en": "Cancel (credit note)",
+"ar": "إلغاء (إشعار دائن)"
+},
+{
+"en": "Change prices",
+"ar": "تغيير الأسعار"
+},
+{
+"en": "See profit",
+"ar": "يرى الربح"
+},
+{
+"en": "Users & settings",
+"ar": "المستخدمون والإعدادات"
+},
+{
+"en": "Users & roles",
+"ar": "المستخدمون والصلاحيات"
+},
+{
+"en": "One owner, no users. Add the owner first, then the staff — each with their own PIN."
+},
+{
+"en": "Add user",
+"ar": "ضيف مستخدم"
+},
+{
+"en": "Currencies (EGP for 1 unit)"
+},
+{
+"en": "Rate saved",
+"ar": "السعر اتحفظ"
+},
+{
+"en": "Save rate",
+"ar": "احفظ السعر"
+},
+{
+"en": "Rate (EGP)",
+"ar": "السعر (جنيه)"
+},
+{
+"en": "Add the rate in Settings → Currencies"
+},
+{
+"en": "Give a customer a group (in the customer's card), then a list for that group. The newest list in force on the invoice date wins; quantity breaks lower the price."
+},
+{
+"en": "Price list saved",
+"ar": "القايمة اتحفظت"
+},
+{
+"en": "Customer group",
+"ar": "مجموعة العملاء"
+},
+{
+"en": "To (optional)",
+"ar": "إلى (اختياري)"
+},
+{
+"en": "from qty",
+"ar": "من كمية"
+},
+{
+"en": "Add a price",
+"ar": "ضيف سعر"
+},
+{
+"en": "Delivery note",
+"ar": "إذن تسليم"
+},
+{
+"en": "Delivery note posted",
+"ar": "إذن التسليم اتسجل"
+},
+{
+"en": "Post & share",
+"ar": "سجّل وشارك"
+},
+{
+"en": "Everything has been delivered.",
+"ar": "كل حاجة اتسلمت."
+},
+{
+"en": "The stock left when the invoice was posted; the note records the delivery."
+},
+{
+"en": "Goods leave stock with this note."
+},
+{
+"en": "Notes already sent",
+"ar": "الأذونات اللي اتعملت"
+},
+{
+"en": "Tax invoice",
+"ar": "فاتورة ضريبية"
+},
+{
+"en": "Credit note",
+"ar": "إشعار دائن"
+},
+{
+"en": "Sales order",
+"ar": "أمر بيع"
+},
+{
+"en": "Supplier bill",
+"ar": "فاتورة مورد"
+},
+{
+"en": "Posted",
+"ar": "مرحّلة"
+},
+{
+"en": "Void",
+"ar": "ملغاة"
+},
+{
+"en": "Bank / transfer",
+"ar": "بنك / تحويل"
+},
+{
+"en": "Receipt recorded",
+"ar": "التحصيل اتسجل"
+},
+{
+"en": "Money received",
+"ar": "تحصيل من عميل"
+},
+{
+"en": "Save receipt",
+"ar": "احفظ التحصيل"
+},
+{
+"en": "Customer",
+"ar": "العميل"
+},
+{
+"en": "— choose —",
+"ar": "— اختار —"
+},
+{
+"en": "Amount received",
+"ar": "المبلغ المحصّل"
+},
+{
+"en": "How was it paid",
+"ar": "طريقة الدفع"
+},
+{
+"en": "Settles these invoices (oldest first)"
+},
+{
+"en": "not covered",
+"ar": "مش متغطية"
+},
+{
+"en": "withheld by customer",
+"ar": "المخصوم من المنبع"
+},
+{
+"en": "Left on account (customer deposit):"
+},
+{
+"en": "This customer has no open invoices — the money will be kept on account."
+},
+{
+"en": "Payment recorded",
+"ar": "الدفع اتسجل"
+},
+{
+"en": "Pay a supplier",
+"ar": "سداد لمورد"
+},
+{
+"en": "Save payment",
+"ar": "احفظ السداد"
+},
+{
+"en": "Amount paid",
+"ar": "المبلغ المدفوع"
+},
+{
+"en": "Nothing owed to this supplier."
+},
+{
+"en": "Salaries",
+"ar": "مرتبات"
+},
+{
+"en": "Electricity & water",
+"ar": "كهرباء ومياه"
+},
+{
+"en": "Phone & internet",
+"ar": "تليفون وإنترنت"
+},
+{
+"en": "Fees & taxes",
+"ar": "رسوم وضرائب"
+},
+{
+"en": "Expense recorded",
+"ar": "المصروف اتسجل"
+},
+{
+"en": "Save expense",
+"ar": "احفظ المصروف"
+},
+{
+"en": "Paid from",
+"ar": "دُفع من"
+},
+{
+"en": "Change photo",
+"ar": "غيّر الصورة"
+},
+{
+"en": "Photo of the receipt",
+"ar": "صورة الإيصال"
+},
+{
+"en": "1–30 days",
+"ar": "١–٣٠ يوم"
+},
+{
+"en": "Reminder copied",
+"ar": "التذكير اتنسخ"
+},
+{
+"en": "Total owed to you",
+"ar": "إجمالي المستحق لك"
+},
+{
+"en": "Nobody owes you anything",
+"ar": "مفيش حد عليه فلوس ليك"
+},
+{
+"en": "Remind",
+"ar": "ذكّره"
+},
+{
+"en": "Share / PDF",
+"ar": "مشاركة / PDF"
+},
+{
+"en": "Closing balance",
+"ar": "الرصيد الختامي"
+},
+{
+"en": "+ Receipt",
+"ar": "+ تحصيل"
+},
+{
+"en": "+ Pay supplier",
+"ar": "+ سداد مورد"
+},
+{
+"en": "+ Expense",
+"ar": "+ مصروف"
+},
+{
+"en": "Paid to suppliers",
+"ar": "سداد موردين"
+},
+{
+"en": "Who owes you",
+"ar": "المديونيات"
+},
+{
+"en": "Nothing here yet",
+"ar": "مفيش حاجة لسه"
+},
+{
+"en": "Accountant",
+"ar": "المحاسب"
+},
+{
+"en": "Egyptian pound",
+"ar": "جنيه مصري"
+},
+{
+"en": "US dollar",
+"ar": "دولار أمريكي"
+},
+{
+"en": "Euro",
+"ar": "يورو"
+},
+{
+"en": "Saudi riyal",
+"ar": "ريال سعودي"
+},
+{
+"en": "UAE dirham",
+"ar": "درهم إماراتي"
+},
+{
+"en": "Balance sheet",
+"ar": "الميزانية"
+},
+{
+"en": "Cash flow",
+"ar": "التدفقات النقدية"
+},
+{
+"en": "Month by month",
+"ar": "شهر بشهر"
+},
+{
+"en": "Budget vs actual",
+"ar": "الموازنة والفعلي"
+},
+{
+"en": "As of",
+"ar": "في"
+},
+{
+"en": "Assets — what the company has"
+},
+{
+"en": "Liabilities — what it owes"
+},
+{
+"en": "Equity — what is the owner's"
+},
+{
+"en": "Assets = liabilities + equity — the books balance."
+},
+{
+"en": "The balance sheet does not balance — check the journal."
+},
+{
+"en": "Taxes",
+"ar": "الضرايب"
+},
+{
+"en": "Fixed assets",
+"ar": "الأصول الثابتة"
+},
+{
+"en": "Cash + bank at the start"
+},
+{
+"en": "Net change",
+"ar": "صافي التغيير"
+},
+{
+"en": "Cash + bank at the end"
+},
+{
+"en": "Moving money between the cash box and the bank is not counted — it stays in the company."
+},
+{
+"en": "Revenue",
+"ar": "الإيراد"
+},
+{
+"en": "Actual",
+"ar": "الفعلي"
+},
+{
+"en": "better by",
+"ar": "أحسن بـ"
+},
+{
+"en": "worse by",
+"ar": "أسوأ بـ"
+},
+{
+"en": "No budget for this year yet"
+},
+{
+"en": "Set what you expect each month — sales, salaries, expenses — and see where you are ahead or behind."
+},
+{
+"en": "+ Budget for an account"
+},
+{
+"en": "Budget saved",
+"ar": "الموازنة اتحفظت"
+},
+{
+"en": "Same every month",
+"ar": "نفس الرقم كل شهر"
+},
+{
+"en": "Recurring",
+"ar": "فواتير متكررة"
+},
+{
+"en": "Bank reconciliation",
+"ar": "تسوية البنك"
+},
+{
+"en": "Instalments",
+"ar": "التقسيط"
+},
+{
+"en": "Depreciated",
+"ar": "الإهلاك"
+},
+{
+"en": "Book value",
+"ar": "القيمة الدفترية"
+},
+{
+"en": "+ Asset",
+"ar": "+ أصل"
+},
+{
+"en": "Depreciation posted up to this month"
+},
+{
+"en": "Post depreciation",
+"ar": "رحّل الإهلاك"
+},
+{
+"en": "No fixed assets yet",
+"ar": "مفيش أصول ثابتة لسه"
+},
+{
+"en": "Cars, machines, furniture, computers: their cost is spread over their useful life (depreciation)."
+},
+{
+"en": "New fixed asset",
+"ar": "أصل ثابت جديد"
+},
+{
+"en": "Asset saved",
+"ar": "الأصل اتسجل"
+},
+{
+"en": "What is it",
+"ar": "إيه هو"
+},
+{
+"en": "Bought on",
+"ar": "اتشرى يوم"
+},
+{
+"en": "Useful life (months)",
+"ar": "العمر الإنتاجي (شهور)"
+},
+{
+"en": "Worth at the end (salvage)"
+},
+{
+"en": "Owed to the supplier",
+"ar": "على الحساب للمورد"
+},
+{
+"en": "+ Employee",
+"ar": "+ موظف"
+},
+{
+"en": "Tax",
+"ar": "ضريبة"
+},
+{
+"en": "Deductions",
+"ar": "خصومات"
+},
+{
+"en": "This month's payroll is done"
+},
+{
+"en": "Pay from the bank",
+"ar": "ادفع من البنك"
+},
+{
+"en": "Pay in cash",
+"ar": "ادفع كاش"
+},
+{
+"en": "Owe it for now",
+"ar": "خليها مستحقة"
+},
+{
+"en": "Payroll posted",
+"ar": "المرتبات اترحّلت"
+},
+{
+"en": "Run the payroll",
+"ar": "اعمل المرتبات"
+},
+{
+"en": "Insurance: employee 11 % and employer 18.75 % of the insurable wage by default — confirm the rates and limits in force. Payroll tax is what you type per employee."
+},
+{
+"en": "No employees yet",
+"ar": "مفيش موظفين لسه"
+},
+{
+"en": "Add each one with the monthly gross; the payroll works out insurance and the net and posts one entry."
+},
+{
+"en": "Employee",
+"ar": "موظف"
+},
+{
+"en": "Monthly gross",
+"ar": "إجمالي المرتب"
+},
+{
+"en": "Insurable wage (empty = gross)"
+},
+{
+"en": "Employee %",
+"ar": "الموظف %"
+},
+{
+"en": "Employer %",
+"ar": "صاحب العمل %"
+},
+{
+"en": "Tax a month",
+"ar": "الضريبة شهريًا"
+},
+{
+"en": "+ Recurring invoice",
+"ar": "+ فاتورة متكررة"
+},
+{
+"en": "Invoices made",
+"ar": "الفواتير اتعملت"
+},
+{
+"en": "Make the due ones",
+"ar": "اعمل المستحقة"
+},
+{
+"en": "posted at once",
+"ar": "بتترحّل على طول"
+},
+{
+"en": "No recurring invoices",
+"ar": "مفيش فواتير متكررة"
+},
+{
+"en": "Rent, maintenance contracts, subscriptions: made by themselves on their dates."
+},
+{
+"en": "Recurring invoice",
+"ar": "فاتورة متكررة"
+},
+{
+"en": "Item or service",
+"ar": "صنف أو خدمة"
+},
+{
+"en": "— a service (type below) —"
+},
+{
+"en": "Price (before VAT)",
+"ar": "السعر (قبل الضريبة)"
+},
+{
+"en": "First date",
+"ar": "أول تاريخ"
+},
+{
+"en": "Post them at once (else they wait as drafts)"
+},
+{
+"en": "Download your bank statement as CSV (date, description, amount) and open it here: each line is matched to your books by amount and date."
+},
+{
+"en": "Open the bank statement (CSV)"
+},
+{
+"en": "Matched",
+"ar": "متطابق"
+},
+{
+"en": "Only at the bank",
+"ar": "في البنك بس"
+},
+{
+"en": "Only in the books",
+"ar": "في الدفاتر بس"
+},
+{
+"en": "At the bank, not in your books — record them (charges, interest, transfers)"
+},
+{
+"en": "In your books, not at the bank yet — cheques not cleared, or a mistake"
+},
+{
+"en": "Difference between the statement and the books:"
+},
+{
+"en": "The statement and the books agree."
+},
+{
+"en": "Coming",
+"ar": "جاي"
+},
+{
+"en": "+ Instalment plan for an invoice"
+},
+{
+"en": "No instalment plans",
+"ar": "مفيش خطط تقسيط"
+},
+{
+"en": "Split a big invoice into a down payment and monthly parts; Attune shows what is late from the receipts."
+},
+{
+"en": "Instalment plan",
+"ar": "خطة تقسيط"
+},
+{
+"en": "Plan saved",
+"ar": "خطة التقسيط اتحفظت"
+},
+{
+"en": "Down payment",
+"ar": "المقدّم"
+},
+{
+"en": "First on",
+"ar": "أول قسط"
+},
+{
+"en": "Profit not yet closed",
+"ar": "أرباح الفترة"
+},
+{
+"en": "Bill posted — stock updated"
+},
+{
+"en": "Save draft",
+"ar": "احفظ مسودة"
+},
+{
+"en": "Post",
+"ar": "ترحيل"
+},
+{
+"en": "Bill date",
+"ar": "تاريخ الفاتورة"
+},
+{
+"en": "Supplier's invoice no.",
+"ar": "رقم فاتورة المورد"
+},
+{
+"en": "What you bought",
+"ar": "ما اشتريته"
+},
+{
+"en": "Items that track stock are added to your stock at this cost when you post."
+},
+{
+"en": "Delete this draft?",
+"ar": "تمسح المسودة دي؟"
+},
+{
+"en": "Edit & post",
+"ar": "عدّل ورحّل"
+},
+{
+"en": "Pay",
+"ar": "سداد"
+},
+{
+"en": "Their invoice",
+"ar": "فاتورتهم"
+},
+{
+"en": "Still owed",
+"ar": "المتبقي"
+},
+{
+"en": "Search bills",
+"ar": "دوّر في الفواتير"
+},
+{
+"en": "No supplier bills yet",
+"ar": "مفيش فواتير موردين لسه"
+},
+{
+"en": "Record what you buy so stock and what you owe stay right."
+},
+{
+"en": "Add a supplier",
+"ar": "ضيف مورد"
+},
+{
+"en": "No suppliers yet",
+"ar": "مفيش موردين لسه"
+},
+{
+"en": "you owe",
+"ar": "عليك"
+},
+{
+"en": "Sales returns",
+"ar": "مردودات المبيعات"
+},
+{
+"en": "Net revenue",
+"ar": "صافي الإيراد"
+},
+{
+"en": "Gross profit",
+"ar": "مجمل الربح"
+},
+{
+"en": "Exchange gain / loss",
+"ar": "فروق تغيير العملة"
+},
+{
+"en": "Sales (net)",
+"ar": "المبيعات (صافي)"
+},
+{
+"en": "Output VAT",
+"ar": "ضريبة المبيعات"
+},
+{
+"en": "Purchases (net)",
+"ar": "المشتريات (صافي)"
+},
+{
+"en": "Input VAT",
+"ar": "ضريبة المشتريات"
+},
+{
+"en": "A summary to help you fill in your return — check it with your accountant."
+},
+{
+"en": "Avg cost",
+"ar": "متوسط التكلفة"
+},
+{
+"en": "Value",
+"ar": "القيمة"
+},
+{
+"en": "Profit & loss",
+"ar": "الأرباح والخسائر"
+},
+{
+"en": "Sales by customer",
+"ar": "مبيعات بالعميل"
+},
+{
+"en": "Sales by item",
+"ar": "مبيعات بالصنف"
+},
+{
+"en": "Trial balance",
+"ar": "ميزان المراجعة"
+},
+{
+"en": "E-invoices (ETA)",
+"ar": "الفواتير الإلكترونية"
+},
+{
+"en": "Last month",
+"ar": "الشهر اللي فات"
+},
+{
+"en": "This quarter",
+"ar": "الربع ده"
+},
+{
+"en": "Dates…",
+"ar": "تواريخ…"
+},
+{
+"en": "Nothing to report for this period"
+},
+{
+"en": "The books balance.",
+"ar": "الدفاتر متوازنة."
+},
+{
+"en": "The books do not balance — contact support."
+},
+{
+"en": "— free text —",
+"ar": "— نص حر —"
+},
+{
+"en": "Remove line",
+"ar": "شيل السطر"
+},
+{
+"en": "Disc. %",
+"ar": "خصم %"
+},
+{
+"en": "14% standard",
+"ar": "عادية ١٤٪"
+},
+{
+"en": "0% zero-rated",
+"ar": "صفرية ٠٪"
+},
+{
+"en": "Exempt",
+"ar": "معفاة"
+},
+{
+"en": "Withholding",
+"ar": "خصم من المنبع"
+},
+{
+"en": "Supplies 1%",
+"ar": "توريدات ١٪"
+},
+{
+"en": "Services 3%",
+"ar": "خدمات ٣٪"
+},
+{
+"en": "Professional 5%",
+"ar": "مهنية ٥٪"
+},
+{
+"en": "Add a line",
+"ar": "ضيف سطر"
+},
+{
+"en": "Discount",
+"ar": "الخصم"
+},
+{
+"en": "Table tax",
+"ar": "ضريبة الجدول"
+},
+{
+"en": "Withheld by customer",
+"ar": "خصم من المنبع"
+},
+{
+"en": "Cash to receive",
+"ar": "المطلوب تحصيله"
+},
+{
+"en": "Enter the exchange rate",
+"ar": "اكتب سعر الصرف"
+},
+{
+"en": "Due date",
+"ar": "تاريخ الاستحقاق"
+},
+{
+"en": "Empty = the customer's credit days"
+},
+{
+"en": "Lines",
+"ar": "البنود"
+},
+{
+"en": "Notes (printed on the document)"
+},
+{
+"en": "Posting gives the invoice its number and locks it. A mistake after that is fixed with a credit note."
+},
+{
+"en": "Tax number",
+"ar": "الرقم الضريبي"
+},
+{
+"en": "Price group (e.g. wholesale)",
+"ar": "مجموعة الأسعار (مثلاً جملة)"
+},
+{
+"en": "Credit limit (0 = none)"
+},
+{
+"en": "For e-invoices (ETA)",
+"ar": "للفاتورة الإلكترونية"
+},
+{
+"en": "Customer type",
+"ar": "نوع العميل"
+},
+{
+"en": "Automatic (company if it has a tax number)"
+},
+{
+"en": "Foreign",
+"ar": "أجنبي"
+},
+{
+"en": "National ID (a person, invoices of 50,000 EGP or more)"
+},
+{
+"en": "Credit note for ",
+"ar": "إشعار دائن عن "
+},
+{
+"en": "Credit note drafted — review and post it"
+},
+{
+"en": "Invoice drafted from the quote"
+},
+{
+"en": "Record payment",
+"ar": "تسجيل دفعة"
+},
+{
+"en": "Invoice drafted from what was delivered"
+},
+{
+"en": "Invoice delivered",
+"ar": "فوترة المسلّم"
+},
+{
+"en": "Make an invoice",
+"ar": "حوّل لفاتورة"
+},
+{
+"en": "Against",
+"ar": "بخصوص"
+},
+{
+"en": "Credited",
+"ar": "إشعارات دائنة"
+},
+{
+"en": "Search number or customer",
+"ar": "دوّر برقم أو عميل"
+},
+{
+"en": "Credit notes",
+"ar": "إشعارات"
+},
+{
+"en": "Orders",
+"ar": "أوامر بيع"
+},
+{
+"en": "Drafts",
+"ar": "مسودات"
+},
+{
+"en": "No documents yet",
+"ar": "مفيش مستندات لسه"
+},
+{
+"en": "Create your first invoice or quotation."
+},
+{
+"en": "Add a customer",
+"ar": "ضيف عميل"
+},
+{
+"en": "No customers yet",
+"ar": "مفيش عملاء لسه"
+},
+{
+"en": "New document",
+"ar": "مستند جديد"
+},
+{
+"en": "Bill a customer; goes into your books."
+},
+{
+"en": "A price offer; no effect on your books until it becomes an invoice."
+},
+{
+"en": "A confirmed order: deliver it in parts with delivery notes, then invoice."
+},
+{
+"en": "Code / SKU",
+"ar": "الكود"
+},
+{
+"en": "E-invoice item code (EGS / GS1)"
+},
+{
+"en": "E-invoice unit (e.g. EA)",
+"ar": "وحدة الفاتورة الإلكترونية"
+},
+{
+"en": "Selling price",
+"ar": "سعر البيع"
+},
+{
+"en": "Reorder when at or below"
+},
+{
+"en": "Track stock for this item (turn off for services)"
+},
+{
+"en": "Opening stock (how many you have now)"
+},
+{
+"en": "Valued at the cost above."
+},
+{
+"en": "Stock count",
+"ar": "جرد"
+},
+{
+"en": "Stock adjusted",
+"ar": "المخزون اتعدّل"
+},
+{
+"en": "Adjust",
+"ar": "تسوية"
+},
+{
+"en": "Quantity (+ found / − lost)"
+},
+{
+"en": "Cost per unit (for additions)"
+},
+{
+"en": "Reason",
+"ar": "السبب"
+},
+{
+"en": "Search items",
+"ar": "دوّر في الأصناف"
+},
+{
+"en": "No items yet",
+"ar": "مفيش أصناف لسه"
+},
+{
+"en": "Add what you sell. Stock updates by itself from your invoices and purchases."
+},
+{
+"en": "No movements yet",
+"ar": "مفيش حركة لسه"
+},
 {
 "en": "Encrypted backup saved on this phone"
 },
@@ -1368,2637 +3954,5 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 {
 "en": "Capacity",
 "ar": "الحمولة"
-},
-{
-"en": "Boom",
-"ar": "الذراع"
-},
-{
-"en": "Storage",
-"ar": "التخزين"
-},
-{
-"en": "RAM",
-"ar": "الرام"
-},
-{
-"en": "Screen",
-"ar": "الشاشة"
-},
-{
-"en": "Fuel use",
-"ar": "استهلاك الوقود"
-},
-{
-"en": "Motor",
-"ar": "الموتور"
-},
-{
-"en": "Powertrain",
-"ar": "نوع المحرك"
-},
-{
-"en": "Drive",
-"ar": "الدفع"
-},
-{
-"en": "or ",
-"ar": "أو "
-},
-{
-"en": "### Key figures (copied exactly from the sources)\n"
-},
-{
-"en": "| Spec | Value |\n| --- | --- |\n"
-},
-{
-"en": "\n✓ = the same figure on 2 or more sites.\n"
-},
-{
-"en": "#### Table from ",
-"ar": "#### جدول من "
-},
-{
-"en": "### Head to head (figures copied from the sources)\n"
-},
-{
-"en": "Spec",
-"ar": "البند"
-},
-{
-"en": "Better",
-"ar": "الأفضل"
-},
-{
-"en": "\\n✓ = the same figure on 2 or more sites. \\\"Better\\\" is by the number only (lower for price, 0–100 and fuel use)."
-},
-{
-"en": "Ali",
-"ar": "علي"
-},
-{
-"en": "milk, bread and eggs",
-"ar": "لبن، عيش وبيض"
-},
-{
-"en": "Dad",
-"ar": "بابا"
-},
-{
-"en": "green beans",
-"ar": "فاصوليا خضراء"
-},
-{
-"en": "sweet potato",
-"ar": "بطاطا حلوة"
-},
-{
-"en": "baladi bread",
-"ar": "عيش بلدي"
-},
-{
-"en": "chicken breast",
-"ar": "صدور فراخ"
-},
-{
-"en": "chicken thighs",
-"ar": "وراك فراخ"
-},
-{
-"en": "beef cubes",
-"ar": "لحمة بقري"
-},
-{
-"en": "white fish fillet",
-"ar": "فيليه سمك"
-},
-{
-"en": "turkey breast",
-"ar": "صدر ديك رومي"
-},
-{
-"en": "sea bass",
-"ar": "قاروص"
-},
-{
-"en": "kidney bean",
-"ar": "فاصوليا حمراء"
-},
-{
-"en": "black-eyed bean",
-"ar": "لوبيا"
-},
-{
-"en": "white bean",
-"ar": "فاصوليا بيضا"
-},
-{
-"en": "cottage cheese",
-"ar": "جبنة قريش"
-},
-{
-"en": "brown pita",
-"ar": "عيش بيتا أسمر"
-},
-{
-"en": "brown toast",
-"ar": "توست أسمر"
-},
-{
-"en": "cucumber salad",
-"ar": "سلطة خيار"
-},
-{
-"en": "black pepper",
-"ar": "الفلفل الأسود"
-},
-{
-"en": "chili flakes",
-"ar": "الشطة"
-},
-{
-"en": "fresh herbs",
-"ar": "الأعشاب"
-},
-{
-"en": "brown rice",
-"ar": "أرز بني"
-},
-{
-"en": "minced beef",
-"ar": "لحمة مفرومة"
-},
-{
-"en": "a banana",
-"ar": "ومعاه موزة"
-},
-{
-"en": "a scoop of protein",
-"ar": "ومعاه سكوب بروتين"
-},
-{
-"en": "grilled chicken",
-"ar": "فراخ مشوية"
-},
-{
-"en": "tortilla wrap",
-"ar": "تورتيلا"
-},
-{
-"en": "lemon-garlic marinade",
-"ar": "بتتبيلة الليمون والثوم"
-},
-{
-"en": "cumin and coriander rub",
-"ar": "بتتبيلة الكمون والكزبرة"
-},
-{
-"en": "tahini-lemon sauce",
-"ar": "بصوص الطحينة والليمون"
-},
-{
-"en": "spiced yogurt marinade",
-"ar": "بتتبيلة الزبادي والتوابل"
-},
-{
-"en": "tomato and herb sauce",
-"ar": "بصوص الطماطم والأعشاب"
-},
-{
-"en": "chili and paprika rub",
-"ar": "بتتبيلة الشطة والبابريكا"
-},
-{
-"en": "lemon-cumin dressing",
-"ar": "صوص الليمون والكمون"
-},
-{
-"en": "tahini drizzle",
-"ar": "رشة طحينة"
-},
-{
-"en": "garlic and tomato",
-"ar": "الثوم والطماطم"
-},
-{
-"en": "mint yogurt",
-"ar": "زبادي بالنعناع"
-},
-{
-"en": "chili and lemon",
-"ar": "الشطة والليمون"
-},
-{
-"en": "parsley and olive oil",
-"ar": "البقدونس وزيت الزيتون"
-},
-{
-"en": "scrambled eggs",
-"ar": "بيض مخفوق"
-},
-{
-"en": "baked eggs in tomato sauce"
-},
-{
-"en": "fried eggs",
-"ar": "بيض مقلي"
-},
-{
-"en": "egg and vegetable scramble",
-"ar": "بيض مخلوط بالخضار"
-},
-{
-"en": "a bowl of oats",
-"ar": "طبق شوفان"
-},
-{
-"en": "tomato sauce",
-"ar": "صلصة الطماطم"
-},
-{
-"en": "garlic and olive oil",
-"ar": "الثوم وزيت الزيتون"
-},
-{
-"en": "creamy yogurt sauce",
-"ar": "صوص الزبادي"
-},
-{
-"en": "lemon-tahini dressing",
-"ar": "صوص الطحينة والليمون"
-},
-{
-"en": "spicy tomato sauce",
-"ar": "صلصة طماطم حارة"
-},
-{
-"en": "herb and lemon dressing",
-"ar": "صوص الأعشاب والليمون"
-},
-{
-"en": "Greek yogurt bowl",
-"ar": "بول زبادي يوناني"
-},
-{
-"en": "overnight oats",
-"ar": "شوفان بالليل"
-},
-{
-"en": "cottage cheese bowl",
-"ar": "بول جبنة قريش"
-},
-{
-"en": "chia pudding",
-"ar": "تشيا بودينج"
-},
-{
-"en": "garlic yogurt",
-"ar": "زبادي بالثوم"
-},
-{
-"en": "light mayo",
-"ar": "مايونيز"
-},
-{
-"en": "Koshari (home style)",
-"ar": "كشري بيتي"
-},
-{
-"en": "Lighter koshari",
-"ar": "كشري لايت"
-},
-{
-"en": "Molokhia with chicken and rice"
-},
-{
-"en": "Molokhia with rabbit",
-"ar": "ملوخية بالأرنب"
-},
-{
-"en": "Fatta with meat",
-"ar": "فتة باللحمة"
-},
-{
-"en": "Mixed mahshi (rice stuffed vegetables)"
-},
-{
-"en": "Stuffed cabbage leaves",
-"ar": "محشي كرنب"
-},
-{
-"en": "Stuffed vine leaves",
-"ar": "محشي ورق عنب"
-},
-{
-"en": "Okra stew with meat",
-"ar": "بامية باللحمة"
-},
-{
-"en": "Green beans with meat",
-"ar": "فاصوليا خضراء باللحمة"
-},
-{
-"en": "Peas and carrot stew with meat"
-},
-{
-"en": "Potato and meat tagen",
-"ar": "طاجن بطاطس باللحمة"
-},
-{
-"en": "Kofta and potato tagen",
-"ar": "طاجن كفتة بالبطاطس"
-},
-{
-"en": "Oven chicken with rice",
-"ar": "فراخ بالأرز في الفرن"
-},
-{
-"en": "Rice pudding",
-"ar": "أرز باللبن"
-},
-{
-"en": "Om Ali",
-"ar": "أم علي"
-},
-{
-"en": "Basbousa",
-"ar": "بسبوسة"
-},
-{
-"en": "Feteer with cheese",
-"ar": "فطير بالجبنة"
-},
-{
-"en": "Egg shakshuka with bread",
-"ar": "شكشوكة بالبيض"
-},
-{
-"en": "Ful medames bowl",
-"ar": "فول مدمس"
-},
-{
-"en": "Baked taameya plate",
-"ar": "طعمية مشوية"
-},
-{
-"en": "Hawawshi",
-"ar": "حواوشي"
-},
-{
-"en": "Alexandrian liver",
-"ar": "كبدة إسكندراني"
-},
-{
-"en": "Mesaka'a (eggplant stew)",
-"ar": "مسقعة"
-},
-{
-"en": "Egyptian lentil soup",
-"ar": "شوربة عدس"
-},
-{
-"en": "Freekeh with chicken",
-"ar": "فريك بالفراخ"
-},
-{
-"en": "Fish sayadeya",
-"ar": "سمك صيادية"
-},
-{
-"en": "Fried fish plate with salad"
-},
-{
-"en": "Grilled fish with vegetables",
-"ar": "سمك مشوي بالخضار"
-},
-{
-"en": "Shrimp tagen",
-"ar": "طاجن جمبري"
-},
-{
-"en": "Grilled kofta plate",
-"ar": "كفتة مشوية"
-},
-{
-"en": "Grilled chicken with rice and salad"
-},
-{
-"en": "Macarona béchamel",
-"ar": "مكرونة بالبشاميل"
-},
-{
-"en": "Roz me'ammar (baked creamy rice)"
-},
-{
-"en": "Baladi bread cheese and tomato"
-},
-{
-"en": "Eggs with basturma",
-"ar": "بيض بالبسطرمة"
-},
-{
-"en": "Fried eggs on bread",
-"ar": "بيض مقلي على عيش"
-},
-{
-"en": "Feteer with honey and nuts"
-},
-{
-"en": "Konafa with nuts",
-"ar": "كنافة بالمكسرات"
-},
-{
-"en": "Mahalabiya",
-"ar": "مهلبية"
-},
-{
-"en": "Karkadeh (hibiscus) drink",
-"ar": "كركديه"
-},
-{
-"en": "Maqluba (upside-down rice)",
-"ar": "مقلوبة"
-},
-{
-"en": "Mujadara",
-"ar": "مجدرة"
-},
-{
-"en": "Tabbouleh",
-"ar": "تبولة"
-},
-{
-"en": "Fattoush",
-"ar": "فتوش"
-},
-{
-"en": "Hummus plate",
-"ar": "حمص بالطحينة"
-},
-{
-"en": "Baba ghanoush",
-"ar": "بابا غنوج"
-},
-{
-"en": "Shish tawook",
-"ar": "شيش طاووق"
-},
-{
-"en": "Homemade chicken shawarma plate",
-"ar": "شاورما فراخ"
-},
-{
-"en": "Baked kibbeh",
-"ar": "كبة بالصينية"
-},
-{
-"en": "Zaatar manakish",
-"ar": "مناقيش زعتر"
-},
-{
-"en": "Lentil and spinach soup",
-"ar": "شوربة عدس بالسبانخ"
-},
-{
-"en": "Chicken kabsa",
-"ar": "كبسة دجاج"
-},
-{
-"en": "Lamb mandi",
-"ar": "مندي لحم"
-},
-{
-"en": "Chicken biryani",
-"ar": "برياني دجاج"
-},
-{
-"en": "Harees",
-"ar": "هريس"
-},
-{
-"en": "Luqaimat",
-"ar": "لقيمات"
-},
-{
-"en": "Oats with banana and nuts"
-},
-{
-"en": "Overnight oats",
-"ar": "شوفان منقوع"
-},
-{
-"en": "Protein pancakes",
-"ar": "بان كيك بروتين"
-},
-{
-"en": "Vegetable omelette",
-"ar": "أومليت بالخضار"
-},
-{
-"en": "Egg muffins",
-"ar": "مافن بيض"
-},
-{
-"en": "Yogurt parfait",
-"ar": "زبادي بالفاكهة والجرانولا"
-},
-{
-"en": "Chicken and rice meal prep"
-},
-{
-"en": "Grilled chicken salad",
-"ar": "سلطة فراخ مشوية"
-},
-{
-"en": "Tuna salad",
-"ar": "سلطة تونة"
-},
-{
-"en": "Greek salad",
-"ar": "سلطة يونانية"
-},
-{
-"en": "Baked salmon with vegetables",
-"ar": "سلمون مشوي بالخضار"
-},
-{
-"en": "Shrimp and vegetable stir-fry",
-"ar": "جمبري بالخضار"
-},
-{
-"en": "Chicken and vegetable soup",
-"ar": "شوربة فراخ بالخضار"
-},
-{
-"en": "Vegetable soup",
-"ar": "شوربة خضار"
-},
-{
-"en": "Pasta with tomato sauce",
-"ar": "مكرونة بصلصة الطماطم"
-},
-{
-"en": "Creamy chicken pasta",
-"ar": "مكرونة بالفراخ والكريمة"
-},
-{
-"en": "Homemade beef burger",
-"ar": "برجر بيتي"
-},
-{
-"en": "Chicken wrap",
-"ar": "راب فراخ"
-},
-{
-"en": "Tuna sandwich",
-"ar": "ساندوتش تونة"
-},
-{
-"en": "Hummus and vegetable sticks",
-"ar": "حمص مع خضار"
-},
-{
-"en": "Apple with peanut butter",
-"ar": "تفاح بزبدة الفول السوداني"
-},
-{
-"en": "Banana milk smoothie",
-"ar": "سموذي موز باللبن"
-},
-{
-"en": "Protein shake",
-"ar": "بروتين شيك"
-},
-{
-"en": "Date and nut energy balls"
-},
-{
-"en": "Lentil and rice bowl",
-"ar": "طبق عدس وأرز"
-},
-{
-"en": "Chickpea curry",
-"ar": "كاري الحمص"
-},
-{
-"en": "Roasted vegetables with quinoa",
-"ar": "خضار مشوية مع كينوا"
-},
-{
-"en": "Baked sweet potato with yogurt"
-},
-{
-"en": "Avocado egg toast",
-"ar": "توست أفوكادو وبيض"
-},
-{
-"en": "Fruit salad with yogurt",
-"ar": "سلطة فواكه بالزبادي"
-},
-{
-"en": "Cottage cheese and cucumber bowl"
-},
-{
-"en": "Smoked turkey sandwich",
-"ar": "ساندوتش ديك رومي"
-},
-{
-"en": "Baked chicken and potatoes",
-"ar": "فراخ وبطاطس في الفرن"
-},
-{
-"en": "Beef and vegetable stew",
-"ar": "يخنة لحمة بالخضار"
-},
-{
-"en": "Zucchini and kofta bake",
-"ar": "كوسة بالكفتة في الفرن"
-},
-{
-"en": "Spinach with eggs",
-"ar": "سبانخ بالبيض"
-},
-{
-"en": "Chicken with cauliflower rice",
-"ar": "فراخ برز القرنبيط"
-},
-{
-"en": "Mushroom omelette",
-"ar": "أومليت مشروم"
-},
-{
-"en": "What I saw",
-"ar": "اللي شفته"
-},
-{
-"en": "Your meal",
-"ar": "وجبتك"
-},
-{
-"en": "kcal burned",
-"ar": "سعرة محروقة"
-},
-{
-"en": "updated ",
-"ar": "اتحدث "
-},
-{
-"en": "You wrote",
-"ar": "إنت كتبت"
-},
-{
-"en": "Read as",
-"ar": "اتقرت على إنها"
-},
-{
-"en": "as you wrote it — the AI's estimate for this exact food"
-},
-{
-"en": "not in the food table — the AI's estimate"
-},
-{
-"en": "as you corrected it before"
-},
-{
-"en": "Per 100 g",
-"ar": "لكل ١٠٠ جم"
-},
-{
-"en": "Attune's food table (USDA / Egyptian tables), on this phone"
-},
-{
-"en": "📏 Exact portions: put a bank card next to the plate — or"
-},
-{
-"en": "my plate",
-"ar": "طبقي"
-},
-{
-"en": "cm wide",
-"ar": "سم عرض"
-},
-{
-"en": "kcal over today",
-"ar": "سعرة زيادة النهارده"
-},
-{
-"en": "kcal left today",
-"ar": "سعرة فاضلة النهارده"
-},
-{
-"en": "Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”"
-},
-{
-"en": "Reading the photo took too long — name the food instead (e.g. “2 fried eggs and baladi bread”) and I'll log it at once"
-},
-{
-"en": "Couldn't read that meal",
-"ar": "مقدرتش أقرا الوجبة"
-},
-{
-"en": "Couldn't recognise the food in time — name it instead (e.g. “2 fried eggs and baladi bread”) or search it below"
-},
-{
-"en": "Looking for a barcode…",
-"ar": "بدوّر على باركود…"
-},
-{
-"en": "Couldn't recognise this photo — name the food instead, e.g. “2 fried eggs and baladi bread”"
-},
-{
-"en": "This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”"
-},
-{
-"en": "This model can't read photos — get “Fast photo recognition” in My plan, or name the food, e.g. “2 fried eggs and baladi bread”"
-},
-{
-"en": "Waking the model…",
-"ar": "بصحّي الموديل…"
-},
-{
-"en": "Taking a quick look…",
-"ar": "ببص بصة سريعة…"
-},
-{
-"en": "Checking for hidden calories (oil, sauce, drinks)…"
-},
-{
-"en": "I didn't get that change — try “remove the cola”, “rice 200 g”, “add a spoon of oil”"
-},
-{
-"en": "To estimate a food the table doesn't know, load an AI model (Engine) — or pick one from the list."
-},
-{
-"en": "No product with that barcode yet"
-},
-{
-"en": "Couldn't reach the food databases — showing what's on the phone"
-},
-{
-"en": "No barcode found — hold the phone closer, straight on"
-},
-{
-"en": "This product isn't in the databases yet — log it by name"
-},
-{
-"en": "The live scanner didn't open — take a photo of the barcode instead"
-},
-{
-"en": "Enter your age, height and weight"
-},
-{
-"en": "Recipes",
-"ar": "وصفات"
-},
-{
-"en": "Progress",
-"ar": "التقدم"
-},
-{
-"en": "Diary",
-"ar": "اليوميات"
-},
-{
-"en": "Fasting",
-"ar": "الصيام"
-},
-{
-"en": "Workouts",
-"ar": "التمارين"
-},
-{
-"en": "Log food",
-"ar": "سجّل أكل"
-},
-{
-"en": "Add food",
-"ar": "ضيف أكل"
-},
-{
-"en": "Photo of your food",
-"ar": "صورة أكلك"
-},
-{
-"en": "Choose from the gallery",
-"ar": "اختار من المعرض"
-},
-{
-"en": "Scan with the camera — aim at the code"
-},
-{
-"en": "Take a photo of the barcode"
-},
-{
-"en": "A barcode photo from the gallery"
-},
-{
-"en": "Type the number",
-"ar": "اكتب الرقم"
-},
-{
-"en": "Meal",
-"ar": "الوجبة"
-},
-{
-"en": "What did you eat?",
-"ar": "أكلت إيه؟"
-},
-{
-"en": "Write it like you'd say it — English, Arabic or Franco. Amounts if you know them."
-},
-{
-"en": "Add to",
-"ar": "ضيف على"
-},
-{
-"en": "Reading your meal…",
-"ar": "بقرا وجبتك…"
-},
-{
-"en": "e.g. 150 g chicken Alfredo pasta and 7 chicken strips"
-},
-{
-"en": "Find the foods",
-"ar": "طلّع الأكل"
-},
-{
-"en": "Add it",
-"ar": "ضيفه"
-},
-{
-"en": "Favourites",
-"ar": "المفضلة"
-},
-{
-"en": "My meals",
-"ar": "وجباتي"
-},
-{
-"en": "What you log shows here — one tap to add it again."
-},
-{
-"en": "Search millions of foods",
-"ar": "دوّر في ملايين الأكلات"
-},
-{
-"en": "Fast photo recognition is ready"
-},
-{
-"en": "Faster photos (≈200 MB)",
-"ar": "صور أسرع (حوالي 200 ميجا)"
-},
-{
-"en": "What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful"
-},
-{
-"en": "Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈200 MB, once) and a photo is read in a few seconds."
-},
-{
-"en": "Get it",
-"ar": "نزّله"
-},
-{
-"en": "Or search foods, brands or a barcode…"
-},
-{
-"en": "label may be wrong",
-"ar": "الملصق ممكن يكون غلط"
-},
-{
-"en": "Check the amounts — change the grams if needed, then save."
-},
-{
-"en": "📏 Measured against your card"
-},
-{
-"en": "The AI is double-checking the photo — you can save now."
-},
-{
-"en": "The AI sees: ",
-"ar": "الذكاء الاصطناعي شايف: "
-},
-{
-"en": "Use this",
-"ar": "استخدم ده"
-},
-{
-"en": "Keep mine",
-"ar": "خلّي اختياري"
-},
-{
-"en": "how sure",
-"ar": "متأكد قد إيه"
-},
-{
-"en": "easy to miss",
-"ar": "سهل يتنسي"
-},
-{
-"en": "as you corrected it",
-"ar": "زي ما صحّحته"
-},
-{
-"en": "check the portion",
-"ar": "راجع الكمية"
-},
-{
-"en": "looked closer",
-"ar": "اتبص عليها أقرب"
-},
-{
-"en": "calories as printed in the photo"
-},
-{
-"en": "Removed from favorites",
-"ar": "اتشالت من المفضلة"
-},
-{
-"en": "Favorite",
-"ar": "مفضلة"
-},
-{
-"en": "Not right? Change it",
-"ar": "مش مظبوط؟ غيّره"
-},
-{
-"en": "Is it:",
-"ar": "قصدك:"
-},
-{
-"en": "something else…",
-"ar": "حاجة تانية…"
-},
-{
-"en": "as written",
-"ar": "زي ما كتبت"
-},
-{
-"en": "as seen",
-"ar": "زي الصورة"
-},
-{
-"en": "Write it as it is, e.g. homemade chicken pizza"
-},
-{
-"en": "Estimating…",
-"ar": "بقدّر…"
-},
-{
-"en": "Search databases",
-"ar": "دوّر في القواعد"
-},
-{
-"en": "Change something: “remove the cola”, “rice 200 g”…"
-},
-{
-"en": "Your coach this week",
-"ar": "مدربك الأسبوع ده"
-},
-{
-"en": "Go back to the formula"
-},
-{
-"en": "Lose weight",
-"ar": "أخسّ"
-},
-{
-"en": "Keep my weight",
-"ar": "أحافظ على وزني"
-},
-{
-"en": "Gain muscle",
-"ar": "أبني عضل"
-},
-{
-"en": "My plan",
-"ar": "خطتي"
-},
-{
-"en": "kcal a day",
-"ar": "سعرة في اليوم"
-},
-{
-"en": "Change my plan",
-"ar": "عدّل خطتي"
-},
-{
-"en": "Workouts and steps",
-"ar": "التمارين والخطوات"
-},
-{
-"en": "Your plan",
-"ar": "خطتك"
-},
-{
-"en": "Your daily calories and protein are worked out by the Mifflin-St Jeor formula — the one dietitians use. Everything stays on your phone."
-},
-{
-"en": "Male",
-"ar": "ذكر"
-},
-{
-"en": "Female",
-"ar": "أنثى"
-},
-{
-"en": "Age",
-"ar": "السن"
-},
-{
-"en": "Height (cm)",
-"ar": "الطول (سم)"
-},
-{
-"en": "Weight (kg)",
-"ar": "الوزن (كجم)"
-},
-{
-"en": "How active are you?",
-"ar": "نشاطك قد إيه؟"
-},
-{
-"en": "Desk, little walking",
-"ar": "مكتب، مشي قليل"
-},
-{
-"en": "Moderate",
-"ar": "متوسط"
-},
-{
-"en": "Very active",
-"ar": "نشيط جداً"
-},
-{
-"en": "Goal weight (kg)",
-"ar": "الوزن المطلوب (كجم)"
-},
-{
-"en": "Pace (kg a week)",
-"ar": "السرعة (كجم في الأسبوع)"
-},
-{
-"en": "Eating style",
-"ar": "نظام الأكل"
-},
-{
-"en": "Pregnant or breastfeeding",
-"ar": "حامل أو بترضّعي"
-},
-{
-"en": "goal in",
-"ar": "توصل للهدف في"
-},
-{
-"en": "Save my plan",
-"ar": "احفظ خطتي"
-},
-{
-"en": "Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”."
-},
-{
-"en": "Photos, barcodes and your voice — the calories are worked out for you"
-},
-{
-"en": "A daily target made for your body and goal"
-},
-{
-"en": "Everything stays on your phone"
-},
-{
-"en": "Get started",
-"ar": "ابدأ"
-},
-{
-"en": "Takes under a minute · you can change it later in Me"
-},
-{
-"en": "Your plan is ready",
-"ar": "خطتك جاهزة"
-},
-{
-"en": "Your daily target",
-"ar": "هدفك اليومي"
-},
-{
-"en": "calories a day",
-"ar": "سعرة في اليوم"
-},
-{
-"en": "Suggestions, food search, typed meals and photos use this country's dishes first."
-},
-{
-"en": "Fibre",
-"ar": "ألياف"
-},
-{
-"en": "Saturated fat",
-"ar": "دهون مشبعة"
-},
-{
-"en": "Salt",
-"ar": "ملح"
-},
-{
-"en": "logged at ",
-"ar": "اتسجلت "
-},
-{
-"en": "Edit this food",
-"ar": "عدّل الأكلة دي"
-},
-{
-"en": "Edit food",
-"ar": "عدّل الأكل"
-},
-{
-"en": "Amount (g)",
-"ar": "الكمية (جم)"
-},
-{
-"en": "Protein g",
-"ar": "بروتين جم"
-},
-{
-"en": "Carbs g",
-"ar": "كربوهيدرات جم"
-},
-{
-"en": "Fat g",
-"ar": "دهون جم"
-},
-{
-"en": "Fibre g",
-"ar": "ألياف جم"
-},
-{
-"en": "Changing the amount changes the numbers with it. You can also type the numbers from the label."
-},
-{
-"en": "g carbs",
-"ar": "جم كربوهيدرات"
-},
-{
-"en": "Copy to another day",
-"ar": "انسخ ليوم تاني"
-},
-{
-"en": "Suggested",
-"ar": "مقترح"
-},
-{
-"en": "I ate this",
-"ar": "أكلت ده"
-},
-{
-"en": "End fast",
-"ar": "خلّص الصيام"
-},
-{
-"en": "Copied to today",
-"ar": "اتنسخ للنهارده"
-},
-{
-"en": "Easy start",
-"ar": "بداية سهلة"
-},
-{
-"en": "Gentle",
-"ar": "خفيف"
-},
-{
-"en": "The classic",
-"ar": "الأشهر"
-},
-{
-"en": "Stronger",
-"ar": "أقوى"
-},
-{
-"en": "Warrior",
-"ar": "المحارب"
-},
-{
-"en": "One meal a day",
-"ar": "وجبة واحدة في اليوم"
-},
-{
-"en": "Long fast — check with a doctor"
-},
-{
-"en": "Done! 🎉",
-"ar": "خلصت!"
-},
-{
-"en": "Fasting for",
-"ar": "صايم بقالك"
-},
-{
-"en": "Not fasting",
-"ar": "مش صايم"
-},
-{
-"en": "Pick a plan below to start"
-},
-{
-"en": "What happens in your body"
-},
-{
-"en": "kcal over",
-"ar": "سعرة زيادة"
-},
-{
-"en": "kcal left",
-"ar": "سعرة فاضلة"
-},
-{
-"en": "Meals",
-"ar": "الوجبات"
-},
-{
-"en": "Sleep",
-"ar": "النوم"
-},
-{
-"en": "Activity",
-"ar": "النشاط"
-},
-{
-"en": "Connect a watch in Me"
-},
-{
-"en": "Copy today's food to another day"
-},
-{
-"en": "Copy this day's food to another day"
-},
-{
-"en": "Over today",
-"ar": "زيادة النهارده"
-},
-{
-"en": "Left today",
-"ar": "الفاضل النهارده"
-},
-{
-"en": "Eaten",
-"ar": "أكلت"
-},
-{
-"en": "Burned",
-"ar": "حرقت"
-},
-{
-"en": "Tap to add",
-"ar": "اضغط وضيف"
-},
-{
-"en": "Tap for a glass",
-"ar": "اضغط لكوب"
-},
-{
-"en": "Exercise",
-"ar": "الرياضة"
-},
-{
-"en": "Egyptian",
-"ar": "مصري"
-},
-{
-"en": "Snack",
-"ar": "سناك"
-},
-{
-"en": "High protein",
-"ar": "بروتين عالي"
-},
-{
-"en": "Low carb",
-"ar": "كارب قليل"
-},
-{
-"en": "Vegetarian",
-"ar": "نباتي"
-},
-{
-"en": "Couldn't make a recipe from that — try listing a few ingredients"
-},
-{
-"en": "Couldn't make a recipe",
-"ar": "مقدرتش أعمل وصفة"
-},
-{
-"en": "one serving",
-"ar": "حصة واحدة"
-},
-{
-"en": "a serving",
-"ar": "للفرد"
-},
-{
-"en": "not counted",
-"ar": "مش محسوب"
-},
-{
-"en": "Logged one serving",
-"ar": "اتسجلت حصة"
-},
-{
-"en": "I ate one serving",
-"ar": "أكلت حصة"
-},
-{
-"en": "Plan my week + shopping list"
-},
-{
-"en": "What's in your fridge? AI makes a recipe"
-},
-{
-"en": "No recipe matches",
-"ar": "مفيش وصفة مطابقة"
-},
-{
-"en": "Rest",
-"ar": "راحة"
-},
-{
-"en": "Done — next",
-"ar": "خلصت — اللي بعده"
-},
-{
-"en": "Log an activity",
-"ar": "سجّل نشاط"
-},
-{
-"en": "walking, football, swimming…",
-"ar": "مشي، كورة، سباحة…"
-},
-{
-"en": "log it",
-"ar": "سجّل"
-},
-{
-"en": "Not in the list yet — try a simpler name"
-},
-{
-"en": "Guided workouts — the timer walks you through"
-},
-{
-"en": "Couldn't make a plan — try again"
-},
-{
-"en": "Couldn't make a plan",
-"ar": "مقدرتش أعمل خطة"
-},
-{
-"en": "Make me a weekly plan"
-},
-{
-"en": "Today's weight (kg)",
-"ar": "وزن النهارده (كجم)"
-},
-{
-"en": "The blue line is the 7-entry average — daily weight jumps with water and salt; the average is the truth."
-},
-{
-"en": "More: week, measurements, photos, challenges"
-},
-{
-"en": "Your week report — what went well, what to change — is in Pro."
-},
-{
-"en": "day streak",
-"ar": "يوم ورا بعض"
-},
-{
-"en": "avg kcal (7 d)",
-"ar": "متوسط السعرات"
-},
-{
-"en": "kg this week",
-"ar": "كجم الأسبوع ده"
-},
-{
-"en": "Last 7 days",
-"ar": "آخر 7 أيام"
-},
-{
-"en": "on target",
-"ar": "في الهدف"
-},
-{
-"en": "Copy the whole day to…"
-},
-{
-"en": "Each meal goes into the same meal on that day, added to what is already there."
-},
-{
-"en": "Not enough space for more photos — delete an old one."
-},
-{
-"en": "Body measurements (cm)",
-"ar": "قياسات الجسم (سم)"
-},
-{
-"en": "Save today's measurements",
-"ar": "احفظ قياسات النهارده"
-},
-{
-"en": "Progress photos",
-"ar": "صور التقدم"
-},
-{
-"en": "Photos stay on this phone. Add one now and one in a few weeks to compare."
-},
-{
-"en": "Delete the latest photo",
-"ar": "امسح آخر صورة"
-},
-{
-"en": "More calories on some days"
-},
-{
-"en": "Pick days to eat 300 kcal more (weekends, family dinners). The other days give a little back, so your week — and your weight plan — stays the same."
-},
-{
-"en": "Export my food diary (CSV for Excel)"
-},
-{
-"en": "Vitamins & minerals",
-"ar": "الفيتامينات والمعادن"
-},
-{
-"en": "all good so far",
-"ar": "كويسة لحد دلوقتي"
-},
-{
-"en": "Good sources: ",
-"ar": "مصادر كويسة: "
-},
-{
-"en": "Challenges",
-"ar": "التحديات"
-},
-{
-"en": "Checked from your diary each day — nothing to tick."
-},
-{
-"en": "Baladi bread|whole wheat pita|aish baladi"
-},
-{
-"en": "White pita bread|shami bread|pita",
-"ar": "عيش شامي|عيش أبيض|خبز شامي"
-},
-{
-"en": "White toast bread|white bread|toast",
-"ar": "توست أبيض|عيش توست|توست"
-},
-{
-"en": "Brown toast bread|whole wheat bread|brown bread"
-},
-{
-"en": "Fino bread roll|baguette",
-"ar": "عيش فينو|فينو|باجيت"
-},
-{
-"en": "White rice (cooked)|rice",
-"ar": "رز أبيض|رز|أرز"
-},
-{
-"en": "Rice with vermicelli (cooked)",
-"ar": "رز بالشعرية|رز بشعرية"
-},
-{
-"en": "Brown rice (cooked)",
-"ar": "رز بني"
-},
-{
-"en": "Pasta (cooked)|macaroni|spaghetti",
-"ar": "مكرونة|مكرونه|اسباجتي|باستا"
-},
-{
-"en": "Oats (dry)|oatmeal|rolled oats",
-"ar": "شوفان"
-},
-{
-"en": "Cornflakes|breakfast cereal",
-"ar": "كورن فليكس|حبوب إفطار"
-},
-{
-"en": "Freekeh (cooked)",
-"ar": "فريك"
-},
-{
-"en": "Bulgur (cooked)|burghul",
-"ar": "برغل"
-},
-{
-"en": "Rice (uncooked)",
-"ar": "رز ني|أرز غير مطبوخ"
-},
-{
-"en": "Pasta (uncooked)",
-"ar": "مكرونة ني"
-},
-{
-"en": "Potato (boiled)|potatoes",
-"ar": "بطاطس مسلوقة|بطاطس|بطاطا"
-},
-{
-"en": "French fries|chips|fried potatoes",
-"ar": "بطاطس محمرة|بطاطس مقلية|فرايز"
-},
-{
-"en": "Sweet potato (baked)",
-"ar": "بطاطا مشوية|بطاطا حلوة"
-},
-{
-"en": "Sweet corn|corn on the cob"
-},
-{
-"en": "Croissant",
-"ar": "كرواسون|كرواسان"
-},
-{
-"en": "Feteer meshaltet",
-"ar": "فطير مشلتت|فطير"
-},
-{
-"en": "Ful medames|fava beans|foul",
-"ar": "فول|فول مدمس|فول بالزيت"
-},
-{
-"en": "Taameya|falafel",
-"ar": "طعمية|فلافل"
-},
-{
-"en": "Koshari",
-"ar": "كشري|كُشري"
-},
-{
-"en": "Molokhia (cooked)",
-"ar": "ملوخية"
-},
-{
-"en": "Lentil soup",
-"ar": "شوربة عدس|عدس"
-},
-{
-"en": "Mahshi (stuffed vegetables)|stuffed vine leaves|stuffed peppers"
-},
-{
-"en": "Macarona bechamel|pasta bechamel",
-"ar": "مكرونة بشاميل|بشاميل"
-},
-{
-"en": "Okra stew with meat|bamya",
-"ar": "بامية"
-},
-{
-"en": "Green bean stew with meat"
-},
-{
-"en": "Shakshuka|eggs in tomato",
-"ar": "شكشوكة|بيض بالطماطم"
-},
-{
-"en": "Kunafa",
-"ar": "كنافة"
-},
-{
-"en": "Hummus",
-"ar": "حمص|حمص بالطحينة"
-},
-{
-"en": "Baba ghanoush|eggplant dip",
-"ar": "بابا غنوج|باباغنوج"
-},
-{
-"en": "Fried eggplant",
-"ar": "بتنجان مقلي|باذنجان مقلي"
-},
-{
-"en": "Chicken shawarma sandwich",
-"ar": "ساندوتش شاورما|شاورما"
-},
-{
-"en": "Ful sandwich",
-"ar": "ساندوتش فول"
-},
-{
-"en": "Taameya sandwich|falafel sandwich",
-"ar": "ساندوتش طعمية|ساندوتش فلافل"
-},
-{
-"en": "Liver sandwich (kebda)",
-"ar": "ساندوتش كبدة|كبدة"
-},
-{
-"en": "Beef burger (with bun)|hamburger",
-"ar": "برجر|بيرجر|هامبورجر"
-},
-{
-"en": "Pizza|margherita pizza",
-"ar": "بيتزا"
-},
-{
-"en": "Egg|boiled egg|eggs",
-"ar": "بيض|بيضة|بيض مسلوق"
-},
-{
-"en": "Fried egg|eggs fried|omelette",
-"ar": "بيض مقلي|بيض أومليت|أومليت|عجة"
-},
-{
-"en": "Fried egg on toast|fried eggs on toast|eggs on toast|egg on toast|egg toast|fried eggs on bread"
-},
-{
-"en": "Egg white",
-"ar": "بياض بيض"
-},
-{
-"en": "Chicken breast (grilled)|grilled chicken|chicken",
-"ar": "صدور فراخ|صدر فراخ|فراخ مشوية|دجاج مشوي|فراخ"
-},
-{
-"en": "Chicken thigh (with skin)|chicken leg"
-},
-{
-"en": "Chicken breast (raw)",
-"ar": "صدور فراخ ني"
-},
-{
-"en": "Beef (lean, cooked)|steak|meat",
-"ar": "لحمة|لحم|ستيك|لحم بقري"
-},
-{
-"en": "Kofta (grilled)|minced beef",
-"ar": "كفتة|كفته|لحمة مفرومة"
-},
-{
-"en": "Minced beef (raw)",
-"ar": "لحمة مفرومة ني"
-},
-{
-"en": "Beef liver (cooked)",
-"ar": "كبدة بلدي|كبد"
-},
-{
-"en": "Tuna in oil (drained)|tuna",
-"ar": "تونة|تونة بالزيت"
-},
-{
-"en": "Tuna in water",
-"ar": "تونة مية|تونة في الماء"
-},
-{
-"en": "Grilled fish|tilapia|fish fillet",
-"ar": "سمك مشوي|سمك|بلطي|فيليه"
-},
-{
-"en": "Fried fish",
-"ar": "سمك مقلي"
-},
-{
-"en": "Fish fillet (raw)",
-"ar": "سمك ني"
-},
-{
-"en": "Salmon (cooked)",
-"ar": "سلمون|سالمون"
-},
-{
-"en": "Shrimp (cooked)|prawns",
-"ar": "جمبري"
-},
-{
-"en": "Lentils (dry)",
-"ar": "عدس ني|عدس جاف"
-},
-{
-"en": "Chickpeas (cooked)",
-"ar": "حمص مسلوق|حمص الشام"
-},
-{
-"en": "Whey protein powder",
-"ar": "واي بروتين|بروتين"
-},
-{
-"en": "White cheese (domiati / feta)"
-},
-{
-"en": "Roumi cheese",
-"ar": "جبنة رومي|رومي"
-},
-{
-"en": "Cottage cheese (low fat)|areesh cheese"
-},
-{
-"en": "Processed cheese triangle",
-"ar": "جبنة مثلثات|جبنة نستو"
-},
-{
-"en": "Mozzarella",
-"ar": "موتزاريلا|موزاريلا"
-},
-{
-"en": "Labneh",
-"ar": "لبنة"
-},
-{
-"en": "Greek yogurt (plain, low fat)"
-},
-{
-"en": "Yogurt (plain)|zabadi",
-"ar": "زبادي|زبادى|رايب"
-},
-{
-"en": "Milk (full fat)",
-"ar": "لبن|حليب|لبن كامل الدسم"
-},
-{
-"en": "Milk (skimmed)",
-"ar": "لبن خالي الدسم|حليب خالي الدسم"
-},
-{
-"en": "Olive oil|oil|vegetable oil",
-"ar": "زيت زيتون|زيت"
-},
-{
-"en": "Butter",
-"ar": "زبدة"
-},
-{
-"en": "Ghee|samna",
-"ar": "سمنة|سمن"
-},
-{
-"en": "Tahini",
-"ar": "طحينة"
-},
-{
-"en": "Peanut butter",
-"ar": "زبدة فول سوداني"
-},
-{
-"en": "Almonds",
-"ar": "لوز"
-},
-{
-"en": "Peanuts",
-"ar": "فول سوداني"
-},
-{
-"en": "Walnuts",
-"ar": "عين جمل"
-},
-{
-"en": "Mixed nuts",
-"ar": "مكسرات"
-},
-{
-"en": "Avocado",
-"ar": "أفوكادو|افوكادو"
-},
-{
-"en": "Apple",
-"ar": "تفاح|تفاحة"
-},
-{
-"en": "Banana",
-"ar": "موز|موزة"
-},
-{
-"en": "Mango",
-"ar": "مانجا|مانجو|مانجة"
-},
-{
-"en": "Guava",
-"ar": "جوافة"
-},
-{
-"en": "Grapes",
-"ar": "عنب"
-},
-{
-"en": "Watermelon",
-"ar": "بطيخ"
-},
-{
-"en": "Strawberries",
-"ar": "فراولة"
-},
-{
-"en": "Pomegranate",
-"ar": "رمان|رمانة"
-},
-{
-"en": "Figs (fresh)",
-"ar": "تين"
-},
-{
-"en": "Pear",
-"ar": "كمثرى"
-},
-{
-"en": "Peach",
-"ar": "خوخ"
-},
-{
-"en": "Kiwi",
-"ar": "كيوي"
-},
-{
-"en": "Green salad (no oil)|tomato cucumber salad"
-},
-{
-"en": "Tomato",
-"ar": "طماطم|قوطة|طماطماية"
-},
-{
-"en": "Cucumber",
-"ar": "خيار|خياراية"
-},
-{
-"en": "Lettuce",
-"ar": "خس"
-},
-{
-"en": "Carrot",
-"ar": "جزر"
-},
-{
-"en": "Onion",
-"ar": "بصل|بصلة"
-},
-{
-"en": "Bell pepper",
-"ar": "فلفل رومي|فلفل ألوان|فلفل"
-},
-{
-"en": "Zucchini",
-"ar": "كوسة"
-},
-{
-"en": "Spinach",
-"ar": "سبانخ"
-},
-{
-"en": "Broccoli",
-"ar": "بروكلي|بروكلى"
-},
-{
-"en": "Peas",
-"ar": "بسلة|بازلاء"
-},
-{
-"en": "Jute leaves (raw)",
-"ar": "ملوخية خضرا ني"
-},
-{
-"en": "Garlic",
-"ar": "توم|ثوم"
-},
-{
-"en": "Tomato paste",
-"ar": "صلصة|صلصة طماطم"
-},
-{
-"en": "Lemon juice",
-"ar": "ليمون|عصير ليمون"
-},
-{
-"en": "Honey",
-"ar": "عسل|عسل نحل"
-},
-{
-"en": "Jam",
-"ar": "مربى|مربة"
-},
-{
-"en": "Milk chocolate",
-"ar": "شوكولاتة|شيكولاتة|شوكولاته"
-},
-{
-"en": "Dark chocolate",
-"ar": "شوكولاتة داكنة|دارك شوكليت"
-},
-{
-"en": "Biscuits|cookies",
-"ar": "بسكويت|كوكيز"
-},
-{
-"en": "Cake",
-"ar": "كيك|كيكة|جاتوه|تورتة"
-},
-{
-"en": "Chocolate sprinkles (choco rice)|chocolate sprinkles|choco rice|sprinkles"
-},
-{
-"en": "Cream filling (pastry cream)|pastry cream|cream filling|custard filling"
-},
-{
-"en": "Chocolate log (roll cake)",
-"ar": "رول شوكولاتة|بوش دي نويل|سويس رول"
-},
-{
-"en": "Ice cream",
-"ar": "آيس كريم|ايس كريم|جيلاتي"
-},
-{
-"en": "Potato chips (crisps)",
-"ar": "شيبسي|شيبس"
-},
-{
-"en": "Tea (no sugar)",
-"ar": "شاي|شاي من غير سكر"
-},
-{
-"en": "Tea with milk (no sugar)"
-},
-{
-"en": "Coffee (black)",
-"ar": "قهوة|قهوة سادة|اسبريسو|إسبريسو"
-},
-{
-"en": "Turkish coffee (medium sugar)",
-"ar": "قهوة تركي|قهوة مظبوط"
-},
-{
-"en": "Latte (whole milk)",
-"ar": "لاتيه|قهوة بلبن"
-},
-{
-"en": "Cappuccino",
-"ar": "كابتشينو|كابوتشينو"
-},
-{
-"en": "Cola|soft drink|soda",
-"ar": "كولا|بيبسي|كوكاكولا|حاجة ساقعة|سفن|مياه غازية"
-},
-{
-"en": "Orange juice",
-"ar": "عصير برتقال"
-},
-{
-"en": "Sugarcane juice",
-"ar": "عصير قصب|قصب"
-},
-{
-"en": "Hibiscus (karkadeh), sweetened",
-"ar": "كركديه"
-},
-{
-"en": "Walking (5 km/h)",
-"ar": "مشي (5 كم/ساعة)"
-},
-{
-"en": "Brisk walking (6 km/h)",
-"ar": "مشي سريع (6 كم/ساعة)"
-},
-{
-"en": "Running (8 km/h)",
-"ar": "جري (8 كم/ساعة)"
-},
-{
-"en": "Running (10 km/h)",
-"ar": "جري (10 كم/ساعة)"
-},
-{
-"en": "Cycling (moderate)",
-"ar": "عجلة (متوسط)"
-},
-{
-"en": "Stationary bike",
-"ar": "عجلة ثابتة"
-},
-{
-"en": "Swimming (moderate)",
-"ar": "سباحة (متوسط)"
-},
-{
-"en": "Jump rope",
-"ar": "نط الحبل"
-},
-{
-"en": "Stair climbing",
-"ar": "طلوع السلم"
-},
-{
-"en": "Elliptical",
-"ar": "إليبتكال"
-},
-{
-"en": "Rowing machine",
-"ar": "تجديف"
-},
-{
-"en": "HIIT / circuit",
-"ar": "تمارين هيت|دائري"
-},
-{
-"en": "Football",
-"ar": "كورة|كرة قدم"
-},
-{
-"en": "Padel / tennis (doubles)",
-"ar": "بادل|تنس"
-},
-{
-"en": "Basketball",
-"ar": "باسكت|كرة سلة"
-},
-{
-"en": "Weight training (moderate)",
-"ar": "حديد|تمارين أوزان"
-},
-{
-"en": "Weight training (hard)",
-"ar": "حديد تقيل"
-},
-{
-"en": "Bodyweight training",
-"ar": "تمارين وزن الجسم"
-},
-{
-"en": "Yoga",
-"ar": "يوجا"
-},
-{
-"en": "Pilates",
-"ar": "بيلاتس"
-},
-{
-"en": "Stretching",
-"ar": "إطالة|استرتش"
-},
-{
-"en": "Dancing",
-"ar": "رقص"
-},
-{
-"en": "Housework",
-"ar": "شغل البيت"
-},
-{
-"en": "Squats",
-"ar": "سكوات|قرفصاء"
-},
-{
-"en": "Push-ups",
-"ar": "ضغط|بوش أب"
-},
-{
-"en": "Lunges",
-"ar": "طعنات|لانجز"
-},
-{
-"en": "Plank",
-"ar": "بلانك"
-},
-{
-"en": "Glute bridge",
-"ar": "جلوت بريدج|رفع الحوض"
-},
-{
-"en": "Superman",
-"ar": "سوبرمان"
-},
-{
-"en": "Dumbbell / bottle row",
-"ar": "سحب بالدمبل"
-},
-{
-"en": "Shoulder press",
-"ar": "ضغط أكتاف"
-},
-{
-"en": "Deadlift",
-"ar": "ديدلفت|رفعة ميتة"
-},
-{
-"en": "Bench press",
-"ar": "بنش بريس|بنش"
-},
-{
-"en": "Pull-ups / lat pulldown",
-"ar": "عقلة|سحب عالي"
-},
-{
-"en": "Jumping jacks",
-"ar": "جامبنج جاك"
-},
-{
-"en": "Mountain climbers",
-"ar": "ماونتن كلايمر"
-},
-{
-"en": "Crunches",
-"ar": "بطن|كرانش"
-},
-{
-"en": "Your BMI is already under 18.5 — losing more isn't healthy, so the plan keeps your weight."
-},
-{
-"en": "The pace was capped at a quarter of your daily energy — faster loss mostly costs muscle."
-},
-{
-"en": "Home full body — beginner"
-},
-{
-"en": "Fat-burn walking",
-"ar": "مشي لحرق الدهون"
-},
-{
-"en": "Quick HIIT — 8 moves"
-},
-{
-"en": "Gym strength — 3 days"
-},
-{
-"en": "Core & back (desk workers)"
-},
-{
-"en": "Ful with olive oil, salad and baladi bread"
-},
-{
-"en": "Grilled chicken, rice and salad"
-},
-{
-"en": "Greek yogurt, oats and fruit"
-},
-{
-"en": "Shakshuka",
-"ar": "شكشوكة"
-},
-{
-"en": "Grilled fish with sweet potato"
-},
-{
-"en": "Hummus plate with vegetables",
-"ar": "طبق حمص بالخضار"
-},
-{
-"en": "Chicken shawarma bowl (home)",
-"ar": "بول شاورما فراخ (في البيت)"
-},
-{
-"en": "Kofta with salad",
-"ar": "كفتة مع سلطة"
-},
-{
-"en": "Oat banana pancakes",
-"ar": "بان كيك شوفان وموز"
-},
-{
-"en": "Protein smoothie",
-"ar": "سموذي بروتين"
-},
-{
-"en": "Water is under half your goal — drink two glasses now."
-},
-{
-"en": "Fibre is low — ful, lentils, vegetables or oats help."
-},
-{
-"en": "¼ cup",
-"ar": "ربع كوب"
-},
-{
-"en": "½ cup",
-"ar": "نصف كوب"
-},
-{
-"en": "1 cup",
-"ar": "كوب"
-},
-{
-"en": "a pinch",
-"ar": "رشة"
-},
-{
-"en": "1 tbsp",
-"ar": "ملعقة"
-},
-{
-"en": "2 tbsp",
-"ar": "ملعقتان"
-},
-{
-"en": "a handful",
-"ar": "حفنة"
-},
-{
-"en": "2 handfuls",
-"ar": "حفنتان"
-},
-{
-"en": "a little",
-"ar": "قليل"
-},
-{
-"en": "¼ plate",
-"ar": "ربع طبق"
-},
-{
-"en": "½ plate",
-"ar": "نصف طبق"
-},
-{
-"en": "¾ plate",
-"ar": "ثلاثة أرباع"
-},
-{
-"en": "full plate",
-"ar": "طبق كامل"
-},
-{
-"en": "1 tsp",
-"ar": "ملعقة صغيرة"
-},
-{
-"en": "4 tbsp",
-"ar": "4 ملاعق"
-},
-{
-"en": "Vitamin C",
-"ar": "فيتامين C"
-},
-{
-"en": "Magnesium",
-"ar": "المغنيسيوم"
-},
-{
-"en": "Vitamin A",
-"ar": "فيتامين A"
-},
-{
-"en": "Suhoor",
-"ar": "سحور"
-},
-{
-"en": "After Taraweeh",
-"ar": "بعد التراويح"
-},
-{
-"en": "Today's score",
-"ar": "درجة النهارده"
-},
-{
-"en": "so far",
-"ar": "لحد دلوقتي"
-},
-{
-"en": "Sat. fat",
-"ar": "دهون مشبعة"
-},
-{
-"en": "No sugar / salt data for today's foods — packaged products (barcode or search) carry them."
-},
-{
-"en": "Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call."
-},
-{
-"en": "From Family health. Not medical advice — your doctor sets your insulin."
-},
-{
-"en": "Fill in the name and the numbers from the label"
-},
-{
-"en": "My own food (from its label)"
-},
-{
-"en": "per 100 g",
-"ar": "لكل ١٠٠ جم"
-},
-{
-"en": "per serving",
-"ar": "للحصة"
-},
-{
-"en": "serving g",
-"ar": "الحصة جم"
-},
-{
-"en": "sat. fat",
-"ar": "مشبعة"
-},
-{
-"en": "Save and add",
-"ar": "احفظ وضيف"
-},
-{
-"en": "Favorites:",
-"ar": "المفضلة:"
-},
-{
-"en": "Recent:",
-"ar": "الأخيرة:"
-},
-{
-"en": "Same as yesterday",
-"ar": "زي امبارح"
-},
-{
-"en": "Quick add kcal",
-"ar": "ضيف سعرات بسرعة"
-},
-{
-"en": "My own food",
-"ar": "أكلي الخاص"
-},
-{
-"en": "Save these as “my meal”"
-},
-{
-"en": "e.g. My usual breakfast",
-"ar": "مثلاً فطاري العادي"
-},
-{
-"en": "Saved — one tap next time"
-},
-{
-"en": "My week",
-"ar": "أسبوعي"
-},
-{
-"en": "Your week",
-"ar": "أسبوعك"
-},
-{
-"en": "average score",
-"ar": "متوسط الدرجة"
-},
-{
-"en": "Body fat (tape measure)",
-"ar": "نسبة الدهون (بالمازورة)"
-},
-{
-"en": "US Navy method: waist at the navel (women: narrowest), neck below the Adam's apple — ±3 %. The trend matters more than one number."
-},
-{
-"en": "Drink a glass of water"
-},
-{
-"en": "Reminders on: meals and water"
-},
-{
-"en": "Reminders off",
-"ar": "التنبيهات مقفولة"
-},
-{
-"en": "Food from",
-"ar": "أكل بلد"
-},
-{
-"en": "Ramadan mode (Suhoor, Iftar, fasting times)"
-},
-{
-"en": "Remind me to log meals and drink water"
-},
-{
-"en": "Stopped — what was downloaded is kept"
-},
-{
-"en": "The offline food pack is ready"
-},
-{
-"en": "Delete the offline food pack from this phone?"
-},
-{
-"en": "Offline food pack",
-"ar": "باقة الأكل بدون إنترنت"
-},
-{
-"en": "Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
-},
-{
-"en": "Get Egypt + most popular (~240,000, ~30 MB)"
-},
-{
-"en": "Get everything (1,000,000+)",
-"ar": "نزّل الكل (+مليون)"
-},
-{
-"en": "Photo recognition is ready — a food photo now takes about a second"
-},
-{
-"en": "Delete the photo recognition model from this phone?"
-},
-{
-"en": "Fast photo recognition",
-"ar": "التعرّف السريع على صور الأكل"
-},
-{
-"en": "Two picture models (~200 MB, once) that name the food in a photo in a few seconds — your country's dishes first — offline. They learn from the photo meals you save."
-},
-{
-"en": " MB",
-"ar": " ميجا"
-},
-{
-"en": "Get it (~100 MB)",
-"ar": "نزّل (~١٠٠ ميجا)"
-},
-{
-"en": "Health Sync is installed ✓"
-},
-{
-"en": "Install Health Sync (free trial, then a small one-time payment to its maker — not to us)."
-},
-{
-"en": "Open Health Sync",
-"ar": "افتح Health Sync"
-},
-{
-"en": "Get Health Sync",
-"ar": "نزّل Health Sync"
-},
-{
-"en": "In Health Sync: source = Huawei Health → sign in with your Huawei ID and allow it."
-},
-{
-"en": "Destination = Health Connect → allow steps, calories, distance, heart rate and exercise."
-},
-{
-"en": "Back here: “Connect my watch”, then Refresh. The first sync can take a few minutes."
-},
-{
-"en": "Huawei watch: Huawei Health doesn't share with Android's Health Connect by itself — the app Health Sync copies it across (once, then automatically)."
-},
-{
-"en": "Open Huawei Health (let it sync the watch first)"
-},
-{
-"en": "Huawei Health sent nothing — open Huawei Health once so the watch syncs, and check Attune is still allowed in Huawei Health → Me → Privacy → Data sharing."
-},
-{
-"en": "Huawei Health wasn't allowed — tap Connect again and allow steps, calories, distance and heart rate."
-},
-{
-"en": "Watch steps and calories work in the Android app."
-},
-{
-"en": "Huawei watch or band: connect Huawei Health directly — steps, calories, distance and heart rate, read only."
-},
-{
-"en": "Connect Huawei Health",
-"ar": "اربط Huawei Health"
-},
-{
-"en": "First install HMS Core (Huawei's services — free)"
-},
-{
-"en": "Connect your watch: steps, calories burned, workouts and heart rate go into your day automatically."
-},
-{
-"en": "Through Android's Health Connect — works with Samsung Health (Galaxy Watch), Fitbit / Pixel Watch, Garmin Connect, Mi Fitness, Huawei Health (through Health Sync) and others that share to it. Read only; nothing leaves the phone."
-},
-{
-"en": "Huawei watch?",
-"ar": "ساعة هواوي؟"
-},
-{
-"en": "This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it."
-},
-{
-"en": "Install Health Connect",
-"ar": "نزّل Health Connect"
-},
-{
-"en": "Connect my watch",
-"ar": "اربط ساعتي"
-},
-{
-"en": "Huawei Health, through Health Sync ✓"
-},
-{
-"en": "active kcal",
-"ar": "سعر نشاط"
-},
-{
-"en": "≈ worked out from your steps — your watch app didn't send its calories / distance. In Health Sync, switch on Calories and Distance too."
-},
-{
-"en": "Latest from the watch: ",
-"ar": "آخر حاجة وصلت من الساعة: "
-},
-{
-"en": " — open Huawei Health / Health Sync so it sends the newest steps"
-},
-{
-"en": "Workout",
-"ar": "تمرين"
-},
-{
-"en": "Burned calories count the watch or your logged workouts — whichever is more, never both."
-},
-{
-"en": "Nothing from the watch today yet — open its app once so it syncs."
-},
-{
-"en": "Matched to your watch",
-"ar": "متظبط على ساعتك"
-},
-{
-"en": " kcal / 1,000 steps",
-"ar": " سعرة / ١٠٠٠ خطوة"
-},
-{
-"en": " m a step",
-"ar": " م للخطوة"
-},
-{
-"en": "Match again",
-"ar": "ظبط تاني"
-},
-{
-"en": "Numbers lower than your watch? Match it"
-},
-{
-"en": "Look at your watch now and type what it shows — Attune will count like your watch from now on."
-},
-{
-"en": "kcal (Heat / Active)",
-"ar": "السعرات (Heat / نشاط)"
-},
-{
-"en": "Samsung Health → ☰ → Settings → Health Connect → allow all"
-},
-{
-"en": "Garmin Connect → More → Settings → Connected apps → Health Connect → on"
-},
-{
-"en": "Fitbit app → You → Settings → Health Connect → on (Pixel Watch: the same)"
-},
-{
-"en": "Polar Flow → Settings → General settings → Health Connect → on"
-},
-{
-"en": "Mi Fitness / Zepp → Profile → Health Connect (or Third-party access) → on"
-},
-{
-"en": "Automatic tracking",
-"ar": "تتبّع تلقائي"
-},
-{
-"en": "Connected ✓ — steps, calories burned, workouts and heart rate come into your day by themselves."
-},
-{
-"en": "Health Connect is Android's shared place for health data. Any watch app that writes to it reaches Attune. Read only; nothing leaves the phone."
-},
-{
-"en": "Connected ✓",
-"ar": "متوصل ✓"
-},
-{
-"en": "Not connected yet. Opening Huawei Health is not enough: Huawei keeps the watch's data to itself, so it needs one bridge, set up once."
-},
-{
-"en": "Connect Huawei Health (sign in with your Huawei ID)"
-},
-{
-"en": "1. In the watch's app: "
-},
-{
-"en": "2. Here: Connect, and allow steps, calories, exercise and heart rate."
-},
-{
-"en": "Connect",
-"ar": "اربط"
-},
-{
-"en": "Watches connect in the Android app."
-},
-{
-"en": " kg",
-"ar": " كجم"
-},
-{
-"en": "Vegetables",
-"ar": "خضار"
-},
-{
-"en": "Fruit",
-"ar": "فاكهة"
-},
-{
-"en": "Meat & fish",
-"ar": "لحوم وأسماك"
-},
-{
-"en": "Dairy & eggs",
-"ar": "ألبان وبيض"
-},
-{
-"en": "Bread, rice & grains",
-"ar": "عيش ورز وحبوب"
-},
-{
-"en": "Beans & lentils",
-"ar": "بقوليات"
-},
-{
-"en": "Oils & nuts",
-"ar": "زيوت ومكسرات"
 }
 ]

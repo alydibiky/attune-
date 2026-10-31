@@ -1,3 +1,5 @@
+IMPORTANT: Translate EVERY line yourself, by meaning, into the language named below. Do not use code, scripts, word-swapping or dictionaries to produce the translation. Never leave a line in English and never mix in another language (e.g. no Portuguese in Italian), except the brand names, codes and names the rules allow.
+
 You are translating the interface of Attune, a phone app, into Simplified Chinese (language code zh).
 
 # Translating Attune's interface — the brief every translator follows

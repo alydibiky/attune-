@@ -1,3 +1,5 @@
+IMPORTANT: Translate EVERY line yourself, by meaning, into the language named below. Do not use code, scripts, word-swapping or dictionaries to produce the translation. Never leave a line in English and never mix in another language (e.g. no Portuguese in Italian), except the brand names, codes and names the rules allow.
+
 You are translating the interface of Attune, a phone app, into Bengali (language code bn).
 
 # Translating Attune's interface — the brief every translator follows
@@ -153,6 +155,2638 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 
 ## Lines (bn-04)
 [
+{
+"en": "Boom",
+"ar": "الذراع"
+},
+{
+"en": "Storage",
+"ar": "التخزين"
+},
+{
+"en": "RAM",
+"ar": "الرام"
+},
+{
+"en": "Screen",
+"ar": "الشاشة"
+},
+{
+"en": "Fuel use",
+"ar": "استهلاك الوقود"
+},
+{
+"en": "Motor",
+"ar": "الموتور"
+},
+{
+"en": "Powertrain",
+"ar": "نوع المحرك"
+},
+{
+"en": "Drive",
+"ar": "الدفع"
+},
+{
+"en": "or ",
+"ar": "أو "
+},
+{
+"en": "### Key figures (copied exactly from the sources)\n"
+},
+{
+"en": "| Spec | Value |\n| --- | --- |\n"
+},
+{
+"en": "\n✓ = the same figure on 2 or more sites.\n"
+},
+{
+"en": "#### Table from ",
+"ar": "#### جدول من "
+},
+{
+"en": "### Head to head (figures copied from the sources)\n"
+},
+{
+"en": "Spec",
+"ar": "البند"
+},
+{
+"en": "Better",
+"ar": "الأفضل"
+},
+{
+"en": "\\n✓ = the same figure on 2 or more sites. \\\"Better\\\" is by the number only (lower for price, 0–100 and fuel use)."
+},
+{
+"en": "Ali",
+"ar": "علي"
+},
+{
+"en": "milk, bread and eggs",
+"ar": "لبن، عيش وبيض"
+},
+{
+"en": "Dad",
+"ar": "بابا"
+},
+{
+"en": "green beans",
+"ar": "فاصوليا خضراء"
+},
+{
+"en": "sweet potato",
+"ar": "بطاطا حلوة"
+},
+{
+"en": "baladi bread",
+"ar": "عيش بلدي"
+},
+{
+"en": "chicken breast",
+"ar": "صدور فراخ"
+},
+{
+"en": "chicken thighs",
+"ar": "وراك فراخ"
+},
+{
+"en": "beef cubes",
+"ar": "لحمة بقري"
+},
+{
+"en": "white fish fillet",
+"ar": "فيليه سمك"
+},
+{
+"en": "turkey breast",
+"ar": "صدر ديك رومي"
+},
+{
+"en": "sea bass",
+"ar": "قاروص"
+},
+{
+"en": "kidney bean",
+"ar": "فاصوليا حمراء"
+},
+{
+"en": "black-eyed bean",
+"ar": "لوبيا"
+},
+{
+"en": "white bean",
+"ar": "فاصوليا بيضا"
+},
+{
+"en": "cottage cheese",
+"ar": "جبنة قريش"
+},
+{
+"en": "brown pita",
+"ar": "عيش بيتا أسمر"
+},
+{
+"en": "brown toast",
+"ar": "توست أسمر"
+},
+{
+"en": "cucumber salad",
+"ar": "سلطة خيار"
+},
+{
+"en": "black pepper",
+"ar": "الفلفل الأسود"
+},
+{
+"en": "chili flakes",
+"ar": "الشطة"
+},
+{
+"en": "fresh herbs",
+"ar": "الأعشاب"
+},
+{
+"en": "brown rice",
+"ar": "أرز بني"
+},
+{
+"en": "minced beef",
+"ar": "لحمة مفرومة"
+},
+{
+"en": "a banana",
+"ar": "ومعاه موزة"
+},
+{
+"en": "a scoop of protein",
+"ar": "ومعاه سكوب بروتين"
+},
+{
+"en": "grilled chicken",
+"ar": "فراخ مشوية"
+},
+{
+"en": "tortilla wrap",
+"ar": "تورتيلا"
+},
+{
+"en": "lemon-garlic marinade",
+"ar": "بتتبيلة الليمون والثوم"
+},
+{
+"en": "cumin and coriander rub",
+"ar": "بتتبيلة الكمون والكزبرة"
+},
+{
+"en": "tahini-lemon sauce",
+"ar": "بصوص الطحينة والليمون"
+},
+{
+"en": "spiced yogurt marinade",
+"ar": "بتتبيلة الزبادي والتوابل"
+},
+{
+"en": "tomato and herb sauce",
+"ar": "بصوص الطماطم والأعشاب"
+},
+{
+"en": "chili and paprika rub",
+"ar": "بتتبيلة الشطة والبابريكا"
+},
+{
+"en": "lemon-cumin dressing",
+"ar": "صوص الليمون والكمون"
+},
+{
+"en": "tahini drizzle",
+"ar": "رشة طحينة"
+},
+{
+"en": "garlic and tomato",
+"ar": "الثوم والطماطم"
+},
+{
+"en": "mint yogurt",
+"ar": "زبادي بالنعناع"
+},
+{
+"en": "chili and lemon",
+"ar": "الشطة والليمون"
+},
+{
+"en": "parsley and olive oil",
+"ar": "البقدونس وزيت الزيتون"
+},
+{
+"en": "scrambled eggs",
+"ar": "بيض مخفوق"
+},
+{
+"en": "baked eggs in tomato sauce"
+},
+{
+"en": "fried eggs",
+"ar": "بيض مقلي"
+},
+{
+"en": "egg and vegetable scramble",
+"ar": "بيض مخلوط بالخضار"
+},
+{
+"en": "a bowl of oats",
+"ar": "طبق شوفان"
+},
+{
+"en": "tomato sauce",
+"ar": "صلصة الطماطم"
+},
+{
+"en": "garlic and olive oil",
+"ar": "الثوم وزيت الزيتون"
+},
+{
+"en": "creamy yogurt sauce",
+"ar": "صوص الزبادي"
+},
+{
+"en": "lemon-tahini dressing",
+"ar": "صوص الطحينة والليمون"
+},
+{
+"en": "spicy tomato sauce",
+"ar": "صلصة طماطم حارة"
+},
+{
+"en": "herb and lemon dressing",
+"ar": "صوص الأعشاب والليمون"
+},
+{
+"en": "Greek yogurt bowl",
+"ar": "بول زبادي يوناني"
+},
+{
+"en": "overnight oats",
+"ar": "شوفان بالليل"
+},
+{
+"en": "cottage cheese bowl",
+"ar": "بول جبنة قريش"
+},
+{
+"en": "chia pudding",
+"ar": "تشيا بودينج"
+},
+{
+"en": "garlic yogurt",
+"ar": "زبادي بالثوم"
+},
+{
+"en": "light mayo",
+"ar": "مايونيز"
+},
+{
+"en": "Koshari (home style)",
+"ar": "كشري بيتي"
+},
+{
+"en": "Lighter koshari",
+"ar": "كشري لايت"
+},
+{
+"en": "Molokhia with chicken and rice"
+},
+{
+"en": "Molokhia with rabbit",
+"ar": "ملوخية بالأرنب"
+},
+{
+"en": "Fatta with meat",
+"ar": "فتة باللحمة"
+},
+{
+"en": "Mixed mahshi (rice stuffed vegetables)"
+},
+{
+"en": "Stuffed cabbage leaves",
+"ar": "محشي كرنب"
+},
+{
+"en": "Stuffed vine leaves",
+"ar": "محشي ورق عنب"
+},
+{
+"en": "Okra stew with meat",
+"ar": "بامية باللحمة"
+},
+{
+"en": "Green beans with meat",
+"ar": "فاصوليا خضراء باللحمة"
+},
+{
+"en": "Peas and carrot stew with meat"
+},
+{
+"en": "Potato and meat tagen",
+"ar": "طاجن بطاطس باللحمة"
+},
+{
+"en": "Kofta and potato tagen",
+"ar": "طاجن كفتة بالبطاطس"
+},
+{
+"en": "Oven chicken with rice",
+"ar": "فراخ بالأرز في الفرن"
+},
+{
+"en": "Rice pudding",
+"ar": "أرز باللبن"
+},
+{
+"en": "Om Ali",
+"ar": "أم علي"
+},
+{
+"en": "Basbousa",
+"ar": "بسبوسة"
+},
+{
+"en": "Feteer with cheese",
+"ar": "فطير بالجبنة"
+},
+{
+"en": "Egg shakshuka with bread",
+"ar": "شكشوكة بالبيض"
+},
+{
+"en": "Ful medames bowl",
+"ar": "فول مدمس"
+},
+{
+"en": "Baked taameya plate",
+"ar": "طعمية مشوية"
+},
+{
+"en": "Hawawshi",
+"ar": "حواوشي"
+},
+{
+"en": "Alexandrian liver",
+"ar": "كبدة إسكندراني"
+},
+{
+"en": "Mesaka'a (eggplant stew)",
+"ar": "مسقعة"
+},
+{
+"en": "Egyptian lentil soup",
+"ar": "شوربة عدس"
+},
+{
+"en": "Freekeh with chicken",
+"ar": "فريك بالفراخ"
+},
+{
+"en": "Fish sayadeya",
+"ar": "سمك صيادية"
+},
+{
+"en": "Fried fish plate with salad"
+},
+{
+"en": "Grilled fish with vegetables",
+"ar": "سمك مشوي بالخضار"
+},
+{
+"en": "Shrimp tagen",
+"ar": "طاجن جمبري"
+},
+{
+"en": "Grilled kofta plate",
+"ar": "كفتة مشوية"
+},
+{
+"en": "Grilled chicken with rice and salad"
+},
+{
+"en": "Macarona béchamel",
+"ar": "مكرونة بالبشاميل"
+},
+{
+"en": "Roz me'ammar (baked creamy rice)"
+},
+{
+"en": "Baladi bread cheese and tomato"
+},
+{
+"en": "Eggs with basturma",
+"ar": "بيض بالبسطرمة"
+},
+{
+"en": "Fried eggs on bread",
+"ar": "بيض مقلي على عيش"
+},
+{
+"en": "Feteer with honey and nuts"
+},
+{
+"en": "Konafa with nuts",
+"ar": "كنافة بالمكسرات"
+},
+{
+"en": "Mahalabiya",
+"ar": "مهلبية"
+},
+{
+"en": "Karkadeh (hibiscus) drink",
+"ar": "كركديه"
+},
+{
+"en": "Maqluba (upside-down rice)",
+"ar": "مقلوبة"
+},
+{
+"en": "Mujadara",
+"ar": "مجدرة"
+},
+{
+"en": "Tabbouleh",
+"ar": "تبولة"
+},
+{
+"en": "Fattoush",
+"ar": "فتوش"
+},
+{
+"en": "Hummus plate",
+"ar": "حمص بالطحينة"
+},
+{
+"en": "Baba ghanoush",
+"ar": "بابا غنوج"
+},
+{
+"en": "Shish tawook",
+"ar": "شيش طاووق"
+},
+{
+"en": "Homemade chicken shawarma plate",
+"ar": "شاورما فراخ"
+},
+{
+"en": "Baked kibbeh",
+"ar": "كبة بالصينية"
+},
+{
+"en": "Zaatar manakish",
+"ar": "مناقيش زعتر"
+},
+{
+"en": "Lentil and spinach soup",
+"ar": "شوربة عدس بالسبانخ"
+},
+{
+"en": "Chicken kabsa",
+"ar": "كبسة دجاج"
+},
+{
+"en": "Lamb mandi",
+"ar": "مندي لحم"
+},
+{
+"en": "Chicken biryani",
+"ar": "برياني دجاج"
+},
+{
+"en": "Harees",
+"ar": "هريس"
+},
+{
+"en": "Luqaimat",
+"ar": "لقيمات"
+},
+{
+"en": "Oats with banana and nuts"
+},
+{
+"en": "Overnight oats",
+"ar": "شوفان منقوع"
+},
+{
+"en": "Protein pancakes",
+"ar": "بان كيك بروتين"
+},
+{
+"en": "Vegetable omelette",
+"ar": "أومليت بالخضار"
+},
+{
+"en": "Egg muffins",
+"ar": "مافن بيض"
+},
+{
+"en": "Yogurt parfait",
+"ar": "زبادي بالفاكهة والجرانولا"
+},
+{
+"en": "Chicken and rice meal prep"
+},
+{
+"en": "Grilled chicken salad",
+"ar": "سلطة فراخ مشوية"
+},
+{
+"en": "Tuna salad",
+"ar": "سلطة تونة"
+},
+{
+"en": "Greek salad",
+"ar": "سلطة يونانية"
+},
+{
+"en": "Baked salmon with vegetables",
+"ar": "سلمون مشوي بالخضار"
+},
+{
+"en": "Shrimp and vegetable stir-fry",
+"ar": "جمبري بالخضار"
+},
+{
+"en": "Chicken and vegetable soup",
+"ar": "شوربة فراخ بالخضار"
+},
+{
+"en": "Vegetable soup",
+"ar": "شوربة خضار"
+},
+{
+"en": "Pasta with tomato sauce",
+"ar": "مكرونة بصلصة الطماطم"
+},
+{
+"en": "Creamy chicken pasta",
+"ar": "مكرونة بالفراخ والكريمة"
+},
+{
+"en": "Homemade beef burger",
+"ar": "برجر بيتي"
+},
+{
+"en": "Chicken wrap",
+"ar": "راب فراخ"
+},
+{
+"en": "Tuna sandwich",
+"ar": "ساندوتش تونة"
+},
+{
+"en": "Hummus and vegetable sticks",
+"ar": "حمص مع خضار"
+},
+{
+"en": "Apple with peanut butter",
+"ar": "تفاح بزبدة الفول السوداني"
+},
+{
+"en": "Banana milk smoothie",
+"ar": "سموذي موز باللبن"
+},
+{
+"en": "Protein shake",
+"ar": "بروتين شيك"
+},
+{
+"en": "Date and nut energy balls"
+},
+{
+"en": "Lentil and rice bowl",
+"ar": "طبق عدس وأرز"
+},
+{
+"en": "Chickpea curry",
+"ar": "كاري الحمص"
+},
+{
+"en": "Roasted vegetables with quinoa",
+"ar": "خضار مشوية مع كينوا"
+},
+{
+"en": "Baked sweet potato with yogurt"
+},
+{
+"en": "Avocado egg toast",
+"ar": "توست أفوكادو وبيض"
+},
+{
+"en": "Fruit salad with yogurt",
+"ar": "سلطة فواكه بالزبادي"
+},
+{
+"en": "Cottage cheese and cucumber bowl"
+},
+{
+"en": "Smoked turkey sandwich",
+"ar": "ساندوتش ديك رومي"
+},
+{
+"en": "Baked chicken and potatoes",
+"ar": "فراخ وبطاطس في الفرن"
+},
+{
+"en": "Beef and vegetable stew",
+"ar": "يخنة لحمة بالخضار"
+},
+{
+"en": "Zucchini and kofta bake",
+"ar": "كوسة بالكفتة في الفرن"
+},
+{
+"en": "Spinach with eggs",
+"ar": "سبانخ بالبيض"
+},
+{
+"en": "Chicken with cauliflower rice",
+"ar": "فراخ برز القرنبيط"
+},
+{
+"en": "Mushroom omelette",
+"ar": "أومليت مشروم"
+},
+{
+"en": "What I saw",
+"ar": "اللي شفته"
+},
+{
+"en": "Your meal",
+"ar": "وجبتك"
+},
+{
+"en": "kcal burned",
+"ar": "سعرة محروقة"
+},
+{
+"en": "updated ",
+"ar": "اتحدث "
+},
+{
+"en": "You wrote",
+"ar": "إنت كتبت"
+},
+{
+"en": "Read as",
+"ar": "اتقرت على إنها"
+},
+{
+"en": "as you wrote it — the AI's estimate for this exact food"
+},
+{
+"en": "not in the food table — the AI's estimate"
+},
+{
+"en": "as you corrected it before"
+},
+{
+"en": "Per 100 g",
+"ar": "لكل ١٠٠ جم"
+},
+{
+"en": "Attune's food table (USDA / Egyptian tables), on this phone"
+},
+{
+"en": "📏 Exact portions: put a bank card next to the plate — or"
+},
+{
+"en": "my plate",
+"ar": "طبقي"
+},
+{
+"en": "cm wide",
+"ar": "سم عرض"
+},
+{
+"en": "kcal over today",
+"ar": "سعرة زيادة النهارده"
+},
+{
+"en": "kcal left today",
+"ar": "سعرة فاضلة النهارده"
+},
+{
+"en": "Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”"
+},
+{
+"en": "Reading the photo took too long — name the food instead (e.g. “2 fried eggs and baladi bread”) and I'll log it at once"
+},
+{
+"en": "Couldn't read that meal",
+"ar": "مقدرتش أقرا الوجبة"
+},
+{
+"en": "Couldn't recognise the food in time — name it instead (e.g. “2 fried eggs and baladi bread”) or search it below"
+},
+{
+"en": "Looking for a barcode…",
+"ar": "بدوّر على باركود…"
+},
+{
+"en": "Couldn't recognise this photo — name the food instead, e.g. “2 fried eggs and baladi bread”"
+},
+{
+"en": "This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”"
+},
+{
+"en": "This model can't read photos — get “Fast photo recognition” in My plan, or name the food, e.g. “2 fried eggs and baladi bread”"
+},
+{
+"en": "Waking the model…",
+"ar": "بصحّي الموديل…"
+},
+{
+"en": "Taking a quick look…",
+"ar": "ببص بصة سريعة…"
+},
+{
+"en": "Checking for hidden calories (oil, sauce, drinks)…"
+},
+{
+"en": "I didn't get that change — try “remove the cola”, “rice 200 g”, “add a spoon of oil”"
+},
+{
+"en": "To estimate a food the table doesn't know, load an AI model (Engine) — or pick one from the list."
+},
+{
+"en": "No product with that barcode yet"
+},
+{
+"en": "Couldn't reach the food databases — showing what's on the phone"
+},
+{
+"en": "No barcode found — hold the phone closer, straight on"
+},
+{
+"en": "This product isn't in the databases yet — log it by name"
+},
+{
+"en": "The live scanner didn't open — take a photo of the barcode instead"
+},
+{
+"en": "Enter your age, height and weight"
+},
+{
+"en": "Recipes",
+"ar": "وصفات"
+},
+{
+"en": "Progress",
+"ar": "التقدم"
+},
+{
+"en": "Diary",
+"ar": "اليوميات"
+},
+{
+"en": "Fasting",
+"ar": "الصيام"
+},
+{
+"en": "Workouts",
+"ar": "التمارين"
+},
+{
+"en": "Log food",
+"ar": "سجّل أكل"
+},
+{
+"en": "Add food",
+"ar": "ضيف أكل"
+},
+{
+"en": "Photo of your food",
+"ar": "صورة أكلك"
+},
+{
+"en": "Choose from the gallery",
+"ar": "اختار من المعرض"
+},
+{
+"en": "Scan with the camera — aim at the code"
+},
+{
+"en": "Take a photo of the barcode"
+},
+{
+"en": "A barcode photo from the gallery"
+},
+{
+"en": "Type the number",
+"ar": "اكتب الرقم"
+},
+{
+"en": "Meal",
+"ar": "الوجبة"
+},
+{
+"en": "What did you eat?",
+"ar": "أكلت إيه؟"
+},
+{
+"en": "Write it like you'd say it — English, Arabic or Franco. Amounts if you know them."
+},
+{
+"en": "Add to",
+"ar": "ضيف على"
+},
+{
+"en": "Reading your meal…",
+"ar": "بقرا وجبتك…"
+},
+{
+"en": "e.g. 150 g chicken Alfredo pasta and 7 chicken strips"
+},
+{
+"en": "Find the foods",
+"ar": "طلّع الأكل"
+},
+{
+"en": "Add it",
+"ar": "ضيفه"
+},
+{
+"en": "Favourites",
+"ar": "المفضلة"
+},
+{
+"en": "My meals",
+"ar": "وجباتي"
+},
+{
+"en": "What you log shows here — one tap to add it again."
+},
+{
+"en": "Search millions of foods",
+"ar": "دوّر في ملايين الأكلات"
+},
+{
+"en": "Fast photo recognition is ready"
+},
+{
+"en": "Faster photos (≈200 MB)",
+"ar": "صور أسرع (حوالي 200 ميجا)"
+},
+{
+"en": "What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful"
+},
+{
+"en": "Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈200 MB, once) and a photo is read in a few seconds."
+},
+{
+"en": "Get it",
+"ar": "نزّله"
+},
+{
+"en": "Or search foods, brands or a barcode…"
+},
+{
+"en": "label may be wrong",
+"ar": "الملصق ممكن يكون غلط"
+},
+{
+"en": "Check the amounts — change the grams if needed, then save."
+},
+{
+"en": "📏 Measured against your card"
+},
+{
+"en": "The AI is double-checking the photo — you can save now."
+},
+{
+"en": "The AI sees: ",
+"ar": "الذكاء الاصطناعي شايف: "
+},
+{
+"en": "Use this",
+"ar": "استخدم ده"
+},
+{
+"en": "Keep mine",
+"ar": "خلّي اختياري"
+},
+{
+"en": "how sure",
+"ar": "متأكد قد إيه"
+},
+{
+"en": "easy to miss",
+"ar": "سهل يتنسي"
+},
+{
+"en": "as you corrected it",
+"ar": "زي ما صحّحته"
+},
+{
+"en": "check the portion",
+"ar": "راجع الكمية"
+},
+{
+"en": "looked closer",
+"ar": "اتبص عليها أقرب"
+},
+{
+"en": "calories as printed in the photo"
+},
+{
+"en": "Removed from favorites",
+"ar": "اتشالت من المفضلة"
+},
+{
+"en": "Favorite",
+"ar": "مفضلة"
+},
+{
+"en": "Not right? Change it",
+"ar": "مش مظبوط؟ غيّره"
+},
+{
+"en": "Is it:",
+"ar": "قصدك:"
+},
+{
+"en": "something else…",
+"ar": "حاجة تانية…"
+},
+{
+"en": "as written",
+"ar": "زي ما كتبت"
+},
+{
+"en": "as seen",
+"ar": "زي الصورة"
+},
+{
+"en": "Write it as it is, e.g. homemade chicken pizza"
+},
+{
+"en": "Estimating…",
+"ar": "بقدّر…"
+},
+{
+"en": "Search databases",
+"ar": "دوّر في القواعد"
+},
+{
+"en": "Change something: “remove the cola”, “rice 200 g”…"
+},
+{
+"en": "Your coach this week",
+"ar": "مدربك الأسبوع ده"
+},
+{
+"en": "Go back to the formula"
+},
+{
+"en": "Lose weight",
+"ar": "أخسّ"
+},
+{
+"en": "Keep my weight",
+"ar": "أحافظ على وزني"
+},
+{
+"en": "Gain muscle",
+"ar": "أبني عضل"
+},
+{
+"en": "My plan",
+"ar": "خطتي"
+},
+{
+"en": "kcal a day",
+"ar": "سعرة في اليوم"
+},
+{
+"en": "Change my plan",
+"ar": "عدّل خطتي"
+},
+{
+"en": "Workouts and steps",
+"ar": "التمارين والخطوات"
+},
+{
+"en": "Your plan",
+"ar": "خطتك"
+},
+{
+"en": "Your daily calories and protein are worked out by the Mifflin-St Jeor formula — the one dietitians use. Everything stays on your phone."
+},
+{
+"en": "Male",
+"ar": "ذكر"
+},
+{
+"en": "Female",
+"ar": "أنثى"
+},
+{
+"en": "Age",
+"ar": "السن"
+},
+{
+"en": "Height (cm)",
+"ar": "الطول (سم)"
+},
+{
+"en": "Weight (kg)",
+"ar": "الوزن (كجم)"
+},
+{
+"en": "How active are you?",
+"ar": "نشاطك قد إيه؟"
+},
+{
+"en": "Desk, little walking",
+"ar": "مكتب، مشي قليل"
+},
+{
+"en": "Moderate",
+"ar": "متوسط"
+},
+{
+"en": "Very active",
+"ar": "نشيط جداً"
+},
+{
+"en": "Goal weight (kg)",
+"ar": "الوزن المطلوب (كجم)"
+},
+{
+"en": "Pace (kg a week)",
+"ar": "السرعة (كجم في الأسبوع)"
+},
+{
+"en": "Eating style",
+"ar": "نظام الأكل"
+},
+{
+"en": "Pregnant or breastfeeding",
+"ar": "حامل أو بترضّعي"
+},
+{
+"en": "goal in",
+"ar": "توصل للهدف في"
+},
+{
+"en": "Save my plan",
+"ar": "احفظ خطتي"
+},
+{
+"en": "Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”."
+},
+{
+"en": "Photos, barcodes and your voice — the calories are worked out for you"
+},
+{
+"en": "A daily target made for your body and goal"
+},
+{
+"en": "Everything stays on your phone"
+},
+{
+"en": "Get started",
+"ar": "ابدأ"
+},
+{
+"en": "Takes under a minute · you can change it later in Me"
+},
+{
+"en": "Your plan is ready",
+"ar": "خطتك جاهزة"
+},
+{
+"en": "Your daily target",
+"ar": "هدفك اليومي"
+},
+{
+"en": "calories a day",
+"ar": "سعرة في اليوم"
+},
+{
+"en": "Suggestions, food search, typed meals and photos use this country's dishes first."
+},
+{
+"en": "Fibre",
+"ar": "ألياف"
+},
+{
+"en": "Saturated fat",
+"ar": "دهون مشبعة"
+},
+{
+"en": "Salt",
+"ar": "ملح"
+},
+{
+"en": "logged at ",
+"ar": "اتسجلت "
+},
+{
+"en": "Edit this food",
+"ar": "عدّل الأكلة دي"
+},
+{
+"en": "Edit food",
+"ar": "عدّل الأكل"
+},
+{
+"en": "Amount (g)",
+"ar": "الكمية (جم)"
+},
+{
+"en": "Protein g",
+"ar": "بروتين جم"
+},
+{
+"en": "Carbs g",
+"ar": "كربوهيدرات جم"
+},
+{
+"en": "Fat g",
+"ar": "دهون جم"
+},
+{
+"en": "Fibre g",
+"ar": "ألياف جم"
+},
+{
+"en": "Changing the amount changes the numbers with it. You can also type the numbers from the label."
+},
+{
+"en": "g carbs",
+"ar": "جم كربوهيدرات"
+},
+{
+"en": "Copy to another day",
+"ar": "انسخ ليوم تاني"
+},
+{
+"en": "Suggested",
+"ar": "مقترح"
+},
+{
+"en": "I ate this",
+"ar": "أكلت ده"
+},
+{
+"en": "End fast",
+"ar": "خلّص الصيام"
+},
+{
+"en": "Copied to today",
+"ar": "اتنسخ للنهارده"
+},
+{
+"en": "Easy start",
+"ar": "بداية سهلة"
+},
+{
+"en": "Gentle",
+"ar": "خفيف"
+},
+{
+"en": "The classic",
+"ar": "الأشهر"
+},
+{
+"en": "Stronger",
+"ar": "أقوى"
+},
+{
+"en": "Warrior",
+"ar": "المحارب"
+},
+{
+"en": "One meal a day",
+"ar": "وجبة واحدة في اليوم"
+},
+{
+"en": "Long fast — check with a doctor"
+},
+{
+"en": "Done! 🎉",
+"ar": "خلصت!"
+},
+{
+"en": "Fasting for",
+"ar": "صايم بقالك"
+},
+{
+"en": "Not fasting",
+"ar": "مش صايم"
+},
+{
+"en": "Pick a plan below to start"
+},
+{
+"en": "What happens in your body"
+},
+{
+"en": "kcal over",
+"ar": "سعرة زيادة"
+},
+{
+"en": "kcal left",
+"ar": "سعرة فاضلة"
+},
+{
+"en": "Meals",
+"ar": "الوجبات"
+},
+{
+"en": "Sleep",
+"ar": "النوم"
+},
+{
+"en": "Activity",
+"ar": "النشاط"
+},
+{
+"en": "Connect a watch in Me"
+},
+{
+"en": "Copy today's food to another day"
+},
+{
+"en": "Copy this day's food to another day"
+},
+{
+"en": "Over today",
+"ar": "زيادة النهارده"
+},
+{
+"en": "Left today",
+"ar": "الفاضل النهارده"
+},
+{
+"en": "Eaten",
+"ar": "أكلت"
+},
+{
+"en": "Burned",
+"ar": "حرقت"
+},
+{
+"en": "Tap to add",
+"ar": "اضغط وضيف"
+},
+{
+"en": "Tap for a glass",
+"ar": "اضغط لكوب"
+},
+{
+"en": "Exercise",
+"ar": "الرياضة"
+},
+{
+"en": "Egyptian",
+"ar": "مصري"
+},
+{
+"en": "Snack",
+"ar": "سناك"
+},
+{
+"en": "High protein",
+"ar": "بروتين عالي"
+},
+{
+"en": "Low carb",
+"ar": "كارب قليل"
+},
+{
+"en": "Vegetarian",
+"ar": "نباتي"
+},
+{
+"en": "Couldn't make a recipe from that — try listing a few ingredients"
+},
+{
+"en": "Couldn't make a recipe",
+"ar": "مقدرتش أعمل وصفة"
+},
+{
+"en": "one serving",
+"ar": "حصة واحدة"
+},
+{
+"en": "a serving",
+"ar": "للفرد"
+},
+{
+"en": "not counted",
+"ar": "مش محسوب"
+},
+{
+"en": "Logged one serving",
+"ar": "اتسجلت حصة"
+},
+{
+"en": "I ate one serving",
+"ar": "أكلت حصة"
+},
+{
+"en": "Plan my week + shopping list"
+},
+{
+"en": "What's in your fridge? AI makes a recipe"
+},
+{
+"en": "No recipe matches",
+"ar": "مفيش وصفة مطابقة"
+},
+{
+"en": "Rest",
+"ar": "راحة"
+},
+{
+"en": "Done — next",
+"ar": "خلصت — اللي بعده"
+},
+{
+"en": "Log an activity",
+"ar": "سجّل نشاط"
+},
+{
+"en": "walking, football, swimming…",
+"ar": "مشي، كورة، سباحة…"
+},
+{
+"en": "log it",
+"ar": "سجّل"
+},
+{
+"en": "Not in the list yet — try a simpler name"
+},
+{
+"en": "Guided workouts — the timer walks you through"
+},
+{
+"en": "Couldn't make a plan — try again"
+},
+{
+"en": "Couldn't make a plan",
+"ar": "مقدرتش أعمل خطة"
+},
+{
+"en": "Make me a weekly plan"
+},
+{
+"en": "Today's weight (kg)",
+"ar": "وزن النهارده (كجم)"
+},
+{
+"en": "The blue line is the 7-entry average — daily weight jumps with water and salt; the average is the truth."
+},
+{
+"en": "More: week, measurements, photos, challenges"
+},
+{
+"en": "Your week report — what went well, what to change — is in Pro."
+},
+{
+"en": "day streak",
+"ar": "يوم ورا بعض"
+},
+{
+"en": "avg kcal (7 d)",
+"ar": "متوسط السعرات"
+},
+{
+"en": "kg this week",
+"ar": "كجم الأسبوع ده"
+},
+{
+"en": "Last 7 days",
+"ar": "آخر 7 أيام"
+},
+{
+"en": "on target",
+"ar": "في الهدف"
+},
+{
+"en": "Copy the whole day to…"
+},
+{
+"en": "Each meal goes into the same meal on that day, added to what is already there."
+},
+{
+"en": "Not enough space for more photos — delete an old one."
+},
+{
+"en": "Body measurements (cm)",
+"ar": "قياسات الجسم (سم)"
+},
+{
+"en": "Save today's measurements",
+"ar": "احفظ قياسات النهارده"
+},
+{
+"en": "Progress photos",
+"ar": "صور التقدم"
+},
+{
+"en": "Photos stay on this phone. Add one now and one in a few weeks to compare."
+},
+{
+"en": "Delete the latest photo",
+"ar": "امسح آخر صورة"
+},
+{
+"en": "More calories on some days"
+},
+{
+"en": "Pick days to eat 300 kcal more (weekends, family dinners). The other days give a little back, so your week — and your weight plan — stays the same."
+},
+{
+"en": "Export my food diary (CSV for Excel)"
+},
+{
+"en": "Vitamins & minerals",
+"ar": "الفيتامينات والمعادن"
+},
+{
+"en": "all good so far",
+"ar": "كويسة لحد دلوقتي"
+},
+{
+"en": "Good sources: ",
+"ar": "مصادر كويسة: "
+},
+{
+"en": "Challenges",
+"ar": "التحديات"
+},
+{
+"en": "Checked from your diary each day — nothing to tick."
+},
+{
+"en": "Baladi bread|whole wheat pita|aish baladi"
+},
+{
+"en": "White pita bread|shami bread|pita",
+"ar": "عيش شامي|عيش أبيض|خبز شامي"
+},
+{
+"en": "White toast bread|white bread|toast",
+"ar": "توست أبيض|عيش توست|توست"
+},
+{
+"en": "Brown toast bread|whole wheat bread|brown bread"
+},
+{
+"en": "Fino bread roll|baguette",
+"ar": "عيش فينو|فينو|باجيت"
+},
+{
+"en": "White rice (cooked)|rice",
+"ar": "رز أبيض|رز|أرز"
+},
+{
+"en": "Rice with vermicelli (cooked)",
+"ar": "رز بالشعرية|رز بشعرية"
+},
+{
+"en": "Brown rice (cooked)",
+"ar": "رز بني"
+},
+{
+"en": "Pasta (cooked)|macaroni|spaghetti",
+"ar": "مكرونة|مكرونه|اسباجتي|باستا"
+},
+{
+"en": "Oats (dry)|oatmeal|rolled oats",
+"ar": "شوفان"
+},
+{
+"en": "Cornflakes|breakfast cereal",
+"ar": "كورن فليكس|حبوب إفطار"
+},
+{
+"en": "Freekeh (cooked)",
+"ar": "فريك"
+},
+{
+"en": "Bulgur (cooked)|burghul",
+"ar": "برغل"
+},
+{
+"en": "Rice (uncooked)",
+"ar": "رز ني|أرز غير مطبوخ"
+},
+{
+"en": "Pasta (uncooked)",
+"ar": "مكرونة ني"
+},
+{
+"en": "Potato (boiled)|potatoes",
+"ar": "بطاطس مسلوقة|بطاطس|بطاطا"
+},
+{
+"en": "French fries|chips|fried potatoes",
+"ar": "بطاطس محمرة|بطاطس مقلية|فرايز"
+},
+{
+"en": "Sweet potato (baked)",
+"ar": "بطاطا مشوية|بطاطا حلوة"
+},
+{
+"en": "Sweet corn|corn on the cob"
+},
+{
+"en": "Croissant",
+"ar": "كرواسون|كرواسان"
+},
+{
+"en": "Feteer meshaltet",
+"ar": "فطير مشلتت|فطير"
+},
+{
+"en": "Ful medames|fava beans|foul",
+"ar": "فول|فول مدمس|فول بالزيت"
+},
+{
+"en": "Taameya|falafel",
+"ar": "طعمية|فلافل"
+},
+{
+"en": "Koshari",
+"ar": "كشري|كُشري"
+},
+{
+"en": "Molokhia (cooked)",
+"ar": "ملوخية"
+},
+{
+"en": "Lentil soup",
+"ar": "شوربة عدس|عدس"
+},
+{
+"en": "Mahshi (stuffed vegetables)|stuffed vine leaves|stuffed peppers"
+},
+{
+"en": "Macarona bechamel|pasta bechamel",
+"ar": "مكرونة بشاميل|بشاميل"
+},
+{
+"en": "Okra stew with meat|bamya",
+"ar": "بامية"
+},
+{
+"en": "Green bean stew with meat"
+},
+{
+"en": "Shakshuka|eggs in tomato",
+"ar": "شكشوكة|بيض بالطماطم"
+},
+{
+"en": "Kunafa",
+"ar": "كنافة"
+},
+{
+"en": "Hummus",
+"ar": "حمص|حمص بالطحينة"
+},
+{
+"en": "Baba ghanoush|eggplant dip",
+"ar": "بابا غنوج|باباغنوج"
+},
+{
+"en": "Fried eggplant",
+"ar": "بتنجان مقلي|باذنجان مقلي"
+},
+{
+"en": "Chicken shawarma sandwich",
+"ar": "ساندوتش شاورما|شاورما"
+},
+{
+"en": "Ful sandwich",
+"ar": "ساندوتش فول"
+},
+{
+"en": "Taameya sandwich|falafel sandwich",
+"ar": "ساندوتش طعمية|ساندوتش فلافل"
+},
+{
+"en": "Liver sandwich (kebda)",
+"ar": "ساندوتش كبدة|كبدة"
+},
+{
+"en": "Beef burger (with bun)|hamburger",
+"ar": "برجر|بيرجر|هامبورجر"
+},
+{
+"en": "Pizza|margherita pizza",
+"ar": "بيتزا"
+},
+{
+"en": "Egg|boiled egg|eggs",
+"ar": "بيض|بيضة|بيض مسلوق"
+},
+{
+"en": "Fried egg|eggs fried|omelette",
+"ar": "بيض مقلي|بيض أومليت|أومليت|عجة"
+},
+{
+"en": "Fried egg on toast|fried eggs on toast|eggs on toast|egg on toast|egg toast|fried eggs on bread"
+},
+{
+"en": "Egg white",
+"ar": "بياض بيض"
+},
+{
+"en": "Chicken breast (grilled)|grilled chicken|chicken",
+"ar": "صدور فراخ|صدر فراخ|فراخ مشوية|دجاج مشوي|فراخ"
+},
+{
+"en": "Chicken thigh (with skin)|chicken leg"
+},
+{
+"en": "Chicken breast (raw)",
+"ar": "صدور فراخ ني"
+},
+{
+"en": "Beef (lean, cooked)|steak|meat",
+"ar": "لحمة|لحم|ستيك|لحم بقري"
+},
+{
+"en": "Kofta (grilled)|minced beef",
+"ar": "كفتة|كفته|لحمة مفرومة"
+},
+{
+"en": "Minced beef (raw)",
+"ar": "لحمة مفرومة ني"
+},
+{
+"en": "Beef liver (cooked)",
+"ar": "كبدة بلدي|كبد"
+},
+{
+"en": "Tuna in oil (drained)|tuna",
+"ar": "تونة|تونة بالزيت"
+},
+{
+"en": "Tuna in water",
+"ar": "تونة مية|تونة في الماء"
+},
+{
+"en": "Grilled fish|tilapia|fish fillet",
+"ar": "سمك مشوي|سمك|بلطي|فيليه"
+},
+{
+"en": "Fried fish",
+"ar": "سمك مقلي"
+},
+{
+"en": "Fish fillet (raw)",
+"ar": "سمك ني"
+},
+{
+"en": "Salmon (cooked)",
+"ar": "سلمون|سالمون"
+},
+{
+"en": "Shrimp (cooked)|prawns",
+"ar": "جمبري"
+},
+{
+"en": "Lentils (dry)",
+"ar": "عدس ني|عدس جاف"
+},
+{
+"en": "Chickpeas (cooked)",
+"ar": "حمص مسلوق|حمص الشام"
+},
+{
+"en": "Whey protein powder",
+"ar": "واي بروتين|بروتين"
+},
+{
+"en": "White cheese (domiati / feta)"
+},
+{
+"en": "Roumi cheese",
+"ar": "جبنة رومي|رومي"
+},
+{
+"en": "Cottage cheese (low fat)|areesh cheese"
+},
+{
+"en": "Processed cheese triangle",
+"ar": "جبنة مثلثات|جبنة نستو"
+},
+{
+"en": "Mozzarella",
+"ar": "موتزاريلا|موزاريلا"
+},
+{
+"en": "Labneh",
+"ar": "لبنة"
+},
+{
+"en": "Greek yogurt (plain, low fat)"
+},
+{
+"en": "Yogurt (plain)|zabadi",
+"ar": "زبادي|زبادى|رايب"
+},
+{
+"en": "Milk (full fat)",
+"ar": "لبن|حليب|لبن كامل الدسم"
+},
+{
+"en": "Milk (skimmed)",
+"ar": "لبن خالي الدسم|حليب خالي الدسم"
+},
+{
+"en": "Olive oil|oil|vegetable oil",
+"ar": "زيت زيتون|زيت"
+},
+{
+"en": "Butter",
+"ar": "زبدة"
+},
+{
+"en": "Ghee|samna",
+"ar": "سمنة|سمن"
+},
+{
+"en": "Tahini",
+"ar": "طحينة"
+},
+{
+"en": "Peanut butter",
+"ar": "زبدة فول سوداني"
+},
+{
+"en": "Almonds",
+"ar": "لوز"
+},
+{
+"en": "Peanuts",
+"ar": "فول سوداني"
+},
+{
+"en": "Walnuts",
+"ar": "عين جمل"
+},
+{
+"en": "Mixed nuts",
+"ar": "مكسرات"
+},
+{
+"en": "Avocado",
+"ar": "أفوكادو|افوكادو"
+},
+{
+"en": "Apple",
+"ar": "تفاح|تفاحة"
+},
+{
+"en": "Banana",
+"ar": "موز|موزة"
+},
+{
+"en": "Mango",
+"ar": "مانجا|مانجو|مانجة"
+},
+{
+"en": "Guava",
+"ar": "جوافة"
+},
+{
+"en": "Grapes",
+"ar": "عنب"
+},
+{
+"en": "Watermelon",
+"ar": "بطيخ"
+},
+{
+"en": "Strawberries",
+"ar": "فراولة"
+},
+{
+"en": "Pomegranate",
+"ar": "رمان|رمانة"
+},
+{
+"en": "Figs (fresh)",
+"ar": "تين"
+},
+{
+"en": "Pear",
+"ar": "كمثرى"
+},
+{
+"en": "Peach",
+"ar": "خوخ"
+},
+{
+"en": "Kiwi",
+"ar": "كيوي"
+},
+{
+"en": "Green salad (no oil)|tomato cucumber salad"
+},
+{
+"en": "Tomato",
+"ar": "طماطم|قوطة|طماطماية"
+},
+{
+"en": "Cucumber",
+"ar": "خيار|خياراية"
+},
+{
+"en": "Lettuce",
+"ar": "خس"
+},
+{
+"en": "Carrot",
+"ar": "جزر"
+},
+{
+"en": "Onion",
+"ar": "بصل|بصلة"
+},
+{
+"en": "Bell pepper",
+"ar": "فلفل رومي|فلفل ألوان|فلفل"
+},
+{
+"en": "Zucchini",
+"ar": "كوسة"
+},
+{
+"en": "Spinach",
+"ar": "سبانخ"
+},
+{
+"en": "Broccoli",
+"ar": "بروكلي|بروكلى"
+},
+{
+"en": "Peas",
+"ar": "بسلة|بازلاء"
+},
+{
+"en": "Jute leaves (raw)",
+"ar": "ملوخية خضرا ني"
+},
+{
+"en": "Garlic",
+"ar": "توم|ثوم"
+},
+{
+"en": "Tomato paste",
+"ar": "صلصة|صلصة طماطم"
+},
+{
+"en": "Lemon juice",
+"ar": "ليمون|عصير ليمون"
+},
+{
+"en": "Honey",
+"ar": "عسل|عسل نحل"
+},
+{
+"en": "Jam",
+"ar": "مربى|مربة"
+},
+{
+"en": "Milk chocolate",
+"ar": "شوكولاتة|شيكولاتة|شوكولاته"
+},
+{
+"en": "Dark chocolate",
+"ar": "شوكولاتة داكنة|دارك شوكليت"
+},
+{
+"en": "Biscuits|cookies",
+"ar": "بسكويت|كوكيز"
+},
+{
+"en": "Cake",
+"ar": "كيك|كيكة|جاتوه|تورتة"
+},
+{
+"en": "Chocolate sprinkles (choco rice)|chocolate sprinkles|choco rice|sprinkles"
+},
+{
+"en": "Cream filling (pastry cream)|pastry cream|cream filling|custard filling"
+},
+{
+"en": "Chocolate log (roll cake)",
+"ar": "رول شوكولاتة|بوش دي نويل|سويس رول"
+},
+{
+"en": "Ice cream",
+"ar": "آيس كريم|ايس كريم|جيلاتي"
+},
+{
+"en": "Potato chips (crisps)",
+"ar": "شيبسي|شيبس"
+},
+{
+"en": "Tea (no sugar)",
+"ar": "شاي|شاي من غير سكر"
+},
+{
+"en": "Tea with milk (no sugar)"
+},
+{
+"en": "Coffee (black)",
+"ar": "قهوة|قهوة سادة|اسبريسو|إسبريسو"
+},
+{
+"en": "Turkish coffee (medium sugar)",
+"ar": "قهوة تركي|قهوة مظبوط"
+},
+{
+"en": "Latte (whole milk)",
+"ar": "لاتيه|قهوة بلبن"
+},
+{
+"en": "Cappuccino",
+"ar": "كابتشينو|كابوتشينو"
+},
+{
+"en": "Cola|soft drink|soda",
+"ar": "كولا|بيبسي|كوكاكولا|حاجة ساقعة|سفن|مياه غازية"
+},
+{
+"en": "Orange juice",
+"ar": "عصير برتقال"
+},
+{
+"en": "Sugarcane juice",
+"ar": "عصير قصب|قصب"
+},
+{
+"en": "Hibiscus (karkadeh), sweetened",
+"ar": "كركديه"
+},
+{
+"en": "Walking (5 km/h)",
+"ar": "مشي (5 كم/ساعة)"
+},
+{
+"en": "Brisk walking (6 km/h)",
+"ar": "مشي سريع (6 كم/ساعة)"
+},
+{
+"en": "Running (8 km/h)",
+"ar": "جري (8 كم/ساعة)"
+},
+{
+"en": "Running (10 km/h)",
+"ar": "جري (10 كم/ساعة)"
+},
+{
+"en": "Cycling (moderate)",
+"ar": "عجلة (متوسط)"
+},
+{
+"en": "Stationary bike",
+"ar": "عجلة ثابتة"
+},
+{
+"en": "Swimming (moderate)",
+"ar": "سباحة (متوسط)"
+},
+{
+"en": "Jump rope",
+"ar": "نط الحبل"
+},
+{
+"en": "Stair climbing",
+"ar": "طلوع السلم"
+},
+{
+"en": "Elliptical",
+"ar": "إليبتكال"
+},
+{
+"en": "Rowing machine",
+"ar": "تجديف"
+},
+{
+"en": "HIIT / circuit",
+"ar": "تمارين هيت|دائري"
+},
+{
+"en": "Football",
+"ar": "كورة|كرة قدم"
+},
+{
+"en": "Padel / tennis (doubles)",
+"ar": "بادل|تنس"
+},
+{
+"en": "Basketball",
+"ar": "باسكت|كرة سلة"
+},
+{
+"en": "Weight training (moderate)",
+"ar": "حديد|تمارين أوزان"
+},
+{
+"en": "Weight training (hard)",
+"ar": "حديد تقيل"
+},
+{
+"en": "Bodyweight training",
+"ar": "تمارين وزن الجسم"
+},
+{
+"en": "Yoga",
+"ar": "يوجا"
+},
+{
+"en": "Pilates",
+"ar": "بيلاتس"
+},
+{
+"en": "Stretching",
+"ar": "إطالة|استرتش"
+},
+{
+"en": "Dancing",
+"ar": "رقص"
+},
+{
+"en": "Housework",
+"ar": "شغل البيت"
+},
+{
+"en": "Squats",
+"ar": "سكوات|قرفصاء"
+},
+{
+"en": "Push-ups",
+"ar": "ضغط|بوش أب"
+},
+{
+"en": "Lunges",
+"ar": "طعنات|لانجز"
+},
+{
+"en": "Plank",
+"ar": "بلانك"
+},
+{
+"en": "Glute bridge",
+"ar": "جلوت بريدج|رفع الحوض"
+},
+{
+"en": "Superman",
+"ar": "سوبرمان"
+},
+{
+"en": "Dumbbell / bottle row",
+"ar": "سحب بالدمبل"
+},
+{
+"en": "Shoulder press",
+"ar": "ضغط أكتاف"
+},
+{
+"en": "Deadlift",
+"ar": "ديدلفت|رفعة ميتة"
+},
+{
+"en": "Bench press",
+"ar": "بنش بريس|بنش"
+},
+{
+"en": "Pull-ups / lat pulldown",
+"ar": "عقلة|سحب عالي"
+},
+{
+"en": "Jumping jacks",
+"ar": "جامبنج جاك"
+},
+{
+"en": "Mountain climbers",
+"ar": "ماونتن كلايمر"
+},
+{
+"en": "Crunches",
+"ar": "بطن|كرانش"
+},
+{
+"en": "Your BMI is already under 18.5 — losing more isn't healthy, so the plan keeps your weight."
+},
+{
+"en": "The pace was capped at a quarter of your daily energy — faster loss mostly costs muscle."
+},
+{
+"en": "Home full body — beginner"
+},
+{
+"en": "Fat-burn walking",
+"ar": "مشي لحرق الدهون"
+},
+{
+"en": "Quick HIIT — 8 moves"
+},
+{
+"en": "Gym strength — 3 days"
+},
+{
+"en": "Core & back (desk workers)"
+},
+{
+"en": "Ful with olive oil, salad and baladi bread"
+},
+{
+"en": "Grilled chicken, rice and salad"
+},
+{
+"en": "Greek yogurt, oats and fruit"
+},
+{
+"en": "Shakshuka",
+"ar": "شكشوكة"
+},
+{
+"en": "Grilled fish with sweet potato"
+},
+{
+"en": "Hummus plate with vegetables",
+"ar": "طبق حمص بالخضار"
+},
+{
+"en": "Chicken shawarma bowl (home)",
+"ar": "بول شاورما فراخ (في البيت)"
+},
+{
+"en": "Kofta with salad",
+"ar": "كفتة مع سلطة"
+},
+{
+"en": "Oat banana pancakes",
+"ar": "بان كيك شوفان وموز"
+},
+{
+"en": "Protein smoothie",
+"ar": "سموذي بروتين"
+},
+{
+"en": "Water is under half your goal — drink two glasses now."
+},
+{
+"en": "Fibre is low — ful, lentils, vegetables or oats help."
+},
+{
+"en": "¼ cup",
+"ar": "ربع كوب"
+},
+{
+"en": "½ cup",
+"ar": "نصف كوب"
+},
+{
+"en": "1 cup",
+"ar": "كوب"
+},
+{
+"en": "a pinch",
+"ar": "رشة"
+},
+{
+"en": "1 tbsp",
+"ar": "ملعقة"
+},
+{
+"en": "2 tbsp",
+"ar": "ملعقتان"
+},
+{
+"en": "a handful",
+"ar": "حفنة"
+},
+{
+"en": "2 handfuls",
+"ar": "حفنتان"
+},
+{
+"en": "a little",
+"ar": "قليل"
+},
+{
+"en": "¼ plate",
+"ar": "ربع طبق"
+},
+{
+"en": "½ plate",
+"ar": "نصف طبق"
+},
+{
+"en": "¾ plate",
+"ar": "ثلاثة أرباع"
+},
+{
+"en": "full plate",
+"ar": "طبق كامل"
+},
+{
+"en": "1 tsp",
+"ar": "ملعقة صغيرة"
+},
+{
+"en": "4 tbsp",
+"ar": "4 ملاعق"
+},
+{
+"en": "Vitamin C",
+"ar": "فيتامين C"
+},
+{
+"en": "Magnesium",
+"ar": "المغنيسيوم"
+},
+{
+"en": "Vitamin A",
+"ar": "فيتامين A"
+},
+{
+"en": "Suhoor",
+"ar": "سحور"
+},
+{
+"en": "After Taraweeh",
+"ar": "بعد التراويح"
+},
+{
+"en": "Today's score",
+"ar": "درجة النهارده"
+},
+{
+"en": "so far",
+"ar": "لحد دلوقتي"
+},
+{
+"en": "Sat. fat",
+"ar": "دهون مشبعة"
+},
+{
+"en": "No sugar / salt data for today's foods — packaged products (barcode or search) carry them."
+},
+{
+"en": "Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call."
+},
+{
+"en": "From Family health. Not medical advice — your doctor sets your insulin."
+},
+{
+"en": "Fill in the name and the numbers from the label"
+},
+{
+"en": "My own food (from its label)"
+},
+{
+"en": "per 100 g",
+"ar": "لكل ١٠٠ جم"
+},
+{
+"en": "per serving",
+"ar": "للحصة"
+},
+{
+"en": "serving g",
+"ar": "الحصة جم"
+},
+{
+"en": "sat. fat",
+"ar": "مشبعة"
+},
+{
+"en": "Save and add",
+"ar": "احفظ وضيف"
+},
+{
+"en": "Favorites:",
+"ar": "المفضلة:"
+},
+{
+"en": "Recent:",
+"ar": "الأخيرة:"
+},
+{
+"en": "Same as yesterday",
+"ar": "زي امبارح"
+},
+{
+"en": "Quick add kcal",
+"ar": "ضيف سعرات بسرعة"
+},
+{
+"en": "My own food",
+"ar": "أكلي الخاص"
+},
+{
+"en": "Save these as “my meal”"
+},
+{
+"en": "e.g. My usual breakfast",
+"ar": "مثلاً فطاري العادي"
+},
+{
+"en": "Saved — one tap next time"
+},
+{
+"en": "My week",
+"ar": "أسبوعي"
+},
+{
+"en": "Your week",
+"ar": "أسبوعك"
+},
+{
+"en": "average score",
+"ar": "متوسط الدرجة"
+},
+{
+"en": "Body fat (tape measure)",
+"ar": "نسبة الدهون (بالمازورة)"
+},
+{
+"en": "US Navy method: waist at the navel (women: narrowest), neck below the Adam's apple — ±3 %. The trend matters more than one number."
+},
+{
+"en": "Drink a glass of water"
+},
+{
+"en": "Reminders on: meals and water"
+},
+{
+"en": "Reminders off",
+"ar": "التنبيهات مقفولة"
+},
+{
+"en": "Food from",
+"ar": "أكل بلد"
+},
+{
+"en": "Ramadan mode (Suhoor, Iftar, fasting times)"
+},
+{
+"en": "Remind me to log meals and drink water"
+},
+{
+"en": "Stopped — what was downloaded is kept"
+},
+{
+"en": "The offline food pack is ready"
+},
+{
+"en": "Delete the offline food pack from this phone?"
+},
+{
+"en": "Offline food pack",
+"ar": "باقة الأكل بدون إنترنت"
+},
+{
+"en": "Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+},
+{
+"en": "Get Egypt + most popular (~240,000, ~30 MB)"
+},
+{
+"en": "Get everything (1,000,000+)",
+"ar": "نزّل الكل (+مليون)"
+},
+{
+"en": "Photo recognition is ready — a food photo now takes about a second"
+},
+{
+"en": "Delete the photo recognition model from this phone?"
+},
+{
+"en": "Fast photo recognition",
+"ar": "التعرّف السريع على صور الأكل"
+},
+{
+"en": "Two picture models (~200 MB, once) that name the food in a photo in a few seconds — your country's dishes first — offline. They learn from the photo meals you save."
+},
+{
+"en": " MB",
+"ar": " ميجا"
+},
+{
+"en": "Get it (~100 MB)",
+"ar": "نزّل (~١٠٠ ميجا)"
+},
+{
+"en": "Health Sync is installed ✓"
+},
+{
+"en": "Install Health Sync (free trial, then a small one-time payment to its maker — not to us)."
+},
+{
+"en": "Open Health Sync",
+"ar": "افتح Health Sync"
+},
+{
+"en": "Get Health Sync",
+"ar": "نزّل Health Sync"
+},
+{
+"en": "In Health Sync: source = Huawei Health → sign in with your Huawei ID and allow it."
+},
+{
+"en": "Destination = Health Connect → allow steps, calories, distance, heart rate and exercise."
+},
+{
+"en": "Back here: “Connect my watch”, then Refresh. The first sync can take a few minutes."
+},
+{
+"en": "Huawei watch: Huawei Health doesn't share with Android's Health Connect by itself — the app Health Sync copies it across (once, then automatically)."
+},
+{
+"en": "Open Huawei Health (let it sync the watch first)"
+},
+{
+"en": "Huawei Health sent nothing — open Huawei Health once so the watch syncs, and check Attune is still allowed in Huawei Health → Me → Privacy → Data sharing."
+},
+{
+"en": "Huawei Health wasn't allowed — tap Connect again and allow steps, calories, distance and heart rate."
+},
+{
+"en": "Watch steps and calories work in the Android app."
+},
+{
+"en": "Huawei watch or band: connect Huawei Health directly — steps, calories, distance and heart rate, read only."
+},
+{
+"en": "Connect Huawei Health",
+"ar": "اربط Huawei Health"
+},
+{
+"en": "First install HMS Core (Huawei's services — free)"
+},
+{
+"en": "Connect your watch: steps, calories burned, workouts and heart rate go into your day automatically."
+},
+{
+"en": "Through Android's Health Connect — works with Samsung Health (Galaxy Watch), Fitbit / Pixel Watch, Garmin Connect, Mi Fitness, Huawei Health (through Health Sync) and others that share to it. Read only; nothing leaves the phone."
+},
+{
+"en": "Huawei watch?",
+"ar": "ساعة هواوي؟"
+},
+{
+"en": "This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it."
+},
+{
+"en": "Install Health Connect",
+"ar": "نزّل Health Connect"
+},
+{
+"en": "Connect my watch",
+"ar": "اربط ساعتي"
+},
+{
+"en": "Huawei Health, through Health Sync ✓"
+},
+{
+"en": "active kcal",
+"ar": "سعر نشاط"
+},
+{
+"en": "≈ worked out from your steps — your watch app didn't send its calories / distance. In Health Sync, switch on Calories and Distance too."
+},
+{
+"en": "Latest from the watch: ",
+"ar": "آخر حاجة وصلت من الساعة: "
+},
+{
+"en": " — open Huawei Health / Health Sync so it sends the newest steps"
+},
+{
+"en": "Workout",
+"ar": "تمرين"
+},
+{
+"en": "Burned calories count the watch or your logged workouts — whichever is more, never both."
+},
+{
+"en": "Nothing from the watch today yet — open its app once so it syncs."
+},
+{
+"en": "Matched to your watch",
+"ar": "متظبط على ساعتك"
+},
+{
+"en": " kcal / 1,000 steps",
+"ar": " سعرة / ١٠٠٠ خطوة"
+},
+{
+"en": " m a step",
+"ar": " م للخطوة"
+},
+{
+"en": "Match again",
+"ar": "ظبط تاني"
+},
+{
+"en": "Numbers lower than your watch? Match it"
+},
+{
+"en": "Look at your watch now and type what it shows — Attune will count like your watch from now on."
+},
+{
+"en": "kcal (Heat / Active)",
+"ar": "السعرات (Heat / نشاط)"
+},
+{
+"en": "Samsung Health → ☰ → Settings → Health Connect → allow all"
+},
+{
+"en": "Garmin Connect → More → Settings → Connected apps → Health Connect → on"
+},
+{
+"en": "Fitbit app → You → Settings → Health Connect → on (Pixel Watch: the same)"
+},
+{
+"en": "Polar Flow → Settings → General settings → Health Connect → on"
+},
+{
+"en": "Mi Fitness / Zepp → Profile → Health Connect (or Third-party access) → on"
+},
+{
+"en": "Automatic tracking",
+"ar": "تتبّع تلقائي"
+},
+{
+"en": "Connected ✓ — steps, calories burned, workouts and heart rate come into your day by themselves."
+},
+{
+"en": "Health Connect is Android's shared place for health data. Any watch app that writes to it reaches Attune. Read only; nothing leaves the phone."
+},
+{
+"en": "Connected ✓",
+"ar": "متوصل ✓"
+},
+{
+"en": "Not connected yet. Opening Huawei Health is not enough: Huawei keeps the watch's data to itself, so it needs one bridge, set up once."
+},
+{
+"en": "Connect Huawei Health (sign in with your Huawei ID)"
+},
+{
+"en": "1. In the watch's app: "
+},
+{
+"en": "2. Here: Connect, and allow steps, calories, exercise and heart rate."
+},
+{
+"en": "Connect",
+"ar": "اربط"
+},
+{
+"en": "Watches connect in the Android app."
+},
+{
+"en": " kg",
+"ar": " كجم"
+},
+{
+"en": "Vegetables",
+"ar": "خضار"
+},
+{
+"en": "Fruit",
+"ar": "فاكهة"
+},
+{
+"en": "Meat & fish",
+"ar": "لحوم وأسماك"
+},
+{
+"en": "Dairy & eggs",
+"ar": "ألبان وبيض"
+},
+{
+"en": "Bread, rice & grains",
+"ar": "عيش ورز وحبوب"
+},
+{
+"en": "Beans & lentils",
+"ar": "بقوليات"
+},
+{
+"en": "Oils & nuts",
+"ar": "زيوت ومكسرات"
+},
 {
 "en": "Unprocessed",
 "ar": "طبيعي"
@@ -1363,2351 +3997,5 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 {
 "en": "Arabic version",
 "ar": "نسخة عربي"
-},
-{
-"en": "Each job ad gets its own CV."
-},
-{
-"en": "lunch 150",
-"ar": "غدا 150"
-},
-{
-"en": "Safe to spend today: 420 EGP"
-},
-{
-"en": "3,180 for 4 bills",
-"ar": "3,180 لـ 4 فواتير"
-},
-{
-"en": "Food this month",
-"ar": "الأكل الشهر ده"
-},
-{
-"en": "Next salary",
-"ar": "المرتب الجاي"
-},
-{
-"en": "in 9 days",
-"ar": "بعد 9 أيام"
-},
-{
-"en": "What it counted",
-"ar": "حسب إيه"
-},
-{
-"en": "Spend this and every bill is still paid."
-},
-{
-"en": "Wed 21 Oct · 09:00"
-},
-{
-"en": "Call Hassan",
-"ar": "كلم حسن"
-},
-{
-"en": "even when Attune is closed"
-},
-{
-"en": "Check what it understood, then save."
-},
-{
-"en": "6 things coming",
-"ar": "6 حاجات جاية"
-},
-{
-"en": "Netflix trial ends — 240 starts"
-},
-{
-"en": "The maid · 600",
-"ar": "الدادة · 600"
-},
-{
-"en": "Cheque 553100 due · 30,000"
-},
-{
-"en": "Each says what slips if you skip it."
-},
-{
-"en": "A photo of a fridge receipt"
-},
-{
-"en": "Warranty until 12 Mar 2028"
-},
-{
-"en": "14 days — ends 2 Nov"
-},
-{
-"en": "Warn me",
-"ar": "نبّهني"
-},
-{
-"en": "7 days before",
-"ar": "قبلها بأسبوع"
-},
-{
-"en": "The date that matters, found for you."
-},
-{
-"en": "Ahmed owes me 12,000, pays 2,000 a month"
-},
-{
-"en": "Ahmed · 6 payments",
-"ar": "أحمد · 6 دفعات"
-},
-{
-"en": "1 Nov · 2,000",
-"ar": "1 نوفمبر · 2,000"
-},
-{
-"en": "Promise score",
-"ar": "نسبة الالتزام"
-},
-{
-"en": "Remind him",
-"ar": "فكّره"
-},
-{
-"en": "Every payment gets its own box and date."
-},
-{
-"en": "WhatsApp Chat with Design ideas.zip"
-},
-{
-"en": "312 photos in 14 albums"
-},
-{
-"en": "Living room",
-"ar": "الريسبشن"
-},
-{
-"en": "Sofas & seating",
-"ar": "الكنب والقعدة"
-},
-{
-"en": "Lighting",
-"ar": "الإضاءة"
-},
-{
-"en": "Open the albums",
-"ar": "افتح الألبومات"
-},
-{
-"en": "Every photo looked at on the phone."
-},
-{
-"en": "WhatsApp chat with Karim.txt",
-"ar": "محادثة واتساب مع كريم.txt"
-},
-{
-"en": "4 things found",
-"ar": "لقيت 4 حاجات"
-},
-{
-"en": "Karim: “I'll send the 6,500 Friday”"
-},
-{
-"en": "“Can you bring the papers?”"
-},
-{
-"en": "Keeps his word",
-"ar": "بيلتزم بكلامه"
-},
-{
-"en": "To People & plans",
-"ar": "للناس والالتزامات"
-},
-{
-"en": "To Reminders",
-"ar": "للتذكيرات"
-},
-{
-"en": "Read on the phone; the chat stays private."
-},
-{
-"en": "Payment reading: on",
-"ar": "قراءة المدفوعات: شغالة"
-},
-{
-"en": "2 problems this month",
-"ar": "مشكلتين الشهر ده"
-},
-{
-"en": "Charged twice",
-"ar": "اتخصم مرتين"
-},
-{
-"en": "Vodafone 199 · 14 Oct"
-},
-{
-"en": "Price rise",
-"ar": "السعر زاد"
-},
-{
-"en": "Gym 650 → 800",
-"ar": "الجيم 650 ← 800"
-},
-{
-"en": "Could get back",
-"ar": "ممكن ترجّع"
-},
-{
-"en": "See the proof",
-"ar": "شوف الدليل"
-},
-{
-"en": "What to do",
-"ar": "أعمل إيه"
-},
-{
-"en": "Every payment checked by itself."
-},
-{
-"en": "save 20000 for travel by June"
-},
-{
-"en": "November plan",
-"ar": "خطة نوفمبر"
-},
-{
-"en": "Travel 2,223 / month",
-"ar": "السفر 2,223 / الشهر"
-},
-{
-"en": "Every pound of the month gets a job."
-},
-{
-"en": "add milk and bread to the family list"
-},
-{
-"en": "Family · 3 people",
-"ar": "العيلة · 3 أفراد"
-},
-{
-"en": "List",
-"ar": "القايمة"
-},
-{
-"en": "milk, bread",
-"ar": "لبن، عيش"
-},
-{
-"en": "Omar owes Ali 400",
-"ar": "عمر عليه لعلي 400"
-},
-{
-"en": "Dad: pills at 9",
-"ar": "بابا: الدوا الساعة 9"
-},
-{
-"en": "Only the list, the house money and the reminders travel."
-},
-{
-"en": "A photo of a car instalment offer"
-},
-{
-"en": "Cash is cheaper by 61,000"
-},
-{
-"en": "Hidden cost",
-"ar": "تكلفة مخفية"
-},
-{
-"en": "Insurance 4 % a year"
-},
-{
-"en": "Scam signs",
-"ar": "علامات نصب"
-},
-{
-"en": "none found",
-"ar": "مفيش"
-},
-{
-"en": "Ask them",
-"ar": "اسألهم"
-},
-{
-"en": "Instalments vs cash at your bank's rate."
-},
-{
-"en": "Health · today",
-"ar": "الصحة · النهارده"
-},
-{
-"en": "1,420 / 2,100 kcal",
-"ar": "1,420 / 2,100 سعر"
-},
-{
-"en": "Metformin · 21:00",
-"ar": "ميتفورمين · 9 بالليل"
-},
-{
-"en": "day 12",
-"ar": "يوم 12"
-},
-{
-"en": "What you log on Home lands here too."
-},
-{
-"en": "A photo of the lunch plate"
-},
-{
-"en": "4 foods found · 760 kcal"
-},
-{
-"en": "Chicken pané · 150 g"
-},
-{
-"en": "Rice · 180 g",
-"ar": "رز · 180 جم"
-},
-{
-"en": "Salad + tahini",
-"ar": "سلطة + طحينة"
-},
-{
-"en": "Save the meal",
-"ar": "احفظ الوجبة"
-},
-{
-"en": "Change grams",
-"ar": "غيّر الجرامات"
-},
-{
-"en": "Check the amounts; your day fills."
-},
-{
-"en": "A photo of the prescription"
-},
-{
-"en": "3 medicines read",
-"ar": "اتقرت 3 أدوية"
-},
-{
-"en": "Augmentin 1 g",
-"ar": "أوجمنتين 1 جم"
-},
-{
-"en": "every 12 h · 7 days"
-},
-{
-"en": "Panadol 500",
-"ar": "بنادول 500"
-},
-{
-"en": "when needed",
-"ar": "عند اللزوم"
-},
-{
-"en": "14 tablets — 7 days"
-},
-{
-"en": "Save + reminders",
-"ar": "احفظ + التذكيرات"
-},
-{
-"en": "A reminder for every dose."
-},
-{
-"en": "First day: 8 Oct",
-"ar": "أول يوم: 8 أكتوبر"
-},
-{
-"en": "Next period ≈ 5 Nov"
-},
-{
-"en": "Fertile days",
-"ar": "أيام الخصوبة"
-},
-{
-"en": "Average cycle",
-"ar": "متوسط الدورة"
-},
-{
-"en": "28 days",
-"ar": "28 يوم"
-},
-{
-"en": "your last 6 cycles",
-"ar": "آخر 6 دورات"
-},
-{
-"en": "Add a symptom",
-"ar": "ضيفي عَرَض"
-},
-{
-"en": "Predicted from your own history."
-},
-{
-"en": "Course: Turkish A1 · day 12"
-},
-{
-"en": "Today: “Nerede?” — Where?",
-"ar": "النهارده: «Nerede?» — فين؟"
-},
-{
-"en": "Quiz",
-"ar": "الاختبار"
-},
-{
-"en": "Streak",
-"ar": "أيام ورا بعض"
-},
-{
-"en": "Next lesson",
-"ar": "الدرس الجاي"
-},
-{
-"en": "Wrong answers come back until they stick."
-},
-{
-"en": "Watching · Booking.com",
-"ar": "بيراقب · Booking.com"
-},
-{
-"en": "Under",
-"ar": "أقل من"
-},
-{
-"en": "Cheapest now",
-"ar": "أرخص دلوقتي"
-},
-{
-"en": "Open Booking.com",
-"ar": "افتح Booking.com"
-},
-{
-"en": "Checked about twice a day — you are told when it drops."
-},
-{
-"en": "3-bed flat in Maadi under 15,000, not ground floor"
-},
-{
-"en": "7 ads · best: 13,500"
-},
-{
-"en": "3 bedrooms",
-"ar": "3 أوض"
-},
-{
-"en": "Not ground floor",
-"ar": "مش أرضي"
-},
-{
-"en": "✓ 4th",
-"ar": "✓ الرابع"
-},
-{
-"en": "fair · scam check ✓"
-},
-{
-"en": "Follow it",
-"ar": "تابعها"
-},
-{
-"en": "Make an offer",
-"ar": "اعمل عرض"
-},
-{
-"en": "Every wish checked against every ad."
-},
-{
-"en": "A photo of the car licence"
-},
-{
-"en": "Filed: Car · dates",
-"ar": "اتحفظت: العربية · مواعيد"
-},
-{
-"en": "Licence ends",
-"ar": "الرخصة بتخلص"
-},
-{
-"en": "Plate",
-"ar": "اللوحة"
-},
-{
-"en": "#tags",
-"ar": "#وسوم"
-},
-{
-"en": "Ask Chat about it",
-"ar": "اسأل الشات عنها"
-},
-{
-"en": "Search it later in your own words."
-},
-{
-"en": "How much did I pay Ahmed?"
-},
-{
-"en": "Which Ahmed? → Ahmed the plumber"
-},
-{
-"en": "1,150 in 3 payments",
-"ar": "1,150 في 3 دفعات"
-},
-{
-"en": "Last time",
-"ar": "آخر مرة"
-},
-{
-"en": "12 Oct · the sink"
-},
-{
-"en": "Also",
-"ar": "كمان"
-},
-{
-"en": "his WhatsApp: “coming Saturday 6”"
-},
-{
-"en": "Open his card",
-"ar": "افتح الكارت بتاعه"
-},
-{
-"en": "Not him",
-"ar": "مش هو"
-},
-{
-"en": "Your name for each person — Attune links everything about them."
-},
-{
-"en": "The Bakery on Shubra Street.pdf → Remember"
-},
-{
-"en": "Chapter 3: The Wedding Cake"
-},
-{
-"en": "What happens",
-"ar": "اللي بيحصل"
-},
-{
-"en": "Salma bakes the cake the night before the wedding"
-},
-{
-"en": "Who",
-"ar": "مين"
-},
-{
-"en": "Salma bakes, her uncle Hassan delivers"
-},
-{
-"en": "your own copy · 3 chapters"
-},
-{
-"en": "Forget it",
-"ar": "انساه"
-},
-{
-"en": "Books, articles and news you give it — answered from your copy."
-},
-{
-"en": "Topics: football · gold · Egypt economy"
-},
-{
-"en": "This morning · 5 stories"
-},
-{
-"en": "Gold 21 k",
-"ar": "دهب 21"
-},
-{
-"en": "won 2–1 last night",
-"ar": "كسب 2–1 امبارح"
-},
-{
-"en": "Central Bank",
-"ar": "البنك المركزي"
-},
-{
-"en": "rates held",
-"ar": "الفايدة زي ما هي"
-},
-{
-"en": "Full article",
-"ar": "الخبر كامل"
-},
-{
-"en": "Gathered and summed up every morning."
-},
-{
-"en": "a pharmacy open now near me"
-},
-{
-"en": "El Ezaby · 450 m · open 24 h"
-},
-{
-"en": "6 min",
-"ar": "6 دقايق"
-},
-{
-"en": "3 min",
-"ar": "3 دقايق"
-},
-{
-"en": "Offline",
-"ar": "من غير نت"
-},
-{
-"en": "Directions work offline.",
-"ar": "الاتجاهات شغالة من غير نت."
-},
-{
-"en": "Maadi to Ramses",
-"ar": "من المعادي لرمسيس"
-},
-{
-"en": "Line 1 · towards El Marg"
-},
-{
-"en": "Stops",
-"ar": "المحطات"
-},
-{
-"en": "Time",
-"ar": "الوقت"
-},
-{
-"en": "26 min",
-"ar": "26 دقيقة"
-},
-{
-"en": "Ticket",
-"ar": "التذكرة"
-},
-{
-"en": "Show stops",
-"ar": "وريني المحطات"
-},
-{
-"en": "The direction is the last station on the sign."
-},
-{
-"en": "Turkey · 3–10 Nov · Egyptian passport"
-},
-{
-"en": "e-Visa needed · passport OK"
-},
-{
-"en": "Passport valid",
-"ar": "الباسبور ساري"
-},
-{
-"en": "until 2029 ✓",
-"ar": "لحد 2029 ✓"
-},
-{
-"en": "e-Visa · 60 $",
-"ar": "إلكترونية · 60 دولار"
-},
-{
-"en": "Ask there",
-"ar": "اسأل هناك"
-},
-{
-"en": "Everything there works offline.",
-"ar": "كل حاجة هناك من غير نت."
-},
-{
-"en": "Packs: Medicines · Cars · Islamic texts"
-},
-{
-"en": "3 packs ready · 640 MB"
-},
-{
-"en": "24,000 names",
-"ar": "24,000 اسم"
-},
-{
-"en": "Cars",
-"ar": "العربيات"
-},
-{
-"en": "1,900 models",
-"ar": "1,900 موديل"
-},
-{
-"en": "Answer source",
-"ar": "مصدر الإجابة"
-},
-{
-"en": "shown each time",
-"ar": "بيظهر كل مرة"
-},
-{
-"en": "Manage",
-"ar": "إدارة"
-},
-{
-"en": "Chat looks here first, offline."
-},
-{
-"en": "Job order · LTM 1100 · 2 days"
-},
-{
-"en": "6th of October",
-"ar": "6 أكتوبر"
-},
-{
-"en": "Or describe any business and Attune builds it."
-},
-{
-"en": "Site reports · this week"
-},
-{
-"en": "2 machines need attention",
-"ar": "معدتين محتاجين متابعة"
-},
-{
-"en": "hydraulic leak · 6 h down"
-},
-{
-"en": "Open actions",
-"ar": "إجراءات مفتوحة"
-},
-{
-"en": "Keeps breaking",
-"ar": "بيعطل كتير"
-},
-{
-"en": "Receive",
-"ar": "استلم"
-},
-{
-"en": "Moves between your team's phones on the site Wi-Fi."
-},
-{
-"en": "LTM 1100 · 18 t at 22 m · wind 7 m/s"
-},
-{
-"en": "OK — 78 % of the chart"
-},
-{
-"en": "Ground pressure",
-"ar": "ضغط الأرض"
-},
-{
-"en": "Lift plan PDF",
-"ar": "خطة الرفع PDF"
-},
-{
-"en": "Every step of the check shown."
-},
-{
-"en": "Maintenance report · ready",
-"ar": "تقرير صيانة · جاهز"
-},
-{
-"en": "Fault",
-"ar": "العطل"
-},
-{
-"en": "Hydraulic hose burst",
-"ar": "خرطوم هيدروليك اتقطع"
-},
-{
-"en": "Downtime",
-"ar": "مدة الوقوف"
-},
-{
-"en": "3 · time and place"
-},
-{
-"en": "Speak Egyptian Arabic or English."
-},
-{
-"en": "Work → Tools",
-"ar": "شغل ← الأدوات"
-},
-{
-"en": "7 tools",
-"ar": "7 أدوات"
-},
-{
-"en": "Compress · Humanize",
-"ar": "اضغط · خليه طبيعي"
-},
-{
-"en": "Each opens on its own page."
-},
-{
-"en": "write email to client about late payment"
-},
-{
-"en": "Better prompt · for Claude"
-},
-{
-"en": "role, tone, amount, deadline",
-"ar": "الدور، الأسلوب، المبلغ، الميعاد"
-},
-{
-"en": "Clarity",
-"ar": "الوضوح"
-},
-{
-"en": "For ChatGPT",
-"ar": "لـ ChatGPT"
-},
-{
-"en": "Pick the AI it is for."
-},
-{
-"en": "A 900-word prompt",
-"ar": "طلب 900 كلمة"
-},
-{
-"en": "Short version · 210 words"
-},
-{
-"en": "Requirements kept",
-"ar": "الطلبات اللي اتسابت"
-},
-{
-"en": "Meaning",
-"ar": "المعنى"
-},
-{
-"en": "Compare",
-"ar": "قارن"
-},
-{
-"en": "Every requirement stays.",
-"ar": "كل المطلوب بيفضل."
-},
-{
-"en": "“pls send me the report asap i need it for the meeting”"
-},
-{
-"en": "“Could you send me the report when you can? I need it for the meeting.”"
-},
-{
-"en": "Done by",
-"ar": "اتعملت في"
-},
-{
-"en": "the meaning",
-"ar": "المعنى"
-},
-{
-"en": "One box, three buttons.",
-"ar": "مربع واحد، تلات زراير."
-},
-{
-"en": "“We hereby inform you that your request has been processed.”"
-},
-{
-"en": "“Good news — your request is done!”"
-},
-{
-"en": "Sounds like a person",
-"ar": "شبه كلام الناس"
-},
-{
-"en": "Another tone",
-"ar": "أسلوب تاني"
-},
-{
-"en": "Pick a tone; get a natural voice."
-},
-{
-"en": "ChatGPT said: “VAT on 12,500 EGP is 1,250”"
-},
-{
-"en": "Check: wrong for Egypt",
-"ar": "مراجعة: غلط في مصر"
-},
-{
-"en": "Right value",
-"ar": "القيمة الصح"
-},
-{
-"en": "it used 10 % — Egypt's VAT is 14 %"
-},
-{
-"en": "Next prompt",
-"ar": "الطلب الجاي"
-},
-{
-"en": "Copy the next prompt",
-"ar": "انسخ الطلب الجاي"
-},
-{
-"en": "Again",
-"ar": "تاني"
-},
-{
-"en": "Back and forth until it is right."
-},
-{
-"en": "Recipe: Reply to an angry client"
-},
-{
-"en": "Fill 3 blanks",
-"ar": "املا 3 فراغات"
-},
-{
-"en": "Problem",
-"ar": "المشكلة"
-},
-{
-"en": "order arrived 3 h late"
-},
-{
-"en": "Offer",
-"ar": "العرض"
-},
-{
-"en": "10 % off the next order"
-},
-{
-"en": "Send to Chat",
-"ar": "ابعتها للشات"
-},
-{
-"en": "Prompt recipes, by job.",
-"ar": "وصفات طلبات، حسب الشغلانة."
-},
-{
-"en": "Saved · 720p · 84 MB"
-},
-{
-"en": "Sound only",
-"ar": "الصوت بس"
-},
-{
-"en": "Keep only a part, or only the sound."
-},
-{
-"en": "How many litres in a 20-foot container of diesel?"
-},
-{
-"en": "About 26,000 L in a tank container"
-},
-{
-"en": "Tank container",
-"ar": "حاوية تانك"
-},
-{
-"en": "Drums (200 L)",
-"ar": "براميل (200 لتر)"
-},
-{
-"en": "Better in Chat",
-"ar": "أحسن في الشات"
-},
-{
-"en": "Chat does all this and more."
-},
-{
-"en": "Connected to 3 places",
-"ar": "اتوصل بـ 3 أماكن"
-},
-{
-"en": "Model download",
-"ar": "تنزيل الموديل"
-},
-{
-"en": "Your data sent",
-"ar": "بياناتك اتبعتت"
-},
-{
-"en": "Lock Money",
-"ar": "اقفل الفلوس"
-},
-{
-"en": "Run my business",
-"ar": "أدير شغلي"
-},
-{
-"en": "Save money",
-"ar": "أوفّر فلوس"
-},
-{
-"en": "Eat better, stay well",
-"ar": "آكل أحسن وأفضل كويس"
-},
-{
-"en": "Learn and study",
-"ar": "أتعلم وأذاكر"
-},
-{
-"en": "Make things",
-"ar": "أعمل حاجات"
-},
-{
-"en": "Get the AI on your phone"
-},
-{
-"en": "Open Engine: the small model dot at the top of a page, or Engine at the bottom of the sidebar."
-},
-{
-"en": "Attune picks the best model for this phone. Tap Download — once, on Wi-Fi."
-},
-{
-"en": "When it says Ready, everything works with no internet, and nothing you type leaves the phone."
-},
-{
-"en": "Bigger is smarter but warmer: Spark and Glow are light, Core is the everyday choice, Zenith wants 12 GB of memory or more."
-},
-{
-"en": "Find your way: the sidebar"
-},
-{
-"en": "Tap ☰ at the top to open the sidebar (on a computer it is always on the left). It has 8 places: Create · Projects · Home · Students · Money · Health · Daily · Work."
-},
-{
-"en": "Each place is one page with tabs on top. Money = Money · Follow-ups · Deal Check. Work = Business · Team records · Reports · Tools."
-},
-{
-"en": "At the very bottom: How to use Attune, Privacy, Engine, Backup and Settings. Back always takes you to the page before."
-},
-{
-"en": "Every guide here ends with Open it — it takes you straight to that tool."
-},
-{
-"en": "Just say it on Home"
-},
-{
-"en": "Type or say what happened in the Home box: “had foul and 2 eggs”, “spent 150 on lunch”, “took my insulin”."
-},
-{
-"en": "Attune puts it in the right place — Fit & Food, Money, Family health, Reminders, People & plans, Dates — and says what it did. Wrong? Tap Undo."
-},
-{
-"en": "Under the box: three quick starts (Food photo, A file, Find for me), “Attune suggests” with what is waiting today, and four tiles with one number each."
-},
-{
-"en": "One sentence can do two things: “koshary for lunch, 80 pounds” goes to Fit & Food AND Money."
-},
-{
-"en": "Ask anything in Chat",
-"ar": "اسأل أي حاجة في الشات"
-},
-{
-"en": "Home → Chat. Type, or hold the microphone and speak — Arabic or English."
-},
-{
-"en": "+ adds photos or files: Attune reads them and answers about them."
-},
-{
-"en": "Leave it on Auto: it picks the model, the web and thinking for each question. Deep answer is for a big question."
-},
-{
-"en": "Say what you want done, not just the topic: “compare these two cars for a family of five” beats “cars”."
-},
-{
-"en": "Type with the Attune keyboard"
-},
-{
-"en": "Settings → Attune keyboard → Turn on, then Switch to it. It works in WhatsApp, Gmail — every app."
-},
-{
-"en": "Above the keys: Improve, Translate, Reply and Prompt — done by the model on your phone, offline."
-},
-{
-"en": "Tap the Franco chip again to type plain English."
-},
-{
-"en": "Keep it safe: backup",
-"ar": "خلّي بياناتك في أمان: النسخة الاحتياطية"
-},
-{
-"en": "Everything is kept on this phone only. Backup (bottom of the sidebar) saves all of it in one file."
-},
-{
-"en": "New phone? Open that file there and all your data comes back."
-},
-{
-"en": "Your Profile (name, country, language) makes every answer fit you."
-},
-{
-"en": "Make it a habit: one backup every Friday, saved somewhere off the phone."
-},
-{
-"en": "The box that does it all, quick starts and what is waiting today"
-},
-{
-"en": "Ask anything — with photos, files and the web"
-},
-{
-"en": "Spending, bills, Zakāt — and what is safe to spend today"
-},
-{
-"en": "Food, medicines and cycle on one page"
-},
-{
-"en": "Prompts, compress, humanize, copilot, library, video"
-},
-{
-"en": "What stays on your phone — and locking places with your fingerprint"
-},
-{
-"en": "Machine health from your team's site reports"
-},
-{
-"en": "Incident and maintenance reports from what you say"
-},
-{
-"en": "Type or say anything in the box — “remind me at 5 to call mum”, “spent 200 on petrol”, “find me a used Corolla”."
-},
-{
-"en": "“Attune suggests” lists what is waiting today: a bill, a dose, a trial that ends. Tick Paid or Done right there."
-},
-{
-"en": "The four tiles (Money, Health, Daily, Work) show one number each — tap one to open it."
-},
-{
-"en": "Start every morning here — it is your day on one screen."
-},
-{
-"en": "Type or hold the microphone and speak; + adds photos and files."
-},
-{
-"en": "Auto picks the model, the web and thinking for you; Deep answer reads many pages for a big question."
-},
-{
-"en": "Ask about your own things (“what did I spend on food this month?”) and the answer comes from your data."
-},
-{
-"en": "👎 on a wrong answer and say why — Attune remembers the fix."
-},
-{
-"en": "Ask in your own words: “who owes me money?”, “is mum's sugar better?”, “what's due this week?”."
-},
-{
-"en": "Attune finds the answer in your own records — Money, People & plans, Family health, Fit & Food, Dates, Mind — and does the sums by code."
-},
-{
-"en": "Tap Open to see where each number came from."
-},
-{
-"en": "Ask how something changed — “food spending since Ramadan”, “my spending by month” — and you get a chart, every number from your own records."
-},
-{
-"en": "Type text, open a PDF or Word file, or take a photo of a sign or a menu."
-},
-{
-"en": "Pick the language — any language."
-},
-{
-"en": "Every part is checked, and the document keeps its layout."
-},
-{
-"en": "Conversation: two people, one phone — each taps their side and speaks; the other reads it and hears it."
-},
-{
-"en": "Share text or a photo to Attune from any app — or paste it here."
-},
-{
-"en": "Pick an action: summarise, reply, translate, find the address, add to the calendar."
-},
-{
-"en": "The result is ready to copy or send back."
-},
-{
-"en": "Pull down the quick settings and add the “Attune Instant” tile: one tap opens Instant over any app."
-},
-{
-"en": "Make a book for a subject — work, recipes, a course."
-},
-{
-"en": "Add notes and pages to it; they stay in order."
-},
-{
-"en": "Review: your notes come back on the day you are about to forget them — tap Forgot, Hard or I remembered."
-},
-{
-"en": "Export a book as a document or share it. Five minutes of Review a day and what you read stays with you."
-},
-{
-"en": "Check the line it shows, and tap Turn it on. It needs Notification access (the same switch Money uses)."
-},
-{
-"en": "When your bank's notification comes, you get Attune's notification at once; the money goes into the pot when Attune opens."
-},
-{
-"en": "It runs on the phone with no AI and never reads your messages app."
-},
-{
-"en": "Tap Add screenshots once to bring old ones in, and switch on Keep my notifications (30 days, never SMS)."
-},
-{
-"en": "Everything stays on the phone — turning notifications off forgets them."
-},
-{
-"en": "Every time Attune opens it reads your Money, your Fit weights and Scout's market book, and shows your real chance (from your own past days, thousands of possible futures) and your progress."
-},
-{
-"en": "You get ONE step for today — “spend 2,925 less a month on food → 68%”, or move the date when it is out of reach. Why shows the proof."
-},
-{
-"en": "Before a big decision — cash or installments, a new flat, a second car — open “Test a big decision”: 2,000 futures from your own money, with stress tests."
-},
-{
-"en": "Pick a ready expert or make your own with instructions."
-},
-{
-"en": "Chat with it — it follows those instructions every time."
-},
-{
-"en": "Add files it should always know."
-},
-{
-"en": "Tap 👎 on a wrong answer in an assistant's chat and write the right one — the assistant keeps it as a rule. Share an assistant as one file."
-},
-{
-"en": "A skill is a saved recipe for the AI: the steps it follows for one kind of job."
-},
-{
-"en": "Create one, import one, or pick from the list."
-},
-{
-"en": "Use it from Chat — and share it with friends."
-},
-{
-"en": "Skills make a small model act like a bigger one on that job."
-},
-{
-"en": "Pages, documents and small programs Chat makes are kept here."
-},
-{
-"en": "Open one to use it, change it or share it."
-},
-{
-"en": "Ask Chat to change it and a new version is saved."
-},
-{
-"en": "Ask Chat for “a page that tracks…” — what you type into it is kept, and Home screen puts it on your phone like an app."
-},
-{
-"en": "Describe a picture — in any language."
-},
-{
-"en": "A quick draft shows first, then the clear picture."
-},
-{
-"en": "Keep it, draw again, or change a photo with one instruction."
-},
-{
-"en": "Remove people or things from any photo: tap Erase, paint over them with your finger, Remove — about a second, no internet."
-},
-{
-"en": "Say what the program should do."
-},
-{
-"en": "Attune talks it through step by step, writes it and tests it on your phone."
-},
-{
-"en": "Run it, change it, or keep it in Artifacts."
-},
-{
-"en": "Python runs right on the phone — try “split this bill between 4 people”."
-},
-{
-"en": "Make a project for one piece of work."
-},
-{
-"en": "Put its chats, files and instructions together."
-},
-{
-"en": "Every chat inside it already knows the files."
-},
-{
-"en": "The Project brain collects what you decided, what is still open and the dates coming up from the project's chats — and the assistant keeps to it."
-},
-{
-"en": "Take a photo of the homework question."
-},
-{
-"en": "The coach solves it by code and teaches it step by step — with pictures and a voice, not just the answer."
-},
-{
-"en": "Answer the check questions to be sure it is understood."
-},
-{
-"en": "Mark the worksheet: snap the child's page and every answer is checked — right, wrong with the steps, or not answered."
-},
-{
-"en": "Open a file: PDF, Word, PowerPoint, Excel or a photo."
-},
-{
-"en": "Pick what you want: PDF → Word, photos → PDF, Edit a PDF (change a line, sign, reorder pages)… 80+ choices."
-},
-{
-"en": "Save or share the new file. It never leaves the phone."
-},
-{
-"en": "PDF → Word keeps tables and columns; a photo of a printed English page keeps its tables too, read on the phone."
-},
-{
-"en": "Tap + Books and pick the books you trust (PDF, Word, e-book) — several at once."
-},
-{
-"en": "Ask anything: it reads every book on the phone and compares them."
-},
-{
-"en": "Each fact shows its book and page — tap it to see the book's own words; ask follow-ups in the same chat."
-},
-{
-"en": "The books stay on your phone. A scanned book (pictures of pages) is read with the AI in Ask a PDF first."
-},
-{
-"en": "Open a PDF or a book."
-},
-{
-"en": "Ask about it in your own words."
-},
-{
-"en": "Every answer shows the page it came from — tap to jump there."
-},
-{
-"en": "Write one sentence: “a 10-slide pitch for my bakery”."
-},
-{
-"en": "Attune designs the slides or a full report."
-},
-{
-"en": "Change any slide, then save as PowerPoint or PDF."
-},
-{
-"en": "Brand kit: your company name, colour and logo go on every deck and report, inside the PowerPoint too."
-},
-{
-"en": "Answer the questions or paste your old CV."
-},
-{
-"en": "Paste a job ad — the CV is tailored to it."
-},
-{
-"en": "Export a clean PDF in English or Arabic."
-},
-{
-"en": "Job ready → Mock interview: 5 questions out loud, a score for each answer and a better version of it."
-},
-{
-"en": "“Safe to spend today” on top: what you can spend today and still pay every bill, People & plans payment, trial and debt due before your next salary."
-},
-{
-"en": "Tap it to see what it counted, and the “Keep aside” amount for what is coming."
-},
-{
-"en": "Add spending by typing “lunch 150” (or let payment notifications add it); see where it goes, budgets, bills and Zakāt."
-},
-{
-"en": "Add your salary as a repeating income — then the number counts right up to payday."
-},
-{
-"en": "Money → Follow-ups → Reminders. Say or type it: “remind me tomorrow at 9 to call Hassan”."
-},
-{
-"en": "Check the time and the repeat Attune understood, then save."
-},
-{
-"en": "The phone tells you even when Attune is closed."
-},
-{
-"en": "Money → Follow-ups → Timeline: every reminder, date, payment, bill, debt and chat promise coming up, by day."
-},
-{
-"en": "Each one says what slips if you skip it — a trial that starts charging, a payment that goes late."
-},
-{
-"en": "Tap one to open the page it belongs to and deal with it."
-},
-{
-"en": "Look at it every Sunday for a minute: the week ahead, and anything late in red."
-},
-{
-"en": "Money → Follow-ups → Dates. Scan a receipt, paste a trial email, or add a passport or a warranty by hand."
-},
-{
-"en": "Attune finds the date that matters (trial end, return window, expiry) and warns you before it."
-},
-{
-"en": "Not using it? Open “Cancel kit” on a trial or renewal: the exact steps (Google Play, App Store or the service's page) and a ready message to copy."
-},
-{
-"en": "Free trials in your notifications are added by themselves — cancel the day before, not the day after."
-},
-{
-"en": "Money → Follow-ups → People & plans. Add a person, then what is between you: “Ahmed owes me 12,000”, installments, a gam'eya, the maid every Saturday."
-},
-{
-"en": "Tick it when it is paid; Attune reminds you of the next one."
-},
-{
-"en": "Type it the way you would say it — Attune fills in the plan."
-},
-{
-"en": "In WhatsApp open a group → ⋮ → More → Export chat → Include media → Attune (or pick the exported file here)."
-},
-{
-"en": "Attune reads the messages and looks at every photo on the phone, then sorts them into albums: rooms and things for design, topics by month for news, themes for Hadith — each Hadith as a card with its narrator and source."
-},
-{
-"en": "Money and promises in a business chat: open the group → “Money & promises in this chat”."
-},
-{
-"en": "Money → Follow-ups → Chat X-Ray. Export a WhatsApp chat (⋮ → More → Export chat) and open it here."
-},
-{
-"en": "X-Ray finds the money, promises, dates and questions nobody answered — send what matters to Reminders, People & plans or Money."
-},
-{
-"en": "“Who keeps their word”: a promise score per person over every chat you X-rayed — kept, broken, late, still open."
-},
-{
-"en": "It reads Egyptian Arabic the way people really write it."
-},
-{
-"en": "Money → Follow-ups → Payments. Turn on payment reading (Android asks once) — or paste a statement."
-},
-{
-"en": "It checks every payment: double charges, price rises, forgotten subscriptions, paying twice for the same thing."
-},
-{
-"en": "Tap a finding for the proof and what to do — cancel, dispute or keep."
-},
-{
-"en": "Works with InstaPay, bank and card messages, in any currency."
-},
-{
-"en": "Money → Month plan: your income split into fixed, savings, everyday and free."
-},
-{
-"en": "Add a goal — travel by June, a car, Eid — or start the emergency fund; Attune works out this month's share."
-},
-{
-"en": "Put money in each month; Safe to spend keeps it apart."
-},
-{
-"en": "Follow-ups → Family: write your name once."
-},
-{
-"en": "Add to the shopping list, what you paid for the house, and reminders for your parents — or say it in the Home box: «add milk to the family list»."
-},
-{
-"en": "Pick a family code and Send to the family; on their phone: Family → Open a family file. Attune works out who owes whom."
-},
-{
-"en": "Only the list, the house money and the reminders travel — your Money, Mind and chats never do."
-},
-{
-"en": "Paste the offer, contract or chat — or take a photo of it."
-},
-{
-"en": "Deal Check lists the risks, hidden costs, the market price and scam signs."
-},
-{
-"en": "“In today's money”: installments vs cash at your bank's yearly certificate rate (set it once) — it says which is really cheaper."
-},
-{
-"en": "Before a phone or a fridge on installments, check here: “0% interest” is not always cheaper."
-},
-{
-"en": "Health opens on today: calories, the next dose, blood sugar and the cycle on one page."
-},
-{
-"en": "Tap a card to open its tool: Fit & Food, Family health or Cycle."
-},
-{
-"en": "Everything you log on Home lands here too."
-},
-{
-"en": "Lock Health with your fingerprint in Privacy if you share the phone."
-},
-{
-"en": "Tap + on a meal: type “2 eggs and foul”, say it, scan a barcode, or take a photo of the plate — every food on it is found."
-},
-{
-"en": "Check the amounts Attune read — change any food or grams."
-},
-{
-"en": "Your day fills: calories, protein, carbs, fat and fibre against your goal."
-},
-{
-"en": "If you use insulin (Family health), each meal also shows its carbs and you are warned when your sugar is low."
-},
-{
-"en": "Photograph the prescription (or type it). Each medicine is read line by line — check it and save."
-},
-{
-"en": "Reminders are set for every dose; tick each one on Today when it is taken."
-},
-{
-"en": "Add how many are left (insulin: units) and you are told before they run out."
-},
-{
-"en": "Insulin users: save your blood sugar on Today — a low reading shows what to do and reminds you to check again in 15 minutes."
-},
-{
-"en": "Log the first day of each period."
-},
-{
-"en": "Attune predicts the next one and your fertile days from your own history."
-},
-{
-"en": "Add symptoms or notes to any day."
-},
-{
-"en": "A watch that measures night temperature makes it more exact — tap Use my watch's temperature. It stays on this phone."
-},
-{
-"en": "Pick a topic or a ready course you want to learn."
-},
-{
-"en": "Every day a short lesson arrives, with a quiz and Say it to practise out loud."
-},
-{
-"en": "Wrong answers come back on later days until they stick."
-},
-{
-"en": "Five minutes every morning beats an hour once a week."
-},
-{
-"en": "Write one sentence: “tell me when hotels near the Haram are under 45k for 4 nights from 10 December”, “tell me when my Amazon order arrives”, “order my usual from Talabat”, or “open Uber”."
-},
-{
-"en": "If something is missing (the day, the number of nights, your usual dish) the agent asks once. Then it runs: a price is checked about twice a day, even with Attune closed."
-},
-{
-"en": "Each agent is one card: the last check, what it found, Check now, Pause or Delete. Scout and your message alerts are here too."
-},
-{
-"en": "Agents never pay: Talabat opens with your order copied, Booking opens on the cheapest offer — you choose and pay."
-},
-{
-"en": "Say once what you want: “3-bedroom flat for rent in Maadi under 15,000, not ground floor”, a car, a phone, gold, a job."
-},
-{
-"en": "Scout searches the sites that matter and checks every wish against each ad — ✓, ✗ or “not stated” — with a fair-price meter and a scam check."
-},
-{
-"en": "Each ad has a “wait or buy” line from the market book: how long ads of this search stay up and how often prices drop."
-},
-{
-"en": "👍 / 👎 teach it your taste; Follow an ad and you are told when its price drops or it is sold."
-},
-{
-"en": "Keep anything: a note, a photo of a paper, a voice note, an answer from Chat."
-},
-{
-"en": "Mind files it by itself on a picture wall — people, dates, money, promises, #tags."
-},
-{
-"en": "Search it later in your own words; Chat can use it too."
-},
-{
-"en": "Mind brings things back by itself: type or share a message from someone you have records about and you see what they promised and owe."
-},
-{
-"en": "Attune links everything about each one — payments, debts, notes, messages — and Chat answers from it: “how much did I pay my barber?”."
-},
-{
-"en": "Two with the same name? Attune asks which one, and remembers your answer."
-},
-{
-"en": "«Who is this?» shows names Money and your notes met — one tap makes the card."
-},
-{
-"en": "Daily → Remember (or Remember on Home). Add a book or file (PDF, Word, EPUB…), a web page — the news — or paste text."
-},
-{
-"en": "Attune keeps it on this phone and finds its chapters by itself."
-},
-{
-"en": "Put the book's name in the question when you have saved several: “in The Bakery on Shubra Street, chapter 2”."
-},
-{
-"en": "Pick the topics you follow."
-},
-{
-"en": "Every morning Attune gathers them and sums them up."
-},
-{
-"en": "Tap a story for the full article and its source."
-},
-{
-"en": "Story threads follow one story over the days — tap What changed for the news since the day before."
-},
-{
-"en": "Search a place, a compound or an address — or ask “a pharmacy open now near me”."
-},
-{
-"en": "Tap it for directions — they work offline."
-},
-{
-"en": "Download a country for the road, or let it load free online."
-},
-{
-"en": "Ask the map from Chat too: “how far is Alexandria?”."
-},
-{
-"en": "Type where you are and where you're going — English, Arabic or a square like Tahrir or Ramses."
-},
-{
-"en": "Attune shows the line, the direction to ride (the last station on the sign), the stops and where to change."
-},
-{
-"en": "It also gives the minutes and the ticket price — all offline."
-},
-{
-"en": "No typing? Open a line and tap the stations."
-},
-{
-"en": "Pick the country you are going to."
-},
-{
-"en": "Add your dates: Attune checks your passport and the entry rules for your nationality."
-},
-{
-"en": "Use Arrive, Say it and Ask there — all offline."
-},
-{
-"en": "The Trip pack shows what is ready: download the map in one tap and turn on the delay & claim watch."
-},
-{
-"en": "Knowledge packs (medicines, cars, Islamic texts…) download by themselves."
-},
-{
-"en": "Chat looks there first and shows where each answer came from."
-},
-{
-"en": "They work offline once downloaded."
-},
-{
-"en": "Your own facts beat the model's memory."
-},
-{
-"en": "Business opens your systems: Fleet & rentals (cranes, jobs, cheques, profit per crane) — or describe any business and Attune builds its tables."
-},
-{
-"en": "Each crane shows its price from its own rate. Copy the reply (in the client's language), print a quote, or tap Book it."
-},
-{
-"en": "Share the client's message from WhatsApp straight to Attune — it opens in From a message. E-invoices for Egypt are built in."
-},
-{
-"en": "Your team's site reports fill it: every machine, its faults, downtime and open actions."
-},
-{
-"en": "Share and Receive move records between your team's phones — the site Wi-Fi is enough."
-},
-{
-"en": "See what needs attention and what keeps breaking across the team."
-},
-{
-"en": "Set a machine's hourly rate and downtime shows its cost."
-},
-{
-"en": "Pick the crane and the lift."
-},
-{
-"en": "Enter the load, radius and wind."
-},
-{
-"en": "Read the load chart check, ground pressure and slings — every step shown."
-},
-{
-"en": "Lift plan tab: the lift + ground mats + slings + wind → one verdict (GO / critical / STOP) and a PDF for the planner, supervisor and operator to sign."
-},
-{
-"en": "Say what happened in your own words."
-},
-{
-"en": "Attune writes a proper incident or maintenance report."
-},
-{
-"en": "Tap Speak and talk — Egyptian Arabic or English. Add photos: each gets the time and the place, then one PDF with them."
-},
-{
-"en": "Nothing is made up — missing facts are asked."
-},
-{
-"en": "Work → Tools is a list of choices: Improve a prompt, Compress, Humanize, Copilot, Library, Video and Ask."
-},
-{
-"en": "Tap a card to open it on its own page."
-},
-{
-"en": "Back brings you to the list again."
-},
-{
-"en": "Use them before you send something to ChatGPT or a client."
-},
-{
-"en": "Paste a rough prompt you will send to ChatGPT, Claude or Gemini."
-},
-{
-"en": "Copy the better prompt.",
-"ar": "انسخ الطلب المتظبط."
-},
-{
-"en": "Compress makes it shorter; Humanize makes text sound like you."
-},
-{
-"en": "Paste a long prompt.",
-"ar": "الزق طلب طويل."
-},
-{
-"en": "Attune keeps every requirement and drops the rest."
-},
-{
-"en": "Copy the short version.",
-"ar": "انسخ النسخة القصيرة."
-},
-{
-"en": "Shorter prompts cost less on paid AIs."
-},
-{
-"en": "Paste or type any text — a prompt, an email, a message."
-},
-{
-"en": "Tap Improve, Shorten or Humanize."
-},
-{
-"en": "The tool opens with your text and does it."
-},
-{
-"en": "Copilot and the Prompt lab are the tabs next to Writing."
-},
-{
-"en": "Paste text that sounds robotic."
-},
-{
-"en": "Pick a tone.",
-"ar": "اختار الأسلوب."
-},
-{
-"en": "Get it back in a natural voice."
-},
-{
-"en": "Put a sample of your writing in your Profile for your own style."
-},
-{
-"en": "Paste what another AI said."
-},
-{
-"en": "Attune checks it and suggests the next prompt."
-},
-{
-"en": "Go back and forth until it is right."
-},
-{
-"en": "Good for long jobs on another AI."
-},
-{
-"en": "Browse prompt recipes by job."
-},
-{
-"en": "Fill in the blanks.",
-"ar": "املا الفراغات."
-},
-{
-"en": "Send it to Chat or copy it."
-},
-{
-"en": "Prompt lab (top of Library): write two versions, run both on the same text, keep the better one in My prompts."
-},
-{
-"en": "Copy a video's link and paste it here."
-},
-{
-"en": "Pick the quality.",
-"ar": "اختار الجودة."
-},
-{
-"en": "It is saved to your phone. Tap Cut to keep only a part, or only the sound."
-},
-{
-"en": "Only download what you have the right to keep."
-},
-{
-"en": "The earlier one-question screen.",
-"ar": "شاشة السؤال الواحد القديمة."
-},
-{
-"en": "Type a question and get one answer."
-},
-{
-"en": "Kept for people who liked it."
-},
-{
-"en": "Read what Attune keeps and where: on this phone, nowhere else."
-},
-{
-"en": "Private vault: lock places like Money or Health with your fingerprint or a PIN; they lock again a minute after you leave."
-},
-{
-"en": "“Your week in privacy” shows every place Attune connected to this week, and why."
-},
-{
-"en": "The Offline lock in Engine blocks every connection when you want zero internet."
-},
-{
-"en": "Get the most of Attune"
-},
-{
-"en": "Every morning — 5 minutes"
-},
-{
-"en": "With your coffee",
-"ar": "مع فنجان القهوة"
-},
-{
-"en": "Open Home: “Attune suggests” shows today's bill, dose or trial — tick what is done."
-},
-{
-"en": "Check your Missions line on Home: the goal most at risk, its chance, and today's one step."
-},
-{
-"en": "Read “Safe to spend today” on Money: that is your number for the day."
-},
-{
-"en": "Do today's lesson in Learn daily — five minutes, one quiz."
-},
-{
-"en": "Skim Daily news: only your topics, summed up."
-},
-{
-"en": "Same time every day — it becomes a habit in two weeks."
-},
-{
-"en": "During the day — seconds each"
-},
-{
-"en": "As things happen",
-"ar": "أول بأول"
-},
-{
-"en": "Snap your plate before you eat (Home → Food photo)."
-},
-{
-"en": "Spent something? One sentence on Home: “koshary 80”, “InstaPay 500 to Sara”."
-},
-{
-"en": "Promised something? “Remind me at 5 to pay the electricity”."
-},
-{
-"en": "A long message or a photo of a paper? Share it to Attune — it opens in Chat; ask it to reply, translate or add it to the calendar."
-},
-{
-"en": "Log it the moment it happens — at night you will forget half."
-},
-{
-"en": "Every evening — close the day"
-},
-{
-"en": "Before bed",
-"ar": "قبل ما تنام"
-},
-{
-"en": "Look at your Fit & Food summary: calories and protein left; plan tomorrow's breakfast."
-},
-{
-"en": "Tick the evening doses in Family health."
-},
-{
-"en": "Follow-ups: tick what was paid, see who still owes you and what is due tomorrow."
-},
-{
-"en": "Keep the day's papers in Mind: a receipt, a warranty, a card someone gave you."
-},
-{
-"en": "Two minutes at night saves an hour of searching later."
-},
-{
-"en": "Once a week",
-"ar": "مرة في الأسبوع"
-},
-{
-"en": "Friday morning is a good time"
-},
-{
-"en": "Check your Scout searches: new ads, price drops, and the “wait or buy” line."
-},
-{
-"en": "Payments: any double charge, price rise or subscription you forgot?"
-},
-{
-"en": "Export your WhatsApp groups again (design, news, Hadith…) — the new photos and posts go into their albums."
-},
-{
-"en": "People & plans: is the maid paid for Saturday, the gam'eya turn on time?"
-},
-{
-"en": "Save a backup (bottom of the sidebar)."
-},
-{
-"en": "Ten minutes a week keeps money and promises from slipping."
-},
-{
-"en": "Once a month",
-"ar": "مرة في الشهر"
-},
-{
-"en": "The day your salary comes in"
-},
-{
-"en": "Money review: where it went, budgets, bills — and Zakāt when it is due."
-},
-{
-"en": "Dates: a renewal coming? Open its Cancel kit if you don't use it any more."
-},
-{
-"en": "A big buy coming? Deal Check “In today's money” — cash or installments."
-},
-{
-"en": "Ask your life: “how much did I spend on food this month vs last month?”"
-},
-{
-"en": "One honest look a month is how money really grows."
-},
-{
-"en": "For your work",
-"ar": "لشغلك"
-},
-{
-"en": "Every working day",
-"ar": "كل يوم شغل"
-},
-{
-"en": "A client asks on WhatsApp? Share it to Attune → From a message: what is free, the price, the reply, Book it."
-},
-{
-"en": "Something happened on site? Say it — Reports writes the report as a PDF."
-},
-{
-"en": "Team records: which machine needs attention this week."
-},
-{
-"en": "Answer a client in two minutes with a real price — that is how you win the job."
-},
-{
-"en": "Bottom of the sidebar",
-"ar": "تحت في القائمة الجانبية"
-},
-{
-"en": "period started today",
-"ar": "الدورة جات النهارده"
-},
-{
-"en": "Attach the file, then send again."
-},
-{
-"en": "Write what it's about after the command."
-},
-{
-"en": "Kept as a note in Mind."
-},
-{
-"en": "elmenus 300",
-"ar": "صرفت 200 على الغدا"
-},
-{
-"en": "transferred 500 to ahmed",
-"ar": "حولت 500 لأحمد"
-},
-{
-"en": "dinner grilled chicken and rice"
-},
-{
-"en": "every friday remind me to water the plants"
-},
-{
-"en": "headache since morning",
-"ar": "ضغطي 120 على 80"
-},
-{
-"en": "don't forget to book the dentist"
-},
-{
-"en": "what is apple in spanish"
-},
-{
-"en": "open the metro",
-"ar": "افتح الخريطة"
-},
-{
-"en": "give me ideas for a birthday"
-},
-{
-"en": "every month",
-"ar": "كل شهر"
-},
-{
-"en": "every week",
-"ar": "كل أسبوع"
-},
-{
-"en": "Bookkeeping|bookkeeping|journal|ledger",
-"ar": "Tax / VAT|tax|vat|ضريب"
-},
-{
-"en": "Onboarding|onboarding",
-"ar": "Labour law|labour law|labor law|قانون العمل"
-},
-{
-"en": "Tell me about yourself.",
-"ar": "حدثني عن نفسك."
-},
-{
-"en": "Why do you want this job?"
-},
-{
-"en": "Tell me about a problem you solved at work."
-},
-{
-"en": "What is your biggest strength — with an example?"
-},
-{
-"en": "Tell me about a time you made a mistake. What did you do?"
-},
-{
-"en": "Where do you see yourself in three years?"
-},
-{
-"en": "Do you have any questions for us?"
-},
-{
-"en": "Walk me through a project you built. What was hardest?"
-},
-{
-"en": "How do you make sure your code works?"
-},
-{
-"en": "Tell me about an analysis that changed a decision."
-},
-{
-"en": "How do you check that data is correct?"
-},
-{
-"en": "How do you close the month?"
-},
-{
-"en": "Tell me about a reconciliation that didn't match."
-},
-{
-"en": "Tell me about your best month. What did you do differently?"
-},
-{
-"en": "How do you handle a client who says it's too expensive?"
-},
-{
-"en": "Tell me about a campaign and its results."
-},
-{
-"en": "How do you decide where to spend the budget?"
-},
-{
-"en": "Tell me about an angry customer you helped."
-},
-{
-"en": "What do you do when you don't know the answer?"
-},
-{
-"en": "Tell me about a time a patient's condition changed quickly."
-},
-{
-"en": "How do you help a student who is falling behind?"
-},
-{
-"en": "Tell me about a project that was late. What did you do?"
-},
-{
-"en": "Walk me through a design from brief to final."
-},
-{
-"en": "How do you find good candidates for a hard role?"
-},
-{
-"en": "Tell me about a site problem you solved."
-},
-{
-"en": "What do you do if a delivery can't be completed?"
-},
-{
-"en": "How do you plan a lift near the chart's limit?"
-},
-{
-"en": "How do you keep quality during a rush?"
-},
-{
-"en": "How do you handle many urgent tasks at once?"
-},
-{
-"en": "A clear story: what happened → what you did → the result."
-},
-{
-"en": " is missing.",
-"ar": "احكها كقصة: ينقصها "
-},
-{
-"en": "A number makes the result believable."
-},
-{
-"en": "Add a number to the result (how many, how much, how fast)."
-},
-{
-"en": "It matches what your CV says."
-},
-{
-"en": "Tell every answer as a story: what happened, what YOU did, and the result with a number."
-},
-{
-"en": "Replace “um” and “like” with a short pause — a second of silence sounds more confident."
-},
-{
-"en": "Say “I did” and “it worked” instead of “I think” and “maybe”."
-},
-{
-"en": "Keep a steady pace: 110–170 words a minute."
-},
-{
-"en": "(negative ",
-"ar": "(سالب "
-},
-{
-"en": "negative ",
-"ar": "سالب "
-},
-{
-"en": "Well done!",
-"ar": "أحسنت!"
-},
-{
-"en": "Not yet. Try again.",
-"ar": "ليس بعد. حاول مرة أخرى."
-},
-{
-"en": "Listen to the lesson"
-},
-{
-"en": "Netflix 200 every month",
-"ar": "جمعية ٢٠٠٠ في الشهر…"
-},
-{
-"en": "12 installments",
-"ar": "36 شهر"
-},
-{
-"en": "on the 5th",
-"ar": "يوم 5"
-},
-{
-"en": "mum's HbA1c",
-"ar": "ماما"
-},
-{
-"en": "in all",
-"ar": "إجمالًا"
-},
-{
-"en": "How did my food spending change since Ramadan?"
-},
-{
-"en": "What's due this week?",
-"ar": "ايه المواعيد المستحقة الاسبوع ده؟"
-},
-{
-"en": "Is my HbA1c getting better?"
-},
-{
-"en": "How much protein did I eat yesterday?"
-},
-{
-"en": "What medicines does mum take?"
-},
-{
-"en": "You have no installments or debts in People & plans."
-},
-{
-"en": "No blood sugar readings yet. Save one on Family health → Today."
-},
-{
-"en": "That's about the world, not your own data — asking the web."
-},
-{
-"en": "the Eid",
-"ar": "العيد"
-},
-{
-"en": "The pound loses 30%",
-"ar": "الجنيه يخسر 30%"
-},
-{
-"en": "Inflation at 35% for five years"
-},
-{
-"en": "Three months without income",
-"ar": "3 شهور من غير دخل"
-},
-{
-"en": "Wedding",
-"ar": "الفرح"
-},
-{
-"en": "Umrah & Hajj",
-"ar": "العمرة والحج"
-},
-{
-"en": "The car",
-"ar": "العربية"
-},
-{
-"en": "The flat",
-"ar": "الشقة"
-},
-{
-"en": "Repairs",
-"ar": "التصليحات"
-},
-{
-"en": "Groceries",
-"ar": "البقالة"
-},
-{
-"en": "Eating out",
-"ar": "الأكل برة"
-},
-{
-"en": "The kids",
-"ar": "الولاد"
-},
-{
-"en": "Gifts",
-"ar": "الهدايا"
-},
-{
-"en": "Ramadan & Eid",
-"ar": "رمضان والعيد"
-},
-{
-"en": "Clothes",
-"ar": "اللبس"
-},
-{
-"en": "Sport",
-"ar": "الرياضة"
-},
-{
-"en": "man city",
-"ar": "مانشستر سيتي"
-},
-{
-"en": "man utd",
-"ar": "مانشستر يونايتد"
-},
-{
-"en": "real madrid",
-"ar": "ريال مدريد"
-},
-{
-"en": "paris saint-germain",
-"ar": "باريس"
-},
-{
-"en": "al hilal",
-"ar": "الهلال"
-},
-{
-"en": "al nassr",
-"ar": "النصر"
-},
-{
-"en": "aston villa",
-"ar": "استون فيلا"
-},
-{
-"en": "Continue exactly where you stopped. Do not repeat anything you already wrote — start with the very next word."
-},
-{
-"en": "fuel|gas station|petrol|petrol station|gas",
-"ar": "بنزينه|بنزينة|محطه بنزين|محطة بنزين|محطه وقود|محطة وقود|وقود|بنزين"
-},
-{
-"en": "pharmacy|pharmacies|chemist|drugstore",
-"ar": "صيدليه|صيدلية|صيدليات|اجزخانه|أجزخانة"
-},
-{
-"en": "hospital|hospitals|emergency|er",
-"ar": "مستشفي|مستشفى|مستشفيات|طوارئ|اسعاف|إسعاف"
-},
-{
-"en": "clinic|clinics|doctor|dentist|dental",
-"ar": "عياده|عيادة|عيادات|دكتور|طبيب|اسنان|أسنان"
-},
-{
-"en": "atm|cash machine|bank|banks",
-"ar": "صراف|ماكينه صراف|ماكينة صراف|ATM|بنك|بنوك|مصرف"
-},
-{
-"en": "mosque|mosques|masjid",
-"ar": "مسجد|جامع|مساجد|زاويه|زاوية"
-},
-{
-"en": "church|churches",
-"ar": "كنيسه|كنيسة|كنائس"
-},
-{
-"en": "restaurant|restaurants|food|eat|dinner|lunch",
-"ar": "مطعم|مطاعم|اكل|أكل|غدا|غداء|عشا|عشاء"
-},
-{
-"en": "cafe|cafes|coffee|coffee shop",
-"ar": "كافيه|كافيهات|قهوه|قهوة|مقهى|مقهي|كوفي"
-},
-{
-"en": "supermarket|grocery|groceries|market|hypermarket",
-"ar": "سوبر ماركت|سوبرماركت|ماركت|بقاله|بقالة|هايبر"
-},
-{
-"en": "mall|malls|shopping centre|shopping center",
-"ar": "مول|مولات|سنتر تجاري|مركز تجاري"
-},
-{
-"en": "compound|compounds|gated community|residence",
-"ar": "كمبوند|كومباوند|كمباوند|كمبوندات|مجمع سكني"
-},
-{
-"en": "school|schools",
-"ar": "مدرسه|مدرسة|مدارس"
-},
-{
-"en": "university|college",
-"ar": "جامعه|جامعة|كليه|كلية"
-},
-{
-"en": "hotel|hotels|resort",
-"ar": "فندق|فنادق|اوتيل|أوتيل|منتجع"
-},
-{
-"en": "parking|car park",
-"ar": "جراج|موقف سيارات|باركنج|ركنه|ركنة"
-},
-{
-"en": "station|metro|train|bus station",
-"ar": "محطه|محطة|مترو|قطر|قطار|موقف"
-},
-{
-"en": "police|police station",
-"ar": "قسم|قسم شرطه|قسم شرطة|شرطه|شرطة|بوليس"
-},
-{
-"en": "gym|fitness",
-"ar": "جيم|نادي رياضي|صاله العاب|صالة ألعاب"
-},
-{
-"en": "park|garden",
-"ar": "حديقه|حديقة|جنينه|جنينة|بارك"
-},
-{
-"en": "bakery|bread",
-"ar": "مخبز|فرن|عيش"
-},
-{
-"en": "mechanic|car repair|garage",
-"ar": "ميكانيكي|ورشه|ورشة|صيانه سيارات|صيانة سيارات"
 }
 ]

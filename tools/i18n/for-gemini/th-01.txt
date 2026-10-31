@@ -1,3 +1,5 @@
+IMPORTANT: Translate EVERY line yourself, by meaning, into the language named below. Do not use code, scripts, word-swapping or dictionaries to produce the translation. Never leave a line in English and never mix in another language (e.g. no Portuguese in Italian), except the brand names, codes and names the rules allow.
+
 You are translating the interface of Attune, a phone app, into Thai (language code th).
 
 # Translating Attune's interface — the brief every translator follows
@@ -164,6 +166,2495 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 
 ## Lines (th-01)
 [
+{
+"en": "{n} people",
+"ar": "{n} أشخاص"
+},
+{
+"en": "— base prices —",
+"ar": "— الأسعار الأساسية —"
+},
+{
+"en": "Owner",
+"ar": "المالك"
+},
+{
+"en": "Editor",
+"ar": "محرر"
+},
+{
+"en": "Viewer",
+"ar": "مشاهد"
+},
+{
+"en": "Maturity date",
+"ar": "تاريخ الاستحقاق"
+},
+{
+"en": "your data",
+"ar": "بياناتك"
+},
+{
+"en": "a knowledge pack",
+"ar": "حزمة معرفة"
+},
+{
+"en": "the web",
+"ar": "النت"
+},
+{
+"en": "calculated on this phone",
+"ar": "متحسب على الموبايل ده"
+},
+{
+"en": "the model's own knowledge",
+"ar": "معرفة النموذج نفسه"
+},
+{
+"en": "You",
+"ar": "إنت"
+},
+{
+"en": "Someone",
+"ar": "حد"
+},
+{
+"en": "Split bill",
+"ar": "قسّم الفاتورة"
+},
+{
+"en": "{n} ways",
+"ar": "على {n}"
+},
+{
+"en": "{p} owes you {a}",
+"ar": "{p} عليه ليك {a}"
+},
+{
+"en": "You owe {p} {a}",
+"ar": "عليك لـ{p} {a}"
+},
+{
+"en": "No names given — nothing to remember, just the sums."
+},
+{
+"en": "Savings",
+"ar": "التحويش"
+},
+{
+"en": "Paid {a}",
+"ar": "دفعت {a}"
+},
+{
+"en": "My car",
+"ar": "عربيتي"
+},
+{
+"en": "Odometer",
+"ar": "العدّاد"
+},
+{
+"en": "Goes to the Deadline Radar — a warning before it ends"
+},
+{
+"en": "Gold & savings",
+"ar": "الدهب والتحويش"
+},
+{
+"en": "{g} g of pure gold"
+},
+{
+"en": "{g} g of silver",
+"ar": "{g} جم فضة"
+},
+{
+"en": "{g} g of gold, {k}k"
+},
+{
+"en": "Worth today",
+"ar": "بكام النهارده"
+},
+{
+"en": "since you bought",
+"ar": "من ساعة ما اشتريت"
+},
+{
+"en": "Gold 24k, a gram",
+"ar": "جرام الدهب عيار 24"
+},
+{
+"en": "Silver, a gram",
+"ar": "جرام الفضة"
+},
+{
+"en": "1 {c} in your money"
+},
+{
+"en": "Above the niṣāb ({n}). Zakat on what you've held a lunar year: {z}"
+},
+{
+"en": "Above the niṣāb ({n})",
+"ar": "فوق النصاب ({n})"
+},
+{
+"en": "Below the niṣāb ({n}) — no zakat on this alone"
+},
+{
+"en": "{n} not held a year yet"
+},
+{
+"en": "Add today's price to see what it is worth: {m}"
+},
+{
+"en": "gold",
+"ar": "الدهب"
+},
+{
+"en": "silver",
+"ar": "الفضة"
+},
+{
+"en": "Sent to Zakat in Money"
+},
+{
+"en": "Open Money once first, then send"
+},
+{
+"en": "Send to Zakat",
+"ar": "ابعت للزكاة"
+},
+{
+"en": "Fuel this month",
+"ar": "البنزين الشهر ده"
+},
+{
+"en": "Litres per 100 km",
+"ar": "لتر لكل 100 كم"
+},
+{
+"en": "Fuel cost per km",
+"ar": "تكلفة البنزين لكل كم"
+},
+{
+"en": "Two fill-ups with the km on the meter, and it works out your fuel use."
+},
+{
+"en": "Write the thing and its price — “milk 1L 45 at Carrefour”"
+},
+{
+"en": "Remembered",
+"ar": "اتحفظ"
+},
+{
+"en": "cheapest at {s}",
+"ar": "الأرخص عند {s}"
+},
+{
+"en": "Saved — each share is on your list"
+},
+{
+"en": "Worked out",
+"ar": "اتحسب"
+},
+{
+"en": "Saved in Gold & savings"
+},
+{
+"en": "Added to the Deadline Radar"
+},
+{
+"en": "Saved for your car",
+"ar": "اتحفظ لعربيتك"
+},
+{
+"en": "Oil change",
+"ar": "تغيير الزيت"
+},
+{
+"en": "Filters",
+"ar": "الفلاتر"
+},
+{
+"en": "Tyres",
+"ar": "الكاوتش"
+},
+{
+"en": "Brakes",
+"ar": "الفرامل"
+},
+{
+"en": "Battery",
+"ar": "البطارية"
+},
+{
+"en": "Service",
+"ar": "الصيانة"
+},
+{
+"en": "Car wash",
+"ar": "غسيل العربية"
+},
+{
+"en": "{i}: {p} — the first price I have"
+},
+{
+"en": "{i}: {p}, the same as {w}"
+},
+{
+"en": "last month",
+"ar": "الشهر اللي فات"
+},
+{
+"en": "{i}: {p}, {n}% more than last month ({b})"
+},
+{
+"en": "{i}: {p}, {n}% more than on {d} ({b})"
+},
+{
+"en": "{i}: {p}, {n}% less than last month ({b})"
+},
+{
+"en": "{i}: {p}, {n}% less than on {d} ({b})"
+},
+{
+"en": "Open Money Guardian",
+"ar": "افتح «حارس الفلوس»"
+},
+{
+"en": "Milk",
+"ar": "اللبن"
+},
+{
+"en": "Eggs",
+"ar": "البيض"
+},
+{
+"en": "Bread",
+"ar": "العيش"
+},
+{
+"en": "Rice",
+"ar": "الرز"
+},
+{
+"en": "Sugar",
+"ar": "السكر"
+},
+{
+"en": "Oil",
+"ar": "الزيت"
+},
+{
+"en": "Tomatoes",
+"ar": "الطماطم"
+},
+{
+"en": "Potatoes",
+"ar": "البطاطس"
+},
+{
+"en": "Onions",
+"ar": "البصل"
+},
+{
+"en": "Chicken",
+"ar": "الفراخ"
+},
+{
+"en": "Meat",
+"ar": "اللحمة"
+},
+{
+"en": "Fish",
+"ar": "السمك"
+},
+{
+"en": "Cheese",
+"ar": "الجبنة"
+},
+{
+"en": "Coffee",
+"ar": "القهوة"
+},
+{
+"en": "Tea",
+"ar": "الشاي"
+},
+{
+"en": "Petrol",
+"ar": "البنزين"
+},
+{
+"en": "Diesel",
+"ar": "السولار"
+},
+{
+"en": "Gas cylinder",
+"ar": "أنبوبة البوتاجاز"
+},
+{
+"en": "Cigarettes",
+"ar": "السجاير"
+},
+{
+"en": "Diapers",
+"ar": "البامبرز"
+},
+{
+"en": "Baby formula",
+"ar": "لبن الأطفال"
+},
+{
+"en": "second opinion",
+"ar": "رأي تاني"
+},
+{
+"en": "Read by code on this phone. A first look, not legal advice — for a big contract, show it to a lawyer."
+},
+{
+"en": "Ask for",
+"ar": "اطلب"
+},
+{
+"en": "It doesn't say",
+"ar": "العقد مش بيقول"
+},
+{
+"en": "Your reply",
+"ar": "ردّك"
+},
+{
+"en": "Rent contract",
+"ar": "عقد إيجار"
+},
+{
+"en": "Job contract",
+"ar": "عقد شغل"
+},
+{
+"en": "Sale contract",
+"ar": "عقد بيع"
+},
+{
+"en": "Loan",
+"ar": "قرض"
+},
+{
+"en": "Service contract",
+"ar": "عقد خدمات"
+},
+{
+"en": "Contract",
+"ar": "عقد"
+},
+{
+"en": "Serious",
+"ar": "خطير"
+},
+{
+"en": "Don't sign it as it is"
+},
+{
+"en": "Ask for changes first",
+"ar": "اطلب تعديلات الأول"
+},
+{
+"en": "No risky terms found",
+"ar": "مفيش بنود خطيرة"
+},
+{
+"en": "Check this contract",
+"ar": "افحص العقد ده"
+},
+{
+"en": "Write what you want to do, e.g. “study 2 hours, gym 1h, call mum 15 min”"
+},
+{
+"en": "{n} reminders set",
+"ar": "اتظبط {n} تذكيرات"
+},
+{
+"en": "Nothing left to remind today"
+},
+{
+"en": "Ramadan",
+"ar": "رمضان"
+},
+{
+"en": "moved after the prayer",
+"ar": "اتنقل بعد الصلاة"
+},
+{
+"en": "Didn't fit today: {t}",
+"ar": "ماكانش فيه مكان النهارده: {t}"
+},
+{
+"en": "Remind me of each one"
+},
+{
+"en": "Jumu'ah",
+"ar": "الجمعة"
+},
+{
+"en": "Iftar",
+"ar": "الفطار"
+},
+{
+"en": "Taraweeh",
+"ar": "التراويح"
+},
+{
+"en": "Unlock Attune",
+"ar": "افتح Attune"
+},
+{
+"en": "Your private places",
+"ar": "أماكنك الخاصة"
+},
+{
+"en": "Not unlocked — try again"
+},
+{
+"en": "Locked",
+"ar": "مقفول"
+},
+{
+"en": "Use your fingerprint, face or screen lock to open it."
+},
+{
+"en": "Enter your vault PIN.",
+"ar": "اكتب الرقم السري للخزنة."
+},
+{
+"en": "Set a PIN first (4–6 digits)"
+},
+{
+"en": "Opens with your fingerprint, face or screen lock"
+},
+{
+"en": "New PIN",
+"ar": "رقم سري جديد"
+},
+{
+"en": "PIN saved",
+"ar": "الرقم السري اتحفظ"
+},
+{
+"en": "{s}: about {m} min walk"
+},
+{
+"en": "From the offline map: the area's centre to the station, in a straight line × 1.3"
+},
+{
+"en": "The same photo is in another ad ({s}{p}) — it may be copied; ask for a new photo or a video call"
+},
+{
+"en": "heard: «{h}»",
+"ar": "اتسمع: «{h}»"
+},
+{
+"en": "Listen here; saying it and the score need the Android app's speech recognition."
+},
+{
+"en": "best {s}",
+"ar": "الأحسن {s}"
+},
+{
+"en": "Say",
+"ar": "انطق"
+},
+{
+"en": "Excellent",
+"ar": "ممتاز"
+},
+{
+"en": "Nearly — try again",
+"ar": "قربت — جرّب تاني"
+},
+{
+"en": "Listen once more, then try again"
+},
+{
+"en": "Practise a short conversation",
+"ar": "اتدرّب على محادثة قصيرة"
+},
+{
+"en": "A short conversation",
+"ar": "محادثة قصيرة"
+},
+{
+"en": "The phone",
+"ar": "الموبايل"
+},
+{
+"en": "Start — you say the {p} lines"
+},
+{
+"en": "Listen to it",
+"ar": "اسمعها"
+},
+{
+"en": "Swap parts",
+"ar": "بدّلوا الأدوار"
+},
+{
+"en": "Your lines: {s}/100",
+"ar": "جُملك: {s} من ١٠٠"
+},
+{
+"en": "Drawing… {p}%",
+"ar": "بيرسم… {p}%"
+},
+{
+"en": "Draw a picture for this lesson"
+},
+{
+"en": "From your knowledge packs",
+"ar": "من حزم المعرفة اللي عندك"
+},
+{
+"en": "Turn a book into a daily course"
+},
+{
+"en": "This pack has no books to turn into a course."
+},
+{
+"en": "Each lesson is a section of the book in its own words (with its source), so it works without a model; with a model loaded, it is explained more simply from that text only."
+},
+{
+"en": "That section isn't in the pack on this phone — is the pack still installed?"
+},
+{
+"en": "Not enough terms for a quiz yet — on to the next lesson."
+},
+{
+"en": "From: {s}",
+"ar": "المصدر: {s}"
+},
+{
+"en": "the book",
+"ar": "الكتاب"
+},
+{
+"en": "Writing a short conversation…",
+"ar": "بيكتب محادثة قصيرة…"
+},
+{
+"en": "Couldn't write a good conversation this time — try again."
+},
+{
+"en": "Qty in",
+"ar": "الوارد"
+},
+{
+"en": "Qty out",
+"ar": "المنصرف"
+},
+{
+"en": "Signature",
+"ar": "التوقيع"
+},
+{
+"en": "Received by",
+"ar": "المستلم"
+},
+{
+"en": "Statement of account",
+"ar": "كشف حساب"
+},
+{
+"en": "Details",
+"ar": "البيان"
+},
+{
+"en": "Debit",
+"ar": "مدين"
+},
+{
+"en": "Credit",
+"ar": "دائن"
+},
+{
+"en": "Sales this month",
+"ar": "مبيعات الشهر ده"
+},
+{
+"en": "You owe suppliers",
+"ar": "عليك للموردين"
+},
+{
+"en": "Low stock",
+"ar": "مخزون قليل"
+},
+{
+"en": "Due or overdue",
+"ar": "مستحق أو متأخر"
+},
+{
+"en": "This system has no stock, balances, due dates or bookings yet. Ask the AI to add them, e.g. \"add a Payments table linked to Invoices\"."
+},
+{
+"en": "Needs you",
+"ar": "محتاجك"
+},
+{
+"en": "Stock on hand",
+"ar": "المخزون الموجود"
+},
+{
+"en": "On hand",
+"ar": "الموجود"
+},
+{
+"en": "Show all {n}",
+"ar": "اعرض الكل ({n})"
+},
+{
+"en": "Balances",
+"ar": "الأرصدة"
+},
+{
+"en": "Sample records added — erase them any time"
+},
+{
+"en": "Add sample records",
+"ar": "ضيف سجلات تجريبية"
+},
+{
+"en": "Sample records erased",
+"ar": "السجلات التجريبية اتمسحت"
+},
+{
+"en": "Erase sample records",
+"ar": "امسح السجلات التجريبية"
+},
+{
+"en": "Excel (every table)",
+"ar": "Excel (كل الجداول)"
+},
+{
+"en": "Recycle bin",
+"ar": "سلة المحذوفات"
+},
+{
+"en": "What it does for you"
+},
+{
+"en": "Charged",
+"ar": "المستحق"
+},
+{
+"en": "Print or save as PDF"
+},
+{
+"en": "Deleted records stay here for {n} days."
+},
+{
+"en": "The recycle bin is empty"
+},
+{
+"en": "Balances and statements",
+"ar": "الأرصدة وكشوف الحساب"
+},
+{
+"en": "Due-date warnings",
+"ar": "تنبيهات مواعيد الاستحقاق"
+},
+{
+"en": "No double bookings",
+"ar": "مفيش حجز مرتين"
+},
+{
+"en": "Found from your tables. Switch off anything you don't want."
+},
+{
+"en": "{asset} is already booked from {from} to {to} ({rec})."
+},
+{
+"en": "Not enough {item} in stock: only {have} left."
+},
+{
+"en": "Erase all the sample records? Your own records stay."
+},
+{
+"en": "Its table was deleted",
+"ar": "الجدول بتاعه اتمسح"
+},
+{
+"en": "This browser's storage is full — save an encrypted backup and delete old records."
+},
+{
+"en": "Website & desktop app",
+"ar": "موقع وتطبيق للكمبيوتر"
+},
+{
+"en": "the full app — the same screens as in Attune, in any browser, offline; upload the folder to your own website"
+},
+{
+"en": "Open the photo",
+"ar": "افتح الصورة"
+},
+{
+"en": "Left on it",
+"ar": "الباقي عليه"
+},
+{
+"en": "Reference code (optional — the original purchase invoice)"
+},
+{
+"en": "— no link (from the general stock) —"
+},
+{
+"en": "(pick from the table below)"
+},
+{
+"en": "Destination (a crane or another place)"
+},
+{
+"en": "Another place…",
+"ar": "مكان تاني…"
+},
+{
+"en": "Add a lesson",
+"ar": "ضيف درس"
+},
+{
+"en": "What should the lesson be about?"
+},
+{
+"en": "Lesson {n} added: {t}",
+"ar": "اتضاف الدرس {n}: {t}"
+},
+{
+"en": "1 thing",
+"ar": "حاجة واحدة"
+},
+{
+"en": "Solving part {i} of {n} (pages {a}–{b})…"
+},
+{
+"en": "Solving the questions…",
+"ar": "بيحل الأسئلة…"
+},
+{
+"en": "pages {a}–{b}",
+"ar": "الصفحات {a}–{b}"
+},
+{
+"en": "Only the first parts of this long document were solved."
+},
+{
+"en": "Attune is greyed out (\"restricted setting\")?"
+},
+{
+"en": "Android does this for apps installed from a file instead of Google Play. In App info tap ⋮ (top right) → Allow restricted settings, then turn Attune on here again."
+},
+{
+"en": "Open App info",
+"ar": "افتح معلومات التطبيق"
+},
+{
+"en": "Comes regularly",
+"ar": "بييجي بانتظام"
+},
+{
+"en": "{a} {cur} each time · {when}"
+},
+{
+"en": "every {d}",
+"ar": "كل {d}"
+},
+{
+"en": "tick the day — it goes into Money by itself"
+},
+{
+"en": "Recorded in Money: {a} {cur} — {t}"
+},
+{
+"en": "Taken out of Money",
+"ar": "اتشال من الفلوس"
+},
+{
+"en": "Done today",
+"ar": "اتعمل النهارده"
+},
+{
+"en": "Today — tick it when it's done"
+},
+{
+"en": "Hide details",
+"ar": "خبّي التفاصيل"
+},
+{
+"en": "Large for this phone: slower answers, a warm phone."
+},
+{
+"en": "None yet — install the recommended one above."
+},
+{
+"en": "Delete {m}?",
+"ar": "تمسح {m}؟"
+},
+{
+"en": "cores",
+"ar": "أنوية"
+},
+{
+"en": "Renewed: {t}",
+"ar": "اتجدد: {t}"
+},
+{
+"en": "Was due {d} — paid?"
+},
+{
+"en": "Due today — paid? Tick it"
+},
+{
+"en": "Marked as not renewed — {t}"
+},
+{
+"en": "Flashcards",
+"ar": "كروت الحفظ"
+},
+{
+"en": "Plan {n} more lessons",
+"ar": "خطّط {n} دروس كمان"
+},
+{
+"en": "The course goes on from lesson {n} — the next level"
+},
+{
+"en": "Load a model to plan them"
+},
+{
+"en": "Planning the next {n} lessons…"
+},
+{
+"en": "The model didn't produce more lessons — try again."
+},
+{
+"en": "{n} more lessons added",
+"ar": "اتضاف {n} دروس"
+},
+{
+"en": "Making the diagram and flashcards…"
+},
+{
+"en": "Checking it and writing it again…"
+},
+{
+"en": "Service every (engine hours, optional)"
+},
+{
+"en": "Service due — {h} h since the last one"
+},
+{
+"en": "Service in {h} h",
+"ar": "الصيانة بعد {h} ساعة"
+},
+{
+"en": "Every {e} h",
+"ar": "كل {e} ساعة"
+},
+{
+"en": "last {d}",
+"ar": "آخر صيانة {d}"
+},
+{
+"en": "Serviced today",
+"ar": "اتعملت صيانة النهارده"
+},
+{
+"en": "Service saved — the hours start again"
+},
+{
+"en": "Statement",
+"ar": "كشف حساب"
+},
+{
+"en": "{c} is due for its service ({h} h)"
+},
+{
+"en": "{c}: service in {h} h"
+},
+{
+"en": "Fleet: 1 thing needs you"
+},
+{
+"en": "Fleet: {n} things need you"
+},
+{
+"en": "cheque overdue",
+"ar": "شيك متأخر"
+},
+{
+"en": "cheque due today",
+"ar": "شيك مستحق النهارده"
+},
+{
+"en": "job past its end",
+"ar": "أمر شغل عدّى ميعاده"
+},
+{
+"en": "job ending",
+"ar": "أمر شغل قرّب يخلص"
+},
+{
+"en": "item low in the store"
+},
+{
+"en": "crane due for service",
+"ar": "ونش محتاج صيانة"
+},
+{
+"en": "service soon",
+"ar": "صيانة قريب"
+},
+{
+"en": "Use the NPU (experimental)",
+"ar": "استخدم الـ NPU (تجريبي)"
+},
+{
+"en": "Running on the NPU ({d})."
+},
+{
+"en": "Runs the model on the Snapdragon NPU (Hexagon): much cooler, often faster at reading. Works best with Core Max (8-bit). Switches itself back to the CPU if anything goes wrong."
+},
+{
+"en": "This phone's NPU could not be used by the engine — Attune stays on the CPU."
+},
+{
+"en": "Last time, starting on the NPU closed the app. Attune is back on the CPU; you can try it again in Engine → Speed."
+},
+{
+"en": "You have {b}. Until {d} ({n} days) these are due: {t}. What is left, shared over the days, is what you can spend each day."
+},
+{
+"en": "Nothing due before then.",
+"ar": "مفيش حاجة مستحقة قبلها."
+},
+{
+"en": "Tip: add your salary as a repeating income in Money, and this counts until payday."
+},
+{
+"en": "Keep aside",
+"ar": "سيب على جنب"
+},
+{
+"en": "Short by {x} before {d}"
+},
+{
+"en": "about {x} a day until {d}"
+},
+{
+"en": "Safe to spend today",
+"ar": "تقدر تصرف النهارده"
+},
+{
+"en": "In today's money",
+"ar": "بفلوس النهارده"
+},
+{
+"en": "Installments are cheaper in real money by {x}: keep the cash in the bank and pay monthly from it."
+},
+{
+"en": "Cash is cheaper in real money by {x}, even after what the bank would pay you."
+},
+{
+"en": "Cash and installments cost about the same in real money."
+},
+{
+"en": "Your bank pays a year"
+},
+{
+"en": "Who keeps their word",
+"ar": "مين بيوفي بكلمته"
+},
+{
+"en": "{k} kept · {b} broken · {l} late · {o} open"
+},
+{
+"en": "Cancel kit",
+"ar": "إزاي تلغي"
+},
+{
+"en": "Copy the message",
+"ar": "انسخ الرسالة"
+},
+{
+"en": "Open the page",
+"ar": "افتح الصفحة"
+},
+{
+"en": "From a message",
+"ar": "من رسالة"
+},
+{
+"en": "Order from a message",
+"ar": "طلب من رسالة"
+},
+{
+"en": "The client's message",
+"ar": "رسالة العميل"
+},
+{
+"en": "Paste it, e.g. «محتاج ونش 50 طن السبت في 6 أكتوبر يومين»"
+},
+{
+"en": "Hours",
+"ar": "ساعات"
+},
+{
+"en": "No date found in the message — pick the start."
+},
+{
+"en": "Cranes for this job",
+"ar": "الأوناش اللي تنفع"
+},
+{
+"en": "Booked: {no}",
+"ar": "محجوز: {no}"
+},
+{
+"en": "No crane of {t} t or more."
+},
+{
+"en": "Reply to send",
+"ar": "الرد اللي هتبعته"
+},
+{
+"en": "Copy the reply",
+"ar": "انسخ الرد"
+},
+{
+"en": "Book it",
+"ar": "احجزه"
+},
+{
+"en": "Missions",
+"ar": "المهمات"
+},
+{
+"en": "Your missions today",
+"ar": "مهماتك النهارده"
+},
+{
+"en": "Chance over the last days"
+},
+{
+"en": "No deadline",
+"ar": "من غير ميعاد"
+},
+{
+"en": "Ahead",
+"ar": "سابق"
+},
+{
+"en": "On track",
+"ar": "ماشي صح"
+},
+{
+"en": "Behind",
+"ar": "متأخر"
+},
+{
+"en": "Deadline passed",
+"ar": "الميعاد عدّى"
+},
+{
+"en": "Needs data",
+"ar": "محتاج بيانات"
+},
+{
+"en": "No forecast yet",
+"ar": "لسه مفيش توقع"
+},
+{
+"en": "Chance by the deadline",
+"ar": "فرصتك قبل الميعاد"
+},
+{
+"en": "Ads in Scout",
+"ar": "الإعلانات في Scout"
+},
+{
+"en": "Needed from now: {x} kg a week"
+},
+{
+"en": "Needed from now: {x} a month"
+},
+{
+"en": "Mission started — Attune works on it every day"
+},
+{
+"en": "Say a goal with a deadline. Attune works on it every day: it reads your money, food and Scout ads, gives your real chance, and the one step for today."
+},
+{
+"en": "e.g. «عايز أوفر 60 ألف قبل يونيو»"
+},
+{
+"en": "Save {t}",
+"ar": "توفّر {t}"
+},
+{
+"en": "Lose {t} kg",
+"ar": "تخس {t} كيلو"
+},
+{
+"en": "Buy it for {t} or less"
+},
+{
+"en": "by {d}",
+"ar": "قبل {d}"
+},
+{
+"en": "add a date (e.g. by June)"
+},
+{
+"en": "Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay off Ahmed's debt by December · finish the Turkish course by December."
+},
+{
+"en": "Start the mission",
+"ar": "ابدأ المهمة"
+},
+{
+"en": "Your money missions need {a} a month together, but you keep about {b}. Pause one, or move a date."
+},
+{
+"en": "No missions yet. Start one above — a saving goal, a weight goal, something to buy, a spending limit, a debt or a course."
+},
+{
+"en": "A goal with a date — Attune works on it every day"
+},
+{
+"en": "{c}% chance",
+"ar": "فرصتك {c}%"
+},
+{
+"en": "A goal with a date — Attune works on it every day and shows your real chance"
+},
+{
+"en": "Where",
+"ar": "مكانها"
+},
+{
+"en": "Every tool in three steps, with a drawing of its screen — and a plan to make Attune part of your day."
+},
+{
+"en": "Sync",
+"ar": "مزامنة"
+},
+{
+"en": "Backup & sync",
+"ar": "نسخة احتياطية ومزامنة"
+},
+{
+"en": "Synced — {a} new, {c} updated. Reopening…"
+},
+{
+"en": "Waiting for the other device…"
+},
+{
+"en": "Merging…",
+"ar": "بندمج…"
+},
+{
+"en": "Locking and sending…",
+"ar": "بنقفل ونبعت…"
+},
+{
+"en": "Signing in to Google…",
+"ar": "بندخل على جوجل…"
+},
+{
+"en": "Locking and uploading…",
+"ar": "بنقفل ونرفع…"
+},
+{
+"en": "Type the address shown on the other device, like 192.168.1.20:41873"
+},
+{
+"en": "The code has 8 letters and numbers"
+},
+{
+"en": "Set your sync passphrase first — the same on every device."
+},
+{
+"en": "Keep your phone and computer (or two phones) the same. The data is locked before it leaves this device; what you delete on one is deleted on the other, nothing else is lost."
+},
+{
+"en": "Wi-Fi",
+"ar": "واي فاي"
+},
+{
+"en": "Google Drive",
+"ar": "جوجل درايف"
+},
+{
+"en": "Allow Attune to find your other device on this Wi-Fi (Android asks once)."
+},
+{
+"en": "On the other device: Backup → Sync → Wi-Fi → Connect, and type:"
+},
+{
+"en": "not on Wi-Fi",
+"ar": "مش على واي فاي"
+},
+{
+"en": "Show a code on this device"
+},
+{
+"en": "Or connect to the other device"
+},
+{
+"en": "Make this device exactly like the other one (removes what the other doesn't have)"
+},
+{
+"en": "Connect and sync",
+"ar": "وصّل وزامن"
+},
+{
+"en": "One file in your own Google Drive, in a hidden folder only Attune can open. It is locked with your sync passphrase on this device, so Google only stores noise."
+},
+{
+"en": "Sync passphrase set on this device."
+},
+{
+"en": "Sync passphrase (10+ characters, the same on every device)"
+},
+{
+"en": "Save passphrase",
+"ar": "احفظ كلمة السر"
+},
+{
+"en": "Sync with Google Drive",
+"ar": "زامن مع جوجل درايف"
+},
+{
+"en": "Last synced: {d}",
+"ar": "آخر مزامنة: {d}"
+},
+{
+"en": "Wrong code or passphrase — nothing was changed."
+},
+{
+"en": "Use at least 10 characters — the file lives in your Drive, so the passphrase is its only lock."
+},
+{
+"en": "That passphrase is too easy to guess."
+},
+{
+"en": "Only available in the Attune app"
+},
+{
+"en": "Google sync on the computer comes in the next update — use Wi-Fi with your phone for now."
+},
+{
+"en": "Remember your notes",
+"ar": "افتكر ملاحظاتك"
+},
+{
+"en": "{n} notes to look at again today · about a minute"
+},
+{
+"en": "{n} left",
+"ar": "فاضل {n}"
+},
+{
+"en": "first time",
+"ar": "أول مرة"
+},
+{
+"en": "Try to remember what it says, then show it."
+},
+{
+"en": "Forgot",
+"ar": "نسيت"
+},
+{
+"en": "Hard",
+"ar": "صعبة"
+},
+{
+"en": "Done for today — they will come back when you are about to forget them."
+},
+{
+"en": "Edit your brand kit",
+"ar": "عدّل هوية شركتك"
+},
+{
+"en": "+ Your brand kit (logo, colour, name)"
+},
+{
+"en": "Change logo",
+"ar": "غيّر اللوجو"
+},
+{
+"en": "Add logo",
+"ar": "ضيف لوجو"
+},
+{
+"en": "Use my brand",
+"ar": "استخدم هوية شركتي"
+},
+{
+"en": "Your brand",
+"ar": "هوية شركتك"
+},
+{
+"en": "Add photos",
+"ar": "ضيف صور"
+},
+{
+"en": "Each photo gets the time and the place"
+},
+{
+"en": "What it shows (optional)",
+"ar": "فيها إيه (اختياري)"
+},
+{
+"en": "Report with {n} photos (PDF)"
+},
+{
+"en": "Report as PDF",
+"ar": "التقرير PDF"
+},
+{
+"en": "Cut",
+"ar": "قص"
+},
+{
+"en": "to",
+"ar": "لحد"
+},
+{
+"en": "the end",
+"ar": "الآخر"
+},
+{
+"en": "Sound only (saves to Music)"
+},
+{
+"en": "Save the sound",
+"ar": "احفظ الصوت"
+},
+{
+"en": "Save this part",
+"ar": "احفظ الجزء ده"
+},
+{
+"en": "Copied as it is, no re-encoding: quick and cool. The part starts at the nearest key frame, so it may begin a second early."
+},
+{
+"en": "Write the times like 1:20 or 0:45"
+},
+{
+"en": "The end must come after the start"
+},
+{
+"en": "This video has no sound"
+},
+{
+"en": "Nothing between those times",
+"ar": "مفيش حاجة بين الوقتين دول"
+},
+{
+"en": "Couldn't cut the video",
+"ar": "معرفتش أقص الفيديو"
+},
+{
+"en": "Couldn't save the clip",
+"ar": "معرفتش أحفظ الجزء"
+},
+{
+"en": "Your week in privacy",
+"ar": "أسبوعك في الخصوصية"
+},
+{
+"en": "Last week",
+"ar": "الأسبوع اللي فات"
+},
+{
+"en": "Connections: {n} · places: {p} · blocked: {b}. Each place and why is below."
+},
+{
+"en": "No connections at all — Attune worked fully offline."
+},
+{
+"en": "The AI ran on this device: none of your chats, notes, photos or money went to an AI company."
+},
+{
+"en": "{n} times",
+"ar": "{n} مرة"
+},
+{
+"en": "{n} blocked",
+"ar": "{n} اتمنعوا"
+},
+{
+"en": "Only the place and the reason are kept, never what was sent. Counted on this device; it starts from the day you installed this update."
+},
+{
+"en": "page request",
+"ar": "طلب صفحة"
+},
+{
+"en": "agent page",
+"ar": "صفحة للمساعد"
+},
+{
+"en": "Wi-Fi sync: waiting for the other device"
+},
+{
+"en": "Wi-Fi sync with your other device (encrypted file)"
+},
+{
+"en": "Google sync: upload your encrypted file"
+},
+{
+"en": "Google sync: read your encrypted file"
+},
+{
+"en": "I remembered",
+"ar": "افتكرت"
+},
+{
+"en": "Timeline",
+"ar": "الخط الزمني"
+},
+{
+"en": "Everything coming up — reminders, dates, payments, promises — on one list"
+},
+{
+"en": "Everything coming up, from every follow-up page, on one list."
+},
+{
+"en": "7 days",
+"ar": "7 أيام"
+},
+{
+"en": "30 days",
+"ar": "30 يوم"
+},
+{
+"en": "3 months",
+"ar": "3 شهور"
+},
+{
+"en": "Going out: {a}",
+"ar": "خارج: {a}"
+},
+{
+"en": "Coming in: {a}",
+"ar": "داخل: {a}"
+},
+{
+"en": "Nothing coming up. Add a reminder, a date (a trial, a renewal, a warranty), a payment with someone, or X-ray a chat — it all shows here."
+},
+{
+"en": "You pay",
+"ar": "إنت بتدفع"
+},
+{
+"en": "Comes in",
+"ar": "داخلك"
+},
+{
+"en": "Only a reminder — nothing happens by itself if you skip it."
+},
+{
+"en": "The free trial turns into a paid plan: {amount}."
+},
+{
+"en": "The free trial turns into a paid plan."
+},
+{
+"en": "It renews and charges {amount} again."
+},
+{
+"en": "It renews and charges you again."
+},
+{
+"en": "The last day to return it — after this you keep it."
+},
+{
+"en": "The warranty ends — a repair after this is on you."
+},
+{
+"en": "It expires — renewing late can cost a fine or a trip."
+},
+{
+"en": "The date passes.",
+"ar": "الميعاد بيعدّي."
+},
+{
+"en": "{who} pays you {amount} — ask if it doesn't come."
+},
+{
+"en": "{amount} should come in — ask if it doesn't."
+},
+{
+"en": "You pay {who} {amount} — late, and trust drops."
+},
+{
+"en": "{amount} to pay — late fees or a cut service."
+},
+{
+"en": "{amount} goes out of your money — keep it there."
+},
+{
+"en": "{who} owes you {amount} — remind them, or it gets forgotten."
+},
+{
+"en": "You owe {who} {amount} — paying late costs trust."
+},
+{
+"en": "{who} promised this — follow up, or it slips."
+},
+{
+"en": "Paint over the person or thing to remove, then tap Remove."
+},
+{
+"en": "Brush",
+"ar": "الفرشاة"
+},
+{
+"en": "Removing…",
+"ar": "بشيلها…"
+},
+{
+"en": "Paint over what to remove first."
+},
+{
+"en": "Remove people or things from a photo"
+},
+{
+"en": "Erased photo",
+"ar": "صورة متمسّح منها"
+},
+{
+"en": "Removed in {t}",
+"ar": "اتشالت في {t}"
+},
+{
+"en": "Removes people and things you paint over, in about a second, on the phone."
+},
+{
+"en": "eraser model",
+"ar": "موديل المسح"
+},
+{
+"en": "Download the eraser first (28 MB, once)."
+},
+{
+"en": "The photo is too big for the eraser — try a smaller one"
+},
+{
+"en": "The eraser failed",
+"ar": "الممحاة معرفتش تشتغل"
+},
+{
+"en": "That picture is gone.",
+"ar": "الصورة دي مبقتش موجودة."
+},
+{
+"en": "Couldn't open that photo.",
+"ar": "معرفتش أفتح الصورة دي."
+},
+{
+"en": "Log food on {n} more days and your target will follow what your body really does."
+},
+{
+"en": "Weigh yourself 2–3 times a week for two weeks and your target will follow what your body really does."
+},
+{
+"en": "You ate about {eaten} kcal a day and your weight held — so you burn about {burn}. Your plan now counts {tdee}."
+},
+{
+"en": "You ate about {eaten} kcal a day and lost {kg} kg a week — so you burn about {burn}. Your plan now counts {tdee}."
+},
+{
+"en": "You ate about {eaten} kcal a day and gained {kg} kg a week — so you burn about {burn}. Your plan now counts {tdee}."
+},
+{
+"en": "Remembered about {p}",
+"ar": "فاكر عن {p}"
+},
+{
+"en": "Project brain",
+"ar": "مخ المشروع"
+},
+{
+"en": "As you chat in this project, what you decide, what is still open and the dates coming up collect here — and the assistant keeps to them."
+},
+{
+"en": "Decided",
+"ar": "اتقرر"
+},
+{
+"en": "Still open",
+"ar": "لسه مفتوح"
+},
+{
+"en": "Test a big decision",
+"ar": "جرّب قرار كبير"
+},
+{
+"en": "Cash or installments, a new flat, a second car — see 2,000 futures from your own money before you decide."
+},
+{
+"en": "Option name",
+"ar": "اسم الاختيار"
+},
+{
+"en": "Pay now",
+"ar": "تدفع دلوقتي"
+},
+{
+"en": "Then every month",
+"ar": "وبعدين كل شهر"
+},
+{
+"en": "For months",
+"ar": "لمدة (شهور)"
+},
+{
+"en": "What you get is worth"
+},
+{
+"en": "Inflation",
+"ar": "التضخم"
+},
+{
+"en": "Bank certificate",
+"ar": "شهادة البنك"
+},
+{
+"en": "Run the futures",
+"ar": "شغّل المستقبلات"
+},
+{
+"en": "The simulator needs at least a month of your income and spending in Money."
+},
+{
+"en": "Option",
+"ar": "الاختيار"
+},
+{
+"en": "Never runs out",
+"ar": "عمر الفلوس ما تخلص"
+},
+{
+"en": "Cash in 1 year",
+"ar": "الكاش بعد سنة"
+},
+{
+"en": "3 years",
+"ar": "3 سنين"
+},
+{
+"en": "5 years",
+"ar": "5 سنين"
+},
+{
+"en": "Owned after 5 years",
+"ar": "اللي حيلتك بعد 5 سنين"
+},
+{
+"en": "Don't do it",
+"ar": "متعملوش"
+},
+{
+"en": "Stress tests: chance cash never runs out"
+},
+{
+"en": "Median of 2,000 futures in today's {c}, from your last {d} days in Money. Installments are fixed, so inflation makes them smaller each month; savings earn the certificate rate. A model, not a promise."
+},
+{
+"en": "Careful: with every option, your cash runs out in more than 1 future in 10. The safest is {best} ({ok}% of futures stay above zero)."
+},
+{
+"en": "{best}: {ok}% of futures never run out of cash; after 5 years you would have about {worth} (today's pounds, including what you bought)."
+},
+{
+"en": "{best} is better: {ok}% of futures never run out of cash, and after 5 years you would have about {worth} in today's pounds — {diff} more than {other}."
+},
+{
+"en": "The answer came in English — writing it again in Arabic…"
+},
+{
+"en": "The answer came in the wrong language — writing it again in English…"
+},
+{
+"en": "{n} calculations checked by code — all correct"
+},
+{
+"en": "Checked by code: {n} calculation(s) don't add up"
+},
+{
+"en": "not",
+"ar": "مش"
+},
+{
+"en": "Copy all",
+"ar": "انسخ الكل"
+},
+{
+"en": "not published",
+"ar": "مش منشور"
+},
+{
+"en": "Message alerts",
+"ar": "تنبيهات الرسائل"
+},
+{
+"en": "Tell Attune whose message you are waiting for — on WhatsApp, Gmail or any email app — and it tells you the moment it arrives. Checked on this phone; SMS only if you switch it on below."
+},
+{
+"en": "Turn on Notification access for Attune so it can see new messages (Settings opens). If it is grey, see “restricted setting” in Money → Payments."
+},
+{
+"en": "e.g. tell me when Ahmed messages me"
+},
+{
+"en": "Say who, like: tell me when Ahmed messages me"
+},
+{
+"en": "I'll tell you: {r}",
+"ar": "هقولك: {r}"
+},
+{
+"en": "Last alerts",
+"ar": "آخر التنبيهات"
+},
+{
+"en": "Finding the tables…",
+"ar": "بدوّر على الجداول…"
+},
+{
+"en": "No tables found in this PDF."
+},
+{
+"en": "Table {n}",
+"ar": "جدول {n}"
+},
+{
+"en": "{n} tables saved to Excel"
+},
+{
+"en": "Tables → Excel",
+"ar": "الجداول ← Excel"
+},
+{
+"en": "Reading the tables…",
+"ar": "بقرا الجداول…"
+},
+{
+"en": "Prompt lab",
+"ar": "معمل الطلبات"
+},
+{
+"en": "Try two versions of a prompt on the same text and keep the better one."
+},
+{
+"en": "Write both versions first",
+"ar": "اكتب النسختين الأول"
+},
+{
+"en": "Running A…",
+"ar": "بشغّل A…"
+},
+{
+"en": "Running B…",
+"ar": "بشغّل B…"
+},
+{
+"en": "Failed: {e}",
+"ar": "فشل: {e}"
+},
+{
+"en": "Prompt A — use {input} where the text goes"
+},
+{
+"en": "Prompt B",
+"ar": "الطلب B"
+},
+{
+"en": "Test text (optional)",
+"ar": "كلام للتجربة (اختياري)"
+},
+{
+"en": "Run both",
+"ar": "شغّل الاتنين"
+},
+{
+"en": "{n} words",
+"ar": "{n} كلمة"
+},
+{
+"en": "faster",
+"ar": "أسرع"
+},
+{
+"en": "Kept in My prompts",
+"ar": "اتحفظ في طلباتي"
+},
+{
+"en": "Keep {k}",
+"ar": "احتفظ بـ {k}"
+},
+{
+"en": "My prompts",
+"ar": "طلباتي"
+},
+{
+"en": "Prompt loaded",
+"ar": "الطلب اتفتح"
+},
+{
+"en": "{n} added, with what it learned"
+},
+{
+"en": "That is not an assistant file"
+},
+{
+"en": "Learned from your corrections",
+"ar": "اتعلمه من تصحيحاتك"
+},
+{
+"en": "Tap 👎 on an answer in a chat with this assistant and write the right one — it becomes a rule here."
+},
+{
+"en": "Open an assistant file",
+"ar": "افتح ملف مساعد"
+},
+{
+"en": "Save as a file",
+"ar": "احفظه كملف"
+},
+{
+"en": "Lift plan",
+"ar": "خطة الرفع"
+},
+{
+"en": "The crane, radius and load come from the Lift tab. Add the rest and make the plan as a PDF to sign."
+},
+{
+"en": "Load (what)",
+"ar": "الحمل (إيه هو)"
+},
+{
+"en": "Lift planner",
+"ar": "مخطط الرفع"
+},
+{
+"en": "Slings and wind",
+"ar": "الحبال والهوا"
+},
+{
+"en": "Sling legs",
+"ar": "عدد الحبال"
+},
+{
+"en": "Angle from vertical",
+"ar": "الزاوية من الرأسي"
+},
+{
+"en": "Rated load per leg",
+"ar": "حمولة الحبل الواحد"
+},
+{
+"en": "Chart wind limit",
+"ar": "حد الهوا في الجدول"
+},
+{
+"en": "Wind now (at the tip)"
+},
+{
+"en": "GO — within every limit"
+},
+{
+"en": "GO WITH CARE — read the cautions"
+},
+{
+"en": "CRITICAL LIFT — a signed lift plan is required"
+},
+{
+"en": "STOP — do not lift as planned"
+},
+{
+"en": "INCOMPLETE — fill the missing checks"
+},
+{
+"en": "Load chart",
+"ar": "جدول الحمولة"
+},
+{
+"en": "Ground under the outriggers",
+"ar": "الأرض تحت الأرجل"
+},
+{
+"en": "critical",
+"ar": "حرجة"
+},
+{
+"en": "caution",
+"ar": "تنبيه"
+},
+{
+"en": "Make the lift plan (PDF)"
+},
+{
+"en": "Set prices first — the catalogue lists items with a price"
+},
+{
+"en": "Your items, prices and what is in stock — as a WhatsApp message or a PDF, with an Order button that opens WhatsApp."
+},
+{
+"en": "Prices or stock changed since you shared it — share the new one."
+},
+{
+"en": "Your WhatsApp number (for orders)"
+},
+{
+"en": "As a message",
+"ar": "كرسالة"
+},
+{
+"en": "As a PDF",
+"ar": "كـ PDF"
+},
+{
+"en": "That page was deleted",
+"ar": "الصفحة دي اتمسحت"
+},
+{
+"en": "Clear everything typed into this page?"
+},
+{
+"en": "Android will ask to add it to your home screen"
+},
+{
+"en": "This phone's home screen can't add it — open it from Artifacts"
+},
+{
+"en": "Home screen",
+"ar": "الشاشة الرئيسية"
+},
+{
+"en": "Clear data",
+"ar": "امسح البيانات"
+},
+{
+"en": "Recall",
+"ar": "افتكر"
+},
+{
+"en": "Find anything on your phone by meaning — screenshots, notifications, chats, notes"
+},
+{
+"en": "Reading {a} of {b}…",
+"ar": "بقرا {a} من {b}…"
+},
+{
+"en": "{n} added — text read in {k}"
+},
+{
+"en": "Turn on Notification access for Attune, then come back"
+},
+{
+"en": "Kept notifications forgotten",
+"ar": "الإشعارات المحفوظة اتمسحت"
+},
+{
+"en": "Find anything… e.g. the wifi password from a screenshot, the address Ahmed sent"
+},
+{
+"en": "Looking in",
+"ar": "بدوّر في"
+},
+{
+"en": "Nothing found — try other words, or fewer"
+},
+{
+"en": "Android said no — you can allow SMS for Attune in App info."
+},
+{
+"en": "{n} bank messages from the last year are waiting below for you to check."
+},
+{
+"en": "Bring in your old bank SMS"
+},
+{
+"en": "Money starts with the last 12 months instead of today. Only bank and wallet messages; never one-time codes; nothing leaves the phone."
+},
+{
+"en": "Read my bank SMS",
+"ar": "اقرا رسايل البنك"
+},
+{
+"en": "{n} emails about money read — {p} payments are waiting in Money for a tap."
+},
+{
+"en": "Gmail is connected",
+"ar": "الجيميل متوصّل"
+},
+{
+"en": "Read my Gmail by itself"
+},
+{
+"en": "Once a day Attune reads the new emails about money — receipts, bank alerts, subscriptions, price changes. Last read: {t}. {n} kept for Recall."
+},
+{
+"en": "Receipts, bank alerts, subscriptions and price changes go to Money, the Overpaying check and Recall. Read on this phone; never one-time codes. Google asks you once."
+},
+{
+"en": "Connect Gmail",
+"ar": "وصّل الجيميل"
+},
+{
+"en": "Disconnect",
+"ar": "افصل"
+},
+{
+"en": "{n} payments from Gmail are waiting in Money"
+},
+{
+"en": "Gmail isn't connected yet",
+"ar": "الجيميل لسه مش متوصّل"
+},
+{
+"en": "Gmail sign-in was cancelled",
+"ar": "تسجيل الدخول للجيميل اتلغى"
+},
+{
+"en": "Google asks you to confirm again — tap Read now."
+},
+{
+"en": "Attune only reads emails about money, on this phone. They never go to Attune, to an AI in the cloud or to anyone else, and are never used for ads. Disconnect any time."
+},
+{
+"en": "Who should it go to? Add an email address."
+},
+{
+"en": "You can still use Open in Gmail."
+},
+{
+"en": "Sent from your Gmail to {to}."
+},
+{
+"en": "Your email — check it, then send"
+},
+{
+"en": "{n}'s email address",
+"ar": "إيميل {n}"
+},
+{
+"en": "Not an email address: {a}"
+},
+{
+"en": "Subject",
+"ar": "الموضوع"
+},
+{
+"en": "Writing it…",
+"ar": "بكتبه…"
+},
+{
+"en": "Open in Gmail",
+"ar": "افتح في الجيميل"
+},
+{
+"en": "Nothing is sent until you tap Send — here or in Gmail."
+},
+{
+"en": "No email app on this phone — copy the email instead."
+},
+{
+"en": "Keep my messages and notifications forever"
+},
+{
+"en": "WhatsApp, SMS, email, deliveries, banks — so you can find what someone sent, years later. Never one-time codes. Backed up with Attune's backup (Backup & restore)."
+},
+{
+"en": "{n} kept.",
+"ar": "{n} محفوظين."
+},
+{
+"en": "New notifications are not kept now — the ones kept stay"
+},
+{
+"en": "Tap again to forget all {n} — this can't be undone"
+},
+{
+"en": "Forget everything kept",
+"ar": "انسى كل اللي اتحفظ"
+},
+{
+"en": "Backed up",
+"ar": "اتعملت نسخة احتياطية"
+},
+{
+"en": "Google Drive · {f}",
+"ar": "جوجل درايف · {f}"
+},
+{
+"en": "This phone · {f}",
+"ar": "الموبايل ده · {f}"
+},
+{
+"en": "Backs up by itself every day"
+},
+{
+"en": "Back up by itself every day"
+},
+{
+"en": "To {w}. Last: {t}. Everything, with Recall's messages, locked with your backup password; the newest 3 are kept."
+},
+{
+"en": "Like WhatsApp: pick a folder once — on this phone (offline) or in Google Drive (online) — and Attune saves a locked backup there every day, messages included."
+},
+{
+"en": "Backup password (8+ characters)",
+"ar": "كلمة سر النسخة (٨ حروف أو أكتر)"
+},
+{
+"en": "You need this password to restore — write it down. It stays on this phone."
+},
+{
+"en": "Save the password",
+"ar": "احفظ كلمة السر"
+},
+{
+"en": "Change the folder",
+"ar": "غيّر الفولدر"
+},
+{
+"en": "Choose the backup folder",
+"ar": "اختار فولدر النسخ"
+},
+{
+"en": "Backing up…",
+"ar": "بعمل النسخة…"
+},
+{
+"en": "Back up now",
+"ar": "اعمل نسخة دلوقتي"
+},
+{
+"en": "For Google Drive: in the picker tap ☰ → Drive → a folder (make one called Attune) → Use this folder."
+},
+{
+"en": "Set a backup password first"
+},
+{
+"en": "Choose a backup folder first"
+},
+{
+"en": "WhatsApp groups",
+"ar": "جروبات الواتساب"
+},
+{
+"en": "Your groups sorted into albums with their photos — design, news, Hadith… (Chat X-Ray inside)"
+},
+{
+"en": "Reading the chat…",
+"ar": "بقرا المحادثة…"
+},
+{
+"en": "{n} new in {g}",
+"ar": "{n} جديد في {g}"
+},
+{
+"en": "{g}: {n} messages and photos sorted"
+},
+{
+"en": "Looking at the photos… {n} left"
+},
+{
+"en": "No WhatsApp chat in that — export it with “Export chat” first"
+},
+{
+"en": "Search this group…",
+"ar": "دوّر في الجروب ده…"
+},
+{
+"en": "Search all your groups — “grey sofa”, «حديث عن الصبر»…"
+},
+{
+"en": "{n} messages · {p} photos · updated {d}"
+},
+{
+"en": "Money & promises in this chat"
+},
+{
+"en": "Remove {g} from Attune? (WhatsApp keeps it)"
+},
+{
+"en": "Add a group",
+"ar": "ضيف جروب"
+},
+{
+"en": "In WhatsApp open the group → ⋮ → More → Export chat"
+},
+{
+"en": "Choose “Include media” (with the photos)"
+},
+{
+"en": "Choose Attune — it reads everything on this phone and sorts it into albums"
+},
+{
+"en": "Export again any time — only what's new is added."
+},
+{
+"en": "Or pick the exported file"
+},
+{
+"en": "{n} items",
+"ar": "{n} حاجة"
+},
+{
+"en": "Show more",
+"ar": "اعرض أكتر"
+},
+{
+"en": "Narrated by {n}",
+"ar": "عن {n}"
+},
+{
+"en": "Reported by {s}",
+"ar": "رواه {s}"
+},
+{
+"en": "Nothing found — try other words"
+},
+{
+"en": "Move to another album",
+"ar": "انقل لألبوم تاني"
+},
+{
+"en": "Added to {g}",
+"ar": "اتضاف لـ {g}"
+},
+{
+"en": "Add photos or a note"
+},
+{
+"en": "New group in Attune",
+"ar": "جروب جديد في أتيون"
+},
+{
+"en": "One photo or message: share it from WhatsApp or the gallery to “Attune · Groups”."
+},
+{
+"en": "Add to a group",
+"ar": "ضيف لجروب"
+},
+{
+"en": "Group",
+"ar": "الجروب"
+},
+{
+"en": "+ New group…",
+"ar": "+ جروب جديد…"
+},
+{
+"en": "Name — e.g. “Kitchen ideas”"
+},
+{
+"en": "{n} photos shared",
+"ar": "{n} صور متشيّرة"
+},
+{
+"en": "{n} photos chosen",
+"ar": "{n} صور مختارة"
+},
+{
+"en": "Choose photos",
+"ar": "اختار صور"
+},
+{
+"en": "A note or a link (optional) — “grey sofa for the reception”"
+},
+{
+"en": "Album",
+"ar": "الألبوم"
+},
+{
+"en": "Let Attune sort it",
+"ar": "سيب أتيون يرتبها"
+},
+{
+"en": "Couldn't read that file — pick the .xml the SMS backup app made."
+},
+{
+"en": "No bank or wallet messages from the last year in that file."
+},
+{
+"en": "From Google Play, install a free SMS backup app — e.g. “SMS Backup & Restore”."
+},
+{
+"en": "Open it → Back up → only Messages → save on this phone (Downloads)."
+},
+{
+"en": "Come back here and pick the backup file (.xml)."
+},
+{
+"en": "Pick the SMS backup file"
+},
+{
+"en": "How?",
+"ar": "إزاي؟"
+},
+{
+"en": "Attune doesn't ask for SMS access (Google blocks apps installed from a file that do) — it reads the backup file instead."
+},
+{
+"en": "Nothing had all your words — the closest:"
+},
+{
+"en": "Nothing to search yet — add screenshots or keep your notifications below"
+},
+{
+"en": "Add screenshots and photos",
+"ar": "ضيف سكرينات وصور"
+},
+{
+"en": "Their text is read on the phone, so “the receipt from Carrefour” finds them. They are kept in Mind."
+},
+{
+"en": "Keep my notifications for 30 days"
+},
+{
+"en": "WhatsApp, SMS, email, deliveries, banks — so you can find what someone sent. Never one-time codes. Turning it off forgets them."
+},
+{
+"en": "Needs Notification access (the same switch as Money)."
+},
+{
+"en": "Everything stays on this phone."
+},
+{
+"en": "Screenshots & photos",
+"ar": "سكرينات وصور"
+},
+{
+"en": "Notifications",
+"ar": "إشعارات"
+},
+{
+"en": "Saved pages",
+"ar": "صفحات محفوظة"
+},
+{
+"en": "The phone is warm — stopped early so it cools"
+},
+{
+"en": "Timing {a} of {b}…",
+"ar": "بقيس {a} من {b}…"
+},
+{
+"en": "Fastest on this phone: {g} threads — {t} tokens/s"
+},
+{
+"en": "Couldn't time the model — nothing changed"
+},
+{
+"en": "Tune for this phone",
+"ar": "ظبّطه على الموبايل ده"
+},
+{
+"en": "Tuned: {g} threads, {t} tokens/s"
+},
+{
+"en": "Looking…",
+"ar": "بدوّر…"
+},
+{
+"en": "Cheapest price",
+"ar": "أرخص سعر"
+},
+{
+"en": "Prices from the web — check at the pharmacy; the same box size matters."
+},
+{
+"en": "No price found online",
+"ar": "ملقتش سعر على النت"
+},
+{
+"en": "One result so far — the next report shows the trend."
+},
+{
+"en": "{n} results in {y} years: {a} → {b} {u} ({c})."
+},
+{
+"en": "Outside the report's range {k} times."
+},
+{
+"en": "Show this to your doctor — the trend says more than one result."
+},
+{
+"en": "Your watch's temperature rose {r} °C: ovulation around {o}, so the period is expected {n}."
+},
+{
+"en": "(your own {d} days after ovulation)"
+},
+{
+"en": "(14 days after ovulation until 2 cycles are measured)"
+},
+{
+"en": "No temperature rise yet — ovulation looks later than usual, so the period will likely be later than the date above."
+},
+{
+"en": "{n} nights of temperature from your watch — the rise after ovulation shows here."
+},
+{
+"en": "A watch that measures night temperature (Galaxy Watch, Pixel Watch, Oura…) makes the prediction more exact."
+},
+{
+"en": "Use my watch's temperature",
+"ar": "استخدم حرارة ساعتي"
+},
+{
+"en": "Read now",
+"ar": "اقرا دلوقتي"
+},
+{
+"en": "Connected, but the watch hasn't shared any night temperature yet."
+},
+{
+"en": "Story threads",
+"ar": "القصص المستمرة"
+},
+{
+"en": "{n} days · {s} sources"
+},
+{
+"en": "new today",
+"ar": "جديد النهارده"
+},
+{
+"en": "Comparing the days…",
+"ar": "بقارن الأيام…"
+},
+{
+"en": "Nothing really new since the day before."
+},
+{
+"en": "What changed since {d}?",
+"ar": "إيه اللي اتغير من {d}؟"
+},
+{
+"en": "Automations",
+"ar": "أوامر تلقائية"
+},
+{
+"en": "Say what should happen — “when my salary arrives, put 20% in the car fund” — and it runs by itself"
+},
+{
+"en": "Say what should happen",
+"ar": "قول عايز إيه يحصل"
+},
 {
 "en": "e.g. When my salary arrives, put 20% in the car fund and tell me"
 },
@@ -1468,2570 +3959,5 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 {
 "en": "Construction contractor",
 "ar": "مقاولات وإنشاءات"
-},
-{
-"en": "Clients, projects, quotes, progress invoices with retention, materials stock, subcontractors, expenses"
-},
-{
-"en": "Wholesale & distribution",
-"ar": "جملة وتوزيع"
-},
-{
-"en": "Products, customers with credit limits, orders, deliveries, purchases, returns, payments"
-},
-{
-"en": "Open quotes",
-"ar": "عروض مفتوحة"
-},
-{
-"en": "Won this year",
-"ar": "اتكسب السنة دي"
-},
-{
-"en": "Win rate",
-"ar": "نسبة الكسب"
-},
-{
-"en": "New quotation",
-"ar": "عرض سعر جديد"
-},
-{
-"en": "valid until",
-"ar": "ساري لحد"
-},
-{
-"en": "No quotations yet. Price a job for a client, send it, and turn it into the job order when they say yes."
-},
-{
-"en": "Quotation {no} saved",
-"ar": "عرض السعر {no} اتحفظ"
-},
-{
-"en": "Tons needed",
-"ar": "الحمولة المطلوبة (طن)"
-},
-{
-"en": "Crane (free now)",
-"ar": "الونش (الفاضي دلوقتي)"
-},
-{
-"en": "— decide later —",
-"ar": "— بعدين —"
-},
-{
-"en": "— none yet —",
-"ar": "— لسه —"
-},
-{
-"en": "Priced",
-"ar": "التسعير"
-},
-{
-"en": "Mobilisation (transport + rigging)",
-"ar": "النقل والتركيب"
-},
-{
-"en": "Valid until (empty = 14 days)"
-},
-{
-"en": "Expected start",
-"ar": "البدء المتوقع"
-},
-{
-"en": "Notes (conditions, what the client provides)"
-},
-{
-"en": "This quotation was deleted.",
-"ar": "عرض السعر ده اتمسح."
-},
-{
-"en": "Job order {no} made from the quotation"
-},
-{
-"en": "mobilisation",
-"ar": "النقل والتركيب"
-},
-{
-"en": "Marked as sent",
-"ar": "اتعلّم إنه اتبعت"
-},
-{
-"en": "Mark as sent",
-"ar": "اتبعت للعميل"
-},
-{
-"en": "Marked as rejected",
-"ar": "اتعلّم إنه اترفض"
-},
-{
-"en": "Rejected",
-"ar": "اترفض"
-},
-{
-"en": "The client said yes — make the job order"
-},
-{
-"en": "Make the job order",
-"ar": "اعمل أمر الشغل"
-},
-{
-"en": "New purchase order",
-"ar": "أمر شراء جديد"
-},
-{
-"en": "No purchase orders. Order parts from a supplier; receive them when they come and they go straight into the store."
-},
-{
-"en": "Purchase order {no} saved",
-"ar": "أمر الشراء {no} اتحفظ"
-},
-{
-"en": "This purchase order was deleted."
-},
-{
-"en": "Received into the store — code {c}"
-},
-{
-"en": "Cancel the order",
-"ar": "الغي الأمر"
-},
-{
-"en": "Goods came — receive them"
-},
-{
-"en": "Receive into the store",
-"ar": "استلم في المخزن"
-},
-{
-"en": "bought",
-"ar": "اشترينا"
-},
-{
-"en": "No suppliers yet — they come from purchase orders and incoming invoices, or add one."
-},
-{
-"en": "Opening balance (what you owed before)"
-},
-{
-"en": "Owed",
-"ar": "المستحق"
-},
-{
-"en": "Pay this supplier",
-"ar": "ادفع للمورد ده"
-},
-{
-"en": "Quotation {no} for {who} expires in {d} days"
-},
-{
-"en": "Purchase order {no} from {who} is {d} days late"
-},
-{
-"en": "Sent",
-"ar": "اتبعت"
-},
-{
-"en": "Accepted",
-"ar": "اتقبل"
-},
-{
-"en": "Won — job order",
-"ar": "اتكسب — أمر شغل"
-},
-{
-"en": "Expired",
-"ar": "انتهى"
-},
-{
-"en": "Partly received",
-"ar": "اتستلم جزء"
-},
-{
-"en": "Quotes",
-"ar": "عروض الأسعار"
-},
-{
-"en": "Purchase orders",
-"ar": "أوامر الشراء"
-},
-{
-"en": "Suppliers",
-"ar": "الموردين"
-},
-{
-"en": "Quotations",
-"ar": "عروض الأسعار"
-},
-{
-"en": "Supplier balances",
-"ar": "أرصدة الموردين"
-},
-{
-"en": "Quotation",
-"ar": "عرض سعر"
-},
-{
-"en": "Purchase order",
-"ar": "أمر شراء"
-},
-{
-"en": "New supplier",
-"ar": "مورد جديد"
-},
-{
-"en": "Purchase order late",
-"ar": "أمر شراء متأخر"
-},
-{
-"en": "purchase order late",
-"ar": "أمر شراء متأخر"
-},
-{
-"en": "This quote was sent — make a new quote to change its price"
-},
-{
-"en": "This quote is already a job order ({no})"
-},
-{
-"en": "This quote was rejected",
-"ar": "عرض السعر ده اترفض"
-},
-{
-"en": "Choose the supplier",
-"ar": "اختار المورد"
-},
-{
-"en": "Nothing left to receive on this order"
-},
-{
-"en": "{item}: only {n} left to receive"
-},
-{
-"en": "{item} is not on this order"
-},
-{
-"en": "This order was cancelled",
-"ar": "الأمر ده اتلغى"
-},
-{
-"en": "Part of this order was received — make a new order for the rest"
-},
-{
-"en": "Enter the rate",
-"ar": "اكتب السعر"
-},
-{
-"en": "Enter the expected hours / days"
-},
-{
-"en": "Excel",
-"ar": "إكسل"
-},
-{
-"en": "Money this month (cash)",
-"ar": "فلوس الشهر ده (كاش)"
-},
-{
-"en": "{j} jobs · {si} sites · {c} clients"
-},
-{
-"en": "Collected",
-"ar": "اتحصّل"
-},
-{
-"en": "Spent",
-"ar": "اتصرف"
-},
-{
-"en": "Profit this month",
-"ar": "مكسب الشهر ده"
-},
-{
-"en": "Profit, all time",
-"ar": "المكسب من الأول"
-},
-{
-"en": "Collected = payments received that didn't bounce, by their date. Spent = expenses."
-},
-{
-"en": "Less",
-"ar": "أقل"
-},
-{
-"en": "Last 6 months and who owes most"
-},
-{
-"en": "Month",
-"ar": "الشهر"
-},
-{
-"en": "Who owes most",
-"ar": "مين عليه أكتر"
-},
-{
-"en": "Add a crane first.",
-"ar": "ضيف ونش الأول."
-},
-{
-"en": "Every crane's rates in one place. New job orders start with these."
-},
-{
-"en": "Rates saved",
-"ar": "الأسعار اتحفظت"
-},
-{
-"en": "Rates",
-"ar": "الأسعار"
-},
-{
-"en": "No sites yet.",
-"ar": "مفيش مواقع لسه."
-},
-{
-"en": "Profit per site",
-"ar": "المكسب لكل موقع"
-},
-{
-"en": "Query",
-"ar": "استعلام"
-},
-{
-"en": "Crane moves",
-"ar": "نقل الونش"
-},
-{
-"en": "{n} rows",
-"ar": "{n} صف"
-},
-{
-"en": "Nothing matches.",
-"ar": "مفيش حاجة مطابقة."
-},
-{
-"en": "In / out",
-"ar": "داخل / خارج"
-},
-{
-"en": "Client / payee",
-"ar": "العميل / المستفيد"
-},
-{
-"en": "Status",
-"ar": "الحالة"
-},
-{
-"en": "Pricing",
-"ar": "التسعير"
-},
-{
-"en": "What",
-"ar": "إيه"
-},
-{
-"en": "Items",
-"ar": "الأصناف"
-},
-{
-"en": "Stock value",
-"ar": "قيمة المخزون"
-},
-{
-"en": "In this month",
-"ar": "دخل الشهر ده"
-},
-{
-"en": "Out this month",
-"ar": "خرج الشهر ده"
-},
-{
-"en": "{n} items low",
-"ar": "{n} صنف قرّب يخلص"
-},
-{
-"en": "Technician",
-"ar": "الفني"
-},
-{
-"en": "Clear filters",
-"ar": "امسح الفلاتر"
-},
-{
-"en": "balance {b}",
-"ar": "الرصيد {b}"
-},
-{
-"en": "{n} lines · {q} units · {t}"
-},
-{
-"en": "Nothing issued from this invoice yet."
-},
-{
-"en": "Issued from it",
-"ar": "اللي اتصرف منها"
-},
-{
-"en": "Technicians",
-"ar": "الفنيين"
-},
-{
-"en": "Destinations",
-"ar": "الجهات"
-},
-{
-"en": "Purchasers",
-"ar": "المشترين"
-},
-{
-"en": "The names your store forms suggest. Renaming one changes it on every line."
-},
-{
-"en": "Add a name",
-"ar": "ضيف اسم"
-},
-{
-"en": "Renamed everywhere",
-"ar": "الاسم اتغيّر في كل حتة"
-},
-{
-"en": "Remove this name from the list?"
-},
-{
-"en": "Lists",
-"ar": "القوايم"
-},
-{
-"en": "Contact person",
-"ar": "الشخص المسؤول"
-},
-{
-"en": "Not active any more",
-"ar": "مبقاش شغال معانا"
-},
-{
-"en": "Inactive",
-"ar": "مش نشط"
-},
-{
-"en": "Account number",
-"ar": "رقم الحساب"
-},
-{
-"en": "Branch",
-"ar": "الفرع"
-},
-{
-"en": "Account holder",
-"ar": "صاحب الحساب"
-},
-{
-"en": "Opening balance",
-"ar": "الرصيد الافتتاحي"
-},
-{
-"en": "It covers a period (rent, insurance, a monthly salary…)"
-},
-{
-"en": "A rate can't be negative"
-},
-{
-"en": "\"{name}\" still has stock",
-"ar": "\"{name}\" لسه ليه رصيد"
-},
-{
-"en": "{n} store line(s) use \"{name}\" — rename it instead"
-},
-{
-"en": "Unknown table {t}",
-"ar": "جدول مش معروف"
-},
-{
-"en": "See what Attune can do, then watch each tool work with sample data — and a plan to make Attune part of your day."
-},
-{
-"en": "What Attune can do",
-"ar": "Attune يقدر يعمل إيه"
-},
-{
-"en": "You say",
-"ar": "إنت تقول"
-},
-{
-"en": "You get",
-"ar": "إنت تاخد"
-},
-{
-"en": "Show me how",
-"ar": "وريني إزاي"
-},
-{
-"en": "Sample",
-"ar": "تجربة"
-},
-{
-"en": "Sample data — the real screen, playing by itself"
-},
-{
-"en": "Search by meaning is ready"
-},
-{
-"en": "Understanding {a} of {b}…",
-"ar": "بفهم {a} من {b}…"
-},
-{
-"en": "by meaning",
-"ar": "بالمعنى"
-},
-{
-"en": "Search by meaning (Arabic ↔ English)"
-},
-{
-"en": "«فاتورة الكهربا» finds “electricity bill”, “where did I park” finds «ركنت العربية». A {mb} MB model, downloaded once (Wi-Fi), runs on the phone."
-},
-{
-"en": "Remove the model",
-"ar": "امسح الموديل"
-},
-{
-"en": "Download ({mb} MB)",
-"ar": "نزّل ({mb} ميجا)"
-},
-{
-"en": "Couldn't download",
-"ar": "معرفتش أنزّل"
-},
-{
-"en": "Download stopped — it continues where it stopped next time."
-},
-{
-"en": "Not enough free memory right now — close the chat model or try again later"
-},
-{
-"en": "Expand",
-"ar": "كبّر الصورة"
-},
-{
-"en": "A bigger picture — the AI draws the missing edges"
-},
-{
-"en": "All round",
-"ar": "من كل ناحية"
-},
-{
-"en": "Wider",
-"ar": "أعرض"
-},
-{
-"en": "Taller",
-"ar": "أطول"
-},
-{
-"en": "Making it bigger…",
-"ar": "بكبّرها…"
-},
-{
-"en": "Expanded to {w} × {h}"
-},
-{
-"en": "The photo already has that shape"
-},
-{
-"en": "Nothing found there — use the brush to paint over it"
-},
-{
-"en": "Tap what to remove, or brush over it"
-},
-{
-"en": "Removed in {s} s",
-"ar": "اتشالت في {s} ثانية"
-},
-{
-"en": "Cutting out…",
-"ar": "بقصّها…"
-},
-{
-"en": "Tap the subject to cut out"
-},
-{
-"en": "Cut-out saved to Studio",
-"ar": "القصّة اتحفظت في الاستوديو"
-},
-{
-"en": "Sharpening… this takes a while"
-},
-{
-"en": "Paint over the part to change first."
-},
-{
-"en": "Saved to the phone's gallery"
-},
-{
-"en": "Saved in Studio",
-"ar": "اتحفظت في الاستوديو"
-},
-{
-"en": "Finding the people and things in the photo…"
-},
-{
-"en": "Brush over what to remove."
-},
-{
-"en": "Brush over what to remove"
-},
-{
-"en": "Tap a person or a thing — or use the brush"
-},
-{
-"en": "{n} found besides the main subject"
-},
-{
-"en": "No passers-by found",
-"ar": "مفيش ناس معدّية في الصورة"
-},
-{
-"en": "Tap the subject to lift it off the background"
-},
-{
-"en": "Sharper and 4× bigger",
-"ar": "أوضح وأكبر 4 مرات"
-},
-{
-"en": "Brush the part, then say what it should become"
-},
-{
-"en": "Hold to compare",
-"ar": "دوس مطوّل عشان تقارن"
-},
-{
-"en": "Remove {n}",
-"ar": "شيل {n}"
-},
-{
-"en": "Save cut-out",
-"ar": "احفظ القصّة"
-},
-{
-"en": "Cut out",
-"ar": "قص"
-},
-{
-"en": "Enhance",
-"ar": "وضّح"
-},
-{
-"en": "e.g. a sunset sky",
-"ar": "مثلًا: سما وقت الغروب"
-},
-{
-"en": "Edit a photo — erase, passers-by, cut out"
-},
-{
-"en": "AI Eraser",
-"ar": "الممحاة الذكية"
-},
-{
-"en": "Passers-by",
-"ar": "الناس المعدّية"
-},
-{
-"en": "Client page",
-"ar": "صفحة العميل"
-},
-{
-"en": "Saved {f} — send it with the PIN in a separate message"
-},
-{
-"en": "One page {c} can open on any phone: what they owe, their invoices, payments and job orders. No costs, no other client. Send it on WhatsApp or by email."
-},
-{
-"en": "PIN to open it (4+ digits — recommended)"
-},
-{
-"en": "At least 4 digits",
-"ar": "4 أرقام على الأقل"
-},
-{
-"en": "Arabic page",
-"ar": "صفحة عربي"
-},
-{
-"en": "English page",
-"ar": "صفحة إنجليزي"
-},
-{
-"en": "Locking…",
-"ar": "بقفلها…"
-},
-{
-"en": "Make the page",
-"ar": "اعمل الصفحة"
-},
-{
-"en": "Spoken in",
-"ar": "الكلام بـ"
-},
-{
-"en": "Arabic (Egypt)",
-"ar": "عربي (مصري)"
-},
-{
-"en": "Listening… {p}",
-"ar": "بسمع… {p}"
-},
-{
-"en": "Make subtitles (.srt)",
-"ar": "اعمل ترجمة مكتوبة (.srt)"
-},
-{
-"en": "No speech was heard in this video"
-},
-{
-"en": "Your phone's own offline speech recogniser listens to the video, piece by piece — the sound never leaves the phone. About as long as the video."
-},
-{
-"en": "Subtitles need Android 13 or newer"
-},
-{
-"en": "Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then."
-},
-{
-"en": "The first time, Google's sign-in page opens in your browser; after that the computer stays signed in."
-},
-{
-"en": "Built from the \"{k}\" template in a second — change anything you like"
-},
-{
-"en": "Android is downloading the offline speech pack for this language — try again when it finishes"
-},
-{
-"en": "That language isn't installed for offline voice — add it in the phone's Settings → Google → Speech → Offline languages"
-},
-{
-"en": "Marked cleared in Fleet",
-"ar": "اتعلّم إنه اتصرف في الأسطول"
-},
-{
-"en": "Marked bounced in Fleet — it stays owed"
-},
-{
-"en": "Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»"
-},
-{
-"en": "RIGHT NOW",
-"ar": "دلوقتي"
-},
-{
-"en": "Your day",
-"ar": "يومك"
-},
-{
-"en": "Cheque {no} from {who} is 1 day late — {a}"
-},
-{
-"en": "Cheque {no} from {who} is {d} days late — {a}"
-},
-{
-"en": "Your cheque {no} to {who} is due today — {a}"
-},
-{
-"en": "Cheque {no} from {who} is due today — {a}"
-},
-{
-"en": "{c}: a crane paper expired {d} days ago"
-},
-{
-"en": "{c}: a crane paper expires in {d} days"
-},
-{
-"en": "{who}'s licence expired",
-"ar": "رخصة {who} خلصت"
-},
-{
-"en": "{no} passed its end date — {c}"
-},
-{
-"en": "{c} is due for its service"
-},
-{
-"en": "{c}: service soon",
-"ar": "{c}: الصيانة قربت"
-},
-{
-"en": "{item}: {b} left in the store"
-},
-{
-"en": "Purchase order {no} is late"
-},
-{
-"en": "Quotation {no} expires in {d} days"
-},
-{
-"en": "{c} is using more fuel than usual"
-},
-{
-"en": "It cleared",
-"ar": "اتصرف"
-},
-{
-"en": "Spend today",
-"ar": "تصرف النهارده"
-},
-{
-"en": "Calories",
-"ar": "السعرات"
-},
-{
-"en": "Cranes out",
-"ar": "الأوناش الشغالة"
-},
-{
-"en": "Goal",
-"ar": "الهدف"
-},
-{
-"en": "You spent {s} today — more than the {p} that keeps every bill paid. Tomorrow's safe amount is lower."
-},
-{
-"en": "{t}: {c}% chance now",
-"ar": "{t}: الفرصة دلوقتي {c}%"
-},
-{
-"en": "{c} is free — {w} hired it before."
-},
-{
-"en": " and ",
-"ar": " و"
-},
-{
-"en": "{c} is free{since}.",
-"ar": "{c} فاضي{since}."
-},
-{
-"en": "since {d}",
-"ar": "من {d}"
-},
-{
-"en": "Scout found {n} new for “{w}”."
-},
-{
-"en": "Remembered “{t}” — {n} chapters. Ask Chat about it any time."
-},
-{
-"en": "Remembered “{t}”. Ask Chat about it any time."
-},
-{
-"en": "Reading {f}…",
-"ar": "بقرا {f}…"
-},
-{
-"en": "Paste a web address that starts with https://"
-},
-{
-"en": "Reading a web page works in the Android app"
-},
-{
-"en": "Reading the page…",
-"ar": "بقرا الصفحة…"
-},
-{
-"en": "Paste at least a few lines"
-},
-{
-"en": "In “{t}”, what happens in chapter 1?"
-},
-{
-"en": "In “{t}”, ",
-"ar": "في «{t}»، "
-},
-{
-"en": "Give Attune a book, an article or the news to remember. Then ask Chat about it any time — even “what happens in chapter 3?”."
-},
-{
-"en": "A book or file",
-"ar": "كتاب أو ملف"
-},
-{
-"en": "A web page",
-"ar": "صفحة من النت"
-},
-{
-"en": "Remember this page",
-"ar": "افتكر الصفحة دي"
-},
-{
-"en": "A name (optional)",
-"ar": "اسم (لو عايز)"
-},
-{
-"en": "Paste the article, the notes or the chapter here"
-},
-{
-"en": "What Attune remembers",
-"ar": "اللي Attune فاكره"
-},
-{
-"en": "{n} chapters",
-"ar": "{n} فصول"
-},
-{
-"en": "Nothing yet. Add a book, an article or a page above."
-},
-{
-"en": "Kept on this phone only. Chat answers from it and says where."
-},
-{
-"en": "Reading {c} — part {i} of {n}…"
-},
-{
-"en": "Books, articles, the news — ask Chat about them"
-},
-{
-"en": "Forget this? Chat won't answer from it any more."
-},
-{
-"en": "Call",
-"ar": "مكالمة"
-},
-{
-"en": "(observed)",
-"ar": "(بدل الحد)"
-},
-{
-"en": "Emergency {n}",
-"ar": "الطوارئ {n}"
-},
-{
-"en": "Police {n}",
-"ar": "الشرطة {n}"
-},
-{
-"en": "Ambulance {n}",
-"ar": "الإسعاف {n}"
-},
-{
-"en": "Fire {n}",
-"ar": "المطافي {n}"
-},
-{
-"en": "day {n}",
-"ar": "اليوم {n}"
-},
-{
-"en": "Today: {h}",
-"ar": "النهارده: {h}"
-},
-{
-"en": "Tomorrow: {h}",
-"ar": "بكرة: {h}"
-},
-{
-"en": "In 2 days: {h}",
-"ar": "بعد يومين: {h}"
-},
-{
-"en": "A public holiday — banks and offices are closed"
-},
-{
-"en": "the date can move a day with the moon"
-},
-{
-"en": "Your country",
-"ar": "بلدك"
-},
-{
-"en": "Money, VAT, holidays and the weekend follow it"
-},
-{
-"en": "Yes, I live in {c}"
-},
-{
-"en": "VAT: varies",
-"ar": "الضريبة: بتختلف"
-},
-{
-"en": "VAT {v}%",
-"ar": "ضريبة {v}%"
-},
-{
-"en": "Weekend: {d}",
-"ar": "الويك إند: {d}"
-},
-{
-"en": "All the holidays",
-"ar": "كل الإجازات"
-},
-{
-"en": "Taken",
-"ar": "اتاخدت"
-},
-{
-"en": "Not taken yet",
-"ar": "لسه ما اتاخدتش"
-},
-{
-"en": "Dose",
-"ar": "جرعة"
-},
-{
-"en": "Your course",
-"ar": "الكورس بتاعك"
-},
-{
-"en": "Holiday",
-"ar": "إجازة"
-},
-{
-"en": "Banks are closed today{h} — it clears on {d}"
-},
-{
-"en": "Coptic Christmas",
-"ar": "عيد الميلاد المجيد"
-},
-{
-"en": "Revolution Day (25 January)",
-"ar": "عيد ثورة 25 يناير"
-},
-{
-"en": "Sinai Liberation Day",
-"ar": "عيد تحرير سينا"
-},
-{
-"en": "Labour Day",
-"ar": "عيد العمال"
-},
-{
-"en": "30 June Revolution",
-"ar": "ثورة 30 يونيو"
-},
-{
-"en": "Revolution Day (23 July)",
-"ar": "عيد ثورة 23 يوليو"
-},
-{
-"en": "Armed Forces Day",
-"ar": "عيد القوات المسلحة (6 أكتوبر)"
-},
-{
-"en": "Sham el-Nessim",
-"ar": "شم النسيم"
-},
-{
-"en": "Founding Day",
-"ar": "يوم التأسيس"
-},
-{
-"en": "National Day",
-"ar": "اليوم الوطني"
-},
-{
-"en": "New Year's Day",
-"ar": "رأس السنة الميلادية"
-},
-{
-"en": "Commemoration Day",
-"ar": "يوم الشهيد"
-},
-{
-"en": "Liberation Day",
-"ar": "يوم التحرير"
-},
-{
-"en": "National Sport Day",
-"ar": "اليوم الرياضي"
-},
-{
-"en": "Accession Day",
-"ar": "يوم تولي الحكم"
-},
-{
-"en": "Independence Day",
-"ar": "عيد الاستقلال"
-},
-{
-"en": "Christmas Day",
-"ar": "الكريسماس"
-},
-{
-"en": "Armenian Christmas",
-"ar": "عيد الميلاد الأرمني"
-},
-{
-"en": "Saint Maroun's Day",
-"ar": "عيد مار مارون"
-},
-{
-"en": "Annunciation",
-"ar": "عيد البشارة"
-},
-{
-"en": "Assumption",
-"ar": "عيد انتقال العدرا"
-},
-{
-"en": "Independence Manifesto Day",
-"ar": "ذكرى وثيقة الاستقلال"
-},
-{
-"en": "Amazigh New Year",
-"ar": "رأس السنة الأمازيغية"
-},
-{
-"en": "Throne Day",
-"ar": "عيد العرش"
-},
-{
-"en": "Oued Ed-Dahab Day",
-"ar": "ذكرى استرجاع وادي الذهب"
-},
-{
-"en": "Revolution Day",
-"ar": "عيد الثورة"
-},
-{
-"en": "Youth Day",
-"ar": "عيد الشباب"
-},
-{
-"en": "Green March",
-"ar": "المسيرة الخضرا"
-},
-{
-"en": "Martyrs' Day",
-"ar": "عيد الشهدا"
-},
-{
-"en": "Republic Day",
-"ar": "عيد الجمهورية"
-},
-{
-"en": "Women's Day",
-"ar": "عيد المرأة"
-},
-{
-"en": "Evacuation Day",
-"ar": "عيد الجلاء"
-},
-{
-"en": "National Sovereignty and Children's Day"
-},
-{
-"en": "Youth and Sports Day",
-"ar": "عيد الشباب والرياضة"
-},
-{
-"en": "Democracy Day",
-"ar": "يوم الديمقراطية"
-},
-{
-"en": "Victory Day",
-"ar": "عيد النصر"
-},
-{
-"en": "Kashmir Day",
-"ar": "يوم كشمير"
-},
-{
-"en": "Pakistan Day",
-"ar": "يوم باكستان"
-},
-{
-"en": "Youm-e-Takbeer",
-"ar": "يوم التكبير"
-},
-{
-"en": "Iqbal Day",
-"ar": "يوم إقبال"
-},
-{
-"en": "Quaid-e-Azam Day",
-"ar": "يوم القائد الأعظم"
-},
-{
-"en": "Gandhi Jayanti",
-"ar": "ذكرى ميلاد غاندي"
-},
-{
-"en": "GST 18 % is the standard rate (5 % and 40 % also apply). Other holidays (Diwali, Holi, Eid…) vary by state."
-},
-{
-"en": "Pancasila Day",
-"ar": "يوم البانتشاسيلا"
-},
-{
-"en": "VAT is 12 % on the books but 11 % in effect for most goods. Nyepi, Vesak and Chinese New Year are holidays too (moving dates)."
-},
-{
-"en": "Malaysia Day",
-"ar": "يوم ماليزيا"
-},
-{
-"en": "King's Birthday",
-"ar": "عيد ميلاد الملك"
-},
-{
-"en": "Sales tax 10 % (service tax 8 %). Some states keep a Friday–Saturday weekend."
-},
-{
-"en": "Juneteenth",
-"ar": "يوم الحرية (19 يونيو)"
-},
-{
-"en": "Veterans Day",
-"ar": "يوم المحاربين القدامى"
-},
-{
-"en": "Martin Luther King Jr. Day"
-},
-{
-"en": "Presidents' Day",
-"ar": "يوم الرؤسا"
-},
-{
-"en": "Memorial Day",
-"ar": "يوم الذكرى"
-},
-{
-"en": "Labor Day",
-"ar": "عيد العمال"
-},
-{
-"en": "Columbus Day",
-"ar": "يوم كولومبوس"
-},
-{
-"en": "Thanksgiving",
-"ar": "عيد الشكر"
-},
-{
-"en": "No national VAT — sales tax is set by each state and city."
-},
-{
-"en": "Boxing Day",
-"ar": "تاني يوم الكريسماس"
-},
-{
-"en": "Early May bank holiday",
-"ar": "إجازة أول مايو البنكية"
-},
-{
-"en": "Spring bank holiday",
-"ar": "إجازة الربيع البنكية"
-},
-{
-"en": "Summer bank holiday",
-"ar": "إجازة الصيف البنكية"
-},
-{
-"en": "England and Wales; Scotland and Northern Ireland add their own days."
-},
-{
-"en": "Canada Day",
-"ar": "يوم كندا"
-},
-{
-"en": "Truth and Reconciliation Day",
-"ar": "يوم الحقيقة والمصالحة"
-},
-{
-"en": "Remembrance Day",
-"ar": "يوم الذكرى"
-},
-{
-"en": "GST 5 % federal; provinces add PST or use HST (13–15 %)."
-},
-{
-"en": "German Unity Day",
-"ar": "يوم الوحدة الألمانية"
-},
-{
-"en": "Second Day of Christmas",
-"ar": "تاني يوم الكريسماس"
-},
-{
-"en": "Victory in Europe Day",
-"ar": "يوم النصر في أوروبا"
-},
-{
-"en": "Bastille Day",
-"ar": "العيد الوطني الفرنسي"
-},
-{
-"en": "All Saints' Day",
-"ar": "عيد جميع القديسين"
-},
-{
-"en": "Armistice Day",
-"ar": "يوم الهدنة"
-},
-{
-"en": "Epiphany",
-"ar": "عيد الغطاس"
-},
-{
-"en": "Constitution Day",
-"ar": "يوم الدستور"
-},
-{
-"en": "Immaculate Conception",
-"ar": "عيد الحبل بلا دنس"
-},
-{
-"en": "Ferragosto",
-"ar": "فيراجوستو"
-},
-{
-"en": "Saint Stephen's Day",
-"ar": "عيد القديس إسطفانوس"
-},
-{
-"en": "Freedom Day",
-"ar": "يوم الحرية"
-},
-{
-"en": "Portugal Day",
-"ar": "يوم البرتغال"
-},
-{
-"en": "Restoration of Independence",
-"ar": "عيد استعادة الاستقلال"
-},
-{
-"en": "King's Day",
-"ar": "يوم الملك"
-},
-{
-"en": "Tiradentes",
-"ar": "يوم تيرادنتيس"
-},
-{
-"en": "Our Lady of Aparecida",
-"ar": "عيد سيدة أباريسيدا"
-},
-{
-"en": "All Souls' Day",
-"ar": "يوم الموتى"
-},
-{
-"en": "Black Consciousness Day",
-"ar": "يوم الوعي الأسود"
-},
-{
-"en": "Taxes on sales (ICMS, ISS, PIS/COFINS) depend on the state and the product."
-},
-{
-"en": "Benito Juárez Day",
-"ar": "يوم بينيتو خواريز"
-},
-{
-"en": "Workers' Day",
-"ar": "عيد العمال"
-},
-{
-"en": "Human Rights Day",
-"ar": "يوم حقوق الإنسان"
-},
-{
-"en": "National Women's Day",
-"ar": "اليوم الوطني للمرأة"
-},
-{
-"en": "Heritage Day",
-"ar": "يوم التراث"
-},
-{
-"en": "Day of Reconciliation",
-"ar": "يوم المصالحة"
-},
-{
-"en": "Day of Goodwill",
-"ar": "يوم النوايا الحسنة"
-},
-{
-"en": "Islamic New Year",
-"ar": "رأس السنة الهجرية"
-},
-{
-"en": "Ashura",
-"ar": "عاشورا"
-},
-{
-"en": "The Prophet's Birthday",
-"ar": "المولد النبوي"
-},
-{
-"en": "Isra and Mi'raj",
-"ar": "الإسرا والمعراج"
-},
-{
-"en": "Eid al-Fitr",
-"ar": "عيد الفطر"
-},
-{
-"en": "Arafat Day",
-"ar": "وقفة عرفات"
-},
-{
-"en": "Eid al-Adha",
-"ar": "عيد الأضحى"
-},
-{
-"en": "Good Friday",
-"ar": "الجمعة العظيمة"
-},
-{
-"en": "Easter Sunday",
-"ar": "عيد القيامة"
-},
-{
-"en": "Easter Monday",
-"ar": "اتنين القيامة"
-},
-{
-"en": "Ascension Day",
-"ar": "عيد الصعود"
-},
-{
-"en": "Whit Monday",
-"ar": "اتنين العنصرة"
-},
-{
-"en": "Corpus Christi",
-"ar": "عيد جسد المسيح"
-},
-{
-"en": "Carnival",
-"ar": "الكرنفال"
-},
-{
-"en": "Victoria Day",
-"ar": "يوم فيكتوريا"
-},
-{
-"en": "Attach a file, photo, video or recording"
-},
-{
-"en": "What did you mean?",
-"ar": "قصدك إيه؟"
-},
-{
-"en": "Attune learns what you usually mean."
-},
-{
-"en": "Your phone's space for Attune is full — the last change may not be saved. Settings → Backup, then delete old photos or chats."
-},
-{
-"en": "Report this answer",
-"ar": "بلّغ عن الإجابة دي"
-},
-{
-"en": "What's wrong with it?",
-"ar": "فيها إيه غلط؟"
-},
-{
-"en": "Offensive or hateful",
-"ar": "مسيئة أو فيها كراهية"
-},
-{
-"en": "Harmful or dangerous",
-"ar": "مؤذية أو خطيرة"
-},
-{
-"en": "Sexual content",
-"ar": "محتوى جنسي"
-},
-{
-"en": "False or misleading",
-"ar": "غلط أو مضللة"
-},
-{
-"en": "Something else",
-"ar": "حاجة تانية"
-},
-{
-"en": "Thanks — reported. Attune will avoid answers like this."
-},
-{
-"en": "Buy agents",
-"ar": "وكلاء الشراء"
-},
-{
-"en": "Tap what you meant — Attune learns what you usually mean."
-},
-{
-"en": "Do it",
-"ar": "نفّذ"
-},
-{
-"en": "Your to-do list",
-"ar": "المهام بتاعتك"
-},
-{
-"en": "Nothing left — say “add … to my to-do list” to add one."
-},
-{
-"en": "Show it on the map"
-},
-{
-"en": "Metro route",
-"ar": "طريق المترو"
-},
-{
-"en": "Found in your Mind",
-"ar": "لقيته في العقل"
-},
-{
-"en": "Nothing kept fits that yet"
-},
-{
-"en": "at {t}",
-"ar": "عند {t}"
-},
-{
-"en": "Keep things with /remember — a photo, a video, a recording or a note — and find them here."
-},
-{
-"en": "Working on it · {n}"
-},
-{
-"en": "Waiting",
-"ar": "مستني"
-},
-{
-"en": "Retry",
-"ar": "جرّب تاني"
-},
-{
-"en": "Save {n}",
-"ar": "احفظ {n}"
-},
-{
-"en": "The file was not kept after the app closed — Retry makes it again."
-},
-{
-"en": "Starts in {n} days",
-"ar": "تبدأ بعد {n} يوم"
-},
-{
-"en": "On the trip",
-"ar": "في السفرية"
-},
-{
-"en": "Add the dates",
-"ar": "ضيف المواعيد"
-},
-{
-"en": "End trip",
-"ar": "خلّص السفرية"
-},
-{
-"en": "Type / for a command, or just say it…"
-},
-{
-"en": "Attach a file first (the + in the box)."
-},
-{
-"en": "A {k} can become: {list}"
-},
-{
-"en": "Humanizing needs an AI model — open Engine and install one."
-},
-{
-"en": "Rewriting so it sounds like you…"
-},
-{
-"en": "The model gave back nothing — try again"
-},
-{
-"en": "Part {n} of {t}",
-"ar": "جزء {n} من {t}"
-},
-{
-"en": "{n} piece(s) to check",
-"ar": "{n} جزء محتاج مراجعة"
-},
-{
-"en": "Sending it to the phone's speech reader…"
-},
-{
-"en": "Listening to what is said…"
-},
-{
-"en": "Couldn't read {f}",
-"ar": "ما قدرتش أقرا {f}"
-},
-{
-"en": "Kept in your Mind: {list}"
-},
-{
-"en": "Subtitles are made by the Android app — open Attune on your phone."
-},
-{
-"en": "Attach the video first (the paperclip in the box)."
-},
-{
-"en": "No speech was heard in it."
-},
-{
-"en": "Remember: {n}",
-"ar": "افتكر: {n}"
-},
-{
-"en": "Saved {n}",
-"ar": "اتحفظ {n}"
-},
-{
-"en": "Added to your to-do list"
-},
-{
-"en": "Kept in your Mind.",
-"ar": "اتحفظت في العقل."
-},
-{
-"en": "Working on it — the result shows on Home"
-},
-{
-"en": "Subtitles: {n}",
-"ar": "ترجمة مكتوبة: {n}"
-},
-{
-"en": "Working on it — the subtitles show on Home"
-},
-{
-"en": "Translating into {l}…",
-"ar": "بترجم لـ{l}…"
-},
-{
-"en": "OK — nothing changed.",
-"ar": "تمام — مفيش حاجة اتغيرت."
-},
-{
-"en": "Translate my messages",
-"ar": "ترجم رسايلي"
-},
-{
-"en": "Only the words were kept — the file was too big to keep a copy."
-},
-{
-"en": "Subtitles for a video on this phone"
-},
-{
-"en": "Any video or recording → an .srt file. Or type /subtitles on Home."
-},
-{
-"en": "A year ago today you kept: {t}"
-},
-{
-"en": "{n} years ago today you kept: {t}"
-},
-{
-"en": "a file → PDF, Word, Excel, photos…"
-},
-{
-"en": "make text sound like you wrote it"
-},
-{
-"en": "text or a file — say the language"
-},
-{
-"en": "find a car, a flat, a part — Scout keeps looking"
-},
-{
-"en": "a country → your trip page, pinned on Home"
-},
-{
-"en": "a place → the map and the way"
-},
-{
-"en": "from … to … → the Metro route"
-},
-{
-"en": "search the web and answer with sources"
-},
-{
-"en": "a photo, video, recording or note — “as …”"
-},
-{
-"en": "bring back anything you kept"
-},
-{
-"en": "add to your to-do list, or see it"
-},
-{
-"en": "at a time, every day, or when someone messages"
-},
-{
-"en": "a video → its subtitles (.srt)"
-},
-{
-"en": "Calm view",
-"ar": "العرض الهادي"
-},
-{
-"en": "See the Fleet report",
-"ar": "شوف تقرير الأسطول"
-},
-{
-"en": "My report",
-"ar": "تقريري"
-},
-{
-"en": "See all",
-"ar": "شوف الكل"
-},
-{
-"en": "Safe today",
-"ar": "تقدر تصرف النهارده"
-},
-{
-"en": "Write a payment or ask… «lunch 150, taxi 60» or “how much on food this week?”"
-},
-{
-"en": "Write or ask… lunch 150, taxi 60"
-},
-{
-"en": "Write a payment or ask a question"
-},
-{
-"en": "Added {n}: {list}",
-"ar": "اتضاف {n}: {list}"
-},
-{
-"en": "Change it in the ledger"
-},
-{
-"en": "Balance · {a}",
-"ar": "الرصيد · {a}"
-},
-{
-"en": "Total balance · All accounts"
-},
-{
-"en": "{a} net",
-"ar": "صافي {a}"
-},
-{
-"en": "All accounts ({a})",
-"ar": "كل الحسابات ({a})"
-},
-{
-"en": "All accounts",
-"ar": "كل الحسابات"
-},
-{
-"en": "{n} this month",
-"ar": "{n} الشهر ده"
-},
-{
-"en": "Nothing logged yet — write it in the box above: “lunch 150, taxi 60”."
-},
-{
-"en": "Open Money Report",
-"ar": "افتح تقرير الفلوس"
-},
-{
-"en": "See all · Trends, Bills & Zakāt"
-},
-{
-"en": "Where the money went, six months of money in and out, Zakāt and the month's full ledger"
-},
-{
-"en": "Money Report",
-"ar": "تقرير الفلوس"
-},
-{
-"en": "Spent · This month",
-"ar": "المصروف · الشهر ده"
-},
-{
-"en": "Nothing spent yet",
-"ar": "لسه مصرفتش حاجة"
-},
-{
-"en": "Earned · This month",
-"ar": "الدخل · الشهر ده"
-},
-{
-"en": "Net saved: {a}",
-"ar": "صافي اللي اتحوّش: {a}"
-},
-{
-"en": "{p}% of it kept",
-"ar": "حوّشت {p}% منه"
-},
-{
-"en": "No income logged yet",
-"ar": "لسه مفيش دخل متسجل"
-},
-{
-"en": "Recent activity",
-"ar": "آخر الحركات"
-},
-{
-"en": "Recent activity ({a} of {b})"
-},
-{
-"en": "Full ledger",
-"ar": "الدفتر كله"
-},
-{
-"en": "Spent · {m}",
-"ar": "المصروف · {m}"
-},
-{
-"en": "{p}% below last month's pace"
-},
-{
-"en": "{p}% above last month's pace"
-},
-{
-"en": "Bills · Next 7 days"
-},
-{
-"en": "{n} due ({list})",
-"ar": "{n} مستحقين ({list})"
-},
-{
-"en": "Zakāt status",
-"ar": "حالة الزكاة"
-},
-{
-"en": "Needs a price",
-"ar": "محتاج سعر"
-},
-{
-"en": "{p}% of niṣāb",
-"ar": "{p}% من النصاب"
-},
-{
-"en": "Open Zakāt in the ledger"
-},
-{
-"en": "Set today's gold price in Zakāt"
-},
-{
-"en": "{a} — as Yusr calculated"
-},
-{
-"en": "As Yusr's zakāt engine calculated"
-},
-{
-"en": "Right now · 1 thing needs your eye"
-},
-{
-"en": "Spending by category",
-"ar": "المصروف حسب النوع"
-},
-{
-"en": "Where the money went · {m}"
-},
-{
-"en": "Nothing spent this month yet."
-},
-{
-"en": "Weekly spending vs. pace",
-"ar": "مصروف كل أسبوع قدام المعدل"
-},
-{
-"en": "Over the weekly target",
-"ar": "فوق هدف الأسبوع"
-},
-{
-"en": "Under budget",
-"ar": "تحت الميزانية"
-},
-{
-"en": "Weekly spending",
-"ar": "مصروف كل أسبوع"
-},
-{
-"en": "Target {a}/wk",
-"ar": "الهدف {a}/أسبوع"
-},
-{
-"en": "Now",
-"ar": "دلوقتي"
-},
-{
-"en": "Wk {n}",
-"ar": "أسبوع {n}"
-},
-{
-"en": "6-month cashflow · Earned vs. Spent"
-},
-{
-"en": "Bars show each month's money in and out; the line is what was left"
-},
-{
-"en": "Earned",
-"ar": "الداخل"
-},
-{
-"en": "Net saved",
-"ar": "اللي اتحوّش"
-},
-{
-"en": "6-month cashflow",
-"ar": "حركة الفلوس ٦ شهور"
-},
-{
-"en": "Zakāt & niṣāb",
-"ar": "الزكاة والنصاب"
-},
-{
-"en": "2.5% after a lunar year"
-},
-{
-"en": "Open Zakāt to see where you stand — Yusr's engine calculates it."
-},
-{
-"en": "Zakāt can't be told yet: there's no gold or silver price. Open Zakāt and set today's price."
-},
-{
-"en": "What counts for zakāt ({b}) against the niṣāb ({n})"
-},
-{
-"en": "Niṣāb: {a}",
-"ar": "النصاب: {a}"
-},
-{
-"en": "Zakāt is due: {a}",
-"ar": "الزكاة واجبة: {a}"
-},
-{
-"en": "Zakāt is due",
-"ar": "الزكاة واجبة"
-},
-{
-"en": "Figures from Yusr's zakāt engine, not recalculated."
-},
-{
-"en": "{m} ledger ({n} entries)",
-"ar": "دفتر {m} ({n} حركة)"
-},
-{
-"en": "Edit in the ledger",
-"ar": "عدّل في الدفتر"
-},
-{
-"en": "No entries this month yet."
-},
-{
-"en": "Money Report · {m}",
-"ar": "تقرير الفلوس · {m}"
-},
-{
-"en": "updated from your entries",
-"ar": "بيتحدّث من اللي بتسجله"
-},
-{
-"en": "{n} entries",
-"ar": "{n} حركة"
-},
-{
-"en": "Earned this month",
-"ar": "الدخل الشهر ده"
-},
-{
-"en": "Savings rate: {p}% so far"
-},
-{
-"en": "{n} entries across {c} categories"
-},
-{
-"en": "Ledger",
-"ar": "الدفتر"
-},
-{
-"en": "{a} kept aside",
-"ar": "{a} متشالين على جنب"
-},
-{
-"en": "Account",
-"ar": "الحساب"
-},
-{
-"en": "Category",
-"ar": "النوع"
-},
-{
-"en": "Description",
-"ar": "البيان"
-},
-{
-"en": "Entries",
-"ar": "الحركات"
-},
-{
-"en": "Import a payment",
-"ar": "استورد دفعة"
-},
-{
-"en": "Money is still starting — try again in a second."
-},
-{
-"en": "Open bills",
-"ar": "افتح الفواتير"
-},
-{
-"en": "Open the ledger once and add an account first — then write here."
-},
-{
-"en": "{b} is due {d}: {a}"
-},
-{
-"en": "— it's late",
-"ar": "— متأخرة"
-},
-{
-"en": "Act now · {n} quiet catches"
-},
-{
-"en": "{a} at stake",
-"ar": "{a} على المحك"
-},
-{
-"en": "One sentence in any language — Attune builds the schedule:"
-},
-{
-"en": "{a} / {b} paid",
-"ar": "اتدفع {a} من {b}"
-},
-{
-"en": "{n} items · {a}",
-"ar": "{n} بنود · {a}"
-},
-{
-"en": "Write a payment or ask… «lunch 150, taxi 60»"
-},
-{
-"en": "Earned · {m}",
-"ar": "الدخل · {m}"
-},
-{
-"en": "Meal photo",
-"ar": "صورة أكل"
-},
-{
-"en": "Log",
-"ar": "سجّل"
-},
-{
-"en": "Write or ask… “had koshari 85”, “Mom took her Metformin”, “period started today”"
-},
-{
-"en": "Write or ask… “had koshari 85”, “Mom took her Metformin”"
-},
-{
-"en": "Write what you ate, a dose or your period — or ask"
-},
-{
-"en": "Open Health Report",
-"ar": "افتح تقرير الصحة"
-},
-{
-"en": "See all · Week calories, weight & doses"
-},
-{
-"en": "Calories against your target, weight trend, doses on time, labs and the cycle"
-},
-{
-"en": "Health Report",
-"ar": "تقرير الصحة"
-},
-{
-"en": "Calories this week",
-"ar": "سعرات الأسبوع ده"
-},
-{
-"en": "Days a little above the target are amber — never alarming"
-},
-{
-"en": "Steady week",
-"ar": "أسبوع ثابت"
-},
-{
-"en": "Weight trend",
-"ar": "اتجاه الوزن"
-},
-{
-"en": "Add your weight in Fit & Food → Progress to see the trend here."
-},
-{
-"en": "Weight · 7-entry trend",
-"ar": "الوزن · متوسط آخر ٧ قراءات"
-},
-{
-"en": "Daily weight moves with water and salt; the jade line is the real trend"
-},
-{
-"en": "Family medicines & labs",
-"ar": "أدوية العيلة والتحاليل"
-},
-{
-"en": "Open Family",
-"ar": "افتح العيلة"
-},
-{
-"en": "Add a medicine or a lab report in Family health to see them here."
-},
-{
-"en": "Refill today",
-"ar": "اشتري النهارده"
-},
-{
-"en": "Latest lab",
-"ar": "آخر تحليل"
-},
-{
-"en": "Cycle summary (private on this phone)"
-},
-{
-"en": "Open Cycle",
-"ar": "افتح الدورة"
-},
-{
-"en": "Cycle average",
-"ar": "متوسط الدورة"
-},
-{
-"en": "Last period",
-"ar": "آخر دورة"
-},
-{
-"en": "this week",
-"ar": "الأسبوع ده"
-},
-{
-"en": "Doctor PDF",
-"ar": "PDF للدكتور"
-},
-{
-"en": "Calories · 7-day average",
-"ar": "السعرات · متوسط ٧ أيام"
-},
-{
-"en": "On pace",
-"ar": "في المعدل"
-},
-{
-"en": "Set up Fit & Food for a target"
-},
-{
-"en": "No goal set",
-"ar": "مفيش هدف"
-},
-{
-"en": "No weights yet",
-"ar": "لسه مفيش أوزان"
-},
-{
-"en": "Doses taken on time",
-"ar": "الجرعات في ميعادها"
-},
-{
-"en": "No medicines with times",
-"ar": "مفيش أدوية ليها مواعيد"
-},
-{
-"en": "Water & workouts",
-"ar": "المية والتمارين"
-},
-{
-"en": "water a day this week"
-},
-{
-"en": "Worked out on this phone from your own entries. Not medical advice."
-},
-{
-"en": "{n} kcal left today",
-"ar": "فاضل {n} سعرة النهارده"
-},
-{
-"en": "{n} kcal above today's target"
-},
-{
-"en": "1 dose today",
-"ar": "جرعة واحدة النهارده"
-},
-{
-"en": "{n} doses today",
-"ar": "{n} جرعات النهارده"
-},
-{
-"en": "late",
-"ar": "متأخرة"
-},
-{
-"en": "Take",
-"ar": "اتاخدت"
-},
-{
-"en": "Expected {d} — a few days either way is common."
-},
-{
-"en": "Expected {d}.",
-"ar": "متوقعة {d}."
-},
-{
-"en": "Calendar",
-"ar": "التقويم"
-},
-{
-"en": "Today in one calm look"
-},
-{
-"en": "Avg {p}% of target",
-"ar": "المتوسط {p}% من الهدف"
-},
-{
-"en": "Calories vs. {a} kcal target"
-},
-{
-"en": "Goal {a} kg",
-"ar": "الهدف {a} كجم"
-},
-{
-"en": "Target: {a} kcal/day",
-"ar": "الهدف: {a} سعرة/يوم"
-},
-{
-"en": "about {n} steps a day"
-},
-{
-"en": "protein {p} g",
-"ar": "بروتين {p} جم"
-},
-{
-"en": "{a} / {b} doses on time this week"
-},
-{
-"en": "{a} L · {b} workouts"
-},
-{
-"en": "{a} days ({b}d flow)",
-"ar": "{a} يوم ({b} أيام نزول)"
-},
-{
-"en": "{a} of {b} doses this week"
-},
-{
-"en": "{a} → {b} over {n} reports"
-},
-{
-"en": "{p}%",
-"ar": "{p}%"
-},
-{
-"en": "Start a chat",
-"ar": "ابدأ شات"
-},
-{
-"en": "Standing instructions (used in every chat)"
-},
-{
-"en": "Starters (one tap to ask)"
-},
-{
-"en": "A study plan, a home renovation, a small business — keep its chats and files together."
-},
-{
-"en": "Workspaces",
-"ar": "مساحات الشغل"
-},
-{
-"en": "1 item at reorder",
-"ar": "صنف واحد وصل لحد الطلب"
-},
-{
-"en": "Avg {a}",
-"ar": "المتوسط {a}"
-},
-{
-"en": "Best sellers, payment methods, staff and this week"
-},
-{
-"en": "Cash drawer",
-"ar": "درج الكاش"
-},
-{
-"en": "Cash {a}",
-"ar": "كاش {a}"
-},
-{
-"en": "Clock in from Staff",
-"ar": "سجّل الحضور من الموظفين"
-},
-{
-"en": "Clock staff in and close the day — they show here."
-},
-{
-"en": "Clocked out",
-"ar": "انصرف"
-},
-{
-"en": "Counter, stock, staff & day close"
-},
-{
-"en": "Customers owe you",
-"ar": "العملاء عليهم لك"
-},
-{
-"en": "Drawer right",
-"ar": "الدرج مظبوط"
-},
-{
-"en": "Equipment & hire",
-"ar": "معدات وتأجير"
-},
-{
-"en": "Float {a}",
-"ar": "فكّة الصبح {a}"
-},
-{
-"en": "Invoices, VAT, stock & P&L"
-},
-{
-"en": "Job orders, cheques, client balances & parts store"
-},
-{
-"en": "Needs attention today",
-"ar": "محتاج انتباهك النهارده"
-},
-{
-"en": "No sales yet today.",
-"ar": "مفيش مبيعات النهارده لسه."
-},
-{
-"en": "Not counted",
-"ar": "متعدّش"
-},
-{
-"en": "Nothing waiting",
-"ar": "مفيش حاجة مستنية"
-},
-{
-"en": "On shift",
-"ar": "في الوردية"
-},
-{
-"en": "Open books",
-"ar": "افتح الدفاتر"
-},
-{
-"en": "Open counter",
-"ar": "افتح الكاشير"
-},
-{
-"en": "Payment methods today",
-"ar": "طرق الدفع النهارده"
-},
-{
-"en": "Peak: {d}",
-"ar": "الذروة: {d}"
-},
-{
-"en": "Ready-to-use systems",
-"ar": "أنظمة جاهزة"
-},
-{
-"en": "See all → Shop Report"
-},
-{
-"en": "Staff & day closes",
-"ar": "الموظفين وقفلات اليوم"
-},
-{
-"en": "Staff on shift",
-"ar": "الموظفين في الوردية"
-},
-{
-"en": "Stock & VAT",
-"ar": "المخزون والضريبة"
-},
-{
-"en": "Stock and VAT are fine"
-},
-{
-"en": "This week (7 days)",
-"ar": "الأسبوع ده (٧ أيام)"
-},
-{
-"en": "This week's sales",
-"ar": "مبيعات الأسبوع ده"
-},
-{
-"en": "Today and this week",
-"ar": "النهارده والأسبوع ده"
-},
-{
-"en": "Today and this week, payment methods, best sellers, staff and closes"
-},
-{
-"en": "Today's counter sales",
-"ar": "مبيعات الكاشير النهارده"
-},
-{
-"en": "Today's numbers across your shop and books — everything stays on this device"
-},
-{
-"en": "Today's sales",
-"ar": "مبيعات النهارده"
-},
-{
-"en": "Updated today",
-"ar": "اتحدّث النهارده"
-},
-{
-"en": "Updated yesterday",
-"ar": "اتحدّث امبارح"
-},
-{
-"en": "VAT {a}",
-"ar": "ضريبة {a}"
-},
-{
-"en": "built from a sentence",
-"ar": "معمولة من جملة"
-},
-{
-"en": "{a} overdue",
-"ar": "{a} متأخرة"
-},
-{
-"en": "{n} customers",
-"ar": "{n} عملاء"
-},
-{
-"en": "{n} items at reorder",
-"ar": "{n} أصناف وصلت لحد الطلب"
-},
-{
-"en": "{n} low stock",
-"ar": "{n} ناقص في المخزون"
-},
-{
-"en": "{n} overdue",
-"ar": "{n} متأخرة"
-},
-{
-"en": "{n} receipts",
-"ar": "{n} إيصال"
-},
-{
-"en": "{n} staff · {h} h"
-},
-{
-"en": "1 bill",
-"ar": "فاتورة واحدة"
-},
-{
-"en": "A month",
-"ar": "في الشهر"
-},
-{
-"en": "Accounts report",
-"ar": "تقرير الحسابات"
-},
-{
-"en": "Add an expense, income or transfer"
-},
-{
-"en": "Add today's gold price in the Zakāt calculator to see the niṣāb."
-},
-{
-"en": "All your money",
-"ar": "كل فلوسك"
-},
-{
-"en": "Balance at the end of each month ({c})"
-},
-{
-"en": "Balance month by month, money in and out of each account"
-},
-{
-"en": "Bills a month",
-"ar": "الفواتير في الشهر"
-},
-{
-"en": "Bills report",
-"ar": "تقرير الفواتير"
-},
-{
-"en": "Bills you send to clients"
-},
-{
-"en": "Couldn't add it: {w}",
-"ar": "مقدرتش أضيفها: {w}"
-},
-{
-"en": "Currency, categories, budgets, backup",
-"ar": "العملة، الفئات، الميزانيات، النسخة الاحتياطية"
-},
-{
-"en": "Due in 7 days",
-"ar": "مستحق خلال ٧ أيام"
-},
-{
-"en": "Every entry, edit or delete"
-},
-{
-"en": "Every year",
-"ar": "كل سنة"
-},
-{
-"en": "Expense added",
-"ar": "اتضاف المصروف"
-},
-{
-"en": "Goals",
-"ar": "الأهداف"
-},
-{
-"en": "Gold, silver & livestock",
-"ar": "دهب وفضة ومواشي"
-},
-{
-"en": "Hide how it was worked out"
-},
-{
-"en": "How it was worked out"
-},
-{
-"en": "How often",
-"ar": "كل قد إيه"
-},
-{
-"en": "How your spending moves",
-"ar": "مصروفك ماشي إزاي"
-},
-{
-"en": "Income added",
-"ar": "اتضاف الدخل"
-},
-{
-"en": "Ledger settings",
-"ar": "إعدادات الدفتر"
-},
-{
-"en": "Lend / borrow",
-"ar": "سلف / استلاف"
-},
-{
-"en": "Money accounts",
-"ar": "حسابات الفلوس"
-},
-{
-"en": "Money notes",
-"ar": "ملاحظات الفلوس"
-},
-{
-"en": "Niṣāb",
-"ar": "النصاب"
-},
-{
-"en": "No account yet — add one in Accounts."
-},
-{
-"en": "No account yet.",
-"ar": "مفيش حساب لسه."
 }
 ]
