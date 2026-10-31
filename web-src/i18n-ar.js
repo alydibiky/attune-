@@ -7811,4 +7811,12 @@ export const AR = {
   "What's counted": "اللي بيتحسب",
   "Not counted — your school": "مش بيتحسب — حسب مذهبك",
   "Worn jewellery is counted in the Hanafi school. To count it, turn it on in Zakāt settings → Gold and silver you own.": "الدهب الملبوس بيتحسب عند الحنفية. عشان تحسبه، شغّله من إعدادات الزكاة ← الدهب والفضة اللي عندك.",
+  "Find & buy": "دوّر واشتري",
+  "Mo": "ن",
+  "Tu": "ث",
+  "We": "ر",
+  "Th": "خ",
+  "Fr": "ج",
+  "Sa": "س",
+  "Su": "ح",
 };
