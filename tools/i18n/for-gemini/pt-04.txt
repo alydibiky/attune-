@@ -1,0 +1,2352 @@
+You are translating the interface of Attune, a phone app, into Brazilian Portuguese (language code pt).
+
+# Translating Attune's interface — the brief every translator follows
+
+Attune is a phone app (Android, also a computer app) made in Egypt for people everywhere: chat with an on-phone AI, money and
+budgets, Zakāt (Islamic alms), food & fitness, notes ("Mind", "Shelf"), reminders, a business toolkit, travel, learning.
+Its owner wants **every language to be right, accurate and natural in everything** — as if a native designer wrote the app in
+that language. You translate English interface lines; an Arabic version is given beside most of them as a hint to the meaning
+(Egyptian Arabic — use it only to understand, never copy its words).
+
+
+## Rules (all of them matter)
+1. **Placeholders**: keep every `{name}` exactly (same names, never translated, never removed); move them where the grammar
+   needs them. Keep `\n` line breaks, `**bold**` marks, `•`, `→`, `·`, emoji, `%`, quotes styles may follow the language
+   (« » in French, „“ in German, 「」 in Japanese are fine).
+2. **Do not translate**: Attune, brand / product / app names (WhatsApp, Gmail, Google, Android, Booking.com, Talabat, Excel,
+   Word, PDF, Instagram, Uber, Huawei, Health Connect…), codes and units (EGP, USD, kg, kcal, km, %, 24k, AI model names,
+   file types), people's names, and any Arabic text that appears inside an English line («…») — keep it as it is.
+3. **Glossary — one word for one thing, everywhere**: first open `I18N/glossary-<lang>.json` (the app's words already used in
+   your language) and `I18N/terms.json` (the full list of the app's feature names). Before chunk 01, if `I18N/glossary-<lang>-full.json`
+   does not exist yet, translate every term of `terms.json` once, using the existing glossary words where they exist, and save it
+   as `I18N/glossary-<lang>-full.json`. If it already exists (another translator made it), USE IT and never change it. Feature names
+   are short nouns (e.g. "Mind" = the user's notes and memories; "Recall" = search through everything the phone kept; "Shelf" =
+   notebooks of notes; "Scout" = finds ads/deals for you; "Agents" = helpers that watch prices or order things; "Follow-ups" =
+   debts, instalments, reminders, dates; "Fit & Food" = fitness and nutrition).
+4. **Islamic terms**: use the normal word a Muslim speaker of your language uses (e.g. Zakat/Zekât/زکات/زکوٰۃ/জাকাত), keep
+   niṣāb, ḥawl, rikāz, Fiṭr in the usual local transliteration, never change a ruling's meaning. Quranic/hadith quotes in Arabic
+   stay Arabic.
+5. **Tone**: short, warm, plain, like a good app — not formal, not slangy, no machine-translation phrasing. Buttons are short
+   verbs ("Save", "Add"). Use the form of "you" that consumer apps in your language use (see the language notes below).
+   Match the English length roughly — screens are small.
+6. **Meaning over words**: understand what the line does in the app (the Arabic hint helps) and say that naturally. Money,
+   food and health lines must stay exact (numbers, units, rules).
+7. **Context words**: "Pro" (the paid plan) stays "Pro". "Home" = the app's start page. "Chat" = talking to the AI. "Model" /
+   "Engine" = the AI model on the phone.
+8. Never skip a line, never add keys, never leave English (except rule 2 items, or when the line is only a brand/code).
+
+## Language notes
+- es: neutral Spanish for Spain and Latin America, "tú". fr: France French, "tu" is NOT used — use "vous". pt: Brazilian
+  Portuguese, "você". de: "du" (friendly consumer app), nouns capitalised. it: "tu". tr: "sen" forms, natural Turkish app style.
+- ru: "вы" (lowercase). hi: simple everyday Hindi (Devanagari) as Indian apps use; common tech words may stay as Indians say them
+  (ऐप, चैट, मॉडल). ur: simple Urdu (Nastaliq script), "آپ". fa: Persian (Iran), "شما". bn: Bengali (Bangladesh), "আপনি".
+- id: Bahasa Indonesia, "Anda". vi: Vietnamese, "bạn". th: Thai, polite neutral (no ครับ/ค่ะ in UI). sw: Kiswahili (East Africa).
+- arb: Modern Standard Arabic (الفصحى) — clear, modern, the Arabic of good apps and news; NOT Egyptian (the `ar` hint is Egyptian: never copy its dialect words like «عايز، دلوقتي، بتاع، اللي، مش، إزاي»); address the user as «أنت» (masculine default), Western digits 0-9.
+- zh: Simplified Chinese (Mainland), no spaces between Chinese words, full-width punctuation. ja: polite です/ます style, natural UI
+  Japanese. ko: polite 해요체 for sentences, nouns for labels.
+
+
+## Glossary — use these Brazilian Portuguese words for the app's feature names, always:
+{
+ "Home": "Início",
+ "Chat": "Conversa",
+ "Money": "Dinheiro",
+ "Mind": "Mente",
+ "Recall": "Recordar",
+ "Notes": "Notas",
+ "Shelf": "Estante",
+ "Saved": "Salvos",
+ "Library": "Biblioteca",
+ "People": "Pessoas",
+ "Follow-ups": "Pendências",
+ "People & plans": "Pessoas e planos",
+ "Fit & Food": "Forma e comida",
+ "Health": "Saúde",
+ "Daily": "Dia a dia",
+ "Go": "Ir",
+ "Work": "Trabalho",
+ "Business": "Negócios",
+ "Tools": "Ferramentas",
+ "Create": "Criar",
+ "Projects": "Projetos",
+ "Students": "Estudantes",
+ "Agents": "Agentes",
+ "Scout": "Batedor",
+ "Studio": "Studio",
+ "Assistants": "Assistentes",
+ "Skills": "Habilidades",
+ "Missions": "Missões",
+ "Automations": "Automações",
+ "Reminders": "Lembretes",
+ "Dates": "Datas",
+ "Goals": "Metas",
+ "Bills": "Contas",
+ "Accounts": "Contas bancárias",
+ "Zakāt": "Zakat",
+ "Settings": "Configurações",
+ "How to use": "Como usar",
+ "Privacy": "Privacidade",
+ "My report": "Meu relatório",
+ "Attune noticed": "Attune notou",
+ "Translate": "Traduzir",
+ "Writing": "Escrita",
+ "Convert": "Converter",
+ "Learn": "Aprender",
+ "News": "Notícias",
+ "Maps": "Mapas",
+ "Metro": "Metrô",
+ "Travel": "Viagem",
+ "Guardian": "Guardião",
+ "Radar": "Radar",
+ "Timeline": "Linha do tempo",
+ "Family": "Família",
+ "Cycle": "Ciclo",
+ "Homework": "Lição de casa",
+ "Slides": "Slides",
+ "CV": "Currículo",
+ "Remember": "Lembrar",
+ "Documents": "Documentos",
+ "One file": "Um arquivo",
+ "Books & PDFs": "Livros e PDFs",
+ "Attune remembers": "Attune lembra",
+ "Right now": "Agora",
+ "Your day": "Seu dia",
+ "Safe to spend": "Livre para gastar",
+ "Income": "Receita",
+ "Expense": "Despesa",
+ "Balance": "Saldo",
+ "Budget": "Orçamento",
+ "Savings": "Poupança",
+ "Debt": "Dívida",
+ "Installment": "Parcela",
+ "Check now": "Verificar agora",
+ "Year plan": "Plano do ano",
+ "Calories": "Calorias",
+ "Protein": "Proteína",
+ "Niṣāb": "Nisab",
+ "Prayer times": "Horários de oração",
+ "Team records": "Registros da equipe",
+ "Reports": "Relatórios",
+ "Fleet & rentals": "Frota e aluguéis",
+ "Shop": "Loja",
+ "Books": "Livros",
+ "Prompt lab": "Laboratório de prompts",
+ "Deep answer": "Resposta profunda",
+ "Instant": "Instantâneo",
+ "Engine": "Motor",
+ "Model": "Modelo",
+ "Pro": "Pro",
+ "Free plan": "Plano gratuito",
+ "Overpaying check": "Checagem de preço alto",
+ "Deal check": "Checagem de oferta",
+ "Money Guardian": "Guardião do dinheiro",
+ "Safe to spend today": "Livre para gastar hoje",
+ "My Book": "Meu livro",
+ "Review": "Revisar",
+ "Forgot": "Esqueci",
+ "Hard": "Difícil",
+ "I remembered": "Lembrei",
+ "Report": "Relatório",
+ "Today": "Hoje",
+ "Save": "Salvar",
+ "Add": "Adicionar",
+ "Close": "Fechar",
+ "Back": "Voltar",
+ "Search": "Pesquisar",
+ "Share": "Compartilhar",
+ "Turn on": "Ligar",
+ "Plan": "Plano",
+ "Week": "Semana"
+}
+
+## Your answer
+Reply with ONE JSON object only, inside a ```json code block, nothing else: every "en" below as a key, copied byte-for-byte (same spaces, quotes, dashes, emoji, {placeholders}), mapped to its translation. 632 keys — do not skip any, do not stop early. If you cannot fit all in one reply, stop at a complete line, close the JSON, and say CONTINUE; I will ask for the rest.
+
+## Lines (pt-04)
+[
+{
+"en": "Describe a picture — in any language."
+},
+{
+"en": "A quick draft shows first, then the clear picture."
+},
+{
+"en": "Keep it, draw again, or change a photo with one instruction."
+},
+{
+"en": "Remove people or things from any photo: tap Erase, paint over them with your finger, Remove — about a second, no internet."
+},
+{
+"en": "Say what the program should do."
+},
+{
+"en": "Attune talks it through step by step, writes it and tests it on your phone."
+},
+{
+"en": "Run it, change it, or keep it in Artifacts."
+},
+{
+"en": "Python runs right on the phone — try “split this bill between 4 people”."
+},
+{
+"en": "Make a project for one piece of work."
+},
+{
+"en": "Put its chats, files and instructions together."
+},
+{
+"en": "Every chat inside it already knows the files."
+},
+{
+"en": "The Project brain collects what you decided, what is still open and the dates coming up from the project's chats — and the assistant keeps to it."
+},
+{
+"en": "Take a photo of the homework question."
+},
+{
+"en": "The coach solves it by code and teaches it step by step — with pictures and a voice, not just the answer."
+},
+{
+"en": "Answer the check questions to be sure it is understood."
+},
+{
+"en": "Mark the worksheet: snap the child's page and every answer is checked — right, wrong with the steps, or not answered."
+},
+{
+"en": "Open a file: PDF, Word, PowerPoint, Excel or a photo."
+},
+{
+"en": "Pick what you want: PDF → Word, photos → PDF, Edit a PDF (change a line, sign, reorder pages)… 80+ choices."
+},
+{
+"en": "Save or share the new file. It never leaves the phone."
+},
+{
+"en": "PDF → Word keeps tables and columns; a photo of a printed English page keeps its tables too, read on the phone."
+},
+{
+"en": "Tap + Books and pick the books you trust (PDF, Word, e-book) — several at once."
+},
+{
+"en": "Ask anything: it reads every book on the phone and compares them."
+},
+{
+"en": "Each fact shows its book and page — tap it to see the book's own words; ask follow-ups in the same chat."
+},
+{
+"en": "The books stay on your phone. A scanned book (pictures of pages) is read with the AI in Ask a PDF first."
+},
+{
+"en": "Open a PDF or a book."
+},
+{
+"en": "Ask about it in your own words."
+},
+{
+"en": "Every answer shows the page it came from — tap to jump there."
+},
+{
+"en": "Write one sentence: “a 10-slide pitch for my bakery”."
+},
+{
+"en": "Attune designs the slides or a full report."
+},
+{
+"en": "Change any slide, then save as PowerPoint or PDF."
+},
+{
+"en": "Brand kit: your company name, colour and logo go on every deck and report, inside the PowerPoint too."
+},
+{
+"en": "Answer the questions or paste your old CV."
+},
+{
+"en": "Paste a job ad — the CV is tailored to it."
+},
+{
+"en": "Export a clean PDF in English or Arabic."
+},
+{
+"en": "Job ready → Mock interview: 5 questions out loud, a score for each answer and a better version of it."
+},
+{
+"en": "“Safe to spend today” on top: what you can spend today and still pay every bill, People & plans payment, trial and debt due before your next salary."
+},
+{
+"en": "Tap it to see what it counted, and the “Keep aside” amount for what is coming."
+},
+{
+"en": "Add spending by typing “lunch 150” (or let payment notifications add it); see where it goes, budgets, bills and Zakāt."
+},
+{
+"en": "Add your salary as a repeating income — then the number counts right up to payday."
+},
+{
+"en": "Money → Follow-ups → Reminders. Say or type it: “remind me tomorrow at 9 to call Hassan”."
+},
+{
+"en": "Check the time and the repeat Attune understood, then save."
+},
+{
+"en": "The phone tells you even when Attune is closed."
+},
+{
+"en": "Money → Follow-ups → Timeline: every reminder, date, payment, bill, debt and chat promise coming up, by day."
+},
+{
+"en": "Each one says what slips if you skip it — a trial that starts charging, a payment that goes late."
+},
+{
+"en": "Tap one to open the page it belongs to and deal with it."
+},
+{
+"en": "Look at it every Sunday for a minute: the week ahead, and anything late in red."
+},
+{
+"en": "Money → Follow-ups → Dates. Scan a receipt, paste a trial email, or add a passport or a warranty by hand."
+},
+{
+"en": "Attune finds the date that matters (trial end, return window, expiry) and warns you before it."
+},
+{
+"en": "Not using it? Open “Cancel kit” on a trial or renewal: the exact steps (Google Play, App Store or the service's page) and a ready message to copy."
+},
+{
+"en": "Free trials in your notifications are added by themselves — cancel the day before, not the day after."
+},
+{
+"en": "Money → Follow-ups → People & plans. Add a person, then what is between you: “Ahmed owes me 12,000”, installments, a gam'eya, the maid every Saturday."
+},
+{
+"en": "Tick it when it is paid; Attune reminds you of the next one."
+},
+{
+"en": "Type it the way you would say it — Attune fills in the plan."
+},
+{
+"en": "In WhatsApp open a group → ⋮ → More → Export chat → Include media → Attune (or pick the exported file here)."
+},
+{
+"en": "Attune reads the messages and looks at every photo on the phone, then sorts them into albums: rooms and things for design, topics by month for news, themes for Hadith — each Hadith as a card with its narrator and source."
+},
+{
+"en": "Money and promises in a business chat: open the group → “Money & promises in this chat”."
+},
+{
+"en": "Money → Follow-ups → Chat X-Ray. Export a WhatsApp chat (⋮ → More → Export chat) and open it here."
+},
+{
+"en": "X-Ray finds the money, promises, dates and questions nobody answered — send what matters to Reminders, People & plans or Money."
+},
+{
+"en": "“Who keeps their word”: a promise score per person over every chat you X-rayed — kept, broken, late, still open."
+},
+{
+"en": "It reads Egyptian Arabic the way people really write it."
+},
+{
+"en": "Money → Follow-ups → Payments. Turn on payment reading (Android asks once) — or paste a statement."
+},
+{
+"en": "It checks every payment: double charges, price rises, forgotten subscriptions, paying twice for the same thing."
+},
+{
+"en": "Tap a finding for the proof and what to do — cancel, dispute or keep."
+},
+{
+"en": "Works with InstaPay, bank and card messages, in any currency."
+},
+{
+"en": "Money → Month plan: your income split into fixed, savings, everyday and free."
+},
+{
+"en": "Add a goal — travel by June, a car, Eid — or start the emergency fund; Attune works out this month's share."
+},
+{
+"en": "Put money in each month; Safe to spend keeps it apart."
+},
+{
+"en": "Follow-ups → Family: write your name once."
+},
+{
+"en": "Add to the shopping list, what you paid for the house, and reminders for your parents — or say it in the Home box: «add milk to the family list»."
+},
+{
+"en": "Pick a family code and Send to the family; on their phone: Family → Open a family file. Attune works out who owes whom."
+},
+{
+"en": "Only the list, the house money and the reminders travel — your Money, Mind and chats never do."
+},
+{
+"en": "Paste the offer, contract or chat — or take a photo of it."
+},
+{
+"en": "Deal Check lists the risks, hidden costs, the market price and scam signs."
+},
+{
+"en": "“In today's money”: installments vs cash at your bank's yearly certificate rate (set it once) — it says which is really cheaper."
+},
+{
+"en": "Before a phone or a fridge on installments, check here: “0% interest” is not always cheaper."
+},
+{
+"en": "Health opens on today: calories, the next dose, blood sugar and the cycle on one page."
+},
+{
+"en": "Tap a card to open its tool: Fit & Food, Family health or Cycle."
+},
+{
+"en": "Everything you log on Home lands here too."
+},
+{
+"en": "Lock Health with your fingerprint in Privacy if you share the phone."
+},
+{
+"en": "Tap + on a meal: type “2 eggs and foul”, say it, scan a barcode, or take a photo of the plate — every food on it is found."
+},
+{
+"en": "Check the amounts Attune read — change any food or grams."
+},
+{
+"en": "Your day fills: calories, protein, carbs, fat and fibre against your goal."
+},
+{
+"en": "If you use insulin (Family health), each meal also shows its carbs and you are warned when your sugar is low."
+},
+{
+"en": "Photograph the prescription (or type it). Each medicine is read line by line — check it and save."
+},
+{
+"en": "Reminders are set for every dose; tick each one on Today when it is taken."
+},
+{
+"en": "Add how many are left (insulin: units) and you are told before they run out."
+},
+{
+"en": "Insulin users: save your blood sugar on Today — a low reading shows what to do and reminds you to check again in 15 minutes."
+},
+{
+"en": "Log the first day of each period."
+},
+{
+"en": "Attune predicts the next one and your fertile days from your own history."
+},
+{
+"en": "Add symptoms or notes to any day."
+},
+{
+"en": "A watch that measures night temperature makes it more exact — tap Use my watch's temperature. It stays on this phone."
+},
+{
+"en": "Pick a topic or a ready course you want to learn."
+},
+{
+"en": "Every day a short lesson arrives, with a quiz and Say it to practise out loud."
+},
+{
+"en": "Wrong answers come back on later days until they stick."
+},
+{
+"en": "Five minutes every morning beats an hour once a week."
+},
+{
+"en": "Write one sentence: “tell me when hotels near the Haram are under 45k for 4 nights from 10 December”, “tell me when my Amazon order arrives”, “order my usual from Talabat”, or “open Uber”."
+},
+{
+"en": "If something is missing (the day, the number of nights, your usual dish) the agent asks once. Then it runs: a price is checked about twice a day, even with Attune closed."
+},
+{
+"en": "Each agent is one card: the last check, what it found, Check now, Pause or Delete. Scout and your message alerts are here too."
+},
+{
+"en": "Agents never pay: Talabat opens with your order copied, Booking opens on the cheapest offer — you choose and pay."
+},
+{
+"en": "Say once what you want: “3-bedroom flat for rent in Maadi under 15,000, not ground floor”, a car, a phone, gold, a job."
+},
+{
+"en": "Scout searches the sites that matter and checks every wish against each ad — ✓, ✗ or “not stated” — with a fair-price meter and a scam check."
+},
+{
+"en": "Each ad has a “wait or buy” line from the market book: how long ads of this search stay up and how often prices drop."
+},
+{
+"en": "👍 / 👎 teach it your taste; Follow an ad and you are told when its price drops or it is sold."
+},
+{
+"en": "Keep anything: a note, a photo of a paper, a voice note, an answer from Chat."
+},
+{
+"en": "Mind files it by itself on a picture wall — people, dates, money, promises, #tags."
+},
+{
+"en": "Search it later in your own words; Chat can use it too."
+},
+{
+"en": "Mind brings things back by itself: type or share a message from someone you have records about and you see what they promised and owe."
+},
+{
+"en": "Attune links everything about each one — payments, debts, notes, messages — and Chat answers from it: “how much did I pay my barber?”."
+},
+{
+"en": "Two with the same name? Attune asks which one, and remembers your answer."
+},
+{
+"en": "«Who is this?» shows names Money and your notes met — one tap makes the card."
+},
+{
+"en": "Daily → Remember (or Remember on Home). Add a book or file (PDF, Word, EPUB…), a web page — the news — or paste text."
+},
+{
+"en": "Attune keeps it on this phone and finds its chapters by itself."
+},
+{
+"en": "Put the book's name in the question when you have saved several: “in The Bakery on Shubra Street, chapter 2”."
+},
+{
+"en": "Pick the topics you follow."
+},
+{
+"en": "Every morning Attune gathers them and sums them up."
+},
+{
+"en": "Tap a story for the full article and its source."
+},
+{
+"en": "Story threads follow one story over the days — tap What changed for the news since the day before."
+},
+{
+"en": "Search a place, a compound or an address — or ask “a pharmacy open now near me”."
+},
+{
+"en": "Tap it for directions — they work offline."
+},
+{
+"en": "Download a country for the road, or let it load free online."
+},
+{
+"en": "Ask the map from Chat too: “how far is Alexandria?”."
+},
+{
+"en": "Type where you are and where you're going — English, Arabic or a square like Tahrir or Ramses."
+},
+{
+"en": "Attune shows the line, the direction to ride (the last station on the sign), the stops and where to change."
+},
+{
+"en": "It also gives the minutes and the ticket price — all offline."
+},
+{
+"en": "No typing? Open a line and tap the stations."
+},
+{
+"en": "Pick the country you are going to."
+},
+{
+"en": "Add your dates: Attune checks your passport and the entry rules for your nationality."
+},
+{
+"en": "Use Arrive, Say it and Ask there — all offline."
+},
+{
+"en": "The Trip pack shows what is ready: download the map in one tap and turn on the delay & claim watch."
+},
+{
+"en": "Knowledge packs (medicines, cars, Islamic texts…) download by themselves."
+},
+{
+"en": "Chat looks there first and shows where each answer came from."
+},
+{
+"en": "They work offline once downloaded."
+},
+{
+"en": "Your own facts beat the model's memory."
+},
+{
+"en": "Business opens your systems: Fleet & rentals (cranes, jobs, cheques, profit per crane) — or describe any business and Attune builds its tables."
+},
+{
+"en": "Each crane shows its price from its own rate. Copy the reply (in the client's language), print a quote, or tap Book it."
+},
+{
+"en": "Share the client's message from WhatsApp straight to Attune — it opens in From a message. E-invoices for Egypt are built in."
+},
+{
+"en": "Your team's site reports fill it: every machine, its faults, downtime and open actions."
+},
+{
+"en": "Share and Receive move records between your team's phones — the site Wi-Fi is enough."
+},
+{
+"en": "See what needs attention and what keeps breaking across the team."
+},
+{
+"en": "Set a machine's hourly rate and downtime shows its cost."
+},
+{
+"en": "Pick the crane and the lift."
+},
+{
+"en": "Enter the load, radius and wind."
+},
+{
+"en": "Read the load chart check, ground pressure and slings — every step shown."
+},
+{
+"en": "Lift plan tab: the lift + ground mats + slings + wind → one verdict (GO / critical / STOP) and a PDF for the planner, supervisor and operator to sign."
+},
+{
+"en": "Say what happened in your own words."
+},
+{
+"en": "Attune writes a proper incident or maintenance report."
+},
+{
+"en": "Tap Speak and talk — Egyptian Arabic or English. Add photos: each gets the time and the place, then one PDF with them."
+},
+{
+"en": "Nothing is made up — missing facts are asked."
+},
+{
+"en": "Work → Tools is a list of choices: Improve a prompt, Compress, Humanize, Copilot, Library, Video and Ask."
+},
+{
+"en": "Tap a card to open it on its own page."
+},
+{
+"en": "Back brings you to the list again."
+},
+{
+"en": "Use them before you send something to ChatGPT or a client."
+},
+{
+"en": "Paste a rough prompt you will send to ChatGPT, Claude or Gemini."
+},
+{
+"en": "Copy the better prompt.",
+"ar": "انسخ الطلب المتظبط."
+},
+{
+"en": "Compress makes it shorter; Humanize makes text sound like you."
+},
+{
+"en": "Paste a long prompt.",
+"ar": "الزق طلب طويل."
+},
+{
+"en": "Attune keeps every requirement and drops the rest."
+},
+{
+"en": "Copy the short version.",
+"ar": "انسخ النسخة القصيرة."
+},
+{
+"en": "Shorter prompts cost less on paid AIs."
+},
+{
+"en": "Paste or type any text — a prompt, an email, a message."
+},
+{
+"en": "Tap Improve, Shorten or Humanize."
+},
+{
+"en": "The tool opens with your text and does it."
+},
+{
+"en": "Copilot and the Prompt lab are the tabs next to Writing."
+},
+{
+"en": "Paste text that sounds robotic."
+},
+{
+"en": "Pick a tone.",
+"ar": "اختار الأسلوب."
+},
+{
+"en": "Get it back in a natural voice."
+},
+{
+"en": "Put a sample of your writing in your Profile for your own style."
+},
+{
+"en": "Paste what another AI said."
+},
+{
+"en": "Attune checks it and suggests the next prompt."
+},
+{
+"en": "Go back and forth until it is right."
+},
+{
+"en": "Good for long jobs on another AI."
+},
+{
+"en": "Browse prompt recipes by job."
+},
+{
+"en": "Fill in the blanks.",
+"ar": "املا الفراغات."
+},
+{
+"en": "Send it to Chat or copy it."
+},
+{
+"en": "Prompt lab (top of Library): write two versions, run both on the same text, keep the better one in My prompts."
+},
+{
+"en": "Copy a video's link and paste it here."
+},
+{
+"en": "Pick the quality.",
+"ar": "اختار الجودة."
+},
+{
+"en": "It is saved to your phone. Tap Cut to keep only a part, or only the sound."
+},
+{
+"en": "Only download what you have the right to keep."
+},
+{
+"en": "The earlier one-question screen.",
+"ar": "شاشة السؤال الواحد القديمة."
+},
+{
+"en": "Type a question and get one answer."
+},
+{
+"en": "Kept for people who liked it."
+},
+{
+"en": "Read what Attune keeps and where: on this phone, nowhere else."
+},
+{
+"en": "Private vault: lock places like Money or Health with your fingerprint or a PIN; they lock again a minute after you leave."
+},
+{
+"en": "“Your week in privacy” shows every place Attune connected to this week, and why."
+},
+{
+"en": "The Offline lock in Engine blocks every connection when you want zero internet."
+},
+{
+"en": "Get the most of Attune"
+},
+{
+"en": "Every morning — 5 minutes"
+},
+{
+"en": "With your coffee",
+"ar": "مع فنجان القهوة"
+},
+{
+"en": "Open Home: “Attune suggests” shows today's bill, dose or trial — tick what is done."
+},
+{
+"en": "Check your Missions line on Home: the goal most at risk, its chance, and today's one step."
+},
+{
+"en": "Read “Safe to spend today” on Money: that is your number for the day."
+},
+{
+"en": "Do today's lesson in Learn daily — five minutes, one quiz."
+},
+{
+"en": "Skim Daily news: only your topics, summed up."
+},
+{
+"en": "Same time every day — it becomes a habit in two weeks."
+},
+{
+"en": "During the day — seconds each"
+},
+{
+"en": "As things happen",
+"ar": "أول بأول"
+},
+{
+"en": "Snap your plate before you eat (Home → Food photo)."
+},
+{
+"en": "Spent something? One sentence on Home: “koshary 80”, “InstaPay 500 to Sara”."
+},
+{
+"en": "Promised something? “Remind me at 5 to pay the electricity”."
+},
+{
+"en": "A long message or a photo of a paper? Share it to Attune — it opens in Chat; ask it to reply, translate or add it to the calendar."
+},
+{
+"en": "Log it the moment it happens — at night you will forget half."
+},
+{
+"en": "Every evening — close the day"
+},
+{
+"en": "Before bed",
+"ar": "قبل ما تنام"
+},
+{
+"en": "Look at your Fit & Food summary: calories and protein left; plan tomorrow's breakfast."
+},
+{
+"en": "Tick the evening doses in Family health."
+},
+{
+"en": "Follow-ups: tick what was paid, see who still owes you and what is due tomorrow."
+},
+{
+"en": "Keep the day's papers in Mind: a receipt, a warranty, a card someone gave you."
+},
+{
+"en": "Two minutes at night saves an hour of searching later."
+},
+{
+"en": "Once a week",
+"ar": "مرة في الأسبوع"
+},
+{
+"en": "Friday morning is a good time"
+},
+{
+"en": "Check your Scout searches: new ads, price drops, and the “wait or buy” line."
+},
+{
+"en": "Payments: any double charge, price rise or subscription you forgot?"
+},
+{
+"en": "Export your WhatsApp groups again (design, news, Hadith…) — the new photos and posts go into their albums."
+},
+{
+"en": "People & plans: is the maid paid for Saturday, the gam'eya turn on time?"
+},
+{
+"en": "Save a backup (bottom of the sidebar)."
+},
+{
+"en": "Ten minutes a week keeps money and promises from slipping."
+},
+{
+"en": "Once a month",
+"ar": "مرة في الشهر"
+},
+{
+"en": "The day your salary comes in"
+},
+{
+"en": "Money review: where it went, budgets, bills — and Zakāt when it is due."
+},
+{
+"en": "Dates: a renewal coming? Open its Cancel kit if you don't use it any more."
+},
+{
+"en": "A big buy coming? Deal Check “In today's money” — cash or installments."
+},
+{
+"en": "Ask your life: “how much did I spend on food this month vs last month?”"
+},
+{
+"en": "One honest look a month is how money really grows."
+},
+{
+"en": "For your work",
+"ar": "لشغلك"
+},
+{
+"en": "Every working day",
+"ar": "كل يوم شغل"
+},
+{
+"en": "A client asks on WhatsApp? Share it to Attune → From a message: what is free, the price, the reply, Book it."
+},
+{
+"en": "Something happened on site? Say it — Reports writes the report as a PDF."
+},
+{
+"en": "Team records: which machine needs attention this week."
+},
+{
+"en": "Answer a client in two minutes with a real price — that is how you win the job."
+},
+{
+"en": "Bottom of the sidebar",
+"ar": "تحت في القائمة الجانبية"
+},
+{
+"en": "period started today",
+"ar": "الدورة جات النهارده"
+},
+{
+"en": "Attach the file, then send again."
+},
+{
+"en": "Write what it's about after the command."
+},
+{
+"en": "Kept as a note in Mind."
+},
+{
+"en": "elmenus 300",
+"ar": "صرفت 200 على الغدا"
+},
+{
+"en": "transferred 500 to ahmed",
+"ar": "حولت 500 لأحمد"
+},
+{
+"en": "dinner grilled chicken and rice"
+},
+{
+"en": "every friday remind me to water the plants"
+},
+{
+"en": "headache since morning",
+"ar": "ضغطي 120 على 80"
+},
+{
+"en": "don't forget to book the dentist"
+},
+{
+"en": "what is apple in spanish"
+},
+{
+"en": "open the metro",
+"ar": "افتح الخريطة"
+},
+{
+"en": "give me ideas for a birthday"
+},
+{
+"en": "every month",
+"ar": "كل شهر"
+},
+{
+"en": "every week",
+"ar": "كل أسبوع"
+},
+{
+"en": "Bookkeeping|bookkeeping|journal|ledger",
+"ar": "Tax / VAT|tax|vat|ضريب"
+},
+{
+"en": "Onboarding|onboarding",
+"ar": "Labour law|labour law|labor law|قانون العمل"
+},
+{
+"en": "Tell me about yourself.",
+"ar": "حدثني عن نفسك."
+},
+{
+"en": "Why do you want this job?"
+},
+{
+"en": "Tell me about a problem you solved at work."
+},
+{
+"en": "What is your biggest strength — with an example?"
+},
+{
+"en": "Tell me about a time you made a mistake. What did you do?"
+},
+{
+"en": "Where do you see yourself in three years?"
+},
+{
+"en": "Do you have any questions for us?"
+},
+{
+"en": "Walk me through a project you built. What was hardest?"
+},
+{
+"en": "How do you make sure your code works?"
+},
+{
+"en": "Tell me about an analysis that changed a decision."
+},
+{
+"en": "How do you check that data is correct?"
+},
+{
+"en": "How do you close the month?"
+},
+{
+"en": "Tell me about a reconciliation that didn't match."
+},
+{
+"en": "Tell me about your best month. What did you do differently?"
+},
+{
+"en": "How do you handle a client who says it's too expensive?"
+},
+{
+"en": "Tell me about a campaign and its results."
+},
+{
+"en": "How do you decide where to spend the budget?"
+},
+{
+"en": "Tell me about an angry customer you helped."
+},
+{
+"en": "What do you do when you don't know the answer?"
+},
+{
+"en": "Tell me about a time a patient's condition changed quickly."
+},
+{
+"en": "How do you help a student who is falling behind?"
+},
+{
+"en": "Tell me about a project that was late. What did you do?"
+},
+{
+"en": "Walk me through a design from brief to final."
+},
+{
+"en": "How do you find good candidates for a hard role?"
+},
+{
+"en": "Tell me about a site problem you solved."
+},
+{
+"en": "What do you do if a delivery can't be completed?"
+},
+{
+"en": "How do you plan a lift near the chart's limit?"
+},
+{
+"en": "How do you keep quality during a rush?"
+},
+{
+"en": "How do you handle many urgent tasks at once?"
+},
+{
+"en": "A clear story: what happened → what you did → the result."
+},
+{
+"en": " is missing.",
+"ar": "احكها كقصة: ينقصها "
+},
+{
+"en": "A number makes the result believable."
+},
+{
+"en": "Add a number to the result (how many, how much, how fast)."
+},
+{
+"en": "It matches what your CV says."
+},
+{
+"en": "Tell every answer as a story: what happened, what YOU did, and the result with a number."
+},
+{
+"en": "Replace “um” and “like” with a short pause — a second of silence sounds more confident."
+},
+{
+"en": "Say “I did” and “it worked” instead of “I think” and “maybe”."
+},
+{
+"en": "Keep a steady pace: 110–170 words a minute."
+},
+{
+"en": "(negative ",
+"ar": "(سالب "
+},
+{
+"en": "negative ",
+"ar": "سالب "
+},
+{
+"en": "Well done!",
+"ar": "أحسنت!"
+},
+{
+"en": "Not yet. Try again.",
+"ar": "ليس بعد. حاول مرة أخرى."
+},
+{
+"en": "Listen to the lesson"
+},
+{
+"en": "Netflix 200 every month",
+"ar": "جمعية ٢٠٠٠ في الشهر…"
+},
+{
+"en": "12 installments",
+"ar": "36 شهر"
+},
+{
+"en": "on the 5th",
+"ar": "يوم 5"
+},
+{
+"en": "mum's HbA1c",
+"ar": "ماما"
+},
+{
+"en": "in all",
+"ar": "إجمالًا"
+},
+{
+"en": "How did my food spending change since Ramadan?"
+},
+{
+"en": "What's due this week?",
+"ar": "ايه المواعيد المستحقة الاسبوع ده؟"
+},
+{
+"en": "Is my HbA1c getting better?"
+},
+{
+"en": "How much protein did I eat yesterday?"
+},
+{
+"en": "What medicines does mum take?"
+},
+{
+"en": "You have no installments or debts in People & plans."
+},
+{
+"en": "No blood sugar readings yet. Save one on Family health → Today."
+},
+{
+"en": "That's about the world, not your own data — asking the web."
+},
+{
+"en": "the Eid",
+"ar": "العيد"
+},
+{
+"en": "The pound loses 30%",
+"ar": "الجنيه يخسر 30%"
+},
+{
+"en": "Inflation at 35% for five years"
+},
+{
+"en": "Three months without income",
+"ar": "3 شهور من غير دخل"
+},
+{
+"en": "Wedding",
+"ar": "الفرح"
+},
+{
+"en": "Umrah & Hajj",
+"ar": "العمرة والحج"
+},
+{
+"en": "The car",
+"ar": "العربية"
+},
+{
+"en": "The flat",
+"ar": "الشقة"
+},
+{
+"en": "Repairs",
+"ar": "التصليحات"
+},
+{
+"en": "Groceries",
+"ar": "البقالة"
+},
+{
+"en": "Eating out",
+"ar": "الأكل برة"
+},
+{
+"en": "The kids",
+"ar": "الولاد"
+},
+{
+"en": "Gifts",
+"ar": "الهدايا"
+},
+{
+"en": "Ramadan & Eid",
+"ar": "رمضان والعيد"
+},
+{
+"en": "Clothes",
+"ar": "اللبس"
+},
+{
+"en": "Sport",
+"ar": "الرياضة"
+},
+{
+"en": "man city",
+"ar": "مانشستر سيتي"
+},
+{
+"en": "man utd",
+"ar": "مانشستر يونايتد"
+},
+{
+"en": "real madrid",
+"ar": "ريال مدريد"
+},
+{
+"en": "paris saint-germain",
+"ar": "باريس"
+},
+{
+"en": "al hilal",
+"ar": "الهلال"
+},
+{
+"en": "al nassr",
+"ar": "النصر"
+},
+{
+"en": "aston villa",
+"ar": "استون فيلا"
+},
+{
+"en": "Continue exactly where you stopped. Do not repeat anything you already wrote — start with the very next word."
+},
+{
+"en": "fuel|gas station|petrol|petrol station|gas",
+"ar": "بنزينه|بنزينة|محطه بنزين|محطة بنزين|محطه وقود|محطة وقود|وقود|بنزين"
+},
+{
+"en": "pharmacy|pharmacies|chemist|drugstore",
+"ar": "صيدليه|صيدلية|صيدليات|اجزخانه|أجزخانة"
+},
+{
+"en": "hospital|hospitals|emergency|er",
+"ar": "مستشفي|مستشفى|مستشفيات|طوارئ|اسعاف|إسعاف"
+},
+{
+"en": "clinic|clinics|doctor|dentist|dental",
+"ar": "عياده|عيادة|عيادات|دكتور|طبيب|اسنان|أسنان"
+},
+{
+"en": "atm|cash machine|bank|banks",
+"ar": "صراف|ماكينه صراف|ماكينة صراف|ATM|بنك|بنوك|مصرف"
+},
+{
+"en": "mosque|mosques|masjid",
+"ar": "مسجد|جامع|مساجد|زاويه|زاوية"
+},
+{
+"en": "church|churches",
+"ar": "كنيسه|كنيسة|كنائس"
+},
+{
+"en": "restaurant|restaurants|food|eat|dinner|lunch",
+"ar": "مطعم|مطاعم|اكل|أكل|غدا|غداء|عشا|عشاء"
+},
+{
+"en": "cafe|cafes|coffee|coffee shop",
+"ar": "كافيه|كافيهات|قهوه|قهوة|مقهى|مقهي|كوفي"
+},
+{
+"en": "supermarket|grocery|groceries|market|hypermarket",
+"ar": "سوبر ماركت|سوبرماركت|ماركت|بقاله|بقالة|هايبر"
+},
+{
+"en": "mall|malls|shopping centre|shopping center",
+"ar": "مول|مولات|سنتر تجاري|مركز تجاري"
+},
+{
+"en": "compound|compounds|gated community|residence",
+"ar": "كمبوند|كومباوند|كمباوند|كمبوندات|مجمع سكني"
+},
+{
+"en": "school|schools",
+"ar": "مدرسه|مدرسة|مدارس"
+},
+{
+"en": "university|college",
+"ar": "جامعه|جامعة|كليه|كلية"
+},
+{
+"en": "hotel|hotels|resort",
+"ar": "فندق|فنادق|اوتيل|أوتيل|منتجع"
+},
+{
+"en": "parking|car park",
+"ar": "جراج|موقف سيارات|باركنج|ركنه|ركنة"
+},
+{
+"en": "station|metro|train|bus station",
+"ar": "محطه|محطة|مترو|قطر|قطار|موقف"
+},
+{
+"en": "police|police station",
+"ar": "قسم|قسم شرطه|قسم شرطة|شرطه|شرطة|بوليس"
+},
+{
+"en": "gym|fitness",
+"ar": "جيم|نادي رياضي|صاله العاب|صالة ألعاب"
+},
+{
+"en": "park|garden",
+"ar": "حديقه|حديقة|جنينه|جنينة|بارك"
+},
+{
+"en": "bakery|bread",
+"ar": "مخبز|فرن|عيش"
+},
+{
+"en": "mechanic|car repair|garage",
+"ar": "ميكانيكي|ورشه|ورشة|صيانه سيارات|صيانة سيارات"
+},
+{
+"en": "where is the bug in my code"
+},
+{
+"en": "What matters in this?",
+"ar": "ما أهم شيء في هذا؟"
+},
+{
+"en": "Links",
+"ar": "لينكات"
+},
+{
+"en": "Products",
+"ar": "منتجات"
+},
+{
+"en": "To-dos",
+"ar": "مهام"
+},
+{
+"en": "Videos",
+"ar": "فيديوهات"
+},
+{
+"en": "Recordings",
+"ar": "تسجيلات"
+},
+{
+"en": "Where things are",
+"ar": "أماكن الحاجات"
+},
+{
+"en": "Red",
+"ar": "أحمر"
+},
+{
+"en": "Yellow",
+"ar": "أصفر"
+},
+{
+"en": "Purple",
+"ar": "بنفسجي"
+},
+{
+"en": "Pink",
+"ar": "وردي"
+},
+{
+"en": "Brown",
+"ar": "بني"
+},
+{
+"en": "White",
+"ar": "أبيض"
+},
+{
+"en": "Grey",
+"ar": "رمادي"
+},
+{
+"en": "Black",
+"ar": "أسود"
+},
+{
+"en": "Save 60,000 by June",
+"ar": "عايز أوفر 60 ألف قبل يونيو"
+},
+{
+"en": "Lose 6 kg before 20 January"
+},
+{
+"en": "Buy a Corolla 2022 under 900k by 1 December"
+},
+{
+"en": "Log your weight in Fit & Food (Progress) — the mission starts counting from it."
+},
+{
+"en": "Add the debt in Money → People (who, how much) — the mission follows it from there."
+},
+{
+"en": "Start the course in Learn first — the mission counts its lessons."
+},
+{
+"en": "Open Business → Fleet & rentals and add the cranes and their work — the mission reads it."
+},
+{
+"en": "Open Business → Fleet & rentals and record the payments — the mission reads them."
+},
+{
+"en": "done ✔",
+"ar": "خلصت ✔"
+},
+{
+"en": "needs data",
+"ar": "محتاج بيانات"
+},
+{
+"en": "Fun",
+"ar": "ترفيه"
+},
+{
+"en": "Coffee/Tea",
+"ar": "قهوة/شاي"
+},
+{
+"en": "Salary",
+"ar": "راتب"
+},
+{
+"en": "The poor",
+"ar": "الفقراء"
+},
+{
+"en": "The needy",
+"ar": "المساكين"
+},
+{
+"en": "Zakāt workers",
+"ar": "العاملين عليها"
+},
+{
+"en": "Hearts to be reconciled",
+"ar": "المؤلفة قلوبهم"
+},
+{
+"en": "Freeing captives",
+"ar": "في الرقاب"
+},
+{
+"en": "People in debt",
+"ar": "الغارمين"
+},
+{
+"en": "In the way of Allah"
+},
+{
+"en": "The stranded traveller",
+"ar": "ابن السبيل"
+},
+{
+"en": "a subscription cancelled",
+"ar": "اشتراك اتلغى"
+},
+{
+"en": "a double charge refunded",
+"ar": "خصم مكرر رجع"
+},
+{
+"en": "a price rise fixed",
+"ar": "زيادة اتصلحت"
+},
+{
+"en": "a debt collected",
+"ar": "دين اتحصّل"
+},
+{
+"en": "a better price found",
+"ar": "سعر أرخص"
+},
+{
+"en": "fees avoided",
+"ar": "رسوم اتوفرت"
+},
+{
+"en": "Today: ",
+"ar": "النهارده: "
+},
+{
+"en": "Good morning — your day in a few lines"
+},
+{
+"en": "last week",
+"ar": "الأسبوع اللي فات"
+},
+{
+"en": "this year",
+"ar": "السنة دي"
+},
+{
+"en": "Nothing is recorded in **Money** yet. Add your expenses there (or share a bank SMS to Attune) and ask again."
+},
+{
+"en": "You spent",
+"ar": "صرفت"
+},
+{
+"en": "You received",
+"ar": "دخلك"
+},
+{
+"en": "Biggest: ",
+"ar": "الأكبر: "
+},
+{
+"en": "**Each entry:**",
+"ar": "**كل عملية:**"
+},
+{
+"en": "_Added up from your Money records on this phone._"
+},
+{
+"en": "the world",
+"ar": "العالم"
+},
+{
+"en": "arrived more than 3 hours late"
+},
+{
+"en": "was cancelled",
+"ar": "أُلغيت"
+},
+{
+"en": "denied me boarding",
+"ar": "رُفض صعودي إليها"
+},
+{
+"en": "Which term means: ",
+"ar": "أي مصطلح معناه: "
+},
+{
+"en": "Attune is greyed out (\\\"restricted setting\\\")?"
+},
+{
+"en": "The total of",
+"ar": "إجمالي"
+},
+{
+"en": "The average of",
+"ar": "متوسط"
+},
+{
+"en": "The highest",
+"ar": "أعلى"
+},
+{
+"en": "The lowest",
+"ar": "أقل"
+},
+{
+"en": "The rows in the table with"
+},
+{
+"en": "To-do",
+"ar": "المهام"
+},
+{
+"en": "Messages",
+"ar": "الرسايل"
+},
+{
+"en": "a message you got",
+"ar": "رسالة جاتلك"
+},
+{
+"en": "your Mind",
+"ar": "عقلي"
+},
+{
+"en": "gas station",
+"ar": "محطة بنزين"
+},
+{
+"en": "ATM",
+"ar": "ماكينة صراف"
+},
+{
+"en": "car repair",
+"ar": "ورشة عربيات"
+},
+{
+"en": "EV charging station",
+"ar": "محطة شحن"
+},
+{
+"en": " near ",
+"ar": " قريب من "
+},
+{
+"en": " near me",
+"ar": " قريبة"
+},
+{
+"en": "Emergency",
+"ar": "الطوارئ"
+},
+{
+"en": "Eid",
+"ar": "العيد"
+},
+{
+"en": "Going out",
+"ar": "الخروج"
+},
+{
+"en": "Plan ",
+"ar": "خطة "
+},
+{
+"en": "save ",
+"ar": "احوش "
+},
+{
+"en": "Microphone, camera, location",
+"ar": "The microphone is used while you speak to Attune. If you switch on the «يا أتيون» wake word (off by default), the microphone listens on the device for those two words only, with a notification showing while it does; nothing is recorded or sent, and you can pause or switch it off from that notification. Speech is turned into text on the phone; where the phone has no offline voice pack, Android's own speech service (Google's) may process it. The camera is used only when you take a photo for Attune; location only for Maps and Travel. None of them is recorded or sent in the background."
+},
+{
+"en": "A prescription from a doctor."
+},
+{
+"en": "A medicine's box or leaflet."
+},
+{
+"en": "A bill to pay.",
+"ar": "هذه فاتورة للدفع."
+},
+{
+"en": "A receipt for something you bought."
+},
+{
+"en": "A note from the school."
+},
+{
+"en": "An official paper (government, court, tax or police)."
+},
+{
+"en": "A letter.",
+"ar": "هذه رسالة."
+},
+{
+"en": "A sign or a notice."
+},
+{
+"en": "A paper with writing on it."
+},
+{
+"en": "Pay ",
+"ar": "دفع "
+},
+{
+"en": "the bill",
+"ar": "فاتورة"
+},
+{
+"en": "An official paper: if it has a date or a fine, don't ignore it — show it to someone you trust or to the office itself."
+},
+{
+"en": " — by ",
+"ar": " — يوم "
+},
+{
+"en": "Owes you ",
+"ar": "عليه ليك "
+},
+{
+"en": "You owe ",
+"ar": "عليك له "
+},
+{
+"en": "Note: ",
+"ar": "ملاحظة: "
+},
+{
+"en": "long, detailed answers",
+"ar": "الإجابات الطويلة المفصّلة"
+},
+{
+"en": "quick answers",
+"ar": "الإجابات السريعة"
+},
+{
+"en": "3-bedroom flat for rent in Maadi under 15,000, not ground floor, near the metro"
+},
+{
+"en": "Hyundai Tucson 2019 to 2021 under 900k, one owner, no accident, automatic"
+},
+{
+"en": "iPhone 16 Pro 256GB new under 70,000"
+},
+{
+"en": "Data analyst job in Cairo, remote, full-time"
+},
+{
+"en": "Plumber in Nasr City, available this week"
+},
+{
+"en": "A gram now ",
+"ar": "الجرام دلوقتي "
+},
+{
+"en": "An ad you follow has sold"
+},
+{
+"en": "not ground floor",
+"ar": "ليس الدور الأرضي"
+},
+{
+"en": "one owner",
+"ar": "أول مالك"
+},
+{
+"en": "no accidents",
+"ar": "بدون حوادث"
+},
+{
+"en": "near the metro",
+"ar": "قريب من المترو"
+},
+{
+"en": "pets allowed",
+"ar": "يسمح بالحيوانات"
+},
+{
+"en": "with warranty",
+"ar": "بضمان"
+},
+{
+"en": "new cairo",
+"ar": "التجمع"
+},
+{
+"en": "nasr city",
+"ar": "مدينه نصر"
+},
+{
+"en": "sheikh zayed",
+"ar": "الشيخ زايد"
+},
+{
+"en": "garden city",
+"ar": "جاردن سيتي"
+},
+{
+"en": "ain shams",
+"ar": "عين شمس"
+},
+{
+"en": "sidi gaber",
+"ar": "سيدي جابر"
+},
+{
+"en": "north coast",
+"ar": "الساحل"
+},
+{
+"en": "ain sokhna",
+"ar": "السخنه"
+},
+{
+"en": "new capital",
+"ar": "العاصمه الاداريه"
+},
+{
+"en": "a monthly rent (this is a sale price)"
+},
+{
+"en": "Match",
+"ar": "التطابق"
+},
+{
+"en": "Place",
+"ar": "المكان"
+},
+{
+"en": "Bedrooms",
+"ar": "الغرف"
+},
+{
+"en": "Area m²",
+"ar": "المساحة م²"
+},
+{
+"en": "Floor",
+"ar": "الدور"
+},
+{
+"en": "One owner",
+"ar": "أول مالك"
+},
+{
+"en": "No accidents",
+"ar": "بدون حوادث"
+},
+{
+"en": "Automatic",
+"ar": "أوتوماتيك"
+},
+{
+"en": "Furnished",
+"ar": "مفروش"
+},
+{
+"en": "Elevator",
+"ar": "أسانسير"
+},
+{
+"en": "Parking",
+"ar": "جراج"
+},
+{
+"en": "Near the metro",
+"ar": "قريب من المترو"
+},
+{
+"en": "Remote",
+"ar": "عن بعد"
+},
+{
+"en": "Very few details — ask for the papers and more photos"
+},
+{
+"en": " per m²",
+"ar": " للمتر"
+},
+{
+"en": "in Lagos",
+"ar": "موظفين"
+},
+{
+"en": "Photo ",
+"ar": "صورة "
+},
+{
+"en": "A receipt — adding it to Money"
+},
+{
+"en": "A bill — I'll watch its due date"
+},
+{
+"en": "A document — ask anything about it"
+},
+{
+"en": "Text in another language — translating it"
+},
+{
+"en": "A product barcode — looking it up"
+},
+{
+"en": "A plate — reading the food"
+},
+{
+"en": "en-US",
+"ar": "ar-EG"
+},
+{
+"en": "Hello",
+"ar": "أهلاً"
+},
+{
+"en": "Thank you",
+"ar": "شكراً"
+},
+{
+"en": "Please",
+"ar": "لو سمحت"
+},
+{
+"en": "Sorry",
+"ar": "آسف"
+},
+{
+"en": "How are you?",
+"ar": "إزيك؟"
+},
+{
+"en": "Goodbye",
+"ar": "مع السلامة"
+},
+{
+"en": "How much is this?",
+"ar": "بكام ده؟"
+},
+{
+"en": "Where is the bathroom?",
+"ar": "الحمام فين؟"
+},
+{
+"en": "I don't understand",
+"ar": "مش فاهم"
+},
+{
+"en": "You're welcome",
+"ar": "العفو"
+},
+{
+"en": "What is your name?",
+"ar": "اسمك إيه؟"
+},
+{
+"en": "Nice to meet you",
+"ar": "اتشرفت بمعرفتك"
+},
+{
+"en": "EUR",
+"ar": "درهم"
+},
+{
+"en": "AED",
+"ar": "ريال"
+},
+{
+"en": "SAR",
+"ar": "ليرة"
+},
+{
+"en": "{n} meals by photo",
+"ar": "{n} وجبة بالصورة"
+},
+{
+"en": "{n} agents",
+"ar": "{n} وكيل"
+},
+{
+"en": "{n} deal checks",
+"ar": "{n} فحص صفقة"
+},
+{
+"en": "{n} chat X-rays",
+"ar": "{n} فحص محادثة"
+},
+{
+"en": "{n} reports and slides",
+"ar": "{n} تقرير وعرض"
+},
+{
+"en": "{n} deep researches",
+"ar": "{n} بحث متعمق"
+},
+{
+"en": "### Prices in Egypt (copied exactly)\n| Version | Price | Site |\n| --- | --- | --- |\n"
+},
+{
+"en": "implement a class…",
+"ar": "اكتب كود…"
+},
+{
+"en": "Google Drive didn't give the file — make sure it's shared as \\\"Anyone with the link\\\"."
+},
+{
+"en": " or ",
+"ar": " ولا "
+},
+{
+"en": ", or ",
+"ar": "، ولا "
+},
+{
+"en": "You're welcome! Anything else?",
+"ar": "العفو! عايز حاجة تانية؟"
+},
+{
+"en": "I'm good, thanks! What can I do for you?"
+},
+{
+"en": "Navigating to ",
+"ar": "رايحين "
+},
+{
+"en": "reply saying ",
+"ar": "رد عليه "
+},
+{
+"en": "I couldn't answer just now — try again."
+},
+{
+"en": "To answer any question, install an AI model in Engine. Commands (send…, remind me…, open…) work without one."
+},
+{
+"en": "Where to?",
+"ar": "رايح فين؟"
+},
+{
+"en": "Car mode",
+"ar": "وضع العربية"
+},
+{
+"en": "Talk",
+"ar": "اتكلم"
+},
+{
+"en": "who messaged me",
+"ar": "مين بعتلي"
+},
+{
+"en": "Navigate",
+"ar": "ودّيني"
+},
+{
+"en": "Or type (for a passenger)…"
+},
+{
+"en": "Ya Attune",
+"ar": "يا أتيون"
+},
+{
+"en": "Group ",
+"ar": "جروب "
+},
+{
+"en": "To ",
+"ar": "إلى "
+},
+{
+"en": "Their last message: ",
+"ar": "آخر رسالة منه: "
+},
+{
+"en": "change it to ",
+"ar": "غيرها ل "
+},
+{
+"en": "No recent chat with them — the app opens with the message ready; you pick the person."
+},
+{
+"en": "Or type here…",
+"ar": "أو اكتب هنا…"
+},
+{
+"en": "(We are talking by voice: answer in 1–3 short spoken sentences, no lists or tables.)"
+},
+{
+"en": "The details are on the screen."
+},
+{
+"en": "Bedroom",
+"ar": "أوضة النوم"
+},
+{
+"en": "Kids' room",
+"ar": "أوضة الأطفال"
+},
+{
+"en": "Kitchen",
+"ar": "المطبخ"
+},
+{
+"en": "Dining",
+"ar": "السفرة"
+},
+{
+"en": "Bathroom",
+"ar": "الحمام"
+},
+{
+"en": "Office",
+"ar": "المكتب"
+},
+{
+"en": "Entrance & corridor",
+"ar": "المدخل والطرقة"
+},
+{
+"en": "Outdoor & balcony",
+"ar": "البلكونة والجنينة"
+},
+{
+"en": "Wardrobes & storage",
+"ar": "الدواليب والتخزين"
+},
+{
+"en": "Curtains & textiles",
+"ar": "الستاير والمفروشات"
+},
+{
+"en": "Walls, paint & colours",
+"ar": "الحيطان والدهانات والألوان"
+},
+{
+"en": "Floors & tiles",
+"ar": "الأرضيات والسيراميك"
+},
+{
+"en": "Decor & plants",
+"ar": "الديكور والزرع"
+},
+{
+"en": "Appliances",
+"ar": "الأجهزة"
+},
+{
+"en": "Middle East",
+"ar": "الشرق الأوسط"
+},
+{
+"en": "World",
+"ar": "العالم"
+},
+{
+"en": "Economy & money",
+"ar": "الاقتصاد والفلوس"
+},
+{
+"en": "Politics",
+"ar": "السياسة"
+},
+{
+"en": "Tech & science",
+"ar": "التكنولوجيا والعلوم"
+},
+{
+"en": "Weather",
+"ar": "الطقس"
+},
+{
+"en": "Prayer",
+"ar": "الصلاة"
+},
+{
+"en": "Fasting & Ramadan",
+"ar": "الصيام ورمضان"
+},
+{
+"en": "Charity",
+"ar": "الصدقة"
+},
+{
+"en": "Parents & family",
+"ar": "الوالدين والأهل"
+},
+{
+"en": "Patience & trust",
+"ar": "الصبر والتوكل"
+},
+{
+"en": "Manners & character",
+"ar": "الأخلاق"
+},
+{
+"en": "Dua & dhikr",
+"ar": "الدعاء والذكر"
+},
+{
+"en": "Death & the hereafter",
+"ar": "الموت والآخرة"
+},
+{
+"en": "The Prophet & companions",
+"ar": "سيرة النبي والصحابة"
+},
+{
+"en": "Stories",
+"ar": "قصص"
+},
+{
+"en": "Main dishes",
+"ar": "أطباق رئيسية"
+},
+{
+"en": "Desserts",
+"ar": "حلويات"
+},
+{
+"en": "Salads & sides",
+"ar": "سلطات ومقبلات"
+},
+{
+"en": "Drinks",
+"ar": "مشروبات"
+},
+{
+"en": "Design & furniture",
+"ar": "ديكور وأثاث"
+},
+{
+"en": "Rooms",
+"ar": "الأوض"
+},
+{
+"en": "Things",
+"ar": "الحاجات"
+},
+{
+"en": "News",
+"ar": "أخبار"
+},
+{
+"en": "Topics",
+"ar": "المواضيع"
+},
+{
+"en": "Hadith & stories",
+"ar": "أحاديث وقصص"
+},
+{
+"en": "Themes",
+"ar": "المواضيع"
+},
+{
+"en": "Dishes",
+"ar": "الأكلات"
+},
+{
+"en": "Tell me when Ahmed messages me"
+},
+{
+"en": "Alert me when I get an email from the bank"
+},
+{
+"en": "Any WhatsApp with the word urgent — tell me"
+},
+{
+"en": "SMS",
+"ar": "الرسايل العادية"
+},
+{
+"en": "any app",
+"ar": "أي أبلكيشن"
+},
+{
+"en": "WhatsApp",
+"ar": "الواتساب"
+},
+{
+"en": "Gmail",
+"ar": "الجيميل"
+},
+{
+"en": "Telegram",
+"ar": "التليجرام"
+},
+{
+"en": "Messenger",
+"ar": "الماسنجر"
+},
+{
+"en": "Instagram",
+"ar": "الانستجرام"
+},
+{
+"en": "with: ",
+"ar": "فيها: "
+},
+{
+"en": "a sheep or goat",
+"ar": "شاة"
+},
+{
+"en": "a she-camel in her 2nd year (bint makhāḍ)"
+},
+{
+"en": "a she-camel in her 3rd year (bint labūn)"
+},
+{
+"en": "a she-camel in her 4th year (ḥiqqah)"
+},
+{
+"en": "a she-camel in her 5th year (jadhaʿah)"
+},
+{
+"en": "a one-year-old calf (tabīʿ)",
+"ar": "تبيع"
+},
+{
+"en": "a two-year-old cow (musinnah)",
+"ar": "مُسِنّة"
+},
+{
+"en": "Crops & fruit",
+"ar": "الزروع والثمار"
+},
+{
+"en": "Trade goods",
+"ar": "عروض التجارة"
+},
+{
+"en": "Buried treasure (rikāz)",
+"ar": "الركاز"
+},
+{
+"en": "Zakāt al-Fiṭr",
+"ar": "زكاة الفطر"
+},
+{
+"en": "Conditions: they must be free-grazing (sāʾimah) for most of the year, held a full lunar year, and not working animals."
+},
+{
+"en": "No lunar year needed — due on harvest day. Each crop type counts on its own."
+},
+{
+"en": "Valued at today's selling price on your Zakāt date. Niṣāb is the same as gold; rate 2.5%."
+},
+{
+"en": "Pre-Islamic buried treasure (rikāz): 20%, with no niṣāb and no waiting year."
+},
+{
+"en": "One ṣāʿ (about 2.5–3 kg) of staple food per person, paid before the Eid prayer, for yourself and those you support."
+},
+{
+"en": "Niṣāb of gold & silver"
+},
+{
+"en": "“There is no zakāh on less than five awāq (of silver).”"
+},
+{
+"en": "The lunar year (ḥawl)",
+"ar": "الحول"
+},
+{
+"en": "“No zakāh is due on wealth until a year has passed over it.”"
+},
+{
+"en": "The rate: 2.5%",
+"ar": "المقدار: ربع العشر"
+},
+{
+"en": "“On silver (money), one quarter of a tenth.”"
+},
+{
+"en": "“There is no zakāh on fewer than five camels.” And in the Book of Ṣadaqah: for five, a sheep; for ten, two sheep; for fifteen, three; for twenty, four; for twenty-five, a bint makhāḍ…"
+},
+{
+"en": "The Prophet ﷺ told Muʿādh to take “for every thirty cattle a one-year-old calf, and for every forty a two-year-old.”"
+},
+{
+"en": "“For forty sheep, one sheep… above one hundred and twenty, two… above two hundred, three.”"
+},
+{
+"en": "Grazing condition",
+"ar": "شرط السوم"
+},
+{
+"en": "They must graze freely most of the year, be held a full year, and not be working animals."
+},
+{
+"en": "“What is watered by the sky and springs, or by itself: a tenth; what is watered by irrigation: half a tenth.” And “there is no zakāh on less than five awsuq.”"
+},
+{
+"en": "“The Messenger of Allah ﷺ commanded us to pay zakāh on what we prepare for sale.”"
+},
+{
+"en": "“On buried treasure, one fifth.”"
+},
+{
+"en": "“The Messenger of Allah ﷺ made Zakāt al-Fiṭr obligatory: a ṣāʿ of dates or a ṣāʿ of barley, on the slave and the free, male and female.”"
+},
+{
+"en": "The eight recipients",
+"ar": "مصارف الزكاة الثمانية"
+},
+{
+"en": "“Zakāh is only for the poor, the needy, those who collect it, those whose hearts are to be reconciled, freeing captives, those in debt, in the cause of Allah, and the traveller.”"
+},
+{
+"en": "Worn jewellery",
+"ar": "الحلي الملبوس"
+},
+{
+"en": "Scholars differ: the Ḥanafīs make zakāh due on gold and silver jewellery even when worn; the majority (Mālikīs, Shāfiʿīs, Ḥanbalīs) do not, for permitted jewellery kept for wearing."
+},
+{
+"en": "Dropping below the niṣāb",
+"ar": "النقص عن النصاب أثناء الحول"
+},
+{
+"en": "If your wealth drops below the niṣāb during the year, the year is broken; when it reaches the niṣāb again, a new year starts."
+}
+]
