@@ -1,0 +1,26 @@
+name: Translate the app (Gemini)
+# Translates the interface lines still missing (tools/i18n/todo → tools/i18n/out) with Gemini and commits them back.
+# Needs the repository secret GEMINI_API_KEY. Claude then merges + tests them (tools/i18n/merge.mjs, tests/i18n_all.py).
+on:
+  workflow_dispatch:
+    inputs:
+      langs: { description: "languages (empty = all)", required: false, default: "" }
+      model: { description: "Gemini model", required: false, default: "gemini-2.5-pro" }
+permissions: { contents: write }
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Translate
+        env: { GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}", GEMINI_MODEL: "${{ inputs.model }}", PAR: "4" }
+        run: node tools/i18n/gemini.mjs ${{ inputs.langs }}
+      - name: Commit what is done
+        if: always()
+        run: |
+          git config user.name "Claude"; git config user.email "noreply@anthropic.com"
+          git add tools/i18n/out
+          git diff --cached --quiet || { git commit -m "Translations from Gemini (tools/i18n/out)"; git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"; }
