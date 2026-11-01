@@ -59,7 +59,7 @@ const SKETCH = {
   engine: { at: [[70, 70], [70, 140], [100, 196]], draw: <>
     {card(14, 44, 112, 56)}<rect x="24" y="56" width="22" height="22" rx="4" fill="none" stroke={A} strokeWidth="1.8" /><rect x="30" y="62" width="10" height="10" fill={A} />{bar(54, 60, 50, 0.7)}{bar(54, 70, 36)}{btn(54, 82, 46)}
     {card(14, 112, 112, 52)}{bar(22, 124, 60, 0.6)}<rect x="22" y="138" width="96" height="6" rx="3" fill={L} /><rect x="22" y="138" width="64" height="6" rx="3" fill={A} />{bar(22, 152, 40)}
-    {card(14, 176, 112, 40)}{bar(22, 192, 50, 0.6)}<rect x="86" y="188" width="32" height="14" rx="7" fill={A} opacity="0.25" /><text x="102" y="198" fontSize="7" textAnchor="middle" fill={A}>Ready</text></> },
+    {card(14, 176, 112, 40)}{bar(22, 192, 50, 0.6)}<rect x="86" y="188" width="32" height="14" rx="7" fill={A} opacity="0.25" /><text x="102" y="198" fontSize="7" textAnchor="middle" fill={A}>{tr("Ready")}</text></> },
 };
 
 export function Sketch({ kind, step = -1, small = false }) {
