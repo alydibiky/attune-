@@ -163,8 +163,453 @@ that language. You translate English interface lines; an Arabic version is given
 ## Your answer
 Reply with ONE JSON object only, inside a ```json code block, nothing else: every "en" below as a key, copied byte-for-byte (same spaces, quotes, dashes, emoji, {placeholders}), mapped to its translation. 1050 keys — do not skip any, do not stop early. If you cannot fit all in one reply, stop at a complete line, close the JSON, and say CONTINUE; I will ask for the rest.
 
-## Lines (tr-04)
+## Lines (tr-07)
 [
+{
+"en": "Polite requests and replies",
+"ar": "الطلبات والردود المهذبة"
+},
+{
+"en": "Talking about numbers, prices and dates"
+},
+{
+"en": "Meetings: agreeing and disagreeing",
+"ar": "الاجتماعات: الموافقة والاعتراض"
+},
+{
+"en": "Phone and video calls",
+"ar": "المكالمات الهاتفية والمرئية"
+},
+{
+"en": "Describing problems and solutions",
+"ar": "وصف المشكلات والحلول"
+},
+{
+"en": "Negotiating",
+"ar": "التفاوض"
+},
+{
+"en": "Presenting your company",
+"ar": "تقديم شركتك"
+},
+{
+"en": "Writing a report",
+"ar": "كتابة تقرير"
+},
+{
+"en": "Linking words: however, therefore, although"
+},
+{
+"en": "Relative clauses: who, which, that"
+},
+{
+"en": "Conditionals 3 and mixed",
+"ar": "الشرط الثالث والمختلط"
+},
+{
+"en": "Formal vs informal English",
+"ar": "الإنجليزية الرسمية وغير الرسمية"
+},
+{
+"en": "Common mistakes Arabic speakers make"
+},
+{
+"en": "Pronunciation: stress and linking",
+"ar": "النطق: النبر والوصل"
+},
+{
+"en": "Idioms used at work",
+"ar": "تعابير اصطلاحية في العمل"
+},
+{
+"en": "Job interviews in English",
+"ar": "مقابلات العمل بالإنجليزية"
+},
+{
+"en": "Crane hydraulics: 20 lessons",
+"ar": "هيدروليك الرافعات: 20 درسًا"
+},
+{
+"en": "Pressure, flow and force — Pascal's law"
+},
+{
+"en": "Hydraulic oil: grades, heat and contamination"
+},
+{
+"en": "Pumps: gear, vane and piston"
+},
+{
+"en": "Variable displacement and load sensing"
+},
+{
+"en": "Directional control valves and spools"
+},
+{
+"en": "Relief and pressure-reducing valves",
+"ar": "صمامات التنفيس وخفض الضغط"
+},
+{
+"en": "Counterbalance and holding valves",
+"ar": "صمامات الموازنة والتثبيت"
+},
+{
+"en": "Cylinders: lift, telescope, outriggers",
+"ar": "الأسطوانات: الرفع والتلسكوب وأرجل التثبيت"
+},
+{
+"en": "Hydraulic motors: hoist and slew"
+},
+{
+"en": "Accumulators and filters",
+"ar": "المراكم والمرشحات"
+},
+{
+"en": "Hoses, fittings and seals",
+"ar": "الخراطيم والوصلات والحشوات"
+},
+{
+"en": "Reading a hydraulic circuit diagram"
+},
+{
+"en": "Proportional and electro-hydraulic control",
+"ar": "التحكم التناسبي والكهروهيدروليكي"
+},
+{
+"en": "The LMI and hydraulic pressure sensors"
+},
+{
+"en": "Drift and creep: finding internal leaks"
+},
+{
+"en": "Cavitation and aeration",
+"ar": "التكهف ودخول الهواء"
+},
+{
+"en": "Overheating: causes and fixes",
+"ar": "ارتفاع الحرارة: الأسباب والحلول"
+},
+{
+"en": "Troubleshooting step by step",
+"ar": "تشخيص الأعطال خطوة بخطوة"
+},
+{
+"en": "Maintenance schedule and oil analysis"
+},
+{
+"en": "Safety: stored energy and lock-out"
+},
+{
+"en": "Write in clear, simple English."
+},
+{
+"en": " — and a short quiz"
+},
+{
+"en": "Lesson",
+"ar": "الدرس"
+},
+{
+"en": "Today's lesson is waiting",
+"ar": "درس اليوم جاهز"
+},
+{
+"en": "Write in English.",
+"ar": "اكتب بالعربية."
+},
+{
+"en": "Coming up:",
+"ar": "القادم:"
+},
+{
+"en": "today's news",
+"ar": "أخبار اليوم"
+},
+{
+"en": "Tap to gather the last 24 hours"
+},
+{
+"en": "2 years",
+"ar": "سنتين"
+},
+{
+"en": "the subscription",
+"ar": "الاشتراك"
+},
+{
+"en": "Looks like a scam",
+"ar": "شكلها نصب"
+},
+{
+"en": "Risky — be careful",
+"ar": "فيها مخاطرة — انتبه"
+},
+{
+"en": "Overpriced",
+"ar": "غالية"
+},
+{
+"en": "Good deal",
+"ar": "صفقة كويسة"
+},
+{
+"en": "No red flags found",
+"ar": "لا توجد علامات خطر واضحة"
+},
+{
+"en": "Yes, that's right",
+"ar": "أيوه، مظبوط"
+},
+{
+"en": "Explain what you mean, e.g. “the price is 38,000 cash; 12,400 is the down payment”"
+},
+{
+"en": "Read the offer again with this"
+},
+{
+"en": "They want money before you see or receive it."
+},
+{
+"en": "Payment to a personal wallet or gift card — very hard to get back."
+},
+{
+"en": "They ask for a code sent to your phone — that is how accounts and wallets are stolen."
+},
+{
+"en": "A prize you never entered for."
+},
+{
+"en": "Pressure to decide fast — a classic trick."
+},
+{
+"en": "They move you off the platform, where you lose buyer protection."
+},
+{
+"en": "Guaranteed high profit — the sign of a Ponzi / investment scam."
+},
+{
+"en": "No warranty or returns.",
+"ar": "من غير ضمان أو استرجاع."
+},
+{
+"en": "It says copy / replica — not the original product."
+},
+{
+"en": "No real brand is named."
+},
+{
+"en": "Says 0% interest — the real cost is checked below."
+},
+{
+"en": "A seller with no ratings."
+},
+{
+"en": "The installments add nothing over the cash price — a real 0%."
+},
+{
+"en": "Can I see it and pay on delivery (cash / card on receipt)?"
+},
+{
+"en": "What is the exact brand and model number? Can you send a photo of the label?"
+},
+{
+"en": "Is there an official warranty, and for how long? Invoice included?"
+},
+{
+"en": "Can you do a better price? Others sell it for less."
+},
+{
+"en": "What is the total I pay, all fees included? Is there an early-payment penalty?"
+},
+{
+"en": "Can I take it to an independent mechanic and check the papers (license, violations)?"
+},
+{
+"en": "Is the contract registered, and who pays the maintenance and utilities?"
+},
+{
+"en": "Can I get everything agreed in writing?"
+},
+{
+"en": "No price was found in the offer."
+},
+{
+"en": "The installments add up to less than the cash price — one of them was probably misread."
+},
+{
+"en": "The number of months is written but not the monthly amount."
+},
+{
+"en": "Do you mean: ",
+"ar": "قصدك: "
+},
+{
+"en": "Write a short, polite message to the seller (3–5 lines), ready to send on WhatsApp. No preamble, no explanation — only the message."
+},
+{
+"en": "List every amount and important figure"
+},
+{
+"en": "List all dates and deadlines"
+},
+{
+"en": "had foul and 2 eggs for breakfast"
+},
+{
+"en": "spent 150 on lunch",
+"ar": "صرفت ١٥٠ على الغدا"
+},
+{
+"en": "remind me tomorrow at 9 to call Hassan"
+},
+{
+"en": "drank 2 glasses of water"
+},
+{
+"en": "Ahmed owes me 12,000, 1,000 a month"
+},
+{
+"en": "took my insulin",
+"ar": "خدت الإنسولين"
+},
+{
+"en": "— very high. If you have chest pain, a headache or blurred vision, get help now."
+},
+{
+"en": "— high; check it again later."
+},
+{
+"en": "— low.",
+"ar": "— واطي."
+},
+{
+"en": "No family space yet — open Family to start one."
+},
+{
+"en": "That medicine isn't in Family health."
+},
+{
+"en": "Start the family space first (Family → your name) — then this goes on the shared list."
+},
+{
+"en": "Already on the family list."
+},
+{
+"en": "Paid today",
+"ar": "اتدفع النهارده"
+},
+{
+"en": "Kept in Mind — searchable any time."
+},
+{
+"en": "Logged in Cycle.",
+"ar": "اتسجل في الدورة."
+},
+{
+"en": "Fixed (bills, instalments)",
+"ar": "ثابت (فواتير وأقساط)"
+},
+{
+"en": "Save: ",
+"ar": "تحويش: "
+},
+{
+"en": "Free to spend",
+"ar": "حر تصرفه"
+},
+{
+"en": " — paid back",
+"ar": " — سداد"
+},
+{
+"en": " paid back",
+"ar": " رجّع"
+},
+{
+"en": "Ahmed",
+"ar": "أسامة"
+},
+{
+"en": "Sample note",
+"ar": "ملاحظة تجريبية"
+},
+{
+"en": "Payment pending — the system unlocks by itself as soon as Google confirms it."
+},
+{
+"en": "Couldn't link them"
+},
+{
+"en": "Use your Google Play purchase on this system"
+},
+{
+"en": "Opening Google Play…"
+},
+{
+"en": "Activate this system · {p}"
+},
+{
+"en": "Activation is bought in the Google Play version of Attune — one tap, and the system unlocks by itself."
+},
+{
+"en": "Power",
+"ar": "القوة"
+},
+{
+"en": "Torque",
+"ar": "العزم"
+},
+{
+"en": "Range",
+"ar": "المدى"
+},
+{
+"en": "0–100 km/h",
+"ar": "من 0 لـ100"
+},
+{
+"en": "Top speed",
+"ar": "السرعة القصوى"
+},
+{
+"en": "Charging",
+"ar": "الشحن"
+},
+{
+"en": "Width",
+"ar": "العرض"
+},
+{
+"en": "Height",
+"ar": "الارتفاع"
+},
+{
+"en": "Wheelbase",
+"ar": "قاعدة العجلات"
+},
+{
+"en": "Weight",
+"ar": "الوزن"
+},
+{
+"en": "Seats",
+"ar": "المقاعد"
+},
+{
+"en": "Capacity",
+"ar": "الحمولة"
+},
+{
+"en": "Boom",
+"ar": "الذراع"
+},
+{
+"en": "Storage",
+"ar": "التخزين"
+},
+{
+"en": "RAM",
+"ar": "الرام"
+},
 {
 "en": "Screen",
 "ar": "الشاشة"
@@ -3551,459 +3996,5 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 },
 {
 "en": "Grilled sausage · 12 €"
-},
-{
-"en": "Contains pork",
-"ar": "فيه خنزير"
-},
-{
-"en": "Bratwurst ✗",
-"ar": "البراتفورست ✗"
-},
-{
-"en": "Layout kept; any language.",
-"ar": "الشكل زي ما هو؛ أي لغة."
-},
-{
-"en": "Shared from WhatsApp: “meeting Sunday 11 at the Maadi office”"
-},
-{
-"en": "Add to calendar?",
-"ar": "أضيفه للمواعيد؟"
-},
-{
-"en": "Sun 25 Oct · 11:00"
-},
-{
-"en": "Maadi office",
-"ar": "مكتب المعادي"
-},
-{
-"en": "1 hour before",
-"ar": "قبلها بساعة"
-},
-{
-"en": "Reply",
-"ar": "رد"
-},
-{
-"en": "Share anything to Attune from any app."
-},
-{
-"en": "Book: First aid · 14 notes"
-},
-{
-"en": "Review today: 3 notes",
-"ar": "مراجعة النهارده: 3 ملاحظات"
-},
-{
-"en": "Burns",
-"ar": "الحروق"
-},
-{
-"en": "cool water for 20 minutes"
-},
-{
-"en": "CPR pace",
-"ar": "سرعة الإنعاش"
-},
-{
-"en": "100–120 a minute",
-"ar": "100–120 في الدقيقة"
-},
-{
-"en": "You remembered",
-"ar": "افتكرت"
-},
-{
-"en": "Notes come back the day you would forget them."
-},
-{
-"en": "When my salary arrives, put 20% in the car fund"
-},
-{
-"en": "When: salary · Do: 20% → Car fund"
-},
-{
-"en": "Last salary",
-"ar": "آخر مرتب"
-},
-{
-"en": "Would move",
-"ar": "هيتحوّل"
-},
-{
-"en": "Car fund",
-"ar": "صندوق العربية"
-},
-{
-"en": "It runs by itself when the bank's message comes."
-},
-{
-"en": "the wifi password from a screenshot"
-},
-{
-"en": "Found in a screenshot · 3 Oct"
-},
-{
-"en": "Network",
-"ar": "الشبكة"
-},
-{
-"en": "Password",
-"ar": "الباسورد"
-},
-{
-"en": "Also searched",
-"ar": "دوّرت كمان في"
-},
-{
-"en": "chats · Mind · notifications"
-},
-{
-"en": "Open the screenshot",
-"ar": "افتح السكرين شوت"
-},
-{
-"en": "Searched on the phone, by meaning."
-},
-{
-"en": "I want to save 50,000 before June"
-},
-{
-"en": "Save 50,000 · 71 % chance"
-},
-{
-"en": "So far",
-"ar": "لحد دلوقتي"
-},
-{
-"en": "Today's step",
-"ar": "خطوة النهارده"
-},
-{
-"en": "Put 1,500 aside today — that keeps you on track"
-},
-{
-"en": "Days left",
-"ar": "الأيام الباقية"
-},
-{
-"en": "A goal with a number and a date becomes daily steps."
-},
-{
-"en": "Customs expert: what do I pay on a laptop from Dubai?"
-},
-{
-"en": "About 23 % of the value"
-},
-{
-"en": "Customs",
-"ar": "الجمارك"
-},
-{
-"en": "Other fees",
-"ar": "رسوم تانية"
-},
-{
-"en": "It follows its instructions every time."
-},
-{
-"en": "Skill: Monthly client statement",
-"ar": "مهارة: كشف حساب العميل الشهري"
-},
-{
-"en": "3 steps saved",
-"ar": "3 خطوات محفوظة"
-},
-{
-"en": "Collect the month's work",
-"ar": "اجمع شغل الشهر"
-},
-{
-"en": "Add VAT and payments",
-"ar": "ضيف الضريبة والمدفوعات"
-},
-{
-"en": "Write the letter",
-"ar": "اكتب الجواب"
-},
-{
-"en": "Use in Chat",
-"ar": "استعملها في الشات"
-},
-{
-"en": "A saved recipe for one kind of job."
-},
-{
-"en": "Made in Chat: Trip budget calculator"
-},
-{
-"en": "Trip budget calculator · v3"
-},
-{
-"en": "Nights",
-"ar": "ليالي"
-},
-{
-"en": "Per night",
-"ar": "سعر الليلة"
-},
-{
-"en": "Total with VAT",
-"ar": "الإجمالي بالضريبة"
-},
-{
-"en": "Every change keeps a new version."
-},
-{
-"en": "a felucca at sunset on the Nile, photo"
-},
-{
-"en": "Picture ready · 1024 × 1024"
-},
-{
-"en": "in 3 s",
-"ar": "في 3 ثواني"
-},
-{
-"en": "Clear picture",
-"ar": "الصورة الواضحة"
-},
-{
-"en": "in 25 s",
-"ar": "في 25 ثانية"
-},
-{
-"en": "Made on",
-"ar": "اتعملت على"
-},
-{
-"en": "this phone",
-"ar": "الموبايل ده"
-},
-{
-"en": "Erase an object",
-"ar": "امسح حاجة"
-},
-{
-"en": "Or change a photo with one sentence."
-},
-{
-"en": "A page that splits a bill between friends"
-},
-{
-"en": "bill-split.html · tests passed 4/4"
-},
-{
-"en": "Each",
-"ar": "كل واحد"
-},
-{
-"en": "Written and tested on your phone."
-},
-{
-"en": "Project: New Capital tower bid"
-},
-{
-"en": "4 chats · 6 files"
-},
-{
-"en": "Always price in EGP with VAT"
-},
-{
-"en": "Last chat",
-"ar": "آخر محادثة"
-},
-{
-"en": "Price for the steel",
-"ar": "سعر الحديد"
-},
-{
-"en": "Every chat inside already knows the files."
-},
-{
-"en": "A photo: 2x + 6 = 20"
-},
-{
-"en": "x = 7 — step by step"
-},
-{
-"en": "Step 1",
-"ar": "خطوة 1"
-},
-{
-"en": "Step 2",
-"ar": "خطوة 2"
-},
-{
-"en": "Step 3",
-"ar": "خطوة 3"
-},
-{
-"en": "Check question",
-"ar": "سؤال تأكيد"
-},
-{
-"en": "Explain with voice",
-"ar": "اشرح بالصوت"
-},
-{
-"en": "Solved by code, taught like a teacher."
-},
-{
-"en": "contract.pdf · 12 pages",
-"ar": "contract.pdf · 12 صفحة"
-},
-{
-"en": "contract.docx — ready",
-"ar": "contract.docx — جاهز"
-},
-{
-"en": "Tables kept",
-"ar": "الجداول"
-},
-{
-"en": "Layout match",
-"ar": "مطابقة الشكل"
-},
-{
-"en": "Uploaded",
-"ar": "اترفع على النت"
-},
-{
-"en": "Never",
-"ar": "أبدًا"
-},
-{
-"en": "80+ conversions, all on the phone."
-},
-{
-"en": "History · 10 books — what happened at Ain Jalut?"
-},
-{
-"en": "1260: Qutuz and Baybars stopped the Mongols"
-},
-{
-"en": "Hourani p. 84 · Lapidus p. 291"
-},
-{
-"en": "The books disagree",
-"ar": "الكتب مختلفة"
-},
-{
-"en": "10,000 or 20,000 Mongols",
-"ar": "10,000 ولا 20,000 مغولي"
-},
-{
-"en": "10 books, 4,812 pages",
-"ar": "10 كتب، 4,812 صفحة"
-},
-{
-"en": "Ask a follow-up",
-"ar": "اسأل تاني"
-},
-{
-"en": "Only your own books, each fact with its page."
-},
-{
-"en": "Car manual.pdf — how often do I change the oil?"
-},
-{
-"en": "Every 10,000 km or 12 months"
-},
-{
-"en": "page 214",
-"ar": "صفحة 214"
-},
-{
-"en": "Hard driving",
-"ar": "سواقة تقيلة"
-},
-{
-"en": "every 5,000 km",
-"ar": "كل 5,000 كم"
-},
-{
-"en": "quoted word for word",
-"ar": "منقولة بالنص"
-},
-{
-"en": "Jump to page 214",
-"ar": "روح لصفحة 214"
-},
-{
-"en": "Ask more",
-"ar": "اسأل تاني"
-},
-{
-"en": "Every answer shows its page."
-},
-{
-"en": "a 10-slide pitch for my café"
-},
-{
-"en": "10 slides · Nile Café"
-},
-{
-"en": "Slide 3",
-"ar": "شريحة 3"
-},
-{
-"en": "Our menu: 24 drinks, 12 cakes"
-},
-{
-"en": "Slide 6",
-"ar": "شريحة 6"
-},
-{
-"en": "Chart: customers per month",
-"ar": "رسم: الزباين كل شهر"
-},
-{
-"en": "Slide 10",
-"ar": "شريحة 10"
-},
-{
-"en": "Call us",
-"ar": "كلمنا"
-},
-{
-"en": "Change any slide, then save."
-},
-{
-"en": "Old CV + a job ad: Store manager"
-},
-{
-"en": "CV tailored · 92 % match"
-},
-{
-"en": "Led a team of 8, sales up 20 %"
-},
-{
-"en": "Keywords",
-"ar": "الكلمات المهمة"
-},
-{
-"en": "English · Arabic",
-"ar": "إنجليزي · عربي"
-},
-{
-"en": "Export PDF",
-"ar": "صدّر PDF"
-},
-{
-"en": "Arabic version",
-"ar": "نسخة عربي"
-},
-{
-"en": "Each job ad gets its own CV."
-},
-{
-"en": "lunch 150",
-"ar": "غدا 150"
-},
-{
-"en": "Safe to spend today: 420 EGP"
 }
 ]

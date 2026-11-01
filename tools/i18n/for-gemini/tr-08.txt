@@ -161,10 +161,464 @@ that language. You translate English interface lines; an Arabic version is given
 }
 
 ## Your answer
-Reply with ONE JSON object only, inside a ```json code block, nothing else: every "en" below as a key, copied byte-for-byte (same spaces, quotes, dashes, emoji, {placeholders}), mapped to its translation. 979 keys — do not skip any, do not stop early. If you cannot fit all in one reply, stop at a complete line, close the JSON, and say CONTINUE; I will ask for the rest.
+Reply with ONE JSON object only, inside a ```json code block, nothing else: every "en" below as a key, copied byte-for-byte (same spaces, quotes, dashes, emoji, {placeholders}), mapped to its translation. 1050 keys — do not skip any, do not stop early. If you cannot fit all in one reply, stop at a complete line, close the JSON, and say CONTINUE; I will ask for the rest.
 
-## Lines (tr-05)
+## Lines (tr-08)
 [
+{
+"en": "Contains pork",
+"ar": "فيه خنزير"
+},
+{
+"en": "Bratwurst ✗",
+"ar": "البراتفورست ✗"
+},
+{
+"en": "Layout kept; any language.",
+"ar": "الشكل زي ما هو؛ أي لغة."
+},
+{
+"en": "Shared from WhatsApp: “meeting Sunday 11 at the Maadi office”"
+},
+{
+"en": "Add to calendar?",
+"ar": "أضيفه للمواعيد؟"
+},
+{
+"en": "Sun 25 Oct · 11:00"
+},
+{
+"en": "Maadi office",
+"ar": "مكتب المعادي"
+},
+{
+"en": "1 hour before",
+"ar": "قبلها بساعة"
+},
+{
+"en": "Reply",
+"ar": "رد"
+},
+{
+"en": "Share anything to Attune from any app."
+},
+{
+"en": "Book: First aid · 14 notes"
+},
+{
+"en": "Review today: 3 notes",
+"ar": "مراجعة النهارده: 3 ملاحظات"
+},
+{
+"en": "Burns",
+"ar": "الحروق"
+},
+{
+"en": "cool water for 20 minutes"
+},
+{
+"en": "CPR pace",
+"ar": "سرعة الإنعاش"
+},
+{
+"en": "100–120 a minute",
+"ar": "100–120 في الدقيقة"
+},
+{
+"en": "You remembered",
+"ar": "افتكرت"
+},
+{
+"en": "Notes come back the day you would forget them."
+},
+{
+"en": "When my salary arrives, put 20% in the car fund"
+},
+{
+"en": "When: salary · Do: 20% → Car fund"
+},
+{
+"en": "Last salary",
+"ar": "آخر مرتب"
+},
+{
+"en": "Would move",
+"ar": "هيتحوّل"
+},
+{
+"en": "Car fund",
+"ar": "صندوق العربية"
+},
+{
+"en": "It runs by itself when the bank's message comes."
+},
+{
+"en": "the wifi password from a screenshot"
+},
+{
+"en": "Found in a screenshot · 3 Oct"
+},
+{
+"en": "Network",
+"ar": "الشبكة"
+},
+{
+"en": "Password",
+"ar": "الباسورد"
+},
+{
+"en": "Also searched",
+"ar": "دوّرت كمان في"
+},
+{
+"en": "chats · Mind · notifications"
+},
+{
+"en": "Open the screenshot",
+"ar": "افتح السكرين شوت"
+},
+{
+"en": "Searched on the phone, by meaning."
+},
+{
+"en": "I want to save 50,000 before June"
+},
+{
+"en": "Save 50,000 · 71 % chance"
+},
+{
+"en": "So far",
+"ar": "لحد دلوقتي"
+},
+{
+"en": "Today's step",
+"ar": "خطوة النهارده"
+},
+{
+"en": "Put 1,500 aside today — that keeps you on track"
+},
+{
+"en": "Days left",
+"ar": "الأيام الباقية"
+},
+{
+"en": "A goal with a number and a date becomes daily steps."
+},
+{
+"en": "Customs expert: what do I pay on a laptop from Dubai?"
+},
+{
+"en": "About 23 % of the value"
+},
+{
+"en": "Customs",
+"ar": "الجمارك"
+},
+{
+"en": "Other fees",
+"ar": "رسوم تانية"
+},
+{
+"en": "It follows its instructions every time."
+},
+{
+"en": "Skill: Monthly client statement",
+"ar": "مهارة: كشف حساب العميل الشهري"
+},
+{
+"en": "3 steps saved",
+"ar": "3 خطوات محفوظة"
+},
+{
+"en": "Collect the month's work",
+"ar": "اجمع شغل الشهر"
+},
+{
+"en": "Add VAT and payments",
+"ar": "ضيف الضريبة والمدفوعات"
+},
+{
+"en": "Write the letter",
+"ar": "اكتب الجواب"
+},
+{
+"en": "Use in Chat",
+"ar": "استعملها في الشات"
+},
+{
+"en": "A saved recipe for one kind of job."
+},
+{
+"en": "Made in Chat: Trip budget calculator"
+},
+{
+"en": "Trip budget calculator · v3"
+},
+{
+"en": "Nights",
+"ar": "ليالي"
+},
+{
+"en": "Per night",
+"ar": "سعر الليلة"
+},
+{
+"en": "Total with VAT",
+"ar": "الإجمالي بالضريبة"
+},
+{
+"en": "Every change keeps a new version."
+},
+{
+"en": "a felucca at sunset on the Nile, photo"
+},
+{
+"en": "Picture ready · 1024 × 1024"
+},
+{
+"en": "in 3 s",
+"ar": "في 3 ثواني"
+},
+{
+"en": "Clear picture",
+"ar": "الصورة الواضحة"
+},
+{
+"en": "in 25 s",
+"ar": "في 25 ثانية"
+},
+{
+"en": "Made on",
+"ar": "اتعملت على"
+},
+{
+"en": "this phone",
+"ar": "الموبايل ده"
+},
+{
+"en": "Erase an object",
+"ar": "امسح حاجة"
+},
+{
+"en": "Or change a photo with one sentence."
+},
+{
+"en": "A page that splits a bill between friends"
+},
+{
+"en": "bill-split.html · tests passed 4/4"
+},
+{
+"en": "Each",
+"ar": "كل واحد"
+},
+{
+"en": "Written and tested on your phone."
+},
+{
+"en": "Project: New Capital tower bid"
+},
+{
+"en": "4 chats · 6 files"
+},
+{
+"en": "Always price in EGP with VAT"
+},
+{
+"en": "Last chat",
+"ar": "آخر محادثة"
+},
+{
+"en": "Price for the steel",
+"ar": "سعر الحديد"
+},
+{
+"en": "Every chat inside already knows the files."
+},
+{
+"en": "A photo: 2x + 6 = 20"
+},
+{
+"en": "x = 7 — step by step"
+},
+{
+"en": "Step 1",
+"ar": "خطوة 1"
+},
+{
+"en": "Step 2",
+"ar": "خطوة 2"
+},
+{
+"en": "Step 3",
+"ar": "خطوة 3"
+},
+{
+"en": "Check question",
+"ar": "سؤال تأكيد"
+},
+{
+"en": "Explain with voice",
+"ar": "اشرح بالصوت"
+},
+{
+"en": "Solved by code, taught like a teacher."
+},
+{
+"en": "contract.pdf · 12 pages",
+"ar": "contract.pdf · 12 صفحة"
+},
+{
+"en": "contract.docx — ready",
+"ar": "contract.docx — جاهز"
+},
+{
+"en": "Tables kept",
+"ar": "الجداول"
+},
+{
+"en": "Layout match",
+"ar": "مطابقة الشكل"
+},
+{
+"en": "Uploaded",
+"ar": "اترفع على النت"
+},
+{
+"en": "Never",
+"ar": "أبدًا"
+},
+{
+"en": "80+ conversions, all on the phone."
+},
+{
+"en": "History · 10 books — what happened at Ain Jalut?"
+},
+{
+"en": "1260: Qutuz and Baybars stopped the Mongols"
+},
+{
+"en": "Hourani p. 84 · Lapidus p. 291"
+},
+{
+"en": "The books disagree",
+"ar": "الكتب مختلفة"
+},
+{
+"en": "10,000 or 20,000 Mongols",
+"ar": "10,000 ولا 20,000 مغولي"
+},
+{
+"en": "10 books, 4,812 pages",
+"ar": "10 كتب، 4,812 صفحة"
+},
+{
+"en": "Ask a follow-up",
+"ar": "اسأل تاني"
+},
+{
+"en": "Only your own books, each fact with its page."
+},
+{
+"en": "Car manual.pdf — how often do I change the oil?"
+},
+{
+"en": "Every 10,000 km or 12 months"
+},
+{
+"en": "page 214",
+"ar": "صفحة 214"
+},
+{
+"en": "Hard driving",
+"ar": "سواقة تقيلة"
+},
+{
+"en": "every 5,000 km",
+"ar": "كل 5,000 كم"
+},
+{
+"en": "quoted word for word",
+"ar": "منقولة بالنص"
+},
+{
+"en": "Jump to page 214",
+"ar": "روح لصفحة 214"
+},
+{
+"en": "Ask more",
+"ar": "اسأل تاني"
+},
+{
+"en": "Every answer shows its page."
+},
+{
+"en": "a 10-slide pitch for my café"
+},
+{
+"en": "10 slides · Nile Café"
+},
+{
+"en": "Slide 3",
+"ar": "شريحة 3"
+},
+{
+"en": "Our menu: 24 drinks, 12 cakes"
+},
+{
+"en": "Slide 6",
+"ar": "شريحة 6"
+},
+{
+"en": "Chart: customers per month",
+"ar": "رسم: الزباين كل شهر"
+},
+{
+"en": "Slide 10",
+"ar": "شريحة 10"
+},
+{
+"en": "Call us",
+"ar": "كلمنا"
+},
+{
+"en": "Change any slide, then save."
+},
+{
+"en": "Old CV + a job ad: Store manager"
+},
+{
+"en": "CV tailored · 92 % match"
+},
+{
+"en": "Led a team of 8, sales up 20 %"
+},
+{
+"en": "Keywords",
+"ar": "الكلمات المهمة"
+},
+{
+"en": "English · Arabic",
+"ar": "إنجليزي · عربي"
+},
+{
+"en": "Export PDF",
+"ar": "صدّر PDF"
+},
+{
+"en": "Arabic version",
+"ar": "نسخة عربي"
+},
+{
+"en": "Each job ad gets its own CV."
+},
+{
+"en": "lunch 150",
+"ar": "غدا 150"
+},
+{
+"en": "Safe to spend today: 420 EGP"
+},
 {
 "en": "3,180 for 4 bills",
 "ar": "3,180 لـ 4 فواتير"
@@ -3358,202 +3812,5 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 {
 "en": "Drinks",
 "ar": "مشروبات"
-},
-{
-"en": "Design & furniture",
-"ar": "ديكور وأثاث"
-},
-{
-"en": "Rooms",
-"ar": "الأوض"
-},
-{
-"en": "Things",
-"ar": "الحاجات"
-},
-{
-"en": "News",
-"ar": "أخبار"
-},
-{
-"en": "Topics",
-"ar": "المواضيع"
-},
-{
-"en": "Hadith & stories",
-"ar": "أحاديث وقصص"
-},
-{
-"en": "Themes",
-"ar": "المواضيع"
-},
-{
-"en": "Dishes",
-"ar": "الأكلات"
-},
-{
-"en": "Tell me when Ahmed messages me"
-},
-{
-"en": "Alert me when I get an email from the bank"
-},
-{
-"en": "Any WhatsApp with the word urgent — tell me"
-},
-{
-"en": "SMS",
-"ar": "الرسايل العادية"
-},
-{
-"en": "any app",
-"ar": "أي أبلكيشن"
-},
-{
-"en": "WhatsApp",
-"ar": "الواتساب"
-},
-{
-"en": "Gmail",
-"ar": "الجيميل"
-},
-{
-"en": "Telegram",
-"ar": "التليجرام"
-},
-{
-"en": "Messenger",
-"ar": "الماسنجر"
-},
-{
-"en": "Instagram",
-"ar": "الانستجرام"
-},
-{
-"en": "with: ",
-"ar": "فيها: "
-},
-{
-"en": "a sheep or goat",
-"ar": "شاة"
-},
-{
-"en": "a she-camel in her 2nd year (bint makhāḍ)"
-},
-{
-"en": "a she-camel in her 3rd year (bint labūn)"
-},
-{
-"en": "a she-camel in her 4th year (ḥiqqah)"
-},
-{
-"en": "a she-camel in her 5th year (jadhaʿah)"
-},
-{
-"en": "a one-year-old calf (tabīʿ)",
-"ar": "تبيع"
-},
-{
-"en": "a two-year-old cow (musinnah)",
-"ar": "مُسِنّة"
-},
-{
-"en": "Crops & fruit",
-"ar": "الزروع والثمار"
-},
-{
-"en": "Trade goods",
-"ar": "عروض التجارة"
-},
-{
-"en": "Buried treasure (rikāz)",
-"ar": "الركاز"
-},
-{
-"en": "Zakāt al-Fiṭr",
-"ar": "زكاة الفطر"
-},
-{
-"en": "Conditions: they must be free-grazing (sāʾimah) for most of the year, held a full lunar year, and not working animals."
-},
-{
-"en": "No lunar year needed — due on harvest day. Each crop type counts on its own."
-},
-{
-"en": "Valued at today's selling price on your Zakāt date. Niṣāb is the same as gold; rate 2.5%."
-},
-{
-"en": "Pre-Islamic buried treasure (rikāz): 20%, with no niṣāb and no waiting year."
-},
-{
-"en": "One ṣāʿ (about 2.5–3 kg) of staple food per person, paid before the Eid prayer, for yourself and those you support."
-},
-{
-"en": "Niṣāb of gold & silver"
-},
-{
-"en": "“There is no zakāh on less than five awāq (of silver).”"
-},
-{
-"en": "The lunar year (ḥawl)",
-"ar": "الحول"
-},
-{
-"en": "“No zakāh is due on wealth until a year has passed over it.”"
-},
-{
-"en": "The rate: 2.5%",
-"ar": "المقدار: ربع العشر"
-},
-{
-"en": "“On silver (money), one quarter of a tenth.”"
-},
-{
-"en": "“There is no zakāh on fewer than five camels.” And in the Book of Ṣadaqah: for five, a sheep; for ten, two sheep; for fifteen, three; for twenty, four; for twenty-five, a bint makhāḍ…"
-},
-{
-"en": "The Prophet ﷺ told Muʿādh to take “for every thirty cattle a one-year-old calf, and for every forty a two-year-old.”"
-},
-{
-"en": "“For forty sheep, one sheep… above one hundred and twenty, two… above two hundred, three.”"
-},
-{
-"en": "Grazing condition",
-"ar": "شرط السوم"
-},
-{
-"en": "They must graze freely most of the year, be held a full year, and not be working animals."
-},
-{
-"en": "“What is watered by the sky and springs, or by itself: a tenth; what is watered by irrigation: half a tenth.” And “there is no zakāh on less than five awsuq.”"
-},
-{
-"en": "“The Messenger of Allah ﷺ commanded us to pay zakāh on what we prepare for sale.”"
-},
-{
-"en": "“On buried treasure, one fifth.”"
-},
-{
-"en": "“The Messenger of Allah ﷺ made Zakāt al-Fiṭr obligatory: a ṣāʿ of dates or a ṣāʿ of barley, on the slave and the free, male and female.”"
-},
-{
-"en": "The eight recipients",
-"ar": "مصارف الزكاة الثمانية"
-},
-{
-"en": "“Zakāh is only for the poor, the needy, those who collect it, those whose hearts are to be reconciled, freeing captives, those in debt, in the cause of Allah, and the traveller.”"
-},
-{
-"en": "Worn jewellery",
-"ar": "الحلي الملبوس"
-},
-{
-"en": "Scholars differ: the Ḥanafīs make zakāh due on gold and silver jewellery even when worn; the majority (Mālikīs, Shāfiʿīs, Ḥanbalīs) do not, for permitted jewellery kept for wearing."
-},
-{
-"en": "Dropping below the niṣāb",
-"ar": "النقص عن النصاب أثناء الحول"
-},
-{
-"en": "If your wealth drops below the niṣāb during the year, the year is broken; when it reaches the niṣāb again, a new year starts."
 }
 ]

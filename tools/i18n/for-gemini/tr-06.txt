@@ -163,8 +163,454 @@ that language. You translate English interface lines; an Arabic version is given
 ## Your answer
 Reply with ONE JSON object only, inside a ```json code block, nothing else: every "en" below as a key, copied byte-for-byte (same spaces, quotes, dashes, emoji, {placeholders}), mapped to its translation. 1050 keys — do not skip any, do not stop early. If you cannot fit all in one reply, stop at a complete line, close the JSON, and say CONTINUE; I will ask for the rest.
 
-## Lines (tr-03)
+## Lines (tr-06)
 [
+{
+"en": "{a} for your savings goals"
+},
+{
+"en": "You skip refurbished and used ones — I'll leave them out"
+},
+{
+"en": "You skip {s} — I'll leave its offers out"
+},
+{
+"en": "You skip offers under 4★ — I'll leave them out"
+},
+{
+"en": "Price over time",
+"ar": "السعر مع الوقت"
+},
+{
+"en": "Lowest {p} on {d}",
+"ar": "أقل سعر {p} يوم {d}"
+},
+{
+"en": "going down ({c}%)",
+"ar": "بينزل ({c}%)"
+},
+{
+"en": "going up (+{c}%)",
+"ar": "بيطلع (+{c}%)"
+},
+{
+"en": "about the same",
+"ar": "تقريبًا زي ما هو"
+},
+{
+"en": "usually cheapest on {d}",
+"ar": "غالبًا أرخص يوم {d}"
+},
+{
+"en": "Copied {n} sentences Home didn't read by itself"
+},
+{
+"en": "Nothing to copy",
+"ar": "مفيش حاجة تتنسخ"
+},
+{
+"en": "Copy what Home didn't understand"
+},
+{
+"en": "Smart camera",
+"ar": "الكاميرا الذكية"
+},
+{
+"en": "{b} is {n}% higher than usual"
+},
+{
+"en": "{b} hasn't come this month"
+},
+{
+"en": "{a} vs {u} usually — check the meter reading"
+},
+{
+"en": "It usually comes around day {d} — about {u}"
+},
+{
+"en": "Electricity",
+"ar": "الكهربا"
+},
+{
+"en": "Internet",
+"ar": "النت"
+},
+{
+"en": "Landline",
+"ar": "التليفون الأرضي"
+},
+{
+"en": "From your watch",
+"ar": "من ساعتك"
+},
+{
+"en": "{n} of {m} measures shared"
+},
+{
+"en": "Blood pressure, oxygen, sleep, resting heart rate and stress come in by themselves from your watch — nothing to type."
+},
+{
+"en": "Share more from the watch"
+},
+{
+"en": "Connect the watch",
+"ar": "اربط الساعة"
+},
+{
+"en": "One shopping list, who paid what for the house, reminders for the parents — shared with your family's phones"
+},
+{
+"en": "One shopping list, who paid what for the house, and reminders for your parents — shared with your family's phones only, locked with a family code. No account, no server."
+},
+{
+"en": "Your name in the family"
+},
+{
+"en": "Start the family space",
+"ar": "ابدأ مساحة العيلة"
+},
+{
+"en": "Reminder set — it goes to the family with the next file"
+},
+{
+"en": "Pick a family code of 6 letters or more first"
+},
+{
+"en": "Our family list in Attune — open it in Attune with our family code."
+},
+{
+"en": "Family updated",
+"ar": "العيلة اتحدّثت"
+},
+{
+"en": "Wrong family code — nothing was changed."
+},
+{
+"en": "This isn't a family file."
+},
+{
+"en": "Empty — or say «add milk to the family list» in the Home box"
+},
+{
+"en": "Clear the ticked",
+"ar": "امسح اللي اتعلّم عليه"
+},
+{
+"en": "House money",
+"ar": "فلوس البيت"
+},
+{
+"en": "{a} owes {b}",
+"ar": "{a} عليه لـ{b}"
+},
+{
+"en": "All square — nobody owes anybody."
+},
+{
+"en": "Add what you paid for the house; Attune works out who owes whom."
+},
+{
+"en": "For what",
+"ar": "على إيه"
+},
+{
+"en": "Paid by",
+"ar": "دفعها"
+},
+{
+"en": "Paid by {n}",
+"ar": "دفعها {n}"
+},
+{
+"en": "Add the family below (a reminder for someone adds them too), or open a family file from their phone."
+},
+{
+"en": "Reminders for the family",
+"ar": "تفكير للعيلة"
+},
+{
+"en": "Take the pills",
+"ar": "ياخد الدوا"
+},
+{
+"en": "Share with the family",
+"ar": "شارك مع العيلة"
+},
+{
+"en": "The list, the house money and the reminders — nothing else — locked with your family code. Send the file (WhatsApp, anything); on their phone: Family → Open a family file. Each phone keeps both sides."
+},
+{
+"en": "Family code (the same on every phone)"
+},
+{
+"en": "Send to the family",
+"ar": "ابعت للعيلة"
+},
+{
+"en": "Open a family file",
+"ar": "افتح ملف العيلة"
+},
+{
+"en": "My life",
+"ar": "حياتي"
+},
+{
+"en": "Learn & daily",
+"ar": "التعلّم واليوم"
+},
+{
+"en": "Go & work",
+"ar": "المشاوير والشغل"
+},
+{
+"en": "Work & Business",
+"ar": "الشغل والبيزنس"
+},
+{
+"en": "Add your income to see what's safe to spend"
+},
+{
+"en": "Write it like you'd say it — “salary 25,000 on the 1st”. Attune then shows how much you can spend each day and keeps your bills aside."
+},
+{
+"en": "Add my income",
+"ar": "ضيف دخلي"
+},
+{
+"en": "Just track spending",
+"ar": "تابع المصاريف بس"
+},
+{
+"en": "Follow my phone",
+"ar": "زي الموبايل"
+},
+{
+"en": "Your day starts here",
+"ar": "يومك بيبدأ هنا"
+},
+{
+"en": "Write anything the way you'd say it — Attune puts it where it belongs."
+},
+{
+"en": "Nothing to follow yet",
+"ar": "لسه مفيش حاجة تتابعها"
+},
+{
+"en": "Debts, installments, renewals and reminders — write one and Attune keeps the dates."
+},
+{
+"en": "Your money starts here",
+"ar": "فلوسك بتبدأ هنا"
+},
+{
+"en": "Month plan",
+"ar": "خطة الشهر"
+},
+{
+"en": "Plans your month: bills, savings goals (trips, emergencies), everyday spending — and what's free"
+},
+{
+"en": "{m} plan",
+"ar": "خطة {m}"
+},
+{
+"en": "Fixed",
+"ar": "ثابت"
+},
+{
+"en": "Short by {a} this month"
+},
+{
+"en": "Savings goals",
+"ar": "أهداف التحويش"
+},
+{
+"en": "/ month",
+"ar": "/ الشهر"
+},
+{
+"en": "{a} of {b}",
+"ar": "{a} من {b}"
+},
+{
+"en": "3 months of spending",
+"ar": "مصاريف 3 شهور"
+},
+{
+"en": "Put money in",
+"ar": "حط فلوس"
+},
+{
+"en": "Put aside — Safe to spend keeps it apart"
+},
+{
+"en": "Goal (car, Eid, school…)",
+"ar": "الهدف (عربية، عيد، مدارس…)"
+},
+{
+"en": "By",
+"ar": "لحد"
+},
+{
+"en": "Save goal",
+"ar": "احفظ الهدف"
+},
+{
+"en": "New goal (car, Eid, school…)"
+},
+{
+"en": "Start an emergency fund (3 months of spending)"
+},
+{
+"en": "Everyday (your last 3 months)"
+},
+{
+"en": "After a month of spending in Money, your usual food, transport and shopping show here."
+},
+{
+"en": "Fixed this month",
+"ar": "الثابت الشهر ده"
+},
+{
+"en": "To keep your savings goals, spend about {p}% less than usual on everyday things this month."
+},
+{
+"en": "Your fixed costs and goals are {a} more than your income — move a goal's date, or lower a target."
+},
+{
+"en": "No emergency pot yet: 3 months of your spending is about {a}."
+},
+{
+"en": "Add your income (say “salary 25,000”) to plan the month."
+},
+{
+"en": "This year ({y})",
+"ar": "السنة دي ({y})"
+},
+{
+"en": "Saved in a year at this pace"
+},
+{
+"en": "Saved by 31 December",
+"ar": "اللي هيتحوّش لحد 31 ديسمبر"
+},
+{
+"en": "{a} saved · {y} a year · {e} by 31 Dec"
+},
+{
+"en": "A total by a date"
+},
+{
+"en": "Amount every month",
+"ar": "المبلغ كل شهر"
+},
+{
+"en": "= {y} in a year"
+},
+{
+"en": "Money & Follow-ups",
+"ar": "الفلوس والمتابعات"
+},
+{
+"en": "{a} safe to spend today"
+},
+{
+"en": "Write what you spend — Attune keeps the count"
+},
+{
+"en": "Nothing to follow today",
+"ar": "مفيش حاجة تتابعها النهارده"
+},
+{
+"en": "{a} of {b} kcal",
+"ar": "{a} من {b} سعرة"
+},
+{
+"en": "{a} kcal today",
+"ar": "{a} سعرة النهارده"
+},
+{
+"en": "Snap your lunch",
+"ar": "صوّر غداك"
+},
+{
+"en": "{a} left today",
+"ar": "فاضل {a} النهارده"
+},
+{
+"en": "Goal reached today",
+"ar": "وصلت لهدف النهارده"
+},
+{
+"en": "A photo, a barcode or “2 eggs and foul”"
+},
+{
+"en": "{n} agents watching",
+"ar": "{n} وكلاء بيراقبوا"
+},
+{
+"en": "Watch a price, track a delivery"
+},
+{
+"en": "Waiting for your OK to buy"
+},
+{
+"en": "Found for you",
+"ar": "لقاها لك"
+},
+{
+"en": "They tell you when something changes"
+},
+{
+"en": "“Find me AirPods under 9,000”"
+},
+{
+"en": "Invite friends — a month free for each who subscribes (up to 3)"
+},
+{
+"en": "Invite friends",
+"ar": "ادعي صحابك"
+},
+{
+"en": "{n} of {m} friends joined"
+},
+{
+"en": "Your friend gets a month of Pro. When they subscribe, you get a month free — up to 3 friends. Linked to your Google account."
+},
+{
+"en": "Share my link",
+"ar": "ابعت اللينك بتاعي"
+},
+{
+"en": "{n} days of Pro added — thank your friends!"
+},
+{
+"en": "Use my {n} free days"
+},
+{
+"en": "Invites aren't switched on yet"
+},
+{
+"en": "Google sign-in was cancelled",
+"ar": "تسجيل الدخول بجوجل اتلغى"
+},
+{
+"en": "The invite server didn't answer"
+},
+{
+"en": "Python downloads the first time you need it (26 MB)."
+},
+{
+"en": "Download Python",
+"ar": "نزّل Python"
+},
+{
+"en": "Downloading… {p}%",
+"ar": "بينزل… {p}%"
+},
+{
+"en": "Python didn't download — try again on Wi-Fi"
+},
 {
 "en": "Offline mode is on — turn it off to download Python"
 },
@@ -3520,450 +3966,5 @@ Reply with ONE JSON object only, inside a ```json code block, nothing else: ever
 {
 "en": "Writing a clear email",
 "ar": "كتابة بريد إلكتروني واضح"
-},
-{
-"en": "Polite requests and replies",
-"ar": "الطلبات والردود المهذبة"
-},
-{
-"en": "Talking about numbers, prices and dates"
-},
-{
-"en": "Meetings: agreeing and disagreeing",
-"ar": "الاجتماعات: الموافقة والاعتراض"
-},
-{
-"en": "Phone and video calls",
-"ar": "المكالمات الهاتفية والمرئية"
-},
-{
-"en": "Describing problems and solutions",
-"ar": "وصف المشكلات والحلول"
-},
-{
-"en": "Negotiating",
-"ar": "التفاوض"
-},
-{
-"en": "Presenting your company",
-"ar": "تقديم شركتك"
-},
-{
-"en": "Writing a report",
-"ar": "كتابة تقرير"
-},
-{
-"en": "Linking words: however, therefore, although"
-},
-{
-"en": "Relative clauses: who, which, that"
-},
-{
-"en": "Conditionals 3 and mixed",
-"ar": "الشرط الثالث والمختلط"
-},
-{
-"en": "Formal vs informal English",
-"ar": "الإنجليزية الرسمية وغير الرسمية"
-},
-{
-"en": "Common mistakes Arabic speakers make"
-},
-{
-"en": "Pronunciation: stress and linking",
-"ar": "النطق: النبر والوصل"
-},
-{
-"en": "Idioms used at work",
-"ar": "تعابير اصطلاحية في العمل"
-},
-{
-"en": "Job interviews in English",
-"ar": "مقابلات العمل بالإنجليزية"
-},
-{
-"en": "Crane hydraulics: 20 lessons",
-"ar": "هيدروليك الرافعات: 20 درسًا"
-},
-{
-"en": "Pressure, flow and force — Pascal's law"
-},
-{
-"en": "Hydraulic oil: grades, heat and contamination"
-},
-{
-"en": "Pumps: gear, vane and piston"
-},
-{
-"en": "Variable displacement and load sensing"
-},
-{
-"en": "Directional control valves and spools"
-},
-{
-"en": "Relief and pressure-reducing valves",
-"ar": "صمامات التنفيس وخفض الضغط"
-},
-{
-"en": "Counterbalance and holding valves",
-"ar": "صمامات الموازنة والتثبيت"
-},
-{
-"en": "Cylinders: lift, telescope, outriggers",
-"ar": "الأسطوانات: الرفع والتلسكوب وأرجل التثبيت"
-},
-{
-"en": "Hydraulic motors: hoist and slew"
-},
-{
-"en": "Accumulators and filters",
-"ar": "المراكم والمرشحات"
-},
-{
-"en": "Hoses, fittings and seals",
-"ar": "الخراطيم والوصلات والحشوات"
-},
-{
-"en": "Reading a hydraulic circuit diagram"
-},
-{
-"en": "Proportional and electro-hydraulic control",
-"ar": "التحكم التناسبي والكهروهيدروليكي"
-},
-{
-"en": "The LMI and hydraulic pressure sensors"
-},
-{
-"en": "Drift and creep: finding internal leaks"
-},
-{
-"en": "Cavitation and aeration",
-"ar": "التكهف ودخول الهواء"
-},
-{
-"en": "Overheating: causes and fixes",
-"ar": "ارتفاع الحرارة: الأسباب والحلول"
-},
-{
-"en": "Troubleshooting step by step",
-"ar": "تشخيص الأعطال خطوة بخطوة"
-},
-{
-"en": "Maintenance schedule and oil analysis"
-},
-{
-"en": "Safety: stored energy and lock-out"
-},
-{
-"en": "Write in clear, simple English."
-},
-{
-"en": " — and a short quiz"
-},
-{
-"en": "Lesson",
-"ar": "الدرس"
-},
-{
-"en": "Today's lesson is waiting",
-"ar": "درس اليوم جاهز"
-},
-{
-"en": "Write in English.",
-"ar": "اكتب بالعربية."
-},
-{
-"en": "Coming up:",
-"ar": "القادم:"
-},
-{
-"en": "today's news",
-"ar": "أخبار اليوم"
-},
-{
-"en": "Tap to gather the last 24 hours"
-},
-{
-"en": "2 years",
-"ar": "سنتين"
-},
-{
-"en": "the subscription",
-"ar": "الاشتراك"
-},
-{
-"en": "Looks like a scam",
-"ar": "شكلها نصب"
-},
-{
-"en": "Risky — be careful",
-"ar": "فيها مخاطرة — انتبه"
-},
-{
-"en": "Overpriced",
-"ar": "غالية"
-},
-{
-"en": "Good deal",
-"ar": "صفقة كويسة"
-},
-{
-"en": "No red flags found",
-"ar": "لا توجد علامات خطر واضحة"
-},
-{
-"en": "Yes, that's right",
-"ar": "أيوه، مظبوط"
-},
-{
-"en": "Explain what you mean, e.g. “the price is 38,000 cash; 12,400 is the down payment”"
-},
-{
-"en": "Read the offer again with this"
-},
-{
-"en": "They want money before you see or receive it."
-},
-{
-"en": "Payment to a personal wallet or gift card — very hard to get back."
-},
-{
-"en": "They ask for a code sent to your phone — that is how accounts and wallets are stolen."
-},
-{
-"en": "A prize you never entered for."
-},
-{
-"en": "Pressure to decide fast — a classic trick."
-},
-{
-"en": "They move you off the platform, where you lose buyer protection."
-},
-{
-"en": "Guaranteed high profit — the sign of a Ponzi / investment scam."
-},
-{
-"en": "No warranty or returns.",
-"ar": "من غير ضمان أو استرجاع."
-},
-{
-"en": "It says copy / replica — not the original product."
-},
-{
-"en": "No real brand is named."
-},
-{
-"en": "Says 0% interest — the real cost is checked below."
-},
-{
-"en": "A seller with no ratings."
-},
-{
-"en": "The installments add nothing over the cash price — a real 0%."
-},
-{
-"en": "Can I see it and pay on delivery (cash / card on receipt)?"
-},
-{
-"en": "What is the exact brand and model number? Can you send a photo of the label?"
-},
-{
-"en": "Is there an official warranty, and for how long? Invoice included?"
-},
-{
-"en": "Can you do a better price? Others sell it for less."
-},
-{
-"en": "What is the total I pay, all fees included? Is there an early-payment penalty?"
-},
-{
-"en": "Can I take it to an independent mechanic and check the papers (license, violations)?"
-},
-{
-"en": "Is the contract registered, and who pays the maintenance and utilities?"
-},
-{
-"en": "Can I get everything agreed in writing?"
-},
-{
-"en": "No price was found in the offer."
-},
-{
-"en": "The installments add up to less than the cash price — one of them was probably misread."
-},
-{
-"en": "The number of months is written but not the monthly amount."
-},
-{
-"en": "Do you mean: ",
-"ar": "قصدك: "
-},
-{
-"en": "Write a short, polite message to the seller (3–5 lines), ready to send on WhatsApp. No preamble, no explanation — only the message."
-},
-{
-"en": "List every amount and important figure"
-},
-{
-"en": "List all dates and deadlines"
-},
-{
-"en": "had foul and 2 eggs for breakfast"
-},
-{
-"en": "spent 150 on lunch",
-"ar": "صرفت ١٥٠ على الغدا"
-},
-{
-"en": "remind me tomorrow at 9 to call Hassan"
-},
-{
-"en": "drank 2 glasses of water"
-},
-{
-"en": "Ahmed owes me 12,000, 1,000 a month"
-},
-{
-"en": "took my insulin",
-"ar": "خدت الإنسولين"
-},
-{
-"en": "— very high. If you have chest pain, a headache or blurred vision, get help now."
-},
-{
-"en": "— high; check it again later."
-},
-{
-"en": "— low.",
-"ar": "— واطي."
-},
-{
-"en": "No family space yet — open Family to start one."
-},
-{
-"en": "That medicine isn't in Family health."
-},
-{
-"en": "Start the family space first (Family → your name) — then this goes on the shared list."
-},
-{
-"en": "Already on the family list."
-},
-{
-"en": "Paid today",
-"ar": "اتدفع النهارده"
-},
-{
-"en": "Kept in Mind — searchable any time."
-},
-{
-"en": "Logged in Cycle.",
-"ar": "اتسجل في الدورة."
-},
-{
-"en": "Fixed (bills, instalments)",
-"ar": "ثابت (فواتير وأقساط)"
-},
-{
-"en": "Save: ",
-"ar": "تحويش: "
-},
-{
-"en": "Free to spend",
-"ar": "حر تصرفه"
-},
-{
-"en": " — paid back",
-"ar": " — سداد"
-},
-{
-"en": " paid back",
-"ar": " رجّع"
-},
-{
-"en": "Ahmed",
-"ar": "أسامة"
-},
-{
-"en": "Sample note",
-"ar": "ملاحظة تجريبية"
-},
-{
-"en": "Payment pending — the system unlocks by itself as soon as Google confirms it."
-},
-{
-"en": "Couldn't link them"
-},
-{
-"en": "Use your Google Play purchase on this system"
-},
-{
-"en": "Opening Google Play…"
-},
-{
-"en": "Activate this system · {p}"
-},
-{
-"en": "Activation is bought in the Google Play version of Attune — one tap, and the system unlocks by itself."
-},
-{
-"en": "Power",
-"ar": "القوة"
-},
-{
-"en": "Torque",
-"ar": "العزم"
-},
-{
-"en": "Range",
-"ar": "المدى"
-},
-{
-"en": "0–100 km/h",
-"ar": "من 0 لـ100"
-},
-{
-"en": "Top speed",
-"ar": "السرعة القصوى"
-},
-{
-"en": "Charging",
-"ar": "الشحن"
-},
-{
-"en": "Width",
-"ar": "العرض"
-},
-{
-"en": "Height",
-"ar": "الارتفاع"
-},
-{
-"en": "Wheelbase",
-"ar": "قاعدة العجلات"
-},
-{
-"en": "Weight",
-"ar": "الوزن"
-},
-{
-"en": "Seats",
-"ar": "المقاعد"
-},
-{
-"en": "Capacity",
-"ar": "الحمولة"
-},
-{
-"en": "Boom",
-"ar": "الذراع"
-},
-{
-"en": "Storage",
-"ar": "التخزين"
-},
-{
-"en": "RAM",
-"ar": "الرام"
 }
 ]
