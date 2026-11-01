@@ -100,6 +100,13 @@ object PayLog {
 
     /** Open Android's Notification access screen (the person turns Attune on there). */
     fun openSettings(ctx: Context) {
+        // v8.9 (Ali: "make it a pop up in the app"): on Android 11+ straight to Attune's own switch, not the list of every app
+        if (android.os.Build.VERSION.SDK_INT >= 30) try {
+            ctx.startActivity(Intent("android.settings.NOTIFICATION_LISTENER_DETAIL_SETTINGS")
+                .putExtra("android.provider.extra.NOTIFICATION_LISTENER_COMPONENT_NAME", ComponentName(ctx, PayListener::class.java).flattenToString())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            return
+        } catch (e: Exception) { }
         try { ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) { }
     }
 }

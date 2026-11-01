@@ -10709,4 +10709,12 @@ export const ARB = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "وُجد «{n}» — أرقامه تقديرية من منتج مشابه؛ راجع الملصق",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "غير موجود في قواعد البيانات بعد — سجّله مرة واحدة (بالاسم أو بصورة جدول القيم الغذائية) وسيتذكر Attune هذا الباركود",
   "Kept for this barcode — the next scan finds it": "حُفظ لهذا الباركود — سيجده المسح التالي فورًا",
+  "Done — Attune now reads your notifications": "تم — أصبح Attune يقرأ إشعاراتك",
+  "Let Attune read your notifications": "اسمح لـ Attune بقراءة إشعاراتك",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "لكي تُسجَّل المدفوعات من رسائل البنوك والمحافظ في المال تلقائيًا، وتسأل من راسلك، وتعمل تنبيهات الرسائل. يبقى كل شيء على هاتفك، وتُتجاهل رموز الاستخدام لمرة واحدة (OTP).",
+  "A Settings page opens: switch Attune on, then come back.": "ستُفتح صفحة في الإعدادات: فعّل Attune ثم عُد.",
+  "Allow": "السماح",
+  "If Android says “Restricted setting”: open ": "إذا قال Android «إعداد مقيَّد»: افتح ",
+  "App info": "معلومات التطبيق",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " ← ⋮ ← «السماح بالإعدادات المقيَّدة»، ثم اضغط «السماح» هنا مرة أخرى.",
 };

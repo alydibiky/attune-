@@ -10718,4 +10718,12 @@ export const SW = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "Imepatikana «{n}» — thamani zake ni makadirio kutoka bidhaa inayofanana; kagua lebo",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Bado haipo kwenye hifadhidata — iandike mara moja (kwa jina au picha ya jedwali la lishe) na Attune itakumbuka msimbopau huu",
   "Kept for this barcode — the next scan finds it": "Imehifadhiwa kwa msimbopau huu — uchanganuzi ujao utaipata",
+  "Done — Attune now reads your notifications": "Tayari — Attune sasa inasoma arifa zako",
+  "Let Attune read your notifications": "Ruhusu Attune isome arifa zako",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "Ili malipo kutoka ujumbe wa benki na pochi yaingie kwenye Pesa yenyewe, uweze kuuliza nani amekutumia ujumbe, na tahadhari za ujumbe zifanye kazi. Kila kitu kinabaki kwenye simu yako; nambari za siri za mara moja (OTP) zinapuuzwa.",
+  "A Settings page opens: switch Attune on, then come back.": "Ukurasa wa Mipangilio utafunguka: washa Attune, kisha urudi.",
+  "Allow": "Ruhusu",
+  "If Android says “Restricted setting”: open ": "Android ikisema \"Mpangilio uliozuiliwa\": fungua ",
+  "App info": "Maelezo ya programu",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → \"Ruhusu mipangilio iliyozuiliwa\", kisha gusa Ruhusu hapa tena.",
 };

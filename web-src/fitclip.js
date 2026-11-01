@@ -210,7 +210,7 @@ export function defaultItem(fd) {
  *   {status: "notfood"}  a face, a page, a label… → the usual chain
  * The item is an ordinary draft item (conf = the dot colour, alts = "Is it:" chips, base = the portion buttons).
  */
-export function decide(bank, ranked, auto = (bank && bank.auto) || AUTO) {
+export function decide(bank, ranked, auto = (bank && bank.auto) || AUTO, ctx = {}) {
   if (!ranked || !ranked.length) return { status: "notfood", items: [] };
   const top = bank.items[ranked[0].i];
   if (top.kind === "not") return { status: "notfood", items: [], top };
@@ -223,7 +223,13 @@ export function decide(bank, ranked, auto = (bank && bank.auto) || AUTO) {
   // sauce is close behind (chicken in creamy mushroom sauce), that dish is the answer and the sauce stays an "Is it:" choice
   if (/\bsauce\b|gravy/i.test(top.en) && !/\b(in|with)\b/i.test(top.en)) {
     const k = ranked.slice(1, 4).findIndex((r) => { const e = bank.items[r.i]; return e && e.kind !== "not" && /\b(in|with)\b.*\b(sauce|gravy)\b|stroganoff/i.test(e.en) && r.p >= 0.15; });
-    if (k >= 0) { const r = ranked[k + 1]; ranked = [r, ...ranked.filter((x) => x !== r)]; return decide(bank, ranked, auto); }
+    if (k >= 0) { const r = ranked[k + 1]; ranked = [r, ...ranked.filter((x) => x !== r)]; return decide(bank, ranked, auto, ctx); }
+  }
+  // v8.9 (Ali: "it was an omelette with mushroom sauce — what's hard?"): under a sauce the photo can't tell chicken from egg, but
+  // the meal can — at breakfast the egg dish of the same family wins over the meat one (lunch / dinner keep the photo's order)
+  if (ctx.meal === "breakfast" && /\b(chicken|steak|beef|meat|stroganoff)\b/i.test(top.en) && !ctx.eggDone) {
+    const egg = ranked.slice(1, 6).find((r) => { const e = bank.items[r.i]; return e && e.kind !== "not" && /\b(omelet+e?|eggs?|frittata|shakshuka)\b/i.test(e.en) && sameDish(top.en, e.en) && r.p >= 0.02; });
+    if (egg) return decide(bank, [egg, ...ranked.filter((x) => x !== egg)], auto, { ...ctx, eggDone: true });
   }
   const conf = Math.round(Math.min(0.99, Math.max(0.3, p)) * 100) / 100;
   const status = p >= auto ? "auto" : "guess";
@@ -356,8 +362,8 @@ const STOP = new Set(["with", "in", "and", "the", "a", "of", "on", "plate", "cre
 const words = (t) => String(t || "").toLowerCase().replace(/\(.*?\)/g, " ").split(/[^a-z]+/).filter((w) => w.length > 2 && !STOP.has(w));
 /** Two names of one dish: they share a meaningful word ("Creamy mushroom sauce" / "Chicken in creamy mushroom sauce"). */
 export function sameDish(a, b) { const A = new Set(words(a)); return words(b).some((w) => A.has(w)); }
-export function plateScan(bank, ranked, regions) {
-  const main = decide(bank, ranked);
+export function plateScan(bank, ranked, regions, ctx = {}) {
+  const main = decide(bank, ranked, undefined, ctx);
   if (main.status === "notfood" || !main.items.length || !Array.isArray(regions) || !regions.length) return main;
   const mainFd = entryFood(main.top), mainKey = keyOfFood(mainFd) || main.top.en;
   const seen = new Map();   // food key → { fd, entry, quarters: [r], best p }

@@ -1,0 +1,10 @@
+{
+"Done — Attune now reads your notifications": "完了 — Attune が通知を読めるようになりました",
+"Let Attune read your notifications": "Attune に通知の読み取りを許可",
+"So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "銀行やウォレットのメッセージの支払いが自動で お金 に入り、誰からメッセージが来たか聞けて、メッセージ通知も使えるようになります。すべてスマホの中に残り、ワンタイムコード（OTP）は無視されます。",
+"A Settings page opens: switch Attune on, then come back.": "設定画面が開きます：Attune をオンにして戻ってください。",
+"Allow": "許可",
+"If Android says “Restricted setting”: open ": "Android に「制限付き設定」と出たら：",
+"App info": "アプリ情報",
+" → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ →「制限付き設定を許可」を開き、ここでもう一度「許可」をタップしてください。"
+}

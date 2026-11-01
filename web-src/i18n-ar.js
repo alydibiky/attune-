@@ -7824,4 +7824,12 @@ export const AR = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "لقيت «{n}» — الأرقام تقديرية من منتج شبهه؛ راجع الملصق",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "مش موجود في قواعد البيانات لسه — سجّله مرة واحدة (بالاسم أو صورة جدول القيم الغذائية) وأتيون هيفتكر الباركود ده",
   "Kept for this barcode — the next scan finds it": "اتحفظ للباركود ده — المرة الجاية هيلاقيه على طول",
+  "Done — Attune now reads your notifications": "تمام — أتيون بيقرا الإشعارات دلوقتي",
+  "Let Attune read your notifications": "خلّي أتيون يقرا الإشعارات",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "عشان يسجّل مدفوعاتك من رسايل البنك والمحافظ في المال لوحده، ويقولك مين بعتلك، ويشغّل تنبيهات الرسايل. كله بيفضل على موبايلك، وأكواد OTP بتتجاهل.",
+  "A Settings page opens: switch Attune on, then come back.": "هتفتح صفحة في الإعدادات: شغّل «أتيون» وارجع.",
+  "Allow": "اسمح",
+  "If Android says “Restricted setting”: open ": "لو أندرويد قال «إعداد مقيَّد»: افتح ",
+  "App info": "معلومات التطبيق",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " ← ⋮ ← «السماح بالإعدادات المقيَّدة»، وبعدين «اسمح» هنا تاني.",
 };

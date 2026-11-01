@@ -10717,4 +10717,12 @@ export const KO = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "\"{n}\"을(를) 찾았어요 — 수치는 비슷한 제품에서 추정한 값이에요. 라벨을 확인하세요",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "아직 데이터베이스에 없어요 — 한 번만 기록하면(이름이나 영양성분표 사진으로) Attune이 이 바코드를 기억해요",
   "Kept for this barcode — the next scan finds it": "이 바코드로 저장했어요 — 다음 스캔에서 바로 찾아요",
+  "Done — Attune now reads your notifications": "완료 — 이제 Attune이 알림을 읽어요",
+  "Let Attune read your notifications": "Attune이 알림을 읽도록 허용하세요",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "은행·지갑 메시지의 결제가 자동으로 돈에 기록되고, 누가 메시지를 보냈는지 물어볼 수 있고, 메시지 알림도 작동해요. 모든 것은 휴대폰에 남고 일회용 인증번호(OTP)는 무시해요.",
+  "A Settings page opens: switch Attune on, then come back.": "설정 화면이 열려요: Attune을 켜고 돌아오세요.",
+  "Allow": "허용",
+  "If Android says “Restricted setting”: open ": "Android가 \"제한된 설정\"이라고 하면: ",
+  "App info": "앱 정보",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → \"제한된 설정 허용\"을 연 뒤 여기서 다시 허용을 누르세요.",
 };

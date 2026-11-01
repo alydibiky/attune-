@@ -10718,4 +10718,12 @@ export const PT = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "Encontrado \"{n}\" — os valores são estimados a partir de um produto parecido; confira o rótulo",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Ainda não está nas bases de dados — registre uma vez (pelo nome ou com uma foto da tabela nutricional) e o Attune lembra deste código de barras",
   "Kept for this barcode — the next scan finds it": "Guardado para este código de barras — a próxima leitura já encontra",
+  "Done — Attune now reads your notifications": "Pronto — o Attune agora lê suas notificações",
+  "Let Attune read your notifications": "Deixe o Attune ler suas notificações",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "Assim os pagamentos das mensagens do banco e da carteira entram sozinhos em Dinheiro, você pode perguntar quem te mandou mensagem e os alertas de mensagens funcionam. Tudo fica no seu celular; códigos de uso único (OTP) são ignorados.",
+  "A Settings page opens: switch Attune on, then come back.": "Uma página das Configurações abre: ative o Attune e volte.",
+  "Allow": "Permitir",
+  "If Android says “Restricted setting”: open ": "Se o Android disser \"Configuração restrita\": abra ",
+  "App info": "Informações do app",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → \"Permitir configurações restritas\" e toque em Permitir aqui de novo.",
 };

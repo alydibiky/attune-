@@ -10718,4 +10718,12 @@ export const TRK = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "\"{n}\" bulundu — değerleri benzer bir üründen tahmin edildi; etiketi kontrol et",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Henüz veritabanlarında yok — bir kez kaydet (adıyla ya da besin tablosunun fotoğrafıyla), Attune bu barkodu hatırlar",
   "Kept for this barcode — the next scan finds it": "Bu barkod için kaydedildi — bir sonraki taramada hemen bulunur",
+  "Done — Attune now reads your notifications": "Tamam — Attune artık bildirimlerini okuyor",
+  "Let Attune read your notifications": "Attune bildirimlerini okusun",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "Böylece banka ve cüzdan mesajlarındaki ödemeler Para'ya kendiliğinden girer, sana kimin yazdığını sorabilirsin ve mesaj uyarıları çalışır. Her şey telefonunda kalır; tek kullanımlık kodlar (OTP) yok sayılır.",
+  "A Settings page opens: switch Attune on, then come back.": "Bir Ayarlar sayfası açılır: Attune'u aç, sonra geri dön.",
+  "Allow": "İzin ver",
+  "If Android says “Restricted setting”: open ": "Android \"Kısıtlanmış ayar\" derse: ",
+  "App info": "Uygulama bilgisi",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → \"Kısıtlanmış ayarlara izin ver\", sonra burada tekrar İzin ver'e dokun.",
 };

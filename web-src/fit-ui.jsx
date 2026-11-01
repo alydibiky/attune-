@@ -307,7 +307,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     fastSeen.current = { clip, embs: clip.lastEmbs, photo: photo.url };   // v6.17: kept with the dish you save, so next time it is known
     // v6.35 the plate scan: the four quarters too — every food on the plate, each with its share of it (fitclip.js plateScan)
     const regions = await PH.withLimit(CL.classifyRegions(clip, photo.url, 3), 8000).catch(() => []);
-    return CL.plateScan(clip.bank, ranked, regions || []);
+    return CL.plateScan(clip.bank, ranked, regions || [], { meal: adding });
   };
   const useFast = async (fast, me) => {
     let items = fast.items;

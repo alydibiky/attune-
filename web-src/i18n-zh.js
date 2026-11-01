@@ -10717,4 +10717,12 @@ export const ZH = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "找到“{n}” — 数值是根据相似产品估算的，请核对标签",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "数据库中还没有 — 记录一次（按名称或拍营养成分表），Attune 会记住这个条形码",
   "Kept for this barcode — the next scan finds it": "已为这个条形码保存 — 下次扫描即可找到",
+  "Done — Attune now reads your notifications": "好了 — Attune 现在可以读取你的通知",
+  "Let Attune read your notifications": "允许 Attune 读取你的通知",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "这样银行和钱包消息中的付款会自动记入 财务，你可以问谁给你发了消息，消息提醒也能用。所有内容都留在你的手机上；一次性验证码（OTP）会被忽略。",
+  "A Settings page opens: switch Attune on, then come back.": "会打开一个设置页面：打开 Attune，然后返回。",
+  "Allow": "允许",
+  "If Android says “Restricted setting”: open ": "如果 Android 提示“受限设置”：打开 ",
+  "App info": "应用信息",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → “允许受限设置”，然后再回来点“允许”。",
 };

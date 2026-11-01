@@ -1,0 +1,34 @@
+[
+{
+"en": "Done — Attune now reads your notifications",
+"ar": "تمام — أتيون بيقرا الإشعارات دلوقتي"
+},
+{
+"en": "Let Attune read your notifications",
+"ar": "خلّي أتيون يقرا الإشعارات"
+},
+{
+"en": "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.",
+"ar": "عشان يسجّل مدفوعاتك من رسايل البنك والمحافظ في المال لوحده، ويقولك مين بعتلك، ويشغّل تنبيهات الرسايل. كله بيفضل على موبايلك، وأكواد OTP بتتجاهل."
+},
+{
+"en": "A Settings page opens: switch Attune on, then come back.",
+"ar": "هتفتح صفحة في الإعدادات: شغّل «أتيون» وارجع."
+},
+{
+"en": "Allow",
+"ar": "اسمح"
+},
+{
+"en": "If Android says “Restricted setting”: open ",
+"ar": "لو أندرويد قال «إعداد مقيَّد»: افتح "
+},
+{
+"en": "App info",
+"ar": "معلومات التطبيق"
+},
+{
+"en": " → ⋮ → “Allow restricted settings”, then tap Allow here again.",
+"ar": " ← ⋮ ← «السماح بالإعدادات المقيَّدة»، وبعدين «اسمح» هنا تاني."
+}
+]

@@ -10717,4 +10717,12 @@ export const BN = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "“{n}” পাওয়া গেছে — এর মানগুলো একই রকম পণ্য থেকে আনুমানিক; লেবেল দেখে নিন",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "এটি এখনো ডেটাবেসে নেই — একবার লিখে রাখুন (নাম দিয়ে বা পুষ্টি তালিকার ছবি দিয়ে), Attune এই বারকোড মনে রাখবে",
   "Kept for this barcode — the next scan finds it": "এই বারকোডের জন্য রাখা হলো — পরের স্ক্যানেই পাওয়া যাবে",
+  "Done — Attune now reads your notifications": "হয়ে গেছে — Attune এখন আপনার নোটিফিকেশন পড়ে",
+  "Let Attune read your notifications": "Attune-কে আপনার নোটিফিকেশন পড়তে দিন",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "যাতে ব্যাংক ও ওয়ালেটের মেসেজের পেমেন্ট নিজে থেকেই টাকা-য় যোগ হয়, কে মেসেজ দিয়েছে জিজ্ঞেস করতে পারেন, আর মেসেজ অ্যালার্ট কাজ করে। সবকিছু আপনার ফোনেই থাকে; এককালীন কোড (OTP) উপেক্ষা করা হয়।",
+  "A Settings page opens: switch Attune on, then come back.": "সেটিংসের একটি পেজ খুলবে: Attune চালু করে ফিরে আসুন।",
+  "Allow": "অনুমতি দিন",
+  "If Android says “Restricted setting”: open ": "Android যদি বলে “সীমাবদ্ধ সেটিং”: খুলুন ",
+  "App info": "অ্যাপের তথ্য",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → “সীমাবদ্ধ সেটিং অনুমতি দিন”, তারপর এখানে আবার অনুমতি দিন চাপুন।",
 };

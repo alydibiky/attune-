@@ -10717,4 +10717,12 @@ export const VI = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "Đã tìm thấy \"{n}\" — các số liệu được ước tính từ sản phẩm tương tự; hãy kiểm tra nhãn",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Chưa có trong cơ sở dữ liệu — hãy ghi một lần (theo tên hoặc ảnh bảng dinh dưỡng) và Attune sẽ nhớ mã vạch này",
   "Kept for this barcode — the next scan finds it": "Đã lưu cho mã vạch này — lần quét sau sẽ tìm thấy ngay",
+  "Done — Attune now reads your notifications": "Xong — Attune giờ đã đọc thông báo của bạn",
+  "Let Attune read your notifications": "Cho phép Attune đọc thông báo",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "Để các khoản thanh toán từ tin nhắn ngân hàng và ví tự vào Tiền, bạn có thể hỏi ai đã nhắn cho mình, và cảnh báo tin nhắn hoạt động. Mọi thứ ở lại trên điện thoại; mã dùng một lần (OTP) bị bỏ qua.",
+  "A Settings page opens: switch Attune on, then come back.": "Một trang Cài đặt sẽ mở: bật Attune rồi quay lại.",
+  "Allow": "Cho phép",
+  "If Android says “Restricted setting”: open ": "Nếu Android báo \"Cài đặt bị hạn chế\": mở ",
+  "App info": "Thông tin ứng dụng",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → \"Cho phép cài đặt bị hạn chế\", rồi chạm Cho phép ở đây lần nữa.",
 };

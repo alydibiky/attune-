@@ -10717,4 +10717,12 @@ export const TH = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "พบ \"{n}\" — ค่าต่าง ๆ ประมาณจากสินค้าที่คล้ายกัน ตรวจสอบฉลากด้วย",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "ยังไม่มีในฐานข้อมูล — บันทึกครั้งเดียว (ด้วยชื่อหรือรูปตารางโภชนาการ) แล้ว Attune จะจำบาร์โค้ดนี้",
   "Kept for this barcode — the next scan finds it": "บันทึกไว้สำหรับบาร์โค้ดนี้แล้ว — สแกนครั้งหน้าจะเจอทันที",
+  "Done — Attune now reads your notifications": "เรียบร้อย — Attune อ่านการแจ้งเตือนของคุณแล้ว",
+  "Let Attune read your notifications": "ให้ Attune อ่านการแจ้งเตือนของคุณ",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "เพื่อให้รายการชำระเงินจากข้อความธนาคารและกระเป๋าเงินเข้าไปใน การเงิน เอง ถามได้ว่าใครส่งข้อความมา และการแจ้งเตือนข้อความทำงาน ทุกอย่างอยู่บนโทรศัพท์ของคุณ รหัสใช้ครั้งเดียว (OTP) จะถูกข้าม",
+  "A Settings page opens: switch Attune on, then come back.": "หน้าการตั้งค่าจะเปิดขึ้น: เปิด Attune แล้วกลับมา",
+  "Allow": "อนุญาต",
+  "If Android says “Restricted setting”: open ": "ถ้า Android บอกว่า \"การตั้งค่าที่ถูกจำกัด\": เปิด ",
+  "App info": "ข้อมูลแอป",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → \"อนุญาตการตั้งค่าที่ถูกจำกัด\" แล้วแตะ อนุญาต ที่นี่อีกครั้ง",
 };

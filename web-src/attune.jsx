@@ -4,6 +4,7 @@ import { usesFleet } from "./industry.js";
 import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
+import { NotifAsk } from "./notifask-ui.jsx";
 import { TrainFront, Wrench, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase, ChevronDown } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts, homeCurrency } from "./locale.js";
@@ -11793,6 +11794,7 @@ export default function App() {
       </div>
       {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[20px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
+      {NATIVE ? <NotifAsk native={NATIVE} flash={flash} /> : null}
       {voiceOpen ? <Guard name="voice"><VoiceScreen native={NATIVE} nativeCall={nativeCall} onClose={() => { setVoiceOpen(false); setVoiceText(""); }} doIt={doFromHome} country={agentCountry()} flash={flash} initialText={voiceText}
         ask={modelUsable ? async (q, past, ui) => { let lb = ""; try { lb = libraryBlock(await findInLibrary(q, NATIVE ? nativeCall : null)).replace("cite each fact as [Book, p. N]", "say which book it is from"); } catch (e) {}   // v8.7 (4B): the books switched on in the Library
           return callChat([{ role: "system", content: "You are Attune, a friendly voice assistant on the user's phone. You are being spoken to: answer in 1 to 3 short sentences that sound natural when read aloud — no lists, no tables, no markdown, no links. " + (ui === "ar" ? "Answer in Egyptian Arabic." : "Answer in the language the user speaks.") + " If you do not know, say so briefly." }, ...(past || []), { role: "user", content: lb + q }], null, { maxTokens: 200, temperature: 0.5, think: false }); } : null} /></Guard> : null}

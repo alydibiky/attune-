@@ -10718,4 +10718,12 @@ export const HI = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "“{n}” मिला — इसके आँकड़े मिलते-जुलते प्रोडक्ट से अनुमानित हैं; लेबल जाँचें",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "यह अभी डेटाबेस में नहीं है — इसे एक बार दर्ज करें (नाम से या पोषण तालिका की फ़ोटो से) और Attune यह बारकोड याद रखेगा",
   "Kept for this barcode — the next scan finds it": "इस बारकोड के लिए सेव हो गया — अगली स्कैन में तुरंत मिलेगा",
+  "Done — Attune now reads your notifications": "हो गया — Attune अब आपके नोटिफ़िकेशन पढ़ता है",
+  "Let Attune read your notifications": "Attune को आपके नोटिफ़िकेशन पढ़ने दें",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "ताकि बैंक और वॉलेट के मैसेज से पेमेंट अपने-आप पैसे में जुड़ें, आप पूछ सकें कि किसने मैसेज किया, और मैसेज अलर्ट काम करें। सब कुछ आपके फ़ोन पर रहता है; एक बार वाले कोड (OTP) अनदेखे किए जाते हैं।",
+  "A Settings page opens: switch Attune on, then come back.": "सेटिंग्स का एक पेज खुलेगा: Attune चालू करें, फिर वापस आएँ।",
+  "Allow": "अनुमति दें",
+  "If Android says “Restricted setting”: open ": "अगर Android कहे “प्रतिबंधित सेटिंग”: खोलें ",
+  "App info": "ऐप की जानकारी",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → “प्रतिबंधित सेटिंग की अनुमति दें”, फिर यहाँ दोबारा अनुमति दें दबाएँ।",
 };

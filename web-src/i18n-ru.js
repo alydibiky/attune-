@@ -10717,4 +10717,12 @@ export const RU = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "Найдено «{n}» — значения оценены по похожему продукту; проверьте этикетку",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Этого товара пока нет в базах — внесите его один раз (по названию или по фото таблицы пищевой ценности), и Attune запомнит этот штрихкод",
   "Kept for this barcode — the next scan finds it": "Сохранено для этого штрихкода — при следующем сканировании найдётся сразу",
+  "Done — Attune now reads your notifications": "Готово — Attune теперь читает ваши уведомления",
+  "Let Attune read your notifications": "Разрешите Attune читать уведомления",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "Тогда платежи из сообщений банка и кошелька сами попадут в Деньги, можно спросить, кто вам написал, и заработают оповещения о сообщениях. Всё остаётся на телефоне; одноразовые коды (OTP) игнорируются.",
+  "A Settings page opens: switch Attune on, then come back.": "Откроется страница настроек: включите Attune и вернитесь.",
+  "Allow": "Разрешить",
+  "If Android says “Restricted setting”: open ": "Если Android пишет «Ограниченная настройка»: откройте ",
+  "App info": "О приложении",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → «Разрешить ограниченные настройки», затем снова нажмите здесь «Разрешить».",
 };

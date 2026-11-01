@@ -10718,4 +10718,12 @@ export const IDN = {
   "Found “{n}” — its numbers are estimated from a similar product; check the label": "Ditemukan \"{n}\" — nilainya diperkirakan dari produk serupa; periksa labelnya",
   "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Belum ada di database — catat sekali (dengan nama atau foto tabel gizinya) dan Attune akan mengingat barcode ini",
   "Kept for this barcode — the next scan finds it": "Disimpan untuk barcode ini — pemindaian berikutnya langsung menemukannya",
+  "Done — Attune now reads your notifications": "Beres — Attune sekarang membaca notifikasimu",
+  "Let Attune read your notifications": "Izinkan Attune membaca notifikasimu",
+  "So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "Supaya pembayaran dari pesan bank dan dompet digital masuk ke Uang dengan sendirinya, kamu bisa bertanya siapa yang mengirim pesan, dan peringatan pesan berfungsi. Semuanya tetap di ponselmu; kode sekali pakai (OTP) diabaikan.",
+  "A Settings page opens: switch Attune on, then come back.": "Halaman Pengaturan akan terbuka: nyalakan Attune, lalu kembali.",
+  "Allow": "Izinkan",
+  "If Android says “Restricted setting”: open ": "Jika Android bilang \"Setelan terbatas\": buka ",
+  "App info": "Info aplikasi",
+  " → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → \"Izinkan setelan terbatas\", lalu ketuk Izinkan di sini lagi.",
 };

@@ -1,0 +1,10 @@
+{
+"Done — Attune now reads your notifications": "완료 — 이제 Attune이 알림을 읽어요",
+"Let Attune read your notifications": "Attune이 알림을 읽도록 허용하세요",
+"So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.": "은행·지갑 메시지의 결제가 자동으로 돈에 기록되고, 누가 메시지를 보냈는지 물어볼 수 있고, 메시지 알림도 작동해요. 모든 것은 휴대폰에 남고 일회용 인증번호(OTP)는 무시해요.",
+"A Settings page opens: switch Attune on, then come back.": "설정 화면이 열려요: Attune을 켜고 돌아오세요.",
+"Allow": "허용",
+"If Android says “Restricted setting”: open ": "Android가 \"제한된 설정\"이라고 하면: ",
+"App info": "앱 정보",
+" → ⋮ → “Allow restricted settings”, then tap Allow here again.": " → ⋮ → \"제한된 설정 허용\"을 연 뒤 여기서 다시 허용을 누르세요."
+}
