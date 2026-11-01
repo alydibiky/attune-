@@ -21,9 +21,8 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   on Privacy, Books, Voice, Year plan (was Egyptian only).
 - tests/i18n_all.py: shows which page each English text is on (`where`), ignores words that are the same in both languages
   (Hospital, Zakat, Python), ignores lines passed twice through tr().
-- LEFT (for Gemini): 50 new lines (privacy policy, weekday letters, Zakāt lines, examples) = chunk 29 (arb: 32);
-  paste tools/i18n/for-gemini/<lang>-01.txt into Gemini, save its reply as tools/i18n/back/<lang>-01.json, then
-  `python3 tools/i18n/import_gemini.py` + merge + build. Until then those lines show in English.
+- The 50 newest lines (privacy policy, weekday letters, Zakāt lines, examples; chunk 29, arb 32) were translated here too
+  (1 Nov, Ali: "u do them") — every language now has 100% of the app. Nothing is waiting for Gemini.
 - Size: index.html grew 12.6 → 24 MB with all dictionaries. Idea (ask Ali): load only the chosen language's dictionary.
 
 - Tests fixed on 1 Nov (they failed on the 1st of a month, on old main too): e2e_v750money (sample payments get `ts`),
@@ -32,10 +31,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 - Don't run tests/i18n_all.py and tests/run_all.sh at the same time: they share a port ("Address already in use").
 
 ### Do this next
-1. When Ali sends Gemini's replies for the 50 new lines: save each as tools/i18n/back/<lang>-01.json (arb's lines are chunk 32,
-   the rest chunk 29) → `python3 tools/i18n/import_gemini.py` → `node tools/i18n/check.mjs <lang>` (0 not done) →
-   `node tools/i18n/merge.mjs` → `bash web-src/build.sh` → i18n_all.py → run_all.sh → push branch + main → APK link.
-   Check Fusha for Egyptian words (عايز، دلوقتي، مش، اللي، كده، عشان) and that the 100 airport codes in chunk 20 stay as they are.
+1. (done) the 50 new lines.
 2. Ask Ali (show options): load only the chosen language's dictionary, so index.html goes back from 24 MB to ~13 MB.
 3. Then Ali's next list / VOICE_PLAN.md next step.
 
