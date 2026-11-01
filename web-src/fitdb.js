@@ -100,7 +100,7 @@ export function keepFoods(list, cache = loadCache()) {
   const now = Date.now();
   for (const f of list) if (f && f.id) cache[f.id] = { ...f, t: now };
   const ids = Object.keys(cache);
-  if (ids.length > MAX_CACHE) ids.sort((a, b) => (cache[a].t || 0) - (cache[b].t || 0)).slice(0, ids.length - MAX_CACHE).forEach((k) => delete cache[k]);
+  if (ids.length > MAX_CACHE) ids.filter((k) => cache[k].src !== "mine").sort((a, b) => (cache[a].t || 0) - (cache[b].t || 0)).slice(0, ids.length - MAX_CACHE).forEach((k) => delete cache[k]);
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
   return cache;
 }
@@ -164,21 +164,71 @@ export async function searchAll(q, fetchJson, { usdaKey = "DEMO_KEY" } = {}) {
   return { foods: rank([...local, ...got], enQ && isArabic(q) ? q + " " + enQ : q).slice(0, 50), online: true, errors: errors.length === tries.length ? errors : [] };
 }
 
-/** A barcode → the product (kept on the phone), or null when no database knows it. */
+/** v8.9 (Ali: "the barcode database is very lame — Yazio read the same barcode"): the same product under its other spellings —
+ *  UPC-A ↔ EAN-13 (a leading 0), GTIN-14 → EAN-13. */
+export function barcodeVariants(code) {
+  const c = String(code || "").replace(/\D/g, ""), out = [c];
+  if (c.length === 12) out.push("0" + c);
+  if (c.length === 13 && c[0] === "0") out.push(c.slice(1));
+  if (c.length === 14) { out.push(c.slice(1)); if (c.startsWith("00")) out.push(c.slice(2)); }
+  return [...new Set(out.filter(Boolean))];
+}
+/** A product found by name only (no numbers on its label in the database): its nutrition estimated from the closest food of the
+ *  same kind — Open Food Facts products with the same name, then the app's own table — shown as an estimate to check. */
+async function estimateByName(name, brand, code, fetchJson) {
+  const q = [brand, name].filter(Boolean).join(" ").trim(); if (!q) return null;
+  let base = null;
+  if (fetchJson) {
+    const j = await fetchJson(offSearchUrl(q, { size: 12 })).catch(() => null);
+    const list = ((j && j.products) || []).map((p) => fromOFF(p)).filter((x) => x && !x.check);
+    base = list.find((x) => brand && norm(x.en).includes(norm(brand))) || list[0] || null;
+  }
+  if (!base) { const loc = searchOffline(name, 3); base = loc && loc[0] || null; }
+  if (!base) return null;
+  return { ...base, id: "bc:" + code, src: base.src || "estimate", barcode: code, en: brand && !norm(name).includes(norm(brand)) ? `${name} (${brand})` : name, ar: name,
+    names: [name, brand ? `${brand} ${name}` : ""].filter(Boolean), estimate: true, check: true, like: base.en };
+}
+/** A barcode → the product (kept on the phone), or null when no database knows it. Tries, in order: what this phone already knows
+ *  (also products the person added by hand for this barcode), the offline food pack, Open Food Facts under every spelling of the
+ *  code, USDA's branded foods, Open Products Facts (a name only) — and a product known by name only gets estimated numbers. */
 export async function byBarcode(code, fetchJson) {
   const c = String(code || "").replace(/\D/g, "");
   if (!c) return null;
-  const hit = byBarcodeCached(c) || (await packBarcode(c)); if (hit) return hit;
+  const vars = barcodeVariants(c);
+  for (const v of vars) { const hit = byBarcodeCached(v) || (await packBarcode(v)); if (hit) return hit; }
   if (!fetchJson) return null;
-  let err = null;
-  const j = await fetchJson(offProductUrl(c)).catch((e) => { err = e; return null; });
-  let f = j && j.product ? fromOFF({ ...j.product, code: j.product.code || c }) : null;
+  let err = null, named = null, f = null;
+  for (const v of vars) {
+    const j = await fetchJson(offProductUrl(v)).catch((e) => { err = e; return null; });
+    if (j && j.product) {
+      f = fromOFF({ ...j.product, code: j.product.code || v });
+      if (f) break;
+      const nm = String(j.product.product_name_en || j.product.product_name || j.product.generic_name || "").trim();
+      if (nm && !named) named = { name: nm, brand: String(j.product.brands || "").split(",")[0].trim() };
+    }
+  }
   // v6.5: not in Open Food Facts → USDA's branded foods know many products by their barcode
   if (!f) {
-    const u = await fetchJson(usdaSearchUrl(c, "DEMO_KEY", { branded: true, size: 5 })).catch((e) => { if (err) throw err; return null; });   // both unreachable → the network error, not "unknown product"
-    const hit = u && (u.foods || []).find((x) => String(x.gtinUpc || "").replace(/\D/g, "").replace(/^0+/, "") === c.replace(/^0+/, ""));
+    const u = await fetchJson(usdaSearchUrl(c, "DEMO_KEY", { branded: true, size: 5 })).catch((e) => { if (err && !named) throw err; return null; });   // both unreachable → the network error, not "unknown product"
+    const hit = u && (u.foods || []).find((x) => vars.map((v) => v.replace(/^0+/, "")).includes(String(x.gtinUpc || "").replace(/\D/g, "").replace(/^0+/, "")));
     f = hit ? fromUSDA(hit) : null;
+    if (f) f.barcode = c;
   }
+  if (!f && !named) {
+    for (const v of vars) {
+      const j = await fetchJson(`https://world.openproductsfacts.org/api/v2/product/${v}.json?fields=product_name,brands`).catch(() => null);
+      const nm = j && j.product && String(j.product.product_name || "").trim();
+      if (nm) { named = { name: nm, brand: String(j.product.brands || "").split(",")[0].trim() }; break; }
+    }
+  }
+  if (!f && named) f = await estimateByName(named.name, named.brand, c, fetchJson);
   if (f) keepFoods([f]);
   return f;
+}
+/** v8.9: a product the databases don't know, logged by the person (by name, or from its nutrition label) → kept under its
+ *  barcode, so the next scan finds it at once. */
+export function rememberBarcode(code, fd) {
+  const c = String(code || "").replace(/\D/g, ""); if (!c || !fd) return null;
+  const x = { ...fd, id: "bc:" + c, barcode: c, src: fd.src || "mine" };
+  keepFoods([x]); return x;
 }

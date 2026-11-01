@@ -10713,4 +10713,9 @@ export const HI = {
   "taxi 60": "टैक्सी 60",
   "Netflix renews on the 5th": "Netflix 5 तारीख को रिन्यू होता है",
   "remind me to pay the internet on the 1st": "1 तारीख को इंटरनेट का बिल भरना याद दिलाना",
+  "{who}: record {a} as paid on the plan?": "{who}: क्या {a} को प्लान में भुगतान के रूप में दर्ज करें?",
+  "Recorded — what is left is worked out again": "दर्ज हो गया — बाकी रकम फिर से गिनी गई",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "“{n}” मिला — इसके आँकड़े मिलते-जुलते प्रोडक्ट से अनुमानित हैं; लेबल जाँचें",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "यह अभी डेटाबेस में नहीं है — इसे एक बार दर्ज करें (नाम से या पोषण तालिका की फ़ोटो से) और Attune यह बारकोड याद रखेगा",
+  "Kept for this barcode — the next scan finds it": "इस बारकोड के लिए सेव हो गया — अगली स्कैन में तुरंत मिलेगा",
 };

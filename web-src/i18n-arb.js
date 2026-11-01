@@ -10704,4 +10704,9 @@ export const ARB = {
   "taxi 60": "سيارة أجرة 60",
   "Netflix renews on the 5th": "يتجدد اشتراك Netflix يوم 5",
   "remind me to pay the internet on the 1st": "ذكّرني بدفع فاتورة الإنترنت يوم 1",
+  "{who}: record {a} as paid on the plan?": "{who}: هل أسجّل {a} مدفوعًا في الخطة؟",
+  "Recorded — what is left is worked out again": "سُجِّل — وأُعيد حساب المتبقي",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "وُجد «{n}» — أرقامه تقديرية من منتج مشابه؛ راجع الملصق",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "غير موجود في قواعد البيانات بعد — سجّله مرة واحدة (بالاسم أو بصورة جدول القيم الغذائية) وسيتذكر Attune هذا الباركود",
+  "Kept for this barcode — the next scan finds it": "حُفظ لهذا الباركود — سيجده المسح التالي فورًا",
 };

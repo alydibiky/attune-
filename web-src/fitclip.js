@@ -218,7 +218,14 @@ export function decide(bank, ranked, auto = (bank && bank.auto) || AUTO) {
   // v7.9 (Ali's mango cake): a dish and a flavour among the guesses → the dish with its flavour ("Mango cake") first
   const comp = F.composeDish(alts);
   if (comp) alts = F.uniqAlts([{ label: comp.food.en, food: comp.food }, ...alts]);
-  const p = ranked[0].p, conf = Math.round(Math.min(0.99, Math.max(0.3, p)) * 100) / 100;
+  let p = ranked[0].p;
+  // v8.9 (Ali's café plate read as "mushroom soup"/"sauce"): a sauce alone is rarely the meal — when a dish served IN / WITH a
+  // sauce is close behind (chicken in creamy mushroom sauce), that dish is the answer and the sauce stays an "Is it:" choice
+  if (/\bsauce\b|gravy/i.test(top.en) && !/\b(in|with)\b/i.test(top.en)) {
+    const k = ranked.slice(1, 4).findIndex((r) => { const e = bank.items[r.i]; return e && e.kind !== "not" && /\b(in|with)\b.*\b(sauce|gravy)\b|stroganoff/i.test(e.en) && r.p >= 0.15; });
+    if (k >= 0) { const r = ranked[k + 1]; ranked = [r, ...ranked.filter((x) => x !== r)]; return decide(bank, ranked, auto); }
+  }
+  const conf = Math.round(Math.min(0.99, Math.max(0.3, p)) * 100) / 100;
   const status = p >= auto ? "auto" : "guess";
   // v6.18: what the person corrected last time (the food they chose, their usual amount) is used for this dish at once
   const lf = F.learned(top.en), lfd = lf ? (F.food(lf.id) || lf.food) : null;
@@ -345,6 +352,10 @@ export function gramsForShare(fd, share) {
   return Math.max(40, Math.round(full * Math.max(0.1, Math.min(1, share)) / 5) * 5);
 }
 /** decide() + the quarters → the plate: { status, items, foods: n }. Pure; tests in tests/unit/v738plate.test.mjs. */
+const STOP = new Set(["with", "in", "and", "the", "a", "of", "on", "plate", "creamy", "cooked", "fried", "grilled", "style"]);
+const words = (t) => String(t || "").toLowerCase().replace(/\(.*?\)/g, " ").split(/[^a-z]+/).filter((w) => w.length > 2 && !STOP.has(w));
+/** Two names of one dish: they share a meaningful word ("Creamy mushroom sauce" / "Chicken in creamy mushroom sauce"). */
+export function sameDish(a, b) { const A = new Set(words(a)); return words(b).some((w) => A.has(w)); }
 export function plateScan(bank, ranked, regions) {
   const main = decide(bank, ranked);
   if (main.status === "notfood" || !main.items.length || !Array.isArray(regions) || !regions.length) return main;
@@ -353,7 +364,9 @@ export function plateScan(bank, ranked, regions) {
   regions.forEach((rk, r) => {
     const top = rk && rk[0]; if (!top || top.p < REGION_MIN_P) return;
     const e = bank.items[top.i]; if (!e || e.kind === "not") return;
-    const fd = entryFood(e); const key = keyOfFood(fd) || e.en;
+    const fd = entryFood(e); let key = keyOfFood(fd) || e.en;
+    // v8.9: the same dish under another of its names (the sauce of "chicken in creamy mushroom sauce") is the main dish's quarter
+    if (key !== mainKey && sameDish(main.top.en, e.en) && (main.items[0].alts || []).slice(0, 4).some((a) => (keyOfFood(a.food) || a.label) === key)) key = mainKey;
     const x = seen.get(key) || { fd, e, quarters: [], p: 0 }; x.quarters.push(r); x.p = Math.max(x.p, top.p); seen.set(key, x);
   });
   const others = [...seen.entries()].filter(([k]) => k !== mainKey).sort((a, b) => b[1].quarters.length - a[1].quarters.length || b[1].p - a[1].p).slice(0, 3);
@@ -371,8 +384,8 @@ export function plateScan(bank, ranked, regions) {
       const g = gramsForShare(mainFd, mainQ / 4);
       if (g > m0.grams) one = { ...main, items: [{ ...F.scaleItem({ ...m0, base: m0.grams }, g / m0.grams), base: g }] };
     }
-    if (main.status === "auto" && (mainQ < 3 || countable(mainFd))) return { ...one, status: "guess", foods: 1 };
-    return { ...one, foods: 1 };
+    if (main.status === "auto" && (mainQ < 3 || countable(mainFd))) return withBread({ ...one, status: "guess", foods: 1 }, bank, regions);
+    return withBread({ ...one, foods: 1 }, bank, regions);
   }
   // several foods: each gets its share of the plate (the quarters it won; the main dish at least one quarter)
   const total = Math.max(4, mainQ + others.reduce((a, [, o]) => a + o.quarters.length, 0));
@@ -390,5 +403,24 @@ export function plateScan(bank, ranked, regions) {
       items.push({ ...it, k: 1, said: o.e.en, conf, alts: [], base: it.grams, fast: true, plate: true, box: boxOf(o.quarters), ...(o.e.kind === "like" ? { estimate: true, like: o.fd.like } : {}) });
     } else items.push({ ...unknownItem(o.e.en, null, { ar: o.e.ar }), conf, alts: [], fast: true, plate: true, box: boxOf(o.quarters) });
   }
-  return { ...main, status: "guess", items, foods: items.length };
+  return withBread({ ...main, status: "guess", items, foods: items.length }, bank, regions);
+}
+/** v8.9 (Ali's plate: Yazio saw "mushroom sauce and sourdough bread", Attune missed the bread): bread at the side of a plate is
+ *  faint for the image matcher (a quarter's share stays low), so a quarter whose FIRST answer is bread adds it — two slices by
+ *  default, low confidence, one tap to remove. Not when the dish itself is bread / a sandwich. */
+const BREAD = /\b(bread|toast|baguette|ciabatta|sourdough|pita|roll|bun|naan|focaccia)\b/i;
+export function withBread(res, bank, regions) {
+  if (!res || res.status === "notfood" || !res.items || !res.items.length || !Array.isArray(regions)) return res;
+  if (res.items.some((x) => BREAD.test(String(x.said || x.name || x.en || "")) || /sandwich|burger|toast|pizza/i.test(String(x.said || "")))) return res;
+  let best = null;
+  regions.forEach((rk) => { const top = rk && rk[0], e = top && bank.items[top.i]; if (e && e.kind !== "not" && BREAD.test(e.en) && top.p >= 0.03 && (!best || top.p > best.p)) best = { e, p: top.p, rk }; });
+  if (!best) return res;
+  // plain bread unless garlic bread clearly leads (a toasted slice looks "buttery" to the matcher)
+  if (/garlic/i.test(best.e.en)) { const plain = best.rk.slice(1, 4).find((r) => { const e = bank.items[r.i]; return e && BREAD.test(e.en) && !/garlic/i.test(e.en) && r.p >= best.p * 0.7; }); if (plain) best = { ...best, e: bank.items[plain.i] }; }
+  const fd = entryFood(best.e); if (!fd) return res;
+  const slice = fd.portions && (fd.portions.slice || fd.portions.piece);
+  const g = slice ? Math.round((typeof slice === "number" ? slice : slice.g || slice.grams || 40) * 2) : 80;
+  const alts = F.uniqAlts(best.rk.map((r) => bank.items[r.i]).filter((e) => e && BREAD.test(e.en)).map(entryFood).filter(Boolean).map((x) => ({ label: x.en, food: x })));
+  const it = F.itemFromFood(fd, g, "g");
+  return { ...res, status: "guess", items: [...res.items, { ...it, k: 1, said: best.e.en, conf: 0.35, alts, base: g, fast: true, plate: true, side: true }], foods: res.items.length + 1 };
 }

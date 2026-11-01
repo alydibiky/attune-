@@ -1,0 +1,7 @@
+{
+"{who}: record {a} as paid on the plan?": "{who}：把 {a} 记为计划中的已付款？",
+"Recorded — what is left is worked out again": "已记录 — 剩余部分已重新计算",
+"Found “{n}” — its numbers are estimated from a similar product; check the label": "找到“{n}” — 数值是根据相似产品估算的，请核对标签",
+"Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "数据库中还没有 — 记录一次（按名称或拍营养成分表），Attune 会记住这个条形码",
+"Kept for this barcode — the next scan finds it": "已为这个条形码保存 — 下次扫描即可找到"
+}

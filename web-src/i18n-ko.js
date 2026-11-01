@@ -10712,4 +10712,9 @@ export const KO = {
   "taxi 60": "택시 60",
   "Netflix renews on the 5th": "Netflix는 5일에 갱신돼",
   "remind me to pay the internet on the 1st": "1일에 인터넷 요금 내라고 알려 줘",
+  "{who}: record {a} as paid on the plan?": "{who}: {a}을(를) 계획에 지불 완료로 기록할까요?",
+  "Recorded — what is left is worked out again": "기록했어요 — 남은 금액을 다시 계산했어요",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "\"{n}\"을(를) 찾았어요 — 수치는 비슷한 제품에서 추정한 값이에요. 라벨을 확인하세요",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "아직 데이터베이스에 없어요 — 한 번만 기록하면(이름이나 영양성분표 사진으로) Attune이 이 바코드를 기억해요",
+  "Kept for this barcode — the next scan finds it": "이 바코드로 저장했어요 — 다음 스캔에서 바로 찾아요",
 };

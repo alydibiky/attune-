@@ -10713,4 +10713,9 @@ export const UR = {
   "taxi 60": "ٹیکسی 60",
   "Netflix renews on the 5th": "Netflix 5 تاریخ کو رینیو ہوتا ہے",
   "remind me to pay the internet on the 1st": "1 تاریخ کو انٹرنیٹ کا بل دینا یاد دلانا",
+  "{who}: record {a} as paid on the plan?": "{who}: کیا {a} کو پلان میں ادا شدہ درج کروں؟",
+  "Recorded — what is left is worked out again": "درج ہو گیا — باقی رقم دوبارہ حساب کی گئی",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "«{n}» ملا — اس کے اعداد ملتے جلتے پروڈکٹ سے اندازاً ہیں؛ لیبل دیکھ لیں",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "یہ ابھی ڈیٹا بیس میں نہیں — اسے ایک بار درج کریں (نام سے یا غذائی جدول کی تصویر سے) اور Attune یہ بارکوڈ یاد رکھے گا",
+  "Kept for this barcode — the next scan finds it": "اس بارکوڈ کے لیے محفوظ ہو گیا — اگلی اسکین میں فوراً ملے گا",
 };

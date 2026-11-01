@@ -52,6 +52,17 @@ node_modules/.bin/esbuild build/site-entry.jsx --bundle --format=iife --minify \
   --alias:lucide-react="$HERE/build/lucide-shim.js" \
   --outfile="$TMP/site.js" --log-level=error
 
+# 2c. v8.9 (Ali picked A): every interface language except English and Egyptian Arabic is its own file (www/i18n/<id>.js);
+#     shell.html loads only the chosen one before the app starts.
+mkdir -p "$HERE/../app/src/main/assets/www/i18n"
+node --input-type=module -e '
+import fs from "fs";
+const M = { arb: "ARB", fr: "FR", es: "ES", tr: "TRK", pt: "PT", hi: "HI", id: "IDN", ur: "UR", de: "DE", it: "IT", ru: "RU", zh: "ZH", ja: "JA", ko: "KO", fa: "FA", bn: "BN", vi: "VI", th: "TH", sw: "SW" };
+for (const [l, n] of Object.entries(M)) {
+  const d = (await import(process.cwd() + "/i18n-" + l + ".js"))[n];
+  fs.writeFileSync(process.argv[1] + "/" + l + ".js", "(window.__ATTUNE_DICTS=window.__ATTUNE_DICTS||{})[" + JSON.stringify(l) + "]=" + JSON.stringify(d).replace(/<\/script/gi, "<\\/script") + ";\n");
+}' "$HERE/../app/src/main/assets/www/i18n" 2>/dev/null
+
 # 3. Assemble: CSS, React, Yusr (base64) and the app into the shell.
 python3 - "$TMP" "$OUT" <<'PY'
 import base64, pathlib, sys

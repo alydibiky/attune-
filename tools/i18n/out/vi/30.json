@@ -1,0 +1,7 @@
+{
+"{who}: record {a} as paid on the plan?": "{who}: ghi {a} là đã trả trong kế hoạch?",
+"Recorded — what is left is worked out again": "Đã ghi — phần còn lại được tính lại",
+"Found “{n}” — its numbers are estimated from a similar product; check the label": "Đã tìm thấy \"{n}\" — các số liệu được ước tính từ sản phẩm tương tự; hãy kiểm tra nhãn",
+"Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Chưa có trong cơ sở dữ liệu — hãy ghi một lần (theo tên hoặc ảnh bảng dinh dưỡng) và Attune sẽ nhớ mã vạch này",
+"Kept for this barcode — the next scan finds it": "Đã lưu cho mã vạch này — lần quét sau sẽ tìm thấy ngay"
+}

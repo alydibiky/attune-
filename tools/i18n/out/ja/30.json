@@ -1,0 +1,7 @@
+{
+"{who}: record {a} as paid on the plan?": "{who}：{a} を計画の支払い済みとして記録しますか？",
+"Recorded — what is left is worked out again": "記録しました — 残りを計算し直しました",
+"Found “{n}” — its numbers are estimated from a similar product; check the label": "「{n}」が見つかりました — 数値は似た製品からの推定です。ラベルを確認してください",
+"Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "まだデータベースにありません — 一度記録すれば（名前か栄養成分表の写真で）、Attune がこのバーコードを覚えます",
+"Kept for this barcode — the next scan finds it": "このバーコードに保存しました — 次のスキャンですぐ見つかります"
+}

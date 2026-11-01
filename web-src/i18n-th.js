@@ -10712,4 +10712,9 @@ export const TH = {
   "taxi 60": "แท็กซี่ 60",
   "Netflix renews on the 5th": "Netflix ต่ออายุวันที่ 5",
   "remind me to pay the internet on the 1st": "เตือนให้จ่ายค่าเน็ตวันที่ 1",
+  "{who}: record {a} as paid on the plan?": "{who}: บันทึก {a} ว่าจ่ายแล้วในแผนไหม?",
+  "Recorded — what is left is worked out again": "บันทึกแล้ว — คำนวณยอดที่เหลือใหม่แล้ว",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "พบ \"{n}\" — ค่าต่าง ๆ ประมาณจากสินค้าที่คล้ายกัน ตรวจสอบฉลากด้วย",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "ยังไม่มีในฐานข้อมูล — บันทึกครั้งเดียว (ด้วยชื่อหรือรูปตารางโภชนาการ) แล้ว Attune จะจำบาร์โค้ดนี้",
+  "Kept for this barcode — the next scan finds it": "บันทึกไว้สำหรับบาร์โค้ดนี้แล้ว — สแกนครั้งหน้าจะเจอทันที",
 };

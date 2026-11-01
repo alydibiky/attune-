@@ -10713,4 +10713,9 @@ export const SW = {
   "taxi 60": "teksi 60",
   "Netflix renews on the 5th": "Netflix inajirudia tarehe 5",
   "remind me to pay the internet on the 1st": "nikumbushe kulipa intaneti tarehe 1",
+  "{who}: record {a} as paid on the plan?": "{who}: nirekodi {a} kama imelipwa kwenye mpango?",
+  "Recorded — what is left is worked out again": "Imerekodiwa — kilichobaki kimehesabiwa upya",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "Imepatikana «{n}» — thamani zake ni makadirio kutoka bidhaa inayofanana; kagua lebo",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Bado haipo kwenye hifadhidata — iandike mara moja (kwa jina au picha ya jedwali la lishe) na Attune itakumbuka msimbopau huu",
+  "Kept for this barcode — the next scan finds it": "Imehifadhiwa kwa msimbopau huu — uchanganuzi ujao utaipata",
 };

@@ -10,25 +10,9 @@
    engine, so this takes a second). That lets tables of labels defined once at
    start-up be translated with plain tr() calls.                              */
 import { AR } from "./i18n-ar.js";
-import { FR } from "./i18n-fr.js";
-import { ES } from "./i18n-es.js";
-import { TRK } from "./i18n-tr.js";
-import { PT } from "./i18n-pt.js";
-import { HI } from "./i18n-hi.js";
-import { IDN } from "./i18n-id.js";
-import { UR } from "./i18n-ur.js";
-import { DE } from "./i18n-de.js";
-import { IT } from "./i18n-it.js";
-import { RU } from "./i18n-ru.js";
-import { ZH } from "./i18n-zh.js";
-import { JA } from "./i18n-ja.js";
-import { KO } from "./i18n-ko.js";
-import { FA } from "./i18n-fa.js";
-import { BN } from "./i18n-bn.js";
-import { VI } from "./i18n-vi.js";
-import { TH } from "./i18n-th.js";
-import { SW } from "./i18n-sw.js";
-import { ARB } from "./i18n-arb.js";   // v8.8 (Ali: "Egyptian Arabic and normal Arabic"): Modern Standard Arabic
+// v8.9 (Ali picked A: "every language inside the app, in separate files"): Egyptian Arabic is in the page; each other language is
+// its own file next to it (www/i18n/<id>.js, made by build.sh) and the page loads ONLY the chosen one, before the app starts
+// (shell.html) — the page went from 24 MB back to ~13 MB, opens faster and uses less memory. No internet, no download.
 
 export const LANG_KEY = "attune:ui:lang";
 /** v6.32 more interface languages (roadmap: "more UI languages after English + Arabic"). [id, its own name, locale for dates and
@@ -42,7 +26,10 @@ export const LANGS = [["en", "English", "en-US"], ["ar", "العربية (مصر
   ["de", "Deutsch", "de-DE"], ["it", "Italiano", "it-IT"], ["ru", "Русский", "ru-RU"], ["zh", "简体中文", "zh-CN"], ["ja", "日本語", "ja-JP"],
   ["ko", "한국어", "ko-KR"], ["fa", "فارسی", "fa-IR-u-nu-latn"], ["bn", "বাংলা", "bn-BD-u-nu-latn"], ["vi", "Tiếng Việt", "vi-VN"],
   ["th", "ไทย", "th-TH-u-nu-latn"], ["sw", "Kiswahili", "sw-KE"]];
-const DICTS = { ar: AR, arb: ARB, fr: FR, es: ES, tr: TRK, pt: PT, hi: HI, id: IDN, ur: UR, de: DE, it: IT, ru: RU, zh: ZH, ja: JA, ko: KO, fa: FA, bn: BN, vi: VI, th: TH, sw: SW };
+const DICTS = { ar: AR, ...((typeof window !== "undefined" && window.__ATTUNE_DICTS) || {}) };
+/** Tests and tools (node) hand the other dictionaries in directly. */
+export function registerDicts(o) { Object.assign(DICTS, o || {}); }
+export function hasDict(l) { return l === "en" || !!DICTS[l]; }
 const RTL = new Set(["ar", "arb", "ur", "fa", "he"]);
 const known = (l) => LANGS.some((x) => x[0] === l);
 

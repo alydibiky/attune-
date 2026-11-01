@@ -10713,4 +10713,9 @@ export const TRK = {
   "taxi 60": "taksi 60",
   "Netflix renews on the 5th": "Netflix ayın 5'inde yenileniyor",
   "remind me to pay the internet on the 1st": "ayın 1'inde interneti ödemeyi hatırlat",
+  "{who}: record {a} as paid on the plan?": "{who}: {a} planda ödendi olarak kaydedilsin mi?",
+  "Recorded — what is left is worked out again": "Kaydedildi — kalan yeniden hesaplandı",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "\"{n}\" bulundu — değerleri benzer bir üründen tahmin edildi; etiketi kontrol et",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Henüz veritabanlarında yok — bir kez kaydet (adıyla ya da besin tablosunun fotoğrafıyla), Attune bu barkodu hatırlar",
+  "Kept for this barcode — the next scan finds it": "Bu barkod için kaydedildi — bir sonraki taramada hemen bulunur",
 };

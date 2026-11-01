@@ -1,0 +1,7 @@
+{
+"{who}: record {a} as paid on the plan?": "{who}: catat {a} sebagai sudah dibayar di rencana?",
+"Recorded — what is left is worked out again": "Tercatat — sisanya dihitung ulang",
+"Found “{n}” — its numbers are estimated from a similar product; check the label": "Ditemukan \"{n}\" — nilainya diperkirakan dari produk serupa; periksa labelnya",
+"Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Belum ada di database — catat sekali (dengan nama atau foto tabel gizinya) dan Attune akan mengingat barcode ini",
+"Kept for this barcode — the next scan finds it": "Disimpan untuk barcode ini — pemindaian berikutnya langsung menemukannya"
+}

@@ -10712,4 +10712,9 @@ export const BN = {
   "taxi 60": "ট্যাক্সি 60",
   "Netflix renews on the 5th": "Netflix 5 তারিখে রিনিউ হয়",
   "remind me to pay the internet on the 1st": "1 তারিখে ইন্টারনেটের বিল দিতে মনে করিয়ে দিও",
+  "{who}: record {a} as paid on the plan?": "{who}: পরিকল্পনায় {a} পরিশোধিত হিসেবে লিখব?",
+  "Recorded — what is left is worked out again": "লেখা হয়েছে — বাকিটা আবার হিসাব করা হয়েছে",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "“{n}” পাওয়া গেছে — এর মানগুলো একই রকম পণ্য থেকে আনুমানিক; লেবেল দেখে নিন",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "এটি এখনো ডেটাবেসে নেই — একবার লিখে রাখুন (নাম দিয়ে বা পুষ্টি তালিকার ছবি দিয়ে), Attune এই বারকোড মনে রাখবে",
+  "Kept for this barcode — the next scan finds it": "এই বারকোডের জন্য রাখা হলো — পরের স্ক্যানেই পাওয়া যাবে",
 };

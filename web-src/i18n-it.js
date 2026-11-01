@@ -10713,4 +10713,9 @@ export const IT = {
   "taxi 60": "taxi 60",
   "Netflix renews on the 5th": "Netflix si rinnova il 5",
   "remind me to pay the internet on the 1st": "ricordami di pagare internet il 1°",
+  "{who}: record {a} as paid on the plan?": "{who}: registrare {a} come pagato nel piano?",
+  "Recorded — what is left is worked out again": "Registrato — il resto viene ricalcolato",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "Trovato «{n}» — i valori sono stimati da un prodotto simile; controlla l'etichetta",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Non è ancora nei database — registralo una volta (per nome o con una foto della tabella nutrizionale) e Attune ricorderà questo codice a barre",
+  "Kept for this barcode — the next scan finds it": "Salvato per questo codice a barre — la prossima scansione lo trova",
 };

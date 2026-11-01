@@ -211,6 +211,8 @@
   paintBar();
 })();
 </script>
+<script>/* v8.9: only the chosen interface language's dictionary is loaded (www/i18n/<id>.js), before the app starts */
+(function () { try { var l = localStorage.getItem("attune:ui:lang"); if (l && l !== "en" && l !== "ar" && /^[a-z]{2,3}$/.test(l)) document.write('<script src="i18n/' + l + '.js"><\/script>'); } catch (e) {} })();</script>
 <script>__APP__</script>
 </body>
 </html>

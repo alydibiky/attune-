@@ -17,6 +17,8 @@ let fails = 0;
 const ok = (c, m) => { if (!c) { fails++; console.log("FAIL", m); } else console.log("ok  ", m); };
 globalThis.localStorage = { _s: {}, getItem(k) { return this._s[k] ?? null; }, setItem(k, v) { this._s[k] = String(v); } };
 const I = await import("../../web-src/i18n.js");
+// v8.9: the page loads one dictionary file; here every one is handed in
+I.registerDicts({ fr: FR, es: ES, tr: TRK, pt: PT, hi: HI, id: IDN, ur: UR, arb: (await import("../../web-src/i18n-arb.js")).ARB, ...NEW });
 
 ok(I.LANGS.map((x) => x[0]).join(",") === "en,ar,arb,fr,es,tr,pt,hi,id,ur,de,it,ru,zh,ja,ko,fa,bn,vi,th,sw", "21 languages in the switch (v6.49 at least 20; v8.8 Egyptian + Standard Arabic)");
 const ph = (s) => (s.match(/\{\w+\}/g) || []).sort().join(",");

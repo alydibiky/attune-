@@ -10712,4 +10712,9 @@ export const RU = {
   "taxi 60": "такси 60",
   "Netflix renews on the 5th": "Netflix продлевается 5-го",
   "remind me to pay the internet on the 1st": "напомни оплатить интернет 1-го",
+  "{who}: record {a} as paid on the plan?": "{who}: отметить {a} как оплату по плану?",
+  "Recorded — what is left is worked out again": "Записано — остаток пересчитан",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "Найдено «{n}» — значения оценены по похожему продукту; проверьте этикетку",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "Этого товара пока нет в базах — внесите его один раз (по названию или по фото таблицы пищевой ценности), и Attune запомнит этот штрихкод",
+  "Kept for this barcode — the next scan finds it": "Сохранено для этого штрихкода — при следующем сканировании найдётся сразу",
 };

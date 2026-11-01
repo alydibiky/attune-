@@ -1,0 +1,7 @@
+{
+"{who}: record {a} as paid on the plan?": "{who}: {a} را در برنامه پرداخت‌شده ثبت کنم؟",
+"Recorded — what is left is worked out again": "ثبت شد — باقی‌مانده دوباره حساب شد",
+"Found “{n}” — its numbers are estimated from a similar product; check the label": "«{n}» پیدا شد — اعدادش از یک محصول مشابه تخمین زده شده؛ برچسب را بررسی کنید",
+"Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "هنوز در پایگاه‌های داده نیست — یک بار ثبتش کنید (با نام یا عکس جدول ارزش غذایی) تا Attune این بارکد را به خاطر بسپارد",
+"Kept for this barcode — the next scan finds it": "برای این بارکد ذخیره شد — اسکن بعدی فوراً پیدایش می‌کند"
+}

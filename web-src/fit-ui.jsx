@@ -219,6 +219,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   // the pulse stays at least 0.7 s, so a meal read by code in 80 ms is a calm moment, not a flicker
   const [hold, setHold] = useState(false);
   const holdT = useRef(0);
+  const missCode = useRef("");   // v8.9: a scanned barcode no database knew — the next food logged is kept for it
   const pulse = () => { setHold(true); clearTimeout(holdT.current); holdT.current = setTimeout(() => setHold(false), 700); };
   useEffect(() => { if (busy) pulse(); }, [busy]);
   useEffect(() => () => clearTimeout(holdT.current), []);
@@ -439,6 +440,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   };
   const pickFood = (fd) => {
     DB.keepFoods([fd]);
+    if (missCode.current && fd && !fd.barcode) { DB.rememberBarcode(missCode.current, fd); missCode.current = ""; flash && flash(L("Kept for this barcode — the next scan finds it", "اتحفظ للباركود ده — المرة الجاية هيلاقيه على طول")); }
     const unit = Object.keys(fd.portions || {})[0] || "g";
     const it = F.itemFromFood(fd, unit === "g" ? 100 : 1, unit);
     if (replaceAt >= 0 && draft) { chooseAt(replaceAt, fd); setReplaceAt(-1); }
@@ -460,7 +462,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const useCodes = async (codes) => {
     if (!codes || !codes.length) { flash && flash(L("No barcode found — hold the phone closer, straight on", "ملقيتش باركود — قرّب الموبايل وخليه مستقيم")); return; }
     const fd = await DB.byBarcode(codes[0], fetchJson);
-    if (fd) pickFood(fd); else { setQ(codes[0]); flash && flash(L("This product isn't in the databases yet — log it by name", "المنتج ده مش موجود في قواعد البيانات لسه — سجّله بالاسم")); }
+    if (fd) { pickFood(fd); if (fd.estimate) flash && flash(L("Found “{n}” — its numbers are estimated from a similar product; check the label", "لقيت «{n}» — الأرقام تقديرية من منتج شبهه؛ راجع الملصق").replace("{n}", fd.en)); }
+    // v8.9: not known anywhere → what the person logs next (by name or from the label photo) is kept for this barcode
+    else { missCode.current = codes[0]; setQ(""); flash && flash(L("Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode", "مش موجود في قواعد البيانات لسه — سجّله مرة واحدة (بالاسم أو صورة جدول القيم الغذائية) وأتيون هيفتكر الباركود ده")); }
   };
   const scanCode = async (file) => {
     if (!scanBarcode) return;

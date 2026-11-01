@@ -7819,4 +7819,9 @@ export const AR = {
   "Fr": "ج",
   "Sa": "س",
   "Su": "ح",
+  "{who}: record {a} as paid on the plan?": "{who}: أسجّل {a} مدفوعين في الخطة؟",
+  "Recorded — what is left is worked out again": "اتسجّل — والباقي اتحسب من جديد",
+  "Found “{n}” — its numbers are estimated from a similar product; check the label": "لقيت «{n}» — الأرقام تقديرية من منتج شبهه؛ راجع الملصق",
+  "Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode": "مش موجود في قواعد البيانات لسه — سجّله مرة واحدة (بالاسم أو صورة جدول القيم الغذائية) وأتيون هيفتكر الباركود ده",
+  "Kept for this barcode — the next scan finds it": "اتحفظ للباركود ده — المرة الجاية هيلاقيه على طول",
 };

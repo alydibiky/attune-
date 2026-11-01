@@ -159,14 +159,12 @@ club-sandwich	club sandwich
 donut	donuts|doughnut
 ~kofta	dumplings|gyoza|momo	دامبلنج
 ~peas	edamame	فول الصويا الأخضر
-~egg-sandwich	eggs benedict	بيض بنديكت
 ~shrimp	escargots|snails	حلزون
 ~beef	filet mignon|beef steak|steak	ستيك
 ~fish-fried	fish and chips	سمك وبطاطس محمرة
 ~liver	foie gras	فوا جرا
 fries	french fries|fries
 ~onion	french onion soup	شوربة بصل
-~toast-white	french toast	فرنش توست
 calamari	fried calamari
 fried-rice	fried rice|chinese fried rice
 ~ice-cream	frozen yogurt	زبادي مجمد
@@ -266,7 +264,7 @@ quinoa	quinoa salad|quinoa
 ~chicken-rice-oven	chicken with rice	فراخ بالرز
 ~salad	mixed salad|garden salad	سلطة خضرا
 ~kofta	meatballs	كرات لحمة
-~beef	beef stew|beef stroganoff	لحمة مطبوخة
+~beef	beef stew	لحمة مطبوخة
 ~chicken-breast	chicken stir fry|chicken with vegetables	فراخ بالخضار
 ~fries	roasted potatoes|baked potatoes|mashed potatoes	بطاطس في الفرن
 ~pasta	pasta salad|noodles	سلطة مكرونة
@@ -411,3 +409,22 @@ chips	potato chips|crisps
 !	an empty plate
 !	a packaged product box|a snack wrapper
 !	a landscape|the sky
+# ---- v8.9 (Ali's café plate: chicken / omelette under a creamy mushroom sauce, sourdough slices — read as "mushroom soup") ----
+mushroom-sauce	creamy mushroom sauce on a plate|mushroom cream sauce|mushroom gravy
+chicken-mushroom	chicken breast in creamy mushroom sauce on a plate with bread|creamy mushroom chicken|chicken with mushroom sauce|chicken smothered in mushroom gravy
+steak-mushroom	steak with mushroom sauce|beef steak covered in creamy mushroom sauce
+omelette-mushroom	omelette covered with creamy mushroom sauce|egg omelette with mushroom cream sauce
+chicken-white-sauce	chicken in white cream sauce|chicken with bechamel cream sauce
+pepper-steak	pepper steak with creamy peppercorn sauce|steak au poivre
+sourdough	slices of sourdough bread|toasted sourdough bread slices|rustic bread slices|artisan country bread
+ciabatta	ciabatta bread|slices of ciabatta
+baguette	baguette|french bread slices
+garlic-bread	garlic bread|garlic butter toast
+mashed-potato	mashed potatoes|potato puree
+eggs-benedict	eggs benedict with hollandaise sauce|poached eggs on english muffin
+avocado-toast	avocado toast on sourdough|smashed avocado on toast
+french-toast	french toast slices|eggy bread
+club-sandwich	club sandwich with fries|triple decker club sandwich
+chicken-cordon-bleu	chicken cordon bleu|breaded chicken stuffed with ham and cheese
+beef-stroganoff	beef stroganoff with creamy sauce|beef strips in sour cream mushroom sauce
+pasta-mushroom	creamy mushroom pasta|penne with mushroom cream sauce
