@@ -5,7 +5,7 @@ import { PrayerPlanner } from "./prayer-ui.jsx";
 import { askConfirm } from "./confirm.jsx";
 import React, { useState } from "react";
 import { Bell, Trash2, X, Plus, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { newReminderId, nextOccurrence, quickAction, daysText, firstOnDays } from "./actions.js";
 import { PANES, LEFT, RIGHT } from "./desk.jsx";
 import { cardPad, btnP, btnS, inp, label, muted } from "./ui-kit.jsx";
@@ -22,7 +22,7 @@ const repeatLabel = (r) => (/^days:/.test(String(r || "")) ? daysText(r).split("
 const pad = (n) => String(n).padStart(2, "0");
 export function toLocalInput(ms) { if (!ms) return ""; const d = new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
 function fromLocalInput(v) { if (!v) return null; const t = new Date(v).getTime(); return isNaN(t) ? null : t; }
-const locale = () => (getLang() === "ar" ? "ar-EG-u-nu-latn" : "en-GB");
+const locale = () => (dateLocale() || "en-GB");
 export function whenText(ms, allDay) {
   if (!ms) return "";
   const d = new Date(ms), now = new Date();

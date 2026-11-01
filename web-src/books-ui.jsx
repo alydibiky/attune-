@@ -9,6 +9,7 @@ import * as O from "./books-ops.js";
 import { loadBooks, saveBooks, exportBooks, parseBackup, replaceBooks } from "./books-store.js";
 import * as ETA from "./books-eta.js";
 import { BooksCtx, useBooks, L, isAr, ThemeCtx, themeFor, useTheme, Card, Stat, Section, Money, Badge, Empty, Field, Input, Select, Sheet, BTN, btnPrimary, SEL, POS, WARN, NEG, today, monthStart, fmtDate } from "./books-kit.jsx";
+import { isRTL } from "./i18n.js";
 import { SalesModule } from "./books-sales.jsx";
 import { PurchasesModule } from "./books-purchases.jsx";
 import { StockModule } from "./books-stock.jsx";
@@ -67,7 +68,7 @@ export function BooksApp({ flash, saveFile, share, onBack, openPlan, goCustom })
   return (
     <ThemeCtx.Provider value={th}>
       <BooksCtx.Provider value={ctx}>
-        <div className={`fixed inset-0 z-[60] flex flex-col ${th.page}`} data-testid="books-app" dir={isAr() ? "rtl" : "ltr"}>
+        <div className={`fixed inset-0 z-[60] flex flex-col ${th.page}`} data-testid="books-app" dir={isRTL() ? "rtl" : "ltr"}>
           <div className={`flex items-center gap-2.5 px-4 py-2.5 border-b ${th.bar}`}>
             <button onClick={onBack} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] grid place-items-center shrink-0" aria-label={L("Back", "رجوع")}><ChevronRight size={20} className="rotate-180 rtl:rotate-0" /></button>
             <div className="flex-1 min-w-0">
@@ -269,7 +270,7 @@ function PinLock({ s, onOk, onBack }) {
   const [pin, setPin] = useState(""); const [bad, setBad] = useState(0);
   const tryPin = (v) => { if (O.checkPin(s, v)) onOk(v); else { setBad((b) => b + 1); setPin(""); } };
   return (
-    <div className={`fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 p-6 ${th.page}`} data-testid="books-lock" dir={isAr() ? "rtl" : "ltr"}>
+    <div className={`fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 p-6 ${th.page}`} data-testid="books-lock" dir={isRTL() ? "rtl" : "ltr"}>
       <span className="w-16 h-16 rounded-[20px] bg-[var(--c-soft)] grid place-items-center"><Building2 size={30} className={th.brand} /></span>
       <p className="text-[17px] font-extrabold text-center m-0">{L("Enter your PIN to open the books", "اكتب الرقم السري عشان تفتح الدفاتر")}</p>
       <input value={pin} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setPin(v); if (v.length >= 4 && O.checkPin(s, v)) onOk(v); }} type="password" inputMode="numeric" autoFocus data-testid="books-pin"

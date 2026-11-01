@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 29 Oct 2026 — v8.7 part 6)
+# Attune — start here (handoff for the next chat, 1 Nov 2026 — v8.9 languages)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -10,6 +10,21 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
 | Tests | v8.3: every unit + e2e file passes (old Instant / Money / sidebar expectations updated; e2e_v727guardian dates now relative to today) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
+
+## v8.9 — 1 Nov: all 20 languages finished (Ali: "all languages right and accurate in everything")
+- Every interface language now has every line of the app (≈10,650 each): es fr de pt hi id ru it sw th vi zh ja ko fa ur bn tr
+  translated and checked here; Turkish and Fusha (arb) came from Gemini (tools/i18n/back/) and were checked (placeholders, no
+  Egyptian words in Fusha, airport codes kept). Workspace: tools/i18n/ (todo → out → `node tools/i18n/merge.mjs` → web-src/i18n-xx.js).
+- Code fixes so the other languages really show: example chips (Scout, Missions, Watch, Ask your life, Automations, empty-page
+  examples), map place chips, ready courses, planner categories, people sources, Money Report sources, Fit welcome, privacy page —
+  all go through tr(); 49 date formats follow the chosen language (dateLocale()); right-to-left for every RTL language (arb, ur, fa)
+  on Privacy, Books, Voice, Year plan (was Egyptian only).
+- tests/i18n_all.py: shows which page each English text is on (`where`), ignores words that are the same in both languages
+  (Hospital, Zakat, Python), ignores lines passed twice through tr().
+- LEFT (for Gemini): 50 new lines (privacy policy, weekday letters, Zakāt lines, examples) = chunk 29 (arb: 32);
+  paste tools/i18n/for-gemini/<lang>-01.txt into Gemini, save its reply as tools/i18n/back/<lang>-01.json, then
+  `python3 tools/i18n/import_gemini.py` + merge + build. Until then those lines show in English.
+- Size: index.html grew 12.6 → 24 MB with all dictionaries. Idea (ask Ali): load only the chosen language's dictionary.
 
 ## v8.2 — 26 Oct: Ali's 17-point phone list (branch `claude/youthful-davinci-fe3400`)
 Done and tested (unit `tests/unit/v820fixes.test.mjs`, e2e additions in `e2e_fithome.py` + `e2e_v727agent.py`, hub test updated):

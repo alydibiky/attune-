@@ -4,7 +4,7 @@
    Every number comes from the on-device tool log (toollog.js: titles and numbers only, never the text or the file). */
 import React, { useEffect, useMemo, useState } from "react";
 import { Sparkles, FileText, Zap, ImageIcon, Film, ArrowLeft, BookOpen } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { NOT_IN_PLAY } from "./buildflags.js";
 import { loadLog, toolsReport, familyReport } from "./toollog.js";
 import { Bars, SeeAll } from "./biz-dash-ui.jsx";
@@ -27,7 +27,7 @@ export const FAMS = [
 // v8.7: not in the Play Store build
 const FAMS_SHOWN = FAMS.filter((x) => !NOT_IN_PLAY.has(x[0]));
 const FAM_NAME = { instant: "Chat", ...Object.fromEntries(FAMS.map((f) => [f[0], f[2]])) };   // v8.2: old Instant jobs still show
-const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : new Date(t).toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }); };
+const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); };
 
 export function useToolLog() {
   const [log, setLog] = useState(loadLog);

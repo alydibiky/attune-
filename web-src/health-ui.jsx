@@ -4,7 +4,7 @@
    FitToday is also the card on Home. Everything is read from each tool's own data by code. Tests: tests/e2e_v732health.py.     */
 import React, { useState } from "react";
 import { Apple, Heart, Droplet, Plus, ChevronRight, AlertTriangle, Pill, Check, Watch } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as F from "./fit.js";
 import { targetsOf } from "./fithome.js";
 import { loadCare, saveCare, markTaken, dosesOn, lowSupply, insulinState } from "./care.js";
@@ -93,7 +93,7 @@ function CycleToday({ navTo, wide, onLog }) {
   const cyc = (() => { try { const st = cycleLoad(); return Object.keys(st.days || {}).length ? cycleStats(st, cycleKey(new Date())) : null; } catch (e) { return null; } })();
   const daysTo = cyc && cyc.nextStart ? Math.round((Date.parse(cyc.nextStart + "T12:00:00") - Date.parse(cycleKey(new Date()) + "T12:00:00")) / 86400000) : null;
   const status = !cyc ? "" : cyc.inPeriod ? tr("Period — day {n}", { n: cyc.cycleDay }) : cyc.late ? tr("{n} days late", { n: cyc.late }) : daysTo != null ? tr("Next period in {n} days", { n: daysTo }) : "";
-  const exp = cyc && cyc.nextStart ? (() => { try { return new Date(cyc.nextStart + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "long" }); } catch (e) { return cyc.nextStart; } })() : "";
+  const exp = cyc && cyc.nextStart ? (() => { try { return new Date(cyc.nextStart + "T12:00:00").toLocaleDateString(dateLocale(), { day: "numeric", month: "long" }); } catch (e) { return cyc.nextStart; } })() : "";
   return (
     <div className={cardPad + " w-full space-y-2"} data-testid="health-cycle">
       <button className="w-full min-h-[40px] flex items-center gap-2 text-start" onClick={() => navTo("cycle")} data-testid="health-cycle-open">
@@ -155,7 +155,7 @@ export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd, na
   const [listening, setListening] = useState(false);
   const wide = typeof window !== "undefined" && window.innerWidth >= 1024;
   const ar = getLang() === "ar";
-  const date = new Date().toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "long" });
+  const date = new Date().toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" });
   const hasCycle = (() => { try { return Object.keys(cycleLoad().days || {}).length > 0; } catch (e) { return false; } })();
   // the box: the same reader as the Home box (food, a dose, a period, money, a reminder…); "health report" opens level 2; the rest → Chat
   const submit = async (t) => {
@@ -173,7 +173,7 @@ export function HealthPage({ navTo, cycleOn, doIt, onAsk, listen, openFitAdd, na
     const j = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
     return { ...healthReport({ fit: j("attune:fit:v1"), care: loadCare(), cycle: cycleLoad(), cycleStats }), vitals: vitalsWeek(loadVitals()) };
   }, [rep, tick]);
-  const range = (() => { const f = (d) => d.toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }); const a = new Date(); a.setDate(a.getDate() - 6); return f(a) + " – " + f(new Date()); })();
+  const range = (() => { const f = (d) => d.toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); const a = new Date(); a.setDate(a.getDate() - 6); return f(a) + " – " + f(new Date()); })();
   const printPdf = () => {
     if (!report) return;
     const esc = (x) => String(x == null ? "" : x).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -197,7 +197,7 @@ ${report.vitals && report.vitals.has ? `<h3>${esc(tr("From your watch"))}</h3>${
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0"><h2 className={h1 + " flex items-center gap-2"}><Heart size={20} className="c-acc" />{tr("Health")}</h2>
           <p className="m-0 mt-0.5 text-[13px] font-semibold c-sub hidden lg:block">{date} · {tr("Today in one calm look")}</p></div>
-        <span className={tag("blue") + " lg:hidden"}>{new Date().toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span>
+        <span className={tag("blue") + " lg:hidden"}>{new Date().toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "short" })}</span>
       </div>
       <HealthBox wide={wide} onSubmit={submit} onPhoto={openFitAdd || (() => navTo("fit"))} onVoice={voice} listening={listening} />
       <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4 lg:items-start" key={tick}>

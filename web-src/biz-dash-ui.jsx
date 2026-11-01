@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Download, ChevronLeft, Share2, ArrowRight, Check } from "lucide-react";
 import * as B from "./books.js";
 import { booksOverview, overviewCsv, shopReport, donut } from "./biz-dash.js";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as K from "./ui-kit.jsx";
 
 const isAr = () => getLang() === "ar";
@@ -51,8 +51,8 @@ function Tile({ label, value, pill, tone, sub, testid }) {
     {sub ? <span className="block text-[11.5px] text-[var(--c-mut)] leading-snug">{sub}</span> : null}
   </div>;
 }
-const monthLabel = (ym) => new Date(ym + "-15T12:00:00").toLocaleDateString(isAr() ? "ar-EG-u-nu-latn" : "en-US", { month: "short" });
-const dayLabel = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(isAr() ? "ar-EG-u-nu-latn" : "en-GB", { weekday: "short" });
+const monthLabel = (ym) => new Date(ym + "-15T12:00:00").toLocaleDateString(dateLocale() || "en-US", { month: "short" });
+const dayLabel = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { weekday: "short" });
 const pctPill = (p) => (p == null ? null : T((p >= 0 ? "+" : "") + p + "%"));
 
 // ---- Books Report: the overview ----------------------------------------------------------------------------------------------------

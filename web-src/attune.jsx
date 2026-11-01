@@ -6555,7 +6555,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       {!ledgerOn ? (wide ? (
         <>
           {view === "calm" ? <div className="flex items-end justify-between gap-4 mb-4"><div><h2 className="text-[22px] font-black tracking-tight m-0">{tr("Money & Zakāt")}</h2>
-            <p className="m-0 mt-0.5 text-[13px] font-semibold text-[var(--c-mut)]">{new Date().toLocaleDateString(arUI ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "long" })}</p></div>
+            <p className="m-0 mt-0.5 text-[13px] font-semibold text-[var(--c-mut)]">{new Date().toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" })}</p></div>
             <div className="flex gap-2"><button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setSheet(true)} data-testid="money-tools">{tr("Import a payment")}</button>
               <button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(--c-acc)]"} onClick={() => setMoreOpen(true)} data-testid="money-more">{tr("More")}</button></div></div> : null}
           {view === "calm" || view === "pane" ? <MoneyBar wide panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} /> : null}
@@ -7760,7 +7760,7 @@ const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", 
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "8.7";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "8.9";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 

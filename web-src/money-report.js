@@ -45,7 +45,7 @@ export function catName(L, id, ar = false) {
   const c = ((L && L.customCats) || []).find((x) => x.id === id);
   if (c) return (ar ? c.ar : tr(c.en)) || c.name || c.en || id;
   const n = CAT_NAMES[id];
-  return n ? n[ar ? 1 : 0] : (id ? id[0].toUpperCase() + id.slice(1) : ar ? "أخرى" : tr("Other"));
+  return n ? (ar ? n[1] : tr(n[0])) : (id ? id[0].toUpperCase() + id.slice(1) : ar ? "أخرى" : tr("Other"));
 }
 
 /** Everything the calm view and the Report show, at `now`, for one account (`account` = its id) or all money accounts.

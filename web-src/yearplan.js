@@ -8,7 +8,7 @@
      any cell         can be typed over, like Excel (overrides, kept on the phone) — the totals follow
    Pure: stores in, the sheet out. The page draws it and saves it as an .xlsx (convert.js xlsxFromRows).
    Tests: tests/unit/v870yearplan.test.mjs.                                                                                  */
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { scheduleOf } from "./life.js";
 import { averages, monthsTo } from "./planner.js";
 import { catName } from "./money-report.js";
@@ -118,7 +118,7 @@ export function yearGrid({ ledger, life, pots, plan, year, now = Date.now(), ar 
 
 /** The sheet as rows for Excel (convert.js xlsxFromRows): a header, each group's rows, the totals and Free. */
 export function yearRows(g, ar = false) {
-  const head = [ar ? "البند" : tr("Item"), ...g.months.map((m) => new Date(m + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en", { month: "short" })), ar ? "إجمالي السنة" : tr("Year")];
+  const head = [ar ? "البند" : tr("Item"), ...g.months.map((m) => new Date(m + "-15").toLocaleDateString(dateLocale() || "en", { month: "short" })), ar ? "إجمالي السنة" : tr("Year")];
   const rows = [head];
   for (const gr of g.groups) {
     rows.push([gr.label.toUpperCase(), ...g.months.map(() => ""), ""]);

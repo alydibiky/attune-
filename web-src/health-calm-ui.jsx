@@ -6,13 +6,13 @@
    (health-report.js). Kind on purpose: a day above the target is amber with a word, a late period is never red.            */
 import React, { useState } from "react";
 import { Heart, Camera, Mic, ArrowRight, ArrowLeft, Printer, Pill, Droplet, AlertTriangle, Check, Undo2, Sparkles, Loader2 } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as U from "./ui-kit.jsx";
 
 // numbers inside a translated sentence stay left-to-right in Arabic
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? "⁦" + y + "⁩" : y])) : v);
 const n0 = (n) => Math.round(Number(n) || 0).toLocaleString("en-US");
-const loc = () => (getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined);
+const loc = () => dateLocale();
 const dayShort = (k, today) => { if (today) return tr("Today"); try { return new Date(k + "T12:00:00").toLocaleDateString(loc(), { weekday: "short" }); } catch (e) { return k.slice(5); } };
 const dateLong = (k) => { try { return new Date(k + "T12:00:00").toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return k; } };
 export const Arrow = ({ back, size = 15 }) => back ? <ArrowLeft size={size} className="rtl:-scale-x-100" /> : <ArrowRight size={size} className="rtl:-scale-x-100" />;

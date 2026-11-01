@@ -5,7 +5,7 @@
 import { mediaGet, clock } from "./mediastore.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Brain, Search, Sparkles, Link2, Star, Bell, Trash2, X, Plus, ClipboardPaste, Copy, ExternalLink, Share2, Loader2, Shuffle, Folder, ImagePlus, Send, Check, Camera, ChevronLeft } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as M from "./mind.js";
 import { useSubBack } from "./backstack.js";
 import { Md } from "./chat.jsx";
@@ -68,7 +68,7 @@ function useThumb(rec) {
   useEffect(() => { let on = true; if (rec && rec.meta && rec.meta.thumb) thumbGet(rec.id).then((u) => on && setUrl(u)); return () => { on = false; }; }, [rec && rec.id, rec && rec.meta && rec.meta.thumb]);
   return url;
 }
-const dateText = (ts) => new Date(ts).toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short", year: new Date(ts).getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
+const dateText = (ts) => new Date(ts).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: new Date(ts).getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
 const kindLabel = (k) => { const x = M.KINDS[k] || M.KINDS.note; return getLang() === "ar" ? x.ar : tr(x.en); };
 
 /* ---- one card on the wall (v6.32 look A, Ali: "Mind page: A"): each kind looks like what it is — a photo or a link's

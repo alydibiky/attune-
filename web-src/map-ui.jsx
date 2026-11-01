@@ -436,7 +436,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
           </form>
           <div className="pointer-events-auto flex gap-2 overflow-x-auto [scrollbar-width:none] -mx-3 px-3 pb-1">
             {openMetro ? <button onClick={openMetro} className={chipCls} data-testid="map-chip-metro">{tr("Metro")}</button> : null}{/* v6.42: Cairo Metro is the tab next to Maps */}
-            {CHIPS.map((c) => <button key={c[0]} onClick={() => runSearch(lang === "ar" ? c[2] : c[1], c)} className={chipCls} data-testid={"map-chip-" + c[0]}>{lang === "ar" ? c[2] : c[1]}</button>)}
+            {CHIPS.map((c) => <button key={c[0]} onClick={() => runSearch(lang === "ar" ? c[2] : c[1], c)} className={chipCls} data-testid={"map-chip-" + c[0]}>{lang === "ar" ? c[2] : tr(c[1])}</button>)}
           </div>
         </div>
 

@@ -128,7 +128,7 @@ export function MissionsPage({ flash }) {
           ? <p className="text-[12.5px] c-sub" data-testid="missions-read">{tr(READ[parsed.kind] || "Buy it for {t} or less", { t: n(parsed.target), c: tr(CAT_NAME[parsed.cat] || "everything") })}{parsed.deadline ? " · " + tr("by {d}", { d: parsed.deadline }) : " · " + tr("add a date (e.g. by June)")}</p>
           : <p className="text-[12.5px] c-sub">{tr("Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay off Ahmed's debt by December · finish the Turkish course by December.")}</p>) : null}
         <div className="flex flex-wrap gap-1.5">
-          {!text.trim() ? EXAMPLES.map(([en, a]) => <button key={en} className={chip(false) + " !h-auto min-h-[40px] py-2 !whitespace-normal text-start"} onClick={() => setText(ar ? a : en)} data-testid="missions-example">{ar ? a : en}</button>) : null}
+          {!text.trim() ? EXAMPLES.map(([en, a]) => <button key={en} className={chip(false) + " !h-auto min-h-[40px] py-2 !whitespace-normal text-start"} onClick={() => setText(ar ? a : en)} data-testid="missions-example">{ar ? a : tr(en)}</button>) : null}
           {text.trim() ? <button className={btnP + " ms-auto"} disabled={!parsed || !parsed.deadline} onClick={add} data-testid="missions-start">{tr("Start the mission")}</button> : null}
         </div>
       </div>

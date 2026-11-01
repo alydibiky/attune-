@@ -904,7 +904,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed },
-        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? cx.answer.ar : tr(cx.answer.en)) + (cx.items.length ? "\n" + cx.items.slice(0, 5).map((x) => "• " + x.title + (x.amount ? " — " + Math.round(x.amount).toLocaleString("en-US") : "") + (x.ts ? " · " + new Date(x.ts).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short" }) : "")).join("\n") : ""),
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? cx.answer.ar : tr(cx.answer.en)) + (cx.items.length ? "\n" + cx.items.slice(0, 5).map((x) => "• " + x.title + (x.amount ? " — " + Math.round(x.amount).toLocaleString("en-US") : "") + (x.ts ? " · " + new Date(x.ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" }) : "")).join("\n") : ""),
           actions: [...cx.people.slice(0, 1).map((p) => [p.name, "person:" + p.id]), ...opens.map((o) => [OPEN[o], "open:" + o]), ["Just answer", "answer"]] } }] }));
       setText("");
     };

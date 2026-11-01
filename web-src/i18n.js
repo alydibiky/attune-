@@ -88,9 +88,9 @@ export function tr(s, vars) {
   let out = s;
   const d = DICTS[LANG];
   if (d) {
-    if (Object.prototype.hasOwnProperty.call(d, s)) out = d[s];
-    // Tests collect any English still shown in Arabic mode.
-    else if (typeof window !== "undefined" && window.__trMiss && /[A-Za-z]{2}/.test(s)) window.__trMiss.add(s);
+    if (Object.prototype.hasOwnProperty.call(d, s)) { out = d[s]; if (out === s && typeof window !== "undefined" && window.__trMiss) window.__trMiss.same = (window.__trMiss.same || new Set()).add(s); }
+    // Tests collect any English still shown in another language (a line already translated, passed again, is not one).
+    else if (typeof window !== "undefined" && window.__trMiss && /[A-Za-z]{2}/.test(s) && !(window.__trVals || (window.__trVals = new Set(Object.values(d)))).has(s)) window.__trMiss.add(s);
   }
   if (vars) out = out.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? String(vars[k]) : m));
   if (ON_DESKTOP) out = forDesktop(out);

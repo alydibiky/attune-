@@ -2,12 +2,12 @@
    "why this app reads your data" link (Android sends ACTION_SHOW_PERMISSIONS_RATIONALE / VIEW_PERMISSION_USAGE). */
 import React, { useState } from "react";
 import { ShieldCheck, Globe, Ban } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, isRTL, dateLocale } from "./i18n.js";
 import { PRIVACY, PRIVACY_UPDATED } from "./privacy.js";
 import { VaultSettings } from "./vault-ui.jsx";
 import { fold, weekReport, loadNetWeek, saveNetWeek } from "./netreport.js";
 
-const fmtDay = (d) => { const [y, m, dd] = d.split("-").map(Number); return new Date(y, m - 1, dd).toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }); };
+const fmtDay = (d) => { const [y, m, dd] = d.split("-").map(Number); return new Date(y, m - 1, dd).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); };
 /** v6.37 (X3): this week on this device — every place Attune connected to and why, and what it blocked. */
 export function PrivacyWeek({ readNet }) {
   const [ago, setAgo] = useState(0);
@@ -38,15 +38,15 @@ export function PrivacyWeek({ readNet }) {
 export function PrivacyPage({ flash, onVault, readNet } = {}) {
   const ar = getLang() === "ar", P = PRIVACY[ar ? "ar" : "en"];
   return (
-    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[20px] p-4 md:p-6 space-y-4 lg:max-w-[76ch]" style={{ minHeight: "70vh" }} data-testid="privacy-page" dir={ar ? "rtl" : "ltr"}>
+    <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[20px] p-4 md:p-6 space-y-4 lg:max-w-[76ch]" style={{ minHeight: "70vh" }} data-testid="privacy-page" dir={isRTL() ? "rtl" : "ltr"}>
       <div className="flex items-start gap-3"><span className="c-ic"><ShieldCheck size={17} /></span>
         <div><h2 className="text-[22px] font-black tracking-tight m-0">{tr("Privacy")}</h2><p className="c-sub m-0">{tr("Updated {d}", { d: PRIVACY_UPDATED })}</p></div></div>
       <PrivacyWeek readNet={readNet} />
       <VaultSettings flash={flash} onChange={onVault} />
       {P.map(([h, t], i) => (
         <section key={i} className={i === 0 ? "c-card" : ""}>
-          <h3 className="text-[16px] font-extrabold m-0 mb-1">{h}</h3>
-          <p className="text-[14px] leading-relaxed m-0" style={{ color: "var(--c-ink)" }}>{t}</p>
+          <h3 className="text-[16px] font-extrabold m-0 mb-1">{ar ? h : tr(h)}</h3>
+          <p className="text-[14px] leading-relaxed m-0" style={{ color: "var(--c-ink)" }}>{ar ? t : tr(t)}</p>
         </section>))}
     </div>);
 }

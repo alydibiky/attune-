@@ -1,22 +1,15 @@
 {
- "missing": [
-  "Find & buy",
-  "Fr",
-  "Mo",
-  "Qwen",
-  "Sa",
-  "Su",
-  "Th",
-  "Tu",
-  "We"
- ],
+ "missing": [],
  "raw": [
   "Core · 2.",
-  "JavaScript",
-  "Python",
   "Ready",
   "© OpenStreetMap contributors"
  ],
+ "where": {
+  "Core · 2.": "guide",
+  "Ready": "guide",
+  "© OpenStreetMap contributors": "travel"
+ },
  "errors": [
   "console.error: Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
   "console.error: Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",

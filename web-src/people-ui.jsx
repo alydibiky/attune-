@@ -4,7 +4,7 @@
    the app (links.js). "Who is X?" lists names Attune met in Money and your notes that have no card yet. Logic: entities.js. */
 import React, { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Trash2, Phone, ChevronRight, ChevronLeft, X, Users, Link2 } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as E from "./entities.js";
 import * as K from "./links.js";
 import * as LA from "./lifeask.js";
@@ -18,7 +18,7 @@ export function openPerson(id, navTo) { try { localStorage.setItem(OPEN_KEY, Str
 
 const SRC = { money: ["Money", "الفلوس"], followups: ["Follow-ups", "المتابعات"], notes: ["Notes", "الملاحظات"], mind: ["Mind", "العقل"], todo: ["To-do", "المهام"], messages: ["Messages", "الرسايل"],
   reminders: ["Reminders", "التذكيرات"], dates: ["Dates", "المواعيد"], goals: ["Goals", "الأهداف"], health: ["Health", "الصحة"], agents: ["Agents", "الوكلاء"] };
-export const srcName = (k, ar) => (SRC[k] ? SRC[k][ar ? 1 : 0] : k);
+export const srcName = (k, ar) => (SRC[k] ? (ar ? SRC[k][1] : tr(SRC[k][0])) : k);
 
 /** Names Attune met (Money notes, your notes) with no card yet — newest first, at most 6. */
 export function namesToAsk(stores, dir) {
@@ -108,7 +108,7 @@ export function PeoplePage({ nativeCall, navTo, flash }) {
         {linked && linked.items.length ? linked.items.slice(0, 30).map((x) => <button key={x.id} onClick={() => navTo && navTo(x.open)} className="w-full text-start flex items-center gap-2 min-h-[44px] border-t border-[var(--c-ln)] first:border-t-0" data-testid="people-item">
           <span className={tag("gray") + " shrink-0"}>{srcName(x.src, ar)}</span><span className="flex-1 min-w-0 truncate text-[13.5px] font-semibold" dir="auto">{x.title}</span>
           {x.amount ? <b className="tabular-nums text-[13px] shrink-0" dir="ltr">{Math.round(x.amount).toLocaleString("en-US")}</b> : null}
-          <span className={"text-[11.5px] shrink-0 " + muted}>{x.ts ? new Date(x.ts).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short" }) : ""}</span></button>)
+          <span className={"text-[11.5px] shrink-0 " + muted}>{x.ts ? new Date(x.ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" }) : ""}</span></button>)
           : <p className={"m-0 text-[13px] " + muted}>{tr("Nothing linked yet. When you write {n} (or another name of theirs) in Money, a note or a message, it shows here.", { n: p.name })}</p>}
       </div>
     </div>;

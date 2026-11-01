@@ -5,6 +5,7 @@
    the flat, school, the doctor…) and your goals by name. A question then gets everything linked to what it names, from every
    part of the app, the money summed by code; Chat writes the answer from that and shows where each fact came from.
    Pure (stores in); tests: tests/unit/v880links.test.mjs.                                                                   */
+import { dateLocale } from "./i18n.js";
 import { resolve, mentions, fold as efold, labelOf } from "./entities.js";
 import { progressOf } from "./life.js";
 
@@ -110,7 +111,7 @@ export function connect(question, stores = {}, dir = { items: [] }, { now = Date
   const name = people.length ? people.map((p) => p.name).join(" & ") : qGoals[0] || (qTopics[0] ? topicName(qTopics[0]) : "");
   const nameAr = people.length ? people.map((p) => p.name).join(" و") : qGoals[0] || (qTopics[0] ? topicName(qTopics[0], true) : "");
   const n = (v) => Math.round(v).toLocaleString("en-US");
-  const when = (ts, ar) => (ts ? new Date(ts).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short", year: new Date(ts).getFullYear() === new Date(now).getFullYear() ? undefined : "numeric" }) : "");
+  const when = (ts, ar) => (ts ? new Date(ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: new Date(ts).getFullYear() === new Date(now).getFullYear() ? undefined : "numeric" }) : "");
   // what code can answer by itself (sums, debts, the last time) — exact, at once
   let answer = null;
   if (ASK_OWE.test(q) && debts.length) answer = { en: `${name}: ${toMe ? "owes you " + n(toMe) + " " + cur : ""}${toMe && iOwe ? " · " : ""}${iOwe ? "you owe " + n(iOwe) + " " + cur : ""} (from Follow-ups).`, ar: `${nameAr}: ${toMe ? "ليك عنده " + n(toMe) + " " + cur : ""}${toMe && iOwe ? " · " : ""}${iOwe ? "عليك " + n(iOwe) + " " + cur : ""} (من المتابعات).` };

@@ -6,7 +6,7 @@
    the ledger itself (Yusr) stays one tap away. The screens are driven by MoneyTab (attune.jsx), which keeps Yusr connected.  */
 import React, { useState } from "react";
 import { Camera, Mic, ArrowRight, ArrowLeft, FileDown, FileText, Upload, BookOpen, ShieldCheck, Loader2, Sparkles } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { fmt } from "./money-calm.js";
 import { donutArcs } from "./money-report.js";
 import { SafeSpend } from "./safespend-ui.jsx";
@@ -16,8 +16,8 @@ import * as U from "./ui-kit.jsx";
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? "\u2066" + y + "\u2069" : y])) : v);
 const SLICE = ["var(--c-chart-1)", "var(--c-chart-2)", "var(--c-chart-3)", "var(--c-chart-4)"];
 const amt = (n, cur, o) => fmt(n, o) + (cur ? " " + cur : "");
-const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }); } catch (e) { return iso; } };
-const monthLabel = (key, long) => { try { return new Date(key + "-15T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, long ? { month: "long", year: "numeric" } : { month: "short" }); } catch (e) { return key; } };
+const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); } catch (e) { return iso; } };
+const monthLabel = (key, long) => { try { return new Date(key + "-15T12:00:00").toLocaleDateString(dateLocale(), long ? { month: "long", year: "numeric" } : { month: "short" }); } catch (e) { return key; } };
 const Arrow = ({ back, size = 15 }) => back ? <ArrowLeft size={size} className="rtl:-scale-x-100" /> : <ArrowRight size={size} className="rtl:-scale-x-100" />;
 
 /** The one box: write payments ("lunch 150, taxi 60") or ask ("how much on food this week?"). */

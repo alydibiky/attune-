@@ -7,7 +7,7 @@
    AI model (a model that reads photos). Nothing is uploaded. */
 import React, { useState, useRef } from "react";
 import { FileText, Loader2, X, Download, Check, ImagePlus, ChevronRight, Eye } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as C from "./convert.js";
 import * as TR from "./translate.js";
@@ -247,7 +247,7 @@ function ConvertRecent() {
     <p className={K.label + " m-0 mb-1"}>{tr("Recent files & results")}</p>
     {log.map((e, i) => <div key={i} className="flex items-center gap-2 py-2 border-t border-[var(--c-ln)] first:border-t-0">
       <span className="min-w-0 flex-1"><b className="block text-[13.5px] truncate" dir="auto">{e.title}</b>
-        <span className="block text-[11.5px] text-[var(--c-mut)] tabular-nums">{[e.mb ? e.mb + " MB" : "", e.secs ? e.secs + " s" : "", new Date(e.t).toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" })].filter(Boolean).join(" · ")}</span></span>
+        <span className="block text-[11.5px] text-[var(--c-mut)] tabular-nums">{[e.mb ? e.mb + " MB" : "", e.secs ? e.secs + " s" : "", new Date(e.t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })].filter(Boolean).join(" · ")}</span></span>
       <span className={K.tag("green") + " shrink-0"}>{tr("Saved on phone")}</span></div>)}
   </section>;
 }

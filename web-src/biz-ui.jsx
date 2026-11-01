@@ -11,7 +11,7 @@
    the "Tables" tab, so nothing that worked is lost. Logic: erp.js (tables), erp-screens.js (screens), biz-steps.js. */
 import React, { useState, useEffect, useMemo } from "react";
 import { Users, Truck, Gauge, Printer, ShoppingCart, ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench, Smartphone, Monitor } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { ShopApp } from "./shop-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as E from "./erp.js";
@@ -172,7 +172,7 @@ function SysCard({ testid, onClick, icon: I, well, title, short, long, pill, ton
     <ChevronRight size={18} className="text-[var(--c-mut)] rtl:rotate-180 shrink-0 lg:hidden" />
   </button>;
 }
-const whenUpdated = (ms) => { const d = new Date(ms), t = new Date(); const k = (x) => x.toDateString(); if (k(d) === k(t)) return tr("Updated today"); t.setDate(t.getDate() - 1); if (k(d) === k(t)) return tr("Updated yesterday"); return tr("Updated {d}", { d: d.toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }) }); };
+const whenUpdated = (ms) => { const d = new Date(ms), t = new Date(); const k = (x) => x.toDateString(); if (k(d) === k(t)) return tr("Updated today"); t.setDate(t.getDate() - 1); if (k(d) === k(t)) return tr("Updated yesterday"); return tr("Updated {d}", { d: d.toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) }); };
 function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile, intro, onIntro, onIntroDone }) {
   const [books, setBooks] = useState(null);
   useEffect(() => { let on = true; loadBooks().then((b) => on && setBooks(b || null)).catch(() => {}); return () => { on = false; }; }, []);
@@ -180,7 +180,7 @@ function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile,
   const td = useMemo(() => new Date().toISOString().slice(0, 10), []);   // the same day as Books and Shop
   const h = useMemo(() => { try { return books ? hubToday(books, td) : null; } catch (e) { return null; } }, [books, td]);
   const cur = books ? books.currency || "" : "", co = books && books.company ? books.company.name : "";
-  const day = new Date().toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "long" });
+  const day = new Date().toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" });
   const shopPill = shop && h && h.count ? tr("{n} sales", { n: h.count }) : null;
   const booksPill = h && h.low.length ? tr("{n} low stock", { n: h.low.length }) : h && h.overdueCount ? tr("{n} overdue", { n: h.overdueCount }) : null;
   return (

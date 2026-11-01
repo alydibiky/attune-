@@ -7,7 +7,7 @@
    the app opens with the text ready and the person picks the contact. */
 import React, { useEffect, useRef, useState } from "react";
 import { X, Send, Mic, Check, Pencil, Car, MessageCircle, MapPin, Volume2 } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, isRTL } from "./i18n.js";
 import * as V from "./voice-cmd.js";
 import { loadPeople, savePeople } from "./franco.js";
 import { SmsSwitch } from "./sms-ui.jsx";
@@ -177,7 +177,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
     const tile = "w-full min-h-[84px] rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] flex items-center gap-4 px-5 text-[22px] font-black text-start";
     const well = "w-14 h-14 rounded-[20px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0";
     return (
-      <div className="calm fixed inset-0 z-[90] bg-[#0b0e0d] text-[var(--c-ink)] flex flex-col" data-testid="car-mode" dir={ar ? "rtl" : "ltr"}>
+      <div className="calm fixed inset-0 z-[90] bg-[#0b0e0d] text-[var(--c-ink)] flex flex-col" data-testid="car-mode" dir={isRTL() ? "rtl" : "ltr"}>
         <div className="flex items-center gap-2 px-4 pb-2" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}>
           <Car size={24} /><b className="text-[22px] font-black flex-1">{ar ? "وضع العربية" : tr("Car mode")}</b>
           <button onClick={() => setCar(false)} aria-label={tr("Close")} className="w-12 h-12 rounded-full grid place-items-center c-sub" data-testid="car-close"><X size={24} /></button>
@@ -203,7 +203,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
       </div>);
   }
   return (
-    <div className="calm fixed inset-0 z-[90] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col" data-testid="voice-screen" dir={ar ? "rtl" : "ltr"}>
+    <div className="calm fixed inset-0 z-[90] bg-[var(--c-bg)] text-[var(--c-ink)] flex flex-col" data-testid="voice-screen" dir={isRTL() ? "rtl" : "ltr"}>
       <div className="flex items-center gap-2 px-4 pt-4 pb-2" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}>
         <b className="text-[17px] font-black">{ar ? "يا أتيون" : tr("Ya Attune")}</b>
         <span className="text-[11.5px] font-extrabold px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)]">{tr("Offline · private")}</span>

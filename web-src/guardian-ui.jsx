@@ -3,7 +3,7 @@
    others as a total ("3 more ways to save 2,280 EGP") with "Get Pro" — the counter is what Pro is sold on.            */
 import React, { useMemo, useState } from "react";
 import { ShieldCheck, Send, Check, X, Crown, Trash2 } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { findings, loadGuardian, saveGuardian, markSaved, dismiss, savedTotals, noteReminded, removeTxn } from "./guardian.js";
 import { loadLedger } from "./myledger.js";
 import { loadLife } from "./life.js";
@@ -68,7 +68,7 @@ function PriceMemory({ flash }) {
 const SRC = { notification: "From a notification", attune: "Logged in Attune" };
 function TwoPayments({ txns }) {
   const L = loadLedger(), acc = (id) => ((L && L.accounts) || []).find((a) => a.id === id);
-  const when = (t) => t.at ? new Date(t.at).toLocaleTimeString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { hour: "numeric", minute: "2-digit" }) : null;
+  const when = (t) => t.at ? new Date(t.at).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }) : null;
   return <div className="mt-2.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] divide-y divide-[var(--c-ln)]" data-testid="guardian-pair">
     {txns.map((t, i) => <div key={t.id || i} className="flex items-start gap-2 px-3 py-2 text-[12.5px]" data-testid="guardian-pair-row">
       <span className="font-extrabold tabular-nums shrink-0">{i + 1}</span>

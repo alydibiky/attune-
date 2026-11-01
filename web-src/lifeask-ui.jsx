@@ -3,7 +3,7 @@
    the answer on the right. Logic: lifeask.js. Tests: tests/e2e_v731lifeask.py.                                                    */
 import React, { useState } from "react";
 import { Sparkles, Search, Mic, ChevronRight, MessageSquare, Lock, X } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./lifeask.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { page, cardPad, btnP, btnS, inp, label, chip, h1, muted } from "./ui-kit.jsx";
@@ -55,7 +55,7 @@ export function LifeAskPage({ navTo, askChat, listen }) {
         <button className={btnP + " min-w-[48px] px-4"} disabled={!q.trim()} data-testid="lifeask-go"><Search size={16} /></button>
       </form>
       <div><span className={label}>{tr("Try")}</span>
-        <div className="flex flex-wrap gap-2 mt-2">{A.EXAMPLES.map(([en, a]) => <button key={en} onClick={() => ask(ar ? a : en)} className={chip(false).replace("whitespace-nowrap", "").replace(" h-11 ", " ") + " h-auto min-h-[44px] max-w-full py-2 whitespace-normal text-start text-[var(--c-ink)]"} dir="auto" data-testid="lifeask-example">{ar ? a : en}</button>)}</div></div>
+        <div className="flex flex-wrap gap-2 mt-2">{A.EXAMPLES.map(([en, a]) => <button key={en} onClick={() => ask(ar ? a : en)} className={chip(false).replace("whitespace-nowrap", "").replace(" h-11 ", " ") + " h-auto min-h-[44px] max-w-full py-2 whitespace-normal text-start text-[var(--c-ink)]"} dir="auto" data-testid="lifeask-example">{ar ? a : tr(en)}</button>)}</div></div>
       {recent.length ? <div><span className={label}>{tr("Asked before")}</span>
         <div className="mt-1 space-y-1">{recent.map((x) => <button key={x} onClick={() => ask(x)} className={"block w-full min-h-[44px] text-start text-[13.5px] py-2 hover:text-[var(--c-ink)] " + muted} dir="auto">{x}</button>)}</div></div> : null}
       <p className="c-sub text-[12px] m-0 flex gap-1.5 items-start"><Lock size={13} className="shrink-0 mt-0.5" />{tr("Answered from your own records on this device, by code — nothing is sent anywhere, and every number can be checked in the tool it came from.")}</p>

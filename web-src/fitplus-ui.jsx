@@ -1,7 +1,7 @@
 /* ---- Fit & Food, level 2 screens (v6.2): the parts that put Fit "above Yazio by levels" ----
    Faster logging, food quality, Ramadan mode, the day score, the weekly report, body fat, a week
    plan with one shopping list, reminders. The numbers all come from fitplus.js (code).       */
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { LookPicker } from "./fitlook-ui.jsx";
 import { chip } from "./ui-kit.jsx";
 import React, { useState, useMemo, useEffect } from "react";
@@ -172,7 +172,7 @@ export function WeekPlanView({ L, ar, tg, diet, share, close, addToDay }) {
       <div className="flex items-center justify-between"><h3 className="text-[var(--c-ink)] font-semibold">{L("My week", "أسبوعي")}</h3><button onClick={close} className="text-[var(--c-mut)]"><X size={18} /></button></div>
       {week.map((d) => (
         <div key={d.day} className="rounded-xl bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5" data-testid="fit-week-day">
-          <div className="flex justify-between text-[12.5px]"><span className="text-[var(--c-ink)]">{new Date(d.day + "T12:00:00").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span><span className="text-[var(--c-mut)] tabular-nums">{d.plan.total.kcal} {L("kcal", "سعرة")} · {L("Protein", "بروتين")} {Math.round(d.plan.total.p)} {L("g", "جم")}</span></div>
+          <div className="flex justify-between text-[12.5px]"><span className="text-[var(--c-ink)]">{new Date(d.day + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "short" })}</span><span className="text-[var(--c-mut)] tabular-nums">{d.plan.total.kcal} {L("kcal", "سعرة")} · {L("Protein", "بروتين")} {Math.round(d.plan.total.p)} {L("g", "جم")}</span></div>
           {Object.entries(d.plan.meals).map(([slot, m]) => <div key={slot} className="text-[12px] text-[var(--c-mut)] mt-0.5">{names[slot]}: {ar ? m.recipe.ar : tr(m.recipe.en)}{m.x !== 1 ? ` ×${m.x}` : ""} · {m.kcal}</div>)}
         </div>))}
       <div className="rounded-xl bg-[var(--c-surf)] border border-[var(--c-acc)]/40 p-3 space-y-2" data-testid="fit-shopping">

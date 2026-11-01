@@ -113,7 +113,7 @@ export function cycleStats(state, todayKey) {
 export function cycleAnswer(q, state, todayKey, ar = /[\u0600-\u06FF]/.test(q)) {
   const t = String(q || "").toLowerCase(), st = cycleStats(state, todayKey);
   const L = (en, a) => (ar ? a : tr(en));
-  const fd = (k) => fromKey(k).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const fd = (k) => fromKey(k).toLocaleDateString(dateLocale() || "en-GB", { weekday: "short", day: "numeric", month: "short" });
   const has = (re) => re.test(t);
   if (!st.last) return { text: L("Nothing is logged yet. Log your first period (tap the day on the calendar) and I can answer from your own data.", "مفيش حاجة متسجلة لسه. سجّلي أول دورة (اضغطي على اليوم في التقويم) عشان أقدر أرد من بياناتك.") };
   const sinceNext = diffDays(st.nextStart, todayKey);

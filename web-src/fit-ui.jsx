@@ -6,7 +6,7 @@
 import { noteProUse } from "./trialuse.js";
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Mic, Apple, Camera, Search, Plus, Trash2, Loader2, Check, Droplet, Timer, Dumbbell, BarChart3, X, Sparkles, ChevronLeft, Play, Square, Star, Copy, ChevronDown } from "lucide-react";
-import { getLang, tr } from "./i18n.js";
+import { getLang, tr, dateLocale } from "./i18n.js";
 import * as F from "./fit.js";
 import { searchGenerated, getGenerated, GENERATED_COUNT } from "./fit-recipegen.js";
 import * as DB from "./fitdb.js";
@@ -59,7 +59,7 @@ function WatchTop({ w, tot, L, ar }) {
   return <div className="rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 py-2.5 flex items-center gap-3 flex-wrap" data-testid="fit-watch-top">
     <span className="text-[15px] font-black text-[var(--c-ink)] tabular-nums">🔥 {tot.burned} <span className="text-[12px] font-bold text-[var(--c-mut)]">{L("kcal burned", "سعرة محروقة")}{tot.burnedFrom === "watch" && b.est ? " ≈" : ""}</span></span>
     <span className="text-[12.5px] text-[var(--c-mut)] tabular-nums">⌚ {(w.steps || 0).toLocaleString("en-US")} {L("steps", "خطوة")}{k.km ? " · " + (k.est ? "≈" : "") + k.km.toFixed(1) + " km" : ""}{w.hrAvg ? " · ❤ " + w.hrAvg : ""}</span>
-    {w.lastAt ? <span className="text-[11px] text-[var(--c-mut)] ms-auto">{L("updated ", "اتحدث ")}{new Date(w.lastAt).toLocaleTimeString(ar ? "ar-EG-u-nu-latn" : "en-GB", { hour: "numeric", minute: "2-digit" })}</span> : null}
+    {w.lastAt ? <span className="text-[11px] text-[var(--c-mut)] ms-auto">{L("updated ", "اتحدث ")}{new Date(w.lastAt).toLocaleTimeString(dateLocale() || "en-GB", { hour: "numeric", minute: "2-digit" })}</span> : null}
   </div>;
 }
 /** v8.2 (Ali, 26 Oct: "when I press on how it read the food, it opens and shows me the whole thing it read"): what was written,
@@ -177,7 +177,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const [dayKey, setDayKey] = useState(F.today());
   const day = st.days[dayKey] || { meals: {}, water: 0, workouts: [] };
   const tg = useMemo(() => { const t = H.targetsOf(st.profile); return t ? { ...t, kg: +st.profile.kg || 70 } : null; }, [st.profile]);
-  const t = (en) => (ar ? AR[en] || en : en);   // v6.10 home: every new string lives in i18n-ar.js
+  const t = (en) => (ar ? AR[en] || en : tr(en));   // v6.10 home: every new string lives in i18n-ar.js
   // v6.38 (F2): once a week the plan follows what your body really burns (your food + your weight trend), with the reason
   const [coach, setCoach] = useState(null);
   useEffect(() => {
@@ -1320,7 +1320,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
   if (a) {
     const pct = Math.max(0, Math.min(100, Math.round((tot.kcal / Math.max(1, tg.kcal + tot.burned)) * 100)));
     const w = day.watch || null;
-    let dateLine = dayKey; try { dateLine = new Date(dayKey + "T12:00:00").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
+    let dateLine = dayKey; try { dateLine = new Date(dayKey + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
     const MEAL_SIGN = {
       breakfast: ["color-mix(in srgb, var(--c-chart-3) 16%, transparent)", "var(--c-chart-3)", <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>],
       lunch: ["color-mix(in srgb, var(--c-chart-1) 16%, transparent)", "var(--c-chart-1)", <><path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4" /></>],

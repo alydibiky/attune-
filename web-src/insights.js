@@ -13,6 +13,7 @@
      goalFind    an agent's find that fits a goal (the Makkah hotel vs the Umrah money)
    You can dismiss each one (gone for 30 days); a kind you dismiss three times is shown less. No AI — exact and instant.
    Pure; tests: tests/unit/v880insights.test.mjs.                                                                        */
+import { dateLocale } from "./i18n.js";
 import { itemsOf, tagOf, TOPICS, topicName } from "./links.js";
 import { newNames, labelOf } from "./entities.js";
 
@@ -20,7 +21,7 @@ export const SEEN_KEY = "attune:noticed:v1";
 const DAY = 864e5;
 const n0 = (v) => Math.round(v).toLocaleString("en-US");
 const ymd = (ts) => new Date(ts).toISOString().slice(0, 10);
-const fmtDay = (ts, ar) => new Date(ts).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { weekday: "short", day: "numeric", month: "short" });
+const fmtDay = (ts, ar) => new Date(ts).toLocaleDateString(dateLocale() || "en-GB", { weekday: "short", day: "numeric", month: "short" });
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : 0; };
 // a payment's "who / what": the card it names, else its note made plain ("Netflix", «الحلاق») — for rhythms and rises
 const keyOf = (it, t, dir) => {

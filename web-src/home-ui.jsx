@@ -223,7 +223,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const pickAsk = (kind) => { const a = panel; K.savePrefs(K.learn(K.loadPrefs(), a.sig, kind)); let o = null; try { o = cmdRoute(a.text, { files, api: cmd.api, kind }); } catch (e) {} show(o, a.text); };
   // Fleet & rentals is a view inside Business: open Business, then ask it for the Fleet view (as a shared crane order does)
   const openLine = (m) => { if (!m) return; if (m !== "fleet-rentals") return navTo(m); navTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "fleet" })), 80); };
-  const date = now.toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "long" });
+  const date = now.toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" });
   const ICON = { scout: Binoculars, learn: GraduationCap, care: Pill };
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
   return (

@@ -5,7 +5,7 @@
    sentence Money reads from a bank message, confirmed there). Tests: tests/e2e_v727life.py.                                    */
 import React, { useMemo, useState } from "react";
 import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder, isOpenLoan } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { loadGuardian, saveGuardian, collected } from "./guardian.js";
@@ -54,7 +54,7 @@ export function PayBox({ c, ed, setEd, onPay }) {
   </form>;
 }
 const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
-const longDay = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
+const longDay = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
 // persona 9 (Ali picked H-C 1): Sara borrowed four times — one card for Sara with what she owes in all, her loans inside
 const pkey = (c) => String(c.person || "").replace(/[أإآ]/g, "ا").replace(/ة$/, "ه").toLowerCase().trim() + "|" + c.dir;
 function byPerson(items) { const m = new Map(); for (const c of items) { const k = c.person ? pkey(c) : c.id; m.set(k, [...(m.get(k) || []), c]); } return [...m.values()]; }

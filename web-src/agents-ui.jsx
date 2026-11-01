@@ -6,7 +6,7 @@ import * as G from "./guardian.js";
 import { noteProUse } from "./trialuse.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCrossed, Car, LayoutGrid as AppWindow, BellRing, Trash2, RefreshCw, ExternalLink, ChevronRight, ArrowLeft, AlertTriangle, Check, X } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./agents.js";
 import { loadBooking } from "./agent-ui.jsx";
 import * as W from "./watch.js";
@@ -350,7 +350,7 @@ function AgentsReport({ st, scout, alerts, back }) {
     <div className={U.cardPad}>{Object.entries(r.by).map(([k, n]) => <div key={k} className="flex justify-between py-2 border-t border-[var(--c-ln)] first:border-t-0 text-[14px]"><span>{tr(KN[k])}</span><b className="tabular-nums">{n}</b></div>)}</div>
     {st.agents.filter((a) => a.kind === "watch").map((a) => <div key={a.id} className={U.cardPad + " space-y-1"} data-testid="agents-report-watch">
       <p className="m-0 font-extrabold" dir="auto">{a.title}</p>
-      {(a.checks || []).slice().reverse().slice(0, 8).map((c, i) => <div key={i} className="flex justify-between text-[13px] c-sub"><span>{new Date(c.at).toLocaleString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · {tr(c.how === "browser" ? "in the browser" : "by itself")}</span>
+      {(a.checks || []).slice().reverse().slice(0, 8).map((c, i) => <div key={i} className="flex justify-between text-[13px] c-sub"><span>{new Date(c.at).toLocaleString(dateLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · {tr(c.how === "browser" ? "in the browser" : "by itself")}</span>
         <b className={c.price && c.price <= a.below ? "text-[var(--c-pos)]" : ""}>{c.price ? money(c.price, a.currency) : tr("no prices shown")}</b></div>)}
       {!(a.checks || []).length ? <p className="m-0 text-[13px] c-sub">{tr("Not checked yet — tap Check now")}</p> : null}
     </div>)}
@@ -366,7 +366,7 @@ function PriceLine({ a }) {
   return <div className="mt-2" data-testid="agent-history">
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tr("Price over time")}><polyline points={h.points.map((p) => `${X(p.at)},${Y(p.price)}`).join(" ")} fill="none" stroke="var(--c-acc)" strokeWidth="2" />
       <circle cx={X(h.low.at)} cy={Y(h.low.price)} r="3.5" fill="var(--c-pos, #1E7A43)" /></svg>
-    <p className="m-0 text-[12px] c-sub">{tr("Lowest {p} on {d}", { p: money(h.low.price, a.currency), d: new Date(h.low.at).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short" }) })}
+    <p className="m-0 text-[12px] c-sub">{tr("Lowest {p} on {d}", { p: money(h.low.price, a.currency), d: new Date(h.low.at).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) })}
       {" · "}{h.trend === "down" ? tr("going down ({c}%)", { c: h.change }) : h.trend === "up" ? tr("going up (+{c}%)", { c: h.change }) : tr("about the same")}
       {h.lowDay != null ? " · " + tr("usually cheapest on {d}", { d: (ar ? WD_AR : WD)[h.lowDay] }) : ""}</p>
   </div>;

@@ -3,7 +3,7 @@
    screen gets the records and a setter from the app, like Mind does.                             */
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Lock, Mic, PenLine, Menu, AlarmClock, Search, Plus, MoreVertical, X, Star, Bell, Trash2, Copy, Share2, Brain, ArrowUp, ArrowDown, Folder, Check, ImagePlus, Undo2, Camera, ChevronLeft, ChevronRight, Square, BookOpen, Download } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as S from "./shelf.js";
 import * as R from "./shelfreview.js";
 import * as SI from "./shelf-import.js";
@@ -14,7 +14,7 @@ import { askConfirm } from "./confirm.jsx";
 import { card, btnP, btnS, inp, area, label, h1, chip } from "./ui-kit.jsx";
 
 const bookName = (b) => (!b ? "" : b.id === S.MY_BOOK && !b.named && b.name === S.MY_BOOK_NAME ? tr("My Book") : b.name);
-const fmtWhen = (t) => { try { return new Date(t).toLocaleString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
+const fmtWhen = (t) => { try { return new Date(t).toLocaleString(dateLocale(), { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
 const localInput = (t) => { const d = new Date(t - new Date(t).getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); };
 
 /** A picture → a cover: cropped to 3:4 from the middle, at most 600 px tall, JPEG. */

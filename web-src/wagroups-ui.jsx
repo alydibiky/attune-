@@ -5,7 +5,7 @@
    the phone's side (photos kept, what is in them): WaGroups.kt. Chat X-Ray's money & promises stay one tap away.   */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Search, Plus, X, Loader2, Trash2, Wallet } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as W from "./wagroups.js";
 import * as S from "./wagroups-store.js";
 import * as U from "./ui-kit.jsx";
@@ -15,8 +15,8 @@ const N = () => (typeof window !== "undefined" && window.AttuneNative) || null;
 const onPhone = () => !!(N() && typeof N().waLook === "function");   // the Android app keeps the photos as files (/wa/…)
 const KIND_IDS = ["design", "news", "religion", "recipes", "other"];
 const nm = (x, ar) => (ar && x.ar ? x.ar : tr(x.en));
-const fmtDay = (t, ar) => new Date(t).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short", year: "numeric" });
-const fmtMonth = (t, ar) => new Date(t).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "long", year: "numeric" });
+const fmtDay = (t, ar) => new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: "numeric" });
+const fmtMonth = (t, ar) => new Date(t).toLocaleDateString(dateLocale(), { month: "long", year: "numeric" });
 
 // a photo: a file the phone keeps (/wa/…) in the Android app, a Blob kept in IndexedDB in the browser
 function Photo({ gid, file, className = "", alt = "" }) {

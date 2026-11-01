@@ -25,37 +25,38 @@ VISIBLE = r"""() => { const out = new Set(); const w = document.createTreeWalker
 summary = []
 MASTER = set(json.load(open(os.path.join(os.path.dirname(__file__), "..", "web-src", "i18n-master.json")))) if os.path.exists(os.path.join(os.path.dirname(__file__), "..", "web-src", "i18n-master.json")) else set()
 # the language names in the switch, AI product names: shown as they are in every language
-NAMES = set("English العربية Français Español Türkçe Português Deutsch Italiano Русский Kiswahili Nederlands Polski Indonesia ChatGPT Claude Cursor DeepSeek Gemini Grok Kimi Llama Perplexity NotebookLM Copilot".split()) | {"GitHub Copilot", "Mistral / Le Chat", "Bahasa Indonesia", "Tiếng Việt"}
+NAMES = set("Qwen Python JavaScript English العربية Français Español Türkçe Português Deutsch Italiano Русский Kiswahili Nederlands Polski Indonesia ChatGPT Claude Cursor DeepSeek Gemini Grok Kimi Llama Perplexity NotebookLM Copilot".split()) | {"GitHub Copilot", "Mistral / Le Chat", "Bahasa Indonesia", "Tiếng Việt"}
 env = Env()
 with sync_playwright() as p:
     br = p.chromium.launch()
     for lang in LANGS:
-        errors, missing, raw = [], set(), set()
+        errors, missing, raw, where, same = [], set(), set(), {}, set()
         init = "window.__trMiss = new Set(); try{localStorage.setItem('attune:ui:lang','%s');localStorage.setItem('attune:start','home')}catch(e){}" % lang
         ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=init)
         page.set_viewport_size({"width": 390, "height": 900})
         page.goto(env.url); page.wait_for_timeout(1800)
-        def grab():
+        def grab(at="home"):
             try:
-                missing.update(page.evaluate("[...(window.__trMiss||[])]")); raw.update(page.evaluate(VISIBLE))
+                missing.update(page.evaluate("[...(window.__trMiss||[])]")); same.update(page.evaluate("[...((window.__trMiss||{}).same||[])]")); seen = page.evaluate(VISIBLE); raw.update(seen)
+                for t in seen: where.setdefault(t, at)
             except Exception: pass
         grab()
         for m in MODES:
             try:
-                page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", m); page.wait_for_timeout(450); grab()
+                page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", m); page.wait_for_timeout(450); grab(m)
                 # the page's own tabs / parts, once each
                 for sel in ["[data-testid^=hub-part-]", "[data-testid^=hub-tab-]"]:
                     for i in range(min(page.locator(sel).count(), 8)):
-                        try: page.locator(sel).nth(i).click(timeout=800); page.wait_for_timeout(250); grab()
+                        try: page.locator(sel).nth(i).click(timeout=800); page.wait_for_timeout(250); grab(m)
                         except Exception: pass
             except Exception: pass
         ctx.close()
         # visible English: a line of the app's own English shown as-is, or (non-Latin languages) a sentence that is mostly Latin letters
         latin = lambda t: len(re.findall(r"[A-Za-z]", t)); other = lambda t: len(re.findall(r"[^\x00-\x7F\u00C0-\u024F\s\d\W]", t))
         NONLATIN = lang in ("ar", "arb", "ur", "fa", "hi", "bn", "ru", "zh", "ja", "ko", "th")
-        raw_bad = sorted(t for t in raw if not OK.match(t) and t not in missing and (t in MASTER or (NONLATIN and len(t.split()) >= 3 and latin(t) > 3 * max(1, other(t)))))
+        raw_bad = sorted(t for t in raw if not OK.match(t) and t not in missing and t not in same and t not in NAMES and (t in MASTER or (NONLATIN and len(t.split()) >= 3 and latin(t) > 3 * max(1, other(t)))))
         miss_bad = sorted(t for t in missing if not OK.match(t) and t not in NAMES)
-        rep = {"missing": miss_bad, "raw": raw_bad, "errors": [e for e in errors][:20]}
+        rep = {"missing": miss_bad, "raw": raw_bad, "where": {t: where.get(t) for t in raw_bad}, "errors": [e for e in errors][:20]}
         json.dump(rep, open(os.path.join(OUT, lang + ".json"), "w"), ensure_ascii=False, indent=1)
         line = f"{lang}: {len(miss_bad)} lines without a translation, {len(raw_bad)} visible English texts, {len(errors)} page errors"
         print(line, flush=True); summary.append(line)

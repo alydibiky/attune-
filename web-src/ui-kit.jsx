@@ -4,6 +4,7 @@
    only from the theme tokens in build/tw.css (.calm: --c-bg --c-surf --c-surf-2 --c-ink --c-mut --c-ln --c-acc --c-acc-2
    --c-on-acc --c-on-acc-2 --c-soft --c-pos --c-warn --c-neg), so light and dark both work. A page's root gets the class "calm".
    Rules (GEMINI_DESIGN_BRIEF.md): logical classes only (ps/pe/ms/me/start/end), touch targets ≥ 44 px, no blur on big areas. */
+import { tr } from "./i18n.js";
 import React from "react";
 import { ChevronRight, Camera, Mic, ArrowUp, Loader2 } from "lucide-react";
 
@@ -33,7 +34,7 @@ export const tag = (tone = "gray") => "inline-flex items-center gap-1 text-[11px
 /** Segmented choice: a row of chips, the chosen one terracotta. items = [[value, label], …] (labels already translated). */
 export function Seg({ value, onChange, items, testid }) {
   return <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" data-testid={testid} role="tablist">{items.map(([v, l]) =>
-    <button key={v} role="tab" aria-selected={value === v} onClick={() => onChange(v)} data-testid={testid ? testid + "-" + v : undefined} className={chip(value === v)}>{l}</button>)}</div>;
+    <button key={v} role="tab" aria-selected={value === v} onClick={() => onChange(v)} data-testid={testid ? testid + "-" + v : undefined} className={chip(value === v)}>{typeof l === "string" ? tr(l) : l}</button>)}</div>;
 }
 /** A KPI tile: a quiet label, a big number (tabular), an optional pill and bar. */
 export function Kpi({ label: l, value, pill, pct, tone, testid, sub }) {
@@ -74,7 +75,7 @@ export function EmptyStart({ title, sub, examples = [], onPick, testid = "empty-
       <b className="block text-[16px] font-extrabold">{title}</b>
       {sub ? <p className={"m-0 text-[13px] " + muted}>{sub}</p> : null}
       {examples.length ? <div className="flex flex-wrap justify-center gap-1.5 pt-1">{examples.map((x) => (
-        <button key={x} type="button" onClick={() => onPick && onPick(x)} className="min-h-[40px] px-3.5 rounded-full border border-[var(--c-ln)] bg-[var(--c-bg)] text-[13px] font-bold text-[var(--c-ink)] hover:border-[var(--c-acc)]" dir="auto" data-testid={testid + "-ex"}>“{x}”</button>))}</div> : null}
+        <button key={x} type="button" onClick={() => onPick && onPick(x)} className="min-h-[40px] px-3.5 rounded-full border border-[var(--c-ln)] bg-[var(--c-bg)] text-[13px] font-bold text-[var(--c-ink)] hover:border-[var(--c-acc)]" dir="auto" data-testid={testid + "-ex"}>“{tr(x)}”</button>))}</div> : null}
     </div>);
 }
 

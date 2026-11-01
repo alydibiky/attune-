@@ -3,7 +3,7 @@
    3 months. Logic in planner.js (Actual Budget's envelope idea, MIT). The Home box does the same in words («خطة الشهر»).       */
 import React, { useMemo, useState } from "react";
 import { Plus, PiggyBank } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, isRTL, dateLocale } from "./i18n.js";
 import { loadPots, savePots, addPot, fundPot, planMonth, potIntent } from "./planner.js";
 import { loadLedger } from "./myledger.js";
 import { loadLife } from "./life.js";
@@ -22,7 +22,7 @@ function YearSheet({ ledger, pots, cur, flash, year, setYear, toGoals }) {
   const ar = getLang() === "ar";
   const g = useMemo(() => yearGrid({ ledger, life: loadLife(), pots, plan, year, ar }), [ledger, pots, plan, year]);
   const put = (rowId, month, v) => setPlan(saveYearPlan(setCell(plan, rowId, month, String(v).replace(/,/g, "").trim())));
-  const mon = (m) => new Date(m + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "short" });
+  const mon = (m) => new Date(m + "-15").toLocaleDateString(dateLocale(), { month: "short" });
   const excel = () => {
     const name = `attune-year-plan-${year}.xlsx`, bytes = xlsxFromRows(yearRows(g, ar), (ar ? "خطة " : tr("Plan ")) + year);
     let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
@@ -54,7 +54,7 @@ function YearSheet({ ledger, pots, cur, flash, year, setYear, toGoals }) {
       </div>
       <p className={"m-0 text-[12px] " + U.muted}>{tr("Grey = what happened. The rest is the plan — tap any cell to type your own number, like Excel.")}</p>
       <div className={U.card + " overflow-x-auto"}>
-        <table className="text-[12.5px] border-separate border-spacing-0 min-w-full" dir={ar ? "rtl" : "ltr"}>
+        <table className="text-[12.5px] border-separate border-spacing-0 min-w-full" dir={isRTL() ? "rtl" : "ltr"}>
           <thead><tr>
             <th className={stick + " " + cellCls + " text-start font-extrabold"}>{tr("Item")}</th>
             {g.months.map((m, k) => <th key={m} className={cellCls + " font-extrabold " + (k === g.nowIdx ? "text-[var(--c-acc)]" : "")}>{mon(m)}</th>)}
@@ -90,7 +90,7 @@ function YearGoals({ ledger, pots, save, cur, flash, year, setYear, toSheet }) {
   const ar = getLang() === "ar";
   const g = useMemo(() => yearGrid({ ledger, life: loadLife(), pots, plan, year, ar }), [ledger, pots, plan, year]);
   const y = useMemo(() => goalsOfYear(g), [g]);
-  const mon = (k, long) => new Date(g.months[k] + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: long ? "long" : "short" });
+  const mon = (k, long) => new Date(g.months[k] + "-15").toLocaleDateString(dateLocale(), { month: long ? "long" : "short" });
   const put = (rowId, k, v) => setPlan(saveYearPlan(setCell(plan, rowId, g.months[k], String(v).replace(/,/g, "").trim())));
   const add = () => {
     const p = potIntent(text) || potIntent((ar ? "احوش " : tr("save ")) + text);
@@ -109,10 +109,10 @@ function YearGoals({ ledger, pots, save, cur, flash, year, setYear, toSheet }) {
         </div>
         <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={toSheet} data-testid="year-to-sheet">{tr("Sheet & Excel")}</button>
       </div>
-      {y.goals.map((x) => { const p = potOf(x.id), name = KIND_NAME[p.kind] && (p.name === KIND_NAME[p.kind][0] || p.name === KIND_NAME[p.kind][1]) ? KIND_NAME[p.kind][ar ? 1 : 0] : x.name;
+      {y.goals.map((x) => { const p = potOf(x.id), name = KIND_NAME[p.kind] && (p.name === KIND_NAME[p.kind][0] || p.name === KIND_NAME[p.kind][1]) ? (ar ? KIND_NAME[p.kind][1] : tr(KIND_NAME[p.kind][0])) : x.name;
         return <div key={x.id} className={U.cardPad + " space-y-1"} data-testid="year-goal">
           <div className="flex items-baseline justify-between gap-2"><b className="text-[15px] font-extrabold min-w-0 truncate" dir="auto">{name}</b>
-            <span className="text-[13.5px] font-black tabular-nums shrink-0" dir="ltr">{p.target > 0 ? fmt(p.target) + (p.by ? " · " + new Date(p.by + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "short", year: "numeric" }) : "") : fmt(p.per || x.monthly) + " " + tr("/ month")}</span></div>
+            <span className="text-[13.5px] font-black tabular-nums shrink-0" dir="ltr">{p.target > 0 ? fmt(p.target) + (p.by ? " · " + new Date(p.by + "-15").toLocaleDateString(dateLocale(), { month: "short", year: "numeric" }) : "") : fmt(p.per || x.monthly) + " " + tr("/ month")}</span></div>
           <p className={"m-0 text-[12.5px] " + U.muted}>{x.months.length ? tr("{a} a month · {f} → {l}", { a: fmt(x.monthly), f: mon(x.first), l: mon(x.last) }) : tr("Nothing to put aside this year")}
             {" · "}{x.tight.length ? <b className="text-[var(--c-warn)]" data-testid="year-goal-tight">{tr("short in {m}", { m: x.tight.map((k) => mon(k)).join(", ") })}</b> : <b className="text-[var(--c-pos)]">{tr("on track")}</b>}
             {" · "}<button className={"font-bold underline-offset-2 hover:underline hover:text-[var(--c-neg)] " + U.muted} onClick={() => save({ ...pots, pots: pots.pots.filter((q) => q.id !== x.id) })} data-testid="year-goal-remove">{tr("Remove")}</button></p>
@@ -163,10 +163,10 @@ export function PlannerPage({ flash }) {
   const ledger = useMemo(() => loadLedger(), [tick]), cur = homeCurrency(ledger);
   const plan = useMemo(() => planMonth({ ledger, life: loadLife(), pots, now: Date.now() }), [ledger, pots, tick]);
   const save = (p) => setPots(savePots(p));
-  const monthName = new Date(plan.month + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "long" });
+  const monthName = new Date(plan.month + "-15").toLocaleDateString(dateLocale(), { month: "long" });
   const parts = [["fixed", tr("Fixed"), plan.fixedTotal], ["pots", tr("Savings"), plan.potsTotal], ["flex", tr("Everyday"), plan.flexTotal], ["free", tr("Free"), plan.free]];
   const total = Math.max(1, plan.income || parts.reduce((a, p) => a + p[2], 0));
-  const nm = (p) => (KIND_NAME[p.kind] ? KIND_NAME[p.kind][ar ? 1 : 0] : p.name);
+  const nm = (p) => (KIND_NAME[p.kind] ? (ar ? KIND_NAME[p.kind][1] : tr(KIND_NAME[p.kind][0])) : p.name);
   const addGoal = () => {
     const t = +String(target).replace(/,/g, ""); if (!name.trim() || !(t > 0)) return;
     save(addPot(pots, how === "month" ? { name: name.trim(), kind: "other", target: 0, per: t } : { name: name.trim(), kind: "other", target: t, by: /^\d{4}-\d{2}$/.test(by) ? by : "" }));
@@ -201,7 +201,7 @@ export function PlannerPage({ flash }) {
             <div key={p.id} className={U.cardPad + " space-y-1.5"} data-testid="planner-goal">
               <div className="flex items-baseline justify-between gap-2"><b className="text-[15px] font-extrabold" dir="auto">{nm(p)}</b><span className="text-[14px] font-black tabular-nums c-acc" dir="ltr">{fmt(p.monthly)} {tr("/ month")}</span></div>
               <div className="h-2 rounded-full bg-[var(--c-surf-2)] overflow-hidden"><i className="block h-2 rounded-full bg-[var(--c-acc)]" style={{ width: Math.min(100, p.target ? ((p.saved || 0) / p.target) * 100 : 0) + "%" }} /></div>
-              <div className={"text-[12.5px] " + U.muted}>{p.per > 0 && !p.target ? tr("{a} saved · {y} a year · {e} by 31 Dec", { a: fmt(p.saved || 0), y: fmt(p.yearly), e: fmt(p.byYearEnd) }) : tr("{a} of {b}", { a: fmt(p.saved || 0), b: fmt(p.target) })}{p.by ? " · " + tr("by {d}", { d: new Date(p.by + "-15").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { month: "long", year: "numeric" }) }) : ""}{p.kind === "emergency" ? " · " + tr("3 months of spending") : ""}</div>
+              <div className={"text-[12.5px] " + U.muted}>{p.per > 0 && !p.target ? tr("{a} saved · {y} a year · {e} by 31 Dec", { a: fmt(p.saved || 0), y: fmt(p.yearly), e: fmt(p.byYearEnd) }) : tr("{a} of {b}", { a: fmt(p.saved || 0), b: fmt(p.target) })}{p.by ? " · " + tr("by {d}", { d: new Date(p.by + "-15").toLocaleDateString(dateLocale(), { month: "long", year: "numeric" }) }) : ""}{p.kind === "emergency" ? " · " + tr("3 months of spending") : ""}</div>
               <div className="flex gap-2 pt-0.5">
                 <input className={U.inp + " h-10! min-h-[40px]!"} inputMode="decimal" placeholder={fmt(p.monthly || 0)} value={put[p.id] || ""} onChange={(e) => setPut({ ...put, [p.id]: e.target.value })} aria-label={tr("Amount")} data-testid="planner-put-amount" />
                 <button className={U.btnS + " h-10! min-h-[40px]! shrink-0"} onClick={() => { const a = +String(put[p.id] || p.monthly || 0).replace(/,/g, ""); if (a > 0) { save(fundPot(pots, p.id, a)); setPut({ ...put, [p.id]: "" }); flash && flash(tr("Put aside — Safe to spend keeps it apart")); } }} data-testid="planner-put">{tr("Put money in")}</button>
@@ -222,7 +222,7 @@ export function PlannerPage({ flash }) {
       <div className={U.cardPad} data-testid="planner-everyday">
         <p className={U.label + " m-0 mb-2"}>{tr("Everyday (your last 3 months)")}</p>
         {plan.flexible.length ? <div className="space-y-1.5">{plan.flexible.slice(0, 8).map((f) => (
-          <div key={f.cat} className="flex items-center justify-between text-[14px] font-semibold"><span>{CAT_NAME[f.cat] ? CAT_NAME[f.cat][ar ? 1 : 0] : f.cat}</span>
+          <div key={f.cat} className="flex items-center justify-between text-[14px] font-semibold"><span>{CAT_NAME[f.cat] ? (ar ? CAT_NAME[f.cat][1] : tr(CAT_NAME[f.cat][0])) : f.cat}</span>
             <span className="tabular-nums" dir="ltr">{f.plan !== f.avg ? <s className={U.muted + " me-2 text-[12.5px]"}>{fmt(f.avg)}</s> : null}<b>{fmt(f.plan)}</b></span></div>))}</div>
           : <p className={"m-0 text-[13px] " + U.muted}>{tr("After a month of spending in Money, your usual food, transport and shopping show here.")}</p>}
       </div>

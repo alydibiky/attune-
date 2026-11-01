@@ -40,7 +40,7 @@ export function AutomationsPage({ native, flash }) {
         {READY.map(([id, en, arT, icon]) => { const on = readyOn(s, ar ? arT : en) || readyOn(s, en); return (
           <div key={id} className="flex items-center gap-3 min-h-[56px] border-t border-[var(--c-ln)] first-of-type:border-t-0" data-testid="auto-ready-rule" data-id={id}>
             <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0 text-[18px]" aria-hidden="true">{icon}</span>
-            <span className="flex-1 min-w-0 text-[13.5px] font-bold" dir="auto">{ar ? arT : en}</span>
+            <span className="flex-1 min-w-0 text-[13.5px] font-bold" dir="auto">{ar ? arT : tr(en)}</span>
             <button onClick={() => { if (on) put({ ...s, rules: s.rules.filter((x) => x.id !== on.id) }); else { put(addRule(s, parseAutomation(ar ? arT : en))); flash && flash(tr("Automation on — it runs on the phone, no AI needed")); } }}
               aria-pressed={!!on} data-testid="auto-ready-toggle"
               className={"min-h-[40px] px-3.5 rounded-full text-[13px] font-extrabold border shrink-0 " + (on ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-ink)]")}>{on ? tr("On") : tr("Turn on")}</button>

@@ -3,7 +3,7 @@
    the page that owns it. Code only (timeline.js), from the same stores those pages keep. */
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Bell, Radar, Users, Wallet, MessageSquare, AlertTriangle, ShieldCheck as ShieldAlert, Plus, Check } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { timeline, byDay, totals, daysFrom, GROUP_OF } from "./timeline.js";
 import { findings as guardianFindings, loadGuardian, saveGuardian, collected } from "./guardian.js";
 import { loadLife, saveLife, payAmount, progressOf } from "./life.js";
@@ -27,7 +27,7 @@ function dayLabel(date) {
   if (n === 0) return tr("Today");
   if (n === 1) return tr("Tomorrow");
   if (n < 0) return tr("{n} days late", { n: -n });
-  try { return new Date(date + "T12:00:00").toLocaleDateString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return date; }
+  try { return new Date(date + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return date; }
 }
 const money = (x) => (x.amount ? (x.cur ? x.cur + " " : "") + fmt(x.amount) : "");
 
@@ -112,7 +112,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
                         <span className="text-[14.5px] font-extrabold truncate" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : x.what}</span>
                         {x.amount ? <span className="tabular-nums font-extrabold text-[13.5px] shrink-0" dir="ltr">{money(x)}</span> : null}
                       </span>
-                      <span className={"block text-[12px] " + U.muted}>{tr(KIND[x.kind] || x.kind)}{x.time ? " · " + new Date(x.time).toLocaleTimeString(getLang() === "ar" ? "ar-EG-u-nu-latn" : undefined, { hour: "numeric", minute: "2-digit" }) : ""}</span>
+                      <span className={"block text-[12px] " + U.muted}>{tr(KIND[x.kind] || x.kind)}{x.time ? " · " + new Date(x.time).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }) : ""}</span>
                       <span className={"block text-[12px] mt-0.5 " + (x.late ? "font-bold text-[var(--c-neg)]" : U.muted)} data-testid="timeline-slip">
                         {x.late ? <AlertTriangle size={12} className="inline me-1 -mt-0.5" /> : null}
                         {x.D ? tr(x.D[0], x.D[1]) + " — " : ""}{tr(x.slip[0], { amount: money(x) || "", who: x.who || "" })}</span>

@@ -3,7 +3,7 @@
    (MessageWatch.kt). Rules and the short log of alerts stay on the phone. */
 import React, { useEffect, useState } from "react";
 import { MessageSquare, Trash2, AlertTriangle, BellRing } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as W from "./watch.js";
 import { cardPad, btnP, inp, label, chip } from "./ui-kit.jsx";
 import { SmsSwitch } from "./sms-ui.jsx";
@@ -39,7 +39,7 @@ export function WatchPanel({ native: N, flash }) {
           className={inp + " flex-1"} />
         <button className={btnP + " !h-11 !min-h-[44px] shrink-0"} data-testid="watch-add">{tr("Add")}</button>
       </form>
-      {!shown.length ? <div className="flex flex-wrap gap-1.5">{EX.map(([en, a]) => <button key={en} onClick={() => add(ar ? a : en)} className={chip(false) + " !h-auto min-h-[40px] py-2 !whitespace-normal text-start"} dir="auto" data-testid="watch-example">{ar ? a : en}</button>)}</div> : null}
+      {!shown.length ? <div className="flex flex-wrap gap-1.5">{EX.map(([en, a]) => <button key={en} onClick={() => add(ar ? a : en)} className={chip(false) + " !h-auto min-h-[40px] py-2 !whitespace-normal text-start"} dir="auto" data-testid="watch-example">{ar ? a : tr(en)}</button>)}</div> : null}
       {shown.length ? <ul className="m-0 p-0 list-none space-y-1.5" data-testid="watch-rules">{shown.map((r) => (
         <li key={r.id} className="flex items-center gap-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] ps-3 pe-1 min-h-[52px]" data-testid="watch-rule">
           <MessageSquare size={14} className={r.on ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]"} />
@@ -48,6 +48,6 @@ export function WatchPanel({ native: N, flash }) {
           <button onClick={() => put(rules.filter((x) => x.id !== r.id))} aria-label={tr("Delete")} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]"><Trash2 size={15} /></button>
         </li>))}</ul> : null}
       {hits.length ? <div className="space-y-1" data-testid="watch-hits"><p className={label + " m-0"}>{tr("Last alerts")}</p>
-        {hits.map((h, i) => <p key={i} className="text-[12.5px] tabular-nums text-[var(--c-ink)] m-0 truncate" dir="auto"><b>{h.who}</b> · {h.app} · {new Date(h.ts).toLocaleString(ar ? "ar-EG-u-nu-latn" : undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} — {h.text}</p>)}</div> : null}
+        {hits.map((h, i) => <p key={i} className="text-[12.5px] tabular-nums text-[var(--c-ink)] m-0 truncate" dir="auto"><b>{h.who}</b> · {h.app} · {new Date(h.ts).toLocaleString(dateLocale(), { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} — {h.text}</p>)}</div> : null}
     </div>);
 }

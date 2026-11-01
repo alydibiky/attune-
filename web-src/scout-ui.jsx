@@ -187,7 +187,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         <span className={K.label}>{tr("What should Scout look for?")}</span>
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} dir="auto" placeholder={tr("e.g. a 3-bedroom flat for rent in Maadi under 15,000, not ground floor")} className={field} style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} data-testid="scout-text" />
         <button className={K.btnP} disabled={!text.trim()} onClick={() => add()} data-testid="scout-add"><Plus size={15} />{tr("Start scouting")}</button>
-        <div className="flex flex-wrap gap-1.5 pt-1">{(MINIMAL ? EXAMPLES.slice(0, 2) : EXAMPLES).map(([en, a]) => <button key={en} onClick={() => setText(ar ? a : en)} className={K.chip(false) + " !whitespace-normal text-start !h-auto py-2"} dir="auto" data-testid="scout-example">{ar ? a : en}</button>)}</div>
+        <div className="flex flex-wrap gap-1.5 pt-1">{(MINIMAL ? EXAMPLES.slice(0, 2) : EXAMPLES).map(([en, a]) => <button key={en} onClick={() => setText(ar ? a : en)} className={K.chip(false) + " !whitespace-normal text-start !h-auto py-2"} dir="auto" data-testid="scout-example">{ar ? a : tr(en)}</button>)}</div>
       </div>
       {data.goals.length ? <div className="space-y-2" data-testid="scout-goals"><span className={K.label}>{tr("Your goals")}</span>
         {data.goals.map((x) => (

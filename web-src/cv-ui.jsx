@@ -4,7 +4,7 @@
    (cv-ai.js, every number checked by code). Logic: cv.js, cv-ai.js.                                                         */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Plus, Trash2, Copy, Share2, Download, Upload, ChevronLeft, ChevronDown, ArrowUp, ArrowDown, Check, X, Sparkles, FileText, Camera, AlertTriangle, Info, Volume2, Mic } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
 import * as V from "./cv.js";
 import * as A from "./cv-ai.js";
