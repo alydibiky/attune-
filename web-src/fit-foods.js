@@ -114,6 +114,7 @@ export const MORE_FOODS = [
   ["fries-large", "Fries (large)", "بطاطس كبيرة", 312, 3.4, 41, 15, 3.8, { portion: 150 }, "grains"],
   ["onion-rings", "Onion rings", "حلقات بصل|أونيون رينجز", 411, 4.5, 38, 27, 2.4, { portion: 100 }, "grains"],
   ["hotdog-sandwich", "Hot dog sandwich", "ساندوتش هوت دوج", 290, 10, 24, 17, 1, { piece: 150 }, "dishes"],
+  ["club-sandwich", "Club sandwich", "كلوب ساندوتش", 230, 13, 18, 12, 1.5, { piece: 250 }, "dishes"],
   ["tuna-sandwich", "Tuna sandwich", "ساندوتش تونة", 230, 12, 25, 9, 2, { piece: 180 }, "dishes"],
   ["cheese-sandwich", "Cheese sandwich (white cheese)", "ساندوتش جبنة|ساندوتش جبنة بيضا", 250, 10, 30, 10, 2, { piece: 130 }, "dishes"],
   ["egg-sandwich", "Egg sandwich", "ساندوتش بيض", 230, 10, 25, 10, 2, { piece: 150 }, "dishes"],
