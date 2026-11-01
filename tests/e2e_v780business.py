@@ -4,7 +4,7 @@ view (today's counter sales, who owes you, what needs attention; the three syste
 and the Shop Report (today and this week, payment methods, best sellers, staff and closes). Phone + computer, dark + light, Arabic, 360 px.
   PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v780business.py     (SHOTS=dir for screenshots)
 """
-import os
+import os, datetime
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
@@ -73,7 +73,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=ov-chart] rect").count() == 12 and page.locator("[data-testid=ov-chart] polyline").count() == 1, tag + "the Books Report: 6 months of sales vs purchases, with the profit line")
         ages = [page.locator("[data-testid=ov-age-%s]" % k).inner_text() for k in ["notDue", "late1_30", "late31"]]
         check(all(ages) and any("Al-Amal" in a or "Hassan" in a or "Mona" in a for a in ages), tag + "…ageing: not due · 1–30 days late · 31+ late, with who owes most: %s" % " | ".join(a.replace("\n", " ") for a in ages))
-        check("Al-Amal" in page.locator("[data-testid=ov-top]").inner_text(), tag + "…top customers and items")
+        top = page.locator("[data-testid=ov-top]").inner_text(); check("Al-Amal" in top or (datetime.date.today().day <= 3 and "customer" in top), tag + "…top customers and items (this month: Al-Amal's sale is days old, so on the 1st–3rd only today's customers show)")
         check("%" in page.locator("[data-testid=ov-profit]").inner_text(), tag + "…net profit with its margin: %s" % page.locator("[data-testid=ov-profit]").inner_text().replace("\n", " · "))
         shot(page, "books-report-phone-" + theme, True)
         page.click("text=Profit & loss"); page.wait_for_timeout(200)

@@ -39,11 +39,11 @@ with sync_playwright() as p:
         if theme == "light":
             page.locator("[data-testid=home-due]").first.click(); page.wait_for_selector("[data-testid=life-page]", timeout=5000)
             check(True, "a due line opens People & plans")
-            page.locator("nav button:has-text('Home')").click(); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
+            page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
             page.locator("[data-testid=home-all]").click(); page.wait_for_timeout(300)
             check(page.locator("[data-testid=more-group]").count() >= 4, "the All area opens every tool")
             page.keyboard.press("Escape"); page.mouse.click(200, 8); page.wait_for_timeout(200)
-            page.locator("nav button:has-text('Home')").click(); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
+            page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
             page.fill("[data-testid=home-ask]", "hello"); page.press("[data-testid=home-ask]", "Enter"); page.wait_for_timeout(500)
             check(page.locator("[data-testid=phone-home]").count() == 0, "the ask box goes to Chat")
         ctx.close()

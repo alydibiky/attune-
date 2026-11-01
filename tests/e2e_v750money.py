@@ -23,6 +23,10 @@ L = {"currency": "EGP", "accounts": [{"id": "c", "name": "Cash", "emoji": "💵"
      "budgets": {"overall": 6450, "cats": {}},
      "recurring": [{"id": "r1", "type": "expense", "amount": 400, "cat": "bills", "account": "b", "freq": "monthly", "nextDate": (T + datetime.timedelta(days=3)).isoformat(), "note": "Electricity", "active": True}],
      "debts": [], "customCats": [], "goals": [], "projects": [], "notes": [], "zakatPayments": [], "zakatHistory": []}
+# on the first days of a month several "n days ago, but still this month" dates are the same day: the time they were
+# entered (ts, as real entries have) keeps "newest first" true on any date
+_AGO = {"t1": 5, "t2": 3, "t3": 1, "t4": 0, "t5": 8, "t6": 40, "t7": 38}
+for _t in L["txns"]: _t["ts"] = 1_700_000_000_000 - _AGO.get(_t["id"], 50) * 86_400_000
 LIFE = {"v": 1, "items": [{"id": "a1", "kind": "installment", "person": "Ahmed", "dir": "in", "amount": 1000, "count": 12, "total": 12000, "every": "month",
           "start": (m1 - datetime.timedelta(days=120)).replace(day=25).isoformat(), "currency": "EGP", "paid": [0, 1, 2, 3], "title": ""},
          {"id": "c1", "kind": "circle", "dir": "out", "amount": 2000, "count": 10, "every": "month", "start": (m1 - datetime.timedelta(days=150)).replace(day=1).isoformat(), "currency": "EGP", "paid": [0, 1, 2, 3, 4], "myTurn": 7, "title": "Family savings circle"}]}

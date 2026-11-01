@@ -21,7 +21,7 @@ with sync_playwright() as p:
     # ---- reports
     tab(page, "reports"); chip(page, "Balance sheet"); page.wait_for_selector("[data-testid=books-bs]")
     check("the books balance" in page.inner_text("[data-testid=books-bs]"), "Reports → Balance sheet: assets = liabilities + equity")
-    chip(page, "Cash flow"); page.wait_for_selector("[data-testid=books-cf]")
+    chip(page, "Cash flow"); page.wait_for_selector("[data-testid=books-cf]"); chip(page, "All time")   # the sample is dated "n days ago": on the 1st of a month "This month" is empty
     check("Customers" in page.inner_text("[data-testid=books-cf]"), "Cash flow: money in from customers, out to suppliers…")
     chip(page, "Month by month"); page.wait_for_selector("[data-testid=books-months]")
     check("Year" in page.inner_text("[data-testid=books-months]"), "Month by month: 12 months and the year")
