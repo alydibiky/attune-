@@ -1,0 +1,22 @@
+// v8.9 (Ali: "People & plans is still very stupid — it doesn't understand what I want"): the sentences it missed.
+import { parseLife, paymentOn, scheduleOf } from "../../web-src/life.js";
+let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log("FAIL " + m); } };
+const now = Date.parse("2026-11-01T10:00:00");
+let c = parseLife("I'm in a gam'eya with 10 people, 2000 a month, my turn is the 4th", { now });
+ok(c && c.kind === "circle" && c.amount === 2000 && c.count === 10 && c.myTurn === 4, "gam'eya in English: 2000 × 10, my turn 4th");
+c = parseLife("Sara will give me 1500 on Friday", { now });
+ok(c && c.kind === "debt" && c.person === "Sara" && c.dir === "in" && c.amount === 1500 && c.start === "2026-11-06", "Sara will give me 1500 on Friday");
+c = parseLife("ليا عند كريم 250", { now });
+ok(c && c.kind === "debt" && c.person === "كريم" && c.dir === "in" && c.amount === 250, "ليا عند كريم 250 = he owes me");
+c = parseLife("المدرس بياخد 300 الحصة كل حد واربع", { now });
+ok(c && c.kind === "regular" && c.amount === 300 && String(c.days) === "0,3", "the tutor every Sunday and Wednesday");
+ok(c && scheduleOf(c, now + 10 * 864e5).map((x) => x.date).slice(0, 4).join(" ") === "2026-11-01 2026-11-04 2026-11-08 2026-11-11", "…one box on each of those days");
+c = parseLife("my sister pays me 2000 every month", { now });
+ok(c && c.kind === "regular" && c.dir === "in" && c.person === "Sister" && c.every === "month", "my sister pays me 2000 every month = money coming in");
+const data = { items: [{ id: "a", kind: "debt", person: "Ahmed", dir: "in", amount: 5000, count: 1, total: 5000, paid: [] }, { id: "b", kind: "debt", person: "أحمد", dir: "out", amount: 3000, count: 1, total: 3000, paid: [] }] };
+let p = paymentOn(data, "Ahmed paid me back 2000 today", now);
+ok(p && p.c.id === "a" && p.amount === 2000 && p.dir === "in", "Ahmed paid me back 2000 → a payment on his debt, not a new one");
+p = paymentOn(data, "دفعت لأحمد 1000 من الفلوس اللي عليا", now);
+ok(p && p.c.id === "b" && p.amount === 1000 && p.dir === "out", "دفعت لأحمد 1000 → a payment on what I owe him");
+ok(!paymentOn(data, "lunch 150", now), "lunch 150 is not a payment on a plan");
+console.log(bad ? bad + " FAILED" : "PASS v890life: People & plans understands the sentences it missed");

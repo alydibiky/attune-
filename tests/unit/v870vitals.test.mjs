@@ -24,10 +24,10 @@ t("the week flags only what is off against the person's own usual", () => {
   const L = w.lines.map((l) => l.en).join("\n");
   assert.match(L, /Blood pressure: 135\/87 on average \(2 readings\) — 1 high; show a doctor/);
   assert.match(L, /Oxygen \(SpO₂\): 96% on average — under 92% on 1 day; talk to a doctor/);
-  assert.match(L, /Sleep: 5 h 30 min a night — under 6 hours/);
+  assert.match(L, /Sleep: Last night 5 h 30 min · 5 h 30 min a night over 7 nights — under 6 hours/);
   assert.match(L, /Resting heart rate: 66 \(usually 60\) — higher than usual/);
   assert.match(L, /Stress \(HRV\): 30 ms \(usually 50\) — lower than usual/);
-  assert.match(w.lines.map((l) => l.ar).join("\n"), /النوم: 5 ساعة و30 دقيقة/);
+  assert.match(w.lines.map((l) => l.ar).join("\n"), /النوم: امبارح بالليل 5 ساعة و30 دقيقة/);
   assert.equal(w.rows.length, 7);
 });
 t("a calm week flags nothing", () => {

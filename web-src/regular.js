@@ -7,6 +7,32 @@ import { loadRadar, saveRadar, resolveDeadline, updateDeadline } from "./deadlin
 import { appendToLedger } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
 
+// v8.9 (Ali: "the maid's 600 got recorded in Bills although there is a Maid category"): the category for a tick —
+// 1) the one the person chose last time for this same commitment (they edited it: learn), 2) a category of theirs whose name
+// matches who / what it is (maid, driver, tutor, gym, internet, Netflix…), 3) rent → rent, else bills.
+const SYN = [/maid|housekeep|cleaner|cleaning|nanny|babysit|شغال|خدام|دادة|داده|نظاف|مربي/i, /driver|سواق|سائق/i, /tutor|teacher|lesson|درس|مدرس|معلم/i,
+  /gym|coach|trainer|جيم|مدرب/i, /internet|wifi|wi-fi|نت\b|انترنت|إنترنت/i, /phone|mobile|موبايل|تليفون/i, /electric|كهربا/i, /water|مياه|مية/i, /gas|غاز/i,
+  /doorman|bawab|بواب/i, /car wash|غسيل العربية/i, /nurse|ممرض/i, /club|نادي/i, /school|مدرسة|مدارس/i];
+export function catForCommitment(led, c, note = "") {
+  if (c && c.cat) return c.cat;
+  const key = [c && c.person, c && c.title].filter(Boolean).join(" ").trim().toLowerCase();
+  if (led && key) {
+    const past = (led.txns || []).filter((t) => t && t.type === "expense" && t.cat && String(t.note || "").toLowerCase().startsWith(key)).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    if (past.length) return past[0].cat;
+  }
+  const words = [c && c.title, c && c.person, c && c.role, note].filter(Boolean).join(" ");
+  const cats = ((led && led.customCats) || []).filter((x) => !x.type || x.type === "expense");
+  for (const x of cats) {
+    const names = [x.id, x.en, x.name, x.ar].filter(Boolean).map(String);
+    for (const n of names) {
+      const esc = n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (n.length >= 2 && new RegExp("(^|[^\\p{L}])" + esc + "($|[^\\p{L}])", "iu").test(words)) return x.id;
+      const g = SYN.find((r) => r.test(n)); if (g && g.test(words)) return x.id;
+    }
+  }
+  return c && c.kind === "rent" ? "rent" : "bills";
+}
+
 /** Tick (on) / untick payment i of commitment `id`. → { data, recorded: amount or 0, removed: bool }. With no Money ledger yet
  *  the tick is kept and recorded = 0 (the caller hands the sentence to Money instead). */
 export function tickRegular(id, i, on, { store, now = Date.now() } = {}) {
@@ -20,7 +46,7 @@ export function tickRegular(id, i, on, { store, now = Date.now() } = {}) {
   const led = loadLedger(ls);
   if (on && !rec[i] && led) {
     const e = tickEntry(c, i, now);
-    const r = appendToLedger(led, [{ type: "expense", amount: e.amount, currency: e.currency, cat: c.kind === "rent" ? "rent" : "bills", note: e.note, date: new Date(e.ts).toISOString().slice(0, 10) }], now);
+    const r = appendToLedger(led, [{ type: c.dir === "in" ? "income" : "expense", amount: e.amount, currency: e.currency, cat: c.dir === "in" ? "other" : catForCommitment(led, c, e.note), note: e.note, date: new Date(e.ts).toISOString().slice(0, 10) }], now);
     if (r.ids.length) { try { ls.setItem("ledger.v3", JSON.stringify(r.ledger)); rec[i] = r.ids[0]; recorded = e.amount; } catch (x) {} }
   } else if (!on && rec[i] && led) {
     const L = { ...led, txns: led.txns.filter((t) => t.id !== rec[i]) };
@@ -41,7 +67,7 @@ export function payRadar(id, paid, { store, now = Date.now() } = {}) {
   if (paid) {
     const led = loadLedger(ls);
     if (led) {
-      const r = appendToLedger(led, [{ type: "expense", amount: x.amount, currency: x.currency, cat: "bills", note: (x.title || "Renewal") + " · " + x.date, date: x.date }], now);
+      const r = appendToLedger(led, [{ type: "expense", amount: x.amount, currency: x.currency, cat: catForCommitment(led, { title: x.title, kind: "bill", cat: x.cat }, x.title), note: (x.title || "Renewal") + " · " + x.date, date: x.date }], now);
       if (r.ids.length) { try { ls.setItem("ledger.v3", JSON.stringify(r.ledger)); recorded = x.amount; data = updateDeadline(data, id, { txn: r.ids[0] }); } catch (e) {} }
     }
     if (!recorded) return { recorded: 0, data };   // no Money yet: nothing changes (the caller opens Money)

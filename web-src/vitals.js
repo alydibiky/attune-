@@ -69,11 +69,16 @@ export function vitalsWeek(vit, now = Date.now()) {
     say(low ? "red" : "ok", `Oxygen (SpO₂): ${r1(avg(sp))}% on average${low ? ` — under 92% on ${low} day${low > 1 ? "s" : ""}; talk to a doctor` : ""}`,
       `الأكسجين: ${r1(avg(sp))}% في المتوسط${low ? ` — أقل من 92% في ${low} ${low > 1 ? "أيام" : "يوم"}؛ كلّم دكتور` : ""}`, low ? "spo2" : null);
   }
-  // sleep
+  // sleep — v8.9 (Ali: "Huawei says 8 h 57, Attune said 5 h 33"): last night first, as the watch app shows it, then the week's
+  // average and over how many nights (a night without the watch is not counted as a short night)
   const sl = vals(week, "sleepMin");
   if (sl.length) {
-    const m = avg(sl), h = Math.floor(m / 60), mi = Math.round(m % 60), short = m < 360;
-    say(short ? "amber" : "ok", `Sleep: ${h} h ${mi} min a night${short ? " — under 6 hours" : ""}`, `النوم: ${h} ساعة و${mi} دقيقة في الليلة${short ? " — أقل من 6 ساعات" : ""}`, short ? "sleep" : null);
+    const hm = (m) => [Math.floor(m / 60), Math.round(m % 60)];
+    const last = week.filter((d) => d.sleepMin > 0).slice(-1)[0], lastDay = last.day === today ? ["Last night", "امبارح بالليل"] : [last.day, last.day];
+    const [lh, lm] = hm(last.sleepMin), m = avg(sl), [h, mi] = hm(m), short = m < 360 && sl.length >= 3;
+    const st = last.deepMin || last.lightMin || last.remMin ? [` (deep ${hm(last.deepMin || 0)[0]} h ${hm(last.deepMin || 0)[1]} min, REM ${hm(last.remMin || 0)[0]} h ${hm(last.remMin || 0)[1]} min)`, ` (عميق ${hm(last.deepMin || 0)[0]} س ${hm(last.deepMin || 0)[1]} د، REM ${hm(last.remMin || 0)[0]} س ${hm(last.remMin || 0)[1]} د)`] : ["", ""];
+    say(short ? "amber" : "ok", `Sleep: ${lastDay[0]} ${lh} h ${lm} min${st[0]} · ${h} h ${mi} min a night over ${sl.length} night${sl.length > 1 ? "s" : ""}${short ? " — under 6 hours" : ""}`,
+      `النوم: ${lastDay[1]} ${lh} ساعة و${lm} دقيقة${st[1]} · ${h} ساعة و${mi} دقيقة في الليلة على ${sl.length} ${sl.length > 1 ? "ليالي" : "ليلة"}${short ? " — أقل من 6 ساعات" : ""}`, short ? "sleep" : null);
   }
   // resting heart rate: 3 days or more at 7+ above the usual
   const rh = vals(week, "restHr"), rhBase = vals(before, "restHr");

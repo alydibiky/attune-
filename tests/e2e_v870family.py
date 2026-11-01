@@ -45,7 +45,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=watch-vitals] [data-testid=vital-line]", timeout=8000)
     t = page.locator("[data-testid=watch-vitals]").inner_text()
     check("Blood pressure: 150/95" in t and "show a doctor" in t, "From your watch: the high blood pressure reading comes first (%s)" % t[:120])
-    check("Sleep: 5 h 30 min a night — under 6 hours" in t, "…and short sleep is flagged")
+    check("5 h 30 min a night over" in t and "under 6 hours" in t, "…and short sleep is flagged")
     care = json.loads(page.evaluate("localStorage.getItem('attune:care:v1') || '{}'"))
     check(any(l.get("source") == "watch" and l.get("value") == 150 for l in care.get("labs", [])), "the watch's blood pressure is in Family health")
     page.click("[data-testid=watch-vitals-connect]")

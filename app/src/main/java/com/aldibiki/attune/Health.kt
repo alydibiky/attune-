@@ -94,8 +94,45 @@ object Health {
             for (r in runBlocking { client.readRecords(ReadRecordsRequest(OxygenSaturationRecord::class, timeRangeFilter = range)) }.records) note(r.time, "spo2", r.percentage.value)
         } catch (e: Exception) { out.put("spo2Error", e.message ?: "") }
         if (ok(HealthPermission.getReadPermission(SleepSessionRecord::class))) try {
-            for (r in runBlocking { client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, timeRangeFilter = range)) }.records) {
-                val o = dayOf(r.endTime); o.put("sleepMin", o.optInt("sleepMin", 0) + ((r.endTime.toEpochMilli() - r.startTime.toEpochMilli()) / 60000L).toInt())
+            // v8.9 (Ali: "the watch says 5 h 33, Huawei says 8 h 57"): asleep time = the stages that are sleep (light, deep, REM,
+            // sleeping), like the watch app counts it — not the whole session with the awake parts; sessions written by two
+            // apps (the watch app and the phone) are merged, never added twice; every page of records is read.
+            val asleep = HashMap<String, MutableList<LongArray>>()   // wake-up day → [start, end] asleep pieces
+            val stageMin = HashMap<String, IntArray>()                // day → deep, light, rem, awake minutes
+            val lastEnd = HashMap<String, Long>()
+            var token: String? = null
+            do {
+                val page = runBlocking { client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, timeRangeFilter = range, pageToken = token)) }
+                for (r in page.records) {
+                    val d = r.endTime.atZone(zone).toLocalDate().toString()
+                    val list = asleep.getOrPut(d) { mutableListOf() }
+                    val st = stageMin.getOrPut(d) { IntArray(4) }
+                    lastEnd[d] = maxOf(lastEnd[d] ?: 0L, r.endTime.toEpochMilli())
+                    val stages = r.stages
+                    if (stages.isEmpty()) list.add(longArrayOf(r.startTime.toEpochMilli(), r.endTime.toEpochMilli()))
+                    else for (g in stages) {
+                        val a = g.startTime.toEpochMilli(); val b = g.endTime.toEpochMilli(); val m = ((b - a) / 60000L).toInt()
+                        when (g.stage) {
+                            1, 3, 7 -> st[3] += m   // awake, out of bed, awake in bed
+                            else -> {
+                                list.add(longArrayOf(a, b))
+                                when (g.stage) { 5 -> st[0] += m; 4 -> st[1] += m; 6 -> st[2] += m; else -> {} }   // deep, light, REM
+                            }
+                        }
+                    }
+                }
+                token = page.pageToken
+            } while (!token.isNullOrEmpty())
+            for ((d, list) in asleep) {
+                list.sortBy { it[0] }
+                var total = 0L; var curA = -1L; var curB = -1L
+                for (p in list) { if (curB < p[0]) { if (curB > curA) total += curB - curA; curA = p[0]; curB = p[1] } else if (p[1] > curB) curB = p[1] }
+                if (curB > curA) total += curB - curA
+                val o = by.getOrPut(d) { JSONObject().put("day", d) }
+                o.put("sleepMin", (total / 60000L).toInt())
+                val st = stageMin[d]
+                if (st != null && st[0] + st[1] + st[2] > 0) o.put("deepMin", st[0]).put("lightMin", st[1]).put("remMin", st[2]).put("awakeMin", st[3])
+                lastEnd[d]?.let { o.put("sleepEnd", it) }
             }
         } catch (e: Exception) { out.put("sleepError", e.message ?: "") }
         if (ok(HealthPermission.getReadPermission(RestingHeartRateRecord::class))) try {

@@ -6,7 +6,7 @@
 import React, { useMemo, useState } from "react";
 import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
-import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder, isOpenLoan } from "./life.js";
+import { parseLife, paymentOn, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder, isOpenLoan } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { loadGuardian, saveGuardian, collected } from "./guardian.js";
 import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -153,6 +153,12 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   const read = async () => {
     const t = text.trim(); if (!t) return;
     const sp = parseSplit(t); if (sp) { setDraft({ ...sp, source: t }); return; }
+    // v8.9: a payment on something already on the list («Ahmed paid me back 2000») is ticked there, not saved as a new debt
+    const p = paymentOn(data, t);
+    if (p && window.confirm(tr("{who}: record {a} as paid on the plan?", { who: p.c.person, a: p.amount }))) {
+      const d = payAmount(data, p.c.id, p.i, p.amount); put(d); remindFor(d.items.find((x) => x.id === p.c.id)); setText("");
+      flash && flash(tr("Recorded — what is left is worked out again")); return;
+    }
     let c = parseLife(t);
     if (!c) { const h = parseHolding(t); if (h) { setDraft({ kind: "holding", holding: h, source: t }); return; } }
     if (!c) { const e = parseCar(t); if (e) { setDraft({ kind: "car", entry: e, source: t }); return; } }

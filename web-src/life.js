@@ -120,11 +120,14 @@ function startOf(t, now) {
 const NOT_NAME = /^(i|me|my|he|she|they|we|you|him|her|them|the|a|an|his|it|this|that|انا|هو|هي|هم|احنا|انت|عليه|عليها|عليا|ليا|ليه|لي|من|علي|الي|في|ده|دي|كل|شهر|كمان)$/i;
 function personOf(raw, t) {
   const tries = [
-    /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(?:owes|will pay|is paying|pays|borrowed|has to pay|must pay)\b/,
+    /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(?:owes|will pay|is paying|pays|borrowed|has to pay|must pay|will give|gives|will send|will return|is giving)\b/,
     /\b(?:lent|loaned|gave|owe|paid|pay|to|from|with|lend|Lent)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b/,
     /\b(?:owe|from|to)\s+([A-Z]{2,5})\b/,   // a bank's short name: CIB, NBE, QNB
   ];
   for (const re of tries) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
+  // v8.9 (Ali: "People & plans still doesn't understand"): "my sister pays me 2000 every month" — a relative is who it is
+  const rel = /\bmy\s+(sister|brother|mother|mom|mum|father|dad|son|daughter|uncle|aunt|cousin|friend|boss|neighbou?r|wife|husband|landlord|tenant|partner|colleague)\b/i.exec(raw);
+  if (rel && /\b(owes|pays|will pay|gives|will give|lent|borrowed|owe|paid|sends|will send)\b/i.test(raw)) return rel[1][0].toUpperCase() + rel[1].slice(1).toLowerCase();
   // v8.2 (Ali typed "sheikh owes me 22,000 …" in small letters): the word before "owes" is the name, capitalised
   const low = /(?:^|[\s,.])([a-z][a-z'-]{1,20})\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed)\b/i.exec(raw);
   if (low && !NOT_NAME.test(low[1]) && !/^(also|still|now|friend|brother|sister|cousin|neighbou?r|uncle|aunt|boss|client|customer)$/i.test(low[1])) return low[1][0].toUpperCase() + low[1].slice(1).toLowerCase();
@@ -147,6 +150,8 @@ function personOf(raw, t) {
     /(?:^|\s)([ء-ي]{2,})\s+(?:عليه|عليها|هيدفعلي|هيدفع|هيرجعلي|هيرجع|مديون|مدين|استلف مني|اخد مني|خد مني|يدفعلي|سيدفع|يسدد)/,
     /(?:سلفت|اسلفت|اقرضت|ادينت|اديت|عليا ل|علي ل|مديون ل|مدين ل|استلفت من|اخدت من|خدت من|اقترضت من)\s*([ء-ي]{2,})/,
     /(?:^|\s)ل([ء-ي]{2,})\s+(?:عندي|عليا)/,
+    /(?:ليا|لي|ليه)\s+(?:عند|مع|معاه)\s*([ء-ي]{2,})/,
+    /(?:^|\s)([ء-ي]{2,})\s+(?:هيديني|هتديني|بيديني|بتديني|هترجعلي|بتدفعلي|بيدفعلي|بتبعتلي|بيبعتلي)/,
   ];
   // (persona 2: «أحمد عليه ٥٠٠» was saved as «احمد» — the name is taken back from what was typed, hamza and all)
   const plain = (x) => String(x).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
@@ -156,7 +161,7 @@ function personOf(raw, t) {
 }
 
 // ---- the sentence → a commitment -----------------------------------------------------------------------------------------
-const CIRCLE = /\b(savings circle|money circle|rosca|tanda|susu|chit fund|hui|arisan|tontine|pasanaku|cundina|paluwagan|kameti|committee)\b|جمعيه|جمعية/i;
+const CIRCLE = /\b(savings circle|money circle|rosca|tanda|susu|chit fund|hui|arisan|tontine|pasanaku|cundina|paluwagan|kameti|committee|gam'?[3a]?[ei]?ya|gameya|gamaeya|gamiya|gam3eya)\b|جمعيه|جمعية/i;
 const SUBS = /\b(netflix|spotify|shahid|osn|youtube premium|icloud|google one|chatgpt|gym|subscription|membership|disney\+?|hulu|hbo|max|paramount\+?|prime video|apple (?:tv|music|one)|deezer|crunchyroll|xbox|playstation plus|game pass|microsoft 365|office 365|dropbox|notion|duolingo|audible|kindle unlimited|linkedin premium|suscripción|suscripcion|abonnement|assinatura|abo|abbonamento|abonelik|langganan|gimnasio|salle de sport|academia|fitnessstudio|palestra|spor salonu)\b|اشتراك|نتفليكس|شاهد|الجيم|جيم/i;
 const RENT = /\b(rent|alquiler|arriendo|loyer|aluguel|miete|affitto|kira|sewa)\b|ايجار|الايجار/i;
 const BILL = /\b(bill|electricity|water|gas bill|internet|phone bill|due|factura|recibo|facture|conta de|rechnung|bolletta|fatura|tagihan|luz|électricité|strom|elettricità|elektrik|listrik)\b|فاتوره|فاتورة|الكهربا|كهربا|الكهرباء|المياه|الميه|النت|الانترنت|التليفون|الغاز/i;
@@ -176,13 +181,13 @@ function oneAmount(t) {
 const PAY_V = /\b(pay|paid|paying|pays|pay back|repay|settle)\b|ادفع|يدفع|هدفع|هيدفع|دفع|اسدد|يسدد|سداد|هسدد/;
 const IN_W = /me debe|me doit|me deve|schuldet mir|mi deve|bana borçlu|berutang (?:kepada|ke|pada) saya|le presté|lui ai prêté|j'ai prêté|emprestei|habe .{0,30}geliehen|ho prestato|borç verdim|meminjamkan|me tiene que pagar|doit me rendre|vai me pagar|zahlt mir/i;
 const OUT_W = /\b(le debo|je dois|eu devo|ich schulde|gli devo|le devo|borçluyum|saya berutang|pedí prestado|j'ai emprunté|peguei emprestado|habe mir .{0,30}geliehen|ho preso in prestito|borç aldım|saya meminjam|mi cuota|ma mensualité|minha parcela|meine rate|la mia rata|taksitim|cicilan saya)\b/i;
-const IN_ = /\bowes me\b|\bwill pay me\b|\bpays me\b|\bi lent\b|\bi loaned\b|(?:^|\s)lent\s+(?!me\b)|\blent\b.*\bto\b|سيدفع|سيسدد|هيسدد|هيدفع(?!ل)|\bto pay me back\b|\bi gave\b.*\b(loan|borrow)|عليه|عليها|هيدفعلي|يدفعلي|هيرجعلي|سلفت|اسلفت|اقرضت|ادينت|استلف مني|اخد مني|خد مني|مديون ليا|مدين لي/i;
+const IN_ = /\bowes me\b|\bwill pay me\b|\bpays me\b|\b(?:will|is going to|is to|has to|must|should) (?:give|send|return|transfer) me\b|\bgives me\b|\bowe(?:s)? me back\b|ليا عند|ليا مع|لي عند|ليا معاه|هيديني|هتديني|بيديني|بتديني|هترجعلي|بتدفعلي|بيدفعلي|بتبعتلي|بيبعتلي|\bi lent\b|\bi loaned\b|(?:^|\s)lent\s+(?!me\b)|\blent\b.*\bto\b|سيدفع|سيسدد|هيسدد|هيدفع(?!ل)|\bto pay me back\b|\bi gave\b.*\b(loan|borrow)|عليه|عليها|هيدفعلي|يدفعلي|هيرجعلي|سلفت|اسلفت|اقرضت|ادينت|استلف مني|اخد مني|خد مني|مديون ليا|مدين لي/i;
 const OUT_ = /\bi owe\b|\bi borrowed\b|\bi have to pay\b|\bi must pay\b|\bmy (installment|instalment)s?\b|عليا|علي ل|استلفت|اقترضت|اخدت من|خدت من|مديون ل|لازم ادفع|هدفع|قسط العربيه|قسطي|اقساطي/i;
 
 // v6.34 (Ali: "the maid comes every Saturday and takes 600 EGP — a checkbox when I log in on Saturday, and it records the expense
 // by itself"): someone who comes on a day and is paid each time → kind "regular", a checkbox on each day, ticked = spent in Money
 const HELP = /\b(maid|housekeeper|cleaner|cleaning lady|nanny|babysitter|driver|gardener|tutor|private teacher|coach|trainer|doorman|cook|nurse|physio(?:therapist)?|car wash(?:er)?)\b|الشغال[هة]|شغال[هة]|الداد[هة]|داد[هة]|السواق|سواق|المدرس|مدرس|المدرسه الخصوصي|الجنايني|جنايني|البواب|بواب|الطباخ|طباخ|الممرض[هة]|ممرض[هة]|الكوتش|كوتش|المدرب|مدرب|عامله النظاف[هة]|ست النظاف[هة]|اللي بتنضف|غسيل العربي[هة]/i;
-const DAY_EVERY = /\b(every|each|on)\s+(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|كل\s+(يوم\s+)?(احد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)|(?:كل|يوم)\s+(ال)?(احد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)/i;
+const DAY_EVERY = /\b(every|each|on)\s+(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|كل\s+(يوم\s+)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)|(?:كل|يوم)\s+(ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)/i;
 
 /** The name of a bill / subscription: the words before its amount («فاتورة الكهربا ٦٤٠» → «فاتورة الكهربا», "Netflix 200" → "Netflix"). */
 function nameBefore(raw, fallback) {
@@ -225,11 +230,15 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
   if (CIRCLE.test(raw)) {
     const turn = (/(?:my turn|i get it|i take it|دوري|بقبض|هقبض|اقبض)[^\d٠-٩]{0,20}(\d+)/i.exec(latin(t)) || [])[1]
       || ({ "الاول": 1, "التاني": 2, "الثاني": 2, "التالت": 3, "الثالث": 3, "الرابع": 4, "الخامس": 5, "السادس": 6, "السابع": 7, "التامن": 8, "الثامن": 8, "التاسع": 9, "العاشر": 10 })[(/(?:دوري|بقبض|هقبض)\s*(?:في\s*)?(?:الشهر\s*)?(ال[ء-ي]+)/.exec(t) || [])[1]] || 0;
-    const n = count || 10;
-    return { ...base, kind: "circle", dir: "out", amount: amts[0], count: n, total: amts[0] * n, every: every || "month", myTurn: +turn || 0, title: CIRCLE.exec(raw)[0] };
+    const ppl = /(\d+)\s*(?:people|persons|members|friends|افراد|أفراد|فرد|نفر|اشخاص|أشخاص|واحد)/i.exec(latin(t));
+    const n = count || (ppl ? +ppl[1] : 0) || 10;
+    const camt = amts.filter((v) => v !== n && v !== +turn)[0] || amts[0];
+    return { ...base, kind: "circle", dir: "out", amount: camt, count: n, total: camt * n, every: every || "month", myTurn: +turn || 0, title: CIRCLE.exec(raw)[0] };
   }
   const dirIn = IN_.test(t) || IN_.test(raw) || IN_W.test(raw), dirOut = !dirIn && (OUT_.test(t) || OUT_.test(raw) || OUT_W.test(raw));
   // money owed between people: one sum (a debt) or paid in parts (installments)
+  if (person && dirIn && every && !count && amts.length === 1 && /\b(pays|gives|sends)\s+me\b|بيدفعلي|بتدفعلي|بيديني|بتديني|بيبعتلي|بتبعتلي/i.test(raw) && !/owes|عليه|عليها/.test(t))
+    return { ...base, kind: "regular", dir: "in", amount: amts[0], count: 0, total: 0, every, start: start || iso(new Date(now)), title: person, auto: true };
   if (person && (dirIn || dirOut)) {
     const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0;
     if (count || every || (small && small < big)) {
@@ -247,10 +256,14 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
     const m = HELP.exec(raw) || HELP.exec(t), name = m[0].replace(/^ال/, "");
     // the start: that weekday — today when today is the day (the first box is today's)
     const dm = DAY_EVERY.exec(t), word = dm ? (dm[2] || dm[4] || dm[6] || "") : "";
-    const W = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "احد": 0, "اتنين": 1, "اثنين": 1, "تلات": 2, "ثلاثاء": 2, "اربع": 3, "اربعاء": 3, "خميس": 4, "جمعه": 5, "سبت": 6 };
+    const W = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "حد": 0, "احد": 0, "اتنين": 1, "اثنين": 1, "تلات": 2, "ثلاثاء": 2, "اربع": 3, "اربعاء": 3, "خميس": 4, "جمعه": 5, "سبت": 6 };
     let st = start;
     if (word in W) { const d = new Date(now); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + ((W[word] - d.getDay() + 7) % 7)); st = iso(d); }   // that weekday, today included
-    return { ...base, kind: "regular", dir: "out", amount: amts[0], count: 0, total: 0, every: every || "week", start: st || iso(new Date(now)), title: /^[a-z]/i.test(name) ? name[0].toUpperCase() + name.slice(1) : name, auto: true };
+    // v8.9: several days a week — «كل حد واربع», "every Sunday and Wednesday" → days [0, 3] (one box on each)
+    const all = [...t.matchAll(/(?:^|[\s,،و])(?:ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربعاء|اربع|خميس|جمعه|سبت)(?=$|[\s,،])|\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/gi)].map((x) => W[(x[1] || x[2] || "").toLowerCase()]).filter((x) => x != null);
+    const days = [...new Set(all)].sort((a, b) => a - b);
+    const dirR = dirIn || /\b(pays me|gives me|sends me)\b/i.test(raw) ? "in" : "out";
+    return { ...base, ...(days.length > 1 && (every || "week") === "week" ? { days } : {}), kind: "regular", dir: dirR, amount: amts[0], count: 0, total: 0, every: every || "week", start: st || iso(new Date(now)), title: /^[a-z]/i.test(name) ? name[0].toUpperCase() + name.slice(1) : name, auto: true };
   }
   if (RENT.test(raw) || RENT.test(t)) return { ...base, kind: "rent", dir: dirIn && /tenant|المستاجر|بيدفعلي|inquilino|locataire|mieter|affittuario|kiracı|penyewa/.test(t) ? "in" : "out", amount: amts[0], count: count || 0, total: 0, every: every || "month", title: "Rent" };
   if (SUBS.test(raw) || SUBS.test(t)) { const m = SUBS.exec(raw) || SUBS.exec(t); return { ...base, kind: "subscription", dir: "out", amount: amts[0], count: 0, total: 0, every: every || "month", title: nameBefore(raw, m[0][0].toUpperCase() + m[0].slice(1)) }; }
@@ -289,6 +302,12 @@ export function scheduleOf(c, now = Date.now()) {
   if (!(c.count > 0) && c.every && c.kind !== "regular") { const per = c.every === "week" ? 7 : c.every === "year" ? 365.25 : 30.44; n = Math.max(n, Math.floor(Math.max(0, now - d.getTime()) / 864e5 / per) + 12); }
   const out = [];
   const dateOf = (i) => { const x = new Date(d); if (c.every === "month") x.setMonth(d.getMonth() + i); else if (c.every === "week") x.setDate(d.getDate() + 7 * i); else if (c.every === "year") x.setFullYear(d.getFullYear() + i); else if (i > 0) x.setMonth(d.getMonth() + i); return iso(x); };
+  // v8.9: a regular on several days a week (the tutor every Sunday and Wednesday) — one box on each of those days
+  if (c.kind === "regular" && Array.isArray(c.days) && c.days.length > 1 && c.start) {
+    const x = new Date(c.start + "T12:00:00"), end = Date.parse(iso(new Date(now)) + "T12:00:00") + 7 * 864e5;
+    for (let i = 0; x.getTime() <= end && i < 2000; x.setDate(x.getDate() + 1)) if (c.days.includes(x.getDay())) { out.push({ i, date: iso(x), amount: c.amount, paid: (c.paid || []).includes(i) }); i++; }
+    return out;
+  }
   for (let i = 0; i < n; i++) out.push({ i, date: dateOf(i), amount: c.amount, paid: (c.paid || []).includes(i) });
   // v8.6 (persona 6: "22,000 over 9 months" added up to 21,999.96): the last payment takes the cents, so the plan adds up exactly
   if (c.total > 0 && c.count > 1 && n === c.count && !Object.keys(c.got || {}).length) { const rest = r2(c.total - c.amount * (n - 1)); if (Math.abs(rest - c.amount) < 1) out[n - 1].amount = rest; }
@@ -427,4 +446,22 @@ export function nextReminder(c, now = Date.now()) {
   const what = c.kind === "installment" ? `installment ${n.i + 1} of ${c.count}` : c.kind === "circle" ? `${c.title || "savings circle"} ${n.i + 1}/${c.count}` : c.title || c.kind;
   const amount = n.amount.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + (c.currency || homeCurrency());
   return { id: "life-" + c.id, at, title: (c.dir === "in" ? "Due to you: " : "Due: ") + who + what, body: amount + " — tick it in People & plans when it's paid" };
+}
+
+/** v8.9 (Ali: "People & plans doesn't understand what I want"): a payment ON something already on the list — «Ahmed paid me back
+ *  2000», «دفعت لأحمد 1000 من اللي عليا», "I paid Karim 250" — not a new debt. → { c, i, amount, dir } for the person's open plan, or null. */
+export function paymentOn(data, text, now = Date.now()) {
+  const raw = String(text || "").trim(); if (!raw) return null;
+  const t = fold(raw).toLowerCase();
+  const back = /\b(paid me back|paid me|gave me back|returned|sent me|transferred me|repaid me)\b|رجعلي|رجعتلي|ادالي|اداني|اديني|دفعلي|دفعتلي|سددلي|سددتلي|بعتلي|بعتتلي|حولي|حولتلي|استلمت من|خدت من .* من اللي عليه/i;
+  const mine = /\b(i paid|i gave|i returned|i sent|i transferred|i repaid|paid back)\b|دفعت ل|اديت ل|رجعت ل|سددت ل|بعت ل|حولت ل|سددت/i;
+  const dir = back.test(raw) || back.test(t) ? "in" : mine.test(raw) || mine.test(t) ? "out" : null;
+  if (!dir) return null;
+  const amt = amountsIn(raw, homeCurrency()).map((a) => a.value).filter((v) => v > 0)[0]; if (!amt) return null;
+  const plain = (x) => fold(String(x || "")).toLowerCase().replace(/^ال/, "");
+  const open = ((data && data.items) || []).filter((c) => c.person && c.dir === dir && (c.kind === "debt" || c.kind === "installment") && plain(t).includes(plain(c.person)));
+  if (!open.length) return null;
+  const c = open.sort((a, b) => plain(b.person).length - plain(a.person).length)[0];
+  const next = scheduleOf(c, now).find((s) => !s.paid); if (!next) return null;
+  return { c, i: next.i, amount: amt, dir };
 }
