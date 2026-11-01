@@ -11,6 +11,28 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## v8.9 part 2 — 1 Nov: Ali's 5 fixes + option A (languages in separate files)
+1. Maid payment → his Maid category (`regular.js catForCommitment`: the category he chose last time for that plan, else one of his
+   categories whose name matches maid / driver / tutor / gym / internet…, else rent / bills). Test `tests/unit/v890maidcat.test.mjs`.
+2. Watch (Health Connect, `Health.kt vitals`): asleep time = the sleep STAGES (light + deep + REM), like Huawei; sessions from two
+   apps merged (never added twice); every page of records read; card shows "Last night X · Y a night over N nights" (`vitals.js`).
+   Kotlin not compiled locally — the APK build checks it.
+3. People & plans (`life.js`): gam'eya in English (people = months), "will give me", «ليا عند», «كل حد واربع» (several weekdays,
+   `days` in `scheduleOf`), "my sister pays me 2000 every month" (money coming in), and a payment on an existing plan
+   (`paymentOn`: «Ahmed paid me back 2000», «دفعت لأحمد 1000 من اللي عليا») ticks that plan instead of making a new debt.
+   Test `tests/unit/v890life.test.mjs`.
+4. Food photo: Ali's plate (chicken/omelette under creamy mushroom sauce + sourdough) was "Cream of mushroom soup 225 kcal" at 81%
+   (measured here with the app's own two image models). 18 café dishes added to the table (`fit-foods.js`) and the photo names
+   (`tools/food_clip_names.tsv` → the "Build the photo fast path" workflow rebuilds the bank on push to main; phones fetch it in a
+   day); a sauce gives way to the dish served in it; the sauce's quarters count for that dish; bread at the side is added
+   (`fitclip.js withBread`). Same photo now: Chicken in creamy mushroom sauce 525 kcal + bread 216 kcal. Test `v890photo`.
+5. Barcodes (`fitdb.js byBarcode`): every spelling (UPC-A ↔ EAN-13, GTIN-14), a product with a name but no numbers gets numbers
+   estimated from a same-name product (flagged), Open Products Facts for names, and a product the person logs after a failed scan
+   is kept for that barcode (`rememberBarcode`, never evicted). Test `v890barcode`. (UPCitemdb skipped: its free tier isn't for
+   commercial use.)
+A. Languages: Egyptian Arabic stays in the page; each other language is `www/i18n/<id>.js` (build.sh) and shell.html loads only the
+   chosen one before the app starts. index.html 24 MB → 7 MB, business-site 18.5 → 1.5 MB. Node tests call `registerDicts`.
+
 ## v8.9 — 1 Nov: all 20 languages finished (Ali: "all languages right and accurate in everything")
 - Every interface language now has every line of the app (≈10,650 each): es fr de pt hi id ru it sw th vi zh ja ko fa ur bn tr
   translated and checked here; Turkish and Fusha (arb) came from Gemini (tools/i18n/back/) and were checked (placeholders, no
