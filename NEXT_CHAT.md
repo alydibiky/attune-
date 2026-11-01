@@ -6,9 +6,9 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128; branch `claude/affectionate-ptolemy-nmr0bh`) — before: **v8.5** (versionCode 127) — branch `claude/youthful-davinci-fe3400` = main (27 Oct) |
-| Last APK | see "Build the APK" on main for the v7.9 commit (the link was sent to Ali) |
-| Tests | v8.3: every unit + e2e file passes (old Instant / Money / sidebar expectations updated; e2e_v727guardian dates now relative to today) |
+| `main` | **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
+| Last APK | v8.9: https://github.com/alydibiky/attune-/actions/runs/41309881633 (success, sent to Ali) |
+| Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
 ## v8.9 — 1 Nov: all 20 languages finished (Ali: "all languages right and accurate in everything")
@@ -25,6 +25,19 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   paste tools/i18n/for-gemini/<lang>-01.txt into Gemini, save its reply as tools/i18n/back/<lang>-01.json, then
   `python3 tools/i18n/import_gemini.py` + merge + build. Until then those lines show in English.
 - Size: index.html grew 12.6 → 24 MB with all dictionaries. Idea (ask Ali): load only the chosen language's dictionary.
+
+- Tests fixed on 1 Nov (they failed on the 1st of a month, on old main too): e2e_v750money (sample payments get `ts`),
+  e2e_v744bookspro (Cash flow on "All time"), e2e_v780business (this-month top customers), e2e_v727home (Home via the
+  `attune-open` event). e2e_v517 has a flaky external 400 now and then (passes on re-run).
+- Don't run tests/i18n_all.py and tests/run_all.sh at the same time: they share a port ("Address already in use").
+
+### Do this next
+1. When Ali sends Gemini's replies for the 50 new lines: save each as tools/i18n/back/<lang>-01.json (arb's lines are chunk 32,
+   the rest chunk 29) → `python3 tools/i18n/import_gemini.py` → `node tools/i18n/check.mjs <lang>` (0 not done) →
+   `node tools/i18n/merge.mjs` → `bash web-src/build.sh` → i18n_all.py → run_all.sh → push branch + main → APK link.
+   Check Fusha for Egyptian words (عايز، دلوقتي، مش، اللي، كده، عشان) and that the 100 airport codes in chunk 20 stay as they are.
+2. Ask Ali (show options): load only the chosen language's dictionary, so index.html goes back from 24 MB to ~13 MB.
+3. Then Ali's next list / VOICE_PLAN.md next step.
 
 ## v8.2 — 26 Oct: Ali's 17-point phone list (branch `claude/youthful-davinci-fe3400`)
 Done and tested (unit `tests/unit/v820fixes.test.mjs`, e2e additions in `e2e_fithome.py` + `e2e_v727agent.py`, hub test updated):
