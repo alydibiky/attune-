@@ -228,7 +228,7 @@
 "{t}: {c}% chance now": "{t}: 지금 확률 {c}%",
 "{c} is free — {w} hired it before.": "{c}이(가) 비었어요 — 전에 {w}이(가) 빌렸어요.",
 " and ": ", ",
-"{c} is free{since}.": "{c}이(가) {since} 비어 있어요.",
+"{c} is free{since}.": "{c}이(가){since} 비어 있어요.",
 "since {d}": "{d}부터",
 "Scout found {n} new for “{w}”.": "Scout가 “{w}”에서 새로운 것 {n}개를 찾았어요.",
 "Remembered “{t}” — {n} chapters. Ask Chat about it any time.": "“{t}”을(를) 기억했어요 — {n}장. 언제든 채팅에서 물어보세요.",
