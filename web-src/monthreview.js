@@ -4,6 +4,7 @@
    Pure: stores in, numbers out — the card and the notification only print them.                                               */
 import { progressOf } from "./life.js";
 import { savedIn } from "./guardian.js";
+import { catName, looksLikeId } from "./money-report.js";
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const MONTHS = { en: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
@@ -29,8 +30,17 @@ export function monthReview({ ledger, life, fit, guardian } = {}, now = Date.now
   const mealDays = Object.entries(days).filter(([d, v]) => inM(d) && v && Object.values(v.meals || {}).some((m) => (m || []).length)).length;
   const w = ((fit && fit.weights) || []).filter((x) => inM(x.d || "")).sort((a, b) => a.d.localeCompare(b.d));
   if (!tx.length && !mealDays && !w.length) return null;
+  // v9.0 (Ali, 2 Nov: "Most went on cmuu3u3sb2q4sd — what is that?"): a category is shown by its NAME. A category id with no name
+  // left (deleted, or brought in from another app) is named by what was written on those payments ("Rent · Ahmed"), else "Uncategorised"
+  const topName = (id, ar) => {
+    const n = catName(ledger, id, ar);
+    if (!looksLikeId(id) || n !== catName(null, id, ar)) return n;
+    const words = {}; for (const t of tx) if (t.type === "expense" && (t.cat || "other") === id) { const w = String(t.note || t.title || t.payee || t.desc || "").trim().slice(0, 30); if (w) words[w] = (words[w] || 0) + 1; }
+    const best = Object.entries(words).sort((a, b) => b[1] - a[1])[0];
+    return best ? best[0] : ar ? "حاجات من غير تصنيف" : "uncategorised";
+  };
   return { month: first.getMonth(), year: first.getFullYear(), from, to, spent: Math.round(spent), earned: Math.round(earned),
-    keptPct: earned > 0 ? Math.round(((earned - spent) / earned) * 100) : null, top: topCat ? { cat: topCat[0], pct: Math.round((topCat[1] / (spent || 1)) * 100) } : null,
+    keptPct: earned > 0 ? Math.round(((earned - spent) / earned) * 100) : null, top: topCat ? { cat: topCat[0], pct: Math.round((topCat[1] / (spent || 1)) * 100), name: [topName(topCat[0], false), topName(topCat[0], true)] } : null,
     owedToYou: [...people.values()].sort((a, b) => b.left - a.left).slice(0, 3).map((x) => ({ ...x, left: Math.round(x.left) })), youOwe: Math.round(youOwe),
     mealDays, kg: w.length ? { from: w[0].kg, to: w[w.length - 1].kg } : null, saved: guardian ? savedIn(guardian, from.slice(0, 7)) : null };
 }
@@ -45,7 +55,7 @@ export function reviewLines(r, lang = "en", cur = "") {
   // v8.7 (persona 4, idea 2): "Attune saved you 3,420 — a trial cancelled, a price drop, a debt collected"
   if (r.saved && r.saved.total > 0) { const K = { subs: ["a subscription cancelled", "اشتراك اتلغى"], double: ["a double charge refunded", "خصم مكرر رجع"], creep: ["a price rise fixed", "زيادة اتصلحت"], late: ["a debt collected", "دين اتحصّل"], agent: ["a better price found", "سعر أرخص"], fees: ["fees avoided", "رسوم اتوفرت"] };
     out.push(ar ? `أتيون وفّرلك ${f(r.saved.total)} — ${r.saved.parts.map((p) => (K[p.kind] || [p.kind, p.kind])[1]).join("، ")}` : `Attune saved you ${f(r.saved.total)} — ${r.saved.parts.map((p) => (K[p.kind] || [p.kind])[0]).join(", ")}`); }
-  if (r.top) out.push(ar ? `أكتر حاجة: ${(CAT[r.top.cat] || [r.top.cat, r.top.cat])[1]} (${r.top.pct}%)` : `Most went on ${(CAT[r.top.cat] || [r.top.cat])[0]} (${r.top.pct}%)`);
+  if (r.top) { const nm = CAT[r.top.cat] || r.top.name || [r.top.cat, r.top.cat]; out.push(ar ? `أكتر حاجة: ${nm[1]} (${r.top.pct}%)` : `Most went on ${nm[0]} (${r.top.pct}%)`); }
   for (const p of r.owedToYou) out.push(ar ? `لسه على ${p.who} ليك ${f(p.left)}` : `${p.who} still owes you ${f(p.left)}`);
   if (r.youOwe) out.push(ar ? `لسه عليك ${f(r.youOwe)}` : `You still owe ${f(r.youOwe)}`);
   if (r.mealDays) out.push(ar ? `سجلت أكلك ${r.mealDays} يوم` : `Meals logged on ${r.mealDays} days`);

@@ -33,7 +33,7 @@ ok(V.forSpeech("**Paris** is the capital.\n- It has 2M people [1].\nMore. And mo
 // 9. buy agents: find the exact product, ask, then order
 const AG = await import("../../web-src/agents.js");
 const b = AG.parseAgent("buy me AirPods Pro 2 under 9000", { now: Date.parse("2026-10-27") });
-ok(b.kind === "buy" && b.what === "AirPods Pro 2" && b.below === 9000 && b.tries.length === 2, "'buy me AirPods Pro 2 under 9000' → a buy agent on Amazon and noon, limit 9,000");
+ok(b.kind === "buy" && b.what === "AirPods Pro 2" && b.below === 9000 && b.tries.length >= 2 && b.tries[0].site === "Amazon" && b.tries[1].site === "noon", "'buy me AirPods Pro 2 under 9000' → a buy agent on Amazon, noon and the other stores (v9.0), limit 9,000");
 ok(AG.parseAgent("اشتريلي ايربودز برو 2 بأقل من 9000").what === "ايربودز برو 2" && AG.parseAgent("buy me something").ask, "Arabic works; 'something' is asked about, never guessed");
 ok(AG.parseAgent("order my usual from Talabat").kind === "order" && AG.parseAgent("open Uber").kind === "open", "the usual order and opening apps are unchanged");
 ok(AG.matchScore("AirPods Pro 2", { name: "Silicone case for AirPods Pro 2" }) === 0 && AG.matchScore("iPhone 16", { name: "Apple iPhone 16 Pro Max" }) === 0 && AG.matchScore("AirPods Pro 2", { name: "Apple AirPods Pro (2nd generation)" }) === 1, "a case is not the product; 'iPhone 16' is not the Pro Max; '2nd generation' is 2");

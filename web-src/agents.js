@@ -13,9 +13,9 @@
      scout  "find me a used Tucson 2022"              → Scout (it lives here now)
      alert  "tell me when Ahmed messages me"          → a message alert (watch.js)
    Pure; tests/unit/v1000agents.test.mjs.                                                                                       */
-import { planTask, hotelLinks, shopLinks, tripDates } from "./agent.js";
+import { planTask, hotelLinks, shopLinks, tripDates, storeTries } from "./agent.js";
+import { looksLikeGoal, parseGoal, pricesIn, siteOf } from "./scout.js";
 import { parseWatch } from "./watch.js";
-import { looksLikeGoal } from "./scout.js";
 import { isoDay } from "./deadlines.js";
 
 export const AGENTS_KEY = "attune:agents:v1";
@@ -139,11 +139,16 @@ export function windowStarts(w, nights, max = 6) {
   return [...new Set(Array.from({ length: n }, (_, i) => isoDay(a + Math.round(step * i / DAY) * DAY)))];
 }
 
+const RESEARCH = /(?:^|\b)(?:(?:please\s+)?(?:gather|collect|compile|find|get|dig up|look up|pull together)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(?:info(?:rmation)?|details|facts|everything|research|data|sources)\s+(?:on|about|regarding|for)|research(?:\s+(?:about|on))?|do (?:a |some )?research (?:on|about)|deep research(?:\s+(?:on|about))?|(?:give|write) me a (?:report|brief|summary) (?:on|about)|tell me everything about)(?=\s)|(?:(?:جمعلي|جمّعلي|اجمعلي|اجمع لي|هاتلي|هات لي|دورلي على|ابحثلي عن|ابحث عن|عايز|عاوز|محتاج)\s+(?:كل\s+)?(?:ال)?(?:معلومات|تفاصيل)|(?:اعملي|اعمل لي|اعمللي|عايز|عاوز|محتاج)\s+بحث(?:\s+(?:شامل|كامل|عميق))?|بحث عميق)\s+(?:عن|على|حوالين|في)/iu;
 /** The sentence → an agent draft: { kind, … , ask? } (ask = the one thing still missing, as a question) | null. */
 export function parseAgent(text, opts = {}) {
   const t0 = String(text || "").replace(/\s+/g, " ").trim(); if (!t0 || t0.length > 400) return null;
   const t = fold(t0), now = opts.now || Date.now(), country = (opts.country || "EG").toUpperCase();
   const app = appIn(t0);
+  // v9.0 (Ali: "I told it to gather information on a topic — get it from more than one source and present it in a good, neat way"):
+  // a research agent — several searches, every page read one at a time, figures checked across sources, one tidy report with sources
+  const rm = RESEARCH.exec(t0);
+  if (rm) { const topic = t0.slice(rm.index + rm[0].length).replace(/^[\s:,-]+/, "").replace(/[?.!]+$/, "").trim(); if (topic.length >= 3) return { kind: "research", topic: topic.slice(0, 300), title: "Research · " + topic.slice(0, 70) }; }
   // open an app — any app the phone has, by name
   const om = OPEN.exec(t0);
   if (om && !PRICE_WORD.test(t) && om[1].split(/\s+/).length <= 4) {
@@ -178,9 +183,8 @@ export function parseAgent(text, opts = {}) {
     const lim = PRICE_WORD.test(t) ? limitIn(t0) : 0, store = app && app.kind === "shop" ? app : null;
     const what = buyWhat(t0);
     if (what && !/^(something|anything|stuff|it|this|that|حاجه|حاجة|اي حاجه|أي حاجة|ده|دي)$/iu.test(what)) {
-      const links = shopLinks({ what, store: store ? store.id : "" }, country).filter((l) => !/google/i.test(l.label));
-      const tries = (store ? links.filter((l) => l.label.toLowerCase().startsWith(store.label.toLowerCase().slice(0, 4))) : links).slice(0, 2).map((l) => ({ url: l.url, site: l.label }));
-      const use = tries.length ? tries : links.slice(0, 1).map((l) => ({ url: l.url, site: l.label }));
+      // v9.0 (Ali: "Amazon, noon, Jumia … everywhere"): every store of the country, one after another (or only the one named)
+      const use = storeTries(what, country, store ? store.label : "").map((l) => ({ url: l.url, site: l.site }));
       return { kind: "buy", what, below: lim, currency: curIn(t, country), url: use[0].url, site: use.map((x) => x.site).join(" · "), tries: use, title: (lim ? "Buy · " : "Find & buy · ") + what };
     }
     return { kind: "buy", what: "", ask: "What should I buy? (the exact product, e.g. AirPods Pro 2, or iPhone 16 128GB black)" };
@@ -220,14 +224,18 @@ export function parseAgent(text, opts = {}) {
     // a product in a store: "tell me when the iPhone 16 on Amazon is under 40,000" (a car, a flat or anything for sale with no
     // store named is Scout's: "tell me when a Tucson 2022 is under 1.5M")
     const store = app && app.kind === "shop" ? app : null;
-    if (!store) return looksLikeGoal(t0) || /\b(used|for sale|rent|flat|apartment|car)\b|مستعمل|للبيع|ايجار|إيجار|شقه|شقة|عربيه|عربية/iu.test(t) ? { kind: "scout", text: t0, title: t0.slice(0, 80) } : null;
-    const what = t0.replace(/https:\/\/\S+/g, "").replace(/^(?:please\s+)?(?:tell|notify|alert|ping|let|warn)\s+me\s+(?:when|if|once)\s+(?:the\s+)?|^(?:قولي|نبهني|عرفني|بلغني)\s+(?:لما|لو)\s+/iu, "")
+    // v9.0 (Ali: "Huawei FreeClip 2 under 8,400 — look in Amazon, noon, Jumia … everywhere"): a NEW product with no store named is
+    // watched in every store of the country; a used one, a car, a flat or anything from people's ads stays Scout's
+    const used = /\b(used|second hand|for sale|rent|flat|apartment|car)\b|مستعمل|استعمال|للبيع|ايجار|إيجار|شقه|شقة|عربيه|عربية/iu.test(t);
+    const newProduct = !store && !used && parseGoal(t0).kind === "product";
+    if (!store && !newProduct) return looksLikeGoal(t0) || used ? { kind: "scout", text: t0, title: t0.slice(0, 80) } : null;
+    const what = t0.replace(/https:\/\/\S+/g, "").replace(/^(?:please\s+)?(?:tell|notify|alert|ping|let|warn)\s+me\s+(?:when|if|once)\s+(?:the\s+)?|^(?:قولي|نبهني|عرفني|بلغني)\s+(?:لما|لو)\s+|^(?:دورلي|دور لي|ابحثلي|ابحث لي|هاتلي|عايز|عاوز|محتاج)\s+(?:على|عن)?\s*/iu, "")
       .replace(/\s+(?:on|at|from|في|على|من)\s+(?:amazon|noon|jumia|امازون|أمازون|نون|جوميا)\b.*$/iu, "")
-      .replace(/\s+(?:is|are|goes|gets|drops|becomes|يبقي|يبقى|ينزل|تنزل|بقي|بقى)?\s*(?:under|below|less than|cheaper than|lower than|اقل من|أقل من|تحت).*$/iu, "").trim().slice(0, 70);
+      .replace(/\s+(?:is|are|goes|gets|drops|becomes|يبقي|يبقى|ينزل|تنزل|بقي|بقى)?\s*(?:under|below|less than|cheaper than|lower than|اقل من|أقل من|تحت|بأقل من|باقل من|بحد اقصى|بحد أقصى|في حدود).*$/iu, "").trim().slice(0, 70);
     if (!what) return null;
-    const links = shopLinks({ what, store: store ? store.id : "" }, country);
-    const pick = links.find((l) => store && l.label.toLowerCase().startsWith(store.label.toLowerCase().slice(0, 4))) || links[0];
-    return { kind: "watch", site: pick.label, url: pick.url, below: limit, currency: cur, what, title: what + " · " + pick.label };
+    const tries = storeTries(what, country, store ? store.label : "").map((l) => ({ url: l.url, site: l.site }));
+    const site = tries.length > 1 ? tries.length + " stores" : tries[0].site;
+    return { kind: "watch", site, url: tries[0].url, below: limit, currency: cur, what, title: what + " · " + (tries.length > 1 ? tries.map((x) => x.site).slice(0, 3).join(", ") + "…" : tries[0].site), ...(tries.length > 1 ? { tries } : {}) };
   }
   // do it now: a ride, food, a hotel, a flight, a product (the right app with the search ready)
   // "Uber to the airport" has no verb of its own: a ride app's name is the verb
@@ -267,10 +275,12 @@ export function makeAgent(d, now = Date.now()) {
 }
 /** A check's result kept on its agent (the last 30); found = at or under the limit. */
 export function addCheck(a, c) {
-  const row = { at: c.at || Date.now(), ...(c.price > 0 ? { price: Math.round(c.price) } : { blocked: true }), how: c.how || "auto", ...(c.checkin ? { checkin: c.checkin, checkout: c.checkout } : {}) };
+  // v9.0 (Ali: "Check now opened Amazon, not the exact listing"): a check keeps WHICH listing had the price — its link, name and store
+  const where = { ...(c.href ? { href: String(c.href).slice(0, 600) } : {}), ...(c.name ? { name: String(c.name).slice(0, 140) } : {}), ...(c.site ? { site: String(c.site).slice(0, 40) } : {}) };
+  const row = { at: c.at || Date.now(), ...(c.price > 0 ? { price: Math.round(c.price), ...where } : { blocked: true }), how: c.how || "auto", ...(c.checkin ? { checkin: c.checkin, checkout: c.checkout } : {}) };
   const checks = [...(a.checks || []), row].slice(-30);
   const found = row.price > 0 && a.below > 0 && row.price <= a.below && !(a.found && a.found.price <= row.price && a.found.at > row.at - 2 * DAY);
-  return { ...a, checks, ...(found ? { found: { at: row.at, price: row.price, ...(row.checkin ? { checkin: row.checkin, checkout: row.checkout } : {}) } } : {}) };
+  return { ...a, checks, ...(found ? { found: { at: row.at, price: row.price, ...where, ...(row.checkin ? { checkin: row.checkin, checkout: row.checkout } : {}) } } : {}) };
 }
 /* ---- v8.7 (persona 4, idea 3 — Ali: "do all"): agents learn your taste ---------------------------------------------------------
    After two "Not this one" that share something — both refurbished / used, both from the same seller or site, both rated under 4★ —
@@ -359,17 +369,55 @@ export function planSteps(a, now = Date.now()) {
 /** The price watches the phone checks with Attune closed (AgentWatch.kt). */
 // v8.2: a hotel window sends each start day as its own check ("id~2"); takeChecks folds them back into the agent
 export const watchPlan = (st) => (st.agents || []).filter((a) => a.on && (a.kind === "watch" || (a.kind === "buy" && a.below > 0 && a.step === "search")) && /^https:\/\//.test(a.url || ""))
-  .flatMap((a) => (a.tries && a.tries.length ? a.tries.map((x, i) => ({ id: a.id + "~" + i, title: a.title + " · " + x.checkin, url: x.url, below: a.below || 0, currency: a.currency || "" }))
-    : [{ id: a.id, title: a.title, url: a.url, below: a.below || 0, currency: a.currency || "" }])).slice(0, 12);
+  .flatMap((a) => (a.tries && a.tries.length ? a.tries.map((x, i) => ({ id: a.id + "~" + i, title: (a.what || a.title) + " · " + (x.checkin || x.site || ""), url: x.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: x.site || a.site || "" }))
+    : [{ id: a.id, title: a.what ? a.what + " · " + (a.site || "") : a.title, url: a.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: a.site || "" }])).slice(0, 16);
 /** The phone's checks ({id or "id~i": [rows]}) → the agents with them added (a window's row keeps its days). */
 export function takeChecks(agents, got) {
   return agents.map((a) => {
     const rows = Object.entries(got || {}).filter(([k]) => k === a.id || k.startsWith(a.id + "~"))
-      .flatMap(([k, list]) => { const x = k.includes("~") && a.tries ? a.tries[+k.split("~")[1]] : null; return (list || []).map((c) => ({ ...c, ...(x ? { checkin: x.checkin, checkout: x.checkout } : {}) })); })
+      .flatMap(([k, list]) => { const x = k.includes("~") && a.tries ? a.tries[+k.split("~")[1]] : null; return (list || []).map((c) => ({ ...c, ...(x && x.checkin ? { checkin: x.checkin, checkout: x.checkout } : {}), ...(x && x.site && !c.site ? { site: x.site } : {}), ...(x && !c.href ? { url: x.url } : {}) })); })
       .sort((p, q) => (p.at || 0) - (q.at || 0));
-    return rows.reduce((x, c) => addCheck(x, { ...c, how: "auto" }), a);
+    if (!rows.length) return a;
+    const next = rows.reduce((x, c) => addCheck(x, { ...c, how: "auto" }), a);
+    // v9.0: the listings the phone saw (with their own links) become the card's best offers, one per store
+    const seen = rows.filter((c) => c.price > 0 && c.href).map((c) => ({ name: c.name || a.what || a.title, price: c.price, href: c.href, site: c.site || "", url: c.href, text: c.name || "", ...(c.checkin ? { checkin: c.checkin, checkout: c.checkout } : {}) }));
+    return seen.length ? { ...next, best3: bestAcross(seen, a) } : next;
   });
 }
+/* ---- v9.0 (Ali, 2 Nov: "agents stronger and smarter — Amazon, noon, Jumia, Google, Facebook, everywhere; accurate, strong, fast,
+   vast"): the offers of one round from every store AND from the open web (the app's own search: shops Attune doesn't know,
+   price-comparison sites, Facebook pages it indexes) → the exact product only (matchScore: every model number, no case or cable),
+   prices that are clearly not the product's (a monthly instalment, a strap at 300 when the rest are 8,000) dropped, the cheapest
+   listing of each store kept with its OWN link. */
+const MONTHLY = /\/\s*(?:mo|month)\b|per month|a month|monthly|شهري|في الشهر|\/\s*شهر/i;
+/** Search hits ({ title, url, text }) → offers: the price written next to the product on that page, with that page's link. */
+export function webOffers(hits, what, { cur = "" } = {}) {
+  const out = [];
+  for (const h of hits || []) {
+    if (!h || !/^https:\/\//.test(h.url || "") || !h.title) continue;
+    if (/\/(forum|forums|topic|thread|threads|news|blog|wiki|reviews?)\/|youtube\.com|reddit\.com|wikipedia\.org/i.test(h.url)) continue;
+    const head = { name: h.title, text: String(h.text || "").slice(0, 400) };
+    if (matchScore(what, { name: h.title, text: "" }) < 0.75 && matchScore(what, head) < 0.75) continue;
+    const text = (h.title + " · " + String(h.text || "")).slice(0, 6000);
+    const ps = pricesIn(text).filter((p) => p.explicit && (!cur || p.cur === cur) && !MONTHLY.test(text.slice(p.at, p.at + 24)));
+    if (!ps.length) continue;
+    out.push({ name: h.title.slice(0, 140), price: ps[0].v, currency: ps[0].cur || cur, href: h.url, url: h.url, site: siteOf(h.url), text: String(h.text || "").slice(0, 200), web: true });
+  }
+  return out;
+}
+/** Every offer of a round → the exact product, believable prices, the cheapest listing of each store, cheapest first (max 5). */
+export function bestAcross(offers, a = {}, max = 5) {
+  const what = a.what || "", skip = a.skip || [];
+  const ok = (offers || []).filter((o) => o && o.price > 0 && fitsTaste(o, a.taste) && (!what || matchScore(what, o) >= 0.75)
+    && !skip.includes(String(o.href || o.name || "").slice(0, 120)) && !skip.includes(String(o.name || o.text || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 40)));
+  // a price far under the middle of the others is an accessory, a part or an instalment — not the product
+  const ps = ok.map((o) => o.price).sort((x, y) => x - y), mid = ps.length ? ps[Math.floor(ps.length / 2)] : 0;
+  const sane = ps.length >= 3 ? ok.filter((o) => o.price >= mid * 0.45 && o.price <= mid * 2.5) : ok;
+  const by = new Map();
+  for (const o of sane) { const k = (o.site || siteOf(o.href || o.url || "")).toLowerCase() || String(o.name).toLowerCase(); if (!by.has(k) || by.get(k).price > o.price) by.set(k, { ...o, key: String(o.name || o.text || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 40) || String(o.price) }); }
+  return [...by.values()].sort((x, y) => x.price - y.price).slice(0, max);
+}
+
 /** A delivery agent as a Message-alert rule the phone checks against every notification of that store's app. */
 export const trackRule = (a) => ({ id: "agent-" + a.id, on: a.on, created: a.created, who: [], app: "pkgs:" + [a.app.pkg, ...(a.app.alt || [])].filter(Boolean).join("|"),
   words: ["arriving", "arrives", "arrive", "delivered", "delivery", "out for delivery", "shipped", "dispatched", "on its way", "on the way", "يصل", "هيوصل", "توصيل", "التوصيل", "الطريق", "تم الشحن", "تم التوصيل", "شحن", "وصل"],

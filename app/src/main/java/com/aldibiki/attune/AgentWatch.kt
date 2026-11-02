@@ -57,13 +57,64 @@ object AgentWatch {
         raw.toLongOrNull()?.takeIf { it in 50..100_000_000 }
     }.toList()
 
-    /** Reads one page → the lowest price on it, or null when the page shows no prices to an app (a browser check is needed). */
-    private fun lowest(url: String): Long? = try {
+    /** One listing read from a store's results page: its price, its name and its OWN link. */
+    data class Offer(val price: Long, val name: String, val href: String)
+
+    private val STOP = setOf("a", "an", "the", "for", "with", "of", "and", "new", "original", "me", "my", "to", "in", "on")
+    private val VARIANT = Regex("^(pro|max|plus|ultra|mini|lite|se|air|fe)$")
+    private val ACCESSORY = Regex("\\b(case|cover|protector|screen guard|glass|skin|sticker|strap|band|cable|charger|adapter|stand|holder|mount|sleeve|pouch|replacement|ear ?tips|compatible with|fits)\\b|جراب|اسكرينه|حامي|شاحن|كابل|غطاء", RegexOption.IGNORE_CASE)
+    private fun words(s: String) = s.lowercase().replace(Regex("[^\\p{L}\\p{N} ]+"), " ").split(Regex("\\s+")).filter { it.isNotBlank() && it !in STOP }
+
+    /** v9.0 (Ali: "Check now opened Amazon, not the exact listing"): is this listing the product asked for? Every model number and
+     *  variant word must be in its name, 3 in 4 of the other words, and an accessory (a case FOR it) is not it. Same rule as
+     *  agents.js matchScore. Pure. */
+    fun matches(what: String, name: String): Boolean {
+        val want = words(what); if (want.isEmpty()) return true
+        val n = " " + words(name).joinToString(" ") + " "
+        fun has(w: String) = n.contains(" $w ") || n.contains(" ${w}s ") || (w.length > 4 && n.contains(w))
+        if (want.filter { it.any(Char::isDigit) || VARIANT.matches(it) }.any { !has(it) }) return false
+        if (!ACCESSORY.containsMatchIn(what) && ACCESSORY.containsMatchIn(name)) {
+            val first = want.map { n.indexOf(" $it") }.filter { it >= 0 }.minOrNull() ?: Int.MAX_VALUE
+            val acc = ACCESSORY.find(n)?.range?.first ?: Int.MAX_VALUE
+            if (acc < first || Regex("\\b(for|compatible with|fits)\\s").containsMatchIn(n.take(first.coerceAtMost(n.length)))) return false
+        }
+        return want.count { has(it) } * 4 >= want.size * 3
+    }
+
+    /** The listings on a results page: each product card (Amazon, Jumia, B.TECH, 2B…, or any link with a price around it). */
+    private fun offers(doc: org.jsoup.nodes.Document): List<Offer> {
+        val out = ArrayList<Offer>()
+        val cards = doc.select("[data-component-type=s-search-result], article.prd, li.product-item, div.product-item, div.product-item-info, .product-card, [class*=productContainer], [class*=ProductBox], [data-qa=product-item]")
+        val list: List<org.jsoup.nodes.Element> = if (cards.isNotEmpty()) cards.toList() else doc.select("a[href]").mapNotNull { a ->
+            var e: org.jsoup.nodes.Element? = a; var k = 0
+            while (e != null && k < 4 && prices(e.text()).isEmpty()) { e = e.parent(); k++ }
+            e?.takeIf { it.text().length in 10..700 && prices(it.text()).isNotEmpty() }
+        }.distinct()
+        for (c in list.take(80)) {
+            val price = prices(c.text()).firstOrNull() ?: continue
+            val links = c.select("a[href]").filter { it.absUrl("href").startsWith("https://") }
+            val main = links.maxByOrNull { it.text().length + (it.selectFirst("img[alt]")?.attr("alt")?.length ?: 0) } ?: (if (c.tagName() == "a") c else null) ?: continue
+            val href = main.absUrl("href").takeIf { it.startsWith("https://") } ?: continue
+            val name = listOf(c.selectFirst("h2, h3, .name, .product-name, [class*=title], [data-qa=product-name]")?.text() ?: "", main.attr("title"), main.text(), c.selectFirst("img[alt]")?.attr("alt") ?: "")
+                .firstOrNull { it.length >= 6 } ?: continue
+            out.add(Offer(price, name.take(140), href))
+        }
+        return out
+    }
+
+    /** Reads one page → the cheapest listing of THE product (with its link), or the lowest price on the page when nothing names a
+     *  product; null when the page shows no prices to an app (a browser check is needed). */
+    private fun lowest(url: String, what: String): Offer? = try {
         Prefs.requireOnline(url, "an agent checking a price")
         val doc = Jsoup.connect(url).userAgent(UA).header("Accept-Language", "en-US,en;q=0.8,ar;q=0.6")
             .timeout(15_000).maxBodySize(4_000_000).followRedirects(true).get()
         doc.select("script,style,noscript").remove()
-        prices(doc.body()?.text() ?: "").minOrNull()
+        if (what.isNotBlank()) {
+            val ok = offers(doc).filter { matches(what, it.name) }
+            // a price far under the others is a part or an instalment, not the product
+            val mid = ok.map { it.price }.sorted().let { if (it.isEmpty()) 0L else it[it.size / 2] }
+            (if (ok.size >= 3) ok.filter { it.price * 100 >= mid * 45 } else ok).minByOrNull { it.price }
+        } else prices(doc.body()?.text() ?: "").minOrNull()?.let { Offer(it, "", "") }
     } catch (e: Exception) { null }
 
     /** One round of checks. Called on a background thread. */
@@ -74,21 +125,25 @@ object AgentWatch {
         if (Prefs.airGap(ctx)) return
         val out = read(ctx)
         val hits = ArrayList<String>()
-        for (i in 0 until minOf(plan.length(), 12)) {   // v8.2: a hotel window is several start days
+        for (i in 0 until minOf(plan.length(), 16)) {   // v8.2: a hotel window is several start days
             val w = plan.optJSONObject(i) ?: continue
             val url = w.optString("url"); if (!url.startsWith("https://")) continue
-            val low = lowest(url)
+            val got = lowest(url, w.optString("what"))
             val row = JSONObject().put("at", System.currentTimeMillis())
-            if (low == null) row.put("blocked", true) else row.put("price", low)
+            if (got == null) row.put("blocked", true) else {
+                row.put("price", got.price)
+                if (got.href.isNotEmpty()) row.put("href", got.href).put("name", got.name)
+                if (w.optString("site").isNotEmpty()) row.put("site", w.optString("site"))
+            }
             val list = out.optJSONArray(w.optString("id")) ?: JSONArray()
             list.put(row); out.put(w.optString("id"), list)
             val below = w.optLong("below", 0L)
-            if (low != null && below > 0 && low <= below) hits.add(w.optString("title") + " · " + w.optString("currency") + " " + "%,d".format(low))
+            if (got != null && below > 0 && got.price <= below) hits.add(w.optString("title") + " · " + w.optString("currency") + " " + "%,d".format(got.price))
         }
         try { File(ctx.filesDir, FILE).writeText(out.toString()) } catch (e: Exception) {}
         if (hits.isNotEmpty()) Reminders.schedule(ctx, JSONObject().put("id", "agent-watch").put("at", System.currentTimeMillis() + 2000)
             .put("title", "Agents · price dropped")
-            .put("body", hits.take(3).joinToString("\n") + "\nOpen Attune → Agents to see it."))
+            .put("body", hits.take(3).joinToString("\n") + "\nTap to open Agents — the listing is there."))
     }
 
     private fun read(ctx: Context): JSONObject = try { JSONObject(File(ctx.filesDir, FILE).readText()) } catch (e: Exception) { JSONObject() }

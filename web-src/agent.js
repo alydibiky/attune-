@@ -270,6 +270,34 @@ export function shopLinks(f, country = "") {
   return out.slice(0, 3);
 }
 
+/* ---- v9.0 (Ali, 2 Nov: "look in Amazon, noon, Jumia, Google, Facebook — everywhere"): every store that sells in the person's
+   country, searched one after another (each gives the exact listing's own link), plus the places a person looks by hand
+   (Google Shopping, Facebook Marketplace: they need a real browser or a login, so the card links them — never read by the phone). */
+const S = (site, label, url, app = "") => ({ site, label, url, app });
+const STORES = {
+  EG: [S("amazon.eg", "Amazon", (q) => "https://www.amazon.eg/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("noon.com", "noon", (q) => "https://www.noon.com/egypt-en/search/?q=" + enc(q), "com.noon.buyerapp"),
+    S("jumia.com.eg", "Jumia", (q) => "https://www.jumia.com.eg/catalog/?q=" + enc(q), "com.jumia.android"), S("btech.com", "B.TECH", (q) => "https://btech.com/en/catalogsearch/result/?q=" + enc(q)),
+    S("2b.com.eg", "2B", (q) => "https://2b.com.eg/en/catalogsearch/result/?q=" + enc(q)), S("rayashop.com", "Raya Shop", (q) => "https://www.rayashop.com/en/catalogsearch/result/?q=" + enc(q)),
+    S("dubizzle.com.eg", "Dubizzle", (q) => "https://www.dubizzle.com.eg/en/ads/q-" + enc(q.replace(/\s+/g, "-")) + "/")],
+  SA: [S("amazon.sa", "Amazon", (q) => "https://www.amazon.sa/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("noon.com", "noon", (q) => "https://www.noon.com/saudi-en/search/?q=" + enc(q), "com.noon.buyerapp"),
+    S("jarir.com", "Jarir", (q) => "https://www.jarir.com/sa-en/catalogsearch/result?search=" + enc(q)), S("extra.com", "eXtra", (q) => "https://www.extra.com/en-sa/search/?text=" + enc(q))],
+  AE: [S("amazon.ae", "Amazon", (q) => "https://www.amazon.ae/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("noon.com", "noon", (q) => "https://www.noon.com/uae-en/search/?q=" + enc(q), "com.noon.buyerapp"),
+    S("sharafdg.com", "Sharaf DG", (q) => "https://uae.sharafdg.com/?q=" + enc(q)), S("carrefouruae.com", "Carrefour", (q) => "https://www.carrefouruae.com/mafuae/en/search?keyword=" + enc(q))],
+};
+/** The stores to search for a product, in order (the store the person named comes first, or alone when they said "on Amazon"). */
+export function storeTries(what, country = "", store = "", max = 6) {
+  const c = String(country || "").toUpperCase(), list = STORES[c] || [S("amazon." + (AMAZON_TLD[c] || "com"), "Amazon", (q) => "https://www.amazon." + (AMAZON_TLD[c] || "com") + "/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("ebay.com", "eBay", (q) => "https://www.ebay.com/sch/i.html?_nkw=" + enc(q))];
+  const named = store ? list.filter((x) => x.label.toLowerCase().startsWith(String(store).toLowerCase().slice(0, 4)) || x.site.startsWith(String(store).toLowerCase())) : [];
+  return (named.length ? named : list).slice(0, max).map((x) => ({ site: x.label, host: x.site, url: x.url(what), app: x.app }));
+}
+/** Where a person looks by hand: opened in the browser, not read by the phone. */
+export function lookLinks(what, country = "") {
+  const c = String(country || "").toUpperCase(), q = enc(what);
+  return [{ label: "Google Shopping", url: "https://www.google.com/search?tbm=shop&q=" + q + (c === "EG" ? "&gl=eg" : "") },
+    { label: "Facebook Marketplace", url: "https://www.facebook.com/marketplace/search/?query=" + q },
+    { label: "Google", url: "https://www.google.com/search?q=" + q + enc(c === "EG" ? " سعر" : " price") }];
+}
+
 // ---- level 2: the web agent's rules (run inside the page by AgentBrowser) -----------------------------------------------------------
 /** Ranks offers read from a results page by the person's rules. offers: [{ price, currency, text, stops?, depart? }]. */
 export function rankOffers(offers, f = {}) {

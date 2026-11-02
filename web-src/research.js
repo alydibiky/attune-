@@ -325,7 +325,7 @@ export function confirmedFigures(hits, max = 25) {
 
 /** Does the person ask for the slow, thorough page-by-page research? */
 export function wantsDeep(text) {
-  return /\b(deep research|research (it )?(deeply|thoroughly|in depth)|in[- ]depth research|dig deep)\b|بحث عميق|ابحث بعمق|بحث شامل|بعمق/i.test(String(text || ""));
+  return /\b(deep research|research (it )?(deeply|thoroughly|in depth)|in[- ]depth research|dig deep)\b|بحث عميق|ابحث بعمق|بحث شامل|بعمق|بحث معمّق|investigación a fondo|recherche approfondie|tiefenrecherche|pesquisa aprofundada|ricerca approfondita|глубокое исследование|derin araştırma|riset mendalam|गहन शोध|گہری تحقیق|تحقیق عمیق|গভীর গবেষণা|utafiti wa kina|ค้นคว้าเชิงลึก|nghiên cứu chuyên sâu|深度研究|詳細リサーチ|심층 리서치/i.test(String(text || ""));
 }
 
 export const FAST_REPORT_ADD = "\n\n(Write a complete, accurate answer from ALL the passages, like a research assistant: a direct 2–3 line answer first, then sections with ## headings and tables for specs, prices and comparisons, covering every part of the question and every item the passages name. Cite the source number after each fact. Copy numbers exactly. Where sources give different values, show both with their sources; prefer the confirmed figures. Each fact once — no repeated bullets. Never write what the sources don't say, and never use the word \"passages\".)";

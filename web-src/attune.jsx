@@ -8730,6 +8730,10 @@ export default function App() {
       if (d.kind === "reminder" && d.id === "box-widget") { navTo("home"); setTimeout(() => { try { const b = document.querySelector("[data-testid=home-ask]"); if (b) b.focus(); } catch (e) {} }, 350); return; }
       if (d.kind === "reminder" && /^med-/.test(d.id || "")) { navTo("care"); return; }      // v6.27 a medicine reminder → Family health
       if (d.kind === "reminder" && /^missions-/.test(d.id || "")) { navTo("missions"); return; }   // v6.37 the morning debrief
+      // v9.0 (Ali: "when I open it from the notification it doesn't take me to Scout or Agents"): an agent's notification → Agents,
+      // a Scout find → Scout on that goal
+      if (d.kind === "reminder" && /^agent/.test(d.id || "")) { navTo("agents"); return; }
+      if (d.kind === "reminder" && /^scout-/.test(d.id || "")) { try { localStorage.setItem("attune:scout:open", String(d.id).slice(6)); } catch (e) {} navTo("scout"); return; }
       if (d.kind === "reminder" && /^radar-/.test(d.id || "")) { navTo("radar"); return; }  // v6.27 a deadline → the Radar   // v6.14: the Fit widget and Fit reminders
       if (d.kind === "reminder") { navTo("reminders"); return; }
       // A photo or screenshot shared from another app (a receipt, a menu, a
@@ -10767,7 +10771,9 @@ export default function App() {
             } />
         ) : mode === "agents" ? (
           <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()} pro={proActive} openPlan={() => setShowUpgrade(true)}
-            onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }} />
+            onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }}
+            search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 4 }) : null}
+            onResearch={(topic) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: topic })); navTo("chat"); }} />
         ) : mode === "studio" ? (
           STUDIO_OFF ? <StudioOffDevice paused /> : NATIVE && NATIVE.imageInfo ? (
             <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}

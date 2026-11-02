@@ -41,11 +41,13 @@ export const CAT_NAMES = { food: ["Food", "طعام"], groceries: ["Groceries", 
   gifts: ["Gifts", "هدايا"], salary: ["Salary", "راتب"], other: ["Other", "أخرى"] };
 export const CAT_EMOJI = { food: "🍲", groceries: "🛒", transport: "🚗", bills: "⚡", rent: "🏠", shopping: "🛍️", health: "💊", fun: "🎬", coffee: "🍵",
   gifts: "🎁", salary: "💼", other: "✦" };
+/** v9.0: an id the app or another app made up ("cmuu3u3sb2q4sd", "c1730000000") — never a name to show. */
+export const looksLikeId = (id) => { const s = String(id || ""); return s.length >= 8 && !/\s/.test(s) && /\d/.test(s) && /^[a-z0-9_-]+$/i.test(s); };
 export function catName(L, id, ar = false) {
   const c = ((L && L.customCats) || []).find((x) => x.id === id);
   if (c) return (ar ? c.ar : tr(c.en)) || c.name || c.en || id;
   const n = CAT_NAMES[id];
-  return n ? (ar ? n[1] : tr(n[0])) : (id ? id[0].toUpperCase() + id.slice(1) : ar ? "أخرى" : tr("Other"));
+  return n ? (ar ? n[1] : tr(n[0])) : (id && !looksLikeId(id) ? id[0].toUpperCase() + id.slice(1) : ar ? "من غير تصنيف" : tr("Uncategorised"));
 }
 
 /** Everything the calm view and the Report show, at `now`, for one account (`account` = its id) or all money accounts.

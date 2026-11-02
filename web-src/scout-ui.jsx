@@ -145,7 +145,10 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
   const put = (d) => { setData(S.saveScout(d)); try { const N = window.AttuneNative; N && N.scoutNightPlan && N.scoutNightPlan(JSON.stringify(S.nightPlan(d))); } catch (e) {} };
   // v7.9 (Ali: Home's "Scout found 4 new" didn't take him to the ads): the goal with new finds opens first, its new ads marked
   // "New", first in the list, and scrolled to
-  const [sel, setSel] = useState(() => { const gs = S.loadScout().goals; return ((gs.find((x) => (x.unseen || []).length) || gs[0]) || {}).id || null; });
+  const [sel, setSel] = useState(() => { const gs = S.loadScout().goals;
+    // v9.0: a Scout notification tapped → that goal
+    let want = ""; try { want = localStorage.getItem("attune:scout:open") || ""; localStorage.removeItem("attune:scout:open"); } catch (e) {}
+    return ((gs.find((x) => x.id === want) || gs.find((x) => (x.unseen || []).length) || gs[0]) || {}).id || null; });
   const [openAd, setOpenAd] = useState(null);       // v7.9 calm list: the ad whose details are open
   const [picking, setPicking] = useState(false), [picked, setPicked] = useState([]), [cmpOn, setCmpOn] = useState(false);   // select several → a table
   const [fresh] = useState(() => { const gs = S.loadScout().goals; const g0 = gs.find((x) => (x.unseen || []).length); return g0 ? g0.unseen : []; });

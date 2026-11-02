@@ -6,10 +6,40 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
+| `main` | **v9.0** (versionCode 131; 2 Nov, Ali's 3 points) — before: **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
 | Last APK | v8.9: https://github.com/alydibiky/attune-/actions/runs/41309881633 (success, sent to Ali) |
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
+
+## RULE (Ali, 2 Nov 2026) — every addition in all 20 languages, in the same change
+"For each addition in the app do it for all languages so we don't have to translate later": every new English line the app shows
+gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
+v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
+
+## v9.0 — 2 Nov: Ali's 3 points (month card, agent links + notifications, stronger agents)
+1. Home "Last month in one look" said "Most went on cmuu3u3sb2q4sd": a category id with no name. `monthreview.js` now names it
+   with `catName` (his own category's name), else what was written on those payments, else "uncategorised"; `money-report.js
+   catName` never shows a made-up id (`looksLikeId`). Test `tests/unit/v901monthcat.test.mjs`.
+2. "Check now opened Amazon, not the exact listing" + "the notification doesn't open Agents":
+   - every check keeps WHICH listing had the price (`addCheck`: href, name, site); "Open this offer" / "Open the listing" open
+     the listing itself (`openBest` uses `o.href`; the in-app browser's offers always had it, the page ignored it).
+   - AgentWatch.kt (Attune closed) reads each product card (name + price + its own link) and keeps the cheapest one that IS the
+     product (`matches`: model numbers, no case/strap/ear tips; a price under 45% of the middle is dropped). Kotlin not compiled
+     here — the APK build checks it.
+   - notification taps: ids `agent…` → Agents, `scout-<goal>` → Scout on that goal (attune.jsx onShare, scout-ui sel).
+3. Stronger agents (Ali: "Amazon, noon, Jumia, Google, Facebook — everywhere; get info from more than one source, neat"):
+   - `agent.js storeTries`: EG Amazon · noon · Jumia · B.TECH · 2B · Raya Shop (SA: Amazon · noon · Jarir · eXtra; AE: Amazon ·
+     noon · Sharaf DG · Carrefour; else Amazon + eBay). A NEW product with no store named ("tell me when Huawei FreeClip 2 is
+     under 8400") is now a watch on all of them (used / cars / flats stay Scout). Buy agents search all of them too.
+   - plus the open web: the app's own search (3 searches incl. site:facebook.com) → `webOffers` (price written next to the
+     product, not a monthly instalment, not a video/forum) → `bestAcross` (exact product only, outliers out, cheapest listing of
+     each store, top 5, each with its link). The card says "Searched N places" and links Google Shopping, Facebook Marketplace and
+     Google to look by hand (those need a login / real browser — never read by the phone).
+   - Research agent: "gather information on X", "research X", «جمعلي معلومات عن…», «اعملي بحث عن…» → Chat's deep research (web
+     on: several searches, each page read one at a time, figures cross-checked, report with sections, tables and sources).
+   - Test `tests/unit/v901agents.test.mjs`.
+   Open: an Arabic product name («سماعة هواوي فري كليب 2») is searched as written — English store listings won't match it;
+   idea for next time: brand names in Arabic → English (هواوي → Huawei) before the store search.
 
 ## v8.9 part 2 — 1 Nov: Ali's 5 fixes + option A (languages in separate files)
 1. Maid payment → his Maid category (`regular.js catForCommitment`: the category he chose last time for that plan, else one of his
