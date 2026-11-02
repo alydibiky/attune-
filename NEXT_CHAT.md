@@ -31,6 +31,12 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
 - Ali: "for the running now make each one a different tab" — BUILT: one tab per running agent (+ each Scout goal, + Message
   alerts), a dot on a tab with news (found / under the limit / waiting for "Order it"); the chosen tab is remembered, a new
   agent opens on its tab, a tab with news opens first. Running count now includes follow agents.
+- Ali: "the Arabic is stupid and wrong" (the watch card) — every Agents line in Egyptian Arabic re-read and rewritten (no
+  «اتشيّك / الشيّك / بيراقب»: «آخر بحث امبارح», «بدوّر مرتين في اليوم», «البحث الجاي», «دوّر دلوقتي», «افتح صفحة المنتج»);
+  prices in Arabic read "7,950 جنيه" (money() in agents-ui); «نازل 6%» instead of "(-6%)"; a price already in Arabic order is not
+  wrapped left-to-right; "+150" kept left-to-right; the clean English name under his Arabic one (no "earbuds"); Arabic comma in
+  lists. 10 buy-agent lines that no language had + 2 new ones added in all 20. Check: every Agents line exists in all 20
+  languages (149 lines).
 - Tests: `tests/unit/v905dealboard.test.mjs`, `tests/e2e_v905deal.py` (English + Egyptian Arabic, screenshots with SHOTS=).
 
 ## v9.0 part 3 — 2 Nov: "do the not done yet"

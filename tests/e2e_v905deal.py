@@ -36,7 +36,7 @@ with sync_playwright() as p:
     check("Jumia" in hero and "7,950" in hero and "450" in hero, "the best deal is the cheapest real store, Jumia 7,950, 450 under the limit: " + hero.replace("\n", " · ")[:160])
     check("check the seller" in page.locator("[data-testid=agent-deal-cheaper]").inner_text(), "the cheaper Facebook post says check the seller first")
     check(page.locator("[data-testid=agent-deal-row]").count() == 5, "five stores as bars")
-    check("Huawei FreeClip 2 earbuds" in page.locator("[data-testid=agent-searching-as]").inner_text(), "his Arabic name kept; the stores searched in English")
+    check("Huawei FreeClip 2" in page.locator("[data-testid=agent-searching-as]").inner_text(), "his Arabic name kept; the stores searched in English")
     shot(page, "v905-deal-en")
     page.click("[data-testid=agent-deal-open]"); page.wait_for_timeout(200)
     check((page.evaluate("window.__agentOpen") or {}).get("url") == "https://www.jumia.com.eg/huawei-freeclip-2.html", "Open the listing opens THAT listing, not a search page")
@@ -49,7 +49,7 @@ with sync_playwright() as p:
     # Arabic
     page.evaluate("() => { localStorage.setItem('attune:ui:lang', 'ar'); }"); page.reload(); page.wait_for_timeout(1200)
     page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", "agents"); page.wait_for_selector("[data-testid=agent-deal]", timeout=8000); page.wait_for_timeout(300)
-    check("أحسن عرض دلوقتي" in page.locator("[data-testid=agent-deal-best]").inner_text(), "Egyptian Arabic: «أحسن عرض دلوقتي»")
+    check("أحسن سعر دلوقتي" in page.locator("[data-testid=agent-deal-best]").inner_text() and "7,950 جنيه" in page.locator("[data-testid=agent-deal-best]").inner_text() and "EGP" not in page.locator("[data-testid=agent-watch]").inner_text(), "Egyptian Arabic: «أحسن سعر دلوقتي», prices in جنيه")
     shot(page, "v905-deal-ar")
     br.close()
 finish()

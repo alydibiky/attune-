@@ -17,8 +17,11 @@ import { useSubBack } from "./backstack.js";
 import * as U from "./ui-kit.jsx";
 
 const I = (s) => "⁦" + s + "⁩";
-const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? I(y) : y])) : v);
-const money = (n, cur) => (cur ? cur + " " : "") + Math.round(n).toLocaleString("en-US");
+// a number is kept left-to-right inside Arabic — but "8,400 جنيه" (a price already in Arabic order) is left as it is
+const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) && !/[\u0600-\u06ff]/.test(String(y)) ? I(y) : y])) : v);
+// v9.0 (Ali: "the Arabic is stupid"): in Arabic a price reads "8,400 جنيه", not "EGP 8,400"
+const AR_CUR = { EGP: "جنيه", SAR: "ريال", AED: "درهم", KWD: "دينار", QAR: "ريال قطري", USD: "دولار", EUR: "يورو", GBP: "جنيه إسترليني" };
+const money = (n, cur) => { const v = Math.round(n).toLocaleString("en-US"); if (getLang() === "ar" && cur) return v + " " + (AR_CUR[cur] || cur); return (cur ? cur + " " : "") + v; };
 const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : Math.round(m / 1440) === 1 ? tr("yesterday") : T("{n} days ago", { n: Math.round(m / 1440) }); };
 const KIND_ICON = { follow: Newspaper, research: BookOpen, buy: ShoppingCart, watch: Hotel, track: Package, order: UtensilsCrossed, scout: Car, alert: BellRing, open: AppWindow };
 const CHIPS = [["buy", "Find & buy", "Buy me AirPods Pro 2 under 9,000", "اشتريلي ايربودز برو 2 بأقل من 9000"],
@@ -327,7 +330,7 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
   return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-buy">
     <div className="flex gap-3 items-start"><Ico k="buy" /><div className="min-w-0 flex-1">
       <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.said || a.what}</p>
-      {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.q || a.what })}</p> : null}
+      {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.what })}</p> : null}
       <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.site}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{last ? " · " + T("checked {t}", { t: ago(last.at) }) : ""}</p>
       <div className="mt-2 space-y-0.5" data-testid="agent-buy-plan">{A.buySteps(a).map((s, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={s.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{s.done ? "✓" : "⏳"}</span><span className={s.done ? "" : "c-sub"}>{T(s.en, s.v)}</span></p>)}</div>
     </div></div>
@@ -401,7 +404,7 @@ function DealBoard({ a, openBest, skipBest, bars = false }) {
         <span className="text-[12.5px] font-bold truncate" dir="auto">{A.siteOfOffer(r.o)}{r.unsure ? " ⚠" : ""}</span>
         <span className="relative h-[20px] rounded-[7px] bg-[var(--c-soft)] overflow-hidden"><span className={"absolute inset-y-0 start-0 rounded-[7px] " + (r.best ? "bg-[var(--c-acc)]" : "bg-[var(--c-acc)] opacity-35")} style={{ width: r.pct + "%" }} />
           {b.limitPct != null ? <span className="absolute -inset-y-0.5 w-0.5 bg-[#B7791F]" style={{ insetInlineStart: b.limitPct + "%" }} /> : null}</span>
-        <span className="text-end tabular-nums text-[12.5px]"><b>{n(r.o.price)}</b>{r.diff ? <span className="block text-[10.5px] c-sub">+{n(r.diff)}</span> : null}</span>
+        <span className="text-end tabular-nums text-[12.5px]"><b>{n(r.o.price)}</b>{r.diff ? <span className="block text-[10.5px] c-sub" dir="ltr">+{n(r.diff)}</span> : null}</span>
       </button>)}
       <p className="m-0 text-[11px] c-sub">{tr("Tap a store to open its listing")}</p>
     </div> : null}
@@ -458,7 +461,7 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
     return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-watch">
       <div className="flex gap-3 items-start"><Ico k="watch" /><div className="min-w-0 flex-1">
         <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.what && a.tries && a.tries.length && !a.tries[0].checkin ? a.said || a.what : a.title}</p>
-        {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.q || a.what })}</p> : null}
+        {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.what })}</p> : null}
         <p className="m-0 text-[12.5px] c-sub" dir="auto">{/^\d+ stores$/.test(a.site || "") ? T("{n} stores", { n: parseInt(a.site, 10) }) : a.site} · {T("under {p}", { p: money(a.below, a.currency) })}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
         <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) + (last.checkin ? " (" + last.checkin + " → " + last.checkout + ")" : "") : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
         {a.found ? <span className="flex flex-wrap items-center gap-1.5 mt-1.5"><span className={U.tag("amber")} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}{a.found.site ? " · " + a.found.site : ""}</span>
@@ -468,7 +471,7 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
         {/* v8.7 (persona 4, idea 4): its price over time, the lowest seen, and the cheapest weekday once there are 2 weeks of checks */}
         <PriceLine a={a} />
         {/* v8.2 (Ali picked 2A): its plan, step by step */}
-        <div className="mt-2 space-y-0.5" data-testid="agent-plan">{A.planSteps(a).map((p, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={p.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{p.done ? "✓" : "⏳"}</span><span className={p.done ? "" : "c-sub"}>{T(p.en, p.v)}</span></p>)}</div>
+        <div className="mt-2 space-y-0.5" data-testid="agent-plan">{A.planSteps(a).map((p, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={p.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{p.done ? "✓" : "⏳"}</span><span className={p.done ? "" : "c-sub"}>{T(p.en, getLang() === "ar" && p.v && p.v.s ? { ...p.v, s: String(p.v.s).replace(/, /g, "، ") } : p.v)}</span></p>)}</div>
       </div></div>
       {(a.best3 || []).length ? ((a.best3[0] || {}).checkin ? <BestFound a={a} small={small} openBest={openBest} skipBest={skipBest} /> : <DealBoard a={a} openBest={openBest} skipBest={skipBest} />) : null}
       <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => checkNow(a)} disabled={busy} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-check"><RefreshCw size={14} className={busy ? "animate-spin" : ""} />{tr("Check now")}</button>
@@ -523,7 +526,7 @@ function PriceLine({ a }) {
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tr("Price over time")}><polyline points={h.points.map((p) => `${X(p.at)},${Y(p.price)}`).join(" ")} fill="none" stroke="var(--c-acc)" strokeWidth="2" />
       <circle cx={X(h.low.at)} cy={Y(h.low.price)} r="3.5" fill="var(--c-pos, #1E7A43)" /></svg>
     <p className="m-0 text-[12px] c-sub">{tr("Lowest {p} on {d}", { p: money(h.low.price, a.currency), d: new Date(h.low.at).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) })}
-      {" · "}{h.trend === "down" ? tr("going down ({c}%)", { c: h.change }) : h.trend === "up" ? tr("going up (+{c}%)", { c: h.change }) : tr("about the same")}
+      {" · "}{h.trend === "down" ? tr("going down {c}%", { c: Math.abs(h.change) }) : h.trend === "up" ? tr("going up {c}%", { c: Math.abs(h.change) }) : tr("about the same")}
       {h.lowDay != null ? " · " + tr("usually cheapest on {d}", { d: (ar ? WD_AR : WD)[h.lowDay] }) : ""}</p>
   </div>;
 }
