@@ -54,7 +54,7 @@ export function reviewLines(r, lang = "en", cur = "") {
   if (r.spent || r.earned) out.push(ar ? `${m}: صرفت ${f(r.spent)} ${cur}${r.earned ? ` · دخلك ${f(r.earned)}` : ""}${r.keptPct != null ? ` · حوّشت ${r.keptPct}%` : ""}` : `${m}: spent ${f(r.spent)} ${cur}${r.earned ? ` · earned ${f(r.earned)}` : ""}${r.keptPct != null ? ` · ${r.keptPct}% kept` : ""}`);
   // v8.7 (persona 4, idea 2): "Attune saved you 3,420 — a trial cancelled, a price drop, a debt collected"
   if (r.saved && r.saved.total > 0) { const K = { subs: ["a subscription cancelled", "اشتراك اتلغى"], double: ["a double charge refunded", "خصم مكرر رجع"], creep: ["a price rise fixed", "زيادة اتصلحت"], late: ["a debt collected", "دين اتحصّل"], agent: ["a better price found", "سعر أرخص"], fees: ["fees avoided", "رسوم اتوفرت"] };
-    out.push(ar ? `أتيون وفّرلك ${f(r.saved.total)} — ${r.saved.parts.map((p) => (K[p.kind] || [p.kind, p.kind])[1]).join("، ")}` : `Attune saved you ${f(r.saved.total)} — ${r.saved.parts.map((p) => (K[p.kind] || [p.kind])[0]).join(", ")}`); }
+    out.push(ar ? `Attune وفّرلك ${f(r.saved.total)} — ${r.saved.parts.map((p) => (K[p.kind] || [p.kind, p.kind])[1]).join("، ")}` : `Attune saved you ${f(r.saved.total)} — ${r.saved.parts.map((p) => (K[p.kind] || [p.kind])[0]).join(", ")}`); }
   if (r.top) { const nm = CAT[r.top.cat] || r.top.name || [r.top.cat, r.top.cat]; out.push(ar ? `أكتر حاجة: ${nm[1]} (${r.top.pct}%)` : `Most went on ${nm[0]} (${r.top.pct}%)`); }
   for (const p of r.owedToYou) out.push(ar ? `لسه على ${p.who} ليك ${f(p.left)}` : `${p.who} still owes you ${f(p.left)}`);
   if (r.youOwe) out.push(ar ? `لسه عليك ${f(r.youOwe)}` : `You still owe ${f(r.youOwe)}`);

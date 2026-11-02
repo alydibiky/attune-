@@ -18,7 +18,7 @@ export function NotifAsk({ native, flash }) {
   useEffect(() => { const t = setTimeout(() => { if (shouldAsk(native)) setOpen(true); }, 3000); return () => clearTimeout(t); }, []);
   useEffect(() => {
     if (!waiting) return;
-    const back = () => { if (document.visibilityState !== "visible") return; if (access(native)) { setOpen(false); setWaiting(false); flash && flash(ar ? "تمام — أتيون بيقرا الإشعارات دلوقتي" : tr("Done — Attune now reads your notifications")); } };
+    const back = () => { if (document.visibilityState !== "visible") return; if (access(native)) { setOpen(false); setWaiting(false); flash && flash(ar ? "تمام — Attune بيقرا الإشعارات دلوقتي" : tr("Done — Attune now reads your notifications")); } };
     document.addEventListener("visibilitychange", back); window.addEventListener("focus", back);
     return () => { document.removeEventListener("visibilitychange", back); window.removeEventListener("focus", back); };
   }, [waiting]);
@@ -27,11 +27,11 @@ export function NotifAsk({ native, flash }) {
   return (
     <div className="calm fixed inset-0 z-[280] bg-black/40 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" data-testid="notif-ask">
       <div className="w-full max-w-[420px] rounded-[24px] bg-[var(--c-surf)] text-[var(--c-ink)] p-5 shadow-xl">
-        <p className="text-[18px] font-black m-0">{ar ? "خلّي أتيون يقرا الإشعارات" : tr("Let Attune read your notifications")}</p>
+        <p className="text-[18px] font-black m-0">{ar ? "خلّي Attune يقرا الإشعارات" : tr("Let Attune read your notifications")}</p>
         <p className="text-[14px] leading-relaxed mt-2 mb-0 text-[var(--c-mut)]">{ar
           ? "عشان يسجّل مدفوعاتك من رسايل البنك والمحافظ في المال لوحده، ويقولك مين بعتلك، ويشغّل تنبيهات الرسايل. كله بيفضل على موبايلك، وأكواد OTP بتتجاهل."
           : tr("So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.")}</p>
-        <p className="text-[13px] mt-2 mb-0 text-[var(--c-mut)]">{ar ? "هتفتح صفحة في الإعدادات: شغّل «أتيون» وارجع." : tr("A Settings page opens: switch Attune on, then come back.")}</p>
+        <p className="text-[13px] mt-2 mb-0 text-[var(--c-mut)]">{ar ? "هتفتح صفحة في الإعدادات: شغّل «Attune» وارجع." : tr("A Settings page opens: switch Attune on, then come back.")}</p>
         {native.openAppInfo ? <p className="text-[12.5px] mt-2 mb-0 text-[var(--c-mut)]">{ar ? "لو أندرويد قال «إعداد مقيَّد»: افتح " : tr("If Android says “Restricted setting”: open ")}
           <button onClick={() => { setWaiting(true); try { native.openAppInfo(); } catch (e) {} }} className="underline font-bold text-[var(--c-acc)]" data-testid="notif-ask-appinfo">{ar ? "معلومات التطبيق" : tr("App info")}</button>
           {ar ? " ← ⋮ ← «السماح بالإعدادات المقيَّدة»، وبعدين «اسمح» هنا تاني." : tr(" → ⋮ → “Allow restricted settings”, then tap Allow here again.")}</p> : null}

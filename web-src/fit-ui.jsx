@@ -464,7 +464,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     const fd = await DB.byBarcode(codes[0], fetchJson);
     if (fd) { pickFood(fd); if (fd.estimate) flash && flash(L("Found “{n}” — its numbers are estimated from a similar product; check the label", "لقيت «{n}» — الأرقام تقديرية من منتج شبهه؛ راجع الملصق").replace("{n}", fd.en)); }
     // v8.9: not known anywhere → what the person logs next (by name or from the label photo) is kept for this barcode
-    else { missCode.current = codes[0]; setQ(""); flash && flash(L("Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode", "مش موجود في قواعد البيانات لسه — سجّله مرة واحدة (بالاسم أو صورة جدول القيم الغذائية) وأتيون هيفتكر الباركود ده")); }
+    else { missCode.current = codes[0]; setQ(""); flash && flash(L("Not in the databases yet — log it once (by name or a photo of its nutrition label) and Attune remembers this barcode", "مش موجود في قواعد البيانات لسه — سجّله مرة واحدة (بالاسم أو صورة جدول القيم الغذائية) و Attune هيفتكر الباركود ده")); }
   };
   const scanCode = async (file) => {
     if (!scanBarcode) return;

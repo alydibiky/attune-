@@ -103,7 +103,7 @@ export function insights(stores = {}, dir = { items: [] }, { now = Date.now(), s
   { const met = new Map();
     for (const x of items.filter((x) => (x.src === "money" || x.src === "notes" || x.src === "mind") && now - x.ts < 60 * DAY)) for (const nm of newNames([x.title, x.text].join(" "), dir)) { const k = nm.toLowerCase(); met.set(k, { name: nm, n: ((met.get(k) || {}).n || 0) + 1 }); }
     const best = [...met.values()].filter((m) => m.n >= 2).sort((a, b) => b.n - a.n)[0];
-    if (best) push({ k: "newName", id: "name:" + best.name.toLowerCase(), score: 46 + Math.min(10, best.n * 2), open: "people", en: `You've written “${best.name}” ${best.n} times — add them to People so Attune links everything about them?`, ar: `كتبت «${best.name}» ${best.n} مرات — تضيفه للناس عشان أتيون يربط كل حاجة عنه؟` }); }
+    if (best) push({ k: "newName", id: "name:" + best.name.toLowerCase(), score: 46 + Math.min(10, best.n * 2), open: "people", en: `You've written “${best.name}” ${best.n} times — add them to People so Attune links everything about them?`, ar: `كتبت «${best.name}» ${best.n} مرات — تضيفه للناس عشان Attune يربط كل حاجة عنه؟` }); }
   // ---- notes: money your notes say moved, not in Money yet
   if (notesPending > 0) push({ k: "notes", id: "notes:" + notesPending + ":" + ymd(now), score: 60, open: "money", en: `${notesPending} ${notesPending === 1 ? "payment" : "payments"} in your notes ${notesPending === 1 ? "isn't" : "aren't"} in Money yet — one tap each.`, ar: `${notesPending} ${notesPending === 1 ? "دفعة" : "دفعات"} في ملاحظاتك لسه مش في الفلوس — دوسة واحدة لكل واحدة.` });
   // ---- goals: behind the pace the date needs; and an agent's find that fits a goal

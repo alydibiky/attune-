@@ -157,7 +157,7 @@ export const DEMOS = {
     act: [S("Remind me", "فكّرني"), S("Ask Chat about it", "اسأل الشات عنها")], note: S("Search it later in your own words.", "دوّر عليها بعدين بكلامك.") },
   people: { in: "type", say: S("How much did I pay Ahmed?", "دفعت كام لأحمد؟"), title: S("Which Ahmed? → Ahmed the plumber", "أنهي أحمد؟ ← أحمد السباك"),
     lines: [L("You paid", "دفعت", S("1,150 in 3 payments", "1,150 في 3 دفعات")), L("Last time", "آخر مرة", S("12 Oct · the sink", "12 أكتوبر · الحوض")), L("Also", "كمان", S("his WhatsApp: “coming Saturday 6”", "رسالته: «جاي السبت 6»"))],
-    act: [S("Open his card", "افتح الكارت بتاعه"), S("Not him", "مش هو")], note: S("Your name for each person — Attune links everything about them.", "الاسم اللي إنت بتقوله لكل حد — وأتيون بيربط كل حاجة عنه.") },
+    act: [S("Open his card", "افتح الكارت بتاعه"), S("Not him", "مش هو")], note: S("Your name for each person — Attune links everything about them.", "الاسم اللي إنت بتقوله لكل حد — و Attune بيربط كل حاجة عنه.") },
   remember: { in: "file", say: S("The Bakery on Shubra Street.pdf → Remember", "فرن شارع شبرا.pdf ← افتكر"), title: S("Chapter 3: The Wedding Cake", "الفصل التالت: تورتة الفرح"),
     lines: [L("What happens", "اللي بيحصل", S("Salma bakes the cake the night before the wedding", "سلمى بتخبز التورتة ليلة الفرح")), L("Who", "مين", S("Salma bakes, her uncle Hassan delivers", "سلمى بتخبز، وعمها حسن بيوصّل")), L("From", "من", S("your own copy · 3 chapters", "نسختك · 3 فصول"))],
     act: [S("Ask more", "اسأل تاني"), S("Forget it", "انساه")], note: S("Books, articles and news you give it — answered from your copy.", "الكتب والمقالات والأخبار اللي بتديهاله — الإجابة من نسختك.") },
