@@ -13,6 +13,7 @@ import { taskOf, wantsWeb, wantsThink, pickModel, switchLine, needsToday, deepMo
 import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
+import * as UND from "./understand.js";
 import { chatMapIntent } from "./mapintent.js";
 import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_FARES } from "./metro.js";   // v6.41 (D5)
 import { chatLifeIntent } from "./life.js";
@@ -796,6 +797,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }
     }
 
+    // v9.0 (Ali picked B: "the app is programmed to understand like that — I want it as smart as you"): the referee. Each code
+    // reader says whether the sentence is its kind; the words of every kind are checked in all 20 languages; one clear kind →
+    // at once, as before; two kinds, or a kind only the words suggest → the phone's model picks (a few tokens) and the pick is
+    // learned. Only the picked reader may answer (understand.js).
+    let only = null;
+    if (route && !img) {
+      const pay0 = api.parsePayment(typed);
+      const flags = { action: !!(api.looksLikeAction && api.looksLikeAction(typed)), "money-log": !!(pay0 && pay0.ok && !/[?؟]\s*$/.test(typed)), "money-ask": !!myMoneyIntent(typed),
+        calc: !!looksLikeCalc(typed), agent: !!agentCard(typed, { now: Date.now(), order: dateOrder(), inApp: !!(NATIVE && NATIVE.agentOpen) }),
+        deadline: !!chatDeadlineIntent(typed, { now: Date.now(), home: homeCurrency(), order: dateOrder() }), life: !!chatLifeIntent(typed) };
+      try { only = (await UND.referee(typed, flags, { ask: api.canUseAI() ? (m) => api.run(m, null, { maxTokens: 6, temperature: 0, think: false }) : null })).kind; } catch (e) { only = null; }
+    }
+    const ok = (k) => !only || only === k;
+
     // 1. Things the phone files away by itself, instantly, no model.
     if (route && !img && api.isPeriodLog(typed)) {
       const cid = ensureChat(typed);
@@ -807,7 +822,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return;
     }
     const pay = route && !img ? api.parsePayment(typed) : null;
-    if (pay && pay.ok && typed.length < 600 && !/[?؟]\s*$/.test(typed)) {
+    if (pay && pay.ok && typed.length < 600 && !/[?؟]\s*$/.test(typed) && ok("money-log")) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed },
@@ -861,7 +876,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
 
     // Plain arithmetic: exact and instant, worked out here — no model, no wait.
-    if (route && !img && looksLikeCalc(typed)) {
+    if (route && !img && looksLikeCalc(typed) && ok("calc")) {
       const c = calculate(typed);
       if (c) {
         const cid = ensureChat(typed);
@@ -888,7 +903,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return;
     }
     const cx = !img ? connectNow(typed) : null;
-    if (route && cx && cx.ask) {
+    if (route && cx && cx.ask && (!only || only === "money-ask" || only === "life")) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed },
@@ -908,8 +923,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           actions: [...cx.people.slice(0, 1).map((p) => [p.name, "person:" + p.id]), ...opens.map((o) => [OPEN[o], "open:" + o]), ["Just answer", "answer"]] } }] }));
       setText("");
     };
-    if (route && cx && cx.answer && (cx.people.length || cx.goals.length)) { cxCard(); return; }
-    if (route && !img && myMoneyIntent(typed)) {
+    if (route && cx && cx.answer && (cx.people.length || cx.goals.length) && (!only || only === "money-ask")) { cxCard(); return; }
+    if (route && !img && (myMoneyIntent(typed) || only === "money-ask") && ok("money-ask")) {
       const m = answerMyMoney(typed, loadLedger(), { ar: /[\u0600-\u06FF]/.test(typed) });
       const cid = ensureChat(typed);
       patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
@@ -957,11 +972,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v6.27 "Do it for me": «book me the cheapest flight to Dubai on Thursday» — read by code into a plan; missing details
     // are asked; the app / site opens filled in (or inside Attune with Best offer / Fill my details); it never pays
     // v6.28 Ask your life: «who owes me money?», «is mum's HbA1c better?» — answered by code from your own data, with its source
-    if (route && cx && cx.answer) { cxCard(); return; }   // a topic ("the wedding so far") after Money's own reader
-    let mine = route && !img ? chatAsk(typed, lifeStores()) : null;
+    if (route && cx && cx.answer && (!only || only === "money-ask")) { cxCard(); return; }   // a topic ("the wedding so far") after Money's own reader
+    let mine = route && !img && (!only || only === "money-ask" || only === "life") ? chatAsk(typed, lifeStores()) : null;
     // v8.7 (Ali: "tell me about my barber" took 15 s and came from a knowledge pack): your own people and things, from what
     // you told Attune — at once, by code (personal.js)
-    if (!mine && route && !img) { try { const pm = mindAnswer(typed, lifeStores()); if (pm) mine = { ...pm, rows: [] }; } catch (e) {} }
+    if (!mine && route && !img && !only) { try { const pm = mindAnswer(typed, lifeStores()); if (pm) mine = { ...pm, rows: [] }; } catch (e) {} }
     if (mine) {
       const ar = /[\u0600-\u06ff]/.test(typed) || getLang() === "ar";
       const TOOL = { recall: "Open Recall", money: "Open Money", life: "Open People & plans", care: "Open Family health", fit: "Open Fit & Food", radar: "Open Deadline Radar", reminders: "Open Reminders", memory: "Open Mind" };
@@ -974,7 +989,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return;
     }
 
-    const ag = route && !img ? agentCard(typed, { now: Date.now(), order: dateOrder(), inApp: !!(NATIVE && NATIVE.agentOpen) }) : null;
+    const ag = route && !img && ok("agent") ? agentCard(typed, { now: Date.now(), order: dateOrder(), inApp: !!(NATIVE && NATIVE.agentOpen) }) : null;
     if (ag) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
@@ -985,7 +1000,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
 
     // v6.27: «my Netflix trial ends on 20 November» — a deadline: watched by the Deadline Radar (a reminder before it)
-    const dl = route && !img ? chatDeadlineIntent(typed, { now: Date.now(), home: homeCurrency(), order: dateOrder() }) : null;
+    const dl = route && !img && ok("deadline") ? chatDeadlineIntent(typed, { now: Date.now(), home: homeCurrency(), order: dateOrder() }) : null;
     if (dl) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
@@ -997,7 +1012,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
 
     // v6.27: «Ahmed owes me 12,000, 1,000 a month for a year» — a commitment: saved in People & plans (checkboxes, Money)
-    const lifeC = route && !img ? chatLifeIntent(typed) : null;
+    const lifeC = route && !img && ok("life") ? chatLifeIntent(typed) : null;
     if (lifeC) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
@@ -1046,7 +1061,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
     // Something to set on the phone: a reminder, alarm, timer, calendar event,
     // WhatsApp message or call. Read into a card; nothing happens until confirmed.
-    if (route && !img && api.looksLikeAction && api.looksLikeAction(typed)) {
+    if (route && !img && (only === "action" || (ok("action") && api.looksLikeAction && api.looksLikeAction(typed)))) {
       const cid = ensureChat(typed);
       const mid = newId();
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
@@ -1145,7 +1160,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       }
-      let autoWeb = !api.webOn && !o.web && api.webAuto && typed && !img && !fileAtt && wantsWeb(typed, task);
+      let autoWeb = !api.webOn && !o.web && api.webAuto && typed && !img && !fileAtt && (wantsWeb(typed, task) || only === "research");
       // v6.20 (Ali: "huge databases … so the app doesn't do a lot of internet searching"): the packs first (≈ 0.2 s) — when
       // they clearly cover a question that doesn't need today's facts, it is answered offline and the web is skipped
       if (autoWeb && !needsToday(typed) && api.knowledge && api.knowledge.on() && api.knowledge.packs && api.knowledge.packs()) {
@@ -1200,7 +1215,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v5.30 — FAST by default (Gemini-like: searches at the same time, code picks the
         // passages, ONE model pass); page-by-page DEEP research when asked for, or on
         // Expert / Master models for detail-hungry questions (research.js)
-        const deepMode = !!api.webPages && (wantsDeep(typed) || ((pwR.level || 3) >= 4 && deep && (!api.pro || api.pro())));
+        const deepMode = !!api.webPages && (wantsDeep(typed) || only === "research" || ((pwR.level || 3) >= 4 && deep && (!api.pro || api.pro())));
         let queries = [query];
         // v8.7 (Ali: "it was in the notification and even if not, it's easy to find on the internet"): a match's score is
         // searched the way the score sites write it ("Liverpool vs Chelsea score") before the question's own words

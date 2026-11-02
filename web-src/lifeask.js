@@ -7,6 +7,7 @@
    stores = { ledger, life, care, radar, fit, reminders, memory } — the same objects each tool saves (loadStores() reads them).
    Tests: tests/unit/v731lifeask.test.mjs.                                                                                       */
 import { myMoneyIntent, catAsked, answerMyMoney, spanOf } from "./myledger.js";
+import { lexSignals } from "./understand.js";
 import { progressOf, dueSoon } from "./life.js";
 import { trendOf, labTestOf, dosesOn, activeOn, isoDay, mgdl } from "./care.js";
 import { moneyTrend, chartOfRows } from "./lifecharts.js";
@@ -113,6 +114,8 @@ export function kindOf(q, stores = {}) {
   if (SUGAR_NOW.test(t) && !/hba1c|a1c|التراكمي/i.test(t)) return "sugar";
   if (MEDS.test(t)) return "meds";
   if (FOOD.test(t)) return "food";
+  // v9.0: "remind me to pay…" (in any of the 20 languages) is something to set, not a money question
+  if (lexSignals(t).has("action") && !/[?؟]\s*$/.test(t)) return "search";
   if (myMoneyIntent(t) || catAsked(t) || /\b(spend|spent|spending|earn|earned|income|expenses?|balance)\b|صرفت|مصاريف|دخل|رصيد/i.test(t)) return "money";
   if (DUE.test(t)) return "due";
   return "search";

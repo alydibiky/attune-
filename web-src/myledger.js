@@ -7,6 +7,7 @@
 import { tr } from "./i18n.js";
 import { homeCurrency } from "./locale.js";
 import { CAT_WORDS } from "./yusr/logtext.js";
+import { LEX } from "./understand.js";
 
 /** The category a question is about ("how much on food this week?" → "food"), or "". Salary only for income questions. */
 export function catAsked(q) {
@@ -29,7 +30,7 @@ export function myMoneyIntent(q) {
   if (!mine) return "";
   // v9.0 (Ali: "Remind me on the last day of each month to pay interest for mom" was answered with this month's spending): a
   // reminder, an alarm, a to-do or a payment to make is something to SET, never a question about money already spent
-  if (/\b(remind(er)?|alarm|alert me|notify me|schedule|don'?t let me forget|wake me)\b/.test(t) || /(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|حطلي تذكير|منبه|متنسانيش)/.test(t)) return "";
+  if ((LEX.action.test(q) && !/[?؟]\s*$/.test(String(q).trim())) || /\b(remind(er)?|alarm|alert me|notify me|schedule|don'?t let me forget|wake me)\b/.test(t) || /(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|حطلي تذكير|منبه|متنسانيش)/.test(t)) return "";
   if (/^\s*(please\s+)?(pay|transfer|send)\b/.test(t) || /\b(i need to|i have to|i must|i should|i want to|i'?ll|i will|i'?m going to)\s+pay\b/.test(t) || /(لازم|محتاج|عايز|هدفع|حادفع)\s+(ا|أ)?دفع/.test(t)) return "";
   const exp = /\b(expens\w*|spen[dt]\w*|spending|paid|pay(ments)?|costs?|purchases?|bought|outgoings?)\b/.test(t) || /(مصاريف|مصروف|صرفت|دفعت|اتصرف|اشتريت)/.test(t);
   const inc = /\b(income|earn\w*|received|got paid|salary|revenue)\b/.test(t) || /(دخل|قبضت|كسبت|استلمت|مرتب|راتب)/.test(t);

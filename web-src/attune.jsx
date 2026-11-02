@@ -16,6 +16,7 @@ import { DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.js
 import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale, LANGS as UI_LANGS } from "./i18n.js";
+import * as UND from "./understand.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
@@ -9387,7 +9388,7 @@ export default function App() {
     if (!text) return;
     if (looksLikePeriodLog(text)) return logPeriodFromInstant(text);
     // v6.12: "what are my expenses in the last 4 days" → summed from the Money ledger by code (no model, no "please provide the data")
-    if (!inImage && myMoneyIntent(text)) {
+    if (!inImage && myMoneyIntent(text) && UND.signalsOf(text, { "money-ask": true }).has("money-ask")) {   // v9.0: a reminder to pay is not a money question
       const m = answerMyMoney(text, loadLedger(), { ar: /[\u0600-\u06FF]/.test(text) || lang === "ar" });
       const r0 = beginInstant("Answer"); endInstant(r0);
       finishInstantText(text, "Answer", m.text, { level: "low" }, "");

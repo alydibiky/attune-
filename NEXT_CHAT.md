@@ -22,10 +22,17 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   each/every month", "end of the month", «آخر يوم في كل شهر», «نهاية الشهر» is a real repeat `lastday` (actions.js; next: 30 Nov,
   31 Dec, 31 Jan, 28 Feb — Reminders.kt `next` too). Title = "pay interest for mom". Label "Last day of every month" in all 20
   languages. Test `tests/unit/v902remind.test.mjs`.
-- Ali: "the app is programmed to understand like that — I want it as smart as you". Options shown to him (waiting for his pick):
-  A) the phone's model reads every sentence first and code does the exact work; B) code first only when it is sure, the model
-  decides any sentence that mixes signals (recommended) + a bank of real sentences every rule must pass; C) a cloud model
-  (Claude/Gemini API) understands sentences when online — the only way near "as smart as me", costs per use, needs internet.
+- Ali: "the app is programmed to understand like that — I want it as smart as you". Options A (model reads everything first),
+  B (code when sure, the model referees), C (a cloud model when online). **Ali picked B, "for all languages" — BUILT:**
+  `web-src/understand.js` = the referee. Chat (`chat.jsx ask`, before the readers): each reader's yes/no (action, money-log,
+  money-ask, calc, agent, deadline, life) + the words of each kind in all 20 languages (`LEX`: action, money-ask, research,
+  agent). One kind a reader agrees with → at once (as before). Two kinds, or a kind only the words suggest (a Spanish / Hindi /
+  Japanese sentence the en/ar readers don't know) → the phone's model picks one label (6 tokens, 6 s cap) and the pick is learned
+  for that sentence shape (`attune:understand:v1`); no model / too slow → doing first (ORDER). Only the picked reader may answer
+  (`ok(k)` on each branch); "research" turns on deep web research for that message. A reminder never becomes a money question
+  (signalsOf drops money-ask next to action unless it ends with "?"); same guard on Home's box and in Ask your life (lifeask.js).
+  Test: `tests/unit/v903understand.test.mjs` — a bank of ~90 real sentences in all 20 languages. Next: grow the bank with every
+  sentence Ali shows that went wrong; C (a cloud model for Pro when online) can be added on top later.
 - Test setup in cloud sessions: the browser tests need `bash tests/setup.sh` first (llama-server + tiny model + Python
   playwright); without it every e2e test fails with "No module named playwright".
 
