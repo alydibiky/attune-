@@ -5,7 +5,7 @@
 import * as G from "./guardian.js";
 import { noteProUse } from "./trialuse.js";
 import React, { useEffect, useMemo, useState } from "react";
-import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCrossed, Car, LayoutGrid as AppWindow, BellRing, Trash2, RefreshCw, ExternalLink, ChevronRight, ArrowLeft, AlertTriangle, Check, X, BookOpen } from "lucide-react";
+import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCrossed, Car, LayoutGrid as AppWindow, BellRing, Trash2, RefreshCw, ExternalLink, ChevronRight, ArrowLeft, AlertTriangle, Check, X, BookOpen, Newspaper } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./agents.js";
 import { loadBooking } from "./agent-ui.jsx";
@@ -20,12 +20,13 @@ const I = (s) => "⁦" + s + "⁩";
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? I(y) : y])) : v);
 const money = (n, cur) => (cur ? cur + " " : "") + Math.round(n).toLocaleString("en-US");
 const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : T("{n} days ago", { n: Math.round(m / 1440) }); };
-const KIND_ICON = { research: BookOpen, buy: ShoppingCart, watch: Hotel, track: Package, order: UtensilsCrossed, scout: Car, alert: BellRing, open: AppWindow };
+const KIND_ICON = { follow: Newspaper, research: BookOpen, buy: ShoppingCart, watch: Hotel, track: Package, order: UtensilsCrossed, scout: Car, alert: BellRing, open: AppWindow };
 const CHIPS = [["buy", "Find & buy", "Buy me AirPods Pro 2 under 9,000", "اشتريلي ايربودز برو 2 بأقل من 9000"],
   ["watch", "Watch a price", "Tell me when hotels near the Haram are under 45k for 4 nights from 10 December", "نبهني لما فنادق الحرم تبقى أقل من 45 ألف لمدة 4 ليالي من 10 ديسمبر"],
   ["track", "Track a delivery", "Tell me when my Amazon order arrives", "قولي لما طلب أمازون يوصل"],
   ["order", "Order my usual", "Order my usual from Talabat", "اطلبلي أكلي المفضل من طلبات"],
   ["scout", "Scout ads", "Find me a used Hyundai Tucson 2022", "دورلي على هيونداي توسان 2022 مستعملة"],
+  ["follow", "Follow a topic", "Keep me updated on electric cars in Egypt every week", "تابعلي أخبار العربيات الكهربا في مصر كل أسبوع"],
   ["research", "Research a topic", "Gather information on solar panels for a flat in Cairo", "جمعلي معلومات عن الطاقة الشمسية لشقة في القاهرة"],
   ["open", "Open an app", "Open Uber", "افتح أوبر"]];
 
@@ -88,10 +89,12 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   // in English and Arabic (shops Attune doesn't know, price-comparison sites, public Facebook pages); each offer keeps its page's link
   const webRound = async (a) => {
     if (!search || !a.what) return [];
-    const qs = [a.what + " price", a.what + (country === "EG" ? " سعر في مصر" : " buy"), a.what + " site:facebook.com"];
+    const qn = a.q || a.what, qs = [qn + " price", qn + (country === "EG" ? " سعر في مصر" : " buy"), qn + " site:facebook.com", ...(a.said ? [a.said + " سعر"] : [])];
     const lists = await Promise.all(qs.map((q) => Promise.race([search(q).catch(() => null), new Promise((r) => setTimeout(() => r(null), 25000))])));
     const hits = []; for (const r of lists) for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h);
-    return A.webOffers(hits, a.what, { cur: a.currency || "" });
+    const got = A.webOffers(hits, a.what, { cur: a.currency || "" });
+    if (a.said) for (const o of A.webOffers(hits, a.said, { cur: a.currency || "" })) if (!got.some((x) => x.href === o.href)) got.push(o);   // pages written in Arabic
+    return got;
   };
   // a product in several stores: each store's results page in turn (closing by itself), then the web; the exact product, each
   // store's cheapest listing with its own link
@@ -196,8 +199,25 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     try { window.open(url, "_blank"); } catch (e) {}
   };
   const skipBest = (a, o) => put({ ...st, agents: st.agents.map((x) => { if (x.id !== a.id) return x; const l = learn(x, o); return { ...x, ...l, skip: [...(x.skip || []), o.key], best3: (x.best3 || []).filter((y) => y.key !== o.key && A.fitsTaste(y, l.taste)) }; }) });
-  const remove = (a) => put({ ...st, agents: st.agents.filter((x) => x.id !== a.id) });
-  const toggle = (a) => put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, on: !x.on } : x)) });
+  // v9.0 follow agents: a notification on the day (repeating; not in the Reminders list), each round a fresh deep research in Chat
+  const followNote = (a, on = true) => {
+    const id = "agent-follow-" + a.id;
+    try { if (!on) { N && N.unschedule && N.unschedule(id); return; }
+      N && N.schedule && N.schedule(JSON.stringify({ id, at: a.next, title: T("Research update: {t}", { t: a.topic.slice(0, 60) }), body: tr("Tap to read what's new"), repeat: a.every === "day" ? "daily" : a.every === "month" ? "monthly" : "weekly" })); } catch (e) {}
+  };
+  const runFollow = (a) => {
+    if (!onResearch) { flash && flash(tr("Research runs in Chat with the web on")); return; }
+    const q = A.followQuestion(a, (k, v) => tr(k, v));
+    upd(a.id, (y) => A.followDone(y));
+    onResearch(a.topic, q);
+  };
+  useEffect(() => {   // a follow notification tapped → that agent's round
+    let id = ""; try { id = localStorage.getItem("attune:agents:run") || ""; localStorage.removeItem("attune:agents:run"); } catch (e) {}
+    const a = id && A.loadAgents().agents.find((x) => x.id === id && x.kind === "follow");
+    if (a) setTimeout(() => runFollow(a), 200);
+  }, []);
+  const remove = (a) => { if (a.kind === "follow") followNote(a, false); put({ ...st, agents: st.agents.filter((x) => x.id !== a.id) }); };
+  const toggle = (a) => { if (a.kind === "follow") followNote(a, !a.on); put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, on: !x.on } : x)) }); };
 
   const start = (sentence, d) => {
     if (!d) { flash && flash(tr("Say what the agent should do — like the examples above")); return; }
@@ -206,6 +226,12 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     if (d.kind === "open") return openApp(d.app, "");
     if (d.kind === "do") { setDoCard(d); return; }
     if (d.kind === "scout") { onScout && onScout(sentence); return; }
+    if (d.kind === "follow") {
+      if (!pro && st.agents.filter((x) => x.on).length >= 1) { flash && flash(tr("Free includes 1 agent — Pro runs as many as you need")); openPlan && openPlan(); return; }
+      const a = A.makeAgent(d); noteProUse("agent"); put({ ...st, agents: [a, ...st.agents] }); followNote(a, true);
+      flash && flash(T("Following {t} — the first report now, then {e}", { t: d.topic.slice(0, 40), e: tr(d.every === "day" ? "every day" : d.every === "month" ? "every month" : "every week") }));
+      setTimeout(() => runFollow(a), 400); return;
+    }
     if (d.kind === "research") { if (onResearch) onResearch(d.topic); else flash && flash(tr("Research runs in Chat with the web on")); return; }
     if (d.kind === "alert") { W.saveWatch([W.newRule(d.rule), ...W.loadWatch()], ar ? "ar" : "en"); setSt({ ...st }); flash && flash(T("I'll tell you: {r}", { r: W.ruleText(d.rule, ar) })); return; }
     // v8.7 (Ali picked persona 3's point 2): agents that act are Pro — Free keeps one running agent to try
@@ -245,7 +271,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         <AlertTriangle size={14} className="shrink-0 mt-0.5" />{tr("Delivery agents read the store app's notifications: turn on Notification access for Attune (Settings opens).")}</button> : null}
 
       <p className="text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] m-0 pt-1" data-testid="agents-running">{T("Running · {n}", { n: r.running })}</p>
-      {st.agents.map((a) => a.kind === "buy" ? <BuyCard key={a.id} a={a} busy={busy === a.id} {...{ buyRound, confirmBuy, notThis, markDone, remove, toggle, openApp }} /> : <AgentCard key={a.id} a={a} hits={hits} busy={busy === a.id} {...{ checkNow, orderNow, openApp, remove, toggle, openBest, skipBest }} />)}
+      {st.agents.map((a) => a.kind === "follow" ? <FollowCard key={a.id} a={a} {...{ runFollow, remove, toggle }} /> : a.kind === "buy" ? <BuyCard key={a.id} a={a} busy={busy === a.id} {...{ buyRound, confirmBuy, notThis, markDone, remove, toggle, openApp }} /> : <AgentCard key={a.id} a={a} hits={hits} busy={busy === a.id} {...{ checkNow, orderNow, openApp, remove, toggle, openBest, skipBest }} />)}
       {scout.map((g) => <button key={g.id} onClick={() => navTo && navTo("scout")} className={U.card + " w-full text-start p-3.5 flex gap-3 items-start"} data-testid="agents-scout">
         <Ico k="scout" /><span className="min-w-0 flex-1"><span className="block font-extrabold text-[14.5px]" dir="auto">{tr("Scout")} · {g.text}</span>
           <span className="block text-[12.5px] c-sub">{T("{n} ads checked", { n: (g.seen || []).length })}{g.lastRun ? " · " + ago(g.lastRun) : ""}</span>
@@ -269,7 +295,8 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
   const p = a.pending, last = [...(a.checks || [])].reverse()[0];
   return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-buy">
     <div className="flex gap-3 items-start"><Ico k="buy" /><div className="min-w-0 flex-1">
-      <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.what}</p>
+      <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.said || a.what}</p>
+      {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.q || a.what })}</p> : null}
       <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.site}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{last ? " · " + T("checked {t}", { t: ago(last.at) }) : ""}</p>
       <div className="mt-2 space-y-0.5" data-testid="agent-buy-plan">{A.buySteps(a).map((s, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={s.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{s.done ? "✓" : "⏳"}</span><span className={s.done ? "" : "c-sub"}>{T(s.en, s.v)}</span></p>)}</div>
     </div></div>
@@ -292,12 +319,27 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
   </div>;
 }
 
+/** v9.0 a follow agent: the topic, how often, the last and next report, Read now. */
+function FollowCard({ a, runFollow, remove, toggle }) {
+  const small = "min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold inline-flex items-center gap-1.5 border border-[var(--c-ln)]";
+  const last = (a.runs || []).slice(-1)[0], when = (t) => new Date(t).toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" });
+  return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-follow">
+    <div className="flex gap-3 items-start"><Ico k="follow" /><div className="min-w-0 flex-1">
+      <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.topic}</p>
+      <p className="m-0 text-[12.5px] c-sub">{tr(a.every === "day" ? "Every day" : a.every === "month" ? "Every month" : "Every week")} · {tr("several sources, what's new since the last report")}</p>
+      <p className="m-0 text-[12px] c-sub" data-testid="agent-follow-when">{last ? T("Last report {d}", { d: when(last) }) + " · " : ""}{a.on ? T("Next {d}", { d: when(a.next) }) : tr("Paused")}</p></div></div>
+    <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => runFollow(a)} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-follow-run"><BookOpen size={14} />{tr("Read now")}</button>
+      <span className="flex gap-1.5 ms-auto"><button onClick={() => toggle(a)} className={small} data-testid="agent-toggle">{a.on ? tr("Pause") : tr("Resume")}</button>
+        <button onClick={() => remove(a)} aria-label={tr("Delete")} className={small} data-testid="agent-delete"><Trash2 size={14} /></button></span></div>
+  </div>;
+}
+
 /** v9.0 (Ali: "Google, Facebook … everywhere"): the places that need a real browser or a login — one tap opens each, searched. */
 function LookToo({ a, openApp }) {
   const country = (a.currency === "SAR" ? "SA" : a.currency === "AED" ? "AE" : a.currency === "EGP" ? "EG" : "");
   return <div className="flex flex-wrap items-center gap-1.5" data-testid="agent-look">
     <span className="text-[11.5px] c-sub">{a.stores ? T("Searched {n} places", { n: a.stores }) + " · " : ""}{tr("Look yourself too:")}</span>
-    {lookLinks(a.what, country).map((l) => <button key={l.label} onClick={() => openApp && openApp({ pkg: "", label: l.label, web: l.url }, l.url)} className="min-h-[34px] px-2.5 rounded-[10px] text-[11.5px] font-extrabold border border-[var(--c-ln)] inline-flex items-center gap-1" data-testid="agent-look-link"><ExternalLink size={12} />{l.label}</button>)}
+    {lookLinks(a.q || a.what, country).map((l) => <button key={l.label} onClick={() => openApp && openApp({ pkg: "", label: l.label, web: l.url }, l.url)} className="min-h-[34px] px-2.5 rounded-[10px] text-[11.5px] font-extrabold border border-[var(--c-ln)] inline-flex items-center gap-1" data-testid="agent-look-link"><ExternalLink size={12} />{l.label}</button>)}
   </div>;
 }
 
@@ -351,6 +393,7 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
     return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-watch">
       <div className="flex gap-3 items-start"><Ico k="watch" /><div className="min-w-0 flex-1">
         <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.title}</p>
+        {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.q || a.what })}</p> : null}
         <p className="m-0 text-[12.5px] c-sub" dir="auto">{/^\d+ stores$/.test(a.site || "") ? T("{n} stores", { n: parseInt(a.site, 10) }) : a.site} · {T("under {p}", { p: money(a.below, a.currency) })}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
         <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) + (last.checkin ? " (" + last.checkin + " → " + last.checkout + ")" : "") : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
         {a.found ? <span className="flex flex-wrap items-center gap-1.5 mt-1.5"><span className={U.tag("amber")} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}{a.found.site ? " · " + a.found.site : ""}</span>

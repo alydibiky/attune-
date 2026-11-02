@@ -13,8 +13,9 @@
      scout  "find me a used Tucson 2022"              → Scout (it lives here now)
      alert  "tell me when Ahmed messages me"          → a message alert (watch.js)
    Pure; tests/unit/v1000agents.test.mjs.                                                                                       */
-import { planTask, hotelLinks, shopLinks, tripDates, storeTries } from "./agent.js";
+import { planTask, hotelLinks, shopLinks, tripDates, storeTries, productEnglish } from "./agent.js";
 import { looksLikeGoal, parseGoal, pricesIn, siteOf } from "./scout.js";
+import { followOf } from "./understand.js";
 import { parseWatch } from "./watch.js";
 import { isoDay } from "./deadlines.js";
 
@@ -147,6 +148,9 @@ export function parseAgent(text, opts = {}) {
   const app = appIn(t0);
   // v9.0 (Ali: "I told it to gather information on a topic — get it from more than one source and present it in a good, neat way"):
   // a research agent — several searches, every page read one at a time, figures checked across sources, one tidy report with sources
+  // v9.0: research that keeps going — "keep me updated on X every week", «تابعلي أخبار X كل أسبوع» (all 20 languages)
+  const fo = followOf(t0);
+  if (fo) return { kind: "follow", topic: fo.topic, every: fo.every, title: "Follow · " + fo.topic.slice(0, 70) };
   const rm = RESEARCH.exec(t0);
   if (rm) { const topic = t0.slice(rm.index + rm[0].length).replace(/^[\s:,-]+/, "").replace(/[?.!]+$/, "").trim(); if (topic.length >= 3) return { kind: "research", topic: topic.slice(0, 300), title: "Research · " + topic.slice(0, 70) }; }
   // open an app — any app the phone has, by name
@@ -184,8 +188,9 @@ export function parseAgent(text, opts = {}) {
     const what = buyWhat(t0);
     if (what && !/^(something|anything|stuff|it|this|that|حاجه|حاجة|اي حاجه|أي حاجة|ده|دي)$/iu.test(what)) {
       // v9.0 (Ali: "Amazon, noon, Jumia … everywhere"): every store of the country, one after another (or only the one named)
-      const use = storeTries(what, country, store ? store.label : "").map((l) => ({ url: l.url, site: l.site }));
-      return { kind: "buy", what, below: lim, currency: curIn(t, country), url: use[0].url, site: use.map((x) => x.site).join(" · "), tries: use, title: (lim ? "Buy · " : "Find & buy · ") + what };
+      const pe = productEnglish(what), q = pe.left ? what : pe.en;   // v9.0: an Arabic name is searched and matched in English
+      const use = storeTries(q, country, store ? store.label : "").map((l) => ({ url: l.url, site: l.site }));
+      return { kind: "buy", what: pe.left ? what : pe.match, ...(pe.changed ? { said: what, q } : {}), below: lim, currency: curIn(t, country), url: use[0].url, site: use.map((x) => x.site).join(" · "), tries: use, title: (lim ? "Buy · " : "Find & buy · ") + what };
     }
     return { kind: "buy", what: "", ask: "What should I buy? (the exact product, e.g. AirPods Pro 2, or iPhone 16 128GB black)" };
   }
@@ -233,9 +238,10 @@ export function parseAgent(text, opts = {}) {
       .replace(/\s+(?:on|at|from|في|على|من)\s+(?:amazon|noon|jumia|امازون|أمازون|نون|جوميا)\b.*$/iu, "")
       .replace(/\s+(?:is|are|goes|gets|drops|becomes|يبقي|يبقى|ينزل|تنزل|بقي|بقى)?\s*(?:under|below|less than|cheaper than|lower than|اقل من|أقل من|تحت|بأقل من|باقل من|بحد اقصى|بحد أقصى|في حدود).*$/iu, "").trim().slice(0, 70);
     if (!what) return null;
-    const tries = storeTries(what, country, store ? store.label : "").map((l) => ({ url: l.url, site: l.site }));
+    const pe = productEnglish(what), q = pe.left ? what : pe.en;   // v9.0: «سماعة هواوي فري كليب 2» → "Huawei FreeClip 2 earbuds"
+    const tries = storeTries(q, country, store ? store.label : "").map((l) => ({ url: l.url, site: l.site }));
     const site = tries.length > 1 ? tries.length + " stores" : tries[0].site;
-    return { kind: "watch", site, url: tries[0].url, below: limit, currency: cur, what, title: what + " · " + (tries.length > 1 ? tries.map((x) => x.site).slice(0, 3).join(", ") + "…" : tries[0].site), ...(tries.length > 1 ? { tries } : {}) };
+    return { kind: "watch", site, url: tries[0].url, below: limit, currency: cur, what: pe.left ? what : pe.match, ...(pe.changed ? { said: what, q } : {}), title: what + " · " + (tries.length > 1 ? tries.map((x) => x.site).slice(0, 3).join(", ") + "…" : tries[0].site), ...(tries.length > 1 ? { tries } : {}) };
   }
   // do it now: a ride, food, a hotel, a flight, a product (the right app with the search ready)
   // "Uber to the airport" has no verb of its own: a ride app's name is the verb
@@ -267,12 +273,28 @@ export function loadAgents(s = typeof localStorage !== "undefined" ? localStorag
 export function saveAgents(st, s = typeof localStorage !== "undefined" ? localStorage : null) { try { s && s.setItem(AGENTS_KEY, JSON.stringify(st)); } catch (e) {} return st; }
 export function makeAgent(d, now = Date.now()) {
   const a = { id: "ag" + now.toString(36) + Math.floor(Math.random() * 1e4).toString(36), kind: d.kind, title: d.title || "", on: true, created: now, checks: [] };
-  if (d.kind === "watch") Object.assign(a, { url: d.url, site: d.site, below: d.below, currency: d.currency, fields: d.fields || null, what: d.what || "", ...(d.tries ? { tries: d.tries } : {}) });
+  if (d.kind === "watch") Object.assign(a, { url: d.url, site: d.site, below: d.below, currency: d.currency, fields: d.fields || null, what: d.what || "", ...(d.tries ? { tries: d.tries } : {}), ...(d.said ? { said: d.said, q: d.q } : {}) });
+  if (d.kind === "follow") Object.assign(a, { topic: d.topic, every: d.every || "week", next: nextFollow(d.every || "week", now), runs: [] });
   if (d.kind === "track") Object.assign(a, { app: d.app, what: d.what || "" });
   if (d.kind === "order") Object.assign(a, { app: d.app, what: d.what || "" });
-  if (d.kind === "buy") Object.assign(a, { url: d.url, site: d.site, tries: d.tries || [], what: d.what, below: d.below || 0, currency: d.currency, step: "search" });
+  if (d.kind === "buy") Object.assign(a, { url: d.url, site: d.site, tries: d.tries || [], what: d.what, below: d.below || 0, currency: d.currency, step: "search", ...(d.said ? { said: d.said, q: d.q } : {}) });
   return a;
 }
+/** v9.0 the next round of a follow agent: tomorrow / in a week / in a month, at 9:00 in the morning. */
+export function nextFollow(every, from = Date.now()) {
+  const d = new Date(from); d.setHours(9, 0, 0, 0);
+  if (every === "day") d.setDate(d.getDate() + 1); else if (every === "month") d.setMonth(d.getMonth() + 1); else d.setDate(d.getDate() + 7);
+  return d.getTime();
+}
+/** The question a round asks Chat's deep research: what is new about the topic since the last round. */
+export function followQuestion(a, tr = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k])) {
+  const last = (a.runs || []).slice(-1)[0];
+  return last ? tr("Deep research: what's new about {t} since {d} — only what changed or happened since then, from several sources, with the sources", { t: a.topic, d: new Date(last).toISOString().slice(0, 10) })
+    : tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: a.topic });
+}
+/** After a round: kept, and the next one planned. */
+export const followDone = (a, now = Date.now()) => ({ ...a, runs: [...(a.runs || []), now].slice(-20), next: nextFollow(a.every, now) });
+
 /** A check's result kept on its agent (the last 30); found = at or under the limit. */
 export function addCheck(a, c) {
   // v9.0 (Ali: "Check now opened Amazon, not the exact listing"): a check keeps WHICH listing had the price — its link, name and store
@@ -408,7 +430,7 @@ export function webOffers(hits, what, { cur = "" } = {}) {
 /** Every offer of a round → the exact product, believable prices, the cheapest listing of each store, cheapest first (max 5). */
 export function bestAcross(offers, a = {}, max = 5) {
   const what = a.what || "", skip = a.skip || [];
-  const ok = (offers || []).filter((o) => o && o.price > 0 && fitsTaste(o, a.taste) && (!what || matchScore(what, o) >= 0.75)
+  const ok = (offers || []).filter((o) => o && o.price > 0 && fitsTaste(o, a.taste) && (!what || matchScore(what, o) >= 0.75 || (a.said && matchScore(a.said, o) >= 0.75))
     && !skip.includes(String(o.href || o.name || "").slice(0, 120)) && !skip.includes(String(o.name || o.text || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 40)));
   // a price far under the middle of the others is an accessory, a part or an instalment — not the product
   const ps = ok.map((o) => o.price).sort((x, y) => x - y), mid = ps.length ? ps[Math.floor(ps.length / 2)] : 0;

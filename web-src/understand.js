@@ -166,3 +166,35 @@ export async function referee(text, flags = {}, { ask = null, timeoutMs = 6000, 
   if (kind) { learn(text, kind, ls); return { kind, how: "model", candidates: d.candidates }; }
   return { kind: d.fallback, how: "order", candidates: d.candidates };
 }
+
+/* ---- v9.0 (Ali: "do the not done yet" — a research agent that keeps going): "keep me updated on solar panels every week",
+   «تابعلي أخبار الطاقة الشمسية كل أسبوع», "Mantenme al día sobre los coches eléctricos cada semana" → { topic, every } in all 20
+   languages. Each round is a fresh deep research in Chat ("what's new since …"), started by a notification on the day. */
+const FOLLOW = W(
+  "keep me (?:updated|posted|informed) (?:on|about|with)", "send me (?:the )?(?:news|updates?) (?:on|about)", "follow the news (?:on|about)", "what'?s new (?:on|about|with|in)", "track (?:the )?news (?:on|about)",
+  "تابعلي", "تابع لي", "ابعتلي (?:جديد|اخبار|أخبار)", "عرفني (?:آخر |اخر )?(?:جديد|اخبار|أخبار)", "خليني متابع", "ابقني على اطلاع (?:على|ب)", "أطلعني على",
+  "mantenme al (?:día|tanto) (?:sobre|de)", "avísame de (?:las )?novedades (?:de|sobre)", "tiens[- ]moi au courant (?:des|du|de la|de|sur)", "halte mich (?:auf dem laufenden )?(?:über|zu)", "me mantenha atualizado sobre",
+  "mantenha-me informado sobre", "tienimi aggiornato su", "держи меня в курсе", "beni .{1,40} hakkında (?:güncel tut|bilgilendir)", "kabari (?:saya )?perkembangan", "ikuti berita",
+  "के बारे में अपडेट देते रहना", "अपडेट देते रहना", "اپڈیٹ دیتے رہنا", "در جریان .{1,30} بگذار", "مرا در جریان بگذار", "আপডেট দিও", "nijulishe habari (?:za|kuhusu)",
+  "อัปเดตให้ฉันเรื่อง", "cập nhật cho tôi về", "持续关注", "帮我关注", "最新情報を教えて", "追いかけて", "소식 알려줘", "업데이트 해줘");
+const EVERY = [
+  ["day", W("\\bevery ?day\\b", "\\bdaily\\b", "كل يوم", "يوميا", "يوميًا", "cada día", "a diario", "chaque jour", "tous les jours", "täglich", "jeden tag", "todo dia", "todos os dias", "diariamente", "ogni giorno",
+    "каждый день", "ежедневно", "her gün", "setiap hari", "हर दिन", "रोज़", "روزانہ", "ہر روز", "هر روز", "প্রতিদিন", "kila siku", "ทุกวัน", "mỗi ngày", "hằng ngày", "每天", "毎日", "매일")],
+  ["month", W("\\bevery month\\b", "\\bmonthly\\b", "كل شهر", "شهريا", "شهريًا", "cada mes", "mensual", "chaque mois", "tous les mois", "monatlich", "jeden monat", "todo mês", "mensalmente", "ogni mese",
+    "каждый месяц", "ежемесячно", "her ay", "setiap bulan", "हर महीने", "ہر مہینے", "هر ماه", "প্রতি মাসে", "kila mwezi", "ทุกเดือน", "mỗi tháng", "hằng tháng", "每个月", "每月", "毎月", "매달", "매월")],
+  ["week", W("\\bevery week\\b", "\\bweekly\\b", "كل (?:أسبوع|اسبوع)", "أسبوعيا", "اسبوعيا", "أسبوعيًا", "cada semana", "semanal", "chaque semaine", "toutes les semaines", "wöchentlich", "jede woche", "toda semana",
+    "semanalmente", "ogni settimana", "каждую неделю", "еженедельно", "her hafta", "setiap minggu", "हर हफ्ते", "हर सप्ताह", "ہر ہفتے", "هر هفته", "প্রতি সপ্তাহে", "kila wiki", "ทุกสัปดาห์", "mỗi tuần", "hằng tuần", "每周", "每週", "毎週", "매주")],
+];
+/** → { topic, every: "day" | "week" | "month" } or null. A research request with a repeat counts too ("research X every week"). */
+export function followOf(text) {
+  const t = String(text || "").replace(/\s+/g, " ").trim();
+  const ev = EVERY.find(([, re]) => re.test(t));
+  const f = FOLLOW.exec(t) || (ev && /^\s*follow\b/i.exec(t)), r = LEX.research.exec(t);
+  if (!f && !(r && ev)) return null;
+  const every = ev ? ev[0] : "week";
+  let topic = t.replace(f ? f[0] : r[0], " ");
+  if (ev) topic = topic.replace(ev[1], " ");
+  topic = topic.replace(/^(?:please|من فضلك|لو سمحت)\s+/i, "").replace(/\b(?:the news (?:on|about)|news (?:on|about)|about|on|for me|for)\b/gi, " ")
+    .replace(/(?:^|\s)(?:أخبار|اخبار|جديد|عن|على|لي)(?=\s|$)/g, " ").replace(/[?.!،,:;]+/g, " ").replace(/\s+/g, " ").trim();
+  return topic.length >= 2 ? { topic: topic.slice(0, 200), every } : null;
+}

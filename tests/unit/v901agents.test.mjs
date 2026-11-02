@@ -7,7 +7,7 @@ const now = Date.parse("2026-11-02T10:00:00");
 const w = parseAgent("tell me when Huawei FreeClip 2 is under 8400", { country: "EG", now });
 ok(w.kind === "watch" && w.what === "Huawei FreeClip 2" && w.below === 8400 && w.tries.length >= 5 && ["Amazon", "noon", "Jumia", "B.TECH", "2B"].every((s) => w.tries.some((x) => x.site === s)), "FreeClip 2 → a watch on Amazon, noon, Jumia, B.TECH, 2B…");
 ok(parseAgent("tell me when the iPhone 16 on Amazon is under 40000", { country: "EG", now }).tries === undefined, "a store named → that store only");
-ok(parseAgent("دورلي على سماعة هواوي فري كليب 2 بأقل من 8400", { country: "EG", now }).what === "سماعة هواوي فري كليب 2", "Arabic: the product words only");
+ok(parseAgent("دورلي على سماعة هواوي فري كليب 2 بأقل من 8400", { country: "EG", now }).said === "سماعة هواوي فري كليب 2", "Arabic: the product words only (searched in English since v9.0)");
 ok(parseAgent("find me a used Hyundai Tucson 2022", { country: "EG", now }).kind === "scout" && parseAgent("ابحثلي عن شقة في المعادي", { country: "EG", now }).kind === "scout", "used cars, flats → Scout");
 const b = parseAgent("buy me AirPods Pro 2 under 9000", { country: "EG", now });
 ok(b.kind === "buy" && b.tries.length >= 5, "a buy agent searches every store");

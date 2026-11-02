@@ -8733,6 +8733,7 @@ export default function App() {
       if (d.kind === "reminder" && /^missions-/.test(d.id || "")) { navTo("missions"); return; }   // v6.37 the morning debrief
       // v9.0 (Ali: "when I open it from the notification it doesn't take me to Scout or Agents"): an agent's notification → Agents,
       // a Scout find → Scout on that goal
+      if (d.kind === "reminder" && /^agent-follow-/.test(d.id || "")) { try { localStorage.setItem("attune:agents:run", String(d.id).slice(13)); } catch (e) {} navTo("agents"); return; }   // the follow agent's round
       if (d.kind === "reminder" && /^agent/.test(d.id || "")) { navTo("agents"); return; }
       if (d.kind === "reminder" && /^scout-/.test(d.id || "")) { try { localStorage.setItem("attune:scout:open", String(d.id).slice(6)); } catch (e) {} navTo("scout"); return; }
       if (d.kind === "reminder" && /^radar-/.test(d.id || "")) { navTo("radar"); return; }  // v6.27 a deadline → the Radar   // v6.14: the Fit widget and Fit reminders
@@ -10774,7 +10775,7 @@ export default function App() {
           <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()} pro={proActive} openPlan={() => setShowUpgrade(true)}
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }}
             search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 4 }) : null}
-            onResearch={(topic) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: topic })); navTo("chat"); }} />
+            onResearch={(topic, q) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + (q || tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: topic }))); navTo("chat"); }} />
         ) : mode === "studio" ? (
           STUDIO_OFF ? <StudioOffDevice paused /> : NATIVE && NATIVE.imageInfo ? (
             <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}

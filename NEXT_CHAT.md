@@ -16,6 +16,20 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.0 part 3 — 2 Nov: "do the not done yet"
+1. Arabic product names → English (`agent.js productEnglish`: ~150 brands, product lines, model words, kinds, units, colours;
+   Arabic digits; "Galaxy S 24" → "Galaxy S24"). «سماعة هواوي فري كليب 2» → stores searched for "Huawei FreeClip 2 earbuds",
+   matched as "Huawei FreeClip 2"; the card keeps his words (`said`) and says "Searching the stores as: …"; the web round also
+   searches the Arabic name and Arabic listings count (`bestAcross` matches `said` too).
+2. Follow agents (research that keeps going): "keep me updated on X every week", «تابعلي أخبار X كل أسبوع», "research X every
+   month" — in all 20 languages (`understand.js followOf`: FOLLOW + EVERY words). First report now; then a repeating
+   notification `agent-follow-<id>` (daily / weekly / monthly at 9:00, not in the Reminders list) → tap → Agents runs the round
+   → Chat deep research "what's new about X since <last report>" (`agents.js followQuestion` — starts with the language's
+   "Deep research" words, which `research.js wantsDeep` knows). Card: topic, how often, last / next report, Read now, Pause, Delete.
+3. Kotlin compiled: a manual "Build the APK" run on the branch (workflow_dispatch builds only — the Play upload runs only on a
+   push to main), run 41520853981.
+Test `tests/unit/v904agents2.test.mjs`. All new lines in the 20 languages.
+
 ## v9.0 part 2 — 2 Nov: "look how stupid the app is"
 - Chat: «Remind me on the last day of each month to pay interest for mom» was answered with THIS MONTH'S SPENDING (myledger.js
   `myMoneyIntent` saw "me" + "pay"). Now a reminder / alarm / "I need to pay…" is never a money question, and "the last day of

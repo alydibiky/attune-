@@ -284,6 +284,42 @@ const STORES = {
   AE: [S("amazon.ae", "Amazon", (q) => "https://www.amazon.ae/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("noon.com", "noon", (q) => "https://www.noon.com/uae-en/search/?q=" + enc(q), "com.noon.buyerapp"),
     S("sharafdg.com", "Sharaf DG", (q) => "https://uae.sharafdg.com/?q=" + enc(q)), S("carrefouruae.com", "Carrefour", (q) => "https://www.carrefouruae.com/mafuae/en/search?keyword=" + enc(q))],
 };
+/* v9.0 (Ali: «سماعة هواوي فري كليب 2» found nothing — the stores list it as "HUAWEI FreeClip 2"): a product said in Arabic is
+   searched and matched in English — brands, product lines, model words and kinds of product; digits made Latin. Anything not in
+   the list keeps its Arabic, and when Arabic is left the store search uses both. Pure. */
+const AR_EN = [
+  ["هواوي|هواواي|هوواي", "Huawei"], ["سامسونج|سامسونغ|سامسنج", "Samsung"], ["ابل|آبل|أبل", "Apple"], ["شاومي|شاومى|شياومي|ريدمي", (m) => (/ريدمي/.test(m) ? "Redmi" : "Xiaomi")],
+  ["اوبو|أوبو", "Oppo"], ["ريلمي|ريل مي", "Realme"], ["فيفو", "Vivo"], ["هونر|هونور", "Honor"], ["ون ?بلس", "OnePlus"], ["نوكيا", "Nokia"], ["موتورولا", "Motorola"], ["انفينكس|إنفينكس", "Infinix"], ["تكنو", "Tecno"],
+  ["جوجل بكسل|جوجل بيكسل|بيكسل|بكسل", "Pixel"], ["جوجل", "Google"], ["سوني", "Sony"], ["ال ?جي|إل ?جي", "LG"], ["انكر|أنكر", "Anker"], ["جي ?بي ?ال|جيه بي ال", "JBL"], ["بوز", "Bose"], ["بيتس", "Beats"],
+  ["لينوفو", "Lenovo"], ["ديل", "Dell"], ["اتش ?بي|إتش ?بي", "HP"], ["اسوس|أسوس", "Asus"], ["ايسر|أيسر", "Acer"], ["ام ?اس ?اي", "MSI"], ["مايكروسوفت", "Microsoft"], ["لوجيتك", "Logitech"], ["ريزر", "Razer"],
+  ["كانون", "Canon"], ["نيكون", "Nikon"], ["جو ?برو", "GoPro"], ["دي ?جي ?اي", "DJI"], ["دايسون", "Dyson"], ["فيليبس|فيلبس", "Philips"], ["براون", "Braun"], ["توشيبا", "Toshiba"], ["شارب", "Sharp"],
+  ["بوش", "Bosch"], ["كاريير", "Carrier"], ["يونيون ?اير", "Union Air"], ["فريش", "Fresh"], ["تورنيدو", "Tornado"], ["زانوسي", "Zanussi"], ["اريستون|أريستون", "Ariston"], ["تيفال", "Tefal"], ["مولينكس", "Moulinex"], ["كينوود", "Kenwood"],
+  ["ايفون|آيفون|أيفون", "iPhone"], ["ايباد|آيباد|أيباد", "iPad"], ["ماك ?بوك", "MacBook"], ["اير ?بودز|ايربودز|إيربودز", "AirPods"], ["ابل ?واتش|آبل ?واتش", "Apple Watch"], ["جالكسي|جالاكسي|جلاكسي", "Galaxy"],
+  ["فري ?كليب", "FreeClip"], ["فري ?بودز", "FreeBuds"], ["فري ?ليس", "FreeLace"], ["ميت ?باد", "MatePad"], ["ميت ?بوك", "MateBook"], ["ميت", "Mate"], ["نوفا", "Nova"], ["بادز", "Buds"], ["واتش|ووتش", "Watch"], ["باند", "Band"], ["تاب", "Tab"],
+  ["بلايستيشن|بلاي ?ستيشن", "PlayStation"], ["اكس ?بوكس|إكس ?بوكس", "Xbox"], ["نينتندو|نينتيندو", "Nintendo"], ["سويتش", "Switch"], ["كيندل", "Kindle"],
+  ["برو", "Pro"], ["ماكس", "Max"], ["الترا|ألترا", "Ultra"], ["بلس", "Plus"], ["ميني", "Mini"], ["لايت", "Lite"], ["اير|إير", "Air"], ["فولد", "Fold"], ["فليب", "Flip"],
+  ["سماعة بلوتوث|سماعه بلوتوث", "Bluetooth earbuds"], ["سماعة|سماعه|سماعات", "earbuds"], ["هيدفون|هيد ?فون", "headphones"], ["موبايل|تليفون|تلفون|هاتف", "phone"], ["لابتوب|لاب ?توب", "laptop"],
+  ["تابلت", "tablet"], ["شاشة|شاشه|تلفزيون|تليفزيون", "TV"], ["ساعة ذكية|ساعه ذكيه", "smartwatch"], ["ساعة|ساعه", "watch"], ["شاحن", "charger"], ["باور ?بانك", "power bank"], ["كاميرا", "camera"],
+  ["تلاجة|تلاجه|ثلاجة|ثلاجه", "refrigerator"], ["غسالة|غساله", "washing machine"], ["تكييف|مكيف", "air conditioner"], ["ميكروويف", "microwave"], ["مكنسة|مكنسه", "vacuum cleaner"], ["خلاط", "blender"], ["قلاية هوائية|قلايه هوائيه|اير ?فراير", "air fryer"],
+  ["اس", "S"], ["نوت", "Note"], ["زد", "Z"], ["ايه", "A"], ["قدم", "ft"], ["بوصة|بوصه|انش|إنش", "inch"], ["لتر", "L"], ["حصان", "HP"], ["جيجا", "GB"], ["تيرا", "TB"], ["اسود|أسود", "black"], ["ابيض|أبيض", "white"], ["ازرق|أزرق", "blue"], ["اخضر|أخضر", "green"], ["دهبي|ذهبي", "gold"], ["فضي", "silver"], ["رمادي", "grey"],
+];
+const KIND_EN = new Set(["Bluetooth earbuds", "earbuds", "headphones", "phone", "laptop", "tablet", "TV", "smartwatch", "watch", "charger", "power bank", "camera", "refrigerator", "washing machine", "air conditioner", "microwave", "vacuum cleaner", "blender", "air fryer"]);
+const AR_EN_RE = AR_EN.map(([a, e]) => [new RegExp("(?<![\\u0621-\\u064A])(?:ال)?(?:" + a + ")(?![\\u0621-\\u064A])", "g"), e]);
+/** «سماعة هواوي فري كليب 2» → { en: "earbuds Huawei FreeClip 2" … reordered "Huawei FreeClip 2 earbuds", left: "" } */
+export function productEnglish(what) {
+  let t = String(what || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+  if (!/[\u0600-\u06ff]/.test(t)) return { en: t.trim(), match: t.trim(), left: "", changed: false };
+  const kinds = [];
+  for (const [re, e] of AR_EN_RE) t = t.replace(re, (m) => { const v = typeof e === "function" ? e(m) : e; if (KIND_EN.has(v)) { kinds.push(v); return " "; } return " " + v + " "; });
+  t = t.replace(/(?<![\u0621-\u064A])(?:و|ب|ل|من|في|على|عن|بتاع|بتاعة|اللي|الجديد|جديد|جديدة|اصلي|أصلي|اصلية)(?![\u0621-\u064A])/g, " ").replace(/\s+/g, " ").trim();
+  const join = (x) => x.replace(/\b([A-Z]) (\d{1,3})\b/g, "$1$2").replace(/\s+/g, " ").trim();   // "Galaxy S 24" → "Galaxy S24", as stores write it
+  const en = join([t, ...kinds].filter(Boolean).join(" "));
+  const left = (en.match(/[\u0600-\u06ff]+/g) || []).join(" ");
+  // matching uses the name without the kind word ("earbuds") when the name alone says enough — stores write "earphones", "buds"…
+  const match = join(t).split(" ").filter(Boolean).length >= 2 ? join(t) : en;
+  return { en, match, left, changed: true };
+}
+
 /** The stores to search for a product, in order (the store the person named comes first, or alone when they said "on Amazon"). */
 export function storeTries(what, country = "", store = "", max = 6) {
   const c = String(country || "").toUpperCase(), list = STORES[c] || [S("amazon." + (AMAZON_TLD[c] || "com"), "Amazon", (q) => "https://www.amazon." + (AMAZON_TLD[c] || "com") + "/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("ebay.com", "eBay", (q) => "https://www.ebay.com/sch/i.html?_nkw=" + enc(q))];
