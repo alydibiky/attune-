@@ -16,6 +16,23 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.0 part 7 — 2 Nov: "99 percent accurate — always testing and fixing" (no cloud AI: Ali said no)
+- Scoreboard `node tools/accuracy.mjs --show` over `tests/bank/*.json` (core, hard, langs = 306 real sentences, EN / Egyptian /
+  Franco / 11 other languages) through the SAME readers as Chat (`tests/bank/route.mjs`): 100% can be right, 90% by code alone,
+  the rest (other languages) settled by the phone's model. Test `v908bank` (every sentence must stay right).
+- The model step with REAL models (`tests/trials/judge.mjs`, llama-server, the app's prompt + parser): Qwen3-4B 39/39,
+  **Qwen3.5 4B (the app's phone model) 39/39, Qwen3.5 9B (Zenith, desktop) 39/39**. `judge.mjs all` = the model alone on all 306.
+  Models are downloaded to the scratchpad (not in git): unsloth/Qwen3.5-4B-MTP-GGUF Q5_K_S, unsloth/Qwen3.5-9B-MTP-GGUF IQ4_NL.
+- Fixed from the banks: 'give me tips to sleep better' → butter (doit request guard + fitread COMMON words never 'typo-fixed'),
+  'school fees are due on 1 December' (deadlines: due on/by), '1250 / 5', "don't let me forget", 'I need a reminder', 'remind me
+  what we said?' (not a reminder), 'what is the best phone under 15000?' (not a price watch), '1200 gym' (one payment unless it
+  says it repeats or is a known service), 'my sister will give me 2000 every month', Franco 3aleha/3alaya, a price wish / a loan
+  never spending, a statement with an amount is not a spending question; clearer rules in the model's prompt.
+- More banks as tests: `v909times` (30 reminders, exact minute + repeat), `v910food` (meals read; everyday sentences never food),
+  `v911moneyanswers` (10 money questions, exact sums, USD never mixed, the Egyptian week, custom categories by name).
+- Next areas for the same treatment: People & plans schedules (partial payments), Zakāt, Safe to spend, Agents' offer reading,
+  Scout's ad reading, translation, the photo readers.
+
 ## v9.0 part 6 — 2 Nov: launch plan, backup zip, the sentence bank (smarter Chat)
 - `LAUNCH_PLAN_2026-12.md` — Ali: "make it perfect and really smart, deploy in 1 month max"; "ready = no mistakes" (Play account
   and the 14-day closed test come later, when he is ready). v1 leaves out the overlay orb, the keyboard and Video Downloader (the
