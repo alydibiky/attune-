@@ -145,6 +145,8 @@ const RESEARCH = /(?:^|\b)(?:(?:please\s+)?(?:gather|collect|compile|find|get|di
 export function parseAgent(text, opts = {}) {
   const t0 = String(text || "").replace(/\s+/g, " ").trim(); if (!t0 || t0.length > 400) return null;
   const t = fold(t0), now = opts.now || Date.now(), country = (opts.country || "EG").toUpperCase();
+  // v9.0 (the sentence bank: "what is the best phone under 15000?" became a price watch): a question is answered, not watched
+  if (/[?؟]\s*$/.test(t0) && /^\s*(what|which|who|how|is|are|should|can|do|does|why|where|any|إيه|ايه|انهي|أنهي|مين|ازاي|إزاي|هل|ليه|فين)\b/i.test(t0)) return null;
   const app = appIn(t0);
   // v9.0 (Ali: "I told it to gather information on a topic — get it from more than one source and present it in a good, neat way"):
   // a research agent — several searches, every page read one at a time, figures checked across sources, one tidy report with sources

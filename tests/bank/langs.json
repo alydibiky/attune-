@@ -1,0 +1,11 @@
+{
+"action": ["Recuérdame pagar el alquiler mañana a las 9", "Rappelle-moi d'appeler maman demain à 18h", "Erinnere mich morgen um 8 an den Arzttermin", "Lembre-me de pagar a conta amanhã",
+ "Ricordami di chiamare Marco alle 17", "Напомни мне завтра в 9 позвонить в банк", "Yarın saat 9'da bankayı aramayı hatırlat", "Ingatkan saya bayar listrik besok jam 9",
+ "मुझे कल 9 बजे बैंक को फोन करने की याद दिलाना", "明天9点提醒我给银行打电话", "明日9時に銀行に電話するのをリマインドして", "내일 9시에 은행에 전화하라고 리마인드 해줘"],
+"money-ask": ["¿Cuánto gasté este mes?", "Combien j'ai dépensé ce mois-ci ?", "Wie viel habe ich diesen Monat ausgegeben?", "Quanto gastei este mês?", "Сколько я потратил в этом месяце?",
+ "Bu ay ne kadar harcadım?", "इस महीने मैंने कितना खर्च किया?", "这个月我花了多少钱？", "今月いくら使った？", "이번 달에 얼마나 썼어?"],
+"research": ["Reúne información sobre paneles solares", "Fais une recherche sur les voitures électriques", "Sammle Informationen über Solaranlagen", "Собери информацию о солнечных панелях",
+ "Elektrikli arabaları araştır", "सोलर पैनल के बारे में जानकारी इकट्ठा करो", "收集一下太阳能板的信息", "ソーラーパネルについて情報を集めて", "태양광 패널에 대해 정보를 모아 줘"],
+"chat": ["¿Cuál es la capital de Francia?", "Explique-moi la photosynthèse", "Wer hat die Relativitätstheorie entdeckt?", "Qual é a melhor maneira de economizar dinheiro?",
+ "Как приготовить борщ?", "Türkiye'nin başkenti neresi?", "日本の首都はどこ？", "오늘 기분이 어때?", "भारत की राजधानी क्या है?", "Apa ibu kota Indonesia?"]
+}

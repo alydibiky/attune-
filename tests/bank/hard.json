@@ -1,0 +1,39 @@
+{
+"action": [
+ "remnd me tmrw at 9 to call the bank", "pls remind me to call my dad at 6", "can you remind me to drink water every 2 hours", "I need a reminder at 4 for the meeting",
+ "alarm 6am", "wake me up early tomorrow at 5:30 please", "remind me when I get home to call Sara", "remind me tonight at 10 to lock the car",
+ "remind me on Friday to pay Ahmed back", "remind me in 3 days to follow up with the client", "ابعت لماما رسالة اني وصلت", "فكرني اكلم السباك بكرة الصبح الساعة 10",
+ "عايزك تفكرني بكرة الساعة 8 بالجيم", "فكّرني كمان ساعة", "فكرني يوم الخميس ادفع للشغالة", "صحيني 5 الفجر", "اعملي منبه الساعة 7", "fakarny ba3d nos sa3a", "sa7eeny bokra el sa3a 7"
+],
+"money-log": [
+ "spnt 200 on lunh", "paid 60 for the taxi today", "just paid 1,250 for the electricity", "got paid 5000 today", "lunch was 180", "two coffees 90",
+ "bought groceries for 750 pounds", "dinner 450 EGP", "300 fuel", "1200 gym", "I spent 85 on uber", "salary came in 25,000",
+ "دفعت 180 غدا", "صرفت 90 على قهوتين", "النهارده دفعت 60 تاكسي", "جالي المرتب 25 ألف", "بنزين 300", "اشتريت هدوم ب 2000", "غدايا كان 180",
+ "drank 3 glasses of water", "شربت لتر مية", "I weigh 80 kg today", "ate a big salad for lunch", "اكلت شاورما فراخ على الغدا"
+],
+"money-ask": [
+ "how much have I spent this week?", "what did I spend on food in October?", "how much money did I spend on transport last month?", "how much did I earn this year?",
+ "صرفت كام على المواصلات الشهر اللي فات؟", "كام صرفت الأسبوع ده؟", "مصاريفي الشهر ده كام؟"
+],
+"agent": [
+ "tell me when a 4-star hotel in Sharm is under 3000 a night from 20 December for 3 nights", "buy me a 55 inch Samsung TV under 20k", "let me know when the PS5 goes under 22000",
+ "notify me when my Jumia order arrives", "نبهني لما سعر الايفون 16 برو ينزل تحت 50 ألف", "دورلي على سماعة هواوي فري كليب 2 بأقل من 8400", "قولي لما طلب نون يوصل"
+],
+"deadline": [
+ "my gym membership ends on 30 November", "the car insurance expires 10 January 2027", "visa expires on 5 February 2027", "my phone warranty ends on 12 March 2027",
+ "التأمين بينتهي 10 يناير 2027", "اشتراك الجيم بيخلص 30 نوفمبر"
+],
+"life": [
+ "Mostafa owes me 3000", "I owe Ahmed 1500", "my sister will give me 2000 every month", "bought a laptop on 6 installments of 4000", "مصطفى عليه 3000", "عليا لأحمد 1500",
+ "اختي هتديني 2000 كل شهر", "Sara 3aleha 2000"
+],
+"calc": [
+ "what's 12% of 3500?", "4500 + 14% vat", "how much is 3 × 450", "1500 - 10%", "350 x 12", "كام 3 في 450", "احسب 2500 + 1300 + 800"
+],
+"chat": [
+ "what's a good gift for my mom's birthday?", "how long should I boil eggs?", "can you explain how loans work?", "what is the best phone under 15000?", "is it a good time to buy gold?",
+ "how many calories in a banana?", "what's the weather like in Cairo in December?", "help me write an email to my boss asking for a day off", "remind me what we talked about yesterday?",
+ "what is a reminder app?", "where should I invest 100000?", "how do I cancel my Netflix?", "why is my phone battery draining fast?", "my friend owes me money and won't pay, what should I do?",
+ "اكتبلي ايميل لمديري عايز اجازة يوم", "ازاي الغي اشتراك نتفليكس؟", "الدهب هيغلى ولا هيرخص؟", "كام سعرة في الموزة؟", "ابني عنده سخونية اعمل ايه؟", "صاحبي عليه فلوس ومش عايز يدفع اعمل ايه؟"
+]
+}

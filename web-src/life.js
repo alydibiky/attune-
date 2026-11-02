@@ -262,7 +262,7 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
     // v8.9: several days a week — «كل حد واربع», "every Sunday and Wednesday" → days [0, 3] (one box on each)
     const all = [...t.matchAll(/(?:^|[\s,،و])(?:ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربعاء|اربع|خميس|جمعه|سبت)(?=$|[\s,،])|\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/gi)].map((x) => W[(x[1] || x[2] || "").toLowerCase()]).filter((x) => x != null);
     const days = [...new Set(all)].sort((a, b) => a - b);
-    const dirR = dirIn || /\b(pays me|gives me|sends me)\b/i.test(raw) ? "in" : "out";
+    const dirR = dirIn || /\b(pays me|gives me|sends me|will (?:give|pay|send) me)\b/i.test(raw) ? "in" : "out";
     return { ...base, ...(days.length > 1 && (every || "week") === "week" ? { days } : {}), kind: "regular", dir: dirR, amount: amts[0], count: 0, total: 0, every: every || "week", start: st || iso(new Date(now)), title: /^[a-z]/i.test(name) ? name[0].toUpperCase() + name.slice(1) : name, auto: true };
   }
   if (RENT.test(raw) || RENT.test(t)) return { ...base, kind: "rent", dir: dirIn && /tenant|المستاجر|بيدفعلي|inquilino|locataire|mieter|affittuario|kiracı|penyewa/.test(t) ? "in" : "out", amount: amts[0], count: count || 0, total: 0, every: every || "month", title: "Rent" };
@@ -428,11 +428,16 @@ export function chatLifeIntent(text, opts) {
   const t = String(text || "").trim();
   if (!t || t.length > 200 || /[?؟]\s*$/.test(t) || /^[¿]/.test(t) || /^(how|what|why|when|should|can|is|are|do|does|كام|ازاي|إزاي|ليه|امتى|هل|ايه|إيه|cuánto|cuanto|cómo|como|qué|que|por qué|combien|comment|pourquoi|est-ce|quanto|quanta|por que|wie|was|warum|wann|soll|perché|quale|ne kadar|nasıl|neden|berapa|bagaimana|kenapa)(?![\p{L}])/iu.test(t) || /\b(how much|how many|advice|calculate|interest rate)\b/i.test(t)) return null;
   // a request to work something out is a Chat task, not a note («… give me the rent with the tax», «احسب …»)
-  if (/\b(give me|calculate|work out|tell me|compute|show me|explain|write|find|estimate|compare)\b|احسب|اديني|اعطني|قولي|قول لي|اكتب|اعملي|اشرح|قارن|(?<![\p{L}])(calcula|calcule|calcular|calculer|dime|dis-moi|explica|explique|escribe|écris|berechne|erkläre|schreib|calcola|spiega|scrivi|hesapla|açıkla|yaz|hitung|jelaskan|tulis)(?![\p{L}])/iu.test(t)) return null;
+  // (v9.0: "my sister WILL GIVE ME 2000 every month" is money coming in, not a request — "give me" counts only as an order)
+  if (!/\b(will|would|is going to|has to|must|should|to|gonna)\s+(give|send|pay)\s+me\b/i.test(t) && /\b(give me|calculate|work out|tell me|compute|show me|explain|write|find|estimate|compare)\b|احسب|اديني|اعطني|قولي|قول لي|اكتب|اعملي|اشرح|قارن|(?<![\p{L}])(calcula|calcule|calcular|calculer|dime|dis-moi|explica|explique|escribe|écris|berechne|erkläre|schreib|calcola|spiega|scrivi|hesapla|açıkla|yaz|hitung|jelaskan|tulis)(?![\p{L}])/iu.test(t)) return null;
   const c = parseLife(t, opts);
   if (!c) return null;
   // a bill, rent or subscription only when the text itself says how often or when (not a price mentioned in passing)
   if (["bill", "rent", "subscription"].includes(c.kind) && !c.start && !c.every) return null;
+  // v9.0 (the sentence bank: "1200 gym" became a monthly gym plan): a subscription needs the words that say it repeats, or a
+  // service that only comes as one (Netflix, Spotify…) — otherwise it is one payment
+  if (c.kind === "subscription" && !c.start && !/\b(every|each|a month|monthly|per month|a year|yearly|annual|weekly|a week|renews?|subscription|membership)\b|كل|شهري|سنوي|اسبوعي|أسبوعي|بيتجدد|اشتراك/i.test(t)
+    && !/\b(netflix|spotify|shahid|osn|watch it|watchit|youtube premium|apple music|icloud|google one|chatgpt|anghami|disney|amazon prime|prime video|canva|adobe|office 365|microsoft 365)\b|نتفليكس|شاهد|انغامي|أنغامي/i.test(t)) return null;
   return c.person || c.kind === "circle" || c.kind === "installment" || c.every ? c : null;
 }
 

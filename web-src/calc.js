@@ -56,7 +56,8 @@ export function looksLikeCalc(text) {
   // Only when it is clearly a sum: a times/plus/percent sign, or words that ask
   // for a result. "25/9" (a date) or "10-12 days" alone never trigger it.
   // «في» alone ("5 في 6") is also a date — it counts as × only when the message asks for a result
-  const strong = /[×*÷+%٪^√]|sqrt|\d\s*[xX]\s*\d/.test(t.replace(/[٠-٩]/g, "0")) || /(في|فى)\s*(الم|بالم)|بالمي|بالمائ/.test(t);
+  // v9.0 (the sentence bank: "1250 / 5"): a slash with spaces, or with a number a date can't have, is division
+  const strong = /[×*÷+%٪^√]|sqrt|\d\s*[xX]\s*\d|\d\s+\/\s+\d|\d{3,}\s*\/\s*\d|\d\s*\/\s*\d{3,}/.test(t.replace(/[٠-٩]/g, "0")) || /(في|فى)\s*(الم|بالم)|بالمي|بالمائ/.test(t);
   const asks = /\b(total|sum|calculate|how much|equals?)\b|=|كام|احسب|حسبة|اجمالي|إجمالي|مجموع|يساوي/i.test(t);
   if (!strong && !asks) return false;
   if (/\+\s*\d[\d\s-]{7,}/.test(digits(t))) return false;      // a phone number

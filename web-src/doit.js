@@ -255,6 +255,8 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   const money = MONEY_VERB.test(rest) || CURRENCY.test(rest);
   const today = isoDay(now);
   if (foods.length && FUTURE.test(t) && !EAT.test(t)) return { actions: [], chat: true };
+  // v9.0 (the sentence bank: "give me tips to sleep better" was logged as butter): a request is never food eaten, unless it says so
+  if (!EAT.test(t) && /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|make|find|help|teach|list|plan|create|send|search|look up|notify|let me know|alert|remind|ask)\b|^\s*(اديني|إديني|ادّيني|قولي|اقترح|اقترحلي|اشرح|اشرحلي|اكتب|اكتبلي|اعملي|ساعدني|علمني|دورلي|هاتلي)/i.test(t)) return { actions: [], chat: true };
   if (foods.length && (EAT.test(t) || !money)) {
     // the eaten foods are counted; a price said with them ("80 pounds") is the money part
     actions.push({ kind: "food", meal: mealOf(t, now), items: foods, unknown: meal.unknown || [] });

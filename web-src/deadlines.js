@@ -215,6 +215,12 @@ export function readDeadlines(text, opts = {}) {
     const card = /(?:visa|mastercard|master card|amex|american express|maestro|mada|meeza|rupay|discover|unionpay|elo|carte bleue)\s*(?:card\s*)?(?:[•*x·.]{2,}|\d{4}|ending)|valid thru|good thru|card ending|carte se terminant/i.test(t);
     if (d) { const doc = card ? "card" : (DOCS.find(([, re]) => re.test(t)) || [])[0] || ""; add("expiry", d.t, { why: "date", doc }); }
   }
+  // v9.0 (the sentence bank: "the school fees are due on 1 December" was missed): something due on a date — a payment, fees,
+  // a form, an exam — is a deadline too
+  if (!out.length) {
+    const due = /\b(?:(?:is|are)\s+)?due\s+(?:on|by|before)\b|\bdue date\b|\bdeadline\b|\blast day (?:to|for)\b|\bmust be (?:paid|done|submitted) by\b|آخر ميعاد|اخر ميعاد|مستحق(?:ة)? يوم|ميعاد السداد|لازم تتدفع قبل|آخر يوم للتقديم/i;
+    if (due.test(t)) { const d = after(due) || dates.find((x) => x.t > now - DAY / 2); if (d) add("other", d.t, { why: "due" }); }
+  }
   return out;
 }
 // a duration in whole years/months lands on the same day of the month (a 2-year warranty from 14 Oct 2026 → 14 Oct 2028)

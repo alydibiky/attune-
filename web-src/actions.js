@@ -219,9 +219,11 @@ export function normalizePhone(p) {
 
 // ---- is this a request to DO something? ------------------------------------------
 const ACTION_HINT = new RegExp([
-  "\\bremind(er)? me\\b", "\\bremind\\b", "\\bset (an? )?(alarm|timer|reminder)\\b", "\\bwake me\\b", "\\balarm\\b", "\\btimer\\b",
+  "\\bremind(er)? me\\b", "\\bremind\\b", "\\b(need|want|add|create|make) an? reminder\\b", "\\bset (an? )?(alarm|timer|reminder)\\b", "\\bwake me\\b", "\\balarm\\b", "\\btimer\\b",
   "\\b(add|put|schedule|book) .*(calendar|meeting|appointment)\\b", "\\bcalendar\\b",
   "\\bwhats ?app\\b", "\\b(text|message) [A-Z]", "\\bcall [A-Za-z]",
+  "\\bdon'?t let me forget\\b", "\\bmake sure i (remember|don'?t forget)\\b",
+  "نبهني (بعد|الساعة|الساعه|بكرة|بكره|النهارده|يوم|كل)", "نبّهني (بعد|الساعة|الساعه|بكرة|بكره|النهارده|يوم|كل)", "متنسانيش", "ما تنسانيش",
   "فكرني", "فكّرني", "ذكرني", "ذكّرني", "افكرك", "صحيني", "صحّيني", "منبه", "منبّه", "المنبه", "تايمر", "مؤقت",
   "ميعاد", "موعد", "اجتماع", "النتيجة", "الكالندر", "التقويم", "واتس", "الواتساب", "واتساب", "ابعت ل", "ابعتله", "ابعتلها", "كلم ", "اتصل ب",
 ].join("|"), "i");
@@ -229,6 +231,8 @@ export function looksLikeAction(text) {
   const t = String(text || "");
   if (t.length > 400) return false;                           // a pasted document is not a command
   if (/[?؟]\s*$/.test(t) && !/remind|فكرني|ذكرني|صحيني/i.test(t)) return false;  // a question about alarms is not a request
+  // v9.0 (the sentence bank): "remind me what we talked about yesterday?" asks to recall, not to set a reminder
+  if (/\bremind me (what|who|how|where|why|which|of what)\b|(فكرني|ذكرني) (ب?إيه|بايه|مين|ازاي|إزاي|فين|ليه)/i.test(t) && !/\b(at|in|on|tomorrow|tonight|every)\s+\S/i.test(t.replace(/\babout\b.*/i, ""))) return false;
   return ACTION_HINT.test(t);
 }
 

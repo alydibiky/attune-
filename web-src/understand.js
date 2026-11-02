@@ -112,6 +112,12 @@ export function signalsOf(text, flags = {}) {
   for (const [k, v] of Object.entries(flags || {})) if (v) s.add(k);
   // a reminder to pay is not a question about money spent; asking how much you spent is not logging it
   if (s.has("action") && s.has("money-ask") && !/\?\s*$/.test(String(text || "").trim())) s.delete("money-ask");
+  // "remind me what we talked about?" asks to recall something — not a reminder
+  if (/\bremind me (what|who|how|where|why|which|of what)\b|(فكرني|ذكرني) (ب?إيه|بايه|مين|ازاي|إزاي|فين|ليه)/i.test(String(text || "")) && /[?؟]\s*$/.test(String(text || "").trim())) s.delete("action");
+  // a price wish for an agent ("tell me when X is under 40k", «نبهني لما … أقل من …») is not a payment, nor a reminder
+  if (s.has("agent") && /\b(under|below|less than|cheaper|drops?)\b|أقل من|اقل من|تحت|ينزل|يرخص/i.test(String(text || ""))) { s.delete("money-log"); s.delete("action"); }
+  // borrowing or lending is a plan with a person, not money spent
+  if (s.has("life") && s.has("money-log") && /\b(borrow(ed)?|lent|lend|owes?|loan)\b|استلفت|سلفت|سلّفت|عليه|عليها|ليا عند|اقترضت|أقرضت/i.test(String(text || ""))) s.delete("money-log");
   // "15% of 2400" is a calculation, not a payment of 2,400
   if (s.has("calc") && s.has("money-log") && /[%٪]|\b(?:of|times|plus|minus)\b|من|في/.test(String(text || ""))) s.delete("money-log");
   return s;
@@ -145,7 +151,8 @@ export function decide(signals, text = "", learned = null, flagged = null) {
 export function judgeMessages(text, candidates) {
   const list = (candidates || []).filter((k) => KINDS[k]);
   return [
-    { role: "system", content: "You route a message in a phone assistant app. The message may be in any language. Pick the ONE label that says what the person wants done. Reply with the label only.\nLabels:\n" + list.map((k) => "- " + k + ": " + KINDS[k]).join("\n") },
+    { role: "system", content: "You route a message in a phone assistant app. The message may be in any language (also Egyptian Arabic or Arabic written in Latin letters). Pick the ONE label that says what the person wants done. Reply with the label only.\nLabels:\n" + list.map((k) => "- " + k + ": " + KINDS[k]).join("\n")
+      + "\nRules: a question that asks for information is chat, even when it mentions reminders, money or buying (\"remind me what we said?\" → chat; \"what is the best phone under 15000?\" → chat). A short note of something paid or bought with its amount is money-log (\"lunch 150\", \"صرفت 300 بنزين\"). \"Tell me when X is under a price\" is agent." },
     { role: "user", content: "Message: " + String(text || "").slice(0, 500) + "\nLabel:" },
   ];
 }
@@ -212,7 +219,7 @@ const CMD = { fakarny: "فكرني", fakkarny: "فكرني", fakarni: "فكرن�
   embare7: "امبارح", emberi7: "امبارح", sa3a: "ساعة", kol: "كل", youm: "يوم", yom: "يوم", shahr: "شهر", esbo3: "أسبوع", osbo3: "أسبوع", gom3a: "جمعة", gum3a: "جمعة",
   sabt: "سبت", "7ad": "حد", etnen: "اتنين", talat: "تلات", arba3: "أربع", khamees: "خميس", "5amis": "خميس", kam: "كام", kaam: "كام", "3ayez": "عايز", "3awez": "عاوز",
   eshtereely: "اشتريلي", eshtereli: "اشتريلي", eshteryly: "اشتريلي", dawarly: "دورلي", dawwarli: "دورلي", dawarli: "دورلي", "3ala": "على", fe: "في", fi: "في", men: "من",
-  ma3: "مع", "3aleh": "عليه", "3aleih": "عليه", leya: "ليا", liya: "ليا", sallaft: "سلفت", masareef: "مصاريف", masarif: "مصاريف", "2ad": "قد", "2a2al": "أقل", a2al: "أقل",
+  ma3: "مع", "3aleh": "عليه", "3aleih": "عليه", "3aleha": "عليها", "3alaya": "عليا", "3alayya": "عليا", "3alehom": "عليهم", leya: "ليا", liya: "ليا", sallaft: "سلفت", masareef: "مصاريف", masarif: "مصاريف", "2ad": "قد", "2a2al": "أقل", a2al: "أقل",
   ad: "قد", nos: "نص", ro3: "ربع", "ella": "إلا", sob7: "الصبح", "elsob7": "الصبح", bel: "بالليل", belel: "بالليل", "belleil": "بالليل", "2ol": "قول", "2oly": "قولي", "2olli": "قولي", oly: "قولي",
   lama: "لما", lamma: "لما", law: "لو", "yewsal": "يوصل", "yewsl": "يوصل", talab: "طلب", "talaby": "طلبي", "gamaeya": "جمعية", "gam3eya": "جمعية", "gam3ya": "جمعية", dayman: "دايما" };
 let INV = null;
