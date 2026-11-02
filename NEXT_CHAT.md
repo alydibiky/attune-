@@ -22,8 +22,16 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   phone run just after the page shows; the plan / delivery rules are sent only when they changed.
 - Bug found on the way: every page open re-armed AgentWatch to "now + 12 h", so opening Agents daily meant background checks
   almost never ran. `AgentWatch.setPlan` keeps a planned round (`next` in prefs).
-- Results display: options A (best deal first + short list + price line, recommended), B (price board: one bar per store and
-  the limit line), C (photo cards to swipe) shown to Ali: https://claude.ai/artifact/Df9Q99dC5a1qpapnus9Wye — waiting for his pick.
+- Results display: options A / B / C shown (https://claude.ai/artifact/Df9Q99dC5a1qpapnus9Wye). **Ali picked "A and B in a smart
+  way" — BUILT** (`agents-ui.jsx DealBoard`, pure `agents.js dealBoard`): the best deal big = the cheapest KNOWN store (a cheaper
+  Facebook post / unknown shop is a line under it: "check the seller first"), how far under / over the limit, Open the listing,
+  Not this one; then every store as a bar (cheapest first, bars start near the cheapest so small gaps show) against the limit
+  line, each row opening its own listing. Bars only with 2+ offers, the line only with a limit. Buy agents show the bars under
+  their "Found it" box. Hotels keep their own compare table (BestFound). Store names: facebook.com → Facebook.
+- Ali: "for the running now make each one a different tab" — BUILT: one tab per running agent (+ each Scout goal, + Message
+  alerts), a dot on a tab with news (found / under the limit / waiting for "Order it"); the chosen tab is remembered, a new
+  agent opens on its tab, a tab with news opens first. Running count now includes follow agents.
+- Tests: `tests/unit/v905dealboard.test.mjs`, `tests/e2e_v905deal.py` (English + Egyptian Arabic, screenshots with SHOTS=).
 
 ## v9.0 part 3 — 2 Nov: "do the not done yet"
 1. Arabic product names → English (`agent.js productEnglish`: ~150 brands, product lines, model words, kinds, units, colours;

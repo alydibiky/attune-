@@ -30,7 +30,7 @@ with sync_playwright() as p:
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_timeout(1200)
     go(page, "agents", "[data-testid=agents-page]")
-    check(page.locator("[data-testid=agents-empty]").count() == 1 and page.locator("[data-testid^=agents-chip-]").count() == 6, "Agents opens calm: the box, six example chips (v8.6: Find & buy), no agents yet")
+    check(page.locator("[data-testid=agents-empty]").count() == 1 and page.locator("[data-testid^=agents-chip-]").count() == 8, "Agents opens calm: the box, eight example chips (v9.0: Follow a topic, Research a topic), no agents yet")
     # ---- Ali's price watch: no day → asked, then a Booking watch ----
     say(page, "tell me when hotels in masjid el haram become less than 45k in 4 nights")
     check(page.locator("[data-testid=agents-ask]").count() == 1 and "which day" in page.locator("[data-testid=agents-ask]").inner_text(), "no day in the sentence → the agent asks from which day")

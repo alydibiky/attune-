@@ -380,7 +380,8 @@ export function compareOffers(list, { below = 0 } = {}) {
 export function planSteps(a, now = Date.now()) {
   const f = a.fields || {}, last = [...(a.checks || [])].reverse()[0];
   const out = [];
-  if (a.tries && a.tries.length) out.push({ done: !!last, en: "{n} start days checked on {site}", v: { n: a.tries.length, site: a.site } });
+  if (a.tries && a.tries.length && !a.tries[0].checkin && a.tries[0].site) out.push({ done: !!last, en: "Checked {s}", v: { s: a.tries.map((x) => x.site).join(", ") } });   // v9.0 stores, not start days
+  else if (a.tries && a.tries.length) out.push({ done: !!last, en: "{n} start days checked on {site}", v: { n: a.tries.length, site: a.site } });
   else out.push({ done: !!last, en: "Checked on {site}", v: { site: a.site } });
   if (f.stars || f.near) out.push({ done: !!last, en: f.stars && f.near ? "only {s}★, within 1 km" : f.stars ? "only {s}★" : "within 1 km", v: { s: (f.stars || []).join("–") } });
   if (a.compared) out.push({ done: true, en: "{n} offers compared", v: { n: a.compared } });
@@ -440,6 +441,44 @@ export function bestAcross(offers, a = {}, max = 5) {
   return [...by.values()].sort((x, y) => x.price - y.price).slice(0, max);
 }
 
+/* ---- v9.0 (Ali picked "A and B in a smart way"): the best deal big (A) + every store as a bar against the limit line (B).
+   Pure: offers → { best, rows: [{ o, pct, diff, under, best }], limitPct, under: how many are under the limit, unsure }.
+   The bars start a little under the cheapest price (not at 0), so 300 pounds between two stores is visible; the limit line is
+   drawn only when there is a limit; a deal from a page that isn't a known store (a Facebook post, an unknown shop) is "check the
+   seller first". */
+const KNOWN_STORE = /(^|\.)(amazon\.[a-z.]+|noon\.com|jumia\.com\.eg|btech\.com|2b\.com\.eg|rayashop\.com|jarir\.com|extra\.com|sharafdg\.com|carrefouruae\.com|ebay\.com)$/i;
+const SITE_NAMES = { "facebook.com": "Facebook", "m.facebook.com": "Facebook", "instagram.com": "Instagram", "dubizzle.com.eg": "Dubizzle", "olx.com.eg": "OLX" };
+/** A store's name for the card: "facebook.com" → "Facebook", "shop.example.com" → "shop.example.com". */
+export const siteName = (s) => SITE_NAMES[String(s || "").toLowerCase().replace(/^www\./, "")] || s || "";
+export const siteOfOffer = (o) => siteName((o && o.site) || siteOf((o && (o.href || o.url)) || "").replace(/^m\./, ""));
+export function isKnownStore(o) { return !!o && (!o.web || KNOWN_STORE.test(siteOf(o.href || o.url || ""))); }
+export function dealBoard(offers, below = 0) {
+  const list = (offers || []).filter((o) => o && o.price > 0).slice().sort((a, b) => a.price - b.price);
+  if (!list.length) return null;
+  const lo = list[0].price, hi = Math.max(list[list.length - 1].price, below || 0);
+  const base = Math.max(0, lo - Math.max((hi - lo) * 0.6, lo * 0.04)), span = Math.max(1, hi * 1.02 - base);
+  const pct = (v) => Math.max(4, Math.min(100, Math.round(((v - base) / span) * 1000) / 10));
+  const rows = list.map((o, i) => ({ o, pct: pct(o.price), diff: Math.round(o.price - lo), under: below > 0 ? o.price <= below : null, best: i === 0, unsure: !isKnownStore(o) }));
+  const hero = rows.find((r) => !r.unsure) || rows[0], cheaper = rows.find((r) => r.unsure && r.o.price < hero.o.price) || null;
+  return { best: hero.o, hero, cheaper, rows, limitPct: below > 0 ? pct(below) : null, under: below > 0 ? rows.filter((r) => r.under).length : null, gap: below > 0 ? Math.round(below - hero.o.price) : null, bars: rows.length >= 2 };
+}
+
+/* ---- v9.0 (Ali: "for the running now make each one a different tab"): one tab per running agent — its short name, and a dot
+   when it found something. Pure. */
+const cut = (x, n = 24) => { const t = String(x || "").replace(/\s+/g, " ").trim(); return t.length > n ? t.slice(0, n - 1).trim() + "…" : t; };
+export function agentTab(a) {
+  if (!a) return { label: "", dot: false };
+  const f = a.fields || {};
+  const label = a.kind === "follow" ? a.topic : a.kind === "buy" ? a.said || a.what : a.kind === "watch" ? (a.what ? a.said || a.what : f.city ? "Hotels · " + String(f.city).split(",")[0] : a.title)
+    : a.kind === "track" || a.kind === "order" ? (a.app && a.app.label) || a.title : a.title;
+  return { label: cut(label), dot: !!(a.found || a.pending || (a.kind === "buy" && a.step === "confirm") || (a.below > 0 && (a.best3 || []).some((o) => o && o.price > 0 && o.price <= a.below))), kind: a.kind };
+}
+/** Which tab shows: the one asked for if it is still there, else the first with news, else the first. */
+export function pickTab(ids, want, withNews = []) {
+  if (want && ids.includes(want)) return want;
+  return ids.find((x) => withNews.includes(x)) || ids[0] || null;
+}
+
 /** A delivery agent as a Message-alert rule the phone checks against every notification of that store's app. */
 export const trackRule = (a) => ({ id: "agent-" + a.id, on: a.on, created: a.created, who: [], app: "pkgs:" + [a.app.pkg, ...(a.app.alt || [])].filter(Boolean).join("|"),
   words: ["arriving", "arrives", "arrive", "delivered", "delivery", "out for delivery", "shipped", "dispatched", "on its way", "on the way", "يصل", "هيوصل", "توصيل", "التوصيل", "الطريق", "تم الشحن", "تم التوصيل", "شحن", "وصل"],
@@ -454,9 +493,9 @@ export function agentsReport(st, scoutGoals = [], alerts = [], now = Date.now())
   const ag = st.agents || [], wk = now - 7 * DAY;
   const checks = ag.reduce((n, a) => n + (a.checks || []).filter((c) => c.at >= wk).length, 0);
   const found = ag.filter((a) => a.found && a.found.at >= wk).length + scoutGoals.reduce((n, g) => n + ((g.unseen || []).length ? 1 : 0), 0);
-  const by = { buy: 0, watch: 0, track: 0, order: 0, scout: scoutGoals.filter((g) => g.on !== false).length, alert: alerts.filter((r) => r.on !== false && !String(r.id).startsWith("agent-")).length };
+  const by = { buy: 0, watch: 0, follow: 0, track: 0, order: 0, scout: scoutGoals.filter((g) => g.on !== false).length, alert: alerts.filter((r) => r.on !== false && !String(r.id).startsWith("agent-")).length };
   for (const a of ag) if (a.on && by[a.kind] != null) by[a.kind]++;
-  return { running: by.buy + by.watch + by.track + by.order + by.scout + by.alert, found: found + ag.filter((a) => a.kind === "buy" && a.pending).length, checks, by };
+  return { running: by.buy + by.watch + by.follow + by.track + by.order + by.scout + by.alert, found: found + ag.filter((a) => a.kind === "buy" && a.pending).length, checks, by };
 }
 
 // ---- v8.6 buy agents: the closest real match, then the person decides --------------------------------------------------------------
