@@ -9700,6 +9700,10 @@ export default function App() {
   const chatApi = {
     run: callChat,
     cmdLocal: (t) => (cmdLocalRef.current ? cmdLocalRef.current(t) : null),          // v6.48 (Chat runs the app)
+    // v9.0 (the sentence bank: "lunch 150" in Chat went to the AI): what the Home box does, Chat does too — money in a few words,
+    // food eaten, water, weight, a dose, a debt paid back. Reminders, plans with people and dates keep Chat's own cards.
+    doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
+    doIt: (t) => { try { return doRef.current ? doRef.current(t) : null; } catch (e) { return null; } },
     whereYes: (set) => remember(W2.whereRecord(set)),
     openRecord: (id) => { try { localStorage.setItem("attune:mind:open", id); } catch (e) {} navTo("memory"); },
     abort: () => LocalEngine.abort(),
@@ -9865,8 +9869,12 @@ export default function App() {
   // whole app". Code reads it; each action writes into its tool's own store (the old values kept for Undo); a question about your
   // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
   // v8.7 (P5-C): every page's box reaches Home's reader for what isn't its own (Money's box: "remind me tomorrow at 9")
-  useEffect(() => { window.__attuneDo = (t) => { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask || u.actions.some((a) => a.kind !== "note") ? doFromHome(t) : null; }; return () => { try { delete window.__attuneDo; } catch (e) {} }; });
-  const doFromHome = (text) => {
+  useEffect(() => { window.__attuneDo = (t0) => { const t = UND.looksFranco(t0) ? UND.francoToArabic(t0) : t0; const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask || u.actions.some((a) => a.kind !== "note") ? doFromHome(t) : null; }; return () => { try { delete window.__attuneDo; } catch (e) {} }; });
+  const doRef = useRef(null);
+  const doFromHome = (text0) => {
+    // v9.0: Franco ("ghada 150", "fakarny bokra 9") is read as Arabic when the Arabic is something to do
+    let text = text0;
+    if (UND.looksFranco(text0)) { const a = UND.francoToArabic(text0); try { const u = doUnderstand(a, { now: Date.now(), stores: loadLifeStores() }); if (a !== text0 && (u.ask || u.actions.length)) text = a; } catch (e) {} }
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
     // v6.41 D5: «مترو من المعادي للعتبة» → the route, by code
     { const mq = metroAsk(text); if (mq) return { lines: [{ text: metroText(metroRoute(mq.from, mq.to), ar) }], undo: null }; }
@@ -9922,6 +9930,7 @@ export default function App() {
   // ---- v6.48 Chat runs the app (CHAT_RUNS_APP.md; Home option A): what the Home box reaches, and the jobs it starts --------------
   const cmdRef = useRef({});
   const cmdLocalRef = useRef(null);
+  doRef.current = doFromHome;
   cmdRef.current = { modelUsable, memory, hzSample, profile, proActive };
   const findCommitmentsRef = useRef(null); findCommitmentsRef.current = typeof findCommitments === "function" ? findCommitments : null;
   const jobs = useMemo(() => createJobs({ runners: {

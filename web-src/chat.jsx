@@ -14,6 +14,8 @@ import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import * as UND from "./understand.js";
+// v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
+const DO_HERE = ["money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
 import { chatMapIntent } from "./mapintent.js";
 import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_FARES } from "./metro.js";   // v6.41 (D5)
 import { chatLifeIntent } from "./life.js";
@@ -801,10 +803,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // reader says whether the sentence is its kind; the words of every kind are checked in all 20 languages; one clear kind →
     // at once, as before; two kinds, or a kind only the words suggest → the phone's model picks (a few tokens) and the pick is
     // learned. Only the picked reader may answer (understand.js).
+    // v9.0 (the sentence bank): Franco — "fakarny bokra el sa3a 9 akalem mama" — is read as Arabic when the Arabic is something the
+    // app does (a reminder, money, a debt, a date…); otherwise it goes to the AI as it was typed
+    if (route && !img && UND.looksFranco(typed)) {
+      const arT = UND.francoToArabic(typed);
+      if (arT !== typed && ((api.looksLikeAction && api.looksLikeAction(arT)) || (api.doKinds && api.doKinds(arT).length) || myMoneyIntent(arT) || chatLifeIntent(arT)
+        || chatDeadlineIntent(arT, { now: Date.now(), home: homeCurrency(), order: dateOrder() }))) return ask(arT, o);
+    }
     let only = null;
     if (route && !img) {
       const pay0 = api.parsePayment(typed);
-      const flags = { action: !!(api.looksLikeAction && api.looksLikeAction(typed)), "money-log": !!(pay0 && pay0.ok && !/[?؟]\s*$/.test(typed)), "money-ask": !!myMoneyIntent(typed),
+      const dk = api.doKinds ? api.doKinds(typed) : [];
+      const flags = { action: !!(api.looksLikeAction && api.looksLikeAction(typed)), "money-log": !!((pay0 && pay0.ok) || dk.some((k) => DO_HERE.includes(k))) && !/[?؟]\s*$/.test(typed), "money-ask": !!myMoneyIntent(typed),
         calc: !!looksLikeCalc(typed), agent: !!agentCard(typed, { now: Date.now(), order: dateOrder(), inApp: !!(NATIVE && NATIVE.agentOpen) }),
         deadline: !!chatDeadlineIntent(typed, { now: Date.now(), home: homeCurrency(), order: dateOrder() }), life: !!chatLifeIntent(typed) };
       try { only = (await UND.referee(typed, flags, { ask: api.canUseAI() ? (m) => api.run(m, null, { maxTokens: 6, temperature: 0, think: false }) : null })).kind; } catch (e) { only = null; }
@@ -873,6 +883,24 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           actions: [["Open Money Guardian", "open:guardian"], ["Just answer", "answer"]] } }] }));
       setText("");
       return;
+    }
+
+    // v9.0 (the sentence bank: "lunch 150", «غدا 150» in Chat went to the AI): what the Home box does is done here too, with Undo —
+    // money in a few words, food eaten, water, weight, a dose, a debt paid back (doit.js). Reminders, plans and dates keep their cards.
+    if (route && !img && api.doIt && api.doKinds && (!only || only === "money-log")) {
+      const dk = api.doKinds(typed);
+      if (dk.length && dk.every((k) => DO_HERE.includes(k))) {
+        const r = api.doIt(typed);
+        if (r && r.lines && r.lines.length) {
+          const OPEN = { money: "Open Money", fit: "Open Fit & Food", care: "Open Family health", life: "Open People & plans", family: "Open Family", cycle: "Open the calendar", planner: "Open the plan" };
+          const opens = [...new Set(r.lines.map((x) => x.open).filter((o) => OPEN[o]))].slice(0, 2);
+          const cid = ensureChat(typed);
+          patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+            { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => "• " + x.text).join("\n"), actions: [...opens.map((o) => [OPEN[o], "open:" + o]), ...(r.undo ? [["Undo", "undo"]] : [])] }, undo: r.undo || null, askText: typed }] }));
+          setText("");
+          return;
+        }
+      }
     }
 
     // Plain arithmetic: exact and instant, worked out here — no model, no wait.

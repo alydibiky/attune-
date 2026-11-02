@@ -16,6 +16,22 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.0 part 6 — 2 Nov: launch plan, backup zip, the sentence bank (smarter Chat)
+- `LAUNCH_PLAN_2026-12.md` — Ali: "make it perfect and really smart, deploy in 1 month max"; "ready = no mistakes" (Play account
+  and the 14-day closed test come later, when he is ready). v1 leaves out the overlay orb, the keyboard and Video Downloader (the
+  `play` flavor already does). The app's name in Egyptian Arabic = "Attune" everywhere (only the spoken «يا أتيون» stays).
+- Backup zip sent to Ali (attune-backup-2026-11-02.zip, 306 MB): the code + `attune-full-history.bundle` (all 1,100 commits, 36
+  branches) + README-BACKUP.md (what's kept for later, how to restore and build).
+- **Sentence bank** `tests/unit/v908bank.test.mjs` (65 real sentences, EN / Egyptian / Franco) — it found and fixed:
+  - "lunch 150", «غدا 150», "breakfast 80" (the examples printed on Home!) were not money in the Home reader (doit.js).
+  - Chat never did what the Home box does: now `api.doKinds` / `api.doIt` — money in a few words, food, water, weight, a dose,
+    a debt paid back → done in Chat with an Undo card (reminders, plans, dates keep Chat's own cards).
+  - "buy me AirPods Pro 2 under 9000" was logged as 9,000 SPENT by the Home reader — a wish with a price limit is never money.
+  - "15% of 2400" / «كام 15% من 2400» are calculations (calc.js), not a payment of 2,400.
+  - Franco ("fakarny bokra el sa3a 9 akalem mama", "ghada 150", "Ahmed 3aleh 5000") → Arabic (`understand.js francoToArabic`:
+    the Franco keyboard's dictionary turned around + ~120 command words) when the Arabic is something to do — Chat, Home, page boxes.
+  - Next: grow the bank to 500 (all kinds, all languages), and "the electricity bill is due on the 5th" (no amount) → a deadline.
+
 ## v9.0 part 5 — 2 Nov: People & plans history + "all the languages correct and accurate — make sure"
 - People & plans: a tap on a person (or a single loan's name) opens their whole history (`personhist.js` + `PersonHistory` in
   life-ui.jsx): owes you / you owe / got back / you paid back, every plan with them (tickable), each loan, each payment and the

@@ -18,11 +18,11 @@ An **organisation** account (company + D-U-N-S number) skips the 14-day test, bu
 ## Week 1 (3–9 Nov): understand every sentence, no wrong words
 - [x] The referee (option B): code answers only when sure; the phone's model decides mixed sentences; learned; 20 languages.
 - [x] Language audit of all 20 dictionaries as a test; two-meaning words split (Left, Free, Word, Model, Background, Update, Read).
-- [ ] **Sentence bank → 500 real sentences** (English, Egyptian Arabic, Franco, + the 18 others): every kind (reminder, money,
+- [~] **Sentence bank → 500 real sentences** (65 so far: `tests/unit/v908bank.test.mjs` — found and fixed 6 real misses) (English, Egyptian Arabic, Franco, + the 18 others): every kind (reminder, money,
       agent, research, food, people, deadline, translate…) — each must land where it belongs; run on every test run.
 - [ ] Read every Arabic screen (Chat, Settings, Business, Fit & Food, Learn, Studio, Library… — Home, Money, People & plans,
       Follow-ups, Health, Reminders, Agents done) and fix wording; finish the two-meaning list (307 words).
-- [ ] The app's name in Egyptian Arabic: one spelling everywhere (Ali picks).
+- [x] The app's name in Egyptian Arabic: "Attune" everywhere (Ali picked).
 - [ ] Crash and freeze safety: an on-phone crash log + "Send a report" (nothing sent by itself); every page opens < 1 s on a
       mid-range phone (the Agents page was slow — find any other).
 

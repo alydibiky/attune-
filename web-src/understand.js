@@ -112,6 +112,8 @@ export function signalsOf(text, flags = {}) {
   for (const [k, v] of Object.entries(flags || {})) if (v) s.add(k);
   // a reminder to pay is not a question about money spent; asking how much you spent is not logging it
   if (s.has("action") && s.has("money-ask") && !/\?\s*$/.test(String(text || "").trim())) s.delete("money-ask");
+  // "15% of 2400" is a calculation, not a payment of 2,400
+  if (s.has("calc") && s.has("money-log") && /[%٪]|\b(?:of|times|plus|minus)\b|من|في/.test(String(text || ""))) s.delete("money-log");
   return s;
 }
 
@@ -197,4 +199,42 @@ export function followOf(text) {
   topic = topic.replace(/^(?:please|من فضلك|لو سمحت)\s+/i, "").replace(/\b(?:the news (?:on|about)|news (?:on|about)|about|on|for me|for)\b/gi, " ")
     .replace(/(?:^|\s)(?:أخبار|اخبار|جديد|عن|على|لي)(?=\s|$)/g, " ").replace(/[?.!،,:;]+/g, " ").replace(/\s+/g, " ").trim();
   return topic.length >= 2 ? { topic: topic.slice(0, 200), every } : null;
+}
+
+/* ---- v9.0 (the sentence bank: "fakarny bokra el sa3a 9 akalem mama" went to the AI): Franco (Arabic in Latin letters) → Arabic,
+   word by word, so every reader that knows Egyptian Arabic understands it. The keyboard's own dictionary (franco-words.js)
+   turned around, plus the command words people type to an assistant. Words it doesn't know (names, brands) stay as written. */
+import { FROM_KEYBOARD } from "./franco-words.js";
+const CMD = { fakarny: "فكرني", fakkarny: "فكرني", fakarni: "فكرني", fakkarni: "فكرني", fakkrni: "فكرني", nabehny: "نبهني", nabahny: "نبهني", nabbehny: "نبهني",
+  sa7eeny: "صحيني", sa7iny: "صحيني", sa7eny: "صحيني", sa7ini: "صحيني", ab3atly: "ابعتلي", ab3atli: "ابعتلي", ab3at: "ابعت", akalem: "اكلم", a2alem: "اكلم", akallem: "اكلم", kallem: "كلم",
+  edfa3: "ادفع", adfa3: "ادفع", dafa3t: "دفعت", dfa3t: "دفعت", saraft: "صرفت", sraft: "صرفت", eshtaret: "اشتريت", eshtarait: "اشتريت", ghada: "غدا", "8ada": "غدا", ghadaa: "غدا",
+  fetar: "فطار", fe6ar: "فطار", fitar: "فطار", "3asha": "عشا", "3ashaa": "عشا", bokra: "بكرة", bukra: "بكرة", naharda: "النهارده", ennaharda: "النهارده", elnaharda: "النهارده",
+  embare7: "امبارح", emberi7: "امبارح", sa3a: "ساعة", kol: "كل", youm: "يوم", yom: "يوم", shahr: "شهر", esbo3: "أسبوع", osbo3: "أسبوع", gom3a: "جمعة", gum3a: "جمعة",
+  sabt: "سبت", "7ad": "حد", etnen: "اتنين", talat: "تلات", arba3: "أربع", khamees: "خميس", "5amis": "خميس", kam: "كام", kaam: "كام", "3ayez": "عايز", "3awez": "عاوز",
+  eshtereely: "اشتريلي", eshtereli: "اشتريلي", eshteryly: "اشتريلي", dawarly: "دورلي", dawwarli: "دورلي", dawarli: "دورلي", "3ala": "على", fe: "في", fi: "في", men: "من",
+  ma3: "مع", "3aleh": "عليه", "3aleih": "عليه", leya: "ليا", liya: "ليا", sallaft: "سلفت", masareef: "مصاريف", masarif: "مصاريف", "2ad": "قد", "2a2al": "أقل", a2al: "أقل",
+  ad: "قد", nos: "نص", ro3: "ربع", "ella": "إلا", sob7: "الصبح", "elsob7": "الصبح", bel: "بالليل", belel: "بالليل", "belleil": "بالليل", "2ol": "قول", "2oly": "قولي", "2olli": "قولي", oly: "قولي",
+  lama: "لما", lamma: "لما", law: "لو", "yewsal": "يوصل", "yewsl": "يوصل", talab: "طلب", "talaby": "طلبي", "gamaeya": "جمعية", "gam3eya": "جمعية", "gam3ya": "جمعية", dayman: "دايما" };
+let INV = null;
+const inv = () => { if (INV) return INV; INV = {}; for (const [a, f] of Object.entries(FROM_KEYBOARD || {})) if (!INV[f]) INV[f] = a; return INV; };
+/** "fakarny bokra el sa3a 9 akalem mama" → «فكرني بكرة الساعة 9 اكلم ماما». Only words it knows change. */
+export function francoToArabic(text) {
+  const map = inv(), toks = String(text || "").split(/(\s+)/);
+  const word = (w) => { const k = w.toLowerCase(); return CMD[k] || map[k] || null; };
+  const out = [];
+  for (let i = 0; i < toks.length; i++) {
+    const w = toks[i]; if (/^\s*$/.test(w)) { out.push(w); continue; }
+    const lw = w.toLowerCase();
+    // "el sa3a" → «الساعة», "el2akl" → «الأكل»
+    if ((lw === "el" || lw === "il") && toks[i + 2] && word(toks[i + 2])) { out.push("ال" + word(toks[i + 2]).replace(/^ال/, "")); i += 2; continue; }
+    const m = /^(el|il)[-]?(.+)$/i.exec(w); if (m && word(m[2])) { out.push("ال" + word(m[2]).replace(/^ال/, "")); continue; }
+    out.push(word(w) || w);
+  }
+  return out.join("");
+}
+/** Is it Franco worth reading as Arabic? (≥ 1 command word or ≥ 2 known words) */
+export function looksFranco(text) {
+  const ws = String(text || "").toLowerCase().split(/\s+/).filter(Boolean), map = inv();
+  if (/[؀-ۿ]/.test(text)) return false;
+  return ws.some((w) => CMD[w]) || ws.filter((w) => map[w]).length >= 2;
 }

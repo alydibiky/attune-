@@ -125,6 +125,9 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     return a ? { actions: [], ask: a } : { actions: [], chat: true };
   }
   if (NOTE.test(t)) return { actions: [{ kind: "note", text: t.replace(NOTE, "").trim() || t }] };
+  // v9.0 (the sentence bank: "buy me AirPods Pro 2 under 9000" was logged as 9,000 spent): a wish with a price limit is for an agent,
+  // never money already spent
+  if (/\b(under|below|less than|cheaper than|at most|max)\b|أقل من|اقل من|تحت|بحد أقصى/i.test(t) && /\b(buy me|get me|find me|tell me when|notify me|let me know when|alert me|watch)\b|اشتريلي|هاتلي|دورلي|نبهني|قولي لما|عرفني لما/i.test(t)) return { actions: [], chat: true };
   // v8.7 the money planner (Ali): «حوّش ٢٠ الف للسفر لحد يونيو», "save 20000 for travel by June", "emergency fund" → a pot
   { const p = potIntent(t, now); if (p) return { actions: [{ kind: "pot", pot: p }] }; }
   // "plan my month", «خطط مصاريف الشهر», «خطة الشهر» → the month's plan, worked out here
@@ -262,9 +265,12 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
       const all = r.items.filter((x) => x.amount >= 1);
       if (all.length > 1) actions.push({ kind: "money", items: all.map((x) => ({ ...x, cat: x.cat === "other" && x === all[0] ? "food" : x.cat })) });
       else if (it) actions.push({ kind: "money", items: [{ ...it, amount: it.amount, cat: it.cat === "other" ? "food" : it.cat, note: foodText !== rest && named ? named : it.note }] }); }
-  } else if (money || Object.entries(CAT_WORDS).some(([k, re]) => k !== "food" && re.test(rest))) {
+  } else if (money || Object.entries(CAT_WORDS).some(([k, re]) => k !== "food" && re.test(rest))
+    // v9.0 (the sentence bank: "lunch 150" and «غدا 150» — the examples on Home itself — went to Chat): a meal or a label with an
+    // amount and no food named is money spent on food
+    || (/^\s*[\p{L}][\p{L}\s'’-]{1,30}\s+[\d٠-٩][\d٠-٩,.]*\s*(?:egp|le|pounds?|جنيه|ج)?\s*$/iu.test(rest) && !foods.length)) {
     const r = readLocal(rest, { today });
-    const items = r.items.filter((x) => x.amount >= 1);
+    const items = r.items.filter((x) => x.amount >= 1).map((x) => (EAT.test(rest) && x.cat === "other" ? { ...x, cat: "food" } : x));
     if (items.length) actions.push({ kind: "money", items });
   }
   if (ml && !actions.some((a) => a.kind === "water")) actions.push({ kind: "water", ml });

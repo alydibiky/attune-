@@ -50,6 +50,8 @@ export function looksLikeCalc(text) {
   const toks = lex(t).filter((x) => x.t !== "w");
   const nums = toks.filter((x) => x.t === "n").length;
   const ops = toks.filter((x) => x.t === "op").length;
+  // v9.0 (the sentence bank): "15% of 2400", «كام 15% من 2400» — a percentage of a number is a calculation too
+  if (nums === 2 && /\d\s*%\s*(?:of|من)\s*\d/i.test(digits(t))) return calculate(t) != null;
   if (nums < 2 || ops < 1) return false;
   // Only when it is clearly a sum: a times/plus/percent sign, or words that ask
   // for a result. "25/9" (a date) or "10-12 days" alone never trigger it.
