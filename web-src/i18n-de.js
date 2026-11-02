@@ -10784,4 +10784,10 @@ export const DE = {
   "Money in: {a}": "Einnahme: {a}",
   "Money out: {a}": "Ausgabe: {a}",
   "Nothing with {p} yet": "Noch nichts mit {p}",
+  "Not planned yet": "Noch nicht verplant",
+  "Word or phrase": "Wort oder Ausdruck",
+  "Machine model": "Modell",
+  "Background colour": "Hintergrundfarbe",
+  "Finished reading": "Fertig gelesen",
+  "Which messages to read": "Welche Nachrichten lesen",
 };

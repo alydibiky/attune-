@@ -10776,4 +10776,10 @@ export const ARB = {
   "Money in: {a}": "دخل: {a}",
   "Money out: {a}": "مصروف: {a}",
   "Nothing with {p} yet": "لا شيء مع {p} بعد",
+  "Not planned yet": "غير موزّع بعد",
+  "Word or phrase": "كلمة أو عبارة",
+  "Machine model": "الطراز",
+  "Background colour": "لون الخلفية",
+  "Finished reading": "انتهت القراءة",
+  "Which messages to read": "أي الرسائل أقرأ",
 };

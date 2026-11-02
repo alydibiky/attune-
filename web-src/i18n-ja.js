@@ -10784,4 +10784,10 @@ export const JA = {
   "Money in: {a}": "入金：{a}",
   "Money out: {a}": "出金：{a}",
   "Nothing with {p} yet": "{p} とはまだ何もありません",
+  "Not planned yet": "未割り当て",
+  "Word or phrase": "単語やフレーズ",
+  "Machine model": "型式",
+  "Background colour": "背景色",
+  "Finished reading": "読み終わり",
+  "Which messages to read": "どのメッセージを読むか",
 };

@@ -10785,4 +10785,10 @@ export const UR = {
   "Money in: {a}": "آمدنی: {a}",
   "Money out: {a}": "خرچ: {a}",
   "Nothing with {p} yet": "{p} کے ساتھ ابھی کچھ نہیں",
+  "Not planned yet": "ابھی طے نہیں",
+  "Word or phrase": "لفظ یا جملہ",
+  "Machine model": "ماڈل",
+  "Background colour": "پس منظر کا رنگ",
+  "Finished reading": "پڑھنا مکمل",
+  "Which messages to read": "کون سے پیغامات پڑھیں",
 };

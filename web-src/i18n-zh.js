@@ -10784,4 +10784,10 @@ export const ZH = {
   "Money in: {a}": "收入：{a}",
   "Money out: {a}": "支出：{a}",
   "Nothing with {p} yet": "与 {p} 还没有记录",
+  "Not planned yet": "尚未分配",
+  "Word or phrase": "词或短语",
+  "Machine model": "型号",
+  "Background colour": "背景颜色",
+  "Finished reading": "已读完",
+  "Which messages to read": "读取哪些消息",
 };

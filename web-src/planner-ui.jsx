@@ -68,7 +68,7 @@ function YearSheet({ ledger, pots, cur, flash, year, setYear, toGoals }) {
                 <td className={cellCls + " font-extrabold"}>{fmt(r.total)}</td></tr>)}
               {!gr.rows.length ? <tr><td colSpan={14} className={"px-2 py-1 text-[12px] " + U.muted}>{tr("Nothing yet")}</td></tr> : null}
             </React.Fragment>)}
-            {[["in", tr("Total income"), g.income, g.totals.income, "var(--c-pos)"], ["out", tr("Total out (incl. savings)"), g.out, g.totals.out, "var(--c-ink)"], ["free", tr("Free"), g.free, g.totals.free, null]].map(([k, l, arr, tot, col]) => (
+            {[["in", tr("Total income"), g.income, g.totals.income, "var(--c-pos)"], ["out", tr("Total out (incl. savings)"), g.out, g.totals.out, "var(--c-ink)"], ["free", tr("Not planned yet"), g.free, g.totals.free, null]].map(([k, l, arr, tot, col]) => (
               <tr key={k} data-testid={"year-total-" + k}>
                 <td className={stick + " " + cellCls + " text-start font-black border-t-2"}>{l}</td>
                 {arr.map((v, i) => <td key={i} className={cellCls + " font-extrabold border-t-2"} style={{ color: col || (v < 0 ? "var(--c-neg)" : "var(--c-pos)") }}>{fmt(v)}</td>)}
@@ -133,7 +133,7 @@ function YearGoals({ ledger, pots, save, cur, flash, year, setYear, toSheet }) {
       </div>
       {month != null ? <div className={U.cardPad + " space-y-2"} data-testid="year-month">
         <div className="flex items-baseline justify-between gap-2"><b className="text-[16px] font-black">{mon(month, true)} {year}</b>
-          <b className={"tabular-nums " + (g.free[month] < 0 ? "text-[var(--c-neg)]" : "c-acc")} dir="ltr">{tr("Free")} {fmt(g.free[month])}</b></div>
+          <b className={"tabular-nums " + (g.free[month] < 0 ? "text-[var(--c-neg)]" : "c-acc")} dir="ltr">{tr("Not planned yet")} {fmt(g.free[month])}</b></div>
         {g.groups.map((gr) => gr.rows.length ? <div key={gr.id} className="space-y-1">
           <p className="m-0 text-[11.5px] font-black uppercase tracking-[0.08em]" style={{ color: GROUP_COL[gr.id] }}>{gr.label}</p>
           {gr.rows.map((r) => <label key={r.id + month} className="flex items-center gap-2 text-[13.5px]">
@@ -164,7 +164,7 @@ export function PlannerPage({ flash }) {
   const plan = useMemo(() => planMonth({ ledger, life: loadLife(), pots, now: Date.now() }), [ledger, pots, tick]);
   const save = (p) => setPots(savePots(p));
   const monthName = new Date(plan.month + "-15").toLocaleDateString(dateLocale(), { month: "long" });
-  const parts = [["fixed", tr("Fixed"), plan.fixedTotal], ["pots", tr("Savings"), plan.potsTotal], ["flex", tr("Everyday"), plan.flexTotal], ["free", tr("Free"), plan.free]];
+  const parts = [["fixed", tr("Fixed"), plan.fixedTotal], ["pots", tr("Savings"), plan.potsTotal], ["flex", tr("Everyday"), plan.flexTotal], ["free", tr("Not planned yet"), plan.free]];
   const total = Math.max(1, plan.income || parts.reduce((a, p) => a + p[2], 0));
   const nm = (p) => (KIND_NAME[p.kind] ? (ar ? KIND_NAME[p.kind][1] : tr(KIND_NAME[p.kind][0])) : p.name);
   const addGoal = () => {

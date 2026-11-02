@@ -126,7 +126,7 @@ export function yearRows(g, ar = false) {
   }
   rows.push([ar ? "إجمالي الدخل" : tr("Total income"), ...g.income, g.totals.income]);
   rows.push([ar ? "إجمالي المصروف والتحويش" : tr("Total out (incl. savings)"), ...g.out, g.totals.out]);
-  rows.push([ar ? "الحر" : tr("Free"), ...g.free, g.totals.free]);
+  rows.push([ar ? "مش متوزّع" : tr("Not planned yet"), ...g.free, g.totals.free]);
   return rows;
 }
 

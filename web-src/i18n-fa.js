@@ -10784,4 +10784,10 @@ export const FA = {
   "Money in: {a}": "دریافتی: {a}",
   "Money out: {a}": "خرج: {a}",
   "Nothing with {p} yet": "هنوز چیزی با {p} نیست",
+  "Not planned yet": "هنوز برنامه‌ریزی نشده",
+  "Word or phrase": "کلمه یا عبارت",
+  "Machine model": "مدل",
+  "Background colour": "رنگ پس‌زمینه",
+  "Finished reading": "خواندن تمام شد",
+  "Which messages to read": "کدام پیام‌ها خوانده شود",
 };

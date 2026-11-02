@@ -10785,4 +10785,10 @@ export const TRK = {
   "Money in: {a}": "Gelir: {a}",
   "Money out: {a}": "Gider: {a}",
   "Nothing with {p} yet": "{p} ile henüz bir şey yok",
+  "Not planned yet": "Henüz planlanmadı",
+  "Word or phrase": "Kelime veya ifade",
+  "Machine model": "Model",
+  "Background colour": "Arka plan rengi",
+  "Finished reading": "Okuma bitti",
+  "Which messages to read": "Hangi mesajlar okunsun",
 };

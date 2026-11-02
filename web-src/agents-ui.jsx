@@ -485,7 +485,7 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
       <div className="flex gap-3 items-start"><Ico k="track" /><div className="min-w-0 flex-1">
         <p className="m-0 font-extrabold text-[14.5px]" dir="auto">{a.title}</p>
         <p className="m-0 text-[12.5px] c-sub" dir="auto">{mine ? T("{app} said {t}: {m}", { app: a.app.label, t: ago(mine.ts), m: mine.text.slice(0, 90) }) : T("Reading {app}'s notifications — I tell you when it ships and when it arrives", { app: a.app.label })}</p>
-        <span className={U.tag(mine ? "amber" : "blue") + " mt-1.5"}>{mine ? tr("Update") : a.on ? tr("Watching") : tr("Paused")}</span></div></div>
+        <span className={U.tag(mine ? "amber" : "blue") + " mt-1.5"}>{mine ? tr("New") : a.on ? tr("Watching") : tr("Paused")}</span></div></div>
       <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => openApp(a.app, "")} className={small} data-testid="agent-open"><ExternalLink size={14} />{T("Open {app}", { app: a.app.label })}</button>{ctl}</div>
     </div>;
   }

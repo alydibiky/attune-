@@ -10784,4 +10784,10 @@ export const RU = {
   "Money in: {a}": "Доход: {a}",
   "Money out: {a}": "Расход: {a}",
   "Nothing with {p} yet": "С {p} пока ничего",
+  "Not planned yet": "Ещё не распределено",
+  "Word or phrase": "Слово или фраза",
+  "Machine model": "Модель",
+  "Background colour": "Цвет фона",
+  "Finished reading": "Прочитано",
+  "Which messages to read": "Какие сообщения читать",
 };

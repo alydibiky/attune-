@@ -171,7 +171,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
               <button key={p} onClick={() => setMe(p)} data-testid="xray-me" className={chip(me === p)}>{p}</button>))}</div>
           </div>
           <div>
-            <p className={label + " mt-0 mb-2"}>{tr("Read")}</p>
+            <p className={label + " mt-0 mb-2"}>{tr("Which messages to read")}</p>
             <div className="flex flex-wrap gap-1.5">{RANGES.map(([id, label]) => (
               <button key={id} onClick={() => setRange(id)} className={chip(range === id)}>{tr(label)}</button>))}</div>
           </div>

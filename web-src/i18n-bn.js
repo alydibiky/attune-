@@ -10784,4 +10784,10 @@ export const BN = {
   "Money in: {a}": "আয়: {a}",
   "Money out: {a}": "খরচ: {a}",
   "Nothing with {p} yet": "{p}-এর সাথে এখনও কিছু নেই",
+  "Not planned yet": "এখনও ঠিক করা হয়নি",
+  "Word or phrase": "শব্দ বা বাক্যাংশ",
+  "Machine model": "মডেল",
+  "Background colour": "পটভূমির রং",
+  "Finished reading": "পড়া শেষ",
+  "Which messages to read": "কোন বার্তাগুলো পড়ব",
 };

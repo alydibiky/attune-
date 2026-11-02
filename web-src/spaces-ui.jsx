@@ -459,7 +459,7 @@ export function ThemePicker({ theme, setTheme }) {
         </div>
       </div>
       <div>
-        <span className="block text-[12px] font-bold text-[var(--c-mut)] mb-2">{tr("Background")}</span>
+        <span className="block text-[12px] font-bold text-[var(--c-mut)] mb-2">{tr("Background colour")}</span>
         <div className="flex flex-wrap gap-1.5">
           {BACKGROUNDS.map(([id, label]) => (
             <button key={id} onClick={() => pick({ bg: id })} data-testid={"bg-" + id}

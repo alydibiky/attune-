@@ -492,7 +492,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             // tomorrow's lesson, prepared now, so the notification can say what it is
             if ((modelReady || c2.pack) && D.nextIndex(c2) < c2.plan.length && !D.quizDue(c2)) setTimeout(() => makeLesson(c2, D.nextIndex(c2)), 400);
           }}>{tr("I've read it")}</button>
-          : <p className="text-[13px] c-pos flex items-center gap-1 m-0"><CheckCircle2 size={14} />{tr("Read")}{newCards ? " · " + tr("its {n} cards are in your review", { n: newCards }) : ""}</p>}
+          : <p className="text-[13px] c-pos flex items-center gap-1 m-0"><CheckCircle2 size={14} />{tr("Finished reading")}{newCards ? " · " + tr("its {n} cards are in your review", { n: newCards }) : ""}</p>}
         {l.done && due ? <button className={btnP + " w-full"} data-testid="quiz-start" disabled={!!busy} onClick={() => startQuiz(due)}>{tr("Quiz time — a short quiz on lessons {a}–{b}", { a: due[0].n + 1, b: due[due.length - 1].n + 1 })}</button> : null}
         {l.source ? <p className="c-sub text-[12px] m-0" data-testid="lesson-source" dir="auto">{tr("From: {s}", { s: [l.source.name, l.source.title].filter(Boolean).join(" · ") })}{l.source.url ? " · " : ""}{l.source.url ? <a href={l.source.url} target="_blank" rel="noreferrer" className="c-acc">{tr("the book")}</a> : null}</p> : null}
         {D.isLanguageCourse(course.topic) ? <SpeakPractice lesson={l} course={course} native={native} call={call} listen={listen}

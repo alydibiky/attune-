@@ -10784,4 +10784,10 @@ export const TH = {
   "Money in: {a}": "รายรับ: {a}",
   "Money out: {a}": "รายจ่าย: {a}",
   "Nothing with {p} yet": "ยังไม่มีอะไรกับ {p}",
+  "Not planned yet": "ยังไม่ได้วางแผน",
+  "Word or phrase": "คำหรือวลี",
+  "Machine model": "รุ่น",
+  "Background colour": "สีพื้นหลัง",
+  "Finished reading": "อ่านจบแล้ว",
+  "Which messages to read": "อ่านข้อความไหน",
 };

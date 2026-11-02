@@ -33,7 +33,7 @@ t("type over any cell, like Excel — the totals follow", () => {
   const g = yearGrid({ ledger, life, pots, plan, now }), sal = g.groups[0].rows.find((r) => r.id === "src:salary");
   assert.equal(sal.cells[11], 45000); assert.equal(sal.typed[11], true);
   assert.equal(setCell(plan, "src:salary", "2026-12", "").cells["src:salary|2026-12"], undefined, "empty = back to the plan");
-  const rows = yearRows(g); assert.equal(rows[0].length, 14); assert.equal(rows[rows.length - 1][0], "Free");
+  const rows = yearRows(g); assert.equal(rows[0].length, 14); assert.equal(rows[rows.length - 1][0], "Not planned yet");
 });
 t("1B goals first: each goal's months, and the months it runs short", () => {
   const pots2 = { pots: [...pots.pots, { id: "umrah", name: "Umrah", kind: "other", target: 90000, by: "2026-12", saved: 0, log: [] }] };

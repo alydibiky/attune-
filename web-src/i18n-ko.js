@@ -10784,4 +10784,10 @@ export const KO = {
   "Money in: {a}": "수입: {a}",
   "Money out: {a}": "지출: {a}",
   "Nothing with {p} yet": "{p}와 아직 기록이 없어요",
+  "Not planned yet": "아직 배정 안 됨",
+  "Word or phrase": "단어 또는 구문",
+  "Machine model": "모델",
+  "Background colour": "배경색",
+  "Finished reading": "다 읽음",
+  "Which messages to read": "어떤 메시지를 읽을지",
 };

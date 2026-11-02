@@ -10785,4 +10785,10 @@ export const SW = {
   "Money in: {a}": "Mapato: {a}",
   "Money out: {a}": "Matumizi: {a}",
   "Nothing with {p} yet": "Bado hakuna kitu na {p}",
+  "Not planned yet": "Bado haijapangwa",
+  "Word or phrase": "Neno au kifungu",
+  "Machine model": "Modeli",
+  "Background colour": "Rangi ya mandharinyuma",
+  "Finished reading": "Umemaliza kusoma",
+  "Which messages to read": "Ujumbe upi usomwe",
 };

@@ -16,6 +16,23 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.0 part 5 — 2 Nov: People & plans history + "all the languages correct and accurate — make sure"
+- People & plans: a tap on a person (or a single loan's name) opens their whole history (`personhist.js` + `PersonHistory` in
+  life-ui.jsx): owes you / you owe / got back / you paid back, every plan with them (tickable), each loan, each payment and the
+  Money entries that name them (not a tick's own entry), newest first; their People card; phone Back closes it. Arabic sums in
+  جنيه. Tests `v906personhist`, `e2e_v906history.py`.
+- Languages: `tools/i18n/audit.mjs` audits the FINAL 20 dictionaries (placeholders, the language's script, left in English,
+  Egyptian vs Fusha, EGP added) — now a test (`tests/unit/v907i18naudit.test.mjs`), 0 problems. It also lists short words used
+  in more than one file (`tools/i18n/ambiguous.txt`, 307) — read for TWO MEANINGS; fixed so far (each meaning its own key, in
+  20 languages): "Left" (money left to pay → «الباقي», was «شمال»), "Free" (planner: "Not planned yet", was «مجاني»), "Word"
+  (glossary: "Word or phrase", was «وورد»), "Model" (Fleet: "Machine model"), "Background" (Spaces: "Background colour"),
+  "Update" (Agents tag → "New"; Maps keeps «حدّث»), "Read" (button «اقرا»; the lesson's status "Finished reading"; Chat X-Ray
+  "Which messages to read"). Arabic screens read (Home, Money, People & plans, Follow-ups, Health, Reminders): «وأتون» → أتيون,
+  «ظبط» → «اظبط», two Arabic lines that dropped {n} / {t}.
+- Open (ask Ali): the app's name in Egyptian Arabic is "Attune" in 124 lines and «أتيون» in 41 — pick one.
+- Next for the languages: keep reading the ambiguous list and the Arabic screens page by page; the other 18 languages had the
+  mechanical audit + the two-meaning fixes, not a native reader's pass.
+
 ## v9.0 part 4 — 2 Nov: "the Agents page takes a while to load" + "display the results in a better way"
 - Slow page: it read the phone's whole app list (`appsList`: every app's name — slow on Android) before it could show anything;
   now only when a sentence needs it, kept for the session. Delivery notifications, the phone's checks and the plan sent to the

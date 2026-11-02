@@ -10785,4 +10785,10 @@ export const HI = {
   "Money in: {a}": "आमदनी: {a}",
   "Money out: {a}": "खर्च: {a}",
   "Nothing with {p} yet": "{p} के साथ अभी कुछ नहीं",
+  "Not planned yet": "अभी तय नहीं",
+  "Word or phrase": "शब्द या वाक्यांश",
+  "Machine model": "मॉडल",
+  "Background colour": "पृष्ठभूमि का रंग",
+  "Finished reading": "पढ़ना पूरा",
+  "Which messages to read": "कौन से संदेश पढ़ें",
 };

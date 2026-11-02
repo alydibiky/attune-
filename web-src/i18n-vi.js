@@ -10784,4 +10784,10 @@ export const VI = {
   "Money in: {a}": "Tiền vào: {a}",
   "Money out: {a}": "Tiền ra: {a}",
   "Nothing with {p} yet": "Chưa có gì với {p}",
+  "Not planned yet": "Chưa phân bổ",
+  "Word or phrase": "Từ hoặc cụm từ",
+  "Machine model": "Mẫu máy",
+  "Background colour": "Màu nền",
+  "Finished reading": "Đã đọc xong",
+  "Which messages to read": "Đọc tin nhắn nào",
 };
