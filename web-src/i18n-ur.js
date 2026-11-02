@@ -10738,4 +10738,5 @@ export const UR = {
   "Research runs in Chat with the web on": "تحقیق چیٹ میں ویب آن کر کے ہوتی ہے",
   "{n} stores": "{n} اسٹور",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "گہری تحقیق: {t} — کئی ذرائع سے، صاف ترتیب میں: پہلے مختصر جواب، پھر حصے اور جدولیں، ذرائع کے ساتھ",
+  "Last day of every month": "ہر مہینے کا آخری دن",
 };

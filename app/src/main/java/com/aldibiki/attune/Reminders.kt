@@ -115,6 +115,10 @@ object Reminders {
                     c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY ||
                     c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SATURDAY)
                 "monthly" -> c.add(java.util.Calendar.MONTH, 1)   // v6.32: the Overpaying check on the 1st
+                "lastday" -> {   // v9.0 "the last day of each month": next month's last day, same time of day
+                    c.set(java.util.Calendar.DAY_OF_MONTH, 1); c.add(java.util.Calendar.MONTH, 1)
+                    c.set(java.util.Calendar.DAY_OF_MONTH, c.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
+                }
                 else -> if (repeat.startsWith("last:")) {
                     // "every last Friday of the month" (0 = Sunday): next month's last such weekday, same time of day
                     val wd = repeat.removePrefix("last:").trim().toIntOrNull() ?: return from

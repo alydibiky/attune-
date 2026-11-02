@@ -10738,4 +10738,5 @@ export const SW = {
   "Research runs in Chat with the web on": "Utafiti unafanyika kwenye Chat wavuti ikiwa imewashwa",
   "{n} stores": "Maduka {n}",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "Utafiti wa kina: {t} — kutoka vyanzo kadhaa, kwa mpangilio: jibu fupi kwanza, kisha sehemu na majedwali, pamoja na vyanzo",
+  "Last day of every month": "Siku ya mwisho ya kila mwezi",
 };

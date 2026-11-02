@@ -10737,4 +10737,5 @@ export const JA = {
   "Research runs in Chat with the web on": "調査はウェブをオンにしたチャットで行います",
   "{n} stores": "{n} 店舗",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "詳細リサーチ：{t} — 複数の情報源から、見やすく：まず短い答え、次にセクションと表、出典つき",
+  "Last day of every month": "毎月の最終日",
 };

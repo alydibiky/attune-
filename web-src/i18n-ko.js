@@ -10737,4 +10737,5 @@ export const KO = {
   "Research runs in Chat with the web on": "조사는 웹을 켠 채팅에서 진행돼요",
   "{n} stores": "상점 {n}곳",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "심층 리서치: {t} — 여러 출처에서, 깔끔하게: 짧은 답 먼저, 그다음 섹션과 표, 출처 포함",
+  "Last day of every month": "매월 마지막 날",
 };

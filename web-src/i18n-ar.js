@@ -7844,4 +7844,5 @@ export const AR = {
   "Looking on {site} ({i} of {n})…": "بدوّر على {site} ({i} من {n})…",
   "{n} stores": "{n} متاجر",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "بحث عميق عن {t} — من أكتر من مصدر، ورتبه: الخلاصة الأول، بعدين أقسام وجداول، والمصادر",
+  "Last day of every month": "آخر يوم في كل شهر",
 };

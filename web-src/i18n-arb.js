@@ -10729,4 +10729,5 @@ export const ARB = {
   "Research runs in Chat with the web on": "يعمل البحث في المحادثة مع تشغيل الويب",
   "{n} stores": "{n} متاجر",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "بحث معمّق: {t} — من عدة مصادر، معروض بترتيب: الخلاصة أولًا، ثم أقسام وجداول، مع المصادر",
+  "Last day of every month": "آخر يوم من كل شهر",
 };

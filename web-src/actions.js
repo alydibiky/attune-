@@ -334,6 +334,14 @@ export function buildAction(json, text, nowIn) {
     for (let i = problems.length - 1; i >= 0; i--) if (/^When\?|already passed/.test(problems[i])) problems.splice(i, 1);
     if (kind === "none") kind = "reminder";
   }
+  if (repeat === "lastday" && (kind === "reminder" || kind === "alarm" || kind === "none" || kind === "calendar")) {
+    const tm = t && t.said && t.said.time && t.said.time !== "relative" ? new Date(t.at) : null, n0 = new Date(nowIn || Date.now());
+    const lastOf = (y, m) => new Date(y, m + 1, 0, tm ? tm.getHours() : 9, tm ? tm.getMinutes() : 0, 0, 0);
+    let first = lastOf(n0.getFullYear(), n0.getMonth()); if (first.getTime() <= n0.getTime()) first = lastOf(n0.getFullYear(), n0.getMonth() + 1);
+    t = { at: first.getTime(), allDay: false, said: { day: "lastday", time: tm ? "said" : "default" } };
+    for (let i = problems.length - 1; i >= 0; i--) if (/^When\?|already passed/.test(problems[i])) problems.splice(i, 1);
+    if (kind === "none" || kind === "calendar") kind = "reminder";
+  }
   const minutes = kind === "calendar" ? (j.minutes > 0 && j.minutes <= 24 * 60 ? j.minutes : 60) : 0;
   if (kind === "none") problems.push("This doesn't look like something to set on the phone.");
   return { kind, title, at: t ? t.at : null, allDay: !!(t && t.allDay), repeat, durationSec, minutes, contact, phone, message,
@@ -388,8 +396,11 @@ function lastWeekdayIn(s) {
   const hit = LAST_WD.find(([re]) => new RegExp("^(" + re + ")").test(w));
   return hit ? hit[1] : -1;
 }
+const LAST_DAY = /\b(?:on\s+)?(?:the\s+)?(?:last|final)\s+day\s+(?:of|in)\s+(?:the\s+|each\s+|every\s+|a\s+)?month\b|\b(?:(?:at|on|by) )?(?:the )?month[- ]end\b|\b(?:(?:at|on|by) )?(?:the )?end of (?:the |each |every )?month\b|(?:آخر|اخر)\s+(?:يوم|يوم)\s+(?:في|ف|من|ب)?\s*(?:كل\s+)?(?:ال)?شهر|(?:آخر|اخر)\s+الشهر|نهاية\s+(?:كل\s+)?(?:ال)?شهر/i;
 function repeatIn(text) {
   const s = String(text || "");
+  // v9.0 (Ali: "remind me on the last day of each month to pay interest for mom" got no date): the month's last day, every month
+  if (LAST_DAY.test(s)) return "lastday";
   { const lw = lastWeekdayIn(s); if (lw >= 0) return "last:" + lw; }
   if (/\bevery month\b|\bmonthly\b|كل شهر|شهريا|شهريًا/i.test(s)) return "monthly";
   { const ds = daysIn(s); if (ds.length >= 2 && ds.length < 7) return "days:" + ds.join(","); }
@@ -405,7 +416,7 @@ function messageFrom(text) {
 }
 function titleFrom(text, kind, contact) {
   // v8.4: "remind me" anywhere (not only first), "to" as a word ("remind me tomorrow" became "morrow"), the days and times said
-  let s = String(text || "")
+  let s = String(text || "").replace(new RegExp(LAST_DAY.source, "gi"), " ").replace(/\s+(at|on)\s*(?=\s|$)/gi, " ")
     .replace(/^(please |can you |could you )?(set (an? )?(alarm|timer|reminder)( for)?|wake me( up)?|add|put|schedule)\s+/i, "")
     .replace(/\b(please )?remind me( to\b)?/gi, " ")
     .replace(/(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|صحيني|صحّيني)(\s+(ب|إن|ان|اني|إني))?/g, " ").replace(/^\s*(حطلي|حط|اعمل|اعملي)\s+/, "")
@@ -443,6 +454,7 @@ export function nextOccurrence(r, after) {
     else if (r.repeat === "weekly") d.setDate(d.getDate() + 7);
     else if (r.repeat === "weekdays") { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 5 || d.getDay() === 6); } // Egypt: Fri + Sat off
     else if (r.repeat === "monthly") d.setMonth(d.getMonth() + 1);   // v6.32: the Overpaying check on the 1st
+    else if (r.repeat === "lastday") { d.setDate(1); d.setMonth(d.getMonth() + 2); d.setDate(0); }   // v9.0 the month's last day
     else if (/^last:\d$/.test(r.repeat)) { const wd = +r.repeat.slice(5); d.setDate(1); d.setMonth(d.getMonth() + 2); d.setDate(0); while (d.getDay() !== wd) d.setDate(d.getDate() - 1); }   // persona 6: "every last Friday"
     else if (/^days:/.test(r.repeat)) { const ds = r.repeat.slice(5).split(",").map(Number); if (!ds.length) return t; do { d.setDate(d.getDate() + 1); } while (!ds.includes(d.getDay())); }   // v8.4
     else return t;

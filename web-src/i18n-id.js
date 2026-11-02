@@ -10738,4 +10738,5 @@ export const IDN = {
   "Research runs in Chat with the web on": "Riset berjalan di Chat dengan web menyala",
   "{n} stores": "{n} toko",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "Riset mendalam: {t} — dari beberapa sumber, disajikan rapi: jawaban singkat dulu, lalu bagian dan tabel, beserta sumbernya",
+  "Last day of every month": "Hari terakhir setiap bulan",
 };

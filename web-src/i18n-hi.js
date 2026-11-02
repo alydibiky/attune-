@@ -10738,4 +10738,5 @@ export const HI = {
   "Research runs in Chat with the web on": "शोध चैट में वेब चालू करके चलता है",
   "{n} stores": "{n} स्टोर",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "गहन शोध: {t} — कई स्रोतों से, साफ़-सुथरे ढंग से: पहले छोटा जवाब, फिर खंड और तालिकाएँ, स्रोतों के साथ",
+  "Last day of every month": "हर महीने का आखिरी दिन",
 };

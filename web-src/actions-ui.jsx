@@ -12,7 +12,7 @@ import { cardPad, btnP, btnS, inp, label, muted } from "./ui-kit.jsx";
 
 export const KIND_ICON = { reminder: "🔔", alarm: "⏰", timer: "⏱️", calendar: "📅", whatsapp: "💬", call: "📞", none: "❔" };
 export const KIND_LABEL = { reminder: "Reminder", alarm: "Alarm", timer: "Timer", calendar: "Calendar event", whatsapp: "WhatsApp message", call: "Phone call", none: "Nothing to do" };
-const REPEAT_LABEL = { none: "Once", daily: "Every day", weekly: "Every week", weekdays: "Working days (Sun–Thu)", monthly: "Every month", days: "On these days" };
+const REPEAT_LABEL = { none: "Once", daily: "Every day", weekly: "Every week", weekdays: "Working days (Sun–Thu)", monthly: "Every month", lastday: "Last day of every month", days: "On these days" };
 const DAY_BTN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 // "days:0,2,4" → "Sun · Tue · Thu"; the rest by name
 const LAST_DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

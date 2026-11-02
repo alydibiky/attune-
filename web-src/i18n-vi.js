@@ -10737,4 +10737,5 @@ export const VI = {
   "Research runs in Chat with the web on": "Nghiên cứu chạy trong Chat khi bật web",
   "{n} stores": "{n} cửa hàng",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "Nghiên cứu chuyên sâu: {t} — từ nhiều nguồn, trình bày gọn gàng: câu trả lời ngắn trước, rồi các phần và bảng, kèm nguồn",
+  "Last day of every month": "Ngày cuối mỗi tháng",
 };

@@ -10737,4 +10737,5 @@ export const BN = {
   "Research runs in Chat with the web on": "গবেষণা চ্যাটে ওয়েব চালু রেখে হয়",
   "{n} stores": "{n}টি দোকান",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "গভীর গবেষণা: {t} — একাধিক উৎস থেকে, গুছিয়ে: আগে সংক্ষিপ্ত উত্তর, তারপর অংশ ও টেবিল, উৎসসহ",
+  "Last day of every month": "প্রতি মাসের শেষ দিন",
 };

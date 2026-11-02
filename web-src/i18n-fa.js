@@ -10737,4 +10737,5 @@ export const FA = {
   "Research runs in Chat with the web on": "تحقیق در گفت‌وگو با وب روشن انجام می‌شود",
   "{n} stores": "{n} فروشگاه",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "تحقیق عمیق: {t} — از چند منبع، مرتب: اول پاسخ کوتاه، بعد بخش‌ها و جدول‌ها، همراه منابع",
+  "Last day of every month": "آخرین روز هر ماه",
 };

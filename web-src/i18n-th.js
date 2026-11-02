@@ -10737,4 +10737,5 @@ export const TH = {
   "Research runs in Chat with the web on": "การค้นคว้าทำในแชตโดยเปิดเว็บ",
   "{n} stores": "{n} ร้าน",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "ค้นคว้าเชิงลึก: {t} — จากหลายแหล่ง จัดให้อ่านง่าย: คำตอบสั้นก่อน แล้วเป็นหัวข้อและตาราง พร้อมแหล่งที่มา",
+  "Last day of every month": "วันสุดท้ายของทุกเดือน",
 };

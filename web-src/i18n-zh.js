@@ -10737,4 +10737,5 @@ export const ZH = {
   "Research runs in Chat with the web on": "研究在聊天中开启网络后进行",
   "{n} stores": "{n} 家商店",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "深度研究：{t} —— 来自多个来源，整理清楚：先给简短回答，再分章节和表格，并附来源",
+  "Last day of every month": "每月最后一天",
 };

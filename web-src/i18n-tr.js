@@ -10738,4 +10738,5 @@ export const TRK = {
   "Research runs in Chat with the web on": "Araştırma, web açıkken Sohbet'te yapılır",
   "{n} stores": "{n} mağaza",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "Derin araştırma: {t} — birkaç kaynaktan, düzenli şekilde: önce kısa cevap, sonra bölümler ve tablolar, kaynaklarıyla",
+  "Last day of every month": "Her ayın son günü",
 };

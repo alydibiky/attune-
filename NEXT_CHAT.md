@@ -16,6 +16,19 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.0 part 2 — 2 Nov: "look how stupid the app is"
+- Chat: «Remind me on the last day of each month to pay interest for mom» was answered with THIS MONTH'S SPENDING (myledger.js
+  `myMoneyIntent` saw "me" + "pay"). Now a reminder / alarm / "I need to pay…" is never a money question, and "the last day of
+  each/every month", "end of the month", «آخر يوم في كل شهر», «نهاية الشهر» is a real repeat `lastday` (actions.js; next: 30 Nov,
+  31 Dec, 31 Jan, 28 Feb — Reminders.kt `next` too). Title = "pay interest for mom". Label "Last day of every month" in all 20
+  languages. Test `tests/unit/v902remind.test.mjs`.
+- Ali: "the app is programmed to understand like that — I want it as smart as you". Options shown to him (waiting for his pick):
+  A) the phone's model reads every sentence first and code does the exact work; B) code first only when it is sure, the model
+  decides any sentence that mixes signals (recommended) + a bank of real sentences every rule must pass; C) a cloud model
+  (Claude/Gemini API) understands sentences when online — the only way near "as smart as me", costs per use, needs internet.
+- Test setup in cloud sessions: the browser tests need `bash tests/setup.sh` first (llama-server + tiny model + Python
+  playwright); without it every e2e test fails with "No module named playwright".
+
 ## v9.0 — 2 Nov: Ali's 3 points (month card, agent links + notifications, stronger agents)
 1. Home "Last month in one look" said "Most went on cmuu3u3sb2q4sd": a category id with no name. `monthreview.js` now names it
    with `catName` (his own category's name), else what was written on those payments, else "uncategorised"; `money-report.js

@@ -27,6 +27,10 @@ export function myMoneyIntent(q) {
   const t = latin(q).toLowerCase();
   const mine = /\b(my|i|me|i've|did i|have i)\b/.test(t) || /(مصاريفي|مصروفاتي|صرفت|دفعت|دخلي|قبضت|فلوسي|مصروفي|حساباتي|اتصرف|كسبت|عندي كام)/.test(t);
   if (!mine) return "";
+  // v9.0 (Ali: "Remind me on the last day of each month to pay interest for mom" was answered with this month's spending): a
+  // reminder, an alarm, a to-do or a payment to make is something to SET, never a question about money already spent
+  if (/\b(remind(er)?|alarm|alert me|notify me|schedule|don'?t let me forget|wake me)\b/.test(t) || /(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|حطلي تذكير|منبه|متنسانيش)/.test(t)) return "";
+  if (/^\s*(please\s+)?(pay|transfer|send)\b/.test(t) || /\b(i need to|i have to|i must|i should|i want to|i'?ll|i will|i'?m going to)\s+pay\b/.test(t) || /(لازم|محتاج|عايز|هدفع|حادفع)\s+(ا|أ)?دفع/.test(t)) return "";
   const exp = /\b(expens\w*|spen[dt]\w*|spending|paid|pay(ments)?|costs?|purchases?|bought|outgoings?)\b/.test(t) || /(مصاريف|مصروف|صرفت|دفعت|اتصرف|اشتريت)/.test(t);
   const inc = /\b(income|earn\w*|received|got paid|salary|revenue)\b/.test(t) || /(دخل|قبضت|كسبت|استلمت|مرتب|راتب)/.test(t);
   const bal = /\b(balance|how much (money )?(do )?i have|net)\b/.test(t) || /(رصيد|معايا كام|عندي كام)/.test(t);

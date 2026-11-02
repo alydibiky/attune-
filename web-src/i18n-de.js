@@ -10737,4 +10737,5 @@ export const DE = {
   "Research runs in Chat with the web on": "Die Recherche läuft im Chat mit eingeschaltetem Web",
   "{n} stores": "{n} Shops",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "Tiefenrecherche: {t} — aus mehreren Quellen, übersichtlich: zuerst die kurze Antwort, dann Abschnitte und Tabellen, mit den Quellen",
+  "Last day of every month": "Letzter Tag jedes Monats",
 };

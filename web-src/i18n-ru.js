@@ -10737,4 +10737,5 @@ export const RU = {
   "Research runs in Chat with the web on": "Исследование идёт в чате с включённым интернетом",
   "{n} stores": "Магазинов: {n}",
   "Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources": "Глубокое исследование: {t} — из нескольких источников, аккуратно: сначала короткий ответ, затем разделы и таблицы, с источниками",
+  "Last day of every month": "Последний день каждого месяца",
 };
