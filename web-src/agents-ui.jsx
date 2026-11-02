@@ -42,29 +42,45 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   useSubBack(rep, () => setRep(false));
   const put = (next) => setSt(A.saveAgents(next));
   const upd = (id, fn) => { const cur = A.loadAgents(); put({ ...cur, agents: cur.agents.map((y) => (y.id === id ? fn(y) : y)) }); };   // always on the saved list (a round outlives the render that started it)
-  const installed = useMemo(() => { try { return N && N.appsList ? JSON.parse(N.appsList() || "[]") : []; } catch (e) { return []; } }, [N]);
+  // v9.0 (Ali: "the Agents page takes a while to load"): the phone's app list (a slow Android call — every app's name) is read only
+  // when a sentence needs it, and kept for the session; it used to be read before the page could show anything
+  const appsRef = React.useRef(null);
+  const installedNow = () => { if (appsRef.current) return appsRef.current; let l = []; try { l = JSON.parse(sessionStorage.getItem("attune:apps") || "null") || null; } catch (e) {}
+    if (!l) { try { l = N && N.appsList ? JSON.parse(N.appsList() || "[]") : []; } catch (e) { l = []; } try { sessionStorage.setItem("attune:apps", JSON.stringify(l)); } catch (e) {} }
+    return (appsRef.current = l); };
   const access = (() => { try { return !N || !N.payAccess || N.payAccess(); } catch (e) { return true; } })();
   const scout = useMemo(() => loadScout().goals || [], [st]);
   const alerts = useMemo(() => W.loadWatch(), [st]);
-  const hits = useMemo(() => { try { return N && N.watchHits ? JSON.parse(N.watchHits() || "[]") : []; } catch (e) { return []; } }, [N, st]);
+  // the delivery notifications are read just after the page shows, not before
+  const [hits, setHits] = useState([]);
+  useEffect(() => { const t = setTimeout(() => { try { setHits(N && N.watchHits ? JSON.parse(N.watchHits() || "[]") : []); } catch (e) {} }, 60); return () => clearTimeout(t); }, [N, st]);
 
   // a sentence started on Home that still needs an answer continues here
   useEffect(() => {
     let d0 = ""; try { d0 = localStorage.getItem("attune:agents:draft") || ""; localStorage.removeItem("attune:agents:draft"); } catch (e) {}
-    if (d0) { setText(d0); const d = A.parseAgent(d0, { country, installed, usual: st.usual, prefs: loadBooking() }); if (d && d.ask) setDraft({ text: d0, d }); else if (d && d.kind === "buy") start(d0, d); }
+    if (d0) { setText(d0); const d = A.parseAgent(d0, { country, installed: installedNow(), usual: st.usual, prefs: loadBooking() }); if (d && d.ask) setDraft({ text: d0, d }); else if (d && d.kind === "buy") start(d0, d); }
   }, []);
   // the phone's checks (AgentWatch.kt) come in; the price watches and the delivery rules go out
   useEffect(() => {
-    try {
+    const t = setTimeout(() => { try {
       const got = N && N.agentWatchTake ? JSON.parse(N.agentWatchTake() || "{}") : {};
-      if (Object.keys(got).length) put({ ...st, agents: A.takeChecks(st.agents, got) });
-    } catch (e) {}
+      if (Object.keys(got).length) { const cur = A.loadAgents(); put({ ...cur, agents: A.takeChecks(cur.agents, got) }); }
+    } catch (e) {} }, 30);
+    return () => clearTimeout(t);
   }, []);
+  // v9.0: sent to the phone after the page shows, and only when they changed (opening the page used to resend both every time)
+  const sentRef = React.useRef("");
   useEffect(() => {
-    try { N && N.agentWatchPlan && N.agentWatchPlan(JSON.stringify(A.watchPlan(st))); } catch (e) {}
-    const others = W.loadWatch().filter((r) => !String(r.id).startsWith("agent-"));
-    const mine = st.agents.filter((a) => a.kind === "track").map(A.trackRule);
-    W.saveWatch([...others, ...mine], ar ? "ar" : "en");
+    const t = setTimeout(() => {
+      const plan = JSON.stringify(A.watchPlan(st)), mine = st.agents.filter((a) => a.kind === "track").map(A.trackRule), key = plan + "|" + JSON.stringify(mine);
+      let last = sentRef.current; try { last = last || sessionStorage.getItem("attune:agents:sent") || ""; } catch (e) {}
+      if (key === last) return;
+      sentRef.current = key; try { sessionStorage.setItem("attune:agents:sent", key); } catch (e) {}
+      try { N && N.agentWatchPlan && N.agentWatchPlan(plan); } catch (e) {}
+      const others = W.loadWatch().filter((r) => !String(r.id).startsWith("agent-"));
+      W.saveWatch([...others, ...mine], ar ? "ar" : "en");
+    }, 120);
+    return () => clearTimeout(t);
   }, [st]);
 
   const openApp = (app, url = "") => {
@@ -242,8 +258,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     if (d.kind === "buy") { flash && flash(T("On it: I'll find {w} and ask you before buying", { w: d.what })); setTimeout(() => buyRound(a), 300); return; }
     flash && flash(d.kind === "watch" ? T("Watching {t} — I'll tell you under {p}", { t: d.title, p: money(d.below, d.currency) }) : d.kind === "track" ? T("I'll tell you when your {app} order is on its way and arriving", { app: d.app.label }) : T("Saved: {t}", { t: d.title }));
   };
-  const submit = (s) => { const sentence = (s || text).trim(); if (!sentence) return; start(sentence, A.parseAgent(sentence, { country, installed, usual: st.usual, prefs: loadBooking() })); };
-  const reply = () => { if (!draft) return; const s = A.withAnswer(draft.text, draft.d.ask, answer); start(s, A.parseAgent(s, { country, installed, usual: st.usual, prefs: loadBooking() })); };
+  const submit = (s) => { const sentence = (s || text).trim(); if (!sentence) return; start(sentence, A.parseAgent(sentence, { country, installed: installedNow(), usual: st.usual, prefs: loadBooking() })); };
+  const reply = () => { if (!draft) return; const s = A.withAnswer(draft.text, draft.d.ask, answer); start(s, A.parseAgent(s, { country, installed: installedNow(), usual: st.usual, prefs: loadBooking() })); };
 
   if (rep) return <AgentsReport st={st} scout={scout} alerts={alerts} back={() => setRep(false)} />;
   const r = A.agentsReport(st, scout, alerts);

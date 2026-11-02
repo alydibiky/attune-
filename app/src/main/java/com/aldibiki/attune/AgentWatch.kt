@@ -31,7 +31,9 @@ object AgentWatch {
     fun setPlan(ctx: Context, plan: String) {
         val arr = try { JSONArray(plan) } catch (e: Exception) { JSONArray() }
         prefs(ctx).edit().putString("plan", arr.toString()).apply()
-        if (arr.length() > 0) arm(ctx) else cancel(ctx)
+        // v9.0: a round already planned stays planned — opening the Agents page used to push the next check 12 hours later each time
+        if (arr.length() == 0) { cancel(ctx); prefs(ctx).edit().remove("next").apply() }
+        else if (prefs(ctx).getLong("next", 0L) <= System.currentTimeMillis()) arm(ctx)
     }
 
     private fun pending(ctx: Context) = PendingIntent.getBroadcast(ctx, REQ, Intent(ctx, AgentWatchReceiver::class.java),
@@ -42,7 +44,7 @@ object AgentWatch {
         if (prefs(ctx).getString("plan", "[]") == "[]") return
         val am = ctx.getSystemService(AlarmManager::class.java) ?: return
         val at = System.currentTimeMillis() + 12 * 3600_000L + ((Math.random() - 0.5) * 3600_000L).toLong()
-        try { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending(ctx)) } catch (e: Exception) {}
+        try { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending(ctx)); prefs(ctx).edit().putLong("next", at).apply() } catch (e: Exception) {}
     }
 
     private fun cancel(ctx: Context) { try { ctx.getSystemService(AlarmManager::class.java)?.cancel(pending(ctx)) } catch (e: Exception) {} }

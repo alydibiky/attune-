@@ -16,6 +16,15 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.0 part 4 — 2 Nov: "the Agents page takes a while to load" + "display the results in a better way"
+- Slow page: it read the phone's whole app list (`appsList`: every app's name — slow on Android) before it could show anything;
+  now only when a sentence needs it, kept for the session. Delivery notifications, the phone's checks and the plan sent to the
+  phone run just after the page shows; the plan / delivery rules are sent only when they changed.
+- Bug found on the way: every page open re-armed AgentWatch to "now + 12 h", so opening Agents daily meant background checks
+  almost never ran. `AgentWatch.setPlan` keeps a planned round (`next` in prefs).
+- Results display: options A (best deal first + short list + price line, recommended), B (price board: one bar per store and
+  the limit line), C (photo cards to swipe) shown to Ali: https://claude.ai/artifact/Df9Q99dC5a1qpapnus9Wye — waiting for his pick.
+
 ## v9.0 part 3 — 2 Nov: "do the not done yet"
 1. Arabic product names → English (`agent.js productEnglish`: ~150 brands, product lines, model words, kinds, units, colours;
    Arabic digits; "Galaxy S 24" → "Galaxy S24"). «سماعة هواوي فري كليب 2» → stores searched for "Huawei FreeClip 2 earbuds",
