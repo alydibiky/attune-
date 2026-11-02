@@ -4,7 +4,12 @@
    check → saved. Each commitment shows its payments as checkboxes; ticking one offers to add it to Money (the same
    sentence Money reads from a bank message, confirmed there). Tests: tests/e2e_v727life.py.                                    */
 import React, { useMemo, useState } from "react";
-import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown } from "lucide-react";
+import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown, ChevronLeft, ChevronRight, ArrowDown, ArrowUp, User } from "lucide-react";
+import { personHistory } from "./personhist.js";
+import { useSubBack } from "./backstack.js";
+import { loadLedger } from "./myledger.js";
+import * as E from "./entities.js";
+import { openPerson } from "./people-ui.jsx";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { parseLife, paymentOn, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder, isOpenLoan } from "./life.js";
 import { fmt } from "./money-calm.js";
@@ -58,22 +63,54 @@ const longDay = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDate
 // persona 9 (Ali picked H-C 1): Sara borrowed four times — one card for Sara with what she owes in all, her loans inside
 const pkey = (c) => String(c.person || "").replace(/[أإآ]/g, "ا").replace(/ة$/, "ه").toLowerCase().trim() + "|" + c.dir;
 function byPerson(items) { const m = new Map(); for (const c of items) { const k = c.person ? pkey(c) : c.id; m.set(k, [...(m.get(k) || []), c]); } return [...m.values()]; }
-function PersonCard({ list, onTick, onRemove, onPay }) {
-  const [open, setOpen] = useState(false);
+// v9.0 (Ali: "open each person's history by pressing on him"): a tap on a person opens everything with them (PersonHistory)
+function PersonCard({ list, onWho }) {
   const c0 = list[0], left = list.reduce((a, c) => a + (progressOf(c).left || 0), 0);
   return (
     <div className={U.cardPad} data-testid="life-person">
-      <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="w-full flex items-start gap-3 text-start">
+      <button onClick={() => onWho(c0.person)} className="w-full flex items-start gap-3 text-start" data-testid="life-person-open">
         <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
         <div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c0)}</b>
-          <div className={"text-[12.5px] " + U.muted}>{tr("{n} loans", { n: list.length })} · {open ? tr("Hide them") : tr("See each one")}</div></div>
-        <div className="text-end"><span className={U.label}>{tr("Left")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(left)}</div></div>
-        <ChevronDown size={16} className={"mt-3 shrink-0 transition-transform " + (open ? "rotate-180" : "")} />
+          <div className={"text-[12.5px] " + U.muted}>{tr("{n} loans", { n: list.length })} · {tr("Tap to see everything with them")}</div></div>
+        <div className="text-end"><span className={U.label}>{tr("Left to pay")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(left)}</div></div>
+        <ChevronRight size={16} className="mt-3 shrink-0 rtl:rotate-180" />
       </button>
-      {open ? <div className="mt-3 space-y-2" data-testid="life-person-list">{list.map((c) => <Item key={c.id} c={c} onTick={onTick} onRemove={onRemove} onPay={onPay} />)}</div> : null}
     </div>);
 }
-function Item({ c, onTick, onRemove, onPay }) {
+/** v9.0 one person's whole history: the sums, every plan with them (tickable, as on the main page), and a dated timeline. */
+function PersonHistory({ name, data, onBack, onTick, onRemove, onPay }) {
+  const ar = getLang() === "ar";
+  const card = useMemo(() => { try { const d = E.loadDir(), k = E.fold(name).trim(); return d.items.find((p) => [...E.keysOf(p)].includes(k)) || null; } catch (e) { return null; } }, [name]);
+  const h = useMemo(() => personHistory(name, { life: data, ledger: loadLedger() }, { aliases: card ? [card.name, ...(card.aliases || [])] : [] }), [name, data, card]);
+  const day = (d) => { try { return d ? new Date(d + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""; } catch (e) { return d; } };
+  // v9.0: in Arabic a sum reads "2,000 جنيه" (and Arabic order), never "EGP"
+  const AR_CUR = { EGP: "جنيه", SAR: "ريال", AED: "درهم", KWD: "دينار", USD: "دولار", EUR: "يورو" };
+  const amt = (v, c) => fmt(v) + (c ? " " + (ar ? AR_CUR[c] || c : c) : "");
+  const LINE = { lent: ["You lent {p} {a}", true], borrowed: ["You borrowed {a} from {p}", false], "paid-in": ["{p} paid you {a}", true], "paid-out": ["You paid {p} {a}", false], "money-in": ["Money in: {a}", true], "money-out": ["Money out: {a}", false] };
+  const tiles = [["Owes you", h.owesYou, "c-acc"], ["You owe", h.youOwe, "text-[var(--c-warn)]"], ["Got back", h.gotBack, ""], ["You paid back", h.paidBack, ""]].filter((x) => x[1] > 0);
+  return <div className="space-y-3" data-testid="life-history">
+    <button onClick={onBack} className={"inline-flex items-center gap-1 min-h-[40px] text-[13px] font-bold " + U.muted} data-testid="life-history-back"><ChevronLeft size={16} className="rtl:rotate-180" />{tr("People & plans")}</button>
+    <div className={U.cardPad + " flex items-center gap-3"}>
+      <span className="w-12 h-12 rounded-full grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] text-[18px] font-black shrink-0">{String(name || "?").slice(0, 1)}</span>
+      <div className="min-w-0 flex-1"><p className="m-0 text-[19px] font-black" dir="auto">{name}</p>
+        <p className={"m-0 text-[12.5px] " + U.muted}>{tr("{n} plans · {m} things in the history", { n: h.plans.length, m: h.events.length })}</p></div>
+      {card ? <button onClick={() => openPerson(card.id)} className="min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] text-[12.5px] font-extrabold inline-flex items-center gap-1.5" data-testid="life-history-card"><User size={14} />{tr("Their card")}</button> : null}
+    </div>
+    {tiles.length ? <div className="grid grid-cols-2 gap-2" data-testid="life-history-sums">{tiles.map(([l, v, cl]) => <div key={l} className={U.cardPad}><span className={U.label}>{tr(l)}</span>
+      <b className={"block text-[18px] font-black tabular-nums " + cl} dir="ltr">{amt(v, h.cur)}</b></div>)}</div> : null}
+    {h.plans.length ? <div className="space-y-2">{h.plans.map(({ c }) => <Item key={c.id} c={c} onTick={onTick} onRemove={onRemove} onPay={onPay} />)}</div> : null}
+    <div className={U.cardPad} data-testid="life-history-events">
+      <span className={U.label}>{tr("History")}</span>
+      {h.events.length ? h.events.map((e, i) => { const [k, good] = LINE[e.kind] || ["{a}", true]; return <div key={i} className="flex items-center gap-2.5 min-h-[48px] border-t border-[var(--c-ln)] first:border-t-0" data-testid="life-history-row">
+        <span className={"w-8 h-8 rounded-full grid place-items-center shrink-0 " + (good ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-warn)]")}>{good ? <ArrowDown size={15} /> : <ArrowUp size={15} />}</span>
+        <div className="min-w-0 flex-1"><p className="m-0 text-[13.5px] font-bold" dir="auto">{tr(k, { p: name, a: amt(e.amount, e.cur) })}</p>
+          {e.text ? <p className={"m-0 text-[12px] truncate " + U.muted} dir="auto">{e.text}</p> : null}</div>
+        <span className={"text-[12px] shrink-0 " + U.muted}>{day(e.date)}</span></div>; })
+        : <p className={"m-0 mt-1 text-[13px] " + U.muted}>{tr("Nothing with {p} yet", { p: name })}</p>}
+    </div>
+  </div>;
+}
+function Item({ c, onTick, onRemove, onPay, onWho }) {
   const pr = useMemo(() => progressOf(c), [c]);
   // v8.3 (Ali: "write what he actually paid and it reschedules the rest"): a person's payment asks how much came first
   const [ed, setEd] = useState(null);   // { i, v }
@@ -87,10 +124,11 @@ function Item({ c, onTick, onRemove, onPay }) {
       <div className="flex items-start gap-3">
         <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
         <div className="flex-1 min-w-0">
-          <b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c)}</b>
+          {onWho && c.person ? <button onClick={() => onWho(c.person)} className="block text-start font-extrabold text-[14.5px] underline decoration-dotted underline-offset-4 decoration-[var(--c-mut)]" dir="auto" data-testid="life-who">{heading(c)}</button>
+            : <b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c)}</b>}
           <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(c)}{isOpenLoan(c) ? " · " + tr("open — no date") : ""}</div>
         </div>
-        {pr.left != null ? <div className="text-end"><span className={U.label}>{tr("Left")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(pr.left)}</div></div> : null}
+        {pr.left != null ? <div className="text-end"><span className={U.label}>{tr("Left to pay")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(pr.left)}</div></div> : null}
         <button onClick={() => onRemove(c)} aria-label={tr("Delete")} className={"w-11 h-11 -me-2 -mt-1.5 shrink-0 grid place-items-center rounded-[12px] hover:text-[var(--c-neg)] " + U.muted} data-testid="life-remove"><Trash2 size={15} /></button>
       </div>
       {c.count > 1 && c.kind !== "regular" ? <div className="flex items-center gap-2 mt-2.5" data-testid="life-progress">
@@ -138,6 +176,8 @@ function Item({ c, onTick, onRemove, onPay }) {
 
 export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   const [data, setData] = useState(() => loadLife());
+  const [who, setWho] = useState(null);   // v9.0: a person's history is open
+  useSubBack(!!who, () => setWho(null));   // the phone's Back closes it
   const [text, setText] = useState("");
   const [draft, setDraft] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -206,6 +246,8 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   const remove = (c) => { if (window.confirm(tr("Delete this?"))) { put(removeCommitment(data, c.id)); unremind && unremind("life-" + c.id); } };
   const soon = dueSoon(data).filter((x) => !(x.c.kind === "regular" && x.c.dir === "out"));   // those are asked above
   const asks = askToday(data);
+  if (who) return <div className={U.page + " rounded-[20px] p-4 md:p-6"} style={{ minHeight: "70vh" }} data-testid="life-page">
+    <PersonHistory name={who} data={data} onBack={() => setWho(null)} onTick={tick} onRemove={remove} onPay={pay} /></div>;
   const groups = [["People", data.items.filter((c) => c.kind === "debt" || (c.kind === "installment" && c.person))],
     ["Installments", data.items.filter((c) => c.kind === "installment" && !c.person)], ["Savings circles", data.items.filter((c) => c.kind === "circle")],
     ["Bills, rent and subscriptions", data.items.filter((c) => ["bill", "rent", "subscription"].includes(c.kind))], ["Comes regularly", data.items.filter((c) => c.kind === "regular")]].filter((g) => g[1].length);
@@ -259,8 +301,8 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
       {groups.map(([g, items]) => (
         <div key={g} className="space-y-2"><span className={U.label}>{tr(g)}</span>
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{(g === "People" ? byPerson(items) : items.map((c) => [c])).map((list) => (list.length > 1
-            ? <PersonCard key={list[0].id} list={list} onTick={tick} onRemove={remove} onPay={pay} />
-            : <Item key={list[0].id} c={list[0]} onTick={tick} onRemove={remove} onPay={pay} />))}</div></div>))}
+            ? <PersonCard key={list[0].id} list={list} onWho={setWho} />
+            : <Item key={list[0].id} c={list[0]} onTick={tick} onRemove={remove} onPay={pay} onWho={setWho} />))}</div></div>))}
       {gold.items.length || car.log.length ? <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
         {gold.items.length ? <GoldCard data={gold} put={putGold} flash={flash} /> : null}
         {car.log.length ? <CarCard car={car} put={putCar} /> : null}</div> : null}

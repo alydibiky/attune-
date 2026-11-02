@@ -233,7 +233,7 @@ export function DebtPaySheet({ L, id, run, onClose }) {
   const [amount, setAmount] = useState(String(left || "")), [account, setAccount] = useState(d.account || (accs[0] || {}).id || ""), [date, setDate] = useState(isoDay(Date.now()));
   const s = useSave(run, onClose);
   return <Sheet title={d.type === "owed_to_me" ? tr("{p} paid you back", { p: d.person || "" }) : tr("You paid {p}", { p: d.person || "" })} onClose={() => onClose()} testid="money-debtpay-sheet">
-    <p className="m-0 text-[13px] c-sub">{tr("Left")}: <b className="tabular-nums" dir="ltr">{amt(left, L.currency)}</b></p>
+    <p className="m-0 text-[13px] c-sub">{tr("Left to pay")}: <b className="tabular-nums" dir="ltr">{amt(left, L.currency)}</b></p>
     <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} data-testid="debtpay-amount" />
     <Field label={tr("Account")}><Pills value={account} onChange={setAccount} items={[...accs.map((a) => [a.id, (a.emoji || "") + " " + a.name]), ["", tr("No account (record only)")]]} /></Field>
     <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={U.inp} dir="ltr" />
