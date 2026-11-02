@@ -150,9 +150,19 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False, deskt
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))
     page.on("console", lambda m: errors.append("console." + m.type + ": " + m.text) if m.type == "error" else None)
+    # v9.0: the tiny random test model cannot run a JSON-only request (response_format) — the local engine answers 400 "Failed to
+    # initialize samplers"; real models can. Marked here so real_errors drops exactly that one browser message, nothing else.
+    page.on("response", lambda r: errors.append("engine-400-tiny-model") if r.status == 400 and "/v1/chat/completions" in r.url else None)
     return ctx, page
 
 def real_errors(errors):
+    n400 = errors.count("engine-400-tiny-model")
+    out = []
+    for e in errors:
+        if e == "engine-400-tiny-model": continue
+        if n400 and "Failed to load resource: the server responded with a status of 400" in e: n400 -= 1; continue
+        out.append(e)
+    errors = out
     return [e for e in errors if "favicon" not in e and "sw.js" not in e.lower() and "/v1/chat/completions" not in e and "gold" not in e and "ERR_TUNNEL_CONNECTION_FAILED" not in e]
 
 def finish():
