@@ -187,8 +187,25 @@ function dist(a, b, max) {
     rowMin = Math.min(rowMin, d[i][j]); } if (rowMin > max) return max + 1; }
   return d[a.length][b.length];
 }
+// v9.0 (the food bank: "give me tips to sleep better" → butter, "my battery is dying" → "Butter is dying"): an everyday English word
+// is never a typo of a food
+const COMMON = new Set(("better best bitter battery batter letter later latter matter butterfly feeling filling feel fill late lately never ever every very " +
+  "dying doing going being seeing coming making taking having getting saying trying thinking working meeting meetings morning evening night today tomorrow yesterday " +
+  "bank break bring brought bread? nothing something anything everything much many more most less least little long short tired sleep slept sleepy tips tip give gave " +
+  "take took make made said tell told call called phone battery charger charge money paid pay time times week month year hour hours minute minutes help please thanks " +
+  "thank sorry about after again against also always another because before between both could would should might must there their these those then than them they " +
+  "what when where which while who whom whose why with without within your yours mine ours here hello still just only even really quite maybe about above below under " +
+  "over into onto from been were was are is am be has had have will shall can cannot need needs want wants like likes love loves hate know knew think thought feel felt " +
+  "good great bad nice fine happy sad angry busy free open close closed start stop finish work job boss office home house room car bus train taxi road street city " +
+  "school class lesson study exam test teacher student friend friends brother sister mother father mom dad family baby kids child children wife husband people person " +
+  "name number message messages email mail text call calls meeting appointment doctor dentist hospital medicine pill pills water(?) gym run ran walk walked weight " +
+  "price prices cost costs cheap expensive buy bought sell sold order ordered deliver delivery arrive arrived came come back front side left right top bottom middle " +
+  "first second third last next previous new old young big small large high low hot cold warm cool fast slow early ready sure true false real right wrong same other " +
+  "game games movie movies music song songs book books story news world country party birthday holiday weekend vacation travel trip flight hotel ticket tickets " +
+  "battery batteries setting settings screen app apps file files photo photos picture video videos camera computer laptop tablet internet wifi signal network").split(/\s+/).map((w) => w.replace(/\W/g, "")).filter(Boolean));
 export function fixTypos(t, extra = null) {
   return t.split(" ").map((w) => {
+    if (COMMON.has(w.toLowerCase())) return w;
     if (w.length < 3 || /\d/.test(w) || VOCAB.has(w) || KEEP.has(w) || WORDN[w] != null || DUALS[w] || (extra && extra.has(w))) return w;   // a word of the chosen country's dishes is not a typo
     // «ورز», «ورغيف», «بالشعريه»: a glued «و/ب/بال/ال» before a word the reader knows is not a typo
     const bare = w.replace(/^(وبال|وال|بال|و|ب|ال)/, "");
