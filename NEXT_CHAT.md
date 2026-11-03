@@ -41,10 +41,12 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   name, days · nights · walk · rating, price, "2,100 less than the next" / "… more than the cheapest", ‹ Book this offer ›,
   swipe, Not this one). No photo → a calm colour field from the hotel's name. The card sits above the app's pop-ups (z-310).
   7 more lines × 20 languages (2 of the podium's lines removed). Test: `tests/e2e_v830.py`.
-- **Open (tests only):** 13 browser tests fail the same way on main from BEFORE this work (e2e_v513 v516 v528 v542 v700auto
-  v727agent v727chatmap v727owed v727radar v731lifeask v736compare v736plans v880connected): the mock phone (12 GB, SM8650) is now
-  recommended **Blaze** (the GPU engine), which can't run in the cloud tests, so the model never starts and Engine stays open
-  ("Load a model in Engine first") over the page. Fix the tests' setup (install the CPU tiny model / a CPU pick), not the app.
+- **The 13 browser tests that failed on main are fixed (3 Nov night)** — found by bisect; 6 were REAL app bugs from the 2 Nov
+  accuracy / referee work, each now with a unit test: (1) with no model, the referee's canUseAI() check opened Engine instead of
+  answering ("book me a flight") → quiet api.aiReady; (2) "stop, just say yes" logged as soy milk; (3) "I ate a plate of koshari…"
+  rewritten into Arabic as Franco; (4) "Geely Galaxy M9 vs Lynk & Co 900" / "iPhone 16 vs Galaxy S25" logged as Galaxy chocolate;
+  (5) a car's "range" read as an orange; a "Give me the rent…" in a 2nd sentence recorded as 2 expenses; (6) "Lynk and co 900"
+  recorded as a 900 expense (a car maker + a number, no spending word → a question). e2e_v542 follows Chat's instant meal log.
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),

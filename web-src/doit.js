@@ -11,6 +11,7 @@
    Tests: tests/unit/v731doit.test.mjs, tests/e2e_v731doit.py.                                                                    */
 import { tr } from "./i18n.js";
 import { readMealText } from "./fitread.js";
+import { makerOf } from "./makers.js";
 import { readLocal, CAT_WORDS, fixTypos } from "./yusr/logtext.js";
 import { potIntent, addPot, loadPots, planMonth, POTS_KEY } from "./planner.js";
 import { morningCard } from "./morning.js";
@@ -100,6 +101,9 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   // v9.1 (e2e_v513: "Crane hire 25000 each day, the 1st to the 5th… Give me the rent and the rent with the 14 tax added" was recorded as
   // two expenses, 25,000 and 14): a request in a LATER sentence makes it a question too — unless money was clearly spent / paid
   if (!EAT.test(t) && !MONEY_VERB.test(t) && t.split(/[.!?؟\n]+/).slice(1).some((x) => REQ.test(x))) return { actions: [], chat: true };
+  // v9.1 (e2e_v700auto: "Lynk and co 900" — a car's name — was recorded as a 900 expense called "co"): a car maker's name with a
+  // number and no spending word or currency is a question about the car ("fuel for the Hyundai 500" is still money)
+  if (makerOf(t) && !MONEY_VERB.test(t) && !CURRENCY.test(t) && !Object.entries(CAT_WORDS).some(([k, re]) => re.test(t))) return { actions: [], chat: true };
   // v8.7 (persona 4, idea 12 — voice in the car and the kitchen): "what's left today?", «إيه اللي فاضل النهارده؟» → the day in a few
   // lines, by code (the morning card's reader), ready to be read out
   // v8.7 the family space (family.js): "add milk to the family list", "I paid 450 for the family groceries", "who owes whom?"
