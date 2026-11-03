@@ -92,9 +92,14 @@ function numLost(t) {
 // (persona 2: the Arabic message said «احمد · debt»)
 const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتراك", circle: "جمعية", savings: "تحويش", regular: "كل فترة", bill: "فاتورة" };
 /** What the sentence asks Attune to do. ctx: { now, stores } */
+// a request ("give me…", "tell me…", «اديني…») — the person wants an answer, not something recorded
+const REQ = /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|make|find|help|teach|list|plan|create|send|search|look up|notify|let me know|alert|remind|ask)\b|^\s*(اديني|إديني|ادّيني|قولي|اقترح|اقترحلي|اشرح|اشرحلي|اكتب|اكتبلي|اعملي|ساعدني|علمني|دورلي|هاتلي)/i;
 export function understand(text, { now = Date.now(), stores = {} } = {}) {
   const t = fixTypos(String(text || "").trim());   // persona 1: "spnt 200 on lunh"
   if (!t) return { actions: [] };
+  // v9.1 (e2e_v513: "Crane hire 25000 each day, the 1st to the 5th… Give me the rent and the rent with the 14 tax added" was recorded as
+  // two expenses, 25,000 and 14): a request in a LATER sentence makes it a question too — unless money was clearly spent / paid
+  if (!EAT.test(t) && !MONEY_VERB.test(t) && t.split(/[.!?؟\n]+/).slice(1).some((x) => REQ.test(x))) return { actions: [], chat: true };
   // v8.7 (persona 4, idea 12 — voice in the car and the kitchen): "what's left today?", «إيه اللي فاضل النهارده؟» → the day in a few
   // lines, by code (the morning card's reader), ready to be read out
   // v8.7 the family space (family.js): "add milk to the family list", "I paid 450 for the family groceries", "who owes whom?"
@@ -266,7 +271,7 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   // v9.1 (e2e_v736compare: "Geely Galaxy M9 vs Lynk & Co 900" was logged as dinner): a comparison is a question, never food eaten
   if (!EAT.test(t) && /\b(vs\.?|versus|compare|comparison|or better)\b|مقارن|قارن|\bvs\b/i.test(t)) return { actions: [], chat: true };
   if (!EAT.test(t) && /^\s*(اوصف|أوصف|وصف|صف|عرفني|احكيلي|احكي لي|فهمني|ترجم|ترجملي|لخص|لخصلي)/.test(t)) return { actions: [], chat: true };
-  if (!EAT.test(t) && /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|make|find|help|teach|list|plan|create|send|search|look up|notify|let me know|alert|remind|ask)\b|^\s*(اديني|إديني|ادّيني|قولي|اقترح|اقترحلي|اشرح|اشرحلي|اكتب|اكتبلي|اعملي|ساعدني|علمني|دورلي|هاتلي)/i.test(t)) return { actions: [], chat: true };
+  if (!EAT.test(t) && REQ.test(t)) return { actions: [], chat: true };
   if (foods.length && (EAT.test(t) || !money)) {
     // the eaten foods are counted; a price said with them ("80 pounds") is the money part
     actions.push({ kind: "food", meal: mealOf(t, now), items: foods, unknown: meal.unknown || [] });
