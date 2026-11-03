@@ -250,6 +250,10 @@ export function readMealText(text, cc = getCountry()) {
   // shops and brands say where, not what: «من عند جاد», "from KFC" → the food is what's left
   t = t.replace(/(^|\s)(kfc|كنتاكي)(?=\s|$)/g, " fried chicken ").replace(/(^|\s)(pizza hut|بيتزا هت)(?=\s|$)/g, " pizza ").replace(/(^|\s)(mcdonalds|mcdonald's|mcdonald|ماكدونالدز|ماك|starbucks|ستاربكس|buffalo|بافلو|domino's|dominos|papa johns|hardees|هارديز|من عند|from)(?=\s|$)/g, " ")
     .replace(/(^|\s)(جاد|التحرير|ابو طارق|ابو شقره|مؤمن|كوك دور)(?=\s|$)/g, " ").replace(/\s+/g, " ");
+  // v9.1 (e2e_v736compare: "Geely Galaxy M9 vs Lynk & Co 900" and "iPhone 16 vs Galaxy S25" were logged as Galaxy chocolate): a
+  // phone or car named Galaxy — "Samsung Galaxy", "Geely Galaxy", "Galaxy S25 / M9 / A55 / Z Fold" — is not the chocolate bar
+  t = t.replace(/(^|\s)(?:(?:samsung|geely|سامسونج|جيلي)\s+)?(galaxy|جالكسي|جالاكسي)(?=\s+(?:[a-z]{1,2}\d+|z\b|tab|note|watch|buds|fold|flip|ultra|plus)\b)/gi, " ")
+    .replace(/(^|\s)(samsung|geely|سامسونج|جيلي)\s+(galaxy|جالكسي|جالاكسي)(?=\s|$)/gi, " ");
   t = " " + fixTypos(t.trim(), CA.words) + " ";   // after the shop names: "pizza hut" must not become "pizza hot"
   // filler: "I (just) had / ate", "for lunch", «كلت», «فطرت» …
   t = t.replace(/\b(i|i've|ive|just|had|ate|have|eaten|drank|drink|for|my|today|breakfast|lunch|dinner|snack|supper)\b/g, " ")

@@ -263,6 +263,8 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   // v9.0 (the sentence bank: "give me tips to sleep better" was logged as butter): a request is never food eaten, unless it says so
   // v9.0 (the full test run: the marble riddle's "coffee table" logged a coffee; «اوصف الونش في سطر» logged sugar): a long sentence
   // that doesn't say it was eaten or drunk is never food
+  // v9.1 (e2e_v736compare: "Geely Galaxy M9 vs Lynk & Co 900" was logged as dinner): a comparison is a question, never food eaten
+  if (!EAT.test(t) && /\b(vs\.?|versus|compare|comparison|or better)\b|مقارن|قارن|\bvs\b/i.test(t)) return { actions: [], chat: true };
   if (!EAT.test(t) && /^\s*(اوصف|أوصف|وصف|صف|عرفني|احكيلي|احكي لي|فهمني|ترجم|ترجملي|لخص|لخصلي)/.test(t)) return { actions: [], chat: true };
   if (!EAT.test(t) && /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|make|find|help|teach|list|plan|create|send|search|look up|notify|let me know|alert|remind|ask)\b|^\s*(اديني|إديني|ادّيني|قولي|اقترح|اقترحلي|اشرح|اشرحلي|اكتب|اكتبلي|اعملي|ساعدني|علمني|دورلي|هاتلي)/i.test(t)) return { actions: [], chat: true };
   if (foods.length && (EAT.test(t) || !money)) {

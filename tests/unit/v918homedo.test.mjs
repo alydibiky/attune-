@@ -10,4 +10,6 @@ const C = [["drank 2 glasses of water", (a) => a[0].kind === "water" && a[0].ml 
   ["koshary for lunch, 80 pounds", (a) => a[0].kind === "food" && a[0].meal === "lunch" && a[1].kind === "money" && a[1].items[0].amount === 80],
   ["spent 200 on lunch and 50 on coffee", (a) => a.some((x) => x.kind === "money" && x.items.length === 2 && x.items[0].amount === 200 && x.items[1].amount === 50)]];
 for (const [t, f] of C) { let a; try { a = get(t); } catch (e) { a = null; } if (!a || !a.length || !f(a)) { bad++; console.log(`FAIL "${t}" → ${JSON.stringify(a).slice(0, 200)}`); } }
+// v9.1 (e2e_v736compare): a comparison or a phone / car name is never food or money recorded
+for (const t of ["Geely Galaxy M9 vs Lynk & Co 900", "iPhone 16 vs Galaxy S25", "compare the Tucson and the Sportage", "Samsung Galaxy S25 price", "stop, just say yes"]) { const a = get(t); if (a.length) { bad++; console.log(`FAIL recorded "${t}" → ${JSON.stringify(a).slice(0, 160)}`); } }
 console.log(bad ? bad + " FAILED" : `PASS v918homedo: ${C.length} Home-box entries recorded with the exact amounts`);
