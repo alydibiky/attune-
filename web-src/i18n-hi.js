@@ -10791,4 +10791,5 @@ export const HI = {
   "Background colour": "पृष्ठभूमि का रंग",
   "Finished reading": "पढ़ना पूरा",
   "Which messages to read": "कौन से संदेश पढ़ें",
+  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Attune को बताएँ कि आप किसके संदेश का इंतज़ार कर रहे हैं — WhatsApp, Gmail, SMS या किसी भी ईमेल ऐप पर — और संदेश आते ही वह आपको बता देगा। इसी फ़ोन पर जाँचा जाता है; SMS नीचे बंद किया जा सकता है।",
 };

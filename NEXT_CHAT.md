@@ -16,6 +16,21 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
+- PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),
+  the same notification updated kept once; then MessageWatch (alerts), ChatInbox, Recall, AutoRules.
+- The page side (`paylog.js readNotification`, `deadlines.js fromNotifications`) with real-looking notifications — fixed:
+  Vodafone Cash «استلمت 300 ج.م … رصيدك» was dropped as "balance only" (now +300); an Uber receipt "trip total: EGP 85.40" was
+  not read (paytext.js: ride / order totals are paid); an Arabic bill due date had no name. Test `v920notifs` (payments, dates,
+  and 10 that must NOT be payments: chats mentioning money, cashback, an order shipping, bills due, a renewal, an OTP, a balance).
+- The Kotlin tests (tests/kotlin: Franco, LocalSync, WatchMatch, AutoMatch) RUN for the first time here: download
+  kotlin-compiler-2.1.0.zip (JetBrains GitHub release) → `KOTLINC=…/kotlinc/bin/kotlinc bash tests/kotlin/run.sh` (run_all.sh runs
+  them when kotlinc is on PATH). 2 stale WatchMatch tests updated: SMS is read unless switched off (Ali, 29 Oct) — the Message
+  alerts sentence still said "SMS only if you switch it on" → corrected in all 20 languages. All 4 Kotlin suites pass.
+- Also: bank / wallet SMS test `v919sms`; Fit targets `v917fittargets`; Home-box amounts `v918homedo`; Safe to spend `v914safe`;
+  Scout ads `v916scout` («مليون و200 ألف» was 200,000); agent listing prices `v915offers`; the bank at 477 sentences.
+- Real-model trial (Qwen3.5 4B, the phone model): tests/trials/max.mjs → 103/103.
+
 ## v9.0 part 7 — 2 Nov: "99 percent accurate — always testing and fixing" (no cloud AI: Ali said no)
 - Scoreboard `node tools/accuracy.mjs --show` over `tests/bank/*.json` (core, hard, langs = 306 real sentences, EN / Egyptian /
   Franco / 11 other languages) through the SAME readers as Chat (`tests/bank/route.mjs`): 100% can be right, 90% by code alone,

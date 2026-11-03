@@ -10791,4 +10791,5 @@ export const PT = {
   "Background colour": "Cor de fundo",
   "Finished reading": "Leitura concluída",
   "Which messages to read": "Quais mensagens ler",
+  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Diga ao Attune de quem você espera uma mensagem — no WhatsApp, Gmail, SMS ou qualquer app de e-mail — e ele avisa assim que chegar. Verificado neste telefone; o SMS pode ser desligado abaixo.",
 };

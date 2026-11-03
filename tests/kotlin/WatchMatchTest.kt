@@ -11,7 +11,9 @@ fun main() {
     check(!WatchMatch.matches(ahmed, "com.whatsapp", "Ahmedabad trip", "x"), "a name inside another word does not")
     check(!WatchMatch.matches(ahmed, "com.whatsapp", "Mona", "Ahmed said hi"), "on WhatsApp the sender is the title, not a name in the text")
     check(WatchMatch.matches(ahmed, "com.google.android.gm", "Ahmed Fathy", "Invoice for October"), "Gmail from Ahmed (any app)")
-    check(!WatchMatch.matches(ahmed, "com.google.android.apps.messaging", "Ahmed", "hi"), "SMS apps are never watched")
+    // (v8.7, Ali 29 Oct: SMS notifications are read unless the person turns the switch off — the switch decides)
+    WatchMatch.smsAllowed = false
+    check(!WatchMatch.matches(ahmed, "com.google.android.apps.messaging", "Ahmed", "hi"), "SMS switch off: SMS apps are not watched")
     check(WatchMatch.isSms("com.hihonor.mms") && WatchMatch.isSms("com.example.sms.app") && !WatchMatch.isSms("org.thoughtcrime.securesms") && !WatchMatch.isSms("com.whatsapp"), "isSms: Honor and other SMS apps; Signal and WhatsApp are chats")
     check(!WatchMatch.matches(ahmed, "com.example.game", "Ahmed", "hi"), "games and other apps are not watched")
     val hr = WatchRule("2", listOf("hr@company.com"), app = "email")
@@ -31,7 +33,7 @@ fun main() {
     check(!WatchMatch.matches(amazon, "com.amazon.mShop.android.shopping", "Amazon", "Deals of the day"), "…not an Amazon ad")
     // SMS (Ali picked B): only with the switch on, and then only for "any" / "sms" rules
     val anyAhmed = WatchRule("s1", listOf("Ahmed"))
-    check(!WatchMatch.matches(anyAhmed, "com.google.android.apps.messaging", "Ahmed", "hi"), "SMS switch off (default): not watched")
+    check(!WatchMatch.matches(anyAhmed, "com.google.android.apps.messaging", "Ahmed", "hi"), "SMS switch off: not watched")
     WatchMatch.smsAllowed = true
     check(WatchMatch.matches(anyAhmed, "com.google.android.apps.messaging", "Ahmed", "hi"), "SMS switch on: an SMS from Ahmed is watched")
     check(!WatchMatch.matches(WatchRule("s2", listOf("Ahmed"), app = "whatsapp"), "com.google.android.apps.messaging", "Ahmed", "hi"), "…but not by a WhatsApp-only rule")

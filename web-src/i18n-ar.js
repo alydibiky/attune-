@@ -7899,4 +7899,5 @@ export const AR = {
   "Background colour": "لون الخلفية",
   "Finished reading": "خلصت القراية",
   "Which messages to read": "أقرا أنهي رسايل",
+  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "قول لـ Attune رسالة مين مستنيها — على الواتس أو الجيميل أو الرسايل (SMS) أو أي أبلكيشن إيميل — وهو يقولك أول ما توصل. كله على الموبايل ده، وتقدر تقفل الـ SMS تحت.",
 };

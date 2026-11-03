@@ -10790,4 +10790,5 @@ export const FA = {
   "Background colour": "رنگ پس‌زمینه",
   "Finished reading": "خواندن تمام شد",
   "Which messages to read": "کدام پیام‌ها خوانده شود",
+  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "به Attune بگویید منتظر پیام چه کسی هستید — در واتس‌اپ، جیمیل، پیامک یا هر برنامهٔ ایمیل — و همین که برسد خبرتان می‌کند. روی همین گوشی بررسی می‌شود؛ پیامک را می‌توانید پایین خاموش کنید.",
 };

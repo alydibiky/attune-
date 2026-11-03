@@ -219,7 +219,9 @@ export function readDeadlines(text, opts = {}) {
   // a form, an exam — is a deadline too
   if (!out.length) {
     const due = /\b(?:(?:is|are)\s+)?due\s+(?:on|by|before)\b|\bdue date\b|\bdeadline\b|\blast day (?:to|for)\b|\bmust be (?:paid|done|submitted) by\b|آخر ميعاد|اخر ميعاد|مستحق(?:ة)? يوم|ميعاد السداد|لازم تتدفع قبل|آخر يوم للتقديم/i;
-    if (due.test(t)) { const d = after(due) || dates.find((x) => x.t > now - DAY / 2); if (d) add("other", d.t, { why: "due" }); }
+    if (due.test(t)) { const d = after(due) || dates.find((x) => x.t > now - DAY / 2); if (d) { add("other", d.t, { why: "due" }); const last = out[out.length - 1];
+      // (a due line with no name the title reader knows — «فاتورة الإنترنت 450 جنيه مستحقة…» — is named by its own first words)
+      if (last && !last.title) last.title = raw.replace(/\s+/g, " ").split(/[.,،:\n]| due | مستحق/)[0].replace(/[\d٠-٩][\d٠-٩,.]*\s*(?:egp|جنيه|ج\.م)?/gi, "").trim().slice(0, 48); } }
   }
   return out;
 }

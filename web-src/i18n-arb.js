@@ -10782,4 +10782,5 @@ export const ARB = {
   "Background colour": "لون الخلفية",
   "Finished reading": "انتهت القراءة",
   "Which messages to read": "أي الرسائل أقرأ",
+  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "أخبر Attune برسالة من تنتظرها — على واتساب أو جيميل أو الرسائل النصية أو أي تطبيق بريد — وسيخبرك فور وصولها. يتم الفحص على هذا الهاتف؛ ويمكنك إيقاف الرسائل النصية بالأسفل.",
 };

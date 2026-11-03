@@ -10790,4 +10790,5 @@ export const RU = {
   "Background colour": "Цвет фона",
   "Finished reading": "Прочитано",
   "Which messages to read": "Какие сообщения читать",
+  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Скажите Attune, чьего сообщения вы ждёте — в WhatsApp, Gmail, SMS или любом почтовом приложении, — и он сообщит, как только оно придёт. Проверяется на этом телефоне; SMS можно отключить ниже.",
 };
