@@ -1,0 +1,16 @@
+{
+"action": ["فكرني اجيب عيش وانا راجع", "فكرني بكرة الصبح اكلم البنك", "صحيني بكرة 6 الصبح", "فكرني بعد ربع ساعة", "فكرني يوم السبت اروح للدكتور الساعة 5",
+ "فكرني كل يوم الساعة 10 بالليل اقفل الغاز", "ابعت لسارة على الواتس اني جاي", "كلم ماما", "فكرني الشهر الجاي اجدد الرخصة", "فكرني اول كل شهر ادفع النت",
+ "fakarny bokra a3mel el ta2rer", "sa7eeny el sa3a 7 el sob7", "fakarny ba3d sa3a", "nabehny ba3d nos sa3a", "ab3at le sara 3al whatsapp en ana gay",
+ "remind me 2moro at 8 to call the plumber", "wake me at 6", "remind me before my meeting at 3", "set alarm 5:30am", "remind me every Thursday to pay the maid"],
+"money-log": ["دفعت 50 مواصلات", "عيش 20", "خضار 150", "فاكهة 120", "كهربا 650", "دفعت للسباك 300", "اشتريت كتب للمدرسة ب 800", "قبضت 1500 من شغل اضافي", "سوبر ماركت 860", "مكوجي 70",
+ "kahraba 650", "dafa3t 50 mowaslat", "3esh 20", "5odar 150", "spent 45 on bread", "electricity 650", "plumber 300", "school books 800", "got 1500 extra work", "laundry 70"],
+"money-ask": ["صرفت كام على الكهربا السنة دي؟", "صرفت كام في كارفور الشهر ده؟", "دخلي كام السنة دي؟", "how much did I spend at carrefour this month?", "how much did I pay the plumber?",
+ "صرفت كام امبارح؟", "how much did I spend today?"],
+"life": ["محمد عليه 2000 لحد آخر الشهر", "عليا للبقال 300", "اخويا هيرجعلي 5000 على 5 شهور", "اشتريت غسالة بالتقسيط 1200 كل شهر لمدة سنة", "جمعية 1000 كل شهر مع الشغل دوري التالت",
+ "Mohamed owes me 2000 until the end of the month", "I owe the grocer 300", "my brother will pay me back 5000 over 5 months"],
+"deadline": ["الرخصة بتخلص يوم 20 ديسمبر", "التأمين بيتجدد يوم 1 يناير 2027", "my car license expires on 20 December", "my insurance renews on 1 January 2027"],
+"agent": ["نبهني لما سعر الدهب ينزل تحت 3500", "دورلي على تلاجة شارب 18 قدم بأقل من 25 ألف", "قولي لما طلب جوميا يوصل", "tell me when 21k gold is under 3500 a gram", "buy me a Sharp fridge under 25000"],
+"chat": ["الجو عامل ايه النهارده؟", "اعمل ايه لو الموبايل سخن؟", "ايه احسن موبايل بـ 10 آلاف؟", "ازاي اعمل محشي؟", "ايه الفرق بين الايفون 15 و16؟", "قولي حاجة تضحكني", "ترجملي كلمة صباح الخير للفرنساوي",
+ "who is the president of Egypt?", "how do I reset my phone?", "what's a good name for a cat?", "explain inflation like I'm 10", "how do I get a visa to the UK?", "ايه رأيك في الدهب دلوقتي؟"]
+}

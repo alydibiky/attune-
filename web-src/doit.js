@@ -125,6 +125,8 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     return a ? { actions: [], ask: a } : { actions: [], chat: true };
   }
   if (NOTE.test(t)) return { actions: [{ kind: "note", text: t.replace(NOTE, "").trim() || t }] };
+  // v9.0 (the bank: "explain inflation like I'm 10" was logged as 10 spent): an explain / write / describe request is for Chat
+  if (/^\s*(please\s+)?(explain|describe|write|summari[sz]e|translate|compare|teach me|help me (understand|write)|tell me (about|how|why|a))\b|^\s*(اشرح|اشرحلي|اوصف|أوصف|لخص|لخصلي|ترجم|ترجملي|قارن|اكتب|اكتبلي|علمني|فهمني|احكيلي)/i.test(t)) return { actions: [], chat: true };
   // v9.0 (the full test run: the marble riddle — "an empty glass … the coffee table" — logged water and a coffee): a long sentence
   // with no amount that doesn't say something was eaten or drunk is a question or a story for Chat, not something to log
   if (!/\b(ate|eaten|eat|eating|breakfast|lunch|dinner|supper|snack|drank|drink|drinking)\b|اكلت|أكلت|كلت|فطرت|اتغديت|اتعشيت|فطار|غدا|عشا|شربت|بشرب/i.test(t) && !/[\d٠-٩]/.test(t) && t.split(/\s+/).filter(Boolean).length > 6) return { actions: [], chat: true };

@@ -219,7 +219,9 @@ const CMD = { fakarny: "فكرني", fakkarny: "فكرني", fakarni: "فكرن�
   embare7: "امبارح", emberi7: "امبارح", sa3a: "ساعة", kol: "كل", youm: "يوم", yom: "يوم", shahr: "شهر", esbo3: "أسبوع", osbo3: "أسبوع", gom3a: "جمعة", gum3a: "جمعة",
   sabt: "سبت", "7ad": "حد", etnen: "اتنين", talat: "تلات", arba3: "أربع", khamees: "خميس", "5amis": "خميس", kam: "كام", kaam: "كام", "3ayez": "عايز", "3awez": "عاوز",
   eshtereely: "اشتريلي", eshtereli: "اشتريلي", eshteryly: "اشتريلي", dawarly: "دورلي", dawwarli: "دورلي", dawarli: "دورلي", "3ala": "على", fe: "في", fi: "في", men: "من",
-  ma3: "مع", "3aleh": "عليه", "3aleih": "عليه", "3aleha": "عليها", "3alaya": "عليا", "3alayya": "عليا", "3alehom": "عليهم", leya: "ليا", liya: "ليا", sallaft: "سلفت", masareef: "مصاريف", masarif: "مصاريف", "2ad": "قد", "2a2al": "أقل", a2al: "أقل",
+  ma3: "مع", "3esh": "عيش", "3eish": "عيش", "3eesh": "عيش", "5odar": "خضار", "khodar": "خضار", "fak7a": "فاكهة", "fakha": "فاكهة", "mowaslat": "مواصلات", "benzeen": "بنزين", "banzeen": "بنزين",
+  "kahraba": "كهربا", "gas": "غاز", "mayya": "مية", "aysh": "عيش", "laban": "لبن", "fera5": "فراخ", "ferakh": "فراخ", "la7ma": "لحمة", "ro2z": "رز", "roz": "رز", "koshary": "كشري", "koshari": "كشري",
+  "3aleh": "عليه", "3aleih": "عليه", "3aleha": "عليها", "3alaya": "عليا", "3alayya": "عليا", "3alehom": "عليهم", leya: "ليا", liya: "ليا", sallaft: "سلفت", masareef: "مصاريف", masarif: "مصاريف", "2ad": "قد", "2a2al": "أقل", a2al: "أقل",
   ad: "قد", nos: "نص", ro3: "ربع", "ella": "إلا", sob7: "الصبح", "elsob7": "الصبح", bel: "بالليل", belel: "بالليل", "belleil": "بالليل", "2ol": "قول", "2oly": "قولي", "2olli": "قولي", oly: "قولي",
   lama: "لما", lamma: "لما", law: "لو", "yewsal": "يوصل", "yewsl": "يوصل", talab: "طلب", "talaby": "طلبي", "gamaeya": "جمعية", "gam3eya": "جمعية", "gam3ya": "جمعية", dayman: "دايما" };
 let INV = null;

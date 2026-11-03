@@ -67,7 +67,7 @@ function everyOf(t) {
   if (EVERY_M.test(t)) return "month";
   if (EVERY_W.test(t)) return "week";
   if (/\b(a|per|every|each) year\b|\byearly\b|\bannual(ly)?\b|كل سنه|سنوي|سنويا|al año|por año|cada año|anual|par an|chaque année|annuel|por ano|todo ano|pro jahr|jährlich|all'anno|ogni anno|annuale|her yıl|yıllık|per tahun|setiap tahun|tahunan/.test(t)) return "year";
-  if (/installments?|instalments?|اقساط|قسط|cuotas|mensualités|parcelas|raten|rate\b|taksit|cicilan|angsuran/.test(t)) return "month";
+  if (/installments?|instalments?|اقساط|قسط|تقسيط|cuotas|mensualités|parcelas|raten|rate\b|taksit|cicilan|angsuran/.test(t)) return "month";
   return null;
 }
 // v6.27: month names in English, Arabic (Egypt/Gulf and Levant/Iraq), Spanish, French, Portuguese, German, Italian, Turkish,
@@ -272,7 +272,7 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
   if (SUBS.test(raw) || SUBS.test(t)) { const m = SUBS.exec(raw) || SUBS.exec(t); return { ...base, kind: "subscription", dir: "out", amount: amts[0], count: 0, total: 0, every: every || "month", title: nameBefore(raw, m[0][0].toUpperCase() + m[0].slice(1)) }; }
   if (BILL.test(raw) || BILL.test(t)) { const m = BILL.exec(raw) || BILL.exec(t); return { ...base, kind: "bill", dir: "out", amount: amts[0], count: every ? 0 : 1, total: every ? 0 : amts[0], every, title: nameBefore(raw, m[0]) }; }
   // installments — or "22,000 to be paid monthly over 9 months" (a payment over months is installments even without the word)
-  if ((/installments?|instalments?|قسط|اقساط/.test(t) || (PAY_V.test(t) && count > 1)) && (count || every)) {
+  if ((/installments?|instalments?|قسط|اقساط|تقسيط/.test(t) || (PAY_V.test(t) && count > 1)) && (count || every)) {
     const how = amts.length === 1 ? oneAmount(t) : "", title = (/(car|phone|laptop|عربيه|العربيه|موبايل|تليفون|لابتوب)/.exec(t) || [""])[0];
     if (how === "each" && count > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: amts[0], count, total: amts[0] * count, every: every || "month", title };
     const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0, n = count || (small ? Math.round(big / small) : 0);
