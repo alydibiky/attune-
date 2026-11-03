@@ -63,7 +63,7 @@ attune.jsx: {armDelete === m.id ? tr("Tap again") : tr("Delete")}</button>
 
 ## Done
 actions-ui.jsx: <p className={label + " mt-4 mb-2"}>{tr("Done")}</p>
-agent-ui.jsx: export const agentLabels = () => ({ checking: tr("Checking {i} of {n}: {d}"), loadFail: tr("This page didn't load — check the internet, or t
+agent-ui.jsx: export const agentLabels = () => ({ checking: tr("Checking {i} of {n}: {d}"), soFar: tr("Cheapest so far: {p} ({d})"), cheapestAll: tr("Chea
 agents-ui.jsx: : <button onClick={() => markDone(a)} className={small} data-testid="agent-buy-done"><Check size={14} />{tr("Done")}</button>}
 attune.jsx: call: tr("The dialer opened with the number — tap Call there.") }[a.kind] || tr("Done");
 biz-ui.jsx: {edit ? <button onClick={onBack} className={btnP + " flex-1"} style={{ background: "var(--c-acc)" }} data-testid="biz-done"><Check size={18}
