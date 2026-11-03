@@ -1,7 +1,7 @@
 // v9.0 (Ali picked B, "for all languages"): the referee. A bank of real sentences in all 20 languages — each must be seen as its
 // kind; a sentence with two kinds goes to the model (and is learned); without a model, doing wins over looking up; a kind only
 // the words suggest is never forced by code.
-import { lexSignals, signalsOf, decide, judgeMessages, parseJudge, referee, learn, loadLearned } from "../../web-src/understand.js";
+import { lexSignals, signalsOf, decide, judgeMessages, parseJudge, referee, learn, loadLearned, looksFranco } from "../../web-src/understand.js";
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log("FAIL " + m); } };
 const BANK = {
   action: ["Remind me on the last day of each month to pay interest for mom", "set an alarm for 6", "فكرني آخر يوم في كل شهر أدفع فوايد ماما", "ذكّرني بموعد الطبيب غدًا",
@@ -51,6 +51,9 @@ const run = async () => {
   ok(r6.kind === null, "nothing seen → nothing forced");
   const r7 = await referee(two.replace("500", "900") + "!", { "money-log": true, action: true }, { ask: () => new Promise(() => {}), timeoutMs: 50, ls: { getItem: () => null, setItem() {} } });
   ok(r7.kind === "action" && r7.how === "order", "the model too slow → doing first");
+  // v9.1 (e2e_v542): an English sentence with one Egyptian dish in it is not Franco (it was rewritten «…of كشري…» and answered in Arabic)
+  for (const t of ["I ate a plate of koshari and a can of cola", "I had ful and taameya for breakfast", "can you call mama tomorrow"]) ok(!looksFranco(t), "English, not Franco: " + t);
+  for (const t of ["fakarny bokra el sa3a 9 akalem mama", "ana 3ayez koshari", "akalt koshari"]) ok(looksFranco(t), "Franco: " + t);
   console.log(bad ? bad + " FAILED" : "PASS v903understand: the referee, in all 20 languages");
 };
 run();

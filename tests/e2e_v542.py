@@ -144,12 +144,14 @@ with sync_playwright() as p:
     queue(page, ["Sounds like a good dinner.", "ok", "ok"])
     page.locator("textarea[placeholder='Message Attune']").fill("I ate a plate of koshari and a can of cola")
     page.locator("button[title='Send']").first.click()
-    page.wait_for_selector("[data-testid=fit-chip]", timeout=15000)
-    page.locator("[data-testid=fit-chip]").click()
-    page.wait_for_selector("[data-testid=fit-log-text]", timeout=4000)
-    check("koshari" in page.locator("[data-testid=fit-log-text]").input_value(), "the chip opens Fit with the meal ready to read")
-    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
-    check(page.locator("[data-testid=fit-log]").count() == 0 and page.locator("[data-testid=fit-app]").count() == 1, "Back closes the log sheet first")
+    # v9.0 (29555ab: "Chat does what the Home box does, with Undo"): the meal is logged at once — a Done card with Undo and
+    # Open Fit & Food (it used to offer a chip first)
+    page.wait_for_selector("[data-testid=card-emerald]:has-text('Koshari'), [data-testid=card-emerald]:has-text('koshari')", timeout=15000)
+    done = page.locator("[data-testid=card-emerald]").last
+    check("Undo" in done.inner_text() and "Open Fit & Food" in done.inner_text(), "Chat logs the meal at once: Done, with Undo and Open Fit & Food")
+    done.locator("button:has-text('Open Fit & Food')").click()
+    page.wait_for_selector("[data-testid=fit-app]", timeout=6000)
+    check(page.locator("[data-testid=fit-app]").count() == 1, "Open Fit & Food opens it")
 
     # ---- saved on the phone: reload keeps everything ----
     page.reload(); page.wait_for_selector("nav", timeout=15000)

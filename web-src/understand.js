@@ -242,8 +242,13 @@ export function francoToArabic(text) {
   return out.join("");
 }
 /** Is it Franco worth reading as Arabic? (≥ 1 command word or ≥ 2 known words) */
+const EN_WORDS = new Set("i i'm im me my you your we our he she it they the a an and or of to for in on at with from is are was were be been have has had do did does ate eat eating had drink drank can could will would should please this that these those what when where how why not no yes".split(" "));
 export function looksFranco(text) {
   const ws = String(text || "").toLowerCase().split(/\s+/).filter(Boolean), map = inv();
   if (/[؀-ۿ]/.test(text)) return false;
+  // v9.1 (e2e_v542: "I ate a plate of koshari and a can of cola" became «I ate a plate of كشري…», answered in Arabic): an English
+  // sentence with one Egyptian word in it is English — more English everyday words than Franco ones, and it stays as typed
+  const fr = ws.filter((w) => CMD[w] || map[w]).length, en = ws.filter((w) => EN_WORDS.has(w.replace(/[^a-z']/g, ""))).length;
+  if (en >= 2 && en >= fr) return false;
   return ws.some((w) => CMD[w]) || ws.filter((w) => map[w]).length >= 2;
 }
