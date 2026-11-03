@@ -160,17 +160,13 @@ health-calm-ui.jsx: {l.open && res.open ? <button className="min-h-[32px] text-[
 home-now.js: actions: /^cheque/.test(w.kind) ? [{ id: "cleared", label: tr("It cleared") }, { id: "bounced", label: tr("Bounced") }] : [{ id: "open", lab
 home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
 
-## Days
-agents-ui.jsx: const facts = [[tr("Days"), r.o.checkin ? day(r.o) + (r.f.nights ? " · " + tr("{n} nights", { n: r.f.nights }) : "") : ""], [tr("A night"), 
-fleet-trade-ui.jsx: <div className="grid grid-cols-3 gap-2"><Sel label={tr("Priced")} value={x.mode} onChange={set("mode")} options={["hourly", "daily", "period
-fleet-ui.jsx: {j.mode === "daily" ? <Txt label={tr("Days")} value={e.qty} onChange={set("qty")} mode="decimal" testid="fleet-f-qty" /> : null}
-
-## Walk
-agents-ui.jsx: [tr("Walk"), r.f.dist != null ? far(r.f.dist) : ""], [tr("Rating"), r.f.rating != null ? "★ " + r.f.rating : ""]].filter((x) => x[1]);
-map-ui.jsx: {[["car", tr("Car"), "🚗"], ["walk", tr("Walk"), "🚶"]].map(([k, l, e]) => (
+## See all
+agents-ui.jsx: <button onClick={() => setAt(1)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="agent-see-all">{tr("See a
+home-ui.jsx: {!rep ? <button onClick={() => setRep(true)} className="text-[12.5px] font-extrabold c-acc inline-flex items-center gap-1 bg-transparent bor
+home-ui.jsx: <span className="font-extrabold text-[14px]">{tr("See all")}</span>
 
 ## Close
-agents-ui.jsx: <button onClick={() => setAt(-1)} className="absolute top-2 end-2 w-9 h-9 rounded-full grid place-items-center bg-black/55 text-white" aria-
+agents-ui.jsx: <button onClick={() => setAt(-1)} className={"w-10 h-10 rounded-full grid place-items-center " + glass} aria-label={tr("Close")} data-testid
 attune.jsx: <button onClick={() => setSheet(false)} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:bg-slate-800" 
 attune.jsx: <button onClick={() => setMoreOpen(false)} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(-
 attune.jsx: <button onClick={() => setShowCustom(false)} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text
@@ -180,7 +176,7 @@ attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-c
 attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:text-slate-200 hover:bg-slate-
 
 ## Next
-agents-ui.jsx: <button onClick={() => setAt(Math.min(rows.length - 1, at + 1))} disabled={at >= rows.length - 1} className={btn + " border border-[var(--c-
+agents-ui.jsx: <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><Chev
 attune.jsx: {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-e
 biz-ui.jsx: {step < 4 ? <button onClick={() => setStep(step + 1)} className={(edit ? btnG : btnP) + " flex-1"} style={edit ? null : { background: "var(-
 daily-ui.jsx: <button className={btnP} onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? t
@@ -1454,6 +1450,10 @@ fleet-ui.jsx: const places = [...F.live(s.garages).map((g) => ({ v: "garage:" + 
 fleet-trade-ui.jsx: <div className="grid grid-cols-3 gap-2"><Sel label={tr("Priced")} value={x.mode} onChange={set("mode")} options={["hourly", "daily", "period
 fleet-ui.jsx: <p className={"text-[13px] m-0 " + muted}>{tr("Rate")}: <span dir="ltr" className="tabular-nums">{money(j.rate)}</span> · {F.showDate(j.star
 fleet-ui.jsx: <Txt label={tr("Rate")} value={e.rate} onChange={set("rate")} mode="decimal" placeholder={num(j.rate)} />
+
+## Days
+fleet-trade-ui.jsx: <div className="grid grid-cols-3 gap-2"><Sel label={tr("Priced")} value={x.mode} onChange={set("mode")} options={["hourly", "daily", "period
+fleet-ui.jsx: {j.mode === "daily" ? <Txt label={tr("Days")} value={e.qty} onChange={set("qty")} mode="decimal" testid="fleet-f-qty" /> : null}
 
 ## Periods
 fleet-trade-ui.jsx: <div className="grid grid-cols-3 gap-2"><Sel label={tr("Priced")} value={x.mode} onChange={set("mode")} options={["hourly", "daily", "period
