@@ -127,6 +127,8 @@ function personOf(raw, t) {
     /\b(?:lent|loaned|gave|owe|paid|pay|to|from|with|lend|Lent)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b/,
     /\b(?:owe|from|to)\s+([A-Z]{2,5})\b/,   // a bank's short name: CIB, NBE, QNB
   ];
+  // (v9.0: «علي عليه 1000» — Ali, the name, spelled like «علي» "on"; first in the sentence and before «عليه» it can only be the name)
+  if (/^\s*علي\s+(?:عليه|هيدفعلي|هيرجعلي|مديون|استلف مني|خد مني|اخد مني)/.test(raw)) return "علي";
   for (const re of tries) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
   // v8.9 (Ali: "People & plans still doesn't understand"): "my sister pays me 2000 every month" — a relative is who it is
   const rel = /\bmy\s+(sister|brother|mother|mom|mum|father|dad|son|daughter|uncle|aunt|cousin|friend|boss|neighbou?r|wife|husband|landlord|tenant|partner|colleague)\b/i.exec(raw);
@@ -210,11 +212,18 @@ function bankLoan(t0) {
   const bank = new RegExp("(?:from|with|at|من)\\s+((?:the\\s+)?(?:" + BANKS + ")(?:\\s+[A-Z][\\w]*)?)", "i").exec(t);
   if (bank && /^[a-z]{2,5}$/i.test(bank[1]) && !/^bank$/i.test(bank[1])) bank[1] = bank[1].toUpperCase();
   const amt = /(\d[\d,.]*)\s*(k|الف|ألف|thousand)?/i.exec(t.replace(/\b(\d{1,3})\s*(months?|years?|شهر|شهور|سنين|سنة|سنه|سنوات)\b/gi, " "));
-  const per = /(?:for|over|on|in|على|علي|لمدة|مدة)?\s*(\d{1,3})\s*(months?|شهر|شهور|years?|سنين|سنة|سنه|سنوات)/i.exec(t);
+  let per = /(?:for|over|on|in|على|علي|لمدة|مدة)?\s*(\d{1,3})\s*(months?|شهر|شهور|years?|سنين|سنة|سنه|سنوات)(?!\s*(?:a|per|each)?\s*month)/i.exec(t.replace(/(\d[\d,.]*)\s*(?:k|الف|ألف)?\s*(?:a|per|each)\s+month|(\d[\d,.]*)\s*(?:كل شهر|في الشهر|شهريا|شهرياً)/gi, " "));
+  // v9.0 (the bank: «… لمدة سنة» — a year with no number; "سنتين" — two years)
+  if (!per) { const y = /(?:for|over|لمدة|مدة|على|علي)\s+(?:a|one|واحده?)?\s*(year|سنة|سنه)(?![\p{L}])|(?:for|over|لمدة|مدة|على|علي)\s+(two years|سنتين)/iu.exec(t); if (y) per = [y[0], y[2] ? "2" : "1", "year"]; }
   if (!bank || !amt || !per) return t0;
   const n = +amt[1].replace(/,/g, "") * (amt[2] ? 1000 : 1), months = +per[1] * (/year|سن/i.test(per[2]) ? 12 : 1);
   if (!(n > 0) || !(months >= 2 && months <= 360)) return t0;
   const who = bank[1].replace(/^the\s+/i, "").replace(/^(bank|البنك|بنك)$/i, (b) => (/[ء-ي]/.test(b) ? "البنك" : tr("Bank")));
+  // v9.0 (the bank: "loan 10000 from the bank, 1000 a month for 12 months" became 833 a month): the monthly payment said is the
+  // payment — the interest is in it (12 × 1,000 = 12,000 to pay)
+  const pm = /(\d[\d,.]*)\s*(k|الف|ألف)?\s*(?:a|per|each)\s+month|(\d[\d,.]*)\s*(الف|ألف)?\s*(?:كل شهر|في الشهر|شهريا|شهرياً)/i.exec(t);
+  const each = pm ? +String(pm[1] || pm[3]).replace(/,/g, "") * ((pm[2] || pm[4]) ? 1000 : 1) : 0;
+  if (each > 0 && each < n * 2 && each * months >= n * 0.9) return `I owe ${who} ${each} each month, ${months} installments`;
   return `I owe ${who} ${n} over ${months} months`;
 }
 export function parseLife(text, { now = Date.now(), currency = homeCurrency() } = {}) {
@@ -255,7 +264,9 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
     }
     return { ...base, kind: "debt", dir: dirIn ? "in" : "out", amount: big, count: 1, total: big, every: null };
   }
-  if ((HELP.test(raw) || HELP.test(t)) && (DAY_EVERY.test(t) || every)) {
+  // v9.0 (the bank: "the driver comes every day, 200 a day"): every day = all seven days of the week
+  const DAILY = /\b(every ?day|daily|each day|a day)\b|كل يوم|يوميا|يومياً|في اليوم/i;
+  if ((HELP.test(raw) || HELP.test(t)) && (DAY_EVERY.test(t) || every || DAILY.test(t))) {
     const m = HELP.exec(raw) || HELP.exec(t), name = m[0].replace(/^ال/, "");
     // the start: that weekday — today when today is the day (the first box is today's)
     const dm = DAY_EVERY.exec(t), word = dm ? (dm[2] || dm[4] || dm[6] || "") : "";
@@ -264,7 +275,7 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
     if (word in W) { const d = new Date(now); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + ((W[word] - d.getDay() + 7) % 7)); st = iso(d); }   // that weekday, today included
     // v8.9: several days a week — «كل حد واربع», "every Sunday and Wednesday" → days [0, 3] (one box on each)
     const all = [...t.matchAll(/(?:^|[\s,،و])(?:ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربعاء|اربع|خميس|جمعه|سبت)(?=$|[\s,،])|\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/gi)].map((x) => W[(x[1] || x[2] || "").toLowerCase()]).filter((x) => x != null);
-    const days = [...new Set(all)].sort((a, b) => a - b);
+    const days = !DAY_EVERY.test(t) && DAILY.test(t) && !every ? [0, 1, 2, 3, 4, 5, 6] : [...new Set(all)].sort((a, b) => a - b);
     const dirR = dirIn || /\b(pays me|gives me|sends me|will (?:give|pay|send) me)\b/i.test(raw) ? "in" : "out";
     return { ...base, ...(days.length > 1 && (every || "week") === "week" ? { days } : {}), kind: "regular", dir: dirR, amount: amts[0], count: 0, total: 0, every: every || "week", start: st || iso(new Date(now)), title: /^[a-z]/i.test(name) ? name[0].toUpperCase() + name.slice(1) : name, auto: true };
   }
@@ -439,6 +450,8 @@ export function chatLifeIntent(text, opts) {
   if (["bill", "rent", "subscription"].includes(c.kind) && !c.start && !c.every) return null;
   // v9.0 (the sentence bank: "1200 gym" became a monthly gym plan): a subscription needs the words that say it repeats, or a
   // service that only comes as one (Netflix, Spotify…) — otherwise it is one payment
+  // (the same for rent and a bill: "rent 8000" alone is this month's payment, not a new rent plan each time it is typed)
+  if ((c.kind === "rent" || c.kind === "bill") && !c.start && !/\b(every|each|a month|monthly|per month|due|on the \d)|كل|شهري|شهرياً|ميعاد|يوم \d/i.test(t)) return null;
   if (c.kind === "subscription" && !c.start && !/\b(every|each|a month|monthly|per month|a year|yearly|annual|weekly|a week|renews?|subscription|membership)\b|كل|شهري|سنوي|اسبوعي|أسبوعي|بيتجدد|اشتراك/i.test(t)
     && !/\b(netflix|spotify|shahid|osn|watch it|watchit|youtube premium|apple music|icloud|google one|chatgpt|anghami|disney|amazon prime|prime video|canva|adobe|office 365|microsoft 365)\b|نتفليكس|شاهد|انغامي|أنغامي/i.test(t)) return null;
   return c.person || c.kind === "circle" || c.kind === "installment" || c.every ? c : null;

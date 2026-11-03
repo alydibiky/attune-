@@ -1,0 +1,18 @@
+{
+"action": ["remind me to call the bank", "remind me tomorrow", "alarm at 7:15", "wake me up in 30 minutes", "remind me at noon to eat", "remind me this evening to water the plants",
+ "remind me on Sunday at 10 to call the school", "remind me every month on the 1st to pay the internet", "remind me every 2 weeks to change the water filter", "remind me in 5 days to follow up",
+ "فكرني الضهر اكل", "فكرني بالليل اسقي الزرع", "فكرني يوم الحد الساعة 10 اكلم المدرسة", "فكرني كل اسبوعين اغير فلتر المية", "فكرني بعد 5 أيام اتابع مع العميل",
+ "remind me to buy Ahmed a gift on his birthday 14 December", "remind me to pay Sara 500 on Friday", "remind me to transfer 2000 to mom on the 1st", "فكرني ادفع لسارة 500 يوم الجمعة", "فكرني احول لماما 2000 اول الشهر"],
+"money-log": ["ice cream 40", "mobile recharge 100", "شحن رصيد 100", "internet bill 450", "فاتورة النت 450", "gave the doorman 100", "اديت البواب 100", "haircut 150", "حلاق 150", "medicine 320",
+ "دوا 320", "bought a gift for 600", "اشتريت هدية ب 600", "got 2000 from my dad", "بابا اداني 2000", "rent 8000", "الإيجار 8000", "car wash 120", "غسيل العربية 120", "tip 20"],
+"money-ask": ["how much have I spent on coffee?", "what's my total spending this week?", "how much did I give the doorman this month?", "صرفت كام على القهوة؟", "كام دفعت إيجار السنة دي؟",
+ "how much did I spend on medicine in October?", "show me my expenses this month"],
+"life": ["Ali owes me 1000", "علي عليه 1000", "I lent my brother 3000, he'll pay 500 a month", "سلفت اخويا 3000 هيدفع 500 كل شهر", "the driver comes every day, 200 a day", "السواق بيجي كل يوم ب 200",
+ "I borrowed 10000 from the bank, 1000 a month for 12 months", "قرض 10000 من البنك 1000 كل شهر لمدة سنة", "Hany will give me 4000 next month", "هاني هيديني 4000 الشهر الجاي"],
+"deadline": ["my ID card expires on 5 May 2027", "البطاقة بتخلص 5 مايو 2027", "the warranty ends on 1 June 2027", "الضمان بيخلص 1 يونيو 2027", "my Spotify trial ends on 25 November"],
+"calc": ["3500 * 1.14", "حساب 3500 + 14%", "25000 / 12", "how much is 120 × 30?", "12% of 85000", "٢٥٠٠٠ ÷ ١٢"],
+"chat": ["what is 14% VAT in Egypt?", "how much is the dollar today?", "what is a good savings plan?", "is it better to rent or buy?", "tell me about the pyramids", "what's the meaning of life?",
+ "how do I lose 5 kg?", "اخس 5 كيلو ازاي؟", "سعر الدولار النهارده كام؟", "ايه احسن طريقة احوش بيها؟", "احكيلي عن الأهرامات", "how many days until Ramadan?", "what should I cook today?",
+ "can you help me plan my week?", "write a birthday message for my mom", "اكتبلي رسالة عيد ميلاد لماما", "what does 'lunch' mean in Arabic?", "how do you say 'taxi' in French?",
+ "explain how a gam'eya works", "اشرحلي الجمعية بتشتغل ازاي", "is 150 a lot for lunch in Cairo?", "should I pay 8000 rent for a 2-bedroom in Maadi?"]
+}

@@ -231,6 +231,8 @@ export function looksLikeAction(text) {
   const t = String(text || "");
   if (t.length > 400) return false;                           // a pasted document is not a command
   if (/[?؟]\s*$/.test(t) && !/remind|فكرني|ذكرني|صحيني/i.test(t)) return false;  // a question about alarms is not a request
+  // v9.0 (the bank: "write a birthday message for my mom"): writing something is for Chat — sending it is an action
+  if (/^\s*(please\s+)?(write|draft|compose|help me write|create)\b|^\s*(اكتب|اكتبلي|ألف|الفلي|صيغ|صيغلي)/i.test(t) && !/\b(send|text|whatsapp)\b|ابعت|ابعته/i.test(t)) return false;
   // v9.0 (the sentence bank): "remind me what we talked about yesterday?" asks to recall, not to set a reminder
   if (/\bremind me (what|who|how|where|why|which|of what)\b|(فكرني|ذكرني) (ب?إيه|بايه|مين|ازاي|إزاي|فين|ليه)/i.test(t) && !/\b(at|in|on|tomorrow|tonight|every)\s+\S/i.test(t.replace(/\babout\b.*/i, ""))) return false;
   return ACTION_HINT.test(t);
