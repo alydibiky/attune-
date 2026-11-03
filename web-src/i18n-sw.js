@@ -10792,4 +10792,5 @@ export const SW = {
   "Finished reading": "Umemaliza kusoma",
   "Which messages to read": "Ujumbe upi usomwe",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Mwambie Attune unasubiri ujumbe wa nani — kwenye WhatsApp, Gmail, SMS au programu yoyote ya barua pepe — naye atakujulisha mara utakapofika. Hukaguliwa kwenye simu hii; SMS inaweza kuzimwa hapa chini.",
+  "Numbers in the photo, read by the phone: {n} — check them.": "Namba kwenye picha, zilizosomwa na simu: {n} — zikague.",
 };

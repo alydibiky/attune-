@@ -10792,4 +10792,5 @@ export const TRK = {
   "Finished reading": "Okuma bitti",
   "Which messages to read": "Hangi mesajlar okunsun",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Attune'a kimin mesajını beklediğini söyle — WhatsApp, Gmail, SMS veya herhangi bir e-posta uygulamasında — geldiği anda haber versin. Bu telefonda kontrol edilir; SMS'i aşağıdan kapatabilirsin.",
+  "Numbers in the photo, read by the phone: {n} — check them.": "Fotoğraftaki sayılar, telefonun okuduğu: {n} — kontrol edin.",
 };

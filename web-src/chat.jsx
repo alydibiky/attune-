@@ -14,6 +14,7 @@ import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import * as UND from "./understand.js";
+import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
 const DO_HERE = ["money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
 import { chatMapIntent } from "./mapintent.js";
@@ -1945,6 +1946,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (raf) clearTimeout(raf);
       // v8.7 (persona 8, M-A stop-gap): the person wrote Egyptian → the formal words of a short answer become Egyptian ones
       if (answer && typed && writesEgyptian(typed)) answer = egyptianize(answer);
+      // v9.0 (the real-model photo trial: «45000» read as "000 4500"): a photo answer's numbers are checked against the phone's own
+      // text reader — a number that isn't in the photo gets one line with the photo's numbers (nothing changed silently)
+      if (img && answer && api.readText && /\d{2}/.test(answer)) {
+        try { const o = await api.readText(img.data); const ck = checkPhotoNumbers(answer, o && o.text);
+          if (!ck.ok && ck.photo.length) answer += "\n\n> " + tr("Numbers in the photo, read by the phone: {n} — check them.", { n: ck.photo.slice(0, 10).join(" · ") }); } catch (e) {}
+      }
       patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st, ...extra });
       api.spend();
       api.remember({ kind: "chat", title: (typed || "Photo").slice(0, 70), text: typed || "(photo)", output: answer, tags: ["chat"] });

@@ -10791,4 +10791,5 @@ export const ZH = {
   "Finished reading": "已读完",
   "Which messages to read": "读取哪些消息",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "告诉 Attune 你在等谁的消息 —— 在 WhatsApp、Gmail、短信或任何邮件应用中 —— 消息一到就提醒你。在本机上检查；短信可在下方关闭。",
+  "Numbers in the photo, read by the phone: {n} — check them.": "照片中的数字（手机识别）：{n} —— 请核对。",
 };

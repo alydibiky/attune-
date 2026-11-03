@@ -10791,4 +10791,5 @@ export const VI = {
   "Finished reading": "Đã đọc xong",
   "Which messages to read": "Đọc tin nhắn nào",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Cho Attune biết bạn đang chờ tin nhắn của ai — trên WhatsApp, Gmail, SMS hoặc bất kỳ ứng dụng email nào — và nó báo ngay khi tin đến. Được kiểm tra trên điện thoại này; có thể tắt SMS ở bên dưới.",
+  "Numbers in the photo, read by the phone: {n} — check them.": "Các số trong ảnh, điện thoại đọc được: {n} — hãy kiểm tra.",
 };

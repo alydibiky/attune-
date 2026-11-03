@@ -10791,4 +10791,5 @@ export const BN = {
   "Finished reading": "পড়া শেষ",
   "Which messages to read": "কোন বার্তাগুলো পড়ব",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Attune-কে বলুন কার বার্তার অপেক্ষায় আছেন — WhatsApp, Gmail, SMS বা যেকোনো ইমেইল অ্যাপে — এলেই সে আপনাকে জানাবে। এই ফোনেই দেখা হয়; SMS নিচে বন্ধ করা যায়।",
+  "Numbers in the photo, read by the phone: {n} — check them.": "ছবির সংখ্যা, ফোন যা পড়েছে: {n} — মিলিয়ে নিন।",
 };

@@ -10791,4 +10791,5 @@ export const TH = {
   "Finished reading": "อ่านจบแล้ว",
   "Which messages to read": "อ่านข้อความไหน",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "บอก Attune ว่าคุณรอข้อความจากใคร — ใน WhatsApp, Gmail, SMS หรือแอปอีเมลใดก็ได้ — แล้วมันจะบอกทันทีที่ข้อความมาถึง ตรวจบนโทรศัพท์เครื่องนี้ ปิด SMS ได้ด้านล่าง",
+  "Numbers in the photo, read by the phone: {n} — check them.": "ตัวเลขในรูป ที่โทรศัพท์อ่านได้: {n} — โปรดตรวจสอบ",
 };

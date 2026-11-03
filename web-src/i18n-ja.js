@@ -10791,4 +10791,5 @@ export const JA = {
   "Finished reading": "読み終わり",
   "Which messages to read": "どのメッセージを読むか",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "誰からのメッセージを待っているか Attune に伝えると — WhatsApp、Gmail、SMS、どのメールアプリでも — 届いた瞬間に知らせます。この端末で確認します。SMS は下でオフにできます。",
+  "Numbers in the photo, read by the phone: {n} — check them.": "写真の数字（端末で読み取り）：{n} — 確認してください。",
 };

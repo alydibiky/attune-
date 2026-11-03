@@ -30,6 +30,10 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
 - Also: bank / wallet SMS test `v919sms`; Fit targets `v917fittargets`; Home-box amounts `v918homedo`; Safe to spend `v914safe`;
   Scout ads `v916scout` («مليون و200 ألف» was 200,000); agent listing prices `v915offers`; the bank at 477 sentences.
 - Real-model trial (Qwen3.5 4B, the phone model): tests/trials/max.mjs → 103/103.
+- Photos (Qwen3.5 4B + mmproj-F16 from unsloth/Qwen3.5-4B-MTP-GGUF): receipt 3/3, the Arabic site note 2/3 — «الحساب 45000 جنيه»
+  read as "000 4500". Now `photocheck.js`: after a photo answer, Chat checks every number against the phone's own text reader
+  (ML Kit, `api.readText`); a number not in the photo → one line "Numbers in the photo, read by the phone: … — check them" (all 20
+  languages). Test `v921photocheck`. (ML Kit's Latin reader reads digits even in Arabic photos.)
 
 ## v9.0 part 7 — 2 Nov: "99 percent accurate — always testing and fixing" (no cloud AI: Ali said no)
 - Scoreboard `node tools/accuracy.mjs --show` over `tests/bank/*.json` (core, hard, langs = 306 real sentences, EN / Egyptian /

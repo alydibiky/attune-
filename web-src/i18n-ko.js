@@ -10791,4 +10791,5 @@ export const KO = {
   "Finished reading": "다 읽음",
   "Which messages to read": "어떤 메시지를 읽을지",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "누구의 메시지를 기다리는지 Attune에 알려 주세요 — WhatsApp, Gmail, SMS 또는 어떤 이메일 앱이든 — 도착하는 즉시 알려 드립니다. 이 휴대폰에서 확인하며, SMS는 아래에서 끌 수 있어요.",
+  "Numbers in the photo, read by the phone: {n} — check them.": "사진 속 숫자(휴대폰이 읽음): {n} — 확인하세요.",
 };

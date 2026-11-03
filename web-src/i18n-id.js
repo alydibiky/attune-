@@ -10792,4 +10792,5 @@ export const IDN = {
   "Finished reading": "Selesai dibaca",
   "Which messages to read": "Pesan mana yang dibaca",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Beri tahu Attune pesan siapa yang kamu tunggu — di WhatsApp, Gmail, SMS, atau aplikasi email apa pun — dan Attune memberi tahu begitu pesan tiba. Diperiksa di ponsel ini; SMS bisa dimatikan di bawah.",
+  "Numbers in the photo, read by the phone: {n} — check them.": "Angka di foto, dibaca oleh ponsel: {n} — periksa lagi.",
 };

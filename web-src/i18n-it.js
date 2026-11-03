@@ -10792,4 +10792,5 @@ export const IT = {
   "Finished reading": "Lettura finita",
   "Which messages to read": "Quali messaggi leggere",
   "Tell Attune whose message you are waiting for — on WhatsApp, Gmail, SMS or any email app — and it tells you the moment it arrives. Checked on this phone; SMS can be switched off below.": "Di' ad Attune da chi aspetti un messaggio — su WhatsApp, Gmail, SMS o qualsiasi app email — e ti avvisa appena arriva. Controllato su questo telefono; gli SMS si possono disattivare qui sotto.",
+  "Numbers in the photo, read by the phone: {n} — check them.": "Numeri nella foto, letti dal telefono: {n} — controllali.",
 };
