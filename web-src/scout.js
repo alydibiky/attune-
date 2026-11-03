@@ -231,9 +231,19 @@ export const siteOf = (url) => String(url || "").replace(/^https?:\/\/(www\.)?/,
 const urlKey = (u) => String(u || "").toLowerCase().replace(/^https?:\/\/(www\.)?/, "").replace(/[?#].*$/, "").replace(/\/$/, "");
 
 /** Money amounts on a page with their place: not a phone number, a year, a size or a count. → [{ v, at, cur }] */
+// v9.0 (the Scout bank: «مليون و200 ألف» was read as 200,000): Egyptian ways of saying a big price → its number, the same length
+// (padded with spaces) so every position in the text stays where it was
+const pad = (m, v) => { const s = String(Math.round(v)); return s.length >= m.length ? s : s + " ".repeat(m.length - s.length); };
+export function spokenAmounts(text) {
+  return latin(text)
+    .replace(/(\d+(?:[.,]\d+)?)?\s*(?:مليون|ملايين)\s*و\s*(\d+)\s*(?:ألف|الف|آلاف)/g, (m, a, b) => pad(m, (a ? +a.replace(",", ".") : 1) * 1e6 + +b * 1000))
+    .replace(/(\d+(?:[.,]\d+)?)?\s*(?:مليون|ملايين)\s*و\s*(?:نص|نصف)/g, (m, a) => pad(m, (a ? +a.replace(",", ".") : 1) * 1e6 + 500000))
+    .replace(/(\d+(?:[.,]\d+)?)?\s*(?:مليون|ملايين)\s*و\s*ربع/g, (m, a) => pad(m, (a ? +a.replace(",", ".") : 1) * 1e6 + 250000))
+    .replace(/(^|[^\d.,])(مليون)(?=\s|$|[،,.])/g, (m, pre, w) => pre + pad(w, 1e6));
+}
 export function pricesIn(text) {
   // phone numbers first blanked out (same length, so positions stay): 01001234567, 0100 123 4567, +20 100 123 4567
-  const t = latin(text).replace(/(?:\+?20[\s-]?)?0?1[0125][\s-]?\d{3,4}[\s-]?\d{4}(?!\d)/g, (m) => " ".repeat(m.length)), out = [];
+  const t = spokenAmounts(text).replace(/(?:\+?20[\s-]?)?0?1[0125][\s-]?\d{3,4}[\s-]?\d{4}(?!\d)/g, (m) => " ".repeat(m.length)), out = [];
   const re = /(?:(egp|le|l\.e\.?|usd|\$|aed|sar|ج\.م|جنيه|جنية)\s*)?(\d{1,3}(?:[,.\s]\d{3})+|\d{3,9})(?:\s*(k(?![a-z])|الف|ألف|m(?![2²a-z])|مليون|million))?\s*(egp|le\b|l\.e\.?|usd|aed|sar|ج\.م\.?|جنيه|جنية|pounds?|ريال|درهم)?/gi;
   let m;
   while ((m = re.exec(t))) {
@@ -290,7 +300,8 @@ export function readAd(hit, g) {
     if (v != null) { out.facts.floor = v; q("floor", m[0]); }
   }
   if ((m = /(?:model|year|موديل|سنه الصنع|سنة الصنع)\s*[:\-]?\s*((?:19|20)\d{2})/i.exec(t)) || (g && g.kind === "car" && (m = /\b((?:199|20[0-3])\d)\b/.exec(t)))) { out.facts.year = +m[1]; q("year", m[0]); }
-  if ((m = /([\d,.]{1,9})\s*(k)?\s*(?:km|كم|كيلو(?:متر)?)(?!\s*\/)/i.exec(t)) && g && g.kind === "car") { out.facts.km = +m[1].replace(/[,.]/g, "") * (m[2] ? 1000 : 1); q("km", m[0]); }
+  // (v9.0: «عداد 60 ألف كم» — "thousand" in Arabic too)
+  if ((m = /([\d,.]{1,9})\s*(k|ألف|الف)?\s*(?:km|كم|كيلو(?:متر)?)(?!\s*\/)/i.exec(t)) && g && g.kind === "car") { out.facts.km = +m[1].replace(/[,.]/g, "") * (m[2] ? 1000 : 1); q("km", m[0]); }
   // (whole words only — «بالمعادي» holds the letters of «عادي»; an Arabic word may carry و / ب / ف / ل / ال in front)
   const W = (re) => (re ? new RegExp("(?<![\\p{L}\\p{N}])(?:[وبفل]?(?:ال)?)(?:" + re.source + ")(?:ه|ات|ين)?(?![\\p{L}\\p{N}])", "u") : null);
   const yes = (k, re0, no0) => { const re = W(re0), no = W(no0); const mm = re.exec(f); const nn = no ? no.exec(f) : null; const say = (m0) => { const i = f.indexOf(m0); out.quotes[k] = i >= 0 && f.length === text.length ? snip(text, i, m0.length, 14) : m0; };
@@ -300,6 +311,8 @@ export function readAd(hit, g) {
   yes("auto", /(automatic|اوتوماتيك|اتوماتيك)/, /(manual|مانيوال|عادي)/);
   yes("new", /(\bbrand new\b|\bnew\b|زيرو|جديد)/, /(\bused\b|مستعمل)/);
   yes("used", /(\bused\b|مستعمل)/);
+  // (v9.0: "Hyundai Tucson 2022 used" — the ad's title counts too; a car or a flat for sale by a person is used unless it says new)
+  if (out.facts.used == null && /\bused\b|مستعمل|مستعمله|مستعملة/i.test(fold(hit.title || ""))) { out.facts.used = true; out.quotes.used = String(hit.title || "").slice(0, 60); }
   yes("metro", /(metro|مترو)/);
   yes("pets", /(pets? (allowed|friendly|welcome)|يسمح بالحيوانات)/, /(no pets|pets not allowed|ممنوع الحيوانات)/);
   yes("furnished", /(\bfully furnished\b|\bfurnished\b|مفروش)/, /(unfurnished|not furnished|بدون فرش|مش مفروش)/);
