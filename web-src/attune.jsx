@@ -7680,6 +7680,9 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 /* Arabic and Urdu need more line height than Latin at the same size, or the
    diacritics collide with the line above. */
 [dir="rtl"], .att-rtl { line-height: 1.85; }
+/* v9.0: capital letters mean nothing in Arabic, Urdu or Persian — a label in capitals only turned the Latin "Attune" inside an Arabic
+   line into "ATTUNE" («اللي ATTUNE فاكره»). Right-to-left labels keep the words as written. */
+[dir="rtl"] .uppercase { text-transform: none; letter-spacing: normal; }
 
 /* One scrollbar style everywhere, thin and quiet. */
 * { scrollbar-width: thin; scrollbar-color: #1e293b transparent; }
