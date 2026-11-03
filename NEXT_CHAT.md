@@ -7,7 +7,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | | |
 |---|---|
 | `main` | **v9.0** (versionCode 131; pushed 3 Nov after the full suite passed — the two timing flakes, e2e_v518 / e2e_v533, pass alone; they failed while a 9B model ran beside the suite) — before: **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
-| Last APK | v9.0 (3 Nov, notifications + accuracy round 2): https://github.com/alydibiky/attune-/actions/runs/41608171861 — before: v9.0: https://github.com/alydibiky/attune-/actions/runs/41585440030 — before: v8.9: https://github.com/alydibiky/attune-/actions/runs/41309881633 (success, sent to Ali) |
+| Last APK | v9.1 hotel offers (3 Nov evening: option 4 A + C, hidden checking screen, photos): https://github.com/alydibiky/attune-/actions/runs/41693308525 (success) — before: v9.0 (3 Nov, notifications + accuracy round 2): https://github.com/alydibiky/attune-/actions/runs/41608171861 — before: v9.0: https://github.com/alydibiky/attune-/actions/runs/41585440030 — before: v8.9: https://github.com/alydibiky/attune-/actions/runs/41309881633 (success, sent to Ali) |
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
@@ -41,6 +41,10 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   name, days · nights · walk · rating, price, "2,100 less than the next" / "… more than the cheapest", ‹ Book this offer ›,
   swipe, Not this one). No photo → a calm colour field from the hotel's name. The card sits above the app's pop-ups (z-310).
   7 more lines × 20 languages (2 of the podium's lines removed). Test: `tests/e2e_v830.py`.
+- **Open (tests only):** 13 browser tests fail the same way on main from BEFORE this work (e2e_v513 v516 v528 v542 v700auto
+  v727agent v727chatmap v727owed v727radar v731lifeask v736compare v736plans v880connected): the mock phone (12 GB, SM8650) is now
+  recommended **Blaze** (the GPU engine), which can't run in the cloud tests, so the model never starts and Engine stays open
+  ("Load a model in Engine first") over the page. Fix the tests' setup (install the CPU tiny model / a CPU pick), not the app.
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),
