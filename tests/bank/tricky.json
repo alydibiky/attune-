@@ -1,0 +1,9 @@
+{
+"action": ["can you remind me tomorrow at 9 to call mom?", "could you set an alarm for 6?", "ممكن تفكرني بكرة الساعة 9؟", "please wake me up at 5", "I want a reminder at 8 to take my pills",
+ "عايز منبه الساعة 7", "remind me in 10 min", "set a 15 minute timer", "remind me Friday", "فكرني بعد العصر اكلم بابا"],
+"money-log": ["paid 120 for parking and 30 tip", "دفعت 120 جراج و30 بقشيش", "coffee and croissant 95", "قهوة وكرواسون 95", "uber 70 and lunch 150", "اوبر 70 وغدا 150",
+ "spent 2k on clothes", "صرفت 2 ألف على هدوم", "got 500 back from Sara", "سارة رجعتلي 500"],
+"money-ask": ["did I spend more on food this month or last month?", "how much do I usually spend on uber?", "صرفت أكتر على الأكل الشهر ده ولا اللي فات؟", "بصرف كام في المتوسط على أوبر؟"],
+"chat": ["what time is it in New York?", "remind me why we need vitamin D?", "how do alarms work on Android?", "what does 'pay it forward' mean?", "is 25000 a good salary in Cairo?",
+ "can you explain what a reminder is?", "اشرحلي يعني ايه تضخم", "how much protein is in 2 eggs?", "كام بروتين في بيضتين؟", "what is 10% of nothing?"]
+}

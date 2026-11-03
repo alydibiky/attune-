@@ -26,13 +26,13 @@ const WORDNUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, 
 /** Is this a question about the person's own money (not money in general)? → "expense" | "income" | "both" | "" */
 export function myMoneyIntent(q) {
   const t = latin(q).toLowerCase();
-  const mine = /\b(my|i|me|i've|did i|have i)\b/.test(t) || /(مصاريفي|مصروفاتي|صرفت|دفعت|دخلي|قبضت|فلوسي|مصروفي|حساباتي|اتصرف|كسبت|عندي كام)/.test(t);
+  const mine = /\b(my|i|me|i've|did i|have i)\b/.test(t) || /(مصاريفي|مصروفاتي|صرفت|دفعت|دخلي|قبضت|فلوسي|مصروفي|حساباتي|اتصرف|كسبت|عندي كام|بصرف|باصرف|بدفع|بادفع)/.test(t);
   if (!mine) return "";
   // v9.0 (Ali: "Remind me on the last day of each month to pay interest for mom" was answered with this month's spending): a
   // reminder, an alarm, a to-do or a payment to make is something to SET, never a question about money already spent
   if ((LEX.action.test(q) && !/[?؟]\s*$/.test(String(q).trim())) || /\b(remind(er)?|alarm|alert me|notify me|schedule|don'?t let me forget|wake me)\b/.test(t) || /(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|حطلي تذكير|منبه|متنسانيش)/.test(t)) return "";
   if (/^\s*(please\s+)?(pay|transfer|send)\b/.test(t) || /\b(i need to|i have to|i must|i should|i want to|i'?ll|i will|i'?m going to)\s+pay\b/.test(t) || /(لازم|محتاج|عايز|هدفع|حادفع)\s+(ا|أ)?دفع/.test(t)) return "";
-  const exp = /\b(expens\w*|spen[dt]\w*|spending|paid|pay(ments)?|costs?|purchases?|bought|outgoings?)\b|\bhow much (did|have) i (give|given|gave)\b/.test(t) || /(مصاريف|مصروف|صرفت|دفعت|اتصرف|اشتريت)/.test(t);
+  const exp = /\b(expens\w*|spen[dt]\w*|spending|paid|pay(ments)?|costs?|purchases?|bought|outgoings?)\b|\bhow much (did|have) i (give|given|gave)\b/.test(t) || /(مصاريف|مصروف|صرفت|دفعت|اتصرف|اشتريت|بصرف|باصرف|بدفع|بادفع)/.test(t);
   const inc = /\b(income|earn\w*|received|got paid|salary|revenue)\b/.test(t) || /(دخل|قبضت|كسبت|استلمت|مرتب|راتب)/.test(t);
   const bal = /\b(balance|how much (money )?(do )?i have|net)\b/.test(t) || /(رصيد|معايا كام|عندي كام)/.test(t);
   if (!exp && !inc && !bal) return "";
