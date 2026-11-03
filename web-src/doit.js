@@ -125,6 +125,9 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
     return a ? { actions: [], ask: a } : { actions: [], chat: true };
   }
   if (NOTE.test(t)) return { actions: [{ kind: "note", text: t.replace(NOTE, "").trim() || t }] };
+  // v9.0 (the full test run: the marble riddle — "an empty glass … the coffee table" — logged water and a coffee): a long sentence
+  // with no amount that doesn't say something was eaten or drunk is a question or a story for Chat, not something to log
+  if (!/\b(ate|eaten|eat|eating|breakfast|lunch|dinner|supper|snack|drank|drink|drinking)\b|اكلت|أكلت|كلت|فطرت|اتغديت|اتعشيت|فطار|غدا|عشا|شربت|بشرب/i.test(t) && !/[\d٠-٩]/.test(t) && t.split(/\s+/).filter(Boolean).length > 6) return { actions: [], chat: true };
   // v9.0 (the sentence bank: "buy me AirPods Pro 2 under 9000" was logged as 9,000 spent): a wish with a price limit is for an agent,
   // never money already spent
   if (/\b(under|below|less than|cheaper than|at most|max)\b|أقل من|اقل من|تحت|بحد أقصى/i.test(t) && /\b(buy me|get me|find me|tell me when|notify me|let me know when|alert me|watch)\b|اشتريلي|هاتلي|دورلي|نبهني|قولي لما|عرفني لما/i.test(t)) return { actions: [], chat: true };
@@ -256,6 +259,9 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   const today = isoDay(now);
   if (foods.length && FUTURE.test(t) && !EAT.test(t)) return { actions: [], chat: true };
   // v9.0 (the sentence bank: "give me tips to sleep better" was logged as butter): a request is never food eaten, unless it says so
+  // v9.0 (the full test run: the marble riddle's "coffee table" logged a coffee; «اوصف الونش في سطر» logged sugar): a long sentence
+  // that doesn't say it was eaten or drunk is never food
+  if (!EAT.test(t) && /^\s*(اوصف|أوصف|وصف|صف|عرفني|احكيلي|احكي لي|فهمني|ترجم|ترجملي|لخص|لخصلي)/.test(t)) return { actions: [], chat: true };
   if (!EAT.test(t) && /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|make|find|help|teach|list|plan|create|send|search|look up|notify|let me know|alert|remind|ask)\b|^\s*(اديني|إديني|ادّيني|قولي|اقترح|اقترحلي|اشرح|اشرحلي|اكتب|اكتبلي|اعملي|ساعدني|علمني|دورلي|هاتلي)/i.test(t)) return { actions: [], chat: true };
   if (foods.length && (EAT.test(t) || !money)) {
     // the eaten foods are counted; a price said with them ("80 pounds") is the money part

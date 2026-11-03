@@ -30,7 +30,15 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   never spending, a statement with an amount is not a spending question; clearer rules in the model's prompt.
 - More banks as tests: `v909times` (30 reminders, exact minute + repeat), `v910food` (meals read; everyday sentences never food),
   `v911moneyanswers` (10 money questions, exact sums, USD never mixed, the Egyptian week, custom categories by name).
-- Next areas for the same treatment: People & plans schedules (partial payments), Zakāt, Safe to spend, Agents' offer reading,
+- `v912plans`: People & plans numbers (partial payments re-spread, untick, overpay → 0) — found «أحمد عليه 12000 ألف كل شهر» read as
+  12 MILLION (a digit number ≥ 1,000 + «ألف» is now "12,000, a thousand a month") and "my sister will give me 2000 every month"
+  saved as a debt (now monthly income).
+- The full test run found a regression of the Chat → Home-reader change: the marble riddle ("an empty glass … the coffee table")
+  logged water + a coffee; «اوصف الونش في سطر» logged sugar («سطر» typo-fixed to «سكر»). doit.js: a long sentence (> 6 words)
+  with no amount and no clear eat/drink word is never logged; «اوصف / لخص / ترجم…» are requests. Both added to the bank.
+- `judge.mjs all` (the 9B model deciding all 310 alone, no rules): 89.9% — the rules + the model together: 100%. So the rules
+  stay first; the model only settles what the rules leave open.
+- Next areas for the same treatment: Zakāt, Safe to spend, Agents' offer reading,
   Scout's ad reading, translation, the photo readers.
 
 ## v9.0 part 6 — 2 Nov: launch plan, backup zip, the sentence bank (smarter Chat)

@@ -37,6 +37,9 @@ export function amountsIn(text, cur) {
     if (m[3]) { out.push({ value: /الفين|ألفين/.test(m[3]) ? 2000 : 1000, at: m.index }); continue; }
     let v = payNumber(m[1], cur); if (!isFinite(v)) continue;
     const u = (m[2] || "").toLowerCase();
+    // v9.0 (the plans bank: «أحمد عليه 12000 ألف كل شهر» became 12 million): an Arabic "thousand" after a number of 1,000 or more is
+    // a second amount — "12,000, a thousand a month" — nobody writes 12000 ألف for 12 million (that is «12 مليون»)
+    if (/^(الف|الاف|آلاف|ألف)$/.test(u) && v >= 1000) { out.push({ value: v, at: m.index }); out.push({ value: 1000, at: m.index + m[0].length - u.length }); continue; }
     if (/^(k|الف|الاف|آلاف|ألف|thousand|mil|mille|tausend|bin|ribu|rb)$/.test(u)) v *= 1000; else if (/^(مليون|million|m|millones|millions|millionen|milioni|milyon|juta)$/.test(u)) v *= 1e6;
     out.push({ value: v, at: m.index });
   }
@@ -237,7 +240,7 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
   }
   const dirIn = IN_.test(t) || IN_.test(raw) || IN_W.test(raw), dirOut = !dirIn && (OUT_.test(t) || OUT_.test(raw) || OUT_W.test(raw));
   // money owed between people: one sum (a debt) or paid in parts (installments)
-  if (person && dirIn && every && !count && amts.length === 1 && /\b(pays|gives|sends)\s+me\b|بيدفعلي|بتدفعلي|بيديني|بتديني|بيبعتلي|بتبعتلي/i.test(raw) && !/owes|عليه|عليها/.test(t))
+  if (person && dirIn && every && !count && amts.length === 1 && /\b(pays|gives|sends)\s+me\b|\b(will|is going to|gonna)\s+(pay|give|send)\s+me\b|بيدفعلي|بتدفعلي|بيديني|بتديني|بيبعتلي|بتبعتلي|هيديني|هتديني|هيدفعلي|هتدفعلي/i.test(raw) && !/owes|عليه|عليها/.test(t))
     return { ...base, kind: "regular", dir: "in", amount: amts[0], count: 0, total: 0, every, start: start || iso(new Date(now)), title: person, auto: true };
   if (person && (dirIn || dirOut)) {
     const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0;
