@@ -7327,6 +7327,8 @@ export const ES = {
   "Your work (e.g. crane company owner)": "Tu trabajo (p. ej., dueño de una empresa de grúas)",
   "Your area (for places and delivery)": "Tu zona (para lugares y entregas)",
   "Checking {i} of {n}: {d}": "Revisando {i} de {n}: {d}",
+  "Cheapest so far: {p} ({d})": "Lo más barato hasta ahora: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "Lo más barato de {n} fechas: {p} ({d}) — está marcado. Tócalo para reservar.",
   "Cheapest now: {p} ({d})": "Lo más barato ahora: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} noches entre {a} y {b}",
   "{s} stars only": "Solo {s} estrellas",

@@ -54,6 +54,18 @@ class AgentBrowser : Activity() {
     private var rounds = org.json.JSONArray()
     private var round = 0
     private var roundArmed = -1
+    // v9.1 (Ali, 3 Nov: "it keeps loading me to different dates and doesn't get the lowest price in the time span"): each day is
+    // read until its prices have drawn (not a fixed 8 s), the days next to the cheapest are checked too, and at the end the window
+    // stays on the cheapest day with its best offer marked — the person taps it
+    private var roundStart = 0L
+    private var pageRound = -1         // the day whose page is on screen now (the old day's page stays visible for a moment)
+    private var roundRead: JSONObject? = null
+    private var stableHits = 0
+    private var committed = -1
+    private var sweep = 0              // how many of the rounds are the first, evenly spread sweep
+    private var refined = false
+    private var finalMode = false
+    private var finalMarked = false
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
     private fun L(key: String, def: String) = labels.optString(key, def).ifBlank { def }
@@ -93,6 +105,8 @@ class AgentBrowser : Activity() {
 
         status = TextView(this).apply { setTextColor(mut); textSize = 12.5f; setPadding(dp(14), dp(8), dp(14), dp(2)); text = L("hint", "Attune marks the best offer and fills your details. You choose and pay.") }
         root.addView(status)
+        sweep = rounds.length()
+        rounds.optJSONObject(0)?.let { if (rounds.length() > 1) status.text = L("checking", "Checking {i} of {n}: {d}").replace("{i}", "1").replace("{n}", rounds.length().toString()).replace("{d}", dayLine(it)) }
 
         val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(10), dp(6), dp(10), dp(12)) }
         fun btn(label: String, primary: Boolean, onTap: () -> Unit) = TextView(this).apply {
@@ -154,17 +168,19 @@ class AgentBrowser : Activity() {
             override fun onReceivedError(v: WebView, req: WebResourceRequest, err: android.webkit.WebResourceError) {
                 if (req.isForMainFrame) status.text = L("loadFail", "This page didn't load — check the internet, or tap Done.")
             }
+            override fun onPageCommitVisible(v: WebView, u: String) { pageRound = round }
             override fun onPageFinished(v: WebView, u: String) {
+                pageRound = round
                 if (kit.isNotEmpty()) v.evaluateJavascript(kit, null)
                 // v8.0 Agents "Check now": a price watch reads the cheapest offer by itself once the results have drawn
-                if (watchMode) for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.best($rules)") }, ms)
+                if (watchMode && rounds.length() == 0) for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.best($rules)") }, ms)
                 // v8.2: a hotel window checks several start days in a row — each page closes itself once its prices are read
                 if (watchMode && autoClose && !autoArmed && rounds.length() == 0) { autoArmed = true; v.postDelayed({ if (!closed) finishWith("done") }, 11000L) }
-                // v8.7: the next start day in the same window, once this one's prices are read (about 8 s)
-                if (watchMode && rounds.length() > 0 && roundArmed != round) {
-                    roundArmed = round; val mine = round
-                    v.postDelayed({ if (!closed && round == mine) nextRound() }, 8000L)
-                }
+                // v9.1: read this start day again and again until its prices stand still, then the next one (v8.7 waited a fixed 8 s:
+                // a slow Booking page moved on before its prices showed)
+                // (armed by armRound() when the day's page is asked for, so a page that never finishes loading can't stop the check)
+                // the end: the cheapest day's page — its best offer is marked once (not again on the hotel page the person taps)
+                if (finalMode && !finalMarked) { finalMarked = true; for (ms in longArrayOf(3000L, 7000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.best($rules)") }, ms) }
                 // v8.6 buy agent, after the person's "Order it": Buy now (or Add to cart) on the product page, once; then the
                 // checkout pages get the person's details — the payment itself stays the person's (the kit never touches it)
                 if (buyMode) {
@@ -174,17 +190,93 @@ class AgentBrowser : Activity() {
             }
         }
         web.loadUrl(url)
+        if (watchMode) armRound()
+    }
+
+    private fun armRound() {
+        if (rounds.length() == 0 || finalMode || roundArmed == round) return
+        roundArmed = round; roundStart = System.currentTimeMillis(); roundRead = null; stableHits = 0
+        val mine = round; web.postDelayed({ tick(mine) }, 3000L)
+    }
+    private fun tick(mine: Int) {
+        if (closed || finalMode || round != mine) return
+        if (System.currentTimeMillis() - roundStart > 25000L) { commitRound(); nextRound(); return }   // a page that never shows prices
+        if (pageRound == round) {   // only this day's own page — never the last day's prices still on screen
+            if (kit.isNotEmpty()) web.evaluateJavascript(kit, null)   // the kit, if the page hasn't finished loading yet (it runs once per page)
+            run("window.__attuneAgent&&window.__attuneAgent.best($rules,true)")
+        }
+        web.postDelayed({ tick(mine) }, 2000L)
+    }
+    private fun dayLine(r: JSONObject) = r.optString("checkin") + (if (r.optString("checkout").isNotEmpty()) " → " + r.optString("checkout") else "")
+    private fun money(p: Double, c: String) = (c + " " + (if (p % 1.0 == 0.0) p.toLong().toString() else p.toString())).trim()
+
+    /** This start day's last reading becomes its result (once). */
+    private fun commitRound() {
+        if (committed == round) return
+        committed = round
+        val o = roundRead ?: return; val ri = roundInfo() ?: return
+        val n = o.optInt("offers"); if (n <= 0) return
+        result.put("offers", result.optInt("offers") + n)
+        val all = result.optJSONArray("top") ?: org.json.JSONArray()
+        o.optJSONArray("top")?.let { top -> for (k in 0 until top.length()) top.optJSONObject(k)?.let { all.put(it.put("checkin", ri.optString("checkin")).put("checkout", ri.optString("checkout")).put("url", ri.optString("url"))) } }
+        result.put("top", all)
+        val p = o.optDouble("price", 0.0)
+        if (p > 0) {
+            if (!result.has("price") || p < result.optDouble("price")) result.put("price", p).put("currency", o.optString("currency")).put("checkin", ri.optString("checkin")).put("checkout", ri.optString("checkout")).put("bestRound", round)
+        }
     }
 
     private fun nextRound() {
         round++
-        if (round >= rounds.length()) { finishWith("done"); return }
+        if (round >= rounds.length() && !refined) { refined = true; addNeighbours() }
+        if (round >= rounds.length()) { showBest(); return }
         val r = rounds.optJSONObject(round)
+        if (r == null) { showBest(); return }
+        var line = L("checking", "Checking {i} of {n}: {d}").replace("{i}", (round + 1).toString()).replace("{n}", rounds.length().toString()).replace("{d}", dayLine(r))
+        if (result.has("price")) line += "\n" + L("soFar", "Cheapest so far: {p} ({d})").replace("{p}", money(result.optDouble("price"), result.optString("currency"))).replace("{d}", result.optString("checkin") + " → " + result.optString("checkout"))
+        status.text = line
+        pageRound = -1
+        web.loadUrl(r.optString("url"))
+        armRound()
+    }
+
+    /** After the first sweep (up to 6 days spread over the window), the days between the cheapest one and its neighbours —
+     *  so the lowest price in the whole window isn't missed because it fell between two checked days. */
+    private fun addNeighbours() {
+        if (sweep < 2 || !result.has("bestRound")) return
+        val c = result.optInt("bestRound"); if (c >= sweep) return
+        val day = 86400000L
+        fun ms(iso: String) = try { java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.parse(iso)!!.time } catch (e: Exception) { -1L }
+        fun iso(t: Long) = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.format(java.util.Date(t))
+        val have = HashSet<String>(); for (i in 0 until rounds.length()) rounds.optJSONObject(i)?.let { have.add(it.optString("checkin")) }
+        val me = rounds.optJSONObject(c) ?: return
+        val ci = ms(me.optString("checkin")); val co = ms(me.optString("checkout")); if (ci < 0 || co <= ci) return
+        val nights = (co - ci) / day
+        for (j in intArrayOf(c - 1, c + 1)) {
+            val nb = rounds.optJSONObject(j) ?: continue; if (j >= sweep) continue
+            val t = ms(nb.optString("checkin")); if (t < 0) continue
+            val gap = Math.abs(t - ci) / day; if (gap < 2) continue
+            val mid = ci + (if (t > ci) 1 else -1) * (gap / 2) * day
+            val nci = iso(mid); if (!have.add(nci)) continue
+            val nco = iso(mid + nights * day)
+            val u = me.optString("url").replace("checkin=" + me.optString("checkin"), "checkin=$nci").replace("checkout=" + me.optString("checkout"), "checkout=$nco")
+            if (u == me.optString("url")) continue
+            rounds.put(JSONObject().put("checkin", nci).put("checkout", nco).put("url", u))
+        }
+    }
+
+    /** The end: the cheapest day's page, its best offer marked; the window stays open for the person (Done closes it). */
+    private fun showBest() {
+        val b = result.optInt("bestRound", -1)
+        val r = if (b >= 0) rounds.optJSONObject(b) else null
         if (r == null) { finishWith("done"); return }
-        status.text = L("checking", "Checking {i} of {n}: {d}").replace("{i}", (round + 1).toString()).replace("{n}", rounds.length().toString()).replace("{d}", r.optString("checkin"))
+        finalMode = true; round = b
+        status.setTextColor(Color.parseColor("#4FC2AF"))
+        status.text = L("cheapestAll", "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.").replace("{n}", rounds.length().toString())
+            .replace("{p}", money(result.optDouble("price"), result.optString("currency"))).replace("{d}", dayLine(r))
         web.loadUrl(r.optString("url"))
     }
-    private fun roundInfo(): JSONObject? = if (rounds.length() > 0) rounds.optJSONObject(round) else null
+    private fun roundInfo(): JSONObject? = if (rounds.length() > 0 && round < rounds.length()) rounds.optJSONObject(round) else null
 
     private fun run(code: String) { web.evaluateJavascript("(function(){try{$code}catch(e){}})()", null) }
 
@@ -195,7 +287,16 @@ class AgentBrowser : Activity() {
             val o = try { JSONObject(json) } catch (e: Exception) { return }
             runOnUiThread {
                 when (o.optString("kind")) {
-                    "best" -> {
+                    "best" -> if (rounds.length() > 0 && !finalMode) {
+                        // v9.1: a hotel round's reading — kept until the prices stop changing (same count twice), then the next day
+                        if (!o.optBoolean("quiet")) return@runOnUiThread
+                        val n = o.optInt("offers")
+                        stableHits = if (n > 0 && roundRead?.optInt("offers") == n && roundRead?.optDouble("price") == o.optDouble("price")) stableHits + 1 else 0
+                        roundRead = o
+                        if (stableHits >= 1 && System.currentTimeMillis() - roundStart >= 6000L) { val mine = round; commitRound(); web.postDelayed({ if (!closed && round == mine) nextRound() }, 300L) }
+                    } else if (finalMode) {
+                        // the end screen: the cheapest day's offer is marked; its line ("Cheapest of 6 dates…") stays, nothing is counted twice
+                    } else {
                         val n = o.optInt("offers"); val ri = roundInfo()
                         result.put("offers", if (ri != null) result.optInt("offers") + n else n)
                         o.optJSONArray("top")?.let { top ->

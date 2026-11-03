@@ -23,20 +23,34 @@
   };
   const priceIn = (text) => { const m = PRICE.exec(text); if (!m) return null; const v = num(m[2] || m[3]); return v > 0 && v < 1e8 ? { price: v, currency: (m[1] || m[4] || "").trim() } : null; };
 
+  const TAXLINE = /tax|fee|charge|original price|was\b|save\b|off\b|discount|deposit|ضريب|رسوم|خصم|وفر|السعر الأصلي|impuesto|cargo|taxe|frais|steuer|gebühr|vergi|ücret|pajak|biaya/i;
   // ---- offers: the smallest block that holds one price, and a time or a name ----------------------------------------------------
   function offers() {
-    const found = [], seen = new Set();
+    const found = [], seen = new Set(), leaves = [];
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     let n;
+    // pass 1: the text that is a real price (not a total / tax / old / crossed-out one)
     while ((n = walker.nextNode())) {
       const t = n.nodeValue; if (!t || t.length > 80 || !PRICE.test(t)) continue;
       const leaf = n.parentElement; if (!leaf || !visible(leaf)) continue;
       if (/total|subtotal|tax|fee|was|from$|old|strike|crossed|ancien|antes|vorher|prima/i.test(leaf.className + " " + (leaf.getAttribute("aria-label") || "")) || leaf.closest("s,del,strike")) continue;
-      // climb to the card: the first ancestor that has other text (times, names) but only ONE price
+      // v9.1 (Ali, 3 Nov: the hotel check didn't find the lowest price): "+EGP 1,234 taxes and charges", "Original price", "Save
+      // EGP 500" and a crossed-out price (drawn with CSS, not <s>) are not an offer — they read as the cheapest one
+      if (TAXLINE.test(t)) continue;
+      try { if (/line-through/.test(getComputedStyle(leaf).textDecorationLine || getComputedStyle(leaf).textDecoration || "")) continue; } catch (e) {}
+      leaves.push([leaf, t]);
+      if (leaves.length >= 200) break;
+    }
+    const isLeaf = new Set(leaves.map((x) => x[0]));
+    for (const [leaf, t] of leaves) {
+      // climb to the card: the first ancestor that has other text (times, names) but only ONE real price (v9.1: tax lines and old
+      // prices no longer count — a Booking card has three prices and stayed a bare number with no hotel name)
       let card = leaf;
       for (let i = 0; i < 8 && card.parentElement && card.parentElement !== document.body; i++) {
         const up = card.parentElement, txt = up.innerText || "";
-        if (txt.length > 900 || (txt.match(new RegExp(PRICE.source, "gu")) || []).length > 2) break;
+        if (txt.length > 900) break;
+        let k = 0; for (const el of up.querySelectorAll("*")) if (isLeaf.has(el) && ++k > 1) break;
+        if (k > 1) break;
         card = up;
       }
       if (seen.has(card)) continue; seen.add(card);
@@ -56,10 +70,15 @@
     return list.slice().sort((a, b) => score(a) - score(b));
   }
   let mark = null;
-  function best(r) {
+  function best(r, quiet) {
     const list = offers();
     if (!list.length) { report({ kind: "best", offers: 0 }); return { offers: 0 }; }
     const top = rank(list, r)[0];
+    // v9.1: a quiet read (the hotel check reads a page several times while it loads) doesn't move the page under the person
+    if (quiet) { const nameQ = (o) => String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
+      const hrefQ = (o) => { const a = o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
+      const outQ = { kind: "best", quiet: true, offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: rank(list, r).slice(0, 3).map((o) => ({ price: o.price, currency: o.currency, name: nameQ(o), text: o.text.slice(0, 200), href: hrefQ(o) })) };
+      report(outQ); return outQ; }
     if (mark) { mark.style.outline = mark.__o || ""; }
     mark = top.el; mark.__o = mark.style.outline; mark.style.outline = "3px solid #0F7B6C"; mark.style.outlineOffset = "2px";
     try { mark.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}

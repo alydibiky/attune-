@@ -7362,6 +7362,8 @@ export const AR = {
   "Your work (e.g. crane company owner)": "شغلك (مثلاً صاحب شركة ونش)",
   "Your area (for places and delivery)": "منطقتك (للأماكن والتوصيل)",
   "Checking {i} of {n}: {d}": "بدوّر في {i} من {n}: {d}",
+  "Cheapest so far: {p} ({d})": "أرخص لحد دلوقتي: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "أرخص سعر في {n} تواريخ: {p} ({d}) — معلّم عليه. دوس عليه عشان تحجز.",
   "Cheapest now: {p} ({d})": "الأرخص دلوقتي: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} ليالي بين {a} و{b}",
   "{s} stars only": "{s} نجوم بس",

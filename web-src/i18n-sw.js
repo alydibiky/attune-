@@ -7326,6 +7326,8 @@ export const SW = {
   "Your work (e.g. crane company owner)": "Kazi yako (mf. mmiliki wa kampuni ya kreni)",
   "Your area (for places and delivery)": "Eneo lako (kwa maeneo na usafirishaji)",
   "Checking {i} of {n}: {d}": "Inakagua {i} kati ya {n}: {d}",
+  "Cheapest so far: {p} ({d})": "Bei nafuu zaidi hadi sasa: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "Bei nafuu zaidi kati ya tarehe {n}: {p} ({d}) — imewekwa alama. Gusa ili kuweka nafasi.",
   "Cheapest now: {p} ({d})": "Nafuu zaidi sasa: {p} ({d})",
   "{n} nights between {a} and {b}": "Usiku {n} kati ya {a} na {b}",
   "{s} stars only": "Nyota {s} tu",

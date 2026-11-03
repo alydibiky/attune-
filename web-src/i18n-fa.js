@@ -7325,6 +7325,8 @@ export const FA = {
   "Your work (e.g. crane company owner)": "کار شما (مثلاً صاحب شرکت جرثقیل)",
   "Your area (for places and delivery)": "محلهٔ شما (برای مکان‌ها و ارسال)",
   "Checking {i} of {n}: {d}": "در حال بررسی {i} از {n}: {d}",
+  "Cheapest so far: {p} ({d})": "ارزان‌ترین تا اینجا: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "ارزان‌ترین در {n} تاریخ: {p} ({d}) — علامت خورده است. برای رزرو رویش بزنید.",
   "Cheapest now: {p} ({d})": "ارزان‌ترین اکنون: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} شب بین {a} و {b}",
   "{s} stars only": "فقط {s} ستاره",

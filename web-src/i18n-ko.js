@@ -7325,6 +7325,8 @@ export const KO = {
   "Your work (e.g. crane company owner)": "내 일(예: 크레인 회사 대표)",
   "Your area (for places and delivery)": "내 지역(장소와 배달용)",
   "Checking {i} of {n}: {d}": "{n}개 중 {i}번째 확인 중: {d}",
+  "Cheapest so far: {p} ({d})": "지금까지 최저가: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "{n}개 날짜 중 최저가: {p} ({d}) — 표시해 두었어요. 탭해서 예약하세요.",
   "Cheapest now: {p} ({d})": "지금 최저가: {p}({d})",
   "{n} nights between {a} and {b}": "{a}에서 {b} 사이 {n}박",
   "{s} stars only": "{s}성급만",

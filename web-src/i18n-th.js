@@ -7325,6 +7325,8 @@ export const TH = {
   "Your work (e.g. crane company owner)": "งานของคุณ (เช่น เจ้าของบริษัทเครน)",
   "Your area (for places and delivery)": "ย่านของคุณ (สำหรับสถานที่และการจัดส่ง)",
   "Checking {i} of {n}: {d}": "กำลังตรวจ {i} จาก {n}: {d}",
+  "Cheapest so far: {p} ({d})": "ถูกที่สุดตอนนี้: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "ถูกที่สุดจาก {n} วันที่: {p} ({d}) — ทำเครื่องหมายไว้แล้ว แตะเพื่อจอง",
   "Cheapest now: {p} ({d})": "ถูกที่สุดตอนนี้: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} คืน ระหว่าง {a} ถึง {b}",
   "{s} stars only": "เฉพาะ {s} ดาว",

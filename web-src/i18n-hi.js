@@ -7326,6 +7326,8 @@ export const HI = {
   "Your work (e.g. crane company owner)": "आपका काम (जैसे क्रेन कंपनी के मालिक)",
   "Your area (for places and delivery)": "आपका इलाका (जगहों और डिलीवरी के लिए)",
   "Checking {i} of {n}: {d}": "{n} में से {i} की जाँच हो रही है: {d}",
+  "Cheapest so far: {p} ({d})": "अब तक सबसे सस्ता: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "{n} तारीख़ों में सबसे सस्ता: {p} ({d}) — इसे चिह्नित किया गया है। बुक करने के लिए टैप करें।",
   "Cheapest now: {p} ({d})": "अभी सबसे सस्ता: {p} ({d})",
   "{n} nights between {a} and {b}": "{a} और {b} के बीच {n} रातें",
   "{s} stars only": "सिर्फ़ {s} स्टार",

@@ -7326,6 +7326,8 @@ export const IT = {
   "Your work (e.g. crane company owner)": "Il tuo lavoro (es. titolare di un'impresa di gru)",
   "Your area (for places and delivery)": "La tua zona (per luoghi e consegne)",
   "Checking {i} of {n}: {d}": "Controllo {i} di {n}: {d}",
+  "Cheapest so far: {p} ({d})": "Il più economico finora: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "Il più economico su {n} date: {p} ({d}) — è evidenziato. Toccalo per prenotare.",
   "Cheapest now: {p} ({d})": "Più economico ora: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} notti tra {a} e {b}",
   "{s} stars only": "Solo {s} stelle",

@@ -16,6 +16,16 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.0 part 9 — 3 Nov: Ali's screenshot "Checking 2 of 6 — it keeps loading different dates and doesn't get the lowest price"
+- `AgentBrowser.kt`: a hotel window's start days are read until their prices stand still (same count + price twice, 6–25 s) — v8.7
+  moved on after a fixed 8 s, before Booking had drawn its prices. Only the new day's own page is read (`pageRound`), never the last
+  day's still on screen. After the sweep (up to 6 days), the days between the cheapest and its neighbours are checked too; at the end
+  the window STAYS on the cheapest day with its best offer marked ("Cheapest of 8 dates: … — tap it to book"); Done closes it.
+  The status line shows both dates and "Cheapest so far".
+- `agent-kit.js`: "+EGP 4,120 taxes and charges", "Original price", "Save EGP 5,000" and CSS crossed-out prices are no longer offers
+  (one was read as the cheapest); the card search counts only real prices, so a Booking card keeps its hotel name. Quiet reads don't
+  scroll. Test: `tests/e2e_v727agentkit.py` (Makkah hotels page). 2 new lines × 20 languages.
+
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),
   the same notification updated kept once; then MessageWatch (alerts), ChatInbox, Recall, AutoRules.

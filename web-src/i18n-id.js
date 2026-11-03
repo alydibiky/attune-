@@ -7326,6 +7326,8 @@ export const IDN = {
   "Your work (e.g. crane company owner)": "Pekerjaan Anda (mis. pemilik perusahaan derek)",
   "Your area (for places and delivery)": "Area Anda (untuk lokasi dan pesan antar)",
   "Checking {i} of {n}: {d}": "Memeriksa {i} dari {n}: {d}",
+  "Cheapest so far: {p} ({d})": "Termurah sejauh ini: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "Termurah dari {n} tanggal: {p} ({d}) — sudah ditandai. Ketuk untuk memesan.",
   "Cheapest now: {p} ({d})": "Termurah saat ini: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} malam antara {a} dan {b}",
   "{s} stars only": "Hanya bintang {s}",

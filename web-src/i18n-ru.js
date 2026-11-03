@@ -7325,6 +7325,8 @@ export const RU = {
   "Your work (e.g. crane company owner)": "Ваша работа (например, владелец крановой компании)",
   "Your area (for places and delivery)": "Ваш район (для мест и доставки)",
   "Checking {i} of {n}: {d}": "Проверяю {i} из {n}: {d}",
+  "Cheapest so far: {p} ({d})": "Самое дешёвое пока: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "Самое дешёвое из {n} дат: {p} ({d}) — отмечено. Нажмите, чтобы забронировать.",
   "Cheapest now: {p} ({d})": "Сейчас дешевле всего: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} ночей между {a} и {b}",
   "{s} stars only": "Только {s} звезды",

@@ -59,5 +59,16 @@ with sync_playwright() as p:
     r = page.evaluate("window.__attuneAgent.buy()"); page.wait_for_timeout(700); page.evaluate("window.__attuneAgent.buy()"); page.wait_for_timeout(600)
     check(r["clicked"] == "Buy Now" and page.evaluate("window.__bn") == 1, "Buy now pressed once (not twice): %s" % r)
     check(not page.evaluate("window.__po") and not page.evaluate("window.__pay") and not page.evaluate("window.__cart"), "Place order / Pay are never pressed — the person pays")
+    # v9.1 (Ali, 3 Nov, Booking hotels near Masjid al-Haram: the check didn't find the lowest price): a "taxes and charges" line,
+    # "Original price" and a crossed-out price drawn with CSS are NOT offers; a quiet read (while the page loads) doesn't move the page
+    page.set_content("""<html><body><div style="height:1500px">search form</div>
+<div class=h><b>Swissotel Makkah</b> <span style="text-decoration:line-through">EGP 61,000</span> <span>EGP 52,400</span> <div>+EGP 4,120 taxes and charges</div></div>
+<div class=h><b>Pullman ZamZam Makkah</b> <span>Original price EGP 70,000</span> <span>EGP 48,900</span> <div>+EGP 3,900 taxes and fees</div></div>
+<div class=h><b>Fairmont Makkah Clock Royal Tower</b> <span>EGP 66,300</span> <div>Save EGP 5,000</div></div></body></html>""")
+    page.add_script_tag(path=KIT)
+    r = page.evaluate("window.__attuneAgent.best({cheapest:true}, true)")
+    check(r["price"] == 48900 and "Pullman" in r["text"], "hotels: the cheapest is Pullman 48,900 — not a 'taxes and charges' line or a crossed-out price: %s" % r.get("price"))
+    check(sorted(o["price"] for o in page.evaluate("window.__attuneAgent.offers()")) == [48900, 52400, 66300], "only the three real prices are offers")
+    check(r.get("quiet") is True and page.evaluate("scrollY") == 0, "a quiet read doesn't scroll the page")
     br.close()
 finish()

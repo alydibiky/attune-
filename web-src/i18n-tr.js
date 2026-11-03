@@ -7327,6 +7327,8 @@ export const TRK = {
   "Your work (e.g. crane company owner)": "İşin (örn. vinç şirketi sahibi)",
   "Your area (for places and delivery)": "Bölgen (mekânlar ve teslimat için)",
   "Checking {i} of {n}: {d}": "{i} / {n} kontrol ediliyor: {d}",
+  "Cheapest so far: {p} ({d})": "Şimdiye kadarki en ucuz: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "{n} tarih içinde en ucuz: {p} ({d}) — işaretlendi. Rezervasyon için dokunun.",
   "Cheapest now: {p} ({d})": "Şu an en ucuz: {p} ({d})",
   "{n} nights between {a} and {b}": "{a} ile {b} arasında {n} gece",
   "{s} stars only": "yalnızca {s} yıldız",

@@ -7325,6 +7325,8 @@ export const VI = {
   "Your work (e.g. crane company owner)": "Công việc của bạn (ví dụ chủ công ty cần cẩu)",
   "Your area (for places and delivery)": "Khu vực của bạn (cho địa điểm và giao hàng)",
   "Checking {i} of {n}: {d}": "Đang kiểm tra {i} / {n}: {d}",
+  "Cheapest so far: {p} ({d})": "Rẻ nhất đến giờ: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "Rẻ nhất trong {n} ngày: {p} ({d}) — đã được đánh dấu. Chạm để đặt.",
   "Cheapest now: {p} ({d})": "Rẻ nhất lúc này: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} đêm từ {a} đến {b}",
   "{s} stars only": "Chỉ {s} sao",

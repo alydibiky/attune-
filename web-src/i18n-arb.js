@@ -7311,6 +7311,8 @@ export const ARB = {
   "Your work (e.g. crane company owner)": "عملك (مثل: مالك شركة رافعات)",
   "Your area (for places and delivery)": "منطقتك (للأماكن وخدمات التوصيل)",
   "Checking {i} of {n}: {d}": "فحص {i} من {n}: {d}",
+  "Cheapest so far: {p} ({d})": "الأرخص حتى الآن: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "الأرخص بين {n} تواريخ: {p} ({d}) — تم تمييزه. اضغط عليه للحجز.",
   "Cheapest now: {p} ({d})": "أرخص سعر حاليًا: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} ليالٍ بين {a} و {b}",
   "{s} stars only": "{s} نجوم فقط",

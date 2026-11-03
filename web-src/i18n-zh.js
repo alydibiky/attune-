@@ -7325,6 +7325,8 @@ export const ZH = {
   "Your work (e.g. crane company owner)": "你的工作（例如 起重机公司老板）",
   "Your area (for places and delivery)": "你所在区域（用于地点和配送）",
   "Checking {i} of {n}: {d}": "正在检查 {i} / {n}：{d}",
+  "Cheapest so far: {p} ({d})": "目前最便宜：{p}（{d}）",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "{n} 个日期中最便宜：{p}（{d}）— 已标出。点按即可预订。",
   "Cheapest now: {p} ({d})": "当前最低：{p}（{d}）",
   "{n} nights between {a} and {b}": "{a} 至 {b} 之间的 {n} 晚",
   "{s} stars only": "仅 {s} 星",

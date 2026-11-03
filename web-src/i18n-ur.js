@@ -7326,6 +7326,8 @@ export const UR = {
   "Your work (e.g. crane company owner)": "آپ کا کام (مثلاً کرین کمپنی کا مالک)",
   "Your area (for places and delivery)": "آپ کا علاقہ (جگہوں اور ڈیلیوری کے لیے)",
   "Checking {i} of {n}: {d}": "{n} میں سے {i} چیک: {d}",
+  "Cheapest so far: {p} ({d})": "اب تک سب سے سستا: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "{n} تاریخوں میں سب سے سستا: {p} ({d}) — نشان لگا دیا گیا ہے۔ بک کرنے کے لیے ٹیپ کریں۔",
   "Cheapest now: {p} ({d})": "ابھی سب سے سستا: {p} ({d})",
   "{n} nights between {a} and {b}": "{a} اور {b} کے درمیان {n} راتیں",
   "{s} stars only": "صرف {s} ستارے",

@@ -7325,6 +7325,8 @@ export const JA = {
   "Your work (e.g. crane company owner)": "あなたの仕事（例：クレーン会社の経営者）",
   "Your area (for places and delivery)": "あなたの地域（場所や配達用）",
   "Checking {i} of {n}: {d}": "{n} 件中 {i} 件目を確認中：{d}",
+  "Cheapest so far: {p} ({d})": "今のところ最安：{p}（{d}）",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "{n} 件の日程で最安：{p}（{d}）— 印を付けました。タップして予約。",
   "Cheapest now: {p} ({d})": "現在の最安値：{p}（{d}）",
   "{n} nights between {a} and {b}": "{a} から {b} の間で {n} 泊",
   "{s} stars only": "{s} つ星のみ",

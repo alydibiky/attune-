@@ -7325,6 +7325,8 @@ export const BN = {
   "Your work (e.g. crane company owner)": "আপনার কাজ (যেমন ক্রেন কোম্পানির মালিক)",
   "Your area (for places and delivery)": "আপনার এলাকা (জায়গা ও ডেলিভারির জন্য)",
   "Checking {i} of {n}: {d}": "{n}-এর মধ্যে {i} যাচাই: {d}",
+  "Cheapest so far: {p} ({d})": "এখন পর্যন্ত সবচেয়ে সস্তা: {p} ({d})",
+  "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.": "{n}টি তারিখের মধ্যে সবচেয়ে সস্তা: {p} ({d}) — চিহ্নিত করা হয়েছে। বুক করতে ট্যাপ করুন।",
   "Cheapest now: {p} ({d})": "এখন সবচেয়ে সস্তা: {p} ({d})",
   "{n} nights between {a} and {b}": "{a} ও {b}-এর মধ্যে {n} রাত",
   "{s} stars only": "শুধু {s} তারকা",
