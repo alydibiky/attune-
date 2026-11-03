@@ -434,7 +434,7 @@ function titleFrom(text, kind, contact) {
     .replace(/(^|\s)(و)?(ال)?(حد|اتنين|تلات|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
     .replace(/(كل يوم|يوميا|بكرة|بكره|النهارده|الساعة [\d٠-٩]{1,2}([:.][\d٠-٩]{2})?( ونص| وربع| الا ربع)?|بعد [\d٠-٩]+ \S+|بالليل|الصبح|الضهر|العصر|المغرب|مساء|صباحا)/g, " ")
     // (persona 2: «ادفع الكهربا يوم ١٠», "on the 2nd" — the day of the month is the reminder's date, not its title)
-    .replace(/\bon the \d{1,2}(st|nd|rd|th)?\b|\bon \d{1,2}(st|nd|rd|th)\b|(^|\s)يوم [\d٠-٩]{1,2}(?=\s|$)/gi, " ")
+    .replace(/\bon the \d{1,2}(st|nd|rd|th)?\b|\bon \d{1,2}(st|nd|rd|th)\b|\bthe \d{1,2}(st|nd|rd|th)\b|(^|\s)يوم [\d٠-٩]{1,2}(?=\s|$)/gi, " ")
     .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "");
   s = cleanText(s, 60);
   if (!s && contact) s = (kind === "call" ? "Call " : "Message ") + contact;

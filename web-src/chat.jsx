@@ -893,7 +893,28 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // money in a few words, food eaten, water, weight, a dose, a debt paid back (doit.js). Reminders, plans and dates keep their cards.
     if (route && !img && api.doIt && api.doKinds && (!only || only === "money-log")) {
       const dk = api.doKinds(typed);
-      if (dk.length && dk.every((k) => DO_HERE.includes(k))) {
+      let doPick = "do";
+      // v9.1 (Ali, 3 Nov, picked A: "strong code, the small model chooses the meaning, and if it's unsure it asks me 2 or 3 options —
+      // as long as messages don't take time"): when the code is NOT sure of what it would record ("co 900", "ahmed 500"), what this
+      // shape of sentence was before is used at once; else the phone's model judges (3 s at most, it may say "unsure"); else — or
+      // with no model — the person picks on a card, and that pick is remembered for sentences of the same shape
+      if (dk.length && dk.every((k) => DO_HERE.includes(k)) && !o.doSure && api.doSure && !api.doSure(typed)) {
+        const want = dk.includes("food") ? "food-log" : "money-log", opts2 = [want, "chat", "unsure"];
+        let pick = UND.learnedKind(typed); if (pick !== want && pick !== "chat") pick = null;
+        if (!pick && api.aiReady && api.aiReady()) {
+          try { pick = UND.parseJudge(await Promise.race([api.run(UND.judgeMessages(typed, opts2), null, { maxTokens: 6, temperature: 0, think: false }), new Promise((res) => setTimeout(() => res(""), 3000))]), opts2); } catch (e) { pick = null; }
+          if (pick === want || pick === "chat") UND.learn(typed, pick); else pick = null;
+        }
+        if (pick === "chat") doPick = "chat";
+        else if (!pick) {
+          const cid = ensureChat(typed);
+          patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+            { id: newId(), role: "assistant", card: { tone: "emerald", title: "Which did you mean?", detail: "", actions: [[want === "food-log" ? "Log it as food" : "Record it in Money", "pick-do"], ["Answer it", "pick-chat"]] }, pickText: typed, pickKind: want }] }));
+          setText("");
+          return;
+        }
+      }
+      if (doPick === "do" && dk.length && dk.every((k) => DO_HERE.includes(k))) {
         const r = api.doIt(typed);
         if (r && r.lines && r.lines.length) {
           const OPEN = { money: "Open Money", fit: "Open Fit & Food", care: "Open Family health", life: "Open People & plans", family: "Open Family", cycle: "Open the calendar", planner: "Open the plan" };
@@ -2030,6 +2051,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
     else if (act.startsWith("open:")) window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: act.slice(5) } }));   // v6.28 Ask your life
     else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));
+    else if (act === "pick-do" || act === "pick-chat") {   // v9.1 "Which did you mean?" — remembered for this shape of sentence
+      const q = m.pickText || "", at = messages.findIndex((x) => x.id === m.id), hist = messages.slice(0, Math.max(0, at - 1));
+      UND.learn(q, act === "pick-do" ? (m.pickKind || "money-log") : "chat");
+      patchChat(chat.id, (c) => ({ ...c, messages: hist }));
+      setTimeout(() => ask(q, act === "pick-do" ? { history: hist, doSure: true } : { history: hist, noRoute: true }), 0);
+    }
     else if (act === "answer") {
       const at = messages.findIndex((x) => x.id === m.id);
       const u = messages[at - 1];

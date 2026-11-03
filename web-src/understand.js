@@ -20,6 +20,8 @@ export const KINDS = {
   deadline: "a date to keep track of: a bill due, a renewal, an expiry, an exam",
   life: "a plan with a person or money over time: a debt, an instalment, a regular payment, a gam'eya",
   calc: "a calculation to work out",
+  unsure: "it could really be either of the other labels — the person should choose",
+  "food-log": "record food or drink the person just had (e.g. 'koshary for lunch', '2 eggs and toast')",
   chat: "anything else: a question to answer or a conversation",
 };
 /** When no model can decide: doing beats looking up. */
@@ -126,6 +128,8 @@ export function signalsOf(text, flags = {}) {
 const shape = (text) => String(text || "").toLowerCase().replace(/[\d٠-٩۰-۹]+([.,][\d٠-٩۰-۹]+)?/g, "#").replace(/\s+/g, " ").trim().slice(0, 160);
 export const LEARN_KEY = "attune:understand:v1";
 export function loadLearned(ls = typeof localStorage !== "undefined" ? localStorage : null) { try { return JSON.parse((ls && ls.getItem(LEARN_KEY)) || "{}") || {}; } catch (e) { return {}; } }
+/** v9.1: what a sentence of this shape turned out to be before (the person's own pick or the model's), or null. */
+export function learnedKind(text, ls = typeof localStorage !== "undefined" ? localStorage : null) { return loadLearned(ls)[shape(text)] || null; }
 /** Remembers what a sentence of this shape turned out to be (the newest 300). */
 export function learn(text, kind, ls = typeof localStorage !== "undefined" ? localStorage : null) {
   if (!KINDS[kind]) return;

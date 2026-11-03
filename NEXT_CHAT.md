@@ -47,6 +47,13 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   rewritten into Arabic as Franco; (4) "Geely Galaxy M9 vs Lynk & Co 900" / "iPhone 16 vs Galaxy S25" logged as Galaxy chocolate;
   (5) a car's "range" read as an orange; a "Give me the rent…" in a 2nd sentence recorded as 2 expenses; (6) "Lynk and co 900"
   recorded as a 900 expense (a car maker + a number, no spending word → a question). e2e_v542 follows Chat's instant meal log.
+- **Ali picked A (3 Nov night): "strong code, the small model chooses the meaning, and if it's unsure it asks me"** — doit.js
+  `doSure()`: a recording is SURE (instant, as before) with paid/spent/bought, a currency, a spending kind or paid service (lunch,
+  maid, fuel, البواب…), ate/drank/a meal, or a sentence that is only food. UNSURE ("ahmed 500", "co 900") → chat.jsx: what this
+  shape was before (understand.js `learnedKind`) → else the phone's model judges (3 s max, labels money-log / food-log / chat /
+  unsure) → else, or with no model, a card "Which did you mean?" [Record it in Money | Log it as food] [Answer it]; the tap is
+  learned for the same shape (another amount too). Tests: unit v911unsure, e2e_v911unsure. 4 lines × 20 languages.
+  Also fixed: "remind me to pay electricity on the 10th" titled "pay electricity the 10th" (v860p2b, failing on main before).
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),

@@ -132,7 +132,7 @@ import { parseAgent, loadAgents, saveAgents, makeAgent } from "./agents.js";
 import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
 import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan, goldGram } from "./scout.js";
-import { understand as doUnderstand, apply as doApply } from "./doit.js";
+import { understand as doUnderstand, apply as doApply, doSure } from "./doit.js";
 import { PLAY_BUILD, NOT_IN_PLAY } from "./buildflags.js";
 import { morningReminder } from "./morning.js";
 import { photoKind, KIND_SAY } from "./smartcam.js";
@@ -9706,6 +9706,7 @@ export default function App() {
     // v9.0 (the sentence bank: "lunch 150" in Chat went to the AI): what the Home box does, Chat does too — money in a few words,
     // food eaten, water, weight, a dose, a debt paid back. Reminders, plans with people and dates keep Chat's own cards.
     readText: NATIVE && NATIVE.readText ? (b64) => nativeCall("readText", { b64 }) : null,   // v9.0 photo numbers check
+    doSure: (t) => { try { return doSure(t, { now: Date.now(), stores: loadLifeStores() }); } catch (e) { return true; } },
     doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
     doIt: (t) => { try { return doRef.current ? doRef.current(t) : null; } catch (e) { return null; } },
     whereYes: (set) => remember(W2.whereRecord(set)),

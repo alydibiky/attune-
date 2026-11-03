@@ -424,3 +424,30 @@ export function apply(a, stores, { now = Date.now() } = {}) {
   }
 }
 const toMin = (hm) => { const [h, m] = String(hm).split(":").map(Number); return h * 60 + (m || 0); };
+
+/** v9.1 (Ali, 3 Nov, picked A: "strong code, the small model chooses the meaning, and if it's unsure it asks me 2 or 3 options"):
+ *  is the code SURE of what it would record? Sure = the sentence carries a clear sign: paid / spent / bought, a currency or a
+ *  spending kind (lunch, maid, fuel…) for money; ate / drank / a meal for food — or every word of it is the food itself
+ *  ("koshary", "2 eggs and toast"). Unsure ("co 900", "stop, just say yes", "Geely Galaxy M9") → the model decides, then the person. */
+const FILL = new Set("a an the and of with plate plates piece pieces cup cups glass glasses bowl slice slices can cans bottle some little big small half one two three four five و طبق طبقين حتة حته كوباية كوبايه كوب نص شوية علبة".split(" "));
+const PAID_FOR = /\b(maid|nanny|driver|cleaner|cleaning|plumber|electrician|carpenter|painter|mechanic|tutor|teacher|lesson|barber|salon|laundry|tips?|gift|donation|charity|zakat|sadaqa|doorman|bawab|parking|tolls?|fine|repair|service)\b|خدامة|خدامه|شغالة|شغاله|دادة|سواق|سباك|كهربائي|كهربائى|نجار|نقاش|ميكانيكي|مدرس|درس|حلاق|كوافير|مكوجي|مكوجى|بواب|البواب|زكاة|زكاه|صدقة|صدقه|هدية|هديه|باركينج|جراج|غرامة|مخالفة|تصليح|صيانة/i;
+export function doSure(text, { now = Date.now(), stores = {} } = {}) {
+  const t = fixTypos(String(text || "").trim()); if (!t) return true;
+  let u; try { u = understand(text, { now, stores }); } catch (e) { return true; }
+  for (const a of u.actions || []) {
+    if (a.kind === "money") {
+      if (MONEY_VERB.test(t) || CURRENCY.test(t)) continue;
+      if ((a.items || []).every((x) => x.cat && x.cat !== "other")) continue;
+      if (PAID_FOR.test(t)) continue;
+      return false;
+    }
+    if (a.kind === "food") {
+      if (EAT.test(t) || MEAL_OF.some(([, re]) => re.test(t))) continue;
+      let rest = " " + t.toLowerCase().replace(/[,،.;!?؟]/g, " ") + " ";
+      for (const it of a.items || []) for (const w of String(it.said || "").toLowerCase().split(/\s+/)) if (w) rest = rest.replace(new RegExp("(^|\\s)" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?=\\s)", "g"), " ");
+      const left = rest.split(/\s+/).filter((w) => w && !/^[\d٠-٩.,]+[a-z]*$/.test(w) && !FILL.has(w));
+      if (left.length) return false;
+    }
+  }
+  return true;
+}
