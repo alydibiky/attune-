@@ -34,6 +34,13 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   lock) because Attune's own pages never load images from the internet (CSP img-src data: blob:); kept in `attune:agent-photos:v1`
   — on this phone only (SYNC_SKIP), never in the agent itself. Test: `tests/e2e_v830.py` (podium, list, photo, sheet, Next/Prev,
   Book). 7 new lines × 20 languages.
+- Then Ali: the podium "looks like a cartoon … I want it much more visually appealing". Showed 4 mock-ups (A hero + carousel,
+  B ranked list, C full-screen story card, A + C) — he picked **option 4, A + C**. Built (`Podium` / `OfferSheet` in agents-ui.jsx):
+  no medals or emojis; the cheapest hotel big on its photo with a frosted-glass panel (name, days, walk, price, a night, Book);
+  "Next best" photo cards scrolling sideways; a tap opens any of them full screen like a story (bars on top, Offer 1 of 10,
+  name, days · nights · walk · rating, price, "2,100 less than the next" / "… more than the cheapest", ‹ Book this offer ›,
+  swipe, Not this one). No photo → a calm colour field from the hotel's name. The card sits above the app's pop-ups (z-310).
+  7 more lines × 20 languages (2 of the podium's lines removed). Test: `tests/e2e_v830.py`.
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),

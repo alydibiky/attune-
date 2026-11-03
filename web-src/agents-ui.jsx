@@ -437,71 +437,85 @@ function BestFound({ a, small, openBest, skipBest }) {
   </div>;
 }
 
-/** v9.1 (Ali, 3 Nov, picked B: "display the best offer without opening Booking in a wonderful visual way … let me press Next"):
- *  the best 3 on a podium (gold in the middle, raised), each with its photo, price, days, walk and rating; the rest as a list under
- *  it; a tap opens the offer big, with Previous / Next through all of them and Book this offer (only then the site opens). */
-const MEDAL = ["🥇", "🥈", "🥉"];
+/** v9.1 (Ali, 3 Nov: the podium "looks like a cartoon … I want it much more visually appealing"; of 4 mock-ups he picked option 4,
+ *  "A + C together"): the cheapest hotel big — its photo with a frosted-glass panel (name, days, walk, price, Book) — and the next
+ *  ones as photo cards scrolling sideways; a tap on any of them opens it full screen like a story, with ‹ Book this offer › to go
+ *  through all of them (and a swipe). No emojis, no medals; Booking opens only on Book. */
+const glass = "bg-[rgba(16,18,19,.55)] backdrop-blur-xl border border-white/10 text-white";
+const pill = "text-[11px] font-semibold px-2.5 py-1 rounded-full " + glass;
+// no photo yet (offline, or the site had none): a calm blurred colour field, its colours from the hotel's name — never an emoji
+const tint = (s) => { let h = 0; for (const ch of String(s || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const a = h % 360, b = (a + 40) % 360;
+  return { background: `radial-gradient(120% 90% at 20% 30%, hsl(${a} 30% 52%) 0%, transparent 60%), radial-gradient(100% 80% at 85% 75%, hsl(${b} 28% 36%) 0%, transparent 65%), hsl(${a} 18% 20%)` }; };
 function Podium({ a, c, far, day, tv, openBest, skipBest }) {
   const [at, setAt] = useState(-1);
   const photos = useMemo(() => A.loadPhotos(a.id), [a.id, a.best3]);
   const rows = c.rows, w = rows[0], n = (v) => Math.round(v).toLocaleString("en-US");
-  const pic = (o, cls) => (photos[o.key] ? <img src={photos[o.key]} alt="" className={cls + " object-cover"} />
-    : <span className={cls + " grid place-items-center bg-[var(--c-soft)] text-[26px]"} aria-hidden="true">🏨</span>);
-  const sub = (r) => [r.o.checkin ? day(r.o) : "", r.f.dist != null ? far(r.f.dist) : "", r.f.rating != null ? "★ " + r.f.rating : ""].filter(Boolean).join(" · ");
-  const dates = a.tries && a.tries.length > 1 ? a.tries.length : 0;
-  return <div className="space-y-2.5" data-testid="agent-podium">
-    {dates ? <p className="m-0 text-[12px] c-sub" data-testid="agent-podium-head">{T("Best offers · {n} dates checked", { n: dates })} · {tr("Tap a hotel to see it")}</p> : null}
-    <div className="grid grid-cols-3 gap-1.5 items-end">
-      {rows.slice(0, 3).map((r, k) => <div key={k} className={"relative rounded-[16px] border overflow-hidden flex flex-col " + (k === 0 ? "order-2 border-2 border-[var(--c-acc)] shadow-[0_6px_18px_rgba(0,0,0,.12)]" : k === 1 ? "order-1 border-[var(--c-ln)]" : "order-3 border-[var(--c-ln)]")} data-testid="agent-best">
-        <button onClick={() => setAt(k)} className="text-start flex flex-col" aria-label={(r.o.name || a.site) + " · " + money(r.o.price, a.currency)} data-testid="agent-podium-open">
-          {pic(r.o, "w-full " + (k === 0 ? "h-[92px]" : "h-[70px]"))}
-          <span className="px-2 pt-1.5 pb-2 space-y-0.5 block">
-            <span className="block text-[15px] leading-none">{MEDAL[k]}</span>
-            <b className={"block tabular-nums " + (k === 0 ? "text-[15px] text-[var(--c-acc)]" : "text-[13px]")}>{money(r.o.price, a.currency)}</b>
-            <span className="block text-[12px] font-extrabold leading-tight line-clamp-2" dir="auto">{r.o.name || a.site}</span>
-            <span className="block text-[10.5px] c-sub leading-tight">{sub(r)}</span>
-            {k > 0 ? <span className="block text-[10.5px] c-sub leading-tight" data-testid="agent-trade">{c.trade[k - 1].filter((x) => !/^other days/.test(x[0])).map((x) => tr(x[0], tv(x))).join(" · ")}</span> : null}
-          </span>
-        </button>
-        <button onClick={() => skipBest(a, r.o)} className="absolute top-1 end-1 w-7 h-7 rounded-full grid place-items-center bg-black/45 text-white" aria-label={tr("Not this one")} data-testid="agent-best-skip"><X size={13} /></button>
-      </div>)}
+  const pic = (o, cls) => (photos[o.key] ? <img src={photos[o.key]} alt="" className={cls + " object-cover"} /> : <span className={cls + " block"} style={tint(o.name)} aria-hidden="true" />);
+  const dates = a.tries && a.tries.length > 1 ? a.tries.length : 0, f = a.fields || {};
+  return <div className="space-y-3" data-testid="agent-podium">
+    <div className="flex items-end justify-between gap-2" data-testid="agent-podium-head"><div className="min-w-0">
+      {f.city ? <p className="m-0 text-[10.5px] font-bold tracking-[0.16em] uppercase c-sub truncate" dir="auto">{String(f.city).split(",")[0]}{f.nights ? " · " + T("{n} nights", { n: f.nights }) : ""}</p> : null}
+      <p className="m-0 text-[20px] font-extrabold tracking-[-0.02em]">{T("{n} best offers", { n: rows.length })}</p></div>
+      {dates ? <span className="text-[12px] c-sub shrink-0">{T("{n} dates checked", { n: dates })}</span> : null}</div>
+    <div className="relative h-[300px] rounded-[26px] overflow-hidden" data-testid="agent-best">
+      <button onClick={() => setAt(0)} className="absolute inset-0 w-full" aria-label={(w.o.name || a.site) + " · " + money(w.o.price, a.currency)} data-testid="agent-podium-open">{pic(w.o, "absolute inset-0 w-full h-full")}</button>
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/50" />
+      <div className="pointer-events-none absolute top-3 inset-x-3 flex justify-between gap-2"><span className="flex flex-wrap gap-1" data-testid="agent-why">{(c.why.length ? c.why : [["Cheapest", {}]]).slice(0, 2).map(([t, v], k) => <span key={k} className={pill}>{tr(t, v)}</span>)}</span>
+        {w.f.rating != null ? <span className={pill + " shrink-0"}>★ {w.f.rating}</span> : null}</div>
+      <div className={"absolute inset-x-2.5 bottom-2.5 rounded-[20px] px-4 py-3 " + glass}>
+        <p className="m-0 text-[18px] font-bold tracking-[-0.01em] truncate" dir="auto">{w.o.name || a.site}</p>
+        <p className="m-0 text-[12px] text-white/70 truncate">{[w.o.checkin ? day(w.o) : "", w.f.dist != null ? T("{d} walk", { d: far(w.f.dist) }) : ""].filter(Boolean).join(" · ")}</p>
+        <div className="flex items-center justify-between gap-2 mt-2"><div className="min-w-0"><b className="block text-[24px] font-bold tabular-nums tracking-[-0.02em] leading-tight">{money(w.o.price, a.currency)}</b>
+          {w.f.perNight ? <span className="block text-[11.5px] text-white/65 tabular-nums">{money(w.f.perNight, a.currency)} {tr("a night")}</span> : null}</div>
+          <button onClick={() => openBest(a, w.o)} className="shrink-0 min-h-[44px] px-5 rounded-[14px] bg-[#F2F4F3] text-[#0B0D0E] text-[14px] font-bold" data-testid="agent-best-open">{tr("Book")}</button></div>
+      </div>
     </div>
-    {c.why.length ? <div className="flex flex-wrap gap-1 justify-center" data-testid="agent-why">{MEDAL[0]} {c.why.map(([t, v], k) => <span key={k} className={U.tag("green")}>{tr(t, v)}</span>)}</div> : null}
-    {rows.length > 3 ? <div className="rounded-[14px] border border-[var(--c-ln)] divide-y divide-[var(--c-ln)]" data-testid="agent-more-list">
-      {rows.slice(3).map((r, k) => <button key={k} onClick={() => setAt(k + 3)} className="w-full flex items-center gap-2 px-2 py-1.5 text-start min-h-[48px]" data-testid="agent-more">
-        <span className="w-6 text-center text-[12px] font-black c-sub tabular-nums">{k + 4}</span>
-        {pic(r.o, "w-11 h-11 rounded-[10px] shrink-0")}
-        <span className="min-w-0 flex-1"><span className="block text-[13px] font-extrabold truncate" dir="auto">{r.o.name || a.site}</span><span className="block text-[11px] c-sub truncate">{sub(r)}</span></span>
-        <span className="text-end shrink-0"><b className="block tabular-nums text-[13px]">{n(r.o.price)}</b><span className="block text-[10.5px] c-sub tabular-nums" dir="ltr">+{n(r.o.price - w.o.price)}</span></span>
-      </button>)}
-    </div> : null}
-    {at >= 0 && rows[at] ? <OfferSheet a={a} rows={rows} at={at} setAt={setAt} pic={pic} sub={sub} far={far} day={day} n={n} openBest={openBest} skipBest={skipBest} /> : null}
+    {rows.length > 1 ? <>
+      <div className="flex items-baseline justify-between px-0.5"><span className="text-[10.5px] font-bold tracking-[0.16em] uppercase c-sub">{tr("Next best")}</span>
+        <button onClick={() => setAt(1)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="agent-see-all">{tr("See all")}</button></div>
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory -mx-1 px-1 pb-1" style={{ scrollbarWidth: "none" }} data-testid="agent-more-list">
+        {rows.slice(1).map((r, k) => <button key={k} onClick={() => setAt(k + 1)} className="snap-start shrink-0 w-[160px] text-start" data-testid="agent-more">
+          <span className="relative block h-[112px] rounded-[18px] overflow-hidden">{pic(r.o, "absolute inset-0 w-full h-full")}<span className={pill + " absolute top-2 start-2"}>{k + 2}</span></span>
+          <span className="block pt-2 px-0.5"><span className="block text-[13.5px] font-semibold truncate" dir="auto">{r.o.name || a.site}</span>
+            <span className="block text-[11.5px] c-sub truncate">{[r.f.dist != null ? far(r.f.dist) : "", r.f.rating != null ? "★ " + r.f.rating : "", r.o.checkin && r.o.checkin !== w.o.checkin ? day(r.o) : ""].filter(Boolean).join(" · ")}</span>
+            <span className="block text-[14.5px] font-bold tabular-nums mt-0.5">{money(r.o.price, a.currency)} <span className="text-[11px] font-medium c-sub" data-testid="agent-trade">+{n(r.o.price - w.o.price)}</span></span></span>
+        </button>)}
+      </div></> : null}
+    {at >= 0 && rows[at] ? <OfferSheet a={a} rows={rows} at={at} setAt={setAt} pic={pic} far={far} day={day} n={n} openBest={openBest} skipBest={skipBest} /> : null}
   </div>;
 }
 
-/** One offer big: photo, name, every fact, and Previous / Next through all of them — Book this offer opens only that one. */
+/** One offer full screen, like a story: the photo, bars for where you are, name, days · walk · rating, price, ‹ Book this offer ›. */
 function OfferSheet({ a, rows, at, setAt, pic, day, far, n, openBest, skipBest }) {
-  const r = rows[at], w = rows[0];
-  useEffect(() => { const k = (e) => { if (e.key === "Escape") setAt(-1); if (e.key === "ArrowRight") setAt(Math.min(rows.length - 1, at + 1)); if (e.key === "ArrowLeft") setAt(Math.max(0, at - 1)); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, [at, rows.length]);
-  const facts = [[tr("Days"), r.o.checkin ? day(r.o) + (r.f.nights ? " · " + tr("{n} nights", { n: r.f.nights }) : "") : ""], [tr("A night"), r.f.perNight ? money(r.f.perNight, a.currency) : ""],
-    [tr("Walk"), r.f.dist != null ? far(r.f.dist) : ""], [tr("Rating"), r.f.rating != null ? "★ " + r.f.rating : ""]].filter((x) => x[1]);
-  const btn = "min-h-[44px] rounded-[12px] text-[13px] font-extrabold inline-flex items-center justify-center gap-1.5";
-  return <div className="fixed inset-0 z-50 bg-black/55 flex items-end sm:items-center justify-center" onClick={() => setAt(-1)} data-testid="agent-sheet">
-    <div className="w-full sm:max-w-[420px] max-h-[92vh] overflow-y-auto bg-[var(--c-bg)] rounded-t-[22px] sm:rounded-[22px] pb-3" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-      <div className="relative">{pic(r.o, "w-full h-[190px]")}
-        <span className="absolute top-2 start-2 px-2 py-1 rounded-full bg-black/55 text-white text-[12px] font-extrabold">{at < 3 ? MEDAL[at] + " " : ""}{T("Offer {i} of {n}", { i: at + 1, n: rows.length })}</span>
-        <button onClick={() => setAt(-1)} className="absolute top-2 end-2 w-9 h-9 rounded-full grid place-items-center bg-black/55 text-white" aria-label={tr("Close")} data-testid="agent-sheet-close"><X size={16} /></button></div>
-      <div className="px-4 pt-3 space-y-2">
-        <p className="m-0 text-[17px] font-black leading-snug" dir="auto" data-testid="agent-sheet-name">{r.o.name || a.site}</p>
-        <div className="flex items-baseline gap-2 flex-wrap"><b className="text-[24px] font-black tabular-nums text-[var(--c-acc)]" data-testid="agent-sheet-price">{money(r.o.price, a.currency)}</b>
-          {at > 0 ? <span className={U.tag("amber")} dir="ltr">+{n(r.o.price - w.o.price)}</span> : <span className={U.tag("green")}>{tr("Cheapest")}</span>}</div>
-        {facts.length ? <div className="grid grid-cols-2 gap-1.5">{facts.map(([l, v]) => <div key={l} className="rounded-[12px] bg-[var(--c-soft)] px-2.5 py-1.5"><span className="block text-[10.5px] c-sub font-bold">{l}</span><span className="block text-[13px] font-extrabold" dir="auto">{v}</span></div>)}</div> : null}
-        <button onClick={() => openBest(a, r.o)} className={btn + " w-full bg-[var(--c-acc)] text-[var(--c-on-acc)]"} data-testid="agent-sheet-book"><ExternalLink size={15} />{tr("Book this offer")}</button>
-        <div className="grid grid-cols-3 gap-1.5">
-          <button onClick={() => setAt(Math.max(0, at - 1))} disabled={at === 0} className={btn + " border border-[var(--c-ln)] disabled:opacity-35"} data-testid="agent-sheet-prev"><ArrowLeft size={15} className="rtl:rotate-180" />{tr("Previous")}</button>
-          <button onClick={() => { skipBest(a, r.o); setAt(-1); }} className={btn + " c-sub"} data-testid="agent-sheet-skip">{tr("Not this one")}</button>
-          <button onClick={() => setAt(Math.min(rows.length - 1, at + 1))} disabled={at >= rows.length - 1} className={btn + " border border-[var(--c-ln)] disabled:opacity-35"} data-testid="agent-sheet-next">{tr("Next")}<ChevronRight size={15} className="rtl:rotate-180" /></button>
+  const r = rows[at], w = rows[0], next = rows[at + 1];
+  const go = (d) => setAt(Math.max(0, Math.min(rows.length - 1, at + d)));
+  const rtl = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+  const [x0, setX0] = useState(null);
+  useEffect(() => { const k = (e) => { if (e.key === "Escape") setAt(-1); if (e.key === "ArrowRight") go(rtl ? -1 : 1); if (e.key === "ArrowLeft") go(rtl ? 1 : -1); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, [at, rows.length]);
+  const sub = [r.o.checkin ? day(r.o) + (r.f.nights ? " · " + T("{n} nights", { n: r.f.nights }) : "") : "", r.f.dist != null ? T("{d} walk", { d: far(r.f.dist) }) : "", r.f.rating != null ? "★ " + r.f.rating : ""].filter(Boolean).join(" · ");
+  const note = [r.f.perNight ? money(r.f.perNight, a.currency) + " " + tr("a night") : "", at === 0 ? (next ? T("{a} less than the next", { a: n(next.o.price - r.o.price) }) : "") : T("{a} more than the cheapest", { a: n(r.o.price - w.o.price) })].filter(Boolean).join(" · ");
+  const side = "w-[52px] min-h-[52px] rounded-[16px] grid place-items-center disabled:opacity-30 " + glass;
+  return <div className="fixed inset-0 z-[310] bg-black" data-testid="agent-sheet" role="dialog" aria-modal="true"
+    onTouchStart={(e) => setX0(e.touches[0].clientX)} onTouchEnd={(e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; setX0(null); if (Math.abs(dx) > 50) go((dx < 0) !== rtl ? 1 : -1); }}>
+    <div className="absolute inset-0 sm:inset-y-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-[420px] sm:rounded-[28px] overflow-hidden">
+      {pic(r.o, "absolute inset-0 w-full h-full")}
+      <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,0)_22%,rgba(0,0,0,0)_45%,rgba(8,9,10,.93)_80%)]" />
+      <div className="absolute top-0 inset-x-0 px-4 pt-[max(14px,env(safe-area-inset-top))]">
+        <div className="flex gap-1">{rows.map((_, k) => <i key={k} className={"flex-1 h-[2.5px] rounded-full " + (k === at ? "bg-white" : k < at ? "bg-white/70" : "bg-white/30")} />)}</div>
+        <div className="flex items-center justify-between mt-3"><span className={pill}>{T("Offer {i} of {n}", { i: at + 1, n: rows.length })}{at === 0 ? " · " + tr("Cheapest") : ""}</span>
+          <button onClick={() => setAt(-1)} className={"w-10 h-10 rounded-full grid place-items-center " + glass} aria-label={tr("Close")} data-testid="agent-sheet-close"><X size={17} /></button></div>
+      </div>
+      <div className="absolute inset-x-0 bottom-0 px-5 pb-[max(18px,env(safe-area-inset-bottom))] text-white">
+        <p className="m-0 text-[24px] font-bold tracking-[-0.02em] leading-tight" dir="auto" data-testid="agent-sheet-name">{r.o.name || a.site}</p>
+        {sub ? <p className="m-0 mt-1 text-[13px] text-white/70">{sub}</p> : null}
+        <b className="block mt-4 text-[32px] font-bold tabular-nums tracking-[-0.02em] leading-none" data-testid="agent-sheet-price">{money(r.o.price, a.currency)}</b>
+        {note ? <p className="m-0 mt-1.5 text-[12px] text-white/70 tabular-nums">{note}</p> : null}
+        <div className="grid grid-cols-[52px_1fr_52px] gap-2.5 mt-4">
+          <button onClick={() => go(-1)} disabled={at === 0} className={side} aria-label={tr("Previous")} data-testid="agent-sheet-prev"><ChevronRight size={20} className="rotate-180 rtl:rotate-0" /></button>
+          <button onClick={() => openBest(a, r.o)} className="min-h-[52px] rounded-[16px] bg-[#F2F4F3] text-[#0B0D0E] text-[15px] font-bold" data-testid="agent-sheet-book">{tr("Book this offer")}</button>
+          <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><ChevronRight size={20} className="rtl:rotate-180" /></button>
         </div>
+        <button onClick={() => { skipBest(a, r.o); setAt(-1); }} className="block mx-auto mt-2 min-h-[36px] px-3 text-[12.5px] text-white/60" data-testid="agent-sheet-skip">{tr("Not this one")}</button>
       </div>
     </div>
   </div>;

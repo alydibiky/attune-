@@ -77,17 +77,18 @@ with sync_playwright() as p:
     rounds = (opens[0].get("rounds") or []) if len(opens) == 1 else []
     check(len(opens) == 1 and len(rounds) == 6 and all("nflt=class%3D4%3Bclass%3D5" in r["url"] for r in rounds) and all(r.get("checkin") for r in rounds), "Check now reads each of the 6 start days with the stars filter, in one window (no flicker)")
     best = page.locator("[data-testid=agent-best]")
-    check(best.count() == 3 and "Swissotel" in best.nth(0).inner_text() and "41,800" in best.nth(0).inner_text(), "the best 3, cheapest first, one per hotel with its days: " + best.nth(0).inner_text()[:100].replace("\n", " · "))
+    check(best.count() == 1 and "Swissotel" in best.nth(0).inner_text() and "41,800" in best.nth(0).inner_text() and page.locator("[data-testid=agent-more]").count() == 4, "v9.1 option 4: the cheapest big, the other 4 hotels as cards (one per hotel, with its days): " + best.nth(0).inner_text()[:100].replace("\n", " · "))
     check("offers compared" in page.locator("[data-testid=agent-plan]").inner_text(), "the plan says how many offers were compared")
     # v8.7 (Ali picked "A and B in a smart way"): the winner with why, the others with what they trade, a table on a tap
     check("Cheapest" in page.inner_text("[data-testid=agent-why]") and "150 m" in best.nth(0).inner_text(), "the winner says why it wins (Cheapest) and how far it is")
-    check(page.locator("[data-testid=agent-trade]").count() == 2 and "+" in page.locator("[data-testid=agent-trade]").first.inner_text(), "each other one says what it costs more: " + page.locator("[data-testid=agent-trade]").first.inner_text())
+    check(page.locator("[data-testid=agent-trade]").count() == 4 and "+" in page.locator("[data-testid=agent-trade]").first.inner_text(), "each other one says what it costs more: " + page.locator("[data-testid=agent-trade]").first.inner_text())
     page.click("[data-testid=agent-compare]"); page.wait_for_timeout(150)
     tb = page.locator("[data-testid=agent-compare-table]")
     check(tb.count() == 1 and "Swissotel" in tb.inner_text() and "Walk" in tb.inner_text() and "Rating" in tb.inner_text(), "Compare side by side: total, a night, days, walk, rating")
     page.click("[data-testid=agent-compare]"); page.wait_for_timeout(150)
     # v9.1 (Ali picked B, 3 Nov: "display the best offer without opening Booking … let me press Next"): podium + list + one offer big
-    check(page.locator("[data-testid=agent-more]").count() == 2 and "Pullman" in page.locator("[data-testid=agent-more]").nth(0).inner_text(), "the 4th and 5th offers are listed under the podium")
+    check("Hilton" in page.locator("[data-testid=agent-more]").nth(0).inner_text() and "Pullman" in page.locator("[data-testid=agent-more]").nth(2).inner_text(), "Next best: the 2nd, 3rd, 4th… in order, scrolling sideways")
+    check("🥇" not in page.inner_text("[data-testid=agent-podium]"), "no medals / emojis (Ali: it looked like a cartoon)")
     check(best.nth(0).locator("img").count() == 1 and best.nth(0).locator("img").get_attribute("src").startswith("data:image/png"), "the winner shows its hotel photo (kept on the phone, as data)")
     check("data:image" not in page.evaluate("localStorage.getItem('attune:agents:v1')") and "data:image" in (page.evaluate("localStorage.getItem('attune:agent-photos:v1')") or ""), "the photos are kept apart from the agent (and never synced: SYNC_SKIP)")
     n_open = len(page.evaluate("window.__opens"))
@@ -105,8 +106,9 @@ with sync_playwright() as p:
     shot(page, "v910-sheet")
     page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(100)
     shot(page, "v910-podium")
-    best.nth(0).locator("[data-testid=agent-best-skip]").click(); page.wait_for_timeout(200)
-    check(page.locator("[data-testid=agent-best]").count() == 3 and "Swissotel" not in page.locator("[data-testid=agent-best3]").inner_text(), "Not this one takes it off (the next one moves up)")
+    best.nth(0).locator("[data-testid=agent-podium-open]").click(); page.wait_for_selector("[data-testid=agent-sheet]", timeout=3000)
+    page.click("[data-testid=agent-sheet-skip]"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=agent-more]").count() == 3 and "Hilton" in best.nth(0).inner_text() and "Swissotel" not in page.locator("[data-testid=agent-best3]").inner_text(), "Not this one takes it off (the next one moves up to the top)")
     shot(page, "v830-agent")
 
     # ---- 3A the Library ----
