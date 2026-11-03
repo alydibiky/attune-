@@ -818,7 +818,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const flags = { action: !!(api.looksLikeAction && api.looksLikeAction(typed)), "money-log": !!((pay0 && pay0.ok) || dk.some((k) => DO_HERE.includes(k))) && !/[?؟]\s*$/.test(typed), "money-ask": !!myMoneyIntent(typed),
         calc: !!looksLikeCalc(typed), agent: !!agentCard(typed, { now: Date.now(), order: dateOrder(), inApp: !!(NATIVE && NATIVE.agentOpen) }),
         deadline: !!chatDeadlineIntent(typed, { now: Date.now(), home: homeCurrency(), order: dateOrder() }), life: !!chatLifeIntent(typed) };
-      try { only = (await UND.referee(typed, flags, { ask: api.canUseAI() ? (m) => api.run(m, null, { maxTokens: 6, temperature: 0, think: false }) : null })).kind; } catch (e) { only = null; }
+      // v9.1 (13 browser tests, 3 Nov): only a QUIET check here — canUseAI() opens Engine with "Load a model first" when no model
+      // is loaded, so with no model a plain "book me a flight" opened Engine instead of answering; without a model the referee
+      // uses the code's own pick
+      try { only = (await UND.referee(typed, flags, { ask: (api.aiReady ? api.aiReady() : false) ? (m) => api.run(m, null, { maxTokens: 6, temperature: 0, think: false }) : null })).kind; } catch (e) { only = null; }
     }
     const ok = (k) => !only || only === k;
 

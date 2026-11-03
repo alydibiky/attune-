@@ -9721,7 +9721,7 @@ export default function App() {
       return { title: r.title, detail: r.detail, undo: () => setCycle(cycleSave(before)) };
     },
     parsePayment: (t) => parsePayment(t, { now: Date.now(), ...payOpts() }),
-    canUseAI, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
+    canUseAI, aiReady: willRunLocal, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
     webOn,
     toggleWeb: () => {   // On / Off; while Off, Auto (a setting, on by default) still searches when a question needs fresh facts
       if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; }
