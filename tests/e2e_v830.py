@@ -15,7 +15,9 @@ def go(page, mode, sel):
 AGENT = """(() => { const N = window.AttuneNative; N.agentWatchPlan = () => 'ok'; N.agentWatchTake = () => '{}'; N.appsList = () => '[]';
   let k = 0;
   N.agentOpen = (id, arg) => { const a = JSON.parse(arg); window.__opens = (window.__opens || []).concat([a]); const i = k++;
-    const top = [{ price: 41800 + i * 900, currency: 'EGP', name: 'Swissotel Makkah', text: 'Swissotel Makkah 150 m from Masjid al-Haram 9.1' },
+    const top = [{ price: 41800 + i * 900, currency: 'EGP', name: 'Swissotel Makkah', text: 'Swissotel Makkah 150 m from Masjid al-Haram 9.1', photo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' },
+                 { price: 47200, currency: 'EGP', name: 'Pullman ZamZam Makkah', text: 'Pullman ZamZam Makkah 200 m' },
+                 { price: 52300, currency: 'EGP', name: 'Fairmont Makkah Clock Royal Tower', text: 'Fairmont Makkah Clock Royal Tower 100 m 9.0' },
                  { price: 43900 + i * 300, currency: 'EGP', name: 'Hilton Suites Makkah', text: 'Hilton Suites Makkah 300 m' },
                  { price: 44600 - i * 10, currency: 'EGP', name: 'Al Safwah Royale Orchid', text: 'Al Safwah Royale Orchid 450 m' }];
     // v8.7: one window reads every start day in turn (rounds) — each offer says which days it was for
@@ -84,8 +86,27 @@ with sync_playwright() as p:
     tb = page.locator("[data-testid=agent-compare-table]")
     check(tb.count() == 1 and "Swissotel" in tb.inner_text() and "Walk" in tb.inner_text() and "Rating" in tb.inner_text(), "Compare side by side: total, a night, days, walk, rating")
     page.click("[data-testid=agent-compare]"); page.wait_for_timeout(150)
+    # v9.1 (Ali picked B, 3 Nov: "display the best offer without opening Booking … let me press Next"): podium + list + one offer big
+    check(page.locator("[data-testid=agent-more]").count() == 2 and "Pullman" in page.locator("[data-testid=agent-more]").nth(0).inner_text(), "the 4th and 5th offers are listed under the podium")
+    check(best.nth(0).locator("img").count() == 1 and best.nth(0).locator("img").get_attribute("src").startswith("data:image/png"), "the winner shows its hotel photo (kept on the phone, as data)")
+    check("data:image" not in page.evaluate("localStorage.getItem('attune:agents:v1')") and "data:image" in (page.evaluate("localStorage.getItem('attune:agent-photos:v1')") or ""), "the photos are kept apart from the agent (and never synced: SYNC_SKIP)")
+    n_open = len(page.evaluate("window.__opens"))
+    best.nth(0).locator("[data-testid=agent-podium-open]").click(); page.wait_for_selector("[data-testid=agent-sheet]", timeout=3000)
+    check("Swissotel" in page.inner_text("[data-testid=agent-sheet-name]") and "1 of 5" in clean(page.inner_text("[data-testid=agent-sheet]")), "a tap opens the offer big: Offer 1 of 5")
+    check(len(page.evaluate("window.__opens")) == n_open, "…without opening Booking")
+    page.click("[data-testid=agent-sheet-next]"); page.wait_for_timeout(100)
+    check("Hilton" in page.inner_text("[data-testid=agent-sheet-name]") and "2 of 5" in clean(page.inner_text("[data-testid=agent-sheet]")), "Next shows the 2nd best, only when pressed")
+    page.click("[data-testid=agent-sheet-next]"); page.click("[data-testid=agent-sheet-next]"); page.wait_for_timeout(100)
+    check("Pullman" in page.inner_text("[data-testid=agent-sheet-name]"), "…and on to the list's offers")
+    page.click("[data-testid=agent-sheet-prev]"); page.wait_for_timeout(100)
+    check("3 of 5" in clean(page.inner_text("[data-testid=agent-sheet]")), "Previous goes back")
+    page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
+    check(len(page.evaluate("window.__opens")) == n_open + 1, "Book this offer opens only that one")
+    shot(page, "v910-sheet")
+    page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(100)
+    shot(page, "v910-podium")
     best.nth(0).locator("[data-testid=agent-best-skip]").click(); page.wait_for_timeout(200)
-    check(page.locator("[data-testid=agent-best]").count() == 2 and "Swissotel" not in page.locator("[data-testid=agent-best3]").inner_text(), "Not this one takes it off")
+    check(page.locator("[data-testid=agent-best]").count() == 3 and "Swissotel" not in page.locator("[data-testid=agent-best3]").inner_text(), "Not this one takes it off (the next one moves up)")
     shot(page, "v830-agent")
 
     # ---- 3A the Library ----

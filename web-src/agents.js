@@ -336,7 +336,7 @@ export function tasteNews(before = {}, after = {}) {
 }
 /** v8.2 (Ali picked 2A): every offer a round saw ([{ name, price, currency, text, checkin, checkout, url }]) → the best 3 by price, one
     per name (the cheapest days for that hotel), without the ones the person said "Not this one" to. */
-export function bestThree(offers, skip = [], taste = null) {
+export function bestThree(offers, skip = [], taste = null, n = 3) {
   const by = new Map();
   for (const o of offers || []) {
     if (!(o && o.price > 0) || !fitsTaste(o, taste)) continue;
@@ -344,7 +344,18 @@ export function bestThree(offers, skip = [], taste = null) {
     if ((skip || []).includes(k)) continue;
     if (!by.has(k) || by.get(k).price > o.price) by.set(k, { ...o, key: k });
   }
-  return [...by.values()].sort((a, b) => a.price - b.price).slice(0, 3);
+  return [...by.values()].sort((a, b) => a.price - b.price).slice(0, n);
+}
+/** v9.1 (Ali picked B: a podium + list): the hotel photos the phone fetched for an agent's best offers, kept apart from the agent
+ *  (on this phone only — never synced, replaced on each check): { [agentId]: { [offerKey]: "data:image/jpeg;base64,…" } } */
+export const PHOTOS_KEY = "attune:agent-photos:v1";
+export function loadPhotos(id, s = typeof localStorage !== "undefined" ? localStorage : null) {
+  try { return (JSON.parse((s && s.getItem(PHOTOS_KEY)) || "{}") || {})[id] || {}; } catch (e) { return {}; }
+}
+export function savePhotos(id, list, s = typeof localStorage !== "undefined" ? localStorage : null) {
+  const mine = {}; for (const o of list || []) if (o && o.key && /^data:image\/(jpeg|png|webp);base64,/.test(o.photo || "")) mine[o.key] = o.photo;
+  try { const all = JSON.parse((s && s.getItem(PHOTOS_KEY)) || "{}") || {}; if (Object.keys(mine).length) all[id] = mine; else delete all[id]; s && s.setItem(PHOTOS_KEY, JSON.stringify(all)); } catch (e) {}
+  return (list || []).map(({ photo, img, ...o }) => o);   // the agent itself keeps no pictures
 }
 /** v8.7 (Ali picked "A and B in a smart way"): the best offers side by side — what each one is (total, a night, the days, how far,
  *  its rating), the best value of each row, why the first one wins, and what each other one trades ("+2,100 · rated 9.4").

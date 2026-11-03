@@ -25,6 +25,15 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
 - `agent-kit.js`: "+EGP 4,120 taxes and charges", "Original price", "Save EGP 5,000" and CSS crossed-out prices are no longer offers
   (one was read as the cheapest); the card search counts only real prices, so a Booking card keeps its hotel name. Quiet reads don't
   scroll. Test: `tests/e2e_v727agentkit.py` (Makkah hotels page). 2 new lines × 20 languages.
+- Then Ali: "display the best offer without opening Booking in a wonderful visual way … why does it jump, let me press Next" —
+  he picked **B (top-3 podium + list)** of 3 options. Built: while the days are checked an Attune screen ("Finding the best offers
+  for you…", progress bar, "Show the site") covers the website (it still loads underneath); the window then closes by itself and
+  the agent card shows the 3 best on a podium (gold in the middle, raised; photo, price, days, walk, rating, "+2,100") and offers
+  4–10 as a list; a tap opens one offer big with **Previous / Next** through all of them and **Book this offer** (only then the
+  site opens). Photos: AgentBrowser fetches the 10 cheapest offers' pictures (360 px JPEG, data URL; skipped under the Offline
+  lock) because Attune's own pages never load images from the internet (CSP img-src data: blob:); kept in `attune:agent-photos:v1`
+  — on this phone only (SYNC_SKIP), never in the agent itself. Test: `tests/e2e_v830.py` (podium, list, photo, sheet, Next/Prev,
+  Book). 7 new lines × 20 languages.
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),

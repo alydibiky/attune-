@@ -77,7 +77,8 @@
     // v9.1: a quiet read (the hotel check reads a page several times while it loads) doesn't move the page under the person
     if (quiet) { const nameQ = (o) => String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
       const hrefQ = (o) => { const a = o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
-      const outQ = { kind: "best", quiet: true, offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: rank(list, r).slice(0, 3).map((o) => ({ price: o.price, currency: o.currency, name: nameQ(o), text: o.text.slice(0, 200), href: hrefQ(o) })) };
+      const imgQ = (o) => { for (const im of o.el.querySelectorAll("img")) { const u = im.currentSrc || im.src || im.getAttribute("data-src") || ""; if (/^https:\/\//.test(u) && (im.naturalWidth || im.width || 99) >= 40) return u; } return ""; };
+      const outQ = { kind: "best", quiet: true, offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameQ(o), text: o.text.slice(0, 200), href: hrefQ(o), img: imgQ(o) })) };
       report(outQ); return outQ; }
     if (mark) { mark.style.outline = mark.__o || ""; }
     mark = top.el; mark.__o = mark.style.outline; mark.style.outline = "3px solid #0F7B6C"; mark.style.outlineOffset = "2px";
@@ -87,8 +88,9 @@
     // v8.6: each with its own link (the product page a buy agent opens after the person says "Order it"); a buy round asks for
     // more than 3 (r.many) so the closest match — not only the cheapest — can be picked
     const nameOf = (o) => String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
+    const imgOf = (o) => { for (const im of o.el.querySelectorAll("img")) { const u = im.currentSrc || im.src || im.getAttribute("data-src") || ""; if (/^https:\/\//.test(u) && (im.naturalWidth || im.width || 99) >= 40) return u; } return ""; };
     const hrefOf = (o) => { const a = o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
-    const top3 = rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameOf(o), text: o.text.slice(0, 200), href: hrefOf(o) }));
+    const top3 = rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameOf(o), text: o.text.slice(0, 200), href: hrefOf(o), img: imgOf(o) }));
     const out = { kind: "best", offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: top3, why: [r.cheapest !== false ? "cheapest" : "", r.direct ? "direct" : "", r.time || ""].filter(Boolean).join(", ") };
     report(out); return out;
   }

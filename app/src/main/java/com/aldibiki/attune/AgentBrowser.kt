@@ -65,7 +65,12 @@ class AgentBrowser : Activity() {
     private var sweep = 0              // how many of the rounds are the first, evenly spread sweep
     private var refined = false
     private var finalMode = false
-    private var finalMarked = false
+    // v9.1 (Ali picked B, 3 Nov: "display the best offer without opening Booking … why does it jump, let me press Next"): while
+    // the days are checked, an Attune screen covers the website (it still loads underneath — the prices are read from it); the
+    // offers come back to Attune as a podium + list with photos, and the person goes through them there
+    private var cover: LinearLayout? = null
+    private var coverLine: TextView? = null
+    private var coverBar: android.widget.ProgressBar? = null
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
     private fun L(key: String, def: String) = labels.optString(key, def).ifBlank { def }
@@ -101,12 +106,28 @@ class AgentBrowser : Activity() {
         progress = android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { max = 100; progress = 5; isIndeterminate = false }
         root.addView(progress, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(3)))
         web = WebView(this)
-        root.addView(web, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        val stage = android.widget.FrameLayout(this)
+        stage.addView(web, android.widget.FrameLayout.LayoutParams(android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT))
+        val hidden = watchMode && (try { org.json.JSONArray(intent.getStringExtra("rounds") ?: "").length() } catch (e: Exception) { 0 }) > 1
+        if (hidden) {
+            val c = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER; setBackgroundColor(bg); setPadding(dp(28), dp(28), dp(28), dp(28)); isClickable = true }
+            c.addView(TextView(this).apply { text = "🏨"; textSize = 44f; gravity = Gravity.CENTER })
+            c.addView(TextView(this).apply { text = L("finding", "Finding the best offers for you…"); setTextColor(ink); textSize = 19f; gravity = Gravity.CENTER; setPadding(0, dp(12), 0, dp(14)); typeface = android.graphics.Typeface.DEFAULT_BOLD })
+            val bar0 = android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { max = 1000; progress = 30; progressTintList = android.content.res.ColorStateList.valueOf(acc) }
+            c.addView(bar0, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(8)))
+            val line0 = TextView(this).apply { setTextColor(mut); textSize = 14f; gravity = Gravity.CENTER; setPadding(0, dp(14), 0, dp(18)) }
+            c.addView(line0)
+            c.addView(TextView(this).apply { text = L("showSite", "Show the site"); setTextColor(acc); textSize = 14f; gravity = Gravity.CENTER; setPadding(dp(16), dp(10), dp(16), dp(10))
+                setOnClickListener { cover?.visibility = android.view.View.GONE } })
+            stage.addView(c, android.widget.FrameLayout.LayoutParams(android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT))
+            cover = c; coverLine = line0; coverBar = bar0
+        }
+        root.addView(stage, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
 
         status = TextView(this).apply { setTextColor(mut); textSize = 12.5f; setPadding(dp(14), dp(8), dp(14), dp(2)); text = L("hint", "Attune marks the best offer and fills your details. You choose and pay.") }
         root.addView(status)
         sweep = rounds.length()
-        rounds.optJSONObject(0)?.let { if (rounds.length() > 1) status.text = L("checking", "Checking {i} of {n}: {d}").replace("{i}", "1").replace("{n}", rounds.length().toString()).replace("{d}", dayLine(it)) }
+        rounds.optJSONObject(0)?.let { if (rounds.length() > 1) say(L("checking", "Checking {i} of {n}: {d}").replace("{i}", "1").replace("{n}", rounds.length().toString()).replace("{d}", dayLine(it))) }
 
         val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(10), dp(6), dp(10), dp(12)) }
         fun btn(label: String, primary: Boolean, onTap: () -> Unit) = TextView(this).apply {
@@ -179,8 +200,6 @@ class AgentBrowser : Activity() {
                 // v9.1: read this start day again and again until its prices stand still, then the next one (v8.7 waited a fixed 8 s:
                 // a slow Booking page moved on before its prices showed)
                 // (armed by armRound() when the day's page is asked for, so a page that never finishes loading can't stop the check)
-                // the end: the cheapest day's page — its best offer is marked once (not again on the hotel page the person taps)
-                if (finalMode && !finalMarked) { finalMarked = true; for (ms in longArrayOf(3000L, 7000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.best($rules)") }, ms) }
                 // v8.6 buy agent, after the person's "Order it": Buy now (or Add to cart) on the product page, once; then the
                 // checkout pages get the person's details — the payment itself stays the person's (the kit never touches it)
                 if (buyMode) {
@@ -201,6 +220,7 @@ class AgentBrowser : Activity() {
     private fun tick(mine: Int) {
         if (closed || finalMode || round != mine) return
         if (System.currentTimeMillis() - roundStart > 25000L) { commitRound(); nextRound(); return }   // a page that never shows prices
+        coverBar?.let { b -> val part = Math.min(1.0, (System.currentTimeMillis() - roundStart) / 15000.0); b.progress = (((round + part) / Math.max(1, rounds.length())) * 1000).toInt().coerceIn(30, 990) }
         if (pageRound == round) {   // only this day's own page — never the last day's prices still on screen
             if (kit.isNotEmpty()) web.evaluateJavascript(kit, null)   // the kit, if the page hasn't finished loading yet (it runs once per page)
             run("window.__attuneAgent&&window.__attuneAgent.best($rules,true)")
@@ -234,7 +254,7 @@ class AgentBrowser : Activity() {
         if (r == null) { showBest(); return }
         var line = L("checking", "Checking {i} of {n}: {d}").replace("{i}", (round + 1).toString()).replace("{n}", rounds.length().toString()).replace("{d}", dayLine(r))
         if (result.has("price")) line += "\n" + L("soFar", "Cheapest so far: {p} ({d})").replace("{p}", money(result.optDouble("price"), result.optString("currency"))).replace("{d}", result.optString("checkin") + " → " + result.optString("checkout"))
-        status.text = line
+        say(line)
         pageRound = -1
         web.loadUrl(r.optString("url"))
         armRound()
@@ -265,16 +285,39 @@ class AgentBrowser : Activity() {
         }
     }
 
-    /** The end: the cheapest day's page, its best offer marked; the window stays open for the person (Done closes it). */
+    private fun say(line: String) { status.text = line; coverLine?.text = line }
+
+    /** The end (v9.1, Ali picked B): the offers go back to Attune, which shows them as a podium + list. The 10 cheapest get their
+     *  photo — fetched here (Attune's own pages never load pictures from the internet) and kept small inside the result. */
     private fun showBest() {
-        val b = result.optInt("bestRound", -1)
-        val r = if (b >= 0) rounds.optJSONObject(b) else null
-        if (r == null) { finishWith("done"); return }
-        finalMode = true; round = b
-        status.setTextColor(Color.parseColor("#4FC2AF"))
-        status.text = L("cheapestAll", "Cheapest of {n} dates: {p} ({d}) — it's marked. Tap it to book.").replace("{n}", rounds.length().toString())
-            .replace("{p}", money(result.optDouble("price"), result.optString("currency"))).replace("{d}", dayLine(r))
-        web.loadUrl(r.optString("url"))
+        finalMode = true
+        coverBar?.progress = 1000
+        val all = result.optJSONArray("top") ?: org.json.JSONArray()
+        val list = (0 until all.length()).mapNotNull { all.optJSONObject(it) }.filter { it.optDouble("price", 0.0) > 0 }.sortedBy { it.optDouble("price") }
+        val seenNames = HashSet<String>(); val pick = list.filter { val k = it.optString("name").lowercase().take(40); k.isNotEmpty() && seenNames.add(k) }.take(10)
+        for (k in 0 until all.length()) all.optJSONObject(k)?.let { if (!pick.contains(it)) it.remove("img") }
+        if (Prefs.airGapNow || pick.none { it.optString("img").startsWith("https://") }) { finishWith("done"); return }
+        Thread {
+            val until = System.currentTimeMillis() + 12000L
+            for (o in pick) {
+                val u = o.optString("img"); o.remove("img")
+                if (!u.startsWith("https://") || System.currentTimeMillis() > until || Prefs.airGapNow) continue
+                try { photo(u)?.let { o.put("photo", it) } } catch (e: Exception) {}
+            }
+            runOnUiThread { finishWith("done") }
+        }.start()
+    }
+    private fun photo(u: String): String? {
+        NetLog.add(u, "agent page")
+        val c = java.net.URL(u).openConnection() as java.net.HttpURLConnection
+        c.connectTimeout = 4000; c.readTimeout = 4000; c.instanceFollowRedirects = true
+        val bytes = try { c.inputStream.use { it.readBytes() } } finally { c.disconnect() }
+        if (bytes.size > 3_000_000) return null
+        val bm = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
+        val w = 360; val h = Math.max(1, bm.height * w / Math.max(1, bm.width))
+        val small = if (bm.width > w) android.graphics.Bitmap.createScaledBitmap(bm, w, h, true) else bm
+        val out = java.io.ByteArrayOutputStream(); small.compress(android.graphics.Bitmap.CompressFormat.JPEG, 72, out)
+        return "data:image/jpeg;base64," + android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP)
     }
     private fun roundInfo(): JSONObject? = if (rounds.length() > 0 && round < rounds.length()) rounds.optJSONObject(round) else null
 
@@ -295,7 +338,7 @@ class AgentBrowser : Activity() {
                         roundRead = o
                         if (stableHits >= 1 && System.currentTimeMillis() - roundStart >= 6000L) { val mine = round; commitRound(); web.postDelayed({ if (!closed && round == mine) nextRound() }, 300L) }
                     } else if (finalMode) {
-                        // the end screen: the cheapest day's offer is marked; its line ("Cheapest of 6 dates…") stays, nothing is counted twice
+                        // the photos are being fetched; nothing is counted twice
                     } else {
                         val n = o.optInt("offers"); val ri = roundInfo()
                         result.put("offers", if (ri != null) result.optInt("offers") + n else n)

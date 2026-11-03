@@ -24,7 +24,7 @@ export const proSearchReady = (c = CLOUD) => /^https:\/\/[^/\s]+/.test(String(c.
 const SYNC_KEY = "attune:sync:v1";        // { lastSync: ISO, device: id, remoteStamp: ISO } — never synced itself
 // v8.7: what Gmail gave (and the messages waiting for review) stays on the phone that read it — Google's free review of
 // gmail.readonly depends on email content never leaving the phone (docs/GMAIL_VERIFICATION.md); each phone reads Gmail itself
-export const SYNC_SKIP = [/^attune:sync:/, /^attune:vault:/, /^attune:dev$/, /^attune:testing-pro$/, /^attune:gmail:/, /^attune:sms-old:/];
+export const SYNC_SKIP = [/^attune:sync:/, /^attune:vault:/, /^attune:dev$/, /^attune:testing-pro$/, /^attune:gmail:/, /^attune:sms-old:/, /^attune:agent-photos:/];
 
 /** What to send: the backup's keys minus this phone's own settings that must not travel (sync state, the PIN vault, Gmail). */
 export function syncKeys(all) {
