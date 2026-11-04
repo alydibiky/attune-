@@ -180,3 +180,20 @@ export function brandOf(s) { const k = brandKey(s); if (k) return BRANDS[k]; con
 export const brandName = (k) => (BRANDS[k] ? BRANDS[k][0] : k);
 /** Is this "name" only the website (an offer read before the hotel's own name was found)? */
 export const isSiteName = (name, site = "") => { const n = String(name || "").trim(); return !n || n === site || /^(www\.)?[a-z0-9-]+\.[a-z.]{2,}$/i.test(n) || !!(brandKey(n) && fold(n).replace(/[^a-z]/g, "").length <= 14 && BRANDS[brandKey(n)] && fold(BRANDS[brandKey(n)][0]).replace(/[^a-z]/g, "") === fold(n).replace(/[^a-z]/g, "")); };
+
+/** v9.2 round 3 (Ali: "when it opens Booking it doesn't open the specific listing"): an offer read without its own link is searched by
+ *  ITS name on the same site (Booking ss=, Amazon k=, a q= search) with the same dates — that hotel / product first, not the whole list. */
+export function offerUrl(a, o) {
+  if (o && o.href && /^https:\/\//.test(o.href)) {
+    // a hotel's own page without the dates shows no price — the offer's days (and the search's guests) go into it
+    try { const u = new URL(o.href); if (o.checkin && o.checkout && /booking\.com|agoda\.|expedia\.|airbnb\./.test(u.hostname) && !u.searchParams.has("checkin") && !u.searchParams.has("checkIn")) {
+      u.searchParams.set("checkin", o.checkin); u.searchParams.set("checkout", o.checkout);
+      try { const g = new URL(a.url || "").searchParams.get("group_adults") || new URL(a.url || "").searchParams.get("adults"); if (g) u.searchParams.set(/airbnb/.test(u.hostname) ? "adults" : "group_adults", g); } catch (e) {}
+      return u.toString(); } } catch (e) {}
+    return o.href;
+  }
+  const base = (o && o.url) || a.url || "", name = o && o.name && !isSiteName(o.name, a.site) ? String(o.name) : "";
+  if (!name || !/^https:\/\//.test(base)) return base;
+  try { const u = new URL(base); for (const k of ["ss", "k", "q", "query", "search", "textToSearch"]) if (u.searchParams.has(k)) { u.searchParams.set(k, name); return u.toString(); } } catch (e) {}
+  return base;
+}

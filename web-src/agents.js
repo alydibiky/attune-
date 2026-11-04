@@ -402,7 +402,8 @@ export function planSteps(a, now = Date.now()) {
   else out.push({ done: !!last, en: "Checked on {site}", v: { site: a.site } });
   if (f.stars || f.near) out.push({ done: !!last, en: f.stars && f.near ? "only {s}★, within 1 km" : f.stars ? "only {s}★" : "within 1 km", v: { s: (f.stars || []).join("–") } });
   if (a.compared) out.push({ done: true, en: "{n} offers compared", v: { n: a.compared } });
-  const next = (last ? last.at : a.created) + 12 * 3600e3;
+  // v9.2 round 3: the agent's own rhythm ("check every 6 hours" — its rules), and never "Invalid Date" for an agent with no start time
+  const next = ((last && last.at) || a.created || now) + ((a.rules && a.rules.hours) || 12) * 3600e3;
   out.push({ done: false, en: next <= now ? "next check: now — tap Check now" : "next check about {t}", v: { t: new Date(next).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) } });
   return out;
 }

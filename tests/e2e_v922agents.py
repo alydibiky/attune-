@@ -14,12 +14,13 @@ HOTEL = {"id": "h1", "kind": "watch", "on": True, "title": "Hotels · Masjid al-
 BUY = {"id": "b1", "kind": "buy", "on": True, "what": "Huawei FreeClip 2", "site": "Amazon · noon", "below": 8400, "currency": "EGP", "step": "confirm",
   "pending": {"name": "HUAWEI FreeClip 2 Open-Ear", "price": 7950, "currency": "EGP", "site": "noon", "href": "https://www.noon.com/x"}, "checks": []}
 INIT = "try{localStorage.setItem('attune:agents:v1', %s)}catch(e){}" % json.dumps(json.dumps({"agents": [HOTEL, BUY], "usual": {}}))
-CAP = "window.__plans = []; (function w(){ if (window.AttuneNative) { window.AttuneNative.agentWatchPlan = (p) => window.__plans.push(p); } else setTimeout(w, 5); })();"
+CAP = "window.__plans = []; (function w(){ if (window.AttuneNative) { window.AttuneNative.agentWatchPlan = (p) => window.__plans.push(p); window.AttuneNative.openInApp = (u) => { window.__opened = u; return JSON.stringify({ ok: true, how: 'app' }); }; } else setTimeout(w, 5); })();"
+SCOUT = "try{localStorage.setItem('attune:scout:v1', JSON.stringify({ goals: [{ id: 'g1', text: 'Hyundai Tucson 2022 used', seen: ['a','b','c'], unseen: ['d'], lastRun: Date.now() - 3600000 }] }))}catch(e){}"
 def go(page, m): page.evaluate("(m) => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", m); page.wait_for_timeout(700)
 def agents(page): return {a["id"]: a for a in json.loads(page.evaluate("localStorage.getItem('attune:agents:v1')"))["agents"]}
 with sync_playwright() as p:
     br = p.chromium.launch()
-    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + ";" + CAP)
+    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + ";" + CAP + ";" + SCOUT)
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_timeout(1200); go(page, "agents")
     page.wait_for_selector("[data-testid=agent-head]", timeout=8000)
@@ -28,7 +29,10 @@ with sync_playwright() as p:
     check(groups == ["needs", "working"], "groups in order: Needs you, then Working: %s" % groups)
     check("Huawei FreeClip 2" in page.inner_text("[data-testid=agents-group-needs]"), "…the agent waiting for an OK to buy is under Needs you")
     st = page.evaluate("[...document.querySelectorAll('[data-testid=agent-status]')].map(e => e.innerText)")
-    check(st == ["Needs you", "Found"], "every card shows its status the same way: %s" % st)
+    check(st == ["Needs you", "Found", "Found"], "every card shows its status the same way — the Scout goal too: %s" % st)
+    sc = page.locator("[data-testid=agents-scout]")
+    check(sc.locator("[data-testid=agent-head]").count() == 1 and sc.locator("[data-testid=agent-menu]").count() == 1 and sc.locator("[data-testid=agent-actions]").count() == 1,
+          "v9.2 round 3 (Ali: “not consistent”): the Scout card has the same header (status, ⋯) and button row as every agent")
     # logos, never the word
     marks = page.evaluate("[...document.querySelectorAll('[data-testid=agent-head] [data-testid=site-mark]')].map(e => e.innerText)")
     check("B." in marks, "the hotel agent shows Booking's mark, not the word: %s" % marks)
@@ -52,13 +56,18 @@ with sync_playwright() as p:
     check("didn't understand" in hotel.locator("[data-testid=agent-rule-said]").inner_text(), "a sentence with no rule (and no model) → says so, nothing changes")
     hotel.locator("[data-testid=agent-rule-chip]", has_text="walk").click(); page.wait_for_timeout(300)
     check("maxWalk" not in agents(page)["h1"]["rules"] and page.locator("[data-testid=agent-more]").count() == 1, "× on a chip removes that rule only — Swissôtel is back")
+    # v9.2 round 3 (Ali: "when it opens Booking it doesn't open the specific listing"): the card's button opens the best offer itself
+    page.click("[data-testid=agent-watch] [data-testid=agent-open]"); page.wait_for_timeout(200)
+    op = page.evaluate("window.__opened") or ""
+    check("ss=Hilton" in op and "booking.com" in op, "“Open the best offer” opens THAT hotel (searched by its own name, with the dates), not the whole list: " + op[:120])
+    check(page.locator("[data-testid=agent-watch] [data-testid=agent-actions] button").count() == 2, "one row: Check now + Open the best offer (the site search lives in ⋯)")
     # ⋯ menu: pause
     hotel.locator("[data-testid=agent-menu]").click(); hotel.locator("[data-testid=agent-toggle]").click(); page.wait_for_timeout(300)
     check(agents(page)["h1"]["on"] is False and page.locator("[data-testid=agents-group-done]").count() == 1, "Pause (in ⋯) moves it to Done & paused")
     # board
     page.click("[data-testid=agents-view-board]"); page.wait_for_selector("[data-testid=agents-board]")
     cols = page.evaluate("[...document.querySelectorAll('[data-testid^=agents-col-]')].map(e => e.dataset.testid.slice(11) + ':' + e.querySelectorAll('[data-testid=agents-board-card]').length)")
-    check(cols == ["needs:1", "working:0", "found:0", "done:1"], "Board: Needs you · Working · Found · Done & paused: %s" % cols)
+    check(cols == ["needs:1", "working:0", "found:1", "done:1"], "Board: Needs you · Working · Found · Done & paused: %s" % cols)
     check(page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "no sideways scroll of the page (the board scrolls inside itself)")
     errs = real_errors(errors)
     check(not errs, "no page errors: %s" % errs[:3])

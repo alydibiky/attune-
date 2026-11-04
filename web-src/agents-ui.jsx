@@ -239,7 +239,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const markDone = (a) => { try { if (a.pending && a.pending.price > 0) G.saveGuardian(G.agentSaved(G.loadGuardian(), a, a.pending.price)); } catch (e) {} upd(a.id, (y) => ({ ...y, step: "ordered", on: false })); };
   // v8.2 (2A): one of the best 3 — opens in Attune's browser on those days, ready for "Fill my details" (you choose and pay)
   const openBest = async (a, o) => {
-    const url = o.href || o.url || a.url;   // v9.0: the exact listing, not the store's search page
+    const url = R.offerUrl(a, o);   // v9.0: the exact listing, not the store's search page (v9.2: no link → that offer searched by name)
     // v9.1 (Ali, 4 Nov: "it's hard to do anything in the Attune browser — can it open Booking itself, with all the sorting ready?"):
     // when the site's own app is on the phone, the offer opens THERE (its page, with the dates and guests in the link)
     // any site whose app is installed (Android decides: NativeBridge.openInApp); the list below is only for older Attune builds
@@ -316,14 +316,15 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       el: a.kind === "follow" ? <FollowCard key={a.id} a={a} {...{ runFollow, remove, toggle }} {...extra} /> : a.kind === "buy" ? <BuyCard key={a.id} a={a} busy={busy === a.id} {...{ buyRound, confirmBuy, notThis, markDone, remove, toggle, openApp, openBest }} {...extra} />
         : <AgentCard key={a.id} a={a} hits={hits} busy={busy === a.id} {...{ checkNow, orderNow, openApp, remove, toggle, openBest, skipBest }} {...extra} /> })),
     ...scout.map((g) => ({ id: "scout-" + g.id, st: (g.unseen || []).length ? "found" : "working", kind: "scout", title: tr("Scout") + " · " + g.text, site: "", price: "",
-      el: <button onClick={() => navTo && navTo("scout")} className={U.cardPad + " w-full text-start space-y-1"} data-testid="agents-scout">
-        <span className="flex gap-3 items-start"><Ico k="scout" /><span className="min-w-0 flex-1"><span className="block font-extrabold text-[14.5px]" dir="auto">{tr("Scout")} · {g.text}</span>
-          <span className="block text-[12.5px] c-sub">{T("{n} ads checked", { n: (g.seen || []).length })}{g.lastRun ? " · " + ago(g.lastRun) : ""}</span></span>
-          {(g.unseen || []).length ? <span className={U.tag("amber")}>{T("{n} new", { n: g.unseen.length })}</span> : <span className={U.tag("blue")}>{tr("Working")}</span>}</span></button> })),
+      el: <div className={U.cardPad + " space-y-2"} data-testid="agents-scout">
+        <CardHead kind="scout" title={g.text} status={(g.unseen || []).length ? "found" : "working"} menu={[[tr("Open Scout"), () => navTo && navTo("scout"), "agents-scout-open-menu"]]}
+          line={T("{n} ads checked", { n: (g.seen || []).length }) + (g.lastRun ? " · " + ago(g.lastRun) : "") + ((g.unseen || []).length ? " · " + T("{n} new", { n: g.unseen.length }) : "")} />
+        <CardActions primary={{ label: (g.unseen || []).length ? T("See {n} new ads", { n: g.unseen.length }) : tr("See the ads"), icon: ChevronRight, onClick: () => navTo && navTo("scout"), testid: "agents-scout-open" }} /></div> })),
     ...(alertRules.length ? [{ id: "alerts", st: "working", kind: "alert", title: T("Message alerts · {n}", { n: alertRules.length }), site: "", price: "",
-      el: <button onClick={() => navTo && navTo("reminders")} className={U.cardPad + " w-full text-start"} data-testid="agents-alerts">
-        <span className="flex gap-3 items-start"><Ico k="alert" /><span className="min-w-0 flex-1"><span className="block font-extrabold text-[14.5px]">{T("Message alerts · {n}", { n: alertRules.length })}</span>
-          <span className="block text-[12.5px] c-sub truncate" dir="auto">{alertRules.slice(0, 2).map((x) => W.ruleText(x, ar)).join(" · ")}</span></span><span className={U.tag("blue")}>{tr("Working")}</span></span></button> }] : [])];
+      el: <div className={U.cardPad + " space-y-2"} data-testid="agents-alerts">
+        <CardHead kind="alert" title={T("Message alerts · {n}", { n: alertRules.length })} status="working" line={alertRules.slice(0, 2).map((x) => W.ruleText(x, ar)).join(" · ")}
+          menu={[[tr("Open the alerts"), () => navTo && navTo("reminders"), "agents-alerts-open-menu"]]} />
+        <CardActions primary={{ label: tr("Open the alerts"), icon: ChevronRight, onClick: () => navTo && navTo("reminders"), testid: "agents-alerts-open" }} /></div> }] : [])];
 
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agents-page">
@@ -382,23 +383,37 @@ export function SiteMark({ site, size = 40, testid = "site-mark" }) {
   return <span className="shrink-0 grid place-items-center font-black tracking-tight" title={name} aria-label={name} data-testid={testid}
     style={{ width: size, height: size, borderRadius: size * 0.3, background: bg, color: ink, fontSize: Math.round(size * (mark.length > 2 ? 0.3 : 0.42)), boxShadow: "inset 0 0 0 1px rgba(0,0,0,.06)" }}>{mark}</span>;
 }
-const siteOfAgent = (a) => (a.kind === "watch" || a.kind === "buy") && a.site && !/^\d+ (stores|sites)$/.test(a.site) ? a.site : a.kind === "track" || a.kind === "order" ? (a.app && a.app.label) || "" : "";
-/** The one header every agent card has: its mark, its name, one line of what it is doing, its status, and ⋯ (Pause · Rules · Delete). */
-function AgentHead({ a, kind, title, line, toggle, remove, onRules }) {
-  const [menu, setMenu] = useState(false);
-  const st = R.agentStatus(a), [label, tone] = R.STATUS[st], site = siteOfAgent(a);
+/** v9.2 round 3 (Ali, 5 Nov: "the agents page is not ideal nor consistent"): ONE header for every card on the page — agents, Scout
+ *  goals and message alerts: the site's mark (or the kind's icon), the name, one line of what it is doing, its status, and ⋯. */
+/** The offer an agent would open: the best one that follows its rules, else what it found. */
+const bestOfferOf = (a) => { const k = R.applyRules(a.best3 || [], a.rules).filter((o) => o && o.price > 0).sort((x, y) => x.price - y.price);
+  return k[0] || (a.found && (a.found.href || a.found.name) ? a.found : null); };
+function CardHead({ site, kind, title, line, status, menu = [] }) {
+  const [open, setOpen] = useState(false);
+  const [label, tone] = R.STATUS[status] || R.STATUS.working;
   return <div className="flex gap-3 items-start" data-testid="agent-head">
     {site ? <SiteMark site={site} /> : <Ico k={kind} />}
     <div className="min-w-0 flex-1"><p className="m-0 font-extrabold text-[14.5px] leading-snug" dir="auto">{title}</p>
-      {line ? <p className="m-0 text-[12.5px] c-sub" dir="auto">{line}</p> : null}</div>
+      {line ? <p className="m-0 text-[12.5px] c-sub leading-snug" dir="auto" data-testid="agent-line">{line}</p> : null}</div>
     <span className={U.tag(tone) + " shrink-0 mt-0.5"} data-testid="agent-status">{tr(label)}</span>
-    <span className="relative shrink-0"><button onClick={() => setMenu(!menu)} aria-label={tr("More")} aria-expanded={menu} className="w-9 h-9 -mt-1 rounded-full grid place-items-center c-sub hover:bg-[var(--c-soft)]" data-testid="agent-menu"><Ellipsis size={18} /></button>
-      {menu ? <span className={U.card + " absolute end-0 top-9 z-30 w-[190px] p-1.5 flex flex-col"} role="menu" onClick={() => setMenu(false)}>
-        {onRules ? <button onClick={onRules} className="min-h-[44px] px-3 rounded-[10px] text-start text-[14px] font-bold hover:bg-[var(--c-soft)]" data-testid="agent-rules-open">{tr("Rules")}</button> : null}
-        <button onClick={() => toggle(a)} className="min-h-[44px] px-3 rounded-[10px] text-start text-[14px] font-bold hover:bg-[var(--c-soft)]" data-testid="agent-toggle">{a.on ? tr("Pause") : tr("Resume")}</button>
-        <button onClick={() => remove(a)} className="min-h-[44px] px-3 rounded-[10px] text-start text-[14px] font-bold text-[var(--c-neg)] hover:bg-[var(--c-soft)]" data-testid="agent-delete">{tr("Delete")}</button>
-      </span> : null}</span>
+    {menu.length ? <span className="relative shrink-0"><button onClick={() => setOpen(!open)} aria-label={tr("More")} aria-expanded={open} className="w-9 h-9 -mt-1 rounded-full grid place-items-center c-sub hover:bg-[var(--c-soft)]" data-testid="agent-menu"><Ellipsis size={18} /></button>
+      {open ? <span className={U.card + " absolute end-0 top-9 z-30 w-[210px] p-1.5 flex flex-col"} role="menu" onClick={() => setOpen(false)}>
+        {menu.map(([l, fn, id, danger]) => <button key={id} onClick={fn} className={"min-h-[44px] px-3 rounded-[10px] text-start text-[14px] font-bold hover:bg-[var(--c-soft)] " + (danger ? "text-[var(--c-neg)]" : "")} data-testid={id}>{l}</button>)}
+      </span> : null}</span> : <span className="w-9 shrink-0" />}
   </div>;
+}
+/** ONE button row for every card: the main action filled, at most one more outlined — the rest live in ⋯. */
+function CardActions({ primary, secondary }) {
+  const base = "min-h-[44px] px-4 rounded-[14px] text-[13.5px] font-extrabold inline-flex items-center justify-center gap-1.5";
+  const B = (x, main) => x ? <button onClick={x.onClick} disabled={!!x.busy} className={base + (main ? " bg-[var(--c-acc)] text-[var(--c-on-acc)] flex-1" : " border border-[var(--c-ln)] bg-[var(--c-surf)] flex-1")} data-testid={x.testid}>
+    {x.icon ? React.createElement(x.icon, { size: 15, className: x.busy ? "animate-spin" : "" }) : null}<span className="truncate">{x.label}</span></button> : null;
+  return <div className="flex gap-2 pt-0.5" data-testid="agent-actions">{B(primary, true)}{B(secondary, false)}</div>;
+}
+const siteOfAgent = (a) => (a.kind === "watch" || a.kind === "buy") && a.site && !/^\d+ (stores|sites)$/.test(a.site) ? a.site : a.kind === "track" || a.kind === "order" ? (a.app && a.app.label) || "" : "";
+/** The header of an agent: CardHead with its status and ⋯ (Rules · Open the site · Pause · Delete). */
+function AgentHead({ a, kind, title, line, toggle, remove, onRules, status, extra = [] }) {
+  const menu = [...(onRules ? [[tr("Rules"), onRules, "agent-rules-open"]] : []), ...extra, [a.on ? tr("Pause") : tr("Resume"), () => toggle(a), "agent-toggle"], [tr("Delete"), () => remove(a), "agent-delete", true]];
+  return <CardHead site={siteOfAgent(a)} kind={kind} title={title} line={line} status={status || R.agentStatus(a)} menu={menu} />;
 }
 const RULE_HINT = { watch: ["only 4 stars", "walking under 500 m", "with breakfast", "check every 6 hours"], buy: ["new only", "not noon", "under 8,000"],
   flight: ["direct only", "1 bag", "morning", "EgyptAir only"], follow: ["check every day"] };
@@ -456,10 +471,10 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
     {R.applyRules(a.best3 || [], a.rules).length > 1 && a.step !== "ordered" ? <DealBoard a={{ ...a, best3: R.applyRules(a.best3, a.rules) }} openBest={openBest} skipBest={null} bars /> : null}
     {!p && a.nearest ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-buy-nearest">{T("Closest so far: {n} — {p}", { n: a.nearest.name || a.what, p: money(a.nearest.price, a.currency) })}</p> : null}
     {a.step === "ordered" ? <span className={U.tag("amber")} data-testid="agent-buy-ordered">{tr("Ordered — at checkout")}</span> : null}
-    <div className="flex flex-wrap gap-1.5 items-center">
-      {a.step !== "ordered" ? <button onClick={() => buyRound(a)} disabled={busy} className={small + (p ? "" : " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent")} data-testid="agent-buy-search"><RefreshCw size={14} className={busy ? "animate-spin" : ""} />{p ? tr("Look again") : tr("Search now")}</button>
-        : <button onClick={() => markDone(a)} className={small} data-testid="agent-buy-done"><Check size={14} />{tr("Done")}</button>}
-</div>
+    {/* v9.2 round 3: the same button row as every card (with a find waiting, "Order it" above is the main action) */}
+    {a.step !== "ordered" ? (p ? <CardActions secondary={{ label: tr("Look again"), icon: RefreshCw, onClick: () => buyRound(a), busy, testid: "agent-buy-search" }} />
+        : <CardActions primary={{ label: tr("Search now"), icon: RefreshCw, onClick: () => buyRound(a), busy, testid: "agent-buy-search" }} />)
+      : <CardActions primary={{ label: tr("Done"), icon: Check, onClick: () => markDone(a), testid: "agent-buy-done" }} />}
     {a.what ? <LookToo a={a} openApp={openApp} /> : null}
   </div>;
 }
@@ -475,8 +490,7 @@ function FollowCard({ a, runFollow, remove, toggle, setRules, understand, flash 
       <p className="m-0 text-[12.5px] c-sub">{tr(a.every === "day" ? "Every day" : a.every === "month" ? "Every month" : "Every week")} · {tr("several sources, what's new since the last report")}</p>
       <p className="m-0 text-[12px] c-sub" data-testid="agent-follow-when">{last ? T("Last report {d}", { d: when(last) }) + " · " : ""}{a.on ? T("Next {d}", { d: when(a.next) }) : tr("Paused")}</p></div>
     <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={ro} setOpen={setRo} />
-    <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => runFollow(a)} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-follow-run"><BookOpen size={14} />{tr("Read now")}</button>
-</div>
+    <CardActions primary={{ label: tr("Read now"), icon: BookOpen, onClick: () => runFollow(a), testid: "agent-follow-run" }} />
   </div>;
 }
 
@@ -700,14 +714,15 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
   if (a.kind === "watch") {
     const w = A.watchLine(a), last = [...(a.checks || [])].reverse()[0];
     return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-watch">
-      <AgentHead a={a} kind={a.fields && a.fields.flight ? "flight" : "watch"} title={a.what && a.tries && a.tries.length && !a.tries[0].checkin ? a.said || a.what : a.title} toggle={toggle} remove={remove} onRules={() => setRo(true)} />
+      <AgentHead a={a} kind={a.fields && a.fields.flight ? "flight" : "watch"} title={a.what && a.tries && a.tries.length && !a.tries[0].checkin ? a.said || a.what : a.title} toggle={toggle} remove={remove} onRules={() => setRo(true)}
+        extra={a.url && !(a.tries && a.tries.length > 1 && !a.tries[0].checkin) ? [[T("Open {app}", { app: a.site }), () => openApp({ pkg: /booking\.com/.test(a.url) ? "com.booking" : /amazon\./.test(a.url) ? "com.amazon.mShop.android.shopping" : "", label: a.site, web: a.url }, a.url), "agent-open-site"]] : []} />
       <div className="flex gap-3 items-start"><div className="min-w-0 flex-1">
         {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.what })}</p> : null}
         <p className="m-0 text-[12.5px] c-sub" dir="auto">{/^\d+ stores$/.test(a.site || "") ? T("{n} stores", { n: parseInt(a.site, 10) }) : /^\d+ sites$/.test(a.site || "") ? T("{n} sites", { n: parseInt(a.site, 10) }) : a.site}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
         <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) + (last.checkin ? " (" + last.checkin + " → " + last.checkout + ")" : "") : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
         {a.found ? <span className="flex flex-wrap items-center gap-1.5 mt-1.5"><span className={U.tag("amber")} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}{a.found.site ? " · " + a.found.site : ""}</span>
             {a.found.href && !(a.best3 || []).length ? <button onClick={() => openBest(a, { href: a.found.href, name: a.found.name })} className="min-h-[36px] px-2.5 rounded-[10px] text-[12px] font-extrabold inline-flex items-center gap-1 bg-[var(--c-acc)] text-[var(--c-on-acc)]" data-testid="agent-found-open"><ExternalLink size={13} />{tr("Open the listing")}</button> : null}</span>
-          : <span className={U.tag("blue") + " mt-1.5"}>{a.on ? tr("Watching · twice a day") : tr("Paused")}</span>}
+          : null}
         {w.last && w.gap > 0 ? <span className="block text-[11.5px] c-sub mt-1">{T("{p} above your limit", { p: money(w.gap, a.currency) })}</span> : null}
         {/* v8.7 (persona 4, idea 4): its price over time, the lowest seen, and the cheapest weekday once there are 2 weeks of checks */}
         <PriceLine a={a} />
@@ -720,27 +735,26 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
         const kept = R.applyRules(a.best3 || [], a.rules), af = { ...a, best3: kept };
         if ((a.best3 || []).length && !kept.length) return <p className="m-0 text-[12.5px] font-bold text-[var(--c-warn)]" data-testid="agent-rules-none">{tr("No offer follows all your rules yet — the next check looks again.")}</p>;
         return kept.length ? ((kept[0] || {}).checkin ? <BestFound a={af} small={small} openBest={openBest} skipBest={skipBest} /> : <DealBoard a={af} openBest={openBest} skipBest={skipBest} />) : null; })()}
-      <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => checkNow(a)} disabled={busy} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-check"><RefreshCw size={14} className={busy ? "animate-spin" : ""} />{tr("Check now")}</button>
-        {a.tries && a.tries.length > 1 && !a.tries[0].checkin ? null : <button onClick={() => openApp({ pkg: /booking\.com/.test(a.url) ? "com.booking" : /amazon\./.test(a.url) ? "com.amazon.mShop.android.shopping" : "", label: a.site, web: a.url }, a.url)} className={small} data-testid="agent-open"><ExternalLink size={14} />{T("Open {app}", { app: a.site })}</button>}{ctl}</div>
+      {/* v9.2 round 3 (Ali: "when it opens Booking it doesn't open the specific listing"): the second button opens the BEST OFFER's own
+          page (its link), not the site's search; the site itself is in ⋯ */}
+      {(() => { const best = bestOfferOf(a);
+        return <CardActions primary={{ label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), busy, testid: "agent-check" }}
+          secondary={best ? { label: tr("Open the best offer"), icon: ExternalLink, onClick: () => openBest(a, best), testid: "agent-open" } : null} />; })()}
       {a.what ? <LookToo a={a} openApp={openApp} /> : null}
     </div>;
   }
   if (a.kind === "track") {
     const mine = hits.filter((h) => h.rule === "agent-" + a.id).slice(-1)[0];
     return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-track">
-      <AgentHead a={a} kind="track" title={a.title} toggle={toggle} remove={remove} />
-      <div className="flex gap-3 items-start"><div className="min-w-0 flex-1">
-        <p className="m-0 text-[12.5px] c-sub" dir="auto">{mine ? T("{app} said {t}: {m}", { app: a.app.label, t: ago(mine.ts), m: mine.text.slice(0, 90) }) : T("Reading {app}'s notifications — I tell you when it ships and when it arrives", { app: a.app.label })}</p>
-        <span className={U.tag(mine ? "amber" : "blue") + " mt-1.5"}>{mine ? tr("New") : a.on ? tr("Watching") : tr("Paused")}</span></div></div>
-      <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => openApp(a.app, "")} className={small} data-testid="agent-open"><ExternalLink size={14} />{T("Open {app}", { app: a.app.label })}</button>{ctl}</div>
+      <AgentHead a={a} kind="track" title={a.title} toggle={toggle} remove={remove} status={mine && a.on ? "found" : undefined}
+        line={mine ? T("{app} said {t}: {m}", { app: a.app.label, t: ago(mine.ts), m: mine.text.slice(0, 90) }) : T("Reading {app}'s notifications — I tell you when it ships and when it arrives", { app: a.app.label })} />
+      <CardActions primary={{ label: T("Open {app}", { app: a.app.label }), icon: ExternalLink, onClick: () => openApp(a.app, ""), testid: "agent-open" }} />
     </div>;
   }
   return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-order">
-    <AgentHead a={a} kind="order" title={a.title} toggle={toggle} remove={remove} />
-    <div className="flex gap-3 items-start"><div className="min-w-0 flex-1">
-      <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.what}</p>
-      <p className="m-0 text-[11.5px] c-sub">{T("One tap opens {app} with your order copied — you press Order", { app: a.app.label })}</p></div></div>
-    <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => orderNow(a)} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-order-now"><Check size={14} />{tr("Order now")}</button>{ctl}</div>
+    <AgentHead a={a} kind="order" title={a.title} toggle={toggle} remove={remove} line={a.what} />
+    <p className="m-0 text-[11.5px] c-sub">{T("One tap opens {app} with your order copied — you press Order", { app: a.app.label })}</p>
+    <CardActions primary={{ label: tr("Order now"), icon: Check, onClick: () => orderNow(a), testid: "agent-order-now" }} />
   </div>;
 }
 

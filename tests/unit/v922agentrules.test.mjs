@@ -44,3 +44,11 @@ ok(R.agentStatus({ kind: "buy", on: true, pending: { price: 1 }, step: "confirm"
   && R.agentStatus({ kind: "watch", on: false }) === "paused" && R.agentStatus({ kind: "buy", step: "ordered" }) === "done" && R.agentStatus({ kind: "track", on: true }) === "working", "status: Needs you · Found · Paused · Done · Working");
 ok(R.brandOf("Booking.com")[1] === "B." && R.brandOf("https://www.agoda.com/x")[0] === "Agoda" && R.brandOf("EgyptAir")[1] === "MS", "brands: Booking, Agoda, EgyptAir marks");
 ok(R.isSiteName("Booking.com") && R.isSiteName("booking.com") && !R.isSiteName("Swissôtel Makkah"), "the word “Booking.com” as a hotel name is recognised");
+
+// v9.2 round 3 (Ali: "when it opens Booking it doesn't open the specific listing")
+const A0 = { site: "Booking.com", url: "https://www.booking.com/searchresults.html?ss=Makkah&checkin=2027-01-08&checkout=2027-01-12&group_adults=2" };
+ok(R.offerUrl(A0, { href: "https://www.booking.com/hotel/sa/hilton-suites.html?checkin=2027-01-08&checkout=2027-01-12" }) === "https://www.booking.com/hotel/sa/hilton-suites.html?checkin=2027-01-08&checkout=2027-01-12", "an offer with its own link opens that link");
+ok(/hotel\/sa\/hilton-suites\.html\?checkin=2027-01-04&checkout=2027-01-08&group_adults=2$/.test(R.offerUrl(A0, { href: "https://www.booking.com/hotel/sa/hilton-suites.html", checkin: "2027-01-04", checkout: "2027-01-08" })), "…a hotel link without dates gets the offer's days and the guests (else Booking shows no price)");
+ok(/ss=Swiss%C3%B4tel\+Makkah/.test(R.offerUrl(A0, { name: "Swissôtel Makkah", url: A0.url })), "no link → that hotel searched by its own name on the same site, same dates: " + R.offerUrl(A0, { name: "Swissôtel Makkah", url: A0.url }));
+ok(R.offerUrl(A0, { name: "Booking.com", url: A0.url }) === A0.url, "…but a name that is only the website stays the search");
+ok(/k=AirPods\+Pro\+2/.test(R.offerUrl({ site: "Amazon", url: "https://www.amazon.eg/s?k=airpods" }, { name: "AirPods Pro 2" })), "Amazon: k= gets the product's own name");
