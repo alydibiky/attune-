@@ -3,6 +3,7 @@
    and "See all → Tools Report" (jobs by family). Each family's own report: FamilyReport (Writing, Files, Instant, Studio, Video).
    Every number comes from the on-device tool log (toollog.js: titles and numbers only, never the text or the file). */
 import React, { useEffect, useMemo, useState } from "react";
+import { hiddenFromMenus } from "./removed.js";
 import { Sparkles, FileText, Zap, ImageIcon, Film, ArrowLeft, BookOpen } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { NOT_IN_PLAY } from "./buildflags.js";
@@ -71,7 +72,7 @@ export function ToolsHub({ tools, navTo, pages, groups }) {
     </div> : null}
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-4 space-y-3 lg:space-y-0 items-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="tools-families">
-        {FAMS_SHOWN.filter(([f]) => f !== "studio").map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
+        {FAMS_SHOWN.filter(([f, mode]) => f !== "studio" && !hiddenFromMenus(mode)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
           className={U.card + " text-start p-4 min-h-[96px] flex items-start gap-3 hover:border-[var(--c-acc)] transition-colors duration-150"}>
           <span className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center" style={{ background: "var(--c-soft)", color: C[f] }}><Icon size={19} /></span>
           <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="text-[15.5px] font-extrabold leading-tight">{tr(title)}</span>

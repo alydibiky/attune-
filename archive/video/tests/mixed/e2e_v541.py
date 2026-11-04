@@ -1,0 +1,144 @@
+"""v5.41 — Ali's phone test after v5.40: website preview, converter tools, Zenith download, Back history,
+Studio sharpening that survives leaving, Chat X-Ray questions, Deal Check maths, deck commands.
+
+  python3 tests/e2e_v541.py
+"""
+import os, re, json, base64, io, zipfile
+from playwright.sync_api import sync_playwright
+from harness import Env, new_page, check, real_errors, finish, HERE
+
+env = Env(); errors = []
+SHOTS = os.environ.get("SHOTS")
+STUDIO = re.search(r'MOCK = r"""(.*?)"""', open(os.path.join(HERE, "..", "archive", "studio", "tests", "e2e_v59.py"), encoding="utf-8").read(), re.S).group(1)   # v9.1: Studio archived — its mock still helps
+EXTRA = r"""(() => { const S = window.__mock = window.__mock || {};
+  const go = () => { const N = window.AttuneNative; if (!N || !N.upscaleImage) return setTimeout(go, 0);
+    S.img.packs = [{ id: "turbo", label: "Studio Turbo", kind: "turbo", files: {} }, { id: "esrgan-x4", label: "Sharpen", kind: "upscale", files: {} }];
+    N.imageList = () => JSON.stringify(S.folder || []);
+    const up0 = N.upscaleImage;
+    N.upscaleImage = (id, arg) => { if (!S.slowUp) return up0(id, arg); const a = JSON.parse(arg); S.imgCalls.push(["upscale", a]);
+      S.upPending = () => window.__attuneNative.resolve(id, JSON.stringify({ ok: true, file: a.file.replace(".png", "-x4.png"), url: "data:image/png;base64,iVBORw0KGgo=", width: 2048, height: 2048, ms: 60000, backend: "CPU" })); };
+  }; go(); })();"""
+
+def shot(page, name):
+    if SHOTS: page.screenshot(path=os.path.join(SHOTS, name + ".png"))
+
+def queue(page, answers):
+    page.evaluate("(a) => { const M = window.__mock; M.bodies = []; M.fakeQueue = a; }", answers)
+
+def sent(page):
+    return page.evaluate("window.__mock.bodies.filter(b => b.max_tokens > 2)")
+
+def open_tool(page, name, testid):
+    page.locator("nav button").last.click(); page.wait_for_timeout(250)
+    page.locator(f".rounded-t-2xl button:has-text('{name}')").first.click()
+    page.wait_for_selector(f"[data-testid={testid}]", timeout=6000)
+
+def send(page, text):
+    page.locator("textarea[placeholder='Message Attune']").fill(text)
+    page.locator("button[title='Send']").first.click()
+
+HTML = """```html
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>HeavyLift Crane Rentals</title><style>body{font-family:sans-serif;margin:0}.card{padding:12px}</style></head>
+<body><header><h1>HeavyLift Crane Rentals</h1></header><section id="services"><div class="card">Mobile crane rental</div><div class="card">Tower crane rental</div></section>
+<section id="fleet"><div class="card">Liebherr LTM 1100</div></section><form id="contact"><input name="name"><button>Send</button></form>
+<script>document.getElementById('contact').addEventListener('submit', (e) => e.preventDefault());</script></body></html>
+```"""
+
+with sync_playwright() as p:
+    br = p.chromium.launch()
+    ctx, page = new_page(br, env, errors, extra_init=STUDIO + "\n" + EXTRA + "\ntry { localStorage.setItem('attune:studio:hd', '0'); } catch (e) {}")
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    page.locator("header button:has-text('No model')").click()
+    page.locator("text=Recommended for this device").locator("xpath=..").get_by_role("button", name="Install").first.click()
+    page.wait_for_selector("text=Running now", timeout=10000)
+    chip0 = page.locator("header button").filter(has_text=re.compile("Blaze|Glow|Spark|Core|Sense|Zenith")).first.inner_text()
+
+    # ---- #13 choosing a model that isn't on the phone offers its download; the chip keeps the running one ----
+    # (v6.35: Zenith is computer-only now — the same check with Core+, a model this phone can download)
+    page.locator("[data-testid=tier-md-hi]").click(); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=engine-download-selected]").count() == 1 and "Download" in page.locator("[data-testid=engine-download-selected]").inner_text(), "tapping Core+ offers its download")
+    check(page.locator("[data-testid=engine-loaded]").inner_text().find("Core+") < 0, "…and never says “Core+ loaded” while another model runs")
+    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
+    chip1 = page.locator("header button").filter(has_text=re.compile("Blaze|Glow|Spark|Core|Sense|Zenith")).first.inner_text()
+    check(chip1 == chip0 and "Core+" not in chip1, "the header still names the model that is running (%s)" % chip1)
+
+    # ---- #9/#10 a website request goes the code route: clean HTML, Preview card ----
+    queue(page, [HTML] * 3)
+    send(page, "A landing page for my crane rental company with services, fleet and a contact form")
+    page.wait_for_selector("[data-testid=artifact-card]", timeout=40000)
+    bodies = sent(page)
+    check(all("no_repeat_ngram" not in b and "dry_multiplier" not in b for b in bodies), "the page is written without the anti-repeat penalties that mangled it (divclass, </div</div>)")
+    check("code block only" in json.dumps(bodies[0]["messages"]) or "ONE code block" in json.dumps(bodies[0]["messages"]) or "```html" in json.dumps(bodies[0]["messages"]), "the website writer's instructions are used")
+    check(page.locator("[data-testid=artifact-card]").count() >= 1, "the answer has its Preview card")
+    shot(page, "01-website")
+
+    # ---- #12 File Converter shows every tool before a file is picked ----
+    open_tool(page, "File Converter", "convert")
+    tools = page.locator("[data-testid^=convert-tool-]").count()
+    check(tools >= 10 and page.locator("[data-testid=convert-tool-merge]").count() == 1, "What do you want to do? — %d tools, Merge PDFs among them" % tools)
+    page.locator("[data-testid=convert-tool-merge]").click(); page.wait_for_timeout(150)
+    mult = page.evaluate("document.querySelector('[data-testid=convert-file]').multiple && document.querySelector('[data-testid=convert-file]').accept")
+    check(bool(mult) and "pdf" in mult, "Merge opens a picker for several PDFs")
+    page.set_input_files("[data-testid=convert-file]", files=[{"name": "a.pdf", "mimeType": "application/pdf", "buffer": b"%PDF-1.4 a"}, {"name": "b.pdf", "mimeType": "application/pdf", "buffer": b"%PDF-1.4 b"}])
+    page.wait_for_timeout(200)
+    check("--c-soft" in (page.locator("[data-testid=convert-to-merge]").get_attribute("class") or ""), "…and “Merge into one PDF” is already chosen")
+    shot(page, "02-convert")
+
+    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v541.py)
+    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v541.py)
+    # ---- #4 Chat X-Ray: "was X mentioned?" answered by code at once ----
+    # v8.7: Chat X-Ray opens from a WhatsApp group (the groups library took its place in the menu)
+    chat = "\n".join(["27/09/2026, 10:0%d - Hassan: the LTM 1100 is free on Sunday" % 1, "27/09/2026, 10:02 - Ali: ok book it, send the عربون today", "27/09/2026, 10:03 - Hassan: done, 5000 EGP"])
+    page.evaluate("(t) => window.dispatchEvent(new MessageEvent('attune-share', { data: { kind: 'chatfile', text: t, name: 'Hassan' } }))", chat)
+    page.wait_for_selector("[data-testid=wa-group]", timeout=8000); page.locator("[data-testid=wa-xray]").click()
+    page.wait_for_selector("[data-testid=xray-setup]", timeout=5000)
+    queue(page, ['{"items": []}'] * 3)
+    page.locator("[data-testid=xray-me]", has_text="Ali").click()
+    page.locator("[data-testid=xray-go]").click()
+    try: page.wait_for_selector("[data-testid=xray-tab-ask]", timeout=20000)
+    except Exception:
+        shot(page, "xray-fail"); print(page.locator("[data-testid=xray]").inner_text()[:600]); raise
+    page.locator("[data-testid=xray-tab-ask]").click()
+    queue(page, [])
+    page.fill("[data-testid=xray-q]", "was “LTM 1100” mentioned?"); page.locator("[data-testid=xray-ask]").click()
+    page.wait_for_selector("[data-testid=xray-answer]", timeout=5000)
+    ans = page.locator("[data-testid=xray-answer]").inner_text()
+    check(ans.startswith("Yes") and "Hassan" in ans and len(sent(page)) == 0, "“was LTM 1100 mentioned?” — yes, by whom and when, with no model call")
+    shot(page, "03-xray")
+
+    # (v9.1: this section used Deal — archived with it in archive/deal/tests/mixed/e2e_v541.py)
+    # ---- #1 change a deck by a sentence ----
+    open_tool(page, "Slides & Reports", "slides")
+    page.fill("[data-testid=slides-prompt]", "A pitch for our crane company")
+    if page.locator("[data-testid=slides-options-box]").count() == 0: page.locator("[data-testid=slides-options]").click()
+    page.locator("[data-testid=slides-n-5]").click()
+    outline = "TITLE: Crane Co\nSUBTITLE: s\n1. [bullets] One\n2. [bullets] Two\n3. [bullets] Three\n4. [bullets] Four\n5. [bullets] Five"
+    queue(page, [outline] + ["- A: first point here\n- B: second point here\nNOTES: n"] * 5)
+    page.locator("[data-testid=slides-go]").click()
+    page.wait_for_selector("[data-testid=slides-save-pptx]", timeout=30000)
+    n0 = page.locator("[data-testid^=slide-canvas-]").count()
+    page.fill("[data-testid=deck-cmd]", "delete slide 4"); page.locator("[data-testid=deck-cmd-go]").click(); page.wait_for_timeout(300)
+    n1 = page.locator("[data-testid^=slide-canvas-]").count()
+    check(n1 == n0 - 1 and "deleted" in page.locator("[data-testid=deck-cmd-note]").inner_text(), "“delete slide 4” removes it (%d → %d)" % (n0, n1))
+    queue(page, ["- Price: EGP 35,000 a day\n- Crew: included\nNOTES: prices"])
+    page.fill("[data-testid=deck-cmd]", "slide 3: add prices"); page.locator("[data-testid=deck-cmd-go]").click()
+    page.wait_for_selector("[data-testid=deck-cmd-note]", timeout=20000); page.wait_for_timeout(300)
+    m = sent(page)
+    check(len(m) == 1 and "ALSO: add prices" in json.dumps(m[0]["messages"]), "“slide 3: add prices” asks the AI for that slide only")
+    page.fill("[data-testid=deck-cmd]", "green theme with fade transitions"); page.locator("[data-testid=deck-cmd-go]").click(); page.wait_for_timeout(300)
+    page.locator("[data-testid=slides-save-pptx]").click(); page.wait_for_timeout(400)
+    z = zipfile.ZipFile(io.BytesIO(base64.b64decode(page.evaluate("window.__mock.lastSaved.b64"))))
+    s3 = z.read("ppt/slides/slide3.xml").decode()
+    check("35,000" in s3 and "<p:fade/>" in s3 and "059669" in z.read("ppt/theme/theme1.xml").decode(), "the file has the new words, the fade and the green design")
+    shot(page, "05-deck")
+
+    # ---- #2 the Paste button never wraps letter by letter ----
+    open_tool(page, "Video Downloader", "video")
+    h = page.evaluate("document.querySelector('[data-testid=video-paste]').getBoundingClientRect().height")
+    check(h < 60, "the Paste button stays one line (%d px high)" % h)
+
+    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v541.py)
+    check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
+    ctx.close(); br.close()
+env.close()
+finish()

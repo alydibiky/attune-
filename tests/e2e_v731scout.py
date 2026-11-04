@@ -31,7 +31,6 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, extra_init=MOCK)
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-    page.locator("nav button").last.click(); page.wait_for_timeout(300)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_selector("[data-testid=scout-page]", timeout=5000)   # v9.1: Scout opens from an Agent card (folded)
     page.fill("[data-testid=scout-text]", GOAL); page.click("[data-testid=scout-add]")
     page.wait_for_selector("[data-testid=scout-ad]", timeout=15000); page.wait_for_timeout(300)

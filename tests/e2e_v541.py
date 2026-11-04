@@ -132,12 +132,7 @@ with sync_playwright() as p:
     check("35,000" in s3 and "<p:fade/>" in s3 and "059669" in z.read("ppt/theme/theme1.xml").decode(), "the file has the new words, the fade and the green design")
     shot(page, "05-deck")
 
-    # ---- #2 the Paste button never wraps letter by letter ----
-    open_tool(page, "Video Downloader", "video")
-    h = page.evaluate("document.querySelector('[data-testid=video-paste]').getBoundingClientRect().height")
-    check(h < 60, "the Paste button stays one line (%d px high)" % h)
-
-    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v541.py)
+    # (v9.1: this section used Video — archived with it in archive/video/tests/mixed/e2e_v541.py)
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()

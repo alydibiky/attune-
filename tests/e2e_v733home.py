@@ -47,7 +47,7 @@ with sync_playwright() as p:
     page.click("[data-testid=home-menu]"); page.locator("[data-testid=phone-side] [data-testid=side-open-chat]").first.click(); page.wait_for_timeout(500)
     check(page.locator("text=quote for a 100 t crane").count() >= 1 and page.locator("[data-testid=phone-side]").count() == 0, "tapping a chat opens it")
     # Scout tab: opening the goal marks its finds seen, so Home stops saying "new"
-    page.locator("nav button:has-text('Scout')").click(); page.wait_for_selector("[data-testid=scout-page]", timeout=5000); page.wait_for_timeout(300)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_selector("[data-testid=scout-page]", timeout=5000)   # v9.1: from an Agent card; page.wait_for_timeout(300)
     check(json.loads(page.evaluate("localStorage.getItem('attune:scout:v1')"))["goals"][0]["unseen"] == [], "Scout opened → its new finds are seen")
     page.locator("nav button:has-text('Home')").click(); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
     check("new finds" not in page.locator("[data-testid=phone-home]").inner_text(), "…and Home no longer says new finds")

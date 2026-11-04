@@ -60,41 +60,7 @@ with sync_playwright() as p:
     shot(page, "web-continued")
 
     # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v543.py)
-    # ---- Deal Check: "Do you mean…?" ----
-    OFFER = "iPhone 15 Pro 256GB 38,000 EGP, pay 12,400 now then 3 x 4,133"
-    TERMS = json.dumps({"item": "iPhone 15 Pro 256GB", "kind": "installment", "price": 38000, "currency": "EGP", "cash_price": 38000, "down_payment": 12400,
-                        "monthly": 4133, "months": 3, "fees": None, "seller": None, "claims": [], "text": OFFER, "unclear": ""})
-    open_tool(page, "Deal Check", "deal")
-    queue(page, [TERMS])
-    page.locator("[data-testid=deal-input]").fill(OFFER)
-    page.locator("[data-testid=deal-go]").click()
-    page.wait_for_selector("[data-testid=deal-ask]", timeout=15000)
-    reading = page.locator("[data-testid=deal-reading]").inner_text()
-    check(reading.startswith("Do you mean:") and "38,000" in reading and "3 × 4,133" in reading, "the doubtful offer is shown back first: " + reading[:90])
-    check(page.locator("[data-testid=deal-result]").count() == 0, "…before any verdict")
-    shot(page, "deal-ask")
-    # No → explain → read again with the explanation
-    TERMS2 = json.dumps({"item": "iPhone 15 Pro 256GB", "kind": "installment", "price": 38000, "currency": "EGP", "cash_price": 38000, "down_payment": 12400,
-                         "monthly": 8533, "months": 3, "fees": None, "seller": None, "claims": [], "text": OFFER, "unclear": ""})
-    queue(page, [TERMS2, "Hi, is the price negotiable?"])
-    page.locator("[data-testid=deal-no]").click()
-    page.fill("[data-testid=deal-note]", "The price is 38,000. 12,400 is the down payment, then 3 payments of 8,533")
-    page.locator("[data-testid=deal-note-go]").click()
-    page.wait_for_selector("[data-testid=deal-result]", timeout=20000)
-    b0 = json.dumps(sent(page)[0]["messages"])
-    check("12,400 is the down payment" in b0, "the explanation went to the second reading")
-    check(page.locator("[data-testid=deal-ask]").count() == 0, "…which isn't asked again")
-    # Yes → goes straight on with the same reading (no second model reading)
-    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
-    queue(page, [TERMS, "Hi, can we meet?"])
-    page.locator("[data-testid=deal-go]").click()
-    page.wait_for_selector("[data-testid=deal-ask]", timeout=15000)
-    n0 = len(sent(page))
-    page.locator("[data-testid=deal-yes]").click()
-    page.wait_for_selector("[data-testid=deal-result]", timeout=20000)
-    check(len(sent(page)) == n0 + 1, "Yes → the check goes on with that reading (only the reply is written)")
-    shot(page, "deal-yes")
-
+    # (v9.1: this section used Deal — archived with it in archive/deal/tests/mixed/e2e_v543.py)
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()

@@ -46,11 +46,8 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_timeout(4500)   # the once-only moves run 3 s after start
     # ---- invoices → Business → Books, notes → Mind (once) ----
     mv = page.evaluate("JSON.parse(localStorage.getItem('attune:moved:invoices')||'null')")
-    check(mv and len(mv["moved"]) == 1 and mv["moved"][0][0] == 7, "Money's invoice #7 was copied into Business → Books: %s" % mv)
-    books = page.evaluate("""new Promise((ok) => { const r = indexedDB.open('attune-books', 1); r.onsuccess = () => { const t = r.result.transaction('kv'), st = t.objectStore('kv'), out = {};
-      const q = st.openCursor(); q.onsuccess = () => { const c = q.result; if (c) { out[c.key] = c.value; c.continue(); } else ok({ docs: out.docs || [], customers: out.customers || [], payments: out.payments || [] }); }; }; r.onerror = () => ok(null); })""")
-    check(books and len(books["docs"]) == 1 and books["docs"][0]["status"] == "posted" and books["docs"][0]["ref"] == "Yusr #7", "…a posted Books invoice marked Yusr #7")
-    check(books and books["customers"][0]["name"] == "Nile Bakery" and len(books["payments"]) == 1 and books["payments"][0]["amount"] == 40000, "…with its customer and the 400 already paid as a receipt")
+    check(not mv, "Money's invoices are no longer copied into Business → Books (v9.1: Business archived): %s" % mv)
+    # (v9.1: the Books copy checks are archived — archive/business/tests/mixed/e2e_v900fixes.py)
     check(page.evaluate("localStorage.getItem('attune:moved:notes')") == "1", "Money's note was copied into Mind")
     check(len(ledger(page)["invoices"]) == 1 and len(ledger(page)["notes"]) == 1, "…and nothing was taken out of Money")
     # ---- the Guardian: Ali's 599 ----

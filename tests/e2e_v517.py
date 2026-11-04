@@ -96,16 +96,7 @@ with sync_playwright() as p:
     page.mouse.click(5, 5); page.wait_for_timeout(200)
 
     # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v517.py)
-    # ---- 5. Copilot: bring a chat from ChatGPT in one paste ----
-    open_more(page, "Copilot", "cp-import")
-    queue(page, ["Ask it to compare the LTM 1100 and GMK5150 for a 60 t lift at 14 m, as a table."] * 3)
-    page.locator("[data-testid=cp-import-text]").fill("ChatGPT: The LTM 1100 is a 100 t crane with a 60 m boom.")
-    page.click("[data-testid=cp-import-go]")
-    try: page.wait_for_function("() => document.body.innerText.includes('Pasted from')", timeout=20000)
-    except Exception: page.screenshot(path=HERE + "/v517-copilot.png", full_page=True)
-    check(page.locator("text=Pasted from").count() >= 1, "a pasted chat is read into the conversation")
-    check(len(bodies(page)) >= 1, "…and Attune suggests the next message straight away")
-
+    # (v9.1: this section used Prompt-tools — archived with it in archive/prompt-tools/tests/mixed/e2e_v517.py)
     # ---- 6. the version is shown ----
     leave_apps(page); page.locator("nav button").last.click(); page.wait_for_timeout(200)
     import re as _re

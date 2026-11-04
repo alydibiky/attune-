@@ -53,7 +53,7 @@ function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? 
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
 
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
-const START_TOOLS = ["scout", "learn", "slides", "convert", "memory"];
+const START_TOOLS = ["projects", "pdfchat", "slides", "convert", "memory"];   // v9.1: the organiser's tools (Scout is folded, Learn archived)
 const WORK = withoutRemoved(["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"]).filter((m) => !NOT_IN_PLAY.has(m));
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
 const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };

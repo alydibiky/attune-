@@ -60,7 +60,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", tag + "Money opens on the calm view (level 1)")
         check(page.locator("[data-testid=money-yusr]").is_hidden(), tag + "…with the ledger (Yusr) loaded behind it, hidden")
         tabs = [t.get_attribute("data-testid")[8:] for t in page.locator("[data-testid=hub-tabs] [role=tab]").all()]
-        check(tabs == ["money", "planner", "deal"], tag + "tabs Money · Month plan · Deal Check (v8.7): %s" % tabs)
+        check(tabs == ["money", "planner"], tag + "tabs Money · Month plan (v9.1: Deal Check archived): %s" % tabs)
         check(page.locator("[data-testid=money-box-input]").is_visible(), tag + "the box comes first")
         b = page.locator("[data-testid=money-balance]").inner_text()
         check(num(b) == BAL, tag + "the balance, by code from the ledger: %s (want %d)" % (b, BAL))
@@ -158,8 +158,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=money-list]").count() == 1 and page.locator("[data-testid=money-yusr]").is_hidden(), tag + "the ledger opens inside Money as Attune's own list (never the old screen)")
         fr = [f for f in page.frames if f != page.main_frame and "Yusr" in (f.title() or "")]
         check(bool(fr), tag + "…Yusr still runs underneath as the engine")
-        for t in ["deal"]:
-            page.click("[data-testid=hub-tab-" + t + "]"); page.wait_for_timeout(700); shot(page, t + "-desktop-" + theme)
+        # (v9.1: the Deal Check tab is archived)
         ctx.close()
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()
