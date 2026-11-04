@@ -14,7 +14,9 @@ import {
   loadArtifacts, saveArtifact, deleteArtifact, latest, fileNameFor,
   ACCENTS, BACKGROUNDS, PALETTES, loadTheme, saveTheme, applyTheme, newSpaceId,
   rulesFor, setRules, exportAssistant, importAssistant,
+  STARTERS, TASK_COLS, taskProgress, addTasks, moveTask, removeTask,
 } from "./spaces.js";
+import { load as loadUserSkills } from "./userskills.js";
 import { PANES, GRID3 } from "./desk.jsx";
 import { card as kCard, inp, area, btnP, btnS, label as kLabel, chip } from "./ui-kit.jsx";
 import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain, Upload, Pin, Eraser, ChevronRight } from "lucide-react";
@@ -171,6 +173,7 @@ function dueText(due) {
   return n < 0 ? tr("Was due {d}", { d: when }) : n === 0 ? tr("Due today") : tr("Due {d} · in {n} days", { d: when, n });
 }
 
+const COL_NAME = { todo: "To do", doing: "Doing", done: "Done" };
 export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flash }) {
   const [list, setList] = useState(() => loadProjects());
   const [openId, setOpenId] = useSticky("projects:open", null);
@@ -179,6 +182,7 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
   const [note, setNote] = useState(null);           // { name, text } being added
   const [q, setQ] = useState("");
   const [rep, setRep] = useState(null);             // { text, every } being added
+  const [taskIn, setTaskIn] = useState("");
   const [arts, setArts] = useState(() => loadArtifacts());
   useSubBack(!!openId, () => { setOpenId(null); setSub(null); });   // Back — the work → all projects
   useSubBack(!!sub, () => setSub(null));                            //        a row → the work
@@ -226,12 +230,34 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
   );
 
   if (cur && sub) {
-    const head = { files: "Files", saved: "Saved", repeats: "Repeats", answers: "Answers as", chats: "Earlier chats" }[sub];
+    const head = { tasks: "Tasks", files: "Files", saved: "Saved", repeats: "Repeats", answers: "Answers as", chats: "Earlier chats" }[sub];
     const mine = artifactsFor(cur.id, arts);
     return (
       <div className="calm att-in space-y-3 lg:max-w-3xl" data-testid={"project-sub-" + sub}>
         <button onClick={() => setSub(null)} className="min-h-[44px] text-[13px] font-bold text-[var(--c-acc)]" dir="auto">← {cur.emoji} {cur.name}</button>
         <p className="text-[18px] font-extrabold text-[var(--c-ink)] m-0">{rowName(head)}</p>
+
+        {/* v9.2 (Ali picked A + B): the work's tasks as a board — To do · Doing · Done; ‹ › move a card, × removes it */}
+        {sub === "tasks" ? (<div className="space-y-3" data-testid="project-board">
+          <form onSubmit={(e) => { e.preventDefault(); const t = taskIn.trim(); if (!t) return; if (save(addTasks(cur, t))) setTaskIn(""); }} className="flex gap-2">
+            <input value={taskIn} onChange={(e) => setTaskIn(e.target.value)} dir="auto" placeholder={tr("Add a task — or several, separated by commas")} className={input} data-testid="project-task-input" />
+            <button className={btnMain + " shrink-0"} aria-label={tr("Add")} data-testid="project-task-add"><Plus size={16} /></button></form>
+          <div className="flex gap-2.5 overflow-x-auto snap-x -mx-1 px-1 pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible">
+            {TASK_COLS.map((col) => { const items = (cur.tasks || []).filter((t) => t.col === col); return (
+              <div key={col} className="snap-start shrink-0 w-[78%] sm:w-[46%] lg:w-auto rounded-[16px] bg-[var(--c-soft)] p-2 space-y-2" data-testid={"project-col-" + col}>
+                <p className="m-0 px-1 text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)]">{tr(COL_NAME[col])} · {items.length}</p>
+                {items.map((t) => <div key={t.id} className={card + " p-2.5 space-y-1.5"} data-testid="project-task">
+                  <p className={"m-0 text-[14px] font-bold leading-snug " + (col === "done" ? "line-through text-[var(--c-mut)]" : "text-[var(--c-ink)]")} dir="auto">{t.text}</p>
+                  <div className="flex items-center gap-1">
+                    {col !== "todo" ? <button onClick={() => save(moveTask(cur, t.id, -1))} className="min-h-[36px] px-2.5 rounded-[10px] border border-[var(--c-ln)] text-[12px] font-extrabold" aria-label={tr("Back")} data-testid="project-task-back">‹ {tr(COL_NAME[TASK_COLS[TASK_COLS.indexOf(col) - 1]])}</button> : null}
+                    {col !== "done" ? <button onClick={() => save(moveTask(cur, t.id, 1))} className="min-h-[36px] px-2.5 rounded-[10px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[12px] font-extrabold" data-testid="project-task-next">{tr(COL_NAME[TASK_COLS[TASK_COLS.indexOf(col) + 1]])} ›</button> : null}
+                    <button onClick={() => save(removeTask(cur, t.id))} className="ms-auto w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Delete")} data-testid="project-task-delete"><X size={14} /></button></div>
+                </div>)}
+                {!items.length ? <p className="m-0 px-1 py-2 text-[12.5px] text-[var(--c-mut)]">—</p> : null}
+              </div>); })}
+          </div>
+          <p className="m-0 text-[12px] text-[var(--c-mut)]">{tr("Tip: say “add buy tiles to {p}” in the box on Home.", { p: cur.name })}</p>
+        </div>) : null}
 
         {sub === "files" ? (<div className={card + " p-4"}>
           <p className="text-[12.5px] text-[var(--c-mut)] mt-0 mb-2">{tr("Notes and text files the assistant reads before answering — only the parts that match the question.")}</p>
@@ -340,7 +366,9 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
   if (cur) {
     const asst = cur.assistantId ? assistants.find((a) => a.id === cur.assistantId) : null;
     const due = dueRepeats(cur).length, nSaved = artifactsFor(cur.id, arts).length, nFiles = (cur.knowledge || []).length, nRep = (cur.repeats || []).length;
+    const tp = taskProgress(cur);
     const rows = [
+      ["tasks", "Tasks", tp.of ? tr("{a} of {b} done", { a: tp.done, b: tp.of }) : tr("None yet")],
       ["files", "Files", nFiles ? String(nFiles) : tr("None yet")],
       ["saved", "Saved", nSaved ? String(nSaved) : tr("None yet")],
       ["repeats", "Repeats", due ? tr("{n} due", { n: due }) : nRep ? String(nRep) : tr("None yet"), !!due],
@@ -375,24 +403,40 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
     );
   }
 
+  // v9.2 (Ali picked 6 = A + B): the list is never empty — your works with their progress, starters that make one in one tap, and
+  // your assistants and skills one tap away (they work inside a project: "Answers as" and "Repeats")
+  const nAssist = assistants.filter((a) => !isBuiltinAssistant(a.id)).length || assistants.length, nSkills = loadUserSkills().length;
+  const startFrom = (st) => { const p = save({ emoji: st.emoji, name: tr(st.name), instructions: tr(st.instructions), knowledge: [], due: "", tasks: st.tasks.map((t) => ({ text: tr(t), col: "todo" })) }); if (p) { setOpenId(p.id); flash && flash(tr("Project started — its first tasks are on its board")); } };
   return (
     <div className="calm att-in space-y-4" data-testid="projects-page">
-      <p className="text-[13px] text-[var(--c-mut)] leading-relaxed lg:max-w-[70ch]">{tr("A project keeps related chats together with shared instructions and your own files — like a folder the assistant has read.")}</p>
-      <button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [], due: "" })} className={btnMain + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-2"} data-testid="project-new"><Plus size={16} /> {tr("New project")}</button>
-      {/* v7.4 (Gemini's Area 3): a calm empty state, and each project with its chats, files and when it last changed */}
-      {list.length === 0 ? (
-        <div className={card + " p-6 text-center space-y-2"} data-testid="projects-empty">
-          <span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-[var(--c-soft)] text-2xl">📁</span>
-          <p className="m-0 text-[15px] font-extrabold text-[var(--c-ink)]">{tr("No projects yet.")}</p>
-          <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("A study plan, a home renovation, a small business — keep its chats and files together.")}</p>
-        </div>) : <div className={GRID3}>{list.map((p) => { const cs = allChats.filter((c) => c.projectId === p.id), last = Math.max(p.updated || 0, ...cs.map((c) => c.updated || 0)), nd = dueRepeats(p).length; return (
-        <button key={p.id} onClick={() => setOpenId(p.id)} className={card + " w-full p-3.5 min-h-[64px] flex items-center gap-3 text-start hover:border-[var(--c-acc)]"} data-testid="project-item">
-          <span className={well + " text-2xl"}>{p.emoji}</span>
-          <span className="flex-1 min-w-0"><span className="block text-[14.5px] text-[var(--c-ink)] font-extrabold leading-snug" dir="auto">{p.name}</span>
-            <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{p.due ? dueText(p.due) : tr("{n} chats · {k} files", { n: cs.length, k: (p.knowledge || []).length }) + (last > 0 ? " · " + tr("updated {d}", { d: shortDate(last) }) : "")}
-              {nd ? <b className="ms-1.5 text-[var(--c-warn)]">· {tr("{n} due", { n: nd })}</b> : null}</span></span>
-          <ChevronRight size={16} className="shrink-0 text-[var(--c-mut)] rtl:rotate-180" />
-        </button>); })}</div>}
+      <p className="text-[13px] text-[var(--c-mut)] leading-relaxed lg:max-w-[70ch] m-0">{tr("A project keeps related chats together with shared instructions and your own files — like a folder the assistant has read.")}</p>
+      {list.length ? <div className={GRID3}>{list.map((p) => { const cs = allChats.filter((c) => c.projectId === p.id), last = Math.max(p.updated || 0, ...cs.map((c) => c.updated || 0)), nd = dueRepeats(p).length, tp = taskProgress(p), as = p.assistantId ? assistants.find((a) => a.id === p.assistantId) : null; return (
+        <button key={p.id} onClick={() => setOpenId(p.id)} className={card + " w-full p-3.5 min-h-[64px] flex flex-col gap-2 text-start hover:border-[var(--c-acc)]"} data-testid="project-item">
+          <span className="w-full flex items-center gap-3"><span className={well + " text-2xl"}>{p.emoji}</span>
+            <span className="flex-1 min-w-0"><span className="block text-[14.5px] text-[var(--c-ink)] font-extrabold leading-snug" dir="auto">{p.name}</span>
+              <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{p.due ? dueText(p.due) : tr("{n} chats · {k} files", { n: cs.length, k: (p.knowledge || []).length }) + (last > 0 ? " · " + tr("updated {d}", { d: shortDate(last) }) : "")}
+                {tp.of ? <span className="ms-1.5" data-testid="project-item-tasks">· {tr("{n} tasks left", { n: tp.left })}</span> : null}
+                {nd ? <b className="ms-1.5 text-[var(--c-warn)]">· {tr("{n} due", { n: nd })}</b> : null}</span></span>
+            {as ? <span className="shrink-0 text-[11.5px] font-bold px-2 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)] max-w-[30%] truncate" dir="auto">{as.emoji} {tr(as.name)}</span> : null}
+            <ChevronRight size={16} className="shrink-0 text-[var(--c-mut)] rtl:rotate-180" /></span>
+          {tp.of ? <span className="block w-full h-1.5 rounded-full bg-[var(--c-ln)] overflow-hidden"><i className="block h-full bg-[var(--c-acc)]" style={{ width: Math.round(tp.done / tp.of * 100) + "%" }} /></span> : null}
+        </button>); })}</div> : null}
+      <div className="space-y-2" data-testid="project-starters">
+        <p className={kLabel + " m-0"}>{list.length ? tr("Start another") : tr("Start one")}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+          {STARTERS.map((st) => <button key={st.id} onClick={() => startFrom(st)} className={card + " p-3 text-start min-h-[92px] flex flex-col gap-1 hover:border-[var(--c-acc)]"} data-testid={"project-starter-" + st.id}>
+            <span className="text-[20px] leading-none">{st.emoji}</span><b className="text-[14px] text-[var(--c-ink)] leading-tight">{tr(st.name)}</b><span className="text-[11.5px] text-[var(--c-mut)] leading-snug">{tr(st.sub)}</span></button>)}
+          <button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [], due: "" })} className={card + " p-3 text-start min-h-[92px] flex flex-col gap-1 border-dashed! hover:border-[var(--c-acc)]"} data-testid="project-new">
+            <span className="text-[20px] leading-none text-[var(--c-acc)]"><Plus size={20} /></span><b className="text-[14px] text-[var(--c-ink)] leading-tight">{tr("Empty project")}</b><span className="text-[11.5px] text-[var(--c-mut)] leading-snug">{tr("Your own name and instructions")}</span></button>
+        </div>
+      </div>
+      {openPage ? <div className={card + " p-1.5"} data-testid="project-helpers">
+        {[["assistants", "🧑‍🏫", "Your assistants", nAssist, "They answer inside a project — “Answers as”"], ["skills", "🔁", "Your skills", nSkills, "Your own recipes — a project runs them as “Repeats”"]].map(([id, em, l, n, sub], i) =>
+          <button key={id} onClick={() => openPage(id)} className={"w-full min-h-[56px] flex items-center gap-3 px-3 rounded-[12px] text-start hover:bg-[var(--c-surf-2)] " + (i ? "border-t border-[var(--c-ln)]" : "")} data-testid={"project-open-" + id}>
+            <span className="text-[20px] w-8 text-center">{em}</span>
+            <span className="flex-1 min-w-0"><b className="block text-[14.5px] text-[var(--c-ink)]">{tr(l)} · <span className="tabular-nums">{n}</span></b><span className="block text-[12px] text-[var(--c-mut)] truncate">{tr(sub)}</span></span>
+            <ChevronRight size={16} className="shrink-0 text-[var(--c-mut)] rtl:rotate-180" /></button>)}
+      </div> : null}
     </div>
   );
 }

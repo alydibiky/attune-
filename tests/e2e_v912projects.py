@@ -33,7 +33,7 @@ with sync_playwright() as p:
         page.click("[data-testid=project-item]")
         page.wait_for_selector("[data-testid=project-ask]", timeout=5000)
         rows = page.evaluate("[...document.querySelectorAll('[data-testid^=project-row-]')].map(e => e.dataset.testid.slice(12))")
-        check(rows == ["files", "saved", "repeats", "answers"], tag + "the work: ask box + Files · Saved · Repeats · Answers as (no chats yet): %s" % rows)
+        check(rows == ["tasks", "files", "saved", "repeats", "answers"], tag + "the work: ask box + Tasks (v9.2 board) · Files · Saved · Repeats · Answers as (no chats yet): %s" % rows)
         check("Dec" in page.locator("[data-testid=project-due-line]").inner_text(), tag + "…its due date under the name")
         check(page.locator("[data-testid=project-brain]").count() == 0 and page.locator("[data-testid=project-file]").count() == 0, tag + "…and nothing else on the page")
         check("1" in page.locator("[data-testid=project-row-files]").inner_text() and "1 due" in page.locator("[data-testid=project-row-repeats]").inner_text()

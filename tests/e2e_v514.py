@@ -156,7 +156,7 @@ with sync_playwright() as p:
     page.locator("[data-testid=project-instructions]").fill("Prices in EGP. We are the crane supplier.")
     page.locator("[data-testid=project-save]").click()
     page.wait_for_selector("[data-testid=project-page]", timeout=5000)
-    check(page.locator("[data-testid^=project-row-]").count() == 4, "design D: the work opens on its ask box and 4 rows (no chats yet, so no 'Earlier chats')")
+    check(page.locator("[data-testid^=project-row-]").count() == 5, "design D + v9.2 board: the work opens on its ask box and 5 rows — Tasks · Files · Saved · Repeats · Answers as (no chats yet)")
     page.locator("[data-testid=project-row-files]").click()
     page.locator("[data-testid=project-add-note]").click()
     page.locator("[data-testid=project-note-text]").fill("Client rate card: LTM 1100 costs 18,000 EGP per day including operator.")

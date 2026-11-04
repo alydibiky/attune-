@@ -72,6 +72,8 @@ export function route(text, { files = [], api = {}, prefs = {}, kind = null } = 
   if (kind) return runKind(kind, t, { files, api });
   if (isEmailAsk(t)) return { type: "email", text: t };
   // v9.2 (Ali picked 1A): a list — make one, a trip date for it, or show it (lists.js reads it; the page saves it)
+  // v9.2 (Ali picked 6): "add buy tiles to the renovation" → a task on that project's board (only when such a project exists)
+  { const pt = api.projectTask ? api.projectTask(t) : null; if (pt && !files.length) return { type: "projectTask", projectId: pt.project.id, name: pt.project.name, text: pt.text }; }
   { const lc = parseListCommand(t); if (lc && !files.length) return { type: "list", cmd: lc }; }   // v8.7: "email Ahmed that …" → a ready email to check, then Send
   const det = (api.detect && api.detect(t)) || {};
   const records = (api.records && api.records()) || [];

@@ -113,6 +113,7 @@ const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id
 import { AgentsPage } from "./agents-ui.jsx";
 import { ListsPage, lineText as listLine } from "./lists-ui.jsx";
 import * as LISTS from "./lists.js";
+import { parseProjectTask, addTasks, loadProjects as loadProjectsList, upsertProject as upsertProjectRec } from "./spaces.js";
 import { ListChecks } from "lucide-react";
 import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
@@ -10005,6 +10006,7 @@ export default function App() {
     jobs,
     api: {
       records: () => cmdRef.current.memory || [],
+      projectTask: (t) => { try { return parseProjectTask(t); } catch (e) { return null; } },   // v9.2 (6): a task for a project's board
       write: (messages) => callChat(messages, null, { think: false, maxTokens: 700, temperature: 0.4 }),   // v8.7 the email card
       detect: (text) => {
         const now = Date.now(); let doActions = 0;
@@ -10077,6 +10079,8 @@ export default function App() {
     const ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text), L = (x) => (ar ? x.ar || x.en : x.en);
     switch (o.type) {
       // v9.2 (Ali picked 1A): lists said in Chat — "make my travel checklist: …", "I'm travelling Thursday", "what's my travel list?"
+      case "projectTask": { const pr = loadProjectsList().find((x) => x.id === o.projectId); if (!pr) return null; upsertProjectRec(addTasks(pr, o.text));
+        return { tone: "emerald", title: tr("Added to {p}: {t}", { p: o.name, t: o.text }), detail: "", actions: [["Open the project", "open:projects"]] }; }
       case "list": { const r = LISTS.applyListCommand(LISTS.loadLists(), o.cmd); if (!r) return null; if (r.st) LISTS.saveLists(r.st);
         return { tone: "emerald", title: listLine(r.line), detail: r.list ? r.list.items.map((x) => (x.done ? "☑ " : "☐ ") + x.text).join("\n") : "", actions: [["Open my lists", "open:lists"]] }; }
       case "todoAdd": remember({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } });

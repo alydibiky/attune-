@@ -19,6 +19,7 @@ import { saveFleet } from "./fleet-store.js";
 import { RecallCard } from "./recall-ui.jsx";
 import { HomeTodo, ListCard, lineText } from "./lists-ui.jsx";
 import * as LISTS from "./lists.js";
+import { loadProjects, upsertProject, addTasks } from "./spaces.js";
 import { useSubBack } from "./backstack.js";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { loadLife } from "./life.js";
@@ -191,6 +192,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       case "job": cmd.jobs.add(o.spec); setFiles([]); return;
       case "todoAdd": cmd.mind.add({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } }); return lines([{ en: `Added to your to-do list: ${o.item}`, ar: `اتضافت للمهام: ${o.item}`, open: "memory" }]);
       // v9.2 (Ali, 1A): "make my travel checklist: …", "every Saturday: …", "I'm travelling Thursday", "what's my travel list?"
+      case "projectTask": { const pr = loadProjects().find((x) => x.id === o.projectId); if (!pr) return; upsertProject(addTasks(pr, o.text));
+        return lines([{ en: `Added to ${o.name}: ${o.text}`, ar: `اتضافت لـ${o.name}: ${o.text}`, open: "projects" }]); }
       case "list": { const r = LISTS.applyListCommand(LISTS.loadLists(), o.cmd); if (!r) return; if (r.st) LISTS.saveLists(r.st);
         return setPanel({ type: "list", list: r.list, line: lineText(r.line) }); }
       case "whereSave": cmd.mind.add(W.whereRecord(o.set)); return lines([{ en: `Got it: ${o.set.thing} — ${o.set.place}.`, ar: `تمام: ${o.set.thing} — ${o.set.place}.`, open: "memory" }]);

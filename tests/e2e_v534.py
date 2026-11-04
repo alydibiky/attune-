@@ -25,7 +25,7 @@ with sync_playwright() as p:
 
     # ---- Projects: new project → saved and opened → Back → all projects → Back → Chat ----
     open_more(page, "Projects")
-    page.locator("text=New project").first.click(); page.wait_for_timeout(200)
+    page.locator("[data-testid=project-new]").first.click(); page.wait_for_timeout(200)   # v9.2: the "Empty project" card
     page.locator("[data-testid=project-name]").fill("Port Said tender")
     page.locator("[data-testid=project-save]").click(); page.wait_for_timeout(400)
     check(page.locator("text=All projects").count() == 1, "the new project is open")

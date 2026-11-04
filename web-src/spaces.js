@@ -86,11 +86,40 @@ export function upsertProject(p) {
     due: /^\d{4}-\d{2}-\d{2}$/.test(String(p.due || "")) ? p.due : "",
     assistantId: p.assistantId || "",
     repeats: (p.repeats || []).map((r) => ({ id: r.id || newSpaceId("r"), text: String(r.text || "").trim().slice(0, 600), every: EVERY.includes(r.every) ? r.every : "", last: +r.last || 0 })).filter((r) => r.text).slice(0, 20),
+    // v9.2 (Ali picked 6 = A + B "in a smart and organised way"): the work's tasks, on a board To do · Doing · Done
+    tasks: (p.tasks || []).map((t) => ({ id: t.id || newSpaceId("t"), text: String(t.text || "").trim().slice(0, 200), col: TASK_COLS.includes(t.col) ? t.col : "todo", ts: +t.ts || Date.now() })).filter((t) => t.text).slice(0, 200),
     created: p.created || Date.now(), updated: Date.now() };
   if (!saveProjectList([clean, ...list])) return null;       // storage full
   return clean;
 }
 export function deleteProject(id) { saveProjectList(loadProjects().filter((x) => x.id !== id)); }
+
+/* ---- v9.2 a project's tasks (Ali, 4 Nov: "make the app like Trello in the tasks I give it" — the board where things move through
+   stages) and the starters that make a project in one tap. Pure; tests: tests/unit/v922projects.test.mjs. ------------------------ */
+export const TASK_COLS = ["todo", "doing", "done"];
+export const taskProgress = (p) => { const t = (p && p.tasks) || []; return { done: t.filter((x) => x.col === "done").length, of: t.length, left: t.filter((x) => x.col !== "done").length }; };
+export const addTasks = (p, text) => ({ ...p, tasks: [...(p.tasks || []), ...String(text || "").split(/\s*(?:\n|,|،|;)\s*/).map((x) => x.trim()).filter(Boolean).map((x) => ({ id: newSpaceId("t"), text: x.slice(0, 200), col: "todo", ts: Date.now() }))] });
+export const moveTask = (p, id, dir) => ({ ...p, tasks: (p.tasks || []).map((t) => { if (t.id !== id) return t; const i = TASK_COLS.indexOf(t.col) + dir; return i >= 0 && i < TASK_COLS.length ? { ...t, col: TASK_COLS[i] } : t; }) });
+export const setTaskCol = (p, id, col) => ({ ...p, tasks: (p.tasks || []).map((t) => (t.id === id && TASK_COLS.includes(col) ? { ...t, col } : t)) });
+export const removeTask = (p, id) => ({ ...p, tasks: (p.tasks || []).filter((t) => t.id !== id) });
+/** "add buy tiles to the renovation" / «ضيف شراء السيراميك لمشروع الشقة» → { project, text } when a project with that name exists. */
+export function parseProjectTask(text, projects = loadProjects()) {
+  const t = String(text || "").trim();
+  const m = /^\s*(?:please\s+)?(?:add|put)\s+(.+?)\s+(?:to|on|in|into)\s+(?:my\s+|the\s+)?(.+?)(?:\s+(?:project|tasks?|board|list))?\s*[.!]?$/i.exec(t)
+    || /^\s*(?:ضيف|حط)\s+(.+?)\s+(?:ل|في|على)\s*(?:مشروع\s+)?(.+?)\s*$/.exec(t);
+  if (!m) return null;
+  const want = m[2].toLowerCase().replace(/^(ال|the\s+)/, "").trim();
+  if (/^(my\s+)?(to-?do|todo|tasks?)(\s+list)?$|^(المهام|التودو)$/i.test(want)) return null;   // the plain to-do list is Home's
+  const f = (s) => String(s || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/^(ال)/, "");
+  const pr = (projects || []).find((p) => { const n = f(p.name); return n === f(want) || n.includes(f(want)) || (f(want).length >= 4 && f(want).split(/\s+/).every((w) => n.includes(w))); });
+  return pr ? { project: pr, text: m[1].trim() } : null;
+}
+export const STARTERS = [
+  { id: "study", emoji: "📚", name: "Study plan", sub: "Exam dates, chapters, a weekly plan", instructions: "Help me study for this: plan up to the exam date, explain simply, and quiz me.", tasks: ["List the chapters", "Set the exam date", "Make a weekly plan", "First practice test"] },
+  { id: "trip", emoji: "✈️", name: "A trip", sub: "Bookings, documents, the budget", instructions: "Help me plan this trip: bookings, documents, a packing list and the budget.", tasks: ["Book the flight", "Book the hotel", "Visa and documents", "Packing list"] },
+  { id: "job", emoji: "💼", name: "Job hunt", sub: "CV, applications, interviews", instructions: "Help me find a job: tailor my CV, write cover letters and prepare me for interviews.", tasks: ["Update my CV", "List 10 companies", "Apply to 3 jobs", "Practise an interview"] },
+  { id: "home", emoji: "🏠", name: "Flat renovation", sub: "Quotes, materials, workers", instructions: "Help me run this renovation: compare quotes, keep the budget and the order of the work.", tasks: ["Get 3 quotes", "Choose the tiles", "Electrician", "Painting"] },
+];
 
 /* v9.1 design D: a repeat is due when it has a rhythm and its time since the last run has passed (a day / 7 days / a calendar month).
    Never run → due now. "" (only when I tap) → never due. */
