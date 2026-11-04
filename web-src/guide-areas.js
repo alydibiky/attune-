@@ -1,4 +1,4 @@
-import { withoutRemoved } from "./removed.js";
+import { withoutHidden as withoutRemoved } from "./removed.js";   // v9.1: removed + folded (Scout) tools leave menus
 /* ---- v7.9 (Ali, 24 Oct 2026: "I want the how to get most from the app guide to have everything that can be done in the app to make
    life easier"; he picked design A "by life area, with a checklist" + C's list of every feature): every feature of the app sits in
    one life area, with what you say and what you get. "Tried" = the person has opened it (kept on the phone only). Pure, so it is

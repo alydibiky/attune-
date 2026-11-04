@@ -112,7 +112,7 @@ export function RunBlock({ lang, code }) {
           {busy ? <Loader2 size={11} className="animate-spin" /> : L === "html" ? <Eye size={11} /> : <Play size={11} />}
           {busy ? (L === "python" ? tr("Starting Python…") : tr("Running…")) : L === "html" ? (preview ? tr("Hide preview") : tr("Preview")) : tr("Run on this phone")}
         </button>
-        <button onClick={open} data-testid="open-in-code" className="min-h-[36px] text-[12px] font-bold px-3 rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center gap-1"><Wrench size={11} />{tr("Test & fix in Code")}</button>
+        {/* v9.1: the Code page is archived (archive/code/) — no "Test & fix in Code" button; Run stays */}
       </div>
       {L === "html" && preview ? <HtmlPreview code={code} /> : null}
       <RunOutput res={res} lang={L} code={code} />

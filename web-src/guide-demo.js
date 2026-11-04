@@ -1,5 +1,5 @@
 import { tr } from "./i18n.js";
-import { withoutRemoved } from "./removed.js";
+import { withoutHidden as withoutRemoved } from "./removed.js";   // v9.1: removed + folded (Scout) tools leave menus
 /* ---- v6.45 How to use, redesigned (Ali chose A + C, 20 Oct 2026: "with demo data in the visuals so people understand the
    app's capabilities more"). Pure data, unit-tested (tests/unit/v745guidedemo.test.mjs).
    A — every guide plays a small copy of its screen with SAMPLE data: step 1 = what you give it (typed, a photo, a file),

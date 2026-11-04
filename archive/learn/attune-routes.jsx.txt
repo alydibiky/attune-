@@ -1,0 +1,15 @@
+// Removed from web-src/attune.jsx on 4 Nov 2026 (the route chain). Paste back before `) : mode === "write"` with the imports in README.md.
+
+// ---- mode "learn" ----
+        ) : mode === "learn" ? (
+          <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
+            modelReady={modelUsable}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken, grammar: o.grammar })}
+            illustrate={null} />
+
+// ---- mode "coach" ----
+        ) : mode === "coach" ? (
+          <CoachPage native={{ N: NATIVE, call: nativeCall }} readText={readTextAny} flash={flash} incoming={coachIn} clearIncoming={() => setCoachIn(null)}
+            ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 900, temperature: 0.2, think: false }) : null}
+            verify={modelState === "ready" ? async (q) => { if (!(await pythonAvailable())) return null; const r = await verifyMath({ question: q, llm: (m, o) => callChat(m, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false }), runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), explain: false }); return r && r.ok ? { ok: true, answer: r.answer } : null; } : null} />
+

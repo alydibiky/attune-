@@ -36,8 +36,8 @@ with sync_playwright() as p:
     page.fill("[data-testid=home-ask]", "my report"); page.click("[data-testid=home-send]"); page.wait_for_selector("[data-testid=my-report]", timeout=3000)
     check(True, "“my report” in the box opens it")
     page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=home-box]", timeout=3000)
-    page.fill("[data-testid=home-ask]", "open fit"); page.click("[data-testid=home-send]"); page.wait_for_timeout(500)
-    check(page.locator("[data-testid=phone-home]").count() == 0, "“open fit” opens Fit & Food")
+    page.fill("[data-testid=home-ask]", "open money"); page.click("[data-testid=home-send]"); page.wait_for_timeout(500)   # v9.1: Fit is archived
+    check(page.locator("[data-testid=phone-home]").count() == 0, "“open money” opens Money")
     page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
     # the / list
     page.fill("[data-testid=home-ask]", "/tr"); page.wait_for_timeout(200)

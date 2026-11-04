@@ -1,0 +1,6 @@
+// Removed from web-src/attune.jsx on 4 Nov 2026 (the route chain). Paste back before `) : mode === "write"` with the imports in README.md.
+
+// ---- mode "video" ----
+        ) : mode === "video" ? (
+          <VideoDownloader subsForFile={(f) => { jobs.add({ kind: "subtitles", heavy: true, title: tr("Subtitles: {n}", { n: f.name }), input: { files: [f], name: f.name, text: "" } }); flash(tr("Working on it — the subtitles show on Home")); }} flash={flash} nativeCall={NATIVE ? nativeCall : null} pro={proActive} openPlan={() => setShowUpgrade(true)} initialLink={videoIn ? videoIn.replace(/#\d+$/, "") : ""} key={videoIn || "v"} />
+

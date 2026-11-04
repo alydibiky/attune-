@@ -16,22 +16,7 @@ with sync_playwright() as p:
     def open_mode(m, sel):
         page.evaluate("(m) => window.dispatchEvent(new CustomEvent('attune-open', { detail: { mode: m } }))", m)
         page.wait_for_selector(sel, timeout=8000)
-    # ---- Fit: the first visit's 3 questions, then Me → Automatic tracking
-    open_mode("fit", "[data-testid=fit-qs-welcome], [data-testid=fit-today]")
-    if page.locator("[data-testid=fit-qs-welcome]").count():
-        page.click("[data-testid=fit-qs-start]")
-        page.click("[data-testid=fit-qs-goal-lose]"); page.click("[data-testid=fit-qs-next]")
-        page.fill("[data-testid=fit-qs-age]", "21"); page.fill("[data-testid=fit-qs-cm]", "180"); page.fill("[data-testid=fit-qs-kg]", "85")
-        page.click("[data-testid=fit-qs-next]"); page.select_option("[data-testid=fit-qs-country]", "eg"); page.click("[data-testid=fit-qs-next]")
-        page.wait_for_selector("[data-testid=fit-qs-plan]", timeout=4000); page.click("[data-testid=fit-qs-next]")
-    page.wait_for_selector("[data-testid=fit-today]", timeout=5000)
-    page.click("[data-testid=fit-tab-me]")
-    page.wait_for_selector("[data-testid=fit-autotrack]", timeout=4000)
-    tiles = page.locator("[data-testid^=fit-autotrack-]:not([data-testid=fit-autotrack-sheet])").count()
-    check(tiles >= 7, "Automatic tracking: Health Connect, Huawei, Samsung, Garmin, Fitbit, Polar, Xiaomi (%d)" % tiles)
-    page.click("[data-testid=fit-autotrack-garmin]")
-    sheet = page.locator("[data-testid=fit-autotrack-sheet]").inner_text()
-    check("Garmin Connect" in sheet and "Health Connect" in sheet, "Garmin: the one setting to switch on in Garmin Connect, then Connect: " + sheet[:90].replace("\n", " "))
+    # (v9.1: this section used Fit & Food — archived with it in archive/fit/tests/mixed/e2e_v743.py)
     # ---- Android closes Attune in the background → it reopens on Fit, not on the start screen
     page.evaluate("window.dispatchEvent(new Event('attune-pause'))")
     page.reload(); page.wait_for_selector("nav", timeout=15000)

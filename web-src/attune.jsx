@@ -21,9 +21,7 @@ import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
 import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
-import { CodeWorkbench } from "./code-ui.jsx";
-import { LearnPage, NewsPage, syncDaily, lessonAhead } from "./daily-ui.jsx";
-import { DealCheck } from "./deal-ui.jsx";
+import { NewsPage, syncDaily, lessonAhead } from "./daily-ui.jsx";   // v9.1: the Learn page is archived; the news stays
 import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { RecallPage } from "./lookback-ui.jsx";
 import { gmailDue, readGmail, markReconnect } from "./gmail.js";
@@ -41,9 +39,7 @@ import { wrongLanguage } from "./answerfix.js";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { WaLibrary } from "./wagroups-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
-import { VideoDownloader } from "./video-ui.jsx";
 import { SlidesReports } from "./slides-ui.jsx";
-import { classify as videoLink, linkIn } from "./video.js";
 import { popBack, hasBack, useSubBack, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
@@ -73,7 +69,6 @@ import { inviteReady, inviteHello, inviteRedeem, loadInvite, bonusUntil, addBonu
 import { guess as guessRoute } from "./homeroute.js";   // v8.7 the Home router, shadow mode: recorded, not acted on yet   // v8.7 (persona 4, idea 13)
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels, myCountry, bookingLine } from "./agent-ui.jsx";
-import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
 import { PrivacyPage } from "./privacy-ui.jsx";
@@ -166,7 +161,7 @@ import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
 import { BILLING_GROUPS, COMPARE_ROWS, pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, devMode, setDevMode, PLAY, proFromOwned, lifetimeOffer, referralFrom, referralLink, REFERRAL_DAYS } from "./billing.js";
 import { LICENCE_PUBLIC_KEY } from "./licence.js";
-import { REMOVED, isRemoved } from "./removed.js";   // v9.1: Business (erp.js) is archived — the Pro-code key lives here
+import { REMOVED, isRemoved, hiddenFromMenus } from "./removed.js";   // v9.1: Business (erp.js) is archived — the Pro-code key lives here
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
@@ -7825,8 +7820,8 @@ const STUDIO_OFF = true;   // v9.1: Studio is removed (archive/studio/)
 // v9.1 (Ali, 4 Nov 2026: "the app is a life planner / organiser — Studio and Business are removed; Business becomes Attune Business"):
 // these are out of the app — in no list, hub, group, "/" command or Home tile. Their code is kept in archive/<name>/ to bring back.
 {
-  for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (REMOVED.includes(MORE_TOOLS[i][0])) MORE_TOOLS.splice(i, 1);
-  for (const h of HUBS) for (const r of REMOVED) { const k = h[3].indexOf(r); if (k >= 0) h[3].splice(k, 1); }
+  for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (hiddenFromMenus(MORE_TOOLS[i][0])) MORE_TOOLS.splice(i, 1);
+  for (const h of HUBS) for (let k = h[3].length - 1; k >= 0; k--) if (hiddenFromMenus(h[3][k])) h[3].splice(k, 1);
 }
 
 // v6.50 (Ali, 22 Oct: "I want everything in the app to be available via home chat"): every tool can be opened from the Home box —
@@ -8734,9 +8729,7 @@ export default function App() {
       if (!shared) return;
       // A bank SMS, an InstaPay or wallet confirmation: straight to Money.
       if (d.kind === "share") {
-        // v5.38: a shared video link (a direct file, archive.org, Wikimedia Commons) → Video Downloader
-        const link = linkIn(shared), vk = link && videoLink(link).kind;
-        if (link && ["direct", "archive", "commons"].includes(vk) && shared.length - link.length < 120) { setVideoIn(link + "#" + Date.now()); navTo("video"); return; }
+        // (v9.1: a shared video link no longer opens the Video Downloader — archived; it is read like any shared text)
         const pay = parsePayment(shared, { now: Date.now(), ...payOpts() });
         if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); navTo("money");
           showToast(tr("Payment received — pick the account and confirm"), 3500); return; }
@@ -8814,7 +8807,7 @@ export default function App() {
   }, []);
   // v6.27 Homework Coach: a homework photo (or "teach me …") from Chat
   useEffect(() => {
-    const on = (e) => { setCoachIn((e && e.detail) || null); setMode("coach"); };
+    const on = () => {};   // v9.1: Homework Coach is archived (archive/learn/) — Chat answers homework itself
     window.addEventListener("attune-coach", on);
     return () => window.removeEventListener("attune-coach", on);
   }, []);
@@ -8906,7 +8899,7 @@ export default function App() {
   // "Test & fix in Code" under a code block in Chat.
   const [codeIn, setCodeIn] = useState(null);
   useEffect(() => {
-    const on = (e) => { setCodeIn(e.detail || null); setMode("code"); };
+    const on = () => {};   // v9.1: the Code page is archived (archive/code/)
     window.addEventListener("attune-code", on);
     return () => window.removeEventListener("attune-code", on);
   }, []);
@@ -10748,11 +10741,6 @@ export default function App() {
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }}
             search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 4 }) : null}
             onResearch={(topic, q) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + (q || tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: topic }))); navTo("chat"); }} />
-        ) : mode === "learn" ? (
-          <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
-            modelReady={modelUsable}
-            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken, grammar: o.grammar })}
-            illustrate={null} />
         ) : mode === "convert" ? (
           <FileConverter flash={flash} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision}
@@ -10764,8 +10752,6 @@ export default function App() {
             webPages={NATIVE ? (q, n) => webLookupRaw(q, n) : null}
             saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false })} />
-        ) : mode === "video" ? (
-          <VideoDownloader subsForFile={(f) => { jobs.add({ kind: "subtitles", heavy: true, title: tr("Subtitles: {n}", { n: f.name }), input: { files: [f], name: f.name, text: "" } }); flash(tr("Working on it — the subtitles show on Home")); }} flash={flash} nativeCall={NATIVE ? nativeCall : null} pro={proActive} openPlan={() => setShowUpgrade(true)} initialLink={videoIn ? videoIn.replace(/#\d+$/, "") : ""} key={videoIn || "v"} />
         ) : mode === "groups" ? (
           <WaLibrary incoming={waIn} clearIncoming={() => setWaIn(null)} flash={flash} openXray={(x) => { setXrayIn(x); navTo("xray"); }} />
         ) : mode === "xray" ? (
@@ -10773,11 +10759,6 @@ export default function App() {
             modelReady={modelUsable}
             scheduleReminder={scheduleReminder} incoming={xrayIn} clearIncoming={() => setXrayIn(null)}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
-        ) : mode === "deal" ? (
-          <DealCheck flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
-            modelReady={modelUsable}
-            webPages={NATIVE ? (q, n) => webLookupRaw(q, n) : null}
-            llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "news" ? (
           <NewsPage flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             nativeCall={NATIVE && NATIVE.news ? nativeCall : null}
@@ -10804,13 +10785,6 @@ export default function App() {
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.3, think: false, json: !!o.json })}
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
-        ) : mode === "code" ? (
-          <CodeWorkbench flash={flash} native={NATIVE} incoming={codeIn} clearIncoming={() => setCodeIn(null)}
-            engineReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")} openEngine={() => setShowEngine(true)}
-            abortModel={() => LocalEngine.abort()}
-            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken })}
-            saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
-            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "people" ? (
           <PeoplePage nativeCall={NATIVE ? nativeCall : null} navTo={navTo} flash={flash} />
         ) : mode === "remember" ? (
@@ -10830,15 +10804,6 @@ export default function App() {
           <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
             openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
-        ) : mode === "scout" ? (
-          <ScoutPage search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 }) : null} flash={flash}
-            remind={(r) => scheduleReminder({ ...r, created: Date.now(), source: "scout" })} incoming={scoutIn} clearIncoming={() => setScoutIn(null)}
-            readPage={NATIVE && NATIVE.fetchText ? async (url) => { const r = await nativeCall("fetchText", url); return r && r.text ? { text: r.text, title: "" } : null; } : null}
-            goldPrice={async (karat) => {   // v6.36 Scout gold: the world price (USD per ounce) × today's rate, by code
-              let oz = null; try { const r = await fetch("https://api.gold-api.com/price/XAU"); oz = (await r.json()).price; } catch (e) {}
-              let rate = null; try { const r = NATIVE && NATIVE.fxRates ? await nativeCall("fxRates", "") : null; rate = r ? (JSON.parse(r.body || "{}").rates || {})[homeCurrency()] : null; } catch (e) {}
-              return goldGram(oz, homeCurrency() === "USD" ? 1 : rate, karat); }}
-            openLink={(url, label) => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: { label: label || url, url }, plan: null, inApp: false } }))} />
         ) : mode === "lifeask" ? (
           <LifeAskPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }}
@@ -10855,10 +10820,6 @@ export default function App() {
             installPack={NATIVE && NATIVE.knowInstall ? (id) => nativeCall("knowInstall", { id }) : null}
             remind={(r) => scheduleReminder({ ...r, created: Date.now(), source: "care" })}
             unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
-        ) : mode === "coach" ? (
-          <CoachPage native={{ N: NATIVE, call: nativeCall }} readText={readTextAny} flash={flash} incoming={coachIn} clearIncoming={() => setCoachIn(null)}
-            ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 900, temperature: 0.2, think: false }) : null}
-            verify={modelState === "ready" ? async (q) => { if (!(await pythonAvailable())) return null; const r = await verifyMath({ question: q, llm: (m, o) => callChat(m, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false }), runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), explain: false }); return r && r.ok ? { ok: true, answer: r.answer } : null; } : null} />
         ) : mode === "timeline" ? (
           <TimelinePage navTo={navTo} doIt={doFromHome} flash={flash} />
         ) : mode === "missions" ? (
@@ -11190,6 +11151,15 @@ export default function App() {
             <FamilySeeAll fam="instant" onClick={() => setInstRep(true)} />
             <p className="flex items-center justify-center gap-1.5 text-[11px] text-teal-500/60"><ShieldCheck size={12} /> {tr("Runs on your phone · works with no signal")}</p>
           </div>
+        ) : mode === "scout" ? (
+          <ScoutPage search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 }) : null} flash={flash}
+            remind={(r) => scheduleReminder({ ...r, created: Date.now(), source: "scout" })} incoming={scoutIn} clearIncoming={() => setScoutIn(null)}
+            readPage={NATIVE && NATIVE.fetchText ? async (url) => { const r = await nativeCall("fetchText", url); return r && r.text ? { text: r.text, title: "" } : null; } : null}
+            goldPrice={async (karat) => {   // v6.36 Scout gold: the world price (USD per ounce) × today's rate, by code
+              let oz = null; try { const r = await fetch("https://api.gold-api.com/price/XAU"); oz = (await r.json()).price; } catch (e) {}
+              let rate = null; try { const r = NATIVE && NATIVE.fxRates ? await nativeCall("fxRates", "") : null; rate = r ? (JSON.parse(r.body || "{}").rates || {})[homeCurrency()] : null; } catch (e) {}
+              return goldGram(oz, homeCurrency() === "USD" ? 1 : rate, karat); }}
+            openLink={(url, label) => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: { label: label || url, url }, plan: null, inApp: false } }))} />
         ) : mode === "write" ? (
           <WritingBox onGo={(k, t) => { if (k === "improve") setInput(t); else if (k === "compress") setCPrompt(t); else setHzText(t); setWriteRun(k); navTo(k); }} />
         ) : mode === "humanize" ? (
@@ -11534,7 +11504,7 @@ export default function App() {
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
           {/* v6.27 design A "Calm": Home · Chat · Money · Scout (v6.29, was Health) · Mind, then All (every tool; Instant and Business live there now) */}
           {[["home", "Home", House], ["chat", "Chat", MessageCircle], ["money", "Money", Wallet],
-            ["scout", "Scout", Binoculars], ["memory", "Mind", Brain], ["more", "All", LayoutGrid]].map(([id, label, Icon]) => {
+            ["agents", "Agents", Radar], ["memory", "Mind", Brain], ["more", "All", LayoutGrid]].map(([id, label, Icon]) => {   // v9.1: Scout archived — Agents does what it did
             // v6.29 (Ali: "remove Health" → Scout): Health stays one tap away on Home (Fit & Food card) and in All
             const on = id === "more" ? moreOpen : (mode === id && !moreOpen);
             return (
@@ -11921,7 +11891,7 @@ function TextSize() {
 // (the model stays loaded in the engine, so it takes about a second).
 /** v6.32: the Attune keyboard (Android, AttuneKeyboard.kt) — Improve, Translate, Reply and Prompt in every app. Shown only in the app. */
 // v8.7: the keyboard comes in the second Play release — the Play build shows no keyboard row
-function KeyboardRow() { return PLAY_BUILD ? null : <KeyboardRowIn />; }
+function KeyboardRow() { return null; }   // v9.1 (Ali, 4 Nov): the Attune keyboard is removed (archive/keyboard/) — KeyboardRowIn kept to restore
 function KeyboardRowIn() {
   const N = typeof window !== "undefined" ? window.AttuneNative : null;
   const read = () => { try { return JSON.parse(N.keyboardState()).enabled; } catch (e) { return false; } };

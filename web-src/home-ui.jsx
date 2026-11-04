@@ -45,7 +45,7 @@ import { EmailCard } from "./email-ui.jsx";
 import * as LA from "./lifeask.js";
 import { connectNow, pickPerson, allStores } from "./connected.js";
 import { insights, loadSeen, saveSeen, dismiss as dismissSeen } from "./insights.js";
-import { withoutRemoved } from "./removed.js";
+import { withoutHidden as withoutRemoved } from "./removed.js";   // v9.1: removed + folded (Scout) tools leave menus
 import { loadDir } from "./entities.js";
 import { notesMoneyNow } from "./notes-money-ui.jsx";
 

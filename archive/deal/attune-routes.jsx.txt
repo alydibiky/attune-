@@ -1,0 +1,9 @@
+// Removed from web-src/attune.jsx on 4 Nov 2026 (the route chain). Paste back before `) : mode === "write"` with the imports in README.md.
+
+// ---- mode "deal" ----
+        ) : mode === "deal" ? (
+          <DealCheck flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
+            modelReady={modelUsable}
+            webPages={NATIVE ? (q, n) => webLookupRaw(q, n) : null}
+            llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
+

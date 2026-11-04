@@ -43,52 +43,7 @@ with sync_playwright() as p:
     check("38 tok/s" in page.evaluate("window.__mock.shared || ''"), "Send log hands the same text to the phone's share sheet")
 
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
-    page.locator("nav button").last.click(); page.wait_for_timeout(250)
-    page.locator(".rounded-t-2xl button:has-text('Fit & Food')").first.click()
-    page.wait_for_selector("[data-testid=fit-today]", timeout=6000)
-
-    # ---- 2. correct a typed meal once ----
-    page.locator("[data-testid=fit-add-lunch]").click()
-    page.locator("[data-testid=fit-log-text]").fill("طبق رز وبيضتين")
-    page.locator("[data-testid=fit-read]").click()
-    page.wait_for_selector("[data-testid=fit-draft]", timeout=5000)
-    d = draft(page)
-    check(len(d) == 2 and "Rice" in d[0][0] and d[0][1] == "200" and d[1][1] == "100", "read by code: a plate of rice (200 g) and 2 eggs (100 g) — %s" % d)
-    check(items(page).nth(0).locator("[data-testid=fit-alts]").count() == 1, "every typed food offers one-tap swaps and “something else…”")
-    check(items(page).nth(0).locator("text=as written").count() == 1, "the portion buttons say “as written”, not “as seen”")
-    alt = items(page).nth(0).locator("[data-testid=fit-alt]:has-text('Brown rice')")
-    check(alt.count() == 1, "brown rice is one of the swaps")
-    alt.click(); page.wait_for_timeout(150)
-    page.locator("[data-testid=fit-draft-grams]").nth(0).fill("300"); page.wait_for_timeout(100)
-    check("Brown rice" in items(page).nth(0).inner_text(), "swapped to brown rice")
-    # ---- 3. star the eggs ----
-    items(page).nth(1).locator("[data-testid=fit-fav-toggle]").click(); page.wait_for_timeout(150)
-    check(page.locator("text=one tap next time").count() > 0, "starring says what it does")
-    page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(300)
-
-    # ---- the next time: the same words, the correction applied by itself ----
-    page.locator("[data-testid=fit-add-dinner]").click()
-    check(page.locator("[data-testid=fit-favs]").count() == 1 and "Egg" in page.locator("[data-testid=fit-favs]").inner_text(), "Favorites row at the top of the log sheet")
-    page.locator("[data-testid=fit-log-text]").fill("طبق رز")
-    page.locator("[data-testid=fit-read]").click()
-    page.wait_for_selector("[data-testid=fit-draft]", timeout=5000)
-    d = draft(page)
-    check(len(d) == 1 and "Brown rice" in d[0][0] and d[0][1] == "300", "«طبق رز» next time: brown rice, 300 g — %s" % d)
-    check(items(page).nth(0).locator("text=as you corrected it").count() == 1, "…marked “as you corrected it”")
-    # the favorite in one tap
-    page.locator("button:has-text('Back')").click(); page.wait_for_timeout(150)
-    page.locator("[data-testid=fit-fav-item]").first.click(); page.wait_for_timeout(150)
-    d = draft(page)
-    check(any("Egg" in t and g == "100" for t, g in d), "one tap on the favorite adds 2 eggs (100 g), the portion it was starred at — %s" % d)
-    # un-star
-    k = [i for i, (t, _) in enumerate(d) if "Egg" in t][0]
-    items(page).nth(k).locator("[data-testid=fit-fav-toggle]").click(); page.wait_for_timeout(150)
-    page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(300)
-    page.locator("[data-testid=fit-add-snacks]").click(); page.wait_for_timeout(150)
-    check(page.locator("[data-testid=fit-favs]").count() == 0, "tapping the star again removes it from Favorites")
-    saved = json.loads(page.evaluate("localStorage.getItem('attune:fit:v1')"))
-    check(saved.get("favFoods") == [], "…and from what's saved")
-
+    # (v9.1: the typed-meal corrections below used Fit & Food — archived in archive/fit/tests/mixed/e2e_v64.py)
     errs = real_errors(errors)
     check(not errs, "no JavaScript errors in the page (%d)%s" % (len(errs), (": " + errs[0]) if errs else ""))
     ctx.close(); br.close()

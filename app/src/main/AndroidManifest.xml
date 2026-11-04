@@ -226,12 +226,14 @@
              the main APK and the Play Store bundle). Play Protect's fraud protection blocks a notification reader installed
              from a browser / file manager / chat, so the "lite" build leaves it out for phones that can't install the full one. -->
 
-        <!-- v6.32: the Attune keyboard (AttuneKeyboard.kt) — the user turns it on in the system's keyboard settings. -->
+        <!-- v9.1 (Ali, 4 Nov 2026): the Attune keyboard is removed — a keyboard that reads every word typed is a privacy and Play-review
+             risk with little gain for an organiser. AttuneKeyboard.kt stays in the code (archive/keyboard/README.md); to bring it back,
+             put this service back:
         <service android:name=".AttuneKeyboard" android:label="@string/kb_name" android:exported="true"
             android:permission="android.permission.BIND_INPUT_METHOD">
             <intent-filter><action android:name="android.view.InputMethod" /></intent-filter>
             <meta-data android:name="android.view.im" android:resource="@xml/method" />
-        </service>
+        </service> -->
 
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />

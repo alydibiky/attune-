@@ -1,0 +1,11 @@
+// Removed from web-src/attune.jsx on 4 Nov 2026 (the route chain). Paste back before `) : mode === "write"` with the imports in README.md.
+
+// ---- mode "code" ----
+        ) : mode === "code" ? (
+          <CodeWorkbench flash={flash} native={NATIVE} incoming={codeIn} clearIncoming={() => setCodeIn(null)}
+            engineReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")} openEngine={() => setShowEngine(true)}
+            abortModel={() => LocalEngine.abort()}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken })}
+            saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
+

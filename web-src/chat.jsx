@@ -999,7 +999,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
     // v6.27 Homework Coach: a photo of homework («solve this», «help with my homework», «حل», «اشرح») or «teach me 2x + 3 = 11»
     const hw = /\b(homework|worksheet|solve (this|these|it)|help me (solve|with)|teach me|explain (this|how to solve)|step by step)\b|واجب|الواجب|حل (ده|دي|المسأله|المسألة|التمرين)|اشرحلي|اشرح لي|علمني|ساعدني في حل/i;
-    if (route && ((img && hw.test(typed)) || (!img && /^(teach me|explain how to solve|help me solve|علمني|اشرحلي|ساعدني في حل)\b/i.test(typed.trim())))) {
+    if (false && route && ((img && hw.test(typed)) || (!img && /^(teach me|explain how to solve|help me solve|علمني|اشرحلي|ساعدني في حل)\b/i.test(typed.trim())))) /* v9.1: Homework Coach archived — Chat answers homework itself */ {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed, ...(img ? { image: img.url } : {}) },

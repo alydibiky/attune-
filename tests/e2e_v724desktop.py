@@ -37,9 +37,9 @@ with sync_playwright() as p:
     # a new chat, then a tool found by search
     page.locator("[data-testid=side-new]").click(); page.wait_for_timeout(300); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(500)
     check(page.locator("[data-testid=composer] textarea").input_value() == "" and "About EGP" not in page.locator("body").inner_text(), "New chat starts an empty chat")
-    page.fill("[data-testid=side-search]", "fit"); page.wait_for_timeout(200)
-    check(page.locator("[data-testid=side-tool-hits] [data-testid=side-go-fit]").count() == 1, "searching the sidebar finds a tool")
-    page.locator("[data-testid=side-tool-hits] [data-testid=side-go-fit]").click(); page.wait_for_timeout(600)
+    page.fill("[data-testid=side-search]", "conver"); page.wait_for_timeout(200)   # v9.1: Fit & Food is archived — the converter stands in
+    check(page.locator("[data-testid=side-tool-hits] [data-testid=side-go-convert]").count() == 1, "searching the sidebar finds a tool")
+    page.locator("[data-testid=side-tool-hits] [data-testid=side-go-convert]").click(); page.wait_for_timeout(600)
     page.fill("[data-testid=side-search]", "")
     check(page.locator("[data-testid=side]").is_visible(), "the sidebar stays while a tool is open")
     page.locator("[data-testid=side-go-money]").click(); page.wait_for_timeout(600)
