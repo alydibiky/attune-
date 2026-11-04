@@ -110,8 +110,10 @@ model organises work: reads PDFs, sorts them, pulls out dates, tasks and amounts
 
 ## Ali's decisions (4 Nov 2026, evening) — ALI DECIDED
 - **Sections 1–3: all kept** as suggested.
-- **32 Artifacts · 33 Assistants · 34 Skills:** kept; Claude's advice: merge them into **Projects** (each project = files + chats +
-  its assistant + its routines + saved results) — a design change, so show Ali mock-ups first.
+- **32 Artifacts · 33 Assistants · 34 Skills → merged into Projects — ALI PICKED design D (4 Nov):** a project (one work folder)
+  opens on its name + due date, ONE big "Ask about this work" box, then 4 quiet rows: **Files** (count ›) · **Saved** (what Attune made
+  for it — was Artifacts) · **Repeats** (its routines — was Skills) · **Answers as** (its assistant — was Assistants). Nothing else on
+  the page. (He found the first three mock-ups — tabs / one long page / a chat — cluttered.)
 - **35 Instant:** kept (quick capture from the phone's quick-settings tile).
 - **46 Fit & Food, 47 Food photo, 48 Cycle → archived; they become the separate product Attune Fit.** (Attune keeps meals typed
   in Chat, water, weight, sleep, medicines as a light log.) What makes Attune Fit different from Yazio: Egyptian / Arab food as eaten,
