@@ -38,6 +38,11 @@ app better, smoother, better features, and the best ways of implementation".
   **Waiting for Ali's letters:** D1 morning plan / evening close · D2 to-do widget · D3 flight day grid + buy-or-wait · D4 shared budget ·
   D5 simple mode · D6 first minute · A2 Ramadan on Home · A3 scam check.
 - All round-3 lines in 20 languages.
+- Found by the suite and fixed: **How to use search crashed** (the To-dos & lists guide of round 2 had no tip) — tip + sample data added,
+  `searchGuide` tolerates a missing tip; **27 guide texts were English only** (the i18n audit doesn't read guide.js pairs) — all 20 languages
+  now, and `tests/unit/v922guidelangs.test.mjs` fails if a guide text is missing in any language; a project's **Earlier chats** missed a chat
+  saved just after the page opened (`chat.jsx` fires `attune-chats-saved`, `spaces-ui.jsx` re-reads); **`tests/run_all.sh` now reports a unit
+  file that crashes** (it used to show its last PASS line — that is how v731guide hid the crash).
 
 ## v9.2 part 2 — 4 Nov night: Ali's picks BUILT (1A 2A 3A 4A 5A 6 = A + B, 7A), all 20 languages (165 new lines)
 - **1A To-dos & lists** (Ali: "+ a part where I add my list and adjust whether it is recurring or not — clear and visible"):
