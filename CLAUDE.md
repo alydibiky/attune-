@@ -1,5 +1,10 @@
 # Attune — read this first (every session)
 
+000000. **THE BRAND (Ali, 4 Nov 2026): Attune = a life planner / organiser + productivity app with offline AI** (phone: your
+   day, money, dates, people, documents; computer: organise work, read and sort PDFs, understand context). Read the top of
+   **`VISION.md`** and **`FEATURES.md`** (every feature, its use and verdict) before anything else. Business features go to the
+   separate product **Attune Business**. **Never delete a removed feature's code — archive it in `archive/<name>/` with a README
+   so one prompt brings it back** (Ali's rule). Removed so far: Studio, Business, Fleet, Site reports, Crane toolkit.
 00000. **Voice assistant in progress — read `VOICE_PLAN.md` (Ali's pick, 25 Oct: "Ya Attune", Franco per person, global) and continue its next unticked step.**
 00000a. **Launch: `LAUNCH_PLAN_2026-12.md`** (Ali, 2 Nov: "make the app perfect and really smart — deploy in 1 month max";
    "ready = no mistakes"). Work its unticked items; every mistake Ali finds gets a test so it can't come back.

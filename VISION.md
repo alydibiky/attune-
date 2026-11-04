@@ -3,7 +3,30 @@
 _Read this right after CLAUDE.md, in every session. Every feature, fix and design choice serves this page.
 The detailed decisions behind it stay in `ROADMAP_2026-10-13.md`; what is built is in `APP_HANDOFF.md`._
 
-## The vision — in Ali's words
+## ★ The brand identity — Ali, 4 Nov 2026 (this REPLACES the "everything app" line of 20 Oct below)
+> "The goal of the app is to be a life planner or organizer and productivity app with offline AI for help in understanding
+> and answering context — even on powerful computers the model should organize work, read PDFs and organize them, and
+> understand context."
+
+**In one line:** Attune is your private AI that organises your life and work — your day, money, dates, people and documents —
+on your own device.
+**بالمصري:** Attune هو المنظّم بتاعك: بيرتّب يومك وفلوسك ومواعيدك والناس وملفاتك، بذكاء اصطناعي شغّال على جهازك من غير نت.
+
+- **Phone:** the planner — Today, Chat that understands and acts, reminders, Follow-ups, Deadline Radar, Missions, Money,
+  People & plans, Mind + Recall, documents.
+- **Computer:** the same model organises WORK — Projects + Documents at the centre: read a folder of PDFs, summarise, pull out
+  dates / tasks / amounts into the plan, answer from them with the page cited.
+- **Product family:** Attune (this app) · **Attune Business** (Fleet & rentals, Books, ERP, crane toolkit — a separate product
+  for companies) · later maybe Attune Fit and Attune Learn. Every feature, one by one, with its verdict: **`FEATURES.md`**.
+- **Removing:** anything taken out of the app is ARCHIVED in `archive/<name>/` with a README to bring it back by one prompt —
+  never deleted (Ali's rule). Removed so far: Studio, Business (+ Fleet, Site reports, Crane toolkit).
+- **Decided the same week:** prices by region, 3 tiers (`PRICES_BY_COUNTRY.md`); when the code is unsure what a message means,
+  the phone's model decides, and if it's unsure too, Chat asks "Which did you mean?" (option A); the hotel offers screen is
+  option 4 (A + C).
+- The rest of this page (principles, roadmap) still holds where it fits the organiser; where it says "for people AND businesses"
+  or "every part of life in one app", the brand line above wins — businesses go to Attune Business.
+
+## The vision — in Ali's words (20 Oct 2026, kept for history)
 > "A global app that people can live with — that has all aspects of their life in it. Not competing with AI, but having
 > AI, with very strong coding as the key, so the app does very hard, complex and useful things."
 
