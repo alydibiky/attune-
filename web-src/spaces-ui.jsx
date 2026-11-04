@@ -3,14 +3,14 @@
 import { askConfirm } from "./confirm.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { tr, dateLocale } from "./i18n.js";
+import { tr, dateLocale, getLang } from "./i18n.js";
 import { Md, loadChats } from "./chat.jsx";
 import { brainOf } from "./projectbrain.js";
 import { htmlDoc } from "./sandbox.js";
 import { fixMessages, applyFix } from "./code.js";
 import {
   loadAssistants, upsertAssistant, deleteAssistant, isBuiltinAssistant,
-  loadProjects, upsertProject, deleteProject,
+  loadProjects, upsertProject, deleteProject, EVERY, repeatDue, dueRepeats, markRepeatRun, daysToDue, artifactsFor,
   loadArtifacts, saveArtifact, deleteArtifact, latest, fileNameFor,
   ACCENTS, BACKGROUNDS, PALETTES, loadTheme, saveTheme, applyTheme, newSpaceId,
   rulesFor, setRules, exportAssistant, importAssistant,
@@ -157,30 +157,44 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
 }
 
 /* ============================== Projects ============================== */
-export function ProjectsPage({ startChat, openChat, flash }) {
+/* ============================== Projects — design D (Ali, 4 Nov 2026) ==============================
+   One work = its name + due date, ONE big "Ask about this work" box, then 4 quiet rows: Files · Saved (what Attune made for it —
+   was Artifacts) · Repeats (questions it asks again and again — was Skills) · Answers as (its assistant + what it always knows —
+   was Assistants). Earlier chats are one light link under them. Nothing else on the page (Ali found tabs / a long page cluttered). */
+const EVERY_LABEL = { "": "Only when I tap", day: "Every day", week: "Every week", month: "Every month" };
+// "Saved" the row is a noun (the saved things) — in Arabic «المحفوظ», not the flash «اتحفظ», so it has its own line
+const rowName = (k) => (k === "Saved" && getLang() !== "en" ? tr("Saved items") : tr(k));
+const shortDate = (t) => new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" });
+function dueText(due) {
+  const n = daysToDue(due); if (n == null) return "";
+  const [y, m, d] = due.split("-").map(Number), when = shortDate(new Date(y, m - 1, d));
+  return n < 0 ? tr("Was due {d}", { d: when }) : n === 0 ? tr("Due today") : tr("Due {d} · in {n} days", { d: when, n });
+}
+
+export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flash }) {
   const [list, setList] = useState(() => loadProjects());
   const [openId, setOpenId] = useSticky("projects:open", null);
+  const [sub, setSub] = useState(null);             // files | saved | repeats | answers | chats
   const [edit, setEdit] = useState(null);
   const [note, setNote] = useState(null);           // { name, text } being added
-  useSubBack(!!openId, () => setOpenId(null));      // v5.34: Back — project → all projects
-  useSubBack(!!edit, () => setEdit(null));          //         edit form → the project
+  const [q, setQ] = useState("");
+  const [rep, setRep] = useState(null);             // { text, every } being added
+  const [arts, setArts] = useState(() => loadArtifacts());
+  useSubBack(!!openId, () => { setOpenId(null); setSub(null); });   // Back — the work → all projects
+  useSubBack(!!sub, () => setSub(null));                            //        a row → the work
+  useSubBack(!!edit, () => setEdit(null));
   useSubBack(!!note, () => setNote(null));
+  useEffect(() => { const on = () => setArts(loadArtifacts()); window.addEventListener("attune-artifacts-changed", on); return () => window.removeEventListener("attune-artifacts-changed", on); }, []);
   const fileRef = useRef(null);
   const reload = () => setList(loadProjects());
   const cur = list.find((p) => p.id === openId) || null;
   const allChats = useMemo(() => loadChats(), [list, openId]);
-  const chats = useMemo(() => (cur ? loadChats().filter((c) => c.projectId === cur.id) : []), [openId, list]);
+  const chats = useMemo(() => (cur ? allChats.filter((c) => c.projectId === cur.id) : []), [allChats, cur && cur.id]);
+  const assistants = useMemo(() => loadAssistants(), [openId, sub]);
+  const save = (p, msg) => { const r = upsertProject(p); if (!r) { flash && flash(tr(msg || "Storage is full — remove some files first")); return null; } reload(); return r; };
 
-  const saveEdit = () => {
-    const p = upsertProject(edit);
-    if (!p) { flash && flash(tr("Storage is full — remove some files first")); return; }
-    setEdit(null); reload(); setOpenId(p.id);
-  };
-  const addKnowledge = (k) => {
-    const p = upsertProject({ ...cur, knowledge: [...(cur.knowledge || []), { id: newSpaceId("k"), ...k }] });
-    if (!p) { flash && flash(tr("Storage is full — that file is too big")); return; }
-    reload(); flash && flash(tr("Added to the project"));
-  };
+  const saveEdit = () => { const p = save(edit); if (!p) return; setEdit(null); setOpenId(p.id); };
+  const addKnowledge = (k) => { if (save({ ...cur, knowledge: [...(cur.knowledge || []), { id: newSpaceId("k"), ...k }] }, "Storage is full — that file is too big")) flash && flash(tr("Added to the project")); };
   const onFile = async (e) => {
     const f = e.target.files && e.target.files[0]; e.target.value = "";
     if (!f) return;
@@ -188,6 +202,8 @@ export function ProjectsPage({ startChat, openChat, flash }) {
     try { const text = await f.text(); if (!text.trim()) throw new Error("empty"); addKnowledge({ name: f.name, text }); }
     catch (x) { flash && flash(tr("Only text files work here (.txt, .md, .csv, .json)")); }
   };
+  const askHere = (text) => { const t = String(text || "").trim(); if (!t || !cur) return; setQ(""); startChat({ projectId: cur.id, assistantId: cur.assistantId || null, starter: t, send: true }); };
+  const runRepeat = (r) => { markRepeatRun(cur.id, r.id); reload(); askHere(r.text); };
 
   if (edit) return (
     <div className={"att-in " + card + " p-4 space-y-3 lg:max-w-3xl"} data-testid="project-edit">
@@ -195,104 +211,186 @@ export function ProjectsPage({ startChat, openChat, flash }) {
         <input value={edit.emoji} onChange={(e) => setEdit({ ...edit, emoji: e.target.value })} className={input + " w-16 text-center text-lg"} />
         <input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} placeholder={tr("Project name, e.g. Port Said tender")} dir="auto" className={input} data-testid="project-name" />
       </div>
-      <span className="block text-[12px] text-[var(--c-mut)]">{tr("Instructions for every chat in this project")}</span>
-      <textarea value={edit.instructions} onChange={(e) => setEdit({ ...edit, instructions: e.target.value })} rows={6} dir="auto" className={input} data-testid="project-instructions"
-        placeholder={tr("e.g. We are bidding for a 3-month catering contract. Prices in EGP, VAT 14%. Answer as our commercial manager.")} />
+      <label className="block"><span className="block text-[12px] text-[var(--c-mut)] mb-1">{tr("Due date (optional)")}</span>
+        <input type="date" value={edit.due || ""} onChange={(e) => setEdit({ ...edit, due: e.target.value })} className={input} data-testid="project-due" /></label>
+      {!edit.id ? <><span className="block text-[12px] text-[var(--c-mut)]">{tr("What it should always know about this work")}</span>
+        <textarea value={edit.instructions} onChange={(e) => setEdit({ ...edit, instructions: e.target.value })} rows={4} dir="auto" className={input} data-testid="project-instructions"
+          placeholder={tr("e.g. We are bidding for a 3-month catering contract. Prices in EGP, VAT 14%. Answer as our commercial manager.")} /></> : null}
       <div className="flex gap-2">
         <button onClick={saveEdit} disabled={!edit.name.trim()} className={btnMain} data-testid="project-save">{tr("Save")}</button>
         <button onClick={() => setEdit(null)} className={btnGhost}>{tr("Cancel")}</button>
       </div>
+      {edit.id ? <button onClick={async () => { if (!(await askConfirm("Delete this project? Its chats stay in Chat."))) return; deleteProject(edit.id); setEdit(null); setOpenId(null); setSub(null); reload(); }}
+        className="min-h-[44px] text-[13px] font-bold text-[var(--c-neg)] flex items-center gap-1.5 px-1" data-testid="project-delete"><Trash2 size={13} /> {tr("Delete project (its chats stay in Chat)")}</button> : null}
     </div>
   );
 
-  if (cur) return (
-    <div className="calm att-in space-y-4" data-testid="project-page">
-      <button onClick={() => setOpenId(null)} className="min-h-[44px] text-[13px] font-bold text-[var(--c-acc)]">← {tr("All projects")}</button>
-      {/* v6.27 computer layout: the project and its files on the left, its chats on the right */}
-      <div className={PANES}><div className="space-y-3 min-w-0">
-      <div className={card + " p-4"}>
+  if (cur && sub) {
+    const head = { files: "Files", saved: "Saved", repeats: "Repeats", answers: "Answers as", chats: "Earlier chats" }[sub];
+    const mine = artifactsFor(cur.id, arts);
+    return (
+      <div className="calm att-in space-y-3 lg:max-w-3xl" data-testid={"project-sub-" + sub}>
+        <button onClick={() => setSub(null)} className="min-h-[44px] text-[13px] font-bold text-[var(--c-acc)]" dir="auto">← {cur.emoji} {cur.name}</button>
+        <p className="text-[18px] font-extrabold text-[var(--c-ink)] m-0">{rowName(head)}</p>
+
+        {sub === "files" ? (<div className={card + " p-4"}>
+          <p className="text-[12.5px] text-[var(--c-mut)] mt-0 mb-2">{tr("Notes and text files the assistant reads before answering — only the parts that match the question.")}</p>
+          {(cur.knowledge || []).map((k) => (
+            <div key={k.id} className="flex items-center gap-2 py-1 border-t border-[var(--c-ln)]" data-testid="project-file">
+              <FileText size={14} className="text-[var(--c-acc)] shrink-0" />
+              <span className="flex-1 min-w-0 text-[13px] text-[var(--c-ink)] truncate" dir="auto">{k.name}</span>
+              <span className="text-[11px] text-[var(--c-mut)] tabular-nums">{Math.round(k.text.length / 1000)}k</span>
+              <button onClick={async () => { if (!(await askConfirm("Remove this from the project?"))) return; save({ ...cur, knowledge: cur.knowledge.filter((x) => x.id !== k.id) }); }} className={iconBtn} title={tr("Remove")}><Trash2 size={13} /></button>
+            </div>))}
+          {note ? (
+            <div className="space-y-2 mt-2">
+              <input value={note.name} onChange={(e) => setNote({ ...note, name: e.target.value })} placeholder={tr("Title")} dir="auto" className={input} />
+              <textarea value={note.text} onChange={(e) => setNote({ ...note, text: e.target.value })} rows={5} dir="auto" placeholder={tr("Paste the text…")} className={input} data-testid="project-note-text" />
+              <div className="flex gap-2">
+                <button onClick={() => { if (note.text.trim()) addKnowledge({ name: note.name.trim() || tr("Note"), text: note.text }); setNote(null); }} className={btnMain} data-testid="project-note-save">{tr("Add")}</button>
+                <button onClick={() => setNote(null)} className={btnGhost}>{tr("Cancel")}</button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button onClick={() => setNote({ name: "", text: "" })} className={btnGhost + " flex items-center gap-1.5"} data-testid="project-add-note"><Plus size={14} /> {tr("Paste a note")}</button>
+              <button onClick={() => fileRef.current && fileRef.current.click()} className={btnGhost + " flex items-center gap-1.5"}><FileText size={14} /> {tr("Add a text file")}</button>
+              <input ref={fileRef} type="file" accept=".txt,.md,.csv,.tsv,.json,.html,.xml,text/*" className="hidden" onChange={onFile} />
+            </div>)}
+        </div>) : null}
+
+        {sub === "saved" ? (<div className="space-y-2">
+          <p className="text-[12.5px] text-[var(--c-mut)] m-0">{tr("Pages, documents and programs Attune made in this work. Ask for one, then tap Save on its card — it is kept here.")}</p>
+          {mine.length === 0 ? <div className={card + " p-5 text-center text-[13px] text-[var(--c-mut)]"} data-testid="project-saved-empty">{tr("Nothing saved here yet.")}</div>
+            : mine.map((a) => (
+            <button key={a.id} onClick={() => openArtifact && openArtifact(a)} className={card + " w-full p-3.5 flex items-center gap-3 text-start hover:border-[var(--c-acc)]"} data-testid="project-saved-item">
+              <span className={well + " text-xl"}>{a.kind === "html" ? "🌐" : a.kind === "doc" ? "📄" : "⌨️"}</span>
+              <span className="flex-1 min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{a.title}</span>
+                <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{shortDate(a.updated)} · {tr("{n} versions", { n: a.versions.length })}</span></span>
+              <ChevronRight size={16} className="shrink-0 text-[var(--c-mut)] rtl:rotate-180" />
+            </button>))}
+        </div>) : null}
+
+        {sub === "repeats" ? (<div className="space-y-2">
+          <p className="text-[12.5px] text-[var(--c-mut)] m-0">{tr("Questions this work asks again and again. Run one with a tap — the ones whose time has come are marked.")}</p>
+          {(cur.repeats || []).length === 0 && !rep ? <div className={card + " p-5 text-center text-[13px] text-[var(--c-mut)]"}>{tr("No repeats yet.")}</div> : null}
+          {(cur.repeats || []).map((r) => { const due = repeatDue(r); return (
+            <div key={r.id} className={card + " p-3.5 flex items-center gap-2"} data-testid="project-repeat">
+              <span className="flex-1 min-w-0"><span className="block text-[14px] font-bold text-[var(--c-ink)]" dir="auto">{r.text}</span>
+                <span className="block text-[12px] text-[var(--c-mut)]">{tr(EVERY_LABEL[r.every] || EVERY_LABEL[""])}{r.last ? " · " + tr("last run {d}", { d: shortDate(r.last) }) : ""}
+                  {due ? <b className="ms-1.5 text-[var(--c-warn)]" data-testid="project-repeat-due">· {tr("Due now")}</b> : null}</span></span>
+              <button onClick={() => runRepeat(r)} className={btnMain + " !min-h-[40px] !px-3 text-[13px]"} data-testid="project-repeat-run">{tr("Run")}</button>
+              <button onClick={() => save({ ...cur, repeats: cur.repeats.filter((x) => x.id !== r.id) })} className={iconBtn} title={tr("Delete")}><Trash2 size={14} /></button>
+            </div>); })}
+          {rep ? (<div className={card + " p-3.5 space-y-2"}>
+            <textarea value={rep.text} onChange={(e) => setRep({ ...rep, text: e.target.value })} rows={2} dir="auto" className={input} data-testid="project-repeat-text"
+              placeholder={tr("e.g. What is still open, and what is due this week?")} />
+            <div className="flex flex-wrap gap-1.5">{EVERY.map((k) => (
+              <button key={k || "tap"} onClick={() => setRep({ ...rep, every: k })} className={chip(rep.every === k)} data-testid={"project-repeat-every-" + (k || "tap")}>{tr(EVERY_LABEL[k])}</button>))}</div>
+            <div className="flex gap-2">
+              <button onClick={() => { if (rep.text.trim() && save({ ...cur, repeats: [...(cur.repeats || []), { id: newSpaceId("r"), text: rep.text, every: rep.every, last: 0 }] })) setRep(null); }}
+                disabled={!rep.text.trim()} className={btnMain} data-testid="project-repeat-save">{tr("Add")}</button>
+              <button onClick={() => setRep(null)} className={btnGhost}>{tr("Cancel")}</button>
+            </div></div>)
+            : <button onClick={() => setRep({ text: "", every: "week" })} className={btnGhost + " flex items-center gap-1.5"} data-testid="project-repeat-add"><Plus size={14} /> {tr("Add a repeat")}</button>}
+        </div>) : null}
+
+        {sub === "answers" ? (<div className="space-y-3">
+          <div className={card + " p-2"}>
+            {[{ id: "", emoji: "✨", name: tr("Just Attune"), desc: tr("No special role") }, ...assistants].map((a) => { const on = (cur.assistantId || "") === a.id; return (
+              <button key={a.id || "none"} onClick={() => save({ ...cur, assistantId: a.id })} className={"w-full min-h-[52px] flex items-center gap-3 px-2.5 py-2 rounded-[12px] text-start " + (on ? "bg-[var(--c-soft)]" : "hover:bg-[var(--c-surf-2)]")} data-testid="project-answers-pick">
+                <span className="text-xl w-8 text-center">{a.emoji}</span>
+                <span className="flex-1 min-w-0"><span className="block text-[14px] font-bold text-[var(--c-ink)] truncate" dir="auto">{tr(a.name)}</span>
+                  {a.desc ? <span className="block text-[12px] text-[var(--c-mut)] truncate" dir="auto">{tr(a.desc)}</span> : null}</span>
+                {on ? <Check size={16} className="text-[var(--c-acc)] shrink-0" /> : null}
+              </button>); })}
+            {openPage ? <button onClick={() => openPage("assistants")} className="w-full min-h-[44px] text-start px-2.5 text-[13px] font-bold text-[var(--c-acc)] flex items-center gap-1.5" data-testid="project-answers-make"><Plus size={14} /> {tr("Make a new assistant")}</button> : null}
+          </div>
+          <div className={card + " p-4 space-y-2"}>
+            <span className="block text-[13px] font-extrabold text-[var(--c-ink)]">{tr("What it should always know about this work")}</span>
+            <textarea defaultValue={cur.instructions} key={cur.id + ":" + (cur.updated || 0)} onBlur={(e) => { if (e.target.value !== (cur.instructions || "")) { if (save({ ...cur, instructions: e.target.value })) flash && flash(tr("Saved")); } }}
+              rows={5} dir="auto" className={input} data-testid="project-instructions"
+              placeholder={tr("e.g. We are bidding for a 3-month catering contract. Prices in EGP, VAT 14%. Answer as our commercial manager.")} />
+          </div>
+        </div>) : null}
+
+        {sub === "chats" ? (<div className="space-y-3">
+          {/* v6.38 (C4): the project brain — decisions, open points, dates, read from its chats */}
+          {(() => { const b = brainOf(cur, allChats); const any = b.decisions.length || b.open.length || b.dates.length; return any ? (
+            <div className={card + " p-4 space-y-2"} data-testid="project-brain">
+              <p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><Brain size={16} className="text-[var(--c-acc)]" />{tr("Project brain")}</p>
+              {[["decisions", "Decided", "text-[var(--c-pos)]"], ["open", "Still open", "text-[var(--c-warn)]"]].map(([k, label, col]) => b[k].length ? (
+                <div key={k} data-testid={"project-brain-" + k}><p className={"text-[12px] font-extrabold uppercase tracking-[0.08em] mb-1 " + col}>{tr(label)}</p>
+                  <ul className="m-0 p-0 list-none space-y-1">{b[k].map((x, i) => <li key={i}><button onClick={() => openChat(x.chat)} className="text-start min-h-[36px] text-[13.5px] text-[var(--c-ink)] hover:text-[var(--c-acc)]" dir="auto">• {x.text}</button></li>)}</ul></div>) : null)}
+              {b.dates.length ? <div data-testid="project-brain-dates"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] mb-1 text-[var(--c-acc)]">{tr("Dates")}</p>
+                <ul className="m-0 p-0 list-none space-y-1">{b.dates.map((x, i) => <li key={i} className="text-[13px] text-[var(--c-ink)]" dir="auto"><b className="tabular-nums" dir="ltr">{x.date}</b> · {x.text}</li>)}</ul></div> : null}
+            </div>) : null; })()}
+          <div className={card + " p-2"}>
+            {chats.length === 0 ? <p className="text-[12.5px] text-[var(--c-mut)] px-2 py-2 m-0">{tr("No chats in this project yet.")}</p> : chats.map((c) => (
+              <button key={c.id} onClick={() => openChat(c.id)} className="w-full min-h-[48px] text-start px-2.5 py-2.5 rounded-[12px] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="project-chat">
+                <span className="block text-[14px] font-bold text-[var(--c-ink)] truncate" dir="auto">{c.title}</span>
+                <span className="block text-[11.5px] text-[var(--c-mut)] tabular-nums">{shortDate(c.updated)} · {tr("{n} messages", { n: c.messages.length })}</span>
+              </button>))}
+          </div>
+        </div>) : null}
+      </div>
+    );
+  }
+
+  if (cur) {
+    const asst = cur.assistantId ? assistants.find((a) => a.id === cur.assistantId) : null;
+    const due = dueRepeats(cur).length, nSaved = artifactsFor(cur.id, arts).length, nFiles = (cur.knowledge || []).length, nRep = (cur.repeats || []).length;
+    const rows = [
+      ["files", "Files", nFiles ? String(nFiles) : tr("None yet")],
+      ["saved", "Saved", nSaved ? String(nSaved) : tr("None yet")],
+      ["repeats", "Repeats", due ? tr("{n} due", { n: due }) : nRep ? String(nRep) : tr("None yet"), !!due],
+      ["answers", "Answers as", asst ? asst.emoji + " " + tr(asst.name) : tr("Just Attune")],
+    ];
+    return (
+      <div className="calm att-in space-y-4 lg:max-w-3xl" data-testid="project-page">
+        <button onClick={() => setOpenId(null)} className="min-h-[44px] text-[13px] font-bold text-[var(--c-acc)]">← {tr("All projects")}</button>
         <div className="flex items-center gap-3">
           <span className="text-3xl">{cur.emoji}</span>
-          <div className="flex-1 min-w-0"><p className="text-base text-[var(--c-ink)] font-extrabold truncate m-0" dir="auto">{cur.name}</p>
-            <p className="text-[12px] text-[var(--c-mut)] tabular-nums m-0">{tr("{n} chats · {k} files", { n: chats.length, k: (cur.knowledge || []).length })}</p></div>
-          <button onClick={() => setEdit({ ...cur })} className={iconBtn} title={tr("Edit")}><PenLine size={16} /></button>
+          <div className="flex-1 min-w-0"><p className="text-[20px] text-[var(--c-ink)] font-extrabold truncate m-0" dir="auto">{cur.name}</p>
+            {cur.due ? <p className={"text-[12.5px] font-bold m-0 " + (daysToDue(cur.due) < 0 ? "text-[var(--c-neg)]" : "text-[var(--c-mut)]")} data-testid="project-due-line">{dueText(cur.due)}</p> : null}</div>
+          <button onClick={() => setEdit({ ...cur })} className={iconBtn} title={tr("Edit")} data-testid="project-edit-btn"><PenLine size={16} /></button>
         </div>
-        {cur.instructions ? <p className="text-[12px] text-[var(--c-mut)] mt-2 whitespace-pre-wrap line-clamp-4" dir="auto">{cur.instructions}</p> : null}
-        <button onClick={() => startChat({ projectId: cur.id })} className={btnMain + " w-full mt-3 flex items-center justify-center gap-2"} data-testid="project-new-chat"><MessageSquare size={16} /> {tr("New chat in this project")}</button>
+        {/* the one big box: whatever is asked here goes to a new chat in this work, with its files, its role and what it always knows */}
+        <div className={card + " p-3"} data-testid="project-ask">
+          <textarea value={q} onChange={(e) => setQ(e.target.value)} rows={3} dir="auto" data-testid="project-ask-input"
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && wideNow()) { e.preventDefault(); askHere(q); } }}
+            placeholder={tr("Ask about this work…")} className="w-full bg-transparent outline-none resize-none text-[16px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] p-1" />
+          <div className="flex justify-end"><button onClick={() => askHere(q)} disabled={!q.trim()} className={btnMain + " flex items-center gap-1.5"} data-testid="project-new-chat"><MessageSquare size={15} /> {tr("Ask")}</button></div>
+        </div>
+        <div className={card + " p-1.5"}>
+          {rows.map(([id, label, val, warn], i) => (
+            <button key={id} onClick={() => setSub(id)} className={"w-full min-h-[52px] flex items-center gap-3 px-3 rounded-[12px] text-start hover:bg-[var(--c-surf-2)] " + (i ? "border-t border-[var(--c-ln)]" : "")} data-testid={"project-row-" + id}>
+              <span className="flex-1 text-[15px] font-bold text-[var(--c-ink)]">{rowName(label)}</span>
+              <span className={"text-[13px] tabular-nums truncate max-w-[50%] " + (warn ? "font-extrabold text-[var(--c-warn)]" : "text-[var(--c-mut)]")} dir="auto">{val}</span>
+              <ChevronRight size={16} className="shrink-0 text-[var(--c-mut)] rtl:rotate-180" />
+            </button>))}
+        </div>
+        {chats.length ? <button onClick={() => setSub("chats")} className="min-h-[44px] px-1 text-[13px] font-bold text-[var(--c-mut)] hover:text-[var(--c-acc)]" data-testid="project-row-chats">{tr("Earlier chats ({n})", { n: chats.length })} ›</button> : null}
       </div>
-
-      {/* v6.38 (C4): the project brain — decisions, open points, dates, read from its chats */}
-      {(() => { const b = brainOf(cur, loadChats()); const any = b.decisions.length || b.open.length || b.dates.length; return (
-        <div className={card + " p-4 space-y-2"} data-testid="project-brain">
-          <p className="text-[15px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><Brain size={16} className="text-[var(--c-acc)]" />{tr("Project brain")}</p>
-          {!any ? <p className="text-[12px] text-[var(--c-mut)]">{tr("As you chat in this project, what you decide, what is still open and the dates coming up collect here — and the assistant keeps to them.")}</p> : null}
-          {[["decisions", "Decided", "text-[var(--c-pos)]"], ["open", "Still open", "text-[var(--c-warn)]"]].map(([k, label, col]) => b[k].length ? (
-            <div key={k} data-testid={"project-brain-" + k}><p className={"text-[12px] font-extrabold uppercase tracking-[0.08em] mb-1 " + col}>{tr(label)}</p>
-              <ul className="m-0 p-0 list-none space-y-1">{b[k].map((x, i) => <li key={i}><button onClick={() => openChat(x.chat)} className="text-start min-h-[36px] text-[13.5px] text-[var(--c-ink)] hover:text-[var(--c-acc)]" dir="auto">• {x.text}</button></li>)}</ul></div>) : null)}
-          {b.dates.length ? <div data-testid="project-brain-dates"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] mb-1 text-[var(--c-acc)]">{tr("Dates")}</p>
-            <ul className="m-0 p-0 list-none space-y-1">{b.dates.map((x, i) => <li key={i} className="text-[13px] text-[var(--c-ink)]" dir="auto"><b className="tabular-nums" dir="ltr">{x.date}</b> · {x.text}</li>)}</ul></div> : null}
-        </div>); })()}
-
-      <div className={card + " p-4"}>
-        <p className="text-[15px] text-[var(--c-ink)] font-extrabold m-0">{tr("Knowledge")}</p>
-        <p className="text-[12px] text-[var(--c-mut)] mt-1 mb-2">{tr("Notes and text files the assistant reads before answering — only the parts that match the question.")}</p>
-        {(cur.knowledge || []).map((k) => (
-          <div key={k.id} className="flex items-center gap-2 py-1 border-t border-[var(--c-ln)]" data-testid="project-file">
-            <FileText size={14} className="text-[var(--c-acc)] shrink-0" />
-            <span className="flex-1 min-w-0 text-[13px] text-[var(--c-ink)] truncate" dir="auto">{k.name}</span>
-            <span className="text-[11px] text-[var(--c-mut)] tabular-nums">{Math.round(k.text.length / 1000)}k</span>
-            <button onClick={async () => { if (!(await askConfirm("Remove this from the project?"))) return; upsertProject({ ...cur, knowledge: cur.knowledge.filter((x) => x.id !== k.id) }); reload(); }} className={iconBtn}><Trash2 size={13} /></button>
-          </div>
-        ))}
-        {note ? (
-          <div className="space-y-2 mt-2">
-            <input value={note.name} onChange={(e) => setNote({ ...note, name: e.target.value })} placeholder={tr("Title")} dir="auto" className={input} />
-            <textarea value={note.text} onChange={(e) => setNote({ ...note, text: e.target.value })} rows={5} dir="auto" placeholder={tr("Paste the text…")} className={input} data-testid="project-note-text" />
-            <div className="flex gap-2">
-              <button onClick={() => { if (note.text.trim()) addKnowledge({ name: note.name.trim() || tr("Note"), text: note.text }); setNote(null); }} className={btnMain} data-testid="project-note-save">{tr("Add")}</button>
-              <button onClick={() => setNote(null)} className={btnGhost}>{tr("Cancel")}</button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2 mt-3">
-            <button onClick={() => setNote({ name: "", text: "" })} className={btnGhost + " flex items-center gap-1.5"} data-testid="project-add-note"><Plus size={14} /> {tr("Paste a note")}</button>
-            <button onClick={() => fileRef.current && fileRef.current.click()} className={btnGhost + " flex items-center gap-1.5"}><FileText size={14} /> {tr("Add a text file")}</button>
-            <input ref={fileRef} type="file" accept=".txt,.md,.csv,.tsv,.json,.html,.xml,text/*" className="hidden" onChange={onFile} />
-          </div>
-        )}
-      </div>
-
-      </div>
-      <div className="space-y-3 mt-3 lg:mt-0 min-w-0">
-      <div className={card + " p-2"}>
-        <p className="text-[15px] text-[var(--c-ink)] font-extrabold px-2 pt-2 pb-1 m-0">{tr("Chats")}</p>
-        {chats.length === 0 ? <p className="text-[12px] text-[var(--c-mut)] px-2 pb-2">{tr("No chats in this project yet.")}</p> : chats.map((c) => (
-          <button key={c.id} onClick={() => openChat(c.id)} className="w-full min-h-[48px] text-start px-2.5 py-2.5 rounded-[12px] hover:bg-[var(--c-surf-2)] active:bg-[var(--c-surf-2)]" data-testid="project-chat">
-            <span className="block text-[14px] font-bold text-[var(--c-ink)] truncate" dir="auto">{c.title}</span>
-            <span className="block text-[11.5px] text-[var(--c-mut)] tabular-nums">{new Date(c.updated).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {tr("{n} messages", { n: c.messages.length })}</span>
-          </button>
-        ))}
-      </div>
-      <button onClick={() => { deleteProject(cur.id); setOpenId(null); reload(); }} className="min-h-[44px] text-[13px] font-bold text-[var(--c-neg)] flex items-center gap-1.5 px-1"><Trash2 size={13} /> {tr("Delete project (its chats stay in Chat)")}</button>
-      </div></div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="calm att-in space-y-4" data-testid="projects-page">
       <p className="text-[13px] text-[var(--c-mut)] leading-relaxed lg:max-w-[70ch]">{tr("A project keeps related chats together with shared instructions and your own files — like a folder the assistant has read.")}</p>
-      <button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [] })} className={btnMain + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-2"} data-testid="project-new"><Plus size={16} /> {tr("New project")}</button>
+      <button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [], due: "" })} className={btnMain + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-2"} data-testid="project-new"><Plus size={16} /> {tr("New project")}</button>
       {/* v7.4 (Gemini's Area 3): a calm empty state, and each project with its chats, files and when it last changed */}
       {list.length === 0 ? (
         <div className={card + " p-6 text-center space-y-2"} data-testid="projects-empty">
           <span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-[var(--c-soft)] text-2xl">📁</span>
           <p className="m-0 text-[15px] font-extrabold text-[var(--c-ink)]">{tr("No projects yet.")}</p>
           <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("A study plan, a home renovation, a small business — keep its chats and files together.")}</p>
-        </div>) : <div className={GRID3}>{list.map((p) => { const cs = allChats.filter((c) => c.projectId === p.id), last = Math.max(p.updated || 0, ...cs.map((c) => c.updated || 0)); return (
+        </div>) : <div className={GRID3}>{list.map((p) => { const cs = allChats.filter((c) => c.projectId === p.id), last = Math.max(p.updated || 0, ...cs.map((c) => c.updated || 0)), nd = dueRepeats(p).length; return (
         <button key={p.id} onClick={() => setOpenId(p.id)} className={card + " w-full p-3.5 min-h-[64px] flex items-center gap-3 text-start hover:border-[var(--c-acc)]"} data-testid="project-item">
           <span className={well + " text-2xl"}>{p.emoji}</span>
           <span className="flex-1 min-w-0"><span className="block text-[14.5px] text-[var(--c-ink)] font-extrabold leading-snug" dir="auto">{p.name}</span>
-            <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{tr("{n} chats · {k} files", { n: cs.length, k: (p.knowledge || []).length })}{last > 0 ? " · " + tr("updated {d}", { d: new Date(last).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) }) : ""}</span></span>
+            <span className="block text-[12px] text-[var(--c-mut)] tabular-nums">{p.due ? dueText(p.due) : tr("{n} chats · {k} files", { n: cs.length, k: (p.knowledge || []).length }) + (last > 0 ? " · " + tr("updated {d}", { d: shortDate(last) }) : "")}
+              {nd ? <b className="ms-1.5 text-[var(--c-warn)]">· {tr("{n} due", { n: nd })}</b> : null}</span></span>
           <ChevronRight size={16} className="shrink-0 text-[var(--c-mut)] rtl:rotate-180" />
         </button>); })}</div>}
     </div>
@@ -339,7 +437,7 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
   useEffect(() => { setVi(versions.length - 1); }, [versions.length]);
 
   const persist = (c) => {
-    const saved = saveArtifact({ id: item && item.id, kind: meta.kind, lang: meta.lang, title: meta.title, content: c });
+    const saved = saveArtifact({ id: item && item.id, kind: meta.kind, lang: meta.lang, title: meta.title, content: c, projectId: meta.projectId || "" });
     if (!saved) { flash && flash(tr("Storage is full — delete some artifacts")); return null; }
     setItem(saved); return saved;
   };
@@ -405,7 +503,7 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
           </div>
         ) : null}
         <div className="flex gap-1.5 justify-around">
-          <button onClick={() => { if (persist(content)) flash && flash(tr("Saved to Artifacts")); }} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-save"><Save size={17} />{item ? tr("Saved") : tr("Save")}</button>
+          <button onClick={() => { if (persist(content)) flash && flash(tr(meta.projectId ? "Saved to this work" : "Saved to Artifacts")); }} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-save"><Save size={17} />{item ? tr("Saved") : tr("Save")}</button>
           <button onClick={() => { try { navigator.clipboard.writeText(content); flash && flash(tr("Copied")); } catch (e) {} }} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]"><Copy size={17} />{tr("Copy")}</button>
           <button onClick={() => share(native, flash, content)} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]"><Share2 size={17} />{tr("Share")}</button>
           <button onClick={download} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-bold text-[var(--c-ink)] px-2 py-1 hover:bg-[var(--c-surf-2)]" data-testid="artifact-download"><Download size={17} />{tr("File")}</button>

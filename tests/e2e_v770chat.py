@@ -51,7 +51,7 @@ with sync_playwright() as p:
         ctx, page = new_page(br, env, errors, legacy_nav=False, desktop=(1366, 860), extra_init=INIT + (LIGHT if theme == "light" else ""))
         page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000); page.wait_for_timeout(400)
         tag = "[computer %s] " % theme
-        check(page.locator("[data-testid=side-ws-assistants]").count() == 1 and "2" in page.locator("[data-testid=side-ws-projects]").inner_text(), tag + "Workspaces in the sidebar: Assistants, Projects (2)")
+        check(page.locator("[data-testid=side-ws-assistants]").count() == 0 and "2" in page.locator("[data-testid=side-ws-projects]").inner_text(), tag + "Workspaces in the sidebar: Projects (2) — v9.1 design D: assistants live inside a project")
         page.locator("[data-testid=side-open-chat]").first.click(); page.wait_for_timeout(900)
         ans = page.locator("[data-testid=chat-answer]").first
         bg = ans.evaluate("e => getComputedStyle(e).borderTopWidth")

@@ -10239,7 +10239,8 @@ export default function App() {
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false })} />
         ) : mode === "projects" ? (
-          <ProjectsPage startChat={startSpaceChat} openChat={(id) => { setOpenChatId(id); setMode("chat"); }} flash={flash} />
+          <ProjectsPage startChat={startSpaceChat} openChat={(id) => { setOpenChatId(id); setMode("chat"); }} flash={flash}
+            openArtifact={(a) => setArtifact(a)} openPage={(m) => navTo(m)} />
         ) : mode === "artifacts" ? (
           <ArtifactsPage open={(a) => setArtifact(a)} />
         ) : mode === "ask" ? (

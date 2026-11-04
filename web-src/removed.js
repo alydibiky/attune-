@@ -12,6 +12,8 @@ export const isRemoved = (id) => REMOVED.includes(String(id || ""));
 export const withoutRemoved = (ids) => (ids || []).filter((x) => !isRemoved(Array.isArray(x) ? x[0] : x && x.id ? x.id : x));
 /* v9.1 FOLDED into another feature: no app of its own (no tab, menu, guide or Home tile), but still opened from the feature that
    took it over — Scout's results open from an Agent card ("watch ads for a used Tucson"). */
-export const FOLDED = ["scout"];
+// v9.1 design D (Ali, 4 Nov): Assistants, Skills and Artifacts live inside a project now — its "Answers as", "Repeats" and "Saved"
+// rows (the pages stay: a project's "Make a new assistant" opens Assistants, a home-screen page still opens its artifact).
+export const FOLDED = ["scout", "assistants", "skills", "artifacts"];
 export const hiddenFromMenus = (id) => isRemoved(id) || FOLDED.includes(String(id || ""));
 export const withoutHidden = (ids) => (ids || []).filter((x) => !hiddenFromMenus(Array.isArray(x) ? x[0] : x && x.id ? x.id : x));

@@ -10,8 +10,8 @@ from harness import Env, new_page, check, real_errors, finish
 env = Env()
 
 def open_skills(page):
-    page.locator("nav button").last.click(); page.wait_for_timeout(250)
-    page.locator(".rounded-t-2xl button:has-text('Skills')").first.click()
+    # v9.1 design D: Skills is folded into Projects (a project's Repeats) — the page still opens by id
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'skills'}}))")
     page.wait_for_selector("[data-testid=skills-page]", timeout=5000)
 
 def send(page, text):
@@ -33,7 +33,7 @@ with sync_playwright() as p:
     page.wait_for_selector("text=Running now", timeout=10000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
     open_skills(page)
-    check("No skills yet" in page.locator("[data-testid=skills-page]").inner_text(), "Skills opens from More, empty at first")
+    check("No skills yet" in page.locator("[data-testid=skills-page]").inner_text(), "Skills opens, empty at first")
 
     # ---- the catalogue
     page.click("[data-testid=skill-open-catalogue]"); page.wait_for_selector("[data-testid=skill-catalogue]")

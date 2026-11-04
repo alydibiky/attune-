@@ -78,8 +78,19 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   and photos on any site (agent-kit CARD_SEL), white text on photos in the light theme, Book / Open <site> → the site's own app
   (NativeBridge.openInApp, FLAG_ACTIVITY_REQUIRE_NON_BROWSER) else Attune's browser. How to use: the Work routine is Projects · Ask a
   PDF · Slides. index.html 7.05 → 5.27 MB. Full suite: 149 browser tests + every unit test pass.
-  **Next:** Ali's mock-ups for merging Artifacts + Assistants + Skills into Projects (FEATURES row 32–34); the job agent for the CV
+  **Next:** ~~Ali's mock-ups for merging Artifacts + Assistants + Skills into Projects~~ (done, below); the job agent for the CV
   (fills the application, the person presses Submit); www/vendor still ships maplibre (unused now — drop it from build.sh).
+- **4 Nov night — Projects design D (Ali picked D: "ask box + 4 rows"; he found tabs / one long page / a chat cluttered)** —
+  `spaces-ui.jsx ProjectsPage`: a work opens on its emoji + name + due date, ONE big "Ask about this work" box (sends at once into a
+  new chat of the work — chat.jsx spaceSeed `send`), then 4 quiet rows: **Files** (the old Knowledge) · **Saved** (artifacts made in
+  the work's chats — chat.jsx puts `projectId` on the artifact, saveArtifact keeps it, `artifactsFor`) · **Repeats** (questions it
+  asks again: every day / week / month / only when I tap; `repeatDue`, `markRepeatRun`; due ones marked on the row and in the list)
+  · **Answers as** (pick an assistant or "Just Attune" + "What it should always know about this work" = the instructions). The
+  project brain + chats sit behind one light "Earlier chats (n)" link; Delete moved into Edit (with a confirm). Assistants, Skills
+  and Artifacts are FOLDED (removed.js FOLDED: no menu / hub / sidebar entry; the pages still open by id — "Make a new assistant",
+  a pinned home-screen page). 27 new lines × 20 languages ("Saved items" = the row's noun, «المحفوظ»). Tests:
+  `tests/unit/v912projects.test.mjs`, `tests/e2e_v912projects.py` (phone + computer + Arabic); e2e_v514 / v614skills / v734sidebar /
+  v740projectbrain / v770chat follow the new layout.
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),

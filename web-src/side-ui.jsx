@@ -138,7 +138,7 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
             : <Row key={id} id={id} label={label} Icon={Icon} />)}
           {/* v7.4 (Gemini's Area 3): Workspaces — your assistants and projects, one tap away, with how many */}
           <p className="px-3 pt-4 pb-1.5 text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] m-0">{tr("Workspaces")}</p>
-          {[["assistants", "Assistants", Bot, (() => { try { return loadAssistants().length; } catch (e) { return 0; } })()], ["projects", "Projects", Folder, (() => { try { return loadProjects().length; } catch (e) { return 0; } })()]].map(([id, label, Icon, n]) => (
+          {[["projects", "Projects", Folder, (() => { try { return loadProjects().length; } catch (e) { return 0; } })()]].map(([id, label, Icon, n]) => (
             <button key={id} onClick={() => navTo(id)} data-testid={"side-ws-" + id}
               className={"w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[14px] font-bold text-start transition-colors duration-150 " + (mode === id ? "bg-[var(--c-soft)] text-[var(--c-acc)] shadow-sm" : "text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]")}>
               <Icon size={17} className={mode === id ? "" : "text-[var(--c-mut)]"} /><span className="flex-1 truncate">{tr(label)}</span>

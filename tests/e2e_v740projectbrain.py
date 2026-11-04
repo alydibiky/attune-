@@ -18,6 +18,7 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_timeout(1200)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'projects'}}))")
     page.wait_for_selector("[data-testid=project-item]", timeout=8000); page.click("[data-testid=project-item]")
+    page.click("[data-testid=project-row-chats]")      # v9.1 design D: the brain sits with the work's earlier chats
     page.wait_for_selector("[data-testid=project-brain]", timeout=5000)
     check("LTM 1100" in page.locator("[data-testid=project-brain-decisions]").inner_text(), "Decided: the crane choice")
     check("ground pressure" in page.locator("[data-testid=project-brain-open]").inner_text(), "Still open: the ground pressure")

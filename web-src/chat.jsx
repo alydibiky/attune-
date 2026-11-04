@@ -585,6 +585,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     stop(); setActiveId(null); setImage(null);
     setPending({ assistantId: spaceSeed.assistantId || null, projectId: spaceSeed.projectId || null });
     setText(spaceSeed.starter || "");
+    if (spaceSeed.send && spaceSeed.starter) setNewAsk(spaceSeed.starter);   // v9.1 design D: the project's ask box / a repeat sends at once
     clearSpaceSeed && clearSpaceSeed();
   }, [spaceSeed]);
   useEffect(() => { if (openChatId) { stop(); setActiveId(openChatId); setPending(null); clearOpenChat && clearOpenChat(); } }, [openChatId]);
@@ -2381,7 +2382,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               if (!art) return null;
               const kindLabel = art.kind === "html" ? tr("Web page") : art.kind === "doc" ? tr("Document") : tr("Program");
               return (
-                <button data-testid="artifact-card" onClick={() => window.dispatchEvent(new CustomEvent("attune-artifact", { detail: { ...art, chatId: chat && chat.id } }))}
+                <button data-testid="artifact-card" onClick={() => window.dispatchEvent(new CustomEvent("attune-artifact", { detail: { ...art, chatId: chat && chat.id, projectId: (chat && chat.projectId) || "" } }))}
                   className="mt-2 w-full min-h-[64px] flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5 text-start hover:border-[var(--c-acc)] active:border-[var(--c-acc)]">
                   <span className="w-10 h-10 shrink-0 rounded-[12px] bg-[var(--c-soft)] flex items-center justify-center text-lg">{art.kind === "html" ? "🌐" : art.kind === "doc" ? "📄" : "⌨️"}</span>
                   <span className="flex-1 min-w-0">

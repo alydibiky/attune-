@@ -26,8 +26,8 @@ def done(page, n=1):
     page.wait_for_function("(n) => document.querySelectorAll(\"button[title='Regenerate']\").length >= n", arg=n, timeout=30000)
 
 def open_more(page, name, testid):
-    page.locator("nav button").last.click(); page.wait_for_timeout(200)
-    page.locator(f".rounded-t-2xl button:has-text('{name}')").first.click()
+    # v9.1 design D: Assistants and Artifacts are folded into Projects (no menu entry) — their pages still open by id
+    page.evaluate("(m) => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", testid.replace("-page", ""))
     page.wait_for_selector(f"[data-testid={testid}]", timeout=5000)
 
 def bodies(page):
@@ -156,20 +156,24 @@ with sync_playwright() as p:
     page.locator("[data-testid=project-instructions]").fill("Prices in EGP. We are the crane supplier.")
     page.locator("[data-testid=project-save]").click()
     page.wait_for_selector("[data-testid=project-page]", timeout=5000)
+    check(page.locator("[data-testid^=project-row-]").count() == 4, "design D: the work opens on its ask box and 4 rows (no chats yet, so no 'Earlier chats')")
+    page.locator("[data-testid=project-row-files]").click()
     page.locator("[data-testid=project-add-note]").click()
     page.locator("[data-testid=project-note-text]").fill("Client rate card: LTM 1100 costs 18,000 EGP per day including operator.")
     page.locator("[data-testid=project-note-save]").click()
     check(page.locator("[data-testid=project-file]").count() == 1, "a note is added to the project's knowledge")
-    page.locator("[data-testid=project-new-chat]").click()
-    page.wait_for_selector("[data-testid=space-empty]", timeout=5000)
+    page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=project-ask]", timeout=5000)
+    check("1" in page.locator("[data-testid=project-row-files]").inner_text(), "…the Files row counts it")
     queue(page, ["From your rate card: **18,000 EGP per day**."])
-    send(page, "What is our daily price for the LTM 1100?")
+    page.locator("[data-testid=project-ask-input]").fill("What is our daily price for the LTM 1100?")
+    page.locator("[data-testid=project-new-chat]").click()      # the big ask box sends at once, in a new chat of this work
     done(page)
     sp = bodies(page)[0]["messages"][0]["content"]
     check("Prices in EGP" in sp and "18,000 EGP per day" in sp, "a chat in a project gets its instructions and the matching knowledge")
     open_more(page, "Projects", "projects-page")
     page.locator("[data-testid=project-item]").first.click()
-    check(page.locator("[data-testid=project-chat]").count() == 1, "the project lists its chat")
+    page.locator("[data-testid=project-row-chats]").click()
+    check(page.locator("[data-testid=project-chat]").count() == 1, "the project lists its chat (Earlier chats)")
     page.locator("[data-testid=project-chat]").first.click()
     page.wait_for_selector("text=18,000 EGP per day", timeout=5000)
     check(True, "…and opening it goes back to that chat")

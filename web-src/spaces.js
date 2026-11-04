@@ -82,11 +82,43 @@ export function upsertProject(p) {
   const clean = { id: p.id || newSpaceId("p"), emoji: (p.emoji || "📁").slice(0, 4), name: String(p.name || "").trim().slice(0, 50) || "Project",
     instructions: String(p.instructions || "").trim().slice(0, 4000),
     knowledge: (p.knowledge || []).map((k) => ({ id: k.id || newSpaceId("k"), name: String(k.name || "Note").slice(0, 80), text: String(k.text || "").slice(0, 200000) })).filter((k) => k.text.trim()),
+    // v9.1 design D (Ali, 4 Nov): a due date, who answers (an assistant) and its repeats — questions it asks again and again
+    due: /^\d{4}-\d{2}-\d{2}$/.test(String(p.due || "")) ? p.due : "",
+    assistantId: p.assistantId || "",
+    repeats: (p.repeats || []).map((r) => ({ id: r.id || newSpaceId("r"), text: String(r.text || "").trim().slice(0, 600), every: EVERY.includes(r.every) ? r.every : "", last: +r.last || 0 })).filter((r) => r.text).slice(0, 20),
     created: p.created || Date.now(), updated: Date.now() };
   if (!saveProjectList([clean, ...list])) return null;       // storage full
   return clean;
 }
 export function deleteProject(id) { saveProjectList(loadProjects().filter((x) => x.id !== id)); }
+
+/* v9.1 design D: a repeat is due when it has a rhythm and its time since the last run has passed (a day / 7 days / a calendar month).
+   Never run → due now. "" (only when I tap) → never due. */
+export const EVERY = ["", "day", "week", "month"];
+export function repeatDue(r, now = Date.now()) {
+  if (!r || !r.every) return false;
+  if (!r.last) return true;
+  const d = new Date(r.last), day = 864e5;
+  const dayStart = (t) => { const x = new Date(t); x.setHours(0, 0, 0, 0); return x.getTime(); };
+  if (r.every === "day") return dayStart(now) - dayStart(r.last) >= day;
+  if (r.every === "week") return dayStart(now) - dayStart(r.last) >= 7 * day;
+  if (r.every === "month") { const n = new Date(now); return (n.getFullYear() - d.getFullYear()) * 12 + n.getMonth() - d.getMonth() >= 1 && n.getDate() >= Math.min(d.getDate(), 28); }
+  return false;
+}
+export const dueRepeats = (p, now = Date.now()) => ((p && p.repeats) || []).filter((r) => repeatDue(r, now));
+/** Mark a repeat as run now → the saved project (or null). */
+export function markRepeatRun(projectId, repeatId, now = Date.now()) {
+  const p = loadProjects().find((x) => x.id === projectId); if (!p) return null;
+  return upsertProject({ ...p, repeats: (p.repeats || []).map((r) => (r.id === repeatId ? { ...r, last: now } : r)) });
+}
+/** Days from today to the due date (negative = late), or null. */
+export function daysToDue(due, now = Date.now()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(due || "")); if (!m) return null;
+  const a = new Date(+m[1], +m[2] - 1, +m[3]), b = new Date(now); b.setHours(0, 0, 0, 0);
+  return Math.round((a.getTime() - b.getTime()) / 864e5);
+}
+/** What Attune saved for this project (artifacts made in its chats). */
+export const artifactsFor = (projectId, list = loadArtifacts()) => (projectId ? list.filter((a) => a.projectId === projectId) : []);
 
 // Words that carry meaning (English and Arabic), for matching a question to passages.
 const STOP = new Set("the a an and or of to in on for with is are was were be it this that what how why when which who me my i you your we our do does did can could should would will from at by as about into than then there here".split(" "));
@@ -224,6 +256,7 @@ export function saveArtifact(a) {
     item = { ...same, updated: Date.now(), versions: [...versions, { content: a.content, ts: Date.now() }].slice(-10) };
   } else {
     item = { id: newSpaceId("art"), kind: a.kind, lang: a.lang, title: String(a.title || "Untitled").slice(0, 80), created: Date.now(), updated: Date.now(),
+      ...(a.projectId ? { projectId: a.projectId } : {}),
       versions: [{ content: a.content, ts: Date.now() }] };
   }
   const next = [item, ...list.filter((x) => x.id !== item.id)].slice(0, 60);
