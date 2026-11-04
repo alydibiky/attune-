@@ -190,6 +190,8 @@ export const AR = {
   // v6.8 Mind
   "per company system, once": "لكل نظام شركة، مرة واحدة",
   "Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.": "الاشتراك بيتشري من نسخة Attune على Google Play — بدوسة واحدة، بالكارت أو من رصيد فودافون / أورنج / اتصالات، وبيشتغل لوحده.",
+  "Pro is bought in the Google Play version of Attune — one tap, paid by card or from your {c} balance, and it switches on by itself.": "الاشتراك بيتشري من نسخة Attune على Google Play — بدوسة واحدة، بالكارت أو من رصيد {c}، وبيشتغل لوحده.",
+  "mobile (balance)": "الموبايل",
   "Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.": "تقدر تلغي في أي وقت من Google Play ← الاشتراكات. الاشتراك بيتجدد لوحده؛ مش محتاج تبعت حاجة أو تكلم حد.",
   "I have an activation code (company deals)": "معايا كود تفعيل (عروض الشركات)",
   "Tap to rename": "دوس عشان تغيّر الاسم",
@@ -7379,6 +7381,7 @@ export const AR = {
   "Log it as food": "سجّله أكل",
   "Record it in Money": "سجّله في الفلوس",
   "Answer it": "جاوبني عليه",
+  "≈ {p} a month — save {n}%": "≈ {p} في الشهر — وفّر {n}%",
   "Cheapest now: {p} ({d})": "الأرخص دلوقتي: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} ليالي بين {a} و{b}",
   "{s} stars only": "{s} نجوم بس",

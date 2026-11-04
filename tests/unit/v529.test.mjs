@@ -23,8 +23,14 @@ eq(tipsFor("crane outrigger sling wind lift plan", 2).length, 2, "a small model 
 eq(/^\n\n\(Expert tips for this answer:\n- /.test(tipsBlock("VAT on 1000 EGP")), true, "the tips go after the question as a short block");
 
 // ---- billing ----
-eq([region("Africa/Cairo", "en-US"), region("Europe/Berlin", "ar-EG"), region("America/New_York", "en-US")], ["EG", "EG", "US"], "Egypt gets Egyptian prices (by time zone or locale)");
-eq([pricesFor("Africa/Cairo").year, pricesFor("UTC").year], ["EGP 2,499", "$59.99"], "yearly: EGP 2,499 / $59.99 (v6.7 prices)");
+// v9.1 (Ali picked "3 tiers"): where the phone is decides; the Gulf in its own money at the high tier, Egypt at the low tier
+eq([region("Africa/Cairo", "en-US"), region("UTC", "ar-EG"), region("America/New_York", "en-US"), region("Asia/Riyadh", "en-US"), region("Europe/Berlin", "de-DE"), region("UTC", "en-US")], ["eg", "eg", "us", "sa", "de", "us"], "the country by time zone, then the language's region; unknown → us");
+eq([pricesFor("Africa/Cairo").month, pricesFor("Africa/Cairo").year, pricesFor("UTC").year, pricesFor("Asia/Riyadh").month, pricesFor("Asia/Dubai").year, pricesFor("Asia/Kuwait").month],
+  ["EGP 99", "EGP 799", "$59.99", "SAR 29.99", "AED 219.99", "KWD 2.49"], "3 tiers: Egypt EGP 99 / 799 · USD $59.99 · Saudi SAR 29.99 · UAE AED 219.99 · Kuwait KWD 2.49");
+eq([pricesFor("Asia/Karachi").tier, pricesFor("Europe/Istanbul").tier, pricesFor("Europe/London").tier], ["low", "mid", "high"], "Pakistan low, Türkiye mid, the UK high");
+eq([pricesFor("Africa/Cairo").business, pricesFor("UTC").business], ["EGP 14,999", "$299.99"], "the Business system keeps its price");
+eq([pricesFor("Asia/Riyadh").carriers, pricesFor("Africa/Cairo").carriers, pricesFor("Europe/Berlin").carriers], ["STC / Mobily / Zain", "Vodafone / Orange / Etisalat", ""], "each country's own phone companies (a Saudi was told Vodafone / Orange / Etisalat)");
+eq(pricesFor("Africa/Cairo").yearNote.t === "≈ {p} a month — save {n}%" && pricesFor("Africa/Cairo").yearNote.v.p === "EGP 67" && pricesFor("Africa/Cairo").yearNote.v.n === 33, true, "the yearly note works out its month and saving");
 const rc = requestCode("device-123");
 eq([/^PRO-[A-Z0-9]{8}$/.test(rc), rc === requestCode("device-123"), rc !== requestCode("device-124")], [true, true, true], "each phone has its own stable request code (" + rc + ")");
 eq([trialDaysLeft(0), trialDaysLeft(Date.now() - 2 * 86400000), trialDaysLeft(Date.now() - 9 * 86400000)], [7, 5, 0], "the 7-day Pro trial counts down");

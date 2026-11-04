@@ -54,6 +54,13 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   unsure) → else, or with no model, a card "Which did you mean?" [Record it in Money | Log it as food] [Answer it]; the tap is
   learned for the same shape (another amount too). Tests: unit v911unsure, e2e_v911unsure. 4 lines × 20 languages.
   Also fixed: "remind me to pay electricity on the 10th" titled "pay electricity the 10th" (v860p2b, failing on main before).
+- **Regional prices — Ali picked "3 tiers" (4 Nov)**: one global app (no separate Gulf version — the 30 country packs already give
+  currency, VAT, weekend, holidays). billing.js `REGION_PRICES` / `regionPrices()`: high (Gulf, US, UK, EU, Canada ≈ $7.99 / $59.99;
+  Saudi SAR 29.99 / 219.99, UAE AED 29.99 / 219.99, Kuwait KWD 2.49 / 17.99), mid (Türkiye, Malaysia, Brazil, Mexico, South Africa,
+  Jordan, Lebanon ≈ $3.99 / $29.99), low (Egypt EGP 99 / 799, India, Pakistan, Indonesia, Nigeria, Morocco, Algeria, Tunisia ≈ $1.99 /
+  $14.99); Business keeps EGP 14,999 / ≈ $299.99. The country = the one chosen in Attune, else the time zone, else the language.
+  The yearly note is worked out ("≈ SAR 18 a month — save 39%"); the Play line names each country's carriers (a Saudi was told
+  Vodafone / Orange / Etisalat). **ALI: copy `PRICES_BY_COUNTRY.md` into the Play Console** (made by `node tools/price-list.mjs`).
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),

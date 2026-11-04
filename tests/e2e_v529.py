@@ -37,7 +37,7 @@ with sync_playwright() as p:
     check(up.locator("[data-testid=trial-banner]").count() == 1 and "7 days left" in up.inner_text(), "the Plan screen says the trial has 7 days left and everything is unlocked")
     check(up.locator("[data-testid=plans] button").count() == 3 and "Best value" in up.locator("[data-testid=plan-year]").inner_text(), "three plans, the yearly one marked best value")
     txt = up.inner_text()
-    check("$59.99" in txt or "EGP 2,499" in txt, "prices are shown in the phone's region (v6.7 prices)")
+    check(any(p in txt for p in ["$59.99", "EGP 799", "SAR 219.99", "€54.99", "£47.99"]), "prices are shown in the phone's region (v9.1: 3 tiers, local money)")
     check(up.locator("[data-testid=testing-pro]").count() == 1, "the testing build says every Pro feature is unlocked")
     check(up.get_by_role("button", name="Choose").count() == 0, "there is no button that turns Pro on without paying any more")
     up.locator("[data-testid=have-code]").click(); page.wait_for_timeout(100)   # v6.7: codes are for company deals, behind this link

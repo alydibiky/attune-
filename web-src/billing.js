@@ -14,6 +14,8 @@
        an end date. The app only holds the public key: it can check a code, never make one.
    Pure helpers; tests in tests/unit/v529.test.mjs.                                           */
 
+import { guessCountry } from "./country.js";
+
 export const TRIAL_DAYS = 7;
 /** v8.7 (Ali picked persona 3's point 4): Lifetime is a launch offer only — shown until this day (Ali: set it to 30 days after
  *  the Play launch), then it disappears so it doesn't pull the best customers out of the subscription. */
@@ -49,19 +51,58 @@ export const PRICES = {
   EG: { cur: "EGP", month: "EGP 299", year: "EGP 2,499", life: "EGP 5,999", business: "EGP 14,999", yearNote: "≈ EGP 208 a month — save 30%", lifeNote: "pay once, yours forever", businessNote: "per company system, once" },
   US: { cur: "USD", month: "$7.99", year: "$59.99", life: "$149.99", business: "$299.99", yearNote: "≈ $5 a month — save 37%", lifeNote: "pay once, yours forever", businessNote: "per company system, once" },
 };
+/* v9.1 (Ali, 4 Nov, picked "3 tiers": "the app is global and for the Gulf too — not all countries pay; prices should be adjusted
+   based on the region"): one app everywhere, the price by what people in each country can pay, in their own currency.
+     high  — the Gulf, the US, the UK, the EU, Canada: ≈ $7.99 a month · $59.99 a year
+     mid   — Türkiye, Malaysia, Brazil, Mexico, South Africa, Jordan, Lebanon: ≈ $3.99 · $29.99
+     low   — Egypt, India, Pakistan, Indonesia, Nigeria, Morocco, Algeria, Tunisia: ≈ $1.99 · $14.99
+   These are the shown prices and the list to copy into the Play Console (Monetize → Subscriptions → each plan → prices by
+   country); on Google Play the phone shows Play's own local price. A country not listed pays the high tier in dollars.
+   Business (a company system, sold once) keeps its price: EGP 14,999 in Egypt, $299.99 elsewhere. */
+const L = (tier, cur, sym, month, year, life, business) => ({ tier, cur, sym, month, year, life, business });
+export const REGION_PRICES = {
+  us: L("high", "USD", "$", 7.99, 59.99, 149.99, 299.99), ca: L("high", "CAD", "CA$", 10.99, 79.99, 199.99, 399.99), gb: L("high", "GBP", "£", 6.49, 47.99, 119.99, 239.99),
+  de: L("high", "EUR", "€", 7.49, 54.99, 139.99, 279.99), fr: L("high", "EUR", "€", 7.49, 54.99, 139.99, 279.99), es: L("high", "EUR", "€", 7.49, 54.99, 139.99, 279.99),
+  it: L("high", "EUR", "€", 7.49, 54.99, 139.99, 279.99), pt: L("high", "EUR", "€", 7.49, 54.99, 139.99, 279.99), nl: L("high", "EUR", "€", 7.49, 54.99, 139.99, 279.99),
+  sa: L("high", "SAR", "SAR ", 29.99, 219.99, 549.99, 1099.99), ae: L("high", "AED", "AED ", 29.99, 219.99, 549.99, 1099.99), qa: L("high", "QAR", "QAR ", 29.99, 219.99, 549.99, 1099.99),
+  kw: L("high", "KWD", "KWD ", 2.49, 17.99, 45.99, 89.99), bh: L("high", "BHD", "BHD ", 2.99, 22.99, 56.99, 112.99), om: L("high", "OMR", "OMR ", 2.99, 22.99, 56.99, 112.99),
+  tr: L("mid", "TRY", "₺", 169.99, 1249.99, 3149.99, 6299.99), my: L("mid", "MYR", "RM ", 17.99, 129.99, 319.99, 639.99), br: L("mid", "BRL", "R$ ", 21.99, 164.99, 409.99, 819.99),
+  mx: L("mid", "MXN", "MX$", 74.99, 549.99, 1399.99, 2799.99), za: L("mid", "ZAR", "R ", 72.99, 539.99, 1349.99, 2699.99), jo: L("mid", "JOD", "JOD ", 2.99, 21.99, 52.99, 105.99),
+  lb: L("mid", "USD", "$", 3.99, 29.99, 74.99, 149.99),
+  eg: L("low", "EGP", "EGP ", 99, 799, 1999, 14999), in: L("low", "INR", "₹", 169, 1299, 3399, 6799), pk: L("low", "PKR", "Rs ", 549, 4199, 10999, 21999),
+  id: L("low", "IDR", "Rp ", 32900, 249000, 649000, 1299000), ng: L("low", "NGN", "₦", 2999, 22999, 59999, 119999), ma: L("low", "MAD", "MAD ", 19.99, 149.99, 399.99, 799.99),
+  dz: L("low", "DZD", "DZD ", 269, 1999, 5399, 10799), tn: L("low", "TND", "TND ", 5.99, 44.99, 119.99, 239.99),
+};
+const BUSINESS_KEEP = { eg: 14999 };   // the company system keeps Ali's price; elsewhere $299.99 in the local money (the table above)
+const money = (sym, v) => sym + (v % 1 ? v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : v.toLocaleString("en-US"));
+const nice = (v) => { if (v < 1000) return v; const m = 10 ** (Math.floor(Math.log10(v)) - 2); return m <= 100 ? Math.round(v / m) * m - 1 : Math.round(v / m) * m; };   // 25,496 → 25,499 · 4,871,250 → 4,870,000
+/** v9.1: the phone companies whose balance Google Play takes in each country (carrier billing) — a Saudi was told "Vodafone /
+ *  Orange / Etisalat". A country not listed: "mobile" (the Plan page's own word). */
+export const CARRIERS = { eg: "Vodafone / Orange / Etisalat", sa: "STC / Mobily / Zain", ae: "du / e&", kw: "Zain / Ooredoo / stc", qa: "Ooredoo / Vodafone",
+  bh: "Batelco / Zain / stc", om: "Omantel / Ooredoo", jo: "Zain / Orange / Umniah", ma: "Maroc Telecom / Orange / inwi", tr: "Turkcell / Vodafone / Türk Telekom",
+  pk: "Jazz / Telenor / Zong", in: "Airtel / Jio / Vi", id: "Telkomsel / Indosat / XL", my: "Maxis / CelcomDigi / U Mobile", ng: "MTN / Airtel / Glo" };
+/** A country's prices, as the Plan page shows them: { cur, tier, month, year, life, business, yearNote: {t, v}, lifeNote, businessNote }. */
+export function regionPrices(code) {
+  const k = String(code || "").toLowerCase(), r = REGION_PRICES[k] || REGION_PRICES.us;
+  const perMonth = r.year / 12, save = Math.round((1 - r.year / (12 * r.month)) * 100);
+  // the company system costs the same everywhere (≈ $299.99, in the local money) — except Egypt's own price
+  const biz = BUSINESS_KEEP[k] || (r.tier === "high" ? r.business : r.cur === "USD" ? 299.99 : nice(r.business * (r.tier === "mid" ? 2 : 3.75)));
+  return { code: REGION_PRICES[k] ? k : "us", carriers: CARRIERS[k] || "", cur: r.cur, tier: r.tier, month: money(r.sym, r.month), year: money(r.sym, r.year), life: money(r.sym, r.life),
+    business: money(r.sym, biz), yearNote: { t: "≈ {p} a month — save {n}%", v: { p: money(r.sym, perMonth >= 10 ? Math.round(perMonth) : Math.round(perMonth * 100) / 100), n: save } },
+    lifeNote: "pay once, yours forever", businessNote: "per company system, once" };
+}
 /** Google Play product ids (create them with these exact ids in the Play Console). */
 export const PLAY = { month: "attune_pro_monthly", year: "attune_pro_yearly", life: "attune_pro_lifetime", business: "attune_business_system" };
 /** Which Play products make this phone Pro (a Business system activation doesn't). */
 export const proFromOwned = (items) => (items || []).find((x) => x && x.purchased !== false && [PLAY.month, PLAY.year, PLAY.life].includes(x.productId)) || null;
 
-/** "EG" for phones set to Egypt (time zone or Arabic-Egypt locale), else "US" prices. */
+/** v9.1: the country whose prices this phone gets — the one the person chose in Attune first (v8.6: a phone in Egypt set to en-US +
+ *  UTC still pays Egyptian prices), then where the phone is (its time zone), then its language's region. Lower-case code. */
 export function region(tz, lang) {
-  const z = String(tz || ""), l = String(lang || "");
-  // v8.6: the country the person chose in Attune comes first (a phone in Egypt set to en-US + UTC still pays Egyptian prices)
-  try { const c = typeof localStorage !== "undefined" && localStorage.getItem("attune:country"); if (c) return c === "eg" ? "EG" : "US"; } catch (e) {}
-  return /Africa\/Cairo/i.test(z) || /-EG\b/i.test(l) ? "EG" : "US";
+  try { const c = typeof localStorage !== "undefined" && localStorage.getItem("attune:country"); if (c) return REGION_PRICES[c.toLowerCase()] ? c.toLowerCase() : "us"; } catch (e) {}
+  return guessCountry({ language: String(lang || ""), languages: [String(lang || "")] }, String(tz || "")) || "us";
 }
-export function pricesFor(tz, lang) { return PRICES[region(tz, lang)]; }
+export function pricesFor(tz, lang) { return regionPrices(region(tz, lang)); }
 
 /** What Pro gives — the reasons to pay, in the order people care about. */
 export const PRO_BENEFITS = [

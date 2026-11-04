@@ -12102,7 +12102,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
               </div>
               <div className="text-center mt-4">
                 <p className="text-[clamp(28px,9vw,38px)] font-black tracking-tight tabular-nums text-[var(--c-ink)] leading-none m-0" dir="ltr">{price}</p>
-                <p className="text-[12.5px] text-[var(--c-mut)] mt-1.5 mb-0">{tr(planNote)}</p>
+                <p className="text-[12.5px] text-[var(--c-mut)] mt-1.5 mb-0">{planNote && planNote.t ? tr(planNote.t, planNote.v) : tr(planNote)}</p>
               </div>
               <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1">
                 {/* v8.7 (Ali picked persona 3's point 3): what Pro does for you first, in plain words — not feature names */}
@@ -12112,7 +12112,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
               {Store.available() ? (
                 <button onClick={storeBuy} disabled={busy} className="mt-4 w-full min-h-[52px] py-3.5 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15.5px] disabled:opacity-60 transition-opacity duration-150" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
               ) : (
-                <p className="mt-4 text-[12.5px] text-[var(--c-ink)] leading-relaxed rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.")}</p>
+                <p className="mt-4 text-[12.5px] text-[var(--c-ink)] leading-relaxed rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your {c} balance, and it switches on by itself.", { c: P.carriers || (tr("mobile (balance)") === "mobile (balance)" ? "mobile" : tr("mobile (balance)")) })}</p>
               )}
               <p className="text-[11.5px] text-[var(--c-mut)] mt-2 mb-0 leading-relaxed">{tr("Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.")}</p>
             </section>
