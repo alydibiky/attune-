@@ -230,9 +230,9 @@ export const GOALS = [
   { id: "money", title: S("Save money", "أوفّر فلوس"), tools: ["say", "money", "deal", "guardian", "life", "automations"] },
   // v9.1: Fit & Food / Cycle are archived (→ Attune Fit) — the health goal is the family's health and its dates
   { id: "health", title: S("Family & health", "العيلة والصحة"), tools: ["care", "family", "reminders", "radar"] },
-  { id: "learn", title: S("Learn and study", "أتعلم وأذاكر"), tools: ["coach", "learn", "remember", "pdfchat", "translate"] },
+  { id: "learn", title: S("Learn and study", "أتعلم وأذاكر"), tools: ["coach", "learn", "remember", "pdfchat", "booklib", "translate"] },
   { id: "daily", title: S("Daily life", "حياتي اليومية"), tools: ["home", "reminders", "recall", "scout", "metro", "map"] },
-  { id: "create", title: S("Make things", "أعمل حاجات"), tools: ["chat", "studio", "convert", "code", "cv"] },].map((g) => ({ ...g, tools: withoutRemoved(g.tools) }));   // v9.1: Studio / Business / Fleet / Crane / Site reports are archived
+  { id: "create", title: S("Make things", "أعمل حاجات"), tools: ["chat", "studio", "convert", "write", "code", "cv"] },].map((g) => ({ ...g, tools: withoutRemoved(g.tools) }));   // v9.1: Studio / Business / Fleet / Crane / Site reports are archived
 
 /** The demo for a guide key ("start:model" or a tool id). */
 export const demoFor = (key) => DEMOS[String(key || "").replace(/^start:/, "")] || null;

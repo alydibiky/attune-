@@ -4,7 +4,6 @@
 // the first score of each tool is kept in the HANDOFF. Run: node tests/eval/logic.mjs -v
 const mem = {}; globalThis.localStorage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = String(v); }, removeItem: (k) => delete mem[k] };
 const K = await import("../../web-src/calc.js");
-const D = await import("../../web-src/deal.js");
 const X = await import("../../web-src/chatxray.js");
 const V = await import("../../web-src/verify.js");
 const CV = await import("../../web-src/convert.js");
@@ -22,31 +21,7 @@ for (const [t, want] of calc) { const r = K.calculate(t); q("calculator", `${t} 
 q("calculator", "the currency is kept: EGP", K.calculate(calc[0][0])?.unit, K.calculate(calc[0][0])?.unit === "EGP");
 for (const t of ["25/9", "call me 0100 123 4567", "10-12 days", "iPhone 15 Pro 256GB", "عندي معاد 5 في 6", "اشتريت 3 في 2025", "ميعادنا ٢٥/٩"]) q("calculator", `“${t}” is not a sum`, K.looksLikeCalc(t), K.looksLikeCalc(t) === false);
 
-// ---------------- Deal Check (money) ----------------
-const pc = (a) => D.planCost(a);
-let p = pc({ cash: 12400, monthly: 4133, months: 3 });
-q("deal", "12,400 or 3 × 4,133: total 12,399 — a real 0 % plan", p, p.total === 12399 && p.extra === 0 && p.yearlyRate === 0);
-p = pc({ cash: 12000, monthly: 1100, months: 12 });
-q("deal", "12,000 cash vs 1,100 × 12: pays 1,200 more = 19.53 %/yr (Python)", p, p.total === 13200 && p.extra === 1200 && near(p.yearlyRate, 0.1953, 0.0005));
-p = pc({ cash: 10000, down: 2000, monthly: 1000, months: 10 });
-q("deal", "10,000 cash, 2,000 down + 1,000 × 10: 65.31 %/yr (Python)", p, p.total === 12000 && p.extra === 2000 && near(p.yearlyRate, 0.6531, 0.0005));
-p = pc({ cash: 10000, fees: 500, monthly: 1000, months: 10 });
-q("deal", "a 500 fee up front is interest: 11.93 %/yr (Python)", p, p.total === 10500 && near(p.yearlyRate, 0.1193, 0.0005));
-p = pc({ cash: 300000, down: 60000, monthly: 8500, months: 36 });
-q("deal", "car 300,000: 60,000 down + 8,500 × 36 = 366,000; 17.84 %/yr (Python)", p, p.total === 366000 && p.extra === 66000 && near(p.yearlyRate, 0.1784, 0.0005));
-p = pc({ cash: 10000, monthly: 900, months: 10 });
-q("deal", "a plan cheaper than cash means misread terms — never shown as a saving", p, p.inconsistent === true);
-const pl = (t) => D.plansIn(t)[0] || {};
-q("deal", "“12,400 EGP or 3 × 4,133 with valU”", pl("12,400 EGP or 3 × 4,133 with valU"), pl("12,400 EGP or 3 × 4,133 with valU").months === 3 && pl("12,400 EGP or 3 × 4,133 with valU").monthly === 4133 && pl("12,400 EGP or 3 × 4,133 with valU").cash === 12400);
-q("deal", "«قسط 4133 على 12 شهر»", pl("قسط 4133 على 12 شهر"), pl("قسط 4133 على 12 شهر").months === 12 && pl("قسط 4133 على 12 شهر").monthly === 4133);
-q("deal", "“4,133 a month for 12 months”", pl("4,133 a month for 12 months"), pl("4,133 a month for 12 months").months === 12);
-q("deal", "“12 installments of 4,133”", pl("12 installments of 4,133"), pl("12 installments of 4,133").months === 12 && pl("12 installments of 4,133").monthly === 4133);
-q("deal", "“down payment 5,000 then 24 × 2,000”", pl("down payment 5,000 then 24 × 2,000"), pl("down payment 5,000 then 24 × 2,000").down === 5000 && pl("down payment 5,000 then 24 × 2,000").months === 24);
-q("deal", "«مقدم ١٠٠٠٠ و ١٢ قسط × ٣٠٠٠»", pl("مقدم ١٠٠٠٠ و ١٢ قسط × ٣٠٠٠"), pl("مقدم ١٠٠٠٠ و ١٢ قسط × ٣٠٠٠").down === 10000 && pl("مقدم ١٠٠٠٠ و ١٢ قسط × ٣٠٠٠").monthly === 3000);
-for (const [t, want] of [["13.550,00", 13550], ["5k", 5000], ["١٢٠٠٠", 12000], ["1.5 مليون", 1500000], ["12,400", 12400], ["12.400", 12400], ["2.5k", 2500]]) q("deal", `“${t}” = ${want}`, D.num(t), D.num(t) === want);
-const mr = D.marketRange([100, 110, 120, 130, 1000]);
-q("deal", "market of 100/110/120/130 + a 1,000 outlier: median 115 from 4 prices", mr, mr.median === 115 && mr.n === 4);
-
+// (v9.1: the Deal Check section is archived — archive/deal/tests/mixed/logic.mjs)
 // ---------------- Chat X-Ray: who owes whom ----------------
 const it = (type, from, to, amount, currency = "EGP") => ({ type, from, to, amount, currency });
 const led = X.ledgerOf([it("owes", "Hassan", "Ali", 500), it("paid", "Hassan", "Ali", 200), it("owes", "Ali", "Mona", 1000), it("paid", "Ali", "Mona", 400), it("owes", "Hassan", "Ali", 50, "USD"), it("owes", "Mona", "Karim", 300)], "Ali");

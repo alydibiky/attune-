@@ -14,6 +14,8 @@ import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import * as UND from "./understand.js";
+import { promptToolOf } from "./prompttools.js";
+import { directionsOf } from "./gomaps.js";
 import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
 const DO_HERE = ["money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
@@ -824,6 +826,33 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
     const ok = (k) => !only || only === k;
 
+    // v9.1 (Ali, 4 Nov: offline Maps archived — "can't agents use Google Maps to guide the user?"): "take me to City Stars" /
+    // «وديني سيتي ستارز» starts the directions in Google Maps
+    if (route && !img && api.openDirections) {
+      const dir = directionsOf(typed);
+      if (dir) {
+        const cid = ensureChat(typed); const how = api.openDirections(dir.place, dir.mode);
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+          { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Directions to {p} — in Google Maps", { p: dir.place }), detail: tr("Download the area in Google Maps once, and the directions work without internet too."), actions: [["Just answer", "answer"]] } }] }));
+        setText("");
+        return;
+      }
+    }
+    // v9.1 (Ali, 4 Nov: "can't the prompt tools just be in home chat — improve this prompt for Claude, humanize this"): the archived
+    // pages' tuned instructions, run from a sentence; with no text after it, Chat's own last answer is the text
+    if (route && !img && api.promptTool) {
+      const pt = promptToolOf(typed);
+      const src = pt ? pt.text || ((messages || []).filter((m) => m.role === "assistant" && m.text && !m.streaming).slice(-1)[0] || {}).text || "" : "";
+      if (pt && src) {
+        const cid = ensureChat(typed), aiId = newId();
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+          { id: aiId, role: "assistant", text: "", streaming: true, phase: tr(pt.kind === "improve" ? "Improving the prompt…" : pt.kind === "humanize" ? "Making it sound human…" : "Making it shorter…") }] }));
+        setText("");
+        let out = null; try { out = await api.promptTool(pt.kind, src, pt); } catch (e) { out = null; }
+        patchChat(cid, (c) => ({ ...c, messages: c.messages.map((m) => (m.id === aiId ? { ...m, streaming: false, phase: "", text: out || tr("Load a model in Engine first — everything runs on this device") } : m)) }));
+        return;
+      }
+    }
     // 1. Things the phone files away by itself, instantly, no model.
     if (route && !img && api.isPeriodLog(typed)) {
       const cid = ensureChat(typed);

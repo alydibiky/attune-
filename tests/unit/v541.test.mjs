@@ -3,7 +3,6 @@
 import { looksLikeWebsiteTask, looksLikeCodeTask } from "../../web-src/verify.js";
 import { detectArtifact } from "../../web-src/spaces.js";
 import * as C from "../../web-src/convert.js";
-import * as D from "../../web-src/deal.js";
 import * as X from "../../web-src/chatxray.js";
 import { fixModelNames } from "../../web-src/answerfix.js";
 import * as S from "../../web-src/slides.js";
@@ -41,17 +40,7 @@ const dz = await C.unzip(C.docxFromBlocks(pb, "T"));
 const doc = new TextDecoder().decode(dz.get("word/document.xml"));
 eq([/<w:tbl>/.test(doc), /1\.\t/.test(doc), /<w:vertAlign w:val="superscript"\/><\/w:rPr><w:t xml:space="preserve">−ΔΔCt<\/w:t>/.test(doc)], [true, true, true], "Word: a real table, “1.” numbering, 2^(−ΔΔCt) as a superscript");
 
-// ---- #6 Deal Check: installment plans read by code ----
-const offer = `iPhone 15 Pro 256GB, like new, 38,000 EGP, deposit on Vodafone Cash to hold it "12,400 EGP or 3 × 4,133 with valU"`;
-const plan = D.plansIn(offer)[0];
-eq([plan.months, plan.monthly, plan.cash], [3, 4133, 12400], "“12,400 or 3 × 4,133” = cash 12,400 OR 3 payments (not a down payment plus 3)");
-const pc = D.planCost({ cash: plan.cash, down: 0, monthly: plan.monthly, months: plan.months });
-eq([pc.total, pc.yearlyRate], [12399, 0], "3 × 4,133 = 12,399 — a real 0%");
-eq(D.priceMismatch(offer, plan), { hi: 38000, lo: 12400 }, "two very different prices in one offer are noticed");
-eq(D.planCost({ cash: 38000, down: 12400, monthly: 4133, months: 3 }).inconsistent, true, "a plan cheaper than cash is flagged as misread, never shown as −13,201");
-eq(["4,133 a month for 12 months", "12 installments of 4,133 EGP", "قسط 4133 جنيه على 12 شهر", "down payment 5,000 then 2,000 × 10"].map((t) => { const p = D.plansIn(t)[0]; return p ? [p.months, p.monthly, p.down] : null; }),
-  [[12, 4133, null], [12, 4133, null], [12, 4133, null], [10, 2000, 5000]], "other ways of writing a plan (English and Arabic)");
-
+// (v9.1: this Deal Check part is archived in archive/deal/tests/mixed/v541.test.mjs)
 // ---- #4 Chat X-Ray: "what was it about?" and "was X mentioned?" ----
 eq(["What was the conversation about", "ملخص الشات", "was “LTM 1100” mentioned?", "هل اتقال \"العربون\"؟", "did anyone mention the deposit?", "What price did we agree?"].map(X.askKind),
   ["about", "about", "mention", "mention", "mention", "other"], "question kinds");

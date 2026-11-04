@@ -282,7 +282,6 @@ money-calm-ui.jsx: <span className={"w-2 h-2 rounded-full " + (ready ? "bg-[var(
 attune.jsx: <span className={`shrink-0 w-2 h-2 rounded-full ${ready ? "bg-teal-400" : "bg-slate-600"}`} title={ready ? tr("Connected") : tr("Starting…")
 money-calm-ui.jsx: <span className={"w-2 h-2 rounded-full " + (ready ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]")} title={ready ? tr("Connected") : tr("Starting
 travel-ui.jsx: setMapBusy(tr("Starting…"));
-video-ui.jsx: <p className="text-[11px] text-[var(--c-mut)]" data-testid="video-progress">{d.status === "paused" ? tr("Waiting for the internet…") : d.tot
 
 ## Money
 attune.jsx: <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 
@@ -360,10 +359,10 @@ attune.jsx: copy: (t) => { try { navigator.clipboard.writeText(t); flash(tr("Cop
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
-attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash(tr("Copied")); }} classN
 attune.jsx: <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Rewritten")}</label>{hzRe
 attune.jsx: <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash(tr("Copied")); }
+attune.jsx: {result && <div className="flex gap-1.5"><button onClick={copy} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-9
 
 ## Got it
 attune.jsx: case "whereSave": remember(W2.whereRecord(o.set)); return { tone: "emerald", title: tr("Got it"), detail: o.set.thing + " — " + o.set.place,
@@ -394,7 +393,6 @@ side-ui.jsx: {c.space ? <span className="me-1">{c.space}</span> : null}{tr(c.tit
 ## Check
 attune.jsx: {tr("Check")} {t.audit.fabricated.join(", ")} — {t.audit.fabricated.length === 1 ? tr("that figure") : tr("those figures")} {t.audit.fabrica
 attune.jsx: <button className="h-10 px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold" onClick={start} disabled={bu
-coach-ui.jsx: }}>{tr("Check")}</button>)}
 cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job read
 lesson-ui.jsx: <button className={btnP + " shrink-0"} disabled={!answer} onClick={check} data-testid="lesson-check">{tr("Check")}</button>
 
@@ -419,9 +417,9 @@ attune.jsx: <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); setP({ ..
 attune.jsx: {net ? <button className={small} onClick={() => { try { NATIVE.clearNetLog(); } catch (err) {} setNet(nativeJSON("netLog")); }}>{tr("Clear")
 attune.jsx: <button onClick={() => { setOrg({ ...EMPTY_ORG }); setO({ ...EMPTY_ORG }); flash(tr("Cleared")); }} className="min-h-[48px] px-5 rounded-[20
 chatxray-ui.jsx: <button onClick={() => { setSaved([]); saveSaved([]); }} aria-label={tr("Clear")} className="w-11 h-11 grid place-items-center rounded-[12px
-deal-ui.jsx: <button onClick={() => { setHist([]); saveH([]); }} aria-label={tr("Clear")} className={"w-11 h-11 -me-2 grid place-items-center rounded-[12
 map-ui.jsx: {q ? <button type="button" onClick={() => { setQ(""); setHits(null); }} aria-label={tr("Clear")} className="w-10 h-10 flex items-center just
 metro-ui.jsx: {v ? <button onClick={() => set({ ...ft, [k]: "" })} className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Clear")
+pdfchat-ui.jsx: {find ? <button onClick={() => setFind("")} className="absolute top-2 end-2 text-[var(--c-mut)]" aria-label={tr("Clear")}><X size={14} /></b
 
 ## Imported notes
 attune.jsx: if (!bk) { const r = SH.addBook(sh, tr("Imported notes"), "ocean"); bk = { ...r.book, imported: true }; sh = { ...r.shelf, books: r.shelf.bo
@@ -452,7 +450,6 @@ shelf-ui.jsx: <button data-testid="shelf-restore" onClick={() => setRecords((rs)
 ## No
 attune.jsx: className="text-[11px] px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">{tr("No")}</button>
 cmdbox-ui.jsx: <button onClick={onNo} className="h-10 px-5 rounded-full text-[13.5px] font-bold" style={surf} data-testid="confirm-no">{tr("No")}</button><
-deal-ui.jsx: <button onClick={() => setAskNo(true)} className={U.btnS + " flex-1 h-12 min-h-[48px]"} data-testid="deal-no">{ar ? "لأ" : tr("No")}</button
 home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
 home-ui.jsx: {x.pay.kind === "radar" ? <button onClick={() => { payRadar(x.pay.id, false); setNote(tr("Marked as not renewed — {t}", { t: x.title })); se
 owed-ui.jsx: {r.ask.some((q) => /European one/.test(q)) ? <div className="flex gap-2"><button className={U.btnP} onClick={() => set("euCarrier", true)}>{
@@ -486,7 +483,6 @@ wagroups-ui.jsx: <span className="block text-[14px] leading-snug line-clamp-3" d
 attune.jsx: <button onClick={pasteInstant} className="att-icon-btn" title={tr("Paste")}><ClipboardPaste size={18} /></button>
 attune.jsx: className="text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-300 flex items-center gap-1"><ClipboardPaste size={13} />{tr("Pas
 mind-ui.jsx: className={btnS}><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
-video-ui.jsx: <button onClick={paste} className={K.btnS + " shrink-0 whitespace-nowrap"} data-testid="video-paste"><ClipboardPaste size={15} />{tr("Paste"
 
 ## Speak
 attune.jsx: <button onClick={startVoice} className={`att-icon-btn ${listening ? "border-rose-500! text-rose-300! bg-rose-500/10" : ""}`} title={tr("Spea
@@ -676,7 +672,6 @@ care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async ()
 knowledge-ui.jsx: {!got ? <button className={primary} disabled={!N || !N.knowInstall} onClick={() => getPack(p)} data-testid={"kn-pack-get-" + p.id}><Download
 map-ui.jsx: : <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-dl-" + c.code} className="h-10 px-4 rounded-full bg-[var(--c-sof
 travel-ui.jsx: {x.key === "map" && !x.ok ? <button className="c-sub underline bg-transparent border-0 p-0 min-h-[44px] cursor-pointer shrink-0" onClick={ge
-video-ui.jsx: <button onClick={start} className={K.btnP + " w-full"} data-testid="video-download"><Download size={16} />{tr("Download")}</button>
 
 ## Code
 chat.jsx: const label = LANG_LABEL[String(lang || "").trim().toLowerCase()] || (lang ? String(lang).trim() : tr("Code"));
@@ -771,25 +766,6 @@ owed-ui.jsx: {r.ask.some((q) => /UK one/.test(q)) ? <div className="flex gap-2">
 cmdbox-ui.jsx: {j.status === "done" || j.status === "fail" ? <button onClick={() => jobs.dismiss(j.id)} aria-label={tr("Dismiss")} className="w-8 h-8 grid 
 paylog-ui.jsx: <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[
 
-## Try again
-coach-ui.jsx: speakNow(okk ? (getLang() === "ar" ? "صحيح" : tr("Correct")) : (getLang() === "ar" ? "حاول مرة أخرى" : tr("Try again")), { lang: getLang(), 
-cv-ui.jsx: <button className={ghost} onClick={start}>{tr("Try again")}</button>
-guard.jsx: React.createElement("button", { className: "min-h-[44px] h-11 px-5 rounded-[12px] text-[13.5px] font-extrabold bg-[var(--c-acc)] text-[var(-
-
-## Start
-coach-ui.jsx: <button className={btnP} disabled={!text.trim()} onClick={() => readPage(text)} data-testid="coach-go">{tr("Start")}</button>
-cv-ui.jsx: <div className="grid grid-cols-2 gap-2"><Lbl t={tr("Start")}><In value={it.start} onChange={(v) => upd(i, { start: v })} dir="ltr" /></Lbl><
-
-## Report
-coach-ui.jsx: {!items.length ? <SeeAll testid="coach-open-report" onClick={() => setRep(true)} title={tr("See all → Homework Report")} sub={hrep.week ? tr
-daily-ui.jsx: <SeeAll testid="learn-open-report" onClick={() => setView("report")} title={tr("See all → Learning Report")} sub={tr("Days studied, quiz sco
-mind-ui.jsx: {!wide && !filterOn && records.length ? <SeeAll testid="mind-open-report" onClick={() => setRep(true)} title={tr("See all → Mind Report")} s
-money-pages-ui.jsx: <SeeAll testid="money-accounts-open-report" onClick={() => setRep(true)} title={tr("See all → Accounts report")} sub={tr("Balance month by m
-money-pages-ui.jsx: <SeeAll testid="money-bills-open-report" onClick={() => setRep(true)} title={tr("See all → Bills report")} sub={tr("What bills cost each mon
-money-pages-ui.jsx: <SeeAll testid="money-zakat-open-report" onClick={() => setRep(true)} title={tr("See all → Zakāt report")} sub={tr("What you paid each year,
-slides-ui.jsx: <button onClick={() => setTab("report")} className={chip(tab === "report") + " flex items-center justify-center gap-1.5"} data-testid="slide
-tools-hub-ui.jsx: <SeeAll testid="tools-open-report" onClick={() => setRep(true)} title={tr("See all → Tools Report")} sub={T("{n} jobs this week · by family"
-
 ## Preview
 code-ui.jsx: {busy ? (L === "python" ? tr("Starting Python…") : tr("Running…")) : L === "html" ? (preview ? tr("Hide preview") : tr("Preview")) : tr("Run
 code-ui.jsx: {isHtml ? <button onClick={() => setPreviewOpen(!previewOpen)} data-testid="code-view-preview" className={chip(previewOpen)}><Eye size={12} 
@@ -880,10 +856,9 @@ wake-ui.jsx: <div className="flex flex-wrap gap-1.5" data-testid="wake-sens">{[[
 cv-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={ask} data-testid="cv-job-hear"><Volume2 size={13} />{tr("Hear it")}</button>
 speak-ui.jsx: <button className={ghost} style={gs} onClick={() => hear(p)} aria-label={tr("Hear it")} data-testid="speak-hear"><Volume2 size={14} /></butt
 
-## English
-cv-ui.jsx: <Btn k="tr" testid="cv-ai-translate" onClick={() => run("tr", async () => { const to = cv.lang === "ar" ? "en" : "ar"; const texts = A.colle
-cv-ui.jsx: <p className="text-[12px] text-[var(--c-mut)]">{c.basics.name || tr("(no name yet)")} · {c.layout === "modern" ? tr("Modern") : tr("ATS-safe
-video-ui.jsx: <option value="ar">{tr("Arabic (Egypt)")}</option><option value="en">{tr("English")}</option><option value="fr">{tr("French")}</option><opti
+## Try again
+cv-ui.jsx: <button className={ghost} onClick={start}>{tr("Try again")}</button>
+guard.jsx: React.createElement("button", { className: "min-h-[44px] h-11 px-5 rounded-[12px] text-[13.5px] font-extrabold bg-[var(--c-acc)] text-[var(-
 
 ## Word
 cv-ui.jsx: {letter ? <div className="rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="cv-ai-letter-result"><p className=
@@ -915,13 +890,15 @@ daily-ui.jsx: title={tr("Quiz time")} sub={modelReady ? tr("A short quiz on less
 daily-ui.jsx: return p.steps.filter((x) => !x.done).map((x) => x.kind === "review" ? tr("Review {c}", { c: cardsWord(x.n) }) : x.kind === "quiz" ? tr("Qui
 home.js: if (id === "learn") { const c = (courses || [])[0]; if (!c) return ""; const p = todayPlan(c, now); const s = p.steps.filter((x) => !x.done)
 
-## Screenshot
-deal-ui.jsx: <button onClick={() => fileRef.current && fileRef.current.click()} className={U.btnS + " h-12 min-h-[48px]"}><ImagePlus size={16} />{tr("Scr
-lookback-ui.jsx: const rec = remember({ kind: "photo", title: shotTitle(text, f.name ? f.name.replace(/\.\w+$/, "") : tr("Screenshot")), text: text || f.name
-
-## Why
-deal-ui.jsx: <p className={U.label + " m-0 mb-2"}>{tr("Why")}</p>
-missions-ui.jsx: <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick
+## Report
+daily-ui.jsx: <SeeAll testid="learn-open-report" onClick={() => setView("report")} title={tr("See all → Learning Report")} sub={tr("Days studied, quiz sco
+mind-ui.jsx: {!wide && !filterOn && records.length ? <SeeAll testid="mind-open-report" onClick={() => setRep(true)} title={tr("See all → Mind Report")} s
+money-pages-ui.jsx: <SeeAll testid="money-accounts-open-report" onClick={() => setRep(true)} title={tr("See all → Accounts report")} sub={tr("Balance month by m
+money-pages-ui.jsx: <SeeAll testid="money-bills-open-report" onClick={() => setRep(true)} title={tr("See all → Bills report")} sub={tr("What bills cost each mon
+money-pages-ui.jsx: <SeeAll testid="money-zakat-open-report" onClick={() => setRep(true)} title={tr("See all → Zakāt report")} sub={tr("What you paid each year,
+slides-ui.jsx: <button onClick={() => setTab("report")} className={chip(tab === "report") + " flex items-center justify-center gap-1.5"} data-testid="slide
+tools-hub-ui.jsx: <SeeAll testid="tools-open-report" onClick={() => setRep(true)} title={tr("See all → Tools Report")} sub={T("{n} jobs this week · by family"
+tools-hub-ui.jsx: return <SeeAll testid={"open-report-" + fam} onClick={onClick} title={tr(title)} sub={r.week ? T("{n} this week", { n: r.week }) + (fam === 
 
 ## Income
 doit.js: const rows = [[ar ? "الدخل" : tr("Income"), f(pl.income)], [ar ? "ثابت (فواتير وأقساط)" : tr("Fixed (bills, instalments)"), f(pl.fixedTotal)
@@ -1003,10 +980,6 @@ library-ui.jsx: <button className={btnS} disabled={!!busy} onClick={() => setPas
 learning-report-ui.jsx: <Tile label={tr("All time")} value={String(rep.total)} sub={tr("problems")} />
 tools-hub-ui.jsx: : <Tile label={tr("All time")} value={String(r.total)} />}
 
-## Play
-lesson-ui.jsx: {playing ? <Pause size={14} /> : <Play size={14} />}{playing ? tr("Pause") : i === 0 ? tr("Play the lesson") : tr("Play")}</button>
-video-ui.jsx: <button onClick={() => nativeCall("videoOpen", d.clip ? { uri: d.uri, type: d.type } : { id: d.id }).catch(() => flash && flash(tr("The file
-
 ## Speed
 lesson-ui.jsx: <button className={chip(false) + " tabular-nums !min-h-[44px] !h-11"} onClick={() => setRate((r) => (r >= 1.25 ? 0.75 : r + 0.25))} aria-lab
 lesson-ui.jsx: <button className={btnS + " tabular-nums"} onClick={() => L.setRate((r) => (r >= 1.25 ? 0.75 : r + 0.25))} aria-label={tr("Speed")}>{L.rate}
@@ -1042,7 +1015,6 @@ metro-ui.jsx: <p className={K.label + " !normal-case !tracking-normal"}>{tr("The
 money-pages-ui.jsx: <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From") : tr("Account")}</p>
 money-sheets-ui.jsx: <Field label={t.type === "transfer" ? tr("From") : tr("Account")}><Pills value={account} onChange={setAccount} items={cashAccounts(L).map((a
 sourcelabel.js: return s.length ? tr("From") + ": " + s.map((k) => tr(SOURCE_TEXT[k])).join(" · ") : "";
-video-ui.jsx: <span>{tr("From")}</span><input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="0:00" dir="ltr" inputMode="decimal" clas
 
 ## All
 lookback-ui.jsx: {chip(null, tr("All"))}

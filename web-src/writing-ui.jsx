@@ -1,5 +1,5 @@
 /* ---- v8.5 (E3 of the 27 Oct review — Ali agreed): Writing is ONE box. Paste or type any text, then one button: Improve (a prompt
-   for any AI), Shorten, or Humanize (sound like a person). The button opens that tool with the text in it and runs it; Copilot
+   for any AI), Shorten, or Humanize (sound like a person). v9.1: the button sends the text to Chat as that request (prompttools.js) — the tool pages are archived; Copilot
    and the Prompt lab stay as the tabs next to it. */
 import React, { useState } from "react";
 import { Wand2, Scissors, PenLine } from "lucide-react";

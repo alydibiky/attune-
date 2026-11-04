@@ -8,7 +8,6 @@ const X = await import("../../web-src/chatxray.js");
 const S = await import("../../web-src/slides.js");
 const A = await import("../../web-src/actions.js");
 const PL = await import("../../web-src/places.js");
-const DL = await import("../../web-src/deal.js");
 const RS = await import("../../web-src/research.js");
 let fail = 0;
 const ok = (c, what) => { console.log((c ? "PASS " : "FAIL ") + what); if (!c) fail++; };
@@ -75,8 +74,8 @@ const glow = X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from:
 ok(X.ledgerOf(glow, "Ali")[0].net === 8000, "x-ray: «وصلت شكرا، فاضل 8000» is a balance, not a payment → Hassan owes 8,000");
 
 // max trials (Core 4B): «ألف» in an installment plan; «2 الضهر»; a wake-up alarm is in the morning
-const pl2 = DL.plansIn("هيونداي النترا 2020، 850 ألف كاش أو مقدم 200 ألف و 36 قسط 25 ألف")[0];
-ok(pl2 && pl2.months === 36 && pl2.monthly === 25000 && pl2.down === 200000 && DL.planCost({ cash: 850000, down: pl2.down, monthly: pl2.monthly, months: pl2.months }).total === 1100000, "deal: «36 قسط 25 ألف» with «مقدم 200 ألف» → 1,100,000");
+// (v9.1: the Deal Check installment check is archived in archive/deal/tests/mixed/v68.test.mjs)
+// (v9.1: the Deal Check installment check is archived in archive/deal/tests/mixed/v68.test.mjs)
 const t0 = new Date("2026-09-28T10:00:00").getTime();
 ok(new Date(A.buildAction({ action: "calendar" }, "اجتماع يوم الخميس الساعة 2 الضهر", t0).at).getHours() === 14, "time: «الساعة 2 الضهر» is 2 pm");
 const al = new Date(A.buildAction({ action: "alarm" }, "صحيني الساعة 6 ونص", t0).at);
