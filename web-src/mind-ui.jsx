@@ -300,6 +300,12 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const [dropping, setDropping] = useState(false);
   const [adding, setAdding] = useState(false);
   const [hidePast, setHidePast] = useState(false);
+  // v9.2 (Ali, 4 Nov: "Mind is so confusing and bad" — picked 4A): the calm view is folders + recently kept; the wall shows only inside a
+  // folder or with "See everything"; the report, promises, your words and Recall live in ⋯
+  const [browse, setBrowse] = useState(false);
+  const [more, setMore] = useState(false);
+  const [showPast, setShowPast] = useState(false);
+  useSubBack(browse, () => setBrowse(false));
   const fileRef = useRef(null);
   const recsRef = useRef(records); recsRef.current = records;
 
@@ -315,6 +321,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const filterOn = !!(kind || tag || colour || q.trim());
   const colours = useMemo(() => M.colourCounts(records), [records]);
   const shown = colour ? items.filter((r) => r.meta && r.meta.colour === colour) : items;
+  const calm = tab === "mind" && !filterOn && !browse && !rep && records.length > 0;
   const looksLikeQuestion = /\?|؟|^(what|when|where|who|how|which|did|do|is|was|how much|كام|امتى|فين|مين|ايه|إيه|هل|ازاي|إزاي)\b/i.test(q.trim());
 
   // ---- the background filer: while this screen is open and the model is loaded, it reads one new
@@ -390,7 +397,13 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
     <div className={page + " space-y-4 att-in pb-20"} data-testid="mind-page">
       <div className="flex items-center gap-2">
         <h2 className={h1 + " text-[var(--c-ink)] flex items-center gap-2"}><Brain size={20} className="text-[var(--c-acc)]" />{tr("Mind")}</h2>
-        <span className="text-[11.5px] font-semibold tabular-nums text-[var(--c-mut)]">{records.length} {tr("kept · private, on this phone")}</span>
+        <span className="text-[11.5px] font-semibold tabular-nums text-[var(--c-mut)] flex-1 min-w-0 truncate">{records.length} {tr("kept · private, on this phone")}</span>
+        <span className="relative shrink-0"><button onClick={() => setMore(!more)} aria-label={tr("More")} aria-expanded={more} className="w-11 h-11 rounded-full grid place-items-center text-[var(--c-mut)] hover:bg-[var(--c-soft)] text-[20px] font-black leading-none" data-testid="mind-more">⋯</button>
+          {more ? <span className="absolute end-0 top-11 z-40 w-[220px] p-1.5 flex flex-col rounded-[16px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-xl" role="menu" onClick={() => setMore(false)} data-testid="mind-more-menu">
+            {[["mind-menu-report", "Mind Report", () => setRep(true)], ["mind-tab-promises", tr("Promises") + (promiseCount ? ` (${promiseCount})` : ""), () => setTab("promises")], ["mind-tab-words", "Your words", () => setTab("words")],
+              ["mind-menu-past", "From your past", () => { setTab("mind"); setShowPast(true); setHidePast(false); }], ...(openRecall ? [["mind-menu-recall", "Recall — find by meaning", openRecall]] : [])].map(([id, l, fn]) =>
+              <button key={id} onClick={fn} className="min-h-[44px] px-3 rounded-[10px] text-start text-[14px] font-bold text-[var(--c-ink)] hover:bg-[var(--c-soft)]" data-testid={id}>{tr(l)}</button>)}
+          </span> : null}</span>
       </div>
       {shareBanner}
       {note}
@@ -417,17 +430,15 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
           ) : null}
         </div>) : null}
 
-      <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-1 [scrollbar-width:none]" data-testid="mind-spaces">
-        <button onClick={() => { setTab("mind"); setKind(null); setTag(null); setColour(null); setQ(""); setAnswer(null); }} data-testid="mind-all" className={chip(tab === "mind" && !filterOn)}>{tr("All")}</button>
+      {calm ? null : <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-1 [scrollbar-width:none]" data-testid="mind-spaces">
+        <button onClick={() => { setTab("mind"); setKind(null); setTag(null); setColour(null); setQ(""); setAnswer(null); setBrowse(false); }} data-testid="mind-all" className={chip(false) + " inline-flex items-center gap-1"}><ChevronLeft size={14} className="rtl:rotate-180" />{tr("Folders")}</button>
         {counts.map((c) => <button key={c.kind} onClick={() => { setTab("mind"); setKind(kind === c.kind ? null : c.kind); setTag(null); }} data-testid={"mind-kind-" + c.kind} className={chip(tab === "mind" && kind === c.kind)}>{kindLabel(c.kind)}</button>)}
-        <button onClick={() => setTab("promises")} data-testid="mind-tab-promises" className={chip(tab === "promises")}>{tr("Promises")}{promiseCount ? ` (${promiseCount})` : ""}</button>
-        <button onClick={() => setTab("words")} data-testid="mind-tab-words" className={chip(tab === "words")}>{tr("Your words")}</button>
         {colours.map((c) => <button key={c.colour} onClick={() => { setTab("mind"); setColour(colour === c.colour ? null : c.colour); }} data-testid={"mind-colour-" + c.colour} aria-label={M.COLOURS[c.colour][ar ? "ar" : "en"]}
           className={"shrink-0 w-10 h-10 rounded-full border-2 " + (colour === c.colour ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]")} style={{ background: M.COLOURS[c.colour].hex }} />)}
         {spaces.map((sp) => <span key={sp.id} className="relative shrink-0"><button onClick={() => { setTab("mind"); setQ(sp.q || ""); setTag(sp.tag || null); setKind(null); }} className={chip(false) + " pe-6"} dir="auto"><Folder size={11} className="inline me-1" />{sp.name}</button>
           <button onClick={() => removeSpace(sp.id)} className="absolute top-1/2 -translate-y-1/2 end-0.5 w-8 h-8 grid place-items-center rounded-full text-[var(--c-mut)]" aria-label={tr("Remove")}><X size={12} /></button></span>)}
         {auto.map((t) => <button key={t.tag} onClick={() => { setTab("mind"); setTag(tag === t.tag ? null : t.tag); setKind(null); }} className={chip(tab === "mind" && tag === t.tag)} dir="auto">#{t.tag}</button>)}
-      </div>
+      </div>}
 
       {rep && !wide ? <MindReport rep={mrep} back={() => setRep(false)} open={(id) => { setRep(false); setOpenId(id); }} onDone={onPromiseDone} />
         : tab === "promises" ? promisesPanel : tab === "words" ? wordsPanel : (
@@ -490,13 +501,35 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
 
           {filterOn ? <p className="text-[11.5px] font-semibold tabular-nums text-[var(--c-mut)]" data-testid="mind-count">{shown.length} {tr(shown.length === 1 ? "item" : "items")}</p> : null}
 
-          {!filterOn && !answer ? <MindCalmTop rep={mrep} wide={wide} onDone={(id) => onPromiseDone && onPromiseDone(id)} openRecall={openRecall} /> : null}
-          {!wide && !filterOn && records.length ? <SeeAll testid="mind-open-report" onClick={() => setRep(true)} title={tr("See all → Mind Report")} sub={T2("{w} kept this week · {d} promises due", { w: mrep.week, d: mrep.due })} cta={tr("Report")} /> : null}
+          {calm && !answer ? <div className="space-y-4" data-testid="mind-calm-view">
+            {/* a promise that is due stays on top (like a to-do on Home); on a computer, the three numbers */}
+            <MindCalmTop rep={mrep} wide={wide} onDone={(id) => onPromiseDone && onPromiseDone(id)} openRecall={null} />
+            {/* the folders: what you have, with counts */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2" data-testid="mind-folders">
+              {counts.map((c) => <button key={c.kind} onClick={() => { setKind(c.kind); setTag(null); }} data-testid={"mind-kind-" + c.kind}
+                className="min-h-[84px] rounded-[16px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5 text-start flex flex-col justify-between hover:border-[var(--c-acc)]">
+                <span className="text-[18px] leading-none">{M.KINDS[c.kind].icon}</span>
+                <span><b className="block text-[18px] font-black tabular-nums leading-tight">{c.count}</b><span className="block text-[12px] font-bold text-[var(--c-mut)] truncate">{kindLabel(c.kind)}</span></span></button>)}
+            </div>
+            {past.length && showPast && !hidePast ? (() => { const { rec } = past[0]; return <div className="rounded-[16px] p-3 border border-[var(--c-acc)]/40 bg-[var(--c-soft)] flex items-center gap-2" data-testid="mind-past">
+              <button onClick={() => setOpenId(rec.id)} className="flex-1 min-w-0 text-start"><span className="block text-[11px] font-extrabold uppercase tracking-[.08em] text-[var(--c-acc)]">{tr("From your past")}</span>
+                <span className="block text-[13.5px] font-extrabold truncate" dir="auto">{M.titleOf(rec)}</span></button>
+              <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)]">{tr("Keep")}</button></div>; })() : null}
+            <div className="space-y-1.5">
+              <p className={kLabel + " m-0"}>{tr("Recently kept")}</p>
+              <div className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-2" data-testid="mind-recent">
+                {[...records].sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 5).map((r) => <button key={r.id} onClick={() => setOpenId(r.id)} className="w-full flex items-center gap-2.5 py-2.5 border-t border-[var(--c-ln)] first:border-t-0 text-start min-h-[52px]" data-testid="mind-recent-row">
+                  <span className="w-8 h-8 rounded-[10px] bg-[var(--c-soft)] grid place-items-center shrink-0 text-[14px]">{M.KINDS[M.kindOf(r)].icon}</span>
+                  <span className="min-w-0 flex-1"><span className="block text-[14px] font-bold truncate" dir="auto">{M.titleOf(r) || String(r.text || r.output || "").replace(/\s+/g, " ").slice(0, 80) || kindLabel(M.kindOf(r))}</span><span className="block text-[11.5px] text-[var(--c-mut)]">{kindLabel(M.kindOf(r))} · {dateText(r.ts)}</span></span></button>)}
+              </div>
+              <button onClick={() => setBrowse(true)} className={btnS + " w-full"} data-testid="mind-see-all">{tr("See everything")} · {records.length}</button>
+            </div>
+          </div> : null}
           {/* the wall — v7.7: on a computer the Mind Report sits beside it */}
-          <div className={wide && records.length ? "grid grid-cols-[minmax(0,1fr)_380px] gap-4 items-start" : ""}><div className="min-w-0">
+          {calm ? null : <div className={wide && records.length ? "grid grid-cols-[minmax(0,1fr)_380px] gap-4 items-start" : ""}><div className="min-w-0">
           {shown.length ? (
             <div className="columns-2 sm:columns-3 lg:columns-4 gap-2.5" data-testid="mind-board">
-              {past.length && !hidePast && !filterOn ? (() => { const { rec, why } = past[0]; return (
+              {past.length && showPast && !hidePast && !filterOn ? (() => { const { rec, why } = past[0]; return (
                 <div className="mb-2.5 break-inside-avoid rounded-[20px] p-3.5 border border-[var(--c-acc)]/40 bg-[var(--c-soft)]" data-testid="mind-past">
                   <button onClick={() => setOpenId(rec.id)} className="w-full text-start">
                     <p className="text-[12px] font-extrabold uppercase tracking-[.08em] text-[var(--c-acc)] flex items-center gap-1"><Shuffle size={10} /> {tr("From your past")}</p>
@@ -515,7 +548,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
               {records.length ? tr("Nothing matches that.") : <>{tr("Your Mind is empty.")}<br /><span className="text-xs">{tr("Keep a note, a link or a photo with + — or share anything to Attune from another app.")}</span></>}
             </p>
           )}
-          </div>{wide && records.length ? <div className={"calm rounded-[20px] border border-[var(--c-acc)]/50 bg-[var(--c-surf-2)] p-3"}><MindReport compact rep={mrep} open={(id) => setOpenId(id)} onDone={onPromiseDone} /></div> : null}</div>
+          </div>{wide && records.length ? <div className={"calm rounded-[20px] border border-[var(--c-acc)]/50 bg-[var(--c-surf-2)] p-3"}><MindReport compact rep={mrep} open={(id) => setOpenId(id)} onDone={onPromiseDone} /></div> : null}</div>}
         </>
       )}
 

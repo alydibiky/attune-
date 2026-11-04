@@ -46,6 +46,7 @@ with sync_playwright() as p:
     check("Mind" in nav and "Memory" not in nav, "the bottom bar says Mind (Memory is replaced)")
     page.locator("nav button:has-text('Mind')").click()
     page.wait_for_selector("[data-testid=mind-page]", timeout=5000)
+    page.click("[data-testid=mind-see-all]"); page.wait_for_timeout(200)   # v9.2 (4A): the wall is behind "See everything"
 
     # ---- 1. the old records are all here ----
     t = page.locator("[data-testid=mind-page]").inner_text()
@@ -80,10 +81,12 @@ with sync_playwright() as p:
     page.fill("[data-testid=mind-search]", ""); page.wait_for_timeout(200)
     page.click("[data-testid=mind-kind-quote]"); page.wait_for_timeout(200)
     check(kinds(page) == ["quote"], "the Quotes chip shows only quotes")
-    page.click("[data-testid=mind-all]"); page.wait_for_timeout(200)
+    page.click("[data-testid=mind-all]"); page.wait_for_timeout(200)   # v9.2 (4A): back to the folders
+    page.click("[data-testid=mind-see-all]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=mind-spaces]").count() == 1, "Spaces appear from the tags")
 
-    # ---- 5. From your past ----
+    # ---- 5. From your past (v9.2: from ⋯) ----
+    page.click("[data-testid=mind-more]"); page.click("[data-testid=mind-menu-past]"); page.wait_for_timeout(200)
     check(page.get_by_text("From your past", exact=True).count() == 1, "an older item comes back under “From your past”")
 
     # ---- 6. open an item: tag, note, pin, remind, similar, forget ----
@@ -123,9 +126,9 @@ with sync_playwright() as p:
     check(page.locator("[data-kind=quote]").count() == 0, "Forget removes it")
 
     # ---- 10. the other two tabs ----
-    page.click("[data-testid=mind-tab-promises]"); page.wait_for_timeout(200)
+    page.click("[data-testid=mind-more]"); page.click("[data-testid=mind-tab-promises]"); page.wait_for_timeout(200)
     check(page.locator("text=Things you said you'd do").count() == 1, "Promises is a tab")
-    page.click("[data-testid=mind-tab-words]"); page.wait_for_timeout(200)
+    page.click("[data-testid=mind-more]"); page.click("[data-testid=mind-tab-words]"); page.wait_for_timeout(200)
     check(page.locator("text=Your words").count() >= 1, "Your words is a tab")
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:2])
     ctx.close()

@@ -35,7 +35,8 @@ with sync_playwright() as p:
     send("add buy bread to my to-do list")
     check("Added to your to-do list" in page.inner_text("body") and "buy bread" in page.inner_text("body"), "Chat: “add buy bread to my to-do list” → a card, done by code")
     # Mind: tick it
-    open_mode(page, "memory", "[data-testid=mind-todo-tick]")
+    open_mode(page, "memory", "[data-testid=mind-kind-todo]")
+    page.click("[data-testid=mind-kind-todo]"); page.wait_for_selector("[data-testid=mind-todo-tick]", timeout=5000)   # v9.2 (4A): the To-dos folder
     page.locator("[data-testid=mind-todo-tick]").first.click(); page.wait_for_timeout(300)
     done = page.evaluate("() => { const m = JSON.parse(localStorage.getItem('attune:memory:v1') || localStorage.getItem('attune.memory') || 'null'); return m; }")
     check(page.locator("[data-testid=mind-todo-tick] .line-through").count() == 1, "Mind: the to-do ticks done")

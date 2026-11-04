@@ -43,7 +43,7 @@ with sync_playwright() as p:
         dn = page.locator("[data-testid=mind-do-now]")
         check(dn.count() == 1 and ("Eltroxin" in dn.inner_text() or "Tarek" in dn.inner_text()), tag + "Mind: “Do now” shows the promise that is due: %s" % dn.inner_text().replace("\n", " · ")[:90])
         shot(page, "mind-calm-phone-" + theme)
-        page.click("[data-testid=mind-open-report]"); page.wait_for_selector("[data-testid=mind-report]")
+        page.click("[data-testid=mind-more]"); page.click("[data-testid=mind-menu-report]"); page.wait_for_selector("[data-testid=mind-report]")   # v9.2 (4A): the report is in ⋯
         check("3" in page.locator("[data-testid=mind-rep-week]").inner_text(), tag + "…the Mind Report: 3 kept this week")
         check(page.locator("[data-testid=mind-rep-promises]").inner_text().count("late") >= 1, tag + "…promises due or late")
         check("#home" in page.locator("[data-testid=mind-rep-tags]").inner_text(), tag + "…the most-used tags")
@@ -78,6 +78,7 @@ with sync_playwright() as p:
         go(page, "memory", "[data-testid=mind-page]")
         a, b = page.locator("[data-testid=mind-kpi-total]").bounding_box(), page.locator("[data-testid=mind-kpi-spaces]").bounding_box()
         check(abs(a["y"] - b["y"]) < 4, tag + "Mind: three numbers in a row")
+        page.click("[data-testid=mind-see-all]"); page.wait_for_timeout(300)   # v9.2 (4A): the wall is behind "See everything"
         w, r = page.locator("[data-testid=mind-board]").bounding_box(), page.locator("[data-testid=mind-report]").bounding_box()
         check(r["x"] > w["x"] + w["width"] - 4, tag + "…the Mind Report beside the wall")
         shot(page, "mind-desktop-" + theme)
