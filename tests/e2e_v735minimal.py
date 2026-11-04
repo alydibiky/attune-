@@ -20,7 +20,11 @@ with sync_playwright() as p:
     page.click("[data-testid=convert-all]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=convert-tools] [data-testid^=convert-tool-]").count() >= 10, "…'All conversions' shows the rest")
     check(page.locator("[data-testid=header-model]").count() == 1, "the model is a small dot in the header")
-    page.locator("[data-testid=header-menu]:visible").first.click(); page.click("[data-testid=phone-side] [data-testid=side-new]"); page.wait_for_timeout(500); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(500)
+    # v9.2 round 3 (back like ChatGPT): the Converter is opened from inside — its header shows ‹; ‹ goes back, then ☰
+    check(page.locator("header [data-testid=header-back]").count() == 1 and page.locator("header [data-testid=header-menu]").count() == 0, "a page opened from inside: ‹ only in the header")
+    page.click("header [data-testid=header-back]"); page.wait_for_timeout(400)
+    # ‹ went back to Home, whose own ☰ opens the menu
+    page.click("[data-testid=home-menu]"); page.click("[data-testid=phone-side] [data-testid=side-new]"); page.wait_for_timeout(500); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(500)
     check(page.locator("[data-testid=chat-empty-min]").count() == 1, "Chat: a calm empty screen")
     page.click("[data-testid=composer-plus]"); page.wait_for_selector("[data-testid=composer-menu]")
     check(page.locator("[data-testid=composer-menu] label").count() == 2, "'+' holds Photo and File")

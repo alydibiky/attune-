@@ -39,6 +39,8 @@ with sync_playwright() as p:
     check(True, "the Money Guardian opens from Follow-ups")
     shot(page, "radar-parts")
     # v6.34 (Ali: "I don't want this More page"): Settings in the sidebar is settings only — no grid of every tool
+    # v9.2 round 3 (back like ChatGPT): a page opened from inside shows ‹ only — step back to the place, then ☰
+    page.click("header [data-testid=header-back]"); page.wait_for_selector("[data-testid=timeline-page]", timeout=5000)
     page.locator("[data-testid=header-menu]:visible").first.click(); page.click("[data-testid=phone-side] [data-testid=side-settings]"); page.wait_for_selector("[data-testid=more-settings]")
     check(page.locator("[data-testid=more-group]").count() == 0 and page.locator("[data-testid=more-guide]").count() == 0, "Settings: no 'More' grid of tools, no How-to card")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)

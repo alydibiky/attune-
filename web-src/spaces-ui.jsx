@@ -192,7 +192,9 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
   const fileRef = useRef(null);
   const reload = () => setList(loadProjects());
   const cur = list.find((p) => p.id === openId) || null;
-  const allChats = useMemo(() => loadChats(), [list, openId]);
+  const [chatsSaved, setChatsSaved] = useState(0);   // v9.2 round 3: Chat saves just after this page opened → read the chats again
+  useEffect(() => { const f = () => setChatsSaved((n) => n + 1); window.addEventListener("attune-chats-saved", f); return () => window.removeEventListener("attune-chats-saved", f); }, []);
+  const allChats = useMemo(() => loadChats(), [list, openId, chatsSaved]);
   const chats = useMemo(() => (cur ? allChats.filter((c) => c.projectId === cur.id) : []), [allChats, cur && cur.id]);
   const assistants = useMemo(() => loadAssistants(), [openId, sub]);
   const save = (p, msg) => { const r = upsertProject(p); if (!r) { flash && flash(tr(msg || "Storage is full — remove some files first")); return null; } reload(); return r; };

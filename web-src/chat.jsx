@@ -104,7 +104,10 @@ function saveChats(list) {
     () => base.slice(0, 15).map(noPhotos),
   ];
   for (const t of tries) {
-    try { const raw = JSON.stringify(t()); localStorage.setItem(KEY, raw); lastWritten = raw; return true; } catch (e) {}
+    try { const raw = JSON.stringify(t()); localStorage.setItem(KEY, raw); lastWritten = raw;
+      // v9.2 round 3: pages that list chats (a project's "Earlier chats") read them again — a save can land just after they opened
+      try { window.dispatchEvent(new Event("attune-chats-saved")); } catch (e) {}
+      return true; } catch (e) {}
   }
   return false;
 }

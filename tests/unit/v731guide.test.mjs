@@ -38,7 +38,7 @@ const sketches = new Set(["photo", "type", "list", "chart", "map", "chat", "file
 ok([...Object.values(G.TOOLS), ...G.START].every((g) => sketches.has(g.sketch)), "every guide has a drawing");
 // chapters: the sidebar's order
 const ch = G.chapters();
-ok(ch.map((c) => (Array.isArray(c.title) ? c.title[0] : c.title)).join() === "Create,Projects,Home,Students,Money,Follow-ups,Health,Daily,Go,Saved,Work,Tools,Bottom of the sidebar", "chapters follow the sidebar (v8.5: Follow-ups, Go, Saved): " + ch.map((c) => c.title));
+ok(ch.map((c) => (Array.isArray(c.title) ? c.title[0] : c.title)).join() === "Create,Projects,Home,Students,Money,Follow-ups,Health,Daily,Go,My things,Work,Tools,Bottom of the sidebar", "chapters follow the sidebar (v8.5: Follow-ups, Go; v9.2: Saved is My things): " + ch.map((c) => c.title));
 const money = ch.find((c) => c.title === "Money");
 ok(money.ids.join() === "money,deal,planner" && ch.find((c) => c.title === "Follow-ups").ids.join() === "timeline,life,family,reminders,radar,guardian", "Money: Money, Deal Check; Follow-ups its own chapter: " + money.ids);
 ok(ch.find((c) => c.title === "Work").ids.slice(0, 3).join() === "business,fleet,field" && ch.find((c) => c.title === "Tools").ids[0] === "tools" && !ch.flatMap((c) => c.ids).includes("guide"), "Work: Business, Team records, Reports (Crane opens from Fleet, v8.5); Tools its own chapter");
@@ -66,7 +66,7 @@ ok(["reminders", "chat"].every((t) => G.PLAN[1].items.some((i) => i.tool === t))
 ok(["money", "radar"].every((t) => G.PLAN[4].items.some((i) => i.tool === t)) && ["projects", "pdfchat", "slides"].every((t) => G.PLAN[5].items.some((i) => i.tool === t)), "month: Money, Cancel kit; work: Projects, Ask a PDF, Slides (v9.1: the organiser of work)");
 ok(G.searchPlan("").length === 6 && !G.searchPlan("zzqx").length, "the plan is searchable");
 // search
-ok(G.searchGuide("passport", []).sort().join() === "radar,travel" && G.searchGuide("", []) === null, "search finds by what the steps say");
+ok(G.searchGuide("passport", []).sort().join() === "lists,radar,travel" && G.searchGuide("", []) === null, "search finds by what the steps say");
 ok(G.searchGuide("insulin", []).includes("care"), "'insulin' finds Family health");
 ok(G.searchGuide("franco", []).length === 0, "an unknown word finds nothing");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

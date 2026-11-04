@@ -9,8 +9,10 @@ cd "$(dirname "$0")/.."
 OUT=tests/results.txt
 export PYTHONPATH="$PWD/tests/pwshim:$PWD/tests${PYTHONPATH:+:$PYTHONPATH}"   # pwshim: use /opt/pw-browsers/chromium in cloud sessions
 # a unit file can print PASS on its last line after an earlier FAIL, so any FAIL line is reported instead
-for f in tests/unit/*.test.mjs; do o=$(node "$f" 2>/dev/null); fl=$(printf '%s\n' "$o" | grep -m1 '^FAIL')
-  echo "$f: ${fl:-$(printf '%s\n' "$o" | tail -1)}"; done > "$OUT"
+# v9.2 round 3: a unit file that crashes half-way (an exception, exit code ≠ 0) is a failure too, even if its last line was PASS
+for f in tests/unit/*.test.mjs; do o=$(node "$f" 2>&1); rc=$?; fl=$(printf '%s\n' "$o" | grep -m1 '^FAIL')
+  [ -z "$fl" ] && [ $rc -ne 0 ] && fl="FAIL crashed (exit $rc): $(printf '%s\n' "$o" | grep -m1 -E 'Error|error' | cut -c1-160)"
+  echo "$f: ${fl:-$(printf '%s\n' "$o" | grep -E '^(PASS|FAIL|ALL)' | tail -1)}"; done > "$OUT"
 # v6.37: the desktop app's Wi-Fi sync, and the pure-Kotlin parts (Franco, LocalSync) when a Kotlin compiler is there
 o=$(node desktop/test/localsync.js 2>&1 | tail -1); echo "desktop/test/localsync.js: $o" >> "$OUT"
 o=$(node desktop/test/gdrive.js 2>&1 | tail -1); echo "desktop/test/gdrive.js: $o" >> "$OUT"
