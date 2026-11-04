@@ -76,8 +76,12 @@ with sync_playwright() as p:
     page.click("[data-testid=booklib-topic-delete]"); page.wait_for_timeout(200)
     check(page.evaluate("window.__shelf.topics") == [] and len(page.evaluate("window.__shelf.books")) == 2, "deleting a topic keeps its books")
     # v8.7 (Ali picked 4B "one Library"): a book switched on is looked into by Chat too, cited [Book, p. N]
-    page.locator("[data-testid=booklib-answer] summary").click(); page.wait_for_timeout(150)
-    page.locator("[data-testid=booklib-answer-toggle]").first.check(); page.wait_for_timeout(150)
+    # v9.2 (Ali picked 5A: "a button saying Save in Chat, and then the chat knows the book"): one button on each file
+    page.locator("[data-testid=booklib-save-chat]").first.click(); page.wait_for_timeout(150)
+    check("In Chat" in page.locator("[data-testid=booklib-save-chat]").first.inner_text() and "Chat knows it" in page.locator("[data-testid=booklib-book]").first.inner_text(), "Save in Chat → the file says Chat knows it")
+    page.locator("[data-testid=booklib-ask-one]").first.click(); page.wait_for_timeout(150)
+    check(page.locator("[data-testid=booklib-only]").count() == 1, "Ask on a file → the next question reads only that file (it says so, with a way back to all files)")
+    page.click("[data-testid=booklib-only-clear]"); page.wait_for_timeout(100)
     on = page.evaluate("JSON.parse(localStorage.getItem('attune:booklib:answer:v1') || '[]')")
     check(len(on) == 1, "a book is switched on for Chat and the voice: %s" % on)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=home-ask]", timeout=8000)

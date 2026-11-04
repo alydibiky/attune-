@@ -87,6 +87,11 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
   const [live, setLive] = useState("");
   const [stage, setStage] = useState("");
   const [answerOn, setAnswerOn] = useState(() => B.answerIds());   // v8.7 (4B): the books Chat and the voice may answer from
+  // v9.2 (Ali picked 5A: one Documents page; "a button saying Save in Chat, and then the chat knows the book or PDF"): each file has
+  // Ask (the next question reads only that file) and Save in Chat (Chat and the voice answer from it, quoting the page)
+  const [only, setOnly] = useState(null);   // { id, title } — the one file the next question is about
+  const qRef = useRef(null);
+  const saveInChat = (d, on) => { setAnswerOn(B.setAnswerFrom(d.id, on)); flash && flash(on ? tr("Chat knows “{b}” now — ask it anything about it", { b: B.titleOf(d.name) }) : tr("Chat won't look into “{b}”", { b: B.titleOf(d.name) })); };
   const fileRef = useRef(null), endRef = useRef(null);
   const put = (v) => { setSt(v); B.saveLib({ ...v, chat: [] }); };
   const chat = st.chats[topic] || [];
@@ -169,7 +174,7 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
     const search = async (k, perBook) => B.fromNative(await nativeCall("booksSearch", { q: B.searchText(text, history), topic, k, perBook }));
     try {
       if (deep) {
-        const rounds = nat ? B.roundsOf(await search(80, 12), Math.min(budget, 9000)) : B.deepRounds(books, text, { history, budget: Math.min(budget, 9000) });
+        const rounds = nat ? B.roundsOf((await search(80, 12)).filter((x) => !only || x.title === only.title), Math.min(budget, 9000)) : B.deepRounds(only ? books.filter((b) => String(b.id) === String(only.id)) : books, text, { history, budget: Math.min(budget, 9000) });
         found = rounds.flat();
         const notes = [];
         for (let i = 0; i < rounds.length; i++) {   // one round at a time: the model is never given more than it holds
@@ -179,7 +184,8 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
         setStage(tr("Comparing the books…"));
         out = String(await llm(B.fromNotesMessages(text, notes, history), { maxTokens: 1600, temperature: 0.2, onToken: write }) || "").trim();
       } else {
-        found = B.fit(nat ? await search(24, 4) : B.passages(books, text, { history, budget }), budget);
+        const one = only ? (ps) => ps.filter((x) => x.title === only.title) : (ps) => ps;
+        found = B.fit(one(nat ? await search(only ? 60 : 24, only ? 24 : 4) : B.passages(only ? books.filter((b) => String(b.id) === String(only.id)) : books, text, { history, budget })), budget);
         setStage("");
         out = String(await llm(B.libraryMessages(text, found, history), { maxTokens: 1400, temperature: 0.2, onToken: write }) || "").trim();
       }
@@ -191,7 +197,7 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
 
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-3xl" data-testid="booklib-page">
-      <U.Head title={tr("Library")} sub={tr("Your own books — ask anything: it reads all of them, compares them and shows the book and page.")} />
+      <U.Head title={tr("Documents")} sub={tr("Your books and files — ask all of them at once, or one. Save one in Chat and Chat knows it too.")} />
       <p className="m-0 text-[12px] text-[var(--c-mut)] flex items-center gap-1.5" data-testid="booklib-private"><Lock size={12} />{tr("Read and kept on this phone only — your books never leave it.")}</p>
       {/* topics: History, Law, my course… — a question goes to that topic's books only */}
       <div className="flex flex-wrap items-center gap-1.5" data-testid="booklib-topics">
@@ -209,17 +215,16 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf,.txt,application/pdf" className="hidden" data-testid="booklib-file" onChange={(e) => { const f = e.target.files; addFiles(f); e.target.value = ""; }} />
         {busy ? <p className="m-0 text-[12.5px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="booklib-busy"><Loader2 size={13} className="animate-spin" />{busy}</p> : null}
         {nat && ns.job && ns.job.name ? <p className="m-0 text-[12.5px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="booklib-job"><Loader2 size={13} className="animate-spin" />{tr("Reading {name} · page {a} of {b}", { name: B.titleOf(ns.job.name), a: ns.job.page, b: ns.job.pages })}</p> : null}
-        {shelf.length ? <div className="flex flex-wrap gap-2">{shelf.slice(0, 200).map((d, i) => { const id = nat ? d.id : d.id; const pages = nat ? d.pages : d.count; return (
-          <span key={id} className="relative w-[70px] h-[96px] rounded-[12px] text-white text-[9.5px] font-extrabold leading-tight p-1.5 overflow-hidden" style={{ background: SPINES[i % SPINES.length], opacity: nat && d.state !== "done" ? 0.75 : 1 }} data-testid="booklib-book" title={d.name}>
-            {B.titleOf(d.name)}
-            <span className="absolute bottom-1 start-1.5 end-1.5 text-[8.5px] opacity-90">{nat && d.state === "reading" ? d.done + "/" + (d.pages || "…") : nat && d.state === "queued" ? tr("waiting") : nat && d.state === "error" ? "⚠ " + tr("error") : (pages || 0) + " " + tr("p.")}</span>
-            <button onClick={() => removeBook(id)} aria-label={tr("Remove")} className="absolute top-0.5 end-0.5 w-5 h-5 rounded-full bg-black/30 grid place-items-center" data-testid="booklib-remove"><X size={11} /></button></span>); })}</div>
+        {shelf.length ? <div className="-mx-1" data-testid="booklib-rows">{shelf.slice(0, 200).map((d, i) => { const id = d.id, pages = nat ? d.pages : d.count, inChat = answerOn.includes(String(id)), title = B.titleOf(d.name);
+          return <div key={id} className="flex items-center gap-2.5 px-1 py-2 border-t border-[var(--c-ln)] first:border-t-0" data-testid="booklib-book">
+            <span className="w-8 h-11 rounded-[6px] shrink-0" style={{ background: SPINES[i % SPINES.length], opacity: nat && d.state !== "done" ? 0.6 : 1 }} aria-hidden="true" />
+            <span className="min-w-0 flex-1"><b className="block text-[14px] truncate" dir="auto">{title}</b>
+              <span className="block text-[11.5px] text-[var(--c-mut)]">{nat && d.state === "reading" ? tr("reading") + " " + d.done + "/" + (d.pages || "…") : nat && d.state === "queued" ? tr("waiting") : nat && d.state === "error" ? "⚠ " + tr("error") : tr("{n} pages", { n: pages || 0 })}{inChat ? " · " + tr("Chat knows it") : ""}</span></span>
+            <button onClick={() => { setOnly(only && only.id === id ? null : { id, title }); setTimeout(() => qRef.current && qRef.current.focus(), 50); }} aria-pressed={!!(only && only.id === id)} className={"min-h-[40px] px-3 rounded-[12px] border text-[12.5px] font-extrabold " + (only && only.id === id ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)]")} data-testid="booklib-ask-one">{tr("Ask")}</button>
+            <button onClick={() => saveInChat(d, !inChat)} aria-pressed={inChat} className={"min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold " + (inChat ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "border border-[var(--c-acc)] text-[var(--c-acc)]")} data-testid="booklib-save-chat">{inChat ? "✓ " + tr("In Chat") : tr("Save in Chat")}</button>
+            <button onClick={() => removeBook(id)} aria-label={tr("Remove")} className="w-8 h-10 grid place-items-center text-[var(--c-mut)] shrink-0" data-testid="booklib-remove"><X size={14} /></button>
+          </div>; })}</div>
           : <p className="m-0 text-[13px] text-[var(--c-mut)]">{tr("Add the books you trust (PDF, Word, e-book) — 10 history books, your course, a law… Then ask anything.")}</p>}
-        {shelf.length ? <details className="text-[12.5px]" data-testid="booklib-answer"><summary className="cursor-pointer text-[var(--c-acc)] font-bold">{tr("Chat and the voice can answer from…")}{answerOn.length ? " (" + shelf.filter((d) => answerOn.includes(String(d.id))).length + ")" : ""}</summary>
-          <p className="m-0 mt-1 text-[var(--c-mut)]">{tr("Switch a book on and Chat and the voice look into it too, quoting the book and page.")}</p>
-          <div className="mt-1.5 space-y-0.5">{shelf.slice(0, 200).map((d) => <label key={d.id} className="flex items-center gap-2 min-h-[40px]"><input type="checkbox" className="w-5 h-5 accent-[var(--c-acc)] shrink-0" checked={answerOn.includes(String(d.id))}
-            onChange={(e) => { setAnswerOn(B.setAnswerFrom(d.id, e.target.checked)); flash && flash(e.target.checked ? tr("Chat and the voice can answer from “{b}” now", { b: B.titleOf(d.name) }) : tr("Chat won't look into “{b}”", { b: B.titleOf(d.name) })); }} data-testid="booklib-answer-toggle" />
-            <span className="flex-1 min-w-0 truncate" dir="auto">{B.titleOf(d.name)}</span></label>)}</div></details> : null}
         {topics.length && shelf.length ? <details className="text-[12.5px]"><summary className="cursor-pointer text-[var(--c-acc)] font-bold">{tr("Move books to a topic")}</summary>
           <div className="mt-1.5 space-y-1">{shelf.slice(0, 200).map((d) => <label key={d.id} className="flex items-center gap-2"><span className="flex-1 min-w-0 truncate" dir="auto">{B.titleOf(d.name)}</span>
             <select value={nat ? d.topic : (st.topicOf || {})[d.id] || ""} onChange={(e) => moveBook(d.id, e.target.value)} className="min-h-[36px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-2" data-testid="booklib-move"><option value="">{tr("No topic")}</option>{topics.map((t) => <option key={t} value={t}>{t}</option>)}</select></label>)}</div></details> : null}
@@ -244,9 +249,11 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
       {chat.length ? <button onClick={() => setChat([])} className="text-[12px] underline text-[var(--c-mut)]" data-testid="booklib-new">{tr("New question (clear the chat)")}</button> : null}
       <div className="flex flex-wrap gap-1.5"><button onClick={() => setDeep(false)} aria-pressed={!deep} className={U.chip(!deep)} data-testid="booklib-fast">{tr("Fast answer")}</button>
         <button onClick={() => setDeep(true)} aria-pressed={deep} className={U.chip(deep)} data-testid="booklib-deep">{tr("Read deeper (more pages, slower)")}</button></div>
+      {only ? <div className="flex items-center gap-2 text-[13px]" data-testid="booklib-only"><span className="c-sub">{tr("Asking only:")}</span><b className="truncate" dir="auto">{only.title}</b>
+        <button onClick={() => setOnly(null)} className="min-h-[36px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12px] font-bold" data-testid="booklib-only-clear">{tr("All files")}</button></div> : null}
       <form onSubmit={(e) => { e.preventDefault(); ask(); }} className={U.card + " flex items-center gap-2 p-1.5 ps-3.5 sticky bottom-2"} data-testid="booklib-form">
         <BookOpen size={16} className="text-[var(--c-mut)] shrink-0" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} dir="auto" placeholder={topic ? tr("Ask your {t} books…", { t: topic }) : chat.length ? tr("Ask a follow-up…") : tr("Ask your books…")} className="flex-1 min-w-0 bg-transparent outline-none text-[14px] min-h-[44px]" data-testid="booklib-input" />
+        <input ref={qRef} value={q} onChange={(e) => setQ(e.target.value)} dir="auto" placeholder={only ? tr("Ask “{t}”…", { t: only.title }) : topic ? tr("Ask your {t} books…", { t: topic }) : chat.length ? tr("Ask a follow-up…") : tr("Ask your books…")} className="flex-1 min-w-0 bg-transparent outline-none text-[14px] min-h-[44px]" data-testid="booklib-input" />
         <button type="submit" disabled={!q.trim() || asking} aria-label={tr("Send")} className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center disabled:opacity-40" data-testid="booklib-send"><Send size={16} /></button>
       </form>
     </div>);

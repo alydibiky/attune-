@@ -31,7 +31,7 @@ export const HUBS = [
   ["tools", "Work", "business", ["business", "fleet", "field", "guide", "privacy"]],
   // v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools is its own place, not a tab of Work; "Ask (classic)" is gone
   // v8.5 (E3): Writing is one box with Improve · Shorten · Humanize buttons (the three pages open from it, no tab row)
-  ["toolbox", "Tools", "tools", ["tools", "convert", "write", "improve", "compress", "humanize", "copilot", "library", "video"]],
+  ["toolbox", "Tools", "tools", ["tools", "convert", "write", "improve", "compress", "humanize", "copilot", "library", "video", "pdfchat"]],   // v9.2 (5A): Ask a PDF is a tool (its own page, no tab row)
 ];
 
 /** Inside Tools, the pages that are one page with tabs (the smallest group a page is in gives its tabs). */
@@ -43,7 +43,7 @@ export const GROUPS = [
   // v6.43 (Ali: "put the tools that improve a prompt or humanize in the same page"): Writing = Improve · Shorten · Humanize · Copilot · Prompt lab
   ["write", "Writing", ["write", "copilot", "library"]],
   // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")
-  ...["lists", "missions", "automations", "projects", "video", "tools", "convert", "guide", "privacy", "home", "chat", "translate", "improve", "compress", "humanize", "knowledge", "crane"].map((m) => ["solo-" + m, m, [m]]),
+  ...["pdfchat", "remember", "lists", "missions", "automations", "projects", "video", "tools", "convert", "guide", "privacy", "home", "chat", "translate", "improve", "compress", "humanize", "knowledge", "crane"].map((m) => ["solo-" + m, m, [m]]),
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */
@@ -56,7 +56,7 @@ export const FULL = ["home", "fit", "map"];   // (v6.36: Business shows the Work
 // v8.2 (Ali picked 1A, 26 Oct): Follow-ups opens on ONE list by day (the timeline) — People & plans, Reminders, Dates, Chat X-Ray and the
 // Guardian are its parts; Money = Money · Follow-ups · Deal Check
 export const INSIDE = { life: "timeline", family: "timeline", reminders: "timeline", radar: "timeline", xray: "timeline", guardian: "timeline",
-  pdfchat: "booklib", remember: "booklib", recall: "memory" };   // v8.5: Documents = Many books · One file (W3); Mind · Recall (R2)
+  recall: "memory" };   // v9.2 (Ali picked 5A: "library is so confusing — what are the 3 options?"): one Documents page, no Books & PDFs · One file · Attune remembers switch   // v8.5: Documents = Many books · One file (W3); Mind · Recall (R2)
 /* v7.2 (Gemini's Area 1 mock-up, Ali sent it 24 Oct 2026): Money = Money · Follow-ups · Guardian · Deal Check. Follow-ups opens on
    People & plans (debts, installments, savings circles, the maid every Saturday) with Reminders · Timeline · Dates · Chat X-Ray in
    its switch; the Money Guardian is its own tab again. */
