@@ -108,6 +108,31 @@ model organises work: reads PDFs, sorts them, pulls out dates, tasks and amounts
 | 67 | **Video Downloader** | Downloads videos | **REMOVE** — downloading from YouTube breaks Google Play policy (the whole app can be rejected) |
 | 68 | **Attune keyboard** | A keyboard with AI keys | **REMOVE (recommended)** — a keyboard that reads all typing is a privacy and Play-review risk |
 
+## Ali's decisions (4 Nov 2026, evening) — ALI DECIDED
+- **Sections 1–3: all kept** as suggested.
+- **32 Artifacts · 33 Assistants · 34 Skills:** kept; Claude's advice: merge them into **Projects** (each project = files + chats +
+  its assistant + its routines + saved results) — a design change, so show Ali mock-ups first.
+- **35 Instant:** kept (quick capture from the phone's quick-settings tile).
+- **46 Fit & Food, 47 Food photo, 48 Cycle → archived; they become the separate product Attune Fit.** (Attune keeps meals typed
+  in Chat, water, weight, sleep, medicines as a light log.) What makes Attune Fit different from Yazio: Egyptian / Arab food as eaten,
+  logging by one sentence or voice in Egyptian Arabic / Franco, the plate photo read on the phone, the meal's cost in Money,
+  Ramadan, offline, family health — "better" must be proven with real users.
+- **49 Scout → archived** (Agents does what it does). **50 Deal Check → into Money Guardian.** **51 Shop in your pocket → archived.**
+  **52 What you're owed → archived as a page** (kept inside Travel).
+- **53 Learn daily, Homework Coach → archived** (maybe Attune Learn later); **the morning news stays** as a short brief on Today.
+- **54 Homework Coach → archived.**
+- **55 CV / Resume, Job ready, Mock interview → KEPT.** Next: a **job agent** — finds jobs that fit the CV, Ali picks, it opens the
+  page inside Attune and fills the application from the CV; **the person presses Submit** (LinkedIn forbids bots that apply).
+- **56 Code page → archived**; its hidden Python sandbox stays (it checks Attune's own calculations).
+- **57 Copilot, Prompt lab, Improve a prompt, Humanize, Compress → the pages are archived; Chat understands the same requests**
+  ("improve this prompt for Claude…", "humanize this…", "make this shorter…") with the same tuned instructions.
+- **58 Offline Maps → archived.** A place in a reminder / plan, and "take me to X" in Chat, open **Google Maps navigation** (it works
+  offline when the area is downloaded in Google Maps; Attune can remind to download it before a trip).
+- **59 Cairo Metro:** stays as a Chat answer only. **60 Life Simulator → kept as a "What if?" inside Month plan.**
+- **61 Video tools:** subtitles stay in Translate; cut / slow replay archived.
+- **Section 5: all removed → archived** — Studio, Business (+ Fleet, Site reports, Crane toolkit) done; **Video Downloader and the
+  Attune keyboard** too.
+
 ## The product family (Ali, 4 Nov 2026)
 - **Attune** — the life & work organiser with offline AI (this app).
 - **Attune Business** — companies: Fleet & rentals (cranes, warehouses), Books, ERP, Shop/POS, client portal, site reports, crane
