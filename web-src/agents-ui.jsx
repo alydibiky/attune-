@@ -439,7 +439,11 @@ function BestFound({ a, small, openBest, skipBest }) {
   const day = (o) => (o.checkin ? o.checkin.slice(5).replace("-", "/") + " → " + String(o.checkout || "").slice(5).replace("-", "/") : "—");
   const tv = (x) => (x[1].a != null ? { a: Math.round(x[1].a).toLocaleString("en-US") } : x[1]);
   const green = "text-[var(--c-acc)] font-black";
+  // v9.2 (Ali, 4 Nov: "agents still look like that" — blurred boxes, every hotel named "Booking.com"): offers read before the hotel
+  // names and photos were read keep the old look until the next check — say so, so it is never taken for how it should look
+  const stale = (a.best3 || []).length > 0 && a.best3.every((o) => !o.photo && (!o.name || o.name === a.site || /^(www\.)?[a-z0-9-]+\.[a-z.]{2,}$/i.test(String(o.name).trim())));
   return <div className="space-y-2" data-testid="agent-best3">
+    {stale ? <p className="m-0 text-[12.5px] font-bold text-[var(--c-warn)]" data-testid="agent-stale">{tr("These offers were read before Attune could read the hotel names and photos — tap Check now to get them.")}</p> : null}
     <div className="flex items-baseline justify-between gap-2"><p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Best found")}</p>
       {c.rows.length > 1 ? <button onClick={() => setTable(!table)} className="text-[12.5px] font-extrabold text-[var(--c-acc)] min-h-[36px]" data-testid="agent-compare" aria-expanded={table}>{table ? tr("Hide the table") : tr("Compare side by side")}</button> : null}</div>
     {table ? <div className="overflow-x-auto rounded-[12px] border border-[var(--c-ln)]" data-testid="agent-compare-table">

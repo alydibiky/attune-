@@ -35,5 +35,5 @@ export function DoResult({ r, navTo, onClose, onUndo }) {
       </div>
     </div>);
 }
-export const DO_HINTS = [["had foul and 2 eggs for breakfast", "فطرت فول وبيضتين"], ["spent 150 on lunch", "صرفت ١٥٠ على الغدا"], ["remind me tomorrow at 9 to call Hassan", "فكرني بكرة الساعة ٩ اكلم حسن"], ["drank 2 glasses of water", "شربت ٢ كوباية مية"], ["Ahmed owes me 12,000, 1,000 a month", "أحمد عليه ١٢ ألف، ألف كل شهر"], ["took my insulin", "خدت الإنسولين"]];
+export const DO_HINTS = [   /* v9.2: no food example — Fit & Food is archived (→ Attune Fit) */ ["spent 150 on lunch", "صرفت ١٥٠ على الغدا"], ["remind me tomorrow at 9 to call Hassan", "فكرني بكرة الساعة ٩ اكلم حسن"], ["drank 2 glasses of water", "شربت ٢ كوباية مية"], ["Ahmed owes me 12,000, 1,000 a month", "أحمد عليه ١٢ ألف، ألف كل شهر"], ["took my insulin", "خدت الإنسولين"]];
 

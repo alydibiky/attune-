@@ -5,7 +5,8 @@
 import React, { useState, useMemo } from "react";
 import { House as HomeIc, Wallet, Plus, RefreshCw as Repeat, Moon, X, ChevronRight, ArrowLeft, Target, TrendingUp, FileText, Zap, BookOpen, SlidersHorizontal as Settings, Download, Check } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
-import { KINDS as ZC_KINDS } from "./zakatcalc.js";
+import { KINDS as ZC_KINDS, ANIMALS } from "./zakatcalc.js";
+import { sharePdf } from "./share-pdf.js";
 import { fmt } from "./money-calm.js";
 import { accountsPage, billsPage, zakatPage, sheetCats, sheetTxn } from "./money-pages.js";
 import { isoDay } from "./money-report.js";
@@ -214,7 +215,61 @@ export function BillsPane({ L, wide, openLedger, saveFile }) {
 }
 
 // ---- Zakāt ---------------------------------------------------------------------------------------------------------------------------
-export function ZakatPane({ L, snap, wide, openLedger }) {
+/* v9.2 (Ali, 4 Nov 2026: "make sure the zakat is complete and has everything from the past"): the parts of the old ledger's Zakāt tab
+   Attune's page did not show yet — Ramadan (Zakāt al-Fiṭr), the one question about debts, each pool on its own, livestock with its
+   own ḥawl, paid vs due, "Close this Zakāt year", the closed years with their certificate, and the disclaimer. Every figure is the
+   ledger's own (snapshot → zakat.more); Attune only shows it and sends the person's choices back (runDo). */
+const POOL = { cash: ["💵", "Cash"], gold: ["🥇", "Gold"], silver: ["⚪", "Silver"] };
+const LIVE_EMOJI = { camels: "🐪", cattle: "🐄", sheep: "🐑" };
+const animalLine = (owed) => { const o = Array.isArray(owed) && Array.isArray(owed[0]) && Array.isArray(owed[0][0]) ? owed[0] : owed;
+  return (o || []).map(([n, k]) => n + " × " + ((ANIMALS[k] || [k, k])[ar() ? 1 : 0])).join(" + "); };
+export function ZakatMore({ more, cur, runDo, openLedger, flash }) {
+  const [busy, setBusy] = useState("");
+  if (!more) return null;
+  const go = async (op, args, okMsg) => { if (!runDo || busy) return null; setBusy(op); try { const r = await runDo(op, args || {}); if (r && r.ok && okMsg && flash) flash(okMsg); return r; } finally { setBusy(""); } };
+  const cert = async (h) => { const r = await go("zakat-cert", { id: h.id }); if (r && r.ok && r.html) await sharePdf({ html: r.html, name: "Zakat-Certificate-" + h.date, flash }); };
+  const close = () => { if (window.confirm(tr("Close this Zakāt year? Its payments become one closed year with a certificate, and a new Zakāt year starts today."))) go("zakat-close", {}, tr("Closed — the certificate is under Closed years")); };
+  return <>
+    {more.ramadan ? <button onClick={() => openLedger("zakat-calc:fitr")} className={U.card + " w-full p-4 text-start flex items-center gap-3 border-[var(--c-acc)]!"} data-testid="zakat-ramadan">
+      <span className="text-[22px]">🌙</span><span className="flex-1 min-w-0"><b className="block text-[14.5px]">{tr("Ramadan is here — Zakāt al-Fiṭr is due before the Eid prayer")}</b>
+        <span className="block text-[12.5px] c-sub">{tr("Work it out")} ›</span></span></button> : null}
+    {more.debtQuestion ? <Card title={tr("One question before your Zakāt is worked out")} testid="zakat-debt-q">
+      <p className="m-0 mb-2 text-[13px] c-sub leading-relaxed">{T("You owe {a}. Scholars differ on whether a debt is taken off the wealth you pay Zakāt on. It is your choice — until you choose, nothing is taken off.", { a: amt(more.debtQuestion.owed, cur) })}</p>
+      <div className="space-y-2">{(more.debtQuestion.policies || []).map((p) => <button key={p.id} disabled={!!busy} onClick={() => go("zakat-debtpolicy", { policy: p.id }, tr("Saved"))} data-testid={"zakat-debt-" + p.id}
+        className="w-full text-start rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 min-h-[52px]"><b className="block text-[14px]" dir="auto">{p.name}</b><span className="block text-[12px] c-sub leading-snug" dir="auto">{p.who}</span></button>)}</div>
+    </Card> : null}
+    {more.pools && more.pools.length ? <Card title={tr("Each on its own")} testid="zakat-pools">
+      {more.pools.map((p) => <div key={p.pool} className="py-2.5 border-t border-[var(--c-ln)] first:border-t-0" data-testid={"zakat-pool-" + p.pool}>
+        <div className="flex items-center justify-between gap-2"><b className="text-[14px]">{POOL[p.pool][0]} {tr(POOL[p.pool][1])}</b>
+          <span className={U.tag(p.isDue ? "amber" : "gray")}>{p.isDue ? tr("Due now") : p.below ? tr("Below the niṣāb") : p.due ? T("due {d}", { d: dayLabel(p.due) }) : tr("Not due yet")}</span></div>
+        <p className="m-0 text-[12.5px] c-sub tabular-nums" dir="auto">{p.isDue || (!p.below && p.amount) ? T("Zakāt {a} · 2.5% of {b}", { a: amt(p.amount, cur), b: amt(p.val, cur) }) : p.pool === "cash" ? T("Niṣāb {a}", { a: amt(p.N, cur) }) : T("{n} g of {m} g", { n: p.units, m: p.N })}</p></div>)}
+    </Card> : null}
+    {more.livestock && more.livestock.length ? <Card title={tr("Livestock Zakāt")} testid="zakat-livestock">
+      {more.livestock.map((a, i) => <div key={i} className="flex items-start gap-2.5 py-2.5 border-t border-[var(--c-ln)] first:border-t-0" data-testid="zakat-live-row">
+        <span className="text-[20px]">{LIVE_EMOJI[a.kind] || "🐑"}</span>
+        <span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{a.name} · <span className="tabular-nums">{T("{n} head", { n: a.count })}</span></b>
+          <span className={"block text-[12.5px] " + (a.isDue ? "font-extrabold text-[var(--c-warn)]" : "c-sub")} dir="auto">
+            {!a.grazing ? tr("Not free-grazing — no Zakāt on them") : a.below ? T("Below the niṣāb ({n} head)", { n: a.N }) : a.isDue ? T("Due now: {x}", { x: animalLine(a.owed) }) : T("Its ḥawl is running — due {d} (in {n} days)", { d: dayLabel(a.due), n: a.daysLeft })}</span></span></div>)}
+    </Card> : null}
+    {more.dueNow > 0 || more.paid > 0 ? <Card title={tr("Paid vs due")} testid="zakat-distribution">
+      {more.dueNow > 0 ? <div className="c-bar my-1.5" aria-hidden="true"><i style={{ width: Math.min(100, Math.round(more.paid / more.dueNow * 100)) + "%", background: more.remaining <= 0 ? "var(--c-pos)" : undefined }} /></div> : null}
+      <div className="flex justify-between gap-2 text-[13px]"><span className="c-sub">{tr("Paid so far")} <b className="text-[var(--c-ink)] tabular-nums" dir="ltr">{amt(more.paid, cur)}</b></span>
+        {more.dueNow > 0 ? (more.remaining > 0 ? <span className="c-sub">{tr("Still to pay")} <b className="text-[var(--c-warn)] tabular-nums" dir="ltr" data-testid="zakat-remaining">{amt(more.remaining, cur)}</b></span>
+          : <b className="text-[var(--c-pos)]" data-testid="zakat-fully-paid">{tr("Fully paid — may Allah accept it")}</b>) : null}</div>
+      <button onClick={close} disabled={!!busy} className={U.btnS + " w-full mt-3"} data-testid="zakat-close-year">{busy === "zakat-close" ? tr("Saving…") : tr("Close this Zakāt year")}</button>
+    </Card> : null}
+    <Card title={tr("Closed years")} testid="zakat-history">
+      {(more.history || []).map((h) => <div key={h.id} className="flex items-center gap-2 py-2.5 border-t border-[var(--c-ln)] first:border-t-0" data-testid="zakat-history-row">
+        <span className="flex-1 min-w-0"><b className="block text-[14px] tabular-nums" dir="ltr">{amt(h.paid, h.currency)}</b>
+          <span className="block text-[12px] c-sub">{dayLabel(h.date)}{h.hijri ? " · " + h.hijri : ""}{h.due ? " · " + T("due {d}", { d: amt(h.due, h.currency) }) : ""}</span></span>
+        <button onClick={() => cert(h)} disabled={!!busy} className={U.btnS + " shrink-0"} data-testid="zakat-cert">{tr("Certificate")}</button></div>)}
+      {!(more.history || []).length ? <p className="m-0 text-[13px] c-sub py-1">{tr("No closed year yet — when you finish paying a year's Zakāt, close it here and keep its certificate.")}</p> : null}
+    </Card>
+    {/* the old tab's closing note (the ledger's own words), in the person's language */}
+    <p className="m-0 px-1 text-[11.5px] c-sub leading-relaxed" dir="auto" data-testid="zakat-disclaimer">{tr("An estimate to guide you. It uses the gold nisab (85g) and 2.5% on cash, gold, silver and money owed to you — not your home, car, or work equipment. Rulings on debts and on dropping below nisab during the year differ between scholars; confirm your case with a trusted scholar.")}</p>
+  </>;
+}
+export function ZakatPane({ L, snap, wide, openLedger, runDo, flash }) {
   const [rep, setRep] = useState(false);
   const [why, setWhy] = useState(false);
   const z = useMemo(() => zakatPage(L, snap), [L, snap]);
@@ -244,7 +299,7 @@ export function ZakatPane({ L, snap, wide, openLedger }) {
           {s.base != null && s.nisab != null ? <>
             <div className="flex justify-between text-[12.5px] c-sub"><span>{tr("Your zakatable wealth")} <b className="text-[var(--c-ink)] tabular-nums" dir="ltr">{fmt(s.base)}</b></span><span>{tr("Niṣāb")} <b className="text-[var(--c-ink)] tabular-nums" dir="ltr">{fmt(s.nisab)}</b></span></div>
             <div className="c-bar" aria-hidden="true"><i style={{ width: Math.min(100, s.pct || 0) + "%", background: (s.pct || 0) >= 100 ? "var(--c-warn)" : undefined }} /></div>
-            <p className="m-0 text-[12px] c-sub">{T("{p}% of the niṣāb", { p: s.pct })}{z.madhhab ? " · " + z.madhhab : ""}</p></> : null}
+            <p className="m-0 text-[12px] c-sub">{T("{p}% of the niṣāb", { p: s.pct })}{z.madhhab ? " · " + tr(({ jumhur: "Most scholars", majority: "Most scholars", hanafi: "Hanafi", maliki: "Maliki", shafii: "Shafiʿi", hanbali: "Hanbali" })[z.madhhab] || z.madhhab) : ""}</p></> : null}
           {z.basis ? <button onClick={() => setWhy((v) => !v)} className="text-[13px] font-bold c-acc min-h-[36px]" data-testid="zakat-why">{why ? tr("Hide how it was worked out") : tr("How it was worked out")}</button> : null}
           {why ? <div className="text-[12.5px] leading-relaxed c-sub space-y-1" dir="auto"><p className="m-0 whitespace-pre-line">{z.basis}</p>{z.sources.map((x, i) => <p key={i} className="m-0">· {x}</p>)}</div> : null}
         </>}
@@ -265,6 +320,7 @@ export function ZakatPane({ L, snap, wide, openLedger }) {
         {!jewOn ? <p className="m-0 pt-1 text-[12px] c-sub">{tr("Worn jewellery is counted in the Hanafi school. To count it, turn it on in Zakāt settings → Gold and silver you own.")}</p> : null}
         {s && s.base != null ? <div className="flex justify-between text-[14px] font-extrabold pt-2 border-t-2 border-[var(--c-ln)]"><span>{tr("Your zakatable wealth")}</span><b className="tabular-nums" dir="ltr">{amt(s.base, cur)}</b></div> : null}
       </Card>; })()}
+    <ZakatMore more={snap && snap.zakat && snap.zakat.more} cur={cur} runDo={runDo} openLedger={openLedger} flash={flash} />
     {/* v8.7 (Ali: "where is the gold rate, auto-updating for each country?"): today's price, updated by itself twice a day */}
     {L && L.zakat && L.zakat.goldPrice ? <div className={U.card + " p-4 flex items-center gap-3"} data-testid="zakat-gold">
       <span className="text-[22px]">🪙</span>

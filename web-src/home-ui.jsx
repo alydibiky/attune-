@@ -45,7 +45,7 @@ import { EmailCard } from "./email-ui.jsx";
 import * as LA from "./lifeask.js";
 import { connectNow, pickPerson, allStores } from "./connected.js";
 import { insights, loadSeen, saveSeen, dismiss as dismissSeen } from "./insights.js";
-import { withoutHidden as withoutRemoved } from "./removed.js";   // v9.1: removed + folded (Scout) tools leave menus
+import { withoutHidden as withoutRemoved, isRemoved } from "./removed.js";   // v9.1: removed + folded (Scout) tools leave menus
 import { loadDir } from "./entities.js";
 import { notesMoneyNow } from "./notes-money-ui.jsx";
 
@@ -74,8 +74,8 @@ function HeroCards({ data, navTo }) {
   cards.push({ k: "money", label: tr("Money & Follow-ups"), col: "#157A52", open: "money",
     big: safe && data.hasLedger ? tr("{a} safe to spend today", { a: f(safe.today) }) : tr("Write what you spend — Attune keeps the count"),
     sub: first ? first.title : tr("Nothing to follow today") });
-  // 2 — food against the goal
-  cards.push({ k: "fit", label: tr("Fit & Food"), col: "#B4560E", open: "fit",
+  // 2 — food against the goal. v9.2 (Ali, 4 Nov: "home still has food"): Fit & Food is archived (→ Attune Fit) — no card on Home
+  if (!isRemoved("fit")) cards.push({ k: "fit", label: tr("Fit & Food"), col: "#B4560E", open: "fit",
     big: data.fitOn && data.goal ? tr("{a} of {b} kcal", { a: f(data.kcal), b: f(data.goal) }) : data.kcal ? tr("{a} kcal today", { a: f(data.kcal) }) : tr("Snap your lunch"),
     sub: data.fitOn && data.goal > 0 ? (data.goal > data.kcal ? tr("{a} left today", { a: f(data.goal - data.kcal) }) : tr("Goal reached today")) : tr("A photo, a barcode or “2 eggs and foul”") });
   // 3 — agents: one waiting for an OK first, else the newest find
@@ -312,7 +312,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           <span className="c-sub block text-[11px] font-bold truncate">{x.label}</span><b className="c-num block text-[16px]">{x.value}</b></button>)}
       </div> : null}
       {minimal ? null : <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-quick">
-        {[[Apple, "Food photo", () => (openFitAdd ? openFitAdd() : navTo("fit")), "home-quick-food"], [FileText, "A file", () => navTo("pdfchat"), "home-quick-file"], [Binoculars, "Find for me", () => navTo("scout"), "home-quick-scout"]].map(([I, l, go, id]) => (
+        {[[Apple, "Food photo", () => (openFitAdd ? openFitAdd() : navTo("fit")), "home-quick-food"], [FileText, "A file", () => navTo("pdfchat"), "home-quick-file"], [Binoculars, "Find for me", () => navTo("agents"), "home-quick-scout"]].filter((x) => !(x[3] === "home-quick-food" && isRemoved("fit"))).map(([I, l, go, id]) => (
           <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px]" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={14} className="c-acc" />{tr(l)}</button>))}
       </div>}
       {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : tr(hint[0])}»</p>}
@@ -393,7 +393,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         </div> : freshApp() ? <EmptyStart testid="home-empty" title={tr("Your day starts here")} sub={tr("Write anything the way you'd say it — Attune puts it where it belongs.")}
             examples={ar ? ["غدا 150، تاكسي 60", "أحمد عليه 500", "فكرني بكرة الساعة 9"] : ["lunch 150, taxi 60", "Ahmed owes me 500", "remind me tomorrow at 9"]}
             onPick={(x) => { setText(x); try { const el = document.querySelector("[data-testid=home-box] textarea"); if (el) el.focus(); } catch (e) {} }} />
-          : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you ate, spent or need to remember.")}</p>}
+          : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you spent or need to remember.")}</p>}
       </div>
       {!rep ? <button onClick={() => setRep(true)} className="w-full min-h-[50px] rounded-[20px] px-4 flex items-center justify-between gap-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="home-see-report">
         <span className="font-extrabold text-[14px]">{tr("See all")}</span>

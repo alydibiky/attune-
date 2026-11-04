@@ -16,6 +16,36 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.2 — 4 Nov late: Ali's 11-point phone list ("fix everything") — the objective fixes are BUILT, the design picks are WAITING
+**WAITING FOR ALI (ask him, build exactly what he picks):** the mock-up page https://claude.ai/artifact/8SD1njQ1tiLadAFkAbXAHs (made
+in the 4 Nov session; Claude's picks: 1A 2A 3A(+3B's calendar row) 4A 5A 6A+6B 7A). The questions:
+1 Home to-dos + **repeating lists** (Ali: "the to-do / remind should appear on Home when due or not finished … recurring to-do lists
+  … I'm travelling, it shows my travel list on Home") — 1A a "To do" card (late in red) + a list card on its day / 1B "Up next" one
+  at a time / 1C a small board on Home. 2 Agents in **one pattern** (2A same card + "Needs you" first + List/Board switch / 2B board
+  first / 2C inbox list). 3 **Flight agent** (Ali: "see the cheapest flight tickets with the modifications I want") — reference
+  AWeirdDev/flights (MIT, Google Flights `tfs` link) read in AgentBrowser like the hotel sweep; 3A cheapest big + next best / 3B
+  price calendar. 4 **Mind** ("so confusing and bad"): 4A folders + recently kept / 4B timeline / 4C ask first. 5 **Library**
+  (its 3 buttons explained on the page): 5A one Documents page / 5B 3 clear names. 6 **Projects** list (Ali's screenshot was the
+  EMPTY list, before design D reached his phone; Assistants = "Answers as", Skills = "Repeats" inside a project): 6A starters + your
+  assistants / repeats visible, 6B a Tasks board inside a project. 7 a new name for **Saved**: My things / Memory / Keep / Vault.
+  Ali's Trello question — Claude's real opinion (he agreed): a board only where things move through stages (Agents, a project's
+  tasks); to-dos stay a list on Home; the computer shows boards full width.
+**Built (all 20 languages, 26 new lines):**
+- Home: no Fit & Food card / food quick button / food example / "what you ate" line (Fit is archived — `isRemoved("fit")`).
+- Writing → Home bug: its Copilot / Prompt lab TABS opened archived pages (navTo falls back to Home). `hubs.js tabsFor` drops any
+  archived / folded page from every tab row; `tests/unit/v734hubs` updated to v9.1 reality (it still asserted the archived tabs).
+- Notes → **Shelf** again (tab, header, People / links source names). Tools: no second Library card; Writing card's text fixed.
+- **Zakāt complete like the old ledger's tab** (Ali: "make sure the zakat is complete and has everything from the past"): the ledger
+  (`yusr/index.new.html`) sends `zakat.more` in its snapshot (`zakatMoreFacts`: each pool on its own, livestock with its own ḥawl,
+  paid vs due, closed years, the one question about debts, Ramadan) and takes 3 new ops `zakat-close` (closeZakatYear),
+  `zakat-cert` (the certificate HTML → Attune's sharePdf), `zakat-debtpolicy`; `yusr-bridge.js cleanZakatMore` checks every field.
+  Attune shows them (`money-pages-ui.jsx ZakatMore`). The madhhab shows its name ("Most scholars"), not "jumhur".
+  **Real bug fixed in the ledger:** livestock head were counted as MONEY (zakatCashTotal, the ḥawl's running total, the cash pool).
+- Agents: offers saved before hotel names / photos were read (every name = the site, no photo — Ali's screenshot) say so: "tap
+  Check now" (`agent-stale`). The fix itself (CARD_SEL) shipped 4 Nov evening.
+- Test: `tests/e2e_v922fixes.py` (Zakāt: debt question → ledger, livestock not money, 1 sheep due, paid vs due, close year →
+  history → certificate, separate pools; Home no Fit; Writing no archived tabs; Shelf; Tools; stale agent).
+
 ## v9.0 part 9 — 3 Nov: Ali's screenshot "Checking 2 of 6 — it keeps loading different dates and doesn't get the lowest price"
 - `AgentBrowser.kt`: a hotel window's start days are read until their prices stand still (same count + price twice, 6–25 s) — v8.7
   moved on after a fixed 8 s, before Booking had drawn its prices. Only the new day's own page is read (`pageRound`), never the last

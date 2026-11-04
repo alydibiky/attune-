@@ -119,7 +119,7 @@ export function connect(question, stores = {}, dir = { items: [] }, { now = Date
   else if (ASK_SUM.test(q) && money.length) answer = { en: `${name}: ${out ? "you paid " + n(out) + " " + cur : ""}${out && inn ? " and " : ""}${inn ? "you got " + n(inn) + " " + cur : ""} — ${money.length} ${money.length === 1 ? "payment" : "payments"} in Money${money.length ? ", the last on " + when(money[0].ts) : ""}.`,
     ar: `${nameAr}: ${out ? "دفعت " + n(out) + " " + cur : ""}${out && inn ? " و" : ""}${inn ? "جالك " + n(inn) + " " + cur : ""} — ${money.length} ${money.length === 1 ? "عملية" : "عمليات"} في الفلوس${money.length ? "، آخرها " + when(money[0].ts, true) : ""}.` };
   const top = items.slice(0, 40);
-  const SRC = { money: "Money", followups: "Follow-ups", notes: "Notes", mind: "Mind", todo: "To-do", messages: "Messages", reminders: "Reminders", dates: "Dates", goals: "Goals", health: "Health", agents: "Agents" };
+  const SRC = { money: "Money", followups: "Follow-ups", notes: "Shelf", mind: "Mind", todo: "To-do", messages: "Messages", reminders: "Reminders", dates: "Dates", goals: "Goals", health: "Health", agents: "Agents" };
   const block = (people.length ? "Who: " + people.map((p) => labelOf(p) + (p.contact && p.contact.phone ? " (" + p.contact.phone + ")" : "")).join("; ") + "\n" : "")
     + (money.length ? `Money: paid ${n(out)} ${cur}, received ${n(inn)} ${cur}, ${money.length} payments\n` : "")
     + (debts.length ? `Owed: to the user ${n(toMe)} ${cur}, the user owes ${n(iOwe)} ${cur}\n` : "")

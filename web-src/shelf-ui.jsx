@@ -487,7 +487,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
   } else {
     body = (<div data-testid="shelf-home">
       {/* v8.7 (Ali picked V-C, one header style): named like its tab ("Notes"), and no second ☰ — the books list has its own icon */}
-      {header(tr("Notes"),
+      {header(tr("Shelf"),   /* v9.2 (Ali, 4 Nov: "make notes called shelf like it was") */
         <button onClick={() => setView("books")} aria-label={tr("All books")} className={ib} data-testid="shelf-menu"><BookOpen size={21} /></button>,
         <><button onClick={() => setView("reminders")} aria-label={tr("Reminders")} className={ib + " relative"} data-testid="shelf-alarm"><AlarmClock size={21} />{ups.length ? <span className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-[var(--c-neg)]" /> : null}</button>
           <button onClick={() => { setQ(""); setView("search"); }} aria-label={tr("Search")} className={ib} data-testid="shelf-search-open"><Search size={21} /></button>

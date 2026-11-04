@@ -628,11 +628,11 @@ wagroups-ui.jsx: const fresh = W.addedItems({ text, files, who: getLang() === "a
 care-ui.jsx: const refill = (m) => { const v = window.prompt(tr(H.isInsulin(m) ? "How many units do you have now?" : "How many do you have now?"), ""); i
 code-ui.jsx: try { await saveFile(name, cur.code, (LANGS[cur.lang] || LANGS.python).mime); flash(tr("Saved")); } catch (e) { if (String(e.message) !== "C
 convert-ui.jsx: if (saveFile) { await saveFile(out.name, out.text || "", out.mime, out.b64); flash && flash(tr("Saved")); return; }
+money-pages-ui.jsx: <div className="space-y-2">{(more.debtQuestion.policies || []).map((p) => <button key={p.id} disabled={!!busy} onClick={() => go("zakat-debt
 money-sheets-ui.jsx: const save = () => s.go("acct-save", { id: id || undefined, kind, name: name.trim(), emoji, currency, start: parseFloat(start) || 0, karat: 
 money-sheets-ui.jsx: const save = () => s.go("rec-save", { id: id || undefined, type, amount: parseFloat(amount), cat, account, freq, nextDate: next, note: note.
 money-sheets-ui.jsx: {editable ? <SaveBtn busy={s.busy} onClick={() => s.go("tx-edit", { id, amount: parseFloat(amount), cat, account, date, note: note.trim() },
 money-sheets-ui.jsx: <Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go("goal-save", { id: id || undefined, name: name.trim(), target: parseFloat(targ
-money-sheets-ui.jsx: <Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go(op, { id, amount: parseFloat(a) }, tr("Saved"))} />
 
 ## Download
 care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
@@ -790,6 +790,10 @@ money-sheets-ui.jsx: <Field label={tr("Note (optional)")}><input value={note} on
 ## Level
 cv-ui.jsx: </> : s.type === "languages" ? <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Language")}><In value={it.name} onChange={(v) => upd
 daily-ui.jsx: <label className="block"><span className="c-sub block mb-1">{tr("Level")}</span>
+
+## Certificate
+cv-ui.jsx: : s.type === "certs" ? <div className="grid grid-cols-3 gap-2 pe-6"><Lbl t={tr("Certificate")}><In value={it.name} onChange={(v) => upd(i, {
+money-pages-ui.jsx: <button onClick={() => cert(h)} disabled={!!busy} className={U.btnS + " shrink-0"} data-testid="zakat-cert">{tr("Certificate")}</button></di
 
 ## Year
 cv-ui.jsx: : s.type === "certs" ? <div className="grid grid-cols-3 gap-2 pe-6"><Lbl t={tr("Certificate")}><In value={it.name} onChange={(v) => upd(i, {
@@ -956,6 +960,10 @@ lesson-ui.jsx: <button className={chip(false) + " tabular-nums !min-h-[44px] !h-
 lesson-ui.jsx: <button className={btnS + " tabular-nums"} onClick={() => L.setRate((r) => (r >= 1.25 ? 0.75 : r + 0.25))} aria-label={tr("Speed")}>{L.rate}
 speed-ui.jsx: <p className={head}>{tr("Speed")}</p>
 
+## Saving…
+library-ui.jsx: setBusy(tr("Saving…"));
+money-pages-ui.jsx: <button onClick={close} disabled={!!busy} className={U.btnS + " w-full mt-3"} data-testid="zakat-close-year">{busy === "zakat-close" ? tr("S
+
 ## Forget
 library-ui.jsx: <button onClick={() => remove(s)} aria-label={tr("Forget")} className="w-11 h-11 rounded-[12px] grid place-items-center c-sub hover:text-[va
 lookback-ui.jsx: {open.kind === "note" ? <button onClick={() => forget(open)} data-testid="recall-forget" className={btnDanger}><Trash2 size={15} />{tr("Forg
@@ -1036,6 +1044,10 @@ radar-ui.jsx: const when = left < 0 ? tr("{n} days ago", { n: -left }) : left ==
 money-pages-ui.jsx: <Head title={tr("Bills report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick={(
 money-sheets-ui.jsx: <Field label={tr("How often")}><Pills value={freq} onChange={setFreq} items={[["daily", tr("Every day")], ["weekly", tr("Every week")], ["mo
 
+## Due now
+money-pages-ui.jsx: <span className={U.tag(p.isDue ? "amber" : "gray")}>{p.isDue ? tr("Due now") : p.below ? tr("Below the niṣāb") : p.due ? T("due {d}", { d: d
+spaces-ui.jsx: {due ? <b className="ms-1.5 text-[var(--c-warn)]" data-testid="project-repeat-due">· {tr("Due now")}</b> : null}</span></span>
+
 ## Zakāt
 money-pages-ui.jsx: <Head title={tr("Zakāt")} />
 money-pages-ui.jsx: {z.payments.slice(0, 4).map((p) => <Row key={p.id || p.date + p.amount} icon="☪" title={p.to || tr("Zakāt")} sub={dayLabel(p.date)} end={amt
@@ -1113,10 +1125,6 @@ yearplan.js: groups.push({ id: "everyday", label: ar ? "المصاريف الع�
 ## You
 plans-ui.jsx: const who = (p) => (p === "me" ? tr("You") : p || tr("Someone"));
 speak-ui.jsx: <div className="text-[12px] c-sub">{ln.who === me ? tr("You") : tr("The phone")}</div>
-
-## Notes
-shelf-ui.jsx: {header(tr("Notes"),
-slides-ui.jsx: <button onClick={() => setNotes(!notes)} className={`min-h-[44px] px-3.5 rounded-full border font-bold ${notes ? "border-[var(--c-acc)] bg-[
 
 ## Wrong PIN
 shelf-ui.jsx: if (!S.checkPin(shelf, pin)) { setPinIn(""); return flash(tr("Wrong PIN")); }

@@ -16,7 +16,7 @@ export const OPEN_KEY = "attune:people:open";
 /** Open a card from anywhere (a name tapped in Chat, Money, Follow-ups): the People page opens on it. */
 export function openPerson(id, navTo) { try { localStorage.setItem(OPEN_KEY, String(id)); } catch (e) {} if (navTo) navTo("people"); else try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "people" } })); } catch (e) {} }
 
-const SRC = { money: ["Money", "الفلوس"], followups: ["Follow-ups", "المتابعات"], notes: ["Notes", "الملاحظات"], mind: ["Mind", "العقل"], todo: ["To-do", "المهام"], messages: ["Messages", "الرسايل"],
+const SRC = { money: ["Money", "الفلوس"], followups: ["Follow-ups", "المتابعات"], notes: ["Shelf", "الرف"], mind: ["Mind", "العقل"], todo: ["To-do", "المهام"], messages: ["Messages", "الرسايل"],
   reminders: ["Reminders", "التذكيرات"], dates: ["Dates", "المواعيد"], goals: ["Goals", "الأهداف"], health: ["Health", "الصحة"], agents: ["Agents", "الوكلاء"] };
 export const srcName = (k, ar) => (SRC[k] ? (ar ? SRC[k][1] : tr(SRC[k][0])) : k);
 

@@ -3,6 +3,8 @@
    (e.g. Code · Improve a prompt · Compress · Humanize · Copilot · Library · Ask = "Create"; Studio stays its own).
    Pure, so it is unit-tested (tests/unit/v734hubs.test.mjs). The pages themselves are unchanged — a tab is the same page as before. */
 
+import { hiddenFromMenus } from "./removed.js";
+
 /** The 6 places in the sidebar: [id, label, the page it opens, members (every mode that lives there)]. */
 export const HUBS = [
   // v6.36 (Ali arranged it himself on the board, 18 Oct): Create on top, Projects its own place, Home (Chat lives here), Students,
@@ -90,6 +92,9 @@ export function tabsFor(mode, available = null) {
   let list = g ? g[2] : hubOf(mode) === "tools" ? [] : (HUBS.find((x) => x[0] === hubOf(mode)) || [, , , []])[3];
   const has = (m) => !available || m === mode || available.includes(m);
   list = list.filter(has).filter((m) => !(INSIDE[m] && has(INSIDE[m])));   // a page inside another is not a tab of its own
+  // v9.2 (Ali, 4 Nov: "Writing opens, then anything in it redirects to Home"): an archived / folded page is never a tab — its tab
+  // (Copilot, Prompt lab on Writing) used to open nothing and land on Home
+  list = list.filter((m) => m === mode || !hiddenFromMenus(m));
   return list.length > 1 ? list : [];
 }
 
@@ -100,7 +105,7 @@ export const TOOL_PAGES = [
   // v6.36 (Ali: "improve, compress, humanize, copilot, library, video downloader — under a tab called Tools in Business, as
   // choices, not tabs"): one card each
   // v6.43 (Ali: "integrate the tools that improve a prompt or humanize in the same page"): one card, one page with five tabs
-  ["write", "Writing", "One box: Improve · Shorten · Humanize — and Copilot · Prompt lab", ["write", "improve", "compress", "humanize", "copilot", "library"]],
+  ["write", "Writing", "Paste or type any text, then pick what to do with it.", ["write", "improve", "compress", "humanize", "copilot", "library"]],
   ["video", "Video Downloader", "Paste a video link, pick the quality, save it to your phone", ["video"]],
 ];
 /** v8.2 (Ali, 26 Oct): pages taken out of the app — every way in (lists, "/", search, old links, shares) goes to Chat instead. */

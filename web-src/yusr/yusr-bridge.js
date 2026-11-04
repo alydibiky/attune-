@@ -56,7 +56,7 @@ const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "erro
 // Yusr's own Save. Never a zakat FIGURE: zakat-pay is the person's record of a payment they made; zakat-set changes the
 // calculation's inputs (prices, school); what is due is still computed by Yusr alone (rule 1).
 const DO_OPS = new Set(["tx-edit", "tx-delete", "acct-save", "acct-delete", "rec-save", "rec-delete", "goal-save", "goal-delete", "goal-add",
-  "debt-save", "debt-delete", "debt-pay", "zakat-pay", "zakat-set", "gold-fetch", "cat-add", "project-add", "prefs", "rates", "export", "import"]);
+  "debt-save", "debt-delete", "debt-pay", "zakat-pay", "zakat-set", "zakat-close", "zakat-cert", "zakat-debtpolicy", "gold-fetch", "cat-add", "project-add", "prefs", "rates", "export", "import"]);
 
 // What Yusr is allowed to ask the model for. A closed list, because "run this
 // arbitrary prompt" would let a future screen quietly route a fiqh question
@@ -68,6 +68,27 @@ const str = (v, n) => (typeof v === "string" ? v.slice(0, n || 200) : null);
 
 // Validation is deliberately strict and boring. Anything unexpected is
 // dropped with a reason rather than coerced into something plausible.
+/** v9.2 (Ali: "make sure the zakat is complete"): the rest of the old Zakāt tab, as the ledger worked it out — numbers stay numbers,
+ *  text is cut to size, anything else is dropped. */
+const iso = (v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : null);
+const POOLS = ["cash", "gold", "silver"], HERD = ["camels", "cattle", "sheep"], ANIMAL = /^[a-zA-Z]{2,16}$/;
+const owedLines = (o) => (Array.isArray(o) ? o.slice(0, 3).map((x) => (Array.isArray(x) && Array.isArray(x[0]) ? owedLines(x) : Array.isArray(x) && num(x[0]) !== null && ANIMAL.test(String(x[1])) ? [x[0], x[1]] : null)).filter(Boolean) : null);
+function cleanZakatMore(m) {
+  if (!m || typeof m !== "object") return null;
+  return {
+    pools: Array.isArray(m.pools) ? m.pools.filter((p) => p && POOLS.includes(p.pool)).map((p) => ({ pool: p.pool, units: num(p.units), N: num(p.N), val: num(p.val), below: !!p.below,
+      isDue: !!p.isDue, due: iso(p.due), daysLeft: num(p.daysLeft), start: iso(p.start), amount: num(p.amount) })) : null,
+    livestock: Array.isArray(m.livestock) ? m.livestock.slice(0, 30).filter((a) => a && HERD.includes(a.kind)).map((a) => ({ name: str(a.name, 60) || "", kind: a.kind, count: num(a.count) || 0,
+      N: num(a.N), below: !!a.below, isDue: !!a.isDue, due: iso(a.due), daysLeft: num(a.daysLeft), owed: owedLines(a.owed), grazing: a.grazing !== false })) : [],
+    dueNow: num(m.dueNow) || 0, paid: num(m.paid) || 0, remaining: num(m.remaining) || 0,
+    history: Array.isArray(m.history) ? m.history.slice(0, 50).filter((h) => h && str(h.id, 40)).map((h) => ({ id: str(h.id, 40), date: iso(h.date) || "", hijri: str(h.hijri, 20) || "",
+      due: num(h.due) || 0, paid: num(h.paid) || 0, currency: str(h.currency, 8) || "", n: num(h.n) || 0 })) : [],
+    debtQuestion: m.debtQuestion && num(m.debtQuestion.owed) !== null ? { owed: num(m.debtQuestion.owed),
+      policies: (Array.isArray(m.debtQuestion.policies) ? m.debtQuestion.policies : []).filter((p) => p && ["none", "year", "all"].includes(p.id)).map((p) => ({ id: p.id, name: str(p.name, 120) || p.id, who: str(p.who, 300) || "" })) } : null,
+    ramadan: !!m.ramadan, disclaimer: str(m.disclaimer, 600) || "",
+  };
+}
+
 function validateIn(msg) {
   if (!msg || typeof msg !== "object") return { ok: false, why: "not an object" };
   if (msg.ns !== BRIDGE_NS) return { ok: false, why: "not ours" };
@@ -123,6 +144,7 @@ function validateIn(msg) {
         // v8.8 (Ali: "restore the worn gold — I don't know where it went"): what the ledger counted, part by part
         parts: d.zakat.parts && typeof d.zakat.parts === "object" ? { cash: num(d.zakat.parts.cash), gold: num(d.zakat.parts.gold), jewelry: num(d.zakat.parts.jewelry),
           jewelryOn: !!d.zakat.parts.jewelryOn, jewelryGrams: num(d.zakat.parts.jewelryGrams), silver: num(d.zakat.parts.silver), recv: num(d.zakat.parts.recv), owe: num(d.zakat.parts.owe) } : null,
+        more: cleanZakatMore(d.zakat.more),
       } : null,
     };
     if (!clean.kind) return { ok: false, why: "snapshot has no kind" };
@@ -328,7 +350,7 @@ const ZAKAT_AI_RULES =
 - If the question goes beyond what is written below, say exactly: "The app doesn't cover that — it's a question for a scholar." Then stop.
 - Never say a number the app did not give you.`;
 
-if (typeof module !== "undefined") module.exports = {
+if (typeof module !== "undefined") module.exports = { cleanZakatMore,
   createBridge, validateIn, validateOut, zakatExplainContext,
   ZAKAT_AI_RULES, BRIDGE_VERSION, BRIDGE_NS,
 };

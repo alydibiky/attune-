@@ -1358,13 +1358,14 @@ function pushWidget(bal,inS,outS){try{if(window.Android&&window.Android.saveSumm
 function nisab(){const z=db.zakat;if(z.nisabBasis==='silver')return (z.silverPrice||0)*595;if(z.nisabBasis==='lower')return nisabLower();return nisabGoldAt(nisabCarat());}
 function jewelryValue(){const z=db.zakat;return z.jewelryZakat?((z.jewelryGrams||0)*((z.jewelryKarat||24)/24)*(z.goldPrice||0)):0;}
 function zakatIncluded(a){return a && !(db.zakat.excluded||[]).includes(a.id);}
-function zakatCashTotal(){return db.accounts.filter(a=>zakatIncluded(a)&&!isMetal(a)).reduce((s,a)=>s+toDefault(accountBalance(a.id),a.currency),0);}
+function zakatCashTotal(){return db.accounts.filter(a=>zakatIncluded(a)&&!isMetal(a)&&!isLivestock(a)).reduce(   /* v9.2: head of livestock are not money — they have their own Zakāt (livestockPanel) */
+(s,a)=>s+toDefault(accountBalance(a.id),a.currency),0);}
 function zakatMetalValue(kind){return db.accounts.filter(a=>zakatIncluded(a)&&a.kind===kind).reduce((s,a)=>s+metalValue(a),0);}
 function debtRemainingSum(type){return db.debts.filter(d=>d.type===type&&!d.settled&&!(type==='owed_to_me'&&d.doubtful)).reduce((s,d)=>s+debtRemaining(d),0);}
 function zakatBreakdown(){const z=db.zakat;const cash=zakatCashTotal();const goldV=(z.goldGrams||0)*((z.goldKarat||24)/24)*(z.goldPrice||0)+zakatMetalValue('gold')+jewelryValue();const silverV=(z.silverGrams||0)*(z.silverPrice||0)+zakatMetalValue('silver');const recv=z.includeReceivables?debtRemainingSum('owed_to_me'):0;const owe=debtDeduction();return {cash,goldV,silverV,recv,owe,net:cash+goldV+silverV+recv-owe};}
 function computeHawlStart(N){
   if(N<=0)return null;
-  const z=db.zakat;const base=db.accounts.filter(zakatIncluded).reduce((s,a)=>s+toDefault(a.start||0,a.currency),0);
+  const z=db.zakat;const inZ=(a)=>zakatIncluded(a)&&!isLivestock(a);/* v9.2: head of livestock are not money (their own ḥawl: livestockHawlStart) */const base=db.accounts.filter(inZ).reduce((s,a)=>s+toDefault(a.start||0,a.currency),0);
   const txns=db.txns.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)||(a.created||0)-(b.created||0));
   let run=base;let hawlStart=null;
   if(z.anniversary){hawlStart=z.anniversary;}            // user says: I reached nisab on this date
@@ -1372,8 +1373,8 @@ function computeHawlStart(N){
   else if(base>=N){hawlStart=txns[0].date;}
   for(const x of txns){
     if(x.type==='debt')continue;
-    const a=acctById(x.account);const inc=a?zakatIncluded(a):false;
-    if(x.type==='transfer'){if(inc)run-=toDefault(x.amount,a.currency);const to=x.toAccount?acctById(x.toAccount):null;if(to&&zakatIncluded(to))run+=toDefault(x.amount,to.currency);}
+    const a=acctById(x.account);const inc=a?inZ(a):false;
+    if(x.type==='transfer'){if(inc)run-=toDefault(x.amount,a.currency);const to=x.toAccount?acctById(x.toAccount):null;if(to&&inZ(to))run+=toDefault(x.amount,to.currency);}
     else if(inc){run+=(x.type==='income'?1:-1)*toDefault(x.amount,a.currency);}
     if(z.anniversary && new Date(x.date)<new Date(z.anniversary))continue; // ignore before manual start
     if(run>=N){if(hawlStart===null)hawlStart=x.date;}
@@ -1414,7 +1415,7 @@ function poolUnitsNow(pool){
   return db.accounts.filter(a=>zakatIncluded(a)&&a.kind==='silver').reduce((s,a)=>s+accountBalance(a.id),0)+(z.silverGrams||0);
 }
 function poolValue(pool){if(pool==='cash')return poolUnitsNow('cash');if(pool==='gold')return poolUnitsNow('gold')*(db.zakat.goldPrice||0);return poolUnitsNow('silver')*(db.zakat.silverPrice||0);}
-function poolInPool(a,pool){if(!a)return false;if(!zakatIncluded(a))return false;if(pool==='cash')return !isMetal(a);return a.kind===pool;}
+function poolInPool(a,pool){if(!a)return false;if(!zakatIncluded(a))return false;if(pool==='cash')return !isMetal(a)&&!isLivestock(a);return a.kind===pool;}
 function poolHawlStart(pool){
   const N=poolNisab(pool);if(N<=0)return null;const z=db.zakat;
   const unit=(x,a)=>{if(pool==='gold')return x.amount*metalPurity(a);return pool==='cash'?toDefault(x.amount,a.currency):x.amount;};
@@ -1687,7 +1688,23 @@ function historyPanel(){
     '<div class="list-row" onclick="zakatCertificate(\''+h.id+'\')"><div class="info"><div class="t1 num">'+fmt(h.paid,h.currency)+'</div><div class="t2">'+h.date+(h.hijri?' \u00b7 '+h.hijri:'')+'</div></div><div style="color:var(--accent);font-size:13px;font-weight:600">'+t('certificate')+'</div></div>').join('');
   return '<details class="acc"><summary>'+t('zakatHistory')+'</summary><div class="accb">'+(rows||'<div class="psub">'+t('noHistory')+'</div>')+'</div></details>';}
 function zakatCertificate(id){
-  const h=(db.zakatHistory||[]).find(x=>x.id===id);if(!h)return;
+  const html=zakatCertificateHtml(id);if(!html)return;const h=(db.zakatHistory||[]).find(x=>x.id===id);
+  if(window.Android&&window.Android.printHtml){window.Android.printHtml(html,'Zakat-Certificate-'+h.date);return;}
+  const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);}else{dl(new Blob([html],{type:'text/html'}),'zakat-certificate.html','text/html');}}
+/* v9.2: the facts behind the rest of the Zakāt tab, for Attune's own Zakāt page (snapshot → zakat.more). Every figure is this
+   ledger's own (poolStatus, livestockStatus, currentDueAmount…); nothing is decided outside. */
+function zakatMoreFacts(){
+  var ar=db.lang==='ar';
+  var pools=null;try{if(db.zakat.mode==='separate'&&nisab()>0)pools=activePools().map(function(p){var st=poolStatus(p);return {pool:p,units:Math.round(st.units*1000)/1000,N:Math.round(st.N*100)/100,val:Math.round(st.val*100)/100,below:!!st.below,isDue:!!st.isDue,due:st.due||null,daysLeft:st.daysLeft,start:st.hs||null,amount:Math.round(st.amount*100)/100};});}catch(e){pools=null;}
+  var live=[];try{db.accounts.filter(isLivestock).forEach(function(a){if(a.grazing===false){live.push({name:a.name,kind:a.kind,count:accountBalance(a.id),grazing:false});return;}var st=livestockStatus(a);live.push({name:a.name,kind:a.kind,count:st.count,N:st.N,below:!!st.below,isDue:!!st.isDue,due:st.due||null,daysLeft:st.daysLeft,owed:st.owed||null,grazing:true});});}catch(e){}
+  var due=0,paid=0;try{due=Math.round(currentDueAmount()*100)/100;paid=Math.round(zakatPaidTotal()*100)/100;}catch(e){}
+  var hist=(db.zakatHistory||[]).slice().reverse().map(function(h){return {id:h.id,date:h.date,hijri:h.hijri||'',due:h.due,paid:h.paid,currency:h.currency||db.currency,n:(h.payments||[]).length};});
+  var debtQ=null;try{if(debtPolicyNeeded())debtQ={owed:Math.round(debtRemainingSum('i_owe')*100)/100,policies:DEBT_POLICIES.map(function(o){return {id:o.id,name:ar?o.ar:o.en,who:ar?o.whoAr:o.whoEn};})};}catch(e){}
+  var ram=false;try{ram=isRamadan();}catch(e){}
+  return {pools:pools,livestock:live,dueNow:due,paid:paid,remaining:Math.max(Math.round((due-paid)*100)/100,0),history:hist,debtQuestion:debtQ,ramadan:ram,disclaimer:t('zakatDisclaimer')};
+}
+function zakatCertificateHtml(id){
+  const h=(db.zakatHistory||[]).find(x=>x.id===id);if(!h)return '';
   const rows=(h.payments||[]).map(p=>'<tr><td>'+t('a_'+p.cat)+'</td><td>'+(p.to?p.to:'')+'</td><td>'+p.date+'</td><td class="r">'+fmt(p.amount,h.currency)+'</td></tr>').join('');
   const html='<html dir="'+(db.lang==='ar'?'rtl':'ltr')+'"><head><meta charset="utf-8"><style>'
    +'body{font-family:Helvetica,Arial,sans-serif;padding:40px;color:#111}'
@@ -1704,8 +1721,7 @@ function zakatCertificate(id){
    +'<tr><th>'+t('date')+'</th><td class="r">'+h.date+(h.hijri?' / '+h.hijri:'')+'</td></tr></table>'
    +(rows?'<table><tr><th>'+t('asnaf')+'</th><th>'+t('recipient')+'</th><th>'+t('date')+'</th><th class="r">'+t('amount')+'</th></tr>'+rows+'</table>':'')
    +'<div class="ft">'+t('issuedBy')+' \u00b7 '+t('reviewNote')+'</div></body></html>';
-  if(window.Android&&window.Android.printHtml){window.Android.printHtml(html,'Zakat-Certificate-'+h.date);return;}
-  const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);}else{dl(new Blob([html],{type:'text/html'}),'zakat-certificate.html','text/html');}}
+  return html;}
 
 
 /* ---- Gold price source per country + confidence tier ---- */
@@ -2185,6 +2201,10 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
            sources:['Islamweb fatwa 108367','Dorar 2153']};
       }
     }catch(e){}
+    // v9.2 (Ali, 4 Nov: "make sure the zakat is complete and has everything from the past"): the rest of the old Zakāt tab, as
+    // facts the ledger itself worked out — each pool (each on its own), livestock with its own ḥawl, paid vs due (8 asnaf), the
+    // closed years (certificates), the one question about debts, Ramadan (Zakāt al-Fiṭr) and the disclaimer. Attune only shows them.
+    try{ if(z){ z.more=zakatMoreFacts(); } else { z={noPrice:true,due:false,more:zakatMoreFacts()}; } }catch(e){}
     send('snapshot',{kind:kind||'summary',currency:db.currency,cashTotal:cash,
                      income:null,expense:null,accounts:accs,zakat:z,
                      share:(db.shareAttune||'unset')});
@@ -2238,6 +2258,11 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
         if(a.nisabCarat) setSel('z-nisabcarat',a.nisabCarat);
         if(Array.isArray(a.excluded)) document.querySelectorAll('#z-accounts input[data-acc]').forEach(function(c){ c.checked=a.excluded.indexOf(c.dataset.acc)<0; });
         saveZakat(); }
+      // v9.2: close this Zakāt year (the old tab's button) — the payments become one closed year with its certificate
+      else if(op==='zakat-close'){ var n0=(db.zakatHistory||[]).length; closeZakatYear(); return {ok:(db.zakatHistory||[]).length>n0}; }
+      // v9.2: one closed year's certificate, as the old app printed it — the HTML goes back to Attune, which saves / shares the PDF
+      else if(op==='zakat-cert'){ var hh=zakatCertificateHtml(a.id); return hh?{ok:true,html:hh}:{ok:false,error:'not-found'}; }
+      else if(op==='zakat-debtpolicy'){ if(['none','year','all'].indexOf(a.policy)<0) return {ok:false,error:'bad-policy'}; setDebtPolicy(a.policy); }
       // v8.7 (Ali: "where are the gold rates, auto-updating for each country?"): today's price for the chosen country, now
       else if(op==='gold-fetch'){ fetchGoldPrice(true).then(function(ok){ try{ save(); }catch(e){} }); return {ok:true,pending:true}; }
       else if(op==='cat-add'){ openCat(); setv('cat-emoji',a.emoji); setv('cat-label',a.label); saveCat(); }
@@ -2288,7 +2313,7 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
     // v8.0 (Ali: "Money redirects me to the old app — I don't want that at all"): Attune's own screens make every change; this
     // fills Yusr's OWN form for it and presses Yusr's OWN Save, so every rule (balances, debts moving money, zakat records) stays
     // exactly Yusr's. Reports back whether the ledger really changed (a refused form changes nothing).
-    if(m.type==='do'){ var dd=m.data||{}, res; try{ res=doOp(dd.op, dd.args||{}); }catch(e){ res={ok:false,error:String((e&&e.message)||e)}; } send('done',{op:dd.op,ok:!!res.ok,error:res.error||'',id:res.id||''}); return; }
+    if(m.type==='do'){ var dd=m.data||{}, res; try{ res=doOp(dd.op, dd.args||{}); }catch(e){ res={ok:false,error:String((e&&e.message)||e)}; } send('done',{op:dd.op,ok:!!res.ok,error:res.error||'',id:res.id||'',html:res.html||''}); return; }
     if(m.type==='go'){ var sc=m.data&&m.data.screen; if(['home','trends','accounts','bills','goals','zakat','notes','invoices','settings'].indexOf(sc)>=0){ try{go(sc);}catch(e){} }
       else if(sc==='add-bill'){ try{go('bills');openRecurring();}catch(e){} } else if(sc==='debt'){ try{go('home');openDebt();}catch(e){} } else if(sc==='add-account'){ try{go('accounts');openAccount();}catch(e){} } return; }
     if(m.type==='request'){
