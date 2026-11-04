@@ -9,7 +9,7 @@ from harness import Env, new_page, check, real_errors, finish, HERE
 
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
-STUDIO = re.search(r'MOCK = r"""(.*?)"""', open(os.path.join(HERE, "..", "archive", "studio", "tests", "e2e_v59.py"), encoding="utf-8")   # v9.1: Studio archived — the mock still helps.read(), re.S).group(1)
+STUDIO = re.search(r'MOCK = r"""(.*?)"""', open(os.path.join(HERE, "..", "archive", "studio", "tests", "e2e_v59.py"), encoding="utf-8").read(), re.S).group(1)   # v9.1: Studio archived — its mock still helps
 EXTRA = r"""(() => { const S = window.__mock = window.__mock || {};
   const go = () => { const N = window.AttuneNative; if (!N || !N.upscaleImage) return setTimeout(go, 0);
     S.img.packs = [{ id: "turbo", label: "Studio Turbo", kind: "turbo", files: {} }, { id: "esrgan-x4", label: "Sharpen", kind: "upscale", files: {} }];
@@ -148,16 +148,7 @@ with sync_playwright() as p:
     h = page.evaluate("document.querySelector('[data-testid=video-paste]').getBoundingClientRect().height")
     check(h < 60, "the Paste button stays one line (%d px high)" % h)
 
-    # ---- (last: it reloads the page) Studio picks up a sharpening that finished while the page was gone ----
-    # after a page reload: the job noted in storage is picked up from the Studio folder
-    page.evaluate("""() => { localStorage.setItem('attune:studio:pending', JSON.stringify({ what: 'upscale', t0: Date.now(), file: 'img-77.png' }));
-      window.__mock.folder = [{ file: 'img-77-x4.png', url: 'data:image/png;base64,iVBORw0KGgo=', width: 2048, height: 2048, at: Date.now() }]; }""")
-    page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(200)
-    page.reload(); page.wait_for_selector("nav", timeout=15000)
-    page.evaluate("() => { window.__mock.folder = [{ file: 'img-77-x4.png', url: 'data:image/png;base64,iVBORw0KGgo=', width: 2048, height: 2048, at: Date.now() }]; }")
-    open_tool(page, "Studio", "studio-page"); page.wait_for_timeout(600)
-    g2 = page.evaluate("JSON.parse(localStorage.getItem('attune:studio:v1') || '[]').map(x => x.file)")
-    check("img-77-x4.png" in g2 and page.evaluate("localStorage.getItem('attune:studio:pending')") is None, "after a reload, a sharpening that finished is picked up")
+    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v541.py)
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()
