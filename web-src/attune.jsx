@@ -9706,7 +9706,13 @@ export default function App() {
     // v9.0 (the sentence bank: "lunch 150" in Chat went to the AI): what the Home box does, Chat does too — money in a few words,
     // food eaten, water, weight, a dose, a debt paid back. Reminders, plans with people and dates keep Chat's own cards.
     readText: NATIVE && NATIVE.readText ? (b64) => nativeCall("readText", { b64 }) : null,   // v9.0 photo numbers check
-    doSure: (t) => { try { return doSure(t, { now: Date.now(), stores: loadLifeStores() }); } catch (e) { return true; } },
+    // (what the recorder handles before money and food — a Metro route, an automation, a message alert, a mission, an agent — is
+    // read by its own exact code, so it is never asked about; e2e_v741metro: "metro from Maadi to Dokki" was asked "Log it as food?")
+    doSure: (t) => { try { const now = Date.now();
+      if (metroAsk(t) || parseAutomation(t) || parseWatch(t)) return true;
+      const pm = parseMission(t, now); if (pm && pm.deadline) return true;
+      const ag = parseAgent(t, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return true;
+      return doSure(t, { now, stores: loadLifeStores() }); } catch (e) { return true; } },
     doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
     doIt: (t) => { try { return doRef.current ? doRef.current(t) : null; } catch (e) { return null; } },
     whereYes: (set) => remember(W2.whereRecord(set)),

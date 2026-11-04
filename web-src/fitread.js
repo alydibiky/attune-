@@ -191,7 +191,7 @@ function dist(a, b, max) {
 // is never a typo of a food (v9.1: "stop, just say yes" was logged as soy milk — «say» is not «soy»)
 const COMMON = new Set(("better best bitter battery batter letter later latter matter butterfly feeling filling feel fill late lately never ever every very " +
   "dying doing going being seeing coming making taking having getting saying trying thinking working meeting meetings morning evening night today tomorrow yesterday " +
-  "say says yes yeah yep nope okay sure agree range ranges trim trims torque spec specs model models version engine bank break bring brought bread? nothing something anything everything much many more most less least little long short tired sleep slept sleepy tips tip give gave " +
+  "say says yes yeah yep nope okay sure agree maadi dokki zamalek heliopolis nasr mohandessin giza cairo alex alexandria tagamoa rehab shorouk obour october sheikh zayed haram faisal shubra abbasia ramses tahrir downtown metro station line range ranges trim trims torque spec specs model models version engine bank break bring brought bread? nothing something anything everything much many more most less least little long short tired sleep slept sleepy tips tip give gave " +
   "take took make made said tell told call called phone battery charger charge money paid pay time times week month year hour hours minute minutes help please thanks " +
   "thank sorry about after again against also always another because before between both could would should might must there their these those then than them they " +
   "what when where which while who whom whose why with without within your yours mine ours here hello still just only even really quite maybe about above below under " +

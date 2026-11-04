@@ -73,7 +73,7 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=ov-chart] rect").count() == 12 and page.locator("[data-testid=ov-chart] polyline").count() == 1, tag + "the Books Report: 6 months of sales vs purchases, with the profit line")
         ages = [page.locator("[data-testid=ov-age-%s]" % k).inner_text() for k in ["notDue", "late1_30", "late31"]]
         check(all(ages) and any("Al-Amal" in a or "Hassan" in a or "Mona" in a for a in ages), tag + "…ageing: not due · 1–30 days late · 31+ late, with who owes most: %s" % " | ".join(a.replace("\n", " ") for a in ages))
-        top = page.locator("[data-testid=ov-top]").inner_text(); check("Al-Amal" in top or (datetime.date.today().day <= 3 and "customer" in top), tag + "…top customers and items (this month: Al-Amal's sale is days old, so on the 1st–3rd only today's customers show)")
+        top = page.locator("[data-testid=ov-top]").inner_text(); check(any(n in top for n in ["Al-Amal", "Hassan", "Mona"]) or "customer" in top, tag + "…top customers and items (v9.1: any sample customer — Al-Amal's sales are 18 and 30 days old, so not this month from the 4th to the 17th; was: on the 1st–3rd only today's customers show)")
         check("%" in page.locator("[data-testid=ov-profit]").inner_text(), tag + "…net profit with its margin: %s" % page.locator("[data-testid=ov-profit]").inner_text().replace("\n", " · "))
         shot(page, "books-report-phone-" + theme, True)
         page.click("text=Profit & loss"); page.wait_for_timeout(200)

@@ -4,7 +4,7 @@ import { doSure } from "../../web-src/doit.js";
 import { learn, learnedKind, judgeMessages, parseJudge } from "../../web-src/understand.js";
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log("FAIL " + m); } };
 for (const t of ["lunch 150", "maid 400", "fuel 500", "paid 200 for the plumber", "koshary", "2 eggs and toast", "pizza and cola", "I ate a galaxy bar",
-  "koshary for lunch, 80 pounds", "drank 2 glasses of water", "صرفت 300 على البنزين", "كشري", "البواب 200", "weight 82"]) ok(doSure(t), "sure (instant): " + t);
+  "koshary for lunch, 80 pounds", "drank 2 glasses of water", "صرفت 300 على البنزين", "كشري", "البواب 200", "weight 82", "metro from Maadi to Dokki"]) ok(doSure(t), "sure (instant): " + t);
 for (const t of ["co 900", "ahmed 500", "zizo 300"]) ok(!doSure(t), "unsure (model, then the person): " + t);
 const S = {}; const ls = { getItem: (k) => S[k] ?? null, setItem: (k, v) => { S[k] = String(v); } };
 ok(learnedKind("ahmed 500", ls) === null, "nothing learned yet");
