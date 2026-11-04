@@ -1,0 +1,7 @@
+Lines the app showed for this feature outside its own files (the How to use → Work routine, web-src/guide.js) — kept so their
+translations in web-src/i18n-*.js still have a home; put them back with the feature.
+
+"A client asks on WhatsApp? Share it to Attune → From a message: what is free, the price, the reply, Book it."
+"Something happened on site? Say it — Reports writes the report as a PDF."
+"Team records: which machine needs attention this week."
+"Answer a client in two minutes with a real price — that is how you win the job."

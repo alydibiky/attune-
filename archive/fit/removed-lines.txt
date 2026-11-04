@@ -1,0 +1,6 @@
+Lines the app showed for this feature outside its own files (How to use goal, the food search, Cycle) — kept so their translations
+in web-src/i18n-*.js still have a home; put them back with the feature.
+
+"Eat better, stay well"
+"This product isn't in the databases yet — log it by name"
+"Tap a day below, or type it in Instant: “my period started yesterday, light”."

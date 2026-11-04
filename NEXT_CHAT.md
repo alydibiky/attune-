@@ -69,6 +69,17 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   crane records stay in backups / sync until **Attune Business** (a separate product) exists. APK: the Studio picture engine is
   no longer built (workflow `if: false`); its Kotlin glue is dormant — remove it in a session that can compile Android.
   The web page went 7.05 → 6.10 MB and business-site.html (1.5 MB) is gone.
+- **4 Nov evening — Ali's decisions for every FEATURES.md row, all built** (archive/README.md lists every folder): Fit & Food + Food
+  photo + Cycle + the Health page → `archive/fit/` (→ Attune Fit; Chat no longer logs meals / water / weight / workouts / sleep —
+  doit.js FIT_ARCHIVED, the full reader stays as understandAll; priced meals still go to Money); Scout FOLDED into Agents (no tab or
+  menu; the bottom bar is Home · Chat · Money · Agents · Mind · All); Deal Check, Learn daily + Homework Coach, the Code page, Video
+  tools, the prompt-tool pages, offline Maps + the Metro page, the Attune keyboard → archived. Chat now does "improve this prompt for
+  Claude / humanize this / make this shorter" (prompttools.js) and "take me to X" → Google Maps (gomaps.js). Agents: real hotel names
+  and photos on any site (agent-kit CARD_SEL), white text on photos in the light theme, Book / Open <site> → the site's own app
+  (NativeBridge.openInApp, FLAG_ACTIVITY_REQUIRE_NON_BROWSER) else Attune's browser. How to use: the Work routine is Projects · Ask a
+  PDF · Slides. index.html 7.05 → 5.27 MB. Full suite: 149 browser tests + every unit test pass.
+  **Next:** Ali's mock-ups for merging Artifacts + Assistants + Skills into Projects (FEATURES row 32–34); the job agent for the CV
+  (fills the application, the person presses Submit); www/vendor still ships maplibre (unused now — drop it from build.sh).
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),

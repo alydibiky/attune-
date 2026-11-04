@@ -32,7 +32,8 @@ for (const [name, d] of [["fr", FR], ["es", ES], ["tr", TRK], ["pt", PT], ["hi",
   // v9.1: archived features (archive/<name>/web-src) keep their translations, so bringing one back needs no new translating
   const dirs = ["web-src", ...fs.readdirSync("archive").filter((d) => fs.existsSync("archive/" + d + "/web-src")).map((d) => "archive/" + d + "/web-src")];
   const src = dirs.flatMap((d) => fs.readdirSync(d).filter((f) => /\.(js|jsx)$/.test(f) && !/^i18n-/.test(f)).map((f) => fs.readFileSync(d + "/" + f, "utf8"))).join("\n")
-    + "\n" + fs.readdirSync("archive").filter((d) => fs.existsSync("archive/" + d + "/attune-routes.jsx.txt")).map((d) => fs.readFileSync("archive/" + d + "/attune-routes.jsx.txt", "utf8")).join("\n");
+    + "\n" + fs.readdirSync("archive").filter((d) => fs.existsSync("archive/" + d + "/attune-routes.jsx.txt")).map((d) => fs.readFileSync("archive/" + d + "/attune-routes.jsx.txt", "utf8")).join("\n")
+    + "\n" + fs.readdirSync("archive").filter((d) => fs.existsSync("archive/" + d + "/removed-lines.txt")).map((d) => fs.readFileSync("archive/" + d + "/removed-lines.txt", "utf8")).join("\n");
   const stray = keys.filter((k) => !(k in AR) && !src.includes(JSON.stringify(k).slice(1, -1)) && !src.includes(k));
   ok(stray.length <= 10, `${name}: keys come from the app (${stray.length} not found)`);
 }
