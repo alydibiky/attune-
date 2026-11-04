@@ -2,6 +2,7 @@
 // v6.37: also every page of the sidebar (hubs.js), chapters in the sidebar's order, Egyptian Arabic, today's new parts, and the
 // "Get the most of Attune" plan (every line points to a real tool).
 import fs from "fs";
+import { REMOVED } from "../../web-src/removed.js";
 import * as G from "../../web-src/guide.js";
 import { HUBS } from "../../web-src/hubs.js";
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
@@ -59,13 +60,13 @@ ok(G.TOOLS.missions && /chance/.test(en("missions")) && /one step|ONE step/i.tes
 // the plan
 ok(G.PLAN.map((p) => p.id).join() === "morning,day,evening,week,month,work", "the plan: morning, day, evening, week, month, work");
 const planTools = G.PLAN.flatMap((p) => p.items.map((i) => i.tool)).filter(Boolean);
-ok(planTools.every((t) => G.TOOLS[t]) && G.PLAN.every((p) => p.items.length >= 3 && p.items.every((i) => (i.tool || i.see) && i.text[0] && i.text[1]) && p.tip[0] && p.tip[1]), "every plan line points to a real tool, in English and Arabic");
-ok(["home", "money", "learn", "news", "missions"].every((t) => G.PLAN[0].items.some((i) => i.tool === t)), "morning: Home, Safe to spend, the lesson, news, missions");
-ok(["fit", "reminders", "chat"].every((t) => G.PLAN[1].items.some((i) => i.tool === t)) && ["scout", "guardian", "groups"].every((t) => G.PLAN[3].items.some((i) => i.tool === t)) && G.PLAN[3].items.some((i) => i.see === "start:safe"), "day: food photo, reminders, share to Chat (v8.2: no Instant); week: Scout, Payments, X-Ray, backup");
-ok(["money", "radar", "deal"].every((t) => G.PLAN[4].items.some((i) => i.tool === t)) && ["business", "field"].every((t) => G.PLAN[5].items.some((i) => i.tool === t)) && !G.PLAN[5].items.some((i) => i.tool === "crane"), "month: Money, Cancel kit, Deal Check; work: Business from WhatsApp, Reports (the Crane toolkit lives inside Business)");
-ok(G.searchPlan("koshary").join() === "day" && G.searchPlan("").length === 6 && !G.searchPlan("zzqx").length, "the plan is searchable");
+ok(planTools.every((t) => G.TOOLS[t]) && G.PLAN.every((p) => p.items.length >= 3 && !p.items.some((i) => REMOVED.includes(i.tool)) && p.items.every((i) => (i.tool || i.see) && i.text[0] && i.text[1]) && p.tip[0] && p.tip[1]), "every plan line points to a real tool, in English and Arabic");
+ok(["home", "money", "news", "missions"].every((t) => G.PLAN[0].items.some((i) => i.tool === t)), "morning: Home, Safe to spend, news, missions (v9.1: the lesson is archived)");
+ok(["reminders", "chat"].every((t) => G.PLAN[1].items.some((i) => i.tool === t)) && ["guardian", "groups"].every((t) => G.PLAN[3].items.some((i) => i.tool === t)) && G.PLAN[3].items.some((i) => i.see === "start:safe"), "day: reminders, share to Chat; week: Payments, X-Ray, backup (v9.1: food photo and Scout leave the plan)");
+ok(["money", "radar"].every((t) => G.PLAN[4].items.some((i) => i.tool === t)) && ["projects", "pdfchat", "slides"].every((t) => G.PLAN[5].items.some((i) => i.tool === t)), "month: Money, Cancel kit; work: Projects, Ask a PDF, Slides (v9.1: the organiser of work)");
+ok(G.searchPlan("").length === 6 && !G.searchPlan("zzqx").length, "the plan is searchable");
 // search
 ok(G.searchGuide("passport", []).sort().join() === "radar,travel" && G.searchGuide("", []) === null, "search finds by what the steps say");
-ok(G.searchGuide("insulin", []).includes("care") && G.searchGuide("insulin", []).includes("fit"), "'insulin' finds Family health and Fit & Food");
-ok(G.searchGuide("franco", []).length === 0 && G.searchGuide("ونش", []).includes("business"), "Arabic search finds Fleet & rentals by «ونش»");
+ok(G.searchGuide("insulin", []).includes("care"), "'insulin' finds Family health");
+ok(G.searchGuide("franco", []).length === 0, "an unknown word finds nothing");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

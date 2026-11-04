@@ -213,9 +213,7 @@ with sync_playwright() as pw:
     check(page.locator("img[src^='data:image/png']").count() >= 1, "a shared photo opens a chat with the photo attached")
     page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
 
-    # 11. Improve: domain packs have names
-    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'improve'}}))"); page.wait_for_timeout(400)
-    check(page.locator("button:has-text('Heavy Equipment')").count() >= 1 and page.locator("button:has-text('Islamic Studies')").count() >= 1, "domain pack buttons show their names")
+    # (v9.1: the Improve page is archived — archive/prompt-tools/tests/e2e_v3.mixed.py)
 
     br.close()
 

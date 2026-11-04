@@ -248,17 +248,7 @@ with sync_playwright() as pw:
     check(page.locator("button[title='Stop']").count() == 0, "Stop ends the answer")
     page.evaluate("window.__mock.slow = false")
 
-    # 7. period log in chat, no model
-    n0 = page.evaluate("window.__mock.chats")
-    comp.fill("My period started 2 hours ago, heavy with cramps")
-    page.locator("button[title='Send']").click()
-    page.wait_for_selector("text=Period logged", timeout=5000)
-    check(page.evaluate("window.__mock.chats") == n0, "period log handled on the phone, no model call")
-    check(nav.locator("button:has-text('Cycle')").count() == 0, "Cycle stays off the bottom bar (v5.13: in More)")
-    page.get_by_role("button", name="Open the calendar").click()
-    page.wait_for_selector("text=/Period · day [12]/", timeout=5000)   # (day 2 when "2 hours ago" crosses midnight)
-    check(True, "and it's in the calendar")
-    nav.locator("button:has-text('Chat')").click(); page.wait_for_timeout(200)
+    # (v9.1: the period log is archived with Cycle — archive/fit/tests/mixed/e2e_v4.py)
 
     # 8. payment in chat
     comp.fill("تم تحويل مبلغ 2,500.00 جنيه إلى MAHMOUD ALI. رقم العملية 123456")

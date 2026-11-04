@@ -175,10 +175,11 @@ export const PLAN = [
             { tool: "lifeask", text: S("Ask your life: “how much did I spend on food this month vs last month?”", "اسأل عن حياتك: «صرفت كام على الأكل الشهر ده مقارنة باللي فات؟»") }],
     tip: S("One honest look a month is how money really grows.", "بصة واحدة بصراحة كل شهر هي اللي بتخلي الفلوس تكبر بجد.") },
   { id: "work", icon: "work", title: S("For your work", "لشغلك"), when: S("Every working day", "كل يوم شغل"),
-    items: [{ tool: "business", text: S("A client asks on WhatsApp? Share it to Attune → From a message: what is free, the price, the reply, Book it.", "عميل بعت على الواتساب؟ اعملها مشاركة لـ Attune ← «من رسالة»: إيه الفاضي، والسعر، والرد، و«احجزه».") },
-            { tool: "field", text: S("Something happened on site? Say it — Reports writes the report as a PDF.", "حصلت حاجة في الموقع؟ قولها — والتقارير تكتبلك التقرير PDF.") },
-            { tool: "fleet", text: S("Team records: which machine needs attention this week.", "سجلات الفريق: أنهي معدة محتاجة اهتمام الأسبوع ده.") }],
-    tip: S("Answer a client in two minutes with a real price — that is how you win the job.", "رد على العميل في دقيقتين بسعر حقيقي — كده بتكسب الشغلانة.") },
+    // v9.1 (the brand: organise your work; Business is archived → Attune Business)
+    items: [{ tool: "projects", text: S("Open Projects: one folder per job — its files, its chats and what Attune made for it.", "افتح المشاريع: فولدر لكل شغلانة — ملفاته ومحادثاته واللي Attune عمله ليه.") },
+            { tool: "pdfchat", text: S("Drop a PDF into Ask a PDF and ask it anything — the answer shows the page.", "حط ملف PDF في «اسأل PDF» واسأله أي حاجة — الإجابة بتقولك الصفحة.") },
+            { tool: "slides", text: S("Turn your notes into slides or a report in one sentence.", "حوّل ملاحظاتك لعرض أو تقرير بجملة واحدة.") }],
+    tip: S("Keep every job in its own project — the next question about it is answered from its own files.", "خلي كل شغلانة في مشروعها — وأي سؤال بعد كده عنها بيتجاوب من ملفاتها هي.") },
 ];
 for (const part of PLAN) part.items = (part.items || []).filter((x) => !hiddenFromMenus(x.tool));   // v9.1: no line opens an archived tool
 
