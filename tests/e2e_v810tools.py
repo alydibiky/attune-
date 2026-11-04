@@ -36,7 +36,7 @@ with sync_playwright() as p:
         go(page, "tools", "[data-testid=tools-hub]")
         check("7" in page.locator("[data-testid=tools-kpi-week]").inner_text(), tag + "Tools: 7 jobs this week: %s" % page.locator("[data-testid=tools-kpi-week]").inner_text().replace("\n", " · "))
         cards = page.evaluate("[...document.querySelectorAll('[data-testid=tools-families] [data-testid^=tools-page-]')].map(b => b.dataset.testid.slice(11))")
-        check(cards == ["write", "convert", "pdfchat", "booklib"], tag + "the families (v9.1: Studio and Video are archived): %s" % cards)
+        check(cards == ["write", "convert", "pdfchat"], tag + "the families (v9.1: Studio and Video are archived; v9.2 Ali: the Library is not a second card — it has its own place): %s" % cards)
         check("2 this week" in page.locator("[data-testid=tools-page-write]").inner_text().replace("\u2066", "").replace("\u2069", ""), tag + "…each with what it made this week")
         check("GIU_Embedded" in page.locator("[data-testid=tools-recent]").inner_text(), tag + "…recent outputs, newest first")
         shot(page, "tools-hub-phone-" + theme, True)

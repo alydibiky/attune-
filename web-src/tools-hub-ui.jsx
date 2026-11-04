@@ -22,13 +22,14 @@ export const FAMS = [
   ["files", "convert", "Files & Converter", "Edit a PDF · PDF → Word · Photos → PDF · Merge", FileText],
   // v8.2 (Ali, 26 Oct): no Instant (Chat does it); "Ask a PDF" here too so it is easy to find (it also lives in Students)
   ["pdf", "pdfchat", "Ask a PDF", "Read a PDF or book and chat with it — every answer shows its page", BookOpen],
-  // v9.2 (Ali, 4 Nov: "library is in tools although it is in saved also"): the Library lives in its own place only (the sidebar)
-  // ["library", "booklib", "Library", "Your own books — ask them all at once, compared, with the book and page", BookOpen],
+  // v9.2 (Ali, 4 Nov: "library is in tools although it is in saved also"): no Library CARD (it lives in its own place, the
+  // sidebar) — it stays in this list so its jobs still count in the Tools Report
+  ["library", "booklib", "Library", "Your own books — ask them all at once, compared, with the book and page", BookOpen],
   ["studio", "studio", "Studio", "Pictures drawn on the phone's own chip · Eraser · Expand", ImageIcon],
   ["video", "video", "Video Downloader", "Paste a link, pick the quality, save it to your phone", Film]];
 // v8.7: not in the Play Store build
 const FAMS_SHOWN = FAMS.filter((x) => !NOT_IN_PLAY.has(x[0]));
-const FAM_NAME = { instant: "Chat", library: "Library", ...Object.fromEntries(FAMS.map((f) => [f[0], f[2]])) };   // v8.2: old Instant jobs still show
+const FAM_NAME = { instant: "Chat", ...Object.fromEntries(FAMS.map((f) => [f[0], f[2]])) };   // v8.2: old Instant jobs still show
 const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); };
 
 export function useToolLog() {
@@ -73,7 +74,7 @@ export function ToolsHub({ tools, navTo, pages, groups }) {
     </div> : null}
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-4 space-y-3 lg:space-y-0 items-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="tools-families">
-        {FAMS_SHOWN.filter(([f, mode]) => f !== "studio" && !hiddenFromMenus(mode)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
+        {FAMS_SHOWN.filter(([f, mode]) => f !== "studio" && f !== "library" && !hiddenFromMenus(mode)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
           className={U.card + " text-start p-4 min-h-[96px] flex items-start gap-3 hover:border-[var(--c-acc)] transition-colors duration-150"}>
           <span className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center" style={{ background: "var(--c-soft)", color: C[f] }}><Icon size={19} /></span>
           <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="text-[15.5px] font-extrabold leading-tight">{tr(title)}</span>
