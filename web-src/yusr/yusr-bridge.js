@@ -191,6 +191,8 @@ function validateOut(type, data) {
       // v7.2: unless the PERSON chose it (the account pill they tapped on the calm view, or the account they named: "taxi 60 from cash")
       if (t.account && t.byUser !== true) return { ok: false, why: "Attune must not choose the account" };
       if (t.type === "zakat" || t.cat === "zakat") return { ok: false, why: "Zakat is recorded in Yusr only" };
+      // v9.2: a receipt photo the person attached — a small image only
+      if (t.photo != null && !(typeof t.photo === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(t.photo) && t.photo.length < 700000)) return { ok: false, why: "a receipt must be a small photo" };
     }
   }
   if (type === "do") {

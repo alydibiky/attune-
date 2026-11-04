@@ -8,7 +8,14 @@ import { tr, getLang } from "./i18n.js";
 import { KINDS as ZC_KINDS, ANIMALS } from "./zakatcalc.js";
 import { sharePdf } from "./share-pdf.js";
 import { fmt } from "./money-calm.js";
-import { accountsPage, billsPage, zakatPage, sheetCats, sheetTxn } from "./money-pages.js";
+import { accountsPage, billsPage, zakatPage, sheetCats, sheetTxn, receiptTotal } from "./money-pages.js";
+/** A photo → a small JPEG data URL (900 px, like the ledger kept receipts). */
+export function shrinkPhoto(file) {
+  return new Promise((res, rej) => { const rd = new FileReader(); rd.onerror = rej; rd.onload = () => { const img = new Image(); img.onerror = rej; img.onload = () => {
+    try { const max = 900; let w = img.width, h = img.height; if (w > h && w > max) { h *= max / w; w = max; } else if (h > max) { w *= max / h; h = max; }
+      const cv = document.createElement("canvas"); cv.width = Math.round(w); cv.height = Math.round(h); cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); res(cv.toDataURL("image/jpeg", 0.6)); } catch (e) { rej(e); } };
+    img.src = rd.result; }; rd.readAsDataURL(file); });
+}
 import { isoDay } from "./money-report.js";
 import { Bars, SeeAll } from "./dash-kit.jsx";
 import * as U from "./ui-kit.jsx";
@@ -87,11 +94,25 @@ export function AddSheet({ L, onSave, onDebt, onClose, prefill = null }) {
   const [date, setDate] = useState(prefill && prefill.date ? prefill.date : isoDay(Date.now()));
   const [note, setNote] = useState(prefill && prefill.note ? prefill.note : "");
   const [err, setErr] = useState("");
+  // v9.2 (Ali, 5 Nov: "there was an option to add receipts"): a receipt photo kept with the entry; its total is read on the phone
+  const [photo, setPhoto] = useState(prefill && prefill.photo ? prefill.photo : null);
+  const [readLine, setReadLine] = useState("");
+  const photoRef = React.useRef(null);
+  const onReceipt = async (f) => {
+    if (!f || !/^image\//.test(f.type || "")) return;
+    const small = await shrinkPhoto(f).catch(() => null); if (!small) { setErr(tr("Couldn't open that picture")); return; }
+    setPhoto(small); setErr("");
+    const call = typeof window !== "undefined" ? window.__attuneNativeCall : null;
+    if (call && !String(amount).trim()) {
+      try { const r = await call("readText", { b64: small.split(",")[1] }); const v = receiptTotal((r && r.lines) || []);
+        if (v) { setAmount(String(v)); setReadLine(tr("Read from the receipt: {a} — check it", { a: fmt(v) })); } } catch (e) {}
+    }
+  };
   const cats = useMemo(() => sheetCats(L, type, ar()), [L, type]);
   const from = accs.find((a) => a.id === account);
   const tos = accs.filter((a) => a.id !== account && (!from || (a.currency || "") === (from.currency || "")));
   const pick = (t) => { setType(t); setErr(""); if (t === "income") setCat("salary"); else if (t === "expense") setCat("food"); };
-  const save = () => { const r = sheetTxn({ type, amount, cat, account, toAccount, date, note }); if (!r.ok) return setErr(tr(r.why)); onSave(prefill && prefill.evidence ? { ...r.txn, evidence: prefill.evidence } : r.txn); };
+  const save = () => { const r = sheetTxn({ type, amount, cat, account, toAccount, date, note, photo }); if (!r.ok) return setErr(tr(r.why)); onSave(prefill && prefill.evidence ? { ...r.txn, evidence: prefill.evidence } : r.txn); };
   const pill = (on) => "min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold whitespace-nowrap transition-colors duration-150 " + (on ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]");
   return <div className="calm fixed inset-0 z-[80] bg-black/55 flex flex-col justify-end lg:items-center lg:justify-center" onClick={onClose} data-testid="money-add-sheet">
     <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[20px] lg:rounded-[20px] w-full lg:max-w-lg max-h-[92vh] overflow-y-auto p-4 pb-6 space-y-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
@@ -120,6 +141,13 @@ export function AddSheet({ L, onSave, onDebt, onClose, prefill = null }) {
       <div className="grid grid-cols-[auto_1fr] gap-2">
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={U.inp + " !w-auto"} dir="ltr" data-testid="add-date" />
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={tr("Note (optional)")} className={U.inp} dir="auto" data-testid="add-note" /></div>
+      {type !== "transfer" ? <div className="flex items-center gap-2.5" data-testid="add-receipt">
+        <input ref={photoRef} type="file" accept="image/*" className="hidden" data-testid="add-receipt-input" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; onReceipt(f); }} />
+        {photo ? <><img src={photo} alt={tr("Receipt")} className="w-14 h-14 rounded-[12px] object-cover border border-[var(--c-ln)]" data-testid="add-receipt-thumb" />
+          <span className="flex-1 min-w-0 text-[13px] font-bold">{tr("Receipt added")}{readLine ? <span className="block text-[12px] font-semibold c-sub" data-testid="add-receipt-read">{readLine}</span> : null}</span>
+          <button onClick={() => { setPhoto(null); setReadLine(""); }} className="min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] text-[12.5px] font-bold" data-testid="add-receipt-remove">{tr("Remove")}</button></>
+          : <button onClick={() => photoRef.current && photoRef.current.click()} className="min-h-[44px] px-3.5 rounded-[12px] border border-dashed border-[var(--c-acc)] text-[var(--c-acc)] text-[13.5px] font-extrabold inline-flex items-center gap-2" data-testid="add-receipt-btn">📷 {tr("Add a receipt")}</button>}
+      </div> : null}
       {err ? <p className="m-0 text-[13px] font-bold text-[var(--c-neg)]" data-testid="add-err">{err}</p> : null}
       <button onClick={save} className={U.btnP + " w-full"} data-testid="add-save"><Check size={17} />{tr("Save")}</button>
     </div></div>;

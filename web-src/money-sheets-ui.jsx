@@ -114,6 +114,7 @@ export function TxSheet({ L, id, run, onClose }) {
   const cats = useMemo(() => sheetCats(L, t.type === "income" ? "income" : "expense", ar()), [L, t.type]);
   const s = useSave(run, onClose);
   const ev = t.evidence;
+  const [big, setBig] = useState(false);
   const title = t.type === "income" ? tr("Income") : t.type === "transfer" ? tr("Transfer") : t.type === "zakat" ? tr("Zakāt") : t.type === "debt" ? tr("Debt") : tr("Expense");
   return <Sheet title={title} onClose={() => onClose()} testid="money-tx-sheet" danger={editable ? <Del onClick={() => confirmDel(t.note || title) && s.go("tx-delete", { id }, tr("Deleted"))} testid="tx-delete" /> : null}>
     {editable ? <>
@@ -124,6 +125,10 @@ export function TxSheet({ L, id, run, onClose }) {
       <div className="grid grid-cols-[auto_1fr] gap-2"><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={U.inp + " !w-auto"} dir="ltr" data-testid="tx-date" />
         {t.type !== "transfer" ? <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={tr("Note (optional)")} className={U.inp} dir="auto" data-testid="tx-note" /> : <span />}</div>
     </> : <p className="m-0 text-[15px]" dir="auto"><b className="tabular-nums" dir="ltr">{amt(t.amount, (L.currency || ""))}</b> · {dayLabel(t.date)}{t.person ? " · " + t.person : ""}{t.to ? " · " + t.to : ""}<br /><span className="text-[13px] c-sub">{tr("This entry belongs to a debt, a goal or Zakāt — change it there.")}</span></p>}
+    {/* v9.2 (Ali: "there was an option to add receipts"): the receipt kept with the entry — tap to see it full size */}
+    {t.photo ? <button type="button" onClick={() => setBig(!big)} className="block w-full text-start" data-testid="tx-receipt">
+      <span className="block text-[11.5px] font-extrabold c-sub mb-1">{tr("Receipt")}</span>
+      <img src={t.photo} alt={tr("Receipt")} className={"rounded-[12px] border border-[var(--c-ln)] " + (big ? "w-full" : "w-24 h-24 object-cover")} /></button> : null}
     {ev && ev.text ? <div className="rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="tx-evidence">
       <p className="m-0 text-[11.5px] font-extrabold c-sub">{tr("The message as it arrived")}{ev.from ? " · " + ev.from : ""}{ev.app ? " · " + ev.app : ""}</p>
       <p className="m-0 mt-1 text-[14px] leading-snug whitespace-pre-wrap select-text" dir="auto">{ev.text}</p></div> : null}

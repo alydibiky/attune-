@@ -115,7 +115,25 @@ export function sheetCats(L, type, ar = false) {
 }
 
 /** What the + sheet sends to the ledger (bridge add-txns), checked here first. → { ok, txn } | { ok: false, why } */
-export function sheetTxn({ type, amount, cat, account, toAccount, date, note }) {
+/** v9.2 (Ali, 5 Nov: "there was an option to add receipts"): a receipt photo kept with the entry — a small JPEG data URL only. */
+export const okPhoto = (p) => typeof p === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p) && p.length < 700000;
+/** The total on a receipt from the phone's text reader (ML Kit lines): the number on a "total" line (TOTAL, Grand total, Amount due,
+ *  الإجمالي, المجموع, الصافي, المطلوب…), else the largest money-like number. Never a phone number, a date or a long code. → number | null */
+export function receiptTotal(lines) {
+  const L = (lines || []).map((l) => String((l && (l.text != null ? l.text : l)) || "")).map((t) => t.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/٫/g, ".").replace(/٬/g, ","));
+  const nums = (t) => [...t.matchAll(/(?<![\d.,/:-])(\d{1,3}(?:[,\s]\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)(?![\d/:-])/g)].map((m) => parseFloat(m[1].replace(/[,\s]/g, ""))).filter((v) => v > 0 && v < 1e7);
+  const TOTAL = /\b(grand\s*total|total\s*(due|amount|egp|le|sar|aed)?|amount\s*due|net\s*(total|amount)|to\s*pay|balance\s*due)\b|الإجمالي|الاجمالي|إجمالي|اجمالي|المجموع|الصافي|المطلوب|المبلغ المستحق|الإجمالى/i;
+  const SUB = /\b(sub\s*-?\s*total|subtotal|vat|tax|service|tip|discount|change|cash\s*tendered|paid)\b|قبل الضريبة|الضريبة|ضريبة|خدمة|خصم|الباقي|المدفوع/i;
+  for (let i = L.length - 1; i >= 0; i--) {
+    if (!TOTAL.test(L[i]) || SUB.test(L[i])) continue;
+    const here = nums(L[i]); if (here.length) return Math.max(...here);
+    const next = L[i + 1] ? nums(L[i + 1]) : []; if (next.length) return Math.max(...next);   // the amount on the line under "TOTAL"
+  }
+  const all = L.filter((t) => !/\+?\d[\d\s-]{8,}|\b(tel|phone|vat no|tax id|cr|invoice|inv|no\.?|#)\b|رقم|تليفون|هاتف/i.test(t)).flatMap(nums).filter((v) => v < 200000);
+  return all.length ? Math.max(...all) : null;
+}
+
+export function sheetTxn({ type, amount, cat, account, toAccount, date, note, photo }) {
   const a = Number(String(amount || "").replace(/,/g, ""));
   if (!(a > 0 && a < 1e9)) return { ok: false, why: "Write the amount" };
   if (!["expense", "income", "transfer"].includes(type)) return { ok: false, why: "Pick expense, income or transfer" };
@@ -123,5 +141,6 @@ export function sheetTxn({ type, amount, cat, account, toAccount, date, note }) 
   if (type === "transfer" && (!toAccount || toAccount === account)) return { ok: false, why: "Pick the account it goes to" };
   const txn = { type, amount: r2(a), account, byUser: true, date: /^\d{4}-\d{2}-\d{2}$/.test(date || "") ? date : isoDay(Date.now()), note: String(note || "").slice(0, 80) };
   if (type === "transfer") txn.toAccount = toAccount; else txn.cat = cat || "other";
+  if (type !== "transfer" && okPhoto(photo)) txn.photo = photo;   // v9.2: the receipt
   return { ok: true, txn };
 }
