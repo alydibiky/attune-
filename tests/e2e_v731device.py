@@ -31,7 +31,7 @@ with sync_playwright() as p:
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     t = tools(page)
-    check("Studio" in t and page.locator("[data-testid=device-showall]").count() == 0, "12 GB phone: everything listed, nothing to show")
+    check("Studio" not in t and len(t) > 15 and page.locator("[data-testid=device-showall]").count() == 0, "12 GB phone: everything listed (no archived Studio), nothing to show")
     check("Level 4" in page.locator("[data-testid=device-level]").inner_text() and not page.evaluate("document.documentElement.classList.contains('att-lite')"), "12 GB phone: level 4, full effects")
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()

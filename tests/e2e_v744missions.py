@@ -36,7 +36,7 @@ with sync_playwright() as p:
     c = start("Pay off what I owe Ahmed by 31 December", "Pay off the debt")
     check("1,000 / 8,000" not in c.inner_text() and "8,000" in c.locator("[data-testid=mission-progress]").inner_text() and "Pay Ahmed" in c.locator("[data-testid=mission-step]").inner_text(), "the debt to Ahmed from Money → People: 8,000 left, a payment a month")
     # (v9.1: the company mission that read Fleet is archived with Business — archive/business/tests/mixed/e2e_v744missions.py)
-    check(page.locator("[data-testid=mission]").count() == 3, "three missions running")
+    check(page.locator("[data-testid=mission]").count() == 2, "two missions running (v9.1: the Fleet one is archived)")
     check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
     br.close()
 env.close()

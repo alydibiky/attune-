@@ -46,7 +46,7 @@ with sync_playwright() as p:
     # Create: Assistants · Skills · Artifacts · Studio · Code
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'assistants'}}))"); page.wait_for_timeout(600)   # v6.50: from the box, not the sidebar
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
-    check(tabs == ["assistants", "skills", "artifacts", "studio", "code"], "Create: %s" % tabs)
+    check(tabs == ["assistants", "skills", "artifacts"], "Create: %s (v9.1: Studio and Code are archived)" % tabs)
     shot(page, "create-tabs")
     # Chat's menu opens the same sidebar (the chat history)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)

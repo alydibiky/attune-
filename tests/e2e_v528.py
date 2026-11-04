@@ -82,7 +82,7 @@ with sync_playwright() as p:
 
     # ---- 4. the shared 'Are you sure?' dialog ----
     src = open(HERE + "/../web-src/confirm.jsx", encoding="utf-8").read()
-    uses = sum(open(HERE + "/../web-src/" + f, encoding="utf-8").read().count("askConfirm(") for f in ["actions-ui.jsx", "code-ui.jsx", "spaces-ui.jsx", "studio-ui.jsx", "attune.jsx"])
+    uses = sum(open(HERE + "/../web-src/" + f, encoding="utf-8").read().count("askConfirm(") for f in ["actions-ui.jsx", "code-ui.jsx", "spaces-ui.jsx", "attune.jsx"])
     check("This can't be undone." in src and uses >= 8, "reminders, places, projects, cranes, pictures, corrections and actions all ask before deleting (%d places)" % uses)
 
     errs = real_errors(errors)

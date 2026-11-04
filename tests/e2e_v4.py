@@ -277,10 +277,10 @@ with sync_playwright() as pw:
 
     # 10. More sheet and back
     nav.locator("button:has-text('All')").click(); page.wait_for_timeout(200)
-    check(page.locator("text=Site reports").count() >= 1 and page.locator("text=Improve a prompt").count() >= 1, "More lists every other tool")
+    check(page.locator("text=Site reports").count() == 0 and page.locator("text=Money Guardian").count() >= 1, "More lists the tools, not the archived ones (v9.1)")
     page.screenshot(path=HERE + "/v4-more.png")
-    page.locator("button:has-text('Improve a prompt')").click(); page.wait_for_timeout(300)
-    check(page.locator("button:has-text('Heavy Equipment')").count() >= 1, "tools open from More (Improve, packs named)")
+    page.locator(".rounded-t-2xl button:has-text('Money Guardian')").first.click(); page.wait_for_timeout(300)
+    check(page.locator("textarea[placeholder='Message Attune']").count() == 0, "tools open from More (Money Guardian)")
     check(page.evaluate("window.__attuneBack()") is True, "Back from a tool…")
     page.wait_for_timeout(200)
     check(page.locator("textarea[placeholder='Message Attune']").count() == 1, "…returns to Chat")
