@@ -11039,4 +11039,6 @@ export const FA = {
   "Choose the tiles": "انتخاب کاشی",
   "Electrician": "برقکار",
   "Painting": "نقاشی",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«فهرست سفرم را بساز: گذرنامه، شارژر» — بعد «پنجشنبه سفر می‌روم»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "چهارشنبه فهرست در خانه است، همه خانه‌ها خالی، تا همه را تیک بزنید",
 };

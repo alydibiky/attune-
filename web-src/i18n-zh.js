@@ -11039,4 +11039,6 @@ export const ZH = {
   "Choose the tiles": "选瓷砖",
   "Electrician": "电工",
   "Painting": "刷漆",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "「建我的旅行清单：护照、充电器」— 然后「我周四出行」",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "周三清单出现在首页，所有方框都是空的，直到全部打勾",
 };

@@ -11039,4 +11039,6 @@ export const JA = {
   "Choose the tiles": "タイルを選ぶ",
   "Electrician": "電気工事",
   "Painting": "塗装",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "「旅行チェックリストを作って：パスポート、充電器」— それから「木曜に旅行する」",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "水曜日にリストがホームに表示され、すべてチェックするまで空のまま残ります",
 };

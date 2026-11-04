@@ -11039,4 +11039,6 @@ export const TH = {
   "Choose the tiles": "เลือกกระเบื้อง",
   "Electrician": "ช่างไฟ",
   "Painting": "ทาสี",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«สร้างเช็กลิสต์เดินทางของฉัน: หนังสือเดินทาง, ที่ชาร์จ» — แล้ว «ฉันเดินทางวันพฤหัส»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "วันพุธรายการจะอยู่ในหน้าแรก ทุกช่องว่าง จนกว่าจะติ๊กครบ",
 };

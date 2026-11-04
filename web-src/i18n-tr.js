@@ -11040,4 +11040,6 @@ export const TRK = {
   "Choose the tiles": "Fayansları seç",
   "Electrician": "Elektrikçi",
   "Painting": "Boya",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Seyahat listemi yap: pasaport, şarj aleti» — sonra «perşembe yolculuğa çıkıyorum»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "Çarşamba günü liste Ana sayfada, tüm kutular boş, hepsini işaretleyene kadar",
 };

@@ -11040,4 +11040,6 @@ export const IDN = {
   "Choose the tiles": "Pilih ubin",
   "Electrician": "Tukang listrik",
   "Painting": "Pengecatan",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Buat daftar perjalananku: paspor, charger» — lalu «aku berangkat Kamis»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "Hari Rabu daftarnya ada di Beranda, semua kotak kosong, sampai semuanya dicentang",
 };

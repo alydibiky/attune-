@@ -8150,4 +8150,6 @@ export const AR = {
   "Choose the tiles": "اختار السيراميك",
   "Electrician": "الكهربائي",
   "Painting": "الدهانات",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«اعمل ليستة سفر: الباسبور، الشاحن» — وبعدين «أنا مسافر الخميس»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "يوم الأربع القايمة في الرئيسية وكل خاناتها فاضية، لحد ما تعلّم عليها كلها",
 };

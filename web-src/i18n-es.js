@@ -11040,4 +11040,6 @@ export const ES = {
   "Choose the tiles": "Elegir los azulejos",
   "Electrician": "Electricista",
   "Painting": "Pintura",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Haz mi lista de viaje: pasaporte, cargador» — y luego «viajo el jueves»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "El miércoles la lista está en Inicio, con todas las casillas vacías, hasta que lo marques todo",
 };

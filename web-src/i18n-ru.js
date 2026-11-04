@@ -11039,4 +11039,6 @@ export const RU = {
   "Choose the tiles": "Выбрать плитку",
   "Electrician": "Электрик",
   "Painting": "Покраска",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Сделай мой список в дорогу: паспорт, зарядка» — потом «я уезжаю в четверг»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "В среду список на главной, все пункты пустые, пока вы не отметите всё",
 };

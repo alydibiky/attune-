@@ -11039,4 +11039,6 @@ export const BN = {
   "Choose the tiles": "টাইলস বাছুন",
   "Electrician": "ইলেকট্রিশিয়ান",
   "Painting": "রং করা",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«আমার ভ্রমণের চেকলিস্ট বানাও: পাসপোর্ট, চার্জার» — তারপর «আমি বৃহস্পতিবার ভ্রমণে যাচ্ছি»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "বুধবার তালিকাটি হোমে থাকে, সব ঘর খালি, যতক্ষণ না সব টিক হয়",
 };

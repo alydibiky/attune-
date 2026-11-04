@@ -11040,4 +11040,6 @@ export const SW = {
   "Choose the tiles": "Chagua vigae",
   "Electrician": "Fundi umeme",
   "Painting": "Upakaji rangi",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Tengeneza orodha yangu ya safari: pasipoti, chaja» — kisha «ninasafiri Alhamisi»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "Jumatano orodha iko Nyumbani, visanduku vyote vitupu, hadi vyote vitiwe alama",
 };

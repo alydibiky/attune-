@@ -11039,4 +11039,6 @@ export const VI = {
   "Choose the tiles": "Chọn gạch",
   "Electrician": "Thợ điện",
   "Painting": "Sơn",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Tạo checklist du lịch của tôi: hộ chiếu, sạc» — rồi «tôi đi thứ Năm»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "Thứ Tư danh sách ở Trang chủ, mọi ô trống, cho đến khi đánh dấu hết",
 };

@@ -11040,4 +11040,6 @@ export const HI = {
   "Choose the tiles": "टाइल्स चुनें",
   "Electrician": "इलेक्ट्रीशियन",
   "Painting": "पेंटिंग",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«मेरी यात्रा की चेकलिस्ट बनाओ: पासपोर्ट, चार्जर» — फिर «मैं गुरुवार को यात्रा पर हूँ»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "बुधवार को सूची होम पर होती है, सारे बॉक्स खाली, जब तक सब पर निशान न लगे",
 };

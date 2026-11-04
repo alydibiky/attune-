@@ -11031,4 +11031,6 @@ export const ARB = {
   "Choose the tiles": "اختر البلاط",
   "Electrician": "الكهربائي",
   "Painting": "الدهان",
+  "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«أنشئ قائمة سفر: جواز السفر، الشاحن» — ثم «سأسافر الخميس»",
+  "On Wednesday the list is on Home, every box empty, until it is all ticked": "يوم الأربعاء تظهر القائمة في الرئيسية وكل خاناتها فارغة، حتى تؤشر عليها كلها",
 };
