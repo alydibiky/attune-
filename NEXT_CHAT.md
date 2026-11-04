@@ -61,6 +61,14 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
   $14.99); Business keeps EGP 14,999 / ≈ $299.99. The country = the one chosen in Attune, else the time zone, else the language.
   The yearly note is worked out ("≈ SAR 18 a month — save 39%"); the Play line names each country's carriers (a Saudi was told
   Vodafone / Orange / Etisalat). **ALI: copy `PRICES_BY_COUNTRY.md` into the Play Console** (made by `node tools/price-list.mjs`).
+- **THE BRAND (Ali, 4 Nov): Attune = life planner / organiser + productivity with offline AI** — VISION.md (top), FEATURES.md
+  (every feature, its use and verdict; Ali still decides the "DECIDE" rows — ask him before moving any of them).
+  **Archived (Ali decided): Studio and Business** (+ Fleet & rentals, Site reports, Crane toolkit, Books, Shop, ERP, the business
+  website) → `archive/studio/`, `archive/business/` (git mv, READMEs with the restore steps, the cut-out screens, their tests).
+  `web-src/removed.js` hides their ids everywhere. Kept on purpose: the Fleet DATA layer (fleet.js, fleet-store.js…) so Ali's
+  crane records stay in backups / sync until **Attune Business** (a separate product) exists. APK: the Studio picture engine is
+  no longer built (workflow `if: false`); its Kotlin glue is dormant — remove it in a session that can compile Android.
+  The web page went 7.05 → 6.10 MB and business-site.html (1.5 MB) is gone.
 
 ## v9.0 part 8 — 3 Nov: "make sure the notifications reading is working"
 - PayListener.kt (Android) read line by line: one-time codes never kept, only money-looking texts (the last 200, on the phone),
