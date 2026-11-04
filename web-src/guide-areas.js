@@ -1,3 +1,4 @@
+import { withoutRemoved } from "./removed.js";
 /* ---- v7.9 (Ali, 24 Oct 2026: "I want the how to get most from the app guide to have everything that can be done in the app to make
    life easier"; he picked design A "by life area, with a checklist" + C's list of every feature): every feature of the app sits in
    one life area, with what you say and what you get. "Tried" = the person has opened it (kept on the phone only). Pure, so it is
@@ -12,6 +13,7 @@ export const AREAS = [
   { id: "work", icon: "💼", title: S("Work & business", "الشغل والبيزنس"), ids: ["business", "fleet", "field", "crane", "tools", "write", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
   { id: "create", icon: "✨", title: S("Create", "اعمل حاجة"), ids: ["assistants", "skills", "artifacts", "studio", "code", "projects"] },
 ];
+for (const a of AREAS) a.ids = withoutRemoved(a.ids);   // v9.1: archived tools leave every area
 
 /** What you say (or do) → what you get, for every feature. */
 export const SAY = {

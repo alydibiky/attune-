@@ -7344,6 +7344,7 @@ export const RU = {
   "Log it as food": "Записать как еду",
   "Record it in Money": "Записать в Деньги",
   "Answer it": "Ответить",
+  "Organise my work": "Организовать работу",
   "≈ {p} a month — save {n}%": "≈ {p} в месяц — экономия {n}%",
   "Cheapest now: {p} ({d})": "Сейчас дешевле всего: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} ночей между {a} и {b}",

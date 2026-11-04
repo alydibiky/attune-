@@ -9,7 +9,7 @@ import { KINDS as ZC_KINDS } from "./zakatcalc.js";
 import { fmt } from "./money-calm.js";
 import { accountsPage, billsPage, zakatPage, sheetCats, sheetTxn } from "./money-pages.js";
 import { isoDay } from "./money-report.js";
-import { Bars, SeeAll } from "./biz-dash-ui.jsx";
+import { Bars, SeeAll } from "./dash-kit.jsx";
 import * as U from "./ui-kit.jsx";
 
 const ar = () => getLang() === "ar";
@@ -128,8 +128,8 @@ export function AddSheet({ L, onSave, onDebt, onClose, prefill = null }) {
 export { Head as MoneyHead, Card as MoneyCard };
 // ---- More ----------------------------------------------------------------------------------------------------------------------------
 export function MoreSheet({ open, onClose }) {
-  // v7.9 (Ali): Notes left Money (its notes were copied into Mind), and invoices live in Business → Books now
-  const items = [["automations", "Automations", Zap, "When money comes in or goes out, do something by itself"], ["biz-invoices", "Invoices", FileText, "Now in Business → Books"], ["home", "Full ledger", BookOpen, "Every entry, edit or delete"], ["settings", "Ledger settings", Settings, "Currency, categories, budgets, backup"]];
+  // v7.9 (Ali): Notes left Money (its notes were copied into Mind). v9.1: the "Invoices → Business → Books" line is gone (Business is archived)
+  const items = [["automations", "Automations", Zap, "When money comes in or goes out, do something by itself"], ["home", "Full ledger", BookOpen, "Every entry, edit or delete"], ["settings", "Ledger settings", Settings, "Currency, categories, budgets, backup"]];
   return <div className="calm fixed inset-0 z-[80] bg-black/55 flex flex-col justify-end lg:items-center lg:justify-center" onClick={onClose} data-testid="money-more-sheet">
     <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[20px] lg:rounded-[20px] w-full lg:max-w-md p-3 pb-5" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
       <div className="flex items-center gap-2 px-1 pb-1"><p className="flex-1 text-[17px] font-black m-0">{tr("More")}</p>

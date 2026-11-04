@@ -7345,6 +7345,7 @@ export const UR = {
   "Log it as food": "کھانے میں درج کریں",
   "Record it in Money": "پیسوں میں درج کریں",
   "Answer it": "اس کا جواب دیں",
+  "Organise my work": "اپنا کام منظم کروں",
   "≈ {p} a month — save {n}%": "≈ {p} ماہانہ — {n}% بچت",
   "Cheapest now: {p} ({d})": "ابھی سب سے سستا: {p} ({d})",
   "{n} nights between {a} and {b}": "{a} اور {b} کے درمیان {n} راتیں",

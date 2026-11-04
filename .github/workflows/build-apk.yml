@@ -98,12 +98,16 @@ jobs:
       # program — CPU always, plus a GPU (OpenCL/Adreno) copy when the OpenCL
       # SDK step worked. Optional: if it fails, the APK builds without Studio's
       # drawing, and Studio says so.
+      # v9.1 (Ali, 4 Nov 2026): Studio is removed from Attune (archived in archive/studio/) — its picture engine is no longer built
+      # or packed into the APK. To bring Studio back, delete the two `if: ${{ false }}` lines below (see archive/studio/README.md).
       - name: Cache the picture engine
+        if: ${{ false }}
         uses: actions/cache@v4
         with:
           path: app/src/main/jniLibs
           key: image-engine-v2-${{ hashFiles('app/src/main/cpp/build-image-engine.sh') }}-${{ hashFiles('app/src/main/cpp/opencl/lib/**') != '' }}
       - name: Picture engine for Studio (optional)
+        if: ${{ false }}
         continue-on-error: true
         run: |
           L=app/src/main/jniLibs/arm64-v8a

@@ -49,7 +49,6 @@ import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
 import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteFollowUp, refusesToBuild, arithmeticSlips, fixSlips } from "./verify.js";
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
-import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp , learnRule } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote, subjectOf } from "./research.js";
 import { isScoreQuestion, fromNotes as liveFromNotes, fromPassages, isMetaAnswer, keyLines, scoreQueries } from "./livefacts.js";
@@ -1099,18 +1098,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return;
     }
 
-    // "Draw a crane at sunset": pictures are made in Studio, on the phone.
-    // v8.0: not while Studio is paused on phones (device.js) — the request goes to the model like any other
-    if (route && !img && looksLikeImageRequest(typed) && !studioPaused(typeof window !== "undefined" && window.AttuneNative)) {
-      const cid = ensureChat(typed);
-      const subject = pictureSubject(typed);
-      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
-        { id: newId(), role: "assistant", card: { tone: "violet", title: "A picture — Studio draws it on this phone", detail: subject,
-          actions: [["Draw it in Studio", "studio"], ["Just answer", "answer"]] }, studioPrompt: subject }] }));
-      setText("");
-      return;
-    }
+    // v9.1: "Draw a crane at sunset" no longer opens Studio (archived) — it goes to the model like any other request
 
     // Something to set on the phone: a reminder, alarm, timer, calendar event,
     // WhatsApp message or call. Read into a card; nothing happens until confirmed.
@@ -2050,7 +2038,6 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "radar") window.dispatchEvent(new CustomEvent("attune-radar", { detail: { text: m.radarText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
     else if (act.startsWith("open:")) window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: act.slice(5) } }));   // v6.28 Ask your life
-    else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));
     else if (act === "pick-do" || act === "pick-chat") {   // v9.1 "Which did you mean?" — remembered for this shape of sentence
       const q = m.pickText || "", at = messages.findIndex((x) => x.id === m.id), hist = messages.slice(0, Math.max(0, at - 1));
       UND.learn(q, act === "pick-do" ? (m.pickKind || "money-log") : "chat");

@@ -7345,6 +7345,7 @@ export const SW = {
   "Log it as food": "Iandike kama chakula",
   "Record it in Money": "Iandike kwenye Pesa",
   "Answer it": "Ijibu",
+  "Organise my work": "Kupanga kazi yangu",
   "≈ {p} a month — save {n}%": "≈ {p} kwa mwezi — okoa {n}%",
   "Cheapest now: {p} ({d})": "Nafuu zaidi sasa: {p} ({d})",
   "{n} nights between {a} and {b}": "Usiku {n} kati ya {a} na {b}",

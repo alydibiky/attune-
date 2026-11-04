@@ -4,7 +4,7 @@
 import React from "react";
 import { ArrowLeft, Check, Hourglass, Sparkles, Flame, ShieldCheck, Brain, Search, ChevronRight } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
-import { Bars, SeeAll } from "./biz-dash-ui.jsx";
+import { Bars, SeeAll } from "./dash-kit.jsx";
 import * as U from "./ui-kit.jsx";
 
 const ar = () => getLang() === "ar";

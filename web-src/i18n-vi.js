@@ -7344,6 +7344,7 @@ export const VI = {
   "Log it as food": "Ghi là món ăn",
   "Record it in Money": "Ghi vào Tiền",
   "Answer it": "Trả lời",
+  "Organise my work": "Sắp xếp công việc",
   "≈ {p} a month — save {n}%": "≈ {p} mỗi tháng — tiết kiệm {n}%",
   "Cheapest now: {p} ({d})": "Rẻ nhất lúc này: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} đêm từ {a} đến {b}",

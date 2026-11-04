@@ -1,0 +1,11 @@
+// Removed from web-src/attune.jsx on 4 Nov 2026 (the main screen's route chain: `) : mode === "…" ? (` … ). Paste back in
+// the chain (before `) : mode === "write"`) to restore, together with the imports listed in README.md.
+
+// ---- mode "studio" ----
+        ) : mode === "studio" ? (
+          STUDIO_OFF ? <StudioOffDevice paused /> : NATIVE && NATIVE.imageInfo ? (
+            <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}
+              chatReady={modelState === "ready" || (engineInfo && engineInfo.state === "ready")} enhanceMs={enhanceWaitMs(getPower())}
+              llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
+          ) : <StudioOffDevice />
+

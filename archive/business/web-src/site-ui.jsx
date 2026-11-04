@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react";
 import { Mic, Camera, X, FileText, Loader2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { stampLine, reportHtml } from "./sitereport.js";
-import { sharePdf } from "./books-docs.jsx";
+import { sharePdf } from "./share-pdf.js";
 
 /** The microphone: what you say is added to the text box (partial words show while you speak). */
 export function MicButton({ listen, value, setValue, flash }) {

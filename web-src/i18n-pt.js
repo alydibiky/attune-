@@ -7345,6 +7345,7 @@ export const PT = {
   "Log it as food": "Registrar como comida",
   "Record it in Money": "Registrar em Dinheiro",
   "Answer it": "Responder",
+  "Organise my work": "Organizar meu trabalho",
   "≈ {p} a month — save {n}%": "≈ {p} por mês — economize {n}%",
   "Cheapest now: {p} ({d})": "Mais barato agora: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} noites entre {a} e {b}",

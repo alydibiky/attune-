@@ -1,0 +1,235 @@
+// Removed from web-src/attune.jsx on 4 Nov 2026 (the main screen's route chain: `) : mode === "…" ? (` … ). Paste back in
+// the chain (before `) : mode === "write"`) to restore, together with the imports listed in README.md.
+
+// ---- mode "business" ----
+        ) : mode === "business" ? (
+          <BusinessApp flash={flash} openEngine={() => setShowEngine(true)} onExit={goBack}
+            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null} scanLive={NATIVE && NATIVE.scanLive ? async () => { const r = await nativeCall("scanLive", {}); return (r && r.codes) || []; } : null}
+            modelReady={modelUsable}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json, onToken: o.onToken })}
+            runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}
+            saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
+
+// ---- mode "crane" ----
+        ) : mode === "crane" ? (
+          <CraneToolkit flash={flash} remember={remember}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
+
+// ---- mode "fleet" ----
+        ) : mode === "fleet" ? (
+          <div className="space-y-5">
+            {/* sync bar — the answer to "how do records connect" */}
+            <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2 text-sm text-slate-300">
+                  <Users size={15} className="text-teal-400" />
+                  <span>{tr("Team records")}</span>
+                  <span className="text-xs text-slate-500">{tr("· this device")} {myDevice}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {pendingSync > 0 ? <span className="text-xs px-2 py-1 rounded-md bg-amber-500/10 border border-amber-900/60 text-amber-300">{pendingSync} {tr("waiting to share")}</span> : null}
+                  {lastSync ? <span className="text-xs text-slate-600">{tr("synced {t}", { t: new Date(lastSync).toLocaleTimeString(dateLocale()) })}</span> : null}
+                  <button onClick={syncNow} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600"><RefreshCw size={13} /> {tr("Share")}</button>
+                  <button onClick={receiveTeamRecords} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{tr("Receive from teammate")}</button>
+                </div>
+              </div>
+              <p data-intro="" className="text-[11px] text-slate-600 mt-2">{tr("Records replicate between your team's devices whenever any connection exists — site Wi-Fi, a company hub, or when someone drives back into coverage. The AI model never syncs; only small text records do, and they stay inside your company.")}</p>
+            </div>
+
+            {/* the ROI number */}
+            {health.length > 0 ? (
+              <div className="grid sm:grid-cols-3 gap-3">
+                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Assets tracked")}</p>
+                  <p className="text-3xl font-bold text-white mt-1">{health.length}</p>
+                  <p className="text-[11px] text-slate-600 mt-1">{records.length} records</p>
+                </div>
+                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Needs attention")}</p>
+                  <p className="text-3xl font-bold text-rose-400 mt-1">{health.filter((a) => a.band !== "ok").length}</p>
+                  <p className="text-[11px] text-slate-600 mt-1">{health.reduce((n, a) => n + a.open, 0)} {tr("open actions")}</p>
+                </div>
+                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Downtime logged")}</p>
+                  <p className="text-3xl font-bold text-amber-400 mt-1">{cost.hours}h</p>
+                  <p className="text-[11px] text-slate-600 mt-1">
+                    {Number(org.rate) > 0 ? `≈ ${cost.cost.toLocaleString()} ${org.currency || "EGP"}` : <button onClick={() => setShowOrg(true)} className="underline hover:text-teal-400">{tr("set hourly rate to price this")}</button>}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {/* asset health */}
+            <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-3 flex items-center gap-1.5"><Gauge size={13} /> {tr("Asset health")}</p>
+              {health.length === 0 ? (
+                <p className="text-sm text-slate-600">{tr("No assets yet. Create records in Field and they appear here — including records synced from your team.")}</p>
+              ) : (
+                <div className="space-y-2">
+                  {health.map((a) => (
+                    <div key={a.asset} className={`rounded-xl border p-3 ${
+                      a.band === "critical" ? "bg-rose-500/10 border-rose-900/60"
+                      : a.band === "watch" ? "bg-amber-500/10 border-amber-900/60" : "bg-slate-950 border-slate-800"}`}>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-sm font-semibold text-white capitalize">{a.asset}</span>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className={a.trend === "worsening" ? "text-rose-300" : a.trend === "improving" ? "text-teal-300" : "text-slate-500"}>{a.trend}</span>
+                          <span className={`font-bold ${a.band === "critical" ? "text-rose-300" : a.band === "watch" ? "text-amber-300" : "text-teal-300"}`}>{a.score}/100</span>
+                        </div>
+                      </div>
+                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mt-2">
+                        <div className={`h-full ${a.band === "critical" ? "bg-rose-500" : a.band === "watch" ? "bg-amber-500" : "bg-teal-500"}`} style={{ width: a.score + "%" }} />
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1.5">
+                        {a.records} record{a.records > 1 ? "s" : ""} · {a.open} {tr("open action")}{a.open === 1 ? "" : "s"}
+                        {a.openDays > 0 ? ` (oldest ${a.openDays}d)` : ""}{a.downtime > 0 ? ` · ${a.downtime}h downtime` : ""}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {findings.length > 0 ? (
+              <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5"><Radar size={13} /> {tr("Patterns across the team")}</p>
+                  <button onClick={runBrief} disabled={loading} className="text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{loading ? "…" : tr("What does this mean?")}</button>
+                </div>
+                <div className="space-y-1.5">
+                  {findings.map((f, i) => (
+                    <div key={i} className={`text-xs rounded-lg px-2.5 py-2 border ${
+                      f.severity === "high" ? "bg-rose-500/10 border-rose-900/60 text-rose-200"
+                      : f.severity === "medium" ? "bg-amber-500/10 border-amber-900/60 text-amber-200"
+                      : "bg-slate-950 border-slate-800 text-slate-400"}`}>{tr(f.summary)}</div>
+                  ))}
+                </div>
+                {brief ? <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3"><pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{tr(brief)}</pre></div> : null}
+              </div>
+            ) : null}
+          </div>
+
+// ---- mode "field" ----
+        ) : mode === "field" ? (
+          <div className="grid md:grid-cols-2 gap-5">
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-slate-300">{tr("What happened / what's needed")}</label>
+                {/* v6.37 (W3): a real microphone — the phone's speech recognition */}
+                <MicButton listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} value={fdInput} setValue={setFdInput} flash={flash} />
+              </div>
+              <textarea value={fdInput} onChange={(e) => setFdInput(e.target.value)}
+                placeholder={tr("Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'")}
+                className="w-full h-32 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+
+              <div className="flex items-center gap-2 mt-3">
+                <span className="text-xs text-slate-500 shrink-0">{tr("Filed by")}</span>
+                <input value={fdBy} onChange={(e) => setFdBy(e.target.value)} placeholder={tr("your name (optional)")}
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
+                <input value={fdDowntime} onChange={(e) => setFdDowntime(e.target.value)} placeholder={tr("hrs lost")} inputMode="decimal"
+                  className="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
+              </div>
+
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-4 mb-2">{tr("Document")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(FIELD_DOCS).map(([k, d]) => (
+                  <button key={k} onClick={() => setFdDoc(k)} className={btn(fdDoc === k)}>{d.icon} {tr(d.label)}</button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-600 mt-2">{tr("Needs:")} {FIELD_DOCS[fdDoc].need.map((x) => tr(x)).join(" · ")}{tr(". Only genuinely essential gaps are flagged — today's date and your name are filled in automatically.")}</p>
+
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-4 mb-2 flex items-center gap-1.5"><Languages size={13} /> {tr("Produce it in")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {["match", "en", "ar", "hi", "ur", "bn", "tr", "fr", "ru"].map((k) => (
+                  <button key={k} onClick={() => toggleFdLang(k)} className={btn(fdLangs.includes(k))}>
+                    {k === "match" ? tr("Worker's language") : langShown(k)}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-600 mt-2">{tr("One dictation → the same record in every language your site needs. Identical facts, identical numbers.")}</p>
+
+              <button onClick={() => setShowOrg(true)} className={`mt-4 w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm ${org.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
+                <span className="flex items-center gap-2"><Building2 size={15} /> {org.on && org.name ? org.name : tr("Company terminology")}</span>
+                <span className="text-xs">{org.on ? "on" : tr("set up")}</span>
+              </button>
+
+              {liveAlert ? (
+                <div className="mt-3 flex items-start gap-2 text-xs bg-amber-500/10 border border-amber-900/60 rounded-xl p-3">
+                  <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
+                  <span className="text-amber-200">
+                    <b>{liveAlert.asset}</b> {tr("already has")} {liveAlert.count} record{liveAlert.count > 1 ? "s" : ""}
+                    {liveAlert.open > 0 ? <> and <b>{liveAlert.open} {tr("unresolved action")}{liveAlert.open > 1 ? "s" : ""}</b></> : null}.
+                    <button onClick={() => setShowMemory(true)} className="underline ms-1 hover:text-amber-100">{tr("See history")}</button>
+                  </span>
+                </div>
+              ) : null}
+
+              <button onClick={doFieldDoc} disabled={!fdInput.trim() || loading}
+                className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${fdInput.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>
+                {loading ? <Loader2 size={16} className="animate-spin" /> : <HardHat size={16} />}{loading ? tr("Writing…") : tr("Create document")}
+              </button>
+              {queued > 0 ? <p className="text-[11px] text-amber-400 mt-2">{queued} {tr("queued — will process when an engine is available.")}</p> : null}
+              {/* v6.37 (W3): photos with time + place, and one PDF of the report with them */}
+              <SitePhotos photos={fdPhotos} setPhotos={setFdPhotos} title={tr(FIELD_DOCS[fdDoc].label)} text={fdResult || ""} by={fdBy} flash={flash} />
+            </section>
+
+            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-slate-300">{tr(FIELD_DOCS[fdDoc].label)}{fdLangs.length > 1 ? ` · ${fdLangs.length} languages` : ""}</label>
+                {fdResult ? <button onClick={() => { try { navigator.clipboard.writeText(fdResult); } catch (e) {} flash(tr("Copied")); }} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><Copy size={14} /> {tr("Copy")}</button> : null}
+              </div>
+              {fdResult ? (
+                <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 overflow-auto min-h-[16rem]">
+                  <pre className="text-sm text-teal-50 whitespace-pre-wrap font-mono leading-relaxed">{fdResult}</pre>
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[16rem] p-6">
+                  {tr("Rough note in, finished record out — structured, in every language the site needs, without a signal.")}
+                </div>
+              )}
+              <p className="text-[11px] text-slate-600 mt-3">{tr("Runs on the device. Nothing about the incident leaves the phone.")}</p>
+
+              {records.length > 0 ? (
+                <div className="mt-4 border-t border-slate-800 pt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5">
+                      <Radar size={13} /> {tr("Site memory ·")} {records.length} record{records.length > 1 ? "s" : ""}
+                    </p>
+                    {findings.length > 0 ? (
+                      <button onClick={runBrief} disabled={loading}
+                        className="text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">
+                        {loading ? "…" : tr("What does this mean?")}
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {findings.length === 0 ? (
+                    <p className="text-[11px] text-slate-600">{tr("No patterns yet. Add more records and this starts connecting them.")}</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {findings.slice(0, 5).map((f, i) => (
+                        <div key={i} className={`text-xs rounded-lg px-2.5 py-2 border ${
+                          f.severity === "high" ? "bg-rose-500/10 border-rose-900/60 text-rose-200"
+                          : f.severity === "medium" ? "bg-amber-500/10 border-amber-900/60 text-amber-200"
+                          : "bg-slate-950 border-slate-800 text-slate-400"}`}>
+                          {tr(f.summary)}
+                        </div>
+                      ))}
+                      <button onClick={() => setShowMemory(true)} className="text-[11px] text-teal-400 hover:text-teal-300">
+                        {tr("Open site memory →")}
+                      </button>
+                    </div>
+                  )}
+
+                  {brief ? (
+                    <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3">
+                      <p className="text-[12px] uppercase tracking-wider text-teal-400 mb-1.5">{tr("Reviewer's read")}</p>
+                      <pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{tr(brief)}</pre>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </section>
+          </div>
+

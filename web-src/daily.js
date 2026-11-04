@@ -15,7 +15,7 @@
 import { tr } from "./i18n.js";
 import { review as fsrsReview, isLearned } from "./fsrs.js";
 
-import { jsonFrom } from "./erp.js";
+import { jsonFrom } from "./licence.js";
 import { detectLoop, trimLoop, mathToText } from "./quality.js";
 
 export const LEVELS = ["beginner", "intermediate", "advanced"];

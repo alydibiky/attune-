@@ -1,7 +1,6 @@
 // Unit tests for the v5.13 fixes: arithmetic slips, money word problems,
 // Business designs as simple lines, the closest template, odd .xls files.
 import { arithmeticSlips, looksLikeMathProblem, verifyMath } from "../../web-src/verify.js";
-import { specFromLines, guessTemplate, systemFromSpec, designLinesMessages } from "../../web-src/erp.js";
 import { FILE_PRELUDE, profileCode, analyzeFile } from "../../web-src/reason.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
@@ -34,20 +33,7 @@ eq(looksLikeMathProblem("What is the latest stable version of Android and when w
   eq(steps.includes("Writing the program…"), true, "the screen says the program is being written (not one frozen line)");
 }
 
-// ---- Business: the design as simple lines ----
-const lines = "Here is the design:\n**TABLE Customers**\n- Name: text\n- Phone: phone\nTABLE Cranes\n1. Code: auto\n2. Model: text\n3. Status: choice (Available, On hire, Maintenance)\nTABLE Jobs\n- Customer: link Customers\n- Crane: link Cranes\n- Days: number\n- Daily rate: money\n- Total: formula [Days] * [Daily rate]";
-const sp = specFromLines(lines, "Crane co");
-eq(sp.tables.map((t) => t.name), ["Customers", "Cranes", "Jobs"], "tables read from the line format");
-eq(sp.tables[1].fields[2], { name: "Status", type: "choice", options: ["Available", "On hire", "Maintenance"] }, "choice options read");
-eq(sp.tables[2].fields[4].formula, "[Days] * [Daily rate]", "formula read");
-const sys = systemFromSpec(sp);
-eq(sys.tables[2].fields.filter((f) => f.type === "link").length, 2, "links become real links");
-eq(specFromLines("Sorry, I can't."), null, "nothing usable → null");
-eq(guessTemplate("We rent mobile cranes (20-500 t) with operators in Egypt. We track customers, jobs per site").id, "cranes", "Ali's description → the crane template");
-eq(guessTemplate("مطعم وكافيه بنبيع قهوة وأكل").id, "restaurant", "Arabic description → restaurant");
-eq(guessTemplate("hello"), null, "no idea → no template");
-eq(/TABLE/.test(designLinesMessages("x")[0].content), true, "the line-format prompt shows the format");
-
+// (v9.1: the Business part of this test is archived in archive/business/tests/unit/v513.test.mjs)
 // ---- files: the loader comes first, errors say something ----
 eq(/def load_sheets/.test(FILE_PRELUDE) && /<table/.test(FILE_PRELUDE) && /xlrd/.test(FILE_PRELUDE), true, "the loader reads HTML-as-xls, text-as-xls and real xls");
 eq(/load_sheets\(name\)/.test(profileCode("a.xls")), true, "the profile uses the loader");

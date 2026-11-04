@@ -7381,6 +7381,7 @@ export const AR = {
   "Log it as food": "سجّله أكل",
   "Record it in Money": "سجّله في الفلوس",
   "Answer it": "جاوبني عليه",
+  "Organise my work": "أنظّم شغلي",
   "≈ {p} a month — save {n}%": "≈ {p} في الشهر — وفّر {n}%",
   "Cheapest now: {p} ({d})": "الأرخص دلوقتي: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} ليالي بين {a} و{b}",

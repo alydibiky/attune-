@@ -9,7 +9,7 @@ import { useSubBack } from "./backstack.js";
 import * as V from "./cv.js";
 import * as A from "./cv-ai.js";
 import * as C from "./convert.js";
-import { sharePdf } from "./books-docs.jsx";
+import { sharePdf } from "./share-pdf.js";
 import * as J from "./jobready.js";
 import { speakNow } from "./lesson-ui.jsx";
 import { myCountry } from "./agent-ui.jsx";

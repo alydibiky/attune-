@@ -13,7 +13,7 @@ import { cardPad, page, h1, tag } from "./ui-kit.jsx";
 import { HealthBox, HealthReport, HealthReportCta } from "./health-calm-ui.jsx";   // v7.3 Gemini's Area 2: Health
 import { healthReport } from "./health-report.js";
 import { useSubBack } from "./backstack.js";
-import { sharePdf } from "./books-docs.jsx";
+import { sharePdf } from "./share-pdf.js";
 import { loadVitals, saveVitals, mergeVitals, bpIntoCare, sleepIntoFit, vitalsWeek } from "./vitals.js";
 
 const MEAL = { breakfast: ["Breakfast", "الفطار"], lunch: ["Lunch", "الغداء"], dinner: ["Dinner", "العشاء"], snacks: ["Snacks", "سناكس"] };

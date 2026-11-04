@@ -1,10 +1,11 @@
 // v7.9 (Ali: "the guide must have everything that can be done in the app"): every page of the app sits in a life area of the
 // guide with what you say and what you get; tried = opened, counted by area.
 import { AREAS, SAY, areaOf, markTried, loadTried, progress } from "../../web-src/guide-areas.js";
+import { REMOVED } from "../../web-src/removed.js";
 import { HUBS, RETIRED } from "../../web-src/hubs.js";
 import { TOOLS } from "../../web-src/guide.js";
 let fail = 0; const ok = (c, w) => { console.log((c ? "PASS " : "FAIL ") + w); if (!c) fail++; };
-const SKIP = new Set(["guide", "knowledge", ...RETIRED]);   // (v8.2: Instant / Ask classic are gone)   // the guide itself; Knowledge is the developer's only (v7.9)
+const SKIP = new Set(["guide", "knowledge", ...RETIRED, ...REMOVED]);   // v9.1: archived tools (removed.js)   // (v8.2: Instant / Ask classic are gone)   // the guide itself; Knowledge is the developer's only (v7.9)
 const pages = [...new Set([...HUBS.flatMap((h) => h[3]), ...Object.keys(TOOLS)])].filter((m) => !SKIP.has(m));
 const noArea = pages.filter((m) => !areaOf(m)), noSay = pages.filter((m) => !SAY[m]);
 ok(!noArea.length, "every page of the app has a life area" + (noArea.length ? ": missing " + noArea.join(", ") : ` (${pages.length})`));
@@ -18,5 +19,6 @@ ok(markTried("fit", mem) && !markTried("fit", mem) && !markTried("nonsense", mem
 markTried("care", mem);
 const h = progress(loadTried(mem), "health"), all = progress(loadTried(mem));
 ok(h.tried === 2 && h.total === 4 && all.tried === 2 && all.total === AREAS.reduce((a, x) => a + x.ids.length, 0), "progress by area and in all: " + JSON.stringify([h, all]));
-ok(progress([], "work", (id) => id !== "crane").total === 12, "a feature this device doesn't have isn't counted (the crane toolkit for non-fleet users)");
+{ const w = AREAS.find((a) => a.id === "work").ids;   // v9.1: the crane toolkit is archived — any one tool stands in for it
+  ok(w.length > 1 && progress([], "work", (id) => id !== w[0]).total === w.length - 1, "a feature this device doesn't have isn't counted"); }
 console.log(fail ? "FAILED " + fail : "ALL PASSED");

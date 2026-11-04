@@ -7344,6 +7344,7 @@ export const JA = {
   "Log it as food": "食事として記録",
   "Record it in Money": "お金に記録",
   "Answer it": "答える",
+  "Organise my work": "仕事を整理する",
   "≈ {p} a month — save {n}%": "≈ 月あたり {p} — {n}% お得",
   "Cheapest now: {p} ({d})": "現在の最安値：{p}（{d}）",
   "{n} nights between {a} and {b}": "{a} から {b} の間で {n} 泊",

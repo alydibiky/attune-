@@ -7,7 +7,6 @@ import { tr, getLang } from "./i18n.js";
 import * as M from "./missions.js";
 import * as S from "./scout.js";
 import * as LS from "./lifesim.js";
-import { loadFleet } from "./fleet-store.js";
 import { page, cardPad, card as kCard, btnP, inp, area, label as kLabel, h1, chip } from "./ui-kit.jsx";
 
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
@@ -15,7 +14,7 @@ const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null")
 let FLEET = null, fleetAsk = null;
 function useFleet() {
   const [, set] = useState(0);
-  useEffect(() => { if (!fleetAsk) fleetAsk = loadFleet().then((f) => { FLEET = f; }).catch(() => {}); let on = true; fleetAsk.then(() => on && set((x) => x + 1)); return () => { on = false; }; }, []);
+  useEffect(() => { if (!fleetAsk) fleetAsk = Promise.resolve();   /* v9.1: Fleet is archived — Missions no longer read it */ let on = true; fleetAsk.then(() => on && set((x) => x + 1)); return () => { on = false; }; }, []);
   return FLEET;
 }
 const dataNow = () => ({ ledger: j("ledger.v3", null), fit: j("attune:fit:v1", null), market: S.loadMarket(), courses: j("attune:daily:courses:v1", []), fleet: FLEET });

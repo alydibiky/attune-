@@ -7345,6 +7345,7 @@ export const HI = {
   "Log it as food": "खाने में दर्ज करें",
   "Record it in Money": "पैसे में दर्ज करें",
   "Answer it": "इसका जवाब दें",
+  "Organise my work": "अपना काम व्यवस्थित करूँ",
   "≈ {p} a month — save {n}%": "≈ {p} प्रति माह — {n}% बचत",
   "Cheapest now: {p} ({d})": "अभी सबसे सस्ता: {p} ({d})",
   "{n} nights between {a} and {b}": "{a} और {b} के बीच {n} रातें",

@@ -1,4 +1,5 @@
 import { tr } from "./i18n.js";
+import { withoutRemoved } from "./removed.js";
 /* ---- v6.45 How to use, redesigned (Ali chose A + C, 20 Oct 2026: "with demo data in the visuals so people understand the
    app's capabilities more"). Pure data, unit-tested (tests/unit/v745guidedemo.test.mjs).
    A — every guide plays a small copy of its screen with SAMPLE data: step 1 = what you give it (typed, a photo, a file),
@@ -224,13 +225,13 @@ export const DEMOS = {
 
 /** C — "What Attune can do": goals → the guides whose cards show there (each card: You say → You get → Show me how). */
 export const GOALS = [
-  { id: "business", title: S("Run my business", "أدير شغلي"), tools: ["missions", "business", "crane", "field", "slides"] },
+  // v9.1 (the brand: a life & work organiser; Business is archived → Attune Business): the work goal is organising work
+  { id: "work", title: S("Organise my work", "أنظّم شغلي"), tools: ["projects", "pdfchat", "missions", "slides"] },
   { id: "money", title: S("Save money", "أوفّر فلوس"), tools: ["say", "money", "deal", "guardian", "life", "automations"] },
   { id: "health", title: S("Eat better, stay well", "آكل أحسن وأفضل كويس"), tools: ["fit", "care", "health", "cycle"] },
   { id: "learn", title: S("Learn and study", "أتعلم وأذاكر"), tools: ["coach", "learn", "remember", "pdfchat", "translate"] },
   { id: "daily", title: S("Daily life", "حياتي اليومية"), tools: ["home", "reminders", "recall", "scout", "metro", "map"] },
-  { id: "create", title: S("Make things", "أعمل حاجات"), tools: ["chat", "studio", "convert", "code", "cv"] },
-];
+  { id: "create", title: S("Make things", "أعمل حاجات"), tools: ["chat", "studio", "convert", "code", "cv"] },].map((g) => ({ ...g, tools: withoutRemoved(g.tools) }));   // v9.1: Studio / Business / Fleet / Crane / Site reports are archived
 
 /** The demo for a guide key ("start:model" or a tool id). */
 export const demoFor = (key) => DEMOS[String(key || "").replace(/^start:/, "")] || null;

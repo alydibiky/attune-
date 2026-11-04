@@ -21,11 +21,7 @@ import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
 import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
-import { CraneToolkit } from "./crane-ui.jsx";
 import { CodeWorkbench } from "./code-ui.jsx";
-import { StudioPage } from "./studio-ui.jsx";
-import { enhanceWaitMs } from "./studio.js";
-import { BusinessApp } from "./biz-ui.jsx";
 import { LearnPage, NewsPage, syncDaily, lessonAhead } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
@@ -54,13 +50,11 @@ import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
-import { loadBooks, saveBooks } from "./books-store.js";   // v7.9 Money's invoices → Business → Books
-import { invoicesToBooks } from "./yusr-to-books.js";
 import { markTried } from "./guide-areas.js";
 import { MoneyCalm, MoneyReport, MoneyBox, MoneyPhoneHead, RightNow } from "./money-calm-ui.jsx";   // v7.2 Money in two levels (Gemini Area 1)
 import { moneyReport, zakatFromSnapshot, ledgerCsv } from "./money-report.js";
 import { findings as guardianFindings, loadGuardian } from "./guardian.js";
-import { sharePdf } from "./books-docs.jsx";
+import { sharePdf } from "./share-pdf.js";
 import { fmt as fmtMoneyPlain } from "./money-calm.js";
 import { loadLife as loadLifeMoney } from "./life.js";
 import { LifePage } from "./life-ui.jsx";
@@ -90,7 +84,6 @@ import { HUBS, hubOf, tabsFor, toolPages, partsOf, RETIRED } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 import { SafeSpend } from "./safespend-ui.jsx";
 import { MissionsPage } from "./missions-ui.jsx";
-import { MicButton, SitePhotos } from "./site-ui.jsx";
 import { fold as foldNet, loadNetWeek, saveNetWeek } from "./netreport.js";
 import { TimelinePage } from "./timeline-ui.jsx";
 import { BookLibPage, findInLibrary } from "./booklib-ui.jsx";
@@ -174,7 +167,8 @@ import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from 
 import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
 import { BILLING_GROUPS, COMPARE_ROWS, pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, devMode, setDevMode, PLAY, proFromOwned, lifetimeOffer, referralFrom, referralLink, REFERRAL_DAYS } from "./billing.js";
-import { LICENCE_PUBLIC_KEY, SELLER, setTestingOpen } from "./erp.js";
+import { LICENCE_PUBLIC_KEY } from "./licence.js";
+import { REMOVED, isRemoved } from "./removed.js";   // v9.1: Business (erp.js) is archived — the Pro-code key lives here
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
@@ -1347,7 +1341,6 @@ const BACKEND = () => (typeof window !== "undefined" && window.ATTUNE_BACKEND) |
    an id and answer through window.__attuneNative. In a browser it is absent
    and everything falls back to the web path.                               */
 const NATIVE = (typeof window !== "undefined" && window.AttuneNative) || null;
-try { setTestingOpen(testingPro()); } catch (e) {}   // testing: every Business / ERP system counts as activated (and the "See it as a Free user" switch turns that off too)
 const NATIVE_CALLS = {};
 let NATIVE_SEQ = 0;
 let NATIVE_LAST_ID = "";
@@ -1363,7 +1356,7 @@ if (typeof window !== "undefined") {
 function nativeCall(method, arg, onProgress) {
   return new Promise((res, rej) => {
     if (!NATIVE) return rej(new Error("Only available in the Android app"));
-    if (method === "imagine" && studioPaused(NATIVE)) return rej(new Error("Studio is paused on phones for now"));
+    if (method === "imagine") return rej(new Error("Studio is removed"));   // v9.1: Studio is archived
     const id = "n" + (++NATIVE_SEQ) + "-" + Date.now();
     NATIVE_LAST_ID = id;
     // v6.28: a feature this app version doesn't have (the computer app, an older Android app) says so — it used to throw
@@ -6600,7 +6593,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       {msheet ? (() => { const close = (msg) => { setMsheet(null); if (msg) flash(msg); setTimeout(() => setVer((x) => x + 1), 200); }; const P = { L: ledgerNow, run: runDo, onClose: close, id: msheet.id };
         return msheet.k === "account" ? <AccountSheet {...P} /> : msheet.k === "bill" ? <BillSheet {...P} /> : msheet.k === "tx" ? <TxSheet {...P} /> : msheet.k === "debt" ? <DebtSheet {...P} />
           : msheet.k === "zakat-pay" ? <ZakatPaySheet {...P} /> : msheet.k === "zakat-set" ? <ZakatSetSheet {...P} /> : msheet.k === "zakat-rulings" ? <ZakatRulingsSheet {...P} /> : msheet.k === "zakat-calc" ? <ZakatCalcSheet {...P} kind={msheet.id} nisab={(() => { try { const zs = zakatPage(ledgerNow, snapRef.current || snapshot); return (zs && zs.status && zs.status.nisab) || 0; } catch (e) { return 0; } })()} /> : null; })() : null}
-      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "biz-invoices") { setMoreOpen(false); if (goTo) { goTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "books" })), 80); } return; } openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
+      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; }  openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
           <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl rounded-t-[20px]! p-4 max-h-[88%] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
@@ -7831,10 +7824,12 @@ const KNOW_ADMIN = devMode();
 }
 // v8.0 (Ali, 25 Oct: "the studio restarted the mobile again — remove it from the mobile version until further notice"): on the
 // phone Studio is in no list, hub, group or "/" (device.js studioPaused); its page says it is paused and its engine is refused
-const STUDIO_OFF = studioPaused(NATIVE);
-if (STUDIO_OFF) {
-  for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (MORE_TOOLS[i][0] === "studio") MORE_TOOLS.splice(i, 1);
-  for (const h of HUBS) { const k = h[3].indexOf("studio"); if (k >= 0) h[3].splice(k, 1); }
+const STUDIO_OFF = true;   // v9.1: Studio is removed (archive/studio/)
+// v9.1 (Ali, 4 Nov 2026: "the app is a life planner / organiser — Studio and Business are removed; Business becomes Attune Business"):
+// these are out of the app — in no list, hub, group, "/" command or Home tile. Their code is kept in archive/<name>/ to bring back.
+{
+  for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (REMOVED.includes(MORE_TOOLS[i][0])) MORE_TOOLS.splice(i, 1);
+  for (const h of HUBS) for (const r of REMOVED) { const k = h[3].indexOf(r); if (k >= 0) h[3].splice(k, 1); }
 }
 
 // v6.50 (Ali, 22 Oct: "I want everything in the app to be available via home chat"): every tool can be opened from the Home box —
@@ -7844,7 +7839,7 @@ K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[lab
   { id: "all", en: "All apps", ar: "كل التطبيقات" }, { id: "voice", en: "Ya Attune (voice)", ar: "يا أتيون (صوت)" }, { id: "report", en: "My report", ar: "تقريري" },
   { id: "privacy", en: "Privacy", ar: AR_DICT["Privacy"] || "الخصوصية" }, { id: "panel:profile", en: "Profile", ar: AR_DICT["Profile"] || "البروفايل" },
   { id: "panel:plan", en: "Plan", ar: AR_DICT["Plan"] || "الباقة" }, { id: "panel:backup", en: "Backup", ar: AR_DICT["Backup"] || "النسخة الاحتياطية" }, { id: "money", en: "Money", ar: AR_DICT["Money"] || "الفلوس" },
-  ...(usesFleet() ? [{ id: "fleet-rentals", en: "Fleet & rentals", ar: AR_DICT["Fleet & rentals"] || "" }] : [])]);
+  /* v9.1: "Fleet & rentals" is archived (removed.js) */]);
 
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
 // in four named groups instead of one wall of 23 tiles.
@@ -7857,8 +7852,7 @@ const MORE_GROUPS = [
   ["Chat", ["assistants", "skills", "projects", "artifacts", "groups"]],
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
-  ["Business (add-on)", ["business", "field", "fleet"]],   // v6.50: the Crane toolkit opens from Business → Fleet & rentals → More
-  ["Create (add-on)", ["studio", "code", "write", "improve", "compress", "humanize", "copilot", "library"]],
+  ["Create (add-on)", ["code", "write", "improve", "compress", "humanize", "copilot", "library"]],
 ];
 
 // Records from Memory, attached to a chat message about the user's own past.
@@ -8767,12 +8761,7 @@ export default function App() {
         if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); navTo("money");
           showToast(tr("Payment received — pick the account and confirm"), 3500); return; }
       }
-      // v6.37 (W1): a client's crane request shared from WhatsApp («محتاج ونش 50 طن السبت») → Fleet's "Order from a message"
-      if (/ونش|كرين|crane|مرفاع/i.test(shared) && /\d{2,4}\s*(?:طن|tons?\b|t\b)/i.test(shared.replace(/[٠-٩]/g, (x) => String(x.charCodeAt(0) - 0x660))) && shared.length < 600) {
-        try { localStorage.setItem("attune:fleet:incoming", shared); } catch (e) {}
-        // Fleet & rentals lives inside Business (its "fleet" view); the event reaches it whether it is open already or not
-        navTo("business"); setTimeout(() => { window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "fleet" })); window.dispatchEvent(new CustomEvent("attune-fleet-order")); }, 80); return;
-      }
+      // v9.1: a crane request shared from WhatsApp used to open Fleet (Business — archived); it is now read like any shared text
       // v6.12: a conversation shared from Gemini / ChatGPT / Claude… (Share → Attune) opens in Chat as its context
       if (shareLink(shared)) { setChatSeed("\u0001" + shared); navTo("chat"); return; }
       if (d.kind === "selection") {
@@ -8809,15 +8798,7 @@ export default function App() {
     const t = setTimeout(async () => {
       let led = null; try { led = loadLedger(); } catch (e) {}
       if (!led) return;
-      try {
-        if (!localStorage.getItem("attune:moved:invoices") && (led.invoices || []).length) {
-          const r = invoicesToBooks(await loadBooks(), led, { at: new Date().toISOString() });
-          if (!r.moved.length || (await saveBooks(r.state))) {
-            localStorage.setItem("attune:moved:invoices", JSON.stringify({ at: Date.now(), moved: r.moved.map((m) => [m.num, m.number]), skipped: r.skipped }));
-            if (r.moved.length) flash(tr("{n} invoices moved from Money to Business → Books", { n: r.moved.length }));
-          }
-        }
-      } catch (e) {}
+      // v9.1: Money's invoices are no longer copied into Business → Books (Business is archived; nothing in Money was ever deleted)
       try {
         if (!localStorage.getItem("attune:moved:notes") && (led.notes || []).length) {
           const recs = led.notes.map((n) => memMake({ kind: "note", title: String(n.title || n.body || tr("Money note")).slice(0, 60), output: "", tags: ["money"],
@@ -8938,7 +8919,7 @@ export default function App() {
   // "Draw it in Studio" from a picture request in Chat.
   const [studioIn, setStudioIn] = useState(null);
   useEffect(() => {
-    const on = (e) => { setStudioIn(e.detail || null); setMode("studio"); };
+    const on = () => flash(tr("Studio is not part of Attune any more"));   // v9.1: archived
     window.addEventListener("attune-studio", on);
     return () => window.removeEventListener("attune-studio", on);
   }, []);
@@ -10796,17 +10777,11 @@ export default function App() {
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }}
             search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 4 }) : null}
             onResearch={(topic, q) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + (q || tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: topic }))); navTo("chat"); }} />
-        ) : mode === "studio" ? (
-          STUDIO_OFF ? <StudioOffDevice paused /> : NATIVE && NATIVE.imageInfo ? (
-            <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}
-              chatReady={modelState === "ready" || (engineInfo && engineInfo.state === "ready")} enhanceMs={enhanceWaitMs(getPower())}
-              llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
-          ) : <StudioOffDevice />
         ) : mode === "learn" ? (
           <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken, grammar: o.grammar })}
-            illustrate={NATIVE && NATIVE.imageInfo && !STUDIO_OFF ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
+            illustrate={null} />
         ) : mode === "convert" ? (
           <FileConverter flash={flash} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision}
@@ -10872,14 +10847,6 @@ export default function App() {
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.3, think: false, json: !!o.json })}
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
-        ) : mode === "business" ? (
-          <BusinessApp flash={flash} openEngine={() => setShowEngine(true)} onExit={goBack}
-            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null} scanLive={NATIVE && NATIVE.scanLive ? async () => { const r = await nativeCall("scanLive", {}); return (r && r.codes) || []; } : null}
-            modelReady={modelUsable}
-            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json, onToken: o.onToken })}
-            runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}
-            saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
-            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "code" ? (
           <CodeWorkbench flash={flash} native={NATIVE} incoming={codeIn} clearIncoming={() => setCodeIn(null)}
             engineReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")} openEngine={() => setShowEngine(true)}
@@ -10892,9 +10859,6 @@ export default function App() {
         ) : mode === "remember" ? (
           <LibraryPage knowledge={knowledge} nativeCall={NATIVE ? nativeCall : null} flash={flash}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }} />
-        ) : mode === "crane" ? (
-          <CraneToolkit flash={flash} remember={remember}
-            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "reminders" ? (
           <>{/* v6.40: Message alerts first — "tell me when Ahmed messages me" */}<div className="mt-3"><WatchPanel native={NATIVE} flash={flash} /></div>
           <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} /></>
@@ -11274,219 +11238,6 @@ export default function App() {
             </div></div>
             <FamilySeeAll fam="instant" onClick={() => setInstRep(true)} />
             <p className="flex items-center justify-center gap-1.5 text-[11px] text-teal-500/60"><ShieldCheck size={12} /> {tr("Runs on your phone · works with no signal")}</p>
-          </div>
-        ) : mode === "fleet" ? (
-          <div className="space-y-5">
-            {/* sync bar — the answer to "how do records connect" */}
-            <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-2 text-sm text-slate-300">
-                  <Users size={15} className="text-teal-400" />
-                  <span>{tr("Team records")}</span>
-                  <span className="text-xs text-slate-500">{tr("· this device")} {myDevice}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {pendingSync > 0 ? <span className="text-xs px-2 py-1 rounded-md bg-amber-500/10 border border-amber-900/60 text-amber-300">{pendingSync} {tr("waiting to share")}</span> : null}
-                  {lastSync ? <span className="text-xs text-slate-600">{tr("synced {t}", { t: new Date(lastSync).toLocaleTimeString(dateLocale()) })}</span> : null}
-                  <button onClick={syncNow} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600"><RefreshCw size={13} /> {tr("Share")}</button>
-                  <button onClick={receiveTeamRecords} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{tr("Receive from teammate")}</button>
-                </div>
-              </div>
-              <p data-intro="" className="text-[11px] text-slate-600 mt-2">{tr("Records replicate between your team's devices whenever any connection exists — site Wi-Fi, a company hub, or when someone drives back into coverage. The AI model never syncs; only small text records do, and they stay inside your company.")}</p>
-            </div>
-
-            {/* the ROI number */}
-            {health.length > 0 ? (
-              <div className="grid sm:grid-cols-3 gap-3">
-                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
-                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Assets tracked")}</p>
-                  <p className="text-3xl font-bold text-white mt-1">{health.length}</p>
-                  <p className="text-[11px] text-slate-600 mt-1">{records.length} records</p>
-                </div>
-                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
-                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Needs attention")}</p>
-                  <p className="text-3xl font-bold text-rose-400 mt-1">{health.filter((a) => a.band !== "ok").length}</p>
-                  <p className="text-[11px] text-slate-600 mt-1">{health.reduce((n, a) => n + a.open, 0)} {tr("open actions")}</p>
-                </div>
-                <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4">
-                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{tr("Downtime logged")}</p>
-                  <p className="text-3xl font-bold text-amber-400 mt-1">{cost.hours}h</p>
-                  <p className="text-[11px] text-slate-600 mt-1">
-                    {Number(org.rate) > 0 ? `≈ ${cost.cost.toLocaleString()} ${org.currency || "EGP"}` : <button onClick={() => setShowOrg(true)} className="underline hover:text-teal-400">{tr("set hourly rate to price this")}</button>}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-
-            {/* asset health */}
-            <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-3 flex items-center gap-1.5"><Gauge size={13} /> {tr("Asset health")}</p>
-              {health.length === 0 ? (
-                <p className="text-sm text-slate-600">{tr("No assets yet. Create records in Field and they appear here — including records synced from your team.")}</p>
-              ) : (
-                <div className="space-y-2">
-                  {health.map((a) => (
-                    <div key={a.asset} className={`rounded-xl border p-3 ${
-                      a.band === "critical" ? "bg-rose-500/10 border-rose-900/60"
-                      : a.band === "watch" ? "bg-amber-500/10 border-amber-900/60" : "bg-slate-950 border-slate-800"}`}>
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <span className="text-sm font-semibold text-white capitalize">{a.asset}</span>
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className={a.trend === "worsening" ? "text-rose-300" : a.trend === "improving" ? "text-teal-300" : "text-slate-500"}>{a.trend}</span>
-                          <span className={`font-bold ${a.band === "critical" ? "text-rose-300" : a.band === "watch" ? "text-amber-300" : "text-teal-300"}`}>{a.score}/100</span>
-                        </div>
-                      </div>
-                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mt-2">
-                        <div className={`h-full ${a.band === "critical" ? "bg-rose-500" : a.band === "watch" ? "bg-amber-500" : "bg-teal-500"}`} style={{ width: a.score + "%" }} />
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-1.5">
-                        {a.records} record{a.records > 1 ? "s" : ""} · {a.open} {tr("open action")}{a.open === 1 ? "" : "s"}
-                        {a.openDays > 0 ? ` (oldest ${a.openDays}d)` : ""}{a.downtime > 0 ? ` · ${a.downtime}h downtime` : ""}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {findings.length > 0 ? (
-              <div className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5"><Radar size={13} /> {tr("Patterns across the team")}</p>
-                  <button onClick={runBrief} disabled={loading} className="text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{loading ? "…" : tr("What does this mean?")}</button>
-                </div>
-                <div className="space-y-1.5">
-                  {findings.map((f, i) => (
-                    <div key={i} className={`text-xs rounded-lg px-2.5 py-2 border ${
-                      f.severity === "high" ? "bg-rose-500/10 border-rose-900/60 text-rose-200"
-                      : f.severity === "medium" ? "bg-amber-500/10 border-amber-900/60 text-amber-200"
-                      : "bg-slate-950 border-slate-800 text-slate-400"}`}>{tr(f.summary)}</div>
-                  ))}
-                </div>
-                {brief ? <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3"><pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{tr(brief)}</pre></div> : null}
-              </div>
-            ) : null}
-          </div>
-        ) : mode === "field" ? (
-          <div className="grid md:grid-cols-2 gap-5">
-            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-slate-300">{tr("What happened / what's needed")}</label>
-                {/* v6.37 (W3): a real microphone — the phone's speech recognition */}
-                <MicButton listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} value={fdInput} setValue={setFdInput} flash={flash} />
-              </div>
-              <textarea value={fdInput} onChange={(e) => setFdInput(e.target.value)}
-                placeholder={tr("Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'")}
-                className="w-full h-32 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
-
-              <div className="flex items-center gap-2 mt-3">
-                <span className="text-xs text-slate-500 shrink-0">{tr("Filed by")}</span>
-                <input value={fdBy} onChange={(e) => setFdBy(e.target.value)} placeholder={tr("your name (optional)")}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-                <input value={fdDowntime} onChange={(e) => setFdDowntime(e.target.value)} placeholder={tr("hrs lost")} inputMode="decimal"
-                  className="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-              </div>
-
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-4 mb-2">{tr("Document")}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {Object.entries(FIELD_DOCS).map(([k, d]) => (
-                  <button key={k} onClick={() => setFdDoc(k)} className={btn(fdDoc === k)}>{d.icon} {tr(d.label)}</button>
-                ))}
-              </div>
-              <p className="text-[11px] text-slate-600 mt-2">{tr("Needs:")} {FIELD_DOCS[fdDoc].need.map((x) => tr(x)).join(" · ")}{tr(". Only genuinely essential gaps are flagged — today's date and your name are filled in automatically.")}</p>
-
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mt-4 mb-2 flex items-center gap-1.5"><Languages size={13} /> {tr("Produce it in")}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {["match", "en", "ar", "hi", "ur", "bn", "tr", "fr", "ru"].map((k) => (
-                  <button key={k} onClick={() => toggleFdLang(k)} className={btn(fdLangs.includes(k))}>
-                    {k === "match" ? tr("Worker's language") : langShown(k)}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[11px] text-slate-600 mt-2">{tr("One dictation → the same record in every language your site needs. Identical facts, identical numbers.")}</p>
-
-              <button onClick={() => setShowOrg(true)} className={`mt-4 w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm ${org.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
-                <span className="flex items-center gap-2"><Building2 size={15} /> {org.on && org.name ? org.name : tr("Company terminology")}</span>
-                <span className="text-xs">{org.on ? "on" : tr("set up")}</span>
-              </button>
-
-              {liveAlert ? (
-                <div className="mt-3 flex items-start gap-2 text-xs bg-amber-500/10 border border-amber-900/60 rounded-xl p-3">
-                  <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
-                  <span className="text-amber-200">
-                    <b>{liveAlert.asset}</b> {tr("already has")} {liveAlert.count} record{liveAlert.count > 1 ? "s" : ""}
-                    {liveAlert.open > 0 ? <> and <b>{liveAlert.open} {tr("unresolved action")}{liveAlert.open > 1 ? "s" : ""}</b></> : null}.
-                    <button onClick={() => setShowMemory(true)} className="underline ms-1 hover:text-amber-100">{tr("See history")}</button>
-                  </span>
-                </div>
-              ) : null}
-
-              <button onClick={doFieldDoc} disabled={!fdInput.trim() || loading}
-                className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${fdInput.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>
-                {loading ? <Loader2 size={16} className="animate-spin" /> : <HardHat size={16} />}{loading ? tr("Writing…") : tr("Create document")}
-              </button>
-              {queued > 0 ? <p className="text-[11px] text-amber-400 mt-2">{queued} {tr("queued — will process when an engine is available.")}</p> : null}
-              {/* v6.37 (W3): photos with time + place, and one PDF of the report with them */}
-              <SitePhotos photos={fdPhotos} setPhotos={setFdPhotos} title={tr(FIELD_DOCS[fdDoc].label)} text={fdResult || ""} by={fdBy} flash={flash} />
-            </section>
-
-            <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-slate-300">{tr(FIELD_DOCS[fdDoc].label)}{fdLangs.length > 1 ? ` · ${fdLangs.length} languages` : ""}</label>
-                {fdResult ? <button onClick={() => { try { navigator.clipboard.writeText(fdResult); } catch (e) {} flash(tr("Copied")); }} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><Copy size={14} /> {tr("Copy")}</button> : null}
-              </div>
-              {fdResult ? (
-                <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 overflow-auto min-h-[16rem]">
-                  <pre className="text-sm text-teal-50 whitespace-pre-wrap font-mono leading-relaxed">{fdResult}</pre>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[16rem] p-6">
-                  {tr("Rough note in, finished record out — structured, in every language the site needs, without a signal.")}
-                </div>
-              )}
-              <p className="text-[11px] text-slate-600 mt-3">{tr("Runs on the device. Nothing about the incident leaves the phone.")}</p>
-
-              {records.length > 0 ? (
-                <div className="mt-4 border-t border-slate-800 pt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5">
-                      <Radar size={13} /> {tr("Site memory ·")} {records.length} record{records.length > 1 ? "s" : ""}
-                    </p>
-                    {findings.length > 0 ? (
-                      <button onClick={runBrief} disabled={loading}
-                        className="text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">
-                        {loading ? "…" : tr("What does this mean?")}
-                      </button>
-                    ) : null}
-                  </div>
-
-                  {findings.length === 0 ? (
-                    <p className="text-[11px] text-slate-600">{tr("No patterns yet. Add more records and this starts connecting them.")}</p>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {findings.slice(0, 5).map((f, i) => (
-                        <div key={i} className={`text-xs rounded-lg px-2.5 py-2 border ${
-                          f.severity === "high" ? "bg-rose-500/10 border-rose-900/60 text-rose-200"
-                          : f.severity === "medium" ? "bg-amber-500/10 border-amber-900/60 text-amber-200"
-                          : "bg-slate-950 border-slate-800 text-slate-400"}`}>
-                          {tr(f.summary)}
-                        </div>
-                      ))}
-                      <button onClick={() => setShowMemory(true)} className="text-[11px] text-teal-400 hover:text-teal-300">
-                        {tr("Open site memory →")}
-                      </button>
-                    </div>
-                  )}
-
-                  {brief ? (
-                    <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3">
-                      <p className="text-[12px] uppercase tracking-wider text-teal-400 mb-1.5">{tr("Reviewer's read")}</p>
-                      <pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{tr(brief)}</pre>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </section>
           </div>
         ) : mode === "write" ? (
           <WritingBox onGo={(k, t) => { if (k === "improve") setInput(t); else if (k === "compress") setCPrompt(t); else setHzText(t); setWriteRun(k); navTo(k); }} />
@@ -12140,9 +11891,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
           {/* v8.7 (Ali picked persona 3's point 9 + "a month free for every friend who subscribes, maximum 3", linked to a Google
               account): with the invite server on, the card signs in with Google and counts the friends; without it, the friend's month */}
           <InviteCard req={req} flash={flash} />
-          {/* v8.7 (Ali picked persona 3's point 5): Business has its own page and its own sales — one line here, no 14,999 next to 299 */}
-          <button onClick={() => { close(); try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "business" } })); } catch (e) {} }} className="w-full min-h-[48px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-start text-[13.5px] font-bold text-[var(--c-ink)] flex items-center justify-between" data-testid="business-card">
-            <span>🏗️ {tr("Running a company? See Business")}</span><ChevronRight size={16} className="rtl:rotate-180 text-[var(--c-mut)]" /></button>
+          {/* v9.1: the "Running a company? See Business" link is gone — Business is archived (Attune Business, a separate product) */}
 
           {/* 4 · everything side by side */}
           <details className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="compare">

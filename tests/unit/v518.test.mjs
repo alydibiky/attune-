@@ -1,8 +1,6 @@
 // Unit tests for v5.18: junk-loop guard, website topic check, Business app export/import.
 import { detectDegenerate } from "../../web-src/quality.js";
 import { onTopic, topicWords, writeMessages } from "../../web-src/code.js";
-import { buildApp, readApp } from "../../web-src/erp-app.js";
-import * as E from "../../web-src/erp.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 
@@ -22,20 +20,6 @@ eq(topicWords("make a website for a clothing brand called skittlz").named, ["ski
 eq([onTopic("make a website for a clothing brand called skittlz", "<title>ZenFlow: Focus Timer</title>"), onTopic("make a website for a clothing brand called skittlz", "<h1>SKITTLZ</h1>")], [false, true], "ZenFlow is off topic, Skittlz is on");
 eq(writeMessages("a website for a clothing brand called skittlz", "html")[1].content.includes('use the name "skittlz"'), true, "the request pins the name");
 
-// ---- Business app: out and back with its data ----
-let sys = E.systemFromSpec(E.TEMPLATES[0].spec);
-const cust = sys.tables[0];
-sys = E.addRow(sys, cust.id, { [cust.fields.find((f) => f.type === "text").id]: "Orascom" }).sys;
-const html = buildApp(sys, { freeRows: 30 });
-eq(/^<!doctype html>/.test(html) && html.includes("<title>") && !/<\/script>[\s\S]*"attuneErp"/.test(html.split('id="attune-erp">')[0]), true, "the app is one html file with the system inside");
-const back = readApp(html);
-eq([back.id, back.tables.length, back.rows[cust.id].length], [sys.id, sys.tables.length, 1], "reading the app back gives the same system with its records");
-eq(back.freeRows, undefined, "the trial marker is not kept as a field");
-eq(readApp("<html>hello</html>"), null, "any other file is refused");
-const evil = { ...sys, name: "</script><script>alert(1)</script>" };
-const h2 = buildApp(evil);
-eq(h2.split("</script>").length - 1, 2, "a name with </script> can't break out of the data (only the 2 real closing tags)");
-eq(readApp(h2).name, evil.name, "…and still reads back exactly");
-
+// (v9.1: the Business part of this test is archived in archive/business/tests/unit/v518.test.mjs)
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 if (fails.length) process.exit(1);

@@ -37,7 +37,6 @@ import { DoResult, DO_HINTS } from "./doit-ui.jsx";
 import { FitToday } from "./health-ui.jsx";
 import { tickRegular, payRadar } from "./regular.js";
 import { MissionsLine, useTopMission } from "./missions-ui.jsx";
-import { loadFleet } from "./fleet-store.js";
 import { route as cmdRoute } from "./cmdrun.js";
 import * as K from "./commands.js";
 import * as W from "./whereis.js";
@@ -47,6 +46,7 @@ import { EmailCard } from "./email-ui.jsx";
 import * as LA from "./lifeask.js";
 import { connectNow, pickPerson, allStores } from "./connected.js";
 import { insights, loadSeen, saveSeen, dismiss as dismissSeen } from "./insights.js";
+import { withoutRemoved } from "./removed.js";
 import { loadDir } from "./entities.js";
 import { notesMoneyNow } from "./notes-money-ui.jsx";
 
@@ -55,7 +55,7 @@ function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"
 
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
 const START_TOOLS = ["scout", "learn", "slides", "convert", "memory"];
-const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"].filter((m) => !NOT_IN_PLAY.has(m));
+const WORK = withoutRemoved(["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"]).filter((m) => !NOT_IN_PLAY.has(m));
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
 const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
@@ -119,7 +119,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const [note, setNote] = useState("");   // v6.34: "Recorded in Money: 600 EGP — Maid"
   // v6.44: Fleet & rentals lives in IndexedDB (async) — read once for the Today line (cranes working, cheques, service)
   const [fleet, setFleet] = useState(null);
-  useEffect(() => { if (!minimal) return; let on = true; loadFleet().then((f) => { if (on && f) setFleet(f); }).catch(() => {}); return () => { on = false; }; }, [minimal]);
+  // v9.1: Fleet (Business) is archived — Today no longer loads it (the data itself stays on the phone and in backups / sync)
   const ar = getLang() === "ar";
   const hint = DO_HINTS[new Date().getMinutes() % DO_HINTS.length];
   const now = new Date();
