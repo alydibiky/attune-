@@ -140,3 +140,12 @@ model organises work: reads PDFs, sorts them, pulls out dates, tasks and amounts
 - **Attune Business** — companies: Fleet & rentals (cranes, warehouses), Books, ERP, Shop/POS, client portal, site reports, crane
   toolkit. Sold to companies (Ali's own market). Code: `archive/business/` until its own app exists.
 - Later, if wanted: **Attune Fit** (Fit & Food, Cycle) and **Attune Learn** (Learn daily, Homework Coach, courses).
+
+## Ali's picks of 4 Nov night (v9.2) — ALI DECIDED, BUILT
+- **To-dos & lists (1A + his addition)**: Home's To do card (late in red) + lists that come back when needed; a clear page to add a
+  list and choose if it repeats (once / every day / weekdays / monthly / before a date). Joins section 1 as CORE.
+- **Agents (2A + his additions)**: one card for every agent, Needs you first, List / Board; site logos instead of the word; rules told
+  to each agent in plain words. **Flight agent (3A)**: cheapest tickets over 6 sites, organised (Cheapest · Fastest · Direct · Best time).
+- **Mind (4A)**: folders + recently kept. **Library → Documents (5A)**: one page; each file has Ask and Save in Chat.
+- **Projects (6 = A + B)**: starters, your assistants / skills visible, a Tasks board inside each project.
+- **"Saved" → My things (7A).** Notes is **Shelf** again.

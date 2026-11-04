@@ -16,8 +16,39 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.2 part 2 — 4 Nov night: Ali's picks BUILT (1A 2A 3A 4A 5A 6 = A + B, 7A), all 20 languages (165 new lines)
+- **1A To-dos & lists** (Ali: "+ a part where I add my list and adjust whether it is recurring or not — clear and visible"):
+  `lists.js` (pure: once / every day / weekdays / day of month / before a date (a trip, N days ahead); a new round starts with every
+  box empty; an unfinished round stays on Home) + `lists-ui.jsx`: Home's **To do** card (late reminders in red, today's, open Mind
+  to-dos — tick in place) and each list needed today; the **To-dos & lists** page (sidebar row under My life, "+ New list" editor
+  with "Does it repeat?"). Said in the box / Chat: "make my travel checklist: …", "every Saturday: …", «كل سبت: …», "I'm travelling
+  Thursday" / «انا مسافر الخميس», "what's my to-do list for travelling?" (cmdrun `type: "list"`). Computer Home too (desk-ui).
+  Tests: unit v922lists, e2e_v922lists.
+- **2A Agents**: one card for every agent (`AgentHead`: site mark · name · status · ⋯ Pause/Rules/Delete), grouped Needs you →
+  Working → Done & paused, List | Board (Needs you · Working · Found · Done). **Logos instead of the word**: `agent-rules.js BRANDS`
+  (drawn marks: Booking "B.", Agoda, Amazon, noon, airlines…) on the card and on an offer with no photo; an offer saved as
+  "Booking.com" shows the hotel's own name from its text. **Rules** (Ali: "set any rules I want and it understands"): each agent has
+  chips + "Tell this agent a rule…" — code reads stars, price, rating, walk (m/km, Arabic), breakfast / free cancellation / no
+  hostels / new only, only / not a site or airline, check every N hours, direct / stops / bags / time / cabin; else the phone's model
+  (JSON, cleaned by `cleanRules`). Offers are filtered by the rules; "check every 6 hours" reaches the phone (`watchPlan` hours →
+  **AgentWatch.kt** arms the soonest; Kotlin changed — CI compiles it). Tests: unit v922agentrules, e2e_v922agents, e2e_v905deal.
+- **3A Flight agent** (`flights.js`): "cheapest flight from Cairo to Jeddah around 8 January, back after 5 nights, direct, morning,
+  under 12,000" (English / Egyptian Arabic) → a flight agent over **6 sites** (Kayak + momondo ±3 days in one search, Google Flights,
+  Skyscanner, Expedia, Wego — links carry the conditions; idea from AWeirdDev/flights, MIT) read in ONE AgentBrowser window (rounds
+  labelled by site). **Organised** (`FlightBoard`): the answer first (airline mark, times, stops, duration, price, the sites it was on),
+  Cheapest · Fastest · Direct · Best time, the cheapest price per day, the rest one row per flight ("3 sites"). The conditions are
+  the agent's rules. Tests: unit v922flights, e2e_v922flights. **Real sites not tried from a phone yet** — Ali's phone test.
+- **4A Mind**: folders with counts + Recently kept + "See everything"; the wall only inside a folder; report, promises, your words,
+  from your past, Recall in ⋯; a due promise stays on top. Tests follow (e2e_v68, v736mindwall, v748chat, v800mind).
+- **5A Documents** (was Library; Ali: "a button saying Save in Chat, and then the chat knows the book"): no 3-way switch (hubs INSIDE
+  pdfchat / remember removed); each file: **Ask** (the next question reads only it) and **Save in Chat** (booklib answerFrom).
+- **6 Projects (A + B)**: the list shows progress, 4 starters (Study plan, A trip, Job hunt, Flat renovation — instructions + first
+  tasks) + Empty project, and "Your assistants · n" / "Your skills · n" rows; inside, a **Tasks** row → a board To do · Doing · Done
+  (‹ › move, commas add several); "add buy tiles to Flat renovation" in the box / Chat. Tests: unit v922projects, e2e_v922projects.
+- **7A** "Saved" → **My things** «حاجاتي».
+
 ## v9.2 — 4 Nov late: Ali's 11-point phone list ("fix everything") — the objective fixes are BUILT, the design picks are WAITING
-**WAITING FOR ALI (ask him, build exactly what he picks):** the mock-up page https://claude.ai/artifact/8SD1njQ1tiLadAFkAbXAHs (made
+**(Ali's picks are BUILT — see v9.2 part 2 above.)** The mock-up page https://claude.ai/artifact/8SD1njQ1tiLadAFkAbXAHs (made
 in the 4 Nov session; Claude's picks: 1A 2A 3A(+3B's calendar row) 4A 5A 6A+6B 7A). The questions:
 1 Home to-dos + **repeating lists** (Ali: "the to-do / remind should appear on Home when due or not finished … recurring to-do lists
   … I'm travelling, it shows my travel list on Home") — 1A a "To do" card (late in red) + a list card on its day / 1B "Up next" one
