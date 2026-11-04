@@ -7347,6 +7347,7 @@ export const TRK = {
   "Record it in Money": "Para'ya kaydet",
   "Answer it": "Cevapla",
   "Organise my work": "İşimi düzenlemek",
+  "Family & health": "Aile ve sağlık",
   "≈ {p} a month — save {n}%": "≈ ayda {p} — %{n} tasarruf",
   "Cheapest now: {p} ({d})": "Şu an en ucuz: {p} ({d})",
   "{n} nights between {a} and {b}": "{a} ile {b} arasında {n} gece",

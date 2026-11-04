@@ -7346,6 +7346,7 @@ export const IDN = {
   "Record it in Money": "Catat di Uang",
   "Answer it": "Jawab saja",
   "Organise my work": "Mengatur pekerjaanku",
+  "Family & health": "Keluarga & kesehatan",
   "≈ {p} a month — save {n}%": "≈ {p} per bulan — hemat {n}%",
   "Cheapest now: {p} ({d})": "Termurah saat ini: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} malam antara {a} dan {b}",

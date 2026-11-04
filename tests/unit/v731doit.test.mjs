@@ -6,14 +6,14 @@ const now = Date.parse("2026-10-14T08:30:00");
 const stores = { care: { members: [{ id: "me", name: "Me" }], meds: [{ id: "m1", name: "Lantus", dose: "20 units", times: ["09:00", "21:00"], start: "2026-09-01" }], labs: [], taken: {} },
   ledger: { currency: "EGP", accounts: [{ id: "c", name: "Cash", currency: "EGP" }], txns: [] }, life: { v: 1, items: [] }, radar: { items: [], seen: [] },
   fit: { profile: { kg: 80 }, days: {}, weights: [] } };
-const kinds = (t) => { const u = D.understand(t, { now, stores }); return u.ask ? "ask:" + u.ask.kind : u.chat ? "chat" : u.actions.map((a) => a.kind).join("+"); };
+const kinds = (t) => { const u = D.understandAll(t, { now, stores }); return u.ask ? "ask:" + u.ask.kind : u.chat ? "chat" : u.actions.map((a) => a.kind).join("+"); };
 const CASES = [["I ate 2 eggs and foul for breakfast", "food"], ["فطرت فول وبيضتين وعيش", "food"], ["spent 150 on lunch", "money"], ["صرفت ١٥٠ على الغدا", "money"],
   ["had koshary for lunch, 80 pounds", "food+money"], ["took my Lantus", "dose"], ["خدت الانسولين", "dose"], ["remind me tomorrow at 9 to call Hassan", "reminder"],
   ["فكرني بكرة الساعة ٩ اكلم حسن", "reminder"], ["Ahmed owes me 12,000, 1,000 a month for a year", "life"], ["my Netflix trial ends on 20 November", "deadline"],
   ["drank 2 glasses of water", "water"], ["شربت ٢ كوباية مية", "water"], ["weighed 84 kg", "weight"], ["وزني ٨٤", "weight"], ["walked 30 minutes", "workout"], ["مشيت نص ساعة", "workout"],
   ["sugar 62", "sugar"], ["who owes me money?", "ask:owed-in"], ["what is the capital of France?", "chat"], ["note: the plumber is Mahmoud 0100 123 4567", "note"], ["taxi 60", "money"], ["my period started today", "period"]];
 for (const [t, k] of CASES) ok(kinds(t) === k, `«${t}» → ${k} (got ${kinds(t)})`);
-const act = (t) => D.understand(t, { now, stores }).actions;
+const act = (t) => D.understandAll(t, { now, stores }).actions;
 // apply: each tool's own store
 let r = D.apply(act("I ate 2 eggs and foul for breakfast")[0], stores, { now });
 const bf = r.stores["attune:fit:v1"].days["2026-10-14"].meals.breakfast;

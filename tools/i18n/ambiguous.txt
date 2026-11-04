@@ -3,10 +3,10 @@ actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomo
 daily-ui.jsx: <p className="c-lbl m-0">{plan.finished ? tr("Course finished") : plan.left ? tr("Today") : tr("Today · all done")}</p>
 daily-ui.jsx: <p className="c-lbl m-0">{tr("Today")}</p>
 desk-ui.jsx: <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
-health-calm-ui.jsx: const dayShort = (k, today) => { if (today) return tr("Today"); try { return new Date(k + "T12:00:00").toLocaleDateString(loc(), { weekday: 
 home-now.js: sub: x.amount ? fmtN(x.amount) + (x.pay && x.pay.cur ? " " + x.pay.cur : "") : x.date === day ? tr("Today") : x.date || "", open: x.from ===
 home-now.js: out.push({ day: k, label: i === 0 ? tr("Today") : label, spend, kcal, today: i === 0 });
 missions-ui.jsx: {e.step ? <p className="text-[13.5px] rounded-[20px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b
+timeline-ui.jsx: if (n === 0) return tr("Today");
 
 ## Tomorrow
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
@@ -143,7 +143,6 @@ scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-item
 
 ## Read now
 agents-ui.jsx: <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => runFollow(a)} className={small + " bg-[var(--c-acc)] text-[var(-
-cycle.jsx: <button className="min-h-[44px] text-[var(--c-mut)] underline" onClick={() => readTemps()} data-testid="cycle-temp-read">{tempState === "bus
 gmail-ui.jsx: <button onClick={go} disabled={busy} className={U.btnP} data-testid="gmail-go">{busy ? tr("Reading…") : g.on ? tr("Read now") : tr("Connect 
 
 ## Open
@@ -152,9 +151,9 @@ attune.jsx: <div className="flex gap-1.5"><button onClick={() => { try { navigat
 attune.jsx: {result && <div className="flex gap-1.5"><button onClick={copy} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-9
 cmdbox-ui.jsx: {l.open ? <button onClick={() => onOpen(l.open)} className="text-[12.5px] font-extrabold c-acc shrink-0" data-testid="lines-open">{tr("Open"
 cmdbox-ui.jsx: {j.result.open ? <button onClick={() => onOpen(j.result.open)} className="h-9 px-3.5 rounded-full text-[13px] font-extrabold" style={surf} d
-health-calm-ui.jsx: {l.open && res.open ? <button className="min-h-[32px] text-[12.5px] font-bold text-[var(--c-acc)]" onClick={() => res.open(l.open)}>{tr("Ope
 home-now.js: actions: /^cheque/.test(w.kind) ? [{ id: "cleared", label: tr("It cleared") }, { id: "bounced", label: tr("Bounced") }] : [{ id: "open", lab
 home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
+spaces-ui.jsx: {sel && sel.id === a.id ? <span className="hidden lg:inline-flex self-center text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-[var(--c
 
 ## See all
 agents-ui.jsx: <button onClick={() => setAt(1)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="agent-see-all">{tr("See a
@@ -175,7 +174,6 @@ attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-c
 agents-ui.jsx: <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><Chev
 attune.jsx: {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-e
 daily-ui.jsx: <button className={btnP} onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? t
-health-ui.jsx: <span className="min-w-0" dir="auto"><span className="block text-[13.5px] font-extrabold truncate">{d === next[0] ? tr("Next") + ": " : ""}<
 lesson-ui.jsx: <button className={"w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40 ms-
 money-pages-ui.jsx: <Head title={tr("Bills report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick={(
 slides-ui.jsx: <button className="absolute inset-y-0 end-0 w-2/3" aria-label={tr("Next")} onClick={next} data-testid="presenter-next" />
@@ -195,11 +193,7 @@ cv-ui.jsx: <button onClick={onClose} className="w-11 h-11 -ms-1 grid place-items
 daily-ui.jsx: return <button onClick={onClick} className="min-h-[44px] pe-2 text-[var(--c-mut)] text-[13.5px] font-bold flex items-center gap-1"><ChevronL
 daily-ui.jsx: return <button onClick={onClick} className="c-sub min-h-[44px] pe-2 flex items-center gap-1 text-[13.5px] font-bold"><ChevronLeft size={18} 
 guide-ui.jsx: <div className="flex items-center gap-2"><button onClick={() => setArea(null)} className="w-10 h-10 rounded-full grid place-items-center bg-
-health-calm-ui.jsx: <button className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] hover:border-[va
-
-## this week
-agents-ui.jsx: <div className="grid grid-cols-3 gap-2.5"><U.Kpi label={tr("Running")} value={String(r.running)} testid="agents-kpi-running" /><U.Kpi label=
-health-calm-ui.jsx: <div className={"text-[12px] font-semibold truncate " + U.muted}>{rangeLabel} · {tr("this week")}</div></div>
+learning-report-ui.jsx: {back ? <button onClick={back} aria-label={tr("Back")} className="w-10 h-10 rounded-full grid place-items-center bg-[var(--c-surf)] border b
 
 ## Money Report
 attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(rep.month.from.slice(0, 7))}</h1><p>${esc(account ? (rep.accounts.find((a) => a.id === account) || {}
@@ -307,8 +301,8 @@ attune.jsx: {t.thinking ? "Thinking… " + t.thinking.slice(-220) : (t.phase || 
 attune.jsx: {loading ? tr("Reading…") : tr("Read it & suggest my reply")}</button>
 care-ui.jsx: if (!file) return; setBusy(tr("Reading…"));
 chat.jsx: <div className="flex items-center gap-2 text-sm text-[var(--c-acc)] py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shr
-cycle.jsx: <button className="min-h-[44px] text-[var(--c-mut)] underline" onClick={() => readTemps()} data-testid="cycle-temp-read">{tempState === "bus
 gmail-ui.jsx: <button onClick={go} disabled={busy} className={U.btnP} data-testid="gmail-go">{busy ? tr("Reading…") : g.on ? tr("Read now") : tr("Connect 
+paylog-ui.jsx: {msg ? null : st.declared ? <button onClick={go} disabled={busy} className={U.btnP + " mt-2"} data-testid="sms-old-go">{busy ? tr("Reading…"
 
 ## Thinking…
 attune.jsx: {thinking ? tr("Thinking…") : tr("Ask")}
@@ -324,7 +318,6 @@ voice-ui.jsx: setSay(ui === "ar" ? "بفكر…" : tr("Thinking…")); setCard({
 attune.jsx: {thinking ? tr("Thinking…") : tr("Ask")}
 attune.jsx: {askBusy ? tr("Stop") : tr("Ask")}
 chatxray-ui.jsx: : <button onClick={ask} disabled={!q.trim()} className={btnP + " shrink-0 h-11 min-h-[44px]"} data-testid="xray-ask">{tr("Ask")}</button>}
-cycle.jsx: <button onClick={() => ask()} className={btnP + " px-4"} data-testid="cycle-ask-go">{tr("Ask")}</button>
 library-ui.jsx: <button onClick={() => ask(s)} className={btnS + " shrink-0"} data-testid="lib-ask"><MessageCircle size={14} className="c-acc" />{tr("Ask")}
 pdfchat-ui.jsx: const label = kind === "translate" ? tr("Translate") : kind === "explain" ? tr("Explain") : (question || tr("Ask"));
 pdfchat-ui.jsx: <button onClick={() => askSel("ask", sel.quote, sel.page || page)} className={tool} data-testid="pdf-sel-ask"><Send size={13} />{tr("Ask")}<
@@ -365,12 +358,12 @@ map-ui.jsx: {[["places", tr("Your places")], ["offline", tr("Offline maps") + (u
 ## Copied
 attune.jsx: copy: (t) => { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} },
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
-attune.jsx: onExit={goBack} native={NATIVE} share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); 
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash(tr("Copied")); }} classN
 attune.jsx: <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Rewritten")}</label>{hzRe
+attune.jsx: <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash(tr("Copied")); }
 
 ## Got it
 attune.jsx: case "whereSave": remember(W2.whereRecord(o.set)); return { tone: "emerald", title: tr("Got it"), detail: o.set.thing + " — " + o.set.place,
@@ -446,7 +439,6 @@ teach-ui.jsx: onClick={() => go([{ id: "text:" + name.trim() + ":" + Date.now(),
 attune.jsx: className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-teal-300 hover:border-teal-600">{tr("Undo")}</button
 attune.jsx: {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash(tr("Removed")); }} className="text-xs px-3 py-2 rounded-
 doit-ui.jsx: {r.undo && !undone ? <button className={btnS} onClick={() => { r.undo(); setUndone(true); onUndo && onUndo(); }} data-testid="do-undo"><Undo
-health-calm-ui.jsx: {res.undo ? <button className={"shrink-0 min-h-[32px] px-2 inline-flex items-center gap-1 text-[12px] font-bold " + U.muted} onClick={() => 
 pdfedit-ui.jsx: <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"w-11 h-11 grid place-items-center rounded-[12px] " + (his
 shelf-ui.jsx: <button onClick={undoT} aria-label={tr("Undo")} data-testid="shelf-undo-text" className="min-w-[40px] min-h-[40px] grid place-items-center r
 shelf-ui.jsx: <button onClick={() => { undo.run(); setUndo(null); }} data-testid="shelf-undo-btn" className="min-h-[44px] px-3 rounded-[12px] text-sm font
@@ -543,7 +535,6 @@ cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], [
 
 ## History
 attune.jsx: <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><Clock size={13} /> {tr(
-cycle.jsx: <p className={label + " mb-2"}>{tr("History")}</p>
 life-ui.jsx: <span className={U.label}>{tr("History")}</span>
 
 ## Backup
@@ -679,14 +670,6 @@ money-sheets-ui.jsx: const save = () => s.go("rec-save", { id: id || undefined, 
 money-sheets-ui.jsx: {editable ? <SaveBtn busy={s.busy} onClick={() => s.go("tx-edit", { id, amount: parseFloat(amount), cat, account, date, note: note.trim() },
 money-sheets-ui.jsx: <Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go("goal-save", { id: id || undefined, name: name.trim(), target: parseFloat(targ
 money-sheets-ui.jsx: <Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.go(op, { id, amount: parseFloat(a) }, tr("Saved"))} />
-
-## Family health
-care-ui.jsx: <div><h2 className={h1 + " flex items-center gap-2"}><Heart size={20} className="c-acc" />{tr("Family health")}</h2>
-health-ui.jsx: <span className="c-ic"><Pill size={16} /></span><b className="flex-1 font-extrabold">{tr("Family health")}</b>
-
-## I refilled
-care-ui.jsx: {low.map((x) => <div key={x.med.id} className={cardPad + " flex items-center gap-3"} style={{ borderColor: "var(--c-warn)" }} data-testid="c
-health-ui.jsx: <button className="shrink-0 min-h-[32px] underline font-extrabold" onClick={() => navTo("care")} data-testid="health-refill">{tr("I refilled
 
 ## Download
 care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
@@ -855,7 +838,6 @@ readaloud.js: if (f.kind === "school" && f.dates.length) { say.push(ar ? `فيه
 
 ## Note (optional)
 cv-ui.jsx: <Lbl t={tr("Note (optional)")}><In value={it.note} onChange={(v) => upd(i, { note: v })} /></Lbl>
-cycle.jsx: placeholder={tr("Note (optional)")} dir="auto"
 money-pages-ui.jsx: <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={tr("Note (optional)")} className={U.inp} dir="auto" data-testid="
 money-sheets-ui.jsx: {t.type !== "transfer" ? <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={tr("Note (optional)")} className={U.inp}
 money-sheets-ui.jsx: <Field label={tr("Note (optional)")}><input value={note} onChange={(e) => setNote(e.target.value)} dir="auto" className={U.inp} /></Field>
@@ -920,15 +902,6 @@ cv-ui.jsx: <button className={primary + " w-full py-2.5"} disabled={busy} onClic
 money-calm-ui.jsx: <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onImport} data-testid="money-tools"><Upload size={14} />{tr("Import")}</b
 skills-ui.jsx: <button className={ghost + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet
 
-## Cycle
-cycle.jsx: <p className={label + " flex items-center gap-1.5"}><Droplet size={13} /> {tr("Cycle")}</p>
-cycle.jsx: <div className="bg-[var(--c-surf-2)] border border-[var(--c-ln)] rounded-[20px] p-3 min-w-0"><p className="text-[11px] font-bold text-[var(-
-health-ui.jsx: <span className="c-ic"><Droplet size={16} /></span><b className="flex-1 font-extrabold">{tr("Cycle")}</b>
-
-## Last day
-cycle.jsx: className={`flex-1 min-h-[44px] rounded-[12px] text-[12.5px] font-bold border ${selDay.end ? "border-transparent bg-[var(--c-soft)] text-[va
-home.js: try { for (const x of radarToday(radar || { items: [] }, now).filter((x) => x.date === day).slice(0, 2)) line.push({ t: at(9) + 2, app: "rad
-
 ## Review
 daily-ui.jsx: <div className="flex justify-between c-sub c-num"><span>{tr("Review")}</span><span>{rev.i + 1} / {rev.ids.length}</span></div>
 paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
@@ -949,10 +922,6 @@ lookback-ui.jsx: const rec = remember({ kind: "photo", title: shotTitle(text, f.
 ## Why
 deal-ui.jsx: <p className={U.label + " m-0 mb-2"}>{tr("Why")}</p>
 missions-ui.jsx: <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick
-
-## glass
-doit.js: const unit = m[2] || (m[1] === "كوبايتين" ? "كوب" : tr("glass"));
-health-ui.jsx: <button className="c-acc min-h-[44px] px-2 inline-flex items-center gap-1 font-extrabold" onClick={addWater} data-testid="fit-today-water"><
 
 ## Income
 doit.js: const rows = [[ar ? "الدخل" : tr("Income"), f(pl.income)], [ar ? "ثابت (فواتير وأقساط)" : tr("Fixed (bills, instalments)"), f(pl.fixedTotal)
@@ -999,29 +968,9 @@ money-sheets-ui.jsx: <Field label={tr("How often")}><Pills value={freq} onChange
 family-ui.jsx: <select className={U.inp + " w-auto!"} value={rRep} onChange={(e) => setRRep(e.target.value)} aria-label={tr("Repeat")}><option value="none"
 money-sheets-ui.jsx: <Field label={tr("How often")}><Pills value={freq} onChange={setFreq} items={[["daily", tr("Every day")], ["weekly", tr("Every week")], ["mo
 
-##  kg
-fitplus-ui.jsx: {g.items.map((x) => <div key={x.id} className="flex justify-between text-[12.5px] text-[var(--c-ink)]"><span>{ar ? x.ar : tr(x.en)}</span><s
-fitplus.js: return (ar ? "🛒 قايمة المشتريات للأسبوع" : tr("🛒 Shopping list for the week")) + "\n" + list.map((g) => `\n${ar ? g.ar : tr(g.en)}:\n` + g
-
 ## Payment
 guardian-ui.jsx: <span className="min-w-0 flex-1"><span className="block font-bold truncate" dir="auto">{t.note || tr("Payment")}</span>
 home.js: line.push({ t: at(10), app: "life", title: x.c.title ? x.c.title[0].toUpperCase() + x.c.title.slice(1) : x.c.person || tr("Payment"), sub: x
-
-## Health Report
-health-calm-ui.jsx: <span className="shrink-0 inline-flex items-center gap-1 text-[12.5px] font-bold text-[var(--c-acc)]">{tr("Health Report")}<Arrow size={14} 
-health-calm-ui.jsx: <div className="min-w-0"><h2 className="text-[18px] lg:text-[21px] font-black tracking-tight m-0 truncate">{tr("Health Report")}</h2>
-health-ui.jsx: <h1>${esc(tr("Health Report"))}</h1><p>${esc(range)}</p>
-health-ui.jsx: sharePdf({ html, name: "attune-health-report", text: tr("Health Report") });
-
-## Weight trend
-health-calm-ui.jsx: <div className={U.cardPad} data-testid="health-weight"><div className="font-extrabold text-[14.5px]">{tr("Weight trend")}</div>
-health-calm-ui.jsx: <svg width="100%" viewBox={"0 0 " + W + " 112"} role="img" aria-label={tr("Weight trend")} dir="ltr">
-health-calm-ui.jsx: <Tile label={tr("Weight trend")} value={w ? w.avg + " kg" : "—"} tone={w ? "pos" : ""} testid="health-rep-weight"
-health-ui.jsx: ${w ? `<h3>${esc(tr("Weight trend"))}</h3><table>${w.points.map((p) => `<tr><td>${p.d}</td><td class="n">${p.kg} kg</td><td class="n">${p.av
-
-## Now
-health-calm-ui.jsx: {[[tr("Now"), status], [tr("Cycle average"), T("{a} days ({b}d flow)", { a: c.cycleLen, b: c.periodLen })], [tr("Last period"), c.last ? dat
-money-calm-ui.jsx: <text x={x + 19} y="113" textAnchor="middle" fill={now ? "var(--c-ink)" : "var(--c-mut)"} fontSize="10" fontWeight={now ? 800 : 600}>{now ? 
 
 ## Cranes out
 home-now.js: try { if (fleet && live(fleet.cranes || []).length) { const k = fleetKpis(fleet); out.push({ k: "cranes", label: tr("Cranes out"), value: `$

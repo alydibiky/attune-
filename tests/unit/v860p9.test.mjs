@@ -6,7 +6,7 @@ const D = await import("../../web-src/doit.js"), L = await import("../../web-src
 let n = 0; const t = (name, fn) => { fn(); n++; };
 const empty = () => ({ ledger: null, life: { items: [] }, fit: { days: {} }, radar: { items: [] }, care: { members: [], meds: [], labs: [], taken: {} }, reminders: [], memory: [] });
 const now = Date.parse("2026-10-28T12:00:00");
-const kinds = (q, s = empty()) => D.understand(q, { now, stores: s }).actions.map((a) => a.kind + (a.items ? ":" + a.items.map((i) => i.amount || i.name).join("+") : "")).join(" ");
+const kinds = (q, s = empty()) => D.understandAll(q, { now, stores: s }).actions.map((a) => a.kind + (a.items ? ":" + a.items.map((i) => i.amount || i.name).join("+") : "")).join(" ");
 
 t("a shopping word + a price is money, not a food with the number thrown away", () => {
   assert.equal(kinds("vegetables 460"), "money:460");
@@ -30,10 +30,10 @@ t("the meal word is not part of the food's name", () => {
   assert.ok(!it.some((x) => /الفطار/.test(x.name)), it.map((x) => x.name).join());
 });
 t("a subscription typed again is this month's payment, not a second subscription", () => {
-  const s = empty(); let u = D.understand("netflix 250", { now, stores: s });
+  const s = empty(); let u = D.understandAll("netflix 250", { now, stores: s });
   for (const a of u.actions) { const r = D.apply(a, s, { now }); if (r.stores["attune:life:v1"]) s.life = r.stores["attune:life:v1"]; }
   assert.equal(s.life.items.length, 1);
-  u = D.understand("netflix 250", { now: now + 30 * 864e5, stores: s });
+  u = D.understandAll("netflix 250", { now: now + 30 * 864e5, stores: s });
   assert.deepEqual(u.actions.map((a) => a.kind), ["repay", "money"]);
   const r = D.apply(u.actions[0], s, { now: now + 30 * 864e5 }); s.life = r.stores["attune:life:v1"];
   assert.equal(s.life.items.length, 1); assert.match(r.done.en, /this month's 250 paid/);

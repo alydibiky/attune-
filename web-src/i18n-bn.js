@@ -7345,6 +7345,7 @@ export const BN = {
   "Record it in Money": "টাকায় লিখুন",
   "Answer it": "উত্তর দিন",
   "Organise my work": "আমার কাজ গুছিয়ে রাখি",
+  "Family & health": "পরিবার ও স্বাস্থ্য",
   "≈ {p} a month — save {n}%": "≈ মাসে {p} — {n}% সাশ্রয়",
   "Cheapest now: {p} ({d})": "এখন সবচেয়ে সস্তা: {p} ({d})",
   "{n} nights between {a} and {b}": "{a} ও {b}-এর মধ্যে {n} রাত",

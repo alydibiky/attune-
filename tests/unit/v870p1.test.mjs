@@ -6,7 +6,7 @@ const D = await import("../../web-src/doit.js"), L = await import("../../web-src
 let n = 0; const t = (name, fn) => { fn(); n++; };
 const now = Date.parse("2026-10-28T10:00:00");
 const st = () => ({ ledger: null, life: { items: [] }, fit: { days: {} }, radar: { items: [] }, care: { members: [], meds: [], labs: [], taken: {} }, reminders: [], memory: [] });
-const one = (q) => D.understand(q, { now, stores: st() }).actions[0] || {};
+const one = (q) => D.understandAll(q, { now, stores: st() }).actions[0] || {};
 t("blood pressure", () => {
   assert.deepEqual([one("my blood pressure 120/80").sys, one("my blood pressure 120/80").dia], [120, 80]);
   assert.equal(one("ضغطي ١٤٥/٩٥").kind, "bp"); assert.equal(one("bp 135 over 85 pulse 72").pulse, 72);
@@ -37,7 +37,7 @@ t("P8 M-A stop-gap: formal → Egyptian words when the person wrote Egyptian", (
 console.log(`v870p1 (+P8): ${n} checks passed`);
 t("voice: what's left today, by code", () => {
   const s0 = st(); s0.fit = { days: { [new Date(now).toISOString().slice(0, 10)]: { meals: { lunch: [{ kcal: 700 }] } } }, goal: 2000 };
-  const u = D.understand("what's left today?", { now, stores: s0 }); assert.equal(u.ask.kind, "today"); assert.match(u.ask.en, /700 of 2,000 kcal eaten — 1,300 left/);
-  assert.equal(D.understand("ايه اللي فاضل النهارده؟", { now, stores: st() }).ask.kind, "today");
+  const u = D.understandAll("what's left today?", { now, stores: s0 }); assert.equal(u.ask.kind, "today"); assert.match(u.ask.en, /700 of 2,000 kcal eaten — 1,300 left/);
+  assert.equal(D.understandAll("ايه اللي فاضل النهارده؟", { now, stores: st() }).ask.kind, "today");
 });
 console.log(`v870p1 (+ voice day): ${n} checks passed`);

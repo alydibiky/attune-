@@ -7345,6 +7345,7 @@ export const ZH = {
   "Record it in Money": "记入钱",
   "Answer it": "回答它",
   "Organise my work": "整理我的工作",
+  "Family & health": "家庭与健康",
   "≈ {p} a month — save {n}%": "≈ 每月 {p} — 省 {n}%",
   "Cheapest now: {p} ({d})": "当前最低：{p}（{d}）",
   "{n} nights between {a} and {b}": "{a} 至 {b} 之间的 {n} 晚",

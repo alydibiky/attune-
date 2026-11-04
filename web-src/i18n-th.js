@@ -7345,6 +7345,7 @@ export const TH = {
   "Record it in Money": "บันทึกในเงิน",
   "Answer it": "ตอบคำถามนี้",
   "Organise my work": "จัดระเบียบงานของฉัน",
+  "Family & health": "ครอบครัวและสุขภาพ",
   "≈ {p} a month — save {n}%": "≈ เดือนละ {p} — ประหยัด {n}%",
   "Cheapest now: {p} ({d})": "ถูกที่สุดตอนนี้: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} คืน ระหว่าง {a} ถึง {b}",

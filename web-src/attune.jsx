@@ -24,7 +24,6 @@ import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
 import { CodeWorkbench } from "./code-ui.jsx";
 import { LearnPage, NewsPage, syncDaily, lessonAhead } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
-import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { RecallPage } from "./lookback-ui.jsx";
 import { gmailDue, readGmail, markReconnect } from "./gmail.js";
@@ -109,11 +108,10 @@ const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCi
 // back in the list, in 3 short groups — ["@", heading] is a group heading (side-ui.jsx draws it in the accent colour)
 // (v8.7, Ali 29 Oct: "why is there Home and Chat — we agreed only Home"): Home IS the chat (v7.6, he picked A) — no Chat row
 const SIDE_PLACES = [["home", "Home", House],
-  ["@", "My life"], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["health", "Health", Heart], ["agents", "Agents", Radar],
+  ["@", "My life"], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["care", "Health", Heart], ["agents", "Agents", Radar],   // v9.1: Health = Family health (Fit archived)
   ["@", "Learn & daily"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "Saved", BookOpen],
-  ["@", "Go & work"], ["travel", "Go", Plane], ["business", "Work & Business", Database], ["tools", "Tools", Wrench]];
+  ["@", "Go & work"], ["travel", "Go", Plane], ["projects", "Work", Database], ["tools", "Tools", Wrench]];   // v9.1: Business archived — Work = Projects
 const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
-import { HealthPage } from "./health-ui.jsx";
 import { AgentsPage } from "./agents-ui.jsx";
 import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
@@ -178,7 +176,6 @@ import { verifyMath, looksLikeMathProblem, arithmeticSlips, looksLikeCodeTask } 
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
 import { workLoop, guessLang } from "./code.js";
 import { runCode, runHtml, pythonAvailable, warmUp } from "./sandbox.js";
-import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 import { heatLevel } from "./heat.js";
 
 /* =========================================================================
@@ -7920,7 +7917,7 @@ export default function App() {
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
   // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
-  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -8416,25 +8413,8 @@ export default function App() {
   const [pendingPay, setPendingPay] = useState(null);
   const sendToMoney = (text, how) => { setPendingPay({ text, id: Date.now() }); setMode("money");
     showToast(how || "Reading the payment in Money…", 3000); };
-  // Cycle tracker. Kept apart from Memory on purpose (see cycle.jsx).
-  const [cycle, setCycle] = useState(() => cycleLoad());
-  const [cycleOn, setCycleOn] = useState(() => { try { return localStorage.getItem("attune:cycle:on") === "1" || Object.keys(cycleLoad().days).length > 0; } catch (e) { return false; } });
-  const enableCycle = (on) => { setCycleOn(on); try { localStorage.setItem("attune:cycle:on", on ? "1" : "0"); } catch (e) {} };
-  const logPeriodFromInstant = (text) => {
-    const parsed = parsePeriodText(text, Date.now());
-    const before = cycle;
-    const r = applyPeriodLog(cycle, parsed);
-    setCycle(cycleSave(r.state));
-    enableCycle(true);
-    setInResult(""); setInThinking(""); setInAction("");
-    setInLogged({ title: r.title, detail: r.detail, tab: "cycle", open: "Open the calendar",
-                  undo: () => setCycle(cycleSave(before)) });
-    setInText("");
-  };
-  useEffect(() => {
-    const u = (profile && profile.uses) || [];
-    if (u.includes("cycle") && !cycleOn) enableCycle(true);
-  }, [profile]);
+  // v9.1 (Ali, 4 Nov 2026): Cycle is archived with Fit & Food (→ Attune Fit, archive/fit/). Its data stays on the phone, untouched.
+  const cycleOn = false, enableCycle = () => {};
   const [installedPacks, setInstalledPacks] = useState([]);
   const [activePack, setActivePack] = useState(null);
   const [travelQ, setTravelQ] = useState("");
@@ -9371,7 +9351,6 @@ export default function App() {
   const runSmart = async () => {
     const text = inText.trim();
     if (!text) return;
-    if (looksLikePeriodLog(text)) return logPeriodFromInstant(text);
     // v6.12: "what are my expenses in the last 4 days" → summed from the Money ledger by code (no model, no "please provide the data")
     if (!inImage && myMoneyIntent(text) && UND.signalsOf(text, { "money-ask": true }).has("money-ask")) {   // v9.0: a reminder to pay is not a money question
       const m = answerMyMoney(text, loadLedger(), { ar: /[\u0600-\u06FF]/.test(text) || lang === "ar" });
@@ -9701,13 +9680,7 @@ export default function App() {
     abort: () => LocalEngine.abort(),
     profileText: () => profileLine(profile),
     accuracy: ACCURACY_RULES,
-    isPeriodLog: looksLikePeriodLog,
-    logPeriod: (text) => {
-      const before = cycle;
-      const r = applyPeriodLog(cycle, parsePeriodText(text, Date.now()));
-      setCycle(cycleSave(r.state)); enableCycle(true);
-      return { title: r.title, detail: r.detail, undo: () => setCycle(cycleSave(before)) };
-    },
+    isPeriodLog: () => false,   // v9.1: Cycle archived (Attune Fit)
     parsePayment: (t) => parsePayment(t, { now: Date.now(), ...payOpts() }),
     canUseAI, aiReady: willRunLocal, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
     webOn,
@@ -9772,7 +9745,6 @@ export default function App() {
     openTab: (m) => setMode(m),
     sendToMoney: (t) => sendToMoney(t, "Payment read — pick the account and confirm"),
     photoToMoney: (url) => { setPendingPay({ image: url, id: Date.now() }); setMode("money"); },
-    openFit: (text) => { setFitIn(text); setMode("fit"); },
     openPdfChat: (file) => { setPdfIn(file); setMode("pdfchat"); },
     pdfText: NATIVE ? (b64) => nativeCall("pdfText", { b64 }) : null,
     fetchShare: NATIVE && NATIVE.fetchShare ? (url) => nativeCall("fetchShare", url) : null,   // v6.12: a conversation shared from another AI   // v6.12: several PDFs read inside the chat
@@ -9909,7 +9881,6 @@ export default function App() {
         if (x.kind === "reminder") { const id = newReminderId(); scheduleReminder({ id, at: x.at, title: x.title, body: x.message || "", repeat: x.repeat || "none", created: now, source: "home" }); extra.push(() => { setReminders(loadReminders().filter((y) => y.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }); }
         else chatApi.doAction(x);
       } else if (r.need === "note") { const rec = remember({ kind: "note", title: a.text.slice(0, 70), text: a.text, tags: ["home"] }); extra.push(() => setMemory((m) => m.filter((y) => y.id !== rec.id))); }
-      else if (r.need === "period") { const prev = cycle; const pr = applyPeriodLog(cycle, parsePeriodText(a.text, now)); setCycle(cycleSave(pr.state)); enableCycle(true); extra.push(() => setCycle(cycleSave(prev))); }
       else if (r.need === "money-setup") { sendToMoney(text, ""); return { lines: [{ text: ar ? r.done.ar : tr(r.done.en), open: "money" }], undo: null }; }
       if (a.kind === "sugar" && r.low) scheduleReminder({ id: "sugar-recheck", at: now + 15 * 60000, repeat: "none", title: tr("Check your blood sugar again"), body: tr("15 minutes since a low reading. Under 70 mg/dL: another 15 g of fast sugar."), created: now, source: "home" });
       lines.push({ text: ar ? r.done.ar : tr(r.done.en), open: r.open, low: !!r.low,
@@ -10802,20 +10773,6 @@ export default function App() {
             modelReady={modelUsable}
             scheduleReminder={scheduleReminder} incoming={xrayIn} clearIncoming={() => setXrayIn(null)}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
-        ) : mode === "fit" ? (
-          <FitApp minimal={!LEGACY_NAV} abort={() => LocalEngine.abort()} ready={() => LocalEngine.waitReady()} canSee={!(engineInfo && engineInfo.engine === "litert" && engineInfo.fastVision === false)} flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)} pro={proActive} openPlan={() => setShowUpgrade(true)}
-            fetchJson={NATIVE && NATIVE.fetchJson ? async (url) => { const r = await nativeCall("fetchJson", url); return JSON.parse((r && r.body) || "{}"); } : null}
-            packText={NATIVE && NATIVE.foodPackText ? async (name) => { const r = await nativeCall("foodPackText", name); return (r && r.text) || ""; } : null}
-            photoClip={NATIVE && NATIVE.foodClipStatus ? { base: "https://appassets.androidplatform.net/foodclip/", status: () => { try { return JSON.parse(NATIVE.foodClipStatus()); } catch (e) { return { installed: false }; } },
-              install: (onProgress) => nativeCall("foodClipInstall", {}, onProgress), update: () => nativeCall("foodClipInstall", { update: true }), stop: () => NATIVE.cancel(nativeLastId()), remove: () => NATIVE.foodClipRemove() } : null}
-            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null} scanLive={NATIVE && NATIVE.scanLive ? async () => { const r = await nativeCall("scanLive", {}); return (r && r.codes) || []; } : null}
-            readText={NATIVE && NATIVE.readText ? async (b64) => nativeCall("readText", { b64 }) : null}
-            listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
-            health={NATIVE && NATIVE.healthStatus ? { status: () => { try { return JSON.parse(NATIVE.healthStatus()); } catch (e) { return null; } }, connect: () => NATIVE.healthConnect(), openApp: (pkg) => { try { NATIVE.openHealthApp(pkg); } catch (e) {} }, installed: () => { try { return JSON.parse(NATIVE.watchAppsInstalled ? NATIVE.watchAppsInstalled() : "[]"); } catch (e) { return []; } },
-              huawei: NATIVE.huaweiStatus ? { status: () => { try { return JSON.parse(NATIVE.huaweiStatus()); } catch (e) { return null; } }, connect: () => NATIVE.huaweiConnect(), day: (date) => nativeCall("huaweiDay", { date }) } : null, day: (date) => nativeCall("healthDay", { date }) } : null}
-            onExit={goBack} native={NATIVE} share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }}
-            modelReady={modelUsable}
-            llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "deal" ? (
           <DealCheck flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelUsable}
@@ -10862,8 +10819,6 @@ export default function App() {
         ) : mode === "reminders" ? (
           <>{/* v6.40: Message alerts first — "tell me when Ahmed messages me" */}<div className="mt-3"><WatchPanel native={NATIVE} flash={flash} /></div>
           <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} /></>
-        ) : mode === "cycle" ? (
-          <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("chat")} native={NATIVE} nativeCall={nativeCall} />
         ) : mode === "metro" ? (
           <MetroPage />
         ) : mode === "map" ? (
@@ -10875,10 +10830,6 @@ export default function App() {
           <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
             openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
-        ) : mode === "health" ? (
-          <HealthPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} cycleOn={cycleOn} doIt={doFromHome}
-            onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }}
-            listen={NATIVE && NATIVE.listen ? async (langTag) => { const r = await nativeCall("listen", langTag || "", () => {}); return r && r.text; } : null} />
         ) : mode === "scout" ? (
           <ScoutPage search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 }) : null} flash={flash}
             remind={(r) => scheduleReminder({ ...r, created: Date.now(), source: "scout" })} incoming={scoutIn} clearIncoming={() => setScoutIn(null)}

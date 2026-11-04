@@ -7331,6 +7331,7 @@ export const ARB = {
   "Record it in Money": "سجّله في المال",
   "Answer it": "أجب عنه",
   "Organise my work": "أنظّم عملي",
+  "Family & health": "الأسرة والصحة",
   "≈ {p} a month — save {n}%": "≈ {p} شهريًا — وفّر {n}%",
   "Cheapest now: {p} ({d})": "أرخص سعر حاليًا: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} ليالٍ بين {a} و {b}",

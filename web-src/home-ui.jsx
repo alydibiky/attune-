@@ -34,7 +34,6 @@ import { todayFacts } from "./desk-ui.jsx";
 import { targetsOf } from "./fithome.js";
 import { openRead } from "./readaloud-ui.jsx";
 import { DoResult, DO_HINTS } from "./doit-ui.jsx";
-import { FitToday } from "./health-ui.jsx";
 import { tickRegular, payRadar } from "./regular.js";
 import { MissionsLine, useTopMission } from "./missions-ui.jsx";
 import { route as cmdRoute } from "./cmdrun.js";
@@ -125,7 +124,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const now = new Date();
   const data = useMemo(() => {
     const ledger = loadLedger(), o = moneyOverview(ledger);
-    const fit = readJSON("attune:fit:v1"), tg = fit && fit.profile ? targetsOf(fit.profile) : null;
+    const fit = null, tg = null;   // v9.1: Fit & Food is archived (→ Attune Fit) — Home no longer reads it
     const care = loadCare(), scout = loadScout(), courses = readArr("attune:daily:courses:v1"), slides = readArr("attune:slides:v1");
     const known = (id) => tools.some((t) => t[0] === id);
     const recent = [...new Set([...recentTools(), ...START_TOOLS])].filter(known).slice(0, 4);
@@ -355,7 +354,6 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {!minimal ? <>
       {/* v6.28 (Ali: "Fit & Food should be on the Home page"): today's food, water and the four meals — tap a meal to add to it */}
         {/* v6.31 minimal: the "set it up" card is an advert — Home shows Fit & Food once it has your numbers */}
-        {minimal && !data.fitOn ? null : <FitToday key={"fit" + tick} openFit={() => navTo("fit")} compact />}
         {guardian || null}
         {data.o.monthOut || data.o.budget ? <div>
           <button className="c-card text-start w-full" onClick={() => navTo("money")} data-testid="home-spent">

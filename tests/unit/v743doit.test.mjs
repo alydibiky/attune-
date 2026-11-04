@@ -5,9 +5,9 @@ const D = await import("../../web-src/doit.js");
 let bad = 0;
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) bad++; };
 for (const t of ["I had koshari for lunch and paid 85 pounds", "اتغديت كشري ودفعت ٨٥ جنيه"]) {
-  const a = D.understand(t).actions, f = a.find((x) => x.kind === "food"), m = a.find((x) => x.kind === "money");
+  const a = D.understandAll(t).actions, f = a.find((x) => x.kind === "food"), m = a.find((x) => x.kind === "money");
   ok(f && f.items.map((x) => x.id).join() === "koshari" && !f.unknown.length, t + " → Food: koshari only (no 'paid pounds')");
   ok(m && m.items[0].amount === 85 && m.items[0].note === "Koshari" && m.items[0].cat === "food", t + " → Money: 85, «Koshari», food");
 }
-ok(D.understand("2 eggs and toast for breakfast").actions.map((x) => x.kind).join() === "food", "a meal with «and» stays one food action");
+ok(D.understandAll("2 eggs and toast for breakfast").actions.map((x) => x.kind).join() === "food", "a meal with «and» stays one food action");
 console.log(bad ? bad + " FAILED" : "ALL PASSED");

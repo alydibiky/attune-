@@ -8,7 +8,7 @@ import { looksLikeCalc } from "../../web-src/calc.js";
 import { chatDeadlineIntent } from "../../web-src/deadlines.js";
 import { chatLifeIntent } from "../../web-src/life.js";
 import { parseAgent } from "../../web-src/agents.js";
-import { understand as doU } from "../../web-src/doit.js";
+import { understandAll as doU } from "../../web-src/doit.js";   // v9.1: the full reader — meals / water stay measured for Attune Fit (Attune itself no longer logs them: v911unsure)
 import { signalsOf, decide, looksFranco, francoToArabic } from "../../web-src/understand.js";
 export const NOW = Date.parse("2026-11-02T20:00:00");
 const DO_HERE = ["money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];

@@ -1,5 +1,5 @@
 // v9.0 (Ali: "99 percent accurate"): what the Home box records — the exact amount, in English and Egyptian Arabic.
-import { understand } from "../../web-src/doit.js";
+import { understandAll as understand } from "../../web-src/doit.js";   // v9.1: the full reader (Fit archived; Attune itself no longer logs meals)
 let bad = 0; const now = Date.parse("2026-11-03T09:00:00");
 const get = (t) => understand(t, { now, stores: {} }).actions;
 const C = [["drank 2 glasses of water", (a) => a[0].kind === "water" && a[0].ml === 500], ["شربت 3 كوبايات مية", (a) => a[0].ml === 750], ["شربت لتر مية", (a) => a[0].ml === 1000],

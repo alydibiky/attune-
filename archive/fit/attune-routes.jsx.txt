@@ -1,0 +1,48 @@
+// Removed from web-src/attune.jsx on 4 Nov 2026 (the route chain). Paste back before `) : mode === "write"` with the imports in README.md.
+
+// ---- mode "fit" ----
+        ) : mode === "fit" ? (
+          <FitApp minimal={!LEGACY_NAV} abort={() => LocalEngine.abort()} ready={() => LocalEngine.waitReady()} canSee={!(engineInfo && engineInfo.engine === "litert" && engineInfo.fastVision === false)} flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)} pro={proActive} openPlan={() => setShowUpgrade(true)}
+            fetchJson={NATIVE && NATIVE.fetchJson ? async (url) => { const r = await nativeCall("fetchJson", url); return JSON.parse((r && r.body) || "{}"); } : null}
+            packText={NATIVE && NATIVE.foodPackText ? async (name) => { const r = await nativeCall("foodPackText", name); return (r && r.text) || ""; } : null}
+            photoClip={NATIVE && NATIVE.foodClipStatus ? { base: "https://appassets.androidplatform.net/foodclip/", status: () => { try { return JSON.parse(NATIVE.foodClipStatus()); } catch (e) { return { installed: false }; } },
+              install: (onProgress) => nativeCall("foodClipInstall", {}, onProgress), update: () => nativeCall("foodClipInstall", { update: true }), stop: () => NATIVE.cancel(nativeLastId()), remove: () => NATIVE.foodClipRemove() } : null}
+            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null} scanLive={NATIVE && NATIVE.scanLive ? async () => { const r = await nativeCall("scanLive", {}); return (r && r.codes) || []; } : null}
+            readText={NATIVE && NATIVE.readText ? async (b64) => nativeCall("readText", { b64 }) : null}
+            listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
+            health={NATIVE && NATIVE.healthStatus ? { status: () => { try { return JSON.parse(NATIVE.healthStatus()); } catch (e) { return null; } }, connect: () => NATIVE.healthConnect(), openApp: (pkg) => { try { NATIVE.openHealthApp(pkg); } catch (e) {} }, installed: () => { try { return JSON.parse(NATIVE.watchAppsInstalled ? NATIVE.watchAppsInstalled() : "[]"); } catch (e) { return []; } },
+              huawei: NATIVE.huaweiStatus ? { status: () => { try { return JSON.parse(NATIVE.huaweiStatus()); } catch (e) { return null; } }, connect: () => NATIVE.huaweiConnect(), day: (date) => nativeCall("huaweiDay", { date }) } : null, day: (date) => nativeCall("healthDay", { date }) } : null}
+            onExit={goBack} native={NATIVE} share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }}
+            modelReady={modelUsable}
+            llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
+
+// ---- mode "cycle" ----
+        ) : mode === "cycle" ? (
+          <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("chat")} native={NATIVE} nativeCall={nativeCall} />
+
+// ---- mode "health" ----
+        ) : mode === "health" ? (
+          <HealthPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} cycleOn={cycleOn} doIt={doFromHome}
+            onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }}
+            listen={NATIVE && NATIVE.listen ? async (langTag) => { const r = await nativeCall("listen", langTag || "", () => {}); return r && r.text; } : null} />
+
+// ---- the Cycle state in the App component (replaced by `const cycleOn = false, enableCycle = () => {};`) ----
+  // Cycle tracker. Kept apart from Memory on purpose (see cycle.jsx).
+  const [cycle, setCycle] = useState(() => cycleLoad());
+  const [cycleOn, setCycleOn] = useState(() => { try { return localStorage.getItem("attune:cycle:on") === "1" || Object.keys(cycleLoad().days).length > 0; } catch (e) { return false; } });
+  const enableCycle = (on) => { setCycleOn(on); try { localStorage.setItem("attune:cycle:on", on ? "1" : "0"); } catch (e) {} };
+  const logPeriodFromInstant = (text) => {
+    const parsed = parsePeriodText(text, Date.now());
+    const before = cycle;
+    const r = applyPeriodLog(cycle, parsed);
+    setCycle(cycleSave(r.state));
+    enableCycle(true);
+    setInResult(""); setInThinking(""); setInAction("");
+    setInLogged({ title: r.title, detail: r.detail, tab: "cycle", open: "Open the calendar",
+                  undo: () => setCycle(cycleSave(before)) });
+    setInText("");
+  };
+  useEffect(() => {
+    const u = (profile && profile.uses) || [];
+    if (u.includes("cycle") && !cycleOn) enableCycle(true);
+  }, [profile]);

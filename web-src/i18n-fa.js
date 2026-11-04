@@ -7345,6 +7345,7 @@ export const FA = {
   "Record it in Money": "در پول ثبت کن",
   "Answer it": "جوابش را بده",
   "Organise my work": "کارم را مرتب کنم",
+  "Family & health": "خانواده و سلامت",
   "≈ {p} a month — save {n}%": "≈ ماهی {p} — {n}٪ صرفه‌جویی",
   "Cheapest now: {p} ({d})": "ارزان‌ترین اکنون: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} شب بین {a} و {b}",

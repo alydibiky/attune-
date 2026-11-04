@@ -4,7 +4,7 @@ const D = await import("../../web-src/doit.js"), L = await import("../../web-src
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
 const now = Date.parse("2026-10-27T13:00:00");
 let st = { ledger: null, life: { items: [] }, fit: { days: {} } };
-const say = (t) => { const u = D.understand(t, { now, stores: st }); const out = []; for (const a of u.actions || []) { const r = D.apply(a, st, { now }); for (const [k, v] of Object.entries(r.stores || {})) st = { ...st, ...(k === "ledger.v3" ? { ledger: v } : k === "attune:life:v1" ? { life: v } : k === "attune:fit:v1" ? { fit: v } : {}) }; out.push(r.done && r.done.en); } return { u, out }; };
+const say = (t) => { const u = D.understandAll(t, { now, stores: st }); const out = []; for (const a of u.actions || []) { const r = D.apply(a, st, { now }); for (const [k, v] of Object.entries(r.stores || {})) st = { ...st, ...(k === "ledger.v3" ? { ledger: v } : k === "attune:life:v1" ? { life: v } : k === "attune:fit:v1" ? { fit: v } : {}) }; out.push(r.done && r.done.en); } return { u, out }; };
 const spent = () => (st.ledger ? st.ledger.txns.filter((x) => x.type === "expense").reduce((a, x) => a + x.amount, 0) : 0);
 say("fuel 500"); ok(spent() === 500 && !Object.keys(st.fit.days).length, "'fuel 500' is a 500 expense, not ful medames");
 say("maid 400"); ok(spent() === 900, "'maid 400' is an expense (it went to Chat)");

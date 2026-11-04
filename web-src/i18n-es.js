@@ -7347,6 +7347,7 @@ export const ES = {
   "Record it in Money": "Anotarlo en Dinero",
   "Answer it": "Respóndelo",
   "Organise my work": "Organizar mi trabajo",
+  "Family & health": "Familia y salud",
   "≈ {p} a month — save {n}%": "≈ {p} al mes — ahorra un {n}%",
   "Cheapest now: {p} ({d})": "Lo más barato ahora: {p} ({d})",
   "{n} nights between {a} and {b}": "{n} noches entre {a} y {b}",

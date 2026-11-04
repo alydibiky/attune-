@@ -15,10 +15,11 @@ ok(!twice.length, "no feature is in two areas" + (twice.length ? ": " + twice : 
 ok(Object.values(SAY).every(([s, g]) => s.length === 2 && g.length === 2 && s.every(Boolean) && g.every(Boolean)), "each example in English and Egyptian Arabic");
 ok(!AREAS.some((a) => a.ids.includes("knowledge")), "Knowledge is in no area (only the developer adds knowledge)");
 const mem = { d: {}, getItem(k) { return this.d[k] || null; }, setItem(k, v) { this.d[k] = v; } };
-ok(markTried("fit", mem) && !markTried("fit", mem) && !markTried("nonsense", mem) && loadTried(mem).join() === "fit", "opening a page marks it tried, once; unknown pages are not kept");
-markTried("care", mem);
-const h = progress(loadTried(mem), "health"), all = progress(loadTried(mem));
-ok(h.tried === 2 && h.total === 4 && all.tried === 2 && all.total === AREAS.reduce((a, x) => a + x.ids.length, 0), "progress by area and in all: " + JSON.stringify([h, all]));
+// v9.1: Fit & Food is archived — Money's tools stand in for it
+ok(markTried("money", mem) && !markTried("money", mem) && !markTried("nonsense", mem) && loadTried(mem).join() === "money", "opening a page marks it tried, once; unknown pages are not kept");
+markTried("guardian", mem);
+const mArea = AREAS.find((a) => a.id === "money").ids, h = progress(loadTried(mem), "money"), all = progress(loadTried(mem));
+ok(h.tried === 2 && h.total === mArea.length && all.tried === 2 && all.total === AREAS.reduce((a, x) => a + x.ids.length, 0), "progress by area and in all: " + JSON.stringify([h, all]));
 { const w = AREAS.find((a) => a.id === "work").ids;   // v9.1: the crane toolkit is archived — any one tool stands in for it
   ok(w.length > 1 && progress([], "work", (id) => id !== w[0]).total === w.length - 1, "a feature this device doesn't have isn't counted"); }
 console.log(fail ? "FAILED " + fail : "ALL PASSED");

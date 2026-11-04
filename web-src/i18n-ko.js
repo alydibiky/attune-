@@ -7345,6 +7345,7 @@ export const KO = {
   "Record it in Money": "돈에 기록",
   "Answer it": "답해 주기",
   "Organise my work": "내 일 정리하기",
+  "Family & health": "가족과 건강",
   "≈ {p} a month — save {n}%": "≈ 월 {p} — {n}% 절약",
   "Cheapest now: {p} ({d})": "지금 최저가: {p}({d})",
   "{n} nights between {a} and {b}": "{a}에서 {b} 사이 {n}박",

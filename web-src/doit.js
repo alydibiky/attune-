@@ -95,7 +95,18 @@ const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتر
 /** What the sentence asks Attune to do. ctx: { now, stores } */
 // a request ("give me…", "tell me…", «اديني…») — the person wants an answer, not something recorded
 const REQ = /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|make|find|help|teach|list|plan|create|send|search|look up|notify|let me know|alert|remind|ask)\b|^\s*(اديني|إديني|ادّيني|قولي|اقترح|اقترحلي|اشرح|اشرحلي|اكتب|اكتبلي|اعملي|ساعدني|علمني|دورلي|هاتلي)/i;
-export function understand(text, { now = Date.now(), stores = {} } = {}) {
+/** v9.1 (Ali, 4 Nov 2026: Fit & Food leaves Attune for its own app, Attune Fit — archive/fit/): meals, water, weight, workouts and
+ *  sleep are no longer recorded from Chat or Home (a priced meal still records its money). Set to false to bring them back. */
+export const FIT_ARCHIVED = true;
+const FIT_KINDS = new Set(["food", "water", "weight", "workout", "sleep", "period"]);
+export function understand(text, opts = {}) {
+  const u = understandAll(text, opts);
+  if (!FIT_ARCHIVED || !u || !u.actions) return u;
+  const actions = u.actions.filter((a) => !FIT_KINDS.has(a.kind));
+  return actions.length === u.actions.length ? u : { ...u, actions, ...(actions.length ? {} : { chat: true }) };
+}
+/** The full reader (meals, water, weight… too) — what Chat used before Fit was archived; Attune Fit can use it as is. */
+export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   const t = fixTypos(String(text || "").trim());   // persona 1: "spnt 200 on lunh"
   if (!t) return { actions: [] };
   // v9.1 (e2e_v513: "Crane hire 25000 each day, the 1st to the 5th… Give me the rent and the rent with the 14 tax added" was recorded as
