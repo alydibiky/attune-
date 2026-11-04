@@ -11041,4 +11041,12 @@ export const BN = {
   "Painting": "রং করা",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«আমার ভ্রমণের চেকলিস্ট বানাও: পাসপোর্ট, চার্জার» — তারপর «আমি বৃহস্পতিবার ভ্রমণে যাচ্ছি»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "বুধবার তালিকাটি হোমে থাকে, সব ঘর খালি, যতক্ষণ না সব টিক হয়",
+  "Read from the receipt: {a} — check it": "রসিদ থেকে পড়া হয়েছে: {a} — যাচাই করুন",
+  "Receipt added": "রসিদ যোগ হয়েছে",
+  "Add a receipt": "রসিদ যোগ করুন",
+  "Open the best offer": "সেরা অফার খুলুন",
+  "Open Scout": "স্কাউট খুলুন",
+  "See {n} new ads": "{n}টি নতুন বিজ্ঞাপন দেখুন",
+  "See the ads": "বিজ্ঞাপনগুলো দেখুন",
+  "Open the alerts": "সতর্কবার্তা খুলুন",
 };

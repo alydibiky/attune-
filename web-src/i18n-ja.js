@@ -11041,4 +11041,12 @@ export const JA = {
   "Painting": "塗装",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "「旅行チェックリストを作って：パスポート、充電器」— それから「木曜に旅行する」",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "水曜日にリストがホームに表示され、すべてチェックするまで空のまま残ります",
+  "Read from the receipt: {a} — check it": "レシートから読み取り:{a} — 確認してください",
+  "Receipt added": "レシートを追加しました",
+  "Add a receipt": "レシートを追加",
+  "Open the best offer": "いちばんお得な候補を開く",
+  "Open Scout": "スカウトを開く",
+  "See {n} new ads": "新着広告 {n} 件を見る",
+  "See the ads": "広告を見る",
+  "Open the alerts": "アラートを開く",
 };

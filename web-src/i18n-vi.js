@@ -11041,4 +11041,12 @@ export const VI = {
   "Painting": "Sơn",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Tạo checklist du lịch của tôi: hộ chiếu, sạc» — rồi «tôi đi thứ Năm»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "Thứ Tư danh sách ở Trang chủ, mọi ô trống, cho đến khi đánh dấu hết",
+  "Read from the receipt: {a} — check it": "Đọc từ hóa đơn: {a} — hãy kiểm tra",
+  "Receipt added": "Đã thêm hóa đơn",
+  "Add a receipt": "Thêm hóa đơn",
+  "Open the best offer": "Mở ưu đãi tốt nhất",
+  "Open Scout": "Mở Scout",
+  "See {n} new ads": "Xem {n} tin mới",
+  "See the ads": "Xem các tin",
+  "Open the alerts": "Mở cảnh báo",
 };

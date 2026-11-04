@@ -11042,4 +11042,12 @@ export const HI = {
   "Painting": "पेंटिंग",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«मेरी यात्रा की चेकलिस्ट बनाओ: पासपोर्ट, चार्जर» — फिर «मैं गुरुवार को यात्रा पर हूँ»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "बुधवार को सूची होम पर होती है, सारे बॉक्स खाली, जब तक सब पर निशान न लगे",
+  "Read from the receipt: {a} — check it": "रसीद से पढ़ा गया: {a} — जाँच लें",
+  "Receipt added": "रसीद जोड़ी गई",
+  "Add a receipt": "रसीद जोड़ें",
+  "Open the best offer": "सबसे अच्छा ऑफ़र खोलें",
+  "Open Scout": "Scout खोलें",
+  "See {n} new ads": "{n} नए विज्ञापन देखें",
+  "See the ads": "विज्ञापन देखें",
+  "Open the alerts": "अलर्ट खोलें",
 };

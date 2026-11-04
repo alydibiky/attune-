@@ -11042,4 +11042,12 @@ export const IDN = {
   "Painting": "Pengecatan",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Buat daftar perjalananku: paspor, charger» — lalu «aku berangkat Kamis»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "Hari Rabu daftarnya ada di Beranda, semua kotak kosong, sampai semuanya dicentang",
+  "Read from the receipt: {a} — check it": "Dibaca dari struk: {a} — periksa",
+  "Receipt added": "Struk ditambahkan",
+  "Add a receipt": "Tambahkan struk",
+  "Open the best offer": "Buka penawaran terbaik",
+  "Open Scout": "Buka Pemantau",
+  "See {n} new ads": "Lihat {n} iklan baru",
+  "See the ads": "Lihat iklan",
+  "Open the alerts": "Buka peringatan",
 };

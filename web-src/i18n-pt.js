@@ -11042,4 +11042,12 @@ export const PT = {
   "Painting": "Pintura",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "“Faça minha lista de viagem: passaporte, carregador” — depois “viajo na quinta”",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "Na quarta a lista está no Início, com todas as caixas vazias, até você marcar tudo",
+  "Read from the receipt: {a} — check it": "Lido do recibo: {a} — confira",
+  "Receipt added": "Recibo adicionado",
+  "Add a receipt": "Adicionar um recibo",
+  "Open the best offer": "Abrir a melhor oferta",
+  "Open Scout": "Abrir o Batedor",
+  "See {n} new ads": "Ver {n} anúncios novos",
+  "See the ads": "Ver os anúncios",
+  "Open the alerts": "Abrir os alertas",
 };

@@ -11041,4 +11041,12 @@ export const KO = {
   "Painting": "도장",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "\"여행 체크리스트 만들어 줘: 여권, 충전기\" — 그다음 \"목요일에 여행 가\"",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "수요일에 목록이 홈에 나타나고, 모두 체크할 때까지 칸이 비어 있어요",
+  "Read from the receipt: {a} — check it": "영수증에서 읽음: {a} — 확인하세요",
+  "Receipt added": "영수증 추가됨",
+  "Add a receipt": "영수증 추가",
+  "Open the best offer": "최저가 상품 열기",
+  "Open Scout": "Scout 열기",
+  "See {n} new ads": "새 광고 {n}개 보기",
+  "See the ads": "광고 보기",
+  "Open the alerts": "알림 열기",
 };

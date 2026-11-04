@@ -11041,4 +11041,12 @@ export const FA = {
   "Painting": "نقاشی",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«فهرست سفرم را بساز: گذرنامه، شارژر» — بعد «پنجشنبه سفر می‌روم»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "چهارشنبه فهرست در خانه است، همه خانه‌ها خالی، تا همه را تیک بزنید",
+  "Read from the receipt: {a} — check it": "از رسید خوانده شد: {a} — بررسی کنید",
+  "Receipt added": "رسید اضافه شد",
+  "Add a receipt": "افزودن رسید",
+  "Open the best offer": "باز کردن بهترین پیشنهاد",
+  "Open Scout": "باز کردن Scout",
+  "See {n} new ads": "دیدن {n} آگهی جدید",
+  "See the ads": "دیدن آگهی‌ها",
+  "Open the alerts": "باز کردن هشدارها",
 };

@@ -11042,4 +11042,12 @@ export const TRK = {
   "Painting": "Boya",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Seyahat listemi yap: pasaport, şarj aleti» — sonra «perşembe yolculuğa çıkıyorum»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "Çarşamba günü liste Ana sayfada, tüm kutular boş, hepsini işaretleyene kadar",
+  "Read from the receipt: {a} — check it": "Fişten okundu: {a} — kontrol edin",
+  "Receipt added": "Fiş eklendi",
+  "Add a receipt": "Fiş ekle",
+  "Open the best offer": "En iyi teklifi aç",
+  "Open Scout": "Kâşif'i aç",
+  "See {n} new ads": "{n} yeni ilanı gör",
+  "See the ads": "İlanları gör",
+  "Open the alerts": "Uyarıları aç",
 };

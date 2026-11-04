@@ -11042,4 +11042,12 @@ export const SW = {
   "Painting": "Upakaji rangi",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Tengeneza orodha yangu ya safari: pasipoti, chaja» — kisha «ninasafiri Alhamisi»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "Jumatano orodha iko Nyumbani, visanduku vyote vitupu, hadi vyote vitiwe alama",
+  "Read from the receipt: {a} — check it": "Imesomwa kwenye risiti: {a} — ihakiki",
+  "Receipt added": "Risiti imeongezwa",
+  "Add a receipt": "Ongeza risiti",
+  "Open the best offer": "Fungua ofa bora",
+  "Open Scout": "Fungua Scout",
+  "See {n} new ads": "Tazama matangazo mapya {n}",
+  "See the ads": "Tazama matangazo",
+  "Open the alerts": "Fungua arifa",
 };

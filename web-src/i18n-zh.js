@@ -11041,4 +11041,12 @@ export const ZH = {
   "Painting": "刷漆",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "「建我的旅行清单：护照、充电器」— 然后「我周四出行」",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "周三清单出现在首页，所有方框都是空的，直到全部打勾",
+  "Read from the receipt: {a} — check it": "从收据读取:{a} — 请核对",
+  "Receipt added": "已添加收据",
+  "Add a receipt": "添加收据",
+  "Open the best offer": "打开最优惠的选项",
+  "Open Scout": "打开寻物",
+  "See {n} new ads": "查看 {n} 条新广告",
+  "See the ads": "查看广告",
+  "Open the alerts": "打开提醒",
 };

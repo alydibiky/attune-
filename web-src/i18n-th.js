@@ -11041,4 +11041,12 @@ export const TH = {
   "Painting": "ทาสี",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«สร้างเช็กลิสต์เดินทางของฉัน: หนังสือเดินทาง, ที่ชาร์จ» — แล้ว «ฉันเดินทางวันพฤหัส»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "วันพุธรายการจะอยู่ในหน้าแรก ทุกช่องว่าง จนกว่าจะติ๊กครบ",
+  "Read from the receipt: {a} — check it": "อ่านจากใบเสร็จ: {a} — โปรดตรวจสอบ",
+  "Receipt added": "เพิ่มใบเสร็จแล้ว",
+  "Add a receipt": "เพิ่มใบเสร็จ",
+  "Open the best offer": "เปิดข้อเสนอที่ดีที่สุด",
+  "Open Scout": "เปิด Scout",
+  "See {n} new ads": "ดูประกาศใหม่ {n} รายการ",
+  "See the ads": "ดูประกาศ",
+  "Open the alerts": "เปิดการแจ้งเตือน",
 };

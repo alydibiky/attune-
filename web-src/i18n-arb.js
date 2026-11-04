@@ -11033,4 +11033,12 @@ export const ARB = {
   "Painting": "الدهان",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«أنشئ قائمة سفر: جواز السفر، الشاحن» — ثم «سأسافر الخميس»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "يوم الأربعاء تظهر القائمة في الرئيسية وكل خاناتها فارغة، حتى تؤشر عليها كلها",
+  "Read from the receipt: {a} — check it": "قُرئ من الإيصال: {a} — تحقّق منه",
+  "Receipt added": "أُضيف الإيصال",
+  "Add a receipt": "أضف إيصالًا",
+  "Open the best offer": "افتح أفضل عرض",
+  "Open Scout": "افتح Scout",
+  "See {n} new ads": "اعرض {n} إعلانات جديدة",
+  "See the ads": "اعرض الإعلانات",
+  "Open the alerts": "افتح التنبيهات",
 };

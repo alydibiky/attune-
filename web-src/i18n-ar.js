@@ -8152,4 +8152,12 @@ export const AR = {
   "Painting": "الدهانات",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«اعمل ليستة سفر: الباسبور، الشاحن» — وبعدين «أنا مسافر الخميس»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "يوم الأربع القايمة في الرئيسية وكل خاناتها فاضية، لحد ما تعلّم عليها كلها",
+  "Read from the receipt: {a} — check it": "اتقرا من الإيصال: {a} — راجعه",
+  "Receipt added": "الإيصال اتضاف",
+  "Add a receipt": "ضيف إيصال",
+  "Open the best offer": "افتح أحسن عرض",
+  "Open Scout": "افتح الكشّاف",
+  "See {n} new ads": "شوف {n} إعلان جديد",
+  "See the ads": "شوف الإعلانات",
+  "Open the alerts": "افتح التنبيهات",
 };

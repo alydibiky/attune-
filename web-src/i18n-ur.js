@@ -11042,4 +11042,12 @@ export const UR = {
   "Painting": "رنگ و روغن",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«میری سفر کی چیک لسٹ بناؤ: پاسپورٹ، چارجر» — پھر «میں جمعرات کو سفر پر ہوں»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "بدھ کو فہرست ہوم پر ہوتی ہے، سارے خانے خالی، جب تک سب پر نشان نہ لگے",
+  "Read from the receipt: {a} — check it": "رسید سے پڑھا گیا: {a} — چیک کر لیں",
+  "Receipt added": "رسید شامل ہو گئی",
+  "Add a receipt": "رسید شامل کریں",
+  "Open the best offer": "بہترین آفر کھولیں",
+  "Open Scout": "کھوجی کھولیں",
+  "See {n} new ads": "{n} نئے اشتہار دیکھیں",
+  "See the ads": "اشتہار دیکھیں",
+  "Open the alerts": "الرٹس کھولیں",
 };

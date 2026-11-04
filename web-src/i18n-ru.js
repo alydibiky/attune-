@@ -11041,4 +11041,12 @@ export const RU = {
   "Painting": "Покраска",
   "“Make my travel checklist: passport, charger” — then “I'm travelling Thursday”": "«Сделай мой список в дорогу: паспорт, зарядка» — потом «я уезжаю в четверг»",
   "On Wednesday the list is on Home, every box empty, until it is all ticked": "В среду список на главной, все пункты пустые, пока вы не отметите всё",
+  "Read from the receipt: {a} — check it": "Прочитано с чека: {a} — проверьте",
+  "Receipt added": "Чек добавлен",
+  "Add a receipt": "Добавить чек",
+  "Open the best offer": "Открыть лучшее предложение",
+  "Open Scout": "Открыть Scout",
+  "See {n} new ads": "Посмотреть новые объявления: {n}",
+  "See the ads": "Посмотреть объявления",
+  "Open the alerts": "Открыть оповещения",
 };
