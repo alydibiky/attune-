@@ -18,6 +18,7 @@ import { looksLikeGoal, parseGoal, pricesIn, siteOf } from "./scout.js";
 import { followOf } from "./understand.js";
 import { parseWatch } from "./watch.js";
 import { isoDay } from "./deadlines.js";
+import { isFlightAgent, flightAgent } from "./flights.js";
 
 export const AGENTS_KEY = "attune:agents:v1";
 const DAY = 86400000;
@@ -148,6 +149,7 @@ export function parseAgent(text, opts = {}) {
   // v9.0 (the sentence bank: "what is the best phone under 15000?" became a price watch): a question is answered, not watched
   if (/[?؟]\s*$/.test(t0) && /^\s*(what|which|who|how|is|are|should|can|do|does|why|where|any|إيه|ايه|انهي|أنهي|مين|ازاي|إزاي|هل|ليه|فين)\b/i.test(t0)) return null;
   const app = appIn(t0);
+  if (isFlightAgent(t0)) { const fa = flightAgent(t0, { now, country, currency: curIn(t, country) || "" }); if (fa) return fa; }
   // v9.0 (Ali: "I told it to gather information on a topic — get it from more than one source and present it in a good, neat way"):
   // a research agent — several searches, every page read one at a time, figures checked across sources, one tidy report with sources
   // v9.0: research that keeps going — "keep me updated on X every week", «تابعلي أخبار X كل أسبوع» (all 20 languages)
@@ -245,6 +247,8 @@ export function parseAgent(text, opts = {}) {
     const site = tries.length > 1 ? tries.length + " stores" : tries[0].site;
     return { kind: "watch", site, url: tries[0].url, below: limit, currency: cur, what: pe.left ? what : pe.match, ...(pe.changed ? { said: what, q } : {}), title: what + " · " + (tries.length > 1 ? tries.map((x) => x.site).slice(0, 3).join(", ") + "…" : tries[0].site), ...(tries.length > 1 ? { tries } : {}) };
   }
+  // v9.2 (Ali: "via agents, the cheapest flight tickets with the modifications I want"): a flight to search → a flight agent across
+  // many sites (flights.js); missing a day or the city → it asks first
   // do it now: a ride, food, a hotel, a flight, a product (the right app with the search ready)
   // "Uber to the airport" has no verb of its own: a ride app's name is the verb
   const plan = planTask(t0, { now, country }) || (app && app.kind === "ride" ? planTask("i want " + t0, { now, country }) : null);
@@ -275,7 +279,7 @@ export function loadAgents(s = typeof localStorage !== "undefined" ? localStorag
 export function saveAgents(st, s = typeof localStorage !== "undefined" ? localStorage : null) { try { s && s.setItem(AGENTS_KEY, JSON.stringify(st)); } catch (e) {} return st; }
 export function makeAgent(d, now = Date.now()) {
   const a = { id: "ag" + now.toString(36) + Math.floor(Math.random() * 1e4).toString(36), kind: d.kind, title: d.title || "", on: true, created: now, checks: [] };
-  if (d.kind === "watch") Object.assign(a, { url: d.url, site: d.site, below: d.below, currency: d.currency, fields: d.fields || null, what: d.what || "", ...(d.tries ? { tries: d.tries } : {}), ...(d.said ? { said: d.said, q: d.q } : {}) });
+  if (d.kind === "watch") Object.assign(a, { url: d.url, site: d.site, below: d.below, currency: d.currency, fields: d.fields || null, what: d.what || "", ...(d.tries ? { tries: d.tries } : {}), ...(d.said ? { said: d.said, q: d.q } : {}), ...(d.rules ? { rules: d.rules } : {}) });
   if (d.kind === "follow") Object.assign(a, { topic: d.topic, every: d.every || "week", next: nextFollow(d.every || "week", now), runs: [] });
   if (d.kind === "track") Object.assign(a, { app: d.app, what: d.what || "" });
   if (d.kind === "order") Object.assign(a, { app: d.app, what: d.what || "" });

@@ -9,7 +9,8 @@ import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCr
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./agents.js";
 import * as R from "./agent-rules.js";
-import { Ellipsis, Kanban, ListChecks } from "lucide-react";
+import { Ellipsis, Kanban, ListChecks, Plane } from "lucide-react";
+import * as FL from "./flights.js";
 import { loadBooking } from "./agent-ui.jsx";
 import * as W from "./watch.js";
 import { loadScout } from "./scout.js";
@@ -27,8 +28,9 @@ const money = (n, cur) => { const v = Math.round(n).toLocaleString("en-US"); if 
 const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : Math.round(m / 1440) === 1 ? tr("yesterday") : T("{n} days ago", { n: Math.round(m / 1440) }); };
 const GROUPS = [["needs", "Needs you"], ["working", "Working"], ["done", "Done & paused"]];
 const BOARD = [["needs", "Needs you"], ["working", "Working"], ["found", "Found"], ["done", "Done & paused"]];
-const KIND_ICON = { follow: Newspaper, research: BookOpen, buy: ShoppingCart, watch: Hotel, track: Package, order: UtensilsCrossed, scout: Car, alert: BellRing, open: AppWindow };
+const KIND_ICON = { flight: Plane, follow: Newspaper, research: BookOpen, buy: ShoppingCart, watch: Hotel, track: Package, order: UtensilsCrossed, scout: Car, alert: BellRing, open: AppWindow };
 const CHIPS = [["buy", "Find & buy", "Buy me AirPods Pro 2 under 9,000", "اشتريلي ايربودز برو 2 بأقل من 9000"],
+  ["flight", "Cheapest flight", "Cheapest flight from Cairo to Jeddah around 8 January, back after 5 nights, direct, morning", "ارخص طيارة من القاهرة لجدة حوالي 8 يناير، راجع بعد 5 ليالي، مباشر، الصبح"],
   ["watch", "Watch a price", "Tell me when hotels near the Haram are under 45k for 4 nights from 10 December", "نبهني لما فنادق الحرم تبقى أقل من 45 ألف لمدة 4 ليالي من 10 ديسمبر"],
   ["track", "Track a delivery", "Tell me when my Amazon order arrives", "قولي لما طلب أمازون يوصل"],
   ["order", "Order my usual", "Order my usual from Talabat", "اطلبلي أكلي المفضل من طلبات"],
@@ -170,10 +172,12 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         // v8.7 (Ali: "it keeps glitching when I press Check now"): several start days are checked in ONE window that moves from
         // day to day by itself — it used to open and close a window for each day
         if (tries.length > 1) {
-          const r = await nativeCall("agentOpen", { url: tries[0].url, title: a.title, profile: {}, rules: { cheapest: true, many: true }, labels: agentLabels(), search: true, watch: true, rounds: tries.map((x) => ({ url: x.url, checkin: x.checkin || "", checkout: x.checkout || "" })) });
+          const fl = !!(a.fields && a.fields.flight);   // v9.2 flights: one window goes from site to site (Kayak, momondo, Google Flights…)
+          const r = await nativeCall("agentOpen", { url: tries[0].url, title: a.title, profile: {}, rules: { cheapest: true, many: true, ...(fl ? { direct: (a.rules || {}).maxStops === 0, time: (a.rules || {}).timeOfDay || "" } : {}) }, labels: agentLabels(), search: true, watch: true, rounds: tries.map((x) => ({ url: x.url, checkin: x.checkin || (fl ? x.site : ""), checkout: x.checkout || "" })) });
           if (r && r.price > 0) best = { price: r.price, checkin: r.checkin, checkout: r.checkout };
           compared = (r && r.offers) || 0;
-          for (const o of (r && r.top) || []) seen.push({ ...o, url: o.url || a.url });
+          for (const o of (r && r.top) || []) seen.push(fl ? { ...o, site: o.checkin || o.site || "", checkin: "", checkout: "", url: o.href || o.url || a.url } : { ...o, url: o.url || a.url });
+          if (fl && r && r.price > 0) best = { price: r.price };
         } else for (let i = 0; i < tries.length; i++) {
           if (tries.length > 1) flash && flash(T("Checking {i} of {n}: {d}", { i: i + 1, n: tries.length, d: tries[i].checkin }));
           const r = await nativeCall("agentOpen", { url: tries[i].url, title: a.title + (tries[i].checkin ? " · " + tries[i].checkin : ""), profile: {}, rules: { cheapest: true }, labels: agentLabels(), search: true, watch: true, autoClose: tries.length > 1 });
@@ -185,7 +189,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         const top0 = !(best && best.checkin) && seen.length ? seen.filter((o) => o.price > 0).sort((x, y) => x.price - y.price)[0] : null;
         const next0 = A.addCheck(a, { price: best && best.price, how: "browser", ...(top0 ? { href: top0.href || "", name: top0.name || "" } : {}), ...(best && best.checkin ? { checkin: best.checkin, checkout: best.checkout } : {}) });
         // v9.1 (Ali picked B): up to 10 offers for the podium + list; their photos are kept apart (this phone only)
-        const next = seen.length ? { ...next0, best3: A.savePhotos(a.id, A.bestThree(seen, a.skip, a.taste, tries.length > 1 ? 10 : 3)), compared } : compared ? { ...next0, compared } : next0;
+        const keepN = a.fields && a.fields.flight ? 30 : tries.length > 1 ? 10 : 3;   // v9.2 flights: keep more — the board groups them
+        const pool = a.fields && a.fields.flight ? seen.filter((o) => o.price > 0).sort((x, y) => x.price - y.price).map((o, i) => ({ ...o, key: (o.site || "") + i + "-" + o.price })) : null;
+        const next = seen.length ? { ...next0, best3: A.savePhotos(a.id, pool ? pool.slice(0, keepN) : A.bestThree(seen, a.skip, a.taste, keepN)), compared } : compared ? { ...next0, compared } : next0;
         put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? next : x)) });
         flash && flash(best ? (best.checkin ? T("Cheapest now: {p} ({d})", { p: money(best.price, a.currency), d: best.checkin + " → " + best.checkout }) : T("Cheapest now: {p}", { p: money(best.price, a.currency) })) : tr("No prices on that page — search on the site, then tap Best offer"));
       } catch (e) { flash && flash(String((e && e.message) || e)); }
@@ -376,7 +382,7 @@ export function SiteMark({ site, size = 40, testid = "site-mark" }) {
   return <span className="shrink-0 grid place-items-center font-black tracking-tight" title={name} aria-label={name} data-testid={testid}
     style={{ width: size, height: size, borderRadius: size * 0.3, background: bg, color: ink, fontSize: Math.round(size * (mark.length > 2 ? 0.3 : 0.42)), boxShadow: "inset 0 0 0 1px rgba(0,0,0,.06)" }}>{mark}</span>;
 }
-const siteOfAgent = (a) => (a.kind === "watch" || a.kind === "buy") && a.site && !/^\d+ stores$/.test(a.site) ? a.site : a.kind === "track" || a.kind === "order" ? (a.app && a.app.label) || "" : "";
+const siteOfAgent = (a) => (a.kind === "watch" || a.kind === "buy") && a.site && !/^\d+ (stores|sites)$/.test(a.site) ? a.site : a.kind === "track" || a.kind === "order" ? (a.app && a.app.label) || "" : "";
 /** The one header every agent card has: its mark, its name, one line of what it is doing, its status, and ⋯ (Pause · Rules · Delete). */
 function AgentHead({ a, kind, title, line, toggle, remove, onRules }) {
   const [menu, setMenu] = useState(false);
@@ -602,6 +608,54 @@ function Podium({ a, c, far, day, tv, openBest, skipBest }) {
   </div>;
 }
 
+/** v9.2 (Ali picked 3A: "make sure it's organised if I am seeing more than 1 option, and it gets the tickets from many places"): the
+ *  answer first — the cheapest flight that follows the rules, big, with the sites it was on — then Cheapest · Fastest · Direct · Best
+ *  time as tabs, the cheapest price of each day, then every other flight by price (one row per flight, however many sites showed it). */
+function FlightBoard({ a, openBest }) {
+  const f = (a.fields && a.fields.flight) || {};
+  const g = useMemo(() => FL.organise(a.best3 || [], a.rules || {}, f), [a.best3, a.rules]);
+  const [tab, setTab] = useState("cheapest");
+  const [more, setMore] = useState(false);
+  if (!g.rows.length) return <p className="m-0 text-[12.5px] font-bold text-[var(--c-warn)]" data-testid="agent-rules-none">{tr("No flight follows all your rules yet — the next check looks again.")}</p>;
+  const TABS = [["cheapest", "Cheapest", g.cheapest], ["fastest", "Fastest", g.fastest], ["direct", "Direct", g.direct], ["bestTime", "Best time", g.bestTime]].filter(([, , r]) => r);
+  const w = (TABS.find(([k]) => k === tab) || TABS[0])[2];
+  const n = (v) => Math.round(v).toLocaleString("en-US");
+  const stopsTxt = (x) => (x.stops === 0 ? tr("Direct") : x.stops === 1 ? tr("1 stop") : x.stops ? T("{n} stops", { n: x.stops }) : "");
+  const dayTxt = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return iso; } };
+  const rest = g.rows.filter((r) => r !== w);
+  return <div className="space-y-3" data-testid="flight-board">
+    <div className="flex items-end justify-between gap-2"><p className="m-0 text-[18px] font-extrabold tracking-tight" data-testid="flight-count">{T("{n} flights", { n: g.rows.length })}</p>
+      <span className="text-[12px] c-sub">{T("from {n} sites", { n: new Set((a.best3 || []).map((o) => o.site).filter(Boolean)).size })}{g.hidden ? " · " + T("{n} hidden by your rules", { n: g.hidden }) : ""}</span></div>
+    {TABS.length > 1 ? <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0,1fr))` }} role="tablist" data-testid="flight-tabs">
+      {TABS.map(([k, l, r]) => <button key={k} role="tab" aria-selected={w === r && tab === k} onClick={() => setTab(k)} data-testid={"flight-tab-" + k}
+        className={"min-h-[52px] rounded-[14px] border px-2 py-1.5 text-start " + (tab === k ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]")}>
+        <span className={"block text-[11.5px] font-extrabold " + (tab === k ? "c-acc" : "c-sub")}>{tr(l)}</span><b className="block text-[13.5px] tabular-nums">{n(r.o.price)}</b></button>)}</div> : null}
+    {/* the answer */}
+    <div className="rounded-[20px] border-2 border-[var(--c-acc)] p-3.5 space-y-2.5" data-testid="flight-best">
+      <div className="flex items-center gap-2.5">{w.x.airline ? <SiteMark site={w.x.airline} size={36} /> : <Ico k="flight" />}
+        <span className="min-w-0 flex-1"><b className="block text-[15px] truncate" dir="auto" data-testid="flight-best-airline">{w.x.airline || offerName(w.o, a, 0)}</b>
+          <span className="block text-[12px] c-sub">{[w.x.date ? dayTxt(w.x.date) : f.depart ? dayTxt(f.depart) : "", stopsTxt(w.x), FL.fmtDur(w.x.dur)].filter(Boolean).join(" · ")}</span></span></div>
+      {w.x.dep ? <div className="flex items-center justify-between gap-2" dir="ltr"><span><b className="block text-[20px] tabular-nums leading-none">{w.x.dep}</b><span className="text-[11.5px] c-sub">{f.from}</span></span>
+        <span className="flex-1 h-px bg-[var(--c-ln)] mx-2 relative"><Plane size={14} className="absolute left-1/2 -translate-x-1/2 -top-[7px] c-sub bg-[var(--c-surf)]" /></span>
+        <span className="text-end"><b className="block text-[20px] tabular-nums leading-none">{w.x.arr || "—"}</b><span className="text-[11.5px] c-sub">{f.to}</span></span></div> : null}
+      <div className="flex items-end justify-between gap-2"><span className="min-w-0"><b className="block text-[24px] font-black tabular-nums leading-tight" data-testid="flight-best-price">{money(w.o.price, w.o.currency || a.currency)}</b>
+        <span className="flex items-center gap-1 text-[11.5px] c-sub flex-wrap" data-testid="flight-best-sites">{w.sites.slice(0, 4).map((s) => <SiteMark key={s} site={s} size={18} />)}{w.sites.length > 1 ? T("on {n} sites — cheapest on {s}", { n: w.sites.length, s: w.sites[0] }) : w.sites[0] ? T("on {s}", { s: w.sites[0] }) : ""}</span></span>
+        <button onClick={() => openBest(a, w.o)} className="shrink-0 min-h-[44px] px-5 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[14px] font-extrabold" data-testid="flight-book">{tr("Book")}</button></div>
+    </div>
+    {g.days.length > 1 ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="flight-days">{g.days.map((d) => { const lo = d.price === Math.min(...g.days.map((x) => x.price));
+      return <span key={d.date} className={"shrink-0 min-w-[64px] rounded-[12px] border px-2 py-1.5 text-center " + (lo ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)]")} data-testid="flight-day">
+        <span className="block text-[11px] font-bold c-sub">{dayTxt(d.date)}</span><b className={"block text-[12.5px] tabular-nums " + (lo ? "c-acc" : "")}>{n(d.price)}</b></span>; })}</div> : null}
+    {rest.length ? <div className={U.card + " p-1.5"} data-testid="flight-list">
+      {(more ? rest : rest.slice(0, 5)).map((r, k) => <button key={r.key} onClick={() => openBest(a, r.o)} className="w-full flex items-center gap-2.5 px-2 py-2.5 border-t border-[var(--c-ln)] first:border-t-0 text-start min-h-[56px]" data-testid="flight-row">
+        {r.x.airline ? <SiteMark site={r.x.airline} size={30} /> : <Ico k="flight" />}
+        <span className="min-w-0 flex-1"><b className="block text-[13.5px] truncate" dir="auto">{r.x.airline || offerName(r.o, a, k + 1)}{r.x.dep ? <span className="font-semibold c-sub tabular-nums" dir="ltr"> · {r.x.dep}{r.x.arr ? "–" + r.x.arr : ""}</span> : null}</b>
+          <span className="block text-[11.5px] c-sub truncate">{[r.x.date ? dayTxt(r.x.date) : "", stopsTxt(r.x), FL.fmtDur(r.x.dur), r.sites.length > 1 ? T("{n} sites", { n: r.sites.length }) : r.sites[0] || ""].filter(Boolean).join(" · ")}</span></span>
+        <span className="text-end shrink-0"><b className="block text-[14px] tabular-nums">{n(r.o.price)}</b><span className="text-[11px] c-sub tabular-nums">+{n(r.o.price - g.cheapest.o.price)}</span></span></button>)}
+      {rest.length > 5 ? <button onClick={() => setMore(!more)} className="w-full min-h-[44px] text-[13px] font-extrabold c-acc" data-testid="flight-more">{more ? tr("Show fewer") : T("Show all {n}", { n: rest.length })}</button> : null}
+    </div> : null}
+  </div>;
+}
+
 /** One offer full screen, like a story: the photo, bars for where you are, name, days · walk · rating, price, ‹ Book this offer ›. */
 function OfferSheet({ a, rows, at, setAt, pic, day, far, n, openBest, skipBest }) {
   const r = rows[at], w = rows[0], next = rows[at + 1];
@@ -649,7 +703,7 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
       <AgentHead a={a} kind={a.fields && a.fields.flight ? "flight" : "watch"} title={a.what && a.tries && a.tries.length && !a.tries[0].checkin ? a.said || a.what : a.title} toggle={toggle} remove={remove} onRules={() => setRo(true)} />
       <div className="flex gap-3 items-start"><div className="min-w-0 flex-1">
         {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.what })}</p> : null}
-        <p className="m-0 text-[12.5px] c-sub" dir="auto">{/^\d+ stores$/.test(a.site || "") ? T("{n} stores", { n: parseInt(a.site, 10) }) : a.site} · {T("under {p}", { p: money(a.below, a.currency) })}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
+        <p className="m-0 text-[12.5px] c-sub" dir="auto">{/^\d+ stores$/.test(a.site || "") ? T("{n} stores", { n: parseInt(a.site, 10) }) : /^\d+ sites$/.test(a.site || "") ? T("{n} sites", { n: parseInt(a.site, 10) }) : a.site}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
         <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) + (last.checkin ? " (" + last.checkin + " → " + last.checkout + ")" : "") : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
         {a.found ? <span className="flex flex-wrap items-center gap-1.5 mt-1.5"><span className={U.tag("amber")} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}{a.found.site ? " · " + a.found.site : ""}</span>
             {a.found.href && !(a.best3 || []).length ? <button onClick={() => openBest(a, { href: a.found.href, name: a.found.name })} className="min-h-[36px] px-2.5 rounded-[10px] text-[12px] font-extrabold inline-flex items-center gap-1 bg-[var(--c-acc)] text-[var(--c-on-acc)]" data-testid="agent-found-open"><ExternalLink size={13} />{tr("Open the listing")}</button> : null}</span>
@@ -662,7 +716,8 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
       </div></div>
       {rules}
       {/* v9.2: the offers that follow the agent's rules (stars, walk, sites, breakfast…) — agent-rules.js */}
-      {(() => { const kept = R.applyRules(a.best3 || [], a.rules), af = { ...a, best3: kept };
+      {(() => { if (a.fields && a.fields.flight) return (a.best3 || []).length ? <FlightBoard a={a} openBest={openBest} /> : null;   // v9.2: organise() applies the rules itself
+        const kept = R.applyRules(a.best3 || [], a.rules), af = { ...a, best3: kept };
         if ((a.best3 || []).length && !kept.length) return <p className="m-0 text-[12.5px] font-bold text-[var(--c-warn)]" data-testid="agent-rules-none">{tr("No offer follows all your rules yet — the next check looks again.")}</p>;
         return kept.length ? ((kept[0] || {}).checkin ? <BestFound a={af} small={small} openBest={openBest} skipBest={skipBest} /> : <DealBoard a={af} openBest={openBest} skipBest={skipBest} />) : null; })()}
       <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => checkNow(a)} disabled={busy} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-check"><RefreshCw size={14} className={busy ? "animate-spin" : ""} />{tr("Check now")}</button>
