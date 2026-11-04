@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 1 Nov 2026 — v8.9 languages)
+# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.2 part 3)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -15,6 +15,29 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 "For each addition in the app do it for all languages so we don't have to translate later": every new English line the app shows
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
+
+## v9.2 part 3 — 5 Nov: Ali's round 3 (receipts, agents, back, research) — DO THIS NEXT
+Ali (with screenshots): "There was an option to add receipts" · "1. agents page are not ideal nor consistent and when it opens booking it doesn't
+open it on the specific listing 2. make the back option more professional like Claude or ChatGPT 3. take 1 hour researching ways to make the
+app better, smoother, better features, and the best ways of implementation".
+- **Receipt** back in Add to Money (`money-pages.js receiptTotal / okPhoto`, `money-pages-ui.jsx shrinkPhoto + AddSheet`): photo → the phone's
+  text reader → the TOTAL line (not subtotal / VAT / cash / change) fills the amount; the photo is kept on the entry (ledger add-txns,
+  checked by `yusr-bridge.js`) and shown on it (TxSheet `tx-receipt`). Test: e2e_v922receipt.
+- **Agents consistent**: every card — Scout and message alerts too — is `CardHead` (mark · name · line · status · ⋯) + `CardActions` (one
+  row, one primary). "Open the best offer" opens THAT offer: `agent-rules.js offerUrl` (its own link + the dates / guests, else that hotel /
+  product searched by its own name on the same site). Next check follows the agent's own hours (fixed "Invalid Date"). Tests: e2e_v922agents,
+  unit v922agentrules.
+- **Back like Claude / ChatGPT** (`attune.jsx TOP_PLACES` + `useBackDepth`): one control in the phone header — ☰ on a place of the side menu,
+  ‹ on anything opened from inside or a sub-view (goes back one step); the chat shows ☰ + New chat only; the projects page's own "←" is
+  desktop-only. Test: e2e_v922back.
+- **Research report** (published for Ali): https://claude.ai/artifact/NxEchBFrTU4i87eTHbutQX — measured: 2.2 s to interactive at
+  phone speed, 4.5 MB startup script (Arabic dictionary 668 KB always loaded). **Do next without asking:** S1 code-split (esbuild
+  `--splitting` + `import()` for converter / slides / CV / guide-demo / fit-cuisines; Arabic loaded like the other languages; a test that
+  fails if startup grows), S2 predictive back (MainActivity's OnBackPressedCallback enabled only when the page's back depth > 0),
+  S3 WebView early start (keep only if timed faster), A1 model trials (Qwen3-4B-Instruct-2507, Gemma 4 E4B on tests/trials/max.mjs).
+  **Waiting for Ali's letters:** D1 morning plan / evening close · D2 to-do widget · D3 flight day grid + buy-or-wait · D4 shared budget ·
+  D5 simple mode · D6 first minute · A2 Ramadan on Home · A3 scam check.
+- All round-3 lines in 20 languages.
 
 ## v9.2 part 2 — 4 Nov night: Ali's picks BUILT (1A 2A 3A 4A 5A 6 = A + B, 7A), all 20 languages (165 new lines)
 - **1A To-dos & lists** (Ali: "+ a part where I add my list and adjust whether it is recurring or not — clear and visible"):

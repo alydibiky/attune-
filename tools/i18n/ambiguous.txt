@@ -53,7 +53,7 @@ money-pages-ui.jsx: <Card title={tr("Coming up")} testid="bills-list">
 ## Delete
 actions-ui.jsx: <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center 
 actions-ui.jsx: <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center 
-agents-ui.jsx: <button onClick={() => remove(a)} className="min-h-[44px] px-3 rounded-[10px] text-start text-[14px] font-bold text-[var(--c-neg)] hover:bg-
+agents-ui.jsx: const menu = [...(onRules ? [[tr("Rules"), onRules, "agent-rules-open"]] : []), ...extra, [a.on ? tr("Pause") : tr("Resume"), () => toggle(a
 attune.jsx: <MenuItem testid="engine-delete" danger onClick={() => setArmDelete(m.id)}>{tr("Delete")}</MenuItem>
 attune.jsx: <button className="px-2.5 py-1 rounded-md bg-rose-600 text-white" onClick={() => { n.removeInstalled(m.id); setArmDelete(null); flash(tr("De
 attune.jsx: {armDelete === m.id ? tr("Tap again") : tr("Delete")}</button>
@@ -63,7 +63,7 @@ chat.jsx: data-testid="chat-del-yes" className="min-h-[40px] px-3 rounded-[12px]
 ## Done
 actions-ui.jsx: <p className={label + " mt-4 mb-2"}>{tr("Done")}</p>
 agent-ui.jsx: export const agentLabels = () => ({ checking: tr("Checking {i} of {n}: {d}"), soFar: tr("Cheapest so far: {p} ({d})"), finding: tr("Finding 
-agents-ui.jsx: : <button onClick={() => markDone(a)} className={small} data-testid="agent-buy-done"><Check size={14} />{tr("Done")}</button>}
+agents-ui.jsx: : <CardActions primary={{ label: tr("Done"), icon: Check, onClick: () => markDone(a), testid: "agent-buy-done" }} />}
 attune.jsx: call: tr("The dialer opened with the number — tap Call there.") }[a.kind] || tr("Done");
 cmdbox-ui.jsx: <p className="c-lbl m-0">{busy ? tr("Working on it · {n}", { n: busy }) : tr("Done")}</p>
 daily-ui.jsx: <button className={cGhost} style={gs} onClick={() => { setRev(null); setView("course"); }} data-testid="review-finish">{tr("Done")}</button>
@@ -96,7 +96,6 @@ watch-ui.jsx: <div><p className="text-[15px] text-[var(--c-ink)] font-extrabold 
 
 ## Scout
 agents-ui.jsx: ...scout.map((g) => ({ id: "scout-" + g.id, st: (g.unseen || []).length ? "found" : "working", kind: "scout", title: tr("Scout") + " · " + g
-agents-ui.jsx: <span className="flex gap-3 items-start"><Ico k="scout" /><span className="min-w-0 flex-1"><span className="block font-extrabold text-[14.5p
 scout-ui.jsx: <div><h2 className={K.h1 + " flex items-center gap-2"}><Binoculars size={20} className="c-acc" />{tr("Scout")}</h2>
 
 ## Agents
@@ -119,7 +118,7 @@ shelf-ui.jsx: className={btnP + " mt-3 w-full"}>{tr("OK")}</button>
 voice-ui.jsx: <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" data-testid="voice-edit-ok">{ar
 
 ## More
-agents-ui.jsx: <span className="relative shrink-0"><button onClick={() => setMenu(!menu)} aria-label={tr("More")} aria-expanded={menu} className="w-9 h-9 -
+agents-ui.jsx: {menu.length ? <span className="relative shrink-0"><button onClick={() => setOpen(!open)} aria-label={tr("More")} aria-expanded={open} class
 attune.jsx: <button className={"min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold hover:border-[var(
 attune.jsx: <button onClick={() => setMenu(menu === "engine" ? null : "engine")} aria-label={tr("More")} className="w-9 h-9 grid place-items-center roun
 attune.jsx: <button onClick={() => { setArmDelete(null); setMenu(menu === m.id ? null : m.id); }} aria-label={tr("More")} className="w-10 h-10 grid plac
@@ -129,14 +128,14 @@ money-calm-ui.jsx: <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onC
 money-calm-ui.jsx: <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onLedger} data-testid="money-more" aria-label={tr("More")}><BookOpen size
 
 ## Pause
-agents-ui.jsx: <button onClick={() => toggle(a)} className="min-h-[44px] px-3 rounded-[10px] text-start text-[14px] font-bold hover:bg-[var(--c-soft)]" dat
+agents-ui.jsx: const menu = [...(onRules ? [[tr("Rules"), onRules, "agent-rules-open"]] : []), ...extra, [a.on ? tr("Pause") : tr("Resume"), () => toggle(a
 lesson-ui.jsx: {playing ? <Pause size={14} /> : <Play size={14} />}{playing ? tr("Pause") : i === 0 ? tr("Play the lesson") : tr("Play")}</button>
 readaloud-ui.jsx: <button className={big + " flex-1"} style={{ background: "var(--c-acc)", color: "var(--c-on-acc)" }} onClick={() => (playing === "all" ? sto
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={x.on === fa
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={x.on === fa
 
 ## Resume
-agents-ui.jsx: <button onClick={() => toggle(a)} className="min-h-[44px] px-3 rounded-[10px] text-start text-[14px] font-bold hover:bg-[var(--c-soft)]" dat
+agents-ui.jsx: const menu = [...(onRules ? [[tr("Rules"), onRules, "agent-rules-open"]] : []), ...extra, [a.on ? tr("Pause") : tr("Resume"), () => toggle(a
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={x.on === fa
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={x.on === fa
 
@@ -151,7 +150,7 @@ cmdbox-ui.jsx: <button onClick={() => onRemove(i)} aria-label={tr("Remove")} cla
 convert-ui.jsx: <button onClick={() => { setFiles(null); setOut(null); }} aria-label={tr("Remove")} className="p-2 -m-2 text-[var(--c-mut)]"><X size={16} />
 
 ## Read now
-agents-ui.jsx: <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => runFollow(a)} className={small + " bg-[var(--c-acc)] text-[var(-
+agents-ui.jsx: <CardActions primary={{ label: tr("Read now"), icon: BookOpen, onClick: () => runFollow(a), testid: "agent-follow-run" }} />
 gmail-ui.jsx: <button onClick={go} disabled={busy} className={U.btnP} data-testid="gmail-go">{busy ? tr("Reading…") : g.on ? tr("Read now") : tr("Connect 
 
 ## Open
@@ -187,26 +186,20 @@ slides-ui.jsx: <button className="absolute inset-y-0 end-0 w-2/3" aria-label={tr
 slides-ui.jsx: <button onClick={next} className="h-11 w-11 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)]" aria-label={tr("N
 
 ## Check now
-agents-ui.jsx: <div className="flex flex-wrap gap-1.5 items-center"><button onClick={() => checkNow(a)} disabled={busy} className={small + " bg-[var(--c-ac
+agents-ui.jsx: return <CardActions primary={{ label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), busy, testid: "agent-check" }}
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check n
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check n
 speed-ui.jsx: className={K.btnS}>{tr("Check now")}</button>
 
-## New
-agents-ui.jsx: <span className={U.tag(mine ? "amber" : "blue") + " mt-1.5"}>{mine ? tr("New") : a.on ? tr("Watching") : tr("Paused")}</span></div></div>
-code-ui.jsx: {cur ? <button onClick={() => { setCur(null); setRes(null); setSteps([]); setAsks([]); setCurAsk(""); }} data-testid="code-new" className="p
-scout-ui.jsx: {fresh.includes(a.id) ? <span className={K.tag("green") + " mb-0.5"} data-testid="scout-ad-new">{tr("New")}</span> : null}
-skills-ui.jsx: <button className={primary + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setShe
-
 ## Back
 agents-ui.jsx: <div className="flex items-center gap-2"><button onClick={back} aria-label={tr("Back")} className="w-10 h-10 rounded-full grid place-items-c
 attune.jsx: <button onClick={() => { setView("calm"); setPaneRaw("home"); }} aria-label={tr("Back")} data-testid="money-ledger-back"
-attune.jsx: <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transpar
+attune.jsx: ) : wide ? null : LEGACY_NAV ? <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! 
+attune.jsx: : <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! -ms-1.5 rounded-full! border-transparent! bg-
 cv-ui.jsx: <button onClick={onClose} className="w-11 h-11 -ms-1 grid place-items-center rounded-[12px] text-[var(--c-ink)]" aria-label={tr("Back")}><Ch
 daily-ui.jsx: return <button onClick={onClick} className="min-h-[44px] pe-2 text-[var(--c-mut)] text-[13.5px] font-bold flex items-center gap-1"><ChevronL
 daily-ui.jsx: return <button onClick={onClick} className="c-sub min-h-[44px] pe-2 flex items-center gap-1 text-[13.5px] font-bold"><ChevronLeft size={18} 
 guide-ui.jsx: <div className="flex items-center gap-2"><button onClick={() => setArea(null)} className="w-10 h-10 rounded-full grid place-items-center bg-
-learning-report-ui.jsx: {back ? <button onClick={back} aria-label={tr("Back")} className="w-10 h-10 rounded-full grid place-items-center bg-[var(--c-surf)] border b
 
 ## Money Report
 attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(rep.month.from.slice(0, 7))}</h1><p>${esc(account ? (rep.accounts.find((a) => a.id === account) || {}
@@ -274,7 +267,7 @@ tools-hub-ui.jsx: sub={r.change != null ? T("{p}% vs last week", { p: (r.change 
 
 ## Menu
 attune.jsx: {onMenu && !wide ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn h-11! min-w-[44px]! ro
-attune.jsx: {!LEGACY_NAV ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg
+attune.jsx: : TOP_PLACES.has(mode) && !subDepth ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]!
 money-calm-ui.jsx: {onMenu ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="w-10 h-10 rounded-[12px] grid place-items-ce
 
 ## Connected
@@ -350,12 +343,6 @@ guide-ui.jsx: {card(14, 176, 112, 40)}{bar(22, 192, 50, 0.6)}<rect x="86" y="188
 attune.jsx: <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! 
 backup-ui.jsx: [tr("Chats"), s.chats], [tr("Money ledger entries"), s.ledger], [tr("Cycle days logged"), s.cycleDays],
 teach-ui.jsx: <button className={ghost + " flex-col !h-16"} disabled={!ready || !!busy} onClick={() => setMode(mode === "chats" ? null : "chats")} data-te
-
-## Home
-attune.jsx: <button onClick={() => navTo("home")} aria-label={tr("Home")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent
-home-ui.jsx: <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center s
-home-ui.jsx: <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center s
-side-ui.jsx: <button onClick={() => navTo("home")} className="flex-1 min-h-[44px] text-start text-[19px] font-black text-[var(--c-ink)] tracking-tight bg
 
 ## New chat
 attune.jsx: {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); navTo("home"); }} className="att-icon-btn h-11! min-w-[44px]! ro
@@ -730,6 +717,11 @@ convert-ui.jsx: <details><summary className="text-[12px] text-[var(--c-mut)] cur
 cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job read
 spaces-ui.jsx: <button onClick={() => setView("preview")} className={`min-h-[36px] px-3 rounded-full ${view === "preview" ? "bg-[var(--c-soft)] text-[var(-
 
+## New
+code-ui.jsx: {cur ? <button onClick={() => { setCur(null); setRes(null); setSteps([]); setAsks([]); setCurAsk(""); }} data-testid="code-new" className="p
+scout-ui.jsx: {fresh.includes(a.id) ? <span className={K.tag("green") + " mb-0.5"} data-testid="scout-ad-new">{tr("New")}</span> : null}
+skills-ui.jsx: <button className={primary + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setShe
+
 ## Show less
 code-ui.jsx: {projects.length > 4 ? <button onClick={() => setAllProj((v) => !v)} className="min-h-[44px] px-1 text-[12.5px] font-bold text-[var(--c-acc)
 daily-ui.jsx: {course.plan.length > 8 ? <button className="c-acc min-h-[44px] text-[13.5px] font-bold" onClick={() => setAllPlan(!allPlan)} data-testid="l
@@ -919,6 +911,11 @@ report-ui.jsx: if (fleetK) tiles.push(<Tile key="cranes" testid="home-num-cranes
 home-now.js: if (mission && mission.chance != null) out.push({ k: "goal", label: tr("Goal"), value: Math.round(mission.chance * 100) + "%", open: "missio
 money-sheets-ui.jsx: <Head title={tr("Goals & debts")} right={<button className={U.btnS + " h-10! min-h-[40px]!"} onClick={() => setSheet({ k: "goal" })} data-te
 
+## Home
+home-ui.jsx: <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center s
+home-ui.jsx: <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center s
+side-ui.jsx: <button onClick={() => navTo("home")} className="flex-1 min-h-[44px] text-start text-[19px] font-black text-[var(--c-ink)] tracking-tight bg
+
 ## Not now
 home-ui.jsx: {note.kind === "ended" ? <button onClick={close} className="h-10 px-3 c-sub text-[13px]" data-testid="home-trial-close">{tr("Not now")}</but
 mind-ui.jsx: <button onClick={() => setHidePast(true)} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] text-[var(--c-mut)]">{tr("Not 
@@ -1012,6 +1009,9 @@ side-ui.jsx: {showPins && pinned.length ? <p className="px-3 pt-4 pb-1.5 text-[1
 
 ## Receipt
 money-calm-ui.jsx: onSend={onSubmit} busy={busy} onPhoto={onReceipt} photoLabel={tr("Receipt")} onVoice={onVoice} listening={listening} sendLabel={tr(wide ? "R
+money-pages-ui.jsx: {photo ? <><img src={photo} alt={tr("Receipt")} className="w-14 h-14 rounded-[12px] object-cover border border-[var(--c-ln)]" data-testid="a
+money-sheets-ui.jsx: <span className="block text-[11.5px] font-extrabold c-sub mb-1">{tr("Receipt")}</span>
+money-sheets-ui.jsx: <img src={t.photo} alt={tr("Receipt")} className={"rounded-[12px] border border-[var(--c-ln)] " + (big ? "w-full" : "w-24 h-24 object-cover"
 radar-ui.jsx: {x.photo ? <button className={U.btnS} onClick={async () => setImg(img ? "" : await getPhoto(x.photo))} data-testid="radar-photo">{img ? tr("
 
 ## Accounts
