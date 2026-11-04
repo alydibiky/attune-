@@ -109,6 +109,11 @@ with sync_playwright() as p:
     ap = page.evaluate("window.__app")
     check(ap and ap["pkg"] == "com.booking" and "booking.com" in ap["url"] and len(page.evaluate("window.__opens")) == n_open + 1, "with the Booking app installed, Book opens the offer in the Booking app (not Attune's browser): %s" % ap)
     page.evaluate("() => { window.AttuneNative.appsList = () => '[]'; }")
+    # …on any site: Android itself says which installed app owns the link (openInApp) — no list of apps
+    page.evaluate("() => { const N = window.AttuneNative; window.__inapp = null; N.openInApp = (u) => { window.__inapp = u; return JSON.stringify({ ok: true, how: 'app' }); }; }")
+    page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
+    check(bool(page.evaluate("window.__inapp")) and len(page.evaluate("window.__opens")) == n_open + 1, "any site: Android opens the offer in the app that owns the link")
+    page.evaluate("() => { delete window.AttuneNative.openInApp; }")
     shot(page, "v910-sheet")
     page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(100)
     shot(page, "v910-podium")

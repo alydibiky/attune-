@@ -24,9 +24,14 @@
   const priceIn = (text) => { const m = PRICE.exec(text); if (!m) return null; const v = num(m[2] || m[3]); return v > 0 && v < 1e8 ? { price: v, currency: (m[1] || m[4] || "").trim() } : null; };
 
   const TAXLINE = /tax|fee|charge|original price|was\b|save\b|off\b|discount|deposit|ضريب|رسوم|خصم|وفر|السعر الأصلي|impuesto|cargo|taxe|frais|steuer|gebühr|vergi|ücret|pajak|biaya/i;
-  const CARD_SEL = '[data-testid="property-card"],[data-testid="property-card-container"],[data-component-type="s-search-result"],[itemprop="itemListElement"],[data-testid="card-container"],[data-qa="product-block"],article,[role="listitem"]';
+  // the closest result card around a price, on any site: known sites' own markers, schema.org items, then the common class names
+  // for a product / listing / result card (closest() picks the nearest one, so a whole list is never taken for one offer)
+  const CARD_SEL = ['[data-testid="property-card"]', '[data-testid="property-card-container"]', '[data-component-type="s-search-result"]', '[data-testid="card-container"]',
+    '[data-qa="product-block"]', '[itemprop="itemListElement"]', '[itemtype*="Product"]', '[itemtype*="Hotel"]', '[itemtype*="Offer"]', '[itemtype*="Place"]',
+    '[data-testid*="product-card" i]', '[data-testid*="listing-card" i]', '[data-testid*="result-card" i]', '[class*="product-card" i]', '[class*="productcard" i]',
+    '[class*="listing-card" i]', '[class*="result-card" i]', '[class*="hotel-card" i]', '[class*="offer-card" i]', '[class*="item-card" i]', 'article', '[role="listitem"]'].join(",");
   // a card's name: its own title first (Booking data-testid=title, schema.org name, a heading), else its longest line without a price
-  const NAME_SEL = '[data-testid="title"],[itemprop="name"],[data-testid="listing-card-title"],h2,h3,h4';
+  const NAME_SEL = '[data-testid="title"],[itemprop="name"],[data-testid="listing-card-title"],[data-testid*="title" i],h2,h3,h4,[class*="title" i],[class*="name" i]';
   // ---- offers: the smallest block that holds one price, and a time or a name ----------------------------------------------------
   function offers() {
     const found = [], seen = new Set(), leaves = [];

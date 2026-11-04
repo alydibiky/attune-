@@ -773,6 +773,21 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         arr.toString()
     } catch (e: Exception) { "[]" }
 
+    /** v9.1 (Ali, 4 Nov: "not just Booking — all"): opens a web link in the app that owns it — Booking, Agoda, Airbnb, Talabat, Amazon,
+     *  noon, any site whose app is on the phone — never in a browser (Android 11+: FLAG_ACTIVITY_REQUIRE_NON_BROWSER asks Android
+     *  itself, so no list of apps is needed). {ok: true, how: "app"} or {ok: false} (then the page uses Attune's own browser). */
+    @JavascriptInterface
+    fun openInApp(url: String): String = try {
+        if (!url.startsWith("https://") || android.os.Build.VERSION.SDK_INT < 30) JSONObject().put("ok", false).toString()
+        else {
+            val i = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                .addCategory(android.content.Intent.CATEGORY_BROWSABLE)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER)
+            try { ctx.startActivity(i); JSONObject().put("ok", true).put("how", "app").toString() }
+            catch (e: android.content.ActivityNotFoundException) { JSONObject().put("ok", false).put("how", "none").toString() }
+        }
+    } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
+
     /** Opens an app: {pkg, url, store} — the app if it is on the phone (at the link when the app takes it), else the link
      *  (website), else its store page. {ok, how: "app" | "link" | "store"}. */
     @JavascriptInterface

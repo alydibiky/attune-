@@ -86,5 +86,18 @@ with sync_playwright() as p:
     check([o["name"] for o in top[:3]] == ["Swissotel Makkah", "Pullman ZamZam Makkah", "Fairmont Makkah Clock Royal Tower"], "each offer has its hotel's own name (not 'Booking.com'): %s" % [o["name"] for o in top])
     check(all(o["img"].startswith("https://cf.bstatic.com/") for o in top[:3]) and top[0]["href"].endswith("swissotel-makkah.html"), "…its photo and its own page")
     check("Scored 8.9" in top[0]["text"] and "150 m" in top[0]["text"], "…and its score and distance, for the comparison")
+    # v9.1 (Ali: "not just Booking — all"): any site's own result card — a shop with "product-card" classes, schema.org items
+    page.set_content("""<html><body><div class="grid">
+<div class="ProductCard_wrap__x1"><a href="https://www.noon.com/egypt-en/huawei-freeclip-2/N1/p/"><img src="https://f.nooncdn.com/p/n1.jpg" width="120" height="120"></a>
+  <div class="ProductCard_name__y">Huawei FreeClip 2 Open-Ear</div><div><span style="text-decoration:line-through">EGP 9,999</span><b>EGP 8,399</b></div><div>Save EGP 1,600</div></div>
+<div class="ProductCard_wrap__x1"><a href="https://www.noon.com/egypt-en/huawei-freeclip-2-white/N2/p/"><img src="https://f.nooncdn.com/p/n2.jpg" width="120" height="120"></a>
+  <div class="ProductCard_name__y">Huawei FreeClip 2 White</div><div><b>EGP 8,650</b></div></div></div>
+<ul><li itemscope itemtype="https://schema.org/Hotel"><img src="https://img.example/h1.jpg" width="90" height="90"><h3 itemprop="name">Hilton Suites Makkah</h3><span>EGP 43,900</span> <span>EGP 10,975 a night</span></li></ul>
+</body></html>""")
+    page.add_script_tag(path=KIT)
+    r = page.evaluate("window.__attuneAgent.best({cheapest:true, many:true}, true)")
+    names = {o["name"]: o for o in r["top"]}
+    check("Huawei FreeClip 2 Open-Ear" in names and names["Huawei FreeClip 2 Open-Ear"]["price"] == 8399 and names["Huawei FreeClip 2 Open-Ear"]["img"].startswith("https://f.nooncdn.com/"), "a shop's product cards: name, price (not the old one / the saving), photo: %s" % list(names))
+    check("Hilton Suites Makkah" in names and names["Hilton Suites Makkah"]["img"].startswith("https://img.example/"), "a schema.org hotel item: its name and photo")
     br.close()
 finish()

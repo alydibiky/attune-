@@ -220,7 +220,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     const url = o.href || o.url || a.url;   // v9.0: the exact listing, not the store's search page
     // v9.1 (Ali, 4 Nov: "it's hard to do anything in the Attune browser — can it open Booking itself, with all the sorting ready?"):
     // when the site's own app is on the phone, the offer opens THERE (its page, with the dates and guests in the link)
-    const pkg = (APP_OF.find(([re]) => re.test(url)) || [])[1];
+    // any site whose app is installed (Android decides: NativeBridge.openInApp); the list below is only for older Attune builds
+    if (N && N.openInApp) { try { const r = JSON.parse(N.openInApp(url) || "{}"); if (r.ok && r.how === "app") return; } catch (e) {} }
+    const pkg = N && N.openInApp ? null : (APP_OF.find(([re]) => re.test(url)) || [])[1];
     if (pkg && N && N.appsList && N.openAnyApp) {
       let has = false; try { has = JSON.parse(N.appsList() || "[]").some((x) => x.pkg === pkg); } catch (e) {}
       if (has) { try { const r = JSON.parse(N.openAnyApp(JSON.stringify({ pkg, url })) || "{}"); if (r.ok && r.how === "app") return; } catch (e) {} }
