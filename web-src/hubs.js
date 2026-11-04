@@ -13,7 +13,7 @@ export const HUBS = [
   ["projects", "Projects", "projects", ["projects"]],
   // v8.2 (Ali, 26 Oct: "instant should be removed overall — the normal chat should do its job"): no Instant anywhere
   // v8.5 (Ali agreed to the 27 Oct review): Recall lives inside Mind (R2); Shelf moved to Saved (W2)
-  ["home", "Home", "home", ["home", "missions", "automations", "chat"]],
+  ["home", "Home", "home", ["home", "missions", "automations", "chat", "lists"]],   // v9.2: + To-dos & lists (its own sidebar row)
   // v8.2 (Ali: "convert is duplicated, remove it from one page"): the converter lives in Tools only (Files & Converter)
   // v8.5 (W3): Ask a PDF and the Library are one "Documents" tab — its switch: Many books · One file
   ["students", "Students", "coach", ["coach", "slides", "cv"]],
@@ -26,7 +26,7 @@ export const HUBS = [
   ["go", "Go", "travel", ["travel", "scout", "map", "metro"]],   // (v6.42 Ali: Metro right after Maps)
   // v8.5 (W2): one place for what you keep — Notes (Shelf) · Books & pages (Remember) · Mind
   // v8.7 (Ali picked 4B "one Library"): Documents and Books & pages are one Library here — Books & PDFs · One file · Attune remembers
-  ["saved", "Saved", "shelf", ["shelf", "booklib", "people", "memory"]],   // v8.8: + People (the connected memory)
+  ["saved", "My things", "shelf", ["shelf", "booklib", "people", "memory"]],   // v8.8: + People (the connected memory)
   // v8.5 (R4): the Crane toolkit opens from Business → Fleet & rentals → More only
   ["tools", "Work", "business", ["business", "fleet", "field", "guide", "privacy"]],
   // v8.2 (Ali, 26 Oct: "make Tools a page on the left sidebar"): Tools is its own place, not a tab of Work; "Ask (classic)" is gone
@@ -43,7 +43,7 @@ export const GROUPS = [
   // v6.43 (Ali: "put the tools that improve a prompt or humanize in the same page"): Writing = Improve · Shorten · Humanize · Copilot · Prompt lab
   ["write", "Writing", ["write", "copilot", "library"]],
   // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")
-  ...["missions", "automations", "projects", "video", "tools", "convert", "guide", "privacy", "home", "chat", "translate", "improve", "compress", "humanize", "knowledge", "crane"].map((m) => ["solo-" + m, m, [m]]),
+  ...["lists", "missions", "automations", "projects", "video", "tools", "convert", "guide", "privacy", "home", "chat", "translate", "improve", "compress", "humanize", "knowledge", "crane"].map((m) => ["solo-" + m, m, [m]]),
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */

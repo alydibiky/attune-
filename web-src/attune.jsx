@@ -102,14 +102,18 @@ const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCi
 // back in the list, in 3 short groups — ["@", heading] is a group heading (side-ui.jsx draws it in the accent colour)
 // (v8.7, Ali 29 Oct: "why is there Home and Chat — we agreed only Home"): Home IS the chat (v7.6, he picked A) — no Chat row
 const SIDE_PLACES = [["home", "Home", House],
-  ["@", "My life"], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["care", "Health", Heart], ["agents", "Agents", Radar],   // v9.1: Health = Family health (Fit archived)
-  ["@", "Learn & daily"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "Saved", BookOpen],
+  // v9.2 (Ali, 1A: "a part where I add my list … clear and visible"): To-dos & lists first under My life
+  ["@", "My life"], ["lists", "To-dos & lists", ListChecks], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["care", "Health", Heart], ["agents", "Agents", Radar],   // v9.1: Health = Family health (Fit archived)
+  ["@", "Learn & daily"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "My things", BookOpen],
   ["@", "Go & work"], ["travel", "Go", Plane], ["projects", "Work", Database], ["tools", "Tools", Wrench]];   // v9.1: Business archived — Work = Projects
 // v9.1: archived / folded tools leave the sidebar (and a group heading with nothing under it goes too)
 for (let i = SIDE_PLACES.length - 1; i >= 0; i--) if (SIDE_PLACES[i][0] !== "@" && hiddenFromMenus(SIDE_PLACES[i][0])) SIDE_PLACES.splice(i, 1);
 for (let i = SIDE_PLACES.length - 1; i >= 0; i--) if (SIDE_PLACES[i][0] === "@" && (!SIDE_PLACES[i + 1] || SIDE_PLACES[i + 1][0] === "@")) SIDE_PLACES.splice(i, 1);
 const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
 import { AgentsPage } from "./agents-ui.jsx";
+import { ListsPage, lineText as listLine } from "./lists-ui.jsx";
+import * as LISTS from "./lists.js";
+import { ListChecks } from "lucide-react";
 import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { QuietWake } from "./wake-ui.jsx";
@@ -7745,7 +7749,7 @@ function tierOfInstalled(m) {
 const OWN_TITLE = new Set(["groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
-const MODE_TITLES = { booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { lists: "To-dos & lists", booklib: "Library", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", groups: "WhatsApp groups", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -7757,6 +7761,7 @@ const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = dev
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
+  ["lists", "To-dos & lists", "Your to-dos, and lists that come back to Home when you need them", ListChecks],   // v9.2 (Ali picked 1A)
   ["missions", "Missions", "A goal with a date — Attune works on it every day and shows your real chance", Target],   // v6.37
   ["recall", "Recall", "Find anything on your phone by meaning — screenshots, notifications, chats, notes", Search],   // v6.40 (agent C)
   ["automations", "Automations", "Say what should happen — “when my salary arrives, put 20% in the car fund” — and it runs by itself", Zap],   // v6.41 (C3)
@@ -10071,6 +10076,9 @@ export default function App() {
     if (!o) return null;
     const ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text), L = (x) => (ar ? x.ar || x.en : x.en);
     switch (o.type) {
+      // v9.2 (Ali picked 1A): lists said in Chat — "make my travel checklist: …", "I'm travelling Thursday", "what's my travel list?"
+      case "list": { const r = LISTS.applyListCommand(LISTS.loadLists(), o.cmd); if (!r) return null; if (r.st) LISTS.saveLists(r.st);
+        return { tone: "emerald", title: listLine(r.line), detail: r.list ? r.list.items.map((x) => (x.done ? "☑ " : "☐ ") + x.text).join("\n") : "", actions: [["Open my lists", "open:lists"]] }; }
       case "todoAdd": remember({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } });
         return { tone: "emerald", title: tr("Added to your to-do list"), detail: o.item, actions: [["Open in Mind", "open:memory"]] };
       case "todos": return { tone: "emerald", title: tr("Your to-do list") + " · " + o.items.length, detail: o.items.map((x) => "☐ " + (x.title || x.text)).join("\n") || tr("Nothing left — say “add … to my to-do list” to add one."), actions: [["Open in Mind", "open:memory"]] };
@@ -10223,7 +10231,7 @@ export default function App() {
           <PhoneHome cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), pro: isPro(tier) || testingPro(), open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
-          <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
+          <DesktopHome doIt={doFromHome} records={memory} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t, raw) => { setChatSeed(raw ? t : "\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
           LEGACY_NAV ? <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
@@ -10749,6 +10757,9 @@ export default function App() {
                 </p>
               </section>
             } />
+        ) : mode === "lists" ? (
+          <ListsPage records={memory} flash={flash} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))}
+            onAddTodo={(t) => remember({ kind: "todo", title: t.slice(0, 90), text: t, tags: ["todo"], meta: { todo: true, done: false } })} />
         ) : mode === "agents" ? (
           <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()} pro={proActive} openPlan={() => setShowUpgrade(true)}
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }}

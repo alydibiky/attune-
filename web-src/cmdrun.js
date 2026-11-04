@@ -12,6 +12,7 @@
      { type: "email", text }                  → v8.7 a ready email to check (email-ui.jsx), then Open in Gmail / Send
      { type: "chat", text, web?, to? }        → Chat answers (with web search or a language when asked)
      { type: "open", mode }                   → open that app (v6.50: every app from the box)
+     { type: "list", cmd }                    → v9.2 a list (lists.js parseListCommand): make it, set its trip date, or show it
      { type: "todoAdd", item } · { type: "whereSave", set } · { type: "travel", code } · { type: "rememberNote", text }
      { type: "rememberFiles", files, label }  → the page saves it in Mind / starts the trip / starts a "remember" job
    The page passes `api` (the apps' own readers and stores), so this file stays testable. Tests: tests/unit/v748cmdrun.test.mjs. */
@@ -19,6 +20,7 @@ import { tr } from "./i18n.js";
 import * as K from "./commands.js";
 import { isEmailAsk } from "./emaildraft.js";
 import * as W from "./whereis.js";
+import { parseListCommand } from "./lists.js";
 
 const L = (en, ar, open) => ({ en, ar, ...(open ? { open } : {}) });
 /** The place in "I want to go to Cairo Tower" / «عايز اروح برج القاهرة» / "where is Maadi station?". */
@@ -68,7 +70,9 @@ export function route(text, { files = [], api = {}, prefs = {}, kind = null } = 
   if (cmd) return runKind(cmd.id, cmd.arg, { cmd, files, api, slash: true });
   if (!t && !files.length) return null;
   if (kind) return runKind(kind, t, { files, api });
-  if (isEmailAsk(t)) return { type: "email", text: t };   // v8.7: "email Ahmed that …" → a ready email to check, then Send
+  if (isEmailAsk(t)) return { type: "email", text: t };
+  // v9.2 (Ali picked 1A): a list — make one, a trip date for it, or show it (lists.js reads it; the page saves it)
+  { const lc = parseListCommand(t); if (lc && !files.length) return { type: "list", cmd: lc }; }   // v8.7: "email Ahmed that …" → a ready email to check, then Send
   const det = (api.detect && api.detect(t)) || {};
   const records = (api.records && api.records()) || [];
   const g = K.guess(t, { ...det, hasFile: files.length > 0, things: W.thingsKnown(records) });

@@ -1,5 +1,8 @@
 // v6.25 — the computer's own pages (Ali picked "A + C"): Home (ask box, your day, your tools) and Tools (every tool on one
 // full-width page; ★ pins a tool to the sidebar). Phones keep Chat as home and the More sheet.
+import { HomeTodo, ListCard, lineText } from "./lists-ui.jsx";
+import * as LISTS from "./lists.js";
+import { isRemoved } from "./removed.js";
 import React, { useState, useMemo, useEffect } from "react";
 import { Send, Star, LayoutGrid, Bell, Apple, Brain, MessageCircle } from "lucide-react";
 import { openRead } from "./readaloud-ui.jsx";
@@ -45,7 +48,7 @@ const Card = ({ id, label, sub, Icon, onClick, testid }) => (
     <span className="mt-0.5 text-[12.5px] text-[var(--c-mut)] leading-snug line-clamp-2">{tr(sub)}</span>
   </button>);
 
-export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
+export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, records = [], onTickTodo = null }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(null);   // v6.28 "Do it from Home"
   const facts = useMemo(() => todayFacts(), []);
@@ -58,12 +61,15 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
   const [life, setLife] = useState(null);
   useEffect(() => { const on = (e) => { setBoxMode(takeBoxMode() || e.detail); setLife(null); }; window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
   const send = () => {
-    const t = text.trim(); if (!t) return; setText(""); setLife(null); setDone(null);
+    const t = text.trim(); if (!t) return; setText(""); setLife(null); setDone(null); setListAns(null);
     if (boxMode === "life") { let a = null; try { a = LA.askLife(t, LA.loadStores()); } catch (e) { a = null; } if (a && a.kind === "world") return onAsk(t); return setLife({ q: t, a }); }   // v8.7: the world → the chat
     if (boxMode === "translate") return onAsk("\u0004" + t, true);
+    // v9.2 (Ali picked 1A): a list sentence is done here, like the phone's box
+    { const lc = LISTS.parseListCommand(t); if (lc) { const lr = LISTS.applyListCommand(LISTS.loadLists(), lc); if (lr) { if (lr.st) LISTS.saveLists(lr.st); setListAns({ list: lr.list, line: lineText(lr.line) }); return; } } }
     let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) setDone({ ...r, id: Date.now() }); else onAsk(t);
   };
-  const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Plan a weekend trip", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];
+  const [listAns, setListAns] = useState(null);
+  const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Plan a weekend trip", null], ["My lists", "lists"], ["Convert a file", "convert"]];
   return (
     <div className="calm pt-2 pb-10 space-y-5" data-testid="desk-home">
       <h1 className="text-[28px] font-black text-[var(--c-ink)] tracking-tight m-0">{tr(greeting())}{name ? ", " + name : ""}</h1>
@@ -73,11 +79,14 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
           <div className="flex items-end gap-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 focus-within:border-[var(--c-acc)] transition-colors duration-150">
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="home-ask"
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : tr("Ask, or tell Attune what happened — «spent 150 on lunch», «had foul for breakfast»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
+              placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : tr("Ask, or tell Attune what happened — «spent 150 on lunch», «remind me tomorrow at 9»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
             <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
               className="w-11 h-11 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center disabled:opacity-40 transition-opacity duration-150"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>
           <div className="mt-3"><BoxModes mode={boxMode} setMode={(m) => { setBoxMode(m); setLife(null); }} /></div>
+          {listAns ? <div className="mt-3 space-y-2" data-testid="list-answer"><p className="m-0 text-[14px] font-bold" dir="auto">{listAns.line}</p>
+            {listAns.list ? <ListCard list={listAns.list} testid="list-answer-card" onTick={(l, x) => { const st = LISTS.tick(LISTS.loadLists(), l.id, x.id); LISTS.saveLists(st); setListAns({ ...listAns, list: st.lists.find((y) => y.id === l.id) }); }}
+              onOpen={() => { try { localStorage.setItem("attune:lists:open", listAns.list.id); } catch (e) {} navTo("lists"); }} /> : null}</div> : null}
           {done ? <div className="calm rounded-[20px] mt-3"><DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} /></div> : null}
           {life ? <div className="mt-3"><LifeAnswer res={life} navTo={navTo} askChat={(q) => { setLife(null); onAsk(q); }} onClose={() => setLife(null)} /></div> : null}
           {boxMode === "translate" ? <button onClick={() => navTo("translate")} className="mt-2 min-h-[40px] text-[13px] font-bold text-[var(--c-acc)] inline-flex items-center gap-1" data-testid="box-translate-more">{tr("Talk with someone, a photo or a document")} →</button> : null}
@@ -88,7 +97,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
         </div>
         <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 space-y-2" data-testid="home-today">
           <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
-          {facts.kcal != null ? <button onClick={() => navTo("fit")} className="min-h-[44px] flex items-center gap-2 text-start"><Apple size={16} className="text-[var(--c-pos)]" />
+          {facts.kcal != null && !isRemoved("fit") ? <button onClick={() => navTo("fit")} className="min-h-[44px] flex items-center gap-2 text-start"><Apple size={16} className="text-[var(--c-pos)]" />
             <span className="text-[24px] font-black text-[var(--c-ink)] tabular-nums tracking-tight">{facts.kcal}</span><span className="text-[12.5px] text-[var(--c-mut)]">{tr("kcal eaten")}</span></button> : null}
           <button onClick={() => navTo("reminders")} className="min-h-[44px] flex items-center gap-2 text-[13.5px] font-semibold text-[var(--c-ink)]"><Bell size={15} className="text-[var(--c-warn)]" />
             {facts.reminders ? tr("{n} reminders left today", { n: facts.reminders }) : tr("No more reminders today")}</button>
@@ -96,6 +105,8 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
           <p className={"text-[12.5px] font-bold m-0 pt-1 " + (engineReady ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")}>{engineReady ? tr("The model is ready") : tr("The model wakes when you ask")}</p>
         </div>
       </div>
+      {/* v9.2 (Ali picked 1A): what is due or not finished, and the lists needed today — the same card as the phone's Home */}
+      <HomeTodo records={records} navTo={navTo} onTickTodo={onTickTodo} />
       <div className="grid grid-cols-4 gap-4" data-testid="home-cards">
         {cards.map(([id, label, sub, Icon]) => <Card key={id} id={id} label={label} sub={sub} Icon={Icon} onClick={() => navTo(id)} />)}
         <Card id="tools" label="All tools" sub={tr("{n} tools", { n: tools.length - 1 })} Icon={LayoutGrid} onClick={() => navTo("tools")} testid="home-all-tools" />

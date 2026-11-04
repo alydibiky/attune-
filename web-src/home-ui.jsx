@@ -17,6 +17,8 @@ import { safeToSpend } from "./safespend.js";
 import { setChequeStatus } from "./fleet.js";
 import { saveFleet } from "./fleet-store.js";
 import { RecallCard } from "./recall-ui.jsx";
+import { HomeTodo, ListCard, lineText } from "./lists-ui.jsx";
+import * as LISTS from "./lists.js";
 import { useSubBack } from "./backstack.js";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { loadLife } from "./life.js";
@@ -188,6 +190,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       case "open": return /^panel:/.test(o.mode) ? window.dispatchEvent(new CustomEvent("attune-panel", { detail: o.mode.slice(6) })) : o.mode === "report" ? setRep(true) : o.mode === "food-photo" ? (openFitAdd ? openFitAdd() : navTo("fit")) : o.mode === "read" ? openRead() : o.mode === "all" ? openAll() : openLine(o.mode);
       case "job": cmd.jobs.add(o.spec); setFiles([]); return;
       case "todoAdd": cmd.mind.add({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } }); return lines([{ en: `Added to your to-do list: ${o.item}`, ar: `اتضافت للمهام: ${o.item}`, open: "memory" }]);
+      // v9.2 (Ali, 1A): "make my travel checklist: …", "every Saturday: …", "I'm travelling Thursday", "what's my travel list?"
+      case "list": { const r = LISTS.applyListCommand(LISTS.loadLists(), o.cmd); if (!r) return; if (r.st) LISTS.saveLists(r.st);
+        return setPanel({ type: "list", list: r.list, line: lineText(r.line) }); }
       case "whereSave": cmd.mind.add(W.whereRecord(o.set)); return lines([{ en: `Got it: ${o.set.thing} — ${o.set.place}.`, ar: `تمام: ${o.set.thing} — ${o.set.place}.`, open: "memory" }]);
       case "rememberNote": cmd.mind.add({ kind: "note", title: o.text.slice(0, 70), text: o.text, tags: ["remember"] }); return lines([{ en: "Kept in your Mind.", ar: "اتحفظت في العقل.", open: "memory" }]);
       case "rememberFiles": if (cmd.rememberFiles) cmd.rememberFiles(o.files, o.label); setFiles([]); return lines([{ en: `Keeping ${o.files.length > 1 ? o.files.length + " files" : o.files[0].name} in your Mind${o.label ? " as “" + o.label + "”" : ""}…`, ar: `بحفظ ${o.files.length > 1 ? o.files.length + " ملفات" : o.files[0].name} في العقل${o.label ? " على إنه «" + o.label + "»" : ""}…`, open: "memory" }]);
@@ -281,6 +286,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
             onNo={() => { const t = panel.text; setPanel({ type: "lines", lines: [{ en: "Kept as a note in Mind.", ar: "اتحفظت ملاحظة في «العقل»." }] }); try { window.dispatchEvent(new MessageEvent("attune-share", { data: { kind: "share", text: t, asNote: true } })); } catch (e) {} }} />
         : panel.type === "confirm" ? <ConfirmCard q={panel.q} onYes={() => show({ type: "whereSave", set: panel.set }, "")} onNo={() => setPanel({ type: "lines", lines: [{ en: `OK — still ${panel.was}.`, ar: `تمام — لسه ${panel.was}.` }] })} />
         : panel.type === "lines" ? <LinesCard lines={panel.lines} onOpen={(m) => { setPanel(null); openLine(m); }} onClose={() => setPanel(null)} />
+        : panel.type === "list" ? <div className="space-y-2" data-testid="list-answer"><p className="m-0 text-[14px] font-bold" dir="auto">{panel.line}</p>
+          {panel.list ? <ListCard list={panel.list} testid="list-answer-card" onTick={(l, x) => { const st = LISTS.tick(LISTS.loadLists(), l.id, x.id); LISTS.saveLists(st); setPanel({ ...panel, list: st.lists.find((y) => y.id === l.id) }); }}
+            onOpen={() => { try { localStorage.setItem("attune:lists:open", panel.list.id); } catch (e) {} setPanel(null); navTo("lists"); }} /> : <button onClick={() => { setPanel(null); navTo("lists"); }} className={"h-10 px-4 rounded-full text-[13.5px] font-extrabold"} style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="list-answer-open">{tr("Open my lists")}</button>}</div>
         : panel.type === "todos" ? <TodoCard items={panel.items} onTick={(x) => cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} onOpen={() => { setPanel(null); navTo("memory"); }} onClose={() => setPanel(null)} />
         : panel.type === "map" ? <MapCard place={panel.place} metro={panel.metro} onMap={() => { setPanel(null); cmd.openMap(panel.place); }} onMetro={() => { setPanel(null); cmd.openMetro(panel.metro); }} onClose={() => setPanel(null)} />
         : panel.type === "found" ? <FoundCard q={panel.q} items={panel.items} onOpen={(r) => { setPanel(null); cmd.openRecord(r); }} onClose={() => setPanel(null)} />
@@ -303,6 +311,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       </div> : null}
       {/* v8.7 (Ali agreed P3-7, option A done lightly): the 3 hero jobs as 3 live cards — the same three the store page and the
           paywall promise. The box, "Right now" and "Your day" stay. */}
+      {/* v9.2 (Ali picked 1A, 4 Nov): what is due or not finished, and the lists needed today, stay on Home until ticked */}
+      {minimal && !rep ? <HomeTodo records={cmd && cmd.api && cmd.api.records ? cmd.api.records() : []} navTo={navTo}
+        onTickTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} /> : null}
       {minimal && !rep && !freshApp() ? <HeroCards data={data} navTo={navTo} /> : null}
       {minimal && rep ? <><ReportTiles safe={data.safe} spentMonth={data.hasLedger ? data.o.monthOut : null} cur={data.o && data.o.cur} kcal={data.kcal} goal={data.fitOn ? data.goal : 0}
           fleetK={(() => { try { return fleet && fleetLive(fleet.cranes || []).length ? fleetKpis(fleet) : null; } catch (e) { return null; } })()} />

@@ -1,7 +1,7 @@
 // v6.36: Ali's own arrangement (board, 18 Oct): Create · Projects · Home · Students · Money · Health · Daily · Work in the sidebar.
 import { HUBS, GROUPS, hubOf, tabsFor, TOOL_PAGES, toolPages, partsOf, INSIDE, FULL, RETIRED } from "../../web-src/hubs.js";
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
-ok(HUBS.map((h) => h[1]).join() === "Create,Projects,Home,Students,Money,Follow-ups,Health,Daily,Go,Saved,Work,Tools", "v8.5 (Ali agreed to the 27 Oct review): Follow-ups, Go and Saved are places (" + HUBS.map((h) => h[1]) + ")");
+ok(HUBS.map((h) => h[1]).join() === "Create,Projects,Home,Students,Money,Follow-ups,Health,Daily,Go,My things,Work,Tools", "v8.5 (Ali agreed to the 27 Oct review): Follow-ups, Go and Saved are places (" + HUBS.map((h) => h[1]) + ")");
 const all = HUBS.flatMap((h) => h[3]);
 ok(new Set(all).size === all.length, "every page lives in exactly one place");
 ok(hubOf("guardian") === "followups" && hubOf("fit") === "health" && hubOf("humanize") === "toolbox" && hubOf("convert") === "toolbox" && hubOf("assistants") === "create"

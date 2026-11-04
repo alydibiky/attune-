@@ -10,6 +10,12 @@ Object.assign(ICONS, {"ArrowRight":[["path",{"d":"M5 12h14"}],["path",{"d":"m12 
 // v8.7 Health → From your watch; the money planner
 Object.assign(ICONS, {"PiggyBank":[["path",{"d":"M11 17h3v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a3.16 3.16 0 0 0 2-2h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-1a5 5 0 0 0-2-4V3a4 4 0 0 0-3.2 1.6l-.3.4H11a6 6 0 0 0-6 6v1a5 5 0 0 0 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1z"}],["path",{"d":"M16 10h.01"}],["path",{"d":"M2 8v1a2 2 0 0 0 2 2h1"}]],"Watch":[["circle",{"cx":"12","cy":"12","r":"6"}],["polyline",{"points":"12 10 12 12 13 13"}],["path",{"d":"m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05"}],["path",{"d":"m7.88 16.36.8 4a2 2 0 0 0 2 1.61h2.72a2 2 0 0 0 2-1.61l.81-4.05"}]]});
 
+// v9.2 To-dos & lists, the agents' one card (⋯), the project board (Lucide, ISC)
+Object.assign(ICONS, {"ListChecks":[["path",{"d":"m3 17 2 2 4-4"}],["path",{"d":"m3 7 2 2 4-4"}],["path",{"d":"M13 6h8"}],["path",{"d":"M13 12h8"}],["path",{"d":"M13 18h8"}]],
+  "Repeat":[["path",{"d":"m17 2 4 4-4 4"}],["path",{"d":"M3 11v-1a4 4 0 0 1 4-4h14"}],["path",{"d":"m7 22-4-4 4-4"}],["path",{"d":"M21 13v1a4 4 0 0 1-4 4H3"}]],
+  "Kanban":[["path",{"d":"M6 5v11"}],["path",{"d":"M12 5v6"}],["path",{"d":"M18 5v14"}]],
+  "Ellipsis":[["circle",{"cx":"12","cy":"12","r":"1"}],["circle",{"cx":"19","cy":"12","r":"1"}],["circle",{"cx":"5","cy":"12","r":"1"}]]});
+
 const NS = "http://www.w3.org/2000/svg";
 function mk(name) {
   const nodes = ICONS[name] || [];
@@ -20,6 +26,10 @@ function mk(name) {
 }
 
 export const Copy = mk("Copy");
+export const ListChecks = mk("ListChecks");
+export const Repeat = mk("Repeat");
+export const Kanban = mk("Kanban");
+export const Ellipsis = mk("Ellipsis");
 export const Briefcase = mk("Briefcase");
 export const BellOff = mk("BellOff");
 export const Truck = mk("Truck");
