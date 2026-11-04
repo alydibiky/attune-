@@ -10762,6 +10762,9 @@ export default function App() {
             onAddTodo={(t) => remember({ kind: "todo", title: t.slice(0, 90), text: t, tags: ["todo"], meta: { todo: true, done: false } })} />
         ) : mode === "agents" ? (
           <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()} pro={proActive} openPlan={() => setShowUpgrade(true)}
+            understandRule={modelUsable ? async (rule) => {   // v9.2 (Ali: "set any rules I want and it understands"): a rule code can't read → the phone's model, as JSON (agent-rules.js cleans it)
+              const out = String(await callChat([{ role: "system", content: "Turn the user's rule for a shopping / hotel / flight agent into JSON. Keys (only those the rule sets): below (max price, number), minStars (1-5), minRating (number), maxWalk (metres), mustHave (words), avoid (words), onlySites, avoidSites (site or airline names, lowercase), hours (how often to check), maxStops, bags, timeOfDay (morning|afternoon|evening|night), notBefore, notAfter (hour 0-23), cabin (economy|premium|business|first). Answer with the JSON object only." }, { role: "user", content: rule }], null, { think: false, maxTokens: 160, temperature: 0 }) || "");
+              const m = out.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; } : null}
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }}
             search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 4 }) : null}
             onResearch={(topic, q) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + (q || tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: topic }))); navTo("chat"); }} />

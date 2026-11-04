@@ -33,17 +33,29 @@ object AgentWatch {
         prefs(ctx).edit().putString("plan", arr.toString()).apply()
         // v9.0: a round already planned stays planned — opening the Agents page used to push the next check 12 hours later each time
         if (arr.length() == 0) { cancel(ctx); prefs(ctx).edit().remove("next").apply() }
-        else if (prefs(ctx).getLong("next", 0L) <= System.currentTimeMillis()) arm(ctx)
+        else {
+            // v9.2: an agent now asks to be checked more often than the round already planned → plan it again, sooner
+            var hours = 12
+            for (i in 0 until arr.length()) { val h = arr.optJSONObject(i)?.optInt("hours", 0) ?: 0; if (h in 1 until hours) hours = h }
+            val next = prefs(ctx).getLong("next", 0L)
+            if (next <= System.currentTimeMillis() || next > System.currentTimeMillis() + hours * 3600_000L + 3600_000L) arm(ctx)
+        }
     }
 
     private fun pending(ctx: Context) = PendingIntent.getBroadcast(ctx, REQ, Intent(ctx, AgentWatchReceiver::class.java),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-    /** In about 12 hours (± 30 minutes, so not every phone asks at the same minute). Inexact: no special permission. */
+    /** In about 12 hours (± 30 minutes, so not every phone asks at the same minute), or sooner when an agent's rule asks. Inexact: no special permission. */
     fun arm(ctx: Context) {
         if (prefs(ctx).getString("plan", "[]") == "[]") return
         val am = ctx.getSystemService(AlarmManager::class.java) ?: return
-        val at = System.currentTimeMillis() + 12 * 3600_000L + ((Math.random() - 0.5) * 3600_000L).toLong()
+        // v9.2 (Ali: "set any rules I want"): an agent told "check every 6 hours" sends hours; the most frequent one sets the next round
+        // (1 hour at least; 12 hours when no agent asked)
+        val arr = try { JSONArray(prefs(ctx).getString("plan", "[]")) } catch (e: Exception) { JSONArray() }
+        var hours = 12
+        for (i in 0 until arr.length()) { val h = arr.optJSONObject(i)?.optInt("hours", 0) ?: 0; if (h in 1 until hours) hours = h }
+        val jitter = ((Math.random() - 0.5) * Math.min(3600_000L, hours * 3600_000L / 6)).toLong()
+        val at = System.currentTimeMillis() + hours * 3600_000L + jitter
         try { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending(ctx)); prefs(ctx).edit().putLong("next", at).apply() } catch (e: Exception) {}
     }
 

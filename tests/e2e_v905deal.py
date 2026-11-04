@@ -30,8 +30,9 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_timeout(1200)
     page.evaluate("s => localStorage.setItem('attune:agents:v1', s)", SEED); page.reload(); page.wait_for_timeout(1200)
     page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", "agents"); page.wait_for_selector("[data-testid=agent-deal]", timeout=8000); page.wait_for_timeout(300)
-    tabs = page.locator("[data-testid=agents-tab]")
-    check(tabs.count() == 2 and page.locator("[data-testid=agent-follow]").count() == 0, "each running agent is its own tab; only the open one shows (the one with a find opens first)")
+    # v9.2 (Ali picked 2A): no tab per agent — every agent in one list, grouped (Needs you · Working · Done), the same card shape
+    check(page.locator("[data-testid=agents-tab]").count() == 0 and page.locator("[data-testid=agent-follow]").count() == 1 and page.locator("[data-testid=agent-head]").count() == 2,
+          "2A: both agents in one list, each with the same header (mark · name · status · ⋯)")
     hero = page.locator("[data-testid=agent-deal-best]").inner_text()
     check("Jumia" in hero and "7,950" in hero and "450" in hero, "the best deal is the cheapest real store, Jumia 7,950, 450 under the limit: " + hero.replace("\n", " · ")[:160])
     check("check the seller" in page.locator("[data-testid=agent-deal-cheaper]").inner_text(), "the cheaper Facebook post says check the seller first")
@@ -42,10 +43,10 @@ with sync_playwright() as p:
     check((page.evaluate("window.__agentOpen") or {}).get("url") == "https://www.jumia.com.eg/huawei-freeclip-2.html", "Open the listing opens THAT listing, not a search page")
     page.locator("[data-testid=agent-deal-row]").nth(2).click(); page.wait_for_timeout(200)
     check((page.evaluate("window.__agentOpen") or {}).get("url") == "https://www.amazon.eg/dp/B0XYZ", "a bar opens its own store's listing")
-    tabs.nth(0).click(); page.wait_for_timeout(200)
-    check(page.locator("[data-testid=agent-follow]").count() == 1 and page.locator("[data-testid=agent-deal]").count() == 0, "tapping the other tab shows that agent instead")
-    shot(page, "v905-tabs")
-    tabs.nth(1).click(); page.wait_for_timeout(200)
+    page.click("[data-testid=agents-view-board]"); page.wait_for_selector("[data-testid=agents-board]")
+    check(page.locator("[data-testid=agents-board-card]").count() == 2, "Board: every agent as a small card in its column")
+    page.locator("[data-testid=agents-board-card]").first.click(); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=agents-board]").count() == 0 and page.locator("[data-testid=agent-head]").count() == 2, "a board card opens the list at that agent")
     # Arabic
     page.evaluate("() => { localStorage.setItem('attune:ui:lang', 'ar'); }"); page.reload(); page.wait_for_timeout(1200)
     page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", "agents"); page.wait_for_selector("[data-testid=agent-deal]", timeout=8000); page.wait_for_timeout(300)

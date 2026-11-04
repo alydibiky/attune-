@@ -406,7 +406,8 @@ export function planSteps(a, now = Date.now()) {
 // v8.2: a hotel window sends each start day as its own check ("id~2"); takeChecks folds them back into the agent
 export const watchPlan = (st) => (st.agents || []).filter((a) => a.on && (a.kind === "watch" || (a.kind === "buy" && a.below > 0 && a.step === "search")) && /^https:\/\//.test(a.url || ""))
   .flatMap((a) => (a.tries && a.tries.length ? a.tries.map((x, i) => ({ id: a.id + "~" + i, title: (a.what || a.title) + " · " + (x.checkin || x.site || ""), url: x.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: x.site || a.site || "" }))
-    : [{ id: a.id, title: a.what ? a.what + " · " + (a.site || "") : a.title, url: a.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: a.site || "" }])).slice(0, 16);
+    : [{ id: a.id, title: a.what ? a.what + " · " + (a.site || "") : a.title, url: a.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: a.site || "" }])
+    .map((x) => (a.rules && a.rules.hours ? { ...x, hours: a.rules.hours } : x))).slice(0, 16);   // v9.2: "check every 6 hours" (agent-rules.js)
 /** The phone's checks ({id or "id~i": [rows]}) → the agents with them added (a window's row keeps its days). */
 export function takeChecks(agents, got) {
   return agents.map((a) => {
