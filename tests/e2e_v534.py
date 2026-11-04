@@ -35,7 +35,7 @@ with sync_playwright() as p:
     check(page.locator("textarea[placeholder='Message Attune']").count() == 1, "…and ← again goes home to Chat")
 
     # ---- Assistants: the edit form has its own back, and ← closes it first ----
-    open_more(page, "Assistants")
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'assistants'}}))"); page.wait_for_timeout(400)   # v9.1: folded into Projects (no menu entry)
     page.locator("[data-testid=assistant-new]").click(); page.wait_for_timeout(200)
     check(page.locator("[data-testid=assistant-back]").count() == 1, "the assistant form shows '← All assistants'")
     back(page)

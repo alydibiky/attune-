@@ -100,7 +100,8 @@ with sync_playwright() as p:
     # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v519.py)
     # ---- 3. a broken screen stays in its screen ----
     page.evaluate("localStorage.setItem('attune:artifacts:v1', JSON.stringify([{ id: 'x', title: 'Broken', kind: 'html' }]))")
-    open_more(page, "Artifacts", "screen-error")
+    leave_apps(page); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'artifacts'}}))")   # v9.1: Artifacts is folded into Projects (no menu entry)
+    page.wait_for_selector("[data-testid=screen-error]", timeout=5000)
     check(page.locator("[data-testid=screen-error]").count() == 1, "a screen that crashes shows 'Something went wrong on this screen'")
     check(page.locator("nav button").count() == 6, "…and the rest of the app still works (the bottom bar is there)")
     page.locator("nav button:has-text('Chat')").click()

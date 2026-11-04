@@ -88,7 +88,7 @@ chat.jsx: {!busy ? <button onClick={() => editFrom(idx)} className="mt-0.5 min-h
 people-ui.jsx: <div className="flex gap-1.5 flex-wrap"><button className={btnS} onClick={() => setEdit(p)} data-testid="people-edit">{tr("Edit")}</button>
 radar-ui.jsx: <button className={U.btnS} onClick={() => onEdit(x)} data-testid="radar-edit">{tr("Edit")}</button>
 spaces-ui.jsx: <button onClick={() => setEdit({ ...a, startersText: (a.starters || []).join("\n") })} className={iconBtn} title={tr("Edit")}><PenLine size=
-spaces-ui.jsx: <button onClick={() => setEdit({ ...cur })} className={iconBtn} title={tr("Edit")}><PenLine size={16} /></button>
+spaces-ui.jsx: <button onClick={() => setEdit({ ...cur })} className={iconBtn} title={tr("Edit")} data-testid="project-edit-btn"><PenLine size={16} /></but
 
 ## Message alerts
 agents-ui.jsx: ...(alerts.some((x) => !String(x.id).startsWith("agent-")) ? [{ id: "alerts", label: tr("Message alerts"), dot: false, kind: "alert" }] : []
@@ -315,6 +315,7 @@ chatxray-ui.jsx: : <button onClick={ask} disabled={!q.trim()} className={btnP + 
 library-ui.jsx: <button onClick={() => ask(s)} className={btnS + " shrink-0"} data-testid="lib-ask"><MessageCircle size={14} className="c-acc" />{tr("Ask")}
 pdfchat-ui.jsx: const label = kind === "translate" ? tr("Translate") : kind === "explain" ? tr("Explain") : (question || tr("Ask"));
 pdfchat-ui.jsx: <button onClick={() => askSel("ask", sel.quote, sel.page || page)} className={tool} data-testid="pdf-sel-ask"><Send size={13} />{tr("Ask")}<
+spaces-ui.jsx: <div className="flex justify-end"><button onClick={() => askHere(q)} disabled={!q.trim()} className={btnMain + " flex items-center gap-1.5"}
 travel-ui.jsx: <button onClick={askTravel} disabled={!travelQ.trim() || loading} className={K.btnP + " w-full"}>{loading ? <Loader2 size={15} className="an
 
 ## Search
@@ -352,7 +353,6 @@ guide-ui.jsx: {card(14, 176, 112, 40)}{bar(22, 192, 50, 0.6)}<rect x="86" y="188
 ## Chats
 attune.jsx: <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! 
 backup-ui.jsx: [tr("Chats"), s.chats], [tr("Money ledger entries"), s.ledger], [tr("Cycle days logged"), s.cycleDays],
-spaces-ui.jsx: <p className="text-[15px] text-[var(--c-ink)] font-extrabold px-2 pt-2 pb-1 m-0">{tr("Chats")}</p>
 teach-ui.jsx: <button className={ghost + " flex-col !h-16"} disabled={!ready || !!busy} onClick={() => setMode(mode === "chats" ? null : "chats")} data-te
 
 ## Home
@@ -757,6 +757,10 @@ code-ui.jsx: <span className={`block text-[11px] mt-0.5 ${p.status === "passed" 
 speed-ui.jsx: <span className="truncate">{b.mode}{b.draft ? " + " + tr("draft") : ""} · {publicName(b.model)}</span>
 speed-ui.jsx: {best ? <p className="text-[11px] text-[var(--c-acc)] flex items-center gap-1 pt-1"><Zap size={12} />{tr("Fastest here so far: {m}", { m: be
 
+## Run
+code-ui.jsx: {isHtml ? <Eye size={14} /> : <Play size={14} />}{isHtml ? tr("Check the page") : tr("Run")}</button>
+spaces-ui.jsx: <button onClick={() => runRepeat(r)} className={btnMain + " !min-h-[40px] !px-3 text-[13px]"} data-testid="project-repeat-run">{tr("Run")}</
+
 ## Change
 code-ui.jsx: <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Ch
 cv-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={() => photoRef.current && photoRef.current.click()}><Camera size={13} />{cv.
@@ -938,6 +942,10 @@ wagroups-ui.jsx: setAdding(null); setBusy(tr("Adding…"));
 ## Paste text
 knowledge-ui.jsx: <button className={ghost} onClick={() => setPaste({ title: "", text: "" })} data-testid="kn-paste"><ClipboardPaste size={14} />{tr("Paste te
 library-ui.jsx: <button className={btnS} disabled={!!busy} onClick={() => setPaste(paste ? null : { title: "", text: "" })} data-testid="lib-add-paste"><Cli
+
+## Due today
+learning-report-ui.jsx: const dueText = (p) => p.status === "late" ? (p.days === -1 ? tr("1 day late") : T("{n} days late", { n: -p.days })) : p.status === "today" 
+spaces-ui.jsx: return n < 0 ? tr("Was due {d}", { d: when }) : n === 0 ? tr("Due today") : tr("Due {d} · in {n} days", { d: when, n });
 
 ## All time
 learning-report-ui.jsx: <Tile label={tr("All time")} value={String(rep.total)} sub={tr("problems")} />
