@@ -90,6 +90,15 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
 
   const openApp = (app, url = "") => {
     if (!app) return;
+    // v9.1 (Ali, 4 Nov: "if the app won't open, open it in Attune's browser like the agents do"): a web link → the site's own app when
+    // it is on the phone, else Attune's browser (Best offer · Fill my details) — never an outside browser or the store
+    const u = url || app.web || "";
+    if (/^https:\/\//.test(u) && N && N.openInApp && N.agentOpen && nativeCall) {
+      let r = {}; try { r = JSON.parse(N.openInApp(u) || "{}"); } catch (e) {}
+      if (r.ok && r.how === "app") { flash && flash(T("Opening {app}", { app: app.label })); return; }
+      nativeCall("agentOpen", { url: u, title: app.label || "", profile: loadBooking(), rules: { cheapest: true }, labels: agentLabels(), search: true }).catch(() => {});
+      return;
+    }
     if (N && N.openAnyApp) {
       let r = {}; try { r = JSON.parse(N.openAnyApp(JSON.stringify({ pkg: app.pkg || "", url: url || "" })) || "{}"); } catch (e) {}
       if (!r.ok && app.web) try { JSON.parse(N.openAnyApp(JSON.stringify({ pkg: "", url: app.web }))); } catch (e) {}

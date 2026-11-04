@@ -113,6 +113,13 @@ with sync_playwright() as p:
     page.evaluate("() => { const N = window.AttuneNative; window.__inapp = null; N.openInApp = (u) => { window.__inapp = u; return JSON.stringify({ ok: true, how: 'app' }); }; }")
     page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
     check(bool(page.evaluate("window.__inapp")) and len(page.evaluate("window.__opens")) == n_open + 1, "any site: Android opens the offer in the app that owns the link")
+    # …and when no app owns the link, Attune's own browser opens it (never Chrome or the store) — Book and "Open Booking.com" alike
+    page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(100)
+    page.evaluate("() => { window.AttuneNative.openInApp = (u) => JSON.stringify({ ok: false, how: 'none' }); window.AttuneNative.openAnyApp = () => { window.__outside = 1; return JSON.stringify({ ok: true, how: 'link' }); }; }")
+    n0 = len(page.evaluate("window.__opens"))
+    page.click("[data-testid=agent-open]"); page.wait_for_timeout(300)
+    check(len(page.evaluate("window.__opens")) == n0 + 1 and not page.evaluate("window.__outside"), "no app on the phone → 'Open Booking.com' opens Attune's own browser")
+    best.nth(0).locator("[data-testid=agent-podium-open]").click(); page.wait_for_selector("[data-testid=agent-sheet]", timeout=3000)
     page.evaluate("() => { delete window.AttuneNative.openInApp; }")
     shot(page, "v910-sheet")
     page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(100)
