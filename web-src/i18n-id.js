@@ -7350,6 +7350,7 @@ export const IDN = {
   "Improving the prompt…": "Memperbaiki prompt…",
   "Making it sound human…": "Membuatnya terdengar alami…",
   "Making it shorter…": "Memendekkan…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "Beri aku rencana singkat untuk belajar {t}, langkah demi langkah, dengan sumber gratis.",
   "Directions to {p} — in Google Maps": "Rute ke {p} — di Google Maps",
   "Download the area in Google Maps once, and the directions work without internet too.": "Unduh area itu sekali di Google Maps, dan rutenya juga jalan tanpa internet.",
   "≈ {p} a month — save {n}%": "≈ {p} per bulan — hemat {n}%",

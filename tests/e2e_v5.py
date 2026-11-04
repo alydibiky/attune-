@@ -143,7 +143,7 @@ def sec_arabic(br):
     check(page.evaluate("document.documentElement.dir") == "rtl" and page.evaluate("document.documentElement.lang") == "ar", "Arabic turns the whole page right-to-left")
     nav = page.locator("nav button")
     labels = [nav.nth(i).inner_text().strip() for i in range(nav.count())]
-    check(labels == ["الرئيسية", "الشات", "الفلوس", "الكشّاف", "عقلي", "الكل"], "bottom bar is in Arabic (v6.29: Home · Chat · Money · Scout · Mind · All): %s" % labels)
+    check(labels == ["الرئيسية", "الشات", "الفلوس", "الوكلاء", "عقلي", "الكل"], "bottom bar is in Arabic (v6.29: Home · Chat · Money · Scout · Mind · All): %s" % labels)
     b0 = nav.nth(0).bounding_box(); b4 = nav.nth(nav.count() - 1).bounding_box()
     check(b0["x"] > b4["x"], "and it reads from the right (Chat is on the right)")
     check(page.locator("textarea[placeholder='اكتب رسالة لـ Attune']").count() == 1, "the message box says اكتب رسالة إلى Attune")

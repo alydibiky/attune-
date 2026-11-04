@@ -7349,6 +7349,7 @@ export const ZH = {
   "Improving the prompt…": "正在改进提示词…",
   "Making it sound human…": "正在让它更像真人写的…",
   "Making it shorter…": "正在缩短…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "给我一个学习{t}的简短计划，循序渐进，附免费资源。",
   "Directions to {p} — in Google Maps": "去{p}的路线 — 在 Google 地图中",
   "Download the area in Google Maps once, and the directions work without internet too.": "在 Google 地图中下载一次该区域，没有网络也能导航。",
   "≈ {p} a month — save {n}%": "≈ 每月 {p} — 省 {n}%",

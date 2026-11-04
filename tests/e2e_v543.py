@@ -10,7 +10,7 @@ from harness import Env, new_page, check, real_errors, finish, HERE
 
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
-STUDIO = re.search(r'MOCK = r"""(.*?)"""', open(os.path.join(HERE, "e2e_v59.py"), encoding="utf-8").read(), re.S).group(1)
+STUDIO = re.search(r'MOCK = r"""(.*?)"""', open(os.path.join(HERE, "..", "archive", "studio", "tests", "e2e_v59.py"), encoding="utf-8").read(), re.S).group(1)
 EXTRA = r"""(() => { const S = window.__mock = window.__mock || {};
   const go = () => { const N = window.AttuneNative; if (!N || !N.upscaleImage) return setTimeout(go, 0);
     S.img.packs = [{ id: "turbo", label: "Studio Turbo", kind: "turbo", files: {} }, { id: "esrgan-x4", label: "Sharpen", kind: "upscale", files: {} }];

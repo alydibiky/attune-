@@ -7349,6 +7349,7 @@ export const BN = {
   "Improving the prompt…": "প্রম্পট উন্নত করছি…",
   "Making it sound human…": "এটাকে মানুষের লেখার মতো করছি…",
   "Making it shorter…": "ছোট করছি…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "{t} শেখার একটা ছোট পরিকল্পনা দাও, ধাপে ধাপে, বিনামূল্যের উপকরণসহ।",
   "Directions to {p} — in Google Maps": "{p} যাওয়ার পথ — Google Maps-এ",
   "Download the area in Google Maps once, and the directions work without internet too.": "এলাকাটি একবার Google Maps-এ ডাউনলোড করুন, তাহলে ইন্টারনেট ছাড়াও পথ দেখাবে।",
   "≈ {p} a month — save {n}%": "≈ মাসে {p} — {n}% সাশ্রয়",

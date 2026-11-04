@@ -46,7 +46,7 @@ with sync_playwright() as p:
         check("LinkedIn Jobs" in links and "Google" in links, f"{dev}: job sites to search: {links}")
         if dev == "phone":
             page.locator("[data-testid=cv-job-learn]", has_text="Python").click(); page.wait_for_timeout(600)
-            check(page.locator("[data-testid=learn-topic]").count() == 1 and page.locator("[data-testid=learn-topic]").input_value() == "Python", "a missing skill → Learn daily, the course topic filled in")
+            check(page.locator("[data-testid=phone-home], [data-testid=composer], textarea[placeholder='Message Attune']").count() >= 1 and page.locator("[data-testid=learn-topic]").count() == 0, "a missing skill → Chat makes a plan to learn it (v9.1: Learn daily archived)")
         ctx.close()
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()

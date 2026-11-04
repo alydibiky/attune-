@@ -7350,6 +7350,7 @@ export const HI = {
   "Improving the prompt…": "प्रॉम्प्ट बेहतर कर रहे हैं…",
   "Making it sound human…": "इसे इंसानी अंदाज़ दे रहे हैं…",
   "Making it shorter…": "इसे छोटा कर रहे हैं…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "{t} सीखने का एक छोटा प्लान दो, कदम-दर-कदम, मुफ़्त संसाधनों के साथ।",
   "Directions to {p} — in Google Maps": "{p} तक का रास्ता — Google Maps में",
   "Download the area in Google Maps once, and the directions work without internet too.": "इलाका एक बार Google Maps में डाउनलोड कर लें, फिर रास्ता बिना इंटरनेट भी चलेगा।",
   "≈ {p} a month — save {n}%": "≈ {p} प्रति माह — {n}% बचत",

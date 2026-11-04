@@ -125,7 +125,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const data = useMemo(() => {
     const ledger = loadLedger(), o = moneyOverview(ledger);
     const fit = null, tg = null;   // v9.1: Fit & Food is archived (→ Attune Fit) — Home no longer reads it
-    const care = loadCare(), scout = loadScout(), courses = readArr("attune:daily:courses:v1"), slides = readArr("attune:slides:v1");
+    const care = loadCare(), scout = loadScout(), courses = [] /* v9.1: Learn daily archived — its cards no longer wait on Home */, slides = readArr("attune:slides:v1");
     const known = (id) => tools.some((t) => t[0] === id);
     const recent = [...new Set([...recentTools(), ...START_TOOLS])].filter(known).slice(0, 4);
     return { items: waitingList({ care, radar: loadRadar(), life: loadLife(), ledger, scout, courses }), o, hasLedger: !!ledger, fitOn: !!(fit && fit.profile), kcal: todayFacts().kcal || 0, goal: tg && tg.kcal ? tg.kcal : 0, reminders: todayFacts().reminders || 0,

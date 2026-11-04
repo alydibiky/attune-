@@ -7349,6 +7349,7 @@ export const VI = {
   "Improving the prompt…": "Đang cải thiện prompt…",
   "Making it sound human…": "Đang làm cho tự nhiên hơn…",
   "Making it shorter…": "Đang rút gọn…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "Cho tôi một kế hoạch ngắn để học {t}, từng bước, với tài liệu miễn phí.",
   "Directions to {p} — in Google Maps": "Chỉ đường đến {p} — trong Google Maps",
   "Download the area in Google Maps once, and the directions work without internet too.": "Tải khu vực trong Google Maps một lần, chỉ đường sẽ dùng được cả khi không có mạng.",
   "≈ {p} a month — save {n}%": "≈ {p} mỗi tháng — tiết kiệm {n}%",

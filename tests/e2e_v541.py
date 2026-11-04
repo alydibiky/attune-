@@ -106,18 +106,7 @@ with sync_playwright() as p:
     check(ans.startswith("Yes") and "Hassan" in ans and len(sent(page)) == 0, "“was LTM 1100 mentioned?” — yes, by whom and when, with no model call")
     shot(page, "03-xray")
 
-    # ---- #6 Deal Check: “12,400 or 3 × 4,133” read right ----
-    open_tool(page, "Deal Check", "deal")
-    page.fill("[data-testid=deal-input]", 'iPhone 15 Pro 256GB, like new, 38,000 EGP, deposit on Vodafone Cash to hold it "12,400 EGP or 3 × 4,133 with valU"')
-    queue(page, ['{"item": "iPhone 15 Pro 256GB", "kind": "product", "price": 38000, "currency": "EGP", "cash_price": 38000, "down_payment": 12400, "monthly": 4133, "months": 3, "fees": null, "seller": null, "claims": [], "text": ""}', "Hello, can I see it first?"])
-    page.locator("[data-testid=deal-go]").click()
-    page.wait_for_selector("[data-testid=deal-verdict]", timeout=30000)
-    body = page.locator("[data-testid=deal]").inner_text()
-    check("24,799" not in body and "-13,201" not in body and "−13,201" not in body, "no 24,799 total and no −13,201 (the model's misreading is overruled by code)")
-    check("12,399" in body and ("0%" in body), "3 × 4,133 = 12,399 — a real 0%")
-    check("Two very different prices" in body, "two different prices in one offer are flagged")
-    shot(page, "04-deal")
-
+    # (v9.1: this section used Deal — archived with it in archive/deal/tests/mixed/e2e_v541.py)
     # ---- #1 change a deck by a sentence ----
     open_tool(page, "Slides & Reports", "slides")
     page.fill("[data-testid=slides-prompt]", "A pitch for our crane company")

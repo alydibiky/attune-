@@ -8833,7 +8833,8 @@ export default function App() {
     } catch (e) {}
     return () => { try { ob && ob.disconnect(); } catch (e) {} };
   }, []);
-  useEffect(() => { const on = (e) => { try { localStorage.setItem("attune:learn:seed", (e.detail && e.detail.topic) || ""); } catch (x) {} navTo("learn"); }; window.addEventListener("attune-learn", on); return () => window.removeEventListener("attune-learn", on); }, []);
+  // v9.1: Learn daily is archived — "learn this skill" (CV → Job ready) asks Chat for a short plan instead
+  useEffect(() => { const on = (e) => { const t = (e.detail && e.detail.topic) || ""; if (!t) return; setChatSeed("\u0002" + tr("Give me a short plan to learn {t}, step by step, with free resources.", { t })); navTo("chat"); }; window.addEventListener("attune-learn", on); return () => window.removeEventListener("attune-learn", on); }, []);
   // v6.27 Read it to me hands a prescription to Family health and a bill to Money
   const [careIn, setCareIn] = useState(null);
   const [scoutIn, setScoutIn] = useState(null);   // v6.28: a goal typed on Home → Scout starts it

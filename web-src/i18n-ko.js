@@ -7349,6 +7349,7 @@ export const KO = {
   "Improving the prompt…": "프롬프트 다듬는 중…",
   "Making it sound human…": "사람이 쓴 것처럼 바꾸는 중…",
   "Making it shorter…": "줄이는 중…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "{t}을(를) 배우는 짧은 계획을 무료 자료와 함께 단계별로 알려줘.",
   "Directions to {p} — in Google Maps": "{p}까지 길찾기 — Google 지도에서",
   "Download the area in Google Maps once, and the directions work without internet too.": "Google 지도에서 지역을 한 번 다운로드해 두면 인터넷 없이도 길찾기가 됩니다.",
   "≈ {p} a month — save {n}%": "≈ 월 {p} — {n}% 절약",

@@ -7350,6 +7350,7 @@ export const SW = {
   "Improving the prompt…": "Ninaboresha maelekezo…",
   "Making it sound human…": "Ninaifanya isikike ya kibinadamu…",
   "Making it shorter…": "Ninaifupisha…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "Nipe mpango mfupi wa kujifunza {t}, hatua kwa hatua, kwa rasilimali za bure.",
   "Directions to {p} — in Google Maps": "Njia ya kwenda {p} — kwenye Google Maps",
   "Download the area in Google Maps once, and the directions work without internet too.": "Pakua eneo hilo mara moja kwenye Google Maps, na maelekezo yatafanya kazi hata bila intaneti.",
   "≈ {p} a month — save {n}%": "≈ {p} kwa mwezi — okoa {n}%",

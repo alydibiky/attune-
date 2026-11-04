@@ -7349,6 +7349,7 @@ export const JA = {
   "Improving the prompt…": "プロンプトを改善中…",
   "Making it sound human…": "自然な文章にしています…",
   "Making it shorter…": "短くしています…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "{t}を学ぶ短いプランを、無料の教材つきで一歩ずつ教えて。",
   "Directions to {p} — in Google Maps": "{p}への経路 — Google マップで",
   "Download the area in Google Maps once, and the directions work without internet too.": "Google マップでその地域を一度ダウンロードすれば、オフラインでも経路が使えます。",
   "≈ {p} a month — save {n}%": "≈ 月あたり {p} — {n}% お得",

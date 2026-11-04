@@ -8,7 +8,8 @@ from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
-PLACES = ["home", "money", "timeline", "health", "agents", "coach", "learn", "shelf", "travel", "business", "tools"]   # v8.7 (Ali picked P2-E option 1): every place, in 3 groups
+PLACES = ["home", "money", "timeline", "care", "agents", "shelf", "travel", "projects", "tools"]   # v9.1: Health = Family health; Learn / Students / Business archived; Work = Projects
+OLD_PLACES = ["home", "money", "timeline", "health", "agents", "coach", "learn", "shelf", "travel", "business", "tools"]   # v8.7 (Ali picked P2-E option 1): every place, in 3 groups
 def shot(page, name):
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, name + ".png"))
 with sync_playwright() as p:
@@ -23,9 +24,9 @@ with sync_playwright() as p:
     shot(page, "side-phone")
     page.click("[data-testid=phone-side] [data-testid=side-go-money]"); page.wait_for_timeout(400)
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
-    check(tabs == ["money", "planner", "deal"], "Money (v8.7): Money · Month plan · Deal Check: %s" % tabs)
-    page.click("[data-testid=hub-tab-deal]"); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=hub-tab-deal][aria-selected=true]").count() == 1, "a tab opens the sibling, marked as chosen")
+    check(tabs == ["money", "planner"], "Money: Money · Month plan (v9.1: Deal Check archived): %s" % tabs)
+    page.click("[data-testid=hub-tab-planner]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=hub-tab-planner][aria-selected=true]").count() == 1, "a tab opens the sibling, marked as chosen")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=hub-tab-money][aria-selected=true]").count() == 1, "Back returns to the tab before")
     shot(page, "money-tabs")
@@ -75,9 +76,9 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000)
     ids = page.evaluate("[...document.querySelectorAll('[data-testid=side] [data-testid^=side-go-]')].map(b => b.dataset.testid.slice(8))")
     check(ids == PLACES, "computer: the same places: %s" % ids)
-    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'learn'}}))"); page.wait_for_timeout(400)
-    check(page.locator("[data-testid=hub-tab-news]").count() == 1 and page.locator("[data-testid=hub-tab-scout]").count() == 0, "Daily (v8.5, E1): Learn · News are its tabs (Scout is in Go)")
-    shot(page, "desk-learn")
+    # (v9.1: the Daily hub check opened the archived Learn page — removed)
+    # (v9.1: the Daily hub check opened the archived Learn page — removed)
+    # (v9.1: the Daily hub check opened the archived Learn page — removed)
     check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
     br.close()
 finish()

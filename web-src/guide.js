@@ -1,3 +1,4 @@
+import { hiddenFromMenus } from "./removed.js";
 /* ---- How to use Attune — the guide's content. v6.28 (Ali: "a How to Use page with detailed visuals, explanations and
    step-by-step walkthroughs of everything the app can do"); v6.37 (Ali: "make the app easy to use and to understand all these
    features … how to get the most of the app and build a very strong lifestyle with it"): rewritten for the v6.36 sidebar
@@ -179,6 +180,7 @@ export const PLAN = [
             { tool: "fleet", text: S("Team records: which machine needs attention this week.", "سجلات الفريق: أنهي معدة محتاجة اهتمام الأسبوع ده.") }],
     tip: S("Answer a client in two minutes with a real price — that is how you win the job.", "رد على العميل في دقيقتين بسعر حقيقي — كده بتكسب الشغلانة.") },
 ];
+for (const part of PLAN) part.items = (part.items || []).filter((x) => !hiddenFromMenus(x.tool));   // v9.1: no line opens an archived tool
 
 /** The guide's chapters, in the sidebar's own order (hubs.js HUBS): [{ title, ids }]. Money's ids follow its tabs and the
     Follow-ups switch; Privacy (bottom of the sidebar) closes the list. */

@@ -7335,6 +7335,7 @@ export const ARB = {
   "Improving the prompt…": "أحسّن الأمر…",
   "Making it sound human…": "أجعله يبدو بشريًا…",
   "Making it shorter…": "أختصره…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "ضع لي خطة قصيرة لتعلّم {t} خطوة بخطوة، بمصادر مجانية.",
   "Directions to {p} — in Google Maps": "الاتجاهات إلى {p} — في خرائط Google",
   "Download the area in Google Maps once, and the directions work without internet too.": "نزّل المنطقة في خرائط Google مرة واحدة، وستعمل الاتجاهات دون إنترنت أيضًا.",
   "≈ {p} a month — save {n}%": "≈ {p} شهريًا — وفّر {n}%",

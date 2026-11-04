@@ -27,7 +27,7 @@ with sync_playwright() as p:
     # ---- 2. Scout: the old goal, cleaned
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(300)
-    page.locator(".rounded-t-2xl button:has-text('Scout')").first.click(); page.wait_for_selector("[data-testid=scout-page]", timeout=5000)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_selector("[data-testid=scout-page]", timeout=5000)   # v9.1: Scout opens from an Agent card (folded)
     page.locator("[data-testid=scout-goal]").first.click(); page.wait_for_timeout(300)
     body = page.inner_text("[data-testid=scout-page]")
     check("151" not in body and "nfl.com" not in body, "what the old Scout kept (the 151 EGP list page, nfl.com) is gone at once")

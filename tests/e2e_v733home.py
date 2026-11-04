@@ -23,11 +23,11 @@ with sync_playwright() as p:
     page.set_viewport_size({"width": 390, "height": 860})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000); page.wait_for_timeout(500)
     labels = [b.strip() for b in page.locator("nav button").all_inner_texts()]
-    check(labels == ["Home", "Chat", "Money", "Scout", "Mind", "All"], "the bottom bar: Health → Scout: %s" % labels)
+    check(labels == ["Home", "Chat", "Money", "Agents", "Mind", "All"], "the bottom bar: Health → Scout: %s" % labels)
     w = page.locator("[data-testid=home-today]").inner_text()
-    check("attune suggests" in w.lower() and "2 new finds:" in w and "flat in Maadi" in w and "2 cards to review · lesson 2 — Turkish" in w, "What's waiting: Scout's new finds and the cards to review: " + w.replace("\n", " | "))
+    check("attune suggests" in w.lower() and "2 new finds:" in w and "flat in Maadi" in w and "2 cards to review" not in w, "What's waiting: Scout's new finds (the archived Learn's cards no longer wait) (v9.1ew: " + w.replace("\n", " | "))
     r = page.locator("[data-testid=home-recent]").inner_text()
-    check(r.index("Learn daily") < r.index("Scout") and "Review 2 cards · Lesson 2" in r and "2 new finds" in r, "Recent: the last tools used, first the latest, each with what waits there")
+    check("Learn daily" not in r and "Scout" not in r, "Recent: archived / folded tools are not offered (v9.1): " + r.replace("\n", " · ")[:120])
     check(page.locator("[data-testid^=home-recent-]").count() == 4 and page.locator("[data-testid=home-areas]").count() == 0, "four recent tools (filled with useful ones); the old tiles are gone")
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "home-A.png"), full_page=True)
     # the sidebar with the chats

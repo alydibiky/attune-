@@ -7350,6 +7350,7 @@ export const UR = {
   "Improving the prompt…": "پرامپٹ بہتر کر رہے ہیں…",
   "Making it sound human…": "اسے انسانی انداز دے رہے ہیں…",
   "Making it shorter…": "اسے مختصر کر رہے ہیں…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "{t} سیکھنے کا ایک مختصر پلان دو، قدم بہ قدم، مفت وسائل کے ساتھ۔",
   "Directions to {p} — in Google Maps": "{p} تک کا راستہ — Google Maps میں",
   "Download the area in Google Maps once, and the directions work without internet too.": "علاقہ ایک بار Google Maps میں ڈاؤن لوڈ کر لیں، پھر راستہ انٹرنیٹ کے بغیر بھی چلے گا۔",
   "≈ {p} a month — save {n}%": "≈ {p} ماہانہ — {n}% بچت",

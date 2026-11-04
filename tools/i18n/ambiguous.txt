@@ -129,7 +129,6 @@ agents-ui.jsx: <span className="flex gap-1.5 ms-auto"><button onClick={() => tog
 agents-ui.jsx: <span className="flex gap-1.5 ms-auto"><button onClick={() => toggle(a)} className={small} data-testid="agent-toggle">{a.on ? tr("Pause") : 
 agents-ui.jsx: const ctl = <span className="flex gap-1.5 ms-auto"><button onClick={() => toggle(a)} className={small} data-testid="agent-toggle">{a.on ? tr
 lesson-ui.jsx: {playing ? <Pause size={14} /> : <Play size={14} />}{playing ? tr("Pause") : i === 0 ? tr("Play the lesson") : tr("Play")}</button>
-map-ui.jsx: {mine ? <button onClick={pause} className="h-10 px-4 rounded-full bg-[var(--c-surf-2)] text-[var(--c-ink)] font-semibold text-[13px]">{tr("P
 readaloud-ui.jsx: <button className={big + " flex-1"} style={{ background: "var(--c-acc)", color: "var(--c-on-acc)" }} onClick={() => (playing === "all" ? sto
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={x.on === fa
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={x.on === fa
@@ -147,8 +146,6 @@ gmail-ui.jsx: <button onClick={go} disabled={busy} className={U.btnP} data-testi
 
 ## Open
 agents-ui.jsx: <tr className="border-t border-[var(--c-ln)]"><td></td>{c.rows.map((r, k) => <td key={k} className="px-2 py-1.5 text-end"><button onClick={(
-attune.jsx: <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash(tr("Copied")); }
-attune.jsx: {result && <div className="flex gap-1.5"><button onClick={copy} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-9
 cmdbox-ui.jsx: {l.open ? <button onClick={() => onOpen(l.open)} className="text-[12.5px] font-extrabold c-acc shrink-0" data-testid="lines-open">{tr("Open"
 cmdbox-ui.jsx: {j.result.open ? <button onClick={() => onOpen(j.result.open)} className="h-9 px-3.5 rounded-full text-[13px] font-extrabold" style={surf} d
 home-now.js: actions: /^cheque/.test(w.kind) ? [{ id: "cleared", label: tr("It cleared") }, { id: "bounced", label: tr("Bounced") }] : [{ id: "open", lab
@@ -297,17 +294,15 @@ care-ui.jsx: {typing === "lab" ? <div className={cardPad + " space-y-2"}><textar
 attune.jsx: {reading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />} {reading ? tr("Reading…") : tr("From a photo")}
 attune.jsx: {analysing ? tr("Reading…") : tr("What do you make of this?")}
 attune.jsx: {t.thinking ? "Thinking… " + t.thinking.slice(-220) : (t.phase || tr("Reading…"))}
-attune.jsx: {loading ? tr("Reading…") : tr("Read it & suggest my reply")}</button>
 care-ui.jsx: if (!file) return; setBusy(tr("Reading…"));
 chat.jsx: <div className="flex items-center gap-2 text-sm text-[var(--c-acc)] py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shr
 gmail-ui.jsx: <button onClick={go} disabled={busy} className={U.btnP} data-testid="gmail-go">{busy ? tr("Reading…") : g.on ? tr("Read now") : tr("Connect 
 paylog-ui.jsx: {msg ? null : st.declared ? <button onClick={go} disabled={busy} className={U.btnP + " mt-2"} data-testid="sms-old-go">{busy ? tr("Reading…"
+paylog-ui.jsx: <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy} className={U.btnP} data-testid="sms-old-file">{busy ? tr(
 
 ## Thinking…
 attune.jsx: {thinking ? tr("Thinking…") : tr("Ask")}
 attune.jsx: <span className="flex items-center gap-1.5"><Brain size={12} /> {inBusy && !inResult ? tr("Thinking…") : tr("How it thought")}</span>
-attune.jsx: <button onClick={() => cpOptimize()} disabled={!cpIntent.trim() || loading} className={`mt-3 w-full flex items-center justify-center gap-2 p
-attune.jsx: <button onClick={aiRewriteAction} disabled={!input.trim() || loading} className={`flex-1 min-w-[7rem] flex items-center justify-center gap-2
 attune.jsx: <button onClick={aiCompressAction} disabled={!cPrompt.trim() || loading} className={`flex-1 min-w-[6rem] flex items-center justify-center ga
 chat.jsx: const label = { listen: tr("Listening… speak now"), think: tr("Thinking…"), speak: tr("Speaking — tap to cut in"), idle: tr("Tap to talk") }
 chat.jsx: {m.streaming && !m.text ? tr("Thinking…") : "Thought" + (m.secs ? " for " + m.secs + " s" : "")}
@@ -322,22 +317,9 @@ pdfchat-ui.jsx: const label = kind === "translate" ? tr("Translate") : kind === 
 pdfchat-ui.jsx: <button onClick={() => askSel("ask", sel.quote, sel.page || page)} className={tool} data-testid="pdf-sel-ask"><Send size={13} />{tr("Ask")}<
 travel-ui.jsx: <button onClick={askTravel} disabled={!travelQ.trim() || loading} className={K.btnP + " w-full"}>{loading ? <Loader2 size={15} className="an
 
-## online
-attune.jsx: {online ? tr("online") : tr("offline — showing saved tiles")}
-map-ui.jsx: <span className="text-[12px] font-semibold text-[var(--c-pos)] truncate" data-testid="map-mode">{streaming ? tr("online map") + " · " + cnam
-
 ## Search
 attune.jsx: {busy ? "…" : tr("Search")}
 shelf-ui.jsx: <button onClick={() => { setQ(""); setView("search"); }} aria-label={tr("Search")} className={ib} data-testid="shelf-search-open"><Search si
-
-## saved place
-attune.jsx: <span className="block text-[10.5px] text-slate-500">{r.local ? tr("saved place") : [r.kind ? r.kind.split("/").pop().replace(/_/g, " ") : "
-map-ui.jsx: <p className="text-[13px] text-[var(--c-mut)] mt-0.5" dir="auto">{[sel.local || sel.id ? tr("saved place") : sel.kind ? String(sel.kind).spl
-map-ui.jsx: <span className="block text-[12px] text-[var(--c-mut)] truncate" dir="auto">{[r.local ? tr("saved place") : r.kind ? String(r.kind).split("/
-
-## My location
-attune.jsx: <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className="w-11 h-11 rounded-[12px] bg-slate-950/90 borde
-map-ui.jsx: <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className={fab + " w-14 h-14 text-[var(--c-acc)]"}>
 
 ## Remove
 attune.jsx: className="min-h-[40px] text-[12.5px] font-bold px-3.5 py-1.5 rounded-full text-slate-400 hover:text-amber-400">{tr("Remove")}</button>}
@@ -349,20 +331,15 @@ cmdbox-ui.jsx: <button onClick={() => onRemove(i)} aria-label={tr("Remove")} cla
 convert-ui.jsx: <button onClick={() => { setFiles(null); setOut(null); }} aria-label={tr("Remove")} className="p-2 -m-2 text-[var(--c-mut)]"><X size={16} />
 cv-ui.jsx: <button className="min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)]" onClick={
 
-## Your places
-attune.jsx: <p className="text-[15px] font-extrabold text-slate-100 mt-0 mb-2">{tr("Your places")} <span className="text-slate-500 text-xs">({st.places.
-map-ui.jsx: <div className="flex items-center justify-between gap-2"><span className="text-[16px] font-bold text-[var(--c-ink)]">{tr("Your places")}</sp
-map-ui.jsx: {[["places", tr("Your places")], ["offline", tr("Offline maps") + (updates.length ? " •" : "")]].map(([k, l]) => (
-
 ## Copied
 attune.jsx: copy: (t) => { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} },
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
 attune.jsx: {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash(tr("Copied")); }} classN
-attune.jsx: <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Rewritten")}</label>{hzRe
-attune.jsx: <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash(tr("Copied")); }
-attune.jsx: {result && <div className="flex gap-1.5"><button onClick={copy} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-9
+attune.jsx: <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{cResult ? (cResult.kind === "
+attune.jsx: <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="min-h-[40px
+chat.jsx: {done ? <CheckCircle2 size={12} className="text-[var(--c-pos)]" /> : <Copy size={12} />}{done ? tr("Copied") : tr("Copy")}</button>
 
 ## Got it
 attune.jsx: case "whereSave": remember(W2.whereRecord(o.set)); return { tone: "emerald", title: tr("Got it"), detail: o.set.thing + " — " + o.set.place,
@@ -417,9 +394,9 @@ attune.jsx: <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); setP({ ..
 attune.jsx: {net ? <button className={small} onClick={() => { try { NATIVE.clearNetLog(); } catch (err) {} setNet(nativeJSON("netLog")); }}>{tr("Clear")
 attune.jsx: <button onClick={() => { setOrg({ ...EMPTY_ORG }); setO({ ...EMPTY_ORG }); flash(tr("Cleared")); }} className="min-h-[48px] px-5 rounded-[20
 chatxray-ui.jsx: <button onClick={() => { setSaved([]); saveSaved([]); }} aria-label={tr("Clear")} className="w-11 h-11 grid place-items-center rounded-[12px
-map-ui.jsx: {q ? <button type="button" onClick={() => { setQ(""); setHits(null); }} aria-label={tr("Clear")} className="w-10 h-10 flex items-center just
-metro-ui.jsx: {v ? <button onClick={() => set({ ...ft, [k]: "" })} className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Clear")
 pdfchat-ui.jsx: {find ? <button onClick={() => setFind("")} className="absolute top-2 end-2 text-[var(--c-mut)]" aria-label={tr("Clear")}><X size={14} /></b
+pdfedit-ui.jsx: <button onClick={() => { const c = cv.current; c.getContext("2d").clearRect(0, 0, c.width, c.height); setAny(false); }} className="min-h-[44
+shelf-ui.jsx: <button onClick={() => { const c = ref.current, x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height); setUse
 
 ## Imported notes
 attune.jsx: if (!bk) { const r = SH.addBook(sh, tr("Imported notes"), "ocean"); bk = { ...r.book, imported: true }; sh = { ...r.shelf, books: r.shelf.bo
@@ -481,7 +458,6 @@ wagroups-ui.jsx: <span className="block text-[14px] leading-snug line-clamp-3" d
 
 ## Paste
 attune.jsx: <button onClick={pasteInstant} className="att-icon-btn" title={tr("Paste")}><ClipboardPaste size={18} /></button>
-attune.jsx: className="text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-300 flex items-center gap-1"><ClipboardPaste size={13} />{tr("Pas
 mind-ui.jsx: className={btnS}><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
 
 ## Speak
@@ -499,13 +475,13 @@ chat.jsx: <Brain size={14} /> {tr("Think")}</button>
 
 ## Copy
 attune.jsx: {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash(tr("Copied")); }} classN
-attune.jsx: <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Rewritten")}</label>{hzRe
-attune.jsx: <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash(tr("Copied")); }
-attune.jsx: {result && <div className="flex gap-1.5"><button onClick={copy} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-9
 attune.jsx: <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{cResult ? (cResult.kind === "
 chat.jsx: {done ? <CheckCircle2 size={12} className="text-[var(--c-pos)]" /> : <Copy size={12} />}{done ? tr("Copied") : tr("Copy")}</button>
 chat.jsx: <button onClick={() => { try { navigator.clipboard.writeText(m.text); } catch (e) {} api.flash(tr("Copied")); }} className="w-11 h-11 grid p
 cmdbox-ui.jsx: {j.result.text ? <button onClick={() => onCopy(j.result.text)} className="h-9 px-3.5 rounded-full text-[13px] font-extrabold inline-flex ite
+code-ui.jsx: <button onClick={() => { try { navigator.clipboard.writeText(cur.code); } catch (e) {} flash(tr("Copied")); }} className="px-3 min-h-[44px] 
+cv-ui.jsx: {letter ? <div className="rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="cv-ai-letter-result"><p className=
+email-ui.jsx: <button onClick={copy} disabled={busy} className={U.btnS + " " + U.muted} data-testid="email-copy">{tr("Copy")}</button>
 
 ## Working…
 attune.jsx: <Loader2 size={13} className="animate-spin" /><span>{checkState === "careful" && !inResult ? tr("This looks like it matters — reading it lin
@@ -520,14 +496,6 @@ library-ui.jsx: <button className={btnP} onClick={addPaste} disabled={!!busy} da
 attune.jsx: <p className="text-[12px] uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5"><History size={12} /> {tr("Recent")}</p>
 home-ui.jsx: <p className="c-lbl m-0 mb-2">{tr("Recent")}</p>
 slides-ui.jsx: <p className={K.label + " px-1"}>{tr("Recent")}</p>
-
-## Language
-attune.jsx: <Row label={tr("Language")}>
-cv-ui.jsx: </> : s.type === "languages" ? <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Language")}><In value={it.name} onChange={(v) => upd
-
-## AI
-attune.jsx: <label className="text-sm font-medium text-slate-300 flex items-center gap-2">{tr("Tailored for")} {tr(TOOLS[tool].label)}{result && result.
-cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job read
 
 ## History
 attune.jsx: <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><Clock size={13} /> {tr(
@@ -573,13 +541,12 @@ care-ui.jsx: <button className={btnP} onClick={() => { const d = ensureMember();
 chat.jsx: onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.kno
 knowledge-ui.jsx: onClick={async () => { const p = paste; setPaste(null); await add({ kind: "text", title: p.title.trim() || p.text.trim().split("\n")[0].slic
 life-ui.jsx: <div className="flex gap-2 mt-3"><button className={U.btnP} onClick={save} data-testid="life-save">{tr("Save")}</button><button className={U
-map-ui.jsx: <button type="submit" disabled={!adding.trim()} data-testid="map-add-save" className="h-11 px-4 rounded-[20px] bg-[var(--c-acc)] text-[var(-
+money-pages-ui.jsx: <button onClick={save} className={U.btnP + " w-full"} data-testid="add-save"><Check size={17} />{tr("Save")}</button>
 
 ## Downloading…
 attune.jsx: <div className="flex items-center gap-2 text-[13px] text-slate-300"><span className="flex-1 truncate">{n.dlStage || tr("Downloading…")}</spa
 attune.jsx: <div className="flex items-center justify-between text-xs text-slate-300 mb-2"><span>{n.dlStage || tr("Downloading…")}</span><span>{dlPct}%<
 care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
-map-ui.jsx: {dl && dl.code === trip.code ? <p className="text-[13px] text-[var(--c-acc)]">{tr("Downloading…")} {dl.pct}% {dl.detail}</p>
 
 ## Use
 attune.jsx: : <button disabled={busy} onClick={() => n.useInstalled(m.id)} className="text-[11px] px-2 py-1 rounded-full bg-teal-500 text-slate-950 disa
@@ -670,7 +637,6 @@ money-sheets-ui.jsx: <Err err={s.err} /><SaveBtn busy={s.busy} onClick={() => s.
 ## Download
 care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
 knowledge-ui.jsx: {!got ? <button className={primary} disabled={!N || !N.knowInstall} onClick={() => getPack(p)} data-testid={"kn-pack-get-" + p.id}><Download
-map-ui.jsx: : <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-dl-" + c.code} className="h-10 px-4 rounded-full bg-[var(--c-sof
 travel-ui.jsx: {x.key === "map" && !x.ok ? <button className="c-sub underline bg-transparent border-0 p-0 min-h-[44px] cursor-pointer shrink-0" onClick={ge
 
 ## Code
@@ -710,7 +676,6 @@ spaces-ui.jsx: <button onClick={() => { if (note.text.trim()) addKnowledge({ nam
 chat.jsx: <button onClick={() => share(m)} className="w-11 h-11 grid place-items-center rounded-full hover:bg-[var(--c-surf-2)] hover:text-[var(--c-in
 code-ui.jsx: {share ? <button onClick={() => share(cur.code)} className="px-3 min-h-[44px] rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] t
 cv-ui.jsx: {letter ? <div className="rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="cv-ai-letter-result"><p className=
-map-ui.jsx: className="flex-1 h-12 rounded-full border-[1.5px] border-[var(--c-ln)] text-[var(--c-acc)] font-bold text-[14.5px] flex items-center justif
 mind-ui.jsx: className={btnS}><Share2 size={12} className="inline me-1" />{tr("Share")}</button> : null}
 skills-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={() => shareOne(s)} data-testid="skill-share"><Share2 size={12} />{tr("Share"
 spaces-ui.jsx: <button onClick={() => share(native, flash, content)} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5
@@ -915,8 +880,6 @@ yearplan.js: return row("pot:" + p.id, (ar ? "تحويش: " : tr("Save: ")) + p.
 
 ## To
 email-ui.jsx: <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("To")}
-metro-ui.jsx: {box("to", tr("To"))}
-metro-ui.jsx: <p className={K.label + " !normal-case !tracking-normal"}>{tr("The lines — tap a station to put it in “{b}”", { b: pick === "from" ? tr("Fro
 money-pages-ui.jsx: {type === "transfer" ? <div><p className={U.label + " m-0 mb-1.5"}>{tr("To")}</p>
 owed-ui.jsx: <label className="block space-y-1"><span className={"block text-[12px] font-bold " + U.muted}>{tr("To")}</span><input value={f.to} onChange=
 
@@ -1010,8 +973,6 @@ slides-ui.jsx: <button aria-label={tr("Delete")} className="w-11 h-11 grid place
 
 ## From
 lifeask-ui.jsx: <span className="c-sub text-[12px]">{tr("From")}: {res.a.sources.map((s) => tr(TOOL[s] || s)).join(" · ")}</span>
-metro-ui.jsx: {box("from", tr("From"))}
-metro-ui.jsx: <p className={K.label + " !normal-case !tracking-normal"}>{tr("The lines — tap a station to put it in “{b}”", { b: pick === "from" ? tr("Fro
 money-pages-ui.jsx: <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From") : tr("Account")}</p>
 money-sheets-ui.jsx: <Field label={t.type === "transfer" ? tr("From") : tr("Account")}><Pills value={account} onChange={setAccount} items={cashAccounts(L).map((a
 sourcelabel.js: return s.length ? tr("From") + ": " + s.map((k) => tr(SOURCE_TEXT[k])).join(" · ") : "";
@@ -1021,18 +982,6 @@ lookback-ui.jsx: {chip(null, tr("All"))}
 mind-ui.jsx: <button onClick={() => { setTab("mind"); setKind(null); setTag(null); setColour(null); setQ(""); setAnswer(null); }} data-testid="mind-all" 
 money-sheets-ui.jsx: <div className="flex gap-1.5 overflow-x-auto pb-1"><button onClick={() => setMonth("")} className={pill(!month)}>{tr("All")}</button>{months
 money-sheets-ui.jsx: <Field label={tr("Default period")}><Pills value={ui.period || "month"} onChange={(v) => doIt("prefs", { period: v })} items={[["week", tr("
-
-## Say it
-map-ui.jsx: aria-label={tr("Say it")} className="w-10 h-10 flex items-center justify-center text-[var(--c-mut)]"><svg width="20" height="20" viewBox="0 
-speak-ui.jsx: <p className="c-lbl m-0 flex items-center gap-1.5"><Mic size={14} />{tr("Say it")}</p>
-
-## Searching…
-map-ui.jsx: <div className="flex items-center justify-between"><p className="text-[13px] text-[var(--c-mut)]">{busy ? tr("Searching…") : tr("{n} results
-scout-ui.jsx: {!found.length && goal.g.kind !== "gold" ? <p className="c-sub" data-testid="scout-none">{goal.lastRun ? tr("Nothing that matches yet. Scout
-
-## Swap
-metro-ui.jsx: <button onClick={() => set({ from: ft.to, to: ft.from })} data-testid="metro-swap" aria-label={tr("Swap")} className="w-11 h-11 grid place-i
-translate-ui.jsx: {tab === "text" && res ? <button className={btnS + " w-11 px-0"} aria-label={tr("Swap")} onClick={() => { const from = guessFrom(text); setT
 
 ## Pin
 mind-ui.jsx: <Star size={12} className={`inline me-1 ${rec.pinned ? "text-[var(--c-warn)]" : ""}`} />{rec.pinned ? tr("Unpin") : tr("Pin")}</button>

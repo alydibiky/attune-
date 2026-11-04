@@ -7349,6 +7349,7 @@ export const RU = {
   "Improving the prompt…": "Улучшаю промпт…",
   "Making it sound human…": "Делаю текст живым…",
   "Making it shorter…": "Сокращаю…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "Дай короткий план, как выучить {t} шаг за шагом, с бесплатными материалами.",
   "Directions to {p} — in Google Maps": "Маршрут до {p} — в Google Картах",
   "Download the area in Google Maps once, and the directions work without internet too.": "Скачайте район в Google Картах один раз, и маршрут будет работать и без интернета.",
   "≈ {p} a month — save {n}%": "≈ {p} в месяц — экономия {n}%",

@@ -7386,6 +7386,7 @@ export const AR = {
   "Improving the prompt…": "بحسّن البرومبت…",
   "Making it sound human…": "بخليه طبيعي كأن بني آدم كاتبه…",
   "Making it shorter…": "باختصره…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "اعمللي خطة قصيرة أتعلم بيها {t} خطوة بخطوة، بمصادر ببلاش.",
   "Directions to {p} — in Google Maps": "الطريق لـ{p} — في خرائط جوجل",
   "Download the area in Google Maps once, and the directions work without internet too.": "نزّل المنطقة في خرائط جوجل مرة واحدة، والطريق هيشتغل من غير نت كمان.",
   "≈ {p} a month — save {n}%": "≈ {p} في الشهر — وفّر {n}%",

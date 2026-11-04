@@ -7350,6 +7350,7 @@ export const PT = {
   "Improving the prompt…": "Melhorando o prompt…",
   "Making it sound human…": "Deixando com cara de humano…",
   "Making it shorter…": "Encurtando…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "Me dê um plano curto para aprender {t}, passo a passo, com recursos gratuitos.",
   "Directions to {p} — in Google Maps": "Rotas para {p} — no Google Maps",
   "Download the area in Google Maps once, and the directions work without internet too.": "Baixe a área no Google Maps uma vez e as rotas funcionam também sem internet.",
   "≈ {p} a month — save {n}%": "≈ {p} por mês — economize {n}%",

@@ -42,7 +42,7 @@ with sync_playwright() as p:
 
     # ---- home screen: no period tracker ----
     nav = page.locator("nav").inner_text()
-    check("Cycle" not in nav and "Home" in nav and "Scout" in nav, "the bottom bar is Home · Chat · Money · Scout · Mind · All, no Cycle (v6.29: Health → Scout; Business is in All) (%s)" % nav.replace("\n", " "))
+    check("Cycle" not in nav and "Home" in nav and "Agents" in nav, "the bottom bar is Home · Chat · Money · Agents · Mind · All (v9.1: Scout folded into Agents), no Cycle (v6.29: Health → Scout; Business is in All) (%s)" % nav.replace("\n", " "))
     check(page.locator("text=Log my period").count() == 0, "no 'Log my period' starter on the home screen")
     install(page)
 
@@ -155,18 +155,7 @@ with sync_playwright() as p:
     # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v513.py)
     ctx.close()
 
-    # ---- 11. Learn daily: the notification row is readable ----
-    ctx, page = new_page(br, env, errors)
-    page.set_viewport_size({"width": 400, "height": 800})
-    page.add_init_script("""localStorage.setItem('attune:daily:courses:v1', JSON.stringify([{ id: 'c1', topic: 'Turkish', level: 'beginner', lang: 'en', goal: '', time: '08:00', quizEvery: 5,
-      plan: ['Lesson 1', 'Lesson 2'], lessons: [], quizzes: [], review: [], streak: 0, created: 1 }]));""")
-    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
-    open_more(page, "Learn daily", "learn-page")
-    page.locator("[data-testid=learn-course]:has-text('Turkish'), [data-testid^=learn-start-]:has-text('Turkish')").first.click(); page.wait_for_selector("[data-testid=learn-time]", timeout=5000)
-    h = page.evaluate("() => { const el = [...document.querySelectorAll('span')].find(s => s.textContent.trim() === 'Daily notification'); return el ? el.getBoundingClientRect().height : -1; }")
-    check(0 < h < 40, "'Daily notification' reads on one line, not one letter per line (height %d px)" % h)
-    w = page.evaluate("() => { const r = document.querySelector('[data-testid=learn-time]').getBoundingClientRect(); return [r.right, window.innerWidth]; }")
-    check(w[0] <= w[1], "the time box stays inside the screen (%s)" % w)
+    # (v9.1: this section used Learn — archived with it in archive/learn/tests/mixed/e2e_v513.py)
     ctx.close()
 
     check(not real_errors(errors), "no JavaScript errors in the page (%d)" % len(real_errors(errors)))

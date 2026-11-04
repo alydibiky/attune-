@@ -7349,6 +7349,7 @@ export const TH = {
   "Improving the prompt…": "กำลังปรับพรอมต์…",
   "Making it sound human…": "กำลังทำให้ฟังเป็นธรรมชาติ…",
   "Making it shorter…": "กำลังย่อ…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "ขอแผนสั้น ๆ ในการเรียน {t} ทีละขั้น พร้อมแหล่งเรียนฟรี",
   "Directions to {p} — in Google Maps": "เส้นทางไป {p} — ใน Google Maps",
   "Download the area in Google Maps once, and the directions work without internet too.": "ดาวน์โหลดพื้นที่ใน Google Maps ครั้งเดียว แล้วเส้นทางจะใช้ได้แม้ไม่มีเน็ต",
   "≈ {p} a month — save {n}%": "≈ เดือนละ {p} — ประหยัด {n}%",

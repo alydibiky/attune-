@@ -51,14 +51,7 @@ with sync_playwright() as p:
     check("Petrol: 600, 20% more than last month (500)" in pm, "Money's petrol entries compared: " + pm.replace("\n", " · ")[:200])
     page.fill("[data-testid=price-input]", "milk 1L 45 at Carrefour"); page.click("[data-testid=price-add]"); page.wait_for_timeout(200)
     check("Milk: 45 / L — the first price I have" in page.locator("[data-testid=price-memory]").inner_text(), "a typed price is remembered")
-    # Deal Check: a pasted contract gets a second opinion by code, with no model loaded
-    open_mode("deal", "[data-testid=deal-input]")
-    page.fill("[data-testid=deal-input]", "Lease agreement between the Landlord and the Tenant. This agreement shall renew automatically for a similar period. The Tenant shall sign a promissory note as a guarantee. A late fee of 5% per day applies.")
-    check("Check this contract" in page.locator("[data-testid=deal-go]").inner_text(), "the button says it will check a contract")
-    page.click("[data-testid=deal-go]"); page.wait_for_selector("[data-testid=contract-review]", timeout=3000)
-    ids = page.eval_on_selector_all("[data-testid=contract-flag]", "els => els.map(e => e.dataset.id)")
-    check(page.get_attribute("[data-testid=contract-review]", "data-level") == "serious" and {"blank-cheque", "auto-renew", "late-fee"} <= set(ids), "risky terms flagged: %s" % ids)
-    check("Before I sign" in page.locator("[data-testid=contract-message]").inner_text(), "a reply asking for the changes is written")
+    # (v9.1: the Deal Check contract check is archived — archive/deal/tests/mixed/e2e_v736plans.py)
     # Reminders: Plan my day around the prayers
     open_mode("reminders", "[data-testid=prayer-planner]")
     check(page.locator("[data-testid=prayer-times] > div").count() == 5, "today's five prayer times are shown")

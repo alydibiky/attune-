@@ -7349,6 +7349,7 @@ export const FA = {
   "Improving the prompt…": "در حال بهتر کردن پرامپت…",
   "Making it sound human…": "طبیعی‌اش می‌کنم…",
   "Making it shorter…": "کوتاهش می‌کنم…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "یک برنامهٔ کوتاه برای یادگیری {t} بده، قدم‌به‌قدم، با منابع رایگان.",
   "Directions to {p} — in Google Maps": "مسیر تا {p} — در Google Maps",
   "Download the area in Google Maps once, and the directions work without internet too.": "منطقه را یک بار در Google Maps دانلود کنید تا مسیریابی بدون اینترنت هم کار کند.",
   "≈ {p} a month — save {n}%": "≈ ماهی {p} — {n}٪ صرفه‌جویی",

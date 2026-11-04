@@ -32,7 +32,7 @@ with sync_playwright() as p:
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(300)
-    page.locator(".rounded-t-2xl button:has-text('Scout')").first.click(); page.wait_for_selector("[data-testid=scout-page]", timeout=5000)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_selector("[data-testid=scout-page]", timeout=5000)   # v9.1: Scout opens from an Agent card (folded)
     page.fill("[data-testid=scout-text]", GOAL); page.click("[data-testid=scout-add]")
     page.wait_for_selector("[data-testid=scout-ad]", timeout=15000); page.wait_for_timeout(300)
     qs = page.evaluate("window.__searches")
@@ -63,8 +63,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=scout-goal]").count() == 2 and any("hatla2ee" in q for q in page.evaluate("window.__searches")), "«دورلي على عربية …» on Home → a new Scout goal, searched on the car sites")
     # computer
     page.set_viewport_size({"width": 1366, "height": 860}); page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000)
-    page.locator("[data-testid=side] input").first.fill("Scout"); page.wait_for_timeout(200)
-    page.locator("[data-testid=side-go-scout]").first.click(); page.wait_for_selector("[data-testid=scout-page]", timeout=5000); page.wait_for_timeout(300)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_selector("[data-testid=scout-page]", timeout=5000)   # v9.1: Scout opens from an Agent card (folded); page.wait_for_timeout(300)
     page.locator("[data-testid=scout-goal] button").filter(has_text="flat").first.click(); page.wait_for_timeout(200)
     g, r = page.locator("[data-testid=scout-goals]").bounding_box(), page.locator("[data-testid=scout-results]").bounding_box()
     check(r["x"] > g["x"] + g["width"] - 2, "computer: goals on the left, finds on the right")

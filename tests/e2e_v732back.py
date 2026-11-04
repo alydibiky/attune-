@@ -16,11 +16,11 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, extra_init="try{localStorage.setItem('attune:start','home')}catch(e){}")
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-    all_menu(page, "Scout"); check(on(page, "scout-page"), "Home → Scout")
-    all_menu(page, "Travel"); check(on(page, "travel-page"), "Scout → Travel")
+    all_menu(page, "Agents"); check(on(page, "agents-page"), "Home → Agents")   # v9.1: Scout folded into Agents
+    all_menu(page, "Travel"); check(on(page, "travel-page"), "Agents → Travel")
     all_menu(page, "Family health"); check(on(page, "care-page"), "Travel → Family health")
     back(page); check(on(page, "travel-page"), "Back → Travel (the page before), not Home")
-    back(page); check(on(page, "scout-page"), "Back → Scout")
+    back(page); check(on(page, "agents-page"), "Back → Agents")
     back(page); check(on(page, "phone-home"), "Back → Home")
     # the bottom bar and Home's own buttons are remembered too
     page.locator("nav button:has-text('Money')").click(); page.wait_for_timeout(400)
@@ -32,11 +32,11 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, extra_init="try{localStorage.setItem('attune:start','home')}catch(e){}")
     page.set_viewport_size({"width": 1366, "height": 860})
     page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000)
-    for q, tid in [("Scout", "scout"), ("Travel", "travel")]:
+    for q, tid in [("Agents", "agents"), ("Travel", "travel")]:   # v9.1: Scout folded into Agents
         page.locator("[data-testid=side] input").first.fill(q); page.wait_for_timeout(200); page.locator("[data-testid=side-go-%s]" % tid).first.click(); page.wait_for_timeout(400)
-    check(on(page, "travel-page"), "computer: Home → Scout → Travel")
+    check(on(page, "travel-page"), "computer: Home → Agents → Travel")
     page.click("[data-testid=side-back]"); page.wait_for_timeout(350)
-    check(on(page, "scout-page"), "computer: ← → Scout")
+    check(on(page, "agents-page"), "computer: ← → Agents")
     page.click("[data-testid=side-back]"); page.wait_for_timeout(350)
     check(on(page, "desk-home"), "computer: ← → Home")
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])

@@ -7351,6 +7351,7 @@ export const TRK = {
   "Improving the prompt…": "İstem iyileştiriliyor…",
   "Making it sound human…": "Doğal hale getiriliyor…",
   "Making it shorter…": "Kısaltılıyor…",
+  "Give me a short plan to learn {t}, step by step, with free resources.": "{t} öğrenmem için adım adım, ücretsiz kaynaklarla kısa bir plan ver.",
   "Directions to {p} — in Google Maps": "{p} yol tarifi — Google Haritalar'da",
   "Download the area in Google Maps once, and the directions work without internet too.": "Bölgeyi Google Haritalar'a bir kez indirin, yol tarifi internetsiz de çalışır.",
   "≈ {p} a month — save {n}%": "≈ ayda {p} — %{n} tasarruf",

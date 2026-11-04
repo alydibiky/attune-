@@ -17,13 +17,7 @@ with sync_playwright() as p:
         page.evaluate("(m) => window.dispatchEvent(new CustomEvent('attune-open', { detail: { mode: m } }))", m)
         page.wait_for_selector(sel, timeout=8000)
     # (v9.1: this section used Fit & Food — archived with it in archive/fit/tests/mixed/e2e_v743.py)
-    # ---- Android closes Attune in the background → it reopens on Fit, not on the start screen
-    page.evaluate("window.dispatchEvent(new Event('attune-pause'))")
-    page.reload(); page.wait_for_selector("nav", timeout=15000)
-    page.wait_for_selector("[data-testid=fit-today], [data-testid=fit-me]", timeout=6000)
-    check(True, "after the app was closed in the background, it reopens on the screen that was open (Fit)")
-    page.reload(); page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(600)
-    check(page.locator("[data-testid=fit-today], [data-testid=fit-me]").count() == 0, "a reload in front of you starts as usual (the note is used once)")
+    # (v9.1: this section used Fit & Food — archived with it in archive/fit/tests/mixed/e2e_v743.py)
     # ---- an answer cut when the app was closed: Continue
     page.evaluate("(c) => { localStorage.setItem('attune:chats:v1', JSON.stringify([{ ...c, updated: Date.now() }])); }", CUT)
     page.reload(); page.wait_for_selector("nav", timeout=15000)
