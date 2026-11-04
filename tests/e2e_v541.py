@@ -9,7 +9,7 @@ from harness import Env, new_page, check, real_errors, finish, HERE
 
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
-STUDIO = re.search(r'MOCK = r"""(.*?)"""', open(os.path.join(HERE, "e2e_v59.py"), encoding="utf-8").read(), re.S).group(1)
+STUDIO = re.search(r'MOCK = r"""(.*?)"""', open(os.path.join(HERE, "..", "archive", "studio", "tests", "e2e_v59.py"), encoding="utf-8")   # v9.1: Studio archived — the mock still helps.read(), re.S).group(1)
 EXTRA = r"""(() => { const S = window.__mock = window.__mock || {};
   const go = () => { const N = window.AttuneNative; if (!N || !N.upscaleImage) return setTimeout(go, 0);
     S.img.packs = [{ id: "turbo", label: "Studio Turbo", kind: "turbo", files: {} }, { id: "esrgan-x4", label: "Sharpen", kind: "upscale", files: {} }];
@@ -85,24 +85,7 @@ with sync_playwright() as p:
     shot(page, "02-convert")
 
     # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v541.py)
-    # ---- #3 sharpening carries on while you are elsewhere; the result lands in the gallery ----
-    open_tool(page, "Studio", "studio-page")
-    page.evaluate("() => { window.__mock.slowUp = false; }")
-    page.fill("[data-testid=studio-idea]", "a crane at sunset")
-    draw = page.locator("[data-testid=studio-go]")
-    if draw.count():
-        draw.first.click(); page.wait_for_selector("[data-testid=studio-upscale]", timeout=15000)
-        page.evaluate("() => { window.__mock.slowUp = true; }")
-        page.locator("[data-testid=studio-upscale]").click(); page.wait_for_timeout(300)
-        page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)          # leave Studio while it sharpens
-        page.evaluate("window.__mock.upPending()"); page.wait_for_timeout(300)        # it finishes while you are away
-        open_tool(page, "Studio", "studio-page"); page.wait_for_timeout(300)
-        g = page.evaluate("JSON.parse(localStorage.getItem('attune:studio:v1') || '[]').map(x => x.file)")
-        check(any(f.endswith("-x4.png") for f in g), "the sharpened picture was kept although Studio was closed (%s)" % g[:3])
-        check(page.locator("[data-testid=studio-upscale]").count() == 0, "…and Studio shows the sharpened one")
-    else:
-        check(False, "Studio draw button present")
-
+    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v541.py)
     # ---- #4 Chat X-Ray: "was X mentioned?" answered by code at once ----
     # v8.7: Chat X-Ray opens from a WhatsApp group (the groups library took its place in the menu)
     chat = "\n".join(["27/09/2026, 10:0%d - Hassan: the LTM 1100 is free on Sunday" % 1, "27/09/2026, 10:02 - Ali: ok book it, send the عربون today", "27/09/2026, 10:03 - Hassan: done, 5000 EGP"])

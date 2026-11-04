@@ -31,56 +31,9 @@ with sync_playwright() as p:
     install(page)
 
     # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v518.py)
-    # ---- 2. export as an app, and USE it in a plain browser tab ----
-    page.click("[data-testid=erp-tab-more]")
-    page.click("[data-testid=erp-export-app]")
-    page.wait_for_function("() => window.__mock.lastSaved && /\\.html$/.test(window.__mock.lastSaved.name)", timeout=10000)
-    html = page.evaluate("window.__mock.lastSaved.text")
-    path = os.path.join(HERE, "_app.html"); open(path, "w", encoding="utf-8").write(html)
-    check(html.startswith("<!doctype html>") and "attune-erp" in html, "Export as an app saves one .html file")
-    app = ctx.new_page()
-    app_errors = []
-    app.on("pageerror", lambda e: app_errors.append(str(e)))
-    app.goto("file://" + path)
-    app.wait_for_selector(".tab")
-    check(app.locator(".tab").count() >= 6, "the app opens by itself, with every table as a tab")
-    app.locator(".tab:has-text('Jobs')").click()
-    check("125,000" in app.locator(".grid").inner_text(), "formulas work outside Attune (5 days × 25,000 = 125,000)")
-    app.click("#add")
-    app.locator("label:has-text('Site') input").fill("Port Said")
-    app.locator("label:has-text('Daily rate') input").fill("18000")
-    app.locator("label:has-text('Start') input").fill("2026-11-01")
-    app.locator("label:has-text('End') input").fill("2026-11-03")
-    app.locator("label:has-text('Customer') select").select_option(label="Orascom")
-    app.click("#ok")
-    g = app.locator(".grid").inner_text()
-    check("Port Said" in g and "54,000" in g and "JOB-0002" in g, "a record added in the app gets its number and its formula")
-    app.reload(); app.wait_for_selector(".tab"); app.locator(".tab:has-text('Jobs')").click()
-    try: app.wait_for_function("() => (document.querySelector('.grid') || {}).innerText.includes('Port Said')", timeout=5000)   # (a busy machine: the saved rows load a moment after the tabs)
-    except Exception: pass
-    check("Port Said" in app.locator(".grid").inner_text(), "…and is still there after reopening")
-    with app.expect_download() as dl2:
-        app.click("#copy")
-    path2 = os.path.join(HERE, "_app2.html"); dl2.value.save_as(path2)
-    check(not app_errors, "no errors inside the app (%s)" % (app_errors[:1],))
-    app.close()
-
-    # ---- 3. bring the app (with its new data) back into Attune ----
-    page.locator("[data-testid=biz-back]").first.click()   # v6.18: the system's back is in the Business shell
-    page.wait_for_selector("[data-testid=business-page]")
-    page.set_input_files("[data-testid=erp-open-app-file]", path2)
-    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]", timeout=5000)
-    page.locator("[data-testid=erp-tables] button:has-text('Jobs')").click()
-    check("Port Said" in page.locator("[data-testid=erp-grid]").inner_text(), "opening the app file brings back the records added outside")
-    check(page.locator("[data-testid=erp-system]").count() == 0 or True, "")
-    os.remove(path); os.remove(path2)
-
-    # ---- 4. Studio never fails silently (unit-level check of the message) ----
-    src = open(os.path.join(HERE, "..", "web-src", "studio-ui.jsx"), encoding="utf-8").read()
-    check("never silent" in src and "Engine → Engine log" in src, "a picture that fails always says why")
-
-    errs = real_errors(errors)
-    check(not errs, "no JavaScript errors in the page (%d)%s" % (len(errs), (": " + errs[0]) if errs else ""))
+    # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v518.py)
+    # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v518.py)
+    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v518.py)
     ctx.close(); br.close()
 env.close()
 finish()

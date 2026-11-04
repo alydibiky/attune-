@@ -103,6 +103,12 @@ with sync_playwright() as p:
     check("3 of 5" in clean(page.inner_text("[data-testid=agent-sheet]")), "Previous goes back")
     page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
     check(len(page.evaluate("window.__opens")) == n_open + 1, "Book this offer opens only that one")
+    # v9.1 (Ali: "can it open Booking itself, with the sorting ready?"): with the Booking app on the phone, Book opens the offer THERE
+    page.evaluate("() => { const N = window.AttuneNative; N.appsList = () => JSON.stringify([{ pkg: 'com.booking', label: 'Booking.com' }]); N.openAnyApp = (j) => { window.__app = JSON.parse(j); return JSON.stringify({ ok: true, how: 'app' }); }; }")
+    page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
+    ap = page.evaluate("window.__app")
+    check(ap and ap["pkg"] == "com.booking" and "booking.com" in ap["url"] and len(page.evaluate("window.__opens")) == n_open + 1, "with the Booking app installed, Book opens the offer in the Booking app (not Attune's browser): %s" % ap)
+    page.evaluate("() => { window.AttuneNative.appsList = () => '[]'; }")
     shot(page, "v910-sheet")
     page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(100)
     shot(page, "v910-podium")

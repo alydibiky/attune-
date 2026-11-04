@@ -118,7 +118,7 @@ class AgentBrowser : Activity() {
             val line0 = TextView(this).apply { setTextColor(mut); textSize = 14f; gravity = Gravity.CENTER; setPadding(0, dp(14), 0, dp(18)) }
             c.addView(line0)
             c.addView(TextView(this).apply { text = L("showSite", "Show the site"); setTextColor(acc); textSize = 14f; gravity = Gravity.CENTER; setPadding(dp(16), dp(10), dp(16), dp(10))
-                setOnClickListener { cover?.visibility = android.view.View.GONE } })
+                setOnClickListener { cover?.visibility = android.view.View.GONE; status.visibility = android.view.View.VISIBLE } })
             stage.addView(c, android.widget.FrameLayout.LayoutParams(android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT))
             cover = c; coverLine = line0; coverBar = bar0
         }
@@ -127,6 +127,7 @@ class AgentBrowser : Activity() {
         status = TextView(this).apply { setTextColor(mut); textSize = 12.5f; setPadding(dp(14), dp(8), dp(14), dp(2)); text = L("hint", "Attune marks the best offer and fills your details. You choose and pay.") }
         root.addView(status)
         sweep = rounds.length()
+        if (cover != null) status.visibility = android.view.View.GONE   // v9.1: the Attune screen already shows the line (it was shown twice)
         rounds.optJSONObject(0)?.let { if (rounds.length() > 1) say(L("checking", "Checking {i} of {n}: {d}").replace("{i}", "1").replace("{n}", rounds.length().toString()).replace("{d}", dayLine(it))) }
 
         val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(10), dp(6), dp(10), dp(12)) }

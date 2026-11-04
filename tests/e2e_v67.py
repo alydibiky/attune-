@@ -58,19 +58,7 @@ with sync_playwright() as p:
     # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v67.py)
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:2])
     ctx.close()
-    # ---- 4. a paid business purchase that wasn't applied (the app closed) ----
-    OWN = "window.__mock = { owned: [{ productId: 'attune_business_system', purchased: true, token: 'tok-old', orderId: 'GPA.9' }] };"
-    errors = []; ctx, page = new_page(br, env, errors, extra_init=FREE + OWN + PLAY.replace("PENDING", "false"))
-    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
-    page.locator("nav button").last.click(); page.wait_for_timeout(250)
-    page.locator(".rounded-t-2xl button:has-text('Business')").first.click()
-    page.wait_for_selector("[data-testid=business-page]", timeout=6000)
-    page.click("[data-testid=erp-new]"); page.click("[data-testid=erp-tpl-cranes]"); page.click("[data-testid=erp-create]")
-    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]", timeout=6000)
-    page.locator("[data-testid=erp-tab-more]").click(); page.wait_for_timeout(600)
-    check(page.locator("[data-testid=erp-use-purchase]").count() == 1, "a paid, unused purchase is offered: 'Use your Google Play purchase on this system'")
-    page.locator("[data-testid=erp-use-purchase]").click(); page.wait_for_timeout(500)
-    check("Activated" in page.locator("[data-testid=erp-licence]").inner_text() and page.evaluate("window.__mock.consumed") == ["tok-old"], "…and it activates the system")
+    # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v67.py)
     ctx.close()
     # ---- 5. Fit on Free ----
     STATE = {"profile": {"sex": "m", "age": 21, "cm": 178, "kg": 92, "activity": "light", "goal": "lose", "rate": 0.5, "goalKg": 80, "diet": "balanced"}, "days": {}, "weights": [], "fast": None, "myRecipes": [], "favs": [], "watchSkip": True,

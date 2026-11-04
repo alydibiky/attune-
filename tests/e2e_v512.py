@@ -6,7 +6,7 @@ import os, sys, json, subprocess, tempfile
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish, HERE, to_tables
 
-SECTIONS = sys.argv[1:] or ["business", "aidesign", "lessons", "news", "layout"]
+SECTIONS = sys.argv[1:] or ["lessons", "news"]   # v9.1: "business", "aidesign" and "layout" (Business tabs) archived with Business
 env = Env()
 errors = []
 ROOT = os.path.dirname(HERE)

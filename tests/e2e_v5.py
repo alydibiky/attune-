@@ -5,7 +5,7 @@ import re, json, sys
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish, HERE, leave_apps
 
-SECTIONS = sys.argv[1:] or ["backup", "arabic", "actions", "speed", "crane", "fast", "fastengine"]
+SECTIONS = sys.argv[1:] or ["backup", "arabic", "actions", "speed", "fast", "fastengine"]   # v9.1: "crane" archived with Business
 env = Env()
 errors = []
 

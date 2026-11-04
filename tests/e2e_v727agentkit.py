@@ -70,5 +70,21 @@ with sync_playwright() as p:
     check(r["price"] == 48900 and "Pullman" in r["text"], "hotels: the cheapest is Pullman 48,900 — not a 'taxes and charges' line or a crossed-out price: %s" % r.get("price"))
     check(sorted(o["price"] for o in page.evaluate("window.__attuneAgent.offers()")) == [48900, 52400, 66300], "only the three real prices are offers")
     check(r.get("quiet") is True and page.evaluate("scrollY") == 0, "a quiet read doesn't scroll the page")
+    # v9.1 (Ali's 4 Nov screenshots: every hotel named "Booking.com", no photo, "+0"): Booking's own property cards — the name, the
+    # photo, the score and the distance come with the price, even though each card has several prices
+    card = lambda n, img, price, old, score, dist: f"""<div data-testid="property-card"><a href="https://www.booking.com/hotel/sa/{n.lower().replace(' ', '-')}.html">
+<img data-testid="image" src="https://cf.bstatic.com/xdata/images/hotel/{img}.jpg" width="200" height="200"></a>
+<div><div data-testid="title">{n}</div><span data-testid="distance">{dist} from Masjid al Haram</span>
+<div data-testid="review-score"><div>Scored {score}</div><div>{score}</div><div>Superb</div></div>
+<div><span>4 nights, 2 adults</span><span style="text-decoration:line-through">EGP {old}</span><span data-testid="price-and-discounted-price">EGP {price}</span><div>+EGP 4,120 taxes and charges</div></div></div></div>"""
+    page.set_content("<html><body><div>search form</div>" + card("Swissotel Makkah", "a1", "41,495", "52,000", "8.9", "150 m") + card("Pullman ZamZam Makkah", "b2", "42,124", "49,000", "8.6", "300 m")
+                     + card("Fairmont Makkah Clock Royal Tower", "c3", "55,300", "61,000", "9.1", "100 m") + "</body></html>")
+    page.add_script_tag(path=KIT)
+    r = page.evaluate("window.__attuneAgent.best({cheapest:true, many:true}, true)")
+    top = r["top"]
+    check(r["offers"] == 3 and [o["price"] for o in top[:3]] == [41495, 42124, 55300], "Booking cards: 3 offers, cheapest first: %s" % [o["price"] for o in top])
+    check([o["name"] for o in top[:3]] == ["Swissotel Makkah", "Pullman ZamZam Makkah", "Fairmont Makkah Clock Royal Tower"], "each offer has its hotel's own name (not 'Booking.com'): %s" % [o["name"] for o in top])
+    check(all(o["img"].startswith("https://cf.bstatic.com/") for o in top[:3]) and top[0]["href"].endswith("swissotel-makkah.html"), "…its photo and its own page")
+    check("Scored 8.9" in top[0]["text"] and "150 m" in top[0]["text"], "…and its score and distance, for the comparison")
     br.close()
 finish()

@@ -218,6 +218,13 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   // v8.2 (2A): one of the best 3 — opens in Attune's browser on those days, ready for "Fill my details" (you choose and pay)
   const openBest = async (a, o) => {
     const url = o.href || o.url || a.url;   // v9.0: the exact listing, not the store's search page
+    // v9.1 (Ali, 4 Nov: "it's hard to do anything in the Attune browser — can it open Booking itself, with all the sorting ready?"):
+    // when the site's own app is on the phone, the offer opens THERE (its page, with the dates and guests in the link)
+    const pkg = (APP_OF.find(([re]) => re.test(url)) || [])[1];
+    if (pkg && N && N.appsList && N.openAnyApp) {
+      let has = false; try { has = JSON.parse(N.appsList() || "[]").some((x) => x.pkg === pkg); } catch (e) {}
+      if (has) { try { const r = JSON.parse(N.openAnyApp(JSON.stringify({ pkg, url })) || "{}"); if (r.ok && r.how === "app") return; } catch (e) {} }
+    }
     if (N && N.agentOpen && nativeCall) { try { await nativeCall("agentOpen", { url, title: o.name || a.title, profile: loadBooking(), rules: { cheapest: true }, labels: agentLabels(), search: !o.href }); } catch (e) {} return; }
     try { window.open(url, "_blank"); } catch (e) {}
   };
@@ -441,7 +448,10 @@ function BestFound({ a, small, openBest, skipBest }) {
  *  "A + C together"): the cheapest hotel big — its photo with a frosted-glass panel (name, days, walk, price, Book) — and the next
  *  ones as photo cards scrolling sideways; a tap on any of them opens it full screen like a story, with ‹ Book this offer › to go
  *  through all of them (and a swipe). No emojis, no medals; Booking opens only on Book. */
-const glass = "bg-[rgba(16,18,19,.55)] backdrop-blur-xl border border-white/10 text-white";
+/** The shopping / booking apps whose links open inside the app itself (Android app links). */
+const APP_OF = [[/(^|\.)booking\.com\//, "com.booking"], [/(^|\.)airbnb\.[a-z.]+\//, "com.airbnb.android"], [/(^|\.)amazon\.[a-z.]+\//, "com.amazon.mShop.android.shopping"],
+  [/(^|\.)noon\.com\//, "com.noon.buyerapp"], [/(^|\.)jumia\.[a-z.]+\//, "com.jumia.android"]];
+const glass = "bg-[rgba(16,18,19,.55)] backdrop-blur-xl border border-[rgba(255,255,255,.12)] text-[#fff]";
 const pill = "text-[11px] font-semibold px-2.5 py-1 rounded-full " + glass;
 // no photo yet (offline, or the site had none): a calm blurred colour field, its colours from the hotel's name — never an emoji
 const tint = (s) => { let h = 0; for (const ch of String(s || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const a = h % 360, b = (a + 40) % 360;
@@ -459,14 +469,14 @@ function Podium({ a, c, far, day, tv, openBest, skipBest }) {
       {dates ? <span className="text-[12px] c-sub shrink-0">{T("{n} dates checked", { n: dates })}</span> : null}</div>
     <div className="relative h-[300px] rounded-[26px] overflow-hidden" data-testid="agent-best">
       <button onClick={() => setAt(0)} className="absolute inset-0 w-full" aria-label={(w.o.name || a.site) + " · " + money(w.o.price, a.currency)} data-testid="agent-podium-open">{pic(w.o, "absolute inset-0 w-full h-full")}</button>
-      <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/50" />
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[rgba(0,0,0,.25)] via-transparent to-[rgba(0,0,0,.5)]" />
       <div className="pointer-events-none absolute top-3 inset-x-3 flex justify-between gap-2"><span className="flex flex-wrap gap-1" data-testid="agent-why">{(c.why.length ? c.why : [["Cheapest", {}]]).slice(0, 2).map(([t, v], k) => <span key={k} className={pill}>{tr(t, v)}</span>)}</span>
         {w.f.rating != null ? <span className={pill + " shrink-0"}>★ {w.f.rating}</span> : null}</div>
       <div className={"absolute inset-x-2.5 bottom-2.5 rounded-[20px] px-4 py-3 " + glass}>
         <p className="m-0 text-[18px] font-bold tracking-[-0.01em] truncate" dir="auto">{w.o.name || a.site}</p>
-        <p className="m-0 text-[12px] text-white/70 truncate">{[w.o.checkin ? day(w.o) : "", w.f.dist != null ? T("{d} walk", { d: far(w.f.dist) }) : ""].filter(Boolean).join(" · ")}</p>
+        <p className="m-0 text-[12px] text-[rgba(255,255,255,.72)] truncate">{[w.o.checkin ? day(w.o) : "", w.f.dist != null ? T("{d} walk", { d: far(w.f.dist) }) : ""].filter(Boolean).join(" · ")}</p>
         <div className="flex items-center justify-between gap-2 mt-2"><div className="min-w-0"><b className="block text-[24px] font-bold tabular-nums tracking-[-0.02em] leading-tight">{money(w.o.price, a.currency)}</b>
-          {w.f.perNight ? <span className="block text-[11.5px] text-white/65 tabular-nums">{money(w.f.perNight, a.currency)} {tr("a night")}</span> : null}</div>
+          {w.f.perNight ? <span className="block text-[11.5px] text-[rgba(255,255,255,.68)] tabular-nums">{money(w.f.perNight, a.currency)} {tr("a night")}</span> : null}</div>
           <button onClick={() => openBest(a, w.o)} className="shrink-0 min-h-[44px] px-5 rounded-[14px] bg-[#F2F4F3] text-[#0B0D0E] text-[14px] font-bold" data-testid="agent-best-open">{tr("Book")}</button></div>
       </div>
     </div>
@@ -495,27 +505,27 @@ function OfferSheet({ a, rows, at, setAt, pic, day, far, n, openBest, skipBest }
   const sub = [r.o.checkin ? day(r.o) + (r.f.nights ? " · " + T("{n} nights", { n: r.f.nights }) : "") : "", r.f.dist != null ? T("{d} walk", { d: far(r.f.dist) }) : "", r.f.rating != null ? "★ " + r.f.rating : ""].filter(Boolean).join(" · ");
   const note = [r.f.perNight ? money(r.f.perNight, a.currency) + " " + tr("a night") : "", at === 0 ? (next ? T("{a} less than the next", { a: n(next.o.price - r.o.price) }) : "") : T("{a} more than the cheapest", { a: n(r.o.price - w.o.price) })].filter(Boolean).join(" · ");
   const side = "w-[52px] min-h-[52px] rounded-[16px] grid place-items-center disabled:opacity-30 " + glass;
-  return <div className="fixed inset-0 z-[310] bg-black" data-testid="agent-sheet" role="dialog" aria-modal="true"
+  return <div className="fixed inset-0 z-[310] bg-[#000]" data-testid="agent-sheet" role="dialog" aria-modal="true"
     onTouchStart={(e) => setX0(e.touches[0].clientX)} onTouchEnd={(e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; setX0(null); if (Math.abs(dx) > 50) go((dx < 0) !== rtl ? 1 : -1); }}>
     <div className="absolute inset-0 sm:inset-y-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-[420px] sm:rounded-[28px] overflow-hidden">
       {pic(r.o, "absolute inset-0 w-full h-full")}
       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,0)_22%,rgba(0,0,0,0)_45%,rgba(8,9,10,.93)_80%)]" />
       <div className="absolute top-0 inset-x-0 px-4 pt-[max(14px,env(safe-area-inset-top))]">
-        <div className="flex gap-1">{rows.map((_, k) => <i key={k} className={"flex-1 h-[2.5px] rounded-full " + (k === at ? "bg-white" : k < at ? "bg-white/70" : "bg-white/30")} />)}</div>
+        <div className="flex gap-1">{rows.map((_, k) => <i key={k} className={"flex-1 h-[2.5px] rounded-full " + (k === at ? "bg-[#fff]" : k < at ? "bg-[rgba(255,255,255,.7)]" : "bg-[rgba(255,255,255,.3)]")} />)}</div>
         <div className="flex items-center justify-between mt-3"><span className={pill}>{T("Offer {i} of {n}", { i: at + 1, n: rows.length })}{at === 0 ? " · " + tr("Cheapest") : ""}</span>
           <button onClick={() => setAt(-1)} className={"w-10 h-10 rounded-full grid place-items-center " + glass} aria-label={tr("Close")} data-testid="agent-sheet-close"><X size={17} /></button></div>
       </div>
-      <div className="absolute inset-x-0 bottom-0 px-5 pb-[max(18px,env(safe-area-inset-bottom))] text-white">
+      <div className="absolute inset-x-0 bottom-0 px-5 pb-[max(18px,env(safe-area-inset-bottom))] text-[#fff]">
         <p className="m-0 text-[24px] font-bold tracking-[-0.02em] leading-tight" dir="auto" data-testid="agent-sheet-name">{r.o.name || a.site}</p>
-        {sub ? <p className="m-0 mt-1 text-[13px] text-white/70">{sub}</p> : null}
+        {sub ? <p className="m-0 mt-1 text-[13px] text-[rgba(255,255,255,.72)]">{sub}</p> : null}
         <b className="block mt-4 text-[32px] font-bold tabular-nums tracking-[-0.02em] leading-none" data-testid="agent-sheet-price">{money(r.o.price, a.currency)}</b>
-        {note ? <p className="m-0 mt-1.5 text-[12px] text-white/70 tabular-nums">{note}</p> : null}
+        {note ? <p className="m-0 mt-1.5 text-[12px] text-[rgba(255,255,255,.72)] tabular-nums">{note}</p> : null}
         <div className="grid grid-cols-[52px_1fr_52px] gap-2.5 mt-4">
           <button onClick={() => go(-1)} disabled={at === 0} className={side} aria-label={tr("Previous")} data-testid="agent-sheet-prev"><ChevronRight size={20} className="rotate-180 rtl:rotate-0" /></button>
           <button onClick={() => openBest(a, r.o)} className="min-h-[52px] rounded-[16px] bg-[#F2F4F3] text-[#0B0D0E] text-[15px] font-bold" data-testid="agent-sheet-book">{tr("Book this offer")}</button>
           <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><ChevronRight size={20} className="rtl:rotate-180" /></button>
         </div>
-        <button onClick={() => { skipBest(a, r.o); setAt(-1); }} className="block mx-auto mt-2 min-h-[36px] px-3 text-[12.5px] text-white/60" data-testid="agent-sheet-skip">{tr("Not this one")}</button>
+        <button onClick={() => { skipBest(a, r.o); setAt(-1); }} className="block mx-auto mt-2 min-h-[36px] px-3 text-[12.5px] text-[rgba(255,255,255,.62)]" data-testid="agent-sheet-skip">{tr("Not this one")}</button>
       </div>
     </div>
   </div>;

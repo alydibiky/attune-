@@ -24,6 +24,9 @@
   const priceIn = (text) => { const m = PRICE.exec(text); if (!m) return null; const v = num(m[2] || m[3]); return v > 0 && v < 1e8 ? { price: v, currency: (m[1] || m[4] || "").trim() } : null; };
 
   const TAXLINE = /tax|fee|charge|original price|was\b|save\b|off\b|discount|deposit|ضريب|رسوم|خصم|وفر|السعر الأصلي|impuesto|cargo|taxe|frais|steuer|gebühr|vergi|ücret|pajak|biaya/i;
+  const CARD_SEL = '[data-testid="property-card"],[data-testid="property-card-container"],[data-component-type="s-search-result"],[itemprop="itemListElement"],[data-testid="card-container"],[data-qa="product-block"],article,[role="listitem"]';
+  // a card's name: its own title first (Booking data-testid=title, schema.org name, a heading), else its longest line without a price
+  const NAME_SEL = '[data-testid="title"],[itemprop="name"],[data-testid="listing-card-title"],h2,h3,h4';
   // ---- offers: the smallest block that holds one price, and a time or a name ----------------------------------------------------
   function offers() {
     const found = [], seen = new Set(), leaves = [];
@@ -53,8 +56,13 @@
         if (k > 1) break;
         card = up;
       }
+      // v9.1 (Ali's 4 Nov screenshots: every hotel was named "Booking.com", no photo, "+0"): a site's own result card wins — Booking's
+      // property card, Amazon's search result, Airbnb / schema.org list items, an <article> — so the name, photo, score and distance
+      // come with the price (a Booking card has 3+ prices, so the climb above stopped at the bare price)
+      const own = leaf.closest(CARD_SEL);
+      if (own && own !== document.body && (own.innerText || "").length < 3000) card = own;
       if (seen.has(card)) continue; seen.add(card);
-      const text = (card.innerText || "").replace(/\s+/g, " ").trim().slice(0, 300);
+      const text = (card.innerText || "").replace(/\s+/g, " ").trim().slice(0, 600);
       const p = priceIn(t); if (!p) continue;
       const time = /(?:^|\D)([01]?\d|2[0-3]):([0-5]\d)(?:\s?([ap])\.?m\.?)?/i.exec(text);
       let hour = time ? +time[1] : null; if (time && time[3] && /p/i.test(time[3]) && hour < 12) hour += 12;
@@ -63,6 +71,11 @@
       if (found.length >= 80) break;
     }
     return found;
+  }
+  function cardName(o) {
+    const t = o.el.querySelector && o.el.querySelector(NAME_SEL); const own = t ? (t.innerText || t.textContent || "").replace(/\s+/g, " ").trim() : "";
+    if (own && !PRICE.test(own) && own.length > 2) return own.slice(0, 160);
+    return String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
   }
   function rank(list, r) {
     r = r || {};
@@ -75,10 +88,10 @@
     if (!list.length) { report({ kind: "best", offers: 0 }); return { offers: 0 }; }
     const top = rank(list, r)[0];
     // v9.1: a quiet read (the hotel check reads a page several times while it loads) doesn't move the page under the person
-    if (quiet) { const nameQ = (o) => String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
+    if (quiet) { const nameQ = cardName;
       const hrefQ = (o) => { const a = o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
       const imgQ = (o) => { for (const im of o.el.querySelectorAll("img")) { const u = im.currentSrc || im.src || im.getAttribute("data-src") || ""; if (/^https:\/\//.test(u) && (im.naturalWidth || im.width || 99) >= 40) return u; } return ""; };
-      const outQ = { kind: "best", quiet: true, offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameQ(o), text: o.text.slice(0, 200), href: hrefQ(o), img: imgQ(o) })) };
+      const outQ = { kind: "best", quiet: true, offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameQ(o), text: o.text.slice(0, 400), href: hrefQ(o), img: imgQ(o) })) };
       report(outQ); return outQ; }
     if (mark) { mark.style.outline = mark.__o || ""; }
     mark = top.el; mark.__o = mark.style.outline; mark.style.outline = "3px solid #0F7B6C"; mark.style.outlineOffset = "2px";
@@ -87,10 +100,10 @@
     // first line) and its text, so an agent can list them
     // v8.6: each with its own link (the product page a buy agent opens after the person says "Order it"); a buy round asks for
     // more than 3 (r.many) so the closest match — not only the cheapest — can be picked
-    const nameOf = (o) => String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
+    const nameOf = cardName;
     const imgOf = (o) => { for (const im of o.el.querySelectorAll("img")) { const u = im.currentSrc || im.src || im.getAttribute("data-src") || ""; if (/^https:\/\//.test(u) && (im.naturalWidth || im.width || 99) >= 40) return u; } return ""; };
     const hrefOf = (o) => { const a = o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
-    const top3 = rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameOf(o), text: o.text.slice(0, 200), href: hrefOf(o), img: imgOf(o) }));
+    const top3 = rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameOf(o), text: o.text.slice(0, 400), href: hrefOf(o), img: imgOf(o) }));
     const out = { kind: "best", offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: top3, why: [r.cheapest !== false ? "cheapest" : "", r.direct ? "direct" : "", r.time || ""].filter(Boolean).join(", ") };
     report(out); return out;
   }
