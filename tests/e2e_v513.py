@@ -152,27 +152,7 @@ with sync_playwright() as p:
     page.keyboard.press("Escape"); page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(200)
     ctx.close()
 
-    # ---- 10. Business: JSON broken → simple lines → a real design ----
-    ctx, page = new_page(br, env, errors)
-    page.set_viewport_size({"width": 400, "height": 800})
-    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
-    install(page)
-    page.locator("nav button:has-text('All')").click(); page.wait_for_timeout(250); page.locator(".rounded-t-2xl button:has-text('Business')").first.click()   # v6.27: Business lives in All
-    page.wait_for_selector("[data-testid=business-page]", timeout=5000)
-    page.click("[data-testid=erp-new]")
-    LINES = "TABLE Customers\n- Name: text\n- Phone: phone\nTABLE Cranes\n- Code: auto\n- Model: text\n- Status: choice (Available, On hire)\nTABLE Jobs\n- Customer: link Customers\n- Crane: link Cranes\n- Days: number\n- Daily rate: money\n- Total: formula [Days] * [Daily rate]"
-    queue(page, ['{"name": "Cranes", "tables": [{"name": "Customers", "fields": [{"name": "Na', LINES])
-    page.fill("[data-testid=erp-desc]", "We rent mobile cranes (20-500 t) with operators in Egypt. We track customers, jobs per site, daily rates, invoices and payments, maintenance, etc")
-    page.click("[data-testid=erp-design]")
-    page.wait_for_selector("[data-testid=erp-draft]", timeout=30000)
-    d = page.locator("[data-testid=erp-draft]").inner_text()
-    check("Jobs" in d and "Cranes" in d, "a broken JSON design is rescued by the simple line format")
-    page.click("[data-testid=biz-step-name]"); page.wait_for_timeout(200)   # v6.18: back to step 1 (Name) of the builder
-    queue(page, ["no idea", "sorry"])
-    page.click("[data-testid=erp-design]")
-    page.wait_for_selector("[data-testid=erp-draft]", timeout=30000)
-    d = page.locator("[data-testid=erp-draft]").inner_text()
-    check("Equipment" in d and "Maintenance" in d, "if the model can't design at all, the closest template (crane rental) is used — never a dead end")
+    # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v513.py)
     ctx.close()
 
     # ---- 11. Learn daily: the notification row is readable ----

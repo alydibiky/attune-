@@ -59,28 +59,7 @@ with sync_playwright() as p:
     check("</html>" in page.content() or "HeavyLift 2026" in page.content(), "the finished page reaches its end (footer and </html>)")
     shot(page, "web-continued")
 
-    # ---- Studio without the graphics chip: HD is the instant ×2; ×4 says how long it takes ----
-    page.evaluate("() => { window.__mock.img.cpuOnly = true; }")
-    open_tool(page, "Studio", "studio-page")
-    page.fill("[data-testid=studio-idea]", "a crane at sunset")
-    page.locator("[data-testid=studio-go]").first.click()
-    page.wait_for_selector("[data-testid=studio-result]", timeout=15000); page.wait_for_timeout(600)
-    calls = [c[0] for c in page.evaluate("window.__mock.imgCalls")]
-    check("fast" in calls and "upscale" not in calls, "drawn on the processor → sharpened ×2 at once, not the 10-minute ×4 (%s)" % calls)
-    check("1024×1024" in page.locator("[data-testid=studio-result]").inner_text(), "the picture is 1024 px after the fast sharpen")
-    up = page.locator("[data-testid=studio-upscale]")
-    check(up.count() == 1 and "min" in up.inner_text(), "×4 shows its real time on this phone (%s)" % (up.inner_text() if up.count() else ""))
-    up.click(); page.wait_for_selector("[data-testid=confirm]", timeout=3000)
-    ctext = page.locator("[data-testid=confirm]").inner_text()
-    check("minutes" in ctext and "Start ×4" in ctext and "Delete" not in ctext, "…and asks before starting, with its own buttons")
-    page.locator("[data-testid=confirm-no]").click(); page.wait_for_timeout(200)
-    check("upscale" not in [c[0] for c in page.evaluate("window.__mock.imgCalls")], "Cancel → nothing started")
-    shot(page, "studio-fast")
-    card = page.locator("[data-testid=studio-gpu-card]")
-    check(card.count() == 1 and "graphics chip" in card.inner_text(), "on the processor with a graphics chip available → a clear card offers it")
-    page.locator("[data-testid=studio-gpu-on]").click(); page.wait_for_timeout(200)
-    check(page.evaluate("window.__mock.img.cpuOnly") is False and page.locator("[data-testid=studio-gpu-card]").count() == 0, "“Use the graphics chip” turns it back on")
-
+    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v543.py)
     # ---- Deal Check: "Do you mean…?" ----
     OFFER = "iPhone 15 Pro 256GB 38,000 EGP, pay 12,400 now then 3 x 4,133"
     TERMS = json.dumps({"item": "iPhone 15 Pro 256GB", "kind": "installment", "price": 38000, "currency": "EGP", "cash_price": 38000, "down_payment": 12400,

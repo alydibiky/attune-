@@ -30,37 +30,7 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     install(page)
 
-    # ---- 1. fields added to the design before creating it: by hand and by AI ----
-    open_more(page, "Business", "business-page")
-    page.click("[data-testid=erp-new]")
-    page.click("[data-testid=erp-tpl-cranes]")
-    page.locator("[data-testid=erp-draft-add-field]").first.click()
-    page.locator("[data-testid=erp-draft-new-field-name]").fill("Tax ID")
-    page.click("[data-testid=erp-draft-new-field-save]")
-    check(page.locator("[data-testid=erp-draft-field]:has-text('Tax ID')").count() == 1, "a field is added to a table in the design preview")
-    queue(page, [json.dumps({"ops": [{"op": "addField", "table": "Equipment", "name": "Warranty months", "type": "number"}]})])
-    page.locator("[data-testid=erp-draft-ask]").fill("add warranty months to equipment")
-    page.click("[data-testid=erp-draft-ask-go]")
-    page.wait_for_selector("[data-testid=erp-draft-proposal]", timeout=15000)
-    page.click("[data-testid=erp-draft-apply]")
-    check(page.locator("[data-testid=erp-draft-field]:has-text('Warranty months')").count() == 1, "…and by asking the AI (shown first, then applied)")
-    page.click("[data-testid=erp-create]")
-    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
-
-    # a customer + a job so the app has data and a formula
-    def add(values):
-        page.click("[data-testid=erp-add-row]")
-        page.wait_for_selector("[data-testid=erp-record]")
-        for label, v in values:
-            box = page.locator("[data-testid=erp-record] label").filter(has_text=label).first
-            if box.locator("select").count(): box.locator("select").select_option(label=v)
-            else: box.locator("input, textarea").first.fill(v)
-        page.click("[data-testid=erp-save]")
-        page.wait_for_selector("[data-testid=erp-grid]")
-    add([("Name", "Orascom")])
-    page.locator("[data-testid=erp-tables] button:has-text('Jobs')").click()
-    add([("Customer", "Orascom"), ("Site", "New Capital"), ("Start", "2026-10-01"), ("End", "2026-10-05"), ("Daily rate", "25000")])
-
+    # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v518.py)
     # ---- 2. export as an app, and USE it in a plain browser tab ----
     page.click("[data-testid=erp-tab-more]")
     page.click("[data-testid=erp-export-app]")

@@ -57,20 +57,7 @@ with sync_playwright() as p:
     t_poem = main_bodies(page)[-1].get("temperature", 0)
     check(t_poem > b.get("temperature", 1), "a poem gets a warmer temperature than a fact (%s > %s)" % (t_poem, b.get("temperature")))
 
-    # ---- 4. Business: JSON mode, and a safe retry when the engine refuses it ----
-    page.locator("nav button:has-text('All')").click(); page.wait_for_timeout(250); page.locator(".rounded-t-2xl button:has-text('Business')").first.click()   # v6.27: Business lives in All
-    page.wait_for_selector("[data-testid=business-page]", timeout=5000)
-    page.click("[data-testid=erp-new]")
-    page.evaluate("() => { const M = window.__mock; M.fakeQueue = []; M.bodies = []; }")
-    page.locator("[data-testid=erp-desc]").fill("A laundry with delivery drivers: customers, orders and drivers")   # (v6.46: a kind no template knows, so the model designs it)
-    page.click("[data-testid=erp-design]")
-    page.wait_for_function("() => (window.__mock.bodies || []).filter(x => x.max_tokens > 2).length >= 2", timeout=60000)
-    bs = main_bodies(page)
-    check((bs[0].get("response_format") or {}).get("type") == "json_object", "a Business design asks the engine for guaranteed-valid JSON")
-    check("response_format" not in bs[1], "…and when this engine refuses JSON mode, the same design is sent again without it (no error)")
-
-    errs = [e for e in real_errors(errors) if "400" not in e and "Bad Request" not in e]
-    check(not errs, "no JavaScript errors (%d)%s" % (len(errs), (": " + errs[0]) if errs else ""))
+    # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v526.py)
     ctx.close(); br.close()
 env.close()
 finish()

@@ -97,20 +97,7 @@ with sync_playwright() as p:
     check(len(page.evaluate("window.__mock.searchLog")) >= 1 and page.locator("[data-testid=cite]").count() >= 1, "…one tap searches the web for that question (Web stays off afterwards)")
     check(page.locator("button:has-text('Web')").first.get_attribute("class").find("border-teal-600") < 0, "…and the Web switch itself stays off")
 
-    # ---- 2. ERP: tables connected for you ----
-    open_more(page, "Business", "business-page")
-    page.click("[data-testid=erp-new]")
-    page.evaluate("() => { const M = window.__mock; M.fakeQueue = [JSON.stringify({ name: 'Workshop', tables: [ { name: 'Suppliers', fields: [ { name: 'SupplierID', type: 'auto' }, { name: 'SupplierName', type: 'text' }, { name: 'Phone', type: 'phone' } ] }, { name: 'Parts', fields: [ { name: 'PartID', type: 'auto' }, { name: 'PartName', type: 'text' }, { name: 'SupplierID', type: 'number' }, { name: 'Unit price', type: 'money' } ] }, { name: 'Customers', fields: [ { name: 'Name', type: 'text' }, { name: 'Phone', type: 'phone' } ] }, { name: 'Repairs', fields: [ { name: 'RepairNo', type: 'auto' }, { name: 'Customer name', type: 'text' }, { name: 'Part', type: 'text' }, { name: 'Cost', type: 'money' } ] } ] })]; }")
-    page.locator("[data-testid=erp-desc]").fill("A car workshop: suppliers, spare parts, customers and repairs")
-    page.click("[data-testid=erp-design]")
-    page.wait_for_selector("[data-testid=erp-draft]", timeout=20000)
-    draft = page.locator("[data-testid=erp-draft]").inner_text()
-    check(draft.count("Link to another table") >= 3, "a new design is connected automatically (SupplierID, Customer name, Part → links)")
-    page.click("[data-testid=erp-create]")
-    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
-    page.click("[data-testid=erp-tab-design]")
-    check(page.locator("[data-testid=erp-relationships]").inner_text().count("→") >= 3, "Design lists the connections")
-
+    # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v519.py)
     # ---- 3. a broken screen stays in its screen ----
     page.evaluate("localStorage.setItem('attune:artifacts:v1', JSON.stringify([{ id: 'x', title: 'Broken', kind: 'html' }]))")
     open_more(page, "Artifacts", "screen-error")

@@ -23,16 +23,7 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, extra_init=INIT)
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-    # ---- 1. the clinic, at once
-    page.locator("nav button").last.click(); page.wait_for_timeout(300)
-    page.locator(".rounded-t-2xl button:has-text('Business')").first.click()
-    page.wait_for_selector("[data-testid=erp-new]", timeout=8000); page.click("[data-testid=erp-new]")
-    page.evaluate("() => { window.__mock.bodies = []; }")
-    page.locator("button:has-text('I run a clinic with appointments')").first.click()
-    t0 = time.time(); page.click("[data-testid=erp-design]")
-    page.wait_for_selector("[data-testid=erp-draft]", timeout=5000)
-    check(time.time() - t0 < 3 and "Patients" in page.inner_text("[data-testid=erp-draft]"), "a clinic is built at once from its template (%.1f s): Patients…" % (time.time() - t0))
-    check(len([b for b in page.evaluate("window.__mock.bodies || []") if b.get("max_tokens", 0) > 2]) == 0, "…without waiting on the model")
+    # (v9.1: this section used Business — archived with it in archive/business/tests/mixed/e2e_v746.py)
     # ---- 2. Scout: the old goal, cleaned
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(300)

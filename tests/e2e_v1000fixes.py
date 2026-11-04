@@ -22,14 +22,7 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_timeout(1200)
-    # ---- Studio is paused on the phone ----
-    go(page, "studio", "[data-testid=studio-page]")
-    check(page.locator("[data-testid=studio-paused]").count() == 1, "Studio on a phone: its page says it is paused (no engine is started)")
-    err = page.evaluate("() => window.__attuneNativeCall('imagine', {prompt: 'x'}).then(() => 'ran', (e) => e.message)")
-    check("paused" in err, "the picture engine call is refused: " + err)
-    go(page, "tools", "[data-testid=tools-families]")
-    check(page.locator("[data-testid=tools-page-studio]").count() == 0 and page.locator("[data-testid=tools-page-convert]").count() == 1, "the Tools hub has no Studio card (the others stay)")
-    shot(page, "v1000-studio-paused")
+    # (v9.1: this section used Studio — archived with it in archive/studio/tests/mixed/e2e_v1000fixes.py)
     # ---- Huawei: the real way in ----
     go(page, "fit", "[data-testid=fit-today]")
     page.click("[data-testid=fit-tab-me]"); page.wait_for_selector("[data-testid=fit-autotrack]", timeout=5000)
