@@ -234,7 +234,8 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
     const mine = artifactsFor(cur.id, arts);
     return (
       <div className="calm att-in space-y-3 lg:max-w-3xl" data-testid={"project-sub-" + sub}>
-        <button onClick={() => setSub(null)} className="min-h-[44px] text-[13px] font-bold text-[var(--c-acc)]" dir="auto">← {cur.emoji} {cur.name}</button>
+        {/* v9.2 round 3: on a phone the header's ‹ is the one back (like Claude / ChatGPT); a computer keeps this link */}
+        <button onClick={() => setSub(null)} className="hidden lg:inline-flex min-h-[44px] items-center text-[13px] font-bold text-[var(--c-acc)]" dir="auto">← {cur.emoji} {cur.name}</button>
         <p className="text-[18px] font-extrabold text-[var(--c-ink)] m-0">{rowName(head)}</p>
 
         {/* v9.2 (Ali picked A + B): the work's tasks as a board — To do · Doing · Done; ‹ › move a card, × removes it */}
@@ -376,7 +377,7 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
     ];
     return (
       <div className="calm att-in space-y-4 lg:max-w-3xl" data-testid="project-page">
-        <button onClick={() => setOpenId(null)} className="min-h-[44px] text-[13px] font-bold text-[var(--c-acc)]">← {tr("All projects")}</button>
+        <button onClick={() => setOpenId(null)} className="hidden lg:inline-flex min-h-[44px] items-center text-[13px] font-bold text-[var(--c-acc)]">← {tr("All projects")}</button>
         <div className="flex items-center gap-3">
           <span className="text-3xl">{cur.emoji}</span>
           <div className="flex-1 min-w-0"><p className="text-[20px] text-[var(--c-ink)] font-extrabold truncate m-0" dir="auto">{cur.name}</p>

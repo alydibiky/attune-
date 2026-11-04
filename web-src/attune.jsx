@@ -39,7 +39,7 @@ import { ChatXRay } from "./chatxray-ui.jsx";
 import { WaLibrary } from "./wagroups-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
 import { SlidesReports } from "./slides-ui.jsx";
-import { popBack, hasBack, useSubBack, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
+import { popBack, hasBack, useSubBack, useBackDepth, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
@@ -106,6 +106,8 @@ const SIDE_PLACES = [["home", "Home", House],
   ["@", "My life"], ["lists", "To-dos & lists", ListChecks], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["care", "Health", Heart], ["agents", "Agents", Radar],   // v9.1: Health = Family health (Fit archived)
   ["@", "Learn & daily"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "My things", BookOpen],
   ["@", "Go & work"], ["travel", "Go", Plane], ["projects", "Work", Database], ["tools", "Tools", Wrench]];   // v9.1: Business archived — Work = Projects
+/** v9.2 round 3: the places of the side menu (and what they open) — their header shows ☰; every other page shows ‹ back. */
+const TOP_PLACES = new Set(["home", "lists", "money", "timeline", "care", "agents", "shelf", "travel", "projects", "tools", "memory", "booklib", "people", "coach", "learn"]);
 // v9.1: archived / folded tools leave the sidebar (and a group heading with nothing under it goes too)
 for (let i = SIDE_PLACES.length - 1; i >= 0; i--) if (SIDE_PLACES[i][0] !== "@" && hiddenFromMenus(SIDE_PLACES[i][0])) SIDE_PLACES.splice(i, 1);
 for (let i = SIDE_PLACES.length - 1; i >= 0; i--) if (SIDE_PLACES[i][0] === "@" && (!SIDE_PLACES[i + 1] || SIDE_PLACES[i + 1][0] === "@")) SIDE_PLACES.splice(i, 1);
@@ -10132,6 +10134,7 @@ export default function App() {
   // handle it and return true, otherwise it returns false and the app exits.
   const canGoBackRef = useRef(false); canGoBackRef.current = canGoBack;
   const goBackRef = useRef(() => {}); goBackRef.current = goBack;
+  const subDepth = useBackDepth();   // v9.2 round 3: a sub-view open inside a place (a project, a report, a folder) → the header shows ‹
   useEffect(() => {
     window.__attuneBack = () => {
       if (canGoBackRef.current || hasBack()) { goBackRef.current(); return true; }
@@ -10183,13 +10186,13 @@ export default function App() {
           {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
             <>
-            <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Chats")} data-testid="header-menu"><Menu size={20} /></button>
-            {/* v7.6: the chat is part of Home — ← goes back to the clean Home */}
-            <button onClick={() => navTo("home")} aria-label={tr("Home")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" data-testid="chat-home"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button></>
-          ) : wide ? null : (<>   {/* v6.25: on a computer Back is the sidebar's ← (one arrow, not two) */}
-            {!LEGACY_NAV ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button> : null}
-            <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
-          </>)}
+            {/* v9.2 round 3 (Ali: "make the back option more professional, like Claude or ChatGPT"): a chat has ☰ and New chat — no extra ← */}
+            <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Chats")} data-testid="header-menu"><Menu size={20} /></button></>
+          ) : wide ? null : LEGACY_NAV ? <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
+          /* v9.2 round 3: like Claude / ChatGPT — a place of the side menu shows ☰ only; a page opened from inside a place shows ‹ only
+             (one control, never both). Android's back gesture works everywhere as before. */
+          : TOP_PLACES.has(mode) && !subDepth ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button>
+          : <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! -ms-1.5 rounded-full! border-transparent! bg-transparent! text-slate-200!" data-testid="header-back"><ChevronLeft size={26} strokeWidth={2.2} className="rtl:-scale-x-100" /></button>}
           {/* v6.28 (Ali: "the UI is still cluttered"): a page with its own big title doesn't repeat it in the top bar */}
           <p className="text-[17px] font-extrabold tracking-tight text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
