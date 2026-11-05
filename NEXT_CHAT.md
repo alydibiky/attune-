@@ -16,6 +16,14 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## Waiting for Ali: colour pick C1–C5 (6 Nov)
+Ali on 9.6: "I said burgundy but I didn't mean everything burgundy — the app became darker and harder to read". Cause: v9.5 made
+burgundy the accent of every button, tab, checkbox AND the charts (Money report donut, cashflow "Earned" bars in red). Options:
+https://claude.ai/artifact/E8FbW1hcBmvmFHqWCAwk1P — C1 quiet burgundy (rec.: burgundy only for small things, soft buttons, mixed chart
+colours, earned green / spent ink) · C2 soft rose · C3 green back + burgundy brand mark · C4 ink + burgundy · C5 burgundy + teal.
+Build only his pick: spaces.js CALM_ACCENT / calmVars (+ a soft-button token), the Money ledger's chart colours (attune.jsx Yusr
+style block: --chart / --income / --accent), money-report charts. Green = money in, red = money out, everywhere.
+
 ## v9.6 — 5 Nov night: Ali said "OK, I love all of them" → BUILT (+ MOCKUPS.md: mock-ups before building, his rule)
 - Agents (A3 + A4): the board is the page (Watching · Found · Done; `attune:agents:view2`, List still one tap away); a tap opens
   `AgentChat` — what you asked, what it did (`agents.js agentChat`), the **dates × best-3 grid** (`offersByDay` kept as `a.byDay` by

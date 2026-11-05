@@ -31,5 +31,6 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
 ## Log (newest first)
 | Date | Screen | Options page | Ali's pick | Combined / built |
 |---|---|---|---|---|
+| 6 Nov 2026 | Colours ("I didn't mean everything burgundy — darker, harder to read") | https://claude.ai/artifact/E8FbW1hcBmvmFHqWCAwk1P (C1–C5) | waiting | — |
 | 5 Nov 2026 | Agents, Month plan, Follow-ups | https://claude.ai/artifact/1HJyhGHDsm5Ko9RXpK6ZrJ (A1–A6, P1–P6, F1–F6) | A3 + A4 with offers on several dates · P2 + P4 + P5 + P6 with savings goals over any time span · F1 + F4 | https://claude.ai/artifact/2T2ZRNTemt42fTyvYX6FeY — "OK", built in v9.6 |
 | 5 Nov 2026 | Gemini research picks | https://claude.ai/artifact/GaNgb3thF9dSYox2Pt1HkA | none yet ("not inclined to accept anything" for now) | — |
