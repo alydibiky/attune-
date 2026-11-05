@@ -11371,4 +11371,6 @@ export const RU = {
   "Checked: cheapest {p}.": "Проверено: дешевле всего {p}.",
   "Checked: cheapest {p} ({d}).": "Проверено: дешевле всего {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "Сайт не показал цены в этот раз — попробую снова.",
+  "The best offers on {d} dates — tap one to open it:": "Лучшие предложения на {d} дат — нажмите, чтобы открыть:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "{n} фоновых проверок без цен — этот сайт показывает их только в браузере. Нажмите «Проверить сейчас».",
 };

@@ -105,14 +105,18 @@
     for (const d of el.querySelectorAll ? el.querySelectorAll("[style*='background']") : []) { const m = /url\(["']?(https:[^"')]+)/.exec(d.getAttribute("style") || ""); if (m) return m[1]; }
     return "";
   }
+  // v9.6 (Ali's screenshot: every hotel was called "Price"): a site's own labels are never a name
+  const GENERIC = /^(price|prices|total|total price|per night|a night|book|book now|reserve|select|choose|view deal|see availability|show prices|deal|deals|cheapest|best value|sponsored|ad|new|genius|free cancellation|السعر|احجز|احجز الآن|الإجمالي)$/i;
+  const okName = (x) => x && !PRICE.test(x) && x.length > 2 && !GENERIC.test(x.replace(/[:·•\s]+$/, "").trim());
   function cardName(o) {
     // the listing link that carries words (the photo's link has none): its title, else its own text / label
     let ln = ""; for (const L of [listingLink(o.el), ...listingLinks(o.el)]) { if (!L) continue; const lt = (L.querySelector && L.querySelector(NAME_SEL)) || L;
-      ln = (lt.innerText || lt.textContent || L.getAttribute("aria-label") || L.getAttribute("title") || "").replace(/\s+/g, " ").trim(); if (ln && !PRICE.test(ln)) break; ln = ""; }
-    const t = o.el.querySelector && o.el.querySelector(NAME_SEL); const own = t ? (t.innerText || t.textContent || "").replace(/\s+/g, " ").trim() : "";
-    if (own && !PRICE.test(own) && own.length > 2) return own.slice(0, 160);
-    if (ln && !PRICE.test(ln) && ln.length > 2 && ln.length < 160) return ln;
-    return String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
+      ln = (lt.innerText || lt.textContent || L.getAttribute("aria-label") || L.getAttribute("title") || "").replace(/\s+/g, " ").trim(); if (okName(ln)) break; ln = ""; }
+    // every element that may hold the name, in order — the first that is a real name (not "Price", not an amount)
+    let own = ""; for (const t of (o.el.querySelectorAll ? [...o.el.querySelectorAll(NAME_SEL)] : [])) { const x = (t.innerText || t.textContent || "").replace(/\s+/g, " ").trim(); if (okName(x) && x.length < 160) { own = x; break; } }
+    if (own) return own.slice(0, 160);
+    if (okName(ln) && ln.length < 160) return ln;
+    return String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => okName(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
   }
   function rank(list, r) {
     r = r || {};

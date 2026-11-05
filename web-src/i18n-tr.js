@@ -11372,4 +11372,6 @@ export const TRK = {
   "Checked: cheapest {p}.": "Kontrol edildi: en ucuz {p}.",
   "Checked: cheapest {p} ({d}).": "Kontrol edildi: en ucuz {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "Site bu sefer fiyat göstermedi — tekrar deneyeceğim.",
+  "The best offers on {d} dates — tap one to open it:": "{d} tarihteki en iyi teklifler — açmak için birine dokun:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "Arka planda {n} kontrol fiyat göstermedi — bu site fiyatları yalnızca tarayıcıda gösteriyor. Şimdi kontrol et'e dokun.",
 };

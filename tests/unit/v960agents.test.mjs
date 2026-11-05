@@ -16,4 +16,10 @@ const g3 = A.datesGrid({ checks: [{ at: Date.parse("2026-11-01"), price: 9400 },
 assert.equal(g3.kind, "checks"); assert.equal(g3.best.price, 8650, "a single product: its price over the check days");
 const chat = A.agentChat({ said: "Tell me when hotels near the Haram are under 45k", created: 1, every: 360, checks: [{ at: 5, price: 41800 }], found: { at: 6, price: 41800 } });
 assert.equal(chat[0].who, "me"); assert.ok(chat.some((m) => m.found)); assert.equal(chat[chat.length - 1].found, true);
-console.log("ALL PASSED v960agents (10 checks)");
+// v9.6 Ali's screenshot: four "didn't show prices" in a row → one message with the count; "Price" is never a hotel's name
+const c2 = A.agentChat({ said: "x", created: 1, checks: [{ at: 2, price: 41495 }, { at: 3, blocked: true }, { at: 4, blocked: true }, { at: 5, blocked: true }, { at: 6, blocked: true }] });
+const misses = c2.filter((m) => m.T && /didn't show prices/.test(m.T[0]));
+assert.equal(misses.length, 1, "one message for the misses in a row"); assert.equal(misses[0].T[1].n, 4);
+const R = await import("../../web-src/agent-rules.js");
+assert.ok(R.isSiteName("Price", "Booking.com") && R.isSiteName("Book now") && !R.isSiteName("Swissotel Makkah", "Booking.com"));
+console.log("ALL PASSED v960agents (14 checks)");

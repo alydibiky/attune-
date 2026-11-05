@@ -11363,4 +11363,6 @@ export const ARB = {
   "Checked: cheapest {p}.": "تم الفحص: الأرخص {p}.",
   "Checked: cheapest {p} ({d}).": "تم الفحص: الأرخص {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "لم يُظهر الموقع أسعارًا هذه المرة — سأحاول مجددًا.",
+  "The best offers on {d} dates — tap one to open it:": "أفضل العروض في {d} تواريخ — اضغط على أحدها لفتحه:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "{n} فحوص في الخلفية لم تُظهر أسعارًا — هذا الموقع يعرضها في المتصفح فقط. اضغط «افحص الآن».",
 };

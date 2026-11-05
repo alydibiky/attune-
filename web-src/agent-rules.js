@@ -192,7 +192,9 @@ const brandKey = (s) => { const f = fold(s).replace(/[^a-z0-9؀-ۿ]/g, ""); retu
 export function brandOf(s) { const k = brandKey(s); if (k) return BRANDS[k]; const n = String(s || "").replace(/^https?:\/\/(www\.)?/, "").split(/[/.]/)[0]; return [n || "?", (n || "?").charAt(0).toUpperCase(), "var(--c-soft)", "var(--c-acc)"]; }
 export const brandName = (k) => (BRANDS[k] ? BRANDS[k][0] : k);
 /** Is this "name" only the website (an offer read before the hotel's own name was found)? */
-export const isSiteName = (name, site = "") => { const n = String(name || "").trim(); return !n || n === site || /^(www\.)?[a-z0-9-]+\.[a-z.]{2,}$/i.test(n) || !!(brandKey(n) && fold(n).replace(/[^a-z]/g, "").length <= 14 && BRANDS[brandKey(n)] && fold(BRANDS[brandKey(n)][0]).replace(/[^a-z]/g, "") === fold(n).replace(/[^a-z]/g, "")); };
+// v9.6: a site's own label read as a name ("Price", "Book now") counts as no name
+const GENERIC_NAME = /^(price|prices|total|total price|per night|a night|book|book now|reserve|select|choose|view deal|see availability|show prices|deal|deals|cheapest|best value|sponsored|السعر|احجز|الإجمالي)$/i;
+export const isSiteName = (name, site = "") => { const n = String(name || "").trim(); return !n || n === site || GENERIC_NAME.test(n) || /^(www\.)?[a-z0-9-]+\.[a-z.]{2,}$/i.test(n) || !!(brandKey(n) && fold(n).replace(/[^a-z]/g, "").length <= 14 && BRANDS[brandKey(n)] && fold(BRANDS[brandKey(n)][0]).replace(/[^a-z]/g, "") === fold(n).replace(/[^a-z]/g, "")); };
 
 /** v9.2 round 3 (Ali: "when it opens Booking it doesn't open the specific listing"): an offer read without its own link is searched by
  *  ITS name on the same site (Booking ss=, Amazon k=, a q= search) with the same dates — that hotel / product first, not the whole list. */

@@ -11372,4 +11372,6 @@ export const SW = {
   "Checked: cheapest {p}.": "Imekaguliwa: nafuu zaidi {p}.",
   "Checked: cheapest {p} ({d}).": "Imekaguliwa: nafuu zaidi {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "Tovuti haikuonyesha bei mara hii — nitajaribu tena.",
+  "The best offers on {d} dates — tap one to open it:": "Ofa bora katika tarehe {d} — gusa moja kuifungua:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "Ukaguzi {n} wa nyuma haukuonyesha bei — tovuti hii huzionyesha kwenye kivinjari tu. Gusa Kagua sasa.",
 };

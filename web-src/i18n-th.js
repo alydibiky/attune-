@@ -11371,4 +11371,6 @@ export const TH = {
   "Checked: cheapest {p}.": "ตรวจแล้ว: ถูกสุด {p}",
   "Checked: cheapest {p} ({d}).": "ตรวจแล้ว: ถูกสุด {p} ({d})",
   "The site didn't show prices this time — I'll try again.": "เว็บไซต์ไม่แสดงราคาครั้งนี้ — จะลองอีกครั้ง",
+  "The best offers on {d} dates — tap one to open it:": "ข้อเสนอที่ดีที่สุดใน {d} วัน — แตะเพื่อเปิด:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "ตรวจเบื้องหลัง {n} ครั้งไม่เห็นราคา — เว็บนี้แสดงราคาเฉพาะในเบราว์เซอร์ แตะ ตรวจตอนนี้",
 };

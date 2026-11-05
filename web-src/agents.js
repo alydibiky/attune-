@@ -644,7 +644,13 @@ export function agentChat(a, now = Date.now()) {
   const out = [{ who: "me", at: a.created || a.at || 0, text: String(a.said || a.text || a.what || a.title || "") }];
   const hrs = a.every ? Math.round(a.every / 60) : 0;
   out.push({ who: "agent", at: (a.created || 0) + 1, T: hrs > 1 ? ["On it — I check every {h} hours and tell you what I find.", { h: hrs }] : ["On it — I'll tell you what I find."] });
-  for (const c of ((a.checks || []).slice(-5))) out.push({ who: "agent", at: c.at, T: c.price > 0 ? (c.checkin ? ["Checked: cheapest {p} ({d}).", { p: c.price, d: c.checkin + " → " + (c.checkout || "") }] : ["Checked: cheapest {p}.", { p: c.price }]) : ["The site didn't show prices this time — I'll try again."] });
+  // v9.6 (Ali's screenshot: the same "didn't show prices" line four times): checks in a row without prices are ONE message
+  let miss = null;
+  for (const c of ((a.checks || []).slice(-12))) {
+    if (c.price > 0) { miss = null; out.push({ who: "agent", at: c.at, T: c.checkin ? ["Checked: cheapest {p} ({d}).", { p: c.price, d: c.checkin + " → " + (c.checkout || "") }] : ["Checked: cheapest {p}.", { p: c.price }] }); continue; }
+    if (miss) { miss.n++; miss.at = c.at; miss.T = ["{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.", { n: miss.n }]; continue; }
+    miss = { who: "agent", at: c.at, n: 1, T: ["The site didn't show prices this time — I'll try again."] }; out.push(miss);
+  }
   if (a.found) out.push({ who: "agent", at: a.found.at, T: ["Found one under your price: {p}.", { p: a.found.price }], found: true });
   for (const r of (a.ruleLog || []).slice(-5)) out.push({ who: "me", at: r.at, text: r.text });
   return out.sort((x, y) => (x.at || 0) - (y.at || 0));

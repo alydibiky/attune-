@@ -11372,4 +11372,6 @@ export const IDN = {
   "Checked: cheapest {p}.": "Dicek: termurah {p}.",
   "Checked: cheapest {p} ({d}).": "Dicek: termurah {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "Situs tidak menampilkan harga kali ini — saya coba lagi.",
+  "The best offers on {d} dates — tap one to open it:": "Penawaran terbaik di {d} tanggal — ketuk satu untuk membukanya:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "{n} pengecekan di latar belakang tidak menampilkan harga — situs ini hanya menampilkannya di browser. Ketuk Cek sekarang.",
 };

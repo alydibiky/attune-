@@ -112,5 +112,12 @@ with sync_playwright() as p:
     check([o["name"] for o in top[:2]] == ["Room Mate Alicia", "Hotel Europa Madrid"], "phone layout: each hotel's own name: %s" % [o["name"] for o in top])
     check(all("/hotel/es/" in o["href"] for o in top[:2]) and "alicia" in top[0]["href"], "phone layout: each hotel's own page (not the search): %s" % [o["href"] for o in top])
     check(top[0]["img"] == "https://cf.bstatic.com/xdata/images/hotel/max500/alicia.jpg", "phone layout: the lazy photo, not the 1-pixel placeholder: %s" % top[0]["img"])
+    # v9.6 (Ali's screenshot: every hotel named "Price"): a card whose first title-like element is the "Price" label
+    lab = lambda n, slug, price: f"""<div class="card"><div class="price-title"><h3>Price</h3><span>EGP {price}</span></div>
+<a href="https://www.booking.com/hotel/sa/{slug}.html"><span class="hotel-name">{n}</span></a><div>0.3 km from Masjid al-Haram</div></div>"""
+    page.set_content('<html><body><div>search form</div><div class="list">' + lab("Swissotel Makkah", "swiss", "41,495") + lab("Pullman ZamZam", "pull", "42,124") + "</div></body></html>")
+    page.add_script_tag(path=KIT)
+    r = page.evaluate("window.__attuneAgent.best({cheapest:true, many:true}, true)")
+    check([o["name"] for o in r["top"][:2]] == ["Swissotel Makkah", "Pullman ZamZam"], "a 'Price' label is never the hotel's name: %s" % [o["name"] for o in r["top"]])
     br.close()
 finish()

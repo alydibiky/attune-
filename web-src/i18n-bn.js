@@ -11371,4 +11371,6 @@ export const BN = {
   "Checked: cheapest {p}.": "যাচাই হয়েছে: সবচেয়ে সস্তা {p}।",
   "Checked: cheapest {p} ({d}).": "যাচাই হয়েছে: সবচেয়ে সস্তা {p} ({d})।",
   "The site didn't show prices this time — I'll try again.": "এবার সাইট দাম দেখায়নি — আবার চেষ্টা করব।",
+  "The best offers on {d} dates — tap one to open it:": "{d}টি তারিখে সেরা অফার — খুলতে একটিতে চাপুন:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "ব্যাকগ্রাউন্ডে {n}টি যাচাইয়ে দাম দেখায়নি — এই সাইট শুধু ব্রাউজারে দাম দেখায়। এখন যাচাই করুন চাপুন।",
 };

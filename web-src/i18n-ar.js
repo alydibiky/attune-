@@ -8455,4 +8455,6 @@ export const AR = {
   "Checked: cheapest {p}.": "اتشيك: أرخص سعر {p}.",
   "Checked: cheapest {p} ({d}).": "اتشيك: أرخص سعر {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "الموقع مطلعش أسعار المرة دي — هحاول تاني.",
+  "The best offers on {d} dates — tap one to open it:": "أحسن العروض في {d} تواريخ — دوس على واحد تفتحه:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "{n} مرات تشيك في الخلفية من غير أسعار — الموقع ده بيطلع الأسعار في المتصفح بس. دوس «شيّك دلوقتي».",
 };

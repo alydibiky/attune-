@@ -11371,4 +11371,6 @@ export const JA = {
   "Checked: cheapest {p}.": "確認済み：最安 {p}。",
   "Checked: cheapest {p} ({d}).": "確認済み：最安 {p}（{d}）。",
   "The site didn't show prices this time — I'll try again.": "今回はサイトに価格が出ませんでした — また試します。",
+  "The best offers on {d} dates — tap one to open it:": "{d} 日分のおすすめ — タップして開く：",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "バックグラウンドの確認 {n} 回で価格が出ませんでした — このサイトはブラウザでのみ価格を表示します。「今すぐ確認」をタップ。",
 };

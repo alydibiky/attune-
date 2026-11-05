@@ -11372,4 +11372,6 @@ export const FR = {
   "Checked: cheapest {p}.": "Vérifié : le moins cher {p}.",
   "Checked: cheapest {p} ({d}).": "Vérifié : le moins cher {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "Le site n'a pas affiché de prix cette fois — je réessaierai.",
+  "The best offers on {d} dates — tap one to open it:": "Les meilleures offres sur {d} dates — touchez-en une pour l'ouvrir :",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "{n} vérifications en arrière-plan sans prix — ce site ne les affiche que dans un navigateur. Touchez Vérifier maintenant.",
 };

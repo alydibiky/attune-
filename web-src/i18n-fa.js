@@ -11371,4 +11371,6 @@ export const FA = {
   "Checked: cheapest {p}.": "بررسی شد: ارزان‌ترین {p}.",
   "Checked: cheapest {p} ({d}).": "بررسی شد: ارزان‌ترین {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "سایت این بار قیمتی نشان نداد — دوباره تلاش می‌کنم.",
+  "The best offers on {d} dates — tap one to open it:": "بهترین پیشنهادها در {d} تاریخ — برای باز کردن یکی را بزنید:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "{n} بررسی در پس‌زمینه قیمتی نشان نداد — این سایت قیمت‌ها را فقط در مرورگر نشان می‌دهد. «الان بررسی کن» را بزنید.",
 };

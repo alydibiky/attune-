@@ -11371,4 +11371,6 @@ export const ZH = {
   "Checked: cheapest {p}.": "已查看：最低 {p}。",
   "Checked: cheapest {p} ({d}).": "已查看：最低 {p}（{d}）。",
   "The site didn't show prices this time — I'll try again.": "这次网站没有显示价格——我会再试。",
+  "The best offers on {d} dates — tap one to open it:": "{d} 个日期中的最佳报价——点一个打开：",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "后台 {n} 次查看都没显示价格——这个网站只在浏览器里显示价格。点“立即查看”。",
 };

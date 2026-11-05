@@ -11371,4 +11371,6 @@ export const DE = {
   "Checked: cheapest {p}.": "Geprüft: am günstigsten {p}.",
   "Checked: cheapest {p} ({d}).": "Geprüft: am günstigsten {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "Die Seite zeigte diesmal keine Preise — ich versuche es wieder.",
+  "The best offers on {d} dates — tap one to open it:": "Die besten Angebote an {d} Terminen — tippe zum Öffnen:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "{n} Prüfungen im Hintergrund ohne Preise — diese Seite zeigt sie nur im Browser. Tippe auf Jetzt prüfen.",
 };

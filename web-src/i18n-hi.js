@@ -11372,4 +11372,6 @@ export const HI = {
   "Checked: cheapest {p}.": "जाँचा: सबसे सस्ता {p}।",
   "Checked: cheapest {p} ({d}).": "जाँचा: सबसे सस्ता {p} ({d})।",
   "The site didn't show prices this time — I'll try again.": "इस बार साइट ने कीमतें नहीं दिखाईं — फिर कोशिश करूँगा।",
+  "The best offers on {d} dates — tap one to open it:": "{d} तारीखों पर सबसे अच्छे ऑफ़र — खोलने के लिए टैप करें:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "बैकग्राउंड में {n} जाँचों में कीमतें नहीं दिखीं — यह साइट उन्हें सिर्फ़ ब्राउज़र में दिखाती है। अभी जाँचें पर टैप करें।",
 };

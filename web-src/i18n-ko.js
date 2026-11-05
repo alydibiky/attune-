@@ -11371,4 +11371,6 @@ export const KO = {
   "Checked: cheapest {p}.": "확인함: 최저 {p}.",
   "Checked: cheapest {p} ({d}).": "확인함: 최저 {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "이번엔 사이트에 가격이 안 나왔어요 — 다시 시도할게요.",
+  "The best offers on {d} dates — tap one to open it:": "{d}개 날짜의 최고 제안 — 눌러서 열기:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "백그라운드 확인 {n}번에 가격이 안 나왔어요 — 이 사이트는 브라우저에서만 가격을 보여줘요. 지금 확인을 누르세요.",
 };

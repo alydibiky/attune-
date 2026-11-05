@@ -11372,4 +11372,6 @@ export const UR = {
   "Checked: cheapest {p}.": "جانچا: سب سے سستا {p}۔",
   "Checked: cheapest {p} ({d}).": "جانچا: سب سے سستا {p} ({d})۔",
   "The site didn't show prices this time — I'll try again.": "اس بار سائٹ نے قیمتیں نہیں دکھائیں — دوبارہ کوشش کروں گا۔",
+  "The best offers on {d} dates — tap one to open it:": "{d} تاریخوں پر بہترین آفرز — کھولنے کے لیے ٹیپ کریں:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "پس منظر میں {n} جانچوں میں قیمتیں نہیں دکھیں — یہ سائٹ انہیں صرف براؤزر میں دکھاتی ہے۔ ابھی جانچیں پر ٹیپ کریں۔",
 };

@@ -53,13 +53,16 @@ const CHIPS = [["reply", "Reply helper", "Who is waiting for my reply?", "مين
 
 /** v9.6 (Ali picked A4): an agent as a conversation — what you asked, what it did, its offers as DATES × the best on each date
  *  ("more than 1 option in more than 1 date"), its full card (every button), and a box to change it by typing. */
+// v9.6: inside an agent's conversation the dates grid already shows every date — the card's own "More dates" list is left out
+const InChat = React.createContext(false);
 function DatesGrid({ a, grid, openBest }) {
   if (!grid || !grid.kind) return null;
   const cur = a.currency || "";
   const label = (d) => { try { return new Date(d + "T12:00:00").toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); } catch (e) { return d; } };
   const cols = Math.max(...grid.rows.map((r) => r.offers.length));
   return <div className="space-y-1.5" data-testid="agent-dates-grid">
-    <p className="m-0 text-[12.5px] c-sub">{grid.kind === "dates" ? T("The best {n} on each of {d} dates — tap one to open it:", { n: cols, d: grid.rows.length }) : tr("The price on each check:")}</p>
+    <p className="m-0 text-[12.5px] c-sub">{grid.kind !== "dates" ? tr("The price on each check:") : grid.rows.filter((r) => r.offers.length >= cols).length >= 2 && cols > 1
+      ? T("The best {n} on each of {d} dates — tap one to open it:", { n: cols, d: grid.rows.length }) : T("The best offers on {d} dates — tap one to open it:", { d: grid.rows.length })}</p>
     <div className="grid gap-1.5" style={{ gridTemplateColumns: "64px repeat(" + cols + ", minmax(0,1fr))" }}>
       {grid.rows.map((r) => <React.Fragment key={r.date}>
         <span className="text-[12px] font-extrabold self-center" data-testid="agent-grid-date">{label(r.date)}{r.checkout && /^\d{4}-/.test(r.checkout) ? <span className="block text-[10.5px] c-sub font-bold">→ {label(r.checkout)}</span> : null}</span>
@@ -68,7 +71,7 @@ function DatesGrid({ a, grid, openBest }) {
           return <button key={k} onClick={() => openBest(a, o)} data-testid={best ? "agent-grid-best" : "agent-grid-offer"}
             className={"rounded-[12px] p-1.5 text-center min-w-0 " + (best ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] border border-[var(--c-ln)]")}>
             <b className="block text-[12.5px] tabular-nums" dir="ltr">{money(o.price, o.currency || cur)}</b>
-            {o.name || o.site ? <span className="block text-[10.5px] truncate opacity-85" dir="auto">{o.name || o.site}</span> : null}</button>; })}
+            {!R.isSiteName(o.name, a.site) ? <span className="block text-[10.5px] truncate opacity-85" dir="auto">{o.name}</span> : null}</button>; })}
       </React.Fragment>)}
     </div>
   </div>;
@@ -95,7 +98,7 @@ function AgentChat({ c, back, openBest, setRules, understand, flash }) {
             {tr(m.T[0], Object.fromEntries(Object.entries(m.T[1] || {}).map(([k, v]) => [k, k === "p" ? money(v, a.currency || "") : v])))}{m.found ? " 🎉" : ""}</div>)}
       {c.grid && c.grid.kind ? <div className={bubble + " self-stretch max-w-none bg-[var(--c-surf)] border border-[var(--c-ln)]"}><DatesGrid a={a} grid={c.grid} openBest={openBest} /></div> : null}
     </div>
-    {c.el}
+    <InChat.Provider value={true}>{c.el}</InChat.Provider>
     <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 sticky bottom-2" data-testid="agent-chat-form">
       <input value={text} onChange={(e) => setText(e.target.value)} dir="auto" className={U.inp + " flex-1"} placeholder={tr("Tell the agent: “only 5 stars”, “under 40,000”…")} data-testid="agent-chat-input" />
       <button className={U.btnP + " !h-11 !min-h-[44px]"} disabled={busy} data-testid="agent-chat-send"><Send size={16} /></button>
@@ -697,7 +700,7 @@ function BestFound({ a, small, openBest, skipBest }) {
   const green = "text-[var(--c-acc)] font-black";
   // v9.2 (Ali, 4 Nov: "agents still look like that" — blurred boxes, every hotel named "Booking.com"): offers read before the hotel
   // names and photos were read keep the old look until the next check — say so, so it is never taken for how it should look
-  const stale = (a.best3 || []).length > 0 && a.best3.every((o) => !o.photo && (!o.name || o.name === a.site || /^(www\.)?[a-z0-9-]+\.[a-z.]{2,}$/i.test(String(o.name).trim())));
+  const stale = (a.best3 || []).length > 0 && a.best3.every((o) => !o.photo && R.isSiteName(o.name, a.site));
   return <div className="space-y-2" data-testid="agent-best3">
     {stale ? <p className="m-0 text-[12.5px] font-bold text-[var(--c-warn)]" data-testid="agent-stale">{tr("These offers were read before Attune could read the hotel names and photos — tap Check now to get them.")}</p> : null}
     <div className="flex items-baseline justify-between gap-2"><p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Best found")}</p>
@@ -733,6 +736,7 @@ const textName = (o, a) => { if (!R.isSiteName(o.name, a.site)) return o.name;
   return t && t.length >= 4 && !R.isSiteName(t, a.site) && !/^\d/.test(t) ? t.slice(0, 60) : ""; };
 const offerName = (o, a, k = 0) => textName(o, a) || T("Offer {i}", { i: k + 1 });
 function Podium({ a, c, far, day, tv, openBest, skipBest }) {
+  const inChat = React.useContext(InChat);
   const [at, setAt] = useState(-1);
   const photos = useMemo(() => A.loadPhotos(a.id), [a.id, a.best3]);
   // v9.4 (Ali, 5 Nov: "Offer 3" on a blurred card, "very bad and confusing and does not open on the specific listing"): only an offer
@@ -775,7 +779,7 @@ function Podium({ a, c, far, day, tv, openBest, skipBest }) {
             <span className="block text-[14.5px] font-bold tabular-nums mt-0.5">{money(r.o.price, a.currency)} <span className="text-[11px] font-medium c-sub" data-testid="agent-trade">+{n(r.o.price - w.o.price)}</span></span></span>
         </button>)}
       </div></> : null}
-    {bare.length ? <DateRows a={a} rows={bare} day={day} openBest={openBest} title="More dates" /> : null}
+    {bare.length && !inChat ? <DateRows a={a} rows={bare} day={day} openBest={openBest} title="More dates" /> : null}
     {at >= 0 && rows[at] ? <OfferSheet a={a} rows={rows} at={at} setAt={setAt} pic={pic} far={far} day={day} n={n} openBest={openBest} skipBest={skipBest} /> : null}
   </div>;
 }

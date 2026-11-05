@@ -11371,4 +11371,6 @@ export const VI = {
   "Checked: cheapest {p}.": "Đã kiểm tra: rẻ nhất {p}.",
   "Checked: cheapest {p} ({d}).": "Đã kiểm tra: rẻ nhất {p} ({d}).",
   "The site didn't show prices this time — I'll try again.": "Lần này trang không hiện giá — tôi sẽ thử lại.",
+  "The best offers on {d} dates — tap one to open it:": "Ưu đãi tốt nhất trong {d} ngày — chạm để mở:",
+  "{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.": "{n} lần kiểm tra nền không thấy giá — trang này chỉ hiện giá trong trình duyệt. Chạm Kiểm tra ngay.",
 };
