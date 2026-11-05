@@ -179,7 +179,7 @@ import { mapsUrl, openMaps } from "./gomaps.js";   // v9.1: Business (erp.js) is
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
-import { loadArtifacts } from "./spaces.js";   // v6.40: open a page pinned to the home screen
+import { loadArtifacts, calmVars, loadTheme as loadThemeV95 } from "./spaces.js";   // v6.40: open a page pinned to the home screen
 import { detectLoop, trimLoop, detectDegenerate, junkStart } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips, looksLikeCodeTask } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
@@ -1367,7 +1367,8 @@ function nativeCall(method, arg, onProgress) {
     NATIVE_LAST_ID = id;
     // v6.28: a feature this app version doesn't have (the computer app, an older Android app) says so — it used to throw
     if (typeof NATIVE[method] !== "function") return rej(new Error("This needs the newest Attune app (" + method + ")"));
-    NATIVE_CALLS[id] = { res, rej, onProgress };
+    // v9.5 (Ali: "Fill my details" in an agent's browser did nothing with no details saved): it closes and Profile → Booking details opens
+    NATIVE_CALLS[id] = { res: method === "agentOpen" ? (r) => { try { if (r && r.reason === "profile") setTimeout(() => window.dispatchEvent(new CustomEvent("attune-panel", { detail: "profile" })), 150); } catch (e) {} res(r); } : res, rej, onProgress };
     try { NATIVE[method](id, typeof arg === "string" ? arg : JSON.stringify(arg || {})); }
     catch (e) { delete NATIVE_CALLS[id]; rej(e); }
   });
@@ -6099,10 +6100,13 @@ function yusrDocumentHtml() {
       ? "--bg:#F4F7F5;--bg2:#EEF3F0;--card:#FFFFFF;--card2:#EEF3F0;--line:#E2EAE5;--line2:#D3DDD7;--text:#16201C;--muted:#4A5852;--faint:#6B7772;--accent:#157A52;--expense:#B33A2E;--income:#1E7A43;--blue:#2F6FA8;--purple:#7A4FA8"
       : "--bg:#101413;--bg2:#141917;--card:#171D1B;--card2:#1E2623;--line:#26302D;--line2:#343E3A;--text:#EAEFEC;--muted:#9BA8A3;--faint:#6B7772;--accent:#4FC2AF;--expense:#F07A6E;--income:#5BC48A;--blue:#7FB3E0;--purple:#C59BE8";
     const face = [400, 600, 700, 800].map((w) => `@font-face{font-family:"Nunito";font-weight:${w};font-display:swap;src:url(fonts/nunito-latin-${w}-normal.woff2) format("woff2")}`).join("");
-    const qa = `<style id="attune-quiet-atelier">${face}:root{${v};--radius:22px;--radius-sm:14px;--font:"Nunito","IBM Plex Sans Arabic",-apple-system,system-ui,sans-serif;--mono:"Nunito","IBM Plex Sans Arabic",system-ui,sans-serif}`
+    // v9.5 (Ali: "make it burgundy", "not all background colours work"): the ledger follows the colour and ground chosen in Theme
+    let cv = {}; try { cv = calmVars(loadThemeV95()); } catch (e) {}
+    const v95 = cv["--c-acc"] ? `;--bg:${cv["--c-bg"]};--bg2:${cv["--c-surf-2"]};--card:${cv["--c-surf"]};--card2:${cv["--c-surf-2"]};--line:${cv["--c-ln"]};--text:${cv["--c-ink"]};--muted:${cv["--c-mut"]};--accent:${cv["--c-acc"]}` : "";
+    const qa = `<style id="attune-quiet-atelier">${face}:root{${v}${v95};--radius:22px;--radius-sm:14px;--font:"Nunito","IBM Plex Sans Arabic",-apple-system,system-ui,sans-serif;--mono:"Nunito","IBM Plex Sans Arabic",system-ui,sans-serif}`
       + `html{color-scheme:${light ? "light" : "dark"}}body{font-variant-numeric:tabular-nums}`
       // the balance card and the bottom bar had their own navy / white: now the surface with a soft jade glow, and the app's ground
-      + `.balance{background:linear-gradient(150deg,var(--card),${light ? "#E3F4EC" : "#173530"})!important;box-shadow:0 2px 10px rgba(0,0,0,.06)!important}`
+      + `.balance{background:linear-gradient(150deg,var(--card),${cv["--c-soft"] || (light ? "#E3F4EC" : "#173530")})!important;box-shadow:0 2px 10px rgba(0,0,0,.06)!important}`
       + `nav{background:var(--bg)!important;backdrop-filter:none!important}`
       // v7.9: Attune draws Yusr's tabs (and the +) itself, under every Yusr screen — Yusr's own bar and + would be a second set;
       // Invoices moved to Business → Books

@@ -60,6 +60,27 @@ function marked(text, q) {
   const rx = new RegExp("(" + words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")", "ig");
   return String(text).split(rx).map((part, i) => (i % 2 ? <mark key={i} className="rounded px-0.5 font-bold" style={{ background: "var(--c-soft)", color: "var(--c-acc)", boxShadow: "inset 0 -1px 0 var(--c-acc)" }}>{part}</mark> : part));
 }
+
+/** v9.5 (Ali: "the Recall has only notifications from 29 Oct — fix it for good"): Android can stop handing notifications to Attune
+ *  without a word. The app reconnects by itself on every open (PayLog.heal); if none has arrived for a day, Recall says so here,
+ *  with one button that reconnects at once. */
+export function listenerQuiet(h, now = Date.now()) {
+  if (!h || !h.on) return null;
+  const last = Math.max(+h.seen || 0, +h.conn || 0);
+  return last && now - last > 24 * 3600000 ? last : null;
+}
+function ListenerNote({ native }) {
+  const read = () => { try { return JSON.parse(native.listenerHealth() || "{}"); } catch (e) { return {}; } };
+  const [h, setH] = useState(read);
+  const [done, setDone] = useState(false);
+  const since = listenerQuiet(h);
+  if (!since && !done) return null;
+  return <div className="rounded-[16px] border border-[var(--c-warn)] bg-[var(--c-soft)] p-3 space-y-2" data-testid="recall-listener">
+    <p className="m-0 text-[13.5px] font-bold" dir="auto">{done ? tr("Reconnected — new notifications will be kept again.") : tr("No notifications have reached Attune since {d}. Android stopped sending them.", { d: new Date(since).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) })}</p>
+    {done ? null : <button className="min-h-[40px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[13px]" onClick={() => { try { native.listenerHeal(); } catch (e) {} setDone(true); setTimeout(() => setH(read()), 3000); }} data-testid="recall-reconnect">{tr("Reconnect")}</button>}
+  </div>;
+}
+
 export function RecallPage({ memory = [], remember, native, call, readText, openRec, openChat, openArtifact, flash }) {
   const ar = getLang() === "ar";
   const [q, setQ] = useState("");
@@ -182,6 +203,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
         )) : <p className={card + " text-sm text-[var(--c-mut)] text-center p-6 m-0"} data-testid="recall-none">{docs.length ? tr("Nothing found — try other words, or fewer") : tr("Nothing to search yet — add screenshots or keep your notifications below")}</p>}
       </div>
 
+      {native && native.listenerHealth ? <ListenerNote native={native} /> : null}
       {!q && docs.length ? <RecallReport s={recallStats(docs)} labels={Object.fromEntries(Object.keys(KINDS).map((k) => [k, ar ? KINDS[k].ar : tr(KINDS[k].en)]))} notesOn={native && native.recallNotesOn ? notesOn : null} /> : null}
       <div className={card + " p-4 space-y-3"}>
         <label className="flex items-center gap-2.5 min-h-[44px] text-[14px] font-bold text-[var(--c-ink)] cursor-pointer" data-testid="recall-add">

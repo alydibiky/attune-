@@ -452,8 +452,11 @@ function titleFrom(text, kind, contact) {
 
 // ---- stored reminders ----------------------------------------------------------------
 // [{ id, at, title, body, repeat, created, source, done }]
+// v9.5 (Ali: "I still get the notification from Fit & Food to log my dinner"): old Fit meal / water reminders are not kept
+export const isLegacyReminder = (r) => !!r && (/^fit-(breakfast|lunch|dinner|water|meal)/.test(String(r.id || "")) ||
+  /^(log your (breakfast|lunch|dinner)|drink a glass of water|سجّ?ل (فطارك|غداك|عشاك)|اشرب كوب ماء)$/i.test(String(r.title || "").trim()));
 export function loadReminders() {
-  try { const v = JSON.parse(localStorage.getItem(REMINDERS_KEY) || "[]"); return Array.isArray(v) ? v : (v && v.items) || []; } catch (e) { return []; }
+  try { const v = JSON.parse(localStorage.getItem(REMINDERS_KEY) || "[]"); return (Array.isArray(v) ? v : (v && v.items) || []).filter((r) => !isLegacyReminder(r)); } catch (e) { return []; }
 }
 export function saveReminders(list) { try { localStorage.setItem(REMINDERS_KEY, JSON.stringify(list)); } catch (e) {} return list; }
 export const newReminderId = () => "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);

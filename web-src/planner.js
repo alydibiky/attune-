@@ -9,6 +9,7 @@
      = free to spend
    Pure: stores in, the plan out. The screen prints it; Safe to spend keeps the pots aside.                                     */
 import { scheduleOf } from "./life.js";
+import { catName, looksLikeId } from "./money-report.js";
 
 export const POTS_KEY = "attune:pots:v1";
 const DAY = 864e5;
@@ -43,16 +44,21 @@ export function monthsTo(by, now = Date.now()) {
 /** The average monthly spending per category over the last `months` full months: { cat: avg }, and the total. */
 export function averages(ledger, now = Date.now(), months = 3) {
   const n = new Date(now), from = iso(new Date(n.getFullYear(), n.getMonth() - months, 1)), to = iso(new Date(n.getFullYear(), n.getMonth(), 0));
-  const by = {}; let total = 0;
+  const by = {}, notes = {}; let total = 0;
   const seen = new Set();
   for (const t of (ledger && ledger.txns) || []) {
     if (t.type !== "expense" || !(t.date >= from && t.date <= to)) continue;
     seen.add(t.date.slice(0, 7));
     const c = t.cat || "other"; by[c] = (by[c] || 0) + (+t.amount || 0); total += +t.amount || 0;
+    const nt = String(t.note || "").replace(" ↻", "").trim();
+    if (nt) { const m = notes[c] || (notes[c] = {}); m[nt] = (m[nt] || 0) + 1; }
   }
   const k = Math.max(1, Math.min(months, seen.size));
   for (const c of Object.keys(by)) by[c] = by[c] / k;
-  return { by, total: total / k, months: seen.size };
+  // v9.5 (Ali, 5 Nov: "I want the category with the note if there is"): the note most entries of a category carry
+  const note = {};
+  for (const [c, m] of Object.entries(notes)) { const top = Object.entries(m).sort((x, y) => y[1] - x[1])[0]; if (top) note[c] = top[0].slice(0, 40); }
+  return { by, total: total / k, months: seen.size, note };
 }
 
 /** The usual monthly income: this month's if it came, else the average of the last 3 months. */
@@ -107,7 +113,7 @@ export function planMonth({ ledger, life, pots, now = Date.now(), income: inc = 
   });
   const potsTotal = potList.reduce((a, p) => a + p.monthly, 0);
   // flexible: the last 3 months' average per category (fixed categories left out)
-  let flexible = Object.entries(avg.by).filter(([c]) => !FLEX_SKIP.has(c)).map(([cat, a]) => ({ cat, avg: r0(a), plan: r0(a) })).sort((a, b) => b.avg - a.avg);
+  let flexible = Object.entries(avg.by).filter(([c]) => !FLEX_SKIP.has(c)).map(([cat, a]) => ({ cat, avg: r0(a), plan: r0(a), note: (avg.note || {})[cat] || "" })).sort((a, b) => b.avg - a.avg);
   let flexTotal = flexible.reduce((a, f) => a + f.plan, 0);
   const room = income - fixedTotal - potsTotal;
   const tips = [];
@@ -160,4 +166,20 @@ export function potIntent(text, now = Date.now()) {
   // v8.7 "4000 a month" / «4000 كل شهر» / «4000 في الشهر»: a fixed monthly amount (the year = ×12), no target needed
   if (/\b(a|per|every|each) month\b|\bmonthly\b|كل شهر|في الشهر|شهريا|شهرياً/i.test(t) && target > 0) return { name: nameOf, kind, target: 0, per: target, by };
   return { name: nameOf, kind, target, by };
+}
+
+/** v9.5 (Ali, 5 Nov: "things shown as id … I want the category with the note if there is"): the category's name (never an id
+ *  like "cmuu3u3sb2q4sd"), its usual note after it; a category Attune can't name shows its note alone. */
+export function flexLabel(f, ledger, ar = false) {
+  const custom = ledger && (ledger.customCats || []).some((c) => c.id === f.cat);
+  const named = custom || !looksLikeId(f.cat) ? catName(ledger, f.cat, ar) : "";
+  if (!named) return f.note || catName(ledger, f.cat, ar);
+  return f.note && f.note.toLowerCase() !== String(named).toLowerCase() ? named + " · " + f.note : named;
+}
+
+/** v9.5: the same bill more than once a month (the maid every Saturday) is one line: "Maid × 4". */
+export function groupFixed(list) {
+  const out = [];
+  for (const f of list || []) { const o = out.find((x) => x.what === f.what && x.amount === f.amount && !!x.paid === !!f.paid); if (o) o.n++; else out.push({ ...f, n: 1 }); }
+  return out;
 }

@@ -2,7 +2,7 @@
    records the expense automatically"): a tick on a "regular" (life.js kind "regular") writes the expense straight into Money's
    ledger — no question asked — and an untick takes that same entry out again. Used by People & plans and Home.
    Tests: tests/unit/v737fixes.test.mjs, tests/e2e_v737maid.py.                                                                  */
-import { loadLife, saveLife, togglePaid, tickEntry } from "./life.js";
+import { loadLife, saveLife, togglePaid, tickEntry, payAmount, progressOf } from "./life.js";
 import { loadRadar, saveRadar, resolveDeadline, updateDeadline } from "./deadlines.js";
 import { appendToLedger } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
@@ -56,6 +56,44 @@ export function tickRegular(id, i, on, { store, now = Date.now() } = {}) {
   data = { ...data, items: data.items.map((x) => (x.id === id ? { ...x, rec } : x)) };
   saveLife(data, ls);
   return { data, recorded, removed };
+}
+
+/** v9.5 (Ali, 5 Nov: "when the date comes it asks me if the person really paid, like the Sheikh — when I tick it is recorded in
+ *  revenue; if he paid more or less, like 4,000, I write it and the other payments are distributed again"): payment i of a
+ *  person's debt / instalments was paid with `amount` (what was due if left out) → the plan is ticked with that amount (the rest
+ *  is spread again by scheduleOf) and it is written in Money at once: income when it came to you, an expense when you paid.
+ *  → { data, recorded, left, next } */
+export function payPerson(id, i, amount, { store, now = Date.now() } = {}) {
+  const ls = store || (typeof localStorage !== "undefined" ? localStorage : null);
+  let data = loadLife(ls);
+  const c0 = data.items.find((x) => x.id === id); if (!c0) return { data, recorded: 0, left: 0, next: null };
+  const due = (progressOf(c0, now).schedule[i] || {}).amount || c0.amount || 0;
+  const v = amount == null || amount === "" ? due : +amount;
+  if (!(v >= 0)) return { data, recorded: 0, left: 0, next: null };
+  data = payAmount(data, id, i, v);
+  const c = data.items.find((x) => x.id === id);
+  const rec = { ...(c.rec || {}) };
+  let recorded = 0;
+  const led = loadLedger(ls);
+  if (led && v > 0) {
+    if (rec[i]) led.txns = led.txns.filter((t) => t.id !== rec[i]);   // asked again: the old entry is replaced
+    const e = tickEntry(c, i, now);
+    const r = appendToLedger(led, [{ type: c.dir === "in" ? "income" : "expense", amount: v, currency: e.currency, cat: c.dir === "in" ? "other" : catForCommitment(led, c, e.note), note: e.note, date: new Date(now).toISOString().slice(0, 10) }], now);
+    if (r.ids.length) { try { ls.setItem("ledger.v3", JSON.stringify(r.ledger)); rec[i] = r.ids[0]; recorded = v; } catch (x) {} }
+  }
+  data = { ...data, items: data.items.map((x) => (x.id === id ? { ...x, rec } : x)) };
+  saveLife(data, ls);
+  const pr = progressOf(data.items.find((x) => x.id === id), now);
+  return { data, recorded, left: pr.left || 0, next: pr.next || null };
+}
+
+/** v9.5: "Not yet" — payment i is asked again tomorrow (not today any more). */
+export function notYet(id, i, { store, now = Date.now() } = {}) {
+  const ls = store || (typeof localStorage !== "undefined" ? localStorage : null);
+  const data = loadLife(ls), d = new Date(now + 86400000);
+  const day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const out = { ...data, items: data.items.map((x) => (x.id === id ? { ...x, later: { ...(x.later || {}), [i]: day } } : x)) };
+  saveLife(out, ls); return out;
 }
 
 /** v6.34 (Ali): a Radar renewal's day came — "Paid?" Yes → the expense in Money (its date, cat bills) and the renewal is done

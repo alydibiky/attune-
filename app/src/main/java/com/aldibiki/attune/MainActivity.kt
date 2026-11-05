@@ -219,6 +219,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ExitWatch.check(this)   // v6.29: why did the app end last time? (engine log + a one-time note on the page)
+        try { Reminders.purgeLegacy(this) } catch (e: Exception) { }   // v9.5: the old Fit "Log your dinner" alarms, gone for good
         Referrer.fetchOnce(this)   // v8.7: a friend's referral code from the Play link (once, on the phone)
         // v6.28 (Ali: "sometimes the app crashes"): an unexpected error on a BACKGROUND thread (a web search, a file being read, a
         // map piece) used to close the whole app. Now it is written to the Engine log and only that piece of work stops; the app
@@ -497,6 +498,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         visible = true
         try { WakeService.ensure(this) } catch (e: Exception) {}
+        try { Thread { try { PayLog.heal(applicationContext) } catch (e: Exception) {} }.start() } catch (e: Exception) {}   // v9.5: Recall never goes quiet again
         try { BookIngestService.resumeIfPending(this) } catch (e: Exception) {}   // v8.3: books still waiting are read on   // voice phase 3: back on if it was on (the service may have been stopped)
         if (::web.isInitialized) {
             web.onResume(); web.resumeTimers()

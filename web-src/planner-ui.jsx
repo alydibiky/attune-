@@ -4,7 +4,7 @@
 import React, { useMemo, useState } from "react";
 import { Plus, PiggyBank } from "lucide-react";
 import { tr, getLang, isRTL, dateLocale } from "./i18n.js";
-import { loadPots, savePots, addPot, fundPot, planMonth, potIntent } from "./planner.js";
+import { loadPots, savePots, addPot, fundPot, planMonth, potIntent, flexLabel, groupFixed } from "./planner.js";
 import { loadLedger } from "./myledger.js";
 import { loadLife } from "./life.js";
 import { homeCurrency } from "./locale.js";
@@ -147,6 +147,8 @@ function YearGoals({ ledger, pots, save, cur, flash, year, setYear, toSheet }) {
 }
 
 const KIND_NAME = { emergency: ["Emergency", "الطوارئ"], travel: ["Travel", "السفر"], car: ["Car", "العربية"], eid: ["Eid", "العيد"], school: ["School", "المدارس"], wedding: ["Wedding", "الجواز"] };
+/** v9.5 (Ali: "things shown as id … I want the category with the note if there is"): the category's name (never an id like
+ *  "cmuu3u3sb2q4sd"); its usual note after it; a category Attune can't name shows the note alone. */
 const CAT_NAME = { food: ["Food", "الأكل"], groceries: ["Groceries", "البقالة"], transport: ["Transport", "المواصلات"], shopping: ["Shopping", "المشتريات"], health: ["Health", "الصحة"],
   fun: ["Going out", "الخروج"], other: ["Other", "حاجات تانية"], education: ["Education", "التعليم"], home: ["Home", "البيت"], gifts: ["Gifts", "الهدايا"] };
 const COL = { fixed: "#4A5852", pots: "var(--c-acc)", flex: "#7FB8A0", free: "#C9E7D8" };
@@ -222,13 +224,13 @@ export function PlannerPage({ flash }) {
       <div className={U.cardPad} data-testid="planner-everyday">
         <p className={U.label + " m-0 mb-2"}>{tr("Everyday (your last 3 months)")}</p>
         {plan.flexible.length ? <div className="space-y-1.5">{plan.flexible.slice(0, 8).map((f) => (
-          <div key={f.cat} className="flex items-center justify-between text-[14px] font-semibold"><span>{CAT_NAME[f.cat] ? (ar ? CAT_NAME[f.cat][1] : tr(CAT_NAME[f.cat][0])) : f.cat}</span>
+          <div key={f.cat} className="flex items-center justify-between text-[14px] font-semibold"><span className="min-w-0" data-testid="planner-cat">{flexLabel(f, ledger, ar)}</span>
             <span className="tabular-nums" dir="ltr">{f.plan !== f.avg ? <s className={U.muted + " me-2 text-[12.5px]"}>{fmt(f.avg)}</s> : null}<b>{fmt(f.plan)}</b></span></div>))}</div>
           : <p className={"m-0 text-[13px] " + U.muted}>{tr("After a month of spending in Money, your usual food, transport and shopping show here.")}</p>}
       </div>
       {plan.fixed.length ? <div className={U.cardPad} data-testid="planner-fixed">
         <p className={U.label + " m-0 mb-2"}>{tr("Fixed this month")}</p>
-        <div className="space-y-1.5">{plan.fixed.map((f, i) => <div key={i} className="flex items-center justify-between text-[14px] font-semibold"><span dir="auto" className={f.paid ? "line-through " + U.muted : ""}>{f.what}</span><b className="tabular-nums" dir="ltr">{fmt(f.amount)}</b></div>)}</div>
+        <div className="space-y-1.5">{groupFixed(plan.fixed).map((f, i) => <div key={i} className="flex items-center justify-between text-[14px] font-semibold" data-testid="planner-fixed-row"><span dir="auto" className={f.paid ? "line-through " + U.muted : ""}>{f.what}{f.n > 1 ? <span className={U.muted + " font-bold"}> × {f.n}</span> : null}</span><b className="tabular-nums" dir="ltr">{fmt(f.amount * f.n)}</b></div>)}</div>
       </div> : null}
       </>}
     </div>);

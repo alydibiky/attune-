@@ -790,6 +790,18 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
 
+    /** v9.5 (Ali, 5 Nov: "it still does not open the specific listing … if you can't do it in the app make it browser like the old"):
+     *  the exact page in the phone's own browser (Chrome or whichever is the default) — never an app that drops it on its home. */
+    @JavascriptInterface
+    fun openInBrowser(url: String): Boolean = try {
+        if (!url.startsWith("https://")) false else {
+            val i = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            i.selector = android.content.Intent.makeMainSelectorActivity(android.content.Intent.ACTION_MAIN, android.content.Intent.CATEGORY_APP_BROWSER)
+            try { ctx.startActivity(i); true } catch (e: android.content.ActivityNotFoundException) {
+                ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)); true }
+        }
+    } catch (e: Exception) { false }
+
     /** Opens an app: {pkg, url, store} — the app if it is on the phone (at the link when the app takes it), else the link
      *  (website), else its store page. {ok, how: "app" | "link" | "store"}. */
     @JavascriptInterface
@@ -1502,6 +1514,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun recallNotesOn(on: Boolean) { try { RecallLog.setOn(ctx, on) } catch (e: Throwable) { } }
     @JavascriptInterface
     fun recallNotesIsOn(): Boolean = try { RecallLog.isOn(ctx) } catch (e: Throwable) { false }
+    @JavascriptInterface
+    fun listenerHealth(): String = try { PayLog.health(ctx) } catch (e: Throwable) { "{}" }
+    @JavascriptInterface
+    fun listenerHeal(): Boolean = try { PayLog.heal(ctx, force = true) } catch (e: Throwable) { false }
     @JavascriptInterface
     fun recallNotes(): String = try { RecallLog.items(ctx) } catch (e: Throwable) { "[]" }
     @JavascriptInterface

@@ -26,7 +26,32 @@ class PayListener : NotificationListenerService() {
         try { if (sbn != null && sbn.packageName != packageName) ChatInbox.gone(applicationContext, sbn) } catch (e: Exception) { }
     }
 
+    // v9.5 (Ali, 5 Nov: "the Recall has only notifications from 29 Oct, why — fix it for good"): Android can stop delivering
+    // notifications to a listener (after an app update, or when the phone's battery manager kills it) and never say so. Now:
+    // 1) when Android disconnects us we ask to be bound again; 2) on every (re)connect the notifications still on screen are
+    // kept, so nothing shown while we were away is lost; 3) the last time one arrived is saved — the app checks it on every open
+    // (PayLog.heal) and reconnects by itself when it has been quiet too long; Recall says so if it can't.
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        try { PayLog.mark(applicationContext, "conn") } catch (e: Exception) { }
+        try {
+            if (RecallLog.isOn(applicationContext)) for (sbn in activeNotifications ?: emptyArray()) {
+                if (sbn.packageName == packageName) continue
+                val ex = sbn.notification?.extras ?: continue
+                val title = ex.getCharSequence("android.title")?.toString().orEmpty()
+                val text = (ex.getCharSequence("android.bigText") ?: ex.getCharSequence("android.text"))?.toString().orEmpty()
+                val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }
+                try { RecallLog.add(applicationContext, sbn, label, title, text) } catch (e: Exception) { }
+            }
+        } catch (e: Exception) { }
+    }
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        try { if (android.os.Build.VERSION.SDK_INT >= 24) NotificationListenerService.requestRebind(ComponentName(this, PayListener::class.java)) } catch (e: Exception) { }
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
+        try { PayLog.mark(applicationContext, "seen") } catch (e: Exception) { }
         try {
             if (sbn == null || sbn.packageName == packageName) return
             WatchMatch.smsAllowed = Prefs.smsNotifs(applicationContext)   // the SMS switch (on unless the person turned it off)
@@ -94,6 +119,34 @@ object PayLog {
         val out = JSONArray()
         for (i in 0 until arr.length()) { val o = arr.optJSONObject(i) ?: continue; if (!drop.contains(o.optString("id"))) out.put(o) }
         p.edit().putString(KEY, out.toString()).apply()
+    }
+
+    // ---- v9.5: is the listener really receiving? ("seen" = the last notification that arrived, "conn" = the last connect) ----
+    private const val HP = "attune.listener"
+    fun mark(ctx: Context, k: String) { ctx.getSharedPreferences(HP, Context.MODE_PRIVATE).edit().putLong(k, System.currentTimeMillis()).apply() }
+    fun health(ctx: Context): String {
+        val p = ctx.getSharedPreferences(HP, Context.MODE_PRIVATE)
+        return JSONObject().put("on", enabled(ctx)).put("seen", p.getLong("seen", 0L)).put("conn", p.getLong("conn", 0L)).put("healed", p.getLong("healed", 0L)).toString()
+    }
+    /** Called on every app open: access is on but nothing arrived for `quietH` hours → ask Android to bind us again; still quiet
+     *  (or `force`) → switch the listener off and on, which makes Android connect it afresh (at most every 6 hours). */
+    fun heal(ctx: Context, force: Boolean = false, quietH: Int = 3): Boolean {
+        if (!enabled(ctx)) return false
+        val p = ctx.getSharedPreferences(HP, Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        val last = maxOf(p.getLong("seen", 0L), p.getLong("conn", 0L))
+        if (!force && last > 0 && now - last < quietH * 3600_000L) return false
+        val cn = ComponentName(ctx, PayListener::class.java)
+        try { if (android.os.Build.VERSION.SDK_INT >= 24) NotificationListenerService.requestRebind(cn) } catch (e: Exception) { }
+        if (force || now - p.getLong("healed", 0L) > 6 * 3600_000L) {
+            try {
+                val pm = ctx.packageManager
+                pm.setComponentEnabledSetting(cn, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP)
+                pm.setComponentEnabledSetting(cn, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP)
+                p.edit().putLong("healed", now).apply()
+            } catch (e: Exception) { }
+        }
+        return true
     }
 
     /** Is Notification access on for Attune? */

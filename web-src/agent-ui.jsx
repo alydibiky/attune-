@@ -44,7 +44,10 @@ export function agentCard(text, { now = Date.now(), order = "dmy", inApp = false
 export const agentLabels = () => ({ checking: tr("Checking {i} of {n}: {d}"), soFar: tr("Cheapest so far: {p} ({d})"), finding: tr("Finding the best offers for you…"), showSite: tr("Show the site"), loadFail: tr("This page didn't load — check the internet, or tap Done."), best: tr("Best offer"), fill: tr("Fill my details"), done: tr("Done"), hint: tr("Attune marks the best offer and fills your details. You choose and pay."),
   noProfile: tr("Add your details first: Profile → Booking details."), noOffers: tr("No offers found on this page yet — search on the site, then tap Best offer."),
   marked: tr("Marked the best of {n}: {price}. Check it and tap it."), filled: tr("Filled {n} fields — check them. Card and password fields are yours."), paying: tr("Payment — your turn. Attune never pays or reads card details."),
-  noBuy: tr("No Buy now button here — tap it yourself, I'll fill your details on the next pages."), pressed: tr("Pressed “{b}” — check the order; the payment is yours.") });
+  noBuy: tr("No Buy now button here — tap it yourself, I'll fill your details on the next pages."), pressed: tr("Pressed “{b}” — check the order; the payment is yours."),
+  // v9.5 (Ali: "it keeps loading … the 3 buttons down don't work … make it browser like the old")
+  browser: tr("Open in my browser"), looking: tr("Looking for the offers on this page…"), stillLoading: tr("The site is still loading — wait a moment, or tap “Open in my browser”."),
+  noFields: tr("No form to fill on this page yet — open the booking or checkout page, then tap again."), slow: tr("This site is slow inside Attune — tap “Open in my browser” to open the same page there.") });
 
 /** v8.2 (Ali, 26 Oct: "expand on Booking details — where the app takes the user's info to help in any booking or anything in the
     app, for more useful answers, while explicitly saying it stays private"): the person's own details in three parts. The trip and

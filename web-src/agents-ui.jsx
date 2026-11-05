@@ -116,6 +116,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     if (/^https:\/\//.test(u) && N && N.openInApp && N.agentOpen && nativeCall) {
       let r = {}; try { r = JSON.parse(N.openInApp(u) || "{}"); } catch (e) {}
       if (r.ok && r.how === "app") { flash && flash(T("Opening {app}", { app: app.label })); return; }
+      // v9.5 (Ali: the Uber site kept loading inside Attune — "make it browser like the old"): the app isn't on the phone → its site
+      // in the phone's own browser
+      if (N.openInBrowser) { try { if (N.openInBrowser(u)) { flash && flash(T("Opening {app}", { app: app.label })); return; } } catch (e) {} }
       nativeCall("agentOpen", { url: u, title: app.label || "", profile: loadBooking(), rules: { cheapest: true }, labels: agentLabels(), search: true }).catch(() => {});
       return;
     }
@@ -127,7 +130,10 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     }
     try { window.open(url || app.web, "_blank"); } catch (e) {}
   };
-  const orderNow = (a) => {
+  const orderNow = (a, typed) => {
+    // v9.5 (Ali: "it does not know my usual order, so why didn't it ask"): no usual saved → the card asks first; the answer is kept
+    if (typed != null) { const w = String(typed).trim(); if (!w) return; a = { ...a, what: w }; upd(a.id, (y) => ({ ...y, what: w })); setSt((s0) => { const n = { ...s0, usual: { ...(s0.usual || {}), [a.app.id]: w } }; try { A.saveAgents(n); } catch (e) {} return n; }); }
+    if (!String(a.what || "").trim()) return;
     if (N && N.intent) {
       let r = {}; try { r = JSON.parse(N.intent(JSON.stringify({ kind: "link", url: a.app.web, app: a.app.pkg, copy: a.what })) || "{}"); } catch (e) {}
       if (r.ok !== false) { flash && flash(T("Your order is copied — paste it in {app}'s search, check it and press Order", { app: a.app.label })); return; }
@@ -252,6 +258,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   // v8.2 (2A): one of the best 3 — opens in Attune's browser on those days, ready for "Fill my details" (you choose and pay)
   const openBest = async (a, o) => {
     const url = R.offerUrl(a, o);   // v9.0: the exact listing, not the store's search page (v9.2: no link → that offer searched by name)
+    // v9.5 (Ali, 5 Nov: "it still does not open the specific listing … if you can't do it in the app make it browser like the old"):
+    // the exact listing opens in the phone's own browser — store apps often drop a link on their home page
+    if (N && N.openInBrowser) { try { if (N.openInBrowser(url)) return; } catch (e) {} }
     // v9.1 (Ali, 4 Nov: "it's hard to do anything in the Attune browser — can it open Booking itself, with all the sorting ready?"):
     // when the site's own app is on the phone, the offer opens THERE (its page, with the dates and guests in the link)
     // any site whose app is installed (Android decides: NativeBridge.openInApp); the list below is only for older Attune builds
@@ -857,10 +866,22 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
       <CardActions primary={{ label: T("Open {app}", { app: a.app.label }), icon: ExternalLink, onClick: () => openApp(a.app, ""), testid: "agent-open" }} />
     </div>;
   }
+  return <OrderCard a={a} toggle={toggle} remove={remove} orderNow={orderNow} />;
+}
+/** v9.5 (Ali: "when I press order my usual from Talabat it just opens Talabat home — it doesn't know my usual, so why didn't it
+ *  ask"): with no usual saved the card asks for it (the place and the dish) before anything opens; Change edits it later. */
+function OrderCard({ a, toggle, remove, orderNow }) {
+  const [ed, setEd] = useState(a.what ? null : "");
   return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-order">
-    <AgentHead a={a} kind="order" title={a.title} toggle={toggle} remove={remove} line={a.what} />
-    <p className="m-0 text-[11.5px] c-sub">{T("One tap opens {app} with your order copied — you press Order", { app: a.app.label })}</p>
-    <CardActions primary={{ label: tr("Order now"), icon: Check, onClick: () => orderNow(a), testid: "agent-order-now" }} />
+    <AgentHead a={a} kind="order" title={a.title} toggle={toggle} remove={remove} line={a.what || T("What is your usual from {app}?", { app: a.app.label })} />
+    {ed != null ? <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (ed.trim()) { orderNow(a, ed); setEd(null); } }} data-testid="agent-order-ask">
+      <p className="m-0 text-[13px] font-bold">{T("What is your usual from {app}?", { app: a.app.label })}</p>
+      <input autoFocus value={ed} onChange={(e) => setEd(e.target.value)} dir="auto" className={U.inp} placeholder={tr("The place and the dish, e.g. Koshary Abou Tarek — large + rice pudding")} data-testid="agent-order-what" />
+      <button type="submit" className={U.btnP + " w-full"} data-testid="agent-order-save">{T("Save and open {app}", { app: a.app.label })}</button>
+    </form> : <>
+      <p className="m-0 text-[11.5px] c-sub">{T("One tap opens {app} with your order copied — you press Order", { app: a.app.label })}</p>
+      <CardActions primary={{ label: tr("Order now"), icon: Check, onClick: () => orderNow(a), testid: "agent-order-now" }} secondary={{ label: tr("Change"), icon: RefreshCw, onClick: () => setEd(a.what || ""), testid: "agent-order-change" }} />
+    </>}
   </div>;
 }
 

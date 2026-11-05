@@ -10,7 +10,7 @@
    Tests: tests/unit/v870yearplan.test.mjs.                                                                                  */
 import { tr, dateLocale } from "./i18n.js";
 import { scheduleOf } from "./life.js";
-import { averages, monthsTo } from "./planner.js";
+import { averages, monthsTo, flexLabel } from "./planner.js";
 import { catName } from "./money-report.js";
 
 export const YEARPLAN_KEY = "attune:yearplan:v1";
@@ -105,7 +105,8 @@ export function yearGrid({ ledger, life, pots, plan, year, now = Date.now(), ar 
   const spent = {};
   for (const t of txns) if (t.type === "expense" && !SKIP.has(t.cat || "other")) { const c = t.cat || "other", mo = t.date.slice(0, 7); (spent[c] || (spent[c] = {}))[mo] = (spent[c][mo] || 0) + (+t.amount || 0); }
   const cats = [...new Set([...Object.keys(avg.by).filter((c) => !SKIP.has(c)), ...Object.keys(spent)])];
-  const every = cats.map((c) => row("cat:" + c, catName(ledger, c, ar), () => avg.by[c] || 0, (mo) => (spent[c] || {})[mo] || 0)).filter((r) => r.total > 0).sort((a, b) => b.total - a.total);
+  const noteOf = averages({ txns: txns.filter((t) => t.type === "expense") }, Date.now(), 24).note || {};   // v9.5: a category's usual note
+  const every = cats.map((c) => row("cat:" + c, flexLabel({ cat: c, note: noteOf[c] || "" }, ledger, ar), () => avg.by[c] || 0, (mo) => (spent[c] || {})[mo] || 0)).filter((r) => r.total > 0).sort((a, b) => b.total - a.total);
   for (const x of extra.filter((x) => x.group === "everyday")) every.push(row(x.id, x.label, () => 0, null));
   groups.push({ id: "everyday", label: ar ? "المصاريف العادية" : tr("Everyday"), rows: every });
   // ---- the totals and what is free each month

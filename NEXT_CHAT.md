@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.4)
+# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.5)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,7 +6,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v9.4** (versionCode 132; 5 Nov) — before: **v9.0** (versionCode 131; pushed 3 Nov after the full suite passed — the two timing flakes, e2e_v518 / e2e_v533, pass alone; they failed while a 9B model ran beside the suite) — before: **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
+| `main` | **v9.5** (versionCode 133; 5 Nov night: Ali's 9-point phone list) — before: **v9.4** (versionCode 132; 5 Nov) — before: **v9.0** (versionCode 131; pushed 3 Nov after the full suite passed — the two timing flakes, e2e_v518 / e2e_v533, pass alone; they failed while a 9B model ran beside the suite) — before: **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
 | Last APK | v9.4 + the chat fixes (5 Nov: number guard, sentence battery, installments keep the total; full suite green): https://github.com/alydibiky/attune-/actions/runs/42069139037 (success) — before: v9.4 (5 Nov: agent picks G1–G7, hotel offers keep each hotel's page, Translate → Document; full suite green): https://github.com/alydibiky/attune-/actions/runs/42056893257 (success) — before: v9.3 (5 Nov: Ali's round-4 picks + notifications → Your day; widgets compiled; full suite green): https://github.com/alydibiky/attune-/actions/runs/42017700711 (success) — before: v9.2 part 3 (5 Nov: receipt back, agents consistent + open the exact offer, back like ChatGPT, How to use search fix, guide in 20 languages; full suite green): https://github.com/alydibiky/attune-/actions/runs/41941437190 (success) — before: v9.2 part 2 (4 Nov night: Ali's 7 picks built — lists, agents' rules + board, flight agent, Mind, Documents, Projects board; full suite green; CI now frees disk first): https://github.com/alydibiky/attune-/actions/runs/41889742662 (success) — before: v9.2 (4 Nov late: Ali's 11-point list — Zakāt complete, Writing tabs, no Food on Home, Shelf; full suite green): https://github.com/alydibiky/attune-/actions/runs/41849639532 (success) — before: v9.1 latest (4 Nov night: Projects design D + the archive round; full suite green): https://github.com/alydibiky/attune-/actions/runs/41820643229 (success) — before: v9.1 (4 Nov: option A "which did you mean?", 8 bug fixes, hotel option 4): https://github.com/alydibiky/attune-/actions/runs/41752948806 (success; full suite 226/226) — before: v9.1 hotel offers (3 Nov evening: option 4 A + C, hidden checking screen, photos): https://github.com/alydibiky/attune-/actions/runs/41693308525 (success) — before: v9.0 (3 Nov, notifications + accuracy round 2): https://github.com/alydibiky/attune-/actions/runs/41608171861 — before: v9.0: https://github.com/alydibiky/attune-/actions/runs/41585440030 — before: v8.9: https://github.com/alydibiky/attune-/actions/runs/41309881633 (success, sent to Ali) |
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
@@ -15,6 +15,32 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 "For each addition in the app do it for all languages so we don't have to translate later": every new English line the app shows
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
+
+## v9.5 — 5 Nov night: Ali's phone test of 9.4 (9 points) — FIXED + 3 × 6 interface options WAITING FOR HIS PICK
+Ali (5 Nov): "1. not all background colours work 2. agents: doesn't open the specific listing, keeps loading (Uber), the 3 buttons
+down don't work, 'order my usual from Talabat' opens Talabat home and didn't ask what my usual is — suggest 6 options 3. month plan
+shows ids (cmuu3u3sb2q4sd) — the category with its note; suggest 6 options 4. People & plans: on the date ask if the person really paid,
+tick → revenue, other amount → the rest redistributed 5. Fit & Food still notifies 'log your dinner' 6. Recall has notifications only
+until 29 Oct — fix for good 7. Follow-ups scattered — 6 options 8. green → burgundy on the light background 9. where is How to use".
+He is "not inclined to accept anything" from the Gemini research for now (R-ideas parked).
+- 1 + 8 `spaces.js` calmVars / calmCss: Settings → Theme now sets the .calm tokens (the redesigned screens had fixed colours, so only
+  old screens changed). Burgundy added and made the default once (`v95` flag; a colour chosen later is kept); Money ledger (Yusr
+  document) and the agent browser follow. Test: unit `v950theme`.
+- 2 `NativeBridge.openInBrowser` (phone's own browser, CATEGORY_APP_BROWSER selector): exact listings (`openBest`) and apps not on the
+  phone open there. AgentBrowser: "Open in my browser" on top; after 12 s not loaded it says so; Best offer / Fill my details always
+  answer on the status line; Fill with no details → closes and opens Profile (Booking details). Order card (`OrderCard`) asks
+  "What is your usual from {app}?" when none is saved, keeps it, Change edits it.
+- 3 `planner.js` flexLabel / groupFixed (+ yearplan rows): name · usual note, never an id; "Maid × 4". Test: unit `v950plan`.
+- 4 `regular.js` payPerson / notYet, `home.js` ask, `home-ui.jsx` PersonAsk: "Did Sheikh pay 2,500?" Paid · Other amount · Not yet;
+  written in Money at once (income / expense); People & plans' pay box records without asking too. Test: unit `v950pay`.
+- 5 Reminders.kt purgeLegacy (+ actions.js isLegacyReminder): the old repeating Fit meal / water alarms are removed for good. (The
+  "Track your dinner" Ali saw in Recall is Yazio's own notification.) Test: unit `v950misc`.
+- 6 PayListener: onListenerConnected keeps what is on screen, onListenerDisconnected → requestRebind; PayLog.mark/health/heal (every
+  app open: quiet 3 h → rebind, then switch the component off/on, at most every 6 h); Recall shows "No notifications since {d}" +
+  Reconnect (`ListenerNote`). Cause: Android stops delivering to a listener after an update / battery kill and never says so.
+- 9 How to use is in the side menu again (`side-guide`).
+- Options page (6 each, burgundy): https://claude.ai/artifact/1HJyhGHDsm5Ko9RXpK6ZrJ — A1–A6 Agents (rec. A1 results inbox), P1–P6
+  Month plan (rec. P2 where the salary goes), F1–F6 Follow-ups (rec. F1 by day). **Build only what Ali picks.**
 
 ## Gemini's answer arrived (5 Nov 2026) — waiting for Ali's IDs
 Ali uploaded the report (35 ideas R1–R35). Every idea checked against the code: **`RESEARCH_GEMINI_2026-11-05.md`**

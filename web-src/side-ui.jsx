@@ -180,7 +180,10 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
         </div>
       </div>
       <div className="shrink-0 border-t border-[var(--c-ln)] p-2.5 space-y-1">
-        {/* v6.50 (Ali picked A): How to use and Privacy open from the Home box ("/guide", "/privacy") and from Settings */}
+        {/* v6.50 (Ali picked A): How to use and Privacy open from the Home box ("/guide", "/privacy") and from Settings.
+            v9.5 (Ali, 5 Nov: "where is how to use the app"): How to use is back in plain sight, above the engine */}
+        <button onClick={() => navTo("guide")} data-testid="side-guide" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[13.5px] font-bold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150">
+          <HelpCircle size={16} className="text-[var(--c-acc)]" /><span className="flex-1 text-start truncate">{tr("How to use Attune")}</span></button>
         <button onClick={openEngine} data-testid="side-engine" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[13.5px] font-bold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150">
           <Cpu size={16} className={engineState === "ready" ? "text-[var(--c-acc)]" : engineState === "starting" ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]"} />
           <span className="flex-1 text-start truncate">{engineLabel}</span>{airGap ? <Lock size={13} className="text-[var(--c-acc)]" /> : null}</button>

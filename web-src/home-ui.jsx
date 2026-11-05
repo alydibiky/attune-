@@ -6,7 +6,7 @@
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { EmptyStart } from "./ui-kit.jsx";
+import { EmptyStart, btnP as UbtnP, btnS as UbtnS, inp as Uinp } from "./ui-kit.jsx";
 import { loadAgents } from "./agents.js";
 import { Paperclip, MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles, X } from "lucide-react";
 import { nowCard, homeNumbers, noticed, onThisDay, weekRhythm } from "./home-now.js";
@@ -37,7 +37,7 @@ import { todayFacts } from "./desk-ui.jsx";
 import { targetsOf } from "./fithome.js";
 import { openRead } from "./readaloud-ui.jsx";
 import { DoResult, DO_HINTS } from "./doit-ui.jsx";
-import { tickRegular, payRadar } from "./regular.js";
+import { tickRegular, payRadar, payPerson, notYet } from "./regular.js";
 import { MissionsLine, useTopMission } from "./missions-ui.jsx";
 import { route as cmdRoute } from "./cmdrun.js";
 import * as K from "./commands.js";
@@ -74,7 +74,7 @@ function HeroCards({ data, navTo }) {
   const cards = [];
   // 1 — money and what to follow
   const safe = data.safe, first = (data.items || [])[0];
-  cards.push({ k: "money", label: tr("Money & Follow-ups"), col: "#157A52", open: "money",
+  cards.push({ k: "money", label: tr("Money & Follow-ups"), col: "var(--c-acc)", open: "money",
     big: safe && data.hasLedger ? tr("{a} safe to spend today", { a: f(safe.today) }) : tr("Write what you spend — Attune keeps the count"),
     sub: first ? first.title : tr("Nothing to follow today") });
   // 2 — food against the goal. v9.2 (Ali, 4 Nov: "home still has food"): Fit & Food is archived (→ Attune Fit) — no card on Home
@@ -97,6 +97,31 @@ function HeroCards({ data, navTo }) {
             <span className="c-sub block text-[13px] truncate" dir="auto">{c.sub}</span></span>
           <ChevronRight size={18} className="c-acc shrink-0 rtl:-scale-x-100" /></button>))}
     </div>);
+}
+
+
+/** v9.5 (Ali, 5 Nov: "when the date comes it asks me if the person really paid, like the Sheikh — tick = recorded in revenue; paid
+ *  more or less, like 4,000: I write it and the other payments are distributed again"): Paid · Other amount · Not yet. */
+function PersonAsk({ x, onDone }) {
+  const [other, setOther] = useState(null);
+  const a = x.ask, q = a.dir === "in" ? tr("Did {p} pay {a}?", { p: a.person, a: fmt(x.amount) }) : tr("Did you pay {p} {a}?", { p: a.person, a: fmt(x.amount) });
+  const done = (v) => {
+    const r = payPerson(a.id, a.i, v);
+    const got = r.recorded || (v == null ? x.amount : +v) || 0;
+    onDone(r.left > 0.004 ? tr("Recorded {a} — {l} left, next {d}: {n}", { a: fmt(got), l: fmt(r.left), d: r.next ? r.next.date : "—", n: r.next ? fmt(r.next.amount) : "—" }) : tr("Recorded {a} — all paid", { a: fmt(got) }));
+  };
+  return <div className="py-2 space-y-2" data-testid="home-person-ask">
+    <div className="flex items-start gap-3"><span className="c-pill due shrink-0"><span className="c-num">{fmt(x.amount)}</span></span>
+      <div className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{q}</b><span className={x.late ? "c-neg text-[12.5px]" : "c-sub text-[12.5px]"} dir="auto">{x.title}</span></div></div>
+    {other == null ? <div className="flex flex-wrap gap-1.5">
+      <button className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} onClick={() => done(null)} data-testid="home-ask-paid">{tr("Paid")}</button>
+      <button className={UbtnS + " h-10! min-h-[40px]!"} onClick={() => setOther(String(x.amount))} data-testid="home-ask-other">{tr("Other amount")}</button>
+      <button className={UbtnS + " h-10! min-h-[40px]!"} onClick={() => { notYet(a.id, a.i); onDone(tr("I'll ask again tomorrow")); }} data-testid="home-ask-later">{tr("Not yet")}</button></div>
+    : <form className="flex gap-1.5" onSubmit={(e) => { e.preventDefault(); const v = +String(other).replace(/[^\d.]/g, ""); if (v >= 0) done(v); }}>
+      <input autoFocus inputMode="decimal" value={other} onChange={(e) => setOther(e.target.value)} className={Uinp + " flex-1 tabular-nums"} aria-label={tr("Amount")} data-testid="home-ask-amount" />
+      <button type="submit" className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} data-testid="home-ask-save">{tr("Save")}</button></form>}
+    {other != null ? <p className="c-sub text-[11.5px] m-0">{tr("More or less than due? Type what came — the rest is spread over the payments left.")}</p> : null}
+  </div>;
 }
 
 export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null, trial = null }) {
@@ -340,7 +365,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <div className="flex items-center mb-1"><span className="c-lbl">{minimal ? tr("Needs you") : tr("Attune suggests")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
         {data.items.length || data.reminders || note ? (
           <>
-            {data.items.map((x, i) => x.pay ? (
+            {data.items.map((x, i) => x.ask ? <PersonAsk key={i} x={x} onDone={(m) => { setNote(m); setTick((n) => n + 1); }} /> : x.pay ? (
               // v6.34 (Ali): the maid's Saturday, a subscription's or a bill's day — "Paid?": tick = the expense in Money at once
               <div key={i} className="w-full flex items-center gap-3 py-2" data-testid={x.pay.kind === "radar" ? "home-pay-radar" : "home-regular"}>
                 <button onClick={() => {

@@ -93,6 +93,7 @@ object Reminders {
 
     /** After a restart or an app update: arm everything that is still to come. */
     fun rearmAll(ctx: Context) {
+        purgeLegacy(ctx)
         val now = System.currentTimeMillis()
         val arr = all(ctx)
         for (i in 0 until arr.length()) {
@@ -181,11 +182,24 @@ object Reminders {
     /** v9.4 G1: what the scheduled messages did since the page last asked (then forgotten). */
     fun takeSendLog(ctx: Context): String { val p = prefs(ctx); val s = p.getString("sendlog", "[]") ?: "[]"; p.edit().putString("sendlog", "[]").apply(); return s }
 
+    /** v9.5 (Ali, 5 Nov: "I still get the notification from Fit & Food to log my dinner"): the old Fit meal / water reminders an
+     *  earlier version saved repeat for ever — Attune no longer makes them, so they are never rung and are taken out. */
+    private val LEGACY_TITLES = Regex("^(log your (breakfast|lunch|dinner)|drink a glass of water|سجّ?ل (فطارك|غداك|عشاك)|اشرب كوب ماء)$", RegexOption.IGNORE_CASE)
+    fun isLegacy(r: JSONObject): Boolean = r.optString("id").let { it == "fit-breakfast" || it == "fit-lunch" || it == "fit-dinner" || it == "fit-water" || it.startsWith("fit-meal") } ||
+        LEGACY_TITLES.matches(r.optString("title").trim())
+    fun purgeLegacy(ctx: Context): Int {
+        val arr = all(ctx); val out = JSONArray(); var n = 0
+        for (i in 0 until arr.length()) arr.optJSONObject(i)?.let { if (isLegacy(it)) { n++; ctx.getSystemService(AlarmManager::class.java)?.cancel(pending(ctx, it.optString("id"))) } else out.put(it) }
+        if (n > 0) save(ctx, out)
+        return n
+    }
+
     fun fire(ctx: Context, id: String) {
         val arr = all(ctx)
         var r: JSONObject? = null
         for (i in 0 until arr.length()) arr.optJSONObject(i)?.let { if (it.optString("id") == id) r = it }
         val rem = r ?: return
+        if (isLegacy(rem)) { purgeLegacy(ctx); return }
         ensureChannel(ctx)
         // v9.4 G1: a scheduled message. Sent by itself through that chat's own Reply when Attune still holds it (the person wrote
         // recently); otherwise the notification opens the chat with the message written — one tap on Send. Never through

@@ -97,12 +97,18 @@ class AgentBrowser : Activity() {
         if (Prefs.airGapNow || !url.startsWith("https://")) { finishWith("blocked"); return }
         kit = try { assets.open("www/agent-kit.js").bufferedReader(Charsets.UTF_8).use { it.readText() } } catch (e: Exception) { "" }
 
-        val bg = Color.parseColor("#111416"); val ink = Color.parseColor("#E7EAEA"); val mut = Color.parseColor("#9AA3A5"); val acc = Color.parseColor("#4FC2AF")
+        val bg = Color.parseColor("#111416"); val ink = Color.parseColor("#E7EAEA"); val mut = Color.parseColor("#9AA3A5"); val acc = Color.parseColor("#E58AA2")   // v9.5: burgundy (Ali: "not the green")
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(bg) }
 
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(14), dp(10), dp(10), dp(10)) }
         val title = TextView(this).apply { text = intent.getStringExtra("title") ?: "Attune"; setTextColor(ink); textSize = 15f; maxLines = 1 }
         top.addView(title, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        // v9.5 (Ali: "it keeps loading … if you can't do it in the app make it browser like the old"): the same page in the phone's browser
+        val ob = TextView(this).apply { text = L("browser", "Open in my browser"); setTextColor(acc); textSize = 13f; setPadding(dp(10), dp(6), dp(10), dp(6))
+            background = GradientDrawable().apply { cornerRadius = dp(14).toFloat(); setStroke(dp(1), acc) }
+            setOnClickListener { openOutside() } }
+        browserBtn = ob
+        top.addView(ob)
         val close = TextView(this).apply { text = "✕"; setTextColor(mut); textSize = 18f; setPadding(dp(12), dp(4), dp(8), dp(4)); setOnClickListener { finishWith("closed") } }
         top.addView(close)
         root.addView(top)
@@ -138,15 +144,23 @@ class AgentBrowser : Activity() {
         val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(10), dp(6), dp(10), dp(12)) }
         fun btn(label: String, primary: Boolean, onTap: () -> Unit) = TextView(this).apply {
             text = label; textSize = 14f; gravity = Gravity.CENTER; setPadding(dp(8), dp(11), dp(8), dp(11))
-            setTextColor(if (primary) Color.parseColor("#0B1A17") else ink)
+            setTextColor(if (primary) Color.parseColor("#1A0A10") else ink)
             background = GradientDrawable().apply { cornerRadius = dp(10).toFloat(); setColor(if (primary) acc else Color.parseColor("#1F2528")) }
             setOnClickListener { onTap() }
         }
         val lp = { LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(dp(4), 0, dp(4), 0) } }
-        if (intent.getBooleanExtra("search", true)) bar.addView(btn(L("best", "Best offer"), false) { run("window.__attuneAgent&&window.__attuneAgent.best($rules)") }, lp())
+        // v9.5 (Ali: "the 3 buttons down don't work"): each one now answers on the status line, even on a page still loading
+        if (intent.getBooleanExtra("search", true)) bar.addView(btn(L("best", "Best offer"), false) {
+            tapped = System.currentTimeMillis(); say(L("looking", "Looking for the offers on this page…"))
+            if (kit.isNotEmpty()) web.evaluateJavascript(kit, null)
+            run("window.__attuneAgent&&window.__attuneAgent.best($rules)")
+            web.postDelayed({ if (!closed && lastReport < tapped) say(if (loaded) L("noOffers", "No offers found on this page yet — search on the site, then tap Best offer.") else L("stillLoading", "The site is still loading — wait a moment, or tap “Open in my browser”.")) }, 2500L)
+        }, lp())
         bar.addView(btn(L("fill", "Fill my details"), false) {
-            if (profile == "{}" || profile.isBlank()) status.text = L("noProfile", "Add your details first: Profile → Booking details.")
-            else run("window.__attuneAgent&&window.__attuneAgent.fill($profile)")
+            // no details saved yet: Attune's Booking details open (the page comes back here after)
+            if (profile == "{}" || profile.isBlank()) finishWith("profile")
+            else { tapped = System.currentTimeMillis(); if (kit.isNotEmpty()) web.evaluateJavascript(kit, null); run("window.__attuneAgent&&window.__attuneAgent.fill($profile)")
+                web.postDelayed({ if (!closed && lastReport < tapped) say(L("noFields", "No form to fill on this page yet — open the booking or checkout page, then tap again.")) }, 2000L) }
         }, lp())
         bar.addView(btn(L("done", "Done"), true) { finishWith("done") }, lp())
         root.addView(bar)
@@ -197,6 +211,7 @@ class AgentBrowser : Activity() {
             }
             override fun onPageCommitVisible(v: WebView, u: String) { pageRound = round }
             override fun onPageFinished(v: WebView, u: String) {
+                loaded = true
                 pageRound = round
                 if (kit.isNotEmpty()) v.evaluateJavascript(kit, null)
                 // v8.0 Agents "Check now": a price watch reads the cheapest offer by itself once the results have drawn
@@ -219,6 +234,8 @@ class AgentBrowser : Activity() {
         }
         web.loadUrl(url)
         if (watchMode) armRound()
+        // v9.5: a site that never finishes loading here (Ali's Uber page) — after 12 s, say so and offer the phone's browser
+        if (!watchMode) web.postDelayed({ if (!closed && !loaded) say(L("slow", "This site is slow inside Attune — tap “Open in my browser” to open the same page there.")) }, 12000L)
     }
 
     private fun armRound() {
@@ -337,6 +354,7 @@ class AgentBrowser : Activity() {
         @JavascriptInterface
         fun report(json: String) {
             val o = try { JSONObject(json) } catch (e: Exception) { return }
+            if (!o.optBoolean("quiet")) lastReport = System.currentTimeMillis()
             runOnUiThread {
                 when (o.optString("kind")) {
                     "best" -> if (rounds.length() > 0 && !finalMode) {
@@ -392,6 +410,22 @@ class AgentBrowser : Activity() {
         result.put("payment", true)
         status.setTextColor(Color.parseColor("#E3A44A"))
         status.text = L("paying", "Payment — your turn. Attune never pays or reads card details.")
+    }
+
+    private var browserBtn: TextView? = null
+    @Volatile private var lastReport = 0L
+    private var tapped = 0L
+    private var loaded = false
+    private fun say(t: String) { status.visibility = android.view.View.VISIBLE; status.setTextColor(Color.parseColor("#E7EAEA")); status.text = t }
+    private fun openOutside() {
+        val u = try { web.url } catch (e: Exception) { null } ?: intent.getStringExtra("url") ?: ""
+        if (!u.startsWith("https://")) return
+        try {
+            val i = Intent(Intent.ACTION_VIEW, Uri.parse(u)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            i.selector = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_BROWSER)
+            try { startActivity(i) } catch (e: Exception) { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(u)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            finishWith("browser")
+        } catch (e: Exception) { }
     }
 
     private fun goBackOrClose() { if (::web.isInitialized && web.canGoBack()) web.goBack() else finishWith("closed") }

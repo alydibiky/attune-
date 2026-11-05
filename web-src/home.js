@@ -19,7 +19,10 @@ function todayList({ life, ledger, radar, care, now = Date.now(), max = 4 }) {
       : (c.title ? c.title[0].toUpperCase() + c.title.slice(1) : tr("Bill"));
     // v6.34 (Ali): on its day a payment you make (the maid, a subscription, a bill, the rent) is a box: tick = paid, in Money
     const askPaid = c.dir === "out" && c.amount > 0 && x.date <= isoD(now) && ["regular", "subscription", "bill", "rent"].includes(c.kind);
-    out.push({ from: "life", title, date: x.date, amount: x.amount, dir: c.dir, late: x.late, ...(askPaid ? { pay: { kind: "life", id: c.id, i: x.i, cur: c.currency } } : {}) });
+    // v9.5 (Ali): on its day a person's payment (the Sheikh's instalment, a debt) asks "did he pay?" — Paid · Other amount · Not yet
+    const askPerson = !!c.person && ["debt", "installment"].includes(c.kind) && x.date <= isoD(now) && !((c.later || {})[x.i] > isoD(now));
+    out.push({ from: "life", title, date: x.date, amount: x.amount, dir: c.dir, late: x.late, ...(askPaid ? { pay: { kind: "life", id: c.id, i: x.i, cur: c.currency } } : {}),
+      ...(askPerson ? { ask: { id: c.id, i: x.i, cur: c.currency, person: c.person, dir: c.dir } } : {}) });
   }
   for (const b of moneyOverview(ledger, now).due) out.push({ from: "money", title: b.note, date: b.date, amount: b.amount, dir: "out", late: b.late });
   // v6.27 Family health: the next doses not taken yet (late ones first)

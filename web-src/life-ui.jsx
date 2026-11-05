@@ -22,7 +22,7 @@ import { parseHolding, loadGold, saveGold, addHolding } from "./gold.js";
 import { parseCar, loadCar, saveCar, addCarEntry, carMoneyText } from "./car.js";
 import { loadRadar, saveRadar, addDeadline, radarReminder } from "./deadlines.js";
 import { PlanDraft, GoldCard, CarCard } from "./plans-ui.jsx";
-import { tickRegular } from "./regular.js";
+import { tickRegular, payPerson } from "./regular.js";
 import * as U from "./ui-kit.jsx";
 
 const KIND = { installment: "Installments", debt: "Money between people", circle: "Savings circle", bill: "Bill", rent: "Rent", subscription: "Subscription", regular: "Comes regularly" };
@@ -241,10 +241,11 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   };
   // v8.3: a person's payment with the amount that really came — the rest of the plan is spread again
   const pay = (c, i, v) => {
-    const d = payAmount(data, c.id, i, v); put(d); const c2 = d.items.find((x) => x.id === c.id); remindFor(c2);
+    // v9.5 (Ali: "when I tick it is recorded in revenue"): written in Money at once — no question
+    const r = payPerson(c.id, i, v); setData(r.data); const c2 = r.data.items.find((x) => x.id === c.id); remindFor(c2);
     if (c.dir === "in") { try { saveGuardian(collected(loadGuardian(), c.id, i, v)); } catch (e) {} }
     const pr = progressOf(c2);
-    if (toMoney && window.confirm(tr("Add it to Money? {t}", { t: tickText(c2, i) }))) { toMoney(tickText(c2, i)); return; }
+    if (!r.recorded && v > 0 && toMoney) { toMoney(tickText(c2, i)); return; }   // no Money accounts yet: Money asks
     flash && flash(pr.left > 0.004 ? tr("Recorded {a} — {l} left, next {d}: {n}", { a: fmt(v), l: fmt(pr.left), d: pr.next ? pr.next.date : "—", n: pr.next ? fmt(pr.next.amount) : "—" }) : tr("Recorded {a} — all paid", { a: fmt(v) }));
   };
   const remove = (c) => { if (window.confirm(tr("Delete this?"))) { put(removeCommitment(data, c.id)); unremind && unremind("life-" + c.id); } };
