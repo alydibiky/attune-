@@ -65,7 +65,9 @@ class PayListener : NotificationListenerService() {
             // v6.40: the message alerts the person asked for ("tell me when Ahmed messages me") — before the money check
             try { MessageWatch.check(applicationContext, sbn, title, text) } catch (e: Exception) { }
             // voice step 1.4: the newest chat messages and their reply actions, for "who messaged me?" / "reply to him…"
-            try { ChatInbox.add(applicationContext, sbn) } catch (e: Exception) { }
+            // v9.7 (Ali picked M3: auto-reply like Auto Text): a chat message that fits one of the person's rules is answered by itself,
+            // through that chat's own Reply (AutoReply.kt)
+            try { ChatInbox.add(applicationContext, sbn)?.let { m -> if (!m.optBoolean("ignore")) AutoReply.check(applicationContext, m) } } catch (e: Exception) { }
             // v6.40 Recall: kept for 30 days when the person switched it on (SMS too, never one-time codes)
             try { if (RecallLog.isOn(applicationContext)) RecallLog.add(applicationContext, sbn, try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }, title, text) } catch (e: Exception) { }
             if (!PayLog.looksLikeMoney(all)) return

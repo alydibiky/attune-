@@ -10,6 +10,7 @@
      G6 trip    — "my flight MS 753 tomorrow at 10:40 to Madrid" (check-in opens, leave by, gate changes from the airline's notifications)
      G7 how much an agent may do by itself — a rule like any other: "only tell me", "ask me first", "do it by itself under 7,500"
    Pure; tests: tests/unit/v940agents.test.mjs. Nothing here sends, books or pays. */
+import { appIn, repeatIn } from "./msgsched.js";
 import { parseTime } from "./actions.js";
 import { airportOf, cityName } from "./agent.js";
 
@@ -52,7 +53,8 @@ export function parseScheduled(text, { now = Date.now() } = {}) {
   if (!who) return { kind: "send", ask: "To whom?" };
   if (!words) return { kind: "send", who, at: when.at, ask: "What should the message say?" };
   if (when.at <= now) return { kind: "send", who, text: words, ask: "That time has passed — when should it go?" };
-  return { kind: "send", who, text: words.slice(0, 1000), at: when.at };
+  // v9.7 Messages: which app ("sms Ahmed…", «على تليجرام») and how it repeats ("every year", «كل شهر»)
+  return { kind: "send", who, text: words.slice(0, 1000), at: when.at, app: appIn(t0), repeat: repeatIn(t0) };
 }
 /** The chat to send it into: the person's newest one-to-one chat Attune has seen (its key → sent by itself through that chat's Reply). */
 export function chatFor(who, items) {

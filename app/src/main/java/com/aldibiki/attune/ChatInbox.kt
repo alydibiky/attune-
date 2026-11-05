@@ -47,12 +47,13 @@ object ChatInbox {
         return withInput.firstOrNull()
     }
 
+    /** v9.7: the message just kept ({key, app, who, group, text}) — the auto-reply rules look at it (AutoReply.kt); null if not a chat message. */
     @Synchronized
-    fun add(ctx: Context, sbn: StatusBarNotification) {
-        val pkg = sbn.packageName; if (!isChat(pkg)) return
-        val n = sbn.notification ?: return
-        if ((n.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return            // "3 new messages": the messages themselves come too
-        val ex = n.extras ?: return
+    fun add(ctx: Context, sbn: StatusBarNotification): JSONObject? {
+        val pkg = sbn.packageName; if (!isChat(pkg)) return null
+        val n = sbn.notification ?: return null
+        if ((n.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return null            // "3 new messages": the messages themselves come too
+        val ex = n.extras ?: return null
         val title = ex.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
         var text = (ex.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: ex.getCharSequence(Notification.EXTRA_TEXT))?.toString().orEmpty()
         val convoTitle = ex.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString().orEmpty()
@@ -73,8 +74,8 @@ object ChatInbox {
         var convo = convoTitle.ifBlank { if (group) title else "" }
         if (title.contains(" @ ")) { group = true; who = title.substringBefore(" @ ").trim(); convo = title.substringAfter(" @ ").trim() }
         else if (group && who == title) { val m = Regex("^([^:]{1,40}):\\s+(.*)$").find(text); if (m != null) { who = m.groupValues[1].trim(); text = m.groupValues[2] } }
-        if (who.isBlank() || text.isBlank()) return
-        if (PayLog.isOtp(text) || PayLog.isOtp(title)) return                        // one-time codes are never kept
+        if (who.isBlank() || text.isBlank()) return null
+        if (PayLog.isOtp(text) || PayLog.isOtp(title)) return null                        // one-time codes are never kept
         // one key per conversation: the chat's reply goes to that chat only
         val key = pkg + "|" + (if (group) "g:" + convo else "p:" + who)
         replyAction(n)?.let { replies[key] = it }
@@ -88,6 +89,7 @@ object ChatInbox {
             .put("text", text.take(500)).put("ts", sbn.postTime))
         val keep = JSONArray(); val start = maxOf(0, out.length() - MAX); for (i in start until out.length()) keep.put(out.get(i))
         p.edit().putString("items", keep.toString()).apply()
+        return JSONObject().put("key", key).put("app", appId(pkg)).put("pkg", pkg).put("who", who.take(80)).put("group", group).put("text", text.take(500))
     }
 
     /** v9.4 G1: a chat notification went away (the person opened the chat, answered, or swiped it) → that chat is "seen" now. */

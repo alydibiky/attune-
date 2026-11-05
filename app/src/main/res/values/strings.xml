@@ -44,4 +44,5 @@
     <string name="widget_list_name">Attune · A list</string>
     <string name="widget_list_desc">One list you pin from Attune (travel, shopping…), with tick boxes</string>
     <string name="widget_list_empty">In Attune: To-dos &amp; lists → open a list → Pin to the widget</string>
+    <string name="autosend_desc">Sends the WhatsApp messages you scheduled in Attune: at their time it presses Send in that chat, only when the box holds your message. Nothing else is read or touched.</string>
 </resources>

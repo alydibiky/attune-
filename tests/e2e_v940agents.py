@@ -60,11 +60,13 @@ with sync_playwright() as p:
           "“send Ahmed 'I'm running late' at 5 pm tomorrow” → scheduled on the phone for 17:00 tomorrow, into Ahmed's chat")
     check(page.locator("[data-testid=agent-send]").count() == 1 and "running late" in page.inner_text("[data-testid=agent-send]"), "…its card shows who, what and when")
     # the form, from the gallery
-    page.click("[data-testid=agents-chip-send]"); page.wait_for_selector("[data-testid=schedule-form]")
-    page.fill("[data-testid=schedule-who]", "Mama"); page.fill("[data-testid=schedule-text]", "Happy birthday 🎂")
-    page.fill("[data-testid=schedule-at]", "2026-11-06T09:00"); page.click("[data-testid=schedule-go]"); page.wait_for_timeout(500)
+    # v9.7 (Ali picked M3 + S1 + S2 + S3): the tile opens Messages with the composer
+    page.click("[data-testid=agents-chip-send]"); page.wait_for_selector("[data-testid=msg-composer]")
+    page.fill("[data-testid=msg-who]", "Mama"); page.fill("[data-testid=msg-phone]", "+201001234431"); page.fill("[data-testid=msg-text]", "Happy birthday 🎂")
+    page.fill("[data-testid=msg-at]", "2026-11-06T09:00"); page.click("[data-testid=msg-save]"); page.wait_for_timeout(500)
     m2 = [x for x in page.evaluate("window.__w.sched") if str(x.get("id", "")).startswith("msg-") and x["send"]["who"] == "Mama"]
     check(len(m2) == 1 and datetime.datetime.fromtimestamp(m2[0]["at"] / 1000).hour == 9, "Schedule a message (the form): Mama, tomorrow 9:00")
+    page.click("[data-testid=messages-back]"); page.wait_for_selector("[data-testid=agents-page]")
     # G2 visa
     check(page.locator("[data-testid=slot-state][data-state=open]").count() == 1 and "15" in page.inner_text("[data-testid=slot-state]"), "Visa appointments: a date is showing (15 Dec), in green")
     page.locator("[data-testid=slot-every]").first.click(); page.wait_for_timeout(200)

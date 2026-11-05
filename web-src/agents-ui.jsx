@@ -21,6 +21,7 @@ import { lookLinks } from "./agent.js";
 import { agentLabels } from "./agent-ui.jsx";
 import { useSubBack } from "./backstack.js";
 import * as U from "./ui-kit.jsx";
+import { MessagesPage, scheduleMessage } from "./messages-ui.jsx";
 
 const I = (s) => "⁦" + s + "⁩";
 // a number is kept left-to-right inside Arabic — but "8,400 جنيه" (a price already in Arabic order) is left as it is
@@ -122,6 +123,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const setView = (v) => { setViewRaw(v); try { localStorage.setItem("attune:agents:view2", v); } catch (e) {} };
   const [chat, setChat] = useState("");
   useSubBack(!!chat, () => setChat(""));
+  const [msgs, setMsgs] = useState("");   // v9.7 Messages: "list" | "new"
+  useSubBack(!!msgs, () => { setMsgs(""); setSt(A.loadAgents()); });
   const [focus, setFocus] = useState("");
   const openTab = (id) => { setTabWant(id); try { localStorage.setItem("attune:agents:tab", id); } catch (e) {} };
   useSubBack(rep, () => setRep(false));
@@ -360,7 +363,13 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   // ---- v9.4 the new agents' actions (agents2.js does the thinking; these only talk to the phone) ----
   const [schedOpen, setSchedOpen] = useState(false), [allStarters, setAllStarters] = useState(false);
   const remind = (id, at, title, body = "") => { const r = { id, at, title, body, repeat: "none" }; const list = [...loadReminders().filter((x) => x.id !== id), r]; saveReminders(list); try { syncToPhone(N, list); } catch (e) {} };
+  // v9.7 Messages (Ali picked M3 + S1 + S2 + S3): one scheduler for the sentence, the composer and Home (messages-ui.jsx)
   const createSend = (d) => {
+    const a = scheduleMessage({ app: d.app || "whatsapp", who: d.who, phone: d.phone || "", text: d.text, at: d.at, repeat: d.repeat || "none" }, N);
+    setSt(A.loadAgents()); setSchedOpen(false);
+    flash && flash(T("Scheduled: {who}, {t}", { who: a.who, t: whenTxt(a.at) }));
+  };
+  const createSendOld = (d) => {
     const chat = A2.chatFor(d.who, readInbox());
     const a = { ...A.makeAgent({ kind: "send", who: d.who, text: d.text, at: d.at }), key: chat ? chat.key : "", pkg: chat ? chat.pkg || "" : "com.whatsapp", phone: d.phone || "" };
     put({ ...A.loadAgents(), agents: [a, ...A.loadAgents().agents] }); openTab(a.id); setSchedOpen(false);
@@ -448,8 +457,15 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const liveSt = (a) => a.kind === "reply" ? (a.on === false ? "paused" : A2.waitingChats(readInbox(), { hours: a.hours || 3 }).length ? "needs" : "working")
     : a.kind === "restock" ? (a.on === false ? "paused" : (() => { try { return A2.restockDue(JSON.parse(localStorage.getItem("ledger.v3") || "null"), { soon: 2 }).length ? "needs" : "working"; } catch (e) { return "working"; } })())
     : a.kind === "clinic" ? (a.on === false ? "paused" : "found") : R.agentStatus(a);   // v9.4: the group follows what the card shows
-  const cards = [...st.agents.map((a) => ({ id: a.id, a, grid: A.datesGrid(a), st: liveSt(a), kind: a.kind, title: a.kind === "follow" ? a.topic : a.said || a.what || a.title, site: siteOfAgent(a), price: priceOf(a),
-      el: a.kind === "reply" ? <ReplyCard key={a.id} a={a} draft={drafter} onSchedule={() => setSchedOpen(true)} {...{ remove, toggle }} {...extra} />
+  // v9.7 Messages: the scheduled messages are one card here (their own page has the list) — not one card each
+  const sends = st.agents.filter((a) => a.kind === "send" && (a.state !== "sent" || (a.repeat && a.repeat !== "none")));
+  const msgCard = sends.length ? [{ id: "messages", st: "working", kind: "send", title: T("Messages · {n} scheduled", { n: sends.length }), site: "", price: "",
+    el: <div className={U.cardPad + " space-y-2"} data-testid="agent-send">
+      <CardHead kind="send" title={T("Messages · {n} scheduled", { n: sends.length })} status="working" line={sends.slice(0, 2).map((a) => a.who + " · " + whenTxt(a.at)).join(" · ")} menu={[[tr("Open Messages"), () => setMsgs("list"), "agent-send-open-menu"]]} />
+      <p className="m-0 text-[13px] c-sub truncate" dir="auto" data-testid="send-text">{sends[0].text}</p>
+      <CardActions primary={{ label: tr("Open Messages"), icon: ChevronRight, onClick: () => setMsgs("list"), testid: "agent-send-open" }} /></div> }] : [];
+  const cards = [...msgCard, ...st.agents.filter((a) => a.kind !== "send").map((a) => ({ id: a.id, a, grid: A.datesGrid(a), st: liveSt(a), kind: a.kind, title: a.kind === "follow" ? a.topic : a.said || a.what || a.title, site: siteOfAgent(a), price: priceOf(a),
+      el: a.kind === "reply" ? <ReplyCard key={a.id} a={a} draft={drafter} onSchedule={() => setMsgs("new")} {...{ remove, toggle }} {...extra} />
         : a.kind === "send" ? <SendCard key={a.id} a={a} {...{ remove, toggle, sendNow }} />
         : a.kind === "slot" ? <SlotCard key={a.id} a={a} busy={busy === a.id} checkSlot={(x) => slotOpen(x)} watchSlot={(x) => slotOpen(x, 60)} setUrl={(x, s0) => upd(x.id, (y) => ({ ...y, url: s0.url, site: s0.name }))} setEvery={(x, m) => upd(x.id, (y) => ({ ...y, every: m }))} {...{ remove, toggle }} {...extra} />
         : a.kind === "restock" ? <RestockCard key={a.id} a={a} openMoney={() => navTo && navTo("money")} toList={(items) => { const st0 = L.loadLists(); const ex = L.findList(st0, ar ? "الطلبات" : "Shopping");
@@ -470,6 +486,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
           menu={[[tr("Open the alerts"), () => navTo && navTo("reminders"), "agents-alerts-open-menu"]]} />
         <CardActions primary={{ label: tr("Open the alerts"), icon: ChevronRight, onClick: () => navTo && navTo("reminders"), testid: "agents-alerts-open" }} /></div> }] : [])];
 
+  if (msgs) return <MessagesPage back={() => { setMsgs(""); setSt(A.loadAgents()); }} flash={flash} nativeCall={nativeCall} drafter={drafter} startNew={msgs === "new"} />;
   const open = chat && cards.find((c) => c.id === chat);
   if (open) return <AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} />;
   return (
@@ -479,7 +496,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       <U.PageBox value={text} setValue={setText} onSend={(t) => submit(t)} hint={tr("Tell an agent what to do…")} sendLabel={tr("Send")} ids={{ box: "agents-box", input: "agents-input", go: "agents-go" }} />
       <div className="grid grid-cols-3 gap-2" data-testid="agents-chips">
         {(allStarters ? CHIPS : CHIPS.filter(([k]) => ["reply", "send", "flight", "slot", "buy", "watch"].includes(k))).map(([k, l, en, a]) => <button key={k}
-          onClick={() => { if (k === "send") { setSchedOpen(true); return; } setText(ar ? a : en); setDraft(null); try { document.querySelector("[data-testid=agents-input]").focus(); } catch (e) {} }}
+          onClick={() => { if (k === "send") { setMsgs("new"); return; } setText(ar ? a : en); setDraft(null); try { document.querySelector("[data-testid=agents-input]").focus(); } catch (e) {} }}
           className="min-h-[84px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5 flex flex-col items-center justify-center gap-1.5 text-center hover:border-[var(--c-acc)] active:scale-[.98] transition" data-testid={"agents-chip-" + k}>
           <span className="w-9 h-9 rounded-full bg-[var(--c-soft)] c-acc grid place-items-center">{React.createElement(KIND_ICON[k] || AppWindow, { size: 17 })}</span>
           <span className="text-[12.5px] font-extrabold leading-tight">{tr(l)}</span></button>)}
@@ -509,7 +526,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         {BOARD.map(([k, l]) => { const items = cards.filter((c) => (k === "working" ? c.st === "working" : k === "done" ? c.st === "done" || c.st === "paused" : c.st === "found" || c.st === "needs"));
           return <div key={k} className="snap-start shrink-0 w-[200px] lg:w-auto lg:flex-1 rounded-[16px] bg-[var(--c-soft)] p-2 space-y-2" data-testid={"agents-col-" + k}>
             <p className="m-0 px-1 text-[11.5px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr(l)} · {items.length}</p>
-            {items.map((c) => <button key={c.id} onClick={() => setChat(c.id)} className={U.card + " w-full text-start p-2.5 space-y-1" + (c.st === "needs" ? " ring-2 ring-[var(--c-warn)]" : c.st === "found" ? " ring-2 ring-[var(--c-acc)]" : "")} data-testid="agents-board-card">
+            {items.map((c) => <button key={c.id} onClick={() => (c.id === "messages" ? setMsgs("list") : setChat(c.id))} className={U.card + " w-full text-start p-2.5 space-y-1" + (c.st === "needs" ? " ring-2 ring-[var(--c-warn)]" : c.st === "found" ? " ring-2 ring-[var(--c-acc)]" : "")} data-testid="agents-board-card">
               <span className="flex items-center gap-2">{c.site ? <SiteMark site={c.site} size={24} /> : <span className="c-acc">{React.createElement(KIND_ICON[c.kind] || AppWindow, { size: 16 })}</span>}
                 <b className="text-[12.5px] leading-tight line-clamp-2 min-w-0" dir="auto">{c.title}</b></span>
               {c.price ? <b className="block text-[13px] tabular-nums">{c.price}</b> : null}

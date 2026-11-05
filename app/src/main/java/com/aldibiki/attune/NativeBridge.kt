@@ -881,6 +881,22 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     // ---- voice -----------------------------------------------------------------
     var voice: Voice? = null
     var askMic: (() -> Unit)? = null
+    // ---- v9.7 Messages (Ali picked M3 + S1 + S2 + S3: "like the Auto Text app, with my interface") ----------------------------
+    var askSms: (() -> Unit)? = null
+    /** {auto: this build can send WhatsApp by itself, autoOn, sms: this build can send SMS by itself, smsOn} */
+    @JavascriptInterface
+    fun msgState(): String = try { JSONObject().put("auto", AutoSend.available(ctx)).put("autoOn", AutoSend.enabled(ctx)).put("sms", SmsOut.declared(ctx)).put("smsOn", SmsOut.allowed(ctx)).toString() } catch (e: Throwable) { "{}" }
+    @JavascriptInterface
+    fun msgOpenAuto() { try { AutoSend.openSettings(ctx) } catch (e: Throwable) { } }
+    @JavascriptInterface
+    fun msgAskSms() { try { askSms?.invoke() } catch (e: Throwable) { } }
+    @JavascriptInterface
+    fun autoReplyRules(): String = try { AutoReply.rules(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface
+    fun autoReplySet(json: String) { try { AutoReply.setRules(ctx, json) } catch (e: Throwable) { } }
+    /** The Sent tab: every scheduled send and auto-reply ({id, how, ok, who, app, text, at, rule?, to?}). */
+    @JavascriptInterface
+    fun msgSent(): String = try { Reminders.sentLog(ctx) } catch (e: Throwable) { "[]" }
     var lastVoiceSink: Voice.Sink? = null
 
     /** Speech to text. Words arrive through progress(id, 0, "partial", text). */

@@ -39,4 +39,5 @@
     <string name="widget_list_name">Attune · قايمة</string>
     <string name="widget_list_desc">قايمة واحدة تثبّتها من Attune (السفر، الطلبات…) بخانات تعلّم عليها</string>
     <string name="widget_list_empty">في Attune: المهام والقوايم ← افتح قايمة ← ثبّتها في الويدجت</string>
+    <string name="autosend_desc">بيبعت رسايل الواتساب اللي جدولتها في Attune: في ميعادها بيدوس «إرسال» في الشات ده، بس لما يكون مكتوب فيه رسالتك. مش بيقرا أو يلمس أي حاجة تانية.</string>
 </resources>

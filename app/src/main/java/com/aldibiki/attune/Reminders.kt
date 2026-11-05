@@ -58,7 +58,11 @@ object Reminders {
             .apply {   // v9.4 G1 (Ali: "schedule a message — send this contact this message at 5 pm tomorrow, and it does that")
                 r.optJSONObject("send")?.let { s0 -> put("send", JSONObject().put("key", s0.optString("key").take(200)).put("pkg", s0.optString("pkg").take(100))
                     .put("phone", s0.optString("phone").filter { it.isDigit() }.take(20)).put("text", s0.optString("text").take(2000)).put("who", s0.optString("who").take(80))
-                    .put("sentTitle", s0.optString("sentTitle").take(120)).put("dueTitle", s0.optString("dueTitle").take(120))) }
+                    .put("sentTitle", s0.optString("sentTitle").take(120)).put("dueTitle", s0.optString("dueTitle").take(120))
+                    // v9.7 Messages: which app, ask first, send by itself, email, the words on the ask notification
+                    .put("app", s0.optString("app", "whatsapp").take(20)).put("ask", s0.optBoolean("ask")).put("auto", s0.optBoolean("auto"))
+                    .put("email", s0.optString("email").take(200)).put("subject", s0.optString("subject").take(200))
+                    .put("askTitle", s0.optString("askTitle").take(120)).put("sendLabel", s0.optString("sendLabel").take(30)).put("skipLabel", s0.optString("skipLabel").take(30))) }
             })
         save(ctx, out)
         arm(ctx, id, at)
@@ -121,6 +125,7 @@ object Reminders {
                     c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY ||
                     c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SATURDAY)
                 "monthly" -> c.add(java.util.Calendar.MONTH, 1)   // v6.32: the Overpaying check on the 1st
+                "yearly" -> c.add(java.util.Calendar.YEAR, 1)     // v9.7 Messages: a birthday every year
                 "lastday" -> {   // v9.0 "the last day of each month": next month's last day, same time of day
                     c.set(java.util.Calendar.DAY_OF_MONTH, 1); c.add(java.util.Calendar.MONTH, 1)
                     c.set(java.util.Calendar.DAY_OF_MONTH, c.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
@@ -153,31 +158,99 @@ object Reminders {
         nm.createNotificationChannel(ch)
     }
 
-    /** Show the notification for reminder `id`; reschedule it if it repeats. */
-    private fun fireSend(ctx: Context, id: String, rem: JSONObject, snd: JSONObject) {
-        val text = snd.optString("text"); val who = snd.optString("who")
-        val sent = snd.optString("key").isNotBlank() && ChatInbox.reply(ctx, snd.optString("key"), text).optBoolean("ok")
-        val pkg = snd.optString("pkg"); val phone = snd.optString("phone")
-        val go: Intent = when {
-            phone.isNotBlank() -> Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://wa.me/" + phone + "?text=" + android.net.Uri.encode(text))).apply { if (pkg.startsWith("com.whatsapp")) setPackage(pkg) }
-            pkg.isNotBlank() -> ctx.packageManager.getLaunchIntentForPackage(pkg) ?: Intent(ctx, MainActivity::class.java)
-            else -> Intent(ctx, MainActivity::class.java).putExtra(EXTRA_ID, id)
-        }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (!sent && phone.isBlank()) try { (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager)?.setPrimaryClip(android.content.ClipData.newPlainText("Attune", text)) } catch (e: Exception) { }
-        val tap = PendingIntent.getActivity(ctx, ("send-" + id).hashCode(), if (sent) Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) else go,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val title = if (sent) snd.optString("sentTitle").ifBlank { "Sent to $who" } else snd.optString("dueTitle").ifBlank { "Time to send to $who" }
+    /** v9.4 G1 → v9.7 Messages (Ali picked M3 + S1 + S2: "like the Auto Text app, with my interface"). A scheduled message at its time:
+     *   ask = true → a notification "Send to X now?" with Send / Not now (nothing goes until the person says so);
+     *   else deliver(): 1) through the chat's own Reply when Attune holds it (every build); 2) SMS sent by itself (the full build, with
+     *   the person's OK for SMS); 3) WhatsApp sent by itself (the full build, Accessibility switched on, phone unlocked — AutoSend.kt);
+     *   4) otherwise a notification: one tap opens the app at that person with the words written — the person presses Send.
+     *   A repeating message (daily / weekly / monthly / yearly) is armed again for its next time. */
+    private fun fireSend(ctx: Context, id: String, rem: JSONObject, snd: JSONObject, arr: JSONArray) {
+        if (snd.optBoolean("ask")) askFirst(ctx, id, snd) else deliver(ctx, id, snd)
+        val repeat = rem.optString("repeat", "none")
+        if (repeat != "none") { val nextAt = next(rem.optLong("at"), repeat, System.currentTimeMillis()); rem.put("at", nextAt); save(ctx, arr); arm(ctx, id, nextAt) }
+        else unschedule(ctx, id)
+    }
+
+    /** The link that opens the app at that person with the words written (the same as web-src/msgsched.js linkFor). */
+    fun linkIntent(ctx: Context, snd: JSONObject): Intent? {
+        val text = snd.optString("text"); val phone = snd.optString("phone").filter { it.isDigit() }; val app = snd.optString("app", "whatsapp")
+        val pkg = snd.optString("pkg")
+        val i = when (app) {
+            "sms" -> if (phone.isNotEmpty()) Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("smsto:$phone")).putExtra("sms_body", text) else null
+            "email" -> snd.optString("email").takeIf { it.contains("@") }?.let { Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:" + android.net.Uri.encode(it) + "?subject=" + android.net.Uri.encode(snd.optString("subject")) + "&body=" + android.net.Uri.encode(text))) }
+            "telegram" -> Intent(Intent.ACTION_VIEW, android.net.Uri.parse(if (phone.isNotEmpty()) "tg://resolve?phone=$phone&text=" + android.net.Uri.encode(text) else "tg://msg?text=" + android.net.Uri.encode(text)))
+            else -> if (phone.isNotEmpty()) Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://wa.me/$phone?text=" + android.net.Uri.encode(text))).apply { if (pkg.startsWith("com.whatsapp")) setPackage(pkg) }
+                    else if (pkg.isNotBlank()) ctx.packageManager.getLaunchIntentForPackage(pkg) else null
+        }
+        return i?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    /** Sends it now, the best way this phone allows (see fireSend). → how: reply | sms | auto | opened | failed */
+    fun deliver(ctx: Context, id: String, snd: JSONObject): String {
+        val text = snd.optString("text"); val who = snd.optString("who"); val app = snd.optString("app", "whatsapp")
+        val phone = snd.optString("phone").filter { it.isDigit() }
+        var how = ""
+        if (snd.optString("key").isNotBlank() && ChatInbox.reply(ctx, snd.optString("key"), text).optBoolean("ok")) how = "reply"
+        if (how.isEmpty() && app == "sms" && phone.isNotEmpty() && SmsOut.allowed(ctx)) how = if (SmsOut.send(ctx, phone, text)) "sms" else ""
+        if (how.isEmpty() && snd.optBoolean("auto") && (app == "whatsapp" || app == "wab") && phone.isNotEmpty() && AutoSend.ready(ctx)) {
+            val go = linkIntent(ctx, snd)
+            if (go != null) try { AutoSend.arm(ctx, id, snd); ctx.startActivity(go); how = "auto" } catch (e: Exception) { }
+        }
+        val sent = how == "reply" || how == "sms"
+        if (how != "auto") {
+            val go = linkIntent(ctx, snd) ?: Intent(ctx, MainActivity::class.java).putExtra(EXTRA_ID, id).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (!sent) try { (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager)?.setPrimaryClip(android.content.ClipData.newPlainText("Attune", text)) } catch (e: Exception) { }
+            val tap = PendingIntent.getActivity(ctx, ("send-" + id).hashCode(), if (sent) Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) else go,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val title = if (sent) snd.optString("sentTitle").ifBlank { "Sent to $who" } else snd.optString("dueTitle").ifBlank { "Time to send to $who" }
+            notifySimple(ctx, id.hashCode(), title, text, tap)
+            if (!sent) how = "opened"
+            log(ctx, JSONObject().put("id", id).put("how", how).put("ok", sent).put("who", who).put("app", app).put("text", text))
+        }
+        return how
+    }
+
+    private fun notifySimple(ctx: Context, nid: Int, title: String, text: String, tap: PendingIntent, vararg actions: android.app.Notification.Action) {
+        ensureChannel(ctx)
         val b = (if (Build.VERSION.SDK_INT >= 26) android.app.Notification.Builder(ctx, CHANNEL) else @Suppress("DEPRECATION") android.app.Notification.Builder(ctx))
             .setSmallIcon(R.drawable.ic_stat_reminder).setContentTitle(title).setContentText(text)
             .setStyle(android.app.Notification.BigTextStyle().bigText(text)).setContentIntent(tap).setAutoCancel(true)
             .setCategory(android.app.Notification.CATEGORY_REMINDER)
-        try { ctx.getSystemService(NotificationManager::class.java)?.notify(id.hashCode(), b.build()) } catch (e: SecurityException) { }
-        try {
-            val p = prefs(ctx); val log = try { JSONArray(p.getString("sendlog", "[]")) } catch (e: Exception) { JSONArray() }
-            log.put(JSONObject().put("id", id).put("ok", sent).put("at", System.currentTimeMillis())); p.edit().putString("sendlog", log.toString()).apply()
-        } catch (e: Exception) { }
-        unschedule(ctx, id)
+        for (a in actions) b.addAction(a)
+        try { ctx.getSystemService(NotificationManager::class.java)?.notify(nid, b.build()) } catch (e: SecurityException) { }
     }
+
+    /** "Ask me before sending": the message waits for the person's Send (MsgActionReceiver). */
+    private fun askFirst(ctx: Context, id: String, snd: JSONObject) {
+        val p = prefs(ctx); val asks = try { JSONObject(p.getString("asks", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+        asks.put(id, snd); p.edit().putString("asks", asks.toString()).apply()
+        fun act(action: String, label: String) = android.app.Notification.Action.Builder(null, label,
+            PendingIntent.getBroadcast(ctx, (action + id).hashCode(), Intent(ctx, MsgActionReceiver::class.java).setAction(action).putExtra(EXTRA_ID, id), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)).build()
+        val open = PendingIntent.getActivity(ctx, ("ask-" + id).hashCode(), Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        notifySimple(ctx, id.hashCode(), snd.optString("askTitle").ifBlank { "Send to " + snd.optString("who") + " now?" }, snd.optString("text"), open,
+            act(MsgActionReceiver.SEND, snd.optString("sendLabel").ifBlank { "Send" }), act(MsgActionReceiver.SKIP, snd.optString("skipLabel").ifBlank { "Not now" }))
+        log(ctx, JSONObject().put("id", id).put("how", "asked").put("ok", false).put("who", snd.optString("who")).put("app", snd.optString("app", "whatsapp")).put("text", snd.optString("text")))
+    }
+    fun answerAsk(ctx: Context, id: String, send: Boolean) {
+        val p = prefs(ctx); val asks = try { JSONObject(p.getString("asks", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+        val snd = asks.optJSONObject(id); asks.remove(id); p.edit().putString("asks", asks.toString()).apply()
+        try { ctx.getSystemService(NotificationManager::class.java)?.cancel(id.hashCode()) } catch (e: Exception) { }
+        if (snd != null && send) deliver(ctx, id, snd)
+    }
+
+    /** v9.7 the Sent tab: every scheduled send and auto-reply (newest last, 300 kept), and the page's "what happened" list. */
+    fun log(ctx: Context, o: JSONObject) {
+        try {
+            o.put("at", System.currentTimeMillis())
+            val p = prefs(ctx)
+            val all = try { JSONArray(p.getString("sent", "[]")) } catch (e: Exception) { JSONArray() }
+            all.put(o); val keep = JSONArray(); for (k in maxOf(0, all.length() - 300) until all.length()) keep.put(all.get(k))
+            val log = try { JSONArray(p.getString("sendlog", "[]")) } catch (e: Exception) { JSONArray() }
+            if (o.optString("id").isNotBlank()) log.put(JSONObject().put("id", o.optString("id")).put("ok", o.optBoolean("ok")).put("how", o.optString("how")).put("at", o.optLong("at")))
+            p.edit().putString("sent", keep.toString()).putString("sendlog", log.toString()).apply()
+        } catch (e: Exception) { }
+    }
+    fun sentLog(ctx: Context): String = prefs(ctx).getString("sent", "[]") ?: "[]"
 
     /** v9.4 G1: what the scheduled messages did since the page last asked (then forgotten). */
     fun takeSendLog(ctx: Context): String { val p = prefs(ctx); val s = p.getString("sendlog", "[]") ?: "[]"; p.edit().putString("sendlog", "[]").apply(); return s }
@@ -204,7 +277,7 @@ object Reminders {
         // v9.4 G1: a scheduled message. Sent by itself through that chat's own Reply when Attune still holds it (the person wrote
         // recently); otherwise the notification opens the chat with the message written — one tap on Send. Never through
         // Accessibility (Google Play forbids it for this), never SMS sending (only the default SMS app may).
-        rem.optJSONObject("send")?.let { snd -> fireSend(ctx, id, rem, snd); return }
+        rem.optJSONObject("send")?.let { snd -> fireSend(ctx, id, rem, snd, arr); return }
         val open = PendingIntent.getActivity(ctx, id.hashCode(),
             Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 .putExtra(EXTRA_ID, id),
@@ -248,5 +321,14 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED,
             "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" -> { Reminders.rearmAll(ctx); ScoutNight.arm(ctx); AgentWatch.arm(ctx) }
         }
+    }
+}
+
+/** v9.7 "Send to X now?" → Send / Not now. */
+class MsgActionReceiver : BroadcastReceiver() {
+    companion object { const val SEND = "com.aldibiki.attune.MSG_SEND"; const val SKIP = "com.aldibiki.attune.MSG_SKIP" }
+    override fun onReceive(ctx: Context, intent: Intent) {
+        val id = intent.getStringExtra(Reminders.EXTRA_ID) ?: return
+        Reminders.answerAsk(ctx, id, intent.action == SEND)
     }
 }
