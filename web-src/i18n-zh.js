@@ -11329,4 +11329,7 @@ export const ZH = {
   "Travel day": "出行日",
   "Price protection": "价格保护",
   "the last one {l}": "最后一期 {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "你说的是 {n} — 这个计划里没有。保存前请核对数字，或重新输入。",
+  "first payment {d}": "首次付款 {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "你说的是 {n} — 我不知道该放在哪里，所以没有保存任何内容。请换个说法再写一次。",
 };

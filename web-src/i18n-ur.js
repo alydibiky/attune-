@@ -11330,4 +11330,7 @@ export const UR = {
   "Travel day": "سفر کا دن",
   "Price protection": "قیمت کا تحفظ",
   "the last one {l}": "آخری {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "آپ نے {n} کہا — یہ اس منصوبے میں نہیں ہے۔ محفوظ کرنے سے پہلے نمبر دیکھ لیں، یا دوبارہ لکھیں۔",
+  "first payment {d}": "پہلی ادائیگی {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "آپ نے {n} کہا — میں اسے کہیں رکھ نہیں سکا، اس لیے کچھ محفوظ نہیں ہوا۔ تھوڑا مختلف انداز میں دوبارہ لکھیں۔",
 };

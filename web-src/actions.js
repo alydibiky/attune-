@@ -422,10 +422,19 @@ function messageFrom(text) {
 }
 function titleFrom(text, kind, contact) {
   // v8.4: "remind me" anywhere (not only first), "to" as a word ("remind me tomorrow" became "morrow"), the days and times said
-  let s = String(text || "").replace(new RegExp(LAST_DAY.source, "gi"), " ").replace(/\s+(at|on)\s*(?=\s|$)/gi, " ")
+  // v9.4 (the sentence battery: "tomorrow at 9 to call the bank" → "9 to call the bank", «فكرني بكرة» → «كرة», "on 1 December to pay
+  // rent", «كمان ساعتين», "next Friday at noon", «يوم الخميس»): the time words go first, then a lone at / on
+  const MON = "(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*", AMON = "(?:يناير|فبراير|مارس|ابريل|أبريل|مايو|يونيو|يوليو|اغسطس|أغسطس|سبتمبر|اكتوبر|أكتوبر|نوفمبر|ديسمبر)";
+  let s = String(text || "").replace(new RegExp(LAST_DAY.source, "gi"), " ")
+    .replace(new RegExp("\\b(on |by |before )?(the )?\\d{1,2}(st|nd|rd|th)?( of)? " + MON + "\\b|\\b(on |by )?" + MON + " \\d{1,2}(st|nd|rd|th)?\\b", "gi"), " ")
+    .replace(new RegExp("(يوم |في )?[\\d٠-٩]{1,2} " + AMON, "g"), " ")
+    .replace(/\b(next|this|coming) (sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|\b(next|this) (week|month)\b|\b(at )?(noon|midday|midnight)\b/gi, " ")
+    .replace(/(كمان|بعد)\s+(ساعتين|ساعه|ساعة|نص ساعه|نص ساعة|ربع ساعه|ربع ساعة|دقيقتين|يومين|[\d٠-٩]+\s+\S+)/g, " ")
+    .replace(/(^|\s)يوم\s+(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
+    .replace(/\bat \d{1,2}([:.]\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?/gi, " ").replace(/\s+(at|on)\s*(?=\s|$)/gi, " ")
     .replace(/^(please |can you |could you )?(set (an? )?(alarm|timer|reminder)( for)?|wake me( up)?|add|put|schedule)\s+/i, "")
     .replace(/\b(please )?remind me( to\b)?/gi, " ")
-    .replace(/(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|صحيني|صحّيني)(\s+(ب|إن|ان|اني|إني))?/g, " ").replace(/^\s*(حطلي|حط|اعمل|اعملي)\s+/, "")
+    .replace(/(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|صحيني|صحّيني)(\s+(إن|ان|اني|إني)(?=\s)|\s+ب(?=ال))?/g, " ").replace(/^\s*(حطلي|حط|اعمل|اعملي)\s+/, "")
     .replace(/\b(every|each|on)\s+((sun|mon|tue|tues|wed|thu|thurs|fri|sat)[a-z]*\.?(\s*(,|and|&)?\s*))+/gi, " ")
     .replace(/\b(every ?day|daily|every week|weekly|every weekday|weekdays|every month|monthly)\b/gi, " ")
     .replace(/\b(every |each |on the )?last (sun|mon|tue|wed|thu|fri|sat)[a-z]* (of|in) (the|every|each) month\b|(كل )?(آخر|اخر) \S+ (في|من|ف|ب)? ?(ال)?شهر|كل شهر/gi, " ")
@@ -435,7 +444,7 @@ function titleFrom(text, kind, contact) {
     .replace(/(كل يوم|يوميا|بكرة|بكره|النهارده|الساعة [\d٠-٩]{1,2}([:.][\d٠-٩]{2})?( ونص| وربع| الا ربع)?|بعد [\d٠-٩]+ \S+|بالليل|الصبح|الضهر|العصر|المغرب|مساء|صباحا)/g, " ")
     // (persona 2: «ادفع الكهربا يوم ١٠», "on the 2nd" — the day of the month is the reminder's date, not its title)
     .replace(/\bon the \d{1,2}(st|nd|rd|th)?\b|\bon \d{1,2}(st|nd|rd|th)\b|\bthe \d{1,2}(st|nd|rd|th)\b|(^|\s)يوم [\d٠-٩]{1,2}(?=\s|$)/gi, " ")
-    .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "");
+    .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "").replace(/^\s*(about|عن)\s+/i, "");
   s = cleanText(s, 60);
   if (!s && contact) s = (kind === "call" ? "Call " : "Message ") + contact;
   return s || { reminder: "Reminder", alarm: "Alarm", timer: "Timer", calendar: "Appointment", whatsapp: "WhatsApp", call: "Call" }[kind] || "Reminder";

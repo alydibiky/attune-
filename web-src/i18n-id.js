@@ -11330,4 +11330,7 @@ export const IDN = {
   "Travel day": "Hari perjalanan",
   "Price protection": "Perlindungan harga",
   "the last one {l}": "yang terakhir {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "Kamu bilang {n} — tidak ada di rencana ini. Cek angkanya sebelum menyimpan, atau tulis ulang.",
+  "first payment {d}": "pembayaran pertama {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "Kamu bilang {n} — saya tidak tahu harus ditaruh di mana, jadi tidak ada yang disimpan. Tulis ulang dengan sedikit berbeda.",
 };

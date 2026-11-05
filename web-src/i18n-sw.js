@@ -11330,4 +11330,7 @@ export const SW = {
   "Travel day": "Siku ya safari",
   "Price protection": "Ulinzi wa bei",
   "the last one {l}": "la mwisho {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "Ulisema {n} — haipo kwenye mpango huu. Kagua namba kabla ya kuhifadhi, au uiandike upya.",
+  "first payment {d}": "malipo ya kwanza {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "Ulisema {n} — sikujua niiweke wapi, kwa hiyo hakuna kilichohifadhiwa. Iandike upya kwa namna tofauti kidogo.",
 };

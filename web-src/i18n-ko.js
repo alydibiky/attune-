@@ -11329,4 +11329,7 @@ export const KO = {
   "Travel day": "여행 당일",
   "Price protection": "가격 보호",
   "the last one {l}": "마지막 회 {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "{n}(이)라고 하셨는데 이 계획에 없어요. 저장하기 전에 숫자를 확인하거나 다시 써 주세요.",
+  "first payment {d}": "첫 납부 {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "{n}(이)라고 하셨는데 어디에 넣을지 몰라서 아무것도 저장하지 않았어요. 조금 다르게 다시 써 주세요.",
 };

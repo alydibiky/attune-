@@ -11329,4 +11329,7 @@ export const FA = {
   "Travel day": "روز سفر",
   "Price protection": "حفاظت قیمت",
   "the last one {l}": "آخری {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "شما {n} گفتید — این در این برنامه نیست. پیش از ذخیره عددها را بررسی کنید، یا دوباره بنویسید.",
+  "first payment {d}": "اولین پرداخت {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "شما {n} گفتید — نتوانستم جایی برایش پیدا کنم، پس چیزی ذخیره نشد. کمی متفاوت دوباره بنویسید.",
 };

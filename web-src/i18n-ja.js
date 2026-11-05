@@ -11329,4 +11329,7 @@ export const JA = {
   "Travel day": "旅行の日",
   "Price protection": "価格保護",
   "the last one {l}": "最終回 {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "{n} と言いましたが、このプランに入っていません。保存する前に数字を確認するか、書き直してください。",
+  "first payment {d}": "初回の支払い {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "{n} と言いましたが、どこに入れるか分からなかったため何も保存していません。少し言い方を変えてもう一度書いてください。",
 };

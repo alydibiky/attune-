@@ -11329,4 +11329,7 @@ export const RU = {
   "Travel day": "День поездки",
   "Price protection": "Защита цены",
   "the last one {l}": "последний {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "Вы сказали {n} — этого нет в плане. Проверьте цифры перед сохранением или напишите заново.",
+  "first payment {d}": "первый платёж {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "Вы сказали {n} — я не понял, куда это отнести, поэтому ничего не сохранено. Напишите иначе.",
 };

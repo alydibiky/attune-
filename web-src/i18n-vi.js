@@ -11329,4 +11329,7 @@ export const VI = {
   "Travel day": "Ngày đi",
   "Price protection": "Bảo vệ giá",
   "the last one {l}": "lần cuối {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "Bạn nói {n} — con số này không có trong kế hoạch. Kiểm tra lại số trước khi lưu, hoặc viết lại.",
+  "first payment {d}": "lần trả đầu tiên {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "Bạn nói {n} — tôi không biết đặt vào đâu nên chưa lưu gì. Hãy viết lại theo cách khác một chút.",
 };

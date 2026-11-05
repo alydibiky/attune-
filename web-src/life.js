@@ -123,7 +123,7 @@ function startOf(t, now) {
 const NOT_NAME = /^(i|me|my|he|she|they|we|you|him|her|them|the|a|an|his|it|this|that|انا|هو|هي|هم|احنا|انت|عليه|عليها|عليا|ليا|ليه|لي|من|علي|الي|في|ده|دي|كل|شهر|كمان)$/i;
 function personOf(raw, t) {
   const tries = [
-    /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(?:owes|will pay|is paying|pays|borrowed|has to pay|must pay|will give|gives|will send|will return|is giving)\b/,
+    /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(?:owes|will pay|is paying|pays|borrowed|took(?=[^.]{0,25}\bfrom me\b)|has to pay|must pay|will give|gives|will send|will return|is giving)\b/,
     /\b(?:lent|loaned|gave|owe|paid|pay|to|from|with|lend|Lent)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b/,
     /\b(?:owe|from|to)\s+([A-Z]{2,5})\b/,   // a bank's short name: CIB, NBE, QNB
   ];
@@ -134,7 +134,7 @@ function personOf(raw, t) {
   const rel = /\bmy\s+(sister|brother|mother|mom|mum|father|dad|son|daughter|uncle|aunt|cousin|friend|boss|neighbou?r|wife|husband|landlord|tenant|partner|colleague)\b/i.exec(raw);
   if (rel && /\b(owes|pays|will pay|gives|will give|lent|borrowed|owe|paid|sends|will send)\b/i.test(raw)) return rel[1][0].toUpperCase() + rel[1].slice(1).toLowerCase();
   // v8.2 (Ali typed "sheikh owes me 22,000 …" in small letters): the word before "owes" is the name, capitalised
-  const low = /(?:^|[\s,.])([a-z][a-z'-]{1,20})\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed)\b/i.exec(raw);
+  const low = /(?:^|[\s,.])([a-z][a-z'-]{1,20})\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed|took(?=[^.]{0,25}\bfrom me\b))\b/i.exec(raw);
   if (low && !NOT_NAME.test(low[1]) && !/^(also|still|now|friend|brother|sister|cousin|neighbou?r|uncle|aunt|boss|client|customer)$/i.test(low[1])) return low[1][0].toUpperCase() + low[1].slice(1).toLowerCase();
   // v8.6 (the 2-month test: "I lent mohamed 700", "I owe the grocer 120" became plain expenses): a small-letter name, or "the grocer",
   // after lent / owe / borrowed from
@@ -186,7 +186,8 @@ function oneAmount(t) {
 const PAY_V = /\b(pay|paid|paying|pays|pay back|repay|settle)\b|ادفع|يدفع|هدفع|هيدفع|دفع|اسدد|يسدد|سداد|هسدد/;
 const IN_W = /me debe|me doit|me deve|schuldet mir|mi deve|bana borçlu|berutang (?:kepada|ke|pada) saya|le presté|lui ai prêté|j'ai prêté|emprestei|habe .{0,30}geliehen|ho prestato|borç verdim|meminjamkan|me tiene que pagar|doit me rendre|vai me pagar|zahlt mir/i;
 const OUT_W = /\b(le debo|je dois|eu devo|ich schulde|gli devo|le devo|borçluyum|saya berutang|pedí prestado|j'ai emprunté|peguei emprestado|habe mir .{0,30}geliehen|ho preso in prestito|borç aldım|saya meminjam|mi cuota|ma mensualité|minha parcela|meine rate|la mia rata|taksitim|cicilan saya)\b/i;
-const IN_ = /\bowes me\b|\bwill pay me\b|\bpays me\b|\b(?:will|is going to|is to|has to|must|should) (?:give|send|return|transfer) me\b|\bgives me\b|\bowe(?:s)? me back\b|ليا عند|ليا مع|لي عند|ليا معاه|هيديني|هتديني|بيديني|بتديني|هترجعلي|بتدفعلي|بيدفعلي|بتبعتلي|بيبعتلي|\bi lent\b|\bi loaned\b|(?:^|\s)lent\s+(?!me\b)|\blent\b.*\bto\b|سيدفع|سيسدد|هيسدد|هيدفع(?!ل)|\bto pay me back\b|\bi gave\b.*\b(loan|borrow)|عليه|عليها|هيدفعلي|يدفعلي|هيرجعلي|سلفت|اسلفت|اقرضت|ادينت|استلف مني|اخد مني|خد مني|مديون ليا|مدين لي/i;
+// v9.4 (the sentence battery: "Mona borrowed 4500 from me" was not read): someone borrowed from me / took a loan from me = they owe me
+const IN_ = /\b(?:borrowed|took|loaned)\s+(?:[\d,.]+\s*k?\s*)?(?:\S+\s+){0,2}from me\b|استلف مني|استلفت مني|اخد مني|خد مني|اخدت مني|خدت مني|اقترض مني|\bowes me\b|\bwill pay me\b|\bpays me\b|\b(?:will|is going to|is to|has to|must|should) (?:give|send|return|transfer) me\b|\bgives me\b|\bowe(?:s)? me back\b|ليا عند|ليا مع|لي عند|ليا معاه|هيديني|هتديني|بيديني|بتديني|هترجعلي|بتدفعلي|بيدفعلي|بتبعتلي|بيبعتلي|\bi lent\b|\bi loaned\b|(?:^|\s)lent\s+(?!me\b)|\blent\b.*\bto\b|سيدفع|سيسدد|هيسدد|هيدفع(?!ل)|\bto pay me back\b|\bi gave\b.*\b(loan|borrow)|عليه|عليها|هيدفعلي|يدفعلي|هيرجعلي|سلفت|اسلفت|اقرضت|ادينت|استلف مني|اخد مني|خد مني|مديون ليا|مدين لي/i;
 const OUT_ = /\bi owe\b|\bi borrowed\b|\bi have to pay\b|\bi must pay\b|\bmy (installment|instalment)s?\b|عليا|علي ل|استلفت|اقترضت|اخدت من|خدت من|مديون ل|لازم ادفع|هدفع|قسط العربيه|قسطي|اقساطي/i;
 
 // v6.34 (Ali: "the maid comes every Saturday and takes 600 EGP — a checkbox when I log in on Saturday, and it records the expense

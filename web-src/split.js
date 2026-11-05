@@ -52,7 +52,9 @@ export function parseSplit(text, { currency = homeCurrency() } = {}) {
   const back = (mt, g) => { const at = mt.index + mt[0].indexOf(mt[g]); return raw.slice(at, at + mt[g].length); };
   if (lm) { const r = namesIn(back(lm, 1)); names = r.names; meIn = r.me || !/\bbetween\b|بين|entre/i.test(lm[0]) || payer === "me"; }
   // unnamed: "on 4", "4 ways", «على ٤», «٤ أفراد»
-  const nm = /(?:\bon|\binto|\bin|علي|على)\s*(\d{1,2})(?!\d)(?!\s*(?:%|k\b))|(\d{1,2})\s*(?:ways|people|persons|friends|of us|parts|افراد|اشخاص|نفر|انفار)/i.exec(latin(t));
+  // v9.4 (the sentence battery: "split between 4" and «علينا 5» became 2 people): "between / among / by 4", «بين 4», «علينا 5»,
+  // "we were 3", «كنا 4» are the number of people too
+  const nm = /(?:\bon|\binto|\bin|\bbetween|\bamong|\bby|\bfor|\bwe were|\bthere were|علي|على|علينا|بين|كنا|احنا)\s*(\d{1,2})(?!\d)(?!\s*(?:%|k\b|[.,]\d))|(\d{1,2})\s*(?:ways|people|persons|friends|of us|parts|افراد|اشخاص|نفر|انفار)/i.exec(latin(t));
   const nUnnamed = nm ? +(nm[1] || nm[2]) : 0;
   if (payer !== "me" && !names.includes(payer)) names = [payer, ...names];
   names = names.filter((n) => !ME.test(n));

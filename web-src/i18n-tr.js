@@ -11330,4 +11330,7 @@ export const TRK = {
   "Travel day": "Seyahat günü",
   "Price protection": "Fiyat koruması",
   "the last one {l}": "sonuncusu {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "{n} dediniz — bu planda yok. Kaydetmeden önce rakamları kontrol edin ya da yeniden yazın.",
+  "first payment {d}": "ilk ödeme {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "{n} dediniz — nereye koyacağımı bulamadım, bu yüzden hiçbir şey kaydedilmedi. Biraz farklı yazın.",
 };

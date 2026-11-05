@@ -11330,4 +11330,7 @@ export const PT = {
   "Travel day": "Dia da viagem",
   "Price protection": "Proteção de preço",
   "the last one {l}": "a última {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "Você disse {n} — isso não está neste plano. Confira os números antes de salvar ou escreva de novo.",
+  "first payment {d}": "primeiro pagamento {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "Você disse {n} — não consegui encaixar, então nada foi salvo. Escreva de novo de um jeito um pouco diferente.",
 };

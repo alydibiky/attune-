@@ -11329,4 +11329,7 @@ export const TH = {
   "Travel day": "วันเดินทาง",
   "Price protection": "คุ้มครองราคา",
   "the last one {l}": "งวดสุดท้าย {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "คุณพูดว่า {n} — แต่ไม่มีในแผนนี้ ตรวจตัวเลขก่อนบันทึก หรือพิมพ์ใหม่",
+  "first payment {d}": "งวดแรก {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "คุณพูดว่า {n} — แต่ฉันไม่รู้จะใส่ไว้ตรงไหน จึงไม่ได้บันทึกอะไร ลองพิมพ์ใหม่อีกแบบ",
 };

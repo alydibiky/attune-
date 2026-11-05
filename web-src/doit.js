@@ -26,6 +26,7 @@ import { appendToLedger } from "./paylog.js";
 import { chatAsk, askLife } from "./lifeask.js";
 import { homeCurrency } from "./locale.js";
 import { savedCountry } from "./country.js";
+import { missingAmounts } from "./numguard.js";
 
 const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const latin = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/٫/g, ".");
@@ -103,6 +104,13 @@ export function understand(text, opts = {}) {
   const u = understandAll(text, opts);
   if (!FIT_ARCHIVED || !u || !u.actions) return u;
   const actions = u.actions.filter((a) => !FIT_KINDS.has(a.kind));
+  // v9.4 (the sentence battery: "uber 120, lunch 200, coffee 60" went to Chat — "lunch" made it a meal, the meal was dropped with Fit,
+  // and the money was lost): when only a food reading was dropped and the sentence is amounts with spending words, it is money
+  if (!actions.length && u.actions.some((a) => a.kind === "food") && !/\b(ate|eaten|drank)\b|اكلت|أكلت|كلت|شربت/i.test(text)) {
+    const r = readLocal(fixTypos(String(text || "").trim()), { today: isoDay(opts.now || Date.now()) });
+    const items = (r.items || []).filter((x) => x.amount >= 1 && x.cat && x.cat !== "other");
+    if (items.length && items.length === (r.items || []).length && !(r.skipped || []).length) return { actions: [{ kind: "money", items }] };
+  }
   return actions.length === u.actions.length ? u : { ...u, actions, ...(actions.length ? {} : { chat: true }) };
 }
 /** The full reader (meals, water, weight… too) — what Chat used before Fit was archived; Attune Fit can use it as is. */
@@ -414,10 +422,15 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const life = stores.life || { v: 1, items: [] };
       const r = addCommitment(life, a.c, now), c = a.c;
       const amt = c.amount ? `${num(c.amount)} ${c.currency || ""}${c.every ? " / " + c.every : ""}` : "";
+      // v9.4 (Ali: 19,500 became 20,000 and the message only said "2,500 / month"): the payments, the total and a smaller last one
+      // are said, so a wrong total is seen at once
+      const sc = c.count > 1 ? scheduleOf(c, now) : [], last = sc.length ? sc[sc.length - 1].amount : 0, tot = c.total || 0;
+      const enX = sc.length ? ` · ${sc.length} payments · ${num(tot)} in all${last && Math.abs(last - c.amount) >= 1 ? ` (the last one ${num(last)})` : ""}` : "";
+      const arX = sc.length ? ` · ${sc.length} دفعات · ${num(tot)} في الإجمالي${last && Math.abs(last - c.amount) >= 1 ? ` (آخر قسط ${num(last)})` : ""}` : "";
       // persona 9 (Ali picked H-D 2): the first "netflix 250" sets up the plan (from next month) — and asks whether this month's
       // was paid today, one tap (the money total was 250 short)
       const followUp = c.kind === "subscription" && c.amount > 0 ? { en: "Paid today", ar: "اتدفع النهارده", actions: [{ kind: "money", items: [{ type: "expense", amount: c.amount, cat: "bills", note: c.title || c.person || "subscription", date: isoDay(now) }] }] } : null;
-      return { stores: { "attune:life:v1": r }, open: "life", followUp, done: { en: `Saved in People & plans: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}.`, ar: `اتحفظ في الناس والالتزامات: ${[c.person, c.title || KIND_AR[c.kind] || c.kind, amt].filter(Boolean).join(" · ")}.` } };
+      return { stores: { "attune:life:v1": r }, open: "life", followUp, done: { en: `Saved in People & plans: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}${enX}.`, ar: `اتحفظ في الناس والالتزامات: ${[c.person, c.title || KIND_AR[c.kind] || c.kind, amt].filter(Boolean).join(" · ")}${arX}.` } };
     }
     case "deadline": {
       const r = addDeadline(stores.radar || { items: [], seen: [] }, { ...a.d, source: "home" }, now);
@@ -445,6 +458,8 @@ const PAID_FOR = /\b(maid|nanny|driver|cleaner|cleaning|plumber|electrician|carp
 export function doSure(text, { now = Date.now(), stores = {} } = {}) {
   const t = fixTypos(String(text || "").trim()); if (!t) return true;
   let u; try { u = understand(text, { now, stores }); } catch (e) { return true; }
+  // v9.4 the number guard: an amount said that is not in what would be recorded → not sure (Chat asks, never records it silently)
+  try { if ((u.actions || []).length && missingAmounts(t, u.actions).length) return false; } catch (e) {}
   for (const a of u.actions || []) {
     if (a.kind === "money") {
       if (MONEY_VERB.test(t) || CURRENCY.test(t)) continue;

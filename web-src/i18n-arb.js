@@ -11321,4 +11321,7 @@ export const ARB = {
   "Travel day": "يوم السفر",
   "Price protection": "حماية السعر",
   "the last one {l}": "والدفعة الأخيرة {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "ذكرتَ {n} — وهو غير موجود في هذه الخطة. راجع الأرقام قبل الحفظ، أو اكتبها مجددًا.",
+  "first payment {d}": "أول دفعة {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "ذكرتَ {n} — ولم أعرف أين أضعه، فلم يُحفظ شيء. اكتبها مجددًا بصيغة مختلفة قليلًا.",
 };

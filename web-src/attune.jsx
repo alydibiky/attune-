@@ -131,6 +131,8 @@ import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
 import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan, goldGram } from "./scout.js";
 import { understand as doUnderstand, apply as doApply, doSure } from "./doit.js";
+import { missingAmounts } from "./numguard.js";
+import { scheduleOf as scheduleOfLife } from "./life.js";
 import { PLAY_BUILD, NOT_IN_PLAY } from "./buildflags.js";
 import { morningReminder } from "./morning.js";
 import { photoKind, KIND_SAY } from "./smartcam.js";
@@ -9886,6 +9888,14 @@ export default function App() {
     if (looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : tr("Scout is on it"), open: "scout" }], undo: null }; }
     const u = doUnderstand(text, { now, stores: loadLifeStores() });
     if (u.ask) return { answer: u.ask, ar };
+    // v9.4 the number guard (Ali: "19,500 became 20,000 … fix it for good for everything in the chat"): an amount said that is not in
+    // what would be saved → nothing is saved silently: a plan opens in its preview (with the warning), anything else says so
+    { let miss = []; try { miss = u.actions.length ? missingAmounts(text, u.actions.map((a) => (a.kind === "life" && a.c ? { ...a, sched: scheduleOfLife(a.c, now).map((x) => x.amount) } : a))) : []; } catch (e) {}
+      if (miss.length) {
+        const n = miss.map((v) => v.toLocaleString("en-US")).join(", ");
+        if (u.actions.some((a) => a.kind === "life")) { try { window.dispatchEvent(new CustomEvent("attune-life", { detail: { text } })); } catch (e) {} return { lines: [{ text: tr("You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.", { n }), open: "life" }], undo: null }; }
+        return { lines: [{ text: tr("You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.", { n }) }], undo: null };
+      } }
     // v8.7 (persona 4, idea 6 — code first): what the code couldn't read is kept ON THE PHONE (the last 100, never sent), so Ali can
     // copy it from Engine → Details and each one becomes a new reader instead of a 2–10 s wait for the model
     if (!u.actions.length) { try { const k = "attune:fell-to-model", l = JSON.parse(localStorage.getItem(k) || "[]"); localStorage.setItem(k, JSON.stringify([...l.filter((x) => x.t !== text), { t: String(text).slice(0, 200), at: now, g: guessRoute(text) }].slice(-100))); } catch (e) {} return null; }

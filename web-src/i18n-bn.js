@@ -11329,4 +11329,7 @@ export const BN = {
   "Travel day": "ভ্রমণের দিন",
   "Price protection": "দাম সুরক্ষা",
   "the last one {l}": "শেষটি {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "আপনি {n} বলেছেন — এটি এই পরিকল্পনায় নেই। সংরক্ষণের আগে সংখ্যাগুলো দেখুন, বা আবার লিখুন।",
+  "first payment {d}": "প্রথম কিস্তি {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "আপনি {n} বলেছেন — কোথায় রাখব বুঝতে পারিনি, তাই কিছু সংরক্ষিত হয়নি। একটু অন্যভাবে আবার লিখুন।",
 };

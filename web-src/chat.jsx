@@ -21,7 +21,9 @@ import { checkPhotoNumbers } from "./photocheck.js";
 const DO_HERE = ["money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
 import { chatMapIntent } from "./mapintent.js";
 import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_FARES } from "./metro.js";   // v6.41 (D5)
-import { chatLifeIntent } from "./life.js";
+import { chatLifeIntent, scheduleOf } from "./life.js";
+import { describe as lifeDescribe, heading as lifeHeading } from "./life-ui.jsx";
+import { missingAmounts } from "./numguard.js";
 import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
 import { mindAnswer } from "./personal.js";
 import { libraryBlock } from "./booklib.js";
@@ -1102,7 +1104,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: typed },
-        { id: newId(), role: "assistant", card: { tone: "emerald", title: "A commitment — save it in People & plans", detail: typed,
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "A commitment — save it in People & plans", detail: (() => {
+          // v9.4 (Ali: "the chat is too stupid" — it saved 20,000 for 19,500 and only showed his own sentence): the card says what will
+          // be saved — who, how much, how many payments, the total, the last one — and an amount said that isn't in it
+          try { const sc = scheduleOf(lifeC).map((x) => x.amount), miss = missingAmounts(typed, { ...lifeC, alt: undefined, sched: sc });
+            return lifeHeading(lifeC) + "\n" + lifeDescribe(lifeC) + (lifeC.start ? " · " + tr("from {d}", { d: lifeC.start }) : sc.length && lifeC.count > 0 ? " · " + tr("first payment {d}", { d: scheduleOf(lifeC)[0].date }) : "")
+              + (miss.length ? "\n⚠ " + tr("You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.", { n: miss.map((v) => v.toLocaleString("en-US")).join(", ") }) : ""); } catch (e) { return typed; } })(),
           actions: [["Save it", "life"], ["Just answer", "answer"]] }, lifeText: typed }] }));
       setText("");
       return;

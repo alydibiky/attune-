@@ -11,8 +11,9 @@ import { loadLedger } from "./myledger.js";
 import * as E from "./entities.js";
 import { openPerson } from "./people-ui.jsx";
 import { tr, getLang, dateLocale } from "./i18n.js";
-import { parseLife, paymentOn, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder, isOpenLoan } from "./life.js";
+import { parseLife, scheduleOf, paymentOn, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder, isOpenLoan } from "./life.js";
 import { fmt } from "./money-calm.js";
+import { missingAmounts } from "./numguard.js";
 import { loadGuardian, saveGuardian, collected } from "./guardian.js";
 import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 // v6.32: the same box also reads a bill to split, gold/currency you keep, and the car (plans-ui.jsx)
@@ -32,7 +33,7 @@ const EVERY = { month: "a month", week: "a week", year: "a year" };
 // v7.2 tick labels: "Oct" for a monthly payment, "Sat 24" for a weekly one; amounts short ("1k")
 const tickDay = (d, weekly) => { try { const x = new Date(d + "T12:00:00"); return x.toLocaleDateString(undefined, weekly ? { weekday: "short", day: "numeric" } : { month: "short", year: x.getFullYear() !== new Date().getFullYear() ? "2-digit" : undefined }); } catch (e) { return d.slice(5); } };
 const short = (n) => (n >= 1000 && n % 100 === 0 ? (n / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k" : fmt(n));
-function describe(c) {
+export function describe(c) {
   const per = c.every ? " " + tr(EVERY[c.every]) : "";
   if (c.kind === "installment") { const last = c.total > 0 && c.count > 1 ? Math.round((c.total - c.amount * (c.count - 1)) * 100) / 100 : 0;
     // v9.4 (Ali: 19,500 in payments of 2,500): the last payment is smaller — said on the card, so the total is clearly the one he gave
@@ -43,7 +44,7 @@ function describe(c) {
   if (c.kind === "regular") return tr("{a} {cur} each time · {when}", { a: fmt(c.amount), cur: c.currency, when: c.every === "week" && c.start ? tr("every {d}", { d: new Date(c.start + "T12:00:00").toLocaleDateString(undefined, { weekday: "long" }) }) : tr(EVERY[c.every] || "a week") }) + " · " + tr("tick the day — it goes into Money by itself");
   return fmt(c.amount) + " " + c.currency + per;
 }
-function heading(c) {
+export function heading(c) {
   if (c.kind === "debt" || c.kind === "installment") {
     if (c.person) return c.dir === "in" ? tr("{p} owes you", { p: c.person }) : tr("You owe {p}", { p: c.person });
     return tr(c.title ? c.title[0].toUpperCase() + c.title.slice(1) : KIND[c.kind]) + (c.kind === "installment" ? " · " + tr("installments") : "");
@@ -275,6 +276,11 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
           <span className={U.label}>{tr(KIND[draft.kind])}{draft.model ? " · " + tr("read by AI") : ""}</span>
           <div className="mt-1 font-extrabold text-[15px]" dir="auto">{heading(draft)}</div>
           <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(draft)}{draft.start ? " · " + tr("from {d}", { d: draft.start }) : ""}</div></>}
+          {/* v9.4 the number guard (Ali: "19,500 became 20,000 — fix it for good"): an amount said that isn't in the plan is shown before Save */}
+          {(() => { let miss = []; try { const sc = draft.kind && !["split", "holding", "car"].includes(draft.kind) ? scheduleOf(draft).map((x) => x.amount) : [];
+              miss = draft.source ? missingAmounts(draft.source, { ...draft, alt: undefined, altOf: undefined, sched: sc }) : []; } catch (e) {}
+            return miss.length ? <div className="mt-2.5 rounded-[12px] border border-[var(--c-warn)] bg-[var(--c-soft)] px-3 py-2 text-[12.5px] font-bold" data-testid="life-numcheck" dir="auto">
+              {tr("You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.", { n: miss.map((v) => fmt(v)).join(", ") })}</div> : null; })()}
           {/* v8.4: a sentence that could mean either — "22,000 … monthly for 9 months": the whole sum, or each month? one tap */}
           {draft.alt || draft.altOf ? <div className="mt-2.5 rounded-[12px] bg-[var(--c-soft)] px-3 py-2 text-[12.5px]" data-testid="life-alt">
             <span className="font-bold">{tr("Did you mean:")}</span>{" "}

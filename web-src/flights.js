@@ -158,7 +158,15 @@ export function parseFlight(text, { now = Date.now(), country = "", homeAirport 
   const lim = /\b(?:under|below|less than|max(?:imum)?|budget|up to)\s+[^\d]{0,6}(\d[\d,.]*\s*(?:k|thousand)?)|(?:اقل من|أقل من|تحت|في حدود|بحد اقصي|بحد أقصى)\s*(\d[\d,.]*\s*(?:الف|ألف)?)/i.exec(latin(text));
   const below = lim ? amountIn(lim[1] || lim[2]) || 0 : 0;
   const kids = /(\d)\s*(?:kids?|children|child|اطفال|أطفال|عيال)/i.exec(latin(text));
-  return { ok: !p.missing.length, f: { ...f, children: kids ? +kids[1] : 0 }, rules, flex, below, missing: p.missing };
+  // v9.4 (the sentence battery: "on 8 January back after 5 nights" had no return day — "after 5" was taken for a time; «راجع 27» was
+  // dropped): the length of the stay gives the return day; "back on the 27th" / «راجع 27» is that day in the departure's month (or the next)
+  let missing = p.missing, ret = f.ret;
+  const st = stayIn(text);
+  if (!ret && f.depart && st && /\b(back|return|returning|round ?trip)\b|راجع|رجوع|العوده|العودة|ذهاب وعوده|ذهاب وعودة/i.test(fold2(text))) { ret = isoAdd(f.depart, st.nights); if (rules.notBefore === st.nights) delete rules.notBefore; }
+  const rd = !ret && f.depart && /(?:\bback|\breturn(?:ing)?|راجع|رجوع|العوده|العودة)\s+(?:on\s+|يوم\s+)?(?:the\s+)?(\d{1,2})(?:st|nd|rd|th)?(?!\d)(?!\s*(?:nights?|days?|ليالي|ليله|ايام|يوم|[:.]\d))/i.exec(latin(text));
+  if (rd && +rd[1] >= 1 && +rd[1] <= 31) { const d0 = new Date(f.depart + "T12:00:00"); let d = new Date(d0.getFullYear(), d0.getMonth(), +rd[1], 12); if (d <= d0) d = new Date(d0.getFullYear(), d0.getMonth() + 1, +rd[1], 12); ret = isoDay(d.getTime()); }
+  if (ret && ret !== f.ret) missing = (missing || []).filter((x) => !/come back/i.test(typeof x === "string" ? x : x.t));
+  return { ok: !missing.length, f: { ...f, ret: ret || "", children: kids ? +kids[1] : 0 }, rules, flex, below, missing };
 }
 
 const yymmdd = (iso) => iso.slice(2, 4) + iso.slice(5, 7) + iso.slice(8, 10);

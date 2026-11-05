@@ -11330,4 +11330,7 @@ export const HI = {
   "Travel day": "यात्रा का दिन",
   "Price protection": "कीमत सुरक्षा",
   "the last one {l}": "आख़िरी {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "आपने {n} कहा — यह इस योजना में नहीं है। सहेजने से पहले अंक जाँचें, या फिर से लिखें।",
+  "first payment {d}": "पहला भुगतान {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "आपने {n} कहा — मैं इसे कहीं रख नहीं पाया, इसलिए कुछ सहेजा नहीं गया। थोड़ा अलग तरह से फिर लिखें।",
 };

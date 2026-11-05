@@ -8413,4 +8413,7 @@ export const AR = {
   "Travel day": "يوم السفر",
   "Price protection": "حماية السعر",
   "the last one {l}": "آخر قسط {l}",
+  "You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.": "إنت قلت {n} — ومش موجود في الخطة دي. راجع الأرقام قبل ما تحفظ، أو اكتبها تاني.",
+  "first payment {d}": "أول قسط {d}",
+  "You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.": "إنت قلت {n} — ومعرفتش أحطه فين، فمحفظتش حاجة. اكتبها تاني بشكل مختلف شوية.",
 };
