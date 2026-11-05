@@ -141,9 +141,9 @@ object AgentWatch {
         if (!cookie.isNullOrBlank()) req.header("Cookie", cookie)
         val doc = req.get(); doc.select("script,style,noscript").remove(); doc.body()?.text()?.take(8000)
     } catch (e: Exception) { null }
-    private val NO_SLOT = Regex("(?i)no (appointment|slot|date)s? (are )?(currently )?available|no availability|fully booked|currently no (dates|slots)|try again later|aucun (rendez-vous|créneau)|pas de (rendez-vous|créneau)|no hay (citas|turnos)|keine termine|nessun appuntamento|sem vagas|randevu (bulunmamaktadır|yok)|لا توجد مواعيد|لا يوجد مواعيد|مفيش مواعيد|غير متاح")
-    private val LOGIN = Regex("(?i)\b(log ?in|sign ?in|password|captcha)\b|تسجيل الدخول|كلمة المرور")
-    private val A_DATE = Regex("\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b", RegexOption.IGNORE_CASE)
+    private val NO_SLOT = Regex("""(?i)no (appointment|slot|date)s? (are )?(currently )?available|no availability|fully booked|currently no (dates|slots)|try again later|aucun (rendez-vous|créneau)|pas de (rendez-vous|créneau)|no hay (citas|turnos)|keine termine|nessun appuntamento|sem vagas|randevu (bulunmamaktadır|yok)|لا توجد مواعيد|لا يوجد مواعيد|مفيش مواعيد|غير متاح""")
+    private val LOGIN = Regex("""(?i)\b(log ?in|sign ?in|password|captcha)\b|تسجيل الدخول|كلمة المرور""")
+    private val A_DATE = Regex("""\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b""", RegexOption.IGNORE_CASE)
     /** A page that shows dates, doesn't say "no appointments", and isn't the login page — worth a look now. */
     fun slotOpen(t: String): Boolean = t.length > 80 && !NO_SLOT.containsMatchIn(t) && !LOGIN.containsMatchIn(t.take(1500)) && A_DATE.containsMatchIn(t) && Regex("(?i)available|book|select|appointment|slot|موعد|متاح|احجز").containsMatchIn(t)
 
