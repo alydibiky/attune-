@@ -16,6 +16,15 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## Ali's picks on the options (5 Nov night) — combined mock-ups WAITING FOR HIS "OK", then build
+Ali: "I like A3 and A4 integrated in a clean way but I want more than 1 option in more than 1 date if available · P2, P4, P5 and P6 but
+I want to set year savings — from the November plan, income vs expenses, if net profit it takes what we agreed for the month to reach
+the time span or the yearly goal; it doesn't have to be yearly only · F4 and F1 integrated". Combined mock-ups + how Claude understood
+each: https://claude.ai/artifact/2T2ZRNTemt42fTyvYX6FeY — Agents = board (Watching · Found · Done) → tap = the agent's conversation
+with a dates × best-3 offers grid; Month plan = tabs Month (P2 net picture + goals that fill themselves at month end: net ≥ agreed →
+agreed goes in, else what's there + the shortfall spread over the months left; P5 sliders) · Calendar (P4) · Table (P6 + year sheet);
+Follow-ups = week strip on top + one list by day (Late, Today, each day), one search box, Paid · Other amount · Not yet in the list.
+
 ## v9.5 — 5 Nov night: Ali's phone test of 9.4 (9 points) — FIXED + 3 × 6 interface options WAITING FOR HIS PICK
 Ali (5 Nov): "1. not all background colours work 2. agents: doesn't open the specific listing, keeps loading (Uber), the 3 buttons
 down don't work, 'order my usual from Talabat' opens Talabat home and didn't ask what my usual is — suggest 6 options 3. month plan
