@@ -16,6 +16,16 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## Waiting for Ali: message scheduler like Auto Text (6 Nov) — pick M (how it sends) + S (screens)
+Ali: "I want the scheduling agent to be like Auto Text app … with my interface". Auto Text (com.hnib.smslater, formerly Do It Later):
+scheduled WhatsApp/SMS/Telegram/email (once or repeating), auto-reply when busy/driving, templates, a log; it sends WhatsApp by itself
+through Accessibility and SMS with SEND_SMS — both need a Google Play declaration and can be refused (SMS "device automation"
+exception is not in the policy text effective 27 Jan 2027). Options: https://claude.ai/artifact/EJoWBPbPS2J5B5EsCEnmxj — M1 safe
+(notification Reply / one tap), M2 fully automatic (Accessibility + SMS), M3 rec. (Play build = M1, direct "full" APK also offers M2
+behind one switch); S1 rec. three tabs Scheduled · Auto-reply · Sent, S2 composer, S3 auto-reply rules, S4 week strip, S5 in the agent
+conversation. Today's base: v9.4 G1 (agents2.js parseScheduled, SendCard + ScheduleForm, Reminders.kt `send` → ChatInbox.reply / wa.me).
+Open source to compare first (rule): Watomatic (GPL-3.0 — idea only: auto-reply through notification RemoteInput, no code copied).
+
 ## Ali picked C1 (6 Nov) — BUILT: spaces.js QUIET + CALM_GROUND lightQuiet/darkQuiet (neutral greys), --c-btn/--c-on-btn soft buttons (every solid accent fill reads them; the floating + stays solid), calm chart colours (teal, amber, blue, grey), Money report: earned green, spent grey, net + this week blue, the big Spent number in ink. Test: unit v950theme (contrast ≥7:1 on buttons, ≥12:1 text). Was: colour pick C1–C5
 Ali on 9.6: "I said burgundy but I didn't mean everything burgundy — the app became darker and harder to read". Cause: v9.5 made
 burgundy the accent of every button, tab, checkbox AND the charts (Money report donut, cashflow "Earned" bars in red). Options:
