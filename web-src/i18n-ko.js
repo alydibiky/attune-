@@ -11328,4 +11328,5 @@ export const KO = {
   "Find a doctor": "의사 찾기",
   "Travel day": "여행 당일",
   "Price protection": "가격 보호",
+  "the last one {l}": "마지막 회 {l}",
 };

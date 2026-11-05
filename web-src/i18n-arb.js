@@ -11320,4 +11320,5 @@ export const ARB = {
   "Find a doctor": "ابحث عن طبيب",
   "Travel day": "يوم السفر",
   "Price protection": "حماية السعر",
+  "the last one {l}": "والدفعة الأخيرة {l}",
 };

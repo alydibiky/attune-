@@ -258,9 +258,12 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
       const how = amts.length === 1 ? oneAmount(t) : "";
       const split = how === "total" || how === "unsure" || /(owes me|عليه|عليها|me debe|me doit|me deve|schuldet mir|mi deve)\s*\S*\s*\d/.test(t) && !small && how !== "each";
       const each1 = amts.length === 1 && how === "each" && every;
-      const n = count || (small ? Math.round(big / small) : 0), each = each1 ? big : small && small < big ? small : n ? Math.round((big / n) * 100) / 100 : big;
+      const n = count || (small ? partsOf(big, small) : 0), each = each1 ? big : small && small < big ? small : n ? Math.round((big / n) * 100) / 100 : big;
       // (a total split in n: the total stays exact — 22,000 over 9 is 22,000, not 9 × 2,444.44 = 21,999.96)
-      if (n > 1) return withAlt({ ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: each, count: n, total: !each1 && !(small && small < big) ? big : Math.round(each * n * 100) / 100, every: every || "month" }, how);
+      // v9.4 (Ali, 5 Nov: "Sheikh pays me 19,500 in installments of 2,500" became 8 × 2,500 = 20,000): a total with a payment size
+      // keeps the TOTAL the person said — 7 × 2,500 and a last payment of 2,000 (scheduleOf gives the last one the rest)
+      const tot = each1 ? Math.round(each * n * 100) / 100 : small && small < big && !count ? big : !(small && small < big) ? big : Math.round(each * n * 100) / 100;
+      if (n > 1) return withAlt({ ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: each, count: n, total: tot, every: every || "month" }, how);
     }
     return { ...base, kind: "debt", dir: dirIn ? "in" : "out", amount: big, count: 1, total: big, every: null };
   }
@@ -286,11 +289,14 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
   if ((/installments?|instalments?|قسط|اقساط|تقسيط/.test(t) || (PAY_V.test(t) && count > 1)) && (count || every)) {
     const how = amts.length === 1 ? oneAmount(t) : "", title = (/(car|phone|laptop|عربيه|العربيه|موبايل|تليفون|لابتوب)/.exec(t) || [""])[0];
     if (how === "each" && count > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: amts[0], count, total: amts[0] * count, every: every || "month", title };
-    const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0, n = count || (small ? Math.round(big / small) : 0);
-    if (n > 1) return withAlt({ ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: small || Math.round((big / n) * 100) / 100, count: n, total: small ? small * n : big, every: every || "month", title }, how);
+    const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0, n = count || (small ? partsOf(big, small) : 0);
+    if (n > 1) return withAlt({ ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: small || Math.round((big / n) * 100) / 100, count: n, total: small && count ? small * n : big, every: every || "month", title }, how);
   }
   return null;
 }
+
+/** How many payments of `each` pay `total`: 12,000 at 1,000 → 12; 19,500 at 2,500 → 8 (7 full and a last, smaller one). */
+function partsOf(total, each) { const q = total / each; return Math.abs(q - Math.round(q)) < 0.001 ? Math.round(q) : Math.ceil(q); }
 
 /** The other reading of an unsure sentence: the same plan with the amount as EACH payment (the preview offers it). */
 function withAlt(c, how) {
@@ -324,7 +330,7 @@ export function scheduleOf(c, now = Date.now()) {
   }
   for (let i = 0; i < n; i++) out.push({ i, date: dateOf(i), amount: c.amount, paid: (c.paid || []).includes(i) });
   // v8.6 (persona 6: "22,000 over 9 months" added up to 21,999.96): the last payment takes the cents, so the plan adds up exactly
-  if (c.total > 0 && c.count > 1 && n === c.count && !Object.keys(c.got || {}).length) { const rest = r2(c.total - c.amount * (n - 1)); if (Math.abs(rest - c.amount) < 1) out[n - 1].amount = rest; }
+  if (c.total > 0 && c.count > 1 && n === c.count && !Object.keys(c.got || {}).length) { const rest = r2(c.total - c.amount * (n - 1)); if (rest > 0 && rest <= c.amount + 1) out[n - 1].amount = rest; }
   const res = rebalance(c, out, dateOf);
   if (isOpenLoan(c)) for (const x of res) x.open = true;
   return res;

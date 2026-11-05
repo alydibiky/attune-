@@ -11328,4 +11328,5 @@ export const BN = {
   "Find a doctor": "ডাক্তার খুঁজুন",
   "Travel day": "ভ্রমণের দিন",
   "Price protection": "দাম সুরক্ষা",
+  "the last one {l}": "শেষটি {l}",
 };

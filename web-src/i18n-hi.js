@@ -11329,4 +11329,5 @@ export const HI = {
   "Find a doctor": "डॉक्टर खोजें",
   "Travel day": "यात्रा का दिन",
   "Price protection": "कीमत सुरक्षा",
+  "the last one {l}": "आख़िरी {l}",
 };

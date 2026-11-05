@@ -11328,4 +11328,5 @@ export const FA = {
   "Find a doctor": "پیدا کردن پزشک",
   "Travel day": "روز سفر",
   "Price protection": "حفاظت قیمت",
+  "the last one {l}": "آخری {l}",
 };

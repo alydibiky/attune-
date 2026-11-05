@@ -11329,4 +11329,5 @@ export const UR = {
   "Find a doctor": "ڈاکٹر ڈھونڈیں",
   "Travel day": "سفر کا دن",
   "Price protection": "قیمت کا تحفظ",
+  "the last one {l}": "آخری {l}",
 };

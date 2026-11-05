@@ -11329,4 +11329,5 @@ export const TRK = {
   "Find a doctor": "Doktor bul",
   "Travel day": "Seyahat günü",
   "Price protection": "Fiyat koruması",
+  "the last one {l}": "sonuncusu {l}",
 };

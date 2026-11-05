@@ -11328,4 +11328,5 @@ export const TH = {
   "Find a doctor": "หาหมอ",
   "Travel day": "วันเดินทาง",
   "Price protection": "คุ้มครองราคา",
+  "the last one {l}": "งวดสุดท้าย {l}",
 };

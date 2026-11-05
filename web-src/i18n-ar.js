@@ -8412,4 +8412,5 @@ export const AR = {
   "Find a doctor": "دوّر على دكتور",
   "Travel day": "يوم السفر",
   "Price protection": "حماية السعر",
+  "the last one {l}": "آخر قسط {l}",
 };

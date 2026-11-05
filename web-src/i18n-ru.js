@@ -11328,4 +11328,5 @@ export const RU = {
   "Find a doctor": "Найти врача",
   "Travel day": "День поездки",
   "Price protection": "Защита цены",
+  "the last one {l}": "последний {l}",
 };

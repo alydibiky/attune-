@@ -11329,4 +11329,5 @@ export const IT = {
   "Find a doctor": "Trova un medico",
   "Travel day": "Giorno del viaggio",
   "Price protection": "Protezione prezzo",
+  "the last one {l}": "l'ultima {l}",
 };

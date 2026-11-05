@@ -34,7 +34,10 @@ const tickDay = (d, weekly) => { try { const x = new Date(d + "T12:00:00"); retu
 const short = (n) => (n >= 1000 && n % 100 === 0 ? (n / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k" : fmt(n));
 function describe(c) {
   const per = c.every ? " " + tr(EVERY[c.every]) : "";
-  if (c.kind === "installment") return tr("{a} {cur}{per} · {n} payments · {t} in all", { a: fmt(c.amount), cur: c.currency, per, n: c.count, t: fmt(c.total) });
+  if (c.kind === "installment") { const last = c.total > 0 && c.count > 1 ? Math.round((c.total - c.amount * (c.count - 1)) * 100) / 100 : 0;
+    // v9.4 (Ali: 19,500 in payments of 2,500): the last payment is smaller — said on the card, so the total is clearly the one he gave
+    return tr("{a} {cur}{per} · {n} payments · {t} in all", { a: fmt(c.amount), cur: c.currency, per, n: c.count, t: fmt(c.total) })
+      + (last > 0 && Math.abs(last - c.amount) >= 1 ? " · " + tr("the last one {l}", { l: fmt(last) }) : ""); }
   if (c.kind === "circle") return tr("{a} {cur}{per} · {n} months", { a: fmt(c.amount), cur: c.currency, per, n: c.count }) + (c.myTurn ? " · " + tr("your turn: {k}", { k: c.myTurn }) : "");
   if (c.kind === "debt") return fmt(c.amount) + " " + c.currency;
   if (c.kind === "regular") return tr("{a} {cur} each time · {when}", { a: fmt(c.amount), cur: c.currency, when: c.every === "week" && c.start ? tr("every {d}", { d: new Date(c.start + "T12:00:00").toLocaleDateString(undefined, { weekday: "long" }) }) : tr(EVERY[c.every] || "a week") }) + " · " + tr("tick the day — it goes into Money by itself");

@@ -11329,4 +11329,5 @@ export const IDN = {
   "Find a doctor": "Cari dokter",
   "Travel day": "Hari perjalanan",
   "Price protection": "Perlindungan harga",
+  "the last one {l}": "yang terakhir {l}",
 };

@@ -11328,4 +11328,5 @@ export const VI = {
   "Find a doctor": "Tìm bác sĩ",
   "Travel day": "Ngày đi",
   "Price protection": "Bảo vệ giá",
+  "the last one {l}": "lần cuối {l}",
 };

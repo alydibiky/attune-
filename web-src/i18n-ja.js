@@ -11328,4 +11328,5 @@ export const JA = {
   "Find a doctor": "医師を探す",
   "Travel day": "旅行の日",
   "Price protection": "価格保護",
+  "the last one {l}": "最終回 {l}",
 };

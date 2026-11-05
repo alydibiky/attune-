@@ -11328,4 +11328,5 @@ export const ZH = {
   "Find a doctor": "找医生",
   "Travel day": "出行日",
   "Price protection": "价格保护",
+  "the last one {l}": "最后一期 {l}",
 };

@@ -11329,4 +11329,5 @@ export const SW = {
   "Find a doctor": "Tafuta daktari",
   "Travel day": "Siku ya safari",
   "Price protection": "Ulinzi wa bei",
+  "the last one {l}": "la mwisho {l}",
 };
