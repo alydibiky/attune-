@@ -67,7 +67,8 @@ with sync_playwright() as p:
     # board
     page.click("[data-testid=agents-view-board]"); page.wait_for_selector("[data-testid=agents-board]")
     cols = page.evaluate("[...document.querySelectorAll('[data-testid^=agents-col-]')].map(e => e.dataset.testid.slice(11) + ':' + e.querySelectorAll('[data-testid=agents-board-card]').length)")
-    check(cols == ["needs:1", "working:0", "found:1", "done:1"], "Board: Needs you · Working · Found · Done & paused: %s" % cols)
+    # v9.6 (Ali picked A3): three columns — Watching · Found (what needs you sits here, marked) · Done
+    check(cols == ["working:0", "found:2", "done:1"], "Board: Watching · Found (incl. needs you) · Done: %s" % cols)
     check(page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "no sideways scroll of the page (the board scrolls inside itself)")
     errs = real_errors(errors)
     check(not errs, "no page errors: %s" % errs[:3])
