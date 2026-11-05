@@ -11,6 +11,9 @@ import { tr, getLang, dateLocale } from "./i18n.js";
 import * as L from "./lists.js";
 import { loadReminders, saveReminders } from "./actions.js";
 import * as U from "./ui-kit.jsx";
+import { YourDay } from "./yourday-ui.jsx";
+import { PIN_KEY } from "./widgets.js";
+import { widgetTodos } from "./widgets-ui.jsx";
 
 const WD = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const WD_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -56,16 +59,20 @@ export function ListCard({ list, onTick, onOpen, compact = false, testid = "list
 }
 
 /** Home's "To do" card + the lists needed today (1A). Nothing to show → only a small "+ Add a to-do or a list" line. */
-export function HomeTodo({ records = [], onTickTodo, navTo, now = Date.now() }) {
+export function HomeTodo({ records = [], onTickTodo, navTo, flash, now = Date.now() }) {
   const [st, put] = useLists();
   const [, setTick] = useState(0);
   const todos = (records || []).filter((r) => r && r.meta && r.meta.todo && !r.meta.done).sort((a, b) => a.ts - b.ts);
+  // v9.3 (D2): the widget shows these to-dos; a to-do ticked on the widget is marked done here (Home has Mind)
+  useEffect(() => { widgetTodos(records, onTickTodo ? (id) => onTickTodo({ id }) : null); try { window.dispatchEvent(new CustomEvent("attune-lists")); } catch (e) {} }, [todos.map((r) => r.id).join()]);
+  useEffect(() => { const f = () => widgetTodos(records, onTickTodo ? (id) => onTickTodo({ id }) : null); window.addEventListener("attune-widget-mind", f); return () => window.removeEventListener("attune-widget-mind", f); }, [records]);
   const rem = todayReminders(now);
   const lists = L.homeLists(st, now);
   const late = rem.filter((r) => r.late).length;
   const rows = [...rem.map((r) => ({ k: "r" + r.id, label: r.title, sub: (r.late ? tr("late") + " · " : "") + timeOf(r.at), bad: r.late, tick: () => { markReminderDone(r.id); setTick((n) => n + 1); } })),
     ...todos.map((r) => ({ k: "t" + r.id, label: r.title || r.text, sub: "", tick: () => onTickTodo && onTickTodo(r) }))];
   return <div className="space-y-2" data-testid="home-todo">
+    <YourDay records={records} navTo={navTo} flash={flash} />
     {rows.length ? <div className="c-card space-y-0.5" data-testid="home-todo-card">
       <div className="flex items-center gap-2 mb-0.5"><span className="text-[12px] font-extrabold tracking-wide c-acc flex-1 uppercase">{tr("To do")} · {tr("{n} left", { n: rows.length })}</span>
         {late ? <span className={U.tag("red")} data-testid="home-todo-late">{tr("{n} late", { n: late })}</span> : null}
@@ -176,6 +183,10 @@ export function ListsPage({ records = [], onTickTodo, onAddTodo, flash }) {
             <input value={addTo[l.id] || ""} onChange={(e) => setAddTo({ ...addTo, [l.id]: e.target.value })} dir="auto" className={U.inp + " flex-1"} placeholder={tr("Add an item…")} data-testid="lists-item-input" />
             <button className={U.btnS} aria-label={tr("Add")}><Plus size={16} /></button></form>
           <button onClick={() => setEdit(l.id)} className={U.btnS + " w-full"} data-testid="lists-edit"><Repeat size={15} />{tr("Change the name, the items or when it repeats")}</button>
+          {/* v9.3 (D2 C): this list on the home-screen widget "Attune · A list" */}
+          {(() => { let pinned = ""; try { pinned = localStorage.getItem(PIN_KEY) || ""; } catch (e) {} const on = pinned === l.id;
+            return <button onClick={() => { try { on ? localStorage.removeItem(PIN_KEY) : localStorage.setItem(PIN_KEY, l.id); } catch (e) {} window.dispatchEvent(new CustomEvent("attune-lists")); setTick((n) => n + 1); flash && flash(on ? tr("Taken off the widget") : tr("Pinned — add the “Attune · A list” widget to your home screen")); }}
+              className={U.btnS + " w-full"} aria-pressed={on} data-testid="lists-pin">{on ? tr("Take it off the widget") : tr("Pin to the widget")}</button>; })()}
         </div> : null}
       </div>; })}
   </div>;

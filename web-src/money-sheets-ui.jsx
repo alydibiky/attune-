@@ -126,6 +126,7 @@ export function TxSheet({ L, id, run, onClose }) {
         {t.type !== "transfer" ? <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={tr("Note (optional)")} className={U.inp} dir="auto" data-testid="tx-note" /> : <span />}</div>
     </> : <p className="m-0 text-[15px]" dir="auto"><b className="tabular-nums" dir="ltr">{amt(t.amount, (L.currency || ""))}</b> · {dayLabel(t.date)}{t.person ? " · " + t.person : ""}{t.to ? " · " + t.to : ""}<br /><span className="text-[13px] c-sub">{tr("This entry belongs to a debt, a goal or Zakāt — change it there.")}</span></p>}
     {/* v9.2 (Ali: "there was an option to add receipts"): the receipt kept with the entry — tap to see it full size */}
+    {t.by ? <p className="m-0 text-[12.5px] c-sub flex items-center gap-2" data-testid="tx-by"><span className="w-6 h-6 rounded-full bg-[var(--c-soft)] c-acc grid place-items-center text-[11px] font-extrabold">{String(t.by).trim().slice(0, 1).toUpperCase()}</span>{tr("Added by {who}", { who: t.by })}</p> : null}
     {t.photo ? <button type="button" onClick={() => setBig(!big)} className="block w-full text-start" data-testid="tx-receipt">
       <span className="block text-[11.5px] font-extrabold c-sub mb-1">{tr("Receipt")}</span>
       <img src={t.photo} alt={tr("Receipt")} className={"rounded-[12px] border border-[var(--c-ln)] " + (big ? "w-full" : "w-24 h-24 object-cover")} /></button> : null}

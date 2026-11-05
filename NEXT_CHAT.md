@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.2 part 3)
+# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.3)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -15,6 +15,49 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 "For each addition in the app do it for all languages so we don't have to translate later": every new English line the app shows
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
+
+## v9.3 — 5 Nov: Ali's round-4 picks BUILT (D1 A · D2 all · D3 A · D4 A+B · D5 A · D6 A · A2 A · A3 = Deal Check folded) + notifications → the day
+Ali: "D1 A but the prayers not automatic — open them in Settings, this is a global app · D2 do all and make people choose · D3 A — does it
+understand "from 1 December to the end of January, cheapest flights to Spain, 4 days go and return"? · D4 A and B, users choose · D5 A · D6 A ·
+A2 A, choosable in Settings + a chat box · A3 wasn't that already Deal Check? · think again about the agents · read ALL notifications (WhatsApp,
+YouTube, Instagram, SMS) to plan the day — offline, Play-safe".
+- **Flights (D3 A)** `flights.js windowIn / stayIn / countryIn / windowDeparts / adviseBuy`: a WINDOW ("from 1 December to the end of January",
+  «من ١ ديسمبر لآخر يناير», "anytime in December or January", "in February"), a trip LENGTH ("4 days" = 3 nights, "5 nights", "a week",
+  «٤ ايام»), a COUNTRY ("to Spain" / «لاسبانيا» → Kayak gets MAD,BCN,AGP ± 3 days; Skyscanner the country "es"). Up to 8 departure days spread
+  over the window, sites taking turns (Kayak · Skyscanner · momondo), each page labelled "site|day" → the board's **price-by-departure-day grid**;
+  **Buy now / Wait** from the agent's own checks with its confidence. Tests: unit v930flights (23 checks).
+- **Notifications → your day** `daynotes.js` (pure) + `yourday-ui.jsx`: the notifications RecallLog already keeps (on the phone, never OTPs) →
+  who wrote today, what someone ASKED at a time (one tap → a reminder; "dinner at 8" = evening), what arrives today, other apps counted
+  (Instagram 2 · YouTube 1). Each app can be left out (Settings → Your day). The disclosure card (notifask-ui) now says exactly what is read and
+  that it stays on the phone; **privacy policy** gained two sections (Your day from notifications · Sharing Money with family), 20 languages,
+  docs/privacy-policy.html rebuilt (tools/privacy_html.mjs), dated 5 Nov. Play: notification access needs the in-app disclosure before the
+  Settings switch (done) + Data safety "processed on device" (see REVIEW_P7_play_launch.md).
+- **Your day (D1 A)** `yourday.js` + Home's To-do card: prayers ONLY when on (Settings → Your day → Prayer times + city), agents' news (Needs you
+  / Found), From your messages, and from the evening hour (default 20:00) **Close the day** — done today · left · **Move N to tomorrow** (keeps
+  each reminder's time). `dayset.js` = the settings (all off by default except notifications for the day).
+- **Ramadan (A2 A)**: Settings switch; during Ramadan the countdown to iftar / end of suhoor, "Plan my day around the fast" and a box to
+  write anything (→ Chat asks it).
+- **Widgets (D2 — all, people choose)** `TodoWidget.kt` (TodoWidget + ListWidget + WidgetTick), `widgets.js` / `widgets-ui.jsx`: "Attune · To-dos"
+  (+ next prayer when on, + safe to spend when Settings → "Safe to spend on the Today widget" is on) and "Attune · A list" (Lists → open a list →
+  Pin to the widget). Ticks on the home screen are kept by the phone and applied when Attune opens. **Kotlin not compiled here — check the APK
+  build.**
+- **Money for two (D4 A+B)** `moneyshare.js` / `moneyshare-ui.jsx`: Money → More → Share with family: some accounts (A) or all of Money (B);
+  one file locked with a family code (like Family's file), sent through any app; the other phone "Joins" / "Opens an update"; the ledger merges
+  it itself (new Yusr op **merge-share**, checked in yusr-bridge.js: accounts + entries by id, newer wins, "by" kept, gone entries leave, never
+  zakat). The entry sheet says "Added by Mariam". Test: e2e_v930share (two phones).
+- **Simple mode (D5 A)**: Settings switch → Home = five big buttons (Talk · Reminders · Money · Prayer (only when on) / To-dos & lists ·
+  Medicines) + "Show the full Home". **First minute (D6 A)** `FirstMinute` in attune.jsx: language + country → "What should Attune do first?"
+  (list · reminder · spending · price watch) → the example sentence, done through the Home box (`attune-box-say`). The old "Make Attune yours"
+  questions (Onboard) are kept in the code, not shown at first run.
+- **A3** — Ali was right: Deal Check had scam signs; it was archived 4 Nov to be folded into Money Guardian and the fold was never done. Done now:
+  `scamcheck.js` (Deal Check's signs + message signs: fake links that wear a brand, "your account will be blocked", card/PIN, "my new number",
+  parcel fees, easy-money jobs) + "Is this a scam?" on the Guardian page (paste or a screenshot read on the phone).
+- **Agents, thinking again** — options published for Ali to pick: https://claude.ai/artifact/3Hwr6jBm2zhqoyPnturLA1 (G1 Reply helper · G2
+  visa-appointment watcher · G3 restock · G4 price protection · G5 clinic finder · G6 travel day · G7 how much an agent may do by itself · G8
+  one daily digest; recommended G1 G2 G7). **Waiting for Ali's codes.**
+- Still from the research report: S1 code-split, S2 predictive back, S3 WebView early start, A1 model trials (do without asking).
+- New tests: unit v930flights · v930daynotes · v930yourday · v930widgets · v930scam · v930moneyshare; e2e v930day · v930widgets · v930first ·
+  v930scam · v930share; e2e_v3 follows the first minute. 128 + 4 new lines × 20 languages.
 
 ## v9.2 part 3 — 5 Nov: Ali's round 3 (receipts, agents, back, research) — DO THIS NEXT
 Ali (with screenshots): "There was an option to add receipts" · "1. agents page are not ideal nor consistent and when it opens booking it doesn't

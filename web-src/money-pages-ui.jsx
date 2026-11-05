@@ -3,7 +3,7 @@
    adds an expense, an income or a transfer to the ledger (Yusr) through the bridge, with the account the person picked; lending /
    borrowing and new bills open the ledger's own forms. Numbers: money-pages.js (code). Zakāt is shown as Yusr calculated it. */
 import React, { useState, useMemo } from "react";
-import { House as HomeIc, Wallet, Plus, RefreshCw as Repeat, Moon, X, ChevronRight, ArrowLeft, Target, TrendingUp, FileText, Zap, BookOpen, SlidersHorizontal as Settings, Download, Check } from "lucide-react";
+import { House as HomeIc, Wallet, Plus, RefreshCw as Repeat, Moon, X, ChevronRight, ArrowLeft, Target, TrendingUp, FileText, Zap, BookOpen, SlidersHorizontal as Settings, Download, Check, Users } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { KINDS as ZC_KINDS, ANIMALS } from "./zakatcalc.js";
 import { sharePdf } from "./share-pdf.js";
@@ -158,7 +158,8 @@ export { Head as MoneyHead, Card as MoneyCard };
 // ---- More ----------------------------------------------------------------------------------------------------------------------------
 export function MoreSheet({ open, onClose }) {
   // v7.9 (Ali): Notes left Money (its notes were copied into Mind). v9.1: the "Invoices → Business → Books" line is gone (Business is archived)
-  const items = [["automations", "Automations", Zap, "When money comes in or goes out, do something by itself"], ["home", "Full ledger", BookOpen, "Every entry, edit or delete"], ["settings", "Ledger settings", Settings, "Currency, categories, budgets, backup"]];
+  const items = [["automations", "Automations", Zap, "When money comes in or goes out, do something by itself"], ["home", "Full ledger", BookOpen, "Every entry, edit or delete"], ["settings", "Ledger settings", Settings, "Currency, categories, budgets, backup"],
+    ["share", "Share with family", Users, "One account or all of Money, with the people you choose"]];   // v9.3 (Ali picked D4 — A and B)
   return <div className="calm fixed inset-0 z-[80] bg-black/55 flex flex-col justify-end lg:items-center lg:justify-center" onClick={onClose} data-testid="money-more-sheet">
     <div onClick={(e) => e.stopPropagation()} className="bg-[var(--c-surf)] text-[var(--c-ink)] rounded-t-[20px] lg:rounded-[20px] w-full lg:max-w-md p-3 pb-5" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
       <div className="flex items-center gap-2 px-1 pb-1"><p className="flex-1 text-[17px] font-black m-0">{tr("More")}</p>

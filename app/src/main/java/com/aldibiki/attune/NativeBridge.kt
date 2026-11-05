@@ -1160,6 +1160,17 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun setWidget(json: String): Boolean = try { DailyWidget.save(ctx, json); true } catch (e: Exception) { false }
 
+    /** v9.3 (Ali picked D2 — all three) — the To-dos widget {title, side, rows:[{id, kind, text, sub}], foot, empty} and the pinned list's
+     *  widget {title, side, rows:[{id, kind:"list", text, done}], empty}; the ticks made on them (applied by the page, then cleared). */
+    @JavascriptInterface
+    fun setTodoWidget(json: String): Boolean = try { Widgets.save(ctx, Widgets.TODO, json); true } catch (e: Exception) { false }
+    @JavascriptInterface
+    fun setListWidget(json: String): Boolean = try { Widgets.save(ctx, Widgets.LIST, json); true } catch (e: Exception) { false }
+    @JavascriptInterface
+    fun widgetTicks(): String = try { Widgets.ticks(ctx) } catch (e: Exception) { "[]" }
+    @JavascriptInterface
+    fun clearWidgetTicks() { try { Widgets.clearTicks(ctx) } catch (e: Exception) { } }
+
     /** v6.14 — what the Fit & Food widget shows: {left, leftLabel, line, water}. */
     @JavascriptInterface
     fun setFitWidget(json: String): Boolean = try { FitWidget.save(ctx, json); true } catch (e: Exception) { false }

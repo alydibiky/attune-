@@ -16,6 +16,8 @@ export function NotifAsk({ native, flash }) {
   const [open, setOpen] = useState(false), [waiting, setWaiting] = useState(false);
   const ar = getLang() === "ar";
   useEffect(() => { const t = setTimeout(() => { if (shouldAsk(native)) setOpen(true); }, 3000); return () => clearTimeout(t); }, []);
+  // v9.3: Your day / Settings open this same disclosure on purpose (the person tapped "Turn on") — always shown first, never skipped
+  useEffect(() => { const f = () => { if (native && native.openPayAccess && !access(native)) setOpen(true); }; window.addEventListener("attune-notif-ask", f); return () => window.removeEventListener("attune-notif-ask", f); }, []);
   useEffect(() => {
     if (!waiting) return;
     const back = () => { if (document.visibilityState !== "visible") return; if (access(native)) { setOpen(false); setWaiting(false); flash && flash(ar ? "تمام — Attune بيقرا الإشعارات دلوقتي" : tr("Done — Attune now reads your notifications")); } };
@@ -31,6 +33,12 @@ export function NotifAsk({ native, flash }) {
         <p className="text-[14px] leading-relaxed mt-2 mb-0 text-[var(--c-mut)]">{ar
           ? "عشان يسجّل مدفوعاتك من رسايل البنك والمحافظ في المال لوحده، ويقولك مين بعتلك، ويشغّل تنبيهات الرسايل. كله بيفضل على موبايلك، وأكواد OTP بتتجاهل."
           : tr("So payments from bank and wallet messages go into Money by themselves, you can ask who messaged you, and message alerts work. Everything stays on your phone; one-time codes (OTP) are ignored.")}</p>
+        {/* v9.3 (Ali: "it will help in planning my day … make sure there are no privacy issues"): the disclosure says exactly what is read */}
+        <ul className="text-[13px] leading-relaxed mt-2 mb-0 ps-5 text-[var(--c-mut)] space-y-1" data-testid="notif-ask-what">
+          <li>{tr("Attune reads the notifications your apps show (WhatsApp, SMS, email, Instagram, YouTube…) to plan your day: who wrote, what someone asked for at a time, what arrives today.")}</li>
+          <li>{tr("They are read and kept on this phone only. Nothing is sent to us or to anyone. No account, no cloud.")}</li>
+          <li>{tr("You choose which apps count (Settings → Your day), and you can forget everything kept at any time.")}</li>
+        </ul>
         <p className="text-[13px] mt-2 mb-0 text-[var(--c-mut)]">{ar ? "هتفتح صفحة في الإعدادات: شغّل «Attune» وارجع." : tr("A Settings page opens: switch Attune on, then come back.")}</p>
         {native.openAppInfo ? <p className="text-[12.5px] mt-2 mb-0 text-[var(--c-mut)]">{ar ? "لو أندرويد قال «إعداد مقيَّد»: افتح " : tr("If Android says “Restricted setting”: open ")}
           <button onClick={() => { setWaiting(true); try { native.openAppInfo(); } catch (e) {} }} className="underline font-bold text-[var(--c-acc)]" data-testid="notif-ask-appinfo">{ar ? "معلومات التطبيق" : tr("App info")}</button>

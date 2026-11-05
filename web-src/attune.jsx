@@ -39,6 +39,9 @@ import { ChatXRay } from "./chatxray-ui.jsx";
 import { WaLibrary } from "./wagroups-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
 import { SlidesReports } from "./slides-ui.jsx";
+import { DaySettings, SimpleHome, useDayset } from "./yourday-ui.jsx";
+import { useWidgets } from "./widgets-ui.jsx";
+import { MoneyShareSheet } from "./moneyshare-ui.jsx";
 import { popBack, hasBack, useSubBack, useBackDepth, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
@@ -6189,6 +6192,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
   });
   const [addOpen, setAddOpen] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
+  const [shareOpen, setShareOpen] = React.useState(false);   // v9.3 Share with family
   const [account, setAccount] = React.useState(null);      // the account pill: null = all accounts
   const [ver, setVer] = React.useState(0);
   const [boxBusy, setBoxBusy] = React.useState(false);
@@ -6594,7 +6598,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       {msheet ? (() => { const close = (msg) => { setMsheet(null); if (msg) flash(msg); setTimeout(() => setVer((x) => x + 1), 200); }; const P = { L: ledgerNow, run: runDo, onClose: close, id: msheet.id };
         return msheet.k === "account" ? <AccountSheet {...P} /> : msheet.k === "bill" ? <BillSheet {...P} /> : msheet.k === "tx" ? <TxSheet {...P} /> : msheet.k === "debt" ? <DebtSheet {...P} />
           : msheet.k === "zakat-pay" ? <ZakatPaySheet {...P} /> : msheet.k === "zakat-set" ? <ZakatSetSheet {...P} /> : msheet.k === "zakat-rulings" ? <ZakatRulingsSheet {...P} /> : msheet.k === "zakat-calc" ? <ZakatCalcSheet {...P} kind={msheet.id} nisab={(() => { try { const zs = zakatPage(ledgerNow, snapRef.current || snapshot); return (zs && zs.status && zs.status.nisab) || 0; } catch (e) { return 0; } })()} /> : null; })() : null}
-      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; }  openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
+      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "share") { setMoreOpen(false); setShareOpen(true); return; }  openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
+      {shareOpen ? <MoneyShareSheet runDo={runDo} flash={flash} onClose={() => setShareOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
           <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl rounded-t-[20px]! p-4 max-h-[88%] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
@@ -7759,7 +7764,7 @@ const MODE_TITLES = { lists: "To-dos & lists", booklib: "Documents", privacy: "P
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.0";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8824,7 +8829,8 @@ export default function App() {
   // v6.27: "Watch it" from a deadline typed in Chat — the Deadline Radar opens with it read
   // v6.27 Job ready: a missing skill starts a Learn daily course on it
   // v6.28: a card in Chat ("Open Money", "Open Family health" — Ask your life) opens that tool
-  useEffect(() => { const on = (e) => { const m = e.detail && e.detail.mode; if (m && /^[a-z]+$/.test(m)) navTo(m); }; window.addEventListener("attune-open", on); return () => window.removeEventListener("attune-open", on); }, []);
+  useEffect(() => { const on = (e) => { const m = e.detail && e.detail.mode; const tx = e.detail && typeof e.detail.text === "string" ? e.detail.text.trim().slice(0, 4000) : ""; if (m === "chat" && tx) setChatSeed("\u0002" + tx); if (m && /^[a-z]+$/.test(m)) navTo(m); }; window.addEventListener("attune-open", on); return () => window.removeEventListener("attune-open", on); }, []);   // v9.3: + text → a new chat that asks it (the Ramadan box)
+  useEffect(() => { const on = (e) => { const m = e.detail; if (typeof m === "string" && m) flash(m.slice(0, 300)); }; window.addEventListener("attune-flash", on); return () => window.removeEventListener("attune-flash", on); }, []);   // v9.3: a page with no flash of its own (Home's Your day) says things through this
   // v8.6: a save that didn't fit is never silent — the person is told once a minute at most, and where to make room
   useEffect(() => { let last = 0; const on = () => { if (Date.now() - last < 60000) return; last = Date.now(); flash(tr("Your phone's space for Attune is full — the last change may not be saved. Settings → Backup, then delete old photos or chats.")); };
     window.addEventListener("attune-storage-full", on); return () => window.removeEventListener("attune-storage-full", on); }, []);
@@ -10134,7 +10140,9 @@ export default function App() {
   // handle it and return true, otherwise it returns false and the app exits.
   const canGoBackRef = useRef(false); canGoBackRef.current = canGoBack;
   const goBackRef = useRef(() => {}); goBackRef.current = goBack;
-  const subDepth = useBackDepth();   // v9.2 round 3: a sub-view open inside a place (a project, a report, a folder) → the header shows ‹
+  const subDepth = useBackDepth();
+  useWidgets();   // v9.3 (D2): the To-dos and A-list home-screen widgets, and the ticks made on them
+  const [dayset] = useDayset();   // v9.3: Simple mode (D5 A) and the rest of Settings → Your day   // v9.2 round 3: a sub-view open inside a place (a project, a report, a folder) → the header shows ‹
   useEffect(() => {
     window.__attuneBack = () => {
       if (canGoBackRef.current || hasBack()) { goBackRef.current(); return true; }
@@ -10234,6 +10242,8 @@ export default function App() {
           className="min-h-[40px] text-[12.5px] font-extrabold text-teal-300 py-1" data-testid="biz-pin">{tr("＋ Business icon on my home screen")}</button></div> : null}
         <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
+        ) : mode === "home" && !wide && dayset.simple ? (
+          <SimpleHome navTo={navTo} openMenu={LEGACY_NAV ? null : () => setPhoneSide(true)} />
         ) : mode === "home" && !wide ? (
           <PhoneHome cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), pro: isPro(tier) || testingPro(), open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
@@ -11313,6 +11323,7 @@ export default function App() {
                 <div><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
             </section>
+            <DaySettings />
             <section>
               <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Account and this device")}</p>
               <div className="grid grid-cols-4 gap-3" data-testid="more-settings">
@@ -11366,6 +11377,8 @@ export default function App() {
               <div className="mt-2 min-h-[56px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 flex items-center gap-2.5 text-[12.5px]" data-testid="device-level">
                 <Gauge size={16} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[var(--c-mut)]">{tr("This device")}: <b className="text-[var(--c-ink)] font-extrabold">{tr("Level {n}", { n: devLevel.level })} · {tr(devLevel.name)}</b><span className="block text-[11.5px] text-[var(--c-mut)]">{tr(devLevel.what)}</span></span>
                 {devLevel.hide.length ? <button onClick={() => setAllTools(!allTools)} className="min-h-[40px] font-bold text-[var(--c-acc)] underline underline-offset-2 shrink-0" data-testid="device-showall">{allTools ? tr("Hide what is too heavy") : tr("Show every tool anyway")}</button> : null}</div>
+              {/* v9.3 Your day: prayer times, Ramadan, notifications for the day, Close the day, widget, simple mode — all chosen here */}
+              <div className="mt-4 pt-4 border-t border-[var(--c-ln)]"><DaySettings /></div>
               {/* v5.29 UX: tools first (what people open More for); appearance settings below */}
               <div className="mt-4 pt-4 border-t border-[var(--c-ln)]" data-testid="more-appearance">
                 <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Appearance")}</p>
@@ -11386,7 +11399,10 @@ export default function App() {
         llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false })}
         saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null} /> : null}
       {showBackup && <BackupPanel close={() => setShowBackup(false)} flash={flash} nativeCall={nativeCall} native={NATIVE} />}
-      {showOnboard && <Onboard profile={profile} setProfile={setProfile} close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} flash={flash}
+      {/* v9.3 (Ali picked D6 A): the first minute — 3 short screens that end with one real thing done. The longer "Make Attune yours"
+          questions (Onboard, below) stay in the code, not shown at first run. */}
+      {showOnboard && <FirstMinute close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} navTo={navTo} />}
+      {false && <Onboard profile={profile} setProfile={setProfile} close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} flash={flash}
         brain={{ rec: recommendEngine(device), ready: modelState === "ready" || modelState === "downloading", go: () => { const r = recommendEngine(device); if (r && r.tier) { setTierId(r.tier.id); downloadModel(r.tier); } } }} />}
       {showEngine && <EngineModal device={device} setRamOverride={setRamOverride} bestTier={bestTier} activeTier={activeTier} setTierId={setTierId} plan={plan}
         engineMode={engineMode} setEngineMode={setEngineMode} modelState={modelState} dlPct={dlPct}
@@ -11696,6 +11712,57 @@ function LangSwitch({ className = "" }) {
       ))}
     </div>
   );
+}
+
+/* ---- v9.3 (Ali picked D6 A — research: show value in the first minute, about 3 screens, no sign-up): language + country, "What should
+   Attune do first?", then that one thing done now through the Home box (the same words the person could type there any time). */
+const FIRST_THINGS = [
+  ["list", "🧳", "Make a list (travel, groceries)", "make my travel checklist: passport, charger, medicines"],
+  ["remind", "⏰", "Remind me of something", "remind me tomorrow at 9 to call the bank"],
+  ["spend", "💸", "Track my spending", "lunch 150, taxi 60"],
+  ["watch", "🔎", "Watch a price for me", "tell me when AirPods Pro 2 are under 9000 on Amazon"],
+];
+function FirstMinute({ close, navTo }) {
+  const [step, setStep] = useState(0);
+  const [pick, setPick] = useState("list");
+  const [ctry, setCtry] = useState(() => countryOfPerson() || "eg");
+  const [text, setText] = useState("");
+  const countryList = useMemo(() => Object.keys(COUNTRY_LIST).map((k) => [k, countryLabel(k)]).sort((a, b) => a[1].localeCompare(b[1])), []);
+  useEffect(() => { setCountrySaved(ctry); }, []);
+  const ex = (FIRST_THINGS.find((x) => x[0] === pick) || FIRST_THINGS[0])[3];
+  const doIt = () => { const t = (text || tr(ex)).trim(); close(); navTo("home"); setTimeout(() => { try { window.dispatchEvent(new CustomEvent("attune-box-say", { detail: t })); } catch (e) {} }, 400); };
+  const bar = (i) => <i key={i} className={"h-1.5 flex-1 rounded-full " + (i <= step ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]")} />;
+  return <div className="fixed inset-0 z-[60] bg-[var(--c-bg)] flex items-stretch sm:items-center justify-center" data-testid="first-minute" data-step={step}>
+    <div className="calm w-full max-w-lg flex flex-col p-5 pt-[max(20px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))] text-[var(--c-ink)]">
+      <div className="flex items-center gap-3"><div className="flex gap-1 flex-1">{[0, 1, 2].map(bar)}</div>
+        <button onClick={close} className="min-h-[44px] px-3 text-[13.5px] font-bold c-sub" data-testid="first-skip">{tr("Skip")}</button></div>
+      {step === 0 ? <div className="flex-1 flex flex-col gap-4 pt-6">
+        <h2 className="m-0 text-[28px] font-black leading-tight">{tr("Welcome to Attune")}</h2>
+        <p className="m-0 text-[15px] c-sub">{tr("Your day, money, dates and people — organised, with an AI that runs on this phone.")}</p>
+        <div><span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] c-sub mb-2">{tr("App language")}</span><LangSwitch /></div>
+        <div><span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] c-sub mb-2">{tr("Your country")}</span>
+          <select value={ctry} onChange={(e) => { setCtry(e.target.value); setCountrySaved(e.target.value); }} className="w-full min-h-[48px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[14px] font-semibold" data-testid="first-country">
+            {countryList.map(([k, nm]) => <option key={k} value={k}>{nm}</option>)}</select>
+          <span className="block text-[12px] c-sub mt-1">{tr("Money, VAT, holidays and the weekend follow it")}</span></div>
+      </div> : step === 1 ? <div className="flex-1 flex flex-col gap-3 pt-6">
+        <h2 className="m-0 text-[26px] font-black leading-tight">{tr("What should Attune do first?")}</h2>
+        <p className="m-0 text-[14px] c-sub">{tr("Pick one. You can do the rest later.")}</p>
+        {FIRST_THINGS.map(([k, ic, l]) => <button key={k} onClick={() => { setPick(k); setText(""); }} aria-pressed={pick === k} data-testid={"first-pick-" + k}
+          className={"min-h-[60px] rounded-[16px] border px-4 flex items-center gap-3 text-start text-[15.5px] font-extrabold " + (pick === k ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)] bg-[var(--c-surf)]")}>
+          <span className="text-[24px]">{ic}</span>{tr(l)}</button>)}
+      </div> : <div className="flex-1 flex flex-col gap-3 pt-6">
+        <h2 className="m-0 text-[26px] font-black leading-tight">{tr("Say it the way you would say it")}</h2>
+        <p className="m-0 text-[14px] c-sub">{tr("Change the example or keep it — Attune does it now.")}</p>
+        <textarea value={text || tr(ex)} onChange={(e) => setText(e.target.value)} dir="auto" rows={3} className="w-full rounded-[16px] border-2 border-[var(--c-acc)] bg-[var(--c-surf)] p-3.5 text-[16px] font-semibold" data-testid="first-text" />
+        <p className="m-0 text-[12.5px] c-sub">{tr("You can always do this from the box on Home, by typing or by voice.")}</p>
+      </div>}
+      <div className="flex gap-2 pt-4">
+        {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[52px] px-5 rounded-full border border-[var(--c-ln)] font-bold" data-testid="first-back">{tr("Back")}</button> : null}
+        {step < 2 ? <button onClick={() => setStep(step + 1)} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[16px]" data-testid="first-next">{tr("Next")}</button>
+          : <button onClick={doIt} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[16px]" data-testid="first-do">{tr("Do it")}</button>}
+      </div>
+    </div>
+  </div>;
 }
 
 function Onboard({ profile, setProfile, close, flash, brain = null }) {

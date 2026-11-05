@@ -10,6 +10,7 @@ import { loadLife } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { disputeLetter } from "./owed.js";
 import { openOwed } from "./owed-ui.jsx";
+import { ScamCheck } from "./scamcheck-ui.jsx";
 import { OverpayCheck } from "./overpay-ui.jsx";
 import * as U from "./ui-kit.jsx";
 import { parsePrice, loadPrices, savePrices, addPrice, allRecords, overview } from "./pricememory.js";
@@ -113,6 +114,8 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
         <U.Kpi label={tr("Saved this month")} value={pro ? fmt(totals.month) : "—"} tone="pos" testid="guardian-month" />
         <U.Kpi label={tr("Saved in all")} value={pro ? fmt(totals.all) : "—"} />
       </div> : null}
+      {/* v9.3: Deal Check's scam check, folded into the Guardian (decided 4 Nov) — for any message, offer, link or screenshot */}
+      <ScamCheck />
       <OverpayCheck pro={pro} openPlan={openPlan} flash={flash} remind={remind} unremind={unremind} />
       {!F.length ? <p className={"text-[13.5px] " + U.muted} data-testid="guardian-empty">{tr("Nothing to fix right now. The Guardian looks again every time a payment comes in.")}</p> : null}
       {shown.length || hidden.length ? <div className="space-y-3" data-testid="guardian-act">

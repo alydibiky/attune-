@@ -33,4 +33,10 @@
     <string name="widget_box_desc">اكتب أو قول أي حاجة — وأتيون يحطها في مكانها</string>
     <string name="widget_box_hint">اكتب لأتيون أي حاجة…</string>
     <string name="widget_box_mic">اتكلم</string>
+    <string name="widget_todo_name">Attune · المهام</string>
+    <string name="widget_todo_desc">مهام النهارده بخانة تعلّم عليها، والصلاة الجاية والمسموح تصرفه (كل واحدة لما تشغّلها)</string>
+    <string name="widget_todo_empty">مفيش حاجة النهارده — افتح Attune وضيف مهمة</string>
+    <string name="widget_list_name">Attune · قايمة</string>
+    <string name="widget_list_desc">قايمة واحدة تثبّتها من Attune (السفر، الطلبات…) بخانات تعلّم عليها</string>
+    <string name="widget_list_empty">في Attune: المهام والقوايم ← افتح قايمة ← ثبّتها في الويدجت</string>
 </resources>

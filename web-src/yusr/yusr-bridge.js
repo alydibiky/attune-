@@ -56,7 +56,7 @@ const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "erro
 // Yusr's own Save. Never a zakat FIGURE: zakat-pay is the person's record of a payment they made; zakat-set changes the
 // calculation's inputs (prices, school); what is due is still computed by Yusr alone (rule 1).
 const DO_OPS = new Set(["tx-edit", "tx-delete", "acct-save", "acct-delete", "rec-save", "rec-delete", "goal-save", "goal-delete", "goal-add",
-  "debt-save", "debt-delete", "debt-pay", "zakat-pay", "zakat-set", "zakat-close", "zakat-cert", "zakat-debtpolicy", "gold-fetch", "cat-add", "project-add", "prefs", "rates", "export", "import"]);
+  "debt-save", "debt-delete", "debt-pay", "zakat-pay", "zakat-set", "zakat-close", "zakat-cert", "zakat-debtpolicy", "gold-fetch", "cat-add", "project-add", "prefs", "rates", "export", "import", "merge-share"]);
 
 // What Yusr is allowed to ask the model for. A closed list, because "run this
 // arbitrary prompt" would let a future screen quietly route a fiqh question
@@ -200,6 +200,14 @@ function validateOut(type, data) {
     const a = data.args || {};
     if ("due" in a || "zakatDue" in a || "nisab" in a) return { ok: false, why: "a zakat figure never comes from outside" };
     if (a.amount != null && (num(a.amount) === null || a.amount <= 0)) return { ok: false, why: "an amount must be a positive number" };
+    // v9.3 a family share (moneyshare.js): only accounts and entries — never a zakat entry, never more than a ledger could hold
+    if (data.op === "merge-share") {
+      const sh = a.share || {};
+      if (typeof sh.id !== "string" || !/^[a-z0-9-]{4,40}$/i.test(sh.id)) return { ok: false, why: "a share needs its id" };
+      if (!Array.isArray(sh.accounts) || sh.accounts.length > 50 || !Array.isArray(sh.txns) || sh.txns.length > 5000) return { ok: false, why: "a share holds up to 50 accounts and 5000 entries" };
+      if (sh.txns.some((t) => !t || t.type === "zakat" || t.cat === "zakat")) return { ok: false, why: "Zakat is recorded in Yusr only" };
+      if (sh.txns.some((t) => num(t.amount) === null || t.amount <= 0)) return { ok: false, why: "each entry needs a positive amount" };
+    }
   }
   if (type === "entitlement") {
     if (!data || typeof data.pro !== "boolean") return { ok: false, why: "entitlement needs pro: true or false" };

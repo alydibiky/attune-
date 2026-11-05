@@ -5,7 +5,7 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import { myCountry } from "./country.js";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyStart } from "./ui-kit.jsx";
 import { loadAgents } from "./agents.js";
 import { Paperclip, MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles, X } from "lucide-react";
@@ -205,6 +205,10 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       default: setPanel({ ...o, text: o.text || t });
     }
   };
+  // v9.3 (Ali picked D6 A): the first minute hands its sentence to this box — the box does it, as if typed here
+  const sayRef = useRef("");
+  useEffect(() => { const on = (e) => { const t = typeof e.detail === "string" ? e.detail.trim() : ""; if (!t) return; sayRef.current = t; setText(t); }; window.addEventListener("attune-box-say", on); return () => window.removeEventListener("attune-box-say", on); }, []);
+  useEffect(() => { if (sayRef.current && text === sayRef.current) { sayRef.current = ""; send(); } }, [text]);
   const send = (kindPicked) => {
     let t = text.trim();
     if (!t && !files.length && !kindPicked) return;

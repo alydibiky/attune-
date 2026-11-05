@@ -155,25 +155,13 @@ with sync_playwright() as pw:
     page.goto(f"http://127.0.0.1:{PAGE_PORT}/index.html")
     page.wait_for_selector("text=Attune", timeout=15000)
 
-    # 1. multi-select onboarding
-    check(page.locator("text=Make Attune yours").count() == 1, "onboarding shown on first launch")
-    check(page.locator("text=Pick as many as you like.").count() == 1, "onboarding says several answers are allowed")
-    page.get_by_role("button", name="Summarise & translate").click()
-    page.get_by_role("button", name="Period & cycle tracking").click()
-    page.get_by_role("button", name="Money, budget & zakat").click()
-    check(page.locator("button:has-text('✓ ')").count() == 3, "three uses selected at once")
-    page.get_by_role("button", name="Next").click()
-    page.get_by_role("button", name="Arabic (Egyptian)").click(); page.get_by_role("button", name="English", exact=True).click()
-    check(page.locator("button:has-text('✓ ')").count() == 2, "two languages selected at once")
-    page.get_by_role("button", name="Next").click()
-    page.get_by_role("button", name="Heavy equipment / construction").click(); page.get_by_role("button", name="Business / trading").click()
-    page.get_by_role("button", name="Next").click()
-    page.get_by_role("button", name="Owner / founder").click(); page.get_by_role("button", name="Next").click()
-    page.get_by_role("button", name="Comfortable").click(); page.wait_for_timeout(300)
-    page.get_by_role("button", name="Start using Attune").click(); page.wait_for_timeout(300)
-    prof = page.evaluate("JSON.parse(localStorage.getItem('attune:profile')||'{}')")
-    check(prof.get("field") == "Heavy equipment / construction, Business / trading", "two fields saved: %s" % prof.get("field"))
-    check(set(prof.get("uses", [])) >= {"cycle", "money"}, "uses saved")
+    # 1. v9.3 (Ali picked D6 A): the first minute — 3 short screens that end with one real thing done (the longer profile questions
+    #    are no longer asked at first run; the profile is set any time from Settings → Profile)
+    check(page.locator("[data-testid=first-minute]").count() == 1, "the first minute is shown on first launch")
+    page.click("[data-testid=first-next]"); page.click("[data-testid=first-pick-spend]"); page.click("[data-testid=first-next]")
+    check("150" in page.input_value("[data-testid=first-text]"), "…pick “Track my spending” → its example to keep or change")
+    page.click("[data-testid=first-skip]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=first-minute]").count() == 0 and page.evaluate("localStorage.getItem('attune:onboarded')") == "1", "Skip closes it for good")
     # v5.13 (Ali): the period tracker is not on the home screen — it stays in More.
     check(page.locator("nav button:has-text('Cycle')").count() == 0, "Cycle is kept off the bottom bar (it lives in More)")
 

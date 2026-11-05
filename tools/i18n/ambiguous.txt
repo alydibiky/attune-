@@ -101,6 +101,7 @@ scout-ui.jsx: <div><h2 className={K.h1 + " flex items-center gap-2"}><Binoculars
 ## Agents
 agents-ui.jsx: <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
 home-ui.jsx: cards.push({ k: "agents", label: tr("Agents"), col: "#3B5BA9", open: "agents",
+yourday-ui.jsx: <span className="text-[12px] font-extrabold tracking-wide c-acc uppercase flex items-center gap-1.5"><Radar size={14} />{tr("Agents")}</span
 
 ## Send
 agents-ui.jsx: <U.PageBox value={text} setValue={setText} onSend={(t) => submit(t)} hint={tr("Tell an agent what to do…")} sendLabel={tr("Send")} ids={{ bo
@@ -165,6 +166,7 @@ spaces-ui.jsx: {sel && sel.id === a.id ? <span className="hidden lg:inline-flex 
 agents-ui.jsx: <button onClick={() => setAt(1)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="agent-see-all">{tr("See a
 home-ui.jsx: {!rep ? <button onClick={() => setRep(true)} className="text-[12.5px] font-extrabold c-acc inline-flex items-center gap-1 bg-transparent bor
 home-ui.jsx: <span className="font-extrabold text-[14px]">{tr("See all")}</span>
+yourday-ui.jsx: <button onClick={() => navTo && navTo("recall")} className="text-[12.5px] font-extrabold c-acc min-h-[36px] px-1" data-testid="day-notes-all
 
 ## Close
 agents-ui.jsx: <button onClick={() => setAt(-1)} className={"w-10 h-10 rounded-full grid place-items-center " + glass} aria-label={tr("Close")} data-testid
@@ -178,6 +180,7 @@ attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-c
 
 ## Next
 agents-ui.jsx: <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><Chev
+attune.jsx: {step < 2 ? <button onClick={() => setStep(step + 1)} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] f
 attune.jsx: {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-e
 daily-ui.jsx: <button className={btnP} onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? t
 lesson-ui.jsx: <button className={"w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40 ms-
@@ -196,10 +199,10 @@ agents-ui.jsx: <div className="flex items-center gap-2"><button onClick={back} a
 attune.jsx: <button onClick={() => { setView("calm"); setPaneRaw("home"); }} aria-label={tr("Back")} data-testid="money-ledger-back"
 attune.jsx: ) : wide ? null : LEGACY_NAV ? <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! 
 attune.jsx: : <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! -ms-1.5 rounded-full! border-transparent! bg-
+attune.jsx: {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[52px] px-5 rounded-full border border-[var(--c-ln)] font-bold" data-
 cv-ui.jsx: <button onClick={onClose} className="w-11 h-11 -ms-1 grid place-items-center rounded-[12px] text-[var(--c-ink)]" aria-label={tr("Back")}><Ch
 daily-ui.jsx: return <button onClick={onClick} className="min-h-[44px] pe-2 text-[var(--c-mut)] text-[13.5px] font-bold flex items-center gap-1"><ChevronL
 daily-ui.jsx: return <button onClick={onClick} className="c-sub min-h-[44px] pe-2 flex items-center gap-1 text-[13.5px] font-bold"><ChevronLeft size={18} 
-guide-ui.jsx: <div className="flex items-center gap-2"><button onClick={() => setArea(null)} className="w-10 h-10 rounded-full grid place-items-center bg-
 
 ## Money Report
 attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(rep.month.from.slice(0, 7))}</h1><p>${esc(account ? (rep.accounts.find((a) => a.id === account) || {}
@@ -269,6 +272,7 @@ tools-hub-ui.jsx: sub={r.change != null ? T("{p}% vs last week", { p: (r.change 
 attune.jsx: {onMenu && !wide ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn h-11! min-w-[44px]! ro
 attune.jsx: : TOP_PLACES.has(mode) && !subDepth ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]!
 money-calm-ui.jsx: {onMenu ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="w-10 h-10 rounded-[12px] grid place-items-ce
+yourday-ui.jsx: {openMenu ? <button onClick={openMenu} className="w-12 h-12 grid place-items-center rounded-[14px] text-[26px] c-sub" aria-label={tr("Menu")
 
 ## Connected
 attune.jsx: <span className={`shrink-0 w-2 h-2 rounded-full ${ready ? "bg-teal-400" : "bg-slate-600"}`} title={ready ? tr("Connected") : tr("Starting…")
@@ -283,6 +287,7 @@ travel-ui.jsx: setMapBusy(tr("Starting…"));
 attune.jsx: <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 
 money-calm-ui.jsx: <h2 className="text-[18px] font-black tracking-tight m-0">{tr("Money")}</h2>
 money-sheets-ui.jsx: {!a ? <Field label={tr("Kind")}><Pills value={kind} onChange={setKind} testid="acc-kind" items={[["cash", tr("Money")], ["gold", tr("Gold")]
+yourday-ui.jsx: <T2 icon="💰" label={tr("Money")} onClick={() => navTo("money")} testid="simple-money" />
 
 ## Read it
 attune.jsx: {tr("Read it")}
@@ -355,6 +360,7 @@ attune.jsx: {tr("Check")} {t.audit.fabricated.join(", ")} — {t.audit.fabricate
 attune.jsx: <button className="h-10 px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold" onClick={start} disabled={bu
 cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job read
 lesson-ui.jsx: <button className={btnP + " shrink-0"} disabled={!answer} onClick={check} data-testid="lesson-check">{tr("Check")}</button>
+scamcheck-ui.jsx: <button onClick={() => check()} disabled={!text.trim()} className={U.btnP + " flex-1"} data-testid="scam-go">{tr("Check")}</button>
 
 ## Stop
 attune.jsx: {askBusy ? tr("Stop") : tr("Ask")}
@@ -509,6 +515,7 @@ radar-ui.jsx: <button className={U.btnP + " mt-2"} onClick={() => openAccess(N)}
 travel-ui.jsx: {x.key === "watch" && !x.ok ? <button className="c-sub underline bg-transparent border-0 p-0 min-h-[44px] cursor-pointer shrink-0" onClick={
 
 ## Your country
+attune.jsx: <div><span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] c-sub mb-2">{tr("Your country")}</span>
 attune.jsx: <span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-3 mb-2">{tr("Your country")}</span>
 country-ui.jsx: <span className="flex-1 min-w-0"><span className="block text-[13px] font-bold text-[var(--c-ink)]">{tr("Your country")}</span>
 
@@ -573,6 +580,7 @@ yearplan.js: groups.push({ id: "savings", label: ar ? "التحويش" : tr("Sav
 backup-ui.jsx: [tr("Memory items"), s.memory], [tr("Reminders"), s.reminders],
 shelf-ui.jsx: {header(tr("Reminders"), backBtn(() => setView(null)))}
 shelf-ui.jsx: <><button onClick={() => setView("reminders")} aria-label={tr("Reminders")} className={ib + " relative"} data-testid="shelf-alarm"><AlarmClo
+yourday-ui.jsx: <T2 icon="⏰" label={tr("Reminders")} onClick={() => navTo("reminders")} testid="simple-reminders" />
 
 ## Show
 backup-ui.jsx: <label className="text-[var(--c-mut)] flex items-center gap-1"><input type="checkbox" checked={show} onChange={(e) => setShow(e.target.check
@@ -709,6 +717,7 @@ owed-ui.jsx: {r.ask.some((q) => /UK one/.test(q)) ? <div className="flex gap-2">
 ## Dismiss
 cmdbox-ui.jsx: {j.status === "done" || j.status === "fail" ? <button onClick={() => jobs.dismiss(j.id)} aria-label={tr("Dismiss")} className="w-8 h-8 grid 
 paylog-ui.jsx: <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[
+yourday-ui.jsx: <button onClick={() => hide(a.id)} className="w-9 h-9 grid place-items-center c-sub" aria-label={tr("Dismiss")} data-testid="day-ask-no"><X 
 
 ## Preview
 code-ui.jsx: {busy ? (L === "python" ? tr("Starting Python…") : tr("Running…")) : L === "html" ? (preview ? tr("Hide preview") : tr("Preview")) : tr("Run
@@ -760,6 +769,7 @@ cv-ui.jsx: <div className="grid grid-cols-3 gap-2"><Lbl t={tr("City")}><In value
 cv-ui.jsx: <Lbl t={tr("City")}><In value={b.city} onChange={setB("city")} /></Lbl>
 cv-ui.jsx: <input value={target.city || ""} onChange={(e) => setT("city", e.target.value)} placeholder={tr("City")} className={field} dir="auto" data-t
 prayer-ui.jsx: <select value={st.city} onChange={(e) => put({ city: e.target.value })} className={field + " !w-auto shrink-0 max-w-[48%] !min-h-[40px] !h-1
+yourday-ui.jsx: {ds.prayers ? <label className="flex items-center gap-2 ps-1 pb-2 text-[13px] font-bold"><span className="c-sub">{tr("City")}</span>
 
 ## School
 cv-ui.jsx: <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Degree / course")}><In value={it.degree} onChange={(v) => upd(i, { degree: v })} />
@@ -916,6 +926,10 @@ home-ui.jsx: <button onClick={() => setRep(false)} aria-label={tr("Home")} title
 home-ui.jsx: <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center s
 side-ui.jsx: <button onClick={() => navTo("home")} className="flex-1 min-h-[44px] text-start text-[19px] font-black text-[var(--c-ink)] tracking-tight bg
 
+## Your day
+home-ui.jsx: <div className="flex items-center justify-between mb-2"><p className="c-lbl m-0">{tr("Your day")}</p>
+yourday-ui.jsx: <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-1">{tr("Your day")}</p>
+
 ## Not now
 home-ui.jsx: {note.kind === "ended" ? <button onClick={close} className="h-10 px-3 c-sub text-[13px]" data-testid="home-trial-close">{tr("Not now")}</but
 mind-ui.jsx: <button onClick={() => setHidePast(true)} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] text-[var(--c-mut)]">{tr("Not 
@@ -987,6 +1001,10 @@ money-sheets-ui.jsx: <Field label={tr("Name")}><input value={name} onChange={(e)
 shelf-ui.jsx: <option value="manual">{tr("My order")}</option><option value="name">{tr("Name")}</option><option value="notes">{tr("Most notes")}</option><
 skills-ui.jsx: <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Name")}</span><input className={field
 
+## Screenshot
+lookback-ui.jsx: const rec = remember({ kind: "photo", title: shotTitle(text, f.name ? f.name.replace(/\.\w+$/, "") : tr("Screenshot")), text: text || f.name
+scamcheck-ui.jsx: <button onClick={() => ref.current && ref.current.click()} disabled={busy} className={U.btnS} data-testid="scam-shot"><ImageIcon size={16} /
+
 ## All
 lookback-ui.jsx: {chip(null, tr("All"))}
 money-sheets-ui.jsx: <div className="flex gap-1.5 overflow-x-auto pb-1"><button onClick={() => setMonth("")} className={pill(!month)}>{tr("All")}</button>{months
@@ -1033,10 +1051,12 @@ money-pages-ui.jsx: const whenText = (b) => b.next == null ? "" : b.late ? T("la
 overpay-ui.jsx: if (f.kind === "trial") return { t: tr("{s} free trial ends", { s: f.name }), d: f.amount ? tr("Then {a} a month", { a: money(f.amount, f.cu
 overpay-ui.jsx: if (f.kind === "renewal") return { t: tr("{s} renews", { s: f.name }), d: tr("On {d}", { d: f.date }) + (f.amount ? " · " + money(f.amount, 
 radar-ui.jsx: const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} d
+yourday-ui.jsx: try { return (same ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateString(dateLocale(), { weekday: "
 
 ## tomorrow
 money-pages-ui.jsx: const whenText = (b) => b.next == null ? "" : b.late ? T("late since {d}", { d: dayLabel(b.next) }) : b.daysTo === 0 ? tr("today") : b.daysT
 radar-ui.jsx: const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} d
+yourday-ui.jsx: try { return (same ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateString(dateLocale(), { weekday: "
 
 ## How often
 money-pages-ui.jsx: <Head title={tr("Bills report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick={(

@@ -2270,6 +2270,27 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
       else if(op==='prefs'){ if(a.period) setUI('period',a.period); if(a.wk) setUI('wk',a.wk); if(a.dec!=null) setUI('dec',a.dec?1:0); if(a.country) setCountry(a.country); if(a.currency) setCurrency(a.currency); if(a.lang&&(a.lang==='ar'||a.lang==='en')) setLang(a.lang); if(a.budget!=null){ db.budgets=db.budgets||{overall:0,cats:{}}; db.budgets.overall=Math.max(0,+a.budget||0); save(); }
         const _vt=['trends','accounts','goals','zakat','bills']; if(a.tabs&&typeof a.tabs==='object'){ db.ui.tabs=db.ui.tabs||{}; _vt.forEach(k=>{ if(a.tabs[k]!=null) db.ui.tabs[k]=a.tabs[k]?1:0; }); db.ui.tabsSet=1; save(); applyUI(); }
         if(Array.isArray(a.tabOrder)){ const o=a.tabOrder.filter(k=>_vt.includes(k)); _vt.forEach(k=>{ if(!o.includes(k)) o.push(k); }); db.ui.tabOrder=o; db.ui.tabsSet=1; save(); applyUI(); } }
+      // v9.3 (Ali picked D4 — A and B, people choose): a family share opened on this phone — its accounts and entries merged by id
+      // (the newer copy of an entry wins), who added each kept ("by"); entries deleted on the other phone leave. Nothing else changes.
+      else if(op==='merge-share'){ var sh=a.share||{}, sid=String(sh.id||'').slice(0,40), from=String(sh.from||'').slice(0,30), ad=0, ch=0, rm=0;
+        if(!/^[a-z0-9-]{4,40}$/i.test(sid)) return {ok:false,error:'bad-share'};
+        (Array.isArray(sh.accounts)?sh.accounts:[]).slice(0,50).forEach(function(x){ if(!x||typeof x.id!=='string'||!/^[A-Z]{3}$/.test(x.currency||''))return;
+          var mine=(db.accounts||[]).find(function(y){return y.id===x.id;});
+          if(!mine){ db.accounts.push({id:x.id.slice(0,40),name:String(x.name||'').slice(0,60),emoji:String(x.emoji||'').slice(0,8),currency:x.currency,start:(typeof x.start==='number'&&isFinite(x.start))?x.start:0,kind:/^[a-z_]{2,20}$/.test(x.kind||'')?x.kind:'cash',grazing:false,karat:(x.karat>=8&&x.karat<=24)?x.karat:24,share:sid}); ad++; }
+          else if(!mine.share) mine.share=sid; });
+        var accIds={}; (db.accounts||[]).forEach(function(y){accIds[y.id]=1;});
+        (Array.isArray(sh.txns)?sh.txns:[]).slice(0,5000).forEach(function(t){ var am=parseFloat(t&&t.amount);
+          if(!t||typeof t.id!=='string'||!(am>0&&am<1e9)||['expense','income','transfer'].indexOf(t.type)<0||!accIds[t.account]||(t.type==='transfer'&&!accIds[t.toAccount]))return;
+          if(t.cat==='zakat')return;
+          var row={id:t.id.slice(0,40),type:t.type,amount:Math.round(am*100)/100,account:t.account,cat:/^[a-z_]{2,20}$/.test(t.cat||'')?t.cat:'other',date:/^\d{4}-\d{2}-\d{2}$/.test(t.date||'')?t.date:toISODate(new Date()),note:String(t.note||'').slice(0,80),created:(typeof t.created==='number'&&t.created>0)?t.created:Date.now(),updated:(typeof t.updated==='number'&&t.updated>0)?t.updated:0,by:String(t.by||from).slice(0,30),share:sid};
+          if(t.type==='transfer') row.toAccount=t.toAccount;
+          var i=db.txns.findIndex(function(y){return y.id===row.id;});
+          if(i<0){ db.txns.push(row); ad++; }
+          else { var y=db.txns[i], ty=(y.updated||y.created||0), tr=(row.updated||row.created||0); if(tr>ty){ db.txns[i]=Object.assign({},y,row); ch++; } } });
+        var gone={}; (Array.isArray(sh.gone)?sh.gone:[]).slice(0,5000).forEach(function(g){ if(typeof g==='string') gone[g]=1; });
+        db.txns=db.txns.filter(function(t){ if(gone[t.id]&&t.share===sid){ rm++; return false; } return true; });
+        if(ad||ch||rm) save();
+        return {ok:true,id:JSON.stringify({added:ad,changed:ch,removed:rm})}; }
       else if(op==='rates'){ updateRates(); return {ok:true}; }
       else if(op==='export'){ if(a.kind==='csv') exportCSV(); else if(a.kind==='share') shareBackup(); else exportData(); return {ok:true}; }
       else if(op==='import'){ var f=new File([String(a.json||'')],'backup.json',{type:'application/json'}); importData({target:{files:[f],value:''}}); return {ok:true}; }

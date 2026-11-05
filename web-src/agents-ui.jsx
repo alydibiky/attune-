@@ -173,10 +173,11 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         // day to day by itself — it used to open and close a window for each day
         if (tries.length > 1) {
           const fl = !!(a.fields && a.fields.flight);   // v9.2 flights: one window goes from site to site (Kayak, momondo, Google Flights…)
-          const r = await nativeCall("agentOpen", { url: tries[0].url, title: a.title, profile: {}, rules: { cheapest: true, many: true, ...(fl ? { direct: (a.rules || {}).maxStops === 0, time: (a.rules || {}).timeOfDay || "" } : {}) }, labels: agentLabels(), search: true, watch: true, rounds: tries.map((x) => ({ url: x.url, checkin: x.checkin || (fl ? x.site : ""), checkout: x.checkout || "" })) });
+          const r = await nativeCall("agentOpen", { url: tries[0].url, title: a.title, profile: {}, rules: { cheapest: true, many: true, ...(fl ? { direct: (a.rules || {}).maxStops === 0, time: (a.rules || {}).timeOfDay || "" } : {}) }, labels: agentLabels(), search: true, watch: true, rounds: tries.map((x) => ({ url: x.url, checkin: x.checkin || (fl ? x.label || x.site : ""), checkout: x.checkout || "" })) });
           if (r && r.price > 0) best = { price: r.price, checkin: r.checkin, checkout: r.checkout };
           compared = (r && r.offers) || 0;
-          for (const o of (r && r.top) || []) seen.push(fl ? { ...o, site: o.checkin || o.site || "", checkin: "", checkout: "", url: o.href || o.url || a.url } : { ...o, url: o.url || a.url });
+          for (const o of (r && r.top) || []) { const [st, dep] = String(o.checkin || "").split("|");   // v9.3 a window: "Kayak|2026-12-09" — the site and the day tried
+            seen.push(fl ? { ...o, site: st || o.site || "", ...(dep ? { depart: dep } : {}), checkin: "", checkout: "", url: o.href || o.url || a.url } : { ...o, url: o.url || a.url }); }
           if (fl && r && r.price > 0) best = { price: r.price };
         } else for (let i = 0; i < tries.length; i++) {
           if (tries.length > 1) flash && flash(T("Checking {i} of {n}: {d}", { i: i + 1, n: tries.length, d: tries[i].checkin }));
@@ -656,7 +657,13 @@ function FlightBoard({ a, openBest }) {
         <span className="flex items-center gap-1 text-[11.5px] c-sub flex-wrap" data-testid="flight-best-sites">{w.sites.slice(0, 4).map((s) => <SiteMark key={s} site={s} size={18} />)}{w.sites.length > 1 ? T("on {n} sites — cheapest on {s}", { n: w.sites.length, s: w.sites[0] }) : w.sites[0] ? T("on {s}", { s: w.sites[0] }) : ""}</span></span>
         <button onClick={() => openBest(a, w.o)} className="shrink-0 min-h-[44px] px-5 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[14px] font-extrabold" data-testid="flight-book">{tr("Book")}</button></div>
     </div>
-    {g.days.length > 1 ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="flight-days">{g.days.map((d) => { const lo = d.price === Math.min(...g.days.map((x) => x.price));
+    {(() => { const ad = FL.adviseBuy(a.checks, { depart: (w.o && w.o.depart) || f.depart || "" });   // v9.3 (Ali picked D3 A): buy now or wait — from its own checks
+      return <div className="rounded-[16px] border border-[var(--c-ln)] p-3 space-y-1" data-testid="flight-advice" data-say={ad.say}>
+        <p className="m-0 flex items-center justify-between gap-2"><b className={"text-[14.5px] " + (ad.say === "buy" ? "text-[var(--c-warn)]" : ad.say === "wait" ? "c-acc" : "")}>{ad.say === "buy" ? tr("Buy now") : ad.say === "wait" ? tr("Wait") : tr("Buy now or wait?")}</b>
+          <span className="text-[11.5px] c-sub">{T("Confidence: {c}", { c: tr(ad.conf === "high" ? "high" : ad.conf === "medium" ? "medium" : "low") })} · {T("{n} checks", { n: ad.n })}</span></p>
+        <p className="m-0 text-[12.5px] c-sub">{tr(ad.why)}{ad.low ? " · " + T("lowest seen {p}", { p: n(ad.low) }) : ""}</p></div>; })()}
+    {f.window && g.days.length ? <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-wide c-sub" data-testid="flight-days-label">{tr("Price by departure day")}</p> : null}
+    {g.days.length > 1 || (f.window && g.days.length) ? <div className={f.window ? "grid grid-cols-4 gap-1.5" : "flex gap-1.5 overflow-x-auto pb-1"} data-testid="flight-days">{g.days.map((d) => { const lo = d.price === Math.min(...g.days.map((x) => x.price));
       return <span key={d.date} className={"shrink-0 min-w-[64px] rounded-[12px] border px-2 py-1.5 text-center " + (lo ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)]")} data-testid="flight-day">
         <span className="block text-[11px] font-bold c-sub">{dayTxt(d.date)}</span><b className={"block text-[12.5px] tabular-nums " + (lo ? "c-acc" : "")}>{n(d.price)}</b></span>; })}</div> : null}
     {rest.length ? <div className={U.card + " p-1.5"} data-testid="flight-list">

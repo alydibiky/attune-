@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v9.3 D2 C: one list pinned from the app (To-dos & lists → Pin to the widget), with tick boxes. The page writes what it shows (TodoWidget.save); a tick is kept on the phone and applied when Attune opens. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wl_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_bg">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/wl_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:text="@string/widget_list_name" android:textColor="#F1F5F9" android:textSize="14sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wl_side" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#5EEAD4" android:textSize="11.5sp" android:textStyle="bold" android:maxLines="1" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wl_row0" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wl_box0" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wl_text0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wl_sub0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wl_row1" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wl_box1" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wl_text1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wl_sub1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wl_row2" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wl_box2" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wl_text2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wl_sub2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wl_row3" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wl_box3" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wl_text3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wl_sub3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wl_row4" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wl_box4" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wl_text4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wl_sub4" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <TextView android:id="@+id/wl_empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="6dp"
+        android:text="@string/widget_list_empty" android:textColor="#94A3B8" android:textSize="12.5sp" android:maxLines="2" />
+    <TextView android:id="@+id/wl_foot" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp"
+        android:textColor="#5BC48A" android:textSize="12.5sp" android:textStyle="bold" android:maxLines="1" android:visibility="gone" />
+</LinearLayout>

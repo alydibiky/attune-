@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v9.3 (Ali picked D2 — all three, people choose): today's to-dos with a tick box, the next prayer (when on) and safe to spend (when on). The page writes what it shows (TodoWidget.save); a tick is kept on the phone and applied when Attune opens. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wt_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_bg">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/wt_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:text="@string/widget_todo_name" android:textColor="#F1F5F9" android:textSize="14sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wt_side" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#5EEAD4" android:textSize="11.5sp" android:textStyle="bold" android:maxLines="1" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wt_row0" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wt_box0" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wt_text0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wt_sub0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wt_row1" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wt_box1" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wt_text1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wt_sub1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wt_row2" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wt_box2" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wt_text2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wt_sub2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/wt_row3" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/wt_box3" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center"
+            android:text="☐" android:textColor="#5EEAD4" android:textSize="17sp" />
+        <TextView android:id="@+id/wt_text3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:textColor="#F1F5F9" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/wt_sub3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#94A3B8" android:textSize="11sp" android:maxLines="1" android:paddingStart="6dp" />
+    </LinearLayout>
+    <TextView android:id="@+id/wt_empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="6dp"
+        android:text="@string/widget_todo_empty" android:textColor="#94A3B8" android:textSize="12.5sp" android:maxLines="2" />
+    <TextView android:id="@+id/wt_foot" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp"
+        android:textColor="#5BC48A" android:textSize="12.5sp" android:textStyle="bold" android:maxLines="1" android:visibility="gone" />
+</LinearLayout>

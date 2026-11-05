@@ -262,6 +262,21 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_fit_info" />
         </receiver>
+        <!-- v9.3 (Ali picked D2 — all three, people choose): to-dos (+ next prayer, + safe to spend) and one pinned list (TodoWidget.kt). -->
+        <receiver android:name=".TodoWidget" android:exported="true" android:label="@string/widget_todo_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_todo_info" />
+        </receiver>
+        <receiver android:name=".ListWidget" android:exported="true" android:label="@string/widget_list_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_list_info" />
+        </receiver>
+        <!-- a tick on a widget row (not exported: only Attune's own widgets send it) -->
+        <receiver android:name=".WidgetTick" android:exported="false" />
         <!-- v8.7: the Attune box on the home screen (BoxWidget.kt): tap to type, the mic to speak. -->
         <receiver android:name=".BoxWidget" android:exported="true" android:label="@string/widget_box_name">
             <intent-filter>
