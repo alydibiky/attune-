@@ -36,7 +36,7 @@ Legend: ✅ already built · 🟡 partly built (only the missing piece is listed
 | R24 | Heat & memory pilot (free the model after 30 s idle, lighter model when hot) | 🟡 | Speed & heat doctor exists. New: idle unload + switch down on thermal status / battery <20% |
 | R25 | Folder of PDFs → one table of dates/amounts/obligations | 🆕 | Strong for work/desktop (contracts, invoices). Medium build |
 | R26 | Share a voice note / 3 messages to Attune → promise, debt, date | 🟡 | Share of text/PDF exists. New: shared WhatsApp voice notes transcribed offline |
-| R27 | One page per person (owes, promises, files, last contact) | 🆕 | Pieces exist in Money / Follow-ups / Documents; the joined page is new |
+| R27 | One page per person (owes, promises, files, last contact) | 🟡 | Person history exists (v9.0 `personhist.js`: plans, loans, payments, sums). New: promises, files, last contact, WhatsApp statement |
 | R28 | Screenshots filed automatically (Fawry codes, tickets) | ⚠️ | Needs broad photo access — Google Play's photo policy allows that only when it is the app's core use. Safer: "Share screenshot to Attune" |
 | R29 | Money for two with automatic merge (CRDT) | 🟡 | Money for two built v9.3 (merge by id, newest wins). CRDT/Drive auto-sync = later |
 | R30 | "after Asr by 15 minutes", "1 hour after iftar" | 🆕 | Prayer times exist (opt-in). New: reminders tied to a prayer that move each day |
@@ -58,6 +58,9 @@ Legend: ✅ already built · 🟡 partly built (only the missing piece is listed
 - "Merge Reminders / Follow-ups / Radar / To-dos" — Follow-ups is already one list (v8.3); a full merge is a design choice → options.
 - "Hide File Converter / Slides on phones", "Career mission" — design choices → options for Ali, never decided alone.
 - "Silent visa polling" — already replaced by the browser check (v9.4 G2).
+
+## Mock-ups + how each pick is built
+Published for Ali: https://claude.ai/artifact/GaNgb3thF9dSYox2Pt1HkA
 
 ## Recommended picks for the launch (Claude's view)
 **R8, R1, R3, R15, R13, R9, R30, R27, R35** (+ R6's 1-line fix, which Claude does anyway). The rest after launch.

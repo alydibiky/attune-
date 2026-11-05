@@ -18,7 +18,7 @@ v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in
 
 ## Gemini's answer arrived (5 Nov 2026) — waiting for Ali's IDs
 Ali uploaded the report (35 ideas R1–R35). Every idea checked against the code: **`RESEARCH_GEMINI_2026-11-05.md`**
-(✅ built · 🟡 partly · 🆕 new · ⚠️ his decision). Claude's launch picks: R8 R1 R3 R15 R13 R9 R30 R27 R35. Build only the IDs Ali sends.
+(✅ built · 🟡 partly · 🆕 new · ⚠️ his decision). Claude's launch picks: R8 R1 R3 R15 R13 R9 R30 R27 R35 — mock-ups + how each is built: https://claude.ai/artifact/GaNgb3thF9dSYox2Pt1HkA Build only the IDs Ali sends.
 Do anyway with the next build (objective fix): PayListener.kt skips Android's group-summary notification like ChatInbox does (R6).
 
 ## Waiting for Ali: the Gemini research (5 Nov 2026)
