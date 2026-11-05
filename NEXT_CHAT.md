@@ -16,6 +16,11 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## Gemini's answer arrived (5 Nov 2026) — waiting for Ali's IDs
+Ali uploaded the report (35 ideas R1–R35). Every idea checked against the code: **`RESEARCH_GEMINI_2026-11-05.md`**
+(✅ built · 🟡 partly · 🆕 new · ⚠️ his decision). Claude's launch picks: R8 R1 R3 R15 R13 R9 R30 R27 R35. Build only the IDs Ali sends.
+Do anyway with the next build (objective fix): PayListener.kt skips Android's group-summary notification like ChatInbox does (R6).
+
 ## Waiting for Ali: the Gemini research (5 Nov 2026)
 Ali asked for a prompt that tells Gemini everything about the app and makes it deep-research ways and features to make Attune better
 and stronger; "if I like the idea, you implement". The prompt is **`GEMINI_RESEARCH_PROMPT.md`** (paste into Gemini Deep Research).
