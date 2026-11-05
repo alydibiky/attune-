@@ -30,7 +30,7 @@ with sync_playwright() as p:
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_timeout(1200)
     go(page, "agents", "[data-testid=agents-page]")
-    check(page.locator("[data-testid=agents-empty]").count() == 1 and page.locator("[data-testid^=agents-chip-]").count() == 9, "Agents opens calm: the box, nine example chips (v9.0: Follow a topic, Research a topic; v9.2: Cheapest flight), no agents yet")
+    check(page.locator("[data-testid=agents-empty]").count() == 1 and page.locator("[data-testid^=agents-chip-]").count() == 6, "Agents opens calm: the box, the six most used starters (v9.4 gallery; the rest under More agents), no agents yet")
     # ---- Ali's price watch: no day → asked, then a Booking watch ----
     say(page, "tell me when hotels in masjid el haram become less than 45k in 4 nights")
     check(page.locator("[data-testid=agents-ask]").count() == 1 and "which day" in page.locator("[data-testid=agents-ask]").inner_text(), "no day in the sentence → the agent asks from which day")
@@ -49,6 +49,7 @@ with sync_playwright() as p:
     mine = [r for r in rules if str(r["id"]).startswith("agent-")]
     check(page.locator("[data-testid=agent-track]").count() == 1 and mine and mine[0]["app"].startswith("pkgs:com.amazon.mShop.android.shopping"), "a delivery agent: Amazon's own notifications are watched (rule %s)" % (mine[0]["app"] if mine else None))
     # ---- the usual order ----
+    if page.locator("[data-testid=agents-chip-order]").count() == 0: page.click("[data-testid=agents-more-starters]")   # v9.4: under More agents
     page.click("[data-testid=agents-chip-order]"); page.click("[data-testid=agents-go]"); page.wait_for_timeout(300)
     check("usual" in page.locator("[data-testid=agents-ask]").inner_text(), "Order my usual from Talabat → it asks what the usual is (once)")
     page.fill("[data-testid=agents-answer]", "Koshary Abou Tarek — large + rice pudding"); page.click("[data-testid=agents-answer-go]"); page.wait_for_timeout(300)

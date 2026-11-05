@@ -54,7 +54,12 @@ object Reminders {
             .put("id", id).put("at", at)
             .put("title", r.optString("title").take(120))
             .put("body", r.optString("body").take(400))
-            .put("repeat", r.optString("repeat", "none")))
+            .put("repeat", r.optString("repeat", "none"))
+            .apply {   // v9.4 G1 (Ali: "schedule a message — send this contact this message at 5 pm tomorrow, and it does that")
+                r.optJSONObject("send")?.let { s0 -> put("send", JSONObject().put("key", s0.optString("key").take(200)).put("pkg", s0.optString("pkg").take(100))
+                    .put("phone", s0.optString("phone").filter { it.isDigit() }.take(20)).put("text", s0.optString("text").take(2000)).put("who", s0.optString("who").take(80))
+                    .put("sentTitle", s0.optString("sentTitle").take(120)).put("dueTitle", s0.optString("dueTitle").take(120))) }
+            })
         save(ctx, out)
         arm(ctx, id, at)
         return true
@@ -148,12 +153,44 @@ object Reminders {
     }
 
     /** Show the notification for reminder `id`; reschedule it if it repeats. */
+    private fun fireSend(ctx: Context, id: String, rem: JSONObject, snd: JSONObject) {
+        val text = snd.optString("text"); val who = snd.optString("who")
+        val sent = snd.optString("key").isNotBlank() && ChatInbox.reply(ctx, snd.optString("key"), text).optBoolean("ok")
+        val pkg = snd.optString("pkg"); val phone = snd.optString("phone")
+        val go: Intent = when {
+            phone.isNotBlank() -> Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://wa.me/" + phone + "?text=" + android.net.Uri.encode(text))).apply { if (pkg.startsWith("com.whatsapp")) setPackage(pkg) }
+            pkg.isNotBlank() -> ctx.packageManager.getLaunchIntentForPackage(pkg) ?: Intent(ctx, MainActivity::class.java)
+            else -> Intent(ctx, MainActivity::class.java).putExtra(EXTRA_ID, id)
+        }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (!sent && phone.isBlank()) try { (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager)?.setPrimaryClip(android.content.ClipData.newPlainText("Attune", text)) } catch (e: Exception) { }
+        val tap = PendingIntent.getActivity(ctx, ("send-" + id).hashCode(), if (sent) Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) else go,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val title = if (sent) snd.optString("sentTitle").ifBlank { "Sent to $who" } else snd.optString("dueTitle").ifBlank { "Time to send to $who" }
+        val b = (if (Build.VERSION.SDK_INT >= 26) android.app.Notification.Builder(ctx, CHANNEL) else @Suppress("DEPRECATION") android.app.Notification.Builder(ctx))
+            .setSmallIcon(R.drawable.ic_stat_reminder).setContentTitle(title).setContentText(text)
+            .setStyle(android.app.Notification.BigTextStyle().bigText(text)).setContentIntent(tap).setAutoCancel(true)
+            .setCategory(android.app.Notification.CATEGORY_REMINDER)
+        try { ctx.getSystemService(NotificationManager::class.java)?.notify(id.hashCode(), b.build()) } catch (e: SecurityException) { }
+        try {
+            val p = prefs(ctx); val log = try { JSONArray(p.getString("sendlog", "[]")) } catch (e: Exception) { JSONArray() }
+            log.put(JSONObject().put("id", id).put("ok", sent).put("at", System.currentTimeMillis())); p.edit().putString("sendlog", log.toString()).apply()
+        } catch (e: Exception) { }
+        unschedule(ctx, id)
+    }
+
+    /** v9.4 G1: what the scheduled messages did since the page last asked (then forgotten). */
+    fun takeSendLog(ctx: Context): String { val p = prefs(ctx); val s = p.getString("sendlog", "[]") ?: "[]"; p.edit().putString("sendlog", "[]").apply(); return s }
+
     fun fire(ctx: Context, id: String) {
         val arr = all(ctx)
         var r: JSONObject? = null
         for (i in 0 until arr.length()) arr.optJSONObject(i)?.let { if (it.optString("id") == id) r = it }
         val rem = r ?: return
         ensureChannel(ctx)
+        // v9.4 G1: a scheduled message. Sent by itself through that chat's own Reply when Attune still holds it (the person wrote
+        // recently); otherwise the notification opens the chat with the message written — one tap on Send. Never through
+        // Accessibility (Google Play forbids it for this), never SMS sending (only the default SMS app may).
+        rem.optJSONObject("send")?.let { snd -> fireSend(ctx, id, rem, snd); return }
         val open = PendingIntent.getActivity(ctx, id.hashCode(),
             Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 .putExtra(EXTRA_ID, id),

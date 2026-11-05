@@ -52,6 +52,9 @@ class AgentBrowser : Activity() {
     // v8.7 (Ali: "it keeps glitching when I press Check now"): a hotel window's start days are checked one after another in
     // THIS window (it used to open and close a window per day) — rounds = [{url, checkin, checkout}]
     private var rounds = org.json.JSONArray()
+    private var slotMode = false
+    private var refreshSec = 0
+    private var refreshArmed = false
     private var round = 0
     private var roundArmed = -1
     // v9.1 (Ali, 3 Nov: "it keeps loading me to different dates and doesn't get the lowest price in the time span"): each day is
@@ -87,6 +90,8 @@ class AgentBrowser : Activity() {
         watchMode = intent.getBooleanExtra("watch", false)
         autoClose = intent.getBooleanExtra("autoClose", false)
         buyMode = intent.getBooleanExtra("buy", false)
+        slotMode = intent.getBooleanExtra("slot", false)              // v9.4 G2: a visa / appointment page — its words go back to the page
+        refreshSec = intent.getIntExtra("refresh", 0).coerceIn(0, 3600) // v9.4 G2: "watch while open" — reload every N seconds
         rounds = try { org.json.JSONArray(intent.getStringExtra("rounds") ?: "") } catch (e: Exception) { org.json.JSONArray() }
         labels = try { JSONObject(intent.getStringExtra("labels") ?: "{}") } catch (e: Exception) { JSONObject() }
         if (Prefs.airGapNow || !url.startsWith("https://")) { finishWith("blocked"); return }
@@ -203,6 +208,9 @@ class AgentBrowser : Activity() {
                 // (armed by armRound() when the day's page is asked for, so a page that never finishes loading can't stop the check)
                 // v8.6 buy agent, after the person's "Order it": Buy now (or Add to cart) on the product page, once; then the
                 // checkout pages get the person's details — the payment itself stays the person's (the kit never touches it)
+                // v9.4 G2: the appointment page's words (after the person logged in) — read twice as it draws
+                if (slotMode) for (ms in longArrayOf(2500L, 7000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.slot&&window.__attuneAgent.slot()") }, ms)
+                if (slotMode && refreshSec >= 30 && !refreshArmed) { refreshArmed = true; val loop = object : Runnable { override fun run() { if (closed) return; try { web.reload() } catch (e: Exception) {}; web.postDelayed(this, refreshSec * 1000L) } }; web.postDelayed(loop, refreshSec * 1000L) }
                 if (buyMode) {
                     if (!buyArmed) { buyArmed = true; v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.buy()") }, 2500L) }
                     else v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.fill($profile)") }, 2000L)
@@ -361,6 +369,15 @@ class AgentBrowser : Activity() {
                         if (o.optBoolean("payment")) payment()
                     }
                     "page" -> if (o.optBoolean("payment")) payment()
+                    "slot" -> {   // v9.4 G2: what the appointment page says; a change while watching → a sound and a line on top
+                        val t = o.optString("text").take(6000)
+                        val before = result.optString("slot")
+                        result.put("slot", t).put("slotUrl", o.optString("url").take(400)).put("slotAt", System.currentTimeMillis())
+                        if (refreshSec > 0 && before.isNotEmpty() && t.isNotEmpty() && t != before) {
+                            status.text = L("changed", "The page changed — look now.")
+                            try { android.media.RingtoneManager.getRingtone(this@AgentBrowser, android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION))?.play() } catch (e: Exception) {}
+                        }
+                    }
                     "buy" -> {
                         val c = o.optString("clicked"); result.put("bought", c)
                         status.text = if (c.isEmpty()) L("noBuy", "No Buy now button here — tap it yourself, I'll fill your details on the next pages.")

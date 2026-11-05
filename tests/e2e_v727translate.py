@@ -61,9 +61,19 @@ with sync_playwright() as p:
     check(page.evaluate("document.querySelector('[data-testid=tr-overlay] img').naturalWidth") == 400, "…and drawn over the photo (same size as the photo)")
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "translate-photo.png"))
     # a document → the File Converter
-    page.click("[data-testid=tr-tab-doc]"); page.click("[data-testid=tr-open-converter]")
+    # v9.4 (Ali, 5 Nov: "Choose a file" only opened the File Converter's start page): the picker opens from Translate itself and the
+    # chosen file is translated at once, into the language picked in Translate
+    page.click("[data-testid=tr-tab-doc]")
+    check(page.locator("[data-testid=tr-doc-file]").count() == 1, "Document has its own file picker")
+    page.set_input_files("[data-testid=tr-doc-file]", files=[{"name": "menu.txt", "mimeType": "text/plain", "buffer": b"Fresh juice 25 EGP\nOpen daily"}])
     page.wait_for_selector("[data-testid=convert]", timeout=5000)
     check(page.evaluate("localStorage.getItem('attune:convert:tlang')") == "ar", "a document opens the File Converter set to the same language")
+    check(page.locator("[data-testid=convert-translate]").count() == 1 and page.input_value("[data-testid=convert-tlang]") == "ar", "…with the file already chosen and set to Translate, into Arabic")
+    page.wait_for_selector("[data-testid=convert-busy], [data-testid=convert-result], [data-testid=convert-error]", timeout=8000)
+    page.wait_for_selector("[data-testid=convert-result], [data-testid=convert-error]", timeout=60000)
+    # (the browser test has no Android PDF writer, so it stops at the last step there; on the phone the PDF is made)
+    t = page.inner_text("[data-testid=convert]")
+    check(page.locator("[data-testid=convert-result]").count() == 1 or "makePdf" in t, "…and translates that file at once, without another tap: %r" % t[-200:])
     ctx.close()
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()

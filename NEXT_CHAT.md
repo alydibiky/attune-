@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.3)
+# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.4)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -15,6 +15,31 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 "For each addition in the app do it for all languages so we don't have to translate later": every new English line the app shows
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
+
+## v9.4 — 5 Nov late: Ali's agent picks G1–G7 BUILT + two fixes from his screenshots
+Ali: "G1 ok but make the option to schedule a message — send this contact this message at 5 pm tomorrow — and it does that · G2–G7 ok ·
+the most important thing is an easy, interactive, visually appealing, smooth interface, consistent across all agents, global, accurate,
+easy results". (G8 was not picked — not built.) Then: "Offer 3 … very bad and confusing and does not open on the specific listing" and
+"Translate → Document → Choose a file" only opened the File Converter.
+- **Pure logic** `web-src/agents2.js` (tests: unit `v940agents`, 25 checks): waitingChats / draftPrompt / QUICK (G1 reply helper),
+  parseScheduled (G1 scheduled message, EN + Egyptian Arabic, "I'm" kept), slotSites / slotState / parseSlot (G2 visa appointments: VFS
+  `visa.vfsglobal.com/{from}/en/{to}/`, US AIS, TLScontact, BLS), restockDue / isRestock (G3, learns from Money's `ledger.v3` txns),
+  returnDays / parseProtect / protectState (G4 price protection, message to the store), SPEC / clinicSites / parseClinic (G5: Vezeeta,
+  Doctolib, Doctoralia, Doktortakvimi, Practo + Google Maps everywhere), parseTrip / tripPlan (G6 travel day, gate changes from
+  notifications), autonomyIn / mayAct (G7 "only tell me" / "ask me first" / "by itself under 500" — never pays, only a store used before).
+- **Cards** (agents-ui.jsx — all with the same AgentHead · CardActions · AgentRules): ReplyCard, SendCard + ScheduleForm, SlotCard,
+  RestockCard, ProtectCard, ClinicCard, TripCard. Starters: the 6 most used as tiles + "More agents".
+- **Android**: Reminders.kt `send` payload → ChatInbox.reply when Attune still holds the chat's Reply action, else a notification that opens
+  wa.me/<phone>?text= (or the app with the text copied) — Play forbids Accessibility automation / SEND_SMS, so this is the honest limit.
+  ChatInbox `seen` (onNotificationRemoved), AgentBrowser slot mode + refresh loop, AgentWatch "slot" checks with WebView cookies.
+- **Hotel offers fix** (agent-kit.js): a layout without Booking's markers (its phone site) — the card climbs to the block holding ONE
+  listing's own link (`listingLink`, `LISTING` regex for hotels/products), so the name, the lazy photo (`photoOf`: data-src, srcset,
+  background) and the exact page come with the price. agents-ui Podium: an offer with no name and no page is a plain **date row**
+  ("01/01 → 01/05 · 4 nights · EGP 42,124 · Hotels on Booking.com"), never an "Offer 3" story. Tests: e2e_v727agentkit (phone layout),
+  e2e_v940offers.
+- **Translate → Document**: "Choose a file" opens the phone's picker right there; the file goes to the converter set to Translate in the
+  chosen language and starts at once (`window.__attuneConvertHandoff`). Test: e2e_v727translate.
+- 120 new lines × 20 languages. Version 9.4 (versionCode 132).
 
 ## v9.3 — 5 Nov: Ali's round-4 picks BUILT (D1 A · D2 all · D3 A · D4 A+B · D5 A · D6 A · A2 A · A3 = Deal Check folded) + notifications → the day
 Ali: "D1 A but the prayers not automatic — open them in Settings, this is a global app · D2 do all and make people choose · D3 A — does it

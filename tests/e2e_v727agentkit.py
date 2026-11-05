@@ -99,5 +99,18 @@ with sync_playwright() as p:
     names = {o["name"]: o for o in r["top"]}
     check("Huawei FreeClip 2 Open-Ear" in names and names["Huawei FreeClip 2 Open-Ear"]["price"] == 8399 and names["Huawei FreeClip 2 Open-Ear"]["img"].startswith("https://f.nooncdn.com/"), "a shop's product cards: name, price (not the old one / the saving), photo: %s" % list(names))
     check("Hilton Suites Makkah" in names and names["Hilton Suites Makkah"]["img"].startswith("https://img.example/"), "a schema.org hotel item: its name and photo")
+    # v9.4 (Ali, 5 Nov: "Offer 3", no photo, Book opened the search): a layout without Booking's markers (its phone site) — the hotel's
+    # link, name and lazy photo sit in other branches of the card than the price; each offer still gets its own page, name and photo
+    mob = lambda n, slug, price: f"""<div class="c1"><div class="c2"><a href="https://www.booking.com/hotel/es/{slug}.html?aid=1&amp;label=x"><div class="pic"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="https://cf.bstatic.com/xdata/images/hotel/max500/{slug}.jpg" width="1" height="1"></div></a></div>
+<div class="c3"><div class="c4"><a href="https://www.booking.com/hotel/es/{slug}.html?aid=1"><span class="h">{n}</span></a><div>Madrid city centre · 0.4 km</div></div>
+<div class="c5"><div class="c6"><div><span>4 nights</span></div><div><span>EGP {price}</span></div><div>+EGP 900 taxes and charges</div></div></div></div></div>"""
+    page.set_content('<html><body><div>search form <a href="https://www.booking.com/searchresults.html?ss=Madrid">Search</a></div><div class="list">' + mob("Hotel Europa Madrid", "europa", "42,124") + mob("Room Mate Alicia", "alicia", "39,900") + "</div></body></html>")
+    page.add_script_tag(path=KIT)
+    r = page.evaluate("window.__attuneAgent.best({cheapest:true, many:true}, true)")
+    top = r["top"]
+    check([o["price"] for o in top[:2]] == [39900, 42124], "phone layout: both offers, cheapest first: %s" % [o["price"] for o in top])
+    check([o["name"] for o in top[:2]] == ["Room Mate Alicia", "Hotel Europa Madrid"], "phone layout: each hotel's own name: %s" % [o["name"] for o in top])
+    check(all("/hotel/es/" in o["href"] for o in top[:2]) and "alicia" in top[0]["href"], "phone layout: each hotel's own page (not the search): %s" % [o["href"] for o in top])
+    check(top[0]["img"] == "https://cf.bstatic.com/xdata/images/hotel/max500/alicia.jpg", "phone layout: the lazy photo, not the 1-pixel placeholder: %s" % top[0]["img"])
     br.close()
 finish()

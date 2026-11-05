@@ -7764,7 +7764,7 @@ const MODE_TITLES = { lists: "To-dos & lists", booklib: "Documents", privacy: "P
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.4";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -10783,6 +10783,7 @@ export default function App() {
               const out = String(await callChat([{ role: "system", content: "Turn the user's rule for a shopping / hotel / flight agent into JSON. Keys (only those the rule sets): below (max price, number), minStars (1-5), minRating (number), maxWalk (metres), mustHave (words), avoid (words), onlySites, avoidSites (site or airline names, lowercase), hours (how often to check), maxStops, bags, timeOfDay (morning|afternoon|evening|night), notBefore, notAfter (hour 0-23), cabin (economy|premium|business|first). Answer with the JSON object only." }, { role: "user", content: rule }], null, { think: false, maxTokens: 160, temperature: 0 }) || "");
               const m = out.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; } : null}
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }}
+            drafter={modelUsable ? async (prompt) => String(await callChat([{ role: "user", content: prompt }], null, { maxTokens: 120, temperature: 0.5, think: false }) || "").trim().replace(/^["“]|["”]$/g, "").slice(0, 600) : null}   // v9.4 G1: a reply draft, on the phone
             search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 4 }) : null}
             onResearch={(topic, q) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + (q || tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: topic }))); navTo("chat"); }} />
         ) : mode === "convert" ? (
@@ -10840,7 +10841,7 @@ export default function App() {
         ) : mode === "translate" ? (
           <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
-            openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
+            openConverter={(to, files) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} if (files && files.length) window.__attuneConvertHandoff = { files, target: "translate", lang: to }; navTo("convert"); }} />
         ) : mode === "lifeask" ? (
           <LifeAskPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }}

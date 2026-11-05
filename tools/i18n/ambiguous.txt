@@ -1,12 +1,12 @@
 ## Today
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
+agents-ui.jsx: <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><span className="block text-[11.5px] c-sub font-bold">{tr("Today")}</span><b
 daily-ui.jsx: <p className="c-lbl m-0">{plan.finished ? tr("Course finished") : plan.left ? tr("Today") : tr("Today · all done")}</p>
 daily-ui.jsx: <p className="c-lbl m-0">{tr("Today")}</p>
 desk-ui.jsx: <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
 home-now.js: sub: x.amount ? fmtN(x.amount) + (x.pay && x.pay.cur ? " " + x.pay.cur : "") : x.date === day ? tr("Today") : x.date || "", open: x.from ===
 home-now.js: out.push({ day: k, label: i === 0 ? tr("Today") : label, spend, kcal, today: i === 0 });
 missions-ui.jsx: {e.step ? <p className="text-[13.5px] rounded-[20px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b
-timeline-ui.jsx: if (n === 0) return tr("Today");
 
 ## Tomorrow
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
@@ -106,12 +106,12 @@ yourday-ui.jsx: <span className="text-[12px] font-extrabold tracking-wide c-acc 
 ## Send
 agents-ui.jsx: <U.PageBox value={text} setValue={setText} onSend={(t) => submit(t)} hint={tr("Tell an agent what to do…")} sendLabel={tr("Send")} ids={{ bo
 agents-ui.jsx: <button disabled={busy || !text.trim()} className={U.btnS} aria-label={tr("Send")} data-testid="agent-rule-go">{busy ? "…" : <Send size={15}
+agents-ui.jsx: <CardActions primary={{ label: x.canReply ? tr("Send") : tr("Copy and open the chat"), icon: Send, onClick: () => send(x), testid: "reply-se
 booklib-ui.jsx: <button type="submit" disabled={!q.trim() || asking} aria-label={tr("Send")} className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(-
 chat.jsx: <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center me
 chat.jsx: <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center" t
 desk-ui.jsx: <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
 email-ui.jsx: {canSend ? <button onClick={send} disabled={busy || !body.trim()} className={U.btnP} data-testid="email-send">{tr("Send")}</button> : null}
-home-ui.jsx: <button onClick={() => send()} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(
 
 ## OK
 agents-ui.jsx: <button className={U.btnP + " !h-11 !min-h-[44px]"} data-testid="agents-answer-go">{tr("OK")}</button>
@@ -170,12 +170,12 @@ yourday-ui.jsx: <button onClick={() => navTo && navTo("recall")} className="text
 
 ## Close
 agents-ui.jsx: <button onClick={() => setAt(-1)} className={"w-10 h-10 rounded-full grid place-items-center " + glass} aria-label={tr("Close")} data-testid
+agents-ui.jsx: <div className="flex items-center gap-2"><b className="flex-1 text-[15px]">{tr("Schedule a message")}</b><button onClick={onClose} aria-labe
 attune.jsx: <button onClick={() => setSheet(false)} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:bg-slate-800" 
 attune.jsx: <button onClick={() => setMoreOpen(false)} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(-
 attune.jsx: <button onClick={() => setShowCustom(false)} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text
 attune.jsx: <button onClick={close} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[
 attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover
-attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:text-slate-200 hover:bg-slate-
 attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:text-slate-200 hover:bg-slate-
 
 ## Next
@@ -190,6 +190,9 @@ slides-ui.jsx: <button onClick={next} className="h-11 w-11 rounded-full grid pla
 
 ## Check now
 agents-ui.jsx: return <CardActions primary={{ label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), busy, testid: "agent-check" }}
+agents-ui.jsx: <CardActions primary={{ label: s.state === "open" ? tr("Open now") : tr("Check now"), icon: s.state === "open" ? ExternalLink : RefreshCw, b
+agents-ui.jsx: <CardActions primary={s.drop ? { label: tr("Ask for the difference"), icon: Share2, onClick: share, testid: "protect-ask" } : { label: tr("C
+agents-ui.jsx: secondary={s.drop ? { label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), testid: "protect-check" } : null} />
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check n
 scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check n
 speed-ui.jsx: className={K.btnS}>{tr("Check now")}</button>
@@ -203,6 +206,46 @@ attune.jsx: {step > 0 ? <button onClick={() => setStep(step - 1)} className="min
 cv-ui.jsx: <button onClick={onClose} className="w-11 h-11 -ms-1 grid place-items-center rounded-[12px] text-[var(--c-ink)]" aria-label={tr("Back")}><Ch
 daily-ui.jsx: return <button onClick={onClick} className="min-h-[44px] pe-2 text-[var(--c-mut)] text-[13.5px] font-bold flex items-center gap-1"><ChevronL
 daily-ui.jsx: return <button onClick={onClick} className="c-sub min-h-[44px] pe-2 flex items-center gap-1 text-[13.5px] font-bold"><ChevronLeft size={18} 
+
+## today
+agents-ui.jsx: const day = d.toDateString() === n.toDateString() ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateSt
+money-pages-ui.jsx: const whenText = (b) => b.next == null ? "" : b.late ? T("late since {d}", { d: dayLabel(b.next) }) : b.daysTo === 0 ? tr("today") : b.daysT
+overpay-ui.jsx: if (f.kind === "trial") return { t: tr("{s} free trial ends", { s: f.name }), d: f.amount ? tr("Then {a} a month", { a: money(f.amount, f.cu
+overpay-ui.jsx: if (f.kind === "renewal") return { t: tr("{s} renews", { s: f.name }), d: tr("On {d}", { d: f.date }) + (f.amount ? " · " + money(f.amount, 
+radar-ui.jsx: const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} d
+yourday-ui.jsx: try { return (same ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateString(dateLocale(), { weekday: "
+
+## tomorrow
+agents-ui.jsx: const day = d.toDateString() === n.toDateString() ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateSt
+money-pages-ui.jsx: const whenText = (b) => b.next == null ? "" : b.late ? T("late since {d}", { d: dayLabel(b.next) }) : b.daysTo === 0 ? tr("today") : b.daysT
+radar-ui.jsx: const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} d
+yourday-ui.jsx: try { return (same ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateString(dateLocale(), { weekday: "
+
+## Later
+agents-ui.jsx: <CardActions primary={{ label: x.canReply ? tr("Send") : tr("Copy and open the chat"), icon: Send, onClick: () => send(x), testid: "reply-se
+life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
+slides-ui.jsx: <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="min-h-[44px] rounded-[12px] border border-[
+
+## Reply
+agents-ui.jsx: </div> : <button onClick={() => pick(x)} className="text-[13px] font-extrabold c-acc min-h-[36px]" data-testid="reply-open">{draft ? tr("Dra
+voice-ui.jsx: <button onClick={() => replyTo(newest)} className="flex-1 min-h-[56px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[17px] f
+
+## Send now
+agents-ui.jsx: {a.state === "scheduled" ? <CardActions primary={{ label: tr("Send now"), icon: Send, onClick: () => sendNow(a), testid: "send-now" }} /> : 
+chat.jsx: <button onClick={() => { const all = queued.map((x) => x.text).join("\n\n"); setQueued([]); ask(all, { queuedDuring: true, now: true }); }} 
+
+## Remind me
+agents-ui.jsx: <button onClick={() => remindOn(x)} className={U.btnS + " h-10! min-h-[40px]!"} data-testid="restock-remind">{tr("Remind me")}</button></div
+attune.jsx: title={tr("Remind me")} aria-label={tr("Remind me")} className={`mt-0.5 ${reminders.some((r) => r.id === "p-" + c.id) ? "text-teal-400" : "t
+attune.jsx: title={tr("Remind me")} aria-label={tr("Remind me")} className={`mt-0.5 ${reminders.some((r) => r.id === "p-" + c.id) ? "text-teal-400" : "t
+chatxray-ui.jsx: {it.due && scheduleReminder ? <button onClick={() => remind(it)} className={btnS + " mt-3"} data-testid="xray-remind"><Bell size={13} />{tr(
+mind-ui.jsx: className={btnP + " !h-11 !min-h-[44px] !text-[14px]"}>{tr("Remind me")}</button>
+shelf-ui.jsx: <button onClick={() => setSheet("remind")} aria-label={tr("Remind me")} data-testid="shelf-note-remind" className="w-11 h-11 grid place-item
+shelf-ui.jsx: <Sheet title={tr("Remind me")} close={() => setSheet(null)} testid="shelf-remind-sheet">
+
+## You paid
+agents-ui.jsx: <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><span className="block text-[11.5px] c-sub font-bold">{tr("You paid")}</span
+people-ui.jsx: {linked.money.out ? <div className={cardPad}><p className={label + " m-0"}>{tr("You paid")}</p><b className="text-[18px] tabular-nums" dir="
 
 ## Money Report
 attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(rep.month.from.slice(0, 7))}</h1><p>${esc(account ? (rep.accounts.find((a) => a.id === account) || {}
@@ -417,14 +460,6 @@ home-ui.jsx: {x.pay.kind === "radar" ? <button onClick={() => { payRadar(x.pay.i
 owed-ui.jsx: {r.ask.some((q) => /European one/.test(q)) ? <div className="flex gap-2"><button className={U.btnP} onClick={() => set("euCarrier", true)}>{
 owed-ui.jsx: {r.ask.some((q) => /UK one/.test(q)) ? <div className="flex gap-2"><button className={U.btnP} onClick={() => set("ukCarrier", true)}>{tr("Ye
 voice-ui.jsx: {card.kind === "readback" ? <div className="flex gap-2 mt-3"><button onClick={() => turn(ar ? "لا" : tr("no"))} className="flex-1 min-h-[56p
-
-## Remind me
-attune.jsx: title={tr("Remind me")} aria-label={tr("Remind me")} className={`mt-0.5 ${reminders.some((r) => r.id === "p-" + c.id) ? "text-teal-400" : "t
-attune.jsx: title={tr("Remind me")} aria-label={tr("Remind me")} className={`mt-0.5 ${reminders.some((r) => r.id === "p-" + c.id) ? "text-teal-400" : "t
-chatxray-ui.jsx: {it.due && scheduleReminder ? <button onClick={() => remind(it)} className={btnS + " mt-3"} data-testid="xray-remind"><Bell size={13} />{tr(
-mind-ui.jsx: className={btnP + " !h-11 !min-h-[44px] !text-[14px]"}>{tr("Remind me")}</button>
-shelf-ui.jsx: <button onClick={() => setSheet("remind")} aria-label={tr("Remind me")} data-testid="shelf-note-remind" className="w-11 h-11 grid place-item
-shelf-ui.jsx: <Sheet title={tr("Remind me")} close={() => setSheet(null)} testid="shelf-remind-sheet">
 
 ## Reminder set
 attune.jsx: <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); fl
@@ -978,10 +1013,6 @@ money-calm-ui.jsx: value={!zak ? "—" : zak.noPrice ? tr("Needs a price") : zak
 money-sheets-ui.jsx: {r.options ? <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p>{r.options.map((o, i) => <p key={i} className="m-0 text-[17px] 
 money-sheets-ui.jsx: : <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p><p className="m-0 text-[22px] font-black text-[var(--c-acc)] tabular-nums"
 
-## Later
-life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
-slides-ui.jsx: <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="min-h-[44px] rounded-[12px] border border-[
-
 ## Delete this?
 life-ui.jsx: const remove = (c) => { if (window.confirm(tr("Delete this?"))) { put(removeCommitment(data, c.id)); unremind && unremind("life-" + c.id); }
 plans-ui.jsx: <button className={"w-11 h-11 -me-2 shrink-0 grid place-items-center rounded-[12px] hover:text-[var(--c-neg)] " + U.muted} aria-label={tr("D
@@ -1045,18 +1076,6 @@ report-ui.jsx: {hasS ? <span className="inline-flex items-center gap-1"><i class
 ## head
 money-pages-ui.jsx: {a.other.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={x.unit} end={fmt(x.balance) + " " + (x.kind === "herd" ? tr("head") :
 money-pages.js: currency: k === "money" ? a.currency || cur : "", unit: k === "metal" ? (ar ? "جم" : "g") + (a.kind === "gold" ? " · " + (a.karat || 24) + (
-
-## today
-money-pages-ui.jsx: const whenText = (b) => b.next == null ? "" : b.late ? T("late since {d}", { d: dayLabel(b.next) }) : b.daysTo === 0 ? tr("today") : b.daysT
-overpay-ui.jsx: if (f.kind === "trial") return { t: tr("{s} free trial ends", { s: f.name }), d: f.amount ? tr("Then {a} a month", { a: money(f.amount, f.cu
-overpay-ui.jsx: if (f.kind === "renewal") return { t: tr("{s} renews", { s: f.name }), d: tr("On {d}", { d: f.date }) + (f.amount ? " · " + money(f.amount, 
-radar-ui.jsx: const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} d
-yourday-ui.jsx: try { return (same ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateString(dateLocale(), { weekday: "
-
-## tomorrow
-money-pages-ui.jsx: const whenText = (b) => b.next == null ? "" : b.late ? T("late since {d}", { d: dayLabel(b.next) }) : b.daysTo === 0 ? tr("today") : b.daysT
-radar-ui.jsx: const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} d
-yourday-ui.jsx: try { return (same ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateString(dateLocale(), { weekday: "
 
 ## How often
 money-pages-ui.jsx: <Head title={tr("Bills report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick={(

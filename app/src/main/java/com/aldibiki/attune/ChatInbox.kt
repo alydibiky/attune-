@@ -78,6 +78,7 @@ object ChatInbox {
         // one key per conversation: the chat's reply goes to that chat only
         val key = pkg + "|" + (if (group) "g:" + convo else "p:" + who)
         replyAction(n)?.let { replies[key] = it }
+        try { ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("sbn:" + sbn.key, key).apply() } catch (e: Exception) { }   // v9.4 G1: which chat this notification was
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val arr = try { JSONArray(p.getString("items", "[]")) } catch (e: Exception) { JSONArray() }
         val now = System.currentTimeMillis()
@@ -89,12 +90,23 @@ object ChatInbox {
         p.edit().putString("items", keep.toString()).apply()
     }
 
+    /** v9.4 G1: a chat notification went away (the person opened the chat, answered, or swiped it) → that chat is "seen" now. */
+    @Synchronized
+    fun gone(ctx: Context, sbn: StatusBarNotification) {
+        val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val key = p.getString("sbn:" + sbn.key, null) ?: return
+        val seen = try { JSONObject(p.getString("seen", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+        seen.put(key, System.currentTimeMillis())
+        p.edit().putString("seen", seen.toString()).remove("sbn:" + sbn.key).apply()
+    }
+
     /** The kept messages, each with canReply = its chat's reply action is still in memory. */
     @Synchronized
     fun list(ctx: Context): String {
         val arr = try { JSONArray(ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("items", "[]")) } catch (e: Exception) { JSONArray() }
         val now = System.currentTimeMillis(); val out = JSONArray()
-        for (i in 0 until arr.length()) { val o = arr.optJSONObject(i) ?: continue; if (now - o.optLong("ts") < DAY) out.put(o.put("canReply", replies.containsKey(o.optString("key")))) }
+        val seen = try { JSONObject(ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("seen", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+        for (i in 0 until arr.length()) { val o = arr.optJSONObject(i) ?: continue; if (now - o.optLong("ts") < DAY) out.put(o.put("canReply", replies.containsKey(o.optString("key"))).put("seen", seen.optLong(o.optString("key"), 0L) >= o.optLong("ts"))) }
         return out.toString()
     }
 

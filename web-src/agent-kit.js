@@ -26,7 +26,7 @@
   const TAXLINE = /tax|fee|charge|original price|was\b|save\b|off\b|discount|deposit|ضريب|رسوم|خصم|وفر|السعر الأصلي|impuesto|cargo|taxe|frais|steuer|gebühr|vergi|ücret|pajak|biaya/i;
   // the closest result card around a price, on any site: known sites' own markers, schema.org items, then the common class names
   // for a product / listing / result card (closest() picks the nearest one, so a whole list is never taken for one offer)
-  const CARD_SEL = ['[data-testid="property-card"]', '[data-testid="property-card-container"]', '[data-component-type="s-search-result"]', '[data-testid="card-container"]',
+  const CARD_SEL = ['[data-testid="property-card"]', '[data-testid="property-card-container"]', '[data-component-type="s-search-result"]', '[data-testid="card-container"]', '[data-hotelid]', '.sr_item', '[data-testid="property-card-content"]',
     '[data-qa="product-block"]', '[itemprop="itemListElement"]', '[itemtype*="Product"]', '[itemtype*="Hotel"]', '[itemtype*="Offer"]', '[itemtype*="Place"]',
     '[data-testid*="product-card" i]', '[data-testid*="listing-card" i]', '[data-testid*="result-card" i]', '[class*="product-card" i]', '[class*="productcard" i]',
     '[class*="listing-card" i]', '[class*="result-card" i]', '[class*="hotel-card" i]', '[class*="offer-card" i]', '[class*="item-card" i]', 'article', '[role="listitem"]'].join(",");
@@ -66,6 +66,13 @@
       // come with the price (a Booking card has 3+ prices, so the climb above stopped at the bare price)
       const own = leaf.closest(CARD_SEL);
       if (own && own !== document.body && (own.innerText || "").length < 3000) card = own;
+      // v9.4 (Ali, 5 Nov: "Offer 3", no photo, Book opened the search — "does not open on the specific listing"): a layout we don't
+      // know (Booking's phone site, any shop) — climb until the block holds ONE listing's own link (its hotel / product page), so
+      // the name, the photo and the exact page come with the price; stop before a block that holds two listings
+      if (!listingLink(card)) { let c = card;
+        for (let i = 0; i < 10 && c.parentElement && c.parentElement !== document.body; i++) {
+          const up = c.parentElement; if ((up.innerText || "").length > 3000 || listingKeys(up) > 1) break;
+          c = up; if (listingLink(c)) { card = c; break; } } }
       if (seen.has(card)) continue; seen.add(card);
       const text = (card.innerText || "").replace(/\s+/g, " ").trim().slice(0, 600);
       const p = priceIn(t); if (!p) continue;
@@ -77,9 +84,34 @@
     }
     return found;
   }
+  // a listing's own page (not a search, a filter or a map link): hotels on Booking / Agoda / Expedia / Airbnb / Hotels.com, products on
+  // Amazon / noon / Jumia / eBay / most shops
+  const LISTING = /\/hotel\/[a-z]{2}\/|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\//i;
+  const listingLinks = (el) => [...(el.querySelectorAll ? el.querySelectorAll("a[href]") : [])].filter((a) => /^https:\/\//.test(a.href) && LISTING.test(a.href.split("#")[0]));
+  const listingKey = (a) => { try { const u = new URL(a.href); return u.hostname + u.pathname; } catch (e) { return a.href; } };
+  const listingKeys = (el) => new Set(listingLinks(el).map(listingKey)).size;
+  function listingLink(el) { const t = el.querySelector && el.querySelector('a[data-testid="title-link"][href],a[data-testid="property-card-desktop-single-image"][href]');
+    if (t && /^https:\/\//.test(t.href)) return t; const l = listingLinks(el); if (l.length) return l[0];
+    const up = el.closest && el.closest("a[href]"); return up && /^https:\/\//.test(up.href) && LISTING.test(up.href) ? up : null; }
+  // a photo, also a lazy one (data-src, srcset) or a background picture — never a 1-pixel placeholder or an icon
+  function photoOf(el) {
+    for (const im of el.querySelectorAll ? el.querySelectorAll("img,source") : []) {
+      const set = (im.getAttribute("srcset") || im.getAttribute("data-srcset") || "").split(",").map((x) => x.trim().split(/\s+/)[0]).filter(Boolean);
+      for (const u of [im.currentSrc, im.getAttribute("src"), im.getAttribute("data-src"), im.getAttribute("data-lazy-src"), im.getAttribute("data-lazy"), ...set]) {
+        if (!u) continue; let abs = u; try { abs = new URL(u, location.href).href; } catch (e) {}
+        if (!/^https:\/\//.test(abs) || /\.svg(\?|$)|sprite|icon|logo|pixel|blank|spacer/i.test(abs)) continue;
+        if (im.tagName === "IMG" && im.naturalWidth && im.naturalWidth < 40 && !im.getAttribute("data-src")) continue;
+        return abs; } }
+    for (const d of el.querySelectorAll ? el.querySelectorAll("[style*='background']") : []) { const m = /url\(["']?(https:[^"')]+)/.exec(d.getAttribute("style") || ""); if (m) return m[1]; }
+    return "";
+  }
   function cardName(o) {
+    // the listing link that carries words (the photo's link has none): its title, else its own text / label
+    let ln = ""; for (const L of [listingLink(o.el), ...listingLinks(o.el)]) { if (!L) continue; const lt = (L.querySelector && L.querySelector(NAME_SEL)) || L;
+      ln = (lt.innerText || lt.textContent || L.getAttribute("aria-label") || L.getAttribute("title") || "").replace(/\s+/g, " ").trim(); if (ln && !PRICE.test(ln)) break; ln = ""; }
     const t = o.el.querySelector && o.el.querySelector(NAME_SEL); const own = t ? (t.innerText || t.textContent || "").replace(/\s+/g, " ").trim() : "";
     if (own && !PRICE.test(own) && own.length > 2) return own.slice(0, 160);
+    if (ln && !PRICE.test(ln) && ln.length > 2 && ln.length < 160) return ln;
     return String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => x && !PRICE.test(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
   }
   function rank(list, r) {
@@ -94,8 +126,8 @@
     const top = rank(list, r)[0];
     // v9.1: a quiet read (the hotel check reads a page several times while it loads) doesn't move the page under the person
     if (quiet) { const nameQ = cardName;
-      const hrefQ = (o) => { const a = o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
-      const imgQ = (o) => { for (const im of o.el.querySelectorAll("img")) { const u = im.currentSrc || im.src || im.getAttribute("data-src") || ""; if (/^https:\/\//.test(u) && (im.naturalWidth || im.width || 99) >= 40) return u; } return ""; };
+      const hrefQ = (o) => { const a = listingLink(o.el) || o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
+      const imgQ = (o) => photoOf(o.el);
       const outQ = { kind: "best", quiet: true, offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameQ(o), text: o.text.slice(0, 400), href: hrefQ(o), img: imgQ(o) })) };
       report(outQ); return outQ; }
     if (mark) { mark.style.outline = mark.__o || ""; }
@@ -106,8 +138,8 @@
     // v8.6: each with its own link (the product page a buy agent opens after the person says "Order it"); a buy round asks for
     // more than 3 (r.many) so the closest match — not only the cheapest — can be picked
     const nameOf = cardName;
-    const imgOf = (o) => { for (const im of o.el.querySelectorAll("img")) { const u = im.currentSrc || im.src || im.getAttribute("data-src") || ""; if (/^https:\/\//.test(u) && (im.naturalWidth || im.width || 99) >= 40) return u; } return ""; };
-    const hrefOf = (o) => { const a = o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
+    const imgOf = (o) => photoOf(o.el);
+    const hrefOf = (o) => { const a = listingLink(o.el) || o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
     const top3 = rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameOf(o), text: o.text.slice(0, 400), href: hrefOf(o), img: imgOf(o) }));
     const out = { kind: "best", offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: top3, why: [r.cheapest !== false ? "cheapest" : "", r.direct ? "direct" : "", r.time || ""].filter(Boolean).join(", ") };
     report(out); return out;
@@ -212,6 +244,8 @@
   let lastPay = null, t = null;
   const watch = () => { clearTimeout(t); t = setTimeout(() => { const pay = payment(); if (pay !== lastPay) { lastPay = pay; report({ kind: "page", payment: pay, offers: offers().length }); } }, 500); };
   try { new MutationObserver(watch).observe(document.documentElement, { childList: true, subtree: true }); } catch (e) {}
-  window.__attuneAgent = { offers: () => offers().map((o) => ({ price: o.price, currency: o.currency, hour: o.hour, stops: o.stops, text: o.text })), best, fill, payment, rank, buy };
+  // v9.4 G2: an appointment page (visa, consulate, clinic) — its visible words go back to Attune, which decides what they mean
+  const slot = () => { const t = String((document.body && document.body.innerText) || "").replace(/\s+/g, " ").trim().slice(0, 6000); const out = { kind: "slot", text: t, url: location.href }; report(out); return out; };
+  window.__attuneAgent = { offers: () => offers().map((o) => ({ price: o.price, currency: o.currency, hour: o.hour, stops: o.stops, text: o.text })), best, fill, payment, rank, buy, slot };
   watch();
 })();

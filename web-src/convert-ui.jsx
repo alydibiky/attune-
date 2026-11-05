@@ -5,7 +5,7 @@
    JPG / PNG / WebP / text; subtitles SRT ↔ VTT. On the phone: Word / Excel / CSV in convert.js, PDFs by Android
    (NativeBridge pdfText / pdfImages / makePdf). Scanned pages and photos of paper are read by the
    AI model (a model that reads photos). Nothing is uploaded. */
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FileText, Loader2, X, Download, Check, ImagePlus, ChevronRight, Eye } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
@@ -83,6 +83,13 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     setTarget(q && q.target && targetsOf(kind).includes(q.target) ? q.target : targetsOf(kind)[0]);
     if (q && q.id === "edit") { if (kind !== "pdf") { setErr(tr("Pick one PDF to edit.")); setFiles(null); return; } if (!nativeCall) { setErr(tr("PDF files are converted by the Android app — open Attune on your phone.")); return; } setEditing(true); }
   };
+
+  // v9.4: a file picked in Translate → Document arrives here already chosen: it is set to Translate, into that language, and starts
+  const [auto, setAuto] = useState(false);
+  useEffect(() => { const h = typeof window !== "undefined" && window.__attuneConvertHandoff; if (!h) return; window.__attuneConvertHandoff = null;
+    if (h.lang && T_LANGS[h.lang]) setTLang(h.lang); intentRef.current = QUICK.find((q) => q.id === "translate") || { id: "translate", target: "translate" };
+    pick(h.files); setAuto(true); }, []);
+  useEffect(() => { if (!auto || !files) return; setAuto(false); if (target === "translate") convert(); }, [auto, files, target]);
 
   const targetsOf = (kind) => (kind === "images" ? C.MULTI.image.targets : kind === "pdfs" ? C.MULTI.pdf.targets : C.KINDS[kind].targets);
   const needsNative = (k, t) => NEEDS_NATIVE(k, t, tFmt);

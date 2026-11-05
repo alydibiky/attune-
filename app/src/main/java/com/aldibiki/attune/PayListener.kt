@@ -21,6 +21,11 @@ import org.json.JSONObject
  * confirm. Tests: tests/unit/v727paylog.test.mjs (the page side).
  */
 class PayListener : NotificationListenerService() {
+    // v9.4 G1: a chat's notification went away (opened / answered / swiped) — the Reply helper stops counting it as waiting
+    override fun onNotificationRemoved(sbn: StatusBarNotification?) {
+        try { if (sbn != null && sbn.packageName != packageName) ChatInbox.gone(applicationContext, sbn) } catch (e: Exception) { }
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         try {
             if (sbn == null || sbn.packageName == packageName) return

@@ -9,7 +9,10 @@ import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCr
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./agents.js";
 import * as R from "./agent-rules.js";
-import { Ellipsis, Kanban, ListChecks, Plane } from "lucide-react";
+import { Ellipsis, Kanban, ListChecks, Plane, MessageCircle, Clock, Eye, Repeat, ShieldCheck, Heart, Share2 } from "lucide-react";
+import * as A2 from "./agents2.js";
+import * as L from "./lists.js";
+import { loadReminders, saveReminders, syncToPhone } from "./actions.js";
 import * as FL from "./flights.js";
 import { loadBooking } from "./agent-ui.jsx";
 import * as W from "./watch.js";
@@ -28,8 +31,16 @@ const money = (n, cur) => { const v = Math.round(n).toLocaleString("en-US"); if 
 const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : Math.round(m / 1440) === 1 ? tr("yesterday") : T("{n} days ago", { n: Math.round(m / 1440) }); };
 const GROUPS = [["needs", "Needs you"], ["working", "Working"], ["done", "Done & paused"]];
 const BOARD = [["needs", "Needs you"], ["working", "Working"], ["found", "Found"], ["done", "Done & paused"]];
-const KIND_ICON = { flight: Plane, follow: Newspaper, research: BookOpen, buy: ShoppingCart, watch: Hotel, track: Package, order: UtensilsCrossed, scout: Car, alert: BellRing, open: AppWindow };
-const CHIPS = [["buy", "Find & buy", "Buy me AirPods Pro 2 under 9,000", "اشتريلي ايربودز برو 2 بأقل من 9000"],
+const KIND_ICON = { reply: MessageCircle, send: Clock, slot: Eye, restock: Repeat, protect: ShieldCheck, clinic: Heart, trip: Plane, flight: Plane, follow: Newspaper, research: BookOpen, buy: ShoppingCart, watch: Hotel, track: Package, order: UtensilsCrossed, scout: Car, alert: BellRing, open: AppWindow };
+// v9.4 (Ali: "easy, interactive, visually appealing"): the starters as a gallery — the six most used first, the rest under "More agents"
+const CHIPS = [["reply", "Reply helper", "Who is waiting for my reply?", "مين مستني مني رد؟"],
+  ["send", "Schedule a message", "", ""],
+  ["slot", "Visa appointment", "Watch the Spain visa appointments", "راقب مواعيد فيزا اسبانيا"],
+  ["clinic", "Find a doctor", "Find a dermatologist in Nasr City under 500", "دكتور جلدية في مدينة نصر أقل من 500"],
+  ["trip", "Travel day", "My flight MS 753 tomorrow at 10:40 to Madrid", "طيارتي MS753 بكرة الساعة 10:40 لمدريد"],
+  ["protect", "Price protection", "I bought AirPods Pro 2 for 9,450 on Amazon", "اشتريت ايربودز برو 2 ب 9450 من امازون"],
+  ["restock", "Restock", "Tell me before I run out of things", "قولي قبل ما الحاجات تخلص"],
+  ["buy", "Find & buy", "Buy me AirPods Pro 2 under 9,000", "اشتريلي ايربودز برو 2 بأقل من 9000"],
   ["flight", "Cheapest flight", "Cheapest flight from Cairo to Jeddah around 8 January, back after 5 nights, direct, morning", "ارخص طيارة من القاهرة لجدة حوالي 8 يناير، راجع بعد 5 ليالي، مباشر، الصبح"],
   ["watch", "Watch a price", "Tell me when hotels near the Haram are under 45k for 4 nights from 10 December", "نبهني لما فنادق الحرم تبقى أقل من 45 ألف لمدة 4 ليالي من 10 ديسمبر"],
   ["track", "Track a delivery", "Tell me when my Amazon order arrives", "قولي لما طلب أمازون يوصل"],
@@ -39,7 +50,7 @@ const CHIPS = [["buy", "Find & buy", "Buy me AirPods Pro 2 under 9,000", "اشت
   ["research", "Research a topic", "Gather information on solar panels for a flat in Cairo", "جمعلي معلومات عن الطاقة الشمسية لشقة في القاهرة"],
   ["open", "Open an app", "Open Uber", "افتح أوبر"]];
 
-export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onResearch = null, search = null, country = "EG", pro = true, openPlan = null, understandRule = null }) {
+export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onResearch = null, search = null, country = "EG", pro = true, openPlan = null, understandRule = null, drafter = null }) {
   const ar = getLang() === "ar";
   const [st, setSt] = useState(() => A.loadAgents());
   const [text, setText] = useState("");
@@ -274,7 +285,56 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const remove = (a) => { if (a.kind === "follow") followNote(a, false); put({ ...st, agents: st.agents.filter((x) => x.id !== a.id) }); };
   const toggle = (a) => { if (a.kind === "follow") followNote(a, !a.on); put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, on: !x.on } : x)) }); };
 
+  // ---- v9.4 the new agents' actions (agents2.js does the thinking; these only talk to the phone) ----
+  const [schedOpen, setSchedOpen] = useState(false), [allStarters, setAllStarters] = useState(false);
+  const remind = (id, at, title, body = "") => { const r = { id, at, title, body, repeat: "none" }; const list = [...loadReminders().filter((x) => x.id !== id), r]; saveReminders(list); try { syncToPhone(N, list); } catch (e) {} };
+  const createSend = (d) => {
+    const chat = A2.chatFor(d.who, readInbox());
+    const a = { ...A.makeAgent({ kind: "send", who: d.who, text: d.text, at: d.at }), key: chat ? chat.key : "", pkg: chat ? chat.pkg || "" : "com.whatsapp", phone: d.phone || "" };
+    put({ ...A.loadAgents(), agents: [a, ...A.loadAgents().agents] }); openTab(a.id); setSchedOpen(false);
+    try { N && N.schedule && N.schedule(JSON.stringify({ id: "msg-" + a.id, at: a.at, title: T("Message to {who}", { who: a.who }), body: a.text, repeat: "none",
+      send: { key: a.key, pkg: a.pkg, phone: a.phone, text: a.text, who: a.who, sentTitle: T("Sent to {who}", { who: a.who }), dueTitle: T("Time to send to {who} — tap to open the chat", { who: a.who }) } })); } catch (e) {}
+    flash && flash(T("Scheduled: {who}, {t}", { who: a.who, t: whenTxt(a.at) }));
+  };
+  const sendNow = (a) => {
+    let r = {}; try { r = a.key && N && N.chatReply ? JSON.parse(N.chatReply(JSON.stringify({ key: a.key, text: a.text })) || "{}") : {}; } catch (e) {}
+    try { N && N.unschedule && N.unschedule("msg-" + a.id); } catch (e) {}
+    if (r.ok) { upd(a.id, (y) => ({ ...y, state: "sent", doneAt: Date.now() })); flash && flash(T("Sent to {who}", { who: a.who })); return; }
+    const url = a.phone ? "https://wa.me/" + String(a.phone).replace(/\D/g, "") + "?text=" + encodeURIComponent(a.text) : "";
+    try { navigator.clipboard && navigator.clipboard.writeText(a.text); } catch (e) {}
+    try { N && N.openAnyApp && N.openAnyApp(JSON.stringify({ pkg: a.pkg || "", url })); } catch (e) {}
+    upd(a.id, (y) => ({ ...y, state: "opened", doneAt: Date.now() }));
+    flash && flash(url ? tr("The chat opens with the message written — tap Send") : T("Copied — {app} opens: paste it in {who}'s chat", { app: "WhatsApp", who: a.who }));
+  };
+  useEffect(() => { try { const log = N && N.sendLog ? JSON.parse(N.sendLog() || "[]") : []; if (log.length) { const cur = A.loadAgents(); put({ ...cur, agents: cur.agents.map((a) => { const x = log.find((l) => l.id === "msg-" + a.id); return x ? { ...a, state: x.ok ? "sent" : "opened", doneAt: x.at } : a; }) }); } } catch (e) {} }, []);
+  const slotOpen = async (a, refresh = 0) => {
+    if (!(N && N.agentOpen && nativeCall)) { try { window.open(a.url, "_blank"); } catch (e) {} return; }
+    setBusy(a.id);
+    try { const r = await nativeCall("agentOpen", { url: a.url, title: a.title, profile: {}, rules: {}, labels: agentLabels(), search: false, slot: true, ...(refresh ? { refresh } : {}) });
+      if (r && typeof r.slot === "string") { upd(a.id, (y) => A.takeSlot(y, { text: r.slot, at: Date.now(), how: "browser" })); const st = A2.slotState(r.slot).state;
+        flash && flash(st === "open" ? tr("A date is showing — book it now") : st === "none" ? tr("No appointments yet — I'll keep checking") : st === "login" ? tr("Log in once, then tap Check now again") : tr("Read the page — nothing clear yet")); } }
+    catch (e) { flash && flash(String((e && e.message) || e)); } finally { setBusy(""); }
+  };
+  const tripRemind = (a) => { const p = A2.tripPlan(a, [], { drive: a.drive || 60 }), now = Date.now();
+    if (p.checkIn > now) remind("trip-ci-" + a.id, p.checkIn, T("Check-in is open: {f}", { f: a.flight }), tr("Check in online now and pick your seat."));
+    if (p.leaveBy > now) remind("trip-go-" + a.id, p.leaveBy, T("Leave for the airport now: {f}", { f: a.flight }), T("Takes off {t}", { t: whenTxt(a.at) }));
+    upd(a.id, (y) => ({ ...y, reminded: true })); flash && flash(tr("Reminders set: when check-in opens and when to leave")); };
+  const openSite = async (a, x) => { if (N && N.openInApp) { try { const r = JSON.parse(N.openInApp(x.url) || "{}"); if (r.ok && r.how === "app") return; } catch (e) {} }
+    if (N && N.agentOpen && nativeCall) { try { await nativeCall("agentOpen", { url: x.url, title: a.title, profile: loadBooking(), rules: { cheapest: true }, labels: agentLabels(), search: false }); } catch (e) {} return; }
+    try { window.open(x.url, "_blank"); } catch (e) {} };
+  const startNew = (d) => {
+    if (d.kind === "send") { createSend(d); return true; }
+    if (!["reply", "slot", "restock", "protect", "clinic", "trip"].includes(d.kind)) return false;
+    if (!pro && st.agents.filter((x) => x.on).length >= 1) { flash && flash(tr("Free includes 1 agent — Pro runs as many as you need")); openPlan && openPlan(); return true; }
+    const a = A.makeAgent(d); noteProUse("agent"); openTab(a.id); put({ ...A.loadAgents(), agents: [a, ...A.loadAgents().agents] }); setText(""); setDraft(null);
+    if (d.kind === "slot") { flash && flash(tr("Watching the appointments — the page opens now: log in once if it asks")); setTimeout(() => slotOpen(a), 300); }
+    else if (d.kind === "trip") { setTimeout(() => tripRemind(a), 100); }
+    else if (d.kind === "protect") { flash && flash(T("Watching the price of {w} for {n} days", { w: d.what, n: d.days })); setTimeout(() => checkNow(a), 300); }
+    else flash && flash(d.kind === "reply" ? tr("Reply helper is on — it shows who is waiting for your answer") : d.kind === "restock" ? tr("Restock is on — it learns from what you buy in Money") : T("{s} in {c}: the booking sites are ready", { s: tr(d.spec), c: d.city }));
+    return true;
+  };
   const start = (sentence, d) => {
+    if (d && !d.ask && startNew(d)) return;
     if (!d) { flash && flash(tr("Say what the agent should do — like the examples above")); return; }
     if (d.ask) { setDraft({ text: sentence, d }); setAnswer(""); return; }
     setDraft(null); setText(""); setDoCard(null);
@@ -313,8 +373,19 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const setRules = (a, rules) => upd(a.id, (y) => ({ ...y, rules, ...(rules.below ? { below: rules.below } : {}) }));
   const extra = { setRules, understand: understandRule, flash };
   const priceOf = (a) => { const p = a.pending || a.found || (R.applyRules(a.best3 || [], a.rules)[0]); return p && p.price ? money(p.price, p.currency || a.currency) : ""; };
-  const cards = [...st.agents.map((a) => ({ id: a.id, st: R.agentStatus(a), kind: a.kind, title: a.kind === "follow" ? a.topic : a.said || a.what || a.title, site: siteOfAgent(a), price: priceOf(a),
-      el: a.kind === "follow" ? <FollowCard key={a.id} a={a} {...{ runFollow, remove, toggle }} {...extra} /> : a.kind === "buy" ? <BuyCard key={a.id} a={a} busy={busy === a.id} {...{ buyRound, confirmBuy, notThis, markDone, remove, toggle, openApp, openBest }} {...extra} />
+  const liveSt = (a) => a.kind === "reply" ? (a.on === false ? "paused" : A2.waitingChats(readInbox(), { hours: a.hours || 3 }).length ? "needs" : "working")
+    : a.kind === "restock" ? (a.on === false ? "paused" : (() => { try { return A2.restockDue(JSON.parse(localStorage.getItem("ledger.v3") || "null"), { soon: 2 }).length ? "needs" : "working"; } catch (e) { return "working"; } })())
+    : a.kind === "clinic" ? (a.on === false ? "paused" : "found") : R.agentStatus(a);   // v9.4: the group follows what the card shows
+  const cards = [...st.agents.map((a) => ({ id: a.id, st: liveSt(a), kind: a.kind, title: a.kind === "follow" ? a.topic : a.said || a.what || a.title, site: siteOfAgent(a), price: priceOf(a),
+      el: a.kind === "reply" ? <ReplyCard key={a.id} a={a} draft={drafter} onSchedule={() => setSchedOpen(true)} {...{ remove, toggle }} {...extra} />
+        : a.kind === "send" ? <SendCard key={a.id} a={a} {...{ remove, toggle, sendNow }} />
+        : a.kind === "slot" ? <SlotCard key={a.id} a={a} busy={busy === a.id} checkSlot={(x) => slotOpen(x)} watchSlot={(x) => slotOpen(x, 60)} setUrl={(x, s0) => upd(x.id, (y) => ({ ...y, url: s0.url, site: s0.name }))} setEvery={(x, m) => upd(x.id, (y) => ({ ...y, every: m }))} {...{ remove, toggle }} {...extra} />
+        : a.kind === "restock" ? <RestockCard key={a.id} a={a} openMoney={() => navTo && navTo("money")} toList={(items) => { const st0 = L.loadLists(); const ex = L.findList(st0, ar ? "الطلبات" : "Shopping");
+            const next = ex ? L.addItem(st0, ex.id, items.join(",")) : L.addList(st0, L.makeList({ name: ar ? "الطلبات" : tr("Shopping"), items, repeat: { every: "once" } })); L.saveLists(next); flash && flash(T("Added to your shopping list: {n}", { n: items.length })); }} findCheapest={(x) => submit((ar ? "اشتريلي " : "Buy me ") + x.item)} remindOn={(x) => { remind("restock-" + encodeURIComponent(x.item).slice(0, 40), Date.parse(x.due + "T09:00:00"), T("Running low: {w}", { w: x.item }), tr("Time to buy it again")); flash && flash(T("I'll remind you on {d}", { d: whenTxt(Date.parse(x.due + "T09:00:00")) })); }} {...{ remove, toggle }} {...extra} />
+        : a.kind === "protect" ? <ProtectCard key={a.id} a={a} busy={busy === a.id} {...{ remove, toggle, checkNow, flash }} {...extra} />
+        : a.kind === "clinic" ? <ClinicCard key={a.id} a={a} {...{ remove, toggle, openSite }} {...extra} />
+        : a.kind === "trip" ? <TripCard key={a.id} a={a} setDrive={(x, m) => upd(x.id, (y) => ({ ...y, drive: m, reminded: false }))} remindTrip={tripRemind} {...{ remove, toggle, navTo }} {...extra} />
+        : a.kind === "follow" ? <FollowCard key={a.id} a={a} {...{ runFollow, remove, toggle }} {...extra} /> : a.kind === "buy" ? <BuyCard key={a.id} a={a} busy={busy === a.id} {...{ buyRound, confirmBuy, notThis, markDone, remove, toggle, openApp, openBest }} {...extra} />
         : <AgentCard key={a.id} a={a} hits={hits} busy={busy === a.id} {...{ checkNow, orderNow, openApp, remove, toggle, openBest, skipBest }} {...extra} /> })),
     ...scout.map((g) => ({ id: "scout-" + g.id, st: (g.unseen || []).length ? "found" : "working", kind: "scout", title: tr("Scout") + " · " + g.text, site: "", price: "",
       el: <div className={U.cardPad + " space-y-2"} data-testid="agents-scout">
@@ -332,9 +403,15 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
       {/* v8.7 (Ali picked P5-C): the same box as Home and every page — only the hint is the Agents' */}
       <U.PageBox value={text} setValue={setText} onSend={(t) => submit(t)} hint={tr("Tell an agent what to do…")} sendLabel={tr("Send")} ids={{ box: "agents-box", input: "agents-input", go: "agents-go" }} />
-      <div className="flex flex-wrap gap-2" data-testid="agents-chips">
-        {CHIPS.map(([k, l, en, a]) => <button key={k} onClick={() => { setText(ar ? a : en); setDraft(null); }} className={U.chip(false)} data-testid={"agents-chip-" + k}>{React.createElement(KIND_ICON[k], { size: 15 })}{tr(l)}</button>)}
+      <div className="grid grid-cols-3 gap-2" data-testid="agents-chips">
+        {(allStarters ? CHIPS : CHIPS.filter(([k]) => ["reply", "send", "flight", "slot", "buy", "watch"].includes(k))).map(([k, l, en, a]) => <button key={k}
+          onClick={() => { if (k === "send") { setSchedOpen(true); return; } setText(ar ? a : en); setDraft(null); try { document.querySelector("[data-testid=agents-input]").focus(); } catch (e) {} }}
+          className="min-h-[84px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5 flex flex-col items-center justify-center gap-1.5 text-center hover:border-[var(--c-acc)] active:scale-[.98] transition" data-testid={"agents-chip-" + k}>
+          <span className="w-9 h-9 rounded-full bg-[var(--c-soft)] c-acc grid place-items-center">{React.createElement(KIND_ICON[k] || AppWindow, { size: 17 })}</span>
+          <span className="text-[12.5px] font-extrabold leading-tight">{tr(l)}</span></button>)}
       </div>
+      <button onClick={() => setAllStarters(!allStarters)} className="w-full min-h-[40px] text-[13px] font-extrabold c-acc" aria-expanded={allStarters} data-testid="agents-more-starters">{allStarters ? tr("Fewer") : tr("More agents")} {allStarters ? "‹" : "›"}</button>
+      {schedOpen ? <ScheduleForm nativeCall={nativeCall} onClose={() => setSchedOpen(false)} onDone={createSend} /> : null}
       {draft ? <div className={U.cardPad + " space-y-2"} data-testid="agents-ask">
         <p className="m-0 text-[14px] font-bold" dir="auto">{T(draft.d.ask, { ...(draft.d.v || {}), app: draft.d.app ? draft.d.app.label : "", x: draft.d.name || "" })}</p>
         <form onSubmit={(e) => { e.preventDefault(); reply(); }} className="flex gap-2">
@@ -579,13 +656,20 @@ const pill = "text-[11px] font-semibold px-2.5 py-1 rounded-full " + glass;
 const tint = (s) => { let h = 0; for (const ch of String(s || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const a = h % 360, b = (a + 40) % 360;
   return { background: `radial-gradient(120% 90% at 20% 30%, hsl(${a} 30% 52%) 0%, transparent 60%), radial-gradient(100% 80% at 85% 75%, hsl(${b} 28% 36%) 0%, transparent 65%), hsl(${a} 18% 20%)` }; };
 /** v9.2: an offer's own name — never just the website's ("Booking.com"): the first words of what the card said, else "Offer n". */
-const offerName = (o, a, k = 0) => { if (!R.isSiteName(o.name, a.site)) return o.name;
+const textName = (o, a) => { if (!R.isSiteName(o.name, a.site)) return o.name;
   const t = String(o.text || "").split(/\s[·|•]\s|\n|(?=\s(?:EGP|SAR|AED|USD|€|\$)\s?\d)|\s\d[\d,.]{3,}/)[0].trim();
-  return t && t.length >= 4 && !R.isSiteName(t, a.site) && !/^\d/.test(t) ? t.slice(0, 60) : T("Offer {i}", { i: k + 1 }); };
+  return t && t.length >= 4 && !R.isSiteName(t, a.site) && !/^\d/.test(t) ? t.slice(0, 60) : ""; };
+const offerName = (o, a, k = 0) => textName(o, a) || T("Offer {i}", { i: k + 1 });
 function Podium({ a, c, far, day, tv, openBest, skipBest }) {
   const [at, setAt] = useState(-1);
   const photos = useMemo(() => A.loadPhotos(a.id), [a.id, a.best3]);
-  const rows = c.rows, w = rows[0], n = (v) => Math.round(v).toLocaleString("en-US");
+  // v9.4 (Ali, 5 Nov: "Offer 3" on a blurred card, "very bad and confusing and does not open on the specific listing"): only an offer
+  // the agent knows by its own name or page is a story; one read without them is a plain row — its days and price — whose button
+  // says honestly what it opens (the site's hotels for those days), never "Book this offer"
+  const named = (o) => !!(o.href && /^https:\/\//.test(o.href)) || !!textName(o, a);
+  const rows = c.rows.filter((r) => named(r.o)), bare = c.rows.filter((r) => !named(r.o)), n = (v) => Math.round(v).toLocaleString("en-US");
+  if (!rows.length) return <DateRows a={a} rows={bare} day={day} openBest={openBest} title="Cheapest dates" />;
+  const w = rows[0];
   // v9.2 (Ali: "the hotel photos, or at least a logo instead of the word booking.com"): no photo → the site's own mark on the calm colour field
   const pic = (o, cls) => (photos[o.key] ? <img src={photos[o.key]} alt="" className={cls + " object-cover"} />
     : <span className={cls + " grid place-items-center"} style={tint(o.name)} aria-hidden="true" data-testid="agent-nophoto"><SiteMark site={o.site || o.href || a.url || a.site} size={cls.includes("inset-0") && !cls.includes("h-[112px]") ? 56 : 44} testid="agent-photo-mark" /></span>);
@@ -619,6 +703,7 @@ function Podium({ a, c, far, day, tv, openBest, skipBest }) {
             <span className="block text-[14.5px] font-bold tabular-nums mt-0.5">{money(r.o.price, a.currency)} <span className="text-[11px] font-medium c-sub" data-testid="agent-trade">+{n(r.o.price - w.o.price)}</span></span></span>
         </button>)}
       </div></> : null}
+    {bare.length ? <DateRows a={a} rows={bare} day={day} openBest={openBest} title="More dates" /> : null}
     {at >= 0 && rows[at] ? <OfferSheet a={a} rows={rows} at={at} setAt={setAt} pic={pic} far={far} day={day} n={n} openBest={openBest} skipBest={skipBest} /> : null}
   </div>;
 }
@@ -678,6 +763,20 @@ function FlightBoard({ a, openBest }) {
 }
 
 /** One offer full screen, like a story: the photo, bars for where you are, name, days · walk · rating, price, ‹ Book this offer ›. */
+/** v9.4: offers read without a hotel's name or page — a clear list of days and prices; the button opens the site for those days. */
+function DateRows({ a, rows, day, openBest, title }) {
+  const site = (R.brandOf(a.url || a.site) || [])[0] || a.site;
+  return <div className="space-y-1.5" data-testid="agent-date-rows">
+    <span className="block px-0.5 text-[10.5px] font-bold tracking-[0.16em] uppercase c-sub">{tr(title)}</span>
+    {rows.map((r, k) => <div key={k} className="flex items-center gap-3 rounded-[16px] border border-[var(--c-ln)] px-3 py-2.5" data-testid="agent-date-row">
+      <div className="min-w-0 flex-1"><p className="m-0 text-[14px] font-bold tabular-nums" dir="ltr">{r.o.checkin ? day(r.o) : site}</p>
+        <p className="m-0 text-[12px] c-sub">{[r.f.nights ? T("{n} nights", { n: r.f.nights }) : "", k === 0 && title === "Cheapest dates" ? tr("Cheapest") : ""].filter(Boolean).join(" · ")}</p></div>
+      <b className="shrink-0 tabular-nums text-[15px]">{money(r.o.price, a.currency)}</b>
+      <button onClick={() => openBest(a, r.o)} className="shrink-0 min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold bg-[var(--c-acc)] text-[var(--c-on-acc)]" data-testid="agent-date-open">{T("Hotels on {site}", { site })}</button>
+    </div>)}
+  </div>;
+}
+
 function OfferSheet({ a, rows, at, setAt, pic, day, far, n, openBest, skipBest }) {
   const r = rows[at], w = rows[0], next = rows[at + 1];
   const go = (d) => setAt(Math.max(0, Math.min(rows.length - 1, at + d)));
@@ -798,3 +897,174 @@ function PriceLine({ a }) {
   </div>;
 }
 
+
+/* ---- v9.4 the new agents (Ali, 5 Nov: G1–G7 — "easy, interactive, visually appealing, smooth and consistent across all agents; global").
+   Every card is the same shape as the others: CardHead (icon · name · what it is doing · status · ⋯) → its body → ONE button row →
+   its rules. The logic is in agents2.js (pure, tested). */
+const N2 = () => (typeof window !== "undefined" ? window.AttuneNative : null);
+const readInbox = () => { const n = N2(); try { return n && n.chatInbox ? JSON.parse(n.chatInbox() || "[]") : []; } catch (e) { return []; } };
+const whenTxt = (t) => { try { const d = new Date(t), n = new Date(), tm = new Date(); tm.setDate(n.getDate() + 1);
+  const day = d.toDateString() === n.toDateString() ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" });
+  return day + " " + d.toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
+const waitTxt = (ms) => { const h = Math.floor(ms / 36e5); return h >= 24 ? T("{n} days", { n: Math.floor(h / 24) }) : h >= 1 ? T("{n} h", { n: h }) : T("{n} min", { n: Math.max(1, Math.round(ms / 6e4)) }); };
+const APP_NAME = { whatsapp: "WhatsApp", telegram: "Telegram", messenger: "Messenger", signal: "Signal", instagram: "Instagram", sms: "SMS", gmail: "Gmail", email: "Email", teams: "Teams", slack: "Slack" };
+const appName = (x) => APP_NAME[String(x || "").toLowerCase()] || x || "";
+const countryName = (cc) => { try { return new Intl.DisplayNames([getLang() === "arb" ? "ar" : getLang() || "en"], { type: "region" }).of(cc) || cc; } catch (e) { return cc; } };
+const Row = ({ children, testid }) => <div className="rounded-[14px] border border-[var(--c-ln)] p-2.5 space-y-2" data-testid={testid}>{children}</div>;
+const Avatar = ({ name }) => <span className="w-9 h-9 rounded-full bg-[var(--c-soft)] c-acc grid place-items-center text-[13px] font-extrabold shrink-0">{String(name || "?").trim().slice(0, 1).toUpperCase()}</span>;
+
+/** G1 — who is waiting for your answer, a draft in your words, sent into exactly that chat; and scheduled messages. */
+export function ReplyCard({ a, draft, flash, remove, toggle, setRules, understand, onSchedule }) {
+  const [tick, setTick] = useState(0), [open, setOpen] = useState(""), [text, setText] = useState(""), [busy, setBusy] = useState(false), [rules, setRulesOpen] = useState(false);
+  const items = useMemo(readInbox, [tick]);
+  const wait = A2.waitingChats(items, { hours: a.hours || 3 });
+  const pick = async (x) => { setOpen(x.key); setText(""); if (!draft) return; setBusy(true); try { setText(await draft(A2.draftPrompt(x))); } catch (e) {} setBusy(false); };
+  const send = (x) => {
+    const t = text.trim(); if (!t) return; const n = N2();
+    let r = {}; try { r = n && n.chatReply ? JSON.parse(n.chatReply(JSON.stringify({ key: x.key, text: t })) || "{}") : {}; } catch (e) {}
+    if (r.ok) { flash && flash(T("Sent to {who}", { who: x.who })); setOpen(""); setTick((k) => k + 1); return; }
+    try { navigator.clipboard && navigator.clipboard.writeText(t); } catch (e) {}
+    try { n && n.openAnyApp && n.openAnyApp(JSON.stringify({ pkg: x.pkg || "", url: "" })); } catch (e) {}
+    flash && flash(T("Copied — {app} opens: paste it in {who}'s chat", { app: appName(x.app) || "WhatsApp", who: x.who }));
+  };
+  return <div className={U.cardPad + " space-y-2.5"} data-testid="agent-reply">
+    <AgentHead a={a} kind="reply" title={tr("Reply helper")} status={wait.length ? "needs" : a.on === false ? "paused" : "working"} {...{ toggle, remove }} onRules={() => setRulesOpen(!rules)}
+      line={wait.length ? T("{n} waiting for your reply", { n: wait.length }) : tr("No one is waiting for your reply")} />
+    {wait.slice(0, 4).map((x) => <Row key={x.key} testid="reply-row">
+      <div className="flex gap-2.5 items-start"><Avatar name={x.who} />
+        <div className="flex-1 min-w-0"><b className="block text-[14px] truncate" dir="auto">{x.who} <span className="c-sub font-semibold text-[12px]">· {appName(x.app)} · {T("waiting {t}", { t: waitTxt(x.waited) })}</span></b>
+          <p className="m-0 text-[13px] c-sub" dir="auto">{x.text}</p></div></div>
+      {open === x.key ? <div className="space-y-2">
+        <textarea value={busy ? tr("Writing a draft…") : text} onChange={(e) => setText(e.target.value)} dir="auto" rows={2} className={U.area} placeholder={tr("Write your reply…")} data-testid="reply-text" />
+        <div className="flex flex-wrap gap-1.5">{A2.QUICK.map((q) => <button key={q} onClick={() => setText(tr(q))} className="min-h-[32px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" data-testid="reply-quick">{tr(q)}</button>)}</div>
+        <CardActions primary={{ label: x.canReply ? tr("Send") : tr("Copy and open the chat"), icon: Send, onClick: () => send(x), testid: "reply-send" }} secondary={{ label: tr("Later"), onClick: () => setOpen(""), testid: "reply-later" }} />
+      </div> : <button onClick={() => pick(x)} className="text-[13px] font-extrabold c-acc min-h-[36px]" data-testid="reply-open">{draft ? tr("Draft a reply") : tr("Reply")} ›</button>}
+    </Row>)}
+    <CardActions primary={{ label: tr("Schedule a message"), icon: Clock, onClick: () => onSchedule && onSchedule(), testid: "reply-schedule" }} secondary={{ label: tr("Check again"), icon: RefreshCw, onClick: () => setTick((k) => k + 1), testid: "reply-refresh" }} />
+    <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={rules} setOpen={setRulesOpen} />
+  </div>;
+}
+
+/** A scheduled message: who, what, when — sent by itself through that chat when it can, else the chat opens with it written. */
+export function SendCard({ a, remove, toggle, sendNow }) {
+  const st = a.state === "sent" ? T("Sent {t}", { t: whenTxt(a.doneAt || a.at) }) : a.state === "opened" ? tr("The chat opened with it written — tap Send there") : T("Goes {t}", { t: whenTxt(a.at) });
+  return <div className={U.cardPad + " space-y-2.5"} data-testid="agent-send">
+    <AgentHead a={a} kind="send" title={T("Message to {who}", { who: a.who })} line={st} {...{ toggle, remove }} />
+    <div className="msg rounded-[14px] bg-[var(--c-soft)] p-2.5 text-[13.5px]" dir="auto" data-testid="send-text">{a.text}</div>
+    {a.state === "scheduled" ? <CardActions primary={{ label: tr("Send now"), icon: Send, onClick: () => sendNow(a), testid: "send-now" }} /> : null}
+  </div>;
+}
+/** The form behind "Schedule a message": the person (or a contact from the phone), the words, the time. */
+export function ScheduleForm({ onDone, onClose, nativeCall }) {
+  const [who, setWho] = useState(""), [phone, setPhone] = useState(""), [text, setText] = useState("");
+  const [at, setAt] = useState(() => { const d = new Date(Date.now() + 3600e3); d.setMinutes(0, 0, 0); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); });
+  const pickC = async () => { try { const c = await nativeCall("contactPick", {}); if (c) { setWho(c.name || who); setPhone(c.phone || ""); } } catch (e) {} };
+  const ok = who.trim() && text.trim() && Date.parse(at) > Date.now();
+  return <div className={U.cardPad + " space-y-2.5"} data-testid="schedule-form">
+    <div className="flex items-center gap-2"><b className="flex-1 text-[15px]">{tr("Schedule a message")}</b><button onClick={onClose} aria-label={tr("Close")} className="w-9 h-9 grid place-items-center c-sub"><X size={16} /></button></div>
+    <div className="flex gap-2"><input value={who} onChange={(e) => setWho(e.target.value)} dir="auto" placeholder={tr("To whom?")} className={U.inp + " flex-1"} data-testid="schedule-who" />
+      {nativeCall ? <button onClick={pickC} className={U.btnS} data-testid="schedule-contact">{tr("Contacts")}</button> : null}</div>
+    <textarea value={text} onChange={(e) => setText(e.target.value)} dir="auto" rows={2} placeholder={tr("The message")} className={U.area} data-testid="schedule-text" />
+    <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} className={U.inp} dir="ltr" data-testid="schedule-at" />
+    <p className="m-0 text-[12px] c-sub">{tr("At that time Attune sends it through the chat's own Reply when it can; otherwise the chat opens with the message written — one tap on Send.")}</p>
+    <CardActions primary={{ label: tr("Schedule"), icon: Clock, onClick: () => ok && onDone({ kind: "send", who: who.trim(), phone, text: text.trim(), at: Date.parse(at) }), testid: "schedule-go" }} />
+  </div>;
+}
+
+/** G2 — a visa / appointment page: open · none · log in · couldn't read, the dates it shows, check now, watch while open. */
+export function SlotCard({ a, remove, toggle, checkSlot, watchSlot, setUrl, setEvery, busy , setRules, understand, flash}) {
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const s = a.slot || {}, d0 = (s.dates || [])[0];
+  const dayTxt = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return iso; } };
+  const box = s.state === "open" ? ["border-[var(--c-pos)] bg-[var(--c-soft)]", T("A date is showing: {d}", { d: dayTxt(d0) }), tr("Book it now — slots go fast.")]
+    : s.state === "none" ? ["border-[var(--c-ln)]", tr("No appointments yet"), tr("I'll keep checking and tell you the moment one shows.")]
+    : s.state === "login" ? ["border-[var(--c-warn)]", tr("Log in once"), tr("Open the page, log in — then I can read it.")]
+    : s.state ? ["border-[var(--c-ln)]", tr("Couldn't read the page"), tr("Tap Check now — the page opens in Attune.")] : ["border-[var(--c-ln)]", tr("Not checked yet"), tr("Tap Check now to read the page.")];
+  return <div className={U.cardPad + " space-y-2.5"} data-testid="agent-slot">
+    <AgentHead a={a} onRules={() => setRulesOpen(!rulesOpen)} kind="slot" title={a.dest ? T("Visa appointments · {c}", { c: countryName(a.dest) }) : tr("Appointment watch")} {...{ toggle, remove }}
+      line={T("Checks every {n} min", { n: a.every || 30 }) + (s.at ? " · " + ago(s.at) : "") + (a.site ? " · " + a.site : "")} />
+    <div className={"rounded-[16px] border-2 p-3 space-y-0.5 " + box[0]} data-testid="slot-state" data-state={s.state || ""}>
+      <b className="block text-[16px]">{box[1]}</b><span className="block text-[12.5px] c-sub">{box[2]}</span>
+      {(s.dates || []).length > 1 ? <span className="block text-[12.5px] font-bold">{tr("Also:")} {(s.dates || []).slice(1, 4).map(dayTxt).join(" · ")}</span> : null}</div>
+    {(a.sites || []).length > 1 ? <div className="flex flex-wrap gap-1.5">{a.sites.map((x) => <button key={x.url} onClick={() => setUrl(a, x)} aria-pressed={x.url === a.url}
+      className={"min-h-[32px] px-2.5 rounded-full border text-[12.5px] font-bold " + (x.url === a.url ? "border-[var(--c-acc)] c-acc" : "border-[var(--c-ln)]")} data-testid="slot-site">{x.name}</button>)}</div> : null}
+    <div className="flex flex-wrap gap-1.5 items-center"><span className="text-[12px] c-sub font-bold">{tr("Check every")}</span>{[15, 30, 60].map((m) => <button key={m} onClick={() => setEvery(a, m)} aria-pressed={(a.every || 30) === m}
+      className={"min-h-[30px] px-2.5 rounded-full border text-[12px] font-bold " + ((a.every || 30) === m ? "border-[var(--c-acc)] c-acc" : "border-[var(--c-ln)]")} data-testid="slot-every">{T("{n} min", { n: m })}</button>)}</div>
+    <CardActions primary={{ label: s.state === "open" ? tr("Open now") : tr("Check now"), icon: s.state === "open" ? ExternalLink : RefreshCw, busy, onClick: () => checkSlot(a), testid: "slot-check" }}
+      secondary={{ label: tr("Watch while open"), icon: Eye, onClick: () => watchSlot(a), testid: "slot-watch" }} />
+    <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={rulesOpen} setOpen={setRulesOpen} />
+  </div>;
+}
+
+/** G3 — what you buy again and again, before it runs out (from Money). */
+export function RestockCard({ a, remove, toggle, findCheapest, remindOn, toList, openMoney , setRules, understand, flash}) {
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const L = (() => { try { return JSON.parse(localStorage.getItem("ledger.v3") || "null"); } catch (e) { return null; } })();
+  const due = A2.restockDue(L, { soon: 7 });
+  return <div className={U.cardPad + " space-y-2.5"} data-testid="agent-restock">
+    <AgentHead a={a} onRules={() => setRulesOpen(!rulesOpen)} kind="restock" title={tr("Restock")} status={due.some((x) => x.daysLeft <= 2) ? "needs" : a.on === false ? "paused" : "working"} {...{ toggle, remove }}
+      line={due.length ? T("{n} running low this week", { n: due.length }) : tr("Nothing is running low")} />
+    {due.length ? due.slice(0, 5).map((x) => <Row key={x.item} testid="restock-row">
+      <div className="flex items-center gap-2"><b className="flex-1 min-w-0 truncate text-[14px]" dir="auto">{x.item}</b>
+        <span className={U.tag(x.daysLeft <= 0 ? "red" : x.daysLeft <= 2 ? "amber" : "gray")}>{x.daysLeft <= 0 ? tr("due now") : T("{n} days left", { n: x.daysLeft })}</span></div>
+      <p className="m-0 text-[12px] c-sub">{T("You buy it every {n} days", { n: x.every })}{x.price ? " · " + T("usually {p}", { p: Math.round(x.price).toLocaleString("en-US") }) : ""}</p>
+      <div className="flex gap-2"><button onClick={() => findCheapest(x)} className={U.btnP + " flex-1 h-10! min-h-[40px]!"} data-testid="restock-find">{tr("Find the cheapest")}</button>
+        <button onClick={() => remindOn(x)} className={U.btnS + " h-10! min-h-[40px]!"} data-testid="restock-remind">{tr("Remind me")}</button></div>
+    </Row>) : <p className="m-0 text-[13px] c-sub" data-testid="restock-empty">{tr("I learn from Money: anything you buy 3 times or more at a steady pace shows here before it runs out.")}</p>}
+    <CardActions primary={due.length ? { label: tr("Add to my shopping list"), icon: ListChecks, onClick: () => toList(due.map((x) => x.item)), testid: "restock-list" } : { label: tr("Open Money"), icon: ChevronRight, onClick: () => openMoney(), testid: "restock-money" }} />
+    <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={rulesOpen} setOpen={setRulesOpen} />
+  </div>;
+}
+
+/** G4 — what you paid, the price today, the days left to return; a drop → the money you can ask back, and the message. */
+export function ProtectCard({ a, remove, toggle, checkNow, busy, flash , setRules, understand}) {
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const now0 = ((a.checks || []).filter((c) => c.price > 0).slice(-1)[0] || {}).price || 0;
+  const s = A2.protectState(a, now0);
+  const share = () => { const n = N2(); try { if (n && n.share) n.share(s.message); else navigator.clipboard && navigator.clipboard.writeText(s.message); } catch (e) {} flash && flash(tr("The message is ready — send it to the store")); };
+  return <div className={U.cardPad + " space-y-2.5"} data-testid="agent-protect">
+    <AgentHead a={a} onRules={() => setRulesOpen(!rulesOpen)} kind="protect" title={a.what} {...{ toggle, remove }} line={T("Watching the price for {n} more days", { n: s.daysLeft }) + (a.site ? " · " + a.site : "")} />
+    <div className="grid grid-cols-2 gap-2 text-center">
+      <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><span className="block text-[11.5px] c-sub font-bold">{tr("You paid")}</span><b className="text-[17px] tabular-nums">{money(a.paid, a.currency)}</b></div>
+      <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><span className="block text-[11.5px] c-sub font-bold">{tr("Today")}</span><b className={"text-[17px] tabular-nums " + (s.drop ? "text-[var(--c-pos)]" : "")} data-testid="protect-now">{now0 ? money(now0, a.currency) : "—"}</b></div></div>
+    {s.drop ? <div className="rounded-[16px] border-2 border-[var(--c-pos)] bg-[var(--c-soft)] p-3 space-y-1" data-testid="protect-drop"><b className="block text-[15px]">{T("{p} back possible", { p: money(s.back, a.currency) })}</b>
+      <span className="block text-[12.5px] c-sub">{T("{n} days left to ask or return it", { n: s.daysLeft })}</span></div> : null}
+    <CardActions primary={s.drop ? { label: tr("Ask for the difference"), icon: Share2, onClick: share, testid: "protect-ask" } : { label: tr("Check now"), icon: RefreshCw, busy, onClick: () => checkNow(a), testid: "protect-check" }}
+      secondary={s.drop ? { label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), testid: "protect-check" } : null} />
+    <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={rulesOpen} setOpen={setRulesOpen} />
+  </div>;
+}
+
+/** G5 — a specialty in a city: the country's booking sites (searched already), Google Maps everywhere. */
+export function ClinicCard({ a, remove, toggle, openSite , setRules, understand, flash}) {
+  const [rulesOpen, setRulesOpen] = useState(false);
+  return <div className={U.cardPad + " space-y-2.5"} data-testid="agent-clinic">
+    <AgentHead a={a} onRules={() => setRulesOpen(!rulesOpen)} kind="clinic" title={tr(a.spec === "ent" ? "ENT doctor" : a.spec.replace(/^\w/, (c) => c.toUpperCase())) + " · " + a.city} {...{ toggle, remove }} status={a.on === false ? "paused" : "found"}
+      line={(a.below ? T("under {p}", { p: a.below.toLocaleString("en-US") }) + " · " : "") + T("{n} places to book", { n: (a.tries || []).length })} />
+    <div className="grid gap-2">{(a.tries || []).map((x) => <button key={x.url} onClick={() => openSite(a, x)} className="min-h-[52px] rounded-[14px] border border-[var(--c-ln)] px-3 flex items-center gap-2.5 text-start" data-testid="clinic-site">
+      <SiteMark site={x.site} size={30} /><span className="flex-1 min-w-0"><b className="block text-[14px]">{x.site}</b><span className="block text-[12px] c-sub truncate">{T("{s} in {c}, ready to book", { s: tr(a.spec), c: a.city })}</span></span><ChevronRight size={16} className="c-sub rtl:rotate-180" /></button>)}</div>
+    <p className="m-0 text-[12px] c-sub">{tr("You choose the doctor and book on the site — Attune never books or pays for you.")}</p>
+    <CardActions primary={{ label: T("Open {s}", { s: ((a.tries || [])[0] || {}).site || "" }), icon: ExternalLink, onClick: () => openSite(a, a.tries[0]), testid: "clinic-open" }} />
+    <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={rulesOpen} setOpen={setRulesOpen} />
+  </div>;
+}
+
+/** G6 — the travel day: check-in opens, leave home by, at the airport by, take-off; the gate and delays from the airline's notifications. */
+export function TripCard({ a, remove, toggle, setDrive, remindTrip, navTo , setRules, understand, flash}) {
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const notes = (() => { const n = N2(); try { return n && n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : []; } catch (e) { return []; } })();
+  const p = A2.tripPlan(a, notes, { drive: a.drive || 60 });
+  const tm = (t) => { try { return new Date(t).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
+  const rows = [[tr("Check-in opens"), whenTxt(p.checkIn), p.checkInOpen], [tr("Leave home by"), whenTxt(p.leaveBy), p.leaveSoon], [tr("At the airport by"), tm(p.atAirport), false], [tr("Takes off"), whenTxt(a.at), false]];
+  return <div className={U.cardPad + " space-y-2.5"} data-testid="agent-trip">
+    <AgentHead a={a} onRules={() => setRulesOpen(!rulesOpen)} kind="trip" title={a.flight + (a.toName ? " · " + a.toName : "")} {...{ toggle, remove }} line={whenTxt(a.at)} />
+    {p.gate || p.status ? <div className="flex flex-wrap gap-1.5">{p.gate ? <span className={U.tag("blue")} data-testid="trip-gate">{T("Gate {g}", { g: p.gate })}</span> : null}
+      {p.status ? <span className={U.tag(p.status === "delayed" || p.status === "cancelled" ? "red" : "green")} data-testid="trip-status">{tr(p.status === "delayed" ? "Delayed" : p.status === "cancelled" ? "Cancelled" : "Boarding")}</span> : null}</div> : null}
+    <div className="space-y-1" data-testid="trip-plan">{rows.map(([l, v, hot]) => <div key={l} className={"flex items-center gap-2 min-h-[36px] px-2 rounded-[10px] " + (hot ? "bg-[var(--c-soft)]" : "")}>
+      <span className={"w-2 h-2 rounded-full shrink-0 " + (hot ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]")} /><span className="flex-1 text-[13.5px] font-bold">{l}</span><span className="text-[13px] tabular-nums c-sub">{v}</span></div>)}</div>
+    <div className="flex flex-wrap gap-1.5 items-center"><span className="text-[12px] c-sub font-bold">{tr("Drive to the airport")}</span>{[30, 45, 60, 90].map((m) => <button key={m} onClick={() => setDrive(a, m)} aria-pressed={(a.drive || 60) === m}
+      className={"min-h-[30px] px-2.5 rounded-full border text-[12px] font-bold " + ((a.drive || 60) === m ? "border-[var(--c-acc)] c-acc" : "border-[var(--c-ln)]")} data-testid="trip-drive">{T("{n} min", { n: m })}</button>)}</div>
+    <CardActions primary={{ label: a.reminded ? tr("Reminders are set") : tr("Remind me on the day"), icon: Clock, onClick: () => remindTrip(a), testid: "trip-remind" }} secondary={{ label: tr("Travel checklist"), icon: ListChecks, onClick: () => navTo && navTo("lists"), testid: "trip-list" }} />
+    <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={rulesOpen} setOpen={setRulesOpen} />
+  </div>;
+}

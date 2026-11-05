@@ -751,7 +751,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 .putExtra("search", a.optBoolean("search", true))
                 .putExtra("watch", a.optBoolean("watch", false))
                 .putExtra("autoClose", a.optBoolean("autoClose", false))   // v8.2: a round of several days closes each page by itself
-                .putExtra("buy", a.optBoolean("buy", false))   // v8.6: a buy agent the person confirmed — Buy now, then their details
+                .putExtra("buy", a.optBoolean("buy", false))
+                .putExtra("slot", a.optBoolean("slot", false))      // v9.4 G2: read an appointment page's words
+                .putExtra("refresh", a.optInt("refresh", 0))        // v9.4 G2: reload every N seconds while open   // v8.6: a buy agent the person confirmed — Buy now, then their details
                 .putExtra("rounds", a.optJSONArray("rounds")?.toString() ?: "")   // v8.7: several start days in ONE window (no flicker)
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             ctx.startActivity(i)
@@ -1170,6 +1172,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun widgetTicks(): String = try { Widgets.ticks(ctx) } catch (e: Exception) { "[]" }
     @JavascriptInterface
     fun clearWidgetTicks() { try { Widgets.clearTicks(ctx) } catch (e: Exception) { } }
+
+    /** v9.4 G1: the scheduled messages' results since the page last asked — [{id, ok, at}] (then forgotten). */
+    @JavascriptInterface
+    fun sendLog(): String = try { Reminders.takeSendLog(ctx) } catch (e: Exception) { "[]" }
 
     /** v6.14 — what the Fit & Food widget shows: {left, leftLabel, line, water}. */
     @JavascriptInterface

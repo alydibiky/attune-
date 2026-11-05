@@ -15,6 +15,7 @@ const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const latin = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/٫/g, ".").replace(/،/g, ",");
 const fold = (s) => latin(s).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?=\s|$)/g, "ه").toLowerCase();
 /** "40,000" / "40k" / "40 الف" / "1.5 مليون" → 40000 */
+import { autonomyIn } from "./agents2.js";   // v9.4 G7
 export function amountIn(s) {
   const m = /(\d[\d,]*(?:\.\d+)?)\s*(k|thousand|الف|ألف|آلاف|الاف|m|million|مليون)?/i.exec(latin(s)); if (!m) return null;
   let v = parseFloat(m[1].replace(/,/g, "")); const u = (m[2] || "").toLowerCase();
@@ -43,6 +44,8 @@ export function cleanRules(r = {}) {
   if (num(r.notAfter, 0, 23) != null) o.notAfter = Math.round(+r.notAfter);
   if (["economy", "premium", "business", "first"].includes(r.cabin)) o.cabin = r.cabin;
   for (const k of ["mustHave", "avoid", "onlySites", "avoidSites"]) { const w = words(r[k]); if (w.length) o[k] = w; }
+  if (r.autonomy === "notify" || r.autonomy === "ask") o.autonomy = r.autonomy;
+  else if (r.autonomy && typeof r.autonomy === "object" && num(r.autonomy.auto, 1, 1e9)) o.autonomy = { auto: Math.round(+r.autonomy.auto) };
   return o;
 }
 /** Merge a new rule into the agent's rules (a new value replaces the old one; word lists add up; "any" clears). */
@@ -59,6 +62,8 @@ export function parseRule(text) {
   const raw = String(text || "").trim(), t = fold(raw);
   if (!t) return null;
   const r = {};
+  // v9.4 G7: how much the agent may do by itself — "only tell me" · "ask me first" · "buy by itself under 7,500"
+  const au = autonomyIn(raw); if (au) { r.autonomy = au; return r; }
   // how often
   let m = /every\s+(\d{1,3})\s*(h|hours?|ساعه|ساعات)|كل\s+(\d{1,3})\s*(ساعه|ساعات)/i.exec(t);
   if (m) r.hours = +(m[1] || m[3]);
@@ -123,6 +128,9 @@ export function ruleChips(rules = {}) {
   for (const w of R.onlySites || []) out.push({ key: "onlySites", val: w, en: "only {w}", v: { w: brandName(w) } });
   for (const w of R.avoidSites || []) out.push({ key: "avoidSites", val: w, en: "not {w}", v: { w: brandName(w) } });
   if (R.hours) out.push({ key: "hours", en: R.hours === 24 ? "check every day" : "check every {n} h", v: { n: R.hours } });
+  if (R.autonomy === "notify") out.push({ key: "autonomy", en: "Only tell me" });
+  else if (R.autonomy === "ask") out.push({ key: "autonomy", en: "Ask me first" });
+  else if (R.autonomy && R.autonomy.auto) out.push({ key: "autonomy", en: "By itself under {p}", v: { p: R.autonomy.auto.toLocaleString("en-US") } });
   return out;
 }
 
@@ -155,8 +163,13 @@ export function followsRules(o, R = {}) {
 export const applyRules = (offers, R) => (!R || !Object.keys(R).length ? offers || [] : (offers || []).filter((o) => followsRules(o, R)));
 
 /** Where an agent is: needs you (an OK to buy) · found (something under the limit / offers) · working · paused · done. */
-export function agentStatus(a) {
+export function agentStatus(a, now = Date.now()) {
   if (!a) return "working";
+  // v9.4 the new agents
+  if (a.kind === "send") return a.state === "sent" || a.state === "opened" ? "done" : a.on === false ? "paused" : "working";
+  if (a.kind === "trip") return a.at && a.at < now ? "done" : a.on === false ? "paused" : "working";
+  if (a.kind === "slot") return a.on === false ? "paused" : a.slot && (a.slot.state === "open" || a.slot.state === "login") ? "needs" : "working";
+  if (a.kind === "protect") { if (a.on === false) return "paused"; const p = ((a.checks || []).filter((c) => c.price > 0).slice(-1)[0] || {}).price; return p && a.paid && p <= a.paid * 0.97 ? "needs" : "working"; }
   if (a.step === "ordered") return "done";
   if (a.on === false) return "paused";
   if (a.pending && (a.step === "confirm" || a.kind === "buy")) return "needs";

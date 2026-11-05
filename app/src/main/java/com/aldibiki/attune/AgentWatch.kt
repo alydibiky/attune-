@@ -52,10 +52,12 @@ object AgentWatch {
         // v9.2 (Ali: "set any rules I want"): an agent told "check every 6 hours" sends hours; the most frequent one sets the next round
         // (1 hour at least; 12 hours when no agent asked)
         val arr = try { JSONArray(prefs(ctx).getString("plan", "[]")) } catch (e: Exception) { JSONArray() }
-        var hours = 12
-        for (i in 0 until arr.length()) { val h = arr.optJSONObject(i)?.optInt("hours", 0) ?: 0; if (h in 1 until hours) hours = h }
-        val jitter = ((Math.random() - 0.5) * Math.min(3600_000L, hours * 3600_000L / 6)).toLong()
-        val at = System.currentTimeMillis() + hours * 3600_000L + jitter
+        var mins = 12 * 60
+        for (i in 0 until arr.length()) { val o = arr.optJSONObject(i) ?: continue
+            val h = o.optInt("hours", 0); if (h in 1 until 13 && h * 60 < mins) mins = h * 60
+            val m = o.optInt("mins", 0); if (m > 0 && maxOf(15, m) < mins) mins = maxOf(15, m) }   // v9.4 G2: a visa watch, every 15 minutes at most
+        val jitter = ((Math.random() - 0.5) * Math.min(3600_000L, mins * 60_000L / 6)).toLong()
+        val at = System.currentTimeMillis() + mins * 60_000L + jitter
         try { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending(ctx)); prefs(ctx).edit().putLong("next", at).apply() } catch (e: Exception) {}
     }
 
@@ -131,6 +133,20 @@ object AgentWatch {
         } else prices(doc.body()?.text() ?: "").minOrNull()?.let { Offer(it, "", "") }
     } catch (e: Exception) { null }
 
+    /** v9.4 G2: the visible words of a page, with the cookies of Attune's own browser (so a page the person logged in to stays open). */
+    private fun pageWords(url: String): String? = try {
+        Prefs.requireOnline(url, "an agent checking an appointment page")
+        val cookie = try { android.webkit.CookieManager.getInstance().getCookie(url) } catch (e: Exception) { null }
+        val req = Jsoup.connect(url).userAgent(UA).header("Accept-Language", "en-US,en;q=0.8,ar;q=0.6").timeout(15_000).maxBodySize(3_000_000).followRedirects(true)
+        if (!cookie.isNullOrBlank()) req.header("Cookie", cookie)
+        val doc = req.get(); doc.select("script,style,noscript").remove(); doc.body()?.text()?.take(8000)
+    } catch (e: Exception) { null }
+    private val NO_SLOT = Regex("(?i)no (appointment|slot|date)s? (are )?(currently )?available|no availability|fully booked|currently no (dates|slots)|try again later|aucun (rendez-vous|créneau)|pas de (rendez-vous|créneau)|no hay (citas|turnos)|keine termine|nessun appuntamento|sem vagas|randevu (bulunmamaktadır|yok)|لا توجد مواعيد|لا يوجد مواعيد|مفيش مواعيد|غير متاح")
+    private val LOGIN = Regex("(?i)\b(log ?in|sign ?in|password|captcha)\b|تسجيل الدخول|كلمة المرور")
+    private val A_DATE = Regex("\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b", RegexOption.IGNORE_CASE)
+    /** A page that shows dates, doesn't say "no appointments", and isn't the login page — worth a look now. */
+    fun slotOpen(t: String): Boolean = t.length > 80 && !NO_SLOT.containsMatchIn(t) && !LOGIN.containsMatchIn(t.take(1500)) && A_DATE.containsMatchIn(t) && Regex("(?i)available|book|select|appointment|slot|موعد|متاح|احجز").containsMatchIn(t)
+
     /** One round of checks. Called on a background thread. */
     fun run(ctx: Context) {
         val plan = try { JSONArray(prefs(ctx).getString("plan", "[]")) } catch (e: Exception) { JSONArray() }
@@ -142,6 +158,15 @@ object AgentWatch {
         for (i in 0 until minOf(plan.length(), 16)) {   // v8.2: a hotel window is several start days
             val w = plan.optJSONObject(i) ?: continue
             val url = w.optString("url"); if (!url.startsWith("https://")) continue
+            // v9.4 G2: an appointment page (BLS, VFS, TLScontact, a consulate…) — its words, read with the login the person made in
+            // Attune's browser; the page decides what they mean (slots.js). A clear "slot open" → a notification at once.
+            if (w.optString("kind") == "slot") {
+                val t = pageWords(url)
+                val row = JSONObject().put("at", System.currentTimeMillis()).apply { if (t == null) put("blocked", true) else put("text", t.take(6000)) }
+                val list = out.optJSONArray(w.optString("id")) ?: JSONArray(); list.put(row); out.put(w.optString("id"), list)
+                if (t != null && slotOpen(t)) hits.add(w.optString("title") + " · " + (w.optString("openLine").ifBlank { "a date may be open" }))
+                continue
+            }
             val got = lowest(url, w.optString("what"))
             val row = JSONObject().put("at", System.currentTimeMillis())
             if (got == null) row.put("blocked", true) else {
@@ -156,8 +181,8 @@ object AgentWatch {
         }
         try { File(ctx.filesDir, FILE).writeText(out.toString()) } catch (e: Exception) {}
         if (hits.isNotEmpty()) Reminders.schedule(ctx, JSONObject().put("id", "agent-watch").put("at", System.currentTimeMillis() + 2000)
-            .put("title", "Agents · price dropped")
-            .put("body", hits.take(3).joinToString("\n") + "\nTap to open Agents — the listing is there."))
+            .put("title", "Agents · something to see")
+            .put("body", hits.take(3).joinToString("\n") + "\nTap to open Agents."))
     }
 
     private fun read(ctx: Context): JSONObject = try { JSONObject(File(ctx.filesDir, FILE).readText()) } catch (e: Exception) { JSONObject() }

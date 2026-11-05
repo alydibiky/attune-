@@ -131,7 +131,7 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   const [gloss, setGloss] = useState(() => { try { return JSON.parse(localStorage.getItem(GKEY) || "[]"); } catch (e) { return []; } });
   const [showG, setShowG] = useState(false);
   const [photo, setPhoto] = useState(null);   // { src, out }
-  const fileRef = useRef(null), galRef = useRef(null);
+  const fileRef = useRef(null), galRef = useRef(null), docRef = useRef(null);
   useEffect(() => { try { localStorage.setItem(LKEY, to); } catch (e) {} }, [to]);
   const saveG = (g) => { setGloss(g); try { localStorage.setItem(GKEY, JSON.stringify(g)); } catch (e) {} };
   const run = async (pieces, from) => {
@@ -200,7 +200,11 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
       {tab === "doc" ? (
         <div className={cardPad + " space-y-3"} data-testid="tr-doc"><b className="flex items-center gap-2 text-[16px] font-extrabold"><FileText size={16} className="text-[var(--c-acc)]" />{tr("PDF, Word, slides, subtitles…")}</b>
           <p className={"m-0 text-[13.5px] " + muted}>{tr("The File Converter translates the whole file and keeps its layout — tables, headings and pictures stay where they are — with the same checks.")}</p>
-          <button className={btnP} onClick={() => openConverter && openConverter(to)} data-testid="tr-open-converter">{tr("Choose a file")}</button></div>) : null}
+          {/* v9.4 (Ali, 5 Nov: "I press Translate, then Document, then Choose a file" and it only opened the File Converter): the phone's
+              file picker opens right here, and the chosen file goes straight into translating, into the language picked above */}
+          <button className={btnP} onClick={() => docRef.current && docRef.current.click()} data-testid="tr-open-converter">{tr("Choose a file")}</button>
+          <input ref={docRef} type="file" accept=".pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf,.txt,.md,.srt,.vtt,application/pdf" className="hidden"
+            onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f && openConverter) openConverter(to, [f]); }} data-testid="tr-doc-file" /></div>) : null}
       {showG ? (
         <div className={cardPad + " space-y-2.5"} data-testid="tr-gloss"><span className={label}>{tr("Always translate these my way")}</span>
           {gloss.map((g, i) => <div key={i} className="flex gap-2 items-center"><input value={g.from} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, from: e.target.value } : x)))} placeholder={tr("Word or phrase")} className={field} style={st} dir="auto" /><span className="rtl:rotate-180 text-[var(--c-mut)]">→</span><input value={g.to} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, to: e.target.value } : x)))} placeholder={tr("My translation")} className={field} style={st} dir="auto" /><button aria-label={tr("Delete")} className="w-11 h-11 shrink-0 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" onClick={() => saveG(gloss.filter((_, k) => k !== i))}><Trash2 size={14} /></button></div>)}

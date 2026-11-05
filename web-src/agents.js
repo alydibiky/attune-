@@ -19,6 +19,7 @@ import { followOf } from "./understand.js";
 import { parseWatch } from "./watch.js";
 import { isoDay } from "./deadlines.js";
 import { isFlightAgent, flightAgent } from "./flights.js";
+import { parseMore, slotState } from "./agents2.js";
 
 export const AGENTS_KEY = "attune:agents:v1";
 const DAY = 86400000;
@@ -146,6 +147,12 @@ const RESEARCH = /(?:^|\b)(?:(?:please\s+)?(?:gather|collect|compile|find|get|di
 export function parseAgent(text, opts = {}) {
   const t0 = String(text || "").replace(/\s+/g, " ").trim(); if (!t0 || t0.length > 400) return null;
   const t = fold(t0), now = opts.now || Date.now(), country = (opts.country || "EG").toUpperCase();
+  // v9.4 the new agents (Reply helper, a scheduled message, visa slots, restock, price protection, clinics, travel day) — first
+  const more = parseMore(t0, { now, country });
+  if (more) {
+    if (more.kind === "protect" && !more.ask) { const tries = storeTries(more.what, country, more.site).map((l) => ({ url: l.url, site: l.site })); return { ...more, tries, url: (tries[0] || {}).url || "", currency: curIn(t, country) || "", title: more.what }; }
+    return more;
+  }
   // v9.0 (the sentence bank: "what is the best phone under 15000?" became a price watch): a question is answered, not watched
   if (/[?؟]\s*$/.test(t0) && /^\s*(what|which|who|how|is|are|should|can|do|does|why|where|any|إيه|ايه|انهي|أنهي|مين|ازاي|إزاي|هل|ليه|فين)\b/i.test(t0)) return null;
   const app = appIn(t0);
@@ -284,6 +291,14 @@ export function makeAgent(d, now = Date.now()) {
   if (d.kind === "track") Object.assign(a, { app: d.app, what: d.what || "" });
   if (d.kind === "order") Object.assign(a, { app: d.app, what: d.what || "" });
   if (d.kind === "buy") Object.assign(a, { url: d.url, site: d.site, tries: d.tries || [], what: d.what, below: d.below || 0, currency: d.currency, step: "search", ...(d.said ? { said: d.said, q: d.q } : {}) });
+  // v9.4 (agents2.js)
+  if (d.kind === "reply") Object.assign(a, { hours: 3, title: d.title || "Reply helper" });
+  if (d.kind === "send") Object.assign(a, { who: d.who, text: d.text, at: d.at, state: "scheduled", title: d.who });
+  if (d.kind === "slot") Object.assign(a, { url: d.url, site: d.site, sites: d.sites || [], dest: d.dest || "", every: d.every || 30, slot: null, log: [] });
+  if (d.kind === "restock") Object.assign(a, { title: d.title || "Restock" });
+  if (d.kind === "protect") Object.assign(a, { what: d.what, paid: d.paid, site: d.site || "", days: d.days || 14, bought: d.bought || now, url: d.url || "", tries: d.tries || [], currency: d.currency || "" });
+  if (d.kind === "clinic") Object.assign(a, { spec: d.spec, city: d.city, below: d.below || 0, tries: d.tries || [], url: (d.tries && d.tries[0] || {}).url || "" });
+  if (d.kind === "trip") Object.assign(a, { flight: d.flight, at: d.at, to: d.to || "", toName: d.toName || "", intl: d.intl !== false, drive: 60 });
   return a;
 }
 /** v9.0 the next round of a follow agent: tomorrow / in a week / in a month, at 9:00 in the morning. */
@@ -409,13 +424,18 @@ export function planSteps(a, now = Date.now()) {
 }
 /** The price watches the phone checks with Attune closed (AgentWatch.kt). */
 // v8.2: a hotel window sends each start day as its own check ("id~2"); takeChecks folds them back into the agent
-export const watchPlan = (st) => (st.agents || []).filter((a) => a.on && (a.kind === "watch" || (a.kind === "buy" && a.below > 0 && a.step === "search")) && /^https:\/\//.test(a.url || ""))
+export const watchPlan = (st) => [
+  // v9.4 G2: an appointment page, every 15–240 minutes, with the login the person made in Attune's browser
+  ...(st.agents || []).filter((a) => a.on && a.kind === "slot" && /^https:\/\//.test(a.url || "")).map((a) => ({ id: a.id, kind: "slot", title: a.title, url: a.url, mins: a.every || 30 })),
+  ...(st.agents || []).filter((a) => a.on && (a.kind === "watch" || a.kind === "protect" || (a.kind === "buy" && a.below > 0 && a.step === "search")) && /^https:\/\//.test(a.url || ""))
   .flatMap((a) => (a.tries && a.tries.length ? a.tries.map((x, i) => ({ id: a.id + "~" + i, title: (a.what || a.title) + " · " + (x.checkin || x.site || ""), url: x.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: x.site || a.site || "" }))
     : [{ id: a.id, title: a.what ? a.what + " · " + (a.site || "") : a.title, url: a.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: a.site || "" }])
-    .map((x) => (a.rules && a.rules.hours ? { ...x, hours: a.rules.hours } : x))).slice(0, 16);   // v9.2: "check every 6 hours" (agent-rules.js)
+    .map((x) => (a.rules && a.rules.hours ? { ...x, hours: a.rules.hours } : x)))].slice(0, 16);   // v9.2: "check every 6 hours" (agent-rules.js)
 /** The phone's checks ({id or "id~i": [rows]}) → the agents with them added (a window's row keeps its days). */
 export function takeChecks(agents, got) {
   return agents.map((a) => {
+    // v9.4 G2: an appointment page's words → open / none / login / unknown, with the dates it shows (agents2.js slotState)
+    if (a.kind === "slot") { const rows = (got && got[a.id]) || []; if (!rows.length) return a; return rows.reduce((x, r) => takeSlot(x, r), a); }
     const rows = Object.entries(got || {}).filter(([k]) => k === a.id || k.startsWith(a.id + "~"))
       .flatMap(([k, list]) => { const x = k.includes("~") && a.tries ? a.tries[+k.split("~")[1]] : null; return (list || []).map((c) => ({ ...c, ...(x && x.checkin ? { checkin: x.checkin, checkout: x.checkout } : {}), ...(x && x.site && !c.site ? { site: x.site } : {}), ...(x && !c.href ? { url: x.url } : {}) })); })
       .sort((p, q) => (p.at || 0) - (q.at || 0));
@@ -514,7 +534,8 @@ export function agentsReport(st, scoutGoals = [], alerts = [], now = Date.now())
   const found = ag.filter((a) => a.found && a.found.at >= wk).length + scoutGoals.reduce((n, g) => n + ((g.unseen || []).length ? 1 : 0), 0);
   const by = { buy: 0, watch: 0, follow: 0, track: 0, order: 0, scout: scoutGoals.filter((g) => g.on !== false).length, alert: alerts.filter((r) => r.on !== false && !String(r.id).startsWith("agent-")).length };
   for (const a of ag) if (a.on && by[a.kind] != null) by[a.kind]++;
-  return { running: by.buy + by.watch + by.follow + by.track + by.order + by.scout + by.alert, found: found + ag.filter((a) => a.kind === "buy" && a.pending).length, checks, by };
+  const more = ag.filter((a) => a.on !== false && ["reply", "send", "slot", "restock", "protect", "clinic", "trip"].includes(a.kind) && !(a.kind === "send" && a.state && a.state !== "scheduled")).length;   // v9.4
+  return { running: by.buy + by.watch + by.follow + by.track + by.order + by.scout + by.alert + more, found: found + ag.filter((a) => a.kind === "buy" && a.pending).length, checks, by };
 }
 
 // ---- v8.6 buy agents: the closest real match, then the person decides --------------------------------------------------------------
@@ -578,3 +599,12 @@ export function priceHistory(a) {
   return { points: pts, low, high, last, change, trend: change <= -2 ? "down" : change >= 2 ? "up" : "flat", lowDay };
 }
 
+/** v9.4 G2: one reading of an appointment page (from the phone's check or from "Check now") → the agent's state and short log. */
+export function takeSlot(a, r) {
+  const at = r.at || Date.now();
+  const st = r.blocked ? { state: "blocked", dates: [] } : slotState(r.text || "", { now: at });
+  const prev = a.slot || null;
+  const opened = st.state === "open" && !(prev && prev.state === "open" && (prev.dates || []).join() === st.dates.join());
+  return { ...a, slot: { ...st, at, ...(opened ? { openedAt: at } : prev && prev.openedAt && st.state === "open" ? { openedAt: prev.openedAt } : {}) },
+    log: [...(a.log || []), { at, state: st.state, d: st.dates[0] || "" }].slice(-30), checks: [...(a.checks || []), { at, how: r.how || "auto", ...(r.blocked ? { blocked: true } : {}) }].slice(-30) };
+}
