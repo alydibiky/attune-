@@ -16,6 +16,12 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## Waiting for Ali: the Gemini research (5 Nov 2026)
+Ali asked for a prompt that tells Gemini everything about the app and makes it deep-research ways and features to make Attune better
+and stronger; "if I like the idea, you implement". The prompt is **`GEMINI_RESEARCH_PROMPT.md`** (paste into Gemini Deep Research).
+Gemini answers with ideas **R1, R2, …**; Ali sends the IDs he likes → build each (20 languages, tests, full suite, APK), like his
+earlier picks. Check every idea against VISION.md principles and Play policy before building; say honestly if one can't work.
+
 ## v9.4 — 5 Nov late: Ali's agent picks G1–G7 BUILT + two fixes from his screenshots
 Ali: "G1 ok but make the option to schedule a message — send this contact this message at 5 pm tomorrow — and it does that · G2–G7 ok ·
 the most important thing is an easy, interactive, visually appealing, smooth interface, consistent across all agents, global, accurate,
