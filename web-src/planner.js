@@ -260,6 +260,9 @@ export function planVsActual(plan, ledger, m = plan.month) {
   const rows = [];
   for (const f of groupFixed(plan.fixed || [])) rows.push({ group: "fixed", what: f.what + (f.n > 1 ? " × " + f.n : ""), plan: f.amount * f.n, actual: f.paid ? f.amount * f.n : 0 });
   for (const f of plan.flexible || []) rows.push({ group: "everyday", cat: f.cat, note: f.note, plan: f.plan, actual: r0(spent[f.cat] || 0) });
+  // spent this month in a category with no plan yet (a first month, a new kind of spending): plan 0, so it shows as over
+  const noteM = averages({ txns: ((ledger && ledger.txns) || []).filter((t) => t && String(t.date || "").slice(0, 7) === m) }, Date.parse(m + "-28T12:00:00") + 5 * DAY, 1).note || {};
+  for (const [c, a] of Object.entries(spent)) if (!FLEX_SKIP.has(c) && !(plan.flexible || []).some((f) => f.cat === c)) rows.push({ group: "everyday", cat: c, note: noteM[c] || "", plan: 0, actual: r0(a) });
   for (const p of plan.pots || []) rows.push({ group: "savings", what: p.name, plan: p.monthly, actual: r0(p.putThisMonth || 0) });
   return rows.map((r) => ({ ...r, left: r0(r.plan - r.actual) }));
 }

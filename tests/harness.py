@@ -130,6 +130,9 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False, deskt
     # it comes back for them only (attune:legacy-nav); legacy_nav=False = exactly what people see (tests/e2e_v734sidebar.py)
     if legacy_nav: ctx.add_init_script("try{localStorage.setItem('attune:legacy-nav','1')}catch(e){}")
     ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
+    # v9.6: the Agents page opens on the board (Ali picked A3 + A4); the older tests read the cards in the list view — a test of the
+    # board sets 'board' itself
+    ctx.add_init_script("try{if(localStorage.getItem('attune:agents:view2')===null)localStorage.setItem('attune:agents:view2','list')}catch(e){}")
     # v6.34: lessons written ahead in the background would take canned answers meant for the test; a test turns it on itself
     ctx.add_init_script("try{if(localStorage.getItem('attune:learn:ahead')===null)localStorage.setItem('attune:learn:ahead','0')}catch(e){}")
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")

@@ -30,7 +30,8 @@ const AR_CUR = { EGP: "جنيه", SAR: "ريال", AED: "درهم", KWD: "دين
 const money = (n, cur) => { const v = Math.round(n).toLocaleString("en-US"); if (getLang() === "ar" && cur) return v + " " + (AR_CUR[cur] || cur); return (cur ? cur + " " : "") + v; };
 const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : Math.round(m / 1440) === 1 ? tr("yesterday") : T("{n} days ago", { n: Math.round(m / 1440) }); };
 const GROUPS = [["needs", "Needs you"], ["working", "Working"], ["done", "Done & paused"]];
-const BOARD = [["needs", "Needs you"], ["working", "Working"], ["found", "Found"], ["done", "Done & paused"]];
+// v9.6 (Ali picked A3): three columns — Watching · Found (incl. what needs you) · Done
+const BOARD = [["working", "Watching"], ["found", "Found"], ["done", "Done"]];
 const KIND_ICON = { reply: MessageCircle, send: Clock, slot: Eye, restock: Repeat, protect: ShieldCheck, clinic: Heart, trip: Plane, flight: Plane, follow: Newspaper, research: BookOpen, buy: ShoppingCart, watch: Hotel, track: Package, order: UtensilsCrossed, scout: Car, alert: BellRing, open: AppWindow };
 // v9.4 (Ali: "easy, interactive, visually appealing"): the starters as a gallery — the six most used first, the rest under "More agents"
 const CHIPS = [["reply", "Reply helper", "Who is waiting for my reply?", "مين مستني مني رد؟"],
@@ -50,6 +51,59 @@ const CHIPS = [["reply", "Reply helper", "Who is waiting for my reply?", "مين
   ["research", "Research a topic", "Gather information on solar panels for a flat in Cairo", "جمعلي معلومات عن الطاقة الشمسية لشقة في القاهرة"],
   ["open", "Open an app", "Open Uber", "افتح أوبر"]];
 
+/** v9.6 (Ali picked A4): an agent as a conversation — what you asked, what it did, its offers as DATES × the best on each date
+ *  ("more than 1 option in more than 1 date"), its full card (every button), and a box to change it by typing. */
+function DatesGrid({ a, grid, openBest }) {
+  if (!grid || !grid.kind) return null;
+  const cur = a.currency || "";
+  const label = (d) => { try { return new Date(d + "T12:00:00").toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); } catch (e) { return d; } };
+  const cols = Math.max(...grid.rows.map((r) => r.offers.length));
+  return <div className="space-y-1.5" data-testid="agent-dates-grid">
+    <p className="m-0 text-[12.5px] c-sub">{grid.kind === "dates" ? T("The best {n} on each of {d} dates — tap one to open it:", { n: cols, d: grid.rows.length }) : tr("The price on each check:")}</p>
+    <div className="grid gap-1.5" style={{ gridTemplateColumns: "64px repeat(" + cols + ", minmax(0,1fr))" }}>
+      {grid.rows.map((r) => <React.Fragment key={r.date}>
+        <span className="text-[12px] font-extrabold self-center" data-testid="agent-grid-date">{label(r.date)}{r.checkout && /^\d{4}-/.test(r.checkout) ? <span className="block text-[10.5px] c-sub font-bold">→ {label(r.checkout)}</span> : null}</span>
+        {Array.from({ length: cols }, (_, k) => { const o = r.offers[k]; if (!o) return <span key={k} />;
+          const best = grid.best && o.price === grid.best.price && (o.name || "") === (grid.best.name || "");
+          return <button key={k} onClick={() => openBest(a, o)} data-testid={best ? "agent-grid-best" : "agent-grid-offer"}
+            className={"rounded-[12px] p-1.5 text-center min-w-0 " + (best ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] border border-[var(--c-ln)]")}>
+            <b className="block text-[12.5px] tabular-nums" dir="ltr">{money(o.price, o.currency || cur)}</b>
+            {o.name || o.site ? <span className="block text-[10.5px] truncate opacity-85" dir="auto">{o.name || o.site}</span> : null}</button>; })}
+      </React.Fragment>)}
+    </div>
+  </div>;
+}
+function AgentChat({ c, back, openBest, setRules, understand, flash }) {
+  const a = c.a, [text, setText] = useState(""), [busy, setBusy] = useState(false), [said, setSaid] = useState("");
+  const msgs = A.agentChat(a);
+  const send = async () => {
+    const t = text.trim(); if (!t || busy) return;
+    let got = R.parseRule(t);
+    if (!got && understand) { setBusy(true); try { got = R.cleanRules((await understand(t)) || {}); if (!Object.keys(got).length) got = null; } catch (e) { got = null; } setBusy(false); }
+    if (!got) { setSaid(tr("I didn't understand that rule — try one of the examples.")); return; }
+    setRules({ ...a, ruleLog: [...(a.ruleLog || []), { at: Date.now(), text: t }].slice(-10) }, R.mergeRules(a.rules || {}, got)); setText("");
+    setSaid(T("Got it: {r}", { r: R.ruleChips(got).map((x) => tr(x.en, x.v)).join(" · ") }));
+  };
+  const bubble = "max-w-[88%] rounded-[16px] px-3 py-2 text-[13.5px] leading-snug";
+  return <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agent-chat">
+    <div className="flex items-center gap-2"><button onClick={back} className="w-11 h-11 grid place-items-center rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]" aria-label={tr("Back")} data-testid="agent-chat-back"><ArrowLeft size={18} className="rtl:-scale-x-100" /></button>
+      <b className="text-[17px] font-black min-w-0 truncate" dir="auto">{c.title}</b></div>
+    <div className="flex flex-col gap-2">
+      {msgs.map((m, i) => m.who === "me"
+        ? <div key={i} className={bubble + " self-end bg-[var(--c-acc)] text-[var(--c-on-acc)] rounded-ee-[4px]"} dir="auto">{m.text}</div>
+        : <div key={i} className={bubble + " self-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-es-[4px]" + (m.found ? " font-extrabold" : "")} dir="auto">
+            {tr(m.T[0], Object.fromEntries(Object.entries(m.T[1] || {}).map(([k, v]) => [k, k === "p" ? money(v, a.currency || "") : v])))}{m.found ? " 🎉" : ""}</div>)}
+      {c.grid && c.grid.kind ? <div className={bubble + " self-stretch max-w-none bg-[var(--c-surf)] border border-[var(--c-ln)]"}><DatesGrid a={a} grid={c.grid} openBest={openBest} /></div> : null}
+    </div>
+    {c.el}
+    <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 sticky bottom-2" data-testid="agent-chat-form">
+      <input value={text} onChange={(e) => setText(e.target.value)} dir="auto" className={U.inp + " flex-1"} placeholder={tr("Tell the agent: “only 5 stars”, “under 40,000”…")} data-testid="agent-chat-input" />
+      <button className={U.btnP + " !h-11 !min-h-[44px]"} disabled={busy} data-testid="agent-chat-send"><Send size={16} /></button>
+    </form>
+    {said ? <p className="m-0 text-[12.5px] c-sub" data-testid="agent-chat-said">{said}</p> : null}
+  </div>;
+}
+
 export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onResearch = null, search = null, country = "EG", pro = true, openPlan = null, understandRule = null, drafter = null }) {
   const ar = getLang() === "ar";
   const [st, setSt] = useState(() => A.loadAgents());
@@ -60,8 +114,11 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const [rep, setRep] = useState(false);
   const [busy, setBusy] = useState("");
   const [tabWant, setTabWant] = useState(() => { try { return localStorage.getItem("attune:agents:tab") || ""; } catch (e) { return ""; } });
-  const [view, setViewRaw] = useState(() => { try { return localStorage.getItem("attune:agents:view") || "list"; } catch (e) { return "list"; } });
-  const setView = (v) => { setViewRaw(v); try { localStorage.setItem("attune:agents:view", v); } catch (e) {} };
+  // v9.6 (Ali picked A3 + A4): the board is the Agents page; a tap on a card opens that agent's conversation
+  const [view, setViewRaw] = useState(() => { try { return localStorage.getItem("attune:agents:view2") || "board"; } catch (e) { return "board"; } });
+  const setView = (v) => { setViewRaw(v); try { localStorage.setItem("attune:agents:view2", v); } catch (e) {} };
+  const [chat, setChat] = useState("");
+  useSubBack(!!chat, () => setChat(""));
   const [focus, setFocus] = useState("");
   const openTab = (id) => { setTabWant(id); try { localStorage.setItem("attune:agents:tab", id); } catch (e) {} };
   useSubBack(rep, () => setRep(false));
@@ -209,7 +266,10 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         // v9.1 (Ali picked B): up to 10 offers for the podium + list; their photos are kept apart (this phone only)
         const keepN = a.fields && a.fields.flight ? 30 : tries.length > 1 ? 10 : 3;   // v9.2 flights: keep more — the board groups them
         const pool = a.fields && a.fields.flight ? seen.filter((o) => o.price > 0).sort((x, y) => x.price - y.price).map((o, i) => ({ ...o, key: (o.site || "") + i + "-" + o.price })) : null;
-        const next = seen.length ? { ...next0, best3: A.savePhotos(a.id, pool ? pool.slice(0, keepN) : A.bestThree(seen, a.skip, a.taste, keepN)), compared } : compared ? { ...next0, compared } : next0;
+        const next0b = seen.length ? { ...next0, best3: A.savePhotos(a.id, pool ? pool.slice(0, keepN) : A.bestThree(seen, a.skip, a.taste, keepN)), compared } : compared ? { ...next0, compared } : next0;
+        // v9.6 (Ali: "more than 1 option in more than 1 date"): the best 3 on each of the 6 cheapest dates checked
+        const byDay = A.offersByDay(seen.filter((o) => R.followsRules ? R.followsRules(o, a.rules || {}) : true));
+        const next = byDay.length >= 2 ? { ...next0b, byDay } : next0b;
         put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? next : x)) });
         flash && flash(best ? (best.checkin ? T("Cheapest now: {p} ({d})", { p: money(best.price, a.currency), d: best.checkin + " → " + best.checkout }) : T("Cheapest now: {p}", { p: money(best.price, a.currency) })) : tr("No prices on that page — search on the site, then tap Best offer"));
       } catch (e) { flash && flash(String((e && e.message) || e)); }
@@ -379,13 +439,13 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const r = A.agentsReport(st, scout, alerts);
   const alertRules = alerts.filter((x) => !String(x.id).startsWith("agent-"));
   // v9.2: every agent (and each Scout goal, the message alerts) as { id, st, kind, title, site, price, el } — one list, grouped
-  const setRules = (a, rules) => upd(a.id, (y) => ({ ...y, rules, ...(rules.below ? { below: rules.below } : {}) }));
+  const setRules = (a, rules) => upd(a.id, (y) => ({ ...y, rules, ...(rules.below ? { below: rules.below } : {}), ...(a.ruleLog ? { ruleLog: a.ruleLog } : {}) }));
   const extra = { setRules, understand: understandRule, flash };
   const priceOf = (a) => { const p = a.pending || a.found || (R.applyRules(a.best3 || [], a.rules)[0]); return p && p.price ? money(p.price, p.currency || a.currency) : ""; };
   const liveSt = (a) => a.kind === "reply" ? (a.on === false ? "paused" : A2.waitingChats(readInbox(), { hours: a.hours || 3 }).length ? "needs" : "working")
     : a.kind === "restock" ? (a.on === false ? "paused" : (() => { try { return A2.restockDue(JSON.parse(localStorage.getItem("ledger.v3") || "null"), { soon: 2 }).length ? "needs" : "working"; } catch (e) { return "working"; } })())
     : a.kind === "clinic" ? (a.on === false ? "paused" : "found") : R.agentStatus(a);   // v9.4: the group follows what the card shows
-  const cards = [...st.agents.map((a) => ({ id: a.id, st: liveSt(a), kind: a.kind, title: a.kind === "follow" ? a.topic : a.said || a.what || a.title, site: siteOfAgent(a), price: priceOf(a),
+  const cards = [...st.agents.map((a) => ({ id: a.id, a, grid: A.datesGrid(a), st: liveSt(a), kind: a.kind, title: a.kind === "follow" ? a.topic : a.said || a.what || a.title, site: siteOfAgent(a), price: priceOf(a),
       el: a.kind === "reply" ? <ReplyCard key={a.id} a={a} draft={drafter} onSchedule={() => setSchedOpen(true)} {...{ remove, toggle }} {...extra} />
         : a.kind === "send" ? <SendCard key={a.id} a={a} {...{ remove, toggle, sendNow }} />
         : a.kind === "slot" ? <SlotCard key={a.id} a={a} busy={busy === a.id} checkSlot={(x) => slotOpen(x)} watchSlot={(x) => slotOpen(x, 60)} setUrl={(x, s0) => upd(x.id, (y) => ({ ...y, url: s0.url, site: s0.name }))} setEvery={(x, m) => upd(x.id, (y) => ({ ...y, every: m }))} {...{ remove, toggle }} {...extra} />
@@ -407,6 +467,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
           menu={[[tr("Open the alerts"), () => navTo && navTo("reminders"), "agents-alerts-open-menu"]]} />
         <CardActions primary={{ label: tr("Open the alerts"), icon: ChevronRight, onClick: () => navTo && navTo("reminders"), testid: "agents-alerts-open" }} /></div> }] : [])];
 
+  const open = chat && cards.find((c) => c.id === chat);
+  if (open) return <AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} />;
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agents-page">
       <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
@@ -441,13 +503,14 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
           {[["list", "List", ListChecks], ["board", "Board", Kanban]].map(([k, l, Ic]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} data-testid={"agents-view-" + k}
             className={"min-h-[36px] px-3 rounded-full text-[12.5px] font-extrabold inline-flex items-center gap-1 " + (view === k ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "c-sub")}><Ic size={14} />{tr(l)}</button>)}</span> : null}</div>
       {view === "board" && r.running ? <div className="flex gap-2.5 overflow-x-auto -mx-1 px-1 pb-2 snap-x" data-testid="agents-board">
-        {BOARD.map(([k, l]) => { const items = cards.filter((c) => (k === "working" ? c.st === "working" : k === "done" ? c.st === "done" || c.st === "paused" : c.st === k));
+        {BOARD.map(([k, l]) => { const items = cards.filter((c) => (k === "working" ? c.st === "working" : k === "done" ? c.st === "done" || c.st === "paused" : c.st === "found" || c.st === "needs"));
           return <div key={k} className="snap-start shrink-0 w-[200px] lg:w-auto lg:flex-1 rounded-[16px] bg-[var(--c-soft)] p-2 space-y-2" data-testid={"agents-col-" + k}>
             <p className="m-0 px-1 text-[11.5px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr(l)} · {items.length}</p>
-            {items.map((c) => <button key={c.id} onClick={() => { setView("list"); setFocus(c.id); }} className={U.card + " w-full text-start p-2.5 space-y-1"} data-testid="agents-board-card">
+            {items.map((c) => <button key={c.id} onClick={() => setChat(c.id)} className={U.card + " w-full text-start p-2.5 space-y-1" + (c.st === "needs" ? " ring-2 ring-[var(--c-warn)]" : c.st === "found" ? " ring-2 ring-[var(--c-acc)]" : "")} data-testid="agents-board-card">
               <span className="flex items-center gap-2">{c.site ? <SiteMark site={c.site} size={24} /> : <span className="c-acc">{React.createElement(KIND_ICON[c.kind] || AppWindow, { size: 16 })}</span>}
                 <b className="text-[12.5px] leading-tight line-clamp-2 min-w-0" dir="auto">{c.title}</b></span>
-              {c.price ? <b className="block text-[13px] tabular-nums">{c.price}</b> : null}</button>)}
+              {c.price ? <b className="block text-[13px] tabular-nums">{c.price}</b> : null}
+              {c.grid && c.grid.kind === "dates" ? <span className="block text-[11px] c-sub">{T("{n} offers · {d} dates", { n: c.grid.rows.reduce((x, r) => x + r.offers.length, 0), d: c.grid.rows.length })}</span> : null}</button>)}
             {!items.length ? <p className="m-0 px-1 text-[12px] c-sub">—</p> : null}</div>; })}
       </div> : null}
       {view === "list" ? GROUPS.map(([k, l]) => { const items = cards.filter((c) => (k === "working" ? c.st === "working" || c.st === "found" : k === "done" ? c.st === "done" || c.st === "paused" : c.st === k));

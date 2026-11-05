@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.5)
+# Attune — start here (handoff for the next chat, 5 Nov 2026 — v9.6)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,7 +6,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v9.5** (versionCode 133; 5 Nov night: Ali's 9-point phone list) — before: **v9.4** (versionCode 132; 5 Nov) — before: **v9.0** (versionCode 131; pushed 3 Nov after the full suite passed — the two timing flakes, e2e_v518 / e2e_v533, pass alone; they failed while a 9B model ran beside the suite) — before: **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
+| `main` | **v9.6** (versionCode 134; 5 Nov night: Ali's picks built — agents board + conversation + dates grid, month plan goals that fill themselves + calendar + table, follow-ups week strip) — before: **v9.5** (versionCode 133; 5 Nov night: Ali's 9-point phone list) — before: **v9.4** (versionCode 132; 5 Nov) — before: **v9.0** (versionCode 131; pushed 3 Nov after the full suite passed — the two timing flakes, e2e_v518 / e2e_v533, pass alone; they failed while a 9B model ran beside the suite) — before: **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
 | Last APK | v9.5 (5 Nov night: Ali's 9-point phone list; full suite green; Kotlin built): https://github.com/alydibiky/attune-/actions/runs/42094539771 (success) — before: v9.4 + the chat fixes (5 Nov: number guard, sentence battery, installments keep the total; full suite green): https://github.com/alydibiky/attune-/actions/runs/42069139037 (success) — before: v9.4 (5 Nov: agent picks G1–G7, hotel offers keep each hotel's page, Translate → Document; full suite green): https://github.com/alydibiky/attune-/actions/runs/42056893257 (success) — before: v9.3 (5 Nov: Ali's round-4 picks + notifications → Your day; widgets compiled; full suite green): https://github.com/alydibiky/attune-/actions/runs/42017700711 (success) — before: v9.2 part 3 (5 Nov: receipt back, agents consistent + open the exact offer, back like ChatGPT, How to use search fix, guide in 20 languages; full suite green): https://github.com/alydibiky/attune-/actions/runs/41941437190 (success) — before: v9.2 part 2 (4 Nov night: Ali's 7 picks built — lists, agents' rules + board, flight agent, Mind, Documents, Projects board; full suite green; CI now frees disk first): https://github.com/alydibiky/attune-/actions/runs/41889742662 (success) — before: v9.2 (4 Nov late: Ali's 11-point list — Zakāt complete, Writing tabs, no Food on Home, Shelf; full suite green): https://github.com/alydibiky/attune-/actions/runs/41849639532 (success) — before: v9.1 latest (4 Nov night: Projects design D + the archive round; full suite green): https://github.com/alydibiky/attune-/actions/runs/41820643229 (success) — before: v9.1 (4 Nov: option A "which did you mean?", 8 bug fixes, hotel option 4): https://github.com/alydibiky/attune-/actions/runs/41752948806 (success; full suite 226/226) — before: v9.1 hotel offers (3 Nov evening: option 4 A + C, hidden checking screen, photos): https://github.com/alydibiky/attune-/actions/runs/41693308525 (success) — before: v9.0 (3 Nov, notifications + accuracy round 2): https://github.com/alydibiky/attune-/actions/runs/41608171861 — before: v9.0: https://github.com/alydibiky/attune-/actions/runs/41585440030 — before: v8.9: https://github.com/alydibiky/attune-/actions/runs/41309881633 (success, sent to Ali) |
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
@@ -16,7 +16,22 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
-## Ali's picks on the options (5 Nov night) — combined mock-ups WAITING FOR HIS "OK", then build
+## v9.6 — 5 Nov night: Ali said "OK, I love all of them" → BUILT (+ MOCKUPS.md: mock-ups before building, his rule)
+- Agents (A3 + A4): the board is the page (Watching · Found · Done; `attune:agents:view2`, List still one tap away); a tap opens
+  `AgentChat` — what you asked, what it did (`agents.js agentChat`), the **dates × best-3 grid** (`offersByDay` kept as `a.byDay` by
+  Check now: the best 3 on each of the 6 cheapest dates; `datesGrid` falls back to best3 by day, or the price on each check), the
+  agent's full card, and a box that changes its rules (`ruleLog`). Each offer opens that exact listing in the phone's browser.
+- Month plan (P2 + P4 + P5 + P6): tabs Month · Calendar · Table (Year under Table). Month = `NetCard` (income − expenses = net →
+  goals · free; the last month's settling with Undo) + goals with a slider (`setMonthly`: a total-by-date goal moves its date).
+  `planner.js settleMonths` (from `data.since` = the month first opened; net ≥ wanted → wanted; less → what's there, shared by need;
+  the shortfall spreads by itself; a month with nothing recorded is not a loss; `undoSettle`), `monthCalendar`, `planVsActual`
+  (+ spending with no plan shows as over).
+- Follow-ups (F4 + F1): `WeekStrip` (7 days, ‹ ›, dots; red = money out) + one list (`byDayLate`: Late first, then each day), one
+  box searches as you type and adds on Send (`searchItems`), kind chips + the parts' pages behind ⋯ (`fu-more`), "Did Sheikh pay?"
+  in the list (`PersonAsk`, shared with Home).
+- Tests: unit v960plan / v960followups / v960agents; e2e `e2e_v960picks.py`; the harness keeps older tests on the agents list view.
+
+## Ali's picks on the options (5 Nov night) — combined mock-ups (done → v9.6)
 Ali: "I like A3 and A4 integrated in a clean way but I want more than 1 option in more than 1 date if available · P2, P4, P5 and P6 but
 I want to set year savings — from the November plan, income vs expenses, if net profit it takes what we agreed for the month to reach
 the time span or the yearly goal; it doesn't have to be yearly only · F4 and F1 integrated". Combined mock-ups + how Claude understood

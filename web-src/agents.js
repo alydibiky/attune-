@@ -608,3 +608,44 @@ export function takeSlot(a, r) {
   return { ...a, slot: { ...st, at, ...(opened ? { openedAt: at } : prev && prev.openedAt && st.state === "open" ? { openedAt: prev.openedAt } : {}) },
     log: [...(a.log || []), { at, state: st.state, d: st.dates[0] || "" }].slice(-30), checks: [...(a.checks || []), { at, how: r.how || "auto", ...(r.blocked ? { blocked: true } : {}) }].slice(-30) };
 }
+
+/* ---- v9.6 (Ali picked A3 + A4, 5 Nov: "integrated in a clean way, but I want more than 1 option in more than 1 date if available" —
+   MOCKUPS.md, https://claude.ai/artifact/2T2ZRNTemt42fTyvYX6FeY): the board (Watching · Found · Done); a tap opens the agent's
+   conversation; its results come as a grid of DATES × the best offers on each date. Pure. */
+const dayOf = (o) => String((o && (o.checkin || o.depart)) || "").slice(0, 10);
+/** Offers seen on several dates → the best `perDay` on each of the `maxDays` cheapest dates, in date order. → [{ date, checkout, offers }] */
+export function offersByDay(seen, perDay = 3, maxDays = 6) {
+  const by = new Map();
+  for (const o of seen || []) { const d = dayOf(o); if (!d || !(o.price > 0)) continue; (by.get(d) || by.set(d, []).get(d)).push(o); }
+  const days = [...by.entries()].map(([date, list]) => {
+    const seenName = new Set(), offers = [];
+    for (const o of list.sort((a, b) => a.price - b.price)) { const k = String(o.name || o.href || o.price).toLowerCase(); if (seenName.has(k)) continue; seenName.add(k);
+      const { photo, img, el, ...lean } = o; offers.push(lean); if (offers.length >= perDay) break; }
+    return { date, checkout: (list[0] && list[0].checkout) || "", offers };
+  });
+  return days.sort((a, b) => a.offers[0].price - b.offers[0].price).slice(0, maxDays).sort((a, b) => a.date.localeCompare(b.date));
+}
+/** The grid an agent shows: its days × offers when it checked several dates; else the offers it kept grouped by their day; else its
+ *  price on the last check days (a single product: how the price moved). → { kind: "dates" | "checks" | "", rows, best } */
+export function datesGrid(a) {
+  let rows = Array.isArray(a && a.byDay) && a.byDay.length ? a.byDay : offersByDay((a && a.best3) || []);
+  if (rows.length >= 2 || (rows.length === 1 && rows[0].offers.length > 1 && dayOf(rows[0].offers[0]))) {
+    let best = null; for (const r of rows) for (const o of r.offers) if (!best || o.price < best.price) best = o;
+    return { kind: "dates", rows, best };
+  }
+  const checks = ((a && a.checks) || []).filter((c) => c.price > 0).slice(-4);
+  if (checks.length >= 2) { const best = checks.reduce((m, c) => (!m || c.price < m.price ? c : m), null);
+    return { kind: "checks", rows: checks.map((c) => ({ date: new Date(c.at).toISOString().slice(0, 10), offers: [{ price: c.price, name: c.name || "", site: c.site || "", href: c.href || "" }] })), best }; }
+  return { kind: "", rows: [], best: null };
+}
+/** The agent's conversation (A4): what you asked, then what it did, newest last. → [{ who: "me" | "agent", at, T: [text, vars] }] */
+export function agentChat(a, now = Date.now()) {
+  if (!a) return [];
+  const out = [{ who: "me", at: a.created || a.at || 0, text: String(a.said || a.text || a.what || a.title || "") }];
+  const hrs = a.every ? Math.round(a.every / 60) : 0;
+  out.push({ who: "agent", at: (a.created || 0) + 1, T: hrs > 1 ? ["On it — I check every {h} hours and tell you what I find.", { h: hrs }] : ["On it — I'll tell you what I find."] });
+  for (const c of ((a.checks || []).slice(-5))) out.push({ who: "agent", at: c.at, T: c.price > 0 ? (c.checkin ? ["Checked: cheapest {p} ({d}).", { p: c.price, d: c.checkin + " → " + (c.checkout || "") }] : ["Checked: cheapest {p}.", { p: c.price }]) : ["The site didn't show prices this time — I'll try again."] });
+  if (a.found) out.push({ who: "agent", at: a.found.at, T: ["Found one under your price: {p}.", { p: a.found.price }], found: true });
+  for (const r of (a.ruleLog || []).slice(-5)) out.push({ who: "me", at: r.at, text: r.text });
+  return out.sort((x, y) => (x.at || 0) - (y.at || 0));
+}
