@@ -151,16 +151,16 @@ class AgentBrowser : Activity() {
         val lp = { LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(dp(4), 0, dp(4), 0) } }
         // v9.5 (Ali: "the 3 buttons down don't work"): each one now answers on the status line, even on a page still loading
         if (intent.getBooleanExtra("search", true)) bar.addView(btn(L("best", "Best offer"), false) {
-            tapped = System.currentTimeMillis(); say(L("looking", "Looking for the offers on this page…"))
+            tapped = System.currentTimeMillis(); tell(L("looking", "Looking for the offers on this page…"))
             if (kit.isNotEmpty()) web.evaluateJavascript(kit, null)
             run("window.__attuneAgent&&window.__attuneAgent.best($rules)")
-            web.postDelayed({ if (!closed && lastReport < tapped) say(if (loaded) L("noOffers", "No offers found on this page yet — search on the site, then tap Best offer.") else L("stillLoading", "The site is still loading — wait a moment, or tap “Open in my browser”.")) }, 2500L)
+            web.postDelayed({ if (!closed && lastReport < tapped) tell(if (loaded) L("noOffers", "No offers found on this page yet — search on the site, then tap Best offer.") else L("stillLoading", "The site is still loading — wait a moment, or tap “Open in my browser”.")) }, 2500L)
         }, lp())
         bar.addView(btn(L("fill", "Fill my details"), false) {
             // no details saved yet: Attune's Booking details open (the page comes back here after)
             if (profile == "{}" || profile.isBlank()) finishWith("profile")
             else { tapped = System.currentTimeMillis(); if (kit.isNotEmpty()) web.evaluateJavascript(kit, null); run("window.__attuneAgent&&window.__attuneAgent.fill($profile)")
-                web.postDelayed({ if (!closed && lastReport < tapped) say(L("noFields", "No form to fill on this page yet — open the booking or checkout page, then tap again.")) }, 2000L) }
+                web.postDelayed({ if (!closed && lastReport < tapped) tell(L("noFields", "No form to fill on this page yet — open the booking or checkout page, then tap again.")) }, 2000L) }
         }, lp())
         bar.addView(btn(L("done", "Done"), true) { finishWith("done") }, lp())
         root.addView(bar)
@@ -235,7 +235,7 @@ class AgentBrowser : Activity() {
         web.loadUrl(url)
         if (watchMode) armRound()
         // v9.5: a site that never finishes loading here (Ali's Uber page) — after 12 s, say so and offer the phone's browser
-        if (!watchMode) web.postDelayed({ if (!closed && !loaded) say(L("slow", "This site is slow inside Attune — tap “Open in my browser” to open the same page there.")) }, 12000L)
+        if (!watchMode) web.postDelayed({ if (!closed && !loaded) tell(L("slow", "This site is slow inside Attune — tap “Open in my browser” to open the same page there.")) }, 12000L)
     }
 
     private fun armRound() {
@@ -416,7 +416,7 @@ class AgentBrowser : Activity() {
     @Volatile private var lastReport = 0L
     private var tapped = 0L
     private var loaded = false
-    private fun say(t: String) { status.visibility = android.view.View.VISIBLE; status.setTextColor(Color.parseColor("#E7EAEA")); status.text = t }
+    private fun tell(t: String) { status.visibility = android.view.View.VISIBLE; status.setTextColor(Color.parseColor("#E7EAEA")); status.text = t }
     private fun openOutside() {
         val u = try { web.url } catch (e: Exception) { null } ?: intent.getStringExtra("url") ?: ""
         if (!u.startsWith("https://")) return
