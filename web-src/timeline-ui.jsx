@@ -43,7 +43,7 @@ function WeekStrip({ list, week, setWeek, pick, picked }) {
     <div className="grid grid-cols-7 gap-1 flex-1 min-w-0">
       {days.map((d) => { const dt = new Date(d.date + "T12:00:00"), on = d.date === (picked || today);
         return <button key={d.date} onClick={() => pick(d.date)} data-testid="fu-week-day" data-date={d.date} aria-pressed={on}
-          className={"rounded-[14px] py-1.5 flex flex-col items-center min-w-0 " + (on ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)]")}>
+          className={"rounded-[14px] py-1.5 flex flex-col items-center min-w-0 " + (on ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" : "bg-[var(--c-surf)] text-[var(--c-ink)] border border-[var(--c-ln)]")}>
           <span className="text-[10.5px] font-bold opacity-80 truncate max-w-full">{dt.toLocaleDateString(dateLocale(), { weekday: "short" })}</span>
           <b className="text-[15px] leading-tight tabular-nums">{dt.getDate()}</b>
           <i className="block w-1.5 h-1.5 rounded-full mt-0.5" style={{ background: d.count ? (on ? "var(--c-on-acc)" : d.pays ? "var(--c-neg)" : "var(--c-acc)") : "transparent" }} data-testid={d.count ? (d.pays ? "fu-dot-pay" : "fu-dot") : undefined} />

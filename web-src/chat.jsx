@@ -2171,7 +2171,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         <div className="fixed inset-0 z-50 flex" onClick={() => setDrawerOpen(false)}>
           <div className="calm w-[86%] max-w-sm h-full bg-[var(--c-surf)]! text-[var(--c-ink)] border-e border-[var(--c-ln)] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-3 border-b border-[var(--c-ln)] flex items-center gap-2">
-              <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 min-h-[48px] flex items-center gap-2 px-4 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[15px] font-extrabold"><Plus size={16} /> {tr("New chat")}</button>
+              <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 min-h-[48px] flex items-center gap-2 px-4 rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[15px] font-extrabold"><Plus size={16} /> {tr("New chat")}</button>
               <button onClick={() => setDrawerOpen(false)} className="att-icon-btn"><X size={18} /></button>
             </div>
             <div className="px-3 pt-3">
@@ -2310,7 +2310,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <div className="flex gap-2 mt-3 flex-wrap">
                 {m.card.actions.map(([label, act], i) => (
                   <button key={act} onClick={() => cardAction(m, act)}
-                    className={`min-h-[44px] text-[13.5px] font-bold px-4 rounded-[12px] ${i === 0 ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"}`}>{tr(label)}</button>
+                    className={`min-h-[44px] text-[13.5px] font-bold px-4 rounded-[12px] ${i === 0 ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold" : "border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"}`}>{tr(label)}</button>
                 ))}
               </div>
             ) : null}
@@ -2419,7 +2419,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 <div className="flex gap-2">
                   <input value={toPack.name} onChange={(e) => setToPack({ ...toPack, name: e.target.value })} placeholder={tr("New pack…")} dir="auto" data-testid="teach-to-pack-new"
                     className="flex-1 min-w-0 min-h-[44px] rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
-                  <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold disabled:opacity-40" disabled={!toPack.name.trim()} data-testid="teach-to-pack-save"
+                  <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13.5px] font-extrabold disabled:opacity-40" disabled={!toPack.name.trim()} data-testid="teach-to-pack-save"
                     onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.knowledge.teachChat(c, n); setToPack(null); api.flash(tr("Saved in “{n}” ({p} passages)", { n, p: r.passages })); }}>{tr("Save")}</button>
                 </div>
               </div>) : null}
@@ -2438,7 +2438,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                     {r.reason ? <p className="mt-1" dir="auto">{r.reason}</p> : null}
                     {r.answer && r.verdict !== "unsure" ? <p className="mt-1" dir="auto"><span className="text-[var(--c-mut)]">{tr("Checked answer")}: </span><b>{r.answer}</b></p> : null}
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {r.verdict === "partly" && r.answer ? <button data-testid="teach-save-checked" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold"
+                      {r.verdict === "partly" && r.answer ? <button data-testid="teach-save-checked" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13px] font-extrabold"
                         onClick={() => saveTeach(m, idx, r.answer, r.reason, r.verdict)}>{tr("Learn the checked answer")}</button> : null}
                       <button data-testid="teach-force" className="min-h-[44px] px-3.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold"
                         onClick={() => saveTeach(m, idx, teaching.corrected.trim(), teaching.note.trim(), "kept")}>{tr("I'm sure — learn mine anyway")}</button>
@@ -2446,7 +2446,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                     </div>
                   </div>); })() : (
                 <div className="flex flex-wrap gap-2 mt-2.5 items-center">
-                  <button disabled={!teaching.corrected.trim() || teaching.checking} data-testid="teach-save" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold disabled:opacity-40"
+                  <button disabled={!teaching.corrected.trim() || teaching.checking} data-testid="teach-save" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13px] font-extrabold disabled:opacity-40"
                     onClick={() => checkTeach(m, idx)}>{teaching.checking ? tr("Checking…") : tr("Check & teach")}</button>
                   <button onClick={() => setTeaching(null)} className="min-h-[44px] px-3.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold">{tr("Cancel")}</button>
                   {teaching.checking ? <span className="text-[11px] text-[var(--c-acc)]" data-testid="teach-step">{teaching.step || tr("Double-checking your correction…")}</span> : null}
@@ -2652,12 +2652,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             )}
             <div className="flex-1" />
             {busy && text.trim() ? (
-              <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center me-1" title={tr("Send")} data-testid="queue-send"><Send size={17} /></button>
+              <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center me-1" title={tr("Send")} data-testid="queue-send"><Send size={17} /></button>
             ) : null}
             {busy ? (
               <button onClick={stop} className="w-11 h-11 rounded-full bg-[var(--c-ink)] text-[var(--c-bg)] flex items-center justify-center" title={tr("Stop")}><Square size={15} /></button>
             ) : text.trim() || image || files.length ? (
-              <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center" title={tr("Send")}><Send size={17} className="rtl:rotate-180" /></button>
+              <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center" title={tr("Send")}><Send size={17} className="rtl:rotate-180" /></button>
             ) : (
               <>
               {NATIVE && NATIVE.listen && !listening ? <button onClick={() => setCall(true)} className="w-11 h-11 rounded-full flex items-center justify-center bg-[var(--c-soft)] text-[var(--c-acc)]" title={tr("Talk like a phone call")} data-testid="chat-call"><Phone size={17} /></button> : null}

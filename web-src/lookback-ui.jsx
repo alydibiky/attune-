@@ -77,7 +77,7 @@ function ListenerNote({ native }) {
   if (!since && !done) return null;
   return <div className="rounded-[16px] border border-[var(--c-warn)] bg-[var(--c-soft)] p-3 space-y-2" data-testid="recall-listener">
     <p className="m-0 text-[13.5px] font-bold" dir="auto">{done ? tr("Reconnected — new notifications will be kept again.") : tr("No notifications have reached Attune since {d}. Android stopped sending them.", { d: new Date(since).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) })}</p>
-    {done ? null : <button className="min-h-[40px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[13px]" onClick={() => { try { native.listenerHeal(); } catch (e) {} setDone(true); setTimeout(() => setH(read()), 3000); }} data-testid="recall-reconnect">{tr("Reconnect")}</button>}
+    {done ? null : <button className="min-h-[40px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[13px]" onClick={() => { try { native.listenerHeal(); } catch (e) {} setDone(true); setTimeout(() => setH(read()), 3000); }} data-testid="recall-reconnect">{tr("Reconnect")}</button>}
   </div>;
 }
 

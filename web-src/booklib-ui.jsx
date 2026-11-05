@@ -211,7 +211,7 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
         <div className="flex items-center justify-between gap-2 flex-wrap"><b className="text-[14px]">{shelf.length ? tr("{n} books · {p} pages", { n: shelf.length, p: pagesIn.toLocaleString("en-US") }) : tr("No books yet")}{topic ? " · " + topic : ""}{nat && ns.dbBytes > 0 ? <span className="text-[12px] text-[var(--c-mut)] font-semibold"> · {tr("index {s} on the phone", { s: gb(ns.dbBytes) })}</span> : null}</b>
           <span className="flex gap-1.5">
             {nat ? <button onClick={() => add(true)} className="min-h-[40px] px-3 rounded-[12px] border border-[var(--c-ln)] font-extrabold text-[13px] inline-flex items-center gap-1" data-testid="booklib-add-folder"><Plus size={15} />{tr("A folder")}</button> : null}
-            <button onClick={() => add(false)} disabled={!!busy} className="min-h-[40px] px-3.5 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[13px] inline-flex items-center gap-1 disabled:opacity-40" data-testid="booklib-add"><Plus size={15} />{tr("Books")}</button></span></div>
+            <button onClick={() => add(false)} disabled={!!busy} className="min-h-[40px] px-3.5 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[13px] inline-flex items-center gap-1 disabled:opacity-40" data-testid="booklib-add"><Plus size={15} />{tr("Books")}</button></span></div>
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf,.txt,application/pdf" className="hidden" data-testid="booklib-file" onChange={(e) => { const f = e.target.files; addFiles(f); e.target.value = ""; }} />
         {busy ? <p className="m-0 text-[12.5px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="booklib-busy"><Loader2 size={13} className="animate-spin" />{busy}</p> : null}
         {nat && ns.job && ns.job.name ? <p className="m-0 text-[12.5px] text-[var(--c-acc)] flex items-center gap-1.5" data-testid="booklib-job"><Loader2 size={13} className="animate-spin" />{tr("Reading {name} · page {a} of {b}", { name: B.titleOf(ns.job.name), a: ns.job.page, b: ns.job.pages })}</p> : null}
@@ -221,7 +221,7 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
             <span className="min-w-0 flex-1"><b className="block text-[14px] truncate" dir="auto">{title}</b>
               <span className="block text-[11.5px] text-[var(--c-mut)]">{nat && d.state === "reading" ? tr("reading") + " " + d.done + "/" + (d.pages || "…") : nat && d.state === "queued" ? tr("waiting") : nat && d.state === "error" ? "⚠ " + tr("error") : tr("{n} pages", { n: pages || 0 })}{inChat ? " · " + tr("Chat knows it") : ""}</span></span>
             <button onClick={() => { setOnly(only && only.id === id ? null : { id, title }); setTimeout(() => qRef.current && qRef.current.focus(), 50); }} aria-pressed={!!(only && only.id === id)} className={"min-h-[40px] px-3 rounded-[12px] border text-[12.5px] font-extrabold " + (only && only.id === id ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)]")} data-testid="booklib-ask-one">{tr("Ask")}</button>
-            <button onClick={() => saveInChat(d, !inChat)} aria-pressed={inChat} className={"min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold " + (inChat ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "border border-[var(--c-acc)] text-[var(--c-acc)]")} data-testid="booklib-save-chat">{inChat ? "✓ " + tr("In Chat") : tr("Save in Chat")}</button>
+            <button onClick={() => saveInChat(d, !inChat)} aria-pressed={inChat} className={"min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold " + (inChat ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" : "border border-[var(--c-acc)] text-[var(--c-acc)]")} data-testid="booklib-save-chat">{inChat ? "✓ " + tr("In Chat") : tr("Save in Chat")}</button>
             <button onClick={() => removeBook(id)} aria-label={tr("Remove")} className="w-8 h-10 grid place-items-center text-[var(--c-mut)] shrink-0" data-testid="booklib-remove"><X size={14} /></button>
           </div>; })}</div>
           : <p className="m-0 text-[13px] text-[var(--c-mut)]">{tr("Add the books you trust (PDF, Word, e-book) — 10 history books, your course, a law… Then ask anything.")}</p>}
@@ -233,7 +233,7 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
           {docs.filter((d) => !st.ids.includes(d.id)).slice(0, 8).map((d) => <button key={d.id} onClick={() => put({ ...st, ids: [...st.ids, d.id], topicOf: topic ? { ...(st.topicOf || {}), [d.id]: topic } : st.topicOf })} className="underline text-[var(--c-acc)] me-2" data-testid="booklib-add-doc">+ {B.titleOf(d.name)}</button>)}</div> : null}
       </div>
       <div className="space-y-2.5" data-testid="booklib-chat">
-        {chat.map((m, i) => m.role === "user" ? <div key={i} className="ms-10 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] px-3 py-2 text-[14px]" dir="auto" data-testid="booklib-q">{m.text}</div> : (() => {
+        {chat.map((m, i) => m.role === "user" ? <div key={i} className="ms-10 rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] px-3 py-2 text-[14px]" dir="auto" data-testid="booklib-q">{m.text}</div> : (() => {
           const parts = B.splitDisagree(m.text), cites = B.citesIn(m.text);
           return <div key={i} className={U.card + " me-4 px-3.5 py-3 space-y-2"} data-testid="booklib-a">
             <div className="text-[14px] leading-relaxed"><Md text={B.noCites(parts.main)} runnable={false} /></div>
@@ -254,7 +254,7 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
       <form onSubmit={(e) => { e.preventDefault(); ask(); }} className={U.card + " flex items-center gap-2 p-1.5 ps-3.5 sticky bottom-2"} data-testid="booklib-form">
         <BookOpen size={16} className="text-[var(--c-mut)] shrink-0" />
         <input ref={qRef} value={q} onChange={(e) => setQ(e.target.value)} dir="auto" placeholder={only ? tr("Ask “{t}”…", { t: only.title }) : topic ? tr("Ask your {t} books…", { t: topic }) : chat.length ? tr("Ask a follow-up…") : tr("Ask your books…")} className="flex-1 min-w-0 bg-transparent outline-none text-[14px] min-h-[44px]" data-testid="booklib-input" />
-        <button type="submit" disabled={!q.trim() || asking} aria-label={tr("Send")} className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center disabled:opacity-40" data-testid="booklib-send"><Send size={16} /></button>
+        <button type="submit" disabled={!q.trim() || asking} aria-label={tr("Send")} className="w-11 h-11 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] grid place-items-center disabled:opacity-40" data-testid="booklib-send"><Send size={16} /></button>
       </form>
     </div>);
 }

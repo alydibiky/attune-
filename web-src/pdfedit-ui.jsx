@@ -273,7 +273,7 @@ export function PdfEditor({ file, nativeCall, onClose, onDone, flash }) {
         <button onClick={leave} aria-label={tr("Back")} className="w-11 h-11 -ms-1 grid place-items-center rounded-[12px] text-[var(--c-ink)]" data-testid="pdfedit-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
         <p className="flex-1 truncate text-[15px] font-extrabold text-[var(--c-ink)]">{file.name}</p>
         <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"w-11 h-11 grid place-items-center rounded-[12px] " + (hist.length ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")} data-testid="pdfedit-undo"><Undo2 size={17} /></button>
-        <button onClick={save} disabled={!dirty || !!busy} className={"min-h-[44px] px-4 rounded-[12px] text-[13.5px] font-extrabold " + (dirty && !busy ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-save">{tr("Save")}</button>
+        <button onClick={save} disabled={!dirty || !!busy} className={"min-h-[44px] px-4 rounded-[12px] text-[13.5px] font-extrabold " + (dirty && !busy ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-save">{tr("Save")}</button>
       </div>
       {busy ? <p className="flex items-center gap-2 text-[12.5px] text-[var(--c-acc)] px-1 pb-2" data-testid="pdfedit-busy"><Loader2 size={14} className="animate-spin" />{busy}</p> : null}
       {err ? <p className="text-[12.5px] text-[var(--c-neg)] px-1 pb-2" data-testid="pdfedit-error">{err}</p> : null}
@@ -381,7 +381,7 @@ function SignPad({ onCancel, onUse }) {
         <div className="flex justify-end gap-2 mt-3">
           <button onClick={() => { const c = cv.current; c.getContext("2d").clearRect(0, 0, c.width, c.height); setAny(false); }} className="min-h-[44px] px-3 rounded-[12px] font-bold text-[var(--c-ink)] text-sm">{tr("Clear")}</button>
           <button onClick={onCancel} className={K.btnS}>{tr("Cancel")}</button>
-          <button onClick={use} disabled={!any} className={"min-h-[44px] px-4 rounded-[12px] text-sm font-extrabold " + (any ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-sign-use">{tr("Use this signature")}</button>
+          <button onClick={use} disabled={!any} className={"min-h-[44px] px-4 rounded-[12px] text-sm font-extrabold " + (any ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" : "bg-[var(--c-surf-2)] text-[var(--c-mut)]")} data-testid="pdfedit-sign-use">{tr("Use this signature")}</button>
         </div>
       </div>
     </div>

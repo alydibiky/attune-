@@ -188,11 +188,11 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
             <p className="m-0 mt-1 text-[22px] font-extrabold" dir="auto">{newest.text}</p>
             <div className="flex gap-2 mt-3">
               <button onClick={() => speakOut(newest.who + ": " + newest.text, st.ui)} className="flex-1 min-h-[56px] rounded-[20px] border border-[var(--c-ln)] text-[17px] font-extrabold inline-flex items-center justify-center gap-2" data-testid="car-read"><Volume2 size={20} />{ar ? "اقرا" : tr("Read")}</button>
-              <button onClick={() => replyTo(newest)} className="flex-1 min-h-[56px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[17px] font-extrabold inline-flex items-center justify-center gap-2" data-testid="car-reply"><Mic size={20} />{ar ? "رد" : tr("Reply")}</button>
+              <button onClick={() => replyTo(newest)} className="flex-1 min-h-[56px] rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[17px] font-extrabold inline-flex items-center justify-center gap-2" data-testid="car-reply"><Mic size={20} />{ar ? "رد" : tr("Reply")}</button>
             </div></div> : null}
           {card ? <div className="rounded-[20px] bg-[var(--c-soft)] p-4" data-testid="car-say"><p className="m-0 text-[19px] font-extrabold" dir="auto">{card.kind === "readback" ? `${card.to}: «${card.text}»` : say}</p>
             {card.kind === "readback" ? <div className="flex gap-2 mt-3"><button onClick={() => turn(ar ? "لا" : tr("no"))} className="flex-1 min-h-[56px] rounded-[20px] border border-[var(--c-ln)] text-[17px] font-extrabold" data-testid="car-cancel">{ar ? "لا" : tr("No")}</button>
-              <button onClick={() => turn(ar ? "ابعت" : tr("send"))} className="flex-1 min-h-[56px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[17px] font-extrabold" data-testid="car-send">{ar ? "ابعت" : tr("Send")}</button></div> : null}</div> : null}
+              <button onClick={() => turn(ar ? "ابعت" : tr("send"))} className="flex-1 min-h-[56px] rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[17px] font-extrabold" data-testid="car-send">{ar ? "ابعت" : tr("Send")}</button></div> : null}</div> : null}
           <button onClick={listen} className={tile} data-testid="car-talk"><span className={well}><Mic size={26} /></span>{ar ? "اتكلم" : tr("Talk")}</button>
           <button onClick={() => turn(ar ? "مين بعتلي" : tr("who messaged me"))} className={tile} data-testid="car-messages"><span className={well}><MessageCircle size={26} /></span>{(ar ? "الرسايل" : tr("Messages")) + (n ? " · " + n : "")}</button>
           <button onClick={askPlace} className={tile} data-testid="car-nav"><span className={well}><MapPin size={26} /></span>{ar ? "ودّيني" : tr("Navigate")}</button>
@@ -228,12 +228,12 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
           {card.onlyInGroup ? <p className="m-0 mt-1 text-[12.5px] text-[var(--c-warn)]" data-testid="voice-group-note">{ar ? `كتب في جروب «${card.onlyInGroup}» بس — هفتح الأبلكيشن عليه هو، مش الجروب.` : `They only wrote in the “${card.onlyInGroup}” group — the app opens on them, not the group.`}</p> : null}
           {edit != null ? <form onSubmit={(e) => { e.preventDefault(); const t = edit.trim(); setEdit(null); if (t) turn((ar ? "غيرها ل " : tr("change it to ")) + t); }} className="my-2 flex gap-2">
             <input autoFocus value={edit} onChange={(e) => setEdit(e.target.value)} dir="auto" className="flex-1 min-w-0 min-h-[44px] rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-acc)] px-3 text-[16px] font-bold" data-testid="voice-edit" />
-            <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" data-testid="voice-edit-ok">{ar ? "تمام" : tr("OK")}</button></form>
+            <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold" data-testid="voice-edit-ok">{ar ? "تمام" : tr("OK")}</button></form>
             : <p className="m-0 my-2 text-[19px] font-extrabold" dir="auto" data-testid="voice-text">{card.text}</p>}
           {!card.direct ? <p className="m-0 text-[12px] c-sub">{ar ? "مفيش محادثة حديثة معاه — هفتح الأبلكيشن والرسالة جاهزة، وإنت اختار الشخص." : tr("No recent chat with them — the app opens with the message ready; you pick the person.")}</p> : null}
           <div className="flex gap-2 mt-3">
             <button onClick={() => setEdit(card.text)} className="flex-1 min-h-[46px] rounded-[12px] border border-[var(--c-ln)] font-extrabold inline-flex items-center justify-center gap-1.5" data-testid="voice-change"><Pencil size={15} />{ar ? "غيّر" : tr("Change")}</button>
-            <button onClick={() => turn(ar ? "ابعت" : tr("send"))} className="flex-1 min-h-[46px] rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold inline-flex items-center justify-center gap-1.5" data-testid="voice-send"><Send size={15} className="rtl:-scale-x-100" />{ar ? "ابعت" : tr("Send")}</button>
+            <button onClick={() => turn(ar ? "ابعت" : tr("send"))} className="flex-1 min-h-[46px] rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold inline-flex items-center justify-center gap-1.5" data-testid="voice-send"><Send size={15} className="rtl:-scale-x-100" />{ar ? "ابعت" : tr("Send")}</button>
           </div>
         </div> : null}
         {card && card.kind === "messages" ? <div className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-4 mt-3 space-y-2" data-testid="voice-messages">
@@ -249,7 +249,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
         </form>
       </div>
       <div className="pb-6 pt-2 grid place-items-center" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
-        <button onClick={listen} disabled={!N || !N.listen} aria-label={tr("Speak")} className={"w-[74px] h-[74px] rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] shadow-lg disabled:opacity-40 " + (listening ? "animate-pulse" : "")} data-testid="voice-mic"><Mic size={30} /></button>
+        <button onClick={listen} disabled={!N || !N.listen} aria-label={tr("Speak")} className={"w-[74px] h-[74px] rounded-full grid place-items-center bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] shadow-lg disabled:opacity-40 " + (listening ? "animate-pulse" : "")} data-testid="voice-mic"><Mic size={30} /></button>
       </div>
     </div>);
 }

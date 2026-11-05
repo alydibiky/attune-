@@ -81,7 +81,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
               placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : tr("Ask, or tell Attune what happened — «spent 150 on lunch», «remind me tomorrow at 9»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
             <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
-              className="w-11 h-11 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center disabled:opacity-40 transition-opacity duration-150"><Send size={17} className="rtl:-scale-x-100" /></button>
+              className="w-11 h-11 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center disabled:opacity-40 transition-opacity duration-150"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>
           <div className="mt-3"><BoxModes mode={boxMode} setMode={(m) => { setBoxMode(m); setLife(null); }} /></div>
           {listAns ? <div className="mt-3 space-y-2" data-testid="list-answer"><p className="m-0 text-[14px] font-bold" dir="auto">{listAns.line}</p>

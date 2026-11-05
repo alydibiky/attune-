@@ -110,7 +110,7 @@ function Interpreter({ llm, native, flash, gloss, close }) {
       <p className="flex-1 overflow-y-auto text-[26px] leading-snug text-[var(--c-ink)] m-0" dir={RTL.has(langs[side]) ? "rtl" : "ltr"} data-testid={"interp-heard-" + side}>{heard[side]}</p>
       {said[side] ? <p className="text-[13px] text-[var(--c-mut)] m-0" dir="auto" data-testid={"interp-said-" + side}>{said[side]}</p> : null}
       <button onClick={() => turn(side)} disabled={!!busy && busy !== side} data-testid={"interp-mic-" + side}
-        className={"w-full min-h-[56px] py-4 rounded-[20px] text-lg font-extrabold flex items-center justify-center gap-2 disabled:opacity-40 " + (busy === side ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-acc)] text-[var(--c-on-acc)]")}>
+        className={"w-full min-h-[56px] py-4 rounded-[20px] text-lg font-extrabold flex items-center justify-center gap-2 disabled:opacity-40 " + (busy === side ? "bg-[var(--c-neg)] text-[var(--c-on-acc)]" : "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]")}>
         <Volume2 size={20} />{busy === side ? T.LANGS[langs[side]] + " …" : (T.LANGS[langs[side]] || langs[side])}</button>
     </div>);
   return (

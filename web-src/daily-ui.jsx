@@ -27,7 +27,7 @@ export const loadTopics = () => load(NKEY);
 
 const field = inp;
 const btn = "min-h-[44px] px-3.5 py-2 rounded-[12px] text-[13.5px] font-bold disabled:opacity-40 inline-flex items-center justify-center gap-1.5 transition-colors duration-150";
-const primary = btn + " bg-[var(--c-acc)] text-[var(--c-on-acc)]";
+const primary = btn + " bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]";
 // (v5.13: a field that must NOT stretch — "w-full" beat "w-28" and squeezed
 // the label next to it into one letter per line.)
 const fieldFixed = field.replace("w-full ", "");
@@ -126,7 +126,7 @@ export function Visual({ v }) {
       {v.items.map((x, i) => (
         <div key={i}>
           <div className="flex gap-2.5 items-start rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-2.5">
-            <span className="w-6 h-6 shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[12px] font-bold flex items-center justify-center">{i + 1}</span>
+            <span className="w-6 h-6 shrink-0 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[12px] font-bold flex items-center justify-center">{i + 1}</span>
             <span className="text-[13px] text-[var(--c-ink)] pt-0.5" dir="auto">{x}</span></div>
           {i < v.items.length - 1 ? <div className="text-center text-[var(--c-acc)] leading-none py-0.5">↓</div> : null}
         </div>))}

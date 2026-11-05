@@ -326,7 +326,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
                 ))}
               </div>
               <button onClick={() => run({ fresh: true })} disabled={!task.trim()} data-testid="code-build"
-                className="sm:ms-auto w-full sm:w-auto shrink-0 justify-center px-5 min-h-[48px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[15px] font-extrabold disabled:opacity-40 flex items-center gap-1.5"><Wrench size={15} />{tr("Build & test")}</button>
+                className="sm:ms-auto w-full sm:w-auto shrink-0 justify-center px-5 min-h-[48px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[15px] font-extrabold disabled:opacity-40 flex items-center gap-1.5"><Wrench size={15} />{tr("Build & test")}</button>
             </div>
           </div>
           {pyLine}
@@ -368,7 +368,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
           <RunOutput res={res} lang={cur.lang} code={cur.code} />
 
           <div className="flex flex-wrap gap-1.5">
-            <button onClick={runOnly} disabled={busy || !cur.code} data-testid="code-run" className="px-4 min-h-[44px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold flex items-center gap-1.5 disabled:opacity-40">
+            <button onClick={runOnly} disabled={busy || !cur.code} data-testid="code-run" className="px-4 min-h-[44px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13px] font-extrabold flex items-center gap-1.5 disabled:opacity-40">
               {isHtml ? <Eye size={14} /> : <Play size={14} />}{isHtml ? tr("Check the page") : tr("Run")}</button>
             {verdict && !verdict.passed ? (
               <button onClick={() => run({})} disabled={busy} data-testid="code-fix" className="px-3 min-h-[44px] rounded-full bg-[var(--c-warn)]/15 border border-[var(--c-warn)]/50 text-[var(--c-warn)] text-[13px] flex items-center gap-1 disabled:opacity-40"><Wrench size={13} />{tr("Fix it automatically")}</button>
@@ -386,7 +386,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
               onKeyDown={(e) => { if (e.key === "Enter" && change.trim() && !busy) run({ changeText: change.trim() }); }}
               placeholder={tr("Ask for a change… e.g. “also show the total in EGP”")} className="flex-1 min-w-0 bg-transparent py-2 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
             <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Change")}
-              className="w-11 h-11 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] grid place-items-center disabled:opacity-40"><Send size={15} /></button>
+              className="w-11 h-11 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] grid place-items-center disabled:opacity-40"><Send size={15} /></button>
           </div>
         </>
       )}

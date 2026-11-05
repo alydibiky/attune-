@@ -11440,7 +11440,7 @@ export default function App() {
             <textarea value={newAct.instruction} onChange={(e) => setNewAct((a) => ({ ...a, instruction: e.target.value }))} rows={3}
               placeholder={tr("e.g. Write a short polite reply in Egyptian Arabic, friendly but professional.")}
               className="w-full min-h-[44px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 py-2.5 text-[14.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] transition-colors duration-150 resize-none leading-relaxed" />
-            <button onClick={saveCustomAction} className="mt-4 w-full min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Save action")}</button>
+            <button onClick={saveCustomAction} className="mt-4 w-full min-h-[48px] rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[15px]">{tr("Save action")}</button>
             {customActions.length > 0 ? (
               <div className="mt-4">
                 <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2">{tr("Your actions")}</p>
@@ -11574,7 +11574,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                     <span className="block">{tr(PLAN_TEXT[k][0])}</span>
                     <span className={`block text-[11px] font-bold tabular-nums ${plan === k ? "opacity-90" : "text-[var(--c-mut)]"}`} dir="ltr">{shown(k)}</span>
                     {k === "life" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)] font-extrabold">{tr("Launch offer")}</span> : null}
-                    {k === "year" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold">{tr("Best value")}</span> : null}
+                    {k === "year" ? <span className="absolute -top-2.5 end-1 text-[9.5px] px-2 py-0.5 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold">{tr("Best value")}</span> : null}
                   </button>
                 ))}
               </div>
@@ -11588,7 +11588,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                   <li key={b} className="flex items-start gap-1.5 text-[12.5px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(b)}</li>))}
               </ul>
               {Store.available() ? (
-                <button onClick={storeBuy} disabled={busy} className="mt-4 w-full min-h-[52px] py-3.5 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15.5px] disabled:opacity-60 transition-opacity duration-150" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
+                <button onClick={storeBuy} disabled={busy} className="mt-4 w-full min-h-[52px] py-3.5 rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[15.5px] disabled:opacity-60 transition-opacity duration-150" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
               ) : (
                 <p className="mt-4 text-[12.5px] text-[var(--c-ink)] leading-relaxed rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your {c} balance, and it switches on by itself.", { c: P.carriers || (tr("mobile (balance)") === "mobile (balance)" ? "mobile" : tr("mobile (balance)")) })}</p>
               )}
@@ -11648,7 +11648,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                 <div className="mt-3 flex gap-2">
                   <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tr("Paste your activation code (PRO1…)")} data-testid="pro-code"
                     className="flex-1 min-w-0 min-h-[44px] h-11 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3.5 text-[14px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)]" />
-                  <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="min-h-[44px] h-11 px-5 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[14px] font-extrabold disabled:opacity-40">{tr("Activate")}</button>
+                  <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="min-h-[44px] h-11 px-5 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[14px] font-extrabold disabled:opacity-40">{tr("Activate")}</button>
                 </div>
               </> : null}
               <div className="flex items-center justify-between mt-3">
@@ -11713,7 +11713,7 @@ function KeyboardRowIn() {
     <div className="flex items-center gap-2 mb-3" data-testid="keyboard-row">
       <span className="flex-1 min-w-0"><span className="block text-[13px] font-bold text-[var(--c-ink)]">{tr("Attune keyboard")}</span>
         <span className="block text-[11.5px] text-[var(--c-mut)]">{on ? tr("On — pick it from the keyboard button when you type") : tr("Improve, translate, reply and better prompts in every app, offline")}</span></span>
-      <button onClick={() => N.keyboardSetup(on ? "pick" : "settings")} className="shrink-0 min-h-[44px] h-11 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] px-4 text-[13px] font-extrabold" data-testid="keyboard-setup">{on ? tr("Switch to it") : tr("Turn on")}</button>
+      <button onClick={() => N.keyboardSetup(on ? "pick" : "settings")} className="shrink-0 min-h-[44px] h-11 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] px-4 text-[13px] font-extrabold" data-testid="keyboard-setup">{on ? tr("Switch to it") : tr("Turn on")}</button>
     </div>);
 }
 
@@ -11773,8 +11773,8 @@ function FirstMinute({ close, navTo }) {
       </div>}
       <div className="flex gap-2 pt-4">
         {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[52px] px-5 rounded-full border border-[var(--c-ln)] font-bold" data-testid="first-back">{tr("Back")}</button> : null}
-        {step < 2 ? <button onClick={() => setStep(step + 1)} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[16px]" data-testid="first-next">{tr("Next")}</button>
-          : <button onClick={doIt} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[16px]" data-testid="first-do">{tr("Do it")}</button>}
+        {step < 2 ? <button onClick={() => setStep(step + 1)} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[16px]" data-testid="first-next">{tr("Next")}</button>
+          : <button onClick={doIt} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[16px]" data-testid="first-do">{tr("Do it")}</button>}
       </div>
     </div>
   </div>;
@@ -11833,7 +11833,7 @@ function Onboard({ profile, setProfile, close, flash, brain = null }) {
             </div>
             <div className="flex items-center justify-between mt-5">
               {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-mut)] px-3 rounded-[12px] hover:text-[var(--c-ink)]">{tr("← Back")}</button> : <span />}
-              {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px] px-6">{tr("Next")}</button> : null}
+              {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[15px] px-6">{tr("Next")}</button> : null}
             </div>
           </>
         ) : (
@@ -11846,12 +11846,12 @@ function Onboard({ profile, setProfile, close, flash, brain = null }) {
               <p className="m-0 text-[14.5px] font-extrabold">{tr("Get Attune's brain")}</p>
               <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("The AI that answers, reads photos and writes — on your phone, private. {s}. Best on Wi-Fi.", { s: brain.rec.size })}</p>
               {brainOn ? <p className="m-0 text-[13px] font-bold text-[var(--c-acc)]" data-testid="onboard-brain-started">{tr("Downloading — you can use the app meanwhile.")}</p>
-                : <div className="flex gap-2"><button onClick={() => { setBrainOn(true); brain.go(); }} className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13.5px] font-extrabold" data-testid="onboard-brain-now">{tr("Download now")}</button>
+                : <div className="flex gap-2"><button onClick={() => { setBrainOn(true); brain.go(); }} className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13.5px] font-extrabold" data-testid="onboard-brain-now">{tr("Download now")}</button>
                   <span className="self-center text-[12.5px] text-[var(--c-mut)]">{tr("or later, from Engine")}</span></div>}
             </div> : null}
             <div className="flex items-center justify-between mt-4 gap-2">
               <button onClick={() => setStep(step - 1)} className="min-h-[44px] text-[13.5px] font-bold text-[var(--c-mut)] px-3 rounded-[12px] hover:text-[var(--c-ink)]">{tr("← Back")}</button>
-              <button onClick={finish} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Start using Attune")}</button>
+              <button onClick={finish} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[15px]">{tr("Start using Attune")}</button>
             </div>
           </>
         )}
@@ -11904,7 +11904,7 @@ function ProfileModal({ profile, setProfile, close, flash }) {
         <BookingDetails />
         {p.on && profileLine0(p) ? <p className="text-[12px] text-[var(--c-mut)] mt-2 border-s-2 border-[var(--c-acc)]/40 ps-2.5">{tr("Applied to prompts:")} {profileLine0(p).replace("About the user (use this to make the prompt specific and domain-aware, but never mention it): ", "")}</p> : null}
         <div className="flex gap-2 mt-4">
-          <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px]">{tr("Save")}</button>
+          <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[15px]">{tr("Save")}</button>
           <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); setP({ ...EMPTY_PROFILE }); flash(tr("Profile cleared")); }} className="min-h-[48px] px-5 rounded-[20px] border border-[var(--c-ln)] text-[var(--c-mut)] hover:border-[var(--c-neg)] hover:text-[var(--c-neg)] text-[13.5px] font-bold transition-colors duration-150">{tr("Clear")}</button>
         </div>
       </div>
@@ -12236,7 +12236,7 @@ function InviteCard({ req, flash }) {
         <span className="text-[13px] font-extrabold c-acc tabular-nums" data-testid="referral-count">{tr("{n} of {m} friends joined", { n: inv.friends || 0, m: inv.max || 3 })}</span></div>
       <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("Your friend gets a month of Pro. When they subscribe, you get a month free — up to 3 friends. Linked to your Google account.")}</p>
       <div className="flex flex-wrap gap-2">
-        <button className="h-10 px-4 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold" onClick={() => share(inv.code)} data-testid="referral-share">{tr("Share my link")}</button>
+        <button className="h-10 px-4 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13px] font-extrabold" onClick={() => share(inv.code)} data-testid="referral-share">{tr("Share my link")}</button>
         <button className="h-10 px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold" onClick={start} disabled={busy} data-testid="referral-refresh">{busy ? "…" : tr("Check")}</button>
         {inv.days > 0 ? <button className="h-10 px-4 rounded-full border border-[var(--c-acc)] bg-[var(--c-surf)] text-[13px] font-extrabold c-acc" onClick={async () => { setBusy(true); try { const d = await inviteRedeem(nativeCall); setInv(loadInvite()); flash(tr("{n} days of Pro added — thank your friends!", { n: d })); } catch (e) { flash(tr(String(e.message || e))); } setBusy(false); }} data-testid="referral-redeem">{tr("Use my {n} free days", { n: inv.days })}</button> : null}
       </div>

@@ -120,7 +120,7 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
       </div>
       <div className="px-2.5 space-y-2 shrink-0">
         <button onClick={onNewChat} data-testid="side-new" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[14px] font-extrabold text-[var(--c-ink)] border border-[var(--c-ln)] bg-[var(--c-bg)] hover:border-[var(--c-acc)] transition-colors duration-150">
-          <span className="w-7 h-7 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] flex items-center justify-center"><Plus size={16} /></span>{tr("New chat")}</button>
+          <span className="w-7 h-7 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center"><Plus size={16} /></span>{tr("New chat")}</button>
         <div className="flex items-center gap-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 focus-within:border-[var(--c-acc)] transition-colors duration-150">
           <Search size={15} className="text-[var(--c-mut)]" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search chats and tools")} dir="auto" data-testid="side-search"

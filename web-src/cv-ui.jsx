@@ -19,7 +19,7 @@ import * as K from "./ui-kit.jsx";
 
 const field = K.area;
 const btn = "min-h-[44px] px-3.5 rounded-[12px] text-[13px] font-bold inline-flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors duration-150";
-const primary = btn + " bg-[var(--c-acc)] text-[var(--c-on-acc)] !font-extrabold";
+const primary = btn + " bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] !font-extrabold";
 const ghost = btn + " border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]";
 const L2 = (en, ar) => (getLang() === "ar" ? ar : en);
 

@@ -11,7 +11,7 @@ import { ChevronRight, Camera, Mic, ArrowUp, Loader2 } from "lucide-react";
 export const page = "calm min-h-full bg-[var(--c-bg)] text-[var(--c-ink)]";
 export const card = "rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] shadow-[0_2px_10px_rgba(0,0,0,0.06)]";
 export const cardPad = card + " p-4";
-export const btnP = "min-h-[48px] h-12 px-5 rounded-[20px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[15px] disabled:opacity-40 inline-flex items-center justify-center gap-2 transition-opacity duration-150 cursor-pointer";
+export const btnP = "min-h-[48px] h-12 px-5 rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[15px] disabled:opacity-40 inline-flex items-center justify-center gap-2 transition-opacity duration-150 cursor-pointer";
 export const btnS = "min-h-[44px] h-11 px-3.5 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)] text-[13.5px] font-bold inline-flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors duration-150 cursor-pointer";
 export const btnDanger = "min-h-[44px] h-11 px-3.5 rounded-[12px] border border-[var(--c-neg)] text-[var(--c-neg)] bg-transparent text-[13.5px] font-bold inline-flex items-center justify-center gap-1.5";
 export const inp = "w-full min-w-0 min-h-[44px] h-11 rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none focus:border-[var(--c-acc)] focus:bg-[var(--c-surf)] transition-colors duration-150";
@@ -101,7 +101,7 @@ export function PageBox({ hint, label, onSend, value = null, setValue = null, bu
         {onVoice ? <button type="button" className={round + (listening ? " border-[var(--c-neg)]! text-[var(--c-neg)]!" : "")} onClick={async () => { const t = await onVoice(); if (typeof t === "string" && t) setText(t); }} aria-label={listening ? "…" : "Mic"} data-testid={ids.voice}><Mic size={17} /></button> : null}
         <span className="flex-1" />
         <button type="button" onClick={go} disabled={busy || !text.trim()} aria-label={sendLabel || "Send"} title={sendLabel} data-testid={ids.go}
-          className="w-11 h-11 rounded-full grid place-items-center bg-[var(--c-acc)] text-[var(--c-on-acc)] disabled:opacity-40 shrink-0">{busy ? <Loader2 size={17} className="animate-spin" /> : <ArrowUp size={19} strokeWidth={2.6} />}</button>
+          className="w-11 h-11 rounded-full grid place-items-center bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] disabled:opacity-40 shrink-0">{busy ? <Loader2 size={17} className="animate-spin" /> : <ArrowUp size={19} strokeWidth={2.6} />}</button>
       </div>
     </div>);
 }

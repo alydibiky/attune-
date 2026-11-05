@@ -69,7 +69,7 @@ function DatesGrid({ a, grid, openBest }) {
         {Array.from({ length: cols }, (_, k) => { const o = r.offers[k]; if (!o) return <span key={k} />;
           const best = grid.best && o.price === grid.best.price && (o.name || "") === (grid.best.name || "");
           return <button key={k} onClick={() => openBest(a, o)} data-testid={best ? "agent-grid-best" : "agent-grid-offer"}
-            className={"rounded-[12px] p-1.5 text-center min-w-0 " + (best ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf-2)] border border-[var(--c-ln)]")}>
+            className={"rounded-[12px] p-1.5 text-center min-w-0 " + (best ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" : "bg-[var(--c-surf-2)] border border-[var(--c-ln)]")}>
             <b className="block text-[12.5px] tabular-nums" dir="ltr">{money(o.price, o.currency || cur)}</b>
             {!R.isSiteName(o.name, a.site) ? <span className="block text-[10.5px] truncate opacity-85" dir="auto">{o.name}</span> : null}</button>; })}
       </React.Fragment>)}
@@ -93,7 +93,7 @@ function AgentChat({ c, back, openBest, setRules, understand, flash }) {
       <b className="text-[17px] font-black min-w-0 truncate" dir="auto">{c.title}</b></div>
     <div className="flex flex-col gap-2">
       {msgs.map((m, i) => m.who === "me"
-        ? <div key={i} className={bubble + " self-end bg-[var(--c-acc)] text-[var(--c-on-acc)] rounded-ee-[4px]"} dir="auto">{m.text}</div>
+        ? <div key={i} className={bubble + " self-end bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] rounded-ee-[4px]"} dir="auto">{m.text}</div>
         : <div key={i} className={bubble + " self-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-es-[4px]" + (m.found ? " font-extrabold" : "")} dir="auto">
             {tr(m.T[0], Object.fromEntries(Object.entries(m.T[1] || {}).map(([k, v]) => [k, k === "p" ? money(v, a.currency || "") : v])))}{m.found ? " 🎉" : ""}</div>)}
       {c.grid && c.grid.kind ? <div className={bubble + " self-stretch max-w-none bg-[var(--c-surf)] border border-[var(--c-ln)]"}><DatesGrid a={a} grid={c.grid} openBest={openBest} /></div> : null}
@@ -558,7 +558,7 @@ function CardHead({ site, kind, title, line, status, menu = [] }) {
 /** ONE button row for every card: the main action filled, at most one more outlined — the rest live in ⋯. */
 function CardActions({ primary, secondary }) {
   const base = "min-h-[44px] px-4 rounded-[14px] text-[13.5px] font-extrabold inline-flex items-center justify-center gap-1.5";
-  const B = (x, main) => x ? <button onClick={x.onClick} disabled={!!x.busy} className={base + (main ? " bg-[var(--c-acc)] text-[var(--c-on-acc)] flex-1" : " border border-[var(--c-ln)] bg-[var(--c-surf)] flex-1")} data-testid={x.testid}>
+  const B = (x, main) => x ? <button onClick={x.onClick} disabled={!!x.busy} className={base + (main ? " bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex-1" : " border border-[var(--c-ln)] bg-[var(--c-surf)] flex-1")} data-testid={x.testid}>
     {x.icon ? React.createElement(x.icon, { size: 15, className: x.busy ? "animate-spin" : "" }) : null}<span className="truncate">{x.label}</span></button> : null;
   return <div className="flex gap-2 pt-0.5" data-testid="agent-actions">{B(primary, true)}{B(secondary, false)}</div>;
 }
@@ -617,7 +617,7 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
       <p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-acc)]">{tr("Found it — do you want it?")}</p>
       <div className="flex items-start gap-2"><p className="m-0 flex-1 min-w-0 text-[14px] font-extrabold" dir="auto">{p.name}</p><b className="tabular-nums text-[15px] shrink-0">{money(p.price, p.currency)}</b></div>
       <p className="m-0 text-[11.5px] c-sub" dir="auto">{p.site}{p.text && p.text !== p.name ? " · " + p.text.replace(p.name, "").slice(0, 100) : ""}</p>
-      <div className="flex gap-1.5 flex-wrap"><button onClick={() => confirmBuy(a)} className={small + " bg-[var(--c-acc)] text-[var(--c-on-acc)] border-transparent"} data-testid="agent-buy-yes"><Check size={14} />{tr("Order it")}</button>
+      <div className="flex gap-1.5 flex-wrap"><button onClick={() => confirmBuy(a)} className={small + " bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] border-transparent"} data-testid="agent-buy-yes"><Check size={14} />{tr("Order it")}</button>
         <button onClick={() => notThis(a)} className={small} data-testid="agent-buy-no">{tr("Not this one")}</button></div>
       <p className="m-0 text-[11px] c-sub">{tr("Order it opens the product, presses Buy now and fills your details. You check and pay — Attune never pays.")}</p>
     </div> : null}
@@ -669,7 +669,7 @@ function DealBoard({ a, openBest, skipBest, bars = false }) {
       <div className="flex items-baseline justify-between gap-2 flex-wrap"><b className="text-[24px] font-black tabular-nums text-[var(--c-acc)]">{money(w.price, cur)}</b>
         {b.gap != null ? <span className={U.tag(b.gap >= 0 ? "green" : "amber")} data-testid="agent-deal-gap">{b.gap >= 0 ? T("{a} under your limit", { a: n(b.gap) }) : T("{a} over your limit", { a: n(-b.gap) })}</span> : null}</div>
       <p className="m-0 text-[12.5px]" dir="auto"><b>{A.siteOfOffer(w)}</b>{w.name ? " · " + String(w.name).slice(0, 90) : ""}{w.rating ? " · ★ " + w.rating : ""}</p>
-      <div className="flex gap-1.5 flex-wrap"><button onClick={() => openBest(a, w)} className="min-h-[40px] px-3.5 rounded-[12px] text-[13px] font-extrabold inline-flex items-center gap-1.5 bg-[var(--c-acc)] text-[var(--c-on-acc)]" data-testid="agent-deal-open"><ExternalLink size={14} />{tr("Open the listing")}</button>
+      <div className="flex gap-1.5 flex-wrap"><button onClick={() => openBest(a, w)} className="min-h-[40px] px-3.5 rounded-[12px] text-[13px] font-extrabold inline-flex items-center gap-1.5 bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" data-testid="agent-deal-open"><ExternalLink size={14} />{tr("Open the listing")}</button>
         {skipBest ? <button onClick={() => skipBest(a, w)} className="min-h-[40px] px-3.5 rounded-[12px] text-[13px] font-extrabold border border-[var(--c-ln)]" data-testid="agent-deal-skip">{tr("Not this one")}</button> : null}</div>
       {b.cheaper ? <button onClick={() => openBest(a, b.cheaper.o)} className="w-full text-start text-[12px] rounded-[10px] px-2.5 py-2 bg-[var(--c-soft)]" dir="auto" data-testid="agent-deal-cheaper">
         {T("Cheaper on {site}: {p} — check the seller first", { site: A.siteOfOffer(b.cheaper.o), p: money(b.cheaper.o.price, cur) })}</button> : null}
@@ -816,7 +816,7 @@ function FlightBoard({ a, openBest }) {
         <span className="text-end"><b className="block text-[20px] tabular-nums leading-none">{w.x.arr || "—"}</b><span className="text-[11.5px] c-sub">{f.to}</span></span></div> : null}
       <div className="flex items-end justify-between gap-2"><span className="min-w-0"><b className="block text-[24px] font-black tabular-nums leading-tight" data-testid="flight-best-price">{money(w.o.price, w.o.currency || a.currency)}</b>
         <span className="flex items-center gap-1 text-[11.5px] c-sub flex-wrap" data-testid="flight-best-sites">{w.sites.slice(0, 4).map((s) => <SiteMark key={s} site={s} size={18} />)}{w.sites.length > 1 ? T("on {n} sites — cheapest on {s}", { n: w.sites.length, s: w.sites[0] }) : w.sites[0] ? T("on {s}", { s: w.sites[0] }) : ""}</span></span>
-        <button onClick={() => openBest(a, w.o)} className="shrink-0 min-h-[44px] px-5 rounded-[14px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[14px] font-extrabold" data-testid="flight-book">{tr("Book")}</button></div>
+        <button onClick={() => openBest(a, w.o)} className="shrink-0 min-h-[44px] px-5 rounded-[14px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[14px] font-extrabold" data-testid="flight-book">{tr("Book")}</button></div>
     </div>
     {(() => { const ad = FL.adviseBuy(a.checks, { depart: (w.o && w.o.depart) || f.depart || "" });   // v9.3 (Ali picked D3 A): buy now or wait — from its own checks
       return <div className="rounded-[16px] border border-[var(--c-ln)] p-3 space-y-1" data-testid="flight-advice" data-say={ad.say}>
@@ -848,7 +848,7 @@ function DateRows({ a, rows, day, openBest, title }) {
       <div className="min-w-0 flex-1"><p className="m-0 text-[14px] font-bold tabular-nums" dir="ltr">{r.o.checkin ? day(r.o) : site}</p>
         <p className="m-0 text-[12px] c-sub">{[r.f.nights ? T("{n} nights", { n: r.f.nights }) : "", k === 0 && title === "Cheapest dates" ? tr("Cheapest") : ""].filter(Boolean).join(" · ")}</p></div>
       <b className="shrink-0 tabular-nums text-[15px]">{money(r.o.price, a.currency)}</b>
-      <button onClick={() => openBest(a, r.o)} className="shrink-0 min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold bg-[var(--c-acc)] text-[var(--c-on-acc)]" data-testid="agent-date-open">{T("Hotels on {site}", { site })}</button>
+      <button onClick={() => openBest(a, r.o)} className="shrink-0 min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" data-testid="agent-date-open">{T("Hotels on {site}", { site })}</button>
     </div>)}
   </div>;
 }
@@ -903,7 +903,7 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
         <p className="m-0 text-[12.5px] c-sub" dir="auto">{/^\d+ stores$/.test(a.site || "") ? T("{n} stores", { n: parseInt(a.site, 10) }) : /^\d+ sites$/.test(a.site || "") ? T("{n} sites", { n: parseInt(a.site, 10) }) : a.site}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
         <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) + (last.checkin ? " (" + last.checkin + " → " + last.checkout + ")" : "") : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
         {a.found ? <span className="flex flex-wrap items-center gap-1.5 mt-1.5"><span className={U.tag("amber")} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}{a.found.site ? " · " + a.found.site : ""}</span>
-            {a.found.href && !(a.best3 || []).length ? <button onClick={() => openBest(a, { href: a.found.href, name: a.found.name })} className="min-h-[36px] px-2.5 rounded-[10px] text-[12px] font-extrabold inline-flex items-center gap-1 bg-[var(--c-acc)] text-[var(--c-on-acc)]" data-testid="agent-found-open"><ExternalLink size={13} />{tr("Open the listing")}</button> : null}</span>
+            {a.found.href && !(a.best3 || []).length ? <button onClick={() => openBest(a, { href: a.found.href, name: a.found.name })} className="min-h-[36px] px-2.5 rounded-[10px] text-[12px] font-extrabold inline-flex items-center gap-1 bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" data-testid="agent-found-open"><ExternalLink size={13} />{tr("Open the listing")}</button> : null}</span>
           : null}
         {w.last && w.gap > 0 ? <span className="block text-[11.5px] c-sub mt-1">{T("{p} above your limit", { p: money(w.gap, a.currency) })}</span> : null}
         {/* v8.7 (persona 4, idea 4): its price over time, the lowest seen, and the cheapest weekday once there are 2 weeks of checks */}

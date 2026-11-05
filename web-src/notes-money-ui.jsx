@@ -23,7 +23,7 @@ export function NotesMoney({ onAdd }) {
       <div className="min-w-0 flex-1"><p className="m-0 text-[13.5px] font-bold truncate" dir="auto">{x.text}</p>
         <p className={"m-0 text-[11.5px] " + U.muted}>{new Date(x.when).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" })} · {x.item.type === "income" ? tr("Income") : tr("Expense")}</p></div>
       <b className={"tabular-nums text-[14px] shrink-0 " + (x.item.type === "income" ? "text-[var(--c-pos)]" : "")} dir="ltr">{x.item.type === "income" ? "+" : "−"}{Math.round(x.item.amount).toLocaleString("en-US")}</b>
-      <button onClick={() => take(x, true)} className="min-h-[40px] px-3 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[12.5px] font-extrabold inline-flex items-center gap-1" data-testid="notes-money-add"><Check size={13} />{tr("Add")}</button>
+      <button onClick={() => take(x, true)} className="min-h-[40px] px-3 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[12.5px] font-extrabold inline-flex items-center gap-1" data-testid="notes-money-add"><Check size={13} />{tr("Add")}</button>
       <button onClick={() => take(x, false)} className={"w-10 h-10 grid place-items-center " + U.muted} aria-label={tr("Not money")} title={tr("Not money")} data-testid="notes-money-skip"><X size={15} /></button>
     </div>)}
   </div></div>;

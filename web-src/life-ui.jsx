@@ -57,7 +57,7 @@ export function PayBox({ c, ed, setEd, onPay }) {
   return <form onSubmit={(e) => { e.preventDefault(); const v = +String(ed.v).replace(/[^\d.]/g, ""); if (v >= 0) { onPay(c, ed.i, v); setEd(null); } }} className="mt-2.5 rounded-[12px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-2.5 space-y-2" data-testid="life-paybox">
     <p className="m-0 text-[13px] font-bold" dir="auto">{c.dir === "in" ? tr("How much did {p} pay?", { p: c.person }) : tr("How much did you pay {p}?", { p: c.person })}</p>
     <div className="flex gap-2"><input value={ed.v} onChange={(e) => setEd({ ...ed, v: e.target.value })} inputMode="decimal" className={"flex-1 min-w-0 min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[15px] tabular-nums"} data-testid="life-pay-amount" autoFocus />
-      <button type="submit" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[13px]" data-testid="life-pay-go">{tr("Paid")}</button>
+      <button type="submit" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[13px]" data-testid="life-pay-go">{tr("Paid")}</button>
       <button type="button" onClick={() => setEd(null)} className="min-h-[44px] px-3 rounded-[12px] border border-[var(--c-ln)] text-[13px] font-bold">{tr("Cancel")}</button></div>
     <p className="m-0 text-[11.5px] text-[var(--c-mut)]">{tr("More or less than due? Type what came — the rest is spread over the payments left.")}</p>
   </form>;

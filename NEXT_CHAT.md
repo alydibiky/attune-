@@ -16,7 +16,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
-## Waiting for Ali: colour pick C1–C5 (6 Nov)
+## Ali picked C1 (6 Nov) — BUILT: spaces.js QUIET + CALM_GROUND lightQuiet/darkQuiet (neutral greys), --c-btn/--c-on-btn soft buttons (every solid accent fill reads them; the floating + stays solid), calm chart colours (teal, amber, blue, grey), Money report: earned green, spent grey, net + this week blue, the big Spent number in ink. Test: unit v950theme (contrast ≥7:1 on buttons, ≥12:1 text). Was: colour pick C1–C5
 Ali on 9.6: "I said burgundy but I didn't mean everything burgundy — the app became darker and harder to read". Cause: v9.5 made
 burgundy the accent of every button, tab, checkbox AND the charts (Money report donut, cashflow "Earned" bars in red). Options:
 https://claude.ai/artifact/E8FbW1hcBmvmFHqWCAwk1P — C1 quiet burgundy (rec.: burgundy only for small things, soft buttons, mixed chart

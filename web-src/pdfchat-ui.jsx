@@ -24,7 +24,7 @@ import * as PT from "./pdftables.js";
 import * as K from "./ui-kit.jsx";
 
 const btn = "min-h-[44px] px-3.5 rounded-[12px] text-[13px] font-bold inline-flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors duration-150";
-const primary = btn + " bg-[var(--c-acc)] text-[var(--c-on-acc)] !font-extrabold";
+const primary = btn + " bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] !font-extrabold";
 const ghost = btn + " border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]";
 const tool = "min-h-[44px] min-w-[44px] px-2 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] disabled:opacity-40 text-[12px] font-bold flex items-center justify-center gap-1 transition-colors duration-150";
 const OLD_RECENT = "attune:pdfchat:recent:v1";      // v6.18 list (names only) — shown until the library has entries
@@ -576,7 +576,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
           <div className="border-t border-[var(--c-ln)] p-2 flex gap-2 items-end bg-[var(--c-bg)] pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
             <textarea rows={1} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } }} placeholder={tr("Ask about this file…")} data-testid="pdf-input"
               className={K.area + " flex-1 resize-none max-h-28"} />
-            <button onClick={() => ask()} disabled={!q.trim() || !!asking} className="w-11 h-11 grid place-items-center shrink-0 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] disabled:opacity-40" aria-label={tr("Send")} data-testid="pdf-send"><Send size={17} className="rtl:-scale-x-100" /></button>
+            <button onClick={() => ask()} disabled={!q.trim() || !!asking} className="w-11 h-11 grid place-items-center shrink-0 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] disabled:opacity-40" aria-label={tr("Send")} data-testid="pdf-send"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>
           <p className="text-center text-[10.5px] leading-tight text-[var(--c-mut)] bg-[var(--c-bg)] -mt-1 pb-1 px-2" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
         </div>

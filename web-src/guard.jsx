@@ -18,6 +18,6 @@ export class Guard extends React.Component {
       React.createElement("p", { className: "text-[14.5px] text-[var(--c-warn)] font-extrabold m-0" }, tr("Something went wrong on this screen.")),
       React.createElement("p", { className: "text-[12px] text-[var(--c-mut)] break-words m-0", dir: "ltr" }, String((this.state.err && this.state.err.message) || this.state.err).slice(0, 300)),
       React.createElement("p", { className: "text-[12.5px] text-[var(--c-mut)] m-0" }, tr("Your chats and data are safe. Try again — if it keeps happening, send me this message.")),
-      React.createElement("button", { className: "min-h-[44px] h-11 px-5 rounded-[12px] text-[13.5px] font-extrabold bg-[var(--c-acc)] text-[var(--c-on-acc)]", onClick: () => this.setState({ err: null }) }, tr("Try again")));
+      React.createElement("button", { className: "min-h-[44px] h-11 px-5 rounded-[12px] text-[13.5px] font-extrabold bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]", onClick: () => this.setState({ err: null }) }, tr("Try again")));
   }
 }

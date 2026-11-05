@@ -253,7 +253,7 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
                   <p className={"m-0 text-[14px] font-bold leading-snug " + (col === "done" ? "line-through text-[var(--c-mut)]" : "text-[var(--c-ink)]")} dir="auto">{t.text}</p>
                   <div className="flex items-center gap-1">
                     {col !== "todo" ? <button onClick={() => save(moveTask(cur, t.id, -1))} className="min-h-[36px] px-2.5 rounded-[10px] border border-[var(--c-ln)] text-[12px] font-extrabold" aria-label={tr("Back")} data-testid="project-task-back">‹ {tr(COL_NAME[TASK_COLS[TASK_COLS.indexOf(col) - 1]])}</button> : null}
-                    {col !== "done" ? <button onClick={() => save(moveTask(cur, t.id, 1))} className="min-h-[36px] px-2.5 rounded-[10px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[12px] font-extrabold" data-testid="project-task-next">{tr(COL_NAME[TASK_COLS[TASK_COLS.indexOf(col) + 1]])} ›</button> : null}
+                    {col !== "done" ? <button onClick={() => save(moveTask(cur, t.id, 1))} className="min-h-[36px] px-2.5 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[12px] font-extrabold" data-testid="project-task-next">{tr(COL_NAME[TASK_COLS[TASK_COLS.indexOf(col) + 1]])} ›</button> : null}
                     <button onClick={() => save(removeTask(cur, t.id))} className="ms-auto w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Delete")} data-testid="project-task-delete"><X size={14} /></button></div>
                 </div>)}
                 {!items.length ? <p className="m-0 px-1 py-2 text-[12.5px] text-[var(--c-mut)]">—</p> : null}

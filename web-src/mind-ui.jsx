@@ -514,7 +514,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
             {past.length && showPast && !hidePast ? (() => { const { rec } = past[0]; return <div className="rounded-[16px] p-3 border border-[var(--c-acc)]/40 bg-[var(--c-soft)] flex items-center gap-2" data-testid="mind-past">
               <button onClick={() => setOpenId(rec.id)} className="flex-1 min-w-0 text-start"><span className="block text-[11px] font-extrabold uppercase tracking-[.08em] text-[var(--c-acc)]">{tr("From your past")}</span>
                 <span className="block text-[13.5px] font-extrabold truncate" dir="auto">{M.titleOf(rec)}</span></button>
-              <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)]">{tr("Keep")}</button></div>; })() : null}
+              <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]">{tr("Keep")}</button></div>; })() : null}
             <div className="space-y-1.5">
               <p className={kLabel + " m-0"}>{tr("Recently kept")}</p>
               <div className="rounded-[20px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-2" data-testid="mind-recent">
@@ -537,7 +537,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
                     <p className="text-[11px] text-[var(--c-mut)] mt-0.5">{/past/i.test(why) ? "" : tr(why) + " · "}{dateText(rec.ts)}</p>
                   </button>
                   <div className="flex gap-1.5 mt-2">
-                    <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] bg-[var(--c-acc)] text-[var(--c-on-acc)]">{tr("Keep")}</button>
+                    <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]">{tr("Keep")}</button>
                     <button onClick={() => setHidePast(true)} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] text-[var(--c-mut)]">{tr("Not now")}</button>
                   </div>
                 </div>); })() : null}

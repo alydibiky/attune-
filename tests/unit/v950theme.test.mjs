@@ -20,4 +20,16 @@ LS["attune:theme"] = undefined;
 const t0 = S.loadTheme(); assert.equal(t0.accent, "burgundy");
 S.saveTheme({ accent: "emerald", bg: "light" }); assert.equal(S.loadTheme().accent, "emerald", "a green chosen in Settings is kept");
 assert.ok(S.PALETTES.burgundy && S.ACCENTS[0][0] === "burgundy");
-console.log("ALL PASSED v950theme (8 checks)");
+// v9.6 C1 "quiet burgundy" (Ali: "calm and clear"): soft buttons, calm chart colours (never all red), neutral ground
+const q = S.calmVars({ accent: "burgundy", bg: "light" });
+assert.equal(q["--c-btn"], "#F5E6EB"); assert.equal(q["--c-on-btn"], "#7A1F3D", "big buttons: light tint, burgundy text");
+assert.deepEqual([q["--c-chart-1"], q["--c-chart-2"], q["--c-chart-3"], q["--c-chart-4"]], ["#2A9D8F", "#E0A13B", "#4C7DD9", "#9AA0A6"]);
+assert.equal(q["--c-bg"], "#F5F4F2", "a neutral grey ground, no pink tint");
+const lum = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+assert.ok(ratio(q["--c-on-btn"], q["--c-btn"]) >= 7, "button text reads easily (≥7:1)");
+assert.ok(ratio(q["--c-ink"], q["--c-bg"]) >= 12 && ratio(q["--c-mut"], q["--c-bg"]) >= 5.5, "text and grey text on the ground read easily");
+const qd = S.calmVars({ accent: "burgundy", bg: "slate" });
+assert.ok(ratio(qd["--c-on-btn"], qd["--c-btn"]) >= 6 && ratio(qd["--c-ink"], qd["--c-bg"]) >= 12, "the same in dark");
+assert.equal(S.calmVars({ accent: "violet", bg: "light" })["--c-btn"], undefined, "other colours keep solid buttons");
+console.log("ALL PASSED v950theme (16 checks)");

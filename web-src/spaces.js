@@ -355,14 +355,29 @@ const CALM_GROUND = {
   stone: { bg: "#171412", surf: "#201C19", surf2: "#29241F", ink: "#EEE9E4", mut: "#A8A29E", ln: "#352F29" },
   light: { bg: "#F4F7F5", surf: "#FFFFFF", surf2: "#EEF3F0", ink: "#16201C", mut: "#4A5852", ln: "#E2EAE5" },
   lightWarm: { bg: "#F6F3F3", surf: "#FFFFFF", surf2: "#F1ECED", ink: "#1E1618", mut: "#5A4E51", ln: "#EAE2E4" },
+  // v9.6 C1 (Ali picked "quiet burgundy" — "calm and clear"): neutral greys, no pink tint, dark text
+  lightQuiet: { bg: "#F5F4F2", surf: "#FFFFFF", surf2: "#EFEDEA", ink: "#1E1C1B", mut: "#5E5A57", ln: "#E6E3E0" },
+  darkQuiet: { bg: "#141313", surf: "#1C1B1B", surf2: "#242222", ink: "#EDEBEA", mut: "#A9A4A2", ln: "#2F2C2C" },
+};
+/* v9.6 C1 (Ali, 6 Nov: "C1 is the best if done right and all colours are calm and clear as promised" — MOCKUPS.md,
+   https://claude.ai/artifact/E8FbW1hcBmvmFHqWCAwk1P): burgundy only for the small things (the selected tab, links, the + button);
+   big buttons soft (light burgundy tint, burgundy text); charts in calm mixed colours (teal, amber, blue, grey) — never all red;
+   green = money in, red = money out. */
+const QUIET = {
+  l: { btn: "#F5E6EB", onBtn: "#7A1F3D", charts: ["#2A9D8F", "#E0A13B", "#4C7DD9", "#9AA0A6"] },
+  d: { btn: "#3A1E27", onBtn: "#F0A9BB", charts: ["#4FC2B4", "#E8B04B", "#7FA6EE", "#8E949B"] },
 };
 /** The .calm colour tokens for a theme → { "--c-bg": "#…", … } (pure; tests: tests/unit/v950theme.test.mjs). */
 export function calmVars(theme) {
   const t = theme || {}, acc = CALM_ACCENT[t.accent] ? t.accent : "burgundy", bg = resolveBg(t.bg || "auto"), light = bg === "light";
-  const g = light ? (acc === "emerald" || acc === "teal" ? CALM_GROUND.light : CALM_GROUND.lightWarm) : CALM_GROUND[bg] || CALM_GROUND.slate;
+  const quiet = acc === "burgundy";
+  const g = light ? (acc === "emerald" || acc === "teal" ? CALM_GROUND.light : quiet ? CALM_GROUND.lightQuiet : CALM_GROUND.lightWarm)
+    : quiet && bg === "slate" ? CALM_GROUND.darkQuiet : CALM_GROUND[bg] || CALM_GROUND.slate;
   const [a, soft] = CALM_ACCENT[acc][light ? "l" : "d"];
-  return { "--c-bg": g.bg, "--c-surf": g.surf, "--c-surf-2": g.surf2, "--c-ink": g.ink, "--c-mut": g.mut, "--c-ln": g.ln,
+  const v = { "--c-bg": g.bg, "--c-surf": g.surf, "--c-surf-2": g.surf2, "--c-ink": g.ink, "--c-mut": g.mut, "--c-ln": g.ln,
     "--c-acc": a, "--c-soft": soft, "--c-on-acc": light ? "#FFFFFF" : g.bg, "--c-chart-1": a };
+  if (quiet) { const q = QUIET[light ? "l" : "d"]; Object.assign(v, { "--c-btn": q.btn, "--c-on-btn": q.onBtn, "--c-chart-1": q.charts[0], "--c-chart-2": q.charts[1], "--c-chart-3": q.charts[2], "--c-chart-4": q.charts[3] }); }
+  return v;
 }
 export function calmCss(theme) {
   const v = calmVars(theme);

@@ -207,7 +207,7 @@ function PlanCalendar({ ledger, cur }) {
         {Array.from({ length: pad }, (_, k) => <span key={"p" + k} />)}
         {cal.days.map((d) => { const k = d.in && d.out ? "both" : d.in ? "in" : d.out ? "out" : "";
           return <button key={d.date} onClick={() => setDay(d.date)} data-testid="planner-cal-day" data-kind={k}
-            className={"rounded-[10px] py-1.5 text-[12.5px] font-bold tabular-nums " + (d.date === todayIso ? "bg-[var(--c-acc)] text-[var(--c-on-acc)]" : k === "in" ? "bg-[color-mix(in_srgb,var(--c-pos)_16%,transparent)] text-[var(--c-pos)]" : k === "out" ? "bg-[color-mix(in_srgb,var(--c-neg)_14%,transparent)] text-[var(--c-neg)]" : k === "both" ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "bg-[var(--c-surf-2)]") + (day === d.date ? " ring-2 ring-[var(--c-ink)]" : "")}>{+d.date.slice(8)}</button>; })}
+            className={"rounded-[10px] py-1.5 text-[12.5px] font-bold tabular-nums " + (d.date === todayIso ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" : k === "in" ? "bg-[color-mix(in_srgb,var(--c-pos)_16%,transparent)] text-[var(--c-pos)]" : k === "out" ? "bg-[color-mix(in_srgb,var(--c-neg)_14%,transparent)] text-[var(--c-neg)]" : k === "both" ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "bg-[var(--c-surf-2)]") + (day === d.date ? " ring-2 ring-[var(--c-ink)]" : "")}>{+d.date.slice(8)}</button>; })}
       </div>
     </div>
     {sel ? <div className={U.cardPad + " space-y-1.5"} data-testid="planner-cal-list">
