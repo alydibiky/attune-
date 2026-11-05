@@ -110,3 +110,25 @@ export function totals(list) {
   return { out, in: inn };
 }
 export const daysFrom = (date, now = Date.now()) => Math.round((at12(date) - at12(iso(now))) / DAY);
+
+/* ---- v9.6 (Ali picked F4 + F1, 5 Nov: "integrate them in a good way" — MOCKUPS.md): a week strip on top, one list by day under it.
+   weekDays → the 7 days from `start` with a dot for anything due and a red one when money goes out; searchItems → the one box
+   filters the list by what, who and kind; byDayLate → everything late in ONE "Late" group first, then each day.               */
+const OUT_KINDS = new Set(["pay", "bill", "owe", "trial", "renewal"]);
+export function weekDays(list, start, n = 7) {
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    const date = iso(at12(start) + k * DAY), items = (list || []).filter((x) => x.date === date);
+    out.push({ date, count: items.length, pays: items.some((x) => OUT_KINDS.has(x.kind) && x.amount > 0) });
+  }
+  return out;
+}
+export function searchItems(list, q) {
+  const s = String(q || "").trim().toLowerCase(); if (s.length < 2) return list || [];
+  const words = s.split(/\s+/).filter((w) => w.length >= 2);
+  return (list || []).filter((x) => { const hay = [x.what, x.who, x.kind, x.detail, x.cur, x.amount ? String(x.amount) : ""].filter(Boolean).join(" ").toLowerCase(); return words.every((w) => hay.includes(w)); });
+}
+export function byDayLate(list, now = Date.now()) {
+  const today = iso(now), late = (list || []).filter((x) => x.date < today), rest = (list || []).filter((x) => x.date >= today);
+  return [...(late.length ? [{ date: "late", items: late }] : []), ...byDay(rest)];
+}

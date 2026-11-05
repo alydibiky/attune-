@@ -102,7 +102,7 @@ function HeroCards({ data, navTo }) {
 
 /** v9.5 (Ali, 5 Nov: "when the date comes it asks me if the person really paid, like the Sheikh — tick = recorded in revenue; paid
  *  more or less, like 4,000: I write it and the other payments are distributed again"): Paid · Other amount · Not yet. */
-function PersonAsk({ x, onDone }) {
+export function PersonAsk({ x, onDone }) {
   const [other, setOther] = useState(null);
   const a = x.ask, q = a.dir === "in" ? tr("Did {p} pay {a}?", { p: a.person, a: fmt(x.amount) }) : tr("Did you pay {p} {a}?", { p: a.person, a: fmt(x.amount) });
   const done = (v) => {

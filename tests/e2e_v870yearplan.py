@@ -15,7 +15,8 @@ if (!sessionStorage.getItem('x')) { sessionStorage.setItem('x', '1'); localStora
 with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, extra_init=INIT)
-    page.goto(env.url); page.wait_for_selector("[data-testid=planner-view-year]", timeout=15000)
+    page.goto(env.url); page.wait_for_selector("[data-testid=planner-view-table]", timeout=15000)
+    page.click("[data-testid=planner-view-table]"); page.wait_for_selector("[data-testid=planner-view-year]")   # v9.6: the year sits under Table
     page.click("[data-testid=planner-view-year]"); page.wait_for_selector("[data-testid=year-goals]")
     # v8.7 (Ali picked 1B "goals first, Attune spreads them")
     check(page.locator("[data-testid=year-goal]").count() == 1 and "Travel" in page.locator("[data-testid=year-goal]").inner_text(), "the year opens on the goals (Travel, 4,000 a month)")

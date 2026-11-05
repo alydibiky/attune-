@@ -1,0 +1,35 @@
+# Mock-ups before building (Ali's rule, 5 Nov 2026)
+
+> Ali: "add an md to GitHub for everything like that — produce these mock-ups before building."
+
+**Any change people will see on a screen gets a mock-up first. Ali picks, then Claude builds.** This covers a new screen, a
+redesign, a new card or flow, colours, layout, or the order of things. Objective bug fixes that leave the look as it is
+(a wrong number, a crash, a button that does nothing) are just fixed, with no mock-up.
+
+## The steps
+
+1. **Options**: make **4–6 concrete options** (2–4 for a small change) as phone mock-ups on one published page (an Artifact).
+   - Use Attune's real look: the current theme colours (burgundy since v9.5), Nunito, the real card style.
+   - Use Ali's **real examples and numbers**: Sheikh 19,500 in instalments of 2,500, the maid every Saturday 600, hotels near
+     the Haram, Talabat koshary, his categories. Numbers in a mock-up must add up.
+   - For each option give a letter and number (A1, P2, F3…), a name, one line on what it is, one plus and one minus, and mark
+     **one "Recommended"**.
+   - Show light and dark if colour matters; phone first (desktop when the screen differs there).
+2. **Ali picks**: he may pick one, or several "integrated". Don't build yet.
+3. **Combined mock-up**: when he picks more than one, or adds wishes, draw **one screen** that joins them. Put a short
+   "**What I understood**" list next to each. This is where a misunderstanding gets caught (for example "more than 1 option
+   on more than 1 date" became the dates × best-3 offers grid).
+4. **His "OK"** → build exactly that: all 20 languages, light and dark, phone and computer, a test for every rule, full
+   suite, APK link.
+5. **Record it**: the options link, his pick and the combined link go in `NEXT_CHAT.md` (and the feature's own notes),
+   so the next session knows what was agreed.
+
+## Where the pages are kept
+- Published as private Artifacts (claude.ai/artifact/…); the links are listed below and in `NEXT_CHAT.md`.
+- Keep the HTML source short and self-contained (no outside images); phone mock-ups at about 290 px wide.
+
+## Log (newest first)
+| Date | Screen | Options page | Ali's pick | Combined / built |
+|---|---|---|---|---|
+| 5 Nov 2026 | Agents, Month plan, Follow-ups | https://claude.ai/artifact/1HJyhGHDsm5Ko9RXpK6ZrJ (A1–A6, P1–P6, F1–F6) | A3 + A4 with offers on several dates · P2 + P4 + P5 + P6 with savings goals over any time span · F1 + F4 | https://claude.ai/artifact/2T2ZRNTemt42fTyvYX6FeY — "OK", built in v9.6 |
+| 5 Nov 2026 | Gemini research picks | https://claude.ai/artifact/GaNgb3thF9dSYox2Pt1HkA | none yet ("not inclined to accept anything" for now) | — |

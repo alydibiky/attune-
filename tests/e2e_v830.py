@@ -45,6 +45,7 @@ with sync_playwright() as p:
     items = page.locator("[data-testid=timeline-item]")
     check(items.count() >= 1 and "Sheikh" in page.locator("[data-testid=timeline-page]").inner_text(), "one sentence in the Add box → Sheikh's 9 payments are on the list")
     check("2,444" in page.locator("[data-testid=timeline-page]").inner_text(), "each payment is 2,444.44 (22,000 over 9 months)")
+    page.click("[data-testid=fu-more]"); page.wait_for_selector("[data-testid=fu-chips]")   # v9.6: the kind filter waits behind ⋯ (F4 + F1)
     chips = page.locator("[data-testid=fu-chips]").inner_text()
     check(all(w in chips for w in ["All", "Money", "Reminders", "Dates", "Guardian"]), "chips: All · Money · Reminders · Dates · Guardian: " + chips.replace("\n", " "))
     page.click("[data-testid=fu-chip-reminders]"); page.wait_for_timeout(150)

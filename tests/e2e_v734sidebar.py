@@ -31,10 +31,12 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=hub-tab-money][aria-selected=true]").count() == 1, "Back returns to the tab before")
     shot(page, "money-tabs")
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'timeline'}}))"); page.wait_for_selector("[data-testid=timeline-page]", timeout=5000)   # (its sidebar row is checked above)
-    check(page.locator("[data-testid=hub-parts]").count() == 0 and page.locator("[data-testid=fu-chips]").count() == 1, "Follow-ups (v8.5, E2): its own place, chips and no switch")
+    check(page.locator("[data-testid=hub-parts]").count() == 0 and page.locator("[data-testid=fu-week]").count() == 1, "Follow-ups (v8.5, E2; v9.6 F4 + F1): its own place, the week strip and no switch")
+    page.click("[data-testid=fu-more]"); page.wait_for_selector("[data-testid=fu-pages]")   # v9.6: the parts' pages behind ⋯
     page.click("[data-testid=fu-open-radar]"); page.wait_for_selector("text=Deadline Radar", timeout=5000)
     check(page.locator("[data-testid=part-back]").count() == 1, "Dates opens from Follow-ups, with a way back to the list")
     page.click("[data-testid=part-back]"); page.wait_for_selector("[data-testid=timeline-page]", timeout=5000)
+    page.click("[data-testid=fu-more]"); page.wait_for_selector("[data-testid=fu-pages]")
     page.click("[data-testid=fu-open-guardian]"); page.wait_for_selector("[data-testid=guardian-page]", timeout=5000)
     check(True, "the Money Guardian opens from Follow-ups")
     shot(page, "radar-parts")

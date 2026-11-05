@@ -183,3 +183,107 @@ export function groupFixed(list) {
   for (const f of list || []) { const o = out.find((x) => x.what === f.what && x.amount === f.amount && !!x.paid === !!f.paid); if (o) o.n++; else out.push({ ...f, n: 1 }); }
   return out;
 }
+
+/* ---- v9.6 (Ali, 5 Nov: "I want to set year savings and it goes from the November plan — income vs expenses, and if net profit it
+   takes what we agreed for the month to reach the time span or the yearly goal; it doesn't have to be yearly only" — MOCKUPS.md,
+   https://claude.ai/artifact/2T2ZRNTemt42fTyvYX6FeY). At the end of each month, by code:
+     net = the month's income − its expenses (Money's ledger)
+     wanted = what each goal needs that month (a total by a date: what is left ÷ the months left, this one included; a fixed
+              amount a month: that amount), less what was put in by hand that month
+     net ≥ wanted → wanted goes in; less (or a loss) → only what is there, shared by need — the shortfall is spread by itself,
+     because next month each goal's need is worked out again from what is left and the months left.
+   Starts with the month the goals page is first opened (data.since), so nothing is settled backwards. Pure. */
+const ymOf = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
+const nextYm = (m) => { const [y, mo] = m.split("-").map(Number); return mo === 12 ? (y + 1) + "-01" : y + "-" + String(mo + 1).padStart(2, "0"); };
+const lastDay = (m) => { const [y, mo] = m.split("-").map(Number); return iso(new Date(y, mo, 0, 12)); };
+/** One month's money: { income, expenses, net, count } from the ledger (transfers and gold left out). */
+export function monthNet(ledger, m) {
+  let income = 0, expenses = 0, count = 0;
+  for (const t of (ledger && ledger.txns) || []) {
+    if (!t || String(t.date || "").slice(0, 7) !== m) continue;
+    if (t.type === "income") { income += +t.amount || 0; count++; } else if (t.type === "expense") { expenses += +t.amount || 0; count++; }
+  }
+  return { income: r0(income), expenses: r0(expenses), net: r0(income - expenses), count };
+}
+/** What goal p needs in month m (before what was put in by hand that month). */
+export function needIn(p, m) {
+  const putByHand = (p.log || []).filter((x) => String(x.d).slice(0, 7) === m && !x.auto).reduce((a, x) => a + x.a, 0);
+  const savedBefore = (p.saved || 0) - putByHand;
+  let need = 0;
+  if (p.per > 0) need = p.target > 0 ? Math.min(p.per, Math.max(0, p.target - savedBefore)) : p.per;
+  else if (p.target > 0) { const left = Math.max(0, p.target - savedBefore), months = p.by ? Math.max(1, monthsTo(p.by, Date.parse(m + "-15T12:00:00"))) : 12; need = left > 0 ? Math.ceil(left / months) : 0; }
+  return Math.max(0, need - putByHand);
+}
+/** Settle every finished month since data.since that isn't settled yet. → { data, done: [{ month, net, wanted, put, short, nodata }] } */
+export function settleMonths(data, ledger, now = Date.now()) {
+  const d = { ...data, pots: [...((data && data.pots) || [])], settled: { ...((data && data.settled) || {}) } };
+  const cur = ymOf(now);
+  if (!d.since) { d.since = cur; return { data: d, done: [] }; }
+  const done = [];
+  for (let m = d.since, guard = 0; m < cur && guard < 60; m = nextYm(m), guard++) {
+    if (d.settled[m]) continue;
+    const mn = monthNet(ledger, m);
+    const needs = d.pots.map((p) => needIn(p, m)), wanted = needs.reduce((a, x) => a + x, 0);
+    if (!mn.count) { d.settled[m] = { net: 0, wanted, put: 0, short: 0, nodata: true }; done.push({ month: m, ...d.settled[m] }); continue; }
+    const put = Math.min(Math.max(0, mn.net), wanted);
+    let given = 0;
+    d.pots = d.pots.map((p, i) => {
+      if (!needs[i] || !put) return p;
+      const a = i === d.pots.length - 1 || needs.slice(i + 1).every((x) => !x) ? put - given : Math.floor((needs[i] * put) / wanted);
+      if (a <= 0) return p; given += a;
+      return { ...p, saved: r0((p.saved || 0) + a), log: [...(p.log || []), { d: lastDay(m), a, auto: m }].slice(-120) };
+    });
+    d.settled[m] = { net: mn.net, income: mn.income, expenses: mn.expenses, wanted, put, short: wanted - put };
+    done.push({ month: m, ...d.settled[m] });
+  }
+  return { data: d, done };
+}
+/** Undo month m's settling (what went into the goals comes out; the month is not settled again). */
+export function undoSettle(data, m) {
+  const pots = ((data && data.pots) || []).map((p) => { const back = (p.log || []).filter((x) => x.auto === m).reduce((a, x) => a + x.a, 0);
+    return back ? { ...p, saved: Math.max(0, r0((p.saved || 0) - back)), log: (p.log || []).filter((x) => x.auto !== m) } : p; });
+  return { ...data, pots, settled: { ...((data && data.settled) || {}), [m]: { ...(((data || {}).settled || {})[m] || {}), undone: true, put: 0 } } };
+}
+/** P5 sliders: a goal's monthly amount moved → a total-by-a-date goal gets a new date; a fixed-amount goal a new amount. */
+export function setMonthly(data, id, monthly, now = Date.now()) {
+  const v = Math.max(0, r0(+monthly || 0));
+  return { ...data, pots: ((data && data.pots) || []).map((p) => {
+    if (p.id !== id) return p;
+    if (p.target > 0 && !(p.per > 0)) { const left = Math.max(0, p.target - (p.saved || 0)); if (!v || !left) return p; const n = Math.max(1, Math.ceil(left / v)), d = new Date(now); d.setDate(15); d.setMonth(d.getMonth() + n - 1); return { ...p, by: ymOf(d) }; }
+    return { ...p, per: v };
+  }) };
+}
+/** P6: plan vs actual for the month — fixed bills, everyday categories, goals. → [{ group, what, plan, actual, left }] */
+export function planVsActual(plan, ledger, m = plan.month) {
+  const spent = {};
+  for (const t of (ledger && ledger.txns) || []) if (t && t.type === "expense" && String(t.date || "").slice(0, 7) === m) { const c = t.cat || "other"; spent[c] = (spent[c] || 0) + (+t.amount || 0); }
+  const rows = [];
+  for (const f of groupFixed(plan.fixed || [])) rows.push({ group: "fixed", what: f.what + (f.n > 1 ? " × " + f.n : ""), plan: f.amount * f.n, actual: f.paid ? f.amount * f.n : 0 });
+  for (const f of plan.flexible || []) rows.push({ group: "everyday", cat: f.cat, note: f.note, plan: f.plan, actual: r0(spent[f.cat] || 0) });
+  for (const p of plan.pots || []) rows.push({ group: "savings", what: p.name, plan: p.monthly, actual: r0(p.putThisMonth || 0) });
+  return rows.map((r) => ({ ...r, left: r0(r.plan - r.actual) }));
+}
+/** P4: the month as a calendar — money that came in / went out on each day (Money), and what is due on the days ahead (People &
+ *  plans). → { first: "YYYY-MM-01", days: [{ date, in, out, items: [{ what, amount, dir, due }] }] } */
+export function monthCalendar({ ledger, life, month, now = Date.now() }) {
+  const [y, mo] = month.split("-").map(Number), n = new Date(y, mo, 0).getDate(), today = iso(new Date(now));
+  const days = Array.from({ length: n }, (_, k) => ({ date: month + "-" + String(k + 1).padStart(2, "0"), in: 0, out: 0, items: [] }));
+  const at = (d) => days[+d.slice(8, 10) - 1];
+  for (const t of (ledger && ledger.txns) || []) {
+    if (!t || String(t.date || "").slice(0, 7) !== month || (t.type !== "income" && t.type !== "expense")) continue;
+    const x = at(t.date), a = +t.amount || 0; if (!x) continue;
+    if (t.type === "income") x.in += a; else x.out += a;
+    x.items.push({ what: String(t.note || t.cat || "").replace(" ↻", ""), amount: r0(a), dir: t.type === "income" ? "in" : "out" });
+  }
+  for (const c of (life && life.items) || []) {
+    if (c.done) continue;
+    for (const s of scheduleOf(c, Date.parse(month + "-" + String(n).padStart(2, "0") + "T12:00:00"))) {
+      if (s.open || s.paid || s.date.slice(0, 7) !== month || s.date < today) continue;
+      const x = at(s.date); if (!x) continue;
+      x.items.push({ what: [c.person, c.title || c.kind].filter(Boolean).join(" · "), amount: r0(+s.amount || 0), dir: c.dir === "in" ? "in" : "out", due: true });
+      if (c.dir === "in") x.in += +s.amount || 0; else x.out += +s.amount || 0;
+    }
+  }
+  for (const x of days) { x.in = r0(x.in); x.out = r0(x.out); }
+  return { first: month + "-01", days };
+}
