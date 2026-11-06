@@ -177,7 +177,7 @@ class MainActivity : AppCompatActivity() {
     private val askLocalNetPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-localnet',{detail:$granted}))", null)
     }
-    private val askSmsPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> }   // v9.7: the page re-reads msgState
+    private val askSendSmsPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> }   // v9.7 Messages: the page re-reads msgState
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
         if (granted && Prefs.wake(this)) WakeService.set(this, true)   // voice phase 3: the wake word was waiting for the mic
@@ -308,7 +308,7 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this).also { v -> v.popup = { i, cb -> try { voicePopupCb = cb; voicePopup.launch(i); true } catch (e: Exception) { voicePopupCb = null; false } } }
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
-        bridge.askSms = { try { askSmsPermission.launch(android.Manifest.permission.SEND_SMS) } catch (e: Exception) { } }   // v9.7 Messages (full APK)
+        bridge.askSendSms = { runOnUiThread { try { askSendSmsPermission.launch(android.Manifest.permission.SEND_SMS) } catch (e: Exception) { } } }   // v9.7 Messages (full APK)
         bridge.pickBackupFolder = { runOnUiThread { try { pickBackupFolder.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)) } catch (e: Exception) { } } }
         bridge.askSms = { runOnUiThread { try { askSmsPermission.launch(android.Manifest.permission.READ_SMS) } catch (e: Exception) { } } }
         bridge.pickContact = { cb -> runOnUiThread {

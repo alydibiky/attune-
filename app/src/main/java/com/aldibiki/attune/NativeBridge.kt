@@ -882,14 +882,14 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     var voice: Voice? = null
     var askMic: (() -> Unit)? = null
     // ---- v9.7 Messages (Ali picked M3 + S1 + S2 + S3: "like the Auto Text app, with my interface") ----------------------------
-    var askSms: (() -> Unit)? = null
+    var askSendSms: (() -> Unit)? = null
     /** {auto: this build can send WhatsApp by itself, autoOn, sms: this build can send SMS by itself, smsOn} */
     @JavascriptInterface
     fun msgState(): String = try { JSONObject().put("auto", AutoSend.available(ctx)).put("autoOn", AutoSend.enabled(ctx)).put("sms", SmsOut.declared(ctx)).put("smsOn", SmsOut.allowed(ctx)).toString() } catch (e: Throwable) { "{}" }
     @JavascriptInterface
     fun msgOpenAuto() { try { AutoSend.openSettings(ctx) } catch (e: Throwable) { } }
     @JavascriptInterface
-    fun msgAskSms() { try { askSms?.invoke() } catch (e: Throwable) { } }
+    fun msgAskSms() { try { askSendSms?.invoke() } catch (e: Throwable) { } }
     @JavascriptInterface
     fun autoReplyRules(): String = try { AutoReply.rules(ctx) } catch (e: Throwable) { "[]" }
     @JavascriptInterface
