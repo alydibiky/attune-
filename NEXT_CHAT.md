@@ -16,6 +16,12 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.7.2 — 6 Nov: "that wasn't the colours we agreed on" — C1 now for EVERY colour
+Ali's phone had **Rose** picked in Settings → Theme; v9.6 built C1 (calm charts, soft buttons, neutral ground) only for Burgundy, so Rose
+painted the charts red and the ground pink. `spaces.js calmVars`: every colour gets the calm chart colours, soft buttons (its own soft
+tint + its colour as text; orange darkened to read), and the neutral ground (Green / Teal keep the green-grey one). Test: v950theme
+checks all 9 colours × light/dark (calm charts, contrast ≥4.5:1 on buttons, no pink ground).
+
 ## v9.7.1 — 6 Nov: Play Protect blocked the 9.7 full APK ("App blocked to protect your device")
 Cause: SEND_SMS + the AutoSend Accessibility service in the full APK (Google's fraud protection blocks file-installed apps asking for
 them; Egypt included — the same as READ_SMS in v8.7). Fix: both moved to a new optional flavor **"auto"** (src/auto/AndroidManifest.xml =

@@ -345,7 +345,7 @@ export const CALM_ACCENT = {
   blue: { l: ["#1D4ED8", "#E3ECFD"], d: ["#8DB4F7", "#1B2740"] },
   indigo: { l: ["#4338CA", "#E7E6FB"], d: ["#A5A1F5", "#22213F"] },
   amber: { l: ["#9A5B05", "#FBF0DC"], d: ["#E8B04B", "#3A2C12"] },
-  orange: { l: ["#C2410C", "#FCE8DD"], d: ["#F59E6B", "#3B2216"] },
+  orange: { l: ["#A8380A", "#FCE8DD"], d: ["#F59E6B", "#3B2216"] },
   rose: { l: ["#BE123C", "#FCE4EA"], d: ["#F38BA3", "#3D1C25"] },
 };
 const CALM_GROUND = {
@@ -370,14 +370,17 @@ const QUIET = {
 /** The .calm colour tokens for a theme → { "--c-bg": "#…", … } (pure; tests: tests/unit/v950theme.test.mjs). */
 export function calmVars(theme) {
   const t = theme || {}, acc = CALM_ACCENT[t.accent] ? t.accent : "burgundy", bg = resolveBg(t.bg || "auto"), light = bg === "light";
-  const quiet = acc === "burgundy";
-  const g = light ? (acc === "emerald" || acc === "teal" ? CALM_GROUND.light : quiet ? CALM_GROUND.lightQuiet : CALM_GROUND.lightWarm)
-    : quiet && bg === "slate" ? CALM_GROUND.darkQuiet : CALM_GROUND[bg] || CALM_GROUND.slate;
+  // v9.7.2 (Ali, 6 Nov: "that wasn't the colours we agreed on" — his phone had Rose picked, and C1 was only built for Burgundy):
+  // C1 is the look for EVERY colour — the colour only on small things, soft big buttons, calm charts, a neutral ground
+  // (Green and Teal keep their own green-grey ground)
+  const greenish = acc === "emerald" || acc === "teal";
+  const g = light ? (greenish ? CALM_GROUND.light : CALM_GROUND.lightQuiet) : !greenish && bg === "slate" ? CALM_GROUND.darkQuiet : CALM_GROUND[bg] || CALM_GROUND.slate;
   const [a, soft] = CALM_ACCENT[acc][light ? "l" : "d"];
-  const v = { "--c-bg": g.bg, "--c-surf": g.surf, "--c-surf-2": g.surf2, "--c-ink": g.ink, "--c-mut": g.mut, "--c-ln": g.ln,
-    "--c-acc": a, "--c-soft": soft, "--c-on-acc": light ? "#FFFFFF" : g.bg, "--c-chart-1": a };
-  if (quiet) { const q = QUIET[light ? "l" : "d"]; Object.assign(v, { "--c-btn": q.btn, "--c-on-btn": q.onBtn, "--c-chart-1": q.charts[0], "--c-chart-2": q.charts[1], "--c-chart-3": q.charts[2], "--c-chart-4": q.charts[3] }); }
-  return v;
+  const q = QUIET[light ? "l" : "d"];
+  return { "--c-bg": g.bg, "--c-surf": g.surf, "--c-surf-2": g.surf2, "--c-ink": g.ink, "--c-mut": g.mut, "--c-ln": g.ln,
+    "--c-acc": a, "--c-soft": soft, "--c-on-acc": light ? "#FFFFFF" : g.bg,
+    "--c-btn": acc === "burgundy" ? q.btn : soft, "--c-on-btn": acc === "burgundy" ? q.onBtn : a,
+    "--c-chart-1": q.charts[0], "--c-chart-2": q.charts[1], "--c-chart-3": q.charts[2], "--c-chart-4": q.charts[3] };
 }
 export function calmCss(theme) {
   const v = calmVars(theme);

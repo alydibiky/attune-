@@ -31,5 +31,11 @@ assert.ok(ratio(q["--c-on-btn"], q["--c-btn"]) >= 7, "button text reads easily (
 assert.ok(ratio(q["--c-ink"], q["--c-bg"]) >= 12 && ratio(q["--c-mut"], q["--c-bg"]) >= 5.5, "text and grey text on the ground read easily");
 const qd = S.calmVars({ accent: "burgundy", bg: "slate" });
 assert.ok(ratio(qd["--c-on-btn"], qd["--c-btn"]) >= 6 && ratio(qd["--c-ink"], qd["--c-bg"]) >= 12, "the same in dark");
-assert.equal(S.calmVars({ accent: "violet", bg: "light" })["--c-btn"], undefined, "other colours keep solid buttons");
-console.log("ALL PASSED v950theme (16 checks)");
+// v9.7.2 (Ali: "that wasn't the colours we agreed on" — Rose was picked on his phone): C1 holds for EVERY colour
+for (const [acc] of S.ACCENTS) for (const bg of ["light", "slate"]) {
+  const v = S.calmVars({ accent: acc, bg });
+  assert.deepEqual([v["--c-chart-1"], v["--c-chart-2"], v["--c-chart-3"], v["--c-chart-4"]].map((x) => x.toUpperCase()), (bg === "light" ? ["#2A9D8F", "#E0A13B", "#4C7DD9", "#9AA0A6"] : ["#4FC2B4", "#E8B04B", "#7FA6EE", "#8E949B"]), acc + " " + bg + ": calm charts, never all one colour");
+  assert.ok(v["--c-btn"] && ratio(v["--c-on-btn"], v["--c-btn"]) >= 4.5, acc + " " + bg + ": soft buttons that read easily");
+  if (bg === "light" && !["emerald", "teal"].includes(acc)) assert.equal(v["--c-bg"], "#F5F4F2", acc + ": the neutral ground, no pink");
+}
+console.log("ALL PASSED v950theme (16 + 36 checks)");
