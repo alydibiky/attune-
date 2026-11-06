@@ -11437,4 +11437,5 @@ export const RU = {
   "Not sent": "Не отправлено",
   "Messages · {n} scheduled": "Сообщения · {n} запланировано",
   "Open Messages": "Открыть сообщения",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "«Отправлять самому» (как в Auto Text) — в отдельном APK Attune Auto; Google Play Защита может заблокировать его при установке из файла.",
 };

@@ -207,7 +207,7 @@ jobs:
           ATTUNE_KEY_PASSWORD: ${{ secrets.ATTUNE_KEY_PASSWORD }}
         # full = everything, with the payment-notification reader (the main APK); lite = the same without it, for phones whose
         # Play Protect blocks a notification reader installed from a browser / file manager / chat
-        run: gradle assembleFullRelease assembleLiteRelease --no-daemon --stacktrace
+        run: gradle assembleFullRelease assembleLiteRelease assembleAutoRelease --no-daemon --stacktrace
 
       - name: Say whether it is signed for the Play Store
         run: |
@@ -229,6 +229,14 @@ jobs:
         with:
           name: attune-apk-lite
           path: app/build/outputs/apk/lite/release/*.apk
+          retention-days: 30
+
+      # v9.7: the optional APK with "send by itself" (Accessibility + SEND_SMS) — Play Protect may block it from a file
+      - name: Upload the auto APK (send by itself)
+        uses: actions/upload-artifact@v4
+        with:
+          name: attune-apk-auto
+          path: app/build/outputs/apk/auto/release/*.apk
           retention-days: 30
 
       # An AAB is what the Play Store actually wants for a new listing.

@@ -11438,4 +11438,5 @@ export const TRK = {
   "Not sent": "Gönderilmedi",
   "Messages · {n} scheduled": "Mesajlar · {n} planlandı",
   "Open Messages": "Mesajları aç",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“Kendiliğinden gönder” (Auto Text gibi) ayrı Attune Auto APK'sında — dosyadan kurulursa Google Play Protect engelleyebilir.",
 };

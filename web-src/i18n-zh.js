@@ -11437,4 +11437,5 @@ export const ZH = {
   "Not sent": "未发送",
   "Messages · {n} scheduled": "消息 · 已安排 {n}",
   "Open Messages": "打开消息",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“自动发送”（像 Auto Text）在单独的 Attune Auto APK 中——从文件安装时 Google Play 保护机制可能会拦截。",
 };

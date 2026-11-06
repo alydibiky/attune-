@@ -11438,4 +11438,5 @@ export const HI = {
   "Not sent": "नहीं भेजा गया",
   "Messages · {n} scheduled": "संदेश · {n} शेड्यूल",
   "Open Messages": "संदेश खोलें",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“खुद भेजें” (Auto Text जैसा) अलग Attune Auto APK में है — फ़ाइल से इंस्टॉल करने पर Google Play Protect इसे रोक सकता है।",
 };

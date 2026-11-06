@@ -11437,4 +11437,5 @@ export const FA = {
   "Not sent": "فرستاده نشد",
   "Messages · {n} scheduled": "پیام‌ها · {n} زمان‌بندی",
   "Open Messages": "باز کردن پیام‌ها",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "«خودش بفرستد» (مثل Auto Text) در APK جداگانهٔ Attune Auto است — اگر از فایل نصب شود ممکن است Google Play Protect آن را مسدود کند.",
 };

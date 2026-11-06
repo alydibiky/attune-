@@ -11438,4 +11438,5 @@ export const FR = {
   "Not sent": "Non envoyé",
   "Messages · {n} scheduled": "Messages · {n} programmés",
   "Open Messages": "Ouvrir Messages",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "« Envoyer tout seul » (comme Auto Text) est dans l'APK séparé Attune Auto — Google Play Protect peut le bloquer s'il est installé depuis un fichier.",
 };

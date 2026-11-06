@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v9.7 (6 Nov, Ali's phone: Play Protect "App blocked to protect your device" on the full APK once it asked for SEND_SMS and
+     Accessibility): the optional "auto" APK — the full app PLUS "send by itself" (AutoSend.kt, SmsOut.kt). Play Protect blocks it when
+     installed from a file in some countries (Egypt included); the normal full APK no longer asks for either and installs as before.
+     The "full" build (the main APK and the Play Store bundle): the payment-notification reader. Installed from Google Play
+     (or over USB / with Play Protect's scan paused) it is allowed; the "lite" build leaves it out — see src/main/AndroidManifest.xml. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- v8.7: READ_SMS (the one-time import of old bank SMS) was removed the same day — Google Play Protect blocks an APK
+         installed from a file that asks for it ("App blocked to protect your device"). New bank SMS still reach Money through
+         their notifications (PayListener). SmsInbox.kt stays: without the permission declared, the page hides its card. -->
+    <!-- v9.7 Messages, M3 (Ali's pick): an SMS sent by itself at its time — this APK only (Google Play limits SEND_SMS) -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <application>
+        <!-- v9.7 Messages, M3: presses Send in WhatsApp for a message the person scheduled (AutoSend.kt) — only after they switch it
+             on in Accessibility settings, after Attune's own screen that says what it does. Never in the Play build. -->
+        <service android:name=".AutoSend" android:exported="true" android:label="@string/app_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter><action android:name="android.accessibilityservice.AccessibilityService" /></intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/autosend" />
+        </service>
+        <!-- v6.27 "Money tracks itself": reads payment notifications on the phone, only after the person turns on
+             Notification access for Attune in Settings. SMS notifications too (never one-time codes). Nothing leaves the phone (PayListener.kt). -->
+        <service android:name=".PayListener" android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

@@ -13,8 +13,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 37   // v6.35: Android 17 (API 37); minSdk 28 keeps Android 9 – 16 phones. Checked against Google's "behavior changes for apps targeting 17": no writable native libraries, no background activity starts, no widget bitmaps, no SMS
-        versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 135   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
-        versionName = "9.7"
+        versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 136   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
+        versionName = "9.7.1"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
@@ -41,6 +41,8 @@ android {
     productFlavors {
         create("full") { dimension = "store"; resValue("bool", "attune_play", "false") }
         create("lite") { dimension = "store"; resValue("bool", "attune_play", "false") }
+        // v9.7: the full app + "send by itself" (Accessibility + SEND_SMS) — optional; Play Protect blocks it from a file in some countries
+        create("auto") { dimension = "store"; resValue("bool", "attune_play", "false") }
         // v8.7 (Ali agreed to persona 7's launch advice): the Play Store bundle — the full app without the overlay permission
         // (the quiet orb over other apps), without the keyboard (the second release) and without the Video Downloader (hidden
         // by the page when attune_play is true). The APK Ali installs stays "full".

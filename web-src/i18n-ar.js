@@ -8521,4 +8521,5 @@ export const AR = {
   "Not sent": "ما اتبعتتش",
   "Messages · {n} scheduled": "الرسايل · {n} متجدولة",
   "Open Messages": "افتح الرسايل",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "«ابعت لوحدك» (زي Auto Text) موجود في نسخة Attune Auto المنفصلة — حماية Google Play ممكن تمنعها لو اتسطبت من ملف.",
 };

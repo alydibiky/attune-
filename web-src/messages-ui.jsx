@@ -176,6 +176,7 @@ export function MessagesPage({ back, flash, nativeCall, drafter, startNew = fals
       <div className={U.cardPad + " space-y-2"} data-testid="msg-how">
         <b className="block text-[14px]">{tr("How messages are sent")}</b>
         <p className="m-0 text-[12.5px] c-sub">{tr("Through the chat's own reply when its notification is on your phone; otherwise a notification opens the chat with the message written — one tap on Send.")}</p>
+        {!msgState.auto && N ? <p className="m-0 text-[12px] c-sub" data-testid="msg-auto-elsewhere">{tr("“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.")}</p> : null}
         {msgState.auto ? (msgState.autoOn ? <p className="m-0 text-[13px] font-bold text-[var(--c-pos)]" data-testid="msg-auto-on">✓ {tr("Send by itself is on (WhatsApp, phone unlocked).")}</p>
           : <button onClick={() => setExplain(true)} className={U.btnS + " w-full"} data-testid="msg-auto-turn-on">{tr("Turn on “Send by itself” (like Auto Text)")}</button>) : null}
         {msgState.sms && !msgState.smsOn ? <button onClick={() => { try { N.msgAskSms(); } catch (e) {} setTimeout(() => setTick((x) => x + 1), 1500); }} className={U.btnS + " w-full"} data-testid="msg-sms-allow">{tr("Allow SMS to be sent by itself")}</button> : null}

@@ -11437,4 +11437,5 @@ export const KO = {
   "Not sent": "보내지 않음",
   "Messages · {n} scheduled": "메시지 · 예약 {n}",
   "Open Messages": "메시지 열기",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“자동으로 보내기”(Auto Text처럼)는 별도의 Attune Auto APK에 있어요 — 파일로 설치하면 Google Play 프로텍트가 막을 수 있어요.",
 };

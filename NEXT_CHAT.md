@@ -16,6 +16,12 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 gets its translation in all 20 `web-src/i18n-<id>.js` files before the commit (also in CLAUDE.md's standing rules).
 v9.0 did this: 12 new lines × 20 languages; deep research is also recognised in every language (`research.js wantsDeep`).
 
+## v9.7.1 — 6 Nov: Play Protect blocked the 9.7 full APK ("App blocked to protect your device")
+Cause: SEND_SMS + the AutoSend Accessibility service in the full APK (Google's fraud protection blocks file-installed apps asking for
+them; Egypt included — the same as READ_SMS in v8.7). Fix: both moved to a new optional flavor **"auto"** (src/auto/AndroidManifest.xml =
+full + SEND_SMS + AutoSend; CI artifact `attune-apk-auto`); the normal full APK asks for nothing new (installs like 9.6). Messages says
+where "send by itself" is (`msg-auto-elsewhere`). Everything else (auto-reply, ask first, one tap) works in the full APK.
+
 ## v9.7 — 6 Nov: Messages like Auto Text BUILT (Ali: "go with M3 and S1 and S2 and S3")
 - `web-src/msgsched.js` (pure: APPS, nextAt incl. yearly, linkFor per app, missing, auto-reply rules + ruleFits, appIn / repeatIn) ·
   `messages-ui.jsx` MessagesPage (tabs Scheduled · Auto-reply · Sent; Composer: app chips, person + Contacts + phone / email, words,

@@ -11438,4 +11438,5 @@ export const UR = {
   "Not sent": "نہیں بھیجا گیا",
   "Messages · {n} scheduled": "پیغامات · {n} شیڈول",
   "Open Messages": "پیغامات کھولیں",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“خود بھیجیں” (Auto Text کی طرح) الگ Attune Auto APK میں ہے — فائل سے انسٹال کرنے پر Google Play Protect اسے روک سکتا ہے۔",
 };

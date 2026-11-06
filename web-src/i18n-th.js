@@ -11437,4 +11437,5 @@ export const TH = {
   "Not sent": "ไม่ได้ส่ง",
   "Messages · {n} scheduled": "ข้อความ · ตั้งเวลา {n}",
   "Open Messages": "เปิดข้อความ",
+  "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“ส่งเอง” (เหมือน Auto Text) อยู่ใน APK แยก Attune Auto — Google Play Protect อาจบล็อกเมื่อติดตั้งจากไฟล์",
 };
