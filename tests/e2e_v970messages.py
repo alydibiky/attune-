@@ -66,7 +66,10 @@ with sync_playwright() as p:
     rows = page.locator("[data-testid=msg-sent-row]")
     check(rows.count() == 2 and "Ahmed" in rows.first.inner_text() and "Auto-reply" in rows.first.inner_text() and "Sent by itself" in rows.nth(1).inner_text(), "Sent: newest first, how each went")
     page.click("[data-testid=messages-back]"); page.wait_for_selector("[data-testid=agents-page]")
-    check(page.locator("[data-testid=agent-send]").count() == 1 and "2 scheduled" in page.inner_text("[data-testid=agent-send]"), "Agents shows ONE Messages card (2 scheduled), not one card each")
+    cards = [c.inner_text().replace("\u2066", "").replace("\u2069", "") for c in page.locator("[data-testid=agents-board-card]").all()]
+    check(sum("scheduled" in c for c in cards) == 1 and any("2 scheduled" in c for c in cards), "Agents shows ONE Messages card (2 scheduled), not one card each: %s" % cards)
+    page.locator("[data-testid=agents-board-card]", has_text="scheduled").click(); page.wait_for_selector("[data-testid=messages-page]")
+    check(page.locator("[data-testid=msg-card]").count() == 2, "…and it opens Messages")
     check(not real_errors(errors), "no page errors: " + str(real_errors(errors))[:300])
     br.close()
 finish()
