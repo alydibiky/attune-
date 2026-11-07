@@ -7776,7 +7776,7 @@ const MODE_TITLES = { errands: "Errands", lists: "To-dos & lists", booklib: "Doc
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.8";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.8.1";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9907,6 +9907,10 @@ export default function App() {
       try { window.dispatchEvent(new Event("attune:data-changed")); } catch (e) {}
       return { rid };
     };
+    // (v9.8, Ali: "I want to reply to it and tell it how to add it — a reminder, a subscription…"): Autopilot's reply box goes through
+    // the Home box (doFromHome), its To-do button into the to-do list
+    window.__attuneDoIt = (t) => { try { return doRef.current ? doRef.current(t) : null; } catch (e) { return null; } };
+    window.__attuneAddTodo = (t) => { try { remember({ kind: "todo", title: String(t).slice(0, 90), text: String(t), tags: ["todo"], meta: { todo: true, done: false } }); return true; } catch (e) { return false; } };
     window.__attuneRemoveReminder = (id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} };
     // (Undo of an expense / income Autopilot added: the newest one with that amount)
     window.__attuneUndoMoney = (amount, type) => { try { const l = JSON.parse(localStorage.getItem("ledger.v3") || "null"); if (!l) return;

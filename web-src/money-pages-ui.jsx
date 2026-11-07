@@ -325,6 +325,9 @@ export function ZakatPane({ L, snap, wide, openLedger, runDo, flash }) {
           <div className="flex items-start justify-between gap-2"><span className="text-[12px] font-bold c-sub">{s.due ? tr("Zakāt due") : tr("Not due yet")}</span>
             {z.hawlDays != null ? <span className={U.tag(s.due ? "amber" : "gray")}>{z.hawlDays > 0 ? T("ḥawl ends in {n} days", { n: z.hawlDays }) : tr("ḥawl complete")}</span> : null}</div>
           <b className={"block text-[30px] font-black tabular-nums tracking-tight " + (s.due ? "text-[var(--c-warn)]" : "")} dir="ltr" data-testid="zakat-amount">{s.due ? amt(s.amount, cur) : "—"}</b>
+          {z.projected ? <p className="m-0 text-[13.5px] rounded-[12px] bg-[var(--c-soft)] px-3 py-2" data-testid="zakat-projected">{z.projected.above
+            ? T("If your money stays as it is, you will pay about {a} on {d} ({p}% of {b}).", { a: amt(z.projected.amount, cur), d: z.projected.on ? dayLabel(z.projected.on) : tr("the end of your ḥawl"), p: +(z.projected.rate * 100).toFixed(3), b: fmt(s.base) })
+            : tr("If your money stays as it is, it stays under the niṣāb — no Zakāt this year.")}</p> : null}
           {s.base != null && s.nisab != null ? <>
             <div className="flex justify-between text-[12.5px] c-sub"><span>{tr("Your zakatable wealth")} <b className="text-[var(--c-ink)] tabular-nums" dir="ltr">{fmt(s.base)}</b></span><span>{tr("Niṣāb")} <b className="text-[var(--c-ink)] tabular-nums" dir="ltr">{fmt(s.nisab)}</b></span></div>
             <div className="c-bar" aria-hidden="true"><i style={{ width: Math.min(100, s.pct || 0) + "%", background: (s.pct || 0) >= 100 ? "var(--c-warn)" : undefined }} /></div>

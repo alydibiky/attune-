@@ -38,12 +38,16 @@ const sketches = new Set(["photo", "type", "list", "chart", "map", "chat", "file
 ok([...Object.values(G.TOOLS), ...G.START].every((g) => sketches.has(g.sketch)), "every guide has a drawing");
 // chapters: the sidebar's order
 const ch = G.chapters();
-ok(ch.map((c) => (Array.isArray(c.title) ? c.title[0] : c.title)).join() === "Create,Projects,Home,Students,Money,Follow-ups,Health,Daily,Go,My things,Work,Tools,Bottom of the sidebar", "chapters follow the sidebar (v8.5: Follow-ups, Go; v9.2: Saved is My things): " + ch.map((c) => c.title));
+ok(ch.map((c) => (Array.isArray(c.title) ? c.title[0] : c.title)).join() === "Projects,Home,Students,Money,Follow-ups,Health,Daily,Go,My things,Tools,Bottom of the sidebar", "chapters follow the sidebar — v9.8: Create and Work (only archived tools) are gone: " + ch.map((c) => c.title));
 const money = ch.find((c) => c.title === "Money");
-ok(money.ids.join() === "money,deal,planner" && ch.find((c) => c.title === "Follow-ups").ids.join() === "timeline,life,family,reminders,radar,guardian", "Money: Money, Deal Check; Follow-ups its own chapter: " + money.ids);
-ok(ch.find((c) => c.title === "Work").ids.slice(0, 3).join() === "business,fleet,field" && ch.find((c) => c.title === "Tools").ids[0] === "tools" && !ch.flatMap((c) => c.ids).includes("guide"), "Work: Business, Team records, Reports (Crane opens from Fleet, v8.5); Tools its own chapter");
+ok(money.ids.join() === "money,planner" && ch.find((c) => c.title === "Follow-ups").ids.join() === "timeline,life,family,reminders,errands,radar,guardian", "Money: Money, Month plan (Deal Check archived); Follow-ups with Errands: " + money.ids);
+{ const R = await import("../../web-src/removed.js"); const leak = ch.flatMap((c) => c.ids).filter((x) => R.hiddenFromMenus(x));
+  ok(!leak.length, "v9.8 (Ali: 'How to use has things from the old app'): no archived tool in any chapter: " + leak);
+  const text = JSON.stringify(G.START) + JSON.stringify(ch.flatMap((c) => c.ids).map((x) => G.TOOLS[x]));
+  ok(!/Deal Check|Fit & Food|Scout|Business|Studio|Learn daily|Prompt lab/.test(text), "…and no archived name in the guide's words: " + (text.match(/Deal Check|Fit & Food|Scout|Business|Studio|Learn daily|Prompt lab/) || [""])[0]); }
+ok(!ch.find((c) => c.title === "Work") && ch.find((c) => c.title === "Tools").ids[0] === "tools" && !ch.flatMap((c) => c.ids).includes("guide"), "Work: Business, Team records, Reports (Crane opens from Fleet, v8.5); Tools its own chapter");
 const test = G.chapters([["money", "Money", "money", ["money", "deal", "radar"]], ["health", "Health", "health", ["fit", "care"]]]);
-ok(test[0].ids.join() === "money,radar,deal" && test[1].ids.join() === "fit,care" && test.length === 2, "chapters only hold what the sidebar has");
+ok(test[0].ids.join() === "money,radar" && test[1].ids.join() === "care" && test.length === 2, "chapters only hold what the sidebar has — and never an archived tool (deal, fit)");
 ok(G.whereOf("radar").join(" > ") === "Follow-ups > Dates" && G.whereOf("compress").join(" > ") === "Tools" && G.whereOf("fit").join() === "Health", "each guide says where the tool lives");
 // today's new parts are explained in their tools
 const en = (id) => G.TOOLS[id].steps.map((s) => s[0]).join(" ") + " " + G.TOOLS[id].tip[0];
@@ -56,7 +60,7 @@ ok(/From a message/.test(en("business")) && /محتاج ونش 50 طن/.test(en(
 ok(/wait or buy/.test(en("scout")) && /تستنى ولا تشتري/.test(arOf("scout")), "Scout: wait or buy");
 const kb = G.START.find((s) => s.id === "keyboard");
 ok(kb && /3→ع Franco/.test(kb.steps.map((s) => s[0]).join(" ")) && /أنا جاي بكرة/.test(kb.steps.map((s) => s[1]).join(" ")), "the keyboard's Franco chip");
-ok(G.TOOLS.missions && /chance/.test(en("missions")) && /one step|ONE step/i.test(en("missions")) && /Scout/.test(en("missions")) && /المهمة/.test(arOf("missions")), "Missions: a goal, the chance, one step today");
+ok(G.TOOLS.missions && /chance/.test(en("missions")) && /one step|ONE step/i.test(en("missions")) && /agents/.test(en("missions")) && !/Scout|Fit|Business|Learn/.test(en("missions")) && /المهمة/.test(arOf("missions")), "Missions: a goal, the chance, one step today");
 // the plan
 ok(G.PLAN.map((p) => p.id).join() === "morning,day,evening,week,month,work", "the plan: morning, day, evening, week, month, work");
 const planTools = G.PLAN.flatMap((p) => p.items.map((i) => i.tool)).filter(Boolean);

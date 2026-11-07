@@ -16,7 +16,7 @@ const KINDS = [
   ["bank", /bank|cib|nbe|banquemisr|qnb|hsbc|alahly|instapay|vodafone.?cash|fawry|valu|paymob|paypal|wise|revolut|meeza|aman|sympl|contact|souhoola/,
     /\b(debited|credited|transaction|purchase|spent|withdraw(?:al|n)?|deposit(?:ed)?|transfer(?:red)?|balance|card ending|your card|payment of|paid|refund(?:ed)?|egp|usd|sar|aed)\b|تم خصم|خصم مبلغ|تم ايداع|تم إيداع|ايداع|إيداع|تحويل|رصيد|بطاقتك|كارت|سحب|عملية شراء|مبلغ|جنيه/i,
     "money bank payment paid spent purchase transaction card transfer balance debit credit refund فلوس البنك دفع دفعت خصم تحويل رصيد كارت فيزا مصاريف flos bank"],
-  ["call", /dialer|phone|telecom|incallui|contacts/, /\b(missed call|incoming call|calling|voicemail|called you)\b|مكالمة فائتة|مكالمه فائته|مكالمة لم يرد عليها|اتصل بك|بيتصل/i,
+  ["call", /dialer|phone|telecom|incallui|contacts/, /\b(missed (?:voice |video )?call|incoming (?:voice |video )?call|calling|voicemail|called you)\b|مكالمة فائتة|مكالمه فائته|مكالمة لم يرد عليها|اتصل بك|بيتصل/i,
     "call called missed phone ring rang voicemail اتصل اتصال مكالمه كلمني رن رنه kalemny etasal"],
   ["ride", /uber|careem|indrive|didi|bolt|swvl|halan|lyft/, /\b(driver|trip|ride|pickup|pick-up|arriving in|your captain|has arrived|is on the way)\b|السواق|الكابتن|الرحلة|وصل الكابتن|في الطريق اليك/i,
     "ride trip taxi car driver captain uber careem pickup اوبر كريم مشوار عربيه السواق الكابتن رحله"],
@@ -51,14 +51,21 @@ export function understandNote(n) {
   const pkg = low(n && n.pkg), app = low(n && n.app), src = pkg + " " + app, title = String((n && n.title) || ""), text = String((n && n.text) || "");
   const all = title + " " + text, la = low(all);
   let kind = "";
-  for (const [k, appRx, txtRx] of KINDS) if (appRx.test(src) && txtRx.test(all) && k !== "promo" && k !== "news") { kind = k; break; }
-  if (!kind) for (const [k, appRx, txtRx] of KINDS) if (k !== "news" && txtRx.test(all) && (k !== "call" || /missed|مكالم/i.test(all))) { kind = k; break; }
+  // v9.8 (Ali's screenshot): a WhatsApp "Missed voice call" is a call, not a message; an offer ("300 EGP OFF … delivered in 15 minutes")
+  // is an offer, not a delivery; an email only counts as a delivery when a shop sent it
+  const PROMO = /\b\d+\s*(?:%|egp|le|جنيه)?\s*off\b|\bsale\b|\bdiscount\b|\bpromo(?:code)?\b|\bcoupon\b|\bcashback\b|عرض|خصم \d|تخفيض|كوبون/i;
+  const SHOP = /amazon|noon|jumia|talabat|breadfast|aramex|dhl|fedex|ups|bosta|mylerz|shein|temu|aliexpress|instashop/i;
+  if (/missed (?:voice |video )?call|مكالمة (?:صوتية |فيديو )?فائتة|مكالمة لم يرد عليها/i.test(all)) kind = "call";
+  else if (PROMO.test(all) && !/\b(shipped|(?:has been|was|been) delivered|out for delivery|your (?:order|package|parcel)|tracking)\b|تم الشحن|تم التوصيل|طلبك/i.test(all)) kind = "promo";
+  if (!kind) for (const [k, appRx, txtRx] of KINDS) if (appRx.test(src) && txtRx.test(all) && k !== "promo" && k !== "news") { kind = k; break; }
+  if (!kind) for (const [k, appRx, txtRx] of KINDS) if (k !== "news" && txtRx.test(all) && (k !== "call" || /missed|مكالم/i.test(all)) && !(k === "delivery" && EMAIL_APPS.test(src) && !SHOP.test(all))) { kind = k; break; }
   if (!kind && KINDS[KINDS.length - 1][1].test(src)) kind = "news";
   // a person's message (chat apps): the title is who wrote — «Ahmed Salah 012 (Dayı)», a group's "Group: Name"
   let who = "";
   if (!kind && CHAT_APPS.test(src)) { kind = "message"; who = title.replace(/\s*\(\d+ (?:messages?|رسائل|رسالة)\)\s*$/i, "").replace(/^.*?:\s*/, (m) => (m.length < 40 ? m : "")).trim(); }
   if (!kind && EMAIL_APPS.test(src)) { kind = "email"; who = title.trim(); }
-  if (kind === "call") who = (title.replace(/missed call|مكالمة فائتة|مكالمه فائته/gi, "") || text.replace(/missed call( from)?|مكالمة فائتة( من)?/gi, "")).replace(/[·:\-]/g, " ").trim();
+  if (kind === "call" && CHAT_APPS.test(src)) who = title.replace(/\s*\(\d+.*\)\s*$/, "").trim();
+  else if (kind === "call") who = (title.replace(/missed call|مكالمة فائتة|مكالمه فائته/gi, "") || text.replace(/missed call( from)?|مكالمة فائتة( من)?/gi, "")).replace(/[·:\-]/g, " ").trim();
   const m = MONEY.exec(all), amount = m ? +String(m[1] || m[2]).replace(/,/g, "") : 0;
   let state = ""; for (const [rx, s] of STATE) { const x = rx.exec(all); if (x) { state = s === "arriving" && x[1] ? "arriving " + x[1].replace(/\s+/g, " ").trim() : s; break; } }
   const def = KINDS.find((k) => k[0] === kind);

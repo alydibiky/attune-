@@ -329,6 +329,10 @@ money-pages-ui.jsx: <Head title={tr("Bills report")} back={() => setRep(false)} 
 money-sheets-ui.jsx: <Field label={tr("Amount")}><input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp
 money-sheets-ui.jsx: <Field label={tr("Amount")}><input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp
 
+## Expense added
+attune.jsx: setAddOpen(false); flash(txn.type === "income" ? tr("Income added") : txn.type === "transfer" ? tr("Transfer added") : tr("Expense added"));
+autopilot-ui.jsx: expense: () => (x.amount ? (window.__attuneApplyActions([{ kind: "money", items: [{ type: "expense", amount: x.amount, cat: x.cat || "other"
+
 ## Late
 attune.jsx: return d ? { text: tr("{b} is due {d}: {a}", { b: d.note, d: d.late ? tr("— it's late") : d.date.slice(5), a: fmtMoneyPlain(d.amount) + " " 
 home-ui.jsx: <span className="flex-1 min-w-0"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{x.dose ? (x.late
@@ -499,6 +503,7 @@ voice-ui.jsx: {card.kind === "readback" ? <div className="flex gap-2 mt-3"><butt
 
 ## Reminder set
 attune.jsx: <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); fl
+autopilot-ui.jsx: reminder: () => { const r = window.__attuneApplyActions && window.__attuneApplyActions([{ kind: "reminder", action: { kind: "reminder", at: 
 mind-ui.jsx: {m.remindAt && m.remindAt > Date.now() ? <span className="text-[11.5px] font-bold tabular-nums text-[var(--c-acc)]">{tr("Reminder set")}: {n
 shelf-ui.jsx: {m.remindAt > Date.now() ? <p className="text-xs font-bold tabular-nums text-[var(--c-acc)] mt-3"><AlarmClock size={12} className="inline me
 
@@ -602,12 +607,12 @@ country-ui.jsx: <span className="flex-1 min-w-0"><span className="block text-[13
 ## Save
 attune.jsx: <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-bt
 attune.jsx: <button onClick={() => { setOrg(o); flash(tr("Company terminology saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-tea
+autopilot-ui.jsx: <button type="submit" disabled={!say.trim()} className="min-h-[40px] px-3.5 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-b
 care-ui.jsx: <button className={btnP} disabled={!sugar} onClick={saveSugar} data-testid="care-sugar-save">{tr("Save")}</button></div>
 care-ui.jsx: <button className={btnP} onClick={() => { const d = ensureMember(); put(H.addLabs(d, labDraft.member || d.members[0].id, labDraft.date, labD
 chat.jsx: onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.kno
 home-ui.jsx: <button type="submit" className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} data-testid="home-ask-save">{tr("Save")}</button></for
 knowledge-ui.jsx: onClick={async () => { const p = paste; setPaste(null); await add({ kind: "text", title: p.title.trim() || p.text.trim().split("\n")[0].slic
-life-ui.jsx: <div className="flex gap-2 mt-3"><button className={U.btnP} onClick={save} data-testid="life-save">{tr("Save")}</button><button className={U
 
 ## Downloading…
 attune.jsx: <div className="flex items-center gap-2 text-[13px] text-slate-300"><span className="flex-1 truncate">{n.dlStage || tr("Downloading…")}</spa

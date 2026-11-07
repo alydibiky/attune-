@@ -9,6 +9,7 @@
      · everything else counted by kind (Instagram, YouTube, …), so the day's picture is complete without being noisy.
    Each app can be left out (Settings → Your day). Nothing leaves the phone; no model is needed (pure code). Tests:
    tests/unit/v930daynotes.test.mjs.                                                                                                */
+import { understandNote } from "./notifmeaning.js";
 import { parseTime } from "./actions.js";
 
 const P = (s) => new Set(s.split(" "));
@@ -78,7 +79,7 @@ export function dayFromNotes(notes, { now = Date.now(), offApps = [], asksDays =
         if (!seenAsk.has(k)) { seenAsk.add(k); asks.push({ id: String(n.id || n.ts), who: s.who, group: s.group, app: n.app || "", text: text.slice(0, 160), at: t.at, from: n.ts }); }
       }
     }
-    if ((kind === "shop" || kind === "sms" || kind === "email" || kind === "other") && isToday && DELIVERY.test(text + " " + (n.title || "")) && !money.test(text) && arriving.length < 5)
+    if ((kind === "shop" || kind === "sms" || kind === "email" || kind === "other") && isToday && DELIVERY.test(text + " " + (n.title || "")) && !money.test(text) && arriving.length < 5 && (() => { try { return understandNote(n).kind !== "promo"; } catch (e) { return true; } })())   // (v9.8: "300 EGP OFF … delivered in 15 minutes" is an offer)
       arriving.push({ app: n.app || "", text: (n.title ? n.title + " — " : "") + text.slice(0, 120), at: n.ts });
   }
   return { people: [...people.values()].sort((a, b) => b.at - a.at), asks: asks.sort((a, b) => a.at - b.at), arriving, counts, total,

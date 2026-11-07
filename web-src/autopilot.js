@@ -43,7 +43,7 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   if (!n) return null;
   const u = understandNote(n), app = String(n.app || n.pkg || ""), text = String(n.text || ""), title = String(n.title || "");
   if ((s.skipApps || []).includes(app + ":" + u.kind)) return null;
-  const base = { src: String(n.id), app, at: n.ts || now, kind: "" };
+  const base = { src: String(n.id), app, at: n.ts || now, kind: "", full: { title, text } };   // (v9.8: the whole message, to read before adding)
   if (u.kind === "bank" && u.amount > 0 && (u.state === "money out" || u.state === "money in")) {
     const shop = shopIn(title + " " + text), out = u.state === "money out";
     return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now),
@@ -61,7 +61,7 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   }
   if (u.kind === "call" && u.who) {
     const same = (recent || []).filter((r) => r.id !== n.id && Math.abs((r.ts || 0) - (n.ts || 0)) < DAY && (() => { const v = understandNote(r); return v.kind === "call" && v.who === u.who; })());
-    if (same.length >= 1) return { ...base, kind: "callback", at: now + 15 * 60000, who: u.who, title: "Call back " + u.who, key: "cb:" + u.who + ":" + iso(n.ts || now), line: "Call back" };
+    if (same.length >= 1 || /whatsapp|telegram|messenger|viber|botim|imo/i.test(app + " " + (n.pkg || ""))) return { ...base, kind: "callback", at: now + 15 * 60000, who: u.who, title: "Call back " + u.who, key: "cb:" + u.who + ":" + iso(n.ts || now), line: "Call back" };
     return null;
   }
   if (u.kind === "bill" && u.amount > 0 && /\bdue\b|مستحق|آخر ميعاد|اخر ميعاد/i.test(title + " " + text)) {

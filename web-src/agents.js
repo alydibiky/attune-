@@ -474,7 +474,13 @@ export function bestAcross(offers, a = {}, max = 5) {
     && !skip.includes(String(o.href || o.name || "").slice(0, 120)) && !skip.includes(String(o.name || o.text || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 40)));
   // a price far under the middle of the others is an accessory, a part or an instalment — not the product
   const ps = ok.map((o) => o.price).sort((x, y) => x - y), mid = ps.length ? ps[Math.floor(ps.length / 2)] : 0;
-  const sane = ps.length >= 3 ? ok.filter((o) => o.price >= mid * 0.45 && o.price <= mid * 2.5) : ok;
+  let sane = ps.length >= 3 ? ok.filter((o) => o.price >= mid * 0.45 && o.price <= mid * 2.5) : ok;
+  // v9.8 (Ali's screenshot: "Huawei FreeClip 2 · EGP 120" — a case): an accessory is never the product unless it was asked for, and a
+  // price under 30 % of the person's own limit or of what this agent saw before is not believed (with 1–2 prices there is no middle)
+  const ACC = /\b(case|cover|sleeve|pouch|strap|band|protector|screen guard|tempered glass|cable|charger|adapter|skin|sticker|holder|stand|ear ?tips?|replacement)\b|جراب|جرابات|كفر|سكرينة|اسكرينة|شاحن|كابل|حامل|استيكر/i;
+  if (!ACC.test(what + " " + (a.said || ""))) sane = sane.filter((o) => !ACC.test(String(o.name || "") + " " + String(o.text || "").slice(0, 120)));
+  const past = (a.checks || []).map((c) => c.price).filter((v) => v > 0).sort((x, y) => x - y), ref = a.below > 0 ? a.below : past.length ? past[Math.floor(past.length / 2)] : 0;
+  if (ref) sane = sane.filter((o) => o.price >= ref * 0.3);
   const by = new Map();
   for (const o of sane) { const k = (o.site || siteOf(o.href || o.url || "")).toLowerCase() || String(o.name).toLowerCase(); if (!by.has(k) || by.get(k).price > o.price) by.set(k, { ...o, key: String(o.name || o.text || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 40) || String(o.price) }); }
   return [...by.values()].sort((x, y) => x.price - y.price).slice(0, max);
@@ -676,4 +682,13 @@ export function whatChanged(agents = [], now = Date.now(), hours = 36) {
   }
   const rank = { needs: 0, found: 1, drop: 2, rise: 3 };
   return out.sort((x, y) => rank[x.kind] - rank[y.kind] || y.at - x.at);
+}
+
+/** v9.8: Scout searches that say the same thing as an agent ("tell me when the Huawei free clip…" ↔ "Huawei free clips 2") — dropped
+ *  from the Agents list (most of the searched thing's words are the agent's). Pure; tests/unit/v980fixes.test.mjs. */
+const SIG = (t) => new Set(String(t || "").toLowerCase().replace(/[^\p{L}\p{N} ]+/gu, " ").split(/\s+/).map((w) => w.replace(/s$/, "")).filter((w) => w.length >= 3 && !/^(tell|when|the|under|below|price|used|watch|find|for|and|with|me|let|know|cheaper|than|egp|alert|notify)$/.test(w)));
+export function withoutTwins(goals = [], agents = []) {
+  const ag = agents.filter((a) => a && a.kind !== "send").map((a) => SIG([a.what, a.title, a.said].filter(Boolean).join(" ")));
+  return goals.filter((g) => { const w = SIG(g.text); if (!w.size) return true;
+    return !ag.some((s) => { let hit = 0; for (const x of w) if (s.has(x)) hit++; return hit >= Math.min(2, w.size) && hit / w.size >= 0.5; }); });
 }

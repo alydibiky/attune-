@@ -8625,4 +8625,13 @@ export const AR = {
   "Last inspection certificate": "شهادة الفحص السابقة",
   "Load test report": "تقرير اختبار التحميل",
   "Operator licence": "رخصة المشغل",
+  "Save it as:": "احفظها كـ:",
+  "Or say how — “remind me Monday at 9”, “subscription 200 every month”": "أو قول إزاي — «فكرني يوم الاتنين الساعة 9»، «اشتراك 200 كل شهر»",
+  "I couldn't read that — try “reminder tomorrow at 9” or “expense 450”": "مفهمتش — جرّب «فكرني بكرة الساعة 9» أو «صرفت 450»",
+  "If your money stays as it is, you will pay about {a} on {d} ({p}% of {b}).": "لو فلوسك فضلت زي ما هي، هتدفع حوالي {a} يوم {d} ({p}% من {b}).",
+  "If your money stays as it is, it stays under the niṣāb — no Zakāt this year.": "لو فلوسك فضلت زي ما هي، هتفضل تحت النصاب — مفيش زكاة السنة دي.",
+  "the end of your ḥawl": "آخر الحول",
+  "breakfast": "فطار",
+  "free cancellation": "إلغاء مجاني",
+  "pay at property": "الدفع في الفندق",
 };

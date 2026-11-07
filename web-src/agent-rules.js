@@ -15,7 +15,8 @@ const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const latin = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/٫/g, ".").replace(/،/g, ",");
 const fold = (s) => latin(s).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?=\s|$)/g, "ه").toLowerCase();
 /** "40,000" / "40k" / "40 الف" / "1.5 مليون" → 40000 */
-import { autonomyIn } from "./agents2.js";   // v9.4 G7
+import { autonomyIn } from "./agents2.js";
+import { tr } from "./i18n.js";   // v9.4 G7
 export function amountIn(s) {
   const m = /(\d[\d,]*(?:\.\d+)?)\s*(k|thousand|الف|ألف|آلاف|الاف|m|million|مليون)?/i.exec(latin(s)); if (!m) return null;
   let v = parseFloat(m[1].replace(/,/g, "")); const u = (m[2] || "").toLowerCase();
@@ -98,7 +99,8 @@ export function parseRule(text) {
     else if (/\b(prefer|use|on)\b|عايز|يفضل|احسن/.test(t)) r.onlySites = named;
   }
   // must have / avoid words (the hotel / product words people care about)
-  const HAVE = [["breakfast", /breakfast|فطار|افطار|إفطار/], ["free cancellation", /free cancell?ation|الغاء مجاني|إلغاء مجاني|cancel for free/], ["parking", /parking|جراج|ركنه|موقف عربيات/],
+  const HAVE = [["breakfast", /breakfast|فطار|افطار|إفطار/], ["free cancellation", /free cancell?ation|الغاء مجاني|إلغاء مجاني|cancel for free|cancel free/],
+    ["pay at property", /pay at (?:the )?(?:property|hotel)|no prepayment|pay (?:later|on arrival)|الدفع في الفندق|ادفع في الفندق|الدفع عند الوصول|من غير دفع مقدم|بدون دفع مقدم|من غير ما ادفع مقدم/], ["parking", /parking|جراج|ركنه|موقف عربيات/],
     ["pool", /\bpool\b|حمام سباحه|بيسين/], ["wifi", /wi-?fi|واي فاي|نت/], ["haram view", /haram view|view of the haram|كعبه|فيو الحرم|اطلاله علي الحرم/], ["new", /\bnew only\b|\bbrand new\b|جديد بس|متبرشم/],
     ["warranty", /warranty|ضمان/], ["family room", /family room|غرفه عائليه|اوضه عيله/], ["kitchen", /kitchen|مطبخ/]];
   const AVOID = [["hostel", /hostels?|نزل/], ["used", /\bused\b|مستعمل/], ["refurbished", /refurb(ished)?|متجدد/], ["shared bathroom", /shared bath(room)?|حمام مشترك/], ["apartment", /\bapartments?\b|شقق|شقه/]];
@@ -123,8 +125,8 @@ export function ruleChips(rules = {}) {
   if (R.notBefore != null) out.push({ key: "notBefore", en: "not before {h}:00", v: { h: R.notBefore } });
   if (R.notAfter != null) out.push({ key: "notAfter", en: "not after {h}:00", v: { h: R.notAfter } });
   if (R.cabin) out.push({ key: "cabin", en: { economy: "Economy", premium: "Premium economy", business: "Business", first: "First class" }[R.cabin] });
-  for (const w of R.mustHave || []) out.push({ key: "mustHave", val: w, en: "with {w}", v: { w } });
-  for (const w of R.avoid || []) out.push({ key: "avoid", val: w, en: "no {w}", v: { w } });
+  for (const w of R.mustHave || []) out.push({ key: "mustHave", val: w, en: "with {w}", v: { w: tr(w) } });
+  for (const w of R.avoid || []) out.push({ key: "avoid", val: w, en: "no {w}", v: { w: tr(w) } });
   for (const w of R.onlySites || []) out.push({ key: "onlySites", val: w, en: "only {w}", v: { w: brandName(w) } });
   for (const w of R.avoidSites || []) out.push({ key: "avoidSites", val: w, en: "not {w}", v: { w: brandName(w) } });
   if (R.hours) out.push({ key: "hours", en: R.hours === 24 ? "check every day" : "check every {n} h", v: { n: R.hours } });
@@ -139,7 +141,11 @@ const hourOf = (o) => { const m = /\b(\d{1,2}):(\d{2})\b/.exec(String((o && (o.d
 const starsOf = (o) => { const m = /(\d)\s*[- ]?\s*(?:stars?|star hotel|نجوم|نجمات|★{0,1}\s*hotel)/i.exec(String((o && o.text) || "")); return m ? +m[1] : (o && o.stars) || null; };
 const ratingOf = (o) => { if (o && o.rating) return +o.rating; const m = /(?:scored|rating|rated|تقييم)?\s*(\d[.,]\d)\b/.exec(String((o && o.text) || "")); return m ? parseFloat(m[1].replace(",", ".")) : null; };
 const distOf = (o) => { const d = /(\d+(?:[.,]\d+)?)\s*(km|كم|m\b|متر|م\b)/i.exec(" " + String((o && o.text) || "") + " "); return d ? Math.round(parseFloat(d[1].replace(",", ".")) * (/km|كم/i.test(d[2]) ? 1000 : 1)) : (o && o.dist) || null; };
-const WORD_RE = { breakfast: /breakfast|فطار|إفطار|افطار/i, "free cancellation": /free cancell?ation|إلغاء مجاني|الغاء مجاني/i, hostel: /hostel/i, used: /\bused\b|مستعمل|pre-?owned/i,
+// v9.8 (Ali: "I want to filter free cancellation, pay at property, with breakfast"): what the offer's own card must SAY — "breakfast
+// available for EGP 300" is not breakfast included
+const WORD_RE = { breakfast: /breakfast (?:is )?included|includes breakfast|with breakfast|breakfast & |free breakfast|الإفطار مشمول|الافطار مشمول|شامل الإفطار|شامل الافطار|فطار مجاني|إفطار مجاني|إفطار مشمول/i,
+  "free cancellation": /free cancell?ation|cancel for free|إلغاء مجاني|الغاء مجاني/i,
+  "pay at property": /no prepayment|pay at (?:the )?(?:property|hotel)|pay (?:later|on arrival)|reserve now,? pay|لا (?:يلزم|حاجة ل)(?:ل)?(?:ال)?دفع (?:ال)?مسبق|بدون دفع مسبق|الدفع (?:في|عند) (?:الفندق|مكان الإقامة|الوصول)/i, hostel: /hostel/i, used: /\bused\b|مستعمل|pre-?owned/i,
   refurbished: /refurb|renewed|متجدد/i, "shared bathroom": /shared bath/i, apartment: /apartment|شقه|شقة/i, "haram view": /haram view|kaaba view|view of the haram/i };
 const hasWord = (o, w) => (WORD_RE[w] || new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i")).test(`${(o && o.name) || ""} ${(o && o.text) || ""}`);
 /** Does this offer follow every rule? A rule that can't be checked on this offer (no stars written) does not drop it. */
@@ -157,7 +163,7 @@ export function followsRules(o, R = {}) {
   if ((R.onlySites || []).length && !R.onlySites.some((s) => sk.includes(s))) return false;
   if ((R.avoidSites || []).some((s) => sk.includes(s))) return false;
   if ((R.avoid || []).some((w) => hasWord(o, w))) return false;
-  if ((R.mustHave || []).some((w) => !hasWord(o, w) && /breakfast|cancell?ation|view/.test(w) && String(o.text || "").length > 40)) return false;
+  if ((R.mustHave || []).some((w) => !hasWord(o, w) && /breakfast|cancell?ation|view|pay at property/.test(w) && String(o.text || "").length > 40)) return false;
   return true;
 }
 export const applyRules = (offers, R) => (!R || !Object.keys(R).length ? offers || [] : (offers || []).filter((o) => followsRules(o, R)));
@@ -198,6 +204,15 @@ export const isSiteName = (name, site = "") => { const n = String(name || "").tr
 
 /** v9.2 round 3 (Ali: "when it opens Booking it doesn't open the specific listing"): an offer read without its own link is searched by
  *  ITS name on the same site (Booking ss=, Amazon k=, a q= search) with the same dates — that hotel / product first, not the whole list. */
+/** v9.8 (Ali: "filter free cancellation, pay at property, with breakfast"): Booking's search page gets its own filters for the two
+ *  whose codes are known (free cancellation nflt fc=2, breakfast mealplan=1); every site's offers are then checked by their card's
+ *  words (followsRules) — "pay at the property" has no known code, so it is checked by the words only. */
+export function withHotelFilters(url, R = {}) {
+  try { const u = new URL(url); if (!/booking\.com$/.test(u.hostname.replace(/^www\.|^m\./, "")) || !/searchresults/.test(u.pathname)) return url;
+    const want = []; if ((R.mustHave || []).includes("free cancellation")) want.push("fc=2"); if ((R.mustHave || []).includes("breakfast")) want.push("mealplan=1");
+    if (!want.length) return url; const have = (u.searchParams.get("nflt") || "").split(";").filter(Boolean);
+    u.searchParams.set("nflt", [...new Set([...have, ...want])].join(";")); return u.toString(); } catch (e) { return url; }
+}
 /** v9.8 (Ali, 7 Nov: "the agents still don't redirect to the specific listing — fix it for good"): is this link an offer's OWN page
  *  (a hotel, a room, a product) — not a search, a map, a filter or a site's home? The same patterns as agent-kit.js LISTING. */
 export const LISTING_RE = /\/hotel\/[a-z]{2}\/|\/hotel\/[^/?#]+\.html|[?&]hotel_?id=\d|\/hotels?\/detail|\/travel\/hotels\/[^?#]*entity|\.ksp(?:$|[?#])|\/hotel-detail|\/hotels\/[a-z-]+\/[a-z0-9-]*\d|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\//i;

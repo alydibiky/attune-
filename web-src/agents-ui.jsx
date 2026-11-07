@@ -141,7 +141,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     if (!l) { try { l = N && N.appsList ? JSON.parse(N.appsList() || "[]") : []; } catch (e) { l = []; } try { sessionStorage.setItem("attune:apps", JSON.stringify(l)); } catch (e) {} }
     return (appsRef.current = l); };
   const access = (() => { try { return !N || !N.payAccess || N.payAccess(); } catch (e) { return true; } })();
-  const scout = useMemo(() => loadScout().goals || [], [st]);
+  // v9.8 (Ali's screenshot: "Scout · Tell me when the Huawei free clip…" next to "Huawei free clips 2"): a Scout search that is the
+  // same thing as an agent is not listed twice (the agent shows it; Scout's ads still open from it)
+  const scout = useMemo(() => A.withoutTwins(loadScout().goals || [], st.agents || []), [st]);
   const alerts = useMemo(() => W.loadWatch(), [st]);
   // the delivery notifications are read just after the page shows, not before
   const [hits, setHits] = useState([]);
@@ -251,7 +253,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       setBusy(a.id);
       try {
         // v8.2: a hotel window → every start day in turn (4 nights from 10 Dec, 19 Dec … inside 10 Dec – 29 Jan); the cheapest wins
-        const tries = a.tries && a.tries.length ? a.tries : [{ url: a.url }];
+        // (v9.8: the person's conditions — free cancellation, breakfast — are Booking's own filters on its search page too)
+        const tries = (a.tries && a.tries.length ? a.tries : [{ url: a.url }]).map((x) => ({ ...x, url: R.withHotelFilters(x.url, a.rules || {}) }));
         let best = null, seen = [], compared = 0;
         // v8.7 (Ali: "it keeps glitching when I press Check now"): several start days are checked in ONE window that moves from
         // day to day by itself — it used to open and close a window for each day

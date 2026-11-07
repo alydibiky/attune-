@@ -11,6 +11,26 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## v9.8.1 — 8 Nov: Ali's 7 points on v9.8 (+ "reply to it and tell it how to add it")
+- **Autopilot**: a tap opens the whole notification (`autopilot-ui.jsx Item`), "Save it as" Reminder / To-do / Expense / Subscription,
+  and a box that goes through the Home box (`window.__attuneDoIt`; "remind me Monday at 9" alone gets the notification's words as what).
+  notifmeaning: a WhatsApp "Missed voice call" is a call (one is enough for "call back"), "300 EGP OFF … delivered in 15 minutes" is an
+  offer (also not "Arriving" on Your day — daynotes.js), an email is a delivery only when a shop sent it.
+- **Reminders** wrap (whole text) — rem-title-text, Done rows, Follow-ups' list.
+- **Hotel conditions**: "free cancellation", "pay at property" (no prepayment), "breakfast" (= included, not "available for SAR 90")
+  are must-haves (parseRule EN + AR), checked on each offer card's own words (followsRules), and Booking's search page gets
+  `nflt=fc=2;mealplan=1` (`withHotelFilters`; codes from third-party scrapers — "pay at property" has none, so words only).
+- **Agents logic**: an accessory (case, cover, جراب…) is never the product's price unless asked; a price under 30 % of the limit /
+  past prices is not believed (`bestAcross`); a Scout search that is the same as an agent is not listed twice (`withoutTwins`).
+- **Sidebar** keeps the app colour on area pages (areaCss `.calm:not(aside):not(nav):not(header)`).
+- **How to use**: chapters drop archived tools (`chapters` + hiddenFromMenus), 7 sentences that named archived features rewritten
+  (old ones in `archive/guide-v97/removed-lines.txt`), Errands sits with Reminders.
+- **Zakāt**: "If your money stays as it is, you will pay about X on <ḥawl end> (2.5 % of Y)" or "it stays under the niṣāb"
+  (`zakatPage().projected`).
+- **Waiting for Ali's pick**: A5–A8 (the Agents page look; rec. A5 one card per agent with its best offer) and T1–T4 (Tools colours;
+  rec. T1 each tool its own colour) on https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC.
+- Tests: v980fixes (67), e2e_v980autopilot / e2e_v980picks / e2e_v731guide updated.
+
 ## v9.8 — 7 Nov: Ali's 15-point phone list ("fix it for good") — BUILT + options waiting for his picks
 Ali: "each week I burn tokens … the real improvement is 1% because the same problems come back". So every point got its cause found
 and a test (`tests/unit/v980fixes.test.mjs` 50 checks, `tests/e2e_v980agentopen.py` 10 checks).

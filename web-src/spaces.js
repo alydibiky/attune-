@@ -384,7 +384,8 @@ export function areaCss(theme) {
   const bg = resolveBg((theme && theme.bg) || "auto"), light = bg === "light";
   const toks = Object.entries(AREA).map(([k, v]) => `--c-area-${k}:${v[light ? "l" : "d"][0]};--c-area-${k}-soft:${v[light ? "l" : "d"][1]}`).join(";");
   const pages = Object.entries(AREA).map(([k, v]) => { const [a, soft] = v[light ? "l" : "d"];
-    return `html.att-themed.att-themed[data-area="${k}"] .calm{--c-acc:${a};--c-soft:${soft};--c-btn:${soft};--c-on-btn:${a}}`; }).join("");
+    // (v9.8, Ali: "when I press Agents the sidebar turned blue"): the page only — never the sidebar, the top bar or the bottom bar
+    return `html.att-themed.att-themed[data-area="${k}"] .calm:not(aside):not(nav):not(header){--c-acc:${a};--c-soft:${soft};--c-btn:${soft};--c-on-btn:${a}}`; }).join("");
   return `html{${toks}}` + pages;
 }
 /** The .calm colour tokens for a theme → { "--c-bg": "#…", … } (pure; tests: tests/unit/v950theme.test.mjs). */

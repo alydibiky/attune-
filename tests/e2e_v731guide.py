@@ -86,7 +86,10 @@ with sync_playwright() as p:
     check("radar" in got and "travel" in got and "fit" not in got, "search 'passport' → Radar and Travel: %s" % got)
     page.fill("[data-testid=guide-search]", "koshary"); page.wait_for_timeout(150)
     got = page.evaluate("[...document.querySelectorAll('[data-testid^=guide-row-]')].map(e => e.dataset.testid.slice(10))")
-    check("plan:day" in got and "start:say" in got, "search finds the plan too: %s" % got)
+    check("plan:day" in got, "search finds the plan too: %s" % got)
+    page.fill("[data-testid=guide-search]", "12 payments"); page.wait_for_timeout(150)   # v9.8: the first steps' example is now "Ahmed owes me 12,000…"
+    got = page.evaluate("[...document.querySelectorAll('[data-testid^=guide-row-]')].map(e => e.dataset.testid.slice(10))")
+    check("start:say" in got, "…and the first steps: %s" % got)
     page.fill("[data-testid=guide-search]", "zzqx"); page.wait_for_timeout(100)
     check(page.locator("[data-testid=guide-none]").count() == 1, "no match → says so")
     # computer: Settings → guide; two panels

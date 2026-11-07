@@ -94,4 +94,49 @@ console.log(`ALL PASSED v980fixes part 6 (${n} checks)`);
 { const R = await import("../../web-src/router.js");
   ok(R.wantsThink("Compare the running costs of a 50 ton Liebherr crane and a 50 ton Zoomlion crane over five years, with fuel, maintenance and resale value in Egypt", "quick" === "x" ? "quick" : "reason") === true, "a long analysis is thought through");
   ok(R.wantsThink("hi", "quick") === false, "a greeting stays instant"); }
+// v9.8 round 2 (Ali's screenshot): an offer is not a delivery, a WhatsApp missed voice call is a call, a Google email is not a delivery
+{ const NM = await import("../../web-src/notifmeaning.js"), DN = await import("../../web-src/daynotes.js"); const t = Date.parse("2026-11-07T10:00:00");
+  const promo = { id: 1, pkg: "com.talabat", app: "talabat", title: "Arriving", text: "300 EGP OFF Your Groceries! Get 300 EGP OFF selected products when you spend 1,000 EGP on talabat mart. Delivered in just 15 minutes!", ts: t - 3600e3 };
+  ok(NM.understandNote(promo).kind === "promo", "'300 EGP OFF … delivered in 15 minutes' is an offer");
+  ok(!DN.dayFromNotes([promo], { now: t }).arriving.length, "…so it is not 'Arriving' on Your day");
+  ok(NM.understandNote({ pkg: "com.whatsapp", app: "WhatsApp", title: "Mama", text: "Missed voice call" }).kind === "call", "a WhatsApp missed voice call is a call");
+  ok(NM.understandNote({ pkg: "com.google.android.gm", app: "Gmail", title: "Google", text: "Your Google Play order receipt from Nov 7 — arriving" }).kind !== "delivery", "a Google email is not a delivery");
+  ok(NM.understandNote({ pkg: "com.amazon.mShop.android.shopping", app: "Amazon Shopping", title: "Delivered", text: "Your package was delivered" }).kind === "delivery", "a real delivery still is one"); }
+console.log(`ALL PASSED v980fixes (${n} checks)`);
+// 7) Zakāt (Ali: "show me the approximate amount I will pay if the money stays the same")
+{ globalThis.localStorage = globalThis.localStorage || { getItem() { return null; }, setItem() {}, removeItem() {} };
+  const MP = await import("../../web-src/money-pages.js"); const now = Date.parse("2026-11-07T10:00:00");
+  const page = (base, due = false) => MP.zakatPage({ zakatPayments: [] }, { zakat: { base, nisab: 400000, due, amount: due ? base * 0.025 : 0, hawlEndsISO: "2027-03-14T00:00:00Z" } }, { now });
+  const z = page(600000);
+  ok(z.projected && z.projected.above && z.projected.amount === 15000 && z.projected.on === "2027-03-14", "600,000 held, niṣāb 400,000 → about 15,000 on 14 Mar 2027 if it stays the same");
+  ok(page(300000).projected && !page(300000).projected.above && page(300000).projected.amount === 0, "under the niṣāb → 'no Zakāt this year'");
+  ok(page(600000, true).projected === null, "already due → the real amount shows, not a projection"); }
+console.log(`ALL PASSED v980fixes (${n} checks)`);
+// 3) hotel conditions (Ali: "filter free cancellation, pay at property, with breakfast")
+{ const R = await import("../../web-src/agent-rules.js");
+  const r = R.parseRule("only free cancellation, pay at the property, with breakfast");
+  ok(r && ["free cancellation", "pay at property", "breakfast"].every((w) => r.mustHave.includes(w)), "the three conditions are understood: " + JSON.stringify(r));
+  const ra = R.parseRule("عايزه بإلغاء مجاني والدفع في الفندق وفطار"); ok(ra && ["free cancellation", "pay at property", "breakfast"].every((w) => (ra.mustHave || []).includes(w)), "…in Arabic too: " + JSON.stringify(ra));
+  const u = R.withHotelFilters("https://www.booking.com/searchresults.html?ss=Makkah&checkin=2026-12-01", r);
+  ok(/nflt=fc%3D2%3Bmealplan%3D1/.test(u), "Booking's search page gets free cancellation + breakfast filters: " + u);
+  ok(R.withHotelFilters("https://www.agoda.com/search?city=1", r) === "https://www.agoda.com/search?city=1", "other sites' links are left as they are");
+  const offers = [
+    { name: "A", price: 2000, text: "Swissotel Makkah · Free cancellation · No prepayment needed – pay at the property · Breakfast included · 150 m from Haram" },
+    { name: "B", price: 1800, text: "Pullman ZamZam · Free cancellation · Breakfast available for SAR 90 · 200 m from Haram · rating 8.7" },
+    { name: "C", price: 1700, text: "Hilton Suites · Non-refundable · Breakfast included · pay online now · 300 m from Haram · 9.0" }];
+  ok(R.applyRules(offers, r).map((o) => o.name).join() === "A", "only the offer that says all three stays (B's breakfast costs extra, C can't be cancelled)"); }
+console.log(`ALL PASSED v980fixes (${n} checks)`);
+// 3b) an accessory is never the product's price (Ali's screenshot: FreeClip 2 at EGP 120)
+{ const A = await import("../../web-src/agents.js");
+  const a = { what: "Huawei FreeClip 2", below: 8000, checks: [{ price: 8450 }] };
+  const b = A.bestAcross([{ name: "Huawei FreeClip 2 silicone case", price: 120, site: "amazon.eg" }, { name: "Huawei FreeClip 2 earbuds", price: 8450, site: "amazon.eg" }], a);
+  ok(b.length === 1 && b[0].price === 8450, "the case is not the earbuds: " + b.map((o) => o.price));
+  ok(A.bestAcross([{ name: "Huawei FreeClip 2", price: 1500, site: "x.com" }], a).length === 0, "a price under 30 % of your limit is not believed");
+  ok(A.bestAcross([{ name: "Huawei FreeClip 2 case", price: 150, site: "amazon.eg" }], { what: "Huawei FreeClip 2 case" }).length === 1, "…but a case you ASKED for is found"); }
+console.log(`ALL PASSED v980fixes (${n} checks)`);
+// 3c) a Scout search that is the same as an agent is not listed twice
+{ const A = await import("../../web-src/agents.js");
+  const g = [{ id: 1, text: "Tell me when the Huawei free clips 2 are under 8000" }, { id: 2, text: "Hyundai Tuscon 2022 used price" }, { id: 3, text: "3-bedroom flat in Maadi" }];
+  const left = A.withoutTwins(g, [{ kind: "watch", what: "Huawei free clips 2" }, { kind: "watch", title: "Hyundai Tucson 2022" }]).map((x) => x.id);
+  ok(left.join() === "3", "the FreeClip and Tucson Scout twins go (even spelt «Tuscon»); the flat, which no agent watches, stays: " + left); }
 console.log(`ALL PASSED v980fixes (${n} checks)`);

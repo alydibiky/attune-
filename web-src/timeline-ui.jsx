@@ -139,7 +139,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
                     <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><I size={16} /></span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
-                        <span className="text-[14.5px] font-extrabold truncate" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : x.what}</span>
+                        <span className="text-[14.5px] font-extrabold break-words min-w-0" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : x.what}</span>
                         {x.amount ? <span className="tabular-nums font-extrabold text-[13.5px] shrink-0" dir="ltr">{money(x)}</span> : null}
                       </span>
                       <span className={"block text-[12px] " + U.muted}>{tr(KIND[x.kind] || x.kind)}{x.time ? " · " + new Date(x.time).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }) : ""}</span>

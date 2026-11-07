@@ -26,7 +26,7 @@ L = {"currency": "EGP", "accounts": [{"id": "b", "name": "Cash", "currency": "EG
 LIFE = {"v": 1, "items": [{"id": "sh", "kind": "installment", "person": "Sheikh", "dir": "in", "amount": 2500, "total": 19500, "count": 8, "every": "month", "start": "2026-10-05", "currency": "EGP", "paid": [0], "created": 1},
   {"id": "md", "kind": "regular", "title": "Maid", "dir": "out", "amount": 600, "every": "week", "start": "2026-11-07", "currency": "EGP", "paid": [], "created": 2}]}
 POTS = {"v": 1, "pots": [{"id": "pot1", "name": "House", "kind": "other", "target": 120000, "by": "2027-12", "saved": 22000, "per": 0, "log": []}]}
-INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:agents:view2','new');localStorage.setItem('attune:rem:open','[]');localStorage.setItem('attune:reminders:v1', JSON.stringify([{id:'r1',title:'Call Ahmed',at:0,repeat:'none'},{id:'r2',title:'Pay the car wash',at:0,repeat:'none'}]));localStorage.setItem('ledger.v3', %s);localStorage.setItem('attune:agents:v1', %s);"
+INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:agents:view2','new');localStorage.setItem('attune:rem:open','[]');localStorage.setItem('attune:reminders:v1', JSON.stringify([{id:'r1',title:'Call Ahmed about the crane rental contract for the Sokhna site and the deposit he still owes',at:0,repeat:'none'},{id:'r2',title:'Pay the car wash',at:0,repeat:'none'}]));localStorage.setItem('ledger.v3', %s);localStorage.setItem('attune:agents:v1', %s);"
         "localStorage.setItem('attune:life:v1', %s);localStorage.setItem('attune:pots:v1', %s)}catch(e){}") % tuple(json.dumps(json.dumps(x)) for x in (L, AGENTS, LIFE, POTS))
 MOCK = """(() => { window.__w = { opened: [] }; function w(){ const N = window.AttuneNative; if (!N) return setTimeout(w, 5);
   N.openInBrowser = (u) => { window.__w.opened.push(u); return true; }; N.agentOpen = (id, arg) => { window.__agentOpen = JSON.parse(arg); }; } w(); })();"""
@@ -52,6 +52,11 @@ with sync_playwright() as p:
     check(page.evaluate("document.documentElement.dataset.area") == "agents", "C6: the Agents page is the Agents area")
     acc = page.evaluate("getComputedStyle(document.querySelector('[data-testid=agents-page]')).getPropertyValue('--c-acc').trim()")
     check(acc.lower() in ("#2f5fa8", "#86aeea"), "C6: its accent is the Agents blue: %s" % acc)
+    if page.locator("[data-testid=header-menu]").count(): page.locator("[data-testid=header-menu]").first.click(); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=side]").count() == 1, "C6: the sidebar opens over the Agents page")
+    side = page.evaluate("(() => { const s = document.querySelector('[data-testid=side]'); return s ? getComputedStyle(s).getPropertyValue('--c-acc').trim() : null; })()")
+    check(side is not None and side.lower() not in ("#2f5fa8", "#86aeea"), "C6: the sidebar keeps the app's own colour (Ali: 'the sidebar turned blue'): %s" % side)
+    page.keyboard.press("Escape"); page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     open_mode(page, "money", "[data-testid=money-page]")
     acc = page.evaluate("getComputedStyle(document.querySelector('[data-testid=money-page]').closest('.calm') || document.querySelector('[data-testid=money-page]')).getPropertyValue('--c-acc').trim()")
     check(page.evaluate("document.documentElement.dataset.area") == "money" and acc.lower() in ("#1e7a43", "#5bc48a"), "C6: Money is green: %s" % acc)
@@ -62,6 +67,8 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=rem-say]").count() == 1 and page.locator("[data-testid=rem-title]").count() == 0 and page.locator("[data-testid=watch-panel]").count() == 0, "F1: the box is the page; the fill-in form and message alerts wait behind chips")
     days = page.locator("[data-testid=rem-day]").all_inner_texts()
     check(len(days) == 2 and days[0].lower() == "today" and days[1].lower() == "tomorrow", "F1: the list by day: %s" % days)
+    full = page.evaluate("(() => { const e = [...document.querySelectorAll('[data-testid=rem-title-text]')].find(x => x.textContent.includes('Sokhna')); return e ? [getComputedStyle(e).whiteSpace, e.scrollWidth <= e.clientWidth + 1, e.textContent] : null; })()")
+    check(full and full[0] != "nowrap" and full[1] and full[2].endswith("still owes"), "Reminders show the whole text (Ali: 'I can't see the whole reminder'): %s" % (full[:2] if full else None))
     page.click("[data-testid=rem-chip-fill]"); page.wait_for_timeout(100)
     check(page.locator("[data-testid=rem-title]").count() == 1, "F1: Fill it in opens the form")
     page.click("[data-testid=rem-chip-alerts]"); page.wait_for_timeout(100)

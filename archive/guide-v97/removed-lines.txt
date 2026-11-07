@@ -1,0 +1,7 @@
+Attune puts it in the right place — Fit & Food, Money, Family health, Reminders, People & plans, Dates — and says what it did. Wrong? Tap Undo.
+Copilot and the Prompt lab are the tabs next to Writing.
+Each place is one page with tabs on top. Money = Money · Follow-ups · Deal Check. Work = Business · Team records · Reports · Tools.
+Every time Attune opens it reads your Money, your Fit weights and Scout's market book, and shows your real chance (from your own past days, thousands of possible futures) and your progress.
+One sentence can do two things: “koshary for lunch, 80 pounds” goes to Fit & Food AND Money.
+Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start the mission. More kinds: a spending limit («مش عايز أصرف أكتر من 3000 على الأكل الشهر ده»), a debt from Money → People («عايز أخلص دين أحمد قبل ديسمبر»), a Learn course (“finish the Turkish course by December”), and for a company that uses Business → Fleet & rentals: “collect 200k from clients by the end of the month”.
+Work → Tools is a list of choices: Improve a prompt, Compress, Humanize, Copilot, Library, Video and Ask.

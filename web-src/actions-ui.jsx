@@ -200,7 +200,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
               <div className="flex items-center gap-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item">
                 <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0">🔔</span>
                 <div className="flex-1 min-w-0">
-                  <p dir="auto" className="text-[14px] font-bold text-[var(--c-ink)] truncate m-0">{r.title}</p>
+                  <p dir="auto" className="text-[14px] font-bold text-[var(--c-ink)] break-words whitespace-pre-wrap m-0" data-testid="rem-title-text">{r.title}</p>
                   <p className="text-[12px] font-semibold text-[var(--c-acc)] tabular-nums m-0">{whenText(r.next)}{r.repeat && r.repeat !== "none" ? " · " + repeatLabel(r.repeat) : ""}{r.source === "promise" ? " · " + tr("from a promise") : r.source === "life" ? " · " + tr("from People & plans") : ""}</p>
                 </div>
                 <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Delete")}><Trash2 size={15} /></button>
@@ -213,7 +213,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
             <p className={label + " mt-4 mb-2"}>{tr("Done")}</p>
             {past.map((r) => (
               <div key={r.id} className="flex items-center gap-2 px-1 py-0.5 text-[12.5px] text-[var(--c-mut)]">
-                <span className="flex-1 truncate" dir="auto">{r.title}</span><span className="tabular-nums">{new Date(r.at).toLocaleDateString(locale())}</span>
+                <span className="flex-1 min-w-0 break-words" dir="auto">{r.title}</span><span className="tabular-nums">{new Date(r.at).toLocaleDateString(locale())}</span>
                 <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center rounded-[12px]" aria-label={tr("Delete")}><X size={13} /></button>
               </div>
             ))}

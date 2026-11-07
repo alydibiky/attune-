@@ -101,7 +101,12 @@ export function zakatPage(L, snap, { now = Date.now() } = {}) {
     .map((p) => ({ id: p.id, date: p.date, amount: r2(p.amount), to: p.to || "", cat: p.cat || "" })).sort((a, b) => b.date.localeCompare(a.date));
   const yearAgo = isoDay(now - 365 * DAY), years = {};
   for (const p of pays) years[p.date.slice(0, 4)] = r2((years[p.date.slice(0, 4)] || 0) + p.amount);
-  return { status, basis: z.basis || "", sources: z.sources || [], madhhab: z.madhhab || "",
+  // v9.8 (Ali: "show me the approximate amount I will pay if the money stays the same"): today's zakatable wealth × the rate, on the
+  // ḥawl's last day — or "under the niṣāb, nothing" — never shown as the amount due, only as what it would be
+  const rate = Number(z.rate) > 0 && Number(z.rate) < 0.2 ? Number(z.rate) : 0.025;
+  const projected = status && status.base != null && status.nisab != null && !status.due
+    ? { above: status.base >= status.nisab, amount: status.base >= status.nisab ? r2(status.base * rate) : 0, on: status.hawlEnds ? String(status.hawlEnds).slice(0, 10) : "", rate } : null;
+  return { status, projected, basis: z.basis || "", sources: z.sources || [], madhhab: z.madhhab || "",
     hawlDays: status && status.hawlEnds ? dayDiff(today, String(status.hawlEnds).slice(0, 10)) : null,
     payments: pays.slice(0, 20), paidYear: r2(pays.filter((p) => p.date > yearAgo).reduce((s, p) => s + p.amount, 0)),
     years: Object.entries(years).sort((a, b) => a[0].localeCompare(b[0])).slice(-5).map(([year, amount]) => ({ year, amount })) };
