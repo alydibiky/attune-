@@ -13,7 +13,7 @@ for (const [k, v] of Object.entries(S.AREA)) {
   assert.ok(ratio(v.d[0], v.d[1]) >= 4.5, k + " dark text on its soft button ≥ 4.5"); n++;
 }
 const css = S.calmCss({ accent: "burgundy", bg: "light" });
-for (const k of ["money", "agents", "fu", "docs"]) { assert.ok(css.includes(`[data-area="${k}"] .calm{--c-acc:`) && css.includes(`--c-area-${k}:`), k + " page colour + token"); n++; }
+for (const k of ["money", "agents", "fu", "docs"]) { assert.ok(css.includes(`[data-area="${k}"] .calm:not(aside):not(nav):not(header){--c-acc:`) && css.includes(`--c-area-${k}:`), k + " page colour + token"); n++; }
 assert.ok(/--c-acc:#7A1F3D/.test(css), "the theme colour stays for the rest of the app"); n++;
 assert.equal(S.AREA_OF.money, "money"); assert.equal(S.AREA_OF.agents, "agents"); assert.equal(S.AREA_OF.timeline, "fu"); assert.equal(S.AREA_OF.pdfchat, "docs"); n += 4;
 console.log(`ALL PASSED v980c6 (${n} checks)`);
