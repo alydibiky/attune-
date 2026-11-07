@@ -71,7 +71,9 @@ with sync_playwright() as p:
             tiles.nth(i).click(); page.wait_for_timeout(700); report(t)
         for label, sel in [("engine", 0), ("profile", 1), ("plan", 2), ("backup", 3)]:
             bar(); page.locator("nav button").last.click(); page.wait_for_timeout(300)
-            page.locator("[data-testid=more-settings] button").nth(sel).click(); page.wait_for_timeout(700); report(label)
+            btns = page.locator("[data-testid=more-settings] button")
+            if sel >= btns.count(): print(lang, label, "no button"); continue   # v9.8: the settings row has fewer buttons since the archive round
+            btns.nth(sel).click(); page.wait_for_timeout(700); report(label)
             page.keyboard.press("Escape"); page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
         ctx.close()
     br.close()

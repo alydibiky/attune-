@@ -1,15 +1,16 @@
 ## Today
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
+actions-ui.jsx: if (d.toDateString() === n.toDateString()) return tr("Today"); if (d.toDateString() === tm.toDateString()) return tr("Tomorrow");
 agents-ui.jsx: <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><span className="block text-[11.5px] c-sub font-bold">{tr("Today")}</span><b
 daily-ui.jsx: <p className="c-lbl m-0">{plan.finished ? tr("Course finished") : plan.left ? tr("Today") : tr("Today · all done")}</p>
 daily-ui.jsx: <p className="c-lbl m-0">{tr("Today")}</p>
 desk-ui.jsx: <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
 home-now.js: sub: x.amount ? fmtN(x.amount) + (x.pay && x.pay.cur ? " " + x.pay.cur : "") : x.date === day ? tr("Today") : x.date || "", open: x.from ===
 home-now.js: out.push({ day: k, label: i === 0 ? tr("Today") : label, spend, kcal, today: i === 0 });
-missions-ui.jsx: {e.step ? <p className="text-[13.5px] rounded-[20px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b
 
 ## Tomorrow
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
+actions-ui.jsx: if (d.toDateString() === n.toDateString()) return tr("Today"); if (d.toDateString() === tm.toDateString()) return tr("Tomorrow");
 timeline-ui.jsx: if (n === 1) return tr("Tomorrow");
 
 ## Title
@@ -111,7 +112,7 @@ scout-ui.jsx: <div><h2 className={K.h1 + " flex items-center gap-2"}><Binoculars
 
 ## Agents
 agents-ui.jsx: <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
-home-ui.jsx: cards.push({ k: "agents", label: tr("Agents"), col: "#3B5BA9", open: "agents",
+home-ui.jsx: cards.push({ k: "agents", label: tr("Agents"), col: "var(--c-area-agents, #3B5BA9)", open: "agents",
 yourday-ui.jsx: <span className="text-[12px] font-extrabold tracking-wide c-acc uppercase flex items-center gap-1.5"><Radar size={14} />{tr("Agents")}</span
 
 ## Send
@@ -128,6 +129,10 @@ email-ui.jsx: {canSend ? <button onClick={send} disabled={busy || !body.trim()} 
 agents-ui.jsx: <button className={U.btnP + " !h-11 !min-h-[44px]"} data-testid="agents-answer-go">{tr("OK")}</button>
 shelf-ui.jsx: className={btnP + " mt-3 w-full"}>{tr("OK")}</button>
 voice-ui.jsx: <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold" da
+
+## Look
+agents-ui.jsx: : <button onClick={() => openChat({ id: a.id })} className="text-[12px] font-extrabold c-acc min-h-[32px]" data-testid="agents-change-ok">{t
+cv-ui.jsx: <Lbl t={tr("Look")}><Seg k="layout" opts={[["ats", tr("ATS-safe (one column)")], ["modern", tr("Modern (sidebar)")]]} /></Lbl>
 
 ## More
 agents-ui.jsx: {menu.length ? <span className="relative shrink-0"><button onClick={() => setOpen(!open)} aria-label={tr("More")} aria-expanded={open} class
@@ -669,9 +674,11 @@ backup-ui.jsx: {busy ? <Loader2 size={16} className="animate-spin" /> : <Lock si
 vault-ui.jsx: {way === "bio" ? <button className={U.btnP} onClick={ask} data-testid="vault-unlock">{tr("Unlock")}</button> : (
 vault-ui.jsx: <button className={U.btnP + " w-full"} onClick={tryPin} disabled={pin.length < 4} data-testid="vault-pin-go">{tr("Unlock")}</button>
 
-## All books
-booklib-ui.jsx: <button onClick={() => setTopic("")} aria-pressed={!topic} className={U.chip(!topic)} data-testid="booklib-topic-all">{tr("All books")}</but
-shelf-ui.jsx: <button onClick={() => setView("books")} aria-label={tr("All books")} className={ib} data-testid="shelf-menu"><BookOpen size={21} /></button
+## All
+booklib-ui.jsx: <button onClick={() => setTopic("")} aria-pressed={!topic} className={U.chip(!topic)} data-testid="booklib-topic-all">{tr("All")}</button>
+lookback-ui.jsx: {chip(null, tr("All"))}
+money-sheets-ui.jsx: <div className="flex gap-1.5 overflow-x-auto pb-1"><button onClick={() => setMonth("")} className={pill(!month)}>{tr("All")}</button>{months
+money-sheets-ui.jsx: <Field label={tr("Default period")}><Pills value={ui.period || "month"} onChange={(v) => doIt("prefs", { period: v })} items={[["week", tr("
 
 ## Add
 booklib-ui.jsx: <button type="submit" className={U.chip(true)} data-testid="booklib-topic-save">{tr("Add")}</button></form>}
@@ -1078,11 +1085,6 @@ skills-ui.jsx: <label className="block"><span className="block text-[12px] font-
 ## Screenshot
 lookback-ui.jsx: const rec = remember({ kind: "photo", title: shotTitle(text, f.name ? f.name.replace(/\.\w+$/, "") : tr("Screenshot")), text: text || f.name
 scamcheck-ui.jsx: <button onClick={() => ref.current && ref.current.click()} disabled={busy} className={U.btnS} data-testid="scam-shot"><ImageIcon size={16} /
-
-## All
-lookback-ui.jsx: {chip(null, tr("All"))}
-money-sheets-ui.jsx: <div className="flex gap-1.5 overflow-x-auto pb-1"><button onClick={() => setMonth("")} className={pill(!month)}>{tr("All")}</button>{months
-money-sheets-ui.jsx: <Field label={tr("Default period")}><Pills value={ui.period || "month"} onChange={(v) => doIt("prefs", { period: v })} items={[["week", tr("
 
 ## Messages
 messages-ui.jsx: <b className="flex-1 text-[19px] font-black">{tr("Messages")}</b></div>

@@ -5,6 +5,7 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import { enterSends } from "./keys.js";
+import { AutopilotCard } from "./autopilot-ui.jsx";
 import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyStart, btnP as UbtnP, btnS as UbtnS, inp as Uinp } from "./ui-kit.jsx";
@@ -347,6 +348,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* v9.2 (Ali picked 1A, 4 Nov): what is due or not finished, and the lists needed today, stay on Home until ticked */}
       {minimal && !rep ? <HomeTodo records={cmd && cmd.api && cmd.api.records ? cmd.api.records() : []} navTo={navTo}
         onTickTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} /> : null}
+      {minimal && !rep ? <AutopilotCard /> : null}
       {minimal && !rep && !freshApp() ? <HeroCards data={data} navTo={navTo} /> : null}
       {minimal && rep ? <><ReportTiles safe={data.safe} spentMonth={data.hasLedger ? data.o.monthOut : null} cur={data.o && data.o.cur} kcal={data.kcal} goal={data.fitOn ? data.goal : 0}
           fleetK={(() => { try { return fleet && fleetLive(fleet.cranes || []).length ? fleetKpis(fleet) : null; } catch (e) { return null; } })()} />

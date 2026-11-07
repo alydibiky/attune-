@@ -9871,6 +9871,23 @@ export default function App() {
   // v8.7 (P5-C): every page's box reaches Home's reader for what isn't its own (Money's box: "remind me tomorrow at 9")
   useEffect(() => { window.__attuneDo = (t0) => { const t = UND.looksFranco(t0) ? UND.francoToArabic(t0) : t0; const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask || u.actions.some((a) => a.kind !== "note") ? doFromHome(t) : null; }; return () => { try { delete window.__attuneDo; } catch (e) {} }; });
   const doRef = useRef(null);
+  // v9.8 I1 Autopilot: a suggestion saved through the same path as the Home box (money, a bill, a reminder) → { rid } for its reminder
+  useEffect(() => {
+    window.__attuneApplyActions = (actions) => { const now = Date.now(); let rid = "";
+      for (const a of actions || []) {
+        const r = doApply(a, loadLifeStores(), { now });
+        for (const [k, v] of Object.entries(r.stores || {})) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+        if (r.need === "reminder" && a.action && a.action.kind === "reminder") { rid = newReminderId(); scheduleReminder({ id: rid, at: a.action.at, title: a.action.title, body: "", repeat: "none", created: now, source: "autopilot" }); }
+      }
+      try { window.dispatchEvent(new Event("attune:data-changed")); } catch (e) {}
+      return { rid };
+    };
+    window.__attuneRemoveReminder = (id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} };
+    // (Undo of an expense / income Autopilot added: the newest one with that amount)
+    window.__attuneUndoMoney = (amount, type) => { try { const l = JSON.parse(localStorage.getItem("ledger.v3") || "null"); if (!l) return;
+      const i = (l.txns || []).map((t, k) => [t, k]).filter(([t]) => t.type === type && Math.abs((+t.amount || 0) - amount) < 0.01 && t.source === "notification").map(([, k]) => k).pop() ?? -1;
+      if (i >= 0) { l.txns.splice(i, 1); localStorage.setItem("ledger.v3", JSON.stringify(l)); } } catch (e) {} };
+  }, []);
   const doFromHome = (text0) => {
     // v9.0: Franco ("ghada 150", "fakarny bokra 9") is read as Arabic when the Arabic is something to do
     let text = text0;
