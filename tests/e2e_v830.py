@@ -16,10 +16,10 @@ AGENT = """(() => { const N = window.AttuneNative; N.agentWatchPlan = () => 'ok'
   let k = 0;
   N.agentOpen = (id, arg) => { const a = JSON.parse(arg); window.__opens = (window.__opens || []).concat([a]); const i = k++;
     const top = [{ price: 41800 + i * 900, currency: 'EGP', name: 'Swissotel Makkah', text: 'Swissotel Makkah 150 m from Masjid al-Haram 9.1', photo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' },
-                 { price: 47200, currency: 'EGP', name: 'Pullman ZamZam Makkah', text: 'Pullman ZamZam Makkah 200 m' },
-                 { price: 52300, currency: 'EGP', name: 'Fairmont Makkah Clock Royal Tower', text: 'Fairmont Makkah Clock Royal Tower 100 m 9.0' },
-                 { price: 43900 + i * 300, currency: 'EGP', name: 'Hilton Suites Makkah', text: 'Hilton Suites Makkah 300 m' },
-                 { price: 44600 - i * 10, currency: 'EGP', name: 'Al Safwah Royale Orchid', text: 'Al Safwah Royale Orchid 450 m' }];
+                 { price: 47200, currency: 'EGP', name: 'Pullman ZamZam Makkah', href: 'https://www.booking.com/hotel/sa/pullman-zamzam-makkah.html', text: 'Pullman ZamZam Makkah 200 m' },
+                 { price: 52300, currency: 'EGP', name: 'Fairmont Makkah Clock Royal Tower', href: 'https://www.booking.com/hotel/sa/fairmont-makkah.html', text: 'Fairmont Makkah Clock Royal Tower 100 m 9.0' },
+                 { price: 43900 + i * 300, currency: 'EGP', name: 'Hilton Suites Makkah', href: 'https://www.booking.com/hotel/sa/hilton-suites-makkah.html', text: 'Hilton Suites Makkah 300 m' },
+                 { price: 44600 - i * 10, currency: 'EGP', name: 'Al Safwah Royale Orchid', href: 'https://www.booking.com/hotel/sa/al-safwah-royale-orchid.html', text: 'Al Safwah Royale Orchid 450 m' }];
     // v8.7: one window reads every start day in turn (rounds) — each offer says which days it was for
     const rs = a.rounds && a.rounds.length ? a.rounds : null;
     const all = rs ? rs.flatMap((r, j) => top.map((o) => ({ ...o, price: o.price + j * 900, checkin: r.checkin, checkout: r.checkout, url: r.url }))) : top;
@@ -116,6 +116,14 @@ with sync_playwright() as p:
     page.evaluate("() => { const N = window.AttuneNative; window.__inapp = null; N.openInApp = (u) => { window.__inapp = u; return JSON.stringify({ ok: true, how: 'app' }); }; }")
     page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
     check(bool(page.evaluate("window.__inapp")) and len(page.evaluate("window.__opens")) == n_open + 1, "any site: Android opens the offer in the app that owns the link")
+    check("/hotel/sa/al-safwah-royale-orchid.html" in (page.evaluate("window.__inapp") or ""), "v9.8: …and it is the hotel's OWN page, never the search")
+    # v9.8 (Ali: "the agents still don't open the specific listing — fix it for good"): an offer with NO page of its own (Swissotel here)
+    # never opens the search: Attune's browser opens the results and finds THAT hotel by name (goto)
+    page.click("[data-testid=agent-sheet-prev]"); page.click("[data-testid=agent-sheet-prev]"); page.wait_for_timeout(100)
+    n1 = len(page.evaluate("window.__opens")); page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
+    last = (page.evaluate("window.__opens") or [{}])[-1]
+    check(len(page.evaluate("window.__opens")) == n1 + 1 and (last.get("goto") or {}).get("name") == "Swissotel Makkah", "v9.8: no own page → Attune finds Swissotel on the results and opens it: %s" % last.get("goto"))
+    page.click("[data-testid=agent-sheet-next]"); page.click("[data-testid=agent-sheet-next]"); page.wait_for_timeout(100)
     # …and when no app owns the link, Attune's own browser opens it (never Chrome or the store) — Book and "Open Booking.com" alike
     page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(100)
     page.evaluate("() => { window.AttuneNative.openInApp = (u) => JSON.stringify({ ok: false, how: 'none' }); window.AttuneNative.openAnyApp = () => { window.__outside = 1; return JSON.stringify({ ok: true, how: 'link' }); }; }")
