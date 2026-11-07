@@ -11541,4 +11541,12 @@ export const DE = {
   "Last inspection certificate": "Letztes Prüfzertifikat",
   "Load test report": "Belastungsprüfbericht",
   "Operator licence": "Bedienerlizenz",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "Nachverfolgung → ⋯ → Erledigungen. Einmal eintippen: „Fahrzeugschein läuft am 3. Feb. 2027 ab, Kennzeichen أ ب ج 1234“.",
+  "Before it is due it shows under Needs you, with the papers to bring.": "Vor dem Termin erscheint es unter Braucht dich, mit den nötigen Papieren.",
+  "Open the official page — Attune reads what is due; you press Pay.": "Öffne die offizielle Seite — Attune liest, was fällig ist; du tippst auf Bezahlen.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "Strafzettel, Rechnungen, Führerscheine, die Prüfung eines Krans — alles in einer Liste.",
+  "driving licence expires 20 Nov 2026": "Führerschein läuft am 20. Nov. 2026 ab",
+  "Driving licence · in 13 days": "Führerschein · in 13 Tagen",
+  "“Car licence expires 3 Feb 2027”": "„Fahrzeugschein läuft am 3. Feb. 2027 ab“",
+  "Told before it is due, with the papers to bring": "Bescheid vor dem Termin, mit den Papieren",
 };

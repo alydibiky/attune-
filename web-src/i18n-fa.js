@@ -11541,4 +11541,12 @@ export const FA = {
   "Last inspection certificate": "آخرین گواهی بازرسی",
   "Load test report": "گزارش آزمون بار",
   "Operator licence": "گواهی اپراتور",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "پیگیری‌ها ← ⋯ ← کارها. یک بار بنویسید: «کارت خودرو ۳ فوریه ۲۰۲۷ تمام می‌شود، پلاک أ ب ج 1234».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "پیش از موعد زیر «به شما نیاز دارد» با مدارک لازم نمایش داده می‌شود.",
+  "Open the official page — Attune reads what is due; you press Pay.": "صفحه رسمی را باز کنید — Attune بدهی را می‌خواند؛ پرداخت با شماست.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "جریمه‌ها، قبض‌ها، گواهینامه‌ها، بازرسی جرثقیل — همه در یک فهرست.",
+  "driving licence expires 20 Nov 2026": "گواهینامه ۲۰ نوامبر ۲۰۲۶ تمام می‌شود",
+  "Driving licence · in 13 days": "گواهینامه · ۱۳ روز دیگر",
+  "“Car licence expires 3 Feb 2027”": "«کارت خودرو ۳ فوریه ۲۰۲۷ تمام می‌شود»",
+  "Told before it is due, with the papers to bring": "خبر پیش از موعد، با مدارک",
 };

@@ -11541,4 +11541,12 @@ export const ZH = {
   "Last inspection certificate": "上次检验证书",
   "Load test report": "载荷试验报告",
   "Operator licence": "操作员证书",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "跟进 → ⋯ → 事务。输入一次：「行驶证 2027年2月3日到期，车牌 أ ب ج 1234」。",
+  "Before it is due it shows under Needs you, with the papers to bring.": "到期前会显示在「需要你」中，并列出要带的材料。",
+  "Open the official page — Attune reads what is due; you press Pay.": "打开官方页面 — Attune 读取应付金额；付款由你点。",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "罚单、账单、证照、吊车检验 — 都在一个列表里。",
+  "driving licence expires 20 Nov 2026": "驾照 2026年11月20日到期",
+  "Driving licence · in 13 days": "驾照 · 13 天后",
+  "“Car licence expires 3 Feb 2027”": "「行驶证 2027年2月3日到期」",
+  "Told before it is due, with the papers to bring": "到期前提醒，附材料",
 };

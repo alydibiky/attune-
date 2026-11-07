@@ -11542,4 +11542,12 @@ export const PT = {
   "Last inspection certificate": "Último certificado de inspeção",
   "Load test report": "Relatório de teste de carga",
   "Operator licence": "Licença de operador",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "Acompanhamentos → ⋯ → Tarefas. Digite uma vez: «documento do carro vence em 3 fev 2027, placa أ ب ج 1234».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "Antes do prazo aparece em Precisa de você, com os papéis a levar.",
+  "Open the official page — Attune reads what is due; you press Pay.": "Abra a página oficial — o Attune lê o que é devido; você toca em Pagar.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "Multas, contas, documentos, a inspeção de um guindaste — tudo numa lista.",
+  "driving licence expires 20 Nov 2026": "carta de motorista vence em 20 nov 2026",
+  "Driving licence · in 13 days": "Carta de motorista · em 13 dias",
+  "“Car licence expires 3 Feb 2027”": "«Documento do carro vence em 3 fev 2027»",
+  "Told before it is due, with the papers to bring": "Aviso antes do prazo, com os papéis",
 };

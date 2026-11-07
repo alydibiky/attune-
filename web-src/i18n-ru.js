@@ -11541,4 +11541,12 @@ export const RU = {
   "Last inspection certificate": "Последний сертификат осмотра",
   "Load test report": "Протокол испытания нагрузкой",
   "Operator licence": "Лицензия оператора",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "Дела → ⋯ → Дела с документами. Напишите один раз: «техпаспорт до 3 фев 2027, номер أ ب ج 1234».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "До срока появится в «Нужно вам» со списком бумаг.",
+  "Open the official page — Attune reads what is due; you press Pay.": "Откройте официальную страницу — Attune прочитает, что к оплате; платите вы.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "Штрафы, счета, права, осмотр крана — всё в одном списке.",
+  "driving licence expires 20 Nov 2026": "права до 20 ноя 2026",
+  "Driving licence · in 13 days": "Права · через 13 дней",
+  "“Car licence expires 3 Feb 2027”": "«Техпаспорт до 3 фев 2027»",
+  "Told before it is due, with the papers to bring": "Напоминание до срока, с бумагами",
 };

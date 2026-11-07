@@ -11541,4 +11541,12 @@ export const TH = {
   "Last inspection certificate": "ใบรับรองการตรวจครั้งล่าสุด",
   "Load test report": "รายงานทดสอบน้ำหนัก",
   "Operator licence": "ใบอนุญาตผู้ควบคุม",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "ติดตาม → ⋯ → งานต่างๆ พิมพ์ครั้งเดียว: «ทะเบียนรถหมด 3 ก.พ. 2027 ป้าย أ ب ج 1234»",
+  "Before it is due it shows under Needs you, with the papers to bring.": "ก่อนครบกำหนดจะแสดงใน รอคุณ พร้อมเอกสารที่ต้องใช้",
+  "Open the official page — Attune reads what is due; you press Pay.": "เปิดหน้าทางการ — Attune อ่านยอดที่ต้องจ่าย คุณเป็นคนกดจ่าย",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "ค่าปรับ บิล ใบอนุญาต การตรวจเครน — รวมในรายการเดียว",
+  "driving licence expires 20 Nov 2026": "ใบขับขี่หมด 20 พ.ย. 2026",
+  "Driving licence · in 13 days": "ใบขับขี่ · อีก 13 วัน",
+  "“Car licence expires 3 Feb 2027”": "«ทะเบียนรถหมด 3 ก.พ. 2027»",
+  "Told before it is due, with the papers to bring": "แจ้งก่อนครบกำหนด พร้อมเอกสาร",
 };

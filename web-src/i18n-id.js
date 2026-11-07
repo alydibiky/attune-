@@ -11542,4 +11542,12 @@ export const IDN = {
   "Last inspection certificate": "Sertifikat inspeksi terakhir",
   "Load test report": "Laporan uji beban",
   "Operator licence": "Lisensi operator",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "Tindak lanjut → ⋯ → Urusan. Ketik sekali: «STNK habis 3 Feb 2027, pelat أ ب ج 1234».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "Sebelum jatuh tempo muncul di Butuh kamu, beserta dokumen yang perlu dibawa.",
+  "Open the official page — Attune reads what is due; you press Pay.": "Buka halaman resmi — Attune membaca tagihannya; kamu yang menekan Bayar.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "Tilang, tagihan, SIM, inspeksi crane — semua dalam satu daftar.",
+  "driving licence expires 20 Nov 2026": "SIM habis 20 Nov 2026",
+  "Driving licence · in 13 days": "SIM · dalam 13 hari",
+  "“Car licence expires 3 Feb 2027”": "«STNK habis 3 Feb 2027»",
+  "Told before it is due, with the papers to bring": "Diberi tahu sebelum jatuh tempo, dengan dokumennya",
 };

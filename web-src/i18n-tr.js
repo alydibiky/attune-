@@ -11542,4 +11542,12 @@ export const TRK = {
   "Last inspection certificate": "Son muayene sertifikası",
   "Load test report": "Yük testi raporu",
   "Operator licence": "Operatör belgesi",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "Takipler → ⋯ → İşler. Bir kez yaz: «ruhsat 3 Şub 2027'de bitiyor, plaka أ ب ج 1234».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "Vaktinden önce Seni bekliyor altında, gereken evraklarla görünür.",
+  "Open the official page — Attune reads what is due; you press Pay.": "Resmi sayfayı aç — Attune ödenecekleri okur; Öde'ye sen basarsın.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "Trafik cezaları, faturalar, ehliyetler, vinç muayenesi — hepsi tek listede.",
+  "driving licence expires 20 Nov 2026": "ehliyet 20 Kas 2026'da bitiyor",
+  "Driving licence · in 13 days": "Ehliyet · 13 gün sonra",
+  "“Car licence expires 3 Feb 2027”": "«Ruhsat 3 Şub 2027'de bitiyor»",
+  "Told before it is due, with the papers to bring": "Vaktinden önce haber, evraklarla",
 };

@@ -11533,4 +11533,12 @@ export const ARB = {
   "Last inspection certificate": "شهادة الفحص السابقة",
   "Load test report": "تقرير اختبار التحميل",
   "Operator licence": "رخصة المشغّل",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "المتابعات ← ⋯ ← المهام. اكتبها مرة: «رخصة السيارة تنتهي ٣ فبراير ٢٠٢٧، لوحة أ ب ج ١٢٣٤».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "قبل موعدها تظهر تحت «يحتاجك» مع الأوراق المطلوبة.",
+  "Open the official page — Attune reads what is due; you press Pay.": "افتح الصفحة الرسمية — يقرأ Attune المستحق؛ وأنت من يدفع.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "المخالفات والفواتير والرخص وفحص الرافعة — كلها في قائمة واحدة.",
+  "driving licence expires 20 Nov 2026": "رخصة القيادة تنتهي ٢٠ نوفمبر ٢٠٢٦",
+  "Driving licence · in 13 days": "رخصة القيادة · بعد ١٣ يومًا",
+  "“Car licence expires 3 Feb 2027”": "«رخصة السيارة تنتهي ٣ فبراير ٢٠٢٧»",
+  "Told before it is due, with the papers to bring": "تنبيه قبل الموعد، مع الأوراق المطلوبة",
 };

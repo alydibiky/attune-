@@ -6,7 +6,7 @@ import { withoutHidden as withoutRemoved } from "./removed.js";   // v9.1: remov
 const S = (en, ar) => [en, ar];
 
 export const AREAS = [
-  { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "planner", "guardian", "life", "family", "reminders", "radar", "timeline", "deal", "automations", "xray"] },
+  { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "planner", "guardian", "life", "family", "reminders", "errands", "radar", "timeline", "deal", "automations", "xray"] },
   { id: "health", icon: "🥗", title: S("Health & food", "الصحة والأكل"), ids: ["health", "fit", "care", "cycle"] },
   { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "lists", "chat", "lifeask", "translate", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
   { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "booklib", "slides", "cv", "memory", "remember", "people", "groups", "recall", "news"] },
@@ -36,6 +36,7 @@ export const SAY = {
   planner: [S("“Save 20000 for travel by June”", "«حوّش 20000 للسفر لحد يونيو»"), S("This month's share for each goal, and what is free to spend", "نصيب الشهر ده لكل هدف، واللي فاضل حر تصرفه")],
   family: [S("“Add milk to the family list”", "«ضيف لبن لقايمة البيت»"), S("One list for the house, who owes whom, reminders for the parents", "قايمة واحدة للبيت، مين عليه لمين، وتفكير للوالدين")],
   life: [S("«الشغالة كل سبت 600»", "«الشغالة كل سبت 600»"), S("A tick every Saturday — ticked goes into Money by itself", "علامة كل سبت — لما تعلّم بتتسجل في الفلوس لوحدها")],
+  errands: [S("“Car licence expires 3 Feb 2027”", "«رخصة العربية بتخلص ٣ فبراير ٢٠٢٧»"), S("Told before it is due, with the papers to bring", "يتقالك قبل المعاد، ومعاه الورق المطلوب")],
   reminders: [S("“Remind me at 5 to pay the electricity”", "«فكّرني الساعة 5 أدفع الكهربا»"), S("A reminder at 5 — on the phone, no internet needed", "تنبيه الساعة 5 — على الموبايل، من غير نت")],
   radar: [S("A free trial or a warranty in your messages", "تجربة مجانية أو ضمان في رسايلك"), S("The date kept, a warning before it ends, and how to cancel", "الميعاد يتحفظ، وتنبيه قبل ما يخلص، وإزاي تلغي")],
   timeline: [S("Open Follow-ups → Timeline", "افتح المتابعات ← الخط الزمني"), S("Every bill, dose, promise and date of the week in one list", "كل فاتورة وجرعة ووعد وميعاد في الأسبوع في قايمة واحدة")],

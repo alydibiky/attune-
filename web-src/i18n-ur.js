@@ -11542,4 +11542,12 @@ export const UR = {
   "Last inspection certificate": "پچھلا معائنہ سرٹیفکیٹ",
   "Load test report": "لوڈ ٹیسٹ رپورٹ",
   "Operator licence": "آپریٹر لائسنس",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "فالو اپ ← ⋯ ← کام۔ ایک بار لکھیں: «گاڑی کی رجسٹریشن 3 فروری 2027 کو ختم، نمبر أ ب ج 1234»۔",
+  "Before it is due it shows under Needs you, with the papers to bring.": "تاریخ سے پہلے یہ 'آپ کی ضرورت' میں ضروری کاغذات کے ساتھ دکھے گا۔",
+  "Open the official page — Attune reads what is due; you press Pay.": "سرکاری صفحہ کھولیں — Attune واجب رقم پڑھتا ہے؛ ادا آپ کرتے ہیں۔",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "چالان، بل، لائسنس، کرین کا معائنہ — سب ایک فہرست میں۔",
+  "driving licence expires 20 Nov 2026": "ڈرائیونگ لائسنس 20 نومبر 2026 کو ختم",
+  "Driving licence · in 13 days": "ڈرائیونگ لائسنس · 13 دن میں",
+  "“Car licence expires 3 Feb 2027”": "«گاڑی کی رجسٹریشن 3 فروری 2027 کو ختم»",
+  "Told before it is due, with the papers to bring": "تاریخ سے پہلے اطلاع، کاغذات کے ساتھ",
 };

@@ -11541,4 +11541,12 @@ export const KO = {
   "Last inspection certificate": "최근 검사 증명서",
   "Load test report": "하중 시험 보고서",
   "Operator licence": "운전원 자격증",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "후속 조치 → ⋯ → 업무. 한 번만 입력하세요: «자동차 등록증 2027년 2월 3일 만료, 번호판 أ ب ج 1234».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "기한 전에 '확인 필요'에 챙길 서류와 함께 표시돼요.",
+  "Open the official page — Attune reads what is due; you press Pay.": "공식 페이지 열기 — Attune이 낼 금액을 읽어요. 결제는 직접 누르세요.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "과태료, 요금, 면허, 크레인 검사 — 모두 한 목록에.",
+  "driving licence expires 20 Nov 2026": "운전면허 2026년 11월 20일 만료",
+  "Driving licence · in 13 days": "운전면허 · 13일 후",
+  "“Car licence expires 3 Feb 2027”": "«자동차 등록증 2027년 2월 3일 만료»",
+  "Told before it is due, with the papers to bring": "기한 전에 서류와 함께 알림",
 };

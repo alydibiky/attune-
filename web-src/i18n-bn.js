@@ -11541,4 +11541,12 @@ export const BN = {
   "Last inspection certificate": "সর্বশেষ পরিদর্শন সনদ",
   "Load test report": "লোড টেস্ট রিপোর্ট",
   "Operator licence": "অপারেটর লাইসেন্স",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "ফলো-আপ → ⋯ → কাজ। একবার লিখুন: «গাড়ির রেজিস্ট্রেশন ৩ ফেব্রু ২০২৭ শেষ, নম্বর أ ب ج 1234»।",
+  "Before it is due it shows under Needs you, with the papers to bring.": "তারিখের আগে এটি 'আপনাকে দরকার'-এ প্রয়োজনীয় কাগজসহ দেখাবে।",
+  "Open the official page — Attune reads what is due; you press Pay.": "সরকারি পৃষ্ঠা খুলুন — Attune বকেয়া পড়ে; পরিশোধ আপনি করেন।",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "জরিমানা, বিল, লাইসেন্স, ক্রেনের পরিদর্শন — সব এক তালিকায়।",
+  "driving licence expires 20 Nov 2026": "ড্রাইভিং লাইসেন্স ২০ নভে ২০২৬ শেষ",
+  "Driving licence · in 13 days": "ড্রাইভিং লাইসেন্স · ১৩ দিনে",
+  "“Car licence expires 3 Feb 2027”": "«গাড়ির রেজিস্ট্রেশন ৩ ফেব্রু ২০২৭ শেষ»",
+  "Told before it is due, with the papers to bring": "তারিখের আগে জানানো, কাগজসহ",
 };

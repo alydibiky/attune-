@@ -11542,4 +11542,12 @@ export const FR = {
   "Last inspection certificate": "Dernier certificat d'inspection",
   "Load test report": "Rapport d'essai de charge",
   "Operator licence": "Licence d'opérateur",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "Suivis → ⋯ → Démarches. Écrivez-le une fois : « carte grise expire le 3 févr. 2027, plaque أ ب ج 1234 ».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "Avant l'échéance, elle apparaît dans À traiter, avec les papiers à apporter.",
+  "Open the official page — Attune reads what is due; you press Pay.": "Ouvrez la page officielle — Attune lit ce qui est dû ; c'est vous qui payez.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "Amendes, factures, permis, l'inspection d'une grue — tout dans une seule liste.",
+  "driving licence expires 20 Nov 2026": "le permis expire le 20 nov. 2026",
+  "Driving licence · in 13 days": "Permis de conduire · dans 13 jours",
+  "“Car licence expires 3 Feb 2027”": "« Carte grise expire le 3 févr. 2027 »",
+  "Told before it is due, with the papers to bring": "Prévenu avant l'échéance, avec les papiers",
 };

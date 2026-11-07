@@ -11541,4 +11541,12 @@ export const VI = {
   "Last inspection certificate": "Chứng nhận kiểm định gần nhất",
   "Load test report": "Biên bản thử tải",
   "Operator licence": "Chứng chỉ vận hành",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "Theo dõi → ⋯ → Việc giấy tờ. Gõ một lần: «đăng ký xe hết hạn 3 thg 2 2027, biển أ ب ج 1234».",
+  "Before it is due it shows under Needs you, with the papers to bring.": "Trước hạn nó hiện ở mục Cần bạn, kèm giấy tờ cần mang.",
+  "Open the official page — Attune reads what is due; you press Pay.": "Mở trang chính thức — Attune đọc khoản phải trả; bạn bấm Thanh toán.",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "Phạt giao thông, hóa đơn, giấy phép, kiểm định cẩu — tất cả trong một danh sách.",
+  "driving licence expires 20 Nov 2026": "bằng lái hết hạn 20 thg 11 2026",
+  "Driving licence · in 13 days": "Bằng lái · sau 13 ngày",
+  "“Car licence expires 3 Feb 2027”": "«Đăng ký xe hết hạn 3 thg 2 2027»",
+  "Told before it is due, with the papers to bring": "Báo trước hạn, kèm giấy tờ",
 };

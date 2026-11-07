@@ -11541,4 +11541,12 @@ export const JA = {
   "Last inspection certificate": "前回の検査証明書",
   "Load test report": "荷重試験報告書",
   "Operator licence": "オペレーター免許",
+  "Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”.": "フォローアップ → ⋯ → 手続き。一度入力：「車検証 2027年2月3日まで、ナンバー أ ب ج 1234」。",
+  "Before it is due it shows under Needs you, with the papers to bring.": "期限前に「要対応」に必要書類と一緒に表示されます。",
+  "Open the official page — Attune reads what is due; you press Pay.": "公式ページを開く — Attune が支払額を読み取ります。支払うのはあなたです。",
+  "Traffic fines, bills, licences, a crane's inspection — all in one list.": "罰金、請求書、免許、クレーンの検査 — すべて一つのリストに。",
+  "driving licence expires 20 Nov 2026": "運転免許 2026年11月20日まで",
+  "Driving licence · in 13 days": "運転免許 · 13日後",
+  "“Car licence expires 3 Feb 2027”": "「車検証 2027年2月3日まで」",
+  "Told before it is due, with the papers to bring": "期限前に書類と一緒にお知らせ",
 };
