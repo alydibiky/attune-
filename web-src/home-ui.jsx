@@ -60,7 +60,7 @@ function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"
 const START_TOOLS = ["projects", "pdfchat", "slides", "convert", "memory"];   // v9.1: the organiser's tools (Scout is folded, Learn archived)
 const WORK = withoutRemoved(["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"]).filter((m) => !NOT_IN_PLAY.has(m));
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
-const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };
+const LINE_COL = { fit: "#B35C0F", money: "var(--c-area-money, #1E7A43)", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "var(--c-area-fu, #9A5B05)", radar: "#8A5A00", learn: "#0E7C86" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
 // v8.7 (V-D): nothing written anywhere yet — no money, food, reminders, people & plans, dates or agents
 const freshApp = () => { try {
@@ -75,7 +75,7 @@ function HeroCards({ data, navTo }) {
   const cards = [];
   // 1 — money and what to follow
   const safe = data.safe, first = (data.items || [])[0];
-  cards.push({ k: "money", label: tr("Money & Follow-ups"), col: "var(--c-acc)", open: "money",
+  cards.push({ k: "money", label: tr("Money & Follow-ups"), col: "var(--c-area-money, var(--c-acc))", open: "money",
     big: safe && data.hasLedger ? tr("{a} safe to spend today", { a: f(safe.today) }) : tr("Write what you spend — Attune keeps the count"),
     sub: first ? first.title : tr("Nothing to follow today") });
   // 2 — food against the goal. v9.2 (Ali, 4 Nov: "home still has food"): Fit & Food is archived (→ Attune Fit) — no card on Home
@@ -85,13 +85,13 @@ function HeroCards({ data, navTo }) {
   // 3 — agents: one waiting for an OK first, else the newest find
   let A = []; try { A = (loadAgents().agents || []).filter((a) => a.on !== false); } catch (e) {}
   const wait = A.find((a) => a.pending && a.step === "confirm"), found = A.filter((a) => a.found).sort((a, b) => (b.found.at || 0) - (a.found.at || 0))[0];
-  cards.push({ k: "agents", label: tr("Agents"), col: "#3B5BA9", open: "agents",
+  cards.push({ k: "agents", label: tr("Agents"), col: "var(--c-area-agents, #3B5BA9)", open: "agents",
     big: wait ? `${wait.pending.name}: ${f(wait.pending.price)}` : found ? `${found.title || found.what}: ${f(found.found.price)}` : A.length ? tr("{n} agents watching", { n: A.length }) : tr("Watch a price, track a delivery"),
     sub: wait ? tr("Waiting for your OK to buy") : found ? tr("Found for you") : A.length ? tr("They tell you when something changes") : tr("“Find me AirPods under 9,000”") });
   return (
     <div className="space-y-2" data-testid="home-hero">
       {cards.map((c) => (
-        <button key={c.k} onClick={() => navTo(c.open)} className="c-card w-full text-start p-3.5 flex items-center gap-3" data-testid={"home-hero-" + c.k}>
+        <button key={c.k} onClick={() => navTo(c.open)} className="c-card w-full text-start p-3.5 flex items-center gap-3" style={{ borderColor: `color-mix(in srgb, ${c.col} 35%, var(--c-ln))` }} data-testid={"home-hero-" + c.k}>
           <span className="flex-1 min-w-0">
             <span className="block text-[12px] font-extrabold tracking-wide" style={{ color: c.col }}>{c.label.toUpperCase()}</span>
             <b className="block text-[16px] font-extrabold truncate" dir="auto">{c.big}</b>

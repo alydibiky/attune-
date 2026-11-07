@@ -37,7 +37,7 @@ with sync_playwright() as p:
         check(page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), tag + "no sideways scroll of the page (the board scrolls inside itself on a phone)")
         # from the Home box
         go(page, "home")
-        page.fill("[data-testid=home-ask]", "add buy tiles to Flat renovation"); page.keyboard.press("Enter"); page.wait_for_timeout(700)
+        page.fill("[data-testid=home-ask]", "add buy tiles to Flat renovation"); (page.click("[data-testid=home-send]") if page.locator("[data-testid=home-send]").count() else page.keyboard.press("Enter"))   # v9.8: on a phone Enter is a new line; page.wait_for_timeout(700)
         check("Flat renovation" in page.inner_text("body") and any(t["text"] == "buy tiles" for t in projects(page)[0]["tasks"]), tag + "“add buy tiles to Flat renovation” in the box → a card on its board")
         go(page, "projects")
         it = page.inner_text("[data-testid=project-item]")

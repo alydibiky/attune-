@@ -31,7 +31,7 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
 ## Log (newest first)
 | Date | Screen | Options page | Ali's pick | Combined / built |
 |---|---|---|---|---|
-| 7 Nov 2026 | Colours (more colours, less burgundy), Agents ("scattered"), Follow-ups ("poor"), Documents, a new big idea | https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC (C6–C9, A1–A4, F1–F4, D1–D4, I1–I4) | waiting | — |
+| 7 Nov 2026 | Colours (more colours, less burgundy), Agents ("scattered"), Follow-ups ("poor"), Documents, a new big idea | https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC (C6–C9, A1–A4, F1–F4, D1–D4, I1–I4) | C6 · A3 · F1 · D1 · "I1 if done correctly" + another strong idea | C6 A3 F1 D1 built in v9.8; I1 "what I understood" + I5–I7 on the same page, waiting |
 | 6 Nov 2026 | Message scheduler like Auto Text ("with my interface") | https://claude.ai/artifact/EJoWBPbPS2J5B5EsCEnmxj (M1–M3 how it sends · S1–S5 screens) | M3 + S1 + S2 + S3 ("go") | built in v9.7 (the M3 + S1 note on the page was the combined plan) |
 | 6 Nov 2026 | Colours ("I didn't mean everything burgundy — darker, harder to read") | https://claude.ai/artifact/E8FbW1hcBmvmFHqWCAwk1P (C1–C5) | C1 quiet burgundy ("if done right — calm and clear") | built in v9.6 (no combined page needed: one option) |
 | 5 Nov 2026 | Agents, Month plan, Follow-ups | https://claude.ai/artifact/1HJyhGHDsm5Ko9RXpK6ZrJ (A1–A6, P1–P6, F1–F6) | A3 + A4 with offers on several dates · P2 + P4 + P5 + P6 with savings goals over any time span · F1 + F4 | https://claude.ai/artifact/2T2ZRNTemt42fTyvYX6FeY — "OK", built in v9.6 |

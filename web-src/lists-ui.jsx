@@ -74,7 +74,7 @@ export function HomeTodo({ records = [], onTickTodo, navTo, flash, now = Date.no
   return <div className="space-y-2" data-testid="home-todo">
     <YourDay records={records} navTo={navTo} flash={flash} />
     {rows.length ? <div className="c-card space-y-0.5" data-testid="home-todo-card">
-      <div className="flex items-center gap-2 mb-0.5"><span className="text-[12px] font-extrabold tracking-wide c-acc flex-1 uppercase">{tr("To do")} · {tr("{n} left", { n: rows.length })}</span>
+      <div className="flex items-center gap-2 mb-0.5"><span className="text-[12px] font-extrabold tracking-wide flex-1 uppercase" style={{ color: "var(--c-area-fu, var(--c-acc))" }}>{tr("To do")} · {tr("{n} left", { n: rows.length })}</span>
         {late ? <span className={U.tag("red")} data-testid="home-todo-late">{tr("{n} late", { n: late })}</span> : null}
         <button onClick={() => navTo("lists")} className="text-[12.5px] font-extrabold c-acc min-h-[36px] px-1" data-testid="home-todo-all">{tr("Lists")} ›</button></div>
       {rows.slice(0, 5).map((x) => <div key={x.k}><Box on={false} onClick={x.tick} tone={x.bad ? "bad" : ""} label={<span><span className={x.bad ? "font-extrabold text-[var(--c-neg)]" : ""}>{x.label}</span>{x.sub ? <span className="block text-[12px] c-sub">{x.sub}</span> : null}</span>} testid="home-todo-row" /></div>)}

@@ -119,7 +119,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const [busy, setBusy] = useState("");
   const [tabWant, setTabWant] = useState(() => { try { return localStorage.getItem("attune:agents:tab") || ""; } catch (e) { return ""; } });
   // v9.6 (Ali picked A3 + A4): the board is the Agents page; a tap on a card opens that agent's conversation
-  const [view, setViewRaw] = useState(() => { try { return localStorage.getItem("attune:agents:view2") || "board"; } catch (e) { return "board"; } });
+  // v9.8 A3 (Ali picked "what changed on top, then the list"): "new" is the page; List and Board stay one tap away
+  const [view, setViewRaw] = useState(() => { try { return localStorage.getItem("attune:agents:view2") || "new"; } catch (e) { return "new"; } });
   const setView = (v) => { setViewRaw(v); try { localStorage.setItem("attune:agents:view2", v); } catch (e) {} };
   const [chat, setChat] = useState("");
   useSubBack(!!chat, () => setChat(""));
@@ -499,13 +500,13 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
       {/* v8.7 (Ali picked P5-C): the same box as Home and every page — only the hint is the Agents' */}
       <U.PageBox value={text} setValue={setText} onSend={(t) => submit(t)} hint={tr("Tell an agent what to do…")} sendLabel={tr("Send")} ids={{ box: "agents-box", input: "agents-input", go: "agents-go" }} />
-      <div className="grid grid-cols-3 gap-2" data-testid="agents-chips">
+      {view !== "new" || !r.running || allStarters ? <div className="grid grid-cols-3 gap-2" data-testid="agents-chips">
         {(allStarters ? CHIPS : CHIPS.filter(([k]) => ["reply", "send", "flight", "slot", "buy", "watch"].includes(k))).map(([k, l, en, a]) => <button key={k}
           onClick={() => { if (k === "send") { setMsgs("new"); return; } setText(ar ? a : en); setDraft(null); try { document.querySelector("[data-testid=agents-input]").focus(); } catch (e) {} }}
           className="min-h-[84px] rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2.5 flex flex-col items-center justify-center gap-1.5 text-center hover:border-[var(--c-acc)] active:scale-[.98] transition" data-testid={"agents-chip-" + k}>
           <span className="w-9 h-9 rounded-full bg-[var(--c-soft)] c-acc grid place-items-center">{React.createElement(KIND_ICON[k] || AppWindow, { size: 17 })}</span>
           <span className="text-[12.5px] font-extrabold leading-tight">{tr(l)}</span></button>)}
-      </div>
+      </div> : null}
       <button onClick={() => setAllStarters(!allStarters)} className="w-full min-h-[40px] text-[13px] font-extrabold c-acc" aria-expanded={allStarters} data-testid="agents-more-starters">{allStarters ? tr("Fewer") : tr("More agents")} {allStarters ? "‹" : "›"}</button>
       {schedOpen ? <ScheduleForm nativeCall={nativeCall} onClose={() => setSchedOpen(false)} onDone={createSend} /> : null}
       {draft ? <div className={U.cardPad + " space-y-2"} data-testid="agents-ask">
@@ -525,8 +526,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       {/* v9.2 (Ali picked 2A): one card shape for every agent; "Needs you" first, then Working, then Done — List or Board */}
       <div className="flex items-center gap-2 pt-1"><p className="flex-1 text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] m-0" data-testid="agents-running">{T("Running · {n}", { n: r.running })}</p>
         {r.running ? <span className="inline-flex rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] p-0.5" role="group" aria-label={tr("View")} data-testid="agents-view">
-          {[["list", "List", ListChecks], ["board", "Board", Kanban]].map(([k, l, Ic]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} data-testid={"agents-view-" + k}
+          {[["new", "What's new", BellRing], ["list", "List", ListChecks], ["board", "Board", Kanban]].map(([k, l, Ic]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} data-testid={"agents-view-" + k}
             className={"min-h-[36px] px-3 rounded-full text-[12.5px] font-extrabold inline-flex items-center gap-1 " + (view === k ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "c-sub")}><Ic size={14} />{tr(l)}</button>)}</span> : null}</div>
+      {view === "new" && r.running ? <WhatsNew changes={A.whatChanged(st.agents)} cards={cards} openBest={openBest} openChat={(c) => (c.id === "messages" ? setMsgs("list") : setChat(c.id))} /> : null}
       {view === "board" && r.running ? <div className="flex gap-2.5 overflow-x-auto -mx-1 px-1 pb-2 snap-x" data-testid="agents-board">
         {BOARD.map(([k, l]) => { const items = cards.filter((c) => (k === "working" ? c.st === "working" : k === "done" ? c.st === "done" || c.st === "paused" : c.st === "found" || c.st === "needs"));
           return <div key={k} className="snap-start shrink-0 w-[200px] lg:w-auto lg:flex-1 rounded-[16px] bg-[var(--c-soft)] p-2 space-y-2" data-testid={"agents-col-" + k}>
@@ -548,6 +550,37 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       <button onClick={() => setRep(true)} className={U.card + " w-full text-start p-4 flex items-center justify-between font-extrabold"} data-testid="agents-open-report">
         <span>{tr("See all → Agents report")}</span><span className="c-sub text-[12.5px] font-bold">{T("Checks this week: {n}", { n: r.checks })}</span></button>
     </div>);
+}
+
+/* ---- v9.8 A3: what changed since yesterday (a find, a drop, one waiting for you) on top — each opens its listing at once — then
+   every agent as ONE quiet row (tap → its conversation). Nothing else on the page. */
+const CHANGE_LINE = { needs: "Waiting for your OK", found: "Found under your price", drop: "Price dropped", rise: "Price went up" };
+function WhatsNew({ changes, cards, openBest, openChat }) {
+  const cur = (a) => a.currency || "";
+  const quiet = cards.filter((c) => !changes.some((x) => x.id === c.id));
+  return <div className="space-y-3" data-testid="agents-new">
+    <section className={U.card + " p-3.5 space-y-2"} style={{ borderColor: changes.length ? "var(--c-pos)" : undefined }} data-testid="agents-changes">
+      <p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase" style={{ color: changes.length ? "var(--c-pos)" : "var(--c-mut)" }}>{T("New since yesterday · {n}", { n: changes.length })}</p>
+      {!changes.length ? <p className="m-0 text-[13.5px] c-sub" data-testid="agents-changes-none">{tr("Nothing new since yesterday — your agents keep checking.")}</p> : null}
+      {changes.map((x) => { const a = x.a, o = { name: x.name || "", price: x.price, href: x.href, site: a.site, url: a.url, currency: cur(a) };
+        return <div key={x.id} className="flex items-center gap-2.5 py-1.5 border-t first:border-t-0 border-[var(--c-ln)]" data-testid="agents-change">
+          <SiteMark site={a.site || a.url || ""} size={36} />
+          <button onClick={() => openChat({ id: a.id })} className="flex-1 min-w-0 text-start">
+            <b className="block text-[14px] leading-tight truncate" dir="auto">{x.name || a.title || a.what}</b>
+            <span className="block text-[12px] c-sub truncate" dir="auto">{tr(CHANGE_LINE[x.kind])}{x.was ? " · " + T("was {p}", { p: money(x.was, cur(a)) }) : ""}</span></button>
+          <span className="text-end shrink-0"><b className={"block text-[14px] tabular-nums " + (x.kind === "rise" ? "c-neg" : x.kind === "needs" ? "" : "c-pos")}>{money(x.price, cur(a))}</b>
+            {x.kind !== "needs" ? <button onClick={() => openBest(a, o)} className="text-[12px] font-extrabold c-acc min-h-[32px]" data-testid="agents-change-open">{tr("Open the listing")}</button>
+              : <button onClick={() => openChat({ id: a.id })} className="text-[12px] font-extrabold c-acc min-h-[32px]" data-testid="agents-change-ok">{tr("Look")}</button>}</span></div>; })}
+    </section>
+    {quiet.length ? <section className={U.card + " p-3.5"} data-testid="agents-quiet">
+      <p className="m-0 mb-1 text-[12px] font-extrabold tracking-[0.06em] uppercase c-sub">{T("Watching · {n}", { n: quiet.length })}</p>
+      {quiet.map((c) => <button key={c.id} onClick={() => openChat(c)} className="w-full flex items-center gap-2.5 py-2 border-t first:border-t-0 border-[var(--c-ln)] text-start min-h-[48px]" data-testid="agents-row">
+        {c.site ? <SiteMark site={c.site} size={28} /> : <span className="w-7 h-7 rounded-[9px] bg-[var(--c-soft)] c-acc grid place-items-center shrink-0">{React.createElement(KIND_ICON[c.kind] || AppWindow, { size: 15 })}</span>}
+        <span className="flex-1 min-w-0"><b className="block text-[13.5px] truncate" dir="auto">{c.title}</b>
+          <span className="block text-[11.5px] c-sub truncate">{tr(c.st === "done" ? "Done" : c.st === "paused" ? "Paused" : c.st === "needs" ? "Needs you" : "Watching")}{c.price ? " · " + c.price : ""}</span></span>
+        <ChevronRight size={16} className="c-sub shrink-0 rtl:-scale-x-100" /></button>)}
+    </section> : null}
+  </div>;
 }
 
 /* ---- v9.2 (Ali picked 2A: one pattern for every agent; "make sure that the hotel photos or at least a logo instead of the word

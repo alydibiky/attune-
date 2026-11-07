@@ -655,3 +655,21 @@ export function agentChat(a, now = Date.now()) {
   for (const r of (a.ruleLog || []).slice(-5)) out.push({ who: "me", at: r.at, text: r.text });
   return out.sort((x, y) => (x.at || 0) - (y.at || 0));
 }
+
+/* ---- v9.8 A3 (Ali picked "what changed on top, then the list" — MOCKUPS.md, https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC; he said
+   the page was "very scattered"). What changed in the last `hours`: a price that dropped (or rose) between its last two checks, a
+   find under the target, an agent waiting for your OK. → [{ id, a, kind: "drop"|"rise"|"found"|"needs", price, was, at, name, href }],
+   newest first. Pure; tests/unit/v980a3.test.mjs. */
+export function whatChanged(agents = [], now = Date.now(), hours = 36) {
+  const out = [], since = now - hours * 3600e3;
+  for (const a of agents || []) {
+    if (!a || a.on === false) continue;
+    if (a.pending && a.step === "confirm") { out.push({ id: a.id, a, kind: "needs", price: a.pending.price, at: now, name: a.pending.name || "", href: a.pending.href || "" }); continue; }
+    const ok = (a.checks || []).filter((c) => c.price > 0), last = ok[ok.length - 1], prev = ok[ok.length - 2];
+    if (a.found && a.found.at >= since) { out.push({ id: a.id, a, kind: "found", price: a.found.price, was: prev && prev.at < a.found.at ? prev.price : 0, at: a.found.at, name: a.found.name || "", href: a.found.href || "" }); continue; }
+    if (last && prev && last.at >= since && last.price !== prev.price && Math.abs(last.price - prev.price) >= Math.max(1, prev.price * 0.01))
+      out.push({ id: a.id, a, kind: last.price < prev.price ? "drop" : "rise", price: last.price, was: prev.price, at: last.at, name: last.name || "", href: last.href || "" });
+  }
+  const rank = { needs: 0, found: 1, drop: 2, rise: 3 };
+  return out.sort((x, y) => rank[x.kind] - rank[y.kind] || y.at - x.at);
+}

@@ -32,10 +32,15 @@ with sync_playwright() as p:
     page.locator("[data-testid=life-row]").first.click(); page.wait_for_selector("[data-testid=life-paybox]")
     check(page.locator("[data-testid=life-pay-amount]").input_value() == "1000", "a tap asks how much came, filled with what was due")
     page.click("[data-testid=life-pay-go]"); page.wait_for_timeout(300)
-    check(any("Received 1,000 EGP from Ahmed — installment 1 of 12" in m for m in dialogs), "a tick is offered to Money: %s" % dialogs[-1:])
-    page.wait_for_selector("[data-testid=money-page]", timeout=8000)
-    check(True, "…and Money opens to confirm it")
-    page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
+    # v9.5 (Ali: "when I tick it is recorded in revenue"): no question any more — with an account it is written in Money at once,
+    # with no account yet Money opens to pick one
+    led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3')||'{}')") or {}
+    got = [t for t in (led.get("txns") or []) if t.get("type") == "income" and abs(float(t.get("amount", 0)) - 1000) < 0.01]
+    if not got:
+        page.wait_for_selector("[data-testid=money-page]", timeout=8000)
+    check(bool(got) or page.locator("[data-testid=money-page]").count() == 1, "the tick goes to Money: 1,000 received (recorded, or Money opens to pick the account)")
+    if not got:
+        page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     if not page.locator("[data-testid=life-page]").count():
         page.locator("nav button").last.click(); page.wait_for_timeout(250)
         page.locator(".rounded-t-2xl button:has-text('People & plans')").first.click(); page.wait_for_selector("[data-testid=life-page]", timeout=8000)

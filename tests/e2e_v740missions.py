@@ -33,7 +33,7 @@ with sync_playwright() as p:
     check("save 52k" in page.locator("[data-testid=home-missions]").inner_text().lower(), "My report now shows the mission and its chance")
     if page.locator("[data-testid=my-report-back]").count(): page.click("[data-testid=my-report-back]"); page.wait_for_selector("[data-testid=home-ask]")
     # typed in the Home box → Missions, already filled in
-    page.fill("[data-testid=home-ask]", "عايز أخس 4 كيلو خلال شهرين"); page.keyboard.press("Enter")
+    page.fill("[data-testid=home-ask]", "عايز أخس 4 كيلو خلال شهرين"); page.click("[data-testid=home-send]")   # v9.8: on a phone Enter is a new line; Send sends
     page.wait_for_selector("[data-testid=missions-page]", timeout=8000)
     check(page.input_value("[data-testid=missions-input]") == "عايز أخس 4 كيلو خلال شهرين" and "Lose 4 kg" in page.locator("[data-testid=missions-read]").inner_text(), "a goal typed on Home opens Missions, ready to start")
     check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))

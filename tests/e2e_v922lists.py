@@ -11,7 +11,7 @@ REM = [{"id": "r1", "at": now - 3 * 3600 * 1000, "title": "Pay electricity", "re
 INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:reminders:v1', %s)}catch(e){}" % json.dumps(json.dumps(REM)))
 def go(page, m): page.evaluate("(m) => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", m); page.wait_for_timeout(600)
 def say(page, t):
-    page.fill("[data-testid=home-ask]", t); page.keyboard.press("Enter"); page.wait_for_timeout(700)
+    page.fill("[data-testid=home-ask]", t); (page.click("[data-testid=home-send]") if page.locator("[data-testid=home-send]").count() else page.keyboard.press("Enter"))   # v9.8: on a phone Enter is a new line; page.wait_for_timeout(700)
 def lists(page): return json.loads(page.evaluate("localStorage.getItem('attune:lists:v1') || '{\"lists\":[]}'"))["lists"]
 with sync_playwright() as p:
     br = p.chromium.launch()

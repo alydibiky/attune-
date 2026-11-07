@@ -106,7 +106,17 @@ export function ActionCard({ msg, onDo, onCancel, onAnswer }) {
 }
 
 /** More → Reminders: everything set, add by hand, allow exact timing. */
-export function RemindersPanel({ reminders, setReminders, native, flash, onSchedule }) {
+// v9.8 F1: the list by day — "Today", "Tomorrow", then the date
+const dayKey = (t) => (t ? new Date(t).toDateString() : "");
+function dayLabel(t) { const d = new Date(t), n = new Date(), tm = new Date(); tm.setDate(n.getDate() + 1);
+  if (d.toDateString() === n.toDateString()) return tr("Today"); if (d.toDateString() === tm.toDateString()) return tr("Tomorrow");
+  try { return d.toLocaleDateString(locale(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return d.toDateString(); } }
+export function RemindersPanel({ reminders, setReminders, native, flash, onSchedule, alerts = null }) {
+  // v9.8 F1 (Ali picked "one box + one list by day" — MOCKUPS.md, https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC; he said the page was
+  // "still really poor"): the box and the list are the page; message alerts, the fill-in form, plan my day and how it works are chips
+  const [open, setOpenRaw] = useState(() => { try { const v = localStorage.getItem("attune:rem:open"); return v === "all" ? ["alerts", "fill", "plan", "how", "done"] : v ? JSON.parse(v) : []; } catch (e) { return []; } });
+  const toggleOpen = (k) => setOpenRaw((x) => { const n = x.includes(k) ? x.filter((y) => y !== k) : [...x, k]; try { if (localStorage.getItem("attune:rem:open") !== "all") localStorage.setItem("attune:rem:open", JSON.stringify(n)); } catch (e) {} return n; });
+  const isOpen = (k) => open.includes(k);
   const [title, setTitle] = useState("");
   const [at, setAt] = useState(toLocalInput(Date.now() + 3600000));
   const [repeat, setRepeat] = useState("none");
@@ -141,10 +151,34 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
   const remove = (id) => { setReminders(reminders.filter((r) => r.id !== id)); try { native && native.unschedule && native.unschedule(id); } catch (e) {} flash(tr("Removed")); };
   const field = inp.replace("w-full ", "");
   return (
-    <div className="calm mt-3 space-y-4 text-[var(--c-ink)]" data-testid="reminders-panel">
-      {/* v6.27 computer layout (option A): what it is and "add one" on the left, what is set on the right as cards */}
-      <div className={"flex flex-col gap-4 lg:gap-0 " + PANES}><div className={LEFT}>
-      <div className={cardPad}>
+    <div className="calm mt-3 space-y-3 text-[var(--c-ink)]" data-testid="reminders-panel">
+      {/* v9.8 F1: one box — say it your way */}
+      <div className={cardPad + " space-y-2.5"}>
+        <p className={label + " m-0"}>{tr("Add one")}</p>
+        <form onSubmit={(e) => { e.preventDefault(); addSaid(); }} className="flex gap-2" data-testid="rem-say-form">
+          <input dir="auto" value={say} onChange={(e) => setSay(e.target.value)} placeholder={tr("Say it your way — “every Sun, Tue and Thu at 7 pm: train”")} className={field + " flex-1 min-w-0"} data-testid="rem-say" />
+          <button type="submit" disabled={!say.trim()} className={btnP + " shrink-0 px-4 disabled:opacity-40"} data-testid="rem-say-go">{tr("Set")}</button></form>
+        {native && !notify ? <button onClick={() => native.askNotifications && native.askNotifications()} className="w-full min-h-[40px] text-start rounded-[12px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--c-ink)]" data-testid="rem-notify-off">{tr("Notifications are off for Attune — tap to allow them, or reminders can't appear.")}</button> : null}
+        <div className="flex flex-wrap gap-1.5 pt-1" data-testid="rem-chips">
+          {[["alerts", "Message alerts"], ["fill", "Fill it in"], ["plan", "Plan my day"], ["how", "How it works"]].filter(([k]) => k !== "alerts" || alerts).map(([k, l]) => <button key={k} type="button" onClick={() => toggleOpen(k)} aria-expanded={isOpen(k)} data-testid={"rem-chip-" + k}
+            className={"min-h-[36px] px-3 rounded-full border text-[12.5px] font-bold " + (isOpen(k) ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-ink)]")}>{tr(l)}</button>)}
+        </div>
+      </div>
+      {isOpen("alerts") && alerts ? alerts : null}
+      {isOpen("fill") ? <div className={cardPad + " space-y-2.5"} data-testid="rem-fill">
+        <input dir="auto" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr("What to remind you about")} className={field + " w-full"} data-testid="rem-title" />
+        {/* v7.6 (Ali: "fix the interface in the reminders page"): the date and time get the whole row; how often is a row of pills */}
+        <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} className={field + " w-full"} dir="ltr" data-testid="rem-at" />
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr("Repeat")} data-testid="rem-repeat">
+          {Object.keys(REPEAT_LABEL).map((k) => <button key={k} type="button" role="radio" aria-checked={repeat === k} onClick={() => setRepeat(k)} data-testid={"rem-repeat-" + k}
+            className={"min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold transition-colors duration-150 " + (repeat === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>{tr(REPEAT_LABEL[k])}</button>)}
+        </div>
+        {repeat === "days" ? <div className="flex flex-wrap gap-1.5" data-testid="rem-days">{DAY_BTN.map((d, i) => <button key={d} type="button" aria-pressed={days.includes(i)} onClick={() => setDays((x) => (x.includes(i) ? x.filter((y) => y !== i) : [...x, i]))} data-testid={"rem-day-" + i}
+          className={"min-h-[40px] min-w-[48px] px-2.5 rounded-full border text-[13px] font-bold " + (days.includes(i) ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]")}>{tr(d)}</button>)}</div> : null}
+        <button onClick={add} className={btnP + " w-full"} data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
+            </div> : null}
+      {isOpen("plan") ? <PrayerPlanner onSchedule={onSchedule} flash={flash} /> : null}
+      {isOpen("how") ? <div className={cardPad} data-testid="rem-how">
         <p className="text-[16px] text-[var(--c-ink)] font-extrabold flex items-center gap-2 m-0"><Bell size={16} className="text-[var(--c-acc)]" />{tr("Reminders & actions")}</p>
         <p className={"text-[12.5px] mt-1.5 mb-0 " + muted}>{tr("Just say it in Chat: “remind me tomorrow at 9 to call Ahmed”, “صحيني الساعة 6”, “ابعت لمحمود على الواتساب إني هتأخر”. You always confirm first.")}</p>
         {native && !notify ? (
@@ -156,39 +190,21 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
             {tr("Reminders may come up to 10 minutes late. Tap to allow “Alarms & reminders” for Attune so they ring on the minute.")}</button>
         ) : null}
         {!native ? <p className="mt-2 text-[11px] text-[var(--c-mut)]">{tr("In the browser reminders are only listed — the Android app rings them.")}</p> : null}
-      </div>
-      <div className={cardPad + " space-y-2.5"}>
-        <p className={label + " m-0"}>{tr("Add one")}</p>
-        <form onSubmit={(e) => { e.preventDefault(); addSaid(); }} className="flex gap-2" data-testid="rem-say-form">
-          <input dir="auto" value={say} onChange={(e) => setSay(e.target.value)} placeholder={tr("Say it your way — “every Sun, Tue and Thu at 7 pm: train”")} className={field + " flex-1 min-w-0"} data-testid="rem-say" />
-          <button type="submit" disabled={!say.trim()} className={btnP + " shrink-0 px-4 disabled:opacity-40"} data-testid="rem-say-go">{tr("Set")}</button></form>
-        <p className={"m-0 text-[11.5px] " + muted}>{tr("…or fill it in:")}</p>
-        <input dir="auto" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr("What to remind you about")} className={field + " w-full"} data-testid="rem-title" />
-        {/* v7.6 (Ali: "fix the interface in the reminders page"): the date and time get the whole row; how often is a row of pills */}
-        <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} className={field + " w-full"} dir="ltr" data-testid="rem-at" />
-        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr("Repeat")} data-testid="rem-repeat">
-          {Object.keys(REPEAT_LABEL).map((k) => <button key={k} type="button" role="radio" aria-checked={repeat === k} onClick={() => setRepeat(k)} data-testid={"rem-repeat-" + k}
-            className={"min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold transition-colors duration-150 " + (repeat === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]")}>{tr(REPEAT_LABEL[k])}</button>)}
-        </div>
-        {repeat === "days" ? <div className="flex flex-wrap gap-1.5" data-testid="rem-days">{DAY_BTN.map((d, i) => <button key={d} type="button" aria-pressed={days.includes(i)} onClick={() => setDays((x) => (x.includes(i) ? x.filter((y) => y !== i) : [...x, i]))} data-testid={"rem-day-" + i}
-          className={"min-h-[40px] min-w-[48px] px-2.5 rounded-full border text-[13px] font-bold " + (days.includes(i) ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]")}>{tr(d)}</button>)}</div> : null}
-        <button onClick={add} className={btnP + " w-full"} data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
-      </div>
-      <PrayerPlanner onSchedule={onSchedule} flash={flash} />
-      </div><div className={"order-first lg:order-none " + RIGHT}>
+      </div> : null}
       <div className={cardPad}>
         <p className={label + " mt-0 mb-2.5"}>{tr("Coming up")} · <span className="tabular-nums">{upcoming.length}</span></p>
         {upcoming.length === 0 ? <p className="text-sm text-[var(--c-mut)]">{tr("Nothing set.")}</p> : (
           <div className="space-y-1.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">
-            {upcoming.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item">
+            {upcoming.map((r, i) => (
+              <React.Fragment key={r.id}>{dayKey(r.next) !== dayKey(upcoming[i - 1] && upcoming[i - 1].next) ? <p className="m-0 pt-2 pb-0.5 text-[11.5px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] lg:col-span-2" data-testid="rem-day">{dayLabel(r.next)}</p> : null}
+              <div className="flex items-center gap-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item">
                 <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0">🔔</span>
                 <div className="flex-1 min-w-0">
                   <p dir="auto" className="text-[14px] font-bold text-[var(--c-ink)] truncate m-0">{r.title}</p>
                   <p className="text-[12px] font-semibold text-[var(--c-acc)] tabular-nums m-0">{whenText(r.next)}{r.repeat && r.repeat !== "none" ? " · " + repeatLabel(r.repeat) : ""}{r.source === "promise" ? " · " + tr("from a promise") : r.source === "life" ? " · " + tr("from People & plans") : ""}</p>
                 </div>
                 <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Delete")}><Trash2 size={15} /></button>
-              </div>
+              </div></React.Fragment>
             ))}
           </div>
         )}
@@ -204,7 +220,6 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
           </>
         ) : null}
       </div>
-      </div></div>
     </div>
   );
 }

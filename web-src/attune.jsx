@@ -182,7 +182,7 @@ import { mapsUrl, openMaps } from "./gomaps.js";   // v9.1: Business (erp.js) is
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
-import { loadArtifacts, calmVars, loadTheme as loadThemeV95 } from "./spaces.js";   // v6.40: open a page pinned to the home screen
+import { loadArtifacts, calmVars, loadTheme as loadThemeV95, AREA_OF } from "./spaces.js";   // v6.40: open a page pinned to the home screen
 import { detectLoop, trimLoop, detectDegenerate, junkStart } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips, looksLikeCodeTask } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
@@ -7900,7 +7900,9 @@ export default function App() {
   // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
   // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
   const modeRef = useRef(mode); modeRef.current = mode;
-  useEffect(() => { markTried(mode); }, [mode]);   // v7.9 the guide's checklist: a page opened = tried (ids only, on this phone)
+  useEffect(() => { markTried(mode); }, [mode]);
+  // v9.8 C6: the page's area (Money, Agents, Follow-ups, Documents) gives it its own colour (spaces.js areaCss)
+  useEffect(() => { try { const a = AREA_OF[mode] || ""; if (a) document.documentElement.dataset.area = a; else delete document.documentElement.dataset.area; } catch (e) {} }, [mode]);   // v7.9 the guide's checklist: a page opened = tried (ids only, on this phone)
   const modeHist = useRef(resumed.current ? resumed.current.hist : []);
   useEffect(() => {
     // only while the app is away: back on screen, the note is dropped (a reload in front of you starts as usual)
@@ -10860,8 +10862,8 @@ export default function App() {
           <LibraryPage knowledge={knowledge} nativeCall={NATIVE ? nativeCall : null} flash={flash}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }} />
         ) : mode === "reminders" ? (
-          <>{/* v6.40: Message alerts first — "tell me when Ahmed messages me" */}<div className="mt-3"><WatchPanel native={NATIVE} flash={flash} /></div>
-          <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} /></>
+          <>{/* v9.8 F1: message alerts are a chip of the page (they used to sit on top of everything) */}
+          <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} alerts={<WatchPanel native={NATIVE} flash={flash} />} /></>
         ) : mode === "translate" ? (
           <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}

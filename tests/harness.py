@@ -133,6 +133,7 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False, deskt
     # v9.6: the Agents page opens on the board (Ali picked A3 + A4); the older tests read the cards in the list view — a test of the
     # board sets 'board' itself
     ctx.add_init_script("try{if(localStorage.getItem('attune:agents:view2')===null)localStorage.setItem('attune:agents:view2','list')}catch(e){}")
+    ctx.add_init_script("try{if(localStorage.getItem('attune:rem:open')===null)localStorage.setItem('attune:rem:open','all')}catch(e){}")   # v9.8 F1: older tests see every part of Reminders open
     # v6.34: lessons written ahead in the background would take canned answers meant for the test; a test turns it on itself
     ctx.add_init_script("try{if(localStorage.getItem('attune:learn:ahead')===null)localStorage.setItem('attune:learn:ahead','0')}catch(e){}")
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")

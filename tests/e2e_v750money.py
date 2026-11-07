@@ -110,11 +110,14 @@ with sync_playwright() as p:
             page.click("[data-testid=money-bar-home]"); page.wait_for_timeout(200)
             check(page.locator("[data-testid=money-page]").get_attribute("data-view") == "calm", tag + "…and back")
             page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'timeline'}}))"); page.wait_for_selector("[data-testid=timeline-page]", timeout=4000)
+            if not page.locator("[data-testid=fu-open-life]").count(): page.click("[data-testid=fu-more]"); page.wait_for_timeout(150)   # v9.6 (F4 + F1): the parts' pages are behind ⋯
             check(page.locator("[data-testid=fu-open-life]").count() == 1 and page.locator("[data-testid=fu-open-reminders]").count() == 1, tag + "Follow-ups opens on its one list; People & plans and Reminders open from it (v8.5)")
             page.click("[data-testid=fu-open-life]"); page.wait_for_selector("[data-testid=life-page]", timeout=4000)
             check(page.locator("[data-testid=life-progress]").count() == 2 and "4 / 12 paid" in page.locator("[data-testid=life-item]").first.inner_text(), tag + "each plan shows how much is paid (4 / 12)")
             shot(page, "followups-phone-dark")
-            page.click("[data-testid=part-back]"); page.click("[data-testid=fu-open-guardian]"); page.wait_for_selector("[data-testid=guardian-page]", timeout=4000)
+            page.click("[data-testid=part-back]"); page.wait_for_timeout(150)
+            if not page.locator("[data-testid=fu-open-guardian]").count(): page.click("[data-testid=fu-more]"); page.wait_for_timeout(150)
+            page.click("[data-testid=fu-open-guardian]"); page.wait_for_selector("[data-testid=guardian-page]", timeout=4000)
             check(True, tag + "the Guardian is inside Follow-ups (v8.2)")
         else:
             page.click("[data-testid=money-open-report]"); page.wait_for_selector("[data-testid=money-report]"); page.wait_for_timeout(300)

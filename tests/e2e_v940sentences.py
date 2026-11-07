@@ -29,7 +29,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=life-numcheck]").count() == 0, "a right reading has no warning (9,999 kept, the last payment 999)")
     # Chat: the card says what will be saved, not just the sentence back
     go(page, "home"); page.wait_for_selector("[data-testid=home-ask]", timeout=8000)
-    page.fill("[data-testid=home-ask]", SAY); page.keyboard.press("Enter"); page.wait_for_timeout(1200)
+    page.fill("[data-testid=home-ask]", SAY); (page.click("[data-testid=home-send]") if page.locator("[data-testid=home-send]").count() else page.keyboard.press("Enter"))   # v9.8: on a phone Enter is a new line; page.wait_for_timeout(1200)
     body = clean(page.inner_text("body"))
     check("Saved in People & plans" in body and "8 payments" in body and "19,500 in all" in body and "the last one 2,000" in body and "20,000" not in body,
           "the Home box says what it saved — 8 payments · 19,500 in all (the last one 2,000): %r" % body[-500:])

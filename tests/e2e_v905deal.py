@@ -46,7 +46,9 @@ with sync_playwright() as p:
     page.click("[data-testid=agents-view-board]"); page.wait_for_selector("[data-testid=agents-board]")
     check(page.locator("[data-testid=agents-board-card]").count() == 2, "Board: every agent as a small card in its column")
     page.locator("[data-testid=agents-board-card]").first.click(); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=agents-board]").count() == 0 and page.locator("[data-testid=agent-head]").count() == 2, "a board card opens the list at that agent")
+    # v9.6 (Ali picked A3 + A4): a board card opens that agent's conversation
+    check(page.locator("[data-testid=agents-board]").count() == 0 and page.locator("[data-testid=agent-chat]").count() == 1, "a board card opens that agent's conversation")
+    page.evaluate("() => { localStorage.setItem('attune:agents:view2', 'list'); }")
     # Arabic
     page.evaluate("() => { localStorage.setItem('attune:ui:lang', 'ar'); }"); page.reload(); page.wait_for_timeout(1200)
     page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", "agents"); page.wait_for_selector("[data-testid=agent-deal]", timeout=8000); page.wait_for_timeout(300)

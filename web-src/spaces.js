@@ -367,6 +367,26 @@ const QUIET = {
   l: { btn: "#F5E6EB", onBtn: "#7A1F3D", charts: ["#2A9D8F", "#E0A13B", "#4C7DD9", "#9AA0A6"] },
   d: { btn: "#3A1E27", onBtn: "#F0A9BB", charts: ["#4FC2B4", "#E8B04B", "#7FA6EE", "#8E949B"] },
 };
+/* v9.8 C6 (Ali, 7 Nov: "too much burgundy and too few colours" → picked C6 "each area its own colour", MOCKUPS.md,
+   https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC): Money green (in) / red (out), Agents blue, Follow-ups amber, Documents violet.
+   On a page of that area its colour is the accent (tabs, links, soft buttons); Home's cards wear their area's colour; the theme's own
+   colour stays for the logo, the selected tab of the bottom bar and the rest of the app. */
+export const AREA = {
+  money: { l: ["#1E7A43", "#E4F3EA"], d: ["#5BC48A", "#16301F"] },
+  agents: { l: ["#2F5FA8", "#E5EDF9"], d: ["#86AEEA", "#1A2638"] },
+  fu: { l: ["#9A5B05", "#FBF0DC"], d: ["#E8B04B", "#3A2C12"] },
+  docs: { l: ["#6D3FB5", "#EFE7FD"], d: ["#B79BF5", "#2A2140"] },
+};
+export const AREA_OF = { money: "money", guardian: "money", planner: "money", agents: "agents", scout: "agents", radar: "agents", timeline: "fu", life: "fu", reminders: "fu", people: "fu", lists: "fu",
+  pdfchat: "docs", booklib: "docs", convert: "docs", translate: "docs", shelf: "docs", slides: "docs" };
+/** The CSS that gives each area its colour (on its pages + the --c-area-* tokens Home uses). */
+export function areaCss(theme) {
+  const bg = resolveBg((theme && theme.bg) || "auto"), light = bg === "light";
+  const toks = Object.entries(AREA).map(([k, v]) => `--c-area-${k}:${v[light ? "l" : "d"][0]};--c-area-${k}-soft:${v[light ? "l" : "d"][1]}`).join(";");
+  const pages = Object.entries(AREA).map(([k, v]) => { const [a, soft] = v[light ? "l" : "d"];
+    return `html.att-themed.att-themed[data-area="${k}"] .calm{--c-acc:${a};--c-soft:${soft};--c-btn:${soft};--c-on-btn:${a}}`; }).join("");
+  return `html{${toks}}` + pages;
+}
 /** The .calm colour tokens for a theme → { "--c-bg": "#…", … } (pure; tests: tests/unit/v950theme.test.mjs). */
 export function calmVars(theme) {
   const t = theme || {}, acc = CALM_ACCENT[t.accent] ? t.accent : "burgundy", bg = resolveBg(t.bg || "auto"), light = bg === "light";
@@ -384,7 +404,7 @@ export function calmVars(theme) {
 }
 export function calmCss(theme) {
   const v = calmVars(theme);
-  return "html.att-themed.att-themed .calm{" + Object.entries(v).map(([k, x]) => k + ":" + x).join(";") + "}";
+  return "html.att-themed.att-themed .calm{" + Object.entries(v).map(([k, x]) => k + ":" + x).join(";") + "}" + areaCss(theme);
 }
 /** "auto" → "light" or "slate" (dark), from the phone's own setting right now. */
 export const phoneDark = () => { try { return !!(typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches); } catch (e) { return false; } };

@@ -41,7 +41,22 @@ and a test (`tests/unit/v980fixes.test.mjs` 50 checks, `tests/e2e_v980agentopen.
 - **12 translate a document**: voice / Chat "translate this document" → `routeTask` → Translate opens on Document (voice), or the
   attached file goes straight to the converter's checked translation (`api.translateDoc`, whole file, layout kept).
 - 3 new lines × 20 languages. Version 9.8 (versionCode 138).
-- **Waiting for Ali's picks** (MOCKUPS.md rule): https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC — C6–C9 colours (rec. C6 each
+- **Ali picked (7 Nov): C6 · A3 · F1 · D1 · "I1 if done correctly" + "another idea not in the app that is really strong"** — BUILT:
+  - C6 `spaces.js AREA / AREA_OF / areaCss`: Money green, Agents blue, Follow-ups amber, Documents violet; on an area's page its colour
+    is the accent (`html[data-area]`, set in attune.jsx from the mode); Home's cards + "To do" wear their area's colour. Test v980c6
+    (contrast ≥4.5 light + dark).
+  - A3 `agents.js whatChanged` (needs → found → drop → rise, last 36 h) + `agents-ui.jsx WhatsNew`: "New since yesterday" with Open the
+    listing, then "Watching · n" one row each; view "new" is the default (List / Board one tap away; starter tiles behind "More
+    agents"). Test v980a3 + e2e_v980picks.
+  - F1 `actions-ui.jsx RemindersPanel`: the say-it box + the list by day (Today / Tomorrow / date); Message alerts, Fill it in, Plan my
+    day, How it works are chips (`attune:rem:open`; the test harness opens them all for older tests).
+  - D1 `booklib-ui.jsx`: the ask-all box on top until a conversation starts, kind badges (PDF / DOC / PPT / BOOK / TXT), "812 pages ·
+    ready" / "reading 140 of 230 pages", "All" chip.
+  - Old tests fixed on the way (they failed on main before v9.8 too): e2e_v727life (v9.5 records a tick with no question), e2e_v750money
+    (parts behind ⋯ since v9.6), e2e_v905deal (a board card opens the conversation since v9.6).
+  - **I1 Autopilot**: "what I understood" + **new ideas I5 Handshake (rec.), I6 five seconds after every call, I7 one ledger two phones**
+    on the same page — waiting for Ali's OK / pick before building.
+- (was) **Waiting for Ali's picks** (MOCKUPS.md rule): https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC — C6–C9 colours (rec. C6 each
   area its own colour), A1–A4 Agents layout (rec. A3 "what changed" on top), F1–F4 Follow-ups (rec. F1 one box + one list by day),
   D1–D4 Documents (rec. D1 library + ask-all), I1–I4 the new big idea (rec. I1 Autopilot: notifications do themselves). Source:
   `design/v98/options.html`.
