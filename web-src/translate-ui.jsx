@@ -122,7 +122,8 @@ function Interpreter({ llm, native, flash, gloss, close }) {
 }
 
 export function TranslatePage({ llm, readText, native, openConverter, flash }) {
-  const [tab, setTab] = useState("text");
+  // v9.8: "translate this document" said in Chat / voice opens straight on Document (one time)
+  const [tab, setTab] = useState(() => { try { const t = localStorage.getItem("attune:translate:tab"); if (t) { localStorage.removeItem("attune:translate:tab"); return t; } } catch (e) {} return "text"; });
   const [to, setTo] = useState(() => { try { return localStorage.getItem(LKEY) || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } });
   const [text, setText] = useState("");
   const [busy, setBusy] = useState("");

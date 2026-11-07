@@ -61,7 +61,10 @@ export function wantsWeb(text, task = taskOf(text)) {
 
 /** Should the model think first? (auto mode) */
 export function wantsThink(text, task = taskOf(text), canThink = true) {
-  return !!canThink && (task === "math" || task === "reason" || (task === "code" && String(text || "").length > 60));
+  // v9.8 (Ali, 7 Nov: "I don't care if it takes 3, 4 or even 10 seconds, but it must come right at the end"): a long question that
+  // asks for a report / analysis, or any long, detailed question, is thought through first too (short and quick ones stay fast)
+  const n = String(text || "").length;
+  return !!canThink && (task === "math" || task === "reason" || (task === "code" && n > 60) || (task === "report" && n > 80) || (!["quick", "translate", "photo"].includes(task) && n > 160));
 }
 
 /**

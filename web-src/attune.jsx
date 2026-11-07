@@ -1,3 +1,4 @@
+import { enterSends } from "./keys.js";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { AR as AR_DICT } from "./i18n-ar.js";   // v6.50: Arabic names of the apps for the Home box
 import { usesFleet } from "./industry.js";
@@ -21,7 +22,7 @@ import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
 import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
-import { NewsPage, syncDaily, lessonAhead } from "./daily-ui.jsx";   // v9.1: the Learn page is archived; the news stays
+import { NewsPage, syncDaily, lessonAhead, LEARN_NOTIFY } from "./daily-ui.jsx";   // v9.1: the Learn page is archived; the news stays
 import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { RecallPage } from "./lookback-ui.jsx";
 import { gmailDue, readGmail, markReconnect } from "./gmail.js";
@@ -122,6 +123,8 @@ import { parseProjectTask, addTasks, loadProjects as loadProjectsList, upsertPro
 import { ListChecks } from "lucide-react";
 import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
+import { brainSystem, knownFor, routeTask } from "./brain.js";
+import { connectNow } from "./connected.js";
 import { QuietWake } from "./wake-ui.jsx";
 import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
@@ -8570,7 +8573,9 @@ export default function App() {
   // Only when the engine is already up (never wakes a model for it), 20 s after the last check, never during a request.
   const engineUp = modelState === "ready" || !!(engineInfo && engineInfo.state === "ready");
   useEffect(() => {
-    if (!engineUp) return;
+    // v9.8: the Learn page is archived (v9.1) — no lessons are written ahead in the background any more (it kept the model busy
+    // every 20 s for a page nobody can open, and slowed Chat)
+    if (!engineUp || !LEARN_NOTIFY) return;
     const t = setInterval(() => { if (!LocalEngine._abort && !LocalEngine._nativeId && !(LocalEngine._bg && LocalEngine._bg.size) && Date.now() - (LocalEngine.lastAsked || 0) > 30000 && !document.hidden) lessonAhead((messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature, think: false, background: true, grammar: o.grammar }), NATIVE); }, 20000);
     return () => clearInterval(t);
   }, [engineUp]);
@@ -9692,6 +9697,11 @@ export default function App() {
       if (out) { spendIfFree(); capture(kind === "improve" ? "rewrite" : kind === "shorten" ? "compress" : "humanize", text, out); }
       return out || null;
     },
+    // v9.8 (Ali: "translating document did not work"): a document attached in Chat + "translate" → the File Converter's checked
+    // translation (the whole file, its layout kept, any size, part by part) — not a chat answer that only sees the first pages
+    knownFor: (q) => knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? (() => { try { return JSON.parse(NATIVE.recallNotes() || "[]"); } catch (e) { return []; } })() : [] }),
+    translateDoc: (file, lang) => { const to = lang || (() => { try { return localStorage.getItem("attune:translate:to") || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } })();
+      try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} window.__attuneConvertHandoff = { files: [file], target: "translate", lang: to }; navTo("convert"); return to; },
     doSure: (t) => { try { const now = Date.now();
       if (metroAsk(t) || parseAutomation(t) || parseWatch(t)) return true;
       const pm = parseMission(t, now); if (pm && pm.deadline) return true;
@@ -10421,7 +10431,7 @@ export default function App() {
 
               <div className="flex gap-2 items-end">
                 <textarea value={askQ} onChange={(e) => setAskQ(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); runAsk(); } }}
+                  onKeyDown={(e) => { if (enterSends(e)) { e.preventDefault(); runAsk(); } }}
                   placeholder={tr("Ask anything — Enter to send, Shift+Enter for a new line")}
                   className="flex-1 h-14 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
                 <button onClick={() => (askBusy ? LocalEngine.abort() : runAsk())} disabled={!askQ.trim() && !askBusy}
@@ -11297,7 +11307,13 @@ export default function App() {
       {NATIVE ? <NotifAsk native={NATIVE} flash={flash} /> : null}
       {voiceOpen ? <Guard name="voice"><VoiceScreen native={NATIVE} nativeCall={nativeCall} onClose={() => { setVoiceOpen(false); setVoiceText(""); }} doIt={doFromHome} country={agentCountry()} flash={flash} initialText={voiceText}
         ask={modelUsable ? async (q, past, ui) => { let lb = ""; try { lb = libraryBlock(await findInLibrary(q, NATIVE ? nativeCall : null)).replace("cite each fact as [Book, p. N]", "say which book it is from"); } catch (e) {}   // v8.7 (4B): the books switched on in the Library
-          return callChat([{ role: "system", content: "You are Attune, a friendly voice assistant on the user's phone. You are being spoken to: answer in 1 to 3 short sentences that sound natural when read aloud — no lists, no tables, no markdown, no links. " + (ui === "ar" ? "Answer in Egyptian Arabic." : "Answer in the language the user speaks.") + " If you do not know, say so briefly." }, ...(past || []), { role: "user", content: lb + q }], null, { maxTokens: 200, temperature: 0.5, think: false }); } : null} /></Guard> : null}
+          // v9.8 (Ali: "the chat is still stupid — I don't care if it takes 10 seconds, but the answer must be right"): the same brain as
+          // every chat — what Attune can do, what it already knows that fits (notifications understood, people, payments), the
+          // profile, room for a real answer (was 200 tokens, "1 to 3 short sentences")
+          let known = []; try { known = knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], connect: connectNow }); } catch (e) {}
+          const prof = profileLine(profile);
+          return callChat([{ role: "system", content: brainSystem({ voice: true, ui, known }) + (prof ? "\n\n" + prof : "") }, ...(past || []), { role: "user", content: lb + q }], null, { maxTokens: 520, temperature: 0.3, think: false }); } : null}
+        openTool={(tool, lang) => { setVoiceOpen(false); setVoiceText(""); try { localStorage.setItem("attune:translate:tab", "doc"); if (lang) localStorage.setItem("attune:translate:to", lang); } catch (e) {} navTo(tool === "translate-doc" ? "translate" : "pdfchat"); }} /></Guard> : null}
       {quietWake && !voiceOpen ? <QuietWake native={NATIVE} nativeCall={nativeCall} tag={voiceTag(agentCountry())} onDone={(text) => { setQuietWake(false); if (text != null) { setVoiceText(text); setVoiceOpen(true); } }} /> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>

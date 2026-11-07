@@ -11439,4 +11439,7 @@ export const IT = {
   "Messages · {n} scheduled": "Messaggi · {n} programmati",
   "Open Messages": "Apri Messaggi",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "«Invia da solo» (come Auto Text) è nell'APK separato Attune Auto — Google Play Protect può bloccarlo se installato da un file.",
+  "Opening document translation — pick the file.": "Apro la traduzione dei documenti — scegli il file.",
+  "Opening Documents — pick the file.": "Apro Documenti — scegli il file.",
+  "Opening this offer's own page…": "Apro la pagina di questa offerta…",
 };

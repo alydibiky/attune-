@@ -11438,4 +11438,7 @@ export const FA = {
   "Messages · {n} scheduled": "پیام‌ها · {n} زمان‌بندی",
   "Open Messages": "باز کردن پیام‌ها",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "«خودش بفرستد» (مثل Auto Text) در APK جداگانهٔ Attune Auto است — اگر از فایل نصب شود ممکن است Google Play Protect آن را مسدود کند.",
+  "Opening document translation — pick the file.": "ترجمهٔ اسناد را باز می‌کنم — فایل را انتخاب کنید.",
+  "Opening Documents — pick the file.": "اسناد را باز می‌کنم — فایل را انتخاب کنید.",
+  "Opening this offer's own page…": "در حال باز کردن صفحهٔ همین پیشنهاد…",
 };

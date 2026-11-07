@@ -753,6 +753,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 .putExtra("autoClose", a.optBoolean("autoClose", false))   // v8.2: a round of several days closes each page by itself
                 .putExtra("buy", a.optBoolean("buy", false))
                 .putExtra("slot", a.optBoolean("slot", false))      // v9.4 G2: read an appointment page's words
+                .putExtra("goto", a.optJSONObject("goto")?.toString() ?: "")   // v9.8: find this offer on the results and open its own page
                 .putExtra("refresh", a.optInt("refresh", 0))        // v9.4 G2: reload every N seconds while open   // v8.6: a buy agent the person confirmed — Buy now, then their details
                 .putExtra("rounds", a.optJSONArray("rounds")?.toString() ?: "")   // v8.7: several start days in ONE window (no flicker)
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)

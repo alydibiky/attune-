@@ -1,0 +1,299 @@
+<title>Attune v9.8 Picks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: a wall of phone mock-ups grouped by screen, one row per question, each with its code, plus/minus and a Recommended mark */
+:root{
+  --bg:#F3F2EF; --paper:#FFFFFF; --ink:#1E1C1B; --mut:#615C58; --ln:#E4E1DD;
+  --brand:#7A1F3D; --soft:#F5E6EB;
+  --in:#1E7A43; --out:#C0392B; --blue:#2F6FA8; --amber:#B7791F; --teal:#0F766E; --violet:#6D3FB5;
+  --rec:#0F766E;
+  --f:'Nunito',system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141313;--paper:#1C1B1B;--ink:#EDEBEA;--mut:#A9A4A2;--ln:#2F2C2C;--brand:#E58AA2;--soft:#3A1E27;--in:#5BC48A;--out:#F07A6E;--blue:#7FB3E0;--amber:#E8B04B;--teal:#5EC9BD;--violet:#B79BF5;--rec:#5EC9BD;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141313;--paper:#1C1B1B;--ink:#EDEBEA;--mut:#A9A4A2;--ln:#2F2C2C;--brand:#E58AA2;--soft:#3A1E27;--in:#5BC48A;--out:#F07A6E;--blue:#7FB3E0;--amber:#E8B04B;--teal:#5EC9BD;--violet:#B79BF5;--rec:#5EC9BD;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);line-height:1.45}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:30px;font-weight:900;margin:0 0 6px;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:21px;font-weight:900;margin:44px 0 4px;text-wrap:balance}
+.lead{color:var(--mut);max-width:70ch;margin:0}
+.q{color:var(--mut);margin:0 0 16px;max-width:75ch}
+.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+.opt{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tag{display:flex;align-items:center;gap:8px;font-weight:900;font-size:15px}
+.code{background:var(--ink);color:var(--bg);border-radius:8px;padding:2px 8px;font-size:13px}
+.recm{font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--rec);border:1.5px solid var(--rec);border-radius:999px;padding:1px 8px}
+.pm{font-size:13px;color:var(--mut);margin:0}
+.pm b{color:var(--ink)}
+/* phone */
+.ph{width:100%;max-width:300px;border-radius:30px;border:8px solid #111;background:var(--bg);overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.14)}
+.scr{padding:12px 11px 14px;display:flex;flex-direction:column;gap:8px;font-size:12px;min-height:470px}
+.bar{display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--mut);padding:0 4px}
+.ttl{font-size:16px;font-weight:900;padding:2px 4px}
+.card{background:var(--paper);border:1px solid var(--ln);border-radius:16px;padding:9px 10px;display:flex;flex-direction:column;gap:4px}
+.lbl{font-size:9.5px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.big{font-size:17px;font-weight:900}
+.sm{font-size:10.5px;color:var(--mut)}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:10px;font-weight:800;border:1px solid var(--ln);border-radius:999px;padding:3px 8px;background:var(--paper)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.li{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--ln)}
+.li:first-child{border-top:0}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.box{width:14px;height:14px;border-radius:4px;border:2px solid var(--mut);flex:none}
+.grow{flex:1;min-width:0}
+.trunc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.num{font-variant-numeric:tabular-nums;font-weight:900}
+.in{color:var(--in)}.out{color:var(--out)}
+.btn{font-size:11px;font-weight:900;border-radius:10px;padding:6px 9px;text-align:center;background:var(--soft);color:var(--brand)}
+.thumb{width:38px;height:38px;border-radius:10px;flex:none;display:grid;place-items:center;color:#fff;font-weight:900;font-size:12px}
+.tabs{display:flex;gap:4px;background:var(--paper);border:1px solid var(--ln);border-radius:12px;padding:3px}
+.tabs span{flex:1;text-align:center;font-size:10px;font-weight:800;padding:5px 0;border-radius:9px}
+.tabs .on{background:var(--ink);color:var(--bg)}
+.input{background:var(--paper);border:1.5px solid var(--ln);border-radius:12px;padding:8px 10px;color:var(--mut);font-size:11px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:9.5px}
+.cal span{padding:4px 0;border-radius:6px;background:var(--paper);position:relative}
+.cal .d::after{content:"";position:absolute;bottom:2px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--out)}
+.cal .t{background:var(--ink);color:var(--bg);font-weight:900}
+.spark{height:22px;width:60px;flex:none}
+.idea{background:var(--paper);border:1px solid var(--ln);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.idea h3{margin:0;font-size:18px;font-weight:900;text-wrap:balance}
+.idea p{margin:0;font-size:14px}
+.idea ul{margin:0;padding-inline-start:18px;font-size:13.5px;display:grid;gap:4px}
+.moat{font-size:12.5px;color:var(--mut);border-top:1px solid var(--ln);padding-top:8px}
+.note{background:var(--paper);border:1px solid var(--ln);border-radius:16px;padding:14px 16px;margin-top:18px;font-size:14px}
+.note b{font-weight:900}
+</style>
+
+<div class="wrap">
+  <h1>Attune v9.8 — your picks</h1>
+  <p class="lead">Ali's 7 Nov list. Fixes 1, 2, 4, 5, 6, 8, 11, 12 and 15 are already built and tested (they do not change how screens look, beyond Spent turning red). The screens you said look poor need your pick first: <b>Colours (C)</b>, <b>Agents (A)</b>, <b>Follow-ups (F)</b>, <b>Documents (D)</b>, and the new big idea <b>(I)</b>. Reply with codes, for example “C6, A3, F1, D1+D4, I1”.</p>
+
+  <!-- ================= COLOURS ================= -->
+  <h2>Colours: too much burgundy, too few colours</h2>
+  <p class="q">You said Spent should be red, not grey. That is done everywhere in Money. What is left: how much colour the rest of the app gets.</p>
+  <div class="row">
+    <div class="opt">
+      <div class="tag"><span class="code">C6</span> Each area its own colour <span class="recm">Recommended</span></div>
+      <div class="ph"><div class="scr">
+        <div class="bar"><span>5:00</span><span>58%</span></div><div class="ttl">Home</div>
+        <div class="card" style="border-color:color-mix(in srgb,var(--in) 40%,var(--ln))"><span class="lbl" style="color:var(--in)">Money</span><span class="big">1,840 safe to spend</span><span class="sm"><span class="out num">−700</span> car wash · <span class="in num">+2,500</span> Sheikh</span></div>
+        <div class="card" style="border-color:color-mix(in srgb,var(--blue) 40%,var(--ln))"><span class="lbl" style="color:var(--blue)">Agents</span><span class="big">Swissotel Makkah · SAR 2,450</span><span class="sm">4 nights · cheapest of 24</span></div>
+        <div class="card" style="border-color:color-mix(in srgb,var(--amber) 40%,var(--ln))"><span class="lbl" style="color:var(--amber)">Follow-ups</span><span class="big">Maid · Sat · 600</span><span class="sm">Tick when she comes</span></div>
+        <div class="card" style="border-color:color-mix(in srgb,var(--violet) 40%,var(--ln))"><span class="lbl" style="color:var(--violet)">Documents</span><span class="big">Crane contract.pdf</span><span class="sm">Translated to English · 38 pages</span></div>
+        <div class="chips"><span class="chip" style="color:var(--brand)">● Attune burgundy = logo + selected tab only</span></div>
+      </div></div>
+      <p class="pm"><b>+</b> You know where you are by colour; money is always green/red. <b>−</b> More colours to keep consistent (we test contrast).</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">C7</span> Teal + coral</div>
+      <div class="ph"><div class="scr">
+        <div class="bar"><span>5:00</span><span>58%</span></div><div class="ttl" style="color:var(--teal)">Home</div>
+        <div class="card"><span class="lbl" style="color:var(--teal)">Money</span><span class="big">1,840 safe to spend</span><span class="sm"><span class="out num">−700</span> car wash</span></div>
+        <div class="card"><span class="lbl" style="color:var(--teal)">Agents</span><span class="big">Swissotel Makkah · SAR 2,450</span></div>
+        <div class="card"><span class="lbl" style="color:var(--teal)">Follow-ups</span><span class="big">Maid · Sat · 600</span></div>
+        <div class="btn" style="background:color-mix(in srgb,#E07A5F 18%,var(--paper));color:#C2593E">Add</div>
+      </div></div>
+      <p class="pm"><b>+</b> Fresh, light, two colours only. <b>−</b> Burgundy disappears from the app.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">C8</span> Calm ink + colourful data</div>
+      <div class="ph"><div class="scr">
+        <div class="bar"><span>5:00</span><span>58%</span></div><div class="ttl">Home</div>
+        <div class="card"><span class="lbl">Money</span><span class="big">1,840 safe to spend</span>
+          <svg viewBox="0 0 120 30" width="100%" height="30"><rect x="2" y="10" width="14" height="20" rx="3" fill="var(--in)"/><rect x="20" y="16" width="14" height="14" rx="3" fill="var(--out)"/><rect x="38" y="6" width="14" height="24" rx="3" fill="var(--in)"/><rect x="56" y="12" width="14" height="18" rx="3" fill="var(--out)"/><rect x="74" y="4" width="14" height="26" rx="3" fill="var(--blue)"/><rect x="92" y="14" width="14" height="16" rx="3" fill="var(--amber)"/></svg></div>
+        <div class="card"><span class="lbl">Agents</span><span class="big">Swissotel · SAR 2,450</span></div>
+        <div class="card"><span class="lbl">Follow-ups</span><span class="big">Maid · Sat · 600</span></div>
+      </div></div>
+      <p class="pm"><b>+</b> Very clean; colour only where it means something. <b>−</b> The cards themselves stay mostly black and white.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">C9</span> Back to Attune green</div>
+      <div class="ph"><div class="scr" style="--brand:#157A52;--soft:#E3F4EC">
+        <div class="bar"><span>5:00</span><span>58%</span></div><div class="ttl" style="color:#157A52">Home</div>
+        <div class="card"><span class="lbl" style="color:#157A52">Money</span><span class="big">1,840 safe to spend</span><span class="sm"><span class="out num">−700</span> car wash</span></div>
+        <div class="card"><span class="lbl" style="color:#157A52">Agents</span><span class="big">Swissotel · SAR 2,450</span></div>
+        <div class="btn">Add</div>
+      </div></div>
+      <p class="pm"><b>+</b> The look you had before v9.5. <b>−</b> You asked to move away from green on 5 Nov.</p>
+    </div>
+  </div>
+
+  <!-- ================= AGENTS ================= -->
+  <h2>Agents: “very scattered”</h2>
+  <p class="q">Today the page mixes a board, several card types, rules and links. Each option below has one clear way to read it.</p>
+  <div class="row">
+    <div class="opt">
+      <div class="tag"><span class="code">A1</span> One clean list</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Agents</div><div class="input">+ Tell an agent what to watch…</div>
+        <div class="card">
+          <div class="li"><span class="dot" style="background:var(--in)"></span><div class="grow"><b class="trunc" style="display:block">Hotels · Makkah · 4 nights</b><span class="sm">Found · Swissotel SAR 2,450</span></div><svg class="spark" viewBox="0 0 60 22"><polyline fill="none" stroke="var(--in)" stroke-width="2" points="0,6 15,9 30,8 45,14 60,17"/></svg></div>
+          <div class="li"><span class="dot" style="background:var(--blue)"></span><div class="grow"><b class="trunc" style="display:block">Flight Cairo → Jeddah</b><span class="sm">Watching · EGP 9,850</span></div></div>
+          <div class="li"><span class="dot" style="background:var(--amber)"></span><div class="grow"><b class="trunc" style="display:block">Messages · 2 scheduled</b><span class="sm">Next: Sheikh reminder, 1 Dec</span></div></div>
+          <div class="li"><span class="dot" style="background:var(--mut)"></span><div class="grow"><b class="trunc" style="display:block">Anker charger · Amazon</b><span class="sm">Done · ordered</span></div></div>
+        </div>
+      </div></div>
+      <p class="pm"><b>+</b> Like WhatsApp: one row each, tap opens the conversation. <b>−</b> No photos on the main list.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">A2</span> Tabs by kind</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Agents</div><div class="tabs"><span class="on">Hotels</span><span>Flights</span><span>Shop</span><span>Messages</span></div>
+        <div class="card"><div class="li"><span class="thumb" style="background:#2F6FA8">S</span><div class="grow"><b>Swissotel Makkah</b><div class="sm">1 Dec → 5 Dec · 450 m from the Haram</div></div><span class="num">2,450</span></div>
+        <div class="li"><span class="thumb" style="background:#0F766E">P</span><div class="grow"><b>Pullman ZamZam</b><div class="sm">2 Dec → 6 Dec</div></div><span class="num">2,610</span></div>
+        <div class="li"><span class="thumb" style="background:#6D3FB5">H</span><div class="grow"><b>Hilton Suites</b><div class="sm">1 Dec → 5 Dec</div></div><span class="num">2,700</span></div></div>
+        <div class="btn">Open Swissotel's page</div>
+      </div></div>
+      <p class="pm"><b>+</b> Each kind looks the same every time. <b>−</b> One more tap to see everything.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">A3</span> “What changed” on top, then the list <span class="recm">Recommended</span></div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Agents</div>
+        <div class="card" style="border-color:var(--in)"><span class="lbl" style="color:var(--in)">New since yesterday · 2</span>
+          <div class="li"><span class="thumb" style="background:#2F6FA8">S</span><div class="grow"><b>Swissotel dropped to SAR 2,450</b><div class="sm">was 2,780 · 1–5 Dec</div></div></div>
+          <div class="li"><span class="thumb" style="background:#B7791F">✈</span><div class="grow"><b>Jeddah flight −1,200</b><div class="sm">EgyptAir 7 Dec · EGP 9,850</div></div></div>
+          <div class="btn">Open the listing</div></div>
+        <div class="card"><span class="lbl">Watching · 4</span>
+          <div class="li"><div class="grow trunc">Hotels · Makkah · 4 nights</div><span class="sm">checked 9:00</span></div>
+          <div class="li"><div class="grow trunc">Messages · 2 scheduled</div><span class="sm">1 Dec</span></div>
+          <div class="li"><div class="grow trunc">Visa slot · Saudi embassy</div><span class="sm">every 30 min</span></div></div>
+      </div></div>
+      <p class="pm"><b>+</b> You only look at what's new; the rest is quiet. <b>−</b> When nothing changed, the top card is empty.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">A4</span> Big photo cards</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Agents</div>
+        <div class="card" style="padding:0;overflow:hidden"><div style="height:92px;background:linear-gradient(135deg,#2F6FA8,#0F766E)"></div><div style="padding:8px 10px"><b>Swissotel Makkah</b><div class="sm">SAR 2,450 · 4 nights · cheapest of 24</div></div></div>
+        <div class="card" style="padding:0;overflow:hidden"><div style="height:60px;background:linear-gradient(135deg,#B7791F,#C0392B)"></div><div style="padding:8px 10px"><b>Cairo → Jeddah · EGP 9,850</b></div></div>
+      </div></div>
+      <p class="pm"><b>+</b> Looks like Booking / Airbnb. <b>−</b> Only 2–3 agents fit on a screen.</p>
+    </div>
+  </div>
+
+  <!-- ================= FOLLOW-UPS ================= -->
+  <h2>Follow-ups: “interface is still really poor”</h2>
+  <p class="q">Today it is one long page: Message alerts, Coming up, Reminders, Add one, Plan my day. Your real items: Maid every Saturday 600, Car wash on the 1st 700, Sheikh 2,500 a month (19,500 total), Ahmed's message alert.</p>
+  <div class="row">
+    <div class="opt">
+      <div class="tag"><span class="code">F1</span> One box + one list by day <span class="recm">Recommended</span></div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Follow-ups</div><div class="input">Say it: “every 1st pay the car wash 700”</div>
+        <div class="card"><span class="lbl">Today · Sat 7 Nov</span>
+          <div class="li"><span class="box"></span><div class="grow"><b>Maid came?</b><div class="sm">tick = 600 spent</div></div><span class="num out">600</span></div>
+          <div class="li"><span class="box"></span><div class="grow"><b>Did Sheikh pay?</b><div class="sm">payment 3 of 8</div></div><span class="num in">2,500</span></div></div>
+        <div class="card"><span class="lbl">Tue 1 Dec</span>
+          <div class="li"><span class="box"></span><div class="grow"><b>Car wash</b><div class="sm">every 1st of the month</div></div><span class="num out">700</span></div></div>
+        <div class="chips"><span class="chip">🔔 Alerts · 1</span><span class="chip">⚙ Settings</span></div>
+      </div></div>
+      <p class="pm"><b>+</b> One thing to read; settings and alerts move off the page. <b>−</b> Plan my day becomes a button.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">F2</span> Three tabs</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Follow-ups</div><div class="tabs"><span class="on">Today</span><span>Coming</span><span>Alerts</span></div>
+        <div class="card"><div class="li"><span class="box"></span><div class="grow"><b>Maid came?</b></div><span class="num out">600</span></div>
+        <div class="li"><span class="box"></span><div class="grow"><b>Did Sheikh pay?</b></div><span class="num in">2,500</span></div></div>
+        <div class="btn">+ Add</div>
+      </div></div>
+      <p class="pm"><b>+</b> Short pages. <b>−</b> What's coming is hidden behind a tab.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">F3</span> Month calendar + day</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">November</div>
+        <div class="cal"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          <span class="d">1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span class="t d">7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span class="d">14</span></div>
+        <div class="card"><span class="lbl">Sat 7</span><div class="li"><span class="box"></span><div class="grow">Maid · 600</div></div><div class="li"><span class="box"></span><div class="grow">Sheikh · 2,500</div></div></div>
+      </div></div>
+      <p class="pm"><b>+</b> See the whole month's payments. <b>−</b> Small on a phone.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">F4</span> By person</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Follow-ups</div>
+        <div class="card"><div class="li"><span class="thumb" style="background:#1E7A43">Sh</span><div class="grow"><b>Sheikh</b><div class="sm">owes 14,500 · next 2,500 today</div></div></div>
+        <div class="li"><span class="thumb" style="background:#B7791F">M</span><div class="grow"><b>Maid</b><div class="sm">every Sat · 600</div></div></div>
+        <div class="li"><span class="thumb" style="background:#2F6FA8">C</span><div class="grow"><b>Car wash</b><div class="sm">1st of month · 700</div></div></div>
+        <div class="li"><span class="thumb" style="background:#6D3FB5">A</span><div class="grow"><b>Ahmed Salah</b><div class="sm">alert on · last msg 29 Oct</div></div></div></div>
+      </div></div>
+      <p class="pm"><b>+</b> Everything about one person together. <b>−</b> Dates are less visible.</p>
+    </div>
+  </div>
+
+  <!-- ================= DOCUMENTS ================= -->
+  <h2>Documents: better look, works with huge files</h2>
+  <p class="q">Built in every option: files of any size are read page by page in the background (a progress line shows it), answers name the page, and Translate keeps the layout.</p>
+  <div class="row">
+    <div class="opt">
+      <div class="tag"><span class="code">D1</span> Library + one “ask all” box <span class="recm">Recommended</span></div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Documents</div><div class="input">Ask across all your files…</div>
+        <div class="card"><div class="li"><span class="thumb" style="background:#C0392B">PDF</span><div class="grow"><b class="trunc" style="display:block">Liebherr LTM 1100 manual</b><div class="sm">812 pages · ready</div></div></div>
+        <div class="li"><span class="thumb" style="background:#2F6FA8">DOC</span><div class="grow"><b class="trunc" style="display:block">Crane rental contract</b><div class="sm">Translated → English</div></div></div>
+        <div class="li"><span class="thumb" style="background:#B7791F">PDF</span><div class="grow"><b class="trunc" style="display:block">Taxation case study</b><div class="sm">reading 140 / 230 pages</div></div></div></div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Contracts</span><span class="chip">Manuals</span><span class="chip">Study</span></div>
+      </div></div>
+      <p class="pm"><b>+</b> One place for every file; ask a question across all of them. <b>−</b> Folders are chips, not real folders.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">D2</span> Tabs inside a file</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl trunc">Crane rental contract</div><div class="tabs"><span class="on">Ask</span><span>Read</span><span>Translate</span><span>Notes</span></div>
+        <div class="card"><b>What is the penalty for late return?</b><span class="sm">500 EGP per day after 3 days of grace (page 7, clause 12.2).</span></div>
+        <div class="input">Ask about this file…</div>
+      </div></div>
+      <p class="pm"><b>+</b> Every tool for one file in one place. <b>−</b> No overview of all files here.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">D3</span> AI sorts into folders</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl">Documents</div>
+        <div class="row" style="grid-template-columns:1fr 1fr;gap:6px">
+          <div class="card"><b>Contracts</b><span class="sm">6 · 1 expires Jan</span></div><div class="card"><b>Invoices</b><span class="sm">24</span></div>
+          <div class="card"><b>Manuals</b><span class="sm">9 cranes</span></div><div class="card"><b>IDs</b><span class="sm">passport 2028</span></div></div>
+      </div></div>
+      <p class="pm"><b>+</b> Sorted by itself; expiry dates show. <b>−</b> The sorting can be wrong at first.</p>
+    </div>
+    <div class="opt">
+      <div class="tag"><span class="code">D4</span> Reader + chat drawer</div>
+      <div class="ph"><div class="scr">
+        <div class="ttl trunc">Liebherr LTM 1100 · p. 214</div>
+        <div class="card" style="min-height:170px"><span class="sm">Load chart · 18.4 m boom · 6 m radius → 42.5 t …</span></div>
+        <div class="card" style="border-color:var(--brand)"><b>Max load at 10 m radius, 30 m boom?</b><span class="sm">21.6 t (p. 214, table 3). Tap to jump.</span></div>
+      </div></div>
+      <p class="pm"><b>+</b> The page and the answer side by side. <b>−</b> For one file at a time.</p>
+    </div>
+  </div>
+
+  <!-- ================= IDEAS ================= -->
+  <h2>A new idea as strong as Agents (I)</h2>
+  <p class="q">Each one uses what only Attune has together: the phone's notifications, an offline model, your money, people and documents. A cloud app can't read all of that, and iPhones don't allow it.</p>
+  <div class="row">
+    <div class="idea">
+      <div class="tag"><span class="code">I1</span> Autopilot: notifications do themselves <span class="recm">Recommended</span></div>
+      <p>Every notification is understood and turned into the thing it means, waiting for one tap.</p>
+      <ul><li>CIB “debited EGP 1,250 at Carrefour” → expense, category Food, ready.</li><li>Amazon “Arriving Thursday” → a follow-up on Thursday, and it closes itself on “Delivered”.</li><li>Ahmed: «ابعتلي الورق بكرة» → to-do tomorrow with “send Ahmed the papers”.</li><li>Missed call from a client twice → “call back” on top of Home.</li><li>Vodafone “bill due 15th” → a bill in People & plans.</li></ul>
+      <p class="moat">Why it's hard to copy: needs notification access + an offline model + your own money, people and to-dos in one app. Google / Apple assistants don't write into your own ledger.</p>
+    </div>
+    <div class="idea">
+      <div class="tag"><span class="code">I2</span> Paperwork Guardian (Egypt first)</div>
+      <p>Photograph any official paper: car licence, crane inspection certificate, passport, insurance, ID, lease. Attune reads the expiry, reminds you 30 days before, and lists exactly what to bring to renew it (which office, which papers, fees), then fills the form from your details.</p>
+      <p class="moat">Why it's hard to copy: the renewal steps per country (Egypt's traffic unit, Saudi visa) are a pack Attune owns; it works offline and keeps the papers private.</p>
+    </div>
+    <div class="idea">
+      <div class="tag"><span class="code">I3</span> Promise Radar</div>
+      <p>Every promise made by you or to you (WhatsApp, calls you note, notifications) becomes one list: “Mahmoud said he'd send the crane invoice on Monday”. When it's late, Attune writes the polite reminder in your Franco or Arabic style and sends it on one tap.</p>
+      <p class="moat">Why it's hard to copy: it joins Chat X-Ray, message alerts and Messages scheduling, which you already have.</p>
+    </div>
+    <div class="idea">
+      <div class="tag"><span class="code">I4</span> Ask my month</div>
+      <p>One page at the end of every month, written by the model from everything on the phone: what you spent and why it went up, who still owes you, what you promised, what the agents saved you, which papers expire next month. You can ask it anything (“why was October more expensive?”) and it answers from your own data.</p>
+      <p class="moat">Why it's hard to copy: only works when money, people, notifications and agents live in one offline app.</p>
+    </div>
+  </div>
+
+  <div class="note"><b>How to reply:</b> send the codes you want, for example “C6, A3, F1, D1+D4, I1”. If you pick more than one in a row, I'll draw one combined screen with “what I understood” before building, as MOCKUPS.md says.</div>
+</div>

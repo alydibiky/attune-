@@ -11439,4 +11439,7 @@ export const SW = {
   "Messages · {n} scheduled": "Ujumbe · {n} zimepangwa",
   "Open Messages": "Fungua Ujumbe",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“Tuma yenyewe” (kama Auto Text) iko kwenye APK tofauti ya Attune Auto — Google Play Protect inaweza kuizuia ikisakinishwa kutoka kwa faili.",
+  "Opening document translation — pick the file.": "Nafungua tafsiri ya hati — chagua faili.",
+  "Opening Documents — pick the file.": "Nafungua Hati — chagua faili.",
+  "Opening this offer's own page…": "Nafungua ukurasa wa ofa hii…",
 };

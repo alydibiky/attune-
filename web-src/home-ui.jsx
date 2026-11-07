@@ -4,6 +4,7 @@
    areas (v6.29: replaced by "Recent" — the last 4 tools with what waits there; TODAY became "What's waiting": also new Scout
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
+import { enterSends } from "./keys.js";
 import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyStart, btnP as UbtnP, btnS as UbtnS, inp as Uinp } from "./ui-kit.jsx";
@@ -276,7 +277,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       ) : minimal ? (
         /* v6.43 option 1 (Ali): one big box — say anything, Attune does it in every app it touches */
         <div className="rounded-[20px] p-4 space-y-3" style={{ background: "var(--c-surf)", border: "1.5px solid var(--c-acc)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} dir="auto" data-testid="home-ask" rows={2}
+          <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (enterSends(e)) { e.preventDefault(); send(); } }} dir="auto" data-testid="home-ask" rows={2}
             placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : cmd ? tr("Type / for a command, or just say it…") : tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
           {cmd ? <Attached files={files} onRemove={(i) => setFiles((f) => f.filter((_, k) => k !== i))} /> : null}
           {cmd ? <input ref={fileRef} type="file" multiple className="hidden" data-testid="box-file-input" onChange={(e) => { const add = [...(e.target.files || [])].slice(0, 20); e.target.value = ""; if (add.length) setFiles((f) => [...f, ...add].slice(0, 20)); }} /> : null}

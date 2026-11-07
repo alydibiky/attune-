@@ -8,6 +8,7 @@
      · Kept between sessions (IndexedDB): the text, the file itself when ≤ 25 MB, last page and zoom, the chat, the annotations.
    A long file shows its first pages at once; the rest is read in parts in the background.
    The logic is docqa.js and pdfreader.js (tested); this file is the screen.                                                             */
+import { enterSends } from "./keys.js";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Upload, Send, ChevronLeft, ChevronRight, Search, FileText, X, AlertTriangle, Copy, Trash2, Sparkles, Star, PenLine, Languages, Menu, LayoutGrid, Eye, Share2, Download, Maximize2, Plus, Brain, History, Check } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -574,7 +575,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
             <div ref={endRef} />
           </div>
           <div className="border-t border-[var(--c-ln)] p-2 flex gap-2 items-end bg-[var(--c-bg)] pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-            <textarea rows={1} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } }} placeholder={tr("Ask about this file…")} data-testid="pdf-input"
+            <textarea rows={1} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (enterSends(e)) { e.preventDefault(); ask(); } }} placeholder={tr("Ask about this file…")} data-testid="pdf-input"
               className={K.area + " flex-1 resize-none max-h-28"} />
             <button onClick={() => ask()} disabled={!q.trim() || !!asking} className="w-11 h-11 grid place-items-center shrink-0 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] disabled:opacity-40" aria-label={tr("Send")} data-testid="pdf-send"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>

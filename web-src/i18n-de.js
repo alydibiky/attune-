@@ -11438,4 +11438,7 @@ export const DE = {
   "Messages · {n} scheduled": "Nachrichten · {n} geplant",
   "Open Messages": "Nachrichten öffnen",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "„Von selbst senden“ (wie Auto Text) steckt in der separaten Attune-Auto-APK — Google Play Protect kann sie blockieren, wenn sie aus einer Datei installiert wird.",
+  "Opening document translation — pick the file.": "Dokumentübersetzung wird geöffnet – wähle die Datei.",
+  "Opening Documents — pick the file.": "Dokumente wird geöffnet – wähle die Datei.",
+  "Opening this offer's own page…": "Die Seite dieses Angebots wird geöffnet…",
 };

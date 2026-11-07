@@ -123,7 +123,7 @@ function ReportCta({ onClick, wide }) {
 /** Level 1 — the calm view. `rep` = the report for the chosen account; `all` = for all accounts (the pills). */
 export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, clearResult, openReport, openLedger, rightNow, zak, inbox }) {
   const top2 = rep.month.cats.filter((c) => c.id !== "_rest").slice(0, 2).map((c) => c.name + " " + c.pct + "%").join(" · ");
-  const spent = <Tile label={tr("Spent · This month")} mark={<span className="text-[var(--c-neg)]">↓</span>} value={amt(rep.month.out, rep.cur)} tone="" sub={top2 || tr("Nothing spent yet")} testid="money-kpi-out" />;
+  const spent = <Tile label={tr("Spent · This month")} mark={<span className="text-[var(--c-neg)]">↓</span>} value={amt(rep.month.out, rep.cur)} tone="neg" sub={top2 || tr("Nothing spent yet")} testid="money-kpi-out" />;
   const earned = <Tile label={wide ? T("Earned · {m}", { m: monthLabel(rep.month.from.slice(0, 7)) }) : tr("Earned · This month")} mark={<span className="text-[var(--c-pos)]">↑</span>} value={amt(rep.month.in, rep.cur)} tone="pos"
     sub={wide ? T("Net saved: {a}", { a: amt(rep.month.net, rep.cur) }) : rep.month.rate != null ? (rep.month.rate >= 0 ? T("{p}% of it kept", { p: rep.month.rate }) : T("Spent {a} more than earned", { a: amt(-rep.month.net, rep.cur) })) : tr("No income logged yet")} testid="money-kpi-in" />;
   if (!wide) return (
@@ -159,7 +159,7 @@ export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, cl
       </div>
       <div className="flex flex-col gap-3.5 min-w-0">
         <div className="grid grid-cols-2 gap-2.5">
-          <Tile label={T("Spent · {m}", { m: monthLabel(rep.month.from.slice(0, 7)) })} value={amt(rep.month.out, rep.cur)} tone=""
+          <Tile label={T("Spent · {m}", { m: monthLabel(rep.month.from.slice(0, 7)) })} value={amt(rep.month.out, rep.cur)} tone="neg"
             sub={rep.month.pace == null ? top2 || tr("Nothing spent yet") : rep.month.pace <= 0 ? T("{p}% below last month's pace", { p: -rep.month.pace }) : T("{p}% above last month's pace", { p: rep.month.pace })} testid="money-kpi-out" />
           {earned}
           <Tile label={tr("Bills · Next 7 days")} value={amt(rep.dueTotal, rep.cur)} tone={rep.due.length ? "warn" : ""} testid="money-kpi-bills"
@@ -238,7 +238,7 @@ function Weeks({ rep }) {
         {rep.weekTarget ? <g><line x1="10" x2="310" y1={y0 - (rep.weekTarget / max) * H} y2={y0 - (rep.weekTarget / max) * H} stroke="var(--c-warn)" strokeWidth="1.5" strokeDasharray="4 4" />
           <text x="10" y={y0 - (rep.weekTarget / max) * H - 6} textAnchor="start" fill="var(--c-warn)" fontSize="9.5" fontWeight="700">{T("Target {a}/wk", { a: fmt(rep.weekTarget) })}</text></g> : null}
         {rep.weeks.map((w, i) => { const h = Math.max(3, (w.out / max) * H), x = 28 + i * 74, now = i === 3; return (
-          <g key={i}><rect x={x} y={y0 - h} width="38" height={h} rx="7" fill={now ? "var(--c-chart-3)" : "var(--c-chart-4)"} opacity={now ? 1 : 0.7} />
+          <g key={i}><rect x={x} y={y0 - h} width="38" height={h} rx="7" fill="var(--c-neg)" opacity={now ? 0.9 : 0.45} />
             <text x={x + 19} y={y0 - h - 5} textAnchor="middle" fill="var(--c-ink)" fontSize="10" fontWeight={now ? 800 : 700}>{fmt(Math.round(w.out))}</text>
             <text x={x + 19} y="113" textAnchor="middle" fill={now ? "var(--c-ink)" : "var(--c-mut)"} fontSize="10" fontWeight={now ? 800 : 600}>{now ? tr("Now") : T("Wk {n}", { n: i + 1 })}</text></g>); })}
       </svg>
@@ -260,7 +260,7 @@ function Cashflow({ rep, wide }) {
           <div className={"text-[12px] " + U.muted}>{tr("Bars show each month's money in and out; the line is what was left")}</div></div>
         <div className="flex gap-3 text-[11.5px] font-bold">
           <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px]" style={{ background: "var(--c-pos)" }} />{tr("Earned")}</span>
-          <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] opacity-50" style={{ background: "var(--c-mut)" }} />{tr("Spent")}</span>
+          <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px]" style={{ background: "var(--c-neg)" }} />{tr("Spent")}</span>
           <span className="inline-flex items-center gap-1.5"><i className="w-3 h-[3px]" style={{ background: "var(--c-chart-3)" }} />{tr("Net saved")}</span>
         </div>
       </div>
@@ -269,7 +269,7 @@ function Cashflow({ rep, wide }) {
           <text x="34" y={base - f * H + 4} textAnchor="end" fill="var(--c-mut)" fontSize={fs}>{nice(f * max)}</text></g>)}
         {rep.months.map((m, i) => { const x = cx(i), now = i === 5, hi = (m.in / max) * H, ho = (m.out / max) * H; return (
           <g key={m.key}><rect x={x - bw - gap / 2} y={base - hi} width={bw} height={Math.max(0, hi)} rx={wide ? 5 : 3} fill="var(--c-pos)" opacity="0.85" />
-            <rect x={x + gap / 2} y={base - ho} width={bw} height={Math.max(0, ho)} rx={wide ? 5 : 3} fill="var(--c-mut)" opacity={now ? 0.75 : 0.4} />
+            <rect x={x + gap / 2} y={base - ho} width={bw} height={Math.max(0, ho)} rx={wide ? 5 : 3} fill="var(--c-neg)" opacity={now ? 0.85 : 0.45} />
             <text x={x} y="163" textAnchor="middle" fill={now ? "var(--c-ink)" : "var(--c-mut)"} fontSize={fs} fontWeight={now ? 800 : 700}>{monthLabel(m.key)}</text></g>); })}
         <polyline fill="none" stroke="var(--c-chart-3)" strokeWidth="2.5" points={pts.map((p) => p.join(",")).join(" ")} />
         {pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={i === 5 ? 5 : 3.5} fill="var(--c-chart-3)" stroke={i === 5 ? "var(--c-surf)" : "none"} strokeWidth="2" />)}
@@ -345,7 +345,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
     <div className="flex flex-col gap-3" data-testid="money-report">
       {head}
       <div className="grid grid-cols-2 gap-2.5">
-        <Tile label={tr("Spent · This month")} value={amt(rep.month.out, rep.cur)} tone="" sub={T("{n} entries", { n: rep.month.count })} testid="money-rep-out" />
+        <Tile label={tr("Spent · This month")} value={amt(rep.month.out, rep.cur)} tone="neg" sub={T("{n} entries", { n: rep.month.count })} testid="money-rep-out" />
         <Tile label={tr("Earned · This month")} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? (rep.month.rate >= 0 ? T("{p}% of it kept", { p: rep.month.rate }) : T("Spent {a} more than earned", { a: amt(-rep.month.net, rep.cur) })) : "—"} testid="money-rep-in" />
       </div>
       <WhereItWent rep={rep} />
@@ -361,7 +361,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
       <div className="grid grid-cols-4 gap-3">
         <Tile label={tr("Balance")} value={amt(rep.balance, rep.cur)} sub={rep.accounts.filter((a) => a.currency === rep.cur && (!account || a.id === account)).slice(0, 3).map((a) => a.name + " " + fmt(a.balance)).join(" · ")} testid="money-rep-balance" />
         <Tile label={tr("Earned this month")} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? T("Savings rate: {p}% so far", { p: rep.month.rate }) : "—"} testid="money-rep-in" />
-        <Tile label={tr("Spent this month")} value={amt(rep.month.out, rep.cur)} tone="" sub={T("{n} entries across {c} categories", { n: rep.month.count, c: rep.month.cats.length })} testid="money-rep-out" />
+        <Tile label={tr("Spent this month")} value={amt(rep.month.out, rep.cur)} tone="neg" sub={T("{n} entries across {c} categories", { n: rep.month.count, c: rep.month.cats.length })} testid="money-rep-out" />
         <Tile label={tr("Bills · Next 7 days")} value={amt(rep.dueTotal, rep.cur)} tone={rep.due.length ? "warn" : ""} sub={rep.due.length ? rep.due.slice(0, 2).map((d) => d.note + " " + dayLabel(d.date)).join(" · ") : tr("No bills due this week.")} testid="money-rep-bills" />
       </div>
       <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: "minmax(0,1.15fr) minmax(0,0.85fr)" }}>

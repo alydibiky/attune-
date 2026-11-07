@@ -7,6 +7,7 @@
    bill = fatora). Pure; tests/unit/v740lookback.test.mjs; the page is lookback-ui.jsx.                                  */
 
 import { CLUBS } from "./livefacts.js";
+import { understandNote } from "./notifmeaning.js";
 const DAY = 86400000;
 export const fold = (s) => String(s || "").toLowerCase()
   .replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?![\p{L}])/gu, "ه").replace(/[ً-ْـ]/g, "")
@@ -65,6 +66,13 @@ export const MEANINGS = [
   "weather|temperature|hot|cold|warm|degrees|rain|feels|°|حر|برد|الجو|جو|الطقس|طقس|حراره|درجه الحراره|مطر|el gaw",
   "news|breaking|headline|اخبار|الاخبار|خبر|عاجل|akhbar",
   "message|messages|texted|wrote|رساله|رسايل|الرساله|مسدج|ماسدج|بعت|massage",
+  // v9.8: what people ask about their notifications in their own words
+  "package|parcel|shipment|order|delivery|tracking|courier|شحنه|الشحنه|الاوردر|اوردر|طلبي|الطلب|هيوصل|يوصل|توصيل|المندوب",
+  "called|call|calls|missed|ring|rang|اتصل|اتصال|مكالمه|رن|كلمني",
+  "spent|spend|charged|debited|withdrew|purchase|card|صرفت|اتخصم|خصم|سحبت|الكارت|الفيزا",
+  "ride|taxi|uber|careem|driver|captain|اوبر|كريم|مشوار|الكابتن",
+  "login|signin|security|account|hacked|دخول|الحساب|اتهكر",
+  "offer|offers|sale|discount|deal|coupon|عرض|عروض|تخفيض|كوبون",
   "photo|picture|image|صوره|الصوره",
   ...CLUBS.map((g) => g.join("|")),
 ].map((g) => g.split("|").map(fold));
@@ -100,7 +108,7 @@ const APP_WORDS = [
 const MONTHS_EN = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
 const MONTHS_AR = ["يناير", "فبراير", "مارس", "ابريل", "مايو", "يونيو", "يوليو", "اغسطس", "سبتمبر", "اكتوبر", "نوفمبر", "ديسمبر"];
 // words that only glue the question together
-const STOP = new Set(("the a an of from to in on at for with my me i you it that this was were is are and or what where when which who how did do " +
+const STOP = new Set(("the a an of from to in on at for with my me i you it that this was were is are and or what where when which who how did do does will would much " +
   "find show give get last sent send told said about any all one some there here have has had want need " +
   "saw seen see remember remind got came again latest now just thing things something which whats what's was it " +
   "شفت شوفت جالي جاتلي وصلي افتكر فاكر حاجه دلوقتي تاني " +
@@ -187,7 +195,9 @@ export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pa
     const photo = r.kind === "photo" || (r.meta && r.meta.thumb);
     docs.push({ id: "m:" + r.id, kind: photo ? "photo" : "mind", title: r.title || "", text: [r.text, r.output, r.note, (r.tags || []).join(" ")].filter(Boolean).join("\n"), ts: r.ts || 0, thumb: photo ? r.id : null, open: { mode: "memory", id: r.id } });
   }
-  for (const n of notes) docs.push({ id: "n:" + n.id, kind: "note", title: n.title || "", text: n.text || "", ts: n.ts || 0, app: n.app || "", pkg: n.pkg || "", raw: n.id });
+  // v9.8: a notification also carries what it MEANS (delivery, money out, missed call, a message from…) — found without its words
+  for (const n of notes) { let u = null; try { u = understandNote(n); } catch (e) {}
+    docs.push({ id: "n:" + n.id, kind: "note", title: n.title || "", text: (n.text || "") + (u && u.words ? "\n" + u.words : ""), ts: n.ts || 0, app: n.app || "", pkg: n.pkg || "", raw: n.id, meaning: u ? u.kind : "", shown: n.text || "" }); }
   for (const c of chats) {
     const msgs = (c.messages || []).filter((m) => m.text);
     if (!msgs.length) continue;
@@ -244,8 +254,8 @@ export function recallSearch(docs, q, { now = Date.now(), limit = 40 } = {}) {
       s += best * idf * (num ? 2 : 1) * (title.has(bw) ? 1.5 : 1);
     });
     const need = wants.length <= 2 ? 1 : Math.ceil(wants.length * 0.5);   // most of the words, not every one
-    if (got >= need && s > 0) hits.push({ doc: d, score: s * (got / wants.length), snip: snippet(d.text || d.title, seen) });
-    else if (got && s > 0) loose.push({ doc: d, score: s * (got / wants.length) * 0.5, snip: snippet(d.text || d.title, seen) });
+    if (got >= need && s > 0) hits.push({ doc: d, score: s * (got / wants.length), snip: snippet(d.shown != null ? d.shown || d.title : d.text || d.title, seen) });
+    else if (got && s > 0) loose.push({ doc: d, score: s * (got / wants.length) * 0.5, snip: snippet(d.shown != null ? d.shown || d.title : d.text || d.title, seen) });
   }
   // v8.7: nothing has most of the words → the things that have some of them, best first (free text never ends on "nothing")
   const out = hits.length ? hits : loose;

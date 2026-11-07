@@ -198,6 +198,23 @@ export const isSiteName = (name, site = "") => { const n = String(name || "").tr
 
 /** v9.2 round 3 (Ali: "when it opens Booking it doesn't open the specific listing"): an offer read without its own link is searched by
  *  ITS name on the same site (Booking ss=, Amazon k=, a q= search) with the same dates — that hotel / product first, not the whole list. */
+/** v9.8 (Ali, 7 Nov: "the agents still don't redirect to the specific listing — fix it for good"): is this link an offer's OWN page
+ *  (a hotel, a room, a product) — not a search, a map, a filter or a site's home? The same patterns as agent-kit.js LISTING. */
+export const LISTING_RE = /\/hotel\/[a-z]{2}\/|\/hotel\/[^/?#]+\.html|[?&]hotel_?id=\d|\/hotels?\/detail|\/travel\/hotels\/[^?#]*entity|\.ksp(?:$|[?#])|\/hotel-detail|\/hotels\/[a-z-]+\/[a-z0-9-]*\d|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\//i;
+const NOT_OWN = /[?&#](?:map|sort|order|filter|nflt|page|offset|rows)=|\/(?:search|searchresults|map|reviews?|filter|login|signin|account|help|deals)(?:[/.?#]|$)/i;
+export function isOwnPage(href) {
+  if (!href || !/^https:\/\//.test(href)) return false;
+  try { const u = new URL(href); if (LISTING_RE.test(u.pathname + u.search)) return true; if (NOT_OWN.test(href) || u.pathname.length < 6) return false; return true; } catch (e) { return false; }
+}
+/** How to open one offer: { url, direct } — direct = its own page (open it as it is, in the phone's browser);
+ *  else the results page it came from + `goto` {name, price} so Attune's browser finds THAT offer and goes into its page. */
+export function offerOpen(a, o) {
+  const url = offerUrl(a, o);
+  if (o && o.href && isOwnPage(o.href)) return { url, direct: true };
+  const name = o && o.name && !isSiteName(o.name, a && a.site) ? String(o.name).slice(0, 120) : "";
+  const results = (o && o.url) || (a && a.url) || url;
+  return { url: results, direct: false, goto: { name, price: (o && o.price) || 0 } };
+}
 export function offerUrl(a, o) {
   if (o && o.href && /^https:\/\//.test(o.href)) {
     // a hotel's own page without the dates shows no price — the offer's days (and the search's guests) go into it

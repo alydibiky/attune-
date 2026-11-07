@@ -53,6 +53,10 @@ class AgentBrowser : Activity() {
     // THIS window (it used to open and close a window per day) — rounds = [{url, checkin, checkout}]
     private var rounds = org.json.JSONArray()
     private var slotMode = false
+    // v9.8 (Ali, 7 Nov: "the agents still don't open the specific listing"): an offer with no link of its own — open the results,
+    // find THAT offer by its name / price and go into its own page (goTo in agent-kit.js), once
+    private var gotoWant = ""
+    private var gotoDone = false
     private var refreshSec = 0
     private var refreshArmed = false
     private var round = 0
@@ -90,6 +94,7 @@ class AgentBrowser : Activity() {
         watchMode = intent.getBooleanExtra("watch", false)
         autoClose = intent.getBooleanExtra("autoClose", false)
         buyMode = intent.getBooleanExtra("buy", false)
+        gotoWant = intent.getStringExtra("goto") ?: ""
         slotMode = intent.getBooleanExtra("slot", false)              // v9.4 G2: a visa / appointment page — its words go back to the page
         refreshSec = intent.getIntExtra("refresh", 0).coerceIn(0, 3600) // v9.4 G2: "watch while open" — reload every N seconds
         rounds = try { org.json.JSONArray(intent.getStringExtra("rounds") ?: "") } catch (e: Exception) { org.json.JSONArray() }
@@ -224,6 +229,7 @@ class AgentBrowser : Activity() {
                 // v8.6 buy agent, after the person's "Order it": Buy now (or Add to cart) on the product page, once; then the
                 // checkout pages get the person's details — the payment itself stays the person's (the kit never touches it)
                 // v9.4 G2: the appointment page's words (after the person logged in) — read twice as it draws
+                if (gotoWant.isNotEmpty() && !gotoDone) for (ms in longArrayOf(2500L, 5000L, 9000L)) v.postDelayed({ if (!closed && !gotoDone) run("window.__attuneAgent&&window.__attuneAgent.goTo&&window.__attuneAgent.goTo($gotoWant)") }, ms)
                 if (slotMode) for (ms in longArrayOf(2500L, 7000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.slot&&window.__attuneAgent.slot()") }, ms)
                 if (slotMode && refreshSec >= 30 && !refreshArmed) { refreshArmed = true; val loop = object : Runnable { override fun run() { if (closed) return; try { web.reload() } catch (e: Exception) {}; web.postDelayed(this, refreshSec * 1000L) } }; web.postDelayed(loop, refreshSec * 1000L) }
                 if (buyMode) {
@@ -387,6 +393,7 @@ class AgentBrowser : Activity() {
                         if (o.optBoolean("payment")) payment()
                     }
                     "page" -> if (o.optBoolean("payment")) payment()
+                    "goto" -> if (o.optBoolean("ok")) { gotoDone = true; result.put("opened", o.optString("href")); status.text = L("opening", "Opening this offer's own page…") }
                     "slot" -> {   // v9.4 G2: what the appointment page says; a change while watching → a sound and a line on top
                         val t = o.optString("text").take(6000)
                         val before = result.optString("slot")

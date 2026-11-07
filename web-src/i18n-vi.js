@@ -11438,4 +11438,7 @@ export const VI = {
   "Messages · {n} scheduled": "Tin nhắn · {n} đã lên lịch",
   "Open Messages": "Mở Tin nhắn",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“Tự gửi” (như Auto Text) nằm trong APK riêng Attune Auto — Google Play Protect có thể chặn khi cài từ tệp.",
+  "Opening document translation — pick the file.": "Đang mở dịch tài liệu — hãy chọn tệp.",
+  "Opening Documents — pick the file.": "Đang mở Tài liệu — hãy chọn tệp.",
+  "Opening this offer's own page…": "Đang mở trang của ưu đãi này…",
 };

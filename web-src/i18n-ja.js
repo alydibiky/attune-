@@ -11438,4 +11438,7 @@ export const JA = {
   "Messages · {n} scheduled": "メッセージ · 予約 {n}",
   "Open Messages": "メッセージを開く",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "「自動で送る」（Auto Text のような機能）は別の Attune Auto APK にあります — ファイルからインストールすると Google Play プロテクトにブロックされることがあります。",
+  "Opening document translation — pick the file.": "文書の翻訳を開きます — ファイルを選んでください。",
+  "Opening Documents — pick the file.": "ドキュメントを開きます — ファイルを選んでください。",
+  "Opening this offer's own page…": "このオファーのページを開いています…",
 };

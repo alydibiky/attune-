@@ -6,6 +6,8 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import { enterSends } from "./keys.js";
+import * as BR from "./brain.js";
 import * as LIB from "./library.js";   // v6.46 "Remember this": chapters of a saved book
 import { shareLink, looksLikeChat, fromPage, fromText, contextBlock } from "./ai-import.js";
 import { studioPaused } from "./device.js";
@@ -780,6 +782,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
     if (busy) stop();
 
+    // v9.8 (Ali: "translating document did not work"): a document attached + "translate" → the File Converter translates the whole
+    // file and keeps its layout (a chat answer saw only the first pages, or said it can't open files)
+    if (fileAtt && !fileAtt.many && fileAtt.file && api.translateDoc && /\.(pdf|docx|pptx|odt|epub|html?|rtf|txt|md|srt|vtt)$/i.test(fileAtt.name || "")) {
+      const job = BR.routeTask(typed, { hasFile: true });
+      if (job && job.tool === "translate-doc") { const ff = fileAtt.file; setFiles([]); setText(""); api.translateDoc(ff, job.lang); return; }
+    }
+
     // v6.48 Translate mode: the message is translated by the checked engine (numbers, names kept; each piece checked)
     if (trMode && typed && !img && !fileAtt) {
       const to = K.langIn(typed) || (/[\u0600-\u06ff]/.test(typed) ? "en" : "ar");
@@ -1465,6 +1474,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const found = api.memSearch(typed);
         if (found.length) content = api.withRecords(typed, found);
       }
+      // v9.8 (Ali: "Attune must recall all notifications — and understand them"): what the phone's notifications say about the
+      // question (understood: a delivery, money out, a missed call…) goes with it, so "when does my package come?" is answered
+      if (typed && !sources && !fileAtt && api.knownFor) { try { const k = api.knownFor(typed); if (k.length) content = content + "\n\n(What Attune already knows from this phone — use it only if it answers the question, and say it came from the phone's notifications:\n- " + k.join("\n- ") + ")"; } catch (e) {} }
       let answer, extra = {};
       if (research) extra.research = research;
       if (webEmpty) extra.webEmpty = true;
@@ -2610,7 +2622,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             // (after a moment: a tap on Send closes the keyboard first, and the
             // text box must not move away from under the finger before the tap lands)
             onBlur={() => { setTimeout(() => { if (document.activeElement !== taRef.current) { setTyping(false); document.documentElement.classList.remove("att-typing"); } }, 300); }}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia && window.matchMedia(tr("(pointer: fine)")).matches) { e.preventDefault(); ask(); } }}
+            onKeyDown={(e) => { if (enterSends(e)) { e.preventDefault(); ask(); } }}
             placeholder={listening ? tr("Listening…") : tr("Message Attune")}
             className="att-scroll w-full bg-transparent px-2.5 py-2 text-[16px] leading-relaxed text-[var(--c-ink)] placeholder:text-[var(--c-mut)] resize-none focus:outline-none max-h-[180px]" />
           <div className="flex items-center gap-1 relative">

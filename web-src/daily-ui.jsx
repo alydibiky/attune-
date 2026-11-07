@@ -74,12 +74,16 @@ export async function lessonAhead(llm, native) {
 /** The live "writing…" preview without markdown signs (it showed «**# Mastering Turkish Sounds ##»). */
 export const plainPreview = (t) => String(t || "").replace(/```[\s\S]*?(```|$)/g, " ").replace(/^\s*[{\["]+.*?:\s*"?/, "").replace(/[#*_`>|]+/g, " ").replace(/\\n|\n+/g, " ").replace(/\s+/g, " ").trim();
 
+export const LEARN_NOTIFY = false;   // v9.8: the Learn page is archived — never a lesson notification
 /** Daily notifications + the widget, from the saved courses and topics. Safe to call often. */
 export function syncDaily(native, courses = loadCourses(), topics = loadTopics(), now = Date.now()) {
   if (!native) return;
   const wanted = new Set();
   if (native.schedule) {
-    for (const c of courses) if (c.notify !== false && c.plan && c.plan.length) {
+    // v9.8 (Ali, 7 Nov: "I still get notifications for daily learning"): the Learn page was archived in v9.1, but every app start
+    // re-armed a daily lesson notification for each saved course — with no page left to switch it off. No lesson notifications
+    // any more; the clean-up below removes the ones already on the phone. (Daily news keeps its own switch.)
+    if (LEARN_NOTIFY) for (const c of courses) if (c.notify !== false && c.plan && c.plan.length) {
       const id = "daily-learn-" + c.id, n = D.lessonNotice(c); wanted.add(id);
       try { native.schedule(JSON.stringify({ id, at: D.nextAt(c.time, now), title: n.title, body: n.body, repeat: "daily" })); } catch (e) {}
     }
@@ -92,7 +96,7 @@ export function syncDaily(native, courses = loadCourses(), topics = loadTopics()
   if (native.setWidget) {
     const c = courses[0], t = topics[0];
     const w = {};
-    if (c) { const n = D.lessonNotice(c); w.lesson = { label: n.title, title: n.body, open: "daily-learn-" + c.id }; }
+    if (c && LEARN_NOTIFY) { const n = D.lessonNotice(c); w.lesson = { label: n.title, title: n.body, open: "daily-learn-" + c.id }; }
     if (t) { const n = D.newsNotice(t); w.news = { label: n.title, title: n.body, open: "daily-news-" + t.id }; }
     try { native.setWidget(JSON.stringify(w)); } catch (e) {}
   }

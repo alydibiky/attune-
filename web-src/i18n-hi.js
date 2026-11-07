@@ -11439,4 +11439,7 @@ export const HI = {
   "Messages · {n} scheduled": "संदेश · {n} शेड्यूल",
   "Open Messages": "संदेश खोलें",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“खुद भेजें” (Auto Text जैसा) अलग Attune Auto APK में है — फ़ाइल से इंस्टॉल करने पर Google Play Protect इसे रोक सकता है।",
+  "Opening document translation — pick the file.": "दस्तावेज़ अनुवाद खोल रहा हूँ — फ़ाइल चुनें।",
+  "Opening Documents — pick the file.": "दस्तावेज़ खोल रहा हूँ — फ़ाइल चुनें।",
+  "Opening this offer's own page…": "इस ऑफ़र का अपना पेज खोल रहा हूँ…",
 };

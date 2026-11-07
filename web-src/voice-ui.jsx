@@ -15,6 +15,7 @@ import { WakeSwitch } from "./wake-ui.jsx";
 import { smallTalk, forSpeech } from "./voice-talk.js";
 import { mindAnswer } from "./personal.js";
 import { connectNow, pickPerson } from "./connected.js";
+import { routeTask } from "./brain.js";
 import * as LA from "./lifeask.js";
 
 const STYLE_BY_COUNTRY = { EG: "eg", SA: "gulf", AE: "gulf", KW: "gulf", QA: "gulf", BH: "gulf", OM: "gulf", JO: "lev", LB: "lev", SY: "lev", PS: "lev", IQ: "gulf", MA: "maghreb", DZ: "maghreb", TN: "maghreb", LY: "maghreb" };
@@ -31,7 +32,7 @@ export function voiceTag(country = "EG") {
 }
 const APP_NAME = { whatsapp: "WhatsApp", telegram: "Telegram", messenger: "Messenger", signal: "Signal", instagram: "Instagram" };
 
-export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country = "EG", flash, initialText = "" }) {
+export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, openTool, country = "EG", flash, initialText = "" }) {
   const style = STYLE_BY_COUNTRY[(country || "EG").toUpperCase()] || "eg";
   const [st, setSt] = useState(() => ({ ...V.newVoiceState(), ui: getLang() === "ar" ? "ar" : "en" }));
   const [edit, setEdit] = useState(null);   // the read-back's words being changed by hand
@@ -110,6 +111,10 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, country
       let line = "", talk = false;
       const ui = /[\u0600-\u06ff]/.test(text) ? "ar" : r.state.ui;
       // (v8.7: an answer from your data is an {en, ar} — it was read out as nothing)
+      // v9.8 (Ali's screenshot: "translate this document" → "I don't have the ability to access files"): a job the app does itself
+      // (translate a whole document, read a long PDF) opens that tool — the model never answers it
+      { const job = routeTask(text); if (job && openTool) { const l = ui === "ar" ? (job.tool === "translate-doc" ? "هفتحلك ترجمة المستندات — اختار الملف." : "هفتحلك المستندات — اختار الملف.") : tr(job.tool === "translate-doc" ? "Opening document translation — pick the file." : "Opening Documents — pick the file.");
+        setSay(l); setCard({ kind: "done", ok: true }); await speakOut(l, ui); openTool(job.tool, job.lang); return; } }
       try { const res = doIt ? await doIt(text) : null; line = res ? (res.answer ? (typeof res.answer === "string" ? res.answer : (ui === "ar" ? res.answer.ar : tr(res.answer.en)) || "") : (res.lines || []).map((l) => l.text).join(" · ")) : ""; } catch (e) {}
       // v8.6 (Ali: "fix the voice part for good"): not an action → a real conversation — small talk by code at once, anything
       // else to the AI model on the phone (short spoken answer, the last turns kept), never a dead "I didn't get that"

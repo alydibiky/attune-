@@ -11439,4 +11439,7 @@ export const IDN = {
   "Messages · {n} scheduled": "Pesan · {n} terjadwal",
   "Open Messages": "Buka Pesan",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“Kirim sendiri” (seperti Auto Text) ada di APK terpisah Attune Auto — Google Play Protect bisa memblokirnya jika dipasang dari file.",
+  "Opening document translation — pick the file.": "Membuka terjemahan dokumen — pilih filenya.",
+  "Opening Documents — pick the file.": "Membuka Dokumen — pilih filenya.",
+  "Opening this offer's own page…": "Membuka halaman penawaran ini…",
 };

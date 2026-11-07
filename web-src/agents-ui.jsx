@@ -223,7 +223,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       const x = a.tries[i];
       flash && flash(T("Looking on {site} ({i} of {n})…", { site: x.site, i: i + 1, n: a.tries.length + (search ? 1 : 0) }));
       const r = await nativeCall("agentOpen", { url: x.url, title: (a.what || a.title) + " · " + x.site, profile: {}, rules: { cheapest: true, many: true }, labels: agentLabels(), search: true, watch: true, autoClose: true });
-      for (const o of (r && r.top) || []) seen.push({ ...o, site: x.site, url: o.href || x.url });
+      for (const o of (r && r.top) || []) seen.push({ ...o, site: x.site, url: x.url });   // v9.8: url = the results page (href = its own page)
       if (r && r.reason === "closed") return { seen, stopped: true };
     }
     if (search) { flash && flash(tr("Looking on the rest of the web…")); try { seen.push(...(await webRound(a))); } catch (e) {} }
@@ -264,7 +264,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
           const r = await nativeCall("agentOpen", { url: tries[i].url, title: a.title + (tries[i].checkin ? " · " + tries[i].checkin : ""), profile: {}, rules: { cheapest: true }, labels: agentLabels(), search: true, watch: true, autoClose: tries.length > 1 });
           if (r && r.price > 0 && (!best || r.price < best.price)) best = { price: r.price, checkin: tries[i].checkin, checkout: tries[i].checkout };
           compared += (r && r.offers) || 0;
-          for (const o of (r && r.top) || []) seen.push({ ...o, checkin: tries[i].checkin, checkout: tries[i].checkout, url: o.href || tries[i].url || a.url });
+          for (const o of (r && r.top) || []) seen.push({ ...o, checkin: tries[i].checkin, checkout: tries[i].checkout, url: tries[i].url || a.url });
           if (r && r.reason === "closed") break;   // the person closed the browser: stop the round
         }
         const top0 = !(best && best.checkin) && seen.length ? seen.filter((o) => o.price > 0).sort((x, y) => x.price - y.price)[0] : null;
@@ -323,7 +323,12 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const markDone = (a) => { try { if (a.pending && a.pending.price > 0) G.saveGuardian(G.agentSaved(G.loadGuardian(), a, a.pending.price)); } catch (e) {} upd(a.id, (y) => ({ ...y, step: "ordered", on: false })); };
   // v8.2 (2A): one of the best 3 — opens in Attune's browser on those days, ready for "Fill my details" (you choose and pay)
   const openBest = async (a, o) => {
-    const url = R.offerUrl(a, o);   // v9.0: the exact listing, not the store's search page (v9.2: no link → that offer searched by name)
+    // v9.8 (Ali, 7 Nov: "fix it for good"): an offer whose link is its OWN page opens it (phone's browser / the site's app); an offer
+    // with no such link is never sent to the search page — Attune's browser opens the results, finds THAT offer by name / price and
+    // goes into its page (agent-kit goTo), and "Open in my browser" then carries the listing itself
+    const how = R.offerOpen(a, o);
+    if (!how.direct && N && N.agentOpen && nativeCall) { try { await nativeCall("agentOpen", { url: how.url, title: o.name || a.title, profile: loadBooking(), rules: { cheapest: true }, labels: { ...agentLabels(), opening: tr("Opening this offer's own page…") }, search: false, goto: how.goto }); } catch (e) {} return; }
+    const url = how.direct ? how.url : R.offerUrl(a, o);   // v9.0: the exact listing, not the store's search page
     // v9.5 (Ali, 5 Nov: "it still does not open the specific listing … if you can't do it in the app make it browser like the old"):
     // the exact listing opens in the phone's own browser — store apps often drop a link on their home page
     if (N && N.openInBrowser) { try { if (N.openInBrowser(url)) return; } catch (e) {} }

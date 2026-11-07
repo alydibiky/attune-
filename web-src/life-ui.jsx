@@ -3,6 +3,7 @@
    read by code (life.js parseLife; the phone's model only if the rules can't, and only when one is loaded) → a preview to
    check → saved. Each commitment shows its payments as checkboxes; ticking one offers to add it to Money (the same
    sentence Money reads from a bank message, confirmed there). Tests: tests/e2e_v727life.py.                                    */
+import { enterSends } from "./keys.js";
 import React, { useMemo, useState } from "react";
 import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown, ChevronLeft, ChevronRight, ArrowDown, ArrowUp, User } from "lucide-react";
 import { personHistory } from "./personhist.js";
@@ -265,7 +266,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
         <div className={"text-[11.5px] font-bold mb-1.5 " + U.muted}>{tr("One sentence in any language — Attune builds the schedule:")}</div>
         <div className="flex items-end gap-2">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="life-input"
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); read(); } }}
+            onKeyDown={(e) => { if (enterSends(e)) { e.preventDefault(); read(); } }}
             placeholder={tr("Type it as you'd say it — “Ahmed owes me 12,000, 1,000 a month for a year”")}
             className={U.area + " flex-1 resize-none"} />
           <button className={U.btnP} onClick={read} disabled={busy || !text.trim()} data-testid="life-read">{busy ? "…" : tr("Read")}</button>

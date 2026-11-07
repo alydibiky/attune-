@@ -1,5 +1,6 @@
 /* ---- Spaces screens: Assistants, Projects, Artifacts, Themes (v5.14) ---------------------
    Logic and storage: spaces.js. Chat carries assistantId / projectId on each chat.      */
+import { enterSends } from "./keys.js";
 import { askConfirm } from "./confirm.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
@@ -389,7 +390,7 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
         {/* the one big box: whatever is asked here goes to a new chat in this work, with its files, its role and what it always knows */}
         <div className={card + " p-3"} data-testid="project-ask">
           <textarea value={q} onChange={(e) => setQ(e.target.value)} rows={3} dir="auto" data-testid="project-ask-input"
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && wideNow()) { e.preventDefault(); askHere(q); } }}
+            onKeyDown={(e) => { if (enterSends(e) && wideNow()) { e.preventDefault(); askHere(q); } }}
             placeholder={tr("Ask about this work…")} className="w-full bg-transparent outline-none resize-none text-[16px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] p-1" />
           <div className="flex justify-end"><button onClick={() => askHere(q)} disabled={!q.trim()} className={btnMain + " flex items-center gap-1.5"} data-testid="project-new-chat"><MessageSquare size={15} /> {tr("Ask")}</button></div>
         </div>

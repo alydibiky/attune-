@@ -1,5 +1,6 @@
 // v6.25 — the computer's own pages (Ali picked "A + C"): Home (ask box, your day, your tools) and Tools (every tool on one
 // full-width page; ★ pins a tool to the sidebar). Phones keep Chat as home and the More sheet.
+import { enterSends } from "./keys.js";
 import { HomeTodo, ListCard, lineText } from "./lists-ui.jsx";
 import * as LISTS from "./lists.js";
 import { isRemoved } from "./removed.js";
@@ -78,7 +79,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
           <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] mb-2.5 mt-0">{tr("Ask anything")}</p>
           <div className="flex items-end gap-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 focus-within:border-[var(--c-acc)] transition-colors duration-150">
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="home-ask"
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+              onKeyDown={(e) => { if (enterSends(e)) { e.preventDefault(); send(); } }}
               placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : tr("Ask, or tell Attune what happened — «spent 150 on lunch», «remind me tomorrow at 9»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
             <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
               className="w-11 h-11 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center disabled:opacity-40 transition-opacity duration-150"><Send size={17} className="rtl:-scale-x-100" /></button>

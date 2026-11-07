@@ -1,4 +1,4 @@
-# Attune — start here (handoff for the next chat, 6 Nov 2026 — v9.7)
+# Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
@@ -6,10 +6,45 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## Status in one look
 | | |
 |---|---|
-| `main` | **v9.7** (versionCode 135; 6 Nov: C1 colours, agent fixes, Messages like Auto Text) — before: **v9.6** (versionCode 134; 5 Nov night: Ali's picks built — agents board + conversation + dates grid, month plan goals that fill themselves + calendar + table, follow-ups week strip) — before: **v9.5** (versionCode 133; 5 Nov night: Ali's 9-point phone list) — before: **v9.4** (versionCode 132; 5 Nov) — before: **v9.0** (versionCode 131; pushed 3 Nov after the full suite passed — the two timing flakes, e2e_v518 / e2e_v533, pass alone; they failed while a 9B model ran beside the suite) — before: **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
+| `main` | **v9.8** (versionCode 138; 7 Nov: Ali's 15-point list — recurring payments as boxes, Enter = new line, Spent red, no Learn alarms, agents open the listing, notifications understood, one brain for chats, translate a document; options C/A/F/D/I waiting) — before: **v9.7** (versionCode 135; 6 Nov: C1 colours, agent fixes, Messages like Auto Text) — before: **v9.6** (versionCode 134; 5 Nov night: Ali's picks built — agents board + conversation + dates grid, month plan goals that fill themselves + calendar + table, follow-ups week strip) — before: **v9.5** (versionCode 133; 5 Nov night: Ali's 9-point phone list) — before: **v9.4** (versionCode 132; 5 Nov) — before: **v9.0** (versionCode 131; pushed 3 Nov after the full suite passed — the two timing flakes, e2e_v518 / e2e_v533, pass alone; they failed while a 9B model ran beside the suite) — before: **v8.9** (versionCode 130; branch `claude/affectionate-ptolemy-nmr0bh`, 1 Nov) — before: **v8.7** (versionCode 129) — before: **v8.6** (versionCode 128) |
 | Last APK | v9.7.2 (6 Nov: C1 calm look for every colour; full suite green): https://github.com/alydibiky/attune-/actions/runs/42198144053 (success) — before: v9.7.1 (6 Nov: the normal APK installs again — send-by-itself moved to the optional attune-apk-auto; full suite green): https://github.com/alydibiky/attune-/actions/runs/42161023633 (success) — before: v9.7 (6 Nov: Messages like Auto Text, colours C1, real hotel names; full suite green; Kotlin built): https://github.com/alydibiky/attune-/actions/runs/42136431819 (success) — before: v9.6 (5 Nov night: Ali's picks — agents board + conversation + dates grid, month plan goals + calendar + table, follow-ups week strip; full suite green): https://github.com/alydibiky/attune-/actions/runs/42114184938 (success) — before: v9.5 (5 Nov night: Ali's 9-point phone list; full suite green; Kotlin built): https://github.com/alydibiky/attune-/actions/runs/42094539771 (success) — before: v9.4 + the chat fixes (5 Nov: number guard, sentence battery, installments keep the total; full suite green): https://github.com/alydibiky/attune-/actions/runs/42069139037 (success) — before: v9.4 (5 Nov: agent picks G1–G7, hotel offers keep each hotel's page, Translate → Document; full suite green): https://github.com/alydibiky/attune-/actions/runs/42056893257 (success) — before: v9.3 (5 Nov: Ali's round-4 picks + notifications → Your day; widgets compiled; full suite green): https://github.com/alydibiky/attune-/actions/runs/42017700711 (success) — before: v9.2 part 3 (5 Nov: receipt back, agents consistent + open the exact offer, back like ChatGPT, How to use search fix, guide in 20 languages; full suite green): https://github.com/alydibiky/attune-/actions/runs/41941437190 (success) — before: v9.2 part 2 (4 Nov night: Ali's 7 picks built — lists, agents' rules + board, flight agent, Mind, Documents, Projects board; full suite green; CI now frees disk first): https://github.com/alydibiky/attune-/actions/runs/41889742662 (success) — before: v9.2 (4 Nov late: Ali's 11-point list — Zakāt complete, Writing tabs, no Food on Home, Shelf; full suite green): https://github.com/alydibiky/attune-/actions/runs/41849639532 (success) — before: v9.1 latest (4 Nov night: Projects design D + the archive round; full suite green): https://github.com/alydibiky/attune-/actions/runs/41820643229 (success) — before: v9.1 (4 Nov: option A "which did you mean?", 8 bug fixes, hotel option 4): https://github.com/alydibiky/attune-/actions/runs/41752948806 (success; full suite 226/226) — before: v9.1 hotel offers (3 Nov evening: option 4 A + C, hidden checking screen, photos): https://github.com/alydibiky/attune-/actions/runs/41693308525 (success) — before: v9.0 (3 Nov, notifications + accuracy round 2): https://github.com/alydibiky/attune-/actions/runs/41608171861 — before: v9.0: https://github.com/alydibiky/attune-/actions/runs/41585440030 — before: v8.9: https://github.com/alydibiky/attune-/actions/runs/41309881633 (success, sent to Ali) |
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
+
+## v9.8 — 7 Nov: Ali's 15-point phone list ("fix it for good") — BUILT + options waiting for his picks
+Ali: "each week I burn tokens … the real improvement is 1% because the same problems come back". So every point got its cause found
+and a test (`tests/unit/v980fixes.test.mjs` 50 checks, `tests/e2e_v980agentopen.py` 10 checks).
+- **1 recurring payment = a box, not an expense**: "each first day of month pay to man who washes car 700" → a monthly *regular* on the
+  1st (like the maid / Sheikh), ticked = the expense. Causes: `life.js HELP` didn't know "washes the car" / «بيغسل العربية»; "every
+  month" matched "every **mon**day" (`DAY_EVERY` `[a-z]*`); no "first day of the month" (`startOf` day 1, `EVERY_M`); any "I pay X
+  every month/week" with no known word is now a regular (title from "for/to the …"); "I pay 1500 for the gym" is named "Gym".
+- **15 Enter = new line on phones**: `web-src/keys.js enterSends` in every chat box (Chat, Home box, Ask a PDF, People & plans, Desk,
+  Spaces). Touch → Enter is a new line, only Send sends; computer → Enter sends, Shift+Enter new line. (Old bug: Chat checked
+  `tr("(pointer: fine)")` — translated into Arabic it was never a valid media query.)
+- **4 Spent is red**: every Spent tile, weekly bars and the cashflow "Spent" bars in Money use `--c-neg` (Earned stays green). The
+  rest of the colour question is option C6–C9 below.
+- **11 no more daily-learning notifications**: the Learn page was archived in v9.1 but `syncDaily` re-armed a daily lesson alarm on
+  every start, with no page left to switch it off, and `lessonAhead` ran the model every 20 s for it. `daily-ui.jsx LEARN_NOTIFY =
+  false` (the start-up clean-up now removes the old alarms; Daily news keeps its own switch); no background lessons.
+- **5/9 agents open THE listing**: `agent-kit.js hrefOf` gives an offer only its own page (a listing link, else the card's link if it
+  isn't a map / reviews / search / filter) — it used to take the card's first link. New `goTo({name, price})`: on the results page it
+  finds that offer and goes into its page (its link, or a tap when the site opens cards by script). `agent-rules.js offerOpen`:
+  own page → phone's browser / app; no own page → `agentOpen` with `goto` (AgentBrowser.kt runs goTo after load, once).
+  LISTING widened (Agoda /hotel/x.html, Trip.com hotelId, Google /entity/, Kayak .ksp). Offers keep `url` = the results page.
+- **6 notifications understood**: `web-src/notifmeaning.js understandNote` → kind (delivery, bank, call, ride, flight, appointment,
+  bill, security, promo, news, message, email), who, amount, state ("arriving Thursday", "money out"). Recall's search carries
+  those meaning words (hidden from snippets), so "when does my package come" finds Amazon's "Shipped", "who called me" the missed call.
+- **2/8 chats smarter**: `web-src/brain.js` — one brain for the voice and page chats: Attune's own abilities (never "I can't access
+  files"), what the phone already knows that fits (notifications understood + connected memory), the profile; voice answers get 520
+  tokens and "2 to 5 spoken sentences" (was 200 / "1 to 3"). Main Chat adds the matching notifications to the question
+  (`api.knownFor`). `router.js wantsThink`: long report / analysis questions think first (Ali: "10 seconds is fine if it's right").
+- **12 translate a document**: voice / Chat "translate this document" → `routeTask` → Translate opens on Document (voice), or the
+  attached file goes straight to the converter's checked translation (`api.translateDoc`, whole file, layout kept).
+- 3 new lines × 20 languages. Version 9.8 (versionCode 138).
+- **Waiting for Ali's picks** (MOCKUPS.md rule): https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC — C6–C9 colours (rec. C6 each
+  area its own colour), A1–A4 Agents layout (rec. A3 "what changed" on top), F1–F4 Follow-ups (rec. F1 one box + one list by day),
+  D1–D4 Documents (rec. D1 library + ask-all), I1–I4 the new big idea (rec. I1 Autopilot: notifications do themselves). Source:
+  `design/v98/options.html`.
 
 ## RULE (Ali, 2 Nov 2026) — every addition in all 20 languages, in the same change
 "For each addition in the app do it for all languages so we don't have to translate later": every new English line the app shows

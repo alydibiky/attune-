@@ -61,7 +61,7 @@ function countOf(t) {
   if (/\b(for|over) (six|6) months\b|نص سنه/.test(t)) return 6;
   return 0;
 }
-const EVERY_M = /\b(a|per|every|each) month\b|\bmonthly\b|كل شهر|شهري|شهريا|في الشهر|بالشهر|كل اول شهر|al mes|por mes|cada mes|mensual|par mois|chaque mois|tous les mois|mensuel|por mês|ao mês|todo mês|todos os meses|mensal|pro monat|im monat|jeden monat|monatlich|al mese|ogni mese|mensile|her ay|aylık|ayda|per bulan|setiap bulan|tiap bulan|bulanan/;
+const EVERY_M = /\b(a|per|every|each) month\b|\b(?:every|each)\s+(?:first|1st|last|beginning|start|end)\b.{0,15}\bmonth\b|\b(?:first|1st|beginning|start)\s+(?:day\s+)?of\s+(?:every|each)\s+month\b|اول كل شهر|أول كل شهر|كل اول الشهر|كل أول الشهر|اول الشهر من كل شهر|\bmonthly\b|كل شهر|شهري|شهريا|في الشهر|بالشهر|كل اول شهر|al mes|por mes|cada mes|mensual|par mois|chaque mois|tous les mois|mensuel|por mês|ao mês|todo mês|todos os meses|mensal|pro monat|im monat|jeden monat|monatlich|al mese|ogni mese|mensile|her ay|aylık|ayda|per bulan|setiap bulan|tiap bulan|bulanan/;
 const EVERY_W = /\b(a|per|every|each) week\b|\bweekly\b|كل اسبوع|اسبوعي|اسبوعيا|في الاسبوع|por semana|cada semana|semanal|par semaine|chaque semaine|hebdomadaire|pro woche|jede woche|wöchentlich|a settimana|ogni settimana|settimanale|her hafta|haftalık|per minggu|setiap minggu|mingguan/;
 function everyOf(t) {
   if (EVERY_M.test(t)) return "month";
@@ -99,6 +99,8 @@ const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0
 function startOf(t, now) {
   const d0 = new Date(now); d0.setHours(12, 0, 0, 0);
   let dayN = (/(?:on the|day|يوم|el día|le|am|il|dia)\s*(\d{1,2})(?:st|nd|rd|th|er|º|\.)?\b/i.exec(t) || [])[1];
+  // v9.8 (Ali: "I pay 700 for the man who washes the car the first day of each month"): the first of the month = day 1
+  if (!dayN && /\b(?:first|1st|beginning|start)\s+(?:day\s+)?of\s+(?:the\s+|each\s+|every\s+)?month\b|\b(?:every|each)\s+(?:first|1st)\s+(?:day\s+)?of\s+(?:the\s+)?month\b|اول (?:كل )?(?:ال)?شهر|أول (?:كل )?(?:ال)?شهر/i.test(t)) dayN = "1";
   for (let m = 0; m < 12; m++) {
     const k = "(?:" + MONTH_NAMES[m] + ")\\.?";
     const near = new RegExp("(\\d{1,2})(?:st|nd|rd|th|er|º|\\.)?\\s*(?:de\\s+|of\\s+)?" + k + "(?![\\p{L}])|(?<![\\p{L}])" + k + "\\s+(\\d{1,2})(?!\\d)", "iu").exec(t);
@@ -192,13 +194,16 @@ const OUT_ = /\bi owe\b|\bi borrowed\b|\bi have to pay\b|\bi must pay\b|\bmy (in
 
 // v6.34 (Ali: "the maid comes every Saturday and takes 600 EGP — a checkbox when I log in on Saturday, and it records the expense
 // by itself"): someone who comes on a day and is paid each time → kind "regular", a checkbox on each day, ticked = spent in Money
-const HELP = /\b(maid|housekeeper|cleaner|cleaning lady|nanny|babysitter|driver|gardener|tutor|private teacher|coach|trainer|doorman|cook|nurse|physio(?:therapist)?|car wash(?:er)?)\b|الشغال[هة]|شغال[هة]|الداد[هة]|داد[هة]|السواق|سواق|المدرس|مدرس|المدرسه الخصوصي|الجنايني|جنايني|البواب|بواب|الطباخ|طباخ|الممرض[هة]|ممرض[هة]|الكوتش|كوتش|المدرب|مدرب|عامله النظاف[هة]|ست النظاف[هة]|اللي بتنضف|غسيل العربي[هة]/i;
-const DAY_EVERY = /\b(every|each|on)\s+(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|كل\s+(يوم\s+)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)|(?:كل|يوم)\s+(ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)/i;
+const HELP = /\b(maid|housekeeper|cleaner|cleaning lady|nanny|babysitter|driver|gardener|tutor|private teacher|coach|trainer|doorman|cook|nurse|physio(?:therapist)?|car wash(?:er)?|wash(?:es|ed|ing)?\s+(?:the\s+|my\s+)?cars?|car\s+cleaner)\b|الشغال[هة]|شغال[هة]|الداد[هة]|داد[هة]|السواق|سواق|المدرس|مدرس|المدرسه الخصوصي|الجنايني|جنايني|البواب|بواب|الطباخ|طباخ|الممرض[هة]|ممرض[هة]|الكوتش|كوتش|المدرب|مدرب|عامله النظاف[هة]|ست النظاف[هة]|اللي بتنضف|غسيل العربي[هة]|بيغسل العربي[هة]|يغسل العربي[هة]|غسال العربي[هة]|اللي بيغسل/i;
+const DAY_EVERY = /\b(every|each|on)\s+(sun|mon|tue|wed|thu|fri|sat)(?:day|s|sday|nesday|rsday|rs|urday)?s?\b|كل\s+(يوم\s+)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)|(?:كل|يوم)\s+(ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)/i;
 
 /** The name of a bill / subscription: the words before its amount («فاتورة الكهربا ٦٤٠» → «فاتورة الكهربا», "Netflix 200" → "Netflix"). */
 function nameBefore(raw, fallback) {
-  const lead = String(raw).split(/[\d\u0660-\u0669$€£]/)[0].replace(/[:،,\-–—]+\s*$/, "").replace(/\s+/g, " ").trim();
+  const lead = String(raw).split(/[\d\u0660-\u0669$€£]/)[0].replace(/[:،,\-–—]+\s*$/, "").replace(/\s+/g, " ").trim()
+    // v9.8 ("I pay 1500 for the gym every month" was named "I pay"): the payer and the verb are not the name
+    .replace(/^(?:i|we)\s+(?:pay|paid|am paying|spend|give|send|transfer)\s*(?:for\s+|to\s+)?(?:the\s+|my\s+)?|^(?:بدفع|بادفع|بندفع|دفعت)\s*/i, "").trim();
   const words = lead.split(" ").filter(Boolean);
+  if (!words.length) { const after = /\b(?:for|to)\s+(?:the\s+|my\s+)?([\p{L}]+(?:\s+[\p{L}]+)?)/iu.exec(String(raw).replace(/\b(?:every|each|a|per)\s+(?:month|week|year)\b.*$/i, "")); if (after) return after[1][0].toUpperCase() + after[1].slice(1); }
   return words.length && words.length <= 5 ? words.join(" ") : fallback;
 }
 
@@ -271,14 +276,16 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
   // v9.0 (the bank: "the driver comes every day, 200 a day"): every day = all seven days of the week
   const DAILY = /\b(every ?day|daily|each day|a day)\b|كل يوم|يوميا|يومياً|في اليوم/i;
   if ((HELP.test(raw) || HELP.test(t)) && (DAY_EVERY.test(t) || every || DAILY.test(t))) {
-    const m = HELP.exec(raw) || HELP.exec(t), name = m[0].replace(/^ال/, "");
+    const m = HELP.exec(raw) || HELP.exec(t);
+    // v9.8: "the man who washes the car" is the car washer (a name, not "washes car")
+    const name = /wash|غسيل|يغسل|غسال/i.test(m[0]) ? (/[\u0600-\u06FF]/.test(m[0]) ? "غسيل العربية" : "Car wash") : m[0].replace(/^ال/, "");
     // the start: that weekday — today when today is the day (the first box is today's)
     const dm = DAY_EVERY.exec(t), word = dm ? (dm[2] || dm[4] || dm[6] || "") : "";
     const W = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "حد": 0, "احد": 0, "اتنين": 1, "اثنين": 1, "تلات": 2, "ثلاثاء": 2, "اربع": 3, "اربعاء": 3, "خميس": 4, "جمعه": 5, "سبت": 6 };
     let st = start;
     if (word in W) { const d = new Date(now); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + ((W[word] - d.getDay() + 7) % 7)); st = iso(d); }   // that weekday, today included
     // v8.9: several days a week — «كل حد واربع», "every Sunday and Wednesday" → days [0, 3] (one box on each)
-    const all = [...t.matchAll(/(?:^|[\s,،و])(?:ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربعاء|اربع|خميس|جمعه|سبت)(?=$|[\s,،])|\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/gi)].map((x) => W[(x[1] || x[2] || "").toLowerCase()]).filter((x) => x != null);
+    const all = [...t.matchAll(/(?:^|[\s,،و])(?:ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربعاء|اربع|خميس|جمعه|سبت)(?=$|[\s,،])|\b(sun|mon|tue|wed|thu|fri|sat)(?:day|s|sday|nesday|rsday|rs|urday)?s?\b/gi)].map((x) => W[(x[1] || x[2] || "").toLowerCase()]).filter((x) => x != null);
     const days = !DAY_EVERY.test(t) && DAILY.test(t) && !every ? [0, 1, 2, 3, 4, 5, 6] : [...new Set(all)].sort((a, b) => a - b);
     const dirR = dirIn || /\b(pays me|gives me|sends me|will (?:give|pay|send) me)\b/i.test(raw) ? "in" : "out";
     return { ...base, ...(days.length > 1 && (every || "week") === "week" ? { days } : {}), kind: "regular", dir: dirR, amount: amts[0], count: 0, total: 0, every: every || "week", start: st || iso(new Date(now)), title: /^[a-z]/i.test(name) ? name[0].toUpperCase() + name.slice(1) : name, auto: true };
@@ -292,6 +299,14 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
     if (how === "each" && count > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: amts[0], count, total: amts[0] * count, every: every || "month", title };
     const big = Math.max(...amts), small = amts.length > 1 ? Math.min(...amts) : 0, n = count || (small ? partsOf(big, small) : 0);
     if (n > 1) return withAlt({ ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: small || Math.round((big / n) * 100) / 100, count: n, total: small && count ? small * n : big, every: every || "month", title }, how);
+  }
+  // v9.8 (Ali: "I pay 700 EGP to the man who washes the car the first day of each month" became a one-off expense): a payment I make
+  // again and again (every month / week / year) is a regular — a box on each of its days, ticked = the expense in Money (like the maid)
+  if (every && !dirIn && amts.length === 1 && (PAY_V.test(t) || PAY_V.test(raw) || /\b(?:for|to)\s+(?:the|my)\b|\bi\s+(?:give|send|transfer)\b|بدفع|بادفع|بندفع|بدي|بديله|بديها|بيدفعله|ببعت|بحول/i.test(raw))) {
+    const who = /\b(?:for|to)\s+((?:the|my)\s+)?([\p{L}][\p{L}' -]{1,40}?)(?=\s+(?:on|every|each|the first|first|at|in|a month|per|\d)|[,.،]|$)/iu.exec(raw.replace(/[\d٠-٩][\d٠-٩,.]*\s*(?:egp|le|l\.e\.?|pounds?|جنيه|ج)?/gi, " ").replace(/\s+/g, " "));
+    const ar = /(?:^|\s)(?:ل|لل)([ء-ي]+(?:\s+[ء-ي]+){0,2})/.exec(raw.replace(/كل|اول|أول|الشهر|شهر|بدفع|بادفع/g, " "));
+    const title = (who && who[2].trim()) || (ar && ar[1].trim()) || nameBefore(raw, tr("Payment"));
+    return { ...base, kind: "regular", dir: "out", amount: amts[0], count: 0, total: 0, every, start: start || iso(new Date(now)), title: /^[a-z]/i.test(title) ? title[0].toUpperCase() + title.slice(1) : title, auto: true };
   }
   return null;
 }

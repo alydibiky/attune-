@@ -986,6 +986,7 @@ money-sheets-ui.jsx: <Field label={tr("How often")}><Pills value={freq} onChange
 ## Payment
 guardian-ui.jsx: <span className="min-w-0 flex-1"><span className="block font-bold truncate" dir="auto">{t.note || tr("Payment")}</span>
 home.js: line.push({ t: at(10), app: "life", title: x.c.title ? x.c.title[0].toUpperCase() + x.c.title.slice(1) : x.c.person || tr("Payment"), sub: x
+life.js: const title = (who && who[2].trim()) || (ar && ar[1].trim()) || nameBefore(raw, tr("Payment"));
 
 ## Cranes out
 home-now.js: try { if (fleet && live(fleet.cranes || []).length) { const k = fleetKpis(fleet); out.push({ k: "cranes", label: tr("Cranes out"), value: `$
@@ -1119,7 +1120,7 @@ money-pages-ui.jsx: <Tile label={tr("Accounts")} value={String(a.money.length + 
 money-pages-ui.jsx: <Head title={tr("Accounts")} right={<button className={U.btnS + " h-10! min-h-[40px]!"} onClick={() => openLedger("add-account")} data-testi
 
 ## Spent
-money-calm-ui.jsx: <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] opacity-50" style={{ background: "var(--c-mut)" }
+money-calm-ui.jsx: <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px]" style={{ background: "var(--c-neg)" }} />{tr("Sp
 planner-ui.jsx: <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Plan")}</th><th className={th}>{tr("Spent")}</th><th
 report-ui.jsx: pill={safe.today > 0 ? tr("On track") : tr("Spent")} tone={safe.today > 0 ? "" : "late"} pct={safe.perDay > 0 ? (safe.today / safe.perDay) *
 report-ui.jsx: {hasS ? <span className="inline-flex items-center gap-1"><i className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "var(--c-ac

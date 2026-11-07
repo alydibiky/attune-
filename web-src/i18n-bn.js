@@ -11438,4 +11438,7 @@ export const BN = {
   "Messages · {n} scheduled": "মেসেজ · {n} নির্ধারিত",
   "Open Messages": "মেসেজ খুলুন",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“নিজে পাঠাও” (Auto Text-এর মতো) আলাদা Attune Auto APK-তে আছে — ফাইল থেকে ইনস্টল করলে Google Play Protect আটকাতে পারে।",
+  "Opening document translation — pick the file.": "ডকুমেন্ট অনুবাদ খুলছি — ফাইলটি বেছে নিন।",
+  "Opening Documents — pick the file.": "ডকুমেন্টস খুলছি — ফাইলটি বেছে নিন।",
+  "Opening this offer's own page…": "এই অফারের নিজস্ব পেজ খুলছি…",
 };

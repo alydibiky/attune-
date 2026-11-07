@@ -11439,4 +11439,7 @@ export const TRK = {
   "Messages · {n} scheduled": "Mesajlar · {n} planlandı",
   "Open Messages": "Mesajları aç",
   "“Send by itself” (like Auto Text) is in the separate Attune Auto APK — Google Play Protect may block it when installed from a file.": "“Kendiliğinden gönder” (Auto Text gibi) ayrı Attune Auto APK'sında — dosyadan kurulursa Google Play Protect engelleyebilir.",
+  "Opening document translation — pick the file.": "Belge çevirisi açılıyor — dosyayı seç.",
+  "Opening Documents — pick the file.": "Belgeler açılıyor — dosyayı seç.",
+  "Opening this offer's own page…": "Bu teklifin kendi sayfası açılıyor…",
 };

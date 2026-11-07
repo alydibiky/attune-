@@ -86,7 +86,9 @@
   }
   // a listing's own page (not a search, a filter or a map link): hotels on Booking / Agoda / Expedia / Airbnb / Hotels.com, products on
   // Amazon / noon / Jumia / eBay / most shops
-  const LISTING = /\/hotel\/[a-z]{2}\/|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\//i;
+  // v9.8 (Ali, 7 Nov: "the agents still don't open the specific listing"): Agoda (/name/hotel/makkah-sa.html), Trip.com (hotelId=),
+  // Google Hotels (/entity/), Kayak (.ksp), Almosafer / Wego (/hotels/…/id), Jumia / noon product pages too
+  const LISTING = /\/hotel\/[a-z]{2}\/|\/hotel\/[^/?#]+\.html|[?&]hotel_?id=\d|\/hotels?\/detail|\/travel\/hotels\/[^?#]*entity|\.ksp(?:$|[?#])|\/hotel-detail|\/hotels\/[a-z-]+\/[a-z0-9-]*\d|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\//i;
   const listingLinks = (el) => [...(el.querySelectorAll ? el.querySelectorAll("a[href]") : [])].filter((a) => /^https:\/\//.test(a.href) && LISTING.test(a.href.split("#")[0]));
   const listingKey = (a) => { try { const u = new URL(a.href); return u.hostname + u.pathname; } catch (e) { return a.href; } };
   const listingKeys = (el) => new Set(listingLinks(el).map(listingKey)).size;
@@ -118,6 +120,33 @@
     if (okName(ln) && ln.length < 160) return ln;
     return String((o.el.innerText || "").split("\n").map((x) => x.trim()).filter((x) => okName(x) && x.length > 3).sort((a, b) => b.length - a.length)[0] || "").slice(0, 160);
   }
+  // v9.8: an offer's link is its OWN page only — a listing link, or the card's link when it leads somewhere else than this search,
+  // a map, a filter or the reviews (that was "Book" opening the search again). No such link → "" (the offer is then found by name)
+  const NOT_LISTING = /[?&#](?:map|sort|order|filter|nflt|page|offset|rows)=|\/(?:search|searchresults|map|reviews?|filter|login|signin|account|help|deals)(?:[/.?#]|$)|javascript:/i;
+  function hrefOf(o) {
+    const l = listingLink(o.el); if (l) return l.href;
+    for (const a of [o.el.closest && o.el.closest("a[href]"), ...(o.el.querySelectorAll ? o.el.querySelectorAll("a[href]") : [])]) {
+      if (!a || !/^https:\/\//.test(a.href) || NOT_LISTING.test(a.href)) continue;
+      try { const u = new URL(a.href); if (u.hostname === location.hostname && u.pathname === location.pathname) continue; if (u.pathname.length < 6) continue; } catch (e) { continue; }
+      return a.href; }
+    return "";
+  }
+  // v9.8: on a results page, go to ONE offer's own page — found by its name (else its price): its listing link, else a tap on it
+  const words = (x) => String(x || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").split(" ").filter((w) => w.length > 1);
+  function goTo(want) {
+    want = want || {}; const list = offers(), ww = words(want.name);
+    const score = (o) => { const have = new Set(words(cardName(o) + " " + o.text)); const hit = ww.filter((w) => have.has(w)).length;
+      return (ww.length ? hit / ww.length : 0) + (want.price && Math.abs(o.price - want.price) < 1 ? 0.6 : 0); };
+    const pick = list.map((o) => ({ o, s: score(o) })).sort((a, b) => b.s - a.s)[0];
+    if (!pick || pick.s < 0.5) { const out = { kind: "goto", ok: false, offers: list.length }; report(out); return out; }
+    const href = hrefOf(pick.o);
+    try { pick.o.el.style.outline = "3px solid #0F7B6C"; pick.o.el.scrollIntoView({ block: "center" }); } catch (e) {}
+    if (href) { const out = { kind: "goto", ok: true, href }; report(out); setTimeout(() => { location.assign(href); }, 250); return out; }
+    // no link at all (a site that opens a card by script): tap its name, else the card
+    const tgt = (pick.o.el.querySelector && (pick.o.el.querySelector(NAME_SEL) || pick.o.el.querySelector("a,button,[role=link],[role=button]"))) || pick.o.el;
+    setTimeout(() => { try { tgt.click(); } catch (e) {} }, 250);
+    const out = { kind: "goto", ok: true, href: "", tapped: true }; report(out); return out;
+  }
   function rank(list, r) {
     r = r || {};
     const score = (o) => o.price * (r.direct && o.stops > 0 ? 1.6 : 1) * (r.time === "morning" && o.hour != null && (o.hour < 5 || o.hour > 12) ? 1.25 : 1) * (r.time === "evening" && o.hour != null && o.hour < 16 ? 1.25 : 1);
@@ -130,7 +159,7 @@
     const top = rank(list, r)[0];
     // v9.1: a quiet read (the hotel check reads a page several times while it loads) doesn't move the page under the person
     if (quiet) { const nameQ = cardName;
-      const hrefQ = (o) => { const a = listingLink(o.el) || o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
+      const hrefQ = hrefOf;
       const imgQ = (o) => photoOf(o.el);
       const outQ = { kind: "best", quiet: true, offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameQ(o), text: o.text.slice(0, 400), href: hrefQ(o), img: imgQ(o) })) };
       report(outQ); return outQ; }
@@ -143,7 +172,6 @@
     // more than 3 (r.many) so the closest match — not only the cheapest — can be picked
     const nameOf = cardName;
     const imgOf = (o) => photoOf(o.el);
-    const hrefOf = (o) => { const a = listingLink(o.el) || o.el.closest("a[href]") || o.el.querySelector("a[href]"); return a && /^https:\/\//.test(a.href) ? a.href : ""; };
     const top3 = rank(list, r).slice(0, r && r.many ? 24 : 3).map((o) => ({ price: o.price, currency: o.currency, name: nameOf(o), text: o.text.slice(0, 400), href: hrefOf(o), img: imgOf(o) }));
     const out = { kind: "best", offers: list.length, price: top.price, currency: top.currency, text: top.text.slice(0, 140), top: top3, why: [r.cheapest !== false ? "cheapest" : "", r.direct ? "direct" : "", r.time || ""].filter(Boolean).join(", ") };
     report(out); return out;
@@ -250,6 +278,6 @@
   try { new MutationObserver(watch).observe(document.documentElement, { childList: true, subtree: true }); } catch (e) {}
   // v9.4 G2: an appointment page (visa, consulate, clinic) — its visible words go back to Attune, which decides what they mean
   const slot = () => { const t = String((document.body && document.body.innerText) || "").replace(/\s+/g, " ").trim().slice(0, 6000); const out = { kind: "slot", text: t, url: location.href }; report(out); return out; };
-  window.__attuneAgent = { offers: () => offers().map((o) => ({ price: o.price, currency: o.currency, hour: o.hour, stops: o.stops, text: o.text })), best, fill, payment, rank, buy, slot };
+  window.__attuneAgent = { offers: () => offers().map((o) => ({ price: o.price, currency: o.currency, hour: o.hour, stops: o.stops, text: o.text })), best, fill, payment, rank, buy, slot, goTo, hrefOf };
   watch();
 })();
