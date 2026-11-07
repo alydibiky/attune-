@@ -70,7 +70,7 @@ attune.jsx: call: tr("The dialer opened with the number — tap Call there.") }[
 cmdbox-ui.jsx: <p className="c-lbl m-0">{busy ? tr("Working on it · {n}", { n: busy }) : tr("Done")}</p>
 daily-ui.jsx: <button className={cGhost} style={gs} onClick={() => { setRev(null); setView("course"); }} data-testid="review-finish">{tr("Done")}</button>
 daily-ui.jsx: <button className={btnP} onClick={() => { const f = D.finishQuiz(latest(), quiz, quiz.picks); putCourse(f.course); setQuiz(null); setView("c
-learning-report-ui.jsx: <button onClick={() => onDone(p.id)} className={U.btnP + " h-10! min-h-[40px]! rounded-full shrink-0"} data-testid="mind-do-now-done"><Check
+errands-ui.jsx: const done = (e) => { put(list.map((x) => (x.id === e.id ? E.markDone(x, { newDate: e.every ? "" : newDate }) : x))); setOpen(""); setNewDat
 
 ## cheapest
 agent-ui.jsx: const sum = p.task === "flight" ? `${cityName(f.from)} (${f.from}) → ${cityName(f.to)} (${f.to}) · ${DAYFMT(f.depart)}${f.ret ? " → " + DAYF
@@ -475,6 +475,7 @@ teach-ui.jsx: onClick={() => go([{ id: "text:" + name.trim() + ":" + Date.now(),
 ## Undo
 attune.jsx: className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-teal-300 hover:border-teal-600">{tr("Undo")}</button
 attune.jsx: {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash(tr("Removed")); }} className="text-xs px-3 py-2 rounded-
+autopilot-ui.jsx: <button onClick={() => undo(d)} className="min-h-[32px] px-2 text-[12px] font-bold c-acc inline-flex items-center gap-1" data-testid="autopi
 doit-ui.jsx: {r.undo && !undone ? <button className={btnS} onClick={() => { r.undo(); setUndone(true); onUndo && onUndo(); }} data-testid="do-undo"><Undo
 pdfedit-ui.jsx: <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"w-11 h-11 grid place-items-center rounded-[12px] " + (his
 planner-ui.jsx: {settled.put > 0 ? <button onClick={undo} className="font-extrabold underline text-[var(--c-acc)] min-h-[36px] px-1" data-testid="planner-se
@@ -656,6 +657,20 @@ planner-ui.jsx: const parts = [["fixed", tr("Fixed"), plan.fixedTotal], ["pots",
 plans-ui.jsx: <div data-testid="gold-draft"><span className={U.label}>{tr("Savings")}</span>
 yearplan.js: groups.push({ id: "savings", label: ar ? "التحويش" : tr("Savings"), rows: sav });
 
+## Add
+autopilot-ui.jsx: <button onClick={() => add(x)} aria-label={tr("Add")} className="min-h-[36px] px-3 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(-
+autopilot-ui.jsx: <button onClick={() => add(x)} aria-label={tr("Add")} className="min-h-[36px] px-3 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(-
+booklib-ui.jsx: <button type="submit" className={U.chip(true)} data-testid="booklib-topic-save">{tr("Add")}</button></form>}
+care-ui.jsx: <button className={btnP} disabled={!n.trim()} onClick={() => { onAdd({ name: n.trim(), notes }); setN(""); setNotes(""); }} data-testid="car
+chat.jsx: <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
+cv-ui.jsx: <button className={ghost + " w-full flex items-center justify-center gap-1"} onClick={add} data-testid="cv-add-item"><Plus size={13} />{tr("
+daily-ui.jsx: <button className={btnP + " !px-4 shrink-0"} onClick={add} disabled={!t.trim()} data-testid="learn-add-save">{tr("Add")}</button></div>;
+errands-ui.jsx: <button type="submit" disabled={!text.trim()} className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-bt
+
+## Not this
+autopilot-ui.jsx: <button onClick={() => no(x, false)} onContextMenu={(e) => { e.preventDefault(); no(x, true); }} aria-label={tr("Not this")} title={tr("Not 
+radar-ui.jsx: <button className={U.btnS + " w-11 px-0 " + U.muted} aria-label={tr("Not this")} onClick={() => { put(D.markSeen(data, [s.nid])); setSugg((x
+
 ## Reminders
 backup-ui.jsx: [tr("Memory items"), s.memory], [tr("Reminders"), s.reminders],
 shelf-ui.jsx: {header(tr("Reminders"), backBtn(() => setView(null)))}
@@ -679,16 +694,6 @@ booklib-ui.jsx: <button onClick={() => setTopic("")} aria-pressed={!topic} class
 lookback-ui.jsx: {chip(null, tr("All"))}
 money-sheets-ui.jsx: <div className="flex gap-1.5 overflow-x-auto pb-1"><button onClick={() => setMonth("")} className={pill(!month)}>{tr("All")}</button>{months
 money-sheets-ui.jsx: <Field label={tr("Default period")}><Pills value={ui.period || "month"} onChange={(v) => doIt("prefs", { period: v })} items={[["week", tr("
-
-## Add
-booklib-ui.jsx: <button type="submit" className={U.chip(true)} data-testid="booklib-topic-save">{tr("Add")}</button></form>}
-care-ui.jsx: <button className={btnP} disabled={!n.trim()} onClick={() => { onAdd({ name: n.trim(), notes }); setN(""); setNotes(""); }} data-testid="car
-chat.jsx: <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
-cv-ui.jsx: <button className={ghost + " w-full flex items-center justify-center gap-1"} onClick={add} data-testid="cv-add-item"><Plus size={13} />{tr("
-daily-ui.jsx: <button className={btnP + " !px-4 shrink-0"} onClick={add} disabled={!t.trim()} data-testid="learn-add-save">{tr("Add")}</button></div>;
-family-ui.jsx: <button className={U.btnS} onClick={addItem} aria-label={tr("Add")} data-testid="family-item-add"><Plus size={16} /></button></div>
-guardian-ui.jsx: <button className={U.btnP} onClick={add} disabled={!text.trim()} data-testid="price-add">{tr("Add")}</button>
-lists-ui.jsx: <button className={U.btnS} aria-label={tr("Add")} data-testid="lists-todo-add"><Plus size={16} /></button></form>
 
 ## Me
 care-ui.jsx: const ensureMember = () => { if (data.members.length) return data; const r = H.addMember(data, { name: tr("Me") }); return r.data; };
@@ -963,11 +968,8 @@ owed-ui.jsx: <label className="block space-y-1"><span className={"block text-[12
 email-ui.jsx: <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("Subject")}
 messages-ui.jsx: <input value={m.subject} onChange={(e) => set("subject", e.target.value)} dir="auto" placeholder={tr("Subject")} className={U.inp} data-test
 
-## Spec
-factsheet.js: "| " + (ar ? "البند" : tr("Spec")) + " | " + a + " | " + b + " | " + (ar ? "الأفضل" : tr("Better")) + " |\n| --- | --- | --- | --- |\n" +
-trusted.js: "| " + (ar ? "البند" : tr("Spec")) + " | " + use.map((c) => cell(c.name) + " [" + c.n + "]").join(" | ") + " |\n" +
-
 ## Paid
+errands-ui.jsx: <button onClick={() => done(e)} disabled={!e.every && !newDate} className="min-h-[40px] px-3.5 rounded-[12px] border border-[var(--c-ln)] te
 family-ui.jsx: <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={() => put(F.settlePayment(fam, m.from, m.to, m.amount))} data-testid="family-set
 home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
 home-ui.jsx: <button className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} onClick={() => done(null)} data-testid="home-ask-paid">{tr("Paid")}<
@@ -975,7 +977,10 @@ home-ui.jsx: aria-label={tr("Paid")} className="w-[22px] h-[22px] rounded-md shr
 life-ui.jsx: <button type="submit" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
-money-pages-ui.jsx: <Card title={tr("Paid")} right={<span className="text-[12.5px] font-bold c-sub tabular-nums">{T("last 12 months: {a}", { a: amt(z.paidYear, 
+
+## Spec
+factsheet.js: "| " + (ar ? "البند" : tr("Spec")) + " | " + a + " | " + b + " | " + (ar ? "الأفضل" : tr("Better")) + " |\n| --- | --- | --- | --- |\n" +
+trusted.js: "| " + (ar ? "البند" : tr("Spec")) + " | " + use.map((c) => cell(c.name) + " [" + c.n + "]").join(" | ") + " |\n" +
 
 ## When
 family-ui.jsx: <div className="flex gap-2"><input type="datetime-local" className={U.inp} value={rAt} onChange={(e) => setRAt(e.target.value)} aria-label={

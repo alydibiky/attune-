@@ -56,6 +56,23 @@ and a test (`tests/unit/v980fixes.test.mjs` 50 checks, `tests/e2e_v980agentopen.
     (parts behind ⋯ since v9.6), e2e_v905deal (a board card opens the conversation since v9.6).
   - **I1 Autopilot**: "what I understood" + **new ideas I5 Handshake (rec.), I6 five seconds after every call, I7 one ledger two phones**
     on the same page — waiting for Ali's OK / pick before building.
+- **I1 Autopilot BUILT** (Ali: "I1 ok"): `autopilot.js` (suggestFrom / suggestions / accept / refuse / allow / undoDone / actionsFor) +
+  `autopilot-ui.jsx` AutopilotCard on Home; saved through `window.__attuneApplyActions` (the Home box's path). Tests v980autopilot +
+  e2e_v980autopilot. Ali on I5–I7: "too basic and lame" → researched **N1 Haggler / N2 phone memory / N3 errands**.
+- **N1 + N3 BUILT** (Ali: "do N1 and N3 … best way possible … without any mistakes"):
+  - N1 `haggle.js` (pricesIn «مليون و٥٠», parseHaggle, addSeller, marketOf / targetOf (93 % of market, ≤ limit) / openingOffer (85 %),
+    readReply (price, final, sold, scam = deposit before viewing, no viewing, answers), nextMove (ask → offer → our last number →
+    good = YOUR turn / walk / dealer / scam; "last price" in the first reply is not believed; a seller is held to their lowest),
+    `safeText` (never a yes / payment / deposit), tick (background step), sellerFromAd (any phone spacing)) + `haggle-ui.jsx`
+    HaggleView. Agents: a "negotiate …" / «فاصلي على …» sentence (Agents box, Home, Chat, voice) makes kind "haggle"; it shows in
+    What's new when a seller is inside the limit; attune.jsx runs `HG.tick` every minute and sends through `scheduleMessage`
+    (ask = one tap, or by itself in the auto APK). Tests v980haggle (35) + e2e_v980n1n3.
+  - N3 `errands.js` (parseErrand in EN / AR with Egyptian plates and day-first dates, KINDS with Egypt's papers, dueList in calendar
+    days, readPortal reads what an official page says is due — a login page reads as nothing, afterCheck, markDone) +
+    `errands-ui.jsx` ErrandsPage (mode "errands", Follow-ups ⋯ → Errands, amber). Due errands are on Follow-ups' list (timeline.js).
+    The official page opens in Attune's browser (slot mode: its words come back) — Egyptian portals ask for ID / a code, so nothing is
+    checked silently; Attune never pays. Tests v980errands (17) + e2e_v980n1n3.
+  - 78 lines × 20 languages.
 - (was) **Waiting for Ali's picks** (MOCKUPS.md rule): https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC — C6–C9 colours (rec. C6 each
   area its own colour), A1–A4 Agents layout (rec. A3 "what changed" on top), F1–F4 Follow-ups (rec. F1 one box + one list by day),
   D1–D4 Documents (rec. D1 library + ask-all), I1–I4 the new big idea (rec. I1 Autopilot: notifications do themselves). Source:

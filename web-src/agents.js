@@ -664,6 +664,10 @@ export function whatChanged(agents = [], now = Date.now(), hours = 36) {
   const out = [], since = now - hours * 3600e3;
   for (const a of agents || []) {
     if (!a || a.on === false) continue;
+    // v9.8 N1: a haggle with a seller inside the limit needs you
+    if (a.kind === "haggle") { const g = (a.sellers || []).filter((x) => x.state === "good" && !x.viewing && !x.stopped);
+      if (g.length) { const s = g[0], p = s.theirs && s.theirs.length ? Math.min(...s.theirs) : s.ask; out.push({ id: a.id, a, kind: "needs", price: p, at: s.lastAt || now, name: "Seller " + s.n + " · " + (a.what || ""), href: "" }); }
+      continue; }
     if (a.pending && a.step === "confirm") { out.push({ id: a.id, a, kind: "needs", price: a.pending.price, at: now, name: a.pending.name || "", href: a.pending.href || "" }); continue; }
     const ok = (a.checks || []).filter((c) => c.price > 0), last = ok[ok.length - 1], prev = ok[ok.length - 2];
     if (a.found && a.found.at >= since) { out.push({ id: a.id, a, kind: "found", price: a.found.price, was: prev && prev.at < a.found.at ? prev.price : 0, at: a.found.at, name: a.found.name || "", href: a.found.href || "" }); continue; }

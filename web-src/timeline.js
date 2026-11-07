@@ -2,6 +2,8 @@
    People & plans payments, bills that repeat in Money, debts, and the promises people made in chats (Chat X-Ray) — on one
    list by day, each with "what slips if you skip this". Pure: it only reads the same stores those pages keep.
    Tests: tests/unit/v740timeline.test.mjs.                                                                                  */
+import { dueList, nameOf } from "./errands.js";
+import { tr } from "./i18n.js";
 import { scheduleOf } from "./life.js";
 import { occurrences } from "./safespend.js";
 
@@ -26,7 +28,7 @@ export function nextRing(r, now) {
  * kind: reminder | trial | renewal | return | warranty | expiry | other | pay | collect | bill | owe | owed | promise
  * page: the page that owns it (reminders, radar, life, money, xray). `slip` is an English sentence for tr() with its values.
  */
-export function timeline({ reminders = [], radar = null, life = null, ledger = null, xray = [], guardian = [], now = Date.now(), days = 30, back = 14 } = {}) {
+export function timeline({ reminders = [], radar = null, life = null, ledger = null, xray = [], guardian = [], errands = [], now = Date.now(), days = 30, back = 14 } = {}) {
   const today = iso(now), until = iso(now + days * DAY), from = iso(now - back * DAY), out = [];
   const add = (x) => { if (x.date >= from && x.date <= until) out.push({ ...x, late: x.date < today }); };
   for (const r of reminders || []) {
@@ -87,12 +89,15 @@ export function timeline({ reminders = [], radar = null, life = null, ledger = n
     if (!f || f.kind === "late") continue;
     add({ id: "g:" + f.id, date: today, kind: "guardian", what: f.title || "Guardian", T: f.T || null, D: f.D || null, detail: f.detail || "", amount: num(f.amount), cur: f.currency, page: "guardian", slip: ["The Guardian caught this — check it before it costs you."] });
   }
+  // v9.8 N3: errands that need you (a licence to renew, a fine to pay, a meter to check) — on their day, late ones on top
+  try { for (const d of dueList(errands || [], now)) add({ id: "e:" + d.e.id, date: iso(d.date), kind: "errand", what: nameOf(d.e, false, tr), amount: num(d.amount || 0), page: "errands",
+    slip: [d.why === "check" ? "Time to look at the official page." : "Renew it before it expires — a late renewal can cost a fine."] }); } catch (e) {}
   return out.sort((a, b) => a.date.localeCompare(b.date) || (a.time || 0) - (b.time || 0) || b.amount - a.amount);
 }
 
 /** The list cut into days: [{ date, items }]; with the totals going out / coming in per currency for the window. */
 /** v8.2 the chips on top of Follow-ups: which group an item is in. */
-export const GROUP_OF = { pay: "money", collect: "money", bill: "money", owe: "money", owed: "money", promise: "money", reminder: "reminders",
+export const GROUP_OF = { errand: "reminders", pay: "money", collect: "money", bill: "money", owe: "money", owed: "money", promise: "money", reminder: "reminders",
   trial: "dates", renewal: "dates", return: "dates", warranty: "dates", expiry: "dates", other: "dates", guardian: "guardian" };
 export function byDay(list) {
   const days = [];

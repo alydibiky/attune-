@@ -124,6 +124,9 @@ import { ListChecks } from "lucide-react";
 import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { brainSystem, knownFor, routeTask } from "./brain.js";
+import { ErrandsPage } from "./errands-ui.jsx";
+import * as HG from "./haggle.js";
+import { scheduleMessage } from "./messages-ui.jsx";
 import { connectNow } from "./connected.js";
 import { QuietWake } from "./wake-ui.jsx";
 import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST } from "./country.js";
@@ -7763,10 +7766,10 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const OWN_TITLE = new Set(["errands", "groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
-const MODE_TITLES = { lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", groups: "WhatsApp groups", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -7814,6 +7817,7 @@ const MORE_TOOLS = [
   ["code", "Code", "Programs tested on your phone", Code2],
   ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
+  ["errands", "Errands", "Licences, fines, bills, IDs, inspections — told before each is due, with the papers", Bell],   // v9.8 N3
   ["shelf", "Shelf", "Your notes, in books", BookOpen],
   ["memory", "Mind", "Everything you keep — it files itself", Brain],
   ["remember", "Remember", "Books, articles, the news — ask Chat about them", BookOpen],
@@ -9705,7 +9709,7 @@ export default function App() {
     translateDoc: (file, lang) => { const to = lang || (() => { try { return localStorage.getItem("attune:translate:to") || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } })();
       try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} window.__attuneConvertHandoff = { files: [file], target: "translate", lang: to }; navTo("convert"); return to; },
     doSure: (t) => { try { const now = Date.now();
-      if (metroAsk(t) || parseAutomation(t) || parseWatch(t)) return true;
+      if (metroAsk(t) || parseAutomation(t) || parseWatch(t) || HG.parseHaggle(t)) return true;   // (v9.8 N1: "negotiate …" is done, not answered)
       const pm = parseMission(t, now); if (pm && pm.deadline) return true;
       const ag = parseAgent(t, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return true;
       return doSure(t, { now, stores: loadLifeStores() }); } catch (e) { return true; } },
@@ -9871,6 +9875,27 @@ export default function App() {
   // v8.7 (P5-C): every page's box reaches Home's reader for what isn't its own (Money's box: "remind me tomorrow at 9")
   useEffect(() => { window.__attuneDo = (t0) => { const t = UND.looksFranco(t0) ? UND.francoToArabic(t0) : t0; const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask || u.actions.some((a) => a.kind !== "note") ? doFromHome(t) : null; }; return () => { try { delete window.__attuneDo; } catch (e) {} }; });
   const doRef = useRef(null);
+  // v9.8 N1 The Haggler, in the background (every minute): replies read from the kept notifications, the next message sent through
+  // Messages' own path — by itself when "Send by itself" is on, else a notification with Send / Not now (one tap). Never a promise
+  // (haggle.js safeText); a price inside the limit → Agents' "Needs you" and a notification, the viewing is the person's call.
+  useEffect(() => {
+    const run = () => { try {
+      const st = loadAgents(), hs = (st.agents || []).filter((a) => a.kind === "haggle" && a.on !== false); if (!hs.length) return;
+      const notes = NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [];
+      let auto = false; try { auto = !!(NATIVE && NATIVE.msgState && JSON.parse(NATIVE.msgState() || "{}").autoOn); } catch (e) {}
+      const next = (st.agents || []).map((a) => {
+        if (a.kind !== "haggle" || a.on === false) return a;
+        let { h, sends, news } = HG.tick(a, notes, Date.now());
+        for (const x of sends) { if (!HG.safeText(x.text) || !x.seller.phone) continue;
+          scheduleMessage({ app: "whatsapp", who: tr("Seller {n}", { n: x.seller.n }) + (x.seller.name ? " · " + x.seller.name : ""), phone: x.seller.phone, text: x.text, at: Date.now() + 3000, repeat: "none", ask: !auto, auto });
+          h = HG.sent(h, x.seller.id); }
+        for (const w of news) if (w.status === "good" && NATIVE && NATIVE.schedule) { try { NATIVE.schedule(JSON.stringify({ id: "haggle-" + a.id + "-" + w.seller.id, at: Date.now() + 2000, title: tr("Negotiating · {w}", { w: a.what }), body: tr("Seller {n} is inside your limit — book a viewing?", { n: w.seller.n }), repeat: "none" })); } catch (e) {} }
+        return h;
+      });
+      saveAgents({ ...st, agents: next });
+    } catch (e) {} };
+    run(); const t = setInterval(run, 60000); return () => clearInterval(t);
+  }, []);
   // v9.8 I1 Autopilot: a suggestion saved through the same path as the Home box (money, a bill, a reminder) → { rid } for its reminder
   useEffect(() => {
     window.__attuneApplyActions = (actions) => { const now = Date.now(); let rid = "";
@@ -9906,6 +9931,10 @@ export default function App() {
     // v6.37: a goal with a number and a date («عايز أوفر 60 ألف قبل يونيو», "lose 6 kg before 20 January") → Missions, ready to start
     { const pm = parseMission(text, now); if (pm && pm.deadline) { try { localStorage.setItem("attune:missions:draft", text); } catch (e) {} navTo("missions");
       return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : tr("Your mission is ready — tap Start the mission"), open: "missions" }], undo: null }; } }
+    // v9.8 N1: "negotiate a Tucson 2022 under 1,050,000…" / «فاصلي على…» → the Haggler, opened on its page
+    { const hp = HG.parseHaggle(text); if (hp) { const h = HG.makeHaggle(hp, now), st0 = loadAgents(); saveAgents({ ...st0, agents: [h, ...st0.agents] });
+      try { localStorage.setItem("attune:agents:openchat", h.id); } catch (e) {} navTo("agents");
+      return { lines: [{ text: (ar ? "هتفاصل عن: " : tr("Negotiating for you: ")) + hp.what, open: "agents" }], undo: () => { const c = loadAgents(); saveAgents({ ...c, agents: c.agents.filter((x) => x.id !== h.id) }); } }; } }
     // v8.0 Agents: "tell me when hotels near the Haram are under 45k…", "tell me when my Amazon order arrives", "order my usual from
     // Talabat: …" → an agent on the Agents page (asked there if something is missing); "open Uber" opens the app
     { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() });
@@ -10878,6 +10907,8 @@ export default function App() {
         ) : mode === "remember" ? (
           <LibraryPage knowledge={knowledge} nativeCall={NATIVE ? nativeCall : null} flash={flash}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }} />
+        ) : mode === "errands" ? (
+          <ErrandsPage nativeCall={NATIVE ? nativeCall : null} flash={flash} profile={loadBooking()} />
         ) : mode === "reminders" ? (
           <>{/* v9.8 F1: message alerts are a chip of the page (they used to sit on top of everything) */}
           <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} alerts={<WatchPanel native={NATIVE} flash={flash} />} /></>

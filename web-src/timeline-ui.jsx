@@ -18,7 +18,7 @@ const ICON = { reminders: Bell, radar: Radar, life: Users, money: Wallet, xray: 
 // v8.2 (Ali picked 1A): the chips on top — All · Money · Reminders · Dates · Guardian
 const CHIPS = [["all", "All"], ["money", "Money"], ["reminders", "Reminders"], ["dates", "Dates"], ["guardian", "Guardian"]];
 // the parts' own pages [page, name, the chip it belongs to]
-const PAGES = [["life", "People & plans", "money"], ["reminders", "Reminders", "reminders"], ["radar", "Dates", "dates"], ["xray", "Chat X-Ray", ""], ["guardian", "Guardian", "guardian"]];
+const PAGES = [["life", "People & plans", "money"], ["reminders", "Reminders", "reminders"], ["errands", "Errands", "reminders"], ["radar", "Dates", "dates"], ["xray", "Chat X-Ray", ""], ["guardian", "Guardian", "guardian"]];
 const KIND = { reminder: "Reminder", trial: "Free trial", renewal: "Renewal", return: "Return window", warranty: "Warranty", expiry: "Document expiry", other: "Date",
   pay: "You pay", collect: "Comes in", bill: "Bill", owe: "You owe", owed: "Owed to you", promise: "Promise", guardian: "Guardian" };
 const RANGES = [[7, "7 days"], [30, "30 days"], [90, "3 months"]];
@@ -66,7 +66,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
   const all = useMemo(() => {
     const ledger = j("ledger.v3", null), life = j("attune:life:v1", null);
     let guardian = []; try { guardian = guardianFindings({ ledger, life, dismissed: (loadGuardian().dismissed || []), lang: getLang() }); } catch (e) {}
-    return timeline({ reminders: loadReminders(), radar: j("attune:radar:v1", null), life, ledger, xray: j("attune:xray:v1", []), guardian, days });
+    return timeline({ reminders: loadReminders(), radar: j("attune:radar:v1", null), life, ledger, xray: j("attune:xray:v1", []), guardian, errands: j("attune:errands:v1", []), days });
   }, [days, v]);
   const count = (c) => (c === "all" ? all.length : all.filter((x) => GROUP_OF[x.kind] === c).length);
   // v9.6: one box searches the list as you type (and adds what you send); the kind filter sits behind ⋯

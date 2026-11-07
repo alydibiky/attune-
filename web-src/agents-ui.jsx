@@ -9,6 +9,8 @@ import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCr
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./agents.js";
 import * as R from "./agent-rules.js";
+import * as HG from "./haggle.js";
+import { HaggleView } from "./haggle-ui.jsx";
 import { Ellipsis, Kanban, ListChecks, Plane, MessageCircle, Clock, Eye, Repeat, ShieldCheck, Heart, Share2 } from "lucide-react";
 import * as A2 from "./agents2.js";
 import * as L from "./lists.js";
@@ -122,7 +124,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   // v9.8 A3 (Ali picked "what changed on top, then the list"): "new" is the page; List and Board stay one tap away
   const [view, setViewRaw] = useState(() => { try { return localStorage.getItem("attune:agents:view2") || "new"; } catch (e) { return "new"; } });
   const setView = (v) => { setViewRaw(v); try { localStorage.setItem("attune:agents:view2", v); } catch (e) {} };
-  const [chat, setChat] = useState("");
+  // (v9.8: a haggle started from Home opens straight on its page)
+  const [chat, setChat] = useState(() => { try { const v = localStorage.getItem("attune:agents:openchat") || ""; if (v) localStorage.removeItem("attune:agents:openchat"); return v; } catch (e) { return ""; } });
   useSubBack(!!chat, () => setChat(""));
   const [msgs, setMsgs] = useState("");   // v9.7 Messages: "list" | "new"
   useSubBack(!!msgs, () => { setMsgs(""); setSt(A.loadAgents()); });
@@ -444,7 +447,16 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     if (d.kind === "buy") { flash && flash(T("On it: I'll find {w} and ask you before buying", { w: d.what })); setTimeout(() => buyRound(a), 300); return; }
     flash && flash(d.kind === "watch" ? T("Watching {t} — I'll tell you under {p}", { t: d.title, p: money(d.below, d.currency) }) : d.kind === "track" ? T("I'll tell you when your {app} order is on its way and arriving", { app: d.app.label }) : T("Saved: {t}", { t: d.title }));
   };
-  const submit = (s) => { const sentence = (s || text).trim(); if (!sentence) return; start(sentence, A.parseAgent(sentence, { country, installed: installedNow(), usual: st.usual, prefs: loadBooking() })); };
+  const sendHaggle = (a, sl) => {
+    if (!sl.pending || !HG.safeText(sl.pending)) return;
+    let auto = false; try { auto = !!(N && N.msgState && JSON.parse(N.msgState() || "{}").autoOn); } catch (e) {}
+    scheduleMessage({ app: "whatsapp", who: T("Seller {n}", { n: sl.n }) + (sl.name ? " · " + sl.name : ""), phone: sl.phone, text: sl.pending, at: Date.now() + 3000, repeat: "none", ask: false, auto });
+    upd(a.id, (h) => HG.sent(h, sl.id)); flash && flash(auto ? tr("Sent by itself") : tr("Tap the notification to send it in WhatsApp"));
+  };
+  const submit = (s) => { const sentence = (s || text).trim(); if (!sentence) return;
+    // v9.8 N1: "negotiate a Tucson 2022 under 1,050,000…" / «فاصلي على…» → the Haggler, opened on its page to add the sellers
+    { const hp = HG.parseHaggle(sentence); if (hp) { const h = HG.makeHaggle(hp); const cur = A.loadAgents(); put({ ...cur, agents: [h, ...cur.agents] }); setText(""); setChat(h.id); return; } }
+    start(sentence, A.parseAgent(sentence, { country, installed: installedNow(), usual: st.usual, prefs: loadBooking() })); };
   const reply = () => { if (!draft) return; const s = A.withAnswer(draft.text, draft.d.ask, answer); start(s, A.parseAgent(s, { country, installed: installedNow(), usual: st.usual, prefs: loadBooking() })); };
 
   // v9.0 (Ali: "make each one a different tab"): one tab per running agent (+ each Scout goal, + the message alerts); the chosen
@@ -459,10 +471,11 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   // v9.2: every agent (and each Scout goal, the message alerts) as { id, st, kind, title, site, price, el } — one list, grouped
   const setRules = (a, rules) => upd(a.id, (y) => ({ ...y, rules, ...(rules.below ? { below: rules.below } : {}), ...(a.ruleLog ? { ruleLog: a.ruleLog } : {}) }));
   const extra = { setRules, understand: understandRule, flash };
-  const priceOf = (a) => { const p = a.pending || a.found || (R.applyRules(a.best3 || [], a.rules)[0]); return p && p.price ? money(p.price, p.currency || a.currency) : ""; };
+  const priceOf = (a) => { if (a.kind === "haggle") { const b = HG.bestOf(a).best; return b ? money(b.p, "") : ""; } const p = a.pending || a.found || (R.applyRules(a.best3 || [], a.rules)[0]); return p && p.price ? money(p.price, p.currency || a.currency) : ""; };
   const liveSt = (a) => a.kind === "reply" ? (a.on === false ? "paused" : A2.waitingChats(readInbox(), { hours: a.hours || 3 }).length ? "needs" : "working")
     : a.kind === "restock" ? (a.on === false ? "paused" : (() => { try { return A2.restockDue(JSON.parse(localStorage.getItem("ledger.v3") || "null"), { soon: 2 }).length ? "needs" : "working"; } catch (e) { return "working"; } })())
-    : a.kind === "clinic" ? (a.on === false ? "paused" : "found") : R.agentStatus(a);   // v9.4: the group follows what the card shows
+    : a.kind === "clinic" ? (a.on === false ? "paused" : "found")
+    : a.kind === "haggle" ? (a.on === false ? "paused" : HG.bestOf(a).good.length || (a.sellers || []).some((x) => x.pending) ? "needs" : "working") : R.agentStatus(a);   // v9.4: the group follows what the card shows
   // v9.7 Messages: the scheduled messages are one card here (their own page has the list) — not one card each
   const sends = st.agents.filter((a) => a.kind === "send" && (a.state !== "sent" || (a.repeat && a.repeat !== "none")));
   const msgCard = sends.length ? [{ id: "messages", st: "working", kind: "send", title: T("Messages · {n} scheduled", { n: sends.length }), site: "", price: "",
@@ -477,6 +490,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         : a.kind === "restock" ? <RestockCard key={a.id} a={a} openMoney={() => navTo && navTo("money")} toList={(items) => { const st0 = L.loadLists(); const ex = L.findList(st0, ar ? "الطلبات" : "Shopping");
             const next = ex ? L.addItem(st0, ex.id, items.join(",")) : L.addList(st0, L.makeList({ name: ar ? "الطلبات" : tr("Shopping"), items, repeat: { every: "once" } })); L.saveLists(next); flash && flash(T("Added to your shopping list: {n}", { n: items.length })); }} findCheapest={(x) => submit((ar ? "اشتريلي " : "Buy me ") + x.item)} remindOn={(x) => { remind("restock-" + encodeURIComponent(x.item).slice(0, 40), Date.parse(x.due + "T09:00:00"), T("Running low: {w}", { w: x.item }), tr("Time to buy it again")); flash && flash(T("I'll remind you on {d}", { d: whenTxt(Date.parse(x.due + "T09:00:00")) })); }} {...{ remove, toggle }} {...extra} />
         : a.kind === "protect" ? <ProtectCard key={a.id} a={a} busy={busy === a.id} {...{ remove, toggle, checkNow, flash }} {...extra} />
+        : a.kind === "haggle" ? <button key={a.id} onClick={() => setChat(a.id)} className={U.card + " w-full text-start p-3.5 space-y-0.5"} data-testid="haggle-card"><b className="block text-[14.5px]" dir="auto">{T("Negotiating · {w}", { w: a.what })}</b><span className="block text-[12.5px] c-sub">{(() => { const b = HG.bestOf(a); return b.best ? T("Best so far: {p} · talking to {n}", { p: money(b.best.p, ""), n: b.talking }) : T("Sellers · {n}", { n: (a.sellers || []).length }); })()}</span></button>
         : a.kind === "clinic" ? <ClinicCard key={a.id} a={a} {...{ remove, toggle, openSite }} {...extra} />
         : a.kind === "trip" ? <TripCard key={a.id} a={a} setDrive={(x, m) => upd(x.id, (y) => ({ ...y, drive: m, reminded: false }))} remindTrip={tripRemind} {...{ remove, toggle, navTo }} {...extra} />
         : a.kind === "follow" ? <FollowCard key={a.id} a={a} {...{ runFollow, remove, toggle }} {...extra} /> : a.kind === "buy" ? <BuyCard key={a.id} a={a} busy={busy === a.id} {...{ buyRound, confirmBuy, notThis, markDone, remove, toggle, openApp, openBest }} {...extra} />
@@ -494,6 +508,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
 
   if (msgs) return <MessagesPage back={() => { setMsgs(""); setSt(A.loadAgents()); }} flash={flash} nativeCall={nativeCall} drafter={drafter} startNew={msgs === "new"} />;
   const open = chat && cards.find((c) => c.id === chat);
+  if (open && open.a && open.a.kind === "haggle") return <HaggleView a={A.loadAgents().agents.find((x) => x.id === open.id) || open.a} back={() => setChat("")} upd={upd} flash={flash} send={sendHaggle} />;
   if (open) return <AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} />;
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agents-page">
