@@ -54,8 +54,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=phone-home]").count() == 0, "a general question goes to Chat, as before")
     ctx.close()
     # computer
-    ctx, page = new_page(br, env, errors, extra_init=INIT % ("home", J(FIT), J(LEDGER), J(CARE), J(LIFE)))
-    page.set_viewport_size({"width": 1366, "height": 860})
+    ctx, page = new_page(br, env, errors, extra_init=INIT % ("home", J(FIT), J(LEDGER), J(CARE), J(LIFE)), desktop=(1366, 860))   # v9.8: a real computer (mouse) — Enter sends there
     page.goto(env.url); page.wait_for_selector("[data-testid=desk-home]", timeout=15000)
     page.fill("[data-testid=home-ask]", "spent 80 on a taxi"); page.keyboard.press("Enter"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=do-result]").count() == 1 and store(page, "ledger.v3")["txns"][0]["cat"] == "transport", "computer: «spent 80 on a taxi» → Money (transport)")
