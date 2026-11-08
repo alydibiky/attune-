@@ -11565,4 +11565,9 @@ export const JA = {
   "breakfast": "朝食",
   "free cancellation": "無料キャンセル",
   "pay at property": "現地払い",
+  "Cards": "カード",
+  "Best on {s}": "{s} で最安",
+  "{n} more": "ほか {n} 件",
+  "Watching for under {p}": "{p} 未満を見守り中",
+  "Nothing found yet — it keeps checking.": "まだ見つかりません — 探し続けます。",
 };

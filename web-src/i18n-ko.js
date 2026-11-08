@@ -11565,4 +11565,9 @@ export const KO = {
   "breakfast": "조식",
   "free cancellation": "무료 취소",
   "pay at property": "현장 결제",
+  "Cards": "카드",
+  "Best on {s}": "{s} 최저가",
+  "{n} more": "{n}개 더",
+  "Watching for under {p}": "{p} 미만 지켜보는 중",
+  "Nothing found yet — it keeps checking.": "아직 없어요 — 계속 찾아요.",
 };

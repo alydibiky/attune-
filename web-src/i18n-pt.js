@@ -11566,4 +11566,9 @@ export const PT = {
   "breakfast": "café da manhã",
   "free cancellation": "cancelamento grátis",
   "pay at property": "pagamento na propriedade",
+  "Cards": "Cartões",
+  "Best on {s}": "Melhor em {s}",
+  "{n} more": "mais {n}",
+  "Watching for under {p}": "Acompanhando abaixo de {p}",
+  "Nothing found yet — it keeps checking.": "Nada ainda — continua procurando.",
 };

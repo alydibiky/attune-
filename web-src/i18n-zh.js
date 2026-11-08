@@ -11565,4 +11565,9 @@ export const ZH = {
   "breakfast": "含早餐",
   "free cancellation": "免费取消",
   "pay at property": "到店付款",
+  "Cards": "卡片",
+  "Best on {s}": "{s} 上最好的",
+  "{n} more": "还有 {n} 个",
+  "Watching for under {p}": "关注低于 {p}",
+  "Nothing found yet — it keeps checking.": "还没找到 — 会继续查找。",
 };

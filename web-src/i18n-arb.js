@@ -11557,4 +11557,9 @@ export const ARB = {
   "breakfast": "إفطار",
   "free cancellation": "إلغاء مجاني",
   "pay at property": "الدفع في الفندق",
+  "Cards": "بطاقات",
+  "Best on {s}": "الأفضل على {s}",
+  "{n} more": "{n} أخرى",
+  "Watching for under {p}": "يراقب لما هو أقل من {p}",
+  "Nothing found yet — it keeps checking.": "لم يجد شيئًا بعد — سيواصل البحث.",
 };

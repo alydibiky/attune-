@@ -11566,4 +11566,9 @@ export const HI = {
   "breakfast": "नाश्ता",
   "free cancellation": "मुफ़्त रद्दीकरण",
   "pay at property": "होटल पर भुगतान",
+  "Cards": "कार्ड",
+  "Best on {s}": "{s} पर सबसे अच्छा",
+  "{n} more": "{n} और",
+  "Watching for under {p}": "{p} से कम पर नज़र",
+  "Nothing found yet — it keeps checking.": "अभी कुछ नहीं — खोज जारी है।",
 };

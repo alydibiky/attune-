@@ -11565,4 +11565,9 @@ export const RU = {
   "breakfast": "завтрак",
   "free cancellation": "бесплатная отмена",
   "pay at property": "оплата на месте",
+  "Cards": "Карточки",
+  "Best on {s}": "Лучшее на {s}",
+  "{n} more": "ещё {n}",
+  "Watching for under {p}": "Ждёт цену ниже {p}",
+  "Nothing found yet — it keeps checking.": "Пока ничего — продолжает искать.",
 };

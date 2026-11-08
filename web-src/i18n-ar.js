@@ -8634,4 +8634,9 @@ export const AR = {
   "breakfast": "فطار",
   "free cancellation": "إلغاء مجاني",
   "pay at property": "الدفع في الفندق",
+  "Cards": "كروت",
+  "Best on {s}": "الأرخص على {s}",
+  "{n} more": "{n} كمان",
+  "Watching for under {p}": "بيراقب لحد أقل من {p}",
+  "Nothing found yet — it keeps checking.": "لسه ملقاش حاجة — هيفضل يدوّر.",
 };

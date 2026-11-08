@@ -11565,4 +11565,9 @@ export const BN = {
   "breakfast": "নাশতা",
   "free cancellation": "বিনামূল্যে বাতিল",
   "pay at property": "হোটেলে পরিশোধ",
+  "Cards": "কার্ড",
+  "Best on {s}": "{s}-এ সেরা",
+  "{n} more": "আরও {n}টি",
+  "Watching for under {p}": "{p}-এর নিচে নজর",
+  "Nothing found yet — it keeps checking.": "এখনো কিছু নেই — খোঁজা চলছে।",
 };

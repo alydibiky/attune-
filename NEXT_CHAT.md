@@ -27,8 +27,11 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   (old ones in `archive/guide-v97/removed-lines.txt`), Errands sits with Reminders.
 - **Zakāt**: "If your money stays as it is, you will pay about X on <ḥawl end> (2.5 % of Y)" or "it stays under the niṣāb"
   (`zakatPage().projected`).
-- **Waiting for Ali's pick**: A5–A8 (the Agents page look; rec. A5 one card per agent with its best offer) and T1–T4 (Tools colours;
-  rec. T1 each tool its own colour) on https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC.
+- **Ali picked A5 + T1 (8 Nov) — BUILT (v9.8.2)**: Agents' default view "Cards" (`agents-ui.jsx AgentCardsA5`): one card per agent —
+  its site, what it watches, "checked … ago", your conditions, what changed since yesterday, and its best offer INSIDE (name, days,
+  site, "n more", price) with Open the listing; no offer → "Watching for under …". List / Board one tap away. Tools (`tools-hub-ui.jsx
+  TOOL_COLOR`): a solid colour per tool with a white mark (Writing violet, Files orange, Ask a PDF blue), numbers in ink, quiet badges.
+  Test: e2e_v980picks (A5 + T1).
 - Tests: v980fixes (67), e2e_v980autopilot / e2e_v980picks / e2e_v731guide updated.
 
 ## v9.8 — 7 Nov: Ali's 15-point phone list ("fix it for good") — BUILT + options waiting for his picks

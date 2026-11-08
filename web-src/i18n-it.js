@@ -11566,4 +11566,9 @@ export const IT = {
   "breakfast": "colazione",
   "free cancellation": "cancellazione gratuita",
   "pay at property": "pagamento in struttura",
+  "Cards": "Schede",
+  "Best on {s}": "Il migliore su {s}",
+  "{n} more": "altri {n}",
+  "Watching for under {p}": "Osserva sotto {p}",
+  "Nothing found yet — it keeps checking.": "Ancora niente — continua a cercare.",
 };

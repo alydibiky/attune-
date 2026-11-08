@@ -11566,4 +11566,9 @@ export const TRK = {
   "breakfast": "kahvaltı",
   "free cancellation": "ücretsiz iptal",
   "pay at property": "tesiste ödeme",
+  "Cards": "Kartlar",
+  "Best on {s}": "{s} üzerinde en iyisi",
+  "{n} more": "{n} tane daha",
+  "Watching for under {p}": "{p} altını izliyor",
+  "Nothing found yet — it keeps checking.": "Henüz bir şey yok — aramaya devam ediyor.",
 };

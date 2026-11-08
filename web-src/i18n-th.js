@@ -11565,4 +11565,9 @@ export const TH = {
   "breakfast": "อาหารเช้า",
   "free cancellation": "ยกเลิกฟรี",
   "pay at property": "ชำระที่ที่พัก",
+  "Cards": "การ์ด",
+  "Best on {s}": "ดีที่สุดบน {s}",
+  "{n} more": "อีก {n}",
+  "Watching for under {p}": "เฝ้าดูต่ำกว่า {p}",
+  "Nothing found yet — it keeps checking.": "ยังไม่พบ — กำลังค้นหาต่อ",
 };

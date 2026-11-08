@@ -544,9 +544,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       {/* v9.2 (Ali picked 2A): one card shape for every agent; "Needs you" first, then Working, then Done — List or Board */}
       <div className="flex items-center gap-2 pt-1"><p className="flex-1 text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] m-0" data-testid="agents-running">{T("Running · {n}", { n: r.running })}</p>
         {r.running ? <span className="inline-flex rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] p-0.5" role="group" aria-label={tr("View")} data-testid="agents-view">
-          {[["new", "What's new", BellRing], ["list", "List", ListChecks], ["board", "Board", Kanban]].map(([k, l, Ic]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} data-testid={"agents-view-" + k}
+          {[["new", "Cards", AppWindow], ["list", "List", ListChecks], ["board", "Board", Kanban]].map(([k, l, Ic]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} data-testid={"agents-view-" + k}
             className={"min-h-[36px] px-3 rounded-full text-[12.5px] font-extrabold inline-flex items-center gap-1 " + (view === k ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "c-sub")}><Ic size={14} />{tr(l)}</button>)}</span> : null}</div>
-      {view === "new" && r.running ? <WhatsNew changes={A.whatChanged(st.agents)} cards={cards} openBest={openBest} openChat={(c) => (c.id === "messages" ? setMsgs("list") : setChat(c.id))} /> : null}
+      {view === "new" && r.running ? <AgentCardsA5 changes={A.whatChanged(st.agents)} cards={cards} openBest={openBest} openChat={(c) => (c.id === "messages" ? setMsgs("list") : setChat(c.id))} /> : null}
       {view === "board" && r.running ? <div className="flex gap-2.5 overflow-x-auto -mx-1 px-1 pb-2 snap-x" data-testid="agents-board">
         {BOARD.map(([k, l]) => { const items = cards.filter((c) => (k === "working" ? c.st === "working" : k === "done" ? c.st === "done" || c.st === "paused" : c.st === "found" || c.st === "needs"));
           return <div key={k} className="snap-start shrink-0 w-[200px] lg:w-auto lg:flex-1 rounded-[16px] bg-[var(--c-soft)] p-2 space-y-2" data-testid={"agents-col-" + k}>
@@ -573,6 +573,33 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
 /* ---- v9.8 A3: what changed since yesterday (a find, a drop, one waiting for you) on top — each opens its listing at once — then
    every agent as ONE quiet row (tap → its conversation). Nothing else on the page. */
 const CHANGE_LINE = { needs: "Waiting for your OK", found: "Found under your price", drop: "Price dropped", rise: "Price went up" };
+/* ---- v9.8 A5 (Ali picked "one card per agent, its best offer inside" — MOCKUPS.md, https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC):
+   each agent is one card: its site, what it watches, when it last looked and your conditions, then its best offer right there (name,
+   days, price) with Open the listing — no extra tap. What changed since yesterday is a line on its own card ("Price dropped · was …").
+   A card with no offer yet says what it is waiting for. */
+function AgentCardsA5({ changes, cards, openBest, openChat }) {
+  const LINE = { needs: "Waiting for your OK", found: "Found under your price", drop: "Price dropped", rise: "Price went up" };
+  return <div className="space-y-2.5" data-testid="agents-a5">
+    {cards.map((c) => { const a = c.a, ch = changes.find((x) => x.id === c.id), cur = (a && a.currency) || "";
+      const offers = a ? R.applyRules(a.best3 || [], a.rules || {}) : [], o = offers[0] || (a && a.found && a.found.price ? { ...a.found, url: a.url, site: a.site } : null);
+      const last = a && (a.checks || []).length ? a.checks[a.checks.length - 1].at : a && a.lastRun;
+      const chips = a ? R.ruleChips(a.rules || {}).filter((x) => x.key !== "autonomy" && x.key !== "hours").slice(0, 3).map((x) => tr(x.en, x.v)) : [];
+      return <section key={c.id} className={U.card + " p-3.5 space-y-2"} style={ch ? { borderColor: ch.kind === "rise" ? "var(--c-neg)" : "var(--c-pos)" } : undefined} data-testid="agent-a5">
+        <button onClick={() => openChat(c)} className="w-full flex items-center gap-2.5 text-start" data-testid="agent-a5-head">
+          {c.site ? <SiteMark site={c.site} size={36} /> : <span className="w-9 h-9 rounded-[11px] bg-[var(--c-soft)] c-acc grid place-items-center shrink-0">{React.createElement(KIND_ICON[c.kind] || AppWindow, { size: 17 })}</span>}
+          <span className="flex-1 min-w-0"><b className="block text-[14.5px] leading-tight" dir="auto">{c.title}</b>
+            <span className="block text-[11.5px] c-sub truncate">{[last ? T("checked {t}", { t: ago(last) }) : tr(c.st === "done" ? "Done" : c.st === "paused" ? "Paused" : "Watching"), ...chips].join(" · ")}</span></span>
+          <ChevronRight size={16} className="c-sub shrink-0 rtl:-scale-x-100" /></button>
+        {ch ? <p className={"m-0 text-[12.5px] font-extrabold " + (ch.kind === "rise" ? "c-neg" : "c-pos")} data-testid="agent-a5-change">{tr(LINE[ch.kind])}{ch.was ? " · " + T("was {p}", { p: money(ch.was, cur) }) : ""}</p> : null}
+        {o && o.price ? <div className="rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-2.5 space-y-2" data-testid="agent-a5-offer">
+          <div className="flex items-start gap-2"><span className="flex-1 min-w-0"><b className="block text-[14px] leading-snug" dir="auto">{o.name && !R.isSiteName(o.name, a.site) ? o.name : T("Best on {s}", { s: A.siteOfOffer(o) || a.site || "" })}</b>
+            <span className="block text-[11.5px] c-sub">{[o.checkin && o.checkout ? o.checkin.slice(5).replace("-", "/") + " → " + o.checkout.slice(5).replace("-", "/") : "", A.siteOfOffer(o), offers.length > 1 ? T("{n} more", { n: offers.length - 1 }) : ""].filter(Boolean).join(" · ")}</span></span>
+            <b className="text-[16px] tabular-nums shrink-0" dir="ltr">{money(o.price, o.currency || cur)}</b></div>
+          <button onClick={() => openBest(a, o)} className="w-full min-h-[40px] rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13px] font-extrabold inline-flex items-center justify-center gap-1.5" data-testid="agent-a5-open"><ExternalLink size={14} />{tr("Open the listing")}</button>
+        </div> : <p className="m-0 text-[12.5px] c-sub" dir="auto" data-testid="agent-a5-wait">{a && a.below ? T("Watching for under {p}", { p: money(a.below, cur) }) : c.price ? c.price : tr("Nothing found yet — it keeps checking.")}</p>}
+      </section>; })}
+  </div>;
+}
 function WhatsNew({ changes, cards, openBest, openChat }) {
   const cur = (a) => a.currency || "";
   const quiet = cards.filter((c) => !changes.some((x) => x.id === c.id));

@@ -11565,4 +11565,9 @@ export const FA = {
   "breakfast": "صبحانه",
   "free cancellation": "لغو رایگان",
   "pay at property": "پرداخت در محل اقامت",
+  "Cards": "کارت‌ها",
+  "Best on {s}": "بهترین در {s}",
+  "{n} more": "{n} مورد دیگر",
+  "Watching for under {p}": "پایش زیر {p}",
+  "Nothing found yet — it keeps checking.": "هنوز چیزی نیست — جستجو ادامه دارد.",
 };

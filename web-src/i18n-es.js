@@ -11566,4 +11566,9 @@ export const ES = {
   "breakfast": "desayuno",
   "free cancellation": "cancelación gratis",
   "pay at property": "pago en el alojamiento",
+  "Cards": "Tarjetas",
+  "Best on {s}": "Lo mejor en {s}",
+  "{n} more": "{n} más",
+  "Watching for under {p}": "Vigilando por debajo de {p}",
+  "Nothing found yet — it keeps checking.": "Aún nada — sigue buscando.",
 };

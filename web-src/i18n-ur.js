@@ -11566,4 +11566,9 @@ export const UR = {
   "breakfast": "ناشتہ",
   "free cancellation": "مفت منسوخی",
   "pay at property": "ہوٹل پر ادائیگی",
+  "Cards": "کارڈز",
+  "Best on {s}": "{s} پر بہترین",
+  "{n} more": "{n} مزید",
+  "Watching for under {p}": "{p} سے کم کی نگرانی",
+  "Nothing found yet — it keeps checking.": "ابھی کچھ نہیں — تلاش جاری ہے۔",
 };

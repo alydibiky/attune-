@@ -17,6 +17,9 @@ import { studioPaused } from "./device.js";
 const I = (s) => "⁦" + s + "⁩";
 const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) => [x, /\d/.test(String(y)) ? I(y) : y])) : v);
 const C = { writing: "var(--c-chart-1)", files: "var(--c-chart-2)", instant: "var(--c-chart-3)", pdf: "var(--c-chart-3)", library: "var(--c-chart-4)", studio: "var(--c-chart-4)", video: "var(--c-acc)" };
+// v9.8 T1 (Ali picked "each tool its own colour" — MOCKUPS.md, https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC; he said the colours
+// "look bad": pink boxes, red numbers): a solid colour per tool with a white mark; the numbers in ink; the badges quiet
+export const TOOL_COLOR = { writing: "#6D3FB5", files: "#C2593E", pdf: "#2F6FA8", instant: "#0F766E", library: "#1E7A43", studio: "#9A5B05", video: "#7A1F3D" };
 export const FAMS = [
   ["writing", "write", "Writing", "Paste or type any text, then pick what to do with it.", Sparkles],   // v9.2: Copilot / Prompt lab are archived
   ["files", "convert", "Files & Converter", "Edit a PDF · PDF → Word · Photos → PDF · Merge", FileText],
@@ -39,8 +42,8 @@ export function useToolLog() {
 }
 function Tile({ label, value, sub, pill, tone, testid }) {
   return <div className={U.card + " p-3.5 min-w-0 space-y-1"} data-testid={testid}>
-    <div className="flex items-start justify-between gap-2"><span className="text-[12px] font-bold text-[var(--c-mut)] leading-tight">{label}</span>{pill ? <span className={U.tag(tone || "green") + " shrink-0"}>{pill}</span> : null}</div>
-    <b className="block tabular-nums text-[clamp(18px,5vw,23px)] font-black tracking-tight leading-tight text-[var(--c-acc)]" dir="auto">{value}</b>
+    <div className="flex items-start justify-between gap-2"><span className="text-[12px] font-bold text-[var(--c-mut)] leading-tight">{label}</span>{pill ? <span className={U.tag(tone || "gray") + " shrink-0"}>{pill}</span> : null}</div>
+    <b className="block tabular-nums text-[clamp(18px,5vw,23px)] font-black tracking-tight leading-tight text-[var(--c-ink)]" dir="auto" data-testid="tools-kpi-value">{value}</b>
     {sub ? <span className="block text-[11.5px] text-[var(--c-mut)] leading-snug">{sub}</span> : null}
   </div>;
 }
@@ -76,9 +79,9 @@ export function ToolsHub({ tools, navTo, pages, groups }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="tools-families">
         {FAMS_SHOWN.filter(([f, mode]) => f !== "studio" && f !== "library" && !hiddenFromMenus(mode)).map(([f, mode, title, sub, Icon]) => <button key={f} onClick={() => navTo(mode)} data-testid={"tools-page-" + mode}
           className={U.card + " text-start p-4 min-h-[96px] flex items-start gap-3 hover:border-[var(--c-acc)] transition-colors duration-150"}>
-          <span className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center" style={{ background: "var(--c-soft)", color: C[f] }}><Icon size={19} /></span>
+          <span className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center text-white" style={{ background: TOOL_COLOR[f] || C[f] }} data-testid="tools-icon"><Icon size={19} /></span>
           <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="text-[15.5px] font-extrabold leading-tight">{tr(title)}</span>
-            {r.by[f] ? <span className={U.tag("green") + " shrink-0"}>{T("{n} this week", { n: r.by[f] })}</span> : null}</span>
+            {r.by[f] ? <span className={U.tag("gray") + " shrink-0"}>{T("{n} this week", { n: r.by[f] })}</span> : null}</span>
             <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-1">{tr(sub)}</span></span></button>)}
       </div>
       <div className="space-y-3"><Recent items={r.recent} navTo={navTo} />

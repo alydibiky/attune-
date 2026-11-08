@@ -11566,4 +11566,9 @@ export const IDN = {
   "breakfast": "sarapan",
   "free cancellation": "pembatalan gratis",
   "pay at property": "bayar di properti",
+  "Cards": "Kartu",
+  "Best on {s}": "Terbaik di {s}",
+  "{n} more": "{n} lagi",
+  "Watching for under {p}": "Memantau di bawah {p}",
+  "Nothing found yet — it keeps checking.": "Belum ada — terus mencari.",
 };

@@ -11566,4 +11566,9 @@ export const SW = {
   "breakfast": "kifungua kinywa",
   "free cancellation": "kughairi bila malipo",
   "pay at property": "lipa kwenye malazi",
+  "Cards": "Kadi",
+  "Best on {s}": "Bora kwenye {s}",
+  "{n} more": "{n} zaidi",
+  "Watching for under {p}": "Inafuatilia chini ya {p}",
+  "Nothing found yet — it keeps checking.": "Bado hakuna — inaendelea kutafuta.",
 };

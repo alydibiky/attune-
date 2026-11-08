@@ -11565,4 +11565,9 @@ export const VI = {
   "breakfast": "bữa sáng",
   "free cancellation": "hủy miễn phí",
   "pay at property": "thanh toán tại chỗ nghỉ",
+  "Cards": "Thẻ",
+  "Best on {s}": "Tốt nhất trên {s}",
+  "{n} more": "thêm {n}",
+  "Watching for under {p}": "Theo dõi dưới {p}",
+  "Nothing found yet — it keeps checking.": "Chưa thấy gì — vẫn đang tìm.",
 };
