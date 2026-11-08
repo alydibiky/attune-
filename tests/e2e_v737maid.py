@@ -37,6 +37,11 @@ with sync_playwright() as p:
     # untick there → out of Money again
     page.locator("[data-testid=life-item]:has-text('Maid') [data-testid=life-tick][aria-pressed=true]").click(); page.wait_for_timeout(300)
     check(len(page.evaluate("JSON.parse(localStorage.getItem('ledger.v3'))")["txns"]) == 0, "unticked → taken out of Money")
+    # v9.8.2 (Ali: "I don't want to be able to press the maid 1 week ago and it tells me out of money / in money")
+    past = page.locator("[data-testid=life-item]:has-text('Maid') [data-testid=life-tick][data-locked='1']")
+    n0 = len(page.evaluate("JSON.parse(localStorage.getItem('ledger.v3'))")["txns"])
+    if past.count(): past.first.click(force=True); page.wait_for_timeout(300)
+    check(past.count() >= 1 and len(page.evaluate("JSON.parse(localStorage.getItem('ledger.v3'))")["txns"]) == n0, "a past (or future) maid day can't be pressed — Money stays as it is (%d locked boxes)" % past.count())
     # v6.34 (Ali: "when the deadline of a subscription comes, a checkbox asks me if I paid; yes = recorded in Money")
     page.evaluate("""() => { const d = new Date(), iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       localStorage.setItem('attune:radar:v1', JSON.stringify({ items: [

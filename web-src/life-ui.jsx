@@ -161,13 +161,15 @@ function Item({ c, onTick, onRemove, onPay, onWho }) {
       {c.kind === "regular" && show.length > 1 ? (
         // v7.2 (Gemini's Area 1): a box per payment with its date and amount — paid green, the next one due amber
         <div className="flex flex-wrap gap-1.5 mt-3">
-          {show.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid; return (
-            <button key={s.i} onClick={() => tap(s.i, s.paid, s.amount)} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick"
+          {/* v9.8.2 (Ali: "I don't want to be able to press the maid 1 week ago and it tells me out of money / in money"): only TODAY's
+              box can be ticked; a past day shows what happened (✓ / —) and a future one waits — neither touches Money */}
+          {show.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid, today = s.date === todayIso(), locked = !today; return (
+            <button key={s.i} onClick={() => { if (!locked) tap(s.i, s.paid, s.amount); }} disabled={locked} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick" data-locked={locked ? "1" : "0"}
               aria-pressed={s.paid} aria-label={tr("Payment {k}", { k: s.i + 1 }) + " · " + s.date}
-              className="min-w-[60px] min-h-[44px] px-2 py-1 rounded-[12px] flex flex-col items-center justify-center gap-px text-[11px] font-bold tabular-nums transition-colors duration-150"
+              className={"min-w-[60px] min-h-[44px] px-2 py-1 rounded-[12px] flex flex-col items-center justify-center gap-px text-[11px] font-bold tabular-nums transition-colors duration-150 " + (locked ? "cursor-default opacity-80" : "")}
               style={{ background: s.paid ? "color-mix(in srgb, var(--c-pos) 14%, transparent)" : nx ? "color-mix(in srgb, var(--c-warn) 14%, transparent)" : "var(--c-surf)",
                 border: "1.5px solid " + (s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-ln)"), color: s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-mut)" }}>
-              <span>{tickDay(s.date, c.kind === "regular")}</span><span className="flex items-center gap-0.5">{s.paid ? <Check size={11} /> : null}{nx && !s.paid ? tr("Due") + " " : ""}{short(s.amount)}</span></button>); })}
+              <span>{tickDay(s.date, c.kind === "regular")}</span><span className="flex items-center gap-0.5">{s.paid ? <Check size={11} /> : s.date < todayIso() ? "— " : null}{nx && !s.paid && today ? tr("Due") + " " : ""}{short(s.amount)}</span></button>); })}
         </div>) : show.length <= 1 ? (
         <button onClick={() => tap(0, (c.paid || []).includes(0), c.amount)} className={"mt-3 min-h-[44px] flex items-center gap-2 text-[13.5px] font-bold " + U.muted} data-testid="life-tick">
           <span className="w-6 h-6 rounded-[12px] flex items-center justify-center" style={{ background: (c.paid || []).includes(0) ? "var(--c-acc)" : "transparent", border: "1.5px solid var(--c-acc)", color: "var(--c-on-acc)" }}>{(c.paid || []).includes(0) ? <Check size={12} /> : null}</span>
