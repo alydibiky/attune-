@@ -55,6 +55,11 @@ class PayListener : NotificationListenerService() {
         try {
             if (sbn == null || sbn.packageName == packageName) return
             WatchMatch.smsAllowed = Prefs.smsNotifs(applicationContext)   // the SMS switch (on unless the person turned it off)
+            // v9.9 (Ali's Recall screenshot: "Payments · Maps · 50 m · At the roundabout…" ×20): turn-by-turn navigation, a download's
+            // progress and other notifications that keep updating are not messages or payments — none of them is kept
+            val nf = sbn.notification
+            if (sbn.isOngoing || nf?.category == android.app.Notification.CATEGORY_NAVIGATION || nf?.category == android.app.Notification.CATEGORY_PROGRESS
+                || nf?.category == android.app.Notification.CATEGORY_TRANSPORT || nf?.category == android.app.Notification.CATEGORY_STOPWATCH) return
             val ex = sbn.notification?.extras ?: return
             val title = ex.getCharSequence("android.title")?.toString().orEmpty()
             var text = (ex.getCharSequence("android.bigText") ?: ex.getCharSequence("android.text"))?.toString().orEmpty()

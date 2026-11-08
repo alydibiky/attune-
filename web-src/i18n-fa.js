@@ -11605,4 +11605,7 @@ export const FA = {
   "Done — {w} is now {a} from today (was {b}).": "انجام شد — {w} از امروز {a} است (قبلاً {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "انجام شد — {w} به {d} منتقل شد، اولین بار {f}.",
   "the {n} of each month": "روز {n} هر ماه",
+  "Added to Subscriptions: {n} · {a} a month": "به اشتراک‌ها اضافه شد: {n} · ماهی {a}",
+  "{n} paid this month: {a}": "{n} این ماه پرداخت شد: {a}",
+  "added to Subscriptions": "به اشتراک‌ها اضافه شد",
 };

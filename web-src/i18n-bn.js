@@ -11605,4 +11605,7 @@ export const BN = {
   "Done — {w} is now {a} from today (was {b}).": "হয়ে গেছে — {w} আজ থেকে {a} (আগে {b})।",
   "Done — {w} moves to {d}, the first time on {f}.": "হয়ে গেছে — {w} এখন {d}-এ, প্রথমবার {f}।",
   "the {n} of each month": "প্রতি মাসের {n} তারিখ",
+  "Added to Subscriptions: {n} · {a} a month": "সাবস্ক্রিপশনে যোগ হয়েছে: {n} · মাসে {a}",
+  "{n} paid this month: {a}": "{n} এই মাসে পরিশোধ: {a}",
+  "added to Subscriptions": "সাবস্ক্রিপশনে যোগ হয়েছে",
 };

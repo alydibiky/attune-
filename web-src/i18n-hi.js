@@ -11606,4 +11606,7 @@ export const HI = {
   "Done — {w} is now {a} from today (was {b}).": "हो गया — {w} आज से {a} है (पहले {b})।",
   "Done — {w} moves to {d}, the first time on {f}.": "हो गया — {w} अब {d} को, पहली बार {f}।",
   "the {n} of each month": "हर महीने की {n} तारीख़",
+  "Added to Subscriptions: {n} · {a} a month": "सदस्यताओं में जोड़ा: {n} · {a} प्रति माह",
+  "{n} paid this month: {a}": "{n} का इस महीने भुगतान हुआ: {a}",
+  "added to Subscriptions": "सदस्यताओं में जोड़ा",
 };

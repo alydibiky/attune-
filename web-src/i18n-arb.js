@@ -11597,4 +11597,7 @@ export const ARB = {
   "Done — {w} is now {a} from today (was {b}).": "تم — أصبح {w} {a} من اليوم (كان {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "تم — نُقل {w} إلى {d}، أول مرة في {f}.",
   "the {n} of each month": "اليوم {n} من كل شهر",
+  "Added to Subscriptions: {n} · {a} a month": "أُضيف إلى الاشتراكات: {n} · {a} شهريًا",
+  "{n} paid this month: {a}": "دُفع {n} هذا الشهر: {a}",
+  "added to Subscriptions": "أُضيف إلى الاشتراكات",
 };

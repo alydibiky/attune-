@@ -11605,4 +11605,7 @@ export const DE = {
   "Done — {w} is now {a} from today (was {b}).": "Erledigt — {w} kostet ab heute {a} (vorher {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "Erledigt — {w} wechselt auf {d}, das erste Mal am {f}.",
   "the {n} of each month": "der {n}. jedes Monats",
+  "Added to Subscriptions: {n} · {a} a month": "Zu Abos hinzugefügt: {n} · {a} im Monat",
+  "{n} paid this month: {a}": "{n} diesen Monat bezahlt: {a}",
+  "added to Subscriptions": "zu Abos hinzugefügt",
 };

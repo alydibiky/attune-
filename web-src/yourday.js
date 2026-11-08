@@ -39,11 +39,24 @@ export function moveToTomorrow(reminders = [], ids = [], now = Date.now()) {
 }
 
 /** The agents' news for the day: what needs you, then what was found (newest first), at most 3. */
+/** v9.9 (Ali's Home: "Huawei free clips 2 · Found · 120 EGP" — a case kept from before the v9.8 price guard): a price is believed only
+ *  when it is not under 30 % of the person's limit / of what this agent usually sees, and not a few hundred pounds for earbuds,
+ *  a phone, a laptop… (an accessory). */
+const PRICEY = /\b(free ?clips?|freebuds|airpods|buds|earbuds|headphones?|iphone|galaxy|pixel|phone|laptop|macbook|ipad|tablet|watch|tv|playstation|ps5|xbox|camera|car|apartment|flat|hotel)\b|سماعه|سماعة|موبايل|لابتوب|ساعه|ساعة|تليفزيون|عربيه|عربية|شقه|شقة|فندق/i;
+export function believable(a, price) {
+  if (!(price > 0)) return false;
+  const ps = (a.checks || []).map((c) => c.price).filter((v) => v > 0).sort((x, y) => x - y), mid = ps.length ? ps[Math.floor(ps.length / 2)] : 0;
+  const ref = a.below > 0 ? a.below : mid;
+  if (ref && price < ref * 0.3) return false;
+  if (/^(egp|جنيه)?$/i.test(String(a.currency || "EGP")) && PRICEY.test(String(a.what || a.title || a.said || "")) && price < 400) return false;
+  return true;
+}
 export function agentNews(agents = [], now = Date.now()) {
-  const rows = (agents || []).filter((a) => a && a.on !== false).map((a) => ({ a, s: agentStatus(a) })).filter((x) => x.s === "needs" || x.s === "found");
+  const rows = (agents || []).filter((a) => a && a.on !== false).map((a) => ({ a, s: agentStatus(a) })).filter((x) => x.s === "needs" || x.s === "found")
+    .filter((x) => x.s === "needs" || !(x.a.found && x.a.found.price > 0) || believable(x.a, x.a.found.price));
   const last = (a) => Math.max(0, ...((a.checks || []).map((c) => c.at || 0)), (a.found && a.found.at) || 0);
   return rows.sort((x, y) => (x.s === y.s ? last(y.a) - last(x.a) : x.s === "needs" ? -1 : 1)).slice(0, 3).map(({ a, s }) => {
-    const p = (a.found && a.found.price) || ((a.checks || []).filter((c) => c.price > 0).slice(-1)[0] || {}).price || ((a.pending || {}).price) || 0;
+    const p = [a.found && a.found.price, ((a.checks || []).filter((c) => c.price > 0).slice(-1)[0] || {}).price, (a.pending || {}).price].find((v) => v > 0 && believable(a, v)) || 0;
     return { id: a.id, status: s, title: String(a.what || a.title || "").replace(/^[^·]*·\s*/, (m) => (a.what ? "" : m)).slice(0, 70), price: p, currency: a.currency || "" };
   });
 }

@@ -11606,4 +11606,7 @@ export const IT = {
   "Done — {w} is now {a} from today (was {b}).": "Fatto — {w} ora è {a} da oggi (era {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "Fatto — {w} passa a {d}, la prima volta il {f}.",
   "the {n} of each month": "il {n} di ogni mese",
+  "Added to Subscriptions: {n} · {a} a month": "Aggiunto agli abbonamenti: {n} · {a} al mese",
+  "{n} paid this month: {a}": "{n} pagato questo mese: {a}",
+  "added to Subscriptions": "aggiunto agli abbonamenti",
 };

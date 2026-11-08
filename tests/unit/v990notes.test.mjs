@@ -1,0 +1,20 @@
+// v9.9 Ali's 9 Nov screenshots: Maps steps kept as "Payments"; Home's agents showed "Huawei free clips 2 · Found · 120 EGP" (a case)
+import assert from "node:assert/strict";
+import { isNavNote, recallDocs } from "../../web-src/lookback.js";
+import { agentNews, believable } from "../../web-src/yourday.js";
+import { understandNote } from "../../web-src/notifmeaning.js";
+let n = 0; const ok = (c, m) => { assert.ok(c, m); n++; console.log("PASS " + m); };
+const nav = { id: "1", pkg: "com.google.android.apps.maps", app: "Maps", title: "50 m · At the roundabout, continue straight to stay on Road 90", text: "12 min · 5.2 km", ts: 1 };
+ok(isNavNote(nav), "a Maps turn-by-turn step is navigation");
+ok(!isNavNote({ pkg: "com.google.android.apps.maps", app: "Maps", title: "Fawzy El-Kababgy · Know this place?", text: "People are asking questions" }), "Maps' “Know this place?” is a normal notification");
+ok(!isNavNote({ pkg: "com.cib", app: "CIB", title: "Card purchase", text: "EGP 50.00 at Uber" }), "a bank message is not navigation");
+const docs = recallDocs({ pays: [nav, { id: "2", app: "CIB", pkg: "com.cib", title: "Card purchase", text: "EGP 250.00 at NETFLIX.COM", ts: 2 }], notes: [nav] });
+ok(docs.length === 1 && docs[0].kind === "pay" && /NETFLIX/.test(docs[0].text), "Recall hides the Maps steps kept before; the real payment stays");
+ok(understandNote({ app: "Google Play", title: "Receipt", text: "E£975.00 · Google One" }).amount === 975, "E£975.00 is read as 975");
+const huawei = { id: "w", on: true, kind: "watch", title: "Huawei free clips 2", what: "Huawei free clips 2", currency: "EGP", found: { at: 5, price: 120 }, checks: [{ at: 5, price: 120 }] };
+ok(!believable(huawei, 120) && believable(huawei, 8999), "120 EGP for Huawei FreeClip 2 is not believed (an accessory); 8,999 is");
+const hotel = { id: "h", on: true, kind: "watch", title: "Hotels · Masjid al-Haram", what: "hotel near masjid el haram", below: 45000, currency: "EGP", found: { at: 6, price: 41495 }, checks: [{ at: 6, price: 41495 }] };
+const rows = agentNews([huawei, hotel], 10);
+ok(rows.length === 1 && rows[0].id === "h" && rows[0].price === 41495, "Home's Agents shows the hotel (41,495) and not the 120 EGP case");
+ok(!believable({ below: 9000, checks: [] }, 1200) && believable({ below: 9000, checks: [] }, 8500), "under 30 % of the person's limit is not believed");
+console.log("ALL PASSED v990notes (" + n + " checks)");

@@ -189,6 +189,9 @@ export function wordsFor(q, now = Date.now()) {
 }
 
 /** Everything Recall can find, as one list: [{ id, kind, title, text, ts, app?, pkg?, open? }]. */
+/** v9.9 (Ali's screenshot: Maps' "50 m · At the roundabout, continue straight…" kept 20 times as "Payments"): a turn-by-turn step
+ *  from a maps app is not kept (the phone no longer keeps new ones — PayListener.kt; this hides the ones kept before). */
+export const isNavNote = (x) => /maps|waze|navigation|here\.wego|citymapper/i.test(String((x && (x.pkg || "")) + " " + ((x && x.app) || ""))) && /^\s*[\d.,]+\s*(m|km|ft|mi|م|كم)\b|\b(roundabout|turn (left|right)|continue (straight|onto)|head (north|south|east|west)|keep (left|right)|exit|arrive)|دوران|لف (يمين|شمال)|اتجه|استمر/i.test(String((x && x.title) || "") + " " + String((x && x.text) || ""));
 export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pays = [] } = {}) {
   const docs = [];
   for (const r of memory) {
@@ -196,7 +199,7 @@ export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pa
     docs.push({ id: "m:" + r.id, kind: photo ? "photo" : "mind", title: r.title || "", text: [r.text, r.output, r.note, (r.tags || []).join(" ")].filter(Boolean).join("\n"), ts: r.ts || 0, thumb: photo ? r.id : null, open: { mode: "memory", id: r.id } });
   }
   // v9.8: a notification also carries what it MEANS (delivery, money out, missed call, a message from…) — found without its words
-  for (const n of notes) { let u = null; try { u = understandNote(n); } catch (e) {}
+  for (const n of notes) { if (isNavNote(n)) continue; let u = null; try { u = understandNote(n); } catch (e) {}
     docs.push({ id: "n:" + n.id, kind: "note", title: n.title || "", text: (n.text || "") + (u && u.words ? "\n" + u.words : ""), ts: n.ts || 0, app: n.app || "", pkg: n.pkg || "", raw: n.id, meaning: u ? u.kind : "", shown: n.text || "" }); }
   for (const c of chats) {
     const msgs = (c.messages || []).filter((m) => m.text);
@@ -204,7 +207,7 @@ export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pa
     docs.push({ id: "c:" + c.id, kind: "chat", title: c.title || (msgs[0].text || "").slice(0, 60), text: msgs.map((m) => m.text).join("\n").slice(0, 20000), ts: c.updated || c.ts || (msgs[msgs.length - 1].ts) || 0, open: { mode: "chat", id: c.id } });
   }
   for (const a of pages) { const v = (a.versions || [])[a.versions.length - 1]; docs.push({ id: "a:" + a.id, kind: "page", title: a.title || "", text: v ? String(v.content).replace(/<[^>]+>/g, " ").slice(0, 8000) : "", ts: a.updated || 0, open: { artifact: a.id } }); }
-  for (const p of pays) docs.push({ id: "p:" + p.id, kind: "pay", title: p.title || p.app || "", text: p.text || "", ts: p.ts || 0, app: p.app || "", pkg: p.pkg || "" });
+  for (const p of pays) if (!isNavNote(p)) docs.push({ id: "p:" + p.id, kind: "pay", title: p.title || p.app || "", text: p.text || "", ts: p.ts || 0, app: p.app || "", pkg: p.pkg || "" });
   return docs;
 }
 

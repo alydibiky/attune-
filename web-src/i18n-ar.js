@@ -8674,4 +8674,7 @@ export const AR = {
   "Done — {w} is now {a} from today (was {b}).": "تمام — {w} بقى {a} من النهارده (كان {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "تمام — {w} اتنقل لـ{d}، أول مرة {f}.",
   "the {n} of each month": "يوم {n} من كل شهر",
+  "Added to Subscriptions: {n} · {a} a month": "اتضاف للاشتراكات: {n} · {a} في الشهر",
+  "{n} paid this month: {a}": "{n} اتدفع الشهر ده: {a}",
+  "added to Subscriptions": "اتضاف للاشتراكات",
 };

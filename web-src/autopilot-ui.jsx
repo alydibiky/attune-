@@ -4,11 +4,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Check, X, Undo2, Zap } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
+import { loadLife, saveLife } from "./life.js";
+import { undoSubPay } from "./subpay.js";
 import * as AP from "./autopilot.js";
 
 const T = (k, v) => tr(k, v);
 const N = () => (typeof window !== "undefined" ? window.AttuneNative : null);
-const readNotes = () => { try { const n = N(); return n && n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : []; } catch (e) { return []; } };
+// the kept notifications (Recall) + (v9.9) the payment notifications Money keeps even when Recall is off — so a Gemini payment is seen
+const readNotes = () => { try { const n = N(); if (!n) return [];
+  const a = n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : [], b = n.payQueue ? JSON.parse(n.payQueue() || "[]") : [];
+  const seen = new Set(a.map((x) => String(x.title || "") + "|" + String(x.text || "").slice(0, 80)));
+  return [...a, ...b.filter((x) => !seen.has(String(x.title || "") + "|" + String(x.text || "").slice(0, 80)))]; } catch (e) { return []; } };
 const readLedger = () => { try { return JSON.parse(localStorage.getItem("ledger.v3") || "null"); } catch (e) { return null; } };
 const fmt = (v) => Math.round(v || 0).toLocaleString("en-US");
 const when = (t) => { try { return new Date(t).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return ""; } };
@@ -65,21 +71,28 @@ export function AutopilotCard() {
   useEffect(() => { const t = setInterval(() => setSlot(Math.floor(Date.now() / 120000)), 60000); return () => clearInterval(t); }, []);
   const put = (x) => setS(AP.saveAP(x));
   const [open, setOpen] = useState("");
+  const [ready, setReady] = useState(0);
   const flash = (m) => { try { window.dispatchEvent(new CustomEvent("attune-flash", { detail: m })); } catch (e) {} };
   const notes = useMemo(readNotes, [slot]);
   const list = useMemo(() => AP.suggestions(notes, { now: Date.now(), s, ledger: readLedger() }), [notes, s]);
   // what you allowed is done by itself (listed below with Undo); a "Delivered" closes its follow-up
   useEffect(() => {
+    // (v9.9: on the first open the app's save path is set up a moment after this card — wait for it, or "done for you" was shown and
+    // nothing was saved)
+    if (!window.__attuneApplyActions) { const t = setTimeout(() => setReady((r) => r + 1), 300); return () => clearTimeout(t); }
     let st = s, changed = false;
-    for (const x of list) if (st.always.includes(AP.ruleOf(x))) { const r = apply(x); st = AP.accept(st, x, { auto: true, rid: (r && r.rid) || "" }); changed = true; }
+    for (const x of list) if (AP.isAuto(st, x)) { const r = apply(x); st = AP.accept(st, x, { auto: true, rid: (r && r.rid) || "" }); changed = true; }
     for (const rid of AP.deliveredDone(notes, st)) { try { window.__attuneRemoveReminder && window.__attuneRemoveReminder(rid); } catch (e) {} st = { ...st, done: st.done.map((d) => (d.rid === rid ? { ...d, closed: true } : d)) }; changed = true; }
     if (changed) put(st);
-  }, [list.map((x) => x.key).join(), notes.length]);
+  }, [list.map((x) => x.key).join(), notes.length, ready]);
   const add = (x) => { const r = apply(x); put(AP.accept(s, x, { rid: (r && r.rid) || "" })); };
   const no = (x, all) => put(AP.refuse(s, x, { app: all }));
   const undo = (d) => { try { d.rid && window.__attuneRemoveReminder && window.__attuneRemoveReminder(d.rid); } catch (e) {}
-    try { if (d.kind === "expense" || d.kind === "income") window.__attuneUndoMoney && window.__attuneUndoMoney(d.amount, d.kind); } catch (e) {} put(AP.undoDone(s, d.key)); };
-  const waiting = list.filter((x) => !s.always.includes(AP.ruleOf(x))).slice(0, 4), recent = (s.done || []).filter((d) => d.at > Date.now() - 2 * 864e5 && d.kind !== "followup").slice(0, 3), week = AP.weekCount(s);
+    try { if (d.kind === "expense" || d.kind === "income") window.__attuneUndoMoney && window.__attuneUndoMoney(d.amount, d.kind); } catch (e) {}
+    // v9.9 a subscription it added by itself: the plan (or this month's tick) and its expense are taken back
+    try { if (d.kind === "subscription") { saveLife(undoSubPay(loadLife(), d.key)); window.__attuneUndoMoney && window.__attuneUndoMoney(d.amount, "expense"); } } catch (e) {}
+    put(AP.undoDone(s, d.key)); };
+  const waiting = list.filter((x) => !AP.isAuto(s, x)).slice(0, 4), recent = (s.done || []).filter((d) => d.at > Date.now() - 2 * 864e5 && d.kind !== "followup").slice(0, 3), week = AP.weekCount(s);
   if (!waiting.length && !recent.length && !s.ask) return null;
   return (
     <section className="c-card p-3.5 space-y-2" style={{ borderColor: "color-mix(in srgb, var(--c-area-agents, var(--c-acc)) 35%, var(--c-ln))" }} data-testid="autopilot">
@@ -93,7 +106,7 @@ export function AutopilotCard() {
       {waiting.map((x) => <Item key={x.key} x={x} open={open === x.key} setOpen={(v) => setOpen(v ? x.key : "")} add={add} no={no} done={(how) => { put(AP.accept(s, { ...x, kind: x.kind }, {})); setOpen(""); flash(how); }} />)}
       {recent.length ? <div className="pt-1 space-y-1" data-testid="autopilot-done">
         <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Done for you")}</p>
-        {recent.map((d) => <div key={d.key} className="flex items-center gap-2 text-[12.5px]"><Check size={13} className="c-pos shrink-0" /><span className="flex-1 truncate" dir="auto">{d.title || d.app}{d.amount ? " · " + fmt(d.amount) : ""}</span>
+        {recent.map((d) => <div key={d.key} className="flex items-center gap-2 text-[12.5px]"><Check size={13} className="c-pos shrink-0" /><span className="flex-1 truncate" dir="auto">{d.title || d.app}{d.amount ? " · " + fmt(d.amount) : ""}{d.kind === "subscription" ? " · " + tr("added to Subscriptions") : ""}</span>
           <button onClick={() => undo(d)} className="min-h-[32px] px-2 text-[12px] font-bold c-acc inline-flex items-center gap-1" data-testid="autopilot-undo"><Undo2 size={12} />{tr("Undo")}</button></div>)}
       </div> : null}
     </section>);

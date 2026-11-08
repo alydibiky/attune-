@@ -11605,4 +11605,7 @@ export const KO = {
   "Done — {w} is now {a} from today (was {b}).": "완료 — {w}은(는) 오늘부터 {a} (이전 {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "완료 — {w}은(는) {d}(으)로 바뀌고, 처음은 {f}.",
   "the {n} of each month": "매월 {n}일",
+  "Added to Subscriptions: {n} · {a} a month": "구독에 추가됨: {n} · 월 {a}",
+  "{n} paid this month: {a}": "{n} 이번 달 결제됨: {a}",
+  "added to Subscriptions": "구독에 추가됨",
 };

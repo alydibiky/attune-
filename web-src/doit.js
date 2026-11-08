@@ -19,6 +19,7 @@ import { billsIntent, billsAnswer } from "./bills.js";
 import { familyIntent, addItems as famItems, addExpense as famExpense, balances as famBalances, listNow as famList, FAMILY_KEY } from "./family.js";
 import { quickAction, looksLikeAction } from "./actions.js";
 import { chatLifeIntent, addCommitment, scheduleOf, payAmount, togglePaid, progressOf } from "./life.js";
+import { subPay } from "./subpay.js";
 import { chatDeadlineIntent, addDeadline } from "./deadlines.js";
 import { EXERCISES, burned, today as fitToday } from "./fit.js";
 import { markTaken, addGlucose, addBloodPressure, bpLevel, isInsulin, isoDay } from "./care.js";
@@ -437,6 +438,11 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       // was paid today, one tap (the money total was 250 short)
       const followUp = c.kind === "subscription" && c.amount > 0 ? { en: "Paid today", ar: "اتدفع النهارده", actions: [{ kind: "money", items: [{ type: "expense", amount: c.amount, cat: "bills", note: c.title || c.person || "subscription", date: isoDay(now) }] }] } : null;
       return { stores: { "attune:life:v1": r }, open: "life", followUp, done: { en: `Saved in People & plans: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}${enX}.`, ar: `اتحفظ في الناس والالتزامات: ${[c.person, c.title || KIND_AR[c.kind] || c.kind, amt].filter(Boolean).join(" · ")}${arX}.` } };
+    }
+    case "subPay": {
+      const r = subPay(stores.life || { v: 1, items: [] }, a, now);
+      return { stores: { "attune:life:v1": r.data }, open: "life", done: r.isNew ? { en: tr("Added to Subscriptions: {n} · {a} a month", { n: a.name, a: num(a.amount) }), ar: `اتضاف للاشتراكات: ${a.name} · ${num(a.amount)} في الشهر` }
+        : { en: tr("{n} paid this month: {a}", { n: a.name, a: num(a.amount) }), ar: `${a.name} اتدفع الشهر ده: ${num(a.amount)}` } };
     }
     case "lifeEdit": {
       const life = stores.life || { v: 1, items: [] };

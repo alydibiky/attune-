@@ -11605,4 +11605,7 @@ export const ZH = {
   "Done — {w} is now {a} from today (was {b}).": "好了 — {w}从今天起是{a}（之前{b}）。",
   "Done — {w} moves to {d}, the first time on {f}.": "好了 — {w}改到{d}，第一次在{f}。",
   "the {n} of each month": "每月{n}日",
+  "Added to Subscriptions: {n} · {a} a month": "已加入订阅：{n} · 每月{a}",
+  "{n} paid this month: {a}": "{n}本月已付：{a}",
+  "added to Subscriptions": "已加入订阅",
 };

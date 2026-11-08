@@ -11605,4 +11605,7 @@ export const JA = {
   "Done — {w} is now {a} from today (was {b}).": "完了 — {w}は今日から{a}（以前は{b}）。",
   "Done — {w} moves to {d}, the first time on {f}.": "完了 — {w}は{d}に変更、初回は{f}。",
   "the {n} of each month": "毎月{n}日",
+  "Added to Subscriptions: {n} · {a} a month": "サブスクに追加：{n} · 月{a}",
+  "{n} paid this month: {a}": "{n}今月支払い済み：{a}",
+  "added to Subscriptions": "サブスクに追加",
 };

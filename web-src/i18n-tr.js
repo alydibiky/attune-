@@ -11606,4 +11606,7 @@ export const TRK = {
   "Done — {w} is now {a} from today (was {b}).": "Tamam — {w} bugünden itibaren {a} (önce {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "Tamam — {w} {d} gününe taşındı, ilk kez {f}.",
   "the {n} of each month": "her ayın {n}. günü",
+  "Added to Subscriptions: {n} · {a} a month": "Aboneliklere eklendi: {n} · ayda {a}",
+  "{n} paid this month: {a}": "{n} bu ay ödendi: {a}",
+  "added to Subscriptions": "aboneliklere eklendi",
 };

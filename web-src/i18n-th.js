@@ -11605,4 +11605,7 @@ export const TH = {
   "Done — {w} is now {a} from today (was {b}).": "เรียบร้อย — {w} ตอนนี้เป็น {a} ตั้งแต่วันนี้ (เดิม {b})",
   "Done — {w} moves to {d}, the first time on {f}.": "เรียบร้อย — {w} ย้ายไปเป็น {d} ครั้งแรก {f}",
   "the {n} of each month": "วันที่ {n} ของทุกเดือน",
+  "Added to Subscriptions: {n} · {a} a month": "เพิ่มในการสมัครสมาชิกแล้ว: {n} · เดือนละ {a}",
+  "{n} paid this month: {a}": "{n} จ่ายแล้วเดือนนี้: {a}",
+  "added to Subscriptions": "เพิ่มในการสมัครสมาชิกแล้ว",
 };

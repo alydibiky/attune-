@@ -11606,4 +11606,7 @@ export const IDN = {
   "Done — {w} is now {a} from today (was {b}).": "Selesai — {w} sekarang {a} mulai hari ini (sebelumnya {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "Selesai — {w} pindah ke {d}, pertama kali pada {f}.",
   "the {n} of each month": "tanggal {n} setiap bulan",
+  "Added to Subscriptions: {n} · {a} a month": "Ditambahkan ke Langganan: {n} · {a} per bulan",
+  "{n} paid this month: {a}": "{n} dibayar bulan ini: {a}",
+  "added to Subscriptions": "ditambahkan ke Langganan",
 };

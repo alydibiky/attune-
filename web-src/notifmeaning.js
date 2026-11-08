@@ -37,7 +37,7 @@ const KINDS = [
 const CHAT_APPS = /whatsapp|telegram|messenger|orca|signal|viber|instagram|slack|teams|discord|imo|botim|messaging|mms|sms/;
 const EMAIL_APPS = /gmail|\.gm$|outlook|yahoo|proton|mail/;
 
-const MONEY = /(?:egp|le|l\.e\.?|usd|\$|sar|aed|eur|€|£|جنيه|ج\.م|ريال|درهم)\s*([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s*(?:egp|le|l\.e\.?|usd|sar|aed|eur|جنيه|ج\.م|ريال|درهم)/i;
+const MONEY = /(?:egp|e£|le|l\.e\.?|usd|\$|sar|aed|eur|€|£|جنيه|ج\.م|ريال|درهم)\s*([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s*(?:egp|e£|le|l\.e\.?|usd|sar|aed|eur|جنيه|ج\.م|ريال|درهم)/i;
 const STATE = [
   [/delivered|تم التوصيل|اتسلم|وصل طلبك/i, "delivered"], [/out for delivery|خرج للتوصيل|المندوب في الطريق/i, "out for delivery"],
   [/arriv(?:ing|es)\s+((?:on\s+|by\s+)?(?:today|tomorrow|mon|tue|wed|thu|fri|sat|sun|\d{1,2}\s*(?:[a-z]{3}|\/))[\p{L}\d ,/]{0,16})/iu, "arriving"],

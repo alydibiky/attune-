@@ -11,6 +11,22 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 9 Nov — v9.9.1: Ali's notifications questions (screenshots of Recall + Home)
+- **Subscriptions from notifications, by themselves** (Ali: "a Google one told me the payment of Gemini and it wasn't recorded in
+  subscriptions automatically"): autopilot.js `subscription` (SUBS list: Gemini/Google One, YouTube Premium, Netflix, Spotify, Shahid,
+  OSN+, WATCH IT, Anghami, Apple, ChatGPT, Claude, Disney+, Prime, Canva, Adobe, Microsoft, PS Plus, Duolingo, Notion…) — a PAYMENT
+  (not an offer) → `subpay.js`: new monthly subscription in People & plans with this month ticked, or this month ticked on the one
+  already there; the expense in Money (not twice if the bank SMS came first). Added WITHOUT a tap (`isAuto`), shown on Home as done
+  for you with Undo; "Not this" for that app stops it. Autopilot now also reads Money's payment notifications (payQueue), not only
+  Recall's. Fixed: on the first open Autopilot's auto step ran before the app's save path existed (shown done, nothing saved).
+- **Maps navigation** ("50 m · At the roundabout…" ×20 as "Payments"): PayListener.kt keeps no ongoing / navigation / progress
+  notifications; Recall hides the ones kept before (lookback.js `isNavNote`). E£975.00 is read as 975.
+- **Home's Agents**: "Huawei free clips 2 · Found · 120 EGP" (a case from before the v9.8 guard) is hidden — yourday.js `believable`.
+- Answered (no code): Shelf notes are Mind records — Chat reads them when the question is about your own things; Documents are kept
+  in the phone's storage until deleted, answers come from the passages that fit (hard multi-step questions limited by the phone
+  model); a timetable photo → reminders, Notion ideas and "connect apps" are options waiting for Ali's pick (see the chat).
+- Tests: unit v990subs (14), v990notes (8); e2e_v990subs.
+
 ## 8 Nov — v9.9: Ali picked FU6 + "edit anything by talking to Chat"
 - **Follow-ups = Attune asks, you answer** (`timeline-ui.jsx`; FU1 archived in `archive/followups-fu1/`): one question per thing
   that needs you today (late first) — "Did Maid come on Saturday?" Came ✓ / Didn't come; "Did Sheikh pay?" Paid · Other amount ·

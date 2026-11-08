@@ -11605,4 +11605,7 @@ export const VI = {
   "Done — {w} is now {a} from today (was {b}).": "Xong — {w} giờ là {a} từ hôm nay (trước là {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "Xong — {w} chuyển sang {d}, lần đầu vào {f}.",
   "the {n} of each month": "ngày {n} hằng tháng",
+  "Added to Subscriptions: {n} · {a} a month": "Đã thêm vào Gói đăng ký: {n} · {a} mỗi tháng",
+  "{n} paid this month: {a}": "{n} đã trả tháng này: {a}",
+  "added to Subscriptions": "đã thêm vào Gói đăng ký",
 };

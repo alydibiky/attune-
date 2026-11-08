@@ -11605,4 +11605,7 @@ export const RU = {
   "Done — {w} is now {a} from today (was {b}).": "Готово — {w} теперь {a} с сегодняшнего дня (было {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "Готово — {w} переносится на {d}, первый раз {f}.",
   "the {n} of each month": "{n}-е число каждого месяца",
+  "Added to Subscriptions: {n} · {a} a month": "Добавлено в подписки: {n} · {a} в месяц",
+  "{n} paid this month: {a}": "{n} оплачено в этом месяце: {a}",
+  "added to Subscriptions": "добавлено в подписки",
 };

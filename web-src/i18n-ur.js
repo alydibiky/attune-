@@ -11606,4 +11606,7 @@ export const UR = {
   "Done — {w} is now {a} from today (was {b}).": "ہو گیا — {w} آج سے {a} ہے (پہلے {b})۔",
   "Done — {w} moves to {d}, the first time on {f}.": "ہو گیا — {w} اب {d} کو، پہلی بار {f}۔",
   "the {n} of each month": "ہر مہینے کی {n} تاریخ",
+  "Added to Subscriptions: {n} · {a} a month": "سبسکرپشنز میں شامل: {n} · {a} ماہانہ",
+  "{n} paid this month: {a}": "{n} کی اس مہینے ادائیگی ہوئی: {a}",
+  "added to Subscriptions": "سبسکرپشنز میں شامل",
 };

@@ -38,12 +38,34 @@ export function dayIn(text, now) {
 // a message that asks you to do something (or says when)
 const ASKS = /\b(send|bring|call|pay|transfer|remind|don't forget|please|can you|could you|tomorrow|tonight)\b|ابعت|ابعتلي|هات|كلمني|اتصل|حول|حوّل|ادفع|متنساش|ماتنساش|بكرة|بكره|النهارده|بليل|لو سمحت|ممكن/i;
 
+// v9.9 (Ali, 9 Nov: "there was a Google one which told me the payment of Gemini, and it wasn't recorded in subscriptions automatically —
+// I want users to make low effort and the app makes the most effort"): a payment to a service that only comes as a subscription →
+// added to Subscriptions (People & plans, every month) and the expense to Money, BY ITSELF (listed as "done for you" with Undo)
+export const SUBS = [
+  [/gemini|google one|google ai (?:pro|premium|ultra|plus)|جيميني|جوجل ون/i, "Google Gemini"], [/youtube premium|youtube music|يوتيوب بريميوم/i, "YouTube Premium"],
+  [/netflix|نتفليكس/i, "Netflix"], [/spotify|سبوتيفاي/i, "Spotify"], [/shahid|شاهد vip|شاهد في اي بي/i, "Shahid"], [/\bosn\+?|osn plus/i, "OSN+"],
+  [/watch ?it|واتش ات/i, "WATCH IT"], [/anghami|انغامي|أنغامي/i, "Anghami"], [/icloud|apple music|apple tv|apple one/i, "Apple"],
+  [/chatgpt|openai/i, "ChatGPT"], [/claude\.ai|anthropic|claude pro/i, "Claude"], [/disney\+|disney plus/i, "Disney+"],
+  [/amazon prime|prime video/i, "Amazon Prime"], [/canva/i, "Canva"], [/adobe|creative cloud/i, "Adobe"], [/microsoft 365|office 365|xbox game pass|game pass/i, "Microsoft"],
+  [/playstation plus|ps plus/i, "PlayStation Plus"], [/duolingo/i, "Duolingo"], [/linkedin premium/i, "LinkedIn Premium"], [/google play pass/i, "Google Play Pass"],
+  [/starzplay|starz play/i, "STARZPLAY"], [/notion/i, "Notion"], [/capcut/i, "CapCut"], [/tinder|bumble/i, "Dating app"],
+];
+export const subOf = (t) => (SUBS.find(([re]) => re.test(String(t || ""))) || [null, ""])[1];
+const PAID_W = /\b(paid|payment|charged|renew(?:ed|al)|receipt|billed|purchase|subscription|subscribed|membership|order|invoice|debited|successful)\b|تم الدفع|دفعت|تم خصم|اتخصم|خصم مبلغ|اشتراك|تجديد|تم تجديد|فاتورة|عملية شراء|ايصال|إيصال/i;
+const OFFER_W = /\b(get|try|free for|save|discount|deal|offer|limited time|\d+\s*%|for just|starting at|join now|upgrade now|ends soon|trial ends)\b|جرب|عرض|خصم \d|وفر/i;
+const curOf = (t) => { const m = /\b(egp|usd|sar|aed|eur|gbp|kwd|qar|try)\b|(e£|£|\$|€|جنيه|ريال|درهم)/i.exec(String(t || "")); if (!m) return ""; const k = (m[1] || m[2]).toLowerCase(); return { "e£": "EGP", "جنيه": "EGP", "$": "USD", "€": "EUR", "£": "GBP", "ريال": "SAR", "درهم": "AED" }[k] || k.toUpperCase(); };
+
 /** One notification → one suggestion (or null). s = the Autopilot state; recent = the other notifications (for missed calls). */
 export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState() } = {}) {
   if (!n) return null;
   const u = understandNote(n), app = String(n.app || n.pkg || ""), text = String(n.text || ""), title = String(n.title || "");
   if ((s.skipApps || []).includes(app + ":" + u.kind)) return null;
   const base = { src: String(n.id), app, at: n.ts || now, kind: "", full: { title, text } };   // (v9.8: the whole message, to read before adding)
+  { const all = title + " " + text, svc = subOf(all);
+    if (svc && u.amount > 0 && u.kind !== "promo" && u.state !== "money in" && PAID_W.test(all) && !OFFER_W.test(all)) {
+      const d = iso(n.ts || now);
+      return { ...base, kind: "subscription", title: svc, amount: u.amount, cur: curOf(all), date: d, key: "sb:" + svc + ":" + d.slice(0, 7), line: "Subscription" };
+    } }
   if (u.kind === "bank" && u.amount > 0 && (u.state === "money out" || u.state === "money in")) {
     const shop = shopIn(title + " " + text), out = u.state === "money out";
     return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now),
@@ -84,6 +106,8 @@ export function suggestions(notes = [], { now = Date.now(), s = emptyState(), le
   for (const n of list) {
     const x = suggestFrom(n, { now, recent: list, s }); if (!x || x.kind === "delivered") continue;
     if (keys.has(x.key) || s.ok[x.key] || s.no[x.key] || inLedger(x, ledger)) continue;
+    // a subscription whose expense is already in Money (the bank SMS came first) adds only the plan
+    if (x.kind === "subscription") x.noMoney = inLedger({ kind: "expense", amount: x.amount, date: x.date }, ledger);
     keys.add(x.key); out.push(x);
   }
   return out;
@@ -96,6 +120,8 @@ export function deliveredDone(notes = [], s = emptyState()) {
 
 /** The kind of a suggestion as "auto" sees it: CIB expenses, Amazon deliveries… */
 export const ruleOf = (x) => x.kind + ":" + x.app;
+/** Done by itself without asking: what the person allowed — and (v9.9) a subscription payment, unless they said "not these" */
+export const isAuto = (s, x) => (s.always || []).includes(ruleOf(x)) || (x.kind === "subscription" && !(s.skipApps || []).includes(x.app + ":subscription"));
 /** Accepted (by a tap or by itself): remembered, counted; after 3 of the same rule → ask once "do these by yourself?" */
 export function accept(s, x, { auto = false, rid = "", now = Date.now() } = {}) {
   const r = ruleOf(x), count = Object.values(s.ok).filter((v) => v.rule === r).length + 1;
@@ -113,6 +139,8 @@ export const weekCount = (s, now = Date.now()) => Object.values(s.ok || {}).filt
 /** A suggestion → the actions the Home box would run (doit.js apply). */
 export function actionsFor(x) {
   if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, cat: x.cat || "other", note: x.note || "", date: x.date, source: "notification" }] }];
+  if (x.kind === "subscription") return [{ kind: "subPay", name: x.title, amount: x.amount, date: x.date, cur: x.cur || "", key: x.key },
+    ...(x.noMoney ? [] : [{ kind: "money", items: [{ type: "expense", amount: x.amount, cat: "bills", note: x.title, date: x.date, source: "notification" }] }])];
   if (x.kind === "bill") return [{ kind: "life", c: { kind: "bill", dir: "out", amount: x.amount, count: 1, total: x.amount, every: null, start: iso(x.at), title: x.title, person: "", paid: [], currency: "" } }];
   return [{ kind: "reminder", action: { kind: "reminder", at: x.at, title: x.title } }];
 }

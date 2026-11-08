@@ -11606,4 +11606,7 @@ export const SW = {
   "Done — {w} is now {a} from today (was {b}).": "Imekamilika — {w} sasa ni {a} kuanzia leo (ilikuwa {b}).",
   "Done — {w} moves to {d}, the first time on {f}.": "Imekamilika — {w} inahamia {d}, mara ya kwanza {f}.",
   "the {n} of each month": "tarehe {n} ya kila mwezi",
+  "Added to Subscriptions: {n} · {a} a month": "Imeongezwa kwenye Usajili: {n} · {a} kwa mwezi",
+  "{n} paid this month: {a}": "{n} imelipwa mwezi huu: {a}",
+  "added to Subscriptions": "imeongezwa kwenye Usajili",
 };
