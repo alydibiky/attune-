@@ -167,6 +167,8 @@ with sync_playwright() as p:
     queue(page, ["From your rate card: **18,000 EGP per day**."])
     page.locator("[data-testid=project-ask-input]").fill("What is our daily price for the LTM 1100?")
     page.locator("[data-testid=project-new-chat]").click()      # the big ask box sends at once, in a new chat of this work
+    # (wait for the question itself — an older answer's Regenerate button is already on screen, so done() alone returns too early)
+    page.wait_for_function("() => window.__mock.bodies.filter(x => x.max_tokens > 2).length >= 1", timeout=30000)
     done(page)
     sp = bodies(page)[0]["messages"][0]["content"]
     check("Prices in EGP" in sp and "18,000 EGP per day" in sp, "a chat in a project gets its instructions and the matching knowledge")
