@@ -27,6 +27,7 @@ import { chatAsk, askLife } from "./lifeask.js";
 import { homeCurrency } from "./locale.js";
 import { savedCountry } from "./country.js";
 import { missingAmounts } from "./numguard.js";
+import { editIntent, applyEdit, editDone } from "./lifeedit.js";
 
 const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const latin = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/٫/g, ".");
@@ -117,6 +118,11 @@ export function understand(text, opts = {}) {
 export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   const t = fixTypos(String(text || "").trim());   // persona 1: "spnt 200 on lunh"
   if (!t) return { actions: [] };
+  // v9.9 (Ali, with FU6: "edit anything by talking — the maid is now taking 700 and it gets done"): a change to something already in
+  // People & plans, from today on (lifeedit.js) — before anything reads it as a new expense or a new plan
+  { const ed = editIntent(String(text || "").trim(), (stores.life && stores.life.items) || [], now);
+    if (ed && ed.change) return { actions: [{ kind: "lifeEdit", e: ed, amount: ed.change.amount }] };
+    if (ed) return { actions: [], ask: { kind: "life-edit", en: editDone(ed, { tr, now }), ar: editDone(ed, { ar: true, now }), open: ed.blocked ? "life" : "" } }; }
   // v9.1 (e2e_v513: "Crane hire 25000 each day, the 1st to the 5th… Give me the rent and the rent with the 14 tax added" was recorded as
   // two expenses, 25,000 and 14): a request in a LATER sentence makes it a question too — unless money was clearly spent / paid
   if (!EAT.test(t) && !MONEY_VERB.test(t) && t.split(/[.!?؟\n]+/).slice(1).some((x) => REQ.test(x))) return { actions: [], chat: true };
@@ -431,6 +437,10 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       // was paid today, one tap (the money total was 250 short)
       const followUp = c.kind === "subscription" && c.amount > 0 ? { en: "Paid today", ar: "اتدفع النهارده", actions: [{ kind: "money", items: [{ type: "expense", amount: c.amount, cat: "bills", note: c.title || c.person || "subscription", date: isoDay(now) }] }] } : null;
       return { stores: { "attune:life:v1": r }, open: "life", followUp, done: { en: `Saved in People & plans: ${[c.person, c.title || c.kind, amt].filter(Boolean).join(" · ")}${enX}.`, ar: `اتحفظ في الناس والالتزامات: ${[c.person, c.title || KIND_AR[c.kind] || c.kind, amt].filter(Boolean).join(" · ")}${arX}.` } };
+    }
+    case "lifeEdit": {
+      const life = stores.life || { v: 1, items: [] };
+      return { stores: { "attune:life:v1": applyEdit(life, a.e, now) }, open: "life", done: { en: editDone(a.e, { tr, now }), ar: editDone(a.e, { ar: true, now }) } };
     }
     case "deadline": {
       const r = addDeadline(stores.radar || { items: [], seen: [] }, { ...a.d, source: "home" }, now);

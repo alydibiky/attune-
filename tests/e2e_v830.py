@@ -43,12 +43,11 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=fu-pages]")   # v9.8 FU1: the parts' pages are a "Manage" row under the feed
     check(all(page.locator("[data-testid=fu-open-%s]" % x).count() == 1 for x in ["life", "reminders", "radar", "xray", "guardian"]), "Follow-ups (v8.5): its one list opens People & plans · Reminders · Dates · Chat X-Ray · Guardian")
     page.fill("[data-testid=fu-add]", "sheikh owes me 22,000 to be paid in installments monthly for 9 months"); page.click("[data-testid=fu-add-go]"); page.wait_for_timeout(500)
-    items = page.locator("[data-testid=timeline-item]")
-    check(items.count() >= 1 and "Sheikh" in page.locator("[data-testid=timeline-page]").inner_text(), "one sentence in the Add box → Sheikh's 9 payments are on the list")
+    check("Sheikh" in page.locator("[data-testid=fu-coming]").inner_text() and "Sheikh" in page.locator("[data-testid=fu-result]").last.inner_text(), "one sentence in the box → Sheikh's plan is saved (said in the thread) and in Coming")
     check("2,444" in page.locator("[data-testid=timeline-page]").inner_text(), "each payment is 2,444.44 (22,000 over 9 months)")
     # v9.8 FU1: no kind chips (one feed); a payment that is not due yet has no box on Follow-ups (money by a tap: today and the 7
     # days before) — paying early is done in People & plans' schedule
-    check(page.locator("[data-testid=fu-chips]").count() == 0 and page.locator("[data-testid=fu-sec-later], [data-testid=fu-sec-week]").count() >= 1, "FU1: one feed, no chips")
+    check(page.locator("[data-testid=fu-chips]").count() == 0 and page.locator("[data-testid=fu-thread]").count() == 1 and page.locator("[data-testid=fu-q][data-act=pay]").count() == 0, "FU6: the questions thread; a payment not due yet isn't asked")
     n0 = 1
     page.click("[data-testid=fu-open-life]"); page.wait_for_selector("[data-testid=life-item]")
     page.click("[data-testid=life-open]"); page.wait_for_timeout(150)

@@ -11,6 +11,19 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 8 Nov — v9.9: Ali picked FU6 + "edit anything by talking to Chat"
+- **Follow-ups = Attune asks, you answer** (`timeline-ui.jsx`; FU1 archived in `archive/followups-fu1/`): one question per thing
+  that needs you today (late first) — "Did Maid come on Saturday?" Came ✓ / Didn't come; "Did Sheikh pay?" Paid · Other amount ·
+  Not yet (PersonAsk); a reminder Done / Tomorrow; anything else Open / Later. Each answer shows in the thread with what it did
+  ("600 out of Money") and Undo. None left → "All clear until …". "Coming:" one line + See all. The box at the bottom adds AND changes.
+  `timeline.js` now respects "Didn't come" (c.skip) and "Not yet" (c.later). Money by a tap: today and 7 days back (unchanged).
+- **Edit by talking** (`lifeedit.js`, Ali: "telling it the maid is now taking 700 and it gets done"): from the Follow-ups box, the
+  Home box, voice and Chat (doit.js action `lifeEdit`, Chat DO_HERE): change the amount ("the maid is now taking 700",
+  «الخدامة بقت بـ٧٠٠», «الشغالة بتاخد ٧٠٠ دلوقتي»), the day ("comes on Friday now", "move the car wash to the 5th"), or stop it
+  ("stop the car wash", «الخدامة مش هتيجي تاني»). From TODAY on — the days before keep their amount / day (c.changes, read by
+  life.js `withChanges`), Money never changes. A plan with a total (Sheikh 19,500 in 8) is not changed by a sentence: it says so and
+  opens People & plans. English ↔ Arabic names match (maid = خدامة = شغالة …). Tests: unit v990edit (28), e2e_v990fu6.
+
 ## 8 Nov later — Ali: "cancel FU1, tell me a better option" → FU6–FU10 on https://claude.ai/artifact/FsAwRjNtSWY4Lb7fCVSfYY (rec. FU6 Attune asks, you answer). FU1 stays live until his pick; then archive it in archive/followups-fu1/ and build the pick.
 
 ## 8 Nov — v9.8.4: Ali picked FU1 — Follow-ups is ONE feed

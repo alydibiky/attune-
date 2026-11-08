@@ -1,4 +1,4 @@
-/* ---- v6.38 (upgrade M3) — Follow-ups → Timeline: everything coming up on one list by day — reminders, dates, People & plans
+/* ---- v9.9: FU6 — Attune asks, you answer (the FU1 page is in archive/followups-fu1/). Before: v6.38 (upgrade M3) — Follow-ups → Timeline: everything coming up on one list by day — reminders, dates, People & plans
    payments, bills, debts and the promises people made in chats — each with "what slips if you skip this" and a tap that opens
    the page that owns it. Code only (timeline.js), from the same stores those pages keep. */
 import React, { useEffect, useMemo, useState } from "react";
@@ -8,7 +8,7 @@ import { timeline, byDay, totals, daysFrom, GROUP_OF, weekDays, searchItems, byD
 import { tickRegular } from "./regular.js";
 import { PersonAsk } from "./home-ui.jsx";
 import { findings as guardianFindings, loadGuardian, saveGuardian, collected } from "./guardian.js";
-import { loadLife, saveLife, payAmount, progressOf } from "./life.js";
+import { loadLife, saveLife, payAmount, progressOf, skipDay } from "./life.js";
 import { PayBox } from "./life-ui.jsx";
 import { loadReminders } from "./actions.js";
 import { fmt } from "./money-calm.js";
@@ -111,44 +111,89 @@ export function TimelinePage({ navTo, doIt, flash }) {
     if (act === "errand") { navTo && navTo("errands"); return; }
     navTo && navTo(x.page);
   };
-  const SEC = [["today", "Today"], ["week", "This week"], ["later", "Later"]];
+  // ---- v9.9 FU6 (Ali picked "Attune asks, you answer", 8 Nov): one short question for each thing that needs you, answered with one
+  // button (or by voice / the box); each answer is done at once, with Undo. What's coming is one line below; the box adds AND changes
+  // anything in your words ("the maid is now taking 700" — lifeedit.js).
+  const [log, setLog] = useState([]);   // [{ id, q, a, msg, undo }] — what was answered on this visit, newest last
+  const [allOpen, setAllOpen] = useState(false);
+  const today = isoOf(Date.now());
+  const snoozeKey = (x) => x.id + "@" + x.date + "@" + today;
+  const qs = feed.today.filter((x) => !doneSet.has(snoozeKey(x)) && !log.some((l) => l.id === x.id + "@" + x.date));
+  const coming = [...feed.week, ...feed.later];
+  const answer = (x, a, msg, undo) => { setLog((l) => [...l, { id: x.id + "@" + x.date, q: qText(x), a, msg, undo }]); setV((y) => y + 1); };
+  const who = (x) => (x.who || x.what || "").split(" · ")[0];
+  function qText(x) {
+    const act = actionOf(x);
+    if (act === "pay" && x.ck === "regular") return x.date === today ? tr("Did {w} come today?", { w: x.what }) : tr("Did {w} come on {d}?", { w: x.what, d: new Date(x.date + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "short" }) });
+    if (act === "pay") return tr("Did you pay {w}?", { w: x.what });
+    if (act === "ask") return tr("Did {w} pay?", { w: who(x) });
+    if (act === "done") return x.what;
+    return x.T ? tr(x.T[0], x.T[1]) : x.what;
+  }
+  const snooze = (x) => markDone(snoozeKey(x));
+  const came = (x) => { const l = lifeOf(x); if (!l) return; const r = tickRegular(l.c.id, l.i, true);
+    answer(x, x.ck === "regular" ? tr("Came ✓") : tr("Paid"), r && r.recorded ? tr("{a} out of Money", { a: fmt(r.recorded) }) : tr("Done"), () => { tickRegular(l.c.id, l.i, false); setV((y) => y + 1); }); };
+  const didnt = (x) => { const l = lifeOf(x); if (!l) return; saveLife(skipDay(loadLife(), l.c.id, l.i, true));
+    answer(x, tr("Didn't come"), tr("Nothing paid"), () => { saveLife(skipDay(loadLife(), l.c.id, l.i, false)); setV((y) => y + 1); }); };
+  const later = (x, label) => { snooze(x); answer(x, label, tr("I'll ask again tomorrow"), () => { const n = new Set(doneSet); n.delete(snoozeKey(x)); setDoneSet(n); try { localStorage.setItem("attune:fu:done", JSON.stringify([...n])); } catch (e) {} setV((y) => y + 1); }); };
+  const did = (x) => { markDone(x.id + "@" + x.date); answer(x, tr("Done"), tr("Done"), () => { const n = new Set(doneSet); n.delete(x.id + "@" + x.date); setDoneSet(n); try { localStorage.setItem("attune:fu:done", JSON.stringify([...n])); } catch (e) {} setV((y) => y + 1); }); };
+  // the box: add or change anything — the answer shows in the thread
+  const say2 = (t0) => { const text = String(t0 || "").trim(); if (!text || !doIt) return false;
+    let r = null; try { r = doIt(text); } catch (e) {}
+    if (!r && /\b(today|tonight|tomorrow|mon|tue|wed|thu|fri|sat|sun)\w*\b|\b\d{1,2}\s*(am|pm)\b|\d{1,2}:\d{2}|النهارده|بكره|بكرة|الساعه|الساعة/i.test(text)) { try { r = doIt((/[\u0600-\u06ff]/.test(text) ? "فكرني " : tr("remind me ")) + text); } catch (e) {} }
+    const ans = r && r.answer ? (typeof r.answer === "string" ? r.answer : (getLang() === "ar" ? r.answer.ar : r.answer.en)) : "";
+    if (r && r.lines && r.lines.length) { setLog((l) => [...l, { id: "say:" + Date.now(), q: "", a: text, msg: r.lines.map((x) => x.text).join(" · "), undo: r.undo ? () => { r.undo(); setV((y) => y + 1); } : null }]); setSay(""); setV((y) => y + 1); return true; }
+    if (ans) { setLog((l) => [...l, { id: "say:" + Date.now(), q: "", a: text, msg: ans, undo: null }]); setSay(""); return true; }
+    flash && flash(tr("I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”")); return false; };
+  const B = "min-h-[38px] px-3.5 rounded-[12px] text-[13px] font-extrabold border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]";
+  const BP = "min-h-[38px] px-3.5 rounded-[12px] text-[13px] font-extrabold bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]";
+  const bubble = "rounded-[18px] rounded-es-[6px] px-3.5 py-2.5 bg-[var(--c-soft)] max-w-[92%]";
+  const nextUp = coming[0];
   const tone = (x) => (x.kind === "collect" || x.kind === "owed" ? "c-pos" : ["pay", "bill", "owe"].includes(x.kind) ? "c-neg" : "");
   return (
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-3 lg:max-w-[80ch]"} style={{ minHeight: "70vh" }} data-testid="timeline-page">
       <div className="flex items-start gap-3"><span className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><CalendarDays size={18} /></span>
-        <div className="min-w-0"><h2 className={U.h1}>{tr("Follow-ups")}</h2>
-          <p className={"m-0 mt-0.5 text-[13px] " + U.muted}>{tr("Everything you must pay, collect, remember or watch — on one list.")}</p></div></div>
-      {doIt ? <U.PageBox value={say} setValue={setSay} onSend={(t) => add(t)} hint={tr("Add anything — “Ahmed owes me 12,000, 1,000 a month”")} sendLabel={tr("Add")}
+        <div className="min-w-0 flex-1"><h2 className={U.h1}>{tr("Follow-ups")}</h2>
+          <p className={"m-0 mt-0.5 text-[13px] " + U.muted} data-testid="fu-count">{qs.length ? tr("Today · {n} to answer", { n: qs.length }) : tr("Today")}</p></div></div>
+      <div className="flex flex-col gap-2" data-testid="fu-thread">
+        {log.map((l) => <React.Fragment key={l.id}>
+          {l.q ? <div className={bubble + " opacity-70"}><span className="text-[14px] font-bold" dir="auto">{l.q}</span></div> : null}
+          <div className="self-end rounded-[18px] rounded-ee-[6px] px-3.5 py-2 bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[14px] font-bold max-w-[85%]" dir="auto" data-testid="fu-me">{l.a}</div>
+          <p className="m-0 self-center text-[12.5px] font-bold text-[var(--c-pos)] text-center" data-testid="fu-result" dir="auto">{l.msg}{l.undo ? <> · <button className="underline" onClick={() => { l.undo(); setLog((g) => g.filter((y) => y.id !== l.id)); }} data-testid="fu-undo">{tr("Undo")}</button></> : null}</p>
+        </React.Fragment>)}
+        {qs.map((x) => { const act = actionOf(x), l = act === "ask" ? lifeOf(x) : null;
+          return <div key={x.id + "@" + x.date} className={bubble} data-testid="fu-q" data-act={act || "open"} data-kind={x.kind}>
+            {act === "ask" && l && l.c.person
+              ? <PersonAsk x={{ amount: x.amount, title: x.what + (x.late ? " · " + tr("Late") : ""), late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.currency, person: l.c.person, dir: l.c.dir } }} onDone={(m) => answer(x, m.startsWith(tr("I'll ask again tomorrow")) ? tr("Not yet") : tr("Paid"), m, null)} />
+              : <>
+                <p className="m-0 text-[14.5px] font-bold" dir="auto">{qText(x)}{x.amount ? <span className={"ms-1.5 text-[12.5px] tabular-nums " + U.muted} dir="ltr">· {money(x)}</span> : null}</p>
+                {x.late || (!act && x.slip) ? <p className={"m-0 text-[12px] " + (x.late ? "text-[var(--c-neg)] font-bold" : U.muted)} dir="auto">{x.late ? tr("Late") + " · " + dayLabel(x.date) : ""}{!act && x.slip && x.ck !== "regular" ? (x.late ? " — " : "") + (x.D ? tr(x.D[0], x.D[1]) + " — " : "") + tr(x.slip[0], { amount: money(x) || "", who: x.who || "" }) : ""}</p> : null}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {act === "pay" ? <><button className={BP} onClick={() => came(x)} data-testid="fu-yes">{x.ck === "regular" ? tr("Came ✓") : tr("Paid")}</button>
+                    {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B} onClick={() => later(x, tr("Not yet"))} data-testid="fu-no">{tr("Not yet")}</button>}</> : null}
+                  {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={() => later(x, tr("Tomorrow"))} data-testid="fu-no">{tr("Tomorrow")}</button></> : null}
+                  {act === "errand" ? <button className={BP} onClick={() => navTo && navTo("errands")} data-testid="fu-open">{tr("Open")}</button> : null}
+                  {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onClick={() => later(x, tr("Later"))} data-testid="fu-no">{tr("Later")}</button></> : null}
+                </div></>}
+          </div>; })}
+        {!qs.length ? <div className={bubble} data-testid="fu-clear"><p className="m-0 text-[14.5px] font-bold">{nextUp ? tr("All clear until {d}", { d: dayLabel(nextUp.date) }) : tr("All clear")}</p>
+          {!shown.length && !log.length ? <p className={"m-0 mt-1 text-[12.5px] " + U.muted}>{tr("Write a payment, a date or a reminder below — Attune asks you when it's due.")}</p> : null}</div> : null}
+      </div>
+      {coming.length ? <section className={U.card + " p-3"} data-testid="fu-coming">
+        <button onClick={() => setAllOpen(!allOpen)} className="w-full text-start text-[13px]" aria-expanded={allOpen} data-testid="fu-coming-toggle">
+          <b>{tr("Coming:")}</b> <span dir="auto">{coming.slice(0, 4).map((x) => x.what + (x.amount ? " " + fmt(x.amount) : "") + " · " + dayLabel(x.date)).join(" — ")}</span>
+          <span className={"ms-1 " + U.muted}>{allOpen ? tr("Hide") : tr("See all ({n})", { n: coming.length })}</span></button>
+        {allOpen ? <ul className="m-0 mt-2 p-0 list-none" data-testid="fu-coming-all">
+          {coming.map((x) => { const I = ICON[x.page] || Bell; return <li key={x.id + "@" + x.date} className="border-t border-[var(--c-ln)]" data-testid="timeline-item" data-kind={x.kind}>
+            <button onClick={() => navTo && navTo(x.kind === "errand" ? "errands" : x.page)} className="w-full flex items-center gap-2.5 py-2 text-start">
+              <I size={14} className="shrink-0 text-[var(--c-acc)]" />
+              <span className="flex-1 min-w-0"><span className="block text-[13.5px] font-bold break-words" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : x.what}</span>
+                <span className={"block text-[11.5px] " + U.muted}>{dayLabel(x.date)} · {tr(KIND[x.kind] || x.kind)}</span></span>
+              {x.amount ? <b className={"tabular-nums text-[13px] shrink-0 " + tone(x)} dir="ltr">{money(x)}</b> : null}</button></li>; })}
+        </ul> : null}
+      </section> : null}
+      {doIt ? <U.PageBox value={say} setValue={setSay} onSend={(t) => say2(t)} hint={tr("Say it or type — add or change anything: “the maid is now taking 700”")} sendLabel={tr("Send")}
         ids={{ box: "fu-add-form", input: "fu-add", go: "fu-add-go" }} /> : null}
-      {shown.length ? (
-        <p className="text-[13px] font-semibold m-0 tabular-nums" data-testid="timeline-sum">
-          {late ? <span className="text-[var(--c-neg)] font-extrabold">{tr("{n} late", { n: late })} · </span> : null}
-          {Object.keys(t.out).length ? <span>{tr("Going out: {a}", { a: sum(t.out) })}</span> : null}
-          {Object.keys(t.in).length ? <span>{Object.keys(t.out).length ? " · " : ""}{tr("Coming in: {a}", { a: sum(t.in) })}</span> : null}
-        </p>) : null}
-      {!shown.length && doIt && (() => { try { return !(loadLife().items || []).length && !loadReminders().length && !((JSON.parse(localStorage.getItem("attune:radar:v1") || "null") || {}).items || []).length; } catch (e) { return false; } })()
-        ? <U.EmptyStart testid="timeline-start" title={tr("Nothing to follow yet")} sub={tr("Debts, installments, renewals and reminders — write one and Attune keeps the dates.")}
-            examples={getLang() === "ar" ? ["أحمد عليه 12,000، ألف كل شهر", "نتفليكس بيتجدد يوم 5", "فكرني أدفع النت يوم 1"] : ["Ahmed owes me 12,000, 1,000 a month", "Netflix renews on the 5th", "remind me to pay the internet on the 1st"]}
-            onPick={(x) => setSay(x)} />
-      : !shown.length ? <p className={"text-[14px] " + U.muted} data-testid="timeline-empty">{tr("Nothing coming up. Add a reminder, a date (a trial, a renewal, a warranty), a payment with someone, or X-ray a chat — it all shows here.")}</p> : null}
-      {SEC.map(([k, l]) => feed[k].length ? <section key={k} className={U.card + " p-3.5"} data-testid={"fu-sec-" + k}>
-        <p className={"m-0 mb-1 text-[12px] font-extrabold tracking-[0.06em] uppercase " + (k === "today" && feed.today.some((x) => x.late) ? "text-[var(--c-neg)]" : "c-sub")}>{tr(l)}{k === "today" ? " · " + new Date().toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }) : ""}</p>
-        <ul className="m-0 p-0 list-none">
-          {feed[k].map((x) => { const act = actionOf(x), I = ICON[x.page] || Bell; return <li key={x.id + "@" + x.date} className="border-t first:border-t-0 border-[var(--c-ln)]" data-testid="timeline-item" data-kind={x.kind} data-act={act || "open"}>
-            <div className="flex items-start gap-3 py-2.5">
-              {act === "pay" || act === "done" || act === "ask"
-                ? <button onClick={() => tick(x)} aria-label={tr("Done")} className="w-7 h-7 mt-0.5 rounded-[8px] border-2 shrink-0 grid place-items-center" style={{ borderColor: x.late ? "var(--c-neg)" : "var(--c-mut)" }} data-testid="fu-tick" />
-                : <span className="w-7 h-7 mt-0.5 rounded-[8px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><I size={14} /></span>}
-              <button onClick={() => (act === "pay" || act === "done" ? tick(x) : act === "ask" ? setAsking(asking === x.id ? "" : x.id) : navTo && navTo(act === "errand" ? "errands" : x.page))} className="flex-1 min-w-0 text-start" data-testid="fu-row">
-                <span className="block text-[14.5px] font-extrabold break-words" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : act === "pay" && x.ck === "regular" ? T2("{w} came?", { w: x.what }) : act === "ask" ? T2("Did {w} pay?", { w: (x.who || x.what || "").split(" · ")[0] }) : x.what}</span>
-                <span className={"block text-[12px] " + (x.late ? "font-bold text-[var(--c-neg)]" : U.muted)}>{x.late ? tr("Late") + " · " + dayLabel(x.date) : k === "today" && x.date >= isoOf(Date.now()) ? tr(KIND[x.kind] || x.kind) : dayLabel(x.date) + " · " + tr(KIND[x.kind] || x.kind)}{x.time ? " · " + new Date(x.time).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }) : ""}{act === "pay" ? " · " + tr("tick = out of Money") : ""}</span>
-                {!act && x.slip && x.ck !== "regular" ? <span className={"block text-[12px] mt-0.5 " + U.muted} data-testid="timeline-slip" dir="auto">{x.D ? tr(x.D[0], x.D[1]) + " — " : ""}{tr(x.slip[0], { amount: money(x) || "", who: x.who || "" })}</span> : null}
-              </button>
-              {x.amount ? <b className={"tabular-nums text-[14px] shrink-0 " + tone(x)} dir="ltr">{money(x)}</b> : null}
-            </div>
-            {asking === x.id ? (() => { const l = lifeOf(x); return l && l.c.person ? <div className="ms-10 pb-2"><PersonAsk x={{ amount: x.amount, title: x.what, late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.currency, person: l.c.person, dir: l.c.dir } }} onDone={(m) => { flash && flash(m); setAsking(""); setV((y) => y + 1); }} /></div> : null; })() : null}
-          </li>; })}
-        </ul></section> : null)}
       {navTo ? <div className={"flex flex-wrap items-center gap-1.5 text-[12.5px] pt-1 " + U.muted} data-testid="fu-pages">
         <span>{tr("Manage:")}</span>
         {PAGES.map(([pg, l]) => <button key={pg} onClick={() => navTo(pg)} className="min-h-[34px] px-3 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[12px] font-bold text-[var(--c-ink)]" data-testid={"fu-open-" + pg}>{tr(l)}</button>)}

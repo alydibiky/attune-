@@ -12,6 +12,8 @@ home-now.js: out.push({ day: k, label: i === 0 ? tr("Today") : label, spend, kca
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
 actions-ui.jsx: if (d.toDateString() === n.toDateString()) return tr("Today"); if (d.toDateString() === tm.toDateString()) return tr("Tomorrow");
 timeline-ui.jsx: if (n === 1) return tr("Tomorrow");
+timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={(
+timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={(
 
 ## Title
 actions-ui.jsx: <input dir="auto" value={a.title} onChange={(e) => setA({ ...a, title: e.target.value })} className={field} aria-label={tr("Title")} data-te
@@ -83,6 +85,7 @@ home-ui.jsx: <button onClick={() => { try { localStorage.setItem(key, "1"); } ca
 paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
 paylog-ui.jsx: <button onClick={close} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted}>{tr("Hide")}</button></div>
 slides-ui.jsx: <span className="text-[var(--c-acc)] shrink-0">{opts ? tr("Hide") : tr("Change")}</span></button>
+timeline-ui.jsx: <span className={"ms-1 " + U.muted}>{allOpen ? tr("Hide") : tr("See all ({n})", { n: coming.length })}</span></button>
 
 ## Edit
 agent-ui.jsx: <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[44px] text-start text-[15px] text-[var(--c-ink)] font-extrabold flex ite
@@ -180,6 +183,8 @@ cmdbox-ui.jsx: {j.result.open ? <button onClick={() => onOpen(j.result.open)} cl
 home-now.js: actions: /^cheque/.test(w.kind) ? [{ id: "cleared", label: tr("It cleared") }, { id: "bounced", label: tr("Bounced") }] : [{ id: "open", lab
 home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
 spaces-ui.jsx: {sel && sel.id === a.id ? <span className="hidden lg:inline-flex self-center text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-[var(--c
+timeline-ui.jsx: {act === "errand" ? <button className={BP} onClick={() => navTo && navTo("errands")} data-testid="fu-open">{tr("Open")}</button> : null}
+timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onC
 
 ## See all
 agents-ui.jsx: <button onClick={() => setAt(1)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="agent-see-all">{tr("See a
@@ -244,6 +249,8 @@ yourday-ui.jsx: try { return (same ? tr("today") : d.toDateString() === tm.toDat
 agents-ui.jsx: <CardActions primary={{ label: x.canReply ? tr("Send") : tr("Copy and open the chat"), icon: Send, onClick: () => send(x), testid: "reply-se
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
 slides-ui.jsx: <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="min-h-[44px] rounded-[12px] border border-[
+timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onC
+timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onC
 
 ## Reply
 agents-ui.jsx: </div> : <button onClick={() => pick(x)} className="text-[13px] font-extrabold c-acc min-h-[36px]" data-testid="reply-open">{draft ? tr("Dra
@@ -342,7 +349,8 @@ home-ui.jsx: <span className="flex-1 min-w-0"><b className="block truncate text-
 home-ui.jsx: <span className="flex-1 min-w-0"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{x.dose ? (x.late
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
 life-ui.jsx: <span className={U.tag(x.late ? "red" : "amber")}>{x.late ? tr("Late") : x.date.slice(5)} · <span className="tabular-nums">{fmt(x.amount)}</
-timeline-ui.jsx: <span className={"block text-[12px] " + (x.late ? "font-bold text-[var(--c-neg)]" : U.muted)}>{x.late ? tr("Late") + " · " + dayLabel(x.date
+timeline-ui.jsx: ? <PersonAsk x={{ amount: x.amount, title: x.what + (x.late ? " · " + tr("Late") : ""), late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.cu
+timeline-ui.jsx: {x.late || (!act && x.slip) ? <p className={"m-0 text-[12px] " + (x.late ? "text-[var(--c-neg)] font-bold" : U.muted)} dir="auto">{x.late ? 
 
 ## This week
 attune.jsx: return d ? { text: tr("{b} is due {d}: {a}", { b: d.note, d: d.late ? tr("— it's late") : d.date.slice(5), a: fmtMoneyPlain(d.amount) + " " 
@@ -931,6 +939,9 @@ paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{op
 daily-ui.jsx: <button className={cGhost + " py-2.5"} style={{ ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" }} onClick={() => grade(false)} da
 home-ui.jsx: <button className={UbtnS + " h-10! min-h-[40px]!"} onClick={() => { notYet(a.id, a.i); onDone(tr("I'll ask again tomorrow")); }} data-testid
 lesson-ui.jsx: {result === "wrong" ? <p className="c-neg text-[13px] m-0" data-testid="lesson-wrong"><X size={13} className="inline -mt-0.5" /> {tr("Not ye
+timeline-ui.jsx: ? <PersonAsk x={{ amount: x.amount, title: x.what + (x.late ? " · " + tr("Late") : ""), late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.cu
+timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
+timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
 
 ## Quiz time
 daily-ui.jsx: title={tr("Quiz time")} sub={modelReady ? tr("A short quiz on lessons {a}–{b}", { a: st.lessons[0].n + 1, b: st.lessons[st.lessons.length - 
@@ -1075,12 +1086,21 @@ plans-ui.jsx: <button className="w-11 h-11 -me-2 shrink-0 grid place-items-cente
 radar-ui.jsx: const del = (x) => { if (!window.confirm(tr("Delete this?"))) return; put(D.removeDeadline(data, x.id)); unremind && unremind("radar-" + x.i
 slides-ui.jsx: <button aria-label={tr("Delete")} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]"
 
+## Didn't come
+life-ui.jsx: <button onClick={() => { put(skipDay(data, x.c.id, x.i)); flash && flash(tr("Noted — nothing paid today")); }} className={U.btnS + " mt-1 " 
+timeline-ui.jsx: answer(x, tr("Didn't come"), tr("Nothing paid"), () => { saveLife(skipDay(loadLife(), l.c.id, l.i, false)); setV((y) => y + 1); }); };
+timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
+
 ## From
 lifeask-ui.jsx: <span className="c-sub text-[12px]">{tr("From")}: {res.a.sources.map((s) => tr(TOOL[s] || s)).join(" · ")}</span>
 messages-ui.jsx: {r.mode === "hours" ? <div className="flex gap-2 items-center"><input type="time" value={r.from} onChange={(e) => put("from", e.target.value
 money-pages-ui.jsx: <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From") : tr("Account")}</p>
 money-sheets-ui.jsx: <Field label={t.type === "transfer" ? tr("From") : tr("Account")}><Pills value={account} onChange={setAccount} items={cashAccounts(L).map((a
 sourcelabel.js: return s.length ? tr("From") + ": " + s.map((k) => tr(SOURCE_TEXT[k])).join(" · ") : "";
+
+## a month
+lifeedit.js: const per = intent.every === "week" ? (ar ? " في الأسبوع" : " " + tr("a week")) : intent.every === "month" ? (ar ? " في الشهر" : " " + tr("a
+overpay-ui.jsx: {f.kind === "overlap" ? <div className={"text-[12.5px] " + U.muted}>{f.items.map((i) => <div key={i.name} className="flex justify-between py
 
 ## Name
 lists-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("Name")}</span>

@@ -54,6 +54,8 @@ export function timeline({ reminders = [], radar = null, life = null, ledger = n
     const s = scheduleOf(c, c.kind === "regular" ? now + days * DAY : now);
     for (const p of s) {
       if (p.paid || p.open) continue;   // (an open loan, no date: never late — persona 9)
+      // v9.9 FU6: "Didn't come" (skip) is answered for good; "Not yet" asks again the next day (c.later[i] = that day)
+      if ((c.skip || []).includes(p.i) || ((c.later || {})[p.i] && c.later[p.i] > today)) continue;
       // a regular day that passed = maybe they didn't come, not "late": kept only for the 7 days a tap may still record it
       // (Ali, 8 Nov: "7 days as the maximum") — FU1 asks "Maid came?" there
       if (c.kind === "regular" && p.date < today && p.date < iso(now - 7 * DAY)) continue;

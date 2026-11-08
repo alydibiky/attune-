@@ -342,13 +342,34 @@ export function scheduleOf(c, now = Date.now()) {
   if (c.kind === "regular" && Array.isArray(c.days) && c.days.length > 1 && c.start) {
     const x = new Date(c.start + "T12:00:00"), end = Date.parse(iso(new Date(now)) + "T12:00:00") + 7 * 864e5;
     for (let i = 0; x.getTime() <= end && i < 2000; x.setDate(x.getDate() + 1)) if (c.days.includes(x.getDay())) { out.push({ i, date: iso(x), amount: c.amount, paid: (c.paid || []).includes(i) }); i++; }
-    return out;
+    return withChanges(c, out, now);
   }
   for (let i = 0; i < n; i++) out.push({ i, date: dateOf(i), amount: c.amount, paid: (c.paid || []).includes(i) });
   // v8.6 (persona 6: "22,000 over 9 months" added up to 21,999.96): the last payment takes the cents, so the plan adds up exactly
   if (c.total > 0 && c.count > 1 && n === c.count && !Object.keys(c.got || {}).length) { const rest = r2(c.total - c.amount * (n - 1)); if (rest > 0 && rest <= c.amount + 1) out[n - 1].amount = rest; }
-  const res = rebalance(c, out, dateOf);
+  const res = rebalance(c, withChanges(c, out, now), dateOf);
   if (isOpenLoan(c)) for (const x of res) x.open = true;
+  return res;
+}
+/* v9.9 edit by talking (lifeedit.js): "the maid is now taking 700" / "comes on Friday now" / "stop the car wash" from a day on.
+   The days before keep what they were: an amount change keeps the old amount (`was`) for earlier days; a new start day keeps the
+   days before it (and a day already ticked) and the rest follow the new day; a stop removes the days from then on. */
+function withChanges(c, out, now) {
+  const ch = c.changes || [];
+  if (!ch.length || c.count > 0) return out;
+  let res = out.map((x) => ({ ...x }));
+  for (const m of [...ch].filter((x) => x.start).sort((a, b) => a.from.localeCompare(b.from))) {
+    const keep = res.filter((x) => x.date < m.from || x.paid);
+    const last = res.length ? res[res.length - 1].date : m.from, today = iso(new Date(now));
+    let i = keep.reduce((a, x) => Math.max(a, x.i), -1) + 1;
+    const base = new Date(m.start + "T12:00:00"), step = (k) => { const x = new Date(base); if (c.every === "month") x.setMonth(base.getMonth() + k); else if (c.every === "year") x.setFullYear(base.getFullYear() + k); else x.setDate(base.getDate() + 7 * k); return iso(x); };
+    const add = [];
+    for (let k = 0; k < 600; k++) { const d = step(k); if (d > last && add.some((y) => y.date > today)) break; if (keep.some((y) => y.date === d)) continue; add.push({ i, date: d, amount: c.amount, paid: (c.paid || []).includes(i) }); i++; }
+    res = [...keep, ...add];
+  }
+  const stop = ch.filter((x) => x.stop).map((x) => x.from).sort()[0];
+  if (stop) res = res.filter((x) => x.date < stop || x.paid);
+  for (const x of res) { let a = c.amount; for (const m of [...ch].filter((y) => y.amount != null).sort((p, q) => q.from.localeCompare(p.from))) if (m.from > x.date) a = m.was; x.amount = a; }
   return res;
 }
 /* v8.3 (Ali, 26 Oct: "make it customizable — write what he actually paid, and it reschedules the rest based on that"): a payment can
