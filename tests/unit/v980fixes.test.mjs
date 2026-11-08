@@ -140,3 +140,12 @@ console.log(`ALL PASSED v980fixes (${n} checks)`);
   const left = A.withoutTwins(g, [{ kind: "watch", what: "Huawei free clips 2" }, { kind: "watch", title: "Hyundai Tucson 2022" }]).map((x) => x.id);
   ok(left.join() === "3", "the FreeClip and Tucson Scout twins go (even spelt «Tuscon»); the flat, which no agent watches, stays: " + left); }
 console.log(`ALL PASSED v980fixes (${n} checks)`);
+// (Ali, 8 Nov) money by a tap: today and the 7 days before — never older, never ahead
+{ globalThis.window = globalThis.window || { addEventListener() {}, dispatchEvent() {} };
+  const fs = await import("node:fs"); const src = fs.readFileSync(new URL("../../web-src/life-ui.jsx", import.meta.url), "utf8");
+  const m = /export const tickable = \(date, now = Date.now\(\)\) => \{([\s\S]*?)\};\n/.exec(src); ok(!!m, "life-ui has the 7-day rule");
+  const tickable = new Function("date", "now", "const TICK_DAYS = 7;" + m[1]);
+  const now = Date.parse("2026-11-08T10:00:00");
+  ok(tickable("2026-11-08", now) && tickable("2026-11-01", now), "today and 7 days ago can be ticked");
+  ok(!tickable("2026-10-31", now) && !tickable("2026-11-09", now), "8 days ago and tomorrow can't"); }
+console.log(`ALL PASSED v980fixes (${n} checks)`);

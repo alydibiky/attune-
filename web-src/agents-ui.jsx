@@ -110,7 +110,7 @@ function AgentChat({ c, back, openBest, setRules, understand, flash }) {
   </div>;
 }
 
-export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onResearch = null, search = null, country = "EG", pro = true, openPlan = null, understandRule = null, drafter = null }) {
+export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onResearch = null, onResearchBg = null, search = null, country = "EG", pro = true, openPlan = null, understandRule = null, drafter = null }) {
   const ar = getLang() === "ar";
   const [st, setSt] = useState(() => A.loadAgents());
   const [text, setText] = useState("");
@@ -358,10 +358,18 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     try { if (!on) { N && N.unschedule && N.unschedule(id); return; }
       N && N.schedule && N.schedule(JSON.stringify({ id, at: a.next, title: T("Research update: {t}", { t: a.topic.slice(0, 60) }), body: tr("Tap to read what's new"), repeat: a.every === "day" ? "daily" : a.every === "month" ? "monthly" : "weekly" })); } catch (e) {}
   };
-  const runFollow = (a) => {
-    if (!onResearch) { flash && flash(tr("Research runs in Chat with the web on")); return; }
+  // v9.8 (Ali: "it went to Chat, so I have to keep the app open"): the research runs here, by itself, and its report stays on the agent;
+  // Chat is only the fallback for an old build without it
+  const runFollow = async (a) => {
     const q = A.followQuestion(a, (k, v) => tr(k, v));
     upd(a.id, (y) => A.followDone(y));
+    if (onResearchBg) {
+      flash && flash(tr("Researching in the background — you can leave Attune; I'll tell you when it's ready"));
+      const r = await onResearchBg(a, q); setSt(A.loadAgents());
+      if (r && !r.ok) flash && flash(r.why === "model" ? tr("Install an AI model in Engine to research") : r.why === "offline" ? tr("Offline lock is on — turn it off in Engine to search the web") : tr("The research didn't finish — try again"));
+      return;
+    }
+    if (!onResearch) { flash && flash(tr("Research runs in Chat with the web on")); return; }
     onResearch(a.topic, q);
   };
   useEffect(() => {   // a follow notification tapped → that agent's round
@@ -440,7 +448,12 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       flash && flash(T("Following {t} — the first report now, then {e}", { t: d.topic.slice(0, 40), e: tr(d.every === "day" ? "every day" : d.every === "month" ? "every month" : "every week") }));
       setTimeout(() => runFollow(a), 400); return;
     }
-    if (d.kind === "research") { if (onResearch) onResearch(d.topic); else flash && flash(tr("Research runs in Chat with the web on")); return; }
+    // v9.8 (Ali: "I made an agent to research a car — it went to Chat, so I have to keep the app open"): a one-off research is an agent
+    // too — it runs here in the background, its report stays on its card, a notification says when it's ready (no repeat, no Chat)
+    if (d.kind === "research") {
+      if (onResearchBg) { const a = { ...A.makeAgent({ kind: "follow", topic: d.topic, every: "once", title: "Research · " + String(d.topic).slice(0, 70) }), every: "once", once: true };
+        put({ ...st, agents: [a, ...st.agents] }); setTimeout(() => runFollow(a), 300); return; }
+      if (onResearch) onResearch(d.topic); else flash && flash(tr("Research runs in Chat with the web on")); return; }
     if (d.kind === "alert") { W.saveWatch([W.newRule(d.rule), ...W.loadWatch()], ar ? "ar" : "en"); setSt({ ...st }); flash && flash(T("I'll tell you: {r}", { r: W.ruleText(d.rule, ar) })); return; }
     // v8.7 (Ali picked persona 3's point 2): agents that act are Pro — Free keeps one running agent to try
     if (!pro && st.agents.filter((x) => x.on).length >= 1) { flash && flash(tr("Free includes 1 agent — Pro runs as many as you need")); openPlan && openPlan(); return; }
@@ -546,7 +559,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         {r.running ? <span className="inline-flex rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] p-0.5" role="group" aria-label={tr("View")} data-testid="agents-view">
           {[["new", "Cards", AppWindow], ["list", "List", ListChecks], ["board", "Board", Kanban]].map(([k, l, Ic]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} data-testid={"agents-view-" + k}
             className={"min-h-[36px] px-3 rounded-full text-[12.5px] font-extrabold inline-flex items-center gap-1 " + (view === k ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "c-sub")}><Ic size={14} />{tr(l)}</button>)}</span> : null}</div>
-      {view === "new" && r.running ? <AgentCardsA5 changes={A.whatChanged(st.agents)} cards={cards} openBest={openBest} openChat={(c) => (c.id === "messages" ? setMsgs("list") : setChat(c.id))} /> : null}
+      {view === "new" && r.running ? <AgentCardsA5 changes={A.whatChanged(st.agents)} cards={cards} runFollowA5={runFollow} openBest={openBest} openChat={(c) => (c.id === "messages" ? setMsgs("list") : setChat(c.id))} /> : null}
       {view === "board" && r.running ? <div className="flex gap-2.5 overflow-x-auto -mx-1 px-1 pb-2 snap-x" data-testid="agents-board">
         {BOARD.map(([k, l]) => { const items = cards.filter((c) => (k === "working" ? c.st === "working" : k === "done" ? c.st === "done" || c.st === "paused" : c.st === "found" || c.st === "needs"));
           return <div key={k} className="snap-start shrink-0 w-[200px] lg:w-auto lg:flex-1 rounded-[16px] bg-[var(--c-soft)] p-2 space-y-2" data-testid={"agents-col-" + k}>
@@ -577,7 +590,7 @@ const CHANGE_LINE = { needs: "Waiting for your OK", found: "Found under your pri
    each agent is one card: its site, what it watches, when it last looked and your conditions, then its best offer right there (name,
    days, price) with Open the listing — no extra tap. What changed since yesterday is a line on its own card ("Price dropped · was …").
    A card with no offer yet says what it is waiting for. */
-function AgentCardsA5({ changes, cards, openBest, openChat }) {
+function AgentCardsA5({ changes, cards, openBest, openChat, runFollowA5 }) {
   const LINE = { needs: "Waiting for your OK", found: "Found under your price", drop: "Price dropped", rise: "Price went up" };
   return <div className="space-y-2.5" data-testid="agents-a5">
     {cards.map((c) => { const a = c.a, ch = changes.find((x) => x.id === c.id), cur = (a && a.currency) || "";
@@ -591,7 +604,8 @@ function AgentCardsA5({ changes, cards, openBest, openChat }) {
             <span className="block text-[11.5px] c-sub truncate">{[last ? T("checked {t}", { t: ago(last) }) : tr(c.st === "done" ? "Done" : c.st === "paused" ? "Paused" : "Watching"), ...chips].join(" · ")}</span></span>
           <ChevronRight size={16} className="c-sub shrink-0 rtl:-scale-x-100" /></button>
         {ch ? <p className={"m-0 text-[12.5px] font-extrabold " + (ch.kind === "rise" ? "c-neg" : "c-pos")} data-testid="agent-a5-change">{tr(LINE[ch.kind])}{ch.was ? " · " + T("was {p}", { p: money(ch.was, cur) }) : ""}</p> : null}
-        {o && o.price ? <div className="rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-2.5 space-y-2" data-testid="agent-a5-offer">
+        {a && a.kind === "follow" ? <><ReportBox a={a} />{!a.report && !a.researching ? <button onClick={() => runFollowA5 && runFollowA5(a)} className="w-full min-h-[40px] rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13px] font-extrabold" data-testid="agent-a5-research">{tr("Research now")}</button> : null}</>
+        : o && o.price ? <div className="rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-2.5 space-y-2" data-testid="agent-a5-offer">
           <div className="flex items-start gap-2"><span className="flex-1 min-w-0"><b className="block text-[14px] leading-snug" dir="auto">{o.name && !R.isSiteName(o.name, a.site) ? o.name : T("Best on {s}", { s: A.siteOfOffer(o) || a.site || "" })}</b>
             <span className="block text-[11.5px] c-sub">{[o.checkin && o.checkout ? o.checkin.slice(5).replace("-", "/") + " → " + o.checkout.slice(5).replace("-", "/") : "", A.siteOfOffer(o), offers.length > 1 ? T("{n} more", { n: offers.length - 1 }) : ""].filter(Boolean).join(" · ")}</span></span>
             <b className="text-[16px] tabular-nums shrink-0" dir="ltr">{money(o.price, o.currency || cur)}</b></div>
@@ -733,6 +747,19 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
 }
 
 /** v9.0 a follow agent: the topic, how often, the last and next report, Read now. */
+/** v9.8: a research agent's report, kept on the agent — "researching…" while it runs, then the report (short, Read all, sources). */
+function ReportBox({ a }) {
+  const [all, setAll] = useState(false);
+  if (a.researching && Date.now() - a.researching < 20 * 60000) return <p className="m-0 text-[12.5px] c-acc flex items-center gap-1.5" data-testid="agent-researching"><RefreshCw size={13} className="animate-spin" />{tr("Researching — you can leave Attune; a notification says when it's ready")}</p>;
+  if (!a.report || !a.report.text) return null;
+  const t = a.report.text, long = t.length > 420;
+  return <div className="rounded-[14px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3 space-y-1.5" data-testid="agent-report">
+    <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.05em] c-sub">{T("Report · {d}", { d: new Date(a.report.at).toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }) })}</p>
+    <div className="text-[13.5px] leading-relaxed whitespace-pre-wrap break-words" dir="auto" data-testid="agent-report-text">{(all || !long ? t : t.slice(0, 420) + "…").replace(/^#{1,6}\s*/gm, "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/^\s*[-*]\s+/gm, "• ")}</div>
+    {long ? <button onClick={() => setAll(!all)} className="text-[12.5px] font-extrabold c-acc min-h-[32px]" data-testid="agent-report-all">{all ? tr("Show less") : tr("Read all")}</button> : null}
+    {all && (a.report.sources || []).length ? <ul className="m-0 ps-4 text-[12px] c-sub space-y-0.5">{a.report.sources.map((x, i) => <li key={i} className="truncate" dir="auto">{x.title || x.url}</li>)}</ul> : null}
+  </div>;
+}
 function FollowCard({ a, runFollow, remove, toggle, setRules, understand, flash }) {
   const [ro, setRo] = useState(false);
   const small = "min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold inline-flex items-center gap-1.5 border border-[var(--c-ln)]";
@@ -740,10 +767,11 @@ function FollowCard({ a, runFollow, remove, toggle, setRules, understand, flash 
   return <div className={U.cardPad + " space-y-2" + (a.on ? "" : " opacity-60")} data-testid="agent-follow">
     <AgentHead a={a} kind="follow" title={a.topic} toggle={toggle} remove={remove} onRules={() => setRo(true)} />
     <div className="min-w-0">
-      <p className="m-0 text-[12.5px] c-sub">{tr(a.every === "day" ? "Every day" : a.every === "month" ? "Every month" : "Every week")} · {tr("several sources, what's new since the last report")}</p>
-      <p className="m-0 text-[12px] c-sub" data-testid="agent-follow-when">{last ? T("Last report {d}", { d: when(last) }) + " · " : ""}{a.on ? T("Next {d}", { d: when(a.next) }) : tr("Paused")}</p></div>
+      <p className="m-0 text-[12.5px] c-sub">{a.once ? tr("One research · several sources") : tr(a.every === "day" ? "Every day" : a.every === "month" ? "Every month" : "Every week") + " · " + tr("several sources, what's new since the last report")}</p>
+      {a.once ? null : <p className="m-0 text-[12px] c-sub" data-testid="agent-follow-when">{last ? T("Last report {d}", { d: when(last) }) + " · " : ""}{a.on ? T("Next {d}", { d: when(a.next) }) : tr("Paused")}</p>}</div>
+    <ReportBox a={a} />
     <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={ro} setOpen={setRo} />
-    <CardActions primary={{ label: tr("Read now"), icon: BookOpen, onClick: () => runFollow(a), testid: "agent-follow-run" }} />
+    <CardActions primary={{ label: a.report ? tr("Research again") : tr("Research now"), icon: BookOpen, onClick: () => runFollow(a), testid: "agent-follow-run" }} />
   </div>;
 }
 

@@ -62,6 +62,9 @@ export function PayBox({ c, ed, setEd, onPay }) {
     <p className="m-0 text-[11.5px] text-[var(--c-mut)]">{tr("More or less than due? Type what came — the rest is spread over the payments left.")}</p>
   </form>;
 }
+/** (Ali: 7 days at most): a day of a regular can be ticked from 7 days ago up to today — never older, never ahead. */
+export const TICK_DAYS = 7;
+export const tickable = (date, now = Date.now()) => { const d = Date.parse(date + "T12:00:00"), t = new Date(now); t.setHours(12, 0, 0, 0); const diff = Math.round((t.getTime() - d) / 864e5); return diff >= 0 && diff <= TICK_DAYS; };
 const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const longDay = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
 // persona 9 (Ali picked H-C 1): Sara borrowed four times — one card for Sara with what she owes in all, her loans inside
@@ -163,7 +166,8 @@ function Item({ c, onTick, onRemove, onPay, onWho }) {
         <div className="flex flex-wrap gap-1.5 mt-3">
           {/* v9.8.2 (Ali: "I don't want to be able to press the maid 1 week ago and it tells me out of money / in money"): only TODAY's
               box can be ticked; a past day shows what happened (✓ / —) and a future one waits — neither touches Money */}
-          {show.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid, today = s.date === todayIso(), locked = !today; return (
+          {/* (Ali, 8 Nov: "make 7 days the maximum where I can edit money by a tap"): today and the 7 days before it can be ticked */}
+          {show.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid, today = s.date === todayIso(), locked = !tickable(s.date); return (
             <button key={s.i} onClick={() => { if (!locked) tap(s.i, s.paid, s.amount); }} disabled={locked} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick" data-locked={locked ? "1" : "0"}
               aria-pressed={s.paid} aria-label={tr("Payment {k}", { k: s.i + 1 }) + " · " + s.date}
               className={"min-w-[60px] min-h-[44px] px-2 py-1 rounded-[12px] flex flex-col items-center justify-center gap-px text-[11px] font-bold tabular-nums transition-colors duration-150 " + (locked ? "cursor-default opacity-80" : "")}

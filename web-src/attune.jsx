@@ -124,6 +124,7 @@ import { ListChecks } from "lucide-react";
 import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { brainSystem, knownFor, routeTask } from "./brain.js";
+import { expandQueries, mergeHits } from "./research.js";
 import { ErrandsPage } from "./errands-ui.jsx";
 import * as HG from "./haggle.js";
 import { scheduleMessage } from "./messages-ui.jsx";
@@ -7776,7 +7777,7 @@ const MODE_TITLES = { errands: "Errands", lists: "To-dos & lists", booklib: "Doc
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.8.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.8.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9875,6 +9876,29 @@ export default function App() {
   // v8.7 (P5-C): every page's box reaches Home's reader for what isn't its own (Money's box: "remind me tomorrow at 9")
   useEffect(() => { window.__attuneDo = (t0) => { const t = UND.looksFranco(t0) ? UND.francoToArabic(t0) : t0; const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask || u.actions.some((a) => a.kind !== "note") ? doFromHome(t) : null; }; return () => { try { delete window.__attuneDo; } catch (e) {} }; });
   const doRef = useRef(null);
+  // v9.8 (Ali, 8 Nov: "I made an agent to research a car — it went to Chat, so I have to keep the app open"): an agent's research runs
+  // by itself — searched on the web, the pages read, the report written by the phone's model — and is kept ON the agent; a
+  // notification says when it is ready. The writing service (GenService, keepAwake) keeps it going while Attune is in the background.
+  const researchForAgent = async (a, q) => {
+    if (NATIVE && airGap) return { ok: false, why: "offline" };
+    if (!modelUsable) return { ok: false, why: "model" };
+    const mark = (patch) => { const st = loadAgents(); saveAgents({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, ...patch } : x)) }); };
+    mark({ researching: Date.now() });
+    try { NATIVE && NATIVE.keepAwake && NATIVE.keepAwake(true); } catch (e) {}
+    try {
+      const queries = [q, ...expandQueries(q, 2)].filter((x, i, l) => x && l.indexOf(x) === i).slice(0, 3);
+      const lists = []; for (const x of queries) { try { const r = await webLookupRaw(x, 4); lists.push((r && r.hits) || []); } catch (e) { lists.push([]); } }
+      const hits = mergeHits(lists, 8, q);
+      const ranked = hits.length ? rankPassages(q, hits) : [];
+      const content = ranked.length ? groundedPrompt(q, ranked, lang) : q + "\n\n(The web search found nothing — answer from what you know and say so in one line.)";
+      const text = await callChat([{ role: "system", content: chatSystemPrompt(profileLine(profile), ACCURACY_RULES) }, { role: "user", content }], null, { maxTokens: 1600, temperature: 0.3, think: false, background: true });
+      const report = { at: Date.now(), q, text: String(text || "").trim(), sources: ranked.slice(0, 8).map((h) => ({ title: String(h.title || "").slice(0, 120), url: h.url || "" })) };
+      mark({ researching: 0, report, lastRun: Date.now() });
+      try { NATIVE && NATIVE.schedule && NATIVE.schedule(JSON.stringify({ id: "agent-report-" + a.id, at: Date.now() + 1500, title: tr("Research ready: {t}", { t: a.topic || a.title || "" }), body: report.text.replace(/[#*_>|`]/g, "").slice(0, 140), repeat: "none" })); } catch (e) {}
+      return { ok: !!report.text, report };
+    } catch (e) { mark({ researching: 0 }); return { ok: false, why: String((e && e.message) || e) }; }
+    finally { try { NATIVE && NATIVE.keepAwake && NATIVE.keepAwake(false); } catch (e) {} }
+  };
   // v9.8 N1 The Haggler, in the background (every minute): replies read from the kept notifications, the next message sent through
   // Messages' own path — by itself when "Send by itself" is on, else a notification with Send / Not now (one tap). Never a promise
   // (haggle.js safeText); a price inside the limit → Agents' "Needs you" and a notification, the viewing is the person's call.
@@ -10861,6 +10885,7 @@ export default function App() {
             onScout={(t) => { setScoutIn({ id: Date.now(), text: t }); navTo("scout"); }}
             drafter={modelUsable ? async (prompt) => String(await callChat([{ role: "user", content: prompt }], null, { maxTokens: 120, temperature: 0.5, think: false }) || "").trim().replace(/^["“]|["”]$/g, "").slice(0, 600) : null}   // v9.4 G1: a reply draft, on the phone
             search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 4 }) : null}
+            onResearchBg={(a, q) => researchForAgent(a, q)}
             onResearch={(topic, q) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + (q || tr("Deep research: {t} — from several sources, presented neatly: the short answer first, then sections and tables, with the sources", { t: topic }))); navTo("chat"); }} />
         ) : mode === "convert" ? (
           <FileConverter flash={flash} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}

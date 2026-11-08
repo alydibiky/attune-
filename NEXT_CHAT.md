@@ -14,6 +14,13 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## 8 Nov later — Follow-ups redesign asked ("so confusing and scattered") + a past maid day can't be pressed
 - Fixed: People & plans — only today's box of a regular can be ticked (life-ui.jsx Item, data-locked); a past day shows ✓ / —, never
   moves money (e2e_v737maid). Home's "Was due … — paid?" still lets a forgotten day be recorded on purpose.
+- (v9.8.3) **Research agents never go to Chat** (Ali: "it went to Chat, so I have to keep the app open"): attune.jsx `researchForAgent`
+  (web search ×3 → mergeHits → rankPassages → groundedPrompt → callChat background) under `keepAwake` (GenService keeps it at full speed
+  while Attune is in the background), the report saved ON the agent (`a.report`, ReportBox on the A5 card + FollowCard), a notification
+  "Research ready". A one-off "research …" sentence is a once-agent (kind follow, once). Honest limit: if Attune is swiped away / force-
+  stopped the WebView dies and the run stops — it continues while the app is in the background. Test e2e_v980research.
+- (v9.8.3) **Money by a tap: 7 days at most** (Ali): a regular's box is tappable from 7 days ago to today (life-ui `tickable`), Home's
+  "paid?" box only for the last 7 days (home.js askPaid).
 - Waiting for Ali's pick: FU1–FU5 (rec. FU1 one feed Today · This week · Later, everything ticked the same way, one Add box) on
   https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC.
 

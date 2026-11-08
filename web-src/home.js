@@ -18,7 +18,8 @@ function todayList({ life, ledger, radar, care, now = Date.now(), max = 4 }) {
       : c.kind === "circle" ? tr("Savings circle · {i} of {n}", { i: x.i + 1, n: c.count }) : c.kind === "debt" ? (c.dir === "in" ? tr("{p} pays you back", { p: who }) : tr("Pay {p} back", { p: who }))
       : (c.title ? c.title[0].toUpperCase() + c.title.slice(1) : tr("Bill"));
     // v6.34 (Ali): on its day a payment you make (the maid, a subscription, a bill, the rent) is a box: tick = paid, in Money
-    const askPaid = c.dir === "out" && c.amount > 0 && x.date <= isoD(now) && ["regular", "subscription", "bill", "rent"].includes(c.kind);
+    // (Ali, 8 Nov: "7 days as the maximum where I can edit money by a tap"): a box only for the last 7 days — an older day is just shown
+    const askPaid = c.dir === "out" && c.amount > 0 && x.date <= isoD(now) && x.date >= isoD(now - 7 * 864e5) && ["regular", "subscription", "bill", "rent"].includes(c.kind);
     // v9.5 (Ali): on its day a person's payment (the Sheikh's instalment, a debt) asks "did he pay?" — Paid · Other amount · Not yet
     const askPerson = !!c.person && ["debt", "installment"].includes(c.kind) && x.date <= isoD(now) && !((c.later || {})[x.i] > isoD(now));
     out.push({ from: "life", title, date: x.date, amount: x.amount, dir: c.dir, late: x.late, ...(askPaid ? { pay: { kind: "life", id: c.id, i: x.i, cur: c.currency } } : {}),
