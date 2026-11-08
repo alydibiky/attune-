@@ -11,6 +11,8 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 8 Nov later — Ali: "cancel FU1, tell me a better option" → FU6–FU10 on https://claude.ai/artifact/FsAwRjNtSWY4Lb7fCVSfYY (rec. FU6 Attune asks, you answer). FU1 stays live until his pick; then archive it in archive/followups-fu1/ and build the pick.
+
 ## 8 Nov — v9.8.4: Ali picked FU1 — Follow-ups is ONE feed
 - `timeline-ui.jsx` rewritten: the Add box on top, a one-line summary, then **Today** (late first, red) · **This week** · **Later**.
   Every row is the same: a box on the left when it can be ticked, the amount on the right. No week strip, no chips, no ⋯ menu;
