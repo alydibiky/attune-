@@ -11,6 +11,12 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 8 Nov later — Follow-ups redesign asked ("so confusing and scattered") + a past maid day can't be pressed
+- Fixed: People & plans — only today's box of a regular can be ticked (life-ui.jsx Item, data-locked); a past day shows ✓ / —, never
+  moves money (e2e_v737maid). Home's "Was due … — paid?" still lets a forgotten day be recorded on purpose.
+- Waiting for Ali's pick: FU1–FU5 (rec. FU1 one feed Today · This week · Later, everything ticked the same way, one Add box) on
+  https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC.
+
 ## v9.8.1 — 8 Nov: Ali's 7 points on v9.8 (+ "reply to it and tell it how to add it")
 - **Autopilot**: a tap opens the whole notification (`autopilot-ui.jsx Item`), "Save it as" Reminder / To-do / Expense / Subscription,
   and a box that goes through the Home box (`window.__attuneDoIt`; "remind me Monday at 9" alone gets the notification's words as what).
