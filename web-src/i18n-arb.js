@@ -11572,4 +11572,8 @@ export const ARB = {
   "Research again": "ابحث مرة أخرى",
   "Research now": "ابحث الآن",
   "One research · several sources": "بحث واحد · من عدة مصادر",
+  "{w} came?": "هل جاء {w}؟",
+  "Did {w} pay?": "هل دفع {w}؟",
+  "tick = out of Money": "العلامة = تُخصم من المال",
+  "Manage:": "إدارة:",
 };

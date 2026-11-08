@@ -11580,4 +11580,8 @@ export const TH = {
   "Research again": "ค้นคว้าอีกครั้ง",
   "Research now": "ค้นคว้าตอนนี้",
   "One research · several sources": "ค้นคว้าครั้งเดียว · หลายแหล่ง",
+  "{w} came?": "{w} มาไหม?",
+  "Did {w} pay?": "{w} จ่ายแล้วหรือยัง?",
+  "tick = out of Money": "ติ๊ก = หักจากเงิน",
+  "Manage:": "จัดการ:",
 };

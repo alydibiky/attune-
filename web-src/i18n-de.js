@@ -11580,4 +11580,8 @@ export const DE = {
   "Research again": "Erneut recherchieren",
   "Research now": "Jetzt recherchieren",
   "One research · several sources": "Eine Recherche · mehrere Quellen",
+  "{w} came?": "{w} gekommen?",
+  "Did {w} pay?": "Hat {w} bezahlt?",
+  "tick = out of Money": "Haken = geht von Geld ab",
+  "Manage:": "Verwalten:",
 };

@@ -342,7 +342,7 @@ home-ui.jsx: <span className="flex-1 min-w-0"><b className="block truncate text-
 home-ui.jsx: <span className="flex-1 min-w-0"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{x.dose ? (x.late
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
 life-ui.jsx: <span className={U.tag(x.late ? "red" : "amber")}>{x.late ? tr("Late") : x.date.slice(5)} · <span className="tabular-nums">{fmt(x.amount)}</
-timeline-ui.jsx: <h3 className={"text-[12px] font-extrabold uppercase tracking-[0.08em] m-0 mb-1.5 " + (g.date === "late" ? "text-[var(--c-neg)]" : g.date ==
+timeline-ui.jsx: <span className={"block text-[12px] " + (x.late ? "font-bold text-[var(--c-neg)]" : U.muted)}>{x.late ? tr("Late") + " · " + dayLabel(x.date
 
 ## This week
 attune.jsx: return d ? { text: tr("{b} is due {d}: {a}", { b: d.note, d: d.late ? tr("— it's late") : d.date.slice(5), a: fmtMoneyPlain(d.amount) + " " 
@@ -690,7 +690,6 @@ backup-ui.jsx: <label className="text-[var(--c-mut)] flex items-center gap-1"><i
 cv-ui.jsx: <label className="flex items-center gap-1 text-[11px] text-[var(--c-mut)] px-1"><input type="checkbox" checked={s.visible !== false} onChang
 money-sheets-ui.jsx: <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={shown(k)} onChange={() => flip(k)} classNam
 shelf-ui.jsx: {!shown ? <button onClick={() => setShown(true)} className={btnP + " w-full"} data-testid="shelf-review-show">{tr("Show")}</button> : (
-timeline-ui.jsx: <button onClick={() => setMore(!more)} aria-expanded={more} className={U.chip(more || chip !== "all") + " inline-flex items-center gap-1"} d
 
 ## Unlock
 backup-ui.jsx: {busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}{busy || tr("Unlock")}

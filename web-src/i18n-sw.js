@@ -11581,4 +11581,8 @@ export const SW = {
   "Research again": "Tafiti tena",
   "Research now": "Tafiti sasa",
   "One research · several sources": "Utafiti mmoja · vyanzo kadhaa",
+  "{w} came?": "{w} amekuja?",
+  "Did {w} pay?": "{w} amelipa?",
+  "tick = out of Money": "tiki = inatoka kwenye Pesa",
+  "Manage:": "Simamia:",
 };

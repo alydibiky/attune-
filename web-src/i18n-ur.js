@@ -11581,4 +11581,8 @@ export const UR = {
   "Research again": "دوبارہ تحقیق کریں",
   "Research now": "ابھی تحقیق کریں",
   "One research · several sources": "ایک تحقیق · کئی ذرائع",
+  "{w} came?": "{w} آئے؟",
+  "Did {w} pay?": "کیا {w} نے ادائیگی کی؟",
+  "tick = out of Money": "ٹک = پیسوں سے کٹے گا",
+  "Manage:": "انتظام:",
 };

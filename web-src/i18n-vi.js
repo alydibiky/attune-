@@ -11580,4 +11580,8 @@ export const VI = {
   "Research again": "Nghiên cứu lại",
   "Research now": "Nghiên cứu ngay",
   "One research · several sources": "Một lần nghiên cứu · nhiều nguồn",
+  "{w} came?": "{w} đã đến?",
+  "Did {w} pay?": "{w} đã trả chưa?",
+  "tick = out of Money": "đánh dấu = trừ vào Tiền",
+  "Manage:": "Quản lý:",
 };

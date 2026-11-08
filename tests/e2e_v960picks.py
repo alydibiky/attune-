@@ -23,7 +23,9 @@ TX = [{"id": "i1", "type": "income", "amount": 40000, "account": "b", "cat": "sa
       {"id": "e1", "type": "expense", "amount": 5100, "account": "b", "cat": "groceries", "date": "2026-11-03", "note": "Seoudi"}]
 L = {"currency": "EGP", "accounts": [{"id": "b", "name": "Cash", "currency": "EGP", "start": 5000}], "txns": TX, "budgets": {"overall": 0, "cats": {}}, "recurring": [], "debts": [], "customCats": [], "goals": [], "projects": []}
 LIFE = {"v": 1, "items": [{"id": "sh", "kind": "installment", "person": "Sheikh", "dir": "in", "amount": 2500, "total": 19500, "count": 8, "every": "month", "start": "2026-10-05", "currency": "EGP", "paid": [0], "created": 1},
-  {"id": "md", "kind": "regular", "title": "Maid", "dir": "out", "amount": 600, "every": "week", "start": "2026-11-07", "currency": "EGP", "paid": [], "created": 2}]}
+  {"id": "md", "kind": "regular", "title": "Maid", "dir": "out", "amount": 600, "every": "week", "start": "2026-11-07", "currency": "EGP", "paid": [], "created": 2},
+  {"id": "gd", "kind": "regular", "title": "Gardener", "dir": "out", "amount": 400, "every": "week", "start": "2026-11-02", "currency": "EGP", "paid": [], "created": 3},
+  {"id": "cl", "kind": "regular", "title": "Cleaner", "dir": "out", "amount": 900, "every": "month", "start": "2026-10-20", "currency": "EGP", "paid": [], "created": 4}]}
 POTS = {"v": 1, "pots": [{"id": "pot1", "name": "House", "kind": "other", "target": 120000, "by": "2027-12", "saved": 22000, "per": 0, "log": []}]}
 INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:agents:view2','board');localStorage.setItem('ledger.v3', %s);localStorage.setItem('attune:agents:v1', %s);"
         "localStorage.setItem('attune:life:v1', %s);localStorage.setItem('attune:pots:v1', %s)}catch(e){}") % tuple(json.dumps(json.dumps(x)) for x in (L, AGENTS, LIFE, POTS))
@@ -71,18 +73,25 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=planner-cal-day][data-kind=in]").count() >= 1 and page.locator("[data-testid=planner-cal-day][data-kind=out]").count() >= 1, "green on days money came in, red on days it went out")
     page.click("[data-testid=planner-view-table]"); page.wait_for_selector("[data-testid=planner-table]")
     check(page.locator("[data-testid=planner-row]").count() >= 2 and "Seoudi" in page.locator("[data-testid=planner-table]").inner_text(), "Table: plan · spent · left per line (P6), names with notes")
-    # ---- F4 + F1 ----
-    open_mode(page, "timeline", "[data-testid=fu-week]")
-    check(page.locator("[data-testid=fu-week-day]").count() == 7, "Follow-ups: a week strip on top")
-    check(page.locator("[data-testid=fu-dot-pay]").count() >= 1, "a red dot on the maid's day")
-    check(page.locator("[data-testid=fu-chips]").count() == 0, "the scattered chips are gone from the top (behind ⋯)")
-    asks = page.locator("[data-testid=timeline-page] [data-testid=home-person-ask]")
-    check(asks.count() == 1 and "Sheikh" in asks.first.inner_text(), "Sheikh's payment asks Paid · Other amount · Not yet right in the list")
-    page.fill("[data-testid=fu-add]", "maid"); page.wait_for_timeout(250)
-    check(all("aid" in x.inner_text() for x in page.locator("[data-testid=timeline-item]").all()) and page.locator("[data-testid=timeline-item]").count() >= 1, "one box searches the list as you type")
-    page.fill("[data-testid=fu-add]", "")
-    page.locator("[data-testid=fu-week-day]").nth(2).click(); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=fu-week-day]").nth(2).get_attribute("aria-pressed") == "true", "a tap on a day picks it")
+    # ---- v9.8 FU1 (replaced F4 + F1, Ali: "so confusing and scattered"): one feed — Today · This week · Later ----
+    open_mode(page, "timeline", "[data-testid=fu-sec-today]")
+    check(page.locator("[data-testid=fu-week]").count() == 0 and page.locator("[data-testid=fu-chips]").count() == 0 and page.locator("[data-testid=fu-more]").count() == 0, "FU1: no week strip, no chips, no ⋯ — one feed")
+    asks = page.locator("[data-testid=fu-sec-today] [data-testid=timeline-item][data-act=ask]")
+    check(asks.count() == 1 and "Sheikh" in asks.first.inner_text(), "Sheikh's late payment is in Today with a box: Did Sheikh pay?")
+    asks.first.locator("[data-testid=fu-tick]").click(); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=timeline-page] [data-testid=home-person-ask]").count() == 1, "…its box opens Paid · Other amount · Not yet right in the list")
+    later = page.locator("[data-testid=fu-sec-week] [data-testid=timeline-item], [data-testid=fu-sec-later] [data-testid=timeline-item]")
+    check(later.count() >= 1 and all(x.get_attribute("data-act") in ("open", "errand", "") for x in later.all() if x.get_attribute("data-kind") in ("pay", "collect")), "a payment that is not due yet has no box (money by a tap: today and 7 days back)")
+    check(all(x.get_attribute("data-act") == "open" for x in page.locator("[data-testid=timeline-item]").all() if "Maid" in x.inner_text()), "the maid on Saturday (not come yet) has no box")
+    maid = page.locator("[data-testid=fu-sec-today] [data-testid=timeline-item][data-act=pay]")
+    check(maid.count() == 1 and "Gardener came?" in maid.first.inner_text(), "Monday's gardener (3 days ago) is in Today: Gardener came? with a box")
+    check(not any("Cleaner" in t and "Oct" in t for t in page.locator("[data-testid=timeline-item]").all_inner_texts()), "the cleaner on 20 Oct (16 days ago) is past the 7 days — no box, not shown")
+    n_tx = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3')).txns.length")
+    maid.first.locator("[data-testid=fu-tick]").click(); page.wait_for_timeout(300)
+    led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3')).txns")
+    lf = page.evaluate("JSON.parse(localStorage.getItem('attune:life:v1')).items.find(x => x.id == 'gd')")
+    check(len(led) == n_tx + 1 and led[-1]["type"] == "expense" and led[-1]["amount"] == 400 and 0 in lf["paid"], "one tick = 400 out of Money and the gardener marked paid")
+    check(page.locator("[data-testid=fu-sec-today] [data-testid=timeline-item][data-act=pay]").count() == 0, "…and it leaves Today")
     check(not real_errors(errors), "no page errors: " + str(real_errors(errors))[:300])
     br.close()
 finish()

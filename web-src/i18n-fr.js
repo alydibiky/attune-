@@ -11581,4 +11581,8 @@ export const FR = {
   "Research again": "Rechercher à nouveau",
   "Research now": "Rechercher maintenant",
   "One research · several sources": "Une recherche · plusieurs sources",
+  "{w} came?": "{w} est venu ?",
+  "Did {w} pay?": "{w} a payé ?",
+  "tick = out of Money": "coche = sort de l'Argent",
+  "Manage:": "Gérer :",
 };

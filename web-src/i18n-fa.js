@@ -11580,4 +11580,8 @@ export const FA = {
   "Research again": "تحقیق دوباره",
   "Research now": "اکنون تحقیق کن",
   "One research · several sources": "یک تحقیق · چند منبع",
+  "{w} came?": "{w} آمد؟",
+  "Did {w} pay?": "{w} پرداخت کرد؟",
+  "tick = out of Money": "تیک = از پول کم می‌شود",
+  "Manage:": "مدیریت:",
 };

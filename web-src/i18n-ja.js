@@ -11580,4 +11580,8 @@ export const JA = {
   "Research again": "もう一度調べる",
   "Research now": "今すぐ調べる",
   "One research · several sources": "1回の調査 · 複数の情報源",
+  "{w} came?": "{w}は来た？",
+  "Did {w} pay?": "{w}は払った？",
+  "tick = out of Money": "チェック = お金から引く",
+  "Manage:": "管理：",
 };

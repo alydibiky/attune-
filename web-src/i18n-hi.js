@@ -11581,4 +11581,8 @@ export const HI = {
   "Research again": "फिर से खोजें",
   "Research now": "अभी खोजें",
   "One research · several sources": "एक खोज · कई स्रोत",
+  "{w} came?": "{w} आए?",
+  "Did {w} pay?": "क्या {w} ने भुगतान किया?",
+  "tick = out of Money": "टिक = पैसे से कटेगा",
+  "Manage:": "प्रबंधन:",
 };

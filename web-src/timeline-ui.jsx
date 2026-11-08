@@ -4,7 +4,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Bell, Radar, Users, Wallet, MessageSquare, AlertTriangle, ShieldCheck as ShieldAlert, Plus, Check, ChevronLeft, ChevronRight, SlidersHorizontal as MoreHorizontal } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
-import { timeline, byDay, totals, daysFrom, GROUP_OF, weekDays, searchItems, byDayLate } from "./timeline.js";
+import { timeline, byDay, totals, daysFrom, GROUP_OF, weekDays, searchItems, byDayLate, feedOf, actionOf } from "./timeline.js";
+import { tickRegular } from "./regular.js";
 import { PersonAsk } from "./home-ui.jsx";
 import { findings as guardianFindings, loadGuardian, saveGuardian, collected } from "./guardian.js";
 import { loadLife, saveLife, payAmount, progressOf } from "./life.js";
@@ -19,8 +20,9 @@ const ICON = { reminders: Bell, radar: Radar, life: Users, money: Wallet, xray: 
 const CHIPS = [["all", "All"], ["money", "Money"], ["reminders", "Reminders"], ["dates", "Dates"], ["guardian", "Guardian"]];
 // the parts' own pages [page, name, the chip it belongs to]
 const PAGES = [["life", "People & plans", "money"], ["reminders", "Reminders", "reminders"], ["errands", "Errands", "reminders"], ["radar", "Dates", "dates"], ["xray", "Chat X-Ray", ""], ["guardian", "Guardian", "guardian"]];
-const KIND = { reminder: "Reminder", trial: "Free trial", renewal: "Renewal", return: "Return window", warranty: "Warranty", expiry: "Document expiry", other: "Date",
+const KIND = { errand: "Errand", reminder: "Reminder", trial: "Free trial", renewal: "Renewal", return: "Return window", warranty: "Warranty", expiry: "Document expiry", other: "Date",
   pay: "You pay", collect: "Comes in", bill: "Bill", owe: "You owe", owed: "Owed to you", promise: "Promise", guardian: "Guardian" };
+const T2 = (k, v) => tr(k, v);
 const RANGES = [[7, "7 days"], [30, "30 days"], [90, "3 months"]];
 
 function dayLabel(date) {
@@ -94,67 +96,62 @@ export function TimelinePage({ navTo, doIt, flash }) {
     flash && flash(pr.left > 0.004 ? tr("Recorded {a} — {l} left, next {d}: {n}", { a: fmt(v), l: fmt(pr.left), d: pr.next ? pr.next.date : "—", n: pr.next ? fmt(pr.next.amount) : "—" }) : tr("Recorded {a} — all paid", { a: fmt(v) }));
   };
   const sum = (o) => Object.entries(o).map(([c, a]) => (c ? c + " " : "") + fmt(a)).join(" · ");
+  // v9.8 FU1 (Ali picked "one feed: Today · This week · Later"): every item ticked the same way, nothing else to open
+  const [doneSet, setDoneSet] = useState(() => new Set(j("attune:fu:done", [])));
+  const markDone = (key) => { const n = new Set(doneSet); n.add(key); setDoneSet(n); try { localStorage.setItem("attune:fu:done", JSON.stringify([...n].slice(-300))); } catch (e) {} };
+  const [asking, setAsking] = useState("");
+  const shown = list.filter((x) => !doneSet.has(x.id + "@" + x.date));
+  const feed = feedOf(shown);
+  const tick = (x) => {
+    const act = actionOf(x);
+    if (act === "pay") { const l = lifeOf(x); if (!l) return; const r = tickRegular(l.c.id, l.i, true); setV((y) => y + 1);
+      flash && flash(r && r.recorded ? tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: l.c.currency || "", t: x.what }) : tr("Done")); return; }
+    if (act === "ask") { setAsking(asking === x.id ? "" : x.id); return; }
+    if (act === "done") { markDone(x.id + "@" + x.date); flash && flash(tr("Done")); return; }
+    if (act === "errand") { navTo && navTo("errands"); return; }
+    navTo && navTo(x.page);
+  };
+  const SEC = [["today", "Today"], ["week", "This week"], ["later", "Later"]];
+  const tone = (x) => (x.kind === "collect" || x.kind === "owed" ? "c-pos" : ["pay", "bill", "owe"].includes(x.kind) ? "c-neg" : "");
   return (
-    <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4 lg:max-w-[80ch]"} style={{ minHeight: "70vh" }} data-testid="timeline-page">
+    <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-3 lg:max-w-[80ch]"} style={{ minHeight: "70vh" }} data-testid="timeline-page">
       <div className="flex items-start gap-3"><span className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><CalendarDays size={18} /></span>
         <div className="min-w-0"><h2 className={U.h1}>{tr("Follow-ups")}</h2>
           <p className={"m-0 mt-0.5 text-[13px] " + U.muted}>{tr("Everything you must pay, collect, remember or watch — on one list.")}</p></div></div>
-      {/* v8.7 (Ali picked P5-C): the same box as Home and every page — only the hint is Follow-ups' */}
       {doIt ? <U.PageBox value={say} setValue={setSay} onSend={(t) => add(t)} hint={tr("Add anything — “Ahmed owes me 12,000, 1,000 a month”")} sendLabel={tr("Add")}
         ids={{ box: "fu-add-form", input: "fu-add", go: "fu-add-go" }} /> : null}
-      <WeekStrip list={all} week={week} setWeek={setWeek} pick={pick} picked={picked} />
-      {/* v9.6 (Ali: "follow-ups are scattered"): the kind filter and the parts' own pages wait behind ⋯ */}
-      <div className="flex items-center gap-2">
-        <button onClick={() => setMore(!more)} aria-expanded={more} className={U.chip(more || chip !== "all") + " inline-flex items-center gap-1"} data-testid="fu-more"><MoreHorizontal size={14} />{chip === "all" ? tr("Show") : tr(CHIPS.find((c) => c[0] === chip)[1])}</button>
-      </div>
-      {more ? <div className="space-y-2" data-testid="fu-more-panel">
-        <div className="flex flex-wrap items-center gap-1.5" data-testid="fu-chips">
-          {CHIPS.map(([c, l]) => <button key={c} onClick={() => setChip(c)} aria-pressed={chip === c} className={U.chip(chip === c)} data-testid={"fu-chip-" + c}>{tr(l)} {count(c)}</button>)}
-        </div>
-        {navTo ? <div className={"flex flex-wrap items-center gap-1.5 text-[12.5px] " + U.muted} data-testid="fu-pages">
-          <span>{tr("Open:")}</span>
-          {PAGES.map(([pg, l]) => <button key={pg} onClick={() => navTo(pg)} className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[12.5px] font-bold text-[var(--c-ink)]" data-testid={"fu-open-" + pg}>{tr(l)} ›</button>)}
-        </div> : null}
-      </div> : null}
-      {list.length ? (
-        <p className="text-[13.5px] font-semibold m-0 tabular-nums" data-testid="timeline-sum">
+      {shown.length ? (
+        <p className="text-[13px] font-semibold m-0 tabular-nums" data-testid="timeline-sum">
           {late ? <span className="text-[var(--c-neg)] font-extrabold">{tr("{n} late", { n: late })} · </span> : null}
           {Object.keys(t.out).length ? <span>{tr("Going out: {a}", { a: sum(t.out) })}</span> : null}
           {Object.keys(t.in).length ? <span>{Object.keys(t.out).length ? " · " : ""}{tr("Coming in: {a}", { a: sum(t.in) })}</span> : null}
         </p>) : null}
-      {/* v8.7 (Ali picked V-D): with nothing at all yet (no people & plans, reminders or dates), a friendly start with examples */}
-      {!list.length && doIt && (() => { try { return !(loadLife().items || []).length && !loadReminders().length && !((JSON.parse(localStorage.getItem("attune:radar:v1") || "null") || {}).items || []).length; } catch (e) { return false; } })()
+      {!shown.length && doIt && (() => { try { return !(loadLife().items || []).length && !loadReminders().length && !((JSON.parse(localStorage.getItem("attune:radar:v1") || "null") || {}).items || []).length; } catch (e) { return false; } })()
         ? <U.EmptyStart testid="timeline-start" title={tr("Nothing to follow yet")} sub={tr("Debts, installments, renewals and reminders — write one and Attune keeps the dates.")}
             examples={getLang() === "ar" ? ["أحمد عليه 12,000، ألف كل شهر", "نتفليكس بيتجدد يوم 5", "فكرني أدفع النت يوم 1"] : ["Ahmed owes me 12,000, 1,000 a month", "Netflix renews on the 5th", "remind me to pay the internet on the 1st"]}
             onPick={(x) => setSay(x)} />
-      : !list.length ? <p className={"text-[14px] " + U.muted} data-testid="timeline-empty">{tr("Nothing coming up. Add a reminder, a date (a trial, a renewal, a warranty), a payment with someone, or X-ray a chat — it all shows here.")}</p> : null}
-      <div className="space-y-4">
-        {groups.map((g) => (
-          <section key={g.date} data-testid="timeline-day" data-day={g.date} style={{ scrollMarginTop: 72 }}>
-            <h3 className={"text-[12px] font-extrabold uppercase tracking-[0.08em] m-0 mb-1.5 " + (g.date === "late" ? "text-[var(--c-neg)]" : g.date === picked ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")}>{g.date === "late" ? tr("Late") : dayLabel(g.date)}</h3>
-            <ul className="m-0 p-0 list-none space-y-1.5">
-              {g.items.map((x) => { const I = ICON[x.page] || Bell; return (
-                <li key={x.id}>
-                  <button onClick={() => navTo && navTo(x.page)} className={U.card + " w-full text-start p-3.5 min-h-[56px] flex items-start gap-3 hover:border-[var(--c-acc)]"} data-testid="timeline-item" data-kind={x.kind}>
-                    <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><I size={16} /></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-baseline justify-between gap-2">
-                        <span className="text-[14.5px] font-extrabold break-words min-w-0" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : x.what}</span>
-                        {x.amount ? <span className="tabular-nums font-extrabold text-[13.5px] shrink-0" dir="ltr">{money(x)}</span> : null}
-                      </span>
-                      <span className={"block text-[12px] " + U.muted}>{tr(KIND[x.kind] || x.kind)}{x.time ? " · " + new Date(x.time).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }) : ""}</span>
-                      <span className={"block text-[12px] mt-0.5 " + (x.late ? "font-bold text-[var(--c-neg)]" : U.muted)} data-testid="timeline-slip">
-                        {x.late ? <AlertTriangle size={12} className="inline me-1 -mt-0.5" /> : null}
-                        {x.D ? tr(x.D[0], x.D[1]) + " — " : ""}{tr(x.slip[0], { amount: money(x) || "", who: x.who || "" })}</span>
-                    </span>
-                  </button>
-                  {x.page === "life" && /^p:/.test(x.id) && ["debt", "installment"].includes(x.ck) && daysFrom(x.date) <= 0 && lifeOf(x) && lifeOf(x).c.person
-                    ? <div className="ms-12">{(() => { const l = lifeOf(x); return <PersonAsk x={{ amount: x.amount, title: x.what, late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.currency, person: l.c.person, dir: l.c.dir } }} onDone={(m) => { flash && flash(m); setV((y) => y + 1); }} />; })()}</div>
-                  : x.page === "life" && /^p:/.test(x.id) && ["debt", "installment", "circle"].includes(x.ck) ? <button onClick={() => { const l = lifeOf(x); if (l) setPay({ key: x.id, c: l.c, i: l.i, v: String(x.amount) }); }} className="mt-1 ms-12 min-h-[36px] px-3 rounded-[12px] border border-[var(--c-ln)] text-[12.5px] font-bold inline-flex items-center gap-1.5" data-testid="fu-tick"><Check size={14} />{tr(x.kind === "collect" ? "Got it — mark as paid" : "Paid — tick it")}</button> : null}
-                  {pay && pay.key === x.id ? <div className="ms-12"><PayBox c={pay.c} ed={{ i: pay.i, v: pay.v }} setEd={(e) => (e ? setPay({ ...pay, v: e.v }) : setPay(null))} onPay={paid} /></div> : null}
-                </li>); })}
-            </ul>
-          </section>))}
-      </div>
+      : !shown.length ? <p className={"text-[14px] " + U.muted} data-testid="timeline-empty">{tr("Nothing coming up. Add a reminder, a date (a trial, a renewal, a warranty), a payment with someone, or X-ray a chat — it all shows here.")}</p> : null}
+      {SEC.map(([k, l]) => feed[k].length ? <section key={k} className={U.card + " p-3.5"} data-testid={"fu-sec-" + k}>
+        <p className={"m-0 mb-1 text-[12px] font-extrabold tracking-[0.06em] uppercase " + (k === "today" && feed.today.some((x) => x.late) ? "text-[var(--c-neg)]" : "c-sub")}>{tr(l)}{k === "today" ? " · " + new Date().toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }) : ""}</p>
+        <ul className="m-0 p-0 list-none">
+          {feed[k].map((x) => { const act = actionOf(x), I = ICON[x.page] || Bell; return <li key={x.id + "@" + x.date} className="border-t first:border-t-0 border-[var(--c-ln)]" data-testid="timeline-item" data-kind={x.kind} data-act={act || "open"}>
+            <div className="flex items-start gap-3 py-2.5">
+              {act === "pay" || act === "done" || act === "ask"
+                ? <button onClick={() => tick(x)} aria-label={tr("Done")} className="w-7 h-7 mt-0.5 rounded-[8px] border-2 shrink-0 grid place-items-center" style={{ borderColor: x.late ? "var(--c-neg)" : "var(--c-mut)" }} data-testid="fu-tick" />
+                : <span className="w-7 h-7 mt-0.5 rounded-[8px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><I size={14} /></span>}
+              <button onClick={() => (act === "pay" || act === "done" ? tick(x) : act === "ask" ? setAsking(asking === x.id ? "" : x.id) : navTo && navTo(act === "errand" ? "errands" : x.page))} className="flex-1 min-w-0 text-start" data-testid="fu-row">
+                <span className="block text-[14.5px] font-extrabold break-words" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : act === "pay" && x.ck === "regular" ? T2("{w} came?", { w: x.what }) : act === "ask" ? T2("Did {w} pay?", { w: (x.who || x.what || "").split(" · ")[0] }) : x.what}</span>
+                <span className={"block text-[12px] " + (x.late ? "font-bold text-[var(--c-neg)]" : U.muted)}>{x.late ? tr("Late") + " · " + dayLabel(x.date) : k === "today" && x.date >= isoOf(Date.now()) ? tr(KIND[x.kind] || x.kind) : dayLabel(x.date) + " · " + tr(KIND[x.kind] || x.kind)}{x.time ? " · " + new Date(x.time).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }) : ""}{act === "pay" ? " · " + tr("tick = out of Money") : ""}</span>
+                {!act && x.slip && x.ck !== "regular" ? <span className={"block text-[12px] mt-0.5 " + U.muted} data-testid="timeline-slip" dir="auto">{x.D ? tr(x.D[0], x.D[1]) + " — " : ""}{tr(x.slip[0], { amount: money(x) || "", who: x.who || "" })}</span> : null}
+              </button>
+              {x.amount ? <b className={"tabular-nums text-[14px] shrink-0 " + tone(x)} dir="ltr">{money(x)}</b> : null}
+            </div>
+            {asking === x.id ? (() => { const l = lifeOf(x); return l && l.c.person ? <div className="ms-10 pb-2"><PersonAsk x={{ amount: x.amount, title: x.what, late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.currency, person: l.c.person, dir: l.c.dir } }} onDone={(m) => { flash && flash(m); setAsking(""); setV((y) => y + 1); }} /></div> : null; })() : null}
+          </li>; })}
+        </ul></section> : null)}
+      {navTo ? <div className={"flex flex-wrap items-center gap-1.5 text-[12.5px] pt-1 " + U.muted} data-testid="fu-pages">
+        <span>{tr("Manage:")}</span>
+        {PAGES.map(([pg, l]) => <button key={pg} onClick={() => navTo(pg)} className="min-h-[34px] px-3 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[12px] font-bold text-[var(--c-ink)]" data-testid={"fu-open-" + pg}>{tr(l)}</button>)}
+      </div> : null}
     </div>);
 }

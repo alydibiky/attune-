@@ -11581,4 +11581,8 @@ export const PT = {
   "Research again": "Pesquisar de novo",
   "Research now": "Pesquisar agora",
   "One research · several sources": "Uma pesquisa · várias fontes",
+  "{w} came?": "{w} veio?",
+  "Did {w} pay?": "{w} pagou?",
+  "tick = out of Money": "marcar = sai do Dinheiro",
+  "Manage:": "Gerenciar:",
 };

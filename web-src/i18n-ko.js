@@ -11580,4 +11580,8 @@ export const KO = {
   "Research again": "다시 조사",
   "Research now": "지금 조사",
   "One research · several sources": "한 번 조사 · 여러 출처",
+  "{w} came?": "{w} 왔나요?",
+  "Did {w} pay?": "{w} 냈나요?",
+  "tick = out of Money": "체크 = 돈에서 빠짐",
+  "Manage:": "관리:",
 };

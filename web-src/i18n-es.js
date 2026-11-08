@@ -11581,4 +11581,8 @@ export const ES = {
   "Research again": "Investigar de nuevo",
   "Research now": "Investigar ahora",
   "One research · several sources": "Una investigación · varias fuentes",
+  "{w} came?": "¿Vino {w}?",
+  "Did {w} pay?": "¿Pagó {w}?",
+  "tick = out of Money": "marca = sale de Dinero",
+  "Manage:": "Gestionar:",
 };

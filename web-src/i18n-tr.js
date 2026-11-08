@@ -11581,4 +11581,8 @@ export const TRK = {
   "Research again": "Yeniden araştır",
   "Research now": "Şimdi araştır",
   "One research · several sources": "Tek araştırma · birkaç kaynak",
+  "{w} came?": "{w} geldi mi?",
+  "Did {w} pay?": "{w} ödedi mi?",
+  "tick = out of Money": "işaret = Para'dan düşer",
+  "Manage:": "Yönet:",
 };

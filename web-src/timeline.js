@@ -30,7 +30,7 @@ export function nextRing(r, now) {
  */
 export function timeline({ reminders = [], radar = null, life = null, ledger = null, xray = [], guardian = [], errands = [], now = Date.now(), days = 30, back = 14 } = {}) {
   const today = iso(now), until = iso(now + days * DAY), from = iso(now - back * DAY), out = [];
-  const add = (x) => { if (x.date >= from && x.date <= until) out.push({ ...x, late: x.date < today }); };
+  const add = (x) => { if (x.date >= from && x.date <= until) out.push({ late: x.date < today, ...x }); };
   for (const r of reminders || []) {
     const t = nextRing(r, now); if (t == null) continue;
     add({ id: "r:" + r.id, date: iso(t), time: t, kind: "reminder", what: r.title || "Reminder", page: "reminders", slip: ["Only a reminder — nothing happens by itself if you skip it."] });
@@ -54,9 +54,11 @@ export function timeline({ reminders = [], radar = null, life = null, ledger = n
     const s = scheduleOf(c, c.kind === "regular" ? now + days * DAY : now);
     for (const p of s) {
       if (p.paid || p.open) continue;   // (an open loan, no date: never late — persona 9)
-      if (c.kind === "regular" && p.date < today) continue;   // a regular day that passed = they didn't come, not late
+      // a regular day that passed = maybe they didn't come, not "late": kept only for the 7 days a tap may still record it
+      // (Ali, 8 Nov: "7 days as the maximum") — FU1 asks "Maid came?" there
+      if (c.kind === "regular" && p.date < today && p.date < iso(now - 7 * DAY)) continue;
       const who = c.person || "";
-      add({ id: "p:" + c.id + ":" + p.i, date: p.date, kind: c.dir === "in" ? "collect" : "pay", what: [who, c.title || c.kind].filter(Boolean).join(" · "), amount: num(p.amount), cur: c.currency, page: "life", ck: c.kind,
+      add({ id: "p:" + c.id + ":" + p.i, date: p.date, kind: c.dir === "in" ? "collect" : "pay", what: [who, c.title || c.kind].filter(Boolean).join(" · "), amount: num(p.amount), cur: c.currency, page: "life", ck: c.kind, ...(c.kind === "regular" ? { late: false } : {}),
         slip: c.dir === "in" ? (who ? ["{who} pays you {amount} — ask if it doesn't come."] : ["{amount} should come in — ask if it doesn't."]) : (who ? ["You pay {who} {amount} — late, and trust drops."] : ["{amount} to pay — late fees or a cut service."]), who });
       if (c.kind !== "regular" && p.date >= today) break;   // only the next one ahead of an installment plan
     }
@@ -136,4 +138,24 @@ export function searchItems(list, q) {
 export function byDayLate(list, now = Date.now()) {
   const today = iso(now), late = (list || []).filter((x) => x.date < today), rest = (list || []).filter((x) => x.date >= today);
   return [...(late.length ? [{ date: "late", items: late }] : []), ...byDay(rest)];
+}
+
+/* ---- v9.8 FU1 (Ali picked "one feed: Today · This week · Later" — MOCKUPS.md, https://claude.ai/artifact/2QaqFEiB5AyWHcmugbaZfC; he
+   said Follow-ups was "so confusing and scattered"). → { today: [late first, then today's], week: [the next 7 days], later: [the rest] },
+   each in time order. Pure; tests/unit/v980fu1.test.mjs. */
+export function feedOf(list = [], now = Date.now()) {
+  const today = iso(now), week = iso(now + 7 * DAY), by = (a, b) => a.date.localeCompare(b.date) || (a.time || 0) - (b.time || 0);
+  const late = list.filter((x) => x.date < today).sort(by).map((x) => ({ ...x, late: x.ck !== "regular" }));   // a regular day that passed is a question, not late
+  return { today: [...late, ...list.filter((x) => x.date === today).sort(by)], week: list.filter((x) => x.date > today && x.date <= week).sort(by), later: list.filter((x) => x.date > week).sort(by) };
+}
+/** What a row does when its box is ticked: "pay" (a payment you make — recorded in Money), "ask" (did the person pay?), "done" (a
+ *  reminder), "errand" (its page: a licence needs the new date), "" (no box: a date to watch, a promise — a tap opens its page).
+ *  Money only by a tap for today and the 7 days before (Ali, 8 Nov). */
+export function actionOf(x, now = Date.now()) {
+  const d = daysFrom(x.date, now);
+  if (x.page === "life" && x.kind === "pay" && ["regular", "subscription", "bill", "rent"].includes(x.ck)) return d <= 0 && d >= -7 ? "pay" : "";
+  if (x.page === "life" && x.kind === "collect" && ["debt", "installment"].includes(x.ck)) return d <= 0 && d >= -7 ? "ask" : "";
+  if (x.kind === "reminder") return d <= 0 ? "done" : "";
+  if (x.kind === "errand") return "errand";
+  return "";
 }

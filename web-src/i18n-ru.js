@@ -11580,4 +11580,8 @@ export const RU = {
   "Research again": "Искать снова",
   "Research now": "Искать сейчас",
   "One research · several sources": "Одно исследование · несколько источников",
+  "{w} came?": "{w} пришёл?",
+  "Did {w} pay?": "{w} заплатил?",
+  "tick = out of Money": "галочка = списать из Денег",
+  "Manage:": "Управление:",
 };

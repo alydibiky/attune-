@@ -11581,4 +11581,8 @@ export const IDN = {
   "Research again": "Riset lagi",
   "Research now": "Riset sekarang",
   "One research · several sources": "Satu riset · beberapa sumber",
+  "{w} came?": "{w} datang?",
+  "Did {w} pay?": "{w} sudah bayar?",
+  "tick = out of Money": "centang = keluar dari Uang",
+  "Manage:": "Kelola:",
 };

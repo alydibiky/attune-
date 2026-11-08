@@ -8649,4 +8649,8 @@ export const AR = {
   "Research again": "ابحث تاني",
   "Research now": "ابحث دلوقتي",
   "One research · several sources": "بحث مرة واحدة · من كذا مصدر",
+  "{w} came?": "{w} جه؟",
+  "Did {w} pay?": "{w} دفع؟",
+  "tick = out of Money": "العلامة = تتخصم من الفلوس",
+  "Manage:": "إدارة:",
 };

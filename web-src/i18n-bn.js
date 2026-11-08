@@ -11580,4 +11580,8 @@ export const BN = {
   "Research again": "আবার গবেষণা করুন",
   "Research now": "এখন গবেষণা করুন",
   "One research · several sources": "একটি গবেষণা · কয়েকটি উৎস",
+  "{w} came?": "{w} এসেছে?",
+  "Did {w} pay?": "{w} কি টাকা দিয়েছে?",
+  "tick = out of Money": "টিক = টাকা থেকে কাটা যাবে",
+  "Manage:": "পরিচালনা:",
 };

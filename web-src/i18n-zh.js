@@ -11580,4 +11580,8 @@ export const ZH = {
   "Research again": "重新研究",
   "Research now": "立即研究",
   "One research · several sources": "单次研究 · 多个来源",
+  "{w} came?": "{w}来了吗？",
+  "Did {w} pay?": "{w}付了吗？",
+  "tick = out of Money": "打勾 = 从钱中支出",
+  "Manage:": "管理：",
 };
