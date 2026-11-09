@@ -816,6 +816,8 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             installed && url.isNotBlank() && go(view(url).setPackage(pkg)) -> "app"
             installed && pm.getLaunchIntentForPackage(pkg)?.let { go(it) } == true -> "app"
             url.startsWith("https://") && go(view(url)) -> "link"
+            // v9.9.3 W2: the dialer with the number typed (the person presses Call — no CALL_PHONE), an SMS / email ready to send
+            (url.startsWith("tel:") || url.startsWith("sms:") || url.startsWith("smsto:") || url.startsWith("mailto:") || url.startsWith("geo:")) && go(view(url)) -> "link"
             pkg.isNotBlank() && (go(view("market://details?id=$pkg")) || go(view("https://play.google.com/store/apps/details?id=$pkg"))) -> "store"
             else -> ""
         }

@@ -11657,4 +11657,10 @@ export const FA = {
   "My wife": "همسرم",
   "Friend": "دوست",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "هنوز اعلان مکانی نیست — Life360 باید اعلان بفرستد و Recall روشن باشد.",
+  "Which {n}? Pick below — Attune remembers it.": "کدام {n}؟ از پایین انتخاب کن — Attune یادش می‌ماند.",
+  "Opening the dialer — {n}. Press Call.": "باز کردن شماره‌گیر — {n}. تماس را بزن.",
+  "Opening {a} — {n}. Press Send.": "باز کردن {a} — {n}. ارسال را بزن.",
+  "Opening {a}…": "باز کردن {a}…",
+  "Pick from contacts": "انتخاب از مخاطبان",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune فقط مخاطبی را که انتخاب می‌کنی می‌بیند — هرگز مخاطبانت را نمی‌خواند.",
 };

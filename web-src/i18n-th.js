@@ -11657,4 +11657,10 @@ export const TH = {
   "My wife": "ภรรยาฉัน",
   "Friend": "เพื่อน",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "ยังไม่มีการแจ้งเตือนตำแหน่ง — Life360 ต้องส่งการแจ้งเตือนและต้องเปิด Recall",
+  "Which {n}? Pick below — Attune remembers it.": "{n} คนไหน? เลือกด้านล่าง — Attune จะจำไว้",
+  "Opening the dialer — {n}. Press Call.": "กำลังเปิดหน้าโทร — {n} กดโทร",
+  "Opening {a} — {n}. Press Send.": "กำลังเปิด {a} — {n} กดส่ง",
+  "Opening {a}…": "กำลังเปิด {a}…",
+  "Pick from contacts": "เลือกจากรายชื่อ",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune เห็นเฉพาะรายชื่อที่คุณเลือก — ไม่อ่านรายชื่อของคุณเลย",
 };

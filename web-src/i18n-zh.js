@@ -11657,4 +11657,10 @@ export const ZH = {
   "My wife": "我妻子",
   "Friend": "朋友",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "还没有位置通知——Life360需发送通知且Recall需开启。",
+  "Which {n}? Pick below — Attune remembers it.": "哪个{n}？在下方选择——Attune会记住。",
+  "Opening the dialer — {n}. Press Call.": "正在打开拨号界面——{n}。请按拨打。",
+  "Opening {a} — {n}. Press Send.": "正在打开{a}——{n}。请按发送。",
+  "Opening {a}…": "正在打开{a}…",
+  "Pick from contacts": "从通讯录选择",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune只看到你选的联系人——从不读取你的通讯录。",
 };

@@ -11657,4 +11657,10 @@ export const DE = {
   "My wife": "Meine Frau",
   "Friend": "Freund",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "Noch keine Standort-Benachrichtigung — Life360 muss Benachrichtigungen senden und Recall muss an sein.",
+  "Which {n}? Pick below — Attune remembers it.": "Welcher {n}? Unten wählen — Attune merkt es sich.",
+  "Opening the dialer — {n}. Press Call.": "Telefon wird geöffnet — {n}. Auf Anrufen tippen.",
+  "Opening {a} — {n}. Press Send.": "{a} wird geöffnet — {n}. Auf Senden tippen.",
+  "Opening {a}…": "{a} wird geöffnet…",
+  "Pick from contacts": "Aus Kontakten wählen",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune sieht nur den gewählten Kontakt — es liest nie deine Kontakte.",
 };

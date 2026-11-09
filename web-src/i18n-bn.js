@@ -11657,4 +11657,10 @@ export const BN = {
   "My wife": "আমার স্ত্রী",
   "Friend": "বন্ধু",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "এখনও অবস্থানের নোটিফিকেশন নেই — Life360 নোটিফিকেশন পাঠাবে এবং Recall চালু থাকতে হবে।",
+  "Which {n}? Pick below — Attune remembers it.": "কোন {n}? নিচে বেছে নিন — Attune মনে রাখবে।",
+  "Opening the dialer — {n}. Press Call.": "ডায়ালার খুলছে — {n}। কল চাপুন।",
+  "Opening {a} — {n}. Press Send.": "{a} খুলছে — {n}। পাঠান চাপুন।",
+  "Opening {a}…": "{a} খুলছে…",
+  "Pick from contacts": "কন্টাক্ট থেকে বেছে নিন",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune শুধু আপনার বেছে নেওয়া কন্টাক্ট দেখে — কখনও আপনার কন্টাক্ট পড়ে না।",
 };

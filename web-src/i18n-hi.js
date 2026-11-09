@@ -11658,4 +11658,10 @@ export const HI = {
   "My wife": "मेरी पत्नी",
   "Friend": "दोस्त",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "अभी कोई लोकेशन सूचना नहीं — Life360 सूचनाएँ भेजे और Recall चालू हो।",
+  "Which {n}? Pick below — Attune remembers it.": "कौन-सा {n}? नीचे चुनें — Attune याद रखेगा।",
+  "Opening the dialer — {n}. Press Call.": "डायलर खुल रहा है — {n}। कॉल दबाएँ।",
+  "Opening {a} — {n}. Press Send.": "{a} खुल रहा है — {n}। भेजें दबाएँ।",
+  "Opening {a}…": "{a} खुल रहा है…",
+  "Pick from contacts": "संपर्कों से चुनें",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune सिर्फ़ आपका चुना संपर्क देखता है — आपके संपर्क कभी नहीं पढ़ता।",
 };

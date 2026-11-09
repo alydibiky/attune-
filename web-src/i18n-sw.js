@@ -11658,4 +11658,10 @@ export const SW = {
   "My wife": "Mke wangu",
   "Friend": "Rafiki",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "Bado hakuna arifa ya mahali — Life360 lazima itume arifa na Recall iwe imewashwa.",
+  "Which {n}? Pick below — Attune remembers it.": "{n} yupi? Chagua hapa chini — Attune itakumbuka.",
+  "Opening the dialer — {n}. Press Call.": "Inafungua kipiga simu — {n}. Bonyeza Piga.",
+  "Opening {a} — {n}. Press Send.": "Inafungua {a} — {n}. Bonyeza Tuma.",
+  "Opening {a}…": "Inafungua {a}…",
+  "Pick from contacts": "Chagua kutoka anwani",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune huona tu anwani unayochagua — haisomi kamwe anwani zako.",
 };

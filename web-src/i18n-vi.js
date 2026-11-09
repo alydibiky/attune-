@@ -11657,4 +11657,10 @@ export const VI = {
   "My wife": "Vợ tôi",
   "Friend": "Bạn",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "Chưa có thông báo vị trí — Life360 phải gửi thông báo và Recall phải bật.",
+  "Which {n}? Pick below — Attune remembers it.": "{n} nào? Chọn bên dưới — Attune sẽ nhớ.",
+  "Opening the dialer — {n}. Press Call.": "Đang mở trình quay số — {n}. Bấm Gọi.",
+  "Opening {a} — {n}. Press Send.": "Đang mở {a} — {n}. Bấm Gửi.",
+  "Opening {a}…": "Đang mở {a}…",
+  "Pick from contacts": "Chọn từ danh bạ",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune chỉ thấy liên hệ bạn chọn — không bao giờ đọc danh bạ của bạn.",
 };

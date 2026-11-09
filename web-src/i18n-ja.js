@@ -11657,4 +11657,10 @@ export const JA = {
   "My wife": "妻",
   "Friend": "友人",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "まだ位置の通知がありません — Life360が通知を送り、Recallがオンである必要があります。",
+  "Which {n}? Pick below — Attune remembers it.": "どの{n}？下から選んでください — Attuneが覚えます。",
+  "Opening the dialer — {n}. Press Call.": "ダイヤル画面を開きます — {n}。発信を押してください。",
+  "Opening {a} — {n}. Press Send.": "{a}を開きます — {n}。送信を押してください。",
+  "Opening {a}…": "{a}を開いています…",
+  "Pick from contacts": "連絡先から選ぶ",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attuneは選んだ連絡先だけを見ます — 連絡先を読むことはありません。",
 };

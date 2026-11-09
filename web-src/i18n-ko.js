@@ -11657,4 +11657,10 @@ export const KO = {
   "My wife": "내 아내",
   "Friend": "친구",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "아직 위치 알림이 없어요 — Life360이 알림을 보내야 하고 Recall이 켜져 있어야 해요.",
+  "Which {n}? Pick below — Attune remembers it.": "어느 {n}인가요? 아래에서 고르세요 — Attune이 기억해요.",
+  "Opening the dialer — {n}. Press Call.": "전화 화면을 여는 중 — {n}. 통화를 누르세요.",
+  "Opening {a} — {n}. Press Send.": "{a} 여는 중 — {n}. 보내기를 누르세요.",
+  "Opening {a}…": "{a} 여는 중…",
+  "Pick from contacts": "연락처에서 고르기",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune은 고른 연락처만 봐요 — 연락처를 읽지 않아요.",
 };

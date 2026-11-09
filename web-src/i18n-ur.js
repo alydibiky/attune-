@@ -11658,4 +11658,10 @@ export const UR = {
   "My wife": "میری بیوی",
   "Friend": "دوست",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "ابھی کوئی مقام کی اطلاع نہیں — Life360 اطلاعات بھیجے اور Recall آن ہو۔",
+  "Which {n}? Pick below — Attune remembers it.": "کون سا {n}؟ نیچے چنیں — Attune یاد رکھے گا۔",
+  "Opening the dialer — {n}. Press Call.": "ڈائلر کھل رہا ہے — {n}۔ کال دبائیں۔",
+  "Opening {a} — {n}. Press Send.": "{a} کھل رہا ہے — {n}۔ بھیجیں دبائیں۔",
+  "Opening {a}…": "{a} کھل رہا ہے…",
+  "Pick from contacts": "رابطوں سے چنیں",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune صرف آپ کا چنا ہوا رابطہ دیکھتا ہے — آپ کے رابطے کبھی نہیں پڑھتا۔",
 };

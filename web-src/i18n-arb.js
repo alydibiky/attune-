@@ -11649,4 +11649,10 @@ export const ARB = {
   "My wife": "زوجتي",
   "Friend": "صديق",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "لا يوجد إشعار عن موقعه بعد — يجب أن يرسل Life360 إشعارات وأن يكون Recall مفعّلًا.",
+  "Which {n}? Pick below — Attune remembers it.": "من {n}؟ اختر من الأسفل — سيتذكر أتيون.",
+  "Opening the dialer — {n}. Press Call.": "أفتح الاتصال — {n}. اضغط اتصال.",
+  "Opening {a} — {n}. Press Send.": "أفتح {a} — {n}. اضغط إرسال.",
+  "Opening {a}…": "أفتح {a}…",
+  "Pick from contacts": "اختر من جهات الاتصال",
+  "Attune sees only the contact you pick — it never reads your contacts.": "يرى أتيون جهة الاتصال التي تختارها فقط — ولا يقرأ جهات اتصالك أبدًا.",
 };

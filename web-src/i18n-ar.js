@@ -8726,4 +8726,10 @@ export const AR = {
   "My wife": "مراتي",
   "Friend": "صاحب/صاحبة",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "مفيش إشعار عن مكانه لسه — لازم Life360 يبعت إشعارات وRecall يكون شغال.",
+  "Which {n}? Pick below — Attune remembers it.": "مين {n}؟ اختار من تحت — أتيون هيفتكر.",
+  "Opening the dialer — {n}. Press Call.": "بفتح الاتصال — {n}. دوس اتصال.",
+  "Opening {a} — {n}. Press Send.": "بفتح {a} — {n}. دوس إرسال.",
+  "Opening {a}…": "بفتح {a}…",
+  "Pick from contacts": "اختار من الأسماء",
+  "Attune sees only the contact you pick — it never reads your contacts.": "أتيون بيشوف بس الاسم اللي تختاره — عمره ما بيقرا جهات الاتصال بتاعتك.",
 };

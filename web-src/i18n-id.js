@@ -11658,4 +11658,10 @@ export const IDN = {
   "My wife": "Istri saya",
   "Friend": "Teman",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "Belum ada notifikasi lokasi — Life360 harus mengirim notifikasi dan Recall harus aktif.",
+  "Which {n}? Pick below — Attune remembers it.": "{n} yang mana? Pilih di bawah — Attune akan ingat.",
+  "Opening the dialer — {n}. Press Call.": "Membuka panggilan — {n}. Tekan Panggil.",
+  "Opening {a} — {n}. Press Send.": "Membuka {a} — {n}. Tekan Kirim.",
+  "Opening {a}…": "Membuka {a}…",
+  "Pick from contacts": "Pilih dari kontak",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune hanya melihat kontak yang kamu pilih — tidak pernah membaca kontakmu.",
 };

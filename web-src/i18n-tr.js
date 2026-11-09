@@ -11658,4 +11658,10 @@ export const TRK = {
   "My wife": "Eşim",
   "Friend": "Arkadaş",
   "No location notification about them yet — Life360 must send notifications and Recall must be on.": "Henüz konum bildirimi yok — Life360 bildirim göndermeli ve Recall açık olmalı.",
+  "Which {n}? Pick below — Attune remembers it.": "Hangi {n}? Aşağıdan seç — Attune hatırlar.",
+  "Opening the dialer — {n}. Press Call.": "Arama ekranı açılıyor — {n}. Ara'ya bas.",
+  "Opening {a} — {n}. Press Send.": "{a} açılıyor — {n}. Gönder'e bas.",
+  "Opening {a}…": "{a} açılıyor…",
+  "Pick from contacts": "Kişilerden seç",
+  "Attune sees only the contact you pick — it never reads your contacts.": "Attune yalnızca seçtiğin kişiyi görür — kişilerini asla okumaz.",
 };

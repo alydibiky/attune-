@@ -92,6 +92,8 @@ import { WatchPanel } from "./watch-ui.jsx";
 import { PromptLab } from "./promptlab-ui.jsx";
 import { parseWatch, newRule, saveWatch, loadWatch, ruleText } from "./watch.js";
 import * as NT from "./noteteach.js";
+import * as AL from "./applinks.js";
+import { saveDir as savePeopleDir, addCard as addPeopleCard, updateCard as updatePeopleCard } from "./entities.js";
 import { loadDir as loadPeopleDir } from "./entities.js";
 import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
@@ -8874,6 +8876,7 @@ export default function App() {
   const [scoutIn, setScoutIn] = useState(null);   // v6.28: a goal typed on Home → Scout starts it
   // Voice (VOICE_PLAN.md, design A): "Ya Attune" — opened from the Home box's orb, "/voice", or an "attune-voice" event
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [whoPick, setWhoPick] = useState(null);   // v9.9.3 W2: "Which Ahmed?" — { op, name, choices }
   useEffect(() => { if (mode === "chat" || mode === "translate" || voiceOpen) wakeModel(); }, [mode, voiceOpen]);   // v8.7 idea 8
   const [voiceText, setVoiceText] = useState("");     // words the quiet orb heard (the voice screen starts with them)
   const [quietWake, setQuietWake] = useState(false);
@@ -9716,6 +9719,7 @@ export default function App() {
       const pm = parseMission(t, now); if (pm && pm.deadline) return true;
       const ag = parseAgent(t, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return true;
       return doSure(t, { now, stores: loadLifeStores() }); } catch (e) { return true; } },
+    openIt: (t) => { try { return AL.readOpen(t) ? (doRef.current ? doRef.current(t) : null) : null; } catch (e) { return null; } },   // v9.9.3 W2
     whereIs: (q) => { try { return NT.whereIs(q, NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], loadPeopleDir()); } catch (e) { return null; } },
     // v9.9 edit by talking: "Sheikh pays 3000 now" (a plan with a total), "which maid?", "already 700" — said, nothing saved
     editSay: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask && u.ask.kind === "life-edit" ? u.ask : null; } catch (e) { return null; } },
@@ -9951,6 +9955,31 @@ export default function App() {
       const i = (l.txns || []).map((t, k) => [t, k]).filter(([t]) => t.type === type && Math.abs((+t.amount || 0) - amount) < 0.01 && t.source === "notification").map(([, k]) => k).pop() ?? -1;
       if (i >= 0) { l.txns.splice(i, 1); localStorage.setItem("ledger.v3", JSON.stringify(l)); } } catch (e) {} };
   }, []);
+  // v9.9.3 W2: open the app there (the link the app offers); Telegram has no "write to" link → the app opens and the words are copied
+  const openLink = (op, phone, name) => {
+    const url = AL.linkOf(op, phone), pkg = op.kind === "msg" ? AL.PKG[op.app] || "" : op.kind === "ride" ? AL.PKG[op.app] || "" : op.kind === "maps" ? AL.PKG.maps : "";
+    if (!url && op.text) { try { navigator.clipboard.writeText(op.text); } catch (e) {} }
+    try { if (NATIVE && NATIVE.openAnyApp) NATIVE.openAnyApp(JSON.stringify({ pkg, url })); else if (url) window.open(url, "_blank"); } catch (e) {}
+  };
+  const openLine = (op, name, ar) => {
+    const app = { whatsapp: "WhatsApp", telegram: "Telegram", sms: "SMS", uber: "Uber", careem: "Careem", indrive: "inDrive" }[op.app] || (op.kind === "maps" ? "Google Maps" : op.kind === "email" ? "Email" : "");
+    if (op.kind === "call") return ar ? `بفتح الاتصال — ${name}. دوس اتصال.` : tr("Opening the dialer — {n}. Press Call.", { n: name });
+    if (op.kind === "msg") return ar ? `بفتح ${app} — ${name}. دوس إرسال.` : tr("Opening {a} — {n}. Press Send.", { a: app, n: name });
+    return ar ? `بفتح ${app}…` : tr("Opening {a}…", { a: app });
+  };
+  const pickWho = (card, contact) => {
+    const wp = whoPick; if (!wp) return; setWhoPick(null);
+    let dir = loadPeopleDir(), id = card ? card.id : null, phone = card && card.contact ? card.contact.phone : "", name = card ? card.name : wp.name;
+    if (contact) {
+      const same = dir.items.find((p) => p.kind === "person" && String(p.name).toLowerCase() === String(wp.name).toLowerCase() && !(p.contact && p.contact.phone));
+      if (same) { dir = updatePeopleCard(dir, same.id, { contact: { name: contact.name || "", phone: contact.phone || "" } }); id = same.id; }
+      else { const r = addPeopleCard(dir, { name: wp.name, aliases: contact.name && contact.name !== wp.name ? [contact.name] : [], contact: { name: contact.name || "", phone: contact.phone || "" } }); dir = r.dir; id = r.id; }
+      phone = contact.phone || ""; name = contact.name || wp.name;
+    }
+    if (id) dir = AL.rememberPick(dir, id, wp.name);
+    savePeopleDir(dir);
+    openLink(wp.op, phone, name); flash(openLine(wp.op, name, getLang() === "ar"));
+  };
   const doFromHome = (text0) => {
     // v9.0: Franco ("ghada 150", "fakarny bokra 9") is read as Arabic when the Arabic is something to do
     let text = text0;
@@ -9958,6 +9987,16 @@ export default function App() {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
     // v9.9.3 L2: "tell me when my wife gets home" / "never show Yazio" is teaching Attune — not an agent or a message alert
     let teachFirst = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teachFirst = !!(tx && (tx.kind === "rule" || (tx.kind === "ask" && tx.needRole != null))); } catch (e) {}
+    // v9.9.3 W2: "send Ahmed 'I'm on my way' on WhatsApp", "call Mama", "uber to …", "directions to …" → the app at the right place;
+    // you press the last button. Not sure who → "Which Ahmed?" (your saved people + Pick from contacts — no contacts permission)
+    { const op = teachFirst ? null : AL.readOpen(text);
+      if (op) {
+        if (AL.needsPerson(op)) { const w = AL.whoFor(op.who, loadPeopleDir());
+          if (w.card) { openLink(op, w.card.contact.phone, w.card.name); return { lines: [{ text: openLine(op, w.card.name, ar) }], undo: null }; }
+          setWhoPick({ op, name: op.who, choices: w.ask || [] });
+          return { lines: [{ text: ar ? `مين ${op.who}؟ اختار من تحت — أتيون هيفتكر.` : tr("Which {n}? Pick below — Attune remembers it.", { n: op.who }) }], undo: null }; }
+        openLink(op, "", ""); return { lines: [{ text: openLine(op, op.dest || "", ar) }], undo: null };
+      } }
     // v6.41 D5: «مترو من المعادي للعتبة» → the route, by code
     { const mq = metroAsk(text); if (mq) return { lines: [{ text: metroText(metroRoute(mq.from, mq.to), ar) }], undo: null }; }
     // v6.41 C3: "when my salary arrives, put 20% in the car fund" → an automation, on at once
@@ -10138,6 +10177,7 @@ export default function App() {
         let agent = ""; try { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["buy", "order", "watch", "track"].includes(ag.kind)) agent = ag.kind; } catch (e) {}
         // v9.9.3 L1/L2: teaching Attune ("Nada is my wife", "tell me when my wife gets home") is done in the app, never a Scout search
         let teach = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teach = !!(tx && (tx.kind === "rule" || (tx.kind === "who" && text.split(/\s+/).length <= 7))); } catch (e) {}
+        try { if (!teach && AL.readOpen(text)) teach = true; } catch (e) {}   // v9.9.3 W2: "send Ahmed '…' on WhatsApp" is done in the app
         if (teach) return { doActions: Math.max(1, doActions), teach: true, goal: false, metro: false, automation: false, watch: false, mission: false, agent: "" };
         return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text), watch: !!parseWatch(text), mission, agent };
       },
@@ -11400,6 +11440,15 @@ export default function App() {
       {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[20px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
       {NATIVE ? <NotifAsk native={NATIVE} flash={flash} /> : null}
+      {whoPick ? <div className="fixed inset-0 z-[80] bg-black/60 flex items-end" onClick={() => setWhoPick(null)}>
+        <div className="calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[20px] p-4 space-y-2" onClick={(e) => e.stopPropagation()} data-testid="who-pick">
+          <p className="m-0 text-[16px] font-extrabold" dir="auto">{tr("Which {n}?", { n: whoPick.name })}</p>
+          {whoPick.choices.map((c) => <button key={c.id} onClick={() => pickWho(c, null)} className="w-full min-h-[48px] rounded-[14px] border border-[var(--c-ln)] px-3 text-start" data-testid="who-pick-card">
+            <b className="block text-[14.5px]" dir="auto">{c.name}{c.role ? " · " + c.role : ""}</b><span className="block text-[12px] c-sub tabular-nums" dir="ltr">{String((c.contact && c.contact.phone) || "").replace(/(\d{3})\d+(\d{3})/, "$1…$2")}</span></button>)}
+          <button onClick={async () => { try { const c = await nativeCall("contactPick", {}); if (c && c.phone) pickWho(null, c); } catch (e) {} }} className="w-full min-h-[48px] rounded-[14px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold" data-testid="who-pick-contacts">📇 {tr("Pick from contacts")}</button>
+          <p className="m-0 text-[11.5px] c-sub">{tr("Attune sees only the contact you pick — it never reads your contacts.")}</p>
+          <button onClick={() => setWhoPick(null)} className="w-full min-h-[44px] text-[13px] c-sub" data-testid="who-pick-cancel">{tr("Cancel")}</button>
+        </div></div> : null}
       {voiceOpen ? <Guard name="voice"><VoiceScreen native={NATIVE} nativeCall={nativeCall} onClose={() => { setVoiceOpen(false); setVoiceText(""); }} doIt={doFromHome} country={agentCountry()} flash={flash} initialText={voiceText}
         ask={modelUsable ? async (q, past, ui) => { let lb = ""; try { lb = libraryBlock(await findInLibrary(q, NATIVE ? nativeCall : null)).replace("cite each fact as [Book, p. N]", "say which book it is from"); } catch (e) {}   // v8.7 (4B): the books switched on in the Library
           // v9.8 (Ali: "the chat is still stupid — I don't care if it takes 10 seconds, but the answer must be right"): the same brain as
