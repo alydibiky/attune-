@@ -11753,4 +11753,9 @@ export const ARB = {
   "Nothing in these dates.": "لا شيء في هذه التواريخ.",
   "Change the dates": "غيّر التواريخ",
   "Months": "الأشهر",
+  "Removed {n}": "أُزيل {n}",
+  "Attune added {n} from chat messages by mistake": "أضاف أتيون {n} من رسائل محادثة بالخطأ",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "يتحدث الناس عن المال في المحادثات — وهذا ليس دفعًا. من الآن لن تُقرأ تطبيقات المحادثة كأموال أبدًا.",
+  "Remove them": "أزلها",
+  "Keep them": "أبقِها",
 };

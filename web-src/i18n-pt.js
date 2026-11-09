@@ -11762,4 +11762,9 @@ export const PT = {
   "Nothing in these dates.": "Nada nessas datas.",
   "Change the dates": "Mudar as datas",
   "Months": "Meses",
+  "Removed {n}": "{n} removidos",
+  "Attune added {n} from chat messages by mistake": "O Attune adicionou {n} de mensagens de chat por engano",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "As pessoas falam de dinheiro nos chats — isso não é um pagamento. A partir de agora, apps de chat nunca são lidos como dinheiro.",
+  "Remove them": "Remover",
+  "Keep them": "Manter",
 };

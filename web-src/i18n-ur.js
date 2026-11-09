@@ -11762,4 +11762,9 @@ export const UR = {
   "Nothing in these dates.": "ان تاریخوں میں کچھ نہیں۔",
   "Change the dates": "تاریخیں بدلیں",
   "Months": "مہینے",
+  "Removed {n}": "{n} ہٹا دیے",
+  "Attune added {n} from chat messages by mistake": "Attune نے غلطی سے چیٹ پیغامات سے {n} شامل کر دیے",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "لوگ چیٹ میں پیسوں کی بات کرتے ہیں — یہ ادائیگی نہیں۔ اب سے چیٹ ایپس کو کبھی پیسہ نہیں سمجھا جائے گا۔",
+  "Remove them": "انہیں ہٹائیں",
+  "Keep them": "رہنے دیں",
 };

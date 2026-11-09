@@ -76,6 +76,9 @@ class PayListener : NotificationListenerService() {
             // v6.40 Recall: kept for 30 days when the person switched it on (SMS too, never one-time codes)
             try { if (RecallLog.isOn(applicationContext)) RecallLog.add(applicationContext, sbn, try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }, title, text) } catch (e: Exception) { }
             if (!PayLog.looksLikeMoney(all)) return
+            // v9.9.9 (Ali: a WhatsApp work group talking about wages became "income"): people talk about money in chat apps —
+            // that is never a payment (paylog.js CHAT_APP, the same list); bank SMS (the Messages app) stays
+            if (PayLog.isChatApp(sbn.packageName)) return
             val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }
             try { AutoRules.check(applicationContext, sbn, label, title, text) } catch (e: Exception) { }   // v6.41 C3: the person's automations
             PayLog.add(applicationContext, JSONObject()
@@ -87,6 +90,8 @@ class PayListener : NotificationListenerService() {
 }
 
 object PayLog {
+    private val CHAT = Regex("(?i)whatsapp|telegram|messenger|com\\.facebook\\.orca|instagram|securesms|org\\.signal|viber|slack|microsoft\\.teams|discord|imo\\.android|botim|tencent\\.mm|jp\\.naver\\.line|snapchat|skype|zoom|kakao|tiktok")
+    fun isChatApp(pkg: String): Boolean = CHAT.containsMatchIn(pkg)
     private const val PREFS = "attune.paylog"
     private const val KEY = "items"
     private const val MAX = 200

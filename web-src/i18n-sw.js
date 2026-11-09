@@ -11762,4 +11762,9 @@ export const SW = {
   "Nothing in these dates.": "Hakuna kitu katika tarehe hizi.",
   "Change the dates": "Badilisha tarehe",
   "Months": "Miezi",
+  "Removed {n}": "Zimeondolewa {n}",
+  "Attune added {n} from chat messages by mistake": "Attune iliongeza {n} kutoka ujumbe wa gumzo kimakosa",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "Watu huzungumza kuhusu pesa kwenye gumzo — hilo si malipo. Kuanzia sasa programu za gumzo hazisomwi kama pesa kamwe.",
+  "Remove them": "Ziondoe",
+  "Keep them": "Ziache",
 };

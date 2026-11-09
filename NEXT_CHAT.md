@@ -11,6 +11,16 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 10 Nov — v9.9.10: a WhatsApp group's wages became "income" (Ali: "what the hell?") — fixed for good
+- Cause: PayListener kept any notification with an amount + a money word, from ANY app; paylog.js read «غفره بليل ٤٥٠ جنيه…»
+  (group "ما يخص المرتبات") as "450 EGP in, from يوم, high confidence" → added by itself. Now chat apps (WhatsApp, Telegram, Messenger,
+  Signal, Viber, Instagram, Slack, Teams, Discord, imo, botim, WeChat, LINE…) are never money: PayListener.kt `PayLog.isChatApp`,
+  paylog.js `CHAT_APP` / `isChatApp` (readNotification), autopilot.js (subscriptions / bank suggestions). Bank SMS (Messages) stays.
+- Already-added ones: `ChatMoneyFix` card in Money (paylog-ui.jsx) lists them; "Remove them" deletes through Money's own tx-delete,
+  "Keep them" never asks again. Nothing deleted silently.
+- Ali's "nothing was updated": his screens were v9.9.8 (Radar photo behind, no ‹ › bar) — the v9.9.9 APK had built 20 min before.
+- Tests: unit v999chatmoney (his exact message; the old reader made it 450 income), e2e_v999chatmoney.
+
 ## 10 Nov — v9.9.9: Ali's phone round — Radar card C + Money Report dates (P1 + category)
 - **Radar card** (Ali: "it looks really bad" → picked **C**, https://claude.ai/artifact/R1UWeisuGPnseigFyo1ar8): the light theme maps
   "white" to near-black (spaces.js `--color-white`), so the card's words were dark on dark — `DocCover` now uses real white inline;

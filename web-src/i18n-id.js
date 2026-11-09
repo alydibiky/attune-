@@ -11762,4 +11762,9 @@ export const IDN = {
   "Nothing in these dates.": "Tidak ada di tanggal ini.",
   "Change the dates": "Ubah tanggal",
   "Months": "Bulan",
+  "Removed {n}": "{n} dihapus",
+  "Attune added {n} from chat messages by mistake": "Attune keliru menambahkan {n} dari pesan chat",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "Orang membicarakan uang di chat — itu bukan pembayaran. Mulai sekarang aplikasi chat tidak pernah dibaca sebagai uang.",
+  "Remove them": "Hapus",
+  "Keep them": "Biarkan",
 };

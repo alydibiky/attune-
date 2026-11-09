@@ -8832,4 +8832,9 @@ export const AR = {
   "Nothing in these dates.": "مفيش حاجة في التواريخ دي.",
   "Change the dates": "غيّر التواريخ",
   "Months": "الشهور",
+  "Removed {n}": "اتشال {n}",
+  "Attune added {n} from chat messages by mistake": "أتيون ضاف {n} من رسايل شات بالغلط",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "الناس بتتكلم عن فلوس في الشات — ده مش دفع. من النهارده تطبيقات الشات عمرها ما هتتقري كفلوس.",
+  "Remove them": "شيلهم",
+  "Keep them": "سيبهم",
 };

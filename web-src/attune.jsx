@@ -63,7 +63,7 @@ const wordCount = (s) => String(s || "").trim().split(/\s+/).filter(Boolean).len
 import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES, panesFor, AccountsPane, BillsPane, ZakatPane, MoneyHead, MoneyCard } from "./money-pages-ui.jsx";
 import { AccountSheet, BillSheet, TxSheet, TxListPane, GoalsPane, DebtSheet, ZakatPaySheet, ZakatSetSheet, ZakatCalcSheet, ZakatRulingsSheet, LedgerSettings } from "./money-sheets-ui.jsx";
 import { sheetCats as moneyCats, zakatPage } from "./money-pages.js";   // v7.6 Money's bottom bar
-import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
+import { PayInbox, runAutoPay, ChatMoneyFix } from "./paylog-ui.jsx";
 import { categorise } from "./paylog.js";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { FamilyPage } from "./family-ui.jsx";
@@ -6558,7 +6558,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
   const ledgerOn = false;   // v8.0: the old ledger screen is never shown (Yusr stays hidden as the engine)
   const addTxnsNow = (txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); setTimeout(() => setVer((x) => x + 1), 400); };
   // v8.8 (Ali: "read the notes I write when I put an expense or income"): money a note says moved, one tap to add
-  const inbox = <><NotesMoney onAdd={addTxnsNow} /><PayInbox N={NATIVE} ready={ready} onAdd={addTxnsNow} /></>;
+  const inbox = <><ChatMoneyFix ledger={ledgerNow} runDo={ready ? (op, a) => runDo(op, a).then((r) => { setVer((x) => x + 1); return r; }) : null} flash={flash} /><NotesMoney onAdd={addTxnsNow} /><PayInbox N={NATIVE} ready={ready} onAdd={addTxnsNow} /></>;
   const paneBody = pane === "trends" ? <MoneyReport rep={repR} setPeriod={setPeriod} cats={repCats} all={allRep} wide={wide} account={account} back={() => setPane("home")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf} openLedger={openLedger} openZakat={() => setPane("zakat")} />
     : pane === "accounts" ? <AccountsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
     : pane === "goals" ? <GoalsPane L={ledgerNow} run={runDo} flash={flash} Head={MoneyHead} Card={MoneyCard} />
@@ -7793,7 +7793,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.9";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.10";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 

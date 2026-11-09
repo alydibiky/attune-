@@ -11762,4 +11762,9 @@ export const TRK = {
   "Nothing in these dates.": "Bu tarihlerde bir şey yok.",
   "Change the dates": "Tarihleri değiştir",
   "Months": "Aylar",
+  "Removed {n}": "{n} kaldırıldı",
+  "Attune added {n} from chat messages by mistake": "Attune sohbet mesajlarından yanlışlıkla {n} ekledi",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "İnsanlar sohbetlerde paradan söz eder — bu bir ödeme değil. Artık sohbet uygulamaları asla para olarak okunmaz.",
+  "Remove them": "Kaldır",
+  "Keep them": "Kalsın",
 };

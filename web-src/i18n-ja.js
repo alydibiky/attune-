@@ -11761,4 +11761,9 @@ export const JA = {
   "Nothing in these dates.": "この期間には何もありません。",
   "Change the dates": "日付を変更",
   "Months": "月",
+  "Removed {n}": "{n} 件を削除",
+  "Attune added {n} from chat messages by mistake": "Attune がチャットのメッセージから誤って {n} 件追加しました",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "チャットでお金の話をしても支払いではありません。今後、チャットアプリはお金として読み取りません。",
+  "Remove them": "削除する",
+  "Keep them": "残す",
 };

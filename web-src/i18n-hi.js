@@ -11762,4 +11762,9 @@ export const HI = {
   "Nothing in these dates.": "इन तारीखों में कुछ नहीं।",
   "Change the dates": "तारीखें बदलें",
   "Months": "महीने",
+  "Removed {n}": "{n} हटाए गए",
+  "Attune added {n} from chat messages by mistake": "Attune ने गलती से चैट संदेशों से {n} जोड़ दिए",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "लोग चैट में पैसों की बात करते हैं — वह भुगतान नहीं है। अब से चैट ऐप्स को कभी पैसा नहीं माना जाएगा।",
+  "Remove them": "इन्हें हटाएँ",
+  "Keep them": "रहने दें",
 };

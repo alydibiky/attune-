@@ -11761,4 +11761,9 @@ export const FA = {
   "Nothing in these dates.": "در این تاریخ‌ها چیزی نیست.",
   "Change the dates": "تغییر تاریخ‌ها",
   "Months": "ماه‌ها",
+  "Removed {n}": "{n} حذف شد",
+  "Attune added {n} from chat messages by mistake": "Attune به‌اشتباه {n} مورد از پیام‌های گفتگو اضافه کرد",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "مردم در گفتگوها درباره پول حرف می‌زنند — این پرداخت نیست. از این به بعد برنامه‌های گفتگو هرگز پول خوانده نمی‌شوند.",
+  "Remove them": "حذفشان کن",
+  "Keep them": "نگهشان دار",
 };

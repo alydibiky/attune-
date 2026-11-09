@@ -11761,4 +11761,9 @@ export const VI = {
   "Nothing in these dates.": "Không có gì trong khoảng này.",
   "Change the dates": "Đổi ngày",
   "Months": "Tháng",
+  "Removed {n}": "Đã xóa {n}",
+  "Attune added {n} from chat messages by mistake": "Attune đã thêm nhầm {n} mục từ tin nhắn trò chuyện",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "Mọi người nói về tiền trong trò chuyện — đó không phải là thanh toán. Từ nay ứng dụng trò chuyện không bao giờ được đọc là tiền.",
+  "Remove them": "Xóa chúng",
+  "Keep them": "Giữ lại",
 };

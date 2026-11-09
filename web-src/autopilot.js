@@ -7,6 +7,7 @@
    from now on?"; then they are added alone and listed as "done for you", each with Undo. Never twice: the bank SMS and the bank app's
    notification for the same amount are one; an expense already typed is matched, not added again. "Not this" teaches it (that app's
    offers are never suggested again). One-time codes are never kept (RecallLog.kt). Pure; tests/unit/v980autopilot.test.mjs.        */
+import { isChatApp } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
 import { understandNote } from "./notifmeaning.js";
 
 export const AP_KEY = "attune:autopilot:v1";
@@ -62,11 +63,11 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   if ((s.skipApps || []).includes(app + ":" + u.kind)) return null;
   const base = { src: String(n.id), app, at: n.ts || now, kind: "", full: { title, text } };   // (v9.8: the whole message, to read before adding)
   { const all = title + " " + text, svc = subOf(all);
-    if (svc && u.amount > 0 && u.kind !== "promo" && u.state !== "money in" && PAID_W.test(all) && !OFFER_W.test(all)) {
+    if (svc && u.amount > 0 && !isChatApp(n) && u.kind !== "promo" && u.state !== "money in" && PAID_W.test(all) && !OFFER_W.test(all)) {
       const d = iso(n.ts || now);
       return { ...base, kind: "subscription", title: svc, amount: u.amount, cur: curOf(all), date: d, key: "sb:" + svc + ":" + d.slice(0, 7), line: "Subscription" };
     } }
-  if (u.kind === "bank" && u.amount > 0 && (u.state === "money out" || u.state === "money in")) {
+  if (u.kind === "bank" && u.amount > 0 && !isChatApp(n) && (u.state === "money out" || u.state === "money in")) {   // v9.9.9: never from a chat
     const shop = shopIn(title + " " + text), out = u.state === "money out";
     return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now),
       key: (out ? "x:" : "i:") + Math.round(u.amount * 100) + ":" + iso(n.ts || now), line: (out ? "Expense" : "Income") };

@@ -11761,4 +11761,9 @@ export const BN = {
   "Nothing in these dates.": "এই তারিখগুলোতে কিছু নেই।",
   "Change the dates": "তারিখ বদলান",
   "Months": "মাস",
+  "Removed {n}": "{n}টি সরানো হয়েছে",
+  "Attune added {n} from chat messages by mistake": "Attune ভুল করে চ্যাট বার্তা থেকে {n}টি যোগ করেছে",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "মানুষ চ্যাটে টাকার কথা বলে — সেটা পেমেন্ট নয়। এখন থেকে চ্যাট অ্যাপ কখনো টাকা হিসেবে পড়া হবে না।",
+  "Remove them": "সরিয়ে দিন",
+  "Keep them": "রেখে দিন",
 };

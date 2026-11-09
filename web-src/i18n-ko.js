@@ -11761,4 +11761,9 @@ export const KO = {
   "Nothing in these dates.": "이 기간에는 내역이 없어요.",
   "Change the dates": "날짜 변경",
   "Months": "월",
+  "Removed {n}": "{n}개 삭제됨",
+  "Attune added {n} from chat messages by mistake": "Attune이 채팅 메시지에서 {n}개를 잘못 추가했어요",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "채팅에서 돈 이야기를 해도 결제가 아니에요. 이제부터 채팅 앱은 돈으로 읽지 않아요.",
+  "Remove them": "삭제하기",
+  "Keep them": "그대로 두기",
 };

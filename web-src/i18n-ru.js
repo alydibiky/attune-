@@ -11761,4 +11761,9 @@ export const RU = {
   "Nothing in these dates.": "За эти даты ничего нет.",
   "Change the dates": "Изменить даты",
   "Months": "Месяцы",
+  "Removed {n}": "Удалено: {n}",
+  "Attune added {n} from chat messages by mistake": "Attune по ошибке добавил {n} из сообщений чата",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "В чатах говорят о деньгах — это не платёж. Теперь мессенджеры никогда не читаются как деньги.",
+  "Remove them": "Удалить их",
+  "Keep them": "Оставить",
 };

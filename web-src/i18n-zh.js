@@ -11761,4 +11761,9 @@ export const ZH = {
   "Nothing in these dates.": "这些日期内没有记录。",
   "Change the dates": "更改日期",
   "Months": "月份",
+  "Removed {n}": "已删除 {n} 项",
+  "Attune added {n} from chat messages by mistake": "Attune 误从聊天消息中添加了 {n} 项",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "人们在聊天中谈论钱——那不是付款。从现在起，聊天应用永远不会被当作资金读取。",
+  "Remove them": "删除它们",
+  "Keep them": "保留",
 };

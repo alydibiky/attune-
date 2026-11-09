@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, Check, X } from "lucide-react";
 import { tr } from "./i18n.js";
-import { inbox, toTxns, autoPick, appendToLedger, alreadyIn } from "./paylog.js";
+import { inbox, toTxns, autoPick, appendToLedger, alreadyIn, fromChats } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
 import { payOpts } from "./locale.js";
 import * as U from "./ui-kit.jsx";
@@ -215,5 +215,29 @@ function AutoList({ n, close }) {
       <b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "")} dir="ltr">{e.direction === "in" ? "+" : "−"}{Number(e.amount).toLocaleString("en-US")} {e.currency}</b>
       <span className={"block text-[12px] " + U.muted} dir="auto">{[e.party, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span>
       <Evidence e={{ full: e.text, from: e.from, app: e.app }} testid="paylog-auto-evidence" /></div>)}
+  </div></div>;
+}
+
+/** v9.9.9 (Ali: "a WhatsApp group about work was talking about money and it was added to my income — what the hell?"): the
+ *  entries Attune put into Money from a chat app's notification before this fix. Never deleted silently — one card, the person
+ *  removes them (through Money's own delete) or keeps them. */
+const CHAT_KEPT = "attune:paylog:chat-kept";
+export function ChatMoneyFix({ ledger, runDo, flash }) {
+  const [kept, setKept] = useState(() => { try { return JSON.parse(localStorage.getItem(CHAT_KEPT) || "[]"); } catch (e) { return []; } });
+  const [busy, setBusy] = useState(false), [gone, setGone] = useState([]);
+  const list = fromChats(ledger, kept).filter((t) => !gone.includes(t.id));
+  if (!list.length || !runDo) return null;
+  const keep = () => { const k = [...kept, ...list.map((t) => t.id)]; setKept(k); try { localStorage.setItem(CHAT_KEPT, JSON.stringify(k)); } catch (e) {} };
+  const remove = async () => { setBusy(true); const ids = list.map((t) => t.id);
+    for (const id of ids) { try { await runDo("tx-delete", { id }); } catch (e) {} }
+    setGone((g) => [...g, ...ids]); setBusy(false); flash && flash(tr("Removed {n}", { n: ids.length })); };
+  return <div className="calm shrink-0 px-2 py-2" data-testid="paylog-chatfix"><div className={U.cardPad + " space-y-2"}>
+    <p className="m-0 text-[14px] font-extrabold flex items-center gap-2"><Bell size={15} className="text-[var(--c-warn)]" />{tr("Attune added {n} from chat messages by mistake", { n: list.length })}</p>
+    <p className={"m-0 text-[12.5px] leading-relaxed " + U.muted}>{tr("People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.")}</p>
+    <ul className="m-0 p-0 list-none space-y-1">{list.slice(0, 6).map((t) => <li key={t.id} className="text-[12.5px] flex gap-2 justify-between" data-testid="paylog-chatfix-row">
+      <span className="min-w-0 truncate" dir="auto">{(t.evidence && (t.evidence.from || t.evidence.app)) || t.note}</span>
+      <span className="shrink-0 tabular-nums font-bold" dir="ltr">{t.type === "income" ? "+" : "−"}{Number(t.amount).toLocaleString()} · {t.date}</span></li>)}</ul>
+    <div className="flex gap-2"><button onClick={remove} disabled={busy} className={U.btnP} data-testid="paylog-chatfix-remove"><X size={14} />{tr("Remove them")}</button>
+      <button onClick={keep} disabled={busy} className={U.btnS} data-testid="paylog-chatfix-keep">{tr("Keep them")}</button></div>
   </div></div>;
 }

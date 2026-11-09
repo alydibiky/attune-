@@ -35,8 +35,18 @@ const PROMO = /\b(offer|discount|win|cashback offer|promo|sale|% off|deal of the
 
 // v6.27: a charge that has NOT happened yet (a trial ending, a renewal, an upcoming bill) is the Deadline Radar's, not a payment
 const FUTURE = /\b(will be (?:charged|billed|debited|renewed)|you'?ll be (?:charged|billed)|will renew|renews on|auto-?renew|upcoming (?:payment|charge|bill)|payment (?:is )?due|due on|due date|free trial|trial (?:ends|period)|reminder)\b|سيتم خصم|سيتم التجديد|تنتهي الفترة التجريبية|الفترة التجريبية|تاريخ الاستحقاق|(?<![\p{L}])(sera (?:débité|prélevé|facturé)|se renouvelle|essai gratuit|será (?:cobrado|cargado|debitado|renovad[oa])|se renovará|prueba gratuita|teste grátis|wird (?:abgebucht|belastet|verlängert)|probemonat|testphase|verrà addebitat[oa]|si rinnova|prova gratuita|tahsil edilecek|yenilenecek|ücretsiz deneme|akan (?:ditagih|didebit)|uji coba)(?![\p{L}])/iu;
+// v9.9.9 (Ali, 10 Nov: "a WhatsApp group about work was talking about money and it was added to my income — what the hell?"):
+// people TALK about money in chat apps («غفره بليل ٤٥٠ جنيه+١٠٠جنيه اعاشه» in a wages group) — that is never a payment.
+// Payments come from banks, InstaPay, wallets and bank SMS (the Messages app stays).
+export const CHAT_APP = /whatsapp|telegram|messenger|com\.facebook\.orca|instagram|thoughtcrime\.securesms|org\.signal|signal|viber|slack|microsoft\.teams|\bteams\b|discord|imo\.android|\bimo\b|botim|wechat|tencent\.mm|jp\.naver\.line|\bline\b|snapchat|skype|zoom|kakao|tiktok/i;
+export const isChatApp = (n) => !!n && CHAT_APP.test([n.pkg, n.app].filter(Boolean).join(" "));
+/** Entries already in Money that were read from a chat app's notification (to offer removing them). */
+export const fromChats = (ledger, kept = []) => (((ledger && ledger.txns) || []).filter((t) => t && t.source === "notification" && !kept.includes(t.id)
+  && (CHAT_APP.test(String((t.evidence && t.evidence.app) || "")) || / · (whatsapp|telegram|messenger|signal|viber|instagram)$/i.test(String(t.note || "")))));
+
 /** One stored notification {id, pkg, app, title, text, ts} → an entry, or null when it isn't a payment. */
 export function readNotification(n, opts) {
+  if (isChatApp(n)) return null;
   const text = [n.title, n.text].filter(Boolean).join(" — ").trim();
   if (!text || OTP.test(text) || BALANCE_ONLY.test(text) || FUTURE.test(text) || (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text))) return null;
   const p = parsePayment(text, { ...(opts || {}), now: n.ts || undefined });

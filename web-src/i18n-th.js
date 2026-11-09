@@ -11761,4 +11761,9 @@ export const TH = {
   "Nothing in these dates.": "ไม่มีรายการในช่วงนี้",
   "Change the dates": "เปลี่ยนวันที่",
   "Months": "เดือน",
+  "Removed {n}": "ลบแล้ว {n}",
+  "Attune added {n} from chat messages by mistake": "Attune เพิ่ม {n} รายการจากข้อความแชทโดยไม่ตั้งใจ",
+  "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "คนคุยเรื่องเงินในแชท — นั่นไม่ใช่การจ่ายเงิน ต่อจากนี้แอปแชทจะไม่ถูกอ่านเป็นเงินอีก",
+  "Remove them": "ลบออก",
+  "Keep them": "เก็บไว้",
 };
