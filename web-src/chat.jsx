@@ -1878,12 +1878,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // who recomputes numbers, fixes mistakes, fills gaps and writes the improved answer.
       // Unusable review (no FINAL ANSWER, much shorter) or Stop → the draft stays. (power.js)
       const pwA = api.power ? api.power() : null;
-      if (plain && pwA && pwA.review && (!api.pro || api.pro()) && !useThink && !sources && !pic && !fileAtt && !longMsg && !extra.continued && answer && worthReview(typed, answer)) {
+      // v9.9.4 M3 (Ali picked: "a second read before you see it"): also on every power level when you ask ("check it", «اتأكد») or the
+      // question is a hard one with numbers (a contract, tax, a penalty, interest, zakat) — the same small model re-reads it, no extra model
+      const wantCheck = !!typed && (/\b(check it|double[- ]check|verify (it|this)|make sure|are you sure)\b|اتأكد|اتاكد|راجعها|راجعه|راجع الحساب|متأكد|متاكد/i.test(typed)
+        || (/\b(contract|clause|penalty|tax|vat|interest|zakat|loan|installment|salary|invoice|percent|%)\b|عقد|بند|غرامة|ضريبة|ضريبه|فايدة|فائدة|زكاة|زكاه|قسط|مرتب|فاتورة|نسبة/i.test(typed) && /\d/.test(typed)));
+      if (plain && ((pwA && pwA.review && (!api.pro || api.pro())) || wantCheck) && !useThink && !sources && !pic && !fileAtt && !longMsg && !extra.continued && answer && (wantCheck || worthReview(typed, answer))) {
         const draft = answer;
         try {
           if (raf) { clearTimeout(raf); raf = null; }
           patchMsg(cid, aiId, { text: draft, phase: tr("Reviewing the answer like a senior expert…") });
-          const rv = await api.run(reviewMessages(typed, draft), null, { think: false, temperature: 0.3, maxTokens: pwA.longTokens, copy: true, onStatus,
+          const rv = await api.run(reviewMessages(typed, draft), null, { think: false, temperature: 0.3, maxTokens: (pwA && pwA.longTokens) || 1500, copy: true, onStatus,
             onToken: (tx) => { const i = String(tx).search(/FINAL ANSWER\s*:?/i); if (i >= 0) { const t = String(tx).slice(i).replace(/^FINAL ANSWER\s*:?\**\s*/i, ""); if (t.length > draft.length * 0.5) onToken(t, ""); } } });
           if (runRef.current !== run) return;
           const got = pickReviewed(rv, draft);
