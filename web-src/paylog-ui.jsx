@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, Check, X } from "lucide-react";
 import { tr } from "./i18n.js";
-import { inbox, toTxns, autoPick, appendToLedger, alreadyIn, fromChats, judged, codeSure } from "./paylog.js";
+import { inbox, toTxns, autoPick, appendToLedger, alreadyIn, fromChats, judged, codeSure, readNotification } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
 import { payOpts } from "./locale.js";
 import * as U from "./ui-kit.jsx";
@@ -42,6 +42,24 @@ export function RestrictedHelp({ N }) {
       <button onClick={() => { try { N.openAppInfo(); } catch (e) {} }} className="ms-1 min-h-[44px] underline font-bold text-[var(--c-acc)]" data-testid="pay-open-appinfo">{tr("Open App info")}</button>
     </div>);
 }
+/** v9.9.12 Follow-ups "You paid … — add it to Money?" (a receipt read from an email / an app): the payment it reads, unless it was
+ *  already added or dismissed, or is already in Money. */
+export function payEntryOf(n) {
+  if (!n || readDone().includes(n.id)) return null;
+  let e = null; try { e = readNotification(n, payOpts()); } catch (x) { return null; }
+  if (!e) return null;
+  try { const led = loadLedger(); if (led && alreadyIn(e, led)) return null; } catch (x) {}
+  return e;
+}
+/** Adds one payment to Money's ledger (the same way "by itself" does) → true when added. */
+export function addPaidNow(e, N = (typeof window !== "undefined" ? window.AttuneNative : null)) {
+  const led = loadLedger(); if (!led || !e) return false;
+  const r = appendToLedger(led, toTxns([e]));
+  if (!r.ids.length) return false;
+  try { localStorage.setItem("ledger.v3", JSON.stringify(r.ledger)); } catch (x) { return false; }
+  markDone(N, [e.id]); return true;
+}
+export const dismissPaid = (e, N = (typeof window !== "undefined" ? window.AttuneNative : null)) => { if (e) markDone(N, [e.id]); };
 /** v9.9.10 the small model's check (paylog.js judged), set by the page only while a model is loaded — never loads one by itself. */
 export const payJudge = () => { try { return (typeof window !== "undefined" && window.__attunePayJudge) || null; } catch (e) { return null; } };
 const DOUBT_KEY = "attune:paylog:doubt";

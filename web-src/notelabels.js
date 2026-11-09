@@ -16,6 +16,7 @@ const ROLE_AR = Object.fromEntries(ROLES.map((r) => [r[0], r[2]]));
 
 const CHAT = /whatsapp|telegram|messenger|com\.facebook\.orca|instagram|securesms|org\.signal|signal|viber|slack|teams|discord|imo|botim|wechat|tencent\.mm|naver\.line|snapchat|skype/i;
 const SMS = /messag|\bsms\b|mms|samsung\.android\.messaging|google\.android\.apps\.messaging|رسائل/i;
+const MAIL = /com\.google\.android\.gm\b|gmail|outlook|com\.microsoft\.office\.outlook|yahoo\.mobile\.client\.android\.mail|ymail|proton\.?mail|com\.samsung\.android\.email|android\.email|\bmail\b|spark|bluemail|edison/i;
 const fold = (s) => String(s || "").toLowerCase().normalize("NFKC").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 const appName = (n) => String((n && (n.app || n.pkg)) || "").trim();
 
@@ -26,6 +27,7 @@ export function sourceOf(n) {
   const app = appName(n), both = app + " " + String(n.pkg || "");
   const title = String(n.title || "").replace(/\s*\(\d+\s*(?:messages?|رسائل|رسالة|new)[^)]*\)\s*$/i, "").trim();
   if (CHAT.test(both)) { const name = title.split(/:\s/)[0].replace(/\s*@\s*.*$/, "").trim() || app; return { key: "chat:" + fold(app).split(" ")[0] + ":" + fold(name), kind: "chat", name, app, pkg: String(n.pkg || "") }; }
+  if (MAIL.test(both)) { const name = title.replace(/\s*<[^>]*>\s*$/, "").trim() || app; return { key: "mail:" + fold(name), kind: "mail", name, app, pkg: String(n.pkg || "") }; }   // v9.9.12: an email's source is its sender, never "Gmail" as a whole
   if (SMS.test(both)) { const name = title || app; return { key: "sms:" + fold(name), kind: "sms", name, app, pkg: String(n.pkg || "") }; }
   return { key: "app:" + fold(n.pkg || app), kind: "app", name: app, app, pkg: String(n.pkg || "") };
 }
@@ -102,7 +104,7 @@ export function readAi(out, src, text) {
 /** "I understood: …" — the line approved before saving. */
 export function understoodLabel(x, { ar = false, tr = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v || {})[k]) } = {}) {
   if (!x || x.kind !== "label") return "";
-  const src = x.src || {}, where = src.kind === "chat" ? (ar ? `رسايل «${src.name}» (${src.app})` : tr("messages in “{n}” ({a})", { n: src.name, a: src.app })) : src.kind === "sms" ? (ar ? `رسايل ${src.name}` : tr("messages from {n}", { n: src.name })) : (ar ? `إشعارات ${src.name}` : tr("{n} notifications", { n: src.name }));
+  const src = x.src || {}, where = src.kind === "chat" ? (ar ? `رسايل «${src.name}» (${src.app})` : tr("messages in “{n}” ({a})", { n: src.name, a: src.app })) : src.kind === "sms" ? (ar ? `رسايل ${src.name}` : tr("messages from {n}", { n: src.name })) : src.kind === "mail" ? (ar ? `إيميلات ${src.name}` : tr("emails from {n}", { n: src.name })) : (ar ? `إشعارات ${src.name}` : tr("{n} notifications", { n: src.name }));
   const mean = meaningOf(x.meaning), what = ar ? mean[2] : tr(mean[1]);
   const after = notMoney(x) ? (ar ? " — عمري ما هحسبها فلوس ولا هسألك عنها تاني" : tr(" — never counted as money, and I won't ask again"))
     : countsAsMoney(x) ? (ar ? " — الفلوس اللي بتتحرك فيها هتتحسب" : tr(" — money that moves in them counts"))
@@ -135,18 +137,47 @@ export function learned(teach, dir = { items: [] }) {
   return [...rules, ...people].sort((a, b) => b.ts - a.ts);
 }
 
+// ---- v9.9.12 understand the message itself before asking (Ali, 10 Nov: "Follow-ups is not logical — how does it not understand these
+// notifications?": it asked "What is this?" about an Uber invite-a-friend offer, a talabat "206 instead of 295" offer, a YouTube video
+// title with "$250,000" and a Google Play receipt). Code reads each MESSAGE first:
+//   an offer / advert → "ads" (sure, never asked) · a video / post / news app → not money (sure, never asked)
+//   a receipt that says you were charged → "paid" (asked as "You paid … — add it to Money?", never "what is this?")
+//   a chat whose name or sender says work / wages → "work" as a GUESS (the card opens on "I think: …" — Save / Change)
+// Nothing is saved without the person's tap; the sure ones are only left out of the questions.
+const AD = /(invite (?:a |your )?friends?|refer (?:a |your )?friends?|get [^.\n]{0,24}\boff\b|\d+(?:[.,]\d+)?\s?%\s?off|\binstead of\b|\bonly (?:for|today|this)\b|\bfor [^.\n]{0,20}\bonly\b|treat yourself|don'?t miss|limited[- ]time|hurry|last chance|flash sale|\bsale\b|\bdeals?\b|\boffers?\b|discount|promo\w*|coupon|voucher|use (?:the )?code|free delivery|free shipping|cashback|save up to|lowest price|new arrivals|order now|shop now|book now|\bwin\b|giveaway|بدل(?:ا|اً)? من|بدل ما|خصم|عرض|عروض|كوبون|كود الخصم|استخدم كود|وفر|توصيل مجاني|لفترة محدودة|متفوتش|الحق(?:ه|ها)?|هدية|اطلب دلوقتي|اطلب الآن|ادعي صاحبك|ادعُ صديق|اكسب|تخفيضات|لحق نفسك)/iu;
+const MOVED = /(you'?ve been charged|you were charged|has been charged|was charged|we charged|charged to your|debited|credited|payment (?:received|successful|confirmed|complete[d]?)|paid successfully|you paid|you sent|you received|refund(?:ed)?|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|استلمت|وصلك مبلغ)/iu;
+const RECEIPT = /(receipt|you'?ve been charged|you were charged|has been charged|was charged|we charged|payment (?:received|successful|confirmed|complete[d]?)|paid successfully|thanks? (?:you )?for your (?:payment|purchase|order)|invoice (?:paid|#|no)|order (?:number|no\.?|#)|subscription (?:continues|renewed|has been renewed|is renewed)|إيصال|ايصال|تم الدفع|تم خصم|تم سداد|فاتورة مدفوعة|تم تجديد اشتراكك|رقم الطلب)/iu;
+const FUTURE = /(will be (?:charged|billed|debited|renewed)|you'?ll be (?:charged|billed)|will renew|renews on|payment (?:is )?due|due on|free trial|trial ends|سيتم خصم|سيتم التجديد|الفترة التجريبية)/iu;
+const MEDIA = /youtube|tiktok|musically|zhiliaoapp|netflix|spotify|twitch|reddit|twitter|com\.x\.android|\bx\.com\b|pinterest|facebook\.katana|\bfacebook\b(?!.*orca)|threads|tumblr|shahid|anghami|watch ?it|osn|disney|primevideo|prime video|hbo|crunchyroll|soundcloud|deezer|podcast|castbox|\bnews\b|bbc|cnn|aljazeera|youm7|masrawy|almasryalyoum|google\.android\.apps\.magazines|quora|medium|linkedin|duolingo|\bgames?\b|supercell|pubg|tencent\.ig|freefire|dts\.freefire|roblox|king\.candycrush|steam|epicgames|chess|9gag|imdb|kick\.com|vimeo|dailymotion|snapchat/i;
+const WORKY = /(work|office|company|staff|wages|salar(?:y|ies)|payroll|accountant|accounts|hr\b|site|workers|employees|team|شغل|الشغل|شركه|شركة|الشركة|المكتب|مرتبات|المرتبات|رواتب|الرواتب|محاسب|المحاسب|حسابات|الموظفين|العمال|عمال|الموقع|الورشه|الورشة|الادارة|الإدارة)/iu;
+/** What one notification is, read by code → { meaning, sure, why } or null (not clear — ask). Pure. */
+export function understandNote(n) {
+  if (!n) return null;
+  const s = sourceOf(n), text = String(n.title || "") + " \n " + String(n.text || ""), app = appName(n) + " " + String(n.pkg || "");
+  const moved = MOVED.test(text) && !FUTURE.test(text);
+  if (moved && RECEIPT.test(text)) return { meaning: "paid", sure: true, why: "receipt" };
+  if (s.kind !== "chat" && AD.test(text) && !moved) return { meaning: "ads", sure: true, why: "offer" };
+  if (s.kind === "app" && MEDIA.test(app) && !moved) return { meaning: "notmoney", sure: true, why: "media" };
+  if (s.kind === "chat" && WORKY.test(s.name + " " + String(n.title || ""))) return { meaning: "work", sure: false, why: "work-chat" };
+  return null;
+}
+
 // ---- what to ask about ------------------------------------------------------------------------------------------------------------
-const MONEYISH = /[\d٠-٩][\d٠-٩,.٬٫]*\s*(?:جنيه|جنيها|ج\.م|جم|egp|le\b|l\.e|\$|usd|eur|sar|aed|ريال|درهم|دولار)|(?:egp|le|l\.e|\$|usd)\s*[\d٠-٩]/i;
+const MONEYISH = /[\d٠-٩][\d٠-٩,.٬٫]*\s*(?:جنيه|جنيها|ج\.م|جم|egp|le\b|l\.e|\$|usd|eur|sar|aed|ريال|درهم|دولار)|(?:egp|le|l\.e|\$|usd|ج\.م\.?|€|£)[\s\u200e\u200f]*[\d٠-٩]/i;
 /** Notifications Attune should ask about, once per source: money in a chat / an unknown app (never a known label, never twice).
  *  → [{ id, src, n, why: "money" }] newest first, at most `max`. A bank app's money is NOT asked here (the payment check handles it). */
-export function asksFrom(notes = [], teach = { rules: [], asked: [], skip: [] }, { max = 3, bankish = () => false, now = Date.now() } = {}) {
+export function asksFrom(notes = [], teach = { rules: [], asked: [], skip: [] }, { max = 3, bankish = () => false, payOf = () => null, now = Date.now() } = {}) {
   const done = new Set([...(teach.asked || []), ...(teach.skip || [])]), seen = new Set(), out = [];
   for (const n of [...notes].sort((a, b) => (b.ts || 0) - (a.ts || 0))) {
     if ((n.ts || 0) < now - 14 * 864e5) continue;
     const s = sourceOf(n); if (!s || seen.has(s.key) || done.has(s.key) || labelOf(n, teach)) continue;
     const text = String(n.title || "") + " " + String(n.text || "");
     if (!MONEYISH.test(text) || bankish(n)) continue;
-    seen.add(s.key); out.push({ id: "ask:" + s.key, src: s, n, why: "money" });
+    // v9.9.12: read the message first — offers and videos are never asked; a receipt is asked as "You paid … — add it?"
+    const u = understandNote(n);
+    if (u && u.sure && u.meaning !== "paid") continue;
+    if (u && u.meaning === "paid") { const e = payOf(n); if (!e) continue; if (seen.has("pay:" + n.id)) continue; seen.add("pay:" + n.id); out.push({ id: "pay:" + n.id, src: s, n, why: "paid", pay: e }); }
+    else { seen.add(s.key); out.push({ id: "ask:" + s.key, src: s, n, why: "money", ...(u && u.meaning ? { guess: u.meaning } : {}) }); }
     if (out.length >= max) break;
   }
   return out;

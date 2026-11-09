@@ -10,6 +10,7 @@ import * as NT from "./noteteach.js";
 import { loadDir } from "./entities.js";
 import { saveTaught } from "./noteteach-ui.jsx";
 import { moneySourceNote } from "./paylog.js";
+import { payEntryOf, addPaidNow, dismissPaid } from "./paylog-ui.jsx";   // v9.9.12 a receipt → "You paid … — add it to Money?"
 
 const BTN = "min-h-[40px] px-3.5 rounded-[12px] text-[13px] font-extrabold bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] disabled:opacity-40";
 const BTN2 = "min-h-[40px] px-3.5 rounded-[12px] text-[13px] font-extrabold border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]";
@@ -31,7 +32,7 @@ const dropSaid = (key) => { try { localStorage.setItem(SAID_KEY, JSON.stringify(
 export function currentAsks(N = N0(), max = 3) {
   const said = readSaid().map((x) => ({ id: "said:" + NL.sourceOf(x.n).key, src: NL.sourceOf(x.n), n: x.n, said: x.said, why: "money" }));
   const keys = new Set(said.map((a) => a.src.key));
-  return [...said, ...NL.asksFrom(allNotes(N), NT.loadTeach(), { max, bankish: moneySourceNote }).filter((a) => !keys.has(a.src.key))].slice(0, Math.max(max, said.length));
+  return [...said, ...NL.asksFrom(allNotes(N), NT.loadTeach(), { max, bankish: moneySourceNote, payOf: payEntryOf }).filter((a) => !keys.has(a.src.key))].slice(0, Math.max(max, said.length));
 }
 /** A2: tell the phone what it knows + the question's words; take the answers given on the phone's question.
  *  A tap (Mine / Not money) is clear → learnt at once; a typed sentence → asked in Follow-ups ("I understood … — Save"). → lines learnt */
@@ -61,10 +62,34 @@ export function saveAnswer(x) {
 }
 const understoodOf = (x, ar) => (x.kind === "who" ? NT.understood(x, { ar, tr }) : NL.understoodLabel(x, { ar, tr }));
 
+/** v9.9.12 a receipt (an email / an app said you were charged): "You paid 939.99 EGP — Google Commerce Limited. Add it to Money?" */
+const fmtAmt = (e) => { try { return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(e.amount) + " " + (e.currency || ""); } catch (x) { return e.amount + " " + (e.currency || ""); } };
+export function PaidAskCard({ ask, onDone, flash }) {
+  const e = ask.pay, n = ask.n || {}, monthly = /\/\s*(month|mo\b)|monthly|شهري|في الشهر|auto-?renew/i.test(String(n.text || ""));
+  const add = () => { const ok = addPaidNow(e); const m = ok ? tr("Added to Money: {a} — {p}", { a: fmtAmt(e), p: e.party || e.from || "" }) : tr("Couldn't add it — open Money once, then try again"); flash && flash(m); if (ok) onDone && onDone(m); };
+  const no = () => { dismissPaid(e); onDone && onDone(tr("Not added")); };
+  return <div className="space-y-2" data-testid="note-paid" data-key={ask.id}>
+    <p className="m-0 text-[14.5px] font-bold flex items-center gap-1.5"><Check size={15} className="text-[var(--c-acc)] shrink-0" />{tr("Looks like you paid — add it to Money?")}</p>
+    <div className="rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 py-2">
+      <p className="m-0 text-[15px] font-extrabold tabular-nums" dir="auto" data-testid="note-paid-amount">{fmtAmt(e)}{monthly ? <span className="text-[12.5px] font-bold c-sub"> · {tr("every month")}</span> : null}</p>
+      <p className="m-0 text-[12.5px] c-sub" dir="auto">{[e.party, src0(ask)].filter(Boolean).join(" · ")}</p>
+      <p className="m-0 mt-1 text-[12px] c-sub whitespace-pre-wrap line-clamp-3" dir="auto">{String(n.text || "").slice(0, 200)}</p></div>
+    <div className="flex flex-wrap gap-1.5">
+      <button onClick={add} className={BTN} data-testid="note-paid-add"><Check size={14} className="inline -mt-0.5 me-1" />{tr("Add to Money")}</button>
+      <button onClick={no} className={BTN2} data-testid="note-paid-no">{tr("Not mine")}</button></div>
+  </div>;
+}
+const src0 = (a) => (a.src ? (a.src.kind === "mail" ? a.src.name + " (" + a.src.app + ")" : a.src.app) : "");
+
 /** One question about one source: quick answers, your own words, "I understood: …", Save. */
 export function NoteAskCard({ ask, onDone, flash }) {
+  if (ask && ask.why === "paid" && ask.pay) return <PaidAskCard ask={ask} onDone={onDone} flash={flash} />;
+  return <NoteAskInner ask={ask} onDone={onDone} flash={flash} />;
+}
+function NoteAskInner({ ask, onDone, flash }) {
   const ar = getLang() === "ar", src = ask.src, n = ask.n || {};
-  const [text, setText] = useState(ask.said || ""), [x, setX] = useState(null), [busy, setBusy] = useState(false), [all, setAll] = useState(false);
+  // v9.9.12: when code already has a good guess (a work / wages group), the card opens on "I think: …" — Save or Change
+  const [text, setText] = useState(ask.said || ""), [x, setX] = useState(() => (ask.guess && !ask.said ? NL.readAnswer(ask.guess, src) : null)), [busy, setBusy] = useState(false), [all, setAll] = useState(false);
   const read = async (t) => {
     let r = NL.readAnswer(t, src, { dir: loadDir() });
     if (r && r.kind === "ask") { const ai = quickAi(); if (ai) { setBusy(true); try { const a = NL.readAi(await ai(NL.aiPrompt(t, src, n.text)), src, t); if (a) r = a; } catch (e) {} setBusy(false); } }
@@ -76,9 +101,9 @@ export function NoteAskCard({ ask, onDone, flash }) {
   const quick = ["work", "notmoney", "mymoney", "ignore"];
   const label = (k) => { const m = NL.meaningOf(k); return ar ? m[2] : tr(m[1]); };
   return <div className="space-y-2" data-testid="note-ask" data-key={src.key}>
-    <p className="m-0 text-[14.5px] font-bold flex items-center gap-1.5"><GraduationCap size={15} className="text-[var(--c-acc)] shrink-0" />{tr("What is this? I wasn't sure.")}</p>
+    <p className="m-0 text-[14.5px] font-bold flex items-center gap-1.5"><GraduationCap size={15} className="text-[var(--c-acc)] shrink-0" />{ask.guess && x && x.kind === "label" && x.meaning === ask.guess ? tr("I think I know what this is — right?") : tr("What is this? I wasn't sure.")}</p>
     <div className="rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 py-2">
-      <p className="m-0 text-[11.5px] font-extrabold c-sub" dir="auto">{src.app}{src.kind === "chat" || src.kind === "sms" ? " · " + src.name : ""}</p>
+      <p className="m-0 text-[11.5px] font-extrabold c-sub" dir="auto">{src.app}{src.kind === "chat" || src.kind === "sms" || src.kind === "mail" ? " · " + src.name : ""}</p>
       <p className="m-0 mt-0.5 text-[13px] whitespace-pre-wrap" dir="auto">{String(n.text || n.title || "").slice(0, 400)}</p></div>
     {!x || x.kind === "ask" ? <>
       <div className="flex flex-wrap gap-1.5" data-testid="note-ask-quick">

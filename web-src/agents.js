@@ -389,8 +389,22 @@ export function offerFacts(o) {
   const nights = o && o.checkin && o.checkout ? Math.round((Date.parse(o.checkout) - Date.parse(o.checkin)) / 864e5) : 0;
   return { dist, rating, nights: nights > 0 ? nights : 0, perNight: nights > 0 ? Math.round(o.price / nights) : null };
 }
+/** v9.9.12 (Ali's screenshot: the same 41,495 on 01/08 → 01/12 twice in "Best found"): one offer once — the same page, or the same
+ *  name, or (when the name is only the website's) the same price on the same days. */
+export function uniqueOffers(list = []) {
+  const out = [], site = /^(booking(\.com)?|agoda|expedia|airbnb|hotels\.com|trip\.com|almosafer|kayak|skyscanner|google)$/i;
+  const nm = (o) => String(o.name || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  for (const o of list || []) {
+    if (!o) continue;
+    const same = out.some((x) => (o.href && x.href && String(o.href).split("?")[0] === String(x.href).split("?")[0] && x.checkin === o.checkin)
+      || (nm(o) && nm(o) === nm(x) && !site.test(nm(o)) && x.checkin === o.checkin && x.price === o.price)
+      || ((!nm(o) || site.test(nm(o))) && (!nm(x) || site.test(nm(x))) && x.price === o.price && (x.checkin || "") === (o.checkin || "") && (x.checkout || "") === (o.checkout || "")));
+    if (!same) out.push(o);
+  }
+  return out;
+}
 export function compareOffers(list, { below = 0 } = {}) {
-  const rows = (list || []).map((o) => ({ o, f: offerFacts(o) }));
+  const rows = uniqueOffers(list || []).map((o) => ({ o, f: offerFacts(o) }));
   if (!rows.length) return { rows, best: {}, why: [], trade: [] };
   const pick = (fn, lo) => { const v = rows.map((r) => fn(r)).filter((x) => x != null); return v.length > 1 || (v.length && rows.length === 1) ? (lo ? Math.min(...v) : Math.max(...v)) : null; };
   const best = { price: pick((r) => r.o.price, true), perNight: pick((r) => r.f.perNight, true), dist: pick((r) => r.f.dist, true), rating: pick((r) => r.f.rating, false) };
@@ -657,9 +671,20 @@ export function agentChat(a, now = Date.now()) {
   out.push({ who: "agent", at: (a.created || 0) + 1, T: hrs > 1 ? ["On it — I check every {h} hours and tell you what I find.", { h: hrs }] : ["On it — I'll tell you what I find."] });
   // v9.6 (Ali's screenshot: the same "didn't show prices" line four times): checks in a row without prices are ONE message
   let miss = null;
-  for (const c of ((a.checks || []).slice(-12))) {
-    if (c.price > 0) { miss = null; out.push({ who: "agent", at: c.at, T: c.checkin ? ["Checked: cheapest {p} ({d}).", { p: c.price, d: c.checkin + " → " + (c.checkout || "") }] : ["Checked: cheapest {p}.", { p: c.price }] }); continue; }
-    if (miss) { miss.n++; miss.at = c.at; miss.T = ["{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.", { n: miss.n }]; continue; }
+  // v9.9.12 (Ali: "how do I know if the new findings are better than the current ones?"): every check with a price says it against the
+  // best one before it — "New best", "the same as your best", or "no better: your best is still …"
+  const all = (a.checks || []), from = Math.max(0, all.length - 12);
+  let best = 0; for (const c of all.slice(0, from)) if (c.price > 0 && (!best || c.price < best)) best = c.price;
+  for (const c of all.slice(from)) {
+    if (c.price > 0) { miss = null;
+      const d = c.checkin ? " (" + c.checkin + " → " + (c.checkout || "") + ")" : "";
+      const T = !best ? ["Checked: cheapest {p}{d}.", { p: c.price, d }]
+        : c.price < best ? ["New best: {p}{d} — {x} less than the best before ({b}).", { p: c.price, d, x: best - c.price, b: best }]
+        : c.price === best ? ["Checked: {p}{d} — the same as your best.", { p: c.price, d }]
+        : ["Checked: cheapest {p}{d} — no better. Your best is still {b}.", { p: c.price, d, b: best }];
+      out.push({ who: "agent", at: c.at, T, ...(best && c.price < best ? { better: true } : {}) });
+      if (!best || c.price < best) best = c.price; continue; }
+    if (miss) { miss.n++; miss.at = c.at; miss.T = ["{n} checks in the background couldn't read the prices — {site} shows them only in a browser. Your best stays; I read them again when you tap Check now.", { n: miss.n, site: a.site || "this site" }]; continue; }
     miss = { who: "agent", at: c.at, n: 1, T: ["The site didn't show prices this time — I'll try again."] }; out.push(miss);
   }
   { const f = withRuleFound(a).found; if (f) out.push({ who: "agent", at: f.at, T: ["Found one under your price: {p}.", { p: f.price }], found: true }); }

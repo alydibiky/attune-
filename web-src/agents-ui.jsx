@@ -97,8 +97,8 @@ function AgentChat({ c, back, openBest, setRules, understand, flash }) {
     <div className="flex flex-col gap-2">
       {msgs.map((m, i) => m.who === "me"
         ? <div key={i} className={bubble + " self-end bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] rounded-ee-[4px]"} dir="auto">{m.text}</div>
-        : <div key={i} className={bubble + " self-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-es-[4px]" + (m.found ? " font-extrabold" : "")} dir="auto">
-            {tr(m.T[0], Object.fromEntries(Object.entries(m.T[1] || {}).map(([k, v]) => [k, k === "p" ? money(v, a.currency || "") : v])))}{m.found ? " 🎉" : ""}</div>)}
+        : <div key={i} className={bubble + " self-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-es-[4px]" + (m.found || m.better ? " font-extrabold" : "")} dir="auto" data-testid={m.better ? "agent-chat-better" : undefined}>
+            {tr(m.T[0], Object.fromEntries(Object.entries(m.T[1] || {}).map(([k, v]) => [k, ["p", "b", "x"].includes(k) ? money(v, a.currency || "") : v])))}{m.found ? " 🎉" : ""}</div>)}
       {c.grid && c.grid.kind ? <div className={bubble + " self-stretch max-w-none bg-[var(--c-surf)] border border-[var(--c-ln)]"}><DatesGrid a={a} grid={c.grid} openBest={openBest} /></div> : null}
     </div>
     <InChat.Provider value={true}>{c.el}</InChat.Provider>
@@ -836,7 +836,7 @@ function BestFound({ a, small, openBest, skipBest }) {
       {c.rows.length > 1 ? <button onClick={() => setTable(!table)} className="text-[12.5px] font-extrabold text-[var(--c-acc)] min-h-[36px]" data-testid="agent-compare" aria-expanded={table}>{table ? tr("Hide the table") : tr("Compare side by side")}</button> : null}</div>
     {table ? <div className="overflow-x-auto rounded-[12px] border border-[var(--c-ln)]" data-testid="agent-compare-table">
       <table className="w-full text-[12px] border-collapse">
-        <thead><tr><th className="text-start px-2 py-1.5"></th>{c.rows.map((r, k) => <th key={k} className="px-2 py-1.5 text-end font-extrabold max-w-[110px] truncate" dir="auto">{r.o.name || a.site}</th>)}</tr></thead>
+        <thead><tr><th className="text-start px-2 py-1.5"></th>{c.rows.map((r, k) => <th key={k} className="px-2 py-1.5 text-end font-extrabold max-w-[110px] truncate" dir="auto" data-testid="agent-compare-name">{offerName(r.o, a, k)}</th>)}</tr></thead>
         <tbody>{[["Total", (r) => r.o.price, (v) => money(v), "price"], ["A night", (r) => r.f.perNight, (v) => (v == null ? "—" : money(v)), "perNight"], ["Days", (r) => r.o, day, null],
           ["Walk", (r) => r.f.dist, far, "dist"], ["Rating", (r) => r.f.rating, (v) => (v == null ? "—" : v), "rating"]].filter(([l, get]) => l !== "A night" || c.rows.some((r) => r.f.perNight)).filter(([l, get]) => !["Walk", "Rating"].includes(l) || c.rows.some((r) => get(r) != null))
           .map(([l, get, show, key]) => <tr key={l} className="border-t border-[var(--c-ln)]"><td className="px-2 py-1.5 font-bold c-sub">{tr(l)}</td>

@@ -18,7 +18,7 @@ const chat = A.agentChat({ said: "Tell me when hotels near the Haram are under 4
 assert.equal(chat[0].who, "me"); assert.ok(chat.some((m) => m.found)); assert.equal(chat[chat.length - 1].found, true);
 // v9.6 Ali's screenshot: four "didn't show prices" in a row → one message with the count; "Price" is never a hotel's name
 const c2 = A.agentChat({ said: "x", created: 1, checks: [{ at: 2, price: 41495 }, { at: 3, blocked: true }, { at: 4, blocked: true }, { at: 5, blocked: true }, { at: 6, blocked: true }] });
-const misses = c2.filter((m) => m.T && /didn't show prices/.test(m.T[0]));
+const misses = c2.filter((m) => m.T && /didn't show prices|couldn't read the prices/.test(m.T[0]));
 assert.equal(misses.length, 1, "one message for the misses in a row"); assert.equal(misses[0].T[1].n, 4);
 const R = await import("../../web-src/agent-rules.js");
 assert.ok(R.isSiteName("Price", "Booking.com") && R.isSiteName("Book now") && !R.isSiteName("Swissotel Makkah", "Booking.com"));

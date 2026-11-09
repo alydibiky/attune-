@@ -22,6 +22,9 @@ with sync_playwright() as p:
     open_mode(page, "timeline", "[data-testid=fu-thread]")
     asks = page.locator("[data-testid=note-ask]")
     check(asks.count() == 1 and "ما يخص المرتبات" in asks.first.inner_text(), "Follow-ups asks once about the WhatsApp group (two messages = one question; the CIB credit is not asked)")
+    # v9.9.12: a wages group opens on Attune's guess ("I think …" — Save / Change); Change → your own words
+    check("Work talk" in page.locator("[data-testid=note-ask-understood]").inner_text(), "v9.9.12: the wages group opens on Attune's guess: work talk")
+    page.click("[data-testid=note-ask-change]"); page.wait_for_timeout(200)
     page.fill("[data-testid=note-ask-input]", "this is the work wages group, it's never my money"); page.click("[data-testid=note-ask-go]"); page.wait_for_timeout(300)
     u = page.locator("[data-testid=note-ask-understood]").inner_text()
     check("ما يخص المرتبات" in u and "never counted as money" in u, "your words are understood and shown first: " + u.replace("\n", " "))
@@ -42,7 +45,7 @@ with sync_playwright() as p:
     page.locator("textarea[placeholder='Message Attune']").fill("علمني اشعاراتي"); page.locator("button[title='Send']").first.click()
     page.wait_for_selector("[data-testid=chat-teach] [data-testid=note-ask]", timeout=5000)
     check("ما يخص المرتبات" in page.locator("[data-testid=chat-teach]").inner_text(), "Chat «علمني اشعاراتي» → the same question in the conversation")
-    page.click("[data-testid=chat-teach] [data-testid=note-ask-notmoney]"); page.click("[data-testid=chat-teach] [data-testid=note-ask-save]"); page.wait_for_timeout(300)
+    page.click("[data-testid=chat-teach] [data-testid=note-ask-change]"); page.click("[data-testid=chat-teach] [data-testid=note-ask-notmoney]"); page.click("[data-testid=chat-teach] [data-testid=note-ask-save]"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=teach-chat-done]").count() == 1, "…a quick answer + Save → “That's all for now — I learnt 1”")
     check(page.evaluate("JSON.parse(localStorage.getItem('attune:noteteach:v1')).rules[0].meaning") == "notmoney", "…saved as not money")
     # A2: answers given on the phone's own "What is this?" question
