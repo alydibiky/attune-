@@ -195,6 +195,10 @@
     ["city", /city|town|ville|ciudad|cidade|stadt|città|şehir|kota|المدينة/i, "address-level2"],
     ["postcode", /post.?code|zip|postal|code postal|código postal|\bcep\b|plz|\bcap\b|posta kodu|kode pos|الرمز البريدي/i, "postal-code"],
     ["address", /address|street|adresse|dirección|endereço|straße|strasse|indirizzo|adres|alamat|العنوان/i, "address-line1"],
+    // v9.9.7 W1: the task's own values ("book a padel court Friday 8pm for 4") — only when the page clearly asks for them
+    ["taskDate", /\b(date|day|check.?in|arrival|booking.?date|reservation.?date|visit.?date|fecha|datum)\b|تاريخ|اليوم|يوم الحجز/i, ""],
+    ["taskTime", /\b(time|hour|slot|start.?time|hora|heure|uhrzeit)\b|الوقت|الساعة|الساعه|ميعاد/i, ""],
+    ["taskPeople", /\b(guests?|people|persons?|party.?size|players?|adults|covers|seats|tickets?|number of)\b|عدد|اشخاص|أشخاص|افراد|أفراد|ضيوف/i, ""],
   ];
   const AC = { "given-name": "first", "family-name": "last", name: "full", email: "email", tel: "phone", "tel-national": "phone", bday: "birth", "country-name": "country", country: "country", "address-level2": "city", "postal-code": "postcode", "address-line1": "address", "street-address": "address" };
   const labelOf = (el) => {
@@ -210,6 +214,8 @@
     if (AC[ac]) return { key: AC[ac] };
     if (el.type === "email") return { key: "email" };
     if (el.type === "tel") return { key: "phone" };
+    if (el.type === "date" && !/birth|dob|naissance|nacimiento|geburt|الميلاد|expir|انتهاء/i.test(lab)) return { key: "taskDate" };
+    if (el.type === "time") return { key: "taskTime" };
     // "Hotel name", "Company name", "Street name", "User name"… are not the person
     if (/(hotel|company|business|organi[sz]ation|firm|street|user|account|pet|bank|ship|vessel|property|event|group|team|file|product|store|shop|restaurant|card|holder|beneficiary|recipient)[\s_-]*name|nom (de l'hôtel|de la société|d'utilisateur)|nombre de (la empresa|usuario)|firmenname|benutzername|اسم (الفندق|الشركة|المستخدم)/i.test(lab)) return { key: "" };
     for (const [k, re] of KEYS) if (re.test(lab)) return { key: k };
@@ -224,6 +230,7 @@
   const valueFor = (key, el, p) => {
     if (key === "full") return [p.first, p.last].filter(Boolean).join(" ");
     let v = p[key] || "";
+    if (key === "taskDate" && /^\d{4}-\d{2}-\d{2}$/.test(v) && el.type !== "date") { const [y, m, d] = v.split("-"); return /mm\W*dd/i.test(el.placeholder || "") ? `${m}/${d}/${y}` : `${d}/${m}/${y}`; }
     if (key === "birth" || key === "passportExpiry") {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return "";
       if (el.type === "date") return v;
@@ -242,7 +249,11 @@
       const v = valueFor(k.key, el, p); if (!v) continue;
       if (el.tagName === "SELECT") {
         const want = String(v).toLowerCase();
-        const opt = [...el.options].find((o) => o.value.toLowerCase() === want || o.text.trim().toLowerCase() === want);
+        // a time ("20:00") matches "8:00 PM" / "20:00"; a number of people matches "4 people" / "4 guests"
+        const hm = (t) => { const m = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i.exec(String(t)); if (!m) return ""; let h = +m[1]; if (m[3]) { h %= 12; if (/pm/i.test(m[3])) h += 12; } return h + ":" + (m[2] || "00"); };
+        const opt = [...el.options].find((o) => o.value.toLowerCase() === want || o.text.trim().toLowerCase() === want)
+          || (k.key === "taskTime" ? [...el.options].find((o) => hm(o.text) && hm(o.text) === hm(v)) : null)
+          || (k.key === "taskPeople" ? [...el.options].find((o) => (/^\s*(\d{1,2})\b/.exec(o.text) || [])[1] === String(v)) : null);
         if (!opt || el.value === opt.value) continue;
         setVal(el, opt.value);
       } else setVal(el, v);
