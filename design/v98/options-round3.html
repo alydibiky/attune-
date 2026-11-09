@@ -1,0 +1,384 @@
+<title>Attune Picks, 9 November</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+<style>
+/* Layout: a short intro and a sticky "my picks" bar; then groups (Notifications & photos · Memory · Notion ideas · Do it for me · Several AI models · Look), each option = a card with a small phone mock-up, what it does, + / −, effort, and a pick checkbox. */
+:root{
+  --bg:#f6f2f2; --surf:#ffffff; --fg:#2a1c20; --mut:#7a676c; --ln:#e7dcdf;
+  --acc:#7a2338; --soft:#f3e3e7; --pos:#2f7d55; --neg:#b3263b; --warn:#a86a12; --phone:#1d1416;
+  --f-ui:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif; --f-d:"Fraunces",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#171113;--surf:#221a1d;--fg:#f2e9eb;--mut:#ab979c;--ln:#3a2d31;--acc:#e48aa0;--soft:#3a2229;--pos:#6fcf9b;--neg:#ff7d8f;--warn:#e5b062;--phone:#000;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171113;--surf:#221a1d;--fg:#f2e9eb;--mut:#ab979c;--ln:#3a2d31;--acc:#e48aa0;--soft:#3a2229;--pos:#6fcf9b;--neg:#ff7d8f;--warn:#e5b062;--phone:#000;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 120px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:30px}
+h1{font-family:var(--f-d);font-size:clamp(28px,5vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--f-d);font-size:24px;margin:0;text-wrap:balance}
+h3{margin:0;font-size:18px;font-weight:900}
+.lede{max-width:70ch;color:var(--mut);margin:6px 0 0}
+.eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.group{display:grid;gap:14px}
+.group>p{margin:0;color:var(--mut);max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.opt{background:var(--surf);border:1px solid var(--ln);border-radius:18px;padding:14px;display:grid;gap:10px;align-content:start;min-width:0;transition:border-color .15s}
+.opt.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}
+.opt header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.code{font-weight:900;font-size:13px;color:var(--surf);background:var(--acc);border-radius:8px;padding:2px 8px}
+.rec{font-size:11.5px;font-weight:800;color:var(--pos);border:1px solid currentColor;border-radius:999px;padding:1px 8px}
+.where{font-size:11.5px;font-weight:800;color:var(--mut);border:1px solid var(--ln);border-radius:999px;padding:1px 8px}
+.opt p{margin:0;font-size:14px}
+.pro::before{content:"+ ";font-weight:900;color:var(--pos)}
+.con::before{content:"− ";font-weight:900;color:var(--neg)}
+.meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--mut)}
+.pick{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;cursor:pointer;min-height:44px;border-top:1px solid var(--ln);padding-top:8px}
+.pick input{width:20px;height:20px;accent-color:var(--acc)}
+/* mini phone */
+.ph{background:var(--phone);border-radius:22px;padding:6px;max-width:260px;width:100%;margin:0 auto}
+.sc{background:var(--bg);border-radius:17px;overflow:hidden;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:12px;min-height:200px}
+.sc .t{font-weight:900;font-size:14px}
+.c{background:var(--surf);border:1px solid var(--ln);border-radius:12px;padding:7px 9px}
+.mut{color:var(--mut)} .b{font-weight:800} .s{font-size:11px} .num{font-variant-numeric:tabular-nums;font-weight:800}
+.chip{display:inline-block;border-radius:8px;padding:2px 7px;font-weight:800;font-size:11px;background:var(--soft);color:var(--acc)}
+.btn{display:inline-block;border-radius:9px;padding:3px 9px;font-weight:800;font-size:11px;background:var(--acc);color:var(--surf)}
+.btn2{display:inline-block;border-radius:9px;padding:3px 9px;font-weight:800;font-size:11px;border:1px solid var(--ln)}
+table.tt{width:100%;border-collapse:collapse;font-size:10.5px}
+table.tt td,table.tt th{border:1px solid var(--ln);padding:2px 3px;text-align:center}
+table.tt th{background:var(--soft);color:var(--acc)}
+.flow{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11px;font-weight:800}
+.flow span{background:var(--surf);border:1px solid var(--ln);border-radius:9px;padding:3px 7px}
+.flow i{font-style:normal;color:var(--mut)}
+.ask{background:var(--soft);border-radius:12px 12px 12px 3px;padding:6px 8px}
+.me{align-self:flex-end;background:var(--acc);color:var(--surf);border-radius:12px 12px 3px 12px;padding:5px 8px;font-weight:700}
+/* sticky bar */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1px solid var(--ln);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;z-index:5}
+.bar .picks{flex:1;min-width:0;font-weight:900;font-size:15px;overflow-wrap:anywhere}
+.bar button{min-height:44px;border-radius:12px;border:0;background:var(--acc);color:var(--surf);font:inherit;font-weight:900;padding:0 16px;cursor:pointer}
+.bar button.clear{background:transparent;color:var(--mut);border:1px solid var(--ln)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.copied{font-size:12px;color:var(--pos);font-weight:800}
+.note{background:var(--surf);border:1px solid var(--ln);border-radius:16px;padding:14px 18px;max-width:820px}
+.note ul{margin:6px 0 0;padding-inline-start:20px}
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Attune · options to pick · 9 Nov 2026</div>
+    <h1>All the options, in one place</h1>
+    <p class="lede">Tick the ones you want. The bar at the bottom collects your codes. Tap <b>Copy my picks</b> and paste them to me. Each phone mock-up uses your real things: the maid, Sheikh, Gemini, your uni schedule, your cranes.</p>
+  </div>
+
+  <!-- 1 -->
+  <section class="group">
+    <div class="eyebrow">1 · Notifications, photos and memory</div>
+    <h2>Make Attune use what it already sees</h2>
+    <div class="grid">
+
+      <article class="opt" data-code="T1">
+        <header><span class="code">T1</span><h3>Timetable photo → reminders</h3><span class="rec">Recommended</span></header>
+        <div class="ph"><div class="sc">
+          <span class="t">Your uni schedule</span>
+          <table class="tt"><tr><th></th><th>Sun</th><th>Mon</th><th>Tue</th></tr>
+            <tr><th>9:00</th><td>Accounting<br><span class="mut">B204</span></td><td></td><td>Tax law</td></tr>
+            <tr><th>11:00</th><td></td><td>Finance</td><td></td></tr>
+            <tr><th>1:00</th><td>Seminar</td><td>Finance lab</td><td>Accounting</td></tr></table>
+          <div class="c s">Is this right? <span class="btn">Yes, remind me</span> <span class="btn2">Fix a cell</span></div>
+          <div class="s mut">Every week, 15 min before each class · stops at the end of term</div>
+        </div></div>
+        <p>Take a photo or screenshot of your timetable (جدول). Attune reads it into a table. You check it once, and every class gets a weekly reminder.</p>
+        <p class="pro">One photo replaces typing 15 reminders. Each reminder shows the room and the time to leave.</p>
+        <p class="con">An Arabic timetable needs a 📷 model (the phone's own text reader is English only).</p>
+        <div class="meta"><span>Effort: medium</span><span>Phone ✓ · Computer ✓</span></div>
+        <label class="pick"><input type="checkbox" id="p-T1"> Pick T1</label>
+      </article>
+
+      <article class="opt" data-code="S1">
+        <header><span class="code">S1</span><h3>Chat always checks your own things first</h3><span class="rec">Recommended</span></header>
+        <div class="ph"><div class="sc">
+          <div class="me">what did the Liebherr mechanic say about the hydraulics?</div>
+          <div class="ask">He said the hose on boom 2 must be changed before the Sokhna job, about 4,500.
+            <div class="s mut" style="margin-top:4px">From your Shelf: “Crane notes” · 3 Oct</div></div>
+          <div class="c s"><span class="chip">Shelf</span> <span class="chip">Mind</span> <span class="chip">Documents</span> <span class="chip">Recall</span></div>
+        </div></div>
+        <p>Before answering, Chat looks in Shelf, Mind, Documents and Recall. When it uses one, it shows the source: “From your Shelf: Crane notes”.</p>
+        <p class="pro">What you wrote once is never lost. Answers come from your own notes, not from the internet.</p>
+        <p class="con">A tiny bit slower for general questions, about 0.1 s.</p>
+        <div class="meta"><span>Effort: small</span><span>Phone ✓ · Computer ✓</span></div>
+        <label class="pick"><input type="checkbox" id="p-S1"> Pick S1</label>
+      </article>
+
+      <article class="opt" data-code="G1">
+        <header><span class="code">G1</span><h3>“Found” in the app's colour</h3></header>
+        <div class="ph"><div class="sc">
+          <span class="t">Agents</span>
+          <div class="c"><span class="chip">Found</span> Hotels · Masjid al-Haram <span class="num" style="float:inline-end">41,495</span></div>
+          <div class="c s mut">Today: the “Found” tag is green (good news, like money coming in). G1 makes it burgundy, the same as the rest of the app.</div>
+        </div></div>
+        <p>You asked why “Found” is green. Green = good news. G1 makes it burgundy so the whole app is one quiet colour.</p>
+        <p class="pro">Calmer and more consistent.</p>
+        <p class="con">Good news no longer stands out by colour.</p>
+        <div class="meta"><span>Effort: tiny</span></div>
+        <label class="pick"><input type="checkbox" id="p-G1"> Pick G1 (burgundy)</label>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="group">
+    <div class="eyebrow">2 · Ideas taken from Notion</div>
+    <h2>Notion builds by hand; Attune builds from one sentence</h2>
+    <p>You use Notion. These take its best parts and make them easier, offline, and connected to your real data.</p>
+    <div class="grid">
+
+      <article class="opt" data-code="N1">
+        <header><span class="code">N1</span><h3>Databases from a sentence</h3><span class="rec">Recommended</span></header>
+        <div class="ph"><div class="sc">
+          <div class="me">track my cranes: name, tonnage, next inspection</div>
+          <span class="t">Cranes</span>
+          <div class="c s"><span class="chip">Table</span> Board · Calendar</div>
+          <table class="tt"><tr><th>Name</th><th>Tons</th><th>Inspection</th></tr>
+            <tr><td>Liebherr LTM</td><td>200</td><td>20 Nov</td></tr><tr><td>Grove GMK</td><td>100</td><td>4 Dec</td></tr><tr><td>XCMG QY</td><td>50</td><td>Jan</td></tr></table>
+          <div class="s mut">Dates become reminders by themselves</div>
+        </div></div>
+        <p>Say what you want to track and Attune makes the table with views (table, board, calendar). Dates become reminders, amounts link to Money.</p>
+        <p class="pro">Any list in your life (cranes, clients, courses, books) without building it.</p>
+        <p class="con">A big feature: a few days of work.</p>
+        <div class="meta"><span>Effort: large</span><span>Phone ✓ · Computer ✓</span></div>
+        <label class="pick"><input type="checkbox" id="p-N1"> Pick N1</label>
+      </article>
+
+      <article class="opt" data-code="N2">
+        <header><span class="code">N2</span><h3>Templates that fill themselves</h3></header>
+        <div class="ph"><div class="sc">
+          <span class="t">Meeting · Sheikh · today</span>
+          <div class="c s"><b>Open:</b> payment 3 of 8 late (2,500) · 14,500 left</div>
+          <div class="c s"><b>Last time:</b> he promised to pay on the 5th</div>
+          <div class="c s"><b>Notes:</b> <span class="mut">write here…</span></div>
+        </div></div>
+        <p>A meeting note brings the person's history and open payments. A trip plan brings bookings and agents. A project brings its money and dates.</p>
+        <p class="pro">You walk into every meeting knowing everything.</p>
+        <p class="con">Useful mostly for people who write notes.</p>
+        <div class="meta"><span>Effort: medium</span></div>
+        <label class="pick"><input type="checkbox" id="p-N2"> Pick N2</label>
+      </article>
+
+      <article class="opt" data-code="N3">
+        <header><span class="code">N3</span><h3>@ links to people and things</h3><span class="rec">Recommended</span></header>
+        <div class="ph"><div class="sc">
+          <div class="c">Called <span class="chip">@Sheikh</span> about the <span class="chip">@Grove GMK</span> rental, he'll pay Thursday</div>
+          <div class="c s"><b>Sheikh</b> · owes 14,500 · 3 notes · 12 messages · next payment 5 Dec</div>
+          <div class="s mut">“he'll pay Thursday” became a follow-up</div>
+        </div></div>
+        <p>Typing @ in any note links it to a person, a crane or a project. Their page then shows everything: notes, payments, messages, dates.</p>
+        <p class="pro">Everything about one person in one place. Notion can't link to your real money and messages.</p>
+        <p class="con">Works best once you have a few weeks of notes.</p>
+        <div class="meta"><span>Effort: medium</span></div>
+        <label class="pick"><input type="checkbox" id="p-N3"> Pick N3</label>
+      </article>
+
+      <article class="opt" data-code="N4">
+        <header><span class="code">N4</span><h3>One page per project</h3></header>
+        <div class="ph"><div class="sc">
+          <span class="t">The new crane</span>
+          <div class="c s"><b>To-do</b> · 3 left · <b>Money</b> · 1.2M of 1.5M · <b>Files</b> · 4</div>
+          <div class="c s"><b>Dates</b> · delivery 15 Dec · insurance 1 Jan</div>
+          <div class="c s"><b>Notes</b> · 6</div>
+        </div></div>
+        <p>A project gathers its notes, to-dos, money, files and dates on one page. Attune already has a Projects board; this makes each project a full page.</p>
+        <p class="pro">Good for your company work.</p>
+        <p class="con">Overlaps with the Projects board, so it's an upgrade, not a new place.</p>
+        <div class="meta"><span>Effort: medium</span></div>
+        <label class="pick"><input type="checkbox" id="p-N4"> Pick N4</label>
+      </article>
+
+      <article class="opt" data-code="N5">
+        <header><span class="code">N5</span><h3>A daily journal that writes itself</h3></header>
+        <div class="ph"><div class="sc">
+          <span class="t">Sunday, 8 Nov</span>
+          <div class="c s">Spent 1,820 (fuel, lunch) · Maid came · Nada drove 13 km · Palace 0–2 Liverpool</div>
+          <div class="c s mut">Your thoughts: …</div>
+        </div></div>
+        <p>Each evening Attune drafts your day from what happened (money, messages, places). You only add your thoughts.</p>
+        <p class="pro">A diary with no effort, and searchable later.</p>
+        <p class="con">Some people find it too personal. It would be off until you switch it on.</p>
+        <div class="meta"><span>Effort: small</span></div>
+        <label class="pick"><input type="checkbox" id="p-N5"> Pick N5</label>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="group">
+    <div class="eyebrow">3 · Do it for me</div>
+    <h2>Attune doing tasks in other apps and sites</h2>
+    <div class="grid">
+
+      <article class="opt" data-code="W1">
+        <header><span class="code">W1</span><h3>“Do it on the web” agent</h3><span class="rec">Recommended</span></header>
+        <div class="ph"><div class="sc">
+          <div class="me">book a padel court Friday 8pm near me</div>
+          <div class="c s">1 ✓ Opened the club's site<br>2 ✓ Picked Friday 8:00 pm, court 3<br>3 ✓ Filled your name and phone<br>4 ⏸ <b>Waiting for you: Pay 600</b></div>
+          <div class="s"><span class="btn">Show me</span> <span class="btn2">Cancel</span></div>
+        </div></div>
+        <p>You say the task. Attune opens the site in its own browser, does the steps while showing each one, and always stops before paying.</p>
+        <p class="pro">Builds on what agents already do. Safe for Google Play.</p>
+        <p class="con">Works on websites, not inside other apps. Some sites block robots or need a login first.</p>
+        <div class="meta"><span>Effort: large</span><span>Phone ✓ · Computer ✓</span></div>
+        <label class="pick"><input type="checkbox" id="p-W1"> Pick W1</label>
+      </article>
+
+      <article class="opt" data-code="W2">
+        <header><span class="code">W2</span><h3>Open apps straight to the right screen</h3></header>
+        <div class="ph"><div class="sc">
+          <div class="me">uber to Cairo Festival City</div>
+          <div class="c s">Opening Uber with the destination filled…</div>
+          <div class="me">send Ahmed “I'm on my way” on WhatsApp</div>
+          <div class="c s">WhatsApp opened with the message ready. Press Send.</div>
+        </div></div>
+        <p>Uses the shortcuts apps offer (links into the app). Attune fills what it can; you press the last button.</p>
+        <p class="pro">Fast, and allowed on Google Play.</p>
+        <p class="con">Only as deep as each app allows; the last tap is yours.</p>
+        <div class="meta"><span>Effort: small</span></div>
+        <label class="pick"><input type="checkbox" id="p-W2"> Pick W2</label>
+      </article>
+
+      <article class="opt" data-code="W3">
+        <header><span class="code">W3</span><h3>Tap inside other apps like a person</h3><span class="where">Not for the Play Store</span></header>
+        <div class="ph"><div class="sc">
+          <div class="c s">Attune presses buttons in any app for you (needs Android “Accessibility”).</div>
+          <div class="c s" style="border-color:var(--neg)">Google Play rejects apps that use it for this.</div>
+        </div></div>
+        <p>The most powerful option: works in any app. But Google allows it only for real accessibility use.</p>
+        <p class="pro">Could do anything a person can do.</p>
+        <p class="con">High risk of Google Play removing Attune. Only for a version outside the store.</p>
+        <div class="meta"><span>Effort: large</span><span>Not recommended</span></div>
+        <label class="pick"><input type="checkbox" id="p-W3"> Pick W3</label>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="group">
+    <div class="eyebrow">4 · Several AI models together</div>
+    <h2>Models that help each other</h2>
+    <p>A phone AI is limited by memory speed, so two big models running at the same time each go slower. On the phone, the smart way is a relay (one after another). The computer can run a real team.</p>
+    <div class="grid">
+
+      <article class="opt" data-code="M1">
+        <header><span class="code">M1</span><h3>Router: the right helper for each question</h3><span class="rec">Recommended</span></header>
+        <div class="ph"><div class="sc">
+          <div class="flow"><span>Your question</span><i>→</i><span>Router</span></div>
+          <div class="flow"><i>↳</i><span>“maid now 700” → code, instant</span></div>
+          <div class="flow"><i>↳</i><span>“explain this clause” → AI</span></div>
+          <div class="flow"><i>↳</i><span>photo → photo model</span></div>
+        </div></div>
+        <p>A tiny model (or code) decides what kind of question it is and sends it to the right tool. Simple things never wait for the AI.</p>
+        <p class="pro">Faster answers and less battery.</p>
+        <p class="con">Mostly done already by code; this makes it smarter for unclear sentences.</p>
+        <div class="meta"><span>Effort: small</span><span>Phone ✓</span></div>
+        <label class="pick"><input type="checkbox" id="p-M1"> Pick M1</label>
+      </article>
+
+      <article class="opt" data-code="M2">
+        <header><span class="code">M2</span><h3>Relay of specialists</h3><span class="rec">Recommended</span></header>
+        <div class="ph"><div class="sc">
+          <div class="flow"><span>📷 Photo model</span><i>reads the timetable →</i></div>
+          <div class="flow"><span>💬 Chat model</span><i>builds the reminders →</i></div>
+          <div class="flow"><span>✔ Code</span><i>checks times and days</i></div>
+          <div class="c s mut">Each does its own job, one after another</div>
+        </div></div>
+        <p>Each model does one part in turn: the meaning model finds the passages, the chat model answers, code checks numbers and pages.</p>
+        <p class="pro">Better answers on a normal phone, no memory problems.</p>
+        <p class="con">Switching big models takes ~5–20 s, so I'd measure on your phone first and use a tiny helper that stays loaded if needed.</p>
+        <div class="meta"><span>Effort: medium</span><span>Phone ✓ · Computer ✓</span></div>
+        <label class="pick"><input type="checkbox" id="p-M2"> Pick M2</label>
+      </article>
+
+      <article class="opt" data-code="M3">
+        <header><span class="code">M3</span><h3>Checker: a second read before you see it</h3></header>
+        <div class="ph"><div class="sc">
+          <div class="ask">The penalty is 5% per day [p. 12]</div>
+          <div class="c s">🔎 Checked against page 12: <b>it says 2% per day</b>. Fixed.</div>
+        </div></div>
+        <p>For hard questions (or when you say “check it”), the answer is re-read against its sources and corrected.</p>
+        <p class="pro">Fewer mistakes on contracts, tax, numbers.</p>
+        <p class="con">About double the time, so only for hard questions.</p>
+        <div class="meta"><span>Effort: medium</span><span>Phone ✓ (slow) · Computer ✓</span></div>
+        <label class="pick"><input type="checkbox" id="p-M3"> Pick M3</label>
+      </article>
+
+      <article class="opt" data-code="M4">
+        <header><span class="code">M4</span><h3>Team at the same time (computer)</h3></header>
+        <div class="ph"><div class="sc">
+          <div class="flow"><span>⚡ Fast model</span><i>writes a draft</i></div>
+          <div class="flow"><span>🧠 Big model</span><i>checks and improves it</i></div>
+          <div class="c s">Or each answers one part of a long question, then they are joined</div>
+        </div></div>
+        <p>A “Deep answer” mode on the computer app: two models work together at once.</p>
+        <p class="pro">The strongest answers Attune can give offline.</p>
+        <p class="con">Computer only. Phones don't have the memory for it.</p>
+        <div class="meta"><span>Effort: large</span><span>Computer only</span></div>
+        <label class="pick"><input type="checkbox" id="p-M4"> Pick M4</label>
+      </article>
+
+      <article class="opt" data-code="M5">
+        <header><span class="code">M5</span><h3>Ask a stronger online model (with your OK)</h3></header>
+        <div class="ph"><div class="sc">
+          <div class="c s">This question is hard for the phone. Send only this part online to a stronger model?</div>
+          <div class="s"><span class="btn">Send this once</span> <span class="btn2">Keep it offline</span></div>
+        </div></div>
+        <p>For very hard questions only, and only when you allow it each time, sending only the needed part.</p>
+        <p class="pro">Expert-level answers when you really need them.</p>
+        <p class="con">Breaks “fully offline” for that question; may cost money per use.</p>
+        <div class="meta"><span>Effort: medium</span><span>Optional setting</span></div>
+        <label class="pick"><input type="checkbox" id="p-M5"> Pick M5</label>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="note">
+    <div class="eyebrow">Already fixed in v9.9.1 (nothing to pick)</div>
+    <ul>
+      <li>A Gemini / Netflix / Spotify payment notification now goes into Subscriptions and Money by itself, with Undo.</li>
+      <li>Maps' “50 m · At the roundabout…” is no longer kept as a payment.</li>
+      <li>“Huawei free clips 2 · 120 EGP” (a phone case) no longer shows on Home.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="bar" role="region" aria-label="Your picks">
+  <span class="picks" id="picks">Nothing picked yet</span>
+  <span class="copied" id="copied" hidden>Copied</span>
+  <button class="clear" id="clear" type="button">Clear</button>
+  <button id="copy" type="button">Copy my picks</button>
+</div>
+
+<script>
+(function(){
+  var K = "attune-picks-r3";
+  var boxes = Array.prototype.slice.call(document.querySelectorAll(".pick input"));
+  var saved = [];
+  try { saved = JSON.parse(localStorage.getItem(K) || "[]"); } catch (e) {}
+  function codes(){ return boxes.filter(function(b){ return b.checked; }).map(function(b){ return b.id.slice(2); }); }
+  function render(){
+    var c = codes();
+    document.getElementById("picks").textContent = c.length ? "My picks: " + c.join(" ") : "Nothing picked yet";
+    boxes.forEach(function(b){ b.closest(".opt").classList.toggle("on", b.checked); });
+    try { localStorage.setItem(K, JSON.stringify(c)); } catch (e) {}
+  }
+  boxes.forEach(function(b){ b.checked = saved.indexOf(b.id.slice(2)) >= 0; b.addEventListener("change", render); });
+  document.getElementById("clear").addEventListener("click", function(){ boxes.forEach(function(b){ b.checked = false; }); render(); });
+  document.getElementById("copy").addEventListener("click", function(){
+    var t = codes().join(" ") || "nothing";
+    var el = document.getElementById("copied");
+    function done(){ el.hidden = false; setTimeout(function(){ el.hidden = true; }, 1600); }
+    try { navigator.clipboard.writeText(t).then(done, function(){ sel(); }); } catch (e) { sel(); }
+    function sel(){ var r = document.createRange(); r.selectNodeContents(document.getElementById("picks")); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+  });
+  render();
+})();
+</script>

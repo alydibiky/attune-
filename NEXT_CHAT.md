@@ -11,6 +11,8 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 9 Nov later — every open option on one page for Ali to pick: https://claude.ai/artifact/CQZCRBEDAcv7NJG6VG3V5J (T1 timetable photo, S1 Chat checks Shelf/Mind/Documents first, G1 Found in burgundy, N1–N5 from Notion, W1–W3 do it for me, M1–M5 several AI models). Build what he picks.
+
 ## 9 Nov — v9.9.1: Ali's notifications questions (screenshots of Recall + Home)
 - **Subscriptions from notifications, by themselves** (Ali: "a Google one told me the payment of Gemini and it wasn't recorded in
   subscriptions automatically"): autopilot.js `subscription` (SUBS list: Gemini/Google One, YouTube Premium, Netflix, Spotify, Shahid,
