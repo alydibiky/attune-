@@ -56,7 +56,7 @@ with sync_playwright() as p:
     it = page.evaluate("JSON.parse(localStorage.getItem('attune:radar:v1')).items[0]")
     check(len(it.get("photos", [])) == 2 and len(it.get("fields", [])) == 2, "Save in Edit keeps the photos and details added there (%s photos, %s details)" % (len(it.get("photos", [])), len(it.get("fields", []))))
     cov = page.locator("[data-testid=doc-cover]")
-    check(cov.count() == 1 and cov.locator("img").count() == 1 and "4242" in cov.inner_text() and "Visa card" in cov.inner_text(), "the card looks like the real card: its photo behind, the name, the number")
+    check(cov.count() == 1 and cov.locator("img").count() == 0 and "📷 2" in cov.inner_text() and "4242" in cov.inner_text() and "Visa card" in cov.inner_text(), "look C (Ali's pick): a colour card with the name and number, no photo on it — “📷 2” says the photos are there")
     col = page.evaluate("[...document.querySelectorAll('[data-testid=doc-cover] b, [data-testid=doc-cover-main], [data-testid=doc-cover] [data-testid=radar-when]')].map(e => getComputedStyle(e).color)")
     check(col and all(c.startswith("rgb(255, 255, 255") or c.startswith("rgba(255, 255, 255, 0.8") or c.startswith("rgba(255, 255, 255, 0.9") for c in col), "light theme: the card's words are real white on the dark card, never dark on dark (Ali's phone, 10 Nov): %s" % col)
     check(page.locator("[data-testid=doc-details-view]").count() == 0, "details folded by default")

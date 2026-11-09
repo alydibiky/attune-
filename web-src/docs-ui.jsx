@@ -101,36 +101,24 @@ const COVER = { passport: "linear-gradient(135deg,#2f5d4a,#173327)", visa: "line
 /** The note shown on the card when it is just a number ("30410280106338", "Control number : 2023…") and there are no details. */
 export const coverNote = (x) => (!(x.fields || []).length && x.note && String(x.note).trim().length <= 48 ? String(x.note).trim() : "");
 // v9.9.8 fix (Ali's phone, light theme: "it looks really bad"): the light theme maps "white" to near-black for old screens, so the
-// card's words were dark on dark — the card now uses real white (inline), a stronger shade, and one of three looks (Ali picks):
-//   A = the photo behind (dark shade — Ali: "I don't like the photo this way", kept only if picked) · B = a colour card with the photo
-//   in the corner, like a real ID · C = colour only · D = colour card, the photos as small pictures under it
+// card's words were dark on dark — the card uses real white (inline). Ali picked look C (10 Nov: "I don't like the photo this
+// way"): one colour per document, no photo on it — "📷 2" says the photos are there and a tap opens them full screen.
 const WHITE = "#ffffff";
 export function DocCover({ x, title, sub, when, tone }) {
-  const ids = x.photos || [], [bg, setBg] = useState(""), [view, setView] = useState(-1);
-  useEffect(() => { let alive = true; (async () => { const b = ids[0] ? await thumbGet(ids[0]) : ""; if (alive) setBg(b || ""); })(); return () => { alive = false; }; }, [ids[0]]);
-  let look = "B"; try { look = localStorage.getItem("attune:radar:look") || "B"; } catch (e) {}
+  const ids = x.photos || [], [view, setView] = useState(-1);
   const rows = F.joined(x.id, x.fields || [], F.loadSecrets()), main = rows[0], note = coverNote(x);
   const shown = main ? (F.isLocked(main) ? F.masked(main) : main.value) : "";
   const grad = COVER[x.doc] || (/card/i.test(x.doc || "") ? COVER.card : /turk|kimlik/i.test(title || "") ? COVER.id : "linear-gradient(135deg,#5a2a3a,#2a1c20)");
-  const photoBack = look === "A" && bg, corner = look === "B" && bg;
   const pill = { background: tone === "red" ? "#b3263b" : tone === "amber" ? "#a86a12" : "rgba(0,0,0,.38)", color: WHITE };
   return <>
-    <button type="button" onClick={() => ids.length && setView(0)} className="relative block w-full text-start rounded-[18px] overflow-hidden min-h-[128px] p-4 shadow-sm" style={{ background: grad, color: WHITE }} aria-label={ids.length ? tr("Open the photos") : title} data-testid="doc-cover" data-look={look}>
-      {photoBack ? <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover" /> : null}
-      <span className="absolute inset-0" style={{ background: photoBack ? "linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.82))" : "linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.28))" }} />
-      <span className="relative flex items-start gap-3">
-        <span className="flex-1 min-w-0">
-          <span className="flex items-start gap-2"><b className="flex-1 min-w-0 text-[17px] font-extrabold leading-tight" style={{ color: WHITE }} dir="auto">{title}</b>
-            {corner ? null : <span className="shrink-0 rounded-full px-2.5 py-0.5 text-[11.5px] font-extrabold" style={pill} data-testid="radar-when">{when}</span>}</span>
-          {main ? <span className="block mt-2 text-[13px]" style={{ color: "rgba(255,255,255,.88)" }} dir="auto"><span className="font-bold">{tr(main.name)}</span> · <span className="tabular-nums tracking-wide" data-testid="doc-cover-main">{shown}</span></span>
-            : note ? <span className="block mt-2 text-[14px] font-bold tabular-nums tracking-wide" style={{ color: "rgba(255,255,255,.92)" }} dir="auto" data-testid="doc-cover-main">{note}</span> : null}
-          {corner ? <span className="inline-block mt-2 rounded-full px-2.5 py-0.5 text-[11.5px] font-extrabold" style={pill} data-testid="radar-when">{when}</span> : null}
-        </span>
-        {corner ? <img src={bg} alt="" className="shrink-0 w-[64px] h-[80px] rounded-[10px] object-cover" style={{ border: "2px solid rgba(255,255,255,.55)" }} data-testid="doc-cover-photo" /> : null}
-      </span>
-      <span className="relative block pt-4 text-[12.5px] font-bold tabular-nums" style={{ color: "rgba(255,255,255,.85)" }} dir="auto">{sub}{look !== "D" && (ids.length > 1 || (look === "C" && ids.length)) ? " · 📷 " + ids.length : ""}</span>
+    <button type="button" onClick={() => ids.length && setView(0)} className="relative block w-full text-start rounded-[18px] overflow-hidden min-h-[120px] p-4 shadow-sm" style={{ background: grad, color: WHITE }} aria-label={ids.length ? tr("Open the photos") : title} data-testid="doc-cover">
+      <span className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.28))" }} />
+      <span className="relative flex items-start gap-2"><b className="flex-1 min-w-0 text-[17px] font-extrabold leading-tight" style={{ color: WHITE }} dir="auto">{title}</b>
+        <span className="shrink-0 rounded-full px-2.5 py-0.5 text-[11.5px] font-extrabold" style={pill} data-testid="radar-when">{when}</span></span>
+      {main ? <span className="relative block mt-2 text-[13px]" style={{ color: "rgba(255,255,255,.88)" }} dir="auto"><span className="font-bold">{tr(main.name)}</span> · <span className="tabular-nums tracking-wide" data-testid="doc-cover-main">{shown}</span></span>
+        : note ? <span className="relative block mt-2 text-[14px] font-bold tabular-nums tracking-wide" style={{ color: "rgba(255,255,255,.92)" }} dir="auto" data-testid="doc-cover-main">{note}</span> : null}
+      <span className="relative block pt-4 text-[12.5px] font-bold tabular-nums" style={{ color: "rgba(255,255,255,.85)" }} dir="auto">{sub}{ids.length ? <span data-testid="doc-cover-photos">{" · 📷 " + ids.length}</span> : null}</span>
     </button>
-    {look === "D" && ids.length ? <DocPhotos x={x} onPatch={() => {}} edit={false} /> : null}
     {view >= 0 ? <DocPhotos x={x} onPatch={() => {}} edit={false} start={view} onClose={() => setView(-1)} hideStrip /> : null}
   </>;
 }
