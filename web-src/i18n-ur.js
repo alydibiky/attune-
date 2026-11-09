@@ -11721,4 +11721,8 @@ export const UR = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "یا کہیں: “ویزا نمبر H123، 1 دسمبر 2027 تک درست”",
   "until I leave": "جب تک میں نہ نکلوں",
   "{n} s": "{n} سیکنڈ",
+  "Linked:": "منسلک:",
+  "Follow up": "فالو اپ",
+  "New: {n}": "نیا: {n}",
+  "Follow-up set: {w} — {t}": "فالو اپ مقرر: {w} — {t}",
 };

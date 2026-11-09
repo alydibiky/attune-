@@ -11720,4 +11720,8 @@ export const RU = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "или скажите: «номер визы H123, действует до 1 дек 2027»",
   "until I leave": "пока не уйду",
   "{n} s": "{n} с",
+  "Linked:": "Связано:",
+  "Follow up": "Напомнить",
+  "New: {n}": "Новый: {n}",
+  "Follow-up set: {w} — {t}": "Напоминание: {w} — {t}",
 };

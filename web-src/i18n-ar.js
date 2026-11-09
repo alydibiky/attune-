@@ -8791,4 +8791,8 @@ export const AR = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "أو قولها: «رقم الفيزا H123، صالحة لحد 1 ديسمبر 2027»",
   "until I leave": "لحد ما أقفل الصفحة",
   "{n} s": "{n} ثانية",
+  "Linked:": "مربوط بـ:",
+  "Follow up": "تابع",
+  "New: {n}": "جديد: {n}",
+  "Follow-up set: {w} — {t}": "اتعملت متابعة: {w} — {t}",
 };

@@ -11720,4 +11720,8 @@ export const TH = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "หรือพูดว่า: “เลขวีซ่า H123 ใช้ได้ถึง 1 ธ.ค. 2027”",
   "until I leave": "จนกว่าจะออก",
   "{n} s": "{n} วิ",
+  "Linked:": "เชื่อมโยง:",
+  "Follow up": "ติดตาม",
+  "New: {n}": "ใหม่: {n}",
+  "Follow-up set: {w} — {t}": "ตั้งการติดตามแล้ว: {w} — {t}",
 };

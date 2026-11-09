@@ -11720,4 +11720,8 @@ export const KO = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "또는 말하기: “비자 번호 H123, 2027년 12월 1일까지 유효”",
   "until I leave": "페이지를 떠날 때까지",
   "{n} s": "{n}초",
+  "Linked:": "연결됨:",
+  "Follow up": "후속 알림",
+  "New: {n}": "새로 만들기: {n}",
+  "Follow-up set: {w} — {t}": "후속 알림 설정: {w} — {t}",
 };

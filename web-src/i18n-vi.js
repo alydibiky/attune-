@@ -11720,4 +11720,8 @@ export const VI = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "hoặc nói: “số thị thực H123, có hiệu lực đến 1/12/2027”",
   "until I leave": "đến khi tôi rời trang",
   "{n} s": "{n} giây",
+  "Linked:": "Liên kết:",
+  "Follow up": "Theo dõi",
+  "New: {n}": "Mới: {n}",
+  "Follow-up set: {w} — {t}": "Đã đặt theo dõi: {w} — {t}",
 };

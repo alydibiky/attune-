@@ -11720,4 +11720,8 @@ export const ZH = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "或者说：“签证号H123，有效期至2027年12月1日”",
   "until I leave": "直到离开页面",
   "{n} s": "{n}秒",
+  "Linked:": "已关联：",
+  "Follow up": "跟进",
+  "New: {n}": "新建：{n}",
+  "Follow-up set: {w} — {t}": "已设跟进：{w} — {t}",
 };

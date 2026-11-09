@@ -11720,4 +11720,8 @@ export const JA = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "または話す：「ビザ番号H123、2027年12月1日まで有効」",
   "until I leave": "ページを離れるまで",
   "{n} s": "{n}秒",
+  "Linked:": "リンク：",
+  "Follow up": "フォロー",
+  "New: {n}": "新規：{n}",
+  "Follow-up set: {w} — {t}": "フォロー設定：{w} — {t}",
 };

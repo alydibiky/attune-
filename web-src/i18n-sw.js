@@ -11721,4 +11721,8 @@ export const SW = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "au sema: “namba ya visa H123, halali hadi 1 Des 2027”",
   "until I leave": "mpaka nitoke",
   "{n} s": "sek {n}",
+  "Linked:": "Imeunganishwa:",
+  "Follow up": "Fuatilia",
+  "New: {n}": "Mpya: {n}",
+  "Follow-up set: {w} — {t}": "Ufuatiliaji umewekwa: {w} — {t}",
 };

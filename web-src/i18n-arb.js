@@ -11712,4 +11712,8 @@ export const ARB = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "أو قلها: «رقم التأشيرة H123، صالحة حتى 1 ديسمبر 2027»",
   "until I leave": "حتى أغادر الصفحة",
   "{n} s": "{n} ثانية",
+  "Linked:": "مرتبط بـ:",
+  "Follow up": "تابِع",
+  "New: {n}": "جديد: {n}",
+  "Follow-up set: {w} — {t}": "ضُبطت المتابعة: {w} — {t}",
 };

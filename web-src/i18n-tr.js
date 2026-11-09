@@ -11721,4 +11721,8 @@ export const TRK = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "ya da söyle: “vize numarası H123, 1 Ara 2027'ye kadar geçerli”",
   "until I leave": "ben çıkana kadar",
   "{n} s": "{n} sn",
+  "Linked:": "Bağlı:",
+  "Follow up": "Takip et",
+  "New: {n}": "Yeni: {n}",
+  "Follow-up set: {w} — {t}": "Takip ayarlandı: {w} — {t}",
 };

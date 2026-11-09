@@ -11721,4 +11721,8 @@ export const IDN = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "atau ucapkan: “nomor visa H123, berlaku sampai 1 Des 2027”",
   "until I leave": "sampai saya keluar",
   "{n} s": "{n} dtk",
+  "Linked:": "Tertaut:",
+  "Follow up": "Tindak lanjut",
+  "New: {n}": "Baru: {n}",
+  "Follow-up set: {w} — {t}": "Tindak lanjut diatur: {w} — {t}",
 };

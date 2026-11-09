@@ -11720,4 +11720,8 @@ export const FA = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "یا بگو: «شمارهٔ ویزا H123، معتبر تا ۱ دسامبر ۲۰۲۷»",
   "until I leave": "تا وقتی صفحه را ترک کنم",
   "{n} s": "{n} ثانیه",
+  "Linked:": "پیوند:",
+  "Follow up": "پیگیری",
+  "New: {n}": "جدید: {n}",
+  "Follow-up set: {w} — {t}": "پیگیری تنظیم شد: {w} — {t}",
 };

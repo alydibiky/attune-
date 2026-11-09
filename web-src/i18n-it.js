@@ -11721,4 +11721,8 @@ export const IT = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "oppure dillo: “numero del visto H123, valido fino al 1 dic 2027”",
   "until I leave": "finché non esco",
   "{n} s": "{n} s",
+  "Linked:": "Collegato:",
+  "Follow up": "Segui",
+  "New: {n}": "Nuovo: {n}",
+  "Follow-up set: {w} — {t}": "Promemoria impostato: {w} — {t}",
 };

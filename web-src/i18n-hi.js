@@ -11721,4 +11721,8 @@ export const HI = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "या कहें: “वीज़ा नंबर H123, 1 दिसंबर 2027 तक मान्य”",
   "until I leave": "जब तक मैं न निकलूँ",
   "{n} s": "{n} सेकंड",
+  "Linked:": "जुड़ा:",
+  "Follow up": "फ़ॉलो-अप",
+  "New: {n}": "नया: {n}",
+  "Follow-up set: {w} — {t}": "फ़ॉलो-अप सेट: {w} — {t}",
 };

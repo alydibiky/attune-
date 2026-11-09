@@ -1,6 +1,8 @@
 /* ---- v6.11 Shelf («رف») — the notes as a shelf of books (Ali, item 25; Option A: a grid of covers,
    two per row). Data and rules: shelf.js. A note IS a Mind record (one source of truth), so the
    screen gets the records and a setter from the app, like Mind does.                             */
+import * as MN from "./mentions.js";
+import { loadDir as loadPeople, saveDir as savePeople, addCard as addPeopleCard } from "./entities.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Lock, Mic, PenLine, Menu, AlarmClock, Search, Plus, MoreVertical, X, Star, Bell, Trash2, Copy, Share2, Brain, ArrowUp, ArrowDown, Folder, Check, ImagePlus, Undo2, Camera, ChevronLeft, ChevronRight, Square, BookOpen, Download } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
@@ -172,6 +174,17 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
   const undoT = () => { const h = hist.current; if (!h.past.length) return; h.future.push(latest.current.text); dirty.current = true; setText(h.past.pop()); h.last = 0; };
   const redoT = () => { const h = hist.current; if (!h.future.length) return; h.past.push(latest.current.text); dirty.current = true; setText(h.future.pop()); h.last = 0; };
   const taRef = useRef(null);
+  // v9.9.6 N3: @ links — the "@she…" being typed, its suggestions, the links and promises of the note
+  const [caret, setCaret] = useState(null);
+  const people = loadPeople();
+  const atQ = MN.atQuery(text, caret == null ? text.length : caret), atList = atQ ? MN.suggest(atQ.q, people) : [];
+  const links = MN.linksIn(text, people), [made, setMade] = useState({});
+  const promises = MN.promisesIn(text, people).filter((x) => !made[x.pid + x.at]);
+  const pickAt = (name) => { const r = MN.insertAt(text, caret == null ? text.length : caret, atQ, name); setBody(r.text); setCaret(r.caret);
+    setTimeout(() => { try { taRef.current.focus(); taRef.current.setSelectionRange(r.caret, r.caret); } catch (x) {} }, 0); };
+  const openCard = (p) => { save(latest.current); try { localStorage.setItem("attune:people:open", p.id); } catch (e) {} window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "people" } })); };
+  const follow = (x) => { try { window.__attuneApplyActions && window.__attuneApplyActions([{ kind: "reminder", action: { kind: "reminder", at: x.at, title: x.who + " — " + x.line } }]); } catch (e) {}
+    setMade((m) => ({ ...m, [x.pid + x.at]: 1 })); flash(tr("Follow-up set: {w} — {t}", { w: x.who, t: fmtWhen(x.at) })); };
   const fmt = (kind) => {
     const el = taRef.current; const s0 = el ? el.selectionStart : text.length, e0 = el ? el.selectionEnd : text.length;
     hist.current.last = 0; const r = S.format(text, s0, e0, kind); setBody(r.text);
@@ -191,7 +204,7 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
         <button onClick={() => setSheet("remind")} aria-label={tr("Remind me")} data-testid="shelf-note-remind" className="w-11 h-11 grid place-items-center rounded-full"><Bell size={18} className={m.remindAt > Date.now() ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]"} /></button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-3 lg:px-[max(1rem,calc((100%-46rem)/2))]">
-        <textarea ref={taRef} value={text} onChange={set(setText)} dir="auto" placeholder={tr("Write your note…")} data-testid="shelf-note-body"
+        <textarea ref={taRef} value={text} onChange={(e) => { set(setText)(e); setCaret(e.target.selectionStart); }} onSelect={(e) => setCaret(e.target.selectionStart)} dir="auto" placeholder={tr("Write your note…")} data-testid="shelf-note-body"
           onFocus={(e) => { const el = e.target; setTimeout(() => { try { el.scrollIntoView({ block: "nearest" }); } catch (x) {} }, 300); }}
           className="w-full min-h-[40vh] bg-transparent text-[var(--c-ink)] placeholder:text-[var(--c-mut)] leading-relaxed focus:outline-none resize-none" />
         {checks.length ? (
@@ -206,11 +219,21 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
               <button disabled={i === checks.length - 1} onClick={() => setBody(S.moveCheck(text, i, 1))} aria-label={tr("Move later")} className="w-9 h-9 grid place-items-center rounded-full text-[var(--c-mut)] disabled:opacity-20"><ArrowDown size={14} /></button>
               </div>); })}
           </div>) : null}
+        {/* v9.9.6 N3: the people and things this note @-mentions (a tap opens everything about them) + promises to follow up */}
+        {links.length ? <div className="flex flex-wrap items-center gap-1.5 mt-2" data-testid="note-links"><span className="text-[11.5px] text-[var(--c-mut)]">{tr("Linked:")}</span>
+          {links.map((p) => <button key={p.id} onClick={() => openCard(p)} className="min-h-[32px] px-2.5 rounded-full bg-[var(--c-soft)] text-[var(--c-acc)] text-[12.5px] font-bold" dir="auto" data-testid="note-link">@{p.name}</button>)}</div> : null}
+        {promises.map((x) => <div key={x.pid + x.at} className="flex items-center gap-2 mt-2 rounded-[12px] border border-[var(--c-ln)] px-2.5 py-1.5" data-testid="note-promise">
+          <span className="flex-1 min-w-0 text-[12.5px]" dir="auto"><b>{x.who}</b> · {x.line} · <span className="text-[var(--c-mut)]">{fmtWhen(x.at)}</span></span>
+          <button onClick={() => follow(x)} className="min-h-[34px] px-3 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[12px] font-extrabold" data-testid="note-promise-go">{tr("Follow up")}</button></div>)}
         {(text.match(/https?:\/\/[^\s<>"')\]]+/g) || []).slice(0, 5).map((u) => <a key={u} href={u} target="_blank" rel="noreferrer" className="block text-xs text-[var(--c-acc)] truncate mt-1" dir="ltr">{u}</a>)}
         {photos.length ? <div className="flex flex-wrap gap-2 mt-3">{photos.map((p) => <NotePhoto key={p} id={p} remove={() => { thumbDel(p); save({ ...latest.current, photos: photos.filter((x) => x !== p) }); }} />)}</div> : null}
         {m.remindAt > Date.now() ? <p className="text-xs font-bold tabular-nums text-[var(--c-acc)] mt-3"><AlarmClock size={12} className="inline me-1" />{tr("Reminder set")}: {fmtWhen(m.remindAt)}</p> : null}
         <p className="text-[11px] text-[var(--c-mut)] mt-3"><Brain size={11} className="inline me-1" />{tr("Also in your Mind: Mind's search finds it.")}</p>
       </div>
+      {atQ ? <div className="flex gap-1.5 px-2 py-1.5 border-t border-[var(--c-ln)] overflow-x-auto" data-testid="note-at">
+        {atList.map((p) => <button key={p.id} onMouseDown={(e) => e.preventDefault()} onClick={() => pickAt(p.name)} className="shrink-0 min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[13px] font-bold" dir="auto" data-testid="note-at-pick">@{p.name}{p.role ? <span className="text-[var(--c-mut)] font-semibold"> · {p.role}</span> : null}</button>)}
+        {atQ.q.length >= 2 && !atList.some((p) => p.name.toLowerCase() === atQ.q.toLowerCase()) ? <button onMouseDown={(e) => e.preventDefault()} onClick={() => { savePeople(addPeopleCard(loadPeople(), { name: atQ.q }).dir); pickAt(atQ.q); }} className="shrink-0 min-h-[36px] px-3 rounded-full border border-dashed border-[var(--c-ln)] text-[13px] font-bold" data-testid="note-at-new">+ {tr("New: {n}", { n: atQ.q })}</button> : null}
+      </div> : null}
       <div className="flex items-center gap-0.5 px-2 pt-1.5 border-t border-[var(--c-ln)] overflow-x-auto lg:px-[max(1rem,calc((100%-46rem)/2))]" data-testid="shelf-format" dir="ltr">
         {[["bold", <b>B</b>], ["italic", <i>I</i>], ["strike", <s>S</s>], ["h1", "H1"], ["h2", "H2"], ["bullet", "•"], ["number", "1."], ["check", "☐"], ["quote", "❝"]].map(([k, l]) => (
           <button key={k} onMouseDown={(e) => e.preventDefault()} onClick={() => fmt(k)} data-testid={"shelf-fmt-" + k} className="min-w-[40px] min-h-[40px] px-2 rounded-[12px] text-sm font-bold text-[var(--c-ink)] active:bg-[var(--c-surf-2)]">{l}</button>))}

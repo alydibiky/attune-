@@ -11720,4 +11720,8 @@ export const BN = {
   "or say it: “visa number H123, valid until 1 Dec 2027”": "বা বলুন: “ভিসা নম্বর H123, 1 ডিসেম্বর 2027 পর্যন্ত বৈধ”",
   "until I leave": "যতক্ষণ না বেরোই",
   "{n} s": "{n} সে",
+  "Linked:": "যুক্ত:",
+  "Follow up": "ফলো-আপ",
+  "New: {n}": "নতুন: {n}",
+  "Follow-up set: {w} — {t}": "ফলো-আপ সেট: {w} — {t}",
 };
