@@ -1,0 +1,142 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Radar Card Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Radar card options R1–R4. Layout: a short intro and a sticky "my picks" bar; then groups (Notifications & photos · Memory · Notion ideas · Do it for me · Several AI models · Look), each option = a card with a small phone mock-up, what it does, + / −, effort, and a pick checkbox. */
+:root{
+  --bg:#f6f2f2; --surf:#ffffff; --fg:#2a1c20; --mut:#7a676c; --ln:#e7dcdf;
+  --acc:#7a2338; --soft:#f3e3e7; --pos:#2f7d55; --neg:#b3263b; --warn:#a86a12; --phone:#1d1416;
+  --f-ui:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif; --f-d:"Fraunces",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#171113;--surf:#221a1d;--fg:#f2e9eb;--mut:#ab979c;--ln:#3a2d31;--acc:#e48aa0;--soft:#3a2229;--pos:#6fcf9b;--neg:#ff7d8f;--warn:#e5b062;--phone:#000;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171113;--surf:#221a1d;--fg:#f2e9eb;--mut:#ab979c;--ln:#3a2d31;--acc:#e48aa0;--soft:#3a2229;--pos:#6fcf9b;--neg:#ff7d8f;--warn:#e5b062;--phone:#000;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 120px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:30px}
+h1{font-family:var(--f-d);font-size:clamp(28px,5vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--f-d);font-size:24px;margin:0;text-wrap:balance}
+h3{margin:0;font-size:18px;font-weight:900}
+.lede{max-width:70ch;color:var(--mut);margin:6px 0 0}
+.eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.group{display:grid;gap:14px}
+.group>p{margin:0;color:var(--mut);max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.opt{background:var(--surf);border:1px solid var(--ln);border-radius:18px;padding:14px;display:grid;gap:10px;align-content:start;min-width:0;transition:border-color .15s}
+.opt.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}
+.opt header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.code{font-weight:900;font-size:13px;color:var(--surf);background:var(--acc);border-radius:8px;padding:2px 8px}
+.rec{font-size:11.5px;font-weight:800;color:var(--pos);border:1px solid currentColor;border-radius:999px;padding:1px 8px}
+.where{font-size:11.5px;font-weight:800;color:var(--mut);border:1px solid var(--ln);border-radius:999px;padding:1px 8px}
+.opt p{margin:0;font-size:14px}
+.pro::before{content:"+ ";font-weight:900;color:var(--pos)}
+.con::before{content:"− ";font-weight:900;color:var(--neg)}
+.meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--mut)}
+.pick{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;cursor:pointer;min-height:44px;border-top:1px solid var(--ln);padding-top:8px}
+.pick input{width:20px;height:20px;accent-color:var(--acc)}
+/* mini phone */
+.ph{background:var(--phone);border-radius:22px;padding:6px;max-width:260px;width:100%;margin:0 auto}
+.sc{background:var(--bg);border-radius:17px;overflow:hidden;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:12px;min-height:200px}
+.sc .t{font-weight:900;font-size:14px}
+.c{background:var(--surf);border:1px solid var(--ln);border-radius:12px;padding:7px 9px}
+.mut{color:var(--mut)} .b{font-weight:800} .s{font-size:11px} .num{font-variant-numeric:tabular-nums;font-weight:800}
+.chip{display:inline-block;border-radius:8px;padding:2px 7px;font-weight:800;font-size:11px;background:var(--soft);color:var(--acc)}
+.btn{display:inline-block;border-radius:9px;padding:3px 9px;font-weight:800;font-size:11px;background:var(--acc);color:var(--surf)}
+.btn2{display:inline-block;border-radius:9px;padding:3px 9px;font-weight:800;font-size:11px;border:1px solid var(--ln)}
+table.tt{width:100%;border-collapse:collapse;font-size:10.5px}
+table.tt td,table.tt th{border:1px solid var(--ln);padding:2px 3px;text-align:center}
+table.tt th{background:var(--soft);color:var(--acc)}
+.flow{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11px;font-weight:800}
+.flow span{background:var(--surf);border:1px solid var(--ln);border-radius:9px;padding:3px 7px}
+.flow i{font-style:normal;color:var(--mut)}
+.ask{background:var(--soft);border-radius:12px 12px 12px 3px;padding:6px 8px}
+.me{align-self:flex-end;background:var(--acc);color:var(--surf);border-radius:12px 12px 3px 12px;padding:5px 8px;font-weight:700}
+/* sticky bar */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1px solid var(--ln);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;z-index:5}
+.bar .picks{flex:1;min-width:0;font-weight:900;font-size:15px;overflow-wrap:anywhere}
+.bar button{min-height:44px;border-radius:12px;border:0;background:var(--acc);color:var(--surf);font:inherit;font-weight:900;padding:0 16px;cursor:pointer}
+.bar button.clear{background:transparent;color:var(--mut);border:1px solid var(--ln)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.copied{font-size:12px;color:var(--pos);font-weight:800}
+.note{background:var(--surf);border:1px solid var(--ln);border-radius:16px;padding:14px 18px;max-width:820px}
+.note ul{margin:6px 0 0;padding-inline-start:20px}
+.nb{width:100%;min-height:60px;border:1px solid var(--ln);border-radius:12px;background:var(--bg);color:var(--fg);font:inherit;font-size:13px;padding:8px}
+.th{display:inline-block;width:44px;height:30px;border-radius:7px;background:linear-gradient(135deg,#d9c39a,#9c8a6a);vertical-align:middle;margin-inline-end:4px}
+.th.d{background:linear-gradient(135deg,#333,#777)}
+.row{display:flex;justify-content:space-between;gap:6px;align-items:center}
+.tag{border-radius:999px;padding:1px 7px;font-weight:800;font-size:10.5px;background:var(--soft);color:var(--acc)}
+.line{border-top:1px solid var(--ln);padding-top:5px}
+.fld{display:flex;justify-content:space-between;gap:6px;border:1px solid var(--ln);border-radius:9px;padding:4px 7px;font-size:11px}
+.dash{border:1px dashed var(--ln);border-radius:999px;padding:2px 7px;font-size:10.5px;font-weight:800;display:inline-block}
+.cover{border-radius:12px;height:86px;background:linear-gradient(135deg,#e9dcc0,#b9a57c);position:relative;padding:8px;color:#2a1c20}
+.cover .b{font-size:13px}
+.tabs{display:flex;gap:4px}.tabs span{flex:1;text-align:center;border-radius:9px;padding:3px;font-weight:800;font-size:11px;border:1px solid var(--ln)}.tabs .on{background:var(--acc);color:var(--surf);border-color:var(--acc)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+</style></head><body><div class="wrap">
+<header><div class="eyebrow">Deadline Radar · 10 Nov 2026</div><h1>An easier document card</h1>
+<p class="lede">Your note: “I want the additional things to be in the edit and the interface more easy visually”. Four ways, with your ID card and visa (numbers masked here). Tick one or more, add a note, then Copy my picks.</p></header>
+<section class="group"><div class="grid"><article class="opt item" data-code="R1"><header><span class="code">R1</span><h3>Clean card — details shown, adding goes into Edit</h3><span class="rec">my pick</span></header>
+<div style="display:grid;gap:10px"><div class="ph"><div class="sc"><div class="t">Deadline Radar</div><div class="c"><div class="row"><span class="b">Egyptian ID card</span><span class="tag">13 months</span></div>
+<div class="mut s">Expires 1 Dec 2027</div><div class="s">ID number · <span class="num">3041 •••• 6338</span> <span class="chip">Show</span></div>
+<div><span class="th"></span><span class="th d"></span></div><div class="row line"><span class="btn">✓ Renewed it</span><span class="btn2">Edit</span><span class="btn2">⋯</span></div></div>
+<div class="c"><div class="row"><span class="b">American Visa</span><span class="tag">23 months</span></div><div class="mut s">Expires 2 Oct 2028</div><div class="s">Control number · <span class="num">2023 •••• 0010</span></div></div></div></div><div class="ph"><div class="sc"><div class="t">Edit · Egyptian ID card</div><div class="c">Egyptian ID card</div><div class="c">Expires · 1 Dec 2027</div>
+<div class="mut s b">PHOTOS</div><div><span class="th"></span><span class="th d"></span><span class="dash">+ Photo</span></div>
+<div class="mut s b">DETAILS</div><div class="fld"><span><b>ID number</b> 3041 •••• 6338</span><span class="mut">🔒 tap · 30s</span></div>
+<div><span class="dash">+ Issue date</span> <span class="dash">+ Address</span></div><div class="c mut">or say it: “issued 1 Dec 2020”</div>
+<div class="row"><span class="btn">Save</span><span class="btn2">Cancel</span></div></div></div></div><p>The card shows only what you need: name, date, the main detail (masked, Show), small photos, and three buttons. The + chips, the Name/Value boxes and the say box move <b>inside Edit</b>, with the lock settings.</p><p class="pro">Exactly your note: adding is in Edit, the card is calm</p><p class="pro">Nothing to learn — same page, fewer things on it</p><p class="con">The card still shows the details (some like that, some don't)</p>
+<label class="pick"><input type="checkbox" id="ok-R1"> Pick R1</label>
+<textarea class="nb" id="n-R1" placeholder="Your note on R1 (optional)"></textarea></article><article class="opt item" data-code="R2"><header><span class="code">R2</span><h3>One line each — tap to open the document</h3></header>
+<div style="display:grid;gap:10px"><div class="ph"><div class="sc"><div class="t">Deadline Radar</div><div class="c"><div class="row"><span><span class="th"></span><span class="b">Egyptian ID card</span></span><span class="tag">13 mo</span></div><div class="mut s">1 Dec 2027 · 2 photos · 1 detail ›</div></div>
+<div class="c"><div class="row"><span><span class="th d"></span><span class="b">American Visa</span></span><span class="tag">23 mo</span></div><div class="mut s">2 Oct 2028 · 1 detail ›</div></div>
+<div class="c"><div class="row"><span class="b">Netflix</span><span class="tag">in 4 days</span></div><div class="mut s">Renews 13 Nov · 240 EGP ›</div></div></div></div><div class="ph"><div class="sc"><div class="t">‹ Egyptian ID card</div><div><span class="th" style="width:100px;height:62px"></span><span class="th d" style="width:100px;height:62px"></span></div>
+<div class="c"><div class="row"><span class="mut">Expires</span><span class="b">1 Dec 2027 · 13 months</span></div></div>
+<div class="fld"><span><b>ID number</b> 3041 •••• 6338</span><span class="chip">Show · Copy</span></div>
+<div class="row line"><span class="btn">✓ Renewed it</span><span class="btn2">Edit</span><span class="btn2">🗑</span></div></div></div></div><p>The list is one short line per item (thumbnail, name, date). Tapping opens a full page with big photos, details (Show · Copy), Renewed it, Edit.</p><p class="pro">Calmest list, many items fit on one screen</p><p class="pro">Big photos on the item page</p><p class="con">One more tap to see the ID number</p>
+<label class="pick"><input type="checkbox" id="ok-R2"> Pick R2</label>
+<textarea class="nb" id="n-R2" placeholder="Your note on R2 (optional)"></textarea></article><article class="opt item" data-code="R3"><header><span class="code">R3</span><h3>Looks like the real card</h3></header>
+<div style="display:grid;gap:10px"><div class="ph"><div class="sc"><div class="t">Deadline Radar</div><div class="cover"><div class="b">Egyptian ID card</div><div class="s">3041 •••• 6338</div><div class="s" style="position:absolute;bottom:6px">Expires 1 Dec 2027 · 13 months</div></div>
+<div class="row"><span class="btn">✓ Renewed it</span><span class="btn2">Edit</span><span class="btn2">⋯</span></div>
+<div class="cover" style="background:linear-gradient(135deg,#c9d6e8,#7d93b3)"><div class="b">American Visa</div><div class="s">2023 •••• 0010</div><div class="s" style="position:absolute;bottom:6px">Expires 2 Oct 2028</div></div></div></div><div class="ph"><div class="sc"><div class="t">Edit · Egyptian ID card</div><div class="c">Egyptian ID card</div><div class="c">Expires · 1 Dec 2027</div>
+<div class="mut s b">PHOTOS</div><div><span class="th"></span><span class="th d"></span><span class="dash">+ Photo</span></div>
+<div class="mut s b">DETAILS</div><div class="fld"><span><b>ID number</b> 3041 •••• 6338</span><span class="mut">🔒 tap · 30s</span></div>
+<div><span class="dash">+ Issue date</span> <span class="dash">+ Address</span></div><div class="c mut">or say it: “issued 1 Dec 2020”</div>
+<div class="row"><span class="btn">Save</span><span class="btn2">Cancel</span></div></div></div></div><p>Each document is drawn as a card (its own photo or colour as the background) with the masked number and the date on it. Buttons under it; everything else in Edit.</p><p class="pro">Very visual, you find the passport by its look</p><p class="con">Takes more space per item</p><p class="con">Dates like Netflix still need the normal look</p>
+<label class="pick"><input type="checkbox" id="ok-R3"> Pick R3</label>
+<textarea class="nb" id="n-R3" placeholder="Your note on R3 (optional)"></textarea></article><article class="opt item" data-code="R4"><header><span class="code">R4</span><h3>Two tabs: Dates · Documents (wallet)</h3></header>
+<div style="display:grid;gap:10px"><div class="ph"><div class="sc"><div class="t">Deadline Radar</div><div class="tabs"><span>Dates</span><span class="on">Documents</span></div>
+<div class="g2"><div class="cover" style="height:70px"><div class="b s">ID card</div><div class="s" style="position:absolute;bottom:5px">13 mo</div></div>
+<div class="cover" style="height:70px;background:linear-gradient(135deg,#c9d6e8,#7d93b3)"><div class="b s">US Visa</div><div class="s" style="position:absolute;bottom:5px">23 mo</div></div>
+<div class="cover" style="height:70px;background:linear-gradient(135deg,#d4e2d0,#8ba684)"><div class="b s">Passport</div></div><div class="c mut s" style="display:grid;place-items:center">+ Add</div></div>
+<div class="mut s">Dates tab = Netflix, warranties, returns (simple list)</div></div></div><div class="ph"><div class="sc"><div class="t">Edit · Egyptian ID card</div><div class="c">Egyptian ID card</div><div class="c">Expires · 1 Dec 2027</div>
+<div class="mut s b">PHOTOS</div><div><span class="th"></span><span class="th d"></span><span class="dash">+ Photo</span></div>
+<div class="mut s b">DETAILS</div><div class="fld"><span><b>ID number</b> 3041 •••• 6338</span><span class="mut">🔒 tap · 30s</span></div>
+<div><span class="dash">+ Issue date</span> <span class="dash">+ Address</span></div><div class="c mut">or say it: “issued 1 Dec 2020”</div>
+<div class="row"><span class="btn">Save</span><span class="btn2">Cancel</span></div></div></div></div><p>Radar is split: Dates (Netflix, warranties, returns) as a simple list, and Documents as a wallet grid of cards. Tap a card → its page; adding in Edit.</p><p class="pro">Documents feel like a real wallet</p><p class="pro">Subscriptions and documents don't mix</p><p class="con">A bigger change than the others</p>
+<label class="pick"><input type="checkbox" id="ok-R4"> Pick R4</label>
+<textarea class="nb" id="n-R4" placeholder="Your note on R4 (optional)"></textarea></article></div></section></div>
+<div class="bar"><div class="picks" id="picks">Nothing ticked yet</div><span class="copied" id="copied" hidden>Copied</span><button class="clear" id="clear">Clear</button><button id="copy">Copy my picks</button></div>
+<script>
+(function(){
+  var K = "attune-radar-r1";
+  var items = Array.prototype.slice.call(document.querySelectorAll(".item"));
+  var st = {}; try { st = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) {}
+  function text(){
+    return items.map(function(it){ var c = it.getAttribute("data-code"), ok = document.getElementById("ok-" + c).checked, n = document.getElementById("n-" + c).value.trim();
+      if (!ok && !n) return ""; return (ok ? "OK " : "") + c + (n ? " — " + n : ""); }).filter(Boolean).join("\n");
+  }
+  function save(){
+    var o = {}; items.forEach(function(it){ var c = it.getAttribute("data-code"); o[c] = { ok: document.getElementById("ok-" + c).checked, n: document.getElementById("n-" + c).value }; it.classList.toggle("on", o[c].ok); });
+    try { localStorage.setItem(K, JSON.stringify(o)); } catch (e) {}
+    var t = text(); document.getElementById("picks").textContent = t || "Nothing ticked yet";
+  }
+  items.forEach(function(it){ var c = it.getAttribute("data-code"), v = st[c] || {}, ok = document.getElementById("ok-" + c), n = document.getElementById("n-" + c);
+    ok.checked = !!v.ok; n.value = v.n || ""; ok.addEventListener("change", save); n.addEventListener("input", save); });
+  document.getElementById("clear").addEventListener("click", function(){ items.forEach(function(it){ var c = it.getAttribute("data-code"); document.getElementById("ok-" + c).checked = false; document.getElementById("n-" + c).value = ""; }); save(); });
+  document.getElementById("copy").addEventListener("click", function(){
+    var t = text() || "nothing", el = document.getElementById("copied");
+    function done(){ el.hidden = false; setTimeout(function(){ el.hidden = true; }, 1600); }
+    function sel(){ var r = document.createRange(); r.selectNodeContents(document.getElementById("picks")); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    try { navigator.clipboard.writeText(t).then(done, sel); } catch (e) { sel(); }
+  });
+  save();
+})();
+</script>
+</body></html>

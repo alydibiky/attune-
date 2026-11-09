@@ -49,6 +49,7 @@ class AgentBrowser : Activity() {
     private var autoArmed = false
     private var buyMode = false        // v8.6: the person said "Order it" — press Buy now once, then fill their details on each page
     private var buyArmed = false
+    private var fillAuto = false   // v9.9.7 W1 "Do it on the web": every page gets the details filled (never payment, never passwords)
     // v8.7 (Ali: "it keeps glitching when I press Check now"): a hotel window's start days are checked one after another in
     // THIS window (it used to open and close a window per day) — rounds = [{url, checkin, checkout}]
     private var rounds = org.json.JSONArray()
@@ -94,6 +95,7 @@ class AgentBrowser : Activity() {
         watchMode = intent.getBooleanExtra("watch", false)
         autoClose = intent.getBooleanExtra("autoClose", false)
         buyMode = intent.getBooleanExtra("buy", false)
+        fillAuto = intent.getBooleanExtra("fillAuto", false)
         gotoWant = intent.getStringExtra("goto") ?: ""
         slotMode = intent.getBooleanExtra("slot", false)              // v9.4 G2: a visa / appointment page — its words go back to the page
         refreshSec = intent.getIntExtra("refresh", 0).coerceIn(0, 3600) // v9.4 G2: "watch while open" — reload every N seconds
@@ -232,6 +234,7 @@ class AgentBrowser : Activity() {
                 if (gotoWant.isNotEmpty() && !gotoDone) for (ms in longArrayOf(2500L, 5000L, 9000L)) v.postDelayed({ if (!closed && !gotoDone) run("window.__attuneAgent&&window.__attuneAgent.goTo&&window.__attuneAgent.goTo($gotoWant)") }, ms)
                 if (slotMode) for (ms in longArrayOf(2500L, 7000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.slot&&window.__attuneAgent.slot()") }, ms)
                 if (slotMode && refreshSec >= 30 && !refreshArmed) { refreshArmed = true; val loop = object : Runnable { override fun run() { if (closed) return; try { web.reload() } catch (e: Exception) {}; web.postDelayed(this, refreshSec * 1000L) } }; web.postDelayed(loop, refreshSec * 1000L) }
+                if (fillAuto && profile != "{}") for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.fill($profile)") }, ms)
                 if (buyMode) {
                     if (!buyArmed) { buyArmed = true; v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.buy()") }, 2500L) }
                     else v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.fill($profile)") }, 2000L)

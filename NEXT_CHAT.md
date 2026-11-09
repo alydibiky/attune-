@@ -11,6 +11,15 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 10 Nov — v9.9.7: W1 "Do it on the web" (Ali OK'd)
+- `webtask.js` + `WebTaskSheet` (attune.jsx): "book a padel court Friday 8pm near me", «احجزلي ملعب بادل الجمعة الساعة ٨ بالليل», "renew my
+  car licence" → a sheet with the steps (understood ✓ · find / open the site · fill your details + day, time, people · **stops before
+  paying**). Start opens Attune's browser (AgentBrowser) with `fillAuto` → agent-kit fills the saved Booking details + taskDate /
+  taskTime / taskPeople at 2.5 s and 6 s; the steps tick from what the browser reports (filled n · payment page reached → "your turn").
+  Hotels, flights, food, doctors stay with Agents; messages / rides stay with W2. Licence / passport / ID → digital.gov.eg, else a web search.
+- Tests: unit v997webtask, e2e_v997webtask. **Next:** Ali's Radar note ("the extra details inside Edit, easier look" — mock-ups first),
+  then M2 (small-model relay on phones), M4 (two models on the computer app).
+
 ## 10 Nov — v9.9.6: N3 @ links + N1 tables (Ali OK'd)
 - **N3** (`mentions.js`, Shelf note editor): typing @ + letters shows your people / things (People cards) + "+ New: X"; picking writes
   "@Sheikh"; the note shows "Linked: @Sheikh @Grove GMK" (a tap opens the card — whose page already lists every note naming them);

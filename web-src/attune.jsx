@@ -93,6 +93,8 @@ import { PromptLab } from "./promptlab-ui.jsx";
 import { parseWatch, newRule, saveWatch, loadWatch, ruleText } from "./watch.js";
 import * as NT from "./noteteach.js";
 import * as AL from "./applinks.js";
+import * as WT from "./webtask.js";
+import { loadBooking as loadBookingProfile } from "./agent-ui.jsx";
 import { saveDir as savePeopleDir, addCard as addPeopleCard, updateCard as updatePeopleCard } from "./entities.js";
 import { loadDir as loadPeopleDir } from "./entities.js";
 import { parseMission } from "./missions.js";
@@ -7784,7 +7786,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.6";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.7";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7891,6 +7893,28 @@ function withRecords(question, found) {
 ${found.map((f, i) => `[${i + 1}] ${new Date(f.rec.ts).toISOString().slice(0, 10)} · ${f.rec.title}
 ${(f.rec.text || "").slice(0, 600)}
 ${(f.rec.output || "").slice(0, 600)}`).join("\n\n")}`;
+}
+
+/** v9.9.7 W1 "Do it on the web": the task understood, then each step ticked from what Attune's browser reported. Never pays. */
+function WebTaskSheet({ t, close, start }) {
+  const x = t.x, r = t.r, steps = WT.stepsFor(x, r), ar = getLang() === "ar";
+  const when = [x.date ? new Date(x.date + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }) : "", x.time || "", x.people ? tr("{n} people", { n: x.people }) : "", x.near ? tr("near me") : x.place].filter(Boolean).join(" · ");
+  const line = (s) => s.k === "understood" ? tr("Understood: {w}", { w: x.what + (when ? " · " + when : "") })
+    : s.k === "find" ? tr("Find the site — a web search, you pick the right one") : s.k === "open" ? tr("Open {s}", { s: x.site })
+    : s.k === "fill" ? (s.state === "done" ? tr("Filled {n} fields — check them", { n: s.n }) : s.state === "you" ? tr("No form filled yet — on the booking page tap “Fill my details”") : s.said ? tr("Fill your details + the day, time and people") : tr("Fill your details"))
+    : (s.state === "you" ? tr("Your turn: check it and press Pay yourself") : tr("Attune stops before paying — you press Pay"));
+  const icon = (st) => (st === "done" ? "✓" : st === "you" ? "⏸" : "○");
+  return <div className="fixed inset-0 z-[80] bg-black/60 flex items-end" onClick={close}>
+    <div className="calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[20px] p-4 space-y-2.5" onClick={(e) => e.stopPropagation()} data-testid="webtask">
+      <p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-acc)]">{tr("Do it on the web")}</p>
+      <p className="m-0 text-[16px] font-extrabold" dir="auto">{x.said}</p>
+      <ol className="m-0 p-0 list-none space-y-1.5">{steps.map((s) => <li key={s.k} className={"flex items-start gap-2 text-[13.5px] " + (s.state === "you" ? "font-bold text-[var(--c-acc)]" : s.state === "wait" ? "c-sub" : "")} data-testid="webtask-step" data-state={s.state} data-k={s.k}>
+        <span className="w-5 shrink-0 text-center">{icon(s.state)}</span><span dir="auto">{line(s)}</span></li>)}</ol>
+      {r && r.err ? <p className="m-0 text-[12.5px] text-[var(--c-warn)]" dir="auto">{r.err}</p> : null}
+      <p className="m-0 text-[11.5px] c-sub">{tr("Your saved details come from Profile → Booking details. Login codes and payment are always yours.")}</p>
+      <div className="flex gap-2"><button onClick={start} className="flex-1 min-h-[46px] rounded-[14px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold" data-testid="webtask-start">{r ? tr("Show me again") : tr("Start")}</button>
+        <button onClick={close} className="min-h-[46px] px-4 rounded-[14px] border border-[var(--c-ln)] font-bold" data-testid="webtask-close">{r ? tr("Done") : tr("Cancel")}</button></div>
+    </div></div>;
 }
 
 export default function App() {
@@ -8879,7 +8903,8 @@ export default function App() {
   const [scoutIn, setScoutIn] = useState(null);   // v6.28: a goal typed on Home → Scout starts it
   // Voice (VOICE_PLAN.md, design A): "Ya Attune" — opened from the Home box's orb, "/voice", or an "attune-voice" event
   const [voiceOpen, setVoiceOpen] = useState(false);
-  const [whoPick, setWhoPick] = useState(null);   // v9.9.3 W2: "Which Ahmed?" — { op, name, choices }
+  const [whoPick, setWhoPick] = useState(null);
+  const [webTask, setWebTask] = useState(null);   // v9.9.7 W1 "Do it on the web": { x, r } — the task and what the browser reported   // v9.9.3 W2: "Which Ahmed?" — { op, name, choices }
   useEffect(() => { if (mode === "chat" || mode === "translate" || voiceOpen) wakeModel(); }, [mode, voiceOpen]);   // v8.7 idea 8
   const [voiceText, setVoiceText] = useState("");     // words the quiet orb heard (the voice screen starts with them)
   const [quietWake, setQuietWake] = useState(false);
@@ -10039,6 +10064,9 @@ export default function App() {
       if (ag && ag.kind === "open" && ag.app && NATIVE && NATIVE.openAnyApp) { try { NATIVE.openAnyApp(JSON.stringify({ pkg: ag.app.pkg || "", url: "" })); } catch (e) {}
         return { lines: [{ text: (ar ? "بفتح " : tr("Opening ")) + ag.app.label }], undo: null }; } }
     // "find me a flat in Maadi under 15k" / «دورلي على عربية …» → a Scout goal, started at once
+    // v9.9.7 W1: "book a padel court Friday 8pm", "renew my car licence", «احجزلي ملعب…» → the steps, then the site in Attune's browser
+    { const wt = teachFirst ? null : WT.readWebTask(text, now); if (wt) { setWebTask({ x: wt, r: null });
+        return { lines: [{ text: (ar ? "هعملها على النت: " : tr("Doing it on the web: ")) + wt.what }], undo: null }; } }
     if (!teachFirst && looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : tr("Scout is on it"), open: "scout" }], undo: null }; }
     const u = doUnderstand(text, { now, stores: loadLifeStores() });
     if (u.ask) return { answer: u.ask, ar };
@@ -10194,6 +10222,7 @@ export default function App() {
         // v9.9.3 L1/L2: teaching Attune ("Nada is my wife", "tell me when my wife gets home") is done in the app, never a Scout search
         let teach = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teach = !!(tx && (tx.kind === "rule" || (tx.kind === "who" && text.split(/\s+/).length <= 7))); } catch (e) {}
         try { if (!teach && AL.readOpen(text)) teach = true; } catch (e) {}
+        try { if (!teach && !agent && WT.readWebTask(text)) teach = true; } catch (e) {}   // v9.9.7 W1
         try { if (!teach && (TBL.parseTrack(text) || TBL.parseRow(TBL.loadTables(), text))) teach = true; } catch (e) {}   // v9.9.6 N1   // v9.9.3 W2: "send Ahmed '…' on WhatsApp" is done in the app
         if (teach) return { doActions: Math.max(1, doActions), teach: true, goal: false, metro: false, automation: false, watch: false, mission: false, agent: "" };
         return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text), watch: !!parseWatch(text), mission, agent };
@@ -11462,6 +11491,12 @@ export default function App() {
       {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[20px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
       {NATIVE ? <NotifAsk native={NATIVE} flash={flash} /> : null}
+      {webTask ? <WebTaskSheet t={webTask} close={() => setWebTask(null)} start={async () => {
+          const x = webTask.x, prof = WT.fillFor((() => { try { return JSON.parse(localStorage.getItem("attune:agent:profile") || "{}") || {}; } catch (e) { return {}; } })(), x);
+          if (!NATIVE) { try { window.open(x.url, "_blank"); } catch (e) {} setWebTask({ x, r: { filled: 0, payment: false, opened: true } }); return; }
+          try { const r = await nativeCall("agentOpen", { url: x.url, title: x.what, profile: prof, rules: {}, search: false, fillAuto: true }); setWebTask({ x, r: { ...(r || {}), opened: true } }); }
+          catch (e) { setWebTask({ x, r: { filled: 0, payment: false, opened: true, err: String((e && e.message) || e) } }); }
+        }} /> : null}
       {whoPick ? <div className="fixed inset-0 z-[80] bg-black/60 flex items-end" onClick={() => setWhoPick(null)}>
         <div className="calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[20px] p-4 space-y-2" onClick={(e) => e.stopPropagation()} data-testid="who-pick">
           <p className="m-0 text-[16px] font-extrabold" dir="auto">{tr("Which {n}?", { n: whoPick.name })}</p>

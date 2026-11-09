@@ -752,6 +752,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 .putExtra("watch", a.optBoolean("watch", false))
                 .putExtra("autoClose", a.optBoolean("autoClose", false))   // v8.2: a round of several days closes each page by itself
                 .putExtra("buy", a.optBoolean("buy", false))
+                .putExtra("fillAuto", a.optBoolean("fillAuto", false))   // v9.9.7 W1: fill the saved details + the task's date / time / people on each page
                 .putExtra("slot", a.optBoolean("slot", false))      // v9.4 G2: read an appointment page's words
                 .putExtra("goto", a.optJSONObject("goto")?.toString() ?: "")   // v9.8: find this offer on the results and open its own page
                 .putExtra("refresh", a.optInt("refresh", 0))        // v9.4 G2: reload every N seconds while open   // v8.6: a buy agent the person confirmed — Buy now, then their details
