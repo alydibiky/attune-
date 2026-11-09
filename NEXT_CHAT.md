@@ -11,6 +11,15 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 10 Nov — v9.9.5: Ali OK'd D1 D2 S1 — documents with photos and details, each detail its own lock and time
+- `docfields.js` + `docs-ui.jsx` on every Deadline Radar document / warranty card: **D1** photos (many, private store, full screen
+  with ‹ ›, delete); **D2** details (suggested per type: passport / ID / visa / licence / insurance / registration / bank card /
+  account; added by name or said in one sentence "visa number H123, valid until 1 Dec 2027"; Copy); **S1** (Ali: "make the vault
+  customizable … the time for each one separately, and an option to do S2"): each row Normal / Hidden-tap (S2) / Locked-fingerprint
+  (S1, Vault.kt prompt) with its own show time (15 s … 10 min, or until you leave); CVC / PIN / password start locked, a card number
+  tap-to-show with its last 4 visible. Locked values are kept in `attune:radar:secrets:v1`, not in the item (not in sync / backup).
+  On the computer app (no fingerprint) a locked row opens with a tap. Tests: unit v995docfields (11), e2e_v995docs.
+
 ## 10 Nov — v9.9.4: M1 strict saving, M3 check-it, the hotel agent's background checks, Radar dates
 - **M1** (doit.js `strictCheck`, Ali: "strict — I don't want the code saving things wrong"): anything read from typed / spoken words
   that the code isn't sure of ("co 900", "ahmed 500", an amount over 5 M, a reminder with no time) → "Save this? Expense 900 — co"
