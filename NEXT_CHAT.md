@@ -11,6 +11,23 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 10 Nov — v9.9.11: Attune asks about notifications, you tell it, it remembers (Ali picked A1 A2 A4 L — "integrate them in a good
+   way and make sure it's smart and understands anything I type"; options https://claude.ai/artifact/MmUidfQHioDS3NuqzTGJwV)
+- Brain `notelabels.js`: `sourceOf` (a chat / group, an SMS sender, an app), labels (work · notmoney · mymoney · bank · bill · delivery ·
+  family · important · ads · ignore) saved in noteteach's rules (kind "label"); `readAnswer` reads free words (English, Egyptian Arabic,
+  Franco; "not mine" before "mine"; a person + money together: «ده اخويا بيحولي فلوس» → his money counts AND Ahmed = brother) → else
+  the AI (`aiPrompt` / `readAi`, a meaning from the list only, `window.__attuneQuickAi` while a model is loaded) → else "which of
+  these?". Nothing saved before "I understood … — Save". Effects: paylog.js (notmoney/work/ads/ignore → never money; mymoney/bank →
+  `trusted` money source), Recall + Your day hide ignore/ads.
+- **A1** Follow-ups: `NoteAskCard` at the top of the thread (money in a chat / an unknown app, once per source; a bank's money is not
+  asked — the payment check handles it). **A4** Chat: "teach me your notifications" / «علمني اشعاراتي» → `TeachChat` (one by one).
+  **L** "What Attune learned (n)" in Follow-ups and Recall (`LearnedList`, Undo — the source may be asked again).
+- **A2** `NoteAsk.kt`: money in a chat Attune wasn't taught → one notification "What is this?" with Mine · Not money · Reply… (typed);
+  max 2 a day, never the same chat twice, never a taught chat (page → `noteAskKnown`); the words in the person's language
+  (`noteAskWords`). The page takes answers on open (`syncPhone`): a tap is learnt at once; a typed sentence waits in Follow-ups as
+  "I understood … — Save".
+- Tests: unit v999notelabels (36), e2e_v999teachnotes (A1, Save, never again, learned list + Undo, Chat, A2 tap + typed).
+
 ## 10 Nov — v9.9.10: a WhatsApp group's wages became "income" (Ali: "what the hell?") — fixed for good
 - Cause: PayListener kept any notification with an amount + a money word, from ANY app; paylog.js read «غفره بليل ٤٥٠ جنيه…»
   (group "ما يخص المرتبات") as "450 EGP in, from يوم, high confidence" → added by itself. Now chat apps (WhatsApp, Telegram, Messenger,

@@ -20,6 +20,8 @@ import { promptToolOf } from "./prompttools.js";
 import { directionsOf } from "./gomaps.js";
 import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
+// v9.9.11 A4: "teach me your notifications" / «علمني اشعاراتي» / "what don't you understand in my notifications?"
+const TEACH_ME = /\b(teach|learn|train)\b.{0,25}\b(notifications?|notifs?|alerts?)\b|\b(ask me about|what don'?t you (understand|get)( in)?)\b.{0,20}\b(notifications?|alerts?)\b|(علم|عل[ّ]?م|اعلم|أعلم|اتعلم|تتعلم|اسألني|إسألني|اسالني).{0,20}(الاشعارات|الإشعارات|اشعارات|إشعارات|اشعاراتي|إشعاراتي|النوتيفيكيشن)|(الاشعارات|الإشعارات|اشعاراتي|إشعاراتي).{0,20}(مش فاهم|مش فاهمها|متعرفهاش|اتعلمها|علمني|عرفني)/i;
 const DO_HERE = ["teach", "lifeEdit", "money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
 import { chatMapIntent } from "./mapintent.js";
 import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_FARES } from "./metro.js";   // v6.41 (D5)
@@ -83,6 +85,7 @@ import { sayable, endsCall } from "./voicecall.js";   // v6.41 (H2)
 
 import { summary as sideSummary } from "./side-ui.jsx";
 import { mergeFound } from "./relay.js";   // v9.9.8 M2
+import { TeachChat } from "./notelabels-ui.jsx";   // v9.9.11 A4
 const KEY = "attune:chats:v1";
 const MAX_CHATS = 100;
 const NATIVE = (typeof window !== "undefined" && window.AttuneNative) || null;
@@ -943,6 +946,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => x.text).join("\n"), actions: [] } }] }));
         setText(""); return; }
     }
+    // v9.9.11 A4 (Ali: "ask me, I tell it what it is and it understands"): "teach me your notifications" → the questions here
+    if (route && !img && !only && TEACH_ME.test(typed)) { const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed }, { id: newId(), role: "assistant", teachChat: true, text: "" }] }));
+      setText(""); return; }
     // v9.9.3 L4: "where's my wife?" / «مراتي فين؟» — from the newest Life360 (or family locator) notification about her, by code
     if (route && !img && api.whereIs && !only) {
       const wi = api.whereIs(typed);
@@ -2351,6 +2358,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               patchChat(chat.id, (c) => ({ ...c, messages: hist }));
               setTimeout(() => ask(m.askText, { history: hist, noRoute: true }), 0);
             }} />
+        ) : m.teachChat ? (
+          <div key={m.id} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4" data-testid="chat-teach"><TeachChat flash={api.flash} /></div>
         ) : m.card ? (
           <div key={m.id} data-testid={"card-" + (m.card.tone || "")} className={`rounded-[20px] border p-4 ${m.card.tone === "rose" ? "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10" : m.card.tone === "violet" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10"}`}>
             <p dir="auto" className="text-[15px] font-extrabold text-[var(--c-ink)] flex items-center gap-2 m-0"><CheckCircle2 size={16} className={m.card.tone === "rose" ? "text-[var(--c-neg)]" : m.card.tone === "violet" ? "text-[var(--c-acc)]" : "text-[var(--c-pos)]"} /> {tr(m.card.title)}</p>

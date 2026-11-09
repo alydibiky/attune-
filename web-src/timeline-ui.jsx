@@ -13,6 +13,7 @@ import { PayBox } from "./life-ui.jsx";
 import { loadReminders } from "./actions.js";
 import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
+import { NoteAskCard, LearnedButton, currentAsks } from "./notelabels-ui.jsx";   // v9.9.11 A1 + L (Ali: "ask me, I tell it, it remembers")
 
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
 const ICON = { reminders: Bell, radar: Radar, life: Users, money: Wallet, xray: MessageSquare, guardian: ShieldAlert };
@@ -119,6 +120,8 @@ export function TimelinePage({ navTo, doIt, flash }) {
   const today = isoOf(Date.now());
   const snoozeKey = (x) => x.id + "@" + x.date + "@" + today;
   const qs = feed.today.filter((x) => !doneSet.has(snoozeKey(x)) && !log.some((l) => l.id === x.id + "@" + x.date));
+  // v9.9.11 A1: what Attune isn't sure about in your notifications — asked here, once per chat / app
+  const [asks, setAsks] = useState(() => { try { return currentAsks(); } catch (e) { return []; } });
   const coming = [...feed.week, ...feed.later];
   const answer = (x, a, msg, undo) => { setLog((l) => [...l, { id: x.id + "@" + x.date, q: qText(x), a, msg, undo }]); setV((y) => y + 1); };
   const who = (x) => (x.who || x.what || "").split(" · ")[0];
@@ -156,7 +159,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-3 lg:max-w-[80ch]"} style={{ minHeight: "70vh" }} data-testid="timeline-page">
       <div className="flex items-start gap-3"><span className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><CalendarDays size={18} /></span>
         <div className="min-w-0 flex-1"><h2 className={U.h1}>{tr("Follow-ups")}</h2>
-          <p className={"m-0 mt-0.5 text-[13px] " + U.muted} data-testid="fu-count">{qs.length ? tr("Today · {n} to answer", { n: qs.length }) : tr("Today")}</p></div></div>
+          <p className={"m-0 mt-0.5 text-[13px] " + U.muted} data-testid="fu-count">{qs.length + asks.length ? tr("Today · {n} to answer", { n: qs.length + asks.length }) : tr("Today")}</p></div></div>
       <div className="flex flex-col gap-2" data-testid="fu-thread">
         {log.map((l) => <React.Fragment key={l.id}>
           {l.q ? <div className={bubble + " opacity-70"}><span className="text-[14px] font-bold" dir="auto">{l.q}</span></div> : null}
@@ -166,6 +169,8 @@ export function TimelinePage({ navTo, doIt, flash }) {
               <button className={B} onClick={() => setLog((g) => g.map((y) => (y.id === l.id ? { ...y, confirm: "", msg: tr("Not saved") } : y)))} data-testid="fu-confirm-no">{tr("Not this")}</button></div></div> :
           <p className="m-0 self-center text-[12.5px] font-bold text-[var(--c-pos)] text-center" data-testid="fu-result" dir="auto">{l.msg}{l.undo ? <> · <button className="underline" onClick={() => { l.undo(); setLog((g) => g.filter((y) => y.id !== l.id)); }} data-testid="fu-undo">{tr("Undo")}</button></> : null}</p>}
         </React.Fragment>)}
+        {asks.map((a) => <div key={a.id} className={bubble} data-testid="fu-q" data-act="note-ask">
+          <NoteAskCard ask={a} flash={flash} onDone={(m) => { setAsks((x) => x.filter((y) => y.id !== a.id)); if (m) setLog((l) => [...l, { id: "na:" + a.id, q: "", a: a.src.name, msg: m, undo: null }]); }} /></div>)}
         {qs.map((x) => { const act = actionOf(x), l = act === "ask" ? lifeOf(x) : null;
           return <div key={x.id + "@" + x.date} className={bubble} data-testid="fu-q" data-act={act || "open"} data-kind={x.kind}>
             {act === "ask" && l && l.c.person
@@ -181,7 +186,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
                   {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onClick={() => later(x, tr("Later"))} data-testid="fu-no">{tr("Later")}</button></> : null}
                 </div></>}
           </div>; })}
-        {!qs.length ? <div className={bubble} data-testid="fu-clear"><p className="m-0 text-[14.5px] font-bold">{nextUp ? tr("All clear until {d}", { d: dayLabel(nextUp.date) }) : tr("All clear")}</p>
+        {!qs.length && !asks.length ? <div className={bubble} data-testid="fu-clear"><p className="m-0 text-[14.5px] font-bold">{nextUp ? tr("All clear until {d}", { d: dayLabel(nextUp.date) }) : tr("All clear")}</p>
           {!shown.length && !log.length ? <p className={"m-0 mt-1 text-[12.5px] " + U.muted}>{tr("Write a payment, a date or a reminder below — Attune asks you when it's due.")}</p> : null}</div> : null}
       </div>
       {coming.length ? <section className={U.card + " p-3"} data-testid="fu-coming">
@@ -201,6 +206,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
         ids={{ box: "fu-add-form", input: "fu-add", go: "fu-add-go" }} /> : null}
       {navTo ? <div className={"flex flex-wrap items-center gap-1.5 text-[12.5px] pt-1 " + U.muted} data-testid="fu-pages">
         <span>{tr("Manage:")}</span>
+        <LearnedButton flash={flash} />
         {PAGES.map(([pg, l]) => <button key={pg} onClick={() => navTo(pg)} className="min-h-[34px] px-3 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[12px] font-bold text-[var(--c-ink)]" data-testid={"fu-open-" + pg}>{tr(l)}</button>)}
       </div> : null}
     </div>);

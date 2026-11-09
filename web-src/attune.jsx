@@ -64,6 +64,7 @@ import { MoneyBar, AddSheet, MoreSheet, PANES as MONEY_PANES, panesFor, Accounts
 import { AccountSheet, BillSheet, TxSheet, TxListPane, GoalsPane, DebtSheet, ZakatPaySheet, ZakatSetSheet, ZakatCalcSheet, ZakatRulingsSheet, LedgerSettings } from "./money-sheets-ui.jsx";
 import { sheetCats as moneyCats, zakatPage } from "./money-pages.js";   // v7.6 Money's bottom bar
 import { PayInbox, runAutoPay, ChatMoneyFix } from "./paylog-ui.jsx";
+import { syncPhone } from "./notelabels-ui.jsx";   // v9.9.11 A2
 import { categorise } from "./paylog.js";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { FamilyPage } from "./family-ui.jsx";
@@ -7793,7 +7794,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.10";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.11";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8615,8 +8616,14 @@ export default function App() {
   };
   // A model is "usable" when it is running OR installed and asleep: the engine wakes it by itself the
   // moment a tool sends a request (LocalEngine.waitReady), so no tool should send the user to Engine.
+  // v9.9.11 A2: answers given on the phone's "What is this?" question come in when Attune opens (a tap is learnt; a sentence is
+  // confirmed in Follow-ups), and the phone is told what it knows
+  useEffect(() => { if (!NATIVE) return; const go = () => { if (document.visibilityState === "hidden") return; try { const l = syncPhone(NATIVE); if (l.length) flash(l[l.length - 1]); } catch (e) {} };
+    const t = setTimeout(go, 1800); document.addEventListener("visibilitychange", go); return () => { clearTimeout(t); document.removeEventListener("visibilitychange", go); }; }, []);
   // v9.9.10 the money-notification check by the small model — only while one is loaded (paylog.js judged; never loads one for it)
-  useEffect(() => { try { window.__attunePayJudge = modelState === "ready" ? (q) => callClaude(q, { prefix: "payjudge", background: true, maxTokens: 60, temperature: 0, think: false }) : null; } catch (e) {} }, [modelState]);
+  useEffect(() => { try { window.__attunePayJudge = modelState === "ready" ? (q) => callClaude(q, { prefix: "payjudge", background: true, maxTokens: 60, temperature: 0, think: false }) : null;
+    // v9.9.11: the same small check for "what did the person mean?" when the words alone don't say it (notelabels.js aiPrompt)
+    window.__attuneQuickAi = modelState === "ready" ? (q) => callClaude(q, { prefix: "teach", background: true, maxTokens: 40, temperature: 0, think: false }) : null; } catch (e) {} }, [modelState]);
   const modelUsable = modelState === "ready" || (NATIVE && ((engineInfo && engineInfo.state === "ready") || (installedModels || []).length > 0));
   const refreshModels = () => { const m = nativeJSON("models"); setInstalledModels((m && m.models) || []); };
   // v6.34 (Ali): the next lesson is written ahead while a model is loaded and idle — ready when Learn is opened.

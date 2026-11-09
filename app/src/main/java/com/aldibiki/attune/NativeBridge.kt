@@ -1375,6 +1375,11 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun embedRemove(): Boolean = Embedder.remove(ctx)
 
+    /* ---- v9.9.11 A2: "What is this?" on a notification — the answers, what the page knows, the question's words ---- */
+    @JavascriptInterface fun noteAskTake(): String = try { NoteAsk.take(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface fun noteAskKnown(json: String) { try { NoteAsk.setKnown(ctx, json) } catch (e: Throwable) { } }
+    @JavascriptInterface fun noteAskWords(json: String) { try { NoteAsk.setWords(ctx, json) } catch (e: Throwable) { } }
+
     /** {"texts":[…]} → {"vecs":[[…1024 numbers]…]} on the phone; nothing leaves it. */
     @JavascriptInterface
     fun embed(id: String, arg: String) {

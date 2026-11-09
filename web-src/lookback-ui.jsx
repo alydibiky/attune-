@@ -17,6 +17,8 @@ import { Search, ImagePlus, Bell, Loader2, X, Copy, Trash2, ShieldCheck, Sparkle
 import * as M from "./meaning.js";
 import { TeachBox } from "./noteteach-ui.jsx";
 import { isHidden, loadTeach } from "./noteteach.js";
+import { labelOf, hiddenBy } from "./notelabels.js";
+import { LearnedButton } from "./notelabels-ui.jsx";   // v9.9.11 "ignore" / "ads" taught for a source
 import { card as kCard, btnP, btnS, btnDanger, chip as kChip } from "./ui-kit.jsx";
 
 const card = kCard;
@@ -98,7 +100,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
     const t = setTimeout(() => { setOlder(readJson(() => native.recallFind(JSON.stringify(wordsFor(q)), 400))); }, 250); return () => clearTimeout(t); }, [q]);
   const docs = useMemo(() => recallDocs({
     memory, chats: loadChats(), pages: loadArtifacts(),
-    notes: [...(native && native.recallNotes ? readJson(() => native.recallNotes()) : []), ...older, ...gmailNotes()].filter((n, i, a) => a.findIndex((x) => x.id === n.id) === i).filter((n) => { try { return !isHidden(n, loadTeach()); } catch (e) { return true; } }),   // v9.9.3 L2: "never show Yazio"   // v8.7: + older ones the phone kept (by the words asked) + the emails Gmail read
+    notes: [...(native && native.recallNotes ? readJson(() => native.recallNotes()) : []), ...older, ...gmailNotes()].filter((n, i, a) => a.findIndex((x) => x.id === n.id) === i).filter((n) => { try { const t = loadTeach(); return !isHidden(n, t) && !hiddenBy(labelOf(n, t)); } catch (e) { return true; } }),   // v9.9.3 L2: "never show Yazio"   // v8.7: + older ones the phone kept (by the words asked) + the emails Gmail read
     pays: native && native.payQueue ? readJson(() => native.payQueue()) : [],
   }), [memory, tick, older]);
   const words = useMemo(() => recallSearch(only ? docs.filter((d) => d.kind === only) : docs, q), [docs, q, only]);
@@ -175,6 +177,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
 
   return (
     <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="recall-page">
+      <div className="flex justify-end"><LearnedButton flash={flash} /></div>
       <div className={card + " p-4 space-y-2.5"}>
         <div className="flex items-center gap-2 min-h-[48px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[20px] ps-3.5 pe-1 focus-within:border-[var(--c-acc)] transition-colors duration-150">
           <Search size={16} className="text-[var(--c-mut)]" />

@@ -10,6 +10,7 @@ import { dayFromNotes, reminderFromAsk, kindOf } from "./daynotes.js";
 import { loadDayset, saveDayset } from "./dayset.js";
 import { loadAgents } from "./agents.js";
 import * as NT from "./noteteach.js";
+import { labelOf, hiddenBy } from "./notelabels.js";   // v9.9.11
 import { loadDir } from "./entities.js";
 import { WhoAskCard } from "./noteteach-ui.jsx";
 import { loadReminders, saveReminders, syncToPhone } from "./actions.js";
@@ -52,7 +53,7 @@ export function YourDay({ records = [], navTo, flash: flash0, now: now0 }) {
   // v9.9.3 L2 + L4: hidden apps ("never show Yazio") are left out; a person you taught about reads as "Your wife (Nada) · …"
   const [tv, setTv] = useState(0);
   useEffect(() => { const f = () => setTv((x) => x + 1); window.addEventListener("attune-noteteach", f); window.addEventListener("attune-people", f); return () => { window.removeEventListener("attune-noteteach", f); window.removeEventListener("attune-people", f); }; }, []);
-  const notes = useMemo(() => { const t = NT.loadTeach(); return notes0.filter((n) => !NT.isHidden(n, t)); }, [notes0, tv]);
+  const notes = useMemo(() => { const t = NT.loadTeach(); return notes0.filter((n) => !NT.isHidden(n, t) && !hiddenBy(labelOf(n, t))); }, [notes0, tv]);
   const fam = useMemo(() => { const dir = loadDir(), seen = new Set(), out = [];
     for (const n of [...notes].filter((x) => /life ?360|find my|family/i.test(String(x.app || "") + " " + String(x.pkg || "")) && (x.ts || 0) > now - 864e5).sort((a, b) => (b.ts || 0) - (a.ts || 0))) {
       const d = NT.describe(n, dir, { tr }); if (!d || seen.has(d.name)) continue; seen.add(d.name); out.push({ ...d, ts: n.ts, id: n.id }); }

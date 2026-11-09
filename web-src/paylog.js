@@ -4,6 +4,8 @@
    unreadable texts are dropped; the same payment notified twice (an update, or the bank AND InstaPay) is kept once.
    The entries are listed in Money to confirm; confirmed ones go to Money (Yusr) through the bridge ("add-txns").
    Pure logic; tests: tests/unit/v727paylog.test.mjs.                                                                         */
+import { labelOf, notMoney, countsAsMoney } from "./notelabels.js";   // v9.9.11 what the person taught
+import { loadTeach } from "./noteteach.js";
 import { parsePayment } from "./yusr/paytext.js";
 import { catOf } from "./yusr/logtext.js";
 import { merchantOf } from "./guardian.js";   // v7.9 the shop a payment was made to (alreadyIn)
@@ -46,14 +48,19 @@ export const fromChats = (ledger, kept = []) => (((ledger && ledger.txns) || [])
 
 /** One stored notification {id, pkg, app, title, text, ts} → an entry, or null when it isn't a payment. */
 export function readNotification(n, opts) {
-  if (isChatApp(n)) return null;
+  // v9.9.11 what the person taught about this source: "work talk" / "not money" / "ads" / "ignore" → never money; "my money" /
+  // "my bank" → it counts as a money source (a chat too — the person said so)
+  let lab = null; try { lab = labelOf(n, opts && opts.teach !== undefined ? opts.teach : loadTeach()); } catch (e) {}
+  if (lab && notMoney(lab)) return null;
+  if (isChatApp(n) && !countsAsMoney(lab)) return null;
   const text = [n.title, n.text].filter(Boolean).join(" — ").trim();
   if (!text || OTP.test(text) || BALANCE_ONLY.test(text) || FUTURE.test(text) || (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text))) return null;
   const p = parsePayment(text, { ...(opts || {}), now: n.ts || undefined });
   if (!p || !p.ok || !(p.amount > 0) || !p.direction || p.confidence === "low") return null;
   // full / from: the complete message as it arrived and who sent it — kept with the payment as its evidence (Ali, 25 Oct)
   return { id: n.id, app: n.app || n.pkg || "", amount: p.amount, currency: p.currency || "", direction: p.direction, party: p.party || "",
-    ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), full: String(n.text || "").slice(0, 2000), from: String(n.title || "").slice(0, 200), confidence: p.confidence };
+    ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), full: String(n.text || "").slice(0, 2000), from: String(n.title || "").slice(0, 200), confidence: p.confidence,
+    ...(countsAsMoney(lab) ? { trusted: true } : {}) };
 }
 
 /** All stored notifications → entries, newest first; the same payment twice (same direction and amount within
@@ -105,11 +112,14 @@ const SMS_APP = /messag|\bsms\b|mms|com\.android\.mms|samsung\.android\.messagin
 const MOVED = /\b(debited|credited|charged|purchase[d]?|paid|payment (?:of|to|from)|received|transferr?ed|transfer (?:of|to|from)|withdrawn?|withdrawal|deposit(?:ed)?|spent|refund(?:ed)?|sent you|you sent)\b|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|خصم مبلغ|إيداع مبلغ|ايداع مبلغ|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|سحبت|عملية شراء|(?<![\p{L}])(débit[ée]|crédit[ée]|paiement|achat|virement|cargo|abono|compra|pago|transferencia|pagamento|transferência|zahlung|gutschrift|überweisung|abbuchung|ödeme|harcama|havale|pembayaran|списан|зачислен|оплата|перевод)(?![\p{L}])/iu;
 /** Did this entry come from a money source? (the app, or an SMS whose sender is a bank / wallet) */
 export function fromMoneySource(e) {
+  if (e && e.trusted) return true;   // v9.9.11 the person taught: this source is their bank / their money
   const app = String((e && (e.app || "")) || ""), from = String((e && e.from) || "");
   if (CHAT_APP.test(app)) return false;
   if (SMS_APP.test(app)) return MONEY_SRC.test(from) || /^[A-Z][A-Za-z0-9 .-]{1,14}$/.test(from.trim()) && !/^\+?\d/.test(from.trim());   // SMS: a named sender ("CIB", "NBE", "VF-Cash"), not a person's number
   return MONEY_SRC.test(app + " " + from);
 }
+/** A raw notification from a money app / a bank's SMS sender (v9.9.11: such money is checked as a payment, not asked about). */
+export const moneySourceNote = (n) => !!n && fromMoneySource({ app: n.app || n.pkg || "", from: n.title || "" });
 /** The code alone is sure: steps 1–3 above. */
 export const codeSure = (e) => !!e && e.confidence === "high" && e.amount > 0 && (e.direction === "in" || e.direction === "out") && fromMoneySource(e) && MOVED.test(String(e.full || e.text || ""));
 /** v6.27 "by itself" — v9.9.10: only what the code is sure of (codeSure); the model's check comes on top (judged). */

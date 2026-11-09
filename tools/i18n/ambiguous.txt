@@ -503,10 +503,10 @@ attune.jsx: className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border bo
 attune.jsx: {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash(tr("Removed")); }} className="text-xs px-3 py-2 rounded-
 autopilot-ui.jsx: <button onClick={() => undo(d)} className="min-h-[32px] px-2 text-[12px] font-bold c-acc inline-flex items-center gap-1" data-testid="autopi
 doit-ui.jsx: {r.undo && !undone ? <button className={btnS} onClick={() => { r.undo(); setUndone(true); onUndo && onUndo(); }} data-testid="do-undo"><Undo
+notelabels-ui.jsx: {i.type !== "who" ? <button onClick={() => undo(i)} className="shrink-0 min-h-[34px] px-2 text-[12px] font-bold underline c-sub inline-flex 
 pdfedit-ui.jsx: <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"w-11 h-11 grid place-items-center rounded-[12px] " + (his
 planner-ui.jsx: {settled.put > 0 ? <button onClick={undo} className="font-extrabold underline text-[var(--c-acc)] min-h-[36px] px-1" data-testid="planner-se
 shelf-ui.jsx: <button onClick={undoT} aria-label={tr("Undo")} data-testid="shelf-undo-text" className="min-w-[40px] min-h-[40px] grid place-items-center r
-shelf-ui.jsx: <button onClick={() => { undo.run(); setUndo(null); }} data-testid="shelf-undo-btn" className="min-h-[44px] px-3 rounded-[12px] text-sm font
 
 ## Restore
 attune.jsx: {tr("Restore")}
@@ -989,6 +989,10 @@ slides-ui.jsx: <button onClick={() => setTab("report")} className={chip(tab === 
 tools-hub-ui.jsx: <SeeAll testid="tools-open-report" onClick={() => setRep(true)} title={tr("See all → Tools Report")} sub={T("{n} jobs this week · by family"
 tools-hub-ui.jsx: return <SeeAll testid={"open-report-" + fam} onClick={onClick} title={tr(title)} sub={r.week ? T("{n} this week", { n: r.week }) + (fam === 
 
+## Undone
+doit-ui.jsx: {undone ? <span className="c-sub text-[13px]" data-testid="do-undone">{tr("Undone")}</span> : null}
+notelabels-ui.jsx: NT.saveTeach(NL.undoLabel(NT.loadTeach(), i.id)); setV((x) => x + 1); flash && flash(tr("Undone"));
+
 ## Income
 doit.js: const rows = [[ar ? "الدخل" : tr("Income"), f(pl.income)], [ar ? "ثابت (فواتير وأقساط)" : tr("Fixed (bills, instalments)"), f(pl.fixedTotal)
 money-calm-ui.jsx: <span className={"block truncate text-[11.5px] font-semibold " + U.muted} dir="auto">{dayLabel(t.date)} · {t.type === "income" ? tr("Income"
@@ -1068,6 +1072,7 @@ home-ui.jsx: {note.kind === "ended" ? <button onClick={close} className="h-10 px
 messages-ui.jsx: askTitle: T("Send to {who} now?", { who: a.who }), sendLabel: tr("Send"), skipLabel: tr("Not now") } }));
 messages-ui.jsx: <button onClick={() => setExplain(false)} className={U.btnS}>{tr("Not now")}</button></div>
 mind-ui.jsx: <button onClick={() => setHidePast(true)} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] text-[var(--c-mut)]">{tr("Not 
+notelabels-ui.jsx: <button onClick={notNow} className={CHIP + " c-sub inline-flex items-center gap-1"} data-testid="note-ask-skip"><X size={13} />{tr("Not now"
 notifask-ui.jsx: <button onClick={later} className="flex-1 min-h-[48px] rounded-full border border-[var(--c-ln)] font-bold" data-testid="notif-ask-later">{ar
 paylog-ui.jsx: <button onClick={() => { setNotNow(true); try { localStorage.setItem(OFF_KEY, "1"); } catch (e) {} }} className={U.btnS + " " + U.muted}>{tr
 
@@ -1254,6 +1259,15 @@ planner-ui.jsx: : <div className="grid grid-cols-2 gap-2"><input className={U.in
 ## Month
 money-sheets-ui.jsx: <Field label={tr("Default period")}><Pills value={ui.period || "month"} onChange={(v) => doIt("prefs", { period: v })} items={[["week", tr("
 planner-ui.jsx: <div className="flex gap-1.5" role="tablist">{[["month", tr("Month")], ["calendar", tr("Calendar")], ["table", tr("Table")]].map(([k, l]) =>
+
+## Not money
+notelabels-ui.jsx: try { N.noteAskWords && N.noteAskWords(JSON.stringify({ title: tr("What is this? I wasn't sure."), mine: tr("Mine"), not: tr("Not money"), r
+notes-money-ui.jsx: <button onClick={() => take(x, false)} className={"w-10 h-10 grid place-items-center " + U.muted} aria-label={tr("Not money")} title={tr("No
+notes-money-ui.jsx: <button onClick={() => take(x, false)} className={"w-10 h-10 grid place-items-center " + U.muted} aria-label={tr("Not money")} title={tr("No
+
+## I understood:
+notelabels-ui.jsx: <p className="m-0 text-[13.5px]" dir="auto"><b>{tr("I understood:")}</b> {understoodOf(x, ar)}</p>
+noteteach-ui.jsx: <p className="m-0 text-[13.5px]" dir="auto"><b>{tr("I understood:")}</b> {NT.understood(x, { ar, tr })}</p>
 
 ## Translating…
 pdfchat-ui.jsx: setAsking(kind === "translate" ? tr("Translating…") : tr("Reading pages {p}…", { p: pg }));

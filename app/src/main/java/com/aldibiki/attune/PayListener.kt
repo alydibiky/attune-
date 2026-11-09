@@ -78,7 +78,12 @@ class PayListener : NotificationListenerService() {
             if (!PayLog.looksLikeMoney(all)) return
             // v9.9.9 (Ali: a WhatsApp work group talking about wages became "income"): people talk about money in chat apps —
             // that is never a payment (paylog.js CHAT_APP, the same list); bank SMS (the Messages app) stays
-            if (PayLog.isChatApp(sbn.packageName)) return
+            if (PayLog.isChatApp(sbn.packageName)) {
+                // v9.9.11 A2: money in a chat Attune was never taught about → ask once on a notification (Mine / Not money / Reply…)
+                try { val lbl = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }
+                    NoteAsk.maybeAsk(applicationContext, sbn.packageName, lbl, title, text) } catch (e: Exception) { }
+                return
+            }
             val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }
             try { AutoRules.check(applicationContext, sbn, label, title, text) } catch (e: Exception) { }   // v6.41 C3: the person's automations
             PayLog.add(applicationContext, JSONObject()
