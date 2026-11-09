@@ -17,8 +17,11 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   paying**). Start opens Attune's browser (AgentBrowser) with `fillAuto` → agent-kit fills the saved Booking details + taskDate /
   taskTime / taskPeople at 2.5 s and 6 s; the steps tick from what the browser reports (filled n · payment page reached → "your turn").
   Hotels, flights, food, doctors stay with Agents; messages / rides stay with W2. Licence / passport / ID → digital.gov.eg, else a web search.
-- Tests: unit v997webtask, e2e_v997webtask. **Next:** Ali's Radar note ("the extra details inside Edit, easier look" — mock-ups first),
-  then M2 (small-model relay on phones), M4 (two models on the computer app).
+- **R3 Radar card** (Ali picked from https://claude.ai/artifact/6bjm3PQWxPKhXUSFq8DWBx): a document (kind expiry) is drawn like the real
+  card (`DocCover` in docs-ui.jsx: its first photo or a colour per document, name, main number masked, date); a tap opens the photos;
+  Details (n) folds out with Show · Copy only. Adding photos / details, locks and times are in **Edit** (`Form` gets live/onPatch;
+  Save never puts back stale photos/fields). Netflix, warranties, returns keep the list card.
+- Tests: unit v997webtask, e2e_v997webtask, e2e_v995docs (R3). **Next:** M2 (small-model relay on phones), M4 (two models on the computer app).
 
 ## 10 Nov — v9.9.6: N3 @ links + N1 tables (Ali OK'd)
 - **N3** (`mentions.js`, Shelf note editor): typing @ + letters shows your people / things (People cards) + "+ New: X"; picking writes
