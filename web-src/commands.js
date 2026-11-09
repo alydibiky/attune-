@@ -178,6 +178,7 @@ export function guess(text, ctx = {}) {
   const c = [];
   const T = (rx) => rx.test(t) || rx.test(f);    // the Arabic patterns are written folded (ة → ه, أ → ا)
   const add = (kind, score) => { const o = c.find((x) => x.kind === kind); if (o) o.score = Math.max(o.score, score); else c.push({ kind, score }); };
+  if (ctx.teach) add("do", 0.97);   // v9.9.3: teaching Attune is done at once (with Undo)
   if (ctx.metro) add("metro", 0.92);
   if (ctx.automation) add("automation", 0.9);
   if (ctx.watch) add("watch", 0.9);

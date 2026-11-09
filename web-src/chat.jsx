@@ -20,7 +20,7 @@ import { promptToolOf } from "./prompttools.js";
 import { directionsOf } from "./gomaps.js";
 import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
-const DO_HERE = ["lifeEdit", "money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
+const DO_HERE = ["teach", "lifeEdit", "money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
 import { chatMapIntent } from "./mapintent.js";
 import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_FARES } from "./metro.js";   // v6.41 (D5)
 import { chatLifeIntent, scheduleOf } from "./life.js";
@@ -934,6 +934,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
     // v9.0 (the sentence bank: "lunch 150", «غدا 150» in Chat went to the AI): what the Home box does is done here too, with Undo —
     // money in a few words, food eaten, water, weight, a dose, a debt paid back (doit.js). Reminders, plans and dates keep their cards.
+    // v9.9.3 L4: "where's my wife?" / «مراتي فين؟» — from the newest Life360 (or family locator) notification about her, by code
+    if (route && !img && api.whereIs && !only) {
+      const wi = api.whereIs(typed);
+      if (wi) { const cid = ensureChat(typed), n = wi.note, ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(typed);
+        const when = n ? new Date(n.ts).toLocaleString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }) : "";
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+          { id: newId(), role: "assistant", card: { tone: "emerald", title: wi.person.name, detail: n ? (n.app || "") + " · " + when + ": " + String(n.title || "") + " — " + String(n.text || "").replace(/^🏁\s*/, "") : (ar ? "مفيش إشعار عن مكانه/مكانها لسه — Life360 لازم يكون بيبعت إشعارات وRecall شغال." : tr("No location notification about them yet — Life360 must send notifications and Recall must be on.")),
+            actions: [["Open Recall", "open:recall"]] } }] }));
+        setText(""); return; }
+    }
     // v9.9 edit by talking — what can't be changed by a sentence (a plan with a total) or needs a name is said here, nothing saved
     if (route && !img && api.editSay && !only) {
       const ea = api.editSay(typed);

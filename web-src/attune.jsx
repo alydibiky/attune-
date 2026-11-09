@@ -91,6 +91,8 @@ import { RecallCard } from "./recall-ui.jsx";
 import { WatchPanel } from "./watch-ui.jsx";
 import { PromptLab } from "./promptlab-ui.jsx";
 import { parseWatch, newRule, saveWatch, loadWatch, ruleText } from "./watch.js";
+import * as NT from "./noteteach.js";
+import { loadDir as loadPeopleDir } from "./entities.js";
 import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
@@ -9714,6 +9716,7 @@ export default function App() {
       const pm = parseMission(t, now); if (pm && pm.deadline) return true;
       const ag = parseAgent(t, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return true;
       return doSure(t, { now, stores: loadLifeStores() }); } catch (e) { return true; } },
+    whereIs: (q) => { try { return NT.whereIs(q, NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], loadPeopleDir()); } catch (e) { return null; } },
     // v9.9 edit by talking: "Sheikh pays 3000 now" (a plan with a total), "which maid?", "already 700" — said, nothing saved
     editSay: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask && u.ask.kind === "life-edit" ? u.ask : null; } catch (e) { return null; } },
     doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
@@ -9953,13 +9956,15 @@ export default function App() {
     let text = text0;
     if (UND.looksFranco(text0)) { const a = UND.francoToArabic(text0); try { const u = doUnderstand(a, { now: Date.now(), stores: loadLifeStores() }); if (a !== text0 && (u.ask || u.actions.length)) text = a; } catch (e) {} }
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
+    // v9.9.3 L2: "tell me when my wife gets home" / "never show Yazio" is teaching Attune — not an agent or a message alert
+    let teachFirst = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teachFirst = !!(tx && (tx.kind === "rule" || (tx.kind === "ask" && tx.needRole != null))); } catch (e) {}
     // v6.41 D5: «مترو من المعادي للعتبة» → the route, by code
     { const mq = metroAsk(text); if (mq) return { lines: [{ text: metroText(metroRoute(mq.from, mq.to), ar) }], undo: null }; }
     // v6.41 C3: "when my salary arrives, put 20% in the car fund" → an automation, on at once
     { const pa = parseAutomation(text); if (pa) { const st = addRule(loadAuto(), pa, now); saveAuto(st, NATIVE, ar ? "ar" : "en");
       return { lines: [{ text: (ar ? "اشتغل: " : tr("On: ")) + autoRuleText(pa, ar), open: "automations" }], undo: () => { const c = loadAuto(); saveAuto({ ...c, rules: c.rules.filter((x) => x.id !== st.rules[st.rules.length - 1].id) }, NATIVE, ar ? "ar" : "en"); } }; } }
     // v6.40: "tell me when Ahmed messages me" / «لو أحمد بعتلي قولي» → a message alert, on at once
-    { const pw = parseWatch(text); if (pw) { const r = newRule(pw, now); saveWatch([r, ...loadWatch()], ar ? "ar" : "en");
+    { const pw = teachFirst ? null : parseWatch(text); if (pw) { const r = newRule(pw, now); saveWatch([r, ...loadWatch()], ar ? "ar" : "en");
       const okAccess = !NATIVE || !NATIVE.payAccess || (() => { try { return NATIVE.payAccess(); } catch (e) { return true; } })();
       return { lines: [{ text: (ar ? "هقولك أول ما توصل: " : tr("I'll tell you the moment it comes: ")) + ruleText(pw, ar) + (okAccess ? "" : (ar ? " — شغّل «الوصول للإشعارات» الأول" : tr(" — turn on Notification access first"))), open: "reminders" }],
         undo: () => saveWatch(loadWatch().filter((x) => x.id !== r.id), ar ? "ar" : "en") }; } }
@@ -9972,7 +9977,7 @@ export default function App() {
       return { lines: [{ text: (ar ? "هتفاصل عن: " : tr("Negotiating for you: ")) + hp.what, open: "agents" }], undo: () => { const c = loadAgents(); saveAgents({ ...c, agents: c.agents.filter((x) => x.id !== h.id) }); } }; } }
     // v8.0 Agents: "tell me when hotels near the Haram are under 45k…", "tell me when my Amazon order arrives", "order my usual from
     // Talabat: …" → an agent on the Agents page (asked there if something is missing); "open Uber" opens the app
-    { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() });
+    { const ag = teachFirst ? null : parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() });
       if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) {
         if (ag.ask || ag.kind === "buy") { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); if (ag.kind === "buy" && !ag.ask) return { lines: [{ text: (ar ? "وكيل شراء: " : tr("Buy agent: ")) + ag.what + (ar ? " — هسألك قبل ما أشتري" : tr(" — I'll ask you before buying")), open: "agents" }], undo: null }; return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : tr("Finish it on the Agents page"), open: "agents" }], undo: null }; }
         const a = makeAgent(ag, now), st0 = loadAgents();
@@ -9982,7 +9987,7 @@ export default function App() {
       if (ag && ag.kind === "open" && ag.app && NATIVE && NATIVE.openAnyApp) { try { NATIVE.openAnyApp(JSON.stringify({ pkg: ag.app.pkg || "", url: "" })); } catch (e) {}
         return { lines: [{ text: (ar ? "بفتح " : tr("Opening ")) + ag.app.label }], undo: null }; } }
     // "find me a flat in Maadi under 15k" / «دورلي على عربية …» → a Scout goal, started at once
-    if (looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : tr("Scout is on it"), open: "scout" }], undo: null }; }
+    if (!teachFirst && looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : tr("Scout is on it"), open: "scout" }], undo: null }; }
     const u = doUnderstand(text, { now, stores: loadLifeStores() });
     if (u.ask) return { answer: u.ask, ar };
     // v9.4 the number guard (Ali: "19,500 became 20,000 … fix it for good for everything in the chat"): an amount said that is not in
@@ -10006,6 +10011,7 @@ export default function App() {
         if (x.kind === "reminder") { const id = newReminderId(); scheduleReminder({ id, at: x.at, title: x.title, body: x.message || "", repeat: x.repeat || "none", created: now, source: "home" }); extra.push(() => { setReminders(loadReminders().filter((y) => y.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }); }
         else chatApi.doAction(x);
       } else if (r.need === "note") { const rec = remember({ kind: "note", title: a.text.slice(0, 70), text: a.text, tags: ["home"] }); extra.push(() => setMemory((m) => m.filter((y) => y.id !== rec.id))); }
+      else if (r.need === "watch") { try { saveWatch(loadWatch(), ar ? "ar" : "en"); } catch (e) {} extra.push(() => { try { saveWatch(loadWatch(), ar ? "ar" : "en"); } catch (e) {} }); }
       else if (r.need === "money-setup") { sendToMoney(text, ""); return { lines: [{ text: ar ? r.done.ar : tr(r.done.en), open: "money" }], undo: null }; }
       if (a.kind === "sugar" && r.low) scheduleReminder({ id: "sugar-recheck", at: now + 15 * 60000, repeat: "none", title: tr("Check your blood sugar again"), body: tr("15 minutes since a low reading. Under 70 mg/dL: another 15 g of fast sugar."), created: now, source: "home" });
       lines.push({ text: ar ? r.done.ar : tr(r.done.en), open: r.open, low: !!r.low,
@@ -10130,6 +10136,9 @@ export default function App() {
         let mission = false; try { const pm = parseMission(text, now); mission = !!(pm && pm.deadline); } catch (e) {}
         // v8.6: an order for an agent ("buy me …", "order my usual …", "tell me when … is under …", "track my Amazon order")
         let agent = ""; try { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["buy", "order", "watch", "track"].includes(ag.kind)) agent = ag.kind; } catch (e) {}
+        // v9.9.3 L1/L2: teaching Attune ("Nada is my wife", "tell me when my wife gets home") is done in the app, never a Scout search
+        let teach = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teach = !!(tx && (tx.kind === "rule" || (tx.kind === "who" && text.split(/\s+/).length <= 7))); } catch (e) {}
+        if (teach) return { doActions: Math.max(1, doActions), teach: true, goal: false, metro: false, automation: false, watch: false, mission: false, agent: "" };
         return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text), watch: !!parseWatch(text), mission, agent };
       },
       metroAsk: (text) => metroAsk(text) || (() => { const st = findStation(placeOf(text).replace(/\b(metro|station|stop)\b|محطه|محطة|مترو/gi, "").trim()); return st ? { to: st } : null; })(),

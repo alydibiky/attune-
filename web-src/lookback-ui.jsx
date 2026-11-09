@@ -15,6 +15,8 @@ import { loadArtifacts } from "./spaces.js";
 import { keepPicture, thumbGet } from "./mind-ui.jsx";
 import { Search, ImagePlus, Bell, Loader2, X, Copy, Trash2, ShieldCheck, Sparkles, Download } from "lucide-react";
 import * as M from "./meaning.js";
+import { TeachBox } from "./noteteach-ui.jsx";
+import { isHidden, loadTeach } from "./noteteach.js";
 import { card as kCard, btnP, btnS, btnDanger, chip as kChip } from "./ui-kit.jsx";
 
 const card = kCard;
@@ -96,7 +98,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
     const t = setTimeout(() => { setOlder(readJson(() => native.recallFind(JSON.stringify(wordsFor(q)), 400))); }, 250); return () => clearTimeout(t); }, [q]);
   const docs = useMemo(() => recallDocs({
     memory, chats: loadChats(), pages: loadArtifacts(),
-    notes: [...(native && native.recallNotes ? readJson(() => native.recallNotes()) : []), ...older, ...gmailNotes()].filter((n, i, a) => a.findIndex((x) => x.id === n.id) === i),   // v8.7: + older ones the phone kept (by the words asked) + the emails Gmail read
+    notes: [...(native && native.recallNotes ? readJson(() => native.recallNotes()) : []), ...older, ...gmailNotes()].filter((n, i, a) => a.findIndex((x) => x.id === n.id) === i).filter((n) => { try { return !isHidden(n, loadTeach()); } catch (e) { return true; } }),   // v9.9.3 L2: "never show Yazio"   // v8.7: + older ones the phone kept (by the words asked) + the emails Gmail read
     pays: native && native.payQueue ? readJson(() => native.payQueue()) : [],
   }), [memory, tick, older]);
   const words = useMemo(() => recallSearch(only ? docs.filter((d) => d.kind === only) : docs, q), [docs, q, only]);
@@ -246,6 +248,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
               <button onClick={() => { try { navigator.clipboard.writeText(open.text); flash && flash(tr("Copied")); } catch (e) {} }} className={btnS + " flex-1"}><Copy size={15} />{tr("Copy")}</button>
               {open.kind === "note" ? <button onClick={() => forget(open)} data-testid="recall-forget" className={btnDanger}><Trash2 size={15} />{tr("Forget")}</button> : null}
             </div>
+            {open.kind === "note" ? <TeachBox note={open} flash={flash} /> : null}
           </div>
         </div>
       ) : null}

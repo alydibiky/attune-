@@ -29,6 +29,9 @@ import { homeCurrency } from "./locale.js";
 import { savedCountry } from "./country.js";
 import { missingAmounts } from "./numguard.js";
 import { editIntent, applyEdit, editDone } from "./lifeedit.js";
+import { readTeach, applyTeach, understood as teachLine, loadTeach } from "./noteteach.js";
+import { loadDir } from "./entities.js";
+import { loadWatch, newRule } from "./watch.js";
 
 const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const latin = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/٫/g, ".");
@@ -124,6 +127,12 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   { const ed = editIntent(String(text || "").trim(), (stores.life && stores.life.items) || [], now);
     if (ed && ed.change) return { actions: [{ kind: "lifeEdit", e: ed, amount: ed.change.amount }] };
     if (ed) return { actions: [], ask: { kind: "life-edit", en: editDone(ed, { tr, now }), ar: editDone(ed, { ar: true, now }), open: ed.blocked ? "life" : "" } }; }
+  // v9.9.3 L1/L2 (Ali: "Nada is my wife … it learns"): what you teach Attune — who someone is, or a rule for notifications. Short
+  // sentences only (a debt like "Ahmed my friend owes me 500" stays a debt); not sure → Attune asks instead of saving a guess
+  { const raw = String(text || "").trim(), short = raw.split(/\s+/).length <= 7 && !/\d/.test(raw);
+    let tx = null; try { tx = readTeach(raw, stores.people || loadDir()); } catch (e) {}
+    if (tx && (tx.kind === "rule" || (short && tx.kind === "who"))) return { actions: [{ kind: "teach", x: tx }] };
+    if (tx && tx.kind === "ask" && (short || /\b(tell|notify|alert|hide|never show)\b|قولي|نبهني|اخفي/i.test(raw))) return { actions: [], ask: { kind: "teach", en: teachLine(tx, { tr }), ar: tx.qAr } }; }
   // v9.1 (e2e_v513: "Crane hire 25000 each day, the 1st to the 5th… Give me the rent and the rent with the 14 tax added" was recorded as
   // two expenses, 25,000 and 14): a request in a LATER sentence makes it a question too — unless money was clearly spent / paid
   if (!EAT.test(t) && !MONEY_VERB.test(t) && t.split(/[.!?؟\n]+/).slice(1).some((x) => REQ.test(x))) return { actions: [], chat: true };
@@ -443,6 +452,13 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       const r = subPay(stores.life || { v: 1, items: [] }, a, now);
       return { stores: { "attune:life:v1": r.data }, open: "life", done: r.isNew ? { en: tr("Added to Subscriptions: {n} · {a} a month", { n: a.name, a: num(a.amount) }), ar: `اتضاف للاشتراكات: ${a.name} · ${num(a.amount)} في الشهر` }
         : { en: tr("{n} paid this month: {a}", { n: a.name, a: num(a.amount) }), ar: `${a.name} اتدفع الشهر ده: ${num(a.amount)}` } };
+    }
+    case "teach": {
+      const dir0 = stores.people || loadDir(), teach0 = stores.noteteach || loadTeach();
+      const r = applyTeach(a.x, { dir: dir0, teach: teach0, now });
+      const out = { "attune:people:v1": r.dir, "attune:noteteach:v1": r.teach };
+      if (r.watch) out["attune:watch:v1"] = [...(stores.watch || loadWatch()), newRule(r.watch, now)];
+      return { stores: out, need: r.watch ? "watch" : "", open: a.x.kind === "who" ? "people" : "recall", done: { en: tr("Learnt: {l}", { l: teachLine(a.x, { tr }) }), ar: "اتعلمت: " + teachLine(a.x, { ar: true }) } };
     }
     case "lifeEdit": {
       const life = stores.life || { v: 1, items: [] };

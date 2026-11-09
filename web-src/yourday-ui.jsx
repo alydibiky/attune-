@@ -9,6 +9,9 @@ import * as Y from "./yourday.js";
 import { dayFromNotes, reminderFromAsk, kindOf } from "./daynotes.js";
 import { loadDayset, saveDayset } from "./dayset.js";
 import { loadAgents } from "./agents.js";
+import * as NT from "./noteteach.js";
+import { loadDir } from "./entities.js";
+import { WhoAskCard } from "./noteteach-ui.jsx";
 import { loadReminders, saveReminders, syncToPhone } from "./actions.js";
 import { CITIES } from "./fitplus.js";
 import { isRamadan } from "./prayer-ui.jsx";
@@ -45,7 +48,15 @@ export function YourDay({ records = [], navTo, flash: flash0, now: now0 }) {
   const ram = ds.ramadan && ramadanNow(now);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), ram ? 1000 : 60000); return () => clearInterval(t); }, [ram]);
   const [, bump] = useState(0);
-  const notes = useNotes(ds.notes, now);
+  const notes0 = useNotes(ds.notes, now);
+  // v9.9.3 L2 + L4: hidden apps ("never show Yazio") are left out; a person you taught about reads as "Your wife (Nada) · …"
+  const [tv, setTv] = useState(0);
+  useEffect(() => { const f = () => setTv((x) => x + 1); window.addEventListener("attune-noteteach", f); window.addEventListener("attune-people", f); return () => { window.removeEventListener("attune-noteteach", f); window.removeEventListener("attune-people", f); }; }, []);
+  const notes = useMemo(() => { const t = NT.loadTeach(); return notes0.filter((n) => !NT.isHidden(n, t)); }, [notes0, tv]);
+  const fam = useMemo(() => { const dir = loadDir(), seen = new Set(), out = [];
+    for (const n of [...notes].filter((x) => /life ?360|find my|family/i.test(String(x.app || "") + " " + String(x.pkg || "")) && (x.ts || 0) > now - 864e5).sort((a, b) => (b.ts || 0) - (a.ts || 0))) {
+      const d = NT.describe(n, dir, { tr }); if (!d || seen.has(d.name)) continue; seen.add(d.name); out.push({ ...d, ts: n.ts, id: n.id }); }
+    return out.slice(0, 3); }, [notes, tv, Math.floor(now / 60000)]);
   const day = useMemo(() => dayFromNotes(notes, { now, offApps: ds.offApps }), [notes, Math.floor(now / 60000), ds.offApps.join()]);
   const hidden = new Set(readJson(ADDED_KEY, []));
   const asks = day.asks.filter((a) => !hidden.has(a.id)).slice(0, 3);
@@ -58,7 +69,7 @@ export function YourDay({ records = [], navTo, flash: flash0, now: now0 }) {
   const rem = loadReminders(), close = evening ? Y.closeDay(rem, records, now) : null;
   const move = () => { const next = Y.moveToTomorrow(loadReminders(), close.movable, now); saveReminders(next); try { syncToPhone(N(), next); } catch (e) {}
     try { window.dispatchEvent(new CustomEvent("attune-lists")); } catch (e) {} bump((x) => x + 1); flash && flash(tr("{n} moved to tomorrow", { n: close.movable.length })); };
-  const showNotes = ds.notes && (day.people.length || asks.length || day.arriving.length);
+  const showNotes = ds.notes && (day.people.length || asks.length || day.arriving.length || fam.length);
   const askAccess = ds.notes && !access();
   return <div className="space-y-2" data-testid="your-day">
     {ram ? <RamadanCard now={now} navTo={navTo} /> : null}
@@ -81,9 +92,12 @@ export function YourDay({ records = [], navTo, flash: flash0, now: now0 }) {
         <span className="flex-1 min-w-0 truncate text-[13.5px] font-bold" dir="auto">{x.title}</span>
         {x.price ? <b className="text-[13px] tabular-nums shrink-0">{Math.round(x.price).toLocaleString("en-US")}{x.currency ? " " + x.currency : ""}</b> : null}</button>)}
     </div> : null}
+    {ds.notes ? <WhoAskCard notes={notes} flash={flash} bump={() => setTv((x) => x + 1)} /> : null}
     {showNotes ? <div className="c-card space-y-1.5" data-testid="day-notes">
       <div className="flex items-center gap-2"><span className="text-[12px] font-extrabold tracking-wide c-acc flex-1 uppercase flex items-center gap-1.5"><MessageCircle size={14} />{tr("From your messages")}</span>
         <button onClick={() => navTo && navTo("recall")} className="text-[12.5px] font-extrabold c-acc min-h-[36px] px-1" data-testid="day-notes-all">{tr("See all")} ›</button></div>
+      {fam.map((x) => <div key={x.id} className="flex items-center gap-2.5 min-h-[36px] text-[13px]" data-testid="day-family" dir="auto"><span className="w-8 h-8 rounded-full bg-[var(--c-soft)] c-acc grid place-items-center text-[12px] font-extrabold shrink-0">{String(x.name).slice(0, 1).toUpperCase()}</span>
+        <span className="flex-1 min-w-0 truncate">{x.line}</span><span className="c-sub text-[12px] shrink-0 tabular-nums">{new Date(x.ts).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" })}</span></div>)}
       {asks.map((a) => <div key={a.id} className="rounded-[14px] border border-[var(--c-ln)] p-2.5 space-y-1.5" data-testid="day-ask">
         <p className="m-0 text-[13px]" dir="auto"><b>{a.who}</b>{a.app ? <span className="c-sub"> · {a.app}</span> : null}: {a.text}</p>
         <div className="flex items-center gap-2"><span className="flex-1 text-[12px] c-sub">{tr("For {t}", { t: dayTime(a.at, now) })}</span>
@@ -91,7 +105,7 @@ export function YourDay({ records = [], navTo, flash: flash0, now: now0 }) {
           <button onClick={() => addAsk(a)} className={U.btnP + " h-9! min-h-[36px]! px-3! text-[12.5px]!"} data-testid="day-ask-add"><Plus size={14} />{tr("Add a reminder")}</button></div></div>)}
       {day.people.slice(0, 3).map((p) => <div key={p.who + p.kind} className="flex items-center gap-2.5 min-h-[40px]" data-testid="day-person">
         <span className="w-8 h-8 rounded-full bg-[var(--c-soft)] c-acc grid place-items-center text-[12px] font-extrabold shrink-0">{String(p.who || "?").trim().slice(0, 1).toUpperCase()}</span>
-        <span className="flex-1 min-w-0"><b className="block text-[13.5px] truncate" dir="auto">{p.who}{p.group ? <span className="c-sub font-semibold"> · {p.group}</span> : null}</b>
+        <span className="flex-1 min-w-0"><b className="block text-[13.5px] truncate" dir="auto">{p.who}{(() => { const c = NT.cardOf({ title: p.who, app: p.app, pkg: p.pkg }, loadDir()), r = c && NT.roleOf(c.role); return r ? <span className="c-sub font-semibold" data-testid="day-person-role"> · {tr(r[1])}</span> : null; })()}{p.group ? <span className="c-sub font-semibold"> · {p.group}</span> : null}</b>
           <span className="block text-[12px] c-sub truncate" dir="auto">{p.last}</span></span>
         <span className="text-[11.5px] c-sub shrink-0 text-end">{p.app}<span className="block tabular-nums">{p.n > 1 ? tr("{n} messages", { n: p.n }) : timeOf(p.at)}</span></span></div>)}
       {day.arriving.map((x, i) => <p key={i} className="m-0 text-[12.5px] flex gap-2 items-start" data-testid="day-arriving"><Package size={14} className="c-acc shrink-0 mt-0.5" /><span dir="auto"><b>{tr("Arriving")}</b> · {x.text}</span></p>)}

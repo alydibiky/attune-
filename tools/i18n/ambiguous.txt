@@ -610,6 +610,11 @@ paylog-ui.jsx: <button onClick={() => openAccess(N)} className={U.btnP} data-tes
 radar-ui.jsx: <button className={U.btnP + " mt-2"} onClick={() => openAccess(N)}>{tr("Turn on")}</button><RestrictedHelp N={N} /></div>
 travel-ui.jsx: {x.key === "watch" && !x.ok ? <button className="c-sub underline bg-transparent border-0 p-0 min-h-[44px] cursor-pointer shrink-0" onClick={
 
+## Skip
+attune.jsx: <button onClick={close} className="min-h-[44px] px-3 text-[13.5px] font-bold c-sub" data-testid="first-skip">{tr("Skip")}</button></div>
+attune.jsx: <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); close(); }} className="min-h-[44px] text-[var(--c-mut)] text-[13.5px] font-bold p
+noteteach-ui.jsx: <button onClick={skip} className="min-h-[36px] px-3 rounded-full text-[12.5px] c-sub inline-flex items-center gap-1" data-testid="who-ask-sk
+
 ## Your country
 attune.jsx: <div><span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] c-sub mb-2">{tr("Your country")}</span>
 attune.jsx: <span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-3 mb-2">{tr("Your country")}</span>
