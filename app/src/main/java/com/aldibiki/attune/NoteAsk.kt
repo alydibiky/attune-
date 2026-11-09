@@ -50,7 +50,8 @@ object NoteAsk {
         try {
             val key = keyOf(pkg, title)
             if (key.endsWith("|")) return
-            val asked = arr(ctx, "asked"), known = arr(ctx, "known")
+            val asked = arr(ctx, "asked")
+            val known = arr(ctx, "known")
             if (has(asked, key) || has(known, key)) return
             val day = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
             val p = prefs(ctx); val today = if (p.getString("day", "") == day) p.getInt("count", 0) else 0
