@@ -3,6 +3,7 @@
    read by code (life.js parseLife; the phone's model only if the rules can't, and only when one is loaded) → a preview to
    check → saved. Each commitment shows its payments as checkboxes; ticking one offers to add it to Money (the same
    sentence Money reads from a bank message, confirmed there). Tests: tests/e2e_v727life.py.                                    */
+import { PayerAsk } from "./payer-ui.jsx";
 import React, { useMemo, useState } from "react";
 import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown, ChevronLeft, ChevronRight, ArrowDown, ArrowUp, User } from "lucide-react";
 import { personHistory } from "./personhist.js";
@@ -265,6 +266,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   return (
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="life-page">
       <div><h2 className={U.h1}>{tr("People & plans")}</h2><p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
+      <PayerAsk flash={flash} onDone={() => setData(loadLife())} />{/* v9.9.13 "Who pays it?" for a subscription added by itself */}
       {/* v6.27 computer layout A: what you type and what's due on the left, the commitments on the right (stacked on a phone) */}
       <div className={PANES_N}><div className={LEFT}>
       <div className={U.cardPad + " focus-within:border-[var(--c-acc)]"}>

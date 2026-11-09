@@ -856,6 +856,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun agentWatchPlan(plan: String): String { AgentWatch.setPlan(ctx, plan); return "ok" }
     @JavascriptInterface
     fun agentWatchTake(): String = AgentWatch.take(ctx)
+    /** v9.9.13: the agents' notification words in the person's language ("a new best price", "Time to check … — tap"). */
+    @JavascriptInterface
+    fun agentWatchWords(json: String): String { AgentWatch.setWords(ctx, json); return "ok" }
 
     // ---- v8.3 Library at scale (BookShelf.kt): topics, books read natively into a full-text index, fast search ----------------
     var pickContact: (((JSONObject?) -> Unit) -> Unit)? = null   // v8.8: Android's contact picker (no permission) → {name, phone}

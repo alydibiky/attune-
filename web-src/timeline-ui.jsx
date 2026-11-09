@@ -13,7 +13,8 @@ import { PayBox } from "./life-ui.jsx";
 import { loadReminders } from "./actions.js";
 import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
-import { NoteAskCard, LearnedButton, currentAsks } from "./notelabels-ui.jsx";   // v9.9.11 A1 + L (Ali: "ask me, I tell it, it remembers")
+import { NoteAskCard, LearnedButton, currentAsks } from "./notelabels-ui.jsx";
+import { PayerAsk } from "./payer-ui.jsx";   // v9.9.13 who pays a subscription added by itself   // v9.9.11 A1 + L (Ali: "ask me, I tell it, it remembers")
 
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
 const ICON = { reminders: Bell, radar: Radar, life: Users, money: Wallet, xray: MessageSquare, guardian: ShieldAlert };
@@ -169,6 +170,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
               <button className={B} onClick={() => setLog((g) => g.map((y) => (y.id === l.id ? { ...y, confirm: "", msg: tr("Not saved") } : y)))} data-testid="fu-confirm-no">{tr("Not this")}</button></div></div> :
           <p className="m-0 self-center text-[12.5px] font-bold text-[var(--c-pos)] text-center" data-testid="fu-result" dir="auto">{l.msg}{l.undo ? <> · <button className="underline" onClick={() => { l.undo(); setLog((g) => g.filter((y) => y.id !== l.id)); }} data-testid="fu-undo">{tr("Undo")}</button></> : null}</p>}
         </React.Fragment>)}
+        <PayerAsk flash={flash} onDone={(m) => setLog((l) => [...l, { id: "payer:" + Date.now(), q: "", a: tr("Who pays it?"), msg: m, undo: null }])} />
         {asks.map((a) => <div key={a.id} className={bubble} data-testid="fu-q" data-act="note-ask">
           <NoteAskCard ask={a} flash={flash} onDone={(m) => { setAsks((x) => x.filter((y) => y.id !== a.id)); if (m) setLog((l) => [...l, { id: "na:" + a.id, q: "", a: a.src.name, msg: m, undo: null }]); }} /></div>)}
         {qs.map((x) => { const act = actionOf(x), l = act === "ask" ? lifeOf(x) : null;

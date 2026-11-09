@@ -9,6 +9,7 @@
    offers are never suggested again). One-time codes are never kept (RecallLog.kt). Pure; tests/unit/v980autopilot.test.mjs.        */
 import { isChatApp } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
 import { understandNote } from "./notifmeaning.js";
+import { findSub } from "./subpay.js";
 
 export const AP_KEY = "attune:autopilot:v1";
 export const emptyState = () => ({ v: 1, seen: {}, ok: {}, no: {}, always: [], asked: [], done: [], skipApps: [] });
@@ -111,14 +112,20 @@ export function inLedger(x, ledger) {
 }
 
 /** Every waiting suggestion: newest first, one per key, minus what was added, said no to, or is in Money already. */
-export function suggestions(notes = [], { now = Date.now(), s = emptyState(), ledger = null, days = 3 } = {}) {
-  const since = now - days * DAY, keys = new Set(), out = [];
+export function suggestions(notes = [], { now = Date.now(), s = emptyState(), ledger = null, days = 3, life = null } = {}) {
+  // v9.9.13: a subscription receipt counts for 14 days (Ali's Google AI Pro receipt of 7 Nov was gone after 3); the rest for `days`
+  const since = now - Math.max(days, 14) * DAY, keys = new Set(), out = [];
   const list = [...notes].filter((n) => (n.ts || 0) >= since).sort((a, b) => (b.ts || 0) - (a.ts || 0));
   for (const n of list) {
     const x = suggestFrom(n, { now, recent: list, s }); if (!x || x.kind === "delivered") continue;
+    if (x.kind !== "subscription" && (n.ts || 0) < now - days * DAY) continue;
     if (keys.has(x.key) || s.ok[x.key] || s.no[x.key] || inLedger(x, ledger)) continue;
     // a subscription whose expense is already in Money (the bank SMS came first) adds only the plan
     if (x.kind === "subscription") x.noMoney = inLedger({ kind: "expense", amount: x.amount, date: x.date }, ledger);
+    // v9.9.13 (Ali: "an option whether to deduct from my balance or not — this subscription is paid by my father"): someone else pays
+    // it → only the plan (and its reminder), never Money; a NEW subscription waits for "Who pays it?" before anything leaves Money
+    if (x.kind === "subscription" && life) { const c = findSub(life, x.title);
+      if (!c) { x.noMoney = true; x.askPayer = true; } else if (c.payer && c.payer !== "me") x.noMoney = true; }
     keys.add(x.key); out.push(x);
   }
   return out;
@@ -136,7 +143,7 @@ export const isAuto = (s, x) => (s.always || []).includes(ruleOf(x)) || (x.kind 
 /** Accepted (by a tap or by itself): remembered, counted; after 3 of the same rule → ask once "do these by yourself?" */
 export function accept(s, x, { auto = false, rid = "", now = Date.now() } = {}) {
   const r = ruleOf(x), count = Object.values(s.ok).filter((v) => v.rule === r).length + 1;
-  const done = auto ? [{ key: x.key, kind: x.kind, app: x.app, title: x.title || x.note || "", amount: x.amount || 0, at: now, rid }, ...(s.done || [])].slice(0, 60) : (x.kind === "followup" ? [{ key: x.key, kind: x.kind, app: x.app, title: x.title, at: now, rid }, ...(s.done || [])].slice(0, 60) : s.done || []);
+  const done = auto ? [{ key: x.key, kind: x.kind, app: x.app, title: x.title || x.note || "", amount: x.amount || 0, at: now, rid, ...(x.noMoney ? { noMoney: true } : {}) }, ...(s.done || [])].slice(0, 60) : (x.kind === "followup" ? [{ key: x.key, kind: x.kind, app: x.app, title: x.title, at: now, rid }, ...(s.done || [])].slice(0, 60) : s.done || []);
   return { ...s, ok: { ...s.ok, [x.key]: { rule: r, at: now, auto } }, done, ask: !auto && count >= 3 && !s.always.includes(r) && !s.asked.includes(r) ? r : s.ask || "" };
 }
 export function refuse(s, x, { app = false } = {}) {

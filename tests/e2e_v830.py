@@ -70,7 +70,7 @@ with sync_playwright() as p:
 
     # ---- 2A the hotel agent: its plan, then the best 3 ----
     go(page, "agents", "[data-testid=agents-page]")
-    page.fill("[data-testid=agents-input]", "hotel near masjid el haram under 45k for 4 nights from 10 december to january 29, 4 or 5 stars"); page.click("[data-testid=agents-go]"); page.wait_for_timeout(300)
+    page.fill("[data-testid=agents-input]", "hotel near masjid el haram under 45k for 4 nights from 10 december to january 29, 4 or 5 stars"); page.click("[data-testid=agents-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1: the plan first, then Start; page.wait_for_timeout(300)
     card = page.locator("[data-testid=agent-watch]")
     clean = lambda t: t.replace("\u2066", "").replace("\u2069", "")
     check(card.count() == 1 and "4 nights between 2026-12-10 and 2027-01-29" in clean(card.inner_text()) and "only 4–5★, within 1 km" in clean(card.inner_text()), "the card says 4 nights between 10 Dec and 29 Jan, only 4–5★ within 1 km: " + card.inner_text()[:160].replace("\n", " · "))

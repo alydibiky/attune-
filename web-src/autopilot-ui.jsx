@@ -74,7 +74,7 @@ export function AutopilotCard() {
   const [ready, setReady] = useState(0);
   const flash = (m) => { try { window.dispatchEvent(new CustomEvent("attune-flash", { detail: m })); } catch (e) {} };
   const notes = useMemo(readNotes, [slot]);
-  const list = useMemo(() => AP.suggestions(notes, { now: Date.now(), s, ledger: readLedger() }), [notes, s]);
+  const list = useMemo(() => AP.suggestions(notes, { now: Date.now(), s, ledger: readLedger(), life: loadLife() }), [notes, s]);
   // what you allowed is done by itself (listed below with Undo); a "Delivered" closes its follow-up
   useEffect(() => {
     // (v9.9: on the first open the app's save path is set up a moment after this card — wait for it, or "done for you" was shown and
@@ -90,7 +90,7 @@ export function AutopilotCard() {
   const undo = (d) => { try { d.rid && window.__attuneRemoveReminder && window.__attuneRemoveReminder(d.rid); } catch (e) {}
     try { if (d.kind === "expense" || d.kind === "income") window.__attuneUndoMoney && window.__attuneUndoMoney(d.amount, d.kind); } catch (e) {}
     // v9.9 a subscription it added by itself: the plan (or this month's tick) and its expense are taken back
-    try { if (d.kind === "subscription") { saveLife(undoSubPay(loadLife(), d.key)); window.__attuneUndoMoney && window.__attuneUndoMoney(d.amount, "expense"); } } catch (e) {}
+    try { if (d.kind === "subscription") { saveLife(undoSubPay(loadLife(), d.key)); if (!d.noMoney) window.__attuneUndoMoney && window.__attuneUndoMoney(d.amount, "expense"); } } catch (e) {}
     put(AP.undoDone(s, d.key)); };
   const waiting = list.filter((x) => !AP.isAuto(s, x)).slice(0, 4), recent = (s.done || []).filter((d) => d.at > Date.now() - 2 * 864e5 && d.kind !== "followup").slice(0, 3), week = AP.weekCount(s);
   if (!waiting.length && !recent.length && !s.ask) return null;

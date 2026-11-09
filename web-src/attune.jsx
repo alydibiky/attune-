@@ -7794,7 +7794,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.11";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.13";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8775,6 +8775,7 @@ export default function App() {
       if (d.kind === "artifact" && d.id) { const a = loadArtifacts().find((x) => x.id === d.id); if (a) setArtifact(a); else flash(tr("That page was deleted")); return; }   // v6.40 a page pinned to the home screen
       if (d.kind === "wake") { setQuietWake(true); return; }   // voice option C: «يا أتيون» heard with Attune on screen → the quiet orb
       if (d.kind === "open" && d.mode === "voice" && d.text) { setVoiceText(String(d.text)); setVoiceOpen(true); return; }   // the quiet orb heard words
+      if (d.kind === "open" && d.mode === "agents" && d.check) { try { localStorage.setItem("attune:agents:openchat", String(d.check)); localStorage.setItem("attune:agents:checknow", String(d.check)); } catch (e) {} navTo("agents"); return; }   // v9.9.13 AC3 "tap and I'll check"
       if (d.kind === "open" && d.mode) { navTo(String(d.mode)); return; }   // v6.37 the Instant quick-settings tile   // v6.29 Health Connect: "why this app reads your data"
       if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }

@@ -26,7 +26,7 @@ with sync_playwright() as p:
     # ---- N1 ----
     open_mode(page, "agents", "[data-testid=agents-page]")
     page.fill("[data-testid=agents-input]", "negotiate a Tucson 2022 under 1,050,000, no accidents, agency service, in Cairo or Giza")
-    page.click("[data-testid=agents-go]"); page.wait_for_selector("[data-testid=haggle-view]", timeout=5000)
+    page.click("[data-testid=agents-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1: the plan first, then Start; page.wait_for_selector("[data-testid=haggle-view]", timeout=5000)
     lim = page.inner_text("[data-testid=haggle-limits]")
     check("1,050,000" in lim and "No accidents" in lim and "Agency service" in lim, "the Haggler's page with your limits: " + lim.replace("\n", " · "))
     page.fill("[data-testid=haggle-paste]", "Hyundai Tucson 2022 للبيع 1,120,000 جنيه — كلمني 0100 123 4567 https://www.hatla2ee.com/ar/car/used/hyundai/tucson/123456")

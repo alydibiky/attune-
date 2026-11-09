@@ -21,7 +21,7 @@ with sync_playwright() as p:
     page.evaluate("(q) => { const M = window.__mock; M.fakeQueue = q; M.bodies = []; }", ["**Best pick: a 2022 Tucson with agency service, 950k–1.05M EGP.** Check the turbo, the paint and the licence date."])
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'agents'}}))"); page.wait_for_selector("[data-testid=agents-page]", timeout=8000)
     page.fill("[data-testid=agents-input]", "research the best used Hyundai Tucson 2022 in Egypt")
-    page.click("[data-testid=agents-go]")
+    page.click("[data-testid=agents-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1: the plan first, then Start
     page.wait_for_selector("[data-testid=agent-report]", timeout=40000)
     check(page.locator("[data-testid=agents-page]").count() == 1 and page.locator("textarea[placeholder='Message Attune']").count() == 0, "the research stays on the Agents page — Chat is never opened")
     check("2022 Tucson with agency service" in page.inner_text("[data-testid=agent-report]"), "the report is kept on the agent's card")

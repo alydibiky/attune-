@@ -79,11 +79,90 @@ function DatesGrid({ a, grid, openBest }) {
     </div>
   </div>;
 }
-function AgentChat({ c, back, openBest, setRules, understand, flash }) {
-  const a = c.a, [text, setText] = useState(""), [busy, setBusy] = useState(false), [said, setSaid] = useState("");
+/* v9.9.13 Ali picked AG1 + AG2 + AC2 + AC3 + AH1 (combined page "OK1", MOCKUPS.md): the answer on top (the best so far, better than
+   before?, Book this, See 3 more), every date × hotel as a chart, "Checks by itself" (night while charging, else a one-tap question),
+   the plan in 4 lines; the conversation, dates grid and table behind "History". Logic: agents.js bestSoFar / bestChange /
+   chartPoints / planLines (tested). */
+const dShort = (d) => { try { return new Date(d + "T12:00:00").toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); } catch (e) { return d; } };
+const planText = (l) => { const [en, v] = l; if (v && Array.isArray(v.list)) return T(en, { list: v.list.map(([e2, v2]) => T(e2, v2)).join(" · ") });
+  const iso = (x) => (/^\d{4}-\d{2}-\d{2}$/.test(String(x || "")) ? dShort(x) : x);
+  return T(en, v ? { ...v, ...(v.p ? { p: money(v.p, "") } : {}), ...(v.a ? { a: iso(v.a) } : {}), ...(v.b ? { b: iso(v.b) } : {}) } : v); };
+export function PlanCard({ a, onChange, testid = "agent-plan-lines" }) {
+  return <div className={U.cardPad + " space-y-1.5"} data-testid={testid}>
+    <b className="text-[14px]">{tr("My plan")}</b>
+    <ol className="m-0 ps-5 space-y-0.5 text-[13px] c-sub">{A.planLines(a).map((l, i) => <li key={i} dir="auto" data-testid="agent-plan-line">{planText(l)}</li>)}</ol>
+    {onChange ? <button onClick={onChange} className="min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold border border-[var(--c-ln)]" data-testid="agent-plan-change">{tr("Change")}</button> : null}
+  </div>;
+}
+function OffersChart({ a, openBest }) {
+  const c = A.chartPoints(a), [pick, setPick] = useState(null);
+  if (!c.days.length || c.points.length < 2) return null;
+  const W = 300, H = 160, L0 = 40, R0 = 8, T0 = 14, B0 = 26;
+  const ps = c.points.map((p) => p.price), lo = Math.min(...ps, c.below || Infinity), hi = Math.max(...ps, c.below || 0);
+  const pad = Math.max(1, (hi - lo) * 0.08), y0 = lo - pad, y1 = hi + pad;
+  const X = (d) => c.days.length === 1 ? (L0 + W - R0) / 2 : L0 + (c.days.indexOf(d) / (c.days.length - 1)) * (W - L0 - R0 - 10) + 5;
+  const Y = (v) => T0 + (1 - (v - y0) / (y1 - y0)) * (H - T0 - B0);
+  const k = (v) => (v >= 1000 ? Math.round(v / 100) / 10 + "k" : String(Math.round(v)));
+  const ticks = [lo, (lo + hi) / 2, hi];
+  const sel = pick || c.best, rest = c.points.filter((p) => !p.best).slice(0, 2);
+  return <div className={U.cardPad + " space-y-2"} data-testid="agent-chart">
+    <b className="text-[14px]">{tr("Every date, every hotel")}</b>
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={T("Best prices by start date — the lowest is {p} on {d}", { p: money(c.best.price, a.currency || ""), d: dShort(c.best.date) })}>
+      {ticks.map((t, i) => <g key={i}><line x1={L0} x2={W - R0} y1={Y(t)} y2={Y(t)} stroke="var(--c-ln)" /><text x={2} y={Y(t) + 3} fontSize="9" fill="var(--c-mut)">{k(t)}</text></g>)}
+      {c.below > 0 ? <g><line x1={L0} x2={W - R0} y1={Y(c.below)} y2={Y(c.below)} stroke="var(--c-neg)" strokeDasharray="4 3" /><text x={L0 + 2} y={Y(c.below) - 3} fontSize="9" fill="var(--c-neg)">{T("limit {p}", { p: k(c.below) })}</text></g> : null}
+      {c.days.map((d) => <text key={d} x={X(d)} y={H - 8} fontSize="9" textAnchor="middle" fill="var(--c-mut)">{dShort(d)}</text>)}
+      {c.points.map((p, i) => <circle key={i} cx={X(p.date)} cy={Y(p.price)} r={p.best ? 7 : 4.5} fill={p.best ? "var(--c-acc)" : p.price <= (c.below || Infinity) ? "var(--c-blue, #2f5f9e)" : "var(--c-mut)"}
+        stroke={sel === p ? "var(--c-ink)" : "none"} strokeWidth="2" style={{ cursor: "pointer" }} onClick={() => setPick(p)} data-testid={p.best ? "agent-chart-best" : "agent-chart-dot"}><title>{(p.name || a.site) + " · " + money(p.price, a.currency || "")}</title></circle>)}
+    </svg>
+    <p className="m-0 text-[11.5px] c-sub">{tr("Each dot = one hotel on that start date. Tap a dot to see the hotel.")}</p>
+    {sel ? <div className="flex items-center gap-2 rounded-[12px] bg-[var(--c-surf-2)] border border-[var(--c-ln)] px-3 py-2" data-testid="agent-chart-pick">
+      <span className="min-w-0 flex-1 text-[13px]" dir="auto"><b className="block truncate">{sel.name && !R.isSiteName(sel.name, a.site) ? sel.name : a.site}</b><span className="c-sub">{dShort(sel.date)}{sel.checkout ? " → " + dShort(sel.checkout) : ""}</span></span>
+      <b className="tabular-nums text-[14px]" dir="ltr">{money(sel.price, a.currency || "")}</b>
+      <button onClick={() => openBest(a, sel)} className="min-h-[38px] px-3 rounded-[10px] text-[12px] font-extrabold bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" data-testid="agent-chart-open">{tr("Book this")}</button></div> : null}
+    {rest.map((p, i) => <div key={i} className="flex justify-between text-[13px] tabular-nums" data-testid="agent-chart-next"><span dir="auto" className="truncate">{dShort(p.date)} · {p.name && !R.isSiteName(p.name, a.site) ? p.name : a.site}</span><b dir="ltr">{money(p.price, a.currency || "")}</b></div>)}
+  </div>;
+}
+function AgentOverview({ a, openBest, toggle, checkNow, busy, onPlan }) {
+  const b = A.bestSoFar(a), ch = A.bestChange(a), [more, setMore] = useState(false);
+  const last = [...(a.checks || [])].reverse()[0], others = A.knownOffers(a).filter((o) => o !== b).slice(0, 3);
+  const nm = (o) => (o.name && !R.isSiteName(o.name, a.site) ? o.name : a.site);
+  return <div className="space-y-2.5" data-testid="agent-overview">
+    {b ? <div className="rounded-[18px] bg-[var(--c-soft)] p-3.5 space-y-1.5" data-testid="agent-best">
+      <p className="m-0 text-[12.5px] font-extrabold c-sub">{tr("Your best so far")}</p>
+      <p className="m-0 text-[26px] font-black tabular-nums leading-none" dir="ltr" data-testid="agent-best-price">{money(b.price, a.currency || "")}</p>
+      <p className="m-0 text-[13.5px]" dir="auto">{nm(b)}{b.checkin ? " · " + dShort(b.checkin) + (b.checkout ? " → " + dShort(b.checkout) : "") : ""}{a.fields && a.fields.nights ? " · " + T("{n} nights", { n: a.fields.nights }) : ""}</p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {ch && ch.by > 0 ? <span className={U.tag("blue")} data-testid="agent-best-better">{T("↓ {x} since {t}", { x: money(ch.by, ""), t: ago(ch.since) })}</span>
+          : ch && ch.by === 0 ? <span className={U.tag("gray")} data-testid="agent-best-same">{tr("No better price since the last checks")}</span> : null}
+        {a.below > 0 ? <span className={"text-[12px] " + (b.price <= a.below ? "c-pos font-bold" : "c-sub")}>{T("limit {p}", { p: money(a.below, "") })}{b.price <= a.below ? " ✓" : ""}</span> : null}
+      </div>
+      <div className="flex flex-wrap gap-1.5 pt-0.5">
+        <button onClick={() => openBest(a, b)} className={U.btnP} data-testid="agent-best-book">{tr("Book this")}</button>
+        {others.length ? <button onClick={() => setMore(!more)} className={U.btnS} data-testid="agent-best-more">{more ? tr("Hide") : T("See {n} more", { n: others.length })}</button> : null}
+      </div>
+      {more ? <div className="space-y-1 pt-1" data-testid="agent-best-others">{others.map((o, i) => <button key={i} onClick={() => openBest(a, o)} className="w-full flex justify-between gap-2 text-start text-[13px] rounded-[10px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-2.5 py-2">
+        <span className="min-w-0 truncate" dir="auto">{nm(o)}{o.checkin ? " · " + dShort(o.checkin) : ""}</span><b className="tabular-nums" dir="ltr">{money(o.price, a.currency || "")}</b></button>)}</div> : null}
+    </div> : <div className={U.cardPad} data-testid="agent-best-none"><p className="m-0 text-[13.5px]">{tr("No price yet — the first check finds one.")}</p></div>}
+    <OffersChart a={a} openBest={openBest} />
+    <div className={U.cardPad + " space-y-1"} data-testid="agent-auto">
+      <label className="flex items-center justify-between gap-2 min-h-[40px]"><b className="text-[14px]">{tr("Checks by itself")}</b>
+        <input type="checkbox" checked={a.on !== false} onChange={() => toggle(a)} className="w-6 h-6 accent-[var(--c-acc)]" data-testid="agent-auto-toggle" /></label>
+      <p className="m-0 text-[12.5px] c-sub">{a.on === false ? tr("Paused — turn it on to check again") : A.needsBrowser(a) ? tr("Every night while the phone charges on Wi-Fi. If it can't, I ask you with one tap.") : T("Every {h} hours, even with Attune closed", { h: (a.rules && a.rules.hours) || 12 })}{last ? " · " + T("last {t}", { t: ago(last.at) }) : ""}</p>
+      <p className="m-0 text-[12.5px] c-sub">{tr("Tells you only when a price beats your best.")}</p>
+      <button onClick={() => checkNow(a)} disabled={busy} className={U.btnS + " mt-1"} data-testid="agent-auto-check"><RefreshCw size={14} />{busy ? tr("Checking…") : tr("Check now")}</button>
+    </div>
+    <PlanCard a={a} onChange={onPlan} />
+  </div>;
+}
+function AgentChat({ c, back, openBest, setRules, understand, flash, toggle, checkNow, busy }) {
+  const a = c.a, [text, setText] = useState(""), [busy0, setBusy] = useState(false), [said, setSaid] = useState("");
+  // v9.9.13 AG1: a price watch opens on the answer; the rest is History
+  const overview = a.kind === "watch" && !(a.fields && a.fields.flight) && !!toggle;
+  const [hist, setHist] = useState(!overview);
+  const inputRef = React.useRef(null);
   const msgs = A.agentChat(a);
   const send = async () => {
-    const t = text.trim(); if (!t || busy) return;
+    const t = text.trim(); if (!t || busy0) return;
     let got = R.parseRule(t);
     if (!got && understand) { setBusy(true); try { got = R.cleanRules((await understand(t)) || {}); if (!Object.keys(got).length) got = null; } catch (e) { got = null; } setBusy(false); }
     if (!got) { setSaid(tr("I didn't understand that rule — try one of the examples.")); return; }
@@ -94,17 +173,19 @@ function AgentChat({ c, back, openBest, setRules, understand, flash }) {
   return <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agent-chat">
     <div className="flex items-center gap-2"><button onClick={back} className="w-11 h-11 grid place-items-center rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]" aria-label={tr("Back")} data-testid="agent-chat-back"><ArrowLeft size={18} className="rtl:-scale-x-100" /></button>
       <b className="text-[17px] font-black min-w-0 truncate" dir="auto">{c.title}</b></div>
-    <div className="flex flex-col gap-2">
+    {overview ? <AgentOverview a={a} openBest={openBest} toggle={toggle} checkNow={checkNow} busy={busy} onPlan={() => { try { inputRef.current && inputRef.current.focus(); } catch (e) {} }} /> : null}
+    {overview ? <button onClick={() => setHist(!hist)} className="w-full min-h-[44px] text-[13px] font-extrabold c-sub" data-testid="agent-history-toggle" aria-expanded={hist}>{hist ? tr("Hide history") : tr("History ›")}</button> : null}
+    {hist ? <><div className="flex flex-col gap-2">
       {msgs.map((m, i) => m.who === "me"
         ? <div key={i} className={bubble + " self-end bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] rounded-ee-[4px]"} dir="auto">{m.text}</div>
         : <div key={i} className={bubble + " self-start bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-es-[4px]" + (m.found || m.better ? " font-extrabold" : "")} dir="auto" data-testid={m.better ? "agent-chat-better" : undefined}>
             {tr(m.T[0], Object.fromEntries(Object.entries(m.T[1] || {}).map(([k, v]) => [k, ["p", "b", "x"].includes(k) ? money(v, a.currency || "") : v])))}{m.found ? " 🎉" : ""}</div>)}
       {c.grid && c.grid.kind ? <div className={bubble + " self-stretch max-w-none bg-[var(--c-surf)] border border-[var(--c-ln)]"}><DatesGrid a={a} grid={c.grid} openBest={openBest} /></div> : null}
     </div>
-    <InChat.Provider value={true}>{c.el}</InChat.Provider>
+    <InChat.Provider value={true}>{c.el}</InChat.Provider></> : null}
     <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 sticky bottom-2" data-testid="agent-chat-form">
-      <input value={text} onChange={(e) => setText(e.target.value)} dir="auto" className={U.inp + " flex-1"} placeholder={tr("Tell the agent: “only 5 stars”, “under 40,000”…")} data-testid="agent-chat-input" />
-      <button className={U.btnP + " !h-11 !min-h-[44px]"} disabled={busy} data-testid="agent-chat-send"><Send size={16} /></button>
+      <input ref={inputRef} value={text} onChange={(e) => setText(e.target.value)} dir="auto" className={U.inp + " flex-1"} placeholder={tr("Tell the agent: “only 5 stars”, “under 40,000”…")} data-testid="agent-chat-input" />
+      <button className={U.btnP + " !h-11 !min-h-[44px]"} disabled={busy0} data-testid="agent-chat-send"><Send size={16} /></button>
     </form>
     {said ? <p className="m-0 text-[12.5px] c-sub" data-testid="agent-chat-said">{said}</p> : null}
   </div>;
@@ -117,6 +198,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const [draft, setDraft] = useState(null);        // { text, d } — a sentence the agent is still asking about
   const [answer, setAnswer] = useState("");
   const [doCard, setDoCard] = useState(null);      // "do it now": the app links
+  const [planDraft, setPlanDraft] = useState(null);   // v9.9.13 AH1: { sentence, d } — the plan shown before Start
   const [rep, setRep] = useState(false);
   const [busy, setBusy] = useState("");
   const [tabWant, setTabWant] = useState(() => { try { return localStorage.getItem("attune:agents:tab") || ""; } catch (e) { return ""; } });
@@ -171,6 +253,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       if (key === last) return;
       sentRef.current = key; try { sessionStorage.setItem("attune:agents:sent", key); } catch (e) {}
       try { N && N.agentWatchPlan && N.agentWatchPlan(plan); } catch (e) {}
+      try { N && N.agentWatchWords && N.agentWatchWords(JSON.stringify({ newBest: tr("Agents · a new best price"), tap: tr("Tap to open Agents."), ask: tr("Time to check {site} prices — tap and I'll do it (about 30 seconds)."), check: tr("Check") })); } catch (e) {}
       const others = W.loadWatch().filter((r) => !String(r.id).startsWith("agent-"));
       W.saveWatch([...others, ...mine], ar ? "ar" : "en");
     }, 120);
@@ -378,6 +461,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     if (a) setTimeout(() => runFollow(a), 200);
   }, []);
   const remove = (a) => { if (a.kind === "follow") followNote(a, false); put({ ...st, agents: st.agents.filter((x) => x.id !== a.id) }); };
+  // v9.9.13 AC3: the phone asked "Time to check … — tap and I'll do it" → open on that agent and check it now
+  useEffect(() => { let id = ""; try { id = localStorage.getItem("attune:agents:checknow") || ""; if (id) localStorage.removeItem("attune:agents:checknow"); } catch (e) {}
+    const a = id && A.loadAgents().agents.find((x) => x.id === id); if (a) { setChat(a.id); setTimeout(() => checkNow(a), 400); } }, []);
   const toggle = (a) => { if (a.kind === "follow") followNote(a, !a.on); put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? { ...x, on: !x.on } : x)) }); };
 
   // ---- v9.4 the new agents' actions (agents2.js does the thinking; these only talk to the phone) ----
@@ -457,6 +543,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     if (d.kind === "alert") { W.saveWatch([W.newRule(d.rule), ...W.loadWatch()], ar ? "ar" : "en"); setSt({ ...st }); flash && flash(T("I'll tell you: {r}", { r: W.ruleText(d.rule, ar) })); return; }
     // v8.7 (Ali picked persona 3's point 2): agents that act are Pro — Free keeps one running agent to try
     if (!pro && st.agents.filter((x) => x.on).length >= 1) { flash && flash(tr("Free includes 1 agent — Pro runs as many as you need")); openPlan && openPlan(); return; }
+    // v9.9.13 AH1 (Ali picked): a price watch first says its plan in 4 lines — Start / Change something
+    if (d.kind === "watch" && !d.planOk) { setPlanDraft({ sentence, d }); setDraft(null); return; }
+    setPlanDraft(null);
     const a = A.makeAgent(d); noteProUse("agent"); openTab(a.id);
     const usual = d.kind === "order" ? { ...st.usual, [d.app.id]: d.what } : st.usual;
     put({ ...st, usual, agents: [a, ...st.agents] });
@@ -525,7 +614,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   if (msgs) return <MessagesPage back={() => { setMsgs(""); setSt(A.loadAgents()); }} flash={flash} nativeCall={nativeCall} drafter={drafter} startNew={msgs === "new"} />;
   const open = chat && cards.find((c) => c.id === chat);
   if (open && open.a && open.a.kind === "haggle") return <HaggleView a={A.loadAgents().agents.find((x) => x.id === open.id) || open.a} back={() => setChat("")} upd={upd} flash={flash} send={sendHaggle} />;
-  if (open) return <AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} />;
+  if (open) return <AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} toggle={toggle} checkNow={checkNow} busy={busy === open.id} />;
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agents-page">
       <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
@@ -540,6 +629,13 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       </div> : null}
       <button onClick={() => setAllStarters(!allStarters)} className="w-full min-h-[40px] text-[13px] font-extrabold c-acc" aria-expanded={allStarters} data-testid="agents-more-starters">{allStarters ? tr("Fewer") : tr("More agents")} {allStarters ? "‹" : "›"}</button>
       {schedOpen ? <ScheduleForm nativeCall={nativeCall} onClose={() => setSchedOpen(false)} onDone={createSend} /> : null}
+      {planDraft ? <div className="space-y-2" data-testid="agents-plan">
+        <div className="self-end rounded-[16px] rounded-ee-[4px] px-3 py-2 bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[13.5px] font-bold ms-auto w-fit max-w-[88%]" dir="auto">{planDraft.sentence}</div>
+        <p className="m-0 text-[14px] font-extrabold">{tr("Here's what I'll do:")}</p>
+        <PlanCard a={A.makeAgent({ ...planDraft.d })} testid="agents-plan-lines" />
+        <div className="flex gap-2"><button onClick={() => start(planDraft.sentence, { ...planDraft.d, planOk: true })} className={U.btnP} data-testid="agent-plan-start">{tr("Start")}</button>
+          <button onClick={() => { setText(planDraft.sentence); setPlanDraft(null); }} className={U.btnS} data-testid="agent-plan-edit">{tr("Change something")}</button></div>
+      </div> : null}
       {draft ? <div className={U.cardPad + " space-y-2"} data-testid="agents-ask">
         <p className="m-0 text-[14px] font-bold" dir="auto">{T(draft.d.ask, { ...(draft.d.v || {}), app: draft.d.app ? draft.d.app.label : "", x: draft.d.name || "" })}</p>
         <form onSubmit={(e) => { e.preventDefault(); reply(); }} className="flex gap-2">

@@ -509,6 +509,8 @@ export function nextReminder(c, now = Date.now()) {
   const who = c.person ? c.person + " · " : "";
   const what = c.kind === "installment" ? `installment ${n.i + 1} of ${c.count}` : c.kind === "circle" ? `${c.title || "savings circle"} ${n.i + 1}/${c.count}` : c.title || c.kind;
   const amount = n.amount.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + (c.currency || homeCurrency());
+  // v9.9.13 (Ali: "paid by my father … I need to be reminded"): someone else pays it → the reminder says so, and nothing leaves Money
+  if (c.payer && c.payer !== "me") return { id: "life-" + c.id, at, title: tr("Renews today: {w}", { w: what }), body: tr("{a} — {p} pays it; your balance stays the same", { a: amount, p: c.payer }) };
   return { id: "life-" + c.id, at, title: (c.dir === "in" ? "Due to you: " : "Due: ") + who + what, body: amount + " — tick it in People & plans when it's paid" };
 }
 
@@ -529,3 +531,11 @@ export function paymentOn(data, text, now = Date.now()) {
   const next = scheduleOf(c, now).find((s) => !s.paid); if (!next) return null;
   return { c, i: next.i, amount: amt, dir };
 }
+
+/** v9.9.13 who pays a subscription: "me" (out of my balance) or a name ("My father" — never out of Money, still reminded). */
+export function setPayer(data, id, payer) {
+  const p = String(payer || "").trim().slice(0, 40) || "me";
+  return { ...data, items: (data.items || []).map((c) => (c.id === id ? { ...c, payer: p } : c)) };
+}
+/** Subscriptions Attune added by itself whose payer was never asked. */
+export const payerUnknown = (data) => ((data && data.items) || []).filter((c) => c.kind === "subscription" && c.auto && !c.payer && !c.ended);

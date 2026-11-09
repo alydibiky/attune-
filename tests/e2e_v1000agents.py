@@ -23,7 +23,7 @@ N.agentOpen = (id, arg) => { window.__agentOpen = JSON.parse(arg); setTimeout(()
 def go(page, mode, sel):
     page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", mode); page.wait_for_selector(sel, timeout=8000); page.wait_for_timeout(300)
 def say(page, text):
-    page.fill("[data-testid=agents-input]", text); page.click("[data-testid=agents-go]"); page.wait_for_timeout(300)
+    page.fill("[data-testid=agents-input]", text); page.click("[data-testid=agents-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1: the plan first, then Start; page.wait_for_timeout(300)
 with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
@@ -50,7 +50,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=agent-track]").count() == 1 and mine and mine[0]["app"].startswith("pkgs:com.amazon.mShop.android.shopping"), "a delivery agent: Amazon's own notifications are watched (rule %s)" % (mine[0]["app"] if mine else None))
     # ---- the usual order ----
     if page.locator("[data-testid=agents-chip-order]").count() == 0: page.click("[data-testid=agents-more-starters]")   # v9.4: under More agents
-    page.click("[data-testid=agents-chip-order]"); page.click("[data-testid=agents-go]"); page.wait_for_timeout(300)
+    page.click("[data-testid=agents-chip-order]"); page.click("[data-testid=agents-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1: the plan first, then Start; page.wait_for_timeout(300)
     check("usual" in page.locator("[data-testid=agents-ask]").inner_text(), "Order my usual from Talabat → it asks what the usual is (once)")
     page.fill("[data-testid=agents-answer]", "Koshary Abou Tarek — large + rice pudding"); page.click("[data-testid=agents-answer-go]"); page.wait_for_timeout(300)
     page.click("[data-testid=agent-order-now]"); page.wait_for_timeout(200)

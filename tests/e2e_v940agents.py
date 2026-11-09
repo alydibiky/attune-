@@ -53,7 +53,7 @@ with sync_playwright() as p:
     rep = page.evaluate("window.__w.replies")
     check(len(rep) == 1 and rep[0]["key"] == "com.whatsapp|p:Ahmed" and rep[0]["text"] == "Yes 👍", "…a quick reply goes into exactly Ahmed's chat through its own Reply")
     # scheduled message — from a sentence
-    page.fill("[data-testid=agents-input]", "send Ahmed 'I'm running late' at 5 pm tomorrow"); page.click("[data-testid=agents-go]"); page.wait_for_timeout(600)
+    page.fill("[data-testid=agents-input]", "send Ahmed 'I'm running late' at 5 pm tomorrow"); page.click("[data-testid=agents-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1: the plan first, then Start; page.wait_for_timeout(600)
     sch = page.evaluate("window.__w.sched")
     m = [x for x in sch if str(x.get("id", "")).startswith("msg-")]
     check(len(m) == 1 and m[0]["send"]["text"] == "I'm running late" and m[0]["send"]["key"] == "com.whatsapp|p:Ahmed" and datetime.datetime.fromtimestamp(m[0]["at"] / 1000).hour == 17,

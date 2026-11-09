@@ -604,6 +604,7 @@ class MainActivity : AppCompatActivity() {
             if (intent.getBooleanExtra(WakeService.EXTRA_WAKE, false)) { intent.removeExtra(WakeService.EXTRA_WAKE); WakeService.unlockFirst(this) }
             val p = JSONObject().put("kind", "open").put("mode", mode)
             intent.getStringExtra(WakeService.EXTRA_VOICE_TEXT)?.let { t -> intent.removeExtra(WakeService.EXTRA_VOICE_TEXT); p.put("text", t.take(500)) }   // the words the quiet orb heard
+            intent.getStringExtra(EXTRA_AGENT_CHECK)?.let { id -> intent.removeExtra(EXTRA_AGENT_CHECK); p.put("check", id.take(80)) }   // v9.9.13 AC3: "tap and I'll check"
             if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
             return
         }

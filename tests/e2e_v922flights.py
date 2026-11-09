@@ -27,7 +27,7 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_timeout(1200); go(page, "agents")
     check(page.locator("[data-testid=agents-chip-flight]").count() == 1, "a “Cheapest flight” example chip")
     page.fill("[data-testid=agents-input]", "cheapest flight from Cairo to Jeddah on 8 January 2027, ± 3 days, return 13 January 2027")
-    page.click("[data-testid=agents-go]"); page.wait_for_timeout(800)
+    page.click("[data-testid=agents-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1: the plan first, then Start; page.wait_for_timeout(800)
     a = [x for x in agents(page) if x.get("fields") and x["fields"].get("flight")]
     check(len(a) == 1 and len(a[0]["tries"]) == 6 and a[0]["fields"]["flight"]["from"] == "CAI" and a[0]["fields"]["flight"]["to"] == "JED", "one sentence → a flight agent over 6 sites (CAI → JED)")
     card = page.locator("[data-testid=agent-watch]").first

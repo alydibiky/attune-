@@ -20,7 +20,7 @@ import { parseWatch } from "./watch.js";
 import { isoDay } from "./deadlines.js";
 import { isFlightAgent, flightAgent } from "./flights.js";
 import { parseMore, slotState } from "./agents2.js";
-import { withRuleFound } from "./agent-rules.js";
+import { withRuleFound, applyRules, ruleChips } from "./agent-rules.js";
 
 export const AGENTS_KEY = "attune:agents:v1";
 const DAY = 86400000;
@@ -445,6 +445,8 @@ export const watchPlan = (st) => [
   ...(st.agents || []).filter((a) => a.on && (a.kind === "watch" || a.kind === "protect" || (a.kind === "buy" && a.below > 0 && a.step === "search")) && /^https:\/\//.test(a.url || ""))
   .flatMap((a) => (a.tries && a.tries.length ? a.tries.map((x, i) => ({ id: a.id + "~" + i, title: (a.what || a.title) + " · " + (x.checkin || x.site || ""), url: x.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: x.site || a.site || "" }))
     : [{ id: a.id, title: a.what ? a.what + " · " + (a.site || "") : a.title, url: a.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: a.site || "" }])
+    .map((x) => { const b = bestSoFar(a), lb = ((a.checks || []).filter((c) => c.how === "browser" && c.price > 0).slice(-1)[0] || {}).at || 0;   // v9.9.13: the phone tells only a price that beats the best; AC3 knows the last browser read
+      return { ...x, ...(b && b.price > 0 ? { best: b.price } : {}), ...(lb ? { lastBrowser: lb } : {}) }; })
     .map((x) => (a.rules && a.rules.hours ? { ...x, hours: a.rules.hours } : x))
     .map((x) => (a.rules && Object.keys(a.rules).length ? { ...x, rules: JSON.stringify(a.rules) } : x)))].slice(0, 16);   // v9.9.4: the hidden read follows the rules too   // v9.2: "check every 6 hours" (agent-rules.js)
 /** The phone's checks ({id or "id~i": [rows]}) → the agents with them added (a window's row keeps its days). */
@@ -461,7 +463,10 @@ export function takeChecks(agents, got) {
     const seen = rows.filter((c) => c.price > 0 && c.href).map((c) => ({ name: c.name || a.what || a.title, price: c.price, href: c.href, site: c.site || "", url: c.href, text: c.name || "", ...(c.checkin ? { checkin: c.checkin, checkout: c.checkout } : {}) }));
     // v9.9.4: a hidden read (HeadlessRead.kt) brings the page's best offers with their names and links, like Check now
     const tops = rows.flatMap((c) => (Array.isArray(c.top) ? c.top.filter((o) => o && o.price > 0).map((o, i) => ({ ...o, site: c.site || o.site || "", key: (c.checkin || "") + "-" + i + "-" + o.price, ...(c.checkin ? { checkin: c.checkin, checkout: c.checkout } : {}) })) : []));
-    if (tops.length) { const best3 = bestThree([...tops, ...((a.best3 || []).filter((o) => !tops.some((t) => t.checkin && t.checkin === o.checkin)))], a.skip, a.taste, 10); return withRuleFound({ ...next, best3 }); }
+    if (tops.length) { const best3 = bestThree([...tops, ...((a.best3 || []).filter((o) => !tops.some((t) => t.checkin && t.checkin === o.checkin)))], a.skip, a.taste, 10);
+      // v9.9.13 AG2: the night's hotels on each date join the chart (a date read again replaces its old offers)
+      const days = tops.some((t) => t.checkin) ? offersByDay([...tops, ...flatDays(a).filter((o) => !tops.some((t) => t.checkin === o.checkin))].filter((o) => applyRules([o], a.rules || {}).length)) : [];
+      return withRuleFound({ ...next, best3, ...(days.length >= 2 ? { byDay: days } : {}) }); }
     return seen.length ? { ...next, best3: bestAcross(seen, a) } : next;
   });
 }
@@ -721,4 +726,61 @@ export function withoutTwins(goals = [], agents = []) {
   const ag = agents.filter((a) => a && a.kind !== "send").map((a) => SIG([a.what, a.title, a.said].filter(Boolean).join(" ")));
   return goals.filter((g) => { const w = SIG(g.text); if (!w.size) return true;
     return !ag.some((s) => { let hit = 0; for (const x of w) if (s.has(x)) hit++; return hit >= Math.min(2, w.size) && hit / w.size >= 0.5; }); });
+}
+
+/* ---- v9.9.13 Ali picked AG1 + AG2 + AC2 + AC3 + AH1 (MOCKUPS.md, combined https://claude.ai/artifact/MKnujhxuS8SgLncLadhA1W — "OK1"):
+   the agent's page answers "what's the best price, is it better than before, when does it check next" on top; a chart of every start
+   date × every hotel (AG2: "to see if there is another date and another hotel with a good price"); its plan in 4 lines (AH1).
+   Pure; tests/unit/v9913agents.test.mjs. */
+const flatDays = (a) => (Array.isArray(a && a.byDay) ? a.byDay : []).flatMap((r) => (r.offers || []).map((o) => ({ ...o, checkin: o.checkin || r.date, checkout: o.checkout || r.checkout || "" })));
+/** Every offer the agent knows that follows its rules, once each (best3 + the dates grid). */
+export function knownOffers(a) {
+  const all = [...((a && a.best3) || []), ...flatDays(a)].filter((o) => o && o.price > 0);
+  const kept = applyRules(all, (a && a.rules) || {}), out = [], seen = new Set();
+  for (const o of kept.sort((x, y) => x.price - y.price)) {
+    const k = String(o.name || "").toLowerCase().trim() + "|" + (o.checkin || "") + "|" + o.price;
+    if (seen.has(k)) continue; seen.add(k); out.push(o);
+  }
+  return out;
+}
+/** The best so far: the cheapest known offer that follows the rules, else the lowest checked price. → offer-like or null */
+export function bestSoFar(a) {
+  const k = knownOffers(a)[0]; if (k) return k;
+  const c = ((a && a.checks) || []).filter((x) => x.price > 0).sort((x, y) => x.price - y.price)[0];
+  return c ? { price: c.price, name: c.name || "", href: c.href || "", site: c.site || (a && a.site) || "", checkin: c.checkin || "", checkout: c.checkout || "" } : null;
+}
+/** Is the best better than before? The lowest price of the checks before the newest round (rounds = checks within 2 hours) vs. now.
+ *  → { by, was, since } (by > 0: cheaper by that much; by < 0: dearer) or null when there is nothing to compare. */
+export function bestChange(a) {
+  const c = ((a && a.checks) || []).filter((x) => x.price > 0).sort((x, y) => x.at - y.at);
+  const b = bestSoFar(a); if (!b || c.length < 2) return null;
+  const lastAt = c[c.length - 1].at, before = c.filter((x) => x.at < lastAt - 2 * 3600e3);
+  if (!before.length) return null;
+  const was = Math.min(...before.map((x) => x.price));
+  return { by: was - b.price, was, since: before[before.length - 1].at };
+}
+/** AG2: every start date × every hotel, for the chart. → { days: ["2026-12-18", …], points: [{ date, price, name, href, site, checkout, best }], best, below } */
+export function chartPoints(a) {
+  const offers = knownOffers(a).filter((o) => o.checkin);
+  const days = [...new Set(offers.map((o) => o.checkin))].sort();
+  const best = offers[0] || null;
+  return { days, points: offers.map((o) => ({ date: o.checkin, price: o.price, name: o.name || "", href: o.href || "", site: o.site || "", checkout: o.checkout || "", best: !!best && o === best })), best, below: (a && a.below) || 0 };
+}
+/** Sites whose prices appear only in a real browser (the night check reads them — AgentWatch.kt HeadlessRead.needsScripts). */
+export const needsBrowser = (a) => /(^|\.|\b)(booking|agoda|expedia|hotels|airbnb|trivago|kayak|skyscanner|almosafer|wego|tripadvisor)\b/i.test(String((a && (a.url || "")) + " " + ((a && a.site) || "")));
+/** AH1: the agent's plan in 4 lines → [[en, vars], …] (translated by the page). */
+export function planLines(a) {
+  if (!a) return [];
+  const f = a.fields || {}, R = a.rules || {}, out = [];
+  out.push(f.window ? ["Look on {site} for {n} nights between {a} and {b}", { site: a.site || "", n: f.nights || "", a: f.window.from, b: f.window.to }]
+    : f.checkin ? ["Look on {site} for {a} → {b}", { site: a.site || "", a: f.checkin, b: f.checkout || "" }]
+    : a.what ? ["Look for {w} on {site}", { w: a.what, site: a.site || "" }] : ["Look on {site}", { site: a.site || "" }]);
+  const chips = ruleChips({ ...R, below: 0, hours: 0, autonomy: undefined }).map((c) => [c.en, c.v || {}]);
+  if (f.stars && f.stars.length) chips.unshift(["only {s}★", { s: f.stars.join("–") }]);
+  if (f.near && !R.maxWalk) chips.push(["within 1 km", {}]);
+  out.push(chips.length ? ["Keep only: {list}", { list: chips }] : ["Keep every offer that fits", {}]);
+  const h = R.hours || (a.every ? Math.max(1, Math.round(a.every / 60)) : 12);
+  out.push(needsBrowser(a) ? ["Check every night while the phone charges on Wi-Fi; if it can't, ask you with one tap", {}] : ["Check every {h} hours, even with Attune closed", { h }]);
+  out.push(a.below > 0 ? ["Tell you when it's under {p} or better than your best", { p: a.below }] : ["Tell you when a price beats your best", {}]);
+  return out;
 }

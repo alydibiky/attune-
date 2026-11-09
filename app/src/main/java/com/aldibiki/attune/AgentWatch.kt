@@ -32,6 +32,12 @@ object AgentWatch {
         val arr = try { JSONArray(plan) } catch (e: Exception) { JSONArray() }
         prefs(ctx).edit().putString("plan", arr.toString()).apply()
         // v9.0: a round already planned stays planned — opening the Agents page used to push the next check 12 hours later each time
+        // v9.9.13 AC2 (Ali picked): agents on sites that need a browser (Booking…) get a real check once a night while charging on Wi-Fi
+        val browserOnes = (0 until arr.length()).mapNotNull { arr.optJSONObject(it) }.any { HeadlessRead.needsScripts(it.optString("url")) }
+        if (browserOnes) AgentNightJob.schedule(ctx) else AgentNightJob.cancel(ctx)
+        val now0 = System.currentTimeMillis(); val ed = prefs(ctx).edit()
+        for (i in 0 until arr.length()) { val b = baseId(arr.optJSONObject(i)?.optString("id") ?: continue); if (prefs(ctx).getLong("since:" + b, 0L) == 0L) ed.putLong("since:" + b, now0) }
+        ed.apply()
         if (arr.length() == 0) { cancel(ctx); prefs(ctx).edit().remove("next").apply() }
         else {
             // v9.2: an agent now asks to be checked more often than the round already planned → plan it again, sooner
@@ -147,15 +153,30 @@ object AgentWatch {
     /** A page that shows dates, doesn't say "no appointments", and isn't the login page — worth a look now. */
     fun slotOpen(t: String): Boolean = t.length > 80 && !NO_SLOT.containsMatchIn(t) && !LOGIN.containsMatchIn(t.take(1500)) && A_DATE.containsMatchIn(t) && Regex("(?i)available|book|select|appointment|slot|موعد|متاح|احجز").containsMatchIn(t)
 
-    /** One round of checks. Called on a background thread. */
-    fun run(ctx: Context) {
+    fun baseId(id: String) = id.substringBefore("~")
+
+    /** v9.9.13 (Ali picked "tells you only when a price beats your best"): a price is news when it is lower than the agent's best so
+     *  far (`best`, sent by the page) — or, before any best, at or under the person's limit. Pure. */
+    fun isNews(price: Long, best: Long, below: Long): Boolean = price > 0 && (if (best > 0) price < best else below > 0 && price <= below)
+
+    /** One round of checks. Called on a background thread. night = the long night job (AgentNightJob): every page that needs a
+     *  browser is read (Android gives a job up to 10 minutes; the alarm's round only about one). */
+    fun run(ctx: Context, night: Boolean = false) {
         val plan = try { JSONArray(prefs(ctx).getString("plan", "[]")) } catch (e: Exception) { JSONArray() }
         if (plan.length() == 0) return
-        arm(ctx)                                     // the next round, whatever happens in this one
+        if (!night) arm(ctx)                         // the next round, whatever happens in this one
         if (Prefs.airGap(ctx)) return
         val out = read(ctx)
         val hits = ArrayList<String>()
         var headless = 0
+        val bestNow = HashMap<String, Long>()       // per agent: its best so far, lowered as this round finds better
+        for (i in 0 until plan.length()) { val w = plan.optJSONObject(i) ?: continue; val b = baseId(w.optString("id")); val v = w.optLong("best", 0L); if (v > 0 && (bestNow[b] ?: Long.MAX_VALUE) > v) bestNow[b] = v }
+        fun news(w: JSONObject, price: Long): Boolean {
+            val b = baseId(w.optString("id")); val best = bestNow[b] ?: 0L
+            val yes = isNews(price, best, w.optLong("below", 0L))
+            if (price > 0 && (best == 0L || price < best)) bestNow[b] = price
+            return yes
+        }
         for (i in 0 until minOf(plan.length(), 16)) {   // v8.2: a hotel window is several start days
             val w = plan.optJSONObject(i) ?: continue
             val url = w.optString("url"); if (!url.startsWith("https://")) continue
@@ -172,7 +193,7 @@ object AgentWatch {
             val row = JSONObject().put("at", System.currentTimeMillis())
             // v9.9.4: a site that shows prices only after its scripts run (Booking…) → read it in an invisible browser, the way
             // "Check now" does (HeadlessRead.kt). At most 2 such pages a round (Android gives a background check about a minute); the rest come next round.
-            if (got == null && HeadlessRead.needsScripts(url) && headless < 2 && rotateOk(ctx, w.optString("id"))) {
+            if (got == null && HeadlessRead.needsScripts(url) && (if (night) headless < 16 else headless < 2 && rotateOk(ctx, w.optString("id")))) {
                 headless++
                 val o = try { HeadlessRead.best(ctx, url, w.optString("rules", "{}")) } catch (e: Throwable) { null }
                 if (o != null && o.optDouble("price", 0.0) > 0) {
@@ -182,8 +203,8 @@ object AgentWatch {
                     if (w.optString("site").isNotEmpty()) row.put("site", w.optString("site"))
                     val list = out.optJSONArray(w.optString("id")) ?: JSONArray(); list.put(row); out.put(w.optString("id"), list)
                     markRead(ctx, w.optString("id"))
-                    val below0 = w.optLong("below", 0L)
-                    if (below0 > 0 && Math.round(o.optDouble("price")) <= below0) hits.add(w.optString("title") + " · " + w.optString("currency") + " " + "%,d".format(Math.round(o.optDouble("price"))))
+                    val p0 = Math.round(o.optDouble("price")); val was0 = bestNow[baseId(w.optString("id"))] ?: 0L
+                    if (news(w, p0)) hits.add(w.optString("title") + " · " + w.optString("currency") + " " + "%,d".format(p0) + (if (was0 > p0) " (↓ " + "%,d".format(was0 - p0) + ")" else ""))
                     continue
                 }
             }
@@ -194,14 +215,48 @@ object AgentWatch {
             }
             val list = out.optJSONArray(w.optString("id")) ?: JSONArray()
             list.put(row); out.put(w.optString("id"), list)
-            val below = w.optLong("below", 0L)
-            if (got != null && below > 0 && got.price <= below) hits.add(w.optString("title") + " · " + w.optString("currency") + " " + "%,d".format(got.price))
+            if (got != null) { val was1 = bestNow[baseId(w.optString("id"))] ?: 0L
+                if (news(w, got.price)) hits.add(w.optString("title") + " · " + w.optString("currency") + " " + "%,d".format(got.price) + (if (was1 > got.price) " (↓ " + "%,d".format(was1 - got.price) + ")" else "")) }
         }
         try { File(ctx.filesDir, FILE).writeText(out.toString()) } catch (e: Exception) {}
+        val words = try { JSONObject(prefs(ctx).getString("words", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
         if (hits.isNotEmpty()) Reminders.schedule(ctx, JSONObject().put("id", "agent-watch").put("at", System.currentTimeMillis() + 2000)
-            .put("title", "Agents · something to see")
-            .put("body", hits.take(3).joinToString("\n") + "\nTap to open Agents."))
+            .put("title", words.optString("newBest", "Agents · a new best price"))
+            .put("body", hits.take(3).joinToString("\n") + "\n" + words.optString("tap", "Tap to open Agents.")))
+        askIfStale(ctx, plan, words)
     }
+
+    /** v9.9.13 AC3 (Ali picked): an agent on a browser-only site that no check could read for 30 hours (the night job didn't run:
+     *  not charging, the phone stopped it) → one notification "Time to check … — tap and I'll do it"; at most once in 20 hours per
+     *  agent. The tap opens Attune on that agent and runs Check now. */
+    private fun askIfStale(ctx: Context, plan: JSONArray, words: JSONObject) {
+        val now = System.currentTimeMillis(); val p = prefs(ctx)
+        val seen = HashSet<String>()
+        for (i in 0 until plan.length()) {
+            val w = plan.optJSONObject(i) ?: continue
+            if (!HeadlessRead.needsScripts(w.optString("url")) || w.optString("kind") == "slot") continue
+            val b = baseId(w.optString("id")); if (!seen.add(b)) continue
+            val lastRead = (0 until plan.length()).mapNotNull { plan.optJSONObject(it) }.filter { baseId(it.optString("id")) == b }.maxOfOrNull { p.getLong("hidden:" + it.optString("id"), 0L) } ?: 0L
+            val since = maxOf(lastRead, p.getLong("since:" + b, now), w.optLong("lastBrowser", 0L))
+            if (now - since < 30 * 3600_000L || now - p.getLong("asked:" + b, 0L) < 20 * 3600_000L) continue
+            p.edit().putLong("asked:" + b, now).apply()
+            postAsk(ctx, b, w.optString("title").substringBefore(" · 20"), w.optString("site"), words)
+            break   // one question at a time
+        }
+    }
+    private fun postAsk(ctx: Context, id: String, title: String, site: String, words: JSONObject) {
+        val open = android.app.PendingIntent.getActivity(ctx, ("agent-ask" + id).hashCode(), Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .putExtra(EXTRA_OPEN_PAGE, "agents").putExtra(EXTRA_AGENT_CHECK, id), android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
+        val body = words.optString("ask", "Time to check {site} prices — tap and I'll do it (about 30 seconds).").replace("{site}", site.ifBlank { "the site" })
+        Reminders.ensureChannel(ctx)
+        val b = (if (android.os.Build.VERSION.SDK_INT >= 26) android.app.Notification.Builder(ctx, Reminders.CHANNEL) else @Suppress("DEPRECATION") android.app.Notification.Builder(ctx))
+            .setSmallIcon(R.drawable.ic_stat_reminder).setContentTitle(title).setContentText(body)
+            .setStyle(android.app.Notification.BigTextStyle().bigText(body)).setContentIntent(open).setAutoCancel(true)
+            .addAction(android.app.Notification.Action.Builder(null, words.optString("check", "Check"), open).build())
+        try { ctx.getSystemService(android.app.NotificationManager::class.java)?.notify(("agent-ask" + id).hashCode(), b.build()) } catch (e: SecurityException) { }
+    }
+    /** The notification words in the person's language (the page sends them). */
+    fun setWords(ctx: Context, json: String) { prefs(ctx).edit().putString("words", json).apply() }
 
     /** The hidden reads go round the dates: the one read longest ago first (each round reads at most 2). */
     private fun rotateOk(ctx: Context, id: String): Boolean {
@@ -222,6 +277,34 @@ object AgentWatch {
         try { f.delete() } catch (e: Exception) {}
         return s
     }
+}
+
+const val EXTRA_AGENT_CHECK = "attune_agent_check"
+
+/** v9.9.13 AC2 (Ali picked "check at night while charging on Wi-Fi"): a job Android runs about once a day when the phone is charging,
+ *  on Wi-Fi and resting (so at night): every agent page that needs a real browser (Booking…) is read in the invisible browser
+ *  (HeadlessRead) — Android gives a job up to 10 minutes, not the alarm's minute. A price that beats the best → a morning notification. */
+class AgentNightJob : android.app.job.JobService() {
+    companion object {
+        private const val ID = 0x5c0a9
+        fun schedule(ctx: Context) {
+            val js = ctx.getSystemService(android.app.job.JobScheduler::class.java) ?: return
+            if (js.getPendingJob(ID) != null) return
+            val info = android.app.job.JobInfo.Builder(ID, android.content.ComponentName(ctx, AgentNightJob::class.java))
+                .setRequiresCharging(true).setRequiresDeviceIdle(true).setRequiredNetworkType(android.app.job.JobInfo.NETWORK_TYPE_UNMETERED)
+                .setPeriodic(20 * 3600_000L, 6 * 3600_000L).setPersisted(true).build()
+            try { js.schedule(info) } catch (e: Exception) {}
+        }
+        fun cancel(ctx: Context) { try { ctx.getSystemService(android.app.job.JobScheduler::class.java)?.cancel(ID) } catch (e: Exception) {} }
+    }
+    @Volatile private var worker: Thread? = null
+    override fun onStartJob(params: android.app.job.JobParameters): Boolean {
+        worker = Thread {
+            try { AgentWatch.run(applicationContext, night = true) } catch (e: Throwable) {} finally { try { jobFinished(params, false) } catch (e: Throwable) {} }
+        }.also { it.start() }
+        return true
+    }
+    override fun onStopJob(params: android.app.job.JobParameters): Boolean { try { worker?.interrupt() } catch (e: Throwable) {}; return true }
 }
 
 class AgentWatchReceiver : BroadcastReceiver() {
