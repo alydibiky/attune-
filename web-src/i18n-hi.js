@@ -11690,4 +11690,5 @@ export const HI = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "पक्का नहीं हूँ, इसलिए कुछ सेव नहीं किया: {s} — और साफ़ बोलें।",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "ठीक है — कुछ सेव नहीं हुआ। फिर से साफ़ लिखें (जैसे “पेट्रोल पर 900 खर्च किए”)।",
   "Not saved": "सेव नहीं हुआ",
+  "The best offer": "सबसे अच्छा ऑफ़र",
 };

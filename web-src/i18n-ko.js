@@ -11689,4 +11689,5 @@ export const KO = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "확실하지 않아서 아무것도 저장하지 않았어요: {s} — 더 분명하게 말해 주세요.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "알겠어요 — 저장하지 않았어요. 더 분명하게 다시 써 주세요 (예: “기름값 900 썼어”).",
   "Not saved": "저장 안 됨",
+  "The best offer": "최고의 제안",
 };

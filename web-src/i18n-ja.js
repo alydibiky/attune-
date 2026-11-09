@@ -11689,4 +11689,5 @@ export const JA = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "確信がないので何も保存していません：{s} — もっとはっきり言ってください。",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "OK — 何も保存していません。もう少しはっきり書いてください（例：「ガソリンに900使った」）。",
   "Not saved": "保存していません",
+  "The best offer": "最良のオファー",
 };

@@ -20,6 +20,7 @@ import { parseWatch } from "./watch.js";
 import { isoDay } from "./deadlines.js";
 import { isFlightAgent, flightAgent } from "./flights.js";
 import { parseMore, slotState } from "./agents2.js";
+import { withRuleFound } from "./agent-rules.js";
 
 export const AGENTS_KEY = "attune:agents:v1";
 const DAY = 86400000;
@@ -430,7 +431,8 @@ export const watchPlan = (st) => [
   ...(st.agents || []).filter((a) => a.on && (a.kind === "watch" || a.kind === "protect" || (a.kind === "buy" && a.below > 0 && a.step === "search")) && /^https:\/\//.test(a.url || ""))
   .flatMap((a) => (a.tries && a.tries.length ? a.tries.map((x, i) => ({ id: a.id + "~" + i, title: (a.what || a.title) + " · " + (x.checkin || x.site || ""), url: x.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: x.site || a.site || "" }))
     : [{ id: a.id, title: a.what ? a.what + " · " + (a.site || "") : a.title, url: a.url, below: a.below || 0, currency: a.currency || "", what: a.what || "", site: a.site || "" }])
-    .map((x) => (a.rules && a.rules.hours ? { ...x, hours: a.rules.hours } : x)))].slice(0, 16);   // v9.2: "check every 6 hours" (agent-rules.js)
+    .map((x) => (a.rules && a.rules.hours ? { ...x, hours: a.rules.hours } : x))
+    .map((x) => (a.rules && Object.keys(a.rules).length ? { ...x, rules: JSON.stringify(a.rules) } : x)))].slice(0, 16);   // v9.9.4: the hidden read follows the rules too   // v9.2: "check every 6 hours" (agent-rules.js)
 /** The phone's checks ({id or "id~i": [rows]}) → the agents with them added (a window's row keeps its days). */
 export function takeChecks(agents, got) {
   return agents.map((a) => {
@@ -443,6 +445,9 @@ export function takeChecks(agents, got) {
     const next = rows.reduce((x, c) => addCheck(x, { ...c, how: "auto" }), a);
     // v9.0: the listings the phone saw (with their own links) become the card's best offers, one per store
     const seen = rows.filter((c) => c.price > 0 && c.href).map((c) => ({ name: c.name || a.what || a.title, price: c.price, href: c.href, site: c.site || "", url: c.href, text: c.name || "", ...(c.checkin ? { checkin: c.checkin, checkout: c.checkout } : {}) }));
+    // v9.9.4: a hidden read (HeadlessRead.kt) brings the page's best offers with their names and links, like Check now
+    const tops = rows.flatMap((c) => (Array.isArray(c.top) ? c.top.filter((o) => o && o.price > 0).map((o, i) => ({ ...o, site: c.site || o.site || "", key: (c.checkin || "") + "-" + i + "-" + o.price, ...(c.checkin ? { checkin: c.checkin, checkout: c.checkout } : {}) })) : []));
+    if (tops.length) { const best3 = bestThree([...tops, ...((a.best3 || []).filter((o) => !tops.some((t) => t.checkin && t.checkin === o.checkin)))], a.skip, a.taste, 10); return withRuleFound({ ...next, best3 }); }
     return seen.length ? { ...next, best3: bestAcross(seen, a) } : next;
   });
 }
@@ -657,7 +662,7 @@ export function agentChat(a, now = Date.now()) {
     if (miss) { miss.n++; miss.at = c.at; miss.T = ["{n} checks in the background didn't show prices — this site shows them only in a browser. Tap Check now.", { n: miss.n }]; continue; }
     miss = { who: "agent", at: c.at, n: 1, T: ["The site didn't show prices this time — I'll try again."] }; out.push(miss);
   }
-  if (a.found) out.push({ who: "agent", at: a.found.at, T: ["Found one under your price: {p}.", { p: a.found.price }], found: true });
+  { const f = withRuleFound(a).found; if (f) out.push({ who: "agent", at: f.at, T: ["Found one under your price: {p}.", { p: f.price }], found: true }); }
   for (const r of (a.ruleLog || []).slice(-5)) out.push({ who: "me", at: r.at, text: r.text });
   return out.sort((x, y) => (x.at || 0) - (y.at || 0));
 }

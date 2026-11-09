@@ -155,6 +155,7 @@ object AgentWatch {
         if (Prefs.airGap(ctx)) return
         val out = read(ctx)
         val hits = ArrayList<String>()
+        var headless = 0
         for (i in 0 until minOf(plan.length(), 16)) {   // v8.2: a hotel window is several start days
             val w = plan.optJSONObject(i) ?: continue
             val url = w.optString("url"); if (!url.startsWith("https://")) continue
@@ -169,6 +170,23 @@ object AgentWatch {
             }
             val got = lowest(url, w.optString("what"))
             val row = JSONObject().put("at", System.currentTimeMillis())
+            // v9.9.4: a site that shows prices only after its scripts run (Booking…) → read it in an invisible browser, the way
+            // "Check now" does (HeadlessRead.kt). At most 2 such pages a round (Android gives a background check about a minute); the rest come next round.
+            if (got == null && HeadlessRead.needsScripts(url) && headless < 2 && rotateOk(ctx, w.optString("id"))) {
+                headless++
+                val o = try { HeadlessRead.best(ctx, url, w.optString("rules", "{}")) } catch (e: Throwable) { null }
+                if (o != null && o.optDouble("price", 0.0) > 0) {
+                    row.put("price", Math.round(o.optDouble("price"))).put("how", "hidden")
+                    val top = o.optJSONArray("top"); if (top != null) row.put("top", top)
+                    top?.optJSONObject(0)?.let { t -> if (t.optString("href").isNotEmpty()) row.put("href", t.optString("href")).put("name", t.optString("name")) }
+                    if (w.optString("site").isNotEmpty()) row.put("site", w.optString("site"))
+                    val list = out.optJSONArray(w.optString("id")) ?: JSONArray(); list.put(row); out.put(w.optString("id"), list)
+                    markRead(ctx, w.optString("id"))
+                    val below0 = w.optLong("below", 0L)
+                    if (below0 > 0 && Math.round(o.optDouble("price")) <= below0) hits.add(w.optString("title") + " · " + w.optString("currency") + " " + "%,d".format(Math.round(o.optDouble("price"))))
+                    continue
+                }
+            }
             if (got == null) row.put("blocked", true) else {
                 row.put("price", got.price)
                 if (got.href.isNotEmpty()) row.put("href", got.href).put("name", got.name)
@@ -184,6 +202,16 @@ object AgentWatch {
             .put("title", "Agents · something to see")
             .put("body", hits.take(3).joinToString("\n") + "\nTap to open Agents."))
     }
+
+    /** The hidden reads go round the dates: the one read longest ago first (each round reads at most 2). */
+    private fun rotateOk(ctx: Context, id: String): Boolean {
+        val plan = try { JSONArray(prefs(ctx).getString("plan", "[]")) } catch (e: Exception) { JSONArray() }
+        val ids = (0 until plan.length()).mapNotNull { plan.optJSONObject(it) }.filter { HeadlessRead.needsScripts(it.optString("url")) }.map { it.optString("id") }
+        val when0 = { k: String -> prefs(ctx).getLong("hidden:" + k, 0L) }
+        val order = ids.sortedBy { when0(it) }
+        return order.indexOf(id).let { it in 0..1 }
+    }
+    private fun markRead(ctx: Context, id: String) { prefs(ctx).edit().putLong("hidden:" + id, System.currentTimeMillis()).apply() }
 
     private fun read(ctx: Context): JSONObject = try { JSONObject(File(ctx.filesDir, FILE).readText()) } catch (e: Exception) { JSONObject() }
 

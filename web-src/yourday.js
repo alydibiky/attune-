@@ -3,7 +3,7 @@
    turned on). Pure; tests: tests/unit/v930yourday.test.mjs.                                                                         */
 import { prayerTimes, methodFor } from "./prayer.js";
 import { CITIES, zoneOffset } from "./fitplus.js";
-import { agentStatus } from "./agent-rules.js";
+import { agentStatus, withRuleFound } from "./agent-rules.js";
 
 export const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 const minOf = (d) => d.getHours() * 60 + d.getMinutes();
@@ -52,7 +52,7 @@ export function believable(a, price) {
   return true;
 }
 export function agentNews(agents = [], now = Date.now()) {
-  const rows = (agents || []).filter((a) => a && a.on !== false).map((a) => ({ a, s: agentStatus(a) })).filter((x) => x.s === "needs" || x.s === "found")
+  const rows = (agents || []).filter((a) => a && a.on !== false).map((a0) => withRuleFound(a0)).map((a) => ({ a, s: agentStatus(a) })).filter((x) => x.s === "needs" || x.s === "found")
     .filter((x) => x.s === "needs" || !(x.a.found && x.a.found.price > 0) || believable(x.a, x.a.found.price));
   const last = (a) => Math.max(0, ...((a.checks || []).map((c) => c.at || 0)), (a.found && a.found.at) || 0);
   return rows.sort((x, y) => (x.s === y.s ? last(y.a) - last(x.a) : x.s === "needs" ? -1 : 1)).slice(0, 3).map(({ a, s }) => {

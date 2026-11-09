@@ -8758,4 +8758,5 @@ export const AR = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "مش متأكد، فمحفظتش حاجة: {s} — قولها بوضوح أكتر.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "تمام — محفظتش حاجة. اكتبها تاني بوضوح أكتر (مثلاً «صرفت 900 بنزين»).",
   "Not saved": "متحفظش",
+  "The best offer": "أحسن عرض",
 };

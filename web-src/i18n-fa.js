@@ -11689,4 +11689,5 @@ export const FA = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "مطمئن نیستم، پس چیزی ذخیره نکردم: {s} — واضح‌تر بگو.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "باشد — چیزی ذخیره نشد. دوباره واضح‌تر بنویس (مثلاً «۹۰۰ برای بنزین خرج کردم»).",
   "Not saved": "ذخیره نشد",
+  "The best offer": "بهترین پیشنهاد",
 };

@@ -11690,4 +11690,5 @@ export const ES = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "No estoy seguro, así que no guardé nada: {s} — dilo más claro.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Vale — no se guardó nada. Escríbelo otra vez más claro (p. ej. “gasté 900 en gasolina”).",
   "Not saved": "No guardado",
+  "The best offer": "La mejor oferta",
 };

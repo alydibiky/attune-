@@ -169,6 +169,15 @@ export function followsRules(o, R = {}) {
 export const applyRules = (offers, R) => (!R || !Object.keys(R).length ? offers || [] : (offers || []).filter((o) => followsRules(o, R)));
 
 /** Where an agent is: needs you (an OK to buy) · found (something under the limit / offers) · working · paused · done. */
+/** v9.9.4 (Ali's screenshot: "Found one under your price: 41,495" while his rules were 5★ within 1 km and the best that followed them
+ *  was 45,711 — over his 45,000): what an agent "found" must follow its rules. → the agent with `found` = the cheapest offer that
+ *  follows every rule and is at or under the limit, or without `found` when none does (offers read with no hotel facts are kept). */
+export function withRuleFound(a) {
+  if (!a || !a.found || !a.rules || !Object.keys(a.rules).length || !(a.best3 || []).length || !(a.below > 0)) return a;
+  const ok = applyRules(a.best3, a.rules).filter((o) => o.price > 0).sort((x, y) => x.price - y.price)[0];
+  if (ok && ok.price <= a.below) return ok.price === a.found.price ? a : { ...a, found: { ...a.found, price: ok.price, ...(ok.href ? { href: ok.href } : {}), ...(ok.name ? { name: ok.name } : {}), ...(ok.checkin ? { checkin: ok.checkin, checkout: ok.checkout } : {}) } };
+  const { found, ...rest } = a; return rest;
+}
 export function agentStatus(a, now = Date.now()) {
   if (!a) return "working";
   // v9.4 the new agents
@@ -179,7 +188,7 @@ export function agentStatus(a, now = Date.now()) {
   if (a.step === "ordered") return "done";
   if (a.on === false) return "paused";
   if (a.pending && (a.step === "confirm" || a.kind === "buy")) return "needs";
-  if (a.found || (a.best3 || []).length || (a.kind === "follow" && (a.runs || []).length)) return "found";
+  if (withRuleFound(a).found || applyRules(a.best3 || [], a.rules).length || (a.kind === "follow" && (a.runs || []).length)) return "found";
   return "working";
 }
 export const STATUS = { needs: ["Needs you", "amber"], found: ["Found", "blue"], working: ["Working", "blue"], paused: ["Paused", "gray"], done: ["Done", "gray"] };

@@ -11689,4 +11689,5 @@ export const TH = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "ไม่แน่ใจ เลยไม่ได้บันทึกอะไร: {s} — พูดให้ชัดขึ้น",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "โอเค — ไม่ได้บันทึกอะไร เขียนใหม่ให้ชัดขึ้น (เช่น “จ่ายค่าน้ำมัน 900”)",
   "Not saved": "ไม่ได้บันทึก",
+  "The best offer": "ข้อเสนอที่ดีที่สุด",
 };

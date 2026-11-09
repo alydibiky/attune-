@@ -819,6 +819,7 @@ function DealBoard({ a, openBest, skipBest, bars = false }) {
 
 /** v8.7 (Ali picked "A and B in a smart way"): the winner big, with why it wins; under it the others, each saying what it trades
  *  ("+2,100 · rated 9.4"); and "Compare side by side" opens them as a table, the best of each row in green. */
+const RF = (a) => R.withRuleFound(a).found;   // v9.9.4: "found" follows the agent's rules
 function BestFound({ a, small, openBest, skipBest }) {
   const [table, setTable] = useState(false);
   const c = A.compareOffers(a.best3, { below: a.below || 0 }), w = c.rows[0];
@@ -881,12 +882,12 @@ function Podium({ a, c, far, day, tv, openBest, skipBest }) {
   return <div className="space-y-3" data-testid="agent-podium">
     <div className="flex items-end justify-between gap-2" data-testid="agent-podium-head"><div className="min-w-0">
       {f.city ? <p className="m-0 text-[10.5px] font-bold tracking-[0.16em] uppercase c-sub truncate" dir="auto">{String(f.city).split(",")[0]}{f.nights ? " · " + T("{n} nights", { n: f.nights }) : ""}</p> : null}
-      <p className="m-0 text-[20px] font-extrabold tracking-[-0.02em]">{T("{n} best offers", { n: rows.length })}</p></div>
+      <p className="m-0 text-[20px] font-extrabold tracking-[-0.02em]">{rows.length === 1 ? tr("The best offer") : T("{n} best offers", { n: rows.length })}</p></div>
       {dates ? <span className="text-[12px] c-sub shrink-0">{T("{n} dates checked", { n: dates })}</span> : null}</div>
     <div className="relative h-[300px] rounded-[26px] overflow-hidden" data-testid="agent-best">
       <button onClick={() => setAt(0)} className="absolute inset-0 w-full" aria-label={(w.o.name || a.site) + " · " + money(w.o.price, a.currency)} data-testid="agent-podium-open">{pic(w.o, "absolute inset-0 w-full h-full")}</button>
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[rgba(0,0,0,.25)] via-transparent to-[rgba(0,0,0,.5)]" />
-      <div className="pointer-events-none absolute top-3 inset-x-3 flex justify-between gap-2"><span className="flex flex-wrap gap-1" data-testid="agent-why">{(c.why.length ? c.why : [["Cheapest", {}]]).slice(0, 2).map(([t, v], k) => <span key={k} className={pill}>{tr(t, v)}</span>)}</span>
+      <div className="pointer-events-none absolute top-3 inset-x-3 flex justify-between gap-2"><span className="flex flex-wrap gap-1" data-testid="agent-why">{((A.compareOffers(rows.map((r) => r.o), { below: a.below || 0 }).why).length ? A.compareOffers(rows.map((r) => r.o), { below: a.below || 0 }).why : [["Cheapest", {}]]).slice(0, 2).map(([t, v], k) => <span key={k} className={pill}>{tr(t, v)}</span>)}</span>
         {w.f.rating != null ? <span className={pill + " shrink-0"}>★ {w.f.rating}</span> : null}</div>
       <div className={"absolute inset-x-2.5 bottom-2.5 rounded-[20px] px-4 py-3 " + glass}>
         <p className="m-0 text-[18px] font-bold tracking-[-0.01em] truncate" dir="auto" data-testid="agent-best-name">{offerName(w.o, a, 0)}</p>
@@ -1030,8 +1031,8 @@ function AgentCard({ a, hits, busy, checkNow, orderNow, openApp, remove, toggle,
         {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.what })}</p> : null}
         <p className="m-0 text-[12.5px] c-sub" dir="auto">{/^\d+ stores$/.test(a.site || "") ? T("{n} stores", { n: parseInt(a.site, 10) }) : /^\d+ sites$/.test(a.site || "") ? T("{n} sites", { n: parseInt(a.site, 10) }) : a.site}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{a.fields && a.fields.window ? " · " + T("{n} nights between {a} and {b}", { n: a.fields.nights, a: a.fields.window.from, b: a.fields.window.to }) : a.fields && a.fields.checkin ? " · " + a.fields.checkin + " → " + a.fields.checkout : ""}</p>
         <p className="m-0 text-[12.5px] c-sub" data-testid="agent-watch-last">{last ? (last.price ? T("Checked {t} · cheapest {p}", { t: ago(last.at), p: money(last.price, a.currency) }) + (last.checkin ? " (" + last.checkin + " → " + last.checkout + ")" : "") : T("Checked {t} · the site shows prices only in a browser — tap Check now", { t: ago(last.at) })) : tr("Not checked yet — tap Check now")}</p>
-        {a.found ? <span className="flex flex-wrap items-center gap-1.5 mt-1.5"><span className={U.tag("amber")} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(a.found.price, a.currency) })}{a.found.site ? " · " + a.found.site : ""}</span>
-            {a.found.href && !(a.best3 || []).length ? <button onClick={() => openBest(a, { href: a.found.href, name: a.found.name })} className="min-h-[36px] px-2.5 rounded-[10px] text-[12px] font-extrabold inline-flex items-center gap-1 bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" data-testid="agent-found-open"><ExternalLink size={13} />{tr("Open the listing")}</button> : null}</span>
+        {RF(a) ? <span className="flex flex-wrap items-center gap-1.5 mt-1.5"><span className={U.tag("amber")} data-testid="agent-found">{T("Found {p} — under your limit", { p: money(RF(a).price, a.currency) })}{RF(a).site ? " · " + RF(a).site : ""}</span>
+            {RF(a).href && !(a.best3 || []).length ? <button onClick={() => openBest(a, { href: RF(a).href, name: RF(a).name })} className="min-h-[36px] px-2.5 rounded-[10px] text-[12px] font-extrabold inline-flex items-center gap-1 bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" data-testid="agent-found-open"><ExternalLink size={13} />{tr("Open the listing")}</button> : null}</span>
           : null}
         {w.last && w.gap > 0 ? <span className="block text-[11.5px] c-sub mt-1">{T("{p} above your limit", { p: money(w.gap, a.currency) })}</span> : null}
         {/* v8.7 (persona 4, idea 4): its price over time, the lowest seen, and the cheapest weekday once there are 2 weeks of checks */}

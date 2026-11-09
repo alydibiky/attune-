@@ -11690,4 +11690,5 @@ export const IDN = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Saya tidak yakin, jadi tidak ada yang disimpan: {s} — ucapkan lebih jelas.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Oke — tidak ada yang disimpan. Tulis lagi lebih jelas (mis. “habis 900 untuk bensin”).",
   "Not saved": "Tidak disimpan",
+  "The best offer": "Penawaran terbaik",
 };

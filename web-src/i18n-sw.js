@@ -11690,4 +11690,5 @@ export const SW = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Sina uhakika, kwa hiyo sikuhifadhi chochote: {s} — sema kwa uwazi zaidi.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Sawa — hakuna kilichohifadhiwa. Andika tena kwa uwazi zaidi (k.m. “nilitumia 900 kwa mafuta”).",
   "Not saved": "Haijahifadhiwa",
+  "The best offer": "Ofa bora",
 };

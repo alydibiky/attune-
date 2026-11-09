@@ -11690,4 +11690,5 @@ export const TRK = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Emin değilim, bu yüzden hiçbir şey kaydetmedim: {s} — daha açık söyle.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Tamam — hiçbir şey kaydedilmedi. Daha açık yaz (ör. “benzine 900 harcadım”).",
   "Not saved": "Kaydedilmedi",
+  "The best offer": "En iyi teklif",
 };

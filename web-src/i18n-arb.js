@@ -11681,4 +11681,5 @@ export const ARB = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "لست متأكدًا، فلم أحفظ شيئًا: {s} — قلها بوضوح أكثر.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "حسنًا — لم يُحفظ شيء. اكتبها مرة أخرى بوضوح أكثر (مثلًا «صرفت 900 على الوقود»).",
   "Not saved": "لم يُحفظ",
+  "The best offer": "أفضل عرض",
 };

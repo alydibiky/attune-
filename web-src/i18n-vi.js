@@ -11689,4 +11689,5 @@ export const VI = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Tôi không chắc nên chưa lưu gì: {s} — hãy nói rõ hơn.",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Được — chưa lưu gì. Viết lại rõ hơn (ví dụ “tiêu 900 tiền xăng”).",
   "Not saved": "Chưa lưu",
+  "The best offer": "Ưu đãi tốt nhất",
 };

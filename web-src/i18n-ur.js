@@ -11690,4 +11690,5 @@ export const UR = {
   "I'm not sure, so I saved nothing: {s} — say it more clearly.": "یقین نہیں، اس لیے کچھ محفوظ نہیں کیا: {s} — مزید واضح کہیں۔",
   "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "ٹھیک ہے — کچھ محفوظ نہیں ہوا۔ دوبارہ واضح لکھیں (جیسے “پیٹرول پر 900 خرچ کیے”)۔",
   "Not saved": "محفوظ نہیں ہوا",
+  "The best offer": "بہترین پیشکش",
 };
