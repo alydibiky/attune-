@@ -27,6 +27,8 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   changes"); `lifeReminders` keeps every renewing payment's next reminder when Attune opens (Autopilot-ticked ones used to lose it).
   Follow-ups asks "{w} renews today — did Baba pay it?" when someone else pays.
 - Tests: unit v9914payer; e2e_v9913agents (Me → CIB, a known person, contacts offered, Nobody, reminders).
+- Full suite green except e2e_v993timetable (fails the same way on 8ad3e1b, before this session — not caused by this work).
+  **APK v9.9.14:** https://github.com/alydibiky/attune-/actions/runs/42714296451 (success — the Kotlin night job / one-tap ask compiled).
 
 ## 10 Nov — v9.9.13: Ali's OK on the combined page (OK1 + OK2 "make sure it understands 99 percent of notifications" + "Right")
 - **AG1** (agents-ui.jsx `AgentOverview` in `AgentChat`, price watches): "Your best so far" (agents.js `bestSoFar`, follows the rules),
