@@ -1219,7 +1219,7 @@ money-pages-ui.jsx: ["🥈", tr("Silver"), P && P.silver], ["🤝", tr("Money pe
 money-sheets-ui.jsx: {!a ? <Field label={tr("Kind")}><Pills value={kind} onChange={setKind} testid="acc-kind" items={[["cash", tr("Money")], ["gold", tr("Gold")]
 
 ## Other
-money-report.js: if (list.length > 4) list = [...list.slice(0, 3), { id: "_rest", name: ar ? "أخرى" : tr("Other"), amount: r2(list.slice(3).reduce((a, c) => 
+money-report.js: list = [...top, { id: "_rest", name: ar ? "أخرى" : tr("Other"), amount: r2(list.filter((c) => !top.includes(c)).reduce((a, c) => a + c.amoun
 planner-ui.jsx: {sel.items.length ? sel.items.map((x, i) => <div key={i} className="flex justify-between gap-2 text-[13.5px] font-semibold"><span dir="auto"
 
 ## Every month
