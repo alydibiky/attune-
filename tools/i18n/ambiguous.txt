@@ -202,15 +202,19 @@ attune.jsx: <button onClick={close} className="w-11 h-11 grid place-items-center
 attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover
 attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-center rounded-[12px] text-slate-400 hover:text-slate-200 hover:bg-slate-
 
+## Previous
+agents-ui.jsx: <button onClick={() => go(-1)} disabled={at === 0} className={side} aria-label={tr("Previous")} data-testid="agent-sheet-prev"><ChevronRight
+docs-ui.jsx: {open > 0 ? <button onClick={() => setOpen(open - 1)} aria-label={tr("Previous")} className="absolute start-2 w-11 h-11 rounded-full bg-blac
+
 ## Next
 agents-ui.jsx: <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><Chev
 attune.jsx: {step < 2 ? <button onClick={() => setStep(step + 1)} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(-
 attune.jsx: {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on
 daily-ui.jsx: <button className={btnP} onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? t
+docs-ui.jsx: {open < ids.length - 1 ? <button onClick={() => setOpen(open + 1)} aria-label={tr("Next")} className="absolute end-2 w-11 h-11 rounded-full 
 lesson-ui.jsx: <button className={"w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40 ms-
 money-pages-ui.jsx: <Head title={tr("Bills report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick={(
 slides-ui.jsx: <button className="absolute inset-y-0 end-0 w-2/3" aria-label={tr("Next")} onClick={next} data-testid="presenter-next" />
-slides-ui.jsx: <button onClick={next} className="h-11 w-11 rounded-full grid place-items-center bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c
 
 ## Check now
 agents-ui.jsx: return <CardActions primary={{ label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), busy, testid: "agent-check" }}
@@ -523,11 +527,11 @@ shelf-ui.jsx: {m.remindAt > Date.now() ? <p className="text-xs font-bold tabular
 attune.jsx: <label className="att-icon-btn" title={tr("Photo")}>
 chat.jsx: <label className={MINIMAL ? "hidden" : "w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:bg-[var(--c-surf-2)] active
 chat.jsx: <label htmlFor="att-pick-photo" className="flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] ho
+docs-ui.jsx: <label className={B2 + " cursor-pointer"} data-testid="doc-photo-add"><ImagePlus size={13} />{ids.length ? tr("Photo") : tr("Add photos")}
 mind-ui.jsx: const r = remember({ kind: "photo", title: (j && j.title) || file.name || tr("Photo"), text: text || (j && j.summary) || "", output: "", tag
 mind-ui.jsx: <button onClick={() => fileRef.current && fileRef.current.click()} className={btnS}><Camera size={12} className="inline me-1" />{tr("Photo")
 shelf-ui.jsx: <button className={btn} onClick={() => photoRef.current && photoRef.current.click()}><ImagePlus size={13} />{tr("Photo")}</button>
 wagroups-ui.jsx: <span className="flex-1 min-w-0"><b className="block text-[14px] font-bold leading-snug" dir="auto">{W.headline(it.text) || tr("Photo")}</b>
-wagroups-ui.jsx: <span className="block text-[14px] leading-snug line-clamp-3" dir="auto">{r.item.text || r.snip || tr("Photo")}</span></span></button>)}</di
 
 ## Paste
 attune.jsx: <button onClick={pasteInstant} className="att-icon-btn" title={tr("Paste")}><ClipboardPaste size={18} /></button>
@@ -554,7 +558,7 @@ chat.jsx: <button onClick={() => { try { navigator.clipboard.writeText(m.text); 
 cmdbox-ui.jsx: {j.result.text ? <button onClick={() => onCopy(j.result.text)} className="h-9 px-3.5 rounded-full text-[13px] font-extrabold inline-flex ite
 code-ui.jsx: <button onClick={() => { try { navigator.clipboard.writeText(cur.code); } catch (e) {} flash(tr("Copied")); }} className="px-3 min-h-[44px] 
 cv-ui.jsx: {letter ? <div className="rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="cv-ai-letter-result"><p className=
-email-ui.jsx: <button onClick={copy} disabled={busy} className={U.btnS + " " + U.muted} data-testid="email-copy">{tr("Copy")}</button>
+docs-ui.jsx: <button onClick={() => copy(f)} aria-label={tr("Copy")} className={B2 + " w-9 justify-center px-0"} data-testid="doc-field-copy"><Copy size=
 
 ## Working…
 attune.jsx: <Loader2 size={13} className="animate-spin" /><span>{checkState === "careful" && !inResult ? tr("This looks like it matters — reading it lin
@@ -573,6 +577,13 @@ slides-ui.jsx: <p className={K.label + " px-1"}>{tr("Recent")}</p>
 ## History
 attune.jsx: <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-400 mb-2 flex items-center gap-1.5"><Clock size={13} /> {tr(
 life-ui.jsx: <span className={U.label}>{tr("History")}</span>
+
+## Settings
+attune.jsx: <div className="calm att-scroll w-full max-w-3xl max-h-[86vh] overflow-y-auto rounded-[20px] bg-[var(--c-surf)]! text-[var(--c-ink)] border 
+attune.jsx: <div className="flex items-center justify-between"><h2 className="text-[22px] font-black tracking-tight text-[var(--c-ink)] flex items-cente
+attune.jsx: <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-2 px-0.5">{tr("Settings")}</p>
+attune.jsx: <summary className="cursor-pointer select-none text-[13.5px] text-slate-300">{tr("Settings")}</summary>
+docs-ui.jsx: <button onClick={() => setGear(gear === f.id ? "" : f.id)} aria-label={tr("Settings")} aria-expanded={gear === f.id} className={B2 + " w-9 j
 
 ## Plan
 attune.jsx: <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[20px] border border-[var(--c-ln)] bg-
@@ -687,7 +698,7 @@ care-ui.jsx: <button className={btnP} disabled={!n.trim()} onClick={() => { onAd
 chat.jsx: <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
 cv-ui.jsx: <button className={ghost + " w-full flex items-center justify-center gap-1"} onClick={add} data-testid="cv-add-item"><Plus size={13} />{tr("
 daily-ui.jsx: <button className={btnP + " !px-4 shrink-0"} onClick={add} disabled={!t.trim()} data-testid="learn-add-save">{tr("Add")}</button></div>;
-errands-ui.jsx: <button type="submit" disabled={!text.trim()} className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-bt
+docs-ui.jsx: <button onClick={addRow} disabled={!name.trim()} className="min-h-[36px] px-3 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on
 
 ## Not this
 autopilot-ui.jsx: <button onClick={() => no(x, false)} onContextMenu={(e) => { e.preventDefault(); no(x, true); }} aria-label={tr("Not this")} title={tr("Not 
@@ -704,6 +715,7 @@ yourday-ui.jsx: <T2 icon="⏰" label={tr("Reminders")} onClick={() => navTo("rem
 ## Show
 backup-ui.jsx: <label className="text-[var(--c-mut)] flex items-center gap-1"><input type="checkbox" checked={show} onChange={(e) => setShow(e.target.check
 cv-ui.jsx: <label className="flex items-center gap-1 text-[11px] text-[var(--c-mut)] px-1"><input type="checkbox" checked={s.visible !== false} onChang
+docs-ui.jsx: {F.isLocked(f) && !shown[f.id] ? <button onClick={() => show(f)} className={B2} data-testid="doc-field-show">{f.lock === "finger" ? <Lock si
 money-sheets-ui.jsx: <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={shown(k)} onChange={() => flip(k)} classNam
 shelf-ui.jsx: {!shown ? <button onClick={() => setShown(true)} className={btnP + " w-full"} data-testid="shelf-review-show">{tr("Show")}</button> : (
 

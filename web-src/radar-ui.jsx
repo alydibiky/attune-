@@ -7,6 +7,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
+import { DocPhotos, DocDetails } from "./docs-ui.jsx";
 import * as D from "./deadlines.js";
 import { homeCurrency, dateOrder } from "./locale.js";
 import { loadGuardian, saveGuardian, markSaved, savedTotals } from "./guardian.js";
@@ -97,7 +98,7 @@ function Form({ init, onSave, onCancel, photo }) {
     </div>);
 }
 
-function Item({ x, onDone, onEdit, onDelete }) {
+function Item({ x, onDone, onEdit, onDelete, onPatch, unlock }) {
   const left = D.daysLeft(x), [img, setImg] = useState(""), [kit, setKit] = useState(false), [copied, setCopied] = useState(false);
   const K = kit ? D.cancelKit(x, getLang() === "ar" ? "ar" : "en") : null;
   const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} days", { n: left }) : left < 730 ? tr("in {n} months", { n: Math.round(left / 30.4) }) : tr("in {n} years", { n: Math.round(left / 365) });
@@ -112,6 +113,9 @@ function Item({ x, onDone, onEdit, onDelete }) {
         <span className={U.tag(x.status === "done" ? "gray" : left <= 2 ? "red" : left <= D.alertDays(x) ? "amber" : "green")} data-testid="radar-when">{x.status === "done" ? tr("done") : when}</span>
       </div>
       {x.note ? <p className={"text-[12.5px] mt-1.5 " + U.muted} dir="auto">{x.note}</p> : null}
+      {/* v9.9.5 D1 + D2: photos (one or many) and details (ID number, visa number, CVC…) — each detail with its own lock and time */}
+      {onPatch ? <DocPhotos x={x} onPatch={onPatch} /> : null}
+      {onPatch && (x.kind === "expiry" || x.kind === "warranty" || (x.fields || []).length) ? <DocDetails x={x} onPatch={onPatch} unlock={unlock} /> : null}
       {img ? <img src={img} alt="" className="mt-2 max-h-64 rounded-[12px] border border-[var(--c-ln)]" /> : null}
       {x.status !== "done" ? (
         <div className="flex flex-wrap gap-2 mt-2.5">
@@ -273,7 +277,8 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
         <div key={h} className="space-y-2 @container" data-testid={"radar-" + h.toLowerCase()}><span className={U.label}>{tr(h)}</span>
           {/* v6.28: two columns only when each card has room for its buttons on one line (they wrapped at 1366 px) */}
           <div className="space-y-2 @[920px]:space-y-0 @[920px]:grid @[920px]:grid-cols-2 @[920px]:gap-3 @[920px]:items-start" data-testid="radar-grid">
-          {list.filter(match).map((x) => <Item key={x.id} x={x} onDone={done} onEdit={(it) => { setEdit(it); setMode("form"); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} }} onDelete={del} />)}
+          {list.filter(match).map((x) => <Item key={x.id} x={x} onDone={done} onEdit={(it) => { setEdit(it); setMode("form"); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} }} onDelete={del} onPatch={(id, patch) => put({ ...D.loadRadar(), items: D.loadRadar().items.map((y) => (y.id === id ? { ...y, ...patch } : y)) })}
+            unlock={(a) => (N && N.vaultUnlock ? new Promise((ok, bad) => { const nc = window.__attuneNativeCall; if (!nc) return bad(new Error("no")); nc("vaultUnlock", a).then(ok, bad); }) : Promise.resolve(true))} />)}
           </div>
         </div>) : null)}
       {!data.items.length && (drafts.length || mode === "form") ? <DeskEmpty icon={Radar} title={tr("Your deadlines appear here")} testid="radar-desk-empty" /> : null}
