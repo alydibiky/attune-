@@ -54,8 +54,18 @@ export const SUBS = [
 export const subOf = (t) => (SUBS.find(([re]) => re.test(String(t || ""))) || [null, ""])[1];
 const PAID_W = /\b(paid|payment|charged|renew(?:ed|al)|receipt|billed|purchase|subscription|subscribed|membership|order|invoice|debited|successful)\b|تم الدفع|دفعت|تم خصم|اتخصم|خصم مبلغ|اشتراك|تجديد|تم تجديد|فاتورة|عملية شراء|ايصال|إيصال/i;
 const OFFER_W = /\b(get|try|free for|save|discount|deal|offer|limited time|\d+\s*%|for just|starting at|join now|upgrade now|ends soon|trial ends)\b|جرب|عرض|خصم \d|وفر/i;
-const curOf = (t) => { const m = /\b(egp|usd|sar|aed|eur|gbp|kwd|qar|try)\b|(e£|£|\$|€|جنيه|ريال|درهم)/i.exec(String(t || "")); if (!m) return ""; const k = (m[1] || m[2]).toLowerCase(); return { "e£": "EGP", "جنيه": "EGP", "$": "USD", "€": "EUR", "£": "GBP", "ريال": "SAR", "درهم": "AED" }[k] || k.toUpperCase(); };
+const curOf = (t) => { const m = /\b(egp|usd|sar|aed|eur|gbp|kwd|qar|try)\b|(e£|£|\$|€|جنيه|ج\.م|ريال|درهم)/i.exec(String(t || "")); if (!m) return ""; const k = (m[1] || m[2]).toLowerCase(); return { "e£": "EGP", "جنيه": "EGP", "ج.م": "EGP", "$": "USD", "€": "EUR", "£": "GBP", "ريال": "SAR", "درهم": "AED" }[k] || k.toUpperCase(); };
 
+// v9.9.12: the day the receipt says it was paid ("Order date: 7 Nov 2026", "Receipt from 7 Nov 2026") — the plan renews on that day,
+// not on the day the notification was read
+const MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+export function paidDayOf(t, now = Date.now()) {
+  const m = /(?:order date|receipt from|date|paid on|charged on|تاريخ الطلب|بتاريخ)\s*:?\s*(\d{1,2})\s+([a-z]{3})[a-z]*\.?,?\s+(\d{4})/i.exec(String(t || ""));
+  if (!m || !MON[m[2].toLowerCase()]) return "";
+  const d = m[3] + "-" + String(MON[m[2].toLowerCase()]).padStart(2, "0") + "-" + String(+m[1]).padStart(2, "0");
+  const ms = Date.parse(d + "T12:00:00");
+  return ms && ms <= now + 864e5 && ms > now - 60 * 864e5 ? d : "";
+}
 /** One notification → one suggestion (or null). s = the Autopilot state; recent = the other notifications (for missed calls). */
 export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState() } = {}) {
   if (!n) return null;
@@ -64,7 +74,7 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   const base = { src: String(n.id), app, at: n.ts || now, kind: "", full: { title, text } };   // (v9.8: the whole message, to read before adding)
   { const all = title + " " + text, svc = subOf(all);
     if (svc && u.amount > 0 && !isChatApp(n) && u.kind !== "promo" && u.state !== "money in" && PAID_W.test(all) && !OFFER_W.test(all)) {
-      const d = iso(n.ts || now);
+      const d = paidDayOf(all, n.ts || now) || iso(n.ts || now);
       return { ...base, kind: "subscription", title: svc, amount: u.amount, cur: curOf(all), date: d, key: "sb:" + svc + ":" + d.slice(0, 7), line: "Subscription" };
     } }
   if (u.kind === "bank" && u.amount > 0 && !isChatApp(n) && (u.state === "money out" || u.state === "money in")) {   // v9.9.9: never from a chat

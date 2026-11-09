@@ -3,6 +3,8 @@
 import * as L from "../../web-src/notelabels.js";
 import * as A from "../../web-src/agents.js";
 import { readNotification } from "../../web-src/paylog.js";
+import * as AP from "../../web-src/autopilot.js";
+import { understandNote as meaning } from "../../web-src/notifmeaning.js";
 let fails = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) fails++; };
 const now = Date.now();
 const uber = { id: "u", pkg: "com.ubercab", app: "Uber", title: "Uber", text: "Invite a friend to Uber and get ج.م.‏ 30 off when they take their first trip. Terms apply.", ts: now };
@@ -43,4 +45,12 @@ ok(/no better\. Your best is still/.test(t[4]) && chat.find((m) => m.T && /no be
 const offers = [{ name: "Booking.com", price: 41495, checkin: "2027-01-08", checkout: "2027-01-12", text: "a" }, { name: "Booking.com", price: 41495, checkin: "2027-01-08", checkout: "2027-01-12", text: "b" }, { name: "Booking.com", price: 42124, checkin: "2027-01-04", checkout: "2027-01-08" }];
 ok(A.compareOffers(offers).rows.length === 2, "“Best found” shows the same 41,495 on 01/08 → 01/12 once (it showed it twice)");
 ok(A.uniqueOffers([{ name: "Swissotel", price: 1, checkin: "a" }, { name: "Hilton", price: 1, checkin: "a" }]).length === 2, "two different hotels at the same price stay two");
+// Ali: "why wasn't the Google subscription added to the dates by itself?" — the amount «ج.م.‏ ٩٣٩٫٩٩» (Arabic digits, Arabic decimal mark,
+// a hidden direction mark) was read as 0, so Autopilot skipped it
+ok(meaning(gmail).amount === 939.99, "«ج.م.‏ ٩٣٩٫٩٩/month» is read as 939.99 (it was 0)");
+const sub = AP.suggestFrom(gmail, { now });
+ok(sub && sub.kind === "subscription" && sub.title === "Google Gemini" && sub.amount === 939.99 && sub.cur === "EGP", "→ Autopilot: a Google Gemini / Google One subscription, 939.99 EGP (it found nothing): " + JSON.stringify(sub && [sub.title, sub.amount, sub.cur]));
+ok(sub && sub.date.endsWith("-11-07"), "…on the day the receipt says it was paid (7 Nov), so the plan renews on the 7th: " + (sub && sub.date));
+ok(AP.isAuto(AP.emptyState ? AP.emptyState() : { always: [], skipApps: [] }, sub), "…and it is added by itself (plan + Money, with Undo)");
+ok(AP.paidDayOf("Order date: 7 Nov 2026 15:33:27 EET", Date.parse("2026-11-09")) === "2026-11-07" && AP.paidDayOf("no date", now) === "", "the paid day is read from the receipt, else the day it arrived");
 if (fails) { console.log(fails + " failed"); process.exit(1); }

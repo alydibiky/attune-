@@ -8,6 +8,7 @@ import { tr } from "./i18n.js";
 import { inbox, toTxns, autoPick, appendToLedger, alreadyIn, fromChats, judged, codeSure, readNotification } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
 import { payOpts } from "./locale.js";
+import { subOf } from "./autopilot.js";
 import * as U from "./ui-kit.jsx";
 import { parseSmsBackup, moneySms } from "./smsfile.js";
 
@@ -46,6 +47,8 @@ export function RestrictedHelp({ N }) {
  *  already added or dismissed, or is already in Money. */
 export function payEntryOf(n) {
   if (!n || readDone().includes(n.id)) return null;
+  // a known subscription (Google One / Gemini, Netflix…) is added by Autopilot itself — plan + Money — never asked twice
+  if (subOf(String(n.title || "") + " " + String(n.text || ""))) return null;
   let e = null; try { e = readNotification(n, payOpts()); } catch (x) { return null; }
   if (!e) return null;
   try { const led = loadLedger(); if (led && alreadyIn(e, led)) return null; } catch (x) {}

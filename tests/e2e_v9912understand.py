@@ -11,6 +11,7 @@ now = int(time.time() * 1000)
 NOTES = [{"id": "u", "pkg": "com.ubercab", "app": "Uber", "title": "Uber", "text": "Invite a friend to Uber and get ج.م.‏ 30 off when they take their first trip. Terms apply.", "ts": now - 60000},
          {"id": "t", "pkg": "com.talabat", "app": "talabat", "title": "talabat", "text": "For 206 EGP only instead of 295 EGP order 4 gateaux pieces from La Poire. Treat yourself on talabat.", "ts": now - 120000},
          {"id": "g", "pkg": "com.google.android.gm", "app": "Gmail", "title": "Google Play", "text": "Your Google Play Order Receipt from 7 Nov 2026\nThank you\nYour subscription from Google Commerce Limited on Google Play continues and you've been charged. Manage your subscriptions\nItem\nPrice\nGoogle AI Pro (5 TB) (Google One) (by Google LLC)\nج.م.‏ ٩٣٩٫٩٩/month\nAuto-renewing subscription", "ts": now - 180000},
+         {"id": "a", "pkg": "com.google.android.gm", "app": "Gmail", "title": "Amazon.eg", "text": "Thank you for your order. Your payment was successful — you were charged EGP 1,250.00 for Philips kettle. Order number: 402-118", "ts": now - 200000},
          {"id": "y", "pkg": "com.google.android.youtube", "app": "YouTube", "title": "MrBeast", "text": "I Hustled Streamers for $250,000", "ts": now - 240000},
          {"id": "w", "pkg": "com.whatsapp", "app": "WhatsApp", "title": "ما يخص المرتبات: Mahmoud 3ashour (Alex Accountant)", "text": "ابراهيم حسن ايام الجراح ٣٠٠\nغفره بليل ٤٥٠ جنيه+١٠٠جنيه اعاشه", "ts": now - 300000}]
 LEDGER = {"txns": [], "accounts": [{"id": "a1", "name": "Cash", "currency": "EGP"}]}
@@ -25,12 +26,13 @@ with sync_playwright() as p:
     open_mode(page, "timeline", "[data-testid=fu-thread]")
     txt = page.locator("[data-testid=fu-thread]").inner_text()
     check("Invite a friend" not in txt and "Treat yourself" not in txt and "Hustled" not in txt, "the Uber + talabat offers and the YouTube video are understood by code — not asked")
-    check(page.locator("[data-testid=note-ask]").count() == 2, "two cards: the receipt and the wages group (it showed five “What is this?”)")
+    check("Google AI Pro" not in txt, "the Google Play subscription receipt is not asked — Autopilot adds a known subscription by itself")
+    check(page.locator("[data-testid=note-ask]").count() == 2, "two cards: the Amazon receipt and the wages group (it showed five “What is this?”)")
     paid = page.locator("[data-testid=note-paid]")
-    check(paid.count() == 1 and "Looks like you paid" in paid.inner_text() and "939.99" in paid.inner_text() and "every month" in paid.inner_text(), "the Google Play receipt → “Looks like you paid — 939.99 EGP · every month”")
+    check(paid.count() == 1 and "Looks like you paid" in paid.inner_text() and "1,250" in paid.inner_text(), "the Amazon receipt → “Looks like you paid — 1,250 EGP”")
     page.click("[data-testid=note-paid-add]"); page.wait_for_timeout(300)
-    tx = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3')).txns")
-    check(len(tx) == 1 and tx[0]["amount"] == 939.99 and tx[0]["type"] == "expense", "Add to Money → 939.99 EGP spent is in Money: %s" % [(t["amount"], t["type"], t["note"]) for t in tx])
+    tx = [t for t in page.evaluate("JSON.parse(localStorage.getItem('ledger.v3')).txns") if t["amount"] == 1250]
+    check(len(tx) == 1 and tx[0]["type"] == "expense", "Add to Money → 1,250 EGP spent is in Money: %s" % [(t["amount"], t["type"], t["note"]) for t in tx])
     check(page.locator("[data-testid=note-paid]").count() == 0, "…and the card goes")
     g = page.locator("[data-testid=note-ask]").first
     check("I think I know what this is" in g.inner_text() and "Work talk" in g.inner_text(), "the wages group opens on the guess: “I think … work talk” — Save / Change")

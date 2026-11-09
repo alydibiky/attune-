@@ -23,6 +23,10 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 - Agents (`agents.js agentChat`): every priced check says it against the best before it — "New best … {x} less", "the same as your
   best", "no better. Your best is still {b}"; background misses explain Booking.com needs a browser and the best stays.
   `uniqueOffers` (the same 41,495 on 01/08 → 01/12 showed twice in Best found); the table's heads use the hotel's name, not "Booking.com".
+- **Ali: "why wasn't the Google subscription added to the dates by itself?"** notifmeaning.js read «ج.م.‏ ٩٣٩٫٩٩» as 0 (Arabic digits,
+  the Arabic decimal mark, a hidden direction mark) so Autopilot's subscription rule (needs an amount) skipped it. Now 939.99 EGP;
+  `paidDayOf` takes the receipt's own date (Order date: 7 Nov → renews on the 7th); "ج.م" = EGP. Known subscriptions are left to
+  Autopilot (Follow-ups' paid card skips them — no double add).
 - **Waiting for Ali's picks:** https://claude.ai/artifact/QBdtAc2f6TgLA44rLpgLBi — AG1–AG3 (agent page), AC1–AC3 (real auto-check for
   sites that need a browser: on open / at night while charging / one-tap notification), AH1 (plan before Start), FQ1–FQ3.
 - Tests: unit v9912understand (his 5 notifications + agent messages + table), e2e_v9912understand; e2e_v999teachnotes follows the guess.

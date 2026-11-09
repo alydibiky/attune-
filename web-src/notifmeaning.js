@@ -37,7 +37,7 @@ const KINDS = [
 const CHAT_APPS = /whatsapp|telegram|messenger|orca|signal|viber|instagram|slack|teams|discord|imo|botim|messaging|mms|sms/;
 const EMAIL_APPS = /gmail|\.gm$|outlook|yahoo|proton|mail/;
 
-const MONEY = /(?:egp|e£|le|l\.e\.?|usd|\$|sar|aed|eur|€|£|جنيه|ج\.م|ريال|درهم)\s*([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s*(?:egp|e£|le|l\.e\.?|usd|sar|aed|eur|جنيه|ج\.م|ريال|درهم)/i;
+const MONEY = /(?:egp|e£|le|l\.e\.?|usd|\$|sar|aed|eur|€|£|جنيه|ج\.م\.?|ريال|درهم)\s*([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s*(?:egp|e£|le|l\.e\.?|usd|sar|aed|eur|جنيه|ج\.م|ريال|درهم)/i;
 const STATE = [
   [/delivered|تم التوصيل|اتسلم|وصل طلبك/i, "delivered"], [/out for delivery|خرج للتوصيل|المندوب في الطريق/i, "out for delivery"],
   [/arriv(?:ing|es)\s+((?:on\s+|by\s+)?(?:today|tomorrow|mon|tue|wed|thu|fri|sat|sun|\d{1,2}\s*(?:[a-z]{3}|\/))[\p{L}\d ,/]{0,16})/iu, "arriving"],
@@ -66,7 +66,9 @@ export function understandNote(n) {
   if (!kind && EMAIL_APPS.test(src)) { kind = "email"; who = title.trim(); }
   if (kind === "call" && CHAT_APPS.test(src)) who = title.replace(/\s*\(\d+.*\)\s*$/, "").trim();
   else if (kind === "call") who = (title.replace(/missed call|مكالمة فائتة|مكالمه فائته/gi, "") || text.replace(/missed call( from)?|مكالمة فائتة( من)?/gi, "")).replace(/[·:\-]/g, " ").trim();
-  const m = MONEY.exec(all), amount = m ? +String(m[1] || m[2]).replace(/,/g, "") : 0;
+  // v9.9.12 (Ali: the Google AI Pro receipt "ج.م.‏ ٩٣٩٫٩٩/month" wasn't added to Subscriptions): Arabic digits, the Arabic decimal mark
+  // and the invisible direction marks are read like 939.99
+  const m = MONEY.exec(all.replace(/[\u200e\u200f\u061c\u202a-\u202e]/g, "").replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 1632)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 1776)).replace(/٫/g, ".").replace(/٬/g, ",")), amount = m ? +String(m[1] || m[2]).replace(/,/g, "") : 0;
   let state = ""; for (const [rx, s] of STATE) { const x = rx.exec(all); if (x) { state = s === "arriving" && x[1] ? "arriving " + x[1].replace(/\s+/g, " ").trim() : s; break; } }
   const def = KINDS.find((k) => k[0] === kind);
   const words = [def ? def[3] : kind === "message" ? "message messages wrote texted chat رساله رسايل بعت كلمني مسدج" : kind === "email" ? "email mail inbox ايميل بريد" : "",
