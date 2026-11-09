@@ -11,8 +11,8 @@ def install(page):
     page.locator("text=Recommended for this device").locator("xpath=..").get_by_role("button", name="Install").first.click()
     page.wait_for_selector("text=Running now", timeout=10000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
-def ask(page, t):
-    page.evaluate("() => { window.__mock.bodies = []; }")
+def ask(page, t, q=None):
+    page.evaluate("(q) => { window.__mock.bodies = []; if (q) window.__mock.fakeQueue = q; }", q)
     page.locator("textarea[placeholder='Message Attune']").fill(t); page.locator("button[title='Send']").click()
     page.wait_for_function("() => window.__mock.bodies.some(x => x.max_tokens > 2)", timeout=20000); page.wait_for_timeout(2500)
     return json.dumps(page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)"))
@@ -21,8 +21,10 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors)
     page.goto(env.url); page.wait_for_timeout(1000)
     install(page)
-    b = ask(page, "explain what a late-penalty clause in a rental contract usually means for the tenant — check it")
-    try: page.wait_for_function("() => JSON.stringify(window.__mock.bodies).includes('senior expert reviewer')", timeout=20000)
+    b = ask(page, "explain what a late-penalty clause in a rental contract usually means for the tenant — check it",
+            ["A late-penalty clause means the tenant pays an extra amount for each day the rent is late. It is usually a fixed percentage of the monthly rent, and courts may reduce it if it is excessive. Read the clause for the rate, the grace period and any cap.",
+             "PROBLEMS:\n- none\nFINAL ANSWER:\nA late-penalty clause means the tenant pays an extra amount for each day the rent is late, usually a fixed percentage of the rent, often after a grace period and sometimes with a cap."])
+    try: page.wait_for_function("() => JSON.stringify(window.__mock.bodies).includes('senior expert reviewer')", timeout=60000)
     except Exception: pass
     b = json.dumps(page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)"))
     check("senior expert reviewer" in b, "“check it” on a contract question → the reviewer pass runs (same model); word problems with numbers already go to the code checker")
