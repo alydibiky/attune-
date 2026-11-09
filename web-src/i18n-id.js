@@ -11686,4 +11686,8 @@ export const IDN = {
   "From a timetable photo": "Dari foto jadwal",
   "Choose the timetable photo — Attune reads it and you check it.": "Pilih foto jadwal — Attune membacanya dan kamu memeriksa.",
   "Timetable": "Jadwal",
+  "Save this? {s}": "Simpan ini? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Saya tidak yakin, jadi tidak ada yang disimpan: {s} — ucapkan lebih jelas.",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Oke — tidak ada yang disimpan. Tulis lagi lebih jelas (mis. “habis 900 untuk bensin”).",
+  "Not saved": "Tidak disimpan",
 };

@@ -11686,4 +11686,8 @@ export const UR = {
   "From a timetable photo": "ٹائم ٹیبل کی تصویر سے",
   "Choose the timetable photo — Attune reads it and you check it.": "ٹائم ٹیبل کی تصویر چنیں — Attune پڑھے گا اور آپ جانچیں گے۔",
   "Timetable": "ٹائم ٹیبل",
+  "Save this? {s}": "اسے محفوظ کروں؟ {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "یقین نہیں، اس لیے کچھ محفوظ نہیں کیا: {s} — مزید واضح کہیں۔",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "ٹھیک ہے — کچھ محفوظ نہیں ہوا۔ دوبارہ واضح لکھیں (جیسے “پیٹرول پر 900 خرچ کیے”)۔",
+  "Not saved": "محفوظ نہیں ہوا",
 };

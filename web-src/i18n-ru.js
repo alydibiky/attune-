@@ -11685,4 +11685,8 @@ export const RU = {
   "From a timetable photo": "Из фото расписания",
   "Choose the timetable photo — Attune reads it and you check it.": "Выберите фото расписания — Attune прочитает, а вы проверите.",
   "Timetable": "Расписание",
+  "Save this? {s}": "Сохранить это? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Я не уверен, поэтому ничего не сохранил: {s} — скажите яснее.",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Хорошо — ничего не сохранено. Напишите ещё раз яснее (например, «потратил 900 на бензин»).",
+  "Not saved": "Не сохранено",
 };

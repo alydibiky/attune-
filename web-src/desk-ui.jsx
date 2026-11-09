@@ -8,7 +8,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Send, Star, LayoutGrid, Bell, Apple, Brain, MessageCircle } from "lucide-react";
 import { openRead } from "./readaloud-ui.jsx";
 import { DoResult } from "./doit-ui.jsx";
-import { tr } from "./i18n.js";
+import { tr, getLang } from "./i18n.js";
 import { usePins, recentTools } from "./side-ui.jsx";
 import { BoxModes, takeBoxMode, BOX_HINT } from "./cmdbox-ui.jsx";
 import { LifeAnswer } from "./lifeask-ui.jsx";
@@ -67,9 +67,12 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
     if (boxMode === "translate") return onAsk("\u0004" + t, true);
     // v9.2 (Ali picked 1A): a list sentence is done here, like the phone's box
     { const lc = LISTS.parseListCommand(t); if (lc) { const lr = LISTS.applyListCommand(LISTS.loadLists(), lc); if (lr) { if (lr.st) LISTS.saveLists(lr.st); setListAns({ list: lr.list, line: lineText(lr.line) }); return; } } }
-    let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) setDone({ ...r, id: Date.now() }); else onAsk(t);
+    let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; }
+    if (r && r.confirm) return setSure(r.confirm);   // v9.9.4 M1: not sure → Save this? (nothing saved before Save)
+    if (r) setDone({ ...r, id: Date.now() }); else onAsk(t);
   };
   const [listAns, setListAns] = useState(null);
+  const [sure, setSure] = useState(null);
   const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Plan a weekend trip", null], ["My lists", "lists"], ["Convert a file", "convert"]];
   return (
     <div className="calm pt-2 pb-10 space-y-5" data-testid="desk-home">
@@ -88,6 +91,9 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
           {listAns ? <div className="mt-3 space-y-2" data-testid="list-answer"><p className="m-0 text-[14px] font-bold" dir="auto">{listAns.line}</p>
             {listAns.list ? <ListCard list={listAns.list} testid="list-answer-card" onTick={(l, x) => { const st = LISTS.tick(LISTS.loadLists(), l.id, x.id); LISTS.saveLists(st); setListAns({ ...listAns, list: st.lists.find((y) => y.id === l.id) }); }}
               onOpen={() => { try { localStorage.setItem("attune:lists:open", listAns.list.id); } catch (e) {} navTo("lists"); }} /> : null}</div> : null}
+          {sure ? <div className="calm rounded-[20px] mt-3 c-card space-y-2" data-testid="desk-confirm"><b className="block text-[14.5px]" dir="auto">{getLang() === "ar" ? sure.q.ar : sure.q.en}</b>
+            <div className="flex gap-2"><button onClick={() => { const t = sure.text; setSure(null); let r = null; try { r = doIt(t, { force: true }); } catch (e) {} if (r) setDone({ ...r, id: Date.now() }); }} className="h-10 px-5 rounded-full text-[13.5px] font-extrabold bg-[var(--c-acc)] text-white" data-testid="desk-confirm-yes">{tr("Save")}</button>
+              <button onClick={() => setSure(null)} className="h-10 px-5 rounded-full text-[13.5px] font-bold border border-[var(--c-ln)]" data-testid="desk-confirm-no">{tr("Not this")}</button></div></div> : null}
           {done ? <div className="calm rounded-[20px] mt-3"><DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} /></div> : null}
           {life ? <div className="mt-3"><LifeAnswer res={life} navTo={navTo} askChat={(q) => { setLife(null); onAsk(q); }} onClose={() => setLife(null)} /></div> : null}
           {boxMode === "translate" ? <button onClick={() => navTo("translate")} className="mt-2 min-h-[40px] text-[13px] font-bold text-[var(--c-acc)] inline-flex items-center gap-1" data-testid="box-translate-more">{tr("Talk with someone, a photo or a document")} →</button> : null}

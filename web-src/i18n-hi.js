@@ -11686,4 +11686,8 @@ export const HI = {
   "From a timetable photo": "टाइमटेबल फ़ोटो से",
   "Choose the timetable photo — Attune reads it and you check it.": "टाइमटेबल की फ़ोटो चुनें — Attune पढ़ेगा और आप जाँचेंगे।",
   "Timetable": "टाइमटेबल",
+  "Save this? {s}": "इसे सेव करूँ? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "पक्का नहीं हूँ, इसलिए कुछ सेव नहीं किया: {s} — और साफ़ बोलें।",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "ठीक है — कुछ सेव नहीं हुआ। फिर से साफ़ लिखें (जैसे “पेट्रोल पर 900 खर्च किए”)।",
+  "Not saved": "सेव नहीं हुआ",
 };

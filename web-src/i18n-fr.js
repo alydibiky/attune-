@@ -11686,4 +11686,8 @@ export const FR = {
   "From a timetable photo": "Depuis une photo d'emploi du temps",
   "Choose the timetable photo — Attune reads it and you check it.": "Choisis la photo de l'emploi du temps — Attune la lit et tu la vérifies.",
   "Timetable": "Emploi du temps",
+  "Save this? {s}": "Enregistrer ceci ? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Je ne suis pas sûr, donc je n'ai rien enregistré : {s} — dis-le plus clairement.",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "D'accord — rien n'est enregistré. Réécris-le plus clairement (ex. “dépensé 900 en essence”).",
+  "Not saved": "Non enregistré",
 };

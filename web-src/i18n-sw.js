@@ -11686,4 +11686,8 @@ export const SW = {
   "From a timetable photo": "Kutoka picha ya ratiba",
   "Choose the timetable photo — Attune reads it and you check it.": "Chagua picha ya ratiba — Attune inaisoma na wewe unaikagua.",
   "Timetable": "Ratiba",
+  "Save this? {s}": "Nihifadhi hiki? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Sina uhakika, kwa hiyo sikuhifadhi chochote: {s} — sema kwa uwazi zaidi.",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Sawa — hakuna kilichohifadhiwa. Andika tena kwa uwazi zaidi (k.m. “nilitumia 900 kwa mafuta”).",
+  "Not saved": "Haijahifadhiwa",
 };

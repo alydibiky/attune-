@@ -11685,4 +11685,8 @@ export const ZH = {
   "From a timetable photo": "从课表照片",
   "Choose the timetable photo — Attune reads it and you check it.": "选择课表照片——Attune读取，你来核对。",
   "Timetable": "课表",
+  "Save this? {s}": "保存这个吗？{s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "我不确定，所以什么都没保存：{s}——请说得更清楚。",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "好的——什么都没保存。请写得更清楚些（例如“加油花了900”）。",
+  "Not saved": "未保存",
 };

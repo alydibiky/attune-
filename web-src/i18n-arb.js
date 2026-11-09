@@ -11677,4 +11677,8 @@ export const ARB = {
   "From a timetable photo": "من صورة جدول",
   "Choose the timetable photo — Attune reads it and you check it.": "اختر صورة الجدول — يقرؤها أتيون وتراجعها أنت.",
   "Timetable": "الجدول",
+  "Save this? {s}": "هل أحفظ هذا؟ {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "لست متأكدًا، فلم أحفظ شيئًا: {s} — قلها بوضوح أكثر.",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "حسنًا — لم يُحفظ شيء. اكتبها مرة أخرى بوضوح أكثر (مثلًا «صرفت 900 على الوقود»).",
+  "Not saved": "لم يُحفظ",
 };

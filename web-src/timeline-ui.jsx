@@ -140,6 +140,8 @@ export function TimelinePage({ navTo, doIt, flash }) {
   // the box: add or change anything — the answer shows in the thread
   const say2 = (t0) => { const text = String(t0 || "").trim(); if (!text || !doIt) return false;
     let r = null; try { r = doIt(text); } catch (e) {}
+    // v9.9.4 M1: not sure → the question in the thread, Save / Not this — nothing saved before Save
+    if (r && r.confirm) { setLog((l) => [...l, { id: "say:" + Date.now(), q: "", a: text, msg: getLang() === "ar" ? r.confirm.q.ar : r.confirm.q.en, confirm: text }]); setSay(""); return true; }
     if (!r && /\b(today|tonight|tomorrow|mon|tue|wed|thu|fri|sat|sun)\w*\b|\b\d{1,2}\s*(am|pm)\b|\d{1,2}:\d{2}|النهارده|بكره|بكرة|الساعه|الساعة/i.test(text)) { try { r = doIt((/[\u0600-\u06ff]/.test(text) ? "فكرني " : tr("remind me ")) + text); } catch (e) {} }
     const ans = r && r.answer ? (typeof r.answer === "string" ? r.answer : (getLang() === "ar" ? r.answer.ar : r.answer.en)) : "";
     if (r && r.lines && r.lines.length) { setLog((l) => [...l, { id: "say:" + Date.now(), q: "", a: text, msg: r.lines.map((x) => x.text).join(" · "), undo: r.undo ? () => { r.undo(); setV((y) => y + 1); } : null }]); setSay(""); setV((y) => y + 1); return true; }
@@ -159,7 +161,10 @@ export function TimelinePage({ navTo, doIt, flash }) {
         {log.map((l) => <React.Fragment key={l.id}>
           {l.q ? <div className={bubble + " opacity-70"}><span className="text-[14px] font-bold" dir="auto">{l.q}</span></div> : null}
           <div className="self-end rounded-[18px] rounded-ee-[6px] px-3.5 py-2 bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[14px] font-bold max-w-[85%]" dir="auto" data-testid="fu-me">{l.a}</div>
-          <p className="m-0 self-center text-[12.5px] font-bold text-[var(--c-pos)] text-center" data-testid="fu-result" dir="auto">{l.msg}{l.undo ? <> · <button className="underline" onClick={() => { l.undo(); setLog((g) => g.filter((y) => y.id !== l.id)); }} data-testid="fu-undo">{tr("Undo")}</button></> : null}</p>
+          {l.confirm ? <div className={bubble} data-testid="fu-confirm"><p className="m-0 text-[14px] font-bold" dir="auto">{l.msg}</p>
+            <div className="flex gap-1.5 mt-2"><button className={BP} onClick={() => { let r2 = null; try { r2 = doIt(l.confirm, { force: true }); } catch (e) {} setLog((g) => g.map((y) => (y.id === l.id ? { ...y, confirm: "", msg: r2 && r2.lines && r2.lines.length ? r2.lines.map((x) => x.text).join(" · ") : tr("Done"), undo: r2 && r2.undo ? () => { r2.undo(); setV((v) => v + 1); } : null } : y))); setV((v) => v + 1); }} data-testid="fu-confirm-yes">{tr("Save")}</button>
+              <button className={B} onClick={() => setLog((g) => g.map((y) => (y.id === l.id ? { ...y, confirm: "", msg: tr("Not saved") } : y)))} data-testid="fu-confirm-no">{tr("Not this")}</button></div></div> :
+          <p className="m-0 self-center text-[12.5px] font-bold text-[var(--c-pos)] text-center" data-testid="fu-result" dir="auto">{l.msg}{l.undo ? <> · <button className="underline" onClick={() => { l.undo(); setLog((g) => g.filter((y) => y.id !== l.id)); }} data-testid="fu-undo">{tr("Undo")}</button></> : null}</p>}
         </React.Fragment>)}
         {qs.map((x) => { const act = actionOf(x), l = act === "ask" ? lifeOf(x) : null;
           return <div key={x.id + "@" + x.date} className={bubble} data-testid="fu-q" data-act={act || "open"} data-kind={x.kind}>

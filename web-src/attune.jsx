@@ -142,7 +142,7 @@ import { parseAgent, loadAgents, saveAgents, makeAgent } from "./agents.js";
 import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
 import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan, goldGram } from "./scout.js";
-import { understand as doUnderstand, apply as doApply, doSure } from "./doit.js";
+import { understand as doUnderstand, apply as doApply, doSure, strictCheck } from "./doit.js";
 import { missingAmounts } from "./numguard.js";
 import { scheduleOf as scheduleOfLife } from "./life.js";
 import { PLAY_BUILD, NOT_IN_PLAY } from "./buildflags.js";
@@ -9725,7 +9725,7 @@ export default function App() {
     // v9.9 edit by talking: "Sheikh pays 3000 now" (a plan with a total), "which maid?", "already 700" — said, nothing saved
     editSay: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask && u.ask.kind === "life-edit" ? u.ask : null; } catch (e) { return null; } },
     doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
-    doIt: (t) => { try { return doRef.current ? doRef.current(t) : null; } catch (e) { return null; } },
+    doIt: (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } },   // (Chat checked first: doSure + the judge + the person's pick)
     whereYes: (set) => remember(W2.whereRecord(set)),
     openRecord: (id) => { try { localStorage.setItem("attune:mind:open", id); } catch (e) {} navTo("memory"); },
     abort: () => LocalEngine.abort(),
@@ -9948,7 +9948,7 @@ export default function App() {
     };
     // (v9.8, Ali: "I want to reply to it and tell it how to add it — a reminder, a subscription…"): Autopilot's reply box goes through
     // the Home box (doFromHome), its To-do button into the to-do list
-    window.__attuneDoIt = (t) => { try { return doRef.current ? doRef.current(t) : null; } catch (e) { return null; } };
+    window.__attuneDoIt = (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } };   // (Autopilot's box: the person said how to save it)
     window.__attuneAddTodo = (t) => { try { remember({ kind: "todo", title: String(t).slice(0, 90), text: String(t), tags: ["todo"], meta: { todo: true, done: false } }); return true; } catch (e) { return false; } };
     window.__attuneRemoveReminder = (id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} };
     // (Undo of an expense / income Autopilot added: the newest one with that amount)
@@ -9981,7 +9981,7 @@ export default function App() {
     savePeopleDir(dir);
     openLink(wp.op, phone, name); flash(openLine(wp.op, name, getLang() === "ar"));
   };
-  const doFromHome = (text0) => {
+  const doFromHome = (text0, dopts = {}) => {
     // v9.0: Franco ("ghada 150", "fakarny bokra 9") is read as Arabic when the Arabic is something to do
     let text = text0;
     if (UND.looksFranco(text0)) { const a = UND.francoToArabic(text0); try { const u = doUnderstand(a, { now: Date.now(), stores: loadLifeStores() }); if (a !== text0 && (u.ask || u.actions.length)) text = a; } catch (e) {} }
@@ -10040,6 +10040,9 @@ export default function App() {
         if (u.actions.some((a) => a.kind === "life")) { try { window.dispatchEvent(new CustomEvent("attune-life", { detail: { text } })); } catch (e) {} return { lines: [{ text: tr("You said {n} — it isn't in this plan. Check the numbers before you save, or write it again.", { n }), open: "life" }], undo: null }; }
         return { lines: [{ text: tr("You said {n} — I couldn't place it, so nothing was saved. Write it again a little differently.", { n }) }], undo: null };
       } }
+    // v9.9.4 M1 (Ali: "strict — I don't want the code saving things wrong"): not sure → "Save this? …" Yes / No; nothing saved on a guess
+    if (!dopts.force && u.actions.length) { let sc = null; try { sc = strictCheck(text, u, { now, stores: loadLifeStores() }); } catch (e) {}
+      if (sc) return { confirm: { q: { en: tr(sc.en, { s: sc.s }), ar: sc.ar }, text: text0 }, lines: [], undo: null }; }
     // v8.7 (persona 4, idea 6 — code first): what the code couldn't read is kept ON THE PHONE (the last 100, never sent), so Ali can
     // copy it from Engine → Details and each one becomes a new reader instead of a 2–10 s wait for the model
     if (!u.actions.length) { try { const k = "attune:fell-to-model", l = JSON.parse(localStorage.getItem(k) || "[]"); localStorage.setItem(k, JSON.stringify([...l.filter((x) => x.t !== text), { t: String(text).slice(0, 200), at: now, g: guessRoute(text) }].slice(-100))); } catch (e) {} return null; }

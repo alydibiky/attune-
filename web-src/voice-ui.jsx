@@ -115,7 +115,7 @@ export function VoiceScreen({ native: N, nativeCall, onClose, doIt, ask, openToo
       // (translate a whole document, read a long PDF) opens that tool — the model never answers it
       { const job = routeTask(text); if (job && openTool) { const l = ui === "ar" ? (job.tool === "translate-doc" ? "هفتحلك ترجمة المستندات — اختار الملف." : "هفتحلك المستندات — اختار الملف.") : tr(job.tool === "translate-doc" ? "Opening document translation — pick the file." : "Opening Documents — pick the file.");
         setSay(l); setCard({ kind: "done", ok: true }); await speakOut(l, ui); openTool(job.tool, job.lang); return; } }
-      try { const res = doIt ? await doIt(text) : null; line = res ? (res.answer ? (typeof res.answer === "string" ? res.answer : (ui === "ar" ? res.answer.ar : tr(res.answer.en)) || "") : (res.lines || []).map((l) => l.text).join(" · ")) : ""; } catch (e) {}
+      try { const res = doIt ? await doIt(text) : null; line = res ? (res.answer ? (typeof res.answer === "string" ? res.answer : (ui === "ar" ? res.answer.ar : tr(res.answer.en)) || "") : res.confirm ? (ui === "ar" ? "مش متأكد، فمحفظتش حاجة: " + res.confirm.q.ar.replace(/^أحفظ ده؟\s*/, "") + " — اكتبها بوضوح أكتر." : tr("I'm not sure, so I saved nothing: {s} — say it more clearly.", { s: res.confirm.q.en.replace(/^Save this\?\s*/, "") })) : (res.lines || []).map((l) => l.text).join(" · ")) : ""; } catch (e) {}
       // v8.6 (Ali: "fix the voice part for good"): not an action → a real conversation — small talk by code at once, anything
       // else to the AI model on the phone (short spoken answer, the last turns kept), never a dead "I didn't get that"
       // v8.7 (Ali: the voice said "I don't have access to your personal information like your barber" — it was in the app)

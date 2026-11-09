@@ -11685,4 +11685,8 @@ export const VI = {
   "From a timetable photo": "Từ ảnh thời khóa biểu",
   "Choose the timetable photo — Attune reads it and you check it.": "Chọn ảnh thời khóa biểu — Attune đọc và bạn kiểm tra.",
   "Timetable": "Thời khóa biểu",
+  "Save this? {s}": "Lưu cái này? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Tôi không chắc nên chưa lưu gì: {s} — hãy nói rõ hơn.",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Được — chưa lưu gì. Viết lại rõ hơn (ví dụ “tiêu 900 tiền xăng”).",
+  "Not saved": "Chưa lưu",
 };

@@ -206,7 +206,10 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
     openLine(c.open);
   };
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
-  const doOld = (t) => { let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); return true; } return false; };
+  const doOld = (t, o) => { let r = null; try { r = doIt ? doIt(t, o) : null; } catch (e) { r = null; }
+    // v9.9.4 M1: not sure → "Save this? Expense 900 — co" Yes / No — nothing is saved before Yes
+    if (r && r.confirm) { setPanel({ type: "confirmDo", q: r.confirm.q, text: r.confirm.text }); return true; }
+    if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); return true; } return false; };
   // v6.48: what the box does — a "/" command, or a sentence that means one (asks when it could mean two), else Chat as before
   const show = (o, t) => {
     setPanel(null); setDone(null);
@@ -318,6 +321,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
               <button className="min-h-[44px] px-3 text-[13px] font-bold text-[var(--c-mut)]" onClick={() => { setPanel(null); navTo("people"); }}>{tr("Someone else")}</button></div></div>
         : panel.type === "shared" ? <ConfirmCard q={panel.q} onYes={() => { const t = panel.text; setPanel(null); doOld(t); }}
             onNo={() => { const t = panel.text; setPanel({ type: "lines", lines: [{ en: "Kept as a note in Mind.", ar: "اتحفظت ملاحظة في «العقل»." }] }); try { window.dispatchEvent(new MessageEvent("attune-share", { data: { kind: "share", text: t, asNote: true } })); } catch (e) {} }} />
+        : panel.type === "confirmDo" ? <ConfirmCard q={panel.q} onYes={() => { const t = panel.text; setPanel(null); doOld(t, { force: true }); }} onNo={() => setPanel({ type: "lines", lines: [{ en: tr("OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”)."), ar: "تمام — محفظتش حاجة. اكتبها تاني بوضوح أكتر (مثلاً «صرفت 900 بنزين»)." }] })} />
         : panel.type === "confirm" ? <ConfirmCard q={panel.q} onYes={() => show({ type: "whereSave", set: panel.set }, "")} onNo={() => setPanel({ type: "lines", lines: [{ en: `OK — still ${panel.was}.`, ar: `تمام — لسه ${panel.was}.` }] })} />
         : panel.type === "lines" ? <LinesCard lines={panel.lines} onOpen={(m) => { setPanel(null); openLine(m); }} onClose={() => setPanel(null)} />
         : panel.type === "list" ? <div className="space-y-2" data-testid="list-answer"><p className="m-0 text-[14px] font-bold" dir="auto">{panel.line}</p>

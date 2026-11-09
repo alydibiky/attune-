@@ -628,8 +628,8 @@ autopilot-ui.jsx: <button type="submit" disabled={!say.trim()} className="min-h-
 care-ui.jsx: <button className={btnP} disabled={!sugar} onClick={saveSugar} data-testid="care-sugar-save">{tr("Save")}</button></div>
 care-ui.jsx: <button className={btnP} onClick={() => { const d = ensureMember(); put(H.addLabs(d, labDraft.member || d.members[0].id, labDraft.date, labD
 chat.jsx: onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.kno
+desk-ui.jsx: <div className="flex gap-2"><button onClick={() => { const t = sure.text; setSure(null); let r = null; try { r = doIt(t, { force: true }); }
 home-ui.jsx: <button type="submit" className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} data-testid="home-ask-save">{tr("Save")}</button></for
-knowledge-ui.jsx: onClick={async () => { const p = paste; setPaste(null); await add({ kind: "text", title: p.title.trim() || p.text.trim().split("\n")[0].slic
 
 ## Downloading…
 attune.jsx: <div className="flex items-center gap-2 text-[13px] text-slate-300"><span className="flex-1 truncate">{n.dlStage || tr("Downloading…")}</spa
@@ -691,7 +691,9 @@ errands-ui.jsx: <button type="submit" disabled={!text.trim()} className="min-h-[
 
 ## Not this
 autopilot-ui.jsx: <button onClick={() => no(x, false)} onContextMenu={(e) => { e.preventDefault(); no(x, true); }} aria-label={tr("Not this")} title={tr("Not 
+desk-ui.jsx: <button onClick={() => setSure(null)} className="h-10 px-5 rounded-full text-[13.5px] font-bold border border-[var(--c-ln)]" data-testid="de
 radar-ui.jsx: <button className={U.btnS + " w-11 px-0 " + U.muted} aria-label={tr("Not this")} onClick={() => { put(D.markSeen(data, [s.nid])); setSugg((x
+timeline-ui.jsx: <button className={B} onClick={() => setLog((g) => g.map((y) => (y.id === l.id ? { ...y, confirm: "", msg: tr("Not saved") } : y)))} data-te
 
 ## Reminders
 backup-ui.jsx: [tr("Memory items"), s.memory], [tr("Reminders"), s.reminders],

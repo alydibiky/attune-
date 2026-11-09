@@ -11686,4 +11686,8 @@ export const PT = {
   "From a timetable photo": "De uma foto da grade",
   "Choose the timetable photo — Attune reads it and you check it.": "Escolha a foto da grade — o Attune lê e você confere.",
   "Timetable": "Grade",
+  "Save this? {s}": "Salvar isto? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "Não tenho certeza, então não salvei nada: {s} — diga com mais clareza.",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "Ok — nada salvo. Escreva de novo com mais clareza (ex. “gastei 900 em gasolina”).",
+  "Not saved": "Não salvo",
 };

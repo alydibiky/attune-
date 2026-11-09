@@ -8754,4 +8754,8 @@ export const AR = {
   "From a timetable photo": "من صورة جدول",
   "Choose the timetable photo — Attune reads it and you check it.": "اختار صورة الجدول — أتيون يقراها وانت تراجعها.",
   "Timetable": "الجدول",
+  "Save this? {s}": "أحفظ ده؟ {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "مش متأكد، فمحفظتش حاجة: {s} — قولها بوضوح أكتر.",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "تمام — محفظتش حاجة. اكتبها تاني بوضوح أكتر (مثلاً «صرفت 900 بنزين»).",
+  "Not saved": "متحفظش",
 };

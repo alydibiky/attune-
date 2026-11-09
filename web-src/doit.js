@@ -509,3 +509,29 @@ export function doSure(text, { now = Date.now(), stores = {} } = {}) {
   }
   return true;
 }
+
+/** v9.9.4 M1 (Ali: "make the guidelines strict, because I don't want the code saving things wrong"): one check before ANYTHING read
+ *  from typed / spoken words is saved. → null (sure: save) or { en, ar, why } — the question shown instead ("Save this? Expense 900
+ *  — co" · Yes / No). The person's Yes saves it; nothing is saved on a guess. Tests: tests/unit/v994strict.test.mjs. */
+export function describeAction(a) {
+  if (!a) return "";
+  if (a.kind === "money") return (a.items || []).map((x) => (x.type === "income" ? "Income " : "Expense ") + num(x.amount) + (x.note ? " — " + x.note : x.cat && x.cat !== "other" ? " — " + x.cat : "")).join(" · ");
+  if (a.kind === "food") return "Food: " + (a.items || []).map((x) => x.said || x.name || "").filter(Boolean).join(", ");
+  if (a.kind === "life" && a.c) return [a.c.person, a.c.title || a.c.kind, a.c.amount ? num(a.c.amount) + (a.c.every ? " / " + a.c.every : "") : ""].filter(Boolean).join(" · ");
+  if (a.kind === "reminder" && a.action) return "Reminder: " + (a.action.title || "");
+  if (a.kind === "repay") return (a.who || "") + " paid " + num(a.amount || 0);
+  return a.kind;
+}
+export function strictCheck(text, u, { now = Date.now(), stores = {} } = {}) {
+  const acts = (u && u.actions) || []; if (!acts.length) return null;
+  const sure = new Set(["teach", "lifeEdit", "subPay", "note"]);   // these have their own checks (and ask on their own)
+  const q = (why, s) => ({ why, en: "Save this? {s}", s, ar: "أحفظ ده؟ " + s });
+  for (const a of acts) {
+    if (sure.has(a.kind)) continue;
+    if (a.kind === "money" && (a.items || []).some((x) => !(x.amount >= 1) || x.amount > 5e6)) return q("amount", describeAction(a));
+    if (a.kind === "reminder" && a.action && a.action.kind === "reminder" && (!a.action.at || a.action.at < now - 60000)) return q("time", describeAction(a));
+    if (a.kind === "life" && a.c && !(a.c.amount > 0)) return q("plan", describeAction(a));
+  }
+  if (!doSure(text, { now, stores })) return q("unsure", acts.filter((a) => !sure.has(a.kind)).map(describeAction).join(" · "));
+  return null;
+}

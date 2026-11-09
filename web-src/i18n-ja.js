@@ -11685,4 +11685,8 @@ export const JA = {
   "From a timetable photo": "時間割の写真から",
   "Choose the timetable photo — Attune reads it and you check it.": "時間割の写真を選んでください — Attuneが読み、あなたが確認します。",
   "Timetable": "時間割",
+  "Save this? {s}": "これを保存しますか？{s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "確信がないので何も保存していません：{s} — もっとはっきり言ってください。",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "OK — 何も保存していません。もう少しはっきり書いてください（例：「ガソリンに900使った」）。",
+  "Not saved": "保存していません",
 };

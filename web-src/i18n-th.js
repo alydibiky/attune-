@@ -11685,4 +11685,8 @@ export const TH = {
   "From a timetable photo": "จากรูปตารางเรียน",
   "Choose the timetable photo — Attune reads it and you check it.": "เลือกรูปตารางเรียน — Attune อ่านแล้วคุณตรวจ",
   "Timetable": "ตารางเรียน",
+  "Save this? {s}": "บันทึกอันนี้ไหม? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "ไม่แน่ใจ เลยไม่ได้บันทึกอะไร: {s} — พูดให้ชัดขึ้น",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "โอเค — ไม่ได้บันทึกอะไร เขียนใหม่ให้ชัดขึ้น (เช่น “จ่ายค่าน้ำมัน 900”)",
+  "Not saved": "ไม่ได้บันทึก",
 };

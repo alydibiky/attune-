@@ -11685,4 +11685,8 @@ export const BN = {
   "From a timetable photo": "রুটিনের ছবি থেকে",
   "Choose the timetable photo — Attune reads it and you check it.": "রুটিনের ছবি বেছে নিন — Attune পড়বে আর আপনি যাচাই করবেন।",
   "Timetable": "রুটিন",
+  "Save this? {s}": "এটা সেভ করব? {s}",
+  "I'm not sure, so I saved nothing: {s} — say it more clearly.": "নিশ্চিত নই, তাই কিছু সেভ করিনি: {s} — আরও পরিষ্কার বলুন।",
+  "OK — nothing saved. Write it again a little more clearly (e.g. “spent 900 on fuel”).": "ঠিক আছে — কিছু সেভ হয়নি। আবার পরিষ্কার করে লিখুন (যেমন “তেলে 900 খরচ করেছি”)।",
+  "Not saved": "সেভ হয়নি",
 };
