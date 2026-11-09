@@ -11,6 +11,22 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 10 Nov — v9.9.4: M1 strict saving, M3 check-it, the hotel agent's background checks, Radar dates
+- **M1** (doit.js `strictCheck`, Ali: "strict — I don't want the code saving things wrong"): anything read from typed / spoken words
+  that the code isn't sure of ("co 900", "ahmed 500", an amount over 5 M, a reminder with no time) → "Save this? Expense 900 — co"
+  Yes / No (Home box, Follow-ups box, desktop Home); voice says it saved nothing; Chat keeps its own check (doSure + judge + pick).
+- **M3**: the reviewer pass (power.js reviewMessages) on every power level for "check it" / «اتأكد», and for hard contract / tax /
+  interest questions with ≤1 number (sums with numbers go to the code checker, which is stricter). Same small model.
+- **Hotel agent** (Ali: "followed it 2 weeks and it didn't change"): background checks used Jsoup — Booking shows prices only
+  after its JavaScript runs, so 12 background checks never saw a price. Now `HeadlessRead.kt` reads script-only sites (Booking,
+  Agoda, Expedia, Airbnb…) in an invisible WebView with agent-kit.js, 2 dates per round (rotating), the agent's rules sent along;
+  its best offers (names, links) reach the card (agents.js takeChecks `top`). **Needs Ali's phone test** (WebView off-screen).
+  Also: "Found under your price" now follows the agent's rules (agent-rules `withRuleFound`); the podium's "Under your limit ✓" is
+  worked out for the offer shown big; "1 best offers" → "The best offer".
+- **Radar dates** read "3 Aug 2030" (radar-ui niceDate). Documents with photos (D1) + details (D2) + secret fields (S1–S3) waiting
+  for Ali's OK on https://claude.ai/artifact/X6Rovna21JhYvjpNu4hhfj
+- Still to build (OK'd): N3, N1, W1, M2 (small-model relay), M4 (computer team).
+
 ## 9 Nov — v9.9.3: Ali OK'd everything on the "what I understood" page (T1 N1 N3 W1 W2 M1–M4 L1–L4)
 - **L1–L4 teach from notifications** (`noteteach.js` + `noteteach-ui.jsx`): on a Recall notification "she's my wife" → "I understood:
   Nada = your wife" → Save (saved on the People card, role); from the Home box / Chat / voice: "Nada is my wife", "tell me when my

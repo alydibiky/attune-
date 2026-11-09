@@ -1881,7 +1881,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // v9.9.4 M3 (Ali picked: "a second read before you see it"): also on every power level when you ask ("check it", «اتأكد») or the
       // question is a hard one with numbers (a contract, tax, a penalty, interest, zakat) — the same small model re-reads it, no extra model
       const wantCheck = !!typed && (/\b(check it|double[- ]check|verify (it|this)|make sure|are you sure)\b|اتأكد|اتاكد|راجعها|راجعه|راجع الحساب|متأكد|متاكد/i.test(typed)
-        || (/\b(contract|clause|penalty|tax|vat|interest|zakat|loan|installment|salary|invoice|percent|%)\b|عقد|بند|غرامة|ضريبة|ضريبه|فايدة|فائدة|زكاة|زكاه|قسط|مرتب|فاتورة|نسبة/i.test(typed) && /\d/.test(typed)));
+        || (/\b(contract|clause|penalty|tax|vat|interest|zakat|loan|installment|salary|invoice|percent|%)\b|عقد|بند|غرامة|ضريبة|ضريبه|فايدة|فائدة|زكاة|زكاه|قسط|مرتب|فاتورة|نسبة/i.test(typed) && /\d/.test(typed)
+          // (a sum to work out is checked more strictly already — by running code — so it doesn't get a second, slower pass)
+          && !/\b(total|sum|calculate|compute|how much|add up|altogether)\b|احسب|كام|المجموع|الاجمالي|الإجمالي/i.test(typed) && (typed.match(/\d[\d,.]*/g) || []).length <= 1));
       if (plain && ((pwA && pwA.review && (!api.pro || api.pro())) || wantCheck) && !useThink && !sources && !pic && !fileAtt && !longMsg && !extra.continued && answer && (wantCheck || worthReview(typed, answer))) {
         const draft = answer;
         try {

@@ -22,6 +22,9 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_timeout(1000)
     install(page)
     b = ask(page, "explain what a late-penalty clause in a rental contract usually means for the tenant — check it")
+    try: page.wait_for_function("() => JSON.stringify(window.__mock.bodies).includes('senior expert reviewer')", timeout=20000)
+    except Exception: pass
+    b = json.dumps(page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)"))
     check("senior expert reviewer" in b, "“check it” on a contract question → the reviewer pass runs (same model); word problems with numbers already go to the code checker")
     page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(400)
     b = ask(page, "write a short poem about the sea")

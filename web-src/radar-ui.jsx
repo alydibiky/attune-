@@ -6,7 +6,7 @@
    Free: 3 active deadlines; Pro: as many as you like, plus the receipt vault. Tests: tests/e2e_v727radar.py.            */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as D from "./deadlines.js";
 import { homeCurrency, dateOrder } from "./locale.js";
 import { loadGuardian, saveGuardian, markSaved, savedTotals } from "./guardian.js";
@@ -17,6 +17,8 @@ import { payReader, openAccess, RestrictedHelp } from "./paylog-ui.jsx";
 import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import * as U from "./ui-kit.jsx";
 
+// v9.9.4 (Ali: "why is the date like that" — 2030-08-03): a date reads like a date, in the phone's language ("3 Aug 2030")
+const niceDate = (d) => { try { const t = Date.parse(String(d) + "T12:00:00"); return isNaN(t) ? String(d || "") : new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return String(d || ""); } };
 const KIND_LABEL = { trial: "Free trial", renewal: "Renewal", return: "Return window", warranty: "Warranty", expiry: "Document expiry", other: "Other" };
 const DOC_LABEL = { passport: "Passport", visa: "Visa", licence: "Driving licence", id: "ID card", insurance: "Insurance", registration: "Car registration", card: "Bank card" };
 const DONE_ACTS = { trial: [["cancelled", "Cancelled it"], ["kept", "Keep it"]], renewal: [["cancelled", "Cancelled it"], ["renewed", "Let it renew"]],
@@ -105,7 +107,7 @@ function Item({ x, onDone, onEdit, onDelete }) {
         <div className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Bell size={17} /></div>
         <div className="flex-1 min-w-0">
           <b className="block font-extrabold text-[14.5px]" dir="auto">{x.title || tr(KIND_LABEL[x.kind])}</b>
-          <div className={"text-[12.5px] tabular-nums " + U.muted}>{tr(KIND_LABEL[x.kind])}{x.doc ? " · " + tr(DOC_LABEL[x.doc] || x.doc) : ""} · {x.date}{x.amount ? " · " + fmt(x.amount) + " " + (x.currency || "") : ""}</div>
+          <div className={"text-[12.5px] tabular-nums " + U.muted}>{tr(KIND_LABEL[x.kind])}{x.doc ? " · " + tr(DOC_LABEL[x.doc] || x.doc) : ""} · {niceDate(x.date)}{x.amount ? " · " + fmt(x.amount) + " " + (x.currency || "") : ""}</div>
         </div>
         <span className={U.tag(x.status === "done" ? "gray" : left <= 2 ? "red" : left <= D.alertDays(x) ? "amber" : "green")} data-testid="radar-when">{x.status === "done" ? tr("done") : when}</span>
       </div>
@@ -229,7 +231,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
         <div className={U.cardPad + " space-y-2"} data-testid="radar-suggestions"><span className={U.label}>{tr("Found in your notifications")}</span>
           {sugg.slice(0, 8).map((s) => (
             <div key={s.nid + s.kind} className="flex items-center gap-2" data-testid="radar-sugg">
-              <span className="flex-1 min-w-0"><b className="block text-[14px] font-extrabold" dir="auto">{s.title || tr(KIND_LABEL[s.kind])}</b><span className={"text-[12px] " + U.muted}>{tr(KIND_LABEL[s.kind])} · {s.date}{s.app ? " · " + s.app : ""}</span></span>
+              <span className="flex-1 min-w-0"><b className="block text-[14px] font-extrabold" dir="auto">{s.title || tr(KIND_LABEL[s.kind])}</b><span className={"text-[12px] " + U.muted}>{tr(KIND_LABEL[s.kind])} · {niceDate(s.date)}{s.app ? " · " + s.app : ""}</span></span>
               <button className={U.btnP} onClick={() => { if (saveOne(s)) { put(D.markSeen(D.loadRadar(), [s.nid])); setSugg((x) => x.filter((y) => y !== s)); } }} data-testid="radar-sugg-keep">{tr("Keep")}</button>
               <button className={U.btnS + " w-11 px-0 " + U.muted} aria-label={tr("Not this")} onClick={() => { put(D.markSeen(data, [s.nid])); setSugg((x) => x.filter((y) => y !== s)); }}><X size={15} /></button>
             </div>))}

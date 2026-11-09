@@ -1,0 +1,188 @@
+<title>Documents: Photos and Details</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+<style>
+/* Layout: intro + "already built" strip; then one card per pick (what I understood · combined mock-up · limits · OK checkbox + note box);
+   then the new idea (teach Attune from notifications) as options L1–L4; a sticky bar collects ticks + notes and copies them. */
+:root{
+  --bg:#f6f2f2; --surf:#ffffff; --fg:#2a1c20; --mut:#7a676c; --ln:#e7dcdf;
+  --acc:#7a2338; --soft:#f3e3e7; --pos:#2f7d55; --neg:#b3263b; --warn:#a86a12; --phone:#1d1416;
+  --f-ui:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif; --f-d:"Fraunces",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#171113;--surf:#221a1d;--fg:#f2e9eb;--mut:#ab979c;--ln:#3a2d31;--acc:#e48aa0;--soft:#3a2229;--pos:#6fcf9b;--neg:#ff7d8f;--warn:#e5b062;--phone:#000;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171113;--surf:#221a1d;--fg:#f2e9eb;--mut:#ab979c;--ln:#3a2d31;--acc:#e48aa0;--soft:#3a2229;--pos:#6fcf9b;--neg:#ff7d8f;--warn:#e5b062;--phone:#000;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 150px}
+.wrap{max-width:1100px;margin:0 auto;display:grid;gap:28px}
+h1{font-family:var(--f-d);font-size:clamp(28px,5vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--f-d);font-size:24px;margin:0;text-wrap:balance}
+h3{margin:0;font-size:18px;font-weight:900}
+.lede{max-width:70ch;color:var(--mut);margin:6px 0 0}
+.eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.done{background:var(--surf);border:1px solid var(--ln);border-radius:16px;padding:14px 18px}
+.done ul{margin:6px 0 0;padding-inline-start:20px}
+.item{background:var(--surf);border:1px solid var(--ln);border-radius:20px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;align-items:start}
+.item.on{box-shadow:0 0 0 2px var(--acc) inset;border-color:var(--acc)}
+@media (max-width:760px){.item{grid-template-columns:minmax(0,1fr)}}
+.item header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.code{font-weight:900;font-size:13px;color:var(--surf);background:var(--acc);border-radius:8px;padding:2px 8px}
+.rec{font-size:11.5px;font-weight:800;color:var(--pos);border:1px solid currentColor;border-radius:999px;padding:1px 8px}
+.where{font-size:11.5px;font-weight:800;color:var(--mut);border:1px solid var(--ln);border-radius:999px;padding:1px 8px}
+.body{display:grid;gap:8px;min-width:0}
+.body ul{margin:0;padding-inline-start:20px;display:grid;gap:3px}
+.lim{font-size:13.5px;color:var(--mut);margin:0}
+.lim b{color:var(--fg)}
+.pick{display:flex;align-items:center;gap:8px;font-weight:800;min-height:44px;cursor:pointer}
+.pick input{width:20px;height:20px;accent-color:var(--acc)}
+textarea{width:100%;min-height:58px;border:1px solid var(--ln);border-radius:12px;background:var(--bg);color:var(--fg);font:inherit;font-size:14px;padding:8px 10px;resize:vertical}
+.ph{background:var(--phone);border-radius:24px;padding:6px;width:100%;max-width:270px;margin:0 auto}
+.sc{background:var(--bg);border-radius:19px;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:12px;min-height:240px}
+.sc .t{font-weight:900;font-size:14px}
+.c{background:var(--surf);border:1px solid var(--ln);border-radius:12px;padding:7px 9px}
+.mut{color:var(--mut)} .s{font-size:11px} .b{font-weight:800} .num{font-variant-numeric:tabular-nums;font-weight:800}
+.chip{display:inline-block;border-radius:8px;padding:2px 7px;font-weight:800;font-size:11px;background:var(--soft);color:var(--acc)}
+.btn{display:inline-block;border-radius:9px;padding:3px 9px;font-weight:800;font-size:11px;background:var(--acc);color:var(--surf)}
+.btn2{display:inline-block;border-radius:9px;padding:3px 9px;font-weight:800;font-size:11px;border:1px solid var(--ln)}
+.ask{background:var(--soft);border-radius:12px 12px 12px 3px;padding:6px 8px}
+.me{align-self:flex-end;background:var(--acc);color:var(--surf);border-radius:12px 12px 3px 12px;padding:5px 8px;font-weight:700}
+table.tt{width:100%;border-collapse:collapse;font-size:10.5px}
+table.tt td,table.tt th{border:1px solid var(--ln);padding:2px 3px;text-align:center}
+table.tt th{background:var(--soft);color:var(--acc)}
+.flow{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11px;font-weight:800}
+.flow span{background:var(--surf);border:1px solid var(--ln);border-radius:9px;padding:3px 7px}
+.flow i{font-style:normal;color:var(--mut)}
+.mem{display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;font-size:11px;align-items:center}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1px solid var(--ln);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;z-index:5}
+.bar .picks{flex:1;min-width:0;font-weight:800;font-size:13.5px;max-height:64px;overflow:auto;overflow-wrap:anywhere;white-space:pre-line}
+.bar button{min-height:44px;border-radius:12px;border:0;background:var(--acc);color:var(--surf);font:inherit;font-weight:900;padding:0 14px;cursor:pointer}
+.bar button.clear{background:transparent;color:var(--mut);border:1px solid var(--ln)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.copied{font-size:12px;color:var(--pos);font-weight:800}
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Attune · Deadline Radar documents · 10 Nov 2026</div>
+    <h1>Documents with photos and details</h1>
+    <p class="lede">You asked to add one or more photos to a document, and to write several things on it: ID number, visa number, expiry date, card number, password, CVC. Below is what I understood. Tick <b>OK</b> on what is right, write a note on anything to change, then <b>Copy my picks</b>.</p>
+  </div>
+
+  <section class="done">
+    <div class="eyebrow">Already fixed (v9.9.4)</div>
+    <ul><li>Dates read like dates: <b>3 Aug 2030</b> instead of 2030-08-03, in the phone's language.</li></ul>
+  </section>
+
+  <article class="item" data-code="D1">
+    <div class="body">
+      <header><span class="code">D1</span><h3>Photos on a document (one or many)</h3><span class="rec">Recommended</span></header>
+      <ul>
+        <li>On any Deadline Radar item (passport, ID, visa, warranty, receipt): <b>Add photo</b>, from the camera or the gallery, as many as you want (front, back, the visa page…).</li>
+        <li>They show as small pictures on the card. A tap opens them full screen, swipe between them. Share or delete each one.</li>
+        <li>They stay on your phone only, never sent anywhere, and are kept in Attune's private storage (not the gallery).</li>
+      </ul>
+      <label class="pick"><input type="checkbox" id="ok-D1"> OK, build D1</label>
+      <textarea id="n-D1" placeholder="Your note on D1 (optional)"></textarea>
+    </div>
+    <div class="ph"><div class="sc">
+      <div class="c"><b>Egyptian Passport</b> <span class="chip" style="float:inline-end">in 5 years</span><br><span class="s mut">Passport · 8 Aug 2031</span>
+        <div style="display:flex;gap:6px;margin-top:6px"><span style="width:54px;height:40px;border-radius:8px;background:linear-gradient(135deg,#7a2338,#d9a3b0)"></span><span style="width:54px;height:40px;border-radius:8px;background:linear-gradient(135deg,#4a3a3e,#b9a7ac)"></span><span class="btn2" style="align-self:center">+ Photo</span></div></div>
+      <div class="s mut">Tap a photo → full screen · swipe · share</div>
+    </div></div>
+  </article>
+
+  <article class="item" data-code="D2">
+    <div class="body">
+      <header><span class="code">D2</span><h3>Details: as many as you want, with ready fields per document</h3><span class="rec">Recommended</span></header>
+      <ul>
+        <li>Each document gets <b>Details</b>, rows of “name: value”. Attune suggests the usual ones for the type, and you can add any other row.
+          <ul><li><b>Passport:</b> number, issue date, place of issue</li><li><b>ID card:</b> ID number</li><li><b>Visa:</b> visa number, type, entries, valid from / until</li><li><b>Bank card:</b> card number, name on card, expiry, CVC, PIN</li><li><b>Account:</b> username, password</li></ul></li>
+        <li>Each row has a <b>Copy</b> button, handy at an airport form or a website.</li>
+        <li>Search finds them: “my passport number” in Chat or the Radar search answers from here.</li>
+        <li>Say it once: “passport number A12345678, issued Cairo” on the item fills the rows.</li>
+      </ul>
+      <label class="pick"><input type="checkbox" id="ok-D2"> OK, build D2</label>
+      <textarea id="n-D2" placeholder="Your note on D2 (optional)"></textarea>
+    </div>
+    <div class="ph"><div class="sc">
+      <span class="t">American Visa · details</span>
+      <div class="c s"><b>Visa number</b> · H1234567 <span class="btn2" style="float:inline-end">Copy</span></div>
+      <div class="c s"><b>Type</b> · B1/B2 · multiple</div>
+      <div class="c s"><b>Valid until</b> · 1 Dec 2027</div>
+      <div class="c s mut">+ Add a detail</div>
+    </div></div>
+  </article>
+
+  <section style="display:grid;gap:10px">
+    <div class="eyebrow">Secret details (CVC, PIN, password) — pick one</div>
+    <p class="lede">These are the most sensitive things on a phone. Pick how Attune keeps them.</p>
+  </section>
+
+  <article class="item" data-code="S1">
+    <div class="body">
+      <header><span class="code">S1</span><h3>Locked with your fingerprint</h3><span class="rec">Recommended</span></header>
+      <ul><li>Secret rows show as ••••. A tap asks for your fingerprint (or screen lock), then shows them for one minute.</li><li>They are never sent to sync, backup files or Chat answers unless you unlock them.</li></ul>
+      <label class="pick"><input type="checkbox" id="ok-S1"> Pick S1</label>
+      <textarea id="n-S1" placeholder="Your note on S1 (optional)"></textarea>
+    </div>
+    <div class="ph"><div class="sc">
+      <span class="t">Visa card · details</span>
+      <div class="c s"><b>Card</b> · •••• •••• •••• 4242</div>
+      <div class="c s"><b>CVC</b> · ••• <span class="btn" style="float:inline-end">🔒 Show</span></div>
+      <div class="c s mut">Fingerprint to show for 1 minute</div>
+    </div></div>
+  </article>
+
+  <article class="item" data-code="S2">
+    <div class="body">
+      <header><span class="code">S2</span><h3>Hidden, shown with a tap (no fingerprint)</h3></header>
+      <ul><li>Secret rows show as •••• and a tap shows them. Faster, but anyone holding your unlocked phone can see them.</li></ul>
+      <label class="pick"><input type="checkbox" id="ok-S2"> Pick S2</label>
+      <textarea id="n-S2" placeholder="Your note on S2 (optional)"></textarea>
+    </div>
+    <div class="ph"><div class="sc"><div class="c s"><b>CVC</b> · ••• <span class="btn2" style="float:inline-end">Show</span></div></div></div>
+  </article>
+
+  <article class="item" data-code="S3">
+    <div class="body">
+      <header><span class="code">S3</span><h3>Don't keep CVC and PIN at all</h3></header>
+      <ul><li>The safest: Attune keeps the card's last 4 digits and expiry, never the CVC or PIN (banks advise this). Passwords still go under S1.</li></ul>
+      <label class="pick"><input type="checkbox" id="ok-S3"> Pick S3</label>
+      <textarea id="n-S3" placeholder="Your note on S3 (optional)"></textarea>
+    </div>
+    <div class="ph"><div class="sc"><div class="c s"><b>Card</b> · •••• 4242 · exp 08/29</div><div class="c s mut">CVC and PIN are not kept</div></div></div>
+  </article>
+</div>
+
+<div class="bar" role="region" aria-label="Your picks">
+  <span class="picks" id="picks">Nothing ticked yet</span>
+  <span class="copied" id="copied" hidden>Copied</span>
+  <button class="clear" id="clear" type="button">Clear</button>
+  <button id="copy" type="button">Copy my picks</button>
+</div>
+
+<script>
+(function(){
+  var K = "attune-docs-r4";
+  var items = Array.prototype.slice.call(document.querySelectorAll(".item"));
+  var st = {}; try { st = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) {}
+  function text(){
+    return items.map(function(it){ var c = it.getAttribute("data-code"), ok = document.getElementById("ok-" + c).checked, n = document.getElementById("n-" + c).value.trim();
+      if (!ok && !n) return ""; return (ok ? "OK " : "") + c + (n ? " — " + n : ""); }).filter(Boolean).join("\n");
+  }
+  function save(){
+    var o = {}; items.forEach(function(it){ var c = it.getAttribute("data-code"); o[c] = { ok: document.getElementById("ok-" + c).checked, n: document.getElementById("n-" + c).value }; it.classList.toggle("on", o[c].ok); });
+    try { localStorage.setItem(K, JSON.stringify(o)); } catch (e) {}
+    var t = text(); document.getElementById("picks").textContent = t || "Nothing ticked yet";
+  }
+  items.forEach(function(it){ var c = it.getAttribute("data-code"), v = st[c] || {}, ok = document.getElementById("ok-" + c), n = document.getElementById("n-" + c);
+    ok.checked = !!v.ok; n.value = v.n || ""; ok.addEventListener("change", save); n.addEventListener("input", save); });
+  document.getElementById("clear").addEventListener("click", function(){ items.forEach(function(it){ var c = it.getAttribute("data-code"); document.getElementById("ok-" + c).checked = false; document.getElementById("n-" + c).value = ""; }); save(); });
+  document.getElementById("copy").addEventListener("click", function(){
+    var t = text() || "nothing", el = document.getElementById("copied");
+    function done(){ el.hidden = false; setTimeout(function(){ el.hidden = true; }, 1600); }
+    function sel(){ var r = document.createRange(); r.selectNodeContents(document.getElementById("picks")); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    try { navigator.clipboard.writeText(t).then(done, sel); } catch (e) { sel(); }
+  });
+  save();
+})();
+</script>
