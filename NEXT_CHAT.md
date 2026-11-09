@@ -11,6 +11,17 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 10 Nov — v9.9.6: N3 @ links + N1 tables (Ali OK'd)
+- **N3** (`mentions.js`, Shelf note editor): typing @ + letters shows your people / things (People cards) + "+ New: X"; picking writes
+  "@Sheikh"; the note shows "Linked: @Sheikh @Grove GMK" (a tap opens the card — whose page already lists every note naming them);
+  a sentence with a promise ("@Sheikh … he'll pay Thursday", «هيدفع بكرة») offers **Follow up** (a reminder only when tapped).
+- **N1** (`tables.js` + `tables-ui.jsx`, Lists → Tables, mode "tables"): "track my cranes: name, tonnage, next inspection" (Home
+  box or the Tables page) makes the table (column kinds guessed: text / number / date / status); rows by the form, inline edit, or
+  said ("add Grove GMK, 100 tons, inspection 4 Dec" — each value to its column; "add milk" never goes into a table); Table · Board
+  (by status) · Calendar; a reminder the day before each future date at 9:00 (synced to the phone).
+- Tests: unit v996mentions (11), v996tables (12); e2e_v996mentions, e2e_v996tables.
+- Still to build (OK'd): W1 web agent, M2 small-model relay, M4 computer team.
+
 ## 10 Nov — v9.9.5: Ali OK'd D1 D2 S1 — documents with photos and details, each detail its own lock and time
 - `docfields.js` + `docs-ui.jsx` on every Deadline Radar document / warranty card: **D1** photos (many, private store, full screen
   with ‹ ›, delete); **D2** details (suggested per type: passport / ID / visa / licence / insurance / registration / bank card /
