@@ -74,7 +74,10 @@ export function moneyReport(L, { now = Date.now(), account = null, ar = false } 
     const by = {};
     for (const t of inMonth) if (t.type === type) { const [id, name] = keyOf(t); const x = by[id] || (by[id] = { id, name, amount: 0 }); x.amount = r2(x.amount + (Number(t.amount) || 0)); }
     let list = Object.values(by).sort((a, b) => b.amount - a.amount);
-    if (list.length > 4) list = [...list.slice(0, 3), { id: "_rest", name: ar ? "أخرى" : tr("Other"), amount: r2(list.slice(3).reduce((a, c) => a + c.amount, 0)) }];
+    // (Ali's phone, 10 Nov: "Other" twice — his own "Other" category was in the top 3 AND the rest became another "Other"):
+    // the person's own "Other" always goes into the one "Other" slice
+    if (list.length > 4) { const own = (c) => c.id === "other", top = list.filter((c) => !own(c)).slice(0, 3);
+      list = [...top, { id: "_rest", name: ar ? "أخرى" : tr("Other"), amount: r2(list.filter((c) => !top.includes(c)).reduce((a, c) => a + c.amount, 0)) }]; }
     // percentages that add up to 100 (largest remainder), so the donut and the legend agree
     if (!(total > 0)) return list.map((c) => ({ ...c, pct: 0 }));
     const raw = list.map((c) => (c.amount / total) * 100), floor = raw.map(Math.floor);
