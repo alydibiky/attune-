@@ -11749,4 +11749,7 @@ export const TH = {
   "Do it on the web": "ทำบนเว็บ",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "ข้อมูลที่บันทึกมาจาก โปรไฟล์ → ข้อมูลการจอง รหัสเข้าระบบและการชำระเงินเป็นของคุณเสมอ",
   "Show me again": "ดูอีกครั้ง",
+  "Expires {d}": "หมดอายุ {d}",
+  "Details ({n})": "รายละเอียด ({n})",
+  "Open the photos": "เปิดรูปภาพ",
 };

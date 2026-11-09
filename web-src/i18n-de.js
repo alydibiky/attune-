@@ -11749,4 +11749,7 @@ export const DE = {
   "Do it on the web": "Im Web erledigen",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "Deine gespeicherten Daten kommen aus Profil → Buchungsdaten. Login-Codes und Zahlung bleiben immer bei dir.",
   "Show me again": "Nochmal zeigen",
+  "Expires {d}": "Läuft ab am {d}",
+  "Details ({n})": "Details ({n})",
+  "Open the photos": "Fotos öffnen",
 };

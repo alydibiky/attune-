@@ -11749,4 +11749,7 @@ export const ZH = {
   "Do it on the web": "在网上办理",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "已保存的信息来自 个人资料 → 预订信息。登录验证码和付款始终由你掌握。",
   "Show me again": "再看一次",
+  "Expires {d}": "{d} 到期",
+  "Details ({n})": "详细信息（{n}）",
+  "Open the photos": "打开照片",
 };

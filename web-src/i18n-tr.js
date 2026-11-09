@@ -11750,4 +11750,7 @@ export const TRK = {
   "Do it on the web": "Web'de yap",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "Kayıtlı bilgilerin Profil → Rezervasyon bilgileri'nden gelir. Giriş kodları ve ödeme her zaman senindir.",
   "Show me again": "Tekrar göster",
+  "Expires {d}": "Son geçerlilik {d}",
+  "Details ({n})": "Ayrıntılar ({n})",
+  "Open the photos": "Fotoğrafları aç",
 };

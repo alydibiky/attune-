@@ -11749,4 +11749,7 @@ export const RU = {
   "Do it on the web": "Сделать в интернете",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "Сохранённые данные — из Профиль → Данные для бронирования. Коды входа и оплата всегда ваши.",
   "Show me again": "Показать ещё раз",
+  "Expires {d}": "Истекает {d}",
+  "Details ({n})": "Подробности ({n})",
+  "Open the photos": "Открыть фото",
 };

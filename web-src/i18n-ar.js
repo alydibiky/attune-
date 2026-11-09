@@ -8820,4 +8820,7 @@ export const AR = {
   "Do it on the web": "اعملها على النت",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "بياناتك المحفوظة من البروفايل ← بيانات الحجز. أكواد الدخول والدفع دايماً بتوعك.",
   "Show me again": "وريني تاني",
+  "Expires {d}": "بينتهي {d}",
+  "Details ({n})": "التفاصيل ({n})",
+  "Open the photos": "افتح الصور",
 };

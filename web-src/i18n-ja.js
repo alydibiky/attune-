@@ -11749,4 +11749,7 @@ export const JA = {
   "Do it on the web": "ウェブで実行",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "保存した情報は プロフィール → 予約情報 から。ログインコードと支払いは常にあなたのものです。",
   "Show me again": "もう一度見る",
+  "Expires {d}": "{d} に期限切れ",
+  "Details ({n})": "詳細（{n}）",
+  "Open the photos": "写真を開く",
 };

@@ -11749,4 +11749,7 @@ export const FA = {
   "Do it on the web": "در وب انجامش بده",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "اطلاعات ذخیره‌شده از نمایه ← اطلاعات رزرو می‌آید. کدهای ورود و پرداخت همیشه با خودت است.",
   "Show me again": "دوباره نشان بده",
+  "Expires {d}": "انقضا {d}",
+  "Details ({n})": "جزئیات ({n})",
+  "Open the photos": "باز کردن عکس‌ها",
 };

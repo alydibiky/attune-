@@ -11750,4 +11750,7 @@ export const IDN = {
   "Do it on the web": "Kerjakan di web",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "Data tersimpanmu dari Profil → Data pemesanan. Kode masuk dan pembayaran selalu milikmu.",
   "Show me again": "Tunjukkan lagi",
+  "Expires {d}": "Berakhir {d}",
+  "Details ({n})": "Detail ({n})",
+  "Open the photos": "Buka foto",
 };

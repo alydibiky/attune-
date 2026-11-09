@@ -11749,4 +11749,7 @@ export const BN = {
   "Do it on the web": "ওয়েবে করুন",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "সেভ করা তথ্য প্রোফাইল → বুকিং তথ্য থেকে আসে। লগইন কোড ও পেমেন্ট সবসময় আপনার।",
   "Show me again": "আবার দেখান",
+  "Expires {d}": "মেয়াদ শেষ {d}",
+  "Details ({n})": "বিস্তারিত ({n})",
+  "Open the photos": "ছবিগুলো খুলুন",
 };

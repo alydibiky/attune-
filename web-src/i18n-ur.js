@@ -11750,4 +11750,7 @@ export const UR = {
   "Do it on the web": "ویب پر کریں",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "محفوظ معلومات پروفائل → بکنگ معلومات سے آتی ہیں۔ لاگ اِن کوڈ اور ادائیگی ہمیشہ آپ کی ہیں۔",
   "Show me again": "دوبارہ دکھائیں",
+  "Expires {d}": "میعاد ختم {d}",
+  "Details ({n})": "تفصیلات ({n})",
+  "Open the photos": "تصاویر کھولیں",
 };

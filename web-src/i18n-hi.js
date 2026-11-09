@@ -11750,4 +11750,7 @@ export const HI = {
   "Do it on the web": "वेब पर करें",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "सेव जानकारी प्रोफ़ाइल → बुकिंग जानकारी से आती है। लॉगिन कोड और भुगतान हमेशा आपके हैं।",
   "Show me again": "फिर दिखाएँ",
+  "Expires {d}": "समाप्ति {d}",
+  "Details ({n})": "विवरण ({n})",
+  "Open the photos": "फ़ोटो खोलें",
 };

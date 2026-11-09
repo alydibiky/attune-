@@ -11749,4 +11749,7 @@ export const KO = {
   "Do it on the web": "웹에서 하기",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "저장된 정보는 프로필 → 예약 정보에서 와요. 로그인 코드와 결제는 항상 직접 해요.",
   "Show me again": "다시 보기",
+  "Expires {d}": "{d} 만료",
+  "Details ({n})": "세부 정보 ({n})",
+  "Open the photos": "사진 열기",
 };

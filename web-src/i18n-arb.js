@@ -11741,4 +11741,7 @@ export const ARB = {
   "Do it on the web": "أنجزها على الإنترنت",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "بياناتك المحفوظة من الملف الشخصي ← بيانات الحجز. رموز الدخول والدفع لك دائمًا.",
   "Show me again": "أرني مجددًا",
+  "Expires {d}": "ينتهي في {d}",
+  "Details ({n})": "التفاصيل ({n})",
+  "Open the photos": "افتح الصور",
 };

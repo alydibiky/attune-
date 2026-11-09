@@ -5,9 +5,9 @@
    "Cancelled it" / "Returned it" / "Claimed" count in the Guardian's honest "saved" counter.
    Free: 3 active deadlines; Pro: as many as you like, plus the receipt vault. Tests: tests/e2e_v727radar.py.            */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText } from "lucide-react";
+import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText, ChevronDown } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
-import { DocPhotos, DocDetails } from "./docs-ui.jsx";
+import { DocPhotos, DocDetails, DocCover } from "./docs-ui.jsx";
 import * as D from "./deadlines.js";
 import { homeCurrency, dateOrder } from "./locale.js";
 import { loadGuardian, saveGuardian, markSaved, savedTotals } from "./guardian.js";
@@ -66,7 +66,7 @@ export function runAutoRadar(N, { pro, remind } = {}) {
 }
 
 /** The form: an item to check or edit, or a new one by hand. */
-function Form({ init, onSave, onCancel, photo }) {
+function Form({ init, onSave, onCancel, photo, live, onPatch, unlock }) {
   const [f, setF] = useState(() => ({ kind: "trial", title: "", date: "", amount: "", currency: homeCurrency(), doc: "", note: "", ...init, amount: init && init.amount ? String(init.amount) : "" }));
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const field = U.inp;
@@ -91,6 +91,10 @@ function Form({ init, onSave, onCancel, photo }) {
       </div>
       <input value={f.note} onChange={(e) => set("note", e.target.value)} placeholder={tr("Note (optional): order number, where to cancel…")} className={field} style={st} dir="auto" />
       {photo ? <img src={photo} alt="" className="max-h-28 rounded-[12px] border border-[var(--c-ln)]" /> : null}
+      {/* R3 (Ali, 10 Nov: "the additional things in the edit"): photos and details are added, locked and timed here, not on the card */}
+      {live && onPatch ? <div className="space-y-1 pt-1" data-testid="radar-form-extras">
+        <span className={U.label}>{tr("Photos")}</span><DocPhotos x={live} onPatch={onPatch} />
+        <span className={U.label + " block pt-1.5"}>{tr("Details")}</span><DocDetails x={{ ...live, doc: f.doc || live.doc }} onPatch={onPatch} unlock={unlock} /></div> : null}
       <div className="flex gap-2 pt-1">
         <button className={U.btnP} disabled={!okDate || !f.title.trim()} onClick={() => onSave({ ...f, amount: parseFloat(String(f.amount).replace(",", ".")) || 0, title: f.title.trim() })} data-testid="radar-save">{tr("Save and remind me")}</button>
         <button className={U.btnS} onClick={onCancel}>{tr("Cancel")}</button>
@@ -99,23 +103,30 @@ function Form({ init, onSave, onCancel, photo }) {
 }
 
 function Item({ x, onDone, onEdit, onDelete, onPatch, unlock }) {
-  const left = D.daysLeft(x), [img, setImg] = useState(""), [kit, setKit] = useState(false), [copied, setCopied] = useState(false);
+  const left = D.daysLeft(x), [img, setImg] = useState(""), [kit, setKit] = useState(false), [copied, setCopied] = useState(false), [more, setMore] = useState(false);
   const K = kit ? D.cancelKit(x, getLang() === "ar" ? "ar" : "en") : null;
   const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} days", { n: left }) : left < 730 ? tr("in {n} months", { n: Math.round(left / 30.4) }) : tr("in {n} years", { n: Math.round(left / 365) });
+  const tone = x.status === "done" ? "gray" : left <= 2 ? "red" : left <= D.alertDays(x) ? "amber" : "green";
+  // R3 (Ali picked, 10 Nov 2026): a document (ID, passport, visa, licence, bank card…) looks like the real card; the rest keep the list card
+  const isDoc = x.kind === "expiry";
+  const nDetails = (x.fields || []).length;
   return (
-    <div className={U.cardPad} data-testid="radar-item">
-      <div className="flex items-start gap-3">
+    <div className={U.cardPad} data-testid="radar-item" data-doc={isDoc ? "1" : ""}>
+      {isDoc ? <DocCover x={x} title={x.title || tr(DOC_LABEL[x.doc] || KIND_LABEL[x.kind])} sub={tr("Expires {d}", { d: niceDate(x.date) })} when={x.status === "done" ? tr("done") : when} tone={tone} />
+      : <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Bell size={17} /></div>
         <div className="flex-1 min-w-0">
           <b className="block font-extrabold text-[14.5px]" dir="auto">{x.title || tr(KIND_LABEL[x.kind])}</b>
           <div className={"text-[12.5px] tabular-nums " + U.muted}>{tr(KIND_LABEL[x.kind])}{x.doc ? " · " + tr(DOC_LABEL[x.doc] || x.doc) : ""} · {niceDate(x.date)}{x.amount ? " · " + fmt(x.amount) + " " + (x.currency || "") : ""}</div>
         </div>
-        <span className={U.tag(x.status === "done" ? "gray" : left <= 2 ? "red" : left <= D.alertDays(x) ? "amber" : "green")} data-testid="radar-when">{x.status === "done" ? tr("done") : when}</span>
-      </div>
+        <span className={U.tag(tone)} data-testid="radar-when">{x.status === "done" ? tr("done") : when}</span>
+      </div>}
       {x.note ? <p className={"text-[12.5px] mt-1.5 " + U.muted} dir="auto">{x.note}</p> : null}
-      {/* v9.9.5 D1 + D2: photos (one or many) and details (ID number, visa number, CVC…) — each detail with its own lock and time */}
-      {onPatch ? <DocPhotos x={x} onPatch={onPatch} /> : null}
-      {onPatch && (x.kind === "expiry" || x.kind === "warranty" || (x.fields || []).length) ? <DocDetails x={x} onPatch={onPatch} unlock={unlock} /> : null}
+      {/* the card only SHOWS photos and details (Show · Copy); adding, locks and times are in Edit */}
+      {!isDoc ? <DocPhotos x={x} onPatch={onPatch || (() => {})} edit={false} /> : null}
+      {nDetails ? (isDoc ? <button onClick={() => setMore(!more)} aria-expanded={more} className={"mt-2 min-h-[36px] inline-flex items-center gap-1 text-[12.5px] font-bold " + U.muted} data-testid="radar-details-toggle">
+          <ChevronDown size={14} className={more ? "rotate-180" : ""} />{tr("Details ({n})", { n: nDetails })}</button> : null) : null}
+      {nDetails && (!isDoc || more) ? <DocDetails x={x} onPatch={onPatch || (() => {})} unlock={unlock} edit={false} /> : null}
       {img ? <img src={img} alt="" className="mt-2 max-h-64 rounded-[12px] border border-[var(--c-ln)]" /> : null}
       {x.status !== "done" ? (
         <div className="flex flex-wrap gap-2 mt-2.5">
@@ -143,6 +154,8 @@ function Item({ x, onDone, onEdit, onDelete, onPatch, unlock }) {
 export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unremind }) {
   const [data, setData] = useState(() => D.loadRadar());
   const put = (d) => setData(D.saveRadar(d));
+  const patchItem = (id, patch) => put({ ...D.loadRadar(), items: D.loadRadar().items.map((y) => (y.id === id ? { ...y, ...patch } : y)) });
+  const unlockFn = (a) => (N && N.vaultUnlock ? new Promise((ok, bad) => { const nc = window.__attuneNativeCall; if (!nc) return bad(new Error("no")); nc("vaultUnlock", a).then(ok, bad); }) : Promise.resolve(true));
   const [mode, setMode] = useState(null);        // null | "paste" | "form"
   const [drafts, setDrafts] = useState([]);       // found in a paste / photo, to check
   const [edit, setEdit] = useState(null);         // an item or a draft in the form
@@ -263,8 +276,10 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
             onSave={(f) => { const { _k, ...rest } = { ...d, ...f }; if (saveOne(rest)) setDrafts((x) => x.filter((y) => y !== d)); }} /></div>))}
       {mode === "form" && edit ? (
         <Form init={edit} photo={edit.photo && photo ? photo : ""} onCancel={() => { setMode(null); setEdit(null); }}
-          onSave={(f) => {
-            if (edit.id) { const d = D.updateDeadline(data, edit.id, { ...f }); put(d); const it = d.items.find((x) => x.id === edit.id); unremind && unremind("radar-" + edit.id); const rem = D.radarReminder(it); if (rem && remind) remind(rem); flash && flash(tr("Saved")); }
+          live={edit.id ? data.items.find((y) => y.id === edit.id) : null} onPatch={patchItem} unlock={unlockFn}
+          onSave={(f0) => {
+            const { photos: _p, fields: _f, ...f } = f0;   // photos + details are saved as they are changed (never put back from when Edit opened)
+            if (edit.id) { const d = D.updateDeadline(D.loadRadar(), edit.id, { ...f }); put(d); const it = d.items.find((x) => x.id === edit.id); unremind && unremind("radar-" + edit.id); const rem = D.radarReminder(it); if (rem && remind) remind(rem); flash && flash(tr("Saved")); }
             else saveOne({ ...edit, ...f, source: edit.source || "manual" });
             setMode(null); setEdit(null); setPhoto(""); }} />) : null}
       </div><div className={rightHas ? RIGHT : "min-w-0"}>
@@ -277,8 +292,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
         <div key={h} className="space-y-2 @container" data-testid={"radar-" + h.toLowerCase()}><span className={U.label}>{tr(h)}</span>
           {/* v6.28: two columns only when each card has room for its buttons on one line (they wrapped at 1366 px) */}
           <div className="space-y-2 @[920px]:space-y-0 @[920px]:grid @[920px]:grid-cols-2 @[920px]:gap-3 @[920px]:items-start" data-testid="radar-grid">
-          {list.filter(match).map((x) => <Item key={x.id} x={x} onDone={done} onEdit={(it) => { setEdit(it); setMode("form"); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} }} onDelete={del} onPatch={(id, patch) => put({ ...D.loadRadar(), items: D.loadRadar().items.map((y) => (y.id === id ? { ...y, ...patch } : y)) })}
-            unlock={(a) => (N && N.vaultUnlock ? new Promise((ok, bad) => { const nc = window.__attuneNativeCall; if (!nc) return bad(new Error("no")); nc("vaultUnlock", a).then(ok, bad); }) : Promise.resolve(true))} />)}
+          {list.filter(match).map((x) => <Item key={x.id} x={x} onDone={done} onEdit={(it) => { setEdit(it); setMode("form"); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} }} onDelete={del} onPatch={patchItem} unlock={unlockFn} />)}
           </div>
         </div>) : null)}
       {!data.items.length && (drafts.length || mode === "form") ? <DeskEmpty icon={Radar} title={tr("Your deadlines appear here")} testid="radar-desk-empty" /> : null}

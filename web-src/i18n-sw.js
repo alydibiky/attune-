@@ -11750,4 +11750,7 @@ export const SW = {
   "Do it on the web": "Ifanye mtandaoni",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "Taarifa zako zilizohifadhiwa zinatoka Wasifu → Taarifa za kuhifadhi. Nambari za kuingia na malipo ni zako daima.",
   "Show me again": "Nionyeshe tena",
+  "Expires {d}": "Inaisha {d}",
+  "Details ({n})": "Maelezo ({n})",
+  "Open the photos": "Fungua picha",
 };

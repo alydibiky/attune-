@@ -11750,4 +11750,7 @@ export const IT = {
   "Do it on the web": "Fallo sul web",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "I tuoi dati salvati vengono da Profilo → Dati di prenotazione. Codici di accesso e pagamento restano tuoi.",
   "Show me again": "Mostra di nuovo",
+  "Expires {d}": "Scade il {d}",
+  "Details ({n})": "Dettagli ({n})",
+  "Open the photos": "Apri le foto",
 };

@@ -11749,4 +11749,7 @@ export const VI = {
   "Do it on the web": "Làm trên web",
   "Your saved details come from Profile → Booking details. Login codes and payment are always yours.": "Thông tin đã lưu lấy từ Hồ sơ → Thông tin đặt chỗ. Mã đăng nhập và thanh toán luôn do bạn.",
   "Show me again": "Cho xem lại",
+  "Expires {d}": "Hết hạn {d}",
+  "Details ({n})": "Chi tiết ({n})",
+  "Open the photos": "Mở ảnh",
 };
