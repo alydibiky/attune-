@@ -10,7 +10,8 @@ env = Env(); errors = []
 IMG = os.path.join(tempfile.mkdtemp(), "doc.png")
 open(IMG, "wb").write(base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGP4z8CAFWEXHbQSACj/P8Fu7N9hAAAAAElFTkSuQmCC"))
 RADAR = {"items": [{"id": "v1", "kind": "expiry", "doc": "card", "title": "Visa card", "date": "2029-08-31", "status": "active", "source": "typed", "created": 1}], "seen": []}
-INIT = "try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:radar:v1', %s)}catch(e){}" % json.dumps(json.dumps(RADAR))
+TH = {"accent": "burgundy", "bg": "light", "a43": 1, "v87": 1, "v95": 1}   # Ali's phone: the light theme (where "white" became dark)
+INIT = "try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:radar:v1', %s);localStorage.setItem('attune:theme:v1', %s)}catch(e){}" % (json.dumps(json.dumps(RADAR)), json.dumps(json.dumps(TH)))
 MOCK = "(() => { window.__unlocks = 0; function w(){ const N = window.AttuneNative; if (!N) return setTimeout(w, 5); N.vaultUnlock = (id, j) => { window.__unlocks++; setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ ok: true })), 20); }; } w(); })();"
 with sync_playwright() as p:
     br = p.chromium.launch()
@@ -56,6 +57,8 @@ with sync_playwright() as p:
     check(len(it.get("photos", [])) == 2 and len(it.get("fields", [])) == 2, "Save in Edit keeps the photos and details added there (%s photos, %s details)" % (len(it.get("photos", [])), len(it.get("fields", []))))
     cov = page.locator("[data-testid=doc-cover]")
     check(cov.count() == 1 and cov.locator("img").count() == 1 and "4242" in cov.inner_text() and "Visa card" in cov.inner_text(), "the card looks like the real card: its photo behind, the name, the number")
+    col = page.evaluate("[...document.querySelectorAll('[data-testid=doc-cover] b, [data-testid=doc-cover-main], [data-testid=doc-cover] [data-testid=radar-when]')].map(e => getComputedStyle(e).color)")
+    check(col and all(c.startswith("rgb(255, 255, 255") or c.startswith("rgba(255, 255, 255, 0.8") or c.startswith("rgba(255, 255, 255, 0.9") for c in col), "light theme: the card's words are real white on the dark card, never dark on dark (Ali's phone, 10 Nov): %s" % col)
     check(page.locator("[data-testid=doc-details-view]").count() == 0, "details folded by default")
     page.click("[data-testid=radar-details-toggle]"); page.wait_for_timeout(200)
     v = page.locator("[data-testid=doc-details-view]")

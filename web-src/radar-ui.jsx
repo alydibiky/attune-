@@ -7,7 +7,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText, ChevronDown } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
-import { DocPhotos, DocDetails, DocCover } from "./docs-ui.jsx";
+import { DocPhotos, DocDetails, DocCover, coverNote } from "./docs-ui.jsx";
 import * as D from "./deadlines.js";
 import { homeCurrency, dateOrder } from "./locale.js";
 import { loadGuardian, saveGuardian, markSaved, savedTotals } from "./guardian.js";
@@ -121,7 +121,7 @@ function Item({ x, onDone, onEdit, onDelete, onPatch, unlock }) {
         </div>
         <span className={U.tag(tone)} data-testid="radar-when">{x.status === "done" ? tr("done") : when}</span>
       </div>}
-      {x.note ? <p className={"text-[12.5px] mt-1.5 " + U.muted} dir="auto">{x.note}</p> : null}
+      {x.note && !(isDoc && coverNote(x)) ? <p className={"text-[12.5px] mt-1.5 " + U.muted} dir="auto">{x.note}</p> : null}
       {/* the card only SHOWS photos and details (Show · Copy); adding, locks and times are in Edit */}
       {!isDoc ? <DocPhotos x={x} onPatch={onPatch || (() => {})} edit={false} /> : null}
       {nDetails ? (isDoc ? <button onClick={() => setMore(!more)} aria-expanded={more} className={"mt-2 min-h-[36px] inline-flex items-center gap-1 text-[12.5px] font-bold " + U.muted} data-testid="radar-details-toggle">
