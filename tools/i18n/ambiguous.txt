@@ -285,6 +285,7 @@ chatxray-ui.jsx: {it.due && scheduleReminder ? <button onClick={() => remind(it)
 mind-ui.jsx: className={btnP + " !h-11 !min-h-[44px] !text-[14px]"}>{tr("Remind me")}</button>
 shelf-ui.jsx: <button onClick={() => setSheet("remind")} aria-label={tr("Remind me")} data-testid="shelf-note-remind" className="w-11 h-11 grid place-item
 shelf-ui.jsx: <Sheet title={tr("Remind me")} close={() => setSheet(null)} testid="shelf-remind-sheet">
+timetable-ui.jsx: <label className="text-[13px] flex items-center gap-1.5">{tr("Remind me")}<input type="number" min="0" max="120" value={minutes} onChange={(
 
 ## You paid
 agents-ui.jsx: <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><span className="block text-[11.5px] c-sub font-bold">{tr("You paid")}</span
@@ -984,6 +985,7 @@ owed-ui.jsx: <label className="block space-y-1"><span className={"block text-[12
 ## Subject
 email-ui.jsx: <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("Subject")}
 messages-ui.jsx: <input value={m.subject} onChange={(e) => set("subject", e.target.value)} dir="auto" placeholder={tr("Subject")} className={U.inp} data-test
+timetable-ui.jsx: <div className="flex gap-1.5"><input value={r.subject} onChange={(e) => set(r.k, { subject: e.target.value })} dir="auto" className={inp + "
 
 ## Paid
 errands-ui.jsx: <button onClick={() => done(e)} disabled={!e.every && !newDate} className="min-h-[40px] px-3.5 rounded-[12px] border border-[var(--c-ln)] te

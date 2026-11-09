@@ -489,8 +489,9 @@ export function syncToPhone(native, list) {
     if (r.done) continue;
     const at = nextOccurrence(r, Date.now() - 1000);
     if (!at || at < Date.now() - 1000) continue;
+    if (r.until && at > r.until) continue;   // v9.9.3 T1: a class after the term's last day
     wanted.add(r.id);
-    try { native.schedule(JSON.stringify({ id: r.id, at, title: r.title, body: r.body || "", repeat: r.repeat || "none" })); n++; } catch (e) {}
+    try { native.schedule(JSON.stringify({ id: r.id, at, title: r.title, body: r.body || "", repeat: r.repeat || "none", until: r.until || 0 })); n++; } catch (e) {}
   }
   try {
     const onPhone = JSON.parse(native.scheduled() || "[]");

@@ -130,6 +130,7 @@ import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { brainSystem, knownFor, routeTask } from "./brain.js";
 import { expandQueries, mergeHits } from "./research.js";
 import { ErrandsPage } from "./errands-ui.jsx";
+import { TimetablePage } from "./timetable-ui.jsx";
 import * as HG from "./haggle.js";
 import { scheduleMessage } from "./messages-ui.jsx";
 import { connectNow } from "./connected.js";
@@ -7771,17 +7772,17 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["errands", "groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const OWN_TITLE = new Set(["timetable", "errands", "groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
-const MODE_TITLES = { errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { timetable: "Timetable", errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", groups: "WhatsApp groups", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9987,6 +9988,8 @@ export default function App() {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
     // v9.9.3 L2: "tell me when my wife gets home" / "never show Yazio" is teaching Attune — not an agent or a message alert
     let teachFirst = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teachFirst = !!(tx && (tx.kind === "rule" || (tx.kind === "ask" && tx.needRole != null))); } catch (e) {}
+    // v9.9.3 T1: "add my timetable" / «جدول المحاضرات» → the timetable page (a photo → weekly reminders)
+    if (/^\s*(?:add |scan |read |import )?(?:my )?(?:uni |university |school |class |college )?(?:timetable|class schedule|lecture schedule)\s*$|^\s*(?:ضيف |اقرا |اقرأ )?(?:جدول المحاضرات|جدول الحصص|جدولي|جدول الكلية|جدول الجامعة|جدول المدرسة)\s*$/i.test(text)) { navTo("timetable"); return { lines: [{ text: ar ? "افتح صورة الجدول — أتيون يقراها وتراجعها." : tr("Choose the timetable photo — Attune reads it and you check it."), open: "timetable" }], undo: null }; }
     // v9.9.3 W2: "send Ahmed 'I'm on my way' on WhatsApp", "call Mama", "uber to …", "directions to …" → the app at the right place;
     // you press the last button. Not sure who → "Which Ahmed?" (your saved people + Pick from contacts — no contacts permission)
     { const op = teachFirst ? null : AL.readOpen(text);
@@ -10992,6 +10995,9 @@ export default function App() {
         ) : mode === "remember" ? (
           <LibraryPage knowledge={knowledge} nativeCall={NATIVE ? nativeCall : null} flash={flash}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }} />
+        ) : mode === "timetable" ? (
+          <TimetablePage nativeCall={NATIVE ? nativeCall : null} native={NATIVE} flash={flash} navTo={navTo}
+            runVision={modelUsable && LocalEngine.vision ? (prompt, image) => LocalEngine.run(prompt, image, { maxTokens: 1400, temperature: 0, think: false }) : null} />
         ) : mode === "errands" ? (
           <ErrandsPage nativeCall={NATIVE ? nativeCall : null} flash={flash} profile={loadBooking()} />
         ) : mode === "reminders" ? (

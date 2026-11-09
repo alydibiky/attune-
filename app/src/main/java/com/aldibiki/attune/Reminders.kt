@@ -55,6 +55,7 @@ object Reminders {
             .put("title", r.optString("title").take(120))
             .put("body", r.optString("body").take(400))
             .put("repeat", r.optString("repeat", "none"))
+            .put("until", r.optLong("until", 0L))   // v9.9.3 T1: a class reminder stops after the term's last day
             .apply {   // v9.4 G1 (Ali: "schedule a message — send this contact this message at 5 pm tomorrow, and it does that")
                 r.optJSONObject("send")?.let { s0 -> put("send", JSONObject().put("key", s0.optString("key").take(200)).put("pkg", s0.optString("pkg").take(100))
                     .put("phone", s0.optString("phone").filter { it.isDigit() }.take(20)).put("text", s0.optString("text").take(2000)).put("who", s0.optString("who").take(80))
@@ -108,6 +109,8 @@ object Reminders {
                 at = next(at, r.optString("repeat"), now)
                 r.put("at", at)
             }
+            val until = r.optLong("until", 0L)
+            if (until > 0L && at > until) continue   // the term is over: not armed again
             arm(ctx, r.optString("id"), at)
         }
         save(ctx, arr)
@@ -297,8 +300,10 @@ object Reminders {
         } catch (e: SecurityException) { /* notifications not allowed: the page shows it as missed */ }
 
         val repeat = rem.optString("repeat", "none")
-        if (repeat != "none") {
-            val nextAt = next(rem.optLong("at"), repeat, System.currentTimeMillis())
+        val until = rem.optLong("until", 0L)
+        val nextAt0 = if (repeat != "none") next(rem.optLong("at"), repeat, System.currentTimeMillis()) else 0L
+        if (repeat != "none" && (until <= 0L || nextAt0 <= until)) {
+            val nextAt = nextAt0
             rem.put("at", nextAt); save(ctx, arr); arm(ctx, id, nextAt)
         } else {
             unschedule(ctx, id)

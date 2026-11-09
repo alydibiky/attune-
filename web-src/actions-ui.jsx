@@ -158,6 +158,8 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
         <form onSubmit={(e) => { e.preventDefault(); addSaid(); }} className="flex gap-2" data-testid="rem-say-form">
           <input dir="auto" value={say} onChange={(e) => setSay(e.target.value)} placeholder={tr("Say it your way — “every Sun, Tue and Thu at 7 pm: train”")} className={field + " flex-1 min-w-0"} data-testid="rem-say" />
           <button type="submit" disabled={!say.trim()} className={btnP + " shrink-0 px-4 disabled:opacity-40"} data-testid="rem-say-go">{tr("Set")}</button></form>
+        {/* v9.9.3 T1: a timetable photo → a weekly reminder before every class */}
+        <button onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "timetable" } })); } catch (e) {} }} className="min-h-[40px] text-[13px] font-extrabold text-[var(--c-acc)] underline" data-testid="rem-timetable">{tr("From a timetable photo")}</button>
         {native && !notify ? <button onClick={() => native.askNotifications && native.askNotifications()} className="w-full min-h-[40px] text-start rounded-[12px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--c-ink)]" data-testid="rem-notify-off">{tr("Notifications are off for Attune — tap to allow them, or reminders can't appear.")}</button> : null}
         <div className="flex flex-wrap gap-1.5 pt-1" data-testid="rem-chips">
           {[["alerts", "Message alerts"], ["fill", "Fill it in"], ["plan", "Plan my day"], ["how", "How it works"]].filter(([k]) => k !== "alerts" || alerts).map(([k, l]) => <button key={k} type="button" onClick={() => toggleOpen(k)} aria-expanded={isOpen(k)} data-testid={"rem-chip-" + k}
