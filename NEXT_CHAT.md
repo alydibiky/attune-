@@ -27,7 +27,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   the Arabic decimal mark, a hidden direction mark) so Autopilot's subscription rule (needs an amount) skipped it. Now 939.99 EGP;
   `paidDayOf` takes the receipt's own date (Order date: 7 Nov → renews on the 7th); "ج.م" = EGP. Known subscriptions are left to
   Autopilot (Follow-ups' paid card skips them — no double add).
-- **Waiting for Ali's picks:** https://claude.ai/artifact/QBdtAc2f6TgLA44rLpgLBi — AG1–AG3 (agent page), AC1–AC3 (real auto-check for
+- **Ali picked AG1 AG2 AC2 AC3 AH1** (AG2 as a chart of every start date × hotel) + subscriptions "who pays it" (me → from my balance; someone else, e.g. his father → not deducted but reminded). Combined page waiting for his OK: https://claude.ai/artifact/MKnujhxuS8SgLncLadhA1W (point 5 asks: does he pay his father back?). Options page: — AG1–AG3 (agent page), AC1–AC3 (real auto-check for
   sites that need a browser: on open / at night while charging / one-tap notification), AH1 (plan before Start), FQ1–FQ3.
 - Tests: unit v9912understand (his 5 notifications + agent messages + table), e2e_v9912understand; e2e_v999teachnotes follows the guess.
 
