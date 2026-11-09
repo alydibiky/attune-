@@ -131,6 +131,8 @@ import { brainSystem, knownFor, routeTask } from "./brain.js";
 import { expandQueries, mergeHits } from "./research.js";
 import { ErrandsPage } from "./errands-ui.jsx";
 import { TimetablePage } from "./timetable-ui.jsx";
+import { TablesPage, syncTableReminders } from "./tables-ui.jsx";
+import * as TBL from "./tables.js";
 import * as HG from "./haggle.js";
 import { scheduleMessage } from "./messages-ui.jsx";
 import { connectNow } from "./connected.js";
@@ -7772,10 +7774,10 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["timetable", "errands", "groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const OWN_TITLE = new Set(["tables", "timetable", "errands", "groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
-const MODE_TITLES = { timetable: "Timetable", errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", groups: "WhatsApp groups", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -9988,6 +9990,14 @@ export default function App() {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
     // v9.9.3 L2: "tell me when my wife gets home" / "never show Yazio" is teaching Attune — not an agent or a message alert
     let teachFirst = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teachFirst = !!(tx && (tx.kind === "rule" || (tx.kind === "ask" && tx.needRole != null))); } catch (e) {}
+    // v9.9.6 N1: "track my cranes: name, tonnage, next inspection" → a table; "add Grove GMK, 100 tons, inspection 4 Dec" → its row
+    { const tp = TBL.parseTrack(text); if (tp) { const t = TBL.makeTable(tp, now), s0 = TBL.loadTables(); TBL.saveTables({ ...s0, tables: [t, ...s0.tables] });
+        try { localStorage.setItem("attune:tables:open", t.id); } catch (e) {} navTo("tables");
+        return { lines: [{ text: (ar ? "اتعمل جدول: " : tr("Table made: ")) + t.name + " — " + t.cols.map((c) => c.name).join(" · "), open: "tables" }], undo: () => { const c = TBL.loadTables(); TBL.saveTables({ ...c, tables: c.tables.filter((x) => x.id !== t.id) }); } }; }
+      const rp = TBL.parseRow(TBL.loadTables(), text, now);
+      if (rp) { const s1 = TBL.addRow(TBL.loadTables(), rp.table, rp.cells); TBL.saveTables(s1); const t = s1.tables.find((x) => x.id === rp.table); syncTableReminders(t);
+        const line = t.cols.filter((c) => rp.cells[c.id] != null).map((c) => String(rp.cells[c.id])).join(" · ");
+        return { lines: [{ text: (ar ? "اتضاف في " : tr("Added to {t}: ", { t: t.name }).replace(/: $/, ": ")) + (ar ? t.name + ": " : "") + line, open: "tables" }], undo: () => { const c = TBL.loadTables(); TBL.saveTables({ ...c, tables: c.tables.map((x) => (x.id === t.id ? { ...x, rows: x.rows.slice(0, -1) } : x)) }); } }; } }
     // v9.9.3 T1: "add my timetable" / «جدول المحاضرات» → the timetable page (a photo → weekly reminders)
     if (/^\s*(?:add |scan |read |import )?(?:my )?(?:uni |university |school |class |college )?(?:timetable|class schedule|lecture schedule)\s*$|^\s*(?:ضيف |اقرا |اقرأ )?(?:جدول المحاضرات|جدول الحصص|جدولي|جدول الكلية|جدول الجامعة|جدول المدرسة)\s*$/i.test(text)) { navTo("timetable"); return { lines: [{ text: ar ? "افتح صورة الجدول — أتيون يقراها وتراجعها." : tr("Choose the timetable photo — Attune reads it and you check it."), open: "timetable" }], undo: null }; }
     // v9.9.3 W2: "send Ahmed 'I'm on my way' on WhatsApp", "call Mama", "uber to …", "directions to …" → the app at the right place;
@@ -10183,7 +10193,8 @@ export default function App() {
         let agent = ""; try { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["buy", "order", "watch", "track"].includes(ag.kind)) agent = ag.kind; } catch (e) {}
         // v9.9.3 L1/L2: teaching Attune ("Nada is my wife", "tell me when my wife gets home") is done in the app, never a Scout search
         let teach = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teach = !!(tx && (tx.kind === "rule" || (tx.kind === "who" && text.split(/\s+/).length <= 7))); } catch (e) {}
-        try { if (!teach && AL.readOpen(text)) teach = true; } catch (e) {}   // v9.9.3 W2: "send Ahmed '…' on WhatsApp" is done in the app
+        try { if (!teach && AL.readOpen(text)) teach = true; } catch (e) {}
+        try { if (!teach && (TBL.parseTrack(text) || TBL.parseRow(TBL.loadTables(), text))) teach = true; } catch (e) {}   // v9.9.6 N1   // v9.9.3 W2: "send Ahmed '…' on WhatsApp" is done in the app
         if (teach) return { doActions: Math.max(1, doActions), teach: true, goal: false, metro: false, automation: false, watch: false, mission: false, agent: "" };
         return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text), watch: !!parseWatch(text), mission, agent };
       },
@@ -10998,6 +11009,8 @@ export default function App() {
         ) : mode === "remember" ? (
           <LibraryPage knowledge={knowledge} nativeCall={NATIVE ? nativeCall : null} flash={flash}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }} />
+        ) : mode === "tables" ? (
+          <TablesPage flash={flash} />
         ) : mode === "timetable" ? (
           <TimetablePage nativeCall={NATIVE ? nativeCall : null} native={NATIVE} flash={flash} navTo={navTo}
             runVision={modelUsable && LocalEngine.vision ? (prompt, image) => LocalEngine.run(prompt, image, { maxTokens: 1400, temperature: 0, think: false }) : null} />

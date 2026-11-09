@@ -205,6 +205,7 @@ attune.jsx: <button onClick={close} className="w-11 h-11 -m-2 grid place-items-c
 ## Previous
 agents-ui.jsx: <button onClick={() => go(-1)} disabled={at === 0} className={side} aria-label={tr("Previous")} data-testid="agent-sheet-prev"><ChevronRight
 docs-ui.jsx: {open > 0 ? <button onClick={() => setOpen(open - 1)} aria-label={tr("Previous")} className="absolute start-2 w-11 h-11 rounded-full bg-blac
+tables-ui.jsx: <div className="flex items-center gap-2"><button onClick={() => setMonth(month - 1)} aria-label={tr("Previous")} className="w-9 h-9 grid pla
 
 ## Next
 agents-ui.jsx: <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><Chev
@@ -1128,6 +1129,11 @@ lists-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("
 money-sheets-ui.jsx: <Field label={tr("Name")}><input value={name} onChange={(e) => setName(e.target.value)} dir="auto" className={U.inp} placeholder={tr("e.g. C
 shelf-ui.jsx: <option value="manual">{tr("My order")}</option><option value="name">{tr("Name")}</option><option value="notes">{tr("Most notes")}</option><
 skills-ui.jsx: <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Name")}</span><input className={field
+
+## Tables
+lists-ui.jsx: <b className="flex-1 text-[14px]">{tr("Tables")}</b><span className="text-[12.5px] c-sub">{tr("“track my cranes: name, tonnage, next inspect
+tables-ui.jsx: <U.Head title={tr("Tables")} sub={tr("Track anything in one sentence — your cranes, clients, courses. Dates remind you the day before.")} />
+tables-ui.jsx: <button onClick={back} className="inline-flex items-center gap-1 min-h-[40px] text-[13px] font-bold c-sub"><ArrowLeft size={15} className="r
 
 ## Screenshot
 lookback-ui.jsx: const rec = remember({ kind: "photo", title: shotTitle(text, f.name ? f.name.replace(/\.\w+$/, "") : tr("Screenshot")), text: text || f.name

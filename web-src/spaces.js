@@ -377,7 +377,7 @@ export const AREA = {
   fu: { l: ["#9A5B05", "#FBF0DC"], d: ["#E8B04B", "#3A2C12"] },
   docs: { l: ["#6D3FB5", "#EFE7FD"], d: ["#B79BF5", "#2A2140"] },
 };
-export const AREA_OF = { money: "money", guardian: "money", planner: "money", agents: "agents", scout: "agents", radar: "agents", timeline: "fu", life: "fu", reminders: "fu", errands: "fu", timetable: "fu", people: "fu", lists: "fu",
+export const AREA_OF = { money: "money", guardian: "money", planner: "money", agents: "agents", scout: "agents", radar: "agents", timeline: "fu", life: "fu", reminders: "fu", errands: "fu", timetable: "fu", tables: "fu", people: "fu", lists: "fu",
   pdfchat: "docs", booklib: "docs", convert: "docs", translate: "docs", shelf: "docs", slides: "docs" };
 /** The CSS that gives each area its colour (on its pages + the --c-area-* tokens Home uses). */
 export function areaCss(theme) {
