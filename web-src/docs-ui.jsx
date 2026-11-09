@@ -102,7 +102,8 @@ const COVER = { passport: "linear-gradient(135deg,#2f5d4a,#173327)", visa: "line
 export const coverNote = (x) => (!(x.fields || []).length && x.note && String(x.note).trim().length <= 48 ? String(x.note).trim() : "");
 // v9.9.8 fix (Ali's phone, light theme: "it looks really bad"): the light theme maps "white" to near-black for old screens, so the
 // card's words were dark on dark — the card now uses real white (inline), a stronger shade, and one of three looks (Ali picks):
-//   A = the photo behind (dark shade) · B = a colour card with the photo in the corner, like a real ID · C = colour only
+//   A = the photo behind (dark shade — Ali: "I don't like the photo this way", kept only if picked) · B = a colour card with the photo
+//   in the corner, like a real ID · C = colour only · D = colour card, the photos as small pictures under it
 const WHITE = "#ffffff";
 export function DocCover({ x, title, sub, when, tone }) {
   const ids = x.photos || [], [bg, setBg] = useState(""), [view, setView] = useState(-1);
@@ -127,8 +128,9 @@ export function DocCover({ x, title, sub, when, tone }) {
         </span>
         {corner ? <img src={bg} alt="" className="shrink-0 w-[64px] h-[80px] rounded-[10px] object-cover" style={{ border: "2px solid rgba(255,255,255,.55)" }} data-testid="doc-cover-photo" /> : null}
       </span>
-      <span className="relative block pt-4 text-[12.5px] font-bold tabular-nums" style={{ color: "rgba(255,255,255,.85)" }} dir="auto">{sub}{ids.length > 1 || (look === "C" && ids.length) ? " · 📷 " + ids.length : ""}</span>
+      <span className="relative block pt-4 text-[12.5px] font-bold tabular-nums" style={{ color: "rgba(255,255,255,.85)" }} dir="auto">{sub}{look !== "D" && (ids.length > 1 || (look === "C" && ids.length)) ? " · 📷 " + ids.length : ""}</span>
     </button>
+    {look === "D" && ids.length ? <DocPhotos x={x} onPatch={() => {}} edit={false} /> : null}
     {view >= 0 ? <DocPhotos x={x} onPatch={() => {}} edit={false} start={view} onClose={() => setView(-1)} hideStrip /> : null}
   </>;
 }
