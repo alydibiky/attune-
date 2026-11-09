@@ -297,19 +297,19 @@ agents-ui.jsx: <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><
 people-ui.jsx: {linked.money.out ? <div className={cardPad}><p className={label + " m-0"}>{tr("You paid")}</p><b className="text-[18px] tabular-nums" dir="
 
 ## Money Report
-attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(rep.month.from.slice(0, 7))}</h1><p>${esc(account ? (rep.accounts.find((a) => a.id === account) || {}
-attune.jsx: sharePdf({ html, name: "attune-money-" + rep.month.from.slice(0, 7), text: tr("Money Report"), flash });
+attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(repR.period && !repR.period.whole ? repR.period.from + " – " + repR.period.to : repR.month.from.slice
+attune.jsx: sharePdf({ html, name: "attune-money-" + repR.month.from.slice(0, 7), text: tr("Money Report"), flash });
 money-calm-ui.jsx: <span className="shrink-0 inline-flex items-center gap-1 text-[12.5px] font-bold text-[var(--c-acc)]">{tr("Money Report")}<Arrow size={14} /
 money-calm-ui.jsx: <div className="min-w-0"><h2 className={(wide ? "text-[21px]" : "text-[17px]") + " font-black tracking-tight m-0 truncate"}>{wide ? T("Money
 
 ## All accounts
-attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(rep.month.from.slice(0, 7))}</h1><p>${esc(account ? (rep.accounts.find((a) => a.id === account) || {}
+attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(repR.period && !repR.period.whole ? repR.period.from + " – " + repR.period.to : repR.month.from.slice
 money-calm-ui.jsx: <span className="w-1.5 h-1.5 rounded-full bg-current" />{wide ? T("All accounts ({a})", { a: amt(all.balance, all.cur) }) : tr("All accounts
-money-calm-ui.jsx: const sub = monthLabel(rep.month.from.slice(0, 7), true) + " · " + (accName || tr("All accounts"));
+money-calm-ui.jsx: const sub = accName || tr("All accounts");
 money-calm-ui.jsx: <div className={"text-[12px] font-semibold truncate " + U.muted}>{wide ? (accName ? accName : tr("All accounts")) + " · " + tr("updated from
 
 ## Balance
-attune.jsx: <div class="k">${esc(tr("Balance"))}<b>${f(rep.balance)} ${rep.cur}</b></div><div class="k">${esc(tr("Earned this month"))}<b>${f(rep.month.
+attune.jsx: <div class="k">${esc(tr("Balance"))}<b>${f(repR.balance)} ${repR.cur}</b></div><div class="k">${esc(tr("Earned this month"))}<b>${f(repR.mon
 money-calm-ui.jsx: <Tile label={tr("Balance")} value={amt(rep.balance, rep.cur)} sub={rep.accounts.filter((a) => a.currency === rep.cur && (!account || a.id ==
 money-pages-ui.jsx: <Head title={tr("Accounts report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick
 money-pages-ui.jsx: <Tile label={tr("Balance")} value={amt(a.balance, cur)} tone={a.balance < 0 ? "neg" : undefined} testid="acc-rep-balance" />
@@ -322,6 +322,7 @@ radar-ui.jsx: <label className="block space-y-1"><span className={U.label}>{f.ki
 
 ## Category
 attune.jsx: <h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${e
+money-calm-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("Category")}</span>
 money-pages-ui.jsx: {type !== "transfer" ? <div><p className={U.label + " m-0 mb-1.5"}>{tr("Category")}</p>
 money-sheets-ui.jsx: <Field label={tr("Category")}><div className="flex flex-wrap gap-1.5">{cats.map((c) => <button key={c.id} type="button" onClick={() => setCa
 money-sheets-ui.jsx: {t.type !== "transfer" ? <Field label={tr("Category")}><div className="flex flex-wrap gap-1.5">{cats.map((c) => <button key={c.id} type="but
@@ -726,6 +727,7 @@ yourday-ui.jsx: <T2 icon="⏰" label={tr("Reminders")} onClick={() => navTo("rem
 backup-ui.jsx: <label className="text-[var(--c-mut)] flex items-center gap-1"><input type="checkbox" checked={show} onChange={(e) => setShow(e.target.check
 cv-ui.jsx: <label className="flex items-center gap-1 text-[11px] text-[var(--c-mut)] px-1"><input type="checkbox" checked={s.visible !== false} onChang
 docs-ui.jsx: {F.isLocked(f) && !shown[f.id] ? <button onClick={() => show(f)} className={B2} data-testid="doc-field-show">{f.lock === "finger" ? <Lock si
+money-calm-ui.jsx: <button onClick={() => { if (f && t) { setPeriod({ from: f, to: t, cat: c || null }); setOpen(false); } }} disabled={!f || !t} className={U.
 money-sheets-ui.jsx: <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={shown(k)} onChange={() => flip(k)} classNam
 shelf-ui.jsx: {!shown ? <button onClick={() => setShown(true)} className={btnP + " w-full"} data-testid="shelf-review-show">{tr("Show")}</button> : (
 
@@ -1003,6 +1005,7 @@ yearplan.js: return row("pot:" + p.id, (ar ? "تحويش: " : tr("Save: ")) + p.
 ## To
 email-ui.jsx: <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("To")}
 messages-ui.jsx: {r.mode === "hours" ? <div className="flex gap-2 items-center"><input type="time" value={r.from} onChange={(e) => put("from", e.target.value
+money-calm-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("To")}</span><input type="date" value={t} min={f || undefined} onChange={(e
 money-pages-ui.jsx: {type === "transfer" ? <div><p className={U.label + " m-0 mb-1.5"}>{tr("To")}</p>
 owed-ui.jsx: <label className="block space-y-1"><span className={"block text-[12px] font-bold " + U.muted}>{tr("To")}</span><input value={f.to} onChange=
 
@@ -1125,6 +1128,7 @@ timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didn
 ## From
 lifeask-ui.jsx: <span className="c-sub text-[12px]">{tr("From")}: {res.a.sources.map((s) => tr(TOOL[s] || s)).join(" · ")}</span>
 messages-ui.jsx: {r.mode === "hours" ? <div className="flex gap-2 items-center"><input type="time" value={r.from} onChange={(e) => put("from", e.target.value
+money-calm-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("From")}</span><input type="date" value={f} max={t || undefined} onChange={
 money-pages-ui.jsx: <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From") : tr("Account")}</p>
 money-sheets-ui.jsx: <Field label={t.type === "transfer" ? tr("From") : tr("Account")}><Pills value={account} onChange={setAccount} items={cashAccounts(L).map((a
 sourcelabel.js: return s.length ? tr("From") + ": " + s.map((k) => tr(SOURCE_TEXT[k])).join(" · ") : "";
@@ -1188,6 +1192,14 @@ money-calm-ui.jsx: <span className="inline-flex items-center gap-1.5"><i classNa
 planner-ui.jsx: <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Plan")}</th><th className={th}>{tr("Spent")}</th><th
 report-ui.jsx: pill={safe.today > 0 ? tr("On track") : tr("Spent")} tone={safe.today > 0 ? "" : "late"} pct={safe.perDay > 0 ? (safe.today / safe.perDay) *
 report-ui.jsx: {hasS ? <span className="inline-flex items-center gap-1"><i className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "var(--c-ac
+
+## Previous month
+money-calm-ui.jsx: <button onClick={() => go(-1)} aria-label={tr("Previous month")} className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center bg-[va
+planner-ui.jsx: <div className="flex items-center justify-between"><button className={U.btnS + " h-9! min-h-[36px]!"} onClick={() => move(-1)} aria-label={t
+
+## Next month
+money-calm-ui.jsx: <button onClick={() => go(1)} disabled={atNow} aria-label={tr("Next month")} className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-c
+planner-ui.jsx: <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={() => move(1)} aria-label={tr("Next month")}>›</button></div>
 
 ## head
 money-pages-ui.jsx: {a.other.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={x.unit} end={fmt(x.balance) + " " + (x.kind === "herd" ? tr("head") :

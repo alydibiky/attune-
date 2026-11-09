@@ -11,6 +11,18 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 10 Nov — v9.9.9: Ali's phone round — Radar card C + Money Report dates (P1 + category)
+- **Radar card** (Ali: "it looks really bad" → picked **C**, https://claude.ai/artifact/R1UWeisuGPnseigFyo1ar8): the light theme maps
+  "white" to near-black (spaces.js `--color-white`), so the card's words were dark on dark — `DocCover` now uses real white inline;
+  one colour per document, no photo on it ("I don't like the photo this way"), "📷 n" opens the photos; a short number note shows ON
+  the card. Test: e2e_v995docs checks the words are white in the light theme (it fails on the old card).
+- **Money Report dates** (Ali picked **P1** + "a specific date and category at the same time", https://claude.ai/artifact/TeMyVf4p2FfgaJocDndgiT):
+  ‹ November 2026 ▾ › under the title (› off at this month); the month opens From / To + Category + the last 12 months; the category
+  shows as a chip (✕), "Back to this month". `moneyReport(L, { from, to, cat })` — totals, both pies, weeks, 6 months, list, PDF / Excel
+  follow; nothing after today counts; From after To is swapped. Home's calm view stays on this month.
+- **Bugs from his screenshot:** "Other" twice (his own Other category + the rest) → one Other; the income legend cut the % → fits.
+- Tests: unit v998moneyfix; e2e_v998moneydates; e2e_v995docs (C + white).
+
 ## 10 Nov — v9.9.8: M2 small models as a relay (phone) + M4 two models as a team (computer) — Ali OK'd
 - **M2** (`relay.js`, attune.jsx `memMeaning`, chat.jsx S1 block): when the meaning model (bge-m3, 0.57 B) is on the phone, Chat's
   "your own notes first" also finds records that MEAN the question with other words («فاتورة الكهربا» ↔ "electricity invoice"),

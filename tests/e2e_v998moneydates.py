@@ -38,7 +38,7 @@ with sync_playwright() as p:
     page.click("[data-testid=money-period-reset]"); page.wait_for_timeout(300)
     check(out() == 700, "Back to this month → 700")
     w = page.evaluate("document.documentElement.scrollWidth")
-    check(w <= 390, "nothing wider than the phone (the % are never cut): %s" % w)
+    check(w <= 390, "nothing wider than the phone (the %% are never cut): %s" % w)
     check(not real_errors(errors), "no page errors: " + str(real_errors(errors)[:3]))
     br.close()
 finish()
