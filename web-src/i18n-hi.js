@@ -11767,4 +11767,8 @@ export const HI = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "लोग चैट में पैसों की बात करते हैं — वह भुगतान नहीं है। अब से चैट ऐप्स को कभी पैसा नहीं माना जाएगा।",
   "Remove them": "इन्हें हटाएँ",
   "Keep them": "रहने दें",
+  "{n} payments wait for your OK in Money": "{n} भुगतान पैसे में आपकी मंज़ूरी का इंतज़ार कर रहे हैं",
+  "Attune thinks this isn't a payment — is it yours?": "Attune को लगता है यह भुगतान नहीं है — क्या यह आपका है?",
+  "Not sure — is this yours?": "पक्का नहीं — क्या यह आपका है?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "पक्के वाले खुद जोड़ें (बैंक, वॉलेट और InstaPay संदेश जो कहते हैं कि पैसा हिला — मॉडल लोड होने पर AI जाँचता है)",
 };

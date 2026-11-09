@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, Check, X } from "lucide-react";
 import { tr } from "./i18n.js";
-import { inbox, toTxns, autoPick, appendToLedger, alreadyIn, fromChats } from "./paylog.js";
+import { inbox, toTxns, autoPick, appendToLedger, alreadyIn, fromChats, judged, codeSure } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
 import { payOpts } from "./locale.js";
 import * as U from "./ui-kit.jsx";
@@ -42,20 +42,31 @@ export function RestrictedHelp({ N }) {
       <button onClick={() => { try { N.openAppInfo(); } catch (e) {} }} className="ms-1 min-h-[44px] underline font-bold text-[var(--c-acc)]" data-testid="pay-open-appinfo">{tr("Open App info")}</button>
     </div>);
 }
-export function runAutoPay(N) {
-  if (!payReader(N) || !autoOn()) return 0;
+/** v9.9.10 the small model's check (paylog.js judged), set by the page only while a model is loaded — never loads one by itself. */
+export const payJudge = () => { try { return (typeof window !== "undefined" && window.__attunePayJudge) || null; } catch (e) { return null; } };
+const DOUBT_KEY = "attune:paylog:doubt";
+const readDoubt = () => { try { return JSON.parse(localStorage.getItem(DOUBT_KEY) || "{}"); } catch (e) { return {}; } };
+const saveDoubt = (list) => { const d = readDoubt(); for (const e of list) d[e.id] = e.doubt; try { localStorage.setItem(DOUBT_KEY, JSON.stringify(Object.fromEntries(Object.entries(d).slice(-300)))); } catch (e) {} };
+/** → { added, waiting } — waiting = the payments read that wait for the person's OK in Money (not sure enough to add alone). */
+export async function runAutoPay(N, judge = payJudge()) {
+  const none = { added: 0, waiting: 0 };
+  if (!payReader(N)) return none;
   let on = false; try { on = N.payAccess(); } catch (e) {}
-  if (!on) return 0;
+  if (!on) return none;
   let q = []; try { q = JSON.parse(N.payQueue() || "[]"); } catch (e) {}
-  const led = loadLedger(); if (!led) return 0;
+  const led = loadLedger(); if (!led) return none;
+  const all = inbox(q, readDone(), payOpts());
+  if (!autoOn()) return { added: 0, waiting: all.length };
   // v7.9: one already in Money (typed by hand, or read before) is never added by itself — it waits as "Already in Money?"
-  const sure = autoPick(inbox(q, readDone(), payOpts())).filter((e) => !alreadyIn(e, led));
-  if (!sure.length) return 0;
-  const r = appendToLedger(led, toTxns(sure));
-  if (!r.ids.length) return 0;
-  try { localStorage.setItem("ledger.v3", JSON.stringify(r.ledger)); } catch (e) { return 0; }
-  markDone(N, sure.map((e) => e.id)); logAuto(sure);
-  return r.ids.length;
+  const sure = autoPick(all).filter((e) => !alreadyIn(e, led));
+  const { add, wait } = await judged(sure, judge);   // v9.9.10: the model reads each one too, when one is loaded
+  if (wait.length) saveDoubt(wait);
+  let added = 0;
+  if (add.length) {
+    const led2 = loadLedger() || led, r = appendToLedger(led2, toTxns(add));
+    if (r.ids.length) { try { localStorage.setItem("ledger.v3", JSON.stringify(r.ledger)); markDone(N, add.map((e) => e.id)); logAuto(add); added = r.ids.length; } catch (e) {} }
+  }
+  return { added, waiting: all.length - added };
 }
 
 /** The complete message a payment was read from — exactly as it arrived (Ali: "the evidence of the complete real message"). */
@@ -154,10 +165,19 @@ export function PayInbox({ N, onAdd, ready = true }) {
   const [autoN, setAutoN] = useState(0);
   const [showAuto, setShowAuto] = useState(false);
   // by itself, with Money open: the sure ones go in through Money; the rest wait here for a tap
+  const [doubt, setDoubt] = useState(readDoubt);
   useEffect(() => {
     if (!on || !auto || !ready) return;   // only once Money is loaded, so nothing is marked done before Money has it
-    const led = loadLedger(), sure = autoPick(items.filter((e) => !/^(sms|smsf|gm):/.test(String(e.id)))).filter((e) => !alreadyIn(e, led));   // v7.9: never a second copy by itself; v8.7: old SMS wait for a tap
-    if (sure.length) { const t = setTimeout(() => { add(sure); logAuto(sure); setAutoN((n) => n + sure.length); }, 1500); return () => clearTimeout(t); }
+    const led = loadLedger(), sure = autoPick(items.filter((e) => !/^(sms|smsf|gm):/.test(String(e.id)) && !doubt[e.id])).filter((e) => !alreadyIn(e, led));   // v7.9: never a second copy by itself; v8.7: old SMS wait for a tap
+    if (!sure.length) return;
+    let live = true;
+    const t = setTimeout(async () => {
+      const { add: ok, wait } = await judged(sure, payJudge());   // v9.9.10: the model agrees, or it waits for a tap
+      if (!live) return;
+      if (wait.length) { saveDoubt(wait); setDoubt(readDoubt()); }
+      if (ok.length) { add(ok); logAuto(ok); setAutoN((n) => n + ok.length); }
+    }, 1500);
+    return () => { live = false; clearTimeout(t); };
   }, [on, auto, ready, items.length]);
   const toggleAuto = () => { const v = !auto; setAuto(v); try { localStorage.setItem(AUTO_KEY, v ? "1" : "0"); } catch (e) {} };
   if (!can) return null;   // v7.9: after every hook (React needs the same hooks on every render)
@@ -194,12 +214,14 @@ export function PayInbox({ N, onAdd, ready = true }) {
             <div key={e.id} className="rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item"><div className="flex items-center gap-2">
               <span className="flex-1 min-w-0"><b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "text-[var(--c-ink)]")} dir="ltr">{e.direction === "in" ? "+" : "−"}{e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} {e.currency}</b>
                 <span className={"block text-[12px] truncate " + U.muted} dir="auto">{[e.party, e.app, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span>
-                {alreadyIn(e, ledgerNow) ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-already">{tr("Already in Money?")}</span> : null}</span>
+                {alreadyIn(e, ledgerNow) ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-already">{tr("Already in Money?")}</span>
+                  : doubt[e.id] === "no" ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-doubt">{tr("Attune thinks this isn't a payment — is it yours?")}</span>
+                  : doubt[e.id] || !codeSure(e) ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-doubt">{tr("Not sure — is this yours?")}</span> : null}</span>
               <button onClick={() => add([e])} aria-label={tr("Add")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] grid place-items-center" data-testid="paylog-add"><Check size={15} /></button>
               <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] grid place-items-center" data-testid="paylog-dismiss"><X size={15} /></button>
             </div><Evidence e={e} />
             </div>))}
-          <label className={"flex items-center gap-2 text-[12.5px] min-h-[44px] pt-1 " + U.muted}><input type="checkbox" checked={auto} onChange={toggleAuto} className="w-5 h-5 shrink-0 accent-[var(--c-acc)]" data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank and InstaPay messages with a name)")}</label>
+          <label className={"flex items-center gap-2 text-[12.5px] min-h-[44px] pt-1 " + U.muted}><input type="checkbox" checked={auto} onChange={toggleAuto} className="w-5 h-5 shrink-0 accent-[var(--c-acc)]" data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)")}</label>
           {items.length > 1 ? <button onClick={() => add(items)} className={U.btnP + " w-full"} data-testid="paylog-add-all">{tr("Add all {n}", { n: items.length })}</button> : null}
         </div>) : null}
     </div></div></>);

@@ -11766,4 +11766,8 @@ export const BN = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "মানুষ চ্যাটে টাকার কথা বলে — সেটা পেমেন্ট নয়। এখন থেকে চ্যাট অ্যাপ কখনো টাকা হিসেবে পড়া হবে না।",
   "Remove them": "সরিয়ে দিন",
   "Keep them": "রেখে দিন",
+  "{n} payments wait for your OK in Money": "{n}টি পেমেন্ট টাকায় আপনার অনুমতির অপেক্ষায়",
+  "Attune thinks this isn't a payment — is it yours?": "Attune মনে করে এটি পেমেন্ট নয় — এটা কি আপনার?",
+  "Not sure — is this yours?": "নিশ্চিত নই — এটা কি আপনার?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "নিশ্চিতগুলো নিজে যোগ করুক (ব্যাংক, ওয়ালেট ও InstaPay বার্তা যা বলে টাকা নড়েছে — মডেল লোড থাকলে AI যাচাই করে)",
 };

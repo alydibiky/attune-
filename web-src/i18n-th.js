@@ -11766,4 +11766,8 @@ export const TH = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "คนคุยเรื่องเงินในแชท — นั่นไม่ใช่การจ่ายเงิน ต่อจากนี้แอปแชทจะไม่ถูกอ่านเป็นเงินอีก",
   "Remove them": "ลบออก",
   "Keep them": "เก็บไว้",
+  "{n} payments wait for your OK in Money": "{n} รายการรอการยืนยันของคุณใน เงิน",
+  "Attune thinks this isn't a payment — is it yours?": "Attune คิดว่านี่ไม่ใช่การชำระเงิน — ของคุณไหม?",
+  "Not sure — is this yours?": "ไม่แน่ใจ — ของคุณไหม?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "เพิ่มรายการที่แน่นอนเอง (ข้อความธนาคาร กระเป๋าเงิน และ InstaPay ที่บอกว่าเงินเคลื่อนไหว — AI ตรวจเมื่อโหลดโมเดลอยู่)",
 };

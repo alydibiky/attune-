@@ -11767,4 +11767,8 @@ export const SW = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "Watu huzungumza kuhusu pesa kwenye gumzo — hilo si malipo. Kuanzia sasa programu za gumzo hazisomwi kama pesa kamwe.",
   "Remove them": "Ziondoe",
   "Keep them": "Ziache",
+  "{n} payments wait for your OK in Money": "Malipo {n} yanasubiri idhini yako kwenye Pesa",
+  "Attune thinks this isn't a payment — is it yours?": "Attune inadhani hii si malipo — ni yako?",
+  "Not sure — is this yours?": "Sina uhakika — hii ni yako?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "Ongeza zilizo hakika zenyewe (ujumbe wa benki, pochi na InstaPay unaosema pesa imehamia — hukaguliwa na AI modeli ikiwa imepakiwa)",
 };

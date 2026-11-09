@@ -11766,4 +11766,8 @@ export const RU = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "В чатах говорят о деньгах — это не платёж. Теперь мессенджеры никогда не читаются как деньги.",
   "Remove them": "Удалить их",
   "Keep them": "Оставить",
+  "{n} payments wait for your OK in Money": "{n} платежей ждут вашего подтверждения в Деньгах",
+  "Attune thinks this isn't a payment — is it yours?": "Attune считает, что это не платёж — это ваше?",
+  "Not sure — is this yours?": "Не уверен — это ваше?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "Добавлять надёжные сами (сообщения банка, кошелька и InstaPay о движении денег — проверяет ИИ, когда модель загружена)",
 };

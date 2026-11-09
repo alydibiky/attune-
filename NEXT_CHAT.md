@@ -18,6 +18,13 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   paylog.js `CHAT_APP` / `isChatApp` (readNotification), autopilot.js (subscriptions / bank suggestions). Bank SMS (Messages) stays.
 - Already-added ones: `ChatMoneyFix` card in Money (paylog-ui.jsx) lists them; "Remove them" deletes through Money's own tx-delete,
   "Keep them" never asks again. Nothing deleted silently.
+- **Then (Ali: "an AI model should assess the notifications … it should have asked me before it was added if it was not sure"):**
+  "by itself" now needs ALL of: the code is sure (high confidence) + a money SOURCE (bank / wallet / InstaPay app, or an SMS whose
+  sender is a bank — not a person's number) + words that the money MOVED (paylog.js `codeSure`) + **the small model agrees** when one
+  is loaded (`judged`: a strict one-line JSON question; only "payment true, same direction, same amount" adds; "no" / another amount /
+  no clear answer / an error → waits). The model is never loaded just for this (`window.__attunePayJudge` exists only while ready).
+  Everything else waits in Money with "Not sure — is this yours?" / "Attune thinks this isn't a payment — is it yours?", and opening
+  Attune says "{n} payments wait for your OK in Money" once when new ones wait. Tests: v999chatmoney (judge cases).
 - Ali's "nothing was updated": his screens were v9.9.8 (Radar photo behind, no ‹ › bar) — the v9.9.9 APK had built 20 min before.
 - Tests: unit v999chatmoney (his exact message; the old reader made it 450 income), e2e_v999chatmoney.
 

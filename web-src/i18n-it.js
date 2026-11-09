@@ -11767,4 +11767,8 @@ export const IT = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "Nelle chat si parla di soldi: non è un pagamento. D'ora in poi le app di chat non vengono mai lette come denaro.",
   "Remove them": "Rimuovili",
   "Keep them": "Tienili",
+  "{n} payments wait for your OK in Money": "{n} pagamenti aspettano il tuo OK in Soldi",
+  "Attune thinks this isn't a payment — is it yours?": "Attune pensa che non sia un pagamento: è tuo?",
+  "Not sure — is this yours?": "Non sono sicuro: è tuo?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "Aggiungi da soli quelli sicuri (messaggi di banca, portafoglio e InstaPay che dicono che i soldi si sono mossi — controllati dall'IA quando un modello è caricato)",
 };

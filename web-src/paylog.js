@@ -93,8 +93,54 @@ export function alreadyIn(entry, ledger) {
     && (t.source !== "notification" ? true : (t.created && entry.ts) ? Math.abs(t.created - entry.ts) <= 10 * 60000 : !!shop && merchantOf(t.note) === shop)) || null;
 }
 
-/** v6.27 "by itself": only what the reader is sure of is added without a tap (high confidence, a direction, an amount). */
-export const autoPick = (entries) => (entries || []).filter((e) => e.confidence === "high" && e.amount > 0 && (e.direction === "in" || e.direction === "out"));
+/* v9.9.10 (Ali: "an AI model should assess the notifications so it knows what everything is about, and it should have asked me
+   before it was added to Money if it was not sure"). "By itself" now needs ALL of:
+     1. the code is sure: high confidence, an amount, a direction;
+     2. it came from a money source: a bank / wallet / InstaPay app, or an SMS whose sender is a bank or wallet;
+     3. it says the money MOVED (debited / credited / تم خصم / تم تحويل / استلمت …) — not "300 for the night guard";
+     4. when a model is loaded: the model read the message and agrees (a real payment of THIS person, same amount and direction).
+   Anything else waits in Money for one tap ("Is this yours?") — never added on a guess. */
+const MONEY_SRC = /bank|banque|banco|\bcib\b|commercial international|\bnbe\b|al ?ahly|الأهلي|الاهلي|banque misr|بنك مصر|\bqnb\b|hsbc|\baaib\b|\badib\b|alex ?bank|faisal|emirates ?nbd|mashreq|\bfab\b|\bcae\b|credit agricole|\bsaib\b|\bnbk\b|\bbdc\b|instapay|انستاباي|\bipn\b|wallet|محفظ|vodafone ?cash|vf-?cash|فودافون كاش|orange ?(cash|money)|etisalat ?cash|e& ?cash|we ?pay|fawry|فوري|valu|meeza|ميزة|paymob|telda|khazna|sympl|souhoola|halan|contact|aman|masary|bee\b|paypal|revolut|wise|payoneer|stripe|apple ?pay|google ?(pay|wallet)|samsung ?(pay|wallet)|visa|mastercard|amex|stc ?pay|urpay|mada|benefit|gpay|phonepe|paytm|upi|\bpix\b|nubank|mercado ?pago|m-?pesa|chase|wells ?fargo|citi|barclays|lloyds|santander|monzo|starling|n26|ing\b|bnp|soci[eé]t[eé] g[eé]n[eé]rale|deutsche ?bank|sparkasse|garanti|akbank|i[sş] ?bankas[iı]|ziraat|yap[iı] ?kredi|sberbank|tinkoff|alfa-?bank|icici|hdfc|\bsbi\b|axis|kotak|bca\b|mandiri|\bbri\b|maybank|cimb|dbs|ocbc|kasikorn|scb\b/i;
+const SMS_APP = /messag|\bsms\b|mms|com\.android\.mms|samsung\.android\.messaging|google\.android\.apps\.messaging|رسائل/i;
+const MOVED = /\b(debited|credited|charged|purchase[d]?|paid|payment (?:of|to|from)|received|transferr?ed|transfer (?:of|to|from)|withdrawn?|withdrawal|deposit(?:ed)?|spent|refund(?:ed)?|sent you|you sent)\b|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|خصم مبلغ|إيداع مبلغ|ايداع مبلغ|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|سحبت|عملية شراء|(?<![\p{L}])(débit[ée]|crédit[ée]|paiement|achat|virement|cargo|abono|compra|pago|transferencia|pagamento|transferência|zahlung|gutschrift|überweisung|abbuchung|ödeme|harcama|havale|pembayaran|списан|зачислен|оплата|перевод)(?![\p{L}])/iu;
+/** Did this entry come from a money source? (the app, or an SMS whose sender is a bank / wallet) */
+export function fromMoneySource(e) {
+  const app = String((e && (e.app || "")) || ""), from = String((e && e.from) || "");
+  if (CHAT_APP.test(app)) return false;
+  if (SMS_APP.test(app)) return MONEY_SRC.test(from) || /^[A-Z][A-Za-z0-9 .-]{1,14}$/.test(from.trim()) && !/^\+?\d/.test(from.trim());   // SMS: a named sender ("CIB", "NBE", "VF-Cash"), not a person's number
+  return MONEY_SRC.test(app + " " + from);
+}
+/** The code alone is sure: steps 1–3 above. */
+export const codeSure = (e) => !!e && e.confidence === "high" && e.amount > 0 && (e.direction === "in" || e.direction === "out") && fromMoneySource(e) && MOVED.test(String(e.full || e.text || ""));
+/** v6.27 "by itself" — v9.9.10: only what the code is sure of (codeSure); the model's check comes on top (judged). */
+export const autoPick = (entries) => (entries || []).filter(codeSure);
+
+/** The question for the small model: one line of JSON back. */
+export const judgePrompt = (e) => `A notification arrived on the phone of the person you work for. Decide if it reports money that ALREADY moved in or out of THIS person's own account or wallet.
+NOT a payment: people chatting about money, wages or prices; offers; reminders; bills not yet paid; one-time codes; balances only; other people's money.
+App: ${String(e.app || "").slice(0, 60)}
+From: ${String(e.from || "").slice(0, 80)}
+Message: ${String(e.full || e.text || "").replace(/\s+/g, " ").slice(0, 600)}
+Answer with ONE line of JSON only: {"payment": true or false, "direction": "in" or "out" or "", "amount": number or 0}`;
+/** The model's answer → "yes" (a real payment that matches the code: same direction, same amount) | "no" | "unsure". */
+export function readJudge(out, e) {
+  const m = /\{[^{}]*\}/.exec(String(out || "")); if (!m) return "unsure";
+  let j = null; try { j = JSON.parse(m[0]); } catch (x) { return "unsure"; }
+  if (j.payment === false || j.payment === "false") return "no";
+  if (!(j.payment === true || j.payment === "true")) return "unsure";
+  const amt = Number(String(j.amount).replace(/[^\d.]/g, "")) || 0;
+  return j.direction === e.direction && Math.abs(amt - e.amount) < 0.01 ? "yes" : "unsure";
+}
+/** Code-sure entries → { add: the model agreed (or no model), wait: [{ ...e, doubt: "no"|"unsure" }] }. judge(prompt) → text, or null. */
+export async function judged(entries, judge) {
+  if (!judge) return { add: entries, wait: [] };
+  const add = [], wait = [];
+  for (const e of entries) {
+    let v = "unsure"; try { v = readJudge(await judge(judgePrompt(e)), e); } catch (x) {}
+    if (v === "yes") add.push(e); else wait.push({ ...e, doubt: v });
+  }
+  return { add, wait };
+}
 
 /** The same as Money's own "add-txns" (yusr/index.new.html): each entry into the first account of its currency (else the
  *  first account), id, date, note — used when Money isn't open, so its ledger is written directly. → { ledger, ids } */

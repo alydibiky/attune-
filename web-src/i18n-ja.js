@@ -11766,4 +11766,8 @@ export const JA = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "チャットでお金の話をしても支払いではありません。今後、チャットアプリはお金として読み取りません。",
   "Remove them": "削除する",
   "Keep them": "残す",
+  "{n} payments wait for your OK in Money": "{n} 件の支払いがお金であなたの確認を待っています",
+  "Attune thinks this isn't a payment — is it yours?": "Attune はこれが支払いではないと考えています — あなたのものですか？",
+  "Not sure — is this yours?": "確信がありません — これはあなたのものですか？",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "確実なものは自動で追加（お金が動いたと書かれた銀行・ウォレット・InstaPay のメッセージ — モデル読み込み中は AI が確認）",
 };

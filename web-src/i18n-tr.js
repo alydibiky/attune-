@@ -11767,4 +11767,8 @@ export const TRK = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "İnsanlar sohbetlerde paradan söz eder — bu bir ödeme değil. Artık sohbet uygulamaları asla para olarak okunmaz.",
   "Remove them": "Kaldır",
   "Keep them": "Kalsın",
+  "{n} payments wait for your OK in Money": "{n} ödeme Para'da onayını bekliyor",
+  "Attune thinks this isn't a payment — is it yours?": "Attune bunun bir ödeme olmadığını düşünüyor — senin mi?",
+  "Not sure — is this yours?": "Emin değilim — bu senin mi?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "Kesin olanları kendisi eklesin (paranın hareket ettiğini söyleyen banka, cüzdan ve InstaPay mesajları — bir model yüklüyken yapay zekâ kontrol eder)",
 };

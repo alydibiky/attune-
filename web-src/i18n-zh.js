@@ -11766,4 +11766,8 @@ export const ZH = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "人们在聊天中谈论钱——那不是付款。从现在起，聊天应用永远不会被当作资金读取。",
   "Remove them": "删除它们",
   "Keep them": "保留",
+  "{n} payments wait for your OK in Money": "{n} 笔付款在“资金”中等待你确认",
+  "Attune thinks this isn't a payment — is it yours?": "Attune 认为这不是付款——是你的吗？",
+  "Not sure — is this yours?": "不确定——这是你的吗？",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "自动添加确定的（银行、钱包和 InstaPay 说明资金已变动的消息——加载模型时由 AI 核对）",
 };

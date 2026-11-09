@@ -8615,6 +8615,8 @@ export default function App() {
   };
   // A model is "usable" when it is running OR installed and asleep: the engine wakes it by itself the
   // moment a tool sends a request (LocalEngine.waitReady), so no tool should send the user to Engine.
+  // v9.9.10 the money-notification check by the small model — only while one is loaded (paylog.js judged; never loads one for it)
+  useEffect(() => { try { window.__attunePayJudge = modelState === "ready" ? (q) => callClaude(q, { prefix: "payjudge", background: true, maxTokens: 60, temperature: 0, think: false }) : null; } catch (e) {} }, [modelState]);
   const modelUsable = modelState === "ready" || (NATIVE && ((engineInfo && engineInfo.state === "ready") || (installedModels || []).length > 0));
   const refreshModels = () => { const m = nativeJSON("models"); setInstalledModels((m && m.models) || []); };
   // v6.34 (Ali): the next lesson is written ahead while a model is loaded and idle — ready when Learn is opened.
@@ -8833,7 +8835,15 @@ export default function App() {
       // v8.7 (Ali: "backup like WhatsApp"): once a day, the locked backup into the folder the person picked (autobackup.js)
       try { const abs = NATIVE && NATIVE.autoBackupState ? JSON.parse(NATIVE.autoBackupState() || "{}") : {}; if (autoDue(loadAutoBackup(), !!abs.set)) runAutoBackup(nativeCall, NATIVE).catch(() => {}); } catch (e) {}
       if (gmailDue()) readGmail(nativeCall, { silent: true }).then((r) => { if (r && r.payments) flash(tr("{n} payments from Gmail are waiting in Money", { n: r.payments })); }).catch(() => markReconnect(true));
-      const n = runAutoPay(NATIVE); if (n) flash(tr("{n} payments added to Money by themselves", { n })); else if (k) flash(tr("{n} deadlines added to your Radar by themselves", { n: k })); };
+      // v9.9.10 (Ali: "it should have asked me before it was added if it was not sure"): only sure ones (code + the model when
+      // loaded) go in; the rest wait in Money — said once when new ones wait
+      runAutoPay(NATIVE).then(({ added: n, waiting: w }) => {
+        let seen = 0; try { seen = +localStorage.getItem("attune:paylog:waitsaid") || 0; } catch (e) {}
+        try { localStorage.setItem("attune:paylog:waitsaid", String(w)); } catch (e) {}
+        if (n) flash(tr("{n} payments added to Money by themselves", { n }));
+        else if (w > seen) flash(tr("{n} payments wait for your OK in Money", { n: w }));
+        else if (k) flash(tr("{n} deadlines added to your Radar by themselves", { n: k }));
+      }).catch(() => {}); };
     const t = setTimeout(run, 2500);
     document.addEventListener("visibilitychange", run);
     return () => { clearTimeout(t); document.removeEventListener("visibilitychange", run); };

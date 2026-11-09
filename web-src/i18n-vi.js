@@ -11766,4 +11766,8 @@ export const VI = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "Mọi người nói về tiền trong trò chuyện — đó không phải là thanh toán. Từ nay ứng dụng trò chuyện không bao giờ được đọc là tiền.",
   "Remove them": "Xóa chúng",
   "Keep them": "Giữ lại",
+  "{n} payments wait for your OK in Money": "{n} khoản đang chờ bạn đồng ý trong Tiền",
+  "Attune thinks this isn't a payment — is it yours?": "Attune nghĩ đây không phải thanh toán — có phải của bạn?",
+  "Not sure — is this yours?": "Không chắc — có phải của bạn?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "Tự thêm những khoản chắc chắn (tin nhắn ngân hàng, ví và InstaPay nói tiền đã chuyển — AI kiểm tra khi có mô hình được tải)",
 };

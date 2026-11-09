@@ -11758,4 +11758,8 @@ export const ARB = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "يتحدث الناس عن المال في المحادثات — وهذا ليس دفعًا. من الآن لن تُقرأ تطبيقات المحادثة كأموال أبدًا.",
   "Remove them": "أزلها",
   "Keep them": "أبقِها",
+  "{n} payments wait for your OK in Money": "{n} مدفوعات تنتظر موافقتك في المال",
+  "Attune thinks this isn't a payment — is it yours?": "يرى أتيون أن هذه ليست عملية دفع — هل هي لك؟",
+  "Not sure — is this yours?": "لست متأكدًا — هل هذه لك؟",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "أضف المؤكد تلقائيًا (رسائل البنك والمحفظة وإنستاباي التي تقول إن المال تحرك — ويراجعها الذكاء الاصطناعي عند تحميل نموذج)",
 };

@@ -11766,4 +11766,8 @@ export const KO = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "채팅에서 돈 이야기를 해도 결제가 아니에요. 이제부터 채팅 앱은 돈으로 읽지 않아요.",
   "Remove them": "삭제하기",
   "Keep them": "그대로 두기",
+  "{n} payments wait for your OK in Money": "{n}건의 결제가 돈에서 확인을 기다려요",
+  "Attune thinks this isn't a payment — is it yours?": "Attune은 이게 결제가 아니라고 봐요 — 내 거예요?",
+  "Not sure — is this yours?": "확실하지 않아요 — 내 거예요?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "확실한 것은 자동으로 추가 (돈이 움직였다고 하는 은행·지갑·InstaPay 메시지 — 모델이 로드되어 있으면 AI가 확인)",
 };

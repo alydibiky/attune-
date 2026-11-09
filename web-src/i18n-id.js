@@ -11767,4 +11767,8 @@ export const IDN = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "Orang membicarakan uang di chat — itu bukan pembayaran. Mulai sekarang aplikasi chat tidak pernah dibaca sebagai uang.",
   "Remove them": "Hapus",
   "Keep them": "Biarkan",
+  "{n} payments wait for your OK in Money": "{n} pembayaran menunggu OK-mu di Uang",
+  "Attune thinks this isn't a payment — is it yours?": "Attune mengira ini bukan pembayaran — milikmu?",
+  "Not sure — is this yours?": "Tidak yakin — ini milikmu?",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "Tambahkan yang pasti otomatis (pesan bank, dompet, dan InstaPay yang menyatakan uang berpindah — dicek AI saat model dimuat)",
 };

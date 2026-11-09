@@ -11766,4 +11766,8 @@ export const FA = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "مردم در گفتگوها درباره پول حرف می‌زنند — این پرداخت نیست. از این به بعد برنامه‌های گفتگو هرگز پول خوانده نمی‌شوند.",
   "Remove them": "حذفشان کن",
   "Keep them": "نگهشان دار",
+  "{n} payments wait for your OK in Money": "{n} پرداخت در پول منتظر تأیید توست",
+  "Attune thinks this isn't a payment — is it yours?": "Attune فکر می‌کند این پرداخت نیست — مال توست؟",
+  "Not sure — is this yours?": "مطمئن نیستم — این مال توست؟",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "موارد قطعی را خودش اضافه کند (پیام‌های بانک، کیف پول و InstaPay که می‌گویند پول جابه‌جا شد — وقتی مدلی بارگذاری است هوش مصنوعی بررسی می‌کند)",
 };

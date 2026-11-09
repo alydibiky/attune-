@@ -8837,4 +8837,8 @@ export const AR = {
   "People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.": "الناس بتتكلم عن فلوس في الشات — ده مش دفع. من النهارده تطبيقات الشات عمرها ما هتتقري كفلوس.",
   "Remove them": "شيلهم",
   "Keep them": "سيبهم",
+  "{n} payments wait for your OK in Money": "{n} مدفوعات مستنية موافقتك في الفلوس",
+  "Attune thinks this isn't a payment — is it yours?": "أتيون شايف إن دي مش عملية دفع — هي بتاعتك؟",
+  "Not sure — is this yours?": "مش متأكد — دي بتاعتك؟",
+  "Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)": "ضيف المؤكد لوحده (رسايل البنك والمحفظة وانستاباي اللي بتقول إن الفلوس اتحركت — والذكاء الاصطناعي بيراجعها لو فيه نموذج شغال)",
 };
