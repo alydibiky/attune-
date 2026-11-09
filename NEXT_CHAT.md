@@ -11,6 +11,22 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 9 Nov — v9.9.3: Ali OK'd everything on the "what I understood" page (T1 N1 N3 W1 W2 M1–M4 L1–L4)
+- **L1–L4 teach from notifications** (`noteteach.js` + `noteteach-ui.jsx`): on a Recall notification "she's my wife" → "I understood:
+  Nada = your wife" → Save (saved on the People card, role); from the Home box / Chat / voice: "Nada is my wife", "tell me when my
+  wife gets home" (a phone alert on Life360 via watch.js → WatchMatch.kt, works with Attune closed), "never show Yazio" (hidden in
+  Recall + Home); Home asks once "Who is Sara?" (seen 3×/week); Home reads "Your wife (Nada) · Arrived at Home"; Chat "where's my
+  wife?" → the newest Life360 note. Not sure → it asks, never a guess. (teach.js is the OLD "teach your model" packs — kept.)
+- **W2** (`applinks.js`): "send Ahmed '…' on WhatsApp", "call Mama", "uber to …", "directions to …", "email Karim about …" → the app's
+  own link (wa.me / sms: / tel: dialer / mailto: / Uber / Maps); two Ahmeds or none → "Which Ahmed?" sheet with saved people +
+  Pick from contacts (Android's picker, no contacts permission), remembered. NativeBridge.openAnyApp opens tel:/sms:/mailto:.
+- **T1** (`timetable.js` + `timetable-ui.jsx`, Reminders → "From a timetable photo", Home "my timetable"): text reader positions →
+  grid or list, + the photo model's JSON (when a 📷 model is loaded) merged (both agree = sure, one = "check this"); the person checks
+  / fixes / deletes; weekly reminders N min before, stopping after the term's last day (Reminders.kt `until`).
+- Next (not started): N3 @ links, N1 tables from a sentence (in Lists), W1 web agent, M1 strict router (ask when unsure — Ali: "make
+  the guidelines strict, I don't want the code saving things wrong"), M2 small-model relay (never two > ~1.5 B), M3 checker, M4 computer team.
+- Tests: unit v993noteteach (23), v993applinks (13), v993timetable (14); e2e_v993teach, e2e_v993applinks, e2e_v993timetable.
+
 ## 9 Nov — v9.9.2: Ali picked T1 S1 G1 N1 N3 W1 W2 M1 M2 M3 M4 (+ asked to explore "teach Attune from notifications")
 - Built: **G1** "Found" in the app colour (agent-rules STATUS found → blue/accent, yourday tag); **S1** Chat checks Shelf / Mind
   notes first for ANY question a note clearly fits (attune.jsx `memStrong`: ≥2 words and ≥60 % of the question's words in one
