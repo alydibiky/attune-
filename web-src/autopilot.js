@@ -125,7 +125,7 @@ export function suggestions(notes = [], { now = Date.now(), s = emptyState(), le
     // v9.9.13 (Ali: "an option whether to deduct from my balance or not — this subscription is paid by my father"): someone else pays
     // it → only the plan (and its reminder), never Money; a NEW subscription waits for "Who pays it?" before anything leaves Money
     if (x.kind === "subscription" && life) { const c = findSub(life, x.title);
-      if (!c) { x.noMoney = true; x.askPayer = true; } else if (c.payer && c.payer !== "me") x.noMoney = true; }
+      if (!c) { x.noMoney = true; x.askPayer = true; } else if (c.payer && c.payer !== "me") x.noMoney = true; else if (c.account) x.account = c.account; }
     keys.add(x.key); out.push(x);
   }
   return out;
@@ -158,7 +158,7 @@ export const weekCount = (s, now = Date.now()) => Object.values(s.ok || {}).filt
 export function actionsFor(x) {
   if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, cat: x.cat || "other", note: x.note || "", date: x.date, source: "notification" }] }];
   if (x.kind === "subscription") return [{ kind: "subPay", name: x.title, amount: x.amount, date: x.date, cur: x.cur || "", key: x.key },
-    ...(x.noMoney ? [] : [{ kind: "money", items: [{ type: "expense", amount: x.amount, cat: "bills", note: x.title, date: x.date, source: "notification" }] }])];
+    ...(x.noMoney ? [] : [{ kind: "money", items: [{ type: "expense", amount: x.amount, cat: "bills", note: x.title, date: x.date, source: "notification", ...(x.account ? { account: x.account } : {}) }] }])];
   if (x.kind === "bill") return [{ kind: "life", c: { kind: "bill", dir: "out", amount: x.amount, count: 1, total: x.amount, every: null, start: iso(x.at), title: x.title, person: "", paid: [], currency: "" } }];
   return [{ kind: "reminder", action: { kind: "reminder", at: x.at, title: x.title } }];
 }

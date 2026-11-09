@@ -3,7 +3,7 @@
    read by code (life.js parseLife; the phone's model only if the rules can't, and only when one is loaded) → a preview to
    check → saved. Each commitment shows its payments as checkboxes; ticking one offers to add it to Money (the same
    sentence Money reads from a bank message, confirmed there). Tests: tests/e2e_v727life.py.                                    */
-import { PayerAsk } from "./payer-ui.jsx";
+import { PayerAsk, PayerRow } from "./payer-ui.jsx";
 import React, { useMemo, useState } from "react";
 import { Users, Check, Trash2, Wallet, Sparkles, X, ChevronDown, ChevronLeft, ChevronRight, ArrowDown, ArrowUp, User } from "lucide-react";
 import { personHistory } from "./personhist.js";
@@ -12,6 +12,7 @@ import { loadLedger } from "./myledger.js";
 import * as E from "./entities.js";
 import { openPerson } from "./people-ui.jsx";
 import { tr, getLang, dateLocale } from "./i18n.js";
+import { paysMe } from "./life.js";
 import { parseLife, scheduleOf, paymentOn, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, payAmount, askToday, skipDay, lifeModelPrompt, readLifeModel, nextReminder, isOpenLoan } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { missingAmounts } from "./numguard.js";
@@ -118,7 +119,7 @@ function PersonHistory({ name, data, onBack, onTick, onRemove, onPay }) {
     </div>
   </div>;
 }
-function Item({ c, onTick, onRemove, onPay, onWho }) {
+function Item({ c, onTick, onRemove, onPay, onWho, onPayer }) {
   const pr = useMemo(() => progressOf(c), [c]);
   // v8.3 (Ali: "write what he actually paid and it reschedules the rest"): a person's payment asks how much came first
   const [ed, setEd] = useState(null);   // { i, v }
@@ -139,6 +140,7 @@ function Item({ c, onTick, onRemove, onPay, onWho }) {
         {pr.left != null ? <div className="text-end"><span className={U.label}>{tr("Left to pay")}</span><div className="tabular-nums font-black text-[17px]" dir="ltr">{fmt(pr.left)}</div></div> : null}
         <button onClick={() => onRemove(c)} aria-label={tr("Delete")} className={"w-11 h-11 -me-2 -mt-1.5 shrink-0 grid place-items-center rounded-[12px] hover:text-[var(--c-neg)] " + U.muted} data-testid="life-remove"><Trash2 size={15} /></button>
       </div>
+      <PayerRow c={c} onChange={onPayer} />{/* v9.9.14 who pays it, from which account — changeable any time */}
       {c.count > 1 && c.kind !== "regular" ? <div className="flex items-center gap-2 mt-2.5" data-testid="life-progress">
         <div className="flex-1 h-2 rounded-full bg-[var(--c-surf-2)] border border-[var(--c-ln)] overflow-hidden"><i className="block h-full rounded-full bg-[var(--c-pos)]" style={{ width: Math.min(100, (pr.paidCount / c.count) * 100) + "%" }} /></div>
         <span className={U.tag("green") + " tabular-nums"}>{tr("{a} / {b} paid", { a: pr.paidCount, b: c.count })}</span></div> : null}
@@ -236,6 +238,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     // v6.34 (Ali): the maid, a subscription, a bill, the rent — a tick is "paid", recorded in Money by itself
     if (["regular", "subscription", "bill", "rent"].includes(c.kind) && c.dir === "out") {
       const r = tickRegular(c.id, i, on); setData(r.data); remindFor(r.data.items.find((x) => x.id === c.id));
+      if (on && !paysMe(c)) { flash && flash(c.payer === "none" ? tr("Ticked — nobody's balance changes") : tr("Ticked — {p} pays it; your balance stays the same", { p: c.payer })); return; }   // v9.9.14
       if (on && r.recorded) flash && flash(tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: c.currency, t: heading(c) }));
       else if (on && toMoney) toMoney(tickText(c, i));
       else if (!on && r.removed) flash && flash(tr("Taken out of Money"));
@@ -320,7 +323,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
         <div key={g} className="space-y-2"><span className={U.label}>{tr(g)}</span>
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{(g === "People" ? byPerson(items) : items.map((c) => [c])).map((list) => (list.length > 1
             ? <PersonCard key={list[0].id} list={list} onWho={setWho} />
-            : <Item key={list[0].id} c={list[0]} onTick={tick} onRemove={remove} onPay={pay} onWho={setWho} />))}</div></div>))}
+            : <Item key={list[0].id} c={list[0]} onTick={tick} onRemove={remove} onPay={pay} onWho={setWho} onPayer={() => setData(loadLife())} />))}</div></div>))}
       {gold.items.length || car.log.length ? <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
         {gold.items.length ? <GoldCard data={gold} put={putGold} flash={flash} /> : null}
         {car.log.length ? <CarCard car={car} put={putCar} /> : null}</div> : null}

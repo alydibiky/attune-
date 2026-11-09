@@ -54,7 +54,7 @@ import { moneyReport, zakatFromSnapshot, ledgerCsv, usedCats } from "./money-rep
 import { findings as guardianFindings, loadGuardian } from "./guardian.js";
 import { sharePdf } from "./share-pdf.js";
 import { fmt as fmtMoneyPlain } from "./money-calm.js";
-import { loadLife as loadLifeMoney } from "./life.js";
+import { loadLife as loadLifeMoney, lifeReminders } from "./life.js";
 import { LifePage } from "./life-ui.jsx";
 import { PhoneHome } from "./home-ui.jsx";
 import { logTool } from "./toollog.js";   // v7.8 the Tools report
@@ -7794,7 +7794,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.13";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.14";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8016,6 +8016,8 @@ export default function App() {
   const [videoIn, setVideoIn] = useState("");             // v5.38: a video link shared to Attune
   const [waIn, setWaIn] = useState(null);                 // v8.7: a WhatsApp export → the groups library
   const [xrayIn, setXrayIn] = useState(null);             // v5.35: a WhatsApp chat export shared to Attune      // "daily-learn-…" / "daily-news-…" from a notification or the widget
+  // v9.9.14 (Ali: "remind me whether I am paying or not"): every renewing payment keeps its next reminder — checked when Attune opens
+  useEffect(() => { const t = setTimeout(() => { try { for (const r of lifeReminders(loadLifeMoney(), loadReminders())) scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "life" }); } catch (e) {} }, 2500); return () => clearTimeout(t); }, []);
   const scheduleReminder = (r) => {
     const list = [...loadReminders().filter((x) => x.id !== r.id), r];
     setReminders(list);

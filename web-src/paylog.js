@@ -160,7 +160,7 @@ export function appendToLedger(ledger, txns, now = Date.now()) {
   for (const t of (txns || []).slice(0, 50)) {
     const a = parseFloat(t.amount);
     if (!(a > 0 && a < 1e9) || (t.type !== "expense" && t.type !== "income")) continue;
-    const acc = L.accounts.find((x) => t.currency && x.currency === t.currency) || L.accounts[0];
+    const acc = (t.account && L.accounts.find((x) => x.id === t.account)) || L.accounts.find((x) => t.currency && x.currency === t.currency) || L.accounts[0];   // v9.9.14: the account chosen for it first
     const id = "n" + now.toString(36) + Math.random().toString(36).slice(2, 6) + ids.length;
     L.txns.push({ id, type: t.type, amount: Math.round(a * 100) / 100, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0 } } : {}) });
     ids.push(id);

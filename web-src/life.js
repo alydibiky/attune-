@@ -509,8 +509,10 @@ export function nextReminder(c, now = Date.now()) {
   const who = c.person ? c.person + " · " : "";
   const what = c.kind === "installment" ? `installment ${n.i + 1} of ${c.count}` : c.kind === "circle" ? `${c.title || "savings circle"} ${n.i + 1}/${c.count}` : c.title || c.kind;
   const amount = n.amount.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + (c.currency || homeCurrency());
-  // v9.9.13 (Ali: "paid by my father … I need to be reminded"): someone else pays it → the reminder says so, and nothing leaves Money
+  // v9.9.13/14 (Ali: "it should remind me whether I am paying or not"): who pays decides the words; someone else / nobody → Money untouched
+  if (c.payer === "none") return { id: "life-" + c.id, at, title: tr("Renews today: {w}", { w: what }), body: tr("{a} — nobody's balance changes; tick it when it's paid", { a: amount }) };
   if (c.payer && c.payer !== "me") return { id: "life-" + c.id, at, title: tr("Renews today: {w}", { w: what }), body: tr("{a} — {p} pays it; your balance stays the same", { a: amount, p: c.payer }) };
+  if (c.payer === "me" && c.accountName) return { id: "life-" + c.id, at, title: tr("Due: {w}", { w: what }), body: tr("{a} from {acc} — tick it in People & plans when it's paid", { a: amount, acc: c.accountName }) };
   return { id: "life-" + c.id, at, title: (c.dir === "in" ? "Due to you: " : "Due: ") + who + what, body: amount + " — tick it in People & plans when it's paid" };
 }
 
@@ -532,10 +534,55 @@ export function paymentOn(data, text, now = Date.now()) {
   return { c, i: next.i, amount: amt, dir };
 }
 
-/** v9.9.13 who pays a subscription: "me" (out of my balance) or a name ("My father" — never out of Money, still reminded). */
-export function setPayer(data, id, payer) {
-  const p = String(payer || "").trim().slice(0, 40) || "me";
-  return { ...data, items: (data.items || []).map((c) => (c.id === id ? { ...c, payer: p } : c)) };
+/* ---- v9.9.14 "Who pays it?" for every recurring payment (Ali, 10 Nov: "I don't want a small fix … choose which balance to take from if
+   it's taking from me, and if someone else is paying it make me choose who pays it — someone Attune knows, from contacts, or nothing …
+   it should remind me whether I am paying or not"). On a commitment:
+     payer: "me" | a person's name | "none" (not set — nobody's money moves, only the reminder)
+     payerRef: { id (a People card), phone (a contact) }   account / accountName: the Money account "me" pays from ("" = the usual one)
+   Kinds: subscription, bill, rent, regular — the ones that renew. Pure; tests/unit/v9914payer.test.mjs. */
+export const RENEWS = ["subscription", "bill", "rent", "regular"];
+export const hasPayer = (c) => !!c && RENEWS.includes(c.kind) && c.dir !== "in";
+/** Save who pays: setPayer(data, id, "me" | "Name" | "none" | { payer, ref, account, accountName }). */
+export function setPayer(data, id, who) {
+  const w = typeof who === "string" ? { payer: who } : (who || {});
+  const payer = w.payer === "me" || w.payer === "none" ? w.payer : String(w.payer || "").trim().slice(0, 40) || "none";
+  const ref = w.ref && (w.ref.id || w.ref.phone) ? { ...(w.ref.id ? { id: String(w.ref.id) } : {}), ...(w.ref.phone ? { phone: String(w.ref.phone).slice(0, 30) } : {}) } : null;
+  return { ...data, items: (data.items || []).map((c) => (c.id === id ? { ...c, payer, payerRef: ref,
+    account: payer === "me" ? String(w.account || "") : "", accountName: payer === "me" ? String(w.accountName || "").slice(0, 40) : "" } : c)) };
 }
-/** Subscriptions Attune added by itself whose payer was never asked. */
-export const payerUnknown = (data) => ((data && data.items) || []).filter((c) => c.kind === "subscription" && c.auto && !c.payer && !c.ended);
+/** Does this payment come out of MY money? (no payer saved = me, as it always was) */
+export const paysMe = (c) => !c || !c.payer || c.payer === "me";
+/** Recurring payments Attune added by itself whose payer was never asked. */
+export const payerUnknown = (data) => ((data && data.items) || []).filter((c) => hasPayer(c) && c.auto && !c.payer && !c.ended);
+/** One line: "You pay · from CIB" / "My father pays" / "Nobody set — reminder only". */
+export function payerLine(c) {
+  if (!c || !c.payer) return tr("You pay");
+  if (c.payer === "me") return c.accountName ? tr("You pay · from {a}", { a: c.accountName }) : tr("You pay");
+  if (c.payer === "none") return tr("Nobody set — reminder only");
+  return tr("{p} pays", { p: c.payer });
+}
+/** The people to offer: your People cards (family first), then the people already in your plans and payers; once each. */
+export function peopleChoices(dir = { items: [] }, data = { items: [] }, max = 8) {
+  const fam = /father|mother|dad|mom|mum|brother|sister|wife|husband|son|daughter|uncle|aunt|grand|بابا|ماما|ابويا|امي|أبويا|أمي|اخويا|أخويا|اختي|أختي|مراتي|جوزي|ابني|بنتي|خالي|عمي|جدي|جدتي|خالتي|عمتي/i;
+  const out = [], seen = new Set();
+  const add = (name, ref, role) => { const k = String(name || "").trim().toLowerCase(); if (!k || seen.has(k)) return; seen.add(k); out.push({ name: String(name).trim(), ref: ref || null, role: role || "" }); };
+  for (const c of (data && data.items) || []) if (c.payer && !["me", "none"].includes(c.payer)) add(c.payer, c.payerRef || null, "");
+  const people = ((dir && dir.items) || []).filter((p) => p && p.kind === "person" && p.name);
+  const isFam = (p) => fam.test(p.role || "") || fam.test(p.name);
+  for (const p of [...people.filter(isFam), ...people.filter((p) => !isFam(p))]) add(p.name, { id: p.id, ...(p.contact && p.contact.phone ? { phone: p.contact.phone } : {}) }, p.role);
+  for (const c of (data && data.items) || []) if (c.person) add(c.person, null, "");
+  return out.slice(0, max);
+}
+/** v9.9.14 every renewing payment keeps its next reminder (Ali: "remind me whether I am paying or not") — also the ones Autopilot ticks
+ *  by itself, whose reminder used to be set only when People & plans was used. → the reminders that are missing or out of date. */
+export function lifeReminders(data, existing = [], now = Date.now()) {
+  const have = new Map((existing || []).map((r) => [r.id, r]));
+  const out = [];
+  for (const c of (data && data.items) || []) {
+    if (!hasPayer(c) || c.ended) continue;
+    const r = nextReminder(c, now); if (!r) continue;
+    const h = have.get(r.id);
+    if (!h || h.at !== r.at || h.body !== r.body || h.title !== r.title) out.push(r);
+  }
+  return out;
+}

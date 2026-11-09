@@ -44,9 +44,9 @@ export function tickRegular(id, i, on, { store, now = Date.now() } = {}) {
   const rec = { ...(c.rec || {}) };
   let recorded = 0, removed = false;
   const led = loadLedger(ls);
-  if (on && !rec[i] && led && !(c.payer && c.payer !== "me")) {   // v9.9.13: someone else pays it (Ali's father) → never out of Money
+  if (on && !rec[i] && led && !(c.payer && c.payer !== "me")) {   // v9.9.13: someone else pays it (Ali's father) / nobody set → never out of Money
     const e = tickEntry(c, i, now);
-    const r = appendToLedger(led, [{ type: c.dir === "in" ? "income" : "expense", amount: e.amount, currency: e.currency, cat: c.dir === "in" ? "other" : catForCommitment(led, c, e.note), note: e.note, date: new Date(e.ts).toISOString().slice(0, 10) }], now);
+    const r = appendToLedger(led, [{ type: c.dir === "in" ? "income" : "expense", amount: e.amount, currency: e.currency, cat: c.dir === "in" ? "other" : catForCommitment(led, c, e.note), note: e.note, date: new Date(e.ts).toISOString().slice(0, 10), ...(c.account ? { account: c.account } : {}) }], now);   // v9.9.14: from the account the person chose
     if (r.ids.length) { try { ls.setItem("ledger.v3", JSON.stringify(r.ledger)); rec[i] = r.ids[0]; recorded = e.amount; } catch (x) {} }
   } else if (!on && rec[i] && led) {
     const L = { ...led, txns: led.txns.filter((t) => t.id !== rec[i]) };

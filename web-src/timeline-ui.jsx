@@ -129,14 +129,16 @@ export function TimelinePage({ navTo, doIt, flash }) {
   function qText(x) {
     const act = actionOf(x);
     if (act === "pay" && x.ck === "regular") return x.date === today ? tr("Did {w} come today?", { w: x.what }) : tr("Did {w} come on {d}?", { w: x.what, d: new Date(x.date + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "short" }) });
-    if (act === "pay") return tr("Did you pay {w}?", { w: x.what });
+    if (act === "pay") { const l = lifeOf(x), c = l && l.c;   // v9.9.14: someone else pays it / nobody set → ask about THEM, Money stays as it is
+      if (c && c.payer && c.payer !== "me") return c.payer === "none" ? tr("{w} renews today — was it paid?", { w: x.what }) : tr("{w} renews today — did {p} pay it?", { w: x.what, p: c.payer });
+      return tr("Did you pay {w}?", { w: x.what }); }
     if (act === "ask") return tr("Did {w} pay?", { w: who(x) });
     if (act === "done") return x.what;
     return x.T ? tr(x.T[0], x.T[1]) : x.what;
   }
   const snooze = (x) => markDone(snoozeKey(x));
   const came = (x) => { const l = lifeOf(x); if (!l) return; const r = tickRegular(l.c.id, l.i, true);
-    answer(x, x.ck === "regular" ? tr("Came ✓") : tr("Paid"), r && r.recorded ? tr("{a} out of Money", { a: fmt(r.recorded) }) : tr("Done"), () => { tickRegular(l.c.id, l.i, false); setV((y) => y + 1); }); };
+    answer(x, x.ck === "regular" ? tr("Came ✓") : tr("Paid"), r && r.recorded ? tr("{a} out of Money", { a: fmt(r.recorded) }) : l.c.payer && l.c.payer !== "me" ? tr("Done — your balance stays the same") : tr("Done"), () => { tickRegular(l.c.id, l.i, false); setV((y) => y + 1); }); };
   const didnt = (x) => { const l = lifeOf(x); if (!l) return; saveLife(skipDay(loadLife(), l.c.id, l.i, true));
     answer(x, tr("Didn't come"), tr("Nothing paid"), () => { saveLife(skipDay(loadLife(), l.c.id, l.i, false)); setV((y) => y + 1); }); };
   const later = (x, label) => { snooze(x); answer(x, label, tr("I'll ask again tomorrow"), () => { const n = new Set(doneSet); n.delete(snoozeKey(x)); setDoneSet(n); try { localStorage.setItem("attune:fu:done", JSON.stringify([...n])); } catch (e) {} setV((y) => y + 1); }); };
