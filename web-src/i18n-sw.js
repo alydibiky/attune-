@@ -11754,4 +11754,12 @@ export const SW = {
   "Details ({n})": "Maelezo ({n})",
   "Open the photos": "Fungua picha",
   "Looking in your notes…": "Natafuta kwenye maelezo yako…",
+  "Spent · {p}": "Imetumika · {p}",
+  "Earned · {p}": "Imepatikana · {p}",
+  "Pick the dates": "Chagua tarehe",
+  "All categories": "Aina zote",
+  "Back to this month": "Rudi mwezi huu",
+  "Nothing in these dates.": "Hakuna kitu katika tarehe hizi.",
+  "Change the dates": "Badilisha tarehe",
+  "Months": "Miezi",
 };

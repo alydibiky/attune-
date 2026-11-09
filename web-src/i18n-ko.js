@@ -11753,4 +11753,12 @@ export const KO = {
   "Details ({n})": "세부 정보 ({n})",
   "Open the photos": "사진 열기",
   "Looking in your notes…": "메모에서 찾는 중…",
+  "Spent · {p}": "지출 · {p}",
+  "Earned · {p}": "수입 · {p}",
+  "Pick the dates": "날짜 선택",
+  "All categories": "모든 카테고리",
+  "Back to this month": "이번 달로 돌아가기",
+  "Nothing in these dates.": "이 기간에는 내역이 없어요.",
+  "Change the dates": "날짜 변경",
+  "Months": "월",
 };

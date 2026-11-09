@@ -5,10 +5,10 @@
    calculated it, and the month's ledger with Excel / PDF export. Phone and computer. Every number is code (money-report.js);
    the ledger itself (Yusr) stays one tap away. The screens are driven by MoneyTab (attune.jsx), which keeps Yusr connected.  */
 import React, { useState } from "react";
-import { Camera, Mic, ArrowRight, ArrowLeft, FileDown, FileText, Upload, BookOpen, ShieldCheck, Loader2, Sparkles } from "lucide-react";
+import { Camera, Mic, ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, X, FileDown, FileText, Upload, BookOpen, ShieldCheck, Loader2, Sparkles } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { fmt } from "./money-calm.js";
-import { donutArcs } from "./money-report.js";
+import { donutArcs, shiftMonth } from "./money-report.js";
 import { SafeSpend } from "./safespend-ui.jsx";
 import * as U from "./ui-kit.jsx";
 
@@ -17,6 +17,12 @@ const T = (k, v) => tr(k, v ? Object.fromEntries(Object.entries(v).map(([x, y]) 
 const SLICE = ["var(--c-chart-1)", "var(--c-chart-2)", "var(--c-chart-3)", "var(--c-chart-4)"];
 const amt = (n, cur, o) => fmt(n, o) + (cur ? " " + cur : "");
 const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); } catch (e) { return iso; } };
+/** v9.9.8 P1: what the report covers — "November 2026", or "1 Oct – 15 Nov 2026"; with a category: "… · Groceries". */
+const dayShort = (iso, year) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(dateLocale(), year ? { day: "numeric", month: "short", year: "numeric" } : { day: "numeric", month: "short" }); } catch (e) { return iso; } };
+export const periodLabel = (rep, withCat = true) => { const p = rep.period || { from: rep.month.from, whole: true };
+  const d = p.whole ? monthLabel(p.from.slice(0, 7), true) : dayShort(p.from, p.from.slice(0, 4) !== p.to.slice(0, 4)) + " – " + dayShort(p.to, true);
+  return d + (withCat && p.cat ? " · " + p.catName : ""); };
+const isNow = (rep) => !rep.period || (rep.period.current && !rep.period.cat);
 const monthLabel = (key, long) => { try { return new Date(key + "-15T12:00:00").toLocaleDateString(dateLocale(), long ? { month: "long", year: "numeric" } : { month: "short" }); } catch (e) { return key; } };
 const Arrow = ({ back, size = 15 }) => back ? <ArrowLeft size={size} className="rtl:-scale-x-100" /> : <ArrowRight size={size} className="rtl:-scale-x-100" />;
 
@@ -206,7 +212,7 @@ function WhereItWent({ rep, wide, income = false }) {
   return (
     <div className={U.cardPad} data-testid={income ? "money-sources" : "money-cats"}>
       <div className="flex items-center justify-between gap-2 mb-3">
-        <span className="font-extrabold text-[14.5px]">{income ? T("Where the money came from · {m}", { m: monthLabel(rep.month.from.slice(0, 7), true) }) : wide ? tr("Spending by category") : T("Where the money went · {m}", { m: monthLabel(rep.month.from.slice(0, 7), true) })}</span>
+        <span className="font-extrabold text-[14.5px]">{income ? T("Where the money came from · {m}", { m: periodLabel(rep) }) : wide ? tr("Spending by category") : T("Where the money went · {m}", { m: periodLabel(rep) })}</span>
         <span className={"tabular-nums font-extrabold text-[13px] " + (income ? "text-[var(--c-pos)]" : "text-[var(--c-neg)]")} dir="ltr">{amt(total, rep.cur)}</span>
       </div>
       {list.length ? (
@@ -221,7 +227,7 @@ function WhereItWent({ rep, wide, income = false }) {
                 <span className="flex items-center gap-1.5 font-bold min-w-0"><i className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: SLICE[i % 4] }} /><span className="truncate">{c.name}</span></span>
                 <span className="tabular-nums font-extrabold shrink-0" dir="ltr">{fmt(c.amount)} <span className={"font-semibold " + U.muted}>({c.pct}%)</span></span></div>))}
           </div>
-        </div>) : <p className={"m-0 text-[13px] " + U.muted}>{income ? tr("Nothing earned this month yet.") : tr("Nothing spent this month yet.")}</p>}
+        </div>) : <p className={"m-0 text-[13px] " + U.muted}>{!isNow(rep) ? tr("Nothing in these dates.") : income ? tr("Nothing earned this month yet.") : tr("Nothing spent this month yet.")}</p>}
     </div>);
 }
 
@@ -323,10 +329,55 @@ function Ledger({ rep, openLedger, wide }) {
     </div>);
 }
 
+/** v9.9.8 P1 (Ali picked, + "a specific date and category at the same time"): ‹ November 2026 ▾ › under the title — the arrows
+ *  move a whole month; tapping the month opens From / To + Category (both together) + the last 12 months. */
+function PeriodBar({ rep, setPeriod, cats }) {
+  const p = rep.period || { from: rep.month.from, to: rep.month.to, whole: true, current: true };
+  const [open, setOpen] = useState(false), [f, setF] = useState(p.from), [t, setT] = useState(p.to), [c, setC] = useState(p.cat || "");
+  const td = new Date(), thisMonth = shiftMonth(td.getFullYear() + "-" + String(td.getMonth() + 1).padStart(2, "0") + "-01", 0);
+  const atNow = p.to >= thisMonth.from;
+  const go = (k) => { const n = shiftMonth(p.from.slice(0, 8) + "01", k); setPeriod({ ...n, cat: p.cat || null }); };
+  const months = Array.from({ length: 12 }, (_, i) => shiftMonth(thisMonth.from, -i));
+  const box = "w-full min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[14px]";
+  const openSheet = () => { setF(p.from); setT(p.to); setC(p.cat || ""); setOpen(true); };
+  return <>
+    <div className="flex items-center gap-1.5" data-testid="money-period">
+      <button onClick={() => go(-1)} aria-label={tr("Previous month")} className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)]" data-testid="money-period-prev"><ChevronLeft size={18} className="rtl:-scale-x-100" /></button>
+      <button onClick={openSheet} aria-label={tr("Change the dates")} className="flex-1 min-w-0 min-h-[44px] rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3 inline-flex items-center justify-center gap-1.5 font-extrabold text-[14px]" data-testid="money-period-label">
+        <span className="truncate" dir="auto">{periodLabel(rep, false)}</span><ChevronDown size={15} className="shrink-0" /></button>
+      <button onClick={() => go(1)} disabled={atNow} aria-label={tr("Next month")} className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] disabled:opacity-35" data-testid="money-period-next"><ChevronRight size={18} className="rtl:-scale-x-100" /></button>
+    </div>
+    {p.cat || !p.current ? <div className="flex flex-wrap items-center gap-1.5 -mt-1">
+      {p.cat ? <button onClick={() => setPeriod({ from: p.from, to: p.to, cat: null })} className="min-h-[34px] px-3 rounded-full text-[12.5px] font-bold bg-[var(--c-soft)] text-[var(--c-acc)] inline-flex items-center gap-1" data-testid="money-period-cat">{p.catName}<X size={13} /></button> : null}
+      {!(p.current && !p.cat) ? <button onClick={() => setPeriod(null)} className={"min-h-[34px] px-2 text-[12.5px] font-bold " + U.muted} data-testid="money-period-reset">{tr("Back to this month")}</button> : null}
+    </div> : null}
+    {open ? <div className="fixed inset-0 z-[80] bg-black/60 flex items-end" onClick={() => setOpen(false)}>
+      <div className="calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[20px] p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="money-period-sheet">
+        <p className="m-0 text-[16px] font-extrabold">{tr("Pick the dates")}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block space-y-1"><span className={U.label}>{tr("From")}</span><input type="date" value={f} max={t || undefined} onChange={(e) => setF(e.target.value)} className={box} data-testid="money-period-from" /></label>
+          <label className="block space-y-1"><span className={U.label}>{tr("To")}</span><input type="date" value={t} min={f || undefined} onChange={(e) => setT(e.target.value)} className={box} data-testid="money-period-to" /></label>
+        </div>
+        <label className="block space-y-1"><span className={U.label}>{tr("Category")}</span>
+          <select value={c} onChange={(e) => setC(e.target.value)} className={box} data-testid="money-period-catpick">
+            <option value="">{tr("All categories")}</option>{cats.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+        <div className="space-y-1"><span className={U.label}>{tr("Months")}</span>
+          <div className="flex gap-1.5 overflow-x-auto pb-1">{months.map((m) => <button key={m.from} onClick={() => { setF(m.from); setT(m.to); }} aria-pressed={f === m.from && t === m.to}
+            className={"shrink-0 min-h-[36px] px-3 rounded-full text-[12.5px] font-bold border " + (f === m.from && t === m.to ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] border-transparent" : "border-[var(--c-ln)]")} data-testid="money-period-month">{monthLabel(m.from.slice(0, 7))} {m.from.slice(2, 4)}</button>)}</div></div>
+        <div className="flex gap-2 pt-1">
+          <button onClick={() => { if (f && t) { setPeriod({ from: f, to: t, cat: c || null }); setOpen(false); } }} disabled={!f || !t} className={U.btnP + " flex-1"} data-testid="money-period-show">{tr("Show")}</button>
+          <button onClick={() => { setPeriod(null); setOpen(false); }} className={U.btnS}>{tr("Back to this month")}</button></div>
+      </div></div> : null}
+  </>;
+}
+
 /** Level 2 — the Money Report. */
-export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, openLedger, openZakat, account }) {
+export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, openLedger, openZakat, account, setPeriod, cats }) {
   const accName = account ? (rep.accounts.find((a) => a.id === account) || {}).name : null;
-  const sub = monthLabel(rep.month.from.slice(0, 7), true) + " · " + (accName || tr("All accounts"));
+  const sub = accName || tr("All accounts");
+  const now = isNow(rep), pl = periodLabel(rep);
+  const spentL = now ? tr("Spent · This month") : T("Spent · {p}", { p: periodLabel(rep, false) }), earnedL = now ? tr("Earned · This month") : T("Earned · {p}", { p: periodLabel(rep, false) });
+  const bar = setPeriod ? <PeriodBar rep={rep} setPeriod={setPeriod} cats={cats || []} /> : null;
   const exports = (
     <div className="flex gap-1.5 shrink-0">
       <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={exportPdf} data-testid="money-export-pdf"><FileText size={14} />PDF</button>
@@ -336,7 +387,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2 min-w-0">
         <button className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] hover:border-[var(--c-acc)]" onClick={back} aria-label={tr("Back")} data-testid="money-report-back"><Arrow back size={17} /></button>
-        <div className="min-w-0"><h2 className={(wide ? "text-[21px]" : "text-[17px]") + " font-black tracking-tight m-0 truncate"}>{wide ? T("Money Report · {m}", { m: monthLabel(rep.month.from.slice(0, 7), true) }) : tr("Money Report")}</h2>
+        <div className="min-w-0"><h2 className={(wide ? "text-[21px]" : "text-[17px]") + " font-black tracking-tight m-0 truncate"}>{wide ? T("Money Report · {m}", { m: pl }) : tr("Money Report")}</h2>
           <div className={"text-[12px] font-semibold truncate " + U.muted}>{wide ? (accName ? accName : tr("All accounts")) + " · " + tr("updated from your entries") : sub}</div></div>
       </div>
       {exports}
@@ -344,9 +395,10 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
   if (!wide) return (
     <div className="flex flex-col gap-3" data-testid="money-report">
       {head}
+      {bar}
       <div className="grid grid-cols-2 gap-2.5">
-        <Tile label={tr("Spent · This month")} value={amt(rep.month.out, rep.cur)} tone="neg" sub={T("{n} entries", { n: rep.month.count })} testid="money-rep-out" />
-        <Tile label={tr("Earned · This month")} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? (rep.month.rate >= 0 ? T("{p}% of it kept", { p: rep.month.rate }) : T("Spent {a} more than earned", { a: amt(-rep.month.net, rep.cur) })) : "—"} testid="money-rep-in" />
+        <Tile label={spentL} value={amt(rep.month.out, rep.cur)} tone="neg" sub={T("{n} entries", { n: rep.month.count })} testid="money-rep-out" />
+        <Tile label={earnedL} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? (rep.month.rate >= 0 ? T("{p}% of it kept", { p: rep.month.rate }) : T("Spent {a} more than earned", { a: amt(-rep.month.net, rep.cur) })) : "—"} testid="money-rep-in" />
       </div>
       <WhereItWent rep={rep} />
       {rep.month.in > 0 ? <WhereItWent rep={rep} income /> : null}
@@ -358,10 +410,11 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
   return (
     <div className="flex flex-col gap-[18px]" data-testid="money-report">
       {head}
+      {bar}
       <div className="grid grid-cols-4 gap-3">
         <Tile label={tr("Balance")} value={amt(rep.balance, rep.cur)} sub={rep.accounts.filter((a) => a.currency === rep.cur && (!account || a.id === account)).slice(0, 3).map((a) => a.name + " " + fmt(a.balance)).join(" · ")} testid="money-rep-balance" />
-        <Tile label={tr("Earned this month")} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? T("Savings rate: {p}% so far", { p: rep.month.rate }) : "—"} testid="money-rep-in" />
-        <Tile label={tr("Spent this month")} value={amt(rep.month.out, rep.cur)} tone="neg" sub={T("{n} entries across {c} categories", { n: rep.month.count, c: rep.month.cats.length })} testid="money-rep-out" />
+        <Tile label={now ? tr("Earned this month") : earnedL} value={amt(rep.month.in, rep.cur)} tone="pos" sub={rep.month.rate != null ? T("Savings rate: {p}% so far", { p: rep.month.rate }) : "—"} testid="money-rep-in" />
+        <Tile label={now ? tr("Spent this month") : spentL} value={amt(rep.month.out, rep.cur)} tone="neg" sub={T("{n} entries across {c} categories", { n: rep.month.count, c: rep.month.cats.length })} testid="money-rep-out" />
         <Tile label={tr("Bills · Next 7 days")} value={amt(rep.dueTotal, rep.cur)} tone={rep.due.length ? "warn" : ""} sub={rep.due.length ? rep.due.slice(0, 2).map((d) => d.note + " " + dayLabel(d.date)).join(" · ") : tr("No bills due this week.")} testid="money-rep-bills" />
       </div>
       <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: "minmax(0,1.15fr) minmax(0,0.85fr)" }}>

@@ -11753,4 +11753,12 @@ export const BN = {
   "Details ({n})": "বিস্তারিত ({n})",
   "Open the photos": "ছবিগুলো খুলুন",
   "Looking in your notes…": "আপনার নোটে খুঁজছি…",
+  "Spent · {p}": "খরচ · {p}",
+  "Earned · {p}": "আয় · {p}",
+  "Pick the dates": "তারিখ বেছে নিন",
+  "All categories": "সব বিভাগ",
+  "Back to this month": "এই মাসে ফিরুন",
+  "Nothing in these dates.": "এই তারিখগুলোতে কিছু নেই।",
+  "Change the dates": "তারিখ বদলান",
+  "Months": "মাস",
 };

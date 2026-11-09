@@ -11754,4 +11754,12 @@ export const IDN = {
   "Details ({n})": "Detail ({n})",
   "Open the photos": "Buka foto",
   "Looking in your notes…": "Mencari di catatanmu…",
+  "Spent · {p}": "Dibelanjakan · {p}",
+  "Earned · {p}": "Diterima · {p}",
+  "Pick the dates": "Pilih tanggal",
+  "All categories": "Semua kategori",
+  "Back to this month": "Kembali ke bulan ini",
+  "Nothing in these dates.": "Tidak ada di tanggal ini.",
+  "Change the dates": "Ubah tanggal",
+  "Months": "Bulan",
 };

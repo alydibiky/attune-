@@ -11754,4 +11754,12 @@ export const UR = {
   "Details ({n})": "تفصیلات ({n})",
   "Open the photos": "تصاویر کھولیں",
   "Looking in your notes…": "آپ کے نوٹس میں دیکھ رہا ہوں…",
+  "Spent · {p}": "خرچ · {p}",
+  "Earned · {p}": "آمدنی · {p}",
+  "Pick the dates": "تاریخیں چنیں",
+  "All categories": "تمام زمرے",
+  "Back to this month": "اس مہینے پر واپس",
+  "Nothing in these dates.": "ان تاریخوں میں کچھ نہیں۔",
+  "Change the dates": "تاریخیں بدلیں",
+  "Months": "مہینے",
 };

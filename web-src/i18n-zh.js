@@ -11753,4 +11753,12 @@ export const ZH = {
   "Details ({n})": "详细信息（{n}）",
   "Open the photos": "打开照片",
   "Looking in your notes…": "正在查看你的笔记…",
+  "Spent · {p}": "支出 · {p}",
+  "Earned · {p}": "收入 · {p}",
+  "Pick the dates": "选择日期",
+  "All categories": "所有类别",
+  "Back to this month": "回到本月",
+  "Nothing in these dates.": "这些日期内没有记录。",
+  "Change the dates": "更改日期",
+  "Months": "月份",
 };

@@ -11754,4 +11754,12 @@ export const HI = {
   "Details ({n})": "विवरण ({n})",
   "Open the photos": "फ़ोटो खोलें",
   "Looking in your notes…": "आपके नोट्स में देख रहा हूँ…",
+  "Spent · {p}": "खर्च · {p}",
+  "Earned · {p}": "कमाई · {p}",
+  "Pick the dates": "तारीखें चुनें",
+  "All categories": "सभी श्रेणियाँ",
+  "Back to this month": "इस महीने पर लौटें",
+  "Nothing in these dates.": "इन तारीखों में कुछ नहीं।",
+  "Change the dates": "तारीखें बदलें",
+  "Months": "महीने",
 };

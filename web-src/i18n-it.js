@@ -11754,4 +11754,12 @@ export const IT = {
   "Details ({n})": "Dettagli ({n})",
   "Open the photos": "Apri le foto",
   "Looking in your notes…": "Cerco nelle tue note…",
+  "Spent · {p}": "Speso · {p}",
+  "Earned · {p}": "Guadagnato · {p}",
+  "Pick the dates": "Scegli le date",
+  "All categories": "Tutte le categorie",
+  "Back to this month": "Torna a questo mese",
+  "Nothing in these dates.": "Niente in queste date.",
+  "Change the dates": "Cambia le date",
+  "Months": "Mesi",
 };

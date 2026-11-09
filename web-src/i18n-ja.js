@@ -11753,4 +11753,12 @@ export const JA = {
   "Details ({n})": "詳細（{n}）",
   "Open the photos": "写真を開く",
   "Looking in your notes…": "あなたのメモを探しています…",
+  "Spent · {p}": "支出 · {p}",
+  "Earned · {p}": "収入 · {p}",
+  "Pick the dates": "日付を選ぶ",
+  "All categories": "すべてのカテゴリ",
+  "Back to this month": "今月に戻る",
+  "Nothing in these dates.": "この期間には何もありません。",
+  "Change the dates": "日付を変更",
+  "Months": "月",
 };

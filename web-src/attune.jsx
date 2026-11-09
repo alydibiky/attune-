@@ -50,7 +50,7 @@ import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
 import { markTried } from "./guide-areas.js";
 import { MoneyCalm, MoneyReport, MoneyBox, MoneyPhoneHead, RightNow } from "./money-calm-ui.jsx";   // v7.2 Money in two levels (Gemini Area 1)
-import { moneyReport, zakatFromSnapshot, ledgerCsv } from "./money-report.js";
+import { moneyReport, zakatFromSnapshot, ledgerCsv, usedCats } from "./money-report.js";
 import { findings as guardianFindings, loadGuardian } from "./guardian.js";
 import { sharePdf } from "./share-pdf.js";
 import { fmt as fmtMoneyPlain } from "./money-calm.js";
@@ -6233,6 +6233,10 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
   const allRep = React.useMemo(() => moneyReport(loadLedger(), { ar: arUI }), [ver, view, arUI]);
   const moneyPanes = React.useMemo(() => { try { return panesFor(loadLedger()); } catch (e) { return MONEY_PANES; } }, [ver, view, pane]);
   const rep = React.useMemo(() => (account ? moneyReport(loadLedger(), { account, ar: arUI }) : allRep), [allRep, account]);
+  // v9.9.8 P1 (Ali): the Money Report's own dates + category (‹ › months, From / To, a category); Home keeps this month
+  const [period, setPeriod] = React.useState(null);
+  const repR = React.useMemo(() => (period ? moneyReport(loadLedger(), { account, ar: arUI, ...period }) : rep), [rep, period, account, arUI, ver]);
+  const repCats = React.useMemo(() => { try { return usedCats(loadLedger(), arUI); } catch (e) { return []; } }, [ver, arUI]);
   const [ready, setReady] = React.useState(false);
   const [snapshot, setSnapshot] = React.useState(null);
   const [feed, setFeed] = React.useState([]);
@@ -6483,7 +6487,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     setListening(false);
   } : null;
   const exportCsv = async () => {
-    const name = "attune-money-" + rep.month.from.slice(0, 7) + ".csv", text = ledgerCsv(rep, { ar: arUI });
+    const name = "attune-money-" + repR.month.from.slice(0, 7) + ".csv", text = ledgerCsv(repR, { ar: arUI });
     try { if (NATIVE) { await nativeCall("saveFile", { name, mime: "text/csv", text }); flash(tr("Saved {n}", { n: name })); return; } } catch (e) {}
     try { const url = URL.createObjectURL(new Blob([text], { type: "text/csv" })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); } catch (e) {}
   };
@@ -6491,11 +6495,11 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     const esc = (x) => String(x == null ? "" : x).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const f = (n) => fmtMoneyPlain(n);
     const html = `<!doctype html><html dir="${arUI ? "rtl" : "ltr"}"><head><meta charset="utf-8"><style>body{font-family:system-ui,"Noto Sans Arabic",sans-serif;color:#16201C;margin:32px;font-size:12px}h1{font-size:20px;margin:0 0 4px}p{color:#4A5852;margin:0 0 16px}.k{display:inline-block;margin:0 18px 12px 0}.k b{display:block;font-size:16px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:6px 8px;border-bottom:1px solid #E2EAE5;text-align:start}td.n{text-align:end;font-variant-numeric:tabular-nums}</style></head><body>
-<h1>${esc(tr("Money Report"))} · ${esc(rep.month.from.slice(0, 7))}</h1><p>${esc(account ? (rep.accounts.find((a) => a.id === account) || {}).name : tr("All accounts"))}</p>
-<div class="k">${esc(tr("Balance"))}<b>${f(rep.balance)} ${rep.cur}</b></div><div class="k">${esc(tr("Earned this month"))}<b>${f(rep.month.in)} ${rep.cur}</b></div><div class="k">${esc(tr("Spent this month"))}<b>${f(rep.month.out)} ${rep.cur}</b></div>
-<h3>${esc(tr("Spending by category"))}</h3><table>${rep.month.cats.map((c) => `<tr><td>${esc(c.name)}</td><td class="n">${f(c.amount)} ${rep.cur}</td><td class="n">${c.pct}%</td></tr>`).join("")}</table>
-<h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${esc(tr("Account"))}</th><th>${esc(tr("Amount"))}</th></tr>${rep.rows.map((t) => `<tr><td>${t.date}</td><td>${esc(t.note || t.catName)}</td><td>${esc(t.catName)}</td><td>${esc(t.account)}</td><td class="n">${t.type === "expense" ? "−" : "+"}${f(t.amount)} ${t.currency}</td></tr>`).join("")}</table></body></html>`;
-    sharePdf({ html, name: "attune-money-" + rep.month.from.slice(0, 7), text: tr("Money Report"), flash });
+<h1>${esc(tr("Money Report"))} · ${esc(repR.period && !repR.period.whole ? repR.period.from + " – " + repR.period.to : repR.month.from.slice(0, 7))}${repR.period && repR.period.cat ? " · " + esc(repR.period.catName) : ""}</h1><p>${esc(account ? (repR.accounts.find((a) => a.id === account) || {}).name : tr("All accounts"))}</p>
+<div class="k">${esc(tr("Balance"))}<b>${f(repR.balance)} ${repR.cur}</b></div><div class="k">${esc(tr("Earned this month"))}<b>${f(repR.month.in)} ${repR.cur}</b></div><div class="k">${esc(tr("Spent this month"))}<b>${f(repR.month.out)} ${repR.cur}</b></div>
+<h3>${esc(tr("Spending by category"))}</h3><table>${repR.month.cats.map((c) => `<tr><td>${esc(c.name)}</td><td class="n">${f(c.amount)} ${repR.cur}</td><td class="n">${c.pct}%</td></tr>`).join("")}</table>
+<h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${esc(tr("Account"))}</th><th>${esc(tr("Amount"))}</th></tr>${repR.rows.map((t) => `<tr><td>${t.date}</td><td>${esc(t.note || t.catName)}</td><td>${esc(t.catName)}</td><td>${esc(t.account)}</td><td class="n">${t.type === "expense" ? "−" : "+"}${f(t.amount)} ${t.currency}</td></tr>`).join("")}</table></body></html>`;
+    sharePdf({ html, name: "attune-money-" + repR.month.from.slice(0, 7), text: tr("Money Report"), flash });
   };
   const openLedger = (sc) => {
     setMoreOpen(false); setAddOpen(false); const s = String(sc || "home");
@@ -6555,7 +6559,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
   const addTxnsNow = (txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); setTimeout(() => setVer((x) => x + 1), 400); };
   // v8.8 (Ali: "read the notes I write when I put an expense or income"): money a note says moved, one tap to add
   const inbox = <><NotesMoney onAdd={addTxnsNow} /><PayInbox N={NATIVE} ready={ready} onAdd={addTxnsNow} /></>;
-  const paneBody = pane === "trends" ? <MoneyReport rep={rep} all={allRep} wide={wide} account={account} back={() => setPane("home")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf} openLedger={openLedger} openZakat={() => setPane("zakat")} />
+  const paneBody = pane === "trends" ? <MoneyReport rep={repR} setPeriod={setPeriod} cats={repCats} all={allRep} wide={wide} account={account} back={() => setPane("home")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf} openLedger={openLedger} openZakat={() => setPane("zakat")} />
     : pane === "accounts" ? <AccountsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
     : pane === "goals" ? <GoalsPane L={ledgerNow} run={runDo} flash={flash} Head={MoneyHead} Card={MoneyCard} />
     : pane === "bills" ? <BillsPane L={ledgerNow} wide={wide} openLedger={openLedger} saveFile={saveText} />
@@ -6565,7 +6569,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     : view === "list" ? <TxListPane L={ledgerNow} cats={mcats} account={listAcc} onOpen={(id) => setMsheet({ k: "tx", id })} back={() => setView("calm")} Head={MoneyHead} />
     : view === "settings" ? <LedgerSettings L={ledgerNow} run={runDo} flash={flash} back={() => setView("calm")} Head={MoneyHead} Card={MoneyCard} />
     : view === "report"
-    ? <MoneyReport rep={rep} all={allRep} wide={wide} account={account} back={() => setView("calm")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf}
+    ? <MoneyReport rep={repR} setPeriod={setPeriod} cats={repCats} all={allRep} wide={wide} account={account} back={() => setView("calm")} zak={zakNow} exportCsv={exportCsv} exportPdf={exportPdf}
         openLedger={() => openLedger("home")} openZakat={() => openLedger("zakat")} />
     : <MoneyCalm rep={rep} all={allRep} account={account} setAccount={setAccount} wide={wide} zak={zakNow} inbox={inbox}
         box={<MoneyBox wide={wide} busy={boxBusy} onSubmit={boxSubmit} onReceipt={fromPhoto} onVoice={boxVoice} listening={listening} />}

@@ -11754,4 +11754,12 @@ export const TRK = {
   "Details ({n})": "Ayrıntılar ({n})",
   "Open the photos": "Fotoğrafları aç",
   "Looking in your notes…": "Notlarında arıyorum…",
+  "Spent · {p}": "Harcanan · {p}",
+  "Earned · {p}": "Kazanılan · {p}",
+  "Pick the dates": "Tarihleri seç",
+  "All categories": "Tüm kategoriler",
+  "Back to this month": "Bu aya dön",
+  "Nothing in these dates.": "Bu tarihlerde bir şey yok.",
+  "Change the dates": "Tarihleri değiştir",
+  "Months": "Aylar",
 };

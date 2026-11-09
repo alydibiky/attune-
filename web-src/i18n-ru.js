@@ -11753,4 +11753,12 @@ export const RU = {
   "Details ({n})": "Подробности ({n})",
   "Open the photos": "Открыть фото",
   "Looking in your notes…": "Ищу в ваших заметках…",
+  "Spent · {p}": "Потрачено · {p}",
+  "Earned · {p}": "Получено · {p}",
+  "Pick the dates": "Выберите даты",
+  "All categories": "Все категории",
+  "Back to this month": "Вернуться к этому месяцу",
+  "Nothing in these dates.": "За эти даты ничего нет.",
+  "Change the dates": "Изменить даты",
+  "Months": "Месяцы",
 };

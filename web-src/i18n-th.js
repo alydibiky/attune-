@@ -11753,4 +11753,12 @@ export const TH = {
   "Details ({n})": "รายละเอียด ({n})",
   "Open the photos": "เปิดรูปภาพ",
   "Looking in your notes…": "กำลังค้นในโน้ตของคุณ…",
+  "Spent · {p}": "ใช้จ่าย · {p}",
+  "Earned · {p}": "รายรับ · {p}",
+  "Pick the dates": "เลือกวันที่",
+  "All categories": "ทุกหมวด",
+  "Back to this month": "กลับไปเดือนนี้",
+  "Nothing in these dates.": "ไม่มีรายการในช่วงนี้",
+  "Change the dates": "เปลี่ยนวันที่",
+  "Months": "เดือน",
 };

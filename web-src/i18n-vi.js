@@ -11753,4 +11753,12 @@ export const VI = {
   "Details ({n})": "Chi tiết ({n})",
   "Open the photos": "Mở ảnh",
   "Looking in your notes…": "Đang tìm trong ghi chú của bạn…",
+  "Spent · {p}": "Đã chi · {p}",
+  "Earned · {p}": "Đã thu · {p}",
+  "Pick the dates": "Chọn ngày",
+  "All categories": "Tất cả danh mục",
+  "Back to this month": "Về tháng này",
+  "Nothing in these dates.": "Không có gì trong khoảng này.",
+  "Change the dates": "Đổi ngày",
+  "Months": "Tháng",
 };

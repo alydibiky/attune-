@@ -11753,4 +11753,12 @@ export const FA = {
   "Details ({n})": "جزئیات ({n})",
   "Open the photos": "باز کردن عکس‌ها",
   "Looking in your notes…": "در یادداشت‌هایت می‌گردم…",
+  "Spent · {p}": "خرج‌شده · {p}",
+  "Earned · {p}": "درآمد · {p}",
+  "Pick the dates": "تاریخ‌ها را انتخاب کن",
+  "All categories": "همهٔ دسته‌ها",
+  "Back to this month": "برگشت به این ماه",
+  "Nothing in these dates.": "در این تاریخ‌ها چیزی نیست.",
+  "Change the dates": "تغییر تاریخ‌ها",
+  "Months": "ماه‌ها",
 };

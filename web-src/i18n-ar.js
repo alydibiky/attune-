@@ -8824,4 +8824,12 @@ export const AR = {
   "Details ({n})": "التفاصيل ({n})",
   "Open the photos": "افتح الصور",
   "Looking in your notes…": "بدوّر في ملاحظاتك…",
+  "Spent · {p}": "المصروف · {p}",
+  "Earned · {p}": "الدخل · {p}",
+  "Pick the dates": "اختار التواريخ",
+  "All categories": "كل الفئات",
+  "Back to this month": "ارجع للشهر ده",
+  "Nothing in these dates.": "مفيش حاجة في التواريخ دي.",
+  "Change the dates": "غيّر التواريخ",
+  "Months": "الشهور",
 };

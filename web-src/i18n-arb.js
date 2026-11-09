@@ -11745,4 +11745,12 @@ export const ARB = {
   "Details ({n})": "التفاصيل ({n})",
   "Open the photos": "افتح الصور",
   "Looking in your notes…": "أبحث في ملاحظاتك…",
+  "Spent · {p}": "المصروف · {p}",
+  "Earned · {p}": "الدخل · {p}",
+  "Pick the dates": "اختر التواريخ",
+  "All categories": "كل الفئات",
+  "Back to this month": "العودة إلى هذا الشهر",
+  "Nothing in these dates.": "لا شيء في هذه التواريخ.",
+  "Change the dates": "غيّر التواريخ",
+  "Months": "الأشهر",
 };

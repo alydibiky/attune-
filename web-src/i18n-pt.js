@@ -11754,4 +11754,12 @@ export const PT = {
   "Details ({n})": "Detalhes ({n})",
   "Open the photos": "Abrir as fotos",
   "Looking in your notes…": "Procurando nas suas notas…",
+  "Spent · {p}": "Gasto · {p}",
+  "Earned · {p}": "Recebido · {p}",
+  "Pick the dates": "Escolha as datas",
+  "All categories": "Todas as categorias",
+  "Back to this month": "Voltar para este mês",
+  "Nothing in these dates.": "Nada nessas datas.",
+  "Change the dates": "Mudar as datas",
+  "Months": "Meses",
 };

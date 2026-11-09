@@ -53,7 +53,7 @@ export function catName(L, id, ar = false) {
 /** Everything the calm view and the Report show, at `now`, for one account (`account` = its id) or all money accounts.
  *  → { cur, others, accounts, balance, month: { in, out, net, count, rate, from, to, daysLeft, cats, sources, pace }, weeks, months,
  *      recent, rows, due, dueTotal } */
-export function moneyReport(L, { now = Date.now(), account = null, ar = false } = {}) {
+export function moneyReport(L, { now = Date.now(), account = null, ar = false, from = null, to = null, cat = null } = {}) {
   const cur = homeCurrency(L);
   const accounts = accountsOf(L);
   const byId = Object.fromEntries(accounts.map((a) => [a.id, a]));
@@ -61,10 +61,18 @@ export function moneyReport(L, { now = Date.now(), account = null, ar = false } 
   const curOf = (id) => (byId[id] ? byId[id].currency : null);
   // the entries that count: income / expense in a money account of the main currency (or of the chosen account)
   const inScope = (t) => (t.type === "income" || t.type === "expense") && byId[t.account] && (acc ? t.account === acc.id : curOf(t.account) === cur);
-  const txns = ((L && L.txns) || []).filter(inScope);
+  // v9.9.8 (Ali picked P1 + "a specific date and category at the same time"): any period (from–to) and one category; without
+  // them, this month so far, as before. Every number below follows: totals, both pies, the weeks, the 6 months, the list, exports.
+  const txns = ((L && L.txns) || []).filter(inScope).filter((t) => !cat || (t.cat || "other") === cat);
   const sum = (list, type) => r2(list.filter((t) => t.type === type).reduce((a, t) => a + (Number(t.amount) || 0), 0));
-  const d = new Date(now), y = d.getFullYear(), m = d.getMonth(), today = isoDay(now);
-  const monthFrom = isoDay(new Date(y, m, 1)), monthEnd = isoDay(new Date(y, m + 1, 0));
+  const realToday = isoDay(now), ISO = /^\d{4}-\d{2}-\d{2}$/;
+  let pFrom = ISO.test(String(from || "")) ? from : null, pTo = ISO.test(String(to || "")) ? to : null;
+  if (pFrom && pTo && pFrom > pTo) [pFrom, pTo] = [pTo, pFrom];
+  const endDay = pTo ? (pTo < realToday ? pTo : realToday) : realToday;   // nothing counted after today
+  const d = new Date(endDay + "T12:00:00"), y = d.getFullYear(), m = d.getMonth(), today = endDay;
+  const monthFrom = pFrom || isoDay(new Date(y, m, 1)), monthEnd = pTo || isoDay(new Date(y, m + 1, 0));
+  const whole = monthFrom.slice(8) === "01" && monthEnd === isoDay(new Date(+monthFrom.slice(0, 4), +monthFrom.slice(5, 7), 0));
+  const current = monthFrom === isoDay(new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1)) && whole;
   const inMonth = txns.filter((t) => t.date >= monthFrom && t.date <= today);
   const mIn = sum(inMonth, "income"), mOut = sum(inMonth, "expense");
   // where the money went this month: by category, biggest first; past the 4th they are one "other" slice
@@ -92,7 +100,7 @@ export function moneyReport(L, { now = Date.now(), account = null, ar = false } 
   // pace: spent so far this month against the same days of last month
   const dom = d.getDate(), lastFrom = isoDay(new Date(y, m - 1, 1)), lastTo = isoDay(new Date(y, m - 1, Math.min(dom, new Date(y, m, 0).getDate())));
   const lastSoFar = sum(txns.filter((t) => t.date >= lastFrom && t.date <= lastTo), "expense");
-  const pace = lastSoFar > 0 ? Math.round(((mOut - lastSoFar) / lastSoFar) * 100) : null;
+  const pace = current && lastSoFar > 0 ? Math.round(((mOut - lastSoFar) / lastSoFar) * 100) : null;
   // the last 4 weeks (7 days each, this week last) and the weekly target from the monthly budget
   const t0 = new Date(y, m, dom).getTime(), weeks = [];
   for (let w = 3; w >= 0; w--) {
@@ -123,7 +131,8 @@ export function moneyReport(L, { now = Date.now(), account = null, ar = false } 
     cur: acc ? acc.currency : cur, account: acc ? acc.id : null, accounts, balance,
     others: Object.entries(oth).map(([currency, v]) => ({ currency, balance: v })),
     month: { in: mIn, out: mOut, net: r2(mIn - mOut), count: inMonth.length, rate: mIn > 0 ? Math.round(((mIn - mOut) / mIn) * 1000) / 10 : null,
-      from: monthFrom, to: monthEnd, daysLeft: Math.max(0, Math.round((new Date(monthEnd + "T12:00:00") - new Date(today + "T12:00:00")) / DAY)), cats, sources, pace },
+      from: monthFrom, to: monthEnd, daysLeft: current ? Math.max(0, Math.round((new Date(monthEnd + "T12:00:00") - new Date(today + "T12:00:00")) / DAY)) : 0, cats, sources, pace },
+    period: { from: monthFrom, to: monthEnd, whole, current, cat: cat || null, catName: cat ? catName(L, cat, ar) : "" },
     weeks, budget, weekTarget: budget ? Math.round(budget / 4.3) : 0, months,
     recent: sorted.slice(0, 3).map(row), rows: sorted.filter((t) => t.date >= monthFrom && t.date <= today).map(row),
     due, dueTotal: r2(due.filter((x) => x.currency === (acc ? acc.currency : cur)).reduce((a, x) => a + x.amount, 0)),
@@ -152,4 +161,15 @@ export function ledgerCsv(rep, { ar = false } = {}) {
   const q = (s) => /[",\n]/.test(String(s)) ? '"' + String(s).replace(/"/g, '""') + '"' : String(s);
   const lines = [head.join(",")].concat(rep.rows.map((t) => [t.date, t.note || t.catName, t.catName, t.account, t.type, (t.type === "expense" ? -t.amount : t.amount), t.currency].map(q).join(",")));
   return "﻿" + lines.join("\r\n") + "\r\n";
+}
+
+/** v9.9.8 P1: the calendar month before / after a period's month → { from, to } (whole months). */
+export function shiftMonth(fromIso, k) {
+  const y = +String(fromIso).slice(0, 4), m = +String(fromIso).slice(5, 7) - 1 + k, a = new Date(y, m, 1), b = new Date(y, m + 1, 0);
+  return { from: isoDay(a), to: isoDay(b) };
+}
+/** The categories that have money in this ledger (for the filter): [{ id, name }] by use. */
+export function usedCats(L, ar = false) {
+  const n = {}; for (const t of (L && L.txns) || []) if (t.type === "income" || t.type === "expense") { const c = t.cat || "other"; n[c] = (n[c] || 0) + 1; }
+  return Object.keys(n).sort((a, b) => n[b] - n[a]).map((id) => ({ id, name: catName(L, id, ar) }));
 }
