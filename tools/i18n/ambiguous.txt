@@ -532,7 +532,7 @@ shelf-ui.jsx: {m.remindAt > Date.now() ? <p className="text-xs font-bold tabular
 attune.jsx: <label className="att-icon-btn" title={tr("Photo")}>
 chat.jsx: <label className={MINIMAL ? "hidden" : "w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:bg-[var(--c-surf-2)] active
 chat.jsx: <label htmlFor="att-pick-photo" className="flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] ho
-docs-ui.jsx: <label className={B2 + " cursor-pointer"} data-testid="doc-photo-add"><ImagePlus size={13} />{ids.length ? tr("Photo") : tr("Add photos")}
+docs-ui.jsx: {edit && !hideStrip ? <label className={B2 + " cursor-pointer"} data-testid="doc-photo-add"><ImagePlus size={13} />{ids.length ? tr("Photo")
 mind-ui.jsx: const r = remember({ kind: "photo", title: (j && j.title) || file.name || tr("Photo"), text: text || (j && j.summary) || "", output: "", tag
 mind-ui.jsx: <button onClick={() => fileRef.current && fileRef.current.click()} className={btnS}><Camera size={12} className="inline me-1" />{tr("Photo")
 shelf-ui.jsx: <button className={btn} onClick={() => photoRef.current && photoRef.current.click()}><ImagePlus size={13} />{tr("Photo")}</button>
@@ -588,7 +588,7 @@ attune.jsx: <div className="calm att-scroll w-full max-w-3xl max-h-[86vh] overfl
 attune.jsx: <div className="flex items-center justify-between"><h2 className="text-[22px] font-black tracking-tight text-[var(--c-ink)] flex items-cente
 attune.jsx: <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-2 px-0.5">{tr("Settings")}</p>
 attune.jsx: <summary className="cursor-pointer select-none text-[13.5px] text-slate-300">{tr("Settings")}</summary>
-docs-ui.jsx: <button onClick={() => setGear(gear === f.id ? "" : f.id)} aria-label={tr("Settings")} aria-expanded={gear === f.id} className={B2 + " w-9 j
+docs-ui.jsx: {edit ? <button onClick={() => setGear(gear === f.id ? "" : f.id)} aria-label={tr("Settings")} aria-expanded={gear === f.id} className={B2 +
 
 ## Plan
 attune.jsx: <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[20px] border border-[var(--c-ln)] bg-
@@ -646,6 +646,11 @@ care-ui.jsx: <button className={btnP} onClick={() => { const d = ensureMember();
 chat.jsx: onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.kno
 desk-ui.jsx: <div className="flex gap-2"><button onClick={() => { const t = sure.text; setSure(null); let r = null; try { r = doIt(t, { force: true }); }
 home-ui.jsx: <button type="submit" className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} data-testid="home-ask-save">{tr("Save")}</button></for
+
+## Details
+attune.jsx: <MenuItem testid="engine-details" onClick={() => setDetails(!details)}>{details ? tr("Hide details") : tr("Details")}</MenuItem>
+attune.jsx: <details className="mb-4" data-testid="engine-device-details"><summary className="cursor-pointer select-none text-[13px] font-bold text-slat
+radar-ui.jsx: <span className={U.label + " block pt-1.5"}>{tr("Details")}</span><DocDetails x={{ ...live, doc: f.doc || live.doc }} onPatch={onPatch} unlo
 
 ## Downloading…
 attune.jsx: <div className="flex items-center gap-2 text-[13px] text-slate-300"><span className="flex-1 truncate">{n.dlStage || tr("Downloading…")}</spa
