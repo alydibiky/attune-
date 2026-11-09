@@ -32,6 +32,7 @@ export function timeline({ reminders = [], radar = null, life = null, ledger = n
   const today = iso(now), until = iso(now + days * DAY), from = iso(now - back * DAY), out = [];
   const add = (x) => { if (x.date >= from && x.date <= until) out.push({ late: x.date < today, ...x }); };
   for (const r of reminders || []) {
+    if (life && /^life-/.test(String(r.id || ""))) continue;   // v9.9.14: a plan's own reminder — the plan itself is on the list (no "Maid" twice)
     const t = nextRing(r, now); if (t == null) continue;
     add({ id: "r:" + r.id, date: iso(t), time: t, kind: "reminder", what: r.title || "Reminder", page: "reminders", slip: ["Only a reminder — nothing happens by itself if you skip it."] });
   }

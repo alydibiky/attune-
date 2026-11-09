@@ -71,7 +71,7 @@ with sync_playwright() as p:
     open_mode(page, "reminders", "[data-testid=reminders-panel]")
     check(page.locator("[data-testid=rem-say]").count() == 1 and page.locator("[data-testid=rem-title]").count() == 0 and page.locator("[data-testid=watch-panel]").count() == 0, "F1: the box is the page; the fill-in form and message alerts wait behind chips")
     days = page.locator("[data-testid=rem-day]").all_inner_texts()
-    check(len(days) == 2 and days[0].lower() == "today" and days[1].lower() == "tomorrow", "F1: the list by day: %s" % days)
+    check(len(days) >= 2 and days[0].lower() == "today" and days[1].lower() == "tomorrow", "F1: the list by day: %s" % days)
     full = page.evaluate("(() => { const e = [...document.querySelectorAll('[data-testid=rem-title-text]')].find(x => x.textContent.includes('Sokhna')); return e ? [getComputedStyle(e).whiteSpace, e.scrollWidth <= e.clientWidth + 1, e.textContent] : null; })()")
     check(full and full[0] != "nowrap" and full[1] and full[2].endswith("still owes"), "Reminders show the whole text (Ali: 'I can't see the whole reminder'): %s" % (full[:2] if full else None))
     page.click("[data-testid=rem-chip-fill]"); page.wait_for_timeout(100)

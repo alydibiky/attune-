@@ -81,6 +81,7 @@ scout-ui.jsx: <b className="block c-num text-[20px] font-black">{ps.length ? sho
 
 ## Hide
 agent-ui.jsx: <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[44px] text-start text-[15px] text-[var(--c-ink)] font-extrabold flex ite
+agents-ui.jsx: {others.length ? <button onClick={() => setMore(!more)} className={U.btnS} data-testid="agent-best-more">{more ? tr("Hide") : T("See {n} mor
 home-ui.jsx: <button onClick={() => { try { localStorage.setItem(key, "1"); } catch (e) {} setHidden(true); }} className="c-sub text-[12px] min-h-[36px] 
 paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
 paylog-ui.jsx: <button onClick={close} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted}>{tr("Hide")}</button></div>
@@ -95,6 +96,30 @@ radar-ui.jsx: <button className={U.btnS} onClick={() => onEdit(x)} data-testid="
 spaces-ui.jsx: <button onClick={() => setEdit({ ...a, startersText: (a.starters || []).join("\n") })} className={iconBtn} title={tr("Edit")}><PenLine size=
 spaces-ui.jsx: <button onClick={() => setEdit({ ...cur })} className={iconBtn} title={tr("Edit")} data-testid="project-edit-btn"><PenLine size={16} /></but
 
+## Change
+agents-ui.jsx: {onChange ? <button onClick={onChange} className="min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold border border-[var(--c-ln)]"
+agents-ui.jsx: <CardActions primary={{ label: tr("Order now"), icon: Check, onClick: () => orderNow(a), testid: "agent-order-now" }} secondary={{ label: tr
+code-ui.jsx: <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Ch
+cv-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={() => photoRef.current && photoRef.current.click()}><Camera size={13} />{cv.
+messages-ui.jsx: <div className="flex gap-1.5"><button onClick={() => setOpen(!open)} className={U.btnS + " h-9! min-h-[36px]!"} aria-expanded={open} data-te
+messages-ui.jsx: <button onClick={() => setEdit({ ...a, at: a.next || a.at })} className={U.btnS + " h-9! min-h-[36px]!"} data-testid="msg-edit"><PenLine siz
+money-pages-ui.jsx: return <Card title={tr("What's counted")} right={<button className="text-[13px] font-bold c-acc min-h-[36px]" onClick={() => openLedger("zak
+money-pages-ui.jsx: <button className={U.btnS} onClick={() => openLedger("zakat-settings")} data-testid="zakat-gold-change">{tr("Change")}</button></div> : null
+
+## Checking…
+agents-ui.jsx: <button onClick={() => checkNow(a)} disabled={busy} className={U.btnS + " mt-1"} data-testid="agent-auto-check"><RefreshCw size={14} />{busy
+chat.jsx: onClick={() => checkTeach(m, idx)}>{teaching.checking ? tr("Checking…") : tr("Check & teach")}</button>
+
+## Check now
+agents-ui.jsx: <button onClick={() => checkNow(a)} disabled={busy} className={U.btnS + " mt-1"} data-testid="agent-auto-check"><RefreshCw size={14} />{busy
+agents-ui.jsx: return <CardActions primary={{ label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), busy, testid: "agent-check" }}
+agents-ui.jsx: <CardActions primary={{ label: s.state === "open" ? tr("Open now") : tr("Check now"), icon: s.state === "open" ? ExternalLink : RefreshCw, b
+agents-ui.jsx: <CardActions primary={s.drop ? { label: tr("Ask for the difference"), icon: Share2, onClick: share, testid: "protect-ask" } : { label: tr("C
+agents-ui.jsx: secondary={s.drop ? { label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), testid: "protect-check" } : null} />
+scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check n
+scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check n
+speed-ui.jsx: className={K.btnS}>{tr("Check now")}</button>
+
 ## Back
 agents-ui.jsx: <div className="flex items-center gap-2"><button onClick={back} className="w-11 h-11 grid place-items-center rounded-full border border-[var
 agents-ui.jsx: <div className="flex items-center gap-2"><button onClick={back} aria-label={tr("Back")} className="w-10 h-10 rounded-full grid place-items-c
@@ -104,6 +129,14 @@ attune.jsx: : <button onClick={goBack} aria-label={tr("Back")} className="att-ic
 attune.jsx: {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[52px] px-5 rounded-full border border-[var(--c-ln)] font-bold" data-
 cv-ui.jsx: <button onClick={onClose} className="w-11 h-11 -ms-1 grid place-items-center rounded-[12px] text-[var(--c-ink)]" aria-label={tr("Back")}><Ch
 daily-ui.jsx: return <button onClick={onClick} className="min-h-[44px] pe-2 text-[var(--c-mut)] text-[13.5px] font-bold flex items-center gap-1"><ChevronL
+
+## Check
+agents-ui.jsx: try { N && N.agentWatchWords && N.agentWatchWords(JSON.stringify({ newBest: tr("Agents · a new best price"), tap: tr("Tap to open Agents."),
+attune.jsx: {tr("Check")} {t.audit.fabricated.join(", ")} — {t.audit.fabricated.length === 1 ? tr("that figure") : tr("those figures")} {t.audit.fabrica
+attune.jsx: <button className="h-10 px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold" onClick={start} disabled={bu
+cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job read
+lesson-ui.jsx: <button className={btnP + " shrink-0"} disabled={!answer} onClick={check} data-testid="lesson-check">{tr("Check")}</button>
+scamcheck-ui.jsx: <button onClick={() => check()} disabled={!text.trim()} className={U.btnP + " flex-1"} data-testid="scam-go">{tr("Check")}</button>
 
 ## Message alerts
 agents-ui.jsx: ...(alerts.some((x) => !String(x.id).startsWith("agent-")) ? [{ id: "alerts", label: tr("Message alerts"), dot: false, kind: "alert" }] : []
@@ -127,6 +160,11 @@ chat.jsx: <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[va
 chat.jsx: <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex i
 desk-ui.jsx: <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
 email-ui.jsx: {canSend ? <button onClick={send} disabled={busy || !body.trim()} className={U.btnP} data-testid="email-send">{tr("Send")}</button> : null}
+
+## Start
+agents-ui.jsx: <div className="flex gap-2"><button onClick={() => start(planDraft.sentence, { ...planDraft.d, planOk: true })} className={U.btnP} data-test
+attune.jsx: <div className="flex gap-2"><button onClick={start} className="flex-1 min-h-[46px] rounded-[14px] bg-[var(--c-btn,var(--c-acc))] text-[var(-
+cv-ui.jsx: <div className="grid grid-cols-2 gap-2"><Lbl t={tr("Start")}><In value={it.start} onChange={(v) => upd(i, { start: v })} dir="ltr" /></Lbl><
 
 ## OK
 agents-ui.jsx: <button className={U.btnP + " !h-11 !min-h-[44px]"} data-testid="agents-answer-go">{tr("OK")}</button>
@@ -216,25 +254,6 @@ docs-ui.jsx: {open < ids.length - 1 ? <button onClick={() => setOpen(open + 1)} 
 lesson-ui.jsx: <button className={"w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0 disabled:opacity-40 ms-
 money-pages-ui.jsx: <Head title={tr("Bills report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick={(
 slides-ui.jsx: <button className="absolute inset-y-0 end-0 w-2/3" aria-label={tr("Next")} onClick={next} data-testid="presenter-next" />
-
-## Check now
-agents-ui.jsx: return <CardActions primary={{ label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), busy, testid: "agent-check" }}
-agents-ui.jsx: <CardActions primary={{ label: s.state === "open" ? tr("Open now") : tr("Check now"), icon: s.state === "open" ? ExternalLink : RefreshCw, b
-agents-ui.jsx: <CardActions primary={s.drop ? { label: tr("Ask for the difference"), icon: Share2, onClick: share, testid: "protect-ask" } : { label: tr("C
-agents-ui.jsx: secondary={s.drop ? { label: tr("Check now"), icon: RefreshCw, onClick: () => checkNow(a), testid: "protect-check" } : null} />
-scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check n
-scout-ui.jsx: <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check n
-speed-ui.jsx: className={K.btnS}>{tr("Check now")}</button>
-
-## Change
-agents-ui.jsx: <CardActions primary={{ label: tr("Order now"), icon: Check, onClick: () => orderNow(a), testid: "agent-order-now" }} secondary={{ label: tr
-code-ui.jsx: <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Ch
-cv-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={() => photoRef.current && photoRef.current.click()}><Camera size={13} />{cv.
-messages-ui.jsx: <div className="flex gap-1.5"><button onClick={() => setOpen(!open)} className={U.btnS + " h-9! min-h-[36px]!"} aria-expanded={open} data-te
-messages-ui.jsx: <button onClick={() => setEdit({ ...a, at: a.next || a.at })} className={U.btnS + " h-9! min-h-[36px]!"} data-testid="msg-edit"><PenLine siz
-money-pages-ui.jsx: return <Card title={tr("What's counted")} right={<button className="text-[13px] font-bold c-acc min-h-[36px]" onClick={() => openLedger("zak
-money-pages-ui.jsx: <button className={U.btnS} onClick={() => openLedger("zakat-settings")} data-testid="zakat-gold-change">{tr("Change")}</button></div> : null
-money-sheets-ui.jsx: <span className="text-[13px] font-extrabold text-[var(--c-acc)] shrink-0 flex items-center gap-1">{more ? tr("Done") : tr("Change")}{more ? 
 
 ## today
 agents-ui.jsx: const day = d.toDateString() === n.toDateString() ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateSt
@@ -425,10 +444,6 @@ spaces-ui.jsx: <div className="flex justify-end"><button onClick={() => askHere(
 attune.jsx: {busy ? "…" : tr("Search")}
 shelf-ui.jsx: <button onClick={() => { setQ(""); setView("search"); }} aria-label={tr("Search")} className={ib} data-testid="shelf-search-open"><Search si
 
-## Start
-attune.jsx: <div className="flex gap-2"><button onClick={start} className="flex-1 min-h-[46px] rounded-[14px] bg-[var(--c-btn,var(--c-acc))] text-[var(-
-cv-ui.jsx: <div className="grid grid-cols-2 gap-2"><Lbl t={tr("Start")}><In value={it.start} onChange={(v) => upd(i, { start: v })} dir="ltr" /></Lbl><
-
 ## Copied
 attune.jsx: copy: (t) => { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} },
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)
@@ -457,13 +472,6 @@ attune.jsx: {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => 
 chat.jsx: <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 min-h-[48px] flex items-center gap-2 px-4 rounded-[20
 side-ui.jsx: <span className="w-7 h-7 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center
 side-ui.jsx: {c.space ? <span className="me-1">{c.space}</span> : null}{tr(c.title) || tr("New chat")}</button>
-
-## Check
-attune.jsx: {tr("Check")} {t.audit.fabricated.join(", ")} — {t.audit.fabricated.length === 1 ? tr("that figure") : tr("those figures")} {t.audit.fabrica
-attune.jsx: <button className="h-10 px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold" onClick={start} disabled={bu
-cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job read
-lesson-ui.jsx: <button className={btnP + " shrink-0"} disabled={!answer} onClick={check} data-testid="lesson-check">{tr("Check")}</button>
-scamcheck-ui.jsx: <button onClick={() => check()} disabled={!text.trim()} className={U.btnP + " flex-1"} data-testid="scam-go">{tr("Check")}</button>
 
 ## Stop
 attune.jsx: {askBusy ? tr("Stop") : tr("Ask")}

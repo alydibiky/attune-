@@ -104,7 +104,7 @@ export function todayLine({ fit, ledger, reminders, life, radar, care, scout, co
   }
   // reminders still to come today
   const list = Array.isArray(reminders) ? reminders : (reminders && reminders.items) || [];
-  for (const r of list) if (r && !r.done && r.at >= now && r.at < at(24)) line.push({ t: r.at, app: "reminders", title: r.title || tr("Reminder"), sub: "", open: "reminders", ahead: true });
+  for (const r of list) if (r && !r.done && !(life && /^life-/.test(String(r.id || ""))) && r.at >= now && r.at < at(24)) line.push({ t: r.at, app: "reminders", title: r.title || tr("Reminder"), sub: "", open: "reminders", ahead: true });
   // v6.44 Fleet & rentals: the cranes working today (one line, at 07:00 — the work day) and what needs you there
   // (a cheque overdue / due today, a job past its end, a crane due for service, a store item out) at 09:00, when its alert comes
   if (fleet && fleet.jobs) {

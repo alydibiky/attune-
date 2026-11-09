@@ -24,7 +24,9 @@ with sync_playwright() as p:
     subs = [c for c in life if c.get("kind") == "subscription"]
     check(len(subs) == 1 and subs[0]["title"] == "Google Gemini" and subs[0]["amount"] == 975 and subs[0]["every"] == "month" and 0 in subs[0]["paid"], "no tap: Google Gemini 975 a month is in Subscriptions, this month paid: %s" % subs)
     led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3')).txns")
-    check(len([t for t in led if t["type"] == "expense" and abs(t["amount"] - 975) < 0.01]) == 1, "…and 975 is one expense in Money")
+    # v9.9.13/14 (Ali: "an option whether to deduct from my balance or not — paid by my father"): a NEW subscription asks "Who pays
+    # it?" first — nothing leaves Money before the answer (e2e_v9913agents covers Me → from which account / someone else / nobody)
+    check(len([t for t in led if t["type"] == "expense" and abs(t["amount"] - 975) < 0.01]) == 0, "…and nothing leaves Money before “Who pays it?”")
     card = page.inner_text("[data-testid=autopilot]")
     check("Google Gemini" in card and "added to Subscriptions" in card, "Home: done for you — Google Gemini · 975 · added to Subscriptions (with Undo)")
     page.locator("[data-testid=autopilot] button", has_text="Undo").first.click(); page.wait_for_timeout(400)

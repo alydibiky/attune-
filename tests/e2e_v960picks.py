@@ -46,6 +46,7 @@ with sync_playwright() as p:
     found = page.locator("[data-testid=agents-col-found] [data-testid=agents-board-card]")
     check(found.count() == 1 and "dates" in found.first.inner_text(), "the hotels agent sits in Found and says how many offers on how many dates: " + found.first.inner_text().replace("\n", " "))
     found.first.click(); page.wait_for_selector("[data-testid=agent-chat]")
+    if page.locator("[data-testid=agent-history-toggle]").count(): page.click("[data-testid=agent-history-toggle]"); page.wait_for_timeout(200)   # v9.9.13 AG1: the grid is in History
     check("Haram" in page.locator("[data-testid=agent-chat]").inner_text(), "a tap opens the agent's conversation, starting with what you asked")
     dates = page.locator("[data-testid=agent-grid-date]")
     check(dates.count() == 3, "more than 1 option on more than 1 date: 3 dates in the grid (%d)" % dates.count())

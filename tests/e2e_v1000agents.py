@@ -34,10 +34,11 @@ with sync_playwright() as p:
     # ---- Ali's price watch: no day → asked, then a Booking watch ----
     say(page, "tell me when hotels in masjid el haram become less than 45k in 4 nights")
     check(page.locator("[data-testid=agents-ask]").count() == 1 and "which day" in page.locator("[data-testid=agents-ask]").inner_text(), "no day in the sentence → the agent asks from which day")
-    page.fill("[data-testid=agents-answer]", "10 December"); page.click("[data-testid=agents-answer-go]"); page.wait_for_timeout(300)
+    page.fill("[data-testid=agents-answer]", "10 December"); page.click("[data-testid=agents-answer-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1; page.wait_for_timeout(300)
     card = page.locator("[data-testid=agent-watch]")
     check(card.count() == 1 and "EGP 45,000" in card.inner_text() and "2026-12-10" in card.inner_text() or "12-10" in card.inner_text(), "a price watch: Hotels · Masjid al-Haram · 4 nights, under EGP 45,000: " + card.inner_text()[:120].replace("\n", " · "))
     plan = page.evaluate("window.__plan")
+    page.wait_for_timeout(400); plan = page.evaluate("window.__plan")   # v9.9.13: Start comes after the plan card
     check(plan and len(plan) == 1 and "booking.com" in plan[0]["url"] and plan[0]["below"] == 45000, "the phone gets it to check about every 12 hours, even with Attune closed")
     page.click("[data-testid=agent-check]"); page.wait_for_selector("[data-testid=agent-found]", timeout=4000)
     ao = page.evaluate("window.__agentOpen")
@@ -52,7 +53,7 @@ with sync_playwright() as p:
     if page.locator("[data-testid=agents-chip-order]").count() == 0: page.click("[data-testid=agents-more-starters]")   # v9.4: under More agents
     page.click("[data-testid=agents-chip-order]"); page.click("[data-testid=agents-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1: the plan first, then Start; page.wait_for_timeout(300)
     check("usual" in page.locator("[data-testid=agents-ask]").inner_text(), "Order my usual from Talabat → it asks what the usual is (once)")
-    page.fill("[data-testid=agents-answer]", "Koshary Abou Tarek — large + rice pudding"); page.click("[data-testid=agents-answer-go]"); page.wait_for_timeout(300)
+    page.fill("[data-testid=agents-answer]", "Koshary Abou Tarek — large + rice pudding"); page.click("[data-testid=agents-answer-go]"); page.wait_for_timeout(200); (page.locator("[data-testid=agent-plan-start]").count() and page.click("[data-testid=agent-plan-start]"))  # v9.9.13 AH1; page.wait_for_timeout(300)
     page.click("[data-testid=agent-order-now]"); page.wait_for_timeout(200)
     it = [c[1] for c in page.evaluate("window.__calls") if c[0] == "intent"]
     check(it and it[-1]["app"] == "com.talabat" and "Koshary" in it[-1]["copy"], "Order now: Talabat opens with the order copied (you press Order)")
