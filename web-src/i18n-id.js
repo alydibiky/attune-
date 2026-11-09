@@ -11753,4 +11753,5 @@ export const IDN = {
   "Expires {d}": "Berakhir {d}",
   "Details ({n})": "Detail ({n})",
   "Open the photos": "Buka foto",
+  "Looking in your notes…": "Mencari di catatanmu…",
 };

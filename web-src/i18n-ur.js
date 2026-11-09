@@ -11753,4 +11753,5 @@ export const UR = {
   "Expires {d}": "میعاد ختم {d}",
   "Details ({n})": "تفصیلات ({n})",
   "Open the photos": "تصاویر کھولیں",
+  "Looking in your notes…": "آپ کے نوٹس میں دیکھ رہا ہوں…",
 };

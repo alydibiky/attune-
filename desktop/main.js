@@ -11,6 +11,7 @@ const { pathToFileURL } = require("url");
 const models = require("./lib/models");
 const device = require("./lib/device");
 const { Engine } = require("./lib/engine");
+const team = require("./lib/team");   // v9.9.8 M4
 const { makeWeb } = require("./lib/web");
 const { makePacks, Cancelled } = require("./lib/packs");
 const { makePdf } = require("./lib/pdf");
@@ -79,6 +80,8 @@ function info() {
   if (!gpus) { const b = engine.binary(); gpus = b ? device.listGpus(b.bin, b.env) : []; }
   return device.info(DATA, gpus, { airGap: !!state.airGap, desktopShell: "electron", appVersion: app.getVersion(), packSearch: packs.canSearch });
 }
+// v9.9.8 M4: a small helper of the same family, when one is installed and both fit ("team": false in state turns it off)
+const draftFor = (m) => team.pickDraft(m, models.list(DATA), info(), { on: state.team !== false });
 const activeModel = () => (state.active && models.get(DATA, state.active)) || models.list(DATA).slice(-1)[0] || null;
 
 const cancels = new Map();
@@ -103,7 +106,7 @@ const QUICK = {
     if (engine.state === "ready") return "ready";
     if (engine.state === "starting") return "starting";
     const m = activeModel(); if (!m) return "none";
-    state.active = m.id; saveState(); engine.start(m, info()); return "starting";
+    state.active = m.id; saveState(); engine.start(m, info(), draftFor(m)); return "starting";
   },
   setAirGap: (on) => { state.airGap = !!on; saveState(); },
   setTextZoom: (pct) => { if (win) win.webContents.setZoomFactor(Math.max(0.5, Math.min(3, (+pct || 100) / 100))); },
@@ -181,7 +184,7 @@ async function useModel(id, modelId) {
   const m = models.get(DATA, modelId);
   if (!m) return reject(id, "That model is not installed");
   state.active = m.id; saveState();
-  const ok = await engine.start(m, info());
+  const ok = await engine.start(m, info(), draftFor(m));
   if (ok) resolve(id, { ok: true, model: models.toJson(m, true), engine: engine.json() });
   else reject(id, engine.error || "The model could not be loaded");
 }
@@ -349,7 +352,7 @@ app.whenReady().then(() => {
   win.on("app-command", (e, cmd) => { if (cmd === "browser-backward") js("window.dispatchEvent(new Event('attune-back'))"); });
   win.loadURL("app://attune/index.html");
   reminders.rearmAll();
-  if (!SMOKE) { const m = activeModel(); if (m) { state.active = m.id; engine.start(m, info()); } }
+  if (!SMOKE) { const m = activeModel(); if (m) { state.active = m.id; engine.start(m, info(), draftFor(m)); } }
   if (SMOKE) require("./test/smoke-run")(win, SMOKE, app, DATA);
 });
 app.on("window-all-closed", () => { engine.stop().finally(() => app.quit()); });

@@ -11752,4 +11752,5 @@ export const DE = {
   "Expires {d}": "Läuft ab am {d}",
   "Details ({n})": "Details ({n})",
   "Open the photos": "Fotos öffnen",
+  "Looking in your notes…": "Ich suche in deinen Notizen…",
 };

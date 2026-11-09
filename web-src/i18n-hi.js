@@ -11753,4 +11753,5 @@ export const HI = {
   "Expires {d}": "समाप्ति {d}",
   "Details ({n})": "विवरण ({n})",
   "Open the photos": "फ़ोटो खोलें",
+  "Looking in your notes…": "आपके नोट्स में देख रहा हूँ…",
 };

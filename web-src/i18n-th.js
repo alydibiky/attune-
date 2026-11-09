@@ -11752,4 +11752,5 @@ export const TH = {
   "Expires {d}": "หมดอายุ {d}",
   "Details ({n})": "รายละเอียด ({n})",
   "Open the photos": "เปิดรูปภาพ",
+  "Looking in your notes…": "กำลังค้นในโน้ตของคุณ…",
 };

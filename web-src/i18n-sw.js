@@ -11753,4 +11753,5 @@ export const SW = {
   "Expires {d}": "Inaisha {d}",
   "Details ({n})": "Maelezo ({n})",
   "Open the photos": "Fungua picha",
+  "Looking in your notes…": "Natafuta kwenye maelezo yako…",
 };

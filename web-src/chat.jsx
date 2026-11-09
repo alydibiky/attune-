@@ -82,6 +82,7 @@ import { SlashMenu } from "./cmdbox-ui.jsx";   // v7.4 the "/" list in Chat too 
 import { sayable, endsCall } from "./voicecall.js";   // v6.41 (H2)
 
 import { summary as sideSummary } from "./side-ui.jsx";
+import { mergeFound } from "./relay.js";   // v9.9.8 M2
 const KEY = "attune:chats:v1";
 const MAX_CHATS = 100;
 const NATIVE = (typeof window !== "undefined" && window.AttuneNative) || null;
@@ -1499,7 +1500,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       } else if (typed && !fileAtt && (api.isPersonal(typed) || api.memStrong)) {
         // v9.9.2 S1: your own Shelf / Mind notes first — for "my…" questions as before, and for any question a note clearly fits;
         // the answer then says where it came from ("From your Shelf: Crane notes")
-        const found = api.isPersonal(typed) ? api.memSearch(typed) : api.memStrong(typed);
+        let found = api.isPersonal(typed) ? api.memSearch(typed) : api.memStrong(typed);
+        // v9.9.8 M2 the relay: the small meaning model adds your records that mean the same with other words (strict)
+        if (found.length < 3 && api.memMeaning) { try { onStatus(tr("Looking in your notes…")); found = mergeFound(found, await api.memMeaning(typed), 3); } catch (e) {} }
         if (found.length) { content = api.withRecords(typed, found); extra0.fromMine = found.slice(0, 3).map((f) => ({ title: String(f.rec.title || "").slice(0, 70), where: f.rec.meta && f.rec.meta.book ? "Shelf" : "Mind" })); }
       }
       // v9.8 (Ali: "Attune must recall all notifications — and understand them"): what the phone's notifications say about the

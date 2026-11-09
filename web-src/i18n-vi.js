@@ -11752,4 +11752,5 @@ export const VI = {
   "Expires {d}": "Hết hạn {d}",
   "Details ({n})": "Chi tiết ({n})",
   "Open the photos": "Mở ảnh",
+  "Looking in your notes…": "Đang tìm trong ghi chú của bạn…",
 };

@@ -11752,4 +11752,5 @@ export const BN = {
   "Expires {d}": "মেয়াদ শেষ {d}",
   "Details ({n})": "বিস্তারিত ({n})",
   "Open the photos": "ছবিগুলো খুলুন",
+  "Looking in your notes…": "আপনার নোটে খুঁজছি…",
 };

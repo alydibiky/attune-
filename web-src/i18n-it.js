@@ -11753,4 +11753,5 @@ export const IT = {
   "Expires {d}": "Scade il {d}",
   "Details ({n})": "Dettagli ({n})",
   "Open the photos": "Apri le foto",
+  "Looking in your notes…": "Cerco nelle tue note…",
 };

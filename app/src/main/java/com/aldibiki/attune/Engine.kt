@@ -421,6 +421,8 @@ object Engine {
     private fun startBlocking(ctx: Context, model: ModelStore.Installed, forceCpu: Boolean = false, noMtp: Boolean = false): Boolean {
         if (EngineNative.nState() == 1) stopBlocking()
         if (state == State.ERROR && EngineNative.nState() == 1) return false
+        // v9.9.8 M2: the small meaning model gives its memory back while the chat model loads (it reloads in ~1 s when asked)
+        try { Embedder.release() } catch (e: Throwable) {}
         if (FastEngine.isFast(model)) return startFast(ctx, model)
         if (FastEngine.loaded()) FastEngine.close()
         kind = "llama"

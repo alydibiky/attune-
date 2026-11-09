@@ -1379,7 +1379,14 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun embed(id: String, arg: String) {
         embedPool.execute {
-            try { resolve(id, JSONObject().put("vecs", Embedder.embed(ctx, JSONObject(arg).optJSONArray("texts") ?: org.json.JSONArray()))) }
+            try {
+                val a = JSONObject(arg)
+                val vecs = Embedder.embed(ctx, a.optJSONArray("texts") ?: org.json.JSONArray())
+                // v9.9.8 M2: a chat question asks the meaning model, then lets it go when memory is tight, so the chat model
+                // (and the photo reader) always have room — two models never fight for the phone's memory
+                if (a.optBoolean("release") && DeviceInfo.availRamBytes(ctx) < Embedder.KEEP_AFTER) Embedder.release()
+                resolve(id, JSONObject().put("vecs", vecs))
+            }
             catch (e: Throwable) { reject(id, e.message ?: "The meaning model failed") }
         }
     }

@@ -11752,4 +11752,5 @@ export const KO = {
   "Expires {d}": "{d} 만료",
   "Details ({n})": "세부 정보 ({n})",
   "Open the photos": "사진 열기",
+  "Looking in your notes…": "메모에서 찾는 중…",
 };

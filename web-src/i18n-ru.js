@@ -11752,4 +11752,5 @@ export const RU = {
   "Expires {d}": "Истекает {d}",
   "Details ({n})": "Подробности ({n})",
   "Open the photos": "Открыть фото",
+  "Looking in your notes…": "Ищу в ваших заметках…",
 };

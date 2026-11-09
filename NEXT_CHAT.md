@@ -11,6 +11,22 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 10 Nov — v9.9.8: M2 small models as a relay (phone) + M4 two models as a team (computer) — Ali OK'd
+- **M2** (`relay.js`, attune.jsx `memMeaning`, chat.jsx S1 block): when the meaning model (bge-m3, 0.57 B) is on the phone, Chat's
+  "your own notes first" also finds records that MEAN the question with other words («فاتورة الكهربا» ↔ "electricity invoice"),
+  reusing Recall's stored numbers (up to 24 new records get theirs in the same call). Strict like M1: a meaning-only record must be
+  ≥ 0.62 close (≥ 0.55 with a shared word), at most 3 records in all. Memory rule (relay.js `helperAllowed`, Embedder.kt
+  `KEEP_AFTER` 1.15 GB): helpers ≤ ~1.5 B, never two big models together, the meaning model loads next to a chat model only with
+  1.15 GB free, is let go after a chat question when memory is tight, and always before a chat model loads (Engine.startBlocking).
+  Already there before: the photo reader loads only for a photo; Android takes the model back only when memory is really short;
+  the 2-model "draft helper" stays retired on phones (measured slower, wrote "0000" on Ali's phone).
+- **M4** (`desktop/lib/team.js`, engine.js, main.js): on the computer, a small model of the SAME family (≤ 1.5 B, ≤ ¼ of the big
+  one, both in the memory budget) drafts and the big one checks — llama.cpp speculative decoding: the answer is exactly the big
+  model's, faster. Qwen3.5 9B / 4B + Qwen3.5 0.8B; other families never mix. Tried as a team first, then alone. Off with
+  `"team": false` in the desktop state. No Engine-page line yet (visible → mock-ups first).
+- Tests: unit v998relay; e2e_v998relay; desktop/test/team.js (in run_all). **Needs measuring:** M2 on Ali's phone (time of the
+  first question with the meaning model), M4 speed on a computer (expect 1.5–2.5×).
+
 ## 10 Nov — v9.9.7: W1 "Do it on the web" (Ali OK'd)
 - `webtask.js` + `WebTaskSheet` (attune.jsx): "book a padel court Friday 8pm near me", «احجزلي ملعب بادل الجمعة الساعة ٨ بالليل», "renew my
   car licence" → a sheet with the steps (understood ✓ · find / open the site · fill your details + day, time, people · **stops before

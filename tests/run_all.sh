@@ -16,6 +16,7 @@ for f in tests/unit/*.test.mjs; do o=$(node "$f" 2>&1); rc=$?; fl=$(printf '%s\n
 # v6.37: the desktop app's Wi-Fi sync, and the pure-Kotlin parts (Franco, LocalSync) when a Kotlin compiler is there
 o=$(node desktop/test/localsync.js 2>&1 | tail -1); echo "desktop/test/localsync.js: $o" >> "$OUT"
 o=$(node desktop/test/gdrive.js 2>&1 | tail -1); echo "desktop/test/gdrive.js: $o" >> "$OUT"
+o=$(node desktop/test/team.js 2>&1 | tail -1); echo "desktop/test/team.js: $o" >> "$OUT"
 if command -v "${KOTLINC:-kotlinc}" >/dev/null 2>&1; then o=$(bash tests/kotlin/run.sh 2>&1); fl=$(printf '%s\n' "$o" | grep -m1 '^FAIL'); echo "tests/kotlin: ${fl:-$(printf '%s\n' "$o" | tail -1)}" >> "$OUT"; fi
 # a failing file keeps its whole output in tests/fail-<name>.log (which check, and why), so an
 # intermittent failure can be read afterwards instead of guessed at

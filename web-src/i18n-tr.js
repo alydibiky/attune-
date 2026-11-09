@@ -11753,4 +11753,5 @@ export const TRK = {
   "Expires {d}": "Son geçerlilik {d}",
   "Details ({n})": "Ayrıntılar ({n})",
   "Open the photos": "Fotoğrafları aç",
+  "Looking in your notes…": "Notlarında arıyorum…",
 };

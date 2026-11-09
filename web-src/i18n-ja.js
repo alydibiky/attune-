@@ -11752,4 +11752,5 @@ export const JA = {
   "Expires {d}": "{d} に期限切れ",
   "Details ({n})": "詳細（{n}）",
   "Open the photos": "写真を開く",
+  "Looking in your notes…": "あなたのメモを探しています…",
 };

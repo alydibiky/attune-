@@ -94,6 +94,9 @@ import { parseWatch, newRule, saveWatch, loadWatch, ruleText } from "./watch.js"
 import * as NT from "./noteteach.js";
 import * as AL from "./applinks.js";
 import * as WT from "./webtask.js";
+import * as RELAY from "./relay.js";   // v9.9.8 M2
+import * as MEAN from "./meaning.js";
+import { recallDocs as RDOCS } from "./lookback.js";
 import { loadBooking as loadBookingProfile } from "./agent-ui.jsx";
 import { saveDir as savePeopleDir, addCard as addPeopleCard, updateCard as updatePeopleCard } from "./entities.js";
 import { loadDir as loadPeopleDir } from "./entities.js";
@@ -7786,7 +7789,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.7";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.8";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7894,6 +7897,9 @@ ${found.map((f, i) => `[${i + 1}] ${new Date(f.rec.ts).toISOString().slice(0, 10
 ${(f.rec.text || "").slice(0, 600)}
 ${(f.rec.output || "").slice(0, 600)}`).join("\n\n")}`;
 }
+
+/** v9.9.2 S1 / v9.9.8 M2: what YOU wrote or kept — notes, Shelf, to-dos, places, photos you saved — never Attune's own chat answers. */
+const ownRec = (r) => !!r && (["note", "todo", "place", "photo", "field", "travel"].includes(r.kind) || (r.meta && r.meta.book) || r.pinned);
 
 /** v9.9.7 W1 "Do it on the web": the task understood, then each step ticked from what Attune's browser reported. Never pays. */
 function WebTaskSheet({ t, close, start }) {
@@ -9814,7 +9820,22 @@ export default function App() {
     // (most of its words in one record) — not only "my…" questions
     memStrong: (q) => { const qt = [...new Set(memTokens(q))]; if (qt.length < 2) return [];
       // (only what YOU wrote or kept — notes, Shelf, to-dos, places, photos you saved — never Attune's own saved chat answers)
-      return memSearch(memory, memIndex, q, { now: Date.now(), limit: 8 }).filter((f) => (["note", "todo", "place", "photo", "field", "travel"].includes(f.rec.kind) || (f.rec.meta && f.rec.meta.book) || f.rec.pinned)).filter((f) => { const rt = new Set(memTokens([f.rec.title, f.rec.text, f.rec.output, f.rec.note].filter(Boolean).join(" "))); const hit = qt.filter((t) => rt.has(t)).length; return hit >= 2 && hit / qt.length >= 0.6; }).slice(0, 3); },
+      return memSearch(memory, memIndex, q, { now: Date.now(), limit: 8 }).filter((f) => ownRec(f.rec)).filter((f) => { const rt = new Set(memTokens([f.rec.title, f.rec.text, f.rec.output, f.rec.note].filter(Boolean).join(" "))); const hit = qt.filter((t) => rt.has(t)).length; return hit >= 2 && hit / qt.length >= 0.6; }).slice(0, 3); },
+    // v9.9.8 M2 the relay: the meaning model (small, 0.57 B) finds your records that MEAN the question; the chat model answers
+    // from them. Reuses the numbers Recall stored; up to 24 newest records without numbers get theirs in the same call; the
+    // phone lets the meaning model go right after when memory is tight (release). Nothing when the model isn't on the phone.
+    memMeaning: NATIVE && NATIVE.embedStatus ? async (q) => {
+      let st = null; try { st = JSON.parse(NATIVE.embedStatus()); } catch (e) {}
+      if (!st || !st.installed || String(q || "").trim().length < 4) return [];
+      const own = memory.filter(ownRec).slice(-1500), docs = RDOCS({ memory: own }), keyOf = new Map(own.map((r, i) => [r.id, MEAN.keyOf(docs[i])]));
+      const vecs = await MEAN.loadVectors();
+      const todo = own.filter((r) => !vecs.has(keyOf.get(r.id))).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 24);
+      const r = await nativeCall("embed", { texts: [String(q).slice(0, 600), ...todo.map((x) => MEAN.textOf(docs[own.indexOf(x)]))], release: true });
+      const got = (r && r.vecs) || []; if (!got[0]) return [];
+      const pairs = todo.map((x, i) => [keyOf.get(x.id), got[i + 1] ? Float32Array.from(got[i + 1]) : null]).filter((p) => p[1]);
+      pairs.forEach(([k, v]) => vecs.set(k, v)); if (pairs.length) MEAN.saveVectors(pairs);
+      return RELAY.meaningPick(q, own, (rec) => vecs.get(keyOf.get(rec.id)), Float32Array.from(got[0]));
+    } : null,
     withRecords,
     libraryFind: (q) => findInLibrary(q, NATIVE ? nativeCall : null),   // v8.7 (4B): the Library books switched on for Chat
     knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch,

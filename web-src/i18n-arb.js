@@ -11744,4 +11744,5 @@ export const ARB = {
   "Expires {d}": "ينتهي في {d}",
   "Details ({n})": "التفاصيل ({n})",
   "Open the photos": "افتح الصور",
+  "Looking in your notes…": "أبحث في ملاحظاتك…",
 };

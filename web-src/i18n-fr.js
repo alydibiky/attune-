@@ -11753,4 +11753,5 @@ export const FR = {
   "Expires {d}": "Expire le {d}",
   "Details ({n})": "Détails ({n})",
   "Open the photos": "Ouvrir les photos",
+  "Looking in your notes…": "Je cherche dans tes notes…",
 };

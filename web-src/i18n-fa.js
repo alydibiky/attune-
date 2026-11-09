@@ -11752,4 +11752,5 @@ export const FA = {
   "Expires {d}": "انقضا {d}",
   "Details ({n})": "جزئیات ({n})",
   "Open the photos": "باز کردن عکس‌ها",
+  "Looking in your notes…": "در یادداشت‌هایت می‌گردم…",
 };

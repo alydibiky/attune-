@@ -8823,4 +8823,5 @@ export const AR = {
   "Expires {d}": "بينتهي {d}",
   "Details ({n})": "التفاصيل ({n})",
   "Open the photos": "افتح الصور",
+  "Looking in your notes…": "بدوّر في ملاحظاتك…",
 };

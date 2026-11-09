@@ -24,6 +24,9 @@ object Embedder {
     const val BYTES = 437_778_496L
     private const val SHA = "6d39681b26c61279ac1f82db35a04a05009e94c415b51c858ff571489a82fc06"
     private const val NEED_FREE = 900L * 1024 * 1024     // the model + its working memory, with room to spare
+    /** v9.9.8 M2: with a chat model loaded, the meaning model loads only with this much free (relay.js helperAllowed: the
+     *  0.44 GB helper + 0.7 GB left for the chat model to work), and is let go after a chat question below it. */
+    const val KEEP_AFTER = 1_150L * 1024 * 1024
 
     class Cancelled : Exception("Cancelled")
 
@@ -82,7 +85,7 @@ object Embedder {
     @Synchronized fun embed(ctx: Context, texts: JSONArray): JSONArray {
         if (!installed(ctx)) throw Exception("Download the meaning model first (Recall → Search by meaning)")
         if (!loaded) {
-            if (DeviceInfo.availRamBytes(ctx) < NEED_FREE) throw Exception("Not enough free memory right now — close the chat model or try again later")
+            if (DeviceInfo.availRamBytes(ctx) < (if (Engine.state == Engine.State.READY) KEEP_AFTER else NEED_FREE)) throw Exception("Not enough free memory right now — close the chat model or try again later")
             EngineNative.nPreload(ctx.applicationInfo.nativeLibraryDir)
             val threads = DeviceInfo.bigCores().coerceIn(2, 4)
             if (!EmbedNative.nLoad(file(ctx).absolutePath, threads)) throw Exception("The meaning model couldn't start on this phone")

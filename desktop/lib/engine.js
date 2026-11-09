@@ -50,6 +50,8 @@ function freePort() {
   });
 }
 
+const team = require("./team");
+
 class Engine {
   constructor(opts) {
     this.engineRoots = opts.engineRoots; this.logFile = opts.logFile; this.onChange = opts.onChange || (() => {});
@@ -62,12 +64,12 @@ class Engine {
     return { state: this.state, error: this.error, modelId: this.modelId, port: this.port,
       loadingFor: this.started && this.state === "starting" ? Math.round((Date.now() - this.started) / 1000) : 0,
       phase: this.state === "starting" ? "Reading the model file" : "", heavy: false, thermal: 0,
-      engine: "llama", backend: this.variant || "" };
+      engine: "llama", backend: this.variant || "", team: this.team || "" };
   }
   note(line) { try { fs.appendFileSync(this.logFile, line + "\n"); } catch (e) {} }
   logTail(n) { try { const t = fs.readFileSync(this.logFile, "utf8"); return t.slice(-(n || 8000)); } catch (e) { return ""; } }
 
-  args(model, info, gpu) {
+  args(model, info, gpu, draft) {
     const a = ["-m", model.modelFile, "--host", "127.0.0.1", "--port", String(this.port), "--api-key", this.apiKey,
       "-c", String(model.ctx || 8192), "-t", String(info.genThreads || 4), "-np", "1",
       "--cache-reuse", "256", "--cache-ram", "0", "--jinja", "--no-slots", "--threads-http", "2",
@@ -75,6 +77,7 @@ class Engine {
     if (gpu) a.push("-fa", "auto", "--fit", "on");   // llama.cpp puts as many layers on the graphics chip as fit, the rest in RAM
     else a.push("--device", "none", "-ngl", "0", "-fa", "on", "-ctk", "q8_0", "-ctv", "q8_0");
     if (model.mmproj) a.push("--mmproj", model.mmproj);
+    if (draft) a.push(...team.draftArgs(draft, gpu));   // v9.9.8 M4: the small helper writes ahead, this model checks
     return a;
   }
 
@@ -87,7 +90,7 @@ class Engine {
     this.state = "idle"; this.modelId = null; this.onChange(this.json());
   }
 
-  async start(model, info) {
+  async start(model, info, draft) {
     await this.stop();
     const gen = this.gen;
     this.state = "starting"; this.error = null; this.modelId = model.id; this.started = Date.now(); this.onChange(this.json());
@@ -96,18 +99,20 @@ class Engine {
     let lastErr = "";
     // Each engine folder: first with the graphics chip, then (if that will not start) CPU only.
     const attempts = [];
-    for (const v of vs) { if (v.name !== "cpu" && !process.env.ATTUNE_CPU_ONLY) attempts.push({ v, gpu: true }); attempts.push({ v, gpu: false }); }
-    for (const { v, gpu } of attempts) {
+    // v9.9.8 M4: with a helper, each way is tried as a team first, then the big model alone (a pair that won't start never blocks it)
+    for (const v of vs) for (const gpu of (v.name !== "cpu" && !process.env.ATTUNE_CPU_ONLY ? [true, false] : [false])) {
+      if (draft) attempts.push({ v, gpu, draft }); attempts.push({ v, gpu, draft: null }); }
+    for (const { v, gpu, draft: d } of attempts) {
       if (gen !== this.gen) return false;
       this.port = await freePort();
       const log = fs.openSync(this.logFile, "a");
-      fs.writeSync(log, "\n=== " + new Date().toISOString() + " start " + model.id + " with " + v.name + "\n");
-      const p = spawn(path.join(v.dir, EXE), this.args(model, info, gpu), { env: envFor(v.dir), stdio: ["ignore", log, log], windowsHide: true });
+      fs.writeSync(log, "\n=== " + new Date().toISOString() + " start " + model.id + " with " + v.name + (d ? " + helper " + d.id : "") + "\n");
+      const p = spawn(path.join(v.dir, EXE), this.args(model, info, gpu, d), { env: envFor(v.dir), stdio: ["ignore", log, log], windowsHide: true });
       fs.closeSync(log);
       // v6.25 (Ali's log: six starts, not one word): when the engine stops, the log says why in plain words
       p.on("error", (e) => this.note("The engine could not be started: " + (e.code === "EACCES" || e.code === "EPERM" ? "Windows or an antivirus blocked it — allow Attune in the antivirus" : e.message)));
       p.on("exit", (code, sig) => { if (gen === this.gen && this.proc === p && this.state !== "ready") this.note(exitReason(code, sig)); });
-      this.proc = p; this.variant = v.name + (gpu ? "" : " (CPU)");
+      this.proc = p; this.variant = v.name + (gpu ? "" : " (CPU)"); this.team = d ? (d.label || d.id) : "";
       const ok = await this.waitHealthy(p, gen);
       if (ok) { this.state = "ready"; this.onChange(this.json()); return true; }
       lastErr = (this.logTail(600).split("\n").filter(Boolean).pop() || "The model could not be loaded");

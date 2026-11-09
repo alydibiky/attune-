@@ -11752,4 +11752,5 @@ export const ZH = {
   "Expires {d}": "{d} 到期",
   "Details ({n})": "详细信息（{n}）",
   "Open the photos": "打开照片",
+  "Looking in your notes…": "正在查看你的笔记…",
 };
