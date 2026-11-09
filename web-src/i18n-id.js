@@ -11609,4 +11609,5 @@ export const IDN = {
   "Added to Subscriptions: {n} · {a} a month": "Ditambahkan ke Langganan: {n} · {a} per bulan",
   "{n} paid this month: {a}": "{n} dibayar bulan ini: {a}",
   "added to Subscriptions": "ditambahkan ke Langganan",
+  "From your {w}: {t}": "Dari {w} Anda: {t}",
 };

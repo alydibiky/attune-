@@ -1478,9 +1478,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           webEmpty = true;
           content = content + "\n\n(A web search was made, but it found no page about this. Answer from your own knowledge, say in one short line at the start that the web search found nothing about it, and mark anything that may have changed recently as possibly out of date. Never say that a product, model, car, phone or person does not exist just because you don't know it — it may be newer than what you know: say you have no reliable information about it yet. Never give the figures of a different model in its place.)" + photoNote;
         }
-      } else if (typed && api.isPersonal(typed)) {
-        const found = api.memSearch(typed);
-        if (found.length) content = api.withRecords(typed, found);
+      } else if (typed && !fileAtt && (api.isPersonal(typed) || api.memStrong)) {
+        // v9.9.2 S1: your own Shelf / Mind notes first — for "my…" questions as before, and for any question a note clearly fits;
+        // the answer then says where it came from ("From your Shelf: Crane notes")
+        const found = api.isPersonal(typed) ? api.memSearch(typed) : api.memStrong(typed);
+        if (found.length) { content = api.withRecords(typed, found); extra0.fromMine = found.slice(0, 3).map((f) => ({ title: String(f.rec.title || "").slice(0, 70), where: f.rec.meta && f.rec.meta.book ? "Shelf" : "Mind" })); }
       }
       // v9.8 (Ali: "Attune must recall all notifications — and understand them"): what the phone's notifications say about the
       // question (understood: a delivery, money out, a missed call…) goes with it, so "when does my package come?" is answered
@@ -2354,6 +2356,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.streaming && !m.text && !m.thinking ? (
               <div className="flex items-center gap-2 text-sm text-[var(--c-acc)] py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shrink-0" /> <span className="min-w-0">{m.phase || tr("Reading…")}</span> <Elapsed /></div>
             ) : null}
+            {m.fromMine && m.fromMine.length && !m.streaming ? <p className="text-[11.5px] text-[var(--c-mut)] m-0 mt-1" data-testid="from-mine" dir="auto">{m.fromMine.map((x) => tr("From your {w}: {t}", { w: tr(x.where), t: x.title })).join(" · ")}</p> : null}
             {m.webImages && m.webImages.length && !m.streaming ? (   /* v6.12: pictures from the pages read, like Gemini — tap opens the page */
               <div className="flex gap-1.5 overflow-x-auto mb-2 -mx-1 px-1" data-testid="web-images">
                 {m.webImages.map((w, i) => <a key={i} href={w.url} target="_blank" rel="noopener noreferrer" className="shrink-0"><img src={w.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} className="h-24 w-32 object-cover rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)]" /></a>)}

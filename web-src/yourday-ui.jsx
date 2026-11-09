@@ -77,7 +77,7 @@ export function YourDay({ records = [], navTo, flash: flash0, now: now0 }) {
     {news.length ? <div className="c-card space-y-0.5" data-testid="day-agents">
       <span className="text-[12px] font-extrabold tracking-wide c-acc uppercase flex items-center gap-1.5"><Radar size={14} />{tr("Agents")}</span>
       {news.map((x) => <button key={x.id} onClick={() => navTo && navTo("agents")} className="w-full min-h-[44px] flex items-center gap-2 text-start" data-testid="day-agent">
-        <span className={U.tag(x.status === "needs" ? "amber" : "green")}>{tr(x.status === "needs" ? "Needs you" : "Found")}</span>
+        <span className={U.tag(x.status === "needs" ? "amber" : "blue")}>{tr(x.status === "needs" ? "Needs you" : "Found")}</span>
         <span className="flex-1 min-w-0 truncate text-[13.5px] font-bold" dir="auto">{x.title}</span>
         {x.price ? <b className="text-[13px] tabular-nums shrink-0">{Math.round(x.price).toLocaleString("en-US")}{x.currency ? " " + x.currency : ""}</b> : null}</button>)}
     </div> : null}

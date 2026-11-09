@@ -11608,4 +11608,5 @@ export const BN = {
   "Added to Subscriptions: {n} · {a} a month": "সাবস্ক্রিপশনে যোগ হয়েছে: {n} · মাসে {a}",
   "{n} paid this month: {a}": "{n} এই মাসে পরিশোধ: {a}",
   "added to Subscriptions": "সাবস্ক্রিপশনে যোগ হয়েছে",
+  "From your {w}: {t}": "আপনার {w} থেকে: {t}",
 };

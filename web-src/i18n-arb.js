@@ -11600,4 +11600,5 @@ export const ARB = {
   "Added to Subscriptions: {n} · {a} a month": "أُضيف إلى الاشتراكات: {n} · {a} شهريًا",
   "{n} paid this month: {a}": "دُفع {n} هذا الشهر: {a}",
   "added to Subscriptions": "أُضيف إلى الاشتراكات",
+  "From your {w}: {t}": "من {w} الخاص بك: {t}",
 };

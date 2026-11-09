@@ -11608,4 +11608,5 @@ export const DE = {
   "Added to Subscriptions: {n} · {a} a month": "Zu Abos hinzugefügt: {n} · {a} im Monat",
   "{n} paid this month: {a}": "{n} diesen Monat bezahlt: {a}",
   "added to Subscriptions": "zu Abos hinzugefügt",
+  "From your {w}: {t}": "Aus deinem {w}: {t}",
 };

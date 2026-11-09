@@ -11609,4 +11609,5 @@ export const TRK = {
   "Added to Subscriptions: {n} · {a} a month": "Aboneliklere eklendi: {n} · ayda {a}",
   "{n} paid this month: {a}": "{n} bu ay ödendi: {a}",
   "added to Subscriptions": "aboneliklere eklendi",
+  "From your {w}: {t}": "{w} bölümünden: {t}",
 };

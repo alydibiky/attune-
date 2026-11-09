@@ -11609,4 +11609,5 @@ export const SW = {
   "Added to Subscriptions: {n} · {a} a month": "Imeongezwa kwenye Usajili: {n} · {a} kwa mwezi",
   "{n} paid this month: {a}": "{n} imelipwa mwezi huu: {a}",
   "added to Subscriptions": "imeongezwa kwenye Usajili",
+  "From your {w}: {t}": "Kutoka {w} yako: {t}",
 };

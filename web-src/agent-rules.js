@@ -182,7 +182,7 @@ export function agentStatus(a, now = Date.now()) {
   if (a.found || (a.best3 || []).length || (a.kind === "follow" && (a.runs || []).length)) return "found";
   return "working";
 }
-export const STATUS = { needs: ["Needs you", "amber"], found: ["Found", "green"], working: ["Working", "blue"], paused: ["Paused", "gray"], done: ["Done", "gray"] };
+export const STATUS = { needs: ["Needs you", "amber"], found: ["Found", "blue"], working: ["Working", "blue"], paused: ["Paused", "gray"], done: ["Done", "gray"] };
 
 // ---- the site's mark (a logo drawn by Attune — never a picture from the internet, never the plain word) ------------------------------
 export const BRANDS = {

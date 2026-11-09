@@ -11609,4 +11609,5 @@ export const HI = {
   "Added to Subscriptions: {n} · {a} a month": "सदस्यताओं में जोड़ा: {n} · {a} प्रति माह",
   "{n} paid this month: {a}": "{n} का इस महीने भुगतान हुआ: {a}",
   "added to Subscriptions": "सदस्यताओं में जोड़ा",
+  "From your {w}: {t}": "आपके {w} से: {t}",
 };

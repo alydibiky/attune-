@@ -11609,4 +11609,5 @@ export const UR = {
   "Added to Subscriptions: {n} · {a} a month": "سبسکرپشنز میں شامل: {n} · {a} ماہانہ",
   "{n} paid this month: {a}": "{n} کی اس مہینے ادائیگی ہوئی: {a}",
   "added to Subscriptions": "سبسکرپشنز میں شامل",
+  "From your {w}: {t}": "آپ کے {w} سے: {t}",
 };

@@ -11608,4 +11608,5 @@ export const TH = {
   "Added to Subscriptions: {n} · {a} a month": "เพิ่มในการสมัครสมาชิกแล้ว: {n} · เดือนละ {a}",
   "{n} paid this month: {a}": "{n} จ่ายแล้วเดือนนี้: {a}",
   "added to Subscriptions": "เพิ่มในการสมัครสมาชิกแล้ว",
+  "From your {w}: {t}": "จาก{w}ของคุณ: {t}",
 };

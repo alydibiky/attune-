@@ -11,6 +11,16 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## 9 Nov — v9.9.2: Ali picked T1 S1 G1 N1 N3 W1 W2 M1 M2 M3 M4 (+ asked to explore "teach Attune from notifications")
+- Built: **G1** "Found" in the app colour (agent-rules STATUS found → blue/accent, yourday tag); **S1** Chat checks Shelf / Mind
+  notes first for ANY question a note clearly fits (attune.jsx `memStrong`: ≥2 words and ≥60 % of the question's words in one
+  record) and shows "From your Shelf: Crane notes" (chat.jsx `fromMine`, e2e_v992s1).
+- New standing rule (CLAUDE.md + MOCKUPS.md): every options page has an OK box AND a note box on every option + a copy bar.
+- Waiting for his OKs / notes on the combined page https://claude.ai/artifact/UNQfGvdVLJyATkZ2JZDNHz — T1 timetable photo,
+  N1 tables from a sentence (in Lists), N3 @ links, W1 web agent (stops before Pay), W2 app links + "which Ahmed?" with Android's
+  contact picker (no contacts permission — Play-safe), M1 router, M2 small models only on phones (never two > ~1.5 B, memory checked),
+  M3 checker, M4 computer team; new L1–L4 (talk to a notification "Nada is my wife", rules by talking, asks once, uses it on Home/Chat).
+
 ## 9 Nov later — every open option on one page for Ali to pick: https://claude.ai/artifact/CQZCRBEDAcv7NJG6VG3V5J (T1 timetable photo, S1 Chat checks Shelf/Mind/Documents first, G1 Found in burgundy, N1–N5 from Notion, W1–W3 do it for me, M1–M5 several AI models). Build what he picks.
 
 ## 9 Nov — v9.9.1: Ali's notifications questions (screenshots of Recall + Home)

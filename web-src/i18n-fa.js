@@ -11608,4 +11608,5 @@ export const FA = {
   "Added to Subscriptions: {n} · {a} a month": "به اشتراک‌ها اضافه شد: {n} · ماهی {a}",
   "{n} paid this month: {a}": "{n} این ماه پرداخت شد: {a}",
   "added to Subscriptions": "به اشتراک‌ها اضافه شد",
+  "From your {w}: {t}": "از {w} شما: {t}",
 };

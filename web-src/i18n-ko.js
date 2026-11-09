@@ -11608,4 +11608,5 @@ export const KO = {
   "Added to Subscriptions: {n} · {a} a month": "구독에 추가됨: {n} · 월 {a}",
   "{n} paid this month: {a}": "{n} 이번 달 결제됨: {a}",
   "added to Subscriptions": "구독에 추가됨",
+  "From your {w}: {t}": "내 {w}에서: {t}",
 };

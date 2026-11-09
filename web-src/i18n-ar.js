@@ -8677,4 +8677,5 @@ export const AR = {
   "Added to Subscriptions: {n} · {a} a month": "اتضاف للاشتراكات: {n} · {a} في الشهر",
   "{n} paid this month: {a}": "{n} اتدفع الشهر ده: {a}",
   "added to Subscriptions": "اتضاف للاشتراكات",
+  "From your {w}: {t}": "من {w} بتاعك: {t}",
 };

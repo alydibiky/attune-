@@ -11608,4 +11608,5 @@ export const JA = {
   "Added to Subscriptions: {n} · {a} a month": "サブスクに追加：{n} · 月{a}",
   "{n} paid this month: {a}": "{n}今月支払い済み：{a}",
   "added to Subscriptions": "サブスクに追加",
+  "From your {w}: {t}": "あなたの{w}から：{t}",
 };

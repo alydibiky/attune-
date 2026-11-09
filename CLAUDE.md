@@ -39,6 +39,10 @@
 - **For unfamiliar features, don't write from scratch — first search GitHub for open-source projects, compare approaches,
   then get started** (licence must be commercial-safe, see §5.48; say in the handoff which project the idea came from).
 - Never commit `*private-key*.json`; never change `app/attune-test.keystore`.
+- **Every options artifact has a pick + copy bar AND a note box on every option (Ali, 9 Nov 2026):** each option gets a checkbox
+  and its own "your note on this option" box; the sticky bar at the bottom collects the ticked codes WITH their notes
+  (e.g. `W2 — ask which Ahmed`), and one "Copy my picks" button copies codes + notes together (clipboard, with a select-the-text
+  fallback). Picks and notes are kept in the viewer's browser (localStorage, wrapped in try/catch). No options page without them.
 - **Mock-ups before building (Ali, 5 Nov 2026): read `MOCKUPS.md`.** Any visible change → 4–6 phone mock-ups on a published
   page with his real examples → his pick → one combined mock-up with "what I understood" → his OK → build. Log it there.
 - Subjective choices (look and feel, layout, colours, names, wording, which of several good designs): don't decide alone.

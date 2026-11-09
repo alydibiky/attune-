@@ -7777,7 +7777,7 @@ const MODE_TITLES = { errands: "Errands", lists: "To-dos & lists", booklib: "Doc
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.1";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9775,6 +9775,11 @@ export default function App() {
     rankAll: (question, hits, o) => rankPassages(question, hits, o),
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
+    // v9.9.2 S1 (Ali picked: "Chat always checks your own things first"): a note in Shelf / Mind that clearly fits ANY question
+    // (most of its words in one record) — not only "my…" questions
+    memStrong: (q) => { const qt = [...new Set(memTokens(q))]; if (qt.length < 2) return [];
+      // (only what YOU wrote or kept — notes, Shelf, to-dos, places, photos you saved — never Attune's own saved chat answers)
+      return memSearch(memory, memIndex, q, { now: Date.now(), limit: 8 }).filter((f) => (["note", "todo", "place", "photo", "field", "travel"].includes(f.rec.kind) || (f.rec.meta && f.rec.meta.book) || f.rec.pinned)).filter((f) => { const rt = new Set(memTokens([f.rec.title, f.rec.text, f.rec.output, f.rec.note].filter(Boolean).join(" "))); const hit = qt.filter((t) => rt.has(t)).length; return hit >= 2 && hit / qt.length >= 0.6; }).slice(0, 3); },
     withRecords,
     libraryFind: (q) => findInLibrary(q, NATIVE ? nativeCall : null),   // v8.7 (4B): the Library books switched on for Chat
     knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch,

@@ -11608,4 +11608,5 @@ export const RU = {
   "Added to Subscriptions: {n} · {a} a month": "Добавлено в подписки: {n} · {a} в месяц",
   "{n} paid this month: {a}": "{n} оплачено в этом месяце: {a}",
   "added to Subscriptions": "добавлено в подписки",
+  "From your {w}: {t}": "Из вашего раздела «{w}»: {t}",
 };

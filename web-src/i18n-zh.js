@@ -11608,4 +11608,5 @@ export const ZH = {
   "Added to Subscriptions: {n} · {a} a month": "已加入订阅：{n} · 每月{a}",
   "{n} paid this month: {a}": "{n}本月已付：{a}",
   "added to Subscriptions": "已加入订阅",
+  "From your {w}: {t}": "来自你的{w}：{t}",
 };

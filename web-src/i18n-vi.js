@@ -11608,4 +11608,5 @@ export const VI = {
   "Added to Subscriptions: {n} · {a} a month": "Đã thêm vào Gói đăng ký: {n} · {a} mỗi tháng",
   "{n} paid this month: {a}": "{n} đã trả tháng này: {a}",
   "added to Subscriptions": "đã thêm vào Gói đăng ký",
+  "From your {w}: {t}": "Từ {w} của bạn: {t}",
 };
