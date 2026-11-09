@@ -26,7 +26,8 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   max 2 a day, never the same chat twice, never a taught chat (page → `noteAskKnown`); the words in the person's language
   (`noteAskWords`). The page takes answers on open (`syncPhone`): a tap is learnt at once; a typed sentence waits in Follow-ups as
   "I understood … — Save".
-- Tests: unit v999notelabels (36), e2e_v999teachnotes (A1, Save, never again, learned list + Undo, Chat, A2 tap + typed).
+- Tests: unit v999notelabels (36), e2e_v999teachnotes (A1, Save, never again, learned list + Undo, Chat, A2 tap + typed); unit
+  v999kotlinval (the first v9.9.11 APK build broke on `val a = …, b = …` in NoteAsk.kt). **APK v9.9.11:** https://github.com/alydibiky/attune-/actions/runs/42679500778 (success).
 
 ## 10 Nov — v9.9.10: a WhatsApp group's wages became "income" (Ali: "what the hell?") — fixed for good
 - Cause: PayListener kept any notification with an amount + a money word, from ANY app; paylog.js read «غفره بليل ٤٥٠ جنيه…»
