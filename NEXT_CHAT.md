@@ -14,6 +14,11 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 ## ▶ START HERE (11 Nov, night) — **AUTOMATION_PLAN.md** is the plan: Ali picked his screens for all 29 features ("ALL features working in
 ALL languages and ALL countries … batch by batch, update the handoff so another AI can continue"). Combined screens waiting for his OK:
 https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU. Carry on with the first unticked batch in AUTOMATION_PLAN.md.
+**State at the end of the 11 Nov night session:** B0–B3 LOGIC done on the branch (not yet on main — main is v9.9.18 without it):
+nag.js, notifpay.js, donelog.js, NagPay.kt, rules.js, suggest.js, recipes.js, moneyunits.js, salarysort.js, catlearn.js, groups.js,
+the country-weekend fix, and their 10,000-case tests (tests/nag, notifpay, donelog, rules (+ heldout), suggest, recipes, salarysort,
+groups, catlearn; units v9918b1 / b2 / b3 / rules). Before merging to main: the branch APK build must be green (NagPay.kt has never
+been compiled — no kotlinc here) and the full suite run. Then B4 (design notes in the plan).
 
 ## ▶ NEXT (11 Nov, late night) — Ali picked 29 of the 38 research ideas; their SCREENS are waiting for his A/B picks
 - His picks: AU1–AU8 · M1 M3 M5 · T1–T6 · N1 · N2 ("it can go very wrong — only if you are sure it will be very accurate") · N3 ·

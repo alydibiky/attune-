@@ -110,6 +110,24 @@
   - [ ] screens after OK: M1-A checklist sheet on the salary notification, M3-A group page + settle-up + share, M5-B "Always?"
         sheet + the rules list; wire to paylog / ledger; 20 languages.
 - [ ] **B4 to-dos: T1 brain dump (typed + voice) · T3 countdowns · T2 habits · T6 focus (Play check) · T4 places · T5 week plan**
+  - Design notes for the next session (nothing built yet):
+    - T1 brain dump: web-src/braindump.js organise(text, ctx) → [{ type: todo|reminder|list|payment|bill|note, text, at, amount, list }].
+      Split the paragraph into clauses (., ; newline, "and / then / also", «و / وبعدين / كمان», and the 18 other languages' "and"),
+      carry a day said once ("tomorrow: …") to the clauses after it, and read each clause with the app's OWN readers in order:
+      lists.parseListCommand → commands (to-do) → doit.understand (money / reminder / life) → rules.parseRule; unread → a "note"
+      item (never dropped). **Gap to close first:** doit.understand / actions.quickAction read English + Arabic (+ Franco) well but
+      not the 18 other languages — Ali wants every feature in every language, so B4 starts by giving actions.js (time words) and
+      the to-do / list readers the same word tables as rules.js W (reuse W: remind, addTo, list, todos; add "tomorrow / today /
+      next week / at H" per language — Intl gives day names). Test: tests/braindump/gen.mjs 10,000 paragraphs of 2–6 clauses in
+      20 languages, each clause with its expected type / date / amount.
+    - T3: countdowns.js (dates incl. Hijri / Coptic from country.js) — days left the same as an independent day count.
+    - T2: habits.js — streak never breaks on a day the habit wasn't due; a habit day counts once toward a goal.
+    - T6: focus.js time accounting (pause / call / app closed); Play: NO full-screen-intent permission (calls / alarms only);
+      Do Not Disturb only through ACCESS_NOTIFICATION_POLICY that the person grants in Android settings — both allowed on Play.
+    - T4: places.js arrival / leave from location samples (150 m radius, 2 samples inside to arrive, 2 outside to leave — GPS jumps
+      ignored); Play needs the background-location declaration + a prominent disclosure screen — tell Ali before submitting.
+    - T5: weekplan.js — place tasks (length + deadline) in free slots around calendar events, work hours, prayer times (when on);
+      never on a busy slot, never after the deadline; too big → reported, not squeezed.
 - [ ] **B5 people: P1 keep in touch · P3 occasions · P2 before you meet · N1 person page · N3 on this day**
 - [ ] **B6 papers & things: X1 paperwork · X4 emergency card · X2 upkeep · X3 what I own · X6 kids & school**
 - [ ] **B7 travel: TR1 trip from bookings · TR2 flight day · TR3 trip money & papers**
@@ -117,5 +135,6 @@
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 
 ## Log
+- 11 Nov 2026 (late night): B1, B2, B3 LOGIC done and pushed (all 10,000-case runs at 100%, held-out for the rules reader 40/40). Screens for all of them wait for Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU. The Kotlin of B1 (NagPay.kt) is being compiled by the branch build https://github.com/alydibiky/attune-/actions/runs/43113610542 — check it ended green before merging to main; if red, read the job log and fix.
 - 11 Nov 2026 (night): B1 logic + 10,000-case tests + Kotlin done (see B1); screens wait for the OK.
 - 11 Nov 2026: plan written; Ali's picks recorded.
