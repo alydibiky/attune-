@@ -110,7 +110,10 @@
   - [ ] screens after OK: M1-A checklist sheet on the salary notification, M3-A group page + settle-up + share, M5-B "Always?"
         sheet + the rules list; wire to paylog / ledger; 20 languages.
 - [ ] **B4 to-dos: T1 brain dump (typed + voice) · T3 countdowns · T2 habits · T6 focus (Play check) · T4 places · T5 week plan**
-  - Design notes for the next session (nothing built yet):
+  - [x] T3 / T2 / T6 logic: web-src/b4time.js (daysLeft by calendar — DST never shifts it; habit dueOn / streak / weekDots / goalCount
+        — a day not due never breaks a streak, a day counts once; focused() — pauses out, capped at the plan). tests/b4time/gen.mjs:
+        10,000 of each × 4 time zones (Cairo, London, New York, Tokyo) = 100%; planted bugs → 85% / 54% / 60%. tests/unit/v9918b4.
+  - Design notes for the rest (not built yet):
     - T1 brain dump: web-src/braindump.js organise(text, ctx) → [{ type: todo|reminder|list|payment|bill|note, text, at, amount, list }].
       Split the paragraph into clauses (., ; newline, "and / then / also", «و / وبعدين / كمان», and the 18 other languages' "and"),
       carry a day said once ("tomorrow: …") to the clauses after it, and read each clause with the app's OWN readers in order:
