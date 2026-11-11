@@ -613,7 +613,7 @@ money-sheets-ui.jsx: <Card title={tr("Backup")}>
 attune.jsx: <button onClick={() => { setMoreOpen(false); navTo("privacy"); }} className="block mx-auto min-h-[40px] px-3 text-[12.5px] font-bold text-[v
 attune.jsx: <button onClick={() => { setMoreOpen(false); navTo("privacy"); }} className="block mx-auto min-h-[40px] px-3 text-[12.5px] font-bold text-[v
 attune.jsx: <p className={head}>{tr("Privacy")}</p>
-privacy-ui.jsx: <div><h2 className="text-[22px] font-black tracking-tight m-0">{tr("Privacy")}</h2><p className="c-sub m-0">{tr("Updated {d}", { d: PRIVACY_
+privacy-ui.jsx: <div><h2 className="att-h1 text-[22px] font-black tracking-tight m-0">{tr("Privacy")}</h2><p className="c-sub m-0">{tr("Updated {d}", { d: P
 
 ## Sources
 attune.jsx: if (tool === "perplexity") return (<Box><Row label={tr("Sources")}><div className="flex flex-wrap gap-1.5">{[["any", "Any"], ["academic", "A
@@ -828,7 +828,7 @@ cmdbox-ui.jsx: <button onClick={() => setTr2(!tr2)} aria-pressed={tr2} className
 cv-ui.jsx: <p className="text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Translate")}</p>
 pdfchat-ui.jsx: const label = kind === "translate" ? tr("Translate") : kind === "explain" ? tr("Explain") : (question || tr("Ask"));
 pdfchat-ui.jsx: <button onClick={() => askSel("translate", sel.quote, sel.page || page)} className={tool} data-testid="pdf-sel-translate"><Languages size={1
-translate-ui.jsx: <div><h2 className={h1 + " flex items-center gap-2"}><Languages size={20} className="text-[var(--c-acc)]" />{tr("Translate")}</h2>
+translate-ui.jsx: <div><h2 className={"att-h1 " + h1 + " flex items-center gap-2"}><Languages size={20} className="text-[var(--c-acc)]" />{tr("Translate")}</h
 translate-ui.jsx: <button className={btnP} disabled={!text.trim() || !!busy} onClick={go} data-testid="tr-go">{tr("Translate")}</button>
 
 ## Web
