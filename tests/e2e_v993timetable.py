@@ -8,7 +8,10 @@ from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 NOW = datetime.datetime(2026, 11, 9, 8, 0, 0)
-IMG = "/tmp/claude-0/-home-user-attune-/739740fb-478b-5f95-b105-83fb84eb25c5/scratchpad/tt.png"
+import os, tempfile
+IMG = os.path.join(tempfile.gettempdir(), "attune-e2e-tt.png")   # v9.9.18: was an old session's scratch folder
+import base64   # the reading is mocked, so any small picture will do — the test makes its own
+open(IMG, "wb").write(base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="))
 L = lambda t, x, y, w=80, h=14: {"text": t, "x": x, "y": y, "w": w, "h": h}
 LINES = [L("Sun", 200, 40, 40), L("Mon", 320, 40, 40), L("Tue", 440, 40, 40), L("9:00 - 10:30", 40, 100, 100), L("11:00 - 12:30", 40, 200, 110), L("1:00 - 2:30", 40, 300, 100),
   L("Accounting", 180, 95), L("B204", 190, 115, 40), L("Tax Law", 420, 95), L("A12", 430, 115, 30), L("Finance", 300, 195), L("Seminar", 180, 295), L("Finance Lab", 300, 295, 90), L("Accounting", 420, 295)]
