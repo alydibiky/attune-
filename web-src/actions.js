@@ -17,6 +17,7 @@
    Without a model, the same parser plus keyword rules still handle the
    common cases (quickAction).                                                 */
 
+import { easeTime } from "./sense.js";   // v9.9.17 "half past 6", "an hour and a half", «فكريني», «اعملي تذكير» → words the reader knows
 export const REMINDERS_KEY = "attune:reminders:v1";
 export const KINDS = ["reminder", "alarm", "timer", "calendar", "whatsapp", "call", "none"];
 
@@ -228,7 +229,7 @@ const ACTION_HINT = new RegExp([
   "ميعاد", "موعد", "اجتماع", "النتيجة", "الكالندر", "التقويم", "واتس", "الواتساب", "واتساب", "ابعت ل", "ابعتله", "ابعتلها", "كلم ", "اتصل ب",
 ].join("|"), "i");
 export function looksLikeAction(text) {
-  const t = String(text || "");
+  const t = easeTime(String(text || ""));
   if (t.length > 400) return false;                           // a pasted document is not a command
   if (/[?؟]\s*$/.test(t) && !/remind|فكرني|ذكرني|صحيني/i.test(t)) return false;  // a question about alarms is not a request
   // v9.0 (the bank: "write a birthday message for my mom"): writing something is for Chat — sending it is an action
@@ -285,8 +286,9 @@ contact: the person's name if any. phone: digits only if a number was written. m
  * "when" is used only if the words alone can't be read. Returns
  * { kind, title, at, allDay, repeat, durationSec, contact, phone, message, place, problems[] }.
  */
-export function buildAction(json, text, nowIn) {
+export function buildAction(json, text0, nowIn) {
   const now = nowIn || Date.now();
+  const text = easeTime(text0, now);
   const j = json && typeof json === "object" ? json : {};
   let kind = KINDS.includes(j.action) ? j.action : guessKind(text);
   // «فكرني … اكلم حسن» / "remind me to call" is a reminder to call, not a call now (the model mixes them up)
@@ -355,7 +357,7 @@ export function buildAction(json, text, nowIn) {
 }
 
 /** No model loaded: keywords + the parser, for the common cases. */
-export function quickAction(text, nowIn) { return buildAction({ action: guessKind(text) }, text, nowIn); }
+export function quickAction(text, nowIn) { return buildAction({ action: guessKind(easeTime(text, nowIn || Date.now())) }, text, nowIn); }
 
 function guessKind(text) {
   const s = String(text || "");
@@ -411,6 +413,8 @@ function repeatIn(text) {
   if (/\bevery month\b|\bmonthly\b|كل شهر|شهريا|شهريًا/i.test(s)) return "monthly";
   { const ds = daysIn(s); if (ds.length >= 2 && ds.length < 7) return "days:" + ds.join(","); }
   if (/every ?day|daily|كل يوم|يوميا|يوميًا/i.test(s)) return "daily";
+  // v9.9.17 (the hard run): «فكرني كل جمعة الساعة 10» was a one-time reminder — one Arabic day after «كل» is every week
+  if (/كل\s+(?:يوم\s+)?(?:ال)?(?:حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(?=\s|$)/.test(s)) return "weekly";
   if (/weekdays|every weekday|أيام الشغل|ايام الشغل/i.test(s)) return "weekdays";
   if (/every (week|sun|mon|tue|wed|thu|fri|sat)|weekly|كل اسبوع|كل أسبوع|أسبوعيا|اسبوعيا/i.test(s)) return "weekly";
   return "none";

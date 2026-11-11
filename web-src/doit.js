@@ -9,6 +9,7 @@
    apply(action, stores, ctx) → { stores: { key: newValue }, done: { en, ar }, open }   (pure; the page writes the keys, keeps the old
    values for Undo, and does what code can't do alone: schedule a reminder, file a note in Mind, log a period).
    Tests: tests/unit/v731doit.test.mjs, tests/e2e_v731doit.py.                                                                    */
+import { numWords, notSpent, splitOrders } from "./sense.js";   // v9.9.17
 import { tr } from "./i18n.js";
 import { readMealText } from "./fitread.js";
 import { makerOf } from "./makers.js";
@@ -120,7 +121,20 @@ const REQ = /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|mak
  *  sleep are no longer recorded from Chat or Home (a priced meal still records its money). Set to false to bring them back. */
 export const FIT_ARCHIVED = true;
 const FIT_KINDS = new Set(["food", "water", "weight", "workout", "sleep", "period"]);
-export function understand(text, opts = {}) {
+export function understand(text0, opts = {}) {
+  // v9.9.17 (the 10,000 hard sentences): number words are read as numbers («دفعت ميتين جنيه تاكسي», "spent three hundred on lunch");
+  // two orders in one sentence are both done ("paid 300 for lunch and remind me to call Ahmed at 5" was ONE reminder titled "paid
+  // 300 for lunch and call Ahmed"); and a sentence that says nothing was paid ("I didn't pay the 300 yet", "the driver wanted 200
+  // but I refused", "he said the price is 300", "translate 'I paid 180…'") is never recorded as money (sense.js)
+  const text = numWords(String(text0 || ""));
+  { const parts = splitOrders(text);
+    if (parts) { const a = understand(parts.pay, opts), b = understand(parts.remind, opts);
+      if (a && b && a.actions && b.actions && a.actions.length && a.actions.every((x) => x.kind === "money") && b.actions.length === 1 && b.actions[0].kind === "reminder") return { actions: [...a.actions, ...b.actions], two: true }; } }
+  const u = understand1(text, opts);
+  if (u && u.actions && u.actions.length && u.actions.every((a) => a.kind === "money") && notSpent(text)) return { actions: [], chat: true };
+  return u;
+}
+function understand1(text, opts = {}) {
   const u = understandAll(text, opts);
   if (!FIT_ARCHIVED || !u || !u.actions) return u;
   // v9.9.15: a request ("give me 5 ideas for a gift"), a search ("watch the price of iPhone 16") or a number that is not money

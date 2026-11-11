@@ -1,37 +1,37 @@
-# Hard scenario run — 10000 sentences, 7045 right (70.5%)
+# Hard scenario run — 10000 sentences, 8527 right (85.3%)
 
 Every sentence is different; each is checked for WHAT the app does and for the details (amount, direction, hour, person).
 
 | group | sentences | wrong | right % |
 |---|---|---|---|
-| spend_words | 300 | 300 | 0.0 |
-| two_orders | 200 | 200 | 0.0 |
-| not_a_payment | 500 | 323 | 35.4 |
 | open_call_go | 250 | 161 | 35.6 |
 | lists_todos | 350 | 175 | 50.0 |
-| remind_mixed | 200 | 82 | 59.0 |
-| remind_en_time | 550 | 205 | 62.7 |
-| edits_cancels | 140 | 51 | 63.6 |
-| multi_spend | 400 | 135 | 66.3 |
-| income | 400 | 133 | 66.8 |
 | debt_en | 450 | 149 | 66.9 |
-| remind_ar_time | 500 | 159 | 68.2 |
-| repay | 300 | 89 | 70.3 |
+| remind_mixed | 200 | 58 | 71.0 |
 | calc | 350 | 100 | 71.4 |
 | debt_ar | 400 | 108 | 73.0 |
-| world_questions | 350 | 73 | 79.1 |
-| spend_story_en | 450 | 84 | 81.3 |
 | spend_short_mix | 450 | 83 | 81.6 |
+| two_orders | 200 | 36 | 82.0 |
+| income | 400 | 65 | 83.8 |
 | my_money_questions | 300 | 45 | 85.0 |
-| spend_franco | 400 | 57 | 85.8 |
-| remind_repeat | 300 | 42 | 86.0 |
 | teach_alert_auto | 200 | 28 | 86.0 |
+| spend_franco | 400 | 55 | 86.3 |
+| repay | 300 | 40 | 86.7 |
+| spend_story_en | 450 | 58 | 87.1 |
 | plans | 450 | 58 | 87.1 |
 | notes_where | 250 | 29 | 88.4 |
+| world_questions | 350 | 39 | 88.9 |
 | spend_story_ar | 450 | 39 | 91.3 |
+| edits_cancels | 140 | 12 | 91.4 |
+| remind_en_time | 550 | 41 | 92.5 |
 | goals | 150 | 11 | 92.7 |
+| multi_spend | 400 | 27 | 93.3 |
 | numbers_not_money | 250 | 16 | 93.6 |
 | agents | 400 | 20 | 95.0 |
+| spend_words | 300 | 10 | 96.7 |
+| not_a_payment | 500 | 10 | 98.0 |
+| remind_ar_time | 500 | 0 | 100.0 |
+| remind_repeat | 300 | 0 | 100.0 |
 | deadlines | 250 | 0 | 100.0 |
 | smalltalk | 60 | 0 | 100.0 |
 
@@ -39,11 +39,10 @@ Every sentence is different; each is checked for WHAT the app does and for the d
 
 ### spend_story_en
 - **→ chat** × 39: «I took Omar out and flowers came to 1500» · «135 went on dinner today, way too much» · «60 went on coffee today, way too much» · «I took my brother out and pizza came to 650» · «the laundry with Mohamed last night, 720 in total» · «I took Ahmed out and the plumber came to 550»
-- **amount N ≠ N** × 26: «at 8 pm I paid 600 for bus tickets» · «at 7 pm I paid 85 for the internet bill» · «at 2 pm I paid 180 for the laundry» · «this morning I spent 15 on clothes near gate 4» · «at 11 pm I paid 350 for coffee» · «at 1 pm I paid 95 for school books»
 - **→ confirm** × 19: «bus tickets with my brother last night, 4500 in total» · «a taxi with Mohamed last night, 300 in total» · «groceries with Laila last night, 2500 in total» · «a taxi with Fatima last night, 850 in total» · «the internet bill with Maria last night, 800 in total» · «petrol with David last night, 150 in total»
 
 ### spend_story_ar
-- **amount N ≠ N** × 26: «اشتريت 5 قمصان ب420 من سيتي ستارز» · «اشتريت 2 قمصان ب1100 من كارفور» · «اشتريت 2 قمصان ب٣٢٠ من سيتي ستارز» · «اشتريت 2 قمصان ب٤٥٠٠ من كازيون» · «اشتريت 4 قمصان ب850 من النادي» · «اشتريت 2 قمصان ب275 من ستاربكس»
+- **direction in ≠ out** × 26: «اشتريت 5 قمصان ب420 من سيتي ستارز» · «اشتريت 2 قمصان ب1100 من كارفور» · «اشتريت 2 قمصان ب٣٢٠ من سيتي ستارز» · «اشتريت 2 قمصان ب٤٥٠٠ من كازيون» · «اشتريت 4 قمصان ب850 من النادي» · «اشتريت 2 قمصان ب275 من ستاربكس»
 - **→ chat** × 12: «اديت الدليفري 7500 العشا» · «اديت الدليفري 180 الغدا» · «اديت الدليفري 950 السباك» · «اديت الدليفري 1400 الغدا» · «اديت الدليفري 18000 اكل القطة» · «اديت الدليفري ٤٥٠ البيطري»
 - **→ life** × 1: «الجيم كلفتني 60 جنيه»
 
@@ -53,44 +52,35 @@ Every sentence is different; each is checked for WHAT the app does and for the d
 - **→ open** × 6: «phone cover 18000 egp.» · «phone cover   800  » · «phone cover 1750 جنيه» · «phone cover   75  » · «phone cover 1250 egp.» · «phone cover   1400  »
 
 ### spend_words
-- **→ chat** × 192: «spent seven hundred and fifty on school books» · «فاتورة النت ربعمية جنيه» · «pizza five hundred pounds» · «a phone cover three hundred pounds» · «the electricity bill ten pounds» · «الحلاق بتلتمية جنيه»
-- **→ money-ask** × 108: «صرفت سبعين على فاتورة المية» · «I paid seventy for a new charger today» · «صرفت سبعين على دكتور الاسنان» · «dinner cost me two hundred and fifty» · «صرفت تلتمية على تذاكر الاتوبيس» · «I paid six hundred for the plumber today»
+- **→ money-ask** × 9: «صرفت مية على تذاكر الاتوبيس» · «flowers cost me ten» · «صرفت عشرة على هدية» · «صرفت مية على المغسلة» · «صرفت مية على فاتورة الكهربا» · «صرفت مية على فاتورة المية»
+- **→ chat** × 1: «اشتريت الميكانيكي بعشرة»
 
 ### spend_franco
 - **→ chat** × 44: «rakna 110 geneh» · «hodoom 300 geneh» · «rakna kalefny 420 geneh» · «dawa b 950 geneh» · «sabak b 35 geneh» · «el 7ala2 kan b 3200»
 - **→ confirm** × 10: «el sabak kan b 850» · «el hedeya kan b 650» · «el dawa kan b 720» · «el rakna kan b 25» · «el hodoom kan b 1400» · «el hedeya kan b 850»
-- **amount N ≠ N** × 3: «dafa3t lel 7ala2 60» · «dafa3t lel 7ala2 135» · «dafa3t lel 7ala2 220»
+- **amount N ≠ N** × 1: «dafa3t lel 7ala2 60»
 
 ### income
-- **direction out ≠ in** × 80: «العميل دفعلي 40000» · «abadt 4000» · «the client paid 1000 for overtime» · «العميل دفعلي 15000» · «Karim sent me 500» · «Fatima sent me 5000»
 - **→ confirm** × 53: «جالي بونص 1500» · «el morattab nezel 1000» · «el morattab nezel 4000» · «اختي بعتلي 1200» · «el morattab nezel 8000» · «جالي بونص 5000»
+- **direction out ≠ in** × 12: «abadt 4000» · «abadt 3000» · «abadt 20000» · «abadt 2000» · «abadt 1000» · «abadt 40000»
 
 ### multi_spend
-- **amounts N ≠ N+N** × 65: «spent 75 on the plumber and 2200 on parking» · «دفعت 4500 الجيم و 15 الصيدلية» · «دفعت 95 الفطار و 175 العشا» · «دفعت 18000 خضار و 15 دوا» · «spent 1500 on groceries and 180 on the mechanic» · «spent 450 on sushi and 300 on the cinema»
-- **amounts N ≠ N+N+N** × 44: «spent 1500 on a gift, 95 on dinner and 135 on the laundry» · «spent 85 on breakfast, 320 on the laundry and 18000 on petrol» · «spent 550 on parking, 75 on petrol and 25 on the electricity bill» · «spent 480 on the gym, 220 on shoes and 175 on a phone cover» · «spent 850 on the vet, 480 on a phone cover and 950 on pizza» · «spent 150 on the dentist, 3200 on the mechanic and 120 on tolls»
 - **→ chat** × 17: «today: school books 1100; the barber 120» · «a new charger 720, the mechanic 12500» · «كتب المدرسة 2500، تورتة 1100» · «بامبرز 110 وكتب المدرسة 2500» · «flowers 600 and a haircut 850» · «المغسلة 18000 والميكانيكي 2500»
 - **→ calc** × 6: «the laundry 720 + tolls 650» · «lunch 75 + tolls 950» · «the barber 5200 + tolls 850» · «the mechanic 250 + cat food 7500» · «diapers 220 + a new charger 75» · «flowers 2500 + dinner 850»
 - **→ life** × 3: «فاتورة النت 25 والغدا 1100» · «الغدا 220، فاتورة النت 1500» · «الغدا 95، فاتورة النت 12500»
+- **amounts N+N ≠ N+N** × 1: «دفعت 95 الفطار و 175 العشا»
 
 ### not_a_payment
-- **→ money** × 323: «I almost paid 550 for a haircut» · «I didn't pay the 300 for the gym yet» · «طلبوا مني 1750 في فاتورة الكهربا ومدفعتش» · «don't count the 300 for the electricity bill» · «I didn't pay the 85 for the internet bill yet» · «shoes used to cost 25»
+- **→ money** × 10: «don't count the 300 for the electricity bill» · «don't count the 135 for a gift» · «don't count the 850 for the pharmacy» · «don't count the 85 for shoes» · «don't count the 320 for the water bill» · «don't count the 7500 for shoes»
 
 ### remind_en_time
-- **title keeps time words: “…”** × 105: «reminder to charge the power bank this evening at 7» · «wake me tomorrow morning at 8 to renew the car licence» · «I need a reminder in an hour to back up my phone» · «I need a reminder in half an hour to wish Ahmed happy birthday» · «please remind me to back up my phone the day after tomorrow at 10 am» · «remind me tomorrow morning at 8 that I have to call Tom»
-- **time N/N N:N ≠ N/N N:N** × 100: «I need a reminder at 10 to 5 pm to call Omar» · «remind me at half past 6 pm that I have to send the report» · «remind me at quarter past 5 pm that I have to buy bread» · «set a reminder in 3 days at 4 pm: wish Priya happy birthday» · «remind me at half past 6 pm that I have to order the cake» · «wake me at quarter past 5 pm to email Priya»
-
-### remind_ar_time
-- **→ chat** × 77: «اعملي تذكير كمان 20 دقيقة ادفع للشغالة» · «اعملي تذكير بعد بكرة الساعة 10 الصبح انقل العربية» · «اعملي تذكير النهارده الساعة 9 وربع بالليل اجدد رخصة العربية» · «فكريني كمان ربع ساعة اجدد رخصة العربية» · «اعملي تذكير بكرة الساعة 9 الصبح اسلم الواجب» · «فكريني كمان ساعة ونص اطبع التذاكر»
-- **→ money** × 42: «فكريني الساعة 6 ونص المغرب اطبع التذاكر» · «اعملي تذكير بكرة الساعة 9 الصبح ادفع فاتورة الكهربا» · «فكريني يوم السبت الساعة 11 الصبح اخد الدوا» · «فكريني بعد 3 ايام الساعة 4 العصر ادفع فاتورة الكهربا» · «متخلنيش انسى اسقي الزرع الساعة 6 ونص المغرب» · «متخلنيش انسى ادفع للشغالة النهارده الساعة 9 وربع بالليل»
-- **time N/N N:N ≠ N/N N:N** × 39: «ذكرني بعد 3 ايام الساعة 4 العصر اني اكلم البنك» · «فكرني بعد 3 ايام الساعة 4 العصر انقل العربية» · «فكرني اطبع التذاكر كمان ساعة ونص» · «فكرني كمان ساعة ونص احجز عند الدكتور» · «فكرني اكلم ليلى كمان ساعة ونص» · «فكرني كمان ساعة ونص اسقي الزرع»
-- **→ confirm** × 1: «فكريني النهارده الساعة 8 بالليل ابعت التقرير»
+- **time none ≠ N/N N:N** × 19: «I need a reminder in an hour to back up my phone» · «I need a reminder in half an hour to wish Ahmed happy birthday» · «I need a reminder in 45 minutes to check the oven» · «set a reminder in 10 mins: feed the cat» · «I need a reminder in an hour and a half to book the dentist» · «I need a reminder in half an hour to send the report»
+- **title keeps time words: “…”** × 12: «set a reminder the day after tomorrow at 10 am: send Nada the photos» · «I need a reminder this evening at 7 to take the laundry out» · «set a reminder this evening at 7: call the bank» · «I need a reminder this evening at 7 to email Hassan» · «I need a reminder this evening at 7 to check the oven» · «set a reminder this evening at 7: pick up the kids»
+- **time N/N N:N ≠ N/N N:N** × 10: «set a reminder in 3 days at 4 pm: wish Priya happy birthday» · «set a reminder on the 15th at 6 pm: print the tickets» · «wake me in 2 hours to buy bread» · «I need a reminder tomorrow at 5pm to return the library books» · «set a reminder on 25 December at 8 pm: send Maria the photos» · «wake me in 2 hours to water the plants»
 
 ### remind_mixed
 - **time none ≠ N/N N:N** × 56: «fakarny kaman 20 de2e2a atfy el forn!» · «fakarny yom el gom3a el sa3a 3 el 3asr aroo7 el doctor!» · «fakarny yom el gom3a el sa3a 3 el 3asr aroo7 el doctor ya attune» · «fakarny yom el gom3a el sa3a 3 el 3asr aroo7 el doctor 🙏» · «fakarny enharda el sa3a 8 bel leil akalem Omar!» · «fakarny ba3d bokra el sa3a 10 el sob7 akalem Mohamed 🙏»
-- **time N/N N:N ≠ N/N N:N** × 26: «remind me tmrw 5pm to email Nada» · «remind me tmrw 5pm to email Chen» · «remind me tmrw 5pm to email Youssef pls» · «remind me tmrw 5pm to email John pls» · «remind me tmrw 5pm to email Fatima» · «remind me tmrw 5pm to email Tom!»
-
-### remind_repeat
-- **not repeating (repeat)** × 42: «every morning at 6 remind me to pay the electricity bill» · «every morning at 9 remind me to wish Sara happy birthday» · «every morning at 7 remind me to call the bank» · «every morning at 9 remind me to back up my phone» · «فكرني كل حد الساعة 8 بالليل اطفي الفرن» · «فكرني كل جمعة الساعة 10 بالليل اطبع التذاكر»
+- **time N/N N:N ≠ N/N N:N** × 2: «fakarny ba3d bokra el sa3a 10 el sob7 akalem Maria» · «fakarny enharda el sa3a 8 bel leil akalem Maria»
 
 ### debt_en
 - **→ chat** × 83: «I took 4000 from my mum and will return it next month» · «John still owes me 40000 for the laundry» · «I took 5000 from my wife and will return it next month» · «I gave my neighbour 6500 as a loan» · «Maria has 2000 of mine» · «I have to give my neighbour back 1200»
@@ -105,8 +95,6 @@ Every sentence is different; each is checked for WHAT the app does and for the d
 
 ### repay
 - **→ chat** × 40: «Priya returned the 40000 he owed me» · «Sara returned the 3000 he owed me» · «Youssef returned the 8000 he owed me» · «Nada returned the 700 he owed me» · «Hassan returned the 700 he owed me» · «I gave Laila back the 6500 I owed»
-- **direction out ≠ in (a debt paid back)** × 34: «Sara paid me back 1000» · «Mohamed paid me back 3000» · «Tom paid me back 2500» · «Mona paid back 1500 of what he owes me» · «John paid me back 1000» · «Chen paid back 3000 of what he owes me»
-- **direction in ≠ out (a debt paid back)** × 15: «رجعت 8000 لهنا من اللي عليا» · «رجعت 6500 لندى من اللي عليا» · «رجعت 8000 لعمر من اللي عليا» · «رجعت 1000 لاحمد من اللي عليا» · «رجعت 1200 لندى من اللي عليا» · «رجعت 5000 لعمر من اللي عليا»
 
 ### plans
 - **each payment N ≠ N** × 33: «قسط الموبايل 1500 كل شهر على 12 شهر» · «قسط الموبايل 200 كل شهر على 10 شهر» · «قسط الموبايل 200 كل شهر على 12 شهر» · «قسط الموبايل 600 كل شهر على 12 شهر» · «قسط الموبايل 1500 كل شهر على 24 شهر» · «قسط الموبايل 120 كل شهر على 36 شهر»
@@ -151,7 +139,6 @@ Every sentence is different; each is checked for WHAT the app does and for the d
 - **→ ask:due** × 1: «how much went on restaurants this week?»
 
 ### world_questions
-- **→ money** × 34: «ترجم "دفعت 2200 في السباك" للانجليزي» · «correct my grammar: i payed 1400 for the internet bill yesterday» · «correct my grammar: i payed 3200 for the vet yesterday» · «translate "I paid 180 for petrol" to French» · «correct my grammar: i payed 450 for the vet yesterday» · «ترجم "دفعت 75 في شاحن جديد" للانجليزي»
 - **→ agent/watch** × 23: «ايه احسن موبايل تحت 11000؟» · «ايه احسن لابتوب تحت 2500؟» · «ايه احسن لابتوب تحت 1250000؟» · «ايه احسن لابتوب تحت 12000؟» · «ايه احسن موبايل تحت 9500؟» · «ايه احسن تابلت تحت 65000؟»
 - **→ ask:teach** × 9: «tell me a story about a man who owed his friend 220» · «tell me a story about a man who owed his friend 450» · «tell me a story about a man who owed his friend 3200» · «tell me a story about a man who owed his friend 650» · «tell me a story about a man who owed his friend 480» · «tell me a story about a man who owed his friend 2200»
 - **→ reminder** × 6: «how do I remind my team about deadlines?» · «what does "remind me tomorrow" mean in French?» · «what does "remind me tomorrow" mean in Turkish?» · «what does "remind me tomorrow" mean in Italian?» · «what does "remind me tomorrow" mean in German?» · «what does "remind me tomorrow" mean in Spanish?»
@@ -162,9 +149,9 @@ Every sentence is different; each is checked for WHAT the app does and for the d
 - **→ reminder** × 6: «call me on 01014597157» · «call me on 01027397395» · «call me on 01025688838» · «call me on 01017057521» · «call me on 01060143609» · «call me on 01033321032»
 
 ### two_orders
-- **→ reminder** × 200: «spent 3200 on an uber, also remind me the day after tomorrow at 10 am to send the report» · «جزمة 550 جنيه، وفكرني احجز عند الدكتور بكرة الساعة 9 الصبح» · «spent 135 on the dentist, also remind me tomorrow at 9 am to buy bread» · «القهوة 1100 جنيه، وفكرني اجيب العيال يوم الجمعة الساعة 3 العصر» · «paid 600 for tolls and remind me to check the oven in 2 hours» · «remind me tonight at 8 to charge the power bank and I paid 60 for petrol»
+- **→ reminder** × 33: «spent 85 on parking, also remind me in an hour and a half to water the plants» · «spent 1750 on a birthday cake, also remind me tomorrow at noon to print the tickets» · «remind me in half an hour to call David and I paid 1250 for shoes» · «paid 95 for vegetables and remind me to move the car tomorrow at noon» · «remind me in an hour to take my medicine and I paid 550 for a phone cover» · «paid 2500 for diapers and remind me to pay the maid in half an hour»
+- **payment N not recorded** × 3: «دفعت 15 الفطار وفكرني كمان ساعة ونص ابعت التقرير» · «دفعت 950 الفطار وفكرني بكرة الساعة 9 الصبح اطبع التذاكر» · «دفعت 120 الفطار وفكرني بعد ساعة اشتري عيش»
 
 ### edits_cancels
-- **→ money** × 39: «لا غلط كانت 2200» · «edit the internet amount to 220» · «غير الايجار ل5200» · «edit the rent amount to 600» · «لا غلط كانت 120» · «لا غلط كانت 720»
 - **→ life** × 11: «the netflix is 150 now, not 200» · «the netflix is 5200 now, not 5250» · «change the netflix to 480» · «غير الاشتراك ل420» · «edit the netflix amount to 1100» · «edit the netflix amount to 15»
 - **→ reminder** × 1: «cancel my reminder to call the bank»

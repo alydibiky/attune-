@@ -1,4 +1,5 @@
 import { enterSends } from "./keys.js";
+import { typedPayment } from "./sense.js";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { AR as AR_DICT } from "./i18n-ar.js";   // v6.50: Arabic names of the apps for the Home box
 import { usesFleet } from "./industry.js";
@@ -9803,7 +9804,7 @@ export default function App() {
     profileText: () => profileLine(profile),
     accuracy: ACCURACY_RULES,
     isPeriodLog: () => false,   // v9.1: Cycle archived (Attune Fit)
-    parsePayment: (t) => parsePayment(t, { now: Date.now(), ...payOpts() }),
+    parsePayment: (t) => typedPayment(t, { now: Date.now(), ...payOpts() }),   // v9.9.17: a typed sentence — negations, who paid whom, the amount that is money (sense.js)
     canUseAI, aiReady: willRunLocal, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
     webOn,
     toggleWeb: () => {   // On / Off; while Off, Auto (a setting, on by default) still searches when a question needs fresh facts

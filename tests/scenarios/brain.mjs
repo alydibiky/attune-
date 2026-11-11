@@ -31,6 +31,7 @@ import * as TBL from "../../web-src/tables.js";
 import * as HG from "../../web-src/haggle.js";
 import { missingAmounts } from "../../web-src/numguard.js";
 import { directionsOf } from "../../web-src/gomaps.js";
+import { typedPayment, numWords } from "../../web-src/sense.js";
 export { understand, quickAction, calculate, parseAgent, UND, missingAmounts };
 const DO_HERE = ["teach", "lifeEdit", "money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
 const T = (f, d = null) => { try { return f(); } catch (e) { return d; } };
@@ -76,8 +77,12 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
       if (o.type === "lines" && o.lines[0] && o.lines[0].open === "memory") return { k: "where" }; } }
   if (UND.looksFranco(typed)) { const arT = UND.francoToArabic(typed);
     if (arT !== typed && (T(() => looksLikeAction(arT)) || T(() => understand(arT, { now, stores: {} }).actions.length) || T(() => myMoneyIntent(arT)) || T(() => chatLifeIntent(arT)) || T(() => chatDeadlineIntent(arT, { now, home: homeCurrency(), order: "dmy" })))) typed = arT; }
+  // chat.jsx (v9.9.17): number words → digits when the sentence is then something the app does; two orders → both done by Home's reader
+  { const nw = numWords(typed); if (nw !== typed && (T(() => typedPayment(nw, { now, ...payOpts() }), null) || {}).ok || (nw !== typed && (T(() => understand(nw, { now, stores: {} }).actions.length) || T(() => chatLifeIntent(nw))))) typed = nw; }
+  { const u2 = T(() => understand(typed, { now, stores: {} })); if (u2 && u2.two) { const rem = u2.actions.find((a) => a.kind === "reminder"), mon = u2.actions.filter((a) => a.kind === "money").flatMap((a) => (a.items || []).map((i) => i.amount));
+      return { k: both ? "both" : "money", u: u2, parts: { money: mon, at: rem.action.at, title: rem.action.title } }; } }
   const q = /[?؟]\s*$/.test(typed);
-  const pay0 = T(() => parsePayment(typed, { now, ...payOpts() }));
+  const pay0 = T(() => typedPayment(typed, { now, ...payOpts() }));
   const dkOf = (t) => T(() => { const u = understand(t, { now, stores: {} }); return u.ask ? [] : u.actions.map((a) => a.kind); }, []);
   const dk = dkOf(typed);
   const flags = { action: !!T(() => looksLikeAction(typed)), "money-log": !!((pay0 && pay0.ok) || dk.some((k) => DO_HERE.includes(k))) && !q, "money-ask": !!T(() => myMoneyIntent(typed)),
