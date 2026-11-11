@@ -11885,4 +11885,6 @@ export const IDN = {
   "Write it like: “{x}”": "Tulis seperti ini: “{x}”",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Lacak apa saja dengan satu kalimat — buku, klien, kursus Anda. Tanggal mengingatkan Anda sehari sebelumnya.",
   "Say or type it — “the maid is now 700”": "Ucapkan atau ketik — “ART sekarang 700”",
+  "Which category?": "Kategori yang mana?",
+  "Another amount": "Jumlah lain",
 };

@@ -227,7 +227,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
 
   return (
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="radar-page">
-      <div><h2 className={U.h1 + " flex items-center gap-2"}><Radar size={20} className="text-[var(--c-acc)]" />{tr("Deadline Radar")}</h2>
+      <div><h2 className={U.pageH1 + " flex items-center gap-2"}><Radar size={20} className="text-[var(--c-acc)]" />{tr("Deadline Radar")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
 
       {/* v6.27 computer layout A: the counters and the ways in on the left, the deadlines on the right (stacked on a phone) */}

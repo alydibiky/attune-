@@ -79,3 +79,6 @@ html[dir="rtl"] body { line-height: 1.6; }
 .att-fadein { animation: att-fadein .35s ease-out both }
 .att-tilt { transform-box: view-box; transform-origin: 150px 40px; animation: att-tilt 1.1s ease-out both }
 @media (prefers-reduced-motion: reduce) { .att-pop, .att-draw, .att-grow, .att-fadein, .att-tilt { animation: none } }
+
+/* v9.9.16 OK1 (Ali's OK): on a phone the top bar carries the page's name, so the page's own big name is not repeated under it */
+html:not(.att-wide) .att-h1 { display: none; }

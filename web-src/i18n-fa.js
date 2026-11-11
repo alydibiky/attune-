@@ -11884,4 +11884,6 @@ export const FA = {
   "Write it like: “{x}”": "این‌طور بنویسید: «{x}»",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "هر چیزی را با یک جمله پیگیری کنید — کتاب‌ها، مشتری‌ها، دوره‌هایتان. تاریخ‌ها یک روز قبل یادآوری می‌شوند.",
   "Say or type it — “the maid is now 700”": "بگویید یا بنویسید — «خدمتکار حالا ۷۰۰ می‌گیرد»",
+  "Which category?": "کدام دسته؟",
+  "Another amount": "مبلغ دیگر",
 };

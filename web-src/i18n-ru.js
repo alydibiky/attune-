@@ -11884,4 +11884,6 @@ export const RU = {
   "Write it like: “{x}”": "Напишите так: «{x}»",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Ведите что угодно одной фразой — книги, клиентов, курсы. О датах напомним за день.",
   "Say or type it — “the maid is now 700”": "Скажите или напишите — «домработница теперь 700»",
+  "Which category?": "Какая категория?",
+  "Another amount": "Другая сумма",
 };

@@ -11,11 +11,12 @@
    from your account), paylog.js appendToLedger (the chosen account). */
 import React, { useState } from "react";
 import { Check, Wallet, User, Phone, BellRing, ChevronLeft } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, getLang } from "./i18n.js";
+import { tickRegular, catForCommitment } from "./regular.js";
 import { loadLife, saveLife, setPayer, payerUnknown, payerLine, peopleChoices, nextReminder, hasPayer } from "./life.js";
 import { appendToLedger } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
-import { accountBalance } from "./money-report.js";
+import { accountBalance, catName } from "./money-report.js";
 import { loadDir } from "./entities.js";
 import { loadReminders, saveReminders, syncToPhone } from "./actions.js";
 
@@ -117,5 +118,44 @@ export function PayerRow({ c, onChange }) {
       <Wallet size={14} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 min-w-0 truncate font-bold" dir="auto" data-testid="payer-line">{payerLine(c)}</span>
       <button onClick={() => setOpen(true)} className="min-h-[36px] px-2 text-[12.5px] font-extrabold text-[var(--c-acc)]" data-testid="payer-change">{tr("Change")}</button></div>
     : <PayerPicker c={c} onCancel={() => setOpen(false)} onSave={(who) => { savePayer(c.id, who); setOpen(false); onChange && onChange(); }} />}
+  </div>;
+}
+
+/* ---- v9.9.16 OK3 (Ali's OK on https://claude.ai/artifact/8SwygRB1JbYRAgnfgiRpG6, with K1 B1 Q1): a payment you said you WOULD make
+   ("I will pay Ahmed 4500 next week") is asked about on its day — "Did you pay Ahmed 4,500?" — and after "Paid" this step asks from
+   which balance (skipped with one account — B1) and which category (Attune's guess already picked, one tap to change — K1), or
+   another amount; then it goes to Money. Nothing is taken from Money before "Add to Money". */
+export function paidCats(L, c) {
+  const guess = catForCommitment(L, c, c.title || "");
+  const custom = ((L && L.customCats) || []).filter((x) => !x.type || x.type === "expense").map((x) => x.id);
+  return [...new Set([guess, "bills", "food", "transport", "shopping", "health", ...custom.slice(0, 4), "other"])].filter(Boolean).slice(0, 9);
+}
+export function PaidStep({ c, i, onDone, onCancel }) {
+  const ar = getLang() === "ar", L = loadLedger(), accounts = accountsNow();
+  const cats = paidCats(L, c);
+  const [acc, setAcc] = useState(c.account && accounts.some((a) => a.id === c.account) ? c.account : (accounts[0] || {}).id || "");
+  const [cat, setCat] = useState(cats[0]);
+  const [other, setOther] = useState(false), [amt, setAmt] = useState(String(c.amount || ""));
+  const chip = (on) => "min-h-[36px] px-3 rounded-full text-[12.5px] font-bold border " + (on ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]");
+  const go = () => {
+    const n = other ? +String(amt).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[, ]/g, "") : c.amount;
+    if (!(n > 0)) return;
+    const a = accounts.find((x) => x.id === acc);
+    const d = loadLife();
+    saveLife({ ...d, items: d.items.map((x) => (x.id === c.id ? { ...x, payer: "me", cat, ...(a ? { account: a.id, accountName: a.name } : {}), ...(n !== x.amount ? { amount: n, total: x.count === 1 ? n : x.total } : {}) } : x)) });
+    const r = tickRegular(c.id, i, true);
+    onDone && onDone({ recorded: r.recorded, amount: n, account: a ? a.name : "", cat: catName(L, cat, ar), undo: () => tickRegular(c.id, i, false) });
+  };
+  return <div className="rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 space-y-2.5" data-testid="paid-step">
+    {accounts.length > 1 ? <div><p className="m-0 text-[13px] font-extrabold">{tr("From which balance?")}</p>
+      <div className="flex flex-wrap gap-1.5 mt-1.5">{accounts.map((a) => <button key={a.id} onClick={() => setAcc(a.id)} aria-pressed={acc === a.id} className={chip(acc === a.id)} data-testid="paid-acc" dir="auto">{a.name} · <span className="tabular-nums">{Math.round(a.balance).toLocaleString("en-US")}</span></button>)}</div></div> : null}
+    <div><p className="m-0 text-[13px] font-extrabold">{tr("Which category?")}</p>
+      <div className="flex flex-wrap gap-1.5 mt-1.5">{cats.map((k) => <button key={k} onClick={() => setCat(k)} aria-pressed={cat === k} className={chip(cat === k)} data-testid="paid-cat" data-cat={k} dir="auto">{catName(L, k, ar)}</button>)}</div></div>
+    {other ? <input value={amt} onChange={(e) => setAmt(e.target.value)} inputMode="decimal" dir="ltr" aria-label={tr("Amount")} className="w-full min-h-[40px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 text-[14px] tabular-nums" data-testid="paid-amount" /> : null}
+    <div className="flex flex-wrap gap-1.5">
+      <button onClick={go} className="min-h-[38px] px-3.5 rounded-[12px] text-[13px] font-extrabold bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" data-testid="paid-go">{tr("Add to Money")}</button>
+      {!other ? <button onClick={() => setOther(true)} className="min-h-[38px] px-3.5 rounded-[12px] text-[13px] font-extrabold border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]" data-testid="paid-other">{tr("Another amount")}</button> : null}
+      <button onClick={onCancel} className="min-h-[38px] px-3 text-[13px] font-bold underline c-sub" data-testid="paid-cancel">{tr("Cancel")}</button>
+    </div>
   </div>;
 }

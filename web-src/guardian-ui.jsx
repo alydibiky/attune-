@@ -105,7 +105,7 @@ export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
   const shown = pro ? F : F.slice(0, 1), hidden = pro ? [] : F.slice(1);
   return (
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="guardian-page">
-      <div><h2 className={U.h1 + " flex items-center gap-2"}><ShieldCheck size={20} className="text-[var(--c-acc)]" />{tr("Money Guardian")}</h2>
+      <div><h2 className={U.pageH1 + " flex items-center gap-2"}><ShieldCheck size={20} className="text-[var(--c-acc)]" />{tr("Money Guardian")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Finds money in your own payments — on this phone, by code. It only counts what you did.")}</p></div>
       {/* v7.2 (Gemini's Area 1): on a computer two panes — what to act on at the start, the Price memory at the end */}
       <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-5 lg:items-start"><div className="space-y-4 min-w-0">

@@ -268,7 +268,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     ["Bills, rent and subscriptions", data.items.filter((c) => ["bill", "rent", "subscription"].includes(c.kind))], ["Comes regularly", data.items.filter((c) => c.kind === "regular")]].filter((g) => g[1].length);
   return (
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="life-page">
-      <div><h2 className={U.h1}>{tr("People & plans")}</h2><p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
+      <div><h2 className={U.pageH1}>{tr("People & plans")}</h2><p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
       <PayerAsk flash={flash} onDone={() => setData(loadLife())} />{/* v9.9.13 "Who pays it?" for a subscription added by itself */}
       {/* v6.27 computer layout A: what you type and what's due on the left, the commitments on the right (stacked on a phone) */}
       <div className={PANES_N}><div className={LEFT}>

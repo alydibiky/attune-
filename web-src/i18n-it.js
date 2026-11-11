@@ -11885,4 +11885,6 @@ export const IT = {
   "Write it like: “{x}”": "Scrivilo così: “{x}”",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Tieni traccia di qualsiasi cosa con una frase — libri, clienti, corsi. Le date ti avvisano il giorno prima.",
   "Say or type it — “the maid is now 700”": "Dillo o scrivilo — “la colf ora prende 700”",
+  "Which category?": "Quale categoria?",
+  "Another amount": "Un altro importo",
 };

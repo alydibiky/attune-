@@ -11885,4 +11885,6 @@ export const UR = {
   "Write it like: “{x}”": "اسے یوں لکھیں: “{x}”",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "ایک جملے میں کچھ بھی ٹریک کریں — آپ کی کتابیں، کلائنٹس، کورسز۔ تاریخیں ایک دن پہلے یاد دلاتی ہیں۔",
   "Say or type it — “the maid is now 700”": "بولیں یا لکھیں — “ملازمہ اب 700 لیتی ہے”",
+  "Which category?": "کون سی قسم؟",
+  "Another amount": "کوئی اور رقم",
 };

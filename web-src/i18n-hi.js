@@ -11885,4 +11885,6 @@ export const HI = {
   "Write it like: “{x}”": "इसे ऐसे लिखें: “{x}”",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "एक वाक्य में कुछ भी ट्रैक करें — आपकी किताबें, क्लाइंट, कोर्स। तारीखें एक दिन पहले याद दिलाती हैं।",
   "Say or type it — “the maid is now 700”": "बोलें या लिखें — “कामवाली अब 700 लेती है”",
+  "Which category?": "कौन-सी श्रेणी?",
+  "Another amount": "कोई और रकम",
 };

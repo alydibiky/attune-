@@ -135,10 +135,10 @@ export function TravelPage(p) {
             <input value={find} onChange={(e) => setFind(e.target.value)} placeholder={tr("Find a country…")} className={field + " w-full ps-8"} style={st} data-testid="travel-find" /></div>
           <div className="flex flex-wrap gap-1.5 max-h-56 overflow-auto">{others.map(([k, x]) => (
             <button key={k} onClick={() => { installPack(k); setPick(false); setFind(""); }} className={K.chip(false) + " cursor-pointer"} data-testid={"travel-pack-" + k}>
-              {x.flag} {countryShown(k, x.name)} <span className="c-sub">{x.size}</span></button>))}</div>
+              {x.flag} {countryShown(k, x.name)}</button>))}</div>
           <div className="flex flex-wrap gap-1.5 pt-1">
             <span className="c-sub">{tr("Country packs")}: {tr(packFeed.from)}{packFeed.rejected ? " · " + tr("{n} rejected", { n: packFeed.rejected }) : ""}</span>
-            {netInfo.filter((x) => x.configured).map((x) => <span key={x.k} className="c-sub">· {tr(x.label)}: {x.at ? new Date(x.at).toLocaleDateString(dateLocale()) : tr("never")}</span>)}
+            {netInfo.filter((x) => x.configured).map((x) => <span key={x.k} className="c-sub">· {tr(x.label)}: {x.at ? new Date(x.at).toLocaleDateString(dateLocale()) : tr("Not yet")}</span>)}
           </div>
         </Section>
       ) : null}

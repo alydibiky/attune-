@@ -11884,4 +11884,6 @@ export const TH = {
   "Write it like: “{x}”": "เขียนแบบนี้: “{x}”",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "ติดตามอะไรก็ได้ด้วยประโยคเดียว — หนังสือ ลูกค้า คอร์สของคุณ วันที่จะเตือนคุณล่วงหน้าหนึ่งวัน",
   "Say or type it — “the maid is now 700”": "พูดหรือพิมพ์ — “แม่บ้านตอนนี้ 700”",
+  "Which category?": "หมวดหมู่ไหน?",
+  "Another amount": "จำนวนอื่น",
 };

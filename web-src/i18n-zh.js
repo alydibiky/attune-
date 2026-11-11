@@ -11884,4 +11884,6 @@ export const ZH = {
   "Write it like: “{x}”": "请这样写：“{x}”",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "一句话记录任何东西——你的书、客户、课程。日期会提前一天提醒你。",
   "Say or type it — “the maid is now 700”": "说出或输入——“保姆现在是700”",
+  "Which category?": "哪个类别？",
+  "Another amount": "其他金额",
 };

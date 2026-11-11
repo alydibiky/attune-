@@ -11885,4 +11885,6 @@ export const TRK = {
   "Write it like: “{x}”": "Şöyle yazın: “{x}”",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Her şeyi tek cümleyle takip edin — kitaplarınız, müşterileriniz, kurslarınız. Tarihler bir gün önce hatırlatır.",
   "Say or type it — “the maid is now 700”": "Söyleyin veya yazın — “temizlikçi artık 700”",
+  "Which category?": "Hangi kategori?",
+  "Another amount": "Başka bir tutar",
 };

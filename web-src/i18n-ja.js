@@ -11884,4 +11884,6 @@ export const JA = {
   "Write it like: “{x}”": "このように書いてください：「{x}」",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "一文で何でも管理 — 本、顧客、講座。日付は前日にお知らせします。",
   "Say or type it — “the maid is now 700”": "話すか入力 —「家政婦は今700」",
+  "Which category?": "どのカテゴリ？",
+  "Another amount": "別の金額",
 };

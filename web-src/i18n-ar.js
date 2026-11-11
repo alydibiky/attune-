@@ -8956,4 +8956,6 @@ export const AR = {
   "Write it like: “{x}”": "اكتبها كده: «{x}»",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "تابع أي حاجة بجملة واحدة — كتبك، عملاءك، كورساتك. والتواريخ بتفكرك قبلها بيوم.",
   "Say or type it — “the maid is now 700”": "قولها أو اكتبها — «الشغالة بقت 700»",
+  "Which category?": "أنهي تصنيف؟",
+  "Another amount": "مبلغ تاني",
 };

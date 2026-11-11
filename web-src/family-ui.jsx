@@ -24,7 +24,7 @@ export function FamilyPage({ flash, cur = "", remind }) {
 
   if (!fam.me) return (
     <div className={U.page + " rounded-2xl p-4 md:p-6 space-y-3.5"} data-testid="family-page" data-view="setup">
-      <h2 className={U.h1 + " flex items-center gap-2"}><Users size={20} className="c-acc" />{tr("Family")}</h2>
+      <h2 className={U.pageH1 + " flex items-center gap-2"}><Users size={20} className="c-acc" />{tr("Family")}</h2>
       <div className={U.cardPad + " space-y-2.5"}>
         <p className={"m-0 text-[13.5px] " + U.muted}>{tr("One shopping list, who paid what for the house, and reminders for your parents — shared with your family's phones only, locked with a family code. No account, no server.")}</p>
         <label className="block text-[13px] font-bold">{tr("Your name in the family")}<input className={U.inp + " mt-1"} value={me} onChange={(e) => setMeName(e.target.value)} placeholder={ar ? "علي" : tr("Ali")} data-testid="family-me" /></label>
@@ -60,7 +60,7 @@ export function FamilyPage({ flash, cur = "", remind }) {
   return (
     <div className={U.page + " rounded-2xl p-4 md:p-6 space-y-3.5 lg:space-y-[18px]"} data-testid="family-page" data-view="main">
       <div className="flex items-end justify-between gap-3">
-        <h2 className={U.h1 + " flex items-center gap-2"}><Users size={20} className="c-acc" />{tr("Family")}</h2>
+        <h2 className={U.pageH1 + " flex items-center gap-2"}><Users size={20} className="c-acc" />{tr("Family")}</h2>
         <span className={U.tag("blue")}>{fam.members.map((m) => m.name).join(" · ")}</span>
       </div>
       <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4 lg:items-start">

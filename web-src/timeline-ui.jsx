@@ -14,7 +14,7 @@ import { loadReminders } from "./actions.js";
 import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
 import { NoteAskCard, LearnedButton, currentAsks } from "./notelabels-ui.jsx";
-import { PayerAsk } from "./payer-ui.jsx";   // v9.9.13 who pays a subscription added by itself   // v9.9.11 A1 + L (Ali: "ask me, I tell it, it remembers")
+import { PayerAsk, PaidStep } from "./payer-ui.jsx";   // v9.9.13 who pays a subscription added by itself   // v9.9.11 A1 + L (Ali: "ask me, I tell it, it remembers")
 
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
 const ICON = { reminders: Bell, radar: Radar, life: Users, money: Wallet, xray: MessageSquare, guardian: ShieldAlert };
@@ -102,6 +102,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
   const [doneSet, setDoneSet] = useState(() => new Set(j("attune:fu:done", [])));
   const markDone = (key) => { const n = new Set(doneSet); n.add(key); setDoneSet(n); try { localStorage.setItem("attune:fu:done", JSON.stringify([...n].slice(-300))); } catch (e) {} };
   const [asking, setAsking] = useState("");
+  const [paying, setPaying] = useState("");   // v9.9.16 OK3: the payment whose "Paid" is asking balance + category
   const shown = list.filter((x) => !doneSet.has(x.id + "@" + x.date));
   const feed = feedOf(shown);
   const tick = (x) => {
@@ -131,6 +132,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
     if (act === "pay" && x.ck === "regular") return x.date === today ? tr("Did {w} come today?", { w: x.what }) : tr("Did {w} come on {d}?", { w: x.what, d: new Date(x.date + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "short" }) });
     if (act === "pay") { const l = lifeOf(x), c = l && l.c;   // v9.9.14: someone else pays it / nobody set → ask about THEM, Money stays as it is
       if (c && c.payer && c.payer !== "me") return c.payer === "none" ? tr("{w} renews today — was it paid?", { w: x.what }) : tr("{w} renews today — did {p} pay it?", { w: x.what, p: c.payer });
+      if (c && c.planned) return tr("Did you pay {w}?", { w: c.person || c.title || x.what });   // v9.9.16 OK3: "Did you pay Ahmed?" (the amount is on the line under it)
       return tr("Did you pay {w}?", { w: x.what }); }
     if (act === "ask") return tr("Did {w} pay?", { w: who(x) });
     if (act === "done") return x.what;
@@ -161,7 +163,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
   return (
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-3 lg:max-w-[80ch]"} style={{ minHeight: "70vh" }} data-testid="timeline-page">
       <div className="flex items-start gap-3"><span className="w-11 h-11 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><CalendarDays size={18} /></span>
-        <div className="min-w-0 flex-1"><h2 className={U.h1}>{tr("Follow-ups")}</h2>
+        <div className="min-w-0 flex-1"><h2 className={U.pageH1}>{tr("Follow-ups")}</h2>
           <p className={"m-0 mt-0.5 text-[13px] " + U.muted} data-testid="fu-count">{qs.length + asks.length ? tr("Today · {n} to answer", { n: qs.length + asks.length }) : tr("Today")}</p></div></div>
       <div className="flex flex-col gap-2" data-testid="fu-thread">
         {log.map((l) => <React.Fragment key={l.id}>
@@ -183,7 +185,9 @@ export function TimelinePage({ navTo, doIt, flash }) {
                 <p className="m-0 text-[14.5px] font-bold" dir="auto">{qText(x)}{x.amount ? <span className={"ms-1.5 text-[12.5px] tabular-nums " + U.muted} dir="ltr">· {money(x)}</span> : null}</p>
                 {x.late || (!act && x.slip) ? <p className={"m-0 text-[12px] " + (x.late ? "text-[var(--c-neg)] font-bold" : U.muted)} dir="auto">{x.late ? tr("Late") + " · " + dayLabel(x.date) : ""}{!act && x.slip && x.ck !== "regular" ? (x.late ? " — " : "") + (x.D ? tr(x.D[0], x.D[1]) + " — " : "") + tr(x.slip[0], { amount: money(x) || "", who: x.who || "" }) : ""}</p> : null}
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {act === "pay" ? <><button className={BP} onClick={() => came(x)} data-testid="fu-yes">{x.ck === "regular" ? tr("Came ✓") : tr("Paid")}</button>
+                  {act === "pay" && paying === x.id + "@" + x.date ? (() => { const l = lifeOf(x); return l ? <PaidStep c={l.c} i={l.i} onCancel={() => setPaying("")}
+                    onDone={(r) => { setPaying(""); answer(x, tr("Paid"), r.recorded ? tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: l.c.currency || "", t: [r.account, r.cat].filter(Boolean).join(" · ") }) : tr("Done"), () => { r.undo(); setV((y) => y + 1); }); }} /> : null; })()
+                  : act === "pay" ? <><button className={BP} onClick={() => { const l = lifeOf(x); if (l && l.c.planned && !(l.c.payer && l.c.payer !== "me")) setPaying(x.id + "@" + x.date); else came(x); }} data-testid="fu-yes">{x.ck === "regular" ? tr("Came ✓") : tr("Paid")}</button>
                     {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B} onClick={() => later(x, tr("Not yet"))} data-testid="fu-no">{tr("Not yet")}</button>}</> : null}
                   {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={() => later(x, tr("Tomorrow"))} data-testid="fu-no">{tr("Tomorrow")}</button></> : null}
                   {act === "errand" ? <button className={BP} onClick={() => navTo && navTo("errands")} data-testid="fu-open">{tr("Open")}</button> : null}

@@ -11885,4 +11885,6 @@ export const SW = {
   "Write it like: “{x}”": "Iandike hivi: “{x}”",
   "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Fuatilia chochote kwa sentensi moja — vitabu, wateja, kozi zako. Tarehe hukukumbusha siku moja kabla.",
   "Say or type it — “the maid is now 700”": "Sema au andika — “msaidizi sasa ni 700”",
+  "Which category?": "Aina gani?",
+  "Another amount": "Kiasi kingine",
 };

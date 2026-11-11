@@ -20,6 +20,9 @@ export const muted = "text-[var(--c-mut)]";
 export const label = "text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)]";
 export const h1 = "text-[22px] font-black tracking-tight m-0";
 export const h2 = "text-[16px] font-extrabold m-0";
+/** v9.9.16 OK1 (Ali's OK, 11 Nov): a page's own big name. On a phone the top bar already says it (☰ / ‹ + the name), so this one is
+ *  hidden there (build/tw.css .att-h1); on a computer, where there is no top bar, it shows. */
+export const pageH1 = "att-h1 " + h1;
 /** A chip / pill that can be selected: terracotta when on (Gemini's active pill), quiet outline when off. */
 export const chip = (on) => "min-h-[44px] h-11 px-4 rounded-full text-[13.5px] font-extrabold whitespace-nowrap border inline-flex items-center gap-1.5 transition-colors duration-150 "
   + (on ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]");
@@ -54,7 +57,7 @@ export function Row({ icon: I, title, sub, end, onClick, testid }) {
 }
 /** A page header: title, one quiet line under it, actions at the end. */
 export function Head({ title, sub, actions, testid }) {
-  return <div className="flex items-start gap-3" data-testid={testid}><div className="flex-1 min-w-0"><h1 className={h1}>{title}</h1>{sub ? <p className={"m-0 mt-0.5 text-[13px] " + muted}>{sub}</p> : null}</div>{actions}</div>;
+  return <div className="flex items-start gap-3" data-testid={testid}><div className="flex-1 min-w-0"><h1 className={pageH1}>{title}</h1>{sub ? <p className={"m-0 mt-0.5 text-[13px] " + muted}>{sub}</p> : null}</div>{actions}</div>;
 }
 /** The empty state: a soft icon, one sentence, one action. */
 export function Empty({ icon: I, children, action }) {

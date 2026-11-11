@@ -119,7 +119,7 @@ const SIDE_PLACES = [["home", "Home", House],
   // v9.2 (Ali, 1A: "a part where I add my list … clear and visible"): To-dos & lists first under My life
   ["@", "My life"], ["lists", "To-dos & lists", ListChecks], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["care", "Health", Heart], ["agents", "Agents", Radar],   // v9.1: Health = Family health (Fit archived)
   ["@", "Learn & daily"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "My things", BookOpen],
-  ["@", "Go & work"], ["travel", "Go", Plane], ["projects", "Work", Database], ["tools", "Tools", Wrench]];   // v9.1: Business archived — Work = Projects
+  ["@", "Go & work"], ["travel", "Go", Plane], ["tools", "Tools", Wrench]];   // v9.9.16 (Ali: keep the groups): only "Work" left — it opened Projects, which has its own row under Workspaces   // v9.1: Business archived — Work = Projects
 /** v9.2 round 3: the places of the side menu (and what they open) — their header shows ☰; every other page shows ‹ back. */
 const TOP_PLACES = new Set(["home", "lists", "money", "timeline", "care", "agents", "shelf", "travel", "projects", "tools", "memory", "booklib", "people", "coach", "learn"]);
 // v9.1: archived / folded tools leave the sidebar (and a group heading with nothing under it goes too)
@@ -7784,9 +7784,12 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["tables", "timetable", "errands", "groups", "privacy", "family", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+// v9.9.16 OK1: tables, timetable, errands, family, guardian, radar, life left this list — their name is in the top bar now
+const OWN_TITLE = new Set(["groups", "privacy", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
+// v9.9.16 OK1: the pages that had no name for the top bar (Agents said "Attune")
+const BAR_TITLES = { agents: "Agents", timeline: "Follow-ups", life: "People & plans", radar: "Deadline Radar", guardian: "Money Guardian", family: "Family", reminders: "Reminders", write: "Writing", people: "People", projects: "Projects", missions: "Missions", automations: "Automations", recall: "Recall" };
 const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
@@ -7794,7 +7797,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.15";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.16";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -10448,7 +10451,7 @@ export default function App() {
       <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide || !LEGACY_NAV ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
-        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 min-h-[60px] py-2 mb-3 border-b border-slate-800/70" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>
+        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 min-h-[60px] py-2 mb-3 border-b border-slate-800/70" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && (OWN_TITLE.has(mode) || BAR_TITLES[mode] || ["tables", "timetable", "errands"].includes(mode))) ? " hidden" : "")}>
           {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
             <>
@@ -10460,7 +10463,7 @@ export default function App() {
           : TOP_PLACES.has(mode) && !subDepth ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button>
           : <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! -ms-1.5 rounded-full! border-transparent! bg-transparent! text-slate-200!" data-testid="header-back"><ChevronLeft size={26} strokeWidth={2.2} className="rtl:-scale-x-100" /></button>}
           {/* v6.28 (Ali: "the UI is still cluttered"): a page with its own big title doesn't repeat it in the top bar */}
-          <p className="text-[17px] font-extrabold tracking-tight text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || "Attune")}</p>
+          <p className="text-[17px] font-extrabold tracking-tight text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || BAR_TITLES[mode] || (MORE_TOOLS.find((x) => x[0] === mode) || [])[1] || "Attune")}</p>
           <div className="flex-1" />
           {/* v6.31 minimal: the model is a small dot and a name, not a big outlined button */}
           {LEGACY_NAV ? <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 min-h-[40px] text-[12px] font-bold px-3 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
