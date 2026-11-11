@@ -18,6 +18,7 @@ import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import * as UND from "./understand.js";
 import { promptToolOf } from "./prompttools.js";
 import { directionsOf } from "./gomaps.js";
+import { numWords } from "./sense.js";   // v9.9.17
 import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
 // v9.9.11 A4: "teach me your notifications" / «علمني اشعاراتي» / "what don't you understand in my notifications?"
@@ -831,6 +832,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (arT !== typed && ((api.looksLikeAction && api.looksLikeAction(arT)) || (api.doKinds && api.doKinds(arT).length) || myMoneyIntent(arT) || chatLifeIntent(arT)
         || chatDeadlineIntent(arT, { now: Date.now(), home: homeCurrency(), order: dateOrder() }))) return ask(arT, o);
     }
+    // v9.9.17 (the 10,000 hard sentences): "spent three hundred on lunch" / «دفعت ميتين جنيه تاكسي» are read with the number in
+    // digits; "open Money" / «افتح الفلوس» opens the page; two orders in one sentence ("paid 300 for lunch and remind me to call
+    // Ahmed at 5") are BOTH done, with Undo
+    if (route && !img) { const nw = numWords(typed); if (nw !== typed && ((api.parsePayment(nw) || {}).ok || (api.doKinds && api.doKinds(nw).length) || chatLifeIntent(nw))) return ask(nw, o); }
+    if (route && !img && api.pageOf) { const pg = api.pageOf(typed); if (pg) { setText(""); try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: pg } })); } catch (e) {} return; } }
+    if (route && !img && api.twoOrders && api.doIt && api.twoOrders(typed)) {
+      const r = api.doIt(typed);
+      if (r && r.lines && r.lines.length) { const cid = ensureChat(typed);
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+          { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => "• " + x.text).join("\n"), actions: r.undo ? [["Undo", "undo"]] : [] }, undo: r.undo || null, askText: typed }] }));
+        setText(""); return; }
+    }
     let only = null;
     if (route && !img) {
       const pay0 = api.parsePayment(typed);
@@ -953,7 +966,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v9.0 (the sentence bank: "lunch 150", «غدا 150» in Chat went to the AI): what the Home box does is done here too, with Undo —
     // money in a few words, food eaten, water, weight, a dose, a debt paid back (doit.js). Reminders, plans and dates keep their cards.
     // v9.9.3 W2: "send Ahmed 'I'm on my way' on WhatsApp", "call Mama", "uber to …" → the app opens at the right place (Which Ahmed? if unsure)
-    if (route && !img && api.openIt && !only) {
+    if (route && !img && api.openIt && (!only || only === "action")) {   // v9.9.17: "call Mohamed" opened a reminder card with no time
       const r = api.openIt(typed);
       if (r && r.lines && r.lines.length) { const cid = ensureChat(typed);
         patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },

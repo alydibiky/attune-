@@ -9796,6 +9796,8 @@ export default function App() {
     editSay: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask && u.ask.kind === "life-edit" ? u.ask : null; } catch (e) { return null; } },
     doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
     // v9.9.15: is this an order for an agent ("tell me when … is under …", «اشتريلي … بأقل من …», "track my Amazon order")? → its kind, or ""
+    twoOrders: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return !!(u && u.two); } catch (e) { return false; } },   // v9.9.17
+    pageOf: (t) => { try { return AL.pageOf(t); } catch (e) { return ""; } },
     agentKind: (t) => { try { const ag = parseAgent(t, { now: Date.now(), country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); return ag && ["watch", "track", "order", "buy"].includes(ag.kind) ? ag.kind : ""; } catch (e) { return ""; } },
     doIt: (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } },   // (Chat checked first: doSure + the judge + the person's pick)
     whereYes: (set) => remember(W2.whereRecord(set)),

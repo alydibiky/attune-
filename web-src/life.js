@@ -10,6 +10,7 @@
      every "month" | "week" | "year" | null (once)
    Pure logic; stored in localStorage "attune:life:v1" by the UI. Tests: tests/unit/v727life.test.mjs.                          */
 
+import { easeDebt } from "./sense.js";
 import { tr } from "./i18n.js";
 import { payCurrency, payNumber } from "./yusr/paytext.js";
 import { homeCurrency } from "./locale.js";
@@ -236,7 +237,7 @@ function bankLoan(t0) {
 export function parseLife(text, { now = Date.now(), currency = homeCurrency() } = {}) {
   // persona 1: a bank loan — "loan 5000 from the bank, 12 months", "a loan of 60000 from CIB for 24 months", «قرض ١٠٠ الف من البنك
   // على ٣ سنين» — is money you owe the bank in monthly payments (the principal; interest can be added on its page)
-  text = bankLoan(text);
+  text = bankLoan(easeDebt(text));   // v9.9.17: "uncle Samir lent me 10000", «انا عليا 1000 لحسن» (sense.js)
   const raw = String(text || "").trim(); if (!raw) return null;
   const t = fold(raw).toLowerCase();
   // v6.27: the currency as the payment reader sees it (any currency in the world), else the person's own

@@ -232,6 +232,8 @@ export function looksLikeAction(text) {
   const t = easeTime(String(text || ""));
   if (t.length > 400) return false;                           // a pasted document is not a command
   if (/[?؟]\s*$/.test(t) && !/remind|فكرني|ذكرني|صحيني/i.test(t)) return false;  // a question about alarms is not a request
+  // v9.9.17 (the hard run): "how do I remind my team about deadlines?", "what does "remind me tomorrow" mean in French?" are questions
+  if (/[?؟]\s*$/.test(t) && /^\s*(?:what|how|why|who|which|is|are|does|do|should)\b/i.test(t)) return false;
   // v9.0 (the bank: "write a birthday message for my mom"): writing something is for Chat — sending it is an action
   if (/^\s*(please\s+)?(write|draft|compose|help me write|create)\b|^\s*(اكتب|اكتبلي|ألف|الفلي|صيغ|صيغلي)/i.test(t) && !/\b(send|text|whatsapp)\b|ابعت|ابعته/i.test(t)) return false;
   // v9.0 (the sentence bank): "remind me what we talked about yesterday?" asks to recall, not to set a reminder

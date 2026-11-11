@@ -27,7 +27,12 @@ export function readOpen(text) {
     if (!who) return null;
     return { kind: "msg", who, text: words, app };
   }
-  if ((m = /^(?:please\s+)?(?:call|ring|dial|phone)\s+(.{2,40})$/i.exec(t)) || (m = /^(?:كلم|كلملي|اتصل ب|اتصل على|رن على|رنلي على)\s*(.{2,40})$/.exec(t))) return { kind: "call", who: strip(m[1]).replace(/^ب(?=\S)/, "") };
+  if ((m = /^(?:please\s+)?(?:call|ring|dial|phone)\s+(.{2,40})$/i.exec(t)) || (m = /^(?:كلم|كلملي|اتصل ب|اتصل على|رن على|رنلي على)\s*(.{2,40})$/.exec(t))) {
+    // v9.9.17 (the hard run): "phone cover 800" is a purchase, not a call; "call Ahmed tomorrow at 5" is a reminder (Messages / reminders' job)
+    if (/^\s*phone\s/i.test(t) && /\d/.test(m[1]) && !/\d{7,}/.test(m[1].replace(/[\s-]/g, ""))) return null;
+    if (/\b(at \d|tomorrow|tonight|on (mon|tue|wed|thu|fri|sat|sun)|every|in \d+ (min|hour))\b|بكره|بكرة|الساعه|الساعة|كل يوم|كمان|بعد /i.test(t)) return null;
+    return { kind: "call", who: strip(m[1]).replace(/^ب(?=\S)/, "").replace(/\s+now$/i, "") };
+  }
   if ((m = /^(?:please\s+)?(?:e-?mail|mail)\s+(.{2,40}?)(?:\s+(?:about|re|subject)\s+(.{1,120}))?$/i.exec(t)) || (m = /^(?:ابعت|ابعتلي)\s+(?:ايميل|إيميل|ميل)\s+(?:ل|لـ)?\s*(.{2,40}?)(?:\s+عن\s+(.{1,120}))?$/.exec(t))) return { kind: "email", who: strip(m[1]), subject: strip(m[2] || "") };
   if ((m = /^(?:please\s+)?(?:(?:get|book|order|call)\s+(?:me\s+)?(?:an?\s+)?)?(uber|careem|indrive|a ride|a taxi|a car)\s+(?:to|for)\s+(.{2,80})$/i.exec(t)) || (m = /^(?:اطلبلي|اطلب)\s+(اوبر|أوبر|كريم|عربيه|عربية|تاكسي)\s+(?:ل|لـ|على|الى|إلى)\s*(.{2,80})$/.exec(t))) {
     const app = /careem|كريم/i.test(m[1]) ? "careem" : /indrive/i.test(m[1]) ? "indrive" : "uber";
@@ -63,3 +68,13 @@ export function linkOf(x, phone = "") {
 }
 export const PKG = { whatsapp: "com.whatsapp", telegram: "org.telegram.messenger", uber: "com.ubercab", careem: "com.careem.acma", indrive: "sinet.startup.inDriver", maps: "com.google.android.apps.maps" };
 export const needsPerson = (x) => x && (x.kind === "msg" || x.kind === "call");
+
+// v9.9.17 (the hard run: "open Money", "go to Agents", «افتح الفلوس» went to the AI): a page of Attune by its name → its id (attune-open)
+const PAGES = [["money", /^(?:the )?money$|^(?:ال)?فلوس$|^(?:ال)?مصاريف$/i], ["agents", /^(?:the |my )?agents$|^(?:ال)?وكلاء$|^(?:ال)?وكلا$/i], ["reminders", /^(?:the |my )?reminders$|^(?:ال)?تذكيرات$|^تذكيراتي$/i], ["recall", /^recall$/i],
+  ["radar", /^(?:the |my )?dates$|^(?:ال)?مواعيد$/i], ["timeline", /^(?:the |my )?timeline$/i], ["guide", /^how to use$|^(?:the )?guide$|^help$|^ازاي استخدم$/i], ["privacy", /^privacy$|^(?:ال)?خصوصية$/i], ["travel", /^travel$|^(?:ال)?سفر$/i],
+  ["translate", /^translate$|^(?:ال)?ترجمة$/i], ["tools", /^(?:the )?tools$|^(?:ال)?ادوات$|^(?:ال)?أدوات$/i], ["home", /^home$|^(?:ال)?رئيسية$/i]];
+/** "open Money" / "go to Agents" / «افتح الفلوس» → the page's id, or "". */
+export function pageOf(text) {
+  const m = /^\s*(?:please\s+)?(?:open|go to|show me|take me to|show)\s+(.{2,30}?)\s*[.!]?\s*$/i.exec(String(text || "")) || /^\s*(?:افتح|افتحلي|روح على|وديني على|وريني)\s+(.{2,30}?)\s*$/.exec(String(text || ""));
+  if (!m) return ""; const name = m[1].trim(); const hit = PAGES.find(([, re]) => re.test(name)); return hit ? hit[0] : "";
+}

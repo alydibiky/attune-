@@ -147,7 +147,7 @@ object PayLog {
     }
     /** Called on every app open: access is on but nothing arrived for `quietH` hours → ask Android to bind us again; still quiet
      *  (or `force`) → switch the listener off and on, which makes Android connect it afresh (at most every 6 hours). */
-    fun heal(ctx: Context, force: Boolean = false, quietH: Int = 3): Boolean {
+    fun heal(ctx: Context, force: Boolean = false, quietH: Int = 1): Boolean {   // v9.9.17 (Ali: "notifications stopped working from 3pm"): 1 quiet hour, not 3
         if (!enabled(ctx)) return false
         val p = ctx.getSharedPreferences(HP, Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
@@ -155,7 +155,7 @@ object PayLog {
         if (!force && last > 0 && now - last < quietH * 3600_000L) return false
         val cn = ComponentName(ctx, PayListener::class.java)
         try { if (android.os.Build.VERSION.SDK_INT >= 24) NotificationListenerService.requestRebind(cn) } catch (e: Exception) { }
-        if (force || now - p.getLong("healed", 0L) > 6 * 3600_000L) {
+        if (force || now - p.getLong("healed", 0L) > 1 * 3600_000L) {
             try {
                 val pm = ctx.packageManager
                 pm.setComponentEnabledSetting(cn, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP)

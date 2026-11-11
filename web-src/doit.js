@@ -9,7 +9,7 @@
    apply(action, stores, ctx) → { stores: { key: newValue }, done: { en, ar }, open }   (pure; the page writes the keys, keeps the old
    values for Undo, and does what code can't do alone: schedule a reminder, file a note in Mind, log a period).
    Tests: tests/unit/v731doit.test.mjs, tests/e2e_v731doit.py.                                                                    */
-import { numWords, notSpent, splitOrders } from "./sense.js";   // v9.9.17
+import { numWords, notSpent, splitOrders, tidy } from "./sense.js";   // v9.9.17
 import { tr } from "./i18n.js";
 import { readMealText } from "./fitread.js";
 import { makerOf } from "./makers.js";
@@ -104,7 +104,7 @@ const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتر
 const GENERAL_Q = /^\s*(?:how (?:do|does|can|could|should|would|to|long|far|tall|old|many (?!.*\b(?:i|my|me|we)\b))|should i\b|can i\b|could i\b|would it\b|is it\b|is \d|are there\b|why\b|who (?:is|was|were|won|invented|made|wrote)\b|what (?:is|are|was|were|does|do) (?:a|an|the)\b(?!.*\b(?:my|mine|our)\b)|what did (?!i\b|we\b|my\b)|which is (?:better|best|cheaper)\b)|ازاي\s*[?؟]?\s*$|إزاي\s*[?؟]?\s*$|^\s*(?:ازاي|إزاي|ليه|يعني (?:ايه|إيه))|^\s*هو\s+[\d٠-٩]|(?:كتير|غالي|كويس)\s+(?:على|علي)\s/i;
 // v9.9.15: what a number in a sentence is when it is NOT money — a time, a distance, a count, a page, a code… (doSure / strictCheck)
 const UNIT_AFTER = "(?:min(?:ute)?s?|hours?|hrs?|km|kms|kilomet(?:er|re)s?|miles?|steps?|pages?|years?(?: old)?|people|persons?|kids?|children|kg|kilos?|%|days?|nights?|weeks?|months?|times|floors?|دقيقه|دقيقة|دقايق|ساعه|ساعة|ساعات|كيلو|خطوه|خطوة|صفحه|صفحة|صفحات|سنه|سنة|سنين|يوم|ايام|أيام|مره|مرة|مرات|عيال|اولاد|أولاد|افراد|أفراد)";
-const LEAD_BEFORE = "(?:page|room|floor|chapter|code|pin|password|passcode|number|no\\.?|flat|apartment|gate|seat|bus|line|version|model|iphone|galaxy|pixel|ps|size|aged?|score|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الباسورد|باسورد|باب|مقاس|ايفون|آيفون)";
+const LEAD_BEFORE = "(?:page|room|floor|chapter|code|pin|password|passcode|number|no\\.?|flat|apartment|gate|seat|bus|line|flight|الرحله|الرحلة|رحله|رحلة|version|model|iphone|galaxy|pixel|ps|size|aged?|score|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الباسورد|باسورد|باب|مقاس|ايفون|آيفون)";
 const FUTURE_PAY = /\b(?:will|going to|gonna|should|need to|have to|must|want to|plan to|about to)\s+(?:pay|buy|spend|give|send|transfer|get)\b|(?<![ء-ي])(?:هدفع|هشتري|هحول|هبعت)(?![ء-ي])|(?:لازم|عايز|عاوز|محتاج|ناوي)\s+(?:ادفع|اشتري|احول|ابعت)/i;
 const NOT_A_LOG = /\bremind(?:er)?\b|فكرني|ذكرني|نبهني|^\s*(?:watch|track|follow|monitor|compare|search|find|look up|google)\b|^\s*(?:we|he|she|they|i)\s+(?:are|is|am|were|was)\b|^\s*(?:تابع|راقب|دور|قارن)/i;
 /** Is this amount really money? → false when the number that would be saved is a time, a count, a page, a model number… */
@@ -130,7 +130,9 @@ export function understand(text0, opts = {}) {
   { const parts = splitOrders(text);
     if (parts) { const a = understand(parts.pay, opts), b = understand(parts.remind, opts);
       if (a && b && a.actions && b.actions && a.actions.length && a.actions.every((x) => x.kind === "money") && b.actions.length === 1 && b.actions[0].kind === "reminder") return { actions: [...a.actions, ...b.actions], two: true }; } }
-  const u = understand1(text, opts);
+  let u = understand1(text, opts);
+  // a spending line written with signs — "lunch (350)", "mechanic: 320", "haircut 1750/-", «تورتة 15ج», "😋 charger 25" — is read without them
+  if (u && !u.ask && !(u.actions || []).length) { const t2 = tidy(text); if (t2 && t2 !== text.trim()) { const u2 = understand1(t2, opts); if (u2 && u2.actions && u2.actions.length && u2.actions.every((a) => a.kind === "money")) u = u2; } }
   if (u && u.actions && u.actions.length && u.actions.every((a) => a.kind === "money") && notSpent(text)) return { actions: [], chat: true };
   return u;
 }
@@ -179,7 +181,7 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   { const raw = String(text || "").trim(), short = raw.split(/\s+/).length <= 7 && !/\d/.test(raw);
     let tx = null; try { tx = readTeach(raw, stores.people || loadDir()); } catch (e) {}
     if (tx && (tx.kind === "rule" || (short && tx.kind === "who"))) return { actions: [{ kind: "teach", x: tx }] };
-    if (tx && tx.kind === "ask" && (short || /\b(tell|notify|alert|hide|never show)\b|قولي|نبهني|اخفي/i.test(raw))) return { actions: [], ask: { kind: "teach", en: teachLine(tx, { tr }), ar: tx.qAr } }; }
+    if (tx && tx.kind === "ask" && !/^\s*tell me (?:a|an|about|how|why|what|the|more|something)\b/i.test(raw) && (short || /\b(tell|notify|alert|hide|never show)\b|قولي|نبهني|اخفي/i.test(raw))) return { actions: [], ask: { kind: "teach", en: teachLine(tx, { tr }), ar: tx.qAr } }; }
   // v9.1 (e2e_v513: "Crane hire 25000 each day, the 1st to the 5th… Give me the rent and the rent with the 14 tax added" was recorded as
   // two expenses, 25,000 and 14): a request in a LATER sentence makes it a question too — unless money was clearly spent / paid
   if (!EAT.test(t) && !MONEY_VERB.test(t) && t.split(/[.!?؟\n]+/).slice(1).some((x) => REQ.test(x))) return { actions: [], chat: true };

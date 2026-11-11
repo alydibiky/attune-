@@ -48,7 +48,7 @@ const money = (a, dir = "out") => (r) => { if (r.k !== "money") return ""; const
 const moneyAll = (list) => (r) => { if (r.k !== "money") return ""; const it = itemsOf(r).map((x) => x.amount).sort((a, b) => a - b), want = [...list].sort((a, b) => a - b); return JSON.stringify(it) === JSON.stringify(want) ? "" : "amounts " + it.join("+") + " ≠ " + want.join("+"); };
 const hm = (t) => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 const LEFT = /\b(tomorrow|tonight|today|morning|evening|afternoon|quarter|half past|the day after|next week|minutes?|hours?|o'?clock|noon|midnight|every|weekday)\b|بكرة|بكره|النهارده|الساعة|الصبح|بالليل|العصر|كمان|دقيقة|ساعتين|الجاي|كل يوم/i;
-const remind = (when, task, rep) => (r, s) => { if (r.k !== "reminder") return ""; let a = null; const s2 = looksFranco(s) ? francoToArabic(s) : s; try { a = quickAction(s, NOW) || quickAction(s2, NOW); } catch (e) {} if (!a) return "no reminder read";
+const remind = (when, task, rep) => (r, s) => { if (r.k !== "reminder") return ""; let a = null; const s2 = looksFranco(s) ? francoToArabic(s) : s; try { a = quickAction(s2, NOW); } catch (e) {}   // Chat reads Franco as Arabic first if (!a) return "no reminder read";
   if (when != null && (!a.at || hm(a.at) !== hm(when))) return "time " + (a.at ? hm(a.at) : "none") + " ≠ " + hm(when);
   if (rep && (!a.repeat || a.repeat === "none")) return "not repeating (" + rep + ")";
   const title = String(a.title || a.text || "");

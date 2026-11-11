@@ -74,7 +74,7 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
     const o = T(() => cmdRoute(typed, { api: { detect: det, records: () => [] }, prefs: {} }));
     if (o) { const m = { list: "list", todoAdd: "todo", todos: "todo", whereSave: "where", confirm: "where", rememberNote: "note", found: "find", email: "email", projectTask: "todo" }[o.type];
       if (m && !(o.type === "email")) return { k: m }; if (o.type === "email") return { k: "email" };
-      if (o.type === "lines" && o.lines[0] && o.lines[0].open === "memory") return { k: "where" }; } }
+      if (o.type === "lines" && o.lines[0] && (o.lines[0].open === "memory" || /where|فين/i.test(typed))) return { k: "where" }; } }
   if (UND.looksFranco(typed)) { const arT = UND.francoToArabic(typed);
     if (arT !== typed && (T(() => looksLikeAction(arT)) || T(() => understand(arT, { now, stores: {} }).actions.length) || T(() => myMoneyIntent(arT)) || T(() => chatLifeIntent(arT)) || T(() => chatDeadlineIntent(arT, { now, home: homeCurrency(), order: "dmy" })))) typed = arT; }
   // chat.jsx (v9.9.17): number words → digits when the sentence is then something the app does; two orders → both done by Home's reader
@@ -97,7 +97,8 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
   { const ag = q ? null : T(() => parseAgent(typed, { now, country: "EG", usual: {}, prefs: {} }));   // chat.jsx agentK (v9.9.15)
     if (ag && ["watch", "track", "order", "buy"].includes(ag.kind) && (!only || only === "agent" || only === "money-log")) return R("agent", { sub: ag.kind, ag }); }
   if (pay0 && pay0.ok && typed.length < 600 && !q && ok("money-log")) return R("money", { via: "pay", pay: pay0 });
-  if (!only) { if (T(() => AL.readOpen(typed))) return R("open"); }
+  if (T(() => AL.pageOf(typed))) return R("open");
+  if (!only || only === "action") { if (T(() => AL.readOpen(typed))) return R("open"); }
   if (!only || only === "money-log") {
     if (dk.length && dk.every((k) => DO_HERE.includes(k)) && !T(() => doSure(typed, { now, stores: {} }), true)) return R("confirm", { via: "which" });
     if (dk.length && dk.every((k) => DO_HERE.includes(k))) { const r = doFromHome(typed, now); if (r) return R(r.k, r); }
@@ -109,6 +110,6 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
   if (ok("life") && flags.life) return R("life");
   if (only === "action" || (ok("action") && flags.action)) return R("reminder");
   // what is left of the Home reader (agents, alerts, missions…) — Chat reaches it through its own "do" card
-  if (!only || only === "agent") { const r = doFromHome(typed, now); if (r && !["money", "confirm", "guard"].includes(r.k) && !/^ask:/.test(r.k)) return R(r.k, r); if (r && /^ask:/.test(r.k)) return R(r.k, r); }
+  if (!only || only === "agent") { const r = doFromHome(typed, now); if (r && !["money", "confirm", "guard"].includes(r.k) && !/^ask:/.test(r.k) && !(q && r.k === "agent")) return R(r.k, r); if (r && /^ask:/.test(r.k)) return R(r.k, r); }
   return R("chat");
 }

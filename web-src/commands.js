@@ -130,7 +130,7 @@ export function countryIn(text) {
 
 // ---- the readers for plain sentences ---------------------------------------------------------------------------------------------
 const RX = {
-  todoAdd: /\b(add|put|write)\b.{1,120}?\b(to|on|in)\s+(my\s+|the\s+)?(to-?do|todo|tasks?)(\s+list)?\b|^\s*(to-?do|todo)\s*[:\-]|(ضيف|حط|اكتب|زود).{1,120}?(المهام|للمهام|مهامي|التودو|للتودو|التو دو|ليسته المهام|قايمه المهام|قائمه المهام|الليسته|لليسته)|^\s*(مهمه|تودو)\s*[:\-]/i,
+  todoAdd: /\b(add|put|write)\b.{1,120}?\b(to|on|in)\s+(my\s+|the\s+)?(to-?do|todo|tasks?)(\s+list)?\b|^\s*(to-?do|todo)\s*[:\-]|^\s*(?:add|put)\s+(?:to|on|in)\s+(?:my\s+|the\s+)?(?:to-?do|todo|tasks?)(?:\s+list)?\s*[:,]?\s+\S|^\s*(?:new\s+)?task\s*[:\-]\s*\S|^\s*don'?t forget\s*[:\-]\s*\S|^\s*i (?:need|have|must|gotta|got) to (?!know|understand|ask|talk|tell|think|say|see|go\b|be\b|pay \S+ \d)(?!.*[\d٠-٩]{2})(?:\S+\s*){1,9}$|^\s*لازم\s+(?!ادفع|أدفع)(?!.*[\d٠-٩]{2})(?:\S+\s*){1,8}$|(ضيف|حط|اكتب|زود).{1,120}?(المهام|للمهام|مهامي|التودو|للتودو|التو دو|ليسته المهام|قايمه المهام|قائمه المهام|الليسته|لليسته)|^\s*(مهمه|تودو)\s*[:\-]/i,
   todoList: /\b(what('?s| is| are)|show( me)?|list|read)\b.{0,30}\b(to-?dos?|todos?|tasks?)\b|\bmy (to-?dos?|todos?)( list)?\s*[?؟]?$|(ايه|إيه|وريني|هات|قولي).{0,25}(المهام|التودو|مهامي)|^(المهام|مهامي)\s*[?؟]?$/i,
   whereAsk: /\bwhere\b.{0,40}\b(my|the|our)\b|\bwhere (do|did) i (usually )?(put|leave|keep)\b|(فين|حطيت|بحط|بنحط|سبت|سايب).{0,30}(فين|عاده|عادة|دايما)|^(فين)\s+\S+/i,
   whereSet: /^(remember( that)?\s+)?(my|the|our)\s+.{2,40}?\s+(is|are)\s+(now\s+)?(in|on|under|inside|at|behind|beside|next to|in the|on the)\b|\bi (put|left|keep|placed)\s+(my|the)\s+.{2,40}?\s+(in|on|under|inside|at|behind|beside)\b|^(افتكر|خلي في بالك)?\s*(ان|إن)?\s*(ال\S+|\S+ بتاعي|\S+ بتاعتي)\s+(في|على|علي|تحت|جوه|جنب|ورا)\s+|(حطيت|سبت|سايب|شلت)\s+\S+.{0,30}(في|على|علي|تحت|جوه|جنب|ورا)\s+/i,
@@ -154,6 +154,10 @@ export function todoText(text) {
   let t = String(text || "").trim();
   let m = t.match(/^\s*(?:to-?do|todo|مهمه|مهمة|تودو)\s*[:\-]\s*(.+)$/i); if (m) return m[1].trim();
   m = t.match(/^\s*(?:please\s+)?(?:add|put|write)\s+(.+?)\s+(?:to|on|in)\s+(?:my\s+|the\s+)?(?:to-?do|todo|tasks?)(?:\s+list)?\s*[.!]?$/i); if (m) return m[1].replace(/^["“«]|["”»]$/g, "").trim();
+  // v9.9.17 (the hard run): "add to my todo print the tickets", "new task: …", "don't forget: …", "I need to …", "I have to … this week", «لازم …»
+  m = t.match(/^\s*(?:add|put)\s+(?:to|on|in)\s+(?:my\s+|the\s+)?(?:to-?do|todo|tasks?)(?:\s+list)?\s*[:,]?\s+(.+)$/i) || t.match(/^\s*(?:new\s+)?task\s*[:\-]\s*(.+)$/i) || t.match(/^\s*don'?t forget\s*[:\-]\s*(.+)$/i)
+    || t.match(/^\s*i (?:need|have|must|gotta|got) to\s+(.+?)(?:\s+(?:this|next) (?:week|month))?[.!]?$/i) || t.match(/^\s*لازم\s+(.+)$/);
+  if (m) return m[1].replace(/^["“«]|["”»]$/g, "").replace(/[.!]+$/, "").trim();
   if (BARE_BUY.test(t)) return t.replace(/^\s*please\s+/i, "").replace(/[.!]+$/, "").trim();   // v9.9.15 C1: "buy milk" → the to-do "buy milk"
   m = t.match(/^\s*(?:ضيف|حط|اكتب|زود)\s+(.+?)\s+(?:في |على |علي )?(?:للمهام|للتودو|لليستة|لليسته|المهام|التودو|التو دو|ليستة المهام|ليسته المهام|قايمة المهام|قايمه المهام|قائمة المهام|الليستة|الليسته)\s*[.!]?$/); if (m) return m[1].replace(/^["“«]|["”»]$/g, "").trim();
   return "";

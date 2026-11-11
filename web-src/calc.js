@@ -1,3 +1,4 @@
+import { easeCalc } from "./sense.js";
 import { tr } from "./i18n.js";
 /* ---- instant calculations ------------------------------------------------------
    "3 cranes × 4 days × 12,500 EGP a day + 14% VAT — total?" is arithmetic, not a
@@ -46,7 +47,8 @@ function lex(text) {
 }
 
 /** Is this message a calculation we can do exactly? */
-export function looksLikeCalc(text) {
+export function looksLikeCalc(text0) {
+  const text = easeCalc(text0);   // v9.9.17: «12 في 30», "4 percent of 2400", "15% off 48", "split 7200 between 3", "half of 850", "250 squared"
   const t = String(text || "");
   if (t.length > 220 || /\n.*\n/.test(t)) return false;
   const toks = lex(t).filter((x) => x.t !== "w");
@@ -106,7 +108,8 @@ const show = (toks) => toks.map((k) => (k.t === "n" ? k.raw || fmt(k.v) : k.t ==
  * The exact result and its working, or null if this isn't plain arithmetic.
  * { value, unit, steps: [text…], markdown }
  */
-export function calculate(text) {
+export function calculate(text0) {
+  const text = easeCalc(text0);
   // persona 6: "10 % 3" (spaces on both sides) and "10 mod 3" are the remainder (1), as a programmer means it; "10% 3",
   // "10% of 3" stay percentages
   { const m = /^\s*(-?\d+(?:\.\d+)?)\s+(?:%|mod|modulo)\s+(-?\d+(?:\.\d+)?)\s*[=?]?\s*$/i.exec(digits(text));
