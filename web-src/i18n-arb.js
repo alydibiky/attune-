@@ -11878,4 +11878,9 @@ export const ARB = {
   "Say or type it — “the maid is now 700”": "قلها أو اكتبها — «أصبحت أجرة العاملة 700»",
   "Which category?": "أي تصنيف؟",
   "Another amount": "مبلغ آخر",
+  "To cancel a reminder, open Follow-ups and remove it there.": "لإلغاء تذكير، افتح المتابعات واحذفه من هناك.",
+  "1 item": "عنصر واحد",
+  "1 item · {a}": "بند واحد · {a}",
+  "What you kept this week by kind (1 item)": "ما حفظته هذا الأسبوع حسب النوع (عنصر واحد)",
+  "Saved your list “{n}” — 1 item": "حُفظت قائمتك «{n}» — عنصر واحد",
 };

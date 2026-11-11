@@ -78,6 +78,28 @@ export const PACKS = {
     shops: [["Takealot", "https://www.takealot.com/all?qsearch={q}"], ["Amazon", A("co.za")], ["Makro", "https://www.makro.co.za/search?q={q}"], ["Game", "https://www.game.co.za/search?q={q}"], ["Incredible", "https://www.incredible.co.za/catalogsearch/result/?q={q}"]], food: ["Uber Eats", "Mr D", "Checkers Sixty60", "Bolt Food"], ride: ["Uber", "Bolt", "inDrive"], gov: [["SARS eFiling", "https://www.sarsefiling.co.za/"], ["eHomeAffairs", "https://ehome.dha.gov.za/"], ["NaTIS", "https://online.natis.gov.za/"]], circle: "stokvel" },
 };
 export const packOf = (cc) => PACKS[String(cc || "").toLowerCase()] || null;
+/** v9.9.18 (Ali, 11 Nov: "every country should have its dedicated things like Egypt"): the official page an errand opens, in the
+ *  person's own country — a fine or a licence → the traffic / police portal, a passport or an ID → the identity portal, a bill → the
+ *  utility / bill portal; otherwise the country's main portal. Only portals already in the pack (public facts); "" when none. */
+const PORTAL_BY_KIND = {
+  fines: /traffic|police|fines|e-?challan|DVLA|DGT|ANTS|JPJ|Parivahan|FRSC|NaTIS|\bROP\b|\bMOI\b|Metrash|eTraffic|Absher|trânsito|SIGNAL|Rokhas/i,
+  carLicence: /traffic|police|DVLA|DGT|ANTS|JPJ|Parivahan|FRSC|NaTIS|\bROP\b|\bMOI\b|Metrash|eTraffic|Absher|trânsito|SIGNAL|MyEG/i,
+  driving: /traffic|police|DVLA|DGT|ANTS|JPJ|Parivahan|FRSC|NaTIS|\bROP\b|\bMOI\b|Metrash|eTraffic|Absher|trânsito/i,
+  passport: /ICP|Absher|NADRA|Sahel|Metrash|ANTS|Home ?Affairs|NIMC|identit|Houwiya|CURP|Sanad|Dawlati|GOV\.UK|USA\.gov|gov\.br|gob\.mx|ePortugal|BundID|MijnOverheid|e-Devlet|DigiLocker|Mouwatin/i,
+  nationalId: /ICP|Absher|NADRA|Sahel|Metrash|ANTS|Home ?Affairs|NIMC|identit|Houwiya|CURP|Sanad|Dawlati|e-Devlet|DigiLocker|Mouwatin|BundID|ePortugal/i,
+  bill: /DEWA|eFAWATEER|PagoPA|Sanad/i,
+};
+export function portalFor(kind, cc) {
+  const gov = ((packOf(cc) || {}).gov || []).filter((g) => /^https:\/\//.test(g[1] || ""));
+  if (!gov.length) return null;
+  const re = PORTAL_BY_KIND[kind]; const hit = re ? gov.find(([n]) => re.test(n)) : null;
+  if (hit) return { name: hit[0], url: hit[1] };
+  if (kind === "bill") return null;   // a bill is paid on the company's own page — never a government one by guess
+  // otherwise the country's general portal — never a tax office for a fine or a licence
+  const TAX = /ELSTER|IRS|HMRC|CRA|GİB|FBR|\bSAT\b|FIRS|SARS|\bDGI\b|ZATCA|Income Tax|DJP|LHDN|Tributaria|Entrate|impots|Finanças|Belastingdienst|Receita|Najiz|Tawakkalna|SATUSEHAT|ameli|MHRS|USPS|Algérie Poste|eFAWATEER|PagoPA/i;
+  const gen = gov.find(([n]) => !TAX.test(n));
+  return gen ? { name: gen[0], url: gen[1] } : null;
+}
 const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s?");
 /** One pattern of every bank, wallet and payment-system name of the 30 countries — "is this sender a money source?" */
 export const WORLD_MONEY_SRC = (() => {

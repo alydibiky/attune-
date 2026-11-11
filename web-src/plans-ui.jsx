@@ -3,7 +3,7 @@
    right. Tests: tests/e2e_v736plans.py.                                                                                          */
 import React, { useState } from "react";
 import { Car, Trash2, Wallet, Check } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { fmt } from "./money-calm.js";
 import { summary, toZakat } from "./gold.js";
 import { carStats } from "./car.js";
@@ -88,7 +88,7 @@ export function CarCard({ car, put }) {
           <span className={U.tag(n.due ? "red" : "amber") + " tabular-nums"}>{[n.dueKm ? fmt(n.dueKm) + " km" : "", n.dueDate || ""].filter(Boolean).join(" · ")}</span></div>))}</div> : null}
       {log.length ? <div className="mt-3 space-y-1">{(all ? log : log.slice(0, 3)).map((e) => (
         <div key={e.id} className={"flex items-center gap-2 text-[12.5px] " + U.muted}>
-          <span className="flex-1 truncate">{e.date} · {e.kind === "fuel" ? tr("Fuel") + (e.liters ? " " + e.liters + " L" : "") : e.kind === "service" ? tr(SERVICE[e.service] || "Service") : tr("Odometer")}{e.km ? " · " + fmt(e.km) + " km" : ""}</span>
+          <span className="flex-1 truncate">{(() => { try { return new Date(e.date + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (x) { return e.date; } })()} · {e.kind === "fuel" ? tr("Fuel") + (e.liters ? " " + e.liters + " L" : "") : e.kind === "service" ? tr(SERVICE[e.service] || "Service") : tr("Odometer")}{e.km ? " · " + fmt(e.km) + " km" : ""}</span>
           <span className="tabular-nums">{e.amount ? fmt(e.amount) : ""}</span>
           <button className="w-11 h-11 -me-2 shrink-0 grid place-items-center rounded-[12px] hover:text-[var(--c-neg)]" aria-label={tr("Delete")} onClick={() => window.confirm(tr("Delete this?")) && put({ ...car, log: car.log.filter((x) => x.id !== e.id) })}><Trash2 size={12} /></button></div>))}
         {log.length > 3 ? <button className="min-h-[44px] px-1 text-[13px] font-bold text-[var(--c-acc)]" onClick={() => setAll(!all)}>{all ? tr("Show less") : tr("Show all {n}", { n: log.length })}</button> : null}</div> : null}

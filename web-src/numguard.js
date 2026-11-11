@@ -29,7 +29,7 @@ export function saidAmounts(text) {
     .replace(/\b(?:ms|sv|ek|qr|tk|ey|xy|nl|fz|g9|j9|ba|lh|af|kl|pc|w6|fr|u2)\s\d{2,4}\b/gi, " ")
     .replace(/(?:\b(?:iphone|galaxy|pixel|redmi|note|playstation|ps|xbox|ipad|macbook|watch|series|gen|pro|max|plus|ultra|mini|air|model|version|v)|ايفون|الايفون|آيفون|جالاكسي|بلايستيشن|ساعه|ساعة)\s*\d{1,3}(?![\d,.])/gi, " ");
   const out = [];
-  const re = /(\d+(?:[,]\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*(k\b|thousand|الف|ألف|آلاف|الاف|m\b|million|مليون)?\s*([^\s\d,.،]*)/gi;
+  const re = /(\d+(?:[,]\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*(k\b|thousand|(?:الف|ألف|آلاف|الاف|مليون)(?![ء-ي])|m\b|million)?\s*([^\s\d,.،]*)/gi;
   let m;
   while ((m = re.exec(t))) {
     const after = (m[3] || "") + " " + t.slice(re.lastIndex, re.lastIndex + 14);

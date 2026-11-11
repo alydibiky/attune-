@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Check, Trash2, ChevronDown, Loader2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as E from "./errands.js";
+import { myCountry } from "./country.js";
 import * as U from "./ui-kit.jsx";
 
 const T = (k, v) => tr(k, v);
@@ -20,12 +21,12 @@ export function ErrandsPage({ nativeCall, flash, profile = {} }) {
   const due = useMemo(() => E.dueList(list), [list]);
   const add = () => { const p = E.parseErrand(text); if (!p) { setErr(tr("Say what it is and its date — “car licence expires 3 Feb 2027, plate أ ب ج 1234”")); return; }
     if (!p.date && !p.every) { setErr(tr("When is it due? Add the date — “… expires 3 Feb 2027”")); return; }
-    put([...list, E.makeErrand(p)]); setText(""); setErr(""); flash && flash(tr("Errand saved — Attune tells you before it is due")); };
+    put([...list, E.makeErrand(p, Date.now(), myCountry())]); setText(""); setErr(""); flash && flash(tr("Errand saved — Attune tells you before it is due")); };
   // the official page, in Attune's browser: details filled; what it says is read once you are through (nothing is paid)
   const openPage = async (e) => {
-    if (!nativeCall) { try { window.open(e.url || E.DIGITAL_EGYPT, "_blank"); } catch (x) {} return; }
+    if (!nativeCall) { try { window.open(E.openUrlOf(e, myCountry()), "_blank"); } catch (x) {} return; }
     setBusy(e.id);
-    try { const r = await nativeCall("agentOpen", { url: e.url || E.DIGITAL_EGYPT, title: E.nameOf(e, ar, tr), profile, rules: {}, search: false, slot: true });
+    try { const r = await nativeCall("agentOpen", { url: E.openUrlOf(e, myCountry()), title: E.nameOf(e, ar, tr), profile, rules: {}, search: false, slot: true });
       const read = r && r.slot ? E.readPortal(r.slot) : null;
       put(E.loadErrands().map((x) => (x.id === e.id ? E.afterCheck(x, read) : x)));
       flash && flash(read ? (read.none ? tr("Nothing due — checked") : T("Due: {a}", { a: read.amount.toLocaleString("en-US") })) : tr("I couldn't read an amount on that page — mark it yourself if something is due"));
@@ -33,7 +34,7 @@ export function ErrandsPage({ nativeCall, flash, profile = {} }) {
   };
   const done = (e) => { put(list.map((x) => (x.id === e.id ? E.markDone(x, { newDate: e.every ? "" : newDate }) : x))); setOpen(""); setNewDate(""); flash && flash(tr("Done")); };
   const remove = (e) => put(list.filter((x) => x.id !== e.id));
-  const papers = (e) => ar ? (((E.KINDS[e.kind] || E.KINDS.other).papers || {}).ar || []) : (((E.KINDS[e.kind] || E.KINDS.other).papers || {}).en || []).map((x) => tr(x));
+  const papers = (e) => { const l = E.papersFor(e.kind, e.cc || "eg", ar); return ar ? l : l.map((x) => tr(x)); };   // v9.9.18: Egypt's papers only for Egypt
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="errands-page">
       <U.Head title={tr("Errands")} sub={tr("Licences, fines, bills, IDs, inspections — added once. Attune tells you before each is due, with the papers to bring.")} />

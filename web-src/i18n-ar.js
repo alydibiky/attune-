@@ -8958,4 +8958,9 @@ export const AR = {
   "Say or type it — “the maid is now 700”": "قولها أو اكتبها — «الشغالة بقت 700»",
   "Which category?": "أنهي تصنيف؟",
   "Another amount": "مبلغ تاني",
+  "To cancel a reminder, open Follow-ups and remove it there.": "عشان تلغي تذكير، افتح المتابعات وامسحه من هناك.",
+  "1 item": "حاجة واحدة",
+  "1 item · {a}": "بند واحد · {a}",
+  "What you kept this week by kind (1 item)": "اللي حفظته الأسبوع ده حسب النوع (حاجة واحدة)",
+  "Saved your list “{n}” — 1 item": "اتحفظت قايمتك «{n}» — حاجة واحدة",
 };

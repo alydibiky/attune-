@@ -160,7 +160,8 @@ export function parseAgent(text, opts = {}) {
   // a choice ("… or …?"), "best …?" and «… ايه؟» are questions for an answer
   if (/[?؟]\s*$/.test(t0) && (/\s(?:or|ولا|أم|ام)\s/i.test(t0) || /(?:ايه|إيه|what)\s*[?؟]\s*$/i.test(t0) || /^\s*(?:the\s+)?(?:best|احسن|أحسن|افضل|أفضل)\b/i.test(t0))) return null;
   // "watch the price of a PS5" (no price said) → asked for the price, never read as "PS5 … 5" spent
-  { const wp = /^\s*(?:please\s+)?(?:watch|track|monitor|keep an eye on)\s+(?:the\s+)?prices?\s+(?:of|for|on)\s+(.{2,60}?)\s*[.!]?$/i.exec(t0);
+  { const wp = /^\s*(?:please\s+)?(?:watch|track|monitor|keep an eye on|follow)\s+(?:the\s+)?prices?\s+(?:of|for|on)\s+(.{2,60}?)\s*[.!]?$/i.exec(t0)
+      || /^\s*(?:من فضلك\s+)?(?:تابعلي|تابع لي|تابع|راقبلي|راقب|خلي عينك على)\s+(?:ال)?(?:سعر|اسعار|أسعار)\s+(?!.*(?:كل (?:يوم|اسبوع|أسبوع|شهر)|يوميا))(.{2,60}?)\s*[.!]?$/.exec(t0);   // v9.9.18: «تابعلي سعر iPhone 16»
     if (wp && !PRICE_WORD.test(t)) return { kind: "watch", what: wp[1].trim(), below: 0, title: wp[1].trim(), ask: "At what price should I tell you about {w}? Write the number — e.g. 9,000", v: { w: wp[1].trim() } }; }
   const app = appIn(t0);
   if (isFlightAgent(t0)) { const fa = flightAgent(t0, { now, country, currency: curIn(t, country) || "" }); if (fa) return fa; }
@@ -183,7 +184,7 @@ export function parseAgent(text, opts = {}) {
   const w = parseWatch(t0);
   if (w && !app) return { kind: "alert", rule: w, title: w.label };
   // a delivery: "tell me when my Amazon order arrives", «امتى طلب أمازون هيوصل»
-  if (app && ["shop", "food", "post"].includes(app.kind) && ARRIVE.test(t) && !PRICE_WORD.test(t) && !(ORDER_W.test(t) && USUAL.test(t)) && (WHEN.test(t) || /\b(my|order|package|parcel|shipment)\b|طلب|طلبي|الطلب|الاوردر|الأوردر|الشحنه|الشحنة|الطرد|اوردر|أوردر/iu.test(t))) {
+  if (app && ["shop", "food", "post"].includes(app.kind) && (ARRIVE.test(t) || /\bwhere(?:'s| is)\s+my\b.{0,24}\b(?:order|package|parcel|delivery|shipment)\b|(?:طلبي|الاوردر|الأوردر|الشحنة|الشحنه|الطرد)\s+(?:\S+\s+)?فين|فين\s+(?:طلبي|الاوردر|الأوردر|الشحنة|الشحنه|الطرد)/i.test(t)) /* v9.9.18: "where is my noon order" */ && !PRICE_WORD.test(t) && !(ORDER_W.test(t) && USUAL.test(t)) && (WHEN.test(t) || /\b(my|order|package|parcel|shipment)\b|طلب|طلبي|الطلب|الاوردر|الأوردر|الشحنه|الشحنة|الطرد|اوردر|أوردر/iu.test(t))) {
     const what = (/(?:order|package|parcel)\s+(?:of|for|—|-|:)\s*([^,.؟?]+)/i.exec(t0) || /(?:طلب|اوردر|أوردر)\s+(?!امازون|أمازون|نون|طلبات|جوميا)([؀-ۿ\w ]{3,30})/u.exec(t0) || [])[1] || "";
     return { kind: "track", app: { id: app.id, label: app.label, pkg: app.pkg, alt: app.alt || [], web: app.web }, what: what.trim(), title: app.label + " order" + (what ? " — " + what.trim() : "") };
   }

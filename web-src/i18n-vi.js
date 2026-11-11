@@ -11886,4 +11886,9 @@ export const VI = {
   "Say or type it — “the maid is now 700”": "Nói hoặc gõ — “người giúp việc giờ là 700”",
   "Which category?": "Danh mục nào?",
   "Another amount": "Số tiền khác",
+  "To cancel a reminder, open Follow-ups and remove it there.": "Để hủy lời nhắc, hãy mở Theo dõi và xóa nó ở đó.",
+  "1 item": "1 mục",
+  "1 item · {a}": "1 mục · {a}",
+  "What you kept this week by kind (1 item)": "Những gì bạn đã giữ tuần này theo loại (1 mục)",
+  "Saved your list “{n}” — 1 item": "Đã lưu danh sách “{n}” — 1 mục",
 };

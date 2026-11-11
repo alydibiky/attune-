@@ -160,7 +160,7 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   if (tab === "talk") return <Interpreter llm={llm} native={native} flash={flash} gloss={gloss} close={() => setTab("text")} />;
   return (
     <div className={page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="translate-page">
-      <div><h2 className={h1 + " flex items-center gap-2"}><Languages size={20} className="text-[var(--c-acc)]" />{tr("Translate")}</h2>
+      <div><h2 className={"att-h1 " + h1 + " flex items-center gap-2"}><Languages size={20} className="text-[var(--c-acc)]" />{tr("Translate")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + muted}>{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
       <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" role="tablist">
         {[["text", "Text"], ["talk", "Conversation"], ["photo", "Photo"], ["doc", "Document"]].map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className={chip(tab === id)} onClick={() => { setTab(id); setRes(null); }} data-testid={"tr-tab-" + id}>{tr(l)}</button>)}

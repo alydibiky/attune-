@@ -7786,11 +7786,12 @@ function tierOfInstalled(m) {
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
 // v9.9.16 OK1: tables, timetable, errands, family, guardian, radar, life left this list — their name is in the top bar now
-const OWN_TITLE = new Set(["groups", "privacy", "planner", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const OWN_TITLE = new Set(["groups", "planner", "health", "scout", "lifeask", "skills", "code", "learn", "news", "xray", "video", "deal", "shelf", "money", "coach"]);   // v9.9.18 OK1: privacy, guide, slides, convert, pdfchat, cv, memory, care, translate, travel moved to BAR_TITLES   // v6.27: money (the Calm computer layout has its own title)
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
 // v9.9.16 OK1: the pages that had no name for the top bar (Agents said "Attune")
-const BAR_TITLES = { agents: "Agents", timeline: "Follow-ups", life: "People & plans", radar: "Deadline Radar", guardian: "Money Guardian", family: "Family", reminders: "Reminders", write: "Writing", people: "People", projects: "Projects", missions: "Missions", automations: "Automations", recall: "Recall" };
+const BAR_TITLES = { agents: "Agents", timeline: "Follow-ups", life: "People & plans", radar: "Deadline Radar", guardian: "Money Guardian", family: "Family", reminders: "Reminders", write: "Writing", people: "People", projects: "Projects", missions: "Missions", automations: "Automations", recall: "Recall",
+  privacy: "Privacy", guide: "How to use Attune", slides: "Slides & Reports", convert: "File Converter", pdfchat: "Ask a PDF", cv: "CV / Resume", memory: "Mind", care: "Family health", translate: "Translate", travel: "Travel" };
 const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
@@ -7798,7 +7799,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.17";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.18";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8912,7 +8913,7 @@ export default function App() {
   // v6.27: "Watch it" from a deadline typed in Chat — the Deadline Radar opens with it read
   // v6.27 Job ready: a missing skill starts a Learn daily course on it
   // v6.28: a card in Chat ("Open Money", "Open Family health" — Ask your life) opens that tool
-  useEffect(() => { const on = (e) => { const m = e.detail && e.detail.mode; const tx = e.detail && typeof e.detail.text === "string" ? e.detail.text.trim().slice(0, 4000) : ""; if (m === "chat" && tx) setChatSeed("\u0002" + tx); if (m && /^[a-z]+$/.test(m)) navTo(m); }; window.addEventListener("attune-open", on); return () => window.removeEventListener("attune-open", on); }, []);   // v9.3: + text → a new chat that asks it (the Ramadan box)
+  useEffect(() => { const on = (e) => { const m = e.detail && e.detail.mode; const tx = e.detail && typeof e.detail.text === "string" ? e.detail.text.trim().slice(0, 4000) : ""; if (m === "chat" && tx) setChatSeed("\u0002" + tx); if (m === "settings") { setMoreOpen(true); return; } if (m && /^[a-z]+$/.test(m)) navTo(m); }; window.addEventListener("attune-open", on); return () => window.removeEventListener("attune-open", on); }, []);   // v9.3: + text → a new chat that asks it (the Ramadan box)
   useEffect(() => { const on = (e) => { const m = e.detail; if (typeof m === "string" && m) flash(m.slice(0, 300)); }; window.addEventListener("attune-flash", on); return () => window.removeEventListener("attune-flash", on); }, []);   // v9.3: a page with no flash of its own (Home's Your day) says things through this
   // v8.6: a save that didn't fit is never silent — the person is told once a minute at most, and where to make room
   useEffect(() => { let last = 0; const on = () => { if (Date.now() - last < 60000) return; last = Date.now(); flash(tr("Your phone's space for Attune is full — the last change may not be saved. Settings → Backup, then delete old photos or chats.")); };

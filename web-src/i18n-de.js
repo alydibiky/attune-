@@ -11886,4 +11886,9 @@ export const DE = {
   "Say or type it — “the maid is now 700”": "Sag oder schreib es — „die Haushaltshilfe bekommt jetzt 700“",
   "Which category?": "Welche Kategorie?",
   "Another amount": "Anderer Betrag",
+  "To cancel a reminder, open Follow-ups and remove it there.": "Um eine Erinnerung zu löschen, öffne Nachverfolgung und entferne sie dort.",
+  "1 item": "1 Eintrag",
+  "1 item · {a}": "1 Posten · {a}",
+  "What you kept this week by kind (1 item)": "Was du diese Woche behalten hast, nach Art (1 Eintrag)",
+  "Saved your list “{n}” — 1 item": "Liste „{n}“ gespeichert — 1 Eintrag",
 };

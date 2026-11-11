@@ -11887,4 +11887,9 @@ export const HI = {
   "Say or type it — “the maid is now 700”": "बोलें या लिखें — “कामवाली अब 700 लेती है”",
   "Which category?": "कौन-सी श्रेणी?",
   "Another amount": "कोई और रकम",
+  "To cancel a reminder, open Follow-ups and remove it there.": "रिमाइंडर रद्द करने के लिए फ़ॉलो-अप खोलें और वहाँ से हटाएँ।",
+  "1 item": "1 आइटम",
+  "1 item · {a}": "1 आइटम · {a}",
+  "What you kept this week by kind (1 item)": "इस हफ़्ते प्रकार के अनुसार जो आपने रखा (1 आइटम)",
+  "Saved your list “{n}” — 1 item": "आपकी सूची “{n}” सहेजी गई — 1 आइटम",
 };

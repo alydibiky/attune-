@@ -40,6 +40,9 @@ function enWords(text) {
     }
     let end = j; while (end > i && /^(\s+|-)$/.test(tok[end - 1] || "")) end--;
     const n = total + cur, next = (tok.slice(end).find((x) => x && !/^(\s+|-)$/.test(x)) || "").replace(/[.,!?;:]+$/, "");
+    const prevE = ([...out].reverse().find((x) => x && !/^(\s+|-)$/.test(x)) || "").toLowerCase(), prev2 = out.join("").toLowerCase();
+    const afterPay = /^(?:spent|paid|cost|costs|me)$/.test(prevE) && /\b(?:spent|paid|cost|costs|cost me|costs me)\s*$/.test(prev2.trim()) && n >= 10;
+    if (afterPay) { out.push(String(n) + tail); i = end; continue; }
     if (used && n >= 10 && (big || CUR_NEXT.test(next)) && !(n < 20 && !CUR_NEXT.test(next) && !/^(on|for)$/i.test(next))) { out.push(String(n) + tail); i = end; }
     else { out.push(tok[i]); i++; }
   }
@@ -76,7 +79,10 @@ function arWords(text) {
     let end = j; while (end > i && /^\s+$/.test(tok[end - 1] || "")) end--;
     const n = total + cur, next = strip(tok.slice(end).find((x) => x && !/^\s+$/.test(x)) || "");
     // «مية» is also water («اشرب مية»): a bare «مية» counts only with «بـ» before it, a currency after it, or more number words
-    const ok = used && n >= 10 && (big || CUR_NEXT.test(next)) && !(firstBare100 && used === 1 && !pre && !CUR_NEXT.test(next)) && !(n < 20 && !CUR_NEXT.test(next));
+    // v9.9.18 («صرفت مية على تذاكر الاتوبيس», «صرفت عشرة على هدية»): right after a money verb a number word is the amount
+    const prev = strip([...out].reverse().find((x) => x && !/^\s+$/.test(x)) || "");
+    const afterPay = /^(?:صرفت|دفعت|دفعتلها|دفعتله|اديت|اديته|اديتها|كلفني|كلفتني|كلفتنا|سلفت|سلفته|سلفتها|حولت|بعت|بعتله|بعتلها)$/.test(prev);
+    const ok = used && n >= 10 && (afterPay || (pre && /اشتريت|جبت|خدت|كان|كانت/.test(text)) || ((big || CUR_NEXT.test(next)) && !(firstBare100 && used === 1 && !pre && !CUR_NEXT.test(next)) && !(n < 20 && !CUR_NEXT.test(next))));
     if (ok) { out.push((pre ? pre.replace("ـ", "") : "") + String(n) + tail); i = end; } else { out.push(raw0); i++; }
   }
   return out.join("");
@@ -116,9 +122,10 @@ const CURW = "(?:egp|le|l\\.e\\.?|usd|sar|aed|eur|gbp|pounds?|dollars?|euros?|ri
 /** The numbers in a typed sentence that can be money: not a time, a date, a count of people / things, a gate, a page. → [n…] */
 export function moneyNumbers(text) {
   const s = latin(String(text || "")).replace(/(\d),(?=\d{3}\b)/g, "$1"), out = [];
-  const re = /(?<![\d.])(\d+(?:\.\d+)?)(k\b)?/gi; let m;
+  const re = /(?<![\d.])(\d+(?:\.\d+)?)(k\b|\s*thousand\b|\s*grand\b|\s*(?:الف|ألف|آلاف|الاف|تلاف)(?![ء-ي])|\s*(?:million|مليون)(?![ء-ي\w]))?/gi; let m;
   while ((m = re.exec(s))) {
-    const before = s.slice(Math.max(0, m.index - 24), m.index), after = s.slice(m.index + m[0].length, m.index + m[0].length + 24), n = +m[1] * (m[2] ? 1000 : 1);
+    // v9.9.18 («دفعت 12 الف» was offered as 12): "12 الف" / "12 thousand" is 12,000
+    const before = s.slice(Math.max(0, m.index - 24), m.index), after = s.slice(m.index + m[0].length, m.index + m[0].length + 24), n = +m[1] * (!m[2] ? 1 : /million|مليون/i.test(m[2]) ? 1e6 : 1000);
     if ((/[a-z]$/i.test(before) && !new RegExp(CURW + "$", "i").test(before)) || (/^[a-z]/i.test(after) && !new RegExp("^" + CURW, "i").test(after) && !/^(?:am|pm|st|nd|rd|th|x)\b/i.test(after))) continue;   // "dafa3t", "7ala2", "S24", "M3"
     const cur = new RegExp("^\\s*" + CURW, "i").test(after) || new RegExp(CURW + "\\s*$", "i").test(before);
     if (!cur) {
@@ -144,6 +151,11 @@ export function typedPayment(text, opts = {}) {
   if (notSpent(t)) return null;
   // a bank / wallet message pasted into Chat («تم تحويل مبلغ 2,500.00 جنيه إلى … رقم العملية 123456») is read by the bank reader as it is
   if (/تم (?:خصم|تحويل|ايداع|إيداع|استلام|سحب|دفع|سداد)|رقم العملية|\b(?:debited|credited|available balance|avl\.? ?bal|card ending|a\/c|ref(?:erence)?\.? ?(?:no\.? ?)?\d)\b/i.test(t)) return parsePayment(t, opts);
+  // v9.9.18 («بدفع 99 كل شهر للجيم», "I pay 500 every month for the gym"): a payment that repeats is a plan (People & plans), not money spent now
+  if (/^\s*(?:انا\s+)?(?:(?:بدفع|بندفع|بادفع|بندفعلها|بدفعله|بدفعلها)(?![ء-ي])|(?:i pay|we pay|i'?m paying)\b)/i.test(t) && /كل (?:شهر|اسبوع|أسبوع|سنة|سنه|يوم|سبت|جمعة)|شهريا|\b(?:every|each) (?:month|week|year|day)\b|\b(?:monthly|weekly|yearly|annually|a month|a week|a year|per month|per week)\b/i.test(t)) return null;
+  // v9.9.18 («عايز فندق في جدة من 3 ل 7 مارس» was 3 received): a wish, or days "from 3 to 7 March", is never money that moved
+  if (/^\s*(?:(?:عايز|عاوز|محتاج|نفسي)(?![ء-ي])|i (?:want|need|would like)\b|i'?d like\b)/i.test(t) && !/(?:دفعت|صرفت|اشتريت|استلمت|قبضت)(?![ء-ي])|\b(?:paid|spent|bought|received|got)\b/i.test(t)) return null;
+  if (/(?:^|\s)(?:from|من|between)\s*\d{1,2}\s*(?:to|ل|الى|إلى|and|-)\s*\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|يناير|فبراير|مارس|ابريل|أبريل|مايو|يونيو|يوليو|اغسطس|أغسطس|سبتمبر|اكتوبر|أكتوبر|نوفمبر|ديسمبر)/i.test(t)) return null;
   const nums = moneyNumbers(t);
   if (nums.length >= 2 && /\b(?:and|then|plus)\b|[,،;+\n]|\sو\s?|\sو(?=[ء-ي])/i.test(t) && !/\b(?:of what|out of|from the|instead of|in total|total)\b|من اللي|من اصل|من أصل/i.test(t)) return null;   // several things → the list reader (doit.js)
   const p = parsePayment(t, opts);
@@ -208,7 +220,7 @@ export function easeTime(text, now = Date.now()) {
 }
 
 // ---- debts said another way → the words the plan reader knows ---------------------------------------------------------------------------------
-const NM = "((?:my |the |uncle |aunt |dr\\.? )?[\\p{L}'’-]+(?: [\\p{Lu}][\\p{L}'’-]+| Ali)?)", NA = "((?:صاحبي |صديقي |ابن عمي |ابن خالي |دكتور |عمو |طنط )?[ء-ي]+)", AMT = "([\\d٠-٩][\\d٠-٩,.٬]*\\s*k?)";
+const NM = "((?:my |the |uncle |aunt |dr\\.? )?[\\p{L}'’-]+(?: [\\p{Lu}][\\p{L}'’-]+| Ali)?)", NA = "((?:صاحبي |صديقي |ابن عمي |ابن خالي |بنت عمي |بنت خالي |دكتور |عمو |طنط |الحاج |صاحب |صاحبة )?[ء-ي]+)", AMT = "([\\d٠-٩][\\d٠-٩,.٬]*\\s*k?)";
 const DEBT_FORMS = [
   [new RegExp("^" + NM + " lent me " + AMT, "iu"), "I borrowed $2 from $1"], [new RegExp("^i gave " + NM + " " + AMT + " as a loan", "iu"), "I lent $1 $2"],
   [new RegExp("^i took " + AMT + " from " + NM + " and (?:i )?(?:will|i'?ll) (?:return|pay|give) (?:it|them)(?: back)?", "iu"), "I borrowed $1 from $2"], [new RegExp("^" + NM + " took " + AMT + " from me and (?:will|he'?ll|she'?ll) (?:return|pay|give) (?:it|them)(?: back)?", "iu"), "$1 borrowed $2 from me"],
@@ -235,6 +247,6 @@ export function easeCalc(text) {
 
 // ---- a spending line written with signs: "lunch (350)", "mechanic: 320", "haircut 1750/-", «تورتة 15ج», "😋 charger 25" -------------------------------
 export function tidy(text) {
-  return String(text || "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, " ").replace(/\(([\d٠-٩][\d٠-٩,.]*)\)/g, " $1 ").replace(/([\p{L}])\s*[:=\-–]\s*(?=[\d٠-٩])/gu, "$1 ")
+  return String(text || "").replace(/^\s*(today|yesterday|this morning|tonight|النهارده|امبارح|الصبح)\s*[:\-–]\s*/i, "$1 ").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, " ").replace(/\(([\d٠-٩][\d٠-٩,.]*)\)/g, " $1 ").replace(/([\p{L}])\s*[:=\-–]\s*(?=[\d٠-٩])/gu, "$1 ")
     .replace(/([\d٠-٩])\/-/g, "$1").replace(/([\d٠-٩])(ج|جنيه)(?![ء-ي])/g, "$1 $2").replace(/^\s*-(?=[\d٠-٩])/, "").replace(/([\d٠-٩])\s*[.!]+\s*$/, "$1").replace(/\s+/g, " ").trim();
 }

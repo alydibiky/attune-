@@ -11886,4 +11886,9 @@ export const ZH = {
   "Say or type it — “the maid is now 700”": "说出或输入——“保姆现在是700”",
   "Which category?": "哪个类别？",
   "Another amount": "其他金额",
+  "To cancel a reminder, open Follow-ups and remove it there.": "要取消提醒，请打开“跟进”并在那里删除。",
+  "1 item": "1 项",
+  "1 item · {a}": "1 项 · {a}",
+  "What you kept this week by kind (1 item)": "本周按类型保存的内容（1 项）",
+  "Saved your list “{n}” — 1 item": "已保存清单“{n}”— 1 项",
 };

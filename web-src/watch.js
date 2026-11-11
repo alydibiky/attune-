@@ -23,7 +23,7 @@ export function parseWatch(text) {
   const t = String(text || "").replace(/[“”«»"']/g, " ").replace(/\s+/g, " ").trim();
   if (!t || t.length > 300) return null;
   if (!(ASK_EN.test(t) || ASK_AR.test(t) || ASK_FR.test(t))) return null;
-  const msgEN = /\b(messages?|texts?|writes?|emails?|mails?|sends? me|replies|replied|reply|contacts? me|calls? me back|dms?|whatsapps?)\b/i;
+  const msgEN = /\b(messages?|texts?|writes?|emails?|mails?|sends? me|replies|replied|reply|contacts? me|calls? me back|calls?|rings? me|missed calldms?|whatsapps?)\b/i;
   const msgAR = /(بعت|بعتت|بعتلي|بعتتلي|يبعت|تبعت|يبعتلي|تبعتلي|كلمني|كلمتني|يكلمني|تكلمني|راسلني|يراسلني|رد|ترد|يرد|رسالة|رساله|مسج|ماسدج|ايميل|إيميل|جالي|جاتلي|وصلني|وصلتني)/;
   if (!(msgEN.test(t) || msgAR.test(t) || /\b(b3t|b3tly|ba3at|ba3atly|kalemny|kallemny|ba3atetly)\b/i.test(t))) return null;
   let app = "any";

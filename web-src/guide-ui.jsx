@@ -275,7 +275,7 @@ export function GuidePage({ tools, groups, navTo }) {
   return (
     <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[20px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="guide-page">
       <style>{`@keyframes guidePulse{0%{opacity:.9;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}.guide-pulse{transform-box:fill-box;transform-origin:center;animation:guidePulse 1.3s ease-out infinite}.g-acc{color:var(--c-on-acc)}`}</style>
-      <div><h2 className={K.h1 + " flex items-center gap-2"}><BookOpen size={20} className="c-acc" />{tr("How to use Attune")}</h2>
+      <div><h2 className={"att-h1 " + K.h1 + " flex items-center gap-2"}><BookOpen size={20} className="c-acc" />{tr("How to use Attune")}</h2>
         <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("See what Attune can do, then watch each tool work with sample data — and a plan to make Attune part of your day.")}</p></div>
       {wide ? <div className={PANES}><div className={LEFT + " lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto pe-1"}>{list}</div><div className={RIGHT}>{walkFor(sel) || walkFor("start:model")}</div></div> : list}
     </div>);

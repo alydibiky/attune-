@@ -171,8 +171,8 @@ function Item({ c, onTick, onRemove, onPay, onWho, onPayer }) {
               box can be ticked; a past day shows what happened (✓ / —) and a future one waits — neither touches Money */}
           {/* (Ali, 8 Nov: "make 7 days the maximum where I can edit money by a tap"): today and the 7 days before it can be ticked */}
           {show.map((s) => { const nx = pr.next && pr.next.i === s.i && !s.paid, today = s.date === todayIso(), locked = !tickable(s.date); return (
-            <button key={s.i} onClick={() => { if (!locked) tap(s.i, s.paid, s.amount); }} disabled={locked} title={s.date + " · " + fmt(s.amount)} data-testid="life-tick" data-locked={locked ? "1" : "0"}
-              aria-pressed={s.paid} aria-label={tr("Payment {k}", { k: s.i + 1 }) + " · " + s.date}
+            <button key={s.i} onClick={() => { if (!locked) tap(s.i, s.paid, s.amount); }} disabled={locked} title={longDay(s.date) + " · " + fmt(s.amount)} data-testid="life-tick" data-locked={locked ? "1" : "0"}
+              aria-pressed={s.paid} aria-label={tr("Payment {k}", { k: s.i + 1 }) + " · " + longDay(s.date)}
               className={"min-w-[60px] min-h-[44px] px-2 py-1 rounded-[12px] flex flex-col items-center justify-center gap-px text-[11px] font-bold tabular-nums transition-colors duration-150 " + (locked ? "cursor-default opacity-80" : "")}
               style={{ background: s.paid ? "color-mix(in srgb, var(--c-pos) 14%, transparent)" : nx ? "color-mix(in srgb, var(--c-warn) 14%, transparent)" : "var(--c-surf)",
                 border: "1.5px solid " + (s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-ln)"), color: s.paid ? "var(--c-pos)" : nx ? "var(--c-warn)" : "var(--c-mut)" }}>
@@ -312,7 +312,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
       {soon.length ? (
         <div className={U.cardPad.replace("border-[var(--c-ln)]", "border-[var(--c-warn)]")} data-testid="life-soon">
           <div className="flex items-center justify-between gap-2"><span className="font-extrabold text-[14.5px]">⏰ {tr("Due this week")}</span>
-            <span className={U.tag("amber") + " tabular-nums"}>{tr("{n} items · {a}", { n: soon.length, a: fmt(soon.reduce((a, x) => a + x.amount, 0)) })}</span></div>
+            <span className={U.tag("amber") + " tabular-nums"}>{tr(soon.length === 1 ? "1 item · {a}" : "{n} items · {a}", { n: soon.length, a: fmt(soon.reduce((a, x) => a + x.amount, 0)) })}</span></div>
           {soon.slice(0, 6).map((x, k) => (
             <div key={k} className="flex items-center gap-2 mt-2"><span className="flex-1 truncate font-semibold" dir="auto">{heading(x.c)}</span>
               <span className={U.tag(x.late ? "red" : "amber")}>{x.late ? tr("Late") : x.date.slice(5)} · <span className="tabular-nums">{fmt(x.amount)}</span></span></div>))}

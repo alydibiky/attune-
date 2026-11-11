@@ -11886,4 +11886,9 @@ export const FA = {
   "Say or type it — “the maid is now 700”": "بگویید یا بنویسید — «خدمتکار حالا ۷۰۰ می‌گیرد»",
   "Which category?": "کدام دسته؟",
   "Another amount": "مبلغ دیگر",
+  "To cancel a reminder, open Follow-ups and remove it there.": "برای لغو یادآور، پیگیری‌ها را باز کنید و آن را از آنجا حذف کنید.",
+  "1 item": "۱ مورد",
+  "1 item · {a}": "۱ قلم · {a}",
+  "What you kept this week by kind (1 item)": "آنچه این هفته به تفکیک نوع نگه داشتید (۱ مورد)",
+  "Saved your list “{n}” — 1 item": "فهرست «{n}» ذخیره شد — ۱ مورد",
 };

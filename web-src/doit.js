@@ -103,7 +103,7 @@ const dayWords = (isoDate, loc) => { try { const d = new Date(String(isoDate) + 
 const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتراك", circle: "جمعية", savings: "تحويش", regular: "كل فترة", bill: "فاتورة" };
 const GENERAL_Q = /^\s*(?:how (?:do|does|can|could|should|would|to|long|far|tall|old|many (?!.*\b(?:i|my|me|we)\b))|should i\b|can i\b|could i\b|would it\b|is it\b|is \d|are there\b|why\b|who (?:is|was|were|won|invented|made|wrote)\b|what (?:is|are|was|were|does|do) (?:a|an|the)\b(?!.*\b(?:my|mine|our)\b)|what did (?!i\b|we\b|my\b)|which is (?:better|best|cheaper)\b)|ازاي\s*[?؟]?\s*$|إزاي\s*[?؟]?\s*$|^\s*(?:ازاي|إزاي|ليه|يعني (?:ايه|إيه))|^\s*هو\s+[\d٠-٩]|(?:كتير|غالي|كويس)\s+(?:على|علي)\s/i;
 // v9.9.15: what a number in a sentence is when it is NOT money — a time, a distance, a count, a page, a code… (doSure / strictCheck)
-const UNIT_AFTER = "(?:min(?:ute)?s?|hours?|hrs?|km|kms|kilomet(?:er|re)s?|miles?|steps?|pages?|years?(?: old)?|people|persons?|kids?|children|kg|kilos?|%|days?|nights?|weeks?|months?|times|floors?|دقيقه|دقيقة|دقايق|ساعه|ساعة|ساعات|كيلو|خطوه|خطوة|صفحه|صفحة|صفحات|سنه|سنة|سنين|يوم|ايام|أيام|مره|مرة|مرات|عيال|اولاد|أولاد|افراد|أفراد)";
+const UNIT_AFTER = "(?:min(?:ute)?s?|hours?|hrs?|km|kms|kilomet(?:er|re)s?|miles?|steps?|pages?|years?(?: old)?|people|persons?|kids?|children|kg|kilos?|%|days?|nights?|weeks?|months?|times|floors?|books?|squared|cubed|to the power(?: of)? \\d+|دقيقه|دقيقة|دقايق|ساعه|ساعة|ساعات|كيلو|خطوه|خطوة|صفحه|صفحة|صفحات|سنه|سنة|سنين|يوم|ايام|أيام|مره|مرة|مرات|عيال|اولاد|أولاد|افراد|أفراد)";
 const LEAD_BEFORE = "(?:page|room|floor|chapter|code|pin|password|passcode|number|no\\.?|flat|apartment|gate|seat|bus|line|flight|الرحله|الرحلة|رحله|رحلة|version|model|iphone|galaxy|pixel|ps|size|aged?|score|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الباسورد|باسورد|باب|مقاس|ايفون|آيفون)";
 const FUTURE_PAY = /\b(?:will|going to|gonna|should|need to|have to|must|want to|plan to|about to)\s+(?:pay|buy|spend|give|send|transfer|get)\b|(?<![ء-ي])(?:هدفع|هشتري|هحول|هبعت)(?![ء-ي])|(?:لازم|عايز|عاوز|محتاج|ناوي)\s+(?:ادفع|اشتري|احول|ابعت)/i;
 const NOT_A_LOG = /\bremind(?:er)?\b|فكرني|ذكرني|نبهني|^\s*(?:watch|track|follow|monitor|compare|search|find|look up|google)\b|^\s*(?:we|he|she|they|i)\s+(?:are|is|am|were|was)\b|^\s*(?:تابع|راقب|دور|قارن)/i;
@@ -111,6 +111,10 @@ const NOT_A_LOG = /\bremind(?:er)?\b|فكرني|ذكرني|نبهني|^\s*(?:wat
 function amountIsMoney(t, amount) {
   const n = String(amount).replace(/\.0+$/, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), s = latin(t).replace(/(\d),(?=\d{3})/g, "$1");
   if (new RegExp("(?:^|[^\\d.])" + n + "\\s*" + UNIT_AFTER + "(?![\\p{L}])", "iu").test(s)) return false;
+  // v9.9.18: a year after a month ("before December 2027", «في يناير 2027») is a date, not money
+  if (/^(?:19|20)\d\d$/.test(n) && new RegExp("(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?\\s*(?:\\d{1,2},?\\s*)?" + n + "|(?:يناير|فبراير|مارس|ابريل|أبريل|مايو|يونيو|يوليو|اغسطس|أغسطس|سبتمبر|اكتوبر|أكتوبر|نوفمبر|ديسمبر)\\s*" + n + "|\\b(?:in|by|before|until|end of|since)\\s+" + n, "i").test(s)) return false;
+  // v9.9.18 ("the maid comes at 9" was 9 spent): an hour after "at" / «الساعة» is a time, not money ("bought it at 500" still is)
+  if (+amount <= 24 && new RegExp("(?<![\\p{L}])(?:at|around|by|until|till|from|الساعة|الساعه|ساعة)\\s*" + n + "(?:[:.]\\d\\d)?\\s*(?:am|pm|o'?clock|ص|م|الصبح|بالليل)?(?![\\d.])", "iu").test(s)) return false;
   if (new RegExp("(?<![\\p{L}])" + LEAD_BEFORE + "\\s*#?\\s*(?:is\\s+|=\\s*)?" + n + "(?![\\d.])", "iu").test(s)) return false;
   return true;
 }
@@ -126,9 +130,13 @@ export function understand(text0, opts = {}) {
   // two orders in one sentence are both done ("paid 300 for lunch and remind me to call Ahmed at 5" was ONE reminder titled "paid
   // 300 for lunch and call Ahmed"); and a sentence that says nothing was paid ("I didn't pay the 300 yet", "the driver wanted 200
   // but I refused", "he said the price is 300", "translate 'I paid 180…'") is never recorded as money (sense.js)
-  const text = numWords(String(text0 || ""));
+  let text = numWords(String(text0 || ""));
+  // v9.9.18 ("the laundry 720 + tolls 650"): each number with its own thing joined by "+" is a list of spendings, not a sum
+  if (/^\s*(?:[\p{L}][\p{L}\s'’-]*?\s+[\d٠-٩][\d٠-٩,.]*\s*\+\s*)+[\p{L}][\p{L}\s'’-]*?\s+[\d٠-٩][\d٠-٩,.]*\s*$/u.test(text)) text = text.replace(/\s*\+\s*/g, /[\u0600-\u06ff]/.test(text) ? " و" : " and ");
   { const parts = splitOrders(text);
-    if (parts) { const a = understand(parts.pay, opts), b = understand(parts.remind, opts);
+    if (parts) { const a = understand(parts.pay, opts); let b = understand(parts.remind, opts);
+      // v9.9.18 (the hard run: "spent 85 on parking, also remind me in an hour and a half to water the plants" kept only the reminder)
+      if (!(b && b.actions && b.actions.length === 1 && b.actions[0].kind === "reminder")) { const q = quickAction(parts.remind, (opts && opts.now) || Date.now()); if (q && ["reminder", "alarm", "timer"].includes(q.kind) && !q.problems.length) b = { actions: [{ kind: "reminder", action: q }] }; }
       if (a && b && a.actions && b.actions && a.actions.length && a.actions.every((x) => x.kind === "money") && b.actions.length === 1 && b.actions[0].kind === "reminder") return { actions: [...a.actions, ...b.actions], two: true }; } }
   let u = understand1(text, opts);
   // a spending line written with signs — "lunch (350)", "mechanic: 320", "haircut 1750/-", «تورتة 15ج», "😋 charger 25" — is read without them
@@ -337,7 +345,8 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   if (dl) return { actions: [{ kind: "deadline", d: dl }] };
   // v8.6 (the 2-month test: "fuel 500" was logged as FOOD — ful medames — and "maid 400" went to Chat): a spending word or just
   // "something + an amount" is money, unless it was eaten ("ate", «اكلت») — the food reader must not take "fuel" for «فول»
-  { const hasNum = /\d/.test(latin(t)), catHit = Object.entries(CAT_WORDS).some(([k, re]) => !["food", "groceries", "coffee", "salary"].includes(k) && re.test(t));
+  { const hasNum = /\d/.test(latin(t)), catHit = Object.entries(CAT_WORDS).some(([k, re]) => !["food", "groceries", "coffee", "salary"].includes(k) && re.test(t))
+      || (PAID_FOR.test(t) && !REQ.test(t) && !NOT_A_LOG.test(t) && !FUTURE_PAY.test(t));   // v9.9.18: «المغسلة 18000 والميكانيكي 2500»
     const short = /^\s*[\p{L}][\p{L}\s'’-]{1,30}\s+[\d٠-٩][\d٠-٩,.]*\s*(?:egp|le|pounds?|جنيه|ج)?\s*$|^\s*[\d٠-٩][\d٠-٩,.]*\s*(?:egp|le|pounds?|جنيه|ج)?\s+[\p{L}][\p{L}\s'’-]{1,30}$/iu.test(t);
     if (hasNum && !EAT.test(t) && !ml && !WEIGHT.test(t) && !/شربت|drank/.test(t) && (catHit || (short && !readMealText(t).items.some((x) => x.kcal != null && !/^(ful|ful-sandwich)$/.test(x.id) || false)) || (short && numLost(t)))) {
       const r = readLocal(t, { today: isoDay(now) }); const lost = short && numLost(t);
@@ -539,7 +548,7 @@ const toMin = (hm) => { const [h, m] = String(hm).split(":").map(Number); return
  *  spending kind (lunch, maid, fuel…) for money; ate / drank / a meal for food — or every word of it is the food itself
  *  ("koshary", "2 eggs and toast"). Unsure ("co 900", "stop, just say yes", "Geely Galaxy M9") → the model decides, then the person. */
 const FILL = new Set("a an the and of with plate plates piece pieces cup cups glass glasses bowl slice slices can cans bottle some little big small half one two three four five و طبق طبقين حتة حته كوباية كوبايه كوب نص شوية علبة".split(" "));
-const PAID_FOR = /\b(maid|nanny|driver|cleaner|cleaning|plumber|electrician|carpenter|painter|mechanic|tutor|teacher|lesson|barber|salon|laundry|tips?|gift|donation|charity|zakat|sadaqa|doorman|bawab|parking|tolls?|fine|repair|service)\b|خدامة|خدامه|شغالة|شغاله|دادة|سواق|سباك|كهربائي|كهربائى|نجار|نقاش|ميكانيكي|مدرس|درس|حلاق|كوافير|مكوجي|مكوجى|بواب|البواب|زكاة|زكاه|صدقة|صدقه|هدية|هديه|باركينج|جراج|غرامة|مخالفة|تصليح|صيانة/i;
+const PAID_FOR = /\b(haircut|hair cut|vet|maid|nanny|driver|cleaner|cleaning|plumber|electrician|carpenter|painter|mechanic|tutor|teacher|lesson|barber|salon|laundry|tips?|gift|donation|charity|zakat|sadaqa|doorman|bawab|parking|tolls?|fine|repair|service)\b|خدامة|خدامه|شغالة|شغاله|دادة|سواق|سباك|كهربائي|كهربائى|نجار|نقاش|ميكانيكي|مغسلة|المغسلة|بيطري|البيطري|مدرس|درس|حلاق|كوافير|مكوجي|مكوجى|بواب|البواب|زكاة|زكاه|صدقة|صدقه|هدية|هديه|باركينج|جراج|غرامة|مخالفة|تصليح|صيانة/i;
 export function doSure(text, { now = Date.now(), stores = {} } = {}) {
   const t = fixTypos(String(text || "").trim()); if (!t) return true;
   let u; try { u = understand(text, { now, stores }); } catch (e) { return true; }

@@ -11886,4 +11886,9 @@ export const KO = {
   "Say or type it — “the maid is now 700”": "말하거나 입력하세요 — “가사도우미 이제 700”",
   "Which category?": "어떤 카테고리?",
   "Another amount": "다른 금액",
+  "To cancel a reminder, open Follow-ups and remove it there.": "알림을 취소하려면 후속 조치를 열고 거기서 삭제하세요.",
+  "1 item": "1개 항목",
+  "1 item · {a}": "1개 항목 · {a}",
+  "What you kept this week by kind (1 item)": "이번 주 종류별로 저장한 것 (1개 항목)",
+  "Saved your list “{n}” — 1 item": "목록 “{n}” 저장됨 — 1개 항목",
 };

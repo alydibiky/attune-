@@ -140,7 +140,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
   return (
     <div className="calm text-[var(--c-ink)] space-y-4 max-w-2xl mx-auto" data-testid="convert">
       <div className="px-1">
-        <h2 className={K.h1 + " flex items-center gap-2"}><FileText size={19} className="text-[var(--c-acc)]" />{tr("File Converter")}</h2>
+        <h2 className={"att-h1 " + K.h1 + " flex items-center gap-2"}><FileText size={19} className="text-[var(--c-acc)]" />{tr("File Converter")}</h2>
         <p data-intro="" className="text-[12.5px] text-[var(--c-mut)] leading-relaxed mt-1 lg:max-w-[75ch]">{tr("PDF ↔ Word, PowerPoint → PDF, photos → PDF, scanned paper → editable Word, Excel ↔ CSV ↔ JSON, e-books, web pages, subtitles, merge and split PDFs — on your phone. Your files are never uploaded to a converter website.")}</p>
       </div>
 

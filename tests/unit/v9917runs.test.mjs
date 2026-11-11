@@ -11,5 +11,5 @@ const h = run("../notifs/heldout.mjs"), hp = +(/\(([\d.]+)%\)/.exec(h) || [])[1]
 ok(hp >= 95, "held-out notifications: " + hp + "% (the mark: 95%)");
 const s = run("../scenarios/hard.mjs", ["2500"]), sp = +(/\(([\d.]+)%\)/.exec(s) || [])[1];
 const row = (g) => { const r = new RegExp("\\| " + g + " \\| (\\d+) \\| (\\d+) \\|").exec(s); return r ? +r[2] : -1; };
-ok(sp >= 93, "2,500 hard sentences: " + sp + "% handled right, details checked (the mark: 93%)");
+ok(sp >= 98, "2,500 hard sentences: " + sp + "% handled right, details checked (the mark: 98% since v9.9.18)");
 for (const g of ["not_a_payment", "remind_ar_time", "remind_repeat", "deadlines", "repay", "income"]) ok(row(g) >= 0 && row(g) <= 1, g + ": at most one wrong (" + row(g) + ")");

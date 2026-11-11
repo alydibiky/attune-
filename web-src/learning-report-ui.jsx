@@ -61,7 +61,7 @@ export function MindReport({ rep, back, open, onDone, compact = false }) {
       {compact ? null : <Tile label={tr("Everything")} value={String(rep.total)} />}
     </div>
     <div className={compact ? "space-y-3" : "space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3"}>
-      <Card title={T("What you kept this week by kind ({n} items)", { n: rep.week })} testid="mind-rep-kinds">
+      <Card title={(rep.week === 1 ? T("What you kept this week by kind (1 item)") : T("What you kept this week by kind ({n} items)", { n: rep.week }))} testid="mind-rep-kinds">
         {rep.kinds.length ? <div className="flex items-end gap-3 h-[120px] pt-4">{rep.kinds.map((k, i) => <div key={k.kind} className="flex-1 min-w-0 flex flex-col items-center justify-end gap-1 h-full">
           <span className="text-[12px] font-black tabular-nums">{k.n}</span>
           <span className="w-full max-w-[56px] rounded-[12px]" style={{ height: Math.max(8, (k.n / max) * 70), background: C[i % C.length] }} />

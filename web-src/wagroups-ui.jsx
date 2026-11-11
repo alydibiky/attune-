@@ -242,7 +242,7 @@ function GroupCard({ g, ar, open }) {
     {covers.length ? <div className="grid grid-cols-4 gap-0.5 h-24">{covers.map((c) => <Photo key={c.id} gid={g.id} file={c.file} className="w-full h-24 object-cover" />)}</div> : null}
     <div className="p-3.5">
       <div className="flex items-center gap-2"><b className="flex-1 truncate text-[15.5px] font-extrabold" dir="auto">{g.title}</b><span className={U.tag("green")}>{nm(W.KINDS[g.kind] || W.KINDS.other, ar)}</span></div>
-      <p className={"m-0 mt-0.5 text-[12.5px] truncate " + U.muted} dir="auto">{tr("{n} items", { n: g.items.length })}{last ? " · " + W.headline(last.text) : ""}</p>
+      <p className={"m-0 mt-0.5 text-[12.5px] truncate " + U.muted} dir="auto">{(g.items.length === 1 ? tr("1 item") : tr("{n} items", { n: g.items.length }))}{last ? " · " + W.headline(last.text) : ""}</p>
     </div></button>;
 }
 function AlbumTile({ g, a, ar, open }) {

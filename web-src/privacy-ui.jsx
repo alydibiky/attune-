@@ -40,7 +40,7 @@ export function PrivacyPage({ flash, onVault, readNet } = {}) {
   return (
     <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[20px] p-4 md:p-6 space-y-4 lg:max-w-[76ch]" style={{ minHeight: "70vh" }} data-testid="privacy-page" dir={isRTL() ? "rtl" : "ltr"}>
       <div className="flex items-start gap-3"><span className="c-ic"><ShieldCheck size={17} /></span>
-        <div><h2 className="text-[22px] font-black tracking-tight m-0">{tr("Privacy")}</h2><p className="c-sub m-0">{tr("Updated {d}", { d: PRIVACY_UPDATED })}</p></div></div>
+        <div><h2 className="att-h1 text-[22px] font-black tracking-tight m-0">{tr("Privacy")}</h2><p className="c-sub m-0">{tr("Updated {d}", { d: PRIVACY_UPDATED })}</p></div></div>
       <PrivacyWeek readNet={readNet} />
       <VaultSettings flash={flash} onChange={onVault} />
       {P.map(([h, t], i) => (

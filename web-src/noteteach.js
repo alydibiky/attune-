@@ -52,6 +52,8 @@ function nameFromRole(t, dir) { const k = roleIn(t); if (!k) return null; const 
 function whoSentence(raw, ctx) {
   const t = String(raw || "").replace(/[“”«»"']/g, " ").replace(/\s+/g, " ").trim();
   const role = roleIn(t.toLowerCase()); if (!role) return null;
+  // v9.9.18 (the hard run: "the glasses is at my mum's house" taught "glasses" as my mother): a place said with a role is where a thing is
+  if (/\b(?:is|are)\s+(?:now\s+)?(?:at|in|on|under|inside|behind|beside|next to)\s+(?:my|our|the)\s+(?:\w+(?:'s|\s+s)\s+)?(?:house|home|place|flat|apartment|car|office|room|bag|drawer)\b|\b(?:at|in)\s+my\s+\w+(?:'s|\s+s)\s+(?:house|home|place|flat|apartment|car|office)\b|(?:في|عند)\s+(?:بيت|شقة|شقه|عربية|عربيه)\s/i.test(t)) return null;
   let name = "", m;
   // "Nada is my wife" · "Nada = wife" · "Nada, my wife" · "this is my wife" / "she's my wife" (the notification's person)
   if ((m = /^(?:and\s+)?([\p{L}][\p{L}'.-]*(?:\s+[\p{L}][\p{L}'.-]*){0,2})\s*(?:is|'s|=|:|,|-)\s*(?:my|our)?\s*/iu.exec(t))) name = m[1];

@@ -40,6 +40,7 @@ const WEEKDAY = [
   [/\bsat(urday)?\b|السبت/i, 6],
 ];
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const MONTH_FULL = ["january", "february", "march", "april", "may", "june", "july", "august", "sept?(?:ember)?", "october", "november", "december"];
 const AR_MONTHS = [/يناير/, /فبراير/, /مارس/, /ابريل|أبريل/, /مايو/, /يونيو/, /يوليو/, /اغسطس|أغسطس/, /سبتمبر/, /اكتوبر|أكتوبر/, /نوفمبر/, /ديسمبر/];
 
 // Parts of the day, with the hour they mean when no hour is said, and whether
@@ -92,7 +93,7 @@ export function parseTime(text, nowIn) {
   // 2. The day
   let day = null, dayWord = "";
   if (/day after tomorrow|بعد بكرة|بعد بكره|بعد غد/.test(s)) { day = addDays(now, 2); dayWord = "+2"; }
-  else if (/\btomorrow\b|بكرة|بكره|غدا|غدًا|الغد/.test(s)) { day = addDays(now, 1); dayWord = "+1"; }
+  else if (/\btomorrow\b|بكرة|بكره|(?<![ء-ي])غدا(?![ء-ي])|(?<![ء-ي])غدًا|الغد(?![ء-ي])/.test(s)) { day = addDays(now, 1); dayWord = "+1"; }
   else if (/\btoday\b|\btonight\b|النهارده|النهاردة|اليوم|الليلة دي|انهارده/.test(s)) { day = new Date(now); dayWord = "0"; }
   if (!day) {
     for (const [re, wd] of WEEKDAY) if (re.test(s)) {
@@ -108,7 +109,7 @@ export function parseTime(text, nowIn) {
     if (dm) { y = +dm[1]; mo = +dm[2] - 1; d = +dm[3]; }
     else if ((dm = s.match(/\b(\d{1,2})[/.-](\d{1,2})(?:[/.-](\d{2,4}))?\b/))) { d = +dm[1]; mo = +dm[2] - 1; y = dm[3] ? (+dm[3] < 100 ? 2000 + +dm[3] : +dm[3]) : null; }
     else {
-      const mi = MONTHS.findIndex((x) => new RegExp("\\b" + x).test(s));
+      const mi = MONTHS.findIndex((x) => new RegExp("\\b" + x + "(?:[a-z]*?)\\b").test(s) && new RegExp("\\b(?:" + MONTH_FULL[MONTHS.indexOf(x)] + "|" + x + "\\.?)(?![a-z])").test(s));   // v9.9.18: "Maria" is not March, "Mayar" not May
       const ai = AR_MONTHS.findIndex((re) => re.test(s));
       const mIdx = mi >= 0 ? mi : ai;
       const dd = s.match(/\b(\d{1,2})(?:st|nd|rd|th)?\b/);
@@ -304,7 +305,7 @@ export function buildAction(json, text0, nowIn) {
   let t = null;
   for (const w of words) { t = parseTime(w, now); if (t) break; }
   // «صحيني الساعة 6 ونص» — a wake-up alarm with no am/pm is in the morning, not 6:30 pm (v6.8)
-  if (kind === "alarm" && t && !/\b(pm|p\.m\.|evening|tonight|afternoon)\b|مساء|بالليل|باليل|المغرب|العصر|الضهر|الظهر|\d\s*م(?![\p{L}])|\b(1[3-9]|2[0-3])[:.]\d{2}/iu.test(String(text || ""))) {
+  if (kind === "alarm" && t && t.said && t.said.time !== "relative" && !/\b(pm|p\.m\.|evening|tonight|afternoon)\b|مساء|بالليل|باليل|المغرب|العصر|الضهر|الظهر|\d\s*م(?![\p{L}])|\b(1[3-9]|2[0-3])[:.]\d{2}/iu.test(String(text || ""))) {
     const d = new Date(t.at);
     if (d.getHours() >= 13 && d.getHours() <= 23) {
       const m = new Date(d); m.setHours(d.getHours() - 12);
@@ -359,7 +360,9 @@ export function buildAction(json, text0, nowIn) {
 }
 
 /** No model loaded: keywords + the parser, for the common cases. */
-export function quickAction(text, nowIn) { return buildAction({ action: guessKind(easeTime(text, nowIn || Date.now())) }, text, nowIn); }
+export function quickAction(text, nowIn) {
+  // v9.9.18 (the hard run: "cancel my reminder to call the bank" MADE a reminder): cancelling one is not making one
+  if (/^\s*(?:please\s+)?(?:cancel|delete|remove|stop|turn off)\s+(?:my\s+|the\s+|that\s+)?(?:reminder|alarm|timer)s?\b|^\s*(?:الغي|ألغي|امسح|شيل|وقف)\s+(?:ال)?(?:تذكير|منبه|تايمر)/i.test(String(text || ""))) return { ...buildAction({ action: "none" }, text, nowIn), kind: "none", at: 0, problems: ["To cancel a reminder, open Follow-ups and remove it there."] }; return buildAction({ action: guessKind(easeTime(text, nowIn || Date.now())) }, text, nowIn); }
 
 function guessKind(text) {
   const s = String(text || "");

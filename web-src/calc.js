@@ -51,6 +51,8 @@ export function looksLikeCalc(text0) {
   const text = easeCalc(text0);   // v9.9.17: «12 في 30», "4 percent of 2400", "15% off 48", "split 7200 between 3", "half of 850", "250 squared"
   const t = String(text || "");
   if (t.length > 220 || /\n.*\n/.test(t)) return false;
+  // v9.9.18 (the hard run: "the laundry 720 + tolls 650" was summed, not recorded): every number has its own thing → a spending list
+  if (/^\s*(?:[\p{L}][\p{L}\s'’-]*?\s+[\d٠-٩][\d٠-٩,.]*\s*\+\s*)+[\p{L}][\p{L}\s'’-]*?\s+[\d٠-٩][\d٠-٩,.]*\s*$/u.test(t) && !/^\s*(?:what|how|calc|كام|احسب)/i.test(t)) return false;
   const toks = lex(t).filter((x) => x.t !== "w");
   const nums = toks.filter((x) => x.t === "n").length;
   const ops = toks.filter((x) => x.t === "op").length;

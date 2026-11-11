@@ -61,7 +61,8 @@ for (const s of ["reminder to book the dentist in 20 minutes", "the code is 4821
 // still money
 for (const [s, a] of [["320 dinner", 320], ["7500 غدا", 7500], ["breakfast 300 cash", 300], ["spent 250 on lunch", 250], ["غدا 150", 150], ["paid 300 for 3 nights at the hotel", 300], ["lunch was 150", 150], ["taxi 85", 85]]) {
   const m = (U(s).actions || []).find((x) => x.kind === "money"); ok(m && m.items.some((x) => x.amount === a), "«" + s + "» → money " + a + ": " + JSON.stringify(m && m.items.map((x) => x.amount))); }
-ok(doSure("lunch 60 and a haircut 85", { now }) === false && kinds("lunch 60 and a haircut 85") === "money", "“lunch 60 and a haircut 85” is read, and asked (a haircut has no known kind)");
+// v9.9.18: a haircut is a known spending now (PAID_FOR) — saved without asking, like "the barber 85"
+ok(doSure("lunch 60 and a haircut 85", { now }) === true && kinds("lunch 60 and a haircut 85") === "money", "“lunch 60 and a haircut 85” is read and saved (a haircut is a known spending since v9.9.18)");
 // questions for the AI, not answered from Money
 for (const s of ["how do I make koshary?", "should I pay 850 for Samsung S24?", "is 120 too much for medicine?", "what did Apple earn in 2023?", "اعمل كشري ازاي؟", "how do I renew my passport?"]) { const u = U(s); ok(u.chat === true && !u.ask, "«" + s + "» goes to the AI: " + JSON.stringify(u).slice(0, 80)); }
 for (const s of ["how much did I spend this week?", "who owes me money?", "what are my bills this month?", "صرفت كام الاسبوع ده؟"]) ok(!!U(s).ask, "«" + s + "» is still answered from your own data");

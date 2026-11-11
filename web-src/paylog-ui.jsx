@@ -4,7 +4,9 @@
    handled ids are remembered here and forgotten on the phone (payForget). Tests: tests/e2e_v727paylog.py.            */
 import React, { useEffect, useState } from "react";
 import { Bell, Check, X } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
+// v9.9.18: a day in words (the list showed 2026-12-01)
+const dayWords = (iso) => { try { return /^\d{4}-\d{2}-\d{2}$/.test(String(iso || "")) ? new Date(iso + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" }) : iso || ""; } catch (e) { return iso || ""; } };
 import { inbox, toTxns, autoPick, appendToLedger, alreadyIn, fromChats, judged, codeSure, readNotification } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
 import { payOpts } from "./locale.js";
@@ -279,7 +281,7 @@ export function ChatMoneyFix({ ledger, runDo, flash }) {
     <p className={"m-0 text-[12.5px] leading-relaxed " + U.muted}>{tr("People talk about money in chats — that isn't a payment. From now on chat apps are never read as money.")}</p>
     <ul className="m-0 p-0 list-none space-y-1">{list.slice(0, 6).map((t) => <li key={t.id} className="text-[12.5px] flex gap-2 justify-between" data-testid="paylog-chatfix-row">
       <span className="min-w-0 truncate" dir="auto">{(t.evidence && (t.evidence.from || t.evidence.app)) || t.note}</span>
-      <span className="shrink-0 tabular-nums font-bold" dir="ltr">{t.type === "income" ? "+" : "−"}{Number(t.amount).toLocaleString()} · {t.date}</span></li>)}</ul>
+      <span className="shrink-0 tabular-nums font-bold" dir="ltr">{t.type === "income" ? "+" : "−"}{Number(t.amount).toLocaleString()} · {dayWords(t.date)}</span></li>)}</ul>
     <div className="flex gap-2"><button onClick={remove} disabled={busy} className={U.btnP} data-testid="paylog-chatfix-remove"><X size={14} />{tr("Remove them")}</button>
       <button onClick={keep} disabled={busy} className={U.btnS} data-testid="paylog-chatfix-keep">{tr("Keep them")}</button></div>
   </div></div>;

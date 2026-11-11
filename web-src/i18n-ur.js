@@ -11887,4 +11887,9 @@ export const UR = {
   "Say or type it — “the maid is now 700”": "بولیں یا لکھیں — “ملازمہ اب 700 لیتی ہے”",
   "Which category?": "کون سی قسم؟",
   "Another amount": "کوئی اور رقم",
+  "To cancel a reminder, open Follow-ups and remove it there.": "یاد دہانی منسوخ کرنے کے لیے فالو اپ کھولیں اور وہاں سے ہٹا دیں۔",
+  "1 item": "1 آئٹم",
+  "1 item · {a}": "1 آئٹم · {a}",
+  "What you kept this week by kind (1 item)": "اس ہفتے قسم کے لحاظ سے جو آپ نے رکھا (1 آئٹم)",
+  "Saved your list “{n}” — 1 item": "آپ کی فہرست “{n}” محفوظ ہو گئی — 1 آئٹم",
 };

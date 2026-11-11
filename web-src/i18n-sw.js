@@ -11887,4 +11887,9 @@ export const SW = {
   "Say or type it — “the maid is now 700”": "Sema au andika — “msaidizi sasa ni 700”",
   "Which category?": "Aina gani?",
   "Another amount": "Kiasi kingine",
+  "To cancel a reminder, open Follow-ups and remove it there.": "Kughairi kikumbusho, fungua Ufuatiliaji na ukiondoe hapo.",
+  "1 item": "kipengee 1",
+  "1 item · {a}": "kipengee 1 · {a}",
+  "What you kept this week by kind (1 item)": "Ulichohifadhi wiki hii kwa aina (kipengee 1)",
+  "Saved your list “{n}” — 1 item": "Orodha “{n}” imehifadhiwa — kipengee 1",
 };

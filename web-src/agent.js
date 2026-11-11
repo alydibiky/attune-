@@ -82,7 +82,7 @@ export function taskOf(text) {
   const route = /(?:^|\s)(to|from|من|الى|إلى|de|desde|von|nach|para|à)\s|(?:^|\s)ل(?=\p{L})/u.test(t);
   const day = /\d|tomorrow|today|tonight|next week|بكره|بكرة|النهارده|الاسبوع الجاي/.test(t) || WEEKDAYS.some(([n]) => new RegExp("(?<![\\p{L}])(?:" + n + ")(?![\\p{L}])", "iu").test(t));
   if (FLIGHT.test(t) && (BOOK.test(t) || (verb || day) && route)) return "flight";
-  if (HOTEL.test(t) && BOOK.test(t)) return "hotel";
+  if (HOTEL.test(t) && (BOOK.test(t) || (verb && day && /\b(?:hotels?|airbnb|resort|hostel)\b|فندق|فنادق|منتجع/.test(t) && /(?:^|\s)(?:in|at|في|à|en|em|di)\s/.test(t)))) return "hotel";   // v9.9.18: «عايز فندق في جدة من 3 ل 7 مارس», "I need a hotel in Rome on 3 March"
   if (RIDE.test(t) && (verb || /take me|pick me|وصلني|خدني/.test(t))) return "ride";
   if (FOOD.test(t) && (ORDER.test(t) || /طلبات|talabat|deliveroo|doordash|uber ?eats/.test(t))) return "food";
   if (verb && SHOP.test(t) && /\b(on|from)\s+(amazon|noon|jumia|ebay|aliexpress|temu|shein)\b|من (امازون|نون|جوميا)/i.test(t)) return "shop";
@@ -98,7 +98,14 @@ const at12 = (t) => { const d = new Date(t); d.setHours(12, 0, 0, 0); return d.g
 /** The dates in a request, in order, as YYYY-MM-DD (weekdays → the next one; "next week" → +7). */
 export function tripDates(text, { now = Date.now(), order = "dmy" } = {}) {
   const t = fold(String(text || "")).toLowerCase(), out = [];
-  for (const d of datesIn(text, { now, order })) out.push({ at: d.at, iso: isoDay(d.t) });
+  // v9.9.18 (the hard run: "a hotel in Jeddah from 3 to 7 March" checked in on 7 March with no check-out): a range with one month
+  // name — "from 3 to 7 March", "3-7 March", «من 3 ل 7 مارس» — is both days of that month
+  { const rg = /(?:^|[\s(])(?:from\s+|between\s+|من\s+)?(\d{1,2})(?:st|nd|rd|th)?\s*(?:to|until|till|and|-|–|ل|الى|إلى|لحد|لغاية|لغايه)\s*(\d{1,2})(?:st|nd|rd|th)?\s+([\p{L}]{3,})/iu.exec(String(text || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)));
+    if (rg && +rg[1] < 32 && +rg[2] < 32) { const end = datesIn(rg[2] + " " + rg[3], { now, order });
+      if (end.length) { const e = new Date(end[0].t), st = new Date(e); st.setDate(+rg[1]); if (+rg[1] > +rg[2]) st.setMonth(st.getMonth() - 1);
+        out.push({ at: rg.index, iso: isoDay(st.getTime()) }, { at: rg.index + 1, iso: isoDay(e.getTime()) });
+        for (const d of datesIn(text, { now, order })) if (d.at < rg.index || d.at > rg.index + rg[0].length) out.push({ at: d.at, iso: isoDay(d.t) }); } } }
+  if (!out.length) for (const d of datesIn(text, { now, order })) out.push({ at: d.at, iso: isoDay(d.t) });
   const today = at12(now);
   const rel = [[W("today|tonight|النهارده|النهاردة|اليوم|الليله|الليلة|aujourd'hui|hoy|hoje|heute|oggi|bugün|hari ini|vandaag"), 0], [W("tomorrow|بكره|بكرة|غدا|غداً|demain|mañana|amanhã|morgen|domani|yarın|besok"), 1], [W("day after tomorrow|بعد بكره|بعد بكرة|après-demain|pasado mañana|übermorgen"), 2]];
   for (const [re, k] of rel) { const m = re.exec(t); if (m && !out.some((x) => Math.abs(x.at - m.index) < 3)) out.push({ at: m.index, iso: isoDay(today + k * DAY) }); }

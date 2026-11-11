@@ -227,17 +227,25 @@ const CMD = { fakarny: "فكرني", fakkarny: "فكرني", fakarni: "فكرن�
   "kahraba": "كهربا", "gas": "غاز", "mayya": "مية", "aysh": "عيش", "laban": "لبن", "fera5": "فراخ", "ferakh": "فراخ", "la7ma": "لحمة", "ro2z": "رز", "roz": "رز", "koshary": "كشري", "koshari": "كشري",
   "3aleh": "عليه", "3aleih": "عليه", "3aleha": "عليها", "3alaya": "عليا", "3alayya": "عليا", "3alehom": "عليهم", leya: "ليا", liya: "ليا", sallaft: "سلفت", masareef: "مصاريف", masarif: "مصاريف", "2ad": "قد", "2a2al": "أقل", a2al: "أقل",
   ad: "قد", nos: "نص", ro3: "ربع", "ella": "إلا", sob7: "الصبح", "elsob7": "الصبح", bel: "بالليل", belel: "بالليل", "belleil": "بالليل", "2ol": "قول", "2oly": "قولي", "2olli": "قولي", oly: "قولي",
-  lama: "لما", lamma: "لما", law: "لو", "yewsal": "يوصل", "yewsl": "يوصل", talab: "طلب", "talaby": "طلبي", "gamaeya": "جمعية", "gam3eya": "جمعية", "gam3ya": "جمعية", dayman: "دايما" };
+  lama: "لما", lamma: "لما", law: "لو", "yewsal": "يوصل", "yewsl": "يوصل", talab: "طلب", "talaby": "طلبي", "gamaeya": "جمعية", "gam3eya": "جمعية", "gam3ya": "جمعية", dayman: "دايما",
+  // v9.9.18 (the hard run: "rakna 110 geneh", "dawa b 950 geneh", "el 7ala2 kan b 3200" went to the AI) — money words and everyday things
+  geneh: "جنيه", gneh: "جنيه", geneih: "جنيه", genih: "جنيه", genieh: "جنيه", ginih: "جنيه", gnih: "جنيه", kan: "كان", kanet: "كانت", kalefny: "كلفني", kallefny: "كلفني", kalefni: "كلفني", kalefetny: "كلفتني",
+  rakna: "ركنة", ragna: "ركنة", dawa: "دوا", hodoom: "هدوم", hodom: "هدوم", sabak: "سباك", "7ala2": "حلاق", hala2: "حلاق", hedeya: "هدية", hedeyya: "هدية", hdeya: "هدية", ahwa: "قهوة", "2ahwa": "قهوة",
+  makwagy: "مكوجي", mekaneeky: "ميكانيكي", mekaniky: "ميكانيكي", saydaleya: "صيدلية", "3arabeya": "عربية", "3arabiya": "عربية", b: "ب", bi: "ب", lel: "على", "3al": "على",
+  kaman: "كمان", kamaan: "كمان", kman: "كمان", "de2e2a": "دقيقة", "de2ee2a": "دقيقة", "d2e2a": "دقيقة", "da2aye2": "دقايق", "da2ayi2": "دقايق", "sa3ten": "ساعتين", "sa3teen": "ساعتين", "sa3tein": "ساعتين",
+  enharda: "النهارده", "ba3d": "بعد", "b3d": "بعد", "ashrab": "اشرب", "eshrab": "اشرب", "atfy": "اطفي", "atfi": "اطفي", "forn": "فرن", "maya": "مية", "dohr": "الضهر", "el3asr": "العصر", "3asr": "العصر", "maghrib": "المغرب" };
 let INV = null;
 const inv = () => { if (INV) return INV; INV = {}; for (const [a, f] of Object.entries(FROM_KEYBOARD || {})) if (!INV[f]) INV[f] = a; return INV; };
 /** "fakarny bokra el sa3a 9 akalem mama" → «فكرني بكرة الساعة 9 اكلم ماما». Only words it knows change. */
 export function francoToArabic(text) {
   const map = inv(), toks = String(text || "").split(/(\s+)/);
-  const word = (w) => { const k = w.toLowerCase(); return CMD[k] || map[k] || null; };
+  const word = (w) => { const k = w.toLowerCase(), p = /[.,!?؟]+$/.exec(k), k2 = p ? k.slice(0, p.index) : k; const r = CMD[k] || map[k] || (p ? CMD[k2] || map[k2] : null); return r && p && !(CMD[k] || map[k]) ? r + p[0] : r || null; };   // v9.9.18: "forn!" too
   const out = [];
   for (let i = 0; i < toks.length; i++) {
     const w = toks[i]; if (/^\s*$/.test(w)) { out.push(w); continue; }
     const lw = w.toLowerCase();
+    // "bel leil" / "bel lel" → «بالليل» (one word, not «بالليل leil»)
+    if ((lw === "bel" || lw === "bil") && toks[i + 2] && /^(leil|lail|lel|leyl)$/i.test(toks[i + 2].replace(/[.,!?]+$/, ""))) { out.push("بالليل"); i += 2; continue; }
     // "el sa3a" → «الساعة», "el2akl" → «الأكل»
     if ((lw === "el" || lw === "il") && toks[i + 2] && word(toks[i + 2])) { out.push("ال" + word(toks[i + 2]).replace(/^ال/, "")); i += 2; continue; }
     const m = /^(el|il)[-]?(.+)$/i.exec(w); if (m && word(m[2])) { out.push("ال" + word(m[2]).replace(/^ال/, "")); continue; }

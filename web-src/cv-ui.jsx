@@ -489,7 +489,7 @@ export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, na
   };
   return (
     <section className="calm bg-[var(--c-bg)] text-[var(--c-ink)] p-4 space-y-3" data-testid="cv-page">
-      <div className="flex items-start gap-3"><FileText size={22} className="text-[var(--c-acc)] mt-1" /><div><h2 className={K.h1}>{tr("CV / Resume")}</h2><p data-intro="" className="text-[13px] text-[var(--c-mut)] lg:max-w-[70ch]">{tr("Build a CV in English or Arabic, keep a copy for every job, and export a clean PDF or Word file. The AI on your phone helps with wording.")}</p></div></div>
+      <div className="flex items-start gap-3"><FileText size={22} className="text-[var(--c-acc)] mt-1" /><div><h2 className={"att-h1 " + K.h1}>{tr("CV / Resume")}</h2><p data-intro="" className="text-[13px] text-[var(--c-mut)] lg:max-w-[70ch]">{tr("Build a CV in English or Arabic, keep a copy for every job, and export a clean PDF or Word file. The AI on your phone helps with wording.")}</p></div></div>
       <div className="grid grid-cols-2 gap-2 lg:max-w-md">
         <button className={primary + " py-2.5 flex items-center justify-center gap-1.5"} onClick={() => setSheet("new")} data-testid="cv-new"><Plus size={14} />{tr("New CV")}</button>
         <button className={ghost + " py-2.5 flex items-center justify-center gap-1.5"} onClick={() => setSheet("import")} data-testid="cv-import"><Upload size={14} />{tr("Import my CV")}</button>

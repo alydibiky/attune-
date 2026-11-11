@@ -64,7 +64,7 @@ const life = (want) => (r, s) => { if (r.k !== "life") return ""; let c = null; 
   if (want.every && c.every !== want.every) return "every " + c.every + " ≠ " + want.every;
   if (want.count && c.count !== want.count) return "count " + c.count + " ≠ " + want.count;
   if (want.kind && c.kind !== want.kind) return "kind " + c.kind + " ≠ " + want.kind;
-  if (want.person && !String(c.person || "").toLowerCase().includes(String(want.person).toLowerCase().replace(/^(my|the|dr|uncle) /, "").slice(0, 4))) return "person “" + c.person + "” ≠ " + want.person;
+  if (want.person && !String(c.person || "").toLowerCase().includes(String(want.person).toLowerCase().replace(/^(my friend|my|the|dr|uncle) /, "").slice(0, 4))) return "person “" + c.person + "” ≠ " + want.person;
   return ""; };
 const NOT = (...bad) => ({ not: bad });   // accept anything except these kinds
 

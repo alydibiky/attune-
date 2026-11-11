@@ -11886,4 +11886,9 @@ export const TH = {
   "Say or type it — “the maid is now 700”": "พูดหรือพิมพ์ — “แม่บ้านตอนนี้ 700”",
   "Which category?": "หมวดหมู่ไหน?",
   "Another amount": "จำนวนอื่น",
+  "To cancel a reminder, open Follow-ups and remove it there.": "หากต้องการยกเลิกการเตือน ให้เปิดการติดตามแล้วลบที่นั่น",
+  "1 item": "1 รายการ",
+  "1 item · {a}": "1 รายการ · {a}",
+  "What you kept this week by kind (1 item)": "สิ่งที่คุณเก็บสัปดาห์นี้ตามประเภท (1 รายการ)",
+  "Saved your list “{n}” — 1 item": "บันทึกรายการ “{n}” แล้ว — 1 รายการ",
 };

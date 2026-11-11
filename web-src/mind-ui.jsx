@@ -396,7 +396,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   return (
     <div className={page + " space-y-4 att-in pb-20"} data-testid="mind-page">
       <div className="flex items-center gap-2">
-        <h2 className={h1 + " text-[var(--c-ink)] flex items-center gap-2"}><Brain size={20} className="text-[var(--c-acc)]" />{tr("Mind")}</h2>
+        <h2 className={"att-h1 " + h1 + " text-[var(--c-ink)] flex items-center gap-2"}><Brain size={20} className="text-[var(--c-acc)]" />{tr("Mind")}</h2>
         <span className="text-[11.5px] font-semibold tabular-nums text-[var(--c-mut)] flex-1 min-w-0 truncate">{records.length} {tr("kept · private, on this phone")}</span>
         <span className="relative shrink-0"><button onClick={() => setMore(!more)} aria-label={tr("More")} aria-expanded={more} className="w-11 h-11 rounded-full grid place-items-center text-[var(--c-mut)] hover:bg-[var(--c-soft)] text-[20px] font-black leading-none" data-testid="mind-more">⋯</button>
           {more ? <span className="absolute end-0 top-11 z-40 w-[220px] p-1.5 flex flex-col rounded-[16px] bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-xl" role="menu" onClick={() => setMore(false)} data-testid="mind-more-menu">

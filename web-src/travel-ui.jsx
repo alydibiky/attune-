@@ -115,7 +115,7 @@ export function TravelPage(p) {
       {/* the country — one line; the full list opens only when asked */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <h2 className={K.h1 + " flex items-center gap-2"}><Plane size={20} className="c-acc" />{pack ? <span>{pack.flag} {countryShown(activePack, pack.name)}</span> : tr("Travel")}</h2>
+          <h2 className={(pack ? "" : "att-h1 ") + K.h1 + " flex items-center gap-2"}><Plane size={20} className="c-acc" />{pack ? <span>{pack.flag} {countryShown(activePack, pack.name)}</span> : tr("Travel")}</h2>
           <p className="c-sub m-0 flex items-center gap-1.5 flex-wrap">
             <span className="inline-block w-2 h-2 rounded-full" style={{ background: online ? "var(--c-pos)" : "var(--c-mut)" }} />
             {online ? tr("Online") : tr("Offline — everything below still works")}

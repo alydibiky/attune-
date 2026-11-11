@@ -20,7 +20,7 @@ const DAY = 86400000;
 const iso = (t) => isoDay(t);
 
 // ---- what kind of question -------------------------------------------------------------------------------------------------------
-const OWED_IN = /\b(owes? me|owe me|owed to me|lent|i lent|who owes|money (?:people|others) owe)\b|ليا عند|لي عند|مين عليه|(?:عليه|عليها|عليهم)[^؟?]{0,20}(?:ليا|لي)(?![\u0600-\u06ff])|مديون لي|مديونين لي|سلفت|سلّفت|اللي ليا|فلوسي عند/i;
+const OWED_IN = /\b(owes? me|owe me|owed to me|lent|i lent|who owes|money (?:people|others) owe)\b|ليا عند|لي عند|مين عليه|(?:عليه|عليها|عليهم)[^؟?]{0,20}(?:ليا|لي)(?![\u0600-\u06ff])|مديون لي|مديونين لي|(?:^|\s)[ء-ي]{2,}(?:\s+[ء-ي]{2,})?\s+(?:عليه|عليها)\s+(?:لسه\s+)?كام|سلفت|سلّفت|اللي ليا|فلوسي عند/i;
 const OWED_OUT = /\b(i owe|do i owe|my debts?|installments?|instalments?|i still pay|left to pay)\b|عليا|علي فلوس|ديوني|اقساط|أقساط|القسط|فاضل عليا|باقي عليا|جمعيه|جمعية/i;
 const DUE = /\b(due|deadline|deadlines|coming up|upcoming|expir\w*|renew\w*|what(?:'s| is) (?:on|next)|this week|next week|this month|to pay|bills? due|reminders?)\b|مواعيد|موعد|مستحق|هينتهي|ينتهي|تجديد|الاسبوع ده|الأسبوع ده|الجاي|ايه اللي عليا|المطلوب مني/i;
 const MEDS = /\b(medicines?|medications?|meds|pills?|tablets?|doses?|insulin|take (?:my|her|his)|when do (?:i|we|they|she|he) take)\b|دوا|ادويه|أدوية|ادوية|العلاج|جرعه|جرعة|حبوب|انسولين|إنسولين/i;
@@ -116,7 +116,7 @@ export function kindOf(q, stores = {}) {
   if (FOOD.test(t)) return "food";
   // v9.0: "remind me to pay…" (in any of the 20 languages) is something to set, not a money question
   if (lexSignals(t).has("action") && !/[?؟]\s*$/.test(t)) return "search";
-  if (myMoneyIntent(t) || catAsked(t) || /\b(spend|spent|spending|earn|earned|income|expenses?|balance)\b|صرفت|مصاريف|دخل|رصيد/i.test(t)) return "money";
+  if (myMoneyIntent(t) || catAsked(t) || /\b(spend|spent|spending|earn|earned|income|expenses?|balance|went on|go on|goes on)\b|صرفت|مصاريف|دخل|رصيد/i.test(t)) return "money";
   if (DUE.test(t)) return "due";
   return "search";
 }

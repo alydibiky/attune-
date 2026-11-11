@@ -8,6 +8,14 @@ const DAY = 864e5;
 const DIG = (s) => String(s || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
 const iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 export const DIGITAL_EGYPT = "https://digital.gov.eg/";
+import { portalFor } from "./countrypack.js";
+/** v9.9.18: the page an errand opens — the person's own country's portal for that kind (Absher, UAE Pass, DVLA…); Egypt's as before. */
+export const urlFor = (kind, cc = "eg") => { const c = String(cc || "eg").toLowerCase(); if (c === "eg") return kind === "fines" ? "https://traffic.moi.gov.eg/" : DIGITAL_EGYPT; const p = portalFor(kind, c); return p ? p.url : ""; };
+/** The papers to bring are Egypt's lists (checked); another country shows none rather than Egypt's by mistake. */
+/** The page to open: the errand's own, its country's portal, or (no portal for it, e.g. a Saudi electricity bill) a search for how to
+ *  pay it online — never Egypt's portal for another country. */
+export const openUrlOf = (e, cc) => { const c = String((e && e.cc) || cc || "eg").toLowerCase(); return (e && e.url) || urlFor(e && e.kind, c) || (c === "eg" ? DIGITAL_EGYPT : "https://www.google.com/search?q=" + encodeURIComponent([(KINDS[e && e.kind] || KINDS.other).en, e && e.label, "pay online"].filter(Boolean).join(" "))); };
+export const papersFor = (kind, cc = "eg", ar = false) => (String(cc || "eg").toLowerCase() !== "eg" ? [] : (((KINDS[kind] || KINDS.other).papers || {})[ar ? "ar" : "en"] || []));
 
 /** Every kind: what it is, how far ahead to warn, how often to look, the papers to bring (Egypt). */
 export const KINDS = {
@@ -55,9 +63,9 @@ export function parseErrand(text, now = Date.now()) {
   const label = k === "inspection" ? (t.match(/\b(LTM|GMK|AC|ATF|QY|STC|XCT|SAC|ZTC)\s?\d{2,4}\b/i) || [""])[0] || "" : k === "bill" ? (/(electricity|water|gas|internet|landline|كهربا|الكهرباء|المية|المياه|الغاز)/i.exec(t) || [""])[0] : "";
   return { kind: k, label, ref, date: date ? iso(date) : "", every: every ? +(every[1] || every[2]) : KINDS[k].every || 0 };
 }
-export function makeErrand(e, now = Date.now()) {
+export function makeErrand(e, now = Date.now(), cc = "eg") {
   return { id: "er" + now.toString(36) + Math.floor(Math.random() * 1e3).toString(36), kind: e.kind, label: e.label || "", ref: e.ref || "", date: e.date || "", every: e.every || 0,
-    url: e.url || DIGITAL_EGYPT, lastCheck: 0, last: null, created: now, done: [] };
+    url: e.url || urlFor(e.kind, cc) || (String(cc || "eg").toLowerCase() === "eg" ? DIGITAL_EGYPT : ""), cc: String(cc || "eg").toLowerCase(), lastCheck: 0, last: null, created: now, done: [] };
 }
 const nextMonthly = (from, every, now) => { let d = new Date(from); d.setHours(12, 0, 0, 0); while (d.getTime() < now - DAY) d.setMonth(d.getMonth() + (every || 1)); return d.getTime(); };
 /** What needs you, soonest first: { e, why: "expires"|"check"|"due"|"late", date (ms), days } — only inside each kind's warning time. */

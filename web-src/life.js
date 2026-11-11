@@ -27,7 +27,7 @@ const WORDS_AR = { "واحد": 1, "اتنين": 2, "اثنين": 2, "تلات": 
 export function amountsIn(text, cur) {
   const t = fold(text), out = [];
   // v6.27: any number format (1,500.00 · 1.500,00 · 12,50) — payNumber reads it as the payment reader does
-  const re = /(\d[\d,.]*\d|\d)\s*(k|الف|الاف|آلاف|ألف|thousand|mil\b|mille|tausend|bin\b|ribu|rb\b|مليون|million|millones|millions|millionen|milioni|milyon|juta|m\b)?|(?:^|\s)(الفين|ألفين|الف|ألف)(?=\s|$|[،,.])/gi;
+  const re = /(\d[\d,.]*\d|\d)\s*(k|(?:الف|الاف|آلاف|ألف|مليون)(?![ء-ي])|thousand|mil\b|mille|tausend|bin\b|ribu|rb\b|million|millones|millions|millionen|milioni|milyon|juta|m\b)?|(?:^|\s)(الفين|ألفين|الف|ألف)(?=\s|$|[،,.])/gi;
   let m;
   while ((m = re.exec(t))) {
     // not money: a count ("12 installments", "36 شهر"), a day ("on the 5th", "يوم 5") or a turn ("my turn is 4", "month 4")
@@ -117,7 +117,7 @@ function startOf(t, now) {
     }
   }
   if (/\bnext month\b|الشهر الجاي|الشهر القادم|الشهر اللي جاي|próximo mes|mes que viene|mois prochain|mês que vem|próximo mês|nächsten monat|prossimo mese|gelecek ay|bulan depan/.test(t)) return iso(new Date(d0.getFullYear(), d0.getMonth() + 1, dayN ? +dayN : 1, 12));
-  if (/\btomorrow\b|بكره|بكرة|غدا|mañana|demain|amanhã|morgen|domani|yarın|besok/.test(t)) { const d = new Date(d0); d.setDate(d.getDate() + 1); return iso(d); }
+  if (/\btomorrow\b|بكره|بكرة|(?<![ء-ي])غدا(?![ء-ي])|mañana|demain|amanhã|morgen|domani|yarın|besok/.test(t)) { const d = new Date(d0); d.setDate(d.getDate() + 1); return iso(d); }
   if (dayN) { const d = new Date(d0.getFullYear(), d0.getMonth(), +dayN, 12); if (d < d0) d.setMonth(d.getMonth() + 1); return iso(d); }
   return "";
 }
@@ -132,6 +132,10 @@ function personOf(raw, t) {
   ];
   // (v9.0: «علي عليه 1000» — Ali, the name, spelled like «علي» "on"; first in the sentence and before «عليه» it can only be the name)
   if (/^\s*(?:(?:صاحبي|صديقي|زميلي|جاري|اخويا|أخويا|ابن عمي|ابن خالي)\s+)?علي\s+(?:عليه|هيدفعلي|هيرجعلي|مديون|استلف مني|خد مني|اخد مني)/.test(raw)) return "علي";   // v9.9.15: «صاحبي علي استلف مني 450»
+  // v9.9.18 (the hard run: "uncle Samir lent me 10000" was "Uncle"): a title with a name is both — "Uncle Samir", "Dr Hany"
+  { const tn = /\b(uncle|aunt|auntie|dr\.?|doctor|mr\.?|mrs\.?|ms\.?|sheikh|hajj|haj|my friend|my cousin|my neighbou?r|my colleague)\s+([A-Za-z][a-z]{1,20})\b/i.exec(raw);
+    if (tn && !NOT_NAME.test(tn[2]) && !/^(me|you|him|her|them|us|owes|lent|borrowed|paid|has|is|will|gave|took)$/i.test(tn[2])) { const nm = tn[2][0].toUpperCase() + tn[2].slice(1);
+      return /^my /i.test(tn[1]) ? nm : tn[1][0].toUpperCase() + tn[1].slice(1).toLowerCase() + " " + nm; } }
   for (const re of tries) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
   // v8.9 (Ali: "People & plans still doesn't understand"): "my sister pays me 2000 every month" — a relative is who it is
   const rel = /\bmy\s+(sister|brother|mother|mom|mum|father|dad|son|daughter|uncle|aunt|cousin|friend|boss|neighbou?r|wife|husband|landlord|tenant|partner|colleague)\b/i.exec(raw);
@@ -155,7 +159,7 @@ function personOf(raw, t) {
   ];
   for (const re of world) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
   const ar = [
-    /(?:^|\s)([ء-ي]{2,})\s+(?:عليه|عليها|هيدفعلي|هيدفع|هيرجعلي|هيرجع|مديون|مدين|استلف مني|استلفت مني|اخد مني|اخدت مني|خد مني|خدت مني|يدفعلي|سيدفع|يسدد)/,   // v9.9.15: «ماما استلفت مني 850»
+    /(?:^|\s)([ء-ي]{2,})\s+(?:عليه|عليها|هيدفعلي|هيدفع|هيرجعلي|هيرجع|مديون|مدين|استلف مني|استلفت مني|استلفهم مني|استلفها مني|استلفه مني|اخد مني|اخدت مني|خد مني|خدت مني|يدفعلي|سيدفع|يسدد)/,   // v9.9.15: «ماما استلفت مني 850»
     // v9.9.15 (the 10,000-sentence run): «استلفت 700 من كريم» — the amount between the verb and the name — was saved as a 700 expense
     /(?:سلفت|اسلفت|اقرضت|ادينت|اديت|عليا ل|علي ل|مديون ل|مدين ل|(?:استلفت|اخدت|خدت|اقترضت)\s+(?:[\d٠-٩][\d٠-٩,.٬]*\s*(?:جنيه|جنية|ج|الف|ألف|k)?\s+)?من)\s*([ء-ي]{2,})/,
     /(?:^|\s)ل([ء-ي]{2,})\s+(?:عندي|عليا)/,
@@ -165,15 +169,18 @@ function personOf(raw, t) {
   // (persona 2: «أحمد عليه ٥٠٠» was saved as «احمد» — the name is taken back from what was typed, hamza and all)
   const plain = (x) => String(x).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
   const asTyped = (n) => String(raw).split(/[\s،,.]+/).map((w) => w.replace(/^ل(?=[ء-ي]{3,})/, "")).find((w) => plain(w) === plain(n)) || n;
+  // v9.9.18 (the hard run: «اديت صاحب البيت 25000 سلف» went to the AI): a person said in two words — the landlord, a cousin, a title + name
+  { const two = /(صاحب البيت|صاحب الشقة|صاحبة البيت|ابن عمي|ابن خالي|ابن عمتي|ابن خالتي|بنت عمي|بنت خالي|بنت عمتي|بنت خالتي|(?:عمو|طنط|خالو|دكتور|دكتورة|الحاج|الحاجة|الشيخ|استاذ|أستاذ|مدام)\s+[ء-ي]{2,})/.exec(t);
+    if (two) return two[1]; }
   for (const re of ar) { const m = re.exec(t); if (m && !NOT_NAME.test(m[1])) return asTyped(m[1].replace(/^ل(?=[ء-ي]{3,})/, "")); }
   return "";
 }
 
 // ---- the sentence → a commitment -----------------------------------------------------------------------------------------
 const CIRCLE = /\b(savings circle|money circle|rosca|tanda|susu|chit fund|hui|arisan|tontine|pasanaku|cundina|paluwagan|kameti|committee|gam'?[3a]?[ei]?ya|gameya|gamaeya|gamiya|gam3eya)\b|جمعيه|جمعية/i;
-const SUBS = /\b(netflix|spotify|shahid|osn|youtube premium|icloud|google one|chatgpt|gym|subscription|membership|disney\+?|hulu|hbo|max|paramount\+?|prime video|apple (?:tv|music|one)|deezer|crunchyroll|xbox|playstation plus|game pass|microsoft 365|office 365|dropbox|notion|duolingo|audible|kindle unlimited|linkedin premium|suscripción|suscripcion|abonnement|assinatura|abo|abbonamento|abonelik|langganan|gimnasio|salle de sport|academia|fitnessstudio|palestra|spor salonu)\b|اشتراك|نتفليكس|شاهد|الجيم|جيم/i;
+const SUBS = /\b(netflix|spotify|shahid|anghami|watch ?it|tod|starzplay|osn|youtube premium|icloud|google one|chatgpt|gym|subscription|membership|disney\+?|hulu|hbo|max|paramount\+?|prime video|apple (?:tv|music|one)|deezer|crunchyroll|xbox|playstation plus|game pass|microsoft 365|office 365|dropbox|notion|duolingo|audible|kindle unlimited|linkedin premium|suscripción|suscripcion|abonnement|assinatura|abo|abbonamento|abonelik|langganan|gimnasio|salle de sport|academia|fitnessstudio|palestra|spor salonu)\b|اشتراك|نتفليكس|شاهد|الجيم|جيم/i;
 const RENT = /\b(rent|alquiler|arriendo|loyer|aluguel|miete|affitto|kira|sewa)\b|ايجار|الايجار/i;
-const BILL = /\b(bill|electricity|water|gas bill|internet|phone bill|due|factura|recibo|facture|conta de|rechnung|bolletta|fatura|tagihan|luz|électricité|strom|elettricità|elektrik|listrik)\b|فاتوره|فاتورة|الكهربا|كهربا|الكهرباء|المياه|الميه|النت|الانترنت|التليفون|الغاز/i;
+const BILL = /\b(insurance|car insurance|health insurance|car licen[cs]e|licen[cs]e renewal|property tax|school fees|tuition|bill|electricity|water|gas bill|internet|phone bill|due|factura|recibo|facture|conta de|rechnung|bolletta|fatura|tagihan|luz|électricité|strom|elettricità|elektrik|listrik)\b|فاتوره|فاتورة|تامين|تأمين|رخصة العربية|مصاريف المدرسة|الكهربا|كهربا|الكهرباء|المياه|الميه|النت|الانترنت|التليفون|الغاز/i;
 // v8.2: an amount said WITH "a month" ("1,000 a month", «1000 في الشهر») is each payment; "owes me 22,000 … monthly for 9 months" is a total
 const PER_AMOUNT = /(?:\d|الف|ألف|آلاف|الاف|مية|ميه|thousand|hundred)\s*(?:k|egp|le|usd|sar|aed|\$|جنيه|ج|ريال|درهم)?\s*(?:(?:a|per|every|each)\s+(?:month|week)|monthly|weekly|كل\s*(?:ال)?(?:شهر|اسبوع)|في\s*(?:ال)?(?:شهر|اسبوع)|بال(?:شهر|اسبوع)|شهريا|اسبوعيا)/;
 // v8.4 (Ali, 27 Oct: "22,000 total for the next 9 months to be paid in installments" was read as 22,000 a month): "total" is the
@@ -182,6 +189,9 @@ const PER_AMOUNT = /(?:\d|الف|ألف|آلاف|الاف|مية|ميه|thousand
 const TOTAL_W = /\b(total|in total|in all|altogether|all together|the whole|whole amount|overall|full amount)\b|اجمالي|الاجمالي|كله|كلهم|بالكامل|المبلغ الكلي/;
 function oneAmount(t) {
   if (TOTAL_W.test(t)) return "total";
+  // v9.9.18 («قسط الموبايل 1500 كل شهر على 12 شهر» became 125 a month): an amount said WITH "every month" is each payment
+  { const re = /(?:^|[^\d.,])(\d[\d,.]*)\s*(?:k|egp|le|جنيه|ج)?\s*(?:كل شهر|في الشهر|فى الشهر|شهريا|شهرياً|كل اسبوع|كل أسبوع|a month|per month|monthly|each month|every month|a week|per week|every week|\/\s*month)(?!\s*(?:installments?|instalments?|payments?|parts?|اقساط|أقساط|دفعات|قسط))/gi, s = latin(t);
+    for (const m of s.matchAll(re)) { const before = s.slice(0, m.index + m[0].indexOf(m[1])); if (!/(?:\b(?:in|over|for)|على|علي|لمدة|مدة)\s*$/i.test(before)) return "each"; } }
   if (/\b(?:in|over|en|sur|em|auf|su|dalam)\s+\d+|عل[يى]\s*\d+/.test(t)) return "total";
   if (PER_AMOUNT.test(latin(t))) return "each";
   if (EVERY_M.test(t) || EVERY_W.test(t)) return "unsure";
@@ -219,7 +229,7 @@ function bankLoan(t0) {
   if (!/\bloan\b|قرض|سلفة من البنك/i.test(t)) return t0;
   const bank = new RegExp("(?:from|with|at|من)\\s+((?:the\\s+)?(?:" + BANKS + ")(?:\\s+[A-Z][\\w]*)?)", "i").exec(t);
   if (bank && /^[a-z]{2,5}$/i.test(bank[1]) && !/^bank$/i.test(bank[1])) bank[1] = bank[1].toUpperCase();
-  const amt = /(\d[\d,.]*)\s*(k|الف|ألف|thousand)?/i.exec(t.replace(/\b(\d{1,3})\s*(months?|years?|شهر|شهور|سنين|سنة|سنه|سنوات)\b/gi, " "));
+  const amt = /(\d[\d,.]*)\s*(k|(?:الف|ألف)(?![ء-ي])|thousand)?/i.exec(t.replace(/\b(\d{1,3})\s*(months?|years?|شهر|شهور|سنين|سنة|سنه|سنوات)\b/gi, " "));
   let per = /(?:for|over|on|in|على|علي|لمدة|مدة)?\s*(\d{1,3})\s*(months?|شهر|شهور|years?|سنين|سنة|سنه|سنوات)(?!\s*(?:a|per|each)?\s*month)/i.exec(t.replace(/(\d[\d,.]*)\s*(?:k|الف|ألف)?\s*(?:a|per|each)\s+month|(\d[\d,.]*)\s*(?:كل شهر|في الشهر|شهريا|شهرياً)/gi, " "));
   // v9.0 (the bank: «… لمدة سنة» — a year with no number; "سنتين" — two years)
   if (!per) { const y = /(?:for|over|لمدة|مدة|على|علي)\s+(?:a|one|واحده?)?\s*(year|سنة|سنه)(?![\p{L}])|(?:for|over|لمدة|مدة|على|علي)\s+(two years|سنتين)/iu.exec(t); if (y) per = [y[0], y[2] ? "2" : "1", "year"]; }
@@ -229,7 +239,7 @@ function bankLoan(t0) {
   const who = bank[1].replace(/^the\s+/i, "").replace(/^(bank|البنك|بنك)$/i, (b) => (/[ء-ي]/.test(b) ? "البنك" : tr("Bank")));
   // v9.0 (the bank: "loan 10000 from the bank, 1000 a month for 12 months" became 833 a month): the monthly payment said is the
   // payment — the interest is in it (12 × 1,000 = 12,000 to pay)
-  const pm = /(\d[\d,.]*)\s*(k|الف|ألف)?\s*(?:a|per|each)\s+month|(\d[\d,.]*)\s*(الف|ألف)?\s*(?:كل شهر|في الشهر|شهريا|شهرياً)/i.exec(t);
+  const pm = /(\d[\d,.]*)\s*(k|(?:الف|ألف)(?![ء-ي]))?\s*(?:a|per|each)\s+month|(\d[\d,.]*)\s*((?:الف|ألف)(?![ء-ي]))?\s*(?:كل شهر|في الشهر|شهريا|شهرياً)/i.exec(t);
   const each = pm ? +String(pm[1] || pm[3]).replace(/,/g, "") * ((pm[2] || pm[4]) ? 1000 : 1) : 0;
   if (each > 0 && each < n * 2 && each * months >= n * 0.9) return `I owe ${who} ${each} each month, ${months} installments`;
   return `I owe ${who} ${n} over ${months} months`;
@@ -508,6 +518,8 @@ export function chatLifeIntent(text, opts) {
   // a request to work something out is a Chat task, not a note («… give me the rent with the tax», «احسب …»)
   // (v9.0: "my sister WILL GIVE ME 2000 every month" is money coming in, not a request — "give me" counts only as an order)
   if (!/\b(will|would|is going to|has to|must|should|to|gonna)\s+(give|send|pay)\s+me\b/i.test(t) && /\b(give me|calculate|work out|tell me|compute|show me|explain|write|find|estimate|compare)\b|احسب|اديني|اعطني|قولي|قول لي|اكتب|اعملي|اشرح|قارن|(?<![\p{L}])(calcula|calcule|calcular|calculer|dime|dis-moi|explica|explique|escribe|écris|berechne|erkläre|schreib|calcola|spiega|scrivi|hesapla|açıkla|yaz|hitung|jelaskan|tulis)(?![\p{L}])/iu.test(t)) return null;
+  // v9.9.18 (the hard run: "change the netflix to 480", "the netflix is 150 now, not 200" made a NEW plan): an edit is not a new plan
+  if (/^\s*(?:please\s+)?(?:change|edit|update|correct|fix|set)\b|\bnow,? not\b|\bactually (?:it'?s|make it)\b|^\s*(?:غير|غيّر|عدل|عدّل|صحح)(?![ء-ي])/i.test(t)) return null;
   const c = parseLife(t, opts);
   if (!c) return null;
   // a bill, rent or subscription only when the text itself says how often or when (not a price mentioned in passing)

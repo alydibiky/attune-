@@ -11886,4 +11886,9 @@ export const JA = {
   "Say or type it — “the maid is now 700”": "話すか入力 —「家政婦は今700」",
   "Which category?": "どのカテゴリ？",
   "Another amount": "別の金額",
+  "To cancel a reminder, open Follow-ups and remove it there.": "リマインダーを取り消すには、フォローアップを開いてそこで削除してください。",
+  "1 item": "1 件",
+  "1 item · {a}": "1 件 · {a}",
+  "What you kept this week by kind (1 item)": "今週保存したもの（種類別・1 件）",
+  "Saved your list “{n}” — 1 item": "リスト「{n}」を保存しました — 1 件",
 };

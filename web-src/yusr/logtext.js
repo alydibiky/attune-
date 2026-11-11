@@ -25,16 +25,16 @@ export const normDigits = (s) => String(s || "").replace(/[٠-٩۰-۹٫٬]/g, (c
 // (persona 9: «فول وطعمية» was a water bill — «مية» inside «طعمية»; short Arabic words now match only as whole words,
 //  with و / ب / ال in front allowed)
 export const CAT_WORDS = {
-  food: /\b(food|eating|lunch|dinner|breakfast|food|meal|restaurant|pizza|burger|shawarma|koshary|sandwich|snack|delivery|talabat|kfc|mcdonald'?s?)\b|غدا|غداء|عشا|عشاء|فطار|فطور|أكل|اكل|مطعم|بيتزا|برجر|شاورما|كشري|سندوتش|ساندوتش|طلبات|دليفري|\b(?:akl|a2l|ghada|8ada|3asha|fetar|fe6ar)\b|فول|طعمية|طعميه|فلافل|كبدة|كبده|حواوشي|مكرونة|مكرونه|فطير|كباب|كفتة|كفته/i,
+  food: /تورتة|تورته|كيكة|سوشي|حلويات|\b(sushi|cake|cakes|dessert|desserts|food|eating|lunch|dinner|breakfast|food|meal|restaurant|pizza|burger|shawarma|koshary|sandwich|snack|delivery|talabat|kfc|mcdonald'?s?)\b|غدا|غداء|عشا|عشاء|فطار|فطور|أكل|اكل|مطعم|بيتزا|برجر|شاورما|كشري|سندوتش|ساندوتش|طلبات|دليفري|\b(?:akl|a2l|ghada|8ada|3asha|fetar|fe6ar)\b|فول|طعمية|طعميه|فلافل|كبدة|كبده|حواوشي|مكرونة|مكرونه|فطير|كباب|كفتة|كفته/i,
   groceries: /\b(groceries|grocery|supermarket|market|vegetables|fruit|milk|bread|eggs|carrefour|spinneys|hyper)\b|بقالة|سوبر ?ماركت|خضار|فاكهة|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?لبن(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?عيش(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?بيض(?![ء-ي])|كارفور|هايبر/i,
   transport: /\b(transport|transportation|commute|taxi|uber|careem|didi|indrive|bus|metro|train|fuel|petrol|gas|benzine|parking|toll|car wash|ticket)\b|تاكسي|أوبر|اوبر|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?كريم(?![ء-ي])|ميكروباص|اتوبيس|أتوبيس|مترو|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?قطر(?![ء-ي])|بنزين|سولار|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?جاز(?![ء-ي])|ركنة|باركينج|كارتة|غسيل العربية|مواصلات/i,
   bills: /\b(bill|bills|electricity|water|internet|wifi|phone|mobile|recharge|subscription|netflix|spotify|we|vodafone|orange|etisalat|gas bill)\b|فاتورة|فواتير|كهرباء|كهربا|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?مية(?![ء-ي])|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?ماء(?![ء-ي])|انترنت|إنترنت|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?نت(?![ء-ي])|رصيد|شحن|اشتراك|نتفلكس/i,
   rent: /\b(rent|landlord|lease)\b|إيجار|ايجار|الإيجار|الايجار/i,
-  shopping: /\b(shopping|clothes|shirt|shoes|jeans|dress|amazon|noon|jumia|bought|watch|bag)\b|تسوق|هدوم|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?لبس(?![ء-ي])|قميص|جزمة|كوتشي|بنطلون|فستان|أمازون|امازون|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?نون(?![ء-ي])|جوميا|اشتريت|شنطة|ساعة/i,
+  shopping: /شاحن|بامبرز|حفاضات|كتب المدرسة|كراسات|ادوات مدرسية|أدوات مدرسية|لعب الاطفال|\b(charger|cables?|phone cover|phone case|diapers|pampers|nappies|school books|textbooks|stationery|notebooks|toys|shopping|clothes|shirt|shoes|jeans|dress|amazon|noon|jumia|bought|watch|bag)\b|تسوق|هدوم|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?لبس(?![ء-ي])|قميص|جزمة|كوتشي|بنطلون|فستان|أمازون|امازون|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?نون(?![ء-ي])|جوميا|اشتريت|شنطة|ساعة/i,
   health: /\b(health|medical|pharmacy|medicine|doctor|clinic|hospital|dentist|lab|x-?ray|gym|vitamins?)\b|صيدلية|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?دوا(?![ء-ي])|دواء|علاج|دكتور|طبيب|عيادة|مستشفى|دكتور سنان|تحاليل|أشعة|اشعة|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?جيم(?![ء-ي])/i,
   fun: /\b(entertainment|cinema|movie|game|games|playstation|outing|trip|concert|club|fun)\b|سينما|فيلم|(?<![ء-ي])(?:و|ب|ال|بال|وال|لل)?لعب(?![ء-ي])|بلايستيشن|خروجة|فسحة|رحلة|حفلة|نادي/i,
   coffee: /\b(coffee|tea|cafe|café|starbucks|latte|cappuccino|espresso|juice)\b|قهوة|شاي|كافيه|ستاربكس|لاتيه|عصير/i,
-  gifts: /\b(gifts|gift|present|eidiya|charity|donation|sadaqa)\b|هدية|هدايا|عيدية|صدقة|تبرع/i,
+  gifts: /\b(flowers|bouquet|gifts|gift|present|eidiya|charity|donation|sadaqa)\b|هدية|هدايا|عيدية|صدقة|تبرع/i,
   salary: /\b(salary|paycheck|payroll|wage|wages)\b|مرتب|راتب|المرتب|الراتب|قبضت/i,
 };
 const INCOME = /\b(salary|paycheck|got paid|received|receive|earned|income|refund(ed)?|sold|bonus|commission|someone paid me|paid me|gave me|got \d+|got back)\b|قبضت|مرتب|راتب|استلمت|جالي|جاتلي|اخدت|أخدت|خدت|دخل|بعت|بيعت|ارتجعلي|رجعلي|عمولة|مكافأة|مكافاة|حد ادانى|اداني|ادّاني/i;
@@ -45,7 +45,7 @@ export function amountsIn(text) {
   const t = normDigits(text);
   const out = [];
   // v8.6: a Franco letter-digit inside a word ("da3et", "3ala", "7aga") is not an amount
-  const re = /(?<![A-Za-z])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![A-Za-z](?<![kKmM]))\s*(k|K|ألف|الف|آلاف|الاف|thousand|مليون|million|m\b|M\b)?/g;
+  const re = /(?<![A-Za-z])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![A-Za-z](?<![kKmM]))\s*(k|K|(?:ألف|الف|آلاف|الاف|مليون)(?![ء-ي])|thousand|million|m\b|M\b)?/g;   // v9.9.18: «950 الفطار» is 950, not 950,000
   let m;
   while ((m = re.exec(t))) {
     // v8.6: "1.500" / "12.000" written the European / Egyptian way is thousands (three digits after one dot), not 1.5

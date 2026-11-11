@@ -11887,4 +11887,9 @@ export const TRK = {
   "Say or type it — “the maid is now 700”": "Söyleyin veya yazın — “temizlikçi artık 700”",
   "Which category?": "Hangi kategori?",
   "Another amount": "Başka bir tutar",
+  "To cancel a reminder, open Follow-ups and remove it there.": "Bir hatırlatıcıyı iptal etmek için Takipler'i açıp oradan kaldır.",
+  "1 item": "1 öğe",
+  "1 item · {a}": "1 kalem · {a}",
+  "What you kept this week by kind (1 item)": "Bu hafta türe göre sakladıkların (1 öğe)",
+  "Saved your list “{n}” — 1 item": "“{n}” listen kaydedildi — 1 öğe",
 };

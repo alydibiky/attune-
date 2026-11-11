@@ -11887,4 +11887,9 @@ export const ES = {
   "Say or type it — “the maid is now 700”": "Dilo o escríbelo: «la asistenta ahora cobra 700»",
   "Which category?": "¿Qué categoría?",
   "Another amount": "Otro importe",
+  "To cancel a reminder, open Follow-ups and remove it there.": "Para cancelar un recordatorio, abre Seguimientos y elimínalo allí.",
+  "1 item": "1 elemento",
+  "1 item · {a}": "1 artículo · {a}",
+  "What you kept this week by kind (1 item)": "Lo que guardaste esta semana por tipo (1 elemento)",
+  "Saved your list “{n}” — 1 item": "Lista «{n}» guardada — 1 elemento",
 };

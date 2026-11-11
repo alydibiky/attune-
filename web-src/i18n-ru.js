@@ -11886,4 +11886,9 @@ export const RU = {
   "Say or type it — “the maid is now 700”": "Скажите или напишите — «домработница теперь 700»",
   "Which category?": "Какая категория?",
   "Another amount": "Другая сумма",
+  "To cancel a reminder, open Follow-ups and remove it there.": "Чтобы отменить напоминание, откройте «Дела» и удалите его там.",
+  "1 item": "1 пункт",
+  "1 item · {a}": "1 позиция · {a}",
+  "What you kept this week by kind (1 item)": "Что вы сохранили на этой неделе по типам (1 пункт)",
+  "Saved your list “{n}” — 1 item": "Список «{n}» сохранён — 1 пункт",
 };

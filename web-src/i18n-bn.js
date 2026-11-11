@@ -11886,4 +11886,9 @@ export const BN = {
   "Say or type it — “the maid is now 700”": "বলুন বা লিখুন — “গৃহকর্মী এখন 700 নেন”",
   "Which category?": "কোন বিভাগ?",
   "Another amount": "অন্য পরিমাণ",
+  "To cancel a reminder, open Follow-ups and remove it there.": "রিমাইন্ডার বাতিল করতে ফলো-আপ খুলে সেখান থেকে মুছুন।",
+  "1 item": "১টি আইটেম",
+  "1 item · {a}": "১টি আইটেম · {a}",
+  "What you kept this week by kind (1 item)": "এই সপ্তাহে ধরন অনুযায়ী যা রেখেছেন (১টি আইটেম)",
+  "Saved your list “{n}” — 1 item": "আপনার তালিকা “{n}” সংরক্ষিত — ১টি আইটেম",
 };

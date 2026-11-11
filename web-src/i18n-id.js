@@ -11887,4 +11887,9 @@ export const IDN = {
   "Say or type it — “the maid is now 700”": "Ucapkan atau ketik — “ART sekarang 700”",
   "Which category?": "Kategori yang mana?",
   "Another amount": "Jumlah lain",
+  "To cancel a reminder, open Follow-ups and remove it there.": "Untuk membatalkan pengingat, buka Tindak lanjut dan hapus di sana.",
+  "1 item": "1 item",
+  "1 item · {a}": "1 item · {a}",
+  "What you kept this week by kind (1 item)": "Yang kamu simpan minggu ini menurut jenis (1 item)",
+  "Saved your list “{n}” — 1 item": "Daftar “{n}” disimpan — 1 item",
 };
