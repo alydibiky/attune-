@@ -43,6 +43,13 @@
   and its own "your note on this option" box; the sticky bar at the bottom collects the ticked codes WITH their notes
   (e.g. `W2 — ask which Ahmed`), and one "Copy my picks" button copies codes + notes together (clipboard, with a select-the-text
   fallback). Picks and notes are kept in the viewer's browser (localStorage, wrapped in try/catch). No options page without them.
+- **No idea without its look (Ali, 11 Nov 2026: "from now on this is the last time I will accept an idea without seeing how it will
+  look like"):** every idea / option offered to Ali — research, features, anything — comes WITH a phone mock-up of its screen on the
+  same page. A list of ideas in words only is not allowed any more.
+- **10,000 scenarios per feature (Ali, 11 Nov 2026: "it has to be done right and tested in at least 10000 scenarios each because I
+  want no mistakes"):** every feature built from now on gets its own generator of exactly 10,000 different cases with what Attune
+  must do and the details checked (like tests/scenarios/hard.mjs), a held-out set written after the fixes, and a unit test that
+  keeps a 2,500 sample above its mark.
 - **Mock-ups before building (Ali, 5 Nov 2026): read `MOCKUPS.md`.** Any visible change → 4–6 phone mock-ups on a published
   page with his real examples → his pick → one combined mock-up with "what I understood" → his OK → build. Log it there.
 - Subjective choices (look and feel, layout, colours, names, wording, which of several good designs): don't decide alone.

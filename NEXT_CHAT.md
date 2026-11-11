@@ -11,6 +11,17 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ NEXT (11 Nov, late night) — Ali picked 29 of the 38 research ideas; their SCREENS are waiting for his A/B picks
+- His picks: AU1–AU8 · M1 M3 M5 · T1–T6 · N1 · N2 ("it can go very wrong — only if you are sure it will be very accurate") · N3 ·
+  P1–P3 · TR1 TR2 ("good if done right") · TR3 · X1 X2 · X3 ("must take a photo and read it very well") · X4 · X6 ("excellent if it
+  understands everything") · X5 LATER (after launch). Not picked: M2 M4 PR1 PR2.
+- **Screens page (2 phone screens per feature, Recommended marked): https://claude.ai/artifact/NSsHTv8B6NSzN9eCS1Got8** — wait for his
+  A/B picks + notes → ONE combined mock-up with "what I understood" → his OK → build.
+- **His new rules (in CLAUDE.md):** no idea without its look; every feature gets its own 10,000-case generator (details checked) +
+  a held-out set + a unit test on a 2,500 sample. N2 ships only if it reaches 99% offline — otherwise tell him and don't ship.
+- Build order I suggest once he OKs: AU5 AU7 AU8 (small, make the rest safe) → AU1 + AU2 + AU3 (the engine) → M1 M5 M3 → T1 T3 T2
+  T6 T4 T5 → P1 P3 P2 → X1 X4 X2 X3 X6 → TR1 TR2 TR3 → AU4 → N1 N3 → N2 last.
+
 ## ▶ v9.9.18 (11 Nov, night) — Ali: "lets do first 3 things now" (the sentences still read wrong · small visible things · countries) + "deeply think and research … automation … the best of each app"
 **Where things are:** `main` = branch `claude/blissful-curie-d5gddb` = **v9.9.18** (versionCode 161). APK: the newest "Build the APK" run on main.
 **Waiting for Ali:** his picks on the research page **https://claude.ai/artifact/VAmamnCKNj3gqxVNsadFo3** (38 options, my ★ picks: AU1 AU2 AU4 AU5 AU6
