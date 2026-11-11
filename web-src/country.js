@@ -191,6 +191,8 @@ export function setCountry(code, store = typeof localStorage !== "undefined" ? l
   try { if (COUNTRIES[code]) store.setItem(COUNTRY_KEY, code); else store.removeItem(COUNTRY_KEY); } catch (e) {}
 }
 /** The emergency numbers as short lines: ["Police 122", "Ambulance 123", "Fire 180"] or ["Emergency 112"]. */
+/** v9.9.18 (Ali: "all countries"): the weekend days (0 = Sunday) — "weekdays" reminders skip these, not Egypt's Fri + Sat everywhere. */
+export function weekendOf(code) { try { const c = COUNTRIES[ALIASES[code] || code] || COUNTRIES[myCountry()] || COUNTRIES.eg; return (c.weekend && c.weekend.length ? c.weekend : [5, 6]).slice(); } catch (e) { return [5, 6]; } }
 export function emergencyLines(code) {
   const t = (COUNTRIES[code] || {}).tel || {};
   if (t.all) return [tr("Emergency {n}", { n: t.all })];

@@ -4,6 +4,7 @@
    Tests: tests/unit/v740timeline.test.mjs.                                                                                  */
 import { dueList, nameOf } from "./errands.js";
 import { tr } from "./i18n.js";
+import { weekendOf } from "./country.js";
 import { scheduleOf } from "./life.js";
 import { occurrences } from "./safespend.js";
 
@@ -19,7 +20,7 @@ export function nextRing(r, now) {
   if (!r.repeat || r.repeat === "none") return t >= now ? t : null;
   const step = r.repeat === "weekly" ? 7 * DAY : DAY;
   if (t < now) t += Math.ceil((now - t) / step) * step;
-  if (r.repeat === "weekdays") for (let g = 0; g < 3 && [5, 6].includes(new Date(t).getDay()); g++) t += DAY;   // Fri/Sat off (Egypt's weekend)
+  if (r.repeat === "weekdays") { const off = Array.isArray(r.off) && r.off.length ? r.off : weekendOf(); for (let g = 0; g < 3 && off.includes(new Date(t).getDay()); g++) t += DAY; }   // v9.9.18: the country's weekend
   return t;
 }
 

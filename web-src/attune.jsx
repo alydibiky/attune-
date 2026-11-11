@@ -144,7 +144,7 @@ import * as HG from "./haggle.js";
 import { scheduleMessage } from "./messages-ui.jsx";
 import { connectNow } from "./connected.js";
 import { QuietWake } from "./wake-ui.jsx";
-import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST } from "./country.js";
+import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST, weekendOf } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
 const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
 import { parseAgent, loadAgents, saveAgents, makeAgent } from "./agents.js";
@@ -8028,7 +8028,7 @@ export default function App() {
     setReminders(list);
     let res = { ok: true, exact: true, notify: true };
     if (NATIVE && NATIVE.schedule) {
-      try { res = JSON.parse(NATIVE.schedule(JSON.stringify({ id: r.id, at: r.at, title: r.title, body: r.body || "", repeat: r.repeat || "none" }))); } catch (e) {}
+      try { res = JSON.parse(NATIVE.schedule(JSON.stringify({ id: r.id, at: r.at, title: r.title, body: r.body || "", repeat: r.repeat || "none", off: weekendOf() /* v9.9.18 the country's weekend */ }))); } catch (e) {}
       if (res.notify === false && NATIVE.askNotifications) NATIVE.askNotifications();
     }
     return res;

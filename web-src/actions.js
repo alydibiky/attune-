@@ -17,7 +17,8 @@
    Without a model, the same parser plus keyword rules still handle the
    common cases (quickAction).                                                 */
 
-import { easeTime } from "./sense.js";   // v9.9.17 "half past 6", "an hour and a half", «فكريني», «اعملي تذكير» → words the reader knows
+import { easeTime } from "./sense.js";
+import { weekendOf } from "./country.js";   // v9.9.17 "half past 6", "an hour and a half", «فكريني», «اعملي تذكير» → words the reader knows
 export const REMINDERS_KEY = "attune:reminders:v1";
 export const KINDS = ["reminder", "alarm", "timer", "calendar", "whatsapp", "call", "none"];
 
@@ -479,7 +480,7 @@ export function nextOccurrence(r, after) {
     const d = new Date(t);
     if (r.repeat === "daily") d.setDate(d.getDate() + 1);
     else if (r.repeat === "weekly") d.setDate(d.getDate() + 7);
-    else if (r.repeat === "weekdays") { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 5 || d.getDay() === 6); } // Egypt: Fri + Sat off
+    else if (r.repeat === "weekdays") { const off = Array.isArray(r.off) && r.off.length ? r.off : weekendOf(); do { d.setDate(d.getDate() + 1); } while (off.includes(d.getDay())); }   // v9.9.18: the country's weekend (was Egypt's everywhere)
     else if (r.repeat === "monthly") d.setMonth(d.getMonth() + 1);   // v6.32: the Overpaying check on the 1st
     else if (r.repeat === "lastday") { d.setDate(1); d.setMonth(d.getMonth() + 2); d.setDate(0); }   // v9.0 the month's last day
     else if (/^last:\d$/.test(r.repeat)) { const wd = +r.repeat.slice(5); d.setDate(1); d.setMonth(d.getMonth() + 2); d.setDate(0); while (d.getDay() !== wd) d.setDate(d.getDate() - 1); }   // persona 6: "every last Friday"

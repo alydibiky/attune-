@@ -63,6 +63,19 @@
 ## Batches (tick when done and pushed)
 - [x] **B0** this plan + combined screens page published + logged in MOCKUPS.md / NEXT_CHAT.md
 - [ ] **B1 safety first: AU5 nag levels · AU7 notification buttons · AU8 done-for-you log** (logic + 10,000 cases each; screens after OK)
+  - [x] logic: web-src/nag.js (AU5 levels + quiet hours), web-src/notifpay.js (AU7 Paid → balance → exactly once), web-src/donelog.js
+        (AU8 limits, Undo, Edit, remember only for the same kind + source)
+  - [x] 10,000 cases each, each with an independent oracle and a planted-bug check: `bash tests/nag/run.sh` (5 time zones × 2,000),
+        `node tests/notifpay/gen.mjs` (30 countries' currencies), `node tests/donelog/gen.mjs` (20 languages' names) — all 100%;
+        tests/unit/v9918b1.test.mjs (2,500 samples + held-out)
+  - [x] the phone: NagPay.kt (nag rings, Done / Paid / balance / Undo / Tomorrow / In 1 hour, taps kept for the page), Reminders.kt
+        hooks, manifest receiver, NativeBridge.takeTaps — **compiled only by CI (no kotlinc here): check the branch build**
+  - [x] country fix: "weekdays" reminders follow the country's weekend (country.js weekendOf; actions.js, timeline.js, Reminders.kt
+        `off`) — was Egypt's Fri + Sat everywhere
+  - [ ] after Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU: the screens — the "Keep reminding" chips + ★ in the
+        reminder sheet (sets r.nag / r.important / r.quiet), payment reminders pass r.pay (notifpay.payButtons with tr() labels in 20
+        languages) and r.labels, the page applies NATIVE.takeTaps() on open (notifpay.applyTaps → paylog appendToLedger, Undo),
+        the "Done for you" page (donelog.js) + Edit sheet + "Do it this way next time?"; all words in 20 languages; e2e test.
 - [ ] **B2 the engine: AU1 rules (all triggers/actions, 20 languages, asks when unsure) · AU2 suggestions · AU3 recipes**
 - [ ] **B3 money: M1 salary sorter · M5 categories that learn · M3 split groups** (30 countries' currencies)
 - [ ] **B4 to-dos: T1 brain dump (typed + voice) · T3 countdowns · T2 habits · T6 focus (Play check) · T4 places · T5 week plan**
@@ -73,4 +86,5 @@
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 
 ## Log
+- 11 Nov 2026 (night): B1 logic + 10,000-case tests + Kotlin done (see B1); screens wait for the OK.
 - 11 Nov 2026: plan written; Ali's picks recorded.

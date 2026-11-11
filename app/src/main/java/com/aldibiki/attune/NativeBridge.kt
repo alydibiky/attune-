@@ -692,6 +692,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun unschedule(id: String): Boolean = Reminders.unschedule(ctx, id)
 
+    /** v9.9.18 B1: the taps on Done / Paid / a balance / Undo since the page last asked (web-src/notifpay.js applyTaps). */
+    @JavascriptInterface
+    fun takeTaps(): String = try { NagPay.takeTaps(ctx) } catch (e: Exception) { "[]" }
+
     /** What the phone will ring, for the page to reconcile with its own list. */
     @JavascriptInterface
     fun scheduled(): String = Reminders.all(ctx).toString()

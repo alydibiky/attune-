@@ -55,7 +55,15 @@ object Reminders {
             .put("title", r.optString("title").take(120))
             .put("body", r.optString("body").take(400))
             .put("repeat", r.optString("repeat", "none"))
-            .put("until", r.optLong("until", 0L))   // v9.9.3 T1: a class reminder stops after the term's last day
+            .put("until", r.optLong("until", 0L))
+            .put("off", r.optJSONArray("off") ?: JSONArray().put(5).put(6))   // v9.9.18 the country's weekend for "weekdays"
+            .apply {   // v9.9.18 B1: AU5 nag level + quiet hours, AU7 payment buttons, the button words (NagPay.kt)
+                r.optString("nag").takeIf { it.isNotBlank() }?.let { put("nag", it.take(10)) }
+                if (r.optBoolean("important")) put("important", true)
+                r.optJSONObject("quiet")?.let { q -> put("quiet", JSONObject().put("from", q.optString("from").take(5)).put("to", q.optString("to").take(5))) }
+                r.optJSONObject("pay")?.let { put("pay", it) }
+                r.optJSONObject("labels")?.let { put("labels", it) }
+            }   // v9.9.3 T1: a class reminder stops after the term's last day
             .apply {   // v9.4 G1 (Ali: "schedule a message — send this contact this message at 5 pm tomorrow, and it does that")
                 r.optJSONObject("send")?.let { s0 -> put("send", JSONObject().put("key", s0.optString("key").take(200)).put("pkg", s0.optString("pkg").take(100))
                     .put("phone", s0.optString("phone").filter { it.isDigit() }.take(20)).put("text", s0.optString("text").take(2000)).put("who", s0.optString("who").take(80))
@@ -106,7 +114,7 @@ object Reminders {
             var at = r.optLong("at")
             if (at < now) {
                 if (r.optString("repeat", "none") == "none") continue  // missed while off: shown by the page, not rung late
-                at = next(at, r.optString("repeat"), now)
+                at = next(at, r.optString("repeat"), now, offOf(r))
                 r.put("at", at)
             }
             val until = r.optLong("until", 0L)
@@ -117,16 +125,15 @@ object Reminders {
     }
 
     /** The next time a repeating reminder is due after `after` (Egypt's weekend is Friday + Saturday). */
-    fun next(from: Long, repeat: String, after: Long): Long {
+    fun next(from: Long, repeat: String, after: Long, off: Set<Int> = setOf(5, 6)): Long {
         val c = java.util.Calendar.getInstance().apply { timeInMillis = from }
         var guard = 0
         while (c.timeInMillis <= after && guard++ < 1000) {
             when (repeat) {
                 "daily" -> c.add(java.util.Calendar.DAY_OF_MONTH, 1)
                 "weekly" -> c.add(java.util.Calendar.DAY_OF_MONTH, 7)
-                "weekdays" -> do { c.add(java.util.Calendar.DAY_OF_MONTH, 1) } while (
-                    c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY ||
-                    c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SATURDAY)
+                // v9.9.18: the person's country's weekend (the page sends "off"; 0 = Sunday) — was Egypt's Fri + Sat everywhere
+                "weekdays" -> do { c.add(java.util.Calendar.DAY_OF_MONTH, 1) } while ((c.get(java.util.Calendar.DAY_OF_WEEK) - 1) in off && off.size < 7)
                 "monthly" -> c.add(java.util.Calendar.MONTH, 1)   // v6.32: the Overpaying check on the 1st
                 "yearly" -> c.add(java.util.Calendar.YEAR, 1)     // v9.7 Messages: a birthday every year
                 "lastday" -> {   // v9.0 "the last day of each month": next month's last day, same time of day
@@ -151,6 +158,8 @@ object Reminders {
         return c.timeInMillis
     }
 
+    fun offOf(r: JSONObject): Set<Int> { val a = r.optJSONArray("off") ?: return setOf(5, 6); val s = HashSet<Int>(); for (i in 0 until a.length()) a.optInt(i, -1).takeIf { it in 0..6 }?.let { s.add(it) }; return if (s.isEmpty()) setOf(5, 6) else s }
+
     fun ensureChannel(ctx: Context) {
         if (Build.VERSION.SDK_INT < 26) return
         val nm = ctx.getSystemService(NotificationManager::class.java) ?: return
@@ -170,7 +179,7 @@ object Reminders {
     private fun fireSend(ctx: Context, id: String, rem: JSONObject, snd: JSONObject, arr: JSONArray) {
         if (snd.optBoolean("ask")) askFirst(ctx, id, snd) else deliver(ctx, id, snd)
         val repeat = rem.optString("repeat", "none")
-        if (repeat != "none") { val nextAt = next(rem.optLong("at"), repeat, System.currentTimeMillis()); rem.put("at", nextAt); save(ctx, arr); arm(ctx, id, nextAt) }
+        if (repeat != "none") { val nextAt = next(rem.optLong("at"), repeat, System.currentTimeMillis(), offOf(rem)); rem.put("at", nextAt); save(ctx, arr); arm(ctx, id, nextAt) }
         else unschedule(ctx, id)
     }
 
@@ -295,13 +304,15 @@ object Reminders {
             .setAutoCancel(true)
             .setCategory(android.app.Notification.CATEGORY_REMINDER)
         if (Build.VERSION.SDK_INT < 26) @Suppress("DEPRECATION") b.setPriority(android.app.Notification.PRIORITY_HIGH)
+        // v9.9.18 B1: Done / Paid / Tomorrow / In 1 hour buttons, and the next nag ring (NagPay.kt)
+        if (rem.has("nag") || rem.optBoolean("important") || rem.has("pay")) try { NagPay.onFire(ctx, id, rem, b) } catch (e: Exception) { }
         try {
             ctx.getSystemService(NotificationManager::class.java)?.notify(id.hashCode(), b.build())
         } catch (e: SecurityException) { /* notifications not allowed: the page shows it as missed */ }
 
         val repeat = rem.optString("repeat", "none")
         val until = rem.optLong("until", 0L)
-        val nextAt0 = if (repeat != "none") next(rem.optLong("at"), repeat, System.currentTimeMillis()) else 0L
+        val nextAt0 = if (repeat != "none") next(rem.optLong("at"), repeat, System.currentTimeMillis(), offOf(rem)) else 0L
         if (repeat != "none" && (until <= 0L || nextAt0 <= until)) {
             val nextAt = nextAt0
             rem.put("at", nextAt); save(ctx, arr); arm(ctx, id, nextAt)
@@ -324,7 +335,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED,
-            "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" -> { Reminders.rearmAll(ctx); ScoutNight.arm(ctx); AgentWatch.arm(ctx) }
+            "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" -> { Reminders.rearmAll(ctx); ScoutNight.arm(ctx); AgentWatch.arm(ctx); NagPay.rearm(ctx) }
         }
     }
 }

@@ -238,6 +238,7 @@
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />
         <receiver android:name=".MsgActionReceiver" android:exported="false" />
+        <receiver android:name=".NagPayReceiver" android:exported="false" />
         <receiver android:name=".NoteAskReceiver" android:exported="false" />   <!-- v9.9.11 A2 "What is this?" → Mine / Not money / Reply -->   <!-- v9.7 "Send to X now?" → Send / Not now -->
         <receiver android:name=".ScoutNightReceiver" android:exported="false" />
         <!-- v8.0 Agents: the price watches, checked about every 12 hours even with Attune closed -->
