@@ -69,7 +69,7 @@
         `node tests/notifpay/gen.mjs` (30 countries' currencies), `node tests/donelog/gen.mjs` (20 languages' names) — all 100%;
         tests/unit/v9918b1.test.mjs (2,500 samples + held-out)
   - [x] the phone: NagPay.kt (nag rings, Done / Paid / balance / Undo / Tomorrow / In 1 hour, taps kept for the page), Reminders.kt
-        hooks, manifest receiver, NativeBridge.takeTaps — **compiled only by CI (no kotlinc here): check the branch build**
+        hooks, manifest receiver, NativeBridge.takeTaps — **compiled green on CI** (branch build https://github.com/alydibiky/attune-/actions/runs/43113610542, 11 Nov 22:58)
   - [x] country fix: "weekdays" reminders follow the country's weekend (country.js weekendOf; actions.js, timeline.js, Reminders.kt
         `off`) — was Egypt's Fri + Sat everywhere
   - [ ] after Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU: the screens — the "Keep reminding" chips + ★ in the
@@ -135,6 +135,6 @@
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 
 ## Log
-- 11 Nov 2026 (late night): B1, B2, B3 LOGIC done and pushed (all 10,000-case runs at 100%, held-out for the rules reader 40/40). Screens for all of them wait for Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU. The Kotlin of B1 (NagPay.kt) is being compiled by the branch build https://github.com/alydibiky/attune-/actions/runs/43113610542 — check it ended green before merging to main; if red, read the job log and fix.
+- 11 Nov 2026 (late night): B1, B2, B3 LOGIC done and pushed (all 10,000-case runs at 100%, held-out for the rules reader 40/40). Screens for all of them wait for Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU. The Kotlin of B1 (NagPay.kt) compiled green on the branch build https://github.com/alydibiky/attune-/actions/runs/43113610542.
 - 11 Nov 2026 (night): B1 logic + 10,000-case tests + Kotlin done (see B1); screens wait for the OK.
 - 11 Nov 2026: plan written; Ali's picks recorded.
