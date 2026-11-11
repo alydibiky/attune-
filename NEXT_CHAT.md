@@ -23,7 +23,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
   T6 T4 T5 → P1 P3 P2 → X1 X4 X2 X3 X6 → TR1 TR2 TR3 → AU4 → N1 N3 → N2 last.
 
 ## ▶ v9.9.18 (11 Nov, night) — Ali: "lets do first 3 things now" (the sentences still read wrong · small visible things · countries) + "deeply think and research … automation … the best of each app"
-**Where things are:** `main` = branch `claude/blissful-curie-d5gddb` = **v9.9.18** (versionCode 161). APK: the newest "Build the APK" run on main.
+**Where things are:** `main` = branch `claude/blissful-curie-d5gddb` = **v9.9.18** (versionCode 161). **Full suite green** (e2e_v68 updated for OK1, e2e_v993timetable now makes its own picture — both pass; the audit's only errors are the sandbox's blocked network). APK: https://github.com/alydibiky/attune-/actions/runs/43107733272 (was building when written — check it ended green).
 **Waiting for Ali:** his picks on the research page **https://claude.ai/artifact/VAmamnCKNj3gqxVNsadFo3** (38 options, my ★ picks: AU1 AU2 AU4 AU5 AU6
 M1 M3 T1 P1 TR1 X1 X4). Build NOTHING from it before his picks; each pick then gets phone mock-ups (MOCKUPS.md) before building.
 - **1. Sentences (hard run 95.4% → 99.3%; everyday run 97.8% → 99.6%; notifications still 100%, held-out 60/60).** Fixed in the app's own
