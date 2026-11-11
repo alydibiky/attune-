@@ -102,6 +102,13 @@
         the rule store + runner (time → Reminders, money_in → AutoRules.kt words, message/call → watch.js, arrive/leave → a
         geofence (needs location — Play: background location declaration!), bluetooth/wifi/charging → Kotlin receivers).
 - [ ] **B3 money: M1 salary sorter · M5 categories that learn · M3 split groups** (30 countries' currencies)
+  - [x] logic: web-src/moneyunits.js (each currency's smallest coin from Intl: KWD 3, EGP 2, JPY 0), salarysort.js (salaryOf joins
+        two parts within 3 days; sortSalary: fixed / % parts, "left", a part that doesn't fit is flagged), catlearn.js (exact shop
+        key in any script; never hand-set; never a longer name), groups.js (shares to the coin, settle ≤ people−1 payments)
+  - [x] 10,000 each (27 currencies; names in 10 scripts): tests/salarysort, tests/groups, tests/catlearn — all 100%; planted bugs
+        → 95.1% / 2.1% / 60.7% (the catlearn test first missed its planted bug — catFor is now checked too). tests/unit/v9918b3.
+  - [ ] screens after OK: M1-A checklist sheet on the salary notification, M3-A group page + settle-up + share, M5-B "Always?"
+        sheet + the rules list; wire to paylog / ledger; 20 languages.
 - [ ] **B4 to-dos: T1 brain dump (typed + voice) · T3 countdowns · T2 habits · T6 focus (Play check) · T4 places · T5 week plan**
 - [ ] **B5 people: P1 keep in touch · P3 occasions · P2 before you meet · N1 person page · N3 on this day**
 - [ ] **B6 papers & things: X1 paperwork · X4 emergency card · X2 upkeep · X3 what I own · X6 kids & school**
