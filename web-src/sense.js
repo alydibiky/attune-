@@ -142,6 +142,8 @@ const DEBT_W = /\b(?:owes?|owed|lent|loan(?:ed)?|borrow(?:ed)?|in debt|of mine)\
 export function typedPayment(text, opts = {}) {
   const t = numWords(String(text || ""));
   if (notSpent(t)) return null;
+  // a bank / wallet message pasted into Chat («تم تحويل مبلغ 2,500.00 جنيه إلى … رقم العملية 123456») is read by the bank reader as it is
+  if (/تم (?:خصم|تحويل|ايداع|إيداع|استلام|سحب|دفع|سداد)|رقم العملية|\b(?:debited|credited|available balance|avl\.? ?bal|card ending|a\/c|ref(?:erence)?\.? ?(?:no\.? ?)?\d)\b/i.test(t)) return parsePayment(t, opts);
   const nums = moneyNumbers(t);
   if (nums.length >= 2 && /\b(?:and|then|plus)\b|[,،;+\n]|\sو\s?|\sو(?=[ء-ي])/i.test(t) && !/\b(?:of what|out of|from the|instead of|in total|total)\b|من اللي|من اصل|من أصل/i.test(t)) return null;   // several things → the list reader (doit.js)
   const p = parsePayment(t, opts);

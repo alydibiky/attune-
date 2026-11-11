@@ -966,7 +966,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v9.0 (the sentence bank: "lunch 150", «غدا 150» in Chat went to the AI): what the Home box does is done here too, with Undo —
     // money in a few words, food eaten, water, weight, a dose, a debt paid back (doit.js). Reminders, plans and dates keep their cards.
     // v9.9.3 W2: "send Ahmed 'I'm on my way' on WhatsApp", "call Mama", "uber to …" → the app opens at the right place (Which Ahmed? if unsure)
-    if (route && !img && api.openIt && (!only || only === "action")) {   // v9.9.17: "call Mohamed" opened a reminder card with no time
+    if (route && !img && api.openIt && !only) {
       const r = api.openIt(typed);
       if (r && r.lines && r.lines.length) { const cid = ensureChat(typed);
         patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
