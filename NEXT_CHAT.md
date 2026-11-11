@@ -49,6 +49,9 @@ R1–R9 (three months after launch), I1–I7 (new ideas). **Build nothing from i
     before any change), G1–G6 the country plan (country-pack card + "teach Attune my bank's messages", Saudi + UAE first, testers).
     **Build none of these before his OK.**
   - Not started (after launch, his picks): R1 R4 R5 R7 R8, I1 I2 I3 I5 I6, M4 — each needs its own mock-ups first.
+- **Full suite (twice, 11 Nov):** everything passes except e2e_v993timetable (it reads a picture from an older session's scratch folder —
+  the same failure as before this work). **APK v9.9.15:** https://github.com/alydibiky/attune-/actions/runs/42994765308 (started 11 Nov;
+  check that it ended green).
 - **Not done (known)**: Franco "dawa b 2000 geneh" goes to the AI; "1 items"; dates shown as 2026-12-01 in People & plans; the open
   UI points on the review page. `tools/i18n/add_lines.py lines.json` adds new lines to all 20 dictionaries at once.
 
