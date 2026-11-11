@@ -11,6 +11,25 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ v9.9.17 (11 Nov, evening) — Ali: "exactly 10000 hard scenarios … 10000 notifications in every area … people do the less work"
+- **10,000 notifications** (`bash tests/notifs/run.sh` → tests/notifs/report.md; gen.mjs = 27 areas, brain.mjs = what Attune does with
+  each): 84.2% → **100%**; not-a-payment reaching Money **855 → 0**. Honest number: `tests/notifs/heldout.mjs` (60 written AFTER the
+  fixes) was **91.7% on the first try**, 60/60 after fixing by class — keep adding real misses THERE, never tune a rule to one sentence.
+  Cause: each reader had its own list. Now ONE list `web-src/notifwords.js` (`notAPayment`: code · failed · notyet · offer · price ·
+  post · scam · person) used by paylog.js, autopilot.js (cards skipped every check before), notelabels.js, notifmeaning.js. Also:
+  bill-due card from any app, to-dos need a request ("see you tomorrow" made one), «تم خصم» is not a discount, a chat is a message,
+  paytext.js («تم رد مبلغ» in, "Incoming transfer" in, "was used for", "BHD 2,983.250"), MONEY_SRC word edges ("purchase" matched "chase").
+- **10,000 hard sentences** (`bash tests/scenarios/run.sh hard` → hard-report.md; details checked: amount, direction, hour, person):
+  70.5% → **95.5%**. New `web-src/sense.js`: numWords, notSpent ("I didn't pay the 300 yet" was RECORDED), typedPayment (Chat's reader:
+  "Ahmed paid me back 500" was money OUT), splitOrders (two orders both done), easeTime, easeDebt, easeCalc, tidy; applinks.js pageOf
+  ("open Money"), commands.js to-dos ("I need to…", "new task:"), chat.jsx (number words, two orders, call/open before reminders).
+  **Still wrong (4.5%, see hard-report.md):** Franco "x b N geneh", «قسط … على 12 شهر» divides, "car insurance N every year", "X always
+  comes first", "open Settings / Documents / Follow-ups" (no page id), «تابعلي سعر», «X عليه كام؟», "read N books before…".
+  The mirror (tests/scenarios/brain.mjs) is a strong hint, not proof — the two-orders and open-page paths in chat.jsx have NO browser test yet.
+- **"Notifications stopped working from 3pm" (Ali's phone):** not reproduced here (no phone log). PayListener.kt heal: 1 quiet hour
+  (was 3), re-toggle hourly (was 6 h) — runs on app open. Ask Ali for Engine → Details log if it happens again; likely the phone's battery saver.
+- Tests: tests/unit/v9917runs.test.mjs (both runs on 2,500 samples + held-out).
+
 ## ▶ v9.9.16 (11 Nov, later the same day) — Ali: "do all now … every country fully … your code should deal with any notification"
 His answer on the combined mock-up: **OK1, OK3, K1, B1, Q1, M1**; OK2 NOT ticked ("leaving them in groups is better visually");
 U6 ("why not exchange rates visible; that doesn't mean it won't be downloaded?"); G2 not ticked ("I want ALL countries fully made if
