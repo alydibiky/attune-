@@ -11873,4 +11873,12 @@ export const FR = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "La lecture automatique de Gmail n'est pas encore activée dans cette version. En attendant, « {a} » ou « {b} » lisent les mêmes e-mails.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Vous êtes en Gratuit : réponses illimitées, Argent et Suivis. Pro ajoute des agents qui agissent pour vous, Chat X-Ray, la recherche approfondie, les rapports, les présentations et les conversions de fichiers sans limite.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "À quel prix dois-je vous prévenir pour {w} ? Écrivez le nombre — p. ex. 9 000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "Touchez ☰ en haut pour ouvrir le menu latéral (sur ordinateur il est toujours à gauche) : Accueil, puis Tâches et listes, Argent, Suivis, Santé et Agents, puis Mes affaires, Lancer, Outils et Projets.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "Chaque endroit est une seule page — Suivis réunit Personnes et projets, Rappels et Dates ; Mes affaires garde vos notes, documents, personnes et Esprit.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "Tout en bas : Comment utiliser Attune, Moteur, Sauvegarde et Réglages. Retour vous ramène toujours à la page précédente.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "Écrivez ou dites ce qui s'est passé dans la zone de Accueil : « dépensé 150 pour le déjeuner », « Ahmed me doit 500 », « rappelle-moi demain à 9 h ».",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "Sous la zone : ajouter une tâche ou une liste, les cartes Argent et Suivis et Agents, puis votre journée — ce qui vous attend aujourd'hui, dans l'ordre.",
+  "Documents & memory": "Documents et mémoire",
+  "Every place is one page.": "Chaque endroit est une seule page.",
+  "Money · Transport": "Argent · Transport",
 };

@@ -49,7 +49,7 @@ export function VaultSettings({ onChange, flash }) {
       <div className="flex items-center gap-3"><span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Lock size={17} /></span>
         <div className="flex-1 min-w-0"><b className="block font-extrabold text-[14.5px]">{tr("Private vault")}</b><span className={"text-[12.5px] " + U.muted}>{way === "bio" ? tr("Opens with your fingerprint, face or screen lock") : tr("Opens with a PIN on this device")}</span></div>
         <button role="switch" aria-checked={v.on} onClick={toggle} className={v.on ? U.btnP : U.btnS + " h-12 min-h-[48px] px-5"} data-testid="vault-toggle">{v.on ? tr("On") : tr("Off")}</button></div>
-      <div className="flex flex-wrap gap-2">{Object.keys(VAULT_AREAS).map((a) => {
+      <div className="flex flex-wrap gap-2">{Object.keys(VAULT_AREAS).filter((a) => a !== "cycle").map((a) => {   /* v9.9.15: Cycle left with Fit — no chip for a page that is gone */
         const on = (v.areas || []).includes(a);
         return <button key={a} onClick={() => put({ ...v, areas: on ? v.areas.filter((x) => x !== a) : [...(v.areas || []), a] })} aria-pressed={on} data-testid={"vault-area-" + a}
           className={U.chip(on)}>{tr(VAULT_LABEL[a])}</button>; })}</div>

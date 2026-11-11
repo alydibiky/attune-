@@ -11872,4 +11872,12 @@ export const VI = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Tính năng tự đọc Gmail chưa được bật trong phiên bản này. Trong lúc đó, “{a}” hoặc “{b}” đọc được cùng những email ấy.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Bạn đang dùng Miễn phí: trả lời không giới hạn, Tiền và Việc cần theo dõi. Pro thêm các trợ lý tự làm việc thay bạn, Chat X-Ray, nghiên cứu sâu, báo cáo, slide và chuyển đổi tệp không giới hạn.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "Báo cho bạn về {w} khi giá bao nhiêu? Hãy viết con số — ví dụ 9.000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "Chạm ☰ ở trên cùng để mở thanh bên (trên máy tính nó luôn ở bên trái): Trang chủ, rồi Việc cần làm & danh sách, Tiền, Việc cần theo dõi, Sức khỏe và Tác nhân, sau đó là Đồ của tôi, Bắt đầu, Công cụ và Dự án.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "Mỗi nơi là một trang — Việc cần theo dõi gom Mọi người và kế hoạch, Nhắc nhở và Ngày lại với nhau; Đồ của tôi giữ ghi chú, tài liệu, mọi người và Mind của bạn.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "Dưới cùng: Cách dùng Attune, Động cơ, Sao lưu và Cài đặt. Nút Quay lại luôn đưa bạn về trang trước.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "Gõ hoặc nói điều đã xảy ra vào ô ở Trang chủ: “tiêu 150 cho bữa trưa”, “Ahmed nợ tôi 500”, “nhắc tôi 9 giờ sáng mai”.",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "Dưới ô: thêm việc cần làm hoặc danh sách, các thẻ Tiền và Việc cần theo dõi cùng Tác nhân, rồi đến ngày của bạn — những gì đang chờ hôm nay, theo thứ tự.",
+  "Documents & memory": "Tài liệu & trí nhớ",
+  "Every place is one page.": "Mỗi nơi là một trang.",
+  "Money · Transport": "Tiền · Đi lại",
 };

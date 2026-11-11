@@ -32,7 +32,7 @@ with sync_playwright() as p:
     labels = page.evaluate("[...document.querySelectorAll('[data-testid=guide-chapter] > .c-lbl')].map(e => e.textContent.trim())")
     check(labels[:2] == ["Getting started", "Get the most of Attune"] and labels[2] == "A" and labels[2:] == sorted(labels[2:]), "start, the plan, then A–Z: %s" % labels)
     check("the All button" not in page.locator("[data-testid=guide-page]").inner_text(), "no word of the old All button")
-    for k in ["plan:morning", "plan:day", "plan:evening", "plan:week", "plan:month", "plan:work", "start:keyboard"]: check(k in ids, "has " + k)
+    for k in ["plan:morning", "plan:day", "plan:evening", "plan:week", "plan:month", "plan:work", "start:safe"]: check(k in ids, "has " + k)
     # v7.9 a life area: what it can do, tried or not, You say → You get, How and Try it
     page.click("[data-testid=guide-see-all]"); page.wait_for_timeout(100)
     page.click("[data-testid=guide-area-money]"); page.wait_for_timeout(200)

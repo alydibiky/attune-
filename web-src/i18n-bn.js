@@ -11872,4 +11872,12 @@ export const BN = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail নিজে থেকে পড়া এই সংস্করণে এখনও চালু হয়নি। ততদিন “{a}” বা “{b}” একই ইমেইলগুলো পড়ে।",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "আপনি ফ্রি প্ল্যানে আছেন: সীমাহীন উত্তর, টাকা ও ফলো-আপ। Pro যোগ করে আপনার হয়ে কাজ করা এজেন্ট, Chat X-Ray, গভীর গবেষণা, রিপোর্ট, স্লাইড এবং সীমাহীন ফাইল রূপান্তর।",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} কত দামে হলে জানাব? সংখ্যাটি লিখুন — যেমন 9,000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "সাইডবার খুলতে ওপরে ☰-এ ট্যাপ করুন (কম্পিউটারে এটি সবসময় পাশে থাকে): হোম, তারপর কাজ ও তালিকা, টাকা, ফলো-আপ, স্বাস্থ্য ও এজেন্ট, এরপর আমার জিনিস, চলো, টুল ও প্রজেক্ট।",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "প্রতিটি জায়গা একটি পৃষ্ঠা — ফলো-আপ-এ মানুষ ও প্ল্যান, রিমাইন্ডার ও তারিখ একসঙ্গে থাকে; আমার জিনিস আপনার নোট, নথি, মানুষ ও মাইন্ড রাখে।",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "একদম নিচে: Attune কীভাবে ব্যবহার করবেন, ইঞ্জিন, ব্যাকআপ ও সেটিংস। পেছনে সবসময় আগের পৃষ্ঠায় নিয়ে যায়।",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "হোম-এর বাক্সে যা ঘটেছে লিখুন বা বলুন: “দুপুরের খাবারে 150 খরচ করেছি”, “আহমেদ আমার কাছে 500 ধারে”, “কাল 9টায় মনে করিয়ে দিও”।",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "বাক্সের নিচে: কাজ বা তালিকা যোগ করুন, টাকা ও ফলো-আপ এবং এজেন্ট-এর কার্ড, তারপর আপনার দিন — আজ যা অপেক্ষায় আছে, ক্রমানুসারে।",
+  "Documents & memory": "নথি ও স্মৃতি",
+  "Every place is one page.": "প্রতিটি জায়গা একটি পৃষ্ঠা।",
+  "Money · Transport": "টাকা · যাতায়াত",
 };

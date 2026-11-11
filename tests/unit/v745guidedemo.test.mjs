@@ -17,4 +17,4 @@ ok(ar.filter((t) => !/[؀-ۿ]/.test(t) && !/^[0-9]+$|PDF|PowerPoint|LTM/.test(t)
 ok(!ar.some((t) => /الهاتف|تريد|يجب أن|عندما/.test(t)), "Egyptian, not formal");
 ok(GD.GOALS.length >= 5 && GD.GOALS.every((g) => pair(g.title) && g.tools.length >= 4 && g.tools.every((id) => GD.demoFor(id))), "What Attune can do: " + GD.GOALS.length + " goals, each with 4+ cards that have a guide");
 ok(GD.pickV(["a", "ب"], true) === "ب" && GD.pickV("x", true) === "x", "a value shows in the language");
-ok(GD.demoFor("start:say").title[0] === "Done in two places" && /koshari/.test(GD.demoFor("start:say").say[0]), "Home's sample: one sentence → Food and Money");
+ok(GD.demoFor("start:say").title[0] === "Done in two places" && /lunch 150, taxi 60/.test(GD.demoFor("start:say").say[0]) && !/Fit & Food/.test(JSON.stringify(GD.demoFor("start:say"))), "Home's sample: one sentence → two entries in Money (v9.9.15: no Fit & Food)");

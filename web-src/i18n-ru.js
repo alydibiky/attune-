@@ -11872,4 +11872,12 @@ export const RU = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Автоматическое чтение Gmail в этой версии пока не включено. А пока «{a}» или «{b}» читают те же письма.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "У вас бесплатный план: безлимитные ответы, Деньги и «На контроле». Pro добавляет агентов, которые действуют за вас, Chat X-Ray, глубокий поиск, отчёты, слайды и конвертацию файлов без ограничений.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "При какой цене сообщить вам о {w}? Напишите число — например, 9 000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "Нажмите ☰ вверху, чтобы открыть боковое меню (на компьютере оно всегда слева): Главная, затем Дела и списки, Деньги, На контроле, Здоровье и Агенты, а потом Мои вещи, Вперёд, Инструменты и Проекты.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "Каждое место — одна страница: На контроле объединяет Люди и планы, Напоминания и Даты; Мои вещи хранит ваши заметки, документы, людей и Mind.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "В самом низу: Как пользоваться Attune, Движок, Резервная копия и Настройки. Кнопка «Назад» всегда возвращает на предыдущую страницу.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "Напишите или скажите, что произошло, в поле на Главная: «потратил 150 на обед», «Ахмед должен мне 500», «напомни завтра в 9».",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "Под полем: добавить дело или список, карточки Деньги и На контроле и Агенты, затем ваш день — что ждёт сегодня, по порядку.",
+  "Documents & memory": "Документы и память",
+  "Every place is one page.": "Каждое место — одна страница.",
+  "Money · Transport": "Деньги · Транспорт",
 };

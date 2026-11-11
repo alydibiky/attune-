@@ -11873,4 +11873,12 @@ export const HI = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail को अपने आप पढ़ना इस संस्करण में अभी चालू नहीं है। तब तक “{a}” या “{b}” वही ईमेल पढ़ते हैं।",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "आप मुफ़्त प्लान पर हैं: असीमित जवाब, पैसे और फ़ॉलो-अप। Pro में आपके लिए काम करने वाले एजेंट, Chat X-Ray, गहरी रिसर्च, रिपोर्ट, स्लाइड और बिना सीमा के फ़ाइल कन्वर्ज़न जुड़ते हैं।",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} के बारे में किस कीमत पर बताऊँ? संख्या लिखें — जैसे 9,000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "साइडबार खोलने के लिए ऊपर ☰ पर टैप करें (कंप्यूटर पर यह हमेशा बाईं ओर रहता है): होम, फिर काम और सूचियाँ, पैसे, फ़ॉलो-अप, सेहत और एजेंट, उसके बाद मेरी चीज़ें, चलो, टूल और प्रोजेक्ट।",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "हर जगह एक ही पेज है — फ़ॉलो-अप में लोग और प्लान, रिमाइंडर और तारीखें साथ रहते हैं; मेरी चीज़ें आपके नोट, दस्तावेज़, लोग और Mind रखता है।",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "सबसे नीचे: Attune कैसे इस्तेमाल करें, इंजन, बैकअप और सेटिंग्स। वापस हमेशा पिछले पेज पर ले जाता है।",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "होम के बॉक्स में जो हुआ वह लिखें या बोलें: “दोपहर के खाने पर 150 खर्च किए”, “अहमद पर मेरे 500 बाकी हैं”, “कल 9 बजे याद दिलाना”।",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "बॉक्स के नीचे: काम या सूची जोड़ें, पैसे और फ़ॉलो-अप तथा एजेंट के कार्ड, फिर आपका दिन — आज जो इंतज़ार में है, क्रम से।",
+  "Documents & memory": "दस्तावेज़ और याददाश्त",
+  "Every place is one page.": "हर जगह एक ही पेज है।",
+  "Money · Transport": "पैसे · यातायात",
 };

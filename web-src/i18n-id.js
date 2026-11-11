@@ -11873,4 +11873,12 @@ export const IDN = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Membaca Gmail secara otomatis belum diaktifkan di versi ini. Sementara itu, “{a}” atau “{b}” membaca email yang sama.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Anda memakai Gratis: jawaban tanpa batas, Uang, dan Tindak lanjut. Pro menambahkan agen yang bertindak untuk Anda, Chat X-Ray, riset mendalam, laporan, slide, dan konversi file tanpa batas.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "Pada harga berapa saya harus memberi tahu Anda tentang {w}? Tulis angkanya — mis. 9.000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "Ketuk ☰ di atas untuk membuka bilah sisi (di komputer selalu ada di kiri): Beranda, lalu Tugas & daftar, Uang, Tindak lanjut, Kesehatan dan Agen, kemudian Barang-barangku, Mulai, Alat dan Proyek.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "Setiap tempat adalah satu halaman — Tindak lanjut menyatukan Orang & rencana, Pengingat dan Tanggal; Barang-barangku menyimpan catatan, dokumen, orang, dan Pikiran Anda.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "Paling bawah: Cara memakai Attune, Mesin, Cadangan dan Pengaturan. Kembali selalu membawa Anda ke halaman sebelumnya.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "Ketik atau ucapkan apa yang terjadi di kotak Beranda: “keluar 150 untuk makan siang”, “Ahmed berutang 500 kepada saya”, “ingatkan saya besok jam 9”.",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "Di bawah kotak: tambah tugas atau daftar, kartu Uang dan Tindak lanjut serta Agen, lalu hari Anda — apa yang menunggu hari ini, berurutan.",
+  "Documents & memory": "Dokumen & memori",
+  "Every place is one page.": "Setiap tempat adalah satu halaman.",
+  "Money · Transport": "Uang · Transportasi",
 };

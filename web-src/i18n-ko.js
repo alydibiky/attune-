@@ -11872,4 +11872,12 @@ export const KO = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail 자동 읽기는 이 버전에서 아직 켜져 있지 않아요. 그때까지는 “{a}” 또는 “{b}”로 같은 이메일을 읽을 수 있어요.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "지금은 무료 플랜이에요: 무제한 답변, 돈, 후속 조치. Pro는 대신 일해 주는 에이전트, Chat X-Ray, 심층 리서치, 보고서, 슬라이드, 무제한 파일 변환을 더해 줘요.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} 가격이 얼마가 되면 알려드릴까요? 숫자를 적어 주세요 — 예: 9,000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "위쪽의 ☰를 눌러 사이드바를 여세요(컴퓨터에서는 항상 왼쪽에 있어요): 홈, 그다음 할 일 & 목록, 돈, 후속 조치, 건강, 에이전트, 이어서 내 것, 실행, 도구, 프로젝트.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "각 장소는 한 페이지예요 — 후속 조치에는 사람 & 계획, 알림, 날짜가 함께 있고, 내 것에는 메모, 문서, 사람, Mind가 들어 있어요.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "맨 아래: Attune 사용법, 엔진, 백업, 설정. 뒤로는 항상 이전 페이지로 돌아가요.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "홈의 상자에 있었던 일을 입력하거나 말하세요: “점심에 150 썼어”, “Ahmed가 나에게 500 빚졌어”, “내일 9시에 알려줘”.",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "상자 아래: 할 일이나 목록 추가, 돈와 후속 조치, 에이전트 카드, 그리고 오늘 하루 — 오늘 기다리는 일이 순서대로 보여요.",
+  "Documents & memory": "문서와 기억",
+  "Every place is one page.": "각 장소는 한 페이지예요.",
+  "Money · Transport": "돈 · 교통",
 };

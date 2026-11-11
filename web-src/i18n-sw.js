@@ -11873,4 +11873,12 @@ export const SW = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Kusoma Gmail yenyewe bado hakujawashwa katika toleo hili. Hadi hapo, “{a}” au “{b}” husoma barua pepe zilezile.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Uko kwenye Bure: majibu bila kikomo, Pesa na Mambo ya kufuatilia. Pro inaongeza mawakala wanaokufanyia kazi, Chat X-Ray, utafiti wa kina, ripoti, slaidi na ubadilishaji wa faili bila kikomo.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "Nikujulishe kuhusu {w} bei ikifika ngapi? Andika nambari — mf. 9,000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "Gusa ☰ juu ili kufungua upau wa pembeni (kwenye kompyuta huwa upande wa kushoto daima): Nyumbani, kisha Kazi na orodha, Pesa, Mambo ya kufuatilia, Afya na Mawakala, halafu Vitu vyangu, Anza, Zana na Miradi.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "Kila mahali ni ukurasa mmoja — Mambo ya kufuatilia huweka Watu na mipango, Vikumbusho na Tarehe pamoja; Vitu vyangu huhifadhi madokezo, hati, watu na Akili yako.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "Chini kabisa: Jinsi ya kutumia Attune, Injini, Nakala rudufu na Mipangilio. Rudi hukurudisha daima kwenye ukurasa uliotangulia.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "Andika au sema kilichotokea kwenye kisanduku cha Nyumbani: “nimetumia 150 kwa chakula cha mchana”, “Ahmed ananidai 500”, “nikumbushe kesho saa 9”.",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "Chini ya kisanduku: ongeza jukumu au orodha, kadi za Pesa na Mambo ya kufuatilia na Mawakala, kisha siku yako — kinachokusubiri leo, kwa mpangilio.",
+  "Documents & memory": "Hati na kumbukumbu",
+  "Every place is one page.": "Kila mahali ni ukurasa mmoja.",
+  "Money · Transport": "Pesa · Usafiri",
 };

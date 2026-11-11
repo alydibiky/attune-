@@ -11872,4 +11872,12 @@ export const TH = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "การอ่าน Gmail อัตโนมัติยังไม่เปิดใช้ในเวอร์ชันนี้ ระหว่างนี้ “{a}” หรือ “{b}” อ่านอีเมลชุดเดียวกันได้",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "คุณใช้แบบฟรี: คำตอบไม่จำกัด การเงิน และติดตามผล Pro เพิ่มเอเจนต์ที่ทำงานแทนคุณ, Chat X-Ray, การค้นคว้าเชิงลึก, รายงาน, สไลด์ และการแปลงไฟล์แบบไม่จำกัด",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "ให้แจ้งเรื่อง {w} เมื่อราคาเท่าไร? พิมพ์ตัวเลข — เช่น 9,000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "แตะ ☰ ด้านบนเพื่อเปิดแถบด้านข้าง (บนคอมพิวเตอร์จะอยู่ด้านซ้ายเสมอ): หน้าแรก จากนั้น สิ่งที่ต้องทำและรายการ, การเงิน, ติดตามผล, สุขภาพ และ เอเจนต์ แล้วตามด้วย ของของฉัน, ไป, เครื่องมือ และ โปรเจกต์",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "แต่ละที่คือหนึ่งหน้า — ติดตามผล รวม ผู้คนและแผน, การแจ้งเตือน และ วันที่ ไว้ด้วยกัน ส่วน ของของฉัน เก็บโน้ต เอกสาร ผู้คน และ Mind ของคุณ",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "ล่างสุด: วิธีใช้ Attune, เอนจิน, สำรองข้อมูล และ การตั้งค่า ปุ่มย้อนกลับจะพากลับไปหน้าก่อนหน้าเสมอ",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "พิมพ์หรือพูดสิ่งที่เกิดขึ้นในช่องของ หน้าแรก: “จ่ายค่าอาหารกลางวัน 150”, “อาเหม็ดติดเงินฉัน 500”, “เตือนฉันพรุ่งนี้ 9 โมง”",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "ใต้ช่อง: เพิ่มสิ่งที่ต้องทำหรือรายการ การ์ดของ การเงิน และ ติดตามผล กับ เอเจนต์ จากนั้นคือวันของคุณ — สิ่งที่รออยู่วันนี้ตามลำดับ",
+  "Documents & memory": "เอกสารและความจำ",
+  "Every place is one page.": "แต่ละที่คือหนึ่งหน้า",
+  "Money · Transport": "การเงิน · การเดินทาง",
 };

@@ -7,11 +7,11 @@ const S = (en, ar) => [en, ar];
 
 export const AREAS = [
   { id: "money", icon: "💰", title: S("Money", "الفلوس"), ids: ["money", "planner", "guardian", "life", "family", "reminders", "errands", "radar", "timeline", "deal", "automations", "xray"] },
-  { id: "health", icon: "🥗", title: S("Health & food", "الصحة والأكل"), ids: ["health", "fit", "care", "cycle"] },
+  { id: "health", icon: "🥗", title: S("Family health", "صحة العيلة"), ids: ["health", "fit", "care", "cycle"] },
   { id: "everyday", icon: "☀️", title: S("Every day", "كل يوم"), ids: ["home", "lists", "chat", "lifeask", "translate", "missions", "agents", "scout", "shelf", "map", "metro", "travel", "privacy"] },
-  { id: "learn", icon: "📚", title: S("Learning & study", "التعلّم والمذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "booklib", "slides", "cv", "memory", "remember", "people", "groups", "recall", "news"] },
-  { id: "work", icon: "💼", title: S("Work & business", "الشغل والبيزنس"), ids: ["business", "fleet", "field", "crane", "tools", "write", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
-  { id: "create", icon: "✨", title: S("Create", "اعمل حاجة"), ids: ["assistants", "skills", "artifacts", "studio", "code", "projects"] },
+  { id: "learn", icon: "📚", title: S("Documents & memory", "المستندات والذاكرة"), ids: ["learn", "coach", "convert", "pdfchat", "booklib", "slides", "cv", "memory", "remember", "people", "groups", "recall", "news"] },
+  { id: "work", icon: "💼", title: S("Tools", "الأدوات"), ids: ["business", "fleet", "field", "crane", "tools", "write", "improve", "compress", "humanize", "copilot", "library", "video", "ask"] },
+  { id: "create", icon: "✨", title: S("Projects", "المشاريع"), ids: ["assistants", "skills", "artifacts", "studio", "code", "projects"] },
 ];
 for (const a of AREAS) a.ids = withoutRemoved(a.ids);   // v9.1: archived tools leave every area
 

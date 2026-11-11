@@ -11864,4 +11864,12 @@ export const ARB = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "قراءة Gmail تلقائيًا غير مفعّلة في هذه النسخة بعد. إلى ذلك الحين، «{a}» أو «{b}» يقرآن الرسائل نفسها.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "أنت على الخطة المجانية: إجابات غير محدودة، والمال والمتابعات. Pro يضيف وكلاء يتصرفون عنك، وChat X-Ray، والبحث المتعمق، والتقارير، والعروض، وتحويل الملفات بلا حدود.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "عند أي سعر أخبرك عن {w}؟ اكتب الرقم — مثلًا 9,000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "اضغط ☰ في الأعلى لفتح القائمة الجانبية (على الحاسوب تكون دائمًا على الجانب): الرئيسية، ثم المهام والقوائم والمال والمتابعات والصحة والوكلاء، ثم أشيائي وانطلق والأدوات والمشاريع.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "كل مكان صفحة واحدة — المتابعات تجمع الأشخاص والخطط والتذكيرات والمواعيد معًا؛ وأشيائي تحفظ ملاحظاتك ومستنداتك وأشخاصك والذهن.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "في الأسفل تمامًا: طريقة استخدام Attune والمحرّك والنسخة الاحتياطية والإعدادات. زر الرجوع يعيدك دائمًا إلى الصفحة السابقة.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "اكتب أو قل ما حدث في خانة الرئيسية: «صرفت 150 على الغداء»، «أحمد مدين لي بـ500»، «ذكّرني غدًا الساعة 9».",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "تحت الخانة: إضافة مهمة أو قائمة، ثم بطاقتا المال والمتابعات والوكلاء، ثم يومك — ما ينتظرك اليوم بالترتيب.",
+  "Documents & memory": "المستندات والذاكرة",
+  "Every place is one page.": "كل مكان صفحة واحدة.",
+  "Money · Transport": "المال · المواصلات",
 };

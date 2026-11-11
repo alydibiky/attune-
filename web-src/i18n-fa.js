@@ -11872,4 +11872,12 @@ export const FA = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "خواندن خودکار Gmail هنوز در این نسخه فعال نیست. تا آن زمان، «{a}» یا «{b}» همان ایمیل‌ها را می‌خوانند.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "شما در طرح رایگان هستید: پاسخ نامحدود، پول و پیگیری‌ها. Pro نماینده‌هایی که به‌جای شما کار می‌کنند، Chat X-Ray، پژوهش عمیق، گزارش، اسلاید و تبدیل فایل بدون محدودیت را اضافه می‌کند.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "با چه قیمتی دربارهٔ {w} خبرتان کنم؟ عدد را بنویسید — مثلاً 9,000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "برای باز کردن نوار کناری، بالای صفحه روی ☰ بزنید (در رایانه همیشه کنار صفحه است): خانه، سپس کارها و فهرست‌ها، پول، پیگیری‌ها، سلامت و عامل‌ها، و بعد چیزهای من، برو، ابزارها و پروژه‌ها.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "هر جا یک صفحه است — پیگیری‌ها، آدم‌ها و برنامه‌ها و یادآورها و تاریخ‌ها را کنار هم نگه می‌دارد؛ چیزهای من یادداشت‌ها، سندها، افراد و ذهن شما را نگه می‌دارد.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "در پایین‌ترین بخش: طرز استفاده از Attune، موتور، پشتیبان و تنظیمات. بازگشت همیشه شما را به صفحهٔ قبل می‌برد.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "در کادر خانه بنویسید یا بگویید چه شد: «۱۵۰ برای ناهار خرج کردم»، «احمد ۵۰۰ به من بدهکار است»، «فردا ساعت ۹ یادم بینداز».",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "زیر کادر: افزودن کار یا فهرست، کارت‌های پول و پیگیری‌ها و عامل‌ها، سپس روز شما — آنچه امروز منتظر است، به ترتیب.",
+  "Documents & memory": "سندها و حافظه",
+  "Every place is one page.": "هر جا یک صفحه است.",
+  "Money · Transport": "پول · حمل‌ونقل",
 };

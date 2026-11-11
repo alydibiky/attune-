@@ -11873,4 +11873,12 @@ export const IT = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "La lettura automatica di Gmail non è ancora attiva in questa versione. Nel frattempo, “{a}” o “{b}” leggono le stesse email.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Sei su Gratis: risposte illimitate, Soldi e Da seguire. Pro aggiunge agenti che agiscono per te, Chat X-Ray, ricerca approfondita, report, slide e conversioni di file senza limiti.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "A quale prezzo devo avvisarti per {w}? Scrivi il numero — es. 9.000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "Tocca ☰ in alto per aprire la barra laterale (sul computer è sempre a sinistra): Home, poi Attività e liste, Soldi, Da seguire, Salute e Agenti, quindi Le mie cose, Vai, Strumenti e Progetti.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "Ogni luogo è una sola pagina — Da seguire tiene insieme Persone e piani, Promemoria e Date; Le mie cose conserva note, documenti, persone e Mente.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "In fondo: Come usare Attune, Motore, Backup e Impostazioni. Indietro ti riporta sempre alla pagina precedente.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "Scrivi o di' cosa è successo nel riquadro di Home: “spesi 150 per il pranzo”, “Ahmed mi deve 500”, “ricordamelo domani alle 9”.",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "Sotto il riquadro: aggiungi un'attività o una lista, le schede di Soldi e Da seguire e di Agenti, poi la tua giornata — ciò che ti aspetta oggi, in ordine.",
+  "Documents & memory": "Documenti e memoria",
+  "Every place is one page.": "Ogni luogo è una sola pagina.",
+  "Money · Transport": "Soldi · Trasporti",
 };

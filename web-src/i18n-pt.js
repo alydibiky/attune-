@@ -11873,4 +11873,12 @@ export const PT = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "A leitura automática do Gmail ainda não está ativada nesta versão. Até lá, “{a}” ou “{b}” leem os mesmos e-mails.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Você está no Grátis: respostas ilimitadas, Dinheiro e Pendências. O Pro adiciona agentes que agem por você, Chat X-Ray, pesquisa aprofundada, relatórios, slides e conversões de arquivos sem limites.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "A que preço devo avisar você sobre {w}? Escreva o número — ex.: 9.000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "Toque em ☰ no topo para abrir a barra lateral (no computador ela fica sempre à esquerda): Início, depois Tarefas e listas, Dinheiro, Pendências, Saúde e Agentes, e então Minhas coisas, Ir, Ferramentas e Projetos.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "Cada lugar é uma página só — Pendências reúne Pessoas e planos, Lembretes e Datas; Minhas coisas guarda suas notas, documentos, pessoas e Mente.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "Bem embaixo: Como usar o Attune, Motor, Backup e Configurações. Voltar sempre leva você à página anterior.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "Escreva ou diga o que aconteceu na caixa de Início: “gastei 150 no almoço”, “Ahmed me deve 500”, “me lembre amanhã às 9”.",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "Abaixo da caixa: adicionar uma tarefa ou lista, os cartões de Dinheiro e Pendências e de Agentes, depois o seu dia — o que espera por você hoje, em ordem.",
+  "Documents & memory": "Documentos e memória",
+  "Every place is one page.": "Cada lugar é uma página só.",
+  "Money · Transport": "Dinheiro · Transporte",
 };

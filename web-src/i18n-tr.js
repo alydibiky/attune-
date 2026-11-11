@@ -11873,4 +11873,12 @@ export const TRK = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail'i kendiliğinden okuma bu sürümde henüz açık değil. O zamana kadar “{a}” veya “{b}” aynı e-postaları okur.",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Ücretsiz plandasınız: sınırsız yanıt, Para ve Takipler. Pro; sizin yerinize iş yapan ajanları, Chat X-Ray'i, derin araştırmayı, raporları, slaytları ve sınırsız dosya dönüştürmeyi ekler.",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} için hangi fiyatta haber vereyim? Sayıyı yazın — örn. 9.000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "Kenar çubuğunu açmak için üstteki ☰ simgesine dokunun (bilgisayarda hep soldadır): Ana sayfa, sonra Yapılacaklar ve listeler, Para, Takipler, Sağlık ve Ajanlar, ardından Eşyalarım, Başla, Araçlar ve Projeler.",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "Her yer tek bir sayfadır — Takipler; Kişiler ve planlar, Hatırlatıcılar ve Tarihler bölümlerini bir arada tutar; Eşyalarım notlarınızı, belgelerinizi, kişilerinizi ve Zihin bölümünü saklar.",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "En altta: Attune nasıl kullanılır, Motor, Yedekleme ve Ayarlar. Geri her zaman önceki sayfaya götürür.",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "Ana sayfa kutusuna olanı yazın veya söyleyin: “öğle yemeğine 150 harcadım”, “Ahmed'in bana 500 borcu var”, “yarın 9'da hatırlat”.",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "Kutunun altında: görev veya liste ekleme, Para ve Takipler ile Ajanlar kartları, sonra gününüz — bugün sizi bekleyenler, sırasıyla.",
+  "Documents & memory": "Belgeler ve hafıza",
+  "Every place is one page.": "Her yer tek bir sayfadır.",
+  "Money · Transport": "Para · Ulaşım",
 };

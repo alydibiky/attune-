@@ -31,9 +31,9 @@ const formal = ar.filter((t) => /اضغط(?![،»])|الهاتف|هاتفك|تر
 ok(!formal.length, "Arabic is Egyptian, not formal: " + formal.slice(0, 3).join(" | "));
 const all = ar.join(" ");
 ok(["دوس", "الموبايل", "عايز", "النهارده", "مفيش"].every((w) => all.includes(w)), "Egyptian words are used (دوس، الموبايل، عايز، النهارده، مفيش)");
-ok(G.START.length === 6 && G.START.every((s) => s.steps.length === 3), "getting started: 6 chapters of 3 steps (Engine, sidebar, Home, Chat, keyboard, backup)");
+ok(G.START.length === 5 && G.START.every((s) => s.steps.length === 3), "getting started: 5 chapters of 3 steps (Engine, sidebar, Home, Chat, backup) — v9.9.15: the keyboard chapter went with the keyboard");
 const startText = G.START.map((s) => s.steps.flat().join(" ")).join(" ");
-ok(!/the All button/.test(startText) && /sidebar/.test(startText) && /Create · Projects · Home · Students · Money · Health · Daily · Work/.test(startText) && /How to use Attune/.test(startText) && /Backup/.test(startText), "getting started describes the sidebar (no 'All button')");
+ok(!/the All button/.test(startText) && /sidebar/.test(startText) && /To-dos & lists, Money, Follow-ups, Health and Agents/.test(startText) && !/Students|Daily|Food photo|keyboard|8 places/.test(startText) && /How to use Attune/.test(startText) && /Backup/.test(startText), "getting started describes the sidebar (no 'All button')");
 const sketches = new Set(["photo", "type", "list", "chart", "map", "chat", "file", "lesson", "engine"]);
 ok([...Object.values(G.TOOLS), ...G.START].every((g) => sketches.has(g.sketch)), "every guide has a drawing");
 // chapters: the sidebar's order
@@ -58,8 +58,7 @@ ok(/Who keeps their word/.test(en("xray")) && /kept, broken, late/.test(en("xray
 ok(/Cancel kit/.test(en("radar")) && /Google Play/.test(en("radar")) && /App Store/.test(en("radar")) && /إزاي تلغي/.test(arOf("radar")), "Dates: the Cancel kit");
 ok(/From a message/.test(en("business")) && /محتاج ونش 50 طن/.test(en("business")) && /Book it/.test(en("business")) && /quote/.test(en("business")) && /من رسالة/.test(arOf("business")) && /احجزه/.test(arOf("business")), "Business: Fleet & rentals From a message");
 ok(/wait or buy/.test(en("scout")) && /تستنى ولا تشتري/.test(arOf("scout")), "Scout: wait or buy");
-const kb = G.START.find((s) => s.id === "keyboard");
-ok(kb && /3→ع Franco/.test(kb.steps.map((s) => s[0]).join(" ")) && /أنا جاي بكرة/.test(kb.steps.map((s) => s[1]).join(" ")), "the keyboard's Franco chip");
+ok(!G.START.find((s) => s.id === "keyboard"), "v9.9.15: no keyboard chapter (the keyboard is archived)");
 ok(G.TOOLS.missions && /chance/.test(en("missions")) && /one step|ONE step/i.test(en("missions")) && /agents/.test(en("missions")) && !/Scout|Fit|Business|Learn/.test(en("missions")) && /المهمة/.test(arOf("missions")), "Missions: a goal, the chance, one step today");
 // the plan
 ok(G.PLAN.map((p) => p.id).join() === "morning,day,evening,week,month,work", "the plan: morning, day, evening, week, month, work");

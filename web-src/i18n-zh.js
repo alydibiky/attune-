@@ -11872,4 +11872,12 @@ export const ZH = {
   "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "此版本尚未开启自动读取 Gmail。在此之前，“{a}”或“{b}”可以读取同样的邮件。",
   "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "你正在使用免费版：无限回答、财务和待跟进。Pro 增加替你办事的代理、Chat X-Ray、深度研究、报告、幻灯片和不限次数的文件转换。",
   "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} 到什么价格时通知你？请写下数字——例如 9,000",
+  "Tap ☰ at the top to open the sidebar (on a computer it is always on the left): Home, then To-dos & lists, Money, Follow-ups, Health and Agents, then My things, Go, Tools and Projects.": "点按顶部的 ☰ 打开侧边栏（在电脑上它始终在左侧）：首页，然后是待办和清单、财务、待跟进、健康和智能体，接着是我的东西、开始、工具和项目。",
+  "Each place is one page — Follow-ups keeps People & plans, Reminders and Dates together; My things keeps your notes, documents, people and Mind.": "每个位置都是一个页面——待跟进把人和计划、提醒和日期放在一起；我的东西保存你的笔记、文档、人物和心智。",
+  "At the very bottom: How to use Attune, Engine, Backup and Settings. Back always takes you to the page before.": "最下方：如何使用 Attune、引擎、备份和设置。返回键总是带你回到上一页。",
+  "Type or say what happened in the Home box: “spent 150 on lunch”, “Ahmed owes me 500”, “remind me tomorrow at 9”.": "在首页的输入框里写下或说出发生的事：“午餐花了150”“Ahmed欠我500”“明天9点提醒我”。",
+  "Under the box: Add a to-do or a list, the cards for Money & Follow-ups and Agents, then Your day — what is waiting today, in order.": "输入框下方：添加待办或清单，财务和待跟进以及智能体的卡片，然后是你的一天——今天等着你的事，按顺序排列。",
+  "Documents & memory": "文档与记忆",
+  "Every place is one page.": "每个位置都是一个页面。",
+  "Money · Transport": "财务 · 交通",
 };

@@ -206,7 +206,7 @@ function LifeAreas({ ar, nameOf, navTo, sel, setSel, walkFor }) {
         {GA.AREAS.map((a) => { const p = GA.progress(tried, a.id, has); return p.total ? (
           <button key={a.id} onClick={() => setArea(a.id)} className={K.cardPad + " text-start min-h-[104px] hover:border-[var(--c-acc)] transition-colors duration-150"} data-testid={"guide-area-" + a.id}>
             <span className="w-10 h-10 rounded-[12px] grid place-items-center text-[19px]" style={{ background: "var(--c-soft)" }} aria-hidden="true">{a.icon}</span>
-            <b className="block mt-2 text-[15px] font-extrabold" dir="auto">{pk(a.title)}</b>
+            <b className="block mt-2 text-[15px] font-extrabold" dir="auto" style={{ hyphens: "auto", overflowWrap: "break-word" }}>{pk(a.title)}</b>{/* v9.9.15: "Familiengesundheit" broke as "Familiengesundhei / t" */}
             <span className="block c-sub text-[12px] tabular-nums">{tr("{a} of {b} tried", { a: p.tried, b: p.total })}</span></button>) : null; })}
       </div> : (
       <div className="space-y-2.5" data-testid="guide-area-panel" data-id={A.id}>
