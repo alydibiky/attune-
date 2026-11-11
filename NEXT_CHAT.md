@@ -11,6 +11,37 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ START HERE (handoff written 11 Nov 2026, end of the v9.9.15 session)
+**Where things are:** `main` = branch `claude/awesome-hopper-pxkuzb` = **v9.9.15** (versionCode 158). Full suite green twice except
+`e2e_v993timetable` (reads a picture from an old session's scratch folder — fix the test's path when convenient).
+APK: https://github.com/alydibiky/attune-/actions/runs/42994765308 — it was still building when this was written: **check it ended
+green first**; if red, read the job log, fix, push, give Ali the new link.
+
+**Do this next, in this order:**
+1. **Wait for Ali's OK on the combined mock-up** https://claude.ai/artifact/8SwygRB1JbYRAgnfgiRpG6 — codes OK1 (top bar), OK2 (flat
+   sidebar), OK3 (pay-later flow) + K1/K2 (category guess or not), B1, Q1/Q2 (hour), U6 (Travel sizes), M1 (Free = by hand, Pro = by
+   itself), G1–G6 (countries). Build only what he ticks. For M1 a Free / Pro mock-up comes BEFORE any change to billing.
+   - OK3 is half there: life.js already saves "I will pay Ahmed 4500 next week" / "pay the electricity bill 320 on Friday" as a one-time
+     `bill` due that day (`planned`), and Follow-ups asks "Did you pay?". To build: the balance question for these (payer-ui.jsx
+     `PayerPicker`, as for renewing payments), the NEW category question, "Another amount", then Money (paylog.js `appendToLedger`).
+2. **Ali's phone test of v9.9.15** — fix whatever he reports, each with a test.
+3. **Countries ("every country like Egypt", Ali 11 Nov)** — after his G picks: a country-pack card + "teach Attune my bank's
+   messages"; Saudi + UAE first (banks, shops, delivery apps, errands, jam'iya, Gulf Arabic). Real bank messages are needed from
+   testers — never guess a bank's format.
+4. **Known small things, not done:** Franco "dawa b 2000 geneh" goes to the AI · "1 items" · raw dates still in Family health lab
+   results and the payments list · the remaining 3.6% in `tests/scenarios/report.md` (mostly cases where asking is right).
+5. **After launch (his picks, each needs its own mock-ups first):** R1 stability reports, R4 Gulf bank messages, R5 widgets, R7 "Ya
+   Attune" (VOICE_PLAN.md), R8 Gmail after Google's verification, I1 year in review, I2 receipt → warranty, I3 bank-statement import,
+   I5 Ramadan plan (Ramadan 2027 ≈ 8 Feb), I6 cancel helper, M4 affiliate links. Play name he picked: **N2 "Attune: Planner, Money & AI"**
+   (put it in STORE_LISTING.md when the listing is next edited).
+
+**Only Ali can do:** the Google Cloud Android OAuth client (package + the APK's SHA-1) and Google's verification for Gmail; the Play
+closed test (12 testers, 14 days); the Play products; set `TESTING_ALL_PRO = false` before release; 2–3 testers per country.
+
+**Tools made this session:** `bash tests/scenarios/run.sh` (the 10,000 sentences; report.md), `python3 tools/i18n/add_lines.py
+lines.json` (a new line into all 20 dictionaries), tests/unit/v9915fixes + v9915scenarios. Review page (all findings, marketing, money,
+roadmap): https://claude.ai/artifact/2hQ9Mu5SNsL2hyec86ZbjC.
+
 ## 11 Nov — v9.9.15: Ali's four phone problems + "test 10000 scenarios" + the launch review (his picks are waiting)
 **Review page (tick + note on every option, Copy my picks): https://claude.ai/artifact/2hQ9Mu5SNsL2hyec86ZbjC** — U1–U7 (top bar, dates, sidebar,
 neutral examples, Travel, placeholders), C1–C3 (what "buy milk", "pay the electricity bill 320 on Friday", "I will pay Ahmed 4500 next
