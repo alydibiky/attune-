@@ -5,6 +5,7 @@
    (date, time, number of people — agent-kit.js fill), and the steps are ticked from what the browser reports back
    (opened · fields filled · the payment page reached → "your turn"). Hotels, flights, food orders and doctors stay with Agents;
    "send / call / uber" stay with W2 (applinks.js). Pure; tests: tests/unit/v997webtask.test.mjs. */
+import { BARE_BUY } from "./commands.js";
 import { dateOf } from "./tables.js";
 
 const VERB = /^\s*(?:please\s+|can you\s+|could you\s+)?(book|reserve|renew|register(?:\s+for)?|apply\s+for|sign\s+up\s+for|buy|get\s+me|pay)\s+(.+)$/i;
@@ -38,6 +39,10 @@ export function readWebTask(text, now = Date.now()) {
   const t = String(text || "").trim(); if (!t || t.length > 300 || /[?؟]\s*$/.test(t)) return null;
   const m = VERB.exec(t) || VERB_AR.exec(t); if (!m) return null;
   if (NOT_MINE.test(t)) return null;
+  if (BARE_BUY.test(t)) return null;   // v9.9.15 C1: "buy milk" is a to-do ("buy tickets for …", "buy … online" stay web tasks)
+  // v9.9.15 C2 (Ali picked it): "pay the electricity bill 320 on Friday" — an amount and a day — is a payment to remember (People &
+  // plans asks "did you pay?" on the day), not something to do on a website now
+  if (/^\s*(?:please\s+)?pay\b|^\s*(?:ادفع|سدد)/i.test(t) && /[\d٠-٩]{2,}/.test(t) && /\b(?:on|by|before|next|tomorrow|sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|يوم|بكره|بكرة|الاسبوع|الشهر/i.test(t)) return null;
   const verb = m[1].toLowerCase().replace(/\s+/g, " ");
   let rest = m[2].replace(/\b(?:for me|on the web|online|on the website|please)\b|اونلاين|أونلاين|من النت|على النت/gi, " ");
   const date = dateOf(rest, now), time = timeOf(rest), people = peopleOf(rest), near = /\bnear (?:me|here)\b|\bnearby\b|قريب مني|جنبي|قريب/i.test(rest);

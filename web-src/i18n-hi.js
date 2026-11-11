@@ -11881,4 +11881,8 @@ export const HI = {
   "Documents & memory": "दस्तावेज़ और याददाश्त",
   "Every place is one page.": "हर जगह एक ही पेज है।",
   "Money · Transport": "पैसे · यातायात",
+  "track my books: title, author, due date": "मेरी किताबें ट्रैक करो: नाम, लेखक, लौटाने की तारीख",
+  "Write it like: “{x}”": "इसे ऐसे लिखें: “{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "एक वाक्य में कुछ भी ट्रैक करें — आपकी किताबें, क्लाइंट, कोर्स। तारीखें एक दिन पहले याद दिलाती हैं।",
+  "Say or type it — “the maid is now 700”": "बोलें या लिखें — “कामवाली अब 700 लेती है”",
 };

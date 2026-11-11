@@ -11880,4 +11880,8 @@ export const JA = {
   "Documents & memory": "書類と記憶",
   "Every place is one page.": "それぞれの場所は1ページです。",
   "Money · Transport": "お金 · 交通",
+  "track my books: title, author, due date": "本を管理: タイトル、著者、返却日",
+  "Write it like: “{x}”": "このように書いてください：「{x}」",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "一文で何でも管理 — 本、顧客、講座。日付は前日にお知らせします。",
+  "Say or type it — “the maid is now 700”": "話すか入力 —「家政婦は今700」",
 };

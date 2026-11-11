@@ -15,6 +15,7 @@ const NL = await import("../../web-src/notelabels.js");
 const B = await import("../../web-src/billing.js");
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
 const now = Date.parse("2026-11-10T12:00:00"), U = (s) => understand(s, { now, stores: {} }), kinds = (s) => (U(s).actions || []).map((a) => a.kind).join(",");
+const PA = (s) => parseAgent(s, { now, country: "EG", usual: {}, prefs: {} });
 const tr = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v || {})[k]);
 
 // 1 · the Follow-ups crash ("Cannot read properties of null (reading '1')"): a People card whose role is not one of the known ones
@@ -41,7 +42,22 @@ ok(looksLikeAction("set an alarm for 6 am") && looksLikeAction("wake me at 7") &
 // never money: a time, a count, a code, a request, a search
 for (const s of ["reminder to book the dentist in 20 minutes", "the code is 4821", "we are 4 people", "give me 5 ideas for a birthday gift", "watch the price of iphone 16", "page 120 of the book is missing", "I ran 5 km this morning", "he is 25 years old", "عمري 21 سنة", "الدور 5 شقة 12"])
   ok(!kinds(s).includes("money"), "«" + s + "» is not money: " + (kinds(s) || "chat"));
-ok(kinds("I will pay Ahmed 4500 next week") === "money" && doSure("I will pay Ahmed 4500 next week", { now }) === false, "“I will pay Ahmed 4500 next week” is asked first (not paid yet), never saved silently");
+// C3 / C2 (Ali's picks, 11 Nov): a payment for a later day is a one-time payment due that day — asked about on the day, never an expense now
+{ const a = (U("I will pay Ahmed 4500 next week").actions || [])[0] || {}, c = a.c || {};
+  ok(a.kind === "life" && c.kind === "bill" && c.dir === "out" && c.amount === 4500 && c.count === 1 && c.title === "Pay Ahmed" && c.start > "2026-11-10", "“I will pay Ahmed 4500 next week” → a payment due next week (Pay Ahmed · 4,500): " + JSON.stringify([a.kind, c.kind, c.title, c.start]));
+  const b = ((U("pay the electricity bill 320 on Friday").actions || [])[0] || {}).c || {};
+  ok(b.kind === "bill" && b.amount === 320 && b.start === "2026-11-13" && /^Electricity bill$/i.test(b.title), "“pay the electricity bill 320 on Friday” → Electricity bill · 320 · due Friday: " + JSON.stringify([b.kind, b.title, b.start]));
+  const d = ((U("I should pay 1500 for the course by Sunday").actions || [])[0] || {}).c || {};
+  ok(d.kind === "bill" && d.amount === 1500 && d.title === "Course" && d.start === "2026-11-15", "“I should pay 1500 for the course by Sunday” → Course · 1,500 · Sunday");
+  ok(kinds("paid the electricity bill 320") === "money" && kinds("I owe Ahmed 4500, I will pay next week") === "life", "paid already stays money; a debt stays a debt"); }
+{ const WT = await import("../../web-src/webtask.js");
+  ok(!WT.readWebTask("pay the electricity bill 320 on Friday", now) && !!WT.readWebTask("renew my car licence", now) && !!WT.readWebTask("buy tickets for the concert on Friday", now), "the web task keeps “renew my car licence” and tickets, not a bill with an amount and a day");
+  // C1: "buy milk" is a to-do
+  ok(!WT.readWebTask("buy milk", now) && PA("buy milk") == null && PA("اشتري لبن") == null && (PA("buy me milk") || {}).kind === "buy" && (PA("buy a PS5 under 20000") || {}).kind === "buy", "“buy milk” is not an agent or a web task; “buy me …” and “buy … under …” are");
+  ok(K.guess("buy milk")[0].kind === "todoAdd" && K.todoText("buy milk") === "buy milk" && K.guess("اشتري لبن")[0].kind === "todoAdd", "…it is a to-do: “buy milk”"); }
+// U2: dates in words
+{ const D = await import("../../web-src/doit.js"); const u = U("my passport expires on 3 March 2027"); const r = D.apply(u.actions[0], {}, { now });
+  ok(/3 Mar 2027/.test(r.done.en) && !/2027-03-03/.test(r.done.en + r.done.ar) && /مارس/.test(r.done.ar), "a date reads “3 Mar 2027”, not 2027-03-03: " + r.done.en); }
 // still money
 for (const [s, a] of [["320 dinner", 320], ["7500 غدا", 7500], ["breakfast 300 cash", 300], ["spent 250 on lunch", 250], ["غدا 150", 150], ["paid 300 for 3 nights at the hotel", 300], ["lunch was 150", 150], ["taxi 85", 85]]) {
   const m = (U(s).actions || []).find((x) => x.kind === "money"); ok(m && m.items.some((x) => x.amount === a), "«" + s + "» → money " + a + ": " + JSON.stringify(m && m.items.map((x) => x.amount))); }
@@ -53,7 +69,6 @@ for (const s of ["how much did I spend this week?", "who owes me money?", "what 
 for (const [s, v] of [["250 - 7", 243], ["what is 2400 times 4?", 9600], ["12 plus 30", 42], ["100 divided by 4", 25], ["50 minus 8", 42]]) ok(looksLikeCalc(s) && calculate(s).value === v, "«" + s + "» = " + v);
 ok(!looksLikeCalc("10-12 days") && !looksLikeCalc("12-11-2026"), "a range and a date are not sums");
 // agents
-const PA = (s) => parseAgent(s, { now, country: "EG", usual: {}, prefs: {} });
 ok(PA("اشتري عربية ولا احوش؟") == null && PA("احسن موبايل تحت 20000 ايه؟") == null, "a choice / “best …?” question is not an agent");
 ok((PA("اشتريت هدوم ب 650") || {}).kind !== "buy" && (PA("اشتريلي iPhone 16 بأقل من 45000") || {}).kind === "buy", "«اشتريت» (I bought) is not «اشتريلي» (buy for me)");
 { const w = PA("watch the price of a PS5") || {}; ok(w.kind === "watch" && /At what price/.test(w.ask || "") && withAnswer("watch the price of a PS5", w.ask, "20000") === "tell me when a PS5 is under 20000" && (PA("tell me when a PS5 is under 20000") || {}).below === 20000, "“watch the price of a PS5” asks for the price, and the answer makes the watch"); }

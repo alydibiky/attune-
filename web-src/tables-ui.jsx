@@ -23,14 +23,14 @@ export function TablesPage({ flash }) {
   const [say, setSay] = useState(""), [err, setErr] = useState("");
   useEffect(() => { const f = () => setSt(T.loadTables()); window.addEventListener("attune-tables", f); return () => window.removeEventListener("attune-tables", f); }, []);
   const put = (s, tid) => { T.saveTables(s); setSt(s); const t = s.tables.find((x) => x.id === tid); if (t) syncTableReminders(t); };
-  const create = () => { const p = T.parseTrack(say); if (!p) { setErr(tr("Write it like: “track my cranes: name, tonnage, next inspection”")); return; }
+  const create = () => { const p = T.parseTrack(say); if (!p) { setErr(tr("Write it like: “{x}”", { x: tr("track my books: title, author, due date") })); return; }
     const t = T.makeTable(p); put({ ...st, tables: [t, ...st.tables] }, t.id); setSay(""); setErr(""); setOpen(t.id); };
   const t = st.tables.find((x) => x.id === open);
   if (t) return <TableView t={t} back={() => setOpen("")} put={(s) => put(s, t.id)} st={st} flash={flash} />;
   return <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="tables-page">
-    <U.Head title={tr("Tables")} sub={tr("Track anything in one sentence — your cranes, clients, courses. Dates remind you the day before.")} />
+    <U.Head title={tr("Tables")} sub={tr("Track anything in one sentence — your books, clients, courses. Dates remind you the day before.")} />
     <form onSubmit={(e) => { e.preventDefault(); if (say.trim()) create(); }} className={U.card + " p-2 flex gap-2"}>
-      <input value={say} onChange={(e) => setSay(e.target.value)} dir="auto" placeholder={tr("track my cranes: name, tonnage, next inspection")} className="flex-1 min-w-0 bg-transparent px-2.5 text-[15px] focus:outline-none" data-testid="tables-new" />
+      <input value={say} onChange={(e) => setSay(e.target.value)} dir="auto" placeholder={tr("track my books: title, author, due date")} className="flex-1 min-w-0 bg-transparent px-2.5 text-[15px] focus:outline-none" data-testid="tables-new" />
       <button type="submit" disabled={!say.trim()} className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[13.5px] disabled:opacity-40" data-testid="tables-new-go">{tr("Make it")}</button>
     </form>
     {err ? <p className="m-0 text-[12.5px] text-[var(--c-warn)]" data-testid="tables-err">{err}</p> : null}

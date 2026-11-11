@@ -11880,4 +11880,8 @@ export const TH = {
   "Documents & memory": "เอกสารและความจำ",
   "Every place is one page.": "แต่ละที่คือหนึ่งหน้า",
   "Money · Transport": "การเงิน · การเดินทาง",
+  "track my books: title, author, due date": "ติดตามหนังสือของฉัน: ชื่อ, ผู้เขียน, วันคืน",
+  "Write it like: “{x}”": "เขียนแบบนี้: “{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "ติดตามอะไรก็ได้ด้วยประโยคเดียว — หนังสือ ลูกค้า คอร์สของคุณ วันที่จะเตือนคุณล่วงหน้าหนึ่งวัน",
+  "Say or type it — “the maid is now 700”": "พูดหรือพิมพ์ — “แม่บ้านตอนนี้ 700”",
 };

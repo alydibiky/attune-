@@ -11881,4 +11881,8 @@ export const IT = {
   "Documents & memory": "Documenti e memoria",
   "Every place is one page.": "Ogni luogo è una sola pagina.",
   "Money · Transport": "Soldi · Trasporti",
+  "track my books: title, author, due date": "segui i miei libri: titolo, autore, data di restituzione",
+  "Write it like: “{x}”": "Scrivilo così: “{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Tieni traccia di qualsiasi cosa con una frase — libri, clienti, corsi. Le date ti avvisano il giorno prima.",
+  "Say or type it — “the maid is now 700”": "Dillo o scrivilo — “la colf ora prende 700”",
 };

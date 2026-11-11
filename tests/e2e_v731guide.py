@@ -117,7 +117,7 @@ with sync_playwright() as p:
     check("إزاي تستخدم" in page.locator("[data-testid=guide-page] h2").inner_text(), "the title in Arabic")
     page.click("[data-testid=guide-area-health]"); page.wait_for_timeout(200)
     ap = page.inner_text("[data-testid=guide-area-panel]")
-    check("الصحة" in ap, "a life area in Egyptian Arabic")   # v9.1: Fit & Food (the plate photo) is archived
+    check("صحة" in ap, "a life area in Egyptian Arabic")   # v9.1: Fit & Food (the plate photo) is archived
     page.click("[data-testid=guide-area-back]"); page.click("[data-testid=guide-see-all]"); page.wait_for_timeout(200)
     # (v9.1: the Fit & Food sample screen in Arabic is archived with Fit — archive/fit/tests/mixed/e2e_v731guide.py)
     check("إزاي تستفيد من Attune لآخر حاجة" in page.locator("[data-testid=guide-page]").text_content(), "the plan's title in Arabic")

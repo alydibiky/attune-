@@ -11880,4 +11880,8 @@ export const ZH = {
   "Documents & memory": "文档与记忆",
   "Every place is one page.": "每个位置都是一个页面。",
   "Money · Transport": "财务 · 交通",
+  "track my books: title, author, due date": "记录我的书：书名、作者、归还日期",
+  "Write it like: “{x}”": "请这样写：“{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "一句话记录任何东西——你的书、客户、课程。日期会提前一天提醒你。",
+  "Say or type it — “the maid is now 700”": "说出或输入——“保姆现在是700”",
 };

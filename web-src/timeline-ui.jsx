@@ -206,7 +206,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
               {x.amount ? <b className={"tabular-nums text-[13px] shrink-0 " + tone(x)} dir="ltr">{money(x)}</b> : null}</button></li>; })}
         </ul> : null}
       </section> : null}
-      {doIt ? <U.PageBox value={say} setValue={setSay} onSend={(t) => say2(t)} hint={tr("Say it or type — add or change anything: “the maid is now taking 700”")} sendLabel={tr("Send")}
+      {doIt ? <U.PageBox value={say} setValue={setSay} onSend={(t) => say2(t)} hint={tr("Say or type it — “the maid is now 700”")} sendLabel={tr("Send")}
         ids={{ box: "fu-add-form", input: "fu-add", go: "fu-add-go" }} /> : null}
       {navTo ? <div className={"flex flex-wrap items-center gap-1.5 text-[12.5px] pt-1 " + U.muted} data-testid="fu-pages">
         <span>{tr("Manage:")}</span>

@@ -36,6 +36,19 @@ R1–R9 (three months after launch), I1–I7 (new ideas). **Build nothing from i
   «هيخلص» (deadlines.js), choice questions and «اشتريت» are not agents, "watch the price of X" asks for the price (agents.js), and
   **Chat makes agents like Home** (chat.jsx `agentK` + attune.jsx `agentKind`; «اشتريلي … بأقل من …» showed "Payment found: +45000").
   tests/unit/v9915scenarios.test.mjs keeps 2,500 sentences above 94%.
+- **Ali's picks on the review page (11 Nov):** U1 U2 U3 U5 U7 · C1 C2 C3 (+ "on the day ask if I paid; if yes → Money after asking which
+  balance and which category") · M1 M4 · **N2 "Attune: Planner, Money & AI"** · R1 R4 R5 R7 R8 · I1 I2 I3 I5 I6 · and "the app must be
+  global — each country gets its dedicated things like Egypt". He asked what U6 and M1 mean and whether Play = everywhere (M3).
+  - **Built (no look change):** U2 dates in words (life-ui `longDay`, doit.js `dayWords`), U5 neutral Tables examples (books, not cranes),
+    U7 shorter hints, C1 "buy milk" / «اشتري لبن» = a to-do (commands.js `BARE_BUY`; agents.js `bareBuy`; webtask.js), C2 "pay the
+    electricity bill 320 on Friday" and C3 "I will pay Ahmed 4500 next week" = a one-time payment due that day (life.js: kind "bill",
+    count 1, `planned`; chatLifeIntent lets a bill due on a LATER day through; Follow-ups already asks "Did you pay?").
+  - **Waiting for his OK — combined mock-up https://claude.ai/artifact/8SwygRB1JbYRAgnfgiRpG6**: OK1 top bar (☰/‹ + name, no second
+    heading), OK2 flat sidebar without "Work" and group headings, OK3 pay-later flow (Did you pay? → which balance → which category →
+    Money; K1/K2 category guess, B1, Q1/Q2 the hour), U6 Travel sizes, M1 Free = by hand / Pro = by itself (a Free/Pro mock-up comes
+    before any change), G1–G6 the country plan (country-pack card + "teach Attune my bank's messages", Saudi + UAE first, testers).
+    **Build none of these before his OK.**
+  - Not started (after launch, his picks): R1 R4 R5 R7 R8, I1 I2 I3 I5 I6, M4 — each needs its own mock-ups first.
 - **Not done (known)**: Franco "dawa b 2000 geneh" goes to the AI; "1 items"; dates shown as 2026-12-01 in People & plans; the open
   UI points on the review page. `tools/i18n/add_lines.py lines.json` adds new lines to all 20 dictionaries at once.
 

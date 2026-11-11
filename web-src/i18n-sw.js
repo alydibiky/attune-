@@ -11881,4 +11881,8 @@ export const SW = {
   "Documents & memory": "Hati na kumbukumbu",
   "Every place is one page.": "Kila mahali ni ukurasa mmoja.",
   "Money · Transport": "Pesa · Usafiri",
+  "track my books: title, author, due date": "fuatilia vitabu vyangu: jina, mwandishi, tarehe ya kurudisha",
+  "Write it like: “{x}”": "Iandike hivi: “{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Fuatilia chochote kwa sentensi moja — vitabu, wateja, kozi zako. Tarehe hukukumbusha siku moja kabla.",
+  "Say or type it — “the maid is now 700”": "Sema au andika — “msaidizi sasa ni 700”",
 };

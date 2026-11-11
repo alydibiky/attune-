@@ -1157,8 +1157,8 @@ shelf-ui.jsx: <option value="manual">{tr("My order")}</option><option value="nam
 skills-ui.jsx: <label className="block"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Name")}</span><input className={field
 
 ## Tables
-lists-ui.jsx: <b className="flex-1 text-[14px]">{tr("Tables")}</b><span className="text-[12.5px] c-sub">{tr("“track my cranes: name, tonnage, next inspect
-tables-ui.jsx: <U.Head title={tr("Tables")} sub={tr("Track anything in one sentence — your cranes, clients, courses. Dates remind you the day before.")} />
+lists-ui.jsx: <b className="flex-1 text-[14px]">{tr("Tables")}</b><span className="text-[12.5px] c-sub">{"“" + tr("track my books: title, author, due date
+tables-ui.jsx: <U.Head title={tr("Tables")} sub={tr("Track anything in one sentence — your books, clients, courses. Dates remind you the day before.")} />
 tables-ui.jsx: <button onClick={back} className="inline-flex items-center gap-1 min-h-[40px] text-[13px] font-bold c-sub"><ArrowLeft size={15} className="r
 
 ## Screenshot

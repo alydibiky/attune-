@@ -245,6 +245,25 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
   if (!amts.length) return null;
   const count = countOf(t), every = everyOf(t), start = startOf(t, now), person = personOf(raw, fold(raw));
   const base = { person, currency: cur, start, every, paid: [], title: "" };
+  // v9.9.15 C3 (Ali picked it, 11 Nov: "I will pay Ahmed 4500 next week" — "it should ask me on the day if I paid, and if I did it goes
+  // to Money after asking which balance and which category"): something I WILL pay, once, on a day → a one-time payment due that day
+  // (kind "bill": Follow-ups asks "did you pay?" on the day; "who pays it / from which balance" as for every payment)
+  { const FP = /\b(?:i(?:'ll| will| should| need to| have to| must| am going to| want to)|gonna|need to|have to)\s+pay\b|(?<![ء-ي])(?:هدفع|هسدد)(?![ء-ي])|(?:لازم|عايز|عاوز|محتاج|ناوي)\s+(?:ادفع|اسدد)/i;
+    if (FP.test(raw) && !count && !every && amts.length === 1 && !/\b(?:owe|owes|borrow|lent|installments?|instalments?)\b|قسط|اقساط|استلف|سلف/i.test(raw)) {
+      const isAr = /[ء-ي]/.test(raw);
+      let st = start;
+      if (!st) { const d = new Date(now); d.setHours(12, 0, 0, 0);
+        const W = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "حد": 0, "احد": 0, "اتنين": 1, "اثنين": 1, "تلات": 2, "ثلاثاء": 2, "اربع": 3, "اربعاء": 3, "خميس": 4, "جمعه": 5, "سبت": 6 };
+        const wd = /\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/i.exec(raw) || /(?:^|\s)(?:يوم\s+)?(?:ال)?(احد|حد|اتنين|اثنين|تلات|ثلاثاء|اربعاء|اربع|خميس|جمعه|سبت)(?=$|\s)/.exec(t);
+        if (/\bnext week\b|الاسبوع الجاي|الاسبوع اللي جاي|الاسبوع القادم/i.test(t)) { d.setDate(d.getDate() + 7); st = iso(d); }
+        else if (/\btomorrow\b|بكره|بكرة/i.test(t)) { d.setDate(d.getDate() + 1); st = iso(d); }
+        else if (/\bnext month\b|الشهر الجاي|الشهر اللي جاي/i.test(t)) { d.setMonth(d.getMonth() + 1); st = iso(d); }
+        else if (wd) { const k = (wd[1] || "").toLowerCase(); d.setDate(d.getDate() + (((W[k] - d.getDay() + 7) % 7) || 7)); st = iso(d); } }
+      if (st) {
+        const thing = (/\bfor\s+(?:the\s+|my\s+|a\s+)?([a-z][a-z' -]{1,28}?)(?=\s+(?:by|on|next|before|this|tomorrow|in)\b|\s*[.!]?$)/i.exec(raw) || [])[1] || "";
+        const title = person ? (isAr ? "دفع ل" + person : "Pay " + person) : thing ? thing[0].toUpperCase() + thing.slice(1) : isAr ? "دفعة" : "Payment";
+        return { ...base, start: st, kind: "bill", dir: "out", amount: amts[0], count: 1, total: amts[0], every: null, title, planned: true };
+      } } }
   // a savings circle: "جمعية 2000 في الشهر لمدة 10 شهور ودوري الرابع"
   if (CIRCLE.test(raw)) {
     const turn = (/(?:my turn|i get it|i take it|دوري|بقبض|هقبض|اقبض)[^\d٠-٩]{0,20}(\d+)/i.exec(latin(t)) || [])[1]
@@ -498,6 +517,13 @@ export function chatLifeIntent(text, opts) {
   if ((c.kind === "rent" || c.kind === "bill") && !c.start && !/\b(every|each|a month|monthly|per month|due|on the \d)|كل|شهري|شهرياً|ميعاد|يوم \d/i.test(t)) return null;
   if (c.kind === "subscription" && !c.start && !/\b(every|each|a month|monthly|per month|a year|yearly|annual|weekly|a week|renews?|subscription|membership)\b|كل|شهري|سنوي|اسبوعي|أسبوعي|بيتجدد|اشتراك/i.test(t)
     && !/\b(netflix|spotify|shahid|osn|watch it|watchit|youtube premium|apple music|icloud|google one|chatgpt|anghami|disney|amazon prime|prime video|canva|adobe|office 365|microsoft 365)\b|نتفليكس|شاهد|انغامي|أنغامي/i.test(t)) return null;
+  // v9.9.15 C2 / C3: one payment due on a LATER day ("pay the electricity bill 320 on Friday", "I should pay 1500 for the course by
+  // Sunday") is a plan too — asked about on its day; the same words about today or a past day stay money spent
+  if (c.kind === "bill" && c.count === 1 && c.start && c.start > iso(new Date((opts && opts.now) || Date.now()))) {
+    if (c.planned) return c;
+    const ti = String(c.title || "").replace(/^\s*(?:please\s+)?(?:pay|ادفع|سدد)\s+(?:the\s+|my\s+)?/i, "").trim();
+    return { ...c, title: ti ? ti[0].toUpperCase() + ti.slice(1) : c.title };
+  }
   return c.person || c.kind === "circle" || c.kind === "installment" || c.every ? c : null;
 }
 

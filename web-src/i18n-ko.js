@@ -11880,4 +11880,8 @@ export const KO = {
   "Documents & memory": "문서와 기억",
   "Every place is one page.": "각 장소는 한 페이지예요.",
   "Money · Transport": "돈 · 교통",
+  "track my books: title, author, due date": "내 책 관리: 제목, 저자, 반납일",
+  "Write it like: “{x}”": "이렇게 적어 주세요: “{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "한 문장으로 무엇이든 관리하세요 — 책, 고객, 강의. 날짜는 하루 전에 알려 드려요.",
+  "Say or type it — “the maid is now 700”": "말하거나 입력하세요 — “가사도우미 이제 700”",
 };

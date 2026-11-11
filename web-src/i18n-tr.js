@@ -11881,4 +11881,8 @@ export const TRK = {
   "Documents & memory": "Belgeler ve hafıza",
   "Every place is one page.": "Her yer tek bir sayfadır.",
   "Money · Transport": "Para · Ulaşım",
+  "track my books: title, author, due date": "kitaplarımı takip et: ad, yazar, iade tarihi",
+  "Write it like: “{x}”": "Şöyle yazın: “{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Her şeyi tek cümleyle takip edin — kitaplarınız, müşterileriniz, kurslarınız. Tarihler bir gün önce hatırlatır.",
+  "Say or type it — “the maid is now 700”": "Söyleyin veya yazın — “temizlikçi artık 700”",
 };

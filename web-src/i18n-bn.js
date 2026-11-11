@@ -11880,4 +11880,8 @@ export const BN = {
   "Documents & memory": "নথি ও স্মৃতি",
   "Every place is one page.": "প্রতিটি জায়গা একটি পৃষ্ঠা।",
   "Money · Transport": "টাকা · যাতায়াত",
+  "track my books: title, author, due date": "আমার বই ট্র্যাক করো: নাম, লেখক, ফেরতের তারিখ",
+  "Write it like: “{x}”": "এভাবে লিখুন: “{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "এক বাক্যে যেকোনো কিছু ট্র্যাক করুন — আপনার বই, ক্লায়েন্ট, কোর্স। তারিখগুলো আগের দিন মনে করিয়ে দেয়।",
+  "Say or type it — “the maid is now 700”": "বলুন বা লিখুন — “গৃহকর্মী এখন 700 নেন”",
 };

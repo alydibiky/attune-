@@ -11880,4 +11880,8 @@ export const RU = {
   "Documents & memory": "Документы и память",
   "Every place is one page.": "Каждое место — одна страница.",
   "Money · Transport": "Деньги · Транспорт",
+  "track my books: title, author, due date": "веди мои книги: название, автор, срок возврата",
+  "Write it like: “{x}”": "Напишите так: «{x}»",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Ведите что угодно одной фразой — книги, клиентов, курсы. О датах напомним за день.",
+  "Say or type it — “the maid is now 700”": "Скажите или напишите — «домработница теперь 700»",
 };

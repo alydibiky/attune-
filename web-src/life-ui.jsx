@@ -182,7 +182,7 @@ function Item({ c, onTick, onRemove, onPay, onWho, onPayer }) {
           <span className="w-6 h-6 rounded-[12px] flex items-center justify-center" style={{ background: (c.paid || []).includes(0) ? "var(--c-acc)" : "transparent", border: "1.5px solid var(--c-acc)", color: "var(--c-on-acc)" }}>{(c.paid || []).includes(0) ? <Check size={12} /> : null}</span>
           {(c.paid || []).includes(0) ? tr("Settled") : c.dir === "in" ? tr("Mark as paid back") : tr("Mark as paid")}</button>) : null}
       {ed && !open ? <PayBox c={c} ed={ed} setEd={setEd} onPay={onPay} /> : null}
-      {pr.next && show.length > 1 ? <div className={"mt-2 text-[12.5px] tabular-nums " + U.muted}>{tr("Next: {d} · {a}", { d: pr.next.date, a: fmt(pr.next.amount) })}</div> : null}
+      {pr.next && show.length > 1 ? <div className={"mt-2 text-[12.5px] tabular-nums " + U.muted}>{tr("Next: {d} · {a}", { d: longDay(pr.next.date), a: fmt(pr.next.amount) })}</div> : null}
       {pr.schedule.some((x) => x.moved || x.extra) ? <div className="mt-1 text-[12px] text-[var(--c-acc)]" data-testid="life-moved">{tr("The rest is spread again: {n} × {a}", { n: pr.schedule.filter((x) => !x.paid).length, a: fmt(pr.next ? pr.next.amount : 0) })}</div> : null}
     </div>);
 }
@@ -277,7 +277,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
         <div className="flex items-end gap-2">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="life-input"
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); read(); } } /* v9.8: one sentence — Enter reads it (the long boxes keep Enter = new line on phones) */}
-            placeholder={tr("Type it as you'd say it — “Ahmed owes me 12,000, 1,000 a month for a year”")}
+            placeholder={tr("“Ahmed owes me 500”")}
             className={U.area + " flex-1 resize-none"} />
           <button className={U.btnP} onClick={read} disabled={busy || !text.trim()} data-testid="life-read">{busy ? "…" : tr("Read")}</button>
         </div>

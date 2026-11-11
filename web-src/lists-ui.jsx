@@ -153,7 +153,7 @@ export function ListsPage({ records = [], onTickTodo, onAddTodo, flash }) {
     <U.Head title={tr("To-dos & lists")} sub={tr("What is due or not finished is on Home until you tick it.")} />
     {/* v9.9.6 N1: tables from one sentence live here too */}
     <button onClick={() => window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "tables" } }))} className={U.card + " w-full p-3 text-start flex items-center gap-2"} data-testid="lists-tables">
-      <b className="flex-1 text-[14px]">{tr("Tables")}</b><span className="text-[12.5px] c-sub">{tr("“track my cranes: name, tonnage, next inspection”")}</span></button>
+      <b className="flex-1 text-[14px]">{tr("Tables")}</b><span className="text-[12.5px] c-sub">{"“" + tr("track my books: title, author, due date") + "”"}</span></button>
     <button onClick={() => setEdit("new")} className={U.btnP + " w-full"} data-testid="lists-new"><Plus size={18} />{tr("New list")}</button>
     {/* to-dos and today's reminders */}
     <div className={U.cardPad + " space-y-1"} data-testid="lists-todos">

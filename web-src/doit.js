@@ -97,6 +97,8 @@ function numLost(t) {
   return items.length > 0 && !items.some((x) => Math.abs((x.grams || 0) - n) < 1);
 }
 // (persona 2: the Arabic message said «احمد · debt»)
+// v9.9.15 U2 (Ali picked it): a date reads "3 Mar 2027" / «3 مارس 2027», never 2027-03-03
+const dayWords = (isoDate, loc) => { try { const d = new Date(String(isoDate) + "T12:00:00"); return isNaN(d) ? String(isoDate) : d.toLocaleDateString(loc, { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return String(isoDate); } };
 const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتراك", circle: "جمعية", savings: "تحويش", regular: "كل فترة", bill: "فاتورة" };
 const GENERAL_Q = /^\s*(?:how (?:do|does|can|could|should|would|to|long|far|tall|old|many (?!.*\b(?:i|my|me|we)\b))|should i\b|can i\b|could i\b|would it\b|is it\b|is \d|are there\b|why\b|who (?:is|was|were|won|invented|made|wrote)\b|what (?:is|are|was|were|does|do) (?:a|an|the)\b(?!.*\b(?:my|mine|our)\b)|what did (?!i\b|we\b|my\b)|which is (?:better|best|cheaper)\b)|ازاي\s*[?؟]?\s*$|إزاي\s*[?؟]?\s*$|^\s*(?:ازاي|إزاي|ليه|يعني (?:ايه|إيه))|^\s*هو\s+[\d٠-٩]|(?:كتير|غالي|كويس)\s+(?:على|علي)\s/i;
 // v9.9.15: what a number in a sentence is when it is NOT money — a time, a distance, a count, a page, a code… (doSure / strictCheck)
@@ -501,7 +503,7 @@ export function apply(a, stores, { now = Date.now() } = {}) {
     }
     case "deadline": {
       const r = addDeadline(stores.radar || { items: [], seen: [] }, { ...a.d, source: "home" }, now);
-      return { stores: r.dup ? {} : { "attune:radar:v1": r.data }, open: "radar", item: r.item, done: r.dup ? { en: `Already in Deadline Radar: ${r.item.title} (${r.item.date}).`, ar: `موجود خلاص في رادار المواعيد: ${r.item.title} (${r.item.date}).` } : { en: `Deadline Radar will remind you: ${r.item.title} — ${r.item.date}.`, ar: `رادار المواعيد هيفكرك: ${r.item.title} — ${r.item.date}.` } };
+      return { stores: r.dup ? {} : { "attune:radar:v1": r.data }, open: "radar", item: r.item, done: r.dup ? { en: `Already in Deadline Radar: ${r.item.title} (${dayWords(r.item.date, "en-GB")}).`, ar: `موجود خلاص في رادار المواعيد: ${r.item.title} (${dayWords(r.item.date, "ar-EG-u-nu-latn")}).` } : { en: `Deadline Radar will remind you: ${r.item.title} — ${dayWords(r.item.date, "en-GB")}.`, ar: `رادار المواعيد هيفكرك: ${r.item.title} — ${dayWords(r.item.date, "ar-EG-u-nu-latn")}.` } };
     }
     case "reminder": {
       const x = a.action, when = x.at ? new Date(x.at) : null;

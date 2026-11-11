@@ -1,4 +1,4 @@
-# Scenario run — 2500 sentences, 2366 right (94.6%)
+# Scenario run — 2500 sentences, 2377 right (95.1%)
 
 | group | sentences | wrong | right % |
 |---|---|---|---|
@@ -8,7 +8,6 @@
 | agent | 85 | 28 | 67.1 |
 | note | 12 | 3 | 75.0 |
 | moneyask | 20 | 4 | 80.0 |
-| mixed | 64 | 11 | 82.8 |
 | gk_ar | 19 | 3 | 84.2 |
 | spend_fr | 153 | 23 | 85.0 |
 | deadline | 12 | 1 | 91.7 |
@@ -22,6 +21,7 @@
 | typos | 34 | 0 | 100.0 |
 | income | 104 | 0 | 100.0 |
 | remind_ar | 163 | 0 | 100.0 |
+| mixed | 64 | 0 | 100.0 |
 | questions_with_amounts | 135 | 0 | 100.0 |
 | remind_en | 212 | 0 | 100.0 |
 | teach | 10 | 0 | 100.0 |
@@ -53,9 +53,6 @@
 
 ### todo
 - **→ chat** × 10: «I need to fix the printer» · «add to my todo send the invoice» · «add to my todo clean the car» · «I need to renew the domain» · «add to my todo renew the domain» · «I need to buy milk»
-
-### mixed
-- **→ agent/web** × 11: «pay the electricity bill 320 on Friday» · «pay the electricity bill 60 on Friday» · «pay the electricity bill 100 on Friday» · «pay the electricity bill 20 on Friday» · «pay the electricity bill 7500 on Friday» · «pay the electricity bill 12 on Friday»
 
 ### spend_fr
 - **→ chat** × 14: «dawa b 2000 geneh» · «rakna b 1000 geneh» · «egar b 650 geneh» · «egar b 200 geneh» · «egar b 80 geneh» · «net b 20 geneh»

@@ -11880,4 +11880,8 @@ export const VI = {
   "Documents & memory": "Tài liệu & trí nhớ",
   "Every place is one page.": "Mỗi nơi là một trang.",
   "Money · Transport": "Tiền · Đi lại",
+  "track my books: title, author, due date": "theo dõi sách của tôi: tên, tác giả, ngày trả",
+  "Write it like: “{x}”": "Hãy viết như sau: “{x}”",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "Theo dõi bất cứ thứ gì bằng một câu — sách, khách hàng, khóa học của bạn. Ngày tháng sẽ nhắc bạn trước một ngày.",
+  "Say or type it — “the maid is now 700”": "Nói hoặc gõ — “người giúp việc giờ là 700”",
 };

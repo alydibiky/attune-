@@ -199,7 +199,10 @@ export function parseAgent(text, opts = {}) {
   // for confirmation"): "buy me AirPods Pro 2 under 9,000", "order an iPhone 16 128GB from Amazon when it's under 40k",
   // «اشتريلي سماعة ايربودز برو 2 بأقل من 9000» → a BUY agent: it searches the stores, picks the closest real match (not a case or
   // a cable), asks the person, and only after "Order it" opens the product, presses Buy now and fills the details — the person pays
-  const bm = BUY_W.exec(t0);
+  // v9.9.15 C1 (Ali picked it): "buy milk" on its own — no "me / for me", no price, no shop — is a to-do for the person, not an
+  // order for an agent ("buy me …", «اشتريلي …», "buy … under 9,000", "buy … from Amazon" stay the agent's)
+  const bareBuy = (/^\s*(?:please\s+)?(?:buy|purchase)\s+(?!me\b|for me\b)/i.test(t0) || /^\s*اشتري\s+(?!لي(?![ء-ي]))/.test(t0)) && !PRICE_WORD.test(t) && !app;
+  const bm = bareBuy ? null : BUY_W.exec(t0);
   if (bm && !USUAL.test(t) && !/:\s*\S/.test(t0) && !(app && ["food", "ride", "travel"].includes(app.kind)) && !/\b(hotels?|rooms?|flights?|tickets?)\b|فندق|فنادق|طياره|طيارة|تذكره|تذكرة/iu.test(t)) {
     // a number in the product's name ("PS5", "iPhone 16", "S24") is not a price: only a number after under / less than / max is
     const lim = PRICE_WORD.test(t) ? limitIn(t0) : 0, store = app && app.kind === "shop" ? app : null;

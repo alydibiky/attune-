@@ -11872,4 +11872,8 @@ export const ARB = {
   "Documents & memory": "المستندات والذاكرة",
   "Every place is one page.": "كل مكان صفحة واحدة.",
   "Money · Transport": "المال · المواصلات",
+  "track my books: title, author, due date": "تتبّع كتبي: العنوان، المؤلف، تاريخ الإرجاع",
+  "Write it like: “{x}”": "اكتبها هكذا: «{x}»",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "تتبّع أي شيء بجملة واحدة — كتبك، عملاءك، دوراتك. والتواريخ تذكّرك قبلها بيوم.",
+  "Say or type it — “the maid is now 700”": "قلها أو اكتبها — «أصبحت أجرة العاملة 700»",
 };

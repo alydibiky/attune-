@@ -148,10 +148,13 @@ const RX = {
 export const READERS = RX;
 
 /** "add buy milk to my to-do list" → "buy milk"; «ضيف اشتري لبن للمهام» → «اشتري لبن». */
+// v9.9.15 C1: "buy milk", «اشتري لبن» — a few words, no "me", no price, no shop: something to do
+export const BARE_BUY = /^\s*(?:please\s+)?(?:buy|purchase|pick up)\s+(?!me\b|for me\b)(?!.*\b(?:under|below|less than|from|on amazon|on noon|tickets?|online)\b)(?:\S+\s*){1,6}[.!]?$|^\s*اشتري\s+(?!لي(?![ء-ي]))(?!.*(?:اقل من|أقل من|تحت|من امازون|من نون|تذاكر|تذكره|تذكرة|اونلاين))(?:\S+\s*){1,6}$/i;
 export function todoText(text) {
   let t = String(text || "").trim();
   let m = t.match(/^\s*(?:to-?do|todo|مهمه|مهمة|تودو)\s*[:\-]\s*(.+)$/i); if (m) return m[1].trim();
   m = t.match(/^\s*(?:please\s+)?(?:add|put|write)\s+(.+?)\s+(?:to|on|in)\s+(?:my\s+|the\s+)?(?:to-?do|todo|tasks?)(?:\s+list)?\s*[.!]?$/i); if (m) return m[1].replace(/^["“«]|["”»]$/g, "").trim();
+  if (BARE_BUY.test(t)) return t.replace(/^\s*please\s+/i, "").replace(/[.!]+$/, "").trim();   // v9.9.15 C1: "buy milk" → the to-do "buy milk"
   m = t.match(/^\s*(?:ضيف|حط|اكتب|زود)\s+(.+?)\s+(?:في |على |علي )?(?:للمهام|للتودو|لليستة|لليسته|المهام|التودو|التو دو|ليستة المهام|ليسته المهام|قايمة المهام|قايمه المهام|قائمة المهام|الليستة|الليسته)\s*[.!]?$/); if (m) return m[1].replace(/^["“«]|["”»]$/g, "").trim();
   return "";
 }
@@ -187,7 +190,7 @@ export function guess(text, ctx = {}) {
   // is an alert, not a Scout search or a reminder — and Home's "do it" reader checks the sharp ones first anyway
   const sharp = !!(ctx.metro || ctx.automation || ctx.watch || ctx.mission);
   if (ctx.goal) add("scout", sharp ? 0.6 : 0.9);
-  if (T(RX.todoAdd) && todoText(t)) add("todoAdd", 0.93);
+  if ((T(RX.todoAdd) || (BARE_BUY.test(t) && !/[\d٠-٩]{2,}/.test(t))) && todoText(t)) add("todoAdd", 0.93);
   else if (T(RX.todoList)) add("todoList", 0.92);
   const mine = /\b(my|our)\b|بتاعي|بتاعتي|بتاعنا/i.test(t);
   const thing = (ctx.things || []).some((n) => n && f.includes(fold(n)));

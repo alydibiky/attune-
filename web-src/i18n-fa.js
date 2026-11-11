@@ -11880,4 +11880,8 @@ export const FA = {
   "Documents & memory": "سندها و حافظه",
   "Every place is one page.": "هر جا یک صفحه است.",
   "Money · Transport": "پول · حمل‌ونقل",
+  "track my books: title, author, due date": "کتاب‌هایم را پیگیری کن: عنوان، نویسنده، تاریخ بازگرداندن",
+  "Write it like: “{x}”": "این‌طور بنویسید: «{x}»",
+  "Track anything in one sentence — your books, clients, courses. Dates remind you the day before.": "هر چیزی را با یک جمله پیگیری کنید — کتاب‌ها، مشتری‌ها، دوره‌هایتان. تاریخ‌ها یک روز قبل یادآوری می‌شوند.",
+  "Say or type it — “the maid is now 700”": "بگویید یا بنویسید — «خدمتکار حالا ۷۰۰ می‌گیرد»",
 };
