@@ -7,6 +7,8 @@
 import { labelOf, notMoney, countsAsMoney } from "./notelabels.js";   // v9.9.11 what the person taught
 import { loadTeach } from "./noteteach.js";
 import { parsePayment } from "./yusr/paytext.js";
+import { payOpts } from "./locale.js";
+import { WORLD_MONEY_SRC } from "./countrypack.js";   // v9.9.16 every bank / wallet of the 30 countries
 import { catOf } from "./yusr/logtext.js";
 import { merchantOf } from "./guardian.js";   // v7.9 the shop a payment was made to (alreadyIn)
 
@@ -32,7 +34,7 @@ export function categorise(text, direction) {
 
 // v6.27: one-time codes, balance-only messages and adverts in the world's common languages
 const OTP = /\b(otp|one[- ]time|verification code|security code|passcode|pin|2fa)\b|رمز التحقق|كود التفعيل|كلمة المرور لمرة|رمز التفعيل|(?<![\p{L}])(code de (?:vérification|sécurité|confirmation)|código de (?:verificación|seguridad|verificação|confirmação)|bestätigungscode|sicherheitscode|tan\b|doğrulama kodu|şifre|kode (?:otp|verifikasi)|codice (?:di verifica|otp)|verificatiecode|код подтверждения|验证码|인증번호|認証コード)/iu;
-const BALANCE_ONLY = /^(?=.*(?<![\p{L}])(balance|available|solde|saldo|kontostand|bakiye|остаток|余额|잔액|رصيدك|الرصيد)(?![\p{L}]))(?!.*(?<![\p{L}])(debited|credited|charged|purchase|paid|received|transfer|withdraw|deposit|spent|débité|crédité|paiement|cargo|abono|compra|pago|pagamento|zahlung|gutschrift|harcama|ödeme|pembayaran|списан|зачислен|خصم|إيداع|ايداع|تحويل|سحب|شراء|استلام|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|تم دفع|total)(?![\p{L}]))/iu;   // v9.0: «استلمت 300 ج.م … رصيدك» is money received, not a balance
+const BALANCE_ONLY = /^(?=.*(?<![\p{L}])(balance|available|solde|saldo|kontostand|bakiye|остаток|余额|잔액|رصيدك|الرصيد)(?![\p{L}]))(?!.*(?<![\p{L}])(debited|credited|charged|purchase|paid|received|transfer|withdraw|deposit|spent|débité|crédité|paiement|cargo|abono|compra|pago|pagamento|zahlung|gutschrift|harcama|ödeme|pembayaran|списан|зачислен|خصم|إيداع|ايداع|تحويل|سحب|شراء|استلام|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|تم دفع|total|virement|re[cç]u|achat|havale|eft|gelmi[sş]tir|al[ıi][sş]veri[sş]|didebet|debet|menerima|pembelian|kartenzahlung|erhalten|überweisung|accredito|addebito|bonifico|pagou|recebeu|pix|recibiste|recibido|transferencia|debit|credit|dr|cr|amt|betaald|ontvangen|حوالة|حواله)(?![\p{L}]))/iu;   // v9.0: «استلمت 300 ج.م … رصيدك» is money received, not a balance
 const PROMO = /\b(offer|discount|win|cashback offer|promo|sale|% off|deal of the day|coupon)\b|عرض|خصم \d+%|اربح|كاش باك|(?<![\p{L}])(offre|promotion|soldes|oferta|descuento|promoción|promoção|desconto|angebot|rabatt|gutschein|kampanya|indirim|fırsat|diskon|promo|sconto|offerta|aanbieding|korting|скидка|акция|优惠|할인|セール)(?![\p{L}])/iu;
 
 // v6.27: a charge that has NOT happened yet (a trial ending, a renewal, an upcoming bill) is the Deadline Radar's, not a payment
@@ -55,8 +57,14 @@ export function readNotification(n, opts) {
   if (isChatApp(n) && !countsAsMoney(lab)) return null;
   const text = [n.title, n.text].filter(Boolean).join(" — ").trim();
   if (!text || OTP.test(text) || BALANCE_ONLY.test(text) || FUTURE.test(text) || (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text))) return null;
-  const p = parsePayment(text, { ...(opts || {}), now: n.ts || undefined });
-  if (!p || !p.ok || !(p.amount > 0) || !p.direction || p.confidence === "low") return null;
+  // v9.9.16: the person's own currency decides what "$", "Rs", «دينار», «ريال» mean (a Canadian's $ is CAD, a Jordanian's دينار JOD)
+  let home = {}; try { home = payOpts() || {}; } catch (e) {}
+  const p = parsePayment(text, { ...home, ...(opts || {}), now: n.ts || undefined });
+  // a bank / wallet that names no currency ("A/C X1234 debited by 450.0") speaks in the person's own — kept when the sender is a
+  // money source; from anyone else a message with no currency is still too little to go on
+  const known = MONEY_SRC.test(String(n.app || "") + " " + String(n.title || ""));
+  if (!p || !p.ok || !(p.amount > 0) || !p.direction || (p.confidence === "low" && !(known && !p.currency && home.home))) return null;
+  if (!p.currency && home.home) p.currency = home.home;
   // full / from: the complete message as it arrived and who sent it — kept with the payment as its evidence (Ali, 25 Oct)
   return { id: n.id, app: n.app || n.pkg || "", amount: p.amount, currency: p.currency || "", direction: p.direction, party: p.party || "",
     ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), full: String(n.text || "").slice(0, 2000), from: String(n.title || "").slice(0, 200), confidence: p.confidence,
@@ -107,7 +115,8 @@ export function alreadyIn(entry, ledger) {
      3. it says the money MOVED (debited / credited / تم خصم / تم تحويل / استلمت …) — not "300 for the night guard";
      4. when a model is loaded: the model read the message and agrees (a real payment of THIS person, same amount and direction).
    Anything else waits in Money for one tap ("Is this yours?") — never added on a guess. */
-const MONEY_SRC = /bank|banque|banco|\bcib\b|commercial international|\bnbe\b|al ?ahly|الأهلي|الاهلي|banque misr|بنك مصر|\bqnb\b|hsbc|\baaib\b|\badib\b|alex ?bank|faisal|emirates ?nbd|mashreq|\bfab\b|\bcae\b|credit agricole|\bsaib\b|\bnbk\b|\bbdc\b|instapay|انستاباي|\bipn\b|wallet|محفظ|vodafone ?cash|vf-?cash|فودافون كاش|orange ?(cash|money)|etisalat ?cash|e& ?cash|we ?pay|fawry|فوري|valu|meeza|ميزة|paymob|telda|khazna|sympl|souhoola|halan|contact|aman|masary|bee\b|paypal|revolut|wise|payoneer|stripe|apple ?pay|google ?(pay|wallet)|samsung ?(pay|wallet)|visa|mastercard|amex|stc ?pay|urpay|mada|benefit|gpay|phonepe|paytm|upi|\bpix\b|nubank|mercado ?pago|m-?pesa|chase|wells ?fargo|citi|barclays|lloyds|santander|monzo|starling|n26|ing\b|bnp|soci[eé]t[eé] g[eé]n[eé]rale|deutsche ?bank|sparkasse|garanti|akbank|i[sş] ?bankas[iı]|ziraat|yap[iı] ?kredi|sberbank|tinkoff|alfa-?bank|icici|hdfc|\bsbi\b|axis|kotak|bca\b|mandiri|\bbri\b|maybank|cimb|dbs|ocbc|kasikorn|scb\b/i;
+const MONEY_SRC0 = /bank|banque|banco|\bcib\b|commercial international|\bnbe\b|al ?ahly|الأهلي|الاهلي|banque misr|بنك مصر|\bqnb\b|hsbc|\baaib\b|\badib\b|alex ?bank|faisal|emirates ?nbd|mashreq|\bfab\b|\bcae\b|credit agricole|\bsaib\b|\bnbk\b|\bbdc\b|instapay|انستاباي|\bipn\b|wallet|محفظ|vodafone ?cash|vf-?cash|فودافون كاش|orange ?(cash|money)|etisalat ?cash|e& ?cash|we ?pay|fawry|فوري|valu|meeza|ميزة|paymob|telda|khazna|sympl|souhoola|halan|contact|aman|masary|bee\b|paypal|revolut|wise|payoneer|stripe|apple ?pay|google ?(pay|wallet)|samsung ?(pay|wallet)|visa|mastercard|amex|stc ?pay|urpay|mada|benefit|gpay|phonepe|paytm|upi|\bpix\b|nubank|mercado ?pago|m-?pesa|chase|wells ?fargo|citi|barclays|lloyds|santander|monzo|starling|n26|ing\b|bnp|soci[eé]t[eé] g[eé]n[eé]rale|deutsche ?bank|sparkasse|garanti|akbank|i[sş] ?bankas[iı]|ziraat|yap[iı] ?kredi|sberbank|tinkoff|alfa-?bank|icici|hdfc|\bsbi\b|axis|kotak|bca\b|mandiri|\bbri\b|maybank|cimb|dbs|ocbc|kasikorn|scb\b/i;
+const MONEY_SRC = { test: (x) => MONEY_SRC0.test(x) || WORLD_MONEY_SRC.test(x) };
 const SMS_APP = /messag|\bsms\b|mms|com\.android\.mms|samsung\.android\.messaging|google\.android\.apps\.messaging|رسائل/i;
 const MOVED = /\b(debited|credited|charged|purchase[d]?|paid|payment (?:of|to|from)|received|transferr?ed|transfer (?:of|to|from)|withdrawn?|withdrawal|deposit(?:ed)?|spent|refund(?:ed)?|sent you|you sent)\b|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|خصم مبلغ|إيداع مبلغ|ايداع مبلغ|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|سحبت|عملية شراء|(?<![\p{L}])(débit[ée]|crédit[ée]|paiement|achat|virement|cargo|abono|compra|pago|transferencia|pagamento|transferência|zahlung|gutschrift|überweisung|abbuchung|ödeme|harcama|havale|pembayaran|списан|зачислен|оплата|перевод)(?![\p{L}])/iu;
 /** Did this entry come from a money source? (the app, or an SMS whose sender is a bank / wallet) */

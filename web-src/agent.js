@@ -9,6 +9,7 @@
      - it NEVER pays: it stops at the payment page and hands it to the person.
    Pure logic. Tests: tests/unit/v727agent.test.mjs.                                                                      */
 import { datesIn, isoDay } from "./deadlines.js";
+import { shopLinksOf } from "./countrypack.js";
 
 const DAY = 86400000;
 const fold = (s) => String(s || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?=\s|$)/g, "ه");
@@ -322,7 +323,9 @@ export function productEnglish(what) {
 
 /** The stores to search for a product, in order (the store the person named comes first, or alone when they said "on Amazon"). */
 export function storeTries(what, country = "", store = "", max = 6) {
-  const c = String(country || "").toUpperCase(), list = STORES[c] || [S("amazon." + (AMAZON_TLD[c] || "com"), "Amazon", (q) => "https://www.amazon." + (AMAZON_TLD[c] || "com") + "/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("ebay.com", "eBay", (q) => "https://www.ebay.com/sch/i.html?_nkw=" + enc(q))];
+  // v9.9.16 ("every country like Egypt"): a country with no hand-tuned list here uses its country pack's shops (countrypack.js)
+  const c = String(country || "").toUpperCase(), packed = STORES[c] ? null : shopLinksOf(c, "\u0001").map((l) => S(l.url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0], l.site, (q) => l.url.replace("%01", enc(q)))),
+    list = STORES[c] || (packed && packed.length ? packed : null) || [S("amazon." + (AMAZON_TLD[c] || "com"), "Amazon", (q) => "https://www.amazon." + (AMAZON_TLD[c] || "com") + "/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("ebay.com", "eBay", (q) => "https://www.ebay.com/sch/i.html?_nkw=" + enc(q))];
   const named = store ? list.filter((x) => x.label.toLowerCase().startsWith(String(store).toLowerCase().slice(0, 4)) || x.site.startsWith(String(store).toLowerCase())) : [];
   return (named.length ? named : list).slice(0, max).map((x) => ({ site: x.label, host: x.site, url: x.url(what), app: x.app }));
 }

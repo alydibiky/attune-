@@ -34,6 +34,8 @@ function payNormalize(s) {
     .replace(/٫/g, ".")      // Arabic decimal separator
     .replace(/٬/g, ",")      // Arabic thousands separator
     .replace(/‏|‎/g, "")
+    // v9.9.16 (the world corpus): "NGN15,000.00", "Rs.1,200", "Rp1.500.000" — a currency glued to its number (or with a dot) is read apart
+    .replace(/(?<![A-Za-z])([A-Z]{3})(?=\d)/g, "$1 ").replace(/(?<![A-Za-z])(Rs|Rp|RM|INR|PKR|Dhs?|AED|SAR|R|N|Tk)\.\s?(?=\d)/g, "$1 ")
     .replace(/[  ]/g, " ");
 }
 
@@ -43,15 +45,15 @@ function payNormalize(s) {
 const CURRENCIES = [
   ["EGP", /\b(EGP|E\.?G\.?P)\b|جنيه|ج\.?م\.?|جنيهاً|جنيها/i],
   ["EGP", /(?<=\d\s?)L\.?E\b|\bL\.?E\.?(?=\s?\d)/],
-  ["SAR", /\bSAR\b|ريال سعودي|ر\.?س\b/i],
+  ["SAR", /\bSAR\b|ريال سعودي|ر\.\s?س(?![ء-ي])|(?<![ء-ي])رس(?![ء-ي])/i],
   ["AED", /\bAED\b|درهم إماراتي|د\.?إ\b/i],
   ["KWD", /\bKWD\b|دينار كويتي|د\.ك/i],
   ["QAR", /\bQAR\b|ريال قطري|ر\.ق/i],
-  ["BHD", /\bBHD\b|دينار بحريني/i],
+  ["BHD", /\bBHD\b|دينار بحريني|د\.\s?ب(?![ء-ي])/i],
   ["OMR", /\bOMR\b|ريال عماني|ر\.ع/i],
-  ["JOD", /\bJOD\b|دينار أردني|دينار اردني/i],
+  ["JOD", /\bJOD\b|دينار أردني|دينار اردني|د\.\s?أ(?![ء-ي])/i],
   ["MAD", /\bMAD\b|درهم مغربي|(?<=\d\s?)DHS?\b|\bDHS?(?=\s?\d)/],
-  ["TND", /\bTND\b|دينار تونسي/i],
+  ["TND", /\bTND\b|دينار تونسي|(?<=\d\s?)DT\b/i],
   ["DZD", /\bDZD\b|دينار جزائري|(?<=\d\s?)DA\b/],
   ["IQD", /\bIQD\b|دينار عراقي/i],
   ["LBP", /\bLBP\b|ليرة لبنانية/i],
@@ -65,8 +67,8 @@ const CURRENCIES = [
   ["USD", /\bUSD\b|US\$|دولار/i],
   ["EUR", /\bEUR\b|€|euros?\b|يورو/i],
   ["GBP", /\bGBP\b|£|ج\.إ\.س|جنيه إسترليني/i],
-  ["INR", /\bINR\b|₹|\bRs\.?(?=\s?\d)|रु/],
-  ["PKR", /\bPKR\b/],
+  ["INR", /\bINR\b|₹|रु/],   // v9.9.16: "Rs" alone is ambiguous (INR / PKR / LKR / NPR) — the person's own currency decides (AMBIGUOUS)
+  ["PKR", /\bPKR\b|روپے|روپیہ/],
   ["BDT", /\bBDT\b|৳|Tk\.?(?=\s?\d)/],
   ["LKR", /\bLKR\b/],
   ["NPR", /\bNPR\b/],
@@ -90,7 +92,7 @@ const CURRENCIES = [
   ["NOK", /\bNOK\b/],
   ["DKK", /\bDKK\b/],
   ["ZAR", /\bZAR\b/],
-  ["NGN", /\bNGN\b|₦/],
+  ["NGN", /\bNGN\b|₦|(?<![A-Za-z])N(?=\d{1,3}(?:,\d{3})+)/],
   ["KES", /\bKES\b|\bKsh(?=\s?\d)/i],
   ["GHS", /\bGHS\b|GH₵|₵/],
   ["ILS", /\bILS\b|₪/],
@@ -121,6 +123,16 @@ const THREE_DEC = /^(KWD|BHD|OMR|JOD|TND|LYD|IQD)$/;
 // \b only knows ASCII, so "débité\b" would never match).
 const W = (words, flags = "iu") => new RegExp("(?<![\\p{L}])(?:" + words + ")(?![\\p{L}])", flags);
 const DIRECTION = [
+  // v9.9.16 (Ali: "your code should deal with any type of notification" — tests/corpus/world-bank-messages.mjs): wordings from the
+  // banks of all 30 countries that the lists below read wrongly or not at all. In first: an INCOMING transfer / salary / "paid you".
+  ["in",  /حوال[ةه]\s+وارد|وارد[ةه]\s+(?:محلي|دولي|سريع)|إيداع\s+راتب|ايداع\s+راتب|تم\s+(?:إيداع|ايداع|استلام)/],
+  ["out", /حوال[ةه]\s+صادر|تم\s+الدفع|شراء\s+(?:عبر|إنترنت|انترنت|دولي)/],
+  ["in",  /\b(?:paid you|sent you|you(?:'ve| have)? received|has been credited|was credited|credited (?:to|with|by)|credit amt|direct deposit|automatically deposited|salary of)\b/i],
+  ["in",  /\bCR\b(?=\s|$|[:.,])/],
+  ["out", /\b(?:debited by|has been debited|was debited|debit amt|you paid|you have paid|purchase of|a purchase|pos purchase|spent on)\b/i],
+  ["out", /\bDR\b(?=\s|$|[:.,])/],
+  ["in",  W("gelmi[sş]tir|yat[ıi]r[ıi]lm[ıi][sş]t[ıi]r|yat[ıi]r[ıi]ld[ıi]|hesab[ıi]n[ıi]za[^.]{0,80}(?:havale|eft|fast|para)|menerima|dikreditkan|dana masuk|uang masuk|virement re[cç]u|vous avez re[cç]u|accredito|accreditato|has recibido|recibiste|voc[eê] recebeu|recebeu um pix|je hebt[^.]{0,30}ontvangen|du hast[^.]{0,40}erhalten|erhalten|received from|ontvangen")],
+  ["out", W("al[ıi][sş]veri[sş]|harcama|[oö]deme yap[ıi]lm[ıi][sş]t[ıi]r|didebet|telah didebet|transfer ke|pembelian|kartenzahlung|pagou|compra (?:de|por|aprovada)|paiement (?:par carte|de)|effectu[ée] un paiement|d[ée]bit[ée] de|pagamento di|je hebt[^.]{0,30}betaald|betaald aan|paid from|paid to")],
   // STRONGEST FIRST: an explicit debit/credit verb beats any preposition.
   // This ordering is not cosmetic. "تم خصم 250 من حسابك" contains "من حساب",
   // and an earlier version read that as money arriving — it would have ADDED
@@ -167,6 +179,7 @@ function payNumber(raw, cur) {
   if (last < 0) return Number(s);
   const sep = s[last], tail = s.length - last - 1, once = s.indexOf(sep) === last;
   let dec = tail <= 2;
+  if (tail === 3 && cur === "TND" && sep === "," && once) return Number(s.replace(",", "."));   // "85,500 TND" (French style, millimes)
   if (tail === 3) dec = once && sep === "." && !!cur && THREE_DEC.test(cur) && !/,/.test(s.slice(0, last));
   if (dec) return Number(s.slice(0, last).replace(/[.,]/g, "") + "." + s.slice(last + 1));
   return Number(s.replace(/[.,]/g, ""));
@@ -202,6 +215,14 @@ function payAmount(text, home) {
     if (raw.replace(/[^\d]/g, "").length >= 9 && !/[,. '’]\d{3}/.test(raw)) score -= 9;   // phone / reference length (not 1,250,000.00)
     if (/^(19|20)\d{2}$/.test(raw) && /[\/.-]\s*$|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s*$/i.test(before)) score -= 8;   // a year
     if (/^0/.test(raw)) score -= 4;                     // leading zero: phone number
+    // v9.9.16 (the world corpus): "A/c **3545", "card ending 4521", "kart 1234", «بطاقة *4321», "Acct XX789" — a tail is not money
+    if (/(?:a\/c|acc(?:oun)?t|acct?|card(?:\s+no\.?)?|ending|ends? (?:in|with)|biten|nolu|kart\w*|rek(?:ening)?|conto|carta|tarjeta|terminaci[oó]n|cuenta|compte|carte|konto|cheq|بطاقة|بطاقتك|حساب\w*|المنتهية\s+ب.?)[\s.:#-]*[xX*•.]*\s*$/iu.test(before) || /[*•xX]{1,6}\s?$/.test(before.slice(-7))) score -= 12;
+    if (/(?:avl\.?|avail(?:able)?|limit|lmt|kullan[ıi]labilir|bakiye|saldo|solde|kontostand|رصيد|الرصيد|المتاح|المتوفر|\bbal\b)[^\d]{0,22}$/iu.test(before)) score -= 10;
+    if (/^\s*(?:today|so far|this (?:week|month))\b/i.test(after) && /spent\s[^\d]{0,6}$/i.test(before)) score -= 6;   // "You've spent £48.20 today"
+    // the number that TOUCHES a currency is the amount ("Rs 2500.00", "245,90 TL", «45.00 ر.س») — a date or a count beside it is not
+    if (/(?:(?<![A-Za-z])(?:[A-Z]{3}|Rs|Rp|RM|R|N|Dhs?)|R\$|[$€£₹₺₦¥])\s?$/.test(before) || /^\s?(?:[A-Z]{3}(?![A-Za-z])|TL\b|DHS?\b|DT\b|DA\b|€|ر\.\s?[سقع]|د\.\s?[كبأإ]|جنيه|ريال|درهم|دينار|ج\.م)/.test(after)) score += 4;
+    if (/^[.\/-]\d{1,4}(?!\d)/.test(after) && val <= 31 || /\d[.\/-]$/.test(before) && val <= 2100 && !/[.,]\d{2}$/.test(raw)) score -= 8;   // a piece of a date: 10-11-26, 10.11.2026
+    if (!cands.length) score += 0.5;                    // …and of two equal candidates, the first written is the payment
     // v9.9.15: a day of the month ("on 20 December", «يوم 20 ديسمبر») or a count of minutes / nights / people is not an amount
     if (/^\s*(?:of\s+)?(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|^\s*(?:يناير|فبراير|مارس|ابريل|أبريل|مايو|يونيو|يونيه|يوليو|يوليه|اغسطس|أغسطس|سبتمبر|اكتوبر|أكتوبر|نوفمبر|ديسمبر)/i.test(after) && val <= 31) score -= 8;
     if (/^\s*(?:min(?:ute)?s?|hours?|hrs?|days?|nights?|weeks?|months?|years?|km|people|persons?|adults?|guests?|pages?|دقيقه|دقيقة|دقايق|ساعه|ساعة|ساعات|يوم|ايام|أيام|ليله|ليلة|ليالي|اسبوع|أسبوع|شهر|شهور|سنه|سنة|سنين|كيلو|افراد|أفراد)(?![\p{L}])/iu.test(after) && !NEAR_AMOUNT.test(before)) score -= 8;
