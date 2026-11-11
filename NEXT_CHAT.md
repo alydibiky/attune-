@@ -11,6 +11,34 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ v9.9.16 (11 Nov, later the same day) — Ali: "do all now … every country fully … your code should deal with any notification"
+His answer on the combined mock-up: **OK1, OK3, K1, B1, Q1, M1**; OK2 NOT ticked ("leaving them in groups is better visually");
+U6 ("why not exchange rates visible; that doesn't mean it won't be downloaded?"); G2 not ticked ("I want ALL countries fully made if
+you can do it accurately — research").
+- **World bank messages** (`tests/corpus/world-bank-messages.mjs`: 70 payments + 10 look-alikes from all 30 countries, in their
+  languages; `tests/unit/v9916world.test.mjs`): the reader got 45 of 80 right before, 80 of 80 now. yusr/paytext.js: incoming /
+  outgoing wordings (حوالة واردة, شراء عبر…, paid you, DR / CR, Turkish without accents, Indonesian, French, Italian, Portuguese,
+  Dutch, German), a card / account tail or a limit or a date is never the amount, the number that touches a currency wins, "NGN15,000"
+  / "Rs.1,200" glued forms, "85,500 TND", Arabic short currencies (ر.س د.ب د.أ). paylog.js: the person's own currency decides "$",
+  "Rs", «دينار» (payOpts), a bank that names no currency speaks the home one, balance-only filter widened.
+  **Honest limit:** these are the well-known shapes of such messages, not copies from each bank — banks don't publish their templates
+  (searched). Every real message Ali or a tester sends that is read wrong goes into the corpus.
+- **Country packs** `web-src/countrypack.js` — for each of the 30 countries: banks, wallets, payment systems (→ `WORLD_MONEY_SRC`, used
+  by paylog `fromMoneySource`), shops with search links (→ agent.js `storeTries` when a country has no hand-tuned list), delivery and
+  ride apps, official portals, the local name of a savings circle. **Not yet used on screen**: delivery / ride / gov / circle (a
+  "For your country" card needs mock-ups first — G1 / G6 were not ticked), errands per country (errands.js is Egypt's).
+- **OK3 built**: payer-ui.jsx `PaidStep` (which balance — skipped with one account; which category — the guess picked; Another amount;
+  Add to Money) opened by "Paid" in Follow-ups for a `planned` payment; regular.js takes `c.cat` / `c.account`. tests/e2e_v9916paylater.py.
+  Q1 (ask at 9:00) = the plan's own reminder time — check on the phone that the notification comes at 9.
+- **OK1 built for the pages with the shared heading** (ui-kit `pageH1` + `.att-h1` hidden on phones; BAR_TITLES in attune.jsx):
+  Follow-ups, People & plans, Deadline Radar, Money Guardian, Family, Writing, Agents, To-dos & lists, Documents, Tables, Errands,
+  Timetable. **Still to convert (each has its own hand-made heading; today the bar is empty and the heading shows):** privacy, planner
+  (its heading is the month's name), guide, slides, convert, pdfchat, cv, shelf, memory, care, translate, travel.
+- U6: Travel shows no "5 KB"; "Exchange rates: Not yet" until first fetched (packs are built in — nothing to download).
+- Sidebar: groups kept (his word); only the "Work" row removed (it opened Projects, which has its own row).
+- **M1** (Free = by hand, Pro = by itself): he said yes — **show the Free / Pro mock-up before changing billing** (not made yet).
+- Version 9.9.16 (versionCode 159). The full suite was started on it; if this section has no result line below, run it again before main.
+
 ## ▶ START HERE (handoff written 11 Nov 2026, end of the v9.9.15 session)
 **Where things are:** `main` = branch `claude/awesome-hopper-pxkuzb` = **v9.9.15** (versionCode 158). Full suite green twice except
 `e2e_v993timetable` (reads a picture from an old session's scratch folder — fix the test's path when convenient).
