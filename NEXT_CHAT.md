@@ -11,6 +11,10 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ START HERE (11 Nov, night) — **AUTOMATION_PLAN.md** is the plan: Ali picked his screens for all 29 features ("ALL features working in
+ALL languages and ALL countries … batch by batch, update the handoff so another AI can continue"). Combined screens waiting for his OK:
+https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU. Carry on with the first unticked batch in AUTOMATION_PLAN.md.
+
 ## ▶ NEXT (11 Nov, late night) — Ali picked 29 of the 38 research ideas; their SCREENS are waiting for his A/B picks
 - His picks: AU1–AU8 · M1 M3 M5 · T1–T6 · N1 · N2 ("it can go very wrong — only if you are sure it will be very accurate") · N3 ·
   P1–P3 · TR1 TR2 ("good if done right") · TR3 · X1 X2 · X3 ("must take a photo and read it very well") · X4 · X6 ("excellent if it

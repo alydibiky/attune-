@@ -1,0 +1,270 @@
+<title>Attune Combined Screens</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@500;700&display=swap">
+<style>
+/* Layout: one column of features; each shows 2 phone screens (A, B) side by side, wrapping to one on phones; sticky pick bar */
+:root {
+  --bg: #f3f1ef; --surface: #ffffff; --ink: #1f1b1c; --mut: #69605f; --line: #e3dedb; --acc: #7a1f3d; --acc-soft: #f4e4ea; --ok: #1e7a43;
+  --font-ui: "Nunito", "IBM Plex Sans Arabic", system-ui, sans-serif; --font-code: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* the app's own look inside the phones (Attune light, burgundy C1) */
+  --a-bg: #F5F4F2; --a-surf: #FFFFFF; --a-surf2: #EFEDEA; --a-ink: #1E1C1B; --a-mut: #5E5A57; --a-ln: #E6E3E0; --a-acc: #7A1F3D; --a-soft: #F6E6EC;
+  --a-pos: #1e7a43; --a-neg: #b33a2e; --a-warn: #b4560e; --a-amber: #FBF0DC; --a-frame: #1b1718;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 150px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 30px; }
+h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 900; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 22px; font-weight: 900; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.lead { color: var(--mut); font-size: 16px; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); }
+.intro { display: grid; gap: 10px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; display: grid; gap: 6px; }
+.box ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 3px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+nav.toc a { font-family: var(--font-code); font-size: 12.5px; text-decoration: none; color: var(--acc); background: var(--acc-soft); border-radius: 8px; padding: 2px 8px; }
+.group-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+.group-h .ar { color: var(--mut); font-weight: 800; }
+.feat { display: grid; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; scroll-margin-top: 12px; }
+.feat-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.fcode { font-family: var(--font-code); font-weight: 600; color: var(--acc); background: var(--acc-soft); border-radius: 7px; padding: 1px 8px; font-size: 14px; }
+.fname { font-weight: 900; font-size: 19px; }
+.far { color: var(--mut); font-weight: 700; }
+.ali { font-size: 13.5px; color: var(--acc); font-weight: 800; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 14px; }
+.facts div { min-width: 0; } .facts b { display: block; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+@media (max-width: 700px) { .facts { grid-template-columns: 1fr; } }
+.opts { display: flex; flex-wrap: wrap; gap: 18px; }
+.opt { flex: 1 1 300px; min-width: 0; display: grid; gap: 8px; align-content: start; border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.opt.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+.opt-h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.opt-h input { width: 22px; height: 22px; margin: 0; accent-color: var(--acc); cursor: pointer; }
+.ocode { font-family: var(--font-code); font-weight: 600; font-size: 13px; color: var(--acc); }
+.oname { font-weight: 900; }
+.rec { font-size: 11.5px; font-weight: 800; color: var(--surface); background: var(--acc); border-radius: 999px; padding: 1px 8px; }
+.pm { font-size: 13.5px; color: var(--mut); display: grid; gap: 2px; }
+.pm span::before { font-weight: 900; margin-inline-end: 4px; }
+.pm .plus::before { content: "+"; color: var(--ok); } .pm .minus::before { content: "−"; color: #b33a2e; }
+.note { width: 100%; min-height: 40px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); }
+.note:focus, .opt input:focus-visible, .btn:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+/* ---- the phone ---- */
+.phone { width: 290px; max-width: 100%; margin: 0 auto; background: var(--a-frame); border-radius: 36px; padding: 9px; }
+.scr { background: var(--a-bg); border-radius: 28px; overflow: hidden; color: var(--a-ink); font-family: "Nunito", "IBM Plex Sans Arabic", sans-serif; font-size: 12px; line-height: 1.4; height: 560px; display: flex; flex-direction: column; position: relative; }
+.sb { display: flex; justify-content: space-between; padding: 8px 18px 2px; font-size: 10.5px; font-weight: 800; color: var(--a-ink); }
+.tb { display: flex; align-items: center; gap: 10px; padding: 6px 14px 8px; font-weight: 900; font-size: 15px; }
+.tb .ico { font-size: 16px; color: var(--a-ink); width: 18px; text-align: center; }
+.body { padding: 4px 12px 12px; display: grid; gap: 8px; align-content: start; overflow: hidden; flex: 1; }
+.c { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 18px; padding: 10px 12px; display: grid; gap: 6px; }
+.c.amber { background: var(--a-amber); border-color: #efdcb8; }
+.c.soft { background: var(--a-soft); border-color: #ecd0da; }
+.lb { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--a-mut); font-weight: 800; }
+.t { font-weight: 900; font-size: 13px; }
+.s { color: var(--a-mut); font-size: 11px; }
+.r { display: flex; align-items: center; gap: 8px; } .r > .grow { flex: 1; min-width: 0; }
+.sq { width: 26px; height: 26px; border-radius: 9px; background: var(--a-soft); color: var(--a-acc); display: grid; place-items: center; font-weight: 900; font-size: 12px; flex: none; }
+.amt { font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.neg { color: var(--a-neg); } .pos { color: var(--a-pos); } .warn { color: var(--a-warn); } .acc { color: var(--a-acc); }
+.btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.b { border-radius: 10px; padding: 5px 10px; font-weight: 800; font-size: 11px; background: var(--a-acc); color: #fff; }
+.b.g { background: transparent; color: var(--a-acc); border: 1px solid var(--a-acc); }
+.b.q { background: var(--a-surf2); color: var(--a-ink); }
+.ch { border-radius: 999px; padding: 2px 9px; font-weight: 800; font-size: 10.5px; background: var(--a-surf); border: 1px solid var(--a-ln); white-space: nowrap; }
+.ch.on { background: var(--a-acc); color: #fff; border-color: var(--a-acc); }
+.ch.soft { background: var(--a-soft); color: var(--a-acc); border-color: transparent; }
+.tag { font-size: 9.5px; font-weight: 800; border-radius: 6px; padding: 1px 6px; background: var(--a-surf2); color: var(--a-mut); white-space: nowrap; }
+.bar { height: 6px; border-radius: 9px; background: var(--a-ln); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--a-acc); }
+.tick { width: 15px; height: 15px; border-radius: 5px; border: 1.5px solid var(--a-acc); display: inline-grid; place-items: center; font-size: 10px; color: #fff; flex: none; }
+.tick.d { background: var(--a-acc); }
+.sep { border-top: 1px solid var(--a-ln); }
+.notif { background: #2a2526; color: #f3eeee; border-radius: 16px; padding: 9px 11px; display: grid; gap: 4px; font-size: 11px; }
+.notif .app { font-size: 9.5px; color: #c9bfc1; font-weight: 700; }
+.notif .nt { font-weight: 900; font-size: 12px; }
+.notif .na { display: flex; gap: 14px; font-weight: 900; color: #f2b6c8; font-size: 11px; padding-top: 2px; }
+.shade { background: #3b3537; }
+.dim { position: absolute; inset: 0; background: rgba(20,14,16,.38); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--a-surf); border-radius: 22px 22px 0 0; padding: 8px 14px 14px; display: grid; gap: 7px; }
+.sheet::before { content: ""; width: 36px; height: 4px; border-radius: 4px; background: var(--a-ln); justify-self: center; }
+.inp { background: var(--a-surf); border: 1.5px solid var(--a-acc); border-radius: 16px; padding: 8px 10px; color: var(--a-mut); }
+.bubble { background: var(--a-acc); color: #fff; border-radius: 16px 16px 4px 16px; padding: 7px 10px; justify-self: end; max-width: 85%; font-weight: 700; }
+.dots { display: flex; gap: 4px; } .dots i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--a-acc); display: block; } .dots i.d { background: var(--a-acc); } .dots i.x { border-color: var(--a-ln); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tile { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 14px; padding: 8px; display: grid; gap: 2px; }
+.cal { display: grid; grid-template-columns: 26px repeat(3, 1fr); gap: 3px; font-size: 9.5px; }
+.cal .h { font-weight: 800; color: var(--a-mut); text-align: center; }
+.cal .tm { color: var(--a-mut); }
+.cal .slot { border-radius: 6px; min-height: 22px; padding: 2px 4px; }
+.cal .busy { background: var(--a-surf2); color: var(--a-mut); }
+.cal .pr { background: #eef3ef; color: #4b6b57; }
+.cal .plan { background: var(--a-acc); color: #fff; font-weight: 800; }
+.ring { width: 150px; height: 150px; border-radius: 50%; margin: 6px auto; display: grid; place-items: center; background: conic-gradient(var(--a-acc) 0 62%, var(--a-ln) 62% 100%); }
+.ring > div { width: 126px; height: 126px; border-radius: 50%; background: var(--a-bg); display: grid; place-items: center; text-align: center; }
+.big { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.tl { display: grid; gap: 0; } .tl .it { display: grid; grid-template-columns: 38px 1fr; gap: 8px; padding: 5px 0; border-inline-start: 2px solid var(--a-ln); margin-inline-start: 18px; padding-inline-start: 10px; }
+.src { font-size: 9.5px; color: var(--a-mut); }
+.ar-t { font-family: "IBM Plex Sans Arabic", sans-serif; direction: rtl; text-align: right; }
+.hl { background: #fff1c9; border-radius: 4px; padding: 0 2px; }
+/* ---- pick bar ---- */
+.pickbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.pb-in { max-width: 1040px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.picked { flex: 1 1 240px; min-width: 0; font-family: var(--font-code); font-size: 12.5px; color: var(--mut); overflow-wrap: anywhere; max-height: 3.3em; overflow: auto; }
+.picked b { color: var(--ink); }
+.btn { font: inherit; font-weight: 900; border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; background: var(--acc); color: var(--surface); min-height: 44px; }
+.btn.ghost { background: transparent; color: var(--acc); border: 1px solid var(--acc); }
+.copybox { width: 100%; min-height: 90px; font-family: var(--font-code); font-size: 12.5px; border: 1px solid var(--acc); border-radius: 10px; padding: 8px; background: var(--bg); color: var(--ink); }
+.toast { font-weight: 800; color: var(--ok); font-size: 13.5px; }
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <span class="eyebrow">Attune · step 3 · what I understood · 11 Nov 2026</span>
+    <h1>Your combined screens — say OK</h1>
+    <p class="lead">These are the features where you asked me to join A and B, or added a note. Each one shows the joined screen and what I understood. Tick OK on each, or write what to change. The other features are exactly the screen you picked.</p>
+    <div class="box">
+      <b>The same promise for every feature</b>
+      <ul>
+        <li>Attune never does anything with money or messages without your OK the first time. After that you choose what it may do alone, and every action has Undo.</li>
+        <li>Each feature gets its own test of exactly 10,000 different cases, with the details checked (the amount, the date, the person, the place), plus a second set I write after the fixes to check it honestly. It ships only above 99%.</li>
+        <li>Where Attune isn't sure, it asks. It never guesses a number or a date silently.</li>
+        <li>X5 (the hint while you chat) is saved for after the launch, as you said.</li>
+      </ul>
+    </div>
+    <nav class="toc" id="toc" aria-label="Jump to a feature"></nav>
+  </header>
+  <div id="groups"></div>
+</div>
+
+<div class="pickbar" role="region" aria-label="Your picks">
+  <div class="pb-in">
+    <div class="picked" id="picked">Nothing ticked yet.</div>
+    <button class="btn ghost" id="clear" type="button">Clear</button>
+    <button class="btn" id="copy" type="button">Copy my picks</button>
+    <span class="toast" id="toast" hidden>Copied</span>
+    <textarea class="copybox" id="copybox" hidden readonly aria-label="Your picks to copy"></textarea>
+  </div>
+</div>
+
+<script>
+// ---------- tiny builders for the phone screens ----------
+const ph = (title, body, o = {}) => `<div class="phone"><div class="scr"><div class="sb"><span>9:41</span><span>●●● 82%</span></div>${title === null ? "" : `<div class="tb"><span class="ico">${o.back ? "‹" : "☰"}</span><span>${title}</span></div>`}<div class="body">${body}</div>${o.over || ""}</div></div>`;
+const c = (x, cls = "") => `<div class="c ${cls}">${x}</div>`;
+const lb = (x) => `<div class="lb">${x}</div>`;
+const r = (ic, t, s = "", right = "") => `<div class="r">${ic ? `<div class="sq">${ic}</div>` : ""}<div class="grow"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ""}</div>${right}</div>`;
+const bt = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="b ${k}">${t}</span>`; }).join("")}</div>`;
+const chips = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="ch ${k}">${t}</span>`; }).join("")}</div>`;
+const nt = (app, t, s, acts = []) => `<div class="notif"><div class="app">${app}</div><div class="nt">${t}</div><div>${s}</div>${acts.length ? `<div class="na">${acts.map((a) => `<span>${a}</span>`).join("")}</div>` : ""}</div>`;
+const sheet = (x) => `<div class="dim"></div><div class="sheet">${x}</div>`;
+const tk = (d) => `<span class="tick ${d ? "d" : ""}">${d ? "✓" : ""}</span>`;
+const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
+const sep = `<div class="sep"></div>`;
+const ar = (x) => `<span class="ar-t">${x}</span>`;
+
+// ---------- the features: [group, code, name, arabic, Ali's note, where, test, [A, B]] ----------
+// each option: [letter, name, what, plus, minus, recommended?, phone html]
+const G = { au: ["A · Automation", "الأتمتة"], m: ["B · Money", "الفلوس"], t: ["C · To-dos & reminders", "المهام والتذكيرات"], n: ["D · Notes & Mind", "الملاحظات والذاكرة"], p: ["E · People & follow-ups", "الناس والمتابعات"], tr: ["F · Travel", "السفر"], x: ["H · New things", "حاجات جديدة"] };
+const F = [
+["au","AU1","“When … do …” — every trigger, every action, asks when unsure","قواعد «لما … اعمل …»","Your note: the most functions possible; understands every free text; if it doesn't understand, it asks","Automations · Chat · Home","10,000 rule sentences in all 20 languages and Franco, from all 30 countries; a sentence it can't read must produce a question, never a wrong rule.",[
+ ["OK","Combined: say it → card → or a question","• Any sentence in any of the 20 languages becomes When / If / Do.\n• Triggers: a time or repeat, arriving or leaving a place, a Bluetooth device, Wi-Fi, charging, a payment (amount, bank, wallet), a message or call from a person, an app's notification, a date in Follow-ups, a list running low.\n• Actions: remind, nag, add a to-do or list item, log money, move to a pot, split money, open a page or app, draft a WhatsApp, call, silence, start a timer, run an AI job.\n• If a word isn't clear, it asks with choices — like the second card here — and remembers your answer.","","",1,
+  ph("Attune", `<div class="bubble">${ar("لما يجيلي تحويل من بابا فوق 1000، حطه في صندوق الجامعة وقولي")}</div>` + c(lb("New rule — I understood") + r("W","When","a transfer from <b>Baba</b> arrives") + sep + r("I","If","more than <b>1,000</b>") + sep + r("D","Do","move it to <b>University fund</b> · tell you") + bt("Save rule","g|Try it now","q|Change")) + c(lb("One question first") + `<div class="t">Which Baba?</div>` + chips("on|Baba (Hassan) · 0100…","Baba Mohamed (uncle)","Someone else") + `<div class="s">I'll remember your answer.</div>`, "amber"))]
+]],
+["au","AU5","Nag until done — levels + ★ Important","يفكرك لحد ما تخلص","You picked A and B: combine them","Any reminder","10,000 reminder timelines in every country's time zone: repeats stop the moment you tick, respect quiet hours and prayer times (when on), and never exceed the chosen level.",[
+ ["OK","Combined: one ★ for the usual, levels for the rest","• ★ Important = every 15 min until you tick (one tap).\n• Or pick a level yourself: once · every 10 min · every hour · until I tick.\n• The notification says how many times it came.\n• Quiet hours and prayer times (when on) are respected.","","",1,
+  ph("Reminder", c(r("◷","Pay the CIB card","Today 10:00 · 6,240") + `<div class="r"><span class="t">★ Important</span><span class="grow"></span><span class="ch on">On</span></div>`) + c(lb("Keep reminding") + chips("Once","Every 10 min","on|Every 15 min ★","Every hour","Until I tick") + `<div class="s">Quiet 23:00–07:00 · stops when you tap Paid</div>`) + nt("Attune · 3rd time","Pay the CIB card — 6,240","Due today · ★ every 15 min until paid",["Paid","In 1 hour","Tomorrow"]), { back: 1 })]
+]],
+["au","AU7","Notification buttons — Paid stays and asks the balance","أزرار على الإشعار","You picked A and B: after Paid it stays and asks Cash / CIB / Vodafone Cash","Android notifications","10,000 notification + tap sequences: Paid records exactly once, to the balance tapped, even if the app was closed or the button tapped twice.",[
+ ["OK","Combined: two steps on the same notification","• Step 1: Paid · Tomorrow · In 1 hour.\n• Step 2 (after Paid, the notification stays): from which balance — your real ones (Cash, CIB, Vodafone Cash); with one balance it skips this.\n• Then ✓ with Undo.","","",1,
+  `<div class="phone"><div class="scr shade"><div class="sb" style="color:#eee"><span>9:41</span><span>●●● 82%</span></div><div class="body">` + `<div class="s" style="color:#ccc">Step 1</div>` + nt("Attune · Follow-ups","Electricity bill 320 — due today","",["Paid","Tomorrow","In 1 hour"]) + `<div class="s" style="color:#ccc">Step 2 — after Paid</div>` + nt("Attune · Follow-ups","Paid 320 — from which balance?","",["Cash","CIB","Vodafone Cash"]) + `<div class="s" style="color:#ccc">Done</div>` + nt("Attune","✓ 320 from Cash · Electricity","In Money now",["Undo"]) + `</div></div></div>`]
+]],
+["au","AU8","Done for you — with Undo AND Edit that it remembers","اللي أتيون عمله","Your note: make editing possible, and remember my change when it applies","Automations → Done today","10,000 days: Undo restores exactly; an edit is saved; and when the same thing happens again Attune uses your edit (the 10,000 cases check it learns only from the same shop / person / rule).",[
+ ["OK","Combined: each line has Edit and Undo","• Every action has Edit and Undo.\n• Edit opens the same fields (amount, category, balance, time).\n• After an edit Attune asks “Do it this way next time?” — yes = it remembers.","","",1,
+  ph("Done for you", c(lb("What Attune may do alone") + r("₤","Money up to 2,000 a time","", `<span class="ch">Change</span>`) + r("#","Up to 10 actions a day","5 used today")) + c(lb("Today") + r("₤","Logged talabat 185 · Food","09:12", `<span class="ch">Edit</span><span class="ch">Undo</span>`) + r("↻","Moved 500 to car fund","salary rule", `<span class="ch">Edit</span><span class="ch">Undo</span>`)) + c(r("✓","Changed: talabat 185 → Late food","") + `<div class="t">Do it this way next time?</div>` + bt("Yes, remember","g|Just this once"), "soft"), { back: 1 })]
+]],
+["t","T1","Brain dump — typed OR spoken","فضفض واكتب","Your note: not voice only; a typed brainstorm paragraph is organised too","Home box → “Organise this” · mic","10,000 messy paragraphs in all 20 languages + Franco: every item, type, date, amount and person checked; nothing saved before you tick.",[
+ ["OK","Combined: write or talk, then tick","• Type or paste a paragraph (or speak) → “Organise this”.\n• Items come back with their type, date and amount; tap one to fix it.\n• Save only the ones you tick.","","",1,
+  ph("Organise this", c(`<div class="s">I typed:</div><div class="s">“This week: finish the tender file by Thursday, buy milk + bread, Karim's birthday Saturday — get him a gift under 500, pay the gam'eya 2000 on the 1st, and call the bank tomorrow morning.”</div>`, "soft") + c(lb("I found 5 things") + r(tk(1),"Finish the tender file","<span class='tag'>To-do</span> by Thu 19 Nov") + r(tk(1),"Milk, bread","<span class='tag'>Shopping list</span>") + r(tk(1),"Gift for Karim · under 500","<span class='tag'>To-do</span> by Sat 14 Nov") + r(tk(1),"Gam'eya 2,000","<span class='tag'>Payment</span> 1 Dec") + r(tk(1),"Call the bank","<span class='tag'>Reminder</span> tomorrow 10:00") + bt("Save 5","q|Fix one")), { back: 1 })]
+]],
+["t","T3","Countdowns — chips that open","عد تنازلي","Your note: make it openable","Home","10,000 dates (Hijri, Coptic, leap years, 30 countries' time zones): days left right every day.",[
+ ["OK","Combined: tap a chip → its big card","• Chips under the Home box.\n• Tap one → the big countdown card with its bar, the date, and Edit / Remove.","","",1,
+  ph("Good morning", `<div class="inp">Type / for a command, or just say it…</div>` + chips("soft|☾ Ramadan · 89 days","on|♡ Wedding · 39 days","soft|✈ Umrah · 112 days"), { over: sheet(`<div class="r"><div class="grow"><div class="t">♡ Wedding</div><div class="s">Sun 20 Dec 2026</div></div><div class="big acc">39</div><div class="s">days</div></div>` + bar(56) + bt("q|Edit","q|Remove")) })]
+]],
+["t","T6","Focus timer — Play-safe","تايمر تركيز","Your note: only if it is OK with the Play Store","Any to-do → Focus","Checked against Play's rules: no full-screen-intent permission (that is only for calls and alarms); “quiet” uses Do Not Disturb only if you allow it in Android's own settings — both are allowed on Play.",[
+ ["OK","As A, the Play-safe way","• The full-screen timer is a normal Attune screen (no special permission).\n• “Make the phone quiet” is optional and uses Android's Do Not Disturb, which you allow once in Android's settings.\n• 10,000 sessions keep the time right through calls and pauses.","","",1,
+  ph(null, `<div style="text-align:center;padding-top:14px"><div class="lb">Focus</div><div class="t" style="font-size:15px">Thesis · chapter 3</div></div><div class="ring"><div><div><div class="big">15:32</div><div class="s">of 25:00</div></div></div></div><div class="s" style="text-align:center">Do Not Disturb: on (you allowed it once)</div>` + bt("Pause","q|Stop"))]
+]],
+["n","N1","Person page — open the original","صفحة لكل شخص","Your note: and let me open the original things","Tap a name anywhere","10,000 records: each line opens its own source (the message, the payment, the note, the call) and never another person's.",[
+ ["OK","As A, every line opens its source","• Sections: money, promises, dates, notes, messages.\n• Tap any line → the original: the WhatsApp message, the payment in Money, the note in Mind, the call in the log.","","",1,
+  ph("Ahmed (cousin)", bt("✆ Call","g|WhatsApp") + c(lb("Money") + r("₤","Owes you 500","since 2 Oct · open the payment ›")) + c(lb("Promises") + r("◷","The papers — Thursday","open his message ›")) + c(lb("Dates") + r("♡","Mariam's birthday 3 Dec","open ›")) + c(lb("Notes · 2") + r("✎","Works at the bank, Nasr City","open the note ›")), { back: 1 })]
+]],
+["p","P3","Occasions — page + the card on the day","المناسبات","You picked A and B: combine them better","People & plans → Occasions; Home at 9:00","10,000 contacts and dates: no wrong year, Feb 29 handled; a wish is never sent without your tap; the wish is written in the person's language.",[
+ ["OK","Combined: plan ahead, and a ready wish on the day","• The Occasions page (upcoming + Eid eidiya list).\n• On the day at 9:00 a card on Home with a wish in your style and in that person's language; Send opens WhatsApp.","","",1,
+  ph("Good morning", c(r("♡","Nada's birthday today","") + c(`<div class="ar-t">${ar("كل سنة وانتي طيبة يا ندى، ربنا يسعدك 🌸")}</div>`, "soft") + bt("Send on WhatsApp","g|Edit","q|Later"), "soft") + c(lb("Coming up · Occasions ›") + r("♡","Mariam (Ahmed's)","birthday · 3 Dec") + r("◇","Your anniversary","20 Dec") + r("☾","Eid eidiya · 6 kids","1,200 planned")))]
+]],
+["tr","TR2","Flight day — notifications + the card","يوم السفر","You picked A and B: combine them","Notifications + Home on the day","10,000 flight days across airlines and airports in the 30 countries: check-in times per airline, leave time from Maps, gate/delay only from the airline's own message.",[
+ ["OK","Combined: alerts on the lock screen, the card in the app","• Notifications: check-in open, leave now, gate / delay change.\n• The same steps on a flight-day card on Home that ticks along.","","",1,
+  ph("Today", nt("Attune · from EgyptAir","Gate changed to F7","MS 643 · boarding 09:00",["OK"]) + c(lb("Flight day · MS 643") + r(tk(1),"Checked in","yesterday") + r(tk(1),"Left home","06:52") + r(tk(0),"Gate F7 · boarding 09:00","changed 07:40") + r(tk(0),"Take off 09:40","") + bar(50), "soft"))]
+]],
+["x","X1","Paperwork — read, ask, edit, and the list","الورق","You picked A and B: combine them, and let me edit info read wrong","Documents → Papers","10,000 papers (photos at angles, 20 languages, Hijri dates, two dates on one paper): the expiry must be the expiry; unsure fields are yellow; every field editable.",[
+ ["OK","Combined: add a paper → it joins the list","• After the photo: what was read; unsure fields in yellow; tap any field to edit.\n• Saved papers live in one list, soonest expiry first.\n• Edit any saved paper later too.","","",1,
+  ph("Papers", c(r("▣","Car insurance · Misr","ends <b>14 Feb 2027</b>", `<span class="ch">Edit</span>`) + r("","Car","<span class='hl'>أ ب ج 1234?</span> · tap to check")) + c(r("!","Car licence","ends in 38 days · 19 Dec", `<span class="ch soft">soon</span>`), "amber") + c(r("▣","Passport","1 May 2027", `<span class="ch">Edit</span>`)) + c(r("▣","Fridge warranty","Oct 2028", `<span class="ch">Edit</span>`)) + bt("Add a paper"), { back: 1 })]
+]],
+["x","X2","Upkeep — with a plain Done","الصيانة","Your note: add a Done option only, too","Errands → Upkeep","10,000 logs: “whichever comes first” right; Done with or without a cost.",[
+ ["OK","As A, two buttons","• Done — just marks it done.\n• Done + cost — also puts the cost in Money.","","",1,
+  ph("Upkeep", c(lb("Car") + r("🛢","Oil change","9,800 of 10,000 km") + bar(98) + bt("Done","g|Done + cost")) + c(lb("Home") + r("⛲","Water filter","every 6 months · Jan") + r("🔥","Gas cylinder","about every 5 weeks · next week")), { back: 1 })]
+]],
+["x","X3","What I own — every field editable","حاجاتي","Your note: option to edit things that can be edited","Documents → My things","10,000 receipts and boxes (thermal paper, Arabic, crooked): price = the total line, date = the receipt's date; anything unsure is yellow.",[
+ ["OK","As A, with Edit on every field","• Tap any field to change it; the receipt line it came from stays shown.\n• Add the box photo later for the serial.","","",1,
+  ph("Samsung TV 55\"", c(r("","Price","18,500 · total line", `<span class="ch">Edit</span>`) + r("","Bought","2 Oct 2026 · B.TECH Maadi", `<span class="ch">Edit</span>`) + r("","Warranty","→ 2 Oct 2028", `<span class="ch">Edit</span>`) + r("","Serial","<span class='hl'>add the box photo</span>", `<span class="ch">Add</span>`)) + c(r("▣","Receipt photo","B.TECH · open ›")), { back: 1 })]
+]],
+["x","X4","Emergency card — per person, one page","كارت الطوارئ","You picked A and B: combine them","Family → Emergency","10,000 family records: nothing missing or stale; the shared card is readable offline, in the reader's language.",[
+ ["OK","Combined: tabs for each person, a full card each","• One page with a tab per family member (B).\n• Each tab is the full card (A): blood, medicines, allergies, doctor, insurance, who to call.\n• Share one person or all; show on the lock screen.","","",1,
+  ph("Emergency", chips("on|Baba","Mama","Nada","You") + c(r("♥","Blood type","", `<span class="amt">O+</span>`) + r("℞","Medicines","Concor 5 mg (morning)") + r("!","Allergy","Penicillin") + r("✆","Dr Hany","010 2345 6789") + r("▣","Insurance","Misr · card 77…41")) + c(lb("Call first") + r("1","You","") + r("2","Ahmed (brother)","")) + bt("Share Baba","g|Share all","q|Lock screen"), { back: 1 })]
+]],
+["x","X6","Kids & school — page + found items, all editable","الولاد والمدرسة","You picked A and B: combine them and make it editable","Family → a child","10,000 class-group messages in Arabic, English, French and the school languages of the 30 countries: exam, fee, trip, uniform and holiday with the right date and amount; unclear ones asked.",[
+ ["OK","Combined: found items on top, the week under","• “Found in the class group” to tick (B), on top of the child's page.\n• The week (A) under it; tap any item to edit or delete.","","",1,
+  ph("Mariam · Grade 5", c(r("✉","Found 3 in “Grade 5 B parents”","today") + r(tk(1),"Trip fee 350","by Wed 18 Nov") + r(tk(1),"Lab coat","Tuesday") + r(tk(0),"Holiday?","<span class='hl'>which Thursday?</span>") + bt("Add 2","q|Ask"), "amber") + c(lb("This week") + r("✎","Math exam","Sun 15 Nov · chapters 3–4", `<span class="ch">Edit</span>`) + r("₤","Trip fee","Wed 18 Nov · 350", `<span class="ch">Edit</span>`)), { back: 1 })]
+]],
+];
+
+// ---------- render ----------
+const KEY = "attune-automation-combined-v1";
+let st = { on: {}, notes: {} };
+try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && typeof v === "object") st = { on: v.on || {}, notes: v.notes || {} }; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const groupsEl = document.getElementById("groups"), toc = document.getElementById("toc");
+const ORDER = [];
+let lastG = "";
+let gWrap = null;
+for (const [g, code, name, arName, aliNote, where, test, opts] of F) {
+  if (g !== lastG) { lastG = g; gWrap = document.createElement("section"); gWrap.style.display = "grid"; gWrap.style.gap = "16px"; gWrap.innerHTML = `<div class="group-h"><h2>${G[g][0]}</h2><span class="ar" lang="ar">${G[g][1]}</span></div>`; groupsEl.appendChild(gWrap); }
+  const a = document.createElement("a"); a.href = "#f-" + code; a.textContent = code; toc.appendChild(a);
+  const f = document.createElement("article"); f.className = "feat"; f.id = "f-" + code;
+  f.innerHTML = `<div class="feat-h"><span class="fcode">${code}</span><span class="fname">${esc(name)}</span><span class="far" lang="ar">${esc(arName)}</span></div>` + (aliNote ? `<div class="ali">${esc(aliNote)}</div>` : "") +
+    `<div class="facts"><div><b>Where it lives</b>${esc(where)}</div><div><b>How it will be tested</b>${esc(test)}</div></div><div class="opts"></div>`;
+  const host = f.querySelector(".opts");
+  for (const [k, oname, what, plus, minus, rec, phone] of opts) {
+    const id = code + "-" + k; ORDER.push(id);
+    const o = document.createElement("div"); o.className = "opt" + (st.on[id] ? " on" : "");
+    o.innerHTML = `<div class="opt-h"><input type="checkbox" id="cb-${id}" aria-label="Pick ${id}"${st.on[id] ? " checked" : ""}><label for="cb-${id}" class="ocode">${id}</label><label for="cb-${id}" class="oname">${esc(oname)}</label>${rec ? '<span class="rec">Combined</span>' : ""}</div>` +
+      `<div style="font-size:14px;white-space:pre-line"><b>What I understood</b>\n${esc(what)}</div>${plus ? `<div class="pm"><span class="plus">${esc(plus)}</span><span class="minus">${esc(minus)}</span></div>` : ""}${phone}` +
+      `<textarea class="note" id="note-${id}" rows="1" placeholder="Your note on ${id} (optional)">${esc(st.notes[id] || "")}</textarea>`;
+    host.appendChild(o);
+    o.querySelector("input").addEventListener("change", (e) => { if (e.target.checked) st.on[id] = true; else delete st.on[id]; o.classList.toggle("on", e.target.checked); save(); render(); });
+    o.querySelector("textarea").addEventListener("input", (e) => { const v = e.target.value; if (v.trim()) st.notes[id] = v; else delete st.notes[id]; if (v.trim() && !st.on[id]) { st.on[id] = true; o.classList.add("on"); o.querySelector("input").checked = true; } save(); render(); });
+  }
+  gWrap.appendChild(f);
+}
+const lines = () => ORDER.filter((id) => st.on[id]).map((id) => (st.notes[id] && st.notes[id].trim() ? id + " — " + st.notes[id].trim().replace(/\s*\n\s*/g, " / ") : id));
+function render() { const l = lines(); document.getElementById("picked").innerHTML = l.length ? "<b>" + l.length + " picked:</b> " + l.map(esc).join(" · ") : "Nothing ticked yet."; }
+render();
+document.getElementById("copy").addEventListener("click", () => {
+  const l = lines(), box = document.getElementById("copybox"), toast = document.getElementById("toast");
+  if (!l.length) { document.getElementById("picked").textContent = "Tick at least one screen first."; return; }
+  const text = "My answers (combined screens):\n" + l.join("\n");
+  const fallback = () => { box.hidden = false; box.value = text; box.focus(); box.select(); toast.hidden = false; toast.textContent = "Selected: copy it with your keyboard or long-press."; };
+  try { navigator.clipboard.writeText(text).then(() => { toast.hidden = false; toast.textContent = "Copied " + l.length + " picks"; box.hidden = true; setTimeout(() => { toast.hidden = true; }, 2500); }, fallback); } catch (e) { fallback(); }
+});
+document.getElementById("clear").addEventListener("click", () => { st = { on: {}, notes: {} }; save(); document.querySelectorAll(".opt").forEach((o) => { o.classList.remove("on"); o.querySelector("input").checked = false; o.querySelector("textarea").value = ""; }); render(); });
+</script>

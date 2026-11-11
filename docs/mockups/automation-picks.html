@@ -1,0 +1,277 @@
+<title>Attune Automation Picks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column of option cards grouped by area; a sticky pick bar at the bottom collects codes + notes */
+:root {
+  --bg: #f6f3f4; --surface: #ffffff; --ink: #24171c; --mut: #6f5f66; --line: #e6dde0;
+  --acc: #7d2340; --acc-soft: #f3e3e9; --ok: #2f6b4f; --ok-soft: #e3f1ea; --warn: #8a5a12; --warn-soft: #f6ecd9; --new: #31527a; --new-soft: #e3ebf5;
+  --font-ui: "Nunito", "Segoe UI", system-ui, sans-serif; --font-code: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #171214; --surface: #211a1d; --ink: #f2e9ec; --mut: #b3a3aa; --line: #3a2f33;
+  --acc: #e08aa6; --acc-soft: #3a2029; --ok: #7fcaa3; --ok-soft: #1d3329; --warn: #e2b46a; --warn-soft: #3a2d17; --new: #8fb3e0; --new-soft: #1c2a3b; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #171214; --surface: #211a1d; --ink: #f2e9ec; --mut: #b3a3aa; --line: #3a2f33;
+  --acc: #e08aa6; --acc-soft: #3a2029; --ok: #7fcaa3; --ok-soft: #1d3329; --warn: #e2b46a; --warn-soft: #3a2d17; --new: #8fb3e0; --new-soft: #1c2a3b; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 28px 140px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 900; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 21px; font-weight: 900; margin: 0; text-wrap: balance; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+h2 .ar { font-size: 16px; font-weight: 800; color: var(--mut); }
+p { margin: 0; max-width: 68ch; }
+.lead { color: var(--mut); font-size: 16px; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--acc); }
+header { display: grid; gap: 10px; }
+.how { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+.how ol { margin: 0; padding-inline-start: 20px; display: grid; gap: 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; }
+.engine { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.engine > div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+.engine b { display: block; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--acc); margin-bottom: 4px; }
+.engine span { color: var(--mut); font-size: 14px; }
+@media (max-width: 640px) { .engine { grid-template-columns: 1fr; } }
+section { display: grid; gap: 12px; }
+.sec-sub { color: var(--mut); font-size: 14.5px; }
+.opt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; transition: border-color .15s, box-shadow .15s; }
+.opt.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+.opt input[type=checkbox] { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--acc); cursor: pointer; }
+.opt-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.code { font-family: var(--font-code); font-size: 13px; font-weight: 600; color: var(--acc); background: var(--acc-soft); border-radius: 6px; padding: 1px 7px; }
+.opt-title { font-weight: 900; font-size: 16.5px; }
+.opt-ar { color: var(--mut); font-weight: 700; font-size: 14px; }
+.star { font-size: 12px; font-weight: 800; color: var(--acc); border: 1px solid var(--acc); border-radius: 999px; padding: 0 8px; }
+.opt-body { grid-column: 2; display: grid; gap: 6px; min-width: 0; }
+.ex { border-inline-start: 3px solid var(--line); padding-inline-start: 10px; color: var(--ink); font-size: 14.5px; }
+.ex i { color: var(--mut); font-style: normal; font-weight: 800; font-size: 12.5px; letter-spacing: 0.04em; text-transform: uppercase; margin-inline-end: 4px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12.5px; }
+.chip { border-radius: 999px; padding: 1px 9px; font-weight: 800; }
+.chip.from { background: var(--bg); color: var(--mut); border: 1px solid var(--line); font-weight: 700; }
+.chip.has { background: var(--ok-soft); color: var(--ok); }
+.chip.part { background: var(--warn-soft); color: var(--warn); }
+.chip.new { background: var(--new-soft); color: var(--new); }
+.chip.eff { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
+.note { width: 100%; min-height: 40px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); }
+.note:focus, .opt input:focus-visible, button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.sources { font-size: 13px; color: var(--mut); display: grid; gap: 6px; }
+.sources ul { margin: 0; padding-inline-start: 18px; columns: 2 260px; column-gap: 24px; }
+.sources a { color: var(--acc); word-break: break-word; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar-in { max-width: 860px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.picked { flex: 1 1 240px; min-width: 0; font-family: var(--font-code); font-size: 13px; color: var(--mut); overflow-wrap: anywhere; max-height: 3.2em; overflow: auto; }
+.picked b { color: var(--ink); }
+.btn { font: inherit; font-weight: 900; border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; background: var(--acc); color: var(--surface); min-height: 44px; }
+.btn.ghost { background: transparent; color: var(--acc); border: 1px solid var(--acc); }
+.copybox { width: 100%; min-height: 90px; font-family: var(--font-code); font-size: 12.5px; border: 1px solid var(--acc); border-radius: 10px; padding: 8px; background: var(--bg); color: var(--ink); }
+.toast { font-weight: 800; color: var(--ok); font-size: 13.5px; }
+@media (prefers-reduced-motion: reduce) { .opt { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Attune · research for Ali · 11 Nov 2026</span>
+    <h1>Make Attune do the work: the best of 30 apps</h1>
+    <p class="lead">I looked at the best to-do, money, reminder, notes, follow-up, travel, project, automation and AI-agent apps, and picked what would make Attune do more by itself. Each option says which app it comes from and whether Attune has it today. Nothing gets built before you pick. After your picks, each one gets phone mock-ups first, as usual.</p>
+  </header>
+
+  <div class="how">
+    <b>How to pick</b>
+    <ol>
+      <li>Tick the options you want. Write a note on any option (what to change, which example to use).</li>
+      <li>Press <b>Copy my picks</b> at the bottom and paste it to me in Chat. Your ticks and notes stay on this page in your browser.</li>
+    </ol>
+    <div class="legend meta">
+      <span class="star">★ my pick</span>
+      <span class="chip new">New in Attune</span>
+      <span class="chip part">Attune has part of it</span>
+      <span class="chip eff">S / M / L = small / medium / large job</span>
+    </div>
+  </div>
+
+  <section aria-labelledby="engine-h">
+    <h2 id="engine-h">The idea behind all of it <span class="ar">الفكرة كلها</span></h2>
+    <p class="sec-sub">Attune already reads a lot on the phone: bank and wallet notifications, messages, calls, Follow-ups, the calendar and your typing. Automation (أتمتة) means one engine turns what it reads into actions you approve once. These three parts are the same for every option below.</p>
+    <div class="engine">
+      <div><b>When (the trigger)</b><span>a time, a place you arrive at or leave, the car's Bluetooth, charging at night, a message from a person, a payment, a date in Follow-ups</span></div>
+      <div><b>If (the check)</b><span>only on weekdays, only above 1,000, only if not done yet, only if nobody replied</span></div>
+      <div><b>Do (the action)</b><span>remind, add a to-do or list item, log money, move to a pot, open a page or app, draft a WhatsApp, silence the phone</span></div>
+    </div>
+  </section>
+
+  <section id="sec-au" aria-labelledby="au-h">
+    <h2 id="au-h">A · Automation <span class="ar">الأتمتة</span></h2>
+    <p class="sec-sub">From Apple Shortcuts, Samsung Modes &amp; Routines, MacroDroid, Tasker, IFTTT, Gemini scheduled actions, Due and Boomerang.</p>
+    <div class="list" data-group="au"></div>
+  </section>
+  <section id="sec-m" aria-labelledby="m-h">
+    <h2 id="m-h">B · Money <span class="ar">الفلوس</span></h2>
+    <p class="sec-sub">From Monzo, Monarch, Copilot Money, YNAB, Rocket Money, Cleo and Splitwise.</p>
+    <div class="list" data-group="m"></div>
+  </section>
+  <section id="sec-t" aria-labelledby="t-h">
+    <h2 id="t-h">C · To-dos &amp; reminders <span class="ar">المهام والتذكيرات</span></h2>
+    <p class="sec-sub">From Todoist, TickTick, Things, Apple Reminders, Google Keep, Motion and Reclaim.</p>
+    <div class="list" data-group="t"></div>
+  </section>
+  <section id="sec-n" aria-labelledby="n-h">
+    <h2 id="n-h">D · Notes &amp; Mind <span class="ar">الملاحظات والذاكرة</span></h2>
+    <p class="sec-sub">From Obsidian, Notion, Mem, Apple Notes and Day One.</p>
+    <div class="list" data-group="n"></div>
+  </section>
+  <section id="sec-p" aria-labelledby="p-h">
+    <h2 id="p-h">E · People &amp; follow-ups <span class="ar">الناس والمتابعات</span></h2>
+    <p class="sec-sub">From Dex, Clay (now Mesh) and Monica.</p>
+    <div class="list" data-group="p"></div>
+  </section>
+  <section id="sec-tr" aria-labelledby="tr-h">
+    <h2 id="tr-h">F · Travel <span class="ar">السفر</span></h2>
+    <p class="sec-sub">From TripIt, Flighty, Wanderlog, Google Flights and Hopper.</p>
+    <div class="list" data-group="tr"></div>
+  </section>
+  <section id="sec-pr" aria-labelledby="pr-h">
+    <h2 id="pr-h">G · Projects <span class="ar">المشاريع</span></h2>
+    <p class="sec-sub">From Asana, Linear, ClickUp and Motion.</p>
+    <div class="list" data-group="pr"></div>
+  </section>
+  <section id="sec-x" aria-labelledby="x-h">
+    <h2 id="x-h">H · New things Attune doesn't do yet <span class="ar">حاجات جديدة خالص</span></h2>
+    <p class="sec-sub">Ideas from warranty trackers, Pixel Magic Cue, Samsung Now Nudge, iPhone Medical ID and home-upkeep apps.</p>
+    <div class="list" data-group="x"></div>
+  </section>
+
+  <section class="sources" aria-labelledby="src-h">
+    <h2 id="src-h">Where this came from</h2>
+    <ul>
+      <li><a href="https://www.techradar.com/best/best-todo-list-apps" target="_blank" rel="noopener">TechRadar: best to-do apps 2026</a></li>
+      <li><a href="https://clickup.com/blog/ticktick-vs-todoist/" target="_blank" rel="noopener">TickTick vs Todoist (Ramble, MCP)</a></li>
+      <li><a href="https://ticktick.com/features" target="_blank" rel="noopener">TickTick features</a></li>
+      <li><a href="https://www.dueapp.com/blog/most-annoying-app.html" target="_blank" rel="noopener">Due: the "most annoying app" (auto-snooze)</a></li>
+      <li><a href="https://help.boomeranggmail.com/article/241-how-to-track-responses" target="_blank" rel="noopener">Boomerang: remind me if no reply</a></li>
+      <li><a href="https://help.superhuman.com/hc/en-us/articles/46005658551053" target="_blank" rel="noopener">Superhuman: auto reminders</a></li>
+      <li><a href="https://monzo.com/blog/2019/09/26/introducing-salary-sorter-and-bills-pots/" target="_blank" rel="noopener">Monzo: Salary Sorter and Bills Pots</a></li>
+      <li><a href="https://monzo.com/help/budgeting-overdrafts-savings/understanding-roundups" target="_blank" rel="noopener">Monzo: round-ups</a></li>
+      <li><a href="https://www.copilot.money/compare/rocket-money" target="_blank" rel="noopener">Copilot Money vs Rocket Money</a></li>
+      <li><a href="https://useorigin.com/resources/blog/the-10-best-budgeting-apps-for-2026-unbiased-reviews-and-comparisons" target="_blank" rel="noopener">Best budgeting apps 2026</a></li>
+      <li><a href="https://www.ionos.com/digitalguide/online-marketing/web-analytics/best-bill-splitting-apps/" target="_blank" rel="noopener">Splitwise, Tricount: simplify debts</a></li>
+      <li><a href="https://support.apple.com/en-gu/guide/shortcuts/apde31e9638b/ios" target="_blank" rel="noopener">Apple: Shortcuts automation triggers</a></li>
+      <li><a href="https://www.samsung.com/ae/support/mobile-devices/how-to-create-and-manage-modes-and-routines-on-a-galaxy-device/" target="_blank" rel="noopener">Samsung: Modes and Routines</a></li>
+      <li><a href="https://www.androidauthority.com/samsung-galaxy-s25-galaxy-ai-auto-routines-3518264/" target="_blank" rel="noopener">Galaxy AI: routines suggested from habits</a></li>
+      <li><a href="https://m.gsmarena.com/googles_gemini_now_supports_scheduled_actions-news-68154.php" target="_blank" rel="noopener">Gemini scheduled actions</a></li>
+      <li><a href="https://en.androidayuda.com/Create-your-own-automation-routines-with-Tasker-or-Macrodroid/" target="_blank" rel="noopener">Tasker and MacroDroid routines</a></li>
+      <li><a href="https://ifttt.com/explore/top-applets-2025" target="_blank" rel="noopener">IFTTT: top applets 2025</a></li>
+      <li><a href="https://aiagentrank.io/blog/chatgpt-agent-2026" target="_blank" rel="noopener">ChatGPT agent 2026</a></li>
+      <li><a href="https://getdex.com/blog/dex-vs-monica.md" target="_blank" rel="noopener">Dex vs Monica (keep in touch)</a></li>
+      <li><a href="https://happenstance.ai/guides/best-personal-crm" target="_blank" rel="noopener">Best personal CRMs 2026</a></li>
+      <li><a href="https://www.pilotplans.com/blog/review-of-tripit" target="_blank" rel="noopener">TripIt review (auto-import)</a></li>
+      <li><a href="https://blog.jetpacglobal.com/blog/best-travel-apps-for-planning/" target="_blank" rel="noopener">Best travel apps 2026</a></li>
+      <li><a href="https://thriftytraveler.com/hopper-launches-price-freeze-feature/" target="_blank" rel="noopener">Hopper price freeze</a></li>
+      <li><a href="https://ca.finance.yahoo.com/news/google-wants-never-overpay-flight-151611435.html" target="_blank" rel="noopener">Google Flights price guarantee</a></li>
+      <li><a href="https://morgen.so/blog-posts/motion-vs-reclaim" target="_blank" rel="noopener">Motion vs Reclaim (auto-scheduling)</a></li>
+      <li><a href="https://www.asianefficiency.com/task-management/best-ai-project-management-tools/" target="_blank" rel="noopener">AI project tools 2026</a></li>
+      <li><a href="https://dupple.com/learn/best-note-taking-apps" target="_blank" rel="noopener">Best note apps 2026</a></li>
+      <li><a href="https://apps.apple.com/app/id6759033483" target="_blank" rel="noopener">WarrantyHub (expiry alerts)</a></li>
+      <li><a href="https://www.digitaltrends.com/cool-tech/magic-cue-one-of-the-smartest-android-features-on-the-pixel-phones-is-coming-to-more-apps/" target="_blank" rel="noopener">Pixel Magic Cue</a></li>
+      <li><a href="https://9to5google.com/2026/02/25/samsung-galaxy-now-nudge-works-like-magic-cue/" target="_blank" rel="noopener">Samsung Now Nudge</a></li>
+    </ul>
+  </section>
+</div>
+
+<div class="bar" role="region" aria-label="Your picks">
+  <div class="bar-in">
+    <div class="picked" id="picked">No picks yet. Tick an option above.</div>
+    <button class="btn ghost" id="clear" type="button">Clear</button>
+    <button class="btn" id="copy" type="button">Copy my picks</button>
+    <span class="toast" id="toast" hidden>Copied</span>
+    <textarea class="copybox" id="copybox" hidden readonly aria-label="Your picks to copy"></textarea>
+  </div>
+</div>
+
+<script>
+const S = { s: "★", has: ["part", "Attune has part of it"], neu: ["new", "New in Attune"] };
+const OPTS = [
+ // A · automation
+ ["au","AU1",1,"“When … do …” for everything","قواعد «لما … اعمل …» لكل حاجة","Write a rule in one sentence and Attune keeps it, for any trigger, not only money. Today Attune does this for salary and messages only.","“When I connect to the car's Bluetooth, read me today's 3 to-dos.” · “When I arrive at Carrefour, show my shopping list.” · «لما المرتب ينزل، ادفع قسط العربية وفكرني بالجمعية»","Apple Shortcuts · Samsung Routines · MacroDroid · IFTTT","part","L"],
+ ["au","AU2",1,"Attune suggests automations from what you repeat","أتيون يقترح أتمتة من اللي بتكرره","When you do the same thing again and again, Attune offers to do it for you (one tap to accept, Undo always).","“You logged ‘the maid 600’ four Saturdays in a row. Do it by itself every Saturday and just ask ‘did she come?’” · “You order from talabat most Thursdays at 9 pm, about 450. Add a Thursday food budget?”","Galaxy AI suggested routines · Attune Autopilot","part","M"],
+ ["au","AU3",0,"Ready-made automation recipes","وصفات أتمتة جاهزة","A gallery of switch-on automations by life moment: salary day, Ramadan, school year, a trip, the car, a new baby. Each one can be edited in words.","Salary day: split the salary, pay the bills, remind about the gam'eya on the 1st. · Ramadan: suhoor alarm, zakat reminder, eid gift list.","IFTTT applets · Shortcuts Gallery","new","M"],
+ ["au","AU4",1,"Scheduled AI jobs (offline, at night)","مهام ذكاء اصطناعي بمواعيد","Ask Attune to do a job on a schedule. The phone's own model runs it at night while charging, and the result waits for you in the morning.","“Every Sunday 9 pm: review my week and plan next week.” · “On the 25th: tell me what is left until salary.” · «كل يوم خميس: لخصلي اللي حصل في مشروع الونش»","Gemini scheduled actions · ChatGPT tasks","part","M"],
+ ["au","AU5",1,"Nag until done","يفضل يفكرك لحد ما تخلص","Important reminders keep coming every 10 minutes or every hour until you tick them. You pick how persistent each one is.","“Pay the CIB card” keeps coming every hour on the due day until you tap Paid. · Medicine every 10 minutes until taken.","Due (auto-snooze)","new","S"],
+ ["au","AU6",1,"Remind me if no reply","فكرني لو مردش","When you ask someone for something on WhatsApp or Gmail, Attune watches for their reply. No reply in 2 days → a follow-up with a polite nudge drafted in your words. A reply closes it by itself.","You wrote to Sheikh: «ابعتلي الفاتورة». Two days later, nothing → Follow-ups shows “Sheikh hasn't replied about the invoice” with a ready message.","Boomerang · Superhuman auto reminders","part","M"],
+ ["au","AU7",0,"Buttons on Attune's notifications","أزرار على الإشعار","Do it from the notification without opening Attune: Paid · Snooze 1 h · Tomorrow · Call back.","“Electricity bill 320 due today” → tap Paid, and it's in Money from your chosen balance.","Due · Todoist","new","S"],
+ ["au","AU8",0,"What Attune did today, with Undo","اللي أتيون عمله النهارده","One list of everything done automatically today, each with Undo, and a daily limit on what Attune may do alone.","“Logged 3 payments, moved 500 to the car fund, set 2 reminders. Undo any.”","Zapier history · Attune Autopilot","part","S"],
+ // B · money
+ ["m","M1",1,"Salary sorter","تقسيم المرتب","When the salary arrives, one screen proposes the whole split: bills, instalments, gam'eya, savings pots, family, spending. Tick each as you do it.","Salary 25,000 → rent 8,000 · car instalment 3,500 · gam'eya 2,000 · car fund 2,500 · mum 1,500 · left to spend 7,500.","Monzo Salary Sorter","part","M"],
+ ["m","M2",0,"Round-ups to a goal","التقريب للتحويش","Every expense is rounded up (to 10, 50 or 100) and the difference counts toward a goal. Attune tells you how much to move this week.","Lunch 185 → 200, the 15 goes to “car fund”. Sunday: “Move 340 to savings.”","Monzo round-ups","new","S"],
+ ["m","M3",1,"Split with anyone","تقسيم المصاريف مع أي حد","Groups for a trip, a flat or the family: who paid what, the fewest payments to settle up, reminders, and a summary to share on WhatsApp.","Sahel trip with 4 friends: Attune says “Karim pays you 650, Omar pays Nada 300” and nothing else.","Splitwise · Tricount","part","M"],
+ ["m","M4",0,"Weekly money check-in","مراجعة الفلوس كل أسبوع","A 3-minute Sunday chat: what went up, what went down, keep or cut. You choose the tone: calm, strict or funny.","“Food delivery 2,100 this week, up 18%. Keep it or set 1,500?”","Cleo · Copilot Money","new","S"],
+ ["m","M5",0,"Categories that learn","تصنيفات بتتعلم","Fix a category once and every future payment from that shop follows. A page lists the rules Attune learned, each editable.","You change “Seoudi” from Food to Groceries once → every Seoudi payment is Groceries from now on.","Copilot Money · Monarch rules","part","S"],
+ // C · to-dos
+ ["t","T1",1,"Brain dump: talk for a minute, get tasks","فضفض دقيقة وخد مهامك","Speak or paste a messy paragraph. Attune splits it into to-dos, reminders, payments and list items with dates, and you tick the ones to keep.","«بكرة لازم اكلم البنك، ونشتري لبن وعيش، والجمعية 2000 يوم 1، وفكرني اجدد الرخصة قبل آخر الشهر» → 4 items, ready to save.","Todoist Ramble","part","M"],
+ ["t","T2",0,"Habits with streaks","عادات وسلاسل أيام","Daily or weekly habits with streaks and a weekly view. A habit can count toward a goal.","“Read 20 pages a day” → counts toward “read 21 books before December 2027”.","TickTick · Streaks","new","M"],
+ ["t","T3",0,"Countdowns on Home","عد تنازلي","A countdown chip on Home for the dates that matter.","“Ramadan in 89 days” · “Jeddah trip in 12 days” · “Wedding in 40 days”.","TickTick","new","S"],
+ ["t","T4",0,"Place reminders","تذكير بالمكان","A reminder that fires when you arrive at or leave a place.","“When I'm at Carrefour, remind me milk.” · “When I leave the office, remind me to call mum.”","Apple Reminders · Google Keep","new","M"],
+ ["t","T5",0,"Auto-plan my week","خطة الأسبوع لوحدها","Tasks with a length and a deadline are placed into free time around your calendar, work hours and prayer times, and move by themselves when something changes.","“The tender file takes 3 hours, due Thursday” → Tue 10:00–11:30 and Wed 18:00–19:30.","Motion · Reclaim","new","L"],
+ ["t","T6",0,"Focus timer on a task","تايمر تركيز","Start a 25-minute focus from any to-do; the phone goes quiet and the time is kept per project.","“Thesis chapter 3”: 4 sessions today, 1 h 40 m this week.","TickTick · Forest","new","S"],
+ // D · notes
+ ["n","N1",0,"One page for each person or thing","صفحة لكل شخص أو حاجة","Tap a name and see everything about them together: money, promises, notes, messages, dates, files.","“Ahmed”: owes 500 · promised the papers Thursday · his daughter's birthday 3 Dec · 2 notes · last call Sunday.","Obsidian backlinks · Mem","part","M"],
+ ["n","N2",0,"Voice memo → summary and to-dos","تسجيل صوتي ← ملخص ومهام","Record a meeting, a call or an idea. Offline, Attune writes the summary, the decisions and the to-dos.","A 12-minute site meeting → 5 lines, 2 decisions, 3 to-dos with names.","Notion AI meeting notes · Plaud","new","M"],
+ ["n","N3",0,"On this day","في يوم زي النهارده","A small card: what happened on this date in past years, from your own data.","“A year ago today you paid the last car instalment.”","Day One · Photos memories","new","S"],
+ // E · people
+ ["p","P1",1,"Keep in touch","خليك على تواصل","Say how often you want to talk to each person. Calls and WhatsApp notifications reset the timer by themselves, and a gentle nudge comes when it's overdue.","“Call mum every 3 days, Karim every month.” You called mum yesterday → nothing to do. Karim: 5 weeks → “Say hi to Karim?”","Dex · Monica · Clay / Mesh","new","M"],
+ ["p","P2",0,"Before you meet","قبل ما تقابله","An hour before a meeting or visit, a card with what's open between you and that person.","Before meeting Sheikh: “He owes 19,500 (2 of 8 payments) · you promised the price list · his son's wedding was last week.”","Dex · Clay","new","M"],
+ ["p","P3",0,"Birthdays and occasions","أعياد الميلاد والمناسبات","Birthdays from contacts and from what you typed, a wish drafted at 9:00 in your style, and an eidiya list per child with a budget.","“Nada's birthday today. Send: «كل سنة وانتي طيبة يا ندى»?” · Eid: 6 kids × 200 = 1,200.","Contacts birthdays · gift planners","part","S"],
+ // F · travel
+ ["tr","TR1",1,"The trip builds itself","الرحلة بتتعمل لوحدها","Booking confirmations from SMS, notifications, PDFs and Gmail (when connected) become one trip timeline, offline: flight, hotel, check-in times, addresses, booking numbers.","EgyptAir SMS + Booking.com email → “Jeddah, 3–7 March: flight MS 643 at 09:40, check-in from 14:00 at the hotel, booking 4821…”","TripIt · Google Travel","part","M"],
+ ["tr","TR2",0,"Flight day alerts","تنبيهات يوم السفر","Online check-in opens, when to leave for the airport (Google Maps time), gate and delay changes read from the airline's notifications.","“Check-in for MS 643 is open.” · “Leave at 06:50, 55 min to Cairo airport.”","Flighty","part","S"],
+ ["tr","TR3",0,"Trip money and papers","فلوس وورق الرحلة","A trip budget in two currencies, shared costs with companions, and a passport check (6 months valid), visa and insurance reminders.","“Your passport ends 1 May; Saudi needs 6 months. Renew before the trip.”","Wanderlog · Sherpa","part","M"],
+ // G · projects
+ ["pr","PR1",0,"Plan backwards from a date","خطة بالعكس من تاريخ","Give the date and Attune builds the steps backwards with costs and who does what.","“Wedding on 5 June” → hall by 5 Feb, invitations by 5 May, suit fitting 20 May; costs filled from your notes.","Asana templates · Motion","new","M"],
+ ["pr","PR2",0,"Weekly project digest","ملخص المشروع كل أسبوع","Every Thursday per project: what moved, what's stuck, the next 3 steps.","“Crane yard: 2 done, 1 stuck (insurance papers), next: pay the inspection, call the client, send the invoice.”","Asana status updates · Linear summaries","new","S"],
+ // H · new
+ ["x","X1",1,"Paperwork autopilot","الورق بيفكر نفسه","A photo or PDF of anything with a date (warranty, insurance, ID, car licence, lease) → Attune finds the expiry, warns 90, 30 and 7 days before, and keeps the paper in Documents.","Photo of the car insurance → “Ends 14 Feb 2027. I'll remind you 30 days before.”","WarrantyHub · Docly · Attune Errands","part","M"],
+ ["x","X2",0,"Home and car upkeep","صيانة البيت والعربية","Oil change by km or months, AC filter, water filter, gas cylinder; each cost goes into Money.","“Oil change due: 9,800 km since the last one (every 10,000).”","Fuelly · home-upkeep apps","part","S"],
+ ["x","X3",0,"What I own","حاجاتي","Things you own with where you bought them, price, receipt, warranty and serial number. Useful for insurance and selling later.","“Samsung TV, B.TECH, 18,500, warranty until Oct 2028, serial …”","Sortly · Encircle","new","M"],
+ ["x","X4",1,"Emergency card for the family","كارت الطوارئ للعيلة","One offline page: blood types, medicines, allergies, doctors, insurance, bank contacts and who to call. Share it with your spouse or brother.","Baba: blood O+, takes Concor 5 mg, doctor Hany 010…, insurance card 77…","iPhone Medical ID · emergency kits","new","S"],
+ ["x","X5",0,"A hint while you chat","تلميح وانت بتكلم حد","When you open a WhatsApp chat, a small chip shows what's open with that person. It needs the floating-bubble permission, which is left out of the first Play release.","Open Ahmed's chat → “Owes you 500 · promised papers Thursday”.","Pixel Magic Cue · Samsung Now Nudge","new","L"],
+ ["x","X6",0,"Kids and school","الولاد والمدرسة","School fees, exam dates, uniform sizes and the timetable, plus homework and notices read from the class WhatsApp group export.","“Mariam: math exam Sunday · trip fee 350 due Wednesday.”","School apps · Attune Timetable","part","M"],
+];
+const KEY = "attune-automation-picks-v1";
+let st = { on: {}, notes: {} };
+try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && typeof v === "object") st = { on: v.on || {}, notes: v.notes || {} }; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+for (const [g, code, star, title, ar, what, ex, from, status, eff] of OPTS) {
+  const host = document.querySelector('.list[data-group="' + g + '"]');
+  const el = document.createElement("article"); el.className = "opt" + (st.on[code] ? " on" : ""); el.id = "opt-" + code;
+  const tag = status === "part" ? '<span class="chip part">Attune has part of it</span>' : '<span class="chip new">New in Attune</span>';
+  el.innerHTML = '<input type="checkbox" id="cb-' + code + '" aria-label="Pick ' + code + '"' + (st.on[code] ? " checked" : "") + '>' +
+    '<div class="opt-head"><label for="cb-' + code + '" class="code">' + code + '</label><label for="cb-' + code + '" class="opt-title">' + esc(title) + '</label>' + (star ? '<span class="star">★ my pick</span>' : "") + '</div>' +
+    '<div class="opt-body"><div class="opt-ar" dir="rtl" lang="ar">' + esc(ar) + '</div><p>' + esc(what) + '</p><div class="ex"><i>Example</i>' + esc(ex) + '</div>' +
+    '<div class="meta"><span class="chip from">From: ' + esc(from) + '</span>' + tag + '<span class="chip eff">' + eff + '</span></div>' +
+    '<textarea class="note" id="note-' + code + '" rows="1" placeholder="Your note on ' + code + ' (optional)">' + esc(st.notes[code] || "") + '</textarea></div>';
+  host.appendChild(el);
+  el.querySelector("input").addEventListener("change", (e) => { st.on[code] = e.target.checked; if (!e.target.checked) delete st.on[code]; el.classList.toggle("on", e.target.checked); save(); render(); });
+  el.querySelector("textarea").addEventListener("input", (e) => { const v = e.target.value; if (v.trim()) st.notes[code] = v; else delete st.notes[code]; if (v.trim() && !st.on[code]) { st.on[code] = true; el.classList.add("on"); el.querySelector("input").checked = true; } save(); render(); });
+}
+const order = OPTS.map((o) => o[1]);
+const lines = () => order.filter((c) => st.on[c]).map((c) => (st.notes[c] && st.notes[c].trim() ? c + " — " + st.notes[c].trim().replace(/\s*\n\s*/g, " / ") : c));
+function render() {
+  const l = lines(), p = document.getElementById("picked");
+  p.innerHTML = l.length ? "<b>" + l.length + " picked:</b> " + l.map(esc).join(" · ") : "No picks yet. Tick an option above.";
+}
+render();
+document.getElementById("copy").addEventListener("click", () => {
+  const l = lines(); const text = l.length ? "My picks (automation research):\n" + l.join("\n") : "";
+  const box = document.getElementById("copybox"), toast = document.getElementById("toast");
+  if (!text) { document.getElementById("picked").textContent = "Tick at least one option first."; return; }
+  const fallback = () => { box.hidden = false; box.value = text; box.focus(); box.select(); toast.hidden = false; toast.textContent = "Select-all is done: copy it with your keyboard or long-press."; };
+  try { navigator.clipboard.writeText(text).then(() => { toast.hidden = false; toast.textContent = "Copied " + l.length + " picks"; box.hidden = true; setTimeout(() => { toast.hidden = true; }, 2500); }, fallback); } catch (e) { fallback(); }
+});
+document.getElementById("clear").addEventListener("click", () => {
+  st = { on: {}, notes: {} }; save();
+  document.querySelectorAll(".opt").forEach((el) => { el.classList.remove("on"); el.querySelector("input").checked = false; el.querySelector("textarea").value = ""; });
+  render();
+});
+</script>
