@@ -86,6 +86,15 @@
         **Held-out (tests/rules/heldout.mjs, written after): 36/40 (90%) on the first try → 40/40** after class fixes (Arabic past
         forms, Portuguese «ligar», names with endings «Annem», role words: a person saved as mother is found by «mamãe», «엄마»…).
         tests/unit/v9918rules.test.mjs.
+  - [x] AU2 web-src/suggest.js findIdeas / refuse / ruleOf — weekly (same weekday, 3+ weeks in a row, recent) and monthly (same
+        day ±2, 3+ months) habits, amount within 15% of its median; one idea per payee; "No" = never again. tests/suggest/gen.mjs:
+        10,000 histories (names in 20 languages, 5 money scales) — first 96.7% → 100% (median not first amount; Hindi/Bengali vowel
+        signs were stripped from names — fixed). Planted bug → 45.9%.
+  - [x] AU3 web-src/recipes.js RECIPES / gallery / nextRamadan — salary day, Ramadan (only when prayers are on, ≤ 120 days, Umm
+        al-Qura), school year, trip, car, new baby; only the rules whose data exist. tests/recipes/gen.mjs: 10,000 people over
+        2026–2028 vs an independent Hijri scan — 100%. Planted bug → 98.7%. tests/unit/v9918b2.test.mjs.
+  - [ ] B2 screens (after OK): the When/If/Do card in Chat + Home (screen AU1-A, with the "ask" card), Automations page list,
+        Home "Attune noticed" card (AU2-A), Recipes gallery (AU3-A); the runner for each trigger (see the line below).
   - [ ] (was: tests/rules/gen.mjs — exactly 10,000 sentences: 21 language codes × triggers × checks × actions, each with the
         expected { when.type, who/place/device, ifs, do types, pct/amount, pot } + sentences that are NOT rules (must be null) +
         sentences missing a name (must ask); independent phrasings in a held-out file written after the fixes; unit test
