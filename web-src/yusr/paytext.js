@@ -141,11 +141,17 @@ const DIRECTION = [
   // NOTE: no \b anywhere near Arabic. JavaScript's \b is defined on ASCII word
   // characters, so it never matches at an Arabic word edge — a silent failure
   // that makes the pattern dead.
+  // v9.9.17 (the 10,000-notification run): «تم رد مبلغ ٥٨٬٦٣١ جنيه الى بطاقتك» is a refund — money back IN (the «الى» made it "out")
+  ["in",  /تم\s+(?:رد|استرداد|ارجاع|إرجاع)\s|رد مبلغ|استرداد مبلغ|مبلغ مسترد/],
   ["out", /(تم\s+)?(خصم|سحب|دفع|شراء|سداد)|حولت|قمت بتحويل|تم التحويل/],
   ["in",  /(تم\s+)?(استلام|إضافة|اضافة|ايداع|إيداع|توريد)|اضيف|أضيف|وردك/],
+  // v9.9.17: «تم تحويل راتبك بمبلغ … الى حسابك» — a transfer TO your account / card / wallet is money in
+  ["in",  /تحويل (?:راتبك|مرتبك)|(?:الى|إلى)\s*(?:حسابك|حسابكم|بطاقتك|محفظتك)(?!\s*(?:الاخر|الآخر))/],
   // "payment received" in other languages before their "payment" (out) words
   ["in",  W("payment received|received a payment|paiement reçu|virement reçu|pago recibido|transferencia recibida|pagamento recebido|transferência recebida|pix recebido|zahlung erhalten|zahlungseingang|überweisung erhalten|ödeme alındı|gelen (?:havale|eft|fast)|pembayaran diterima|transfer masuk|dana masuk|pagamento ricevuto|bonifico ricevuto|betaling ontvangen")],
-  ["out", /\b(sent|paid|debited|deducted|charged|withdraw(n|al)?|transferred to|purchase|payment to|spent|you made a|transaction (?:with|at)|payment of)\b/i],
+  // v9.9.17: "Incoming transfer: EGP 30,481 from OMAR KHALED" was read as money OUT (the bare word "transfer")
+  ["in",  /\b(incoming (?:transfer|payment|remittance|funds)|inward (?:transfer|remittance)|transfer received)\b/i],
+  ["out", /\b(sent|paid|debited|deducted|charged|withdraw(n|al)?|transferred to|purchase|payment to|spent|you made a|transaction (?:with|at|of)|pos transaction|payment of|was used (?:for|at|to pay))\b/i],
   // v9.0 (the notifications bank: an Uber receipt "Your trip total: EGP 85.40" was not read): a ride / order receipt's total was paid
   ["out", /\b(trip total|ride total|your total|total charged|total paid|amount charged|order total|fare total)\b/i],
   ["in",  /\b(received|credited|deposit(ed)?|refund(ed)?|you have received)\b/i],
@@ -180,7 +186,9 @@ function payNumber(raw, cur) {
   const sep = s[last], tail = s.length - last - 1, once = s.indexOf(sep) === last;
   let dec = tail <= 2;
   if (tail === 3 && cur === "TND" && sep === "," && once) return Number(s.replace(",", "."));   // "85,500 TND" (French style, millimes)
-  if (tail === 3) dec = once && sep === "." && !!cur && THREE_DEC.test(cur) && !/,/.test(s.slice(0, last));
+  if (tail === 3 && cur === "TND" && sep === "," && once && /^\d{1,3}(?:\.\d{3})+$/.test(s.slice(0, last))) return Number(s.slice(0, last).replace(/\./g, "") + "." + s.slice(last + 1));   // "1.716,000 TND"
+  // v9.9.17: "BHD 2,983.250", «2,004.250 د.ك» — thousands with a comma AND three decimals (the comma used to switch the decimals off → 2,983,250)
+  if (tail === 3) dec = once && sep === "." && !!cur && THREE_DEC.test(cur) && (!/,/.test(s.slice(0, last)) || /^\d{1,3}(?:,\d{3})+$/.test(s.slice(0, last)));
   if (dec) return Number(s.slice(0, last).replace(/[.,]/g, "") + "." + s.slice(last + 1));
   return Number(s.replace(/[.,]/g, ""));
 }

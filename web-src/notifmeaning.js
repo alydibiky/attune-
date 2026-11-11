@@ -6,15 +6,16 @@
    «Shipped · Amazon Shopping — Arriving Thursday» and "who called me?" finds «Missed call · Ahmed».
    Pure and offline; tests/unit/v980fixes.test.mjs.                                                                                */
 
+import { OFFER_W, CODE_W } from "./notifwords.js";   // v9.9.17 one list for all four readers
 const low = (s) => String(s || "").toLowerCase();
 
 // [kind, app package / app name pattern, text pattern, the words it means (EN · Egyptian Arabic · Franco)]
 const KINDS = [
   ["delivery", /amazon|noon|jumia|talabat|breadfast|elmenus|instashop|aramex|dhl|fedex|ups|bosta|mylerz|shein|temu|aliexpress|careem.*food|deliveroo|ubereats|glovo|rabbit|mrsool|hungerstation|swvl.*box/,
-    /\b(shipped|out for delivery|on (?:its|the) way|arriv(?:ing|es|ed)|delivered|dispatched|courier|tracking|your (?:order|package|parcel|shipment)|order (?:#|no|number|confirmed|placed|is ready)|rider|picked up)\b|تم الشحن|في الطريق|خرج للتوصيل|هيوصل|وصل طلبك|تم التوصيل|طلبك|الطلب|الشحنة|المندوب|الطيار/i,
+    /\b(shipped|out for delivery|on (?:its|the) way|arriv(?:ing|es|ed)|delivered|dispatched|courier|tracking|your (?:order|package|parcel|shipment)|order (?:#|no|number|confirmed|placed|is ready)|rider|picked up)\b|تم الشحن|في الطريق|خرجت? للتوصيل|شحنتك|هيوصل|وصل طلبك|تم التوصيل|طلبك|الطلب|الشحنة|المندوب|الطيار/i,
     "delivery order package parcel shipment shipping courier arriving arrive coming tracking اوردر طلب الطلب شحنه الشحنه دليفري توصيل المندوب جاي هيوصل order delivery"],
   ["bank", /bank|cib|nbe|banquemisr|qnb|hsbc|alahly|instapay|vodafone.?cash|fawry|valu|paymob|paypal|wise|revolut|meeza|aman|sympl|contact|souhoola/,
-    /\b(debited|credited|transaction|purchase|spent|withdraw(?:al|n)?|deposit(?:ed)?|transfer(?:red)?|balance|card ending|your card|payment of|paid|refund(?:ed)?|egp|usd|sar|aed)\b|تم خصم|خصم مبلغ|تم ايداع|تم إيداع|ايداع|إيداع|تحويل|رصيد|بطاقتك|كارت|سحب|عملية شراء|مبلغ|جنيه/i,
+    /\b(debited|credited|transaction|purchase|spent|withdraw(?:al|n)?|deposit(?:ed)?|transfer(?:red)?|balance|card ending|your card|payment of|paid|refund(?:ed)?|received|egp|usd|sar|aed|qar|kwd|bhd|omr|jod)\b|تم خصم|خصم مبلغ|تم ايداع|تم إيداع|ايداع|إيداع|تحويل|رصيد|بطاقتك|كارت|سحب|عملية شراء|مبلغ|جنيه/i,
     "money bank payment paid spent purchase transaction card transfer balance debit credit refund فلوس البنك دفع دفعت خصم تحويل رصيد كارت فيزا مصاريف flos bank"],
   ["call", /dialer|phone|telecom|incallui|contacts/, /\b(missed (?:voice |video )?call|incoming (?:voice |video )?call|calling|voicemail|called you)\b|مكالمة فائتة|مكالمه فائته|مكالمة لم يرد عليها|اتصل بك|بيتصل/i,
     "call called missed phone ring rang voicemail اتصل اتصال مكالمه كلمني رن رنه kalemny etasal"],
@@ -29,17 +30,18 @@ const KINDS = [
     "bill invoice due recharge bundle internet subscription renew phone credit فاتوره فواتير باقه النت شحن رصيد اشتراك تجديد"],
   ["security", /google|apple|microsoft|facebook|instagram|bank|authenticator/, /\b(sign-?in|log-?in|new device|security alert|password|verify|suspicious|2-step)\b|تسجيل الدخول|جهاز جديد|تنبيه أمني|كلمة المرور/i,
     "security login sign in password account alert device امان دخول باسورد الحساب"],
-  ["promo", /./, /\b(\d+% off|sale|discount|offer|deal|promo(?:code)?|coupon|cashback|limited time|free shipping)\b|خصم \d|عرض|عروض|تخفيض|كوبون|كاش باك/i,
+  ["promo", /./, /\b(\d+% off|sale|discount|offer|deal|promo(?:code)?|coupon|cashback|limited time|free shipping)\b|(?<!تم )خصم \d|عرض|عروض|تخفيض|كوبون|كاش باك/i,
     "offer deal sale discount promo coupon cashback عرض عروض خصم تخفيضات كوبون"],
   ["news", /news|cnn|bbc|aljazeera|youm7|masrawy|reuters|sky|espn|kooora|yallakora|onefootball|fotmob|sofascore|livescore/, /./,
     "news headline breaking match score result اخبار خبر ماتش نتيجه كوره"],
 ];
+const REAL_CHAT = /whatsapp|telegram|messenger|orca|signal|securesms|viber|slack|teams|discord|imo\b|botim/;
 const CHAT_APPS = /whatsapp|telegram|messenger|orca|signal|viber|instagram|slack|teams|discord|imo|botim|messaging|mms|sms/;
 const EMAIL_APPS = /gmail|\.gm$|outlook|yahoo|proton|mail/;
 
-const MONEY = /(?:egp|e£|le|l\.e\.?|usd|\$|sar|aed|eur|€|£|جنيه|ج\.م\.?|ريال|درهم)\s*([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s*(?:egp|e£|le|l\.e\.?|usd|sar|aed|eur|جنيه|ج\.م|ريال|درهم)/i;
+const MONEY = /(?<![a-z])(?:egp|e£|le|l\.e\.?|usd|\$|sar|aed|qar|kwd|bhd|omr|jod|eur|€|£|جنيه|ج\.م\.?|ريال|درهم|ر\.س|ر\.ق|د\.إ|د\.ك)\s*([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s*(?:egp|e£|le\b|l\.e\.?|usd|sar|aed|qar|kwd|bhd|omr|jod|eur|جنيه|جم(?![ء-ي])|ج\.م|ريال|درهم|ر\.س|ر\.ق|د\.إ|د\.ك)/i;
 const STATE = [
-  [/delivered|تم التوصيل|اتسلم|وصل طلبك/i, "delivered"], [/out for delivery|خرج للتوصيل|المندوب في الطريق/i, "out for delivery"],
+  [/(?<!will be |to be |couldn't be |could not be |not be |not |for )delivered|تم التوصيل|تم توصيل|اتسلم|وصل طلبك/i, "delivered"], [/out for delivery|خرج للتوصيل|المندوب في الطريق/i, "out for delivery"],
   [/arriv(?:ing|es)\s+((?:on\s+|by\s+)?(?:today|tomorrow|mon|tue|wed|thu|fri|sat|sun|\d{1,2}\s*(?:[a-z]{3}|\/))[\p{L}\d ,/]{0,16})/iu, "arriving"],
   [/shipped|dispatched|تم الشحن/i, "shipped"],
   [/debited|purchase|spent|withdraw|تم خصم|سحب|عملية شراء/i, "money out"], [/credited|deposit|received|تم ايداع|تم إيداع|استلمت/i, "money in"],
@@ -48,17 +50,24 @@ const STATE = [
 
 /** One notification {app, pkg, title, text} → { kind, who, amount, state, words } (words = what it means, for search and chats). */
 export function understandNote(n) {
-  const pkg = low(n && n.pkg), app = low(n && n.app), src = pkg + " " + app, title = String((n && n.title) || ""), text = String((n && n.text) || "");
+  const pkg = low(n && n.pkg), app = low(n && n.app), src = pkg + " " + app + (/messag|\bsms\b|mms/.test(pkg + " " + app) ? " " + low(n && n.title) : ""), title = String((n && n.title) || ""), text = String((n && n.text) || "");
   const all = title + " " + text, la = low(all);
   let kind = "";
   // v9.8 (Ali's screenshot): a WhatsApp "Missed voice call" is a call, not a message; an offer ("300 EGP OFF … delivered in 15 minutes")
   // is an offer, not a delivery; an email only counts as a delivery when a shop sent it
-  const PROMO = /\b\d+\s*(?:%|egp|le|جنيه)?\s*off\b|\bsale\b|\bdiscount\b|\bpromo(?:code)?\b|\bcoupon\b|\bcashback\b|عرض|خصم \d|تخفيض|كوبون/i;
+  // v9.9.17: «تم خصم 3,317 جم من بطاقتك» is money deducted, not a discount («خصم 30٪»); offers in the app's other languages
+  const PROMO0 = /\b\d+\s*(?:%|egp|le|جنيه)?\s*off\b|\bsale\b|\bdiscount\b|\bpromo(?:code)?\b|\bcoupon\b|\bcashback\b|\b(?:special )?offers?\b|\bdeals?\b|\bbonus\b|\binstead of\b|عرض|(?<!تم )خصم \d|تخفيض|كوبون/i;
+  const PROMO = { test: (x) => (PROMO0.test(x) || OFFER_W.test(x)) && !/تم خصم|خصم مبلغ|\b(debited|credited|charged)\b/i.test(x) };
+  // a person's chat is a message (or a missed call) whatever words it uses («انا في الطريق» is not a delivery, "the gate code" not a flight)
+  const realChat = REAL_CHAT.test(src), cal = /calendar|com\.google\.android\.apps\.tachyon|\bmeet\b/.test(src);
   const SHOP = /amazon|noon|jumia|talabat|breadfast|aramex|dhl|fedex|ups|bosta|mylerz|shein|temu|aliexpress|instashop/i;
   if (/missed (?:voice |video )?call|مكالمة (?:صوتية |فيديو )?فائتة|مكالمة لم يرد عليها/i.test(all)) kind = "call";
+  else if (realChat) kind = "";
+  else if (cal || /\bstarts in \d+ (?:min|mins|minutes|hours?)\b|\bmeeting in \d+ (?:min|minutes)\b/i.test(all)) kind = "appointment";
+  else if (CODE_W.test(all) || /sign[- ]?in|log[- ]?in|tried to log|new device|security alert|password|recovery email|2-step|suspicious|تسجيل الدخول|جهاز جديد|تنبيه أمني/i.test(all) && !/\b(egp|usd|sar|aed)\b|\$|جنيه/i.test(all)) kind = "security";
   else if (PROMO.test(all) && !/\b(shipped|(?:has been|was|been) delivered|out for delivery|your (?:order|package|parcel)|tracking)\b|تم الشحن|تم التوصيل|طلبك/i.test(all)) kind = "promo";
-  if (!kind) for (const [k, appRx, txtRx] of KINDS) if (appRx.test(src) && txtRx.test(all) && k !== "promo" && k !== "news") { kind = k; break; }
-  if (!kind) for (const [k, appRx, txtRx] of KINDS) if (k !== "news" && txtRx.test(all) && (k !== "call" || /missed|مكالم/i.test(all)) && !(k === "delivery" && EMAIL_APPS.test(src) && !SHOP.test(all))) { kind = k; break; }
+  if (!kind && !realChat) for (const [k, appRx, txtRx] of KINDS) if (appRx.test(src) && txtRx.test(all) && k !== "promo" && k !== "news") { kind = k; break; }
+  if (!kind && !realChat) for (const [k, appRx, txtRx] of KINDS) if (k !== "news" && txtRx.test(all) && (k !== "call" || /missed|مكالم/i.test(all)) && !(k === "delivery" && EMAIL_APPS.test(src) && !SHOP.test(all))) { kind = k; break; }
   if (!kind && KINDS[KINDS.length - 1][1].test(src)) kind = "news";
   // a person's message (chat apps): the title is who wrote — «Ahmed Salah 012 (Dayı)», a group's "Group: Name"
   let who = "";

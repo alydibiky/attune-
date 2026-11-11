@@ -4,7 +4,8 @@
    unreadable texts are dropped; the same payment notified twice (an update, or the bank AND InstaPay) is kept once.
    The entries are listed in Money to confirm; confirmed ones go to Money (Yusr) through the bridge ("add-txns").
    Pure logic; tests: tests/unit/v727paylog.test.mjs.                                                                         */
-import { labelOf, notMoney, countsAsMoney } from "./notelabels.js";   // v9.9.11 what the person taught
+import { labelOf, notMoney, countsAsMoney, understandNote as readMeaning } from "./notelabels.js";   // v9.9.11 what the person taught
+import { notAPayment } from "./notifwords.js";   // v9.9.17 one list for all four readers
 import { loadTeach } from "./noteteach.js";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts } from "./locale.js";
@@ -57,14 +58,22 @@ export function readNotification(n, opts) {
   if (isChatApp(n) && !countsAsMoney(lab)) return null;
   const text = [n.title, n.text].filter(Boolean).join(" — ").trim();
   if (!text || OTP.test(text) || BALANCE_ONLY.test(text) || FUTURE.test(text) || (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text))) return null;
+  // v9.9.17 (the 10,000-notification run): a code that names its purchase, a declined / failed payment, a bill that is only due, a
+  // fine, "you will be billed", an offer, a price moving, a prize text, an SMS from a person's number — none of them is money that
+  // moved (what the person taught as "my bank / my money" is still read); a video's title or an advert is never a payment
+  if (!countsAsMoney(lab)) { if (notAPayment(text, n)) return null; let m = null; try { m = readMeaning(n); } catch (e) {} if (m && m.sure && (m.meaning === "ads" || m.meaning === "notmoney")) return null; }
   // v9.9.16: the person's own currency decides what "$", "Rs", «دينار», «ريال» mean (a Canadian's $ is CAD, a Jordanian's دينار JOD)
   let home = {}; try { home = payOpts() || {}; } catch (e) {}
   const p = parsePayment(text, { ...home, ...(opts || {}), now: n.ts || undefined });
   // a bank / wallet that names no currency ("A/C X1234 debited by 450.0") speaks in the person's own — kept when the sender is a
   // money source; from anyone else a message with no currency is still too little to go on
   const known = MONEY_SRC.test(String(n.app || "") + " " + String(n.title || ""));
+  // v9.9.17 (the held-out check): a bank app's short notice "💸 £8.50 at Pret A Manger" has no verb — from a money source, an amount "at" a shop was spent
+  if (p && p.amount > 0 && !p.direction && known && /^[^\p{L}\d]*[$€£]?\s?[\d.,]+\s*(?:[A-Z]{3}\s+)?(?:at|@)\s+\S/iu.test(String(n.text || ""))) { p.direction = "out"; p.ok = true; if (p.confidence === "low") p.confidence = "medium"; }
   if (!p || !p.ok || !(p.amount > 0) || !p.direction || (p.confidence === "low" && !(known && !p.currency && home.home))) return null;
   if (!p.currency && home.home) p.currency = home.home;
+  // v9.9.17: a shop's own "Payment received: EGP 1,879 for your stay" / "We've received your payment" is money the person PAID
+  if (p.direction === "in" && !known && /payment (?:was |has been )?received|received your payment|payment of (?:[^.\n]|\.\d){0,40} received|تم استلام (?:دفعتك|مدفوعاتك)/i.test(text)) p.direction = "out";
   // full / from: the complete message as it arrived and who sent it — kept with the payment as its evidence (Ali, 25 Oct)
   return { id: n.id, app: n.app || n.pkg || "", amount: p.amount, currency: p.currency || "", direction: p.direction, party: p.party || "",
     ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), full: String(n.text || "").slice(0, 2000), from: String(n.title || "").slice(0, 200), confidence: p.confidence,
@@ -115,7 +124,7 @@ export function alreadyIn(entry, ledger) {
      3. it says the money MOVED (debited / credited / تم خصم / تم تحويل / استلمت …) — not "300 for the night guard";
      4. when a model is loaded: the model read the message and agrees (a real payment of THIS person, same amount and direction).
    Anything else waits in Money for one tap ("Is this yours?") — never added on a guess. */
-const MONEY_SRC0 = /bank|banque|banco|\bcib\b|commercial international|\bnbe\b|al ?ahly|الأهلي|الاهلي|banque misr|بنك مصر|\bqnb\b|hsbc|\baaib\b|\badib\b|alex ?bank|faisal|emirates ?nbd|mashreq|\bfab\b|\bcae\b|credit agricole|\bsaib\b|\bnbk\b|\bbdc\b|instapay|انستاباي|\bipn\b|wallet|محفظ|vodafone ?cash|vf-?cash|فودافون كاش|orange ?(cash|money)|etisalat ?cash|e& ?cash|we ?pay|fawry|فوري|valu|meeza|ميزة|paymob|telda|khazna|sympl|souhoola|halan|contact|aman|masary|bee\b|paypal|revolut|wise|payoneer|stripe|apple ?pay|google ?(pay|wallet)|samsung ?(pay|wallet)|visa|mastercard|amex|stc ?pay|urpay|mada|benefit|gpay|phonepe|paytm|upi|\bpix\b|nubank|mercado ?pago|m-?pesa|chase|wells ?fargo|citi|barclays|lloyds|santander|monzo|starling|n26|ing\b|bnp|soci[eé]t[eé] g[eé]n[eé]rale|deutsche ?bank|sparkasse|garanti|akbank|i[sş] ?bankas[iı]|ziraat|yap[iı] ?kredi|sberbank|tinkoff|alfa-?bank|icici|hdfc|\bsbi\b|axis|kotak|bca\b|mandiri|\bbri\b|maybank|cimb|dbs|ocbc|kasikorn|scb\b/i;
+const MONEY_SRC0 = /bank|banque|banco|\bcib\b|commercial international|\bnbe\b|al ?ahly|الأهلي|الاهلي|banque misr|بنك مصر|\bqnb\b|hsbc|\baaib\b|\badib\b|alex ?bank|faisal|emirates ?nbd|mashreq|\bfab\b|\bcae\b|credit agricole|\bsaib\b|\bnbk\b|\bbdc\b|instapay|انستاباي|\bipn\b|wallet|محفظ|vodafone ?cash|vf-?cash|فودافون كاش|orange ?(cash|money)|etisalat ?cash|e& ?cash|we ?pay|fawry|فوري|\bvalu\b|meeza|ميزة|paymob|telda|khazna|sympl|souhoola|\bhalan\b|\bcontact\b(?! us)|\baman\b|masary|bee\b|paypal|revolut|\bwise\b|payoneer|\bstripe\b|apple ?pay|google ?(pay|wallet)|samsung ?(pay|wallet)|\bvisa\b|mastercard|\bamex\b|stc ?pay|urpay|\bmada\b|\bbenefit(?:pay)?\b|\bgpay\b|phonepe|paytm|\bupi\b|\bpix\b|nubank|mercado ?pago|m-?pesa|\bchase\b|wells ?fargo|\bciti(?:bank)?\b|barclays|lloyds|santander|monzo|starling|n26|\bing\b|bnp|soci[eé]t[eé] g[eé]n[eé]rale|deutsche ?bank|sparkasse|garanti|akbank|i[sş] ?bankas[iı]|ziraat|yap[iı] ?kredi|sberbank|tinkoff|alfa-?bank|icici|hdfc|\bsbi\b|\baxis\b|kotak|bca\b|mandiri|\bbri\b|maybank|cimb|dbs|ocbc|kasikorn|scb\b/i;
 const MONEY_SRC = { test: (x) => MONEY_SRC0.test(x) || WORLD_MONEY_SRC.test(x) };
 const SMS_APP = /messag|\bsms\b|mms|com\.android\.mms|samsung\.android\.messaging|google\.android\.apps\.messaging|رسائل/i;
 const MOVED = /\b(debited|credited|charged|purchase[d]?|paid|payment (?:of|to|from)|received|transferr?ed|transfer (?:of|to|from)|withdrawn?|withdrawal|deposit(?:ed)?|spent|refund(?:ed)?|sent you|you sent)\b|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|خصم مبلغ|إيداع مبلغ|ايداع مبلغ|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|سحبت|عملية شراء|(?<![\p{L}])(débit[ée]|crédit[ée]|paiement|achat|virement|cargo|abono|compra|pago|transferencia|pagamento|transferência|zahlung|gutschrift|überweisung|abbuchung|ödeme|harcama|havale|pembayaran|списан|зачислен|оплата|перевод)(?![\p{L}])/iu;

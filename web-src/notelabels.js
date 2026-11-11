@@ -12,6 +12,7 @@
    bill / delivery / family / important → how it is described. Nothing is saved before "I understood … — Save".
    Pure; tests: tests/unit/v999notelabels.test.mjs. */
 import { readTeach, ROLES } from "./noteteach.js";
+import { notAPayment, isScam, OFFER_W } from "./notifwords.js";   // v9.9.17
 const ROLE_AR = Object.fromEntries(ROLES.map((r) => [r[0], r[2]]));
 
 const CHAT = /whatsapp|telegram|messenger|com\.facebook\.orca|instagram|securesms|org\.signal|signal|viber|slack|teams|discord|imo|botim|wechat|tencent\.mm|naver\.line|snapchat|skype/i;
@@ -144,26 +145,34 @@ export function learned(teach, dir = { items: [] }) {
 //   a receipt that says you were charged → "paid" (asked as "You paid … — add it to Money?", never "what is this?")
 //   a chat whose name or sender says work / wages → "work" as a GUESS (the card opens on "I think: …" — Save / Change)
 // Nothing is saved without the person's tap; the sure ones are only left out of the questions.
-const AD = /(invite (?:a |your )?friends?|refer (?:a |your )?friends?|get [^.\n]{0,24}\boff\b|\d+(?:[.,]\d+)?\s?%\s?off|\binstead of\b|\bonly (?:for|today|this)\b|\bfor [^.\n]{0,20}\bonly\b|treat yourself|don'?t miss|limited[- ]time|hurry|last chance|flash sale|\bsale\b|\bdeals?\b|\boffers?\b|discount|promo\w*|coupon|voucher|use (?:the )?code|free delivery|free shipping|cashback|save up to|lowest price|new arrivals|order now|shop now|book now|\bwin\b|giveaway|sponsored|new collection|\bfrom (?:egp|\$|usd|€|£|ج\.م\.?)\s?[\d٠-٩]|buy (?:1|one) get|get (?:1|one) free|special offer|new arrivals|(?:plans?|prices?|items?|starting|installments? starting) (?:from|at)\b|starting (?:from |at )?(?:egp|\$|usd|€)|watch now|visit [a-z0-9-]+\.(?:com|eg|net)|bonus|اشترك (?:في|ف)|واحصل|احصل على|بـ? ?[\d٠-٩][\d٠-٩,.٬٫]* ?جنيه بس|بس بـ|بدل(?:ا|اً)? من|بدل ما|خصم|عرض|عروض|كوبون|كود الخصم|استخدم كود|وفر|توصيل مجاني|لفترة محدودة|متفوتش|الحق(?:ه|ها)?|هدية|اطلب دلوقتي|اطلب الآن|ادعي صاحبك|ادعُ صديق|اكسب|تخفيضات|لحق نفسك)/iu;
-const MOVED = /(you'?ve been charged|amount charged|received your payment|has been renewed|you were charged|has been charged|was charged|we charged|charged to your|billed to|debited|credited|total paid|(?:\$|egp|usd|€)\s?[\d.,]+ paid|\bpaid (?:successfully|with|by|on)\b|payment of [^.\n]{0,30} (?:was|is) successful|تم تجديد|تم الدفع|payment (?:received|successful|confirmed|complete[d]?)|paid successfully|you paid|you sent|you received|refund(?:ed)?|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|استلمت|وصلك مبلغ)/iu;
-const RECEIPT = /(receipt|you paid|received your payment|amount charged|has been renewed|تم سداد|billed to|total paid|invoice|payment of [^.\n]{0,30} (?:was|is) successful|رقم العملية|you'?ve been charged|you were charged|has been charged|was charged|we charged|payment (?:received|successful|confirmed|complete[d]?)|paid successfully|thanks? (?:you )?for your (?:payment|purchase|order)|invoice (?:paid|#|no)|order (?:number|no\.?|#)|subscription (?:continues|renewed|has been renewed|is renewed)|إيصال|ايصال|تم الدفع|تم خصم|تم سداد|فاتورة مدفوعة|تم تجديد اشتراكك|رقم الطلب)/iu;
+const AD = /(invite (?:a |your )?friends?|refer (?:a |your )?friends?|get (?:[^.\n]|\.\d){0,24}\boff\b|\d+(?:[.,]\d+)?\s?%\s?off|\binstead of\b|\bonly (?:for|today|this)\b|\bfor [^.\n]{0,20}\bonly\b|treat yourself|don'?t miss|limited[- ]time|hurry|last chance|flash sale|\bsale\b|\bdeals?\b|\boffers?\b|discount|promo\w*|coupon|voucher|use (?:the )?code|free delivery|free shipping|cashback|save up to|lowest price|new arrivals|order now|shop now|book now|\bwin\b|giveaway|sponsored|new collection|\bfrom (?:egp|\$|usd|€|£|ج\.م\.?)\s?[\d٠-٩]|buy (?:1|one) get|get (?:1|one) free|special offer|new arrivals|(?:plans?|prices?|items?|starting|installments? starting) (?:from|at)\b|starting (?:from |at )?(?:egp|\$|usd|€)|watch now|visit [a-z0-9-]+\.(?:com|eg|net)|bonus|اشترك (?:في|ف)|واحصل|احصل على|بـ? ?[\d٠-٩][\d٠-٩,.٬٫]* ?جنيه بس|بس بـ|بدل(?:ا|اً)? من|بدل ما|خصم|عرض|عروض|كوبون|كود الخصم|استخدم كود|وفر|توصيل مجاني|لفترة محدودة|متفوتش|الحق(?:ه|ها)?|هدية|اطلب دلوقتي|اطلب الآن|ادعي صاحبك|ادعُ صديق|اكسب|تخفيضات|لحق نفسك)/iu;
+const MOVED = /(you'?ve been charged|amount charged|received your payment|has been renewed|you were charged|has been charged|was charged|we charged|charged to your|billed to|debited|credited|total paid|(?:\$|egp|usd|€)\s?[\d.,]+ paid|\bpaid (?:successfully|with|by|on)\b|payment of (?:[^.\n]|\.\d){0,40} (?:was|is) successful|تم تجديد|تم الدفع|payment (?:received|successful|confirmed|complete[d]?)|payment of (?:[^.\n]|\.\d){0,40} received|paid successfully|you paid|you sent|you received|refund(?:ed)?|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|استلمت|وصلك مبلغ)/iu;
+const RECEIPT = /(receipt|you paid|received your payment|amount charged|has been renewed|تم سداد|billed to|total paid|invoice|payment of (?:[^.\n]|\.\d){0,40} (?:was|is) successful|رقم العملية|you'?ve been charged|you were charged|has been charged|was charged|we charged|payment (?:received|successful|confirmed|complete[d]?)|payment of (?:[^.\n]|\.\d){0,40} received|paid successfully|thanks? (?:you )?for your (?:payment|purchase|order)|invoice (?:paid|#|no)|order (?:number|no\.?|#)|subscription (?:continues|renewed|has been renewed|is renewed)|إيصال|ايصال|تم الدفع|تم خصم|تم سداد|فاتورة مدفوعة|تم تجديد اشتراكك|رقم الطلب)/iu;
 const FUTURE = /(will be (?:charged|billed|debited|renewed)|you'?ll be (?:charged|billed)|will renew|renews on|payment (?:is )?due|due on|free trial|trial ends|سيتم خصم|سيتم التجديد|الفترة التجريبية)/iu;
 const MEDIA = /youtube|tiktok|musically|zhiliaoapp|netflix|spotify|twitch|reddit|twitter|com\.x\.android|\bx\.com\b|pinterest|facebook\.katana|\bfacebook\b(?!.*orca)|threads|tumblr|shahid|anghami|watch ?it|osn|disney|primevideo|prime video|hbo|crunchyroll|soundcloud|deezer|podcast|castbox|\bnews\b|bbc|cnn|aljazeera|youm7|masrawy|almasryalyoum|google\.android\.apps\.magazines|quora|medium|linkedin|duolingo|\bgames?\b|supercell|pubg|tencent\.ig|freefire|dts\.freefire|roblox|king\.candycrush|steam|epicgames|chess|9gag|imdb|kick\.com|vimeo|dailymotion|snapchat/i;
+const NEWS_FROM = /substack|medium|digest|newsletter|quora|linkedin|coursera|udemy|kickstarter|reddit|youtube|property ?finder|job alerts?|upwork|indeed|wuzzuf|glassdoor|pinterest|tiktok|facebook|twitter|\bx\b/i;
 const WORKY = /(work|office|company|staff|wages|salar(?:y|ies)|payroll|accountant|accounts|hr\b|site|workers|employees|team|شغل|الشغل|شركه|شركة|الشركة|المكتب|مرتبات|المرتبات|رواتب|الرواتب|محاسب|المحاسب|حسابات|الموظفين|العمال|عمال|الموقع|الورشه|الورشة|الادارة|الإدارة)/iu;
 /** What one notification is, read by code → { meaning, sure, why } or null (not clear — ask). Pure. */
 export function understandNote(n) {
   if (!n) return null;
   const s = sourceOf(n), text = String(n.title || "") + " \n " + String(n.text || ""), app = appName(n) + " " + String(n.pkg || "");
-  const moved = MOVED.test(text) && !FUTURE.test(text);
-  if (moved && RECEIPT.test(text)) return { meaning: "paid", sure: true, why: "receipt" };
-  if ((s.kind !== "chat" || /sponsored|إعلان ممول|ممول/i.test(text)) && AD.test(text) && !moved) return { meaning: "ads", sure: true, why: "offer" };
-  if (s.kind === "app" && MEDIA.test(app) && !moved) return { meaning: "notmoney", sure: true, why: "media" };
+  // v9.9.17 (the 10,000-notification run): a prize / "verify here" text is left out like an advert; "you will be billed", "payment
+  // declined", a code are not receipts; a video title that says "I spent $342,142" is still a video; a newsletter, a price moving
+  // ("BTC is up 3% — now $86,186") and "shared a reel" are not the person's money
+  const why0 = notAPayment(text), receipt = RECEIPT.test(text) && !["failed", "notyet", "code"].includes(why0);
+  if (s.kind !== "chat" && isScam(text)) return { meaning: "ads", sure: true, why: "scam" };
+  const moved = MOVED.test(text) && !FUTURE.test(text) && !["failed", "notyet", "code"].includes(why0);
+  if (s.kind === "app" && MEDIA.test(app) && !(moved && receipt)) return { meaning: "notmoney", sure: true, why: "media" };
+  if (s.kind === "mail" && NEWS_FROM.test(s.name) && !(moved && receipt)) return { meaning: "notmoney", sure: true, why: "newsletter" };
+  if (why0 === "post" || (why0 === "price" && s.kind !== "chat")) return { meaning: "notmoney", sure: true, why: why0 };
+  if (moved && receipt) return { meaning: "paid", sure: true, why: "receipt" };
+  if ((s.kind !== "chat" || /sponsored|إعلان ممول|ممول/i.test(text)) && (AD.test(text) || OFFER_W.test(text)) && !moved) return { meaning: "ads", sure: true, why: "offer" };
   if (s.kind === "chat" && WORKY.test(s.name + " " + String(n.title || ""))) return { meaning: "work", sure: false, why: "work-chat" };
   return null;
 }
 
 // ---- what to ask about ------------------------------------------------------------------------------------------------------------
-const MONEYISH = /[\d٠-٩][\d٠-٩,.٬٫]*\s*(?:جنيه|جنيها|ج\.م|جم|egp|le\b|l\.e|\$|usd|eur|sar|aed|ريال|درهم|دولار)|(?:egp|le|l\.e|\$|usd|ج\.م\.?|€|£)[\s\u200e\u200f]*[\d٠-٩]|(?:حولتلك|حولتلكم|بعتلك|بعتتلك|حولت|حولتلي|بعتلي|sent you|transferred(?: you)?|i sent)\s*[\d٠-٩]{3,}/i;   // v9.9.13: «حولتلك ٣٠٠٠» with no currency is money too
+const MONEYISH = /[\d٠-٩][\d٠-٩,.٬٫]*\s*(?:جنيه|جنيها|ج\.م|جم|egp|le\b|l\.e|\$|usd|eur|sar|aed|ريال|درهم|دولار)|(?<![a-z])(?:egp|le|l\.e|\$|usd|ج\.م\.?|€|£)[\s\u200e\u200f]*[\d٠-٩]|(?:حولتلك|حولتلكم|بعتلك|بعتتلك|حولت|حولتلي|بعتلي|sent you|transferred(?: you)?|i sent)\s*[\d٠-٩]{3,}/i;   // v9.9.13: «حولتلك ٣٠٠٠» with no currency is money too
 /** Notifications Attune should ask about, once per source: money in a chat / an unknown app (never a known label, never twice).
  *  → [{ id, src, n, why: "money" }] newest first, at most `max`. A bank app's money is NOT asked here (the payment check handles it). */
 export function asksFrom(notes = [], teach = { rules: [], asked: [], skip: [] }, { max = 3, bankish = () => false, payOf = () => null, now = Date.now() } = {}) {

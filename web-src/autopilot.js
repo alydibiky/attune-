@@ -10,6 +10,8 @@
 import { isChatApp } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
 import { understandNote } from "./notifmeaning.js";
 import { findSub } from "./subpay.js";
+import { notAPayment, fromPhoneNumber } from "./notifwords.js";   // v9.9.17 one list for all four readers
+import { understandNote as readMeaning } from "./notelabels.js";
 
 export const AP_KEY = "attune:autopilot:v1";
 export const emptyState = () => ({ v: 1, seen: {}, ok: {}, no: {}, always: [], asked: [], done: [], skipApps: [] });
@@ -38,7 +40,11 @@ export function dayIn(text, now) {
   return 0;
 }
 // a message that asks you to do something (or says when)
-const ASKS = /\b(send|bring|call|pay|transfer|remind|don't forget|please|can you|could you|tomorrow|tonight)\b|ابعت|ابعتلي|هات|كلمني|اتصل|حول|حوّل|ادفع|متنساش|ماتنساش|بكرة|بكره|النهارده|بليل|لو سمحت|ممكن/i;
+// v9.9.17 (the 10,000-notification run): "see you tomorrow", "tonight was fun", "I'll call you tomorrow", "thanks for calling" made
+// to-dos — a day word alone asks for nothing, and "I'll call you" is THEIR job; a to-do needs a request
+const ASKS0 = /\b(send|bring|pay|transfer|remind|don't forget|dont forget|please|pls|can you|could you|pick up|call (?:me|us|him|her|them|the|dr|mr|your))\b|ابعت|ابعتلي|هات|كلمني|اتصل|(?<![ء-ي])حول|حوّل|ادفع|متنساش|ماتنساش|لو سمحت|ممكن/i;
+const NOT_ASK = /^\s*(?:thanks?|thank you|شكرا)\b|\b(?:i'?ll|i will|we'?ll|i can|let me) (?:call|send|bring|pay|transfer|pick)\b|\b(?:i|we) (?:sent|paid|transferred|called|brought)\b|\bthanks for (?:calling|sending|paying)\b|(?<![ء-ي])ه(?:بعت|كلم|جيب|دفع|حول)/i;
+const ASKS = { test: (x) => ASKS0.test(x) && !NOT_ASK.test(x) };
 
 // v9.9 (Ali, 9 Nov: "there was a Google one which told me the payment of Gemini, and it wasn't recorded in subscriptions automatically —
 // I want users to make low effort and the app makes the most effort"): a payment to a service that only comes as a subscription →
@@ -54,7 +60,9 @@ export const SUBS = [
 ];
 export const subOf = (t) => (SUBS.find(([re]) => re.test(String(t || ""))) || [null, ""])[1];
 const PAID_W = /\b(paid|payment|charged|renew(?:ed|al)|receipt|billed|purchase|subscription|subscribed|membership|order|invoice|debited|successful)\b|تم الدفع|دفعت|تم خصم|اتخصم|خصم مبلغ|اشتراك|تجديد|تم تجديد|فاتورة|عملية شراء|ايصال|إيصال/i;
-const OFFER_W = /\b(get|try|free for|save|discount|deal|offer|limited time|\d+\s*%|for just|starting at|join now|upgrade now|ends soon|trial ends)\b|جرب|عرض|خصم \d|وفر/i;
+const DUE_W = /\b(?:is |are )?(?:now )?(?:due|overdue|payable)\b|pay (?:it |now )?before|\bdue (?:on|by|date|in)\b|مستحق|آخر ميعاد|اخر ميعاد|السداد قبل|سدد قبل/i;
+const BILL_W = /\b(bill|invoice|installment|instalment|fees?|fine|tax|rent|premium|payment)\b|فاتور|قسط|مخالف|مصاريف|رسوم|ضريب|ايجار|إيجار/i;
+const OFFER_W = /\b(get|try|free for|save|discount|deal|offer|limited time|\d+\s*%|for just|starting at|join now|upgrade now|ends soon|trial ends)\b|جرب|عرض|(?<!تم )خصم \d|وفر/i;
 const curOf = (t) => { const m = /\b(egp|usd|sar|aed|eur|gbp|kwd|qar|try)\b|(e£|£|\$|€|جنيه|ج\.م|ريال|درهم)/i.exec(String(t || "")); if (!m) return ""; const k = (m[1] || m[2]).toLowerCase(); return { "e£": "EGP", "جنيه": "EGP", "ج.م": "EGP", "$": "USD", "€": "EUR", "£": "GBP", "ريال": "SAR", "درهم": "AED" }[k] || k.toUpperCase(); };
 
 // v9.9.12: the day the receipt says it was paid ("Order date: 7 Nov 2026", "Receipt from 7 Nov 2026") — the plan renews on that day,
@@ -73,12 +81,22 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   const u = understandNote(n), app = String(n.app || n.pkg || ""), text = String(n.text || ""), title = String(n.title || "");
   if ((s.skipApps || []).includes(app + ":" + u.kind)) return null;
   const base = { src: String(n.id), app, at: n.ts || now, kind: "", full: { title, text } };   // (v9.8: the whole message, to read before adding)
-  { const all = title + " " + text, svc = subOf(all);
-    if (svc && u.amount > 0 && !isChatApp(n) && u.kind !== "promo" && u.state !== "money in" && PAID_W.test(all) && !OFFER_W.test(all)) {
+  // v9.9.17 (the 10,000-notification run): the cards skipped the checks Money's list has — "You will be billed EGP 1,438", "your
+  // payment was declined", a code "for your purchase of EGP 567", «سيتم خصم قسط القرض», a prize text became a subscription / an
+  // expense / income card. One list for every reader (notifwords.js); an advert or a video is never a card either.
+  const all0 = title + " " + text, no = notAPayment(all0, n), lab = (() => { try { return readMeaning(n); } catch (e) { return null; } })(), left = !!(lab && lab.sure && (lab.meaning === "ads" || lab.meaning === "notmoney"));
+  const smsFrom = /messag|\bsms\b|mms|رسائل/i.test(app + " " + String(n.pkg || "")) && title && !fromPhoneNumber(n) ? title : app;
+  // a bill that is DUE (not paid yet) — whatever kind the app is: "You have a new gas bill: EGP 648 due 5 Dec" (Fawry), «فاتورتك ٢٨٩٨ ر.س مستحقة»
+  if (!isChatApp(n) && !left && no !== "code" && no !== "scam" && no !== "person" && u.amount > 0 && DUE_W.test(all0) && BILL_W.test(all0) && !/\b(paid|thank|received your payment|successful(?:ly)?)\b|تم (?:سداد|دفع|الدفع)/i.test(all0)) {
+    const when = dayIn(text + " " + title, n.ts || now) || at9((n.ts || now) + 3 * DAY);
+    return { ...base, kind: "bill", amount: u.amount, at: when, title: smsFrom + " bill", key: "bl:" + smsFrom + ":" + iso(when), line: "Bill" };
+  }
+  { const all = all0, svc = subOf(all);
+    if (svc && u.amount > 0 && !isChatApp(n) && !no && !left && u.kind !== "promo" && !(u.state === "money in" && !/payment(?:[^.\n]|\.\d){0,40}received|received your payment/i.test(all)) && PAID_W.test(all) && !OFFER_W.test(all)) {
       const d = paidDayOf(all, n.ts || now) || iso(n.ts || now);
       return { ...base, kind: "subscription", title: svc, amount: u.amount, cur: curOf(all), date: d, key: "sb:" + svc + ":" + d.slice(0, 7), line: "Subscription" };
     } }
-  if (u.kind === "bank" && u.amount > 0 && !isChatApp(n) && (u.state === "money out" || u.state === "money in")) {   // v9.9.9: never from a chat
+  if (u.kind === "bank" && u.amount > 0 && !isChatApp(n) && !no && !left && (u.state === "money out" || u.state === "money in")) {   // v9.9.9: never from a chat
     const shop = shopIn(title + " " + text), out = u.state === "money out";
     return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now),
       key: (out ? "x:" : "i:") + Math.round(u.amount * 100) + ":" + iso(n.ts || now), line: (out ? "Expense" : "Income") };
