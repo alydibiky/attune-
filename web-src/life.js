@@ -130,7 +130,7 @@ function personOf(raw, t) {
     /\b(?:owe|from|to)\s+([A-Z]{2,5})\b/,   // a bank's short name: CIB, NBE, QNB
   ];
   // (v9.0: «علي عليه 1000» — Ali, the name, spelled like «علي» "on"; first in the sentence and before «عليه» it can only be the name)
-  if (/^\s*علي\s+(?:عليه|هيدفعلي|هيرجعلي|مديون|استلف مني|خد مني|اخد مني)/.test(raw)) return "علي";
+  if (/^\s*(?:(?:صاحبي|صديقي|زميلي|جاري|اخويا|أخويا|ابن عمي|ابن خالي)\s+)?علي\s+(?:عليه|هيدفعلي|هيرجعلي|مديون|استلف مني|خد مني|اخد مني)/.test(raw)) return "علي";   // v9.9.15: «صاحبي علي استلف مني 450»
   for (const re of tries) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
   // v8.9 (Ali: "People & plans still doesn't understand"): "my sister pays me 2000 every month" — a relative is who it is
   const rel = /\bmy\s+(sister|brother|mother|mom|mum|father|dad|son|daughter|uncle|aunt|cousin|friend|boss|neighbou?r|wife|husband|landlord|tenant|partner|colleague)\b/i.exec(raw);
@@ -154,8 +154,9 @@ function personOf(raw, t) {
   ];
   for (const re of world) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
   const ar = [
-    /(?:^|\s)([ء-ي]{2,})\s+(?:عليه|عليها|هيدفعلي|هيدفع|هيرجعلي|هيرجع|مديون|مدين|استلف مني|اخد مني|خد مني|يدفعلي|سيدفع|يسدد)/,
-    /(?:سلفت|اسلفت|اقرضت|ادينت|اديت|عليا ل|علي ل|مديون ل|مدين ل|استلفت من|اخدت من|خدت من|اقترضت من)\s*([ء-ي]{2,})/,
+    /(?:^|\s)([ء-ي]{2,})\s+(?:عليه|عليها|هيدفعلي|هيدفع|هيرجعلي|هيرجع|مديون|مدين|استلف مني|استلفت مني|اخد مني|اخدت مني|خد مني|خدت مني|يدفعلي|سيدفع|يسدد)/,   // v9.9.15: «ماما استلفت مني 850»
+    // v9.9.15 (the 10,000-sentence run): «استلفت 700 من كريم» — the amount between the verb and the name — was saved as a 700 expense
+    /(?:سلفت|اسلفت|اقرضت|ادينت|اديت|عليا ل|علي ل|مديون ل|مدين ل|(?:استلفت|اخدت|خدت|اقترضت)\s+(?:[\d٠-٩][\d٠-٩,.٬]*\s*(?:جنيه|جنية|ج|الف|ألف|k)?\s+)?من)\s*([ء-ي]{2,})/,
     /(?:^|\s)ل([ء-ي]{2,})\s+(?:عندي|عليا)/,
     /(?:ليا|لي|ليه)\s+(?:عند|مع|معاه)\s*([ء-ي]{2,})/,
     /(?:^|\s)([ء-ي]{2,})\s+(?:هيديني|هتديني|بيديني|بتديني|هترجعلي|بتدفعلي|بيدفعلي|بتبعتلي|بيبعتلي)/,

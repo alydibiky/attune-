@@ -11867,4 +11867,9 @@ export const BN = {
   "{w} renews today — was it paid?": "{w} আজ নবায়ন হবে — দেওয়া হয়েছে?",
   "{w} renews today — did {p} pay it?": "{w} আজ নবায়ন হবে — {p} কি দিয়েছেন?",
   "Done — your balance stays the same": "হয়ে গেছে — আপনার ব্যালেন্স একই",
+  "Compare Free and Pro": "ফ্রি ও Pro তুলনা করুন",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "দুঃখিত — গতবার Attune নিজে থেকেই বন্ধ হয়ে গিয়েছিল। আপনার ডেটা নিরাপদ আছে।",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail নিজে থেকে পড়া এই সংস্করণে এখনও চালু হয়নি। ততদিন “{a}” বা “{b}” একই ইমেইলগুলো পড়ে।",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "আপনি ফ্রি প্ল্যানে আছেন: সীমাহীন উত্তর, টাকা ও ফলো-আপ। Pro যোগ করে আপনার হয়ে কাজ করা এজেন্ট, Chat X-Ray, গভীর গবেষণা, রিপোর্ট, স্লাইড এবং সীমাহীন ফাইল রূপান্তর।",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} কত দামে হলে জানাব? সংখ্যাটি লিখুন — যেমন 9,000",
 };

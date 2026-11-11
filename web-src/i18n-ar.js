@@ -8939,4 +8939,9 @@ export const AR = {
   "{w} renews today — was it paid?": "{w} بيتجدد النهارده — اتدفع؟",
   "{w} renews today — did {p} pay it?": "{w} بيتجدد النهارده — {p} دفعه؟",
   "Done — your balance stays the same": "تمام — رصيدك زي ما هو",
+  "Compare Free and Pro": "قارن بين المجاني وPro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "معلش — Attune قفل لوحده المرة اللي فاتت. بياناتك في أمان.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "قراية Gmail لوحده لسه مش شغالة في النسخة دي. لحد ما تشتغل، «{a}» أو «{b}» بيقروا نفس الإيميلات.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "إنت على المجاني: إجابات من غير حد، الفلوس والمتابعات. Pro بيزود وكلاء بيتصرفوا مكانك، Chat X-Ray، بحث متعمق، تقارير، عروض وتحويل ملفات من غير حدود.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "أقولك لما {w} يوصل لسعر كام؟ اكتب الرقم — مثلاً 9,000",
 };

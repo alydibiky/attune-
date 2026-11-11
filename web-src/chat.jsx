@@ -882,7 +882,21 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       setText("");
       return;
     }
-    const pay = route && !img ? api.parsePayment(typed) : null;
+    // v9.9.15 (the 10,000-sentence run, seen on the real page): «اشتريلي iPhone 16 بأقل من 45000» showed "Payment found: +45000", and
+    // "tell me when iPhone 16 goes under 40000" went to the AI — in Chat an order for an agent now does what the Home box does:
+    // the agent is made (asked on its page when something is missing), with Undo
+    const agentK = route && !img && api.agentKind && !/[?؟]\s*$/.test(typed) ? api.agentKind(typed) : "";
+    if (agentK && api.doIt && (!only || only === "agent" || only === "money-log")) {
+      const r = api.doIt(typed);
+      if (r && r.lines && r.lines.length) {
+        const cid = ensureChat(typed);
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+          { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => "• " + x.text).join("\n"), actions: [["Open Agents", "open:agents"], ...(r.undo ? [["Undo", "undo"]] : [])] }, undo: r.undo || null, askText: typed }] }));
+        setText("");
+        return;
+      }
+    }
+    const pay = route && !img && !agentK ? api.parsePayment(typed) : null;
     if (pay && pay.ok && typed.length < 600 && !/[?؟]\s*$/.test(typed) && ok("money-log")) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,

@@ -5,16 +5,23 @@ import { FileText as Mail } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as G from "./gmail.js";
 import * as U from "./ui-kit.jsx";
+import { PLAY_BUILD, GMAIL_VERIFIED } from "./buildflags.js";
 
 const call = (m, a) => (typeof window !== "undefined" && window.__attuneNativeCall ? window.__attuneNativeCall(m, a) : Promise.reject(new Error("Only in the Android app")));
+// v9.9.15 (Ali's screen: "8: [8] Unknown error [status=UNREGISTERED_ON_API_CONSOLE]"): Google's own words for "this build of the
+// app is not registered for Gmail sign-in yet" (docs/GMAIL_SIGNIN.md) — said plainly, with what works meanwhile.
+export const NOT_SET_UP = /UNREGISTERED_ON_API_CONSOLE|DEVELOPER_ERROR|access_denied|unverified|not registered|\b10:/i;
+export const friendly = (m) => (NOT_SET_UP.test(m) ? tr("Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.", { a: tr("Add a Gmail export"), b: tr("Paste an email") }) : tr(m));
 export function GmailCard({ onRead, compact = false }) {
   const N = typeof window !== "undefined" && window.AttuneNative;
   const [g, setG] = useState(G.loadGmail), [busy, setBusy] = useState(false), [msg, setMsg] = useState("");
   if (!N || typeof N.gmailRead !== "function") return null;
+  // the Play Store build shows the card only once Google has verified Attune for Gmail (a restricted scope) — GMAIL_VERIFIED in buildflags.js
+  if (PLAY_BUILD && !GMAIL_VERIFIED && !g.on) return null;
   const go = async () => {
     setBusy(true); setMsg("");
     try { const r = await G.readGmail(call); setMsg(tr("{n} emails about money read — {p} payments are waiting in Money for a tap.", { n: r.added, p: r.payments })); onRead && onRead(r); }
-    catch (e) { setMsg(tr(String((e && e.message) || e))); }
+    catch (e) { setMsg(friendly(String((e && e.message) || e))); }
     setG(G.loadGmail()); setBusy(false);
   };
   const off = () => { G.disconnectGmail(); setG(G.loadGmail()); setMsg(""); };

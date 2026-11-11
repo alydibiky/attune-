@@ -131,7 +131,7 @@ export function countryIn(text) {
 // ---- the readers for plain sentences ---------------------------------------------------------------------------------------------
 const RX = {
   todoAdd: /\b(add|put|write)\b.{1,120}?\b(to|on|in)\s+(my\s+|the\s+)?(to-?do|todo|tasks?)(\s+list)?\b|^\s*(to-?do|todo)\s*[:\-]|(ضيف|حط|اكتب|زود).{1,120}?(المهام|للمهام|مهامي|التودو|للتودو|التو دو|ليسته المهام|قايمه المهام|قائمه المهام|الليسته|لليسته)|^\s*(مهمه|تودو)\s*[:\-]/i,
-  todoList: /\b(what('?s| is| are)|show( me)?|list|read)\b.{0,30}\b(to-?do|todo|tasks?)\b|\bmy (to-?do|todo)( list)?\s*[?؟]?$|(ايه|إيه|وريني|هات|قولي).{0,25}(المهام|التودو|مهامي)|^(المهام|مهامي)\s*[?؟]?$/i,
+  todoList: /\b(what('?s| is| are)|show( me)?|list|read)\b.{0,30}\b(to-?dos?|todos?|tasks?)\b|\bmy (to-?dos?|todos?)( list)?\s*[?؟]?$|(ايه|إيه|وريني|هات|قولي).{0,25}(المهام|التودو|مهامي)|^(المهام|مهامي)\s*[?؟]?$/i,
   whereAsk: /\bwhere\b.{0,40}\b(my|the|our)\b|\bwhere (do|did) i (usually )?(put|leave|keep)\b|(فين|حطيت|بحط|بنحط|سبت|سايب).{0,30}(فين|عاده|عادة|دايما)|^(فين)\s+\S+/i,
   whereSet: /^(remember( that)?\s+)?(my|the|our)\s+.{2,40}?\s+(is|are)\s+(now\s+)?(in|on|under|inside|at|behind|beside|next to|in the|on the)\b|\bi (put|left|keep|placed)\s+(my|the)\s+.{2,40}?\s+(in|on|under|inside|at|behind|beside)\b|^(افتكر|خلي في بالك)?\s*(ان|إن)?\s*(ال\S+|\S+ بتاعي|\S+ بتاعتي)\s+(في|على|علي|تحت|جوه|جنب|ورا)\s+|(حطيت|سبت|سايب|شلت)\s+\S+.{0,30}(في|على|علي|تحت|جوه|جنب|ورا)\s+/i,
   mapGo: /\b(how (do|can) i (get|go) to|i (want|need) to go to|take me to|directions to|navigate to|show me .{0,20}on the map|on the map)\b|(عايز|عاوز|محتاج)\s+(اروح|أروح)|(ازاي|إزاي)\s+(اروح|أروح|اوصل|أوصل)|وديني|على الخريطه|فين مكان/i,

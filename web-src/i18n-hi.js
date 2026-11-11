@@ -11868,4 +11868,9 @@ export const HI = {
   "{w} renews today — was it paid?": "{w} आज रिन्यू होगा — भुगतान हुआ?",
   "{w} renews today — did {p} pay it?": "{w} आज रिन्यू होगा — क्या {p} ने भरा?",
   "Done — your balance stays the same": "हो गया — आपका बैलेंस वैसा ही",
+  "Compare Free and Pro": "मुफ़्त और Pro की तुलना करें",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "माफ़ कीजिए — पिछली बार Attune अपने आप बंद हो गया। आपका डेटा सुरक्षित है।",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail को अपने आप पढ़ना इस संस्करण में अभी चालू नहीं है। तब तक “{a}” या “{b}” वही ईमेल पढ़ते हैं।",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "आप मुफ़्त प्लान पर हैं: असीमित जवाब, पैसे और फ़ॉलो-अप। Pro में आपके लिए काम करने वाले एजेंट, Chat X-Ray, गहरी रिसर्च, रिपोर्ट, स्लाइड और बिना सीमा के फ़ाइल कन्वर्ज़न जुड़ते हैं।",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} के बारे में किस कीमत पर बताऊँ? संख्या लिखें — जैसे 9,000",
 };

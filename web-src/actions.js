@@ -219,11 +219,11 @@ export function normalizePhone(p) {
 
 // ---- is this a request to DO something? ------------------------------------------
 const ACTION_HINT = new RegExp([
-  "\\bremind(er)? me\\b", "\\bremind\\b", "\\b(need|want|add|create|make) an? reminder\\b", "\\bset (an? )?(alarm|timer|reminder)\\b", "\\bwake me\\b", "\\balarm\\b", "\\btimer\\b",
+  "\\bremind(er)? me\\b", "\\bremind\\b", "^\\s*reminder\\s*(to|for|:|-)\\s*\\S" /* v9.9.15: "reminder to book the dentist in 20 minutes" was saved as a 20 expense */, "\\b(need|want|add|create|make) an? reminder\\b", "\\bset (an? )?(alarm|timer|reminder)\\b", "\\bwake me\\b", "\\balarm\\b", "\\btimer\\b",
   "\\b(add|put|schedule|book) .*(calendar|meeting|appointment)\\b", "\\bcalendar\\b",
   "\\bwhats ?app\\b", "\\b(text|message) [A-Z]", "\\bcall [A-Za-z]",
   "\\bdon'?t let me forget\\b", "\\bmake sure i (remember|don'?t forget)\\b",
-  "نبهني (بعد|الساعة|الساعه|بكرة|بكره|النهارده|يوم|كل)", "نبّهني (بعد|الساعة|الساعه|بكرة|بكره|النهارده|يوم|كل)", "متنسانيش", "ما تنسانيش",
+  "نبهني (بعد|كمان|الساعة|الساعه|بكرة|بكره|النهارده|يوم|كل|(?:ال)?(?:حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|خميس|جمعه|جمعة|سبت))", "نبّهني (بعد|كمان|الساعة|الساعه|بكرة|بكره|النهارده|يوم|كل)", "متنسانيش", "ما تنسانيش",
   "فكرني", "فكّرني", "ذكرني", "ذكّرني", "افكرك", "صحيني", "صحّيني", "منبه", "منبّه", "المنبه", "تايمر", "مؤقت",
   "ميعاد", "موعد", "اجتماع", "النتيجة", "الكالندر", "التقويم", "واتس", "الواتساب", "واتساب", "ابعت ل", "ابعتله", "ابعتلها", "كلم ", "اتصل ب",
 ].join("|"), "i");
@@ -364,7 +364,7 @@ function guessKind(text) {
   if (/whats ?app|واتس|واتساب|ابعت ل|ابعتله|ابعتلها/i.test(s)) return "whatsapp";
   if (/\bcall\b|كلم |اتصل ب/i.test(s) && !/remind|فكرني|ذكرني/i.test(s)) return "call";
   if (/calendar|meeting|appointment|ميعاد|موعد|اجتماع|الكالندر|التقويم/i.test(s) && !/remind|فكرني|ذكرني/i.test(s)) return "calendar";
-  if (/remind|فكرني|فكّرني|ذكرني|ذكّرني/i.test(s)) return "reminder";
+  if (/remind|فكرني|فكّرني|ذكرني|ذكّرني|don'?t let me forget|متنسانيش|ما تنسانيش/i.test(s)) return "reminder";
   return "none";
 }
 /* v8.4 (Ali, 27 Oct: "make the reminder free text — every Sunday, Tuesday and Thursday remind me to train"): several weekdays in
@@ -432,20 +432,20 @@ function titleFrom(text, kind, contact) {
     .replace(/(كمان|بعد)\s+(ساعتين|ساعه|ساعة|نص ساعه|نص ساعة|ربع ساعه|ربع ساعة|دقيقتين|يومين|[\d٠-٩]+\s+\S+)/g, " ")
     .replace(/(^|\s)يوم\s+(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
     .replace(/\bat \d{1,2}([:.]\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?/gi, " ").replace(/\s+(at|on)\s*(?=\s|$)/gi, " ")
-    .replace(/^(please |can you |could you )?(set (an? )?(alarm|timer|reminder)( for)?|wake me( up)?|add|put|schedule)\s+/i, "")
-    .replace(/\b(please )?remind me( to\b)?/gi, " ")
+    .replace(/^(please |can you |could you )?(set (an? )?(alarm|timer|reminder)( for)?|wake me( up)?|add|put|schedule)\s+/i, "").replace(/^\s*[:\-–]\s*/, "")
+    .replace(/\b(please )?remind me( to\b)?/gi, " ").replace(/^\s*reminder\s*(to\b|for\b|:|-)?/i, " ").replace(/\b(please )?(don'?t let me forget|make sure i (remember|don'?t forget))( to\b)?/gi, " ")
     .replace(/(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|صحيني|صحّيني)(\s+(إن|ان|اني|إني)(?=\s)|\s+ب(?=ال))?/g, " ").replace(/^\s*(حطلي|حط|اعمل|اعملي)\s+/, "")
     .replace(/\b(every|each|on)\s+((sun|mon|tue|tues|wed|thu|thurs|fri|sat)[a-z]*\.?(\s*(,|and|&)?\s*))+/gi, " ")
     .replace(/\b(every ?day|daily|every week|weekly|every weekday|weekdays|every month|monthly)\b/gi, " ")
     .replace(/\b(every |each |on the )?last (sun|mon|tue|wed|thu|fri|sat)[a-z]* (of|in) (the|every|each) month\b|(كل )?(آخر|اخر) \S+ (في|من|ف|ب)? ?(ال)?شهر|كل شهر/gi, " ")
     .replace(/\b(tomorrow|today|tonight|in the (morning|evening|afternoon))\b|\bat \d{1,2}([:.]\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?|\b\d{1,2}([:.]\d{2})?\s*(am|pm)\b|\bin \d+ \w+/gi, " ")
     .replace(/كل\s+((يوم\s+)?(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(\s*(،|,|و)\s*(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت))*)/g, " ")
-    .replace(/(^|\s)(و)?(ال)?(حد|اتنين|تلات|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
+    .replace(/(^|\s)(و)?(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|خميس|جمعه|جمعة|سبت)(\s+(الجاي|الجايه|الجاية|اللي جاي|القادم))?(?=\s|$)/g, " ")
     .replace(/(كل يوم|يوميا|بكرة|بكره|النهارده|الساعة [\d٠-٩]{1,2}([:.][\d٠-٩]{2})?( ونص| وربع| الا ربع)?|بعد [\d٠-٩]+ \S+|بالليل|الصبح|الضهر|العصر|المغرب|مساء|صباحا)/g, " ")
     // (persona 2: «ادفع الكهربا يوم ١٠», "on the 2nd" — the day of the month is the reminder's date, not its title)
     .replace(/\bon the \d{1,2}(st|nd|rd|th)?\b|\bon \d{1,2}(st|nd|rd|th)\b|\bthe \d{1,2}(st|nd|rd|th)\b|(^|\s)يوم [\d٠-٩]{1,2}(?=\s|$)/gi, " ")
     .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "").replace(/^\s*(about|عن)\s+/i, "");
-  s = cleanText(s, 60);
+  s = cleanText(s.replace(/^\s*[:\-–,]+\s*/, ""), 60);   // v9.9.15: "set a reminder tomorrow at 9: send the report" kept ": send the report"
   if (!s && contact) s = (kind === "call" ? "Call " : "Message ") + contact;
   return s || { reminder: "Reminder", alarm: "Alarm", timer: "Timer", calendar: "Appointment", whatsapp: "WhatsApp", call: "Call" }[kind] || "Reminder";
 }

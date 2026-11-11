@@ -99,7 +99,7 @@ function NoteAskInner({ ask, onDone, flash }) {
   const save = () => { const m = saveAnswer(x); flash && flash(m); onDone && onDone(m); };
   const notNow = () => { dropSaid(src.key); NT.saveTeach(NL.skipSource(NT.loadTeach(), src.key)); onDone && onDone(""); };
   const quick = ["work", "notmoney", "mymoney", "ignore"];
-  const label = (k) => { const m = NL.meaningOf(k); return ar ? m[2] : tr(m[1]); };
+  const label = (k) => { const m = NL.meaningOf(k); return m ? (ar ? m[2] : tr(m[1])) : k; };
   return <div className="space-y-2" data-testid="note-ask" data-key={src.key}>
     <p className="m-0 text-[14.5px] font-bold flex items-center gap-1.5"><GraduationCap size={15} className="text-[var(--c-acc)] shrink-0" />{ask.guess && x && x.kind === "label" && x.meaning === ask.guess ? tr("I think I know what this is — right?") : tr("What is this? I wasn't sure.")}</p>
     <div className="rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 py-2">
@@ -139,7 +139,8 @@ export function LearnedList({ flash }) {
   const [v, setV] = useState(0);
   useEffect(() => { const f = () => setV((x) => x + 1); window.addEventListener("attune-noteteach", f); return () => window.removeEventListener("attune-noteteach", f); }, []);
   const t = NT.loadTeach(), items = NL.learned(t, loadDir());
-  const line = (i) => i.type === "label" ? NL.understoodLabel({ kind: "label", src: i.rule.src, meaning: i.rule.meaning }, { ar, tr })
+  const line = (i) => { try { return line0(i) || ""; } catch (e) { return i.type === "who" ? i.person.name + " = " + i.person.role : String((i.rule && (i.rule.note || i.rule.kind)) || ""); } };   // v9.9.15: one odd row never takes the screen down
+  const line0 = (i) => i.type === "label" ? NL.understoodLabel({ kind: "label", src: i.rule.src, meaning: i.rule.meaning }, { ar, tr })
     : i.type === "who" ? NT.understood({ kind: "who", name: i.person.name, role: i.person.role }, { ar, tr })
     : NT.understood({ kind: "rule", rule: i.rule }, { ar, tr });
   const undo = (i) => {

@@ -82,7 +82,7 @@ const WHEN = /\b(tell|notify|alert|ping|let|warn)\s+me\b|\b(when|once|if)\b.*\b(
 const PRICE_WORD = /\b(under|below|less than|cheaper than|lower than|drops? (?:to|below|under)|at most|max(?:imum)?|or less)\b|اقل من|أقل من|تحت|ينزل (?:عن|ل|تحت)|يبقي اقل|يبقى أقل|ميعديش|مايعديش|بحد اقصي|بحد أقصى/iu;
 const ARRIVE = /\b(arriv\w*|deliver\w*|delivery|shipp\w*|out for delivery|dispatch\w*|track\w*|comes?|reach\w*)\b|يوصل|هيوصل|توصل|هتوصل|وصل|التوصيل|توصيل|الشحنه|الشحنة|اتشحن|في الطريق|يجي|هيجي|امتي|إمتى|امتى/iu;
 const ORDER_W = /\b(order|get me|reorder)\b|اطلب|اطلبلي|اطلب لي|هاتلي/iu;
-const BUY_W = /^\s*(?:please\s+)?(?:(?:can you\s+)?(?:buy|purchase|order|get)\s+(?:me\s+|for me\s+)?|find (?:and|&) (?:buy|order)\s+|i want to buy\s+|اشتريلي|اشتري لي|اشتري|اطلبلي|اطلب لي|هاتلي|جيبلي|عايز اشتري|عاوز اشتري|عايزه اشتري)/iu;
+const BUY_W = /^\s*(?:please\s+)?(?:(?:can you\s+)?(?:buy|purchase|order|get)\s+(?:me\s+|for me\s+)?|find (?:and|&) (?:buy|order)\s+|i want to buy\s+|اشتريلي|اشتري لي|اشتري(?![ء-ي])|اطلبلي|اطلب لي|هاتلي|جيبلي|عايز اشتري|عاوز اشتري|عايزه اشتري)/iu;
 /** The product in a buy sentence: no verb, store, limit or "when it's…" left. */
 export function buyWhat(t0) {
   return String(t0 || "").replace(BUY_W, "").replace(/https:\/\/\S+/g, "")
@@ -156,6 +156,12 @@ export function parseAgent(text, opts = {}) {
   }
   // v9.0 (the sentence bank: "what is the best phone under 15000?" became a price watch): a question is answered, not watched
   if (/[?؟]\s*$/.test(t0) && /^\s*(what|which|who|how|is|are|should|can|do|does|why|where|any|إيه|ايه|انهي|أنهي|مين|ازاي|إزاي|هل|ليه|فين)\b/i.test(t0)) return null;
+  // v9.9.15 (the 10,000-sentence run): «اشتري عربية ولا احوش؟» became a buy agent, «احسن موبايل تحت 20000 ايه؟» a price watch —
+  // a choice ("… or …?"), "best …?" and «… ايه؟» are questions for an answer
+  if (/[?؟]\s*$/.test(t0) && (/\s(?:or|ولا|أم|ام)\s/i.test(t0) || /(?:ايه|إيه|what)\s*[?؟]\s*$/i.test(t0) || /^\s*(?:the\s+)?(?:best|احسن|أحسن|افضل|أفضل)\b/i.test(t0))) return null;
+  // "watch the price of a PS5" (no price said) → asked for the price, never read as "PS5 … 5" spent
+  { const wp = /^\s*(?:please\s+)?(?:watch|track|monitor|keep an eye on)\s+(?:the\s+)?prices?\s+(?:of|for|on)\s+(.{2,60}?)\s*[.!]?$/i.exec(t0);
+    if (wp && !PRICE_WORD.test(t)) return { kind: "watch", what: wp[1].trim(), below: 0, title: wp[1].trim(), ask: "At what price should I tell you about {w}? Write the number — e.g. 9,000", v: { w: wp[1].trim() } }; }
   const app = appIn(t0);
   if (isFlightAgent(t0)) { const fa = flightAgent(t0, { now, country, currency: curIn(t, country) || "" }); if (fa) return fa; }
   // v9.0 (Ali: "I told it to gather information on a topic — get it from more than one source and present it in a good, neat way"):
@@ -272,6 +278,7 @@ export function parseAgent(text, opts = {}) {
 export function withAnswer(text, ask, answer) {
   const a = String(answer || "").trim(); if (!a) return text;
   if (/should I buy/.test(ask || "")) return "buy " + a;
+  if (/At what price/.test(ask || "")) { const what = (/prices?\s+(?:of|for|on)\s+(.+?)\s*[.!]?$/i.exec(text) || [])[1] || text; return "tell me when " + what + " is under " + a; }   // v9.9.15
   if (/usual/.test(ask || "")) return text.replace(/\s*:.*$/, "") + ": " + a;
   if (/nights/.test(ask || "")) return text + " for " + (/^\d+$/.test(a) ? a + " nights" : a);
   if (/day/.test(ask || "")) return text + " from " + a;

@@ -179,11 +179,14 @@ function payAmount(text, home) {
   AMOUNT_RE.lastIndex = 0;
   while ((m = AMOUNT_RE.exec(t)) !== null) {
     const raw = m[1];
-    const val = payNumber(raw, cur);
+    let val = payNumber(raw, cur);
     if (!isFinite(val) || val <= 0) continue;
     const at = m.index + m[0].indexOf(raw);
     const before = t.slice(Math.max(0, at - 28), at);
     const after = t.slice(at + raw.length, at + raw.length + 28);
+    // v9.9.15 (the 10,000-sentence run): "spent 2k on rent", "2 thousand", «٣ الاف», «2 مليون» were read as 2 / 3
+    { const mul = /^\s?(k|thousand|grand|الف|ألف|الاف|آلاف|ألاف)(?![\p{L}])/iu.test(after) ? 1e3 : /^\s?(m|mn|million|مليون)(?![\p{L}])/iu.test(after) ? 1e6 : 1;
+      if (mul > 1 && val < 1e4) val = Math.round(val * mul * 100) / 100; }
     const ctx = before + " " + after;
 
     let score = 0;
@@ -199,6 +202,9 @@ function payAmount(text, home) {
     if (raw.replace(/[^\d]/g, "").length >= 9 && !/[,. '’]\d{3}/.test(raw)) score -= 9;   // phone / reference length (not 1,250,000.00)
     if (/^(19|20)\d{2}$/.test(raw) && /[\/.-]\s*$|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s*$/i.test(before)) score -= 8;   // a year
     if (/^0/.test(raw)) score -= 4;                     // leading zero: phone number
+    // v9.9.15: a day of the month ("on 20 December", «يوم 20 ديسمبر») or a count of minutes / nights / people is not an amount
+    if (/^\s*(?:of\s+)?(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|^\s*(?:يناير|فبراير|مارس|ابريل|أبريل|مايو|يونيو|يونيه|يوليو|يوليه|اغسطس|أغسطس|سبتمبر|اكتوبر|أكتوبر|نوفمبر|ديسمبر)/i.test(after) && val <= 31) score -= 8;
+    if (/^\s*(?:min(?:ute)?s?|hours?|hrs?|days?|nights?|weeks?|months?|years?|km|people|persons?|adults?|guests?|pages?|دقيقه|دقيقة|دقايق|ساعه|ساعة|ساعات|يوم|ايام|أيام|ليله|ليلة|ليالي|اسبوع|أسبوع|شهر|شهور|سنه|سنة|سنين|كيلو|افراد|أفراد)(?![\p{L}])/iu.test(after) && !NEAR_AMOUNT.test(before)) score -= 8;
     cands.push({ value: val, raw, score, ctx: (before + raw + after).trim() });
   }
   if (!cands.length) return null;

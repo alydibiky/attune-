@@ -9070,6 +9070,15 @@ export default function App() {
     let x = null; try { const t = NATIVE.lastExit(); x = t ? JSON.parse(t) : null; } catch (e) { x = null; }
     if (!x || !x.why) return;
     const tip = x.reason === 3 && x.model ? " " + tr("A smaller model would be steadier on this phone.") : "";   // 3 = low memory
+    // v9.9.15 (Ali: "is it okay if this appears to users?"): no. "the system stopped it (signal 9)" is Android's battery manager closing
+    // a resting app — ordinary, and frightening to read. People are told only when Attune really broke while they were using it
+    // (x.fg: on screen; an app error / engine crash / not responding / out of memory), in one calm line. The full reason stays in the
+    // Engine log, and the tester's switch (7 taps on the version) still shows everything.
+    if (!devMode()) {
+      if (!x.fg || ![3, 4, 5, 6].includes(x.reason)) return;
+      const t1 = setTimeout(() => showToast(tr("Sorry — Attune closed by itself last time. Your data is safe.") + tip, 6000), 1500);
+      return () => clearTimeout(t1);
+    }
     const t = setTimeout(() => showToast(tr("Attune closed unexpectedly last time: {why}{m}.", { why: tr(x.why), m: x.model ? " (" + x.model + ")" : "" }) + tip + " " + tr("It's in the Engine log — send it from Engine."), 9000), 1500);
     return () => clearTimeout(t);
   }, []);
@@ -9098,7 +9107,7 @@ export default function App() {
       flash(tr("Load a model in Engine first — everything runs on this device")); setShowEngine(true); return false;
     }
     // v8.7 (Ali picked persona 3's point 2): answers run on the phone and cost nothing — Free answers without a daily limit;
-    // Pro is for what acts or matters (agents that act, photo meals, Deal Check, Chat X-Ray, exports, reports, Business)
+    // Pro is for what acts or matters (agents that act, Deal Check, Chat X-Ray, exports, reports)
     startTrial(); return true;
   };
   const spendIfFree = () => {};   // v8.7: answers are not counted any more (Free = unlimited answers)
@@ -9782,6 +9791,8 @@ export default function App() {
     // v9.9 edit by talking: "Sheikh pays 3000 now" (a plan with a total), "which maid?", "already 700" — said, nothing saved
     editSay: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask && u.ask.kind === "life-edit" ? u.ask : null; } catch (e) { return null; } },
     doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
+    // v9.9.15: is this an order for an agent ("tell me when … is under …", «اشتريلي … بأقل من …», "track my Amazon order")? → its kind, or ""
+    agentKind: (t) => { try { const ag = parseAgent(t, { now: Date.now(), country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); return ag && ["watch", "track", "order", "buy"].includes(ag.kind) ? ag.kind : ""; } catch (e) { return ""; } },
     doIt: (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } },   // (Chat checked first: doSure + the judge + the person's pick)
     whereYes: (set) => remember(W2.whereRecord(set)),
     openRecord: (id) => { try { localStorage.setItem("attune:mind:open", id); } catch (e) {} navTo("memory"); },
@@ -11823,7 +11834,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
           ) : null}
           {pro ? <div className="rounded-[20px] border border-[var(--c-pos)]/30 bg-[var(--c-soft)] p-3.5 text-[13.5px] font-bold text-[var(--c-pos)]" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</div>
             : trialLeft > 0 ? <div className="rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[13.5px] font-bold text-[var(--c-ink)]" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</div>
-            : <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, photo meals, Deal Check, Chat X-Ray, reports and exports.")}</div>}
+            : <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.")}</div>}
 
           {/* 1 · the plan (what to pay) */}
           {!pro ? (
@@ -11846,7 +11857,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
               </div>
               <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1">
                 {/* v8.7 (Ali picked persona 3's point 3): what Pro does for you first, in plain words — not feature names */}
-                {["An assistant that finds and buys for you", "Lose weight by photo — snap the plate", "Know a deal is fair before you pay", "Who owes you, read from your chats", "Reports, slides and exports", "Deep research & expert review"].map((b) => (
+                {["An assistant that finds and buys for you", "Know a deal is fair before you pay", "File conversions", "Who owes you, read from your chats", "Reports, slides and exports", "Deep research & expert review"].map((b) => (
                   <li key={b} className="flex items-start gap-1.5 text-[12.5px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(b)}</li>))}
               </ul>
               {Store.available() ? (
@@ -11884,14 +11895,14 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
 
           {/* 4 · everything side by side */}
           <details className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-4" data-testid="compare">
-            <summary className="min-h-[28px] text-[14px] font-extrabold text-[var(--c-ink)] cursor-pointer select-none">{tr("Compare Free, Pro and Business")}</summary>
+            <summary className="min-h-[28px] text-[14px] font-extrabold text-[var(--c-ink)] cursor-pointer select-none">{tr("Compare Free and Pro")}</summary>
             <div className="mt-3 overflow-x-auto">
               <table className="w-full text-[11.5px] border-separate border-spacing-y-1">
-                <thead><tr className="text-[var(--c-mut)]"><th className="text-start font-extrabold pe-2">{tr("Feature")}</th><th className="font-extrabold px-1">{tr("Free")}</th><th className="font-extrabold px-1 text-[var(--c-acc-2)]">{tr("Pro")}</th><th className="font-extrabold px-1">{tr("Business")}</th></tr></thead>
+                <thead><tr className="text-[var(--c-mut)]"><th className="text-start font-extrabold pe-2">{tr("Feature")}</th><th className="font-extrabold px-1">{tr("Free")}</th><th className="font-extrabold px-1 text-[var(--c-acc-2)]">{tr("Pro")}</th></tr></thead>
                 <tbody>{COMPARE_ROWS.map((r) => (
                   <tr key={r[0]} className="text-[var(--c-ink)]">
                     <td className="pe-2 py-1.5 text-[var(--c-ink)]">{tr(r[0])}</td>
-                    {[1, 2, 3].map((i) => <td key={i} className={`px-1 text-center tabular-nums ${i === 2 ? "text-[var(--c-acc-2)] font-bold" : ""}`}>{tr(r[i])}</td>)}
+                    {[1, 2].map((i) => <td key={i} className={`px-1 text-center tabular-nums ${i === 2 ? "text-[var(--c-acc-2)] font-bold" : ""}`}>{tr(r[i])}</td>)}
                   </tr>))}</tbody>
               </table>
             </div>

@@ -11867,4 +11867,9 @@ export const RU = {
   "{w} renews today — was it paid?": "{w} продлевается сегодня — оплачено?",
   "{w} renews today — did {p} pay it?": "{w} продлевается сегодня — {p} оплатил?",
   "Done — your balance stays the same": "Готово — ваш баланс не меняется",
+  "Compare Free and Pro": "Сравнить бесплатный план и Pro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "Извините — в прошлый раз Attune закрылся сам. Ваши данные в безопасности.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Автоматическое чтение Gmail в этой версии пока не включено. А пока «{a}» или «{b}» читают те же письма.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "У вас бесплатный план: безлимитные ответы, Деньги и «На контроле». Pro добавляет агентов, которые действуют за вас, Chat X-Ray, глубокий поиск, отчёты, слайды и конвертацию файлов без ограничений.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "При какой цене сообщить вам о {w}? Напишите число — например, 9 000",
 };

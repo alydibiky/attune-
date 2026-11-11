@@ -11868,4 +11868,9 @@ export const FR = {
   "{w} renews today — was it paid?": "{w} se renouvelle aujourd'hui — est-ce payé ?",
   "{w} renews today — did {p} pay it?": "{w} se renouvelle aujourd'hui — {p} l'a-t-il payé ?",
   "Done — your balance stays the same": "Fait — votre solde ne change pas",
+  "Compare Free and Pro": "Comparer Gratuit et Pro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "Désolé — Attune s'est fermé tout seul la dernière fois. Vos données sont en sécurité.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "La lecture automatique de Gmail n'est pas encore activée dans cette version. En attendant, « {a} » ou « {b} » lisent les mêmes e-mails.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Vous êtes en Gratuit : réponses illimitées, Argent et Suivis. Pro ajoute des agents qui agissent pour vous, Chat X-Ray, la recherche approfondie, les rapports, les présentations et les conversions de fichiers sans limite.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "À quel prix dois-je vous prévenir pour {w} ? Écrivez le nombre — p. ex. 9 000",
 };

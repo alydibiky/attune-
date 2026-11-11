@@ -111,8 +111,11 @@ export function readTeach(text, dir = { items: [] }, ctx = {}) {
 export function understood(x, { ar = false, tr = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k]) } = {}) {
   if (!x) return "";
   if (x.kind === "ask") return ar ? x.qAr : tr(x.q, Object.fromEntries(Object.entries(x.qv || {}).map(([k, v]) => [k, tr(v, {})])));
-  if (x.kind === "who") { const r = roleOf(x.role); return ar ? `${x.name} = ${r[2]}` : tr("{n} = {r}", { n: x.name, r: tr(r[1], {}) }); }
+  // v9.9.15: a People card's role can be any word the person typed ("driver", "Sheikh") — not only the ones in ROLES; it used to crash
+  // the whole Follow-ups screen ("Cannot read properties of null (reading '1')" in What Attune learned)
+  if (x.kind === "who") { const r = roleOf(x.role), raw = String(x.role || "").trim(); return ar ? `${x.name} = ${r ? r[2] : raw}` : tr("{n} = {r}", { n: x.name, r: r ? tr(r[1], {}) : raw }); }
   const u = x.rule;
+  if (!u) return "";
   if (u.kind === "hide") return ar ? `مش هعرض إشعارات ${u.app} تاني` : tr("I won't show {a} notifications any more", { a: u.app });
   if (u.kind === "first") return ar ? `${u.who} يبقى الأول دايماً` : tr("{n} always comes first", { n: u.who });
   const at = u.place ? (ar ? { Home: "البيت", Work: "الشغل", School: "الجامعة" }[u.place] : tr(u.place, {})) : "";

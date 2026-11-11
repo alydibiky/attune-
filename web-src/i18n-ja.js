@@ -11867,4 +11867,9 @@ export const JA = {
   "{w} renews today — was it paid?": "{w} 本日更新 — 支払いましたか？",
   "{w} renews today — did {p} pay it?": "{w} 本日更新 — {p}は払いましたか？",
   "Done — your balance stays the same": "完了 — 残高は変わりません",
+  "Compare Free and Pro": "無料とProを比べる",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "申し訳ありません — 前回、Attuneが勝手に終了しました。データは安全です。",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmailの自動読み取りは、このバージョンではまだ有効になっていません。それまでは「{a}」または「{b}」で同じメールを読み取れます。",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "現在は無料プランです：回答は無制限、お金とフォローアップが使えます。Proでは、あなたの代わりに動くエージェント、Chat X-Ray、ディープリサーチ、レポート、スライド、無制限のファイル変換が加わります。",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} がいくらになったらお知らせしますか？数字を入力してください — 例: 9,000",
 };

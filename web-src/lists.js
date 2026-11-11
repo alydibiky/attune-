@@ -142,6 +142,8 @@ const EVERY_AR = /^\s*(?:كل)\s+(يوم|شهر|اسبوع|أسبوع|(?:ال)?(
 const GOING = /\b(i'?m|i am|we'?re|we are)\s+(travel+ing|flying|going on (?:a |my )?trip|leaving for)\b|\bmy (trip|flight|travel) is\b|\b(travel+ing|flying)\s+(on|this|next|tomorrow)\b|(انا\s+)?(مسافر|مسافره|مسافرة|هسافر|هنسافر|طيارتي|سفري)(?![\u0600-\u06ff])/i;
 const SHOW_FOR = /\b(what('?s| is)|show( me)?|open|read)\b.{0,20}\b(check\s?list|list|to-?do list)\s+(for|of)\s+(my\s+|the\s+)?(.{2,30}?)\s*[?؟.]?$/i;
 const SHOW = /\b(what('?s| is)|show( me)?|open|read)\b.{0,20}\b(my\s+)?(.{2,30}?)\s*(check\s?list|list|to-?do list)\b|(وريني|هات|ايه|إيه)\s*(ليسته|ليستة|قايمه|قايمة|لستة)\s+(.{2,30}?)\s*[?؟]?$/i;
+const ADD_TO = /^\s*(?:please\s+)?(?:add|put|write)\s+(.{2,200}?)\s+(?:to|on|in)\s+(?:my\s+|the\s+)?(.{2,30}?)\s*(?:check\s?list|list)\s*[.!]?$/i;
+const ADD_TO_AR = /^\s*(?:ضيف|ضيفلي|حط|حطلي|زود|اكتب)\s+(.{2,200}?)\s+(?:ل|في|على|علي)\s*(?:ليسته|ليستة|قايمه|قايمة|لستة|قائمه|قائمة)\s+(.{2,30}?)\s*$/;
 const splitItems = (s) => String(s || "").split(/\s*(?:,|،|\n|;| and | و(?=\S{2,}))\s*/).map((x) => x.replace(/^[-•☐\s]+|[.!]+$/g, "").trim()).filter((x) => x.length >= 2).slice(0, 60);
 
 /** A sentence about lists → { op: "make" | "trip" | "show", … } or null.
@@ -169,6 +171,10 @@ export function parseListCommand(text, now = Date.now()) {
     return { op: "make", name, items, repeat: TRAVEL.test(name) ? { every: "date", before: 1 } : { every: "once" } };
   }
   if (GOING.test(t) && !/[?؟]\s*$/.test(t)) { const date = dateIn(t, now); if (date) return { op: "trip", date }; }
+  // v9.9.15 (the 10,000-sentence run: "add milk to my shopping list" went to the AI): add to a list by its name — made if it isn't there yet.
+  // The to-do list is Mind's (commands.js todoAdd), so "to-do / tasks" is left to it.
+  m = t.match(ADD_TO) || t.match(ADD_TO_AR);
+  if (m && !/^(to-?dos?|todos?|tasks?|المهام|مهامي|التودو)$/i.test(m[2].trim())) { const items = splitItems(m[1]); if (items.length) return { op: "add", name: m[2].replace(/^(my|the)\s+/i, "").trim(), items }; }
   m = t.match(SHOW_FOR);
   if (m) return { op: "show", name: m[7].trim() };
   m = t.match(SHOW);
@@ -185,6 +191,13 @@ export function applyListCommand(st, c, now = Date.now()) {
       return { st: st2, list: st2.lists.find((l) => l.id === old.id), line: { en: "Added to your list “{n}”", v: { n: old.name } } }; }
     const l = makeList({ name: c.name, items: c.items, repeat: c.repeat, now });
     return { st: addList(st, l), list: l, line: { en: "Saved your list “{n}” — {k} items", v: { n: l.name, k: l.items.length } } };
+  }
+  if (c.op === "add") {
+    const old = findList(st, c.name);
+    if (!old) { const l = makeList({ name: c.name, items: c.items, repeat: { every: "once" }, now }); return { st: addList(st, l), list: l, line: { en: "Saved your list “{n}” — {k} items", v: { n: l.name, k: l.items.length } } }; }
+    const fresh = c.items.filter((x) => !old.items.some((y) => y.text.toLowerCase() === x.toLowerCase()));
+    const st2 = fresh.length ? addItem(st, old.id, fresh.join(",")) : st;
+    return { st: st2, list: st2.lists.find((l) => l.id === old.id), line: { en: "Added to your list “{n}”", v: { n: old.name } } };
   }
   if (c.op === "trip") {
     const l = st.lists.find((x) => TRAVEL.test(x.name)) || null;

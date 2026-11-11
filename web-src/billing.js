@@ -105,7 +105,7 @@ export function region(tz, lang) {
 export function pricesFor(tz, lang) { return regionPrices(region(tz, lang)); }
 
 /** What Pro gives — the reasons to pay, in the order people care about. */
-export const PRO_BENEFITS = [
+export const PRO_BENEFITS = [   // v9.9.15 (Ali: "the billing plan has things from the past"): only what today's app has — no Studio, Fit & Food, Business
   "Agents that find, watch and buy for you (you confirm every order)",
   "Unlimited Deal Checks: the real cost, the market price and scam signs before you pay",
   "Unlimited Chat X-Rays: who owes you, promises and unanswered questions in your WhatsApp chats",
@@ -113,9 +113,6 @@ export const PRO_BENEFITS = [
   "Unlimited presentations (PowerPoint) and reports (Word / PDF)",
   "Expert review: strong models check and improve their own answers",
   "Deep web research: several searches, more pages, cross-checked facts",
-  "Unlimited Studio pictures",
-  "Fit & Food: unlimited photo meals, the week's meal plan and shopping list, the week report",
-  "Business systems: unlimited records and Excel / app export",
   "Memory that remembers everything and can search it",
 ];
 // v8.7 (Ali picked persona 3's point 2): Free answers are unlimited; one agent to try
@@ -133,27 +130,20 @@ export const BILLING_GROUPS = [
     "Deep web research: several searches, more pages, cross-checked facts", "Mind: remembers everything and searches it" ] },
   { id: "tools", icon: "🧰", title: "Tools", items: [
     "Deal Check: the real cost, the market price and scam signs before you pay", "Chat X-Ray: who owes you, promises and unanswered questions in WhatsApp chats",
-    "File converters, including scanned paper → editable Word", "Presentations (PowerPoint) and reports (Word / PDF)", "Studio pictures" ] },
-  { id: "fit", icon: "🥗", title: "Fit & Food", items: [
-    "Unlimited photo meals", "The week's meal plan and shopping list", "The week report" ] },
+    "File converters, including scanned paper → editable Word", "Presentations (PowerPoint) and reports (Word / PDF)" ] },
   { id: "money", icon: "💰", title: "Money", items: [
     "Receipt photos on transactions", "Sync, PDF export and projects", "Every Money Premium feature — included, no second plan" ] },
-  { id: "biz", icon: "🏗️", title: "Business systems", items: [
-    "Unlimited records while you try a system", "Excel and app export", "Activating a system for good is a separate, one-time price (below)" ] },
 ];
 /** Free / Pro / Business columns for the compare table. */
-export const COMPARE_ROWS = [
-  ["Answers", "Unlimited", "Unlimited", "Unlimited"],
-  ["Agents that find, watch and buy", "1 agent", "Unlimited", "Unlimited"],
-  ["Hadith search (Dorar)", "Free, unlimited", "Free, unlimited", "Free, unlimited"],
-  ["Deal Check", "3 a day", "Unlimited", "Unlimited"],
-  ["Chat X-Ray", "1 a day", "Unlimited", "Unlimited"],
-  ["File conversions", "5 a day", "Unlimited", "Unlimited"],
-  ["Presentations & reports", "2 a day", "Unlimited", "Unlimited"],
-  ["Studio pictures", "3 a day", "Unlimited", "Unlimited"],
-  ["Fit & Food photo meals", "3 a day", "Unlimited", "Unlimited"],
-  ["Money: receipt photos, sync, PDF, projects", "—", "✓", "✓"],
-  ["Business systems", "30 records a table", "30 records a table", "Unlimited, per system"],
+export const COMPARE_ROWS = [   // v9.9.15: Free and Pro only (Business is its own product now)
+  ["Answers", "Unlimited", "Unlimited"],
+  ["Agents that find, watch and buy", "1 agent", "Unlimited"],
+  ["Hadith search (Dorar)", "Free, unlimited", "Free, unlimited"],
+  ["Deal Check", "3 a day", "Unlimited"],
+  ["Chat X-Ray", "1 a day", "Unlimited"],
+  ["File conversions", "5 a day", "Unlimited"],
+  ["Presentations & reports", "2 a day", "Unlimited"],
+  ["Money: receipt photos, sync, PDF, projects", "—", "✓"],
 ];
 
 /** The phone's Pro request code, from its install id: "PRO-" + 8 letters/digits. */

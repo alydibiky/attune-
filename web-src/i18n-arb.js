@@ -11859,4 +11859,9 @@ export const ARB = {
   "{w} renews today — was it paid?": "{w} يتجدد اليوم — هل تم الدفع؟",
   "{w} renews today — did {p} pay it?": "{w} يتجدد اليوم — هل دفعه {p}؟",
   "Done — your balance stays the same": "تم — رصيدك كما هو",
+  "Compare Free and Pro": "قارن بين المجانية وPro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "عذرًا — أُغلق Attune من تلقاء نفسه في المرة السابقة. بياناتك في أمان.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "قراءة Gmail تلقائيًا غير مفعّلة في هذه النسخة بعد. إلى ذلك الحين، «{a}» أو «{b}» يقرآن الرسائل نفسها.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "أنت على الخطة المجانية: إجابات غير محدودة، والمال والمتابعات. Pro يضيف وكلاء يتصرفون عنك، وChat X-Ray، والبحث المتعمق، والتقارير، والعروض، وتحويل الملفات بلا حدود.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "عند أي سعر أخبرك عن {w}؟ اكتب الرقم — مثلًا 9,000",
 };

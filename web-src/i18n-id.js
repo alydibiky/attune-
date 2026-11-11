@@ -11868,4 +11868,9 @@ export const IDN = {
   "{w} renews today — was it paid?": "{w} diperpanjang hari ini — sudah dibayar?",
   "{w} renews today — did {p} pay it?": "{w} diperpanjang hari ini — apakah {p} sudah bayar?",
   "Done — your balance stays the same": "Selesai — saldomu tetap",
+  "Compare Free and Pro": "Bandingkan Gratis dan Pro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "Maaf — Attune tertutup sendiri terakhir kali. Data Anda aman.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Membaca Gmail secara otomatis belum diaktifkan di versi ini. Sementara itu, “{a}” atau “{b}” membaca email yang sama.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Anda memakai Gratis: jawaban tanpa batas, Uang, dan Tindak lanjut. Pro menambahkan agen yang bertindak untuk Anda, Chat X-Ray, riset mendalam, laporan, slide, dan konversi file tanpa batas.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "Pada harga berapa saya harus memberi tahu Anda tentang {w}? Tulis angkanya — mis. 9.000",
 };

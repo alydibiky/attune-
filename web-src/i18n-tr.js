@@ -11868,4 +11868,9 @@ export const TRK = {
   "{w} renews today — was it paid?": "{w} bugün yenileniyor — ödendi mi?",
   "{w} renews today — did {p} pay it?": "{w} bugün yenileniyor — {p} ödedi mi?",
   "Done — your balance stays the same": "Tamam — bakiyen aynı kalır",
+  "Compare Free and Pro": "Ücretsiz ve Pro'yu karşılaştır",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "Üzgünüz — Attune geçen sefer kendiliğinden kapandı. Verileriniz güvende.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail'i kendiliğinden okuma bu sürümde henüz açık değil. O zamana kadar “{a}” veya “{b}” aynı e-postaları okur.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Ücretsiz plandasınız: sınırsız yanıt, Para ve Takipler. Pro; sizin yerinize iş yapan ajanları, Chat X-Ray'i, derin araştırmayı, raporları, slaytları ve sınırsız dosya dönüştürmeyi ekler.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} için hangi fiyatta haber vereyim? Sayıyı yazın — örn. 9.000",
 };

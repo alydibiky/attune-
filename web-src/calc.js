@@ -14,7 +14,9 @@ const AR = "٠١٢٣٤٥٦٧٨٩";
 // v6.6: Egyptian ways of saying it — «٣ في ٤» is 3 × 4, «١٤ في المية» / «١٤ بالمية» / «١٤٪» is 14 %
 const digits = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR.indexOf(d)).replace(/٫/g, ".").replace(/٬/g, ",").replace(/٪/g, "%")
   .replace(/(\d)\s*(?:في|فى)\s*(?:الميه|المية|المائة|المئة|الماية)/g, "$1%").replace(/(\d)\s*(?:بالميه|بالمية|بالمائة|بالمئة)/g, "$1%")
-  .replace(/(\d)\s+(?:في|فى)\s+(?=\d)(?!(?:19|20)\d\d(?!\d))/g, "$1 × ");   // «في 2025» is "in 2025", not × 2025
+  .replace(/(\d)\s+(?:في|فى)\s+(?=\d)(?!(?:19|20)\d\d(?!\d))/g, "$1 × ")   // «في 2025» is "in 2025", not × 2025
+  // v9.9.15 (the 10,000-sentence run: "what is 2400 times 4?" went to the model): the words between two numbers
+  .replace(/(\d)\s+(?:times|multiplied by)\s+(?=\d)/gi, "$1 × ").replace(/(\d)\s+plus\s+(?=\d)/gi, "$1 + ").replace(/(\d)\s+minus\s+(?=\d)/gi, "$1 − ").replace(/(\d)\s+divided by\s+(?=\d)/gi, "$1 ÷ ");
 
 const CUR = [[/\bEGP\b|جنيه|ج\.م/i, "EGP"], [/\bUSD\b|\$|دولار/i, "USD"], [/\bSAR\b|ريال/i, "SAR"], [/\bAED\b|درهم/i, "AED"], [/\bEUR\b|€|يورو/i, "EUR"]];
 const OPS = { "^": "^", "×": "*", "x": "*", "X": "*", "*": "*", "·": "*", "÷": "/", "/": "/", "+": "+", "-": "-", "−": "-", "–": "-" };
@@ -58,7 +60,10 @@ export function looksLikeCalc(text) {
   // «في» alone ("5 في 6") is also a date — it counts as × only when the message asks for a result
   // v9.0 (the sentence bank: "1250 / 5"): a slash with spaces, or with a number a date can't have, is division
   const strong = /[×*÷+%٪^√]|sqrt|\d\s*[xX]\s*\d|\d\s+\/\s+\d|\d{3,}\s*\/\s*\d|\d\s*\/\s*\d{3,}/.test(t.replace(/[٠-٩]/g, "0")) || /(في|فى)\s*(الم|بالم)|بالمي|بالمائ/.test(t);
-  const asks = /\b(total|sum|calculate|how much|equals?)\b|=|كام|احسب|حسبة|اجمالي|إجمالي|مجموع|يساوي/i.test(t);
+  const wordOp = /\d\s+(?:times|multiplied by|plus|minus|divided by)\s+\d/i.test(t);
+  // "250 - 7" on its own (a minus with spaces, nothing else in the message) is a sum — "10-12 days" and "12-11-2026" are not
+  const bareMinus = /^\s*\d[\d.,]*\s+[-−–]\s+\d[\d.,]*\s*=?\s*[?؟]?\s*$/.test(t.replace(/[٠-٩]/g, "0"));
+  const asks = wordOp || bareMinus || /\b(total|sum|calculate|how much|equals?)\b|=|كام|احسب|حسبة|اجمالي|إجمالي|مجموع|يساوي/i.test(t);
   if (!strong && !asks) return false;
   if (/\+\s*\d[\d\s-]{7,}/.test(digits(t))) return false;      // a phone number
   if (/\b\d{1,2}[/.-]\d{1,2}([/.-]\d{2,4})?\b/.test(digits(t)) && !/[×*÷+%]/.test(t)) return false; // a date

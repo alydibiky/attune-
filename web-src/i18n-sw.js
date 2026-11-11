@@ -11868,4 +11868,9 @@ export const SW = {
   "{w} renews today — was it paid?": "{w} inajirudia leo — imelipwa?",
   "{w} renews today — did {p} pay it?": "{w} inajirudia leo — {p} amelipa?",
   "Done — your balance stays the same": "Imekamilika — salio lako linabaki vilevile",
+  "Compare Free and Pro": "Linganisha Bure na Pro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "Samahani — Attune ilijifunga yenyewe mara iliyopita. Data yako iko salama.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Kusoma Gmail yenyewe bado hakujawashwa katika toleo hili. Hadi hapo, “{a}” au “{b}” husoma barua pepe zilezile.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Uko kwenye Bure: majibu bila kikomo, Pesa na Mambo ya kufuatilia. Pro inaongeza mawakala wanaokufanyia kazi, Chat X-Ray, utafiti wa kina, ripoti, slaidi na ubadilishaji wa faili bila kikomo.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "Nikujulishe kuhusu {w} bei ikifika ngapi? Andika nambari — mf. 9,000",
 };

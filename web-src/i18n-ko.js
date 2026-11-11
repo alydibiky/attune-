@@ -11867,4 +11867,9 @@ export const KO = {
   "{w} renews today — was it paid?": "{w} 오늘 갱신 — 냈나요?",
   "{w} renews today — did {p} pay it?": "{w} 오늘 갱신 — {p}이(가) 냈나요?",
   "Done — your balance stays the same": "완료 — 잔액은 그대로",
+  "Compare Free and Pro": "무료와 Pro 비교",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "죄송합니다 — 지난번에 Attune이 저절로 종료됐어요. 데이터는 안전합니다.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail 자동 읽기는 이 버전에서 아직 켜져 있지 않아요. 그때까지는 “{a}” 또는 “{b}”로 같은 이메일을 읽을 수 있어요.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "지금은 무료 플랜이에요: 무제한 답변, 돈, 후속 조치. Pro는 대신 일해 주는 에이전트, Chat X-Ray, 심층 리서치, 보고서, 슬라이드, 무제한 파일 변환을 더해 줘요.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} 가격이 얼마가 되면 알려드릴까요? 숫자를 적어 주세요 — 예: 9,000",
 };

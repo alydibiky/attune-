@@ -54,8 +54,13 @@ export function amountsIn(text) {
     if (/^(k|ألف|الف|آلاف|الاف|thousand)$/i.test(mul)) v *= 1000;
     else if (/^(مليون|million|m)$/i.test(mul)) v *= 1e6;
     // a time ("at 5"), a date ("on the 3rd"), a count without money words is still money here: he is logging money
-    out.push({ value: Math.round(v * 100) / 100, raw: m[0].trim(), at: m.index });
+    out.push({ value: Math.round(v * 100) / 100, raw: m[0].trim(), at: m.index, end: m.index + m[0].length });
   }
+  // v9.9.15 (the 10,000-sentence run: "paid 300 for 3 nights at the hotel" saved 3): when another number is there, a count of
+  // nights / days / people / hours / km is not the amount
+  const UNIT = /^\s*(?:nights?|days?|weeks?|months?|years?|hours?|hrs?|min(?:ute)?s?|people|persons?|adults?|guests?|km|kg|ليالي|ليله|ليلة|ايام|أيام|يوم|شهور|ساعات|ساعه|ساعة|افراد|أفراد|كيلو)(?![\p{L}])/iu;
+  const keep = out.filter((x) => !UNIT.test(t.slice(x.end)));
+  if (keep.length && keep.length < out.length) return keep;
   return out;
 }
 

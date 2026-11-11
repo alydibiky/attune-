@@ -59,6 +59,7 @@ object ExitWatch {
                     .append(if (model != null) " · model: $model" else "").append("\n")
                 if (e.reason == ApplicationExitInfo.REASON_ANR) try { e.traceInputStream?.use { sb.append(it.bufferedReader().readText().take(4000)).append("\n") } } catch (x: Exception) {}
                 if (unexpected && !background) newest = JSONObject().put("at", e.timestamp).put("why", text).put("reason", e.reason)
+                    .put("fg", e.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE)   // v9.9.15: it was on screen
                     .put("memMB", e.pss / 1024).put("model", model ?: JSONObject.NULL).put("desc", e.description ?: "")
             }
             try { File(ctx.filesDir, "engine.log").appendText(sb.toString()) } catch (e: Exception) {}

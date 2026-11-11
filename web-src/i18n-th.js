@@ -11867,4 +11867,9 @@ export const TH = {
   "{w} renews today — was it paid?": "{w} ต่ออายุวันนี้ — จ่ายแล้วหรือยัง?",
   "{w} renews today — did {p} pay it?": "{w} ต่ออายุวันนี้ — {p} จ่ายแล้วหรือยัง?",
   "Done — your balance stays the same": "เรียบร้อย — ยอดเงินของคุณเท่าเดิม",
+  "Compare Free and Pro": "เปรียบเทียบแบบฟรีกับ Pro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "ขออภัย — ครั้งที่แล้ว Attune ปิดไปเอง ข้อมูลของคุณปลอดภัย",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "การอ่าน Gmail อัตโนมัติยังไม่เปิดใช้ในเวอร์ชันนี้ ระหว่างนี้ “{a}” หรือ “{b}” อ่านอีเมลชุดเดียวกันได้",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "คุณใช้แบบฟรี: คำตอบไม่จำกัด การเงิน และติดตามผล Pro เพิ่มเอเจนต์ที่ทำงานแทนคุณ, Chat X-Ray, การค้นคว้าเชิงลึก, รายงาน, สไลด์ และการแปลงไฟล์แบบไม่จำกัด",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "ให้แจ้งเรื่อง {w} เมื่อราคาเท่าไร? พิมพ์ตัวเลข — เช่น 9,000",
 };

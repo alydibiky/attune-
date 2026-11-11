@@ -98,6 +98,19 @@ function numLost(t) {
 }
 // (persona 2: the Arabic message said «احمد · debt»)
 const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتراك", circle: "جمعية", savings: "تحويش", regular: "كل فترة", bill: "فاتورة" };
+const GENERAL_Q = /^\s*(?:how (?:do|does|can|could|should|would|to|long|far|tall|old|many (?!.*\b(?:i|my|me|we)\b))|should i\b|can i\b|could i\b|would it\b|is it\b|is \d|are there\b|why\b|who (?:is|was|were|won|invented|made|wrote)\b|what (?:is|are|was|were|does|do) (?:a|an|the)\b(?!.*\b(?:my|mine|our)\b)|what did (?!i\b|we\b|my\b)|which is (?:better|best|cheaper)\b)|ازاي\s*[?؟]?\s*$|إزاي\s*[?؟]?\s*$|^\s*(?:ازاي|إزاي|ليه|يعني (?:ايه|إيه))|^\s*هو\s+[\d٠-٩]|(?:كتير|غالي|كويس)\s+(?:على|علي)\s/i;
+// v9.9.15: what a number in a sentence is when it is NOT money — a time, a distance, a count, a page, a code… (doSure / strictCheck)
+const UNIT_AFTER = "(?:min(?:ute)?s?|hours?|hrs?|km|kms|kilomet(?:er|re)s?|miles?|steps?|pages?|years?(?: old)?|people|persons?|kids?|children|kg|kilos?|%|days?|nights?|weeks?|months?|times|floors?|دقيقه|دقيقة|دقايق|ساعه|ساعة|ساعات|كيلو|خطوه|خطوة|صفحه|صفحة|صفحات|سنه|سنة|سنين|يوم|ايام|أيام|مره|مرة|مرات|عيال|اولاد|أولاد|افراد|أفراد)";
+const LEAD_BEFORE = "(?:page|room|floor|chapter|code|pin|password|passcode|number|no\\.?|flat|apartment|gate|seat|bus|line|version|model|iphone|galaxy|pixel|ps|size|aged?|score|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الباسورد|باسورد|باب|مقاس|ايفون|آيفون)";
+const FUTURE_PAY = /\b(?:will|going to|gonna|should|need to|have to|must|want to|plan to|about to)\s+(?:pay|buy|spend|give|send|transfer|get)\b|(?<![ء-ي])(?:هدفع|هشتري|هحول|هبعت)(?![ء-ي])|(?:لازم|عايز|عاوز|محتاج|ناوي)\s+(?:ادفع|اشتري|احول|ابعت)/i;
+const NOT_A_LOG = /\bremind(?:er)?\b|فكرني|ذكرني|نبهني|^\s*(?:watch|track|follow|monitor|compare|search|find|look up|google)\b|^\s*(?:we|he|she|they|i)\s+(?:are|is|am|were|was)\b|^\s*(?:تابع|راقب|دور|قارن)/i;
+/** Is this amount really money? → false when the number that would be saved is a time, a count, a page, a model number… */
+function amountIsMoney(t, amount) {
+  const n = String(amount).replace(/\.0+$/, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), s = latin(t).replace(/(\d),(?=\d{3})/g, "$1");
+  if (new RegExp("(?:^|[^\\d.])" + n + "\\s*" + UNIT_AFTER + "(?![\\p{L}])", "iu").test(s)) return false;
+  if (new RegExp("(?<![\\p{L}])" + LEAD_BEFORE + "\\s*#?\\s*(?:is\\s+|=\\s*)?" + n + "(?![\\d.])", "iu").test(s)) return false;
+  return true;
+}
 /** What the sentence asks Attune to do. ctx: { now, stores } */
 // a request ("give me…", "tell me…", «اديني…») — the person wants an answer, not something recorded
 const REQ = /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|make|find|help|teach|list|plan|create|send|search|look up|notify|let me know|alert|remind|ask)\b|^\s*(اديني|إديني|ادّيني|قولي|اقترح|اقترحلي|اشرح|اشرحلي|اكتب|اكتبلي|اعملي|ساعدني|علمني|دورلي|هاتلي)/i;
@@ -108,13 +121,31 @@ const FIT_KINDS = new Set(["food", "water", "weight", "workout", "sleep", "perio
 export function understand(text, opts = {}) {
   const u = understandAll(text, opts);
   if (!FIT_ARCHIVED || !u || !u.actions) return u;
+  // v9.9.15: a request ("give me 5 ideas for a gift"), a search ("watch the price of iPhone 16") or a number that is not money
+  // ("the code is 4821", "we are 4 people", "I ran 5 km") is not a payment at all — it goes to the answer, not to "Which did you mean?"
+  if (u.actions.length && u.actions.every((a) => a.kind === "money")) {
+    const t0 = String(text || "").trim();
+    if (!CURRENCY.test(t0) && !MONEY_VERB.test(t0) && (REQ.test(t0) || (NOT_A_LOG.test(t0) && !/\bremind(?:er)?\b|فكرني|ذكرني|نبهني/i.test(t0)) || u.actions.every((a) => (a.items || []).every((x) => !amountIsMoney(t0, x.amount))))) return { actions: [], chat: true };
+  }
   const actions = u.actions.filter((a) => !FIT_KINDS.has(a.kind));
   // v9.4 (the sentence battery: "uber 120, lunch 200, coffee 60" went to Chat — "lunch" made it a meal, the meal was dropped with Fit,
   // and the money was lost): when only a food reading was dropped and the sentence is amounts with spending words, it is money
   if (!actions.length && u.actions.some((a) => a.kind === "food") && !/\b(ate|eaten|drank)\b|اكلت|أكلت|كلت|شربت/i.test(text)) {
     const r = readLocal(fixTypos(String(text || "").trim()), { today: isoDay(opts.now || Date.now()) });
     const items = (r.items || []).filter((x) => x.amount >= 1 && x.cat && x.cat !== "other");
-    if (items.length && items.length === (r.items || []).length && !(r.skipped || []).length) return { actions: [{ kind: "money", items }] };
+    const t1 = String(text || "").trim();   // v9.9.15: "page 120 of the book is missing" (read as «بانيه», then as 120 spent) — a page, a code, a time is not money
+    if (items.length && items.length === (r.items || []).length && !(r.skipped || []).length && (CURRENCY.test(t1) || MONEY_VERB.test(t1) || items.every((x) => amountIsMoney(t1, x.amount))) && !REQ.test(t1)) return { actions: [{ kind: "money", items }] };
+  }
+  // v9.9.15 (the 10,000-sentence run: "320 dinner", «7500 غدا», "breakfast 300 cash", "lunch 60 and a haircut 85" went to the AI and
+  // the money was lost — a meal word made it "food", and food left with Fit): a short list of "thing amount" / "amount thing" where
+  // at least one thing is a known kind of spending is money (anything unsure in it is asked, never guessed — doSure)
+  if (!actions.length && !u.ask) {
+    const t0 = fixTypos(String(text || "").trim()), parts = t0.split(/\s*(?:,|،|;|\band\b|\s+و\s*)\s*/i).filter(Boolean);
+    const PART = /^\s*(?:[\p{L}][\p{L}\s'’-]{1,30}\s+[\d٠-٩][\d٠-٩,.]*\s*(?:k|egp|le|pounds?|جنيه|ج|cash|كاش)?|[\d٠-٩][\d٠-٩,.]*\s*(?:k|egp|le|pounds?|جنيه|ج)?\s+[\p{L}][\p{L}\s'’-]{1,30})\s*$/iu;
+    if (parts.length && parts.length <= 6 && parts.every((x) => PART.test(x)) && !QUESTION.test(t0) && !REQ.test(t0) && !NOT_A_LOG.test(t0) && !/\b(ate|eaten|drank)\b|اكلت|أكلت|كلت|شربت/i.test(t0)) {
+      const r = readLocal(t0, { today: isoDay(opts.now || Date.now()) }), items = (r.items || []).filter((x) => x.amount >= 1);
+      if (items.length && items.length === (r.items || []).length && !(r.skipped || []).length && items.some((x) => x.cat && x.cat !== "other") && items.every((x) => amountIsMoney(t0, x.amount))) return { actions: [{ kind: "money", items }] };
+    }
   }
   return actions.length === u.actions.length ? u : { ...u, actions, ...(actions.length ? {} : { chat: true }) };
 }
@@ -163,6 +194,10 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
         en.push(`${num(k)} of ${num(goal)} kcal eaten — ${num(left)} left`); ar.push(`أكلت ${num(k)} من ${num(goal)} سعرة — فاضل ${num(left)}`); } }
     return { actions: [], ask: { kind: "today", en: en.length ? en.join(". ") + "." : "Nothing due today — a free day.", ar: ar.length ? ar.join(". ") + "." : "مفيش حاجة مستحقة النهارده — يوم فاضي.", open: "timeline", sources: ["life", "money"] } };
   }
+  // v9.9.15 (the 10,000-sentence run): "how do I make koshary?" was answered "Nothing is recorded in Money yet", "should I pay 850 for
+  // a Samsung S24?" → "Nothing in Money mentions Samsung S24", "is 120 too much for medicine?" → the medicines list. A how-to, an
+  // advice or a general-knowledge question is for the AI — only a question about the person's OWN data is answered from it.
+  if (QUESTION.test(t) && GENERAL_Q.test(t) && !/\bcan i afford\b/i.test(t)) return { actions: [], chat: true };
   // a question: about your own data → answered here; otherwise → Chat
   if (QUESTION.test(t) && !looksLikeAction(t)) {
     const a = chatAsk(t, stores, { now }) || (() => { const r = askLife(t, stores, { now }); return r && r.kind !== "search" ? r : null; })();
@@ -494,6 +529,11 @@ export function doSure(text, { now = Date.now(), stores = {} } = {}) {
   try { if ((u.actions || []).length && missingAmounts(t, u.actions).length) return false; } catch (e) {}
   for (const a of u.actions || []) {
     if (a.kind === "money") {
+      // v9.9.15 (the 10,000-sentence run: "reminder to book the dentist in 20 minutes" → 20 spent on health; "the code is 4821" → 4,821
+      // on food; "we are 4 people"; "give me 5 ideas for a gift" → 5 on gifts; "I will pay Ahmed 4500 next week" → paid today): a
+      // request, a reminder, something not paid yet, or a number that is a time / a count / a code is never saved without asking
+      if (REQ.test(t) || NOT_A_LOG.test(t) || FUTURE_PAY.test(t)) return false;
+      if (!CURRENCY.test(t) && (a.items || []).some((x) => !amountIsMoney(t, x.amount))) return false;
       if (MONEY_VERB.test(t) || CURRENCY.test(t)) continue;
       if ((a.items || []).every((x) => x.cat && x.cat !== "other")) continue;
       if (PAID_FOR.test(t)) continue;

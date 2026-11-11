@@ -105,7 +105,7 @@ export function readAi(out, src, text) {
 export function understoodLabel(x, { ar = false, tr = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v || {})[k]) } = {}) {
   if (!x || x.kind !== "label") return "";
   const src = x.src || {}, where = src.kind === "chat" ? (ar ? `رسايل «${src.name}» (${src.app})` : tr("messages in “{n}” ({a})", { n: src.name, a: src.app })) : src.kind === "sms" ? (ar ? `رسايل ${src.name}` : tr("messages from {n}", { n: src.name })) : src.kind === "mail" ? (ar ? `إيميلات ${src.name}` : tr("emails from {n}", { n: src.name })) : (ar ? `إشعارات ${src.name}` : tr("{n} notifications", { n: src.name }));
-  const mean = meaningOf(x.meaning), what = ar ? mean[2] : tr(mean[1]);
+  const mean = meaningOf(x.meaning), what = mean ? (ar ? mean[2] : tr(mean[1])) : String(x.meaning || "");   // v9.9.15: an unknown meaning (an older / synced rule) shows as its word, never a crash
   const after = notMoney(x) ? (ar ? " — عمري ما هحسبها فلوس ولا هسألك عنها تاني" : tr(" — never counted as money, and I won't ask again"))
     : countsAsMoney(x) ? (ar ? " — الفلوس اللي بتتحرك فيها هتتحسب" : tr(" — money that moves in them counts"))
     : x.meaning === "important" ? (ar ? " — هبلغك بيها" : tr(" — I'll tell you about them")) : "";

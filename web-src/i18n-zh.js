@@ -11867,4 +11867,9 @@ export const ZH = {
   "{w} renews today — was it paid?": "{w} 今天续订 — 付了吗？",
   "{w} renews today — did {p} pay it?": "{w} 今天续订 — {p} 付了吗？",
   "Done — your balance stays the same": "完成 — 你的余额不变",
+  "Compare Free and Pro": "比较免费版和 Pro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "抱歉——上次 Attune 自行关闭了。你的数据是安全的。",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "此版本尚未开启自动读取 Gmail。在此之前，“{a}”或“{b}”可以读取同样的邮件。",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "你正在使用免费版：无限回答、财务和待跟进。Pro 增加替你办事的代理、Chat X-Ray、深度研究、报告、幻灯片和不限次数的文件转换。",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} 到什么价格时通知你？请写下数字——例如 9,000",
 };

@@ -11867,4 +11867,9 @@ export const FA = {
   "{w} renews today — was it paid?": "{w} امروز تمدید می‌شود — پرداخت شد؟",
   "{w} renews today — did {p} pay it?": "{w} امروز تمدید می‌شود — {p} پرداخت کرد؟",
   "Done — your balance stays the same": "انجام شد — موجودی شما همان است",
+  "Compare Free and Pro": "مقایسهٔ رایگان و Pro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "ببخشید — Attune دفعهٔ قبل خودبه‌خود بسته شد. داده‌های شما امن است.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "خواندن خودکار Gmail هنوز در این نسخه فعال نیست. تا آن زمان، «{a}» یا «{b}» همان ایمیل‌ها را می‌خوانند.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "شما در طرح رایگان هستید: پاسخ نامحدود، پول و پیگیری‌ها. Pro نماینده‌هایی که به‌جای شما کار می‌کنند، Chat X-Ray، پژوهش عمیق، گزارش، اسلاید و تبدیل فایل بدون محدودیت را اضافه می‌کند.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "با چه قیمتی دربارهٔ {w} خبرتان کنم؟ عدد را بنویسید — مثلاً 9,000",
 };

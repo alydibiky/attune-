@@ -11867,4 +11867,9 @@ export const VI = {
   "{w} renews today — was it paid?": "{w} gia hạn hôm nay — đã trả chưa?",
   "{w} renews today — did {p} pay it?": "{w} gia hạn hôm nay — {p} đã trả chưa?",
   "Done — your balance stays the same": "Xong — số dư của bạn giữ nguyên",
+  "Compare Free and Pro": "So sánh Miễn phí và Pro",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "Xin lỗi — lần trước Attune đã tự đóng. Dữ liệu của bạn vẫn an toàn.",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Tính năng tự đọc Gmail chưa được bật trong phiên bản này. Trong lúc đó, “{a}” hoặc “{b}” đọc được cùng những email ấy.",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "Bạn đang dùng Miễn phí: trả lời không giới hạn, Tiền và Việc cần theo dõi. Pro thêm các trợ lý tự làm việc thay bạn, Chat X-Ray, nghiên cứu sâu, báo cáo, slide và chuyển đổi tệp không giới hạn.",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "Báo cho bạn về {w} khi giá bao nhiêu? Hãy viết con số — ví dụ 9.000",
 };

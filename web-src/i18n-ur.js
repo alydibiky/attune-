@@ -11868,4 +11868,9 @@ export const UR = {
   "{w} renews today — was it paid?": "{w} آج تجدید ہوگا — ادا ہوا؟",
   "{w} renews today — did {p} pay it?": "{w} آج تجدید ہوگا — کیا {p} نے ادا کیا؟",
   "Done — your balance stays the same": "ہو گیا — آپ کا بیلنس وہی",
+  "Compare Free and Pro": "مفت اور Pro کا موازنہ کریں",
+  "Sorry — Attune closed by itself last time. Your data is safe.": "معذرت — پچھلی بار Attune خود بخود بند ہو گیا۔ آپ کا ڈیٹا محفوظ ہے۔",
+  "Reading Gmail by itself isn't switched on in this version yet. Until then, “{a}” or “{b}” read the same emails.": "Gmail کو خود بخود پڑھنا اس ورژن میں ابھی فعال نہیں ہے۔ تب تک “{a}” یا “{b}” وہی ای میلز پڑھتے ہیں۔",
+  "You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.": "آپ مفت پلان پر ہیں: لامحدود جوابات، پیسے اور فالو اپس۔ Pro میں آپ کے لیے کام کرنے والے ایجنٹ، Chat X-Ray، گہری تحقیق، رپورٹس، سلائیڈز اور بغیر حد کے فائل کنورژن شامل ہیں۔",
+  "At what price should I tell you about {w}? Write the number — e.g. 9,000": "{w} کے بارے میں کس قیمت پر بتاؤں؟ عدد لکھیں — مثلاً 9,000",
 };
