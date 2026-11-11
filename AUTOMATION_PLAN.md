@@ -113,6 +113,11 @@
   - [x] T3 / T2 / T6 logic: web-src/b4time.js (daysLeft by calendar — DST never shifts it; habit dueOn / streak / weekDots / goalCount
         — a day not due never breaks a streak, a day counts once; focused() — pauses out, capped at the plan). tests/b4time/gen.mjs:
         10,000 of each × 4 time zones (Cairo, London, New York, Tokyo) = 100%; planted bugs → 85% / 54% / 60%. tests/unit/v9918b4.
+  - [x] T4 / T5 logic: web-src/b4plan.js (placeEvents: 150 m in, 200 m out, 2 samples in a row, < 200 m accuracy only; planWeek:
+        30-min chunks, earliest deadline first, never busy / prayer / night / after the deadline; too big → late, never half).
+        tests/b4plan/gen.mjs 10,000 traces in 6 cities + 10,000 weeks = 100% (Cairo, New York); planted bugs caught.
+  - [ ] T1 brain dump — first give the readers the 18 other languages (see the note below), then braindump.js + 10,000 paragraphs.
+  - [ ] B4 screens after OK (T1-A typed + voice, T2-A, T3-A chips that open, T4-A, T5-A, T6-A).
   - Design notes for the rest (not built yet):
     - T1 brain dump: web-src/braindump.js organise(text, ctx) → [{ type: todo|reminder|list|payment|bill|note, text, at, amount, list }].
       Split the paragraph into clauses (., ; newline, "and / then / also", «و / وبعدين / كمان», and the 18 other languages' "and"),
