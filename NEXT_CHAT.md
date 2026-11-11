@@ -37,7 +37,7 @@ you can do it accurately — research").
 - U6: Travel shows no "5 KB"; "Exchange rates: Not yet" until first fetched (packs are built in — nothing to download).
 - Sidebar: groups kept (his word); only the "Work" row removed (it opened Projects, which has its own row).
 - **M1** (Free = by hand, Pro = by itself): he said yes — **show the Free / Pro mock-up before changing billing** (not made yet).
-- Version 9.9.16 (versionCode 159). The full suite was started on it; if this section has no result line below, run it again before main.
+- Version 9.9.16 (versionCode 159). **Full suite (11 Nov): green** except e2e_v993timetable (the old scratch-folder picture, as before); e2e_v734sidebar updated for the removed "Work" row. Pushed to main — the APK is the newest "Build the APK" run on main.
 
 ## ▶ START HERE (handoff written 11 Nov 2026, end of the v9.9.15 session)
 **Where things are:** `main` = branch `claude/awesome-hopper-pxkuzb` = **v9.9.15** (versionCode 158). Full suite green twice except

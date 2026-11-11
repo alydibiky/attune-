@@ -982,6 +982,7 @@ lesson-ui.jsx: {result === "wrong" ? <p className="c-neg text-[13px] m-0" data-t
 timeline-ui.jsx: ? <PersonAsk x={{ amount: x.amount, title: x.what + (x.late ? " · " + tr("Late") : ""), late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.cu
 timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
 timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
+travel-ui.jsx: {netInfo.filter((x) => x.configured).map((x) => <span key={x.k} className="c-sub">· {tr(x.label)}: {x.at ? new Date(x.at).toLocaleDateString
 
 ## Quiz time
 daily-ui.jsx: title={tr("Quiz time")} sub={modelReady ? tr("A short quiz on lessons {a}–{b}", { a: st.lessons[0].n + 1, b: st.lessons[st.lessons.length - 
