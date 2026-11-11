@@ -30,6 +30,7 @@ import * as WT from "../../web-src/webtask.js";
 import * as TBL from "../../web-src/tables.js";
 import * as HG from "../../web-src/haggle.js";
 import { missingAmounts } from "../../web-src/numguard.js";
+import { directionsOf } from "../../web-src/gomaps.js";
 export { understand, quickAction, calculate, parseAgent, UND, missingAmounts };
 const DO_HERE = ["teach", "lifeEdit", "money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
 const T = (f, d = null) => { try { return f(); } catch (e) { return d; } };
@@ -59,7 +60,7 @@ function doFromHome(text0, now) {
   return { k: kinds.includes("money") ? "money" : kinds[0] === "life" ? "life" : kinds[0], u, kinds };
 }
 
-export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00") } = {}) {
+export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both = false } = {}) {
   let typed = String(typed0 || "").trim();
   // Chat first: what Mind does by code (to-dos, lists, where things are, a note, an email)
   { const det = (text) => { const u = T(() => understand(text, { now, stores: {} }), { actions: [] }); const doActions = (u.actions || []).filter((a) => a.kind !== "note").length;
@@ -87,6 +88,9 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00") } = {
   const only = d.unsure ? d.fallback : d.pick, unsure = d.unsure;
   const ok = (k) => !only || only === k;
   const R = (k, x = {}) => ({ k, only, unsure, cands: d.candidates, ...x });
+  if (T(() => directionsOf(typed))) return R("map");
+  { const ag = q ? null : T(() => parseAgent(typed, { now, country: "EG", usual: {}, prefs: {} }));   // chat.jsx agentK (v9.9.15)
+    if (ag && ["watch", "track", "order", "buy"].includes(ag.kind) && (!only || only === "agent" || only === "money-log")) return R("agent", { sub: ag.kind, ag }); }
   if (pay0 && pay0.ok && typed.length < 600 && !q && ok("money-log")) return R("money", { via: "pay", pay: pay0 });
   if (!only) { if (T(() => AL.readOpen(typed))) return R("open"); }
   if (!only || only === "money-log") {
