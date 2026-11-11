@@ -77,6 +77,15 @@
         languages) and r.labels, the page applies NATIVE.takeTaps() on open (notifpay.applyTaps → paylog appendToLedger, Undo),
         the "Done for you" page (donelog.js) + Edit sheet + "Do it this way next time?"; all words in 20 languages; e2e test.
 - [ ] **B2 the engine: AU1 rules (all triggers/actions, 20 languages, asks when unsure) · AU2 suggestions · AU3 recipes**
+  - [~] web-src/rules.js `parseRule(text, ctx)` → { when, if, do, ask } — one word table per idea in all 20 languages (W), days from
+        Intl for every language, digits of every script, the person's own names (ctx.people / places / devices / pots / lists / apps);
+        unsure → `ask` with choices. Works on first sentences in en / ar / fr / es / zh / ja (scratch check).
+  - [ ] NEXT: tests/rules/gen.mjs — exactly 10,000 sentences: 21 language codes × triggers × checks × actions, each with the
+        expected { when.type, who/place/device, ifs, do types, pct/amount, pot } + sentences that are NOT rules (must be null) +
+        sentences missing a name (must ask); independent phrasings in a held-out file written after the fixes; unit test
+        tests/unit/v9918rules.test.mjs (2,500 sample ≥ 99%). Then wire: Chat / Home "When … do …" card (screen A, after OK),
+        the rule store + runner (time → Reminders, money_in → AutoRules.kt words, message/call → watch.js, arrive/leave → a
+        geofence (needs location — Play: background location declaration!), bluetooth/wifi/charging → Kotlin receivers).
 - [ ] **B3 money: M1 salary sorter · M5 categories that learn · M3 split groups** (30 countries' currencies)
 - [ ] **B4 to-dos: T1 brain dump (typed + voice) · T3 countdowns · T2 habits · T6 focus (Play check) · T4 places · T5 week plan**
 - [ ] **B5 people: P1 keep in touch · P3 occasions · P2 before you meet · N1 person page · N3 on this day**
