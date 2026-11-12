@@ -1,6 +1,7 @@
 /* ---- v8.3 Library (Ali picked 3A): a shelf of your own books; ask anything — it reads all of them, compares them, cites [Book, p. N]
    and shows where they disagree; follow-up questions in the same chat. Books are read on the phone (PDF text by the Android app,
    Word / e-book / text here) and kept in Ask a PDF's on-phone library. Logic: booklib.js (tested). */
+import { MyThings } from "./things-ui.jsx";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Send, Trash2, BookOpen, Loader2, X, AlertTriangle, Lock } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -209,6 +210,8 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-3xl" data-testid="booklib-page">
       <U.Head title={tr("Documents")} sub={tr("Your books and files — ask all of them at once, or one. Save one in Chat and Chat knows it too.")} />
+      {/* v9.9.24 B6 X3: My things — a receipt photo → price, date, warranty (every field editable) */}
+      <MyThings flash={flash} />
       {!chat.length ? askForm(false) : null}
       {/* topics: History, Law, my course… — a question goes to that topic's books only */}
       <div className="flex flex-wrap items-center gap-1.5" data-testid="booklib-topics">

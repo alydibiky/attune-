@@ -12,6 +12,7 @@ import { tr, getLang, dateLocale } from "./i18n.js";
 const dayWords = (iso) => { try { return /^\d{4}-\d{2}-\d{2}$/.test(String(iso || "")) ? new Date(iso + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: "numeric" }) : iso || ""; } catch (e) { return iso || ""; } };
 import * as H from "./care.js";
 import { EmergencyTab } from "./emergency-ui.jsx";
+import { SchoolPanel } from "./school-ui.jsx";
 import { PANES, PANES_WIDE_LEFT, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { cardPad, btnP, chip, area, page, h1 } from "./ui-kit.jsx";
 
@@ -99,6 +100,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
   };
   const put = (d) => setData(H.saveCare(d));
   const [tab, setTab] = useState(() => (H.loadCare().meds.length ? "today" : "meds"));
+  const [schoolFor, setSchoolFor] = useState(null);   // v9.9.24 X6: a child's School page is open
   const [drafts, setDrafts] = useState([]);
   const [labDraft, setLabDraft] = useState(null);
   const [busy, setBusy] = useState("");
@@ -266,12 +268,15 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
         </div>) : null}
 
       {tab === "emergency" ? <EmergencyTab data={data} put={put} flash={flash} /> : null}
-      {tab === "family" ? (
+      {tab === "family" && schoolFor && data.members.find((m) => m.id === schoolFor) ? <SchoolPanel member={data.members.find((m) => m.id === schoolFor)} close={() => setSchoolFor(null)} flash={flash}
+        save={(m) => put({ ...H.loadCare(), members: H.loadCare().members.map((x) => (x.id === m.id ? m : x)) })} /> : null}
+      {tab === "family" && !schoolFor ? (
         <div className="space-y-2" data-testid="care-family">
           {/* v6.27 computer layout A: the family as cards on the left (2 columns), adding someone on the right */}
           <div className={PANES_WIDE_LEFT}>
           {data.members.length ? <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
-          {data.members.map((p) => <div key={p.id} className={cardPad + " flex items-center gap-3"}><div className="c-ic"><Users size={16} /></div><div className="flex-1"><b>{p.name}</b>{p.notes ? <span className="block c-sub text-[12.5px]" dir="auto">{p.notes}</span> : null}</div><span className="c-sub text-[12px]">{tr("{n} medicines", { n: data.meds.filter((m) => m.member === p.id && !m.stopped).length })}</span></div>)}
+          {data.members.map((p) => <div key={p.id} className={cardPad + " flex items-center gap-3"}><div className="c-ic"><Users size={16} /></div><div className="flex-1"><b>{p.name}</b>{p.notes ? <span className="block c-sub text-[12.5px]" dir="auto">{p.notes}</span> : null}</div><span className="c-sub text-[12px]">{tr("{n} medicines", { n: data.meds.filter((m) => m.member === p.id && !m.stopped).length })}</span>
+            <button className="min-h-[40px] px-3 rounded-full text-[12.5px] font-bold c-acc border border-[var(--c-ln)]" onClick={() => setSchoolFor(p.id)} data-testid="care-school">{tr("School")}</button></div>)}
           </div> : <DeskEmpty icon={Users} title={tr("Your family appears here")} testid="care-desk-family" />}
           <div className={(data.members.length ? "mt-2 " : "") + "lg:mt-0 lg:sticky lg:top-4"}><AddMember onAdd={(m) => put(H.addMember(data, m).data)} /></div>
           </div>
