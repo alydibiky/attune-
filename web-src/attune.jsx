@@ -46,6 +46,7 @@ import { useWidgets } from "./widgets-ui.jsx";
 import { MoneyShareSheet } from "./moneyshare-ui.jsx";
 import { FocusHost } from "./focus-ui.jsx";
 import { WeekPlanHost } from "./weekplan-ui.jsx";
+import { BrainDumpHost } from "./braindump-ui.jsx";
 import { popBack, hasBack, useSubBack, useBackDepth, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
@@ -7816,6 +7817,7 @@ const MORE_TOOLS = [
   ["countdowns", "Countdowns", "Days left to a wedding, a trip, Ramadan — chips under the Home box", CalendarDays],   // v9.9.19 T3
   ["weekplan", "Week plan", "Tasks with hours and a deadline — Attune finds the time around your day", CalendarDays],   // v9.9.19 T5
   ["focus", "Focus", "A full-screen timer for one task; the time is kept per task", Target],   // v9.9.19 T6
+  ["braindump", "Organise this", "Write or say everything on your mind — Attune sorts it into to-dos, reminders, lists and money", Sparkles],   // v9.9.21 T1
   ["missions", "Missions", "A goal with a date — Attune works on it every day and shows your real chance", Target],   // v6.37
   ["recall", "Recall", "Find anything on your phone by meaning — screenshots, notifications, chats, notes", Search],   // v6.40 (agent C)
   ["automations", "Automations", "Say what should happen — “when my salary arrives, put 20% in the car fund” — and it runs by itself", Zap],   // v6.41 (C3)
@@ -8001,7 +8003,7 @@ export default function App() {
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
   // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
-  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } /* v9.9.19 B4: screens that open over the page */ if (m === "weekplan" || m === "focus") { try { window.dispatchEvent(new CustomEvent(m === "weekplan" ? "attune-weekplan" : "attune-focus-pick")); } catch (e) {} return; } if (m === "habits" || m === "countdowns") { const ev = m === "habits" ? "attune-habit-add" : "attune-countdown-add"; setTimeout(() => { try { window.dispatchEvent(new CustomEvent(ev)); } catch (e) {} }, 350); m = "home"; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } /* v9.9.19 B4: screens that open over the page */ if (m === "braindump") { try { window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text: "" } })); } catch (e) {} return; } if (m === "weekplan" || m === "focus") { try { window.dispatchEvent(new CustomEvent(m === "weekplan" ? "attune-weekplan" : "attune-focus-pick")); } catch (e) {} return; } if (m === "habits" || m === "countdowns") { const ev = m === "habits" ? "attune-habit-add" : "attune-countdown-add"; setTimeout(() => { try { window.dispatchEvent(new CustomEvent(ev)); } catch (e) {} }, 350); m = "home"; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -10058,6 +10060,9 @@ export default function App() {
     // the Home box (doFromHome), its To-do button into the to-do list
     window.__attuneDoIt = (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } };   // (Autopilot's box: the person said how to save it)
     window.__attuneAddTodo = (t) => { try { remember({ kind: "todo", title: String(t).slice(0, 90), text: String(t), tags: ["todo"], meta: { todo: true, done: false } }); return true; } catch (e) { return false; } };
+    // v9.9.21 T1 brain dump: what it saves goes through the app's own stores (reminders on the phone too, notes in Mind)
+    window.__attuneAddReminder = (r) => { try { const l = [...loadReminders(), r]; setReminders(l); try { NATIVE && syncToPhone(NATIVE, l); } catch (e) {} return true; } catch (e) { return false; } };
+    window.__attuneAddNote = (t) => { try { remember({ kind: "note", title: String(t).slice(0, 90), text: String(t), tags: ["note"] }); return true; } catch (e) { return false; } };
     window.__attuneRemoveReminder = (id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} };
     // (Undo of an expense / income Autopilot added: the newest one with that amount)
     window.__attuneUndoMoney = (amount, type) => { try { const l = JSON.parse(localStorage.getItem("ledger.v3") || "null"); if (!l) return;
@@ -11608,6 +11613,7 @@ export default function App() {
       {/* v9.9.19 T6: the focus timer over everything (focus-ui.jsx) */}
       <Guard name="focus"><FocusHost /></Guard>
       <Guard name="weekplan"><WeekPlanHost flash={flash} /></Guard>
+      <Guard name="braindump"><BrainDumpHost flash={flash} /></Guard>
       {quietWake && !voiceOpen ? <QuietWake native={NATIVE} nativeCall={nativeCall} tag={voiceTag(agentCountry())} onDone={(text) => { setQuietWake(false); if (text != null) { setVoiceText(text); setVoiceOpen(true); } }} /> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>

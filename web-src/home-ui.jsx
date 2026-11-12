@@ -11,6 +11,7 @@ import { SuggestCard } from "./suggest-ui.jsx";
 import { SalaryHomeCard } from "./salary-ui.jsx";
 import { CountdownChips } from "./countdown-ui.jsx";
 import { HabitsCard } from "./habits-ui.jsx";
+import { worthOrganising } from "./braindump-ui.jsx";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyStart, btnP as UbtnP, btnS as UbtnS, inp as Uinp } from "./ui-kit.jsx";
 import { loadAgents } from "./agents.js";
@@ -339,6 +340,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {minimal && !rep && boxMode === "translate" ? <button onClick={() => navTo("translate")} className="-mt-1 min-h-[40px] text-[13px] font-bold c-acc inline-flex items-center gap-1" data-testid="box-translate-more">{tr("Talk with someone, a photo or a document")}<ChevronRight size={15} className="rtl:rotate-180" /></button> : null}
       {minimal && !rep && cmd ? <JobCards list={jobList} jobs={cmd.jobs} onSave={(f) => cmd.saveFile(f)} onCopy={(t) => cmd.copy(t)} onOpen={(m) => openLine(m)} /> : null}
       {minimal && !rep && cmd && tripLive(trip) ? <TripPin trip={trip} name={cmd.countryName(trip.country)} onOpen={() => navTo("travel")} onEnd={() => { cmd.endTrip(); setTrip(cmd.trip()); }} /> : null}
+      {/* v9.9.21 T1: several things written in the box → "Organise this" sorts them (nothing saved before you tick) */}
+      {minimal && !rep && worthOrganising(text) ? <button onClick={() => window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text } }))} className="w-full min-h-[44px] rounded-[14px] font-extrabold text-[13.5px] inline-flex items-center justify-center gap-1.5" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }} data-testid="home-organise"><Sparkles size={15} />{tr("Organise this")}</button> : null}
       {/* v9.9.19 T3 (Ali picked A, "make it openable"): countdown chips under the box; tap → the big card */}
       {minimal && !rep ? <CountdownChips /> : null}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />

@@ -83,7 +83,8 @@ const PAGES = [["money", /^(?:the )?money$|^(?:ال)?فلوس$|^(?:ال)?مصا�
   ["split", /^(?:the |my )?(?:split(?: with (?:anyone|friends))?)$|^(?:ال)?تقسيم المصاريف$/i],
   // v9.9.19 B4
   ["habits", /^(?:the |my )?habits?$|^(?:ال)?عادات$|^عاداتي$/i], ["countdowns", /^(?:the |my )?countdowns?$|^(?:ال)?عد (?:ال)?تنازلي$/i],
-  ["weekplan", /^(?:the |my )?week(?:ly)? ?plan$|^(?:ال)?خطة (?:ال)?[اأ]سبوع$|^خطة [اأ]سبوعي$/i], ["focus", /^(?:the )?focus(?: timer)?$|^(?:ال)?تركيز$|^تايمر (?:ال)?تركيز$/i]];
+  ["weekplan", /^(?:the |my )?week(?:ly)? ?plan$|^(?:ال)?خطة (?:ال)?[اأ]سبوع$|^خطة [اأ]سبوعي$/i], ["focus", /^(?:the )?focus(?: timer)?$|^(?:ال)?تركيز$|^تايمر (?:ال)?تركيز$/i],
+  ["braindump", /^(?:the |my )?brain ?dump$|^organi[sz]e(?: this| my day)?$|^فضفضة$|^نظم(?: ده| يومي)?$/i]];
 /** "open Money" / "go to Agents" / «افتح الفلوس» → the page's id, or "". */
 export function pageOf(text) {
   const m = /^\s*(?:please\s+)?(?:open|go to|show me|take me to|show)\s+(.{2,30}?)\s*[.!]?\s*$/i.exec(String(text || "")) || /^\s*(?:افتح|افتحلي|روح على|وديني على|وريني)\s+(.{2,30}?)\s*$/.exec(String(text || ""));

@@ -71,5 +71,5 @@ ok(G.searchPlan("").length === 6 && !G.searchPlan("zzqx").length, "the plan is s
 // search
 ok(G.searchGuide("passport", []).sort().join() === "lists,radar,travel" && G.searchGuide("", []) === null, "search finds by what the steps say");
 ok(G.searchGuide("insulin", []).includes("care"), "'insulin' finds Family health");
-ok(G.searchGuide("franco", []).length === 0, "an unknown word finds nothing");
+ok(G.searchGuide("xylophone", []).length === 0, "an unknown word finds nothing");   // (v9.9.21: "franco" is a real word now — Organise this reads Franco)
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

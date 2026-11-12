@@ -160,6 +160,9 @@ export const DEMOS = {
   focus: { in: "type", say: S("Focus on thesis chapter 3 for 25 minutes", "ركّز على الفصل التالت من الرسالة 25 دقيقة"), title: S("Thesis · chapter 3 · 15:32 left", "الرسالة · الفصل التالت · فاضل 15:32"),
     lines: [L("Today", "النهاردة", "2"), L("This week", "الأسبوع ده", "1:40"), L("Pause", "وقّف", "⏸")],
     act: [S("Pause", "وقّف"), S("Stop", "إيقاف")], note: S("Paused time is not counted.", "الوقت المتوقف مش بيتحسب.") },   // v9.9.19 B4
+  braindump: { in: "type", say: S("Tomorrow: buy milk and bread, call the bank at 10, pay the rent 6,000 on the 1st", "بكرة: اشتري لبن وعيش، كلم البنك الساعة 10، ادفع الإيجار 6,000 يوم 1"), title: S("3 things found", "لقيت 3 حاجات"),
+    lines: [L("Shopping list", "قايمة مشتريات", "✓"), L("Reminder", "تذكير", "10:00"), L("Payment", "دفعة", "6,000")],
+    act: [S("Save {n}", "احفظ {n}"), S("Organise again", "نظّم تاني")], note: S("Nothing is saved until you tap Save.", "مفيش حاجة بتتحفظ غير لما تدوس احفظ.") },   // v9.9.21 T1
   lists: { in: "type", say: S("Make my travel checklist: passport, charger, medicines", "اعمل قايمة السفر: الباسبور، الشاحن، الأدوية"), title: S("Travel checklist · before each trip", "قايمة السفر · قبل كل سفرية"),
     lines: [L("Passport", "الباسبور", "✓"), L("Charger", "الشاحن", "☐"), L("Medicines", "الأدوية", "☐")], bar: 0.33,
     act: [S("Tick on Home", "علّم من الرئيسية"), S("Does it repeat?", "بتتكرر؟")], note: S("On its day it stays on Home until every box is ticked.", "في يومها بتفضل في الرئيسية لحد ما تعلّم على كل الخانات.") },
