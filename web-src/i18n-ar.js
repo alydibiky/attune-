@@ -9500,4 +9500,7 @@ export const AR = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "تشتغل إمتى؟ مثلًا «كل حد ٩ بالليل»، «يوم ٢٥»، «كل يوم الساعة ٧»",
   "e.g. every Sunday 9 pm plan my week": "مثلًا كل حد ٩ بالليل خطط أسبوعي",
   "next {t}": "المرة الجاية {t}",
+  "Make the phone quiet": "خلّي الموبايل صامت",
+  "Allow once in Android settings": "اسمح بيها مرة في إعدادات أندرويد",
+  "Do Not Disturb while you focus — your own setting comes back after.": "عدم الإزعاج وانت مركّز — وإعدادك بيرجع بعدها.",
 };

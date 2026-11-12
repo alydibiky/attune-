@@ -12411,4 +12411,7 @@ export const UR = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "کب؟ مثلاً “ہر اتوار رات 9”، “25 تاریخ”، “ہر روز 7 بجے”",
   "e.g. every Sunday 9 pm plan my week": "مثلاً ہر اتوار رات 9 میرا ہفتہ پلان کرو",
   "next {t}": "اگلا {t}",
+  "Make the phone quiet": "فون خاموش کریں",
+  "Allow once in Android settings": "Android سیٹنگز میں ایک بار اجازت دیں",
+  "Do Not Disturb while you focus — your own setting comes back after.": "فوکس کے دوران 'تنگ نہ کریں' — بعد میں آپ کی سیٹنگ واپس۔",
 };

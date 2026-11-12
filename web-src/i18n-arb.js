@@ -12402,4 +12402,7 @@ export const ARB = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "متى تعمل؟ مثلًا «كل أحد ٩ مساءً»، «يوم ٢٥»، «كل يوم الساعة ٧»",
   "e.g. every Sunday 9 pm plan my week": "مثلًا كل أحد ٩ مساءً خطط لأسبوعي",
   "next {t}": "التالية {t}",
+  "Make the phone quiet": "اجعل الهاتف صامتًا",
+  "Allow once in Android settings": "اسمح بها مرة في إعدادات أندرويد",
+  "Do Not Disturb while you focus — your own setting comes back after.": "عدم الإزعاج أثناء التركيز — ويعود إعدادك بعدها.",
 };

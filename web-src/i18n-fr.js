@@ -12411,4 +12411,7 @@ export const FR = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Quand ? ex. « chaque dimanche 21 h », « le 25 », « tous les jours à 7 h »",
   "e.g. every Sunday 9 pm plan my week": "ex. chaque dimanche 21 h planifie ma semaine",
   "next {t}": "prochaine {t}",
+  "Make the phone quiet": "Mettre le téléphone en silence",
+  "Allow once in Android settings": "Autoriser une fois dans les réglages Android",
+  "Do Not Disturb while you focus — your own setting comes back after.": "Ne pas déranger pendant la concentration — votre réglage revient ensuite.",
 };

@@ -12411,4 +12411,7 @@ export const TRK = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Ne zaman? örn. “her pazar 21:00”, “ayın 25'i”, “her gün 7'de”",
   "e.g. every Sunday 9 pm plan my week": "örn. her pazar 21:00 haftamı planla",
   "next {t}": "sonraki {t}",
+  "Make the phone quiet": "Telefonu sessize al",
+  "Allow once in Android settings": "Android ayarlarında bir kez izin ver",
+  "Do Not Disturb while you focus — your own setting comes back after.": "Odaklanırken Rahatsız Etmeyin — sonra kendi ayarın geri gelir.",
 };

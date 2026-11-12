@@ -12410,4 +12410,7 @@ export const JA = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "いつ？例：「毎週日曜21時」「25日」「毎日7時」",
   "e.g. every Sunday 9 pm plan my week": "例：毎週日曜21時に今週の計画を立てて",
   "next {t}": "次回 {t}",
+  "Make the phone quiet": "スマホを静かにする",
+  "Allow once in Android settings": "Androidの設定で一度許可",
+  "Do Not Disturb while you focus — your own setting comes back after.": "集中中はおやすみモード — 終わると元の設定に戻ります。",
 };

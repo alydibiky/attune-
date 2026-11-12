@@ -12411,4 +12411,7 @@ export const HI = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "कब? जैसे “हर रविवार रात 9”, “25 तारीख”, “हर दिन 7 बजे”",
   "e.g. every Sunday 9 pm plan my week": "जैसे हर रविवार रात 9 मेरा हफ़्ता प्लान करो",
   "next {t}": "अगला {t}",
+  "Make the phone quiet": "फ़ोन को शांत करें",
+  "Allow once in Android settings": "Android सेटिंग में एक बार अनुमति दें",
+  "Do Not Disturb while you focus — your own setting comes back after.": "फ़ोकस के दौरान 'परेशान न करें' — बाद में आपकी सेटिंग वापस।",
 };

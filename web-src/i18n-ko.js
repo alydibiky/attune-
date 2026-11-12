@@ -12410,4 +12410,7 @@ export const KO = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "언제? 예: “매주 일요일 밤 9시”, “25일”, “매일 7시”",
   "e.g. every Sunday 9 pm plan my week": "예: 매주 일요일 밤 9시 내 한 주 계획해 줘",
   "next {t}": "다음 {t}",
+  "Make the phone quiet": "휴대폰 무음",
+  "Allow once in Android settings": "Android 설정에서 한 번 허용",
+  "Do Not Disturb while you focus — your own setting comes back after.": "집중하는 동안 방해 금지 — 끝나면 원래 설정으로 돌아가요.",
 };

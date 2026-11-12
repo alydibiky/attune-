@@ -12410,4 +12410,7 @@ export const RU = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Когда? напр. «каждое воскресенье в 21:00», «25-го», «каждый день в 7»",
   "e.g. every Sunday 9 pm plan my week": "напр. каждое воскресенье в 21:00 спланируй мою неделю",
   "next {t}": "следующее {t}",
+  "Make the phone quiet": "Беззвучный режим",
+  "Allow once in Android settings": "Разрешить один раз в настройках Android",
+  "Do Not Disturb while you focus — your own setting comes back after.": "«Не беспокоить» на время фокуса — потом вернётся ваша настройка.",
 };

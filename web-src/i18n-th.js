@@ -12410,4 +12410,7 @@ export const TH = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "เมื่อไร? เช่น “ทุกวันอาทิตย์ 21:00” “วันที่ 25” “ทุกวัน 7 โมง”",
   "e.g. every Sunday 9 pm plan my week": "เช่น ทุกวันอาทิตย์ 21:00 วางแผนสัปดาห์ของฉัน",
   "next {t}": "ครั้งถัดไป {t}",
+  "Make the phone quiet": "ปิดเสียงโทรศัพท์",
+  "Allow once in Android settings": "อนุญาตครั้งเดียวในการตั้งค่า Android",
+  "Do Not Disturb while you focus — your own setting comes back after.": "ห้ามรบกวนระหว่างโฟกัส — หลังจากนั้นการตั้งค่าเดิมจะกลับมา",
 };

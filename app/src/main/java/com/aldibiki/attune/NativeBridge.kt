@@ -1501,6 +1501,30 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun openAppInfo() {
         try { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + ctx.packageName)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) {}
     }
+    // ---- v9.9.26 T6 Focus "make the phone quiet": Android's own Do Not Disturb, only when the person allowed Attune once in Android's
+    // settings (ACCESS_NOTIFICATION_POLICY — allowed on Play). Priority-only while the focus runs; the person's own setting comes back after.
+    @JavascriptInterface
+    fun quietAllowed(): Boolean = try { (ctx.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager).isNotificationPolicyAccessGranted } catch (e: Throwable) { false }
+    @JavascriptInterface
+    fun askQuiet() {
+        try { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Throwable) {}
+    }
+    @JavascriptInterface
+    fun setQuiet(on: Boolean): Boolean = try {
+        val nm = ctx.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        val p = ctx.getSharedPreferences("attune.quiet", android.content.Context.MODE_PRIVATE)
+        if (!nm.isNotificationPolicyAccessGranted) false
+        else if (on) {
+            if (!p.contains("was")) p.edit().putInt("was", nm.currentInterruptionFilter).apply()   // the person's own setting, kept once
+            nm.setInterruptionFilter(android.app.NotificationManager.INTERRUPTION_FILTER_PRIORITY); true
+        } else if (!p.contains("was")) true   // Attune didn't change it — the person's own Do Not Disturb is never touched
+        else {
+            val was = p.getInt("was", android.app.NotificationManager.INTERRUPTION_FILTER_ALL)
+            nm.setInterruptionFilter(if (was == android.app.NotificationManager.INTERRUPTION_FILTER_UNKNOWN) android.app.NotificationManager.INTERRUPTION_FILTER_ALL else was)
+            p.edit().remove("was").apply(); true
+        }
+    } catch (e: Throwable) { false }
+
     @JavascriptInterface
     fun payQueue(): String = try { PayLog.list(ctx) } catch (e: Throwable) { "[]" }
 

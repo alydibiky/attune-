@@ -12410,4 +12410,7 @@ export const FA = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "کِی؟ مثلاً «هر یکشنبه ۹ شب»، «روز ۲۵ام»، «هر روز ساعت ۷»",
   "e.g. every Sunday 9 pm plan my week": "مثلاً هر یکشنبه ۹ شب هفته‌ام را برنامه‌ریزی کن",
   "next {t}": "بعدی {t}",
+  "Make the phone quiet": "گوشی را بی‌صدا کن",
+  "Allow once in Android settings": "یک بار در تنظیمات اندروید اجازه دهید",
+  "Do Not Disturb while you focus — your own setting comes back after.": "مزاحم نشوید در طول تمرکز — بعد تنظیم خودتان برمی‌گردد.",
 };

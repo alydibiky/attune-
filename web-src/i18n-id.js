@@ -12411,4 +12411,7 @@ export const IDN = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Kapan? mis. “setiap Minggu 21.00”, “tanggal 25”, “setiap hari jam 7”",
   "e.g. every Sunday 9 pm plan my week": "mis. setiap Minggu 21.00 rencanakan mingguku",
   "next {t}": "berikutnya {t}",
+  "Make the phone quiet": "Senyapkan ponsel",
+  "Allow once in Android settings": "Izinkan sekali di pengaturan Android",
+  "Do Not Disturb while you focus — your own setting comes back after.": "Jangan Ganggu selama fokus — setelahnya setelanmu kembali.",
 };

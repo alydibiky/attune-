@@ -12411,4 +12411,7 @@ export const SW = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Lini? mf. “kila Jumapili saa 3 usiku”, “tarehe 25”, “kila siku saa 1”",
   "e.g. every Sunday 9 pm plan my week": "mf. kila Jumapili saa 3 usiku panga wiki yangu",
   "next {t}": "inayofuata {t}",
+  "Make the phone quiet": "Nyamazisha simu",
+  "Allow once in Android settings": "Ruhusu mara moja kwenye mipangilio ya Android",
+  "Do Not Disturb while you focus — your own setting comes back after.": "Usisumbue wakati unazingatia — kisha mpangilio wako unarudi.",
 };

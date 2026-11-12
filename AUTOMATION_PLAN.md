@@ -174,7 +174,7 @@
         tests/e2e_v9918b4.py.
   - [ ] **Phone parts still to build (Kotlin, compile on the branch APK build):** T4 geofence (AttuneNative.placeReminders() /
         setPlaceReminders(json) — Play background-location declaration + disclosure screen: ASK ALI before shipping), T6 optional
-        Do Not Disturb (ACCESS_NOTIFICATION_POLICY, allowed once in Android settings; AttuneNative.setQuiet). Until then the screens
+        Do Not Disturb (ACCESS_NOTIFICATION_POLICY, allowed once in Android settings; AttuneNative.setQuiet). — **T6 BUILT v9.9.26** (quietAllowed / askQuiet / setQuiet; only undoes what Attune changed). Until then the screens
         say so (place reminders show "Waiting for the phone part").
   - Design notes for the rest (not built yet):
     - T1 brain dump: web-src/braindump.js organise(text, ctx) → [{ type: todo|reminder|list|payment|bill|note, text, at, amount, list }].

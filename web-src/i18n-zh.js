@@ -12410,4 +12410,7 @@ export const ZH = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "什么时候？例如“每周日晚上9点”“每月25号”“每天7点”",
   "e.g. every Sunday 9 pm plan my week": "例如：每周日晚上9点规划我的一周",
   "next {t}": "下次 {t}",
+  "Make the phone quiet": "让手机静音",
+  "Allow once in Android settings": "在 Android 设置中允许一次",
+  "Do Not Disturb while you focus — your own setting comes back after.": "专注期间开启勿扰——之后恢复你自己的设置。",
 };

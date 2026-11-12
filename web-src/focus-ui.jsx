@@ -3,7 +3,7 @@
    left, Pause / Resume / Stop. The time kept = b4time.js focused() (pauses out, never more than the plan, an app closed mid-way keeps
    what was focused — 10,000 sessions). Sessions are saved per task ("2nd session today", "This week: 1 h 40 m").
    "Make the phone quiet" uses Android's Do Not Disturb only if the person allowed it once in Android's settings (AttuneNative.setQuiet;
-   until the phone part exists the switch is hidden). Opened from any to-do on Home (◷) and by window event "attune-focus". */
+   v9.9.26: the phone part exists — the switch shows on the phone; the person's own Do Not Disturb setting comes back when focus ends). Opened from any to-do on Home (◷) and by window event "attune-focus". */
 import React, { useEffect, useState } from "react";
 import { tr } from "./i18n.js";
 import { focused } from "./b4time.js";
@@ -19,8 +19,24 @@ export function focusStats(task, now = Date.now(), list = get(FC_KEY, [])) {
 }
 const mmss = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
 export const hm = (ms) => { const m = Math.round(ms / 60000); return m >= 60 ? tr("{h} h {m} m", { h: Math.floor(m / 60), m: m % 60 }) : tr("{m} m", { m }); };
+// v9.9.26 T6: "Make the phone quiet" — Android's Do Not Disturb while the focus runs (only when allowed once in Android's settings)
+const NQ = () => { try { const N = window.AttuneNative; return N && N.setQuiet ? N : null; } catch (e) { return null; } };
+export const QUIET_KEY = "attune:focus:quiet";
+const quietOn = () => { const N = NQ(); try { if (N && get(QUIET_KEY, false) && N.quietAllowed() && N.setQuiet(true)) put("attune:focus:quieted", true); } catch (e) {} };
+// (only gives back what Attune changed: a focus started with the switch off never touches the person's own Do Not Disturb)
+const quietOff = () => { const N = NQ(); try { if (N && get("attune:focus:quieted", false)) { N.setQuiet(false); put("attune:focus:quieted", null); } } catch (e) {} };
+function QuietSwitch() {
+  const N = NQ(), [on, setOn] = useState(() => get(QUIET_KEY, false)), [, re] = useState(0);
+  if (!N) return null;
+  let ok = false; try { ok = N.quietAllowed(); } catch (e) {}
+  return <div className="space-y-1.5" data-testid="focus-quiet">
+    <label className="flex items-center justify-center gap-2 text-[14px] font-bold min-h-[44px]"><input type="checkbox" checked={on} onChange={(e) => { put(QUIET_KEY, e.target.checked); setOn(e.target.checked); }} className="w-5 h-5 accent-[var(--c-acc)]" data-testid="focus-quiet-switch" />{tr("Make the phone quiet")}</label>
+    {on && !ok ? <button className={btnS + " w-full"} onClick={() => { try { N.askQuiet(); } catch (e) {} setTimeout(() => re((x) => x + 1), 1500); }} data-testid="focus-quiet-allow">{tr("Allow once in Android settings")}</button> : null}
+    {on && ok ? <p className="c-sub text-[12px] m-0">{tr("Do Not Disturb while you focus — your own setting comes back after.")}</p> : null}
+  </div>;
+}
 /** Start a focus session on a task (any screen can call it). */
-export function startFocus(task, plan = 25) { put(FC_RUN, { task, plan, events: [{ t: Date.now(), e: "start" }] }); try { window.dispatchEvent(new CustomEvent("attune-focus")); } catch (e) {} }
+export function startFocus(task, plan = 25) { put(FC_RUN, { task, plan, events: [{ t: Date.now(), e: "start" }] }); quietOn(); try { window.dispatchEvent(new CustomEvent("attune-focus")); } catch (e) {} }
 export function FocusHost() {
   const [run, setRun] = useState(() => get(FC_RUN, null)), [, tick] = useState(0), [done, setDone] = useState(null), [pick, setPick] = useState(null);
   useEffect(() => { const f = () => setPick({ task: "", plan: 25 }); window.addEventListener("attune-focus-pick", f); return () => window.removeEventListener("attune-focus-pick", f); }, []);
@@ -36,6 +52,7 @@ export function FocusHost() {
     <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase c-sub m-0">{tr("Focus")}</p>
     <input autoFocus dir="auto" value={pick.task} onChange={(e) => setPick({ ...pick, task: e.target.value })} placeholder={tr("Focus on what?")} className="w-full min-h-[48px] rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[15px]" data-testid="focus-what" />
     <div className="flex gap-1.5">{[15, 25, 50, 90].map((m) => <button key={m} onClick={() => setPick({ ...pick, plan: m })} className="flex-1 min-h-[44px] rounded-full font-extrabold text-[13px]" style={{ background: pick.plan === m ? "var(--c-acc)" : "var(--c-surf-2, var(--c-surf))", color: pick.plan === m ? "var(--c-on-acc, #fff)" : "inherit" }} data-testid={"focus-min-" + m}>{tr("{m} m", { m })}</button>)}</div>
+    <QuietSwitch />
     <button className={btnP + " w-full"} disabled={!pick.task.trim()} onClick={() => { const t = pick.task.trim(), pl = pick.plan; setPick(null); startFocus(t, pl); }} data-testid="focus-start">{tr("Start")}</button>
     <button className="w-full h-10 c-sub text-[13px] font-bold" onClick={() => setPick(null)}>{tr("Cancel")}</button></div></Full>;
   if (!run) return null;
@@ -44,7 +61,7 @@ export function FocusHost() {
   const save = (events) => { const r = { ...run, events }; put(FC_RUN, r); setRun(r); };
   const stop = () => { const kept = focused([...run.events, { t: Date.now(), e: "stop" }], run.plan); const L = get(FC_KEY, []);
     if (kept >= 60000) { L.push({ task: run.task, at: Date.now(), ms: kept }); put(FC_KEY, L.slice(-500)); }
-    put(FC_RUN, null); setRun(null); setDone({ task: run.task, ms: kept }); };
+    put(FC_RUN, null); setRun(null); setDone({ task: run.task, ms: kept }); quietOff(); };
   if (left <= 0) setTimeout(stop, 0);
   const n = focusStats(run.task, now).today + 1, R = 88, C = 2 * Math.PI * R;
   return <Full><div className="text-center w-full max-w-[420px] px-6 space-y-4" data-testid="focus-screen">

@@ -12410,4 +12410,7 @@ export const BN = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "কখন? যেমন “প্রতি রবিবার রাত ৯টা”, “২৫ তারিখ”, “প্রতিদিন ৭টায়”",
   "e.g. every Sunday 9 pm plan my week": "যেমন প্রতি রবিবার রাত ৯টা আমার সপ্তাহ সাজাও",
   "next {t}": "পরের বার {t}",
+  "Make the phone quiet": "ফোন নীরব করুন",
+  "Allow once in Android settings": "Android সেটিংসে একবার অনুমতি দিন",
+  "Do Not Disturb while you focus — your own setting comes back after.": "মনোযোগের সময় 'বিরক্ত করবেন না' — পরে আপনার সেটিং ফিরে আসবে।",
 };

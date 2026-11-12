@@ -12410,4 +12410,7 @@ export const VI = {
   "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Khi nào? vd: “mỗi Chủ nhật 21:00”, “ngày 25”, “mỗi ngày lúc 7 giờ”",
   "e.g. every Sunday 9 pm plan my week": "vd: mỗi Chủ nhật 21:00 lên kế hoạch tuần",
   "next {t}": "lần tới {t}",
+  "Make the phone quiet": "Để điện thoại im lặng",
+  "Allow once in Android settings": "Cho phép một lần trong cài đặt Android",
+  "Do Not Disturb while you focus — your own setting comes back after.": "Không làm phiền khi tập trung — sau đó cài đặt của bạn trở lại.",
 };
