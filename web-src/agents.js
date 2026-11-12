@@ -502,10 +502,21 @@ export function webOffers(hits, what, { cur = "" } = {}) {
   }
   return out;
 }
+// v9.9.19 (Ali's screenshot again: "Huawei FreeClip 2 · EGP 120" — with one or two prices there is no middle to compare): a
+// brand-name gadget (earbuds, a phone, a watch…) never costs under about 8 US dollars in any country — under that it is a case, a
+// cover or a fake. The floors are rough local amounts of ~8 USD; a currency not in the table has no floor.
+const GADGET = /\b(huawei|apple|iphone|ipad|airpods|macbook|samsung|galaxy|xiaomi|redmi|oppo|vivo|realme|honor|oneplus|nokia|sony|playstation|ps5|nintendo|xbox|jbl|bose|anker|soundcore|beats|lenovo|dell|hp|asus|acer|garmin|fitbit|google pixel|pixel|kindle|dyson|freeclip|freebuds|watch gt|gopro|canon|nikon)\b|هواوي|ايفون|آيفون|سامسونج|شاومي|ريدمي|سوني|بلايستيشن|ابل|أبل/i;
+const FLOOR8 = { EGP: 400, SAR: 30, AED: 30, QAR: 30, KWD: 2.5, BHD: 3, OMR: 3, JOD: 6, USD: 8, EUR: 7, GBP: 6, TRY: 250, INR: 650, PKR: 2200, IDR: 125000, MYR: 35, MAD: 75, TND: 24, DZD: 1050, NGN: 12000, KES: 1000, ZAR: 140, BDT: 950, IRR: 330000, THB: 270, VND: 200000, CNY: 55, JPY: 1200, KRW: 11000, BRL: 40, MXN: 140, RUB: 650, CAD: 11, AUD: 12, LBP: 700000, IQD: 10500, SDG: 4800, LYD: 39 };
+export function believable(o, a = {}) {
+  const want = String(a.what || "") + " " + String(a.said || ""), cur = String((o && o.currency) || a.currency || "").toUpperCase();
+  if (!o || !(o.price > 0)) return false;
+  if (GADGET.test(want) && FLOOR8[cur] && o.price < FLOOR8[cur]) return false;
+  return true;
+}
 /** Every offer of a round → the exact product, believable prices, the cheapest listing of each store, cheapest first (max 5). */
 export function bestAcross(offers, a = {}, max = 5) {
   const what = a.what || "", skip = a.skip || [];
-  const ok = (offers || []).filter((o) => o && o.price > 0 && fitsTaste(o, a.taste) && (!what || matchScore(what, o) >= 0.75 || (a.said && matchScore(a.said, o) >= 0.75))
+  const ok = (offers || []).filter((o) => o && o.price > 0 && believable(o, a) && fitsTaste(o, a.taste) && (!what || matchScore(what, o) >= 0.75 || (a.said && matchScore(a.said, o) >= 0.75))
     && !skip.includes(String(o.href || o.name || "").slice(0, 120)) && !skip.includes(String(o.name || o.text || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 40)));
   // a price far under the middle of the others is an accessory, a part or an instalment — not the product
   const ps = ok.map((o) => o.price).sort((x, y) => x - y), mid = ps.length ? ps[Math.floor(ps.length / 2)] : 0;
@@ -603,7 +614,7 @@ export function matchScore(what, o) {
 }
 /** A round's offers → the best match (≥ 0.75 alike, under the limit when there is one, cheapest first); null = nothing fits. */
 export function pickBuy(a, offers, skip = []) {
-  const ok = (offers || []).filter((o) => o && o.price > 0 && fitsTaste(o, a.taste) && !(skip || []).includes(String(o.href || o.name || "").slice(0, 120)))
+  const ok = (offers || []).filter((o) => o && o.price > 0 && believable(o, a) && fitsTaste(o, a.taste) && !(skip || []).includes(String(o.href || o.name || "").slice(0, 120)))
     .map((o) => ({ ...o, score: matchScore(a.what, o) })).filter((o) => o.score >= 0.75 && (!(a.below > 0) || o.price <= a.below));
   return ok.sort((x, y) => x.price - y.price || y.score - x.score)[0] || null;
 }
