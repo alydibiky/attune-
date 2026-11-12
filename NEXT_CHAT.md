@@ -11,6 +11,12 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ 12 Nov, evening — v9.9.21 (branch ccr-60240af2-j35hvr; main after the full suite): Ali OK'd the combined Agents page (OK-1…OK-4)
+and it is BUILT: one clear list (no Cards/List/Board), all offers inside an agent each opening its own page, "What I watch" with every
+setting changeable (web-src/agentedit.js — 10,000-edit generator tests/agentedit/gen.mjs at 100%, planted bugs caught), one sheet per
+setting → checks again. Also: no EGP 120 FreeClip (agents.js believable), hotel dates in words. Old views only for old tests
+(attune:agents:legacy, set by tests/harness.py). Ali: "and do the other features" → next T1 brain dump, then B5–B9 (AUTOMATION_PLAN.md).
+
 ## ▶ 12 Nov, later — `main` = **v9.9.20** (versionCode 163): Ali's Scout screenshots fixed (tests/unit/v9919scout.test.mjs): the night
 note is one per hunt, id scout-<hunt> (it opened the Tucson for a Huawei watch hunt), in his language, no "51 new ads" count; ads priced
 in another country's money are out (SAR on syarah.com in an Egypt hunt made "62k cheapest"); a price written with its currency in the
