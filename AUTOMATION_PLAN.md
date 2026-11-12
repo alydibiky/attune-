@@ -158,7 +158,18 @@
         30-min chunks, earliest deadline first, never busy / prayer / night / after the deadline; too big → late, never half).
         tests/b4plan/gen.mjs 10,000 traces in 6 cities + 10,000 weeks = 100% (Cairo, New York); planted bugs caught.
   - [ ] T1 brain dump — first give the readers the 18 other languages (see the note below), then braindump.js + 10,000 paragraphs.
-  - [ ] B4 screens after OK (T1-A typed + voice, T2-A, T3-A chips that open, T4-A, T5-A, T6-A).
+  - [x] B4 SCREENS (12 Nov, rebuilt — the previous session built them but hit its limit before pushing, so they were lost):
+        T3-A countdown-ui.jsx (chips under the Home box, tap → big card with days / date / bar / Edit / Remove, "+" adds; Ramadan by
+        itself when prayers are on), T2-A habits-ui.jsx (Home card with this week's dots + streak, tap today's dot; hidden until the
+        first habit — "+ Habit" chip next to the countdowns), T6-A focus-ui.jsx (full-screen timer from ◷ on any to-do on Home; plain
+        screen, no special permission; sessions kept per task), T5-A weekplan-ui.jsx (To-dos & lists → "Plan my week": tasks with hours
+        + deadline, 3-day calendar, reminders grey, prayers when on, "Keep plan" → reminders, too-big tasks said), T4-A placerem-ui.jsx
+        (Reminders → fill-in → When: A time / At a place → saved place or "Save where I am" → arrive / leave). 48 lines × 20 languages.
+        tests/e2e_v9918b4.py.
+  - [ ] **Phone parts still to build (Kotlin, compile on the branch APK build):** T4 geofence (AttuneNative.placeReminders() /
+        setPlaceReminders(json) — Play background-location declaration + disclosure screen: ASK ALI before shipping), T6 optional
+        Do Not Disturb (ACCESS_NOTIFICATION_POLICY, allowed once in Android settings; AttuneNative.setQuiet). Until then the screens
+        say so (place reminders show "Waiting for the phone part").
   - Design notes for the rest (not built yet):
     - T1 brain dump: web-src/braindump.js organise(text, ctx) → [{ type: todo|reminder|list|payment|bill|note, text, at, amount, list }].
       Split the paragraph into clauses (., ; newline, "and / then / also", «و / وبعدين / كمان», and the 18 other languages' "and"),
@@ -184,6 +195,8 @@
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 
 ## Log
+- 12 Nov 2026 (morning, new session): B4 screens T2 T3 T4 T5 T6 rebuilt and pushed to branch ccr-60240af2-j35hvr (on top of
+  claude/blissful-curie-d5gddb). Next: run tests/e2e_v9918b4.py + the full suite → branch APK → main; then T1 brain dump, B5.
 - 12 Nov 2026 (later): AU3 Recipes gallery + all B3 screens (M1-A salary plan, M5-B Always?, M3-A split groups) built, 20 languages,
   e2e ALL PASSED. Next: B4 screens (T3 countdown chips, T2 habits, T6 focus, T4 places, T5 week plan), then T1 (readers in 18 more
   languages first), B5 people, B6, B7 travel, B8 AU4, B9 N2.

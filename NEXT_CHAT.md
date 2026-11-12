@@ -11,7 +11,11 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
-## ▶ START HERE (11 Nov, night) — **AUTOMATION_PLAN.md** is the plan: Ali picked his screens for all 29 features ("ALL features working in
+## ▶ START HERE (12 Nov, morning) — work is on branch **`ccr-60240af2-j35hvr`** (= claude/blissful-curie-d5gddb + B4 screens).
+The 11 Nov night session ran out of its weekly limit before pushing its B4 screens; they were rebuilt here (see AUTOMATION_PLAN.md B4).
+**Push after every feature** so a limit never loses work again. Next: e2e_v9918b4 + full suite → branch APK green → main; then T1, B5.
+
+## ▶ (before) START HERE (11 Nov, night) — **AUTOMATION_PLAN.md** is the plan: Ali picked his screens for all 29 features ("ALL features working in
 ALL languages and ALL countries … batch by batch, update the handoff so another AI can continue"). Combined screens waiting for his OK:
 https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU. Carry on with the first unticked batch in AUTOMATION_PLAN.md.
 **State at the end of the 11 Nov night session:** B0–B3 LOGIC done on the branch (not yet on main — main is v9.9.18 without it):
