@@ -857,6 +857,12 @@ care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async ()
 knowledge-ui.jsx: {!got ? <button className={primary} disabled={!N || !N.knowInstall} onClick={() => getPack(p)} data-testid={"kn-pack-get-" + p.id}><Download
 travel-ui.jsx: {x.key === "map" && !x.ok ? <button className="c-sub underline bg-transparent border-0 p-0 min-h-[44px] cursor-pointer shrink-0" onClick={ge
 
+## School
+care-ui.jsx: <button className="min-h-[40px] px-3 rounded-full text-[12.5px] font-bold c-acc border border-[var(--c-ln)]" onClick={() => setSchoolFor(p.i
+cv-ui.jsx: <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Degree / course")}><In value={it.degree} onChange={(v) => upd(i, { degree: v })} />
+readaloud.js: if (f.kind === "school" && f.dates.length) { say.push(ar ? `فيها تاريخ: ${day(f.dates[0])}.` : `It mentions a date: ${day(f.dates[0])}.`); a
+school-ui.jsx: <div className="flex items-center gap-2"><button className={btnS} onClick={close} aria-label={tr("Back")} data-testid="school-back">‹</butto
+
 ## Code
 chat.jsx: const label = LANG_LABEL[String(lang || "").trim().toLowerCase()] || (lang ? String(lang).trim() : tr("Code"));
 code-ui.jsx: <h2 className={K.h1 + " flex-1 flex items-center gap-2"}><span className="w-9 h-9 rounded-[12px] grid place-items-center" style={{ backgroun
@@ -994,10 +1000,6 @@ cv-ui.jsx: <Lbl t={tr("City")}><In value={b.city} onChange={setB("city")} /></Lb
 cv-ui.jsx: <input value={target.city || ""} onChange={(e) => setT("city", e.target.value)} placeholder={tr("City")} className={field} dir="auto" data-t
 prayer-ui.jsx: <select value={st.city} onChange={(e) => put({ city: e.target.value })} className={field + " !w-auto shrink-0 max-w-[48%] !min-h-[40px] !h-1
 yourday-ui.jsx: {ds.prayers ? <label className="flex items-center gap-2 ps-1 pb-2 text-[13px] font-bold"><span className="c-sub">{tr("City")}</span>
-
-## School
-cv-ui.jsx: <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Degree / course")}><In value={it.degree} onChange={(v) => upd(i, { degree: v })} />
-readaloud.js: if (f.kind === "school" && f.dates.length) { say.push(ar ? `فيها تاريخ: ${day(f.dates[0])}.` : `It mentions a date: ${day(f.dates[0])}.`); a
 
 ## Note (optional)
 cv-ui.jsx: <Lbl t={tr("Note (optional)")}><In value={it.note} onChange={(v) => upd(i, { note: v })} /></Lbl>
@@ -1223,6 +1225,7 @@ life-ui.jsx: <span>{tickDay(s.date, c.kind === "regular")}</span><span className
 money-calm-ui.jsx: value={!zak ? "—" : zak.noPrice ? tr("Needs a price") : zak.due ? tr("Due") : zak.pct != null ? T("{p}% of niṣāb", { p: zak.pct }) : "—"}
 money-sheets-ui.jsx: {r.options ? <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p>{r.options.map((o, i) => <p key={i} className="m-0 text-[17px] 
 money-sheets-ui.jsx: : <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p><p className="m-0 text-[22px] font-black text-[var(--c-acc)] tabular-nums"
+upkeep-ui.jsx: {l.dueNow ? <span className="text-[11px] font-extrabold c-warn">{tr("Due")}</span> : null}</div>
 
 ## Delete this?
 life-ui.jsx: const remove = (c) => { if (window.confirm(tr("Delete this?"))) { put(removeCommitment(data, c.id)); unremind && unremind("life-" + c.id); }
