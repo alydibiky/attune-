@@ -37,13 +37,13 @@ const T = {
     ru: ["аренду", "счёт", "счет", "взнос"], tr: ["kira", "fatura", "taksit"], id: ["sewa", "tagihan", "cicilan"], hi: ["किराया", "बिल", "किस्त"], ur: ["کرایہ", "بل", "قسط"], fa: ["اجاره", "قبض", "قسط"],
     bn: ["ভাড়া", "বিল", "কিস্তি"], sw: ["kodi", "bili"], th: ["ค่าเช่า", "บิล", "ค่างวด"], vi: ["tiền nhà", "hóa đơn"], zh: ["房租", "账单", "分期"], ja: ["家賃", "請求", "ローン"], ko: ["월세", "요금", "할부"], franco: ["el egar", "fatoora"] },
   buy: { en: ["buy", "get", "pick up"], ar: ["اشتري", "اشترى", "هات", "جيب", "نشتري"], arb: ["اشترِ", "اشتر", "اشتري", "أحضر"], es: ["comprar", "compra"], fr: ["acheter", "achète", "prendre"],
-    de: ["kaufen", "kauf", "besorgen"], pt: ["comprar", "compra"], it: ["comprare", "compra"], ru: ["купить", "купи"], tr: ["al", "satın al"], id: ["beli", "membeli"], hi: ["खरीदना", "खरीदो", "लाना"],
+    de: ["kaufen", "kauf", "besorgen"], pt: ["comprar", "compra"], it: ["comprare", "compra"], ru: ["купить", "купи"], tr: ["satın al", "almak", "alınacak"], id: ["beli", "membeli"], hi: ["खरीदना", "खरीदो", "लाना"],
     ur: ["خریدنا", "خریدو", "لانا"], fa: ["بخر", "خریدن"], bn: ["কিনতে", "কেনা", "কিনো"], sw: ["nunua", "kununua"], th: ["ซื้อ"], vi: ["mua"], zh: ["买", "购买"], ja: ["買う", "買って", "買い"],
     ko: ["사기", "사다", "사야", "구매"], franco: ["eshtery", "ishtiri", "hat", "gib"] },
-  outof: { en: ["out of", "we're out of", "we need"], ar: ["خلص", "خلصت", "مفيش"], arb: ["نفد", "نفدت"], es: ["se acabó", "se acabaron", "no queda"], fr: ["plus de", "il manque"], de: ["kein", "keine", "alle"],
-    pt: ["acabou", "acabaram"], it: ["è finito", "sono finite", "manca"], ru: ["закончился", "закончилось", "кончился"], tr: ["bitti"], id: ["habis"], hi: ["खत्म"], ur: ["ختم"], fa: ["تمام شد", "تموم شد"],
-    bn: ["শেষ"], sw: ["imeisha", "zimeisha"], th: ["หมด"], vi: ["hết"], zh: ["没了", "用完"], ja: ["切れた", "なくなった"], ko: ["떨어졌", "다 썼"], franco: ["khelset", "khalas"] },
-  call: { en: ["call", "phone", "ring", "remind me", "text", "message"], ar: ["كلم", "اتصل", "رن على", "فكرني", "ابعت"], arb: ["اتصل", "كلّم", "ذكّرني", "ذكرني"], es: ["llamar", "llama", "recuérdame"],
+  outof: { en: ["out of", "we're out of", "we need"], ar: ["مفيش"], arb: ["نفد", "نفدت"], es: ["se acabó", "se acabaron", "no queda"], fr: ["il n'y a plus de", "on n'a plus de", "il manque"], de: ["ist alle", "sind alle", "nicht mehr da"],
+    pt: ["acabou", "acabaram"], it: ["è finito", "sono finite", "manca"], ru: ["закончился", "закончилось", "кончился"], tr: ["bitti"], id: ["habis"], hi: ["खत्म हो गया", "खत्म हो गई"], ur: ["ختم ہو گیا", "ختم ہو گئی"], fa: ["تمام شد", "تموم شد"],
+    bn: ["ফুরিয়ে গেছে"], sw: ["imeisha", "zimeisha"], th: ["หมด"], vi: ["hết"], zh: ["没了", "用完"], ja: ["切れた", "なくなった"], ko: ["떨어졌", "다 썼"], franco: ["khelset"] },
+  call: { en: ["call", "phone", "ring", "remind me", "text", "message"], ar: ["كلم", "اتصل", "رن على", "فكرني", "ابعت ل", "ابعتله", "ابعتلها", "ابعت رسالة"], arb: ["اتصل", "كلّم", "ذكّرني", "ذكرني"], es: ["llamar", "llama", "recuérdame"],
     fr: ["appeler", "appelle", "rappelle-moi"], de: ["anrufen", "ruf", "erinnere mich"], pt: ["ligar", "liga", "lembra-me", "me lembre"], it: ["chiamare", "chiama", "ricordami"], ru: ["позвонить", "позвони", "напомни"],
     tr: ["ara", "aramak", "hatırlat"], id: ["telepon", "telpon", "ingatkan"], hi: ["फ़ोन", "फोन", "कॉल", "याद दिलाना"], ur: ["فون", "کال", "یاد دلانا"], fa: ["زنگ", "تماس", "یادم بنداز"],
     bn: ["ফোন", "কল", "মনে করিয়ে"], sw: ["piga simu", "nikumbushe"], th: ["โทร", "เตือน"], vi: ["gọi", "nhắc"], zh: ["打电话", "提醒"], ja: ["電話", "リマインド"], ko: ["전화", "알려줘"], franco: ["kalem", "fakarni", "etasel"] },
@@ -51,7 +51,7 @@ const T = {
     hi: ["तोहफ़ा", "उपहार"], ur: ["تحفہ"], fa: ["هدیه", "کادو"], bn: ["উপহার"], sw: ["zawadi"], th: ["ของขวัญ"], vi: ["quà"], zh: ["礼物"], ja: ["プレゼント"], ko: ["선물"], franco: ["hedeya"] },
   today: { en: ["today", "tonight"], ar: ["النهاردة", "النهارده", "انهاردة"], arb: ["اليوم", "الليلة"], es: ["hoy"], fr: ["aujourd'hui", "ce soir"], de: ["heute"], pt: ["hoje"], it: ["oggi", "stasera"], ru: ["сегодня"], tr: ["bugün"],
     id: ["hari ini", "nanti malam"], hi: ["आज"], ur: ["آج"], fa: ["امروز", "امشب"], bn: ["আজ"], sw: ["leo"], th: ["วันนี้", "คืนนี้"], vi: ["hôm nay", "tối nay"], zh: ["今天", "今晚"], ja: ["今日", "今夜"], ko: ["오늘"], franco: ["elnaharda", "el naharda"] },
-  tomorrow: { en: ["tomorrow"], ar: ["بكرة", "بكره", "بكرا"], arb: ["غدًا", "غدا"], es: ["mañana"], fr: ["demain"], de: ["morgen"], pt: ["amanhã"], it: ["domani"], ru: ["завтра"], tr: ["yarın"], id: ["besok"],
+  tomorrow: { en: ["tomorrow"], ar: ["بكرة", "بكره", "بكرا"], arb: ["غدًا"], es: ["mañana"], fr: ["demain"], de: ["morgen"], pt: ["amanhã"], it: ["domani"], ru: ["завтра"], tr: ["yarın"], id: ["besok"],
     hi: ["कल"], ur: ["کل"], fa: ["فردا"], bn: ["আগামীকাল", "কাল"], sw: ["kesho"], th: ["พรุ่งนี้"], vi: ["ngày mai"], zh: ["明天"], ja: ["明日"], ko: ["내일"], franco: ["bokra"] },
   after: { en: ["day after tomorrow"], ar: ["بعد بكرة", "بعد بكره"], arb: ["بعد غد"], es: ["pasado mañana"], fr: ["après-demain"], de: ["übermorgen"], pt: ["depois de amanhã"], it: ["dopodomani"], ru: ["послезавтра"],
     tr: ["öbür gün"], id: ["lusa"], hi: ["परसों"], ur: ["پرسوں"], fa: ["پس‌فردا", "پس فردا"], bn: ["পরশু"], sw: ["kesho kutwa"], th: ["มะรืนนี้"], vi: ["ngày kia"], zh: ["后天"], ja: ["明後日"], ko: ["모레"], franco: ["ba3d bokra"] },
@@ -75,7 +75,17 @@ const ALL = (k) => Object.values(T[k]).flat();
 const RX = {};
 for (const k of Object.keys(T)) { const sp = ALL(k).filter((w) => !/[\u3040-\u30ff\u4e00-\u9fff\u0e00-\u0e7f\uac00-\ud7af]/.test(w)), ns = ALL(k).filter((w) => /[\u3040-\u30ff\u4e00-\u9fff\u0e00-\u0e7f]/.test(w)), ko = ALL(k).filter((w) => /[\uac00-\ud7af]/.test(w));
   RX[k] = [sp.length ? W(sp, k === "buy" || k === "call" || k === "pay" ? "(?:[وفل])?" : "") : null, ns.length ? C(ns) : null, ko.length ? C(ko) : null].filter(Boolean); }
+// any action word at all (a piece without one, right after a shopping clause, is one more thing to buy)
+const ACTION = (x) => ["spent", "pay", "buy", "outof", "call", "gift"].some((k) => has(k, x)) || TASKV.test(x) || TASKC.test(x);
+// common task verbs in every language (a piece that has one is its own to-do, never one more thing to buy)
+const TASKV = new RegExp("(?:^|[^\\p{L}])(?:" + ["finish", "clean", "send", "write", "book", "fix", "make", "prepare", "check", "read", "study", "wash", "cook", "visit", "take", "bring", "renew", "cancel", "order",
+  "خلص", "نضف", "ابعت", "اكتب", "احجز", "صلح", "اعمل", "جهز", "راجع", "اقرا", "اغسل", "اطبخ", "روح", "زور", "جدد", "الغي", "اطلب", "أنهِ", "أنه", "رتّب", "رتب", "نظف", "أرسل",
+  "terminar", "limpiar", "enviar", "mandar", "finir", "ranger", "nettoyer", "envoyer", "fertig", "putzen", "schicken", "aufräumen", "limpar", "finire", "pulire", "mandare", "inviare",
+  "закончить", "убрать", "отправить", "bitir", "temizle", "gönder", "selesaikan", "bersihkan", "kirim", "पूरी", "साफ़", "भेज", "مکمل", "صاف", "بھیج", "تمام", "تمیز", "بفرست",
+  "শেষ", "পরিষ্কার", "পাঠা", "maliza", "safisha", "tuma", "khalas", "nadaf", "ebaat"].join("|") + ")(?![\\p{L}])", "iu");
+const TASKC = /(?:ทำรายงาน|ทำความสะอาด|ส่ง|làm xong|dọn|gửi|写完|打扫|发送|仕上げ|掃除|送る|끝내|청소|보내)/u;
 const THEN_WORDS = new Set(ALL("then").map((w) => w.toLowerCase()));
+const OUT_AR = /(?:^|[^\p{L}])(?:خلص|خلصت|خلصو|خلصوا|khalas|khelset)\s+(?:ال)?(?:سكر|زيت|لبن|عيش|رز|بيض|شاي|قهوة|صابون|مية|غاز|جبنة|زبدة|مكرونة|دقيق|ملح|شامبو|مناديل|sokkar|zeit|laban|3eish|ruz|beid|shay|2ahwa)(?![\p{L}])/iu;
 const has = (k, s) => RX[k].some((re) => re.test(s));
 const strip = (k, s) => RX[k].reduce((x, re) => x.replace(new RegExp(re.source, re.flags + "g"), (m) => (/^[^\p{L}\p{M}]/u.test(m) ? m[0] : "")), s);
 
@@ -91,7 +101,7 @@ const WD = [];   // [regex, weekday]
   for (const [k, v] of Object.entries(EG)) if (!seen.has(k)) seen.set(k, v);
   // Korean / Japanese / Chinese / Thai short names (one letter) are too short to find safely in free text — only the long ones count
   for (const [n, i] of [...seen.entries()].sort((a, b) => b[0].length - a[0].length)) {
-    if (/^[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]$/.test(n)) continue;
+    if (/^[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]$/.test(n) || (!/[\u3040-\u30ff\u4e00-\u9fff\u0e00-\u0e7f\uac00-\ud7af]/.test(n) && n.length < 3)) continue;
     const cjk = /[\u3040-\u30ff\u4e00-\u9fff\u0e00-\u0e7f\uac00-\ud7af]/.test(n);
     WD.push([cjk ? C([n]) : W([n], "(?:[بلو]|ي?وم\\s|on\\s)?"), i, n]);
   }
@@ -107,7 +117,7 @@ export function dayIn(s, now = Date.now()) {
   else if (has("today", t)) { date = iso(mid(now)); for (const re of RX.today) take(re); }
   if (!date) for (const [re, i] of WD) if (re.test(t)) { const d = new Date(mid(now)), add = (i - d.getDay() + 7) % 7; date = iso(d.getTime() + add * DAY); take(re); break; }
   if (!date) {   // the Nth of the month: "on the 1st", «يوم 1», "el día 5", "le 3", "am 1.", "dia 1", "tanggal 1", "1 तारीख", "1号", "1日", "1일" …
-    const m = /(?:on the |the |يوم |el día |el |le |am |dia |il |tanggal |tarehe |ngày |วันที่ |ayın )(\d{1,2})(?:st|nd|rd|th|\.|'?[iıuü])?(?!\d|[.,:]\d)/iu.exec(t) || /(?<![\d.,])(\d{1,2})(?:st|nd|rd|th| तारीख| تاریخ| তারিখ|号|日|일|-го|-e| ام)(?![\p{L}\d])/iu.exec(t);
+    const m = /(?<![\p{L}])(?:on the |the |يوم |yom |el día |el |le |am |dia |il |tanggal |tarehe |ngày |วันที่ |ayın )(\d{1,2})(?:st|nd|rd|th|\.|'?[iıuü])?(?!\d|[.,:]\d)/iu.exec(t) || /(?<![\d.,])(\d{1,2})(?:(?:st|nd|rd|th| तारीख| تاریخ| তারিখ|-го|-e| ام)(?![\p{L}\d])|(?:号|日|일)(?!\d))/iu.exec(t);
     if (m && +m[1] >= 1 && +m[1] <= 31) { const d = new Date(mid(now)); if (d.getDate() > +m[1]) d.setMonth(d.getMonth() + 1, 1); d.setDate(Math.min(+m[1], new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); date = iso(d.getTime()); t = t.replace(m[0], " "); }
   }
   return { date, rest: t };
@@ -115,7 +125,7 @@ export function dayIn(s, now = Date.now()) {
 /** A clock time → "HH:MM": "at 9", "9:30", "9 pm", «الساعة 9», "à 15h", "um 9 Uhr", "alle 9", "в 9", "saat 9", "jam 9", "9 बजे", "9時", "9시"… */
 export function timeIn(s) {
   const t = latinDigits(s);
-  let m = /(?:at|@|الساعة|الساعه|الساعة|ساعة|à|um|alle|às|a las|a la|в|saat|jam|pukul|ساعت|lúc|saa|เวลา)\s*(\d{1,2})(?:[:h.](\d{2}))?\s*(am|pm|ص|م|uhr|h|ظهرا|مساء|العصر)?/iu.exec(t)
+  let m = /(?<![\p{L}])(?:at|@|الساعة|الساعه|ساعة|el sa3a|sa3a|à|um|alle|às|a las|a la|в|saat|jam|pukul|ساعت|lúc|saa|เวลา)\s*(\d{1,2})(?:[:h.](\d{2}))?\s*(am|pm|ص|م|uhr|h|ظهرا|مساء|العصر)?/iu.exec(t)
     || /(\d{1,2}):(\d{2})\s*(am|pm)?/i.exec(t) || /(\d{1,2})\s*(am|pm)\b/i.exec(t) || /(\d{1,2})\s*(?:बजे|بجے|টায়|時|点|시|โมง|giờ)/u.exec(t);
   if (!m) return { time: null, rest: s };
   let h = +m[1], mi = m[2] && /^\d{2}$/.test(m[2]) ? +m[2] : 0; const ap = String((m[2] && !/^\d/.test(m[2]) ? m[2] : m[3]) || "").toLowerCase();
@@ -129,18 +139,18 @@ const MULT = [[/(\d)\s*(?:k|thousand|ألف|الف|آلاف|mil|mille|tausend|т
 /** The money in a clause (the first amount that isn't a time, a date or a count of days). */
 export function amountIn(s) {
   const t = latinDigits(s);
-  const re = /(?<![\d:/])(\d{1,3}(?:[,\s]\d{3})+|\d+)(?:\.(\d{1,3}))?(?![\d:/])/g; let m;
+  const re = /(?<![\d:/A-Za-z])(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,3}))?(?![\d:/]|[A-Za-z][A-Za-z\d])/gu; let m;
   while ((m = re.exec(t))) {
     const after = t.slice(m.index + m[0].length, m.index + m[0].length + 12), before = t.slice(Math.max(0, m.index - 12), m.index);
     if (/^\s*(?:st|nd|rd|th|am|pm|:|h\b|uhr|بجے|बजे|時|点|시|โมง|giờ|号|日|일|तारीख|تاریخ|তারিখ|nights?|ليالي|days?|أيام|ايام|pages?|صفحة|min|minutes?|دقيقة|hours?|ساعات|kg|كيلو|km|كم|%)/iu.test(after)) continue;
-    if (/(?:at|@|الساعة|الساعه|à|um|alle|às|a las|в|saat|jam|pukul|lúc|saa|เวลา|يوم|on the|the|le|am|dia|il|tanggal|tarehe|ngày|วันที่)\s*$/iu.test(before)) continue;
+    if (/(?<![\p{L}])(?:at|@|الساعة|الساعه|sa3a|à|um|alle|às|a las|в|saat|jam|pukul|lúc|saa|เวลา|يوم|yom|on the|the|le|am|dia|il|tanggal|tarehe|ngày|วันที่)\s*$/iu.test(before)) continue;
     let v = parseFloat(m[1].replace(/[,\s]/g, "") + (m[2] ? "." + m[2] : ""));
     for (const [mr, k] of MULT) { const mm = new RegExp("^" + mr.source.replace("(\\d)", ""), mr.flags).exec(after.replace(/^\s*/, "")); if (mm) { v *= k; break; } }
     if (v > 0 && v < 1e10) return v;
   }
   return null;
 }
-const SENT = /\s*(?:\n+|[.!?。！？](?=\s|$)|;|؛|\u061f(?=\s|$))\s*/u;
+const SENT = /\s*(?:\n+|[.!?](?=\s|$)|[。！？]|;|؛|\u061f(?=\s|$))\s*/u;
 /** A paragraph → its clauses (each with the day said before a colon carried). */
 export function clauses(text, withSentence = false) {
   const out = []; let si = -1;
@@ -150,26 +160,29 @@ export function clauses(text, withSentence = false) {
     // "and then / also" in every language
     let parts = [sent];
     for (const re of RX.then) parts = parts.flatMap((p) => p.split(new RegExp("\\s*" + re.source.replace("(?:^|[^\\p{L}\\p{M}])", "(?:^|[\\s,،、，])").replace("(?=$|[^\\p{L}\\p{M}])", "(?=\\s|$)"), re.flags + "g")).filter((x) => x && x.trim() && !THEN_WORDS.has(x.trim().toLowerCase())));
-    for (const p of parts) for (const c of p.split(/\s*[,،、，]\s*/u)) if (c.trim()) out.push(withSentence ? { c: c.trim(), si } : c.trim());
+    for (const p of parts) for (const c of p.split(/\s*[,،，]\s*/u)) if (c.trim()) out.push(withSentence ? { c: c.trim(), si } : c.trim());
   }
   return out;
 }
 const tidy = (s) => s.replace(/\s+/g, " ").replace(/^[\s,،:;\-–—·+&و]+|[\s,،:;\-–—·+&]+$/gu, "").replace(/^(?:and|then|also|و|y|et|und|e|и|ve|dan|और|اور|na)\s+/iu, "").trim();
 const ART = /^(?:the|some|a|an|du|de la|de l'|des|le|la|les|l'|el|los|las|un|una|unos|unas|une|il|lo|gli|i|o|os|as|um|uma|der|die|das|ein|eine|einen|شوية|حبة)\s+/iu;
-const splitItems = (s) => s.split(/\s*(?:\+|,|،|、|，|\s(?:and|&|و|y|et|und|e|и|ve|dan|और|اور|আর|na|และ|và|및)\s|\sو(?=\S)|和|と|하고)\s*/u).map((x) => tidy(tidy(x).replace(ART, ""))).filter((x) => x && x.length <= 40);
+const splitItems = (s) => s.split(/\s*(?:\+|,|،|、|，|\s(?:and|&|و|w|y|et|und|e|и|ve|dan|और|اور|আর|na|และ|và|및)\s|\sو(?=\S)|和|と|하고)\s*/u).map((x) => tidy(tidy(x).replace(ART, "")).replace(/(?<=[\u3040-\u30ff\u4e00-\u9fff])[をがはも]$|(?<=[\uac00-\ud7af])\s*(?:을|를)$/u, "")).filter((x) => x && x.length <= 40);
 /** The paragraph → the items. */
 export function organise(text, { now = Date.now() } = {}) {
   const items = []; let carry = null, lastSi = -1;
-  const all = clauses(text, true), raw = all.map((x) => x.c);
+  const all = clauses(text, true);
+  for (let i = all.length - 2; i >= 0; i--) { const a = all[i], b = all[i + 1];
+    const w = b.c.trim().split(/\s+/), verbLast = has("buy", w[w.length - 1]) && !has("buy", w[0]);
+    const before = i > 0 && all[i - 1].si === a.si && has("buy", all[i - 1].c) && !verbLast;
+    if (a.si === b.si && !before && has("buy", b.c) && !ACTION(a.c) && amountIn(a.c) == null && !timeIn(a.c).time && !(dayIn(a.c).date && dayIn(b.c).date) && dayIn(a.c).rest.trim().split(/\s+/).length <= 3 && !has("buy", b.c.split(/\s+/)[0])) { b.c = a.c + ", " + b.c; all.splice(i, 1); } }
+  const raw = all.map((x) => x.c);
   for (let i = 0; i < raw.length; i++) {
     let src = raw[i];
     if (all[i].si !== lastSi) { carry = null; lastSi = all[i].si; }   // a day carried stops at the end of its sentence
     // "tomorrow: …" / «بكرة: …» — the day before a colon is carried to what follows
     const colon = /^([^:：]{2,25})[:：]\s*(.*)$/u.exec(src);
-    if (colon) { const d = dayIn(colon[1], now); if (d.date && !tidy(d.rest)) { carry = d.date; src = colon[2]; if (!src.trim()) continue; } else if (!d.date && HEADER.test(colon[1].trim())) src = colon[2]; }
+    if (colon) { const d = dayIn(colon[1], now); if (d.date && !tidy(d.rest)) { carry = d.date; src = colon[2]; if (!src.trim()) continue; } else if (!d.date && (HEADER.test(colon[1].trim()) || (colon[1].trim().split(/\s+/).length <= 2 && !ACTION(colon[1]) && colon[2].trim()))) src = colon[2]; }
     const d = dayIn(src, now), tm = timeIn(d.rest), amount = amountIn(tm.rest);
-    // a day said at the very start of a sentence ("tomorrow buy milk, call the bank", «بكرة اشتري لبن، كلم البنك», "明天买…，然后…") covers the sentence
-    if (d.date && (i === 0 || all[i - 1].si !== all[i].si) && dayIn(src.split(/\s+/).slice(0, 3).join(" "), now).date === d.date) carry = d.date;
     let date = d.date || carry, time = tm.time, body = tm.rest;
     if (has("morning", body)) { time = time || "10:00"; for (const re of RX.morning) body = body.replace(new RegExp(re.source, re.flags + "g"), (m) => (/^[^\p{L}]/u.test(m) ? m[0] : "")); }
     else if (has("evening", body) && !time) { time = "19:00"; for (const re of RX.evening) body = body.replace(new RegExp(re.source, re.flags + "g"), (m) => (/^[^\p{L}]/u.test(m) ? m[0] : "")); }
@@ -177,16 +190,17 @@ export function organise(text, { now = Date.now() } = {}) {
     if (amount != null && has("spent", src)) type = "spent";
     else if (amount != null && (has("pay", src) || has("bill", src))) type = "payment";
     else if (has("buy", src) && !(amount != null || has("gift", src))) type = "list";
-    else if (has("outof", src)) type = "list";
+    else if (has("outof", src) || OUT_AR.test(src)) type = "list";
     else if (has("call", src) || time) type = "reminder";
     else if (tidy(body).split(/\s+/).filter(Boolean).length >= 1 && tidy(body).length >= 3) type = "todo";
     else type = "note";
     // a piece with no action word right after a shopping clause = one more thing to buy ("buy milk, bread and eggs")
     const prev = items[items.length - 1];
-    if (type === "todo" && prev && prev.type === "list" && prev.src === raw[i - 1] + "" && !date && !time && amount == null && tidy(src).split(/\s+/).length <= 3) { prev.items.push(...splitItems(src)); prev.text = prev.items.join(", "); continue; }
+    if (type === "todo" && prev && prev.type === "list" && prev.src === raw[i - 1] && all[i - 1].si === all[i].si && !time && amount == null && !ACTION(src) && !(d.date && prev.date) && tidy(d.rest).split(/\s+/).length <= 4) {
+      prev.items.push(...splitItems(d.rest)); prev.text = prev.items.join(", "); prev.src = raw[i]; if (d.date && !prev.date) prev.date = d.date; continue; }
     if (type === "spent" && !date) date = iso(mid(now));   // money already spent is logged on the day it is written
     const it = { type, text: "", date: date || null, time: time || null, amount: amount == null ? null : amount, items: [], src: raw[i] };
-    if (type === "list") { let what = body; for (const k of ["buy", "outof"]) what = strip(k, what); it.items = splitItems(what.replace(/\b(?:the|some|a|an)\s+/gi, "")); it.text = it.items.join(", "); if (!it.items.length) { it.type = "todo"; it.text = tidy(body); } }
+    if (type === "list") { let what = body.replace(/(?:^|[^\p{L}])(?:خلص|خلصت|خلصو|خلصوا|khalas|khelset)(?![\p{L}])/giu, " "); for (const k of ["buy", "outof"]) what = strip(k, what); it.items = splitItems(what); it.text = it.items.join(", "); if (!it.items.length) { it.type = "todo"; it.text = tidy(body); } }
     else it.text = tidy(body.replace(/(\d[\d,.\s]*)(?:\s*(?:k|thousand|ألف|الف|جنيه|ج\.م|egp|pounds?|sar|ريال|aed|usd|\$|€|£|ر\.س))?/giu, (m, n) => (amount != null && amountIn(m) === amount ? " " : m)).replace(/\s+(?:by|before|on|under|below|less than|max|قبل|يوم|أقل من|اقل من|تحت|el|le|am|menos de|moins de|unter|sotto|до|altında|di bawah)\s*$/iu, "")) || tidy(src);
     items.push(it);
   }
