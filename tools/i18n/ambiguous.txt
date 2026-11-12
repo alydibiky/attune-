@@ -98,10 +98,10 @@ actions-ui.jsx: <button onClick={async () => { if (await askConfirm("Delete this
 actions-ui.jsx: <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center 
 agents-ui.jsx: const menu = [...(onRules ? [[tr("Rules"), onRules, "agent-rules-open"]] : []), ...extra, [a.on ? tr("Pause") : tr("Resume"), () => toggle(a
 agents-ui.jsx: <button onClick={() => { if (window.confirm(tr("Delete this agent?"))) { remove(a); back(true); } }} className={U.btnDanger} data-testid="ag
+aijobs-ui.jsx: <button className="text-[12px] font-bold c-sub min-h-[40px] px-2" onClick={() => setS(saveJobs({ ...s, jobs: s.jobs.filter((x) => x.id !== j
 attune.jsx: <MenuItem testid="engine-delete" danger onClick={() => setArmDelete(m.id)}>{tr("Delete")}</MenuItem>
 attune.jsx: <button className="px-2.5 py-1 rounded-md bg-rose-600 text-white" onClick={() => { n.removeInstalled(m.id); setArmDelete(null); flash(tr("De
 attune.jsx: {armDelete === m.id ? tr("Tap again") : tr("Delete")}</button>
-autom-ui.jsx: <button onClick={() => put({ ...s, rules: s.rules.filter((x) => x.id !== r.id) })} className="text-[var(--c-mut)] hover:text-[var(--c-neg)] 
 
 ## Done
 actions-ui.jsx: <p className={label + " mt-4 mb-2"}>{tr("Done")}</p>
@@ -238,6 +238,7 @@ focus-ui.jsx: <button className={btnP + " w-full"} disabled={!pick.task.trim()} 
 
 ## OK
 agents-ui.jsx: <button className={U.btnP + " !h-11 !min-h-[44px]"} data-testid="agents-answer-go">{tr("OK")}</button>
+aijobs-ui.jsx: <button className={btnS + " h-9! min-h-[36px]!"} onClick={() => { setS(saveJobs({ ...s, results: s.results.map((x) => (x.id === r.id ? { ...
 shelf-ui.jsx: className={btnP + " mt-3 w-full"}>{tr("OK")}</button>
 voice-ui.jsx: <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold" da
 
@@ -396,17 +397,21 @@ planner-ui.jsx: {!gr.rows.length ? <tr><td colSpan={14} className={"px-2 py-1 te
 
 ## Add
 agents-ui.jsx: <form onSubmit={(e) => { e.preventDefault(); const w = word.trim(); if (w) { setV({ words: [...new Set([...v.words, w])] }); setWord(""); } 
+aijobs-ui.jsx: <button className={btnP} disabled={!text.trim()} onClick={add} data-testid="jobs-add">{tr("Add")}</button></div>
 autopilot-ui.jsx: <button onClick={() => add(x)} aria-label={tr("Add")} className="min-h-[36px] px-3 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(-
 autopilot-ui.jsx: <button onClick={() => add(x)} aria-label={tr("Add")} className="min-h-[36px] px-3 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(-
 booklib-ui.jsx: <button type="submit" className={U.chip(true)} data-testid="booklib-topic-save">{tr("Add")}</button></form>}
 care-ui.jsx: <button className={btnP} disabled={!n.trim()} onClick={() => { onAdd({ name: n.trim(), notes }); setN(""); setNotes(""); }} data-testid="car
 chat.jsx: <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
 cv-ui.jsx: <button className={ghost + " w-full flex items-center justify-center gap-1"} onClick={add} data-testid="cv-add-item"><Plus size={13} />{tr("
-daily-ui.jsx: <button className={btnP + " !px-4 shrink-0"} onClick={add} disabled={!t.trim()} data-testid="learn-add-save">{tr("Add")}</button></div>;
 
 ## Business
 agents-ui.jsx: else if (s.k === "cabin") body = chipRow([["economy", tr("Economy")], ["premium", tr("Premium economy")], ["business", tr("Business")], ["fi
 attune.jsx: {mode === "business" && !wide && NATIVE && NATIVE.pinTool ? <div className="px-4 max-w-3xl mx-auto flex justify-end"><button onClick={() => 
+
+## Jobs
+aijobs-ui.jsx: <p className={label + " m-0"}>{tr("Jobs")} · {s.jobs.length}</p>
+tools-hub-ui.jsx: <Tile testid="fam-rep-week" label={fam === "writing" ? tr("Prompts improved") : fam === "files" ? tr("Files converted") : fam === "studio" ?
 
 ## Money Report
 attune.jsx: <h1>${esc(tr("Money Report"))} · ${esc(repR.period && !repR.period.whole ? repR.period.from + " – " + repR.period.to : repR.month.from.slice
