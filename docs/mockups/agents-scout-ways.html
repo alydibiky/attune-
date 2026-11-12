@@ -1,4 +1,4 @@
-<title>Agents and Scout</title>
+<title>Agents Look</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@500;700&display=swap">
 <style>
@@ -119,12 +119,15 @@ nav.toc a { font-family: var(--font-code); font-size: 12.5px; text-decoration: n
 
 <div class="wrap">
   <header class="intro">
-    <span class="eyebrow">Attune · Agents &amp; Scout · 12 Nov 2026</span>
-    <h1>How you use Agents and Scout — 6 ways</h1>
-    <p class="lead">You said: keep them, but change how you use them. Each screen below is a different way of living with them, drawn with your own hunts (the Huawei watch, the Tucson 2022) and agents (the Jeddah hotel, the noon order). Tick the one you want (or two, and say how to join them in the note). Then one combined screen with “what I understood” → your OK → I build it.</p>
+    <span class="eyebrow">Attune · Agents · 12 Nov 2026 (round 2)</span>
+    <h1>One clear Agents page — 5 ways</h1>
+    <p class="lead">You said: the Cards, List and Board views are confusing; every piece of information must be clear, changing a watch must be easy, and the details must show very clearly. So there is ONE view (no Cards / List / Board switch). Each screen below uses your own four agents: Huawei FreeClip 2, the hotel near Masjid al-Haram, the Tucson 2022 and your message alert. Tick one (or two, and say how to join them in the note).</p>
     <div class="box">
-      <b>Already fixed in v9.9.20 (no choice needed)</b>
+      <b>Fixed whichever you pick (mistakes in your screenshot)</b>
       <ul>
+        <li>Dates in words: “Thu 8 Jan → Mon 12 Jan · 4 nights”, never “01/08 → 01/12”.</li>
+        <li>“Huawei FreeClip 2 · EGP 120” is not the earbuds' price (it was a case or a cover) — such prices are left out.</li>
+        <li>No repeated words (“Best on Amazon · noon / Amazon · noon”).</li>
         <li>A notification opens exactly the hunt it is about — never another one.</li>
         <li>No “51 new ads” any more: you hear only about ads that really match.</li>
         <li>No ads from other countries (no riyal prices in an Egypt hunt); the price is the one in the ad's own title.</li>
@@ -162,22 +165,21 @@ const ar = (x) => `<span class="ar-t">${x}</span>`;
 
 // ---------- the features: [group, code, name, arabic, Ali's note, where, test, [A, B]] ----------
 // each option: [letter, name, what, plus, minus, recommended?, phone html]
-const G = { as: ["A · How you use them", "طريقة الاستخدام"], sc: ["B · How a match is shown (instead of 100/100)", "شكل النتيجة"] };
+const G = { as: ["A · The Agents page", "صفحة الوكلاء"], sc: ["B · How a match is shown (instead of 100/100)", "شكل النتيجة"] };
 const tucson = (n, p, s) => r("🚗", n, s, `<span class="amt">${p}</span>`);
+const fc = (t, s, p) => r("🎧", t, s, p ? `<span class="amt">${p}</span>` : "");
 const F = [
-["as","AS","Agents & Scout — the way you use them","الوكلاء والسكاوت","Ali: keep them, change the interface / how I use it","Sidebar → today Agents and Scout are two pages","Each option keeps everything Agents and Scout do today; only where you see it and how you act on it changes.",[
- ["1","One “Watching” list","Agents and Scout become ONE page: every watch is one line with a plain sentence of where it stands. Tap → only the real matches. A notification only when something really matches.","One place; one sentence tells you everything.","The details are one tap away.",1,
-  ph("Watching · 4", c(r("⌚","Huawei Watch GT 6 Pro","Nothing new that matches · checked 4:00") + sep + r("🚗","Tucson 2022 used","<b>1 match:</b> 1,490,000 · 7% under usual") + sep + r("🏨","Hotel · Jeddah 3–7 Mar","Best so far: 1,850 SAR/night · checked 8:00") + sep + r("📦","noon order","Out for delivery · arrives today")) + bt("+ Watch something") + `<div class="s">Say it in the box: “tell me when the Huawei watch is under 12,000”.</div>`)],
- ["2","A finds inbox","One feed of what Attune found across all your watches, newest first, like messages. Each find: Keep or Not for me. Your watches are edited behind ⚙.","You only ever see results.","Watches with nothing new are hidden.",0,
-  ph("Finds", c(lb("Today") + tucson("Tucson 2022 · Cairo · 30,000 km","1,490,000","YallaMotor · 7% under usual") + bt("Keep","q|Not for me","q|Open ad")) + c(r("🏨","Jeddah hotel dropped to 1,850 SAR","was 2,100 · 3–7 Mar") + bt("Book","q|Not for me")) + c(lb("Yesterday") + r("📦","noon order shipped","")), { back: 1 })],
- ["3","Each watch is a chat","Every watch is a conversation. Attune posts finds as messages; you answer in words — “only Cairo”, “cheaper”, “stop”.","Change a watch by talking.","More reading than a list.",0,
-  ph("Tucson 2022 used", `<div class="s" style="text-align:center">Watching since 2 Nov</div>` + c(r("🚗","Found 1 that matches","1,490,000 · Cairo · 30,000 km · 7% under usual") + bt("Open ad","q|Message seller"), "soft") + `<div class="bubble">only automatic, under 1.5M</div>` + c(r("✓","Got it","Automatic, under 1,500,000 — I'll check again tonight")), { back: 1 })],
- ["4","A morning digest","One card on Home each morning: at most 3 best finds from all watches. No other notifications.","Calm: once a day.","A great deal can wait until morning.",0,
-  ph("Good morning", c(lb("Attune found · this morning") + tucson("Tucson 2022 · 1,490,000","","7% under usual · YallaMotor") + r("🏨","Jeddah hotel 1,850 SAR","dropped 250 overnight") + r("⌚","Huawei watch","nothing new") ) + bt("See all watches"))],
- ["5","A decision card per hunt","Each hunt opens on ONE card: the best ad now, a clear verdict (Buy / Wait) and why, then two runners-up. The rest behind “See all 7”.","Tells you what to do.","Fewer ads on screen.",0,
-  ph("Tucson 2022 used", c(lb("Best now") + `<div class="t" style="font-size:15px">Tucson 2022 · Cairo · 30,000 km</div><div class="big acc">1,490,000</div><div class="s">7% under the usual 1.6M · YallaMotor</div>` + bt("Open ad","q|Message seller"), "soft") + c(r("✓","Verdict: Buy","cheapest of 7 that match, price fell twice this month")) + c(lb("Next best") + tucson("Tucson 2022 · 45,000 km","1,500,000","") + tucson("Tucson 2022 · New Cairo","1,560,000","")) + bt("q|See all 7"), { back: 1 })],
- ["6","Inside Home only","No separate pages: finds show as lines in Home's “Your day”; you start, change or stop a watch from the box (“/watch”).","Nothing new to learn.","Home gets one more kind of line.",0,
-  ph("Good morning", `<div class="inp">Type / for a command, or just say it…</div>` + c(lb("Your day") + r("🚗","Scout · Tucson: 1 match","1,490,000 · 7% under usual") + r("📦","noon order arrives today","") + r("✓","Call the bank","10:00")) + `<div class="s">“/watch huawei watch under 12000” starts one · “/watch” lists them</div>`)],
+["as","AV","Agents — one clear page","صفحة الوكلاء","Ali: “change the look; Cards, List and Board are so confusing; every info clear; customization easy; details very clear”","Sidebar → Agents (the Cards / List / Board switch goes away)","Each design keeps everything the agents do today; only how it looks and how you change a watch changes.",[
+ ["1","A clear list → a full details page","One list: each agent on one line with a plain status and the best price big. Tap → its own page: what it watches (each line tap-to-change), the best offer with dates in words, other offers, the price over time, Pause / Check now.","Calm list; everything is on the details page.","One tap to see the details.",1,
+  ph("Agents · 4", c(fc("Huawei FreeClip 2","Best: noon · checked yesterday","EGP 7,999") + sep + r("🏨","Hotel near Masjid al-Haram","8 → 12 Jan · 4 nights · 5★ · best on Booking", `<span class="amt">EGP 41,495</span>`) + sep + r("🚗","Tucson 2022 used","1 match · 7% under usual", `<span class="amt">1,490,000</span>`) + sep + r("🔔","Message alert","Tell me when Ahmed writes · nothing yet")) + bt("+ New agent") + `<div class="s" style="text-align:center">↓ tap the hotel</div>` + c(lb("What I watch") + r("📅","Dates","Thu 8 Jan → Mon 12 Jan · 4 nights","<span class='ch'>Change</span>") + r("★","Stars","5★ only","<span class='ch'>Change</span>") + r("📍","Near","Masjid al-Haram · walking","<span class='ch'>Change</span>") + r("₤","Budget","up to EGP 45,000","<span class='ch'>Change</span>")), { back: 0 })],
+ ["2","Cards with your settings on them","One card per agent. Your settings sit on the card as chips (dates, stars, budget) — tap a chip to change it right there. The best offer is under them in big, clear text.","Change things without opening anything.","Cards are taller.",0,
+  ph("Agents · 4", c(r("🏨","Hotel near Masjid al-Haram","checked 5 h ago") + chips("8 → 12 Jan","5★","≤ EGP 45,000","walking") + c(`<div class="s">Best now · Booking.com</div><div class="big acc">EGP 41,495</div><div class="s">Swissôtel Makkah · 4 nights · EGP 10,374 a night</div>` + bt("Open the listing","q|9 more offers"), "soft")) + c(fc("Huawei FreeClip 2","checked yesterday","EGP 7,999") + chips("≤ EGP 8,500","new only","noon · Amazon")))],
+ ["3","Grouped by what needs you","Three groups: “Found something” first, then “Still looking”, then “Paused”. Each line says exactly what happened.","You see at once what needs you.","An agent moves between groups.",0,
+  ph("Agents", c(lb("Found something · 2") + r("🏨","Hotel: price dropped EGP 2,100","now 41,495 for 8 → 12 Jan") + r("🚗","Tucson: 1 new match","1,490,000 · 7% under usual")) + c(lb("Still looking · 1") + r("🎧","Huawei FreeClip 2","waiting for under EGP 7,500 · now 7,999")) + c(lb("Waiting for a message · 1") + r("🔔","Ahmed","you'll hear the moment he writes")))],
+ ["4","Easy settings sheet","Tap ⚙ on any agent: one sheet with plain controls — a price slider, a date picker, how often to check, when to tell you, which shops. Nothing to type.","Customizing is easy and the same for every agent.","Settings are one tap away.",0,
+  ph("Hotel near Masjid al-Haram", c(lb("Budget") + `<div class="s">up to <b>EGP 45,000</b></div>` + bar(70)) + c(lb("Dates") + chips("on|Thu 8 Jan","on|Mon 12 Jan") + `<div class="s">4 nights</div>`) + c(lb("Check") + chips("Every hour","on|Every 3 hours","Once a day")) + c(lb("Tell me when") + chips("on|Price drops","Any new offer","Only under budget")) + c(lb("Sites") + chips("on|Booking","on|Agoda","Expedia")) + bt("Save"), { back: 1 })],
+ ["5","A clear comparison inside each agent","Inside an agent, offers are a table: name, dates, total, per night, distance — the best one marked. Everything readable in one look.","Details very clear; easy to compare.","A table is small on a phone.",0,
+  ph("Hotel near Masjid al-Haram", `<div class="s">Thu 8 Jan → Mon 12 Jan · 4 nights · 5★</div>` + c(`<div class="cal" style="grid-template-columns:1.6fr 1fr 1fr .8fr"><span class="h">Hotel</span><span class="h">Total</span><span class="h">Night</span><span class="h">Walk</span><span class="slot plan">Swissôtel ★ best</span><span class="slot plan">41,495</span><span class="slot plan">10,374</span><span class="slot plan">3 min</span><span class="slot busy">Hilton Suites</span><span class="slot busy">44,900</span><span class="slot busy">11,225</span><span class="slot busy">4 min</span><span class="slot busy">Pullman Zamzam</span><span class="slot busy">47,200</span><span class="slot busy">11,800</span><span class="slot busy">2 min</span></div>`) + bt("Open the best","q|Change dates"), { back: 1 })],
 ]],
 ["sc","SC","A match — instead of “100/100”","شكل النتيجة بدل 100/100","Ali's screenshot: every ad said 100/100","Inside a hunt, on each ad","The words come from the same checks as today (your wishes, the fair price); only how they are shown changes.",[
  ["1","Plain words","Each ad says in words: “Has everything you asked” and how its price compares — “7% under the usual price”.","Clear at a glance.","No single number to sort by.",1,
@@ -190,7 +192,7 @@ const F = [
 ];
 
 // ---------- render ----------
-const KEY = "attune-agents-scout-v1";
+const KEY = "attune-agents-look-v2";
 let st = { on: {}, notes: {} };
 try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && typeof v === "object") st = { on: v.on || {}, notes: v.notes || {} }; } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
@@ -224,7 +226,7 @@ render();
 document.getElementById("copy").addEventListener("click", () => {
   const l = lines(), box = document.getElementById("copybox"), toast = document.getElementById("toast");
   if (!l.length) { document.getElementById("picked").textContent = "Tick at least one screen first."; return; }
-  const text = "My picks (Agents & Scout):\n" + l.join("\n");
+  const text = "My picks (Agents look):\n" + l.join("\n");
   const fallback = () => { box.hidden = false; box.value = text; box.focus(); box.select(); toast.hidden = false; toast.textContent = "Selected: copy it with your keyboard or long-press."; };
   try { navigator.clipboard.writeText(text).then(() => { toast.hidden = false; toast.textContent = "Copied " + l.length + " picks"; box.hidden = true; setTimeout(() => { toast.hidden = true; }, 2500); }, fallback); } catch (e) { fallback(); }
 });
