@@ -16,7 +16,7 @@ note is one per hunt, id scout-<hunt> (it opened the Tucson for a Huawei watch h
 in another country's money are out (SAR on syarah.com in an Egypt hunt made "62k cheapest"); a price written with its currency in the
 ad's title wins (1,490,000, not 1,571,667); "new" = the open hunt's own. Plus How to use guides / demos / life areas for the 4 new tools.
 **Waiting for Ali:** (1) Agents & Scout — he chose "keep them, change the interface / how I use it": options page
-https://claude.ai/artifact/E6UkVGJiwkMwVt846WEUii (round 2: AV-1…AV-5 one clear Agents page — no Cards/List/Board switch — + SC-1…SC-3) → his picks → one combined screen → OK → build. (2) Place reminders in the first release (Play background-location declaration) or after.
+https://claude.ai/artifact/E6UkVGJiwkMwVt846WEUii (round 2: AV-1…AV-7 one clear Agents page, AV-6 Claude Duet style, AV-7 ChatGPT Scheduled style — no Cards/List/Board switch — + SC-1…SC-3) → his picks → one combined screen → OK → build. (2) Place reminders in the first release (Play background-location declaration) or after.
 Still open from his screenshot: every match shows 100/100 when a hunt has few wishes — show options (mock-ups) before changing it.
 T1 brain dump: only research started (weekday names per language via Intl checked); nothing built yet.
 
