@@ -837,6 +837,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // Ahmed at 5") are BOTH done, with Undo
     if (route && !img) { const nw = numWords(typed); if (nw !== typed && ((api.parsePayment(nw) || {}).ok || (api.doKinds && api.doKinds(nw).length) || chatLifeIntent(nw))) return ask(nw, o); }
     if (route && !img && api.pageOf) { const pg = api.pageOf(typed); if (pg) { setText(""); try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: pg } })); } catch (e) {} return; } }
+    // v9.9.18 AU1 (Ali OK'd): "when … do …" in any of the 20 languages → the rule card on the Automations page (or its question)
+    if (route && !img && api.isRule && api.doIt && api.isRule(typed)) { const r = api.doIt(typed); if (r && r.lines && r.lines.length) { setText(""); return; } }
     if (route && !img && api.twoOrders && api.doIt && api.twoOrders(typed)) {
       const r = api.doIt(typed);
       if (r && r.lines && r.lines.length) { const cid = ensureChat(typed);

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { tr, getLang } from "./i18n.js";
 import { parseAutomation, ruleText, loadAuto, saveAuto, addRule, applyEvents, takeOut, READY, readyOn, parseMany } from "./autom.js";
 import { readNotification } from "./paylog.js";
+import { RulesSection } from "./rules-ui.jsx";
 import { Zap, Trash2, Wallet, Bell } from "lucide-react";
 import { card as kCard, btnP, btnS, inp, area, label } from "./ui-kit.jsx";
 
@@ -21,7 +22,7 @@ export function drainAutomations(native) {
   return added;
 }
 
-export function AutomationsPage({ native, flash }) {
+export function AutomationsPage({ native, flash, schedule, unschedule }) {
   const ar = getLang() === "ar";
   const [s, setS] = useState(loadAuto);
   const [text, setText] = useState("");
@@ -36,6 +37,7 @@ export function AutomationsPage({ native, flash }) {
     <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="auto-page">
       <button onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "donefor" } })); } catch (e) {} }} className="w-full min-h-[48px] flex items-center justify-between rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-[14px] font-extrabold" data-testid="auto-donefor">
         <span>{tr("Done for you")}</span><span className="text-[var(--c-acc)]">›</span></button>
+      <RulesSection native={native} flash={flash} schedule={schedule} unschedule={unschedule} lang={getLang()} />
       {/* v7.9 (Ali picked design A): ready rules first — one tap turns one on (or off) */}
       <div className={card + " space-y-1"} data-testid="auto-ready">
         <p className={label}>{tr("Turn one on")}</p>

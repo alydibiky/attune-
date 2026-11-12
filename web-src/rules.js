@@ -274,7 +274,7 @@ export function parseRule(text0, ctx = {}) {
   if ((has("tell", t) || (!dos.length && when)) && !dos.some((d) => d.type === "remind")) dos.push({ type: "tell", text: has("tell", t) ? restAfter(raw, "tell") : "" });
   if (!dos.length || (dos.length === 1 && dos[0].type === "tell" && !has("tell", t) && !startsWhen)) { if (!when) return null; if (!dos.length) ask.push({ field: "do", q: "What should I do then?", choices: ["remind", "tell", "list_add", "pot", "read", "silent", "open"] }); }
   if (when && when.type === "time" && !time && !days.length && !when.monthly) ask.push({ field: "at", q: "At what time?", choices: ["08:00", "09:00", "18:00", "21:00"] });
-  return { when, if: ifs, do: dos, ask, text: raw };
+  return { when, if: ifs, do: dos, ask, text: raw, cond: startsWhen || (when && when.type === "time" && hasEvery) };
 }
 function restAfter(raw, k) { const t = fold(raw), m = find(k, t); if (!m) return ""; let s = t.slice(m.end).replace(/^\s*(?:to|that|about|ان|إن|ب|de|à|a|an|di|о|ki|untuk|को|که|কে|kwamba|ว่า|rằng)\s+/iu, "").trim(); s = s.replace(/[.!?؟]+$/, ""); return s.slice(0, 120); }
 function itemsOf(raw) { const t = fold(raw); const m = find("addTo", t); if (!m) return []; const part = t.slice(m.end).split(RX.list)[0]; return part.split(/\s*(?:,|،|、|\band\b|\bو(?=\S)|\bet\b|\by\b|\bund\b|\be\b|\bи\b|\bve\b|\bdan\b|और|اور|و|এবং|na|และ|và|和|と|와|과)\s*/u).map((x) => x.replace(/^(?:to|on|في|على|a|à|zu|para|in|в|ke|को|به|তে|kwenye|ใน|vào|到|に|에)\s+/u, "").replace(/\s+(?:to|on|في|على|a|à|zu|para|in|в|ke|को|به|তে|kwenye|ใน|vào|到|に|에)$/u, "").trim()).filter((x) => x.length >= 2).slice(0, 12); }

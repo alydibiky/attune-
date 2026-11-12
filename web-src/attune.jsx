@@ -145,6 +145,7 @@ import { scheduleMessage } from "./messages-ui.jsx";
 import { connectNow } from "./connected.js";
 import { QuietWake } from "./wake-ui.jsx";
 import * as B1W from "./b1wire.js";
+import * as RS from "./rulestore.js";
 import { DoneForYouPage } from "./donelog-ui.jsx";   // v9.9.18 B1: nag levels, notification Paid → balance, Done for you
 import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST, weekendOf } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
@@ -9795,7 +9796,7 @@ export default function App() {
     translateDoc: (file, lang) => { const to = lang || (() => { try { return localStorage.getItem("attune:translate:to") || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } })();
       try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} window.__attuneConvertHandoff = { files: [file], target: "translate", lang: to }; navTo("convert"); return to; },
     doSure: (t) => { try { const now = Date.now();
-      if (metroAsk(t) || parseAutomation(t) || parseWatch(t) || HG.parseHaggle(t)) return true;   // (v9.8 N1: "negotiate …" is done, not answered)
+      if (metroAsk(t) || parseAutomation(t) || parseWatch(t) || HG.parseHaggle(t) || RS.ruleFor(t)) return true;   // (v9.8 N1: "negotiate …" is done, not answered)
       const pm = parseMission(t, now); if (pm && pm.deadline) return true;
       const ag = parseAgent(t, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return true;
       return doSure(t, { now, stores: loadLifeStores() }); } catch (e) { return true; } },
@@ -9807,6 +9808,7 @@ export default function App() {
     // v9.9.15: is this an order for an agent ("tell me when … is under …", «اشتريلي … بأقل من …», "track my Amazon order")? → its kind, or ""
     twoOrders: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return !!(u && u.two); } catch (e) { return false; } },   // v9.9.17
     pageOf: (t) => { try { return AL.pageOf(t); } catch (e) { return ""; } },
+    isRule: (t) => { try { return !!RS.ruleFor(t); } catch (e) { return false; } },
     agentKind: (t) => { try { const ag = parseAgent(t, { now: Date.now(), country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); return ag && ["watch", "track", "order", "buy"].includes(ag.kind) ? ag.kind : ""; } catch (e) { return ""; } },
     doIt: (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } },   // (Chat checked first: doSure + the judge + the person's pick)
     whereYes: (set) => remember(W2.whereRecord(set)),
@@ -10108,6 +10110,9 @@ export default function App() {
       } }
     // v6.41 D5: «مترو من المعادي للعتبة» → the route, by code
     { const mq = metroAsk(text); if (mq) return { lines: [{ text: metroText(metroRoute(mq.from, mq.to), ar) }], undo: null }; }
+    // v9.9.18 AU1 (Ali OK'd): every "when … do …" sentence, in any of the 20 languages → the rule card (or its question first)
+    { const pr = teachFirst ? null : RS.ruleFor(text); if (pr) { RS.saveDraft(pr); try { window.dispatchEvent(new Event("attune-rules")); } catch (e) {} navTo("automations");
+      return { lines: [{ text: (pr.ask || []).length ? tr("One question first — on the Automations page") : tr("Check the rule card — Save rule to switch it on"), open: "automations" }], undo: () => RS.saveDraft(null) }; } }
     // v6.41 C3: "when my salary arrives, put 20% in the car fund" → an automation, on at once
     { const pa = parseAutomation(text); if (pa) { const st = addRule(loadAuto(), pa, now); saveAuto(st, NATIVE, ar ? "ar" : "en");
       return { lines: [{ text: (ar ? "اشتغل: " : tr("On: ")) + autoRuleText(pa, ar), open: "automations" }], undo: () => { const c = loadAuto(); saveAuto({ ...c, rules: c.rules.filter((x) => x.id !== st.rules[st.rules.length - 1].id) }, NATIVE, ar ? "ar" : "en"); } }; } }
@@ -10296,7 +10301,7 @@ export default function App() {
         try { if (!teach && !agent && WT.readWebTask(text)) teach = true; } catch (e) {}   // v9.9.7 W1
         try { if (!teach && (TBL.parseTrack(text) || TBL.parseRow(TBL.loadTables(), text))) teach = true; } catch (e) {}   // v9.9.6 N1   // v9.9.3 W2: "send Ahmed '…' on WhatsApp" is done in the app
         if (teach) return { doActions: Math.max(1, doActions), teach: true, goal: false, metro: false, automation: false, watch: false, mission: false, agent: "" };
-        return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text), watch: !!parseWatch(text), mission, agent };
+        return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text) || !!RS.ruleFor(text), watch: !!parseWatch(text), mission, agent };
       },
       metroAsk: (text) => metroAsk(text) || (() => { const st = findStation(placeOf(text).replace(/\b(metro|station|stop)\b|محطه|محطة|مترو/gi, "").trim()); return st ? { to: st } : null; })(),
       translateTo: (text) => (/[\u0600-\u06ff]/.test(text) ? "en" : getLang() !== "en" ? getLang() : "ar"),
@@ -11144,7 +11149,7 @@ export default function App() {
         ) : mode === "missions" ? (
           <MissionsPage flash={flash} />
         ) : mode === "automations" ? (
-          <AutomationsPage native={NATIVE} flash={flash} />
+          <AutomationsPage native={NATIVE} flash={flash} schedule={scheduleReminder} unschedule={(id) => { try { setReminders(loadReminders().filter((x) => x.id !== id)); NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
         ) : mode === "donefor" ? (
           <DoneForYouPage flash={flash} />
         ) : mode === "recall" ? (

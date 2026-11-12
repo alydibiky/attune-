@@ -100,6 +100,18 @@
   - [x] AU3 web-src/recipes.js RECIPES / gallery / nextRamadan — salary day, Ramadan (only when prayers are on, ≤ 120 days, Umm
         al-Qura), school year, trip, car, new baby; only the rules whose data exist. tests/recipes/gen.mjs: 10,000 people over
         2026–2028 vs an independent Hijri scan — 100%. Planted bug → 98.7%. tests/unit/v9918b2.test.mjs.
+  - [x] AU1 SCREEN + RUNNER (OK'd): rulestore.js (store, ruleCtx = People directory with roles / places / devices / funds,
+        ruleLines + questions + answer in 20 languages, saveRule → time = repeating reminder, money in + fund = autom.js,
+        money in / message / call = watch.js alert), rules-ui.jsx on the Automations page (rule card W / I / D, Save rule · Try it
+        now · Change, "One question first" with choices, Your rules with Remove); Chat (chat.jsx api.isRule) and Home (doFromHome,
+        before the older automation / alert readers) open it; ruleFor only for sentences that START like a condition and aren't
+        questions (checked against the 10,000 hard sentences: 0 taken by mistake); plain "every day at 7 remind me…" stays a
+        reminder. 75 lines × 20 languages. tests/e2e_v9918rules.py ALL PASSED.
+  - [ ] **The phone part still to build (rules saved as "Waiting for the phone part", never fired wrongly):** Kotlin listeners for
+        arriving / leaving a place (background location — Play declaration + disclosure screen, tell Ali), Bluetooth connect
+        (BluetoothDevice.ACTION_ACL_CONNECTED, BLUETOOTH_CONNECT permission), Wi-Fi (ConnectivityManager callback), charging
+        (ACTION_POWER_CONNECTED via a registered receiver in a foreground part), and the checks (workdays / before / after / more
+        than) inside AutoRules.kt + the message-alert matcher — then flip isLive in rulestore.js for each.
   - [ ] B2 screens (after OK): the When/If/Do card in Chat + Home (screen AU1-A, with the "ask" card), Automations page list,
         Home "Attune noticed" card (AU2-A), Recipes gallery (AU3-A); the runner for each trigger (see the line below).
   - [ ] (was: tests/rules/gen.mjs — exactly 10,000 sentences: 21 language codes × triggers × checks × actions, each with the
