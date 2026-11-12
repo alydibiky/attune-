@@ -56,13 +56,13 @@
 | X6 | A+B | combine: the child's page + "found in the class group" to tick; everything editable |
 | X5 | — | LATER (after launch) |
 
-## Combined screens (step 3 of MOCKUPS.md) — waiting for Ali's OK
-- Page: **https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU** — AU1 AU5 AU7 AU8 T1 T3 T6 N1 P3 TR2 X1 X2 X3 X4 X6 (16 screens). Waiting for his OK.
+## Combined screens (step 3 of MOCKUPS.md) — **Ali said OK to all 15 (12 Nov 2026)**: AU1 AU5 AU7 AU8 T1 T3 T6 N1 P3 TR2 X1 X2 X3 X4 X6 → build
+- Page: **https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU** — AU1 AU5 AU7 AU8 T1 T3 T6 N1 P3 TR2 X1 X2 X3 X4 X6 (16 screens). **OK'd 12 Nov.**
 - Sources of all three pages: docs/mockups/ (automation-picks.html = the 38 ideas, automation-mockups.html = A/B screens, automation-combined.html = step 3). Edit there and republish with the Artifact tool (same file, keeps the link only from the session that published it — otherwise publish a new one and log the link).
 
 ## Batches (tick when done and pushed)
 - [x] **B0** this plan + combined screens page published + logged in MOCKUPS.md / NEXT_CHAT.md
-- [ ] **B1 safety first: AU5 nag levels · AU7 notification buttons · AU8 done-for-you log** (logic + 10,000 cases each; screens after OK)
+- [x] **B1 safety first: AU5 nag levels · AU7 notification buttons · AU8 done-for-you log** (logic + 10,000 cases each; screens after OK)
   - [x] logic: web-src/nag.js (AU5 levels + quiet hours), web-src/notifpay.js (AU7 Paid → balance → exactly once), web-src/donelog.js
         (AU8 limits, Undo, Edit, remember only for the same kind + source)
   - [x] 10,000 cases each, each with an independent oracle and a planted-bug check: `bash tests/nag/run.sh` (5 time zones × 2,000),
@@ -72,7 +72,14 @@
         hooks, manifest receiver, NativeBridge.takeTaps — **compiled green on CI** (branch build https://github.com/alydibiky/attune-/actions/runs/43113610542, 11 Nov 22:58)
   - [x] country fix: "weekdays" reminders follow the country's weekend (country.js weekendOf; actions.js, timeline.js, Reminders.kt
         `off`) — was Egypt's Fri + Sat everywhere
-  - [ ] after Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU: the screens — the "Keep reminding" chips + ★ in the
+  - [x] SCREENS (OK'd 12 Nov): reminder form ★ Important + "Keep reminding" levels + quiet-hours line, ★ in the list, "important"
+        / «مهم» typed → ★ (actions-ui.jsx); every reminder sent to the phone carries nag / quiet / button words / Paid buttons
+        (attune.jsx scheduleReminder, b1wire.withPayButtons for People & plans bills I pay); the phone's taps applied once on open
+        (b1wire.applyPhoneTaps → Money + tick + Done for you); "Done for you" page (donelog-ui.jsx, mode "donefor", linked from
+        Automations) with limits, Edit (amount / category / balance) → "Do it this way next time?", Undo. 25 new lines × 20
+        languages. Also fixed: appendToLedger rounded KWD / BHD / OMR / JOD / TND to 2 decimals (moneyunits.digitsOf).
+        Browser test tests/e2e_v9918b1.py (16 checks) ALL PASSED.
+  - [x] (was) after Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU: the screens — the "Keep reminding" chips + ★ in the
         reminder sheet (sets r.nag / r.important / r.quiet), payment reminders pass r.pay (notifpay.payButtons with tr() labels in 20
         languages) and r.labels, the page applies NATIVE.takeTaps() on open (notifpay.applyTaps → paylog appendToLedger, Undo),
         the "Done for you" page (donelog.js) + Edit sheet + "Do it this way next time?"; all words in 20 languages; e2e test.
@@ -143,6 +150,7 @@
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 
 ## Log
+- 12 Nov 2026: Ali OK'd every combined screen → building the screens batch by batch (B1 first).
 - 11 Nov 2026 (late night): B1, B2, B3 LOGIC done and pushed (all 10,000-case runs at 100%, held-out for the rules reader 40/40). Screens for all of them wait for Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU. The Kotlin of B1 (NagPay.kt) compiled green on the branch build https://github.com/alydibiky/attune-/actions/runs/43113610542.
 - 11 Nov 2026 (night): B1 logic + 10,000-case tests + Kotlin done (see B1); screens wait for the OK.
 - 11 Nov 2026: plan written; Ali's picks recorded.

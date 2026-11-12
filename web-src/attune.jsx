@@ -144,6 +144,8 @@ import * as HG from "./haggle.js";
 import { scheduleMessage } from "./messages-ui.jsx";
 import { connectNow } from "./connected.js";
 import { QuietWake } from "./wake-ui.jsx";
+import * as B1W from "./b1wire.js";
+import { DoneForYouPage } from "./donelog-ui.jsx";   // v9.9.18 B1: nag levels, notification Paid → balance, Done for you
 import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST, weekendOf } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
 const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
@@ -7790,7 +7792,7 @@ const OWN_TITLE = new Set(["groups", "planner", "health", "scout", "lifeask", "s
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
 // v9.9.16 OK1: the pages that had no name for the top bar (Agents said "Attune")
-const BAR_TITLES = { agents: "Agents", timeline: "Follow-ups", life: "People & plans", radar: "Deadline Radar", guardian: "Money Guardian", family: "Family", reminders: "Reminders", write: "Writing", people: "People", projects: "Projects", missions: "Missions", automations: "Automations", recall: "Recall",
+const BAR_TITLES = { agents: "Agents", timeline: "Follow-ups", life: "People & plans", radar: "Deadline Radar", guardian: "Money Guardian", family: "Family", reminders: "Reminders", write: "Writing", people: "People", projects: "Projects", missions: "Missions", automations: "Automations", recall: "Recall", donefor: "Done for you",
   privacy: "Privacy", guide: "How to use Attune", slides: "Slides & Reports", convert: "File Converter", pdfchat: "Ask a PDF", cv: "CV / Resume", memory: "Mind", care: "Family health", translate: "Translate", travel: "Travel" };
 const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
@@ -8022,13 +8024,19 @@ export default function App() {
   const [waIn, setWaIn] = useState(null);                 // v8.7: a WhatsApp export → the groups library
   const [xrayIn, setXrayIn] = useState(null);             // v5.35: a WhatsApp chat export shared to Attune      // "daily-learn-…" / "daily-news-…" from a notification or the widget
   // v9.9.14 (Ali: "remind me whether I am paying or not"): every renewing payment keeps its next reminder — checked when Attune opens
-  useEffect(() => { const t = setTimeout(() => { try { for (const r of lifeReminders(loadLifeMoney(), loadReminders())) scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "life" }); } catch (e) {} }, 2500); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => { try { const lm = loadLifeMoney(), accs = ((loadLedger() || {}).accounts || []); for (const r of lifeReminders(lm, loadReminders())) scheduleReminder({ ...B1W.withPayButtons(r, lm, accs), repeat: "none", created: Date.now(), source: "life" }); } catch (e) {} }, 2500); return () => clearTimeout(t); }, []);
+  // v9.9.18 B1 AU7: the taps on Paid / a balance / Undo made in the notifications → Money once, the instalment ticked, "Done for you"
+  useEffect(() => { const run = () => { try { const lines = B1W.applyPhoneTaps(NATIVE, { loadLedger, saveLedger: (l) => { try { localStorage.setItem("ledger.v3", JSON.stringify(l)); window.dispatchEvent(new Event("attune-ledger")); } catch (e) {} } });
+      if (lines.length) flash(lines.join(" · ")); } catch (e) {} };
+    run(); const v = () => { if (document.visibilityState === "visible") run(); }; document.addEventListener("visibilitychange", v); return () => document.removeEventListener("visibilitychange", v); }, []);
   const scheduleReminder = (r) => {
     const list = [...loadReminders().filter((x) => x.id !== r.id), r];
     setReminders(list);
     let res = { ok: true, exact: true, notify: true };
     if (NATIVE && NATIVE.schedule) {
-      try { res = JSON.parse(NATIVE.schedule(JSON.stringify({ id: r.id, at: r.at, title: r.title, body: r.body || "", repeat: r.repeat || "none", off: weekendOf() /* v9.9.18 the country's weekend */ }))); } catch (e) {}
+      try { res = JSON.parse(NATIVE.schedule(JSON.stringify({ id: r.id, at: r.at, title: r.title, body: r.body || "", repeat: r.repeat || "none", off: weekendOf() /* v9.9.18 the country's weekend */,
+        /* v9.9.18 B1 (Ali OK'd AU5 / AU7): keep reminding + quiet hours, the Paid → balance buttons, the buttons' words */
+        ...(r.nag ? { nag: r.nag } : {}), ...(r.important ? { important: true } : {}), quiet: B1W.quietHours(), labels: B1W.buttonWords(), ...(r.pay ? { pay: r.pay } : {}) }))); } catch (e) {}
       if (res.notify === false && NATIVE.askNotifications) NATIVE.askNotifications();
     }
     return res;
@@ -11137,6 +11145,8 @@ export default function App() {
           <MissionsPage flash={flash} />
         ) : mode === "automations" ? (
           <AutomationsPage native={NATIVE} flash={flash} />
+        ) : mode === "donefor" ? (
+          <DoneForYouPage flash={flash} />
         ) : mode === "recall" ? (
           <RecallPage memory={memory} remember={remember} native={NATIVE} call={nativeCall} readText={readTextAny} flash={flash}
             openRec={(r) => { setOpenRec(r); setMode("memory"); }} openChat={(id) => { setOpenChatId(id); navTo("chat"); }}

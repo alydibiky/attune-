@@ -34,6 +34,8 @@ export function AutomationsPage({ native, flash }) {
   const pots = Object.entries(s.pots || {});
   return (
     <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="auto-page">
+      <button onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "donefor" } })); } catch (e) {} }} className="w-full min-h-[48px] flex items-center justify-between rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-[14px] font-extrabold" data-testid="auto-donefor">
+        <span>{tr("Done for you")}</span><span className="text-[var(--c-acc)]">›</span></button>
       {/* v7.9 (Ali picked design A): ready rules first — one tap turns one on (or off) */}
       <div className={card + " space-y-1"} data-testid="auto-ready">
         <p className={label}>{tr("Turn one on")}</p>

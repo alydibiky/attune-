@@ -5,6 +5,8 @@ import { PrayerPlanner } from "./prayer-ui.jsx";
 import { askConfirm } from "./confirm.jsx";
 import React, { useState } from "react";
 import { Bell, Trash2, X, Plus, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import * as NAG from "./nag.js";
+import { quietHours } from "./b1wire.js";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { newReminderId, nextOccurrence, quickAction, daysText, firstOnDays } from "./actions.js";
 import { PANES, LEFT, RIGHT } from "./desk.jsx";
@@ -121,6 +123,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
   const [at, setAt] = useState(toLocalInput(Date.now() + 3600000));
   const [repeat, setRepeat] = useState("none");
   const [days, setDays] = useState([]);       // v8.4: "On these days" — the weekdays picked
+  const [nag, setNag] = useState("once");     // v9.9.18 AU5 (Ali OK'd A + B combined): keep reminding until ticked
   const [say, setSay] = useState("");         // v8.4 (Ali: "make the reminder free text — every Sunday, Tuesday and Thursday …")
   const now = Date.now();
   const list = reminders.map((r) => ({ ...r, next: r.done ? null : nextOccurrence(r, now - 60000) }))
@@ -137,15 +140,17 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
       const d0 = t ? new Date(t) : new Date(); t = firstOnDays(days, Date.now(), d0.getHours(), d0.getMinutes());
     }
     if (!t || t < Date.now()) return flash(tr("Pick a time in the future"));
-    onSchedule({ id: newReminderId(), at: t, title: title.trim(), body: "", repeat: repeat === "days" ? "days:" + [...days].sort().join(",") : repeat, created: Date.now(), source: "manual" });
-    setTitle("");
+    onSchedule({ id: newReminderId(), at: t, title: title.trim(), body: "", repeat: repeat === "days" ? "days:" + [...days].sort().join(",") : repeat, created: Date.now(), source: "manual", ...(nag !== "once" ? { nag, important: nag === NAG.IMPORTANT } : {}) });
+    setTitle(""); setNag("once");
   };
   // one sentence, any language: "every Sunday, Tuesday and Thursday at 7 pm remind me to train" / «فكرني اتمرن كل حد وتلات وخميس الساعة 7»
   const addSaid = () => {
     const text = say.trim(); if (!text) return;
     const a = quickAction(/remind|فكرني|ذكرني|نبهني|wake|صحيني/i.test(text) ? text : "remind me " + text, Date.now());
     if (!a.at || a.problems.length) return flash(tr(a.problems[0] || "When? Pick the date and time."));
-    onSchedule({ id: newReminderId(), at: a.at, title: a.title, body: "", repeat: a.repeat || "none", created: Date.now(), source: "manual" });
+    // v9.9.18 AU5: "important" / «مهم» / "keep reminding me" in the sentence → ★ (every 15 min until ticked)
+    const imp = /\b(important|urgent|keep reminding|nag me|until i do it)\b|مهم|ضروري|ضرورى|متسيبنيش|فضل فكرني|importante|urgent|wichtig|dringend|важно|önemli|penting|ज़रूरी|ضروری|مهمه|জরুরি|muhimu|สำคัญ|quan trọng|重要|大事|중요/i.test(text);
+    onSchedule({ id: newReminderId(), at: a.at, title: a.title.replace(/\s*[-—:,]?\s*(?:important|urgent|مهم|ضروري)\s*[!.]*$/i, ""), body: "", repeat: a.repeat || "none", created: Date.now(), source: "manual", ...(imp ? { nag: NAG.IMPORTANT, important: true } : {}) });
     flash(tr("Set: {t} — {w}", { t: a.title, w: (a.repeat && a.repeat !== "none" ? repeatLabel(a.repeat) + " · " : "") + whenText(a.at) })); setSay("");
   };
   const remove = (id) => { setReminders(reminders.filter((r) => r.id !== id)); try { native && native.unschedule && native.unschedule(id); } catch (e) {} flash(tr("Removed")); };
@@ -177,6 +182,16 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
         </div>
         {repeat === "days" ? <div className="flex flex-wrap gap-1.5" data-testid="rem-days">{DAY_BTN.map((d, i) => <button key={d} type="button" aria-pressed={days.includes(i)} onClick={() => setDays((x) => (x.includes(i) ? x.filter((y) => y !== i) : [...x, i]))} data-testid={"rem-day-" + i}
           className={"min-h-[40px] min-w-[48px] px-2.5 rounded-full border text-[13px] font-bold " + (days.includes(i) ? "bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] border-transparent" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]")}>{tr(d)}</button>)}</div> : null}
+        {/* v9.9.18 AU5 (Ali OK'd the combined screen): ★ Important = every 15 min until ticked; or pick how persistent */}
+        <button type="button" onClick={() => setNag((x) => (x === NAG.IMPORTANT ? "once" : NAG.IMPORTANT))} aria-pressed={nag === NAG.IMPORTANT} data-testid="rem-important"
+          className={"w-full min-h-[44px] flex items-center justify-between rounded-[14px] border px-3 text-[14px] font-extrabold " + (nag === NAG.IMPORTANT ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-ink)]")}>
+          <span>★ {tr("Important")}</span><span className="text-[12px] font-bold">{nag === NAG.IMPORTANT ? tr("On") : tr("Off")}</span></button>
+        <p className={label + " m-0"}>{tr("Keep reminding")}</p>
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr("Keep reminding")} data-testid="rem-nag">
+          {NAG.LEVELS.map((l) => <button key={l.id} type="button" role="radio" aria-checked={nag === l.id} onClick={() => setNag(l.id)} data-testid={"rem-nag-" + l.id}
+            className={"min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold " + (nag === l.id ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]")}>{tr(l.en)}{l.star ? " ★" : ""}</button>)}
+        </div>
+        {nag !== "once" ? <p className={"m-0 text-[12px] " + muted} data-testid="rem-nag-note">{tr("Quiet {f}–{t} · stops when you tap Done", { f: quietHours().from, t: quietHours().to })}</p> : null}
         <button onClick={add} className={btnP + " w-full"} data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
             </div> : null}
       {isOpen("plan") ? <PrayerPlanner onSchedule={onSchedule} flash={flash} /> : null}
@@ -202,7 +217,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
               <div className="flex items-center gap-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item">
                 <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0">🔔</span>
                 <div className="flex-1 min-w-0">
-                  <p dir="auto" className="text-[14px] font-bold text-[var(--c-ink)] break-words whitespace-pre-wrap m-0" data-testid="rem-title-text">{r.title}</p>
+                  <p dir="auto" className="text-[14px] font-bold text-[var(--c-ink)] break-words whitespace-pre-wrap m-0" data-testid="rem-title-text">{r.important || (r.nag && r.nag !== "once") ? <span className="text-[var(--c-acc)]" data-testid="rem-star" title={tr(NAG.levelOf(r.nag || NAG.IMPORTANT).en)}>★ </span> : null}{r.title}</p>
                   <p className="text-[12px] font-semibold text-[var(--c-acc)] tabular-nums m-0">{whenText(r.next)}{r.repeat && r.repeat !== "none" ? " · " + repeatLabel(r.repeat) : ""}{r.source === "promise" ? " · " + tr("from a promise") : r.source === "life" ? " · " + tr("from People & plans") : ""}</p>
                 </div>
                 <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Delete")}><Trash2 size={15} /></button>

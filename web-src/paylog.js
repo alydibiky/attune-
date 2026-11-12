@@ -11,7 +11,8 @@ import { parsePayment } from "./yusr/paytext.js";
 import { payOpts } from "./locale.js";
 import { WORLD_MONEY_SRC } from "./countrypack.js";   // v9.9.16 every bank / wallet of the 30 countries
 import { catOf } from "./yusr/logtext.js";
-import { merchantOf } from "./guardian.js";   // v7.9 the shop a payment was made to (alreadyIn)
+import { merchantOf } from "./guardian.js";
+import { digitsOf } from "./moneyunits.js";   // v9.9.18 each currency's decimals   // v7.9 the shop a payment was made to (alreadyIn)
 
 // merchants Money's own words don't know yet → its categories. v6.27: worldwide chains first, then by region
 // (Egypt, the Gulf, Europe, the Americas, South & South-East Asia, Africa). Add more freely: one regex per category.
@@ -180,7 +181,8 @@ export function appendToLedger(ledger, txns, now = Date.now()) {
     if (!(a > 0 && a < 1e9) || (t.type !== "expense" && t.type !== "income")) continue;
     const acc = (t.account && L.accounts.find((x) => x.id === t.account)) || L.accounts.find((x) => t.currency && x.currency === t.currency) || L.accounts[0];   // v9.9.14: the account chosen for it first
     const id = "n" + now.toString(36) + Math.random().toString(36).slice(2, 6) + ids.length;
-    L.txns.push({ id, type: t.type, amount: Math.round(a * 100) / 100, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0 } } : {}) });
+    const dg = digitsOf(acc.currency || t.currency || "EGP");   // v9.9.18: KWD / BHD / OMR / JOD / TND keep 3 decimals, JPY none
+    L.txns.push({ id, ...(t.nid ? { nid: String(t.nid).slice(0, 80) } : {}), type: t.type, amount: Math.round(a * 10 ** dg) / 10 ** dg, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0 } } : {}) });
     ids.push(id);
   }
   return { ledger: L, ids };
