@@ -5,6 +5,7 @@
    "Cancelled it" / "Returned it" / "Claimed" count in the Guardian's honest "saved" counter.
    Free: 3 active deadlines; Pro: as many as you like, plus the receipt vault. Tests: tests/e2e_v727radar.py.            */
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { readMrz } from "./mrz.js";
 import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText, ChevronDown } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { DocPhotos, DocDetails, DocCover, coverNote } from "./docs-ui.jsx";
@@ -161,6 +162,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const [edit, setEdit] = useState(null);         // an item or a draft in the form
   const [text, setText] = useState("");
   const [photo, setPhoto] = useState("");
+  const [mrz, setMrz] = useState(null);   // v9.9.22 X1: a passport / ID read from its photo, to check and save
   const [busy, setBusy] = useState("");
   const [q, setQ] = useState("");
   const fileRef = useRef(null);
@@ -210,6 +212,9 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
     let txt = "";
     try { if (readText && url) { const r = await readText(url.split(",")[1]); txt = (r && r.text) || ""; } } catch (e) {}
     setBusy("");
+    // v9.9.22 X1 (Ali: "upload the photo of the passport … it fills out all info"): a passport / ID card's coded lines → every field
+    const mz = txt ? readMrz(txt) : null;
+    if (mz && mz.expiry) { setMrz({ ...mz, photo: key }); return; }
     const found = txt ? D.readDeadlines(txt, opts()) : [];
     if (found.length) setDrafts(found.map((x, i) => ({ ...x, photo: key, source: "photo", _k: key + ":" + i })));
     else { setEdit({ photo: key, source: "photo", note: txt.slice(0, 160) }); setMode("form"); flash && flash(tr("Couldn't find a date in the photo — fill it in, the photo is kept")); }
@@ -224,6 +229,14 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const match = (x) => !search || [x.title, x.note, x.doc, KIND_LABEL[x.kind]].join(" ").toLowerCase().includes(search);
   // the right panel has something a phone shows (else it keeps no gap, as before)
   const rightHas = data.items.length > 3 || (!V.soon.length && !V.later.length && !drafts.length && mode !== "form") || [V.soon, V.later, V.done.slice(0, 20)].some((l) => l.filter(match).length);
+
+  if (mrz) return <MrzCard m={mrz} onCancel={() => setMrz(null)} onSave={(v) => {
+    const label = { passport: tr("Passport"), id: tr("ID card"), visa: tr("Visa") }[v.doc] || tr("Document");
+    const name = [v.given, v.surname].filter(Boolean).join(" ");
+    const note = [name, v.number, v.nationality ? tr("Nationality: {c}", { c: v.nationality }) : "", v.birth ? tr("Born {d}", { d: v.birth }) : "", v.sex].filter(Boolean).join(" · ");
+    const it = saveOne({ kind: "expiry", doc: v.doc === "visa" ? "visa" : v.doc === "id" ? "id" : "passport", title: label + (name ? " · " + name : ""), date: v.expiry, note, photo: v.photo, source: "photo" });
+    if (it) setMrz(null);
+  }} />;
 
   return (
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="radar-page">
@@ -298,4 +311,23 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
       {!data.items.length && (drafts.length || mode === "form") ? <DeskEmpty icon={Radar} title={tr("Your deadlines appear here")} testid="radar-desk-empty" /> : null}
       </div></div>
     </div>);
+}
+
+/* ---- v9.9.22 X1: what was read from the passport / ID — every field editable; a field whose check digit didn't agree says so */
+function MrzCard({ m, onCancel, onSave }) {
+  const [v, setV] = useState({ ...m });
+  const F = [["given", "Given names", "text"], ["surname", "Surname", "text"], ["number", "Number", "text"], ["nationality", "Nationality", "text"], ["birth", "Date of birth", "date"], ["sex", "Sex", "text"], ["expiry", "Expiry date", "date"]];
+  const unsure = (k) => (k === "number" || k === "birth" || k === "expiry") && m.ok && m.ok[k] === false;
+  return <div className={U.page + " rounded-[20px] p-4 space-y-3"} data-testid="radar-mrz">
+    <h2 className={U.pageH1}>{m.doc === "passport" ? tr("Passport — I read this") : tr("ID — I read this")}</h2>
+    <p className={"m-0 text-[13px] " + U.muted}>{m.sure ? tr("Read from the coded lines at the bottom and checked. Change anything that's wrong.") : tr("Some parts didn't pass their check — look at the marked ones before saving.")}</p>
+    <div className={U.cardPad + " space-y-2"}>
+      {F.map(([k, l, t]) => <label key={k} className="block" data-testid={"mrz-field-" + k}>
+        <span className={"text-[12px] font-extrabold " + (unsure(k) ? "text-[var(--c-warn)]" : U.muted)}>{tr(l)}{unsure(k) ? " · " + tr("check this") : ""}</span>
+        <input type={t} dir="auto" value={v[k] || ""} onChange={(e) => setV({ ...v, [k]: e.target.value })} className={U.inp + (unsure(k) ? " !border-[var(--c-warn)]" : "")} data-testid={"mrz-" + k} /></label>)}
+    </div>
+    <p className={"m-0 text-[12.5px] " + U.muted}>{m.doc === "passport" ? tr("I'll remind you 6 months before it ends — many countries ask for 6 months left.") : tr("I'll remind you before it ends.")}</p>
+    <div className="flex gap-2"><button className={U.btnP + " flex-1"} disabled={!v.expiry} onClick={() => onSave(v)} data-testid="mrz-save">{tr("Save")}</button>
+      <button className={U.btnS} onClick={onCancel}>{tr("Cancel")}</button></div>
+  </div>;
 }
