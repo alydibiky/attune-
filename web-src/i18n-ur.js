@@ -12404,4 +12404,11 @@ export const UR = {
   "{n} min late": "{n} منٹ لیٹ",
   "{n} months after you leave": "جانے کے {n} ماہ بعد",
   "{n} months from arrival": "پہنچنے سے {n} ماہ",
+  "Check: {n} isn't in your data": "چیک کریں: {n} آپ کے ڈیٹا میں نہیں",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "ہر کام اپنے وقت پر فون کے AI سے چلتا ہے؛ جواب ہوم پر انتظار کرتا ہے۔ آپ کے ڈیٹا میں نہ ہونے والا ہر عدد نشان زد ہوتا ہے۔",
+  "Job saved — next: {t}": "کام محفوظ — اگلا: {t}",
+  "Made for you · {t}": "آپ کے لیے بنایا · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "کب؟ مثلاً “ہر اتوار رات 9”، “25 تاریخ”، “ہر روز 7 بجے”",
+  "e.g. every Sunday 9 pm plan my week": "مثلاً ہر اتوار رات 9 میرا ہفتہ پلان کرو",
+  "next {t}": "اگلا {t}",
 };

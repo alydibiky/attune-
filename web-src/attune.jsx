@@ -47,6 +47,7 @@ import { MoneyShareSheet } from "./moneyshare-ui.jsx";
 import { FocusHost } from "./focus-ui.jsx";
 import { WeekPlanHost } from "./weekplan-ui.jsx";
 import { BrainDumpHost } from "./braindump-ui.jsx";
+import { JobsRunner } from "./jobs-ui.jsx";
 import { popBack, hasBack, useSubBack, useBackDepth, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
@@ -11625,6 +11626,7 @@ export default function App() {
       <Guard name="focus"><FocusHost /></Guard>
       <Guard name="weekplan"><WeekPlanHost flash={flash} /></Guard>
       <Guard name="braindump"><BrainDumpHost flash={flash} /></Guard>
+      <Guard name="jobs"><JobsRunner ready={modelUsable} ask={(messages) => callChat(messages, null, { maxTokens: 400, temperature: 0.2, think: false })} /></Guard>
       {quietWake && !voiceOpen ? <QuietWake native={NATIVE} nativeCall={nativeCall} tag={voiceTag(agentCountry())} onDone={(text) => { setQuietWake(false); if (text != null) { setVoiceText(text); setVoiceOpen(true); } }} /> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>

@@ -1,5 +1,6 @@
 /* ---- v6.41 (upgrade C3) — the Automations page: say what should happen, the rule is made once by code, the phone runs it
    (AutoRules.kt) with no AI. Pots (صناديق) hold what was set aside. autom.js is the logic. */
+import { JobsSection } from "./jobs-ui.jsx";
 import React, { useState, useEffect } from "react";
 import { tr, getLang } from "./i18n.js";
 import { parseAutomation, ruleText, loadAuto, saveAuto, addRule, applyEvents, takeOut, READY, readyOn, parseMany } from "./autom.js";
@@ -40,6 +41,8 @@ export function AutomationsPage({ native, flash, schedule, unschedule }) {
       <button onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "salary" } })); } catch (e) {} }} className="w-full min-h-[48px] flex items-center justify-between rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-[14px] font-extrabold" data-testid="auto-salary">
         <span>{tr("Salary plan")}</span><span className="text-[var(--c-acc)]">›</span></button>
       <RulesSection native={native} flash={flash} schedule={schedule} unschedule={unschedule} lang={getLang()} />
+      {/* v9.9.25 B8 AU4: scheduled AI jobs */}
+      <JobsSection flash={flash} />
       {/* v7.9 (Ali picked design A): ready rules first — one tap turns one on (or off) */}
       <div className={card + " space-y-1"} data-testid="auto-ready">
         <p className={label}>{tr("Turn one on")}</p>

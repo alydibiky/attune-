@@ -12404,4 +12404,11 @@ export const IT = {
   "{n} min late": "{n} min di ritardo",
   "{n} months after you leave": "{n} mesi dopo la partenza",
   "{n} months from arrival": "{n} mesi dall'arrivo",
+  "Check: {n} isn't in your data": "Controlla: {n} non è nei tuoi dati",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "Ogni attività parte all'ora con l'IA del telefono; il risultato ti aspetta in Home. Ogni numero non presente nei tuoi dati viene segnalato.",
+  "Job saved — next: {t}": "Attività salvata: prossima {t}",
+  "Made for you · {t}": "Fatto per te · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Quando? es. “ogni domenica alle 21”, “il 25”, “ogni giorno alle 7”",
+  "e.g. every Sunday 9 pm plan my week": "es. ogni domenica alle 21 pianifica la mia settimana",
+  "next {t}": "prossima {t}",
 };

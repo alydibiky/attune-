@@ -12403,4 +12403,11 @@ export const BN = {
   "{n} min late": "{n} মিনিট দেরি",
   "{n} months after you leave": "চলে যাওয়ার {n} মাস পরে",
   "{n} months from arrival": "পৌঁছানোর {n} মাস",
+  "Check: {n} isn't in your data": "যাচাই করুন: {n} আপনার ডেটায় নেই",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "প্রতিটি কাজ সময়মতো ফোনের AI দিয়ে চলে; উত্তর হোমে অপেক্ষা করে। আপনার ডেটায় নেই এমন সংখ্যা চিহ্নিত হয়।",
+  "Job saved — next: {t}": "কাজ সেভ — পরের বার: {t}",
+  "Made for you · {t}": "আপনার জন্য তৈরি · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "কখন? যেমন “প্রতি রবিবার রাত ৯টা”, “২৫ তারিখ”, “প্রতিদিন ৭টায়”",
+  "e.g. every Sunday 9 pm plan my week": "যেমন প্রতি রবিবার রাত ৯টা আমার সপ্তাহ সাজাও",
+  "next {t}": "পরের বার {t}",
 };

@@ -12404,4 +12404,11 @@ export const IDN = {
   "{n} min late": "terlambat {n} mnt",
   "{n} months after you leave": "{n} bulan setelah pergi",
   "{n} months from arrival": "{n} bulan sejak tiba",
+  "Check: {n} isn't in your data": "Periksa: {n} tidak ada di datamu",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "Setiap tugas berjalan pada waktunya dengan AI di ponsel; hasilnya menunggu di Beranda. Angka yang tak ada di datamu ditandai.",
+  "Job saved — next: {t}": "Tugas disimpan — berikutnya: {t}",
+  "Made for you · {t}": "Dibuat untukmu · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Kapan? mis. “setiap Minggu 21.00”, “tanggal 25”, “setiap hari jam 7”",
+  "e.g. every Sunday 9 pm plan my week": "mis. setiap Minggu 21.00 rencanakan mingguku",
+  "next {t}": "berikutnya {t}",
 };

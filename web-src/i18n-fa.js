@@ -12403,4 +12403,11 @@ export const FA = {
   "{n} min late": "{n} دقیقه تأخیر",
   "{n} months after you leave": "{n} ماه پس از خروج",
   "{n} months from arrival": "{n} ماه از ورود",
+  "Check: {n} isn't in your data": "بررسی: {n} در داده‌های شما نیست",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "هر کار در زمان خودش با هوش مصنوعی گوشی اجرا می‌شود و نتیجه در خانه منتظر است. هر عددی که در داده‌هایتان نیست علامت می‌خورد.",
+  "Job saved — next: {t}": "کار ذخیره شد — بعدی: {t}",
+  "Made for you · {t}": "برای شما آماده شد · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "کِی؟ مثلاً «هر یکشنبه ۹ شب»، «روز ۲۵ام»، «هر روز ساعت ۷»",
+  "e.g. every Sunday 9 pm plan my week": "مثلاً هر یکشنبه ۹ شب هفته‌ام را برنامه‌ریزی کن",
+  "next {t}": "بعدی {t}",
 };

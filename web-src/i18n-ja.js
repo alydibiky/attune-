@@ -12403,4 +12403,11 @@ export const JA = {
   "{n} min late": "{n}分遅れ",
   "{n} months after you leave": "出国後{n}か月",
   "{n} months from arrival": "到着から{n}か月",
+  "Check: {n} isn't in your data": "確認：{n} はあなたのデータにありません",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "各ジョブは時間どおりスマホのAIで実行され、結果はホームで待っています。あなたのデータにない数字は印が付きます。",
+  "Job saved — next: {t}": "ジョブを保存 — 次回：{t}",
+  "Made for you · {t}": "あなたのために作成 · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "いつ？例：「毎週日曜21時」「25日」「毎日7時」",
+  "e.g. every Sunday 9 pm plan my week": "例：毎週日曜21時に今週の計画を立てて",
+  "next {t}": "次回 {t}",
 };

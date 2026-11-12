@@ -12403,4 +12403,11 @@ export const TH = {
   "{n} min late": "ล่าช้า {n} นาที",
   "{n} months after you leave": "{n} เดือนหลังออกจากประเทศ",
   "{n} months from arrival": "{n} เดือนนับจากวันถึง",
+  "Check: {n} isn't in your data": "ตรวจสอบ: {n} ไม่มีในข้อมูลของคุณ",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "งานแต่ละงานทำตามเวลาด้วย AI ในมือถือ ผลลัพธ์รออยู่ที่หน้าแรก ตัวเลขที่ไม่มีในข้อมูลของคุณจะถูกทำเครื่องหมาย",
+  "Job saved — next: {t}": "บันทึกงานแล้ว — ครั้งถัดไป: {t}",
+  "Made for you · {t}": "ทำให้คุณแล้ว · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "เมื่อไร? เช่น “ทุกวันอาทิตย์ 21:00” “วันที่ 25” “ทุกวัน 7 โมง”",
+  "e.g. every Sunday 9 pm plan my week": "เช่น ทุกวันอาทิตย์ 21:00 วางแผนสัปดาห์ของฉัน",
+  "next {t}": "ครั้งถัดไป {t}",
 };

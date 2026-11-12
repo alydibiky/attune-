@@ -12395,4 +12395,11 @@ export const ARB = {
   "{n} min late": "متأخرة {n} دقيقة",
   "{n} months after you leave": "{n} أشهر بعد المغادرة",
   "{n} months from arrival": "{n} أشهر من الوصول",
+  "Check: {n} isn't in your data": "تحقّق: {n} غير موجود في بياناتك",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "تعمل كل مهمة في موعدها بالذكاء الاصطناعي على الهاتف، وتنتظرك النتيجة في الرئيسية. ويُعلَّم أي رقم ليس في بياناتك.",
+  "Job saved — next: {t}": "حُفظت المهمة — التالية: {t}",
+  "Made for you · {t}": "أُعدّ لك · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "متى تعمل؟ مثلًا «كل أحد ٩ مساءً»، «يوم ٢٥»، «كل يوم الساعة ٧»",
+  "e.g. every Sunday 9 pm plan my week": "مثلًا كل أحد ٩ مساءً خطط لأسبوعي",
+  "next {t}": "التالية {t}",
 };

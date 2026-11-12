@@ -12403,4 +12403,11 @@ export const KO = {
   "{n} min late": "{n}분 지연",
   "{n} months after you leave": "출국 후 {n}개월",
   "{n} months from arrival": "도착 후 {n}개월",
+  "Check: {n} isn't in your data": "확인: {n}은(는) 내 데이터에 없음",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "각 작업은 제시간에 폰의 AI로 실행되고 결과는 홈에서 기다려요. 내 데이터에 없는 숫자는 표시돼요.",
+  "Job saved — next: {t}": "작업 저장됨 — 다음: {t}",
+  "Made for you · {t}": "준비됨 · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "언제? 예: “매주 일요일 밤 9시”, “25일”, “매일 7시”",
+  "e.g. every Sunday 9 pm plan my week": "예: 매주 일요일 밤 9시 내 한 주 계획해 줘",
+  "next {t}": "다음 {t}",
 };

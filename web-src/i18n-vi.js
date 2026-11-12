@@ -12403,4 +12403,11 @@ export const VI = {
   "{n} min late": "trễ {n} phút",
   "{n} months after you leave": "{n} tháng sau khi rời đi",
   "{n} months from arrival": "{n} tháng kể từ khi đến",
+  "Check: {n} isn't in your data": "Kiểm tra: {n} không có trong dữ liệu của bạn",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "Mỗi việc chạy đúng giờ bằng AI trên điện thoại; kết quả chờ ở Trang chủ. Số nào không có trong dữ liệu của bạn sẽ được đánh dấu.",
+  "Job saved — next: {t}": "Đã lưu việc — lần tới: {t}",
+  "Made for you · {t}": "Đã làm cho bạn · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Khi nào? vd: “mỗi Chủ nhật 21:00”, “ngày 25”, “mỗi ngày lúc 7 giờ”",
+  "e.g. every Sunday 9 pm plan my week": "vd: mỗi Chủ nhật 21:00 lên kế hoạch tuần",
+  "next {t}": "lần tới {t}",
 };

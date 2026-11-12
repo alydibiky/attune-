@@ -12404,4 +12404,11 @@ export const SW = {
   "{n} min late": "dakika {n} kuchelewa",
   "{n} months after you leave": "miezi {n} baada ya kuondoka",
   "{n} months from arrival": "miezi {n} tangu kufika",
+  "Check: {n} isn't in your data": "Kagua: {n} haipo kwenye data yako",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "Kila kazi huendeshwa kwa wakati wake na AI ya simu; jibu linasubiri Nyumbani. Namba yoyote isiyo kwenye data yako huwekewa alama.",
+  "Job saved — next: {t}": "Kazi imehifadhiwa — inayofuata: {t}",
+  "Made for you · {t}": "Imeandaliwa kwa ajili yako · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Lini? mf. “kila Jumapili saa 3 usiku”, “tarehe 25”, “kila siku saa 1”",
+  "e.g. every Sunday 9 pm plan my week": "mf. kila Jumapili saa 3 usiku panga wiki yangu",
+  "next {t}": "inayofuata {t}",
 };

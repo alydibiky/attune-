@@ -12403,4 +12403,11 @@ export const ZH = {
   "{n} min late": "延误 {n} 分钟",
   "{n} months after you leave": "离开后 {n} 个月",
   "{n} months from arrival": "自抵达起 {n} 个月",
+  "Check: {n} isn't in your data": "请核对：你的数据里没有 {n}",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "每个任务按时由手机上的 AI 完成；结果在首页等你。不在你数据里的数字都会标出。",
+  "Job saved — next: {t}": "任务已保存——下次：{t}",
+  "Made for you · {t}": "为你准备 · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "什么时候？例如“每周日晚上9点”“每月25号”“每天7点”",
+  "e.g. every Sunday 9 pm plan my week": "例如：每周日晚上9点规划我的一周",
+  "next {t}": "下次 {t}",
 };

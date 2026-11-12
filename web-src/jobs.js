@@ -55,3 +55,15 @@ export function checkNumbers(answer, data, question = "") {
 }
 /** The jobs due by now (ran after their time, not yet run for it). */
 export const dueJobs = (jobs = [], now = Date.now()) => (jobs || []).filter((j) => j && j.on !== false && j.next && j.next <= now);
+/** What a job may use: the person's own next days, as plain facts (the model is told to use only these). stores = lifeask.loadStores() */
+export function jobData(stores = {}, now = Date.now()) {
+  const DAY = 864e5, iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const lines = [], soon = (t, n) => t >= now - DAY / 2 && t <= now + n * DAY;
+  for (const r of stores.reminders || []) { const t = +r.at || 0; if (!r.done && soon(t, 7)) lines.push("Reminder " + iso(t) + ": " + (r.title || r.text || "")); }
+  for (const x of (stores.radar && stores.radar.items) || []) { const t = Date.parse((x.date || "") + "T12:00:00"); if (x.status !== "done" && soon(t, 30)) lines.push("Date " + x.date + ": " + (x.title || x.name || "") + (x.amount ? " " + x.amount : "")); }
+  for (const c of (stores.life && stores.life.items) || []) if (c && c.person && (c.amount || c.total)) lines.push("Follow-up: " + c.person + " " + (c.title || c.kind || "") + " " + (c.amount || c.total) + (c.start ? " from " + c.start : ""));
+  const L = stores.ledger, month = iso(now).slice(0, 7);
+  if (L && L.txns) { let out = 0, inn = 0; for (const t of L.txns) if (String(t.date || "").startsWith(month)) { if (t.type === "expense") out += +t.amount || 0; if (t.type === "income") inn += +t.amount || 0; }
+    lines.push("Money this month: spent " + Math.round(out) + ", received " + Math.round(inn) + (L.currency ? " " + L.currency : "")); }
+  return lines.slice(0, 60).join("\n");
+}

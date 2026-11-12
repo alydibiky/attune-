@@ -12404,4 +12404,11 @@ export const HI = {
   "{n} min late": "{n} मिनट देर",
   "{n} months after you leave": "जाने के {n} महीने बाद",
   "{n} months from arrival": "पहुँचने से {n} महीने",
+  "Check: {n} isn't in your data": "जाँचें: {n} आपके डेटा में नहीं",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "हर काम अपने समय पर फ़ोन के AI से चलता है; जवाब होम पर इंतज़ार करता है। आपके डेटा में न होने वाली हर संख्या चिह्नित होती है।",
+  "Job saved — next: {t}": "काम सेव — अगला: {t}",
+  "Made for you · {t}": "आपके लिए बनाया · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "कब? जैसे “हर रविवार रात 9”, “25 तारीख”, “हर दिन 7 बजे”",
+  "e.g. every Sunday 9 pm plan my week": "जैसे हर रविवार रात 9 मेरा हफ़्ता प्लान करो",
+  "next {t}": "अगला {t}",
 };

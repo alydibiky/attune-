@@ -12403,4 +12403,11 @@ export const RU = {
   "{n} min late": "задержка {n} мин",
   "{n} months after you leave": "{n} мес. после выезда",
   "{n} months from arrival": "{n} мес. с прибытия",
+  "Check: {n} isn't in your data": "Проверьте: {n} нет в ваших данных",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "Каждое задание выполняется вовремя ИИ на телефоне; ответ ждёт на главном экране. Любое число не из ваших данных помечается.",
+  "Job saved — next: {t}": "Задание сохранено — следующее: {t}",
+  "Made for you · {t}": "Подготовлено для вас · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Когда? напр. «каждое воскресенье в 21:00», «25-го», «каждый день в 7»",
+  "e.g. every Sunday 9 pm plan my week": "напр. каждое воскресенье в 21:00 спланируй мою неделю",
+  "next {t}": "следующее {t}",
 };

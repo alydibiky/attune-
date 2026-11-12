@@ -12404,4 +12404,11 @@ export const TRK = {
   "{n} min late": "{n} dk rötar",
   "{n} months after you leave": "ayrıldıktan {n} ay sonra",
   "{n} months from arrival": "varıştan itibaren {n} ay",
+  "Check: {n} isn't in your data": "Kontrol et: {n} verilerinde yok",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "Her görev zamanında telefondaki yapay zekâyla çalışır; sonuç Ana sayfada bekler. Verilerinde olmayan her sayı işaretlenir.",
+  "Job saved — next: {t}": "Görev kaydedildi — sonraki: {t}",
+  "Made for you · {t}": "Senin için hazırlandı · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "Ne zaman? örn. “her pazar 21:00”, “ayın 25'i”, “her gün 7'de”",
+  "e.g. every Sunday 9 pm plan my week": "örn. her pazar 21:00 haftamı planla",
+  "next {t}": "sonraki {t}",
 };

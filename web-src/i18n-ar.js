@@ -9493,4 +9493,11 @@ export const AR = {
   "{n} min late": "متأخرة {n} دقيقة",
   "{n} months after you leave": "{n} شهور بعد ما تمشي",
   "{n} months from arrival": "{n} شهور من الوصول",
+  "Check: {n} isn't in your data": "راجع: {n} مش موجود في بياناتك",
+  "Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.": "كل مهمة بتشتغل في ميعادها بالذكاء الاصطناعي اللي على الموبايل؛ والنتيجة بتستناك في الرئيسية. أي رقم مش في بياناتك بيتعلم عليه.",
+  "Job saved — next: {t}": "المهمة اتحفظت — المرة الجاية: {t}",
+  "Made for you · {t}": "اتعملتلك · {t}",
+  "When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”": "تشتغل إمتى؟ مثلًا «كل حد ٩ بالليل»، «يوم ٢٥»، «كل يوم الساعة ٧»",
+  "e.g. every Sunday 9 pm plan my week": "مثلًا كل حد ٩ بالليل خطط أسبوعي",
+  "next {t}": "المرة الجاية {t}",
 };
