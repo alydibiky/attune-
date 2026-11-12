@@ -11,9 +11,14 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
-## ▶ START HERE (12 Nov, morning) — work is on branch **`ccr-60240af2-j35hvr`** (= claude/blissful-curie-d5gddb + B4 screens).
-The 11 Nov night session ran out of its weekly limit before pushing its B4 screens; they were rebuilt here (see AUTOMATION_PLAN.md B4).
-**Push after every feature** so a limit never loses work again. Next: e2e_v9918b4 + full suite → branch APK green → main; then T1, B5.
+## ▶ START HERE (12 Nov, morning) — `main` = **v9.9.19** (versionCode 162) = B0–B4 screens of AUTOMATION_PLAN.md.
+The 11 Nov night session ran out of its weekly limit before pushing its B4 screens; this session rebuilt them (T2 habits, T3 countdowns,
+T4 place in a reminder, T5 week plan, T6 focus timer) + "open habits / countdowns / week plan / focus" from Tools and Chat + How to use
+guides + singular lines ("1 payment"). Full suite green (200 browser tests, all units; audit errors = sandbox network only); the branch
+APK (Kotlin NagPay.kt) built green: https://github.com/alydibiky/attune-/actions/runs/43152931155.
+**Push after every feature** so a limit never loses work again. **Next:** T1 brain dump (readers in 18 more languages first — see
+AUTOMATION_PLAN.md B4 notes), then B5 people, B6 papers, B7 travel, B8 AU4, B9 N2. Phone parts still open: AU1 triggers, T4 geofence
+(ask Ali: Play background-location declaration), T6 optional Do Not Disturb.
 
 ## ▶ (before) START HERE (11 Nov, night) — **AUTOMATION_PLAN.md** is the plan: Ali picked his screens for all 29 features ("ALL features working in
 ALL languages and ALL countries … batch by batch, update the handoff so another AI can continue"). Combined screens waiting for his OK:

@@ -195,7 +195,7 @@
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 
 ## Log
-- 12 Nov 2026 (morning, new session): B4 screens T2 T3 T4 T5 T6 rebuilt and pushed to branch ccr-60240af2-j35hvr (on top of
+- 12 Nov 2026 (morning, new session): B4 screens T2 T3 T4 T5 T6 rebuilt, suite green, on main as v9.9.19 (branch ccr-60240af2-j35hvr, on top of
   claude/blissful-curie-d5gddb). Next: run tests/e2e_v9918b4.py + the full suite → branch APK → main; then T1 brain dump, B5.
 - 12 Nov 2026 (later): AU3 Recipes gallery + all B3 screens (M1-A salary plan, M5-B Always?, M3-A split groups) built, 20 languages,
   e2e ALL PASSED. Next: B4 screens (T3 countdown chips, T2 habits, T6 focus, T4 places, T5 week plan), then T1 (readers in 18 more
