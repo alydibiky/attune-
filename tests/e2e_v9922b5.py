@@ -29,7 +29,7 @@ with sync_playwright() as p:
     # P3 on Home (after 9:00 only)
     occ = page.locator("[data-testid=home-occasion]")
     if datetime.datetime.now().hour >= 9:
-        check(occ.count() == 1 and "Nada" in occ.inner_text() and "turns 30" not in occ.inner_text() or True, "P3: Nada's birthday card on Home")
+        check(occ.count() == 1 and "Nada" in occ.inner_text() and "turns 30" in occ.inner_text(), "P3: Nada birthday card on Home, turns 30")
         wish = page.locator("[data-testid=home-occasion-wish]").inner_text()
         check("كل سنة وانت طيب يا Nada" in wish, "P3: the wish is in Nada's language (Arabic): " + wish)
         page.click("[data-testid=home-occasion-send]"); page.wait_for_timeout(200)
