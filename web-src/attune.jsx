@@ -45,6 +45,7 @@ import { DaySettings, SimpleHome, useDayset } from "./yourday-ui.jsx";
 import { useWidgets } from "./widgets-ui.jsx";
 import { MoneyShareSheet } from "./moneyshare-ui.jsx";
 import { FocusHost } from "./focus-ui.jsx";
+import { WeekPlanHost } from "./weekplan-ui.jsx";
 import { popBack, hasBack, useSubBack, useBackDepth, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
@@ -11602,6 +11603,7 @@ export default function App() {
         openTool={(tool, lang) => { setVoiceOpen(false); setVoiceText(""); try { localStorage.setItem("attune:translate:tab", "doc"); if (lang) localStorage.setItem("attune:translate:to", lang); } catch (e) {} navTo(tool === "translate-doc" ? "translate" : "pdfchat"); }} /></Guard> : null}
       {/* v9.9.19 T6: the focus timer over everything (focus-ui.jsx) */}
       <Guard name="focus"><FocusHost /></Guard>
+      <Guard name="weekplan"><WeekPlanHost flash={flash} /></Guard>
       {quietWake && !voiceOpen ? <QuietWake native={NATIVE} nativeCall={nativeCall} tag={voiceTag(agentCountry())} onDone={(text) => { setQuietWake(false); if (text != null) { setVoiceText(text); setVoiceOpen(true); } }} /> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>

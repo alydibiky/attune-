@@ -157,6 +157,9 @@ export function ListsPage({ records = [], onTickTodo, onAddTodo, flash }) {
     {/* v9.9.6 N1: tables from one sentence live here too */}
     <button onClick={() => window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "tables" } }))} className={U.card + " w-full p-3 text-start flex items-center gap-2"} data-testid="lists-tables">
       <b className="flex-1 text-[14px]">{tr("Tables")}</b><span className="text-[12.5px] c-sub">{"“" + tr("track my books: title, author, due date") + "”"}</span></button>
+    {/* v9.9.19 T5 (Ali picked A): tasks with hours and a deadline, placed around your reminders (and prayers when on) */}
+    <button onClick={() => window.dispatchEvent(new CustomEvent("attune-weekplan"))} className={U.card + " w-full p-3 text-start flex items-center gap-2"} data-testid="lists-weekplan">
+      <b className="flex-1 text-[14px]">{tr("Plan my week")}</b><span className="text-[12.5px] c-sub">{tr("Attune finds the time for your tasks")}</span></button>
     <button onClick={() => setEdit("new")} className={U.btnP + " w-full"} data-testid="lists-new"><Plus size={18} />{tr("New list")}</button>
     {/* to-dos and today's reminders */}
     <div className={U.cardPad + " space-y-1"} data-testid="lists-todos">

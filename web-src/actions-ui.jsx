@@ -11,6 +11,7 @@ import { tr, getLang, dateLocale } from "./i18n.js";
 import { newReminderId, nextOccurrence, quickAction, daysText, firstOnDays } from "./actions.js";
 import { PANES, LEFT, RIGHT } from "./desk.jsx";
 import { cardPad, btnP, btnS, inp, label, muted } from "./ui-kit.jsx";
+import { PlacePicker, PlaceReminderList, addPlaceReminder } from "./placerem-ui.jsx";
 
 export const KIND_ICON = { reminder: "🔔", alarm: "⏰", timer: "⏱️", calendar: "📅", whatsapp: "💬", call: "📞", none: "❔" };
 export const KIND_LABEL = { reminder: "Reminder", alarm: "Alarm", timer: "Timer", calendar: "Calendar event", whatsapp: "WhatsApp message", call: "Phone call", none: "Nothing to do" };
@@ -124,6 +125,8 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
   const [repeat, setRepeat] = useState("none");
   const [days, setDays] = useState([]);       // v8.4: "On these days" — the weekdays picked
   const [nag, setNag] = useState("once");     // v9.9.18 AU5 (Ali OK'd A + B combined): keep reminding until ticked
+  const [where, setWhere] = useState({ mode: "time", place: "", on: "arrive" });   // v9.9.19 T4 (Ali picked A): a place inside the reminder
+  const [, setPlaceTick] = useState(0);
   const [say, setSay] = useState("");         // v8.4 (Ali: "make the reminder free text — every Sunday, Tuesday and Thursday …")
   const now = Date.now();
   const list = reminders.map((r) => ({ ...r, next: r.done ? null : nextOccurrence(r, now - 60000) }))
@@ -135,6 +138,8 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
   const add = () => {
     let t = fromLocalInput(at);
     if (!title.trim()) return flash(tr("Give it a title"));
+    if (where.mode === "place") { if (!where.place) return flash(tr("Pick a place"));
+      addPlaceReminder({ title: title.trim(), place: where.place, on: where.on }); setTitle(""); setPlaceTick((x) => x + 1); return flash(tr("Saved")); }
     if (repeat === "days") {
       if (!days.length) return flash(tr("Pick the days"));
       const d0 = t ? new Date(t) : new Date(); t = firstOnDays(days, Date.now(), d0.getHours(), d0.getMinutes());
@@ -175,6 +180,9 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
       {isOpen("fill") ? <div className={cardPad + " space-y-2.5"} data-testid="rem-fill">
         <input dir="auto" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr("What to remind you about")} className={field + " w-full"} data-testid="rem-title" />
         {/* v7.6 (Ali: "fix the interface in the reminders page"): the date and time get the whole row; how often is a row of pills */}
+        <div className="flex gap-1.5" role="radiogroup" aria-label={tr("When")} data-testid="rem-when">{[["time", "A time"], ["place", "At a place"]].map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={where.mode === k} onClick={() => setWhere({ ...where, mode: k })} data-testid={"rem-when-" + k}
+          className={"min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold " + (where.mode === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]")}>{tr(l)}</button>)}</div>
+        {where.mode === "place" ? <PlacePicker value={where} onChange={setWhere} /> : <>
         <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} className={field + " w-full"} dir="ltr" data-testid="rem-at" />
         <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr("Repeat")} data-testid="rem-repeat">
           {Object.keys(REPEAT_LABEL).map((k) => <button key={k} type="button" role="radio" aria-checked={repeat === k} onClick={() => setRepeat(k)} data-testid={"rem-repeat-" + k}
@@ -192,6 +200,8 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
             className={"min-h-[40px] px-3.5 rounded-full border text-[13px] font-bold " + (nag === l.id ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)]" : "bg-[var(--c-bg)] border-[var(--c-ln)] text-[var(--c-mut)]")}>{tr(l.en)}{l.star ? " ★" : ""}</button>)}
         </div>
         {nag !== "once" ? <p className={"m-0 text-[12px] " + muted} data-testid="rem-nag-note">{tr("Quiet {f}–{t} · stops when you tap Done", { f: quietHours().from, t: quietHours().to })}</p> : null}
+        </>}
+        <PlaceReminderList />
         <button onClick={add} className={btnP + " w-full"} data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
             </div> : null}
       {isOpen("plan") ? <PrayerPlanner onSchedule={onSchedule} flash={flash} /> : null}
