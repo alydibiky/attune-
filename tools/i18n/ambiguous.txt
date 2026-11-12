@@ -2,20 +2,20 @@
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
 actions-ui.jsx: if (d.toDateString() === n.toDateString()) return tr("Today"); if (d.toDateString() === tm.toDateString()) return tr("Tomorrow");
 agents-ui.jsx: <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><span className="block text-[11.5px] c-sub font-bold">{tr("Today")}</span><b
+b5-ui.jsx: <span className="text-[12.5px] font-extrabold shrink-0">{o.inDays === 0 ? tr("Today") : o.inDays === 1 ? tr("Tomorrow") : tr("{n} days", { n
 countdown-ui.jsx: const daysText = (n) => (n === 0 ? tr("Today") : n === 1 ? tr("Tomorrow") : tr("{n} days", { n }));
 countdown-ui.jsx: <div className="text-end"><div className="text-[40px] font-black leading-none c-acc c-num" data-testid="countdown-days">{open.left}</div><di
 daily-ui.jsx: <p className="c-lbl m-0">{plan.finished ? tr("Course finished") : plan.left ? tr("Today") : tr("Today · all done")}</p>
 daily-ui.jsx: <p className="c-lbl m-0">{tr("Today")}</p>
-desk-ui.jsx: <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
 
 ## Tomorrow
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
 actions-ui.jsx: if (d.toDateString() === n.toDateString()) return tr("Today"); if (d.toDateString() === tm.toDateString()) return tr("Tomorrow");
 b1wire.js: export const buttonWords = () => ({ done: tr("Done"), hour: tr("In 1 hour"), tomorrow: tr("Tomorrow") });
 b1wire.js: { paid: tr("Paid"), tomorrow: tr("Tomorrow"), hour: tr("In 1 hour"), which: tr("Paid {a} — from which balance?"), done: tr("✓ {a} from {b}")
+b5-ui.jsx: <span className="text-[12.5px] font-extrabold shrink-0">{o.inDays === 0 ? tr("Today") : o.inDays === 1 ? tr("Tomorrow") : tr("{n} days", { n
 countdown-ui.jsx: const daysText = (n) => (n === 0 ? tr("Today") : n === 1 ? tr("Tomorrow") : tr("{n} days", { n }));
 timeline-ui.jsx: if (n === 1) return tr("Tomorrow");
-timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={(
 timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={(
 
 ## Title
@@ -137,6 +137,10 @@ habits-ui.jsx: <button className={btnP} onClick={() => { setAdd({ ...open, days:
 people-ui.jsx: <div className="flex gap-1.5 flex-wrap"><button className={btnS} onClick={() => setEdit(p)} data-testid="people-edit">{tr("Edit")}</button>
 radar-ui.jsx: <button className={U.btnS} onClick={() => onEdit(x)} data-testid="radar-edit">{tr("Edit")}</button>
 
+## yesterday
+agents-ui.jsx: const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m 
+b5-ui.jsx: const sinceText = (x) => (x.since == null ? tr("not yet") : x.since === 0 ? tr("today") : x.since === 1 ? tr("yesterday") : x.since < 14 ? t
+
 ## Change
 agents-ui.jsx: {onChange ? <button onClick={onChange} className="min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold border border-[var(--c-ln)]"
 agents-ui.jsx: <CardActions primary={{ label: tr("Order now"), icon: Check, onClick: () => orderNow(a), testid: "agent-order-now" }} secondary={{ label: tr
@@ -255,11 +259,11 @@ money-calm-ui.jsx: <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onC
 agents-ui.jsx: {chips.length ? <div className="flex flex-wrap gap-1.5">{chips.map((c, k) => <button key={k} onClick={() => setRules(a, R.dropRule(a.rules, 
 attune.jsx: className="min-h-[40px] text-[12.5px] font-bold px-3.5 py-1.5 rounded-full text-slate-400 hover:text-amber-400">{tr("Remove")}</button>}
 attune.jsx: <button onClick={() => unteach(e.id)} className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400 hover:
+b5-ui.jsx: <button onClick={() => save(EN.updateCard(dir, p.id, { dates: (p.dates || []).filter((_, k) => k !== i) }))} className="w-8 h-8 c-sub" aria-
 booklib-ui.jsx: <button onClick={() => removeBook(id)} aria-label={tr("Remove")} className="w-8 h-10 grid place-items-center text-[var(--c-mut)] shrink-0" d
 chat.jsx: <button onClick={() => setQueued((l) => l.filter((x) => x.id !== q.id))} className="w-9 h-9 grid place-items-center rounded-full hover:bg-[v
 chat.jsx: <button onClick={() => setFiles((x) => x.filter((_, j) => j !== i))} className="w-8 h-8 grid place-items-center rounded-full text-[var(--c-m
 cmdbox-ui.jsx: <button onClick={() => onRemove(i)} aria-label={tr("Remove")} className="w-7 h-7 grid place-items-center rounded-full c-sub"><X size={13} />
-convert-ui.jsx: <button onClick={() => { setFiles(null); setOut(null); }} aria-label={tr("Remove")} className="p-2 -m-2 text-[var(--c-mut)]"><X size={16} />
 
 ## Show less
 agents-ui.jsx: {long ? <button onClick={() => setAll(!all)} className="text-[12.5px] font-extrabold c-acc min-h-[32px]" data-testid="agent-report-all">{all
@@ -316,6 +320,7 @@ slides-ui.jsx: <button className="absolute inset-y-0 end-0 w-2/3" aria-label={tr
 
 ## today
 agents-ui.jsx: const day = d.toDateString() === n.toDateString() ? tr("today") : d.toDateString() === tm.toDateString() ? tr("tomorrow") : d.toLocaleDateSt
+b5-ui.jsx: const sinceText = (x) => (x.since == null ? tr("not yet") : x.since === 0 ? tr("today") : x.since === 1 ? tr("yesterday") : x.since < 14 ? t
 money-pages-ui.jsx: const whenText = (b) => b.next == null ? "" : b.late ? T("late since {d}", { d: dayLabel(b.next) }) : b.daysTo === 0 ? tr("today") : b.daysT
 overpay-ui.jsx: if (f.kind === "trial") return { t: tr("{s} free trial ends", { s: f.name }), d: f.amount ? tr("Then {a} a month", { a: money(f.amount, f.cu
 overpay-ui.jsx: if (f.kind === "renewal") return { t: tr("{s} renews", { s: f.name }), d: tr("On {d}", { d: f.date }) + (f.amount ? " · " + money(f.amount, 
@@ -330,6 +335,8 @@ yourday-ui.jsx: try { return (same ? tr("today") : d.toDateString() === tm.toDat
 
 ## Later
 agents-ui.jsx: <CardActions primary={{ label: x.canReply ? tr("Send") : tr("Copy and open the chat"), icon: Send, onClick: () => send(x), testid: "reply-se
+b5-ui.jsx: <button onClick={() => hide(occ.id)} className="min-h-[40px] px-3.5 rounded-[12px] font-bold text-[13px] c-sub" data-testid="home-occasion-l
+b5-ui.jsx: <button onClick={() => hide("touch")} className="min-h-[38px] px-3 rounded-[12px] font-bold text-[13px] c-sub" data-testid="home-touch-later
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
 slides-ui.jsx: <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="min-h-[44px] rounded-[12px] border border-[
 timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onC
@@ -653,12 +660,12 @@ chat.jsx: <Brain size={14} /> {tr("Think")}</button>
 ## Copy
 attune.jsx: {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash(tr("Copied")); }} classN
 attune.jsx: <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{cResult ? (cResult.kind === "
+b5-ui.jsx: <button onClick={() => { try { navigator.clipboard.writeText(wish); } catch (e) {} }} className="min-h-[40px] px-3.5 rounded-[12px] font-bol
 chat.jsx: {done ? <CheckCircle2 size={12} className="text-[var(--c-pos)]" /> : <Copy size={12} />}{done ? tr("Copied") : tr("Copy")}</button>
 chat.jsx: <button onClick={() => { try { navigator.clipboard.writeText(m.text); } catch (e) {} api.flash(tr("Copied")); }} className="w-11 h-11 grid p
 cmdbox-ui.jsx: {j.result.text ? <button onClick={() => onCopy(j.result.text)} className="h-9 px-3.5 rounded-full text-[13px] font-extrabold inline-flex ite
 code-ui.jsx: <button onClick={() => { try { navigator.clipboard.writeText(cur.code); } catch (e) {} flash(tr("Copied")); }} className="px-3 min-h-[44px] 
 cv-ui.jsx: {letter ? <div className="rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="cv-ai-letter-result"><p className=
-docs-ui.jsx: <button onClick={() => copy(f)} aria-label={tr("Copy")} className={B2 + " w-9 justify-center px-0"} data-testid="doc-field-copy"><Copy size=
 
 ## Working…
 attune.jsx: <Loader2 size={13} className="animate-spin" /><span>{checkState === "careful" && !inResult ? tr("This looks like it matters — reading it lin
@@ -736,11 +743,11 @@ country-ui.jsx: <span className="flex-1 min-w-0"><span className="block text-[13
 attune.jsx: <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-bt
 attune.jsx: <button onClick={() => { setOrg(o); flash(tr("Company terminology saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-tea
 autopilot-ui.jsx: <button type="submit" disabled={!say.trim()} className="min-h-[40px] px-3.5 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-b
+b5-ui.jsx: <button disabled={!form.date} onClick={() => { const d = { kind: form.kind, md: form.date.slice(5, 10), ...(form.year ? { year: +form.date.s
 care-ui.jsx: <button className={btnP} disabled={!sugar} onClick={saveSugar} data-testid="care-sugar-save">{tr("Save")}</button></div>
 care-ui.jsx: <button className={btnP} onClick={() => { const d = ensureMember(); put(H.addLabs(d, labDraft.member || d.members[0].id, labDraft.date, labD
 chat.jsx: onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.kno
 countdown-ui.jsx: save(edit.id ? L.map((x) => (x.id === edit.id ? item : x)) : [...L, item]); setEdit(null); refresh(); }}>{tr("Save")}</button>
-desk-ui.jsx: <div className="flex gap-2"><button onClick={() => { const t = sure.text; setSure(null); let r = null; try { r = doIt(t, { force: true }); }
 
 ## Details
 attune.jsx: <MenuItem testid="engine-details" onClick={() => setDetails(!details)}>{details ? tr("Hide details") : tr("Details")}</MenuItem>
@@ -810,6 +817,14 @@ doit-ui.jsx: {undone ? <span className="c-sub text-[13px]" data-testid="do-undon
 donelog-ui.jsx: const undo = (e) => { if (undoDone(e.id, { loadLedger, saveLedger })) { setSt(D.load()); flash && flash(tr("Undone")); } };
 notelabels-ui.jsx: NT.saveTeach(NL.undoLabel(NT.loadTeach(), i.id)); setV((x) => x + 1); flash && flash(tr("Undone"));
 
+## every month
+b5-ui.jsx: const everyText = (n) => (n === 1 ? tr("every day") : n === 7 ? tr("every week") : n === 14 ? tr("every 2 weeks") : n === 30 ? tr("every mon
+notelabels-ui.jsx: <p className="m-0 text-[15px] font-extrabold tabular-nums" dir="auto" data-testid="note-paid-amount">{fmtAmt(e)}{monthly ? <span className="
+
+## On track
+b5-ui.jsx: : <span className="c-pos text-[14px] px-2" aria-label={tr("On track")}>✓</span>}</div>)}
+report-ui.jsx: pill={safe.today > 0 ? tr("On track") : tr("Spent")} tone={safe.today > 0 ? "" : "late"} pct={safe.perDay > 0 ? (safe.today / safe.perDay) *
+
 ## Reminders
 backup-ui.jsx: [tr("Memory items"), s.memory], [tr("Reminders"), s.reminders],
 shelf-ui.jsx: {header(tr("Reminders"), backBtn(() => setView(null)))}
@@ -864,6 +879,7 @@ spaces-ui.jsx: <p className="text-[11.5px] text-[var(--c-mut)] m-0">{meta.kind =
 
 ## Document
 chat.jsx: const kindLabel = art.kind === "html" ? tr("Web page") : art.kind === "doc" ? tr("Document") : tr("Program");
+radar-ui.jsx: const label = { passport: tr("Passport"), id: tr("ID card"), visa: tr("Visa") }[v.doc] || tr("Document");
 spaces-ui.jsx: <p className="text-[11.5px] text-[var(--c-mut)] m-0">{meta.kind === "html" ? tr("Web page") : meta.kind === "doc" ? tr("Document") : tr("Pro
 
 ## Program
