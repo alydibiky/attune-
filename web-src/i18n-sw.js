@@ -11991,4 +11991,11 @@ export const SW = {
   "Add to a list": "Ongeza kwenye orodha",
   "Put money in a fund": "Weka pesa kwenye akiba",
   "Read my to-dos": "Nisomee kazi zangu",
+  "Done — I'll ask you on the day": "Imekamilika — nitakuuliza siku hiyo",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "Uliandika {w} {a} siku ya {d} — wiki {n} mfululizo",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "Uliandika {w} {a} tarehe {dd} — miezi {n} mfululizo",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "Nifanye peke yangu kila {d}? Nitauliza tu “Ilitokea?”",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "Nifanye peke yangu kila mwezi? Nitauliza tu “Ilitokea?”",
+  "Yes, every {d}": "Ndiyo, kila {d}",
+  "Yes, every month": "Ndiyo, kila mwezi",
 };

@@ -7,6 +7,7 @@
 import { enterSends } from "./keys.js";
 import { AutopilotCard } from "./autopilot-ui.jsx";
 import { myCountry } from "./country.js";
+import { SuggestCard } from "./suggest-ui.jsx";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyStart, btnP as UbtnP, btnS as UbtnS, inp as Uinp } from "./ui-kit.jsx";
 import { loadAgents } from "./agents.js";
@@ -448,6 +449,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {!rep ? <button onClick={() => setRep(true)} className="w-full min-h-[50px] rounded-[20px] px-4 flex items-center justify-between gap-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="home-see-report">
         <span className="font-extrabold text-[14px]">{tr("See all")}</span>
         <span className="c-sub text-[12.5px] inline-flex items-center gap-1.5">{tr("My report")}<ChevronRight size={16} className="c-acc rtl:rotate-180" /></span></button> : null}
+      {/* v9.9.18 AU2 (Ali picked A): a habit Attune can do for you — one at a time */}
+      {!rep ? <SuggestCard flash={null} /> : null}
       {/* v6.46 Home A: one thing Attune noticed (home-now.js) — in My report */}
       {/* v8.8: the most urgent finding on Home itself (charged twice, the barber due, a bill late) — the rest in My report */}
       {!rep && smart[0] && smart[0].score >= 75 ? <SmartRow x={smart[0]} ar={ar} open={openSmart} drop={dropSmart} testid="home-smart" /> : null}

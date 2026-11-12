@@ -11982,4 +11982,11 @@ export const ARB = {
   "Add to a list": "أضف إلى قائمة",
   "Put money in a fund": "ضع مالًا في صندوق",
   "Read my to-dos": "اقرأ مهامي",
+  "Done — I'll ask you on the day": "تم — سأسألك في يومها",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "سجّلت {w} {a} يوم {d} — {n} أسابيع متتالية",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "سجّلت {w} {a} في اليوم {dd} — {n} أشهر متتالية",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "هل أقوم بها تلقائيًا كل {d}؟ سأسأل فقط «هل حدث ذلك؟»",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "هل أقوم بها تلقائيًا كل شهر؟ سأسأل فقط «هل حدث ذلك؟»",
+  "Yes, every {d}": "نعم، كل {d}",
+  "Yes, every month": "نعم، كل شهر",
 };

@@ -11991,4 +11991,11 @@ export const HI = {
   "Add to a list": "सूची में जोड़ो",
   "Put money in a fund": "फंड में पैसे डालो",
   "Read my to-dos": "मेरे काम पढ़ो",
+  "Done — I'll ask you on the day": "हो गया — उस दिन पूछूँगा",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "आपने {d} को {w} {a} दर्ज किया — लगातार {n} हफ़्ते",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "आपने {dd} तारीख को {w} {a} दर्ज किया — लगातार {n} महीने",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "हर {d} अपने आप करूँ? सिर्फ़ पूछूँगा “हुआ?”",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "हर महीने अपने आप करूँ? सिर्फ़ पूछूँगा “हुआ?”",
+  "Yes, every {d}": "हाँ, हर {d}",
+  "Yes, every month": "हाँ, हर महीने",
 };

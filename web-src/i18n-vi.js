@@ -11990,4 +11990,11 @@ export const VI = {
   "Add to a list": "Thêm vào danh sách",
   "Put money in a fund": "Bỏ tiền vào quỹ",
   "Read my to-dos": "Đọc việc của tôi",
+  "Done — I'll ask you on the day": "Xong — tôi sẽ hỏi vào hôm đó",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "Bạn ghi {w} {a} vào {d} — {n} tuần liền",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "Bạn ghi {w} {a} vào ngày {dd} — {n} tháng liền",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "Tự làm mỗi {d}? Tôi chỉ hỏi “Đã xảy ra chưa?”",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "Tự làm mỗi tháng? Tôi chỉ hỏi “Đã xảy ra chưa?”",
+  "Yes, every {d}": "Có, mỗi {d}",
+  "Yes, every month": "Có, mỗi tháng",
 };

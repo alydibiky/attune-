@@ -11990,4 +11990,11 @@ export const BN = {
   "Add to a list": "তালিকায় যোগ করো",
   "Put money in a fund": "ফান্ডে টাকা রাখো",
   "Read my to-dos": "আমার কাজ পড়ো",
+  "Done — I'll ask you on the day": "হয়ে গেছে — সেদিন জিজ্ঞেস করব",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "আপনি {d} {w} {a} লিখেছেন — টানা {n} সপ্তাহ",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "আপনি {dd} তারিখে {w} {a} লিখেছেন — টানা {n} মাস",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "প্রতি {d} নিজে থেকে করব? শুধু জিজ্ঞেস করব “হয়েছে?”",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "প্রতি মাসে নিজে থেকে করব? শুধু জিজ্ঞেস করব “হয়েছে?”",
+  "Yes, every {d}": "হ্যাঁ, প্রতি {d}",
+  "Yes, every month": "হ্যাঁ, প্রতি মাসে",
 };

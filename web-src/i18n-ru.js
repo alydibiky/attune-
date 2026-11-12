@@ -11990,4 +11990,11 @@ export const RU = {
   "Add to a list": "Добавить в список",
   "Put money in a fund": "Положить деньги в копилку",
   "Read my to-dos": "Прочитай мои задачи",
+  "Done — I'll ask you on the day": "Готово — спрошу в тот день",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "Вы записали {w} {a} в {d} — {n} недели подряд",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "Вы записали {w} {a} {dd}-го числа — {n} месяца подряд",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "Делать само каждый {d}? Спрошу только «Было?»",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "Делать само каждый месяц? Спрошу только «Было?»",
+  "Yes, every {d}": "Да, каждый {d}",
+  "Yes, every month": "Да, каждый месяц",
 };

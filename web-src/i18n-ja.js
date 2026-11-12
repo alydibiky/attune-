@@ -11990,4 +11990,11 @@ export const JA = {
   "Add to a list": "リストに追加",
   "Put money in a fund": "積立に入れる",
   "Read my to-dos": "やることを読んで",
+  "Done — I'll ask you on the day": "完了 — その日に確認します",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "{d}に{w} {a}を記録 — {n}週連続",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "{dd}日に{w} {a}を記録 — {n}か月連続",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "毎週{d}に自動で？「あった？」と聞くだけです",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "毎月自動で？「あった？」と聞くだけです",
+  "Yes, every {d}": "はい、毎週{d}",
+  "Yes, every month": "はい、毎月",
 };

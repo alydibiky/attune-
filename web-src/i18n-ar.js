@@ -9067,4 +9067,12 @@ export const AR = {
   "Add to a list": "ضيف لقايمة",
   "Put money in a fund": "حط فلوس في صندوق",
   "Read my to-dos": "اقرالي مهامي",
+  "Done — I'll ask you on the day": "تمام — هسألك في يومها",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "سجلت {w} {a} يوم {d} — {n} أسابيع ورا بعض",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "سجلت {w} {a} يوم {dd} — {n} شهور ورا بعض",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "أعملها لوحدي كل {d}؟ هسألك بس «حصلت؟»",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "أعملها لوحدي كل شهر؟ هسألك بس «حصلت؟»",
+  "Yes, every {d}": "أيوه، كل {d}",
+  "Yes, every month": "أيوه، كل شهر",
+  "Never": "أبدًا",
 };

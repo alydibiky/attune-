@@ -11991,4 +11991,11 @@ export const UR = {
   "Add to a list": "فہرست میں شامل کرو",
   "Put money in a fund": "فنڈ میں پیسے ڈالو",
   "Read my to-dos": "میرے کام پڑھو",
+  "Done — I'll ask you on the day": "ہو گیا — اس دن پوچھوں گا",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "آپ نے {d} کو {w} {a} درج کیا — لگاتار {n} ہفتے",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "آپ نے {dd} تاریخ کو {w} {a} درج کیا — لگاتار {n} مہینے",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "ہر {d} خود سے کروں؟ صرف پوچھوں گا “ہوا؟”",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "ہر مہینے خود سے کروں؟ صرف پوچھوں گا “ہوا؟”",
+  "Yes, every {d}": "ہاں، ہر {d}",
+  "Yes, every month": "ہاں، ہر مہینے",
 };

@@ -11991,4 +11991,11 @@ export const IDN = {
   "Add to a list": "Tambahkan ke daftar",
   "Put money in a fund": "Masukkan uang ke dana",
   "Read my to-dos": "Bacakan tugasku",
+  "Done — I'll ask you on the day": "Selesai — saya akan tanya di harinya",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "Kamu mencatat {w} {a} pada {d} — {n} minggu berturut-turut",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "Kamu mencatat {w} {a} tanggal {dd} — {n} bulan berturut-turut",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "Lakukan otomatis setiap {d}? Saya hanya tanya “Sudah terjadi?”",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "Lakukan otomatis setiap bulan? Saya hanya tanya “Sudah terjadi?”",
+  "Yes, every {d}": "Ya, setiap {d}",
+  "Yes, every month": "Ya, setiap bulan",
 };

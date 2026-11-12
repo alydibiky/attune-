@@ -11990,4 +11990,11 @@ export const FA = {
   "Add to a list": "به فهرست اضافه کن",
   "Put money in a fund": "پول در صندوق بگذار",
   "Read my to-dos": "کارهایم را بخوان",
+  "Done — I'll ask you on the day": "انجام شد — همان روز می‌پرسم",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "{w} {a} را {d} ثبت کردید — {n} هفته پشت سر هم",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "{w} {a} را روز {dd} ثبت کردید — {n} ماه پشت سر هم",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "هر {d} خودکار انجام دهم؟ فقط می‌پرسم «انجام شد؟»",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "هر ماه خودکار انجام دهم؟ فقط می‌پرسم «انجام شد؟»",
+  "Yes, every {d}": "بله، هر {d}",
+  "Yes, every month": "بله، هر ماه",
 };

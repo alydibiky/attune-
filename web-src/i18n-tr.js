@@ -11991,4 +11991,11 @@ export const TRK = {
   "Add to a list": "Listeye ekle",
   "Put money in a fund": "Kumbaraya para koy",
   "Read my to-dos": "İşlerimi oku",
+  "Done — I'll ask you on the day": "Tamam — o gün sana soracağım",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "{w} {a} tutarını {d} günü kaydettin — üst üste {n} hafta",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "{w} {a} tutarını ayın {dd}. günü kaydettin — üst üste {n} ay",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "Her {d} kendiliğinden yapayım mı? Sadece “Oldu mu?” diye sorarım",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "Her ay kendiliğinden yapayım mı? Sadece “Oldu mu?” diye sorarım",
+  "Yes, every {d}": "Evet, her {d}",
+  "Yes, every month": "Evet, her ay",
 };

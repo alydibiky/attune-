@@ -11990,4 +11990,11 @@ export const KO = {
   "Add to a list": "목록에 추가",
   "Put money in a fund": "적립금에 넣기",
   "Read my to-dos": "할 일 읽어 줘",
+  "Done — I'll ask you on the day": "완료 — 그날 물어볼게요",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "{d}에 {w} {a} 기록 — {n}주 연속",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "{dd}일에 {w} {a} 기록 — {n}개월 연속",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "매주 {d} 자동으로 할까요? “했나요?”만 물을게요",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "매달 자동으로 할까요? “했나요?”만 물을게요",
+  "Yes, every {d}": "네, 매주 {d}",
+  "Yes, every month": "네, 매달",
 };

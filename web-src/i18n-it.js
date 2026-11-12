@@ -11991,4 +11991,11 @@ export const IT = {
   "Add to a list": "Aggiungi a una lista",
   "Put money in a fund": "Metti soldi in un fondo",
   "Read my to-dos": "Leggi le mie cose da fare",
+  "Done — I'll ask you on the day": "Fatto: te lo chiederò quel giorno",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "Hai registrato {w} {a} di {d}: {n} settimane di fila",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "Hai registrato {w} {a} il giorno {dd}: {n} mesi di fila",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "Farlo da solo ogni {d}? Chiederò solo «È successo?»",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "Farlo da solo ogni mese? Chiederò solo «È successo?»",
+  "Yes, every {d}": "Sì, ogni {d}",
+  "Yes, every month": "Sì, ogni mese",
 };

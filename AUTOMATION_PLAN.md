@@ -112,6 +112,12 @@
         (BluetoothDevice.ACTION_ACL_CONNECTED, BLUETOOTH_CONNECT permission), Wi-Fi (ConnectivityManager callback), charging
         (ACTION_POWER_CONNECTED via a registered receiver in a foreground part), and the checks (workdays / before / after / more
         than) inside AutoRules.kt + the message-alert matcher — then flip isLive in rulestore.js for each.
+  - [x] AU2 SCREEN: suggest-ui.jsx "Attune noticed" card on Home (one idea; Yes → a regular weekly / monthly payment in People &
+        plans, asked on its day; Not now = a week; Never = never) — 7 lines × 20 languages; tests/e2e_v9918suggest.py ALL PASSED.
+  - [ ] AU3 SCREEN (next): the Recipes gallery on the Automations page from recipes.gallery(profile) — profile from the person's data
+        (salary in autom / ledger incomes, rent / gam'eya in People & plans, car papers in Errands, children in Family, a trip in
+        Travel, prayers switch); tap a tile → its rules with on / off → "Switch on N" (time rules → reminders through rulestore;
+        salary split → M1 when built). 20 languages + e2e.
   - [ ] B2 screens (after OK): the When/If/Do card in Chat + Home (screen AU1-A, with the "ask" card), Automations page list,
         Home "Attune noticed" card (AU2-A), Recipes gallery (AU3-A); the runner for each trigger (see the line below).
   - [ ] (was: tests/rules/gen.mjs — exactly 10,000 sentences: 21 language codes × triggers × checks × actions, each with the

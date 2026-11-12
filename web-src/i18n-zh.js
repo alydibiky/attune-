@@ -11990,4 +11990,11 @@ export const ZH = {
   "Add to a list": "加入清单",
   "Put money in a fund": "存入基金",
   "Read my to-dos": "读我的待办",
+  "Done — I'll ask you on the day": "好了 — 当天我会问你",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "你在{d}记了 {w} {a} — 连续 {n} 周",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "你在 {dd} 日记了 {w} {a} — 连续 {n} 个月",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "每{d}自动做？我只会问“发生了吗？”",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "每月自动做？我只会问“发生了吗？”",
+  "Yes, every {d}": "好，每{d}",
+  "Yes, every month": "好，每月",
 };

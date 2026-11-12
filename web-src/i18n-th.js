@@ -11990,4 +11990,11 @@ export const TH = {
   "Add to a list": "เพิ่มในรายการ",
   "Put money in a fund": "ใส่เงินในกองทุน",
   "Read my to-dos": "อ่านงานของฉัน",
+  "Done — I'll ask you on the day": "เรียบร้อย — จะถามในวันนั้น",
+  "You logged {w} {a} on {d} — {n} weeks in a row": "คุณบันทึก {w} {a} วัน{d} — {n} สัปดาห์ติดกัน",
+  "You logged {w} {a} on day {dd} — {n} months in a row": "คุณบันทึก {w} {a} วันที่ {dd} — {n} เดือนติดกัน",
+  "Do it by itself every {d}? I'll only ask “Did it happen?”": "ทำเองทุก{d}ไหม? จะถามแค่ว่า “เกิดขึ้นไหม?”",
+  "Do it by itself every month? I'll only ask “Did it happen?”": "ทำเองทุกเดือนไหม? จะถามแค่ว่า “เกิดขึ้นไหม?”",
+  "Yes, every {d}": "ใช่ ทุก{d}",
+  "Yes, every month": "ใช่ ทุกเดือน",
 };
