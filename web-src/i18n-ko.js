@@ -12229,4 +12229,8 @@ export const KO = {
   "3 things found": "3개를 찾았어요",
   "Nothing is saved until you tap Save.": "저장을 누르기 전에는 아무것도 저장되지 않아요.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "목록: 장보기(우유, 빵), 내일 10시 알림, 1일 월세 6,000 — 체크하고 저장",
+  "A year ago today": "1년 전 오늘",
+  "{n} years ago today": "{n}년 전 오늘",
+  "Nice": "좋아요",
+  "Hide these": "이런 거 숨기기",
 };

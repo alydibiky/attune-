@@ -12229,4 +12229,8 @@ export const FA = {
   "3 things found": "۳ مورد پیدا شد",
   "Nothing is saved until you tap Save.": "تا «ذخیره» را نزنید چیزی ذخیره نمی‌شود.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "یک فهرست: خرید (شیر، نان)، یادآور فردا ساعت ۱۰، اجاره ۶٬۰۰۰ روز ۱ — تیک بزنید و ذخیره",
+  "A year ago today": "یک سال پیش در چنین روزی",
+  "{n} years ago today": "{n} سال پیش در چنین روزی",
+  "Nice": "چه خوب",
+  "Hide these": "پنهان کردن این‌ها",
 };

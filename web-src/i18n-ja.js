@@ -12229,4 +12229,8 @@ export const JA = {
   "3 things found": "3件見つかりました",
   "Nothing is saved until you tap Save.": "「保存」を押すまで何も保存されません。",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "リスト：買い物（牛乳・パン）、明日10:00のリマインダー、1日の家賃6,000 — チェックして保存",
+  "A year ago today": "1年前の今日",
+  "{n} years ago today": "{n}年前の今日",
+  "Nice": "いいね",
+  "Hide these": "これを非表示",
 };

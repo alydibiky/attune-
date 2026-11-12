@@ -12230,4 +12230,8 @@ export const SW = {
   "3 things found": "Mambo 3 yamepatikana",
   "Nothing is saved until you tap Save.": "Hakuna kinachohifadhiwa hadi uguse Hifadhi.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "Orodha: ununuzi (maziwa, mkate), kikumbusho kesho saa 10, kodi 6,000 tarehe 1 — weka alama na Hifadhi",
+  "A year ago today": "Mwaka mmoja uliopita leo",
+  "{n} years ago today": "Miaka {n} iliyopita leo",
+  "Nice": "Safi",
+  "Hide these": "Ficha haya",
 };

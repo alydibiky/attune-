@@ -12230,4 +12230,8 @@ export const IDN = {
   "3 things found": "3 hal ditemukan",
   "Nothing is saved until you tap Save.": "Tidak ada yang disimpan sampai Anda mengetuk Simpan.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "Daftar: belanja (susu, roti), pengingat besok 10:00, sewa 6.000 tanggal 1 — centang dan Simpan",
+  "A year ago today": "Setahun lalu hari ini",
+  "{n} years ago today": "{n} tahun lalu hari ini",
+  "Nice": "Bagus",
+  "Hide these": "Sembunyikan ini",
 };

@@ -12229,4 +12229,8 @@ export const VI = {
   "3 things found": "Tìm thấy 3 việc",
   "Nothing is saved until you tap Save.": "Chưa lưu gì cho đến khi bạn chạm Lưu.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "Một danh sách: mua sắm (sữa, bánh mì), lời nhắc ngày mai 10:00, tiền nhà 6.000 ngày 1 — chọn rồi Lưu",
+  "A year ago today": "Một năm trước, hôm nay",
+  "{n} years ago today": "{n} năm trước, hôm nay",
+  "Nice": "Hay đấy",
+  "Hide these": "Ẩn mục này",
 };

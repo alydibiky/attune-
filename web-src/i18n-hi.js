@@ -12230,4 +12230,8 @@ export const HI = {
   "3 things found": "3 चीज़ें मिलीं",
   "Nothing is saved until you tap Save.": "सहेजें दबाने तक कुछ नहीं सहेजा जाता।",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "एक सूची: खरीदारी (दूध, ब्रेड), कल 10 बजे रिमाइंडर, 1 तारीख को किराया 6,000 — निशान लगाएँ और सहेजें",
+  "A year ago today": "एक साल पहले आज",
+  "{n} years ago today": "{n} साल पहले आज",
+  "Nice": "बढ़िया",
+  "Hide these": "इन्हें छिपाएँ",
 };

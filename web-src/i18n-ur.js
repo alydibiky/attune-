@@ -12230,4 +12230,8 @@ export const UR = {
   "3 things found": "3 چیزیں ملیں",
   "Nothing is saved until you tap Save.": "محفوظ کریں دبانے تک کچھ محفوظ نہیں ہوتا۔",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "ایک فہرست: خریداری (دودھ، ڈبل روٹی)، کل 10 بجے یاد دہانی، 1 تاریخ کو کرایہ 6,000 — نشان لگائیں اور محفوظ کریں",
+  "A year ago today": "ایک سال پہلے آج",
+  "{n} years ago today": "{n} سال پہلے آج",
+  "Nice": "اچھا",
+  "Hide these": "انہیں چھپائیں",
 };

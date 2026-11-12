@@ -12229,4 +12229,8 @@ export const DE = {
   "3 things found": "3 Sachen gefunden",
   "Nothing is saved until you tap Save.": "Nichts wird gespeichert, bevor du auf Speichern tippst.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "Eine Liste: Einkauf (Milch, Brot), eine Erinnerung morgen 10:00, die Miete 6.000 am 1. – abhaken und Speichern",
+  "A year ago today": "Heute vor einem Jahr",
+  "{n} years ago today": "Heute vor {n} Jahren",
+  "Nice": "Schön",
+  "Hide these": "Diese ausblenden",
 };

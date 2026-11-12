@@ -9314,4 +9314,9 @@ export const AR = {
   "Nothing is saved until you tap Save.": "مفيش حاجة بتتحفظ غير لما تدوس احفظ.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "قايمة: مشتريات (لبن، عيش)، تذكير بكرة الساعة 10، الإيجار 6,000 يوم 1 — علّم واحفظ",
   "To-do": "مهمة",
+  "A year ago today": "من سنة النهاردة",
+  "{n} years ago today": "من {n} سنين النهاردة",
+  "You received": "استلمت",
+  "Nice": "حلو",
+  "Hide these": "خبّي دول",
 };

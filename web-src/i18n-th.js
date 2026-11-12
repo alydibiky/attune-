@@ -12229,4 +12229,8 @@ export const TH = {
   "3 things found": "เจอ 3 รายการ",
   "Nothing is saved until you tap Save.": "จะไม่บันทึกอะไรจนกว่าจะแตะบันทึก",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "รายการ: ซื้อของ (นม ขนมปัง) เตือนพรุ่งนี้ 10:00 ค่าเช่า 6,000 วันที่ 1 — ติ๊กแล้วบันทึก",
+  "A year ago today": "เมื่อปีที่แล้ววันนี้",
+  "{n} years ago today": "เมื่อ {n} ปีที่แล้ววันนี้",
+  "Nice": "ดีจัง",
+  "Hide these": "ซ่อนสิ่งเหล่านี้",
 };

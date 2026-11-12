@@ -12229,4 +12229,8 @@ export const BN = {
   "3 things found": "৩টি জিনিস পাওয়া গেছে",
   "Nothing is saved until you tap Save.": "সংরক্ষণ না চাপা পর্যন্ত কিছুই সংরক্ষিত হয় না।",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "একটি তালিকা: কেনাকাটা (দুধ, রুটি), আগামীকাল 10টায় রিমাইন্ডার, 1 তারিখে ভাড়া 6,000 — টিক দিন ও সংরক্ষণ",
+  "A year ago today": "এক বছর আগে আজকের দিনে",
+  "{n} years ago today": "{n} বছর আগে আজকের দিনে",
+  "Nice": "দারুণ",
+  "Hide these": "এগুলো লুকান",
 };

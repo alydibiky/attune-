@@ -12230,4 +12230,8 @@ export const TRK = {
   "3 things found": "3 şey bulundu",
   "Nothing is saved until you tap Save.": "Kaydet'e dokunana kadar hiçbir şey kaydedilmez.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "Bir liste: alışveriş (süt, ekmek), yarın 10:00 hatırlatıcı, ayın 1'inde 6.000 kira — işaretle ve Kaydet",
+  "A year ago today": "Bir yıl önce bugün",
+  "{n} years ago today": "{n} yıl önce bugün",
+  "Nice": "Güzel",
+  "Hide these": "Bunları gizle",
 };

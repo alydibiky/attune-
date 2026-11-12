@@ -12229,4 +12229,8 @@ export const ZH = {
   "3 things found": "找到 3 项",
   "Nothing is saved until you tap Save.": "点保存之前不会保存任何内容。",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "一个清单：购物（牛奶、面包），明天 10:00 提醒，1 号房租 6000——勾选后保存",
+  "A year ago today": "一年前的今天",
+  "{n} years ago today": "{n} 年前的今天",
+  "Nice": "不错",
+  "Hide these": "隐藏这些",
 };

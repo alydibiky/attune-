@@ -12229,4 +12229,8 @@ export const RU = {
   "3 things found": "Найдено 3 дела",
   "Nothing is saved until you tap Save.": "Ничего не сохранится, пока вы не нажмёте «Сохранить».",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "Список: покупки (молоко, хлеб), напоминание завтра в 10:00, аренда 6 000 1-го — отметьте и сохраните",
+  "A year ago today": "Год назад в этот день",
+  "{n} years ago today": "{n} лет назад в этот день",
+  "Nice": "Здорово",
+  "Hide these": "Скрыть такие",
 };

@@ -12230,4 +12230,8 @@ export const IT = {
   "3 things found": "3 cose trovate",
   "Nothing is saved until you tap Save.": "Niente viene salvato finché non tocchi Salva.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "Una lista: spesa (latte, pane), un promemoria domani alle 10, l'affitto 6.000 il 1 — spunta e Salva",
+  "A year ago today": "Un anno fa, oggi",
+  "{n} years ago today": "{n} anni fa, oggi",
+  "Nice": "Bello",
+  "Hide these": "Nascondi questi",
 };

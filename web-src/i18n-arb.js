@@ -12221,4 +12221,8 @@ export const ARB = {
   "3 things found": "وجدت 3 أشياء",
   "Nothing is saved until you tap Save.": "لا يُحفظ شيء حتى تضغط حفظ.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "قائمة: مشتريات (حليب، خبز)، تذكير غدًا الساعة 10، الإيجار 6,000 يوم 1 — حدّد واحفظ",
+  "A year ago today": "قبل عام في مثل هذا اليوم",
+  "{n} years ago today": "قبل {n} أعوام في مثل هذا اليوم",
+  "Nice": "جميل",
+  "Hide these": "أخفِ هذه",
 };

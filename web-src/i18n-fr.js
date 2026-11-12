@@ -12230,4 +12230,8 @@ export const FR = {
   "3 things found": "3 choses trouvées",
   "Nothing is saved until you tap Save.": "Rien n'est enregistré avant d'appuyer sur Enregistrer.",
   "A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save": "Une liste : courses (lait, pain), un rappel demain 10h, le loyer 6 000 le 1er — cochez et Enregistrer",
+  "A year ago today": "Il y a un an, jour pour jour",
+  "{n} years ago today": "Il y a {n} ans, jour pour jour",
+  "Nice": "Sympa",
+  "Hide these": "Masquer ceux-ci",
 };
