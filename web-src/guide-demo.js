@@ -148,6 +148,18 @@ export const DEMOS = {
   learn: { in: "pick", say: S("Course: Turkish A1 · day 12", "كورس: تركي A1 · يوم 12"), title: S("Today: “Nerede?” — Where?", "النهارده: «Nerede?» — فين؟"),
     lines: [L("Quiz", "الاختبار", "4 / 5"), L("Say it", "قولها", S("“Otobüs durağı nerede?”", "«Otobüs durağı nerede?»")), L("Streak", "أيام ورا بعض", "12")], bar: 0.8,
     act: [S("Say it", "قولها"), S("Next lesson", "الدرس الجاي")], note: S("Wrong answers come back until they stick.", "الغلط بيرجعلك لحد ما تحفظه.") },
+  habits: { in: "type", say: S("Habit: read 20 pages every day", "عادة: أقرا 20 صفحة كل يوم"), title: S("Read 20 pages · streak 6 days", "أقرا 20 صفحة · متتالي 6 أيام"),
+    lines: [L("Sunday", "الحد", "✓"), L("Monday", "الاتنين", "✓"), L("Today", "النهاردة", "☐")],
+    act: [S("Tick today", "علّم النهاردة"), S("Edit", "عدّل")], note: S("A day the habit isn't due never breaks the streak.", "اليوم اللي العادة مش مطلوبة فيه عمره ما يكسر العدّ المتتالي.") },   // v9.9.19 B4
+  countdowns: { in: "type", say: S("Wedding on 20 December", "الفرح يوم 20 ديسمبر"), title: S("Countdowns under the Home box", "العد التنازلي تحت خانة الرئيسية"),
+    lines: [L("Wedding", "الفرح", "39"), L("Ramadan", "رمضان", "89"), L("Umrah", "العمرة", "112")],
+    act: [S("Edit", "عدّل"), S("Remove", "شيل")], note: S("Tap a chip to open its big card.", "دوس على أي زرار يفتحلك الكارت الكبير بتاعه.") },   // v9.9.19 B4
+  weekplan: { in: "type", say: S("Tender file, 3 hours, by Thursday", "ملف المناقصة، 3 ساعات، قبل الخميس"), title: S("Tender file: 3 h placed", "ملف المناقصة: اتحطّت 3 ساعات"),
+    lines: [L("Tuesday", "التلات", "10:00–11:30"), L("Wednesday", "الأربع", "18:00–19:30"), L("Thursday", "الخميس", "✓")],
+    act: [S("Keep plan", "ثبّت الخطة"), S("Move", "حرّك")], note: S("Never on a reminder, a prayer or after the deadline.", "عمره ما يتحط على تذكير أو صلاة أو بعد الميعاد.") },   // v9.9.19 B4
+  focus: { in: "type", say: S("Focus on thesis chapter 3 for 25 minutes", "ركّز على الفصل التالت من الرسالة 25 دقيقة"), title: S("Thesis · chapter 3 · 15:32 left", "الرسالة · الفصل التالت · فاضل 15:32"),
+    lines: [L("Today", "النهاردة", "2"), L("This week", "الأسبوع ده", "1:40"), L("Pause", "وقّف", "⏸")],
+    act: [S("Pause", "وقّف"), S("Stop", "إيقاف")], note: S("Paused time is not counted.", "الوقت المتوقف مش بيتحسب.") },   // v9.9.19 B4
   lists: { in: "type", say: S("Make my travel checklist: passport, charger, medicines", "اعمل قايمة السفر: الباسبور، الشاحن، الأدوية"), title: S("Travel checklist · before each trip", "قايمة السفر · قبل كل سفرية"),
     lines: [L("Passport", "الباسبور", "✓"), L("Charger", "الشاحن", "☐"), L("Medicines", "الأدوية", "☐")], bar: 0.33,
     act: [S("Tick on Home", "علّم من الرئيسية"), S("Does it repeat?", "بتتكرر؟")], note: S("On its day it stays on Home until every box is ticked.", "في يومها بتفضل في الرئيسية لحد ما تعلّم على كل الخانات.") },
