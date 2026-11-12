@@ -59,3 +59,5 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
 - Page: https://claude.ai/artifact/7HPTScnSAGUsUj6NKnK8Vf (docs/mockups/phone-rules.html). R1 A–D (how triggers fire: Bluetooth instant
   always; charging / Wi-Fi when Attune is open · with a permanent notification · within ~15 min (recommended C) · per rule), R2 A–B (pick
   the device from paired devices (recommended A) or learn it on the next connection).
+- Ali picked R1-C + R2-A. Combined screen (step 3): https://claude.ai/artifact/UZqLbcCnLDKbytdgdbc1uY (docs/mockups/phone-rules-combined.html)
+  — waiting for his OK.
