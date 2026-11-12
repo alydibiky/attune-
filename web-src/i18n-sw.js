@@ -12143,4 +12143,5 @@ export const SW = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "Au sema “fungua hesabu za kurudi” kwenye Gumzo au kisanduku cha Nyumbani ili kuongeza.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › huonyesha wiki iliyobaki. Mambo yako ni kijivu, sala kijani, vipande vya Attune vina rangi.",
   "“Well done” shows the time kept and this week's total for that task.": "“Hongera” huonyesha muda uliohifadhiwa na jumla ya wiki kwa kazi hiyo.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "Matangazo mapya ya kukagua kwa “{t}” — gusa na Attune itaonyesha yanayolingana kweli tu.",
 };

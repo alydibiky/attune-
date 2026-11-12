@@ -12142,4 +12142,5 @@ export const RU = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "Или скажите «открой отсчёты» в чате или в поле на главной, чтобы добавить.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › показывают остальную неделю. Ваши дела серые, намаз зелёный, блоки Attune цветные.",
   "“Well done” shows the time kept and this week's total for that task.": "«Отлично» показывает сохранённое время и итог недели по этой задаче.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "Новые объявления по «{t}» — нажмите, и Attune покажет только действительно подходящие.",
 };

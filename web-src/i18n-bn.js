@@ -12142,4 +12142,5 @@ export const BN = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "অথবা যোগ করতে চ্যাট বা হোম বক্সে বলুন “কাউন্টডাউন খোলো”।",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › বাকি সপ্তাহ দেখায়। আপনার জিনিস ধূসর, নামাজ সবুজ, Attune-এর ব্লক রঙিন।",
   "“Well done” shows the time kept and this week's total for that task.": "“দারুণ” রাখা সময় আর সেই কাজের এই সপ্তাহের মোট দেখায়।",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "“{t}”-এর জন্য দেখার মতো নতুন বিজ্ঞাপন — চাপুন, Attune শুধু সত্যিই মেলে এমনগুলো দেখাবে।",
 };

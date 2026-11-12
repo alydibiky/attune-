@@ -52,8 +52,7 @@ object ScoutNight {
         arm(ctx)                                     // tomorrow night again, whatever happens tonight
         if (Prefs.airGap(ctx)) return
         val out = readFound(ctx)
-        var fresh = 0
-        val names = ArrayList<String>()
+        val told = ArrayList<JSONObject>()
         for (i in 0 until minOf(plan.length(), 5)) {
             val g = plan.optJSONObject(i) ?: continue
             val seen = HashSet<String>()
@@ -73,12 +72,18 @@ object ScoutNight {
                     }
                 } catch (e: Exception) { /* one search failing never stops the night */ }
             }
-            if (n > 0) { out.put(g.optString("id"), prev); fresh += n; names.add(g.optString("title")) }
+            if (n > 0) { out.put(g.optString("id"), prev); told.add(g) }
         }
         try { File(ctx.filesDir, FILE).writeText(out.toString()) } catch (e: Exception) {}
-        if (fresh > 0) Reminders.schedule(ctx, JSONObject().put("id", "scout-night").put("at", System.currentTimeMillis() + 2000)
-            .put("title", "Scout · " + names.take(2).joinToString(" · "))
-            .put("body", "$fresh new ads tonight — open Attune to see which ones really match."))
+        // v9.9.19 (Ali: "51 new ads" opened ANOTHER hunt and the page then said "1 new"): one notification per hunt, with that
+        // hunt's id ("scout-<id>" — the page opens exactly that hunt), in the person's language (the page wrote "say"), and no
+        // count: the night only searched; which ads really match is decided when Attune opens (and that run tells only real matches)
+        for ((k, g) in told.take(3).withIndex()) {
+            val title = g.optString("title")
+            Reminders.schedule(ctx, JSONObject().put("id", "scout-" + g.optString("id")).put("at", System.currentTimeMillis() + 2000 + k * 500L)
+                .put("title", "Scout · " + title)
+                .put("body", g.optString("say").ifBlank { "New ads to check for “$title” — tap and Attune shows only the ones that really match." }))
+        }
     }
 
     private fun readFound(ctx: Context): JSONObject = try { JSONObject(File(ctx.filesDir, FILE).readText()) } catch (e: Exception) { JSONObject() }

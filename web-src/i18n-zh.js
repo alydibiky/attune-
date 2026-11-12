@@ -12142,4 +12142,5 @@ export const ZH = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "也可以在聊天或主页输入框说“打开倒计时”来添加。",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › 查看本周其余几天。你的事项是灰色，礼拜是绿色，Attune 的时间块是彩色。",
   "“Well done” shows the time kept and this week's total for that task.": "“做得好”显示记录的时间和这项任务本周的总计。",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "“{t}”有新广告待核对——点开，Attune 只显示真正符合的。",
 };

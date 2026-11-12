@@ -5,6 +5,9 @@
    Logic: scout.js. Tests: tests/unit/v731scout.test.mjs, tests/e2e_v731scout.py.                                                   */
 import React, { useEffect, useState } from "react";
 import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play, MapPin, AlertTriangle, Bell, BellOff } from "lucide-react";
+import { COUNTRIES, myCountry } from "./country.js";
+// v9.9.19: the person's own money — an ad priced in another country's is from another country
+const localCur = () => { try { return (COUNTRIES[myCountry()] || {}).cur || "EGP"; } catch (e) { return "EGP"; } };
 import { tr, getLang } from "./i18n.js";
 import * as S from "./scout.js";
 import * as K from "./ui-kit.jsx";
@@ -122,7 +125,7 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now(), { rea
 /** v6.32: the same ending for a run's hits, whether searched now or found by the night run (ScoutNight.kt). */
 export function finishRun(goal, hits, now = Date.now()) {
   const market0 = S.loadMarket();
-  const run = S.runGoal(goal, hits, { now, market: market0 });
+  const run = S.runGoal(goal, hits, { now, market: market0, cur: localCur() });
   // (the market book learns every priced ad, so the next goal for the same thing knows the market at once)
   S.saveMarket(S.addToMarket(market0, goal.g, run.seen.filter((a) => a.lastSeen === now), now));
   // (v6.29: the matches new this run stay "unseen" until the goal is opened — Home's "What's waiting" counts them)
@@ -151,11 +154,13 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     return ((gs.find((x) => x.id === want) || gs.find((x) => (x.unseen || []).length) || gs[0]) || {}).id || null; });
   const [openAd, setOpenAd] = useState(null);       // v7.9 calm list: the ad whose details are open
   const [picking, setPicking] = useState(false), [picked, setPicked] = useState([]), [cmpOn, setCmpOn] = useState(false);   // select several → a table
-  const [fresh] = useState(() => { const gs = S.loadScout().goals; const g0 = gs.find((x) => (x.unseen || []).length); return g0 ? g0.unseen : []; });
+  // v9.9.19 (Ali's phone: "1 new" belonged to another hunt): the new ads of the goal that opened, kept while the page is open
+  const [fresh0] = useState(() => { const gs = S.loadScout().goals; const m = {}; for (const x of gs) m[x.id] = x.unseen || []; return m; });
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(null);   // { id, i, n, q }
   const [copied, setCopied] = useState("");
   const goal = data.goals.find((x) => x.id === sel) || null;
+  const fresh = (goal && fresh0[goal.id]) || [];
   const run = async (gl) => {
     if (!search) { flash && flash(tr("Scout searches the web from the Android app or the computer app.")); return; }
     setBusy({ id: gl.id, i: 0, n: 0, q: "" });
@@ -172,7 +177,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     const d = S.loadScout();
     put({ ...d, goals: d.goals.map((x) => (x.id !== goal.id ? x : { ...x, votes: { ...(x.votes || {}), [ad.id]: up ? 1 : -1 }, taste: S.learn(x.taste, ad, up) })) });
   };
-  const view = goal ? S.runGoal(goal, [], { now: Date.now(), market: S.loadMarket() }) : null;
+  const view = goal ? S.runGoal(goal, [], { now: Date.now(), market: S.loadMarket(), cur: localCur() }) : null;
   const found = view ? [...view.found].sort((a, b) => fresh.includes(b.id) - fresh.includes(a.id)) : [];
   useEffect(() => { if (!fresh.length) return; const t = setTimeout(() => { const el = document.querySelector("[data-testid=scout-ad][data-new]"); if (el && el.scrollIntoView) el.scrollIntoView({ block: "start", behavior: "smooth" }); }, 250); return () => clearTimeout(t); }, [sel]);
   const cmp = view ? view.compare : null;

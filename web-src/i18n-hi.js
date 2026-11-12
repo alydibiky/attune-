@@ -12143,4 +12143,5 @@ export const HI = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "या जोड़ने के लिए चैट या होम बॉक्स में “उलटी गिनती खोलो” कहें।",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › बाक़ी हफ़्ता दिखाते हैं। आपकी चीज़ें स्लेटी, नमाज़ हरी, Attune के ब्लॉक रंगीन।",
   "“Well done” shows the time kept and this week's total for that task.": "“शाबाश” सहेजा समय और उस काम का इस हफ़्ते का कुल दिखाता है।",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "“{t}” के लिए जाँचने को नए विज्ञापन — दबाएँ, Attune सिर्फ़ सच में मेल खाने वाले दिखाएगा।",
 };

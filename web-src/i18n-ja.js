@@ -12142,4 +12142,5 @@ export const JA = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "チャットかホームの入力欄で「カウントダウンを開いて」と言っても追加できます。",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › で週の残りを表示。自分の予定はグレー、礼拝は緑、Attune のブロックは色付き。",
   "“Well done” shows the time kept and this week's total for that task.": "「お疲れさまでした」で記録した時間とそのタスクの今週の合計が出ます。",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "「{t}」の確認したい新着広告 — タップすると Attune が本当に合うものだけを表示します。",
 };

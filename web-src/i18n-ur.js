@@ -12143,4 +12143,5 @@ export const UR = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "یا شامل کرنے کے لیے چیٹ یا ہوم باکس میں “الٹی گنتی کھولو” کہیں۔",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › باقی ہفتہ دکھاتے ہیں۔ آپ کی چیزیں سرمئی، نماز سبز، Attune کے بلاک رنگین۔",
   "“Well done” shows the time kept and this week's total for that task.": "“شاباش” محفوظ وقت اور اس کام کا اس ہفتے کا کل دکھاتا ہے۔",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "“{t}” کے لیے جانچنے کو نئے اشتہار — دبائیں، Attune صرف واقعی میل کھانے والے دکھائے گا۔",
 };

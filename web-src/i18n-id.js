@@ -12143,4 +12143,5 @@ export const IDN = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "Atau ucapkan “buka hitung mundur” di Chat atau kotak Beranda untuk menambah.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › menampilkan sisa minggu. Urusan Anda abu-abu, salat hijau, blok Attune berwarna.",
   "“Well done” shows the time kept and this week's total for that task.": "“Kerja bagus” menampilkan waktu tersimpan dan total minggu ini untuk tugas itu.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "Iklan baru untuk dicek: “{t}” — ketuk dan Attune hanya menampilkan yang benar-benar cocok.",
 };

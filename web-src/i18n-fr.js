@@ -12143,4 +12143,5 @@ export const FR = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "Ou dites « ouvrir les comptes à rebours » dans le Chat ou la case de l'accueil pour en ajouter un.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › montre le reste de la semaine. Vos choses en gris, les prières en vert, les blocs d'Attune en couleur.",
   "“Well done” shows the time kept and this week's total for that task.": "« Bravo » montre le temps gardé et le total de la semaine pour cette tâche.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "Nouvelles annonces à vérifier pour « {t} » — touchez et Attune ne montre que celles qui correspondent vraiment.",
 };

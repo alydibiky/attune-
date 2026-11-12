@@ -12142,4 +12142,5 @@ export const KO = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "채팅이나 홈 입력칸에서 “카운트다운 열어”라고 말해도 추가돼요.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ ›로 나머지 요일을 봐요. 내 일정은 회색, 기도는 초록, Attune 블록은 색깔이에요.",
   "“Well done” shows the time kept and this week's total for that task.": "“잘했어요” 화면에 기록된 시간과 그 일의 이번 주 합계가 나와요.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "“{t}” 새 광고 확인 — 누르면 Attune이 정말 맞는 것만 보여줘요.",
 };

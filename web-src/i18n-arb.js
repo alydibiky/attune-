@@ -12134,4 +12134,5 @@ export const ARB = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "أو قل «افتح العد التنازلي» في المحادثة أو مربع الرئيسية لتضيف واحدًا.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › يعرض بقية الأسبوع. أمورك رمادية، والصلاة خضراء، وكتل أتيون ملونة.",
   "“Well done” shows the time kept and this week's total for that task.": "«أحسنت» تعرض الوقت المحفوظ ومجموع الأسبوع لتلك المهمة.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "إعلانات جديدة للتحقق من «{t}» — اضغط وسيعرض أتيون المطابق فعلًا فقط.",
 };

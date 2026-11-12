@@ -12142,4 +12142,5 @@ export const TH = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "หรือพูดว่า “เปิดนับถอยหลัง” ในแชตหรือช่องหน้าหลักเพื่อเพิ่ม",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › แสดงส่วนที่เหลือของสัปดาห์ ของคุณเป็นสีเทา ละหมาดสีเขียว บล็อกของ Attune เป็นสี",
   "“Well done” shows the time kept and this week's total for that task.": "“เยี่ยมมาก” แสดงเวลาที่เก็บไว้และยอดรวมสัปดาห์นี้ของงานนั้น",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "มีประกาศใหม่ให้ตรวจสำหรับ “{t}” — แตะแล้ว Attune จะแสดงเฉพาะที่ตรงจริง",
 };

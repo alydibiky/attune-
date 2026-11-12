@@ -12142,4 +12142,5 @@ export const FA = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "یا برای افزودن، در گفتگو یا کادر خانه بگویید «شمارش معکوس را باز کن».",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › بقیهٔ هفته را نشان می‌دهد. کارهای شما خاکستری، نماز سبز، بلوک‌های Attune رنگی.",
   "“Well done” shows the time kept and this week's total for that task.": "«آفرین» زمان ذخیره‌شده و جمع این هفته برای آن کار را نشان می‌دهد.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "آگهی‌های تازه برای بررسیِ «{t}» — بزنید تا Attune فقط موارد واقعاً جور را نشان دهد.",
 };

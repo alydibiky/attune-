@@ -12142,4 +12142,5 @@ export const VI = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "Hoặc nói “mở đếm ngược” trong Chat hay ô Trang chủ để thêm.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › hiện phần còn lại của tuần. Việc của bạn màu xám, cầu nguyện màu xanh, khối của Attune có màu.",
   "“Well done” shows the time kept and this week's total for that task.": "“Làm tốt lắm” hiện thời gian đã lưu và tổng tuần này cho việc đó.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "Có tin mới cần xem cho “{t}” — chạm để Attune chỉ hiện những tin thật sự khớp.",
 };

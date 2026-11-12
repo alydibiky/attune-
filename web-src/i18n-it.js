@@ -12143,4 +12143,5 @@ export const IT = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "Oppure di' «apri conti alla rovescia» nella Chat o nella casella della Home per aggiungerne uno.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › mostra il resto della settimana. Le tue cose in grigio, le preghiere in verde, i blocchi di Attune a colori.",
   "“Well done” shows the time kept and this week's total for that task.": "«Ben fatto» mostra il tempo salvato e il totale della settimana per quell'attività.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "Nuovi annunci da controllare per «{t}»: tocca e Attune mostra solo quelli che corrispondono davvero.",
 };

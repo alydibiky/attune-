@@ -290,7 +290,11 @@ export function readAd(hit, g) {
   // v6.46: and not more than it can cost (a car's "1,850 a month" rental or a 2-billion page total is not its price either)
   const inBand = (p) => !(g && BIG[g.kind]) || (p.v >= BAND[g.kind][0] / (p.cur === "EGP" ? 1 : 50) && (g.kind === "rent" || p.v <= BAND[g.kind][1] / (p.cur === "EGP" ? 1 : 50)));   // (a sale price in a rent search stays, so the check can say so)
   const good = pick && inBand(pick) ? pick : ps.find(inBand);
-  if (good) { out.facts.price = good.v; out.facts.cur = good.cur; out.quotes.price = snip(text, good.at, String(good.v).length + 4, 12); }
+  // v9.9.19 (Ali's phone: the title said "EGP 1,490,000" and Scout showed 1,571,667 — a number from elsewhere on the page):
+  // a price written WITH its currency in the ad's own title is the ad's price
+  const tp = pricesIn(String(hit.title || "")).find((p) => p.explicit && inBand(p));
+  if (tp) { out.facts.price = tp.v; out.facts.cur = tp.cur; out.facts.curExplicit = true; out.quotes.price = String(hit.title || "").slice(0, 90); }
+  else if (good) { out.facts.price = good.v; out.facts.cur = good.cur; out.facts.curExplicit = !!good.explicit; out.quotes.price = snip(text, good.at, String(good.v).length + 4, 12); }
   let m;
   if ((m = /(\d{2,4})\s*(?:m2|m²|sqm|sq\.?\s?m|square met\w*|متر مربع|متر|م2|م²)/i.exec(t))) { out.facts.area = +m[1]; q("area", m[0]); }
   if ((m = /(\d{1,2})\s*(?:bed(?:room)?s?|br\b|rooms?|غرف|غرفه|غرفة|اوض|أوض|اوضه|أوضة)/i.exec(t))) { out.facts.beds = +m[1]; q("beds", m[0]); }
@@ -353,6 +357,10 @@ export function check(ad, g) {
   const ok = [], bad = [], unknown = [];
   const F = ad.facts, Q = ad.quotes || {};
   const line = (w, good, quote) => (good === true ? ok : good === false ? bad : unknown).push({ k: w.k, en: w.say[0], ar: w.say[1], quote: quote || "" });
+  // v9.9.19 (Ali's phone: Saudi riyal ads from syarah.com in an Egypt hunt, and "62k cheapest" next to EGP prices): an ad priced
+  // in another country's money is from another country — out (the person's own currency: g.cur, else EGP)
+  const local = g.cur || "EGP";
+  if (F.price && F.cur && F.cur !== local && (F.curExplicit || F.cur !== "EGP")) line({ k: "country", say: [`priced in ${local} (this ad is in ${F.cur})`, `بال${local === "EGP" ? "جنيه" : local} (الإعلان ده بال${F.cur})`] }, false, Q.price);
   // the budget
   if (g.max) line({ k: "price", say: [`under ${num(g.max)}`, `أقل من ${num(g.max)}`] }, F.price == null ? null : F.price <= g.max * 1.0001, Q.price);
   if (g.min) line({ k: "minPrice", say: [`over ${num(g.min)}`, `أكثر من ${num(g.min)}`] }, F.price == null ? null : F.price >= g.min, Q.price);
@@ -379,7 +387,7 @@ export function check(ad, g) {
     else r = F[w.k] == null ? null : F[w.k];
     line(w, r, Q[w.k === "notGround" ? "floor" : w.k]);
   }
-  const hard = bad.some((b) => ["price", "minPrice", "beds", "year", "km", "notGround", "place", "model", "exp"].includes(b.k));
+  const hard = bad.some((b) => ["price", "minPrice", "beds", "year", "km", "notGround", "place", "model", "exp", "country"].includes(b.k));
   const total = ok.length + bad.length + unknown.length || 1;
   const score = Math.max(0, Math.round(100 * (ok.length + 0.3 * unknown.length) / total - (hard ? 40 : 0) - 15 * bad.length));
   return { ok, bad, unknown, score, out: hard };
@@ -571,8 +579,8 @@ export function compareAds(ads) {
 // ---- 8. one run of a goal --------------------------------------------------------------------------------------------------------------
 /** hits from the searches → this run's results, merged with what was seen before.
  *  goal = { id, g, seen: [ad], taste, votes: {id: 1|-1} } → { found: [ad with check/fair/score], fresh: [ids new this run], seen }. */
-export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
-  const g = goal.g, seenIds = new Set((goal.seen || []).map((s) => s.id));
+export function runGoal(goal, hits, { now = Date.now(), market = null, cur = null } = {}) {
+  const g = cur && goal.g && !goal.g.cur ? { ...goal.g, cur } : goal.g, seenIds = new Set((goal.seen || []).map((s) => s.id));
   const ads = mergeTwins((hits || []).filter((h) => h && h.url && isAdPage(h.url, h.text || "", h.title || "")).map((h) => { const a = readAd(h, g); return { ...a, about: aboutIt(a, g, String(h.text || "")) }; }));
   // v6.46: what earlier runs kept is checked again with today's rules (an old run kept list pages, forums and "151 EGP" Tucsons)
   const band = BIG[g.kind] ? BAND[g.kind] : null;
@@ -581,7 +589,10 @@ export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
     (!band || !s.facts || s.facts.price == null || s.facts.price >= band[0] / (s.facts.cur === "EGP" ? 1 : 50));
   const seen = (goal.seen || []).filter(keep);
   for (const a of ads) { const i = seen.findIndex((s) => s.id === a.id); const rec = { ...a, firstSeen: i >= 0 ? seen[i].firstSeen : now, lastSeen: now, history: [...((i >= 0 && seen[i].history) || []), ...(a.facts.price ? [[now, a.facts.price]] : [])].slice(-30) }; if (i >= 0) seen[i] = rec; else seen.push(rec); }
-  const found = seen.filter((a) => a.lastSeen >= now - 14 * 86400000 && (goal.votes || {})[a.id] !== -1).map((a) => {
+  // v9.9.19: an ad kept by an older run is read again from its own title when the title states the price with its currency
+  const fromTitle = (a) => { const tp = pricesIn(String(a.title || "")).find((p) => p.explicit && (!band || p.v >= band[0] / (p.cur === "EGP" ? 1 : 50)));
+    return tp && (a.facts.price !== tp.v || a.facts.cur !== tp.cur) ? { ...a, facts: { ...a.facts, price: tp.v, cur: tp.cur, curExplicit: true }, quotes: { ...(a.quotes || {}), price: String(a.title || "").slice(0, 90) } } : a; };
+  const found = seen.map(fromTitle).filter((a) => a.lastSeen >= now - 14 * 86400000 && (goal.votes || {})[a.id] !== -1).map((a) => {
     const c = check(a, g), fair = fairness(a, seen, g, market ? market[marketKey(g)] : []);
     // v8.2 (Ali: "how will I know if it found something useful"): an ad with no price can't be judged — it ranks under the priced ones
     const score = Math.max(0, Math.min(100, c.score + tasteNudge(a, goal.taste) + (fair && fair.pct <= -5 ? 8 : fair && fair.pct >= 15 ? -8 : 0) + ((goal.votes || {})[a.id] === 1 ? 20 : 0)) - (a.facts.price ? 0 : 15));
@@ -628,7 +639,7 @@ export function listPrices(hit, g) {
 const pct = (xs, q) => xs[Math.min(xs.length - 1, Math.max(0, Math.round((xs.length - 1) * q)))];
 /** The comparison over everything seen: how many ads on how many sites, the usual price range, and the best value. */
 export function compareOf(found, listSeen, g) {
-  const ads = found.filter((a) => a.facts.price && a.facts.cur === "EGP" && !(a.check && a.check.bad.some((b) => b.k === "model")));
+  const ads = found.filter((a) => a.facts.price && a.facts.cur === ((g && g.cur) || "EGP") && !(a.check && a.check.bad.some((b) => b.k === "model")));
   const all = [...ads.map((a) => a.facts.price), ...(listSeen || []).map((x) => x.v)].sort((a, b) => a - b);
   const sites = {};
   for (const a of found) sites[a.site] = (sites[a.site] || 0) + 1;
@@ -746,8 +757,12 @@ export function photoTwins(ads, hashes) {
 
 /** v6.32 Scout at night: what the phone searches around 3:00 with Attune closed (ScoutNight.kt) — each goal that is on, its
     searches and the ad links already seen, so only NEW ads are kept. Max 5 goals, 6 searches, 200 links each. */
+// v9.9.19 (Ali: the night note said "51 new ads", opened another hunt, and the page showed "1 new"): each goal carries the
+// sentence its own notification says (in the person's language, no count — the night can't tell which ads match; the page
+// checks them when Attune opens and says what really matched); the notification opens THAT goal (id "scout-<goal id>").
+export const nightSay = (title) => tr("New ads to check for “{t}” — tap and Attune shows only the ones that really match.", { t: title });
 export const nightPlan = (d) => (d.goals || []).filter((x) => x.on !== false).slice(0, 5)
-  .map((x) => ({ id: x.id, title: String((x.g && x.g.what) || x.text || "").slice(0, 40), queries: searchesFor(x.g).slice(0, 6), seen: (x.seen || []).map((s) => s.url).filter(Boolean).slice(-200) }));
+  .map((x) => { const title = String((x.g && x.g.what) || x.text || "").slice(0, 40); return { id: x.id, title, say: nightSay(title), queries: searchesFor(x.g).slice(0, 6), seen: (x.seen || []).map((s) => s.url).filter(Boolean).slice(-200) }; });
 export const dueGoals = (d, now = Date.now(), hours = 12) => (d.goals || []).filter((x) => x.on !== false && now - (x.lastRun || 0) >= hours * 3600000);
 /** Is this sentence a Scout goal? ("find me a flat in Maadi under 15k", «دورلي على عربية …») */
 export const looksLikeGoal = (text) => /^\s*(find me|look for|hunt for|search for|scout|keep looking for|watch for|alert me when|tell me when)\b|^\s*(دورلي|دور لي|دوّرلي|ابحثلي|ابحث لي|شوفلي|شوف لي|نبهني لما|قولي لما)/i.test(String(text || ""));

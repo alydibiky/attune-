@@ -12143,4 +12143,5 @@ export const TRK = {
   "Or say “open countdowns” in Chat or the Home box to add one.": "Ya da eklemek için Sohbet'te veya Ana sayfa kutusunda “geri sayımları aç” de.",
   "‹ › shows the rest of the week. Your own things are grey, prayers green, Attune's blocks in colour.": "‹ › haftanın gerisini gösterir. Senin işlerin gri, namazlar yeşil, Attune'un blokları renkli.",
   "“Well done” shows the time kept and this week's total for that task.": "“Aferin” kaydedilen süreyi ve o görevin haftalık toplamını gösterir.",
+  "New ads to check for “{t}” — tap and Attune shows only the ones that really match.": "“{t}” için kontrol edilecek yeni ilanlar — dokun, Attune yalnızca gerçekten uyanları göstersin.",
 };
