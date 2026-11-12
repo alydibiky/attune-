@@ -50,8 +50,8 @@ code-ui.jsx: try { await saveFile(name, cur.code, (LANGS[cur.lang] || LANGS.pyth
 convert-ui.jsx: if (saveFile) { await saveFile(out.name, out.text || "", out.mime, out.b64); flash && flash(tr("Saved")); return; }
 donelog-ui.jsx: const r = editDone(edit.e.id, p, { loadLedger, saveLedger }); setSt(D.load()); setEdit(null); if (r.ask) setAsk(r); else flash && flash(tr("
 donelog-ui.jsx: <div className="flex gap-2"><button className={btnP} onClick={() => { const n = D.setLimits(D.load(), lim); D.save(n); setSt(n); setLim(null
+emergency-ui.jsx: const saveE = (e) => { put({ ...data, members: members.map((x) => (x.id === m.id ? { ...x, emergency: e } : x)) }); setEdit(false); flash &&
 lists-ui.jsx: if (edit === "new") { const l = L.makeList({ name, items: texts, repeat }); put(L.addList(st, l)); setOpen(l.id); flash && flash(tr("Saved")
-lists-ui.jsx: put(L.editList(st, edit, { name, repeat, items: texts.map((t) => keep.find((x) => x.text === t) || fresh.find((x) => x.text === t)) })); fla
 
 ## Removed
 actions-ui.jsx: const remove = (id) => { setReminders(reminders.filter((r) => r.id !== id)); try { native && native.unschedule && native.unschedule(id); } c
@@ -133,9 +133,9 @@ chat.jsx: {!busy ? <button onClick={() => editFrom(idx)} className="mt-0.5 min-h
 countdown-ui.jsx: <button className={btnS} onClick={() => { setEdit(open); setOpen(null); }} data-testid="countdown-edit">{tr("Edit")}</button>
 donelog-ui.jsx: {!e.undone ? <><button className="min-h-[36px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" onClick={() => setEd
 donelog-ui.jsx: <p className={label + " m-0"}>{tr("Edit")}</p>
+emergency-ui.jsx: <button className={btnS} onClick={() => setEdit(true)} data-testid="em-edit">{tr("Edit")}</button>
 habits-ui.jsx: <button className={btnP} onClick={() => { setAdd({ ...open, days: open.days || [] }); setOpen(null); }} data-testid="habit-edit">{tr("Edit")
 people-ui.jsx: <div className="flex gap-1.5 flex-wrap"><button className={btnS} onClick={() => setEdit(p)} data-testid="people-edit">{tr("Edit")}</button>
-radar-ui.jsx: <button className={U.btnS} onClick={() => onEdit(x)} data-testid="radar-edit">{tr("Edit")}</button>
 
 ## yesterday
 agents-ui.jsx: const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m 
@@ -284,8 +284,8 @@ cmdbox-ui.jsx: {l.open ? <button onClick={() => onOpen(l.open)} className="text-
 cmdbox-ui.jsx: {j.result.open ? <button onClick={() => onOpen(j.result.open)} className="h-9 px-3.5 rounded-full text-[13px] font-extrabold" style={surf} d
 home-now.js: actions: /^cheque/.test(w.kind) ? [{ id: "cleared", label: tr("It cleared") }, { id: "bounced", label: tr("Bounced") }] : [{ id: "open", lab
 home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
+people-ui.jsx: <span className={"text-[12px] font-bold shrink-0 c-acc"}>{tr("Open")} ›</span></button>)}
 spaces-ui.jsx: {sel && sel.id === a.id ? <span className="hidden lg:inline-flex self-center text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-[var(--c
-timeline-ui.jsx: {act === "errand" ? <button className={BP} onClick={() => navTo && navTo("errands")} data-testid="fu-open">{tr("Open")}</button> : null}
 
 ## See all
 agents-ui.jsx: <button onClick={() => setAt(1)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="agent-see-all">{tr("See a
@@ -935,6 +935,7 @@ spaces-ui.jsx: <button onClick={download} className="min-w-[56px] min-h-[52px] f
 chatxray-ui.jsx: <div className="rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(-
 money-sheets-ui.jsx: <span className="block text-[12px] c-sub">{d.type === "owed_to_me" ? tr("Owes you") : tr("You owe")} · <b className="tabular-nums" dir="ltr"
 people-ui.jsx: {linked.owe.iOwe ? <div className={cardPad}><p className={label + " m-0"}>{tr("You owe")}</p><b className="text-[18px] tabular-nums text-[va
+people-ui.jsx: x.src === "followups" && x.left != null && x.left > 0 ? (x.sign > 0 ? tr("Owes you") : tr("You owe")) + " " + Math.round(x.left).toLocaleStr
 
 ## Yes
 cmdbox-ui.jsx: <button onClick={onYes} className="h-10 px-5 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "#fff" }
@@ -1363,6 +1364,7 @@ notes-money-ui.jsx: <p className={"m-0 text-[11.5px] " + U.muted}>{new Date(x.wh
 ## Owes you
 money-sheets-ui.jsx: <span className="block text-[12px] c-sub">{d.type === "owed_to_me" ? tr("Owes you") : tr("You owe")} · <b className="tabular-nums" dir="ltr"
 people-ui.jsx: {linked.owe.toMe ? <div className={cardPad}><p className={label + " m-0"}>{tr("Owes you")}</p><b className="text-[18px] tabular-nums c-acc" 
+people-ui.jsx: x.src === "followups" && x.left != null && x.left > 0 ? (x.sign > 0 ? tr("Owes you") : tr("You owe")) + " " + Math.round(x.left).toLocaleStr
 
 ## Target
 money-sheets-ui.jsx: <Field label={tr("Target")}><input value={target} onChange={(e) => setTarget(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp
