@@ -150,14 +150,20 @@
         anyone and "open split" in Chat; new group (names with commas / «و»), expenses (who paid, shared by everyone or the ticked
         people), fewest payments (groups.settle), Balances, Share on WhatsApp (wa.me text), Settled (kept in the group's log). Currency
         = the country's. 23 lines × 20; tests/e2e_v9918groups.py ALL PASSED (Ali's Sahel example: 3 payments 2,250 / 1,050 / 450).
-- [ ] **B4 to-dos: T1 brain dump (typed + voice) · T3 countdowns · T2 habits · T6 focus (Play check) · T4 places · T5 week plan**
+- [x] **B4 to-dos: T1 brain dump (typed + voice) · T3 countdowns · T2 habits · T6 focus (Play check) · T4 places · T5 week plan** (phone parts of T4 / T6 open — see below)
   - [x] T3 / T2 / T6 logic: web-src/b4time.js (daysLeft by calendar — DST never shifts it; habit dueOn / streak / weekDots / goalCount
         — a day not due never breaks a streak, a day counts once; focused() — pauses out, capped at the plan). tests/b4time/gen.mjs:
         10,000 of each × 4 time zones (Cairo, London, New York, Tokyo) = 100%; planted bugs → 85% / 54% / 60%. tests/unit/v9918b4.
   - [x] T4 / T5 logic: web-src/b4plan.js (placeEvents: 150 m in, 200 m out, 2 samples in a row, < 200 m accuracy only; planWeek:
         30-min chunks, earliest deadline first, never busy / prayer / night / after the deadline; too big → late, never half).
         tests/b4plan/gen.mjs 10,000 traces in 6 cities + 10,000 weeks = 100% (Cairo, New York); planted bugs caught.
-  - [ ] T1 brain dump — first give the readers the 18 other languages (see the note below), then braindump.js + 10,000 paragraphs.
+  - [x] T1 brain dump (12 Nov): web-src/braindump.js — its own word tables for 20 languages + Franco (Intl weekday names), clauses,
+        a day carried only after a colon and only in its sentence, times (1–6 without am/pm = afternoon), amounts (Franco digits-as-letters
+        skipped), shopping lines in verb-first and verb-last languages. tests/braindump/gen.mjs 10,000 paragraphs: 48.7% first run →
+        **99.06%**; planted bugs → ~50%; held-out tests/unit/v9921braindump.test.mjs (Ali's paragraph, «غدا» = lunch, «خلص السكر» vs
+        «خلص التقرير», Franco, Chinese 、, German verb-last). Screen braindump-ui.jsx: "Organise this" under the Home box (2+ things) /
+        Tools / Chat ("open brain dump") → ticked items with type · day · time · amount, tap to fix, Save N → Mind / reminders (phone) /
+        Shopping list / Money. tests/e2e_v9921braindump.py.
   - [x] B4 SCREENS (12 Nov, rebuilt — the previous session built them but hit its limit before pushing, so they were lost):
         T3-A countdown-ui.jsx (chips under the Home box, tap → big card with days / date / bar / Edit / Remove, "+" adds; Ramadan by
         itself when prayers are on), T2-A habits-ui.jsx (Home card with this week's dots + streak, tap today's dot; hidden until the
@@ -195,6 +201,8 @@
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 
 ## Log
+- 12 Nov 2026 (evening): T1 brain dump built (reader 99.06% on 10,000 + screen). Agents combined page (Ali's OK-1…OK-4) built too
+  (agentedit.js, 10,000 edits 100%). Next: B5 people (P1 P3 P2 N1 N3 — screens already OK'd), then B6, B7, B8, B9.
 - 12 Nov 2026 (morning, new session): B4 screens T2 T3 T4 T5 T6 rebuilt, suite green, on main as v9.9.19 (branch ccr-60240af2-j35hvr, on top of
   claude/blissful-curie-d5gddb). Next: run tests/e2e_v9918b4.py + the full suite → branch APK → main; then T1 brain dump, B5.
 - 12 Nov 2026 (later): AU3 Recipes gallery + all B3 screens (M1-A salary plan, M5-B Always?, M3-A split groups) built, 20 languages,

@@ -15,7 +15,8 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 and it is BUILT: one clear list (no Cards/List/Board), all offers inside an agent each opening its own page, "What I watch" with every
 setting changeable (web-src/agentedit.js — 10,000-edit generator tests/agentedit/gen.mjs at 100%, planted bugs caught), one sheet per
 setting → checks again. Also: no EGP 120 FreeClip (agents.js believable), hotel dates in words. Old views only for old tests
-(attune:agents:legacy, set by tests/harness.py). Ali: "and do the other features" → next T1 brain dump, then B5–B9 (AUTOMATION_PLAN.md).
+(attune:agents:legacy, set by tests/harness.py). Ali: "and do the other features" → T1 brain dump BUILT (braindump.js 99.06% on 10,000
+paragraphs in 20 languages + Franco; "Organise this" screen) → next B5 people (AUTOMATION_PLAN.md), then B6–B9.
 
 ## ▶ 12 Nov, later — `main` = **v9.9.20** (versionCode 163): Ali's Scout screenshots fixed (tests/unit/v9919scout.test.mjs): the night
 note is one per hunt, id scout-<hunt> (it opened the Tucson for a Huawei watch hunt), in his language, no "51 new ads" count; ads priced
