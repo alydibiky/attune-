@@ -11,10 +11,11 @@ import { tr, getLang, dateLocale } from "./i18n.js";
 // v9.9.18 (the open list: lab results showed 2026-12-01): a day in words, as People & plans shows it
 const dayWords = (iso) => { try { return /^\d{4}-\d{2}-\d{2}$/.test(String(iso || "")) ? new Date(iso + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: "numeric" }) : iso || ""; } catch (e) { return iso || ""; } };
 import * as H from "./care.js";
+import { EmergencyTab } from "./emergency-ui.jsx";
 import { PANES, PANES_WIDE_LEFT, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { cardPad, btnP, chip, area, page, h1 } from "./ui-kit.jsx";
 
-const TABS = [["today", "Today"], ["meds", "Medicines"], ["labs", "Lab results"], ["family", "Family"]];
+const TABS = [["today", "Today"], ["meds", "Medicines"], ["labs", "Lab results"], ["family", "Family"], ["emergency", "Emergency"]];   // v9.9.24 X4
 const FREQS = [["once a day", 1], ["twice a day", 2], ["3 times a day", 3], ["4 times a day", 4], ["every 8 hours", 3], ["every 12 hours", 2], ["at bedtime", 1], ["once a week", "week"], ["only when needed", "prn"]];
 const TIMES_FOR = { "once a day": ["09:00"], "twice a day": ["09:00", "21:00"], "3 times a day": ["08:00", "14:00", "20:00"], "4 times a day": ["08:00", "12:00", "16:00", "20:00"], "every 8 hours": ["06:00", "14:00", "22:00"], "every 12 hours": ["08:00", "20:00"], "at bedtime": ["22:00"] };
 function shrink(file) { return new Promise((ok) => { const fr = new FileReader(); fr.onload = () => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", 0.85)); }; img.onerror = () => ok(""); img.src = fr.result; }; fr.onerror = () => ok(""); fr.readAsDataURL(file); }); }
@@ -264,6 +265,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
           </div></div>
         </div>) : null}
 
+      {tab === "emergency" ? <EmergencyTab data={data} put={put} flash={flash} /> : null}
       {tab === "family" ? (
         <div className="space-y-2" data-testid="care-family">
           {/* v6.27 computer layout A: the family as cards on the left (2 columns), adding someone on the right */}

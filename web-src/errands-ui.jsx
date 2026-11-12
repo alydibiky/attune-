@@ -1,6 +1,7 @@
 /* ---- v9.8 N3 Errands (Ali: "do N3 … best way possible … without any mistakes"): one box to add in your words, "Needs you" with
    the papers to bring, Open the official page (Attune's browser — your details filled; it reads what is due once you are through
    the login / code), Done · paid / renewed. The logic is errands.js (tested). Lives in Follow-ups (amber area). */
+import { UpkeepSection } from "./upkeep-ui.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Check, Trash2, ChevronDown, Loader2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -43,6 +44,8 @@ export function ErrandsPage({ nativeCall, flash, profile = {} }) {
         <button type="submit" disabled={!text.trim()} className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[13.5px] disabled:opacity-40" data-testid="errands-add">{tr("Add")}</button>
       </form>
       {err ? <p className="m-0 text-[12.5px] text-[var(--c-warn)]" data-testid="errands-err">{err}</p> : null}
+      {/* v9.9.24 B6 X2: Upkeep — the car's services and the home's, with Done / Done + cost */}
+      <UpkeepSection flash={flash} />
       {due.length ? <section className={U.card + " p-3.5 space-y-1"} style={{ borderColor: "color-mix(in srgb, var(--c-neg) 40%, var(--c-ln))" }} data-testid="errands-due">
         <p className="m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase" style={{ color: "var(--c-neg)" }}>{T("Needs you · {n}", { n: due.length })}</p>
         {due.map(({ e, why, date, days, amount }) => <div key={e.id} className="py-2 border-t first:border-t-0 border-[var(--c-ln)] space-y-2" data-testid="errand-due">
