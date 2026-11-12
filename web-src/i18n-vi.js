@@ -12263,4 +12263,5 @@ export const VI = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "Một số phần chưa qua kiểm tra — xem các mục được đánh dấu trước khi lưu.",
   "Surname": "Họ",
   "check this": "kiểm tra lại",
+  "Choose from gallery": "Chọn từ thư viện",
 };

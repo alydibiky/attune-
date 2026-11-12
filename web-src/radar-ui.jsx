@@ -5,6 +5,7 @@
    "Cancelled it" / "Returned it" / "Claimed" count in the Guardian's honest "saved" counter.
    Free: 3 active deadlines; Pro: as many as you like, plus the receipt vault. Tests: tests/e2e_v727radar.py.            */
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { choosePhoto } from "./photopick.js";
 import { readMrz } from "./mrz.js";
 import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText, ChevronDown } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
@@ -269,7 +270,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
 
       {/* by hand */}
       <div className="grid grid-cols-3 gap-2">
-        <button className={U.card + " text-center py-3 px-1 min-h-[72px] hover:border-[var(--c-acc)]"} onClick={() => (full ? openPlan && openPlan() : fileRef.current && fileRef.current.click())} data-testid="radar-scan"><Camera size={18} className="text-[var(--c-acc)] mx-auto" /><span className="block text-[12.5px] font-bold mt-1">{tr("Scan a receipt")}</span></button>
+        <button className={U.card + " text-center py-3 px-1 min-h-[72px] hover:border-[var(--c-acc)]"} onClick={() => (full ? openPlan && openPlan() : choosePhoto(fileRef.current))} data-testid="radar-scan"><Camera size={18} className="text-[var(--c-acc)] mx-auto" /><span className="block text-[12.5px] font-bold mt-1">{tr("Scan a receipt")}</span></button>
         <button className={U.card + " text-center py-3 px-1 min-h-[72px] hover:border-[var(--c-acc)]"} onClick={() => (full ? openPlan && openPlan() : setMode(mode === "paste" ? null : "paste"))} data-testid="radar-paste"><ClipboardPaste size={18} className="text-[var(--c-acc)] mx-auto" /><span className="block text-[12.5px] font-bold mt-1">{tr("Paste or type")}</span></button>
         <button className={U.card + " text-center py-3 px-1 min-h-[72px] hover:border-[var(--c-acc)]"} onClick={() => { if (full) { openPlan && openPlan(); return; } setEdit({}); setMode("form"); }} data-testid="radar-add"><Plus size={18} className="text-[var(--c-acc)] mx-auto" /><span className="block text-[12.5px] font-bold mt-1">{tr("Add by hand")}</span></button>
       </div>

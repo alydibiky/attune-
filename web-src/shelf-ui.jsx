@@ -2,6 +2,7 @@
    two per row). Data and rules: shelf.js. A note IS a Mind record (one source of truth), so the
    screen gets the records and a setter from the app, like Mind does.                             */
 import * as MN from "./mentions.js";
+import { choosePhoto } from "./photopick.js";
 import { loadDir as loadPeople, saveDir as savePeople, addCard as addPeopleCard } from "./entities.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Lock, Mic, PenLine, Menu, AlarmClock, Search, Plus, MoreVertical, X, Star, Bell, Trash2, Copy, Share2, Brain, ArrowUp, ArrowDown, Folder, Check, ImagePlus, Undo2, Camera, ChevronLeft, ChevronRight, Square, BookOpen, Download } from "lucide-react";
@@ -243,7 +244,7 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
       <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-[var(--c-bg)] lg:justify-center" data-testid="shelf-editor-bar">
         <button className={btn} onClick={() => setSheet("more")} data-testid="shelf-note-more"><MoreVertical size={13} />{tr("More")}</button>
         <button className={btn} onClick={() => photoRef.current && photoRef.current.click()}><ImagePlus size={13} />{tr("Photo")}</button>
-        <button className={btn} onClick={() => camRef.current && camRef.current.click()}><Camera size={13} />{tr("Camera")}</button>
+        <button className={btn} onClick={() => choosePhoto(camRef.current)}><Camera size={13} />{tr("Camera")}</button>
         <button className={btn} onClick={() => setSheet("sketch")} data-testid="shelf-note-sketch"><PenLine size={13} />{tr("Sketch")}</button>
         <button className={btn + (hearing ? " !text-[var(--c-acc)] !border-[var(--c-acc)]" : "")} onClick={dictate} data-testid="shelf-note-voice"><Mic size={13} />{hearing ? tr("Listening…") : tr("Voice")}</button>
         <input ref={camRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { addPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} />

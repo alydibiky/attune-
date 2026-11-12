@@ -23,7 +23,7 @@ with sync_playwright() as p:
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_timeout(1800)
     # N3
     c = page.locator("[data-testid=home-onthisday]")
-    check(c.count() == 1 and "A year ago today" in c.inner_text() and "3,500" in c.inner_text() and "car instalment" in c.inner_text(), "N3: 'A year ago today' — the car instalment 3,500: " + (c.inner_text().replace("\n", " ") if c.count() else "none"))
+    check(c.count() == 1 and "a year ago today" in c.inner_text().lower() and "3,500" in c.inner_text() and "car instalment" in c.inner_text(), "N3: 'A year ago today' — the car instalment 3,500: " + (c.inner_text().replace("\n", " ") if c.count() else "none"))
     page.click("[data-testid=onthisday-nice]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=home-onthisday]").count() == 0, "N3: Nice hides it for today")
     # P3 on Home (after 9:00 only)

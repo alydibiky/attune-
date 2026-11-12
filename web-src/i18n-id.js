@@ -12264,4 +12264,5 @@ export const IDN = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "Beberapa bagian tidak lolos pemeriksaan — lihat yang ditandai sebelum menyimpan.",
   "Surname": "Nama keluarga",
   "check this": "periksa ini",
+  "Choose from gallery": "Pilih dari galeri",
 };

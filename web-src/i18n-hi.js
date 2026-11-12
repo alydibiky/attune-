@@ -12264,4 +12264,5 @@ export const HI = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "कुछ हिस्से जाँच में पास नहीं हुए — सहेजने से पहले चिह्नित देखें।",
   "Surname": "उपनाम",
   "check this": "इसे जाँचें",
+  "Choose from gallery": "गैलरी से चुनें",
 };

@@ -12263,4 +12263,5 @@ export const BN = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "কিছু অংশ যাচাইয়ে পাস করেনি — সংরক্ষণের আগে চিহ্নিতগুলো দেখুন।",
   "Surname": "পদবি",
   "check this": "এটা দেখুন",
+  "Choose from gallery": "গ্যালারি থেকে বাছুন",
 };

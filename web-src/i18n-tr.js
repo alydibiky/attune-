@@ -12264,4 +12264,5 @@ export const TRK = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "Bazı kısımlar kontrolü geçemedi — kaydetmeden önce işaretlilere bak.",
   "Surname": "Soyadı",
   "check this": "kontrol et",
+  "Choose from gallery": "Galeriden seç",
 };

@@ -12263,4 +12263,5 @@ export const JA = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "一部が確認に通りませんでした。保存前に印の付いた項目を見てください。",
   "Surname": "姓",
   "check this": "要確認",
+  "Choose from gallery": "ギャラリーから選ぶ",
 };

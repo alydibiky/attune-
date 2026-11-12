@@ -12264,4 +12264,5 @@ export const FR = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "Certaines parties n'ont pas passé la vérification — regardez celles qui sont marquées avant d'enregistrer.",
   "Surname": "Nom",
   "check this": "à vérifier",
+  "Choose from gallery": "Choisir dans la galerie",
 };

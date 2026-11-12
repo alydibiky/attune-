@@ -12264,4 +12264,5 @@ export const SW = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "Sehemu fulani hazikupita ukaguzi — angalia zilizowekwa alama kabla ya kuhifadhi.",
   "Surname": "Jina la ukoo",
   "check this": "kagua hili",
+  "Choose from gallery": "Chagua kutoka matunzio",
 };

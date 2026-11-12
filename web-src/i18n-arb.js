@@ -12255,4 +12255,5 @@ export const ARB = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "بعض الأجزاء لم تجتز التحقق — راجع المعلَّم قبل الحفظ.",
   "Surname": "اسم العائلة",
   "check this": "راجِع هذا",
+  "Choose from gallery": "اختر من المعرض",
 };

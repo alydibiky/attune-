@@ -12263,4 +12263,5 @@ export const FA = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "برخی بخش‌ها از بررسی رد نشدند — پیش از ذخیره موارد علامت‌خورده را ببینید.",
   "Surname": "نام خانوادگی",
   "check this": "بررسی کنید",
+  "Choose from gallery": "انتخاب از گالری",
 };

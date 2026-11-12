@@ -13,6 +13,7 @@ import { CountdownChips } from "./countdown-ui.jsx";
 import { HabitsCard } from "./habits-ui.jsx";
 import { worthOrganising } from "./braindump-ui.jsx";
 import { OnThisDayCard, PeopleHomeCard } from "./b5-ui.jsx";
+import { choosePhoto } from "./photopick.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyStart, btnP as UbtnP, btnS as UbtnS, inp as Uinp } from "./ui-kit.jsx";
 import { loadAgents } from "./agents.js";
@@ -309,8 +310,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           placeholder={tr("Ask or add anything…")} className="flex-1 min-w-0 bg-transparent focus:outline-none text-[15px]" style={{ color: "var(--c-ink)" }} />
         {/* v6.27 Read it to me: any paper read aloud, explained and acted on */}
         {/* v8.7 (persona 4, idea 9): one camera that knows what it sees — receipt, plate, bill, page, sign, barcode */}
-        {cmd && cmd.smartPhoto ? <label aria-label={tr("Smart camera")} title={tr("Smart camera")} className="w-8 h-8 rounded-full grid place-items-center c-sub cursor-pointer" data-testid="home-smartcam"><ImageIcon size={17} />
-          <input type="file" accept="image/*" capture="environment" className="hidden" data-testid="home-smartcam-input" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) cmd.smartPhoto(f); }} /></label> : null}
+        {cmd && cmd.smartPhoto ? <><button type="button" onClick={() => choosePhoto(document.querySelector("[data-testid=home-smartcam-input]"))} aria-label={tr("Smart camera")} title={tr("Smart camera")} className="w-8 h-8 rounded-full grid place-items-center c-sub cursor-pointer" data-testid="home-smartcam"><ImageIcon size={17} /></button>
+          <input type="file" accept="image/*" capture="environment" className="hidden" data-testid="home-smartcam-input" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) cmd.smartPhoto(f); }} /></> : null}
         <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-8 h-8 rounded-full grid place-items-center c-sub" data-testid="home-read"><Camera size={17} /></button>
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>)}

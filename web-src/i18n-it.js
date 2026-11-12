@@ -12264,4 +12264,5 @@ export const IT = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "Alcune parti non hanno superato il controllo: guarda quelle segnate prima di salvare.",
   "Surname": "Cognome",
   "check this": "controlla",
+  "Choose from gallery": "Scegli dalla galleria",
 };

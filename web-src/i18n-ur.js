@@ -12264,4 +12264,5 @@ export const UR = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "کچھ حصے جانچ میں پورے نہیں اترے — محفوظ کرنے سے پہلے نشان زدہ دیکھیں۔",
   "Surname": "خاندانی نام",
   "check this": "اسے جانچیں",
+  "Choose from gallery": "گیلری سے چنیں",
 };

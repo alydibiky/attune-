@@ -12263,4 +12263,5 @@ export const TH = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "บางส่วนตรวจไม่ผ่าน — ดูส่วนที่มีเครื่องหมายก่อนบันทึก",
   "Surname": "นามสกุล",
   "check this": "ตรวจตรงนี้",
+  "Choose from gallery": "เลือกจากคลังภาพ",
 };

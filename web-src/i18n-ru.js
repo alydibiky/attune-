@@ -12263,4 +12263,5 @@ export const RU = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "Некоторые части не прошли проверку — посмотрите отмеченные перед сохранением.",
   "Surname": "Фамилия",
   "check this": "проверьте",
+  "Choose from gallery": "Выбрать из галереи",
 };

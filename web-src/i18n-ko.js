@@ -12263,4 +12263,5 @@ export const KO = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "일부가 확인을 통과하지 못했어요 — 저장 전에 표시된 항목을 보세요.",
   "Surname": "성",
   "check this": "확인하세요",
+  "Choose from gallery": "갤러리에서 선택",
 };

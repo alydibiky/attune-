@@ -4,6 +4,7 @@
    results (read from a report, judged only by its printed range, trends) · Family. See care.js for the safety rules.
    Tests: tests/e2e_v727care.py.                                                                                              */
 import React, { useEffect, useRef, useState } from "react";
+import { choosePhoto } from "./photopick.js";
 import { Heart, Camera, Pencil, Plus, Check, AlertTriangle, Trash2, Users, Pill } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 // v9.9.18 (the open list: lab results showed 2026-12-01): a day in words, as People & plans shows it
@@ -194,7 +195,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
           {/* v6.27 computer layout A: the ways in and the forms on the left, the warnings and the medicines on the right */}
           <div className={PANES}><div className={L3}>
           <div className="grid grid-cols-3 gap-2">
-            <button className={cardPad + " text-center py-3"} onClick={() => fileRx.current && fileRx.current.click()} data-testid="care-rx-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Prescription photo")}</span></button>
+            <button className={cardPad + " text-center py-3"} onClick={() => choosePhoto(fileRx.current)} data-testid="care-rx-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Prescription photo")}</span></button>
             <button className={cardPad + " text-center py-3"} onClick={() => setTyping(typing === "rx" ? "" : "rx")} data-testid="care-rx-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Type it")}</span></button>
             <button className={cardPad + " text-center py-3"} onClick={() => setDrafts((x) => [...x, { _k: "h" + Date.now() }])} data-testid="care-rx-hand"><Plus size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Add by hand")}</span></button>
           </div>
@@ -234,7 +235,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
           {/* v6.27 computer layout A: adding results on the left, each test over time on the right */}
           <div className={PANES}><div className={L3}>
           <div className="grid grid-cols-2 gap-2">
-            <button className={cardPad + " text-center py-3"} onClick={() => fileLab.current && fileLab.current.click()} data-testid="care-lab-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Photo of a lab report")}</span></button>
+            <button className={cardPad + " text-center py-3"} onClick={() => choosePhoto(fileLab.current)} data-testid="care-lab-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Photo of a lab report")}</span></button>
             <button className={cardPad + " text-center py-3"} onClick={() => setTyping(typing === "lab" ? "" : "lab")} data-testid="care-lab-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Type results")}</span></button>
           </div>
           <input ref={fileLab} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { photo(e.target.files && e.target.files[0], "lab"); e.target.value = ""; }} data-testid="care-lab-file" />

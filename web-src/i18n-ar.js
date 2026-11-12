@@ -9349,4 +9349,5 @@ export const AR = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "في حاجات ما عدّتش المراجعة — بص على المعلّم عليه قبل ما تحفظ.",
   "Surname": "اسم العيلة",
   "check this": "راجع ده",
+  "Choose from gallery": "اختار من الصور",
 };

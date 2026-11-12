@@ -3,6 +3,7 @@
    sentence at a time with the sentence lit up; big buttons; Slower; "Read it in my language" through the checked translator.
    Then it acts: a due date → Deadline Radar, medicines → Family health, a bill → Money. Logic: readaloud.js (all code).    */
 import React, { useEffect, useRef, useState } from "react";
+import { choosePhoto } from "./photopick.js";
 import { X, Camera, ImagePlus, Play, Pause, Bell, Pill, Wallet, Languages, Volume2, Sparkles } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as R from "./readaloud.js";
@@ -70,7 +71,7 @@ function ReadSheet({ init, readText, llm, native, remind, flash, onClose }) {
         {!text && !busy ? (<div className="space-y-3 py-2">
           <p className="c-sub m-0 text-[14px]">{tr("Point the camera at any paper — a bill, a letter, a medicine box, a sign. I'll read it to you and tell you what to do.")}</p>
           <div className="grid md:grid-cols-2 gap-3">
-            <button className={big} style={{ background: "var(--c-acc)", color: "var(--c-on-acc)" }} onClick={() => cam.current && cam.current.click()} data-testid="read-camera"><Camera size={22} />{tr("Take a photo")}</button>
+            <button className={big} style={{ background: "var(--c-acc)", color: "var(--c-on-acc)" }} onClick={() => choosePhoto(cam.current)} data-testid="read-camera"><Camera size={22} />{tr("Take a photo")}</button>
             <button className={big} style={{ background: "var(--c-soft)", color: "var(--c-acc)" }} onClick={() => pick.current && pick.current.click()} data-testid="read-pick"><ImagePlus size={22} />{tr("Choose a photo")}</button>
           </div></div>) : null}
         {busy ? <div className="flex flex-col items-center gap-3 py-6" aria-busy="true"><span className="w-16 h-16 rounded-full fit-pulse" style={{ background: "var(--c-acc)", opacity: 0.4 }} /><p className="m-0 text-[15px]">{busy}</p></div> : null}

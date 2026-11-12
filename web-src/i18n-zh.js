@@ -12263,4 +12263,5 @@ export const ZH = {
   "Some parts didn't pass their check — look at the marked ones before saving.": "有些部分未通过校验——保存前请查看标记的项。",
   "Surname": "姓",
   "check this": "请核对",
+  "Choose from gallery": "从相册选择",
 };
