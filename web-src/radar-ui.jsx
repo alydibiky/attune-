@@ -7,6 +7,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { choosePhoto } from "./photopick.js";
 import { readMrz } from "./mrz.js";
+import { findIds, decodeId } from "./egid.js";
 import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText, ChevronDown } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { DocPhotos, DocDetails, DocCover, coverNote } from "./docs-ui.jsx";
@@ -163,7 +164,8 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const [edit, setEdit] = useState(null);         // an item or a draft in the form
   const [text, setText] = useState("");
   const [photo, setPhoto] = useState("");
-  const [mrz, setMrz] = useState(null);   // v9.9.22 X1: a passport / ID read from its photo, to check and save
+  const [mrz, setMrz] = useState(null);
+  const [egid, setEgid] = useState(null);   // v9.9.23: an Egyptian national ID number found in the photo   // v9.9.22 X1: a passport / ID read from its photo, to check and save
   const [busy, setBusy] = useState("");
   const [q, setQ] = useState("");
   const fileRef = useRef(null);
@@ -216,6 +218,8 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
     // v9.9.22 X1 (Ali: "upload the photo of the passport … it fills out all info"): a passport / ID card's coded lines → every field
     const mz = txt ? readMrz(txt) : null;
     if (mz && mz.expiry) { setMrz({ ...mz, photo: key }); return; }
+    const eg = txt ? findIds(txt).map((n) => decodeId(n)).find((x) => x.ok) : null;
+    if (eg) { const exp = D.readDeadlines(txt, opts()).find((x) => x.kind === "expiry"); setEgid({ number: eg.number, expiry: exp ? exp.date : "", photo: key }); return; }
     const found = txt ? D.readDeadlines(txt, opts()) : [];
     if (found.length) setDrafts(found.map((x, i) => ({ ...x, photo: key, source: "photo", _k: key + ":" + i })));
     else { setEdit({ photo: key, source: "photo", note: txt.slice(0, 160) }); setMode("form"); flash && flash(tr("Couldn't find a date in the photo — fill it in, the photo is kept")); }
@@ -231,6 +235,10 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   // the right panel has something a phone shows (else it keeps no gap, as before)
   const rightHas = data.items.length > 3 || (!V.soon.length && !V.later.length && !drafts.length && mode !== "form") || [V.soon, V.later, V.done.slice(0, 20)].some((l) => l.filter(match).length);
 
+  if (egid) return <EgIdCard m={egid} onCancel={() => setEgid(null)} onSave={(v) => {
+    const d = decodeId(v.number); const it = saveOne({ kind: "expiry", doc: "id", title: tr("National ID") + (v.name ? " · " + v.name : ""), date: v.expiry,
+      note: [v.number, d.ok ? tr("Born {d}", { d: d.birth }) : "", d.ok ? (getLang() === "ar" ? d.governorateAr : d.governorate) : ""].filter(Boolean).join(" · "), photo: v.photo, source: "photo" });
+    if (it) setEgid(null); }} />;
   if (mrz) return <MrzCard m={mrz} onCancel={() => setMrz(null)} onSave={(v) => {
     const label = { passport: tr("Passport"), id: tr("ID card"), visa: tr("Visa") }[v.doc] || tr("Document");
     const name = [v.given, v.surname].filter(Boolean).join(" ");
@@ -330,5 +338,26 @@ function MrzCard({ m, onCancel, onSave }) {
     <p className={"m-0 text-[12.5px] " + U.muted}>{m.doc === "passport" ? tr("I'll remind you 6 months before it ends — many countries ask for 6 months left.") : tr("I'll remind you before it ends.")}</p>
     <div className="flex gap-2"><button className={U.btnP + " flex-1"} disabled={!v.expiry} onClick={() => onSave(v)} data-testid="mrz-save">{tr("Save")}</button>
       <button className={U.btnS} onClick={onCancel}>{tr("Cancel")}</button></div>
+  </div>;
+}
+
+/* ---- v9.9.23: an Egyptian national ID — the 14-digit number decoded by code (egid.js): birth date, governorate, sex; the expiry from the back */
+function EgIdCard({ m, onCancel, onSave }) {
+  const [v, setV] = useState({ ...m, name: "" }), d = decodeId(v.number);
+  const WHY = { length: "The number must have 14 digits.", century: "It must start with 2 or 3.", date: "The birth date inside it isn't a real date.", future: "The birth date inside it is in the future.", governorate: "The governorate code inside it doesn't exist." };
+  const sexName = (x) => (x === "M" ? tr("Male") : tr("Female"));
+  return <div className={U.page + " rounded-[20px] p-4 space-y-3"} data-testid="radar-egid">
+    <h2 className={U.pageH1}>{tr("National ID — I read this")}</h2>
+    <div className={U.cardPad + " space-y-2"}>
+      <label className="block"><span className={"text-[12px] font-extrabold " + U.muted}>{tr("National ID number")}</span>
+        <input dir="ltr" inputMode="numeric" value={v.number} onChange={(e) => setV({ ...v, number: e.target.value })} className={U.inp + (d.ok ? "" : " !border-[var(--c-warn)]")} data-testid="egid-number" /></label>
+      {d.ok ? <div className="text-[13.5px] space-y-0.5" data-testid="egid-decoded"><div>{tr("Date of birth")}: <b>{d.birth}</b></div><div>{tr("Governorate")}: <b>{getLang() === "ar" ? d.governorateAr : d.governorate}</b></div><div>{tr("Sex")}: <b>{sexName(d.sex)}</b></div>
+        <p className={"m-0 text-[12px] " + U.muted}>{tr("Worked out from the number itself — exact.")}</p></div>
+        : <p className="m-0 text-[13px] text-[var(--c-warn)]" data-testid="egid-why">{tr(WHY[d.why] || "Check the number.")}</p>}
+      <label className="block"><span className={"text-[12px] font-extrabold " + U.muted}>{tr("Name (optional)")}</span><input dir="auto" value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className={U.inp} data-testid="egid-name" /></label>
+      <label className="block"><span className={"text-[12px] font-extrabold " + (v.expiry ? U.muted : "text-[var(--c-warn)]")}>{tr("Expiry date")}{v.expiry ? "" : " · " + tr("on the back of the card")}</span>
+        <input type="date" value={v.expiry} onChange={(e) => setV({ ...v, expiry: e.target.value })} className={U.inp} data-testid="egid-expiry" /></label>
+    </div>
+    <div className="flex gap-2"><button className={U.btnP + " flex-1"} disabled={!d.ok || !v.expiry} onClick={() => onSave(v)} data-testid="egid-save">{tr("Save")}</button><button className={U.btnS} onClick={onCancel}>{tr("Cancel")}</button></div>
   </div>;
 }

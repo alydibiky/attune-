@@ -11,6 +11,14 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ 12 Nov, night (branch, not main yet) — Egyptian national ID (egid.js: the 14-digit number → birth date, governorate, sex, exact;
+10,000 at 100%) + its card on Dates. **Honest limit found:** the phone's text reader (ML Kit) is LATIN ONLY — it reads passports' coded
+lines, English papers and Latin digits, NOT Arabic letters or Arabic-Indic digits. Measured here on rendered Egyptian-ID images:
+Tesseract ara 0/40 on the number line, PaddleOCR arabic_PP-OCRv3 (ONNX, Apache-2.0, 2.4 + 9 MB) reads Arabic words but drops digits
+(its dictionary has no ٠). So Arabic papers on a real phone reach these readers only through the on-device vision model's transcription
+(readTextAny) or typing. Next step for exact Arabic: train a small Arabic-digit reader on rendered fonts (needs Ali's OK — adds a model).
+Also: tests/docs/gen.mjs Arabic cases assume the text was read; they test the parsing, not the camera.
+
 ## ▶ 12 Nov, late — `main` = **v9.9.22** (versionCode 165): photos from the gallery on every photo button (photopick.js), passport / ID
 scan on Dates (mrz.js, 10,000 at 100%, ICAO specimens), papers from a photo (warranty / subscription / trial / licence / car licence /
 insurance / visa — tests/docs/gen.mjs 77.3% → 100%; deadlines.js fixOcrDigits), B5 N3 "a year ago today" + P1 Keep in touch + P3
