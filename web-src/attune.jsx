@@ -169,9 +169,13 @@ import { readDeadlines, addDeadline, loadRadar, saveRadar } from "./deadlines.js
 import { loadStores as loadLifeStores } from "./lifeask.js";
 import { setExtraSchedule } from "./actions.js";
 import { beforeMeet } from "./beforemeet.js";
+import { flightAlerts } from "./trip-ui.jsx";
+import { loadTrip as loadTripStore } from "./travel.js";
 // v9.9.23 P2: one hour before a reminder that names one person, what is still open with them — registered when the app loads, so the
 // first sync on opening already keeps these notifications (syncToPhone schedules them with the reminders)
 setExtraSchedule((list) => { try { return beforeMeet(list, loadLifeStores(), loadPeopleDir()); } catch (e) { return []; } });
+// v9.9.25 TR2: the flight day's notifications (check-in open, leave now, gate / delay from the airline) — kept in step the same way
+setExtraSchedule(() => { try { return flightAlerts(loadTripStore()); } catch (e) { return []; } }, "flight");
 import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll, studioPaused } from "./device.js";
 import { TravelPage } from "./travel-ui.jsx";
 import { OwedHost } from "./owed-ui.jsx";
@@ -7814,7 +7818,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.24";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.25";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 

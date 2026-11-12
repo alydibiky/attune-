@@ -3,6 +3,7 @@
    the key facts, money and the fair-price check) · Say it (hand-written phrases: copy, speak aloud, show big; a sign or a menu
    → Translate) · Ask · Know (overcharges, money, manners, health and everything else, folded).
    The logic is in travel.js (code decides; tests/unit/v727travel.test.mjs). Tests: tests/e2e_v727travel.py.               */
+import { TripBookings, FlightDayCard, TripMoney, TripPapers } from "./trip-ui.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { Plane, Languages, RefreshCw, Loader2, Copy, Volume2, AlertTriangle, Maximize2, X, Search, Camera, ShieldCheck, Bell, MapPin, Check } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -12,7 +13,7 @@ import * as D from "./deadlines.js";
 import { speakNow } from "./lesson-ui.jsx";
 import { openOwed } from "./owed-ui.jsx";
 
-const TABS = [["trip", "Trip"], ["arrive", "Arrive"], ["say", "Say it"], ["ask", "Ask"], ["know", "Know"]];
+const TABS = [["trip", "Trip"], ["money", "Money"], ["papers", "Papers"], ["arrive", "Arrive"], ["say", "Say it"], ["ask", "Ask"], ["know", "Know"]];   // v9.9.25 TR3: + Money · Papers
 // v6.27 computer layout A: two equal columns inside a tab (one under the other on a phone)
 const COLS = "lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start";
 const field = K.inp.replace("w-full ", "");
@@ -143,11 +144,16 @@ export function TravelPage(p) {
         </Section>
       ) : null}
 
+      {/* v9.9.25 B7 TR1 / TR2: bookings found (ask first) and the flight day — even before a country is chosen */}
+      {!pack || tab === "trip" ? <div className="space-y-2"><FlightDayCard trip={trip} setTrip={setTrip} /><TripBookings trip={trip} setTrip={setTrip} flash={flash} /></div> : null}
       {pack ? (<>
         <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" role="tablist">
           {TABS.map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className={K.chip(tab === id)} onClick={() => setTab(id)} data-testid={"travel-tab-" + id}>{tr(l)}</button>)}
         </div>
 
+        {/* v9.9.25 B7: the trip's money and papers (TR3) */}
+        {tab === "money" ? <TripMoney trip={trip} setTrip={setTrip} cur={(rates && rates.home) || "EGP"} tripCur={(pack && pack.cur) || ""} /> : null}
+        {tab === "papers" ? <TripPapers trip={trip} setTrip={setTrip} passport={((radar.items || []).filter((x) => x.doc === "passport" && x.status !== "done").map((x) => x.date).sort().pop()) || ""} /> : null}
         {tab === "trip" ? (<div className={"space-y-3 " + COLS}>
           {/* v6.27 computer layout A: the trip and the passport on the left; entry, flights and the rest on the right */}
           <div className="space-y-3">

@@ -4,6 +4,8 @@
    areas (v6.29: replaced by "Recent" — the last 4 tools with what waits there; TODAY became "What's waiting": also new Scout
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
+import { FlightDayCard, nextFlight } from "./trip-ui.jsx";
+import { loadTrip } from "./travel.js";
 import { enterSends } from "./keys.js";
 import { AutopilotCard } from "./autopilot-ui.jsx";
 import { myCountry } from "./country.js";
@@ -346,6 +348,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {minimal && !rep && worthOrganising(text) ? <button onClick={() => window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text } }))} className="w-full min-h-[44px] rounded-[14px] font-extrabold text-[13.5px] inline-flex items-center justify-center gap-1.5" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }} data-testid="home-organise"><Sparkles size={15} />{tr("Organise this")}</button> : null}
       {/* v9.9.19 T3 (Ali picked A, "make it openable"): countdown chips under the box; tap → the big card */}
       {minimal && !rep ? <CountdownChips /> : null}
+      {/* v9.9.25 TR2: on the flight day (the next 24 h) its card ticks along on Home */}
+      {!rep && nextFlight(loadTrip(), Date.now(), 1) ? <FlightDayCard trip={loadTrip()} /> : null}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
       {/* persona 9 (Ali picked H-E): on the 1st–3rd, last month in one card (monthreview.js); × hides it for that month */}
       {!rep ? <MonthCard /> : null}

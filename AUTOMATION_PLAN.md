@@ -214,7 +214,14 @@
   - X6 schoolmsg.js + school-ui.jsx (Family → a child → School): class-group messages (8 school languages) → exam / fee / trip / bring /
     holiday / meeting; "which Thursday?", no day, no amount asked; Add N with reminders; the two weeks editable. 10,000 messages.
   - Phone parts still to do: the emergency card on the lock screen (Kotlin).
-- [ ] **B7 travel: TR1 trip from bookings · TR2 flight day · TR3 trip money & papers**
+- [x] **B7 travel: TR1 trip from bookings · TR2 flight day · TR3 trip money & papers** (v9.9.25)
+  - TR1 bookings.js (B — ask first): flights + stays from SMS / email / notifications (EN, AR), change replaces (keeps what it doesn't
+    say), cancellation by code removes; never a code read as a flight or a date. 10,000 histories. Travel → Trip (found + the list).
+  - TR2 flightday.js (A+B): check-in 24 h (or the airline's "open"), leave home = departure − 3 h / 2 h domestic − your minutes, gate /
+    boarding / delay ONLY from the airline's message; card on Home on the day + notifications (setExtraSchedule "flight"). 10,000 days.
+  - TR3 tripmoney.js (A): Money tab (budget in both currencies to the piastre, shared costs settle to zero) + Papers tab (passport rule
+    per country, visa, insurance). 10,000 trips.
+  - Not offline: the leave time from live traffic (Maps) — the person's own minutes are used.
 - [ ] **B8 AU4 scheduled AI jobs** (needs the night job)
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 

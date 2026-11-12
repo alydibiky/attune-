@@ -493,12 +493,13 @@ export function nextOccurrence(r, after) {
 
 /** Tell the phone about every reminder still to come (idempotent — same id replaces). */
 // v9.9.23 P2: other notifications made from the reminders (the "before you meet" ones) — registered by the app, kept in step here
-let extraFor = null;
-export function setExtraSchedule(fn) { extraFor = fn; }
+const extras = {};   // (several: "before you meet", the flight day…)
+export function setExtraSchedule(fn, key = "meet") { extras[key] = fn; }
+const extraFor = (list) => Object.values(extras).flatMap((f) => { try { return f(list) || []; } catch (e) { return []; } });
 export function syncToPhone(native, list) {
   if (!native || !native.schedule) return 0;
   let wanted = new Set(), n = 0;
-  if (extraFor) { try { for (const x of extraFor(list) || []) { wanted.add(x.id); native.schedule(JSON.stringify({ id: x.id, at: x.at, title: x.title, body: x.body || "", repeat: "none", until: 0 })); n++; } } catch (e) {} }
+  { try { for (const x of extraFor(list) || []) { wanted.add(x.id); native.schedule(JSON.stringify({ id: x.id, at: x.at, title: x.title, body: x.body || "", repeat: "none", until: 0 })); n++; } } catch (e) {} }
   for (const r of list) {
     if (r.done) continue;
     const at = nextOccurrence(r, Date.now() - 1000);

@@ -1738,3 +1738,4 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
   X3 what I own, X6 kids & school; X1 business card → People card), then B7 travel, B8, B9.
 - (later) B6 finished (X1 business card, X4, X2, X3, X6) — see AUTOMATION_PLAN B6. Next: B7 travel (TR1 TR2 TR3), B8 AU4, B9 N2.
   Lesson: never start a second full test run while one is going — they share ports and both fail.
+- (later) B7 travel built (TR1 TR2 TR3) — v9.9.25 (versionCode 168). Next: B8 AU4 scheduled AI jobs (needs the night job), B9 N2 voice memo.
