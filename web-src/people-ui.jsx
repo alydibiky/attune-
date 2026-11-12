@@ -10,6 +10,7 @@ import * as K from "./links.js";
 import * as LA from "./lifeask.js";
 import { loadPots } from "./planner.js";
 import { askConfirm } from "./confirm.jsx";
+import { PeopleB5, PersonB5 } from "./b5-ui.jsx";
 import { cardPad, card, btnP, btnS, inp, label, h1, muted, tag } from "./ui-kit.jsx";
 
 export const OPEN_KEY = "attune:people:open";
@@ -103,6 +104,8 @@ export function PeoplePage({ nativeCall, navTo, flash }) {
         {linked.owe.toMe ? <div className={cardPad}><p className={label + " m-0"}>{tr("Owes you")}</p><b className="text-[18px] tabular-nums c-acc" dir="ltr">{Math.round(linked.owe.toMe).toLocaleString("en-US")}</b></div> : null}
         {linked.owe.iOwe ? <div className={cardPad}><p className={label + " m-0"}>{tr("You owe")}</p><b className="text-[18px] tabular-nums text-[var(--c-warn)]" dir="ltr">{Math.round(linked.owe.iOwe).toLocaleString("en-US")}</b></div> : null}
       </div> : null}
+      {/* v9.9.22 P1 / P3: how often to talk, and their birthday / dates */}
+      <PersonB5 p={p} dir={dir} save={save} />
       <div className={cardPad + " space-y-1"} data-testid="people-linked">
         <p className={label + " m-0 mb-1"}>{tr("Everything about {n}", { n: p.name })}</p>
         {linked && linked.items.length ? linked.items.slice(0, 30).map((x) => <button key={x.id} onClick={() => navTo && navTo(x.open)} className="w-full text-start flex items-center gap-2 min-h-[44px] border-t border-[var(--c-ln)] first:border-t-0" data-testid="people-item">
@@ -118,6 +121,8 @@ export function PeoplePage({ nativeCall, navTo, flash }) {
     <div className="flex items-center justify-between gap-2"><h2 className={h1 + " flex items-center gap-2"}><Users size={20} className="c-acc" />{tr("People")}</h2>
       <button className={btnP + " h-11! min-h-[44px]! px-4!"} onClick={() => setEdit({})} data-testid="people-add"><Plus size={16} />{tr("Add")}</button></div>
     <p className={"m-0 text-[13px] " + muted}>{tr("The people, places and things in your life. Attune links everything about each one — payments, notes, messages, follow-ups — and Chat answers from it. Two with the same name? It asks which one.")}</p>
+    {/* v9.9.22 P1 Keep in touch + P3 Occasions */}
+    <PeopleB5 dir={dir} save={save} open={(id) => setOpen(id)} />
     {ask.length ? <div className={cardPad + " space-y-2"} data-testid="people-ask">
       <p className={label + " m-0"}>{tr("Who is this?")}</p>
       {ask.map((a) => <div key={a.name} className="flex items-center gap-2 flex-wrap border-t border-[var(--c-ln)] first:border-t-0 pt-2 first:pt-0" data-testid="people-ask-row">

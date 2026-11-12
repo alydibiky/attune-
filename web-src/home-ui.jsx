@@ -12,7 +12,7 @@ import { SalaryHomeCard } from "./salary-ui.jsx";
 import { CountdownChips } from "./countdown-ui.jsx";
 import { HabitsCard } from "./habits-ui.jsx";
 import { worthOrganising } from "./braindump-ui.jsx";
-import { OnThisDayCard } from "./b5-ui.jsx";
+import { OnThisDayCard, PeopleHomeCard } from "./b5-ui.jsx";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyStart, btnP as UbtnP, btnS as UbtnS, inp as Uinp } from "./ui-kit.jsx";
 import { loadAgents } from "./agents.js";
@@ -463,6 +463,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* v9.9.18 AU2 (Ali picked A): a habit Attune can do for you — one at a time */}
       {!rep ? <SalaryHomeCard /> : null}
       {!rep ? <SuggestCard flash={null} /> : null}
+      {/* v9.9.22 P3 / P1: today's birthday with a ready wish (from 9:00), else one "say hi" a day */}
+      {minimal && !rep ? <PeopleHomeCard /> : null}
       {/* v9.9.22 N3 (Ali picked A): "A year ago today" — one thing, tap → the original */}
       {minimal && !rep ? <OnThisDayCard records={cmd && cmd.api && cmd.api.records ? cmd.api.records() : []} open={(x) => (x.src === "money" ? navTo("money") : cmd && cmd.openRecord ? cmd.openRecord({ id: x.id }) : navTo("memory"))} /> : null}
       {/* v6.46 Home A: one thing Attune noticed (home-now.js) — in My report */}
