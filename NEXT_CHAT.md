@@ -11,6 +11,12 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ 12 Nov, late — `main` = **v9.9.22** (versionCode 165): photos from the gallery on every photo button (photopick.js), passport / ID
+scan on Dates (mrz.js, 10,000 at 100%, ICAO specimens), papers from a photo (warranty / subscription / trial / licence / car licence /
+insurance / visa — tests/docs/gen.mjs 77.3% → 100%; deadlines.js fixOcrDigits), B5 N3 "a year ago today" + P1 Keep in touch + P3
+Occasions (b5people.js 10,000 each). Full suite: one timing flake (e2e_v996mentions, passes alone 2/2). Next: Egyptian national ID
+front (14-digit number decode), business card → People, B5 P2 + N1, then B6 / B7.
+
 ## ▶ 12 Nov, evening — v9.9.21 (branch ccr-60240af2-j35hvr; main after the full suite): Ali OK'd the combined Agents page (OK-1…OK-4)
 and it is BUILT: one clear list (no Cards/List/Board), all offers inside an agent each opening its own page, "What I watch" with every
 setting changeable (web-src/agentedit.js — 10,000-edit generator tests/agentedit/gen.mjs at 100%, planted bugs caught), one sheet per
