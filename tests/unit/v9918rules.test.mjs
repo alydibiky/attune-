@@ -9,4 +9,6 @@ const p = (s) => +(/\(([\d.]+)%\)/.exec(s) || [])[1];
 // v9.9.23: "Switch on 2" saves two rules in the same millisecond — each must keep its own id (the second used to replace the first)
 { const RS = await import("../../web-src/rulestore.js"); const t = Date.parse("2026-11-12T10:00:00"); const a = RS.ruleId(t), b = RS.ruleId(t), c = RS.ruleId(t + 1);
   ok(a !== b && b !== c && a !== c, "rules saved in the same millisecond get different ids: " + [a, b, c].join(" ")); }
+// v9.9.25: «جمعرات» (Urdu Thursday) holds «رات» (night) — 7 in the morning must stay 07:00
+{ const R = await import("../../web-src/rules.js"); ok(JSON.stringify(R.timeIn("ہر جمعرات صبح 7 بجے")) === '{"h":7,"m":0}' && JSON.stringify(R.timeIn("الخميس الساعة 7 بالليل")) === '{"h":19,"m":0}', "Urdu Thursday at 7 stays 07:00; «7 بالليل» is 19:00"); }
 console.log(bad ? "FAIL " + bad + " failed" : "ALL PASSED"); if (bad) process.exitCode = 1;

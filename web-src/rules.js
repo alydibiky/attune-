@@ -157,8 +157,10 @@ function dayNames() {
   return DAYS;
 }
 export function daysIn(t) { const out = new Set(); let s = t; for (const [n, d] of dayNames()) { const re = NOSPACE.test(n) ? new RegExp(esc(n)) : new RegExp("(?<![\\p{L}\\p{M}])" + esc(n) + "(?![\\p{L}\\p{M}])", "u"); if (re.test(s)) { out.add(d); s = s.replace(re, " "); } } return [...out].sort(); }
-const PM = /\b(pm|p\.m\.)\b|مساء|بالليل|بليل|العصر|المغرب|soir|tarde|noche|abend|nachmittag|sera|pomeriggio|вечер|дня|akşam|aksam|sore|malam|शाम|رات|شام|عصر|شب|সন্ধ্যা|রাত|jioni|usiku|เย็น|ค่ำ|tối|chiều|晚上|下午|午後|夜|저녁|오후/u;
-const AM = /\b(am|a\.m\.)\b|الصبح|صباحا|صباحاً|matin|mañana|morgen|mattina|утр|sabah|pagi|सुबह|صبح|সকাল|asubuhi|เช้า|sáng|早上|上午|午前|朝|아침|오전/u;
+// v9.9.25: the words must START a word — «جمعرات» (Urdu Thursday) holds «رات» (night) and turned 7 in the morning into 19:00; «شب» in «شنبه»…
+// (Thai / Chinese / Japanese / Korean are written without spaces, so those stay as they are)
+const PM = /(?<![\p{L}\p{M}])(?:pm|p\.m\.|مساء|بالليل|بليل|العصر|المغرب|soir|tarde|noche|abend|nachmittag|sera|pomeriggio|вечер|дня|akşam|aksam|sore|malam|शाम|رات|شام|عصر|شب|সন্ধ্যা|রাত|jioni|usiku|tối|chiều)(?![a-z])|เย็น|ค่ำ|晚上|下午|午後|夜|저녁|오후/u;
+const AM = /(?<![\p{L}\p{M}])(?:am|a\.m\.|الصبح|صباحا|صباحاً|matin|mañana|morgen|mattina|утр|sabah|pagi|सुबह|صبح|সকাল|asubuhi|sáng)(?![a-z])|เช้า|早上|上午|午前|朝|아침|오전/u;
 /** "7", "7:30", "19h", «الساعة 7 الصبح», "下午3点", "7時", "7시" → { h, m } */
 export function timeIn(t) {
   const m = /(?:^|[^\d])(\d{1,2})(?:\s*[:.h時시点點]\s*(\d{2}))?\s*(?:o'?clock|uhr|h|horas?|heures?|ore|час\w*|saat|jam|बजे|بجے|ساعت|টায়|โมง|giờ|点|時|시)?/u.exec(t.replace(/\d{3,}|\d+\s*%/g, " "));
