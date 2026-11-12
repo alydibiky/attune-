@@ -54,3 +54,8 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
 | 6 Nov 2026 | Colours ("I didn't mean everything burgundy — darker, harder to read") | https://claude.ai/artifact/E8FbW1hcBmvmFHqWCAwk1P (C1–C5) | C1 quiet burgundy ("if done right — calm and clear") | built in v9.6 (no combined page needed: one option) |
 | 5 Nov 2026 | Agents, Month plan, Follow-ups | https://claude.ai/artifact/1HJyhGHDsm5Ko9RXpK6ZrJ (A1–A6, P1–P6, F1–F6) | A3 + A4 with offers on several dates · P2 + P4 + P5 + P6 with savings goals over any time span · F1 + F4 | https://claude.ai/artifact/2T2ZRNTemt42fTyvYX6FeY — "OK", built in v9.6 |
 | 5 Nov 2026 | Gemini research picks | https://claude.ai/artifact/GaNgb3thF9dSYox2Pt1HkA | none yet ("not inclined to accept anything" for now) | — |
+
+## 12 Nov 2026 — phone rules (Bluetooth / charging / Wi-Fi) — step 1, waiting for Ali's pick
+- Page: https://claude.ai/artifact/7HPTScnSAGUsUj6NKnK8Vf (docs/mockups/phone-rules.html). R1 A–D (how triggers fire: Bluetooth instant
+  always; charging / Wi-Fi when Attune is open · with a permanent notification · within ~15 min (recommended C) · per rule), R2 A–B (pick
+  the device from paired devices (recommended A) or learn it on the next connection).
