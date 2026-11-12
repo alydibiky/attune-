@@ -12283,4 +12283,6 @@ export const KO = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "잘 안 읽혀요 — 종이만 더 가까이, 선명하게 찍어 주세요.",
   "Take another photo": "다시 찍기",
   "Use this one anyway": "그래도 이걸로",
+  "Could be another {n}": "다른 {n}일 수도 있어요",
+  "Open in WhatsApp": "WhatsApp에서 열기",
 };

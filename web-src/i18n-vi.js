@@ -12283,4 +12283,6 @@ export const VI = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Không đọc rõ được — chụp gần và nét hơn, chỉ riêng tờ giấy.",
   "Take another photo": "Chụp lại",
   "Use this one anyway": "Vẫn dùng ảnh này",
+  "Could be another {n}": "Có thể là {n} khác",
+  "Open in WhatsApp": "Mở trong WhatsApp",
 };

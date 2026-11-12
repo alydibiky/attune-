@@ -224,7 +224,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
           <div className="space-y-1.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">
             {upcoming.map((r, i) => (
               <React.Fragment key={r.id}>{dayKey(r.next) !== dayKey(upcoming[i - 1] && upcoming[i - 1].next) ? <p className="m-0 pt-2 pb-0.5 text-[11.5px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] lg:col-span-2" data-testid="rem-day">{dayLabel(r.next)}</p> : null}
-              <div className="flex items-center gap-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item">
+              <div className="flex items-center gap-3 rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] ps-3 pe-1 py-2 min-h-[56px]" data-testid="rem-item" data-open-id={"rem:" + r.id}>
                 <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0">🔔</span>
                 <div className="flex-1 min-w-0">
                   <p dir="auto" className="text-[14px] font-bold text-[var(--c-ink)] break-words whitespace-pre-wrap m-0" data-testid="rem-title-text">{r.important || (r.nag && r.nag !== "once") ? <span className="text-[var(--c-acc)]" data-testid="rem-star" title={tr(NAG.levelOf(r.nag || NAG.IMPORTANT).en)}>★ </span> : null}{r.title}</p>

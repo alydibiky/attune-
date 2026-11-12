@@ -12284,4 +12284,6 @@ export const UR = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "صاف نہیں پڑھ سکا — صرف کاغذ کی قریب سے اور صاف تصویر لیں۔",
   "Take another photo": "دوسری تصویر لیں",
   "Use this one anyway": "پھر بھی یہی استعمال کریں",
+  "Could be another {n}": "کوئی اور {n} ہو سکتا ہے",
+  "Open in WhatsApp": "WhatsApp میں کھولیں",
 };

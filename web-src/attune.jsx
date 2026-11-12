@@ -6527,6 +6527,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     if (MONEY_PANES.some((x) => x[0] === s && s !== "home")) return setPane(s);
     setListAcc(null); setView("list");
   };
+  // v9.9.23 N1: a person's page opened one of their payments → its sheet opens on it
+  React.useEffect(() => { try { const v = localStorage.getItem("attune:money:open"); if (v) { localStorage.removeItem("attune:money:open"); openLedger(v); } } catch (e) {} }, []);
   const saveText = async (name, text, mime) => {
     try { if (NATIVE) { await nativeCall("saveFile", { name, mime, text }); flash(tr("Saved {n}", { n: name })); return; } } catch (e) {}
     try { const url = URL.createObjectURL(new Blob([text], { type: mime })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); } catch (e) {}

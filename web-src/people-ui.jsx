@@ -11,6 +11,7 @@ import * as LA from "./lifeask.js";
 import { loadPots } from "./planner.js";
 import { askConfirm } from "./confirm.jsx";
 import { PeopleB5, PersonB5 } from "./b5-ui.jsx";
+import { personSections, openOriginal } from "./personpage.js";
 import { cardPad, card, btnP, btnS, inp, label, h1, muted, tag } from "./ui-kit.jsx";
 
 export const OPEN_KEY = "attune:people:open";
@@ -77,6 +78,9 @@ export function PeoplePage({ nativeCall, navTo, flash }) {
     .sort((a, b) => (b.last || b.created || 0) - (a.last || a.created || 0));
   const card0 = open ? dir.items.find((p) => p.id === open) : null;
   const linked = useMemo(() => { if (!card0) return null; try { return K.connect(card0.name, stores, dir, { pick: card0.id }); } catch (e) { return null; } }, [card0 && card0.id, stores, dir]);
+  const sections = useMemo(() => { if (!card0) return { sections: [], count: 0 }; try { return personSections(card0, stores, dir); } catch (e) { return { sections: [], count: 0 }; } }, [card0 && card0.id, stores, dir]);
+  const [showAll, setShowAll] = useState({});
+  const waUrl = card0 && card0.contact && card0.contact.phone ? "https://wa.me/" + String(card0.contact.phone).replace(/[^\d]/g, "").replace(/^0(?=1\d{9}$)/, "20") : "";
 
   if (edit) return <div className="space-y-3" data-testid="people-page">
     <Editor init={edit} dir={dir} nativeCall={nativeCall} onCancel={() => setEdit(null)} onSave={(v) => {
@@ -106,14 +110,20 @@ export function PeoplePage({ nativeCall, navTo, flash }) {
       </div> : null}
       {/* v9.9.22 P1 / P3: how often to talk, and their birthday / dates */}
       <PersonB5 p={p} dir={dir} save={save} />
-      <div className={cardPad + " space-y-1"} data-testid="people-linked">
-        <p className={label + " m-0 mb-1"}>{tr("Everything about {n}", { n: p.name })}</p>
-        {linked && linked.items.length ? linked.items.slice(0, 30).map((x) => <button key={x.id} onClick={() => navTo && navTo(x.open)} className="w-full text-start flex items-center gap-2 min-h-[44px] border-t border-[var(--c-ln)] first:border-t-0" data-testid="people-item">
-          <span className={tag("gray") + " shrink-0"}>{srcName(x.src, ar)}</span><span className="flex-1 min-w-0 truncate text-[13.5px] font-semibold" dir="auto">{x.title}</span>
-          {x.amount ? <b className="tabular-nums text-[13px] shrink-0" dir="ltr">{Math.round(x.amount).toLocaleString("en-US")}</b> : null}
-          <span className={"text-[11.5px] shrink-0 " + muted}>{x.ts ? new Date(x.ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" }) : ""}</span></button>)
-          : <p className={"m-0 text-[13px] " + muted}>{tr("Nothing linked yet. When you write {n} (or another name of theirs) in Money, a note or a message, it shows here.", { n: p.name })}</p>}
-      </div>
+      {/* v9.9.23 N1 (Ali picked A — "and let me open the original things"): sections; every line opens ITS original */}
+      {sections.count ? sections.sections.map((sec) => <div key={sec.key} className={cardPad + " space-y-0.5"} data-testid="person-section" data-sec={sec.key}>
+        <p className={label + " m-0 mb-1"}>{tr(sec.label)}{sec.items.length > 1 ? " · " + sec.items.length : ""}</p>
+        {sec.items.slice(0, showAll[sec.key] ? 60 : 6).map((x) => <button key={x.id} onClick={() => openOriginal(x.target, navTo)} className="w-full text-start flex items-center gap-2 min-h-[48px] border-t border-[var(--c-ln)] first:border-t-0" data-testid="person-line" data-src={x.src} data-id={x.id} data-maybe={x.maybe ? "1" : ""}>
+          <span className="flex-1 min-w-0"><span className="block truncate text-[13.5px] font-semibold" dir="auto">{x.title}</span>
+            <span className={"block text-[11.5px] " + muted}>{[srcName(x.src, ar), x.ts ? new Date(x.ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: new Date(x.ts).getFullYear() === new Date().getFullYear() ? undefined : "numeric" }) : "",
+              x.src === "followups" && x.left != null && x.left > 0 ? (x.sign > 0 ? tr("Owes you") : tr("You owe")) + " " + Math.round(x.left).toLocaleString("en-US") : "",
+              x.maybe ? tr("Could be another {n}", { n: p.name }) : ""].filter(Boolean).join(" · ")}</span></span>
+          {x.amount && x.src === "money" ? <b className={"tabular-nums text-[13px] shrink-0 " + (x.sign > 0 ? "c-acc" : "")} dir="ltr">{(x.sign > 0 ? "+" : "−") + Math.round(x.amount).toLocaleString("en-US")}</b> : null}
+          <span className={"text-[12px] font-bold shrink-0 c-acc"}>{tr("Open")} ›</span></button>)}
+        {sec.items.length > 6 && !showAll[sec.key] ? <button className={"min-h-[40px] text-[13px] font-bold c-acc"} onClick={() => setShowAll({ ...showAll, [sec.key]: true })} data-testid="person-more">{tr("Show all {n}", { n: sec.items.length })}</button> : null}
+        {sec.key === "messages" && waUrl ? <button className={btnS + " mt-1"} onClick={() => { const N = window.AttuneNative; try { if (N && N.openInBrowser && N.openInBrowser(waUrl)) return; } catch (e) {} try { window.open(waUrl, "_blank"); } catch (e) {} }} data-testid="person-whatsapp">{tr("Open in WhatsApp")}</button> : null}
+      </div>)
+        : <div className={cardPad} data-testid="people-linked"><p className={"m-0 text-[13px] " + muted}>{tr("Nothing linked yet. When you write {n} (or another name of theirs) in Money, a note or a message, it shows here.", { n: p.name })}</p></div>}
     </div>;
   }
 

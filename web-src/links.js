@@ -45,9 +45,11 @@ export function itemsOf(s = {}) {
       amount: +t.amount || 0, sign: t.type === "income" ? 1 : -1, cur: t.currency || L.currency || "", open: "money" });
   }
   for (const c of (s.life && s.life.items) || []) {
-    let left = null; try { const p = progressOf(c); left = p && p.left != null ? p.left : null; } catch (e) {}
+    let left = null, finished = false; try { const p = progressOf(c); left = p && p.left != null ? p.left : null;
+      // v9.9.23: a plan with an end whose every payment / time is ticked is finished (a paid-back debt, a kept promise) — a regular never is
+      finished = !!p && c.kind !== "regular" && c.count > 0 && p.schedule.length > 0 && p.paidCount >= p.schedule.length; } catch (e) {}
     out.push({ id: "life:" + c.id, src: "followups", ts: day(c.start) || c.created || 0, title: short([c.person, c.title || c.kind].filter(Boolean).join(" · "), 90), text: [c.person, c.title, c.kind, c.note].filter(Boolean).join(" · "),
-      amount: +c.total || +c.amount || 0, sign: c.dir === "in" ? 1 : -1, left, kind: c.kind, done: !!c.done, who: c.person || "", open: "life" });
+      amount: +c.total || +c.amount || 0, sign: c.dir === "in" ? 1 : -1, left, kind: c.kind, done: !!c.done || finished, who: c.person || "", open: "life" });
   }
   for (const r of s.memory || []) {
     if (!r || r.kind === "chat" || (r.meta && r.meta.trashed)) continue;

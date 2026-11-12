@@ -12283,4 +12283,6 @@ export const JA = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "はっきり読めませんでした。紙だけを近くで、鮮明に撮ってください。",
   "Take another photo": "撮り直す",
   "Use this one anyway": "このまま使う",
+  "Could be another {n}": "別の{n}かもしれません",
+  "Open in WhatsApp": "WhatsAppで開く",
 };

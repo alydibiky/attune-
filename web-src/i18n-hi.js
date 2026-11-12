@@ -12284,4 +12284,6 @@ export const HI = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "साफ़ नहीं पढ़ पाया — सिर्फ़ काग़ज़ की पास से और साफ़ फ़ोटो लें।",
   "Take another photo": "दूसरी फ़ोटो लें",
   "Use this one anyway": "फिर भी इसे इस्तेमाल करें",
+  "Could be another {n}": "कोई और {n} हो सकता है",
+  "Open in WhatsApp": "WhatsApp में खोलें",
 };

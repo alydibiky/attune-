@@ -9372,4 +9372,7 @@ export const AR = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "مقدرتش أقراها بوضوح — صوّر الورقة لوحدها من قريب وبوضوح أكتر.",
   "Take another photo": "صوّر تاني",
   "Use this one anyway": "استخدمها كده",
+  "Messages": "الرسايل",
+  "Could be another {n}": "ممكن يكون {n} تاني",
+  "Open in WhatsApp": "افتح في واتساب",
 };

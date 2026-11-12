@@ -12284,4 +12284,6 @@ export const SW = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Sikuweza kusoma vizuri — piga picha ya karibu na wazi zaidi ya karatasi tu.",
   "Take another photo": "Piga picha nyingine",
   "Use this one anyway": "Tumia hii hata hivyo",
+  "Could be another {n}": "Huenda ni {n} mwingine",
+  "Open in WhatsApp": "Fungua kwenye WhatsApp",
 };

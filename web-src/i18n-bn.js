@@ -12283,4 +12283,6 @@ export const BN = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "পরিষ্কার পড়া গেল না — শুধু কাগজটার কাছ থেকে আরও স্পষ্ট ছবি তুলুন।",
   "Take another photo": "আরেকটা ছবি তুলুন",
   "Use this one anyway": "তবুও এটাই ব্যবহার করুন",
+  "Could be another {n}": "অন্য কোনো {n} হতে পারে",
+  "Open in WhatsApp": "WhatsApp-এ খুলুন",
 };

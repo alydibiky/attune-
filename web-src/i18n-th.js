@@ -12283,4 +12283,6 @@ export const TH = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "อ่านได้ไม่ชัด — ถ่ายเฉพาะกระดาษให้ใกล้และคมชัดขึ้น",
   "Take another photo": "ถ่ายใหม่",
   "Use this one anyway": "ใช้รูปนี้ไปก่อน",
+  "Could be another {n}": "อาจเป็น {n} คนอื่น",
+  "Open in WhatsApp": "เปิดใน WhatsApp",
 };

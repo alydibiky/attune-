@@ -129,7 +129,7 @@ function Item({ c, onTick, onRemove, onPay, onWho, onPayer }) {
   // a regular (the maid every Saturday): the last few days and the next one — ticked = she came, and it's in Money
   const show = c.kind === "regular" ? pr.schedule.slice(Math.max(0, pr.schedule.length - 6)) : pr.schedule.slice(0, 24);
   return (
-    <div className={U.cardPad} data-testid="life-item">
+    <div className={U.cardPad} data-testid="life-item" data-open-id={"life:" + c.id}>
       <div className="flex items-start gap-3">
         <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
         <div className="flex-1 min-w-0">
@@ -198,6 +198,9 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   const [gold, setGold] = useState(() => loadGold());
   const [car, setCar] = useState(() => loadCar());
   const putGold = (d) => setGold(saveGold(d)), putCar = (d) => setCar(saveCar(d));
+  // v9.9.23 N1: a person's page opened one of their follow-ups → their history opens (where it is listed) and it lights up
+  React.useEffect(() => { try { const id = localStorage.getItem("attune:life:open"); if (!id) return; localStorage.removeItem("attune:life:open");
+    const c = (loadLife().items || []).find((x) => String(x.id) === id); if (c && c.person) setWho(c.person); } catch (e) {} }, []);
   // a commitment handed over from Chat ("Save it"): read at once, shown to check
   React.useEffect(() => {
     let t0 = ""; try { t0 = localStorage.getItem("attune:life:ask") || ""; localStorage.removeItem("attune:life:ask"); } catch (e) {}

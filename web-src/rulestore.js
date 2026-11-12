@@ -66,9 +66,12 @@ export function answer(r, field, value) {
   else if (field === "at" && n.when) { const [h, m] = String(value).split(":").map(Number); n.when.at = { h, m }; }
   return n;
 }
+// v9.9.23: two rules saved in the same millisecond ("Switch on 2" on a recipe) got the same id, so the second reminder replaced the first
+let lastMs = -1, seq = 0;
+export function ruleId(now = Date.now()) { if (now === lastMs) seq++; else { lastMs = now; seq = 0; } return "r" + now.toString(36) + (seq ? "-" + seq : ""); }
 /** Save + hand it to the engine that runs it. hooks: { schedule(reminder), native, lang } → the saved rule */
 export function saveRule(r, { schedule, native, lang = "en", now = Date.now() } = {}) {
-  const ctx = ruleCtx(), id = "r" + now.toString(36), lines = ruleLines(r, ctx), rule = { ...r, id, on: true, created: now, live: isLive(r), engine: null };
+  const ctx = ruleCtx(), id = ruleId(now), lines = ruleLines(r, ctx), rule = { ...r, id, on: true, created: now, live: isLive(r), engine: null };
   const w = r.when || {}, firstDo = (r.do || [])[0] || {};
   try {
     if (!rule.live) {} else

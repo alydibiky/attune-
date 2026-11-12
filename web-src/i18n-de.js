@@ -12283,4 +12283,6 @@ export const DE = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Ich konnte es nicht klar lesen – mach ein näheres, schärferes Foto nur vom Papier.",
   "Take another photo": "Neues Foto",
   "Use this one anyway": "Trotzdem diese nehmen",
+  "Could be another {n}": "Könnte ein anderer {n} sein",
+  "Open in WhatsApp": "In WhatsApp öffnen",
 };

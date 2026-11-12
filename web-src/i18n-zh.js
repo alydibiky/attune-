@@ -12283,4 +12283,6 @@ export const ZH = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "看不清——请只拍这张纸，靠近一点、清楚一点。",
   "Take another photo": "再拍一张",
   "Use this one anyway": "仍然使用这张",
+  "Could be another {n}": "可能是另一个 {n}",
+  "Open in WhatsApp": "在 WhatsApp 中打开",
 };

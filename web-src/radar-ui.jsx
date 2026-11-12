@@ -170,6 +170,9 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const [retake, setRetake] = useState(null);   // v9.9.23 (Ali: "if the photo isn't clear, tell me to take another"): { why, file }   // v9.9.23: an Egyptian national ID number found in the photo   // v9.9.22 X1: a passport / ID read from its photo, to check and save
   const [busy, setBusy] = useState("");
   const [q, setQ] = useState("");
+  // v9.9.23 N1: a person's page opened one of their dates → its form opens on it
+  useEffect(() => { try { const id = localStorage.getItem("attune:radar:open"); if (!id) return; localStorage.removeItem("attune:radar:open");
+    const it = D.loadRadar().items.find((y) => String(y.id) === id); if (it) { setEdit(it); setMode("form"); } } catch (e) {} }, []);
   const fileRef = useRef(null);
   const [sugg, setSugg] = useState([]);
   const [access, setAccess] = useState(() => { try { return !!(N && N.payAccess && N.payAccess()); } catch (e) { return false; } });

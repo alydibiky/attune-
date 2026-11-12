@@ -12283,4 +12283,6 @@ export const FA = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "به‌وضوح خوانده نشد — از خود کاغذ عکسی نزدیک‌تر و واضح‌تر بگیرید.",
   "Take another photo": "عکس دیگری بگیرید",
   "Use this one anyway": "با همین ادامه بده",
+  "Could be another {n}": "شاید {n} دیگری باشد",
+  "Open in WhatsApp": "باز کردن در واتساپ",
 };

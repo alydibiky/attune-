@@ -12284,4 +12284,6 @@ export const IDN = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Tidak terbaca jelas — foto kertasnya saja, lebih dekat dan tajam.",
   "Take another photo": "Ambil foto lagi",
   "Use this one anyway": "Tetap pakai ini",
+  "Could be another {n}": "Mungkin {n} yang lain",
+  "Open in WhatsApp": "Buka di WhatsApp",
 };

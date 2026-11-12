@@ -12284,4 +12284,6 @@ export const TRK = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Net okuyamadım — sadece kâğıdın daha yakın ve net bir fotoğrafını çek.",
   "Take another photo": "Yeni fotoğraf çek",
   "Use this one anyway": "Yine de bunu kullan",
+  "Could be another {n}": "Başka bir {n} olabilir",
+  "Open in WhatsApp": "WhatsApp'ta aç",
 };

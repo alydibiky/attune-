@@ -40,7 +40,7 @@ with sync_playwright() as p:
     check("Osama Barber 2" in page.inner_text("[data-testid=people-contact]") and page.input_value("[data-testid=people-name]") == "Osama", "his phone contact linked — your own name for him stays “Osama”")
     page.click("[data-testid=people-save]"); page.wait_for_selector("[data-testid=people-card]", timeout=4000)
     sums = page.inner_text("[data-testid=people-sums]")
-    check("500" in sums and page.locator("[data-testid=people-item]").count() == 2, "his card: both haircuts (one written «الحلاق») = 500 paid, linked from Money")
+    check("500" in sums and page.locator("[data-testid=person-line][data-src=money]").count() == 2, "his card: both haircuts (one written «الحلاق») = 500 paid, linked from Money")
     page.click("[data-testid=people-back]"); page.wait_for_timeout(200)
     page.locator("[data-testid=people-ask-row]:has-text('Karim') [data-testid=people-ask-skip]").click(); page.wait_for_timeout(200)
     check(page.locator("[data-testid=people-ask-row]:has-text('Karim')").count() == 0, "Not a person → never asked again")

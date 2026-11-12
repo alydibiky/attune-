@@ -12283,4 +12283,6 @@ export const RU = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Не удалось чётко прочитать — снимите только бумагу, ближе и резче.",
   "Take another photo": "Снять ещё раз",
   "Use this one anyway": "Всё равно использовать",
+  "Could be another {n}": "Возможно, другой {n}",
+  "Open in WhatsApp": "Открыть в WhatsApp",
 };

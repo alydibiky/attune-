@@ -12275,4 +12275,6 @@ export const ARB = {
   "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "تعذّرت القراءة بوضوح — التقط صورة أقرب وأوضح للورقة وحدها.",
   "Take another photo": "التقط صورة أخرى",
   "Use this one anyway": "استخدمها على أي حال",
+  "Could be another {n}": "قد يكون {n} آخر",
+  "Open in WhatsApp": "افتح في واتساب",
 };

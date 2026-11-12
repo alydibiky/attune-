@@ -1730,3 +1730,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
   → "take a closer, sharper photo". Not on Shelf covers, Mind memories, Recall / Scam screenshots, Chat pictures (not papers).
   Screenshots never refused: "dark" / washed-out only when the photo is also flat (contrast < 80); ≥ 70% pure white = a white page.
   Tests: tests/e2e_v9923photogate.py (5 screens, EN + AR); older photo tests now use harness doc_png / doc_bytes.
+- (later) B5 N1 person page built (Ali's pick A, OK'd): sections, every line opens its original — see AUTOMATION_PLAN B5. Also fixed:
+  rules saved in the same millisecond shared an id ("Switch on 2" lost one reminder — the flaky recipes test was this real bug);
+  a follow-up whose every payment / time is ticked now counts as finished (links.js). Known gap: «رانيا» in Arabic doesn't match a card
+  written "Rania" in English (no transliteration yet) — add the other spelling as a nickname on the card.
