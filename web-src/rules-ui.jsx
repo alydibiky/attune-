@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { tr } from "./i18n.js";
 import * as RS from "./rulestore.js";
+import { RecipesGallery } from "./recipes-ui.jsx";
 import { card as kCard, btnP, btnS, inp, label } from "./ui-kit.jsx";
 const card = kCard + " p-4";
 const Row = ({ k, children }) => <div className="flex items-start gap-3 py-1.5 border-t border-[var(--c-ln)] first:border-0"><span className="w-7 h-7 shrink-0 rounded-[9px] bg-[var(--c-soft)] text-[var(--c-acc)] grid place-items-center text-[12px] font-black">{k}</span><div className="flex-1 min-w-0 text-[14px] font-bold break-words" dir="auto">{children}</div></div>;
@@ -33,6 +34,7 @@ export function RulesSection({ native, flash, schedule, unschedule, lang }) {
         <div className="flex flex-wrap gap-2 pt-1"><button className={btnP} onClick={save} data-testid="rule-save">{tr("Save rule")}</button><button className={btnS} onClick={tryNow} data-testid="rule-try">{tr("Try it now")}</button><button className={btnS} onClick={() => setEdit(true)} data-testid="rule-change">{tr("Change")}</button></div>
         {edit ? <form onSubmit={(e) => { e.preventDefault(); read(); }} className="flex gap-2 pt-1"><input dir="auto" value={text} onChange={(e) => setText(e.target.value)} placeholder={tr("Write it again your way")} className={inp} data-testid="rule-rewrite" /><button className={btnP} type="submit">{tr("Read")}</button></form> : null}
       </div> : null}
+      <RecipesGallery flash={flash} schedule={schedule} native={native} lang={lang} />
       {rules.length ? <div className={card + " space-y-1"} data-testid="rule-list">
         <p className={label + " m-0"}>{tr("Your rules · {n}", { n: rules.length })}</p>
         {rules.map((r) => { const l = RS.ruleLines(r, ctx); return <div key={r.id} className="flex items-center gap-2 py-2 border-t border-[var(--c-ln)] first:border-0" data-testid="rule-row">

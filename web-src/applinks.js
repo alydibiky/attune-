@@ -78,7 +78,9 @@ const PAGES = [["money", /^(?:the )?money$|^(?:ال)?فلوس$|^(?:ال)?مصا�
   ["life", /^(?:the |my )?people (?:&|and) plans$|^(?:ال)?ناس و ?(?:ال)?خطط$/i], ["booklib", /^(?:the |my )?documents$|^(?:ال)?مستندات$|^مستنداتي$|^(?:ال)?ورق$/i],
   ["lists", /^(?:the |my )?(?:to-?dos?(?: (?:&|and) lists)?|lists|to-?do list)$|^(?:ال)?مهام$|^(?:ال)?قوايم$/i], ["projects", /^(?:the |my )?projects$|^(?:ال)?مشاريع$/i],
   ["family", /^(?:the |my )?family$|^(?:ال)?عيلة$|^(?:ال)?عائلة$/i], ["health", /^(?:the |my )?health$|^(?:ال)?صحة$/i], ["write", /^writing$|^(?:ال)?كتابة$/i],
-  ["errands", /^(?:the |my )?errands$|^(?:ال)?مشاوير$/i], ["tables", /^(?:the |my )?tables$|^(?:ال)?جداول$/i], ["guardian", /^money guardian$/i]];
+  ["errands", /^(?:the |my )?errands$|^(?:ال)?مشاوير$/i], ["tables", /^(?:the |my )?tables$|^(?:ال)?جداول$/i], ["guardian", /^money guardian$/i],
+  ["salary", /^(?:the |my )?salary(?: plan)?$|^(?:ال)?مرتب$|^(?:خطة|تقسيم) (?:ال)?مرتب$/i], ["automations", /^(?:the |my )?automations?$|^(?:ال)?اوتوميشن$/i], ["donefor", /^done for (?:you|me)$/i],
+  ["split", /^(?:the |my )?(?:split(?: with (?:anyone|friends))?)$|^(?:ال)?تقسيم المصاريف$/i]];
 /** "open Money" / "go to Agents" / «افتح الفلوس» → the page's id, or "". */
 export function pageOf(text) {
   const m = /^\s*(?:please\s+)?(?:open|go to|show me|take me to|show)\s+(.{2,30}?)\s*[.!]?\s*$/i.exec(String(text || "")) || /^\s*(?:افتح|افتحلي|روح على|وديني على|وريني)\s+(.{2,30}?)\s*$/.exec(String(text || ""));

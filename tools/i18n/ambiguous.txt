@@ -5,12 +5,14 @@ agents-ui.jsx: <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><
 daily-ui.jsx: <p className="c-lbl m-0">{plan.finished ? tr("Course finished") : plan.left ? tr("Today") : tr("Today · all done")}</p>
 daily-ui.jsx: <p className="c-lbl m-0">{tr("Today")}</p>
 desk-ui.jsx: <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
+donelog-ui.jsx: <p className={label + " m-0"}>{tr("Today")}</p>
 home-now.js: sub: x.amount ? fmtN(x.amount) + (x.pay && x.pay.cur ? " " + x.pay.cur : "") : x.date === day ? tr("Today") : x.date || "", open: x.from ===
-home-now.js: out.push({ day: k, label: i === 0 ? tr("Today") : label, spend, kcal, today: i === 0 });
 
 ## Tomorrow
 actions-ui.jsx: const dayWord = diff === 0 ? tr("Today") : diff === 1 ? tr("Tomorrow") : d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", m
 actions-ui.jsx: if (d.toDateString() === n.toDateString()) return tr("Today"); if (d.toDateString() === tm.toDateString()) return tr("Tomorrow");
+b1wire.js: export const buttonWords = () => ({ done: tr("Done"), hour: tr("In 1 hour"), tomorrow: tr("Tomorrow") });
+b1wire.js: { paid: tr("Paid"), tomorrow: tr("Tomorrow"), hour: tr("In 1 hour"), which: tr("Paid {a} — from which balance?"), done: tr("✓ {a} from {b}")
 timeline-ui.jsx: if (n === 1) return tr("Tomorrow");
 timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={(
 timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={(
@@ -44,11 +46,30 @@ backup-ui.jsx: <button onClick={() => setConfirm(false)} className={K.btnS + " f
 actions-ui.jsx: const remove = (id) => { setReminders(reminders.filter((r) => r.id !== id)); try { native && native.unschedule && native.unschedule(id); } c
 attune.jsx: if (gone) { setLexUndo(gone); flash(tr("Removed")); }
 attune.jsx: {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash(tr("Removed")); }} className="text-xs px-3 py-2 rounded-
+rules-ui.jsx: <button className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" onClick={() => { RS.removeRule(r.id, 
 
 ## Repeat
 actions-ui.jsx: <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr("Repeat")} data-testid="rem-repeat">
 family-ui.jsx: <select className={U.inp + " w-auto!"} value={rRep} onChange={(e) => setRRep(e.target.value)} aria-label={tr("Repeat")}><option value="none"
 messages-ui.jsx: <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr("Repeat")}>{M.REPEATS.map((r) => <button key={r} onClick={() => set
+
+## On
+actions-ui.jsx: <span>★ {tr("Important")}</span><span className="text-[12px] font-bold">{nag === NAG.IMPORTANT ? tr("On") : tr("Off")}</span></button>
+autom-ui.jsx: className={"min-h-[40px] px-3.5 rounded-full text-[13px] font-extrabold border shrink-0 " + (on ? "bg-[var(--c-acc)] border-[var(--c-acc)] t
+chat.jsx: <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-i
+daily-ui.jsx: <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== 
+daily-ui.jsx: <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.
+lookback-ui.jsx: {mean.on ? <span className="inline-flex items-center text-[11px] font-extrabold rounded-full px-2.5 py-0.5 bg-[var(--c-soft)] text-[var(--c-
+messages-ui.jsx: <button onClick={() => put("on", !r.on)} role="switch" aria-checked={!!r.on} aria-label={tr("On")} data-testid="msg-rule-on"
+recipes-ui.jsx: <span className="block text-[12px] text-[var(--c-mut)]">{done.has(x.id) ? tr("On") : tr(x.why, { n: x.n, d: x.d })}</span></button>)}</div>
+
+## Off
+actions-ui.jsx: <span>★ {tr("Important")}</span><span className="text-[12px] font-bold">{nag === NAG.IMPORTANT ? tr("On") : tr("Off")}</span></button>
+chat.jsx: <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-i
+daily-ui.jsx: <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== 
+daily-ui.jsx: <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.
+teach-ui.jsx: aria-label={off.has(p.name) ? tr("Off") : tr("On")}
+vault-ui.jsx: <button role="switch" aria-checked={v.on} onClick={toggle} className={v.on ? U.btnP : U.btnS + " h-12 min-h-[48px] px-5"} data-testid="vault
 
 ## Coming up
 actions-ui.jsx: <p className={label + " mt-0 mb-2.5"}>{tr("Coming up")} · <span className="tabular-nums">{upcoming.length}</span></p>
@@ -70,9 +91,9 @@ agent-ui.jsx: export const agentLabels = () => ({ checking: tr("Checking {i} of 
 agents-ui.jsx: : <CardActions primary={{ label: tr("Done"), icon: Check, onClick: () => markDone(a), testid: "agent-buy-done" }} />}
 attune.jsx: <button onClick={close} className="min-h-[46px] px-4 rounded-[14px] border border-[var(--c-ln)] font-bold" data-testid="webtask-close">{r ? 
 attune.jsx: call: tr("The dialer opened with the number — tap Call there.") }[a.kind] || tr("Done");
+b1wire.js: export const buttonWords = () => ({ done: tr("Done"), hour: tr("In 1 hour"), tomorrow: tr("Tomorrow") });
 cmdbox-ui.jsx: <p className="c-lbl m-0">{busy ? tr("Working on it · {n}", { n: busy }) : tr("Done")}</p>
 daily-ui.jsx: <button className={cGhost} style={gs} onClick={() => { setRev(null); setView("course"); }} data-testid="review-finish">{tr("Done")}</button>
-daily-ui.jsx: <button className={btnP} onClick={() => { const f = D.finishQuiz(latest(), quiz, quiz.picks); putCourse(f.course); setQuiz(null); setView("c
 
 ## cheapest
 agent-ui.jsx: const sum = p.task === "flight" ? `${cityName(f.from)} (${f.from}) → ${cityName(f.to)} (${f.to}) · ${DAYFMT(f.depart)}${f.ret ? " → " + DAYF
@@ -91,6 +112,8 @@ timeline-ui.jsx: <span className={"ms-1 " + U.muted}>{allOpen ? tr("Hide") : tr(
 ## Edit
 agent-ui.jsx: <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[44px] text-start text-[15px] text-[var(--c-ink)] font-extrabold flex ite
 chat.jsx: {!busy ? <button onClick={() => editFrom(idx)} className="mt-0.5 min-h-[32px] text-[11.5px] font-bold text-[var(--c-mut)] hover:text-[var(--
+donelog-ui.jsx: {!e.undone ? <><button className="min-h-[36px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" onClick={() => setEd
+donelog-ui.jsx: <p className={label + " m-0"}>{tr("Edit")}</p>
 people-ui.jsx: <div className="flex gap-1.5 flex-wrap"><button className={btnS} onClick={() => setEdit(p)} data-testid="people-edit">{tr("Edit")}</button>
 radar-ui.jsx: <button className={U.btnS} onClick={() => onEdit(x)} data-testid="radar-edit">{tr("Edit")}</button>
 spaces-ui.jsx: <button onClick={() => setEdit({ ...a, startersText: (a.starters || []).join("\n") })} className={iconBtn} title={tr("Edit")}><PenLine size=
@@ -101,10 +124,10 @@ agents-ui.jsx: {onChange ? <button onClick={onChange} className="min-h-[40px] px
 agents-ui.jsx: <CardActions primary={{ label: tr("Order now"), icon: Check, onClick: () => orderNow(a), testid: "agent-order-now" }} secondary={{ label: tr
 code-ui.jsx: <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Ch
 cv-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={() => photoRef.current && photoRef.current.click()}><Camera size={13} />{cv.
+donelog-ui.jsx: <div className="flex items-center justify-between gap-2 text-[14px]"><span>{tr("Money up to {n} a time", { n: (+st.limits.money).toLocaleStr
 messages-ui.jsx: <div className="flex gap-1.5"><button onClick={() => setOpen(!open)} className={U.btnS + " h-9! min-h-[36px]!"} aria-expanded={open} data-te
 messages-ui.jsx: <button onClick={() => setEdit({ ...a, at: a.next || a.at })} className={U.btnS + " h-9! min-h-[36px]!"} data-testid="msg-edit"><PenLine siz
 money-pages-ui.jsx: return <Card title={tr("What's counted")} right={<button className="text-[13px] font-bold c-acc min-h-[36px]" onClick={() => openLedger("zak
-money-pages-ui.jsx: <button className={U.btnS} onClick={() => openLedger("zakat-settings")} data-testid="zakat-gold-change">{tr("Change")}</button></div> : null
 
 ## Checking…
 agents-ui.jsx: <button onClick={() => checkNow(a)} disabled={busy} className={U.btnS + " mt-1"} data-testid="agent-auto-check"><RefreshCw size={14} />{busy
@@ -358,11 +381,11 @@ money-sheets-ui.jsx: <Field label={tr("Account")}><Pills value={account} onChang
 ## Amount
 attune.jsx: <h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${e
 autom-ui.jsx: {take ? <div className="flex gap-2"><input type="number" value={take.amount} onChange={(e) => setTake({ ...take, amount: e.target.value })} 
+donelog-ui.jsx: {edit.e.amount != null ? <label className="block text-[13px] font-bold">{tr("Amount")}<input type="number" inputMode="decimal" value={edit.a
 family-ui.jsx: <div className="grid grid-cols-[1fr_1.4fr] gap-2"><input className={U.inp} inputMode="decimal" value={amt} onChange={(e) => setAmt(e.target.
 home-ui.jsx: <input autoFocus inputMode="decimal" value={other} onChange={(e) => setOther(e.target.value)} className={Uinp + " flex-1 tabular-nums"} aria
 life-ui.jsx: <div className={"grid grid-cols-[34px_1fr_auto_auto] gap-x-2 px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-[0.05em] bg-[var(--c-
 money-pages-ui.jsx: <Head title={tr("Bills report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick={(
-money-sheets-ui.jsx: <Field label={tr("Amount")}><input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp
 money-sheets-ui.jsx: <Field label={tr("Amount")}><input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp
 
 ## Expense added
@@ -510,11 +533,11 @@ teach-ui.jsx: onClick={() => go([{ id: "text:" + name.trim() + ":" + Date.now(),
 attune.jsx: className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-teal-300 hover:border-teal-600">{tr("Undo")}</button
 attune.jsx: {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash(tr("Removed")); }} className="text-xs px-3 py-2 rounded-
 autopilot-ui.jsx: <button onClick={() => undo(d)} className="min-h-[32px] px-2 text-[12px] font-bold c-acc inline-flex items-center gap-1" data-testid="autopi
+b1wire.js: { paid: tr("Paid"), tomorrow: tr("Tomorrow"), hour: tr("In 1 hour"), which: tr("Paid {a} — from which balance?"), done: tr("✓ {a} from {b}")
 doit-ui.jsx: {r.undo && !undone ? <button className={btnS} onClick={() => { r.undo(); setUndone(true); onUndo && onUndo(); }} data-testid="do-undo"><Undo
+donelog-ui.jsx: <button className="min-h-[36px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" onClick={() => undo(e)} data-testid
 notelabels-ui.jsx: {i.type !== "who" ? <button onClick={() => undo(i)} className="shrink-0 min-h-[34px] px-2 text-[12px] font-bold underline c-sub inline-flex 
 pdfedit-ui.jsx: <button onClick={undo} disabled={!hist.length} aria-label={tr("Undo")} className={"w-11 h-11 grid place-items-center rounded-[12px] " + (his
-planner-ui.jsx: {settled.put > 0 ? <button onClick={undo} className="font-extrabold underline text-[var(--c-acc)] min-h-[36px] px-1" data-testid="planner-se
-shelf-ui.jsx: <button onClick={undoT} aria-label={tr("Undo")} data-testid="shelf-undo-text" className="min-w-[40px] min-h-[40px] grid place-items-center r
 
 ## Restore
 attune.jsx: {tr("Restore")}
@@ -654,7 +677,7 @@ care-ui.jsx: <button className={btnP} disabled={!sugar} onClick={saveSugar} data
 care-ui.jsx: <button className={btnP} onClick={() => { const d = ensureMember(); put(H.addLabs(d, labDraft.member || d.members[0].id, labDraft.date, labD
 chat.jsx: onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.kno
 desk-ui.jsx: <div className="flex gap-2"><button onClick={() => { const t = sure.text; setSure(null); let r = null; try { r = doIt(t, { force: true }); }
-home-ui.jsx: <button type="submit" className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} data-testid="home-ask-save">{tr("Save")}</button></for
+donelog-ui.jsx: <div className="flex gap-2"><button className={btnP} onClick={() => { const n = D.setLimits(D.load(), lim); D.save(n); setSt(n); setLim(null
 
 ## Details
 attune.jsx: <MenuItem testid="engine-details" onClick={() => setDetails(!details)}>{details ? tr("Hide details") : tr("Details")}</MenuItem>
@@ -692,21 +715,13 @@ care-ui.jsx: {prices[m.id].map((x) => <a key={x.site} href={x.url} target="_blan
 attune.jsx: <button onClick={() => closeFollowUp(r.id, i)} title={tr("Mark done")}
 missions-ui.jsx: {e.state === "done" ? <button className={btnP + " !h-11 !min-h-[44px] !text-[14px]"} onClick={() => onChange({ ...m, status: "done" })} data
 
-## On
-autom-ui.jsx: className={"min-h-[40px] px-3.5 rounded-full text-[13px] font-extrabold border shrink-0 " + (on ? "bg-[var(--c-acc)] border-[var(--c-acc)] t
-chat.jsx: <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-i
-daily-ui.jsx: <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== 
-daily-ui.jsx: <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.
-lookback-ui.jsx: {mean.on ? <span className="inline-flex items-center text-[11px] font-extrabold rounded-full px-2.5 py-0.5 bg-[var(--c-soft)] text-[var(--c-
-messages-ui.jsx: <button onClick={() => put("on", !r.on)} role="switch" aria-checked={!!r.on} aria-label={tr("On")} data-testid="msg-rule-on"
-teach-ui.jsx: aria-label={off.has(p.name) ? tr("Off") : tr("On")}
-vault-ui.jsx: <button role="switch" aria-checked={v.on} onClick={toggle} className={v.on ? U.btnP : U.btnS + " h-12 min-h-[48px] px-5"} data-testid="vault
-
 ## Savings
 autom.js: const pot = potName(String(rest1).replace(/^(?:ال)?صندوق\s+/, "").replace(/^(?:sandou2|sandou)\s+(?:el\s*)?/i, "")) || (ar ? "التوفير" : tr(
 planner-ui.jsx: const G = [["fixed", tr("Fixed")], ["everyday", tr("Everyday")], ["savings", tr("Savings")]];
 planner-ui.jsx: const parts = [["fixed", tr("Fixed"), plan.fixedTotal], ["pots", tr("Savings"), plan.potsTotal], ["flex", tr("Everyday"), plan.flexTotal], [
 plans-ui.jsx: <div data-testid="gold-draft"><span className={U.label}>{tr("Savings")}</span>
+rulestore.js: const p = { words, pct: pot ? (pot.pct != null ? pot.pct : 0) : 0, fixed: pot && pot.amount ? pot.amount : 0, pot: pot ? pot.pot || tr("Savi
+rulestore.js: const p = { words, pct: pot ? (pot.pct != null ? pot.pct : 0) : 0, fixed: pot && pot.amount ? pot.amount : 0, pot: pot ? pot.pot || tr("Savi
 yearplan.js: groups.push({ id: "savings", label: ar ? "التحويش" : tr("Savings"), rows: sav });
 
 ## Add
@@ -724,6 +739,22 @@ autopilot-ui.jsx: <button onClick={() => no(x, false)} onContextMenu={(e) => { e
 desk-ui.jsx: <button onClick={() => setSure(null)} className="h-10 px-5 rounded-full text-[13.5px] font-bold border border-[var(--c-ln)]" data-testid="de
 radar-ui.jsx: <button className={U.btnS + " w-11 px-0 " + U.muted} aria-label={tr("Not this")} onClick={() => { put(D.markSeen(data, [s.nid])); setSugg((x
 timeline-ui.jsx: <button className={B} onClick={() => setLog((g) => g.map((y) => (y.id === l.id ? { ...y, confirm: "", msg: tr("Not saved") } : y)))} data-te
+
+## Paid
+b1wire.js: { paid: tr("Paid"), tomorrow: tr("Tomorrow"), hour: tr("In 1 hour"), which: tr("Paid {a} — from which balance?"), done: tr("✓ {a} from {b}")
+errands-ui.jsx: <button onClick={() => done(e)} disabled={!e.every && !newDate} className="min-h-[40px] px-3.5 rounded-[12px] border border-[var(--c-ln)] te
+family-ui.jsx: <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={() => put(F.settlePayment(fam, m.from, m.to, m.amount))} data-testid="family-set
+home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
+home-ui.jsx: <button className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} onClick={() => done(null)} data-testid="home-ask-paid">{tr("Paid")}<
+home-ui.jsx: aria-label={tr("Paid")} className="w-[22px] h-[22px] rounded-md shrink-0" style={{ border: "1.8px solid var(--c-acc)" }} data-testid="home-r
+life-ui.jsx: <button type="submit" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font
+life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
+
+## Undone
+b1wire.js: lines.push(tr("Undone")); }
+doit-ui.jsx: {undone ? <span className="c-sub text-[13px]" data-testid="do-undone">{tr("Undone")}</span> : null}
+donelog-ui.jsx: const undo = (e) => { if (undoDone(e.id, { loadLedger, saveLedger })) { setSt(D.load()); flash && flash(tr("Undone")); } };
+notelabels-ui.jsx: NT.saveTeach(NL.undoLabel(NT.loadTeach(), i.id)); setV((x) => x + 1); flash && flash(tr("Undone"));
 
 ## Reminders
 backup-ui.jsx: [tr("Memory items"), s.memory], [tr("Reminders"), s.reminders],
@@ -758,11 +789,11 @@ wagroups-ui.jsx: const fresh = W.addedItems({ text, files, who: getLang() === "a
 care-ui.jsx: const refill = (m) => { const v = window.prompt(tr(H.isInsulin(m) ? "How many units do you have now?" : "How many do you have now?"), ""); i
 code-ui.jsx: try { await saveFile(name, cur.code, (LANGS[cur.lang] || LANGS.python).mime); flash(tr("Saved")); } catch (e) { if (String(e.message) !== "C
 convert-ui.jsx: if (saveFile) { await saveFile(out.name, out.text || "", out.mime, out.b64); flash && flash(tr("Saved")); return; }
+donelog-ui.jsx: const r = editDone(edit.e.id, p, { loadLedger, saveLedger }); setSt(D.load()); setEdit(null); if (r.ask) setAsk(r); else flash && flash(tr("
+donelog-ui.jsx: <div className="flex gap-2"><button className={btnP} onClick={() => { const n = D.setLimits(D.load(), lim); D.save(n); setSt(n); setLim(null
 lists-ui.jsx: if (edit === "new") { const l = L.makeList({ name, items: texts, repeat }); put(L.addList(st, l)); setOpen(l.id); flash && flash(tr("Saved")
 lists-ui.jsx: put(L.editList(st, edit, { name, repeat, items: texts.map((t) => keep.find((x) => x.text === t) || fresh.find((x) => x.text === t)) })); fla
 money-pages-ui.jsx: <div className="space-y-2">{(more.debtQuestion.policies || []).map((p) => <button key={p.id} disabled={!!busy} onClick={() => go("zakat-debt
-money-sheets-ui.jsx: const save = () => s.go("acct-save", { id: id || undefined, kind, name: name.trim(), emoji, currency, start: parseFloat(start) || 0, karat: 
-money-sheets-ui.jsx: const save = () => s.go("rec-save", { id: id || undefined, type, amount: parseFloat(amount), cat, account, freq, nextDate: next, note: note.
 
 ## Download
 care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
@@ -778,6 +809,7 @@ sync-ui.jsx: <input value={code} onChange={(e) => setCode(e.target.value)} place
 ## Attune noticed
 chat.jsx: { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Attune noticed"), detail: L.length ? L.map((x) => "• " + (ar ? x.ar : 
 home-ui.jsx: <p className="m-0 text-[12px] font-extrabold tracking-[0.08em] uppercase c-sub">{tr("Attune noticed")}</p>
+suggest-ui.jsx: <p className="m-0 text-[12px] font-extrabold tracking-[0.08em] uppercase c-sub">{tr("Attune noticed")}</p>
 
 ## Rename
 chat.jsx: <button onClick={() => setRenaming(c.id)} className="w-10 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--
@@ -815,6 +847,7 @@ teach-ui.jsx: <button className={ghost + " flex-1"} onClick={() => share(p.name)
 chat.jsx: {api.openPdfChat && f.file && /\.(pdf|docx|pptx|odt|epub|html?|rtf)$/i.test(f.name) ? <button onClick={() => { const ff = f.file; setFiles((
 life-ui.jsx: <button className={U.btnP} onClick={read} disabled={busy || !text.trim()} data-testid="life-read">{busy ? "…" : tr("Read")}</button>
 pdfchat-ui.jsx: <div className="flex shrink-0 gap-1 lg:hidden">{[["chat", tr("Chat")], ["read", tr("Read")]].map(([k, l]) => <button key={k} onClick={() => 
+rules-ui.jsx: {edit ? <form onSubmit={(e) => { e.preventDefault(); read(); }} className="flex gap-2 pt-1"><input dir="auto" value={text} onChange={(e) => 
 voice-ui.jsx: <button onClick={() => speakOut(newest.who + ": " + newest.text, st.ui)} className="flex-1 min-h-[56px] rounded-[20px] border border-[var(--
 
 ## Listening…
@@ -839,13 +872,6 @@ cmdbox-ui.jsx: <button onClick={() => setWeb(!web)} aria-pressed={web} className
 ## File
 chat.jsx: <label htmlFor="att-pick-file" className="flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-ink)] hov
 spaces-ui.jsx: <button onClick={download} className="min-w-[56px] min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px]
-
-## Off
-chat.jsx: <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-i
-daily-ui.jsx: <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== 
-daily-ui.jsx: <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.
-teach-ui.jsx: aria-label={off.has(p.name) ? tr("Off") : tr("On")}
-vault-ui.jsx: <button role="switch" aria-checked={v.on} onClick={toggle} className={v.on ? U.btnP : U.btnS + " h-12 min-h-[48px] px-5"} data-testid="vault
 
 ## You owe
 chatxray-ui.jsx: <div className="rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(-
@@ -998,10 +1024,6 @@ slides-ui.jsx: <button onClick={() => setTab("report")} className={chip(tab === 
 tools-hub-ui.jsx: <SeeAll testid="tools-open-report" onClick={() => setRep(true)} title={tr("See all → Tools Report")} sub={T("{n} jobs this week · by family"
 tools-hub-ui.jsx: return <SeeAll testid={"open-report-" + fam} onClick={onClick} title={tr(title)} sub={r.week ? T("{n} this week", { n: r.week }) + (fam === 
 
-## Undone
-doit-ui.jsx: {undone ? <span className="c-sub text-[13px]" data-testid="do-undone">{tr("Undone")}</span> : null}
-notelabels-ui.jsx: NT.saveTeach(NL.undoLabel(NT.loadTeach(), i.id)); setV((x) => x + 1); flash && flash(tr("Undone"));
-
 ## Income
 doit.js: const rows = [[ar ? "الدخل" : tr("Income"), f(pl.income)], [ar ? "ثابت (فواتير وأقساط)" : tr("Fixed (bills, instalments)"), f(pl.fixedTotal)
 money-calm-ui.jsx: <span className={"block truncate text-[11.5px] font-semibold " + U.muted} dir="auto">{dayLabel(t.date)} · {t.type === "income" ? tr("Income"
@@ -1027,16 +1049,6 @@ email-ui.jsx: <label className="block text-[12px] font-bold text-[var(--c-mut)]"
 messages-ui.jsx: <input value={m.subject} onChange={(e) => set("subject", e.target.value)} dir="auto" placeholder={tr("Subject")} className={U.inp} data-test
 timetable-ui.jsx: <div className="flex gap-1.5"><input value={r.subject} onChange={(e) => set(r.k, { subject: e.target.value })} dir="auto" className={inp + "
 
-## Paid
-errands-ui.jsx: <button onClick={() => done(e)} disabled={!e.every && !newDate} className="min-h-[40px] px-3.5 rounded-[12px] border border-[var(--c-ln)] te
-family-ui.jsx: <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={() => put(F.settlePayment(fam, m.from, m.to, m.amount))} data-testid="family-set
-home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
-home-ui.jsx: <button className={UbtnP + " h-10! min-h-[40px]! px-4! text-[13.5px]!"} onClick={() => done(null)} data-testid="home-ask-paid">{tr("Paid")}<
-home-ui.jsx: aria-label={tr("Paid")} className="w-[22px] h-[22px] rounded-md shrink-0" style={{ border: "1.8px solid var(--c-acc)" }} data-testid="home-r
-life-ui.jsx: <button type="submit" className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font
-life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
-life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
-
 ## Spec
 factsheet.js: "| " + (ar ? "البند" : tr("Spec")) + " | " + a + " | " + b + " | " + (ar ? "الأفضل" : tr("Better")) + " |\n| --- | --- | --- | --- |\n" +
 trusted.js: "| " + (ar ? "البند" : tr("Spec")) + " | " + use.map((c) => cell(c.name) + " [" + c.n + "]").join(" | ") + " |\n" +
@@ -1044,6 +1056,7 @@ trusted.js: "| " + (ar ? "البند" : tr("Spec")) + " | " + use.map((c) => cel
 ## When
 family-ui.jsx: <div className="flex gap-2"><input type="datetime-local" className={U.inp} value={rAt} onChange={(e) => setRAt(e.target.value)} aria-label={
 messages-ui.jsx: <input type="datetime-local" value={localIso(m.at)} onChange={(e) => set("at", Date.parse(e.target.value))} className={U.inp} dir="ltr" aria
+rules-ui.jsx: <Row k="W"><span className="text-[var(--c-mut)] text-[12px] block">{tr("When")}</span>{L.when}</Row>
 wake-ui.jsx: <div><span className="block mb-1 font-extrabold c-sub">{tr("When")}</span>
 
 ## Every day
@@ -1084,6 +1097,7 @@ mind-ui.jsx: <button onClick={() => setHidePast(true)} className="min-h-[40px] t
 notelabels-ui.jsx: <button onClick={notNow} className={CHIP + " c-sub inline-flex items-center gap-1"} data-testid="note-ask-skip"><X size={13} />{tr("Not now"
 notifask-ui.jsx: <button onClick={later} className="flex-1 min-h-[48px] rounded-full border border-[var(--c-ln)] font-bold" data-testid="notif-ask-later">{ar
 paylog-ui.jsx: <button onClick={() => { setNotNow(true); try { localStorage.setItem(OFF_KEY, "1"); } catch (e) {} }} className={U.btnS + " " + U.muted}>{tr
+suggest-ui.jsx: <button onClick={later} className="min-h-[40px] px-3.5 rounded-[12px] font-bold text-[13px] border border-[var(--c-acc)] text-[var(--c-acc)]
 
 ## Bill
 home.js: : (c.title ? c.title[0].toUpperCase() + c.title.slice(1) : tr("Bill"));
@@ -1138,6 +1152,11 @@ slides-ui.jsx: <button aria-label={tr("Delete")} className="w-11 h-11 grid place
 life-ui.jsx: <button onClick={() => { put(skipDay(data, x.c.id, x.i)); flash && flash(tr("Noted — nothing paid today")); }} className={U.btnS + " mt-1 " 
 timeline-ui.jsx: answer(x, tr("Didn't come"), tr("Nothing paid"), () => { saveLife(skipDay(loadLife(), l.c.id, l.i, false)); setV((y) => y + 1); }); };
 timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
+
+## You pay
+life.js: if (!c || !c.payer) return tr("You pay");
+life.js: if (c.payer === "me") return c.accountName ? tr("You pay · from {a}", { a: c.accountName }) : tr("You pay");
+rulestore.js: : w.type === "money_out" ? tr("You pay") : w.type === "message" ? tr("{n} messages you", { n: P(w.who) || "?" }) : w.type === "call" ? tr("{
 
 ## From
 lifeask-ui.jsx: <span className="c-sub text-[12px]">{tr("From")}: {res.a.sources.map((s) => tr(TOOL[s] || s)).join(" · ")}</span>

@@ -4,6 +4,7 @@
    unreadable texts are dropped; the same payment notified twice (an update, or the bank AND InstaPay) is kept once.
    The entries are listed in Money to confirm; confirmed ones go to Money (Yusr) through the bridge ("add-txns").
    Pure logic; tests: tests/unit/v727paylog.test.mjs.                                                                         */
+import { catFor, loadCatRules } from "./catlearn.js";
 import { labelOf, notMoney, countsAsMoney, understandNote as readMeaning } from "./notelabels.js";   // v9.9.11 what the person taught
 import { notAPayment } from "./notifwords.js";   // v9.9.17 one list for all four readers
 import { loadTeach } from "./noteteach.js";
@@ -175,14 +176,14 @@ export async function judged(entries, judge) {
  *  first account), id, date, note — used when Money isn't open, so its ledger is written directly. → { ledger, ids } */
 export function appendToLedger(ledger, txns, now = Date.now()) {
   if (!ledger || !Array.isArray(ledger.txns) || !Array.isArray(ledger.accounts) || !ledger.accounts.length) return { ledger, ids: [] };
-  const L = { ...ledger, txns: [...ledger.txns] }, ids = [];
+  const L = { ...ledger, txns: [...ledger.txns] }, ids = [], CR = loadCatRules();
   for (const t of (txns || []).slice(0, 50)) {
     const a = parseFloat(t.amount);
     if (!(a > 0 && a < 1e9) || (t.type !== "expense" && t.type !== "income")) continue;
     const acc = (t.account && L.accounts.find((x) => x.id === t.account)) || L.accounts.find((x) => t.currency && x.currency === t.currency) || L.accounts[0];   // v9.9.14: the account chosen for it first
     const id = "n" + now.toString(36) + Math.random().toString(36).slice(2, 6) + ids.length;
     const dg = digitsOf(acc.currency || t.currency || "EGP");   // v9.9.18: KWD / BHD / OMR / JOD / TND keep 3 decimals, JPY none
-    L.txns.push({ id, ...(t.nid ? { nid: String(t.nid).slice(0, 80) } : {}), type: t.type, amount: Math.round(a * 10 ** dg) / 10 ** dg, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0 } } : {}) });
+    L.txns.push({ id, ...(t.nid ? { nid: String(t.nid).slice(0, 80) } : {}), type: t.type, amount: Math.round(a * 10 ** dg) / 10 ** dg, cat: catFor(CR.rules, { note: t.note, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other" }) /* v9.9.18 M5: "always put Seoudi in Groceries" */, account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0 } } : {}) });
     ids.push(id);
   }
   return { ledger: L, ids };

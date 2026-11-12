@@ -13,29 +13,31 @@ export function nextRamadan(now = Date.now()) {
 }
 export const daysTo = (t, now = Date.now()) => { const a = new Date(now); a.setHours(0, 0, 0, 0); return Math.round((t - a.getTime()) / DAY); };
 
-/** profile: { salaryDay, rent, gameya, carFund, family:[name], car, kids, tripAt, baby, prayersOn } */
+/** profile: { salaryDay, rent, gameya, carFund, family:[name], car, kids, tripAt, baby, prayersOn, licenceAt, weekend:[days] } */
+const T = (h, m = 0, x = {}) => ({ type: "time", at: { h, m }, ...x });
+const dayBefore = (t, n) => { const d = new Date(t); d.setDate(d.getDate() - n); d.setHours(0, 0, 0, 0); return d.getTime(); };
+const R = (id, title, needs, when, extra = {}) => ({ id, title, needs, rule: (p, now) => ({ when: typeof when === "function" ? when(p, now) : when, if: [], do: [{ type: "remind", text: title }], title, ...extra }) });
 export const RECIPES = [
-  { id: "salary", icon: "₤", title: "Salary day", fits: (p) => p.salaryDay > 0, why: "You get a salary on the {d}th",
-    rules: [{ id: "split", title: "Split the salary", needs: () => true, rule: { when: { type: "money_in", what: "salary" }, if: [], do: [{ type: "salary_sort" }] } },
-      { id: "rent", title: "Pay rent on the 1st", needs: (p) => p.rent > 0, rule: { when: { type: "time", at: { h: 9, m: 0 }, monthly: true, dom: 1 }, if: [], do: [{ type: "remind", text: "rent" }] } },
-      { id: "gameya", title: "Gam'eya reminder", needs: (p) => p.gameya > 0, rule: { when: { type: "time", at: { h: 9, m: 0 }, monthly: true, dom: 1 }, if: [], do: [{ type: "remind", text: "gameya" }] } },
-      { id: "save", title: "Move savings to the fund", needs: (p) => !!p.carFund, rule: { when: { type: "money_in", what: "salary" }, if: [], do: [{ type: "pot", pct: 10, pot: "fund" }] } }] },
+  { id: "salary", icon: "₤", title: "Salary day", fits: (p) => p.salaryDay > 0, why: "You get a salary on day {d}",
+    rules: [R("split", "Split the salary", () => true, { type: "money_in", what: "salary" }),
+      R("rent", "Pay the rent", (p) => p.rent > 0, T(9, 0, { monthly: true, dom: 1 })),
+      R("gameya", "Pay the gam'eya", (p) => p.gameya > 0, T(9, 0, { monthly: true, dom: 1 })),
+      R("save", "Move savings to the fund", (p) => !!p.carFund, (p) => T(10, 0, { monthly: true, dom: p.salaryDay }))] },
   { id: "ramadan", icon: "☾", title: "Ramadan", fits: (p, now) => !!p.prayersOn && (() => { const r = nextRamadan(now); return r != null && daysTo(r, now) <= 120; })(), why: "Ramadan starts in {n} days",
-    rules: [{ id: "suhoor", title: "Suhoor alarm", needs: () => true, rule: { when: { type: "time", at: { h: 3, m: 30 } }, if: [], do: [{ type: "remind", text: "suhoor" }] } },
-      { id: "zakat", title: "Zakat reminder", needs: () => true, rule: { when: { type: "time", at: { h: 10, m: 0 } }, if: [], do: [{ type: "remind", text: "zakat" }] } },
-      { id: "eidiya", title: "Eid gift list", needs: (p) => (p.family || []).length > 0 || p.kids > 0, rule: { when: { type: "time", at: { h: 10, m: 0 } }, if: [], do: [{ type: "list_add", list: "eid" }] } }] },
-  { id: "school", icon: "✎", title: "School year", fits: (p) => p.kids > 0, why: "You have {k} children at school",
-    rules: [{ id: "fees", title: "School fees reminders", needs: () => true, rule: { when: { type: "time", at: { h: 9, m: 0 } }, if: [], do: [{ type: "remind", text: "fees" }] } },
-      { id: "bag", title: "Pack the school bag the night before", needs: () => true, rule: { when: { type: "time", at: { h: 21, m: 0 } }, if: [{ type: "weekdays" }], do: [{ type: "remind", text: "bag" }] } }] },
+    rules: [R("suhoor", "Suhoor", () => true, (p, now) => { const r = nextRamadan(now); return T(3, 30, { from: r, until: r + 30 * DAY }); }),
+      R("zakat", "Pay zakat before Eid", () => true, (p, now) => { const r = nextRamadan(now); return T(10, 0, { from: r + 20 * DAY, once: true }); }),
+      R("eidiya", "Get the eidiya money ready", (p) => (p.family || []).length > 0 || p.kids > 0, (p, now) => { const r = nextRamadan(now); return T(18, 0, { from: r + 25 * DAY, once: true }); })] },
+  { id: "school", icon: "✎", title: "School year", fits: (p) => p.kids > 0, why: "You have children at school",
+    rules: [R("fees", "School fees", () => true, T(9, 0, { monthly: true, dom: 1 })),
+      R("bag", "Pack the school bag", () => true, (p) => T(21, 0, { days: [0, 1, 2, 3, 4, 5, 6].filter((d) => !(p.weekend || [5, 6]).includes((d + 1) % 7)) }))] },
   { id: "trip", icon: "✈", title: "A trip", fits: (p, now) => p.tripAt > now && p.tripAt - now <= 120 * DAY, why: "You have a trip in {n} days",
-    rules: [{ id: "papers", title: "Check the papers a month before", needs: () => true, rule: { when: { type: "time", at: { h: 10, m: 0 } }, if: [], do: [{ type: "remind", text: "papers" }] } },
-      { id: "pack", title: "Packing list 2 days before", needs: () => true, rule: { when: { type: "time", at: { h: 19, m: 0 } }, if: [], do: [{ type: "show", what: "list", list: "travel" }] } }] },
+    rules: [R("papers", "Check passport and visa", (p, now) => p.tripAt - 30 * DAY > (now || Date.now()), (p) => T(10, 0, { from: dayBefore(p.tripAt, 30), once: true })),
+      R("pack", "Pack for the trip", () => true, (p) => T(19, 0, { from: dayBefore(p.tripAt, 2), once: true }))] },
   { id: "car", icon: "🚗", title: "The car", fits: (p) => !!p.car, why: "Your car's papers and service",
-    rules: [{ id: "licence", title: "Licence 30 days before", needs: () => true, rule: { when: { type: "time", at: { h: 10, m: 0 } }, if: [], do: [{ type: "remind", text: "licence" }] } },
-      { id: "oil", title: "Oil change by km", needs: () => true, rule: { when: { type: "time", at: { h: 10, m: 0 } }, if: [], do: [{ type: "remind", text: "oil" }] } }] },
-  { id: "baby", icon: "♡", title: "New baby", fits: (p) => !!p.baby, why: "Vaccines, feeds and checkups",
-    rules: [{ id: "vaccines", title: "Vaccine dates", needs: () => true, rule: { when: { type: "time", at: { h: 10, m: 0 } }, if: [], do: [{ type: "remind", text: "vaccine" }] } },
-      { id: "checkup", title: "Monthly checkup", needs: () => true, rule: { when: { type: "time", at: { h: 10, m: 0 }, monthly: true, dom: 1 }, if: [], do: [{ type: "remind", text: "checkup" }] } }] },
+    rules: [R("licence", "Renew the car licence", (p) => p.licenceAt > 0, (p) => T(10, 0, { from: dayBefore(p.licenceAt, 30), once: true })),
+      R("check", "Check the oil and tyres", () => true, T(10, 0, { monthly: true, dom: 1 }))] },
+  { id: "baby", icon: "♡", title: "New baby", fits: (p) => !!p.baby, why: "Checkups and vaccines",
+    rules: [R("checkup", "Baby checkup", () => true, T(10, 0, { monthly: true, dom: 1 }))] },
 ];
 /** The gallery for this person: every recipe that fits, nearest moment first, each with the rules that will be switched on. */
 export function gallery(p = {}, now = Date.now()) {
@@ -43,9 +45,9 @@ export function gallery(p = {}, now = Date.now()) {
   for (const r of RECIPES) {
     let fit = false; try { fit = !!r.fits(p, now); } catch (e) {}
     if (!fit) continue;
-    const on = r.rules.filter((x) => { try { return !!x.needs(p); } catch (e) { return false; } });
+    const on = r.rules.filter((x) => { try { return !!x.needs(p, now); } catch (e) { return false; } });
     const soon = r.id === "ramadan" ? daysTo(nextRamadan(now), now) : r.id === "trip" ? daysTo(p.tripAt, now) : r.id === "salary" ? ((p.salaryDay - new Date(now).getDate() + 31) % 31) : 999;
-    out.push({ id: r.id, icon: r.icon, title: r.title, why: r.why, n: soon, on: on.map((x) => x.id), off: r.rules.filter((x) => !on.includes(x)).map((x) => x.id) });
+    out.push({ id: r.id, icon: r.icon, title: r.title, why: r.why, n: soon, d: p.salaryDay, on: on.map((x) => x.id), off: r.rules.filter((x) => !on.includes(x)).map((x) => x.id), rules: r.rules.map((x) => ({ id: x.id, title: x.title, on: on.includes(x), rule: on.includes(x) ? x.rule(p, now) : null })) });
   }
   return out.sort((a, b) => a.n - b.n);
 }

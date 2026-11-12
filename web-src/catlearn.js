@@ -16,3 +16,8 @@ export function applyRules(rules, txns = []) {
 }
 /** "11 older Seoudi payments will change too" */
 export const wouldChange = (rules, shop, cat, txns = []) => (txns || []).filter((t) => !t.catByHand && keyOf(t.shop || t.note) === keyOf(shop) && t.cat !== cat).length;
+
+/* the person's rules on the phone: { key: cat } (+ the shop's name as he wrote it, for the list in Money settings) */
+export const CR_KEY = "attune:catrules:v1";
+export function loadCatRules() { try { const v = JSON.parse(localStorage.getItem(CR_KEY) || "null"); return v && typeof v === "object" ? { rules: v.rules || {}, names: v.names || {} } : { rules: {}, names: {} }; } catch (e) { return { rules: {}, names: {} }; } }
+export function saveCatRules(v) { try { localStorage.setItem(CR_KEY, JSON.stringify(v)); } catch (e) {} return v; }

@@ -114,10 +114,14 @@
         than) inside AutoRules.kt + the message-alert matcher — then flip isLive in rulestore.js for each.
   - [x] AU2 SCREEN: suggest-ui.jsx "Attune noticed" card on Home (one idea; Yes → a regular weekly / monthly payment in People &
         plans, asked on its day; Not now = a week; Never = never) — 7 lines × 20 languages; tests/e2e_v9918suggest.py ALL PASSED.
-  - [ ] AU3 SCREEN (next): the Recipes gallery on the Automations page from recipes.gallery(profile) — profile from the person's data
-        (salary in autom / ledger incomes, rent / gam'eya in People & plans, car papers in Errands, children in Family, a trip in
-        Travel, prayers switch); tap a tile → its rules with on / off → "Switch on N" (time rules → reminders through rulestore;
-        salary split → M1 when built). 20 languages + e2e.
+  - [x] AU3 SCREEN: recipes-ui.jsx RecipesGallery on the Automations page (inside rules-ui.jsx) — profileNow() reads the person's data
+        (salary = latest income marked salary in ledger.v3, rent / gam'eya = People & plans kinds rent / circle, fund = first autom pot,
+        family = attune:family:v1, children = People cards whose role says son / daughter / kid / child / ابن / بنت, car + licence date
+        = Errands, trip = attune:trip:v1 depart, prayers = dayset); tiles = recipes.gallery; tap → rules with on / off ("not in your
+        data" greyed) → "Switch on N" → RS.saveRule each (time rules → reminders; `from` / `until` / `once` now honoured by
+        rulestore.saveRule, and `until` is sent to the phone so Ramadan's suhoor stops after the month); tile shows "On" after.
+        31 lines × 20 languages; tests/unit/v9918recipes.test.mjs (real dates: next Ramadan 8 Feb 2027, trip papers off when < 30
+        days, school bag nights by the country's weekend) + tests/e2e_v9918recipes.py ALL PASSED.
   - [ ] B2 screens (after OK): the When/If/Do card in Chat + Home (screen AU1-A, with the "ask" card), Automations page list,
         Home "Attune noticed" card (AU2-A), Recipes gallery (AU3-A); the runner for each trigger (see the line below).
   - [ ] (was: tests/rules/gen.mjs — exactly 10,000 sentences: 21 language codes × triggers × checks × actions, each with the
@@ -126,14 +130,26 @@
         tests/unit/v9918rules.test.mjs (2,500 sample ≥ 99%). Then wire: Chat / Home "When … do …" card (screen A, after OK),
         the rule store + runner (time → Reminders, money_in → AutoRules.kt words, message/call → watch.js, arrive/leave → a
         geofence (needs location — Play: background location declaration!), bluetooth/wifi/charging → Kotlin receivers).
-- [ ] **B3 money: M1 salary sorter · M5 categories that learn · M3 split groups** (30 countries' currencies)
+- [x] **B3 money: M1 salary sorter · M5 categories that learn · M3 split groups** (30 countries' currencies)
   - [x] logic: web-src/moneyunits.js (each currency's smallest coin from Intl: KWD 3, EGP 2, JPY 0), salarysort.js (salaryOf joins
         two parts within 3 days; sortSalary: fixed / % parts, "left", a part that doesn't fit is flagged), catlearn.js (exact shop
         key in any script; never hand-set; never a longer name), groups.js (shares to the coin, settle ≤ people−1 payments)
   - [x] 10,000 each (27 currencies; names in 10 scripts): tests/salarysort, tests/groups, tests/catlearn — all 100%; planted bugs
         → 95.1% / 2.1% / 60.7% (the catlearn test first missed its planted bug — catFor is now checked too). tests/unit/v9918b3.
-  - [ ] screens after OK: M1-A checklist sheet on the salary notification, M3-A group page + settle-up + share, M5-B "Always?"
-        sheet + the rules list; wire to paylog / ledger; 20 languages.
+  - [x] M1-A SCREEN: salary-ui.jsx — mode "salary" (Money → More → Salary plan, Automations page, Home card "Salary arrived — sort
+        it" for 5 days while parts are unticked, "open my salary plan" / «افتح المرتب» in Chat). Salaries = ledger incomes with cat
+        salary or the word in 20 languages; plan (attune:salaryplan:v1) starts from People & plans monthly money out, editable (amount
+        or "10%"; Arabic digits); ticks per salary; Left to spend exact; a part that doesn't fit is flagged. 16 lines × 20;
+        tests/e2e_v9918salary.py ALL PASSED. (Not yet: opening it straight from the salary NOTIFICATION — needs a NagPay-style
+        action on the money-in notification in Kotlin.)
+  - [x] M5-B SCREEN: money-sheets-ui.jsx TxSheet — a changed category on an expense → "Always put {shop} in {cat}? N older payments
+        will change too" (Yes, always → rule saved in attune:catrules:v1 + the older ones re-categorised through the bridge's tx-edit;
+        Just this one → nothing learned); Money settings card "What Money learned" with Delete; paylog.appendToLedger applies the
+        rules to every NEW payment (notifications / chat). 8 lines × 20; tests/e2e_v9918catlearn.py + tests/unit/v9918m5wire ALL PASSED.
+  - [x] M3-A SCREEN: groups-ui.jsx — mode "split" (NOT "groups" — that is the WhatsApp groups page) from Money → More → Split with
+        anyone and "open split" in Chat; new group (names with commas / «و»), expenses (who paid, shared by everyone or the ticked
+        people), fewest payments (groups.settle), Balances, Share on WhatsApp (wa.me text), Settled (kept in the group's log). Currency
+        = the country's. 23 lines × 20; tests/e2e_v9918groups.py ALL PASSED (Ali's Sahel example: 3 payments 2,250 / 1,050 / 450).
 - [ ] **B4 to-dos: T1 brain dump (typed + voice) · T3 countdowns · T2 habits · T6 focus (Play check) · T4 places · T5 week plan**
   - [x] T3 / T2 / T6 logic: web-src/b4time.js (daysLeft by calendar — DST never shifts it; habit dueOn / streak / weekDots / goalCount
         — a day not due never breaks a streak, a day counts once; focused() — pauses out, capped at the plan). tests/b4time/gen.mjs:
@@ -168,6 +184,9 @@
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
 
 ## Log
+- 12 Nov 2026 (later): AU3 Recipes gallery + all B3 screens (M1-A salary plan, M5-B Always?, M3-A split groups) built, 20 languages,
+  e2e ALL PASSED. Next: B4 screens (T3 countdown chips, T2 habits, T6 focus, T4 places, T5 week plan), then T1 (readers in 18 more
+  languages first), B5 people, B6, B7 travel, B8 AU4, B9 N2.
 - 12 Nov 2026: Ali OK'd every combined screen → building the screens batch by batch (B1 first).
 - 11 Nov 2026 (late night): B1, B2, B3 LOGIC done and pushed (all 10,000-case runs at 100%, held-out for the rules reader 40/40). Screens for all of them wait for Ali's OK on https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU. The Kotlin of B1 (NagPay.kt) compiled green on the branch build https://github.com/alydibiky/attune-/actions/runs/43113610542.
 - 11 Nov 2026 (night): B1 logic + 10,000-case tests + Kotlin done (see B1); screens wait for the OK.

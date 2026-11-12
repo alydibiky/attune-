@@ -76,8 +76,10 @@ export function saveRule(r, { schedule, native, lang = "en", now = Date.now() } 
       const d = new Date(now); d.setHours(w.at ? w.at.h : 9, w.at ? w.at.m : 0, 0, 0); if (d.getTime() <= now) d.setDate(d.getDate() + 1);
       if (w.days && w.days.length) while (!w.days.includes(d.getDay())) d.setDate(d.getDate() + 1);
       if (w.monthly) { d.setDate(w.dom || 1); if (d.getTime() <= now) d.setMonth(d.getMonth() + 1); }
-      const repeat = w.monthly ? "monthly" : w.days && w.days.length ? (w.days.length === 1 ? "weekly" : "days:" + [...w.days].sort().join(",")) : "daily";
-      schedule({ id: "rule-" + id, at: d.getTime(), title: lines.dos.join(" · ") || lines.when, body: lines.when, repeat, created: now, source: "rule" }); rule.engine = "reminder:rule-" + id;
+      // v9.9.18 AU3: a rule may start later (from), end (until — Ramadan's month) or ring once (a trip's packing day)
+      if (w.from && w.from > d.getTime()) { const f = new Date(w.from); f.setHours(d.getHours(), d.getMinutes(), 0, 0); d.setTime(f.getTime()); }
+      const repeat = w.once ? "none" : w.monthly ? "monthly" : w.days && w.days.length ? (w.days.length === 1 ? "weekly" : "days:" + [...w.days].sort().join(",")) : "daily";
+      schedule({ id: "rule-" + id, at: d.getTime(), title: r.title || lines.dos.join(" · ") || lines.when, body: lines.when, repeat, ...(w.until ? { until: w.until } : {}), created: now, source: "rule" }); rule.engine = "reminder:rule-" + id;
     } else if (w.type === "money_in") {
       const pot = (r.do || []).find((x) => x.type === "pot");
       const words = w.what === "salary" ? ["salary", "payroll", "مرتب", "راتب"] : w.who ? [nameOf(ctx.people, w.who)].filter(Boolean) : ["transfer", "تحويل"];

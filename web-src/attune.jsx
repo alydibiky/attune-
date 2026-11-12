@@ -146,7 +146,9 @@ import { connectNow } from "./connected.js";
 import { QuietWake } from "./wake-ui.jsx";
 import * as B1W from "./b1wire.js";
 import * as RS from "./rulestore.js";
-import { DoneForYouPage } from "./donelog-ui.jsx";   // v9.9.18 B1: nag levels, notification Paid → balance, Done for you
+import { DoneForYouPage } from "./donelog-ui.jsx";
+import { SalaryPage } from "./salary-ui.jsx";   // v9.9.18 M1 salary sorter
+import { GroupsPage } from "./groups-ui.jsx";   // v9.9.18 M3 split with anyone   // v9.9.18 B1: nag levels, notification Paid → balance, Done for you
 import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST, weekendOf } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
 const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
@@ -6632,7 +6634,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       {msheet ? (() => { const close = (msg) => { setMsheet(null); if (msg) flash(msg); setTimeout(() => setVer((x) => x + 1), 200); }; const P = { L: ledgerNow, run: runDo, onClose: close, id: msheet.id };
         return msheet.k === "account" ? <AccountSheet {...P} /> : msheet.k === "bill" ? <BillSheet {...P} /> : msheet.k === "tx" ? <TxSheet {...P} /> : msheet.k === "debt" ? <DebtSheet {...P} />
           : msheet.k === "zakat-pay" ? <ZakatPaySheet {...P} /> : msheet.k === "zakat-set" ? <ZakatSetSheet {...P} /> : msheet.k === "zakat-rulings" ? <ZakatRulingsSheet {...P} /> : msheet.k === "zakat-calc" ? <ZakatCalcSheet {...P} kind={msheet.id} nisab={(() => { try { const zs = zakatPage(ledgerNow, snapRef.current || snapshot); return (zs && zs.status && zs.status.nisab) || 0; } catch (e) { return 0; } })()} /> : null; })() : null}
-      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "share") { setMoreOpen(false); setShareOpen(true); return; }  openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
+      {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "split" || sc === "salary") { setMoreOpen(false); if (goTo) goTo(sc); return; } if (sc === "share") { setMoreOpen(false); setShareOpen(true); return; }  openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
       {shareOpen ? <MoneyShareSheet runDo={runDo} flash={flash} onClose={() => setShareOpen(false)} /> : null}
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
@@ -7793,7 +7795,7 @@ const OWN_TITLE = new Set(["groups", "planner", "health", "scout", "lifeask", "s
 // persona 2 (Ali: P2-D): the pages that use the AI — only they show the model pill in the top bar
 const AI_MODES = new Set(["chat", "ask", "instant", "write", "improve", "compress", "library", "humanize", "copilot", "code", "studio", "pdfchat", "booklib", "knowledge", "cv", "skills", "assistants", "projects", "artifacts", "slides", "convert", "learn", "news", "recall", "remember", "translate", "coach", "deal", "xray"]);
 // v9.9.16 OK1: the pages that had no name for the top bar (Agents said "Attune")
-const BAR_TITLES = { agents: "Agents", timeline: "Follow-ups", life: "People & plans", radar: "Deadline Radar", guardian: "Money Guardian", family: "Family", reminders: "Reminders", write: "Writing", people: "People", projects: "Projects", missions: "Missions", automations: "Automations", recall: "Recall", donefor: "Done for you",
+const BAR_TITLES = { agents: "Agents", timeline: "Follow-ups", life: "People & plans", radar: "Deadline Radar", guardian: "Money Guardian", family: "Family", reminders: "Reminders", write: "Writing", people: "People", projects: "Projects", missions: "Missions", automations: "Automations", recall: "Recall", donefor: "Done for you", salary: "Salary plan", split: "Split with anyone",
   privacy: "Privacy", guide: "How to use Attune", slides: "Slides & Reports", convert: "File Converter", pdfchat: "Ask a PDF", cv: "CV / Resume", memory: "Mind", care: "Family health", translate: "Translate", travel: "Travel" };
 const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errands", lists: "To-dos & lists", booklib: "Documents", privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", people: "People", improve: "Improve a prompt", compress: "Compress", library: "Prompt lab", write: "Writing", fleet: "Fleet", timeline: "Follow-ups", remember: "Remember", metro: "Cairo Metro", missions: "Missions", recall: "Recall", automations: "Automations",
@@ -8037,7 +8039,7 @@ export default function App() {
     if (NATIVE && NATIVE.schedule) {
       try { res = JSON.parse(NATIVE.schedule(JSON.stringify({ id: r.id, at: r.at, title: r.title, body: r.body || "", repeat: r.repeat || "none", off: weekendOf() /* v9.9.18 the country's weekend */,
         /* v9.9.18 B1 (Ali OK'd AU5 / AU7): keep reminding + quiet hours, the Paid → balance buttons, the buttons' words */
-        ...(r.nag ? { nag: r.nag } : {}), ...(r.important ? { important: true } : {}), quiet: B1W.quietHours(), labels: B1W.buttonWords(), ...(r.pay ? { pay: r.pay } : {}) }))); } catch (e) {}
+        ...(r.nag ? { nag: r.nag } : {}), ...(r.important ? { important: true } : {}), quiet: B1W.quietHours(), labels: B1W.buttonWords(), ...(r.pay ? { pay: r.pay } : {}), ...(r.until ? { until: r.until } : {}) /* AU3: Ramadan's suhoor ends with the month */ }))); } catch (e) {}
       if (res.notify === false && NATIVE.askNotifications) NATIVE.askNotifications();
     }
     return res;
@@ -11152,6 +11154,10 @@ export default function App() {
           <AutomationsPage native={NATIVE} flash={flash} schedule={scheduleReminder} unschedule={(id) => { try { setReminders(loadReminders().filter((x) => x.id !== id)); NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
         ) : mode === "donefor" ? (
           <DoneForYouPage flash={flash} />
+        ) : mode === "salary" ? (
+          <SalaryPage flash={flash} />
+        ) : mode === "split" ? (
+          <GroupsPage flash={flash} />
         ) : mode === "recall" ? (
           <RecallPage memory={memory} remember={remember} native={NATIVE} call={nativeCall} readText={readTextAny} flash={flash}
             openRec={(r) => { setOpenRec(r); setMode("memory"); }} openChat={(id) => { setOpenChatId(id); navTo("chat"); }}

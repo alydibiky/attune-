@@ -13,6 +13,7 @@ import { isoDay } from "./money-report.js";
 import * as U from "./ui-kit.jsx";
 import { REGION_CUR } from "./locale.js";
 import * as ZC from "./zakatcalc.js";
+import * as CL from "./catlearn.js";   // v9.9.18 M5 (Ali picked B): ask once when he changes a category
 
 const ar = () => getLang() === "ar";
 const amt = (n, cur) => fmt(n) + (cur ? " " + cur : "");
@@ -115,6 +116,23 @@ export function TxSheet({ L, id, run, onClose }) {
   const s = useSave(run, onClose);
   const ev = t.evidence;
   const [big, setBig] = useState(false);
+  // v9.9.18 M5: a changed category on a payment with a shop / name → "Always put Seoudi in Groceries?" (once, right then)
+  const [ask, setAsk] = useState(null), [busy2, setBusy2] = useState(false);
+  const saveTx = async () => {
+    const shop = (note.trim() || t.note || "").trim(), changed = t.type === "expense" && cat !== (t.cat || "other") && shop && CL.keyOf(shop);
+    if (!changed) return s.go("tx-edit", { id, amount: parseFloat(amount), cat, account, date, note: note.trim() }, tr("Saved"));
+    setBusy2(true); let r = { ok: false }; try { r = await run("tx-edit", { id, amount: parseFloat(amount), cat, account, date, note: note.trim() }); } catch (e) {} setBusy2(false);
+    if (!r || !r.ok) return s.go("tx-edit", { id, amount: parseFloat(amount), cat, account, date, note: note.trim() }, tr("Saved"));
+    const st = CL.loadCatRules(); if (st.rules[CL.keyOf(shop)] === cat) return onClose(tr("Saved"));
+    const others = (L.txns || []).filter((x) => x.id !== id && x.type === "expense");
+    setAsk({ shop, cat, name: ((cats.find((c) => c.id === cat)) || {}).name || cat, n: CL.wouldChange({}, shop, cat, others), others });
+  };
+  const always = async () => {
+    const st = CL.loadCatRules(); CL.saveCatRules({ rules: CL.learn(st.rules, ask.shop, ask.cat), names: { ...st.names, [CL.keyOf(ask.shop)]: ask.shop } });
+    const todo = ask.others.filter((x) => !x.catByHand && CL.keyOf(x.shop || x.note) === CL.keyOf(ask.shop) && x.cat !== ask.cat);
+    for (const x of todo) { try { await run("tx-edit", { id: x.id, amount: x.amount, cat: ask.cat, account: x.account, date: x.date, note: x.note || "" }); } catch (e) {} }
+    onClose(tr("Saved — {n} changed", { n: todo.length + 1 }));
+  };
   const title = t.type === "income" ? tr("Income") : t.type === "transfer" ? tr("Transfer") : t.type === "zakat" ? tr("Zakāt") : t.type === "debt" ? tr("Debt") : tr("Expense");
   return <Sheet title={title} onClose={() => onClose()} testid="money-tx-sheet" danger={editable ? <Del onClick={() => confirmDel(t.note || title) && s.go("tx-delete", { id }, tr("Deleted"))} testid="tx-delete" /> : null}>
     {editable ? <>
@@ -134,7 +152,13 @@ export function TxSheet({ L, id, run, onClose }) {
       <p className="m-0 text-[11.5px] font-extrabold c-sub">{tr("The message as it arrived")}{ev.from ? " · " + ev.from : ""}{ev.app ? " · " + ev.app : ""}</p>
       <p className="m-0 mt-1 text-[14px] leading-snug whitespace-pre-wrap select-text" dir="auto">{ev.text}</p></div> : null}
     <Err err={s.err} />
-    {editable ? <SaveBtn busy={s.busy} onClick={() => s.go("tx-edit", { id, amount: parseFloat(amount), cat, account, date, note: note.trim() }, tr("Saved"))} /> : null}
+    {editable && !ask ? <SaveBtn busy={s.busy || busy2} onClick={saveTx} /> : null}
+    {ask ? <div className="rounded-[14px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-3 space-y-2" data-testid="cat-always">
+      <p className="m-0 text-[13px] c-sub">✓ {tr("Changed to {c}", { c: ask.name })} · {ask.shop}</p>
+      <p className="m-0 text-[15px] font-extrabold" dir="auto">{tr("Always put {s} in {c}?", { s: ask.shop, c: ask.name })}</p>
+      {ask.n ? <p className="m-0 text-[13px] c-sub">{tr("{n} older {s} payments will change too.", { n: ask.n, s: ask.shop })}</p> : null}
+      <div className="flex gap-2"><button className={U.btnP} onClick={always} data-testid="cat-always-yes">{tr("Yes, always")}</button>
+        <button className={U.btnS} onClick={() => onClose(tr("Saved"))} data-testid="cat-always-no">{tr("Just this one")}</button></div></div> : null}
   </Sheet>;
 }
 
@@ -417,6 +441,15 @@ function TabsCard({ ui, doIt, Card }) {
     </div>)}</div>
   </Card>;
 }
+/** v9.9.18 M5 (the list in Settings, Ali's B keeps A's list): what Money learned — each shop → its category, with Delete. */
+function LearnedCard({ Card, flash }) {
+  const [st, setSt] = useState(CL.loadCatRules), keys = Object.keys(st.rules || {});
+  if (!keys.length) return null;
+  return <Card title={tr("What Money learned")}><div data-testid="cat-rules">{keys.map((k) => <div key={k} className="flex items-center gap-2 min-h-[44px] border-t border-[var(--c-ln)] first:border-0" data-testid="cat-rule">
+    <span className="flex-1 text-[14px]" dir="auto">{(st.names || {})[k] || k} → {tr(CAT_NAME[st.rules[k]] || st.rules[k])}</span>
+    <button className="min-h-[36px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" onClick={() => { const n = { rules: CL.unlearn(st.rules, k), names: st.names }; delete n.names[k]; setSt(CL.saveCatRules(n)); flash && flash(tr("Deleted")); }} data-testid="cat-rule-del">{tr("Delete")}</button></div>)}</div></Card>;
+}
+const CAT_NAME = { food: "Food", groceries: "Groceries", transport: "Transport", bills: "Bills", rent: "Rent", shopping: "Shopping", health: "Health", fun: "Fun", coffee: "Coffee/Tea", gifts: "Gifts", other: "Other", salary: "Salary" };
 export function LedgerSettings({ L, run, flash, back, Head, Card }) {
   const ui = L.ui || {};
   const [cat, setCat] = useState({ emoji: "", label: "" });
@@ -432,6 +465,7 @@ export function LedgerSettings({ L, run, flash, back, Head, Card }) {
       <label className="flex items-center gap-2 mt-3 text-[14px] font-bold"><input type="checkbox" checked={!!ui.dec} onChange={(e) => doIt("prefs", { dec: e.target.checked })} className="w-5 h-5 accent-[var(--c-acc)]" data-testid="set-dec" />{tr("Show decimals")}</label>
     </Card>
     <TabsCard ui={ui} doIt={doIt} Card={Card} />
+    <LearnedCard Card={Card} flash={flash} />
     <Card title={tr("Currency and budget")}>
       <Field label={tr("Default currency")}><input defaultValue={L.currency || ""} onBlur={(e) => { const v = e.target.value.trim().toUpperCase(); if (v && v !== L.currency) doIt("prefs", { currency: v }); }} className={U.inp + " uppercase"} dir="ltr" data-testid="set-currency" /></Field>
       <div className="h-3" /><Field label={tr("Monthly budget (0 = none)")}><div className="flex gap-2"><input value={budget} onChange={(e) => setBudget(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp} data-testid="set-budget" />
