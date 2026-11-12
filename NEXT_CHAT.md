@@ -11,6 +11,15 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ 12 Nov, later — `main` = **v9.9.20** (versionCode 163): Ali's Scout screenshots fixed (tests/unit/v9919scout.test.mjs): the night
+note is one per hunt, id scout-<hunt> (it opened the Tucson for a Huawei watch hunt), in his language, no "51 new ads" count; ads priced
+in another country's money are out (SAR on syarah.com in an Egypt hunt made "62k cheapest"); a price written with its currency in the
+ad's title wins (1,490,000, not 1,571,667); "new" = the open hunt's own. Plus How to use guides / demos / life areas for the 4 new tools.
+**Waiting for Ali:** (1) Agents & Scout — he wrote "I am tired of agents": A hide for launch / B quiet (no night notes) / C keep;
+mock-ups before building A or B. (2) Place reminders in the first release (Play background-location declaration) or after.
+Still open from his screenshot: every match shows 100/100 when a hunt has few wishes — show options (mock-ups) before changing it.
+T1 brain dump: only research started (weekday names per language via Intl checked); nothing built yet.
+
 ## ▶ START HERE (12 Nov, morning) — `main` = **v9.9.19** (versionCode 162) = B0–B4 screens of AUTOMATION_PLAN.md.
 The 11 Nov night session ran out of its weekly limit before pushing its B4 screens; this session rebuilt them (T2 habits, T3 countdowns,
 T4 place in a reminder, T5 week plan, T6 focus timer) + "open habits / countdowns / week plan / focus" from Tools and Chat + How to use
