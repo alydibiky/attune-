@@ -19,7 +19,7 @@ CLIPS = {"id": "p1", "kind": "watch", "on": True, "created": now - 30 * H, "titl
          "best3": [{"name": "Huawei FreeClip 2", "price": 120, "site": "amazon.eg", "href": "https://www.amazon.eg/dp/case"}, {"name": "Huawei FreeClip 2", "price": 7999, "site": "noon.com", "href": "https://www.noon.com/egypt-en/freeclip-2/p/"}]}
 INIT = """try{localStorage.setItem('attune:start','home'); localStorage.setItem('attune:agents:legacy','0'); localStorage.setItem('attune:agents:v1', %s);}catch(e){}
 (() => { function w(){ const N = window.AttuneNative; if (!N) return setTimeout(w, 5); window.__opened = [];
-  N.agentWatchPlan = (p) => 'ok'; N.agentWatchTake = () => '{}'; N.agentWatchWords = (j) => 'ok';
+  N.agentWatchPlan = (p) => { window.__plan = JSON.parse(p); return 'ok'; }; N.agentWatchTake = () => '{}'; N.agentWatchWords = (j) => 'ok';
   N.openInApp = (u) => { window.__opened.push(u); return JSON.stringify({ok: true, how: 'app'}); };
   N.openUrl = (u) => { window.__opened.push(u); return true; };
   N.agentOpen = (id, arg) => { window.__checked = (window.__checked || 0) + 1; setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({reason: 'done', offers: 0, top: []})), 50); };
@@ -74,6 +74,9 @@ with sync_playwright() as p:
     check(a["rules"].get("mustHave") == ["breakfast"], "OK-4: must have → breakfast")
     page.click("[data-testid=agent-set-hours]"); page.click("[data-testid=set-hours-6]"); page.click("[data-testid=agent-set-save]"); page.wait_for_timeout(300)
     check([x for x in agents(page) if x["id"] == "h1"][0]["rules"]["hours"] == 6 and "6 hours" in clean(page.locator("[data-testid=agent-set-val-hours]").inner_text()), "OK-4: check → every 6 hours")
+    page.wait_for_timeout(1500)
+    pl = page.evaluate("window.__plan || []")
+    check(any(x.get("hours") == 6 for x in pl if str(x.get("id", "")).startswith("h1") or x.get("title", "").startswith("Hotels")), "the phone's background plan now checks this agent every 6 hours: " + json.dumps(pl)[:200])
     check(page.evaluate("window.__checked || 0") >= 1, "Save → it checks again now")
     page.click("[data-testid=agent-watch-pause]"); page.wait_for_timeout(200)
     check([x for x in agents(page) if x["id"] == "h1"][0]["on"] is False, "Pause from What I watch")
