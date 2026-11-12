@@ -1,0 +1,22 @@
+// v9.9.25 B7 TR1 the trip from bookings: a 2,500 sample of tests/tr1/gen.mjs must stay at 100%, a held-out 500, plus messages written by hand.
+import { run } from "../tr1/gen.mjs";
+import * as B from "../../web-src/bookings.js";
+let fail = 0; const ok = (c, w) => { console.log((c ? "PASS " : "FAIL ") + w); if (!c) fail++; };
+const r = run(2500, 0); ok(r.pass === 2500, "2,500 generated booking histories: " + r.pass + " / 2500 " + JSON.stringify(r.bad.slice(0, 1)));
+const h = run(500, 90000); ok(h.pass === 500, "500 held-out: " + h.pass + " / 500");
+const NOW = Date.parse("2026-11-12T12:00:00");
+const a = B.readBooking("EgyptAir: Your flight MS 643 Cairo (CAI) to Jeddah (JED) on 03 Mar 2027 at 09:40. Booking ref K7QX2P.", NOW);
+ok(a.airline === "EgyptAir" && a.no === "MS643" && a.from === "CAI" && a.to === "JED" && a.date === "2027-03-03" && a.time === "09:40" && a.code === "K7QX2P", "EgyptAir SMS: every field");
+const b = B.readBooking("مصر للطيران: تم تأكيد رحلتك MS643 من جدة إلى القاهرة يوم ٧ مارس ٢٠٢٧ الساعة 18:30 رقم الحجز K7QX2P", NOW);
+ok(b.from === "JED" && b.to === "CAI" && b.date === "2027-03-07", "Arabic: «من جدة إلى القاهرة» → JED → CAI, «٧ مارس ٢٠٢٧»");
+const c = B.readBooking("flynas booking confirmed. PNR: TA6898. Flight XY191 RUH-IST, departure 21/12/2026 8:10 PM.", NOW);
+ok(c.no === "XY191" && c.code === "TA6898" && c.time === "20:10", "the PNR TA6898 is not taken as the flight; 8:10 PM → 20:10");
+let it = B.applyBooking([], a).items;
+const ch = B.applyBooking(it, B.readBooking("Schedule change: flight MS643 now departs on 04/03/2027 at 11:15 instead of 09:40. PNR K7QX2P", NOW));
+ok(ch.did === "replaced" && ch.items.length === 1 && ch.items[0].time === "11:15" && ch.items[0].date === "2027-03-04" && ch.items[0].from === "CAI", "a change replaces it (new day and time, the route kept)");
+ok(B.applyBooking(ch.items, B.readBooking("Your booking K7QX2P has been cancelled.", NOW)).items.length === 0, "a cancellation with only the code removes it");
+ok(B.applyBooking(it, a).did === "same", "the same message twice → added once");
+const s = B.readBooking("Booking.com: 2 nights at Pullman Zamzam, check-in 2027-02-07. Booking code GX3MAR.", NOW);
+ok(s.checkin === "2027-02-07" && s.checkout === "2027-02-09" && s.code === "GX3MAR", "a code like GX3MAR is not read as 3 March");
+ok(B.readBooking("See you at lunch tomorrow at 1:30", NOW) === null, "an ordinary message → nothing");
+console.log(fail ? "FAILED " + fail : "ALL PASSED");
