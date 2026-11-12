@@ -1,7 +1,7 @@
 // v9.9.25 B8 AU4 scheduled AI jobs: a 2,500 sample of tests/au4/gen.mjs must stay at 100%, a held-out 500, plus the mock-up's jobs and the
 // number check (an answer's number that isn't in the person's data is flagged).
 import { run } from "../au4/gen.mjs";
-import * as J from "../../web-src/jobs.js";
+import * as J from "../../web-src/aijobs.js";
 let fail = 0; const ok = (c, w) => { console.log((c ? "PASS " : "FAIL ") + w); if (!c) fail++; };
 const r = run(2500, 0); ok(r.pass === 2500, "2,500 generated schedules in 21 languages: " + r.pass + " / 2500 " + JSON.stringify(r.bad.slice(0, 1)));
 const h = run(500, 90000); ok(h.pass === 500, "500 held-out: " + h.pass + " / 500");

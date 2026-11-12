@@ -1739,3 +1739,6 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 - (later) B6 finished (X1 business card, X4, X2, X3, X6) — see AUTOMATION_PLAN B6. Next: B7 travel (TR1 TR2 TR3), B8 AU4, B9 N2.
   Lesson: never start a second full test run while one is going — they share ports and both fail.
 - (later) B7 travel built (TR1 TR2 TR3) — v9.9.25 (versionCode 168). Next: B8 AU4 scheduled AI jobs (needs the night job), B9 N2 voice memo.
+- (later) B8 AU4 built (aijobs.js — careful: jobs.js is the older "/" command queue; it was overwritten by mistake and restored before
+  main). Fixed on the way: Urdu «جمعرات» turned morning times into evening (rules + jobs); the week plan hid your reminder when Attune's
+  block shared its hour. N2 voice memo not built (99% offline not reachable) — told Ali.

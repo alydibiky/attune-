@@ -47,7 +47,7 @@ import { MoneyShareSheet } from "./moneyshare-ui.jsx";
 import { FocusHost } from "./focus-ui.jsx";
 import { WeekPlanHost } from "./weekplan-ui.jsx";
 import { BrainDumpHost } from "./braindump-ui.jsx";
-import { JobsRunner } from "./jobs-ui.jsx";
+import { JobsRunner } from "./aijobs-ui.jsx";
 import { popBack, hasBack, useSubBack, useBackDepth, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";

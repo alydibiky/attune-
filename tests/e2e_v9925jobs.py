@@ -12,8 +12,9 @@ NOW = datetime.datetime(2026, 11, 15, 22, 0, 0)   # Sunday, after 21:00
 past = int(datetime.datetime(2026, 11, 15, 21, 0).timestamp() * 1000)
 JOBS = {"jobs": [{"id": "j1", "text": "every Sunday 9 pm plan my week", "schedule": {"kind": "weekly", "days": [0], "dom": None, "at": {"h": 21, "m": 0}}, "next": past, "created": 1}], "results": []}
 L = {"currency": "EGP", "accounts": [{"id": "a", "name": "Cash", "currency": "EGP"}], "txns": [{"id": "t1", "type": "expense", "amount": 4200, "date": "2026-11-10", "note": "groceries", "account": "a"}], "recurring": []}
-INIT = ("try { localStorage.setItem('attune:start','home'); localStorage.setItem('attune:jobs:v1', %s); localStorage.setItem('ledger.v3', %s); } catch (e) {}\n"
-        "(() => { const go = () => { if (!window.__mock) return setTimeout(go, 5); window.__mock.fakeQueue = ['This week: you spent 4200 so far. 3 big things. 14,000 left until salary.']; }; go(); })();") % (json.dumps(json.dumps(JOBS)), json.dumps(json.dumps(L)))
+INIT = ("try { localStorage.setItem('attune:start','home'); localStorage.setItem('attune:aijobs:v1', %s); localStorage.setItem('ledger.v3', %s); } catch (e) {}\n"
+        "(() => { const go = () => { if (!window.__mock) return setTimeout(go, 5); window.__mock.fakeQueue = ['This week: you spent 4200 so far. 3 big things. 14,000 left until salary.'];"
+        " window.__mock.engine = { ...window.__mock.engine, state: 'ready', modelId: 'test-model' }; window.dispatchEvent(new CustomEvent('attune-engine', { detail: { ...window.__mock.engine } })); }; go(); })();") % (json.dumps(json.dumps(JOBS)), json.dumps(json.dumps(L)))
 with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
@@ -23,7 +24,7 @@ with sync_playwright() as p:
     t = page.locator("[data-testid=jobs-home]").inner_text()
     check("plan my week" in t and "4200" in t, "the job ran — its answer waits on Home: " + t.replace("\n", " | ")[:160])
     check("14,000" in page.locator("[data-testid=jobs-home-flag]").inner_text(), "14,000 isn't in the data → flagged")
-    j = page.evaluate("JSON.parse(localStorage.getItem('attune:jobs:v1')).jobs[0]")
+    j = page.evaluate("JSON.parse(localStorage.getItem('attune:aijobs:v1')).jobs[0]")
     check(j["next"] > past + 6 * 86400000, "the next run moved on a week")
     page.click("[data-testid=jobs-home-ok]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=jobs-home]").count() == 0, "OK hides it")

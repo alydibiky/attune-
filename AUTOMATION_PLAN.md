@@ -222,8 +222,13 @@
   - TR3 tripmoney.js (A): Money tab (budget in both currencies to the piastre, shared costs settle to zero) + Papers tab (passport rule
     per country, visa, insurance). 10,000 trips.
   - Not offline: the leave time from live traffic (Maps) — the person's own minutes are used.
-- [ ] **B8 AU4 scheduled AI jobs** (needs the night job)
-- [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)
+- [x] **B8 AU4 scheduled AI jobs** (v9.9.25) — aijobs.js + aijobs-ui.jsx (NOT jobs.js: that is the v6.48 "/" command queue): schedules
+  in 21 languages (weekly / daily / monthly; 31st → last day), Automations → Jobs, Home "Made for you" card, numbers not in the person's
+  data flagged. 10,000 sentences. The night run while charging is a phone part still to build — until then a due job runs when the app
+  is open with the model ready.
+- [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali) — NOT built: the phone's recognizer is for
+  short commands; long recordings offline with a time on every line at 99% in Egyptian Arabic and the other languages isn't reachable
+  with on-phone speech models today — told Ali (12 Nov).
 
 ## Log
 - 12 Nov 2026 (evening): T1 brain dump built (reader 99.06% on 10,000 + screen). Agents combined page (Ali's OK-1…OK-4) built too

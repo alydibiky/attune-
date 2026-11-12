@@ -1,6 +1,6 @@
 /* ---- v6.41 (upgrade C3) — the Automations page: say what should happen, the rule is made once by code, the phone runs it
    (AutoRules.kt) with no AI. Pots (صناديق) hold what was set aside. autom.js is the logic. */
-import { JobsSection } from "./jobs-ui.jsx";
+import { JobsSection } from "./aijobs-ui.jsx";
 import React, { useState, useEffect } from "react";
 import { tr, getLang } from "./i18n.js";
 import { parseAutomation, ruleText, loadAuto, saveAuto, addRule, applyEvents, takeOut, READY, readyOn, parseMany } from "./autom.js";

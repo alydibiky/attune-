@@ -45,8 +45,9 @@ export function WeekPlanPage({ onClose, flash }) {
   const hours = []; for (let h = +v.from.slice(0, 2); h < +v.to.slice(0, 2); h++) hours.push(h);
   const cell = (d, h) => { const a = d + h * 3600e3, b = a + 3600e3;
     const mine = plan.blocks.filter((x) => x.from < b && x.to > a), theirs = busy.filter((x) => x.from < b && x.to > a), pr = prayers.filter((p) => p >= a && p < b);
+    // (an hour with your own reminder AND Attune's block shows both — the reminder used to disappear under the plan)
+    if (theirs.length) return { k: "busy", t: theirs[0].title + (mine.length ? " · " + name(mine[0].id) : "") };
     if (mine.length) return { k: "plan", t: name(mine[0].id) };
-    if (theirs.length) return { k: "busy", t: theirs[0].title };
     if (pr.length) return { k: "pr", t: tr("Prayer") };
     return { k: "", t: "" }; };
   const COL = { plan: { background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }, busy: { background: "var(--c-surf-2, #E6E3E0)", color: "var(--c-ink)" }, pr: { background: "rgba(44,143,128,.18)", color: "var(--c-ink)" }, "": { background: "transparent" } };
