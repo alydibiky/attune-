@@ -7812,6 +7812,10 @@ const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.s
 
 const MORE_TOOLS = [
   ["lists", "To-dos & lists", "Your to-dos, and lists that come back to Home when you need them", ListChecks],   // v9.2 (Ali picked 1A)
+  ["habits", "Habits", "Tick a habit each day — streaks and this week's dots on Home", ListChecks],   // v9.9.19 T2
+  ["countdowns", "Countdowns", "Days left to a wedding, a trip, Ramadan — chips under the Home box", CalendarDays],   // v9.9.19 T3
+  ["weekplan", "Week plan", "Tasks with hours and a deadline — Attune finds the time around your day", CalendarDays],   // v9.9.19 T5
+  ["focus", "Focus", "A full-screen timer for one task; the time is kept per task", Target],   // v9.9.19 T6
   ["missions", "Missions", "A goal with a date — Attune works on it every day and shows your real chance", Target],   // v6.37
   ["recall", "Recall", "Find anything on your phone by meaning — screenshots, notifications, chats, notes", Search],   // v6.40 (agent C)
   ["automations", "Automations", "Say what should happen — “when my salary arrives, put 20% in the car fund” — and it runs by itself", Zap],   // v6.41 (C3)
@@ -7997,7 +8001,7 @@ export default function App() {
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
   // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
-  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } /* v9.9.19 B4: screens that open over the page */ if (m === "weekplan" || m === "focus") { try { window.dispatchEvent(new CustomEvent(m === "weekplan" ? "attune-weekplan" : "attune-focus-pick")); } catch (e) {} return; } if (m === "habits" || m === "countdowns") { const ev = m === "habits" ? "attune-habit-add" : "attune-countdown-add"; setTimeout(() => { try { window.dispatchEvent(new CustomEvent(ev)); } catch (e) {} }, 350); m = "home"; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);

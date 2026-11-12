@@ -80,7 +80,10 @@ const PAGES = [["money", /^(?:the )?money$|^(?:ال)?فلوس$|^(?:ال)?مصا�
   ["family", /^(?:the |my )?family$|^(?:ال)?عيلة$|^(?:ال)?عائلة$/i], ["health", /^(?:the |my )?health$|^(?:ال)?صحة$/i], ["write", /^writing$|^(?:ال)?كتابة$/i],
   ["errands", /^(?:the |my )?errands$|^(?:ال)?مشاوير$/i], ["tables", /^(?:the |my )?tables$|^(?:ال)?جداول$/i], ["guardian", /^money guardian$/i],
   ["salary", /^(?:the |my )?salary(?: plan)?$|^(?:ال)?مرتب$|^(?:خطة|تقسيم) (?:ال)?مرتب$/i], ["automations", /^(?:the |my )?automations?$|^(?:ال)?اوتوميشن$/i], ["donefor", /^done for (?:you|me)$/i],
-  ["split", /^(?:the |my )?(?:split(?: with (?:anyone|friends))?)$|^(?:ال)?تقسيم المصاريف$/i]];
+  ["split", /^(?:the |my )?(?:split(?: with (?:anyone|friends))?)$|^(?:ال)?تقسيم المصاريف$/i],
+  // v9.9.19 B4
+  ["habits", /^(?:the |my )?habits?$|^(?:ال)?عادات$|^عاداتي$/i], ["countdowns", /^(?:the |my )?countdowns?$|^(?:ال)?عد (?:ال)?تنازلي$/i],
+  ["weekplan", /^(?:the |my )?week(?:ly)? ?plan$|^(?:ال)?خطة (?:ال)?[اأ]سبوع$|^خطة [اأ]سبوعي$/i], ["focus", /^(?:the )?focus(?: timer)?$|^(?:ال)?تركيز$|^تايمر (?:ال)?تركيز$/i]];
 /** "open Money" / "go to Agents" / «افتح الفلوس» → the page's id, or "". */
 export function pageOf(text) {
   const m = /^\s*(?:please\s+)?(?:open|go to|show me|take me to|show)\s+(.{2,30}?)\s*[.!]?\s*$/i.exec(String(text || "")) || /^\s*(?:افتح|افتحلي|روح على|وديني على|وريني)\s+(.{2,30}?)\s*$/.exec(String(text || ""));

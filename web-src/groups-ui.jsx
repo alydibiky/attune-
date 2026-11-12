@@ -26,7 +26,7 @@ export function summaryText(g) {
   const tot = g.expenses.reduce((a, e) => a + +e.amount, 0), pays = settle(g);
   return [g.name + " — " + tr("{n} people · total {t}", { n: g.members.length, t: fmt(tot) + " " + g.currency }),
     ...g.expenses.map((e) => "• " + e.what + ": " + fmt(e.amount) + " (" + tr("{p} paid", { p: nameOf(e.paidBy) }) + ")"), "",
-    pays.length ? tr("To settle up · {n} payments", { n: pays.length }) : tr("Everyone is even"), ...pays.map((p) => "→ " + payLine(p, g.currency))].join("\n");
+    pays.length ? (pays.length === 1 ? tr("To settle up · 1 payment") : tr("To settle up · {n} payments", { n: pays.length })) : tr("Everyone is even"), ...pays.map((p) => "→ " + payLine(p, g.currency))].join("\n");
 }
 
 export function GroupsPage({ flash }) {
@@ -37,7 +37,7 @@ export function GroupsPage({ flash }) {
   if (!g) return (
     <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="groups-page">
       {st.groups.map((x) => { const pays = settle(x); return <button key={x.id} onClick={() => setOpenId(x.id)} className={card + " w-full text-start flex items-center justify-between"} data-testid="group-tile">
-        <span><span className="block text-[15px] font-extrabold" dir="auto">{x.name}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{tr("{n} people", { n: x.members.length })} · {pays.length ? tr("{n} payments to settle", { n: pays.length }) : tr("Everyone is even")}</span></span>
+        <span><span className="block text-[15px] font-extrabold" dir="auto">{x.name}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{tr("{n} people", { n: x.members.length })} · {pays.length ? (pays.length === 1 ? tr("1 payment to settle") : tr("{n} payments to settle", { n: pays.length })) : tr("Everyone is even")}</span></span>
         <span className="text-[var(--c-acc)]">›</span></button>; })}
       {!form ? <button className={btnP + " w-full"} onClick={() => setForm({ name: "", people: "", currency: currencyOf() || "EGP" })} data-testid="group-new">{tr("New group")}</button> :
         <div className={card + " space-y-2"} data-testid="group-form">
@@ -79,7 +79,7 @@ export function GroupsPage({ flash }) {
           <button className={btnS} onClick={() => setAdd(null)}>{tr("Cancel")}</button></div></div> :
         <button className={btnS + " w-full"} onClick={() => setAdd({ what: "", amount: "", paidBy: ME, who: [...g.members] })} data-testid="group-add">+ {tr("Add expense")}</button>}
       <div className={card + " space-y-1"} data-testid="group-settle">
-        <p className={label}>{pays.length ? tr("To settle up · {n} payments", { n: pays.length }) : tr("Everyone is even")}</p>
+        <p className={label}>{pays.length ? (pays.length === 1 ? tr("To settle up · 1 payment") : tr("To settle up · {n} payments", { n: pays.length })) : tr("Everyone is even")}</p>
         {pays.map((p, i) => <p key={i} className="m-0 min-h-[40px] flex items-center gap-2 text-[14px] border-t border-[var(--c-ln)] first-of-type:border-0" data-testid="group-pay" dir="auto"><span className="text-[var(--c-acc)]">→</span>{payLine(p, g.currency)}</p>)}
         <details className="pt-1"><summary className="text-[12.5px] text-[var(--c-mut)] cursor-pointer">{tr("Balances")}</summary>
           {g.members.map((m) => <p key={m} className="m-0 text-[13px] flex justify-between" data-testid="group-bal"><span>{nameOf(m)}</span><span className="tabular-nums">{bal[m] > 0 ? "+" : ""}{fmt(bal[m])}</span></p>)}</details>

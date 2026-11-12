@@ -54,7 +54,7 @@ export function WeekPlanPage({ onClose, flash }) {
     const L = loadReminders().filter((r) => r.source !== "weekplan");
     for (const b of plan.blocks) L.push({ id: newReminderId(), at: b.from, title: name(b.id), body: hhmm(b.from) + "–" + hhmm(b.to), repeat: "none", created: Date.now(), source: "weekplan", done: false });
     saveReminders(L); try { if (window.AttuneNative) syncToPhone(window.AttuneNative, L); } catch (e) {}
-    setKept(true); flash && flash(tr("Plan kept — {n} reminders", { n: plan.blocks.length }));
+    setKept(true); flash && flash((plan.blocks.length === 1 ? tr("Plan kept — 1 reminder") : tr("Plan kept — {n} reminders", { n: plan.blocks.length })));
   };
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: "var(--c-bg)", color: "var(--c-ink)" }} data-testid="weekplan-page">

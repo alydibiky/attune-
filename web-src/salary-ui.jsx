@@ -80,6 +80,6 @@ export function SalaryHomeCard() {
   const n = sorted.rows.filter((r) => !r.over && !done.has(r.id)).length;
   return <button onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "salary" } })); } catch (e) {} }} data-testid="home-salary"
     className="w-full text-start rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 py-3 flex items-center justify-between gap-2">
-    <span><span className="block text-[14px] font-extrabold">{tr("Salary arrived — sort it")}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{tr("{n} parts to pay · {a} left to spend", { n, a: (+sorted.left).toLocaleString() })}</span></span>
+    <span><span className="block text-[14px] font-extrabold">{tr("Salary arrived — sort it")}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{(n === 1 ? tr("1 part to pay · {a} left to spend", { a: (+sorted.left).toLocaleString() }) : tr("{n} parts to pay · {a} left to spend", { n, a: (+sorted.left).toLocaleString() }))}</span></span>
     <span className="text-[var(--c-acc)]">›</span></button>;
 }

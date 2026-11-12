@@ -22,7 +22,8 @@ export const hm = (ms) => { const m = Math.round(ms / 60000); return m >= 60 ? t
 /** Start a focus session on a task (any screen can call it). */
 export function startFocus(task, plan = 25) { put(FC_RUN, { task, plan, events: [{ t: Date.now(), e: "start" }] }); try { window.dispatchEvent(new CustomEvent("attune-focus")); } catch (e) {} }
 export function FocusHost() {
-  const [run, setRun] = useState(() => get(FC_RUN, null)), [, tick] = useState(0), [done, setDone] = useState(null);
+  const [run, setRun] = useState(() => get(FC_RUN, null)), [, tick] = useState(0), [done, setDone] = useState(null), [pick, setPick] = useState(null);
+  useEffect(() => { const f = () => setPick({ task: "", plan: 25 }); window.addEventListener("attune-focus-pick", f); return () => window.removeEventListener("attune-focus-pick", f); }, []);
   useEffect(() => { const f = () => setRun(get(FC_RUN, null)); window.addEventListener("attune-focus", f); return () => window.removeEventListener("attune-focus", f); }, []);
   useEffect(() => { if (!run) return; const i = setInterval(() => tick((x) => x + 1), 500); return () => clearInterval(i); }, [run]);
   if (done) return <Full><div className="text-center space-y-3 px-6" data-testid="focus-done">
@@ -31,6 +32,12 @@ export function FocusHost() {
     <p className="text-[34px] font-black c-num m-0" data-testid="focus-kept">{hm(done.ms)}</p>
     <p className="c-sub text-[13px] m-0">{tr("This week on this: {t}", { t: hm(focusStats(done.task).weekMs) })}</p>
     <button className={btnP + " w-full"} onClick={() => setDone(null)} data-testid="focus-close">{tr("Close")}</button></div></Full>;
+  if (!run && pick) return <Full><div className="w-full max-w-[420px] px-6 space-y-3" data-testid="focus-pick">
+    <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase c-sub m-0">{tr("Focus")}</p>
+    <input autoFocus dir="auto" value={pick.task} onChange={(e) => setPick({ ...pick, task: e.target.value })} placeholder={tr("Focus on what?")} className="w-full min-h-[48px] rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] px-3.5 text-[15px]" data-testid="focus-what" />
+    <div className="flex gap-1.5">{[15, 25, 50, 90].map((m) => <button key={m} onClick={() => setPick({ ...pick, plan: m })} className="flex-1 min-h-[44px] rounded-full font-extrabold text-[13px]" style={{ background: pick.plan === m ? "var(--c-acc)" : "var(--c-surf-2, var(--c-surf))", color: pick.plan === m ? "var(--c-on-acc, #fff)" : "inherit" }} data-testid={"focus-min-" + m}>{tr("{m} m", { m })}</button>)}</div>
+    <button className={btnP + " w-full"} disabled={!pick.task.trim()} onClick={() => { const t = pick.task.trim(), pl = pick.plan; setPick(null); startFocus(t, pl); }} data-testid="focus-start">{tr("Start")}</button>
+    <button className="w-full h-10 c-sub text-[13px] font-bold" onClick={() => setPick(null)}>{tr("Cancel")}</button></div></Full>;
   if (!run) return null;
   const now = Date.now(), last = run.events[run.events.length - 1], paused = last.e === "pause";
   const ms = focused([...run.events, { t: now, e: "stop" }], run.plan), left = run.plan * 60000 - ms, pct = ms / (run.plan * 60000);

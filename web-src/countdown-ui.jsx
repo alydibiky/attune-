@@ -2,7 +2,7 @@
    box ("♡ Wedding · 39 days"); tapping one opens its big card (the days in big numbers, the date in words, a bar from the day it was
    added, Edit / Remove). "+" adds one (name + date). Ramadan shows by itself when prayers are on (recipes.js nextRamadan, Umm al-Qura).
    Days left = b4time.js daysLeft (by calendar in the person's own time zone; the day itself = "Today"; tested on 10,000 dates). */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { daysLeft } from "./b4time.js";
 import { nextRamadan } from "./recipes.js";
@@ -27,6 +27,8 @@ export function CountdownChips() {
   const [v, setV] = useState(0), [open, setOpen] = useState(null), [edit, setEdit] = useState(null);
   const list = useMemo(() => countdownsNow(), [v]);
   const refresh = () => setV((x) => x + 1);
+  useEffect(() => { const f = () => refresh(); window.addEventListener("attune-habits", f); return () => window.removeEventListener("attune-habits", f); }, []);
+  useEffect(() => { const f = () => setEdit({ icon: "♡", name: "", date: "" }); window.addEventListener("attune-countdown-add", f); return () => window.removeEventListener("attune-countdown-add", f); }, []);
   const chip = "h-9 px-3.5 rounded-full text-[13px] font-extrabold whitespace-nowrap inline-flex items-center gap-1.5 shrink-0";
   return (
     <div data-testid="home-countdowns">

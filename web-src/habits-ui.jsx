@@ -7,7 +7,7 @@ import { streak, weekDots, goalCount } from "./b4time.js";
 import { btnP, btnDanger, inp, label } from "./ui-kit.jsx";
 export const HB_KEY = "attune:habits:v1";
 export function loadHabits() { try { const v = JSON.parse(localStorage.getItem(HB_KEY) || "null"); return v && Array.isArray(v.items) ? v : { items: [], done: {} }; } catch (e) { return { items: [], done: {} }; } }
-function save(v) { try { localStorage.setItem(HB_KEY, JSON.stringify(v)); } catch (e) {} return v; }
+function save(v) { try { localStorage.setItem(HB_KEY, JSON.stringify(v)); } catch (e) {} try { window.dispatchEvent(new CustomEvent("attune-habits")); } catch (e) {} return v; }
 const sameDay = (a, b) => { const x = new Date(a), y = new Date(b); return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); };
 /** Tick or untick today (a day counts once). */
 export function toggleToday(v, id, now = Date.now()) {

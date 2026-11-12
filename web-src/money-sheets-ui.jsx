@@ -156,7 +156,7 @@ export function TxSheet({ L, id, run, onClose }) {
     {ask ? <div className="rounded-[14px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-3 space-y-2" data-testid="cat-always">
       <p className="m-0 text-[13px] c-sub">✓ {tr("Changed to {c}", { c: ask.name })} · {ask.shop}</p>
       <p className="m-0 text-[15px] font-extrabold" dir="auto">{tr("Always put {s} in {c}?", { s: ask.shop, c: ask.name })}</p>
-      {ask.n ? <p className="m-0 text-[13px] c-sub">{tr("{n} older {s} payments will change too.", { n: ask.n, s: ask.shop })}</p> : null}
+      {ask.n ? <p className="m-0 text-[13px] c-sub">{(ask.n === 1 ? tr("1 older {s} payment will change too.", { s: ask.shop }) : tr("{n} older {s} payments will change too.", { n: ask.n, s: ask.shop }))}</p> : null}
       <div className="flex gap-2"><button className={U.btnP} onClick={always} data-testid="cat-always-yes">{tr("Yes, always")}</button>
         <button className={U.btnS} onClick={() => onClose(tr("Saved"))} data-testid="cat-always-no">{tr("Just this one")}</button></div></div> : null}
   </Sheet>;
