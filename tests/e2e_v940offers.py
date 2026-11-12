@@ -29,7 +29,8 @@ with sync_playwright() as p:
     rows = page.locator("[data-testid=agent-date-row]")
     check(rows.count() == 3, "they are plain rows of days and price (2 under Madrid, 1 for Rome): %d" % rows.count())
     txt = page.inner_text("[data-testid=agent-date-rows] >> nth=0")
-    check("Offer" not in txt and "01/01 → 01/05" in txt.replace("⁦", "").replace("⁩", ""), "a row shows its days, never 'Offer 3': %r" % txt[:120])
+    # (v9.9.21, Ali: "01/08 → 01/12 — January or August?"): the days in words with the weekday
+    check("Offer" not in txt and "Jan 1 →" in txt and "Jan 5" in txt and "01/01" not in txt, "a row shows its days in words, never 'Offer 3' or 01/01: %r" % txt[:120])
     check("Hotels on Booking" in page.inner_text("[data-testid=agent-date-open] >> nth=0"), "its button says what it opens")
     page.click("[data-testid=agent-best-open]"); page.wait_for_timeout(300)
     o = page.evaluate("window.__opened") or ""
