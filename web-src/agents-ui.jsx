@@ -9,6 +9,7 @@ import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCr
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./agents.js";
 import * as R from "./agent-rules.js";
+import * as E from "./agentedit.js";
 import * as HG from "./haggle.js";
 import { HaggleView } from "./haggle-ui.jsx";
 import { Ellipsis, Kanban, ListChecks, Plane, MessageCircle, Clock, Eye, Repeat, ShieldCheck, Heart, Share2 } from "lucide-react";
@@ -156,8 +157,10 @@ function AgentOverview({ a, openBest, toggle, checkNow, busy, onPlan }) {
     <PlanCard a={a} onChange={onPlan} />
   </div>;
 }
-function AgentChat({ c, back, openBest, setRules, understand, flash, toggle, checkNow, busy }) {
+function AgentChat({ c, back, openBest, setRules, understand, flash, toggle, checkNow, busy, remove, saveEdit }) {
   const a = c.a, [text, setText] = useState(""), [busy0, setBusy] = useState(false), [said, setSaid] = useState("");
+  const [watching, setWatching] = useState(false);   // v9.9.21 OK-3: "What I watch"
+  const canEdit = !!(a && saveEdit && E.settingsOf(a).length);
   // v9.9.13 AG1: a price watch opens on the answer; the rest is History
   const overview = a.kind === "watch" && !(a.fields && a.fields.flight) && !!toggle;
   const [hist, setHist] = useState(!overview);
@@ -172,10 +175,17 @@ function AgentChat({ c, back, openBest, setRules, understand, flash, toggle, che
     setSaid(T("Got it: {r}", { r: R.ruleChips(got).map((x) => tr(x.en, x.v)).join(" · ") }));
   };
   const bubble = "max-w-[88%] rounded-[16px] px-3 py-2 text-[13.5px] leading-snug";
+  if (watching && canEdit) return <WatchOK a={a} back={(gone) => { setWatching(false); if (gone === true) back(); }} onSave={saveEdit} toggle={toggle} remove={remove} flash={flash} />;
   return <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agent-chat">
     <div className="flex items-center gap-2"><button onClick={back} className="w-11 h-11 grid place-items-center rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]" aria-label={tr("Back")} data-testid="agent-chat-back"><ArrowLeft size={18} className="rtl:-scale-x-100" /></button>
       <b className="text-[17px] font-black min-w-0 truncate" dir="auto">{c.title}</b></div>
-    {overview ? <AgentOverview a={a} openBest={openBest} toggle={toggle} checkNow={checkNow} busy={busy} onPlan={() => { try { inputRef.current && inputRef.current.focus(); } catch (e) {} }} /> : null}
+    {/* v9.9.21 OK-2: every offer, each opening its own page; then "What I watch" (every setting changeable) */}
+    {overview && legacyView() ? <AgentOverview a={a} openBest={openBest} toggle={toggle} checkNow={checkNow} busy={busy} onPlan={() => { try { inputRef.current && inputRef.current.focus(); } catch (e) {} }} />
+    : overview ? <OffersOK a={a} openBest={openBest} onWatch={canEdit ? () => setWatching(true) : null} /> : canEdit ? <button onClick={() => setWatching(true)} className={U.btnS + " w-full"} data-testid="agent-watch-open">⚙ {tr("What I watch")}</button> : null}
+    {overview && !legacyView() ? <div className="flex gap-2"><button onClick={() => checkNow(a)} disabled={busy} className={U.btnS + " flex-1"} data-testid="agent-auto-check"><RefreshCw size={14} />{busy ? tr("Checking…") : tr("Check now")}</button>
+      <button onClick={() => toggle(a)} className={U.btnS + " flex-1"} data-testid="agent-auto-toggle">{a.on === false ? tr("Resume") : tr("Pause")}</button></div> : null}
+    {overview && !legacyView() ? <p className="m-0 text-[12px] c-sub" data-testid="agent-auto">{a.on === false ? tr("Paused — turn it on to check again") : A.needsBrowser(a) ? tr("Every night while the phone charges on Wi-Fi. If it can't, I ask you with one tap.") : T("Every {h} hours, even with Attune closed", { h: (a.rules && a.rules.hours) || 3 })} · {tr("Tells you only when a price beats your best.")}</p> : null}
+    {overview && !legacyView() ? <OffersChart a={a} openBest={openBest} /> : null}
     {overview ? <button onClick={() => setHist(!hist)} className="w-full min-h-[44px] text-[13px] font-extrabold c-sub" data-testid="agent-history-toggle" aria-expanded={hist}>{hist ? tr("Hide history") : tr("History ›")}</button> : null}
     {hist ? <><div className="flex flex-col gap-2">
       {msgs.map((m, i) => m.who === "me"
@@ -206,6 +216,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   const [tabWant, setTabWant] = useState(() => { try { return localStorage.getItem("attune:agents:tab") || ""; } catch (e) { return ""; } });
   // v9.6 (Ali picked A3 + A4): the board is the Agents page; a tap on a card opens that agent's conversation
   // v9.8 A3 (Ali picked "what changed on top, then the list"): "new" is the page; List and Board stay one tap away
+  const legacy = (() => { try { return localStorage.getItem("attune:agents:legacy") === "1"; } catch (e) { return false; } })();
   const [view, setViewRaw] = useState(() => { try { return localStorage.getItem("attune:agents:view2") || "new"; } catch (e) { return "new"; } });
   const setView = (v) => { setViewRaw(v); try { localStorage.setItem("attune:agents:view2", v); } catch (e) {} };
   // (v9.8: a haggle started from Home opens straight on its page)
@@ -603,11 +614,12 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         : a.kind === "follow" ? <FollowCard key={a.id} a={a} {...{ runFollow, remove, toggle }} {...extra} /> : a.kind === "buy" ? <BuyCard key={a.id} a={a} busy={busy === a.id} {...{ buyRound, confirmBuy, notThis, markDone, remove, toggle, openApp, openBest }} {...extra} />
         : <AgentCard key={a.id} a={a} hits={hits} busy={busy === a.id} {...{ checkNow, orderNow, openApp, remove, toggle, openBest, skipBest }} {...extra} /> })),
     ...scout.map((g) => ({ id: "scout-" + g.id, st: (g.unseen || []).length ? "found" : "working", kind: "scout", title: tr("Scout") + " · " + g.text, site: "", price: "",
+      line: [(g.unseen || []).length ? T("{n} new", { n: g.unseen.length }) : tr("Nothing new that matches"), T("{n} ads checked", { n: (g.seen || []).length }), g.lastRun ? ago(g.lastRun) : ""].filter(Boolean).join(" · "),
       el: <div className={U.cardPad + " space-y-2"} data-testid="agents-scout">
         <CardHead kind="scout" title={g.text} status={(g.unseen || []).length ? "found" : "working"} menu={[[tr("Open Scout"), () => navTo && navTo("scout"), "agents-scout-open-menu"]]}
           line={T("{n} ads checked", { n: (g.seen || []).length }) + (g.lastRun ? " · " + ago(g.lastRun) : "") + ((g.unseen || []).length ? " · " + T("{n} new", { n: g.unseen.length }) : "")} />
         <CardActions primary={{ label: (g.unseen || []).length ? T("See {n} new ads", { n: g.unseen.length }) : tr("See the ads"), icon: ChevronRight, onClick: () => navTo && navTo("scout"), testid: "agents-scout-open" }} /></div> })),
-    ...(alertRules.length ? [{ id: "alerts", st: "working", kind: "alert", title: T("Message alerts · {n}", { n: alertRules.length }), site: "", price: "",
+    ...(alertRules.length ? [{ id: "alerts", st: "working", kind: "alert", title: T("Message alerts · {n}", { n: alertRules.length }), site: "", price: "", line: alertRules.slice(0, 2).map((x) => W.ruleText(x, ar)).join(" · ") + " · " + tr("tells you at once"),
       el: <div className={U.cardPad + " space-y-2"} data-testid="agents-alerts">
         <CardHead kind="alert" title={T("Message alerts · {n}", { n: alertRules.length })} status="working" line={alertRules.slice(0, 2).map((x) => W.ruleText(x, ar)).join(" · ")}
           menu={[[tr("Open the alerts"), () => navTo && navTo("reminders"), "agents-alerts-open-menu"]]} />
@@ -616,7 +628,8 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   if (msgs) return <MessagesPage back={() => { setMsgs(""); setSt(A.loadAgents()); }} flash={flash} nativeCall={nativeCall} drafter={drafter} startNew={msgs === "new"} />;
   const open = chat && cards.find((c) => c.id === chat);
   if (open && open.a && open.a.kind === "haggle") return <HaggleView a={A.loadAgents().agents.find((x) => x.id === open.id) || open.a} back={() => setChat("")} upd={upd} flash={flash} send={sendHaggle} />;
-  if (open) return <AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} toggle={toggle} checkNow={checkNow} busy={busy === open.id} />;
+  if (open) return <AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} toggle={toggle} checkNow={checkNow} busy={busy === open.id}
+    remove={remove} saveEdit={(b) => { upd(b.id, () => b); flash && flash(tr("Saved — checking again")); setTimeout(() => { const fresh = A.loadAgents().agents.find((x) => x.id === b.id); if (fresh && b.kind === "watch") checkNow(fresh); }, 60); }} />;
   return (
     <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agents-page">
       <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
@@ -652,6 +665,10 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       {N && !access && st.agents.some((a) => a.kind === "track") ? <button onClick={() => { try { N.openPayAccess && N.openPayAccess(); } catch (e) {} }} className="w-full text-start min-h-[44px] rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3 text-[12.5px] font-semibold text-[var(--c-warn)] flex gap-2" data-testid="agents-access">
         <AlertTriangle size={14} className="shrink-0 mt-0.5" />{tr("Delivery agents read the store app's notifications: turn on Notification access for Attune (Settings opens).")}</button> : null}
 
+      {/* v9.9.21 OK-1 (Ali: "Cards, List and Board are so confusing"): ONE clear list — the old three views are gone from the page
+          (their code stays below for reference) */}
+      {/* (the old Cards / List / Board views stay only for the older browser tests — tests/harness.py sets attune:agents:legacy) */}
+      {legacy ? <>
       {/* v9.2 (Ali picked 2A): one card shape for every agent; "Needs you" first, then Working, then Done — List or Board */}
       <div className="flex items-center gap-2 pt-1"><p className="flex-1 text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] m-0" data-testid="agents-running">{T("Running · {n}", { n: r.running })}</p>
         {r.running ? <span className="inline-flex rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] p-0.5" role="group" aria-label={tr("View")} data-testid="agents-view">
@@ -675,6 +692,10 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
           <p className={"m-0 text-[12px] font-extrabold tracking-[0.06em] uppercase " + (k === "needs" ? "text-[var(--c-warn)]" : "c-sub")}>{tr(l)} · {items.length}</p>
           {items.map((c) => <div key={c.id} ref={focus === c.id ? (el) => { if (el) { el.scrollIntoView({ block: "start" }); setFocus(""); } } : undefined}>{c.el}</div>)}
         </section>; }) : null}
+      </> : <>
+      <p className="m-0 pt-1 text-[12px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)]" data-testid="agents-running">{T("Running · {n}", { n: r.running })}</p>
+      {r.running ? <AgentRowsOK cards={cards} open={(c) => { if (c.id === "messages") { setMsgs("list"); return; } if (c.kind === "scout") { try { localStorage.setItem("attune:scout:open", String(c.id).slice(6)); } catch (e) {} navTo && navTo("scout"); return; } if (c.id === "alerts") { navTo && navTo("reminders"); return; } setChat(c.id); }} /> : null}
+      </>}
       {!r.running ? <p className={U.card + " p-4 m-0 text-[13.5px] c-sub"} data-testid="agents-empty">{tr("No agents yet. Tap an example above, or write your own — a price to watch, a delivery to track, your usual order, or any app to open.")}</p> : null}
       <button onClick={() => setRep(true)} className={U.card + " w-full text-start p-4 flex items-center justify-between font-extrabold"} data-testid="agents-open-report">
         <span>{tr("See all → Agents report")}</span><span className="c-sub text-[12.5px] font-bold">{T("Checks this week: {n}", { n: r.checks })}</span></button>
@@ -693,7 +714,7 @@ function AgentCardsA5({ changes, cards, openBest, openChat, runFollowA5 }) {
   return <div className="space-y-2.5" data-testid="agents-a5">
     {cards.map((c) => { const a = c.a, ch = changes.find((x) => x.id === c.id), cur = (a && a.currency) || "";
       // v9.9.19: offers saved by older rounds are checked again with today's rules (a "FreeClip 2 · EGP 120" saved before stays out)
-      const kept = a ? A.bestAcross(a.best3 || [], { ...a, checks: a.checks || [] }, 5) : [];
+      const kept = a ? (a.best3 || []).filter((o) => o && A.believable(o, a)) : [];   // (only the price check — 10 hotels on one site stay 10)
       const offers = a ? R.applyRules(kept, a.rules || {}) : [], fb = a && a.found && a.found.price ? { ...a.found, url: a.url, site: a.site } : null, o = offers[0] || (fb && A.believable(fb, a) ? fb : null);
       const last = a && (a.checks || []).length ? a.checks[a.checks.length - 1].at : a && a.lastRun;
       const chips = a ? R.ruleChips(a.rules || {}).filter((x) => x.key !== "autonomy" && x.key !== "hours").slice(0, 3).map((x) => tr(x.en, x.v)) : [];
@@ -1386,4 +1407,143 @@ export function TripCard({ a, remove, toggle, setDrive, remindTrip, navTo , setR
     <CardActions primary={{ label: a.reminded ? tr("Reminders are set") : tr("Remind me on the day"), icon: Clock, onClick: () => remindTrip(a), testid: "trip-remind" }} secondary={{ label: tr("Travel checklist"), icon: ListChecks, onClick: () => navTo && navTo("lists"), testid: "trip-list" }} />
     <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={rulesOpen} setOpen={setRulesOpen} />
   </div>;
+}
+
+/* ---- v9.9.21 the combined Agents page (Ali OK'd OK-1…OK-4, 12 Nov — MOCKUPS.md, https://claude.ai/artifact/DQyJJ7Pm2U8FujwNYz4eS3):
+   "editable as much as you can for every agent in an easy way; if there are 10 offers, written in a good way, and I can open any of
+   them → the exact page". OK-1 one clear list (no Cards / List / Board switch) · OK-2 all the offers inside an agent, each Open ↗ to
+   its own page (openBest → R.offerOpen: the offer's own link, else Attune finds THAT offer on the site) · OK-3 "What I watch", every
+   setting a line with Change (agentedit.js settingsOf) · OK-4 one small sheet per setting; Save → applyEdit → checks again.        */
+const legacyView = () => { try { return localStorage.getItem("attune:agents:legacy") === "1"; } catch (e) { return false; } };   // the older browser tests only
+const wd = (d) => { try { return new Date(d + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return d; } };
+const nightsOf = (a, o) => (o && o.checkin && o.checkout ? Math.round((Date.parse(o.checkout + "T12:00:00") - Date.parse(o.checkin + "T12:00:00")) / 864e5) : (a.fields && a.fields.nights) || 0);
+export const offersOf = (a) => A.knownOffers(a).filter((o) => A.believable(o, a));
+/** OK-1: the line under an agent's name, in words. */
+function rowLine(c) {
+  const a = c.a; if (c.line) return c.line;
+  if (!a) return tr(c.st === "needs" ? "Needs you" : c.st === "found" ? "Found something" : c.st === "paused" ? "Paused" : "Watching");
+  const k = E.kindOf(a), n = offersOf(a).length, f = a.fields || {}, bits = [];
+  if (a.on === false) bits.push(tr("Paused"));
+  if (k === "hotel") { if (f.window) bits.push(T("any {n} nights, {a} – {b}", { n: f.nights, a: wd(f.window.from), b: wd(f.window.to) })); else if (f.checkin) bits.push(wd(f.checkin) + " → " + wd(f.checkout) + " · " + T("{n} nights", { n: nightsOf(a) }));
+    if (f.stars && f.stars.length) bits.push(f.stars[0] + "★"); }
+  if (k === "flight" && f.flight) bits.push(wd(f.flight.depart) + (f.flight.ret ? " → " + wd(f.flight.ret) : ""));
+  bits.push(n === 1 ? tr("1 offer") : n ? T("{n} offers", { n }) : tr("No offer yet"));
+  if (a.below > 0 && !(n && offersOf(a)[0].price <= a.below)) bits.push(T("waiting for under {p}", { p: money(a.below, "") }));
+  return bits.join(" · ");
+}
+export function AgentRowsOK({ cards, open }) {
+  return <div className={U.card + " divide-y divide-[var(--c-ln)]"} data-testid="agents-rows">
+    {cards.map((c) => { const a = c.a, best = a ? offersOf(a)[0] : null, cur = (a && a.currency) || "";
+      return <button key={c.id} onClick={() => open(c)} className="w-full flex items-center gap-3 p-3.5 text-start min-h-[64px]" data-testid="agents-row" data-id={c.id}>
+        {c.site && !/^\d+ (sites|stores)$/.test(c.site) ? <SiteMark site={c.site} size={36} /> : <span className="w-9 h-9 rounded-[11px] bg-[var(--c-soft)] c-acc grid place-items-center shrink-0">{React.createElement(KIND_ICON[c.kind] || AppWindow, { size: 17 })}</span>}
+        <span className="flex-1 min-w-0"><b className="block text-[14.5px] leading-snug" dir="auto">{c.title}</b>
+          <span className="block text-[12.5px] c-sub leading-snug mt-0.5" dir="auto" data-testid="agents-row-line">{rowLine(c)}</span></span>
+        {best ? <b className="text-[15px] tabular-nums shrink-0" dir="ltr" data-testid="agents-row-price">{money(best.price, best.currency || cur)}</b> : c.price && !a ? <b className="text-[13px] shrink-0">{c.price}</b> : null}
+        <ChevronRight size={16} className="c-sub shrink-0 rtl:-scale-x-100" /></button>; })}
+  </div>;
+}
+/** OK-2: every offer, written clearly; each opens its own page. */
+export function OffersOK({ a, openBest, onWatch }) {
+  const all = offersOf(a), [sort, setSort] = useState("price"), [many, setMany] = useState(false), cur = a.currency || "";
+  const hasStars = all.some((o) => o.stars > 0), hasDist = all.some((o) => o.dist > 0);
+  const list = [...all].sort((x, y) => (sort === "stars" ? (y.stars || 0) - (x.stars || 0) || x.price - y.price : sort === "dist" ? (x.dist || 1e9) - (y.dist || 1e9) || x.price - y.price : x.price - y.price));
+  const last = [...(a.checks || [])].filter((c) => !c.old).reverse()[0];
+  const nm = (o) => (o.name && !R.isSiteName(o.name, a.site) ? o.name : A.siteOfOffer(o) || a.site);
+  return <div className="space-y-2" data-testid="agent-offers">
+    <p className="m-0 text-[12.5px] c-sub" dir="auto" data-testid="agent-offers-head">{[all.length === 1 ? tr("1 offer") : T("{n} offers", { n: all.length }), last ? T("checked {t}", { t: ago(last.at) }) : ""].filter(Boolean).join(" · ")}</p>
+    {all.length > 1 && (hasStars || hasDist) ? <div className="flex gap-1.5" role="group" aria-label={tr("Sort")}>
+      {[["price", "Cheapest"], ...(hasStars ? [["stars", "Stars"]] : []), ...(hasDist ? [["dist", "Closest"]] : [])].map(([k, l]) => <button key={k} onClick={() => setSort(k)} aria-pressed={sort === k} className={U.chip(sort === k)} data-testid={"agent-offers-sort-" + k}>{tr(l)}</button>)}</div> : null}
+    {all.length ? <div className={U.card + " divide-y divide-[var(--c-ln)]"}>
+      {(many ? list : list.slice(0, 10)).map((o, i) => { const n = nightsOf(a, o), oc = o.currency || cur;
+        return <div key={i} className="flex items-start gap-2.5 p-3" data-testid="agent-offer">
+          <span className={"w-7 h-7 rounded-[9px] grid place-items-center text-[12.5px] font-black shrink-0 " + (i === 0 && sort === "price" ? "bg-[var(--c-acc)] text-[var(--c-on-acc,#fff)]" : "bg-[var(--c-soft)] c-acc")}>{i + 1}</span>
+          <span className="flex-1 min-w-0"><b className="block text-[14px] leading-snug" dir="auto" data-testid="agent-offer-name">{nm(o)}{i === 0 && sort === "price" ? " · " + tr("best") : ""}</b>
+            <span className="block text-[12px] c-sub leading-snug mt-0.5" dir="auto">{[o.stars > 0 ? o.stars + "★" : "", o.rating > 0 ? T("rated {r}", { r: o.rating }) : "", o.dist > 0 ? (o.dist >= 1000 ? T("{k} km away", { k: (o.dist / 1000).toFixed(1) }) : T("{m} m away", { m: Math.round(o.dist) })) : "",
+              o.checkin ? wd(o.checkin) + (o.checkout ? " → " + wd(o.checkout) : "") : "", A.siteOfOffer(o)].filter(Boolean).join(" · ")}</span></span>
+          <span className="text-end shrink-0"><b className="block text-[15px] tabular-nums" dir="ltr" data-testid="agent-offer-price">{money(o.price, oc)}</b>
+            {n > 1 ? <span className="block text-[11.5px] c-sub tabular-nums" dir="ltr">{T("{p} a night", { p: money(o.price / n, "") })}</span> : null}
+            <button onClick={() => openBest(a, o)} className="mt-1 min-h-[34px] px-2.5 rounded-[10px] border border-[var(--c-acc)] c-acc text-[12px] font-extrabold inline-flex items-center gap-1" data-testid="agent-offer-open">{tr("Open")}<ExternalLink size={12} /></button></span>
+        </div>; })}
+    </div> : <p className={U.cardPad + " m-0 text-[13.5px]"} data-testid="agent-offers-none">{tr("No offer yet — the first check finds them.")}</p>}
+    {list.length > 10 && !many ? <button onClick={() => setMany(true)} className={U.btnS + " w-full"} data-testid="agent-offers-all">{T("Show all {n}", { n: list.length })}</button> : null}
+    {onWatch ? <button onClick={onWatch} className={U.btnS + " w-full"} data-testid="agent-watch-open">⚙ {tr("What I watch")}</button> : null}
+  </div>;
+}
+/** OK-3 / OK-4: every setting a line with Change; one sheet per setting. */
+function valText(s, a) {
+  const v = s.v;
+  switch (s.k) {
+    case "dates": return v.window ? T("any {n} nights, {a} – {b}", { n: v.nights, a: wd(v.window.from), b: wd(v.window.to) }) : v.from ? wd(v.from) + " → " + wd(v.to) + " · " + T("{n} nights", { n: v.nights }) : tr("Not set");
+    case "city": return [v.city, v.near ? tr("walking distance") : "", v.walk ? T("up to {m} m", { m: v.walk }) : ""].filter(Boolean).join(" · ");
+    case "stars": return v.stars ? T("{n}★ or more", { n: v.stars }) : tr("Any");
+    case "guests": return T("{a} adults · {r} rooms", { a: v.adults, r: v.rooms });
+    case "budget": return v.below ? T("up to {p}", { p: money(v.below, v.cur) }) : tr("No limit");
+    case "sites": return (v.only.length ? v.only.join(" · ") : tr("All")) + (v.avoid.length ? " · " + T("not {x}", { x: v.avoid.join(", ") }) : "");
+    case "must": case "avoid": return v.words.length ? v.words.join(" · ") : tr("Nothing");
+    case "hours": return v.hours >= 24 ? (v.hours === 24 ? tr("once a day") : T("every {n} days", { n: Math.round(v.hours / 24) })) : v.hours === 1 ? tr("every hour") : T("every {h} hours", { h: v.hours });
+    case "fdates": return wd(v.from) + (v.to ? " → " + wd(v.to) : " · " + tr("one way")) + (v.flex ? " · ±" + v.flex : "");
+    case "route": return v.from + " → " + v.to;
+    case "stops": return v.n < 0 ? tr("Any") : v.n === 0 ? tr("Direct only") : T("Up to {n} stops", { n: v.n });
+    case "cabin": return tr({ economy: "Economy", premium: "Premium economy", business: "Business", first: "First" }[v.cabin] || "Economy");
+    case "bags": return v.n ? T("{n} bags", { n: v.n }) : tr("No checked bag");
+    case "what": return v.what;
+    default: return "";
+  }
+}
+export function WatchOK({ a, back, onSave, toggle, remove, flash }) {
+  const rows = E.settingsOf(a), [edit, setEdit] = useState(null);
+  return <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agent-watchpage">
+    <div className="flex items-center gap-2"><button onClick={back} className="w-11 h-11 grid place-items-center rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]" aria-label={tr("Back")} data-testid="agent-watch-back"><ArrowLeft size={18} className="rtl:-scale-x-100" /></button>
+      <b className="text-[17px] font-black min-w-0 truncate" dir="auto">{tr("What I watch")}</b></div>
+    <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.title}</p>
+    <div className={U.card + " divide-y divide-[var(--c-ln)]"}>
+      {rows.map((s) => <button key={s.k} onClick={() => setEdit(s)} className="w-full flex items-center gap-3 p-3 text-start min-h-[56px]" data-testid={"agent-set-" + s.k}>
+        <span className="w-8 h-8 rounded-[10px] bg-[var(--c-soft)] grid place-items-center shrink-0" aria-hidden="true">{s.icon}</span>
+        <span className="flex-1 min-w-0"><b className="block text-[13.5px]">{tr(s.en)}</b><span className="block text-[12.5px] c-sub" dir="auto" data-testid={"agent-set-val-" + s.k}>{valText(s, a)}</span></span>
+        <span className="min-h-[32px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12px] font-extrabold grid place-items-center">{tr("Change")}</span></button>)}
+    </div>
+    <div className="flex gap-2"><button onClick={() => toggle(a)} className={U.btnS} data-testid="agent-watch-pause">{a.on === false ? tr("Resume") : tr("Pause")}</button>
+      <button onClick={() => { if (window.confirm(tr("Delete this agent?"))) { remove(a); back(true); } }} className={U.btnDanger} data-testid="agent-watch-delete">{tr("Delete")}</button></div>
+    {edit ? <SettingSheetOK a={a} s={edit} close={() => setEdit(null)} save={(v) => { const b = E.applyEdit(a, edit.k, v); if (b === a) { flash && flash(tr("That didn't change anything — check the values.")); return; } setEdit(null); onSave(b); }} /> : null}
+  </div>;
+}
+function SettingSheetOK({ a, s, close, save }) {
+  const [v, setV] = useState(() => JSON.parse(JSON.stringify(s.v))), [word, setWord] = useState("");
+  const [flex, setFlex] = useState(!!(s.v && s.v.window));
+  const today = new Date(); const min = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+  const chipRow = (opts, cur, set, tid) => <div className="flex flex-wrap gap-1.5">{opts.map(([val, l]) => <button key={String(val)} onClick={() => set(val)} aria-pressed={cur === val} className={U.chip(cur === val)} data-testid={tid + "-" + val}>{l}</button>)}</div>;
+  const date = (val, set, tid) => <input type="date" min={min} value={val || ""} onChange={(e) => set(e.target.value)} className={U.inp} data-testid={tid} />;
+  let body = null;
+  if (s.k === "dates") body = <>
+    {chipRow([[false, tr("Exact dates")], [true, tr("Flexible")]], flex, setFlex, "set-flex")}
+    {flex ? <><p className="m-0 text-[12.5px] c-sub">{tr("The cheapest nights anywhere between:")}</p><div className="flex gap-2">{date(v.window ? v.window.from : v.from, (x) => setV({ ...v, window: { ...(v.window || {}), from: x } }), "set-win-from")}{date(v.window ? v.window.to : v.to, (x) => setV({ ...v, window: { ...(v.window || {}), to: x } }), "set-win-to")}</div>
+      <label className="flex items-center gap-2 text-[13px]">{tr("Nights")}<input type="number" min="1" max="30" value={v.nights || ""} onChange={(e) => setV({ ...v, nights: +e.target.value })} className={U.inp + " !w-24"} data-testid="set-nights" /></label></>
+    : <div className="flex gap-2">{date(v.from, (x) => setV({ ...v, from: x }), "set-from")}{date(v.to, (x) => setV({ ...v, to: x }), "set-to")}</div>}</>;
+  else if (s.k === "fdates") body = <><div className="flex gap-2">{date(v.from, (x) => setV({ ...v, from: x }), "set-from")}{date(v.to, (x) => setV({ ...v, to: x }), "set-to")}</div>
+    <p className="m-0 text-[12.5px] c-sub">{tr("Return is optional — leave it empty for one way.")}</p>{chipRow([[0, tr("Exact")], [1, "±1"], [2, "±2"], [3, "±3"]], v.flex || 0, (x) => setV({ ...v, flex: x }), "set-flexd")}</>;
+  else if (s.k === "city") body = <><input dir="auto" value={v.city} onChange={(e) => setV({ ...v, city: e.target.value })} className={U.inp} data-testid="set-city" />
+    <label className="flex items-center gap-2 text-[13.5px] min-h-[40px]"><input type="checkbox" checked={!!v.near} onChange={(e) => setV({ ...v, near: e.target.checked })} className="w-5 h-5 accent-[var(--c-acc)]" />{tr("Walking distance")}</label>
+    {chipRow([[0, tr("Any distance")], [500, "500 m"], [1000, "1 km"], [2000, "2 km"]], v.walk || 0, (x) => setV({ ...v, walk: x }), "set-walk")}</>;
+  else if (s.k === "stars") body = chipRow([[0, tr("Any")], [3, "3★+"], [4, "4★+"], [5, "5★"]], v.stars || 0, (x) => setV({ stars: x }), "set-stars");
+  else if (s.k === "guests") body = <div className="flex gap-3">{[["adults", "Adults", 30], ["rooms", "Rooms", 10]].map(([k, l, mx]) => <label key={k} className="flex-1 text-[13px]">{tr(l)}<input type="number" min="1" max={mx} value={v[k]} onChange={(e) => setV({ ...v, [k]: +e.target.value })} className={U.inp} data-testid={"set-" + k} /></label>)}</div>;
+  else if (s.k === "budget") body = <><input type="number" inputMode="numeric" min="0" value={v.below || ""} onChange={(e) => setV({ ...v, below: +e.target.value })} placeholder={tr("No limit")} className={U.inp} data-testid="set-budget" />
+    <button onClick={() => setV({ ...v, below: 0 })} className={U.btnS}>{tr("No limit")}</button></>;
+  else if (s.k === "sites") body = <><p className="m-0 text-[12.5px] c-sub">{tr("Tap the ones to use — none ticked means all.")}</p>
+    <div className="flex flex-wrap gap-1.5">{v.list.map((x) => { const on = v.only.includes(x); return <button key={x} onClick={() => setV({ ...v, only: on ? v.only.filter((y) => y !== x) : [...v.only, x] })} aria-pressed={on} className={U.chip(on)} data-testid={"set-site-" + x}>{x}</button>; })}</div></>;
+  else if (s.k === "must" || s.k === "avoid") body = <><div className="flex flex-wrap gap-1.5">{v.words.map((w) => <button key={w} onClick={() => setV({ words: v.words.filter((y) => y !== w) })} className={U.chip(true)} data-testid="set-word">{w} ✕</button>)}{!v.words.length ? <span className="text-[12.5px] c-sub">{tr("Nothing yet")}</span> : null}</div>
+    <form onSubmit={(e) => { e.preventDefault(); const w = word.trim(); if (w) { setV({ words: [...new Set([...v.words, w])] }); setWord(""); } }} className="flex gap-2"><input dir="auto" value={word} onChange={(e) => setWord(e.target.value)} placeholder={s.k === "must" ? tr("e.g. breakfast, free cancellation") : tr("e.g. hostel, shared bathroom")} className={U.inp + " flex-1"} data-testid="set-word-input" /><button className={U.btnS}>{tr("Add")}</button></form></>;
+  else if (s.k === "hours") body = chipRow([[1, tr("every hour")], [3, T("every {h} hours", { h: 3 })], [6, T("every {h} hours", { h: 6 })], [12, T("every {h} hours", { h: 12 })], [24, tr("once a day")]], v.hours, (x) => setV({ hours: x }), "set-hours");
+  else if (s.k === "route") body = <div className="flex gap-2"><input value={v.from} onChange={(e) => setV({ ...v, from: e.target.value.toUpperCase().slice(0, 3) })} className={U.inp} data-testid="set-route-from" /><input value={v.to} onChange={(e) => setV({ ...v, to: e.target.value.toUpperCase().slice(0, 3) })} className={U.inp} data-testid="set-route-to" /></div>;
+  else if (s.k === "stops") body = chipRow([[-1, tr("Any")], [0, tr("Direct only")], [1, T("Up to {n} stops", { n: 1 })], [2, T("Up to {n} stops", { n: 2 })]], v.n, (x) => setV({ n: x }), "set-stops");
+  else if (s.k === "cabin") body = chipRow([["economy", tr("Economy")], ["premium", tr("Premium economy")], ["business", tr("Business")], ["first", tr("First")]], v.cabin, (x) => setV({ cabin: x }), "set-cabin");
+  else if (s.k === "bags") body = chipRow([[0, tr("No checked bag")], [1, "1"], [2, "2"], [3, "3"]], v.n || 0, (x) => setV({ n: x }), "set-bags");
+  else if (s.k === "what") body = <input dir="auto" value={v.what} onChange={(e) => setV({ ...v, what: e.target.value })} className={U.inp} data-testid="set-what" />;
+  const out = () => (s.k === "dates" ? (flex ? { window: v.window || { from: v.from, to: v.to }, nights: v.nights } : { from: v.from, to: v.to }) : s.k === "what" ? { ...v, country: (() => { try { return localStorage.getItem("attune:country") || ""; } catch (e) { return ""; } })() } : v);
+  return <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: "rgba(0,0,0,.35)" }} onClick={close}>
+    <div className="w-full max-w-[520px] rounded-t-[24px] p-5 space-y-3" style={{ background: "var(--c-surf)", color: "var(--c-ink)" }} onClick={(e) => e.stopPropagation()} data-testid="agent-set-sheet">
+      <p className={U.label + " m-0"}>{tr(s.en)}</p>
+      {body}
+      <button onClick={() => save(out())} className={U.btnP + " w-full"} data-testid="agent-set-save">{tr("Save — check again now")}</button>
+      <button onClick={close} className="w-full h-10 c-sub text-[13px] font-bold">{tr("Cancel")}</button>
+    </div></div>;
 }
