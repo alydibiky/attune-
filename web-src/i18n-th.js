@@ -12358,4 +12358,5 @@ export const TH = {
   "…or paste a message from the class group": "…หรือวางข้อความจากกลุ่มห้องเรียน",
   "From a business card": "จากนามบัตร",
   "I couldn't tell the name on the card — type it": "อ่านชื่อบนนามบัตรไม่ได้ — พิมพ์เอง",
+  "or {d}, whichever comes first": "หรือ {d} แล้วแต่อย่างใดถึงก่อน",
 };

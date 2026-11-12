@@ -12358,4 +12358,5 @@ export const RU = {
   "…or paste a message from the class group": "…или вставьте сообщение из чата класса",
   "From a business card": "С визитки",
   "I couldn't tell the name on the card — type it": "Не удалось понять имя на визитке — введите его",
+  "or {d}, whichever comes first": "или {d} — что наступит раньше",
 };

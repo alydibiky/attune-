@@ -12358,4 +12358,5 @@ export const ZH = {
   "…or paste a message from the class group": "…或粘贴班级群里的消息",
   "From a business card": "从名片",
   "I couldn't tell the name on the card — type it": "看不出名片上的名字——请输入",
+  "or {d}, whichever comes first": "或 {d}，以先到者为准",
 };

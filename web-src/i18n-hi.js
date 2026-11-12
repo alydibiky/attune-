@@ -12359,4 +12359,5 @@ export const HI = {
   "…or paste a message from the class group": "…या क्लास ग्रुप का संदेश चिपकाएँ",
   "From a business card": "विज़िटिंग कार्ड से",
   "I couldn't tell the name on the card — type it": "कार्ड पर नाम समझ नहीं आया — लिख दें",
+  "or {d}, whichever comes first": "या {d}, जो पहले आए",
 };

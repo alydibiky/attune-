@@ -12358,4 +12358,5 @@ export const FA = {
   "…or paste a message from the class group": "…یا پیامی از گروه کلاس بچسبانید",
   "From a business card": "از کارت ویزیت",
   "I couldn't tell the name on the card — type it": "نام روی کارت معلوم نشد — بنویسید",
+  "or {d}, whichever comes first": "یا {d}، هر کدام زودتر",
 };

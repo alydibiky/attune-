@@ -12359,4 +12359,5 @@ export const UR = {
   "…or paste a message from the class group": "…یا کلاس گروپ کا پیغام چسپاں کریں",
   "From a business card": "وزیٹنگ کارڈ سے",
   "I couldn't tell the name on the card — type it": "کارڈ پر نام سمجھ نہیں آیا — لکھ دیں",
+  "or {d}, whichever comes first": "یا {d}، جو پہلے آئے",
 };

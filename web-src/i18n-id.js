@@ -12359,4 +12359,5 @@ export const IDN = {
   "…or paste a message from the class group": "…atau tempel pesan dari grup kelas",
   "From a business card": "Dari kartu nama",
   "I couldn't tell the name on the card — type it": "Nama di kartu tidak terbaca — ketik",
+  "or {d}, whichever comes first": "atau {d}, mana yang lebih dulu",
 };

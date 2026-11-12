@@ -36,7 +36,7 @@ with sync_playwright() as p:
     page.evaluate("t => window.__ocr.push(t)", "Raya Shop\nDate 01/09/2026\nMixer 1,250")
     page.set_input_files("[data-testid=things-receipt-input]", IMG); page.wait_for_selector("[data-testid=thing-form]", timeout=8000)
     check(page.locator("[data-testid=thing-f-price]").get_attribute("data-unsure") == "1" and page.locator("[data-testid=thing-unsure]").count() == 1, "no TOTAL line → price marked yellow ('check')")
-    page.fill("[data-testid=thing-f-price]", "1250"); page.wait_for_timeout(100)
+    page.fill("[data-testid=thing-f-price]", "1300"); page.wait_for_timeout(100)
     check(page.locator("[data-testid=thing-f-price]").get_attribute("data-unsure") == "", "…editing it clears the yellow")
     check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
     br.close()

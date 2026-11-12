@@ -12359,4 +12359,5 @@ export const IT = {
   "…or paste a message from the class group": "…o incolla un messaggio del gruppo della classe",
   "From a business card": "Da un biglietto da visita",
   "I couldn't tell the name on the card — type it": "Non riesco a capire il nome sul biglietto: scrivilo",
+  "or {d}, whichever comes first": "o il {d}, quello che arriva prima",
 };

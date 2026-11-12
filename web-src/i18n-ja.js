@@ -12358,4 +12358,5 @@ export const JA = {
   "…or paste a message from the class group": "…またはクラスのグループのメッセージを貼り付け",
   "From a business card": "名刺から",
   "I couldn't tell the name on the card — type it": "名刺の名前がわかりませんでした — 入力してください",
+  "or {d}, whichever comes first": "または{d}（早い方）",
 };

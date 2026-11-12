@@ -12358,4 +12358,5 @@ export const VI = {
   "…or paste a message from the class group": "…hoặc dán tin nhắn từ nhóm lớp",
   "From a business card": "Từ danh thiếp",
   "I couldn't tell the name on the card — type it": "Không đọc được tên trên thẻ — hãy nhập",
+  "or {d}, whichever comes first": "hoặc {d}, tùy cái nào đến trước",
 };

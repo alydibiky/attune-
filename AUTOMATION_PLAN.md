@@ -204,7 +204,16 @@
     for "Ahmed" with two Ahmeds, nothing open → nothing; kept in step by syncToPhone (setExtraSchedule, registered at load).
     tests/p2/gen.mjs 10,000/10,000 + held-out 2,000/2,000 (4 planted bugs caught), tests/unit/v9923p2.test.mjs, tests/e2e_v9923p2.py.
     → B5 done (P1 P3 N3 N1 P2).
-- [ ] **B6 papers & things: X1 paperwork · X4 emergency card · X2 upkeep · X3 what I own · X6 kids & school**
+- [x] **B6 papers & things: X1 paperwork · X4 emergency card · X2 upkeep · X3 what I own · X6 kids & school** (v9.9.24)
+  - X1 passport / ID (v9.9.22–23) + business card → People card (bizcard.js, 10,000 cards, EN AR FR; the mobile, never the fax)
+  - X4 emergency.js + emergency-ui.jsx (Family health → Emergency): blood type read in 20 languages, never guessed; today's medicines only;
+    share in the reader's language, insurance masked; never "no known allergies" unless ticked. 10,000 records.
+  - X2 upkeep.js + upkeep-ui.jsx (Errands → Upkeep): car whichever comes first (km / date), home set or learned interval, Done / Done + cost.
+  - X3 things.js + things-ui.jsx (Documents → My things): receipt → price (TOTAL line, any language), date, shop, item, warranty → Dates;
+    box → serial / IMEI (check digit); unsure = yellow; every field editable. 10,000 receipts and boxes.
+  - X6 schoolmsg.js + school-ui.jsx (Family → a child → School): class-group messages (8 school languages) → exam / fee / trip / bring /
+    holiday / meeting; "which Thursday?", no day, no amount asked; Add N with reminders; the two weeks editable. 10,000 messages.
+  - Phone parts still to do: the emergency card on the lock screen (Kotlin).
 - [ ] **B7 travel: TR1 trip from bookings · TR2 flight day · TR3 trip money & papers**
 - [ ] **B8 AU4 scheduled AI jobs** (needs the night job)
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali)

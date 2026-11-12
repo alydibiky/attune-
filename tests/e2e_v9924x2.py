@@ -23,7 +23,7 @@ with sync_playwright() as p:
     ids = page.evaluate("[...document.querySelectorAll('[data-testid=upkeep-line]')].map(e => e.dataset.id + (e.dataset.due ? '!' : ''))")
     check(ids[:2] == ["car:oil!", "g!"] or ids[:2] == ["g!", "car:oil!"], "the due ones first — oil change and gas cylinder: %s" % ids)
     oil = page.locator("[data-testid=upkeep-line][data-id='car:oil'] [data-testid=upkeep-sub]").inner_text()
-    check("10,000 of 10,200 km" in oil and "200 km left" in oil, "oil: by km, whichever comes first — " + oil)
+    check("10,000 of 10,200 km" in oil and "200 km left" in oil and "whichever comes first" in oil, "oil: by km, whichever comes first — " + oil)
     gas = page.locator("[data-testid=upkeep-line][data-id='g'] [data-testid=upkeep-sub]").inner_text()
     check("about every 35 days" in gas, "gas cylinder: learned — " + gas)
     wf = page.locator("[data-testid=upkeep-line][data-id='w'] [data-testid=upkeep-sub]").inner_text()
@@ -42,7 +42,7 @@ with sync_playwright() as p:
     check(len(led) == 1 and led[0]["amount"] == 1700 and led[0]["type"] == "expense", "Done + cost → 1,700 expense in Money: %s" % json.dumps(led)[:120])
     check(car[-1]["service"] == "oil" and car[-1]["km"] == 10000 and car[-1]["date"] == t.isoformat(), "…and the oil change logged at 10,000 km today")
     oil = page.locator("[data-testid=upkeep-line][data-id='car:oil'] [data-testid=upkeep-sub]").inner_text()
-    check("20,000" in oil, "the next oil change is now at 20,000 km: " + oil)
+    check("10,000 of 20,000 km" in oil and "whichever comes first" in oil, "the next oil change: at 20,000 km or its date, whichever comes first: " + oil)
     # add a home item
     page.click("[data-testid=upkeep-add]"); page.fill("[data-testid=upkeep-name]", "AC service"); page.fill("[data-testid=upkeep-every]", "12"); page.click("[data-testid=upkeep-save]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=upkeep-line]:has-text('AC service')").count() == 1 and "every 12 months" in page.locator("[data-testid=upkeep-line]:has-text('AC service')").inner_text(), "added: AC service, every 12 months")

@@ -12358,4 +12358,5 @@ export const KO = {
   "…or paste a message from the class group": "…또는 반 단톡방 메시지를 붙여넣기",
   "From a business card": "명함에서",
   "I couldn't tell the name on the card — type it": "명함의 이름을 알 수 없어요 — 입력하세요",
+  "or {d}, whichever comes first": "또는 {d}, 먼저 오는 쪽",
 };

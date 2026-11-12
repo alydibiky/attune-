@@ -12358,4 +12358,5 @@ export const BN = {
   "…or paste a message from the class group": "…বা ক্লাস গ্রুপের একটি বার্তা পেস্ট করুন",
   "From a business card": "ভিজিটিং কার্ড থেকে",
   "I couldn't tell the name on the card — type it": "কার্ডে নাম বোঝা গেল না — লিখে দিন",
+  "or {d}, whichever comes first": "অথবা {d}, যেটা আগে আসে",
 };

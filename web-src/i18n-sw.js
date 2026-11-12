@@ -12359,4 +12359,5 @@ export const SW = {
   "…or paste a message from the class group": "…au bandika ujumbe kutoka kikundi cha darasa",
   "From a business card": "Kutoka kadi ya biashara",
   "I couldn't tell the name on the card — type it": "Sikuweza kujua jina kwenye kadi — liandike",
+  "or {d}, whichever comes first": "au {d}, kipi kitangulie",
 };

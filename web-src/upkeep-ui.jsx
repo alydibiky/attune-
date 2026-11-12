@@ -13,14 +13,15 @@ const SVC = { oil: "Oil change", filter: "Filters", tyres: "Tyres", brakes: "Bra
 const loadHome = () => { try { const j = JSON.parse(localStorage.getItem(KEY) || "null"); return j && Array.isArray(j.items) ? j.items : []; } catch (e) { return []; } };
 const saveHome = (items) => { try { localStorage.setItem(KEY, JSON.stringify({ v: 1, items })); } catch (e) {} return items; };
 const iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
-const day = (s) => { try { return new Date(s + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" }); } catch (e) { return s; } };
+const day = (s) => { try { const d = new Date(s + "T12:00:00"); return d.toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric" }); } catch (e) { return s; } };
 const n0 = (v) => Math.round(v).toLocaleString("en-US");
 function toMoney(m) { if (!m) return true; const led = loadLedger(); if (!led) return false; const r = appendToLedger(led, [m]); if (!r.ids.length) return false; try { localStorage.setItem("ledger.v3", JSON.stringify(r.ledger)); } catch (e) {} return true; }
 export function UpkeepSection({ flash }) {
   const [home, setHome] = useState(loadHome), [car, setCar] = useState(loadCar), [cost, setCost] = useState({}), [add, setAdd] = useState(null);
   const lines = upkeepLines({ car: car && car.log && car.log.length ? car : null, home });
-  const sub = (l) => l.kind === "car" ? (l.by === "km" && l.dueKm ? tr("{a} of {b} km", { a: n0(l.kmNow), b: n0(l.dueKm) }) + (l.kmLeft != null ? " · " + (l.kmLeft > 0 ? tr("{n} km left", { n: n0(l.kmLeft) }) : tr("over by {n} km", { n: n0(-l.kmLeft) })) : "")
-      : l.due ? tr("next {d}", { d: day(l.due) }) : "")
+  // the car: both limits, whichever comes first ("at 20,000 km or 12 Nov 2027")
+  const sub = (l) => l.kind === "car" ? [l.dueKm ? tr("{a} of {b} km", { a: n0(l.kmNow), b: n0(l.dueKm) }) + (l.kmLeft != null ? " · " + (l.kmLeft > 0 ? tr("{n} km left", { n: n0(l.kmLeft) }) : tr("over by {n} km", { n: n0(-l.kmLeft) })) : "") : "",
+      l.due ? (l.dueKm ? tr("or {d}, whichever comes first", { d: day(l.due) }) : tr("next {d}", { d: day(l.due) })) : ""].filter(Boolean).join(" · ")
     : [l.everyMonths ? tr("every {n} months", { n: l.everyMonths }) : l.learned ? tr("about every {n} days", { n: l.everyDays }) : l.everyDays ? tr("every {n} days", { n: l.everyDays }) : tr("Done once — set how often, or Attune learns it"),
        l.due ? tr("next {d}", { d: day(l.due) }) : ""].filter(Boolean).join(" · ");
   const done = (l, withCost) => {

@@ -9448,4 +9448,5 @@ export const AR = {
   "…or paste a message from the class group": "…أو الصق رسالة من جروب الفصل",
   "From a business card": "من كارت شغل",
   "I couldn't tell the name on the card — type it": "معرفتش أطلّع الاسم من الكارت — اكتبه",
+  "or {d}, whichever comes first": "أو {d}، اللي ييجي الأول",
 };

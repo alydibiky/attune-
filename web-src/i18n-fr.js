@@ -12359,4 +12359,5 @@ export const FR = {
   "…or paste a message from the class group": "…ou collez un message du groupe de la classe",
   "From a business card": "Depuis une carte de visite",
   "I couldn't tell the name on the card — type it": "Je n'ai pas trouvé le nom sur la carte — tapez-le",
+  "or {d}, whichever comes first": "ou le {d}, au premier des deux",
 };
