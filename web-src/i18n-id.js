@@ -12357,4 +12357,6 @@ export const IDN = {
   "When?": "Kapan?",
   "Which day — this one or next week?": "Hari yang mana — ini atau minggu depan?",
   "…or paste a message from the class group": "…atau tempel pesan dari grup kelas",
+  "From a business card": "Dari kartu nama",
+  "I couldn't tell the name on the card — type it": "Nama di kartu tidak terbaca — ketik",
 };

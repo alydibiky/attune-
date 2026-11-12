@@ -12356,4 +12356,6 @@ export const VI = {
   "When?": "Khi nào?",
   "Which day — this one or next week?": "Ngày nào — hôm nay hay tuần sau?",
   "…or paste a message from the class group": "…hoặc dán tin nhắn từ nhóm lớp",
+  "From a business card": "Từ danh thiếp",
+  "I couldn't tell the name on the card — type it": "Không đọc được tên trên thẻ — hãy nhập",
 };

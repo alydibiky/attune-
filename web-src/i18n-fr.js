@@ -12357,4 +12357,6 @@ export const FR = {
   "When?": "Quand ?",
   "Which day — this one or next week?": "Quel jour — celui-ci ou la semaine prochaine ?",
   "…or paste a message from the class group": "…ou collez un message du groupe de la classe",
+  "From a business card": "Depuis une carte de visite",
+  "I couldn't tell the name on the card — type it": "Je n'ai pas trouvé le nom sur la carte — tapez-le",
 };

@@ -12357,4 +12357,6 @@ export const PT = {
   "When?": "Quando?",
   "Which day — this one or next week?": "Qual dia — este ou na próxima semana?",
   "…or paste a message from the class group": "…ou cole uma mensagem do grupo da turma",
+  "From a business card": "De um cartão de visita",
+  "I couldn't tell the name on the card — type it": "Não consegui ler o nome no cartão — digite",
 };

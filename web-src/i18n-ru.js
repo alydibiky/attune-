@@ -12356,4 +12356,6 @@ export const RU = {
   "When?": "Когда?",
   "Which day — this one or next week?": "Какой день — этот или на следующей неделе?",
   "…or paste a message from the class group": "…или вставьте сообщение из чата класса",
+  "From a business card": "С визитки",
+  "I couldn't tell the name on the card — type it": "Не удалось понять имя на визитке — введите его",
 };

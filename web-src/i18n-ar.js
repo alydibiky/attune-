@@ -9446,4 +9446,6 @@ export const AR = {
   "When?": "إمتى؟",
   "Which day — this one or next week?": "أنهي يوم — ده ولا الأسبوع الجاي؟",
   "…or paste a message from the class group": "…أو الصق رسالة من جروب الفصل",
+  "From a business card": "من كارت شغل",
+  "I couldn't tell the name on the card — type it": "معرفتش أطلّع الاسم من الكارت — اكتبه",
 };

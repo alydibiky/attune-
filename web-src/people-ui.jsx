@@ -12,6 +12,10 @@ import { loadPots } from "./planner.js";
 import { askConfirm } from "./confirm.jsx";
 import { PeopleB5, PersonB5 } from "./b5-ui.jsx";
 import { personSections, openOriginal } from "./personpage.js";
+import { readCard } from "./bizcard.js";
+import { shrinkPhoto } from "./money-pages-ui.jsx";
+import { photoOk, askRetake } from "./photogate.js";
+import { choosePhoto } from "./photopick.js";
 import { cardPad, card, btnP, btnS, inp, label, h1, muted, tag } from "./ui-kit.jsx";
 
 export const OPEN_KEY = "attune:people:open";
@@ -40,10 +44,22 @@ function Editor({ init, onSave, onCancel, nativeCall, dir }) {
     if (!nativeCall) { setErr(tr("Picking a contact works in the Android app")); return; }
     try { const c = await nativeCall("contactPick", {}); if (c && (c.name || c.phone)) { setContact({ name: c.name || "", phone: c.phone || "" }); if (!name.trim()) setName(c.name || ""); } } catch (e) { if (!/cancel/i.test(String(e && e.message))) setErr(String((e && e.message) || e)); }
   };
+  // v9.9.24 X1: a business card photo fills the card (name, job, company, the mobile — never the fax — email, website)
+  const cardRef = React.useRef(null), [note, setNote] = useState(init.note || "");
+  const fromCard = async (f) => { if (!f) return; setErr("");
+    const url = await shrinkPhoto(f).catch(() => null); if (!url) return; if (!(await photoOk(url, cardRef.current))) return;
+    let t = ""; try { const r = nativeCall ? await nativeCall("readText", { b64: url.split(",")[1] }) : null; t = (r && r.text) || ""; } catch (e) {}
+    const c = readCard(t); if (!c.sure.name && !c.phone && !c.email) { askRetake("unread", cardRef.current); return; }
+    if (c.name) setName(c.name); if (c.title || c.company) setRole([c.title, c.company].filter(Boolean).join(" · "));
+    if (c.phone) setContact({ name: c.name || name, phone: c.phone });
+    setNote([c.email, c.website, ...c.phones.filter((x) => x.number !== c.phone).map((x) => (x.kind === "fax" ? "Fax " : "") + x.number)].filter(Boolean).join(" · "));
+    if (!c.sure.name) setErr(tr("I couldn't tell the name on the card — type it")); };
   const same = name.trim() ? dir.items.filter((p) => p.id !== init.id && E.keysOf(p).includes(E.fold(name).trim().split(" ")[0])) : [];
   return <div className={cardPad + " space-y-3"} data-testid="people-editor">
     <div className="flex gap-1.5">{[["person", tr("A person")], ["place", tr("A place")], ["thing", tr("A thing")]].map(([k, l]) => <button key={k} type="button" onClick={() => setKind(k)} data-testid={"people-kind-" + k}
       className={"min-h-[40px] px-3 rounded-full text-[13px] font-extrabold border " + (kind === k ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-transparent" : "border-[var(--c-ln)] " + muted)}>{l}</button>)}</div>
+    {kind === "person" && !init.id ? <><button type="button" className={btnS} onClick={() => choosePhoto(cardRef.current)} data-testid="people-from-card">{tr("From a business card")}</button>
+      <input ref={cardRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; fromCard(f); }} data-testid="people-card-input" /></> : null}
     <label className="block"><span className={label + " block mb-1"}>{kind === "person" ? tr("What you call him / her") : tr("What you call it")}</span>
       <input className={inp} value={name} onChange={(e) => setName(e.target.value)} dir="auto" placeholder={kind === "person" ? tr("e.g. Ahmed the plumber") : kind === "place" ? tr("e.g. the flat in Maadi") : tr("e.g. the Kia")} data-testid="people-name" /></label>
     {same.length ? <p className="m-0 text-[12px] text-[var(--c-warn)] font-bold">{tr("You already have {n} — add what tells them apart (plumber, work…), and Attune will ask which one when it isn't clear.", { n: same.map(E.labelOf).join(" · ") })}</p> : null}
@@ -58,7 +74,7 @@ function Editor({ init, onSave, onCancel, nativeCall, dir }) {
       <span className={"text-[11.5px] " + muted}>{tr("Optional — Attune keeps using your name for them.")}</span></div> : null}
     {err ? <p className="m-0 text-[12.5px] text-[var(--c-neg)] font-bold">{err}</p> : null}
     <div className="flex gap-2"><button className={btnP + " flex-1"} disabled={!name.trim() && !(contact && contact.name)} data-testid="people-save"
-      onClick={() => onSave({ kind, name: name.trim(), role: role.trim(), aliases: aliases.split(/[,،]/).map((x) => x.trim()).filter(Boolean), contact })}>{tr("Save")}</button>
+      onClick={() => onSave({ kind, name: name.trim(), role: role.trim(), aliases: aliases.split(/[,،]/).map((x) => x.trim()).filter(Boolean), contact, note })}>{tr("Save")}</button>
       <button className={btnS} onClick={onCancel}>{tr("Cancel")}</button></div>
   </div>;
 }

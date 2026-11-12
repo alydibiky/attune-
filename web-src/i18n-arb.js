@@ -12348,4 +12348,6 @@ export const ARB = {
   "When?": "متى؟",
   "Which day — this one or next week?": "أي يوم — هذا أم الأسبوع القادم؟",
   "…or paste a message from the class group": "…أو الصق رسالة من مجموعة الفصل",
+  "From a business card": "من بطاقة عمل",
+  "I couldn't tell the name on the card — type it": "تعذّر معرفة الاسم من البطاقة — اكتبه",
 };

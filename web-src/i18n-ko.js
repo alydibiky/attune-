@@ -12356,4 +12356,6 @@ export const KO = {
   "When?": "언제?",
   "Which day — this one or next week?": "어느 날 — 오늘 아니면 다음 주?",
   "…or paste a message from the class group": "…또는 반 단톡방 메시지를 붙여넣기",
+  "From a business card": "명함에서",
+  "I couldn't tell the name on the card — type it": "명함의 이름을 알 수 없어요 — 입력하세요",
 };

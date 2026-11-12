@@ -12357,4 +12357,6 @@ export const TRK = {
   "When?": "Ne zaman?",
   "Which day — this one or next week?": "Hangi gün — bu mu, gelecek hafta mı?",
   "…or paste a message from the class group": "…ya da sınıf grubundan bir mesaj yapıştır",
+  "From a business card": "Kartvizitten",
+  "I couldn't tell the name on the card — type it": "Karttaki adı anlayamadım — yaz",
 };

@@ -12357,4 +12357,6 @@ export const HI = {
   "When?": "कब?",
   "Which day — this one or next week?": "कौन-सा दिन — यह या अगले हफ़्ते?",
   "…or paste a message from the class group": "…या क्लास ग्रुप का संदेश चिपकाएँ",
+  "From a business card": "विज़िटिंग कार्ड से",
+  "I couldn't tell the name on the card — type it": "कार्ड पर नाम समझ नहीं आया — लिख दें",
 };

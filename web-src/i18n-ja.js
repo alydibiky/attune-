@@ -12356,4 +12356,6 @@ export const JA = {
   "When?": "いつ？",
   "Which day — this one or next week?": "どの日 — 今日か来週か？",
   "…or paste a message from the class group": "…またはクラスのグループのメッセージを貼り付け",
+  "From a business card": "名刺から",
+  "I couldn't tell the name on the card — type it": "名刺の名前がわかりませんでした — 入力してください",
 };

@@ -12357,4 +12357,6 @@ export const SW = {
   "When?": "Lini?",
   "Which day — this one or next week?": "Siku gani — hii au wiki ijayo?",
   "…or paste a message from the class group": "…au bandika ujumbe kutoka kikundi cha darasa",
+  "From a business card": "Kutoka kadi ya biashara",
+  "I couldn't tell the name on the card — type it": "Sikuweza kujua jina kwenye kadi — liandike",
 };

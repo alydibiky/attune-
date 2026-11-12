@@ -12356,4 +12356,6 @@ export const ZH = {
   "When?": "什么时候？",
   "Which day — this one or next week?": "哪一天——今天还是下周？",
   "…or paste a message from the class group": "…或粘贴班级群里的消息",
+  "From a business card": "从名片",
+  "I couldn't tell the name on the card — type it": "看不出名片上的名字——请输入",
 };
