@@ -1725,3 +1725,8 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 - Arabic-digit reader (for the Egyptian ID's front, which ML Kit can't read): trained a small model in the scratchpad; on fonts it never
   saw it read 16/200 numbers exactly, asked on 4, 180 not found, 0 WRONG — too weak to ship. Parked (not in the app). The Egyptian ID
   still works by typing the number (or the vision model) and is then checked by code.
+- (later) Ali: "add the photo check everywhere applicable" → web-src/photogate.js (one shared sheet: why + Take another photo / Use this
+  one anyway / Cancel) in Read it to me, Translate (photo), Timetable, Money (receipt), Family health (prescription + lab); nothing read
+  → "take a closer, sharper photo". Not on Shelf covers, Mind memories, Recall / Scam screenshots, Chat pictures (not papers).
+  Screenshots never refused: "dark" / washed-out only when the photo is also flat (contrast < 80); ≥ 70% pure white = a white page.
+  Tests: tests/e2e_v9923photogate.py (5 screens, EN + AR); older photo tests now use harness doc_png / doc_bytes.

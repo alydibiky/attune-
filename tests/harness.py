@@ -203,3 +203,9 @@ def doc_png(page, path, blur=0, dark=False):
       return c.toDataURL('image/png').split(',')[1]; }""", [blur, dark])
     open(path, "wb").write(base64.b64decode(b64))
     return path
+
+
+def doc_bytes(page, blur=0, dark=False):
+    """The same real-size document photo as doc_png, as PNG bytes (for set_input_files buffers)."""
+    import tempfile
+    f = os.path.join(tempfile.mkdtemp(), "doc.png"); doc_png(page, f, blur, dark); b = open(f, "rb").read(); os.remove(f); return b

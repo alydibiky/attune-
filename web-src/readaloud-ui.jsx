@@ -2,6 +2,7 @@
    Chat (a photo with "read it"), Translate (a photo). Voice first: the phone says what the paper is, then reads it all, a
    sentence at a time with the sentence lit up; big buttons; Slower; "Read it in my language" through the checked translator.
    Then it acts: a due date → Deadline Radar, medicines → Family health, a bill → Money. Logic: readaloud.js (all code).    */
+import { photoOk, askRetake } from "./photogate.js";
 import React, { useEffect, useRef, useState } from "react";
 import { choosePhoto } from "./photopick.js";
 import { X, Camera, ImagePlus, Play, Pause, Bell, Pill, Wallet, Languages, Volume2, Sparkles } from "lucide-react";
@@ -39,13 +40,13 @@ function ReadSheet({ init, readText, llm, native, remind, flash, onClose }) {
     setBusy(tr("Reading the paper…")); let t = "";
     try { const r = readText ? await readText(dataUrl.split(",")[1]) : null; t = (r && r.text) || ""; } catch (e) {}
     setBusy("");
-    if (!t.trim()) { flash && flash(tr("Couldn't read any writing — hold the phone closer, in good light")); return; }
+    if (!t.trim()) { askRetake("unread", cam.current); return; }   // v9.9.23: the shared "take a closer, sharper photo" sheet
     setText(t); setShown(""); setPlain("");
   };
   useEffect(() => { if (img && !text) ocr(img); }, []);
   // as soon as the paper is read: say what it is (in the person's language), by code
   useEffect(() => { if (ex && ex.say.length) play(ex.say, ui, 0, "say"); }, [text]);
-  const onFile = async (file) => { if (!file) return; const u = await shrink(file); if (!u) return; setImg(u); setText(""); await ocr(u); };
+  const onFile = async (file) => { if (!file) return; const u = await shrink(file); if (!u) return; if (!(await photoOk(u, cam.current))) return; setImg(u); setText(""); await ocr(u); };
   const translate = async () => {
     if (!llm) return flash && flash(tr("Load a model in Engine to translate"));
     stop(); setBusy(tr("Translating…"));

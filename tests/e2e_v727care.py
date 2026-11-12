@@ -6,7 +6,7 @@ lists the next doses.
 """
 import os, json, base64
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import doc_png, Env, new_page, check, real_errors, finish, HERE
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
 RX = "Dr. Ahmed — Clinic\nDate: 12/10/2026\n1) Coumadin 5 mg 1 tab once daily\n2) Brufen 400 mg 1 tab 3 times daily after food for 5 days\n3) Prednisolone 5 mg 2 tabs daily for 5 days then 1 tab daily for 5 days"
@@ -50,8 +50,7 @@ with sync_playwright() as p:
     check(rows.first.get_attribute("aria-pressed") == "true", "a dose is ticked as taken")
     # labs from a photo
     page.click("[data-testid=care-tab-labs]")
-    png = page.evaluate("""() => { const c = document.createElement('canvas'); c.width = 100; c.height = 100; return c.toDataURL('image/png').split(',')[1]; }""")
-    path = os.path.join(HERE, "_lab.png"); open(path, "wb").write(base64.b64decode(png))
+    path = doc_png(page, os.path.join(HERE, "_lab.png"))   # (a real-size photo: v9.9.23's photo check passes it)
     page.locator("[data-testid=care-lab-file]").set_input_files(path); os.remove(path)
     page.wait_for_selector("[data-testid=care-labdraft]", timeout=5000)
     page.click("[data-testid=care-lab-save]"); page.wait_for_timeout(300)

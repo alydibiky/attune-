@@ -3,6 +3,7 @@
    shown with what was read, missing parts asked; daily reminders; interaction warnings quoted from official labels) · Lab
    results (read from a report, judged only by its printed range, trends) · Family. See care.js for the safety rules.
    Tests: tests/e2e_v727care.py.                                                                                              */
+import { photoOk, askRetake } from "./photogate.js";
 import React, { useEffect, useRef, useState } from "react";
 import { choosePhoto } from "./photopick.js";
 import { Heart, Camera, Pencil, Plus, Check, AlertTriangle, Trash2, Users, Pill } from "lucide-react";
@@ -140,10 +141,11 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
   const readLab = (t) => { const r = H.readLabs(t); if (!r.length) { flash && flash(tr("No results found — type them")); return; } setLabDraft({ date: H.isoDay(Date.now()), member: (members[0] || {}).id || "", rows: r }); setTab("labs"); };
   const photo = async (file, kind) => {
     if (!file) return; setBusy(tr("Reading…"));
-    const url = await shrink(file); let t = "";
+    const url = await shrink(file); let t = ""; const inp = kind === "rx" ? fileRx.current : fileLab.current;
+    if (url && !(await photoOk(url, inp))) { setBusy(""); return; }   // v9.9.23: blurry / dark / glare → "take another photo"
     try { const r = readText ? await readText(url.split(",")[1]) : null; t = (r && r.text) || ""; } catch (e) {}
     setBusy("");
-    if (!t.trim()) { flash && flash(tr("Couldn't read the photo — type it")); setTyping(kind); return; }
+    if (!t.trim()) { askRetake("unread", inp); setTyping(kind); return; }
     kind === "rx" ? readRx(t) : readLab(t);
   };
   // v6.27: a prescription read by "Read it to me" arrives here, line by line, to check and save

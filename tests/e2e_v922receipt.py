@@ -4,7 +4,7 @@ text reader (ML Kit, here a stand-in) reads its TOTAL into the amount; the photo
 """
 import json, os, struct, zlib, datetime
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import doc_png, Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 def png(rgb, w=40, h=60):
     raw = b"".join(b"\x00" + bytes(rgb) * w for _ in range(h))
@@ -26,7 +26,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=money-bar]", timeout=10000); page.wait_for_timeout(1500)
     page.click("[data-testid=money-add]"); page.wait_for_selector("[data-testid=money-add-sheet]")
     check(page.locator("[data-testid=add-receipt-btn]").count() == 1, "Add to Money has “Add a receipt”")
-    f = "/tmp/v922receipt.png"; open(f, "wb").write(png([240, 240, 235]))
+    f = "/tmp/v922receipt.png"; doc_png(page, f)
     page.set_input_files("[data-testid=add-receipt-input]", f); page.wait_for_selector("[data-testid=add-receipt-thumb]", timeout=5000); page.wait_for_timeout(300)
     check(page.input_value("[data-testid=add-amount]") == "2030", "the TOTAL is read from the receipt into the amount (not the subtotal, the cash or the change): %s" % page.input_value("[data-testid=add-amount]"))
     check("2,030" in page.inner_text("[data-testid=add-receipt-read]"), "…and it says so, to check")

@@ -5,7 +5,7 @@ stops after the term's last day.
 """
 import json, os, datetime
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import doc_png, Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 NOW = datetime.datetime(2026, 11, 9, 8, 0, 0)
 import os, tempfile
@@ -26,7 +26,7 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_timeout(1200)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'reminders'}}))"); page.wait_for_selector("[data-testid=rem-timetable]", timeout=10000)
     page.click("[data-testid=rem-timetable]"); page.wait_for_selector("[data-testid=timetable-page]")
-    page.set_input_files("[data-testid=timetable-file]", IMG); page.wait_for_selector("[data-testid=timetable-rows]", timeout=10000)
+    page.set_input_files("[data-testid=timetable-file]", doc_png(page, IMG)); page.wait_for_selector("[data-testid=timetable-rows]", timeout=10000)
     rows = page.locator("[data-testid=timetable-row]")
     check(rows.count() == 6, "the photo → 6 classes to check (%d)" % rows.count())
     subj = [page.locator("[data-testid=timetable-subject]").nth(i).input_value() for i in range(rows.count())]

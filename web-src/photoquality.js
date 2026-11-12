@@ -30,8 +30,11 @@ export function quality({ gray, w, h }, L = LIMITS) {
     gh[Math.min(1023, Math.round(Math.max(gx, gy) * 4))]++; n++; }
   const sharp = n ? (100 * pct(gh, n, 0.997, 0.25)) / Math.max(20, range) : 0;
   const r = { sharp: Math.round(sharp * 10) / 10, light: Math.round(light), glare: Math.round(glare * 1000) / 1000 };
-  if (light < L.dark) return { ok: false, why: "dark", ...r };
-  if (glare > L.glare || light > L.bright) return { ok: false, why: "glare", ...r };
+  // a screenshot (dark mode, or a white page) is sharp and full of contrast — only a photo that is dark / washed out AND flat is refused;
+  // a white page burnt almost all white (≥ 70%) is a screenshot or a scan, not a glare spot
+  const spread = pct(lh, g.length, 0.97, 1) - pct(lh, g.length, 0.03, 1);
+  if (light < L.dark && spread < 80) return { ok: false, why: "dark", ...r };
+  if ((glare > L.glare && glare < 0.7) || (light > L.bright && spread < 80)) return { ok: false, why: "glare", ...r };
   if (sharp < L.sharp) return { ok: false, why: "blur", ...r };
   return { ok: true, why: "", ...r };
 }

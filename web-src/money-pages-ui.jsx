@@ -2,6 +2,7 @@
    Trends, Notes, Invoices, the full ledger). Every page is calm first, then "See all → … report" (Gemini's Option C). The + sheet
    adds an expense, an income or a transfer to the ledger (Yusr) through the bridge, with the account the person picked; lending /
    borrowing and new bills open the ledger's own forms. Numbers: money-pages.js (code). Zakāt is shown as Yusr calculated it. */
+import { photoOk, askRetake } from "./photogate.js";
 import React, { useState, useMemo } from "react";
 import { House as HomeIc, Wallet, Plus, RefreshCw as Repeat, Moon, X, ChevronRight, ArrowLeft, Target, TrendingUp, FileText, Zap, BookOpen, SlidersHorizontal as Settings, Download, Check, Users } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -101,6 +102,7 @@ export function AddSheet({ L, onSave, onDebt, onClose, prefill = null }) {
   const onReceipt = async (f) => {
     if (!f || !/^image\//.test(f.type || "")) return;
     const small = await shrinkPhoto(f).catch(() => null); if (!small) { setErr(tr("Couldn't open that picture")); return; }
+    if (!(await photoOk(small, photoRef.current))) return;   // v9.9.23: a blurry / dark receipt → "take another photo"
     setPhoto(small); setErr("");
     const call = typeof window !== "undefined" ? window.__attuneNativeCall : null;
     if (call && !String(amount).trim()) {

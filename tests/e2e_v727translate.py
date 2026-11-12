@@ -4,7 +4,7 @@ hidden), the person's glossary, a photo whose translation is drawn over it, and 
 """
 import os, base64, json
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import doc_png, Env, new_page, check, real_errors, finish, HERE
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
 INIT = "try{localStorage.setItem('attune:start','chat')}catch(e){}\n" + r"""
@@ -52,13 +52,12 @@ with sync_playwright() as p:
     check('"Attune" → "أتيون"' in sys and "أتيون" in page.locator("[data-testid=tr-result]").inner_text(), "the glossary term goes with the request and is used")
     # a photo: the translation drawn over it
     page.click("[data-testid=tr-tab-photo]")
-    png = page.evaluate("""() => { const c = document.createElement('canvas'); c.width = 400; c.height = 200; const g = c.getContext('2d'); g.fillStyle = '#f5e6c8'; g.fillRect(0,0,400,200); g.fillStyle = '#000'; g.font = '30px sans-serif'; g.fillText('Fresh juice 25 EGP', 22, 60); return c.toDataURL('image/png').split(',')[1]; }""")
-    path = os.path.join(HERE, "_menu.png"); open(path, "wb").write(base64.b64decode(png))
+    path = doc_png(page, os.path.join(HERE, "_menu.png"))   # (a real-size photo: v9.9.23's photo check passes it; the reading is mocked)
     page.evaluate("""() => { window.__mock.fakeQueue = ['[[1]] عصير طازج ⟦1⟧\\n[[2]] مفتوح يوميًا']; }""")
     page.set_input_files("[data-testid=tr-file]", path); os.remove(path)
     page.wait_for_selector("[data-testid=tr-overlay] img", timeout=15000)
     check("25 EGP" in page.locator("[data-testid=tr-result]").inner_text() and "عصير" in page.locator("[data-testid=tr-result]").inner_text(), "a photo: its lines translated, the price kept exactly")
-    check(page.evaluate("document.querySelector('[data-testid=tr-overlay] img').naturalWidth") == 400, "…and drawn over the photo (same size as the photo)")
+    check(page.evaluate("document.querySelector('[data-testid=tr-overlay] img').naturalWidth") == 1000, "…and drawn over the photo (same size as the photo)")
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "translate-photo.png"))
     # a document → the File Converter
     # v9.4 (Ali, 5 Nov: "Choose a file" only opened the File Converter's start page): the picker opens from Translate itself and the

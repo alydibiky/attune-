@@ -2,6 +2,7 @@
    Converter keeps its layout). Every piece is checked by code (translate.js): numbers / names / codes locked, the target
    script, nothing left untranslated, your glossary; "Extra careful" translates back and compares. Flagged pieces are shown,
    never hidden. Tests: tests/e2e_v727translate.py.                                                                         */
+import { photoOk, askRetake } from "./photogate.js";
 import React, { useEffect, useRef, useState } from "react";
 import { Languages, Camera, ImageIcon, FileText, Copy, Volume2, Shuffle, ShieldCheck, AlertTriangle, Plus, Trash2, Download } from "lucide-react";
 import { openRead } from "./readaloud-ui.jsx";
@@ -146,11 +147,12 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   const goPhoto = async (file) => {
     if (!file) return;
     const src = await new Promise((ok) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(file); });
+    if (!(await photoOk(String(src), fileRef.current))) return;   // v9.9.23: blurry / dark / glare → "take another photo"
     setPhoto({ src, out: null }); setRes(null); setBusy(tr("Reading the photo…"));
     let r = null; try { r = readText ? await readText(String(src).split(",")[1]) : null; } catch (e) {}
     const said = (r && r.text) || ""; setPhoto({ src, out: null, text: said });
     const lines = ((r && r.lines) || []).filter((l) => /\p{L}{2,}/u.test(l.text || ""));
-    if (!lines.length) { setBusy(""); if (r && r.text) { const out = await run(T.piecesOf(r.text), guessFrom(r.text)); if (out) setRes(out); } else flash && flash(tr("No text found in the photo")); return; }
+    if (!lines.length) { setBusy(""); if (r && r.text) { const out = await run(T.piecesOf(r.text), guessFrom(r.text)); if (out) setRes(out); } else askRetake("unread", fileRef.current); return; }
     const out = await run(lines.map((l) => l.text), guessFrom(lines.map((l) => l.text).join(" ")));
     if (!out) return;
     setRes(out);

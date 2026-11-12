@@ -2,6 +2,7 @@
    The photo is read twice when the phone can: the text reader (positions → grid) AND the small photo model (JSON) — rows both agree
    on are sure, rows only one read are marked "check this". Nothing is saved before the person checks the table and taps Save.
    Logic: timetable.js (tested). Reached from Reminders ("From a timetable photo"), the Home box ("my timetable") and Chat. */
+import { photoOk, askRetake } from "./photogate.js";
 import React, { useState } from "react";
 import { ImagePlus, Loader2, Trash2, Check, AlertTriangle, CalendarDays as CalendarClock } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
@@ -15,7 +16,8 @@ const inp = "min-h-[36px] rounded-[10px] border border-[var(--c-ln)] bg-[var(--c
 export function TimetablePage({ nativeCall, native, runVision, flash, navTo }) {
   const [img, setImg] = useState(null), [busy, setBusy] = useState(""), [rows, setRows] = useState(null), [err, setErr] = useState("");
   const [minutes, setMinutes] = useState(15), [until, setUntil] = useState(""), [saved, setSaved] = useState(0);
-  const pick = (f) => { if (!f) return; const r = new FileReader(); r.onload = () => { const url = String(r.result), b64 = url.split(",")[1] || ""; setImg({ url, b64, media: f.type || "image/jpeg" }); read({ b64, media: f.type || "image/jpeg" }); }; r.readAsDataURL(f); };
+  const pick = (f) => { if (!f) return; const r = new FileReader(); r.onload = () => { const url = String(r.result), b64 = url.split(",")[1] || "";
+    photoOk(url, document.querySelector("[data-testid=timetable-file]")).then((go) => { if (!go) return; setImg({ url, b64, media: f.type || "image/jpeg" }); read({ b64, media: f.type || "image/jpeg" }); }); }; r.readAsDataURL(f); };   // v9.9.23 photo check
   const read = async (im) => {
     setErr(""); setRows(null); let a = [], b = [];
     try { if (nativeCall) { setBusy(tr("Reading the text…")); const r = await nativeCall("readText", { b64: im.b64 }); a = T.fromLines((r && r.lines) || []); } } catch (e) {}

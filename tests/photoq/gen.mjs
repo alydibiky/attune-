@@ -19,7 +19,7 @@ export function make(i) {
     for (let x = 20; x < w - 30; x += 12 + Math.floor(r() * 10)) { if (r() < 0.2) continue; const sw = 3 + Math.floor(r() * 3), shape = Math.floor(r() * 3);
       const bar = (x0, y0, bw, bh) => { for (let yy = y0; yy < y0 + bh; yy++) for (let xx = x0; xx < x0 + bw; xx++) if (xx < w && yy < h) g[yy * w + xx] = ink; };
       bar(x, y, sw, lh); if (shape) bar(x, shape === 1 ? y : y + lh - sw, 8, sw); if (shape === 2) bar(x + 8, y, sw, lh); } }
-  if (kind === "glare") { const cx = w * (0.3 + r() * 0.4), cy = h * (0.3 + r() * 0.4), R = Math.min(w, h) * (0.42 + r() * 0.15);   // ≥ ~30% of the photo washed out
+  if (kind === "glare") { const cx = w * (0.3 + r() * 0.4), cy = h * (0.3 + r() * 0.4), R = Math.min(w, h) * (0.42 + r() * 0.08);   // ~30–60% of the photo washed out (≥ 70% looks like a white page; its unreadable text is caught after reading)
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if ((x - cx) ** 2 + (y - cy) ** 2 < R * R) g[y * w + x] = 255; }
   // good photos of white receipts: part of the paper burnt pure white (up to ~15% of the photo) — must NOT be called glare
   if (kind === "ok" && r() < 0.4) { const x0 = Math.floor(r() * w * 0.5), y0 = Math.floor(r() * h * 0.5), bw = Math.floor(w * (0.2 + r() * 0.2)), bh = Math.floor(h * (0.2 + r() * 0.15));
@@ -27,6 +27,8 @@ export function make(i) {
   // blur of σ ≥ 2.5 px (where the text reader starts failing, see the top) — then the phone's sensor noise on top
   if (kind === "blur") g = blur(g, w, h, 11 + Math.floor(r() * 8)); else if (r() < 0.5) g = blur(g, w, h, 1 + Math.floor(r() * 3));
   for (let k = 0; k < g.length; k++) g[k] = Math.max(0, Math.min(255, g[k] + (r() + r() + r() - 1.5) * 2 * (1 + Math.floor(r() * 4))));
+  // screenshots (no noise, no blur): a white page or dark mode — must pass (Translate and Timetable take screenshots too)
+  if (kind === "ok" && i % 10 === 5) { const dark = r() < 0.5; for (let k = 0; k < g.length; k++) g[k] = g[k] > 100 ? (dark ? 18 : 255) : (dark ? 235 : 20); }
   return { gray: Uint8ClampedArray.from(g), w, h, want: kind === "ok" ? "" : kind };
 }
 export function run(N = 10000, from = 0) {
