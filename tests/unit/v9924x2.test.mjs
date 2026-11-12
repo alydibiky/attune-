@@ -1,0 +1,20 @@
+// v9.9.24 B6 X2 Upkeep: a 2,500 sample of tests/x2/gen.mjs must stay at 100%, a held-out 500, plus the rules one by one.
+import { run } from "../x2/gen.mjs";
+import * as U from "../../web-src/upkeep.js";
+let fail = 0; const ok = (c, w) => { console.log((c ? "PASS " : "FAIL ") + w); if (!c) fail++; };
+const r = run(2500, 0); ok(r.pass === 2500, "2,500 generated logs: " + r.pass + " / 2500 " + JSON.stringify(r.bad.slice(0, 2)));
+const h = run(500, 90000); ok(h.pass === 500, "500 held-out logs: " + h.pass + " / 500");
+const NOW = Date.parse("2026-11-12T12:00:00");
+const a = U.carLines({ km: 10000, log: [{ kind: "service", service: "oil", km: 200, date: "2026-06-01" }] }, NOW)[0];
+ok(a.by === "km" && a.kmLeft === 200 && a.dueNow, "oil at 200 km on 1 Jun, now 10,000 km → due by KM (200 left) before its date");
+const b = U.carLines({ km: 3000, log: [{ kind: "service", service: "oil", km: 1000, date: "2025-11-20" }] }, NOW)[0];
+ok(b.by === "date" && b.daysLeft === 8 && b.dueNow, "oil a year ago, only 2,000 km driven → due by DATE (8 days)");
+ok(U.homeLine({ id: "w", name: "Water filter", everyMonths: 6, log: [{ date: "2026-08-31" }] }, NOW).due === "2027-02-28", "every 6 months from 31 Aug → 28 Feb (end of month kept)");
+const g = U.homeLine({ id: "g", name: "Gas cylinder", log: [{ date: "2026-08-01" }, { date: "2026-09-05" }, { date: "2026-10-09" }] }, NOW);
+ok(g.learned && g.everyDays === 35 && g.due === "2026-11-13" && g.dueNow, "gas cylinder: learned about every 35 days (5 weeks) → next 13 Nov, due now");
+ok(U.homeLine({ id: "x", name: "X", log: [{ date: "2026-10-01" }] }, NOW).due === null, "one date and no set time → no guess");
+const d1 = U.doneHome({ id: "w", name: "Water filter", everyMonths: 6, log: [] }, { now: NOW });
+ok(d1.item.log.length === 1 && d1.money === null, "Done → marked, nothing in Money");
+const d2 = U.doneHome({ id: "w", name: "Water filter", everyMonths: 6, log: [] }, { cost: 450, now: NOW });
+ok(d2.money && d2.money.amount === 450 && d2.money.note === "Water filter" && d2.item.log[0].cost === 450, "Done + cost → also a 450 expense in Money");
+console.log(fail ? "FAILED " + fail : "ALL PASSED");
