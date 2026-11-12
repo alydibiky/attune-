@@ -1734,3 +1734,5 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
   rules saved in the same millisecond shared an id ("Switch on 2" lost one reminder — the flaky recipes test was this real bug);
   a follow-up whose every payment / time is ticked now counts as finished (links.js). Known gap: «رانيا» in Arabic doesn't match a card
   written "Rania" in English (no transliteration yet) — add the other spelling as a nickname on the card.
+- (later) B5 P2 "before you meet" built (Ali's pick B) → B5 finished. v9.9.24 (versionCode 167). Next: B6 (X4 emergency card, X2 upkeep,
+  X3 what I own, X6 kids & school; X1 business card → People card), then B7 travel, B8, B9.

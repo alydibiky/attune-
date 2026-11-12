@@ -9375,4 +9375,11 @@ export const AR = {
   "Messages": "الرسايل",
   "Could be another {n}": "ممكن يكون {n} تاني",
   "Open in WhatsApp": "افتح في واتساب",
+  "({p} of {n} paid)": "(اتدفع {p} من {n})",
+  "Owes you {a}": "ليك عنده {a}",
+  "You owe {a}": "عليك ليه {a}",
+  "Open: {t}": "لسه مفتوح: {t}",
+  "Last message: {t}": "آخر رسالة: {t}",
+  "Note: {t}": "ملاحظة: {t}",
+  "In 1 hour: {t} · {h}": "كمان ساعة: {t} · {h}",
 };

@@ -12285,4 +12285,11 @@ export const KO = {
   "Use this one anyway": "그래도 이걸로",
   "Could be another {n}": "다른 {n}일 수도 있어요",
   "Open in WhatsApp": "WhatsApp에서 열기",
+  "({p} of {n} paid)": "({n}회 중 {p}회 납부)",
+  "Owes you {a}": "당신에게 {a} 빚짐",
+  "You owe {a}": "당신이 {a} 빚짐",
+  "Open: {t}": "미완료: {t}",
+  "Last message: {t}": "마지막 메시지: {t}",
+  "Note: {t}": "메모: {t}",
+  "In 1 hour: {t} · {h}": "1시간 후: {t} · {h}",
 };

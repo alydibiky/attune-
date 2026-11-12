@@ -12285,4 +12285,11 @@ export const RU = {
   "Use this one anyway": "Всё равно использовать",
   "Could be another {n}": "Возможно, другой {n}",
   "Open in WhatsApp": "Открыть в WhatsApp",
+  "({p} of {n} paid)": "(оплачено {p} из {n})",
+  "Owes you {a}": "Должен вам {a}",
+  "You owe {a}": "Вы должны {a}",
+  "Open: {t}": "Не сделано: {t}",
+  "Last message: {t}": "Последнее сообщение: {t}",
+  "Note: {t}": "Заметка: {t}",
+  "In 1 hour: {t} · {h}": "Через час: {t} · {h}",
 };

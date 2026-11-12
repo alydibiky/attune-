@@ -12285,4 +12285,11 @@ export const JA = {
   "Use this one anyway": "このまま使う",
   "Could be another {n}": "別の{n}かもしれません",
   "Open in WhatsApp": "WhatsAppで開く",
+  "({p} of {n} paid)": "（{n}回中{p}回支払い済み）",
+  "Owes you {a}": "あなたに{a}の借り",
+  "You owe {a}": "あなたが{a}借りている",
+  "Open: {t}": "未完了：{t}",
+  "Last message: {t}": "最後のメッセージ：{t}",
+  "Note: {t}": "メモ：{t}",
+  "In 1 hour: {t} · {h}": "1時間後：{t} · {h}",
 };

@@ -12285,4 +12285,11 @@ export const ZH = {
   "Use this one anyway": "仍然使用这张",
   "Could be another {n}": "可能是另一个 {n}",
   "Open in WhatsApp": "在 WhatsApp 中打开",
+  "({p} of {n} paid)": "（已付 {p}/{n}）",
+  "Owes you {a}": "欠你 {a}",
+  "You owe {a}": "你欠 {a}",
+  "Open: {t}": "未完成：{t}",
+  "Last message: {t}": "最后一条消息：{t}",
+  "Note: {t}": "备注：{t}",
+  "In 1 hour: {t} · {h}": "1 小时后：{t} · {h}",
 };

@@ -12286,4 +12286,11 @@ export const UR = {
   "Use this one anyway": "پھر بھی یہی استعمال کریں",
   "Could be another {n}": "کوئی اور {n} ہو سکتا ہے",
   "Open in WhatsApp": "WhatsApp میں کھولیں",
+  "({p} of {n} paid)": "({n} میں سے {p} ادا)",
+  "Owes you {a}": "آپ کے {a} باقی ہیں",
+  "You owe {a}": "آپ پر {a} باقی ہیں",
+  "Open: {t}": "باقی: {t}",
+  "Last message: {t}": "آخری پیغام: {t}",
+  "Note: {t}": "نوٹ: {t}",
+  "In 1 hour: {t} · {h}": "1 گھنٹے میں: {t} · {h}",
 };

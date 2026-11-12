@@ -71,4 +71,4 @@ export function run(N = 10000, from = 0) {
   }
   return { pass, N: total, rate: pass / total, bad };
 }
-if (process.argv[1] && process.argv[1].endsWith("gen.mjs")) console.log(JSON.stringify(run(+(process.argv[2] || 10000), +(process.argv[3] || 0))));
+if (process.argv[1] && import.meta.url === new URL("file://" + process.argv[1]).href) console.log(JSON.stringify(run(+(process.argv[2] || 10000), +(process.argv[3] || 0))));

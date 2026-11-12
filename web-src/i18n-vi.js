@@ -12285,4 +12285,11 @@ export const VI = {
   "Use this one anyway": "Vẫn dùng ảnh này",
   "Could be another {n}": "Có thể là {n} khác",
   "Open in WhatsApp": "Mở trong WhatsApp",
+  "({p} of {n} paid)": "(đã trả {p}/{n})",
+  "Owes you {a}": "Nợ bạn {a}",
+  "You owe {a}": "Bạn nợ {a}",
+  "Open: {t}": "Chưa xong: {t}",
+  "Last message: {t}": "Tin nhắn cuối: {t}",
+  "Note: {t}": "Ghi chú: {t}",
+  "In 1 hour: {t} · {h}": "Còn 1 giờ: {t} · {h}",
 };

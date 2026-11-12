@@ -36,4 +36,4 @@ export function run(N = 10000, from = 0) {
   for (let i = from; i < from + N; i++) { const c = make(i), q = mod.quality(c); if (q.why === c.want) pass++; else if (bad.length < 5) bad.push({ i, want: c.want, got: q.why, sharp: q.sharp, light: q.light, glare: q.glare }); }
   return { pass, N, rate: pass / N, bad };
 }
-if (process.argv[1] && process.argv[1].endsWith("gen.mjs")) { const r = run(+(process.argv[2] || 10000), +(process.argv[3] || 0)); console.log(JSON.stringify(r)); }
+if (process.argv[1] && import.meta.url === new URL("file://" + process.argv[1]).href) { const r = run(+(process.argv[2] || 10000), +(process.argv[3] || 0)); console.log(JSON.stringify(r)); }

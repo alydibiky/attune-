@@ -12286,4 +12286,11 @@ export const SW = {
   "Use this one anyway": "Tumia hii hata hivyo",
   "Could be another {n}": "Huenda ni {n} mwingine",
   "Open in WhatsApp": "Fungua kwenye WhatsApp",
+  "({p} of {n} paid)": "({p} kati ya {n} zimelipwa)",
+  "Owes you {a}": "Anakudai {a}",
+  "You owe {a}": "Unadaiwa {a}",
+  "Open: {t}": "Bado: {t}",
+  "Last message: {t}": "Ujumbe wa mwisho: {t}",
+  "Note: {t}": "Kumbuka: {t}",
+  "In 1 hour: {t} · {h}": "Baada ya saa 1: {t} · {h}",
 };

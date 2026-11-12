@@ -12286,4 +12286,11 @@ export const IT = {
   "Use this one anyway": "Usa comunque questa",
   "Could be another {n}": "Potrebbe essere un altro {n}",
   "Open in WhatsApp": "Apri in WhatsApp",
+  "({p} of {n} paid)": "({p} di {n} pagati)",
+  "Owes you {a}": "Ti deve {a}",
+  "You owe {a}": "Gli devi {a}",
+  "Open: {t}": "In sospeso: {t}",
+  "Last message: {t}": "Ultimo messaggio: {t}",
+  "Note: {t}": "Nota: {t}",
+  "In 1 hour: {t} · {h}": "Tra 1 ora: {t} · {h}",
 };

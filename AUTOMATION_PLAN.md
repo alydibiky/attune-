@@ -194,11 +194,16 @@
       ignored); Play needs the background-location declaration + a prominent disclosure screen — tell Ali before submitting.
     - T5: weekplan.js — place tasks (length + deadline) in free slots around calendar events, work hours, prayer times (when on);
       never on a busy slot, never after the deadline; too big → reported, not squeezed.
-- [ ] **B5 people: P1 keep in touch · P3 occasions · P2 before you meet · N1 person page · N3 on this day**
+- [x] **B5 people: P1 keep in touch · P3 occasions · P2 before you meet · N1 person page · N3 on this day**
   - [x] P1 · P3 · N3 (v9.9.22) · **N1 person page (v9.9.23)**: web-src/personpage.js — sections Money / Promises / Dates / Notes / Messages,
     every line opens ITS original (Money → that payment's sheet; Follow-ups → the person's history with it lit up; Mind → that note;
     Dates → that date's form; Reminders → lit up); "which Ahmed?" lines marked maybe; paid / kept ones hidden. tests/n1/gen.mjs
-    10,000/10,000 + held-out 2,000/2,000 (3 planted bugs caught), tests/unit/v9923n1.test.mjs, tests/e2e_v9923n1.py. Next: P2.
+    10,000/10,000 + held-out 2,000/2,000 (3 planted bugs caught), tests/unit/v9923n1.test.mjs, tests/e2e_v9923n1.py.
+  - [x] **P2 before you meet (v9.9.24)**: web-src/beforemeet.js — one hour before a reminder naming ONE person for sure, a notification
+    with three lines (what they owe / you owe + "2 of 8 paid", an open promise, the latest note / message); never a paid debt, never
+    for "Ahmed" with two Ahmeds, nothing open → nothing; kept in step by syncToPhone (setExtraSchedule, registered at load).
+    tests/p2/gen.mjs 10,000/10,000 + held-out 2,000/2,000 (4 planted bugs caught), tests/unit/v9923p2.test.mjs, tests/e2e_v9923p2.py.
+    → B5 done (P1 P3 N3 N1 P2).
 - [ ] **B6 papers & things: X1 paperwork · X4 emergency card · X2 upkeep · X3 what I own · X6 kids & school**
 - [ ] **B7 travel: TR1 trip from bookings · TR2 flight day · TR3 trip money & papers**
 - [ ] **B8 AU4 scheduled AI jobs** (needs the night job)

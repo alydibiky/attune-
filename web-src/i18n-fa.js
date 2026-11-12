@@ -12285,4 +12285,11 @@ export const FA = {
   "Use this one anyway": "با همین ادامه بده",
   "Could be another {n}": "شاید {n} دیگری باشد",
   "Open in WhatsApp": "باز کردن در واتساپ",
+  "({p} of {n} paid)": "({p} از {n} پرداخت شده)",
+  "Owes you {a}": "{a} به شما بدهکار است",
+  "You owe {a}": "شما {a} بدهکارید",
+  "Open: {t}": "باز: {t}",
+  "Last message: {t}": "آخرین پیام: {t}",
+  "Note: {t}": "یادداشت: {t}",
+  "In 1 hour: {t} · {h}": "یک ساعت دیگر: {t} · {h}",
 };

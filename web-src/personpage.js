@@ -32,7 +32,7 @@ export function personSections(p, stores = {}, dir = { items: [] }) {
       if (debt && it.left != null && it.left <= 0) continue;
       sec = debt ? "money" : "promises";
     }
-    (by[sec] = by[sec] || []).push({ id: it.id, src: it.src, title: it.title, ts: it.ts || 0, amount: it.amount || 0, sign: it.sign || 0, left: it.left == null ? null : it.left, kind: it.kind || "", maybe, target: targetOf(it) });
+    (by[sec] = by[sec] || []).push({ id: it.id, src: it.src, title: it.title, ts: it.ts || 0, amount: it.amount || 0, sign: it.sign || 0, left: it.left == null ? null : it.left, kind: it.kind || "", count: it.count || 0, paidCount: it.paidCount || 0, text: it.text || "", maybe, target: targetOf(it) });
   }
   const sections = SECTIONS.filter(([k]) => by[k] && by[k].length).map(([k, label]) => ({ key: k, label,
     // what is still open first (an owed amount), then the newest; sure before maybe

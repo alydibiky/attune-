@@ -12285,4 +12285,11 @@ export const TH = {
   "Use this one anyway": "ใช้รูปนี้ไปก่อน",
   "Could be another {n}": "อาจเป็น {n} คนอื่น",
   "Open in WhatsApp": "เปิดใน WhatsApp",
+  "({p} of {n} paid)": "(จ่ายแล้ว {p} จาก {n})",
+  "Owes you {a}": "ค้างคุณ {a}",
+  "You owe {a}": "คุณค้าง {a}",
+  "Open: {t}": "ค้างอยู่: {t}",
+  "Last message: {t}": "ข้อความล่าสุด: {t}",
+  "Note: {t}": "โน้ต: {t}",
+  "In 1 hour: {t} · {h}": "อีก 1 ชั่วโมง: {t} · {h}",
 };

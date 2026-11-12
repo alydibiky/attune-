@@ -12286,4 +12286,11 @@ export const TRK = {
   "Use this one anyway": "Yine de bunu kullan",
   "Could be another {n}": "Başka bir {n} olabilir",
   "Open in WhatsApp": "WhatsApp'ta aç",
+  "({p} of {n} paid)": "({n} taksitten {p} ödendi)",
+  "Owes you {a}": "Sana {a} borçlu",
+  "You owe {a}": "Ona {a} borçlusun",
+  "Open: {t}": "Açık: {t}",
+  "Last message: {t}": "Son mesaj: {t}",
+  "Note: {t}": "Not: {t}",
+  "In 1 hour: {t} · {h}": "1 saat sonra: {t} · {h}",
 };

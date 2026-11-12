@@ -12286,4 +12286,11 @@ export const HI = {
   "Use this one anyway": "फिर भी इसे इस्तेमाल करें",
   "Could be another {n}": "कोई और {n} हो सकता है",
   "Open in WhatsApp": "WhatsApp में खोलें",
+  "({p} of {n} paid)": "({n} में से {p} चुकाए)",
+  "Owes you {a}": "आपके {a} बाकी हैं",
+  "You owe {a}": "आप पर {a} बाकी हैं",
+  "Open: {t}": "बाकी: {t}",
+  "Last message: {t}": "आख़िरी संदेश: {t}",
+  "Note: {t}": "नोट: {t}",
+  "In 1 hour: {t} · {h}": "1 घंटे में: {t} · {h}",
 };

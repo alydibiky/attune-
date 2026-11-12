@@ -12285,4 +12285,11 @@ export const BN = {
   "Use this one anyway": "তবুও এটাই ব্যবহার করুন",
   "Could be another {n}": "অন্য কোনো {n} হতে পারে",
   "Open in WhatsApp": "WhatsApp-এ খুলুন",
+  "({p} of {n} paid)": "({n}টির মধ্যে {p}টি দেওয়া)",
+  "Owes you {a}": "আপনার কাছে {a} বাকি",
+  "You owe {a}": "আপনার {a} দেওয়া বাকি",
+  "Open: {t}": "বাকি: {t}",
+  "Last message: {t}": "শেষ বার্তা: {t}",
+  "Note: {t}": "নোট: {t}",
+  "In 1 hour: {t} · {h}": "১ ঘণ্টা পরে: {t} · {h}",
 };

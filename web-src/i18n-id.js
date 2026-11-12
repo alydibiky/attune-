@@ -12286,4 +12286,11 @@ export const IDN = {
   "Use this one anyway": "Tetap pakai ini",
   "Could be another {n}": "Mungkin {n} yang lain",
   "Open in WhatsApp": "Buka di WhatsApp",
+  "({p} of {n} paid)": "({p} dari {n} dibayar)",
+  "Owes you {a}": "Berutang padamu {a}",
+  "You owe {a}": "Kamu berutang {a}",
+  "Open: {t}": "Belum selesai: {t}",
+  "Last message: {t}": "Pesan terakhir: {t}",
+  "Note: {t}": "Catatan: {t}",
+  "In 1 hour: {t} · {h}": "1 jam lagi: {t} · {h}",
 };

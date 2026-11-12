@@ -12277,4 +12277,11 @@ export const ARB = {
   "Use this one anyway": "استخدمها على أي حال",
   "Could be another {n}": "قد يكون {n} آخر",
   "Open in WhatsApp": "افتح في واتساب",
+  "({p} of {n} paid)": "(دُفع {p} من {n})",
+  "Owes you {a}": "لك عنده {a}",
+  "You owe {a}": "عليك له {a}",
+  "Open: {t}": "لم يُنجز بعد: {t}",
+  "Last message: {t}": "آخر رسالة: {t}",
+  "Note: {t}": "ملاحظة: {t}",
+  "In 1 hour: {t} · {h}": "بعد ساعة: {t} · {h}",
 };
