@@ -5,7 +5,7 @@ scan a receipt (the phone reads it), paste or type, or the "Add by hand" form; H
 """
 import json, os, time, datetime, base64
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import doc_png, Env, new_page, check, real_errors, finish, HERE
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
 T = datetime.date.today()
@@ -65,8 +65,7 @@ with sync_playwright() as p:
     page.click("[data-testid=radar-save]"); page.wait_for_timeout(300)
 
     # ---- scan a receipt ----
-    png = page.evaluate("""() => { const c = document.createElement('canvas'); c.width = 300; c.height = 400; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,300,400); g.fillStyle = '#000'; g.fillText('BEST BUY', 20, 40); return c.toDataURL('image/png').split(',')[1]; }""")
-    path = os.path.join(HERE, "_receipt.png"); open(path, "wb").write(base64.b64decode(png))
+    path = doc_png(page, os.path.join(HERE, "_receipt.png"))   # (a real-size sharp photo: the photo check passes it)
     page.set_input_files("[data-testid=radar-file]", path); os.remove(path)
     page.wait_for_selector("[data-testid=radar-form]", timeout=8000); page.wait_for_timeout(300)
     check(page.locator("[data-testid=radar-title]").first.input_value() == "Apple AirPods Pro" and page.locator("[data-testid=radar-amount]").first.input_value() == "249", "a receipt photo is read: AirPods Pro, 249, return by its date")

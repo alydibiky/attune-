@@ -12275,4 +12275,12 @@ export const JA = {
   "Worked out from the number itself — exact.": "番号そのものから算出 — 正確です。",
   "on the back of the card": "カードの裏面",
   "Check the number.": "番号を確認してください。",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "写真がぼやけています。スマホを固定し、ピントが合ってから撮り直してください。",
+  "This photo is too dark — take it again in more light.": "写真が暗すぎます。明るい場所で撮り直してください。",
+  "There's glare on the paper — tilt it away from the light and take another one.": "紙に光が反射しています。光から傾けて撮り直してください。",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "紙が遠いか写真が小さすぎます。近づいて画面いっぱいに撮ってください。",
+  "I couldn't open this photo — take another one.": "この写真を開けませんでした。撮り直してください。",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "はっきり読めませんでした。紙だけを近くで、鮮明に撮ってください。",
+  "Take another photo": "撮り直す",
+  "Use this one anyway": "このまま使う",
 };

@@ -12267,4 +12267,12 @@ export const ARB = {
   "Worked out from the number itself — exact.": "مستخرجة من الرقم نفسه — بدقة.",
   "on the back of the card": "على ظهر البطاقة",
   "Check the number.": "راجع الرقم.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "الصورة غير واضحة — ثبّت الهاتف، انتظر التركيز، والتقط صورة أخرى.",
+  "This photo is too dark — take it again in more light.": "الصورة مظلمة جدًا — التقطها مجددًا في إضاءة أكثر.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "يوجد لمعان على الورقة — أمِلها بعيدًا عن الضوء والتقط صورة أخرى.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "الورقة بعيدة أو الصورة صغيرة — اقترب حتى تملأ الصورة.",
+  "I couldn't open this photo — take another one.": "تعذّر فتح هذه الصورة — التقط صورة أخرى.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "تعذّرت القراءة بوضوح — التقط صورة أقرب وأوضح للورقة وحدها.",
+  "Take another photo": "التقط صورة أخرى",
+  "Use this one anyway": "استخدمها على أي حال",
 };

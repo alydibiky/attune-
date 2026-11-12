@@ -12276,4 +12276,12 @@ export const SW = {
   "Worked out from the number itself — exact.": "Imetolewa kwenye namba yenyewe — sahihi.",
   "on the back of the card": "nyuma ya kadi",
   "Check the number.": "Kagua namba.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "Picha haiko wazi — shika simu tuli, iache ilenge, kisha piga nyingine.",
+  "This photo is too dark — take it again in more light.": "Picha ni nyeusi mno — piga tena kwenye mwanga zaidi.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "Kuna mng'ao kwenye karatasi — iinamishe mbali na mwanga, kisha piga nyingine.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "Karatasi iko mbali au picha ni ndogo — sogea karibu ijaze picha.",
+  "I couldn't open this photo — take another one.": "Sikuweza kufungua picha hii — piga nyingine.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Sikuweza kusoma vizuri — piga picha ya karibu na wazi zaidi ya karatasi tu.",
+  "Take another photo": "Piga picha nyingine",
+  "Use this one anyway": "Tumia hii hata hivyo",
 };

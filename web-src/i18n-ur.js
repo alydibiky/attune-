@@ -12276,4 +12276,12 @@ export const UR = {
   "Worked out from the number itself — exact.": "نمبر سے ہی نکالا گیا — درست۔",
   "on the back of the card": "کارڈ کی پشت پر",
   "Check the number.": "نمبر جانچیں۔",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "تصویر دھندلی ہے — فون ساکن رکھیں، فوکس ہونے دیں، اور دوبارہ لیں۔",
+  "This photo is too dark — take it again in more light.": "تصویر بہت تاریک ہے — زیادہ روشنی میں دوبارہ لیں۔",
+  "There's glare on the paper — tilt it away from the light and take another one.": "کاغذ پر چمک ہے — اسے روشنی سے دور جھکائیں اور دوبارہ لیں۔",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "کاغذ بہت دور ہے یا تصویر چھوٹی — قریب آئیں تاکہ وہ پوری تصویر بھرے۔",
+  "I couldn't open this photo — take another one.": "یہ تصویر نہیں کھل سکی — دوسری لیں۔",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "صاف نہیں پڑھ سکا — صرف کاغذ کی قریب سے اور صاف تصویر لیں۔",
+  "Take another photo": "دوسری تصویر لیں",
+  "Use this one anyway": "پھر بھی یہی استعمال کریں",
 };

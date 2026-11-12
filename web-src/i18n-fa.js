@@ -12275,4 +12275,12 @@ export const FA = {
   "Worked out from the number itself — exact.": "از خود شماره به دست آمد — دقیق.",
   "on the back of the card": "پشت کارت",
   "Check the number.": "شماره را بررسی کنید.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "عکس تار است — گوشی را ثابت نگه دارید، بگذارید فوکوس کند و دوباره بگیرید.",
+  "This photo is too dark — take it again in more light.": "عکس خیلی تاریک است — در نور بیشتر دوباره بگیرید.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "روی کاغذ برق افتاده — آن را از نور دور کج کنید و دوباره بگیرید.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "کاغذ خیلی دور است یا عکس کوچک — نزدیک‌تر بروید تا کادر را پر کند.",
+  "I couldn't open this photo — take another one.": "این عکس باز نشد — یکی دیگر بگیرید.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "به‌وضوح خوانده نشد — از خود کاغذ عکسی نزدیک‌تر و واضح‌تر بگیرید.",
+  "Take another photo": "عکس دیگری بگیرید",
+  "Use this one anyway": "با همین ادامه بده",
 };

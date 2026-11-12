@@ -4,7 +4,7 @@ governorate and sex worked out from the number; a wrong digit says which part is
 """
 import json, os, tempfile, datetime
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import doc_png, Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 TEXT = "جمهورية مصر العربية\nبطاقة تحقيق الشخصية\n٢٩٠٠٣١٥٠١٠١٢٣٤"
 INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:testing-pro','on')}catch(e){}\n"
@@ -16,7 +16,7 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_timeout(1500)
     page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", "radar"); page.wait_for_selector("[data-testid=radar-page]", timeout=6000)
-    f = os.path.join(tempfile.mkdtemp(), "id.png"); open(f, "wb").write(PNG); page.set_input_files("[data-testid=radar-file]", f)
+    f = os.path.join(tempfile.mkdtemp(), "id.png"); doc_png(page, f); page.set_input_files("[data-testid=radar-file]", f)
     page.wait_for_selector("[data-testid=radar-egid]", timeout=6000)
     dec = page.locator("[data-testid=egid-decoded]").inner_text()
     check(page.locator("[data-testid=egid-number]").input_value() == "29003150101234" and "1990-03-15" in dec and "Cairo" in dec and "Male" in dec, "the number (Arabic-Indic) → 15 Mar 1990, Cairo, Male: " + dec.replace("\n", " "))

@@ -12275,4 +12275,12 @@ export const VI = {
   "Worked out from the number itself — exact.": "Suy ra từ chính con số — chính xác.",
   "on the back of the card": "ở mặt sau thẻ",
   "Check the number.": "Kiểm tra lại số.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "Ảnh bị mờ — giữ máy chắc tay, chờ lấy nét rồi chụp lại.",
+  "This photo is too dark — take it again in more light.": "Ảnh quá tối — chụp lại ở nơi sáng hơn.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "Giấy bị lóa sáng — nghiêng tránh ánh đèn rồi chụp lại.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "Giấy ở xa hoặc ảnh quá nhỏ — lại gần để giấy chiếm đầy ảnh.",
+  "I couldn't open this photo — take another one.": "Không mở được ảnh này — chụp ảnh khác.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Không đọc rõ được — chụp gần và nét hơn, chỉ riêng tờ giấy.",
+  "Take another photo": "Chụp lại",
+  "Use this one anyway": "Vẫn dùng ảnh này",
 };

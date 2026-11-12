@@ -12275,4 +12275,12 @@ export const ZH = {
   "Worked out from the number itself — exact.": "直接由号码推算——准确。",
   "on the back of the card": "在卡片背面",
   "Check the number.": "请核对号码。",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "照片模糊——请拿稳手机，等对焦后再拍一张。",
+  "This photo is too dark — take it again in more light.": "照片太暗——请在更亮的地方重拍。",
+  "There's glare on the paper — tilt it away from the light and take another one.": "纸上有反光——请把它斜开避开光源后再拍。",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "纸太远或照片太小——请靠近，让纸占满画面。",
+  "I couldn't open this photo — take another one.": "无法打开这张照片——请再拍一张。",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "看不清——请只拍这张纸，靠近一点、清楚一点。",
+  "Take another photo": "再拍一张",
+  "Use this one anyway": "仍然使用这张",
 };

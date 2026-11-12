@@ -12276,4 +12276,12 @@ export const TRK = {
   "Worked out from the number itself — exact.": "Numaranın kendisinden çıkarıldı — kesin.",
   "on the back of the card": "kartın arkasında",
   "Check the number.": "Numarayı kontrol et.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "Fotoğraf bulanık — telefonu sabit tut, odaklanmasını bekle ve yeniden çek.",
+  "This photo is too dark — take it again in more light.": "Fotoğraf çok karanlık — daha fazla ışıkta yeniden çek.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "Kâğıtta parlama var — ışıktan uzağa eğ ve yeniden çek.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "Kâğıt uzak ya da fotoğraf küçük — fotoğrafı dolduracak kadar yaklaş.",
+  "I couldn't open this photo — take another one.": "Bu fotoğraf açılamadı — yenisini çek.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Net okuyamadım — sadece kâğıdın daha yakın ve net bir fotoğrafını çek.",
+  "Take another photo": "Yeni fotoğraf çek",
+  "Use this one anyway": "Yine de bunu kullan",
 };

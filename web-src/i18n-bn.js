@@ -12275,4 +12275,12 @@ export const BN = {
   "Worked out from the number itself — exact.": "নম্বর থেকেই বের করা — নির্ভুল।",
   "on the back of the card": "কার্ডের পেছনে",
   "Check the number.": "নম্বরটি দেখুন।",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "ছবিটা ঝাপসা — ফোন স্থির রাখুন, ফোকাস হতে দিন, আবার তুলুন।",
+  "This photo is too dark — take it again in more light.": "ছবিটা খুব অন্ধকার — বেশি আলোয় আবার তুলুন।",
+  "There's glare on the paper — tilt it away from the light and take another one.": "কাগজে আলো প্রতিফলিত হচ্ছে — আলো থেকে সরিয়ে কাত করে আবার তুলুন।",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "কাগজটা দূরে বা ছবি ছোট — কাছে আসুন যাতে ছবিটা ভরে যায়।",
+  "I couldn't open this photo — take another one.": "ছবিটা খোলা গেল না — আরেকটা তুলুন।",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "পরিষ্কার পড়া গেল না — শুধু কাগজটার কাছ থেকে আরও স্পষ্ট ছবি তুলুন।",
+  "Take another photo": "আরেকটা ছবি তুলুন",
+  "Use this one anyway": "তবুও এটাই ব্যবহার করুন",
 };

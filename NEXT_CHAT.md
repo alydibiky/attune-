@@ -1713,3 +1713,15 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 >    About; "See all → Device report". 3. **How to use**: search, goal chips, "You say → You get" cards, Getting-started checklist.
 > 4. **Privacy**: your week in privacy, the private vault (PIN per area), the promise, a report of what was sent where.
 > Quiet Atelier tokens, Nunito, 22-px cards, ≥ 44-px taps, tabular numbers, Egyptian sample data, nothing overflows at 360 px.
+
+## 12 Nov (later) — "if the photo isn't clear, tell me to take another" (v9.9.23, branch)
+- web-src/photoquality.js: before Dates reads a photo, code checks it: blurry (edge steepness after smoothing out sensor noise —
+  Laplacian variance was tried first and phone noise fooled it), too dark, a big washed-out glare patch (≥ 25% — white receipts often
+  burn ~15% pure white, so lower would warn on good photos), too far / too small. A banner says why + "Take another photo" /
+  "Use this one anyway". A sharp photo with nothing readable → "I couldn't read this clearly — take a closer, sharper photo".
+- Blur limit 20 from measurements on rendered ID cards (tesseract): σ ≤ 2 px reads 39–40/40 (sharpness ≥ 25.3), σ 3 px → 34/40 (≤ 19.8).
+- Tests: tests/photoq/gen.mjs 10,000/10,000 + held-out 2,000/2,000; tests/unit/v9923photoq.test.mjs; tests/e2e_v9923photoq.py (EN + AR);
+  harness doc_png() gives the older photo tests a real-size photo. 8 new lines in all 20 languages.
+- Arabic-digit reader (for the Egyptian ID's front, which ML Kit can't read): trained a small model in the scratchpad; on fonts it never
+  saw it read 16/200 numbers exactly, asked on 4, 180 not found, 0 WRONG — too weak to ship. Parked (not in the app). The Egyptian ID
+  still works by typing the number (or the vision model) and is then checked by code.

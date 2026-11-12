@@ -191,3 +191,15 @@ def leave_apps(page, tries=4):
         for sel in ("[data-testid=biz-back]", "[data-testid=fit-exit]", "[data-testid=map-exit]"):
             if page.locator(sel).count() and page.locator(sel).first.is_visible():
                 page.locator(sel).first.click(); page.wait_for_timeout(200); break
+
+
+def doc_png(page, path, blur=0, dark=False):
+    """v9.9.23: a document photo the photo check accepts (1000×640, sharp printed lines) — or a blurred / dark one (Dates asks for another)."""
+    import base64
+    b64 = page.evaluate("""([blur, dark]) => { const c = document.createElement('canvas'); c.width = 1000; c.height = 640; const g = c.getContext('2d');
+      g.fillStyle = dark ? '#151515' : '#f4f1ea'; g.fillRect(0, 0, 1000, 640); if (blur) g.filter = 'blur(' + blur + 'px)';
+      g.fillStyle = dark ? '#000' : '#111'; g.font = '34px sans-serif';
+      for (let i = 0; i < 12; i++) g.fillText('PASSPORT P<EGY ' + (123456789 + i * 7919) + ' ' + 'ABCDEFGHJK'.slice(i % 5), 30, 50 + i * 48);
+      return c.toDataURL('image/png').split(',')[1]; }""", [blur, dark])
+    open(path, "wb").write(base64.b64decode(b64))
+    return path

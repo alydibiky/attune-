@@ -12276,4 +12276,12 @@ export const IDN = {
   "Worked out from the number itself — exact.": "Diambil dari nomor itu sendiri — tepat.",
   "on the back of the card": "di balik kartu",
   "Check the number.": "Periksa nomornya.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "Foto buram — pegang ponsel dengan stabil, biarkan fokus, lalu foto lagi.",
+  "This photo is too dark — take it again in more light.": "Foto terlalu gelap — ambil lagi dengan cahaya lebih terang.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "Ada pantulan cahaya di kertas — miringkan menjauhi cahaya lalu foto lagi.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "Kertas terlalu jauh atau foto terlalu kecil — mendekatlah agar memenuhi foto.",
+  "I couldn't open this photo — take another one.": "Foto tidak bisa dibuka — ambil foto lain.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Tidak terbaca jelas — foto kertasnya saja, lebih dekat dan tajam.",
+  "Take another photo": "Ambil foto lagi",
+  "Use this one anyway": "Tetap pakai ini",
 };

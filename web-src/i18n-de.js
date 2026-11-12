@@ -12275,4 +12275,12 @@ export const DE = {
   "Worked out from the number itself — exact.": "Aus der Nummer selbst ermittelt – exakt.",
   "on the back of the card": "auf der Rückseite",
   "Check the number.": "Prüfe die Nummer.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "Das Foto ist unscharf – halte das Handy ruhig, lass es scharfstellen und mach ein neues.",
+  "This photo is too dark — take it again in more light.": "Das Foto ist zu dunkel – mach es noch einmal bei mehr Licht.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "Auf dem Papier spiegelt es – neige es weg vom Licht und mach ein neues Foto.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "Das Papier ist zu weit weg oder das Foto zu klein – geh näher ran, damit es das Bild füllt.",
+  "I couldn't open this photo — take another one.": "Ich konnte das Foto nicht öffnen – mach ein neues.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Ich konnte es nicht klar lesen – mach ein näheres, schärferes Foto nur vom Papier.",
+  "Take another photo": "Neues Foto",
+  "Use this one anyway": "Trotzdem diese nehmen",
 };

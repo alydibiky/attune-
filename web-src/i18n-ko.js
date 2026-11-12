@@ -12275,4 +12275,12 @@ export const KO = {
   "Worked out from the number itself — exact.": "번호 자체에서 계산 — 정확해요.",
   "on the back of the card": "카드 뒷면",
   "Check the number.": "번호를 확인하세요.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "사진이 흐려요 — 휴대폰을 고정하고 초점이 맞으면 다시 찍어 주세요.",
+  "This photo is too dark — take it again in more light.": "사진이 너무 어두워요 — 더 밝은 곳에서 다시 찍어 주세요.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "종이에 빛 반사가 있어요 — 빛을 피해 기울여서 다시 찍어 주세요.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "종이가 멀거나 사진이 작아요 — 사진을 가득 채우도록 가까이 가세요.",
+  "I couldn't open this photo — take another one.": "이 사진을 열 수 없어요 — 다시 찍어 주세요.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "잘 안 읽혀요 — 종이만 더 가까이, 선명하게 찍어 주세요.",
+  "Take another photo": "다시 찍기",
+  "Use this one anyway": "그래도 이걸로",
 };

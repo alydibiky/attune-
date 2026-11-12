@@ -5,7 +5,7 @@ coded lines (checked), each editable; Save → the passport with its expiry on t
 """
 import json, os, tempfile, datetime
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import doc_png, Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 W = [7, 3, 1]
 def cd(s): return str(sum((0 if c == "<" else int(c) if c.isdigit() else ord(c) - 55) * W[i % 3] for i, c in enumerate(s)) % 10)
@@ -28,7 +28,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=photo-pick-camera]").count() == 1 and page.locator("[data-testid=photo-pick-gallery]").count() == 1, "the photo button asks: Take a photo · Choose from gallery")
     with page.expect_file_chooser() as fc: page.click("[data-testid=photo-pick-gallery]")
     check(page.evaluate("document.querySelector('[data-testid=radar-file]').hasAttribute('capture')") is False, "Gallery opens the picker without forcing the camera")
-    f = os.path.join(tempfile.mkdtemp(), "passport.png"); open(f, "wb").write(PNG); fc.value.set_files(f)
+    f = os.path.join(tempfile.mkdtemp(), "passport.png"); doc_png(page, f); fc.value.set_files(f)
     page.wait_for_selector("[data-testid=radar-mrz]", timeout=6000)
     val = lambda k: page.locator("[data-testid=mrz-%s]" % k).input_value()
     check(val("surname") == "ELDIBIKY" and val("given") == "ALI" and val("number") == "A12345678" and val("nationality") == "EGY" and val("birth") == "1990-03-15" and val("expiry") == exp.isoformat() and val("sex") == "M",

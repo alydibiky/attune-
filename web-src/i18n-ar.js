@@ -9364,4 +9364,12 @@ export const AR = {
   "Governorate": "المحافظة",
   "Male": "ذكر",
   "Female": "أنثى",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "الصورة مهزوزة — ثبّت الموبايل، استنى لما يظبط التركيز، وصوّر تاني.",
+  "This photo is too dark — take it again in more light.": "الصورة ضلمة أوي — صوّرها تاني في نور أكتر.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "فيه لمعة على الورقة — ميّلها بعيد عن النور وصوّر تاني.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "الورقة بعيدة أو الصورة صغيرة — قرّب لحد ما تملى الصورة.",
+  "I couldn't open this photo — take another one.": "معرفتش أفتح الصورة — صوّر تاني.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "مقدرتش أقراها بوضوح — صوّر الورقة لوحدها من قريب وبوضوح أكتر.",
+  "Take another photo": "صوّر تاني",
+  "Use this one anyway": "استخدمها كده",
 };

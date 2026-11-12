@@ -12275,4 +12275,12 @@ export const RU = {
   "Worked out from the number itself — exact.": "Вычислено из самого номера — точно.",
   "on the back of the card": "на обороте",
   "Check the number.": "Проверьте номер.",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "Фото размыто — держите телефон неподвижно, дайте сфокусироваться и снимите ещё раз.",
+  "This photo is too dark — take it again in more light.": "Фото слишком тёмное — снимите ещё раз при лучшем свете.",
+  "There's glare on the paper — tilt it away from the light and take another one.": "На бумаге блик — наклоните её от света и снимите ещё раз.",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "Бумага слишком далеко или фото маленькое — подойдите ближе, чтобы она заполнила кадр.",
+  "I couldn't open this photo — take another one.": "Не удалось открыть фото — снимите ещё раз.",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "Не удалось чётко прочитать — снимите только бумагу, ближе и резче.",
+  "Take another photo": "Снять ещё раз",
+  "Use this one anyway": "Всё равно использовать",
 };

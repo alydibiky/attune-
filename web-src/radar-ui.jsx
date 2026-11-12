@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { choosePhoto } from "./photopick.js";
 import { readMrz } from "./mrz.js";
 import { findIds, decodeId } from "./egid.js";
+import { checkPhoto, ADVICE } from "./photoquality.js";
 import { Radar, Camera, ClipboardPaste, Plus, Search, Trash2, Check, X, Bell, Crown, FileText, ChevronDown } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { DocPhotos, DocDetails, DocCover, coverNote } from "./docs-ui.jsx";
@@ -165,7 +166,8 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const [text, setText] = useState("");
   const [photo, setPhoto] = useState("");
   const [mrz, setMrz] = useState(null);
-  const [egid, setEgid] = useState(null);   // v9.9.23: an Egyptian national ID number found in the photo   // v9.9.22 X1: a passport / ID read from its photo, to check and save
+  const [egid, setEgid] = useState(null);
+  const [retake, setRetake] = useState(null);   // v9.9.23 (Ali: "if the photo isn't clear, tell me to take another"): { why, file }   // v9.9.23: an Egyptian national ID number found in the photo   // v9.9.22 X1: a passport / ID read from its photo, to check and save
   const [busy, setBusy] = useState("");
   const [q, setQ] = useState("");
   const fileRef = useRef(null);
@@ -206,10 +208,12 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
     if (!found.length) { setEdit({ note: t.slice(0, 200) }); setMode("form"); flash && flash(tr("No date found — fill it in")); return; }
     setDrafts(found.map((x, i) => ({ ...x, note: x.note || "", _k: Date.now() + ":" + i }))); setMode(null);
   };
-  const onPhoto = async (file) => {
+  const onPhoto = async (file, anyway) => {
     if (!file) return;
-    setBusy(tr("Reading the photo…"));
+    setRetake(null); setBusy(tr("Reading the photo…"));
     let url = ""; try { url = await shrink(file); } catch (e) {}
+    // the photo's quality first: blurry / dark / glare / too far → say why and ask for another (or use it anyway)
+    if (url && !anyway) { const q = await checkPhoto(url); if (!q.ok) { setBusy(""); setRetake({ why: q.why, file }); return; } }
     const key = "p" + Date.now().toString(36);
     if (url) { await putPhoto(key, url); setPhoto(url); }
     let txt = "";
@@ -222,6 +226,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
     if (eg) { const exp = D.readDeadlines(txt, opts()).find((x) => x.kind === "expiry"); setEgid({ number: eg.number, expiry: exp ? exp.date : "", photo: key }); return; }
     const found = txt ? D.readDeadlines(txt, opts()) : [];
     if (found.length) setDrafts(found.map((x, i) => ({ ...x, photo: key, source: "photo", _k: key + ":" + i })));
+    else if (!anyway && !/\d/.test(txt)) { setRetake({ why: "unread", file }); }
     else { setEdit({ photo: key, source: "photo", note: txt.slice(0, 160) }); setMode("form"); flash && flash(tr("Couldn't find a date in the photo — fill it in, the photo is kept")); }
   };
   const done = (x, outcome) => {
@@ -251,6 +256,10 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
     <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="radar-page">
       <div><h2 className={U.pageH1 + " flex items-center gap-2"}><Radar size={20} className="text-[var(--c-acc)]" />{tr("Deadline Radar")}</h2>
         <p data-intro="" className={"m-0 mt-0.5 text-[13px] lg:max-w-[70ch] " + U.muted}>{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
+      {retake ? <div className="rounded-[16px] p-3 space-y-2" style={{ background: "var(--c-amber, #FBF0DC)", color: "var(--c-ink)" }} data-testid="radar-retake" data-why={retake.why}>
+        <p className="m-0 text-[14px] font-bold">{tr(ADVICE[retake.why] || ADVICE.unread)}</p>
+        <div className="flex flex-wrap gap-2"><button className={U.btnP} onClick={() => { setRetake(null); choosePhoto(fileRef.current); }} data-testid="radar-retake-again">{tr("Take another photo")}</button>
+          <button className={U.btnS} onClick={() => onPhoto(retake.file, true)} data-testid="radar-retake-anyway">{tr("Use this one anyway")}</button></div></div> : null}
 
       {/* v6.27 computer layout A: the counters and the ways in on the left, the deadlines on the right (stacked on a phone) */}
       <div className={PANES_N}><div className={LEFT}>

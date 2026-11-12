@@ -12275,4 +12275,12 @@ export const TH = {
   "Worked out from the number itself — exact.": "คำนวณจากเลขโดยตรง — แม่นยำ",
   "on the back of the card": "ด้านหลังบัตร",
   "Check the number.": "ตรวจสอบเลข",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "รูปเบลอ — ถือมือถือให้นิ่ง รอให้โฟกัส แล้วถ่ายใหม่",
+  "This photo is too dark — take it again in more light.": "รูปมืดเกินไป — ถ่ายใหม่ในที่สว่างกว่านี้",
+  "There's glare on the paper — tilt it away from the light and take another one.": "มีแสงสะท้อนบนกระดาษ — เอียงหนีแสงแล้วถ่ายใหม่",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "กระดาษอยู่ไกลหรือรูปเล็กเกินไป — ขยับเข้าใกล้ให้เต็มภาพ",
+  "I couldn't open this photo — take another one.": "เปิดรูปนี้ไม่ได้ — ถ่ายใหม่",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "อ่านได้ไม่ชัด — ถ่ายเฉพาะกระดาษให้ใกล้และคมชัดขึ้น",
+  "Take another photo": "ถ่ายใหม่",
+  "Use this one anyway": "ใช้รูปนี้ไปก่อน",
 };

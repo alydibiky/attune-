@@ -12276,4 +12276,12 @@ export const HI = {
   "Worked out from the number itself — exact.": "संख्या से ही निकाला गया — सटीक।",
   "on the back of the card": "कार्ड के पीछे",
   "Check the number.": "संख्या जाँचें।",
+  "This photo is blurry — hold the phone still, let it focus, and take another one.": "फ़ोटो धुंधली है — फ़ोन स्थिर रखें, फ़ोकस होने दें, और फिर से लें।",
+  "This photo is too dark — take it again in more light.": "फ़ोटो बहुत अँधेरी है — ज़्यादा रोशनी में फिर से लें।",
+  "There's glare on the paper — tilt it away from the light and take another one.": "काग़ज़ पर चमक है — उसे रोशनी से दूर झुकाएँ और फिर से लें।",
+  "The paper is too far or the photo too small — move closer so it fills the photo.": "काग़ज़ बहुत दूर है या फ़ोटो छोटी — पास आएँ ताकि वह पूरी फ़ोटो में आए।",
+  "I couldn't open this photo — take another one.": "यह फ़ोटो खुल नहीं सकी — दूसरी लें।",
+  "I couldn't read this clearly — take a closer, sharper photo of just the paper.": "साफ़ नहीं पढ़ पाया — सिर्फ़ काग़ज़ की पास से और साफ़ फ़ोटो लें।",
+  "Take another photo": "दूसरी फ़ोटो लें",
+  "Use this one anyway": "फिर भी इसे इस्तेमाल करें",
 };
