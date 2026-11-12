@@ -373,6 +373,7 @@ timetable-ui.jsx: <label className="text-[13px] flex items-center gap-1.5">{tr("
 
 ## You paid
 agents-ui.jsx: <div className="rounded-[14px] border border-[var(--c-ln)] p-2"><span className="block text-[11.5px] c-sub font-bold">{tr("You paid")}</span
+b5-ui.jsx: <span className="flex-1 min-w-0"><b className="block text-[14.5px] truncate" dir="auto">{x.src === "money" ? (x.type === "income" ? tr("You 
 people-ui.jsx: {linked.money.out ? <div className={cardPad}><p className={label + " m-0"}>{tr("You paid")}</p><b className="text-[18px] tabular-nums" dir="
 
 ## All
@@ -827,6 +828,10 @@ shelf-ui.jsx: {!shown ? <button onClick={() => setShown(true)} className={btnP +
 backup-ui.jsx: {busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}{busy || tr("Unlock")}
 vault-ui.jsx: {way === "bio" ? <button className={U.btnP} onClick={ask} data-testid="vault-unlock">{tr("Unlock")}</button> : (
 vault-ui.jsx: <button className={U.btnP + " w-full"} onClick={tryPin} disabled={pin.length < 4} data-testid="vault-pin-go">{tr("Unlock")}</button>
+
+## Organise this
+braindump-ui.jsx: <div className="flex items-center gap-2"><button onClick={close} className={btnS} aria-label={tr("Back")} data-testid="braindump-back">‹</bu
+home-ui.jsx: {minimal && !rep && worthOrganising(text) ? <button onClick={() => window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text
 
 ## Me
 care-ui.jsx: const ensureMember = () => { if (data.members.length) return data; const r = H.addMember(data, { name: tr("Me") }); return r.data; };
