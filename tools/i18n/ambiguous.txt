@@ -912,6 +912,7 @@ chat.jsx: {api.openPdfChat && f.file && /\.(pdf|docx|pptx|odt|epub|html?|rtf)$/i
 life-ui.jsx: <button className={U.btnP} onClick={read} disabled={busy || !text.trim()} data-testid="life-read">{busy ? "…" : tr("Read")}</button>
 pdfchat-ui.jsx: <div className="flex shrink-0 gap-1 lg:hidden">{[["chat", tr("Chat")], ["read", tr("Read")]].map(([k, l]) => <button key={k} onClick={() => 
 rules-ui.jsx: {edit ? <form onSubmit={(e) => { e.preventDefault(); read(); }} className="flex gap-2 pt-1"><input dir="auto" value={text} onChange={(e) => 
+trip-ui.jsx: <button className={btnS} disabled={!paste.trim()} onClick={() => { const b = readBooking(paste); if (!b) { flash && flash(tr("No booking fou
 voice-ui.jsx: <button onClick={() => speakOut(newest.who + ": " + newest.text, st.ui)} className="flex-1 min-h-[56px] rounded-[20px] border border-[var(--
 
 ## Listening…
@@ -942,6 +943,10 @@ chatxray-ui.jsx: <div className="rounded-[20px] border border-[var(--c-warn)]/40
 money-sheets-ui.jsx: <span className="block text-[12px] c-sub">{d.type === "owed_to_me" ? tr("Owes you") : tr("You owe")} · <b className="tabular-nums" dir="ltr"
 people-ui.jsx: {linked.owe.iOwe ? <div className={cardPad}><p className={label + " m-0"}>{tr("You owe")}</p><b className="text-[18px] tabular-nums text-[va
 people-ui.jsx: x.src === "followups" && x.left != null && x.left > 0 ? (x.sign > 0 ? tr("Owes you") : tr("You owe")) + " " + Math.round(x.left).toLocaleStr
+
+## paid
+chatxray-ui.jsx: <div className="mt-2 space-y-2">{r.entries.map((e, i) => <div key={i}><p className="text-[12px] text-[var(--c-mut)]">{e.type === "paid" ? tr
+trip-ui.jsx: <span className="text-[13px] c-sub">{tr("paid")}</span><input inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value)} cla
 
 ## Yes
 cmdbox-ui.jsx: <button onClick={onYes} className="h-10 px-5 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "#fff" }
@@ -1313,6 +1318,7 @@ money-calm-ui.jsx: <span className="inline-flex items-center gap-1.5"><i classNa
 planner-ui.jsx: <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Plan")}</th><th className={th}>{tr("Spent")}</th><th
 report-ui.jsx: pill={safe.today > 0 ? tr("On track") : tr("Spent")} tone={safe.today > 0 ? "" : "late"} pct={safe.perDay > 0 ? (safe.today / safe.perDay) *
 report-ui.jsx: {hasS ? <span className="inline-flex items-center gap-1"><i className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "var(--c-ac
+trip-ui.jsx: <div className="flex gap-2 items-center"><input inputMode="decimal" value={amt} onChange={(e) => setAmt(e.target.value)} placeholder={tr("Sp
 
 ## Previous month
 money-calm-ui.jsx: <button onClick={() => go(-1)} aria-label={tr("Previous month")} className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-center bg-[va
@@ -1381,6 +1387,10 @@ planner-ui.jsx: <div className="flex gap-1.5" role="tablist">{[["month", tr("Mon
 notelabels-ui.jsx: try { N.noteAskWords && N.noteAskWords(JSON.stringify({ title: tr("What is this? I wasn't sure."), mine: tr("Mine"), not: tr("Not money"), r
 notes-money-ui.jsx: <button onClick={() => take(x, false)} className={"w-10 h-10 grid place-items-center " + U.muted} aria-label={tr("Not money")} title={tr("No
 notes-money-ui.jsx: <button onClick={() => take(x, false)} className={"w-10 h-10 grid place-items-center " + U.muted} aria-label={tr("Not money")} title={tr("No
+
+## Not mine
+notelabels-ui.jsx: <button onClick={no} className={BTN2} data-testid="note-paid-no">{tr("Not mine")}</button></div>
+trip-ui.jsx: <button className={btnS} onClick={() => decide(ask, false)} data-testid="trip-found-no">{tr("Not mine")}</button></div></div> : null}
 
 ## I understood:
 notelabels-ui.jsx: <p className="m-0 text-[13.5px]" dir="auto"><b>{tr("I understood:")}</b> {understoodOf(x, ar)}</p>
