@@ -34,8 +34,8 @@ const DOCS = [
   ["visa", W("visa|visum|vize|viza|تأشيرة|الفيزا|فيزا|签证|비자|ビザ"), 30],
   ["licence", W("driving licen[cs]e|driver'?s licen[cs]e|licen[cs]e|permis de conduire|permis|licencia de conducir|carteira de motorista|cnh|führerschein|patente|ehliyet|sim [ac]|rijbewijs|водительск|驾照|운전면허|免許|رخصة القيادة|رخصة قيادة"), 30],
   ["id", W("national id|id card|identity card|carte d'identité|cni|dni|cédula|cedula|rg|personalausweis|carta d'identità|kimlik|ktp|identiteitskaart|удостоверение|身份证|주민등록|マイナンバー|بطاقة الرقم القومي|البطاقة الشخصية|بطاقة الهوية|الهوية الوطنية|الهوية|الإقامة|اقامة|iqama|emirates id|residence permit|titre de séjour|permiso de residencia|aufenthaltstitel|permesso di soggiorno|ikamet"), 30],
-  ["insurance", W("insurance|policy|assurance|seguro|apólice|versicherung|assicurazione|polizza|sigorta|poliçe|asuransi|polis|verzekering|страховка|保险|보험|保険|تأمين|بوليصة"), 30],
-  ["registration", W("vehicle registration|car registration|registration|carte grise|tarjeta de circulación|permiso de circulación|crlv|licenciamento|zulassung|tüv|hu|bollo|revisione|ruhsat|muayene|stnk|apk|mot|техосмотр|年检|자동차 검사|車検|رخصة السيارة|ترخيص السيارة|ترخيص|الفحص الفني|استمارة"), 30],
+  ["insurance", W("insurance|policy|assurance|seguro|apólice|versicherung|assicurazione|polizza|sigorta|poliçe|asuransi|polis|verzekering|страховка|保险|보험|保険|تأمين|تامين|بوليصة|بوليصه"), 30],
+  ["registration", W("رخصة تسيير|رخصه تسيير|رخصة العربية|رخصة العربيه|رخصة السيارة|رخصه السياره|vehicle registration|car registration|registration|carte grise|tarjeta de circulación|permiso de circulación|crlv|licenciamento|zulassung|tüv|hu|bollo|revisione|ruhsat|muayene|stnk|apk|mot|техосмотр|年检|자동차 검사|車検|رخصة السيارة|ترخيص السيارة|ترخيص|الفحص الفني|استمارة"), 30],
   ["card", W("card|carte|tarjeta|cartão|karte|carta|kart|kartu|kaart|карта|卡|카드|カード|بطاقة"), 30],
 ];
 
@@ -44,7 +44,7 @@ const TRIAL = W("free trial|trial period|trial ends|trial will end|trial expires
 const RENEW = W("renews?|renewal|will renew|auto-?renew(?:al|s)?|renewal date|next billing date|next billing|next payment|next charge|will be charged|billed on|se renouvelle|renouvellement|prochain prélèvement|prochaine facturation|se renovará|renovación|próximo cargo|próximo cobro|será renovad[oa]|renovação|próxima cobrança|verlängert sich|verlängerung|nächste abbuchung|nächste zahlung|si rinnova|rinnovo|prossimo addebito|yenilenecek|yenileme|sonraki ödeme|diperpanjang|perpanjangan|tagihan berikutnya|wordt verlengd|verlenging|продлится|продление|следующее списание|续订|自动续费|갱신|更新日|سيتم التجديد|يتجدد|بيتجدد|بتتجدد|هيتجدد|هتتجدد|هيجدد|التجديد يوم|التجديد التلقائي|تاريخ التجديد|سيتم خصم");
 const RETURN = W("return(?:s)? (?:within|by|until|before|window|policy|period)|returnable (?:until|within|by)|free returns|days? to return|money[- ]back guarantee|refund within|retour(?:s)? (?:sous|jusqu'au|gratuit)|retourner (?:sous|avant)|droit de rétractation|délai de rétractation|devoluci[oó]n|devoluciones|devolver (?:en|hasta|antes)|plazo de devolución|devolução|devolver em|direito de arrependimento|rückgabe|rücksendung|widerrufsrecht|umtausch|reso entro|resi gratuiti|restituzione|diritto di recesso|iade (?:süresi|hakkı)|cayma hakkı|pengembalian (?:dalam|barang|dana dalam)|retourneren binnen|herroepingsrecht|возврат в течение|退货|7天无理由|반품|返品|الاسترجاع|الاسترداد خلال|إرجاع|ارجاع|الاستبدال والاسترجاع");
 const WARRANTY = W("warranty|guarantee|guaranteed|garantie|garantía|garantia|gewährleistung|herstellergarantie|garanzia|garanti|garansi|гарантия|保修|保固|보증|保証|ضمان|الضمان|كفالة|الكفالة");
-const EXPIRY = W("expir(?:es|y|ation|e|ed|ing)|ends on|ends|runs out|بينتهي|بتنتهي|هينتهي|هتنتهي|بيخلص|بتخلص|هيخلص|هتخلص|exp\\.?(?=\\s*[:\\d])|valid (?:until|thru|through|till|to)|good thru|valid thru|date of expiry|expiry date|date d'expiration|expire le|valable jusqu'au|date de validité|vence|vencimiento|válid[oa] hasta|caducidad|caduca|validade|válid[oa] até|vence em|gültig bis|ablaufdatum|läuft ab|ablauf|scadenza|valid[oa] fino|scade il|son kullanma|geçerlilik|geçerli|berlaku (?:hingga|sampai)|masa berlaku|kedaluwarsa|geldig tot|vervaldatum|действителен до|срок действия|有效期|만료|有効期限|تاريخ الانتهاء|تاريخ الإنتهاء|ينتهي في|ينتهي|تنتهي|صالح حتى|صالحة حتى|صلاحية|تنتهي صلاحية");
+const EXPIRY = W("نهاية الترخيص|نهايه الترخيص|سارية حتى|ساريه حتى|سارى حتى|ساري حتى|صالحة حتى|صالح حتى|سارية حتي|ساريه حتي|ساري حتي|صالحة حتي|صالحه حتي|صالح حتي|تنتهي في|ينتهي في|expir(?:es|y|ation|e|ed|ing)|ends on|ends|runs out|بينتهي|بتنتهي|هينتهي|هتنتهي|بيخلص|بتخلص|هيخلص|هتخلص|exp\\.?(?=\\s*[:\\d])|valid (?:until|thru|through|till|to)|good thru|valid thru|date of expiry|expiry date|date d'expiration|expire le|valable jusqu'au|date de validité|vence|vencimiento|válid[oa] hasta|caducidad|caduca|validade|válid[oa] até|vence em|gültig bis|ablaufdatum|läuft ab|ablauf|scadenza|valid[oa] fino|scade il|son kullanma|geçerlilik|geçerli|berlaku (?:hingga|sampai)|masa berlaku|kedaluwarsa|geldig tot|vervaldatum|действителен до|срок действия|有效期|만료|有効期限|تاريخ الانتهاء|تاريخ الإنتهاء|ينتهي في|ينتهي|تنتهي|صالح حتى|صالحة حتى|صلاحية|تنتهي صلاحية");
 
 // ---- dates ---------------------------------------------------------------------------------------------------------------
 const MONTH_RES = MONTH_NAMES.map((n) => "(?:" + n + ")\\.?");
@@ -153,8 +153,12 @@ export const DOC_NAME = { passport: "Passport", visa: "Visa", licence: "Driving 
  * [{ kind, title, date, amount, currency, doc, base, confidence, why }]. A receipt can give two (return + warranty).
  * opts: { now, order ("dmy"|"mdy"), home (the person's currency), base (when the message/photo was made) }.
  */
+// v9.9.22 (a photo's text: "2O26", "17,5O0", "1l/03", "SAR l0O"): inside a run of digits, the letters a camera mistakes for them are digits
+export function fixOcrDigits(s) {
+  return String(s || "").replace(/[0-9OoIl|][0-9OoIl|,./:-]*[0-9OoIl|]/g, (m) => (/\d/.test(m) ? m.replace(/[Oo]/g, "0").replace(/[Il|]/g, "1") : m));
+}
 export function readDeadlines(text, opts = {}) {
-  const raw = String(text || "").trim(); if (!raw || raw.length > 6000) return [];
+  const raw = fixOcrDigits(String(text || "").trim()); if (!raw || raw.length > 6000) return [];
   const now = opts.now || Date.now(), base0 = opts.base || now;
   const t = fold(raw);
   const dates = datesIn(raw, { now, order: opts.order });
