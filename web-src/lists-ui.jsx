@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Plus, Check, Trash2, ChevronRight, Repeat, X, ListChecks, CalendarDays } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as L from "./lists.js";
+import { startFocus } from "./focus-ui.jsx";
 import { loadReminders, saveReminders } from "./actions.js";
 import * as U from "./ui-kit.jsx";
 import { YourDay } from "./yourday-ui.jsx";
@@ -70,14 +71,16 @@ export function HomeTodo({ records = [], onTickTodo, navTo, flash, now = Date.no
   const lists = L.homeLists(st, now);
   const late = rem.filter((r) => r.late).length;
   const rows = [...rem.map((r) => ({ k: "r" + r.id, label: r.title, sub: (r.late ? tr("late") + " · " : "") + timeOf(r.at), bad: r.late, tick: () => { markReminderDone(r.id); setTick((n) => n + 1); } })),
-    ...todos.map((r) => ({ k: "t" + r.id, label: r.title || r.text, sub: "", tick: () => onTickTodo && onTickTodo(r) }))];
+    ...todos.map((r) => ({ k: "t" + r.id, label: r.title || r.text, sub: "", todo: true, tick: () => onTickTodo && onTickTodo(r) }))];
   return <div className="space-y-2" data-testid="home-todo">
     <YourDay records={records} navTo={navTo} flash={flash} />
     {rows.length ? <div className="c-card space-y-0.5" data-testid="home-todo-card">
       <div className="flex items-center gap-2 mb-0.5"><span className="text-[12px] font-extrabold tracking-wide flex-1 uppercase" style={{ color: "var(--c-area-fu, var(--c-acc))" }}>{tr("To do")} · {tr("{n} left", { n: rows.length })}</span>
         {late ? <span className={U.tag("red")} data-testid="home-todo-late">{tr("{n} late", { n: late })}</span> : null}
         <button onClick={() => navTo("lists")} className="text-[12.5px] font-extrabold c-acc min-h-[36px] px-1" data-testid="home-todo-all">{tr("Lists")} ›</button></div>
-      {rows.slice(0, 5).map((x) => <div key={x.k}><Box on={false} onClick={x.tick} tone={x.bad ? "bad" : ""} label={<span><span className={x.bad ? "font-extrabold text-[var(--c-neg)]" : ""}>{x.label}</span>{x.sub ? <span className="block text-[12px] c-sub">{x.sub}</span> : null}</span>} testid="home-todo-row" /></div>)}
+      {rows.slice(0, 5).map((x) => <div key={x.k} className="flex items-center gap-1"><div className="flex-1 min-w-0"><Box on={false} onClick={x.tick} tone={x.bad ? "bad" : ""} label={<span><span className={x.bad ? "font-extrabold text-[var(--c-neg)]" : ""}>{x.label}</span>{x.sub ? <span className="block text-[12px] c-sub">{x.sub}</span> : null}</span>} testid="home-todo-row" /></div>
+        {/* v9.9.19 T6: Focus on this to-do */}
+        {x.todo ? <button onClick={() => startFocus(x.label)} aria-label={tr("Focus")} title={tr("Focus")} className="w-10 h-10 rounded-full grid place-items-center c-acc shrink-0" data-testid="todo-focus">◷</button> : null}</div>)}
       {rows.length > 5 ? <button onClick={() => navTo("lists")} className="text-[12.5px] c-sub min-h-[36px]">{tr("+{n} more", { n: rows.length - 5 })}</button> : null}
     </div> : null}
     {lists.map((l) => <ListCard key={l.id} list={l} compact testid="home-list" onTick={(li, x) => put(L.tick(st, li.id, x.id, now))} onOpen={() => { try { localStorage.setItem("attune:lists:open", l.id); } catch (e) {} navTo("lists"); }} />)}

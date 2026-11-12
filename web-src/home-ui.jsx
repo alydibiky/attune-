@@ -9,6 +9,8 @@ import { AutopilotCard } from "./autopilot-ui.jsx";
 import { myCountry } from "./country.js";
 import { SuggestCard } from "./suggest-ui.jsx";
 import { SalaryHomeCard } from "./salary-ui.jsx";
+import { CountdownChips } from "./countdown-ui.jsx";
+import { HabitsCard } from "./habits-ui.jsx";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyStart, btnP as UbtnP, btnS as UbtnS, inp as Uinp } from "./ui-kit.jsx";
 import { loadAgents } from "./agents.js";
@@ -337,6 +339,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {minimal && !rep && boxMode === "translate" ? <button onClick={() => navTo("translate")} className="-mt-1 min-h-[40px] text-[13px] font-bold c-acc inline-flex items-center gap-1" data-testid="box-translate-more">{tr("Talk with someone, a photo or a document")}<ChevronRight size={15} className="rtl:rotate-180" /></button> : null}
       {minimal && !rep && cmd ? <JobCards list={jobList} jobs={cmd.jobs} onSave={(f) => cmd.saveFile(f)} onCopy={(t) => cmd.copy(t)} onOpen={(m) => openLine(m)} /> : null}
       {minimal && !rep && cmd && tripLive(trip) ? <TripPin trip={trip} name={cmd.countryName(trip.country)} onOpen={() => navTo("travel")} onEnd={() => { cmd.endTrip(); setTrip(cmd.trip()); }} /> : null}
+      {/* v9.9.19 T3 (Ali picked A, "make it openable"): countdown chips under the box; tap → the big card */}
+      {minimal && !rep ? <CountdownChips /> : null}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
       {/* persona 9 (Ali picked H-E): on the 1st–3rd, last month in one card (monthreview.js); × hides it for that month */}
       {!rep ? <MonthCard /> : null}
@@ -354,6 +358,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* v9.2 (Ali picked 1A, 4 Nov): what is due or not finished, and the lists needed today, stay on Home until ticked */}
       {minimal && !rep ? <HomeTodo records={cmd && cmd.api && cmd.api.records ? cmd.api.records() : []} navTo={navTo}
         onTickTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} /> : null}
+      {/* v9.9.19 T2 (Ali picked A): habits with this week's dots */}
+      {minimal && !rep ? <HabitsCard /> : null}
       {minimal && !rep ? <AutopilotCard /> : null}
       {minimal && !rep && !freshApp() ? <HeroCards data={data} navTo={navTo} /> : null}
       {minimal && rep ? <><ReportTiles safe={data.safe} spentMonth={data.hasLedger ? data.o.monthOut : null} cur={data.o && data.o.cur} kcal={data.kcal} goal={data.fitOn ? data.goal : 0}
