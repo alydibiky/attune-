@@ -107,7 +107,8 @@ let right = 0; const wrong = [];
 for (const [want, n] of C) {
   const bankish = (x) => /cib|nbe|instapay|vodafone cash|vf ?cash|bank/i.test((x.app || "") + " " + (x.title || ""));
   if (bankish(n) && (L.understandNote(n) || {}).meaning !== "ads") { const got0 = readNotification(n, { teach: { rules: [] } }) ? "bank" : "-"; if (got0 === want) right++; else wrong.push(`${want} ≠ ${got0} · ${n.app}: ${n.text.slice(0, 70)}`); continue; }
-  const u = L.understandNote(n), asks = L.asksFrom([n], { rules: [], asked: [], skip: [] }, { bankish: (x) => /cib|nbe|instapay|vodafone cash|vf ?cash|bank/i.test((x.app || "") + " " + (x.title || "")), payOf: (x) => readNotification(x, { teach: { rules: [] } }) });
+  // v9.9.30: chats are asked about only when the person asks to teach Attune (Chat «علمني اشعاراتي») — this checks that reading
+  const u = L.understandNote(n), asks = L.asksFrom([n], { rules: [], asked: [], skip: [] }, { teach: true, bankish: (x) => /cib|nbe|instapay|vodafone cash|vf ?cash|bank/i.test((x.app || "") + " " + (x.title || "")), payOf: (x) => readNotification(x, { teach: { rules: [] } }) });
   const got = u && u.sure && u.meaning !== "paid" ? u.meaning
     : u && u.meaning === "paid" ? "paid"
     : asks.length ? (asks[0].guess ? "ask:" + asks[0].guess : "ask")
@@ -119,6 +120,7 @@ for (const [want, n] of C) {
 const score = right / C.length;
 for (const w of wrong) console.log("  wrong: " + w);
 ok(score >= 0.99, `understood ${right} of ${C.length} notifications (${(score * 100).toFixed(1)}%) — Ali asked for 99%`);
+ok(C.filter(([w]) => w.startsWith("ask")).every(([, n]) => L.asksFrom([n], { rules: [], asked: [], skip: [] }, { payOf: (x) => readNotification(x, { teach: { rules: [] } }) }).length === 0), "v9.9.30 (Ali: \"not keep asking\"): none of the chat money talk is asked about by itself");
 // money from offers never reaches Money or Subscriptions
 const adsN = C.filter(([w]) => w === "ads").map(([, n]) => n);
 ok(adsN.every((n) => !readNotification(n, { teach: { rules: [] } }) || /cashback|bonus/i.test(n.text) === false), "no offer becomes a payment in Money");

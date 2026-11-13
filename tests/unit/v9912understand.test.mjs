@@ -23,7 +23,9 @@ ok(!L.understandNote(friend), "a friend's “I sent you 500” in a chat → not
 ok(L.sourceOf(gmail).kind === "mail" && L.sourceOf(gmail).name === "Google Play", "an email's source is its sender (Google Play), never all of Gmail");
 ok(!U({ ...gmail, text: "Your subscription will renew on 7 Dec — you'll be charged EGP 939.99" }).meaning, "a renewal that has NOT happened yet is not “paid”");
 const payOf = (n) => readNotification(n, { teach: { rules: [] } });
-const asks = L.asksFrom([uber, talabat, gmail, yt, wa, friend], { rules: [], asked: [], skip: [] }, { max: 9, payOf });
+// (v9.9.30: chats are asked about only when the person asks to teach Attune — this is that path)
+const asks = L.asksFrom([uber, talabat, gmail, yt, wa, friend], { rules: [], asked: [], skip: [] }, { max: 9, payOf, teach: true });
+ok(!L.asksFrom([wa, friend], { rules: [], asked: [], skip: [] }, { max: 9, payOf }).length, "v9.9.30: by itself, Attune never asks about the wages group or a friend's chat");
 ok(!asks.some((a) => ["u", "t", "y"].includes(a.n.id)), "offers and videos are not in the questions (" + asks.map((a) => a.n.app).join(", ") + ")");
 const pay = asks.find((a) => a.n.id === "g");
 ok(pay && pay.why === "paid" && pay.pay.amount === 939.99 && pay.pay.direction === "out", "the receipt is asked as “You paid 939.99 EGP — add it to Money?”");
