@@ -12,7 +12,7 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
 ## ▶ START HERE (13 Nov, night) — v9.9.32 (versionCode 175): Ali's 3 asks — Free vs Pro, the "set up your life" guide, 100,000 + 100,000 tests
-**1 + 2. Free / Pro and the guide — WAITING FOR ALI'S PICKS (build nothing before):** https://claude.ai/artifact/ExrP7vKai43EJDLSFVimHs
+**1 + 2. Free / Pro and the guide — Ali picked FP-4 (only if Pro's automation is measured right, no undo / rechecking) PM-1 PM-2 PM-4 GD-5 GW-A TR-3, and added 2 ideas (the model reads notifications with the app closed, 30 s–1 min each is fine; a 24/7 brain that understands everything and already knows). Combined page + options for the 2 ideas, WAITING FOR HIS OK: https://claude.ai/artifact/XF3TxLzpUYDzBmNPecpdTL (docs/mockups/free-pro-combined.html). First options page:** https://claude.ai/artifact/ExrP7vKai43EJDLSFVimHs
 (docs/mockups/free-pro.html). FP-1…4 the split (my pick FP-4: Free = everything you type or say, one phone, 3 months, 1 agent, 1 rule;
 Pro = Attune does it for you + everywhere; full feature table on the page) · PM-1…4 how Pro is shown (my pick PM-1: "Pro would have done
 this for you" right after the 5th payment typed by hand, max 1 a day) · GD-1…5 the guide (my pick GD-5: Chat interview day 1 + Home

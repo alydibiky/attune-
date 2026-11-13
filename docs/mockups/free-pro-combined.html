@@ -1,0 +1,251 @@
+<title>Pro, Brain and Background</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@500;700&display=swap">
+<style>
+/* Layout: one column of features; each shows 2 phone screens (A, B) side by side, wrapping to one on phones; sticky pick bar */
+:root {
+  --bg: #f3f1ef; --surface: #ffffff; --ink: #1f1b1c; --mut: #69605f; --line: #e3dedb; --acc: #7a1f3d; --acc-soft: #f4e4ea; --ok: #1e7a43;
+  --font-ui: "Nunito", "IBM Plex Sans Arabic", system-ui, sans-serif; --font-code: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* the app's own look inside the phones (Attune light, burgundy C1) */
+  --a-bg: #F5F4F2; --a-surf: #FFFFFF; --a-surf2: #EFEDEA; --a-ink: #1E1C1B; --a-mut: #5E5A57; --a-ln: #E6E3E0; --a-acc: #7A1F3D; --a-soft: #F6E6EC;
+  --a-pos: #1e7a43; --a-neg: #b33a2e; --a-warn: #b4560e; --a-amber: #FBF0DC; --a-frame: #1b1718;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 150px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 30px; }
+h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 900; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 22px; font-weight: 900; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.lead { color: var(--mut); font-size: 16px; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); }
+.intro { display: grid; gap: 10px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; display: grid; gap: 6px; }
+.box ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 3px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+nav.toc a { font-family: var(--font-code); font-size: 12.5px; text-decoration: none; color: var(--acc); background: var(--acc-soft); border-radius: 8px; padding: 2px 8px; }
+.group-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+.group-h .ar { color: var(--mut); font-weight: 800; }
+.feat { display: grid; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; scroll-margin-top: 12px; }
+.feat-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.fcode { font-family: var(--font-code); font-weight: 600; color: var(--acc); background: var(--acc-soft); border-radius: 7px; padding: 1px 8px; font-size: 14px; }
+.fname { font-weight: 900; font-size: 19px; }
+.far { color: var(--mut); font-weight: 700; }
+.ali { font-size: 13.5px; color: var(--acc); font-weight: 800; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 14px; }
+.facts div { min-width: 0; } .facts b { display: block; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+@media (max-width: 700px) { .facts { grid-template-columns: 1fr; } }
+.opts { display: flex; flex-wrap: wrap; gap: 18px; }
+.opt { flex: 1 1 300px; min-width: 0; display: grid; gap: 8px; align-content: start; border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.opt.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+.opt-h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.opt-h input { width: 22px; height: 22px; margin: 0; accent-color: var(--acc); cursor: pointer; }
+.ocode { font-family: var(--font-code); font-weight: 600; font-size: 13px; color: var(--acc); }
+.oname { font-weight: 900; }
+.rec { font-size: 11.5px; font-weight: 800; color: var(--surface); background: var(--acc); border-radius: 999px; padding: 1px 8px; }
+.pm { font-size: 13.5px; color: var(--mut); display: grid; gap: 2px; }
+.pm span::before { font-weight: 900; margin-inline-end: 4px; }
+.pm .plus::before { content: "+"; color: var(--ok); } .pm .minus::before { content: "−"; color: #b33a2e; }
+.note { width: 100%; min-height: 40px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); }
+.note:focus, .opt input:focus-visible, .btn:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+/* ---- the phone ---- */
+.phone { width: 290px; max-width: 100%; margin: 0 auto; background: var(--a-frame); border-radius: 36px; padding: 9px; }
+.scr { background: var(--a-bg); border-radius: 28px; overflow: hidden; color: var(--a-ink); font-family: "Nunito", "IBM Plex Sans Arabic", sans-serif; font-size: 12px; line-height: 1.4; height: 560px; display: flex; flex-direction: column; position: relative; }
+.sb { display: flex; justify-content: space-between; padding: 8px 18px 2px; font-size: 10.5px; font-weight: 800; color: var(--a-ink); }
+.tb { display: flex; align-items: center; gap: 10px; padding: 6px 14px 8px; font-weight: 900; font-size: 15px; }
+.tb .ico { font-size: 16px; color: var(--a-ink); width: 18px; text-align: center; }
+.body { padding: 4px 12px 12px; display: grid; gap: 8px; align-content: start; overflow: hidden; flex: 1; }
+.c { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 18px; padding: 10px 12px; display: grid; gap: 6px; }
+.c.amber { background: var(--a-amber); border-color: #efdcb8; }
+.c.soft { background: var(--a-soft); border-color: #ecd0da; }
+.lb { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--a-mut); font-weight: 800; }
+.t { font-weight: 900; font-size: 13px; }
+.s { color: var(--a-mut); font-size: 11px; }
+.r { display: flex; align-items: center; gap: 8px; } .r > .grow { flex: 1; min-width: 0; }
+.sq { width: 26px; height: 26px; border-radius: 9px; background: var(--a-soft); color: var(--a-acc); display: grid; place-items: center; font-weight: 900; font-size: 12px; flex: none; }
+.amt { font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.neg { color: var(--a-neg); } .pos { color: var(--a-pos); } .warn { color: var(--a-warn); } .acc { color: var(--a-acc); }
+.btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.b { border-radius: 10px; padding: 5px 10px; font-weight: 800; font-size: 11px; background: var(--a-acc); color: #fff; }
+.b.g { background: transparent; color: var(--a-acc); border: 1px solid var(--a-acc); }
+.b.q { background: var(--a-surf2); color: var(--a-ink); }
+.ch { border-radius: 999px; padding: 2px 9px; font-weight: 800; font-size: 10.5px; background: var(--a-surf); border: 1px solid var(--a-ln); white-space: nowrap; }
+.ch.on { background: var(--a-acc); color: #fff; border-color: var(--a-acc); }
+.ch.soft { background: var(--a-soft); color: var(--a-acc); border-color: transparent; }
+.tag { font-size: 9.5px; font-weight: 800; border-radius: 6px; padding: 1px 6px; background: var(--a-surf2); color: var(--a-mut); white-space: nowrap; }
+.bar { height: 6px; border-radius: 9px; background: var(--a-ln); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--a-acc); }
+.tick { width: 15px; height: 15px; border-radius: 5px; border: 1.5px solid var(--a-acc); display: inline-grid; place-items: center; font-size: 10px; color: #fff; flex: none; }
+.tick.d { background: var(--a-acc); }
+.sep { border-top: 1px solid var(--a-ln); }
+.notif { background: #2a2526; color: #f3eeee; border-radius: 16px; padding: 9px 11px; display: grid; gap: 4px; font-size: 11px; }
+.notif .app { font-size: 9.5px; color: #c9bfc1; font-weight: 700; }
+.notif .nt { font-weight: 900; font-size: 12px; }
+.notif .na { display: flex; gap: 14px; font-weight: 900; color: #f2b6c8; font-size: 11px; padding-top: 2px; }
+.shade { background: #3b3537; }
+.dim { position: absolute; inset: 0; background: rgba(20,14,16,.38); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--a-surf); border-radius: 22px 22px 0 0; padding: 8px 14px 14px; display: grid; gap: 7px; }
+.sheet::before { content: ""; width: 36px; height: 4px; border-radius: 4px; background: var(--a-ln); justify-self: center; }
+.inp { background: var(--a-surf); border: 1.5px solid var(--a-acc); border-radius: 16px; padding: 8px 10px; color: var(--a-mut); }
+.bubble { background: var(--a-acc); color: #fff; border-radius: 16px 16px 4px 16px; padding: 7px 10px; justify-self: end; max-width: 85%; font-weight: 700; }
+.dots { display: flex; gap: 4px; } .dots i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--a-acc); display: block; } .dots i.d { background: var(--a-acc); } .dots i.x { border-color: var(--a-ln); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tile { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 14px; padding: 8px; display: grid; gap: 2px; }
+.cal { display: grid; grid-template-columns: 26px repeat(3, 1fr); gap: 3px; font-size: 9.5px; }
+.cal .h { font-weight: 800; color: var(--a-mut); text-align: center; }
+.cal .tm { color: var(--a-mut); }
+.cal .slot { border-radius: 6px; min-height: 22px; padding: 2px 4px; }
+.cal .busy { background: var(--a-surf2); color: var(--a-mut); }
+.cal .pr { background: #eef3ef; color: #4b6b57; }
+.cal .plan { background: var(--a-acc); color: #fff; font-weight: 800; }
+.ring { width: 150px; height: 150px; border-radius: 50%; margin: 6px auto; display: grid; place-items: center; background: conic-gradient(var(--a-acc) 0 62%, var(--a-ln) 62% 100%); }
+.ring > div { width: 126px; height: 126px; border-radius: 50%; background: var(--a-bg); display: grid; place-items: center; text-align: center; }
+.big { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.tl { display: grid; gap: 0; } .tl .it { display: grid; grid-template-columns: 38px 1fr; gap: 8px; padding: 5px 0; border-inline-start: 2px solid var(--a-ln); margin-inline-start: 18px; padding-inline-start: 10px; }
+.src { font-size: 9.5px; color: var(--a-mut); }
+.ar-t { font-family: "IBM Plex Sans Arabic", sans-serif; direction: rtl; text-align: right; }
+.hl { background: #fff1c9; border-radius: 4px; padding: 0 2px; }
+/* ---- pick bar ---- */
+.pickbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.pb-in { max-width: 1040px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.picked { flex: 1 1 240px; min-width: 0; font-family: var(--font-code); font-size: 12.5px; color: var(--mut); overflow-wrap: anywhere; max-height: 3.3em; overflow: auto; }
+.picked b { color: var(--ink); }
+.btn { font: inherit; font-weight: 900; border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; background: var(--acc); color: var(--surface); min-height: 44px; }
+.btn.ghost { background: transparent; color: var(--acc); border: 1px solid var(--acc); }
+.copybox { width: 100%; min-height: 90px; font-family: var(--font-code); font-size: 12.5px; border: 1px solid var(--acc); border-radius: 10px; padding: 8px; background: var(--bg); color: var(--ink); }
+.toast { font-weight: 800; color: var(--ok); font-size: 13.5px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th, .tbl td { text-align: start; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+.tbl td.f { color: var(--ok); font-weight: 800; } .tbl td.p { color: var(--acc); font-weight: 800; }
+.tblwrap { overflow-x: auto; }
+.pro { font-size: 9px; font-weight: 900; color: #fff; background: var(--a-acc); border-radius: 6px; padding: 1px 5px; letter-spacing: .04em; }
+.free { font-size: 9px; font-weight: 900; color: var(--a-pos); background: #e6f3ea; border-radius: 6px; padding: 1px 5px; }
+.coach { position: absolute; left: 12px; right: 12px; background: #2a2526; color: #f6eff1; border-radius: 16px; padding: 10px 12px; display: grid; gap: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.coach .ct { font-weight: 900; font-size: 12.5px; } .coach .ca { display: flex; gap: 12px; font-weight: 900; color: #f2b6c8; }
+.hole { position: absolute; border: 2px solid #f2b6c8; border-radius: 14px; box-shadow: 0 0 0 999px rgba(20,14,16,.45); }
+.scr { position: relative; }
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <span class="eyebrow">Attune · your picks joined + 2 new ideas · 13 Nov 2026</span>
+    <h1>Pro that acts alone, a model that thinks while the app is closed, and a brain that already knows</h1>
+    <p class="lead">Your picks: FP-4, PM-1, PM-2, PM-4, GD-5, GW-A, TR-3. Part A joins them into the real screens with what I understood. Parts B and C are your two new ideas, each with options. Tick, note, and copy. I build after your OK.</p>
+    <div class="box">
+      <b>What I understood</b>
+      <ul>
+        <li><b>FP-4 has a condition:</b> Pro may act alone only if it is really stronger, saves a lot of time, and is right without you having to undo or recheck. My honest answer: nothing can be promised 100% everywhere, so the line is measured. Pro acts alone, with no Undo prompt and no “check this” card, only on kinds measured at 99.9% or more on 10,000 cases and a held-out set. Everything else asks once, learns your answer, then acts alone the next time.</li>
+        <li><b>Where we are today:</b> bank and wallet messages 10,000 / 10,000 right (none made money wrongly); notifications 100% right when code is sure (93.7% of them); with the real model 100% and 97.2% on the two held-out sets; chat orders 99.4% of 100,000.</li>
+        <li><b>PM-1 + PM-2 + PM-4:</b> the line after the 5th payment typed by hand, the Friday “time saved” card, and the trial-end screen. At most 1 Pro note a day.</li>
+        <li><b>GD-5 + GW-A + TR-3:</b> Chat interview on day 1, the Home setup list, one-time tips, Settings → Set up your life. Free keeps the first 3 steps. Finishing 6 of 8 adds 7 days to the trial.</li>
+        <li><b>New idea 1 (B):</b> the model may take 30 s to 1 min per notification with Attune closed. Code still reads everything at once; the model reads only what code is unsure of.</li>
+        <li><b>New idea 2 (C):</b> a brain that keeps learning from notifications, money, people and papers, writes what it learned with its source, analyses, and answers Chat at once. It stays on the phone; nothing is uploaded.</li>
+      </ul>
+    </div>
+    <nav class="toc" id="toc" aria-label="Jump to a choice"></nav>
+  </header>
+  <div id="groups"></div>
+</div>
+
+<div class="pickbar" role="region" aria-label="Your picks">
+  <div class="pb-in">
+    <div class="picked" id="picked">No options picked yet.</div>
+    <button class="btn ghost" id="clear" type="button">Clear</button>
+    <button class="btn" id="copy" type="button">Copy my picks</button>
+    <span class="toast" id="toast" hidden>Copied</span>
+    <textarea class="copybox" id="copybox" hidden readonly aria-label="Your picks to copy"></textarea>
+  </div>
+</div>
+
+<script>
+// ---------- tiny builders for the phone screens ----------
+const ph = (title, body, o = {}) => `<div class="phone"><div class="scr"><div class="sb"><span>9:41</span><span>●●● 82%</span></div>${title === null ? "" : `<div class="tb"><span class="ico">${o.back ? "‹" : "☰"}</span><span>${title}</span></div>`}<div class="body">${body}</div>${o.over || ""}</div></div>`;
+const c = (x, cls = "") => `<div class="c ${cls}">${x}</div>`;
+const lb = (x) => `<div class="lb">${x}</div>`;
+const r = (ic, t, s = "", right = "") => `<div class="r">${ic ? `<div class="sq">${ic}</div>` : ""}<div class="grow"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ""}</div>${right}</div>`;
+const bt = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="b ${k}">${t}</span>`; }).join("")}</div>`;
+const chips = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="ch ${k}">${t}</span>`; }).join("")}</div>`;
+const nt = (app, t, s, acts = []) => `<div class="notif"><div class="app">${app}</div><div class="nt">${t}</div><div>${s}</div>${acts.length ? `<div class="na">${acts.map((a) => `<span>${a}</span>`).join("")}</div>` : ""}</div>`;
+const sheet = (x) => `<div class="dim"></div><div class="sheet">${x}</div>`;
+const tk = (d) => `<span class="tick ${d ? "d" : ""}">${d ? "✓" : ""}</span>`;
+const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
+const sep = `<div class="sep"></div>`;
+const ar = (x) => `<span class="ar-t">${x}</span>`;
+
+// ---------- the choices: [group, code, name, arabic, Ali's words, where, how it is tested, options] ----------
+const G = { a: ["A · Your picks, joined (OK them or note them)", "اختياراتك مع بعض"], b: ["B · The model thinks while Attune is closed", "الموديل يفكر والأبلكيشن مقفول"],
+  c: ["C · The Attune brain: always learning, already knows", "عقل Attune: بيتعلم على طول وعارف كل حاجة"] };
+const li = (ok, t, s = "") => r(ok ? "✓" : "★", t, s);
+const F = [
+["a","OK","The joined screens for FP-4 · PM-1 · PM-2 · PM-4 · GD-5 · GW-A · TR-3","الشاشات مع بعض","“FP-4 only if automation is really stronger, saves a lot of time and is always right, so it does not need undo or rechecking”","Plan page · Home · Settings → Set up your life","Each part gets its own 10,000-case generator before it ships (the Pro rules, the 1-note-a-day limit, the guide steps per phone and country, the trial dates)",[
+ ["1","Pro acts alone only where it is measured ≥ 99.9% — no Undo prompt there","Bank and wallet messages (10,000 / 10,000 right in the test run), bills due, deliveries, renewals: Pro saves them by itself with no Undo bar and no “check this” card. A small “by Attune” mark stays in the history. Anything not measured that high is never done alone: it asks once, learns your answer, and next time does it alone.","This is your condition: no rechecking where Pro acts.","I can’t promise 100% on everything; so the line is drawn by measurement, not by hope.",1,
+  ph("Money", c(lb("Today · saved by Attune") + r("🏦","CIB · salary","25 Nov · by Attune","<span class='amt pos'>+18,500</span>") + r("🍔","Talabat · koshary","by Attune","<span class='amt neg'>−145</span>") + r("⚡","Electricity bill","due 28 Nov · by Attune","<span class='amt warn'>612</span>")) + c(lb("Asked once, then learned") + `<div class="s">“Transfer 2,500 from Sheikh” — is this his instalment?</div>` + bt("Yes, always","g|No"), "soft"), {back:1})],
+ ["2","PM-1 + PM-2: the right moment, and Friday’s card","After the 5th payment typed by hand in a week: one line “Pro reads these from your CIB messages”. Every Friday: “Your week with Attune — 2 h 10 min saved” (in Free: “would have saved”). Never more than 1 Pro note a day.","Value shown in minutes and at the moment of effort.","None beyond the daily limit.",0,
+  ph("Home", c(lb("Your week with Attune") + `<div class="big">2 h 10 min</div><div class="s">Pro would have saved you this week</div>` + r("💳","31 payments read from messages") + r("🧾","3 bills checked") + bt("Try Pro","g|Not now"), "soft") + c(r("✓","Saved: Lunch · Zooba","EGP 185")) + c(`<div class="s">5th payment typed by hand this week. <b class="acc">Pro reads them from CIB by itself.</b></div>`, "soft"))],
+ ["3","PM-4: the trial-end screen","Day 7 (or 14, TR-3): one screen of what Pro did for you, what stops, and the price.","Clear and fair.","—",0,
+  ph(null, `<div style="padding:24px 14px;display:grid;gap:10px">` + c(lb("Your Pro trial ended") + r("💳","42 payments read for you") + r("🤖","2 agents watched prices","hotel near the Haram −1,200") + r("🧭","Your life set up · 8 of 8") + `<div class="s">From today these stop. Your data stays yours.</div>` + bt("Keep Pro · EGP 799 a year","g|Stay on Free")) + `</div>`)],
+ ["4","GD-5 + GW-A + TR-3: the guide","Day 1: Chat interview. Home: “Set up your life · 6 of 8”. Tips pop up once where they help. Settings → Set up your life keeps it all. Free keeps the first 3 steps; finishing 6 of 8 adds 7 days to the trial.","One path from first open to an organised life.","About 4 days of work, all 20 languages.",0,
+  ph("Home", c(lb("Set up your life · 6 of 8") + bar(75) + `<div class="s"><b class="acc">You earned 7 more days of Pro</b> — your trial now ends on 27 Nov.</div>` + r("💬","Next: your papers","2 minutes in Chat") + bt("Continue","g|Later"), "soft") + c(lb("Your day") + r("📄","Sheikh instalment","EGP 2,500 · 4 of 8 · in 2 days") + r("🧹","The maid","Saturday · EGP 600")))],
+]],
+["b","BG","When the model reads notifications with Attune closed","امتى الموديل يقرا الإشعارات والأبلكيشن مقفول","“there is no problem when the app is closed for the model to think and filter notifications with the help of the code, even if each one takes 30 s to 1 min”","Android in the background (like the night AI jobs, AiNight.kt)","10,000 days of notifications × battery levels × charging × screen on/off: nothing lost, nothing read twice, never runs below the battery limit, the batch stops if you open a heavy app",[
+ ["1","Only while charging","Code reads every notification at once (as now). The ones code isn’t sure of wait; the model reads them the next time the phone charges.","No battery cost, no extra notification.","Waits until the evening for some answers.",0,
+  ph(null, `<div style="padding:24px 12px;display:grid;gap:8px">` + nt("Attune","3 messages understood while charging","Mona asks for the ID photo by Friday · a new bill · a delivery tomorrow",["Open"]) + `</div>`)],
+ ["2","Any time, with a small notification while it reads","As soon as code is unsure, the model starts in the background. While it works, a quiet notification shows “Attune is reading 2 messages” (Android requires it for long work). It closes itself when done.","Answers within minutes, all day.","Uses battery; a notification appears for a minute or two.",0,
+  ph(null, `<div style="padding:24px 12px;display:grid;gap:8px">` + nt("Attune · working","Reading 2 messages…","about 1 minute",[]) + nt("WhatsApp · Mona","Can you send me your ID photo before Friday?","",[]) + `</div>`)],
+ ["3","Smart: right away when the battery allows, else at charging (recommended)","Above 40% battery and with the screen off, it reads in small batches (the model loads once per batch). Below that, or on battery saver, it waits for charging. Money from a known bank never waits: code handles it at once.","Fast most of the day, never drains a low battery.","The quiet “reading” notification still shows during a batch.",1,
+  ph("Settings · Background thinking", c(lb("When Attune thinks with the app closed") + r(tk(1),"When the battery is above 40%","screen off, small batches") + r(tk(1),"While charging","everything left") + r(tk(0),"On battery saver","waits")) + c(lb("Today") + r("🧠","14 notifications understood in the background","about 40 s each · 2% battery")))],
+]],
+["c","BR","An agent that keeps understanding everything","وكيل بيفهم كل حاجة على طول","“an agent keeps working 24/7 to understand everything in the app, notifications, money, other things, and makes analysis; when I ask anything it already knows and understands everything”","Runs with B’s schedule; answers in Chat, Home and a new “What Attune knows” page","10,000 questions about a person’s own life over 3 simulated months: the answer uses what the brain learned, every fact has its source, nothing invented (a number not in your data is never shown as a fact)",[
+ ["1","“What Attune knows” — the memory you can see","The brain writes short facts with their source: “Sheikh has paid 4 of 8 (last on 3 Nov)”, “Electricity is 12% higher than your usual”, “Mona asked for your ID photo by Friday”. You can correct or forget any fact.","You see what it learned, and nothing is hidden.","A new page to visit.",0,
+  ph("What Attune knows", c(lb("Money · learned this week") + r("💸","Sheikh has paid 4 of 8","last 2,500 on 3 Nov · from CIB") + r("⚡","Electricity is 12% above usual","612 vs 545 · bill 28 Nov")) + c(lb("People") + r("👩","Mona asked for your ID photo","by Friday · WhatsApp") + r("👤","Your boss writes after 9 pm on Sundays","3 weeks in a row")) + bt("q|Correct","g|Forget"), {back:1})],
+ ["2","Chat already knows","Ask anything and the answer comes at once from what the brain learned, with the sources under it. “How am I doing this month?” → “EGP 4,120 left until the 25th; food is up 18% (Talabat 6 times); Sheikh is on time.”","Answers in a second, about your real life.","Nothing visible until you ask.",0,
+  ph("Chat", `<div class="body" style="padding:0">` + `<div class="bubble">How am I doing this month?</div>` + c(`<div class="s">EGP <b>4,120</b> left until the 25th. Food is up 18% (Talabat 6 times). Sheikh is on time: 4 of 8 paid. The electricity bill on the 28th looks higher than usual.</div>` + `<div class="src">From: Money · People & plans · 3 bank messages · bills</div>`) + `<div class="bubble">Did Mona want anything?</div>` + c(`<div class="s">Your ID photo, before Friday (WhatsApp, yesterday 18:40).</div>` + bt("Remind me Thursday","g|Done")) + `</div>`, {back:1})],
+ ["3","It analyses and tells you first","Each morning one “Attune noticed” card (the most useful thing only), and on Sunday a deeper weekly analysis: spending trends, people waiting for you, papers expiring, what to plan.","You get the insight without asking.","Must stay short (1 card a day).",0,
+  ph("Home", c(lb("Attune noticed") + `<div class="s">You ordered Talabat 6 times this month (EGP 1,040), twice your usual. Cooking 2 of those nights would keep you inside your food budget.</div>` + bt("Set a limit","g|OK"), "soft") + c(lb("Sunday analysis") + r("📈","Spending","−6% vs last week") + r("🕓","Waiting for you","Mona · ID photo") + r("📄","Papers","car licence in 20 days")))],
+ ["4","1 + 2 + 3 together (recommended)","The brain learns all day with B’s schedule, keeps “What Attune knows” (1), answers Chat at once (2), and tells you the one thing that matters each morning plus Sunday’s analysis (3). Pro feature; Free keeps the morning card.","This is what makes Pro feel like it knows your life.","The biggest build here (about 1 week: the fact store, its 10,000 tests, three screens, 20 languages).",1,
+  ph("Home", c(lb("Attune noticed") + `<div class="s">Food is up 18% this month — Talabat 6 times.</div>`, "soft") + c(r("🧠","What Attune knows","212 facts · updated 4 min ago") + r("💬","Ask about your life","it already knows")) + c(lb("Your day") + r("📄","Sheikh instalment","in 2 days · EGP 2,500")))],
+]],
+];
+// ---------- render ----------
+const KEY = "attune-free-pro-combined-v1";
+let st = { on: {}, notes: {} };
+try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && typeof v === "object") st = { on: v.on || {}, notes: v.notes || {} }; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const groupsEl = document.getElementById("groups"), toc = document.getElementById("toc");
+const ORDER = [];
+let lastG = "";
+let gWrap = null;
+for (const [g, code, name, arName, aliNote, where, test, opts] of F) {
+  if (g !== lastG) { lastG = g; gWrap = document.createElement("section"); gWrap.style.display = "grid"; gWrap.style.gap = "16px"; gWrap.innerHTML = `<div class="group-h"><h2>${G[g][0]}</h2><span class="ar" lang="ar">${G[g][1]}</span></div>`; groupsEl.appendChild(gWrap); }
+  const a = document.createElement("a"); a.href = "#f-" + code; a.textContent = code; toc.appendChild(a);
+  const f = document.createElement("article"); f.className = "feat"; f.id = "f-" + code;
+  f.innerHTML = `<div class="feat-h"><span class="fcode">${code}</span><span class="fname">${esc(name)}</span><span class="far" lang="ar">${esc(arName)}</span></div>` + (aliNote ? `<div class="ali">${esc(aliNote)}</div>` : "") +
+    `<div class="facts"><div><b>Where it lives</b>${esc(where)}</div><div><b>How it will be tested</b>${esc(test)}</div></div><div class="opts"></div>`;
+  const host = f.querySelector(".opts");
+  for (const [k, oname, what, plus, minus, rec, phone] of opts) {
+    const id = code + "-" + k; ORDER.push(id);
+    const o = document.createElement("div"); o.className = "opt" + (st.on[id] ? " on" : "");
+    o.innerHTML = `<div class="opt-h"><input type="checkbox" id="cb-${id}" aria-label="Pick ${id}"${st.on[id] ? " checked" : ""}><label for="cb-${id}" class="ocode">${id}</label><label for="cb-${id}" class="oname">${esc(oname)}</label>${rec ? '<span class="rec">Recommended</span>' : ""}</div>` +
+      `<p style="font-size:14px">${esc(what)}</p><div class="pm"><span class="plus">${esc(plus)}</span><span class="minus">${esc(minus)}</span></div>${phone}` +
+      `<textarea class="note" id="note-${id}" rows="1" placeholder="Your note on ${id} (optional)">${esc(st.notes[id] || "")}</textarea>`;
+    host.appendChild(o);
+    o.querySelector("input").addEventListener("change", (e) => { if (e.target.checked) st.on[id] = true; else delete st.on[id]; o.classList.toggle("on", e.target.checked); save(); render(); });
+    o.querySelector("textarea").addEventListener("input", (e) => { const v = e.target.value; if (v.trim()) st.notes[id] = v; else delete st.notes[id]; if (v.trim() && !st.on[id]) { st.on[id] = true; o.classList.add("on"); o.querySelector("input").checked = true; } save(); render(); });
+  }
+  gWrap.appendChild(f);
+}
+const lines = () => ORDER.filter((id) => st.on[id]).map((id) => (st.notes[id] && st.notes[id].trim() ? id + " — " + st.notes[id].trim().replace(/\s*\n\s*/g, " / ") : id));
+function render() { const l = lines(); document.getElementById("picked").innerHTML = l.length ? "<b>" + l.length + " picked:</b> " + l.map(esc).join(" · ") : "No options picked yet."; }
+render();
+document.getElementById("copy").addEventListener("click", () => {
+  const l = lines(), box = document.getElementById("copybox"), toast = document.getElementById("toast");
+  if (!l.length) { document.getElementById("picked").textContent = "Tick at least one option first."; return; }
+  const text = "My answers (combined + new ideas):\n" + l.join("\n");
+  const fallback = () => { box.hidden = false; box.value = text; box.focus(); box.select(); toast.hidden = false; toast.textContent = "Selected: copy it with your keyboard or long-press."; };
+  try { navigator.clipboard.writeText(text).then(() => { toast.hidden = false; toast.textContent = "Copied " + l.length + " picks"; box.hidden = true; setTimeout(() => { toast.hidden = true; }, 2500); }, fallback); } catch (e) { fallback(); }
+});
+document.getElementById("clear").addEventListener("click", () => { st = { on: {}, notes: {} }; save(); document.querySelectorAll(".opt").forEach((o) => { o.classList.remove("on"); o.querySelector("input").checked = false; o.querySelector("textarea").value = ""; }); render(); });
+</script>
