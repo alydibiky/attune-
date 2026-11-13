@@ -1,3 +1,4 @@
+import { readable, negatedOrder } from "./wrapclean.js";
 import { enterSends } from "./keys.js";
 import { typedPayment } from "./sense.js";
 import React, { useState, useMemo, useEffect, useRef } from "react";
@@ -7820,7 +7821,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.31";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.32";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -10107,7 +10108,9 @@ export default function App() {
     savePeopleDir(dir);
     openLink(wp.op, phone, name); flash(openLine(wp.op, name, getLang() === "ar"));
   };
-  const doFromHome = (text0, dopts = {}) => {
+  const doFromHome = (text00, dopts = {}) => {
+    const text0 = readable(text00);   // v9.9.32: the wake word, fillers, thanks and indirect asking are not part of the order
+    if (negatedOrder(text0)) return null;   // "don't remind me to …" sets nothing
     // v9.0: Franco ("ghada 150", "fakarny bokra 9") is read as Arabic when the Arabic is something to do
     let text = text0;
     if (UND.looksFranco(text0)) { const a = UND.francoToArabic(text0); try { const u = doUnderstand(a, { now: Date.now(), stores: loadLifeStores() }); if (a !== text0 && (u.ask || u.actions.length)) text = a; } catch (e) {} }

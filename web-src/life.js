@@ -134,12 +134,14 @@ function personOf(raw, t) {
   if (/^\s*(?:(?:صاحبي|صديقي|زميلي|جاري|اخويا|أخويا|ابن عمي|ابن خالي)\s+)?علي\s+(?:عليه|هيدفعلي|هيرجعلي|مديون|استلف مني|خد مني|اخد مني)/.test(raw)) return "علي";   // v9.9.15: «صاحبي علي استلف مني 450»
   // v9.9.18 (the hard run: "uncle Samir lent me 10000" was "Uncle"): a title with a name is both — "Uncle Samir", "Dr Hany"
   { const tn = /\b(uncle|aunt|auntie|dr\.?|doctor|mr\.?|mrs\.?|ms\.?|sheikh|hajj|haj|my friend|my cousin|my neighbou?r|my colleague)\s+([A-Za-z][a-z]{1,20})\b/i.exec(raw);
-    if (tn && !NOT_NAME.test(tn[2]) && !/^(me|you|him|her|them|us|owes|lent|borrowed|paid|has|is|will|gave|took)$/i.test(tn[2])) { const nm = tn[2][0].toUpperCase() + tn[2].slice(1);
+    // v9.9.32 (the 100,000 run: "lent 1500 to my neighbour yesterday" was "Yesterday", "from my cousin for the barber" was "For"): after
+    // "my cousin" a name is written with a capital
+    if (tn && !NOT_NAME.test(tn[2]) && !(/^my /i.test(tn[1]) && !/^[A-Z]/.test(tn[2])) && !/^(me|you|him|her|them|us|owes|lent|borrowed|paid|has|is|will|gave|took|and|for|yesterday|today|tomorrow|next|last|this|from|to|on|at|in|with|but|so|because)$/i.test(tn[2])) { const nm = tn[2][0].toUpperCase() + tn[2].slice(1);
       return /^my /i.test(tn[1]) ? nm : tn[1][0].toUpperCase() + tn[1].slice(1).toLowerCase() + " " + nm; } }
   for (const re of tries) { const m = re.exec(raw); if (m && !NOT_NAME.test(m[1])) return m[1]; }
   // v8.9 (Ali: "People & plans still doesn't understand"): "my sister pays me 2000 every month" — a relative is who it is
   const rel = /\bmy\s+(sister|brother|mother|mom|mum|father|dad|son|daughter|uncle|aunt|cousin|friend|boss|neighbou?r|wife|husband|landlord|tenant|partner|colleague)\b/i.exec(raw);
-  if (rel && /\b(owes|pays|will pay|gives|will give|lent|borrowed|owe|paid|sends|will send)\b/i.test(raw)) return rel[1][0].toUpperCase() + rel[1].slice(1).toLowerCase();
+  if (rel && /\b(owes|pays|will pay|gives|will give|lent|borrowed|owe|paid|sends|will send|took|gave|loaned|return)\b/i.test(raw)) return rel[1][0].toUpperCase() + rel[1].slice(1).toLowerCase();
   // v8.2 (Ali typed "sheikh owes me 22,000 …" in small letters): the word before "owes" is the name, capitalised
   const low = /(?:^|[\s,.])([a-z][a-z'-]{1,20})\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed|took(?=[^.]{0,25}\bfrom me\b))\b/i.exec(raw);
   if (low && !NOT_NAME.test(low[1]) && !/^(also|still|now|friend|brother|sister|cousin|neighbou?r|uncle|aunt|boss|client|customer)$/i.test(low[1])) return low[1][0].toUpperCase() + low[1].slice(1).toLowerCase();
@@ -518,6 +520,9 @@ export function chatLifeIntent(text, opts) {
   // a request to work something out is a Chat task, not a note («… give me the rent with the tax», «احسب …»)
   // (v9.0: "my sister WILL GIVE ME 2000 every month" is money coming in, not a request — "give me" counts only as an order)
   if (!/\b(will|would|is going to|has to|must|should|to|gonna)\s+(give|send|pay)\s+me\b/i.test(t) && /\b(give me|calculate|work out|tell me|compute|show me|explain|write|find|estimate|compare)\b|احسب|اديني|اعطني|قولي|قول لي|اكتب|اعملي|اشرح|قارن|(?<![\p{L}])(calcula|calcule|calcular|calculer|dime|dis-moi|explica|explique|escribe|écris|berechne|erkläre|schreib|calcola|spiega|scrivi|hesapla|açıkla|yaz|hitung|jelaskan|tulis)(?![\p{L}])/iu.test(t)) return null;
+  // v9.9.32 (the 100,000 run: "I want a Kindle but only if it's under 5000, watch it for me" became a Watch iT subscription): a price
+  // wish with "watch it for me" / "keep an eye" is an agent, not a plan
+  if (/\b(?:under|below|less than|cheaper than|lower than)\s*[\d٠-٩]/i.test(t) && /\b(?:watch (?:it|them|this|that|the price)|keep an eye|let me know|tell me|alert me|notify me)\b/i.test(t)) return null;
   // v9.9.18 (the hard run: "change the netflix to 480", "the netflix is 150 now, not 200" made a NEW plan): an edit is not a new plan
   if (/^\s*(?:please\s+)?(?:change|edit|update|correct|fix|set)\b|\bnow,? not\b|\bactually (?:it'?s|make it)\b|^\s*(?:غير|غيّر|عدل|عدّل|صحح)(?![ء-ي])/i.test(t)) return null;
   const c = parseLife(t, opts);

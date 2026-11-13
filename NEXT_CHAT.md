@@ -11,6 +11,37 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ START HERE (13 Nov, night) — v9.9.32 (versionCode 175): Ali's 3 asks — Free vs Pro, the "set up your life" guide, 100,000 + 100,000 tests
+**1 + 2. Free / Pro and the guide — WAITING FOR ALI'S PICKS (build nothing before):** https://claude.ai/artifact/ExrP7vKai43EJDLSFVimHs
+(docs/mockups/free-pro.html). FP-1…4 the split (my pick FP-4: Free = everything you type or say, one phone, 3 months, 1 agent, 1 rule;
+Pro = Attune does it for you + everywhere; full feature table on the page) · PM-1…4 how Pro is shown (my pick PM-1: "Pro would have done
+this for you" right after the 5th payment typed by hand, max 1 a day) · GD-1…5 the guide (my pick GD-5: Chat interview day 1 + Home
+setup list + one-time pop-up tips + Settings → "Set up your life" always there) · GW-A…C who gets it (A: trial + Pro all, Free first 3
+steps) · TR-1…3 trial (TR-3: 7 days + 7 more when setup is done). After his picks: combined mock-up → OK → build in all 20 languages
+(billing.js already has FREE_LIMITS / COMPARE_ROWS / trialuse.js to build on).
+**3. 100,000 + 100,000 scenarios (DONE):**
+- `tests/scenarios/mega.mjs` — 100,000 different hard sentences (hard.mjs groups ×10, typed the way people type: "hey attune,", «يا أتيون»,
+  thanks, emoji, "ok?", CAPS, double spaces). First run: **84.0%** → now **99.5%** (report tests/scenarios/mega-report.md).
+- `tests/scenarios/chat100k.mjs` — 100,000 different chat orders in hard ways (indirect "ping me / can you make sure I…", «خليك فاكرلي»,
+  changing your mind "at 5, no wait, 6", negations "don't remind me…", long stories full of numbers, two orders, pages by any name,
+  AI questions full of numbers, slang money questions, odd debts, odd agents, 7 more languages, Franco). First run: **67.3%** → **99.4%**
+  (tests/scenarios/chat100k-report.md); 3.6% are left to the model by design.
+- Real model (Qwen3.5-4B Q4_K_M, llama-server, 4 CPU cores, 2.7 s each) on 250 of the orders the code leaves to it: **97.6%**, and the 6
+  misses never reach the model in the app (tests/trials/chat100k-qwen3.5-4b.md; script tests/trials/chat100k-model.mjs).
+- What was fixed: `web-src/wrapclean.js` (new, used by chat.jsx, the Home box doFromHome and the test mirror): cleanTyped (wake word,
+  fillers, thanks, emoji, "ok?", final full stop, ALL CAPS → names kept) · rephrase (indirect reminders EN + AR, odd debts, Arabic
+  agents, money slang) · correct (a change of mind keeps the 2nd number) · negatedOrder (nothing set or saved) · otherLang (spending +
+  reminders in es/pt/it/tr/id, fr "j'ai dépensé"). Reader bugs fixed: "wake me at 5pm" was 5:00 am (actions.js) · "my cousin for the
+  barber" person "For" (life.js) · "I want a Kindle … watch it for me" was a Watch iT subscription (life.js) and the agent watched "I want a
+  Kindle but only if it's" (agents.js) · "text Sara on telegram" made a reminder (chat.jsx openIt) · "take me to my money page" opened Maps
+  (applinks.js pageOf + brain order) · invoice / table / order numbers and "at 10 pm" saved as money (doit.js, sense.js) · «فكرني … ودفعت
+  420» kept only the reminder (sense.js splitOrders) · «بعد اجتماع 5 ساعات … اشتريت ب290» became a reminder (understand.js signals).
+- Unit test tests/unit/v9932hundredk.test.mjs (2,500 of each run ≥ 98.5% + 40 cleaner cases).
+- **Still open (need Ali / a feature):** goals with a count ("read 20 books before December 2027" → needs a "count" mission kind + its
+  screen = mock-ups first) · "X always comes first" when X is not in contacts · "what are my subscriptions?" (no ask:subs answer yet) ·
+  «لازم ادفع للشغالة» (a to-do or a reminder? goes to the AI). Note: Chat now shows the cleaned sentence in the user bubble (as Franco
+  already did) — ask Ali if he wants his exact words kept.
+
 ## ▶ 12 Nov, night (branch, not main yet) — Egyptian national ID (egid.js: the 14-digit number → birth date, governorate, sex, exact;
 10,000 at 100%) + its card on Dates. **Honest limit found:** the phone's text reader (ML Kit) is LATIN ONLY — it reads passports' coded
 lines, English papers and Latin digits, NOT Arabic letters or Arabic-Indic digits. Measured here on rendered Egyptian-ID images:

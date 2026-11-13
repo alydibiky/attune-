@@ -32,6 +32,7 @@ import * as HG from "../../web-src/haggle.js";
 import { missingAmounts } from "../../web-src/numguard.js";
 import { directionsOf } from "../../web-src/gomaps.js";
 import { typedPayment, numWords } from "../../web-src/sense.js";
+import { readable, negatedOrder } from "../../web-src/wrapclean.js";
 export { understand, quickAction, calculate, parseAgent, UND, missingAmounts };
 const DO_HERE = ["teach", "lifeEdit", "money", "food", "water", "weight", "workout", "dose", "sugar", "bp", "sleep", "repay", "pot", "family"];
 const T = (f, d = null) => { try { return f(); } catch (e) { return d; } };
@@ -62,7 +63,8 @@ function doFromHome(text0, now) {
 }
 
 export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both = false } = {}) {
-  let typed = String(typed0 || "").trim();
+  let typed = readable(String(typed0 || "").trim());   // v9.9.32: chat.jsx reads it without the wake word / fillers / thanks / indirect asking
+  if (negatedOrder(typed)) return { k: "chat" };   // chat.jsx: a negated order is not routed
   // Chat first: what Mind does by code (to-dos, lists, where things are, a note, an email)
   { const det = (text) => { const u = T(() => understand(text, { now, stores: {} }), { actions: [] }); const doActions = (u.actions || []).filter((a) => a.kind !== "note").length;
       const pm = T(() => parseMission(text, now)); const ag = T(() => parseAgent(text, { now, country: "EG", usual: {}, prefs: {} }));
@@ -93,12 +95,13 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
   const only = d.unsure ? d.fallback : d.pick, unsure = d.unsure;
   const ok = (k) => !only || only === k;
   const R = (k, x = {}) => ({ k, only, unsure, cands: d.candidates, ...x });
+  if (T(() => AL.pageOf(typed))) return R("open");   // chat.jsx: a page by its name comes before Maps (v9.9.32)
   if (T(() => directionsOf(typed))) return R("map");
   { const ag = q ? null : T(() => parseAgent(typed, { now, country: "EG", usual: {}, prefs: {} }));   // chat.jsx agentK (v9.9.15)
     if (ag && ["watch", "track", "order", "buy"].includes(ag.kind) && (!only || only === "agent" || only === "money-log")) return R("agent", { sub: ag.kind, ag }); }
   if (pay0 && pay0.ok && typed.length < 600 && !q && ok("money-log")) return R("money", { via: "pay", pay: pay0 });
   if (T(() => AL.pageOf(typed))) return R("open");
-  if (!only) { if (T(() => AL.readOpen(typed))) return R("open"); }
+  if (!only || only === "action") { if (T(() => AL.readOpen(typed))) return R("open"); }   // chat.jsx openIt (v9.9.32: also when only "action")
   // "call Mohamed" / "whatsapp Sara" with no time: Chat's action card is a Call / WhatsApp card (it opens the app), not a reminder
   if (only === "action") { const qa = T(() => quickAction(typed, now)); if (qa && (qa.kind === "call" || qa.kind === "whatsapp") && !qa.at) return R("open"); }
   if (!only || only === "money-log") {

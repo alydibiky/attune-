@@ -1,0 +1,290 @@
+<title>Free and Pro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@500;700&display=swap">
+<style>
+/* Layout: one column of features; each shows 2 phone screens (A, B) side by side, wrapping to one on phones; sticky pick bar */
+:root {
+  --bg: #f3f1ef; --surface: #ffffff; --ink: #1f1b1c; --mut: #69605f; --line: #e3dedb; --acc: #7a1f3d; --acc-soft: #f4e4ea; --ok: #1e7a43;
+  --font-ui: "Nunito", "IBM Plex Sans Arabic", system-ui, sans-serif; --font-code: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* the app's own look inside the phones (Attune light, burgundy C1) */
+  --a-bg: #F5F4F2; --a-surf: #FFFFFF; --a-surf2: #EFEDEA; --a-ink: #1E1C1B; --a-mut: #5E5A57; --a-ln: #E6E3E0; --a-acc: #7A1F3D; --a-soft: #F6E6EC;
+  --a-pos: #1e7a43; --a-neg: #b33a2e; --a-warn: #b4560e; --a-amber: #FBF0DC; --a-frame: #1b1718;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 150px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 30px; }
+h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 900; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 22px; font-weight: 900; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.lead { color: var(--mut); font-size: 16px; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); }
+.intro { display: grid; gap: 10px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; display: grid; gap: 6px; }
+.box ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 3px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+nav.toc a { font-family: var(--font-code); font-size: 12.5px; text-decoration: none; color: var(--acc); background: var(--acc-soft); border-radius: 8px; padding: 2px 8px; }
+.group-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+.group-h .ar { color: var(--mut); font-weight: 800; }
+.feat { display: grid; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; scroll-margin-top: 12px; }
+.feat-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.fcode { font-family: var(--font-code); font-weight: 600; color: var(--acc); background: var(--acc-soft); border-radius: 7px; padding: 1px 8px; font-size: 14px; }
+.fname { font-weight: 900; font-size: 19px; }
+.far { color: var(--mut); font-weight: 700; }
+.ali { font-size: 13.5px; color: var(--acc); font-weight: 800; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 14px; }
+.facts div { min-width: 0; } .facts b { display: block; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+@media (max-width: 700px) { .facts { grid-template-columns: 1fr; } }
+.opts { display: flex; flex-wrap: wrap; gap: 18px; }
+.opt { flex: 1 1 300px; min-width: 0; display: grid; gap: 8px; align-content: start; border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.opt.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+.opt-h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.opt-h input { width: 22px; height: 22px; margin: 0; accent-color: var(--acc); cursor: pointer; }
+.ocode { font-family: var(--font-code); font-weight: 600; font-size: 13px; color: var(--acc); }
+.oname { font-weight: 900; }
+.rec { font-size: 11.5px; font-weight: 800; color: var(--surface); background: var(--acc); border-radius: 999px; padding: 1px 8px; }
+.pm { font-size: 13.5px; color: var(--mut); display: grid; gap: 2px; }
+.pm span::before { font-weight: 900; margin-inline-end: 4px; }
+.pm .plus::before { content: "+"; color: var(--ok); } .pm .minus::before { content: "−"; color: #b33a2e; }
+.note { width: 100%; min-height: 40px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); }
+.note:focus, .opt input:focus-visible, .btn:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+/* ---- the phone ---- */
+.phone { width: 290px; max-width: 100%; margin: 0 auto; background: var(--a-frame); border-radius: 36px; padding: 9px; }
+.scr { background: var(--a-bg); border-radius: 28px; overflow: hidden; color: var(--a-ink); font-family: "Nunito", "IBM Plex Sans Arabic", sans-serif; font-size: 12px; line-height: 1.4; height: 560px; display: flex; flex-direction: column; position: relative; }
+.sb { display: flex; justify-content: space-between; padding: 8px 18px 2px; font-size: 10.5px; font-weight: 800; color: var(--a-ink); }
+.tb { display: flex; align-items: center; gap: 10px; padding: 6px 14px 8px; font-weight: 900; font-size: 15px; }
+.tb .ico { font-size: 16px; color: var(--a-ink); width: 18px; text-align: center; }
+.body { padding: 4px 12px 12px; display: grid; gap: 8px; align-content: start; overflow: hidden; flex: 1; }
+.c { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 18px; padding: 10px 12px; display: grid; gap: 6px; }
+.c.amber { background: var(--a-amber); border-color: #efdcb8; }
+.c.soft { background: var(--a-soft); border-color: #ecd0da; }
+.lb { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--a-mut); font-weight: 800; }
+.t { font-weight: 900; font-size: 13px; }
+.s { color: var(--a-mut); font-size: 11px; }
+.r { display: flex; align-items: center; gap: 8px; } .r > .grow { flex: 1; min-width: 0; }
+.sq { width: 26px; height: 26px; border-radius: 9px; background: var(--a-soft); color: var(--a-acc); display: grid; place-items: center; font-weight: 900; font-size: 12px; flex: none; }
+.amt { font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.neg { color: var(--a-neg); } .pos { color: var(--a-pos); } .warn { color: var(--a-warn); } .acc { color: var(--a-acc); }
+.btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.b { border-radius: 10px; padding: 5px 10px; font-weight: 800; font-size: 11px; background: var(--a-acc); color: #fff; }
+.b.g { background: transparent; color: var(--a-acc); border: 1px solid var(--a-acc); }
+.b.q { background: var(--a-surf2); color: var(--a-ink); }
+.ch { border-radius: 999px; padding: 2px 9px; font-weight: 800; font-size: 10.5px; background: var(--a-surf); border: 1px solid var(--a-ln); white-space: nowrap; }
+.ch.on { background: var(--a-acc); color: #fff; border-color: var(--a-acc); }
+.ch.soft { background: var(--a-soft); color: var(--a-acc); border-color: transparent; }
+.tag { font-size: 9.5px; font-weight: 800; border-radius: 6px; padding: 1px 6px; background: var(--a-surf2); color: var(--a-mut); white-space: nowrap; }
+.bar { height: 6px; border-radius: 9px; background: var(--a-ln); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--a-acc); }
+.tick { width: 15px; height: 15px; border-radius: 5px; border: 1.5px solid var(--a-acc); display: inline-grid; place-items: center; font-size: 10px; color: #fff; flex: none; }
+.tick.d { background: var(--a-acc); }
+.sep { border-top: 1px solid var(--a-ln); }
+.notif { background: #2a2526; color: #f3eeee; border-radius: 16px; padding: 9px 11px; display: grid; gap: 4px; font-size: 11px; }
+.notif .app { font-size: 9.5px; color: #c9bfc1; font-weight: 700; }
+.notif .nt { font-weight: 900; font-size: 12px; }
+.notif .na { display: flex; gap: 14px; font-weight: 900; color: #f2b6c8; font-size: 11px; padding-top: 2px; }
+.shade { background: #3b3537; }
+.dim { position: absolute; inset: 0; background: rgba(20,14,16,.38); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--a-surf); border-radius: 22px 22px 0 0; padding: 8px 14px 14px; display: grid; gap: 7px; }
+.sheet::before { content: ""; width: 36px; height: 4px; border-radius: 4px; background: var(--a-ln); justify-self: center; }
+.inp { background: var(--a-surf); border: 1.5px solid var(--a-acc); border-radius: 16px; padding: 8px 10px; color: var(--a-mut); }
+.bubble { background: var(--a-acc); color: #fff; border-radius: 16px 16px 4px 16px; padding: 7px 10px; justify-self: end; max-width: 85%; font-weight: 700; }
+.dots { display: flex; gap: 4px; } .dots i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--a-acc); display: block; } .dots i.d { background: var(--a-acc); } .dots i.x { border-color: var(--a-ln); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tile { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 14px; padding: 8px; display: grid; gap: 2px; }
+.cal { display: grid; grid-template-columns: 26px repeat(3, 1fr); gap: 3px; font-size: 9.5px; }
+.cal .h { font-weight: 800; color: var(--a-mut); text-align: center; }
+.cal .tm { color: var(--a-mut); }
+.cal .slot { border-radius: 6px; min-height: 22px; padding: 2px 4px; }
+.cal .busy { background: var(--a-surf2); color: var(--a-mut); }
+.cal .pr { background: #eef3ef; color: #4b6b57; }
+.cal .plan { background: var(--a-acc); color: #fff; font-weight: 800; }
+.ring { width: 150px; height: 150px; border-radius: 50%; margin: 6px auto; display: grid; place-items: center; background: conic-gradient(var(--a-acc) 0 62%, var(--a-ln) 62% 100%); }
+.ring > div { width: 126px; height: 126px; border-radius: 50%; background: var(--a-bg); display: grid; place-items: center; text-align: center; }
+.big { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.tl { display: grid; gap: 0; } .tl .it { display: grid; grid-template-columns: 38px 1fr; gap: 8px; padding: 5px 0; border-inline-start: 2px solid var(--a-ln); margin-inline-start: 18px; padding-inline-start: 10px; }
+.src { font-size: 9.5px; color: var(--a-mut); }
+.ar-t { font-family: "IBM Plex Sans Arabic", sans-serif; direction: rtl; text-align: right; }
+.hl { background: #fff1c9; border-radius: 4px; padding: 0 2px; }
+/* ---- pick bar ---- */
+.pickbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.pb-in { max-width: 1040px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.picked { flex: 1 1 240px; min-width: 0; font-family: var(--font-code); font-size: 12.5px; color: var(--mut); overflow-wrap: anywhere; max-height: 3.3em; overflow: auto; }
+.picked b { color: var(--ink); }
+.btn { font: inherit; font-weight: 900; border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; background: var(--acc); color: var(--surface); min-height: 44px; }
+.btn.ghost { background: transparent; color: var(--acc); border: 1px solid var(--acc); }
+.copybox { width: 100%; min-height: 90px; font-family: var(--font-code); font-size: 12.5px; border: 1px solid var(--acc); border-radius: 10px; padding: 8px; background: var(--bg); color: var(--ink); }
+.toast { font-weight: 800; color: var(--ok); font-size: 13.5px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th, .tbl td { text-align: start; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+.tbl td.f { color: var(--ok); font-weight: 800; } .tbl td.p { color: var(--acc); font-weight: 800; }
+.tblwrap { overflow-x: auto; }
+.pro { font-size: 9px; font-weight: 900; color: #fff; background: var(--a-acc); border-radius: 6px; padding: 1px 5px; letter-spacing: .04em; }
+.free { font-size: 9px; font-weight: 900; color: var(--a-pos); background: #e6f3ea; border-radius: 6px; padding: 1px 5px; }
+.coach { position: absolute; left: 12px; right: 12px; background: #2a2526; color: #f6eff1; border-radius: 16px; padding: 10px 12px; display: grid; gap: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.coach .ct { font-weight: 900; font-size: 12.5px; } .coach .ca { display: flex; gap: 12px; font-weight: 900; color: #f2b6c8; }
+.hole { position: absolute; border: 2px solid #f2b6c8; border-radius: 14px; box-shadow: 0 0 0 999px rgba(20,14,16,.45); }
+.scr { position: relative; }
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <span class="eyebrow">Attune · Free and Pro + the “set up your life” guide · 13 Nov 2026</span>
+    <h1>What is free, what is Pro, and how Attune teaches people to use it</h1>
+    <p class="lead">You asked for a smart split: Free good enough that people fall in love and tell friends, and Pro clearly the easier, faster, smoother way to organise everything. You also said that even you find it hard to use every feature, so Pro must guide people to set up their life with Attune, with pop-ups in the app and a place in Settings. Pick one option in each part (tick several to join them) and add a note anywhere. Nothing is built before your picks.</p>
+    <div class="box">
+      <b>The idea behind my recommendation</b>
+      <ul>
+        <li><b>Free = you do it, Attune keeps it.</b> Everything you type or say works without limits: money, reminders, debts, lists, dates and Chat. That builds the daily habit and the good reviews.</li>
+        <li><b>Pro = Attune does it for you, everywhere.</b> It reads your bank messages, runs your rules, watches prices, plans your morning, syncs to the computer and keeps every year. Pro sells time saved, not unlocked buttons.</li>
+        <li><b>The guide is part of Pro.</b> People pay for the result (an organised life), not for features. The guide gets each person there in their first week.</li>
+        <li>The current prices stay (Egypt: EGP 99 a month · EGP 799 a year; other countries by region). Hadith search, prayers and the emergency card stay free for everyone, as you decided.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <b>The split in FP-4 (recommended), feature by feature</b>
+      <div class="tblwrap"><table class="tbl">
+        <tr><th>Feature</th><th>Free</th><th>Pro</th></tr>
+        <tr><td>Chat, voice «يا أتيون», answers offline</td><td class="f">Unlimited</td><td class="p">+ expert review, deep research</td></tr>
+        <tr><td>Home “just say it”: money, reminders, debts, instalments, lists, notes, dates</td><td class="f">Unlimited</td><td class="p">Unlimited</td></tr>
+        <tr><td>Money: ledger, budget, this month’s report</td><td class="f">Last 3 months</td><td class="p">Every year + year report, PDF, Excel</td></tr>
+        <tr><td>Bank SMS / notifications → Money by themselves</td><td class="f">Asks you each time</td><td class="p">Done alone, with Undo</td></tr>
+        <tr><td>Bills and subscriptions found, who pays, price-rise alerts (Guardian)</td><td class="f">See them</td><td class="p">Watched and chased for you</td></tr>
+        <tr><td>Automations and phone rules (salary → savings, car Bluetooth, charging, place reminders)</td><td class="f">1 rule</td><td class="p">Unlimited</td></tr>
+        <tr><td>Agents (price watch, hotels, flights), Scout</td><td class="f">1 agent</td><td class="p">Unlimited</td></tr>
+        <tr><td>Morning brief, Close the day, week plan, scheduled messages</td><td class="f">Morning brief</td><td class="p">All of them</td></tr>
+        <tr><td>Documents: scan papers, expiry dates, ID / passport read</td><td class="f">10 papers</td><td class="p">Unlimited + reminders before each date</td></tr>
+        <tr><td>Photo reading (receipts, papers), Deal Check, Chat X-Ray, conversions, slides</td><td class="f">3 a day each</td><td class="p">Unlimited</td></tr>
+        <tr><td>Sync phone ↔ computer, Windows app, Money for two / family, Google Drive backup</td><td class="f">This phone, backup to a file</td><td class="p">Everywhere</td></tr>
+        <tr><td>“Set up your life” guide (part C)</td><td class="f">The first 3 steps</td><td class="p">The whole guide + a monthly check-up</td></tr>
+        <tr><td>Hadith (Dorar), prayers, emergency card, How to use</td><td class="f">Free forever</td><td class="f">Free forever</td></tr>
+      </table></div>
+    </div>
+    <nav class="toc" id="toc" aria-label="Jump to a choice"></nav>
+  </header>
+  <div id="groups"></div>
+</div>
+
+<div class="pickbar" role="region" aria-label="Your picks">
+  <div class="pb-in">
+    <div class="picked" id="picked">No options picked yet.</div>
+    <button class="btn ghost" id="clear" type="button">Clear</button>
+    <button class="btn" id="copy" type="button">Copy my picks</button>
+    <span class="toast" id="toast" hidden>Copied</span>
+    <textarea class="copybox" id="copybox" hidden readonly aria-label="Your picks to copy"></textarea>
+  </div>
+</div>
+
+<script>
+// ---------- tiny builders for the phone screens ----------
+const ph = (title, body, o = {}) => `<div class="phone"><div class="scr"><div class="sb"><span>9:41</span><span>●●● 82%</span></div>${title === null ? "" : `<div class="tb"><span class="ico">${o.back ? "‹" : "☰"}</span><span>${title}</span></div>`}<div class="body">${body}</div>${o.over || ""}</div></div>`;
+const c = (x, cls = "") => `<div class="c ${cls}">${x}</div>`;
+const lb = (x) => `<div class="lb">${x}</div>`;
+const r = (ic, t, s = "", right = "") => `<div class="r">${ic ? `<div class="sq">${ic}</div>` : ""}<div class="grow"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ""}</div>${right}</div>`;
+const bt = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="b ${k}">${t}</span>`; }).join("")}</div>`;
+const chips = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="ch ${k}">${t}</span>`; }).join("")}</div>`;
+const nt = (app, t, s, acts = []) => `<div class="notif"><div class="app">${app}</div><div class="nt">${t}</div><div>${s}</div>${acts.length ? `<div class="na">${acts.map((a) => `<span>${a}</span>`).join("")}</div>` : ""}</div>`;
+const sheet = (x) => `<div class="dim"></div><div class="sheet">${x}</div>`;
+const tk = (d) => `<span class="tick ${d ? "d" : ""}">${d ? "✓" : ""}</span>`;
+const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
+const sep = `<div class="sep"></div>`;
+const ar = (x) => `<span class="ar-t">${x}</span>`;
+
+// ---------- the choices: [group, code, name, arabic, Ali's words, where, how it is tested, options] ----------
+// each option: [letter, name, what, plus, minus, recommended?, phone html]
+const G = { a: ["A · What is free and what is Pro", "إيه المجاني وإيه الـ Pro"], b: ["B · How people meet Pro (without being annoyed)", "إزاي الناس تعرف الـ Pro من غير ما تتضايق"],
+  c: ["C · The “set up your life” guide", "الدليل اللي يظبطلك حياتك"], d: ["D · The free trial", "التجربة المجانية"] };
+const plan = (free, pro, foot) => c(lb("Free · forever") + free) + c(lb("Pro · EGP 99 a month · EGP 799 a year") + pro, "soft") + (foot || "");
+const li = (ok, t, s = "") => r(ok ? "✓" : "★", t, s);
+const F = [
+["a","FP","How Free and Pro are split","تقسيم المجاني والـ Pro","“set what will be free and what will be pro … in a smart way to attract people then convince them that pro is the best way to organise everything much easier and faster and smoother”","Settings → Plan, and wherever a Pro thing appears","10,000 cases: every feature × Free / trial / Pro / ended — the right thing is open or locked, nothing typed is ever lost when locked",[
+ ["1","You do it free · Attune does it for you in Pro","Everything you type or say works without limits in Free. Pro is everything Attune does by itself: reads bank messages, runs rules, watches prices, plans your day.","Free is really useful, so people stay and tell friends; Pro is obviously “less work”.","Some people never feel they need automatic things.",0,
+  ph("Plan", plan(li(1,"Say it, it’s done","money, reminders, debts, lists — unlimited") + li(1,"Chat and «يا أتيون»","unlimited, offline") + li(1,"1 agent · 1 rule"), li(0,"Bank messages → Money by themselves","CIB salary 18,500 → recorded, split to pots") + li(0,"Rules and agents, unlimited","“when the salary arrives, 20% to the car fund”") + li(0,"Morning brief, Close the day")), {back:1})],
+ ["2","Daily limits","Every feature is in Free, but with a daily count (3 photo reads, 3 Deal Checks, 1 X-Ray, 5 conversions, 1 agent). Pro removes the counts.","Simple to explain; people try everything.","People hit a wall at random moments (“2 of 3 left”), which feels stingy and gives 1-star reviews.",0,
+  ph("Plan", plan(r("📷","Photo reads","","<span class='amt'>2 of 3 left</span>") + r("🔍","Deal Checks","","<span class='amt'>3 of 3 left</span>") + r("💬","Chat X-Ray","","<span class='amt neg'>0 of 1 left</span>") + r("🤖","Agents","","<span class='amt'>1 of 1</span>"), r("∞","No daily counts","everything unlimited") + r("☁️","Sync and backup")), {back:1})],
+ ["3","One phone free · Pro everywhere and forever","Free has everything on this phone with 3 months of history. Pro adds sync with the computer, the Windows app, Money for two / family and every year kept.","Very clear line; the computer and family are what organisers pay for.","Someone with one phone and no computer sees little reason to pay.",0,
+  ph("Plan", plan(li(1,"Everything on this phone") + li(1,"History: the last 3 months") + li(1,"Backup to a file"), li(0,"Phone + computer, always the same","Windows app, Projects, PDFs sorted on the PC") + li(0,"Money for two","you and your wife see one budget") + li(0,"Every year kept + year report")), {back:1})],
+ ["4","1 + 3 together (recommended)","Free: everything you type or say, on one phone, 3 months of history, 1 agent and 1 rule. Pro: Attune does it for you AND everywhere (the full table above).","Free is generous where it builds the habit; Pro has two strong reasons, time and every device.","Longest list to explain, so the Plan page shows it as two short columns.",1,
+  ph("Plan", c(`<div class="grid2"><div class="tile">${lb("Free")}<div class="t">You do it</div><div class="s">say it → done · unlimited</div><div class="s">this phone · 3 months</div><div class="s">1 agent · 1 rule</div></div><div class="tile" style="border-color:var(--a-acc)">${lb("Pro")}<div class="t acc">Attune does it</div><div class="s">reads your bank messages</div><div class="s">rules + agents unlimited</div><div class="s">phone + computer · every year</div></div></div>`) + c(lb("This week Pro would have saved you") + r("⏱","47 minutes","14 payments typed by hand · 3 bills checked · 1 hotel price watched")) + bt("Try Pro free for 7 days","g|Compare all"), {back:1})],
+]],
+["b","PM","How people meet Pro","إزاي الناس تقابل الـ Pro","“convince them that pro is the best way … much easier and faster and smoother”","Home, the moment after doing something by hand, and the Plan page","10,000 days of use: never more than 1 Pro note a day, never on top of an urgent thing (a bill due today), never again after “Not now” for 14 days",[
+ ["1","“Pro would have done this for you” — right after the work","After you type the 5th payment by hand this week, a small line under it: “Pro reads these from your CIB messages by itself.”","It appears exactly when the person feels the effort, so it convinces.","Must be rare, or it nags (the test checks 1 a day at most).",1,
+  ph("Home", c(r("✓","Saved: Lunch · Zooba","EGP 185 · cash","<span class='amt neg'>−185</span>")) + c(`<div class="s">That’s the 5th payment you typed this week. <b class="acc">Pro reads them from your CIB messages by itself.</b></div>` + bt("q|Show me","g|Not now"), "soft") + c(lb("Your day") + r("🧹","The maid comes","Saturday · EGP 600") + r("📄","Sheikh instalment","EGP 2,500 · 3 of 8 paid")))],
+ ["2","A weekly “time saved” card","Every Friday one card: what Attune did for you this week and how much time it saved (in the trial) or would have saved (in Free).","Shows the value in minutes, which people understand.","Once a week only, so it convinces slowly.",0,
+  ph("Home", c(lb("Your week with Attune") + `<div class="big">2 h 10 min</div><div class="s">saved this week</div>` + r("💳","31 payments read from messages","instead of typing them") + r("⏰","9 reminders set from Chat") + r("🏨","Hotel near the Haram watched","dropped EGP 1,200") + bt("Keep this with Pro","g|Details"), "soft"))],
+ ["3","Pro badge with a preview","Pro things stay visible in menus with a small PRO badge. Tapping one shows a 10-second preview with your own data (“this is how your month would look”), then the offer.","People discover what exists (you said even you find it hard).","More badges in the menus.",0,
+  ph("Tools", c(r("📊","Year report","<span class='pro'>PRO</span>") + r("🔁","Automations","<span class='pro'>PRO</span> · 1 free") + r("🧾","Bills found","3 found")) + c(lb("Preview · your real numbers") + `<div class="s">October: food 4,320 · transport 1,150 · bills 2,980 — up 12% from September</div>` + bar(62) + bt("Unlock with Pro","g|Not now"), "soft"))],
+ ["4","Trial-end summary only","No notes during use; when the 7 days end, one screen: what you used Pro for and what stops.","Nothing interrupts the person.","People forget the value by day 7; converts less.",0,
+  ph(null, `<div style="padding:30px 14px;display:grid;gap:10px">` + c(lb("Your 7 days of Pro") + r("💳","42 payments read for you") + r("🤖","2 agents watched prices") + r("☁️","Synced with your computer") + `<div class="s">From today these stop. Your data stays yours.</div>` + bt("Keep Pro · EGP 799 a year","g|Stay on Free")) + `</div>`)],
+]],
+["c","GD","How the guide shows up","الدليل بيظهر إزاي","“the app should guide pro users how to use that and set up ur life with attune … by popping on in the app or also being in the settings”","Home (first week), pop-ups at the right moment, and Settings → Set up your life","10,000 people with different phones, languages and countries: each step is offered only when it can work there (no bank step without a bank app, no Ramadan step when switched off), done steps never come back, any step can be skipped",[
+ ["1","A setup list on Home (first week)","A card “Set up your life · 3 of 8” with the next step and one button. Steps: salary day, bank messages, bills, people who owe you, papers, your week, an agent, the computer.","Always clear what’s next; progress feels good.","Takes space on Home until done or hidden.",0,
+  ph("Home", c(lb("Set up your life · 3 of 8") + bar(37) + r(tk(1),"Your salary day","25th · EGP 18,500") + r(tk(1),"Bank messages → Money","CIB") + r(tk(1),"The maid every Saturday","EGP 600") + r(tk(0),"Who owes you","Sheikh 19,500?") + r(tk(0),"Your papers","passport, car licence") + bt("Next step","g|Later"), "soft") + c(r("💬","Ask anything…","")))],
+ ["2","Attune interviews you in Chat (10 minutes)","“Let’s set up your month.” Attune asks one question at a time (salary day? rent? who owes you? which papers expire?) and builds everything from your answers, showing each thing it made.","Feels like a person setting it up for you; works by voice too.","Needs 10 quiet minutes once.",0,
+  ph("Set up with Attune", `<div class="body" style="padding:0">` + c(`<div class="s">When does your salary arrive, and how much?</div>`) + `<div class="bubble">25th, 18,500 on CIB</div>` + c(r("✓","Salary · 25th · EGP 18,500","and I’ll read CIB messages") + `<div class="s">Anyone owe you money, or you owe someone?</div>`) + `<div class="bubble">Sheikh owes me 19,500, 2,500 a month</div>` + c(r("✓","Sheikh · 8 payments of 2,500","reminder 2 days before each")) + `</div>`, {back:1})],
+ ["3","Pop-up tips at the right moment","A short tip appears once, on the screen where it helps: on Money “Long-press a payment to split it”, on a bank message “Attune can save these by itself”. A spotlight shows the button.","Teaches the hidden features exactly where they are.","Must be rare (max 1 a day, never twice).",0,
+  `<div class="phone"><div class="scr"><div class="sb"><span>9:41</span><span>●●● 82%</span></div><div class="tb"><span class="ico">☰</span><span>Money</span></div><div class="body">` + c(r("🍔","Lunch · Zooba","today","<span class='amt neg'>−185</span>") + r("🚕","Uber","today","<span class='amt neg'>−95</span>") + r("🛒","Carrefour","yesterday","<span class='amt neg'>−1,240</span>")) + `</div><div class="hole" style="left:20px;right:20px;top:92px;height:40px"></div><div class="coach" style="top:146px"><div class="ct">Long-press a payment</div><div>Split it with someone, change its category, or add the receipt photo.</div><div class="ca"><span>Got it</span><span>Show me more tips</span></div></div></div></div>`],
+ ["4","“Set up your life” in Settings (always there)","A Settings page with every setup step, its state (done / not yet / not for this phone), a replay of each tip, and a monthly check-up (“2 papers expire next month”).","Nothing is lost if you skip the pop-ups; you can redo anything.","On its own, few people open Settings.",0,
+  ph("Set up your life", c(lb("Done · 5 of 8") + bar(62) + r(tk(1),"Salary and bank messages") + r(tk(1),"Bills and subscriptions","7 found") + r(tk(1),"People and debts") + r(tk(0),"Papers","2 to add") + r(tk(0),"The computer","link your PC")) + c(lb("Monthly check-up") + r("📄","Car licence expires 3 Dec","renew online?") ) + c(r("💡","Replay the tips","12 tips") + r("🎬","Watch how to use, with your data")), {back:1})],
+ ["5","2 + 1 + 3 + 4 together (recommended)","Day 1: the Chat interview sets up the basics (2). Then the Home list shows what’s left (1). Tips pop up once where they help (3). Settings keeps all of it to redo any time (4).","Covers people who like talking, lists, and finding things themselves.","The most to build (about 4 days of work, every language).",1,
+  ph("Home", c(lb("Set up your life · 5 of 8") + bar(62) + r("💬","Next: your papers","2 minutes in Chat") + bt("Continue","g|Later"), "soft") + c(lb("Your day") + r("📄","Sheikh instalment","EGP 2,500 · due in 2 days") + r("🧹","The maid","Saturday · EGP 600")) + `<div class="s" style="padding:0 4px">Settings → Set up your life · always there</div>`)],
+]],
+["c","GW","Who gets the guide","مين ياخد الدليل","“the app should guide pro users”","—","The 10,000 cases above, per plan",[
+ ["A","Pro and trial users: the whole guide; Free: the first 3 steps (recommended)","Everyone starts with the guide in the trial. Free keeps salary, bills and people; papers, agents, the computer and the monthly check-up are Pro.","The guide itself sells Pro: people see their life set up.","Free users meet a locked step.",1,
+  ph("Set up your life", c(r(tk(1),"Salary and bank messages") + r(tk(1),"Bills") + r(tk(1),"People and debts") + r("🔒","Papers and their dates","<span class='pro'>PRO</span>") + r("🔒","The computer","<span class='pro'>PRO</span>") + r("🔒","Monthly check-up","<span class='pro'>PRO</span>")), {back:1})],
+ ["B","Pro only","The guide appears only for Pro and trial users.","A clear reason to pay.","Free users who never set up never see the value.",0,
+  ph("Settings", c(r("🧭","Set up your life","<span class='pro'>PRO</span>") + r("🌐","Language") + r("🌍","Country") + r("🎨","Colours")), {back:1})],
+ ["C","Everyone, all of it","The whole guide is free.","More people set up their life, so more stay.","One less reason to pay.",0,
+  ph("Settings", c(r("🧭","Set up your life","<span class='free'>FREE</span>") + r("🌐","Language") + r("🌍","Country")), {back:1})],
+]],
+["d","TR","The free trial","التجربة المجانية","(today: every new phone gets 7 days of Pro, then Free)","First run and the Plan page","10,000 install dates and clocks: the trial ends at the right minute, the extra days come once only, changing the phone’s date does not extend it",[
+ ["1","Keep 7 days","As now.","Short; people decide fast.","Many don’t finish setting up in 7 days.",0,
+  ph("Plan", c(lb("Pro trial") + `<div class="big">4 days left</div>` + bar(43)), {back:1})],
+ ["2","14 days","Twice as long.","Time to see a full payday and some bills.","Some people get used to Free features and forget Pro.",0,
+  ph("Plan", c(lb("Pro trial") + `<div class="big">11 days left</div>` + bar(21)), {back:1})],
+ ["3","7 days + 7 more when you finish setup (recommended)","Finish “Set up your life” (or 6 of its 8 steps) and the trial grows to 14 days.","Rewards exactly what makes people stay: a set-up life.","One more rule to explain (one line on the setup card).",1,
+  ph("Home", c(lb("Set up your life · 6 of 8") + bar(75) + `<div class="s"><b class="acc">You earned 7 more days of Pro</b> — your trial now ends on 27 Nov.</div>` + bt("Next step","g|Later"), "soft"))],
+]],
+];
+// ---------- render ----------
+const KEY = "attune-free-pro-v1";
+let st = { on: {}, notes: {} };
+try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && typeof v === "object") st = { on: v.on || {}, notes: v.notes || {} }; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const groupsEl = document.getElementById("groups"), toc = document.getElementById("toc");
+const ORDER = [];
+let lastG = "";
+let gWrap = null;
+for (const [g, code, name, arName, aliNote, where, test, opts] of F) {
+  if (g !== lastG) { lastG = g; gWrap = document.createElement("section"); gWrap.style.display = "grid"; gWrap.style.gap = "16px"; gWrap.innerHTML = `<div class="group-h"><h2>${G[g][0]}</h2><span class="ar" lang="ar">${G[g][1]}</span></div>`; groupsEl.appendChild(gWrap); }
+  const a = document.createElement("a"); a.href = "#f-" + code; a.textContent = code; toc.appendChild(a);
+  const f = document.createElement("article"); f.className = "feat"; f.id = "f-" + code;
+  f.innerHTML = `<div class="feat-h"><span class="fcode">${code}</span><span class="fname">${esc(name)}</span><span class="far" lang="ar">${esc(arName)}</span></div>` + (aliNote ? `<div class="ali">${esc(aliNote)}</div>` : "") +
+    `<div class="facts"><div><b>Where it lives</b>${esc(where)}</div><div><b>How it will be tested</b>${esc(test)}</div></div><div class="opts"></div>`;
+  const host = f.querySelector(".opts");
+  for (const [k, oname, what, plus, minus, rec, phone] of opts) {
+    const id = code + "-" + k; ORDER.push(id);
+    const o = document.createElement("div"); o.className = "opt" + (st.on[id] ? " on" : "");
+    o.innerHTML = `<div class="opt-h"><input type="checkbox" id="cb-${id}" aria-label="Pick ${id}"${st.on[id] ? " checked" : ""}><label for="cb-${id}" class="ocode">${id}</label><label for="cb-${id}" class="oname">${esc(oname)}</label>${rec ? '<span class="rec">Recommended</span>' : ""}</div>` +
+      `<p style="font-size:14px">${esc(what)}</p><div class="pm"><span class="plus">${esc(plus)}</span><span class="minus">${esc(minus)}</span></div>${phone}` +
+      `<textarea class="note" id="note-${id}" rows="1" placeholder="Your note on ${id} (optional)">${esc(st.notes[id] || "")}</textarea>`;
+    host.appendChild(o);
+    o.querySelector("input").addEventListener("change", (e) => { if (e.target.checked) st.on[id] = true; else delete st.on[id]; o.classList.toggle("on", e.target.checked); save(); render(); });
+    o.querySelector("textarea").addEventListener("input", (e) => { const v = e.target.value; if (v.trim()) st.notes[id] = v; else delete st.notes[id]; if (v.trim() && !st.on[id]) { st.on[id] = true; o.classList.add("on"); o.querySelector("input").checked = true; } save(); render(); });
+  }
+  gWrap.appendChild(f);
+}
+const lines = () => ORDER.filter((id) => st.on[id]).map((id) => (st.notes[id] && st.notes[id].trim() ? id + " — " + st.notes[id].trim().replace(/\s*\n\s*/g, " / ") : id));
+function render() { const l = lines(); document.getElementById("picked").innerHTML = l.length ? "<b>" + l.length + " picked:</b> " + l.map(esc).join(" · ") : "No options picked yet."; }
+render();
+document.getElementById("copy").addEventListener("click", () => {
+  const l = lines(), box = document.getElementById("copybox"), toast = document.getElementById("toast");
+  if (!l.length) { document.getElementById("picked").textContent = "Tick at least one option first."; return; }
+  const text = "My picks (Free / Pro + guide):\n" + l.join("\n");
+  const fallback = () => { box.hidden = false; box.value = text; box.focus(); box.select(); toast.hidden = false; toast.textContent = "Selected: copy it with your keyboard or long-press."; };
+  try { navigator.clipboard.writeText(text).then(() => { toast.hidden = false; toast.textContent = "Copied " + l.length + " picks"; box.hidden = true; setTimeout(() => { toast.hidden = true; }, 2500); }, fallback); } catch (e) { fallback(); }
+});
+document.getElementById("clear").addEventListener("click", () => { st = { on: {}, notes: {} }; save(); document.querySelectorAll(".opt").forEach((o) => { o.classList.remove("on"); o.querySelector("input").checked = false; o.querySelector("textarea").value = ""; }); render(); });
+</script>

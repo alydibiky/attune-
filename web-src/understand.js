@@ -118,6 +118,9 @@ export function signalsOf(text, flags = {}) {
   if (/\bremind me (what|who|how|where|why|which|of what)\b|(فكرني|ذكرني) (ب?إيه|بايه|مين|ازاي|إزاي|فين|ليه)/i.test(String(text || "")) && /[?؟]\s*$/.test(String(text || "").trim())) s.delete("action");
   // a price wish for an agent ("tell me when X is under 40k", «نبهني لما … أقل من …») is not a payment, nor a reminder
   if (s.has("agent") && /\b(under|below|less than|cheaper|drops?)\b|أقل من|اقل من|تحت|ينزل|يرخص/i.test(String(text || ""))) { s.delete("money-log"); s.delete("action"); }
+  // v9.9.32 (the 100,000 chat orders: «بعد اجتماع 5 ساعات … اشتريت شاحن ب290» became a reminder): something already paid or bought,
+  // with no word asking for a reminder, is not an action ("5 hours" was how long the meeting took)
+  if (s.has("action") && s.has("money-log") && /\b(?:paid|spent|bought|grabbed)\b|(?<![ء-ي])(?:دفعت|صرفت|اشتريت|جبت)(?![ء-ي])/i.test(String(text || "")) && !/\bremind|\balarm|\bwake me|فكرني|ذكرني|نبهني|صحيني|منبه/i.test(String(text || ""))) s.delete("action");
   // borrowing or lending is a plan with a person, not money spent
   if (s.has("life") && s.has("money-log") && /\b(borrow(ed)?|lent|lend|owes?|loan)\b|استلفت|سلفت|سلّفت|عليه|عليها|ليا عند|اقترضت|أقرضت/i.test(String(text || ""))) s.delete("money-log");
   // "15% of 2400" is a calculation, not a payment of 2,400

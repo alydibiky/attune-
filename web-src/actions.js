@@ -306,7 +306,7 @@ export function buildAction(json, text0, nowIn) {
   let t = null;
   for (const w of words) { t = parseTime(w, now); if (t) break; }
   // «صحيني الساعة 6 ونص» — a wake-up alarm with no am/pm is in the morning, not 6:30 pm (v6.8)
-  if (kind === "alarm" && t && t.said && t.said.time !== "relative" && !/\b(pm|p\.m\.|evening|tonight|afternoon)\b|مساء|بالليل|باليل|المغرب|العصر|الضهر|الظهر|\d\s*م(?![\p{L}])|\b(1[3-9]|2[0-3])[:.]\d{2}/iu.test(String(text || ""))) {
+  if (kind === "alarm" && t && t.said && t.said.time !== "relative" && !/(?<![a-z])(pm|p\.m\.)(?![a-z])|\b(evening|tonight|afternoon)\b|مساء|بالليل|باليل|المغرب|العصر|الضهر|الظهر|\d\s*م(?![\p{L}])|\b(1[3-9]|2[0-3])[:.]\d{2}/iu.test(String(text || ""))) {
     const d = new Date(t.at);
     if (d.getHours() >= 13 && d.getHours() <= 23) {
       const m = new Date(d); m.setHours(d.getHours() - 12);

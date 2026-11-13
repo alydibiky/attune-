@@ -19,6 +19,7 @@ import * as UND from "./understand.js";
 import { promptToolOf } from "./prompttools.js";
 import { directionsOf } from "./gomaps.js";
 import { numWords } from "./sense.js";   // v9.9.17
+import { readable, negatedOrder } from "./wrapclean.js";   // v9.9.32
 import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
 // v9.9.11 A4: "teach me your notifications" / «علمني اشعاراتي» / "what don't you understand in my notifications?"
@@ -773,10 +774,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   }, []);
   const ask = async (raw, opts) => {
     const o = opts || {};
-    const typed = String(raw != null ? raw : text).trim();
+    // v9.9.32 (the 100,000-sentence run): "hey attune, remind me at 9 to call mama thanks" is read without the wake word and thanks
+    const typed = readable(String(raw != null ? raw : text).trim());
     const fileList = o.file !== undefined ? (o.file ? [o.file] : []) : files;
     let fileAtt = fileList.length > 1 ? { name: tr("{n} files", { n: fileList.length }), many: fileList, size: 0 } : (fileList[0] || null);
-    const route = !o.noRoute && !fileAtt;
+    // v9.9.32: "don't remind me to …", "I don't owe Ahmed anything" — nothing is set or recorded; the AI answers
+    const route = !o.noRoute && !fileAtt && !negatedOrder(typed);
     const photoList = o.image !== undefined ? (o.image ? [o.image] : []) : photos;
     let img = photoList[0] || null;
     if (!typed && !img && !fileAtt) return;
@@ -968,7 +971,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v9.0 (the sentence bank: "lunch 150", «غدا 150» in Chat went to the AI): what the Home box does is done here too, with Undo —
     // money in a few words, food eaten, water, weight, a dose, a debt paid back (doit.js). Reminders, plans and dates keep their cards.
     // v9.9.3 W2: "send Ahmed 'I'm on my way' on WhatsApp", "call Mama", "uber to …" → the app opens at the right place (Which Ahmed? if unsure)
-    if (route && !img && api.openIt && !only) {
+    // v9.9.32 (the 100,000 run: "text Sara on telegram: running late" became a reminder): readOpen never takes a timed order, so it may
+    // act when the referee only saw an "action"
+    if (route && !img && api.openIt && (!only || only === "action")) {
       const r = api.openIt(typed);
       if (r && r.lines && r.lines.length) { const cid = ensureChat(typed);
         patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },

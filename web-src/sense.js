@@ -116,7 +116,7 @@ export function notSpent(text) { const t = latin(String(text || "")).trim(); ret
 
 // ---- the payment reader for a typed sentence -------------------------------------------------------------------------------------------
 const UNIT_AFTER = "(?:am|pm|a\\.m\\.?|p\\.m\\.?|min(?:ute)?s?|hours?|hrs?|km|kms|kilomet(?:er|re)s?|miles?|steps?|pages?|years?(?: old)?|people|persons?|guys|friends|kids?|children|kg|kilos?|%|days?|nights?|weeks?|months?|times|floors?|shirts?|coffees?|pieces?|items?|tickets?|bottles?|boxes|cups?|دقيقه|دقيقة|دقايق|ساعه|ساعة|ساعات|كيلو|خطوه|خطوة|صفحه|صفحة|صفحات|سنه|سنة|سنين|يوم|ايام|أيام|مره|مرة|مرات|عيال|اولاد|أولاد|افراد|أفراد|قمصان|قطع|تذاكر|انفار)";
-const LEAD_BEFORE = "(?:at|on|page|room|floor|chapter|code|pin|password|number|no\\.?|flat|apartment|gate|seat|bus|line|flight|version|model|iphone|galaxy|pixel|ps|size|aged?|score|الساعة|الساعه|يوم|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الرحلة|رحلة|الباسورد|باسورد|باب|بوابة|مقاس|ايفون|آيفون)";
+const LEAD_BEFORE = "(?:invoice|receipt|order|order number|order no\\.?|ref|reference|table|platform|ticket|طلب|الطلب|رقم الطلب|فاتوره رقم|فاتورة رقم|ترابيزه|ترابيزة|رصيف|at|on|page|room|floor|chapter|code|pin|password|number|no\\.?|flat|apartment|gate|seat|bus|line|flight|version|model|iphone|galaxy|pixel|ps|size|aged?|score|الساعة|الساعه|يوم|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الرحلة|رحلة|الباسورد|باسورد|باب|بوابة|مقاس|ايفون|آيفون)";
 const MONTHS = "(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*|يناير|فبراير|مارس|ابريل|أبريل|مايو|يونيو|يوليو|اغسطس|أغسطس|سبتمبر|اكتوبر|أكتوبر|نوفمبر|ديسمبر";
 const CURW = "(?:egp|le|l\\.e\\.?|usd|sar|aed|eur|gbp|pounds?|dollars?|euros?|riyals?|dirhams?|geneh|جنيه|جنيها|ج\\.م|ج|ريال|درهم|دولار|يورو|\\$|€|£)";
 /** The numbers in a typed sentence that can be money: not a time, a date, a count of people / things, a gate, a page. → [n…] */
@@ -178,8 +178,10 @@ const REM = "(?:please\\s+)?(?:remind me|set a reminder|don'?t let me forget|ف�
 export function splitOrders(text) {
   const t = String(text || "").trim(); if (t.length > 300 || /[?؟]\s*$/.test(t)) return null;
   let m = new RegExp("^(.{4,}?)\\s*(?:[.,،;]|\\band\\b|\\balso\\b|\\bthen\\b|\\s+و(?=[ء-ي\\s]))\\s*(?:and\\s+|also\\s+|then\\s+|و\\s*)?(" + REM + ".+)$", "i").exec(t);
-  if (m && !new RegExp(REM, "i").test(m[1]) && /[\d٠-٩]/.test(m[1])) return { pay: m[1].trim(), remind: m[2].trim() };
-  m = new RegExp("^(" + REM + ".+?)\\s*(?:[.,،;]|\\band\\b|\\balso\\b)\\s*(?:and\\s+|also\\s+)?((?:i\\s+)?(?:paid|spent|bought|دفعت|صرفت|اشتريت).+)$", "i").exec(t);
+  // v9.9.32: "breakfast 240 — oh and remind me …" — the "— oh" belongs to neither order
+  if (m && !new RegExp(REM, "i").test(m[1]) && /[\d٠-٩]/.test(m[1])) return { pay: m[1].replace(/[\s—–-]*(?:oh|ah|um|btw|and)?[\s—–-]*$/i, "").trim(), remind: m[2].trim() };
+  // v9.9.32 (the 100,000 chat orders): «فكرني بكرة الساعة 9 اكلم ماما ودفعت 420 ورد» — the Arabic "and" is joined to «دفعت»
+  m = new RegExp("^(" + REM + ".+?)\\s*(?:[.,،;]|\\band\\b|\\balso\\b|(?=\\sو(?:دفعت|صرفت|اشتريت)))\\s*(?:and\\s+|also\\s+|و)?((?:i\\s+)?(?:paid|spent|bought|دفعت|صرفت|اشتريت).+)$", "i").exec(t);
   if (m && /[\d٠-٩]/.test(m[2])) return { pay: m[2].trim(), remind: m[1].trim() };
   return null;
 }

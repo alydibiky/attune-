@@ -104,7 +104,7 @@ const KIND_AR = { debt: "دين", installment: "قسط", subscription: "اشتر
 const GENERAL_Q = /^\s*(?:how (?:do|does|can|could|should|would|to|long|far|tall|old|many (?!.*\b(?:i|my|me|we)\b))|should i\b|can i\b|could i\b|would it\b|is it\b|is \d|are there\b|why\b|who (?:is|was|were|won|invented|made|wrote)\b|what (?:is|are|was|were|does|do) (?:a|an|the)\b(?!.*\b(?:my|mine|our)\b)|what did (?!i\b|we\b|my\b)|which is (?:better|best|cheaper)\b)|ازاي\s*[?؟]?\s*$|إزاي\s*[?؟]?\s*$|^\s*(?:ازاي|إزاي|ليه|يعني (?:ايه|إيه))|^\s*هو\s+[\d٠-٩]|(?:كتير|غالي|كويس)\s+(?:على|علي)\s/i;
 // v9.9.15: what a number in a sentence is when it is NOT money — a time, a distance, a count, a page, a code… (doSure / strictCheck)
 const UNIT_AFTER = "(?:min(?:ute)?s?|hours?|hrs?|km|kms|kilomet(?:er|re)s?|miles?|steps?|pages?|years?(?: old)?|people|persons?|kids?|children|kg|kilos?|%|days?|nights?|weeks?|months?|times|floors?|books?|squared|cubed|to the power(?: of)? \\d+|دقيقه|دقيقة|دقايق|ساعه|ساعة|ساعات|كيلو|خطوه|خطوة|صفحه|صفحة|صفحات|سنه|سنة|سنين|يوم|ايام|أيام|مره|مرة|مرات|عيال|اولاد|أولاد|افراد|أفراد)";
-const LEAD_BEFORE = "(?:page|room|floor|chapter|code|pin|password|passcode|number|no\\.?|flat|apartment|gate|seat|bus|line|flight|الرحله|الرحلة|رحله|رحلة|version|model|iphone|galaxy|pixel|ps|size|aged?|score|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الباسورد|باسورد|باب|مقاس|ايفون|آيفون)";
+const LEAD_BEFORE = "(?:invoice|receipt|order|order number|order no\\.?|ref|reference|table|platform|ticket|طلب|الطلب|رقم الطلب|فاتوره رقم|فاتورة رقم|ترابيزه|ترابيزة|رصيف|page|room|floor|chapter|code|pin|password|passcode|number|no\\.?|flat|apartment|gate|seat|bus|line|flight|الرحله|الرحلة|رحله|رحلة|version|model|iphone|galaxy|pixel|ps|size|aged?|score|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الباسورد|باسورد|باب|مقاس|ايفون|آيفون)";
 const FUTURE_PAY = /\b(?:will|going to|gonna|should|need to|have to|must|want to|plan to|about to)\s+(?:pay|buy|spend|give|send|transfer|get)\b|(?<![ء-ي])(?:هدفع|هشتري|هحول|هبعت)(?![ء-ي])|(?:لازم|عايز|عاوز|محتاج|ناوي)\s+(?:ادفع|اشتري|احول|ابعت)/i;
 const NOT_A_LOG = /\bremind(?:er)?\b|فكرني|ذكرني|نبهني|^\s*(?:watch|track|follow|monitor|compare|search|find|look up|google)\b|^\s*(?:we|he|she|they|i)\s+(?:are|is|am|were|was)\b|^\s*(?:تابع|راقب|دور|قارن)/i;
 /** Is this amount really money? → false when the number that would be saved is a time, a count, a page, a model number… */
@@ -142,6 +142,13 @@ export function understand(text0, opts = {}) {
   // a spending line written with signs — "lunch (350)", "mechanic: 320", "haircut 1750/-", «تورتة 15ج», "😋 charger 25" — is read without them
   if (u && !u.ask && !(u.actions || []).length) { const t2 = tidy(text); if (t2 && t2 !== text.trim()) { const u2 = understand1(t2, opts); if (u2 && u2.actions && u2.actions.length && u2.actions.every((a) => a.kind === "money")) u = u2; } }
   if (u && u.actions && u.actions.length && u.actions.every((a) => a.kind === "money") && notSpent(text)) return { actions: [], chat: true };
+  // v9.9.32 (the 100,000 chat orders: "the barber for 1750, invoice 5622", "2 of us went to Carrefour at 10 pm and I paid 25 for
+  // parking" saved the invoice number and the hour too): when one item is money and another is an hour / an invoice / a room, the
+  // other is dropped
+  if (u && u.actions) for (const a of u.actions) if (a.kind === "money" && a.items && a.items.length > 1) {
+    const keep = a.items.filter((x) => amountIsMoney(text, x.amount));
+    if (keep.length && keep.length < a.items.length) a.items = keep;
+  }
   return u;
 }
 function understand1(text, opts = {}) {

@@ -87,6 +87,9 @@ const PAGES = [["money", /^(?:the )?money$|^(?:ال)?فلوس$|^(?:ال)?مصا�
   ["braindump", /^(?:the |my )?brain ?dump$|^organi[sz]e(?: this| my day)?$|^فضفضة$|^نظم(?: ده| يومي)?$/i]];
 /** "open Money" / "go to Agents" / «افتح الفلوس» → the page's id, or "". */
 export function pageOf(text) {
-  const m = /^\s*(?:please\s+)?(?:open|go to|show me|take me to|show)\s+(.{2,30}?)\s*[.!]?\s*$/i.exec(String(text || "")) || /^\s*(?:افتح|افتحلي|روح على|وديني على|وريني)\s+(.{2,30}?)\s*$/.exec(String(text || ""));
-  if (!m) return ""; const name = m[1].trim(); const hit = PAGES.find(([, re]) => re.test(name)); return hit ? hit[0] : "";
+  // v9.9.32 (the 100,000 chat orders: "pull up reminders", "take me to my habits page", «افتحلي صفحة الفلوس» went to the AI or Maps)
+  const m = /^\s*(?:please\s+)?(?:(?:can|could|would) you\s+)?(?:open(?: up)?|go to|go back to|show me|show|take me to|pull up|bring up|jump to|switch to|navigate to|i want to see|let me see)\s+(.{2,40}?)\s*(?:please|pls)?\s*[.!?]?\s*$/i.exec(String(text || ""))
+    || /^\s*(?:افتح|افتحلي|افتح لي|روح على|روحلي|وديني على|وديني|وريني|عايز اشوف|عاوز اشوف|ورّيني)\s+(.{2,40}?)\s*$/.exec(String(text || ""));
+  if (!m) return "";
+  const name = m[1].trim().replace(/^(?:the|my)\s+/i, "").replace(/\s+(?:page|screen|tab|section|view)$/i, "").replace(/^(?:the|my)\s+/i, "").replace(/^(?:صفحة|صفحه|شاشة|شاشه)\s+/, "").trim(); const hit = PAGES.find(([, re]) => re.test(name)); return hit ? hit[0] : "";
 }

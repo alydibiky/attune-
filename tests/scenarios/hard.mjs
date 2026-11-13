@@ -201,7 +201,10 @@ add("edits_cancels", 140, () => { const a = amt(), t = sub(pick(TASKS), { n: pic
   return [pick([`change the ${sv} to ${a}`, `delete the last expense`, `cancel my reminder to ${t}`, `undo that`, `the ${sv} is ${a} now, not ${a + 50}`, `remove the ${a} I just added`, `that last one was wrong, it was ${a}`, `edit the ${sv} amount to ${a}`, `delete the ${a} expense`, `actually make it ${a}`,
     `غير ال${pick(["ايجار", "اشتراك", "قسط"])} ل${a}`, `امسح اخر مصروف`, `الغي التذكير`, `امسح ال${a} اللي ضفتها`, `لا غلط كانت ${a}`]), NOT("money", "life", "reminder"), () => ""]; });
 
+// v9.9.32: mega.mjs (100,000) reuses these groups — it sets globalThis.__HARD_IMPORT before importing, so nothing below runs then.
+export { G, NOW, rnd, pick, int, money, moneyAll, remind, life, at, plus, NOT, itemsOf, hm, NAMES, NAMES_AR, THINGS, THINGS_AR, PRODUCTS, PLACES, PLACES_AR, TASKS, TASKS_AR, WHEN_EN, WHEN_AR, CITIES, sub, arD };
 // ---- make exactly TOTAL different sentences, in the groups' proportions --------------------------------------------------------------
+if (!globalThis.__HARD_IMPORT) {
 const full = G.reduce((s, g) => s + g[1], 0); if (full !== 10000) throw new Error("the groups add up to " + full + ", not 10000");
 const seen = new Set(), rows = [];
 for (const [name, n0, maker] of G) { const n = Math.round(n0 * TOTAL / 10000); let made = 0, tries = 0;
@@ -219,3 +222,4 @@ for (const [g, b] of Object.entries(by)) if (b.bad) { md += `\n### ${g}\n`; for 
 if (TOTAL === 10000) fs.writeFileSync(new URL("./hard-report.md", import.meta.url), md);
 if (process.env.HARD_JSON) fs.writeFileSync(process.env.HARD_JSON, JSON.stringify(rows));
 console.log(md.split("\n## What")[0]); console.log(TOTAL === 10000 ? "report: tests/scenarios/hard-report.md" : "(a smaller run — the report file is written only by the full 10,000)");
+}

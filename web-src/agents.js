@@ -257,8 +257,11 @@ export function parseAgent(text, opts = {}) {
     const newProduct = !store && !used && parseGoal(t0).kind === "product";
     if (!store && !newProduct) return looksLikeGoal(t0) || used ? { kind: "scout", text: t0, title: t0.slice(0, 80) } : null;
     const what = t0.replace(/https:\/\/\S+/g, "").replace(/^(?:please\s+)?(?:tell|notify|alert|ping|let|warn)\s+me\s+(?:when|if|once)\s+(?:the\s+)?|^(?:قولي|نبهني|عرفني|بلغني)\s+(?:لما|لو)\s+|^(?:دورلي|دور لي|ابحثلي|ابحث لي|هاتلي|عايز|عاوز|محتاج)\s+(?:على|عن)?\s*/iu, "")
+      // v9.9.32: "I want a Kindle but only if it's under 5000, watch it for me" → "Kindle"
+      .replace(/^(?:i\s+(?:want|need|would like|'d like)|i'?m looking for|looking for)\s+(?:to buy\s+)?(?:an?\s+|the\s+)?/i, "").replace(/\s*,?\s*(?:but\s+)?(?:only\s+)?(?:if|when)\s+(?:it'?s|it is|they'?re|its)\s*$/i, "")
       .replace(/\s+(?:on|at|from|في|على|من)\s+(?:amazon|noon|jumia|امازون|أمازون|نون|جوميا)\b.*$/iu, "")
-      .replace(/\s+(?:is|are|goes|gets|drops|becomes|يبقي|يبقى|ينزل|تنزل|بقي|بقى)?\s*(?:under|below|less than|cheaper than|lower than|اقل من|أقل من|تحت|بأقل من|باقل من|بحد اقصى|بحد أقصى|في حدود).*$/iu, "").trim().slice(0, 70);
+      .replace(/\s+(?:is|are|goes|gets|drops|becomes|يبقي|يبقى|ينزل|تنزل|بقي|بقى)?\s*(?:under|below|less than|cheaper than|lower than|اقل من|أقل من|تحت|بأقل من|باقل من|بحد اقصى|بحد أقصى|في حدود).*$/iu, "")
+      .replace(/\s*,?\s*(?:but\s+)?(?:only\s+)?(?:if|when)\s+(?:it'?s|it is|they'?re|its)\s*$/i, "").trim().slice(0, 70);
     if (!what) return null;
     const pe = productEnglish(what), q = pe.left ? what : pe.en;   // v9.0: «سماعة هواوي فري كليب 2» → "Huawei FreeClip 2 earbuds"
     const tries = storeTries(q, country, store ? store.label : "").map((l) => ({ url: l.url, site: l.site }));
