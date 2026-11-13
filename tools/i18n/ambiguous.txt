@@ -796,6 +796,7 @@ autom.js: const pot = potName(String(rest1).replace(/^(?:ال)?صندوق\s+/, "
 planner-ui.jsx: const G = [["fixed", tr("Fixed")], ["everyday", tr("Everyday")], ["savings", tr("Savings")]];
 planner-ui.jsx: const parts = [["fixed", tr("Fixed"), plan.fixedTotal], ["pots", tr("Savings"), plan.potsTotal], ["flex", tr("Everyday"), plan.flexTotal], [
 plans-ui.jsx: <div data-testid="gold-draft"><span className={U.label}>{tr("Savings")}</span>
+rulestore.js: else if (field === "pot") (n.do || []).forEach((d) => { if (d.type === "pot") d.pot = value === "new" ? d.potName || tr("Savings") : value; 
 rulestore.js: const p = { words, pct: pot ? (pot.pct != null ? pot.pct : 0) : 0, fixed: pot && pot.amount ? pot.amount : 0, pot: pot ? pot.pot || tr("Savi
 rulestore.js: const p = { words, pct: pot ? (pot.pct != null ? pot.pct : 0) : 0, fixed: pot && pot.amount ? pot.amount : 0, pot: pot ? pot.pot || tr("Savi
 yearplan.js: groups.push({ id: "savings", label: ar ? "التحويش" : tr("Savings"), rows: sav });
@@ -1136,6 +1137,11 @@ weekplan-ui.jsx: <label className="flex-1">{tr("To")}<input className={inp} type
 email-ui.jsx: <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("Subject")}
 messages-ui.jsx: <input value={m.subject} onChange={(e) => set("subject", e.target.value)} dir="auto" placeholder={tr("Subject")} className={U.inp} data-test
 timetable-ui.jsx: <div className="flex gap-1.5"><input value={r.subject} onChange={(e) => set(r.k, { subject: e.target.value })} dir="auto" className={inp + "
+
+## Emergency
+emergency-ui.jsx: else { N.lockCardSet("🆘 " + tr("Emergency") + " — " + mm.name, lockText(card)); localStorage.setItem("attune:em:lock", mm.id); setLockOn(mm
+emergency-ui.jsx: useEffect(() => { if (!lockOk || !lockOn) return; const who = members.find((x) => x.id === lockOn); if (who) { try { N.lockCardSet("🆘 " + t
+planner-ui.jsx: {!plan.pots.some((p) => p.kind === "emergency") ? <button className={U.btnS + " w-full " + U.muted} onClick={() => save(addPot(pots, { name:
 
 ## Spec
 factsheet.js: "| " + (ar ? "البند" : tr("Spec")) + " | " + a + " | " + b + " | " + (ar ? "الأفضل" : tr("Better")) + " |\n| --- | --- | --- | --- |\n" +
