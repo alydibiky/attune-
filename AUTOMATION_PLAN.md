@@ -235,8 +235,11 @@
   - Not offline: the leave time from live traffic (Maps) — the person's own minutes are used.
 - [x] **B8 AU4 scheduled AI jobs** (v9.9.25) — aijobs.js + aijobs-ui.jsx (NOT jobs.js: that is the v6.48 "/" command queue): schedules
   in 21 languages (weekly / daily / monthly; 31st → last day), Automations → Jobs, Home "Made for you" card, numbers not in the person's
-  data flagged. 10,000 sentences. The night run while charging is a phone part still to build — until then a due job runs when the app
-  is open with the model ready.
+  data flagged. 10,000 sentences. **Night run BUILT v9.9.29** (Ali: "Do it"): AiNight.kt — the page hands the phone a plan
+  (aijobs.js nightPlan: each job's next 3 runs within 8 days, facts worked out for each run's day, ready messages, "Made for you: …");
+  a JobService waits for the run's time AND the charger, starts the model if it was off (and stops it after), runs each due run once
+  (a job missed for days: once, the newest — dueNight = AiNight.due), posts the answer; the page takes the answers on the next open
+  (mergeNight: once, next moved past the run). tests/ainight/gen.mjs 10,000 + held-out, v9929ainight unit, e2e_v9929night.py.
 - [ ] **B9 N2 voice memo** (last; ship only at ≥ 99% offline in all languages — else tell Ali) — NOT built: the phone's recognizer is for
   short commands; long recordings offline with a time on every line at 99% in Egyptian Arabic and the other languages isn't reachable
   with on-phone speech models today — told Ali (12 Nov).

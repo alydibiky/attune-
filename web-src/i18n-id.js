@@ -12448,4 +12448,6 @@ export const IDN = {
   "From {app}:": "Dari {app}:",
   "Removed from the trip": "Dihapus dari perjalanan",
   "Remove from the trip": "Hapus dari perjalanan",
+  "Made for you: {t}": "Dibuat untukmu: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "Saat Attune tertutup, tugas berjalan tepat waktu selama ponsel diisi daya.",
 };

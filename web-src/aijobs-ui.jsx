@@ -3,12 +3,23 @@
    passed runs when the app is next open); every answer is checked against the person's data — a number that isn't in it is flagged. */
 import React, { useEffect, useState } from "react";
 import { tr, getLang, dateLocale } from "./i18n.js";
-import { makeJob, nextRun, dueJobs, checkNumbers, jobData } from "./aijobs.js";
+import { makeJob, nextRun, dueJobs, checkNumbers, jobData, jobMessages, nightPlan, mergeNight } from "./aijobs.js";
 import { loadStores } from "./lifeask.js";
 import { btnP, btnS, inp, label } from "./ui-kit.jsx";
 const KEY = "attune:aijobs:v1";   // (attune:jobs:v1 belongs to the "/" command queue)
 export const loadJobs = () => { try { const j = JSON.parse(localStorage.getItem(KEY) || "null"); return j && Array.isArray(j.jobs) ? { results: [], ...j } : { jobs: [], results: [] }; } catch (e) { return { jobs: [], results: [] }; } };
-const saveJobs = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} try { window.dispatchEvent(new CustomEvent("attune-aijobs")); } catch (e) {} return s; };
+const saveJobs = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} syncNight(s); try { window.dispatchEvent(new CustomEvent("attune-aijobs")); } catch (e) {} return s; };
+// v9.9.29 the night run: the phone runs a due job while charging with Attune closed (AiNight.kt); the page gives it the plan, takes the answers
+const nightOn = () => { try { return !!(window.AttuneNative && window.AttuneNative.aiNightSet); } catch (e) { return false; } };
+export function syncNight(s = loadJobs()) {
+  try { if (!nightOn()) return; const lang = getLang();
+    const runs = nightPlan(s.jobs, loadStores()).map((r) => ({ key: r.key, job: r.job, title: r.title, at: r.at, data: r.data, messages: jobMessages(r.title, r.data, lang), head: tr("Made for you: {t}", { t: r.title }) }));
+    window.AttuneNative.aiNightSet(JSON.stringify({ lang, runs })); } catch (e) {}
+}
+export function takeNight() {
+  try { const N = window.AttuneNative; if (!N || !N.aiNightTake) return false; const got = JSON.parse(N.aiNightTake() || "[]"); if (!got.length) return false;
+    const cur = loadJobs(), next = mergeNight(cur, got); if (next !== cur) saveJobs(next); return next !== cur; } catch (e) { return false; }
+}
 const when = (t) => { try { return new Date(t).toLocaleString(dateLocale() || "en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
 export function JobsSection({ flash }) {
   const [s, setS] = useState(loadJobs), [text, setText] = useState(""), [err, setErr] = useState("");
@@ -24,15 +35,18 @@ export function JobsSection({ flash }) {
       <span className="flex-1 min-w-0"><b className="block text-[14px] truncate" dir="auto">{j.text}</b><span className="text-[12px] c-sub">{tr("next {t}", { t: when(j.next) })}</span></span>
       <button className="text-[12px] font-bold c-sub min-h-[40px] px-2" onClick={() => setS(saveJobs({ ...s, jobs: s.jobs.filter((x) => x.id !== j.id) }))} data-testid="jobs-delete">{tr("Delete")}</button></div>)}
     <p className="m-0 text-[12px] c-sub">{tr("Each job runs at its time with the AI on this phone; the answer waits on Home. Any number that isn't in your own data is marked.")}</p>
+    {nightOn() ? <p className="m-0 text-[12px] c-sub" data-testid="jobs-night">{tr("With Attune closed, a job runs at its time while the phone is charging.")}</p> : null}
   </div>;
 }
 /** Runs the due jobs once the model is ready (in App). ask(messages) → text */
 export function JobsRunner({ ask, ready }) {
+  // the phone's night answers first (on open and each time Attune comes back), then the plan for tonight
+  useEffect(() => { const f = () => { if (document.visibilityState === "visible") takeNight(); syncNight(); };   /* (leaving Attune = the freshest facts for tonight) */ f(); document.addEventListener("visibilitychange", f); return () => document.removeEventListener("visibilitychange", f); }, []);
   useEffect(() => { if (!ready || !ask) return; let stop = false;
-    (async () => { const s = loadJobs(), due = dueJobs(s.jobs); if (!due.length) return;
+    (async () => { takeNight(); const s = loadJobs(), due = dueJobs(s.jobs); if (!due.length) return;
       for (const j of due) { if (stop) return;
         const data = jobData(loadStores()), lang = getLang();
-        let out = ""; try { out = String(await ask([{ role: "system", content: "You are Attune. Do the person's job using ONLY the facts below — never invent a number, a name or a date. Answer in the language code \"" + lang + "\", short, as a few lines.\n\nFacts:\n" + (data || "(none)") }, { role: "user", content: j.text }]) || "").trim(); } catch (e) { return; }
+        let out = ""; try { out = String(await ask(jobMessages(j.text, data, lang)) || "").trim(); } catch (e) { return; }
         const chk = checkNumbers(out, data, j.text), cur = loadJobs();
         saveJobs({ ...cur, jobs: cur.jobs.map((x) => (x.id === j.id ? { ...x, next: nextRun(x.schedule, Date.now()), last: Date.now() } : x)), results: [{ id: j.id + "-" + Date.now(), job: j.id, title: j.text, at: Date.now(), text: out, unknown: chk.unknown }, ...cur.results].slice(0, 30) }); }
     })(); return () => { stop = true; }; }, [ready]);

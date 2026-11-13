@@ -12447,4 +12447,6 @@ export const ZH = {
   "From {app}:": "来自 {app}：",
   "Removed from the trip": "已从行程中移除",
   "Remove from the trip": "从行程中移除",
+  "Made for you: {t}": "为你准备：{t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "即使 Attune 已关闭，任务也会在手机充电时按时运行。",
 };

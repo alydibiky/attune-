@@ -12448,4 +12448,6 @@ export const IT = {
   "From {app}:": "Da {app}:",
   "Removed from the trip": "Rimosso dal viaggio",
   "Remove from the trip": "Rimuovi dal viaggio",
+  "Made for you: {t}": "Preparato per te: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "Con Attune chiuso, un'attività parte alla sua ora mentre il telefono è in carica.",
 };

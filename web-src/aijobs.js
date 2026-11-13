@@ -67,3 +67,37 @@ export function jobData(stores = {}, now = Date.now()) {
     lines.push("Money this month: spent " + Math.round(out) + ", received " + Math.round(inn) + (L.currency ? " " + L.currency : "")); }
   return lines.slice(0, 60).join("\n");
 }
+/* ---- v9.9.29 the night run (Ali: "Do it"): with Attune closed, the phone runs a due job at its time while charging (AiNight.kt).
+   The page hands the phone a PLAN whenever Attune is open: each job's next runs (up to 3, within 8 days), each with its facts worked
+   out for that run's day — the phone needs nothing else (it can't read the page's data). The phone runs a run once (at ≤ now, while
+   charging), keeps the answer, and the page takes the answers on the next open (mergeNight). Pure; Kotlin mirrors dueNight. */
+/** The model's messages for one job (the same in the page and on the phone at night). */
+export function jobMessages(text, data, lang = "en") {
+  return [{ role: "system", content: "You are Attune. Do the person's job using ONLY the facts below — never invent a number, a name or a date. Answer in the language code \"" + lang + "\", short, as a few lines.\n\nFacts:\n" + (data || "(none)") }, { role: "user", content: String(text || "") }];
+}
+export function nightPlan(jobs = [], stores = {}, now = Date.now()) {
+  const runs = [];
+  for (const j of jobs || []) { if (!j || j.on === false || !j.schedule || !j.next) continue;
+    let at = j.next;
+    for (let k = 0; k < 3 && at && at <= now + 8 * 864e5; k++) { runs.push({ key: j.id + "@" + at, job: j.id, title: j.text, at, data: jobData(stores, at) }); at = nextRun(j.schedule, at); }
+  }
+  return runs.sort((a, b) => a.at - b.at || (a.key < b.key ? -1 : 1));
+}
+/** Which runs the phone does now: due (at ≤ now), not done yet, at most the newest one per job (a phone off for 3 days runs a daily job once). */
+export function dueNight(runs = [], done = [], now = Date.now()) {
+  const d = new Set(done || []), latest = {};
+  for (const r of runs || []) if (r.at <= now && !d.has(r.key) && (!latest[r.job] || r.at > latest[r.job].at)) latest[r.job] = r;
+  return Object.values(latest).sort((a, b) => a.at - b.at);
+}
+/** The phone's answers → into the jobs state: each answer once (by key), a job's next moves past the run that was done; a job deleted
+ *  meanwhile still shows its answer. results from the phone: [{ key, job, title, at, text, data }] */
+export function mergeNight(state = { jobs: [], results: [] }, got = [], now = Date.now()) {
+  const have = new Set((state.results || []).map((r) => r.key).filter(Boolean)), add = [];
+  let jobs = state.jobs || [];
+  for (const g of got || []) { if (!g || !g.key || have.has(g.key) || !String(g.text || "").trim()) continue; have.add(g.key);
+    const chk = checkNumbers(g.text, g.data || "", g.title || "");
+    add.push({ id: g.key, key: g.key, job: g.job, title: g.title, at: g.ranAt || g.at, text: String(g.text).trim(), unknown: chk.unknown, night: true });
+    jobs = jobs.map((j) => (j.id === g.job && j.next && j.next <= g.at ? { ...j, next: nextRun(j.schedule, Math.max(g.at, now)), last: g.ranAt || g.at } : j)); }
+  if (!add.length) return state;
+  return { ...state, jobs, results: [...add.sort((a, b) => b.at - a.at), ...(state.results || [])].slice(0, 30) };
+}

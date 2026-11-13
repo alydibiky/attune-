@@ -12447,4 +12447,6 @@ export const TH = {
   "From {app}:": "จาก {app}:",
   "Removed from the trip": "นำออกจากทริปแล้ว",
   "Remove from the trip": "นำออกจากทริป",
+  "Made for you: {t}": "ทำไว้ให้คุณ: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "แม้ปิด Attune งานจะทำตามเวลาขณะที่โทรศัพท์กำลังชาร์จ",
 };

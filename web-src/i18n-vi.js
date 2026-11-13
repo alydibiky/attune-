@@ -12447,4 +12447,6 @@ export const VI = {
   "From {app}:": "Từ {app}:",
   "Removed from the trip": "Đã bỏ khỏi chuyến đi",
   "Remove from the trip": "Bỏ khỏi chuyến đi",
+  "Made for you: {t}": "Đã làm cho bạn: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "Khi Attune đóng, công việc vẫn chạy đúng giờ lúc điện thoại đang sạc.",
 };

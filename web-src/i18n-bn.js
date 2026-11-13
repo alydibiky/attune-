@@ -12447,4 +12447,6 @@ export const BN = {
   "From {app}:": "{app} থেকে:",
   "Removed from the trip": "ভ্রমণ থেকে সরানো হয়েছে",
   "Remove from the trip": "ভ্রমণ থেকে সরান",
+  "Made for you: {t}": "আপনার জন্য তৈরি: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "Attune বন্ধ থাকলেও, ফোন চার্জে থাকার সময় কাজটি তার সময়ে চলে।",
 };

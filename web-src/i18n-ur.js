@@ -12448,4 +12448,6 @@ export const UR = {
   "From {app}:": "{app} سے:",
   "Removed from the trip": "سفر سے ہٹا دیا گیا",
   "Remove from the trip": "سفر سے ہٹائیں",
+  "Made for you: {t}": "آپ کے لیے تیار: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "Attune بند ہو تو بھی، فون چارج ہوتے وقت کام اپنے وقت پر چلتا ہے۔",
 };

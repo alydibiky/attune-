@@ -12447,4 +12447,6 @@ export const RU = {
   "From {app}:": "Из {app}:",
   "Removed from the trip": "Убрано из поездки",
   "Remove from the trip": "Убрать из поездки",
+  "Made for you: {t}": "Готово для вас: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "Когда Attune закрыт, задание выполняется в своё время, пока телефон заряжается.",
 };

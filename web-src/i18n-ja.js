@@ -12447,4 +12447,6 @@ export const JA = {
   "From {app}:": "{app} から:",
   "Removed from the trip": "旅行から外しました",
   "Remove from the trip": "旅行から外す",
+  "Made for you: {t}": "あなたのために作成: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "Attune を閉じていても、充電中ならジョブは時間どおりに動きます。",
 };

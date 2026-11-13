@@ -12439,4 +12439,6 @@ export const ARB = {
   "From {app}:": "من {app}:",
   "Removed from the trip": "أُزيل من الرحلة",
   "Remove from the trip": "أزِله من الرحلة",
+  "Made for you: {t}": "أُعدّ لك: {t}",
+  "With Attune closed, a job runs at its time while the phone is charging.": "عندما يكون Attune مغلقًا، تعمل المهمة في موعدها أثناء شحن الهاتف.",
 };

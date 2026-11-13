@@ -1508,6 +1508,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface fun placeAsk() { web.post { askPlace?.invoke() } }
     var askPlace: (() -> Unit)? = null
     @JavascriptInterface fun setPlaceReminders(json: String) { try { PlaceGeo.save(ctx, json) } catch (e: Throwable) {} }
+    // ---- v9.9.29 AI jobs at night while charging (AiNight.kt): the page's plan in, the answers out
+    @JavascriptInterface fun aiNightSet(json: String) { try { AiNight.set(ctx, json) } catch (e: Throwable) {} }
+    @JavascriptInterface fun aiNightTake(): String = try { AiNight.take(ctx) } catch (e: Throwable) { "[]" }
 
     // ---- v9.9.27 X4 the emergency card on the lock screen (Ali's OK'd X4 combined screen: "show on the lock screen"): a quiet, ongoing
     // notification whose text is PUBLIC on the lock screen — blood type, medicines, allergies, who to call — readable without unlocking.
