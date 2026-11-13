@@ -12434,4 +12434,9 @@ export const RU = {
   "Remove from lock screen": "Убрать с экрана блокировки",
   "Removed from the lock screen": "Убрано с экрана блокировки",
   "On the lock screen — anyone can read it without unlocking": "На экране блокировки — любой прочтёт без разблокировки",
+  "You arrived: {p}": "Вы на месте: {p}",
+  "You left: {p}": "Вы ушли: {p}",
+  "Place reminders: coming soon in this version.": "Напоминания по месту: скоро в этой версии.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Чтобы звонить при закрытом Attune, Android нужен доступ к местоположению «Разрешить всегда». Оно остаётся на телефоне.",
+  "Coming soon": "Скоро",
 };

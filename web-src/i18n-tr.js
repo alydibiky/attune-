@@ -12435,4 +12435,9 @@ export const TRK = {
   "Remove from lock screen": "Kilit ekranından kaldır",
   "Removed from the lock screen": "Kilit ekranından kaldırıldı",
   "On the lock screen — anyone can read it without unlocking": "Kilit ekranında — kilidi açmadan herkes okuyabilir",
+  "You arrived: {p}": "Vardın: {p}",
+  "You left: {p}": "Ayrıldın: {p}",
+  "Place reminders: coming soon in this version.": "Konum hatırlatıcıları: bu sürümde yakında.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune kapalıyken çalması için Android konumda “Her zaman izin ver” ister. Konum bu telefonda kalır.",
+  "Coming soon": "Yakında",
 };

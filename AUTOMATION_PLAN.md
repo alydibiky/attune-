@@ -113,6 +113,11 @@
         Still waiting: arriving / leaving a place (background location — Ali's Play decision).
   - [x] v9.9.27: rule conditions on the phone — money rules (AutoRules.kt) and message alerts (MessageWatch.kt) check "on workdays", "after
         22:00", "more than 1,000" via RuleConds (= phonerules.js condOk, 10,000 cases); such rules are on now. "A new fund" keeps the written name.
+  - [x] v9.9.28: **place reminders (Ali picked P-2, OK-2 OK-3 OK-4)** — ring on arrive / leave in the APK installed by hand
+        (PlaceGeo.kt: LocationManager proximity alerts, 150 m in / 200 m out, re-armed after a restart; ACCESS_BACKGROUND_LOCATION only in
+        src/full's manifest). Play build: "Place reminders: coming soon in this version.", never asks. No separate explanation screen
+        (OK-1 not picked): one line + Allow → Android's own prompt. placering.js placeRing = PlaceGeo.ring (once per visit, a short step
+        outside < 10 min is the same visit, "leave" only after ≥ 3 min there) — tests/placering/gen.mjs 10,000 + held-out, e2e_v9928places.py.
   - [ ] (older note) **The phone part still to build (rules saved as "Waiting for the phone part", never fired wrongly):** Kotlin listeners for
         arriving / leaving a place (background location — Play declaration + disclosure screen, tell Ali), Bluetooth connect
         (BluetoothDevice.ACTION_ACL_CONNECTED, BLUETOOTH_CONNECT permission), Wi-Fi (ConnectivityManager callback), charging
@@ -178,7 +183,7 @@
         + deadline, 3-day calendar, reminders grey, prayers when on, "Keep plan" → reminders, too-big tasks said), T4-A placerem-ui.jsx
         (Reminders → fill-in → When: A time / At a place → saved place or "Save where I am" → arrive / leave). 48 lines × 20 languages.
         tests/e2e_v9918b4.py.
-  - [ ] **Phone parts still to build (Kotlin, compile on the branch APK build):** T4 geofence (AttuneNative.placeReminders() /
+  - [x] **Phone parts (Kotlin):** T4 geofence **BUILT v9.9.28 (full APK; Play says coming soon)** (AttuneNative.placeReminders() /
         setPlaceReminders(json) — Play background-location declaration + disclosure screen: ASK ALI before shipping), T6 optional
         Do Not Disturb (ACCESS_NOTIFICATION_POLICY, allowed once in Android settings; AttuneNative.setQuiet). — **T6 BUILT v9.9.26** (quietAllowed / askQuiet / setQuiet; only undoes what Attune changed). Until then the screens
         say so (place reminders show "Waiting for the phone part").

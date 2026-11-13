@@ -1746,6 +1746,8 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
   paired list; Focus "make the phone quiet" (Do Not Disturb). Fixed: doit.js read "on Friday" from the phone's clock instead of the day it was
   asked (found because the test ran on a real Friday). Kotlin compiled on the branch (runs 43314448480, 43368561275). Left: place reminders
   (Ali's Play decision), emergency card on the lock screen, AI jobs at night while charging; N2 voice memo not built (99% unreachable).
+- 13 Nov: v9.9.28 (versionCode 171) — place reminders ring on arrive / leave in the APK installed by hand (Ali's P-2 + OK-2/3/4);
+  the Play version says "coming soon" and never asks for background location; no separate explanation screen (OK-1 not picked).
 - 13 Nov: v9.9.27 (versionCode 170) — emergency card on the lock screen; rule conditions (workdays / after / more than) checked on the phone;
   "A new fund" keeps the written name. Ali picked P-2 for place reminders (full APK first) — combined screen waiting for his OK:
   https://claude.ai/artifact/6WqaNahzA9dm66YpDgcB8m

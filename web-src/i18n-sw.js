@@ -12435,4 +12435,9 @@ export const SW = {
   "Remove from lock screen": "Ondoa kwenye skrini iliyofungwa",
   "Removed from the lock screen": "Imeondolewa kwenye skrini iliyofungwa",
   "On the lock screen — anyone can read it without unlocking": "Kwenye skrini iliyofungwa — yeyote anaweza kusoma bila kufungua",
+  "You arrived: {p}": "Umefika: {p}",
+  "You left: {p}": "Umeondoka: {p}",
+  "Place reminders: coming soon in this version.": "Vikumbusho vya mahali: hivi karibuni kwenye toleo hili.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Ili ilie Attune ikiwa imefungwa, Android inahitaji mahali “Ruhusu wakati wote”. Inabaki kwenye simu hii.",
+  "Coming soon": "Hivi karibuni",
 };

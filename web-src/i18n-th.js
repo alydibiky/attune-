@@ -12434,4 +12434,9 @@ export const TH = {
   "Remove from lock screen": "เอาออกจากหน้าจอล็อก",
   "Removed from the lock screen": "เอาออกจากหน้าจอล็อกแล้ว",
   "On the lock screen — anyone can read it without unlocking": "อยู่บนหน้าจอล็อก — ใครก็อ่านได้โดยไม่ต้องปลดล็อก",
+  "You arrived: {p}": "ถึงแล้ว: {p}",
+  "You left: {p}": "ออกจาก: {p}",
+  "Place reminders: coming soon in this version.": "การเตือนตามสถานที่: เร็ว ๆ นี้ในเวอร์ชันนี้",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "เพื่อให้เตือนตอน Attune ปิดอยู่ Android ต้องใช้ตำแหน่ง “อนุญาตตลอดเวลา” ข้อมูลอยู่ในมือถือนี้เท่านั้น",
+  "Coming soon": "เร็ว ๆ นี้",
 };

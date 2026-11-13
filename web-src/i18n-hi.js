@@ -12435,4 +12435,9 @@ export const HI = {
   "Remove from lock screen": "लॉक स्क्रीन से हटाएँ",
   "Removed from the lock screen": "लॉक स्क्रीन से हटा दिया",
   "On the lock screen — anyone can read it without unlocking": "लॉक स्क्रीन पर — बिना अनलॉक किए कोई भी पढ़ सकता है",
+  "You arrived: {p}": "आप पहुँच गए: {p}",
+  "You left: {p}": "आप निकल गए: {p}",
+  "Place reminders: coming soon in this version.": "जगह के रिमाइंडर: इस संस्करण में जल्द।",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune बंद होने पर बजने के लिए Android को लोकेशन “हर समय अनुमति दें” चाहिए। यह इसी फ़ोन पर रहती है।",
+  "Coming soon": "जल्द",
 };

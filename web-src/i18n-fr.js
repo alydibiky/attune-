@@ -12435,4 +12435,9 @@ export const FR = {
   "Remove from lock screen": "Retirer de l'écran verrouillé",
   "Removed from the lock screen": "Retiré de l'écran verrouillé",
   "On the lock screen — anyone can read it without unlocking": "Sur l'écran verrouillé — lisible par tous sans déverrouiller",
+  "You arrived: {p}": "Vous êtes arrivé : {p}",
+  "You left: {p}": "Vous avez quitté : {p}",
+  "Place reminders: coming soon in this version.": "Rappels de lieu : bientôt dans cette version.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Pour sonner Attune fermé, Android demande la localisation « Toujours autoriser ». Elle reste sur ce téléphone.",
+  "Coming soon": "Bientôt",
 };

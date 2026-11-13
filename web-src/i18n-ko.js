@@ -12434,4 +12434,9 @@ export const KO = {
   "Remove from lock screen": "잠금 화면에서 제거",
   "Removed from the lock screen": "잠금 화면에서 제거됨",
   "On the lock screen — anyone can read it without unlocking": "잠금 화면에 표시됨 — 누구나 잠금 해제 없이 읽을 수 있어요",
+  "You arrived: {p}": "도착: {p}",
+  "You left: {p}": "떠남: {p}",
+  "Place reminders: coming soon in this version.": "장소 알림: 이 버전에서 곧 제공.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune이 닫혀 있어도 울리려면 위치 '항상 허용'이 필요해요. 위치는 이 휴대폰에만 있어요.",
+  "Coming soon": "곧 제공",
 };

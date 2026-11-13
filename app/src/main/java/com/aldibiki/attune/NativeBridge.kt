@@ -1501,6 +1501,14 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun openAppInfo() {
         try { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + ctx.packageName)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) {}
     }
+    // ---- v9.9.28 T4 place reminders (P-2): only in the APK installed by hand; the Play build says "Coming soon"
+    @JavascriptInterface fun placeReminders(): Boolean = try { PlaceGeo.supported(ctx) } catch (e: Throwable) { false }
+    @JavascriptInterface fun placeIsPlay(): Boolean = try { PlaceGeo.isPlay(ctx) } catch (e: Throwable) { false }
+    @JavascriptInterface fun placeAllowed(): Boolean = try { PlaceGeo.allowed(ctx) } catch (e: Throwable) { false }
+    @JavascriptInterface fun placeAsk() { web.post { askPlace?.invoke() } }
+    var askPlace: (() -> Unit)? = null
+    @JavascriptInterface fun setPlaceReminders(json: String) { try { PlaceGeo.save(ctx, json) } catch (e: Throwable) {} }
+
     // ---- v9.9.27 X4 the emergency card on the lock screen (Ali's OK'd X4 combined screen: "show on the lock screen"): a quiet, ongoing
     // notification whose text is PUBLIC on the lock screen — blood type, medicines, allergies, who to call — readable without unlocking.
     @JavascriptInterface

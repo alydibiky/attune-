@@ -12434,4 +12434,9 @@ export const BN = {
   "Remove from lock screen": "লক স্ক্রিন থেকে সরান",
   "Removed from the lock screen": "লক স্ক্রিন থেকে সরানো হলো",
   "On the lock screen — anyone can read it without unlocking": "লক স্ক্রিনে — আনলক না করেই যে কেউ পড়তে পারবে",
+  "You arrived: {p}": "আপনি পৌঁছেছেন: {p}",
+  "You left: {p}": "আপনি বের হলেন: {p}",
+  "Place reminders: coming soon in this version.": "স্থানের রিমাইন্ডার: এই সংস্করণে শিগগিরই।",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune বন্ধ থাকলেও বাজাতে Android-এর লোকেশন “সব সময় অনুমতি দিন” দরকার। এটি এই ফোনেই থাকে।",
+  "Coming soon": "শিগগিরই",
 };

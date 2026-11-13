@@ -12434,4 +12434,9 @@ export const ZH = {
   "Remove from lock screen": "从锁屏移除",
   "Removed from the lock screen": "已从锁屏移除",
   "On the lock screen — anyone can read it without unlocking": "已显示在锁屏上——任何人无需解锁即可阅读",
+  "You arrived: {p}": "你已到达：{p}",
+  "You left: {p}": "你已离开：{p}",
+  "Place reminders: coming soon in this version.": "地点提醒：此版本即将推出。",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "要在 Attune 关闭时提醒，Android 需要位置“始终允许”。位置只保存在这部手机上。",
+  "Coming soon": "即将推出",
 };

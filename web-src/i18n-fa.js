@@ -12434,4 +12434,9 @@ export const FA = {
   "Remove from lock screen": "حذف از صفحه قفل",
   "Removed from the lock screen": "از صفحه قفل حذف شد",
   "On the lock screen — anyone can read it without unlocking": "روی صفحه قفل — هر کسی بدون باز کردن قفل می‌تواند بخواند",
+  "You arrived: {p}": "رسیدید: {p}",
+  "You left: {p}": "خارج شدید: {p}",
+  "Place reminders: coming soon in this version.": "یادآوری مکان: به‌زودی در این نسخه.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "برای زنگ با بسته بودن Attune، اندروید مکان «همیشه مجاز» را لازم دارد. روی همین گوشی می‌ماند.",
+  "Coming soon": "به‌زودی",
 };

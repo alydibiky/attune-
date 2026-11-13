@@ -240,6 +240,8 @@
 
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />
+        <!-- v9.9.28 place reminders: Android's proximity alerts (the background-location permission is declared only in src/full) -->
+        <receiver android:name=".PlaceReceiver" android:exported="false" />
         <!-- v9.9.26 phone rules: a Bluetooth device connected (Android allows this one for a closed app) -->
         <receiver android:name=".PhoneBtReceiver" android:exported="true">
             <intent-filter><action android:name="android.bluetooth.device.action.ACL_CONNECTED" /></intent-filter>

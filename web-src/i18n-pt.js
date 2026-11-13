@@ -12435,4 +12435,9 @@ export const PT = {
   "Remove from lock screen": "Remover da tela de bloqueio",
   "Removed from the lock screen": "Removido da tela de bloqueio",
   "On the lock screen — anyone can read it without unlocking": "Na tela de bloqueio — qualquer pessoa lê sem desbloquear",
+  "You arrived: {p}": "Você chegou: {p}",
+  "You left: {p}": "Você saiu de: {p}",
+  "Place reminders: coming soon in this version.": "Lembretes de lugar: em breve nesta versão.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Para tocar com o Attune fechado, o Android precisa da localização “Permitir o tempo todo”. Ela fica neste celular.",
+  "Coming soon": "Em breve",
 };

@@ -12426,4 +12426,9 @@ export const ARB = {
   "Remove from lock screen": "أزله من شاشة القفل",
   "Removed from the lock screen": "أُزيل من شاشة القفل",
   "On the lock screen — anyone can read it without unlocking": "على شاشة القفل — يمكن لأي شخص قراءتها دون فتح الهاتف",
+  "You arrived: {p}": "وصلت: {p}",
+  "You left: {p}": "غادرت: {p}",
+  "Place reminders: coming soon in this version.": "تذكير الأماكن: قريبًا في هذا الإصدار.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "ليرن وأتيون مغلق، يحتاج أندرويد الموقع «السماح طوال الوقت». ويبقى على هذا الهاتف.",
+  "Coming soon": "قريبًا",
 };

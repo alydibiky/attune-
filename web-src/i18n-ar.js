@@ -9524,4 +9524,9 @@ export const AR = {
   "Remove from lock screen": "شيله من شاشة القفل",
   "Removed from the lock screen": "اتشال من شاشة القفل",
   "On the lock screen — anyone can read it without unlocking": "على شاشة القفل — أي حد يقدر يقراه من غير ما يفتح الموبايل",
+  "You arrived: {p}": "وصلت: {p}",
+  "You left: {p}": "مشيت من: {p}",
+  "Place reminders: coming soon in this version.": "تذكير الأماكن: قريب في النسخة دي.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "عشان يرن وأتيون مقفول، أندرويد محتاج الموقع «السماح طول الوقت». وبيفضل على الموبايل ده.",
+  "Coming soon": "قريبًا",
 };

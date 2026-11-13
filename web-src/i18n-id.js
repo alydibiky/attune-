@@ -12435,4 +12435,9 @@ export const IDN = {
   "Remove from lock screen": "Hapus dari layar kunci",
   "Removed from the lock screen": "Dihapus dari layar kunci",
   "On the lock screen — anyone can read it without unlocking": "Di layar kunci — siapa pun bisa membacanya tanpa membuka kunci",
+  "You arrived: {p}": "Kamu tiba: {p}",
+  "You left: {p}": "Kamu pergi dari: {p}",
+  "Place reminders: coming soon in this version.": "Pengingat tempat: segera hadir di versi ini.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Agar berbunyi saat Attune tertutup, Android perlu lokasi “Izinkan sepanjang waktu”. Lokasi tetap di ponsel ini.",
+  "Coming soon": "Segera",
 };

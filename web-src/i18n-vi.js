@@ -12434,4 +12434,9 @@ export const VI = {
   "Remove from lock screen": "Bỏ khỏi màn hình khóa",
   "Removed from the lock screen": "Đã bỏ khỏi màn hình khóa",
   "On the lock screen — anyone can read it without unlocking": "Trên màn hình khóa — ai cũng đọc được mà không cần mở khóa",
+  "You arrived: {p}": "Bạn đã đến: {p}",
+  "You left: {p}": "Bạn đã rời: {p}",
+  "Place reminders: coming soon in this version.": "Nhắc theo địa điểm: sắp có trong phiên bản này.",
+  "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Để nhắc khi Attune đóng, Android cần vị trí “Luôn cho phép”. Vị trí chỉ ở trên điện thoại này.",
+  "Coming soon": "Sắp có",
 };

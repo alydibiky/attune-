@@ -178,6 +178,11 @@ class MainActivity : AppCompatActivity() {
         web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-localnet',{detail:$granted}))", null)
     }
     private val askSendSmsPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> }   // v9.7 Messages: the page re-reads msgState
+    // v9.9.28 place reminders: precise location first, then "Allow all the time" (Android 11+ shows its own page for that step)
+    private val askBgLocation = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> try { PlaceGeo.arm(this); web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-place'))", null) } catch (e: Throwable) {} }
+    private val askFineLocation = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        if (ok && android.os.Build.VERSION.SDK_INT >= 29) askBgLocation.launch("android.permission.ACCESS_BACKGROUND_LOCATION")
+        else try { PlaceGeo.arm(this); web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-place'))", null) } catch (e: Throwable) {} }
     // v9.9.26 phone rules: "Nearby devices" once, so Attune can read the paired devices' names (R2-A)
     private val askBtPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> try { web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-bt'))", null) } catch (e: Throwable) {} }
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -310,6 +315,7 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this).also { v -> v.popup = { i, cb -> try { voicePopupCb = cb; voicePopup.launch(i); true } catch (e: Exception) { voicePopupCb = null; false } } }
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        bridge.askPlace = { if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED && android.os.Build.VERSION.SDK_INT >= 29) askBgLocation.launch("android.permission.ACCESS_BACKGROUND_LOCATION") else askFineLocation.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) }
         bridge.askBt = { if (android.os.Build.VERSION.SDK_INT >= 31) askBtPermission.launch(android.Manifest.permission.BLUETOOTH_CONNECT) else try { web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-bt'))", null) } catch (e: Throwable) {} }
         bridge.askSendSms = { runOnUiThread { try { askSendSmsPermission.launch(android.Manifest.permission.SEND_SMS) } catch (e: Exception) { } } }   // v9.7 Messages (full APK)
         bridge.pickBackupFolder = { runOnUiThread { try { pickBackupFolder.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)) } catch (e: Exception) { } } }
