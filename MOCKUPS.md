@@ -66,3 +66,4 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
 ## 13 Nov 2026 — place reminders: the background-location decision (step 1, waiting for Ali)
 - https://claude.ai/artifact/AVJVQmU2W42JC1Kgf1Ju1g (docs/mockups/place-reminders.html): P-1 everywhere incl. Play (form + video + review),
   P-2 full APK first (recommended), P-3 only while Attune is open, P-4 leave it out.
+- Ali picked P-2. Combined screen: https://claude.ai/artifact/6WqaNahzA9dm66YpDgcB8m (docs/mockups/place-reminders-combined.html) — waiting for his OK.
