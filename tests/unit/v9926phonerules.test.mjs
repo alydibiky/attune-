@@ -19,4 +19,8 @@ ok(P.decide([wifi], { kind: "wifi", ssid: "<unknown ssid>" }, {}, T(19)).blind =
 ok(P.decide([wifi], { kind: "wifi", ssid: "Home-5G" }, { ssid: "Office" }, T(19)).fire.join() === "w", "moving onto Home-5G on a Thursday → fires");
 ok(P.decide([wifi], { kind: "wifi", ssid: "Home-5G" }, { ssid: "Office" }, T(19, 0, 13)).fire.length === 0, "…not on Friday (the Egyptian weekend)");
 ok(P.allowedNow([{ type: "after", at: { h: 22, m: 0 } }, { type: "before", at: { h: 6, m: 0 } }], T(2)), "after 22:00 and before 06:00 goes over midnight (02:00 is in)");
+// v9.9.27 the conditions on money / message rules (checked on the phone now): 2,500 of tests/conds/gen.mjs + held-out, and by hand
+{ const C = await import("../conds/gen.mjs"); const a = C.run(2500, 0), b = C.run(500, 90000); ok(a.pass === 2500 && b.pass === 500, "conditions: 2,500 + 500 held-out at 100%"); }
+ok(P.condOk([{ type: "more", amount: 1000 }], T(10), [5, 6], 1500) && !P.condOk([{ type: "more", amount: 1000 }], T(10), [5, 6], null), "more than 1,000: 1,500 fires; no amount read → never");
+ok(!P.condOk([{ type: "weekdays" }, { type: "more", amount: 1000 }], T(10, 0, 13), [5, 6], 5000), "on workdays: not on a Friday in Egypt");
 console.log(fail ? "FAILED " + fail : "ALL PASSED");

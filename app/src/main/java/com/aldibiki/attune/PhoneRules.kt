@@ -76,23 +76,11 @@ object PhoneRules {
 
     // ---- the same decision as web-src/phonerules.js -------------------------------------------------------------------------------
     private fun mins(at: JSONObject?): Int? = if (at == null) null else at.optInt("h") * 60 + at.optInt("m")
-    private fun allowedNow(ifs: JSONArray?, now: Long, weekend: Set<Int>): Boolean {
-        val c = Calendar.getInstance().apply { timeInMillis = now }; val m = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)
-        val we = weekend.contains(c.get(Calendar.DAY_OF_WEEK) - 1)
-        var a: Int? = null; var b: Int? = null
-        if (ifs != null) for (i in 0 until ifs.length()) { val x = ifs.optJSONObject(i) ?: continue
-            when (x.optString("type")) { "weekdays" -> if (we) return false; "weekend" -> if (!we) return false; "more", "less" -> return false
-                "after" -> a = mins(x.optJSONObject("at")); "before" -> b = mins(x.optJSONObject("at")) } }
-        val A = a; val B = b
-        if (A != null && B != null) return if (A <= B) m >= A && m < B else m >= A || m < B
-        if (A != null) return m >= A; if (B != null) return m < B
-        return true
-    }
     /** ev: { kind: "bt", address, name } | { kind: "power", on, since } | { kind: "wifi", ssid } → the fired rule ids; state updated. */
     fun decide(rules: JSONArray, ev: JSONObject, st: JSONObject, now: Long, weekend: Set<Int>): List<JSONObject> {
         val last = st.optJSONObject("last") ?: JSONObject().also { st.put("last", it) }
         val fire = ArrayList<JSONObject>()
-        fun go(r: JSONObject) { if (!allowedNow(r.optJSONArray("if"), now, weekend)) return; val l = last.optLong(r.optString("id"), 0L); if (l > 0 && now - l < 60000) return; last.put(r.optString("id"), now); fire.add(r) }
+        fun go(r: JSONObject) { if (!RuleConds.ok(r.optJSONArray("if"), now, weekend, null)) return; val l = last.optLong(r.optString("id"), 0L); if (l > 0 && now - l < 60000) return; last.put(r.optString("id"), now); fire.add(r) }
         val live = (0 until rules.length()).mapNotNull { rules.optJSONObject(it) }.filter { it.optBoolean("on", true) && it.optJSONObject("when") != null }
         when (ev.optString("kind")) {
             "bt" -> for (r in live) { val w = r.optJSONObject("when")!!; if (w.optString("type") != "bluetooth") continue; val d = w.optJSONObject("device") ?: continue
@@ -129,6 +117,27 @@ object PhoneRules {
             .setSmallIcon(R.drawable.ic_stat_reminder).setContentTitle(r.optString("title", "Attune")).setContentText(r.optString("body", ""))
             .setStyle(android.app.Notification.BigTextStyle().bigText(r.optString("body", ""))).setAutoCancel(true).setContentIntent(pi)
         try { nm.notify(("pr" + r.optString("id") + System.currentTimeMillis() / 60000).hashCode(), b.build()) } catch (e: SecurityException) { }
+    }
+}
+
+/** v9.9.27 a rule's conditions, the same as web-src/phonerules.js condOk(): after / before a time (over midnight too), weekdays / the
+ *  weekend (the country's), more / less than an amount (no amount read → false). Used by phone rules, money rules and message alerts. */
+object RuleConds {
+    private fun mins(at: JSONObject?): Int? = if (at == null) null else at.optInt("h") * 60 + at.optInt("m")
+    fun weekendOf(o: JSONObject?): Set<Int> = try { val a = o?.optJSONArray("weekend"); if (a == null || a.length() == 0) setOf(5, 6) else (0 until a.length()).map { a.optInt(it) }.toSet() } catch (e: Exception) { setOf(5, 6) }
+    fun ok(ifs: JSONArray?, now: Long, weekend: Set<Int>, amount: Double?): Boolean {
+        val c = Calendar.getInstance().apply { timeInMillis = now }; val m = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)
+        val we = weekend.contains(c.get(Calendar.DAY_OF_WEEK) - 1)
+        var a: Int? = null; var b: Int? = null
+        if (ifs != null) for (i in 0 until ifs.length()) { val x = ifs.optJSONObject(i) ?: continue
+            when (x.optString("type")) { "weekdays" -> if (we) return false; "weekend" -> if (!we) return false
+                "more" -> if (amount == null || !(amount > x.optDouble("amount", Double.MAX_VALUE))) return false
+                "less" -> if (amount == null || !(amount < x.optDouble("amount", -1.0))) return false
+                "after" -> a = mins(x.optJSONObject("at")); "before" -> b = mins(x.optJSONObject("at")) } }
+        val A = a; val B = b
+        if (A != null && B != null) return if (A <= B) m >= A && m < B else m >= A || m < B
+        if (A != null) return m >= A; if (B != null) return m < B
+        return true
     }
 }
 

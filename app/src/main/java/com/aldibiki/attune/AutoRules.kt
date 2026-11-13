@@ -49,6 +49,8 @@ object AutoRules {
             val r = AutoRule(o.optString("id"), list(o.optJSONArray("words")), o.optDouble("pct", 0.0), o.optDouble("fixed", 0.0), o.optString("pot"), o.optBoolean("on", true), o.optString("dir", "in"))
             if (!AutoMatch.matches(r, title, text)) continue
             val amount = AutoMatch.amountIn("$title $text")
+            // v9.9.27: the rule's own conditions (on workdays, after 22:00, more than 1,000) — checked here now
+            if (!RuleConds.ok(o.optJSONArray("ifs"), System.currentTimeMillis(), RuleConds.weekendOf(o), amount)) continue
             val share = AutoMatch.share(r, amount)
             q.put(JSONObject().put("id", evId + ":" + r.id).put("rule", r.id).put("pkg", sbn.packageName).put("app", app).put("title", title.take(200)).put("text", text.take(1000)).put("ts", sbn.postTime))
             if (o.optBoolean("tell", true)) alert(ctx, r, amount, share, ar)

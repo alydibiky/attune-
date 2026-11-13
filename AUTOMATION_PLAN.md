@@ -111,6 +111,8 @@
         charging + Wi-Fi within ~15 min (PhoneRulesWorker, WorkManager), the device from the paired list (BLUETOOTH_CONNECT asked once),
         Wi-Fi by name (unseen with location off → never fires, says so); decide() in phonerules.js = PhoneRules.kt (10,000 sequences).
         Still waiting: arriving / leaving a place (background location — Ali's Play decision).
+  - [x] v9.9.27: rule conditions on the phone — money rules (AutoRules.kt) and message alerts (MessageWatch.kt) check "on workdays", "after
+        22:00", "more than 1,000" via RuleConds (= phonerules.js condOk, 10,000 cases); such rules are on now. "A new fund" keeps the written name.
   - [ ] (older note) **The phone part still to build (rules saved as "Waiting for the phone part", never fired wrongly):** Kotlin listeners for
         arriving / leaving a place (background location — Play declaration + disclosure screen, tell Ali), Bluetooth connect
         (BluetoothDevice.ACTION_ACL_CONNECTED, BLUETOOTH_CONNECT permission), Wi-Fi (ConnectivityManager callback), charging

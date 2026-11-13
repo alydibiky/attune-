@@ -255,7 +255,10 @@ export function parseRule(text0, ctx = {}) {
   if (has("pot", t) && (pc || pots.length || /صندوق|fund|fonds|fondo|topf|fundo|копилк|kumbara|tabungan|फंड|فنڈ|پس انداز|ফান্ড|akiba|กองทุน|quỹ|基金|貯金|적금/u.test(t)) && (pc || money.some((x) => !used.has(x.v)) || (when && when.type === "money_in"))) {
     const fixed = pc ? null : money.filter((x) => !used.has(x.v)).slice(-1)[0];
     // money arriving with no amount said for the fund ("… put it in the university fund") = all of it
-    dos.push({ type: "pot", pct: pc ? pc.v : fixed ? null : 100, amount: fixed ? fixed.v : null, pot: pots[0] ? pots[0].it.id : null });
+    // v9.9.27: a fund that doesn't exist yet keeps the name the person wrote ("put 20% in savings" → "Savings"), for "A new fund"
+    const named = /(?:\bin(?:to)?|\bto)\s+(?:the\s+|my\s+|a\s+)?([\p{L}][\p{L}'\s]{1,30}?)\s*[.!]?$/iu.exec(raw) || /(?:في|ف|على)\s*(?:صندوق|حساب)?\s*([\p{L}\s]{2,24}?)\s*[.!]?$/u.exec(raw);
+    const potName = !pots[0] && named ? named[1].trim().replace(/^./, (c) => c.toUpperCase()) : null;
+    dos.push({ type: "pot", pct: pc ? pc.v : fixed ? null : 100, amount: fixed ? fixed.v : null, pot: pots[0] ? pots[0].it.id : null, ...(potName ? { potName } : {}) });
     if (!pots.length) ask.push({ field: "pot", q: "Which fund?", choices: [...(ctx.pots || []).slice(0, 5).map((p) => p.id), "new"] });
     if (pc && (pc.v <= 0 || pc.v > 100)) ask.push({ field: "pct", q: "What percent?", choices: [] });
   }

@@ -51,7 +51,7 @@ export function loadAuto(ls = typeof localStorage !== "undefined" ? localStorage
 }
 export function saveAuto(s, native, lang = "en", ls = typeof localStorage !== "undefined" ? localStorage : null) {
   try { ls && ls.setItem(AUTO_KEY, JSON.stringify(s)); } catch (e) {}
-  try { native && native.autoSave && native.autoSave(JSON.stringify({ rules: s.rules.map(({ id, words, pct, fixed, pot, on, dir, tell }) => ({ id, words, pct, fixed, pot, on: on !== false, dir, tell })), lang })); } catch (e) {}
+  try { native && native.autoSave && native.autoSave(JSON.stringify({ rules: s.rules.map(({ id, words, pct, fixed, pot, on, dir, tell, ifs, weekend }) => ({ id, words, pct, fixed, pot, on: on !== false, dir, tell, ifs: ifs || [], weekend: weekend || [5, 6] })), lang })); } catch (e) {}
   return s;
 }
 export const addRule = (s, p, now = Date.now()) => ({ ...s, rules: [...s.rules, { id: "au" + now.toString(36) + "-" + s.rules.length, ...p, on: true, created: now }], pots: { [p.pot]: 0, ...s.pots } });

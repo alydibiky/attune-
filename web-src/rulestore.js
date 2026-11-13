@@ -31,7 +31,10 @@ const LIVE = new Set(["time", "money_in", "message", "call"]);
 export const hasPhoneRules = () => { try { return !!(typeof window !== "undefined" && window.AttuneNative && window.AttuneNative.phoneRulesSave); } catch (e) { return false; } };
 const phoneLive = (r) => hasPhoneRules() && !(r.if || []).some((x) => x.type === "more" || x.type === "less")
   && (r.when.type === "charging" || (r.when.type === "bluetooth" && r.when.device && typeof r.when.device === "object" && !!r.when.device.address) || (r.when.type === "wifi" && !!r.when.ssid));
-export const isLive = (r) => !!(r && r.when && ((LIVE.has(r.when.type) && (r.when.type === "time" || !(r.if || []).length)) || (PHONE_T.has(r.when.type) && phoneLive(r))));
+// v9.9.27: money / message / call rules with a condition (workdays, after 22:00, more than 1,000) are checked on the phone now too
+// (AutoRules.kt / MessageWatch.kt → RuleConds) — live with the phone part; a message rule's "more than" (no amount) never fires
+const condsOk = (r) => !(r.if || []).length || (hasPhoneRules() && (r.when.type === "money_in" || !(r.if || []).some((x) => x.type === "more" || x.type === "less")));
+export const isLive = (r) => !!(r && r.when && ((LIVE.has(r.when.type) && (r.when.type === "time" || condsOk(r))) || (PHONE_T.has(r.when.type) && phoneLive(r))));
 const PHONE_T = new Set(["bluetooth", "charging", "wifi"]);
 /** Hand the phone rules to the phone (with the words its notification shows, in the person's language). */
 export function syncPhoneRules() {
@@ -74,7 +77,7 @@ export function answer(r, field, value) {
   const n = JSON.parse(JSON.stringify(r)); n.ask = (n.ask || []).filter((a) => a.field !== field);
   if (field === "who" && n.when) n.when.who = value === "anyone" ? null : value;
   else if (field === "place" && n.when) n.when.place = value; else if (field === "device" && n.when) n.when.device = value;
-  else if (field === "pot") (n.do || []).forEach((d) => { if (d.type === "pot") d.pot = value; });
+  else if (field === "pot") (n.do || []).forEach((d) => { if (d.type === "pot") d.pot = value === "new" ? d.potName || tr("Savings") : value; });   // (v9.9.27: "A new fund" takes the name written, never "new")
   else if (field === "minutes") (n.do || []).forEach((d) => { if (d.type === "timer") d.minutes = +value; });
   else if (field === "when") n.when = { type: value, ...(value === "time" ? { at: { h: 9, m: 0 } } : {}) };
   else if (field === "do") n.do = [{ type: value }];
@@ -101,11 +104,11 @@ export function saveRule(r, { schedule, native, lang = "en", now = Date.now() } 
     } else if (w.type === "money_in") {
       const pot = (r.do || []).find((x) => x.type === "pot");
       const words = w.what === "salary" ? ["salary", "payroll", "مرتب", "راتب"] : w.who ? [nameOf(ctx.people, w.who)].filter(Boolean) : ["transfer", "تحويل"];
-      const p = { words, pct: pot ? (pot.pct != null ? pot.pct : 0) : 0, fixed: pot && pot.amount ? pot.amount : 0, pot: pot ? pot.pot || tr("Savings") : tr("Savings"), tell: true, dir: "in", text: r.text, trigger: lines.when };
+      const p = { words, pct: pot ? (pot.pct != null ? pot.pct : 0) : 0, fixed: pot && pot.amount ? pot.amount : 0, pot: pot ? pot.pot || tr("Savings") : tr("Savings"), tell: true, dir: "in", text: r.text, trigger: lines.when, ifs: r.if || [], weekend: weekendNow() };   // (v9.9.27: its conditions, checked on the phone)
       if (pot) { const st = addRule(loadAuto(), p, now); saveAuto(st, native, lang); rule.engine = "auto:" + st.rules[st.rules.length - 1].id; }
-      else { const wr = newRule({ who: words, app: "any", words: [], once: false, label: r.text }, now); saveWatch([wr, ...loadWatch()], lang); rule.engine = "watch:" + wr.id; }
+      else { const wr = newRule({ who: words, app: "any", words: [], once: false, label: r.text, ifs: r.if || [], weekend: weekendNow() }, now); saveWatch([wr, ...loadWatch()], lang); rule.engine = "watch:" + wr.id; }
     } else if ((w.type === "message" || w.type === "call") && w.who) {
-      const wr = newRule({ who: [nameOf(ctx.people, w.who)], app: w.app && w.app !== "any" ? w.app : "any", words: [], once: false, label: r.text }, now); saveWatch([wr, ...loadWatch()], lang); rule.engine = "watch:" + wr.id;
+      const wr = newRule({ who: [nameOf(ctx.people, w.who)], app: w.app && w.app !== "any" ? w.app : "any", words: [], once: false, label: r.text, ifs: r.if || [], weekend: weekendNow() }, now); saveWatch([wr, ...loadWatch()], lang); rule.engine = "watch:" + wr.id;
     }
   } catch (e) {}
   saveRules([rule, ...loadRules()]);

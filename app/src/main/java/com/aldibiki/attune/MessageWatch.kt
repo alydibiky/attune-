@@ -46,6 +46,7 @@ object MessageWatch {
             val o = arr.optJSONObject(i) ?: continue
             val r = parse(o)
             if (!WatchMatch.matches(r, sbn.packageName, title, text, sub)) continue
+            if (!RuleConds.ok(o.optJSONArray("ifs"), System.currentTimeMillis(), RuleConds.weekendOf(o), null)) continue   // v9.9.27: "after 22:00", "on workdays"…
             val key = r.id + "|" + sbn.packageName + "|" + title
             val now = System.currentTimeMillis()
             if ((recent[key] ?: 0L) > now - 120_000) continue

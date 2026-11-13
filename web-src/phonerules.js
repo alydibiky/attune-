@@ -13,6 +13,13 @@
 export const PHONE_TRIGGERS = ["bluetooth", "charging", "wifi"];
 const norm = (s) => String(s || "").trim().replace(/^"|"$/g, "");
 const mins = (at) => (at ? at.h * 60 + (at.m || 0) : null);
+/** v9.9.27 a rule's conditions with the amount (money rules): more / less than compare the amount read; no amount → never fires
+ *  (RuleConds.ok in PhoneRules.kt is the same). The hours / days as allowedNow. */
+export function condOk(ifs = [], now = Date.now(), weekend = [5, 6], amount = null) {
+  const money = (ifs || []).filter((x) => x.type === "more" || x.type === "less");
+  for (const x of money) { if (amount == null || !(amount >= 0)) return false; if (x.type === "more" && !(amount > x.amount)) return false; if (x.type === "less" && !(amount < x.amount)) return false; }
+  return allowedNow((ifs || []).filter((x) => x.type !== "more" && x.type !== "less"), now, weekend);
+}
 /** The rule's hours / days allow it now? */
 export function allowedNow(ifs = [], now = Date.now(), weekend = [5, 6]) {
   const d = new Date(now), m = d.getHours() * 60 + d.getMinutes(), we = weekend.includes(d.getDay());
