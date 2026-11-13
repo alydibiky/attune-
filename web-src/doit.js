@@ -328,10 +328,10 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   { const due = /\b(?:due|by)\b(?:\s+on)?(?:\s+the)?\s+(\d{1,2})(?:st|nd|rd|th)?\b|(?:يستحق|ميعاده|ميعادها|بتتدفع)\s*(?:يوم)?\s*([\d٠-٩]{1,2})/i.exec(latin(t));
     if (due && /\b(bill|electricity|water|internet|phone|gas|rent|school|fees|subscription|insurance)\b|فاتور|كهربا|ميه|مياه|نت|غاز|ايجار|إيجار|مصاريف|اشتراك|تأمين/i.test(t)) {
       const day = +(due[1] || latin(due[2] || "")), amt = Math.max(0, ...latin(t).replace(due[0], " ").match(/\d[\d,]*(?:\.\d+)?/g)?.map((x) => +x.replace(/,/g, "")) || [0]);
-      if (amt > 0 && day >= 1 && day <= 31) { const c = chatLifeIntent(latin(t).replace(due[0], " ").replace(/\s+/g, " ").trim() + " every month on the " + day + "th"); if (c) return { actions: [{ kind: "life", c: { ...c, amount: amt } }] }; }
+      if (amt > 0 && day >= 1 && day <= 31) { const c = chatLifeIntent(latin(t).replace(due[0], " ").replace(/\s+/g, " ").trim() + " every month on the " + day + "th", { now }); if (c) return { actions: [{ kind: "life", c: { ...c, amount: amt } }] }; }
     } }
   // a debt / installment / savings circle — and a deadline
-  const life = chatLifeIntent(t);
+  const life = chatLifeIntent(t, { now });   // (v9.9.26: the day it was asked, never the phone clock — a Friday "on Friday" test failed on a real Friday)
   // persona 9 (a year of daily use): "netflix 250" typed every month made 12 Netflix subscriptions (Safe to spend took all 12 off).
   // A subscription that is already there is paid this month: the money goes out, the plan's payment is ticked.
   if (life && life.kind === "subscription") {

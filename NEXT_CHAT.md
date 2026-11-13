@@ -1742,3 +1742,7 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
 - (later) B8 AU4 built (aijobs.js — careful: jobs.js is the older "/" command queue; it was overwritten by mistake and restored before
   main). Fixed on the way: Urdu «جمعرات» turned morning times into evening (rules + jobs); the week plan hid your reminder when Attune's
   block shared its hour. N2 voice memo not built (99% offline not reachable) — told Ali.
+- 13 Nov: v9.9.26 (versionCode 169) — phone rules (Ali's R1-C + R2-A): Bluetooth instant, charging / Wi-Fi within ~15 min, device from the
+  paired list; Focus "make the phone quiet" (Do Not Disturb). Fixed: doit.js read "on Friday" from the phone's clock instead of the day it was
+  asked (found because the test ran on a real Friday). Kotlin compiled on the branch (runs 43314448480, 43368561275). Left: place reminders
+  (Ali's Play decision), emergency card on the lock screen, AI jobs at night while charging; N2 voice memo not built (99% unreachable).

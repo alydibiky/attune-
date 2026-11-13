@@ -1063,6 +1063,10 @@ speak-ui.jsx: <button className={ghost} style={gs} onClick={() => hear(p)} aria-
 cv-ui.jsx: <button className={ghost} onClick={start}>{tr("Try again")}</button>
 guard.jsx: React.createElement("button", { className: "min-h-[44px] h-11 px-5 rounded-[12px] text-[13.5px] font-extrabold bg-[var(--c-btn,var(--c-acc))
 
+## Use it
+cv-ui.jsx: {sum ? <div className="rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3 text-[13px] text-[var(--c-ink)]" data-testid="cv-ai
+rules-ui.jsx: <button className={btnS} disabled={!v.trim()} onClick={() => pick(v.trim())} data-testid="rule-wifi-save">{tr("Use it")}</button></div>
+
 ## Word
 cv-ui.jsx: {letter ? <div className="rounded-[12px] bg-[var(--c-surf)] border border-[var(--c-ln)] p-3" data-testid="cv-ai-letter-result"><p className=
 slides-ui.jsx: <button onClick={saveDocx} className="py-2.5 rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extra
