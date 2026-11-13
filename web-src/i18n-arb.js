@@ -12431,4 +12431,12 @@ export const ARB = {
   "Place reminders: coming soon in this version.": "تذكير الأماكن: قريبًا في هذا الإصدار.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "ليرن وأتيون مغلق، يحتاج أندرويد الموقع «السماح طوال الوقت». ويبقى على هذا الهاتف.",
   "Coming soon": "قريبًا",
+  "Flight": "الرحلة",
+  "Hotel": "الفندق",
+  "Check-in": "تسجيل الوصول",
+  "Check-out": "المغادرة",
+  "Booking code": "رقم الحجز",
+  "From {app}:": "من {app}:",
+  "Removed from the trip": "أُزيل من الرحلة",
+  "Remove from the trip": "أزِله من الرحلة",
 };

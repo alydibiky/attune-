@@ -12439,4 +12439,12 @@ export const DE = {
   "Place reminders: coming soon in this version.": "Orts-Erinnerungen: bald in dieser Version.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Damit es bei geschlossenem Attune klingelt, braucht Android den Standort „Immer zulassen“. Er bleibt auf diesem Handy.",
   "Coming soon": "Bald",
+  "Flight": "Flug",
+  "Hotel": "Hotel",
+  "Check-in": "Check-in",
+  "Check-out": "Check-out",
+  "Booking code": "Buchungscode",
+  "From {app}:": "Von {app}:",
+  "Removed from the trip": "Aus der Reise entfernt",
+  "Remove from the trip": "Aus der Reise entfernen",
 };

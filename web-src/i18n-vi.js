@@ -12439,4 +12439,12 @@ export const VI = {
   "Place reminders: coming soon in this version.": "Nhắc theo địa điểm: sắp có trong phiên bản này.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Để nhắc khi Attune đóng, Android cần vị trí “Luôn cho phép”. Vị trí chỉ ở trên điện thoại này.",
   "Coming soon": "Sắp có",
+  "Flight": "Chuyến bay",
+  "Hotel": "Khách sạn",
+  "Check-in": "Nhận phòng",
+  "Check-out": "Trả phòng",
+  "Booking code": "Mã đặt chỗ",
+  "From {app}:": "Từ {app}:",
+  "Removed from the trip": "Đã bỏ khỏi chuyến đi",
+  "Remove from the trip": "Bỏ khỏi chuyến đi",
 };

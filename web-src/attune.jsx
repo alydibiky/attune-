@@ -7819,7 +7819,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.28";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.29";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -11623,9 +11623,13 @@ export default function App() {
           return callChat([{ role: "system", content: brainSystem({ voice: true, ui, known }) + (prof ? "\n\n" + prof : "") }, ...(past || []), { role: "user", content: lb + q }], null, { maxTokens: 520, temperature: 0.3, think: false }); } : null}
         openTool={(tool, lang) => { setVoiceOpen(false); setVoiceText(""); try { localStorage.setItem("attune:translate:tab", "doc"); if (lang) localStorage.setItem("attune:translate:to", lang); } catch (e) {} navTo(tool === "translate-doc" ? "translate" : "pdfchat"); }} /></Guard> : null}
       {/* v9.9.19 T6: the focus timer over everything (focus-ui.jsx) */}
+      {/* v9.9.29 (Ali's screenshot: the week plan showed the To-dos page through it): these full-screen pages sit outside the themed
+          part, so they get the theme's colours here (display: contents — no box of its own; the colours still pass down) */}
+      <div className="calm" style={{ display: "contents" }}>
       <Guard name="focus"><FocusHost /></Guard>
       <Guard name="weekplan"><WeekPlanHost flash={flash} /></Guard>
       <Guard name="braindump"><BrainDumpHost flash={flash} /></Guard>
+      </div>
       <Guard name="jobs"><JobsRunner ready={modelUsable} ask={(messages) => callChat(messages, null, { maxTokens: 400, temperature: 0.2, think: false })} /></Guard>
       {quietWake && !voiceOpen ? <QuietWake native={NATIVE} nativeCall={nativeCall} tag={voiceTag(agentCountry())} onDone={(text) => { setQuietWake(false); if (text != null) { setVoiceText(text); setVoiceOpen(true); } }} /> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}

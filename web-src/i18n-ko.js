@@ -12439,4 +12439,12 @@ export const KO = {
   "Place reminders: coming soon in this version.": "장소 알림: 이 버전에서 곧 제공.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune이 닫혀 있어도 울리려면 위치 '항상 허용'이 필요해요. 위치는 이 휴대폰에만 있어요.",
   "Coming soon": "곧 제공",
+  "Flight": "항공편",
+  "Hotel": "호텔",
+  "Check-in": "체크인",
+  "Check-out": "체크아웃",
+  "Booking code": "예약 번호",
+  "From {app}:": "{app}에서:",
+  "Removed from the trip": "여행에서 뺐어요",
+  "Remove from the trip": "여행에서 빼기",
 };

@@ -12440,4 +12440,12 @@ export const HI = {
   "Place reminders: coming soon in this version.": "जगह के रिमाइंडर: इस संस्करण में जल्द।",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune बंद होने पर बजने के लिए Android को लोकेशन “हर समय अनुमति दें” चाहिए। यह इसी फ़ोन पर रहती है।",
   "Coming soon": "जल्द",
+  "Flight": "उड़ान",
+  "Hotel": "होटल",
+  "Check-in": "चेक-इन",
+  "Check-out": "चेक-आउट",
+  "Booking code": "बुकिंग कोड",
+  "From {app}:": "{app} से:",
+  "Removed from the trip": "यात्रा से हटाया गया",
+  "Remove from the trip": "यात्रा से हटाएँ",
 };

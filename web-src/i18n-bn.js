@@ -12439,4 +12439,12 @@ export const BN = {
   "Place reminders: coming soon in this version.": "স্থানের রিমাইন্ডার: এই সংস্করণে শিগগিরই।",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune বন্ধ থাকলেও বাজাতে Android-এর লোকেশন “সব সময় অনুমতি দিন” দরকার। এটি এই ফোনেই থাকে।",
   "Coming soon": "শিগগিরই",
+  "Flight": "ফ্লাইট",
+  "Hotel": "হোটেল",
+  "Check-in": "চেক-ইন",
+  "Check-out": "চেক-আউট",
+  "Booking code": "বুকিং কোড",
+  "From {app}:": "{app} থেকে:",
+  "Removed from the trip": "ভ্রমণ থেকে সরানো হয়েছে",
+  "Remove from the trip": "ভ্রমণ থেকে সরান",
 };

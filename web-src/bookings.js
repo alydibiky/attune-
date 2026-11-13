@@ -38,9 +38,13 @@ export function readBooking(text, now = Date.now()) {
   const fno = (afterWord && FN.exec(tf.slice(afterWord.index + afterWord[0].length, afterWord.index + afterWord[0].length + 12)) && (() => { const m = FN.exec(tf.slice(afterWord.index + afterWord[0].length)); m.index += afterWord.index + afterWord[0].length; return m; })()) || FN.exec(tf.replace(/\b(PNR|REF|CODE)\b/gi, ""));
   const airline = AIRLINE_NAMES.find((n) => new RegExp("\\b" + n.replace(/ /g, "\\s+") + "\\b", "i").test(t)) || (Object.entries(AIRLINE_AR).find(([a]) => raw.includes(a)) || [])[1] || "";
   const isFlight = (fno && /\b(flight|flt|depart|departure|boarding|gate|airport|seat)\b|رحلة|رحلتك|الرحلة|طيران|مغادرة|الإقلاع|اقلاع|المطار/i.test(t)) || (airline && fno);
-  const isStay = /\b(check-?in|check-?out|hotel|booking\.com|airbnb|agoda|nights?|stay|reservation at)\b|فندق|الفندق|تسجيل الدخول|تسجيل الوصول|ليالي|ليلة|إقامة|اقامة|حجزك في/i.test(t);
   const tc = code ? t.split(code).join(" ") : t, ds = dates(tc, now), tm = times(tc);   // (never a date out of the booking code: "GX3MAR")
-  if (isFlight) {
+  // v9.9.29 (Ali's screenshot: a Telegram news line «… قاعدة عسكرية خشبية …» became "I found a stay · 11 nights"): "night / ليلة /
+  // stay / طيران" are everyday words. A stay needs a hotel / booking word AND a date or a booking code; a flight needs a date or a code.
+  const mine = !!code || /\b(check-?in|check-?out|your (?:reservation|booking|stay|flight|trip|e-?ticket)|e-?ticket|boarding pass|itinerary|(?:reservation|booking) (?:is )?confirmed|confirmation (?:code|number|no))\b|تسجيل الدخول|تسجيل الوصول|حجزك|رحلتك|تذكرتك|تم تأكيد|تم الحجز|تأكيد الحجز|تاكيد الحجز|بطاقة الصعود/i.test(t);
+  const promo = !code && /\b(off|discount|deals?|sale|save|offers?|promo|from only|starting from|book now)\b|%|خصم|عروض|عرض|تخفيض|احجز الآن|احجز الان/i.test(t);
+  const isStay = mine && !promo && (!!code || ds.length > 0) && /\b(check-?in|check-?out|hotel|booking\.com|airbnb|agoda|nights?|stay|reservation at)\b|فندق|الفندق|تسجيل الدخول|تسجيل الوصول|ليالي|ليلة|إقامة|اقامة|حجزك في/i.test(t);
+  if (isFlight && mine && !promo && (code || ds.length)) {
     let codes = [...t.matchAll(IATA)].map((m) => m[1]);
     // (cities in the order they are written: «من جدة إلى القاهرة» = JED → CAI)
     if (codes.length < 2) codes = [...codes, ...Object.entries(CITY).map(([c, i]) => { const m = new RegExp("(?<![\\p{L}])" + c + "(?![\\p{L}])", "iu").exec(raw.toLowerCase()); return m ? [m.index, i] : null; }).filter(Boolean).sort((x, y) => x[0] - y[0]).map((x) => x[1])];
@@ -60,7 +64,7 @@ export function readBooking(text, now = Date.now()) {
     return { kind: "stay", status, code, name: nm ? nm[1].trim() : "", checkin: ci ? ci.iso : "", checkout, nights, src: raw.slice(0, 300), sure: { dates: !!ci && !!checkout, code: !!code, name: !!nm } };
   }
   // only the code and the word "cancelled" ("Your booking K7QX2P has been cancelled") → cancels whatever has that code
-  if (status === "cancelled") { const c = code || ((/\b([A-Z0-9]{6})\b/.exec(t.replace(/\b(PNR|REF|CODE)\b/g, "")) || [])[1] || ""); if (c && /[A-Z]/.test(c)) return { kind: "any", status, code: c, src: raw.slice(0, 300), sure: { code: true } }; }
+  if (status === "cancelled" && /\b(booking|reservation|pnr|ref(?:erence)?)\b|حجز|الحجز/i.test(t)) { const c = code || ((/\b([A-Z0-9]{6})\b/.exec(t.replace(/\b(PNR|REF|CODE)\b/g, "")) || [])[1] || ""); if (c && /[A-Z]/.test(c)) return { kind: "any", status, code: c, src: raw.slice(0, 300), sure: { code: true } }; }
   return null;
 }
 /** Apply a booking the person OK'd to the trip's list: a change replaces the one with the same code (or the same flight number and day),

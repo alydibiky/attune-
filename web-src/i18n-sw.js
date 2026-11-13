@@ -12440,4 +12440,12 @@ export const SW = {
   "Place reminders: coming soon in this version.": "Vikumbusho vya mahali: hivi karibuni kwenye toleo hili.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Ili ilie Attune ikiwa imefungwa, Android inahitaji mahali “Ruhusu wakati wote”. Inabaki kwenye simu hii.",
   "Coming soon": "Hivi karibuni",
+  "Flight": "Safari ya ndege",
+  "Hotel": "Hoteli",
+  "Check-in": "Kuingia",
+  "Check-out": "Kutoka",
+  "Booking code": "Namba ya uhifadhi",
+  "From {app}:": "Kutoka {app}:",
+  "Removed from the trip": "Imeondolewa kwenye safari",
+  "Remove from the trip": "Ondoa kwenye safari",
 };

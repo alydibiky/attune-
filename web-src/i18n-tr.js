@@ -12440,4 +12440,12 @@ export const TRK = {
   "Place reminders: coming soon in this version.": "Konum hatırlatıcıları: bu sürümde yakında.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune kapalıyken çalması için Android konumda “Her zaman izin ver” ister. Konum bu telefonda kalır.",
   "Coming soon": "Yakında",
+  "Flight": "Uçuş",
+  "Hotel": "Otel",
+  "Check-in": "Giriş",
+  "Check-out": "Çıkış",
+  "Booking code": "Rezervasyon kodu",
+  "From {app}:": "{app} kaynağından:",
+  "Removed from the trip": "Geziden çıkarıldı",
+  "Remove from the trip": "Geziden çıkar",
 };

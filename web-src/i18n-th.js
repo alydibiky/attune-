@@ -12439,4 +12439,12 @@ export const TH = {
   "Place reminders: coming soon in this version.": "การเตือนตามสถานที่: เร็ว ๆ นี้ในเวอร์ชันนี้",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "เพื่อให้เตือนตอน Attune ปิดอยู่ Android ต้องใช้ตำแหน่ง “อนุญาตตลอดเวลา” ข้อมูลอยู่ในมือถือนี้เท่านั้น",
   "Coming soon": "เร็ว ๆ นี้",
+  "Flight": "เที่ยวบิน",
+  "Hotel": "โรงแรม",
+  "Check-in": "เช็กอิน",
+  "Check-out": "เช็กเอาต์",
+  "Booking code": "รหัสการจอง",
+  "From {app}:": "จาก {app}:",
+  "Removed from the trip": "นำออกจากทริปแล้ว",
+  "Remove from the trip": "นำออกจากทริป",
 };

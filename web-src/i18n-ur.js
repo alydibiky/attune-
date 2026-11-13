@@ -12440,4 +12440,12 @@ export const UR = {
   "Place reminders: coming soon in this version.": "جگہ کی یاد دہانی: اس ورژن میں جلد۔",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attune بند ہونے پر بجنے کے لیے Android کو لوکیشن “ہر وقت اجازت دیں” چاہیے۔ یہ اسی فون پر رہتی ہے۔",
   "Coming soon": "جلد",
+  "Flight": "پرواز",
+  "Hotel": "ہوٹل",
+  "Check-in": "چیک اِن",
+  "Check-out": "چیک آؤٹ",
+  "Booking code": "بکنگ کوڈ",
+  "From {app}:": "{app} سے:",
+  "Removed from the trip": "سفر سے ہٹا دیا گیا",
+  "Remove from the trip": "سفر سے ہٹائیں",
 };

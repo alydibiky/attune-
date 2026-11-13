@@ -18,7 +18,10 @@ export function TripBookings({ trip, setTrip, flash }) {
   const seen = trip.seenMsgs || [];
   const fresh = useMemo(() => kept().filter((n) => !seen.includes(String(n.id || n.ts))).map((n) => ({ n, b: readBooking((n.title || "") + " " + (n.text || "")) })).filter((x) => x.b), [seen.length]);
   const items = [...(trip.bookings || [])].sort((a, b) => String(a.date || a.checkin).localeCompare(String(b.date || b.checkin)));
+  const [open, setOpen] = useState("");
   const decide = (x, add) => { const res = add ? applyBooking(trip.bookings || [], x.b) : { items: trip.bookings || [], did: "" };
+    // v9.9.29 (Ali: "I don't even know what I added to the trip"): each booking keeps the words it was read from and where they came from
+    if (add && res.did === "added") res.items = res.items.map((y, k) => (k === res.items.length - 1 ? { ...y, msg: String(x.b.src || "").slice(0, 300), via: x.n ? (x.n.app || x.n.title || "") : "" } : y));
     setTrip({ bookings: res.items, seenMsgs: [...seen, ...(x.n ? [String(x.n.id || x.n.ts)] : [])].slice(-300) }); setFound(null); setPaste("");
     if (add) flash && flash(res.did === "removed" ? tr("Removed from the trip — it was cancelled") : res.did === "replaced" ? tr("Updated — the new time replaces the old one") : res.did === "same" ? tr("Already in the trip") : tr("Added to the trip")); };
   const ask = found || fresh[0] || null;
@@ -26,14 +29,23 @@ export function TripBookings({ trip, setTrip, flash }) {
     {ask ? <div className="rounded-[16px] p-3 space-y-2" style={{ background: "var(--c-amber, #FBF0DC)" }} data-testid="trip-found" data-status={ask.b.status}>
       <p className="m-0 text-[13px] font-bold">{ask.b.status === "cancelled" ? tr("A booking was cancelled") : ask.b.status === "changed" ? tr("A booking changed") : ask.b.kind === "flight" ? tr("I found a flight") : tr("I found a stay")}{ask.n ? " · " + (ask.n.app || ask.n.title || "") : ""}</p>
       <p className="m-0 text-[14px] font-extrabold" dir="auto" data-testid="trip-found-line">{line(ask.b)}{ask.b.code ? " · " + ask.b.code : ""}</p>
+      {ask.b.src ? <p className="m-0 text-[12.5px] c-sub line-clamp-3" dir="auto" data-testid="trip-found-msg">“{ask.b.src}”</p> : null}
       <div className="flex flex-wrap gap-2"><button className={btnP} onClick={() => decide(ask, true)} data-testid="trip-found-add">{ask.b.status === "cancelled" ? tr("Remove it") : ask.b.status === "changed" ? tr("Update it") : tr("Add to the trip")}</button>
         <button className={btnS} onClick={() => decide(ask, false)} data-testid="trip-found-no">{tr("Not mine")}</button></div></div> : null}
     <div className="flex gap-2"><input value={paste} onChange={(e) => setPaste(e.target.value)} dir="auto" placeholder={tr("Paste a booking message (flight, hotel)…")} className={inp} data-testid="trip-paste" />
       <button className={btnS} disabled={!paste.trim()} onClick={() => { const b = readBooking(paste); if (!b) { flash && flash(tr("No booking found in it")); return; } setFound({ b, n: null }); }} data-testid="trip-paste-read">{tr("Read")}</button></div>
     {items.length ? <div className="rounded-[16px] border p-3" style={{ borderColor: "var(--c-ln)", background: "var(--c-surf)" }} data-testid="trip-items">
-      {items.map((b) => <div key={b.id} className="flex items-center gap-2 min-h-[44px] border-t border-[var(--c-ln)] first:border-t-0" data-testid="trip-item">
-        <span className="text-[16px]">{b.kind === "flight" ? "✈" : "🏨"}</span><span className="flex-1 min-w-0 text-[13.5px] font-semibold" dir="auto">{line(b)}</span>
-        <span className="text-[11.5px] c-sub" dir="ltr">{b.code}</span></div>)}</div> : null}
+      {items.map((b) => <div key={b.id} className="border-t border-[var(--c-ln)] first:border-t-0" data-testid="trip-item">
+        <button type="button" onClick={() => setOpen(open === b.id ? "" : b.id)} className="w-full flex items-center gap-2 min-h-[44px] text-start" aria-expanded={open === b.id} data-testid="trip-item-open">
+          <span className="text-[16px]">{b.kind === "flight" ? "✈" : "🏨"}</span><span className="flex-1 min-w-0 text-[13.5px] font-semibold" dir="auto">{line(b)}</span>
+          <span className="text-[11.5px] c-sub" dir="ltr">{b.code}</span><span className="c-sub text-[12px]">{open === b.id ? "▴" : "▾"}</span></button>
+        {open === b.id ? <div className="pb-2 space-y-1 text-[13px]" data-testid="trip-item-detail">
+          {(b.kind === "flight" ? [["Flight", [b.airline, b.no].filter(Boolean).join(" ")], ["From", b.from], ["To", b.to], ["Date", day(b.date)], ["Time", b.time]]
+            : [["Hotel", b.name], ["Check-in", day(b.checkin)], ["Check-out", day(b.checkout)], ["Nights", b.nights ? String(b.nights) : ""]]).concat([["Booking code", b.code]])
+            .map(([k, v]) => <div key={k} className="flex gap-2"><span className="c-sub w-28 shrink-0">{tr(k)}</span><b className="flex-1 min-w-0" dir="auto">{v || "—"}</b></div>)}
+          {b.msg ? <p className="m-0 text-[12.5px] c-sub rounded-[10px] p-2" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="trip-item-msg">{b.via ? tr("From {app}:", { app: b.via }) + " " : ""}“{b.msg}”</p> : null}
+          <button type="button" className="text-[13px] font-bold min-h-[40px]" style={{ color: "var(--c-warn, #B42318)" }} onClick={() => { setTrip({ bookings: (trip.bookings || []).filter((y) => y.id !== b.id) }); setOpen(""); flash && flash(tr("Removed from the trip")); }} data-testid="trip-item-remove">{tr("Remove from the trip")}</button>
+        </div> : null}</div>)}</div> : null}
   </div>;
 }
 /** TR2: the flight-day card (Home on the day + the Trip tab). */

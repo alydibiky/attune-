@@ -12439,4 +12439,12 @@ export const FA = {
   "Place reminders: coming soon in this version.": "یادآوری مکان: به‌زودی در این نسخه.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "برای زنگ با بسته بودن Attune، اندروید مکان «همیشه مجاز» را لازم دارد. روی همین گوشی می‌ماند.",
   "Coming soon": "به‌زودی",
+  "Flight": "پرواز",
+  "Hotel": "هتل",
+  "Check-in": "ورود",
+  "Check-out": "خروج",
+  "Booking code": "کد رزرو",
+  "From {app}:": "از {app}:",
+  "Removed from the trip": "از سفر حذف شد",
+  "Remove from the trip": "حذف از سفر",
 };

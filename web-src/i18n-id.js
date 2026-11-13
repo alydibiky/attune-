@@ -12440,4 +12440,12 @@ export const IDN = {
   "Place reminders: coming soon in this version.": "Pengingat tempat: segera hadir di versi ini.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Agar berbunyi saat Attune tertutup, Android perlu lokasi “Izinkan sepanjang waktu”. Lokasi tetap di ponsel ini.",
   "Coming soon": "Segera",
+  "Flight": "Penerbangan",
+  "Hotel": "Hotel",
+  "Check-in": "Check-in",
+  "Check-out": "Check-out",
+  "Booking code": "Kode pemesanan",
+  "From {app}:": "Dari {app}:",
+  "Removed from the trip": "Dihapus dari perjalanan",
+  "Remove from the trip": "Hapus dari perjalanan",
 };

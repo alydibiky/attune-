@@ -12439,4 +12439,12 @@ export const RU = {
   "Place reminders: coming soon in this version.": "Напоминания по месту: скоро в этой версии.",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Чтобы звонить при закрытом Attune, Android нужен доступ к местоположению «Разрешить всегда». Оно остаётся на телефоне.",
   "Coming soon": "Скоро",
+  "Flight": "Рейс",
+  "Hotel": "Отель",
+  "Check-in": "Заезд",
+  "Check-out": "Выезд",
+  "Booking code": "Код брони",
+  "From {app}:": "Из {app}:",
+  "Removed from the trip": "Убрано из поездки",
+  "Remove from the trip": "Убрать из поездки",
 };

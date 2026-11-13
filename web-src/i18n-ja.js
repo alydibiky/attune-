@@ -12439,4 +12439,12 @@ export const JA = {
   "Place reminders: coming soon in this version.": "場所のリマインダー：このバージョンで近日公開。",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "Attuneを閉じていても鳴らすには、位置情報の「常に許可」が必要です。位置はこのスマホに残ります。",
   "Coming soon": "近日公開",
+  "Flight": "フライト",
+  "Hotel": "ホテル",
+  "Check-in": "チェックイン",
+  "Check-out": "チェックアウト",
+  "Booking code": "予約番号",
+  "From {app}:": "{app} から:",
+  "Removed from the trip": "旅行から外しました",
+  "Remove from the trip": "旅行から外す",
 };

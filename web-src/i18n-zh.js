@@ -12439,4 +12439,12 @@ export const ZH = {
   "Place reminders: coming soon in this version.": "地点提醒：此版本即将推出。",
   "To ring with Attune closed, Android needs location “Allow all the time”. It stays on this phone.": "要在 Attune 关闭时提醒，Android 需要位置“始终允许”。位置只保存在这部手机上。",
   "Coming soon": "即将推出",
+  "Flight": "航班",
+  "Hotel": "酒店",
+  "Check-in": "入住",
+  "Check-out": "退房",
+  "Booking code": "预订编号",
+  "From {app}:": "来自 {app}：",
+  "Removed from the trip": "已从行程中移除",
+  "Remove from the trip": "从行程中移除",
 };
