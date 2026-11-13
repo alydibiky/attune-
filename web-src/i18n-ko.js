@@ -12449,4 +12449,6 @@ export const KO = {
   "Remove from the trip": "여행에서 빼기",
   "Made for you: {t}": "준비했어요: {t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune이 닫혀 있어도 휴대폰을 충전하는 동안 작업이 제시간에 실행돼요.",
+  "Updated by itself: {t}": "자동으로 바뀜: {t}",
+  "Removed by itself — it was cancelled: {t}": "자동으로 뺌 — 취소됨: {t}",
 };

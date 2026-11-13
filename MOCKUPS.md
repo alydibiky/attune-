@@ -68,3 +68,9 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
   P-2 full APK first (recommended), P-3 only while Attune is open, P-4 leave it out.
 - Ali picked P-2. Combined screen: https://claude.ai/artifact/6WqaNahzA9dm66YpDgcB8m (docs/mockups/place-reminders-combined.html) — Ali: "OK-2 OK-3 OK-4" (OK-1, the separate explanation screen, not OK'd → left out).
   Built in v9.9.28.
+
+## 13 Nov 2026 — smart notifications (no new screen)
+- Ali: "I want Attune to understand notifications very well, not keep asking like a stupid … really smart". Built without a new
+  mock-up round: nothing new is drawn — it uses the screens he already OK'd (Autopilot's "Done for you" + Undo, I1; the trip list).
+  What changed is WHEN Attune asks (only when it truly can't tell) — his own instruction. Earlier picks it replaces: I1 "nothing without
+  a tap", A1/A2 "ask me about chats" (now only when he asks to teach, in Chat), TR1 B "ask first" (now only bookings without a code).

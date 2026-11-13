@@ -2,6 +2,7 @@
    that asks (in Follow-ups and in Chat), the phone-notification answers coming back (A2), and the "What Attune learned" list (L).
    Understanding: your words by code (English, Egyptian Arabic, Franco) → else the AI when a model is loaded → else "Which of
    these?". Nothing is saved before "I understood: … — Save". */
+import { suggestFrom } from "./autopilot.js";   // v9.9.30 what Autopilot handles is never asked
 import React, { useEffect, useState } from "react";
 import { GraduationCap, Check, X, Undo2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -29,10 +30,10 @@ const SAID_KEY = "attune:noteask:said";
 const readSaid = () => { try { return JSON.parse(localStorage.getItem(SAID_KEY) || "[]") || []; } catch (e) { return []; } };
 const dropSaid = (key) => { try { localStorage.setItem(SAID_KEY, JSON.stringify(readSaid().filter((x) => NL.sourceOf(x.n).key !== key))); } catch (e) {} };
 /** What Attune asks about now: a sentence typed on the phone's question first, then money in a chat / an app it doesn't know. */
-export function currentAsks(N = N0(), max = 3) {
+export function currentAsks(N = N0(), max = 3, { teach = false } = {}) {
   const said = readSaid().map((x) => ({ id: "said:" + NL.sourceOf(x.n).key, src: NL.sourceOf(x.n), n: x.n, said: x.said, why: "money" }));
   const keys = new Set(said.map((a) => a.src.key));
-  return [...said, ...NL.asksFrom(allNotes(N), NT.loadTeach(), { max, bankish: moneySourceNote, payOf: payEntryOf }).filter((a) => !keys.has(a.src.key))].slice(0, Math.max(max, said.length));
+  return [...said, ...NL.asksFrom(allNotes(N), NT.loadTeach(), { max, bankish: moneySourceNote, payOf: payEntryOf, teach, handled: (n) => { try { return !!suggestFrom(n, { now: n.ts || Date.now() }); } catch (e) { return false; } } }).filter((a) => !keys.has(a.src.key))].slice(0, Math.max(max, said.length));
 }
 /** A2: tell the phone what it knows + the question's words; take the answers given on the phone's question.
  *  A tap (Mine / Not money) is clear → learnt at once; a typed sentence → asked in Follow-ups ("I understood … — Save"). → lines learnt */
@@ -124,7 +125,7 @@ function NoteAskInner({ ask, onDone, flash }) {
 
 /** A4: Chat — "teach me your notifications": the questions one after another, inside the conversation. */
 export function TeachChat({ flash }) {
-  const [asks, setAsks] = useState(() => currentAsks(N0(), 10)), [done, setDone] = useState([]);
+  const [asks, setAsks] = useState(() => currentAsks(N0(), 10, { teach: true })), [done, setDone] = useState([]);   // (the person asked to teach — chats too)
   const cur = asks[0];
   if (!cur) return <p className="m-0 text-[14px]" data-testid="teach-chat-done">{done.length ? tr("That's all for now — I learnt {n}. I'll use it everywhere.", { n: done.filter(Boolean).length }) : tr("Nothing I'm unsure about right now. When a notification isn't clear, I'll ask you here or in Follow-ups.")}</p>;
   return <div className="space-y-2" data-testid="teach-chat">

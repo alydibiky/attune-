@@ -12450,4 +12450,6 @@ export const TRK = {
   "Remove from the trip": "Geziden çıkar",
   "Made for you: {t}": "Senin için hazırlandı: {t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune kapalıyken bir iş, telefon şarj olurken zamanında çalışır.",
+  "Updated by itself: {t}": "Kendiliğinden güncellendi: {t}",
+  "Removed by itself — it was cancelled: {t}": "Kendiliğinden kaldırıldı — iptal edildi: {t}",
 };

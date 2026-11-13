@@ -22,11 +22,11 @@ const TEACH = { rules: [], asked: [], skip: [] };
 export function act(n, { recent = [n] } = {}) {
   const pay = T(() => P.readNotification(n, { teach: TEACH }));
   const sug = T(() => AP.suggestFrom(n, { now: n.ts, recent }));
-  const asks = T(() => NL.asksFrom([n], TEACH, { bankish: P.moneySourceNote, payOf: (x) => P.readNotification(x, { teach: TEACH }), now: n.ts }), []) || [];
+  const asks = T(() => NL.asksFrom([n], TEACH, { bankish: P.moneySourceNote, payOf: (x) => P.readNotification(x, { teach: TEACH }), now: n.ts, handled: (x) => !!AP.suggestFrom(x, { now: x.ts }) }), []) || [];
   const dls = T(() => D.fromNotifications([n], [], { now: n.ts, order: "dmy" }).filter((f) => f.date >= D.isoDay(n.ts)), []) || [];
   const k = T(() => NM.understandNote(n), {}) || {};
   return { money: pay ? { amount: pay.amount, dir: pay.direction, cur: pay.currency, auto: !!P.codeSure(pay) } : null,
-    card: sug ? sug.kind : "", cardAmount: sug ? sug.amount || 0 : 0, cardTitle: sug ? sug.title || "" : "", cardAt: sug ? sug.at || 0 : 0,
+    card: sug ? sug.kind : "", cardAuto: !!(sug && AP.isAuto(AP.emptyState(), sug)), cardAmount: sug ? sug.amount || 0 : 0, cardTitle: sug ? sug.title || "" : "", cardAt: sug ? sug.at || 0 : 0,
     ask: asks[0] ? asks[0].why : "", guess: asks[0] ? asks[0].guess || "" : "", askAmount: asks[0] && asks[0].pay ? asks[0].pay.amount : 0,
     deadline: dls.length > 0, kind: k.kind || "other" };
 }

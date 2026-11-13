@@ -92,7 +92,7 @@ export function AutopilotCard() {
     // v9.9 a subscription it added by itself: the plan (or this month's tick) and its expense are taken back
     try { if (d.kind === "subscription") { saveLife(undoSubPay(loadLife(), d.key)); if (!d.noMoney) window.__attuneUndoMoney && window.__attuneUndoMoney(d.amount, "expense"); } } catch (e) {}
     put(AP.undoDone(s, d.key)); };
-  const waiting = list.filter((x) => !AP.isAuto(s, x)).slice(0, 4), recent = (s.done || []).filter((d) => d.at > Date.now() - 2 * 864e5 && d.kind !== "followup").slice(0, 3), week = AP.weekCount(s);
+  const waiting = list.filter((x) => !AP.isAuto(s, x)).slice(0, 4), recent = (s.done || []).filter((d) => d.at > Date.now() - 2 * 864e5).slice(0, 5)   /* v9.9.30: deliveries too — they are done by themselves now */, week = AP.weekCount(s);
   if (!waiting.length && !recent.length && !s.ask) return null;
   return (
     <section className="c-card p-3.5 space-y-2" style={{ borderColor: "color-mix(in srgb, var(--c-area-agents, var(--c-acc)) 35%, var(--c-ln))" }} data-testid="autopilot">

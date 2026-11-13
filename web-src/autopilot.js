@@ -7,14 +7,14 @@
    from now on?"; then they are added alone and listed as "done for you", each with Undo. Never twice: the bank SMS and the bank app's
    notification for the same amount are one; an expense already typed is matched, not added again. "Not this" teaches it (that app's
    offers are never suggested again). One-time codes are never kept (RecallLog.kt). Pure; tests/unit/v980autopilot.test.mjs.        */
-import { isChatApp } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
+import { isChatApp, readNotification, codeSure } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
 import { understandNote } from "./notifmeaning.js";
 import { findSub } from "./subpay.js";
 import { notAPayment, fromPhoneNumber } from "./notifwords.js";   // v9.9.17 one list for all four readers
 import { understandNote as readMeaning } from "./notelabels.js";
 
 export const AP_KEY = "attune:autopilot:v1";
-export const emptyState = () => ({ v: 1, seen: {}, ok: {}, no: {}, always: [], asked: [], done: [], skipApps: [] });
+export const emptyState = () => ({ v: 1, seen: {}, ok: {}, no: {}, always: [], asked: [], done: [], skipApps: [], manual: [] });
 const DAY = 864e5;
 const iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const at9 = (t) => { const d = new Date(t); d.setHours(9, 0, 0, 0); return d.getTime(); };
@@ -89,36 +89,47 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   // a bill that is DUE (not paid yet) — whatever kind the app is: "You have a new gas bill: EGP 648 due 5 Dec" (Fawry), «فاتورتك ٢٨٩٨ ر.س مستحقة»
   if (!isChatApp(n) && !left && no !== "code" && no !== "scam" && no !== "person" && u.amount > 0 && DUE_W.test(all0) && BILL_W.test(all0) && !/\b(paid|thank|received your payment|successful(?:ly)?)\b|تم (?:سداد|دفع|الدفع)/i.test(all0)) {
     const when = dayIn(text + " " + title, n.ts || now) || at9((n.ts || now) + 3 * DAY);
-    return { ...base, kind: "bill", amount: u.amount, at: when, title: smsFrom + " bill", key: "bl:" + smsFrom + ":" + iso(when), line: "Bill" };
+    return { ...base, kind: "bill", amount: u.amount, at: when, title: smsFrom + " bill", key: "bl:" + smsFrom + ":" + iso(when), line: "Bill", sure: true };
   }
   { const all = all0, svc = subOf(all);
     if (svc && u.amount > 0 && !isChatApp(n) && !no && !left && u.kind !== "promo" && !(u.state === "money in" && !/payment(?:[^.\n]|\.\d){0,40}received|received your payment/i.test(all)) && PAID_W.test(all) && !OFFER_W.test(all)) {
       const d = paidDayOf(all, n.ts || now) || iso(n.ts || now);
       return { ...base, kind: "subscription", title: svc, amount: u.amount, cur: curOf(all), date: d, key: "sb:" + svc + ":" + d.slice(0, 7), line: "Subscription" };
     } }
-  if (u.kind === "bank" && u.amount > 0 && !isChatApp(n) && !no && !left && (u.state === "money out" || u.state === "money in")) {   // v9.9.9: never from a chat
+  // v9.9.30 (Ali: "not keep asking — really smart"): a shop's / an app's receipt ("Your payment of EGP 3,942.00 was successful",
+  // "total charged EGP 5458.00 to card 6907") is an expense Attune adds by itself — it was asked "You paid … add it?" before.
+  // If the bank's SMS for it comes too, Money sees the same amount that day and keeps it once (paylog.alreadyIn).
+  if (!(u.kind === "bank" && (u.state === "money out" || u.state === "money in")) && u.amount > 0 && !isChatApp(n) && !no && !left && lab && lab.meaning === "paid" && lab.sure) {
+    const shop = shopIn(title + " " + text) || (/messag|\bsms\b|gmail|mail|outlook/i.test(app) ? title : app);
+    return { ...base, kind: "expense", amount: u.amount, cat: catOf(shop + " " + app + " " + text), note: shop, date: iso(n.ts || now), via: "receipt", sure: true,
+      key: "x:" + Math.round(u.amount * 100) + ":" + iso(n.ts || now), line: "Expense" };
+  }
+  if (u.kind === "bank" && u.amount > 0 && !isChatApp(n) && !no && !left && (u.state === "money out" || u.state === "money in")) {
+    // v9.9.30: a bank / wallet message Money is sure of goes into Money by itself — no card on Home asking for a tap
+    { let e = null; try { e = readNotification(n); } catch (x) {} if (e && codeSure(e)) return null; }   // v9.9.9: never from a chat
     const shop = shopIn(title + " " + text), out = u.state === "money out";
-    return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now),
+    const rc = out && !!(lab && lab.meaning === "paid" && lab.sure) && !/messag|\bsms\b|mms|رسائل/i.test(app + " " + String(n.pkg || ""));   // a shop's receipt (Steam, Booking.com), not a bank SMS: sure (v9.9.30)
+    return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now), ...(rc ? { via: "receipt", sure: true } : {}),
       key: (out ? "x:" : "i:") + Math.round(u.amount * 100) + ":" + iso(n.ts || now), line: (out ? "Expense" : "Income") };
   }
   if (u.kind === "delivery") {
     if (u.state === "delivered") return { ...base, kind: "delivered", key: "dl:" + app, line: "Delivered" };
     const when = dayIn(text + " " + title, n.ts || now) || 0;
-    if (when) return { ...base, kind: "followup", at: when, title: "Delivery · " + app.replace(/ shopping$/i, "") + (text ? " — " + text.slice(0, 60) : ""), key: "dv:" + app + ":" + iso(when), line: "Follow-up" };
+    if (when) return { ...base, kind: "followup", sure: true, at: when, title: "Delivery · " + app.replace(/ shopping$/i, "") + (text ? " — " + text.slice(0, 60) : ""), key: "dv:" + app + ":" + iso(when), line: "Follow-up" };
     return null;
   }
   if (u.kind === "message" && u.who && ASKS.test(text)) {
     const when = dayIn(text, n.ts || now) || at9((n.ts || now) + DAY);
-    return { ...base, kind: "todo", at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "").replace(/\s+\d[\d ]*$/, "") + ": " + text.slice(0, 80), key: "td:" + String(n.id), line: "To-do" };
+    return { ...base, kind: "todo", sure: true, at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "").replace(/\s+\d[\d ]*$/, "") + ": " + text.slice(0, 80), key: "td:" + String(n.id), line: "To-do" };
   }
   if (u.kind === "call" && u.who) {
     const same = (recent || []).filter((r) => r.id !== n.id && Math.abs((r.ts || 0) - (n.ts || 0)) < DAY && (() => { const v = understandNote(r); return v.kind === "call" && v.who === u.who; })());
-    if (same.length >= 1 || /whatsapp|telegram|messenger|viber|botim|imo/i.test(app + " " + (n.pkg || ""))) return { ...base, kind: "callback", at: now + 15 * 60000, who: u.who, title: "Call back " + u.who, key: "cb:" + u.who + ":" + iso(n.ts || now), line: "Call back" };
+    if (same.length >= 1 || /whatsapp|telegram|messenger|viber|botim|imo/i.test(app + " " + (n.pkg || ""))) return { ...base, kind: "callback", sure: true, at: now + 15 * 60000, who: u.who, title: "Call back " + u.who, key: "cb:" + u.who + ":" + iso(n.ts || now), line: "Call back" };
     return null;
   }
   if (u.kind === "bill" && u.amount > 0 && /\bdue\b|مستحق|آخر ميعاد|اخر ميعاد/i.test(title + " " + text)) {
     const when = dayIn(text + " " + title, n.ts || now) || at9((n.ts || now) + 3 * DAY);
-    return { ...base, kind: "bill", amount: u.amount, at: when, title: app + " bill", key: "bl:" + app + ":" + iso(when), line: "Bill" };
+    return { ...base, kind: "bill", amount: u.amount, at: when, title: app + " bill", key: "bl:" + app + ":" + iso(when), line: "Bill", sure: true };
   }
   return null;
 }
@@ -156,8 +167,10 @@ export function deliveredDone(notes = [], s = emptyState()) {
 
 /** The kind of a suggestion as "auto" sees it: CIB expenses, Amazon deliveries… */
 export const ruleOf = (x) => x.kind + ":" + x.app;
-/** Done by itself without asking: what the person allowed — and (v9.9) a subscription payment, unless they said "not these" */
-export const isAuto = (s, x) => (s.always || []).includes(ruleOf(x)) || (x.kind === "subscription" && !(s.skipApps || []).includes(x.app + ":subscription"));
+/** Done by itself without asking: what the person allowed, a subscription payment (v9.9), and (v9.9.30, Ali: "not keep asking")
+ *  everything Attune is SURE of — a delivery's day, a bill that is due, a call back, a to-do someone asked for, a receipt — each
+ *  listed under "done for you" with Undo. An Undo (or "not these") turns that kind from that app back into a card that waits. */
+export const isAuto = (s, x) => !(s.manual || []).includes(ruleOf(x)) && ((s.always || []).includes(ruleOf(x)) || (x.kind === "subscription" && !(s.skipApps || []).includes(x.app + ":subscription")) || !!x.sure);
 /** Accepted (by a tap or by itself): remembered, counted; after 3 of the same rule → ask once "do these by yourself?" */
 export function accept(s, x, { auto = false, rid = "", now = Date.now() } = {}) {
   const r = ruleOf(x), count = Object.values(s.ok).filter((v) => v.rule === r).length + 1;
@@ -168,13 +181,16 @@ export function refuse(s, x, { app = false } = {}) {
   return { ...s, no: { ...s.no, [x.key]: Date.now() }, skipApps: app ? [...new Set([...(s.skipApps || []), x.app + ":" + (x.kind === "expense" || x.kind === "income" ? "bank" : x.kind === "followup" ? "delivery" : x.kind)])] : s.skipApps || [] };
 }
 export const allow = (s, rule, yes) => ({ ...s, always: yes ? [...new Set([...s.always, rule])] : s.always, asked: [...new Set([...s.asked, rule])], ask: "" });
-export const undoDone = (s, key) => { const { [key]: _, ...ok } = s.ok; return { ...s, ok, no: { ...s.no, [key]: Date.now() }, done: (s.done || []).filter((d) => d.key !== key) }; };
+export const undoDone = (s, key) => { const { [key]: _, ...ok } = s.ok, d = (s.done || []).find((x) => x.key === key);
+  // (v9.9.30) undoing something done alone = "ask me about these": that kind from that app waits for a tap from now on
+  const manual = d && d.kind ? [...new Set([...(s.manual || []), d.kind + ":" + d.app])] : s.manual || [];
+  return { ...s, ok, no: { ...s.no, [key]: Date.now() }, done: (s.done || []).filter((x) => x.key !== key), manual, always: (s.always || []).filter((r) => !d || r !== d.kind + ":" + d.app) }; };
 /** "Autopilot did 31 things for you this week" */
 export const weekCount = (s, now = Date.now()) => Object.values(s.ok || {}).filter((v) => v.at > now - 7 * DAY).length;
 
 /** A suggestion → the actions the Home box would run (doit.js apply). */
 export function actionsFor(x) {
-  if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, cat: x.cat || "other", note: x.note || "", date: x.date, source: "notification" }] }];
+  if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, cat: x.cat || "other", note: x.note || "", date: x.date, source: x.via === "receipt" ? "receipt" : "notification" }] }];
   if (x.kind === "subscription") return [{ kind: "subPay", name: x.title, amount: x.amount, date: x.date, cur: x.cur || "", key: x.key },
     ...(x.noMoney ? [] : [{ kind: "money", items: [{ type: "expense", amount: x.amount, cat: "bills", note: x.title, date: x.date, source: "notification", ...(x.account ? { account: x.account } : {}) }] }])];
   if (x.kind === "bill") return [{ kind: "life", c: { kind: "bill", dir: "out", amount: x.amount, count: 1, total: x.amount, every: null, start: iso(x.at), title: x.title, person: "", paid: [], currency: "" } }];

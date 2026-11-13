@@ -34,12 +34,12 @@ ok(L.labelOf(wa2, t).meaning === "work" && L.notMoney(L.labelOf(wa2, t)), "saved
 ok(L.asksFrom([wa, wa2], t).length === 0, "…and it is never asked about again");
 const fresh = { rules: [], asked: [], skip: [] };
 const asks = L.asksFrom([wa, wa2, { id: "c", pkg: "com.cib.mobile", app: "CIB", title: "CIB", text: "credited EGP 450", ts: Date.now() }], fresh, { bankish: (n) => /cib/i.test(n.app) });
-ok(asks.length === 1 && asks[0].src.key === s.key, "asks once for the group (two messages = one question); a bank's money is not asked here");
+ok(asks.length === 0, "v9.9.30 (Ali: \"not keep asking\"): money talk in a group is never asked about (it is never money anyway); a bank's money is not asked here either");
 t = L.applyLabel(L.readAnswer("mine", s), t, 2000);
 ok(t.rules.filter((r) => r.kind === "label").length === 1 && L.labelOf(wa, t).meaning === "mymoney", "a new answer replaces the old one for the same source");
 const list = L.learned(t, { items: [{ id: "p1", kind: "person", name: "Nada", role: "wife", created: 5 }] });
 ok(list.length === 2 && list.some((i) => i.type === "who") && list.some((i) => i.type === "label"), "What Attune learned: the label and Nada = wife");
-const tu = L.undoLabel(t, L.labelOf(wa, t).id); ok(L.labelOf(wa, tu) === null && L.asksFrom([wa], tu).length === 1, "Undo removes it — and Attune may ask about that group again");
+const tu = L.undoLabel(t, L.labelOf(wa, t).id); ok(L.labelOf(wa, tu) === null && L.asksFrom([wa], tu).length === 0, "Undo removes it (v9.9.30: and the group is still never asked about)");
 // what a label does in Money
 const fam = { id: "f1", pkg: "com.whatsapp", app: "WhatsApp", title: "Ahmed brother", text: "تم تحويل 2000 جنيه ليك على انستاباي", ts: Date.now() };
 ok(readNotification(fam, { teach: { rules: [] } }) === null, "a chat is not money by default");

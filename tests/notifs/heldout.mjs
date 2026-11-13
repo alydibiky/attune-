@@ -80,7 +80,7 @@ for (const [want, n, a, x, cc] of HELD) { setCountry(typeof cc === "string" ? cc
   const why = want === "money" ? (!g.money ? "not read" : !near(g.money.amount, a) ? "amount " + g.money.amount : g.money.dir !== x ? "direction " + g.money.dir : "")
     : want === "paid" ? ((g.money && near(g.money.amount, a) && g.money.dir === "out") || (g.ask === "paid" && near(g.askAmount, a)) || (g.card && near(g.cardAmount, a)) ? "" : "receipt missed / wrong amount")
     : want === "sub" ? (g.card === "subscription" && g.cardTitle === x && near(g.cardAmount, a) ? "" : "no subscription card (" + (g.card || "-") + " " + g.cardTitle + " " + g.cardAmount + ")")
-    : want === "nomoney" ? (moneyish ? "became money" : "") : want === "ask" ? (g.money ? "became money" : g.ask === "money" ? "" : "not asked")
+    : want === "nomoney" ? (moneyish ? "became money" : "") : want === "ask" ? (g.money ? "became money" : g.ask ? "asked about chat talk (v9.9.30: never)" : "")
     : want === "quiet" ? (moneyish ? "became money" : card ? "made a " + card + " card" : g.ask ? "asked" : "") : g.card === want ? "" : "no " + want + " (" + (g.card || "nothing") + ")";
   if (!why) right++; else wrong.push(`${want}: ${why} · ${n.app} · ${n.title}: ${n.text.replace(/\n/g, " ⏎ ").slice(0, 90)}`); }
 for (const w of wrong) console.log("  miss — " + w);

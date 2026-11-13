@@ -12450,4 +12450,6 @@ export const UR = {
   "Remove from the trip": "سفر سے ہٹائیں",
   "Made for you: {t}": "آپ کے لیے تیار: {t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune بند ہو تو بھی، فون چارج ہوتے وقت کام اپنے وقت پر چلتا ہے۔",
+  "Updated by itself: {t}": "خود بخود اپ ڈیٹ ہوا: {t}",
+  "Removed by itself — it was cancelled: {t}": "خود بخود ہٹا دیا — منسوخ ہو گیا: {t}",
 };

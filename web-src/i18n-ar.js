@@ -9541,4 +9541,6 @@ export const AR = {
   "Remove from the trip": "شيله من الرحلة",
   "Made for you: {t}": "اتعمل لك: {t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "لو Attune مقفول، الشغلانة بتشتغل في ميعادها والموبايل على الشاحن.",
+  "Updated by itself: {t}": "اتعدّل لوحده: {t}",
+  "Removed by itself — it was cancelled: {t}": "اتشال لوحده — اتلغى: {t}",
 };

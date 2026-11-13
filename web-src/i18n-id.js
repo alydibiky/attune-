@@ -12450,4 +12450,6 @@ export const IDN = {
   "Remove from the trip": "Hapus dari perjalanan",
   "Made for you: {t}": "Dibuat untukmu: {t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "Saat Attune tertutup, tugas berjalan tepat waktu selama ponsel diisi daya.",
+  "Updated by itself: {t}": "Diperbarui otomatis: {t}",
+  "Removed by itself — it was cancelled: {t}": "Dihapus otomatis — dibatalkan: {t}",
 };

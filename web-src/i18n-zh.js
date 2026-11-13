@@ -12449,4 +12449,6 @@ export const ZH = {
   "Remove from the trip": "从行程中移除",
   "Made for you: {t}": "为你准备：{t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "即使 Attune 已关闭，任务也会在手机充电时按时运行。",
+  "Updated by itself: {t}": "已自动更新：{t}",
+  "Removed by itself — it was cancelled: {t}": "已自动移除——已取消：{t}",
 };

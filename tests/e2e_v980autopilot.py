@@ -1,4 +1,4 @@
-"""v9.8 I1 Autopilot (Ali: "I1 ok"): the phone's notifications become cards on Home — Add saves it through the Home box's path
+"""v9.8 I1 Autopilot (Ali: "I1 ok") — v9.9.30: what Attune is sure of is done by itself ("Done for you" + Undo); the rest are cards on Home — Add saves it through the Home box's path
 (Money / a reminder / a bill), Not this hides it, the bank SMS + app copy are one, after 3 of a kind it asks to do them by itself.
   PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v980autopilot.py
 """
@@ -25,21 +25,33 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + ";" + MOCK)
     ctx.clock.set_fixed_time(NOW)
     page.set_viewport_size({"width": 390, "height": 844})
-    page.goto(env.url); page.wait_for_selector("[data-testid=autopilot]", timeout=15000)
-    items = page.locator("[data-testid=autopilot-item]")
-    txt = " | ".join(items.all_inner_texts()).replace("\n", " ")
-    check(items.count() == 4, "four things to do (the SMS copy is the same payment, the sale and Talabat's offer are nothing): " + txt)
-    check("Call back Mama" in txt and "talabat" not in txt.lower(), "a WhatsApp missed voice call from Mama → call back; Talabat's '300 EGP OFF' is an offer, not a delivery")
-    check("CARREFOUR" in txt and "1,250" in txt and "Ahmed Salah" in txt and "Amazon" in txt, "…the Carrefour expense, Ahmed's to-do, the Amazon delivery")
-    page.locator("[data-testid=autopilot-item]", has_text="CARREFOUR").locator("[data-testid=autopilot-add]").click(); page.wait_for_timeout(300)
-    led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3'))")
-    ex = [t for t in led["txns"] if t["type"] == "expense"]
-    check(len(ex) == 1 and abs(ex[0]["amount"] - 1250) < 0.01 and ex[0]["cat"] == "groceries", "Add → one expense in Money: 1,250, groceries: %s" % ex)
-    check(page.locator("[data-testid=autopilot-item]", has_text="CARREFOUR").count() == 0, "…and it leaves the card")
-    page.locator("[data-testid=autopilot-item]", has_text="Ahmed").locator("[data-testid=autopilot-add]").click(); page.wait_for_timeout(300)
+    page.goto(env.url); page.wait_for_selector("[data-testid=autopilot-done]", timeout=15000); page.wait_for_timeout(600)
+    # v9.9.30 (Ali, 13 Nov: "understand notifications very well, not keep asking … really smart"): what Attune is sure of is DONE,
+    # listed under "Done for you" with Undo — nothing waits for a tap
+    check(page.locator("[data-testid=autopilot-item]").count() == 0, "nothing waits for a tap")
+    done = page.locator("[data-testid=autopilot-done]").inner_text()
+    check("Call back Mama" in done and "Ahmed Salah" in done and "Amazon" in done, "done by itself: call back Mama, Ahmed's request, the Amazon delivery: " + done.replace("\n", " | "))
+    check("talabat" not in done.lower() and "Jumia" not in done, "the sale and Talabat's '300 EGP OFF' are nothing")
+    check("CARREFOUR" not in done, "the CIB debit is left to Money, which adds it by itself (one copy: the SMS is the same payment)")
     rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')"); rem = rem if isinstance(rem, list) else rem.get("items", [])
     check(any("Ahmed Salah" in r.get("title", "") and r.get("source") == "autopilot" for r in rem), "Ahmed's message → a reminder for tomorrow")
-    # v9.8 (Ali: "I want to see the whole message … and reply to it and tell it to add it like I want"): a tap shows it all
+    check(any("Call back Mama" in r.get("title", "") for r in rem) and any("Amazon" in r.get("title", "") for r in rem), "…and the call back and the delivery are reminders")
+    row = page.locator("[data-testid=autopilot-done] div", has_text="Ahmed Salah").first
+    row.locator("[data-testid=autopilot-undo]").click(); page.wait_for_timeout(300)
+    rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')"); rem = rem if isinstance(rem, list) else rem.get("items", [])
+    check(not any("Ahmed Salah" in r.get("title", "") for r in rem), "Undo takes the reminder back")
+    check("todo:WhatsApp" in page.evaluate("JSON.parse(localStorage.getItem('attune:autopilot:v1')).manual"), "…and from now on such a request from WhatsApp waits for a tap")
+    n0 = len(rem)
+    page.reload(); page.wait_for_timeout(1800)
+    rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')"); rem = rem if isinstance(rem, list) else rem.get("items", [])
+    check(len(rem) == n0 and page.locator("[data-testid=autopilot-item]").count() == 0, "nothing comes back after a restart (never twice)")
+    ctx.close()
+    # a kind the person asked to see first (Undo once → "manual"): the card waits; a tap shows it all and saves it MY way
+    AP0 = {"v": 1, "seen": {}, "ok": {}, "no": {}, "always": [], "asked": [], "done": [], "skipApps": [], "manual": ["followup:Amazon Shopping"]}
+    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + ";" + MOCK + ";try{localStorage.setItem('attune:autopilot:v1', %s)}catch(e){}" % json.dumps(json.dumps(AP0)))
+    ctx.clock.set_fixed_time(NOW); page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(env.url); page.wait_for_selector("[data-testid=autopilot-item]", timeout=15000)
+    check(page.locator("[data-testid=autopilot-item]").count() == 1 and "Amazon" in page.locator("[data-testid=autopilot-item]").inner_text(), "the Amazon delivery waits (asked to see these first)")
     am = page.locator("[data-testid=autopilot-item]", has_text="Amazon")
     am.locator("[data-testid=autopilot-open]").click(); page.wait_for_timeout(150)
     check("Arriving Thursday · your Anker charger" in am.locator("[data-testid=autopilot-full]").inner_text(), "a tap shows the whole message")
@@ -47,10 +59,6 @@ with sync_playwright() as p:
     life = page.evaluate("JSON.parse(localStorage.getItem('attune:life:v1')||'{\"items\":[]}')")
     check(any(c.get("kind") == "subscription" and c.get("amount") == 200 for c in life.get("items", [])), "…and what I type saves it MY way: a subscription of 200 a month")
     check(page.locator("[data-testid=autopilot-item]", has_text="Amazon").count() == 0, "…then it leaves the card")
-    page.locator("[data-testid=autopilot-item]", has_text="Mama").locator("[data-testid=autopilot-no]").click(); page.wait_for_timeout(200)
-    check(page.locator("[data-testid=autopilot-item]").count() == 0, "Not this → gone")
-    page.reload(); page.wait_for_timeout(1500)
-    check(page.locator("[data-testid=autopilot-item]").count() == 0, "…and nothing comes back after a restart (never twice)")
     check(not real_errors(errors), "no JavaScript errors: %s" % real_errors(errors)[:3])
     br.close()
 finish()

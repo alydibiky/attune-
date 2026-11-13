@@ -1746,6 +1746,18 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
   paired list; Focus "make the phone quiet" (Do Not Disturb). Fixed: doit.js read "on Friday" from the phone's clock instead of the day it was
   asked (found because the test ran on a real Friday). Kotlin compiled on the branch (runs 43314448480, 43368561275). Left: place reminders
   (Ali's Play decision), emergency card on the lock screen, AI jobs at night while charging; N2 voice memo not built (99% unreachable).
+- 13 Nov: v9.9.30 (versionCode 173) — **smart notifications** (Ali: "understand notifications very well, not keep asking like a
+  stupid … really smart"). Measured on the 10,000-notification run: before = 1,875 questions + 2,845 cards waiting for a tap; now = 0
+  and 0, still 10,000/10,000 right and nothing wrongly made money. What changed: (1) questions only for money that may have moved
+  from an unknown source and that nothing else handles — never future charges, failed payments, prices, appointment fees, cash on
+  delivery, ride estimates, scams, chat talk, or something Autopilot already made a card for (notelabels.asksFrom); (2) Autopilot does
+  what it is SURE of by itself from the start — a delivery's day, a bill due, call back, a request in a chat, a subscription, a shop's
+  receipt (new: expense) — listed under "Done for you" with Undo; an Undo turns that kind from that app back into a card
+  (autopilot.isAuto / undoDone → manual); (3) Money is sure of a bank's own words about YOUR account even without a payee name
+  («تم خصم … من حسابك», "Salary … credited to your account", ATM withdrawals — paylog.codeSure + OWN_ACC); "Payment received … for
+  your stay" is money OUT; an email's sender counts like an SMS sender (Vezeeta in Gmail = an appointment); (4) the phone no longer
+  posts "What is this?" about chats (NoteAsk.maybeAsk off; teaching only when asked: Chat «علمني اشعاراتي»); (5) Travel: a booking
+  with its code goes into the trip by itself with Undo. Held-out 60/60 + held-out 2 (written after) 28/28; tests/unit/v9930smart.
 - 13 Nov: v9.9.29 (versionCode 172) — Ali's 2 screenshots: a Telegram news line was offered as "I found a stay · 11 nights" → a booking
   now needs a booking code or "your booking / check-in" words (tests/tr1/notbook.mjs: 10,000 news / chats / offers, old code wrong on 73%);
   the found card shows the words it read; every trip item opens (details + the message + app it came from + Remove from the trip);

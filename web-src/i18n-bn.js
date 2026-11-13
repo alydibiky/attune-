@@ -12449,4 +12449,6 @@ export const BN = {
   "Remove from the trip": "ভ্রমণ থেকে সরান",
   "Made for you: {t}": "আপনার জন্য তৈরি: {t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune বন্ধ থাকলেও, ফোন চার্জে থাকার সময় কাজটি তার সময়ে চলে।",
+  "Updated by itself: {t}": "নিজে থেকে আপডেট হয়েছে: {t}",
+  "Removed by itself — it was cancelled: {t}": "নিজে থেকে সরানো হয়েছে — বাতিল হয়েছে: {t}",
 };

@@ -1,6 +1,7 @@
 # Notification run — 10000 notifications, 10000 handled right (100.0%)
 
 - Became money when it is NOT a payment: **0** (added by itself, without a tap: **0**)
+- Interruptions (v9.9.30 — a question, or a card waiting for a tap, for something Attune could do itself): **0**
 - What it is (the kind Recall files it under): 4903 of 4903 right (100.0%)
 
 | area | notifications | wrong | right % | kind wrong |

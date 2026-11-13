@@ -46,7 +46,11 @@ object NoteAsk {
     private fun has(a: JSONArray, s: String): Boolean { for (i in 0 until a.length()) if (a.optString(i) == s) return true; return false }
 
     /** Called by PayListener for money in a chat app. Asks once, at most PER_DAY a day. */
+    /** v9.9.30 (Ali, 13 Nov: "understand notifications very well, not keep asking like a stupid … really smart"): the phone no longer
+     *  posts "What is this?" about money talk in a chat by itself — chat talk is never added to Money, so the question was only noise.
+     *  The answers path stays (Mine / Not money / Reply…) for when teaching is switched back on (pref "ask" = true). */
     fun maybeAsk(ctx: Context, pkg: String, app: String, title: String, text: String) {
+        if (!prefs(ctx).getBoolean("ask", false)) return
         try {
             val key = keyOf(pkg, title)
             if (key.endsWith("|")) return

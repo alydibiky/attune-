@@ -1,5 +1,5 @@
 """v9.9.11 (Ali picked A1 A4 L: "ask me, I tell it what it is and it understands, so next time it knows" + "make sure it's smart and
-understands anything I type"): Follow-ups asks about the WhatsApp wages group; a free sentence is understood, confirmed, saved;
+understands anything I type") — v9.9.30: nothing is asked by itself any more; teaching happens when the person asks (Chat); a free sentence is understood, confirmed, saved;
 never asked again; What Attune learned lists it with Undo; Chat "teach me your notifications" asks there too.
   PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v999teachnotes.py
 """
@@ -20,32 +20,34 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + ";" + MOCK)
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_timeout(1200)
     open_mode(page, "timeline", "[data-testid=fu-thread]")
-    asks = page.locator("[data-testid=note-ask]")
-    check(asks.count() == 1 and "ما يخص المرتبات" in asks.first.inner_text(), "Follow-ups asks once about the WhatsApp group (two messages = one question; the CIB credit is not asked)")
-    # v9.9.12: a wages group opens on Attune's guess ("I think …" — Save / Change); Change → your own words
-    check("Work talk" in page.locator("[data-testid=note-ask-understood]").inner_text(), "v9.9.12: the wages group opens on Attune's guess: work talk")
-    page.click("[data-testid=note-ask-change]"); page.wait_for_timeout(200)
-    page.fill("[data-testid=note-ask-input]", "this is the work wages group, it's never my money"); page.click("[data-testid=note-ask-go]"); page.wait_for_timeout(300)
-    u = page.locator("[data-testid=note-ask-understood]").inner_text()
+    # v9.9.30 (Ali, 13 Nov: "not keep asking like a stupid … really smart"): Follow-ups never asks about a chat by itself
+    check(page.locator("[data-testid=note-ask]").count() == 0, "Follow-ups asks nothing (the wages group's numbers are never money anyway; the CIB credit is not asked)")
+    # teaching is still there when YOU ask for it: Chat «علمني اشعاراتي»
+    def teach_chat():
+        open_mode(page, "chat", "textarea[placeholder='Message Attune']")
+        page.locator("textarea[placeholder='Message Attune']").fill("علمني اشعاراتي"); page.locator("button[title='Send']").first.click()
+        page.wait_for_selector("[data-testid=chat-teach] [data-testid=note-ask]", timeout=5000)
+    teach_chat()
+    T = "[data-testid=chat-teach] "
+    check("ما يخص المرتبات" in page.locator("[data-testid=chat-teach]").inner_text(), "Chat «علمني اشعاراتي» → asks about the WhatsApp group (two messages = one question)")
+    check("Work talk" in page.locator(T + "[data-testid=note-ask-understood]").inner_text(), "the wages group opens on Attune's guess: work talk")
+    page.click(T + "[data-testid=note-ask-change]"); page.wait_for_timeout(200)
+    page.fill(T + "[data-testid=note-ask-input]", "this is the work wages group, it's never my money"); page.click(T + "[data-testid=note-ask-go]"); page.wait_for_timeout(300)
+    u = page.locator(T + "[data-testid=note-ask-understood]").inner_text()
     check("ما يخص المرتبات" in u and "never counted as money" in u, "your words are understood and shown first: " + u.replace("\n", " "))
     check(page.evaluate("JSON.parse(localStorage.getItem('attune:noteteach:v1') || '{}').rules || []") == [], "…nothing saved before Save")
-    page.click("[data-testid=note-ask-save]"); page.wait_for_timeout(300)
+    page.click(T + "[data-testid=note-ask-save]"); page.wait_for_timeout(300)
     rules = page.evaluate("JSON.parse(localStorage.getItem('attune:noteteach:v1')).rules")
-    check(len(rules) == 1 and rules[0]["meaning"] == "work" and page.locator("[data-testid=note-ask]").count() == 0, "Save → learnt (work talk) and the question goes")
-    open_mode(page, "home", "body"); open_mode(page, "timeline", "[data-testid=fu-thread]")
-    check(page.locator("[data-testid=note-ask]").count() == 0, "next time it knows — not asked again")
+    check(len(rules) == 1 and rules[0]["meaning"] == "work" and page.locator("[data-testid=teach-chat-done]").count() == 1, "Save → learnt (work talk) — “That's all for now — I learnt 1”")
+    open_mode(page, "timeline", "[data-testid=fu-thread]")
     page.click("[data-testid=learned-open]"); page.wait_for_selector("[data-testid=learned-sheet]")
     row = page.locator("[data-testid=learned-row][data-type=label]")
     check(row.count() == 1 and "ما يخص المرتبات" in row.inner_text(), "What Attune learned lists it")
     row.locator("[data-testid=learned-undo]").click(); page.wait_for_timeout(300)
     check(page.locator("[data-testid=learned-row][data-type=label]").count() == 0, "Undo removes it")
     page.keyboard.press("Escape"); page.mouse.click(10, 10); page.wait_for_timeout(300)
-    # Chat: "teach me your notifications" (the group is unknown again after Undo)
-    open_mode(page, "chat", "textarea[placeholder='Message Attune']")
-    page.locator("textarea[placeholder='Message Attune']").fill("علمني اشعاراتي"); page.locator("button[title='Send']").first.click()
-    page.wait_for_selector("[data-testid=chat-teach] [data-testid=note-ask]", timeout=5000)
-    check("ما يخص المرتبات" in page.locator("[data-testid=chat-teach]").inner_text(), "Chat «علمني اشعاراتي» → the same question in the conversation")
-    page.click("[data-testid=chat-teach] [data-testid=note-ask-change]"); page.click("[data-testid=chat-teach] [data-testid=note-ask-notmoney]"); page.click("[data-testid=chat-teach] [data-testid=note-ask-save]"); page.wait_for_timeout(300)
+    teach_chat()
+    page.click(T + "[data-testid=note-ask-change]"); page.click(T + "[data-testid=note-ask-notmoney]"); page.click(T + "[data-testid=note-ask-save]"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=teach-chat-done]").count() == 1, "…a quick answer + Save → “That's all for now — I learnt 1”")
     check(page.evaluate("JSON.parse(localStorage.getItem('attune:noteteach:v1')).rules[0].meaning") == "notmoney", "…saved as not money")
     # A2: answers given on the phone's own "What is this?" question

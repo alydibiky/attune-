@@ -6,7 +6,7 @@
 // the phone's own notices, health, scams, fines, points / stocks, emails. Each one says what Attune must DO with it:
 //   money{amount,dir}  → in Money's list, right amount and direction      sub{service,amount} → a subscription card
 //   paid{amount}       → a receipt: asked "You paid … add it?" or listed   followup / delivered / todo / callback / bill
-//   ask                → money in a chat: asked, never added               quiet → nothing at all (no money, no card, no question)
+//   ask                → money in a chat: never added, never asked (v9.9.30) quiet → nothing at all (no money, no card, no question)
 //   nomoney            → whatever else happens, it must NOT become money
 // and, where it is clear, what it IS (the kind Recall files it under). Seeded: every run gives the same notifications.
 //     bash tests/notifs/run.sh            (summary + tests/notifs/report.md)        node tests/notifs/gen.mjs 2000   (smaller)
@@ -250,7 +250,8 @@ function judge(want, g, guessWant) {
     case "sub": return g.card !== "subscription" ? "no subscription card" + (g.money ? " (only a payment)" : "") : g.cardTitle !== want.svc ? "service “" + g.cardTitle + "” ≠ " + want.svc : near(g.cardAmount, want.a) ? "" : "amount " + g.cardAmount + " ≠ " + want.a;
     case "paid": { const a = g.money && g.money.dir === "out" ? g.money.amount : g.ask === "paid" ? g.askAmount : ["expense", "subscription"].includes(g.card) ? g.cardAmount : null; return a == null ? (g.money ? "read as money IN" : "the receipt was missed") : near(a, want.a) ? "" : "amount " + a + " ≠ " + want.a; }
     case "bill": return moneyish ? "a bill that is only DUE became money" : g.card === "bill" ? (near(g.cardAmount, want.a) ? "" : "bill amount " + g.cardAmount + " ≠ " + want.a) : g.deadline ? "" : "the bill was missed (no card, no date)";
-    case "ask": return g.money ? "chat talk became money" : g.ask !== "money" ? "not asked about" : guessWant && g.guess !== guessWant ? "no “work talk” guess" : "";
+    // v9.9.30 (Ali, 13 Nov: "not keep asking like a stupid … really smart"): money talk in a chat is never money AND never a question
+    case "ask": return g.money ? "chat talk became money" : g.ask ? "asked about chat talk" : "";
     case "quiet": return moneyish ? "became money" : cards ? "made a “" + cards + "” card" : g.ask ? "asked about it" : g.deadline ? "made a deadline" : "";
     case "nomoney": return moneyish ? "became money" : "";
     default: return g.card === want.t ? "" : moneyish ? "became money" : "no “" + want.t + "” (" + (g.card || "nothing") + ")";
@@ -261,11 +262,11 @@ for (const [name, n0, maker] of G) { const n = Math.round(n0 * TOTAL / 10000); l
     const m = maker(); if (!m) continue; const [note, want, kind, cc, recent, guessWant] = m, key = note.app + "|" + note.title + "|" + note.text; if (seen.has(key)) continue; seen.add(key); made++;
     setCountry(cc || "eg"); let g, why; try { g = act(note, recent ? { recent } : {}); why = judge(want, g, guessWant); } catch (e) { g = { kind: "" }; why = "THROW " + e.message; }
     const falseMoney = why && ["quiet", "nomoney", "ask", "bill", "followup", "delivered", "todo", "callback"].includes(want.t) && /became money|chat talk became/.test(why);
-    rows.push({ g: name, n: note, want: want.t, ok: !why, why: why.replace(/\d[\d.,]*/g, "N").replace(/“[^”]*”/g, (x) => (/card|talk|…/.test(x) ? x : "“…”")), falseMoney, auto: !!(falseMoney && g.money && g.money.auto), kindWant: kind, kindOk: !kind || g.kind === kind, kindGot: g.kind }); } }
+    rows.push({ interrupt: !!(g.ask || (g.card && g.card !== "delivered" && !g.cardAuto && !(g.money && g.money.auto))), g: name, n: note, want: want.t, ok: !why, why: why.replace(/\d[\d.,]*/g, "N").replace(/“[^”]*”/g, (x) => (/card|talk|…/.test(x) ? x : "“…”")), falseMoney, auto: !!(falseMoney && g.money && g.money.auto), kindWant: kind, kindOk: !kind || g.kind === kind, kindGot: g.kind }); } }
 const by = {}; for (const r of rows) { const b = (by[r.g] = by[r.g] || { n: 0, bad: 0, ex: {}, kn: 0, kbad: 0, kex: {} }); b.n++; if (!r.ok) { b.bad++; (b.ex[r.why] = b.ex[r.why] || []).push(r.n); } if (r.kindWant) { b.kn++; if (!r.kindOk) { b.kbad++; (b.kex[r.kindGot] = b.kex[r.kindGot] || []).push(r.n); } } }
 const total = rows.length, bad = rows.filter((r) => !r.ok).length, fm = rows.filter((r) => r.falseMoney).length, fa = rows.filter((r) => r.auto).length, kn = rows.filter((r) => r.kindWant).length, kb = rows.filter((r) => r.kindWant && !r.kindOk).length;
 const show = (x) => "«" + x.app + " · " + x.title + ": " + x.text.replace(/\n/g, " ⏎ ").slice(0, 110) + "»";
-let md = `# Notification run — ${total} notifications, ${total - bad} handled right (${(100 * (total - bad) / total).toFixed(1)}%)\n\n- Became money when it is NOT a payment: **${fm}** (added by itself, without a tap: **${fa}**)\n- What it is (the kind Recall files it under): ${kn - kb} of ${kn} right (${(100 * (kn - kb) / kn).toFixed(1)}%)\n\n| area | notifications | wrong | right % | kind wrong |\n|---|---|---|---|---|\n`;
+let md = `# Notification run — ${total} notifications, ${total - bad} handled right (${(100 * (total - bad) / total).toFixed(1)}%)\n\n- Became money when it is NOT a payment: **${fm}** (added by itself, without a tap: **${fa}**)\n- Interruptions (v9.9.30 — a question, or a card waiting for a tap, for something Attune could do itself): **${rows.filter((r) => r.interrupt).length}**\n- What it is (the kind Recall files it under): ${kn - kb} of ${kn} right (${(100 * (kn - kb) / kn).toFixed(1)}%)\n\n| area | notifications | wrong | right % | kind wrong |\n|---|---|---|---|---|\n`;
 for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n)) md += `| ${g} | ${b.n} | ${b.bad} | ${(100 * (b.n - b.bad) / b.n).toFixed(1)} | ${b.kn ? b.kbad + " of " + b.kn : "–"} |\n`;
 md += "\n## What went wrong (examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad || b.kbad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 4).map(show).join(" · ")}\n`;

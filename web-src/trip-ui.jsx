@@ -24,8 +24,25 @@ export function TripBookings({ trip, setTrip, flash }) {
     if (add && res.did === "added") res.items = res.items.map((y, k) => (k === res.items.length - 1 ? { ...y, msg: String(x.b.src || "").slice(0, 300), via: x.n ? (x.n.app || x.n.title || "") : "" } : y));
     setTrip({ bookings: res.items, seenMsgs: [...seen, ...(x.n ? [String(x.n.id || x.n.ts)] : [])].slice(-300) }); setFound(null); setPaste("");
     if (add) flash && flash(res.did === "removed" ? tr("Removed from the trip — it was cancelled") : res.did === "replaced" ? tr("Updated — the new time replaces the old one") : res.did === "same" ? tr("Already in the trip") : tr("Added to the trip")); };
-  const ask = found || fresh[0] || null;
+  // v9.9.30 (Ali: "understand notifications very well, not keep asking"): a booking that carries its booking code (the airline's /
+  // the hotel's own message) goes into the trip by itself — a change or a cancellation of a code already there too — with one Undo.
+  // Only a booking without a code is asked about.
+  React.useEffect(() => {
+    const sure = fresh.filter((x) => x.b.code && x.b.status !== undefined);
+    if (!sure.length) return;
+    let items = trip.bookings || [], did = [];
+    for (const x of sure) { const r = applyBooking(items, x.b); if (r.did === "added") r.items = r.items.map((y, k) => (k === r.items.length - 1 ? { ...y, msg: String(x.b.src || "").slice(0, 300), via: x.n.app || x.n.title || "" } : y));
+      if (r.did !== "same" && r.did !== "nothing") did.push({ did: r.did, line: line(x.b), via: x.n.app || x.n.title || "" }); items = r.items; }
+    setTrip({ bookings: items, seenMsgs: [...seen, ...sure.map((x) => String(x.n.id || x.n.ts))].slice(-300), ...(did.length ? { autoUndo: { before: trip.bookings || [], did, at: Date.now() } } : {}) });
+  }, [fresh.length]);
+  const unsure = fresh.filter((x) => !x.b.code);
+  const ask = found || unsure[0] || null;
+  const au = trip.autoUndo && trip.autoUndo.at > Date.now() - 3 * 864e5 ? trip.autoUndo : null;
   return <div className="space-y-2" data-testid="trip-bookings">
+    {au ? <div className="rounded-[14px] px-3 py-2 flex items-center gap-2 text-[13px]" style={{ background: "var(--c-soft)" }} data-testid="trip-auto">
+      <span className="flex-1 min-w-0" dir="auto">{au.did.map((d) => tr(d.did === "removed" ? "Removed by itself — it was cancelled: {t}" : d.did === "replaced" ? "Updated by itself: {t}" : "Added by itself: {t}", { t: d.line }) + (d.via ? " · " + d.via : "")).join(" · ")}</span>
+      <button type="button" className="font-bold c-acc min-h-[36px] px-1" onClick={() => setTrip({ bookings: au.before, autoUndo: null })} data-testid="trip-auto-undo">{tr("Undo")}</button>
+      <button type="button" className="c-sub min-h-[36px] px-1" aria-label={tr("OK")} onClick={() => setTrip({ autoUndo: null })} data-testid="trip-auto-ok">✓</button></div> : null}
     {ask ? <div className="rounded-[16px] p-3 space-y-2" style={{ background: "var(--c-amber, #FBF0DC)" }} data-testid="trip-found" data-status={ask.b.status}>
       <p className="m-0 text-[13px] font-bold">{ask.b.status === "cancelled" ? tr("A booking was cancelled") : ask.b.status === "changed" ? tr("A booking changed") : ask.b.kind === "flight" ? tr("I found a flight") : tr("I found a stay")}{ask.n ? " · " + (ask.n.app || ask.n.title || "") : ""}</p>
       <p className="m-0 text-[14px] font-extrabold" dir="auto" data-testid="trip-found-line">{line(ask.b)}{ask.b.code ? " · " + ask.b.code : ""}</p>

@@ -44,13 +44,13 @@ const STATE = [
   [/(?<!will be |to be |couldn't be |could not be |not be |not |for )delivered|تم التوصيل|تم توصيل|اتسلم|وصل طلبك/i, "delivered"], [/out for delivery|خرج للتوصيل|المندوب في الطريق/i, "out for delivery"],
   [/arriv(?:ing|es)\s+((?:on\s+|by\s+)?(?:today|tomorrow|mon|tue|wed|thu|fri|sat|sun|\d{1,2}\s*(?:[a-z]{3}|\/))[\p{L}\d ,/]{0,16})/iu, "arriving"],
   [/shipped|dispatched|تم الشحن/i, "shipped"],
-  [/debited|purchase|spent|withdraw|تم خصم|سحب|عملية شراء/i, "money out"], [/credited|deposit|received|تم ايداع|تم إيداع|استلمت/i, "money in"],
+  [/debited|purchase|spent|withdraw|تم خصم|سحب|عملية شراء|(?:payment|we) received(?: your payment)?:?[^.\n]{0,40}\bfor your (?:stay|order|booking|reservation|trip|ticket|purchase|subscription)|received your payment/i, "money out"],   // (v9.9.30: "Payment received: EGP 1,879 for your stay" is YOUR payment) [/credited|deposit|received|تم ايداع|تم إيداع|استلمت/i, "money in"],
   [/missed/i, "missed"], [/cancel+ed|ملغي|تم الالغاء|تم الإلغاء/i, "cancelled"], [/delay(?:ed)?|متأخر|تأخير/i, "delayed"],
 ];
 
 /** One notification {app, pkg, title, text} → { kind, who, amount, state, words } (words = what it means, for search and chats). */
 export function understandNote(n) {
-  const pkg = low(n && n.pkg), app = low(n && n.app), src = pkg + " " + app + (/messag|\bsms\b|mms/.test(pkg + " " + app) ? " " + low(n && n.title) : ""), title = String((n && n.title) || ""), text = String((n && n.text) || "");
+  const pkg = low(n && n.pkg), app = low(n && n.app), src = pkg + " " + app + (/messag|\bsms\b|mms|gmail|\.gm\b|outlook|yahoo|proton|mail/.test(pkg + " " + app) ? " " + low(n && n.title) : ""),   /* v9.9.30: an email's sender counts like an SMS sender ("Vezeeta" in Gmail) */ title = String((n && n.title) || ""), text = String((n && n.text) || "");
   const all = title + " " + text, la = low(all);
   let kind = "";
   // v9.8 (Ali's screenshot): a WhatsApp "Missed voice call" is a call, not a message; an offer ("300 EGP OFF … delivered in 15 minutes")

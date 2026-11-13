@@ -12449,4 +12449,6 @@ export const FA = {
   "Remove from the trip": "حذف از سفر",
   "Made for you: {t}": "برای شما آماده شد: {t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "وقتی Attune بسته است، کار در زمان خودش و هنگام شارژ گوشی انجام می‌شود.",
+  "Updated by itself: {t}": "خودکار به‌روز شد: {t}",
+  "Removed by itself — it was cancelled: {t}": "خودکار حذف شد — لغو شده بود: {t}",
 };

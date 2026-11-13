@@ -12450,4 +12450,6 @@ export const SW = {
   "Remove from the trip": "Ondoa kwenye safari",
   "Made for you: {t}": "Imeandaliwa kwa ajili yako: {t}",
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune ikiwa imefungwa, kazi huendeshwa kwa wakati wake simu ikichajiwa.",
+  "Updated by itself: {t}": "Imesasishwa yenyewe: {t}",
+  "Removed by itself — it was cancelled: {t}": "Imeondolewa yenyewe — ilighairiwa: {t}",
 };
