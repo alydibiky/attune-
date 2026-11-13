@@ -5,6 +5,7 @@
    notifmeaning.js, the people / payments / promises (connected memory), the agents' finds. A request the app does better than a
    model (translate a whole document, read a long PDF) is routed to that tool first (routeTask).
    Pure; tests/unit/v980fixes.test.mjs.                                                                                            */
+import { comprehend } from "./notifmind.js";
 import { noteLine } from "./notifmeaning.js";
 import { recallDocs, recallSearch } from "./lookback.js";
 
@@ -29,6 +30,9 @@ export function langIn(t) { for (const [id, rx] of LANGS) if (rx.test(t)) return
 export const CAPABILITIES = `About the app you are part of (Attune, on the user's phone): it can translate whole documents keeping their layout (Translate → Document, or attach the file in Chat and say "translate"), read and answer questions about long PDFs and Word files (Documents / Ask a PDF), keep money and expenses (Money), people and payments due (Follow-ups → People & plans), reminders and scheduled messages, agents that watch hotel / flight / product prices, notes (Mind), and it keeps the phone's notifications so it can recall them. Below you may get "What Attune already knows" — facts from the user's own phone. Use them when they answer the question and say where they came from in a few words. Never say you cannot access files, notifications or the user's data: if the facts are not below, say Attune has nothing about it yet and which page would have it.`;
 
 /** The facts that fit a question: notifications (understood), people / payments (connected memory), as short lines. */
+// v9.9.31 the meaning of a notification for Chat: "Mona asks you to send the ID photo — by 2026-11-14"
+function meaningLine(n) { try { const m = (JSON.parse(localStorage.getItem("attune:notifmind:v1") || "{}") || {})[String(n.id)] || comprehend(n); if (!m) return "";
+  return " — means: " + [m.cat, m.intent, m.action && m.action !== "none" ? "you should " + m.action.replace("_", " ") : "", m.due ? "by " + m.due.date + (m.due.time ? " " + m.due.time : "") : "", m.amount && m.amount.dir !== "price" ? m.amount.value + " " + m.amount.cur + " (" + m.amount.dir + ")" : "", m.by === "code+model" && m.summary ? "«" + m.summary + "»" : ""].filter(Boolean).join(", "); } catch (e) { return ""; } }
 export function knownFor(q, { notes = [], now = Date.now(), connect = null, max = 6 } = {}) {
   const lines = [];
   try {
@@ -36,7 +40,7 @@ export function knownFor(q, { notes = [], now = Date.now(), connect = null, max 
       const r = recallSearch(recallDocs({ notes }), q, { now, limit: 4 });
       const byId = new Map(notes.map((n) => [n.id, n]));
       // only real matches (most of the question's words or their meanings) — never "some word in common" noise
-      if (!r.loose && r.ask.terms.length) for (const h of r.hits.slice(0, 4)) { const n = byId.get(h.doc.raw); if (n) lines.push("Notification " + noteLine(n, now)); }
+      if (!r.loose && r.ask.terms.length) for (const h of r.hits.slice(0, 4)) { const n = byId.get(h.doc.raw); if (n) lines.push("Notification " + noteLine(n, now) + meaningLine(n)); }
     }
   } catch (e) {}
   try { const cx = connect ? connect(q) : null; if (cx && cx.answer && cx.answer.en) lines.push("From the user's records: " + cx.answer.en); } catch (e) {}

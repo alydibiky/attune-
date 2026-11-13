@@ -118,6 +118,12 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
     if (when) return { ...base, kind: "followup", sure: true, at: when, title: "Delivery · " + app.replace(/ shopping$/i, "") + (text ? " — " + text.slice(0, 60) : ""), key: "dv:" + app + ":" + iso(when), line: "Follow-up" };
     return null;
   }
+  // v9.9.31: a request the model understood (Russian, Chinese, Franco, a long message) — its reading is kept by notification id
+  const mind = (() => { try { return (typeof localStorage !== "undefined" && (JSON.parse(localStorage.getItem("attune:notifmind:v1") || "{}") || {})[String(n.id)]) || null; } catch (e) { return null; } })();
+  if (u.kind === "message" && u.who && !ASKS.test(text) && mind && mind.by === "code+model" && mind.sure && mind.intent === "request" && /^(?:do|pay|submit|call_back|pickup)$/.test(mind.action)) {
+    const when = mind.due && mind.due.date ? Date.parse(mind.due.date + "T" + (mind.due.time || "09:00") + ":00") : at9((n.ts || now) + DAY);
+    return { ...base, kind: "todo", sure: true, at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "") + ": " + (mind.summary || text).slice(0, 80), key: "td:" + String(n.id), line: "To-do" };
+  }
   if (u.kind === "message" && u.who && ASKS.test(text)) {
     const when = dayIn(text, n.ts || now) || at9((n.ts || now) + DAY);
     return { ...base, kind: "todo", sure: true, at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "").replace(/\s+\d[\d ]*$/, "") + ": " + text.slice(0, 80), key: "td:" + String(n.id), line: "To-do" };

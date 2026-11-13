@@ -240,6 +240,7 @@ focus-ui.jsx: <button className={btnP + " w-full"} disabled={!pick.task.trim()} 
 agents-ui.jsx: <button className={U.btnP + " !h-11 !min-h-[44px]"} data-testid="agents-answer-go">{tr("OK")}</button>
 aijobs-ui.jsx: <button className={btnS + " h-9! min-h-[36px]!"} onClick={() => { setS(saveJobs({ ...s, results: s.results.map((x) => (x.id === r.id ? { ...
 shelf-ui.jsx: className={btnP + " mt-3 w-full"}>{tr("OK")}</button>
+trip-ui.jsx: <button type="button" className="c-sub min-h-[36px] px-1" aria-label={tr("OK")} onClick={() => setTrip({ autoUndo: null })} data-testid="tri
 voice-ui.jsx: <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold" da
 
 ## Look

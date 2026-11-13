@@ -48,6 +48,7 @@ import { FocusHost } from "./focus-ui.jsx";
 import { WeekPlanHost } from "./weekplan-ui.jsx";
 import { BrainDumpHost } from "./braindump-ui.jsx";
 import { JobsRunner } from "./aijobs-ui.jsx";
+import { MindRunner } from "./notifmind-ui.jsx";   // v9.9.31 the model reads the notifications code is not sure of
 import { popBack, hasBack, useSubBack, useBackDepth, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
@@ -7819,7 +7820,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.30";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.31";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -11630,6 +11631,7 @@ export default function App() {
       <Guard name="weekplan"><WeekPlanHost flash={flash} /></Guard>
       <Guard name="braindump"><BrainDumpHost flash={flash} /></Guard>
       </div>
+      <Guard name="notifmind"><MindRunner ready={modelUsable} ask={(messages) => callChat(messages, null, { maxTokens: 220, temperature: 0, think: false })} /></Guard>
       <Guard name="jobs"><JobsRunner ready={modelUsable} ask={(messages) => callChat(messages, null, { maxTokens: 400, temperature: 0.2, think: false })} /></Guard>
       {quietWake && !voiceOpen ? <QuietWake native={NATIVE} nativeCall={nativeCall} tag={voiceTag(agentCountry())} onDone={(text) => { setQuietWake(false); if (text != null) { setVoiceText(text); setVoiceOpen(true); } }} /> : null}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}

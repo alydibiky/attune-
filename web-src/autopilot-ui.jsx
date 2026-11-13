@@ -69,6 +69,8 @@ export function AutopilotCard() {
   const [s, setS] = useState(AP.loadAP);
   const [slot, setSlot] = useState(() => Math.floor(Date.now() / 120000));
   useEffect(() => { const t = setInterval(() => setSlot(Math.floor(Date.now() / 120000)), 60000); return () => clearInterval(t); }, []);
+  // v9.9.31 a notification the model just understood (a request in another language…) is looked at again at once
+  useEffect(() => { const f = () => setSlot((x) => x + 0.001); window.addEventListener("attune-notifmind", f); return () => window.removeEventListener("attune-notifmind", f); }, []);
   const put = (x) => setS(AP.saveAP(x));
   const [open, setOpen] = useState("");
   const [ready, setReady] = useState(0);

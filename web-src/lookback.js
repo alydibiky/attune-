@@ -8,6 +8,8 @@
 
 import { CLUBS } from "./livefacts.js";
 import { understandNote } from "./notifmeaning.js";
+import { comprehend, mindWords } from "./notifmind.js";   // v9.9.31 what each notification means (who asked, what to do, by when)
+const storedMinds = () => { try { return JSON.parse(localStorage.getItem("attune:notifmind:v1") || "{}") || {}; } catch (e) { return {}; } };
 const DAY = 86400000;
 export const fold = (s) => String(s || "").toLowerCase()
   .replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?![\p{L}])/gu, "ه").replace(/[ً-ْـ]/g, "")
@@ -199,7 +201,10 @@ export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pa
     docs.push({ id: "m:" + r.id, kind: photo ? "photo" : "mind", title: r.title || "", text: [r.text, r.output, r.note, (r.tags || []).join(" ")].filter(Boolean).join("\n"), ts: r.ts || 0, thumb: photo ? r.id : null, open: { mode: "memory", id: r.id } });
   }
   // v9.8: a notification also carries what it MEANS (delivery, money out, missed call, a message from…) — found without its words
+  const minds = storedMinds();
   for (const n of notes) { if (isNavNote(n)) continue; let u = null; try { u = understandNote(n); } catch (e) {}
+    let mw = ""; try { mw = mindWords(minds[String(n.id)] || comprehend(n)); } catch (e) {}
+    if (mw) u = { ...(u || {}), words: ((u && u.words) || "") + " " + mw };
     docs.push({ id: "n:" + n.id, kind: "note", title: n.title || "", text: (n.text || "") + (u && u.words ? "\n" + u.words : ""), ts: n.ts || 0, app: n.app || "", pkg: n.pkg || "", raw: n.id, meaning: u ? u.kind : "", shown: n.text || "" }); }
   for (const c of chats) {
     const msgs = (c.messages || []).filter((m) => m.text);
