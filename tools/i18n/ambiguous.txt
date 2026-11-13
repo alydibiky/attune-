@@ -1411,6 +1411,10 @@ trip-ui.jsx: <button className={btnS} onClick={() => decide(ask, false)} data-te
 notelabels-ui.jsx: <p className="m-0 text-[13.5px]" dir="auto"><b>{tr("I understood:")}</b> {understoodOf(x, ar)}</p>
 noteteach-ui.jsx: <p className="m-0 text-[13.5px]" dir="auto"><b>{tr("I understood:")}</b> {NT.understood(x, { ar, tr })}</p>
 
+## Allow
+notifask-ui.jsx: <button onClick={() => { setWaiting(true); try { native.openPayAccess(); } catch (e) {} }} className="flex-1 min-h-[48px] rounded-full bg-[v
+placerem-ui.jsx: <button type="button" className="min-h-[40px] px-3.5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc,#fff)] text-[13px] font-bold" onCli
+
 ## Translating…
 pdfchat-ui.jsx: setAsking(kind === "translate" ? tr("Translating…") : tr("Reading pages {p}…", { p: pg }));
 readaloud-ui.jsx: stop(); setBusy(tr("Translating…"));
