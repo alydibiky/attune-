@@ -107,7 +107,11 @@
         before the older automation / alert readers) open it; ruleFor only for sentences that START like a condition and aren't
         questions (checked against the 10,000 hard sentences: 0 taken by mistake); plain "every day at 7 remind me…" stays a
         reminder. 75 lines × 20 languages. tests/e2e_v9918rules.py ALL PASSED.
-  - [ ] **The phone part still to build (rules saved as "Waiting for the phone part", never fired wrongly):** Kotlin listeners for
+  - [x] **Phone rules built v9.9.26 (Ali picked R1-C + R2-A, combined OK'd 13 Nov):** Bluetooth instant (PhoneBtReceiver, ACL_CONNECTED),
+        charging + Wi-Fi within ~15 min (PhoneRulesWorker, WorkManager), the device from the paired list (BLUETOOTH_CONNECT asked once),
+        Wi-Fi by name (unseen with location off → never fires, says so); decide() in phonerules.js = PhoneRules.kt (10,000 sequences).
+        Still waiting: arriving / leaving a place (background location — Ali's Play decision).
+  - [ ] (older note) **The phone part still to build (rules saved as "Waiting for the phone part", never fired wrongly):** Kotlin listeners for
         arriving / leaving a place (background location — Play declaration + disclosure screen, tell Ali), Bluetooth connect
         (BluetoothDevice.ACTION_ACL_CONNECTED, BLUETOOTH_CONNECT permission), Wi-Fi (ConnectivityManager callback), charging
         (ACTION_POWER_CONNECTED via a registered receiver in a foreground part), and the checks (workdays / before / after / more

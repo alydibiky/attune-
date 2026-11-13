@@ -8,6 +8,7 @@ import { tr } from "./i18n.js";
 import { loadDir } from "./entities.js";
 import { loadAuto, saveAuto, addRule } from "./autom.js";
 import { loadWatch, saveWatch, newRule } from "./watch.js";
+import { weekendOf } from "./country.js";
 
 export const RULES_KEY = "attune:rules:v1", DRAFT_KEY = "attune:rules:draft", PLACES_KEY = "attune:places:v1", DEVICES_KEY = "attune:btdevices:v1";
 const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
@@ -25,7 +26,21 @@ export function ruleCtx() {
 const LIVE = new Set(["time", "money_in", "message", "call"]);
 // the phone's money automations and message alerts can't check a condition yet ("on workdays", "before 11", "more than 1,000"),
 // so a rule with one waits for the phone part instead of firing without it; a time rule's days are its own repeat (live)
-export const isLive = (r) => !!(r && r.when && LIVE.has(r.when.type) && (r.when.type === "time" || !(r.if || []).length));
+// v9.9.26 phone rules (R1-C + R2-A): Bluetooth / charging / Wi-Fi are live once the phone part is here and the rule is complete — the
+// device picked from the paired list (its address), the Wi-Fi's name — and it has no money condition; their hours / days are checked on the phone
+export const hasPhoneRules = () => { try { return !!(typeof window !== "undefined" && window.AttuneNative && window.AttuneNative.phoneRulesSave); } catch (e) { return false; } };
+const phoneLive = (r) => hasPhoneRules() && !(r.if || []).some((x) => x.type === "more" || x.type === "less")
+  && (r.when.type === "charging" || (r.when.type === "bluetooth" && r.when.device && typeof r.when.device === "object" && !!r.when.device.address) || (r.when.type === "wifi" && !!r.when.ssid));
+export const isLive = (r) => !!(r && r.when && ((LIVE.has(r.when.type) && (r.when.type === "time" || !(r.if || []).length)) || (PHONE_T.has(r.when.type) && phoneLive(r))));
+const PHONE_T = new Set(["bluetooth", "charging", "wifi"]);
+/** Hand the phone rules to the phone (with the words its notification shows, in the person's language). */
+export function syncPhoneRules() {
+  if (!hasPhoneRules()) return 0; const ctx = ruleCtx();
+  const list = loadRules().filter((r) => r && r.when && PHONE_T.has(r.when.type) && r.on !== false && isLive(r)).map((r) => { const L = ruleLines(r, ctx);
+    return { id: r.id, on: r.on !== false, when: r.when, if: r.if || [], title: L.when, body: L.dos.join(" · "), channel: tr("Your rules"), weekend: weekendNow() }; });
+  try { window.AttuneNative.phoneRulesSave(JSON.stringify(list)); } catch (e) {} return list.length;
+}
+const weekendNow = () => { try { return weekendOf() || [5, 6]; } catch (e) { return [5, 6]; } };
 const nameOf = (list, id) => ((list || []).find((x) => x.id === id) || {}).name || id || "";
 const hhmm = (at) => (at ? String(at.h).padStart(2, "0") + ":" + String(at.m).padStart(2, "0") : "");
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -35,7 +50,7 @@ export function ruleLines(r, ctx = ruleCtx()) {
   const w = r.when || {}, P = (id) => nameOf(ctx.people, id), when =
     w.type === "time" ? (w.monthly ? tr("On the {n} of each month at {t}", { n: w.dom || 1, t: hhmm(w.at) }) : w.days && w.days.length ? tr("Every {d} at {t}", { d: w.days.map((d) => tr(DAYS[d])).join(", "), t: hhmm(w.at) }) : tr("Every day at {t}", { t: hhmm(w.at) }))
     : w.type === "arrive" ? tr("You arrive at {p}", { p: nameOf(ctx.places, w.place) || "?" }) : w.type === "leave" ? tr("You leave {p}", { p: nameOf(ctx.places, w.place) || "?" })
-    : w.type === "bluetooth" ? tr("You connect to {d}", { d: nameOf(ctx.devices, w.device) || tr("your car") }) : w.type === "wifi" ? tr("You join Wi-Fi") : w.type === "charging" ? tr("You start charging")
+    : w.type === "bluetooth" ? tr("You connect to {d}", { d: (w.device && typeof w.device === "object" ? w.device.name : nameOf(ctx.devices, w.device)) || tr("your car") }) : w.type === "wifi" ? (w.ssid ? tr("You join “{n}”", { n: w.ssid }) : tr("You join Wi-Fi")) : w.type === "charging" ? tr("You start charging")
     : w.type === "money_in" ? (w.what === "salary" ? tr("Your salary arrives") : w.who ? tr("{n} sends you money", { n: P(w.who) }) : tr("Money arrives"))
     : w.type === "money_out" ? tr("You pay") : w.type === "message" ? tr("{n} messages you", { n: P(w.who) || "?" }) : w.type === "call" ? tr("{n} calls you", { n: P(w.who) || "?" }) : w.type === "notification" ? tr("An app notifies you") : "?";
   const ifs = (r.if || []).map((x) => (x.type === "weekdays" ? tr("On workdays") : x.type === "weekend" ? tr("On the weekend") : x.type === "before" ? tr("Before {t}", { t: hhmm(x.at) }) : x.type === "after" ? tr("After {t}", { t: hhmm(x.at) })
@@ -94,11 +109,12 @@ export function saveRule(r, { schedule, native, lang = "en", now = Date.now() } 
     }
   } catch (e) {}
   saveRules([rule, ...loadRules()]);
+  if (PHONE_T.has((rule.when || {}).type)) { if (rule.live) rule.engine = "phone:" + rule.id; syncPhoneRules(); }
   return rule;
 }
 /** Off / delete: the engine's own entry goes too. */
 export function removeRule(id, { unschedule, native, lang = "en" } = {}) {
-  const r = loadRules().find((x) => x.id === id); saveRules(loadRules().filter((x) => x.id !== id)); if (!r || !r.engine) return;
+  const r = loadRules().find((x) => x.id === id); saveRules(loadRules().filter((x) => x.id !== id)); if (r && PHONE_T.has((r.when || {}).type)) syncPhoneRules(); if (!r || !r.engine) return;
   const [k, eid] = [r.engine.split(":")[0], r.engine.slice(r.engine.indexOf(":") + 1)];
   try { if (k === "reminder" && unschedule) unschedule(eid); else if (k === "auto") { const s = loadAuto(); saveAuto({ ...s, rules: s.rules.filter((x) => x.id !== eid) }, native, lang); } else if (k === "watch") saveWatch(loadWatch().filter((x) => x.id !== eid), lang); } catch (e) {}
 }

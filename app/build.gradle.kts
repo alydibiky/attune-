@@ -163,6 +163,7 @@ dependencies {
     // (1.1.0 final: compileSdk 36 + AGP 8.9.1, which v6.29 builds with)
     implementation("androidx.health.connect:connect-client:1.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")   // v9.9.26 phone rules: charging / Wi-Fi checked by Android about every 15 min (R1-C)
     // Huawei watches (v6.5): Huawei Health's data through Huawei's Health Kit, read only — the way
     // Yazio connects to Huawei Health. Version from Huawei's own Kotlin demo (HMS-Core/hms-health-demo-kotlin).
     implementation("com.huawei.hms:health:6.11.0.303")

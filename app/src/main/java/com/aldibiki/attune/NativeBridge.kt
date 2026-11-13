@@ -1501,6 +1501,16 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun openAppInfo() {
         try { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + ctx.packageName)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) {}
     }
+    // ---- v9.9.26 phone rules (R1-C + R2-A): the rules to watch, the paired devices, the Wi-Fi now, what fired
+    @JavascriptInterface fun phoneRulesSave(json: String) { try { PhoneRules.save(ctx, json) } catch (e: Throwable) {} }
+    @JavascriptInterface fun phoneRulesTake(): String = try { PhoneRules.take(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface fun phoneRulesStatus(): String = try { PhoneRules.status(ctx) } catch (e: Throwable) { "{}" }
+    @JavascriptInterface fun btAllowed(): Boolean = try { PhoneRules.btAllowed(ctx) } catch (e: Throwable) { false }
+    @JavascriptInterface fun btPaired(): String = try { PhoneRules.paired(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface fun btAsk() { web.post { askBt?.invoke() } }
+    var askBt: (() -> Unit)? = null
+    @JavascriptInterface fun wifiNow(): String = try { PhoneRules.wifiNow(ctx) } catch (e: Throwable) { "" }
+
     // ---- v9.9.26 T6 Focus "make the phone quiet": Android's own Do Not Disturb, only when the person allowed Attune once in Android's
     // settings (ACCESS_NOTIFICATION_POLICY — allowed on Play). Priority-only while the focus runs; the person's own setting comes back after.
     @JavascriptInterface

@@ -61,3 +61,4 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
   the device from paired devices (recommended A) or learn it on the next connection).
 - Ali picked R1-C + R2-A. Combined screen (step 3): https://claude.ai/artifact/UZqLbcCnLDKbytdgdbc1uY (docs/mockups/phone-rules-combined.html)
   — waiting for his OK.
+- 13 Nov: Ali OK'd OK-1 OK-2 OK-3 → built in v9.9.26 (phonerules.js, PhoneRules.kt, rules-ui pickers).

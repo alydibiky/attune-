@@ -23,6 +23,8 @@
     <!-- Reminders: show the notification (Android 13+ asks once), ring on the
          minute (Android 12+: "Alarms & reminders", allowed in Settings), and
          come back after the phone restarts. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />   <!-- v9.9.26 phone rules: the paired devices' names + "when I connect to my car" (asked once) -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />   <!-- v9.9.26 T6: Focus may turn on Do Not Disturb, only after the person allows it in Android settings -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -238,6 +240,10 @@
 
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />
+        <!-- v9.9.26 phone rules: a Bluetooth device connected (Android allows this one for a closed app) -->
+        <receiver android:name=".PhoneBtReceiver" android:exported="true">
+            <intent-filter><action android:name="android.bluetooth.device.action.ACL_CONNECTED" /></intent-filter>
+        </receiver>
         <receiver android:name=".MsgActionReceiver" android:exported="false" />
         <receiver android:name=".NagPayReceiver" android:exported="false" />
         <receiver android:name=".NoteAskReceiver" android:exported="false" />   <!-- v9.9.11 A2 "What is this?" → Mine / Not money / Reply -->   <!-- v9.7 "Send to X now?" → Send / Not now -->
