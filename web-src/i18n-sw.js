@@ -12431,4 +12431,8 @@ export const SW = {
   "last: {t}": "mara ya mwisho: {t}",
   "speaker": "spika",
   "within 15 min": "ndani ya dakika 15",
+  "Show on lock screen": "Onyesha kwenye skrini iliyofungwa",
+  "Remove from lock screen": "Ondoa kwenye skrini iliyofungwa",
+  "Removed from the lock screen": "Imeondolewa kwenye skrini iliyofungwa",
+  "On the lock screen — anyone can read it without unlocking": "Kwenye skrini iliyofungwa — yeyote anaweza kusoma bila kufungua",
 };

@@ -12431,4 +12431,8 @@ export const ES = {
   "last: {t}": "última: {t}",
   "speaker": "altavoz",
   "within 15 min": "en 15 min",
+  "Show on lock screen": "Mostrar en la pantalla de bloqueo",
+  "Remove from lock screen": "Quitar de la pantalla de bloqueo",
+  "Removed from the lock screen": "Quitado de la pantalla de bloqueo",
+  "On the lock screen — anyone can read it without unlocking": "En la pantalla de bloqueo: cualquiera puede leerla sin desbloquear",
 };

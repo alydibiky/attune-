@@ -12430,4 +12430,8 @@ export const DE = {
   "last: {t}": "zuletzt: {t}",
   "speaker": "Lautsprecher",
   "within 15 min": "binnen 15 Min.",
+  "Show on lock screen": "Auf dem Sperrbildschirm zeigen",
+  "Remove from lock screen": "Vom Sperrbildschirm entfernen",
+  "Removed from the lock screen": "Vom Sperrbildschirm entfernt",
+  "On the lock screen — anyone can read it without unlocking": "Auf dem Sperrbildschirm – jeder kann sie ohne Entsperren lesen",
 };

@@ -12431,4 +12431,8 @@ export const TRK = {
   "last: {t}": "son: {t}",
   "speaker": "hoparlör",
   "within 15 min": "15 dk içinde",
+  "Show on lock screen": "Kilit ekranında göster",
+  "Remove from lock screen": "Kilit ekranından kaldır",
+  "Removed from the lock screen": "Kilit ekranından kaldırıldı",
+  "On the lock screen — anyone can read it without unlocking": "Kilit ekranında — kilidi açmadan herkes okuyabilir",
 };

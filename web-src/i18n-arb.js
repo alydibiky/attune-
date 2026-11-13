@@ -12422,4 +12422,8 @@ export const ARB = {
   "last: {t}": "آخر مرة: {t}",
   "speaker": "مكبر صوت",
   "within 15 min": "خلال ١٥ دقيقة",
+  "Show on lock screen": "اعرضه على شاشة القفل",
+  "Remove from lock screen": "أزله من شاشة القفل",
+  "Removed from the lock screen": "أُزيل من شاشة القفل",
+  "On the lock screen — anyone can read it without unlocking": "على شاشة القفل — يمكن لأي شخص قراءتها دون فتح الهاتف",
 };

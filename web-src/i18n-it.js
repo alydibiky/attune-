@@ -12431,4 +12431,8 @@ export const IT = {
   "last: {t}": "ultima: {t}",
   "speaker": "altoparlante",
   "within 15 min": "entro 15 min",
+  "Show on lock screen": "Mostra sulla schermata di blocco",
+  "Remove from lock screen": "Togli dalla schermata di blocco",
+  "Removed from the lock screen": "Tolto dalla schermata di blocco",
+  "On the lock screen — anyone can read it without unlocking": "Sulla schermata di blocco: chiunque può leggerla senza sbloccare",
 };

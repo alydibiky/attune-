@@ -217,7 +217,7 @@
     box → serial / IMEI (check digit); unsure = yellow; every field editable. 10,000 receipts and boxes.
   - X6 schoolmsg.js + school-ui.jsx (Family → a child → School): class-group messages (8 school languages) → exam / fee / trip / bring /
     holiday / meeting; "which Thursday?", no day, no amount asked; Add N with reminders; the two weeks editable. 10,000 messages.
-  - Phone parts still to do: the emergency card on the lock screen (Kotlin).
+  - [x] The emergency card on the lock screen — built v9.9.27 (lockCardSet / lockCardClear: a quiet ongoing notification, public on the lock screen).
 - [x] **B7 travel: TR1 trip from bookings · TR2 flight day · TR3 trip money & papers** (v9.9.25)
   - TR1 bookings.js (B — ask first): flights + stays from SMS / email / notifications (EN, AR), change replaces (keeps what it doesn't
     say), cancellation by code removes; never a code read as a flight or a date. 10,000 histories. Travel → Trip (found + the list).

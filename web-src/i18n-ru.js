@@ -12430,4 +12430,8 @@ export const RU = {
   "last: {t}": "последний раз: {t}",
   "speaker": "колонка",
   "within 15 min": "в течение 15 мин",
+  "Show on lock screen": "Показать на экране блокировки",
+  "Remove from lock screen": "Убрать с экрана блокировки",
+  "Removed from the lock screen": "Убрано с экрана блокировки",
+  "On the lock screen — anyone can read it without unlocking": "На экране блокировки — любой прочтёт без разблокировки",
 };

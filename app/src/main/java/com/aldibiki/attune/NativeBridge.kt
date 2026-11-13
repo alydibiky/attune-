@@ -1501,6 +1501,24 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun openAppInfo() {
         try { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + ctx.packageName)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) {}
     }
+    // ---- v9.9.27 X4 the emergency card on the lock screen (Ali's OK'd X4 combined screen: "show on the lock screen"): a quiet, ongoing
+    // notification whose text is PUBLIC on the lock screen — blood type, medicines, allergies, who to call — readable without unlocking.
+    @JavascriptInterface
+    fun lockCardSet(title: String, text: String): Boolean = try {
+        val nm = ctx.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        if (android.os.Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel("emergency") == null)
+            nm.createNotificationChannel(android.app.NotificationChannel("emergency", title.take(40), android.app.NotificationManager.IMPORTANCE_LOW).apply { lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC; setShowBadge(false) })
+        val i = android.content.Intent(ctx, MainActivity::class.java).putExtra(EXTRA_OPEN_PAGE, "care").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val pi = android.app.PendingIntent.getActivity(ctx, 7301, i, android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT)
+        val b = (if (android.os.Build.VERSION.SDK_INT >= 26) android.app.Notification.Builder(ctx, "emergency") else @Suppress("DEPRECATION") android.app.Notification.Builder(ctx))
+            .setSmallIcon(R.drawable.ic_stat_reminder).setContentTitle(title).setContentText(text.lineSequence().drop(1).firstOrNull() ?: text)
+            .setStyle(android.app.Notification.BigTextStyle().bigText(text)).setOngoing(true).setShowWhen(false)
+            .setVisibility(android.app.Notification.VISIBILITY_PUBLIC).setContentIntent(pi)
+        nm.notify(7301, b.build()); true
+    } catch (e: Throwable) { false }
+    @JavascriptInterface
+    fun lockCardClear() { try { (ctx.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager).cancel(7301) } catch (e: Throwable) {} }
+
     // ---- v9.9.26 phone rules (R1-C + R2-A): the rules to watch, the paired devices, the Wi-Fi now, what fired
     @JavascriptInterface fun phoneRulesSave(json: String) { try { PhoneRules.save(ctx, json) } catch (e: Throwable) {} }
     @JavascriptInterface fun phoneRulesTake(): String = try { PhoneRules.take(ctx) } catch (e: Throwable) { "[]" }

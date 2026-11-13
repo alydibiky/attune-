@@ -12431,4 +12431,8 @@ export const HI = {
   "last: {t}": "पिछली बार: {t}",
   "speaker": "स्पीकर",
   "within 15 min": "15 मिनट में",
+  "Show on lock screen": "लॉक स्क्रीन पर दिखाएँ",
+  "Remove from lock screen": "लॉक स्क्रीन से हटाएँ",
+  "Removed from the lock screen": "लॉक स्क्रीन से हटा दिया",
+  "On the lock screen — anyone can read it without unlocking": "लॉक स्क्रीन पर — बिना अनलॉक किए कोई भी पढ़ सकता है",
 };

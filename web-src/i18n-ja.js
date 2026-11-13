@@ -12430,4 +12430,8 @@ export const JA = {
   "last: {t}": "前回：{t}",
   "speaker": "スピーカー",
   "within 15 min": "15分以内",
+  "Show on lock screen": "ロック画面に表示",
+  "Remove from lock screen": "ロック画面から外す",
+  "Removed from the lock screen": "ロック画面から外しました",
+  "On the lock screen — anyone can read it without unlocking": "ロック画面に表示中 — ロック解除なしで誰でも読めます",
 };

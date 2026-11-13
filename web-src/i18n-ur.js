@@ -12431,4 +12431,8 @@ export const UR = {
   "last: {t}": "پچھلی بار: {t}",
   "speaker": "اسپیکر",
   "within 15 min": "15 منٹ میں",
+  "Show on lock screen": "لاک اسکرین پر دکھائیں",
+  "Remove from lock screen": "لاک اسکرین سے ہٹائیں",
+  "Removed from the lock screen": "لاک اسکرین سے ہٹا دیا",
+  "On the lock screen — anyone can read it without unlocking": "لاک اسکرین پر — بغیر اَن لاک کیے کوئی بھی پڑھ سکتا ہے",
 };

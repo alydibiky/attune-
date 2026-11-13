@@ -17,7 +17,8 @@ CARE = {"members": [{"id": "pb", "name": "Baba", "emergency": {"blood": "o pos",
                  {"id": "m2", "member": "pb", "name": "Augmentin", "strength": "1 g", "dose": "1", "times": [], "start": d(30), "days": 7},
                  {"id": "m3", "member": "pb", "name": "Oldmed", "strength": "", "dose": "", "times": [], "start": d(300), "days": 0, "stopped": True}], "labs": [], "taken": {}}
 INIT = ("try { localStorage.setItem('attune:care:v1', %s); localStorage.setItem('attune:start','home'); } catch (e) {}\n"
-        "window.__shared = []; (() => { const go = () => { const N = window.AttuneNative; if (!N) return setTimeout(go, 0); N.share = (t) => { window.__shared.push(t); return true; }; }; go(); })();") % json.dumps(json.dumps(CARE))
+        "window.__shared = []; (() => { const go = () => { const N = window.AttuneNative; if (!N) return setTimeout(go, 0); N.share = (t) => { window.__shared.push(t); return true; };"
+        " window.__lock = null; N.lockCardSet = (t, x) => { window.__lock = { t, x }; return true; }; N.lockCardClear = () => { window.__lock = 'cleared'; }; }; go(); })();") % json.dumps(json.dumps(CARE))
 with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
@@ -35,6 +36,13 @@ with sync_playwright() as p:
     page.select_option("[data-testid=em-lang]", "ar"); page.click("[data-testid=em-share]"); page.wait_for_timeout(200)
     sh = page.evaluate("window.__shared[window.__shared.length - 1] || ''")
     check("كارت الطوارئ — Baba" in sh and "فصيلة الدم: O+" in sh and "77…41" in sh and "7712345641" not in sh, "Share Baba in Arabic, insurance masked:\n" + sh)
+    # v9.9.27: on the lock screen (readable without unlocking) — the insurance number masked there too
+    page.select_option("[data-testid=em-lang]", "en"); page.click("[data-testid=em-lock]"); page.wait_for_timeout(200)
+    lk = page.evaluate("window.__lock")
+    check(lk and "Baba" in lk["t"] and "Blood type: O+" in lk["x"] and "Concor" in lk["x"] and "Ahmed" in lk["x"] and "7712345641" not in lk["x"], "Show on lock screen → blood type, medicines, who to call (insurance masked): %s" % (lk and lk["x"].replace("\n", " | ")))
+    check("Remove from lock screen" in page.locator("[data-testid=em-lock]").inner_text(), "…the button now removes it")
+    page.click("[data-testid=em-lock]"); page.wait_for_timeout(200)
+    check(page.evaluate("window.__lock") == "cleared", "Remove from lock screen → the notification goes")
     # Mama: what's missing, then Edit
     page.locator("[data-testid=em-person]").nth(1).click(); page.wait_for_timeout(200)
     miss = page.locator("[data-testid=em-missing]").inner_text()

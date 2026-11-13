@@ -12430,4 +12430,8 @@ export const FA = {
   "last: {t}": "آخرین بار: {t}",
   "speaker": "اسپیکر",
   "within 15 min": "ظرف ۱۵ دقیقه",
+  "Show on lock screen": "نمایش روی صفحه قفل",
+  "Remove from lock screen": "حذف از صفحه قفل",
+  "Removed from the lock screen": "از صفحه قفل حذف شد",
+  "On the lock screen — anyone can read it without unlocking": "روی صفحه قفل — هر کسی بدون باز کردن قفل می‌تواند بخواند",
 };

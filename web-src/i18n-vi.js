@@ -12430,4 +12430,8 @@ export const VI = {
   "last: {t}": "lần cuối: {t}",
   "speaker": "loa",
   "within 15 min": "trong 15 phút",
+  "Show on lock screen": "Hiện trên màn hình khóa",
+  "Remove from lock screen": "Bỏ khỏi màn hình khóa",
+  "Removed from the lock screen": "Đã bỏ khỏi màn hình khóa",
+  "On the lock screen — anyone can read it without unlocking": "Trên màn hình khóa — ai cũng đọc được mà không cần mở khóa",
 };

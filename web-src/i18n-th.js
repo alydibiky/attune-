@@ -12430,4 +12430,8 @@ export const TH = {
   "last: {t}": "ล่าสุด: {t}",
   "speaker": "ลำโพง",
   "within 15 min": "ภายใน 15 นาที",
+  "Show on lock screen": "แสดงบนหน้าจอล็อก",
+  "Remove from lock screen": "เอาออกจากหน้าจอล็อก",
+  "Removed from the lock screen": "เอาออกจากหน้าจอล็อกแล้ว",
+  "On the lock screen — anyone can read it without unlocking": "อยู่บนหน้าจอล็อก — ใครก็อ่านได้โดยไม่ต้องปลดล็อก",
 };

@@ -12431,4 +12431,8 @@ export const IDN = {
   "last: {t}": "terakhir: {t}",
   "speaker": "speaker",
   "within 15 min": "dalam 15 mnt",
+  "Show on lock screen": "Tampilkan di layar kunci",
+  "Remove from lock screen": "Hapus dari layar kunci",
+  "Removed from the lock screen": "Dihapus dari layar kunci",
+  "On the lock screen — anyone can read it without unlocking": "Di layar kunci — siapa pun bisa membacanya tanpa membuka kunci",
 };

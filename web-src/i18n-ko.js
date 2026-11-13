@@ -12430,4 +12430,8 @@ export const KO = {
   "last: {t}": "마지막: {t}",
   "speaker": "스피커",
   "within 15 min": "15분 이내",
+  "Show on lock screen": "잠금 화면에 표시",
+  "Remove from lock screen": "잠금 화면에서 제거",
+  "Removed from the lock screen": "잠금 화면에서 제거됨",
+  "On the lock screen — anyone can read it without unlocking": "잠금 화면에 표시됨 — 누구나 잠금 해제 없이 읽을 수 있어요",
 };

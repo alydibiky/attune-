@@ -12430,4 +12430,8 @@ export const BN = {
   "last: {t}": "শেষবার: {t}",
   "speaker": "স্পিকার",
   "within 15 min": "১৫ মিনিটের মধ্যে",
+  "Show on lock screen": "লক স্ক্রিনে দেখান",
+  "Remove from lock screen": "লক স্ক্রিন থেকে সরান",
+  "Removed from the lock screen": "লক স্ক্রিন থেকে সরানো হলো",
+  "On the lock screen — anyone can read it without unlocking": "লক স্ক্রিনে — আনলক না করেই যে কেউ পড়তে পারবে",
 };

@@ -9520,4 +9520,8 @@ export const AR = {
   "last: {t}": "آخر مرة: {t}",
   "speaker": "سماعة",
   "within 15 min": "خلال ١٥ دقيقة",
+  "Show on lock screen": "اعرضه على شاشة القفل",
+  "Remove from lock screen": "شيله من شاشة القفل",
+  "Removed from the lock screen": "اتشال من شاشة القفل",
+  "On the lock screen — anyone can read it without unlocking": "على شاشة القفل — أي حد يقدر يقراه من غير ما يفتح الموبايل",
 };

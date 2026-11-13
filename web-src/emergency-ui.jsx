@@ -1,7 +1,7 @@
 /* ---- v9.9.24 B6 X4 the emergency card screen (Ali picked A+B combined, OK'd 12 Nov): Family health → Emergency — a tab per family member,
    each the full card (blood type, medicines from Family health — today's only —, allergies, conditions, doctor, insurance, who to call
    first); what is missing shows as "Add …"; one Edit for everything; Share one person or all, in the READER's language. Logic: emergency.js. */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { tr, getLang, LANGS } from "./i18n.js";
 import { cardOf, shareText, bloodType } from "./emergency.js";
 import { cardPad, btnP, btnS, chip, inp, label } from "./ui-kit.jsx";
@@ -12,9 +12,17 @@ function share(text) { const N = typeof window !== "undefined" ? window.AttuneNa
 export function EmergencyTab({ data, put, flash }) {
   const members = data.members || [];
   const [sel, setSel] = useState(() => (members[0] || {}).id || ""), [edit, setEdit] = useState(false), [lang, setLang] = useState(getLang());
+  // v9.9.27: the card on the lock screen (a quiet notification readable without unlocking) — one person at a time; refreshed when it changes
+  const N = typeof window !== "undefined" ? window.AttuneNative : null, lockOk = !!(N && N.lockCardSet);
+  const [lockOn, setLockOn] = useState(() => { try { return localStorage.getItem("attune:em:lock") || ""; } catch (e) { return ""; } });
+  const lockText = (card) => shareText(card, lang).split("\n").slice(1).join("\n");
+  const toggleLock = (mm, card) => { try { if (lockOn === mm.id) { N.lockCardClear(); localStorage.removeItem("attune:em:lock"); setLockOn(""); flash && flash(tr("Removed from the lock screen")); }
+    else { N.lockCardSet("🆘 " + tr("Emergency") + " — " + mm.name, lockText(card)); localStorage.setItem("attune:em:lock", mm.id); setLockOn(mm.id); flash && flash(tr("On the lock screen — anyone can read it without unlocking")); } } catch (e) {} };
+  useEffect(() => { if (!lockOk || !lockOn) return; const who = members.find((x) => x.id === lockOn); if (who) { try { N.lockCardSet("🆘 " + tr("Emergency") + " — " + who.name, lockText(cardOf(who, data))); } catch (e) {} } }, [JSON.stringify(data.members), JSON.stringify(data.meds)]);
   if (!members.length) return <div className={cardPad} data-testid="emergency-empty"><p className="m-0 text-[14px] font-bold">{tr("Add your family first")}</p>
     <p className="m-0 mt-1 c-sub text-[13px]">{tr("Each person gets an emergency card: blood type, medicines, allergies, doctor, insurance and who to call.")}</p></div>;
   const m = members.find((x) => x.id === sel) || members[0], c = cardOf(m, data);
+
   const saveE = (e) => { put({ ...data, members: members.map((x) => (x.id === m.id ? { ...x, emergency: e } : x)) }); setEdit(false); flash && flash(tr("Saved")); };
   const row = (k, l, v, extra) => <div className="flex items-start gap-3 min-h-[44px] py-1.5 border-t border-[var(--c-ln)] first:border-t-0" data-testid={"em-" + k}>
     <span className={label + " w-[34%] shrink-0 pt-0.5"}>{tr(l)}</span><span className="flex-1 min-w-0 text-[14px] font-semibold" dir="auto">{v}{extra}</span></div>;
@@ -35,6 +43,7 @@ export function EmergencyTab({ data, put, flash }) {
         <button className={btnS} onClick={() => setEdit(true)} data-testid="em-edit">{tr("Edit")}</button>
         <button className={btnP} onClick={() => share(shareText(c, lang))} data-testid="em-share">{tr("Share {n}", { n: m.name })}</button>
         {members.length > 1 ? <button className={btnS} onClick={() => share(shareText(members.map((x) => cardOf(x, data)), lang))} data-testid="em-share-all">{tr("Share all")}</button> : null}
+        {lockOk ? <button className={btnS} onClick={() => toggleLock(m, c)} data-testid="em-lock" aria-pressed={lockOn === m.id}>{lockOn === m.id ? tr("Remove from lock screen") : tr("Show on lock screen")}</button> : null}
       </div>
       <label className="flex items-center gap-2 text-[13px] c-sub">{tr("In the reader's language")}
         <select className={inp + " w-auto! h-10! min-h-[40px]!"} value={lang} onChange={(e) => setLang(e.target.value)} data-testid="em-lang">{LANGS.map(([id, n]) => <option key={id} value={id}>{n}</option>)}</select></label>

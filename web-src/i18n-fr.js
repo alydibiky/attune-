@@ -12431,4 +12431,8 @@ export const FR = {
   "last: {t}": "dernière : {t}",
   "speaker": "enceinte",
   "within 15 min": "sous 15 min",
+  "Show on lock screen": "Afficher sur l'écran verrouillé",
+  "Remove from lock screen": "Retirer de l'écran verrouillé",
+  "Removed from the lock screen": "Retiré de l'écran verrouillé",
+  "On the lock screen — anyone can read it without unlocking": "Sur l'écran verrouillé — lisible par tous sans déverrouiller",
 };

@@ -12430,4 +12430,8 @@ export const ZH = {
   "last: {t}": "上次：{t}",
   "speaker": "音箱",
   "within 15 min": "15 分钟内",
+  "Show on lock screen": "在锁屏上显示",
+  "Remove from lock screen": "从锁屏移除",
+  "Removed from the lock screen": "已从锁屏移除",
+  "On the lock screen — anyone can read it without unlocking": "已显示在锁屏上——任何人无需解锁即可阅读",
 };
