@@ -277,11 +277,12 @@ export function comprehend(n, { now } = {}) {
   const strongIntent = intent !== "info" || /^(?:news|media|game|system|weather|sports|markets|social|code|bank|wallet|receipt|delivery|ride|travel|health|smart_home)$/.test(cat);
   const fits = ["request", "invite", "reminder", "confirm", "change", "cancel", "alert", "greeting"].filter((k) => k === "request" ? W.request.test(t) || W.ask.test(t) || IMPERATIVE.test(all) : W[k].test(t));
   const clash = fits.length >= 2 && !COMPATIBLE.some(([a, b]) => fits.length === 2 && fits.includes(a) && fits.includes(b)) && /^(?:chat|email|work|school|other)$/.test(cat);
-  sure = !!(strongCat && strongIntent) && !(cat === "chat" && intent === "info") && cat !== "other" && cat !== "email" && !clash && !(cat === "chat" && /[\u0400-\u04FF\u0900-\u097F\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F]/.test(all));
+  const foreign = /[\u0400-\u04FF\u0900-\u097F\u0980-\u09FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F]/.test(all);
+  sure = !!(strongCat && strongIntent) && !(cat === "chat" && intent === "info") && cat !== "other" && cat !== "email" && !clash && !(cat === "chat" && foreign);
   const fromType = cat === "news" ? "company" : cat === "bank" || cat === "wallet" ? (src.type === "person" ? "person" : "bank") : cat === "government" ? "gov" : cat === "school" && src.type !== "person" ? "school" : src.type;
   const who = src.type === "person" || src.type === "group" ? src.name : "";
   return { v: 1, id: String(n.id || ""), cat, intent, action, from: { name: src.name, type: fromType }, who, due: when, amount, ref, urgency,
-    summary: summaryOf({ cat, intent, action, from: src.name, who, amount, when, text: text || title }), sure, by: "code" };
+    summary: summaryOf({ cat, intent, action, from: src.name, who, amount, when, text: text || title }), sure, by: "code", ...(clash ? { clash: true } : {}), ...(foreign ? { foreign: true } : {}) };
 }
 
 // a short line a person would say — code's version; the model writes a better one when it runs
@@ -300,16 +301,19 @@ function summaryOf({ cat, intent, action, from, amount, when, text }) {
 }
 
 // ---- 5. the model, for what code is not sure of -------------------------------------------------------------------------------
-/** The messages for the on-device model: one notification → one line of JSON. */
-export function mindPrompt(n, { lang = "en", now = Date.now() } = {}) {
+/** The messages for the on-device model: one notification → one line of JSON. Code tells it WHAT KIND it is (the app / sender says that
+ *  reliably — the 4B model alone got the kind wrong too often: "food" vs "delivery", a chat filed as "work"); the model decides WHY it
+ *  was sent and WHAT the person must do, with short definitions and examples (tests/trials/notifmind-*.md). */
+export function mindPrompt(n, { lang = "en", now = Date.now(), cat = "" } = {}) {
   const day = new Date(now), d = isoOf(day) + " (" + ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day.getDay()] + ")";
-  return [{ role: "system", content: "You read ONE phone notification for the person who owns the phone and say what it means, the way a smart assistant would. Today is " + d + ".\n"
-    + "Answer with ONE line of JSON and nothing else:\n"
-    + "{\"cat\": one of " + JSON.stringify(CATS) + ",\n \"intent\": one of " + JSON.stringify(INTENTS) + ",\n \"action\": what the PERSON must do, one of " + JSON.stringify(ACTIONS) + ",\n"
-    + " \"from_type\": one of " + JSON.stringify(FROM_TYPES) + ", \"who\": the person's name if a person wrote it, else \"\",\n"
-    + " \"due\": \"YYYY-MM-DD\" or \"YYYY-MM-DD HH:MM\" if it gives a day / time, else \"\",\n \"amount\": the number of money in it or 0, \"cur\": its currency code or \"\", \"dir\": one of [\"in\",\"out\",\"due\",\"price\",\"\"],\n"
-    + " \"urgency\": one of [\"high\",\"normal\",\"low\"], \"summary\": one short sentence in the language code \"" + lang + "\" saying what it is and what to do}\n"
-    + "Rules: never invent a number, a date or a name that is not in the notification. An offer or a price is never money that moved. People chatting about money is not the person's money. A one-time code is cat \"code\"." },
+  const kind = cat || (() => { try { return comprehend(n, { now }).cat; } catch (e) { return ""; } })();
+  return [{ role: "system", content: "You read ONE phone notification for the person who owns the phone, like a smart assistant. Today is " + d + "." + (kind && kind !== "other" ? " It is a \"" + kind + "\" notification." : "") + "\n"
+    + "Decide:\n"
+    + "intent — why it was sent: request (the sender asks the person to DO something), question (asks for information or an answer), invite (invites to an event/meal/meeting), reminder (something is due/coming), confirm (something was done/booked/paid), change (moved/delayed/updated), cancel, alert (a warning/problem/missed call), offer (an advert/discount), greeting (wishes, thanks, hello), info (just news/status).\n"
+    + "action — what the PERSON must do now: do (a task they ask: send, bring, buy, review, print), reply (answer a question or an invitation), pay, attend (be at an appointment/meeting already booked), pickup (a courier/driver is here or arriving), call_back, verify (check a login is them), renew, update_payment, submit (upload/hand in documents or homework), travel (check in / board), check (look at the account/home), none (nothing needed — status, news, greetings, offers).\n"
+    + "Examples: \"send me the file tomorrow\" → request/do · \"where are you?\" → question/reply · \"come for dinner Saturday?\" → invite/reply · \"just landed\" → info/none · \"your order is on the way\" → info/none · \"can we meet Thursday?\" → question/reply · \"posted grades\" → info/none.\n"
+    + "Answer with ONE line of JSON and nothing else: {\"intent\": …, \"action\": …, \"who\": the sender's name if a person wrote it else \"\", \"due\": \"YYYY-MM-DD\" or \"YYYY-MM-DD HH:MM\" only if it names a day else \"\", \"amount\": money number in it or 0, \"cur\": \"\", \"dir\": in|out|due|price|\"\", \"urgency\": high|normal|low, \"summary\": one short sentence in the language code \"" + lang + "\" saying what it is and what to do}\n"
+    + "Never invent a number, a date or a name that is not in the notification." },
     { role: "user", content: "App: " + String(n.app || n.pkg || "").slice(0, 60) + "\nTitle: " + String(n.title || "").slice(0, 120) + "\nText: " + String(n.text || "").replace(/\s+/g, " ").slice(0, 700) }];
 }
 // a day word in any of Attune's 20 languages: today / tomorrow, and every weekday name the phone's own date formatter knows
@@ -349,11 +353,20 @@ export function readMind(out, n) {
   if (j.summary && typeof j.summary === "string") { const s = j.summary.trim().slice(0, 200); const bad = DIGITS_OF(s).filter((x) => x > 31 && !nums.some((y) => Math.abs(y - x) < 0.006)); if (!bad.length) r.summary = s; }
   return r;
 }
-/** Code + model → one reading: what code is sure of stays; the model fills and corrects the rest (but never makes a chat money). */
+/** Code + model → one reading. What code is sure of stays. The KIND stays with code unless code had none ("other" / a plain email).
+ *  The model's why / what is used where code had no signal (a chat that says nothing code reads), where two readings clashed, or
+ *  in a language code doesn't read. It never makes a chat money. (Real-model trial: letting the model overrule code everywhere it
+ *  wasn't sure made the held-out sets WORSE — 100% → 95%, 92% → 81%.) */
 export function merge(code, model) {
   if (!model) return code;
   const out = { ...code, by: "code+model" };
-  if (!code.sure) { for (const k of ["cat", "intent", "action", "urgency"]) if (model[k]) out[k] = model[k]; if (model.fromType) out.from = { ...code.from, type: model.fromType }; out.sure = !!(model.cat && model.intent); }
+  if (!code.sure) {
+    if ((code.cat === "other" || code.cat === "email") && model.cat) out.cat = model.cat;
+    const noSignal = code.intent === "info" && /^(?:chat|email|work|school|other)$/.test(code.cat), foreign = !!code.foreign, clash = !!code.clash;
+    if (model.intent && model.action && (noSignal || foreign || clash)) { out.intent = model.intent; out.action = model.action; out.sure = true; }
+    if (model.urgency && (noSignal || foreign)) out.urgency = model.urgency;
+    if (model.fromType && (code.from || {}).type === "unknown") out.from = { ...code.from, type: model.fromType };
+  }
   if (!out.who && model.who) out.who = model.who;
   if (!out.due && model.due) out.due = model.due;
   if (!out.amount && model.amount && !(out.cat === "chat" && (model.amount.dir === "in" || model.amount.dir === "out"))) out.amount = model.amount;

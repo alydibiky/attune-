@@ -28,7 +28,7 @@ for (const c of cases) {
   secs += r.sec; const model = M.readMind(r.out, c.n); if (!model) bad++;
   const raw = (() => { try { return JSON.parse((/\{[\s\S]*\}/.exec(r.out) || ["{}"])[0]); } catch (e) { return {}; } })();
   if ((+raw.amount > 0 && !(model && model.amount)) || (raw.due && !(model && model.due))) dropped++;
-  const merged = M.merge(code, model), mOnly = model ? { cat: model.cat, intent: model.intent, action: model.action } : null;
+  const merged = M.merge(code, model), mOnly = model ? { cat: model.cat || code.cat, intent: model.intent, action: model.action } : null;   // (the model is told the kind)
   const b = (by[c.set] = by[c.set] || { n: 0, code: 0, model: 0, merged: 0 }); b.n++;
   if (ok3(code, c.want)) b.code++; if (ok3(mOnly, c.want)) b.model++; if (ok3(merged, c.want)) b.merged++;
   if (!ok3(merged, c.want)) lines.push(`- [${c.set}] want ${c.want.cat}/${c.want.intent}/${c.want.action} · code ${code.cat}/${code.intent}/${code.action}${code.sure ? " (sure)" : ""} · model ${mOnly ? mOnly.cat + "/" + mOnly.intent + "/" + mOnly.action : "—"} · «${(c.n.title + ": " + c.n.text).slice(0, 110)}»`);
