@@ -1746,6 +1746,17 @@ Ali said "read this first, then I'll upload more" — part 2 may follow below. T
   paired list; Focus "make the phone quiet" (Do Not Disturb). Fixed: doit.js read "on Friday" from the phone's clock instead of the day it was
   asked (found because the test ran on a real Friday). Kotlin compiled on the branch (runs 43314448480, 43368561275). Left: place reminders
   (Ali's Play decision), emergency card on the lock screen, AI jobs at night while charging; N2 voice memo not built (99% unreachable).
+- 13 Nov: v9.9.31 (versionCode 174) — **Attune understands every notification** (Ali: "comprehend and understand every
+  notification like you would … make the models smarter and the coding smarter … no less"). web-src/notifmind.js: any notification →
+  kind (34), why it was sent (11), what YOU must do (14), who, by when, amount, reference, urgency, one-line summary. Code first
+  (app/sender catalogue + words in 10 languages incl. Egyptian, Fusha and Franco), sure only when nothing contradicts; the phone's model
+  (notifmind-ui.jsx MindRunner, up to 15 a time while loaded) reads what code isn't sure of — told the kind, with definitions — and
+  readMind drops any number / date / name not in the notification. Used by Recall search ("who asked me to send something"), Chat's
+  context, Autopilot (a request in Russian → a to-do). Scores: 10,000 run (tests/notifmind/gen.mjs) right-when-sure 100%, sure of
+  93.7%; held-out 60/60; held-out 2 (written last) 28/28 when sure. Real model Qwen3.5-4B (tests/trials/notifmind-qwen3.5-4b.md):
+  code + model 100% / 97.2% on the held-out sets, 0 non-JSON, 7 invented numbers / dates caught, ~12 s each on 4 CPU cores.
+  Lesson kept in merge(): letting the model overrule code everywhere made it WORSE (95% / 81%) — it only decides where code had no
+  signal, a clash, or a language code doesn't read.
 - 13 Nov: v9.9.30 (versionCode 173) — **smart notifications** (Ali: "understand notifications very well, not keep asking like a
   stupid … really smart"). Measured on the 10,000-notification run: before = 1,875 questions + 2,845 cards waiting for a tap; now = 0
   and 0, still 10,000/10,000 right and nothing wrongly made money. What changed: (1) questions only for money that may have moved
