@@ -1604,7 +1604,7 @@ export const IDN = {
   "Delete the skill “{n}”?": "Hapus skill “{n}”?",
   "The phone's storage is full": "Penyimpanan ponsel penuh",
   "You have the maximum number of skills": "Jumlah skill Anda sudah maksimal",
-  "Edit skill": "Edit skill",
+  "Edit skill": "Edit keahlian",
   "New skill": "Skill baru",
   "e.g. Cake order writer": "mis. Penulis pesanan kue",
   "Command (optional)": "Perintah (opsional)",
