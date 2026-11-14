@@ -30,4 +30,4 @@ set + unit test on 2,500 · full suite before main · push after each batch · t
       while reading, answers merged on open (Kotlin like AiNight.kt).
 - [x] E. (v9.9.37, branch) BR-4: the brain — facts with sources (What Attune knows, correct / forget), Chat answers from it at once, morning "Attune noticed"
       + Sunday analysis; Free keeps the morning card.
-- [ ] F. The 1,000,000-case test of everything (after A–E).
+- [x] F. (v9.9.38) The 1,000,000-case test of everything — tests/onemillion/REPORT.md, FIXED.md.

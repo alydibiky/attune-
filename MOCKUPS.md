@@ -75,3 +75,5 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
   mock-up round: nothing new is drawn — it uses the screens he already OK'd (Autopilot's "Done for you" + Undo, I1; the trip list).
   What changed is WHEN Attune asks (only when it truly can't tell) — his own instruction. Earlier picks it replaces: I1 "nothing without
   a tap", A1/A2 "ask me about chats" (now only when he asks to teach, in Chat), TR1 B "ask first" (now only bookings without a code).
+
+- 14 Nov 2026 (v9.9.38, from the 1M test): count goals CG-1..4 + week start WK-1..3 — docs/mockups/goals-week.html → https://claude.ai/artifact/Shh9zXeQFYVAZ8sDK6nMcL (waiting for Ali)

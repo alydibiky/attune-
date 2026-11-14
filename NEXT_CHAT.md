@@ -11,6 +11,18 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ START HERE (14 Nov, later) — v9.9.38: the 1,000,000-case test (batch F) — tests/onemillion/REPORT.md
+Ali asked for "a 1m test for everything … very very rigorous and hard". Plan: TEST_1M.md. Runner: `bash tests/onemillion/run.sh`
+(hours), report: `node tests/onemillion/report.mjs` → REPORT.md; what it found and what was fixed: tests/onemillion/FIXED.md.
+- A 300,000 typed sentences (A1 mega, A2 chat100k with SEED_SHIFT=1, A3 tests/onemillion/langs.mjs = 100,000 in 20 languages + Franco,
+  plus a held-out set langs-heldout.mjs) · B every feature generator with a new seed (partB.mjs; SEED_SHIFT in every gen.mjs) ·
+  C UI crawler partC.py + partC_probe.js (every screen × 21 languages × light/dark × phone/computer × 3 scroll positions × 16 checks;
+  run C_LANGS=en first) · D partD.mjs 150,000 answers vs truth computed in the test · E partE.py 50,000 real-page journeys.
+- New: web-src/worldlang.js (the six orders in all 20 languages → the sentences the readers know). The real model on what code leaves
+  to it: tests/trials/langs-model.md (299/300).
+- Biggest lesson: 9 test generators had broken random numbers (repeats) — every generator now uses Math.imul.
+- Waiting for Ali: count goals ("read 20 books") need a "+1" button → options page with mock-ups first (MOCKUPS.md rule).
+
 ## ▶ START HERE (14 Nov) — v9.9.33 → v9.9.37: Ali's answers built (PRO_PLAN.md is the plan; batches 0, A–E done, F next)
 Ali's answers on https://claude.ai/artifact/XF3TxLzpUYDzBmNPecpdTL: OK-1 ("don't remove undo — the app could still get something wrong"),
 OK-2, OK-3, OK-4, BG-3, BR-4; plus: the +7 trial days only for REALLY completing setup; language as a dropdown; agents must check while

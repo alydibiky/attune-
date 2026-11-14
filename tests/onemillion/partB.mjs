@@ -12,6 +12,7 @@ const run = (d) => new Promise((res) => { const t0 = Date.now(); let out = "";
   p.stdout.on("data", (b) => (out += b)); p.stderr.on("data", (b) => (out += b));
   p.on("close", (code) => res({ d, code, out, s: Math.round((Date.now() - t0) / 1000) })); });
 function score(out) {
+  { const j0 = out.indexOf("{\n"); if (j0 >= 0) { try { const j = JSON.parse(out.slice(j0, out.lastIndexOf("}") + 1)); if (typeof j.pass === "number" && typeof j.N === "number") return { pass: j.pass, N: j.N, bad: j.bad }; } catch {} } }   // JSON over several lines (ainight)
   for (const line of out.trim().split("\n").reverse()) { try { const j = JSON.parse(line); if (j && typeof j.pass === "number" && typeof j.N === "number") return { pass: j.pass, N: j.N, bad: j.bad }; } catch {} }
   // "# Groups run — 10000 groups, 10000 right (100.00%)" · "300 saved agents, 300 without a fault" · "notifications 10000 · all right 9896"
   { const x = /(\d[\d,]*)\s+[\p{L}\s/-]{2,40}?,\s*(\d[\d,]*)\s+(?:right|without a fault|correct|pass(?:ed)?)\b/u.exec(out) || /(\d[\d,]*)\s*·\s*all right\s*(\d[\d,]*)/.exec(out);
