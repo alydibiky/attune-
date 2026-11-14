@@ -42,7 +42,7 @@ with sync_playwright() as p:
         if lang == "ar" and page.evaluate("document.documentElement.dir") != "rtl":
             page.locator("nav button").last.click(); page.wait_for_timeout(300)
             try:
-                with page.expect_navigation(timeout=8000): page.locator("button[data-lang=ar]").first.click()
+                with page.expect_navigation(timeout=8000): page.locator("select[data-testid=lang-select]").first.select_option("ar")
             except Exception as e: print("lang switch", e)
             page.wait_for_selector("nav", timeout=15000)
         def report(name):

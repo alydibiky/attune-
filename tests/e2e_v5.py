@@ -138,7 +138,7 @@ def sec_arabic(br):
     sw = page.locator("[data-testid=lang-switch]")
     check(sw.count() == 1, "More has the English | العربية switch")
     with page.expect_navigation(timeout=10000):
-        sw.locator("button[data-lang=ar]").click()
+        sw.locator("select[data-testid=lang-select]").select_option("ar")
     page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(300)
     check(page.evaluate("document.documentElement.dir") == "rtl" and page.evaluate("document.documentElement.lang") == "ar", "Arabic turns the whole page right-to-left")
     nav = page.locator("nav button")
@@ -189,7 +189,7 @@ def sec_arabic(br):
     # back to English
     open_more(page)
     with page.expect_navigation(timeout=10000):
-        page.locator("[data-testid=lang-switch] button[data-lang=en]").click()
+        page.locator("[data-testid=lang-switch] select").select_option("en")
     page.wait_for_selector("nav", timeout=15000)
     check(page.evaluate("document.documentElement.dir") == "ltr" and page.locator("nav button:has-text('Chat')").count() == 1, "switching back to English restores everything")
     ctx.close()

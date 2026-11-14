@@ -295,8 +295,21 @@ export function withAnswer(text, ask, answer) {
 
 // ---- the saved agents ------------------------------------------------------------------------------------------------------------
 export function loadAgents(s = typeof localStorage !== "undefined" ? localStorage : null) {
-  try { const v = JSON.parse((s && s.getItem(AGENTS_KEY)) || "null"); if (v && Array.isArray(v.agents)) return { usual: {}, ...v }; } catch (e) {}
+  try { const v = JSON.parse((s && s.getItem(AGENTS_KEY)) || "null"); if (v && Array.isArray(v.agents)) return { usual: {}, ...v, agents: v.agents.map(recheckSaved) }; } catch (e) {}
   return { agents: [], usual: {} };
+}
+/** v9.9.33 (Ali's screenshot: "Huawei FreeClip 2 · Found one under your price: EGP 120" with a limit of 8,400 — a find saved by an older
+ *  version, before accessories and too-cheap prices were refused): a saved find, best price or best-3 list is checked again with
+ *  today's rules each time the agents load, and what fails is dropped (the agent keeps watching). */
+export function recheckSaved(a) {
+  if (!a || a.kind !== "watch" || !(a.what || a.said)) return a;
+  const ok = (o) => o && o.price > 0 && believable({ ...o, currency: o.currency || a.currency }, a) && !(a.below > 0 && o.price < a.below * 0.3)
+    && !(!ACC_RE.test(String(a.what || "") + " " + String(a.said || "")) && ACC_RE.test(String(o.name || "") + " " + String(o.text || "").slice(0, 120)));
+  let b = a;
+  if (b.found && !ok(b.found)) { const { found, ...rest } = b; b = rest; }
+  if (b.best && b.best.price > 0 && !ok(b.best)) { const { best, ...rest } = b; b = rest; }
+  if (Array.isArray(b.best3) && b.best3.some((o) => !ok(o))) b = { ...b, best3: b.best3.filter(ok) };
+  return b;
 }
 export function saveAgents(st, s = typeof localStorage !== "undefined" ? localStorage : null) { try { s && s.setItem(AGENTS_KEY, JSON.stringify(st)); } catch (e) {} return st; }
 export function makeAgent(d, now = Date.now()) {
@@ -510,6 +523,7 @@ export function webOffers(hits, what, { cur = "" } = {}) {
 // cover or a fake. The floors are rough local amounts of ~8 USD; a currency not in the table has no floor.
 const GADGET = /\b(huawei|apple|iphone|ipad|airpods|macbook|samsung|galaxy|xiaomi|redmi|oppo|vivo|realme|honor|oneplus|nokia|sony|playstation|ps5|nintendo|xbox|jbl|bose|anker|soundcore|beats|lenovo|dell|hp|asus|acer|garmin|fitbit|google pixel|pixel|kindle|dyson|freeclip|freebuds|watch gt|gopro|canon|nikon)\b|هواوي|ايفون|آيفون|سامسونج|شاومي|ريدمي|سوني|بلايستيشن|ابل|أبل/i;
 const FLOOR8 = { EGP: 400, SAR: 30, AED: 30, QAR: 30, KWD: 2.5, BHD: 3, OMR: 3, JOD: 6, USD: 8, EUR: 7, GBP: 6, TRY: 250, INR: 650, PKR: 2200, IDR: 125000, MYR: 35, MAD: 75, TND: 24, DZD: 1050, NGN: 12000, KES: 1000, ZAR: 140, BDT: 950, IRR: 330000, THB: 270, VND: 200000, CNY: 55, JPY: 1200, KRW: 11000, BRL: 40, MXN: 140, RUB: 650, CAD: 11, AUD: 12, LBP: 700000, IQD: 10500, SDG: 4800, LYD: 39 };
+const ACC_RE = /\b(case|cover|sleeve|pouch|strap|band|protector|screen guard|tempered glass|cable|charger|adapter|skin|sticker|holder|stand|ear ?tips?|replacement)\b|جراب|جرابات|كفر|سكرينة|اسكرينة|شاحن|كابل|حامل|استيكر/i;
 export function believable(o, a = {}) {
   const want = String(a.what || "") + " " + String(a.said || ""), cur = String((o && o.currency) || a.currency || "").toUpperCase();
   if (!o || !(o.price > 0)) return false;
@@ -526,7 +540,7 @@ export function bestAcross(offers, a = {}, max = 5) {
   let sane = ps.length >= 3 ? ok.filter((o) => o.price >= mid * 0.45 && o.price <= mid * 2.5) : ok;
   // v9.8 (Ali's screenshot: "Huawei FreeClip 2 · EGP 120" — a case): an accessory is never the product unless it was asked for, and a
   // price under 30 % of the person's own limit or of what this agent saw before is not believed (with 1–2 prices there is no middle)
-  const ACC = /\b(case|cover|sleeve|pouch|strap|band|protector|screen guard|tempered glass|cable|charger|adapter|skin|sticker|holder|stand|ear ?tips?|replacement)\b|جراب|جرابات|كفر|سكرينة|اسكرينة|شاحن|كابل|حامل|استيكر/i;
+  const ACC = ACC_RE;
   if (!ACC.test(what + " " + (a.said || ""))) sane = sane.filter((o) => !ACC.test(String(o.name || "") + " " + String(o.text || "").slice(0, 120)));
   const past = (a.checks || []).map((c) => c.price).filter((v) => v > 0).sort((x, y) => x - y), ref = a.below > 0 ? a.below : past.length ? past[Math.floor(past.length / 2)] : 0;
   if (ref) sane = sane.filter((o) => o.price >= ref * 0.3);

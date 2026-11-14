@@ -12056,13 +12056,15 @@ function KeyboardRowIn() {
 }
 
 function LangSwitch({ className = "" }) {
+  // v9.9.33 (Ali: "app languages in the settings to be a drop down list"): one dropdown, each language written in its own words
   const cur = getLang();
   return (
-    <div className={`inline-flex flex-wrap gap-1.5 text-[13px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
-      {UI_LANGS.map(([id, label]) => (
-        <button key={id} onClick={() => { if (id !== cur) setLang(id); }} lang={id} data-lang={id}
-          className={`min-h-[44px] h-11 px-3.5 rounded-full border font-extrabold transition-colors duration-150 ${id === cur ? "bg-[var(--c-soft)] text-[var(--c-acc)] border-[var(--c-acc)] shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)] hover:text-[var(--c-ink)]"}`}>{label}</button>
-      ))}
+    <div className={`relative max-w-[340px] ${className}`} data-testid="lang-switch">
+      <select value={cur} onChange={(e) => { const id = e.target.value; if (id && id !== cur) setLang(id); }} aria-label="Language / اللغة" data-testid="lang-select" id="app-language"
+        className="w-full appearance-none min-h-[44px] h-11 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-extrabold text-[14px] ps-3.5 pe-10 focus:outline-none focus:ring-2 focus:ring-[var(--c-acc)]">
+        {UI_LANGS.map(([id, label]) => <option key={id} value={id} lang={id}>{label}</option>)}
+      </select>
+      <span aria-hidden="true" className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2 text-[var(--c-mut)] text-[12px]">▼</span>
     </div>
   );
 }

@@ -777,6 +777,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const o = opts || {};
     // v9.9.32 (the 100,000-sentence run): "hey attune, remind me at 9 to call mama thanks" is read without the wake word and thanks
     const typed = readable(String(raw != null ? raw : text).trim());
+    // v9.9.33 (Ali chose: keep my exact words): the bubble shows what the person typed; only the readers see the cleaned sentence
+    const said = o.said || String(raw != null ? raw : text).trim();
     const fileList = o.file !== undefined ? (o.file ? [o.file] : []) : files;
     let fileAtt = fileList.length > 1 ? { name: tr("{n} files", { n: fileList.length }), many: fileList, size: 0 } : (fileList[0] || null);
     // v9.9.32: "don't remind me to …", "I don't owe Ahmed anything" — nothing is set or recorded; the AI answers
@@ -803,7 +805,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const to = K.langIn(typed) || (/[\u0600-\u06ff]/.test(typed) ? "en" : "ar");
       const body = K.stripLang(typed.replace(/^\s*(translate|ترجم(لي)?)\s*(this|it|ده|دي)?\s*[:\-]?\s*/i, "")) || typed;
       const cid = ensureChat(typed), aiId = newId();
-      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed }, { id: aiId, role: "assistant", text: "", streaming: true, phase: tr("Translating into {l}…", { l: K.langName(to) }) }] }));
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said }, { id: aiId, role: "assistant", text: "", streaming: true, phase: tr("Translating into {l}…", { l: K.langName(to) }) }] }));
       setText("");
       try {
         const out = await TRN.translatePieces(TRN.piecesOf(body), (m, o2) => api.run(m, null, { maxTokens: o2.maxTokens, temperature: 0.2, think: false, copy: true }), { lang: to, language: K.langName(to) });
@@ -818,7 +820,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const lc = api.cmdLocal(typed);
       if (lc) {
         const cid = ensureChat(typed);
-        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: newId(), role: "assistant", card: { tone: lc.tone, title: lc.title, detail: lc.detail, actions: lc.actions }, whereSet: lc.whereSet || null }] }));
         setText("");
         return;
@@ -834,19 +836,19 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (route && !img && UND.looksFranco(typed)) {
       const arT = UND.francoToArabic(typed);
       if (arT !== typed && ((api.looksLikeAction && api.looksLikeAction(arT)) || (api.doKinds && api.doKinds(arT).length) || myMoneyIntent(arT) || chatLifeIntent(arT)
-        || chatDeadlineIntent(arT, { now: Date.now(), home: homeCurrency(), order: dateOrder() }))) return ask(arT, o);
+        || chatDeadlineIntent(arT, { now: Date.now(), home: homeCurrency(), order: dateOrder() }))) return ask(arT, { ...o, said });
     }
     // v9.9.17 (the 10,000 hard sentences): "spent three hundred on lunch" / «دفعت ميتين جنيه تاكسي» are read with the number in
     // digits; "open Money" / «افتح الفلوس» opens the page; two orders in one sentence ("paid 300 for lunch and remind me to call
     // Ahmed at 5") are BOTH done, with Undo
-    if (route && !img) { const nw = numWords(typed); if (nw !== typed && ((api.parsePayment(nw) || {}).ok || (api.doKinds && api.doKinds(nw).length) || chatLifeIntent(nw))) return ask(nw, o); }
+    if (route && !img) { const nw = numWords(typed); if (nw !== typed && ((api.parsePayment(nw) || {}).ok || (api.doKinds && api.doKinds(nw).length) || chatLifeIntent(nw))) return ask(nw, { ...o, said }); }
     if (route && !img && api.pageOf) { const pg = api.pageOf(typed); if (pg) { setText(""); try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: pg } })); } catch (e) {} return; } }
     // v9.9.18 AU1 (Ali OK'd): "when … do …" in any of the 20 languages → the rule card on the Automations page (or its question)
     if (route && !img && api.isRule && api.doIt && api.isRule(typed)) { const r = api.doIt(typed); if (r && r.lines && r.lines.length) { setText(""); return; } }
     if (route && !img && api.twoOrders && api.doIt && api.twoOrders(typed)) {
       const r = api.doIt(typed);
       if (r && r.lines && r.lines.length) { const cid = ensureChat(typed);
-        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => "• " + x.text).join("\n"), actions: r.undo ? [["Undo", "undo"]] : [] }, undo: r.undo || null, askText: typed }] }));
         setText(""); return; }
     }
@@ -870,7 +872,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const dir = directionsOf(typed);
       if (dir) {
         const cid = ensureChat(typed); const how = api.openDirections(dir.place, dir.mode);
-        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Directions to {p} — in Google Maps", { p: dir.place }), detail: tr("Download the area in Google Maps once, and the directions work without internet too."), actions: [["Just answer", "answer"]] } }] }));
         setText("");
         return;
@@ -883,7 +885,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const src = pt ? pt.text || ((messages || []).filter((m) => m.role === "assistant" && m.text && !m.streaming).slice(-1)[0] || {}).text || "" : "";
       if (pt && src) {
         const cid = ensureChat(typed), aiId = newId();
-        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: aiId, role: "assistant", text: "", streaming: true, phase: tr(pt.kind === "improve" ? "Improving the prompt…" : pt.kind === "humanize" ? "Making it sound human…" : "Making it shorter…") }] }));
         setText("");
         let out = null; try { out = await api.promptTool(pt.kind, src, pt); } catch (e) { out = null; }
@@ -896,7 +898,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       const r = api.logPeriod(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "rose", title: r.title, detail: r.detail, actions: [["Open the calendar", "cycle"], ["Undo", "undo"]] }, undo: r.undo }] }));
       setText("");
       return;
@@ -909,7 +911,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const r = api.doIt(typed);
       if (r && r.lines && r.lines.length) {
         const cid = ensureChat(typed);
-        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => "• " + x.text).join("\n"), actions: [["Open Agents", "open:agents"], ...(r.undo ? [["Undo", "undo"]] : [])] }, undo: r.undo || null, askText: typed }] }));
         setText("");
         return;
@@ -919,7 +921,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (pay && pay.ok && typed.length < 600 && !/[?؟]\s*$/.test(typed) && ok("money-log")) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald",
           title: "Payment found: " + (pay.direction === "out" ? "−" : "+") + pay.amount + " " + (pay.currency || "") + (pay.party ? " · " + pay.party : ""),
           detail: "Add it to your ledger in Money? You'll pick the account and confirm there.", actions: [["Add to Money", "money"], ["Just answer", "answer"]] },
@@ -962,7 +964,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (pi) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: tr(pi.T[0], { ...pi.T[1], i: tr(pi.T[1].i) }) + (pi.last.store ? " · " + pi.last.store : "") + " · " + pi.last.date,
           actions: [["Open Money Guardian", "open:guardian"], ["Just answer", "answer"]] } }] }));
       setText("");
@@ -978,20 +980,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (route && !img && api.openIt && (!only || (only === "action" && (() => { try { const q = quickAction(typed, Date.now()); return !q || q.kind === "none"; } catch (e) { return false; } })()))) {
       const r = api.openIt(typed);
       if (r && r.lines && r.lines.length) { const cid = ensureChat(typed);
-        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => x.text).join("\n"), actions: [] } }] }));
         setText(""); return; }
     }
     // v9.9.11 A4 (Ali: "ask me, I tell it what it is and it understands"): "teach me your notifications" → the questions here
     if (route && !img && !only && TEACH_ME.test(typed)) { const cid = ensureChat(typed);
-      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed }, { id: newId(), role: "assistant", teachChat: true, text: "" }] }));
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said }, { id: newId(), role: "assistant", teachChat: true, text: "" }] }));
       setText(""); return; }
     // v9.9.3 L4: "where's my wife?" / «مراتي فين؟» — from the newest Life360 (or family locator) notification about her, by code
     if (route && !img && api.whereIs && !only) {
       const wi = api.whereIs(typed);
       if (wi) { const cid = ensureChat(typed), n = wi.note, ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(typed);
         const when = n ? new Date(n.ts).toLocaleString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }) : "";
-        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: newId(), role: "assistant", card: { tone: "emerald", title: wi.person.name, detail: n ? (n.app || "") + " · " + when + ": " + String(n.title || "") + " — " + String(n.text || "").replace(/^🏁\s*/, "") : (ar ? "مفيش إشعار عن مكانه/مكانها لسه — Life360 لازم يكون بيبعت إشعارات وRecall شغال." : tr("No location notification about them yet — Life360 must send notifications and Recall must be on.")),
             actions: [["Open Recall", "open:recall"]] } }] }));
         setText(""); return; }
@@ -1000,7 +1002,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (route && !img && api.editSay && !only) {
       const ea = api.editSay(typed);
       if (ea) { const cid = ensureChat(typed), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(typed);
-        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: newId(), role: "assistant", card: { tone: "emerald", title: "People & plans", detail: ar ? ea.ar : ea.en, actions: [["Open People & plans", "open:life"]] } }] }));
         setText(""); return; }
     }
@@ -1021,7 +1023,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (pick === "chat") doPick = "chat";
         else if (!pick) {
           const cid = ensureChat(typed);
-          patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+          patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
             { id: newId(), role: "assistant", card: { tone: "emerald", title: "Which did you mean?", detail: "", actions: [[want === "food-log" ? "Log it as food" : "Record it in Money", "pick-do"], ["Answer it", "pick-chat"]] }, pickText: typed, pickKind: want }] }));
           setText("");
           return;
@@ -1033,7 +1035,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const OPEN = { money: "Open Money", fit: "Open Fit & Food", care: "Open Family health", life: "Open People & plans", family: "Open Family", cycle: "Open the calendar", planner: "Open the plan" };
           const opens = [...new Set(r.lines.map((x) => x.open).filter((o) => OPEN[o]))].slice(0, 2);
           const cid = ensureChat(typed);
-          patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+          patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
             { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => "• " + x.text).join("\n"), actions: [...opens.map((o) => [OPEN[o], "open:" + o]), ...(r.undo ? [["Undo", "undo"]] : [])] }, undo: r.undo || null, askText: typed }] }));
           setText("");
           return;
@@ -1047,7 +1049,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (c) {
         const cid = ensureChat(typed);
         patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
-          { id: newId(), role: "user", text: typed },
+          { id: newId(), role: "user", text: said },
           { id: newId(), role: "assistant", text: c.markdown, calc: true, askText: typed }] }));
         setText("");
         return;
@@ -1063,7 +1065,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const ar = /[\u0600-\u06ff]/.test(typed) || getLang() === "ar";
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Attune noticed"), detail: L.length ? L.map((x) => "• " + (ar ? x.ar : tr(x.en))).join("\n") : tr("Nothing worth your time right now — I'll tell you when something is."), actions: [["Just answer", "answer"]] } }] }));
       setText("");
       return;
@@ -1072,7 +1074,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (route && cx && cx.ask && (!only || only === "money-ask" || only === "life")) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("Which {n}?", { n: cx.ask.key.replace(/^./, (x) => x.toUpperCase()) }), detail: tr("You have more than one — pick him and I'll remember for next time."),
           actions: [...cx.ask.choices.map((c) => [c.label, "who:" + c.id]), ["Someone else", "open:people"]] }, askText: typed }] }));
       setText("");
@@ -1084,7 +1086,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const opens = [...new Set(cx.items.map((x) => x.open))].filter((o) => OPEN[o]).slice(0, 2);
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? cx.answer.ar : tr(cx.answer.en)) + (cx.items.length ? "\n" + cx.items.slice(0, 5).map((x) => "• " + x.title + (x.amount ? " — " + Math.round(x.amount).toLocaleString("en-US") : "") + (x.ts ? " · " + new Date(x.ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" }) : "")).join("\n") : ""),
           actions: [...cx.people.slice(0, 1).map((p) => [p.name, "person:" + p.id]), ...opens.map((o) => [OPEN[o], "open:" + o]), ["Just answer", "answer"]] } }] }));
       setText("");
@@ -1094,7 +1096,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const m = answerMyMoney(typed, loadLedger(), { ar: /[\u0600-\u06FF]/.test(typed) });
       const cid = ensureChat(typed);
       patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", text: m.text, calc: true, askText: typed }] }));
       setText("");
       return;
@@ -1104,7 +1106,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (route && img && /^(?:please\s+)?(?:read (?:it|this|that)(?: (?:to|for) me)?|what does (?:it|this) say|اقر[أا](?:ها|ه|لي|هالي)?|إقرأ|ممكن تقر[أا]|ايه المكتوب|إيه المكتوب|ماذا (?:يقول|مكتوب)|lis(?:ez)?[- ]moi|léeme|lies (?:es|das) vor)(?![\p{L}])/iu.test(typed.trim())) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed, image: img.url },
+        { id: newId(), role: "user", text: said, image: img.url },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "Read it to me", detail: "I read the paper aloud, say what it is and what to do — and add its date or medicine where it belongs.",
           actions: [["Read it to me", "read"], ["Just answer", "answer"]] }, readIn: { image: img.url }, askText: typed }] }));
       setText(""); setPhotos([]);
@@ -1116,7 +1118,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (false && route && ((img && hw.test(typed)) || (!img && /^(teach me|explain how to solve|help me solve|علمني|اشرحلي|ساعدني في حل)\b/i.test(typed.trim())))) /* v9.1: Homework Coach archived — Chat answers homework itself */ {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed, ...(img ? { image: img.url } : {}) },
+        { id: newId(), role: "user", text: said, ...(img ? { image: img.url } : {}) },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "Homework — the Coach teaches it step by step", detail: "Pictures, a voice, and you try each answer. Maths is checked by code.",
           actions: [["Teach me", "coach"], ["Just answer", "answer"]] }, coachIn: img ? { image: img.url } : { text: typed.replace(/^(teach me|explain how to solve|help me solve|علمني|اشرحلي|ساعدني في حل)\s*/i, "") }, askText: typed }] }));
       setText(""); setPhotos([]);
@@ -1128,7 +1130,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (ow) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "A delayed or cancelled flight — the airline may owe you money", detail: [ow.from, ow.to].filter(Boolean).join(" → ") + (ow.arrivalDelayH ? " · " + ow.arrivalDelayH + " h" : ""),
           actions: [["See what I'm owed", "owed"], ["Just answer", "answer"]] }, owedFlight: ow, askText: typed }] }));
       setText("");
@@ -1148,7 +1150,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const TOOL = { recall: "Open Recall", money: "Open Money", life: "Open People & plans", care: "Open Family health", fit: "Open Fit & Food", radar: "Open Deadline Radar", reminders: "Open Reminders", memory: "Open Mind" };
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? mine.ar : tr(mine.en)).replace(/\*\*/g, "") + ((mine.rows || []).length ? "\n" + mine.rows.slice(0, 8).map(([a, b]) => "• " + a + " — " + b).join("\n") : ""),
           actions: [...(mine.open && TOOL[mine.open] ? [[TOOL[mine.open], "open:" + mine.open]] : []), ["Just answer", "answer"]] } }] }));
       setText("");
@@ -1159,7 +1161,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (ag) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: ag.card, agentPlan: ag.plan, askText: typed }] }));
       setText("");
       return;
@@ -1170,7 +1172,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (dl) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "A deadline — the Radar reminds you before it", detail: (dl.title ? dl.title + " · " : "") + dl.date,
           actions: [["Watch it", "radar"], ["Just answer", "answer"]] }, radarText: typed }] }));
       setText("");
@@ -1182,7 +1184,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (lifeC) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "A commitment — save it in People & plans", detail: (() => {
           // v9.4 (Ali: "the chat is too stupid" — it saved 20,000 for 19,500 and only showed his own sentence): the card says what will
           // be saved — who, how much, how many payments, the total, the last one — and an amount said that isn't in it
@@ -1200,7 +1202,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const ar = /[\u0600-\u06ff]/.test(typed), rr = metroRoute(metroQ.from, metroQ.to);
       const cid = ensureChat(typed);
       const body = metroText(rr, ar) + "\n\n" + (ar ? "_مواعيد وأسعار المترو بتتغير — آخر تحديث للأسعار " + METRO_FARES.asOf + "._" : "_Metro times and fares change — fares as of " + METRO_FARES.asOf + "._");
-      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed }, { id: newId(), role: "assistant", text: body, source: "code" }] }));
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said }, { id: newId(), role: "assistant", text: body, source: "code" }] }));
       setText("");
       return;
     }
@@ -1210,7 +1212,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (mapQ) {
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "A place — Maps finds it", detail: mapQ,
           actions: [["Show on the map", "map"], ["Just answer", "answer"]] }, mapQuery: mapQ }] }));
       setText("");
@@ -1225,7 +1227,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       const mid = newId();
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
-        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "user", text: said },
         { id: mid, role: "assistant", actionCard: true, status: "reading", askText: typed }] }));
       setText("");
       const r = await api.readAction(typed);
@@ -1248,7 +1250,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
     // several photos → one numbered picture for the model (each engine takes one picture per message)
     if (photoList.length > 1) { try { const url = await MD.collage(photoList.map((p) => p.url)); img = { data: url.split(",")[1], media: "image/jpeg", url, n: photoList.length }; } catch (e) {} }
-    const userMsg = o.reuseUser || { id: newId(), role: "user", text: typed || (fileAtt ? tr(fileList.length > 1 ? "What's in these files? Summarise what matters in each." : "What's in this file? Summarise what matters.") : ""), image: img ? img.url : null, ...(photoList.length > 1 ? { images: photoList.map((p) => p.url) } : {}), file: fileAtt ? fileList.map((f) => f.name).join(", ") : null };
+    const userMsg = o.reuseUser || { id: newId(), role: "user", text: said || (fileAtt ? tr(fileList.length > 1 ? "What's in these files? Summarise what matters in each." : "What's in this file? Summarise what matters.") : ""), image: img ? img.url : null, ...(photoList.length > 1 ? { images: photoList.map((p) => p.url) } : {}), file: fileAtt ? fileList.map((f) => f.name).join(", ") : null };
     const aiId = newId();
     const run = ++runRef.current;
     const t0 = Date.now();
