@@ -143,6 +143,9 @@ import { ListsPage, lineText as listLine } from "./lists-ui.jsx";
 import * as LISTS from "./lists.js";
 import { boughtOf as shopBought, applyBought as shopApply } from "./shoplist.js";   // v9.9.40 K3
 import { messagesByChat as cpMessagesByChat } from "./chatpilot.js";   // v9.9.40 K5
+import { autoDriveSync } from "./sync-ui.jsx";   // v9.9.40 sync by itself, free
+try { if (typeof window !== "undefined") { setTimeout(() => autoDriveSync(), 6000); setInterval(() => autoDriveSync(), 15 * 60000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") autoDriveSync({ force: true }); }); } } catch (e) {}
 import { askChat as cpAskChat } from "./chatask.js";
 import { loadRoles as cpLoadRoles } from "./chatroles.js";
 import { loadGroups as waLoadGroups, loadRaw as waLoadRaw } from "./wagroups-store.js";

@@ -28,7 +28,8 @@ export const PRO_ONLY = new Set([
   "autoMoney",        // bank / wallet messages saved by themselves (Free: each one waits for a tap)
   "guardianChase",    // Money Guardian chases for you (Free: sees the findings)
   "closeDay", "weekPlan", "msgSchedule",   // Free keeps the morning brief
-  "sync", "desktop", "moneyForTwo", "driveBackup",
+  // v9.9.40 (Ali: "syncing is free … via Google accounts, from the computer, the mobile or another mobile"): sync is free
+  "desktop", "moneyForTwo", "driveBackup",
   "yearReport", "pdfExport", "excelExport",
   "expertReview", "deepResearch",
   "guideFull", "brain",

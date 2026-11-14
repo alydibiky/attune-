@@ -132,3 +132,31 @@ function SyncPanelInner({ native: N, flash }) {
 
 // v9.9.34 FP-4: Pro only (Free sees "Part of Pro"; nothing made is lost)
 export const SyncPanel = proGate("sync", "Sync with your computer", SyncPanelInner);
+
+/* v9.9.40 (Ali, 14 Nov: "build that the syncing is free and it happens via Google accounts no matter I opened it from the computer or
+   mobile or another mobile"): once a device has synced with Google (its passphrase set, Sync → Google Drive done once), it syncs by
+   itself — when Attune opens, every 15 minutes while open, and when you leave the app. Quietly: a failure waits for the next time.
+   Two devices at the same moment: after uploading, the file is read again — if another device wrote in between, it is merged again
+   and uploaded once more, so neither loses anything. Off with Sync → "Sync by itself" (cfg.auto = false). */
+let autoBusy = false;
+export async function autoDriveSync({ now = Date.now(), force = false } = {}) {
+  const cfg = Y.loadSync();
+  if (autoBusy || !cfg.pass || cfg.lastHow !== "drive" || cfg.auto === false || !window.__attuneNativeCall) return { skipped: true };
+  if (!force && cfg.last && now - cfg.last < 5 * 60000) return { skipped: true };
+  autoBusy = true;
+  try {
+    const got = await call("driveSync", { op: "get" });
+    let r = { added: 0, changed: 0 };
+    if (got && got.text) r = await Y.takeIn(got.text, cfg.pass, localStorage, "merge", extra);
+    await call("driveSync", { op: "put", id: (got && got.id) || "", text: await Y.packFor(cfg.pass, localStorage, { extra }) });
+    const again = await call("driveSync", { op: "get" });
+    if (again && again.text && got && again.modified && got.modified && again.modified !== got.modified) {
+      await Y.takeIn(again.text, cfg.pass, localStorage, "merge", extra);
+      await call("driveSync", { op: "put", id: again.id || "", text: await Y.packFor(cfg.pass, localStorage, { extra }) });
+    }
+    Y.saveSync({ ...Y.loadSync(), last: Date.now(), lastHow: "drive" });
+    if (r.added || r.changed) { try { window.dispatchEvent(new Event("attune:data-changed")); } catch (e) {} }
+    return r;
+  } catch (e) { return { error: String(e && e.message || e) }; }
+  finally { autoBusy = false; }
+}

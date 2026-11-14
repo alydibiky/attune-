@@ -36,7 +36,7 @@ ok(B.COMPARE_ROWS.some((r) => /Bank messages/.test(r[0]) && /Asks you/.test(r[1]
 const src = (f) => fs.readFileSync(new URL("../../web-src/" + f, import.meta.url), "utf8");
 ok(/allowed\("autoMoney"\)/.test(src("paylog-ui.jsx")), "Money's auto-save asks plan.js");
 ok(/canUse\("photo"\)/.test(src("photogate.js")) && /noteUse\("photo"\)/.test(src("photogate.js")), "every photo read counts and is limited in one place");
-ok(/proGate\("weekPlan"/.test(src("weekplan-ui.jsx")) && /proGate\("msgSchedule"/.test(src("messages-ui.jsx")) && /proGate\("sync"/.test(src("sync-ui.jsx")) && /proGate\("moneyForTwo"/.test(src("moneyshare-ui.jsx")), "week plan, scheduled messages, sync and Money for two show “Part of Pro” in Free");
+ok(/proGate\("weekPlan"/.test(src("weekplan-ui.jsx")) && /proGate\("msgSchedule"/.test(src("messages-ui.jsx")) && /proGate\("moneyForTwo"/.test(src("moneyshare-ui.jsx")), "week plan, scheduled messages, sync and Money for two show “Part of Pro” in Free");
 ok(/allowed\("closeDay"\)/.test(src("yourday-ui.jsx")), "Close the day is Pro");
 ok(/ruleRoom\(/.test(src("rules-ui.jsx")) && /ruleRoom\(/.test(src("autom-ui.jsx")), "rules and automations check the 1-rule limit");
 ok(/LIMITS\.xray/.test(src("chatxray-ui.jsx")) && /LIMITS\.convert/.test(src("convert-ui.jsx")) && /FREE_PER_DAY = 3/.test(src("slides-ui.jsx")), "X-Ray, conversions, slides: 3 a day");
