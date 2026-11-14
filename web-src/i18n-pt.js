@@ -12827,4 +12827,8 @@ export const PT = {
   "Computer checked: {n} · {f} fixed": "O computador verificou: {n} · {f} corrigidos",
   "fixed": "corrigido",
   "the computer checked it: {r}": "o computador verificou: {r}",
+  "Shopping · 1 item": "Compras · 1 item",
+  "{c} · 1 item still to buy:": "{c} · ainda 1 coisa para comprar:",
+  "Show the message": "Ver a mensagem",
+  "{t} came up in {c} on 1 day:": "{t} apareceu em {c} em um dia:",
 };

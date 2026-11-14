@@ -12827,4 +12827,8 @@ export const SW = {
   "Computer checked: {n} · {f} fixed": "Kompyuta imekagua: {n} · {f} zimerekebishwa",
   "fixed": "imerekebishwa",
   "the computer checked it: {r}": "kompyuta imekagua: {r}",
+  "Shopping · 1 item": "Manunuzi · kitu 1",
+  "{c} · 1 item still to buy:": "{c} · bado kitu 1 cha kununua:",
+  "Show the message": "Onyesha ujumbe",
+  "{t} came up in {c} on 1 day:": "{t} kilizungumzwa katika {c} siku moja:",
 };

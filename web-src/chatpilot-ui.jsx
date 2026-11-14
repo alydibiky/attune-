@@ -163,7 +163,7 @@ export function ChatPilotCard() {
     {ask ? <AskCard key={ask.key} a={ask} done={doneAsk} /> : null}
     {lists.map((l) => { const its = openItems(l); return <button key={l.id} onClick={() => open("lists")} className="w-full flex items-center gap-3 text-start min-h-[48px]" data-testid="cp-shopping">
       <span className="w-9 h-9 rounded-[10px] bg-[var(--c-soft)] grid place-items-center shrink-0"><ShoppingCart size={16} className="c-acc" /></span>
-      <span className="flex-1 min-w-0"><b className="block text-[14px]">{tr("Shopping · {n} items", { n: its.length })}</b><span className="block c-sub text-[12px] truncate" dir="auto">{l.name} · {its.slice(-3).join(", ")}</span></span>
+      <span className="flex-1 min-w-0"><b className="block text-[14px]">{its.length === 1 ? tr("Shopping · 1 item") : tr("Shopping · {n} items", { n: its.length })}</b><span className="block c-sub text-[12px] truncate" dir="auto">{l.name} · {its.slice(-3).join(", ")}</span></span>
       <span className="text-[12.5px] font-extrabold c-acc">{tr("Open")}</span></button>; })}
     {recent.length ? <div className="space-y-1" data-testid="cp-done">
       <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Done for you")}</p>

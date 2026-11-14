@@ -12827,4 +12827,8 @@ export const IDN = {
   "Computer checked: {n} · {f} fixed": "Komputer memeriksa: {n} · {f} diperbaiki",
   "fixed": "diperbaiki",
   "the computer checked it: {r}": "komputer memeriksanya: {r}",
+  "Shopping · 1 item": "Belanja · 1 barang",
+  "{c} · 1 item still to buy:": "{c} · masih 1 barang untuk dibeli:",
+  "Show the message": "Tampilkan pesan",
+  "{t} came up in {c} on 1 day:": "{t} dibahas di {c} pada satu hari:",
 };

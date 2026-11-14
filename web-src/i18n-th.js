@@ -12826,4 +12826,8 @@ export const TH = {
   "Computer checked: {n} · {f} fixed": "คอมพิวเตอร์ตรวจแล้ว: {n} · แก้ {f}",
   "fixed": "แก้แล้ว",
   "the computer checked it: {r}": "คอมพิวเตอร์ตรวจแล้ว: {r}",
+  "Shopping · 1 item": "ซื้อของ · 1 รายการ",
+  "{c} · 1 item still to buy:": "{c} · ยังต้องซื้ออีก 1 อย่าง:",
+  "Show the message": "แสดงข้อความ",
+  "{t} came up in {c} on 1 day:": "{t} ถูกพูดถึงใน {c} 1 วัน:",
 };

@@ -12826,4 +12826,8 @@ export const RU = {
   "Computer checked: {n} · {f} fixed": "Компьютер проверил: {n} · исправлено {f}",
   "fixed": "исправлено",
   "the computer checked it: {r}": "компьютер проверил: {r}",
+  "Shopping · 1 item": "Покупки · 1 шт.",
+  "{c} · 1 item still to buy:": "{c} · осталось купить 1:",
+  "Show the message": "Показать сообщение",
+  "{t} came up in {c} on 1 day:": "{t} обсуждали в {c} в один день:",
 };

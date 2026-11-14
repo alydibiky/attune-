@@ -12826,4 +12826,8 @@ export const BN = {
   "Computer checked: {n} · {f} fixed": "কম্পিউটার যাচাই করেছে: {n} · {f}টি ঠিক করা হয়েছে",
   "fixed": "ঠিক করা হয়েছে",
   "the computer checked it: {r}": "কম্পিউটার যাচাই করেছে: {r}",
+  "Shopping · 1 item": "কেনাকাটা · 1টি জিনিস",
+  "{c} · 1 item still to buy:": "{c} · এখনো 1টি কেনার বাকি:",
+  "Show the message": "বার্তাটি দেখান",
+  "{t} came up in {c} on 1 day:": "{t} নিয়ে {c}-এ এক দিন কথা হয়েছে:",
 };

@@ -12826,4 +12826,8 @@ export const FA = {
   "Computer checked: {n} · {f} fixed": "کامپیوتر بررسی کرد: {n} · {f} اصلاح شد",
   "fixed": "اصلاح شد",
   "the computer checked it: {r}": "کامپیوتر بررسی کرد: {r}",
+  "Shopping · 1 item": "خرید · ۱ قلم",
+  "{c} · 1 item still to buy:": "{c} · هنوز ۱ چیز برای خرید:",
+  "Show the message": "نمایش پیام",
+  "{t} came up in {c} on 1 day:": "{t} در {c} یک روز مطرح شد:",
 };

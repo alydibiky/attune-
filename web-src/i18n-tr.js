@@ -12827,4 +12827,8 @@ export const TRK = {
   "Computer checked: {n} · {f} fixed": "Bilgisayar kontrol etti: {n} · {f} düzeltildi",
   "fixed": "düzeltildi",
   "the computer checked it: {r}": "bilgisayar kontrol etti: {r}",
+  "Shopping · 1 item": "Alışveriş · 1 ürün",
+  "{c} · 1 item still to buy:": "{c} · alınacak 1 şey kaldı:",
+  "Show the message": "Mesajı göster",
+  "{t} came up in {c} on 1 day:": "{t}, {c} içinde bir gün konuşuldu:",
 };

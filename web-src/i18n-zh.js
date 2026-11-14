@@ -12826,4 +12826,8 @@ export const ZH = {
   "Computer checked: {n} · {f} fixed": "电脑已检查：{n} · 修正 {f}",
   "fixed": "已修正",
   "the computer checked it: {r}": "电脑已检查：{r}",
+  "Shopping · 1 item": "购物 · 1 项",
+  "{c} · 1 item still to buy:": "{c} · 还有 1 样要买：",
+  "Show the message": "显示消息",
+  "{t} came up in {c} on 1 day:": "{t} 在 {c} 中被提到 1 天：",
 };

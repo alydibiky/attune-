@@ -12826,4 +12826,8 @@ export const KO = {
   "Computer checked: {n} · {f} fixed": "컴퓨터가 확인: {n} · {f}개 수정",
   "fixed": "수정됨",
   "the computer checked it: {r}": "컴퓨터가 확인함: {r}",
+  "Shopping · 1 item": "장보기 · 1개",
+  "{c} · 1 item still to buy:": "{c} · 아직 살 것 1개:",
+  "Show the message": "메시지 보기",
+  "{t} came up in {c} on 1 day:": "{t} 이야기가 {c}에서 하루 나왔어요:",
 };

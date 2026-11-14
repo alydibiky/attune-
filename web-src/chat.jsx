@@ -1110,9 +1110,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (ac) { const cid = ensureChat(typed), r = ac.r, d = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch (e) { return iso; } };
         let detail = "", actions = [];
         if (r.kind === "list") { const l = (() => { try { return JSON.parse(localStorage.getItem("attune:lists:v1") || "{}").lists.find((x) => x.chatKey === r.key); } catch (e) { return null; } })(), its = l ? l.items.filter((i) => !i.done).map((i) => i.text) : [];
-          detail = its.length ? tr("{c} · {n} items still to buy:", { c: r.chat, n: its.length }) + "\n" + its.map((x) => "• " + x).join("\n") : tr("{c}: nothing left to buy", { c: r.chat }); actions = [["Open the list", "open:lists"]]; }
-        else if (r.kind === "topic") { detail = tr("{t} came up in {c} on {n} days:", { t: r.topic, c: r.chat, n: r.days.length }) + "\n" + r.days.map((x) => "• " + d(x.iso) + " — " + x.who.join(", ") + ": “" + String(x.quote.text).slice(0, 120) + "”").join("\n");
-          actions = [[tr("Show all {n} messages", { n: r.total }), "chatmsgs"]]; }
+          detail = its.length ? (its.length === 1 ? tr("{c} · 1 item still to buy:", { c: r.chat }) : tr("{c} · {n} items still to buy:", { c: r.chat, n: its.length })) + "\n" + its.map((x) => "• " + x).join("\n") : tr("{c}: nothing left to buy", { c: r.chat }); actions = [["Open the list", "open:lists"]]; }
+        else if (r.kind === "topic") { detail = (r.days.length === 1 ? tr("{t} came up in {c} on 1 day:", { t: r.topic, c: r.chat }) : tr("{t} came up in {c} on {n} days:", { t: r.topic, c: r.chat, n: r.days.length })) + "\n" + r.days.map((x) => "• " + d(x.iso) + " — " + x.who.join(", ") + ": “" + String(x.quote.text).slice(0, 120) + "”").join("\n");
+          actions = [[r.total === 1 ? tr("Show the message") : tr("Show all {n} messages", { n: r.total }), "chatmsgs"]]; }
         else { detail = tr("{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”", { c: r.chat, n: r.total }); }
         const amid = newId();
         patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
@@ -2204,7 +2204,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act.startsWith("open:")) window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: act.slice(5) } }));   // v6.28 Ask your life
     else if (act === "chatmsgs") {   // v9.9.40 K5 + Ali's wish "display the full message of everything": every message the answer used, in full
       const all = (m.chatMsgs || []).map((x) => { let w = ""; try { w = new Date(x.ts).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) {} return w + " · " + (x.who || "") + "\n" + x.text; }).join("\n\n");
-      patchChat(chat.id, (c) => ({ ...c, messages: [...c.messages, { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("All {n} messages", { n: (m.chatMsgs || []).length }), detail: all || "—", actions: [] } }] }));
+      patchChat(chat.id, (c) => ({ ...c, messages: [...c.messages, { id: newId(), role: "assistant", card: { tone: "emerald", title: (m.chatMsgs || []).length === 1 ? tr("The message") : tr("All {n} messages", { n: (m.chatMsgs || []).length }), detail: all || "—", actions: [] } }] }));
     }
     else if (act === "pick-do" || act === "pick-chat") {   // v9.1 "Which did you mean?" — remembered for this shape of sentence
       const q = m.pickText || "", at = messages.findIndex((x) => x.id === m.id), hist = messages.slice(0, Math.max(0, at - 1));

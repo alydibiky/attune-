@@ -12827,4 +12827,8 @@ export const UR = {
   "Computer checked: {n} · {f} fixed": "کمپیوٹر نے جانچا: {n} · {f} درست کیے",
   "fixed": "درست کیا",
   "the computer checked it: {r}": "کمپیوٹر نے جانچا: {r}",
+  "Shopping · 1 item": "خریداری · 1 چیز",
+  "{c} · 1 item still to buy:": "{c} · ابھی 1 چیز خریدنی ہے:",
+  "Show the message": "پیغام دکھائیں",
+  "{t} came up in {c} on 1 day:": "{t} کی بات {c} میں ایک دن ہوئی:",
 };

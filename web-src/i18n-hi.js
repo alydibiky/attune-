@@ -12827,4 +12827,8 @@ export const HI = {
   "Computer checked: {n} · {f} fixed": "कंप्यूटर ने जाँचा: {n} · {f} ठीक किए",
   "fixed": "ठीक किया",
   "the computer checked it: {r}": "कंप्यूटर ने जाँचा: {r}",
+  "Shopping · 1 item": "खरीदारी · 1 चीज़",
+  "{c} · 1 item still to buy:": "{c} · अभी 1 चीज़ खरीदनी है:",
+  "Show the message": "मैसेज दिखाएँ",
+  "{t} came up in {c} on 1 day:": "{t} की बात {c} में एक दिन हुई:",
 };

@@ -9928,4 +9928,8 @@ export const AR = {
   "Computer checked: {n} · {f} fixed": "الكمبيوتر راجع: {n} · صلّح {f}",
   "fixed": "اتصلّح",
   "the computer checked it: {r}": "الكمبيوتر راجعها: {r}",
+  "Shopping · 1 item": "المشتريات · حاجة واحدة",
+  "{c} · 1 item still to buy:": "{c} · لسه حاجة واحدة عايزين نشتريها:",
+  "Show the message": "وريني الرسالة",
+  "{t} came up in {c} on 1 day:": "{t} اتكلموا عنه في {c} يوم واحد:",
 };

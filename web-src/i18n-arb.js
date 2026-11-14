@@ -12818,4 +12818,8 @@ export const ARB = {
   "Computer checked: {n} · {f} fixed": "راجع الحاسوب: {n} · أصلح {f}",
   "fixed": "أُصلح",
   "the computer checked it: {r}": "راجعها الحاسوب: {r}",
+  "Shopping · 1 item": "المشتريات · عنصر واحد",
+  "{c} · 1 item still to buy:": "{c} · لا يزال عنصر واحد للشراء:",
+  "Show the message": "اعرض الرسالة",
+  "{t} came up in {c} on 1 day:": "ورد ذكر {t} في {c} في يوم واحد:",
 };

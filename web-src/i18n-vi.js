@@ -12826,4 +12826,8 @@ export const VI = {
   "Computer checked: {n} · {f} fixed": "Máy tính đã kiểm tra: {n} · sửa {f}",
   "fixed": "đã sửa",
   "the computer checked it: {r}": "máy tính đã kiểm tra: {r}",
+  "Shopping · 1 item": "Mua sắm · 1 món",
+  "{c} · 1 item still to buy:": "{c} · còn 1 món cần mua:",
+  "Show the message": "Xem tin nhắn",
+  "{t} came up in {c} on 1 day:": "{t} được nhắc trong {c} vào một ngày:",
 };

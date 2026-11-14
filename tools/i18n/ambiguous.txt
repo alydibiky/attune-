@@ -368,6 +368,7 @@ messages-ui.jsx: {nativeCall ? <button onClick={pick} className={U.btnS} data-te
 
 ## The message
 agents-ui.jsx: <textarea value={text} onChange={(e) => setText(e.target.value)} dir="auto" rows={2} placeholder={tr("The message")} className={U.area} data
+chat.jsx: patchChat(chat.id, (c) => ({ ...c, messages: [...c.messages, { id: newId(), role: "assistant", card: { tone: "emerald", title: (m.chatMsgs |
 messages-ui.jsx: <textarea value={m.text} onChange={(e) => set("text", e.target.value)} dir="auto" rows={3} placeholder={tr("The message")} className={U.area
 
 ## Schedule

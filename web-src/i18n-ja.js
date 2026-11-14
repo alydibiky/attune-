@@ -12826,4 +12826,8 @@ export const JA = {
   "Computer checked: {n} · {f} fixed": "パソコンが確認：{n} · {f} 件修正",
   "fixed": "修正済み",
   "the computer checked it: {r}": "パソコンが確認しました：{r}",
+  "Shopping · 1 item": "買い物 · 1 件",
+  "{c} · 1 item still to buy:": "{c} · まだ買う物 1 件：",
+  "Show the message": "メッセージを表示",
+  "{t} came up in {c} on 1 day:": "{t} は {c} で 1 日話題になりました：",
 };
