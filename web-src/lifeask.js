@@ -153,7 +153,7 @@ function owedIn(q, s, now) {
   // the question who has nothing in People & plans owes nothing — never the others' total
   if (!who) { const m = /\b(?:does|did|is|has)\s+([\p{L}][\p{L}'’-]{1,24})\s+(?:still\s+)?(?:owe|owes|have to pay|need to pay)\b|\bhow much (?:does|do)\s+([\p{L}][\p{L}'’-]{1,24})\s+owe\b/iu.exec(q)
       || /(?:^|\s)([ء-ي]{2,})\s+(?:عليه|عليها)\s+(?:لسه\s+)?(?:كام|حاجة|فلوس)/u.exec(q);
-    const nm = m && (m[1] || m[2]); if (nm && !/^(?:anyone|anybody|someone|somebody|everyone|he|she|they|it|who|that|this)$/i.test(nm)) return { kind: "owed-in", en: `${nm} owes you nothing in People & plans.`, ar: `مفيش على ${nm} حاجة في الناس والالتزامات.`, open: "life", sources: ["life"] }; }
+    const nm = m && (m[1] || m[2]); if (nm && !/^(?:anyone|anybody|someone|somebody|everyone|he|she|they|it|who|that|this|مين|حد|محدش|اي|أي|كل|هو|هي|هما|الناس)$/i.test(nm)) return { kind: "owed-in", en: `${nm} owes you nothing in People & plans.`, ar: `مفيش على ${nm} حاجة في الناس والالتزامات.`, open: "life", sources: ["life"] }; }
   const list = (who ? items.filter((c) => c.person === who) : items).map((c) => ({ c, p: prog(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
   if (!list.length) return { kind: "owed-in", en: who ? `${who} owes you nothing in People & plans.` : "Nobody owes you anything in People & plans.", ar: who ? `مفيش على ${who} حاجة في الناس والالتزامات.` : "محدش عليه فلوس ليك في الناس والالتزامات.", open: "life", sources: ["life"] };
   const cur = list[0].c.currency || "";

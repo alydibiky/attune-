@@ -28,5 +28,5 @@ const n = sample.length, ok = Object.values(by).reduce((s, b) => s + b.ok, 0);
 let md = `# Chat orders the code leaves to the model — real model\n\nModel: ${process.env.MODEL_NAME || "?"} · ${n} of ${pool.length} such orders (of ${rows.length}) · ${(secs / Math.max(1, n)).toFixed(1)} s each on this machine (4 CPU cores)\n\n**Model picked the right kind: ${ok}/${n} = ${(100 * ok / Math.max(1, n)).toFixed(1)}%**\n\n| group | n | right |\n|---|---|---|\n`;
 for (const [g, b] of Object.entries(by)) md += `| ${g} | ${b.n} | ${(100 * b.ok / b.n).toFixed(1)}% |\n`;
 md += "\n## Wrong\n" + wrong.join("\n") + "\n";
-fs.writeFileSync(new URL("./chat100k-" + (process.env.MODEL_NAME || "model") + ".md", import.meta.url), md);
+fs.writeFileSync(new URL("./" + (process.env.TRIAL_OUT || "chat100k-" + (process.env.MODEL_NAME || "model")) + ".md", import.meta.url), md);
 console.log(md.split("## Wrong")[0]);
