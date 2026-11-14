@@ -47,6 +47,34 @@ object ChatInbox {
         return withInput.firstOrNull()
     }
 
+    /** v9.9.40 AP-2: who wrote a chat notification, in which chat, and whether that chat is a group — from Android's conversation
+     *  fields (EXTRA_IS_GROUP_CONVERSATION, EXTRA_CONVERSATION_TITLE, the MessagingStyle sender), the same reading as add() below.
+     *  {who, convo, group, text}, or null when it is not a chat app's message. Used by RecallLog for every message it keeps. */
+    fun parts(sbn: StatusBarNotification): JSONObject? {
+        val pkg = sbn.packageName; if (!isChat(pkg)) return null
+        val n = sbn.notification ?: return null
+        val ex = n.extras ?: return null
+        val title = ex.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
+        var text = (ex.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: ex.getCharSequence(Notification.EXTRA_TEXT))?.toString().orEmpty()
+        val convoTitle = ex.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString().orEmpty()
+        var group = ex.getBoolean(Notification.EXTRA_IS_GROUP_CONVERSATION, false) || convoTitle.isNotBlank()
+        var who = title
+        val msgs = ex.getParcelableArray(Notification.EXTRA_MESSAGES)
+        if (msgs != null && msgs.isNotEmpty()) {
+            val last = msgs.last() as? Bundle
+            if (last != null) {
+                last.getCharSequence("text")?.toString()?.let { if (it.isNotBlank()) text = it }
+                val sender = (if (android.os.Build.VERSION.SDK_INT >= 28) last.getParcelable<android.app.Person>("sender_person")?.name?.toString() else null)
+                    ?: last.getCharSequence("sender")?.toString()
+                if (!sender.isNullOrBlank()) who = sender
+            }
+        }
+        var convo = convoTitle.ifBlank { if (group) title else "" }
+        if (title.contains(" @ ")) { group = true; who = title.substringBefore(" @ ").trim(); convo = title.substringAfter(" @ ").trim() }
+        else if (group && who == title) { val m = Regex("^([^:]{1,40}):\\s+(.*)$").find(text); if (m != null) { who = m.groupValues[1].trim(); text = m.groupValues[2] } }
+        return JSONObject().put("who", who).put("convo", convo).put("group", group).put("text", text)
+    }
+
     /** v9.7: the message just kept ({key, app, who, group, text}) — the auto-reply rules look at it (AutoReply.kt); null if not a chat message. */
     @Synchronized
     fun add(ctx: Context, sbn: StatusBarNotification): JSONObject? {

@@ -22,12 +22,18 @@ object RecallLog {
     private const val PREFS = "attune.recall"
     private const val NEWEST = 3000
 
-    private class Db(ctx: Context) : SQLiteOpenHelper(ctx, "recall.db", null, 1) {
+    // v9.9.40 AP-2 (the new Autopilot, Ali OK'd K1–K6): each chat message also keeps WHO wrote it, the CHAT it is in and whether
+    // that chat is a GROUP — read from Android's own conversation fields (ChatInbox.parts), not guessed from the text
+    private class Db(ctx: Context) : SQLiteOpenHelper(ctx, "recall.db", null, 2) {
         override fun onCreate(db: SQLiteDatabase) {
-            db.execSQL("CREATE TABLE notes (id TEXT PRIMARY KEY, k TEXT UNIQUE, pkg TEXT, app TEXT, title TEXT, text TEXT, ts INTEGER)")
+            db.execSQL("CREATE TABLE notes (id TEXT PRIMARY KEY, k TEXT UNIQUE, pkg TEXT, app TEXT, title TEXT, text TEXT, ts INTEGER, who TEXT, convo TEXT, grp INTEGER)")
             db.execSQL("CREATE INDEX notes_ts ON notes(ts)")
         }
-        override fun onUpgrade(db: SQLiteDatabase, a: Int, b: Int) {}
+        override fun onUpgrade(db: SQLiteDatabase, a: Int, b: Int) {
+            if (a < 2) { try { db.execSQL("ALTER TABLE notes ADD COLUMN who TEXT") } catch (e: Exception) { }
+                try { db.execSQL("ALTER TABLE notes ADD COLUMN convo TEXT") } catch (e: Exception) { }
+                try { db.execSQL("ALTER TABLE notes ADD COLUMN grp INTEGER") } catch (e: Exception) { } }
+        }
     }
     @Volatile private var db: Db? = null
     private fun open(ctx: Context): SQLiteDatabase {
@@ -47,14 +53,17 @@ object RecallLog {
         val v = ContentValues()
         v.put("id", o.optString("id")); v.put("pkg", o.optString("pkg")); v.put("app", o.optString("app"))
         v.put("title", o.optString("title")); v.put("text", o.optString("text")); v.put("ts", o.optLong("ts"))
+        if (o.has("who")) v.put("who", o.optString("who")); if (o.has("convo")) v.put("convo", o.optString("convo")); if (o.has("grp")) v.put("grp", if (o.optBoolean("grp")) 1 else 0)
         v.put("k", o.optString("pkg") + "|" + o.optString("title") + "|" + o.optString("text"))   // the same message updated → one row
         w.insertWithOnConflict("notes", null, v, SQLiteDatabase.CONFLICT_REPLACE)
     }
     private fun rows(w: SQLiteDatabase, where: String?, args: Array<String>?, limit: Int): JSONArray {
         val out = JSONArray()
-        w.query("notes", arrayOf("id", "pkg", "app", "title", "text", "ts"), where, args, null, null, "ts DESC", limit.toString()).use { c ->
-            while (c.moveToNext()) out.put(JSONObject().put("id", c.getString(0)).put("pkg", c.getString(1)).put("app", c.getString(2))
-                .put("title", c.getString(3)).put("text", c.getString(4)).put("ts", c.getLong(5)))
+        w.query("notes", arrayOf("id", "pkg", "app", "title", "text", "ts", "who", "convo", "grp"), where, args, null, null, "ts DESC", limit.toString()).use { c ->
+            while (c.moveToNext()) { val o = JSONObject().put("id", c.getString(0)).put("pkg", c.getString(1)).put("app", c.getString(2))
+                .put("title", c.getString(3)).put("text", c.getString(4)).put("ts", c.getLong(5))
+                if (!c.isNull(6)) o.put("who", c.getString(6)); if (!c.isNull(7)) o.put("convo", c.getString(7)); if (!c.isNull(8)) o.put("group", c.getInt(8) == 1)
+                out.put(o) }
         }
         return out
     }
@@ -72,8 +81,10 @@ object RecallLog {
         if ((n.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0) return
         if (text.isBlank() || n.category == android.app.Notification.CATEGORY_PROGRESS || n.category == android.app.Notification.CATEGORY_TRANSPORT) return
         val key = sbn.packageName + "|" + title + "|" + text
-        put(open(ctx), JSONObject().put("id", sbn.packageName + ":" + sbn.postTime + ":" + key.hashCode()).put("pkg", sbn.packageName)
-            .put("app", app).put("title", title.take(200)).put("text", text.take(2000)).put("ts", sbn.postTime))
+        val row = JSONObject().put("id", sbn.packageName + ":" + sbn.postTime + ":" + key.hashCode()).put("pkg", sbn.packageName)
+            .put("app", app).put("title", title.take(200)).put("text", text.take(2000)).put("ts", sbn.postTime)
+        try { ChatInbox.parts(sbn)?.let { c -> row.put("who", c.optString("who").take(80)).put("convo", c.optString("convo").take(80)).put("grp", c.optBoolean("group")) } } catch (e: Exception) { }
+        put(open(ctx), row)
     }
 
     /** The newest ones (what the Recall page lists and searches first). */
