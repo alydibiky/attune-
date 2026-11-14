@@ -1,0 +1,246 @@
+<title>New Autopilot Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@500;700&display=swap">
+<style>
+/* Layout: one column of features; each shows 2 phone screens (A, B) side by side, wrapping to one on phones; sticky pick bar */
+:root {
+  --bg: #f3f1ef; --surface: #ffffff; --ink: #1f1b1c; --mut: #69605f; --line: #e3dedb; --acc: #7a1f3d; --acc-soft: #f4e4ea; --ok: #1e7a43;
+  --font-ui: "Nunito", "IBM Plex Sans Arabic", system-ui, sans-serif; --font-code: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* the app's own look inside the phones (Attune light, burgundy C1) */
+  --a-bg: #F5F4F2; --a-surf: #FFFFFF; --a-surf2: #EFEDEA; --a-ink: #1E1C1B; --a-mut: #5E5A57; --a-ln: #E6E3E0; --a-acc: #7A1F3D; --a-soft: #F6E6EC;
+  --a-pos: #1e7a43; --a-neg: #b33a2e; --a-warn: #b4560e; --a-amber: #FBF0DC; --a-frame: #1b1718;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 150px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 30px; }
+h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 900; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 22px; font-weight: 900; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.lead { color: var(--mut); font-size: 16px; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); }
+.intro { display: grid; gap: 10px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; display: grid; gap: 6px; }
+.box ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 3px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+nav.toc a { font-family: var(--font-code); font-size: 12.5px; text-decoration: none; color: var(--acc); background: var(--acc-soft); border-radius: 8px; padding: 2px 8px; }
+.group-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+.group-h .ar { color: var(--mut); font-weight: 800; }
+.feat { display: grid; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; scroll-margin-top: 12px; }
+.feat-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.fcode { font-family: var(--font-code); font-weight: 600; color: var(--acc); background: var(--acc-soft); border-radius: 7px; padding: 1px 8px; font-size: 14px; }
+.fname { font-weight: 900; font-size: 19px; }
+.far { color: var(--mut); font-weight: 700; }
+.ali { font-size: 13.5px; color: var(--acc); font-weight: 800; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 14px; }
+.facts div { min-width: 0; } .facts b { display: block; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+@media (max-width: 700px) { .facts { grid-template-columns: 1fr; } }
+.opts { display: flex; flex-wrap: wrap; gap: 18px; }
+.opt { flex: 1 1 300px; min-width: 0; display: grid; gap: 8px; align-content: start; border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.opt.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+.opt-h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.opt-h input { width: 22px; height: 22px; margin: 0; accent-color: var(--acc); cursor: pointer; }
+.ocode { font-family: var(--font-code); font-weight: 600; font-size: 13px; color: var(--acc); }
+.oname { font-weight: 900; }
+.rec { font-size: 11.5px; font-weight: 800; color: var(--surface); background: var(--acc); border-radius: 999px; padding: 1px 8px; }
+.pm { font-size: 13.5px; color: var(--mut); display: grid; gap: 2px; }
+.pm span::before { font-weight: 900; margin-inline-end: 4px; }
+.pm .plus::before { content: "+"; color: var(--ok); } .pm .minus::before { content: "−"; color: #b33a2e; }
+.note { width: 100%; min-height: 40px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); }
+.note:focus, .opt input:focus-visible, .btn:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+/* ---- the phone ---- */
+.phone { width: 290px; max-width: 100%; margin: 0 auto; background: var(--a-frame); border-radius: 36px; padding: 9px; }
+.scr { background: var(--a-bg); border-radius: 28px; overflow: hidden; color: var(--a-ink); font-family: "Nunito", "IBM Plex Sans Arabic", sans-serif; font-size: 12px; line-height: 1.4; height: 560px; display: flex; flex-direction: column; position: relative; }
+.sb { display: flex; justify-content: space-between; padding: 8px 18px 2px; font-size: 10.5px; font-weight: 800; color: var(--a-ink); }
+.tb { display: flex; align-items: center; gap: 10px; padding: 6px 14px 8px; font-weight: 900; font-size: 15px; }
+.tb .ico { font-size: 16px; color: var(--a-ink); width: 18px; text-align: center; }
+.body { padding: 4px 12px 12px; display: grid; gap: 8px; align-content: start; overflow: hidden; flex: 1; }
+.c { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 18px; padding: 10px 12px; display: grid; gap: 6px; }
+.c.amber { background: var(--a-amber); border-color: #efdcb8; }
+.c.soft { background: var(--a-soft); border-color: #ecd0da; }
+.lb { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--a-mut); font-weight: 800; }
+.t { font-weight: 900; font-size: 13px; }
+.s { color: var(--a-mut); font-size: 11px; }
+.r { display: flex; align-items: center; gap: 8px; } .r > .grow { flex: 1; min-width: 0; }
+.sq { width: 26px; height: 26px; border-radius: 9px; background: var(--a-soft); color: var(--a-acc); display: grid; place-items: center; font-weight: 900; font-size: 12px; flex: none; }
+.amt { font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.neg { color: var(--a-neg); } .pos { color: var(--a-pos); } .warn { color: var(--a-warn); } .acc { color: var(--a-acc); }
+.btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.b { border-radius: 10px; padding: 5px 10px; font-weight: 800; font-size: 11px; background: var(--a-acc); color: #fff; }
+.b.g { background: transparent; color: var(--a-acc); border: 1px solid var(--a-acc); }
+.b.q { background: var(--a-surf2); color: var(--a-ink); }
+.ch { border-radius: 999px; padding: 2px 9px; font-weight: 800; font-size: 10.5px; background: var(--a-surf); border: 1px solid var(--a-ln); white-space: nowrap; }
+.ch.on { background: var(--a-acc); color: #fff; border-color: var(--a-acc); }
+.ch.soft { background: var(--a-soft); color: var(--a-acc); border-color: transparent; }
+.tag { font-size: 9.5px; font-weight: 800; border-radius: 6px; padding: 1px 6px; background: var(--a-surf2); color: var(--a-mut); white-space: nowrap; }
+.bar { height: 6px; border-radius: 9px; background: var(--a-ln); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--a-acc); }
+.tick { width: 15px; height: 15px; border-radius: 5px; border: 1.5px solid var(--a-acc); display: inline-grid; place-items: center; font-size: 10px; color: #fff; flex: none; }
+.tick.d { background: var(--a-acc); }
+.sep { border-top: 1px solid var(--a-ln); }
+.notif { background: #2a2526; color: #f3eeee; border-radius: 16px; padding: 9px 11px; display: grid; gap: 4px; font-size: 11px; }
+.notif .app { font-size: 9.5px; color: #c9bfc1; font-weight: 700; }
+.notif .nt { font-weight: 900; font-size: 12px; }
+.notif .na { display: flex; gap: 14px; font-weight: 900; color: #f2b6c8; font-size: 11px; padding-top: 2px; }
+.shade { background: #3b3537; }
+.dim { position: absolute; inset: 0; background: rgba(20,14,16,.38); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--a-surf); border-radius: 22px 22px 0 0; padding: 8px 14px 14px; display: grid; gap: 7px; }
+.sheet::before { content: ""; width: 36px; height: 4px; border-radius: 4px; background: var(--a-ln); justify-self: center; }
+.inp { background: var(--a-surf); border: 1.5px solid var(--a-acc); border-radius: 16px; padding: 8px 10px; color: var(--a-mut); }
+.bubble { background: var(--a-acc); color: #fff; border-radius: 16px 16px 4px 16px; padding: 7px 10px; justify-self: end; max-width: 85%; font-weight: 700; }
+.dots { display: flex; gap: 4px; } .dots i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--a-acc); display: block; } .dots i.d { background: var(--a-acc); } .dots i.x { border-color: var(--a-ln); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tile { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 14px; padding: 8px; display: grid; gap: 2px; }
+.cal { display: grid; grid-template-columns: 26px repeat(3, 1fr); gap: 3px; font-size: 9.5px; }
+.cal .h { font-weight: 800; color: var(--a-mut); text-align: center; }
+.cal .tm { color: var(--a-mut); }
+.cal .slot { border-radius: 6px; min-height: 22px; padding: 2px 4px; }
+.cal .busy { background: var(--a-surf2); color: var(--a-mut); }
+.cal .pr { background: #eef3ef; color: #4b6b57; }
+.cal .plan { background: var(--a-acc); color: #fff; font-weight: 800; }
+.ring { width: 150px; height: 150px; border-radius: 50%; margin: 6px auto; display: grid; place-items: center; background: conic-gradient(var(--a-acc) 0 62%, var(--a-ln) 62% 100%); }
+.ring > div { width: 126px; height: 126px; border-radius: 50%; background: var(--a-bg); display: grid; place-items: center; text-align: center; }
+.big { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.tl { display: grid; gap: 0; } .tl .it { display: grid; grid-template-columns: 38px 1fr; gap: 8px; padding: 5px 0; border-inline-start: 2px solid var(--a-ln); margin-inline-start: 18px; padding-inline-start: 10px; }
+.src { font-size: 9.5px; color: var(--a-mut); }
+.ar-t { font-family: "IBM Plex Sans Arabic", sans-serif; direction: rtl; text-align: right; }
+.hl { background: #fff1c9; border-radius: 4px; padding: 0 2px; }
+/* ---- pick bar ---- */
+.pickbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.pb-in { max-width: 1040px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.picked { flex: 1 1 240px; min-width: 0; font-family: var(--font-code); font-size: 12.5px; color: var(--mut); overflow-wrap: anywhere; max-height: 3.3em; overflow: auto; }
+.picked b { color: var(--ink); }
+.btn { font: inherit; font-weight: 900; border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; background: var(--acc); color: var(--surface); min-height: 44px; }
+.btn.ghost { background: transparent; color: var(--acc); border: 1px solid var(--acc); }
+.copybox { width: 100%; min-height: 90px; font-family: var(--font-code); font-size: 12.5px; border: 1px solid var(--acc); border-radius: 10px; padding: 8px; background: var(--bg); color: var(--ink); }
+.toast { font-weight: 800; color: var(--ok); font-size: 13.5px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th, .tbl td { text-align: start; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+.tbl td.f { color: var(--ok); font-weight: 800; } .tbl td.p { color: var(--acc); font-weight: 800; }
+.tblwrap { overflow-x: auto; }
+.pro { font-size: 9px; font-weight: 900; color: #fff; background: var(--a-acc); border-radius: 6px; padding: 1px 5px; letter-spacing: .04em; }
+.free { font-size: 9px; font-weight: 900; color: var(--a-pos); background: #e6f3ea; border-radius: 6px; padding: 1px 5px; }
+.coach { position: absolute; left: 12px; right: 12px; background: #2a2526; color: #f6eff1; border-radius: 16px; padding: 10px 12px; display: grid; gap: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.coach .ct { font-weight: 900; font-size: 12.5px; } .coach .ca { display: flex; gap: 12px; font-weight: 900; color: #f2b6c8; }
+.hole { position: absolute; border: 2px solid #f2b6c8; border-radius: 14px; box-shadow: 0 0 0 999px rgba(20,14,16,.45); }
+.scr { position: relative; }
+.why { font-size: 10px; color: var(--a-mut); background: var(--a-surf2); border-radius: 10px; padding: 6px 8px; display: grid; gap: 3px; }
+.why b { color: var(--a-ink); }
+.ok { color: var(--a-pos); font-weight: 900; }
+.q { font-size: 11px; background: var(--a-soft); border-radius: 14px 14px 4px 14px; padding: 6px 9px; justify-self: end; max-width: 85%; }
+.ans { font-size: 11px; background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 14px; padding: 8px 10px; display: grid; gap: 5px; }
+.src { font-size: 9.5px; color: var(--a-mut); }
+.quote { border-inline-start: 3px solid var(--a-acc); padding-inline-start: 7px; font-size: 10.5px; }
+.chip2 { display: inline-block; font-size: 9.5px; font-weight: 800; border-radius: 999px; padding: 1px 7px; background: var(--a-soft); color: var(--a-acc); }
+.wa { background: #075E54; color: #fff; padding: 8px 12px; font-weight: 800; font-size: 12px; }
+.menu { position: absolute; right: 10px; top: 70px; background: #fff; color: #111; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.25); font-size: 11px; display: grid; }
+.menu span { padding: 7px 14px; } .menu .on { background: #e7f3ef; font-weight: 800; }
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <span class="eyebrow">Attune · the new Autopilot · combined · 14 Nov 2026</span>
+    <h1>Your picks, drawn together</h1>
+    <p class="lead">Your picks: CH-1, EX-1, SL-1, DN-1, NS-2, AS-2 — with your two wishes. Each screen has “What I understood”. Tick OK on each (or write what's wrong in its note) and copy; I build after your OK.</p>
+    <div class="box"><b>Your two wishes, as I understood them</b><ul>
+      <li><b>“Understand when I tell it I bought the shopping list”</b> — you say it in your own words (“I bought the shopping list”, «جبت الطلبات», “got everything except milk”, “bought tortilla and bread”) and Attune takes those items off the Talabat list — all of them, or only the ones you name, or all but the ones you name — and shows what it took off, with Undo.</li>
+      <li><b>“Display the full message of everything — I want to make sure by myself of everything the app does”</b> — every action, every answer and every “From your messages / Mind” source can open the <b>full original messages</b> (whole text, sender, chat, date and time), not a cut-off line. One tap from anything Attune did or said.</li></ul></div>
+    <nav class="toc" id="toc" aria-label="Jump to a screen"></nav>
+  </header>
+  <div id="groups"></div>
+</div>
+
+<div class="pickbar" role="region" aria-label="Your picks">
+  <div class="pb-in">
+    <div class="picked" id="picked">No options picked yet.</div>
+    <button class="btn ghost" id="clear" type="button">Clear</button>
+    <button class="btn" id="copy" type="button">Copy my picks</button>
+    <span class="toast" id="toast" hidden>Copied</span>
+    <textarea class="copybox" id="copybox" hidden readonly aria-label="Your picks to copy"></textarea>
+  </div>
+</div>
+
+<script>
+
+// ---------- tiny builders for the phone screens ----------
+const ph = (title, body, o = {}) => `<div class="phone"><div class="scr"><div class="sb"><span>9:41</span><span>●●● 82%</span></div>${title === null ? "" : `<div class="tb"><span class="ico">${o.back ? "‹" : "☰"}</span><span>${title}</span></div>`}<div class="body">${body}</div>${o.over || ""}</div></div>`;
+const c = (x, cls = "") => `<div class="c ${cls}">${x}</div>`;
+const lb = (x) => `<div class="lb">${x}</div>`;
+const r = (ic, t, s = "", right = "") => `<div class="r">${ic ? `<div class="sq">${ic}</div>` : ""}<div class="grow"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ""}</div>${right}</div>`;
+const bt = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="b ${k}">${t}</span>`; }).join("")}</div>`;
+const chips = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="ch ${k}">${t}</span>`; }).join("")}</div>`;
+const nt = (app, t, s, acts = []) => `<div class="notif"><div class="app">${app}</div><div class="nt">${t}</div><div>${s}</div>${acts.length ? `<div class="na">${acts.map((a) => `<span>${a}</span>`).join("")}</div>` : ""}</div>`;
+const sheet = (x) => `<div class="dim"></div><div class="sheet">${x}</div>`;
+const tk = (d) => `<span class="tick ${d ? "d" : ""}">${d ? "✓" : ""}</span>`;
+const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
+const sep = `<div class="sep"></div>`;
+const ar = (x) => `<span class="ar-t">${x}</span>`;
+
+
+const AR = (x) => `<span class="ar-t" dir="rtl">${x}</span>`;
+const why = (from, said, because) => `<div class="why"><span><b>From</b> ${from}</span><span class="quote">${said}</span><span><b>Why</b> ${because}</span></div>`;
+const undoRow = `<div class="btns"><span class="b q">↶ Undo</span><span class="b q">Open chat</span><span class="b q">Never from this chat</span></div>`;
+const understood = (title, lines, src) => c(lb(title) + `<div style="display:grid;gap:3px">${lines.map((l) => `<div class="r"><span class="ok">✓</span><span class="grow" style="font-size:11px">${l}</span></div>`).join("")}</div>` + (src ? `<div class="src">${src}</div>` : "") + bt("✓ Right", "g|✎ Change"), "soft");
+const G = { a: ["Your new Autopilot, screen by screen", "الأوتوبايلوت الجديد"] };
+const OKOPT = (what, phone) => [["OK", "OK as drawn", what, "", "", 0, phone]];
+const ul = (xs) => `<ul style="margin:4px 0 0;padding-inline-start:18px;font-size:13px;display:grid;gap:2px">${xs.map((x) => `<li>${x}</li>`).join("")}</ul>`;
+const F = [
+["a","K1","A new chat (CH-1 + EX-1)","شات جديد","What I understood: Attune reads a new chat (or its export) and asks you once what it is; until you say Right it only keeps the messages. Exporting from WhatsApp gives it the whole history.","Home (once per new chat) · Share → Attune · Settings → Your chats","10,000 whole conversations; 0 actions on a chat you haven't confirmed",
+ OKOPT("Reads the chat or its export → “What I understood” → ✓ Right / ✎ Change, or say it in your own words.",
+   ph("Home", c(lb("New chat · Talabat (WhatsApp)") + `<div class="s">I read 2,340 messages from your export (Mar – Nov 2026).</div>`) + understood("What I understood", ["Talabat = you and Noudy", "You write what ran out at home, to buy next time", "Each message → an item on your Shopping list"], "Not the delivery app here — your shared list") + c(lb("Or say it in your words") + `<div class="inp">${AR("ده جروب أنا ونودي، بنكتب فيه الحاجات اللي خلصت من البيت")}</div>`)))],
+["a","K2","Home (SL-1 + DN-1 + NS-2)","الصفحة الرئيسية","What I understood: one Shopping line; Done for you as short lines (tap for the full message, why, Undo, Open chat, Never from this chat); one small “Kept quietly” line.","Home","Home never shows more than these; every Done line opens its full message",
+ OKOPT("Shopping · 6 items, Done for you with sources, Kept quietly today: 41.",
+   ph("Home", `<div class="inp">Type or say it…</div>` + c(r("🛒","Shopping · 6 items","Talabat · Noudy added tortilla, chicken strips today",`<span class="b g">Open</span>`)) + c(lb("Autopilot · done for you") + r("🛒","Added tortilla, chicken strips to Shopping","Talabat · Noudy · 10:32 · tap for the message") + r("📄","Electricity bill 640 → Follow-ups","Fawry SMS · due 18 Nov · tap for the message")) + c(r("🤫","Kept quietly today: 41","Family 18 · Address East 15 · Emerald Park 8",`<span class="tag">See</span>`))))],
+["a","K3","“I bought the shopping list” (your wish)","جبت الطلبات","What I understood: you tell Attune in your words and it takes items off the Talabat list — all, only the ones you name, or all but the ones you name — and shows exactly what it took off, with Undo.","The Home box · Chat · voice","Every way of saying it (EN / Egyptian / Franco: “bought everything”, «جبت الطلبات», «جبت كل حاجة ما عدا اللبن», “got the tortilla and bread”) in its own 10,000-case test",
+ OKOPT("All / some / all-but, said any way — with what it took off and Undo.",
+   ph("Home", `<div class="q">${AR("جبت الطلبات كلها ما عدا اللبن")}</div>` + c(r("✓","Took 5 items off Shopping","Tortilla · Chicken strips · Bread · Eggs · Dish soap") + `<div class="s">Still on the list: Milk</div>` + bt("q|↶ Undo","q|Show the list")) + `<div class="lb" style="padding:4px 2px 0">Another day · the list has 6 items</div><div class="q">got the tortilla and bread</div>` + c(r("✓","Took 2 off: Tortilla, Bread","4 still on the list") + bt("q|↶ Undo"))))],
+["a","K4","The full message behind anything (your wish)","الرسالة كاملة","What I understood: from any Done line, any answer and any “From your messages / Mind” source, one tap shows the full original message(s): whole text, sender, chat, date and time — so you can check everything yourself.","Done for you · Chat answers · Follow-ups · Shopping items","Each action and each answer keeps a link to its messages; the test opens every one and compares it with the original",
+ OKOPT("A tap on any source → the full messages, never a cut-off line.",
+   ph("The message", c(lb("Talabat · WhatsApp") + `<div class="s">Noudy · Sat 14 Nov 2026 · 10:32</div><div style="font-size:12px">tortilla and the chicken strips from Spinneys pls, the frozen ones</div>`) + `<div class="why"><span><b>What Attune did</b> Added “Tortilla” and “Chicken strips” to Shopping</span><span><b>Why</b> Talabat is your shopping list (you said so on 14 Nov)</span></div>` + undoRow, { back: true }))],
+["a","K5","Asking about a chat (AS-2 + your wish)","تسأل عن شات","What I understood: the answer gives what was decided, the dates and who said what — and “Show all 23 messages” opens every message it used, in full, in order.","Chat · the Home box","Answers checked against the messages themselves (dates, senders); every message it used is listed",
+ OKOPT("Decided + dates + who, and all the messages it used, in full.",
+   ph("Chat", `<div class="body" style="padding:0"><div class="q">When did Address East discuss the garage?</div><div class="ans"><b>Decided:</b><span>The second gate opens on Saturdays; parking spaces are still being discussed.</span><span>• 3 Nov — gate closed for 2 days (Dr Hazem)</span><span>• 8 Nov — parking spaces (4 people)</span><span>• 11 Nov — second gate on Saturday (Dr Hazem)</span><span class="src">From Address East Owners · 23 messages</span>${bt("q|Show all 23 messages","q|Open chat")}</div></div>`, { back: true }))],
+];
+// ---------- render ----------
+const KEY = "attune-autopilot2-ok-v1";
+let st = { on: {}, notes: {} };
+try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && typeof v === "object") st = { on: v.on || {}, notes: v.notes || {} }; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const groupsEl = document.getElementById("groups"), toc = document.getElementById("toc");
+const ORDER = [];
+let lastG = "";
+let gWrap = null;
+for (const [g, code, name, arName, aliNote, where, test, opts] of F) {
+  if (g !== lastG) { lastG = g; gWrap = document.createElement("section"); gWrap.style.display = "grid"; gWrap.style.gap = "16px"; gWrap.innerHTML = `<div class="group-h"><h2>${G[g][0]}</h2><span class="ar" lang="ar">${G[g][1]}</span></div>`; groupsEl.appendChild(gWrap); }
+  const a = document.createElement("a"); a.href = "#f-" + code; a.textContent = code; toc.appendChild(a);
+  const f = document.createElement("article"); f.className = "feat"; f.id = "f-" + code;
+  f.innerHTML = `<div class="feat-h"><span class="fcode">${code}</span><span class="fname">${esc(name)}</span><span class="far" lang="ar">${esc(arName)}</span></div>` + (aliNote ? `<div class="ali">${esc(aliNote)}</div>` : "") +
+    `<div class="facts"><div><b>Where it lives</b>${esc(where)}</div><div><b>How it will be tested</b>${esc(test)}</div></div><div class="opts"></div>`;
+  const host = f.querySelector(".opts");
+  for (const [k, oname, what, plus, minus, rec, phone] of opts) {
+    const id = code + "-" + k; ORDER.push(id);
+    const o = document.createElement("div"); o.className = "opt" + (st.on[id] ? " on" : "");
+    o.innerHTML = `<div class="opt-h"><input type="checkbox" id="cb-${id}" aria-label="Pick ${id}"${st.on[id] ? " checked" : ""}><label for="cb-${id}" class="ocode">${id}</label><label for="cb-${id}" class="oname">${esc(oname)}</label>${rec ? '<span class="rec">Recommended</span>' : ""}</div>` +
+      `<p style="font-size:14px">${esc(what)}</p><div class="pm"><span class="plus">${esc(plus)}</span><span class="minus">${esc(minus)}</span></div>${phone}` +
+      `<textarea class="note" id="note-${id}" rows="1" placeholder="Your note on ${id} (optional)">${esc(st.notes[id] || "")}</textarea>`;
+    host.appendChild(o);
+    o.querySelector("input").addEventListener("change", (e) => { if (e.target.checked) st.on[id] = true; else delete st.on[id]; o.classList.toggle("on", e.target.checked); save(); render(); });
+    o.querySelector("textarea").addEventListener("input", (e) => { const v = e.target.value; if (v.trim()) st.notes[id] = v; else delete st.notes[id]; if (v.trim() && !st.on[id]) { st.on[id] = true; o.classList.add("on"); o.querySelector("input").checked = true; } save(); render(); });
+  }
+  gWrap.appendChild(f);
+}
+const lines = () => ORDER.filter((id) => st.on[id]).map((id) => (st.notes[id] && st.notes[id].trim() ? id + " — " + st.notes[id].trim().replace(/\s*\n\s*/g, " / ") : id));
+function render() { const l = lines(); document.getElementById("picked").innerHTML = l.length ? "<b>" + l.length + " picked:</b> " + l.map(esc).join(" · ") : "No options picked yet."; }
+render();
+document.getElementById("copy").addEventListener("click", () => {
+  const l = lines(), box = document.getElementById("copybox"), toast = document.getElementById("toast");
+  if (!l.length) { document.getElementById("picked").textContent = "Tick at least one option first."; return; }
+  const text = "My OK (new Autopilot):\n" + l.join("\n");
+  const fallback = () => { box.hidden = false; box.value = text; box.focus(); box.select(); toast.hidden = false; toast.textContent = "Selected: copy it with your keyboard or long-press."; };
+  try { navigator.clipboard.writeText(text).then(() => { toast.hidden = false; toast.textContent = l.length === 1 ? "Copied 1 pick" : "Copied " + l.length + " picks"; box.hidden = true; setTimeout(() => { toast.hidden = true; }, 2500); }, fallback); } catch (e) { fallback(); }
+});
+document.getElementById("clear").addEventListener("click", () => { st = { on: {}, notes: {} }; save(); document.querySelectorAll(".opt").forEach((o) => { o.classList.remove("on"); o.querySelector("input").checked = false; o.querySelector("textarea").value = ""; }); render(); });
+</script>
