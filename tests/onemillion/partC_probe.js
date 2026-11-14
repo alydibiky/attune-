@@ -26,6 +26,10 @@
   // c07 — the same English sentence as on the English screen
   if (opt.lang !== "en" && opt.en && opt.en.length) { const E = new Set(opt.en); let n = 0, ex = "";
     const D = (opt.data || []).map((x) => x.toLowerCase());
+    // English that is right in this language: the same country name in Swahili; Hindi keeps the tools' names in English on purpose
+    // (Ali's Hindi choice, v8.9) — the rest of the Hindi screen is checked as usual
+    const SAME = ["Sri Lanka", ...({ hi: ["Chat X-Ray", "Money Guardian", "Deadline Radar"] }[opt.lang] || [])];   // a country spelled the same in many languages
+    D.push(...SAME.map((x) => x.toLowerCase()));
     for (const [t, el] of nodes) if (E.has(t) && (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^[A-Z]{2,4}$/.test(w)).length >= 2 && !/^[\d\s.,:%+\-–—/·()A-Z]+$/.test(t) && !el.closest("input,select option") && !D.some((x) => t.toLowerCase().includes(x))) { n++; if (!ex) ex = t.slice(0, 70); }
     if (n) add("c07 English left", "“" + ex + "”" + (n > 1 ? " (+" + (n - 1) + ")" : "")); }
   // c08

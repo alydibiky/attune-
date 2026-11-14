@@ -14,6 +14,11 @@ if len(sys.argv) > 1 and sys.argv[1] == "merge":
     rows = []
     for f in sorted(os.listdir(HERE)):
         if f.startswith("C-shard-") and f.endswith(".json"): rows += json.load(open(os.path.join(HERE, f)))
+    # English that is right in that language (the probe skips it now; rows saved before are read the same way): Swahili "Sri Lanka";
+    # Hindi keeps the tools' names in English on purpose — only when it was the ONE English line on that screen
+    SAME = {"sw": ["Sri Lanka"], "hi": ["Chat X-Ray", "Money Guardian", "Deadline Radar"]}
+    for r in rows:
+        r["fails"] = [[c, why] for c, why in r["fails"] if not (c.startswith("c07") and "(+" not in why and any(why == "\u201c" + x + "\u201d" for x in SAME.get(r["lang"], []) + ["Sri Lanka"]))]
     checks = sum(r["n"] for r in rows); bad = [r for r in rows if r["fails"]]
     nfail = sum(len(r["fails"]) for r in rows)
     by = {}

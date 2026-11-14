@@ -1,12 +1,9 @@
-# 100,000-sentence run — 100000 sentences, 99503 right (99.50%)
+# 100,000-sentence run — 100000 sentences, 99858 right (99.86%)
 
 Every sentence is different (checked). Each is a hard.mjs sentence typed the way people really type (wake word, filler, thanks, emoji, caps, double spaces) and is checked for WHAT the app does and for the details (amount, direction, hour, person).
 
 | group | sentences | wrong | right % |
 |---|---|---|---|
-| goals | 1500 | 156 | 89.60 |
-| teach_alert_auto | 2000 | 137 | 93.15 |
-| my_money_questions | 3000 | 62 | 97.93 |
 | multi_spend | 4000 | 32 | 99.20 |
 | edits_cancels | 1400 | 11 | 99.21 |
 | lists_todos | 3500 | 24 | 99.31 |
@@ -30,7 +27,10 @@ Every sentence is different (checked). Each is a hard.mjs sentence typed the way
 | agents | 4000 | 0 | 100.00 |
 | notes_where | 2500 | 0 | 100.00 |
 | open_call_go | 2500 | 0 | 100.00 |
+| teach_alert_auto | 2000 | 0 | 100.00 |
+| goals | 1500 | 0 | 100.00 |
 | calc | 3500 | 0 | 100.00 |
+| my_money_questions | 3000 | 0 | 100.00 |
 | smalltalk | 600 | 0 | 100.00 |
 | numbers_not_money | 2500 | 0 | 100.00 |
 | two_orders | 2000 | 0 | 100.00 |
@@ -57,15 +57,6 @@ Every sentence is different (checked). Each is a hard.mjs sentence typed the way
 
 ### lists_todos
 - **→ chat** × 24: «بص لازم ادفع للشغالة.» · «لازم  ادفع للشغالة 🙏» · «يا اتيون لازم ادفع للشغالة...» · «لازم ادفع فاتورة الكهربا 🙏» · «يا  عم لازم ادفع للشغالة ❤️» · «طيب لازم ادفع للشغالة!!»
-
-### teach_alert_auto
-- **→ chat** × 137: «hey attune, fatima always comes first» · «attune Sara always comes first pls» · «ok so John always comes first» · «Tom always comes first» · «hey attune, maria always comes first 🙏» · «hey, Chen always comes first»
-
-### goals
-- **→ chat** × 156: «read 14 books before December 2027» · «yo read 6 books before December 2027 thx!» · «Attune:  read 8 books before December 2027» · «listen, read 12 books before December 2027!!» · «read 17 books before december 2027» · «read 23 books before December 2027 thx!»
-
-### my_money_questions
-- **→ chat** × 62: «what are my subscriptions?» · «quick one - what are my subscriptions?» · «pls what are my subscriptions?» · «ok what are my subscriptions?» · «ok what are my subscriptions? pls» · «hey, what are my subscriptions?»
 
 ### world_questions
 - **→ ask:money** × 7: «attune is an Apple Watch worth 3500?» · «pls is an Apple Watch worth 5500? ty» · «so, is an Apple Watch worth 3000?» · «hi! is an Apple Watch worth 9600? thanks» · «yo is an Apple Watch worth 12000? thanks» · «ok so is an Apple Watch worth 1500?.»
