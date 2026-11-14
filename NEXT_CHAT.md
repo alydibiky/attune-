@@ -11,6 +11,27 @@ Then carry on with **"Do this next"** below — no need to ask Ali anything befo
 | Tests | v8.9: full suite passes (`bash tests/run_all.sh`); language crawl `tests/i18n_all.py` (all 20 languages: 1–6 English texts left each, all names/legal) |
 | Gemini step | Areas 1–6 built · **Area 7 (Settings, sidebar, How to use, Privacy)**: Ali picked "I design it myself in Gemini's style" for the rest of the UI — How to use is done (v7.9); Settings / sidebar / Privacy still to design (show Ali 2–3 options first) |
 
+## ▶ START HERE (14 Nov) — v9.9.33 → v9.9.37: Ali's answers built (PRO_PLAN.md is the plan; batches 0, A–E done, F next)
+Ali's answers on https://claude.ai/artifact/XF3TxLzpUYDzBmNPecpdTL: OK-1 ("don't remove undo — the app could still get something wrong"),
+OK-2, OK-3, OK-4, BG-3, BR-4; plus: the +7 trial days only for REALLY completing setup; language as a dropdown; agents must check while
+he's away with many more websites; and at the end a 1,000,000-case test of everything (batch F — NOT started; plan it in TEST_1M.md).
+- **v9.9.33** Chat bubble keeps his exact words · old wrong agent finds dropped on load (his EGP 120 FreeClip screenshot) · language dropdown ·
+  agents: AgentDayJob every ~4 h (battery not low) + the night job; every store read in the invisible browser (needsBrowser); Egypt
+  10 places (Amazon, noon, Jumia, B.TECH, 2B, Raya, Dubizzle, Carrefour, Tradeline, Google Shopping), old agents get them all
+  (recheckSaved); the conversation names the store. tests/agents33/gen.mjs 10,000.
+- **v9.9.34** Free / Pro (FP-4): plan.js (Pro now, limits, Pro-only), plan-ui.jsx (Part of Pro card, openPlan event), bank messages saved
+  by themselves only in Pro WITH Undo, Close the day / week plan / scheduled messages / sync / Money for two / exports Pro, 3-month Money
+  history in Free, 3 a day photo / X-Ray / conversions / slides, 10 papers, 1 rule, 1 agent; Plan page two columns + FP-4 table; PM-1
+  (5 typed payments → line), PM-2 (Friday card), PM-4 (trial-end card). tests/plan/gen.mjs 10,000 (found: the daily counter bug).
+- **v9.9.35** Set up your life (GD-5 + GW-A + TR-3): setup.js (8 steps checked from real data), setup-ui.jsx (Home card, Settings page,
+  interview in the real Chat, salary answer → repeating income), coach.js one-time tips; +7 days once for 6 of 8 really done during
+  the trial (ends 14 days after start). tests/setup/gen.mjs 10,000. Older browser tests: attune:test:quiet keeps new Home cards off.
+- **v9.9.36** BG-3: MindBg.kt + MindBgJob (charging, or > 40% with the screen off; 12 a round, 40 a day), mindbg.js (prompt handed over,
+  answers merged on open), Recall settings switch. tests/bgmind/gen.mjs 10,000. Branch APK built green (run 43563527599) = the Kotlin compiles.
+- **v9.9.37** BR-4 brain: lifefacts.js + brain-ui.jsx (What Attune knows, Home row, Sunday analysis, Chat "how am I doing?", facts in every
+  AI question). tests/brain/gen.mjs 10,000 (a planted bug → 23%).
+- Every addition in 20 languages (≈210 new lines). Full suite on v9.9.37 was running when this was written — if it is green, push main.
+
 ## ▶ START HERE (13 Nov, night) — v9.9.32 (versionCode 175): Ali's 3 asks — Free vs Pro, the "set up your life" guide, 100,000 + 100,000 tests
 **1 + 2. Free / Pro and the guide — Ali picked FP-4 (only if Pro's automation is measured right, no undo / rechecking) PM-1 PM-2 PM-4 GD-5 GW-A TR-3, and added 2 ideas (the model reads notifications with the app closed, 30 s–1 min each is fine; a 24/7 brain that understands everything and already knows). Combined page + options for the 2 ideas, WAITING FOR HIS OK: https://claude.ai/artifact/XF3TxLzpUYDzBmNPecpdTL (docs/mockups/free-pro-combined.html). First options page:** https://claude.ai/artifact/ExrP7vKai43EJDLSFVimHs
 (docs/mockups/free-pro.html). FP-1…4 the split (my pick FP-4: Free = everything you type or say, one phone, 3 months, 1 agent, 1 rule;
