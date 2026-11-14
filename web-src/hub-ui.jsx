@@ -35,7 +35,7 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false 
     <div ref={rowRef} onScroll={check} className="calm bg-transparent! att-hscroll flex gap-5 overflow-x-auto -mx-3 px-3 mb-4 border-b border-[var(--c-ln)]" role="tablist" data-testid="hub-tabs">
       {tabs.map((m) => (
         <button key={m} role="tab" aria-selected={on(m)} onClick={() => { if (m !== mode) navTo(m); }} data-testid={"hub-tab-" + m}
-          className={"shrink-0 h-11 -mb-px text-[14px] whitespace-nowrap border-b-2 transition-colors duration-150 " +
+          className={"shrink-0 h-11 min-w-[44px] text-center -mb-px text-[14px] whitespace-nowrap border-b-2 transition-colors duration-150 " +
             (on(m) ? "border-[var(--c-acc)] text-[var(--c-ink)] font-extrabold" : "border-transparent text-[var(--c-mut)] font-bold hover:text-[var(--c-ink)]")}>
           {tr(titleOf(m))}</button>))}
     </div>

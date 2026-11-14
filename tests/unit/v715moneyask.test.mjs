@@ -12,7 +12,7 @@ const L = { currency: "EGP", accounts: [{ id: "c", currency: "EGP" }], txns: [
 assert.equal(catAsked("how much did I spend on food this week?"), "food");
 assert.equal(catAsked("كام صرفت على المواصلات الشهر ده"), "transport");
 let a = answerMyMoney("how much did I spend on food this week?", L, { now, short: true });
-assert.match(a.text, /You spent 240 EGP\*\* on Food in this week · 2 entries/);
+assert.match(a.text, /You spent 240 EGP\*\* on Food this week · 2 entries/);
 assert.match(a.text, /Biggest: Lunch 150 EGP/);
 assert.doesNotMatch(a.text, /\|/, "no table in a chat bubble");
 a = answerMyMoney("what did I spend this month?", L, { now, short: true });

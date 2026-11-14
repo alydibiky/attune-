@@ -198,7 +198,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
           {!shown.length && !log.length ? <p className={"m-0 mt-1 text-[12.5px] " + U.muted}>{tr("Write a payment, a date or a reminder below — Attune asks you when it's due.")}</p> : null}</div> : null}
       </div>
       {coming.length ? <section className={U.card + " p-3"} data-testid="fu-coming">
-        <button onClick={() => setAllOpen(!allOpen)} className="w-full text-start text-[13px]" aria-expanded={allOpen} data-testid="fu-coming-toggle">
+        <button onClick={() => setAllOpen(!allOpen)} className="w-full min-h-[36px] text-start text-[13px]" aria-expanded={allOpen} data-testid="fu-coming-toggle">
           <b>{tr("Coming:")}</b> <span dir="auto">{coming.slice(0, 4).map((x) => x.what + (x.amount ? " " + fmt(x.amount) : "") + " · " + dayLabel(x.date)).join(" — ")}</span>
           <span className={"ms-1 " + U.muted}>{allOpen ? tr("Hide") : tr("See all ({n})", { n: coming.length })}</span></button>
         {allOpen ? <ul className="m-0 mt-2 p-0 list-none" data-testid="fu-coming-all">

@@ -81,6 +81,9 @@ export function loadLedger(store = typeof localStorage !== "undefined" ? localSt
   try { const j = JSON.parse((store && store.getItem("ledger.v3")) || "null"); return j && Array.isArray(j.txns) ? j : null; } catch (e) { return null; }
 }
 
+// v9.9.38 (the 1M test: "You spent 150 EGP in today", «في النهارده»): "in" only where English / Arabic say it
+const inEn = (l) => (/^(?:today|yesterday|this |last |in )/.test(l) ? l : "in " + l);
+const inAr = (l) => (/^(?:في |النهارده|امبارح)/.test(l) ? l : "في " + l);
 const money = (n, cur) => `${(Math.round(n * 100) / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${cur}`.trim();
 
 /**
@@ -107,16 +110,16 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
     const curs = [...new Set(rows.map(cur))];
     const head = type === "expense" ? L("You spent", "صرفت") : L("You received", "دخلك");
     if (short) {   // v6.13: a chat-sized answer for Yusr's write-or-ask bar
-      if (!rows.length) { out.push(type === "expense" ? L(`Nothing spent${onlyCat ? " on " + catName(onlyCat) : ""} in ${span.label[0]}.`, `لا توجد مصروفات${onlyCat ? " على " + catName(onlyCat) : ""} في ${span.label[1]}.`) : L(`No income in ${span.label[0]}.`, `لا يوجد دخل في ${span.label[1]}.`)); return; }
+      if (!rows.length) { out.push(type === "expense" ? L(`Nothing spent${onlyCat ? " on " + catName(onlyCat) : ""} ${inEn(span.label[0])}.`, `لا توجد مصروفات${onlyCat ? " على " + catName(onlyCat) : ""} ${inAr(span.label[1])}.`) : L(`No income ${inEn(span.label[0])}.`, `لا يوجد دخل ${inAr(span.label[1])}.`)); return; }
       const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => { const [c, cat] = k.split("|"); return `${catName(cat)} ${money(v, c)}`; });
       const big = rows.reduce((m, x) => (+x.amount > +m.amount ? x : m), rows[0]);
-      out.push(`**${head} ${curs.map((c) => money(sums[type + "|" + c], c)).join(" + ")}**${onlyCat && type === "expense" ? L(" on " + catName(onlyCat), " على " + catName(onlyCat)) : ""} ${L(`in ${span.label[0]}`, `في ${span.label[1]}`)} · ${rows.length} ${L(rows.length === 1 ? "entry" : "entries", "عملية")}.`
+      out.push(`**${head} ${curs.map((c) => money(sums[type + "|" + c], c)).join(" + ")}**${onlyCat && type === "expense" ? L(" on " + catName(onlyCat), " على " + catName(onlyCat)) : ""} ${L(`${inEn(span.label[0])}`, `${inAr(span.label[1])}`)} · ${rows.length} ${L(rows.length === 1 ? "entry" : "entries", "عملية")}.`
         + (onlyCat || top.length < 2 ? "" : "\n" + top.join(" · "))
         + (rows.length > 1 ? "\n" + L("Biggest: ", "الأكبر: ") + (big.note ? String(big.note).slice(0, 40) + " " : catName(big.cat) + " ") + money(+big.amount, cur(big)) + " · " + big.date : ""));
       return;
     }
-    if (!rows.length) { out.push(type === "expense" ? L(`No expenses are recorded for ${span.label[0]} (${span.from} → ${span.to}).`, `لا توجد مصروفات مسجّلة في ${span.label[1]} (${span.from} → ${span.to}).`) : L(`No income is recorded for ${span.label[0]}.`, `لا يوجد دخل مسجّل في ${span.label[1]}.`)); return; }
-    out.push(`**${head} ${curs.map((c) => money(sums[type + "|" + c], c)).join(" + ")}** ${L(`in ${span.label[0]}`, `في ${span.label[1]}`)} (${span.from} → ${span.to}) · ${rows.length} ${L(rows.length === 1 ? "entry" : "entries", "عملية")}`);
+    if (!rows.length) { out.push(type === "expense" ? L(`No expenses are recorded for ${span.label[0]} (${span.from} → ${span.to}).`, `لا توجد مصروفات مسجّلة ${inAr(span.label[1])} (${span.from} → ${span.to}).`) : L(`No income is recorded for ${span.label[0]}.`, `لا يوجد دخل مسجّل ${inAr(span.label[1])}.`)); return; }
+    out.push(`**${head} ${curs.map((c) => money(sums[type + "|" + c], c)).join(" + ")}** ${L(`${inEn(span.label[0])}`, `${inAr(span.label[1])}`)} (${span.from} → ${span.to}) · ${rows.length} ${L(rows.length === 1 ? "entry" : "entries", "عملية")}`);
     out.push("", `| ${L("Category", "البند")} | ${L("Amount", "المبلغ")} |`, "|---|---:|");
     for (const [k, v] of Object.entries(by).sort((a, b) => b[1] - a[1])) { const [c, cat] = k.split("|"); out.push(`| ${catName(cat)} | ${money(v, c)} |`); }
     out.push("", L("**Each entry:**", "**كل عملية:**"));

@@ -139,7 +139,7 @@ function rephrase(t) {
   return s.replace(/[ \t]{2,}/g, " ").trim();
 }
 // a change of mind: "…at 7 am, sorry 8 am, to …" → "…at 8 am to …"; "lunch 200, no actually 250" → "lunch 250"
-const FIX = "(?:sorry,?\\s*i mean(?:t)?|sorry|no wait,?(?:\\s*it was)?|no,? actually|actually|oops,?\\s*i meant|i mean|i meant|correction:?|لا قصدي|قصدي|لا غلطت كانوا|لا غلطت كانت|لا غلط كانت|لا غلط كانوا|لا غلطت|لا لا)";
+const FIX = "(?:sorry,?\\s*i mean(?:t)?|sorry|no wait,?(?:\\s*it was)?|no,? actually|actually|oops,?\\s*i meant|i mean|i meant|correction:?|لا قصدي|قصدي|لا استنى|لا استني|استنى|استني|لا لحظة|لا لحظه|لا ثانية|لا ثانيه|لا غلطت كانوا|لا غلطت كانت|لا غلط كانت|لا غلط كانوا|لا غلطت|لا لا)";
 const NUM = "([\\d٠-٩][\\d٠-٩,.]*)(\\s*(?:am|pm|a\\.m\\.|p\\.m\\.))?";
 const CORR = new RegExp("^(.*?)" + NUM + "([^\\d٠-٩]{0,40}?)[\\s,،—–-]+" + FIX + "[\\s,،:]*(?:it was\\s+|كانوا\\s+|كانت\\s+)?" + NUM + "\\s*[,،]?\\s*(.*)$", "i");
 function correct(t) {

@@ -523,7 +523,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
       <div className={prefs.view === "list" ? "grid grid-cols-4 lg:grid-cols-8 gap-x-3 gap-y-4 lg:gap-x-6 lg:gap-y-6 pb-28" : "grid grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-6 lg:gap-x-10 lg:gap-y-8 px-3 pb-28"} data-testid="shelf-grid">
         {books.map((b, i) => (
           <div key={b.id} className="min-w-0" data-testid="shelf-book-tile">
-            <button className="block w-full relative" onClick={() => (reorderOn ? null : openBook(b.id))}
+            <button className="block w-full relative" aria-label={bookName(b)} onClick={() => (reorderOn ? null : openBook(b.id))}
               onContextMenu={(e) => { e.preventDefault(); setSheet({ kind: "more", id: b.id }); }}>
               <Cover cover={b.cover} testid="shelf-cover" />
               {b.locked ? <span className="absolute bottom-2 end-2 bg-black/60 rounded-full p-1.5 text-white" data-testid="shelf-locked"><Lock size={14} /></span> : null}

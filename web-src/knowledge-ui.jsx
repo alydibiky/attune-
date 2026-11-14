@@ -112,7 +112,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
             <p className={h2}>{tr("Use Knowledge in Chat")}</p>
             <p data-intro="" className="text-[12px] text-[var(--c-mut)]">{tr("When you ask for a fact, Chat first looks it up in your sources and shows which one it used.")}</p>
           </div>
-          <button role="switch" aria-checked={on} onClick={() => setOn(!on)} data-testid="kn-switch"
+          <button role="switch" aria-checked={on} aria-label={tr("Use Knowledge in Chat")} onClick={() => setOn(!on)} data-testid="kn-switch"
             className={"shrink-0 w-11 h-6 rounded-full relative transition-colors duration-150 after:absolute after:-inset-2.5 after:content-[''] " + (on ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]")}>
             <span className={"absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-150 " + (on ? "start-[1.375rem]" : "start-0.5")} /></button>
         </div>

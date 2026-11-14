@@ -434,7 +434,9 @@ function rebalance(c, out, dateOf) {
 /** What is left: { paidCount, paidAmount, left, next } */
 export function progressOf(c, now = Date.now()) {
   const s = scheduleOf(c, now), paid = s.filter((x) => x.paid);
-  const total = c.total || (c.count > 0 ? c.amount * c.count : 0);
+  // v9.9.38 (the 1M test, part D: "2 people owe you 10,000" — Sara's open 2,500 counted as 0): an open loan / debt (no instalments, no
+  // total, not repeating) still has its amount to go; a repeating plan (rent, Netflix, the maid) has none
+  const total = c.total || (c.count > 0 ? c.amount * c.count : (!c.every && c.kind !== "regular" && +c.amount > 0 ? +c.amount : 0));
   // (a regular day that passed unticked = they didn't come — not late; its next is today or the next day ahead)
   const today = iso(new Date(now));
   const next = c.kind === "regular" ? s.find((x) => !x.paid && x.date >= today) || null : s.find((x) => !x.paid) || null;

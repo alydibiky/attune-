@@ -67,8 +67,8 @@ export function parseTime(text, nowIn) {
   const s = normDigits(text).toLowerCase().replace(/[،,]/g, " ").replace(/\s+/g, " ");
 
   // 1. Relative: "in 20 minutes", "بعد ساعتين", "بعد نص ساعة"
-  let m = s.match(/\b(?:in|after)\s+(\d+(?:\.\d+)?|an?|one|two|three|four|five|ten|fifteen|twenty|thirty|half an?)\s*(min(?:ute)?s?|hours?|hrs?|h|days?)\b/)
-    || s.match(/(?:بعد|كمان|خلال)\s+(\d+(?:\.\d+)?|نص|ربع|ساعتين|يومين|دقيقتين)?\s*(دقيقة|دقايق|دقائق|دقيقه|ساعة|ساعه|ساعات|يوم|ايام|أيام|ساعتين|يومين|دقيقتين)?/);
+  let m = s.match(/\b(?:in|after)\s+(\d+(?:\.\d+)?|an?|one|two|three|four|five|ten|fifteen|twenty|thirty|half an?)\s*(min(?:ute)?s?|hours?|hrs?|h|days?|weeks?|months?)\b/)
+    || s.match(/(?:بعد|كمان|خلال)\s+(\d+(?:\.\d+)?|نص|ربع|ساعتين|يومين|دقيقتين|اسبوعين|أسبوعين|شهرين)?\s*(دقيقة|دقايق|دقائق|دقيقه|ساعة|ساعه|ساعات|يوم|ايام|أيام|ساعتين|يومين|دقيقتين|اسبوع|أسبوع|اسابيع|أسابيع|اسبوعين|أسبوعين|شهر|شهور|شهرين)?/);
   if (m && (m[1] || m[2])) {
     let n = null, unit = m[2] || "";
     const w = m[1] || "";
@@ -78,14 +78,20 @@ export function parseTime(text, nowIn) {
     else if (w === "ساعتين" || unit === "ساعتين") { n = 2; unit = "hour"; }
     else if (w === "يومين" || unit === "يومين") { n = 2; unit = "day"; }
     else if (w === "دقيقتين" || unit === "دقيقتين") { n = 2; unit = "min"; }
+    else if (/^(?:اسبوعين|أسبوعين)$/.test(w) || /^(?:اسبوعين|أسبوعين)$/.test(unit)) { n = 2; unit = "week"; }
+    else if (w === "شهرين" || unit === "شهرين") { n = 2; unit = "month"; }
     else if (w) n = wordNum(w);
     else if (unit) n = 1;                                   // "بعد ساعة"
     if (n != null && unit) {
+      // v9.9.38 (the 1M test, part D: "remind me in 2 weeks" rang on 1 January 1970): weeks and months are days too
+      const weeks = /^(?:week|اسبوع|أسبوع|اسابيع|أسابيع)/.test(unit), months = /^(?:month|شهر|شهور)/.test(unit);
       const ms = /^(min|دقي|دقا|دقائ)/.test(unit) ? 60000 : /^(h|ساع)/.test(unit) ? 3600000 : 86400000;
       if (ms === 86400000) {
-        const d = addDays(now, Math.round(n));
+        let d = addDays(now, Math.round(n * (weeks ? 7 : 1)));
+        if (months) { d = new Date(now); const day = d.getDate(); d.setMonth(d.getMonth() + Math.round(n)); if (d.getDate() !== day) d.setDate(0); }
         const t = clockIn(s);
-        return { at: (t ? at(d, t.h, t.m) : at(d, 9, 0)).getTime(), allDay: !t, said: { day: "+" + n + "d", time: t ? "clock" : "" } };
+        const h = t ? (t.ampm === "pm" && t.h < 12 ? t.h + 12 : t.ampm === "am" && t.h === 12 ? 0 : t.h) : 9;   // ("in 1 month at 8 pm" rang at 8 am)
+        return { at: (t ? at(d, h, t.m) : at(d, 9, 0)).getTime(), allDay: !t, said: { day: "+" + n + "d", time: t ? "clock" : "" } };
       }
       return { at: now.getTime() + Math.round(n * ms), allDay: false, said: { day: "relative", time: "relative" } };
     }

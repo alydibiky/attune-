@@ -133,7 +133,7 @@ function Item({ c, onTick, onRemove, onPay, onWho, onPayer }) {
       <div className="flex items-start gap-3">
         <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0"><Users size={17} /></span>
         <div className="flex-1 min-w-0">
-          {onWho && c.person ? <button onClick={() => onWho(c.person)} className="block text-start font-extrabold text-[14.5px] underline decoration-dotted underline-offset-4 decoration-[var(--c-mut)]" dir="auto" data-testid="life-who">{heading(c)}</button>
+          {onWho && c.person ? <button onClick={() => onWho(c.person)} className="block min-h-[32px] text-start font-extrabold text-[14.5px] underline decoration-dotted underline-offset-4 decoration-[var(--c-mut)]" dir="auto" data-testid="life-who">{heading(c)}</button>
             : <b className="block font-extrabold text-[14.5px]" dir="auto">{heading(c)}</b>}
           <div className={"text-[12.5px] " + U.muted} dir="auto">{describe(c)}{isOpenLoan(c) ? " · " + tr("open — no date") : ""}</div>
         </div>

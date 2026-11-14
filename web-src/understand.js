@@ -221,7 +221,7 @@ export function followOf(text) {
 import { FROM_KEYBOARD } from "./franco-words.js";
 const CMD = { fakarny: "فكرني", fakkarny: "فكرني", fakarni: "فكرني", fakkarni: "فكرني", fakkrni: "فكرني", nabehny: "نبهني", nabahny: "نبهني", nabbehny: "نبهني",
   sa7eeny: "صحيني", sa7iny: "صحيني", sa7eny: "صحيني", sa7ini: "صحيني", ab3atly: "ابعتلي", ab3atli: "ابعتلي", ab3at: "ابعت", akalem: "اكلم", a2alem: "اكلم", akallem: "اكلم", kallem: "كلم",
-  edfa3: "ادفع", adfa3: "ادفع", dafa3t: "دفعت", dfa3t: "دفعت", saraft: "صرفت", sraft: "صرفت", eshtaret: "اشتريت", eshtarait: "اشتريت", ghada: "غدا", "8ada": "غدا", ghadaa: "غدا",
+  edfa3: "ادفع", adfa3: "ادفع", dafa3t: "دفعت", dfa3t: "دفعت", salaft: "سلفت", sallaft: "سلفت", estalaft: "استلفت", esstalaft: "استلفت", eslaft: "استلفت", estlaft: "استلفت",   /* v9.9.38 (the 1M test: "salaft ahmed 7350" was an English 7,350 expense) */ saraft: "صرفت", sraft: "صرفت", eshtaret: "اشتريت", eshtarait: "اشتريت", ghada: "غدا", "8ada": "غدا", ghadaa: "غدا",
   fetar: "فطار", fe6ar: "فطار", fitar: "فطار", "3asha": "عشا", "3ashaa": "عشا", bokra: "بكرة", bukra: "بكرة", naharda: "النهارده", ennaharda: "النهارده", elnaharda: "النهارده",
   embare7: "امبارح", emberi7: "امبارح", sa3a: "ساعة", kol: "كل", youm: "يوم", yom: "يوم", shahr: "شهر", esbo3: "أسبوع", osbo3: "أسبوع", gom3a: "جمعة", gum3a: "جمعة",
   sabt: "سبت", "7ad": "حد", etnen: "اتنين", talat: "تلات", arba3: "أربع", khamees: "خميس", "5amis": "خميس", kam: "كام", kaam: "كام", "3ayez": "عايز", "3awez": "عاوز",

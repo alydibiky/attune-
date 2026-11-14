@@ -78,6 +78,11 @@ with sync_playwright() as p:
                 page.evaluate("(m) => window.dispatchEvent(new CustomEvent('attune-open', { detail: { mode: m } }))", sc); page.wait_for_timeout(700)
             except Exception as e:
                 rows.append({"screen": sc, "lang": lg, "theme": th, "dev": dev, "pos": "open", "n": 1, "fails": [["c03 crash", "could not open: " + str(e)[:80]]]}); continue
+            try:
+                is_home = sc != "home" and home_sig is not None and page.evaluate("(document.querySelector('main')||document.body).innerText.slice(0,80)") == home_sig
+            except Exception: is_home = False
+            if is_home: page.evaluate("window.dispatchEvent(new CustomEvent('attune-open', { detail: { mode: 'home' } }))"); continue   # an old name that opens Home: not a screen
+            if sc == "home": home_sig = page.evaluate("(document.querySelector('main')||document.body).innerText.slice(0,80)")
             if lg == "en": en_words = None
             else:
                 try: en_words = json.load(open(en_file(th, dev, sc)))
@@ -106,7 +111,7 @@ with sync_playwright() as p:
                 f16 = [["c16 back", "crash after Back"]] if crash else ([["c16 back", "Back did nothing"]] if before == after and sc != "home" else [])
             except Exception as e: f16 = [["c16 back", str(e)[:80]]]
             rows.append({"screen": sc, "lang": lg, "theme": th, "dev": dev, "pos": "back", "n": 1, "fails": f16})
-            page.evaluate("window.dispatchEvent(new CustomEvent('attune-open', { detail: { mode: 'home' } }))"); page.wait_for_timeout(250)
+            page.keyboard.press("Escape"); page.evaluate("window.dispatchEvent(new CustomEvent('attune-open', { detail: { mode: 'home' } }))"); page.wait_for_timeout(250)   # (a full-screen call / sheet is closed first, as a person would)
         ctx.close()
         n = sum(r["n"] for r in rows); nf = sum(len(r["fails"]) for r in rows)
         print("%s %s %s · %d checks so far, %d failed" % (lg, th, dev, n, nf), flush=True)

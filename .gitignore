@@ -44,3 +44,5 @@ tests/convert/out/
 tests/convert/.cache/
 .claude/worktrees/
 __pycache__/
+tests/onemillion/C-en/
+tests/onemillion/C-shard-*.json

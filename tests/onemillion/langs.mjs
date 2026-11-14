@@ -116,7 +116,8 @@ for (const [li, lg] of LANGS.entries()) { const D = L[lg], N = NAMES[lg], per = 
       if (ok && kind === "spend" && r.k === "money" && r.u && r.u.actions) { const it = (r.u.actions.find((x) => x.kind === "money") || { items: [] }).items[0];
         const v2 = /\bribu\b/.test(s) ? val * 1000 : val;   // "50 ribu" is 50,000 rupiah
         if (it && Math.round(it.amount) !== v2) why = "amount " + it.amount + " ≠ " + v2; }
-      rows.push({ lg, kind, s, k: why ? r.k + " (" + why + ")" : r.k, ok: ok && !why, model: ok && !why && model && !accept.includes(r.k) }); }
+      // (cands / want / g: what tests/trials/chat100k-model.mjs needs to put the sentences left to the model to a real model)
+      rows.push({ lg, kind, s, k: why ? r.k + " (" + why + ")" : r.k, ok: ok && !why, model: !!(r.unsure && label && (r.cands || []).includes(label)), cands: r.unsure ? r.cands : undefined, want: label, g: lg + ":" + kind }); }
     madeLg += made; carry = want - made; } }
 if (rows.length !== TOTAL) throw new Error("made " + rows.length + " different sentences, not " + TOTAL);
 const total = rows.length, bad = rows.filter((r) => !r.ok).length, toModel = rows.filter((r) => r.model).length;

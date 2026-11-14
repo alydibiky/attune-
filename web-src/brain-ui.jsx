@@ -49,8 +49,8 @@ function BrainPageInner({ back }) {
   useEffect(() => { const t = setInterval(() => setTick((x) => x + 1), 60000); return () => clearInterval(t); }, []);
   const list = useMemo(() => brainFacts(), [tick]);
   const act = (m) => { saveMem(m); setTick((x) => x + 1); };
-  return <div className="space-y-3 p-4 max-w-[680px] mx-auto" data-testid="brain-page">
-    <div className="flex items-center gap-2">{back ? <button onClick={back} className="min-h-[44px] px-2 text-[18px]" aria-label={tr("Back")}>‹</button> : null}<h2 className="m-0 text-[20px] font-black">{tr("What Attune knows")}</h2></div>
+  return <div className="calm space-y-3 p-4 max-w-[680px] mx-auto" data-testid="brain-page">
+    <div className="flex items-center gap-2">{back ? <button onClick={back} className="min-h-[44px] min-w-[44px] px-2 text-[18px]" aria-label={tr("Back")}>‹</button> : null}<h2 className="m-0 text-[20px] font-black">{tr("What Attune knows")}</h2></div>
     <p className="m-0 text-[13px] c-sub" dir="auto">{tr("{n} facts · worked out on this phone from your money, people, papers, messages and agents — each with where it came from.", { n: list.length })}</p>
     {list.length ? AREAS.map(([a, title]) => { const xs = list.filter((f) => f.area === a); if (!xs.length) return null;
       return <div key={a} className="c-card space-y-2" data-testid="brain-area" data-area={a}><b className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)]">{tr(title)}</b>

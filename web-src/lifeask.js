@@ -20,7 +20,7 @@ const DAY = 86400000;
 const iso = (t) => isoDay(t);
 
 // ---- what kind of question -------------------------------------------------------------------------------------------------------
-const OWED_IN = /\b(owes? me|owe me|owed to me|lent|i lent|who owes|money (?:people|others) owe)\b|ليا عند|لي عند|مين عليه|(?:عليه|عليها|عليهم)[^؟?]{0,20}(?:ليا|لي)(?![\u0600-\u06ff])|مديون لي|مديونين لي|(?:^|\s)[ء-ي]{2,}(?:\s+[ء-ي]{2,})?\s+(?:عليه|عليها)\s+(?:لسه\s+)?كام|سلفت|سلّفت|اللي ليا|فلوسي عند/i;
+const OWED_IN = /\b(owes? me|owe me|owed to me|am i owed|i'?m owed|what i'?m owed|lent|i lent|who owes|money (?:people|others) owe)\b|ليا عند|لي عند|مين عليه|(?:عليه|عليها|عليهم)[^؟?]{0,20}(?:ليا|لي)(?![\u0600-\u06ff])|مديون لي|مديونين لي|(?:^|\s)[ء-ي]{2,}(?:\s+[ء-ي]{2,})?\s+(?:عليه|عليها)\s+(?:لسه\s+)?كام|سلفت|سلّفت|اللي ليا|فلوسي عند/i;
 const OWED_OUT = /\b(i owe|do i owe|my debts?|installments?|instalments?|i still pay|left to pay)\b|عليا|علي فلوس|ديوني|اقساط|أقساط|القسط|فاضل عليا|باقي عليا|جمعيه|جمعية/i;
 const DUE = /\b(due|deadline|deadlines|coming up|upcoming|expir\w*|renew\w*|what(?:'s| is) (?:on|next)|this week|next week|this month|to pay|bills? due|reminders?)\b|مواعيد|موعد|مستحق|هينتهي|ينتهي|تجديد|الاسبوع ده|الأسبوع ده|الجاي|ايه اللي عليا|المطلوب مني/i;
 const MEDS = /\b(medicines?|medications?|meds|pills?|tablets?|doses?|insulin|take (?:my|her|his)|when do (?:i|we|they|she|he) take)\b|دوا|ادويه|أدوية|ادوية|العلاج|جرعه|جرعة|حبوب|انسولين|إنسولين/i;
@@ -143,10 +143,18 @@ export function kindOf(q, stores = {}) {
 }
 
 // ---- the answers -------------------------------------------------------------------------------------------------------------------
+// v9.9.38 (the 1M test, part D: "2 people owe you 10,000" — Sara's open 2,500 counted as 0): an open loan or debt (no instalments, no
+// total) still owes its amount, less what was paid of it; a plan that repeats (rent, Netflix) has no "left"
+const prog = (c, now) => { const p = progressOf(c, now); if (p.left == null && !c.every && +c.amount > 0) return { ...p, left: Math.max(0, +c.amount - (p.paidAmount || 0)) }; return p; };
 function owedIn(q, s, now) {
   const items = ((s.life && s.life.items) || []).filter((c) => c.dir === "in");
-  const who = items.map((c) => c.person).filter(Boolean).find((p) => fold(q).includes(fold(p)));
-  const list = (who ? items.filter((c) => c.person === who) : items).map((c) => ({ c, p: progressOf(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
+  let who = items.map((c) => c.person).filter(Boolean).find((p) => fold(q).includes(fold(p)));
+  // v9.9.38 (the 1M test, part D: "how much does Hany owe me?" answered with EVERYONE's total when Hany owed nothing): a person named in
+  // the question who has nothing in People & plans owes nothing — never the others' total
+  if (!who) { const m = /\b(?:does|did|is|has)\s+([\p{L}][\p{L}'’-]{1,24})\s+(?:still\s+)?(?:owe|owes|have to pay|need to pay)\b|\bhow much (?:does|do)\s+([\p{L}][\p{L}'’-]{1,24})\s+owe\b/iu.exec(q)
+      || /(?:^|\s)([ء-ي]{2,})\s+(?:عليه|عليها)\s+(?:لسه\s+)?(?:كام|حاجة|فلوس)/u.exec(q);
+    const nm = m && (m[1] || m[2]); if (nm && !/^(?:anyone|anybody|someone|somebody|everyone|he|she|they|it|who|that|this)$/i.test(nm)) return { kind: "owed-in", en: `${nm} owes you nothing in People & plans.`, ar: `مفيش على ${nm} حاجة في الناس والالتزامات.`, open: "life", sources: ["life"] }; }
+  const list = (who ? items.filter((c) => c.person === who) : items).map((c) => ({ c, p: prog(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
   if (!list.length) return { kind: "owed-in", en: who ? `${who} owes you nothing in People & plans.` : "Nobody owes you anything in People & plans.", ar: who ? `مفيش على ${who} حاجة في الناس والالتزامات.` : "محدش عليه فلوس ليك في الناس والالتزامات.", open: "life", sources: ["life"] };
   const cur = list[0].c.currency || "";
   const total = list.reduce((a, x) => a + (x.p.left || 0), 0);
@@ -160,7 +168,7 @@ function owedIn(q, s, now) {
     ar: who ? `لسه على ${who} ليك ${num(total)} ${cur} (استلمت ${list[0].p.paidCount} دفعة لحد دلوقتي).` : np === 1 ? `شخص واحد عليه ليك ${num(total)} ${cur}.` : `${np} أشخاص عليهم ليك ${num(total)} ${cur} في المجموع.`, rows, open: "life", sources: ["life"] };
 }
 function owedOut(q, s, now) {
-  const items = ((s.life && s.life.items) || []).filter((c) => c.dir !== "in").map((c) => ({ c, p: progressOf(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
+  const items = ((s.life && s.life.items) || []).filter((c) => c.dir !== "in").map((c) => ({ c, p: prog(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
   if (!items.length) return { kind: "owed-out", en: "You have no installments or debts in People & plans.", ar: "مش عليك أقساط أو ديون في الناس والالتزامات.", open: "life", sources: ["life"] };
   const cur = items[0].c.currency || "", left = items.reduce((a, x) => a + (x.p.left || 0), 0);
   const next = items.map((x) => x.p.next).filter(Boolean).sort((a, b) => a.date.localeCompare(b.date))[0];
@@ -273,7 +281,7 @@ function moneyExtra(q, s, now) {
   const ppl = ((s.life && s.life.items) || []).filter((c) => c.person && fold(c.person).split(/\s+/)[0] === f.split(/\s+/)[0]);
   if (ppl.length) {
     const made = ppl.filter((c) => { const d = new Date(c.created || 0); const iso0 = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; return iso0 >= span.from && iso0 <= span.to; });
-    const lent = made.filter((c) => c.dir === "in").reduce((a, c) => a + (+c.total || +c.amount || 0), 0), left = ppl.filter((c) => c.dir === "in").reduce((a, c) => a + (progressOf(c, now).left || 0), 0);
+    const lent = made.filter((c) => c.dir === "in").reduce((a, c) => a + (+c.total || +c.amount || 0), 0), left = ppl.filter((c) => c.dir === "in").reduce((a, c) => a + (prog(c, now).left || 0), 0);
     const who = ppl[0].person;
     return { kind: "paid-for", en: `You lent ${who} ${num(lent)} ${cur} ${span.label[0]} (${made.length} time${made.length === 1 ? "" : "s"}) — ${num(left)} still owed.`,
       ar: `سلّفت ${who} ${num(lent)} ${cur} ${span.label[1]} (${made.length === 1 ? "مرة واحدة" : made.length === 2 ? "مرتين" : made.length + " مرات"}) — لسه عليه ${num(left)}.`, open: "life", sources: ["life"] };

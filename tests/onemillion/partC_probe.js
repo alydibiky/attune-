@@ -2,7 +2,9 @@
   // the 15 in-page checks of one view (tests/onemillion/partC.py). Returns { fails: [[check, why]], texts: [...] (English run) }
   const W = innerWidth, H = innerHeight, fails = [], add = (c, why) => fails.push([c, String(why).slice(0, 110)]);
   const vis = (el) => { const r = el.getBoundingClientRect(); if (!r.width || !r.height || r.bottom < 0 || r.top > H || r.right < 0 || r.left > W) return null;
-    const cs = getComputedStyle(el); if (cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0) return null; return r; };
+    const cs = getComputedStyle(el); if (cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0) return null;
+    if (el.checkVisibility && !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true, contentVisibilityAuto: true })) return null;   // hidden through a parent
+    return r; };
   const name = (el) => (el.tagName.toLowerCase() + (el.dataset && el.dataset.testid ? "[" + el.dataset.testid + "]" : "") + " “" + (el.innerText || el.getAttribute("aria-label") || el.value || "").trim().slice(0, 28) + "”");
   const skip = (el) => el.closest("[data-i18n-skip],pre,code,textarea,iframe,svg,.att-hscroll,.att-chips,.overflow-x-auto,table");
   // c01 / c02
@@ -33,11 +35,14 @@
   let noName = "", tiny = "", squeezed = "", covered = "", nN = 0, nT = 0, nC = 0;
   for (const el of document.querySelectorAll("button, a[href], [role=button], input:not([type=hidden]), select, textarea")) {
     const r = vis(el); if (!r || el.closest("[aria-hidden=true]") || el.disabled) continue;
-    const label = (el.getAttribute("aria-label") || el.getAttribute("title") || el.innerText || el.value || el.getAttribute("placeholder") || (el.labels && el.labels[0] && el.labels[0].innerText) || (el.querySelector("img[alt]") || {}).alt || "").trim();
+    const label = (el.getAttribute("aria-label") || el.getAttribute("title") || el.innerText || el.textContent || el.value || el.getAttribute("placeholder") || (el.labels && el.labels[0] && el.labels[0].innerText) || (el.querySelector("img[alt]") || {}).alt || "").trim();
     if (!label) { nN++; if (!noName) noName = name(el) + " " + Math.round(r.width) + "×" + Math.round(r.height); }
-    if ((r.width < 32 || r.height < 32) && /^(BUTTON|A)$/.test(el.tagName) && !el.closest("p,li") && r.width * r.height > 0) { nT++; if (!tiny) tiny = name(el) + " " + Math.round(r.width) + "×" + Math.round(r.height); }
+    const af = getComputedStyle(el, "::after"), grow = af.content !== "none" && af.position === "absolute" ? Math.max(0, -parseFloat(af.top) || 0, -parseFloat(af.left) || 0) * 2 : 0;   // a bigger invisible touch area
+    if ((r.width + grow < 32 || r.height + grow < 32) && /^(BUTTON|A)$/.test(el.tagName) && !el.closest("p,li") && r.width * r.height > 0) { nT++; if (!tiny) tiny = name(el) + " " + Math.round(r.width) + "×" + Math.round(r.height); }
     const cx = Math.min(W - 1, Math.max(0, r.left + r.width / 2)), cy = Math.min(H - 1, Math.max(0, r.top + r.height / 2));
-    if (r.top >= 0 && r.bottom <= H && r.left >= 0 && r.right <= W) { const top = document.elementFromPoint(cx, cy);
+    // a control scrolled out of its own box (a chip row, a list that scrolls inside a card) is hidden on purpose, not covered
+    let clipped = false; for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) { const cs = getComputedStyle(e); if (/(hidden|auto|scroll|clip)/.test(cs.overflowY + cs.overflowX)) { const q = e.getBoundingClientRect(); if (cy < q.top || cy > q.bottom || cx < q.left || cx > q.right) { clipped = true; break; } } }
+    if (!clipped && r.top >= 0 && r.bottom <= H && r.left >= 0 && r.right <= W) { const top = document.elementFromPoint(cx, cy);
       if (top && top !== el && !el.contains(top) && !top.contains(el) && !(top.closest && top.closest("label") && top.closest("label").contains(el))) {
         // under a sticky / fixed bar is fine while the screen can still scroll it into view; only a control nobody can reach counts
         let pinned = false; for (let e = top; e; e = e.parentElement) { const p = getComputedStyle(e).position; if (p === "fixed" || p === "sticky") { pinned = true; break; } }
