@@ -57,7 +57,7 @@ function BrainPageInner({ back }) {
         {xs.map((f) => <div key={f.id} className="space-y-1 border-t border-[var(--c-ln)] first-of-type:border-t-0 pt-1.5" data-testid="brain-fact" data-id={f.id}>
           <p className="m-0 text-[14px]" dir="auto">{factText(f)}</p>
           <div className="flex items-center gap-3 text-[12px]"><span className="c-sub flex-1 min-w-0 truncate">{tr("From: {s}", { s: tr(f.src) })}</span>
-            {f.mine ? null : <button onClick={() => { setFix(f.id); setTxt(""); }} className="min-h-[36px] font-bold underline" data-testid="brain-wrong">{tr("Not right")}</button>}
+            {f.mine ? null : <button onClick={() => { setFix(f.id); setTxt(""); }} className="min-h-[36px] min-w-[44px] font-bold underline" data-testid="brain-wrong">{tr("Not right")}</button>}
             <button onClick={() => act(F.forget(loadMem(), f.id))} className="min-h-[36px] min-w-[44px] font-bold underline c-sub" data-testid="brain-forget">{tr("Forget")}</button></div>
           {fix === f.id ? <div className="flex gap-2"><input value={txt} onChange={(e) => setTxt(e.target.value)} placeholder={tr("What's right?")} className="flex-1 min-w-0 h-10 rounded-[10px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[14px]" data-testid="brain-fix-text" id="brain-fix-text" dir="auto" />
             <button onClick={() => { act(F.correct(loadMem(), f.id, txt, Date.now(), F.sameSubject(f, list, factText))); setFix(null); }} className="h-10 px-3 rounded-[10px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc,#fff)" }} data-testid="brain-fix-save">{tr("Save")}</button></div> : null}

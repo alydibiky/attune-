@@ -45,7 +45,8 @@
     if (!clipped && r.top >= 0 && r.bottom <= H && r.left >= 0 && r.right <= W) { const top = document.elementFromPoint(cx, cy);
       if (top && top !== el && !el.contains(top) && !top.contains(el) && !(top.closest && top.closest("label") && top.closest("label").contains(el))) {
         // under a sticky / fixed bar is fine while the screen can still scroll it into view; only a control nobody can reach counts
-        let pinned = false; for (let e = top; e; e = e.parentElement) { const p = getComputedStyle(e).position; if (p === "fixed" || p === "sticky") { pinned = true; break; } }
+        let pinned = false, sheet = false; for (let e = top; e; e = e.parentElement) { const p = getComputedStyle(e).position; if (p === "fixed" || p === "sticky") { pinned = true; const q = e.getBoundingClientRect(); sheet = p === "fixed" && q.width >= W * 0.9 && q.height >= H * 0.9 && !e.contains(el); break; } }
+        if (sheet) continue;   // a full-screen layer (a call, a sheet) covers the page under it on purpose
         let sp = el.parentElement; while (sp && !(/(auto|scroll)/.test(getComputedStyle(sp).overflowY) && sp.scrollHeight > sp.clientHeight + 2)) sp = sp.parentElement; sp = sp || document.scrollingElement;
         const lowerHalf = cy > H / 2, canMore = sp.scrollTop + sp.clientHeight < sp.scrollHeight - 2, canLess = sp.scrollTop > 2;
         if (!(pinned && (lowerHalf ? canMore : canLess))) { nC++; if (!covered) covered = name(el) + " under " + name(top); } } }

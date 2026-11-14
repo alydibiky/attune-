@@ -71,7 +71,7 @@ export const SW = {
   "The answer appears here": "Jibu linaonekana hapa",
   "Paste text or add a photo on the left, pick a job, and the result shows here.": "Bandika maandishi au ongeza picha upande wa kushoto, chagua kazi, na matokeo yataonekana hapa.",
   "Runs on your phone · works with no signal": "Inafanya kazi kwenye simu yako · bila mtandao",
-  "Chat X-Ray": "Chat X-Ray",
+  "Chat X-Ray": "X-Ray ya Gumzo",
   "Who owes whom, what was promised, which dates were agreed and which questions got no answer — read from a WhatsApp chat on your phone. The chat never leaves the phone.": "Nani anadaiwa na nani, nini kiliahidiwa, tarehe gani zilikubaliwa na maswali gani hayakujibiwa — kusomwa kutoka gumzo la WhatsApp kwenye simu yako. Gumzo haliondoki kwenye simu.",
   "In WhatsApp, open the chat → ⋮ → More → Export chat → Without media.": "Katika WhatsApp, fungua gumzo → ⋮ → Zaidi → Hamisha gumzo → Bila media.",
   "Pick Attune in the share list — or save the file and choose it here.": "Chagua Attune kwenye orodha ya kushiriki — au hifadhi faili na uichague hapa.",
