@@ -12582,4 +12582,9 @@ export const TRK = {
   "Show the tips again": "İpuçlarını yeniden göster",
   "Show me more tips": "Daha fazla ipucu göster",
   "Attune sets up your money, papers, people and week with you": "Attune paranı, belgelerini, insanlarını ve haftanı seninle düzenler",
+  "Reading {n} messages…": "{n} mesaj okunuyor…",
+  "Background reading": "Arka planda okuma",
+  "Think in the background": "Arka planda düşün",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Attune kapalıyken yapay zekâ, kodun emin olmadığı mesajları okur — yalnızca şarj olurken ya da pil %40'ın üstündeyken ekran kapalıyken. Pil tasarrufunda bekler.",
+  "Today: {n} understood in the background · about {s} s each": "Bugün: arka planda {n} anlaşıldı · her biri yaklaşık {s} sn",
 };

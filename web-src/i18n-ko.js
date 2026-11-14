@@ -12581,4 +12581,9 @@ export const KO = {
   "Show the tips again": "팁 다시 보기",
   "Show me more tips": "팁 더 보기",
   "Attune sets up your money, papers, people and week with you": "Attune이 돈, 서류, 사람, 한 주를 함께 정리해요",
+  "Reading {n} messages…": "메시지 {n}개 읽는 중…",
+  "Background reading": "백그라운드 읽기",
+  "Think in the background": "백그라운드에서 생각하기",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Attune이 닫혀 있을 때 코드가 확신하지 못한 메시지를 AI가 읽어요 — 충전 중이거나 배터리 40% 이상에 화면이 꺼져 있을 때만. 절전 모드에서는 기다려요.",
+  "Today: {n} understood in the background · about {s} s each": "오늘: 백그라운드에서 {n}개 이해 · 각각 약 {s}초",
 };

@@ -12581,4 +12581,9 @@ export const ZH = {
   "Show the tips again": "再次显示提示",
   "Show me more tips": "再给我一些提示",
   "Attune sets up your money, papers, people and week with you": "Attune 和你一起安排钱、证件、人和这一周",
+  "Reading {n} messages…": "正在读取 {n} 条消息…",
+  "Background reading": "后台读取",
+  "Think in the background": "后台思考",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Attune 关闭时，AI 会读取代码拿不准的消息——仅在充电时，或电量高于 40% 且屏幕关闭时。省电模式下会等待。",
+  "Today: {n} understood in the background · about {s} s each": "今天：后台读懂 {n} 条 · 每条约 {s} 秒",
 };

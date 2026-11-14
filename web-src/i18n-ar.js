@@ -9673,4 +9673,9 @@ export const AR = {
   "Show the tips again": "اعرض النصايح تاني",
   "Show me more tips": "وريني نصايح تانية",
   "Attune sets up your money, papers, people and week with you": "Attune بيظبط معاك فلوسك وورقك والناس وأسبوعك",
+  "Reading {n} messages…": "بقرا {n} رسالة…",
+  "Background reading": "قراية في الخلفية",
+  "Think in the background": "فكّر في الخلفية",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "والأبلكيشن مقفول، الذكاء الاصطناعي بيقرا الرسايل اللي الكود مش متأكد منها — بس وانت بتشحن، أو البطارية فوق 40% والشاشة مقفولة. في توفير البطارية بيستنى.",
+  "Today: {n} understood in the background · about {s} s each": "النهارده: {n} اتفهمت في الخلفية · حوالي {s} ثانية لكل واحدة",
 };

@@ -12582,4 +12582,9 @@ export const SW = {
   "Show the tips again": "Onyesha vidokezo tena",
   "Show me more tips": "Nionyeshe vidokezo zaidi",
   "Attune sets up your money, papers, people and week with you": "Attune inapanga nawe pesa, nyaraka, watu na wiki yako",
+  "Reading {n} messages…": "Inasoma jumbe {n}…",
+  "Background reading": "Kusoma chinichini",
+  "Think in the background": "Fikiria chinichini",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Attune ikiwa imefungwa, AI husoma jumbe ambazo msimbo hauna uhakika nazo — wakati wa kuchaji tu, au betri juu ya 40% na skrini imezimwa. Kwenye kiokoa betri husubiri.",
+  "Today: {n} understood in the background · about {s} s each": "Leo: {n} zimeeleweka chinichini · takriban sekunde {s} kila moja",
 };

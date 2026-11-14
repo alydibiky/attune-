@@ -227,6 +227,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
             {kept && native.recallForgetAll ? <button onClick={forgetAll} className="min-h-[44px] text-[12px] font-bold underline text-[var(--c-mut)]" data-testid="recall-forget-all">{sure ? tr("Tap again to forget all {n} — this can't be undone", { n: kept.toLocaleString() }) : tr("Forget everything kept")}</button> : null}
           </>
         ) : null}
+        {native && native.mindBgOn ? <BgThinking native={native} /> : null}
         <div className="border-t border-[var(--c-ln)] pt-1"><AutoBackupCard compact native={native} nativeCall={call} flash={flash} /></div>
         <div className="border-t border-[var(--c-ln)] pt-1"><GmailCard compact onRead={() => setTick((x) => x + 1)} /></div>
         {native && native.embedStatus ? <div className="border-t border-[var(--c-ln)] pt-2.5 space-y-1.5" data-testid="recall-meaning">
@@ -261,3 +262,18 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
 const d0 = (d, ar) => (ar ? KINDS[d.kind].ar : tr(KINDS[d.kind].en));
 // the words of a question without its filters ("last week", "screenshot") — what the meaning model should read
 const res0Terms = (q) => String(q || "").trim();
+
+/* v9.9.36 BG-3 (Ali picked): the model reads notifications with Attune closed — while charging, or above 40 % with the screen off. */
+function BgThinking({ native: N }) {
+  const st = (() => { try { return JSON.parse(N.mindBgStats() || "{}"); } catch (e) { return {}; } })();
+  const [on, setOn] = useState(st.on !== false);
+  const today = new Date().toISOString().slice(0, 10), n = st.day === today ? st.count || 0 : 0;
+  return <div className="border-t border-[var(--c-ln)] pt-1" data-testid="bg-thinking">
+    <button onClick={() => { const v = !on; setOn(v); try { N.mindBgOn(v); } catch (e) {} }} className="w-full min-h-[44px] flex items-center gap-2.5 text-[14px] font-bold text-[var(--c-ink)]" data-testid="bg-thinking-toggle" aria-pressed={on}>
+      <span className="flex-1 text-start">{tr("Think in the background")}</span>
+      <span className={`w-9 h-5 rounded-full relative shrink-0 ${on ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]"}`}><span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm ${on ? "end-0.5" : "start-0.5"}`} /></span>
+    </button>
+    <p className="text-[11px] text-[var(--c-mut)] m-0">{tr("With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.")}</p>
+    {n ? <p className="text-[11px] m-0 mt-1">{tr("Today: {n} understood in the background · about {s} s each", { n, s: st.secs || 0 })}</p> : null}
+  </div>;
+}

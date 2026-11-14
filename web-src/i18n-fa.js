@@ -12581,4 +12581,9 @@ export const FA = {
   "Show the tips again": "نمایش دوبارهٔ نکته‌ها",
   "Show me more tips": "نکته‌های بیشتر",
   "Attune sets up your money, papers, people and week with you": "Attune پول، مدارک، آدم‌ها و هفتهٔ شما را با شما مرتب می‌کند",
+  "Reading {n} messages…": "در حال خواندن {n} پیام…",
+  "Background reading": "خواندن در پس‌زمینه",
+  "Think in the background": "فکر کردن در پس‌زمینه",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "وقتی Attune بسته است، هوش مصنوعی پیام‌هایی را می‌خواند که کد درباره‌شان مطمئن نیست — فقط هنگام شارژ، یا باتری بالای ۴۰٪ با صفحهٔ خاموش. در حالت صرفه‌جویی صبر می‌کند.",
+  "Today: {n} understood in the background · about {s} s each": "امروز: {n} پیام در پس‌زمینه فهمیده شد · هرکدام حدود {s} ثانیه",
 };

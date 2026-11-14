@@ -12581,4 +12581,9 @@ export const JA = {
   "Show the tips again": "ヒントをもう一度表示",
   "Show me more tips": "ほかのヒントも見る",
   "Attune sets up your money, papers, people and week with you": "Attune があなたとお金・書類・人・1週間を整えます",
+  "Reading {n} messages…": "{n} 件のメッセージを読んでいます…",
+  "Background reading": "バックグラウンドで読む",
+  "Think in the background": "バックグラウンドで考える",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Attune を閉じている間、コードが判断に迷うメッセージを AI が読みます — 充電中か、電池 40% 超で画面オフのときだけ。省電力モードでは待ちます。",
+  "Today: {n} understood in the background · about {s} s each": "今日：バックグラウンドで {n} 件理解 · 1 件あたり約 {s} 秒",
 };

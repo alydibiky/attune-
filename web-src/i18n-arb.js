@@ -12573,4 +12573,9 @@ export const ARB = {
   "Show the tips again": "اعرض النصائح مجددًا",
   "Show me more tips": "أرني نصائح أخرى",
   "Attune sets up your money, papers, people and week with you": "يُنظّم Attune معك مالك وأوراقك والناس وأسبوعك",
+  "Reading {n} messages…": "أقرأ {n} رسالة…",
+  "Background reading": "القراءة في الخلفية",
+  "Think in the background": "التفكير في الخلفية",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "أثناء إغلاق Attune، يقرأ الذكاء الاصطناعي الرسائل التي لم يتأكد منها الكود — فقط أثناء الشحن، أو عندما تتجاوز البطارية 40% والشاشة مغلقة. في وضع توفير البطارية ينتظر.",
+  "Today: {n} understood in the background · about {s} s each": "اليوم: فُهم {n} في الخلفية · نحو {s} ثانية لكل واحدة",
 };

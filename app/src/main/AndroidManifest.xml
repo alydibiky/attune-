@@ -253,6 +253,7 @@
         <!-- v8.0 Agents: the price watches, checked about every 12 hours even with Attune closed -->
         <receiver android:name=".AgentWatchReceiver" android:exported="false" />
         <service android:name=".AgentNightJob" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />
+        <service android:name=".MindBgJob" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />   <!-- v9.9.36 BG-3 the model reads notifications with Attune closed -->
         <service android:name=".AgentDayJob" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />   <!-- v9.9.33 agents check while you are away -->   <!-- v9.9.13 AC2 the night check while charging -->
         <service android:name=".AiNightJob" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />   <!-- v9.9.29 AI jobs at night while charging -->
         <!-- Puts reminders back after a restart or an update (Android forgets alarms). -->

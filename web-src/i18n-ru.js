@@ -12581,4 +12581,9 @@ export const RU = {
   "Show the tips again": "Показать подсказки снова",
   "Show me more tips": "Больше подсказок",
   "Attune sets up your money, papers, people and week with you": "Attune вместе с вами настроит деньги, документы, людей и неделю",
+  "Reading {n} messages…": "Читаю сообщения: {n}…",
+  "Background reading": "Чтение в фоне",
+  "Think in the background": "Думать в фоне",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Когда Attune закрыт, ИИ читает сообщения, в которых код не уверен — только при зарядке или при заряде выше 40% с выключенным экраном. В режиме энергосбережения ждёт.",
+  "Today: {n} understood in the background · about {s} s each": "Сегодня: понято в фоне — {n} · около {s} с каждое",
 };

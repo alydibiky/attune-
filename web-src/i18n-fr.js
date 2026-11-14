@@ -12582,4 +12582,9 @@ export const FR = {
   "Show the tips again": "Revoir les astuces",
   "Show me more tips": "Montrez-moi d'autres astuces",
   "Attune sets up your money, papers, people and week with you": "Attune organise avec vous votre argent, vos papiers, vos proches et votre semaine",
+  "Reading {n} messages…": "Lecture de {n} messages…",
+  "Background reading": "Lecture en arrière-plan",
+  "Think in the background": "Réfléchir en arrière-plan",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Attune fermé, l'IA lit les messages dont le code n'est pas sûr — seulement en charge, ou au-dessus de 40 % de batterie écran éteint. En économie d'énergie, elle attend.",
+  "Today: {n} understood in the background · about {s} s each": "Aujourd'hui : {n} compris en arrière-plan · environ {s} s chacun",
 };

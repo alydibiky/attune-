@@ -12582,4 +12582,9 @@ export const IDN = {
   "Show the tips again": "Tampilkan tips lagi",
   "Show me more tips": "Tunjukkan tips lainnya",
   "Attune sets up your money, papers, people and week with you": "Attune menata uang, dokumen, orang, dan minggumu bersamamu",
+  "Reading {n} messages…": "Membaca {n} pesan…",
+  "Background reading": "Membaca di latar belakang",
+  "Think in the background": "Berpikir di latar belakang",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Saat Attune tertutup, AI membaca pesan yang belum pasti bagi kode — hanya saat mengisi daya, atau baterai di atas 40% dengan layar mati. Saat hemat baterai, ia menunggu.",
+  "Today: {n} understood in the background · about {s} s each": "Hari ini: {n} dipahami di latar belakang · sekitar {s} dtk masing-masing",
 };

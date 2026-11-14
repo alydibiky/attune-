@@ -12581,4 +12581,9 @@ export const BN = {
   "Show the tips again": "টিপসগুলো আবার দেখান",
   "Show me more tips": "আরও টিপস দেখান",
   "Attune sets up your money, papers, people and week with you": "Attune আপনার সাথে টাকা, কাগজ, মানুষ ও সপ্তাহ গুছিয়ে দেয়",
+  "Reading {n} messages…": "{n}টি মেসেজ পড়ছে…",
+  "Background reading": "ব্যাকগ্রাউন্ডে পড়া",
+  "Think in the background": "ব্যাকগ্রাউন্ডে ভাবুন",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Attune বন্ধ থাকলে AI সেই মেসেজগুলো পড়ে যেগুলো নিয়ে কোড নিশ্চিত নয় — শুধু চার্জিং-এর সময়, বা ৪০%-এর বেশি ব্যাটারি ও স্ক্রিন বন্ধ থাকলে। ব্যাটারি সেভারে অপেক্ষা করে।",
+  "Today: {n} understood in the background · about {s} s each": "আজ: ব্যাকগ্রাউন্ডে {n}টি বোঝা হয়েছে · প্রতিটি প্রায় {s} সেকেন্ড",
 };

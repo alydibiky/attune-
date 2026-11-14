@@ -12582,4 +12582,9 @@ export const HI = {
   "Show the tips again": "सुझाव फिर दिखाएँ",
   "Show me more tips": "और सुझाव दिखाएँ",
   "Attune sets up your money, papers, people and week with you": "Attune आपके साथ पैसा, काग़ज़, लोग और हफ़्ता सेट करता है",
+  "Reading {n} messages…": "{n} मैसेज पढ़ रहा है…",
+  "Background reading": "बैकग्राउंड में पढ़ना",
+  "Think in the background": "बैकग्राउंड में सोचें",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Attune बंद होने पर AI वे मैसेज पढ़ता है जिन पर कोड पक्का नहीं — सिर्फ़ चार्जिंग के दौरान, या 40% से ज़्यादा बैटरी और स्क्रीन बंद होने पर। बैटरी सेवर में इंतज़ार करता है।",
+  "Today: {n} understood in the background · about {s} s each": "आज: बैकग्राउंड में {n} समझे गए · हर एक लगभग {s} सेकंड",
 };

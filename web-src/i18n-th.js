@@ -12581,4 +12581,9 @@ export const TH = {
   "Show the tips again": "แสดงเคล็ดลับอีกครั้ง",
   "Show me more tips": "ขอเคล็ดลับเพิ่ม",
   "Attune sets up your money, papers, people and week with you": "Attune ช่วยจัดเงิน เอกสาร ผู้คน และสัปดาห์ของคุณไปด้วยกัน",
+  "Reading {n} messages…": "กำลังอ่าน {n} ข้อความ…",
+  "Background reading": "การอ่านเบื้องหลัง",
+  "Think in the background": "คิดเบื้องหลัง",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "เมื่อปิด Attune อยู่ AI จะอ่านข้อความที่โค้ดยังไม่แน่ใจ — เฉพาะตอนชาร์จ หรือแบตเตอรี่เกิน 40% และปิดหน้าจอ ในโหมดประหยัดแบตจะรอ",
+  "Today: {n} understood in the background · about {s} s each": "วันนี้: เข้าใจในเบื้องหลัง {n} รายการ · ราว {s} วินาทีต่อรายการ",
 };

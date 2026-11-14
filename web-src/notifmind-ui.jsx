@@ -4,8 +4,9 @@
    (at most 15 each time Attune opens / the model wakes), the answer checked (readMind: no number, date or name that isn't in the
    notification) and merged with code's reading. No screen of its own. */
 import { useEffect } from "react";
-import { getLang } from "./i18n.js";
+import { getLang, tr } from "./i18n.js";
 import { comprehend, mindPrompt, readMind, merge } from "./notifmind.js";
+import { bgTemplate, takeBg } from "./mindbg.js";
 const KEY = "attune:notifmind:v1", MAX = 600;
 export function loadMinds() { try { const j = JSON.parse(localStorage.getItem(KEY) || "{}"); return j && typeof j === "object" ? j : {}; } catch (e) { return {}; } }
 function saveMind(id, r) { try { const all = loadMinds(); all[id] = { ...r, at: Date.now() }; const ids = Object.keys(all); if (ids.length > MAX) ids.sort((a, b) => (all[a].at || 0) - (all[b].at || 0)).slice(0, ids.length - MAX).forEach((k) => delete all[k]); localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {} }
@@ -13,6 +14,9 @@ function saveMind(id, r) { try { const all = loadMinds(); all[id] = { ...r, at: 
 export function mindOf(n, minds = null) { if (!n) return null; const m = (minds || loadMinds())[String(n.id)]; if (m) return m; try { return comprehend(n); } catch (e) { return null; } }
 function recent() { try { const N = window.AttuneNative; return N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : []; } catch (e) { return []; } }
 export function MindRunner({ ready, ask }) {
+  useEffect(() => { const N = window.AttuneNative; if (!N) return;
+    try { const got = N.mindBgTake ? JSON.parse(N.mindBgTake() || "[]") : []; if (takeBg(got, recent(), saveMind)) window.dispatchEvent(new CustomEvent("attune-notifmind")); } catch (e) {}   // v9.9.36 BG-3 (mindbg.js)
+    try { N.mindBgSet && N.mindBgSet(JSON.stringify(bgTemplate(recent(), Date.now(), tr))); } catch (e) {} }, []);
   useEffect(() => { if (!ready || !ask) return; let stop = false;
     (async () => { const minds = loadMinds(), since = Date.now() - 3 * 864e5, lang = getLang();
       const todo = recent().filter((n) => n && n.id && (n.ts || 0) >= since && !minds[String(n.id)]).sort((a, b) => (b.ts || 0) - (a.ts || 0))

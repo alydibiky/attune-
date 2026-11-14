@@ -12581,4 +12581,9 @@ export const VI = {
   "Show the tips again": "Hiện lại mẹo",
   "Show me more tips": "Cho tôi thêm mẹo",
   "Attune sets up your money, papers, people and week with you": "Attune cùng bạn sắp xếp tiền, giấy tờ, mọi người và tuần của bạn",
+  "Reading {n} messages…": "Đang đọc {n} tin nhắn…",
+  "Background reading": "Đọc chạy nền",
+  "Think in the background": "Suy nghĩ chạy nền",
+  "With Attune closed, the AI reads the messages code isn't sure of — only while charging, or above 40% battery with the screen off. On battery saver it waits.": "Khi Attune đóng, AI đọc những tin nhắn mà mã chưa chắc — chỉ khi đang sạc, hoặc pin trên 40% và màn hình tắt. Ở chế độ tiết kiệm pin, nó chờ.",
+  "Today: {n} understood in the background · about {s} s each": "Hôm nay: hiểu {n} tin chạy nền · khoảng {s} giây mỗi tin",
 };
