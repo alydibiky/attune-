@@ -46,6 +46,15 @@ with sync_playwright() as p:
     page.locator("[data-testid=habit-today]").click(); page.wait_for_timeout(200)
     check("streak 0 days" in row.inner_text(), "T2: tap again → unticked (a day counts once)")
     check(page.locator("[data-testid=habit-add-chip]").count() == 0, "T2: the '+ Habit' chip hides once the card has its own")
+    # v9.9.38: the week can start on Saturday / Sunday / Monday (country or Settings) — today's dot must still be today, on any day
+    for ws in ("6", "0", "1"):
+        page.evaluate("localStorage.setItem('attune:week-start', '%s')" % ws); page.reload(); page.wait_for_selector("[data-testid=habit-today]", timeout=10000)
+        page.locator("[data-testid=habit-today]").click(); page.wait_for_timeout(200)
+        ok = "streak 1 day" in page.locator("[data-testid=habit-row]").inner_text() and page.locator("[data-testid=habit-today]").get_attribute("data-s") == "d"
+        i = page.evaluate("[...document.querySelectorAll('[data-testid=habit-today],[data-testid=habit-dot]')].findIndex(e => e.dataset.testid === 'habit-today')")
+        check(ok and i == (datetime.date.today().isoweekday() % 7 - int(ws) + 7) % 7, "T2: week starts on day %s → today's dot is in place %s and ticks" % (ws, i))
+        page.locator("[data-testid=habit-today]").click(); page.wait_for_timeout(200)
+    page.evaluate("localStorage.removeItem('attune:week-start')")
     # ---- T6 focus
     page.evaluate("""() => { localStorage.setItem('attune:focus:run', JSON.stringify({ task: 'Thesis · chapter 3', plan: 25, events: [{ t: Date.now() - 65000, e: 'start' }] })); window.dispatchEvent(new CustomEvent('attune-focus')); }""")
     page.wait_for_timeout(700)

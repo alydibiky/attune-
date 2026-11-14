@@ -19,11 +19,11 @@ export function toggleToday(v, id, now = Date.now()) {
 const dayName = (d) => { try { const x = new Date(2026, 10, 1 + d); return x.toLocaleDateString(dateLocale(), { weekday: "narrow" }); } catch (e) { return "SMTWTFS"[d]; } }; // 1 Nov 2026 = Sunday
 export function HabitsCard() {
   const [v, setV] = useState(loadHabits), [add, setAdd] = useState(null), [open, setOpen] = useState(null);
-  const now = Date.now(), today = new Date(now).getDay();
+  const now = Date.now(), ws = weekStart(), today = (new Date(now).getDay() - ws + 7) % 7;   // today's place in a week that starts on ws
   const put = (x) => setV(save(x));
   // Home stays calm (Ali: no "set it up" adverts): with no habits the card is hidden; "+ Habit" next to the countdown chips opens the form
   useEffect(() => { const f = () => setAdd({ name: "", days: [] }); window.addEventListener("attune-habit-add", f); return () => window.removeEventListener("attune-habit-add", f); }, []);
-  const rows = useMemo(() => v.items.map((h) => ({ h, dots: weekDots(h, v.done[h.id], now, weekStart()), st: streak(h, v.done[h.id], now), n: goalCount(h, v.done[h.id]) })), [v]);
+  const rows = useMemo(() => v.items.map((h) => ({ h, dots: weekDots(h, v.done[h.id], now, ws), st: streak(h, v.done[h.id], now), n: goalCount(h, v.done[h.id]) })), [v]);
   if (!rows.length && !add) return null;
   return (
     <div className={rows.length ? "c-card space-y-1" : ""} data-testid="home-habits">
@@ -35,8 +35,8 @@ export function HabitsCard() {
             <span className="c-sub text-[12px]" data-testid="habit-streak">{st === 1 ? tr("streak 1 day") : tr("streak {n} days", { n: st })}{h.goal ? " · " + tr("{n} of {g}", { n, g: h.goal }) : ""}</span></button>
           <div className="flex gap-1 shrink-0" dir="ltr">{dots.map((d, i) => {
             const isToday = i === today, bg = d === "d" ? "var(--c-acc)" : d === "o" ? "transparent" : d === "x" ? "var(--c-surf-2, #EFEDEA)" : "transparent";
-            return <button key={i} disabled={!isToday || d === "x"} onClick={() => put(toggleToday(v, h.id))} aria-label={dayName(i) + (d === "d" ? " ✓" : "")} data-testid={isToday ? "habit-today" : "habit-dot"} data-s={d}
-              className="w-[22px] h-[22px] rounded-full text-[9px] font-extrabold grid place-items-center" style={{ background: bg, border: d === "o" || d === "f" ? "1.5px solid " + (isToday ? "var(--c-acc)" : "var(--c-ln)") : "none", color: d === "d" ? "var(--c-on-acc, #fff)" : "var(--c-mut)" }}>{dayName(i)}</button>; })}</div>
+            return <button key={i} disabled={!isToday || d === "x"} onClick={() => put(toggleToday(v, h.id))} aria-label={dayName((i + ws) % 7) + (d === "d" ? " ✓" : "")} data-testid={isToday ? "habit-today" : "habit-dot"} data-s={d}
+              className="w-[22px] h-[22px] rounded-full text-[9px] font-extrabold grid place-items-center" style={{ background: bg, border: d === "o" || d === "f" ? "1.5px solid " + (isToday ? "var(--c-acc)" : "var(--c-ln)") : "none", color: d === "d" ? "var(--c-on-acc, #fff)" : "var(--c-mut)" }}>{dayName((i + ws) % 7)}</button>; })}</div>
         </div>))}
       {add ? <Sheet onClose={() => setAdd(null)} testid="habit-form">
         <p className={label + " m-0"}>{add.id ? tr("Edit habit") : tr("New habit")}</p>
