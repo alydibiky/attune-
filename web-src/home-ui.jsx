@@ -526,7 +526,8 @@ function ProNotes({ trial }) {
     <p className="m-0 text-[13.5px]" dir="auto">{tr("That's {n} payments you typed by hand this week.", { n: w.typed })} <b className="text-[var(--c-acc)]">{tr("Pro saves the ones your bank messages report by itself.")}</b></p>
     <div className="flex gap-2"><button onClick={() => { done("typed"); open(); }} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="pro-typed-see">{tr("Show me")}</button>
       <button onClick={() => done("typed", true)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-typed-later">{tr("Not now")}</button></div></div>;
-  if (P.showWeekCard({ dueToday, now }) && (w.fromMsgs || w.typed || w.reminders)) {
+  // (an empty "Your week with Attune — OK" card showed with Pro on and only typed payments: what it would show must not be empty)
+  if (P.showWeekCard({ dueToday, now }) && ((pro ? w.fromMsgs : w.typed) || w.reminders)) {
     const payments = pro ? w.fromMsgs : w.typed, mins = P.minutesFor(payments);
     return <div className="c-card space-y-1.5" style={{ background: "var(--c-soft)" }} data-testid="pro-week" data-pro={pro ? "1" : "0"}>
       <span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)]">{tr("Your week with Attune")}</span>

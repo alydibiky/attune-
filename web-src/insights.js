@@ -13,7 +13,7 @@
      goalFind    an agent's find that fits a goal (the Makkah hotel vs the Umrah money)
    You can dismiss each one (gone for 30 days); a kind you dismiss three times is shown less. No AI — exact and instant.
    Pure; tests: tests/unit/v880insights.test.mjs.                                                                        */
-import { dateLocale } from "./i18n.js";
+import { dateLocale, tr } from "./i18n.js";   // v9.9.39: each line in the person's language (was English in 18 languages)
 import { itemsOf, tagOf, TOPICS, topicName } from "./links.js";
 import { newNames, labelOf } from "./entities.js";
 
@@ -50,11 +50,12 @@ export function insights(stores = {}, dir = { items: [] }, { now = Date.now(), s
     if (beat < 5 || beat > 120 || spread > Math.max(3, beat * 0.25)) continue;   // a real beat: steady within a quarter
     const last = l[l.length - 1], next = last.ts + beat * DAY, inDays = Math.round((next - now) / DAY), amt = median(l.map((x) => x.amount));
     const every = beat >= 27 && beat <= 33 ? ["every month", "كل شهر"] : beat >= 6 && beat <= 8 ? ["every week", "كل أسبوع"] : [`every ~${Math.round(beat)} days`, `كل ~${Math.round(beat)} يوم`];
+    const everyT = beat >= 27 && beat <= 33 ? tr("every month") : beat >= 6 && beat <= 8 ? tr("every week") : tr("every ~{n} days", { n: Math.round(beat) });
     if (inDays >= -1 && inDays <= 3) push({ k: "rhythm", id: "rhythm:" + g.k + ":" + ymd(next), score: 78 - Math.max(0, inDays) * 4, open: g.person ? "people" : "money", person: g.person,
-      en: `You pay ${g.name} ${every[0]} (about ${n0(amt)} ${cur}) — the next one is ${inDays <= 0 ? "due now" : "around " + fmtDay(next)}.`, ar: `بتدفع لـ${g.name} ${every[1]} (حوالي ${n0(amt)} ${cur}) — الجاية ${inDays <= 0 ? "دلوقتي" : "حوالي " + fmtDay(next, true)}.`,
+      en: tr("You pay {name} {every} (about {amt}) — the next one is {when}.", { name: g.name, every: everyT, amt: (n0(amt) + " " + cur).trim(), when: inDays <= 0 ? tr("due now") : tr("around {d}", { d: fmtDay(next) }) }), ar: `بتدفع لـ${g.name} ${every[1]} (حوالي ${n0(amt)} ${cur}) — الجاية ${inDays <= 0 ? "دلوقتي" : "حوالي " + fmtDay(next, true)}.`,
       act: { kind: "remind", text: `${g.name} ~${n0(amt)} ${cur}`, at: Math.max(now + 3600e3, next) } });
     else if (inDays < -Math.max(4, beat * 0.5) && inDays > -beat * 2 && /bill|internet|فاتور|اشتراك|نت|كهربا|subscription|rent|ايجار/i.test(g.name + " " + l.map((x) => x.text).join(" ")))
-      push({ k: "rhythm", id: "late:" + g.k + ":" + ymd(next), score: 70, open: "money", en: `${g.name} usually comes ${every[0]} — it's ${-inDays} days late. Paid somewhere else?`, ar: `${g.name} بييجي ${every[1]} — متأخر ${-inDays} يوم. اتدفع من حتة تانية؟` });
+      push({ k: "rhythm", id: "late:" + g.k + ":" + ymd(next), score: 70, open: "money", en: tr("{name} usually comes {every} — it's {n} days late. Paid somewhere else?", { name: g.name, every: everyT, n: -inDays }), ar: `${g.name} بييجي ${every[1]} — متأخر ${-inDays} يوم. اتدفع من حتة تانية؟` });
   }
   // ---- owed: money someone owes you, waiting for weeks
   for (const x of tagged.filter((x) => x.it.src === "followups" && x.it.sign > 0 && !x.it.done && (x.it.left == null || x.it.left > 0))) {
@@ -62,7 +63,7 @@ export function insights(stores = {}, dir = { items: [] }, { now = Date.now(), s
     const left = x.it.left != null ? x.it.left : x.it.amount, who = x.it.who || x.it.title;
     const pid = x.t.people.find((p) => !p.endsWith("?"));
     push({ k: "owed", id: "owed:" + x.it.id + ":" + Math.floor(age / 14), score: Math.min(74, 50 + Math.floor(age / 7) * 3), open: pid ? "people" : "life", person: pid,
-      en: `${who} has owed you ${n0(left)} ${cur} for ${age >= 60 ? Math.round(age / 30) + " months" : Math.round(age / 7) + " weeks"}. A gentle reminder?`, ar: `${who} عليه ${n0(left)} ${cur} من ${age >= 60 ? Math.round(age / 30) + " شهور" : Math.round(age / 7) + " أسابيع"}. نفكّره بلطف؟` });
+      en: tr("{who} has owed you {amt} for {span}. A gentle reminder?", { who, amt: (n0(left) + " " + cur).trim(), span: age >= 60 ? tr("{n} months", { n: Math.round(age / 30) }) : tr("{n} weeks", { n: Math.round(age / 7) }) }), ar: `${who} عليه ${n0(left)} ${cur} من ${age >= 60 ? Math.round(age / 30) + " شهور" : Math.round(age / 7) + " أسابيع"}. نفكّره بلطف؟` });
   }
   // ---- surge: a topic far above its usual this month (vs the 3 months before)
   const ym = (ts) => new Date(ts).toISOString().slice(0, 7), thisM = ym(now);
@@ -74,7 +75,7 @@ export function insights(stores = {}, dir = { items: [] }, { now = Date.now(), s
     if (usual.filter((v) => v > 0).length < 2 || avg <= 0) continue;
     const ratio = nowSum / avg;
     if (ratio >= 1.5 && nowSum - avg >= Math.max(300, avg * 0.3)) push({ k: "surge", id: "surge:" + key + ":" + thisM, score: Math.min(72, 52 + Math.round((ratio - 1.5) * 20)) + (dayOfMonth < 20 ? 6 : 0), open: "money",
-      en: `${topicName(key)} is ${ratio.toFixed(1)}× your usual this month — ${n0(nowSum)} ${cur} vs about ${n0(avg)}${dayOfMonth < 20 ? ", and the month isn't over" : ""}.`, ar: `${topicName(key, true)} ${ratio.toFixed(1)}× المعتاد الشهر ده — ${n0(nowSum)} ${cur} بدل حوالي ${n0(avg)}${dayOfMonth < 20 ? "، والشهر لسه مخلصش" : ""}.` });
+      en: tr(dayOfMonth < 20 ? "{topic} is {r}× your usual this month — {now} vs about {avg}, and the month isn't over." : "{topic} is {r}× your usual this month — {now} vs about {avg}.", { topic: tr(topicName(key)), r: ratio.toFixed(1), now: (n0(nowSum) + " " + cur).trim(), avg: n0(avg) }), ar: `${topicName(key, true)} ${ratio.toFixed(1)}× المعتاد الشهر ده — ${n0(nowSum)} ${cur} بدل حوالي ${n0(avg)}${dayOfMonth < 20 ? "، والشهر لسه مخلصش" : ""}.` });
   }
   // ---- rise: the same thing costing more than its last few times
   for (const g of groups.values()) {
@@ -83,7 +84,7 @@ export function insights(stores = {}, dir = { items: [] }, { now = Date.now(), s
     if (now - last.ts > 40 * DAY || before <= 0) continue;
     const up = (last.amount - before) / before;
     if (up >= 0.12 && last.amount - before >= 20) push({ k: "rise", id: "rise:" + g.k + ":" + last.id, score: 58 + Math.min(12, Math.round(up * 30)), open: g.person ? "people" : "money", person: g.person,
-      en: `${g.name} went up: ${n0(last.amount)} ${cur} last time, it was about ${n0(before)} (+${Math.round(up * 100)}%).`, ar: `${g.name} غلي: ${n0(last.amount)} ${cur} آخر مرة، كان حوالي ${n0(before)} (+${Math.round(up * 100)}%).` });
+      en: tr("{name} went up: {last} last time, it was about {before} (+{p}%).", { name: g.name, last: (n0(last.amount) + " " + cur).trim(), before: n0(before), p: Math.round(up * 100) }), ar: `${g.name} غلي: ${n0(last.amount)} ${cur} آخر مرة، كان حوالي ${n0(before)} (+${Math.round(up * 100)}%).` });
   }
   // ---- twice: the same amount to the same place on the same day (the last 10 days)
   const recent = pays.filter((x) => now - x.it.ts < 10 * DAY), seenPair = new Set();
@@ -92,20 +93,20 @@ export function insights(stores = {}, dir = { items: [] }, { now = Date.now(), s
     if (a.amount !== b.amount || ymd(a.ts) !== ymd(b.ts) || a.amount < 50) continue;
     const ka = keyOf(a, recent[i].t, dir), kb = keyOf(b, recent[j].t, dir); if (!ka || !kb || ka.k !== kb.k || seenPair.has(ka.k + ymd(a.ts))) continue;
     seenPair.add(ka.k + ymd(a.ts));
-    push({ k: "twice", id: "twice:" + a.id + ":" + b.id, score: 88, open: "money", en: `${n0(a.amount)} ${cur} to ${ka.name} twice on ${fmtDay(a.ts)} — charged twice, or two real payments?`, ar: `${n0(a.amount)} ${cur} لـ${ka.name} مرتين يوم ${fmtDay(a.ts, true)} — اتخصموا مرتين ولا دول دفعتين فعلاً؟` });
+    push({ k: "twice", id: "twice:" + a.id + ":" + b.id, score: 88, open: "money", en: tr("{amt} to {name} twice on {day} — charged twice, or two real payments?", { amt: (n0(a.amount) + " " + cur).trim(), name: ka.name, day: fmtDay(a.ts) }), ar: `${n0(a.amount)} ${cur} لـ${ka.name} مرتين يوم ${fmtDay(a.ts, true)} — اتخصموا مرتين ولا دول دفعتين فعلاً؟` });
   }
   // ---- big: this month's one big expense against your usual size
   { const month = pays.filter((x) => ym(x.it.ts) === thisM), all = pays.filter((x) => now - x.it.ts < 120 * DAY).map((x) => x.it.amount);
     const typical = median(all), top = month.sort((a, b) => b.it.amount - a.it.amount)[0];
     if (top && all.length >= 10 && typical > 0 && top.it.amount >= typical * 8 && top.it.amount >= 1000 && now - top.it.ts < 7 * DAY)
-      push({ k: "big", id: "big:" + top.it.id, score: 50, open: "money", en: `A big one: ${n0(top.it.amount)} ${cur} for ${top.it.title} — your usual payment is about ${n0(typical)}. Planned?`, ar: `مبلغ كبير: ${n0(top.it.amount)} ${cur} لـ${top.it.title} — المعتاد حوالي ${n0(typical)}. كان مخطط له؟` }); }
+      push({ k: "big", id: "big:" + top.it.id, score: 50, open: "money", en: tr("A big one: {amt} for {title} — your usual payment is about {typ}. Planned?", { amt: (n0(top.it.amount) + " " + cur).trim(), title: top.it.title, typ: n0(typical) }), ar: `مبلغ كبير: ${n0(top.it.amount)} ${cur} لـ${top.it.title} — المعتاد حوالي ${n0(typical)}. كان مخطط له؟` }); }
   // ---- newName: a name you keep writing that has no card yet
   { const met = new Map();
     for (const x of items.filter((x) => (x.src === "money" || x.src === "notes" || x.src === "mind") && now - x.ts < 60 * DAY)) for (const nm of newNames([x.title, x.text].join(" "), dir)) { const k = nm.toLowerCase(); met.set(k, { name: nm, n: ((met.get(k) || {}).n || 0) + 1 }); }
     const best = [...met.values()].filter((m) => m.n >= 2).sort((a, b) => b.n - a.n)[0];
-    if (best) push({ k: "newName", id: "name:" + best.name.toLowerCase(), score: 46 + Math.min(10, best.n * 2), open: "people", en: `You've written “${best.name}” ${best.n} times — add them to People so Attune links everything about them?`, ar: `كتبت «${best.name}» ${best.n} مرات — تضيفه للناس عشان Attune يربط كل حاجة عنه؟` }); }
+    if (best) push({ k: "newName", id: "name:" + best.name.toLowerCase(), score: 46 + Math.min(10, best.n * 2), open: "people", en: tr("You've written “{name}” {n} times — add them to People so Attune links everything about them?", { name: best.name, n: best.n }), ar: `كتبت «${best.name}» ${best.n} مرات — تضيفه للناس عشان Attune يربط كل حاجة عنه؟` }); }
   // ---- notes: money your notes say moved, not in Money yet
-  if (notesPending > 0) push({ k: "notes", id: "notes:" + notesPending + ":" + ymd(now), score: 60, open: "money", en: `${notesPending} ${notesPending === 1 ? "payment" : "payments"} in your notes ${notesPending === 1 ? "isn't" : "aren't"} in Money yet — one tap each.`, ar: `${notesPending} ${notesPending === 1 ? "دفعة" : "دفعات"} في ملاحظاتك لسه مش في الفلوس — دوسة واحدة لكل واحدة.` });
+  if (notesPending > 0) push({ k: "notes", id: "notes:" + notesPending + ":" + ymd(now), score: 60, open: "money", en: notesPending === 1 ? tr("1 payment in your notes isn't in Money yet — one tap each.") : tr("{n} payments in your notes aren't in Money yet — one tap each.", { n: notesPending }), ar: `${notesPending} ${notesPending === 1 ? "دفعة" : "دفعات"} في ملاحظاتك لسه مش في الفلوس — دوسة واحدة لكل واحدة.` });
   // ---- goals: behind the pace the date needs; and an agent's find that fits a goal
   for (const p of (stores.pots && stores.pots.pots) || []) {
     if (!(p.target > 0) || !p.by) continue;
@@ -113,7 +114,7 @@ export function insights(stores = {}, dir = { items: [] }, { now = Date.now(), s
     const months = Math.max(1, Math.round((end - now) / (30 * DAY))), left = Math.max(0, p.target - (p.saved || 0)), need = left / months;
     const lastPut = (p.log || []).filter((x) => now - Date.parse(x.d) < 35 * DAY).reduce((a, x) => a + (+x.a || 0), 0);
     if (left > 0 && lastPut < need * 0.6) push({ k: "goalPace", id: "pace:" + p.id + ":" + thisM, score: 62, open: "planner",
-      en: `${p.name}: ${n0(left)} ${cur} still to go — about ${n0(need)} a month to make ${p.by}${lastPut ? `; this month ${n0(lastPut)} so far` : "; nothing put aside this month yet"}.`, ar: `${p.name}: فاضل ${n0(left)} ${cur} — حوالي ${n0(need)} في الشهر عشان تلحق ${p.by}${lastPut ? `؛ الشهر ده ${n0(lastPut)} لحد دلوقتي` : "؛ لسه محوّشتش حاجة الشهر ده"}.` });
+      en: tr(lastPut ? "{name}: {left} still to go — about {need} a month to make {by}; this month {put} so far." : "{name}: {left} still to go — about {need} a month to make {by}; nothing put aside this month yet.", { name: p.name, left: (n0(left) + " " + cur).trim(), need: n0(need), by: p.by, put: n0(lastPut || 0) }), ar: `${p.name}: فاضل ${n0(left)} ${cur} — حوالي ${n0(need)} في الشهر عشان تلحق ${p.by}${lastPut ? `؛ الشهر ده ${n0(lastPut)} لحد دلوقتي` : "؛ لسه محوّشتش حاجة الشهر ده"}.` });
     const gTopics = TOPICS.filter((t) => t[3].test(p.name)).map((t) => t[0]);
     for (const a of (stores.agents && stores.agents.agents) || []) {
       const best = a.best3 && a.best3[0]; if (!best || !best.price) continue;
@@ -121,7 +122,7 @@ export function insights(stores = {}, dir = { items: [] }, { now = Date.now(), s
       if (!gTopics.some((k) => aTopics.includes(k)) && !String(a.title).toLowerCase().includes(String(p.name).toLowerCase())) continue;
       const have = p.saved || 0;
       push({ k: "goalFind", id: "find:" + a.id + ":" + p.id + ":" + Math.round(best.price), score: 64, open: "agents",
-        en: `Your agent found ${best.name || a.title} at ${n0(best.price)} — your ${p.name} goal has ${n0(have)} of ${n0(p.target)} saved${have >= best.price ? ", enough for it" : ""}.`,
+        en: tr(have >= best.price ? "Your agent found {item} at {price} — your {goal} goal has {have} of {target} saved, enough for it." : "Your agent found {item} at {price} — your {goal} goal has {have} of {target} saved.", { item: best.name || a.title, price: n0(best.price), goal: p.name, have: n0(have), target: n0(p.target) }),
         ar: `الوكيل لقى ${best.name || a.title} بـ${n0(best.price)} — هدف ${p.name} فيه ${n0(have)} من ${n0(p.target)}${have >= best.price ? "، يكفّيه" : ""}.` });
     }
   }
