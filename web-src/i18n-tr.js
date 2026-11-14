@@ -12823,4 +12823,5 @@ export const TRK = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} mesaj saklandı — bir konu sor, örn. “{c} garajı ne zaman konuştu?”",
   "From your chats — {c}": "Sohbetlerinden — {c}",
   "All {n} messages": "{n} mesajın hepsi",
+  "Decided:": "Karar:",
 };

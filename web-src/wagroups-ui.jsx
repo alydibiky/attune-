@@ -65,6 +65,7 @@ export function WaLibrary({ incoming, clearIncoming, flash, openXray }) {
     const g = { id, title: (old && old.title) || name || "WhatsApp group", items: m.items, seen: (old && old.seen) || {}, moves: (old && old.moves) || {}, kindSet: old && old.kindSet, updated: Date.now() };
     g.kind = g.kindSet || W.kindOf(g.items, { title: g.title, seen: g.seen });
     await S.saveGroup(g); await S.saveRaw(id, text);
+    try { window.dispatchEvent(new Event("attune-wa-added")); } catch (e) {}   // v9.9.40 EX-1: the new Autopilot asks what this chat is
     await reload(); setBusy(""); setAt({ at: "group", gid: id });
     flash && flash(old ? tr("{n} new in {g}", { n: m.added, g: g.title }) : tr("{g}: {n} messages and photos sorted", { g: g.title, n: m.items.length }));
     look(g);

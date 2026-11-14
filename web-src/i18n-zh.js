@@ -12822,4 +12822,5 @@ export const ZH = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}：已保存 {n} 条消息 — 问一个话题，比如“{c} 什么时候讨论过车库？”",
   "From your chats — {c}": "来自你的聊天 — {c}",
   "All {n} messages": "全部 {n} 条消息",
+  "Decided:": "已决定：",
 };

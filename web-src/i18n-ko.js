@@ -12822,4 +12822,5 @@ export const KO = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: 메시지 {n}개 보관 중 — 주제를 물어보세요, 예: “{c}에서 주차장 얘기 언제 했어?”",
   "From your chats — {c}": "내 채팅에서 — {c}",
   "All {n} messages": "메시지 {n}개 전부",
+  "Decided:": "결정:",
 };

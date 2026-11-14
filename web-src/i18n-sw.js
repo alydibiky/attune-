@@ -12823,4 +12823,5 @@ export const SW = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: jumbe {n} zimehifadhiwa — uliza kuhusu mada, k.m. “{c} walizungumza lini kuhusu gereji?”",
   "From your chats — {c}": "Kutoka kwa gumzo zako — {c}",
   "All {n} messages": "Jumbe zote {n}",
+  "Decided:": "Imeamuliwa:",
 };

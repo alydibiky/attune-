@@ -12823,4 +12823,5 @@ export const IDN = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} pesan disimpan — tanyakan topik, mis. “kapan {c} membahas garasi?”",
   "From your chats — {c}": "Dari obrolanmu — {c}",
   "All {n} messages": "Semua {n} pesan",
+  "Decided:": "Diputuskan:",
 };

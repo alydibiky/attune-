@@ -12822,4 +12822,5 @@ export const DE = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} Nachrichten behalten — frag nach einem Thema, z. B. „wann hat {c} über die Garage gesprochen?“",
   "From your chats — {c}": "Aus deinen Chats — {c}",
   "All {n} messages": "Alle {n} Nachrichten",
+  "Decided:": "Entschieden:",
 };

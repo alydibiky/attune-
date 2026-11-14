@@ -12822,4 +12822,5 @@ export const RU = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: сохранено сообщений: {n} — спроси о теме, напр. «когда {c} обсуждали гараж?»",
   "From your chats — {c}": "Из твоих чатов — {c}",
   "All {n} messages": "Все сообщения ({n})",
+  "Decided:": "Решено:",
 };

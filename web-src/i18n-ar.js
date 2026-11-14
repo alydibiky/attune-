@@ -9924,4 +9924,5 @@ export const AR = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} رسالة محفوظة — اسأل عن موضوع، زي «امتى {c} اتكلموا عن الجراج؟»",
   "From your chats — {c}": "من شاتاتك — {c}",
   "All {n} messages": "كل الـ{n} رسالة",
+  "Decided:": "اللي اتقرر:",
 };

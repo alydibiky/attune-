@@ -21,11 +21,15 @@ ok(by("expense").length === 0, "v9.9.30: the CIB debit (card ending 4421 debited
 const ex = { kind: "expense", app: "Wallet X", amount: 1250, cat: "groceries", note: "CARREFOUR MAADI", date: "2026-11-07", key: "x:125000:2026-11-07" };
 ok(!AP.isAuto(s0, ex), "a money card Attune is NOT sure of still waits for a tap");
 ok(by("followup").length === 1 && new Date(by("followup")[0].at).getDay() === 4, "Amazon 'Arriving Thursday' → a follow-up on Thursday");
-ok(by("todo").length === 1 && new Date(by("todo")[0].at).getDate() === 8 && /^Ahmed Salah: /.test(by("todo")[0].title), "Ahmed «ابعتلي الورق بكرة» → a to-do tomorrow");
+// v9.9.40 the new Autopilot: a request in a chat is the chat card's (chatpilot.js, by the chat's role) — this card no longer makes it;
+// the reading itself still works when switched on (oldTodos)
+ok(by("todo").length === 0, "v9.9.40: chat requests are not this card's any more (the chat Autopilot does them, by role)");
+{ const old = AP.suggestions(notes, { now, s: { ...s0, oldTodos: true } }).filter((x) => x.kind === "todo");
+  ok(old.length === 1 && new Date(old[0].at).getDate() === 8 && /^Ahmed Salah: /.test(old[0].title), "Ahmed «ابعتلي الورق بكرة» → a to-do tomorrow (the reading, switched on)"); }
 ok(by("callback").length === 1 && by("callback")[0].who === "Mona", "two missed calls from Mona → call back");
 ok(by("bill").length === 1 && by("bill")[0].amount === 450 && new Date(by("bill")[0].at).getDate() === 15, "Vodafone bill due on the 15th → a bill");
-ok(list.length === 4, "the offer and «ربنا يحفظك» are nothing to do");
-ok(["followup", "todo", "callback", "bill"].every((k) => AP.isAuto(s0, by(k)[0])), "v9.9.30 (Ali: \"not keep asking\"): a delivery's day, a request, two missed calls, a bill due — done by itself from the start");
+ok(list.length === 3, "the offer and «ربنا يحفظك» are nothing to do (3 cards: the chat request is the chat Autopilot's now)");
+ok(["followup", "callback", "bill"].every((k) => AP.isAuto(s0, by(k)[0])), "v9.9.30 (Ali: \"not keep asking\"): a delivery's day, a request, two missed calls, a bill due — done by itself from the start");
 { let u = AP.accept(s0, by("followup")[0], { auto: true }); u = AP.undoDone(u, by("followup")[0].key);
   ok(!AP.isAuto(u, by("followup")[0]) && u.manual.includes("followup:Amazon Shopping"), "Undo on one → that kind from that app waits for a tap from now on"); }
 ok(AP.suggestions(notes, { now, s: s0, ledger: { txns: [{ type: "expense", amount: 1250, date: "2026-11-07" }] } }).filter((x) => x.kind === "expense").length === 0, "typed by hand already → not suggested again");
@@ -41,6 +45,6 @@ ok(AP.suggestions(notes, { now, s: s2 }).every((x) => x.kind !== "followup"), "'
 // delivered closes the follow-up
 const s3 = AP.accept(s0, { ...by("followup")[0] }, { rid: "rem-77" });
 ok(AP.deliveredDone([{ id: 20, pkg: "com.amazon.mShop.android.shopping", app: "Amazon Shopping", title: "Delivered", text: "Your package was delivered", ts: now }], s3).join() === "rem-77", "'Delivered' closes the delivery follow-up");
-ok(AP.actionsFor(ex)[0].kind === "money" && AP.actionsFor(by("todo")[0])[0].kind === "reminder" && AP.actionsFor(by("bill")[0])[0].c.kind === "bill", "each becomes what the Home box would save");
+ok(AP.actionsFor(ex)[0].kind === "money" && AP.actionsFor(by("callback")[0])[0].kind === "reminder" && AP.actionsFor(by("bill")[0])[0].c.kind === "bill", "each becomes what the Home box would save");
 ok(AP.weekCount(s, now) >= 3, "the week's count");
 console.log(`ALL PASSED v980autopilot (${n} checks)`);

@@ -12822,4 +12822,5 @@ export const BN = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n}টি বার্তা রাখা আছে — একটা বিষয় জিজ্ঞেস করুন, যেমন “{c} গ্যারেজ নিয়ে কবে কথা বলেছে?”",
   "From your chats — {c}": "আপনার চ্যাট থেকে — {c}",
   "All {n} messages": "সব {n}টি বার্তা",
+  "Decided:": "সিদ্ধান্ত:",
 };

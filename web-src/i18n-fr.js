@@ -12823,4 +12823,5 @@ export const FR = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c} : {n} messages gardés — demande un sujet, p. ex. « quand {c} a parlé du garage ? »",
   "From your chats — {c}": "De tes discussions — {c}",
   "All {n} messages": "Les {n} messages",
+  "Decided:": "Décidé :",
 };

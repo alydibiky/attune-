@@ -7,6 +7,7 @@
 import { decide } from "./autopilot2.js";
 import { chatOf, noiseOf } from "./chats.js";
 import { readExport } from "./waexport.js";
+import { guessRole } from "./chatroles.js";
 
 export const CP_KEY = "attune:chatpilot:v1";
 export const emptyCP = () => ({ seen: {}, done: [], ask: [], quiet: {}, since: 0 });
@@ -67,4 +68,20 @@ export function messagesByChat(notes = [], exports = [], roles = {}) {
   // the same message from the export and the notification → once (same writer, same words, same minute)
   for (const k of Object.keys(byKey)) { const seen = new Set(); byKey[k] = byKey[k].sort((a, b) => a.ts - b.ts).filter((m) => { const s = (m.who || "") + "|" + String(m.text).slice(0, 80) + "|" + Math.floor(m.ts / 60000); if (seen.has(s)) return false; seen.add(s); return true; }); }
   return { chats: [...chats.values()], byKey };
+}
+
+/** v9.9.40 EX-1 (Ali OK'd: "Export → Attune reads it and suggests what the chat is"): a chat whose export was shared to Attune and
+ *  that you haven't described yet → asked at once ("What I understood", from its whole history) — not only when it next notifies. */
+// (an export doesn't say if it was a group — Talabat, a group of two, looks like one person in the file: the notifications decide,
+// and an answer given on an export's question is kept for both forms of the chat's name)
+export function askForExports(st, exports = [], roles = {}, now = Date.now(), notes = []) {
+  const mb = messagesByChat(notes, exports, roles); let out = st, added = 0;
+  const twin = (k) => k.replace(/\|[gp]:/, (m) => (m === "|g:" ? "|p:" : "|g:"));
+  for (const c of mb.chats) {
+    if (!exports.some((x) => String(x.title || "").toLowerCase() === c.chat.toLowerCase())) continue;
+    if (roles[c.key] || roles[twin(c.key)] || out.ask.some((a) => a.key === c.key || a.key === twin(c.key))) continue;
+    const msgs = (mb.byKey[c.key] || []).map((m) => ({ who: m.who, text: m.text }));
+    out = { ...out, ask: [...out.ask, { key: c.key, chat: c.chat, group: c.group, guess: guessRole({ chat: c.chat, group: c.group }, msgs), from: null, at: now, n: msgs.length, fromExport: true }] }; added++;
+  }
+  return { st: out, added };
 }

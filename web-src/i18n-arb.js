@@ -12814,4 +12814,5 @@ export const ARB = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} رسالة محفوظة — اسأل عن موضوع، مثل «متى ناقشت {c} المرآب؟»",
   "From your chats — {c}": "من محادثاتك — {c}",
   "All {n} messages": "كل الرسائل الـ{n}",
+  "Decided:": "ما تقرر:",
 };

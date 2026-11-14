@@ -35,7 +35,9 @@ function AskCard({ a, done }) {
   const guess = useMemo(() => { try { const mb = CP.messagesByChat(readNotes()), msgs = (mb.byKey[a.key] || []).map((m) => ({ who: m.who, text: m.text })); const g = CR.guessRole({ chat: a.chat, group: a.group }, msgs); return g && g.role ? g : a.guess; } catch (e) { return a.guess; } }, [a.key]);
   a = { ...a, guess };
   const rule = mine || (a.guess && a.guess.role ? { role: a.guess.role, care: [], whenMe: false, people: [] } : null);
-  const save = (r) => { CR.saveRole(a.key, { ...r, ok: true, by: mine ? "you" : "attune", desc: mine ? say : "" }); done(); flash(tr("Got it — {c} is set", { c: a.chat })); };
+  const save = (r) => { const v = { ...r, ok: true, by: mine ? "you" : "attune", desc: mine ? say : "" }; CR.saveRole(a.key, v);
+    if (a.fromExport) CR.saveRole(a.key.replace(/\|[gp]:/, (m) => (m === "|g:" ? "|p:" : "|g:")), v);   // EX-1: both forms of the chat's name
+    done(); flash(tr("Got it — {c} is set", { c: a.chat })); };
   return <div className="rounded-[14px] bg-[var(--c-soft)] p-3 space-y-2" data-testid="cp-ask">
     <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("New chat · {c}", { c: a.chat })}</p>
     <p className="m-0 text-[12.5px] font-extrabold">{tr("What I understood")}</p>
@@ -79,7 +81,9 @@ function MessageSheet({ d, close, undo, never }) {
 
 export function ChatPilotCard() {
   const [st, setSt] = useState(CP.loadCP), [slot, setSlot] = useState(0), [sheet, setSheet] = useState(null), [quietOpen, setQuietOpen] = useState(false);
-  useEffect(() => { const t = setInterval(() => setSlot((x) => x + 1), 60000); const f = () => setSlot((x) => x + 1); window.addEventListener("attune-lists", f); return () => { clearInterval(t); window.removeEventListener("attune-lists", f); }; }, []);
+  useEffect(() => { const t = setInterval(() => setSlot((x) => x + 1), 60000); const f = () => setSlot((x) => x + 1); window.addEventListener("attune-lists", f);
+    const g = () => { setSt(CP.loadCP()); setSlot((x) => x + 1); }; window.addEventListener("attune-chatpilot", g);
+    return () => { clearInterval(t); window.removeEventListener("attune-lists", f); window.removeEventListener("attune-chatpilot", g); }; }, []);
   const put = (x) => setSt(CP.saveCP(x));
   // look at the new chat messages and carry out what was decided
   useEffect(() => {

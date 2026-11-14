@@ -24,5 +24,12 @@ ok(mb.byKey["whatsapp|g:talabat"] && mb.byKey["whatsapp|g:talabat"].length === 3
   const a1 = P.step(t, P.emptyCP(), { roles: {}, now }); ok(a1.effects.length === 0 && a1.st.ask.length === 1, "before Right: asked, nothing done");
   const a2 = P.step(t, { ...a1.st, ask: [] }, { roles, now: now + 1000 });
   ok(a2.effects.length === 2 && a2.effects.map((e) => e.items[0]).join() === "tortilla,chicken strips", "after Right: both waiting items go on the list"); }
+// EX-1: a shared export of a chat not described yet → asked at once, with a guess from its whole history
+{ const exp = [{ title: "Talabat", text: "14/11/2026, 19:00 - Noudy: tortilla\n14/11/2026, 19:05 - Noudy: milk\n14/11/2026, 19:06 - Ali: eggs and bread\n13/11/2026, 10:00 - Noudy: اللبن خلص" }];
+  const e1 = P.askForExports(P.emptyCP(), exp, {}, now);
+  ok(e1.added === 1 && e1.st.ask[0].chat === "Talabat" && e1.st.ask[0].guess.role === "shopping", "EX-1: the Talabat export → asked at once, guess: a shopping list");
+  ok(P.askForExports(P.emptyCP(), exp, roles, now).added === 0, "…not asked again once described");
+  const withNote = P.askForExports(P.emptyCP(), exp, {}, now, [wa("z", "Talabat", "x", now - 1000, { group: true, convo: "Talabat", who: "Noudy" })]);
+  ok(withNote.st.ask[0].key === "whatsapp|g:talabat" && withNote.st.ask[0].fromExport, "a group of two (Talabat): the notifications say group → asked as the group"); }
 console.log(fail ? `FAIL ${fail} of ${n}` : `ALL PASSED (${n} checks)`);
 process.exit(fail ? 1 : 0);

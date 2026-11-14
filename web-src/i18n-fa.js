@@ -12822,4 +12822,5 @@ export const FA = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} پیام نگه داشته شده — درباره موضوعی بپرس، مثلاً «{c} کی درباره پارکینگ حرف زد؟»",
   "From your chats — {c}": "از گفتگوهایت — {c}",
   "All {n} messages": "همه {n} پیام",
+  "Decided:": "تصمیم:",
 };

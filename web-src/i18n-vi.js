@@ -12822,4 +12822,5 @@ export const VI = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: đã giữ {n} tin nhắn — hãy hỏi về một chủ đề, vd. “{c} bàn về nhà xe khi nào?”",
   "From your chats — {c}": "Từ cuộc trò chuyện của bạn — {c}",
   "All {n} messages": "Tất cả {n} tin nhắn",
+  "Decided:": "Đã quyết:",
 };

@@ -12822,4 +12822,5 @@ export const TH = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: เก็บไว้ {n} ข้อความ — ถามเรื่องที่สนใจ เช่น “{c} คุยเรื่องโรงรถเมื่อไร?”",
   "From your chats — {c}": "จากแชทของคุณ — {c}",
   "All {n} messages": "ข้อความทั้ง {n}",
+  "Decided:": "ตัดสินใจแล้ว:",
 };

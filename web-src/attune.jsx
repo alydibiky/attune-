@@ -142,7 +142,7 @@ import { AgentsPage } from "./agents-ui.jsx";
 import { ListsPage, lineText as listLine } from "./lists-ui.jsx";
 import * as LISTS from "./lists.js";
 import { boughtOf as shopBought, applyBought as shopApply } from "./shoplist.js";   // v9.9.40 K3
-import { messagesByChat as cpMessagesByChat } from "./chatpilot.js";   // v9.9.40 K5
+import { messagesByChat as cpMessagesByChat, askForExports as cpAskForExports, loadCP as cpLoadCP, saveCP as cpSaveCP } from "./chatpilot.js";   // v9.9.40 K5, EX-1
 import { autoDriveSync } from "./sync-ui.jsx";   // v9.9.40 sync by itself, free
 try { if (typeof window !== "undefined") { setTimeout(() => autoDriveSync(), 6000); setInterval(() => autoDriveSync(), 15 * 60000);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") autoDriveSync({ force: true }); }); } } catch (e) {}
@@ -151,7 +151,11 @@ import { loadRoles as cpLoadRoles } from "./chatroles.js";
 import { loadGroups as waLoadGroups, loadRaw as waLoadRaw } from "./wagroups-store.js";
 // v9.9.40 rule 6: the WhatsApp exports shared to Attune (the groups library keeps them) are read once at start, for questions (K5)
 let WA_EXPORTS = [];
-try { setTimeout(async () => { try { const gs = await waLoadGroups(); const out = []; for (const g of gs.slice(0, 40)) { const t = await waLoadRaw(g.id); if (t) out.push({ title: g.title, text: t }); } WA_EXPORTS = out; } catch (e) {} }, 1500); } catch (e) {}
+// EX-1: a chat whose export was shared and that isn't described yet → "What I understood" on Home at once
+const askExports = () => { try { const N = window.AttuneNative, notes = N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : [];
+  const r = cpAskForExports(cpLoadCP(), WA_EXPORTS, cpLoadRoles(), Date.now(), notes); if (r.added) { cpSaveCP(r.st); window.dispatchEvent(new Event("attune-chatpilot")); } } catch (e) {} };
+const loadExports = async () => { try { const gs = await waLoadGroups(); const out = []; for (const g of gs.slice(0, 40)) { const t = await waLoadRaw(g.id); if (t) out.push({ title: g.title, text: t }); } WA_EXPORTS = out; askExports(); } catch (e) {} };
+try { setTimeout(loadExports, 1500); window.addEventListener("attune-wa-added", loadExports); } catch (e) {}
 /** v9.9.40 K5 (Ali: "when I ask what or when did Address East discuss the garage it should know"): { r (chatask), msgs [{ who, ts, text }] } or null */
 function askChatsNow(q) {
   try { const N = typeof window !== "undefined" && window.AttuneNative, notes = N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : [];
@@ -10032,6 +10036,16 @@ export default function App() {
     // ---- reminders & phone actions (see actions.js) ----
     looksLikeAction,
     askChats: (q) => askChatsNow(q),   // v9.9.40 K5
+    // v9.9.40 AS-2 (Ali picked "1 + what was decided"): the phone's AI reads ONLY the messages the answer used and says in one line
+    // what was decided and what is still open; a number it says that is not in those messages → the line is dropped (never a guess)
+    decideLine: async (msgs, chat, topic) => {
+      try { const modelOn = (LocalEngine.ready || (NATIVE && engineInfo && engineInfo.state === "ready")); if (!modelOn || !msgs || !msgs.length) return "";
+        const lines = msgs.slice(-40).map((m) => { let d = ""; try { d = new Date(m.ts).toISOString().slice(0, 10); } catch (e) {} return d + " " + (m.who || "") + ": " + String(m.text).slice(0, 300); }).join("\n");
+        const out = await LocalEngine.run("", null, { messages: [{ role: "system", content: "You read messages from one group chat about one topic. In ONE short sentence, say what was decided and what is still open, using only these messages. If nothing was decided, say that nothing was decided yet. Answer in " + (getLang() === "ar" ? "Egyptian Arabic" : "the language of the question") + "." },
+          { role: "user", content: "Chat: " + chat + "\nTopic: " + topic + "\nMessages:\n" + lines }], temperature: 0, maxTokens: 80, think: false });
+        const line = String(out || "").replace(/\s+/g, " ").trim().slice(0, 240); if (!line) return "";
+        const nums = (line.match(/\d+/g) || []).filter((n) => !lines.includes(n)); return nums.length ? "" : line;
+      } catch (e) { return ""; } },
     readAction: async (text) => {
       const now = Date.now();
       // (the 1M test: "cancel my reminder to call the bank" — with the AI on, the model made a NEW reminder): what code knows is NOT a

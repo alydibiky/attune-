@@ -12823,4 +12823,5 @@ export const HI = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} मैसेज रखे हैं — कोई विषय पूछें, जैसे “{c} ने गैराज की बात कब की?”",
   "From your chats — {c}": "आपकी चैट से — {c}",
   "All {n} messages": "सभी {n} मैसेज",
+  "Decided:": "तय हुआ:",
 };

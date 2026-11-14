@@ -1114,8 +1114,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         else if (r.kind === "topic") { detail = tr("{t} came up in {c} on {n} days:", { t: r.topic, c: r.chat, n: r.days.length }) + "\n" + r.days.map((x) => "• " + d(x.iso) + " — " + x.who.join(", ") + ": “" + String(x.quote.text).slice(0, 120) + "”").join("\n");
           actions = [[tr("Show all {n} messages", { n: r.total }), "chatmsgs"]]; }
         else { detail = tr("{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”", { c: r.chat, n: r.total }); }
+        const amid = newId();
         patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
-          { id: newId(), role: "assistant", chatMsgs: ac.msgs, card: { tone: "emerald", title: tr("From your chats — {c}", { c: r.chat }), detail, actions } }] }));
+          { id: amid, role: "assistant", chatMsgs: ac.msgs, card: { tone: "emerald", title: tr("From your chats — {c}", { c: r.chat }), detail, actions } }] }));
+        // AS-2: "Decided:" on top, from the phone's AI reading these same messages (when it is on)
+        if (r.kind === "topic" && api.decideLine) api.decideLine(ac.msgs, r.chat, r.topic).then((line) => { if (line) patchMsg(cid, amid, { card: { tone: "emerald", title: tr("From your chats — {c}", { c: r.chat }), detail: tr("Decided:") + " " + line + "\n\n" + detail, actions } }); }).catch(() => {});
         setText(""); return; } }
     if (route && cx && cx.answer && (cx.people.length || cx.goals.length) && (!only || only === "money-ask")) { cxCard(); return; }
     if (route && !img && (myMoneyIntent(typed) || only === "money-ask") && ok("money-ask")) {

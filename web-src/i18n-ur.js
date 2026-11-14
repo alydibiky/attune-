@@ -12823,4 +12823,5 @@ export const UR = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} پیغامات رکھے ہیں — کوئی موضوع پوچھیں، جیسے “{c} نے گیراج کی بات کب کی؟”",
   "From your chats — {c}": "آپ کی چیٹس سے — {c}",
   "All {n} messages": "تمام {n} پیغامات",
+  "Decided:": "طے ہوا:",
 };

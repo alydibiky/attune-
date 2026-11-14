@@ -12822,4 +12822,5 @@ export const JA = {
   "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}：{n} 件のメッセージを保存 — 話題を聞いてください（例：「{c} が駐車場の話をしたのはいつ？」）",
   "From your chats — {c}": "あなたのチャットから — {c}",
   "All {n} messages": "全 {n} 件のメッセージ",
+  "Decided:": "決まったこと：",
 };
