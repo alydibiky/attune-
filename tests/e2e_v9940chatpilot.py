@@ -53,6 +53,13 @@ with sync_playwright() as p:
     page.click("[data-testid=cp-right]"); page.wait_for_timeout(300)
     roles = page.evaluate("JSON.parse(localStorage.getItem('attune:chatroles:v1'))")
     check(roles.get("whatsapp|g:gym buddies", {}).get("role") == "friends" and roles["whatsapp|g:gym buddies"].get("ok") and roles["whatsapp|g:gym buddies"].get("by") == "you", "saved as you said it (friends, confirmed by you)")
+    # K3 (Ali's wish): "I bought the shopping list" in the Home box → the Talabat list is ticked, with Undo
+    page.fill("[data-testid=home-ask]", "got everything"); page.click("[data-testid=home-send]"); page.wait_for_timeout(500)
+    tl = [l for l in page.evaluate("JSON.parse(localStorage.getItem('attune:lists:v1')).lists") if l.get("chatKey") == "whatsapp|g:talabat"]
+    check(all(i["done"] for i in tl[0]["items"]) and page.locator("text=Took 1 off Talabat").count() > 0, "K3: “got everything” → the Talabat list is ticked (“Took 1 off Talabat”)")
+    page.click("[data-testid=do-undo]"); page.wait_for_timeout(300)
+    tl = [l for l in page.evaluate("JSON.parse(localStorage.getItem('attune:lists:v1')).lists") if l.get("chatKey") == "whatsapp|g:talabat"]
+    check(not any(i["done"] for i in tl[0]["items"]), "…Undo opens it again")
     ctx.close()
     # Arabic: the same card in Egyptian Arabic
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + "try{localStorage.setItem('attune:ui:lang','ar')}catch(e){}")

@@ -12814,4 +12814,5 @@ export const DE = {
   "{c} = deliveries and orders": "{c} = Lieferungen und Bestellungen",
   "{c} = news and offers": "{c} = News und Angebote",
   "{c} = never important": "{c} = nie wichtig",
+  "{n} still on the list": "noch {n} auf der Liste",
 };

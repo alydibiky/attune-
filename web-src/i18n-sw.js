@@ -12815,4 +12815,5 @@ export const SW = {
   "{c} = deliveries and orders": "{c} = usafirishaji na oda",
   "{c} = news and offers": "{c} = habari na ofa",
   "{c} = never important": "{c} = si muhimu kamwe",
+  "{n} still on the list": "bado {n} kwenye orodha",
 };

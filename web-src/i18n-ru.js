@@ -12814,4 +12814,5 @@ export const RU = {
   "{c} = deliveries and orders": "{c} = доставка и заказы",
   "{c} = news and offers": "{c} = новости и предложения",
   "{c} = never important": "{c} = никогда не важно",
+  "{n} still on the list": "в списке ещё {n}",
 };

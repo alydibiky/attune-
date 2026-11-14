@@ -12815,4 +12815,5 @@ export const HI = {
   "{c} = deliveries and orders": "{c} = डिलीवरी और ऑर्डर",
   "{c} = news and offers": "{c} = खबरें और ऑफ़र",
   "{c} = never important": "{c} = कभी ज़रूरी नहीं",
+  "{n} still on the list": "सूची में अभी {n} बाकी",
 };

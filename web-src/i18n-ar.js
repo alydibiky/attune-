@@ -9916,4 +9916,5 @@ export const AR = {
   "{c} = deliveries and orders": "{c} = توصيل وطلبات",
   "{c} = news and offers": "{c} = أخبار وعروض",
   "{c} = never important": "{c} = عمره ما يكون مهم",
+  "{n} still on the list": "لسه {n} في القايمة",
 };

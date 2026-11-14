@@ -12815,4 +12815,5 @@ export const UR = {
   "{c} = deliveries and orders": "{c} = ڈیلیوری اور آرڈر",
   "{c} = news and offers": "{c} = خبریں اور آفرز",
   "{c} = never important": "{c} = کبھی اہم نہیں",
+  "{n} still on the list": "فہرست میں ابھی {n} باقی",
 };

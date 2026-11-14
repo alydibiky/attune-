@@ -12814,4 +12814,5 @@ export const BN = {
   "{c} = deliveries and orders": "{c} = ডেলিভারি ও অর্ডার",
   "{c} = news and offers": "{c} = খবর ও অফার",
   "{c} = never important": "{c} = কখনো জরুরি নয়",
+  "{n} still on the list": "তালিকায় এখনো {n}টি",
 };

@@ -12814,4 +12814,5 @@ export const JA = {
   "{c} = deliveries and orders": "{c} = 配達と注文",
   "{c} = news and offers": "{c} = ニュースとお得情報",
   "{c} = never important": "{c} = 重要ではない",
+  "{n} still on the list": "リストにまだ {n} 件",
 };

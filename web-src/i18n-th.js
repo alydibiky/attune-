@@ -12814,4 +12814,5 @@ export const TH = {
   "{c} = deliveries and orders": "{c} = การส่งของและคำสั่งซื้อ",
   "{c} = news and offers": "{c} = ข่าวและข้อเสนอ",
   "{c} = never important": "{c} = ไม่สำคัญเลย",
+  "{n} still on the list": "ยังเหลือ {n} ในลิสต์",
 };

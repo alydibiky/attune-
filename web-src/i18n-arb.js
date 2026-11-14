@@ -12806,4 +12806,5 @@ export const ARB = {
   "{c} = deliveries and orders": "{c} = توصيل وطلبات",
   "{c} = news and offers": "{c} = أخبار وعروض",
   "{c} = never important": "{c} = غير مهمة أبدًا",
+  "{n} still on the list": "لا يزال {n} في القائمة",
 };

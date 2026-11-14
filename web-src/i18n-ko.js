@@ -12814,4 +12814,5 @@ export const KO = {
   "{c} = deliveries and orders": "{c} = 배송과 주문",
   "{c} = news and offers": "{c} = 뉴스와 할인",
   "{c} = never important": "{c} = 절대 중요하지 않음",
+  "{n} still on the list": "목록에 아직 {n}개",
 };

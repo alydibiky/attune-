@@ -12814,4 +12814,5 @@ export const ZH = {
   "{c} = deliveries and orders": "{c} = 送货和订单",
   "{c} = news and offers": "{c} = 新闻和优惠",
   "{c} = never important": "{c} = 从不重要",
+  "{n} still on the list": "清单上还有 {n} 项",
 };

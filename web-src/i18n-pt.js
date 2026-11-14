@@ -12815,4 +12815,5 @@ export const PT = {
   "{c} = deliveries and orders": "{c} = entregas e pedidos",
   "{c} = news and offers": "{c} = notícias e ofertas",
   "{c} = never important": "{c} = nunca importante",
+  "{n} still on the list": "ainda {n} na lista",
 };

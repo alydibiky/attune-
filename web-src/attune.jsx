@@ -141,6 +141,18 @@ const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id
 import { AgentsPage } from "./agents-ui.jsx";
 import { ListsPage, lineText as listLine } from "./lists-ui.jsx";
 import * as LISTS from "./lists.js";
+import { boughtOf as shopBought, applyBought as shopApply } from "./shoplist.js";   // v9.9.40 K3
+/** v9.9.40 K3 (Ali: "understand when I tell it I bought the shopping list"): the list chats' lists (Talabat…) and what this sentence
+ *  takes off them → { list, ids, names } or null. All of it, all but some, or only the named items (shoplist.js, 10,000 cases). */
+function boughtFromLists(text) {
+  try { const st = LISTS.loadLists();
+    for (const l of st.lists.filter((x) => x.chatKey && x.items.some((i) => !i.done))) {
+      const open = l.items.filter((i) => !i.done), b = shopBought(text, open.map((i) => i.text)); if (!b) continue;
+      const { done } = shopApply(b, open.map((i) => i.text)); if (!done.length) continue;
+      return { list: l, ids: open.filter((i) => done.includes(i.text)).map((i) => i.id), names: done, left: open.length - done.length };
+    } } catch (e) {}
+  return null;
+}
 import { parseProjectTask, addTasks, loadProjects as loadProjectsList, upsertProject as upsertProjectRec } from "./spaces.js";
 import { ListChecks } from "lucide-react";
 import { WritingBox } from "./writing-ui.jsx";
@@ -9846,6 +9858,7 @@ export default function App() {
       if (metroAsk(t) || parseAutomation(t) || parseWatch(t) || HG.parseHaggle(t) || RS.ruleFor(t)) return true;   // (v9.8 N1: "negotiate …" is done, not answered)
       const pm = parseMission(t, now); if (pm && pm.deadline) return true;
       if (readCountDone(t)) return true;   // v9.9.38 CG-3
+      if (boughtFromLists(t)) return true;   // v9.9.40 K3
       const ag = parseAgent(t, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return true;
       return doSure(t, { now, stores: loadLifeStores() }); } catch (e) { return true; } },
     openIt: (t) => { try { return AL.readOpen(t) ? (doRef.current ? doRef.current(t) : null) : null; } catch (e) { return null; } },   // v9.9.3 W2
@@ -10179,6 +10192,12 @@ export default function App() {
         undo: () => saveWatch(loadWatch().filter((x) => x.id !== r.id), ar ? "ar" : "en") }; } }
     // v6.37: a goal with a number and a date («عايز أوفر 60 ألف قبل يونيو», "lose 6 kg before 20 January") → Missions, ready to start
     // v9.9.38 CG-3: "finished another book" / «خلصت كتاب» / "went to the gym" → +1 in the goal you count (with Undo)
+    // v9.9.40 K3: "I bought the shopping list", «جبت الطلبات كلها ما عدا اللبن», "got the tortilla and bread" → ticked on the list chat's list
+    { const bf = boughtFromLists(text0) || (text !== text0 ? boughtFromLists(text) : null);
+      if (bf) { const before = LISTS.loadLists();
+        LISTS.saveLists({ ...before, lists: before.lists.map((l) => (l.id !== bf.list.id ? l : { ...l, items: l.items.map((i) => (bf.ids.includes(i.id) ? { ...i, done: true } : i)) })) });
+        return { lines: [{ text: tr("Took {n} off {l}", { n: bf.ids.length, l: bf.list.name }) + " — " + bf.names.join(", ") + (bf.left ? " · " + tr("{n} still on the list", { n: bf.left }) : ""), open: "lists" }],
+          undo: () => { const c = LISTS.loadLists(); LISTS.saveLists({ ...c, lists: c.lists.map((l) => (l.id !== bf.list.id ? l : { ...l, items: l.items.map((i) => (bf.ids.includes(i.id) ? { ...i, done: false } : i)) })) }); } }; } }
     { const cd = readCountDone(text0) || (text !== text0 ? readCountDone(text) : null);
       if (cd) { const before = loadMissions(), g = countTarget(before, cd);
         if (!g) return { lines: [{ text: tr("No goal counts this yet — say “read 12 books this year” to start one"), open: "missions" }], undo: null };
@@ -10357,6 +10376,7 @@ export default function App() {
         // a plain "remember …" note is Mind's job here (to-dos, where things are, /remember read it better) — the rest counts
         try { doActions = doUnderstand(text, { now, stores: loadLifeStores() }).actions.filter((a) => a.kind !== "note").length; } catch (e) {}
         try { if (readCountDone(text)) doActions = Math.max(doActions, 1); } catch (e) {}   // v9.9.38 CG-3: "finished another book" is done here
+        try { if (boughtFromLists(text)) doActions = Math.max(doActions, 1); } catch (e) {}   // v9.9.40 K3: "I bought the shopping list" is done here
         let mission = false; try { const pm = parseMission(text, now); mission = !!(pm && pm.deadline); } catch (e) {}
         // v8.6: an order for an agent ("buy me …", "order my usual …", "tell me when … is under …", "track my Amazon order")
         let agent = ""; try { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["buy", "order", "watch", "track"].includes(ag.kind)) agent = ag.kind; } catch (e) {}

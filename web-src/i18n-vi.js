@@ -12814,4 +12814,5 @@ export const VI = {
   "{c} = deliveries and orders": "{c} = giao hàng và đơn hàng",
   "{c} = news and offers": "{c} = tin tức và ưu đãi",
   "{c} = never important": "{c} = không bao giờ quan trọng",
+  "{n} still on the list": "còn {n} trong danh sách",
 };

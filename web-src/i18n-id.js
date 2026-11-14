@@ -12815,4 +12815,5 @@ export const IDN = {
   "{c} = deliveries and orders": "{c} = pengiriman dan pesanan",
   "{c} = news and offers": "{c} = berita dan penawaran",
   "{c} = never important": "{c} = tidak pernah penting",
+  "{n} still on the list": "masih {n} di daftar",
 };

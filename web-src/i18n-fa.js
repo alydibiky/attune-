@@ -12814,4 +12814,5 @@ export const FA = {
   "{c} = deliveries and orders": "{c} = تحویل و سفارش‌ها",
   "{c} = news and offers": "{c} = خبرها و پیشنهادها",
   "{c} = never important": "{c} = هرگز مهم نیست",
+  "{n} still on the list": "هنوز {n} در فهرست",
 };

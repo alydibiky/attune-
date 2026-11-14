@@ -12815,4 +12815,5 @@ export const TRK = {
   "{c} = deliveries and orders": "{c} = teslimat ve siparişler",
   "{c} = news and offers": "{c} = haberler ve teklifler",
   "{c} = never important": "{c} = asla önemli değil",
+  "{n} still on the list": "listede hâlâ {n}",
 };
