@@ -101,7 +101,7 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
     if (ag && ["watch", "track", "order", "buy"].includes(ag.kind) && (!only || only === "agent" || only === "money-log")) return R("agent", { sub: ag.kind, ag }); }
   if (pay0 && pay0.ok && typed.length < 600 && !q && ok("money-log")) return R("money", { via: "pay", pay: pay0 });
   if (T(() => AL.pageOf(typed))) return R("open");
-  if (!only || only === "action") { if (T(() => AL.readOpen(typed))) return R("open"); }   // chat.jsx openIt (v9.9.32: also when only "action")
+  if (!only || (only === "action" && (T(() => quickAction(typed, now)) || { kind: "none" }).kind === "none")) { if (T(() => AL.readOpen(typed))) return R("open"); }   // chat.jsx openIt (v9.9.32: also when only "action")
   // "call Mohamed" / "whatsapp Sara" with no time: Chat's action card is a Call / WhatsApp card (it opens the app), not a reminder
   if (only === "action") { const qa = T(() => quickAction(typed, now)); if (qa && (qa.kind === "call" || qa.kind === "whatsapp") && !qa.at) return R("open"); }
   if (!only || only === "money-log") {

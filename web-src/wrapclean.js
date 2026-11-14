@@ -32,6 +32,8 @@ const TAIL_SYMBOLS = /(?:\s*(?:\p{Extended_Pictographic}|️|‍|[!¡]{2,}|\.{2,
 /** The order without the wake word, fillers and thanks around it. Leaves a message that is ONLY such words as it is. */
 export function cleanTyped(text) {
   const orig = String(text == null ? "" : text);
+  // a pasted conversation, document or long message is read as it is (v9.9.32: a pasted "You said / ChatGPT said" was flattened)
+  if (orig.length > 300 || /\n\s*\n/.test(orig) || orig.split("\n").length > 4) return orig.trim();
   let t = orig.replace(/[ \t]{2,}/g, " ").trim();
   for (let i = 0; i < 4; i++) {
     const before = t;
@@ -128,7 +130,7 @@ function rephrase(t) {
   s = s.replace(/^how much (?:did|have) i (?:blow|blown|burn|burned|burnt|waste|wasted|drop|dropped|splash|splashed)\s+(?:out\s+)?on\b/i, "how much did I spend on")
     .replace(/^what(?:'s| is) my (.+?) total (this|last|today|yesterday)\b/i, (m0, c, p) => "how much did I spend on " + c + " " + p)
     .replace(/^how much money is left(?: for me)?\b/i, "how much do I have left");
-  return s.replace(/\s{2,}/g, " ").trim();
+  return s.replace(/[ \t]{2,}/g, " ").trim();
 }
 // a change of mind: "…at 7 am, sorry 8 am, to …" → "…at 8 am to …"; "lunch 200, no actually 250" → "lunch 250"
 const FIX = "(?:sorry,?\\s*i mean(?:t)?|sorry|no wait,?(?:\\s*it was)?|no,? actually|actually|oops,?\\s*i meant|i mean|i meant|correction:?|لا قصدي|قصدي|لا غلطت كانوا|لا غلطت كانت|لا غلط كانت|لا غلط كانوا|لا غلطت|لا لا)";
@@ -137,7 +139,7 @@ const CORR = new RegExp("^(.*?)" + NUM + "([^\\d٠-٩]{0,40}?)[\\s,،—–-]+" 
 function correct(t) {
   const m = CORR.exec(t); if (!m) return t;
   const [, before, , ap1, mid, n2, ap2, after] = m;
-  const out = (before + n2 + (ap2 || ap1 || "") + (mid && !/^[\s,،—–-]*$/.test(mid) ? mid : "") + (after ? " " + after : "")).replace(/\s+([,،])/g, "$1").replace(/\s{2,}/g, " ").trim();
+  const out = (before + n2 + (ap2 || ap1 || "") + (mid && !/^[\s,،—–-]*$/.test(mid) ? mid : "") + (after ? " " + after : "")).replace(/\s+([,،])/g, "$1").replace(/[ \t]{2,}/g, " ").trim();
   return out;
 }
 /** "don't remind me to …", "I don't owe Ahmed anything", «متفكرنيش …»: an order NOT to do something — nothing is recorded or set. */
@@ -150,6 +152,8 @@ export function negatedOrder(text) {
 }
 /** cleanTyped + the indirect ways of asking + a change of mind → what the readers read. */
 export function readable(text) {
+  const raw = String(text == null ? "" : text);
+  if (raw.length > 300 || /\n\s*\n/.test(raw) || raw.split("\n").length > 4) return raw.trim();
   const c = cleanTyped(text);
   if (negatedOrder(c)) return c;
   return correct(rephrase(otherLang(c)));

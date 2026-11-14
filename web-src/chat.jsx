@@ -20,6 +20,7 @@ import { promptToolOf } from "./prompttools.js";
 import { directionsOf } from "./gomaps.js";
 import { numWords } from "./sense.js";   // v9.9.17
 import { readable, negatedOrder } from "./wrapclean.js";   // v9.9.32
+import { quickAction } from "./actions.js";
 import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
 // v9.9.11 A4: "teach me your notifications" / «علمني اشعاراتي» / "what don't you understand in my notifications?"
@@ -973,7 +974,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v9.9.3 W2: "send Ahmed 'I'm on my way' on WhatsApp", "call Mama", "uber to …" → the app opens at the right place (Which Ahmed? if unsure)
     // v9.9.32 (the 100,000 run: "text Sara on telegram: running late" became a reminder): readOpen never takes a timed order, so it may
     // act when the referee only saw an "action"
-    if (route && !img && api.openIt && (!only || only === "action")) {
+    // (only when the action reader itself has no kind for it — "text Sara on telegram"; a WhatsApp or a call keeps its action card)
+    if (route && !img && api.openIt && (!only || (only === "action" && (() => { try { const q = quickAction(typed, Date.now()); return !q || q.kind === "none"; } catch (e) { return false; } })()))) {
       const r = api.openIt(typed);
       if (r && r.lines && r.lines.length) { const cid = ensureChat(typed);
         patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
