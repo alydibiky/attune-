@@ -28,6 +28,6 @@ set + unit test on 2,500 · full suite before main · push after each batch · t
       monthly check-up; steps verified from real data; 6 of 8 really done → +7 trial days once.
 - [x] D. (v9.9.36, branch) BG-3: the model reads unsure notifications with Attune closed (battery > 40 % and screen off, or charging), quiet notification
       while reading, answers merged on open (Kotlin like AiNight.kt).
-- [ ] E. BR-4: the brain — facts with sources (What Attune knows, correct / forget), Chat answers from it at once, morning "Attune noticed"
+- [x] E. (v9.9.37, branch) BR-4: the brain — facts with sources (What Attune knows, correct / forget), Chat answers from it at once, morning "Attune noticed"
       + Sunday analysis; Free keeps the morning card.
 - [ ] F. The 1,000,000-case test of everything (after A–E).

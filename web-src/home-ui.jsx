@@ -5,6 +5,7 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import { SetupHomeCard, quiet as quietTests } from "./setup-ui.jsx";
+import { BrainHome } from "./brain-ui.jsx";
 import { pricesFor } from "./billing.js";
 import * as P from "./plan.js";
 import { loadReminders } from "./actions.js";
@@ -361,6 +362,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {!rep ? <MonthCard /> : null}
       {!rep && trial ? <TrialLine trial={trial} /> : null}
       {!rep ? <SetupHomeCard trial={trial} /> : null}
+      {!rep ? <BrainHome quiet={quietTests()} /> : null}
       {!rep ? <ProNotes trial={trial} /> : null}
       {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}

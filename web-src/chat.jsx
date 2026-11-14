@@ -22,6 +22,7 @@ import { numWords } from "./sense.js";   // v9.9.17
 import { readable, negatedOrder } from "./wrapclean.js";   // v9.9.32
 import { quickAction } from "./actions.js";
 import { setupAnswer } from "./setup-ui.jsx";   // v9.9.35
+import { brainAnswer } from "./brain-ui.jsx";   // v9.9.37
 import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
 // v9.9.11 A4: "teach me your notifications" / «علمني اشعاراتي» / "what don't you understand in my notifications?"
@@ -839,6 +840,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // learned. Only the picked reader may answer (understand.js).
     // v9.0 (the sentence bank): Franco — "fakarny bokra el sa3a 9 akalem mama" — is read as Arabic when the Arabic is something the
     // app does (a reminder, money, a debt, a date…); otherwise it goes to the AI as it was typed
+    // v9.9.37 BR-2: "how am I doing?" / «أخباري إيه؟» — answered at once from what the brain knows (Pro), with where each fact came from
+    if (route && !img) { const bc = brainAnswer(typed); if (bc) { const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said }, { id: newId(), role: "assistant", card: bc }] })); setText(""); return; } }
     // v9.9.35 "Set up your life": the salary answer is saved as a repeating income in Money (one payment is not a salary)
     if (route && !img) { const sc = setupAnswer(typed); if (sc) { const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said }, { id: newId(), role: "assistant", card: sc }] })); setText(""); return; } }

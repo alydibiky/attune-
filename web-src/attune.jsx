@@ -8,6 +8,7 @@ import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   //
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { setProNow, historyFrom, allowed as allowedPlan } from "./plan.js";
 import { SetupDriver, SetupPage, setupAnswer, startSetup, CoachHost } from "./setup-ui.jsx";
+import { BrainPage, brainKnown } from "./brain-ui.jsx";
 import { openPlan as openPlanUI } from "./plan-ui.jsx";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
 import { NotifAsk } from "./notifask-ui.jsx";
@@ -7828,7 +7829,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.36";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.37";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9825,7 +9826,7 @@ export default function App() {
     },
     // v9.8 (Ali: "translating document did not work"): a document attached in Chat + "translate" → the File Converter's checked
     // translation (the whole file, its layout kept, any size, part by part) — not a chat answer that only sees the first pages
-    knownFor: (q) => knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? (() => { try { return JSON.parse(NATIVE.recallNotes() || "[]"); } catch (e) { return []; } })() : [] }),
+    knownFor: (q) => [...brainKnown(q), ...knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? (() => { try { return JSON.parse(NATIVE.recallNotes() || "[]"); } catch (e) { return []; } })() : [] })],   // v9.9.37 BR-2: what the brain knows goes with every question
     translateDoc: (file, lang) => { const to = lang || (() => { try { return localStorage.getItem("attune:translate:to") || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } })();
       try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} window.__attuneConvertHandoff = { files: [file], target: "translate", lang: to }; navTo("convert"); return to; },
     doSure: (t) => { try { const now = Date.now();
@@ -11172,6 +11173,8 @@ export default function App() {
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "privacy" ? (
           <PrivacyPage flash={flash} readNet={NATIVE && NATIVE.netLog ? () => nativeJSON("netLog") : null} onVault={(v) => { setVaultCfg(v); setVaultSess({ open: true }); }} />
+        ) : mode === "brain" ? (
+          <BrainPage back={() => navTo("home")} />
         ) : mode === "setup" ? (
           <SetupPage back={() => navTo("home")} />
         ) : mode === "guide" ? (
@@ -11633,7 +11636,7 @@ export default function App() {
           // v9.8 (Ali: "the chat is still stupid — I don't care if it takes 10 seconds, but the answer must be right"): the same brain as
           // every chat — what Attune can do, what it already knows that fits (notifications understood, people, payments), the
           // profile, room for a real answer (was 200 tokens, "1 to 3 short sentences")
-          let known = []; try { known = knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], connect: connectNow }); } catch (e) {}
+          let known = []; try { known = [...brainKnown(q), ...knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], connect: connectNow })]; } catch (e) {}
           const prof = profileLine(profile);
           return callChat([{ role: "system", content: brainSystem({ voice: true, ui, known }) + (prof ? "\n\n" + prof : "") }, ...(past || []), { role: "user", content: lb + q }], null, { maxTokens: 520, temperature: 0.3, think: false }); } : null}
         openTool={(tool, lang) => { setVoiceOpen(false); setVoiceText(""); try { localStorage.setItem("attune:translate:tab", "doc"); if (lang) localStorage.setItem("attune:translate:to", lang); } catch (e) {} navTo(tool === "translate-doc" ? "translate" : "pdfchat"); }} /></Guard> : null}

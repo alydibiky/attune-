@@ -174,7 +174,7 @@ attune.jsx: <button onClick={() => { setView("calm"); setPaneRaw("home"); }} ari
 attune.jsx: ) : wide ? null : LEGACY_NAV ? <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! 
 attune.jsx: : <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! -ms-1.5 rounded-full! border-transparent! bg-
 attune.jsx: {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[52px] px-5 rounded-full border border-[var(--c-ln)] font-bold" data-
-braindump-ui.jsx: <div className="flex items-center gap-2"><button onClick={close} className={btnS} aria-label={tr("Back")} data-testid="braindump-back">‹</bu
+brain-ui.jsx: <div className="flex items-center gap-2">{back ? <button onClick={back} className="min-h-[44px] px-2 text-[18px]" aria-label={tr("Back")}>‹<
 
 ## Resume
 agents-ui.jsx: <button onClick={() => toggle(a)} className={U.btnS + " flex-1"} data-testid="agent-auto-toggle">{a.on === false ? tr("Resume") : tr("Pause"
@@ -240,6 +240,7 @@ setup-ui.jsx: <div className="flex gap-2">{p.next ? <button onClick={() => start
 ## OK
 agents-ui.jsx: <button className={U.btnP + " !h-11 !min-h-[44px]"} data-testid="agents-answer-go">{tr("OK")}</button>
 aijobs-ui.jsx: <button className={btnS + " h-9! min-h-[36px]!"} onClick={() => { setS(saveJobs({ ...s, results: s.results.map((x) => (x.id === r.id ? { ...
+brain-ui.jsx: <button onClick={() => { try { localStorage.setItem("attune:brain:week", F.weekKey(now)); } catch (e) {} bump((x) => x + 1); }} className="h
 home-ui.jsx: <button onClick={() => done("week", !pro)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-week-close">{pro ? tr("OK") : tr("Not no
 shelf-ui.jsx: className={btnP + " mt-3 w-full"}>{tr("OK")}</button>
 trip-ui.jsx: <button type="button" className="c-sub min-h-[36px] px-1" aria-label={tr("OK")} onClick={() => setTrip({ autoUndo: null })} data-testid="tri
@@ -758,10 +759,10 @@ attune.jsx: <button onClick={() => { setProfile(p); flash(tr("Profile saved")); 
 attune.jsx: <button onClick={() => { setOrg(o); flash(tr("Company terminology saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-tea
 autopilot-ui.jsx: <button type="submit" disabled={!say.trim()} className="min-h-[40px] px-3.5 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-b
 b5-ui.jsx: <button disabled={!form.date} onClick={() => { const d = { kind: form.kind, md: form.date.slice(5, 10), ...(form.year ? { year: +form.date.s
+brain-ui.jsx: <button onClick={() => { act(F.correct(loadMem(), f.id, txt, Date.now(), F.sameSubject(f, list, factText))); setFix(null); }} className="h-1
 care-ui.jsx: <button className={btnP} disabled={!sugar} onClick={saveSugar} data-testid="care-sugar-save">{tr("Save")}</button></div>
 care-ui.jsx: <button className={btnP} onClick={() => { const d = ensureMember(); put(H.addLabs(d, labDraft.member || d.members[0].id, labDraft.date, labD
 chat.jsx: onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.kno
-countdown-ui.jsx: save(edit.id ? L.map((x) => (x.id === edit.id ? item : x)) : [...L, item]); setEdit(null); refresh(); }}>{tr("Save")}</button>
 
 ## Details
 attune.jsx: <MenuItem testid="engine-details" onClick={() => setDetails(!details)}>{details ? tr("Hide details") : tr("Details")}</MenuItem>
@@ -858,6 +859,16 @@ shelf-ui.jsx: {!shown ? <button onClick={() => setShown(true)} className={btnP +
 backup-ui.jsx: {busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}{busy || tr("Unlock")}
 vault-ui.jsx: {way === "bio" ? <button className={U.btnP} onClick={ask} data-testid="vault-unlock">{tr("Unlock")}</button> : (
 vault-ui.jsx: <button className={U.btnP + " w-full"} onClick={tryPin} disabled={pin.length < 4} data-testid="vault-pin-go">{tr("Unlock")}</button>
+
+## Forget
+brain-ui.jsx: <button onClick={() => act(F.forget(loadMem(), f.id))} className="min-h-[36px] font-bold underline c-sub" data-testid="brain-forget">{tr("Fo
+library-ui.jsx: <button onClick={() => remove(s)} aria-label={tr("Forget")} className="w-11 h-11 rounded-[12px] grid place-items-center c-sub hover:text-[va
+lookback-ui.jsx: {open.kind === "note" ? <button onClick={() => forget(open)} data-testid="recall-forget" className={btnDanger}><Trash2 size={15} />{tr("Forg
+mind-ui.jsx: className={btnS + " !text-[var(--c-mut)] hover:!border-[var(--c-neg)] hover:!text-[var(--c-neg)] ms-auto"}><Trash2 size={12} className="inli
+
+## See everything
+brain-ui.jsx: <div className="flex gap-2"><button onClick={() => open("brain")} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ b
+mind-ui.jsx: <button onClick={() => setBrowse(true)} className={btnS + " w-full"} data-testid="mind-see-all">{tr("See everything")} · {records.length}</b
 
 ## Organise this
 braindump-ui.jsx: <div className="flex items-center gap-2"><button onClick={close} className={btnS} aria-label={tr("Back")} data-testid="braindump-back">‹</bu
@@ -1248,11 +1259,6 @@ speed-ui.jsx: <p className={head}>{tr("Speed")}</p>
 ## Saving…
 library-ui.jsx: setBusy(tr("Saving…"));
 money-pages-ui.jsx: <button onClick={close} disabled={!!busy} className={U.btnS + " w-full mt-3"} data-testid="zakat-close-year">{busy === "zakat-close" ? tr("S
-
-## Forget
-library-ui.jsx: <button onClick={() => remove(s)} aria-label={tr("Forget")} className="w-11 h-11 rounded-[12px] grid place-items-center c-sub hover:text-[va
-lookback-ui.jsx: {open.kind === "note" ? <button onClick={() => forget(open)} data-testid="recall-forget" className={btnDanger}><Trash2 size={15} />{tr("Forg
-mind-ui.jsx: className={btnS + " !text-[var(--c-mut)] hover:!border-[var(--c-neg)] hover:!text-[var(--c-neg)] ms-auto"}><Trash2 size={12} className="inli
 
 ## Due
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
