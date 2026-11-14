@@ -114,6 +114,7 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
   if (ok("agent") && flags.agent) return R("agent", { sub: "card" });
   if (ok("deadline") && flags.deadline) return R("deadline");
   if (ok("life") && flags.life) return R("life");
+  if ((only === "action" || (ok("action") && flags.action)) && (() => { const q = T(() => quickAction(typed, now)); return q && q.kind === "none" && (q.problems || []).length; })()) return R("none");   // chat.jsx readAction: code's "not a reminder" (cancelling one) comes first
   if (only === "action" || (ok("action") && flags.action)) return R("reminder");
   // what is left of the Home reader (agents, alerts, missions…) — Chat reaches it through its own "do" card
   if (!only || only === "agent") { const r = doFromHome(typed, now); if (r && !["money", "confirm", "guard"].includes(r.k) && !/^ask:/.test(r.k) && !(q && r.k === "agent")) return R(r.k, r); if (r && /^ask:/.test(r.k)) return R(r.k, r); }

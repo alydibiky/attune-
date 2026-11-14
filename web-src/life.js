@@ -310,7 +310,8 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
       const tot = each1 ? Math.round(each * n * 100) / 100 : small && small < big && !count ? big : !(small && small < big) ? big : Math.round(each * n * 100) / 100;
       if (n > 1) return withAlt({ ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: each, count: n, total: tot, every: every || "month" }, how);
     }
-    return { ...base, kind: "debt", dir: dirIn ? "in" : "out", amount: big, count: 1, total: big, every: null };
+    // (the 1M test: "I owe Omar 500, paying 500 a month" lost its "a month" — one payment, but said monthly)
+    return { ...base, kind: "debt", dir: dirIn ? "in" : "out", amount: big, count: 1, total: big, every: every && amts.length > 1 && small === big ? every : null };
   }
   // v9.0 (the bank: "the driver comes every day, 200 a day"): every day = all seven days of the week
   const DAILY = /\b(every ?day|daily|each day|a day)\b|كل يوم|يوميا|يومياً|في اليوم/i;

@@ -263,7 +263,10 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   // v9.9.15 (the 10,000-sentence run): "how do I make koshary?" was answered "Nothing is recorded in Money yet", "should I pay 850 for
   // a Samsung S24?" → "Nothing in Money mentions Samsung S24", "is 120 too much for medicine?" → the medicines list. A how-to, an
   // advice or a general-knowledge question is for the AI — only a question about the person's OWN data is answered from it.
-  if (QUESTION.test(t) && GENERAL_Q.test(t) && !/\bcan i afford\b/i.test(t)) return { actions: [], chat: true };
+  // (the 1M test: "attune is an Apple Watch worth 3500?", "pls is an Apple Watch worth 5500? ty" — a general "is X worth N?", and the
+  // filler words in front hid "how do / should I…")
+  { const tq = t.replace(/^\s*(?:(?:yo|um+|uh+|ok(?:ay)?|so|pls|please|hey|hi|btw|attune)[\s,!:.]+)+/i, "");
+    if (QUESTION.test(t) && (GENERAL_Q.test(tq) || /^\s*(?:is|are) (?:a|an|the|this|that)?\s*[^?]{1,40}\bworth\b(?!.*\b(?:my|mine)\b)/i.test(tq)) && !/\bcan i afford\b/i.test(t)) return { actions: [], chat: true }; }
   // a question: about your own data → answered here; otherwise → Chat
   if (QUESTION.test(t) && !looksLikeAction(t)) {
     const a = chatAsk(t, stores, { now }) || (() => { const r = askLife(t, stores, { now }); return r && r.kind !== "search" ? r : null; })();
@@ -426,7 +429,8 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   } else if (money || Object.entries(CAT_WORDS).some(([k, re]) => k !== "food" && re.test(rest))
     // v9.0 (the sentence bank: "lunch 150" and «غدا 150» — the examples on Home itself — went to Chat): a meal or a label with an
     // amount and no food named is money spent on food
-    || (/^\s*[\p{L}][\p{L}\s'’-]{1,30}\s+[\d٠-٩][\d٠-٩,.]*\s*(?:egp|le|pounds?|جنيه|ج)?\s*$/iu.test(rest) && !foods.length)) {
+    // (the 1M test: "lunch for 250 at the mall", "breakfast for 95 at Zooba" — the place after the amount kept it from money)
+    || (/^\s*[\p{L}][\p{L}\s'’-]{1,30}\s+[\d٠-٩][\d٠-٩,.]*\s*(?:egp|le|pounds?|جنيه|ج)?(?:\s+(?:at|from|in|في|من)\s+[\p{L}][\p{L}\s'’&.-]{1,30})?\s*$/iu.test(rest) && !foods.length)) {
     const r = readLocal(rest, { today });
     const items = r.items.filter((x) => x.amount >= 1).map((x) => (EAT.test(rest) && x.cat === "other" ? { ...x, cat: "food" } : x));
     if (items.length) actions.push({ kind: "money", items });

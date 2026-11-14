@@ -9999,6 +9999,9 @@ export default function App() {
     looksLikeAction,
     readAction: async (text) => {
       const now = Date.now();
+      // (the 1M test: "cancel my reminder to call the bank" — with the AI on, the model made a NEW reminder): what code knows is NOT a
+      // reminder to make (cancelling one) is said before the model is asked
+      { let q = null; try { q = quickAction(text, now); } catch (e) {} if (q && q.kind === "none" && (q.problems || []).length) return { action: q, via: "phone" }; }
       const modelOn = (LocalEngine.ready || (NATIVE && engineInfo && engineInfo.state === "ready"));
       if (modelOn) {
         try {

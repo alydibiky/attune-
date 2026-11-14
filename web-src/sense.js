@@ -222,7 +222,7 @@ export function easeTime(text, now = Date.now()) {
 }
 
 // ---- debts said another way → the words the plan reader knows ---------------------------------------------------------------------------------
-const NM = "((?:my |the |uncle |aunt |dr\\.? )?[\\p{L}'’-]+(?: [\\p{Lu}][\\p{L}'’-]+| Ali)?)", NA = "((?:صاحبي |صديقي |ابن عمي |ابن خالي |بنت عمي |بنت خالي |دكتور |عمو |طنط |الحاج |صاحب |صاحبة )?[ء-ي]+)", AMT = "([\\d٠-٩][\\d٠-٩,.٬]*\\s*k?)";
+const NM = "((?:my |the |uncle |aunt |dr\\.? )?[\\p{L}'’-]+(?: [\\p{Lu}][\\p{L}'’-]+| Ali)?)", NA = "((?:ابن عمي|ابن خالي|ابن عمتي|ابن خالتي|بنت عمي|بنت خالي|بنت عمتي|بنت خالتي|صاحب البيت|صاحب الشقة)(?= [\\d٠-٩])|(?:صاحبي |صديقي |ابن عمي |ابن خالي |بنت عمي |بنت خالي |دكتور |عمو |طنط |الحاج |صاحب |صاحبة )?[ء-ي]+)", AMT = "([\\d٠-٩][\\d٠-٩,.٬]*\\s*k?)";
 const DEBT_FORMS = [
   [new RegExp("^" + NM + " lent me " + AMT, "iu"), "I borrowed $2 from $1"], [new RegExp("^i gave " + NM + " " + AMT + " as a loan", "iu"), "I lent $1 $2"],
   [new RegExp("^i took " + AMT + " from " + NM + " and (?:i )?(?:will|i'?ll) (?:return|pay|give) (?:it|them)(?: back)?", "iu"), "I borrowed $1 from $2"], [new RegExp("^" + NM + " took " + AMT + " from me and (?:will|he'?ll|she'?ll) (?:return|pay|give) (?:it|them)(?: back)?", "iu"), "$1 borrowed $2 from me"],

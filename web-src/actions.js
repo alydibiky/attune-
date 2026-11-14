@@ -369,7 +369,9 @@ export function buildAction(json, text0, nowIn) {
 /** No model loaded: keywords + the parser, for the common cases. */
 export function quickAction(text, nowIn) {
   // v9.9.18 (the hard run: "cancel my reminder to call the bank" MADE a reminder): cancelling one is not making one
-  if (/^\s*(?:please\s+)?(?:cancel|delete|remove|stop|turn off)\s+(?:my\s+|the\s+|that\s+)?(?:reminder|alarm|timer)s?\b|^\s*(?:الغي|ألغي|امسح|شيل|وقف)\s+(?:ال)?(?:تذكير|منبه|تايمر)/i.test(String(text || ""))) return { ...buildAction({ action: "none" }, text, nowIn), kind: "none", at: 0, problems: ["To cancel a reminder, open Follow-ups and remove it there."] }; return buildAction({ action: guessKind(easeTime(text, nowIn || Date.now())) }, text, nowIn); }
+  // (the 1M test: "yo cancel my reminder…", "um, cancel…", "ok so cancel…" — the filler words in front are skipped)
+  const lead = String(text || "").replace(/^\s*(?:(?:yo|um+|uh+|ok(?:ay)?|so|pls|please|hey|hi|btw|attune|يا\s*(?:اتيون|أتيون|عم)|طيب|بص|اسمع)[\s,!:.]+)+/i, "");
+  if (/^\s*(?:please\s+)?(?:cancel|delete|remove|stop|turn off)\s+(?:my\s+|the\s+|that\s+)?(?:reminder|alarm|timer)s?\b|^\s*(?:الغي|ألغي|امسح|شيل|وقف)\s+(?:ال)?(?:تذكير|منبه|تايمر)/i.test(lead)) return { ...buildAction({ action: "none" }, text, nowIn), kind: "none", at: 0, problems: ["To cancel a reminder, open Follow-ups and remove it there."] }; return buildAction({ action: guessKind(easeTime(text, nowIn || Date.now())) }, text, nowIn); }
 
 function guessKind(text) {
   const s = String(text || "");
