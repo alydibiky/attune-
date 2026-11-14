@@ -11702,6 +11702,8 @@ export default function App() {
               <button onClick={() => setMoreOpen(false)} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150" aria-label={tr("Close")} data-testid="desk-settings-close"><X size={18} /></button></div>
             <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 py-3 text-start hover:border-[var(--c-acc)] transition-colors duration-150" data-testid="desk-guide">
               <BookOpen size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)]">{tr("How to use Attune")}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
+            <button onClick={() => { setMoreOpen(false); navTo("setup"); }} data-testid="more-setup" className="w-full min-h-[52px] flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 text-start">
+              <Sparkles size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Set up your life")}</span><span aria-hidden="true" className="rtl:-scale-x-100 text-[var(--c-mut)]">›</span></button>
             <section data-testid="more-appearance">
               <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-3">{tr("Appearance")}</p>
               <div className="grid grid-cols-2 gap-6">
@@ -11758,7 +11760,11 @@ export default function App() {
                   </div>
                 </div>
               ))}
-              </> : null}
+              </> : <>
+              {/* v9.9.39 SB-4 (Ali picked it): the sidebar's setup strip goes once setup is done — Settings keeps the way in */}
+              <button onClick={() => { setMoreOpen(false); navTo("setup"); }} data-testid="more-setup" className="w-full min-h-[52px] mb-3 flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 text-start">
+                <Sparkles size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Set up your life")}</span><span aria-hidden="true" className="rtl:-scale-x-100 text-[var(--c-mut)]">›</span></button>
+              </>}
               <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-2 px-0.5">{tr("Settings")}</p>
               <div className="grid grid-cols-3 gap-2" data-testid="more-settings">
                 <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] active:bg-[var(--c-surf-2)] p-3 text-start"><Cpu size={18} className="text-[var(--c-acc)]" /><span className="block text-[12.5px] font-extrabold text-[var(--c-ink)] mt-1.5 leading-tight">{tr("Engine & privacy")}</span></button>

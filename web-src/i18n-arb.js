@@ -12732,4 +12732,5 @@ export const ARB = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**أنفقت {a}** {p} ({f} ← {t}) · عملية واحدة",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**أنفقت {a}** {p} ({f} ← {t}) · {n} عمليات",
   "- …and {n} more (open Money to see all).": "- …و{n} أخرى (افتح المال لرؤيتها كلها).",
+  "Knows": "ما يعرفه",
 };

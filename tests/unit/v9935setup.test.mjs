@@ -34,5 +34,5 @@ ok(!C.tipFor("home", { seen: ["*"] }, NOW), "“*” = every tip seen (Settings 
 // wiring
 const src = (f) => fs.readFileSync(new URL("../../web-src/" + f, import.meta.url), "utf8");
 ok(/setupAnswer\(typed\)/.test(src("chat.jsx")) && /c\.op === "say"/.test(src("chat.jsx")) && /act\.startsWith\("setup:"\)/.test(src("chat.jsx")), "Chat: the salary answer, the guide's cards and its buttons");
-ok(/<SetupDriver/.test(src("attune.jsx")) && /mode === "setup"/.test(src("attune.jsx")) && /<CoachHost/.test(src("attune.jsx")) && /<SetupHomeCard/.test(src("home-ui.jsx")) && /side-setup/.test(src("side-ui.jsx")), "the driver, the Settings page, the tips, the Home card and the side menu entry");
+ok(/<SetupDriver/.test(src("attune.jsx")) && /mode === "setup"/.test(src("attune.jsx")) && /<CoachHost/.test(src("attune.jsx")) && /<SetupHomeCard/.test(src("home-ui.jsx")) && /<SetupSideStrip/.test(src("side-ui.jsx")) && /side-setup-strip/.test(src("setup-ui.jsx")), "the driver, the Settings page, the tips, the Home card and the side menu entry");
 ok(/attune:pro-bonus-until/.test(src("setup-ui.jsx")) && /BONUS_KEY = "attune:pro-bonus-until"/.test(src("referral.js")), "the 7 days go into the same bonus Pro reads");

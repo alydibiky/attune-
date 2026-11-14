@@ -12740,4 +12740,5 @@ export const BN = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**আপনি {a} খরচ করেছেন** {p} ({f} → {t}) · 1টি এন্ট্রি",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**আপনি {a} খরচ করেছেন** {p} ({f} → {t}) · {n}টি এন্ট্রি",
   "- …and {n} more (open Money to see all).": "- …আরও {n}টি (সব দেখতে টাকা খুলুন)।",
+  "Knows": "যা জানে",
 };

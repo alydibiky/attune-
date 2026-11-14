@@ -12740,4 +12740,5 @@ export const VI = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**Bạn đã chi {a}** {p} ({f} → {t}) · 1 mục",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**Bạn đã chi {a}** {p} ({f} → {t}) · {n} mục",
   "- …and {n} more (open Money to see all).": "- …và {n} mục nữa (mở Tiền để xem tất cả).",
+  "Knows": "Điều biết",
 };

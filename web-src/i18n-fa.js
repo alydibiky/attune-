@@ -12740,4 +12740,5 @@ export const FA = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**{a} خرج کردید** {p} ({f} ← {t}) · 1 مورد",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**{a} خرج کردید** {p} ({f} ← {t}) · {n} مورد",
   "- …and {n} more (open Money to see all).": "- …و {n} مورد دیگر (برای دیدن همه، پول را باز کنید).",
+  "Knows": "دانسته‌ها",
 };

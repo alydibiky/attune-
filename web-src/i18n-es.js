@@ -12741,4 +12741,5 @@ export const ES = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**Gastaste {a}** {p} ({f} → {t}) · 1 movimiento",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**Gastaste {a}** {p} ({f} → {t}) · {n} movimientos",
   "- …and {n} more (open Money to see all).": "- …y {n} más (abre Dinero para verlos todos).",
+  "Knows": "Lo que sabe",
 };

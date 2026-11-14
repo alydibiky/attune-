@@ -12741,4 +12741,5 @@ export const IDN = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**Kamu menghabiskan {a}** {p} ({f} → {t}) · 1 catatan",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**Kamu menghabiskan {a}** {p} ({f} → {t}) · {n} catatan",
   "- …and {n} more (open Money to see all).": "- …dan {n} lagi (buka Uang untuk melihat semuanya).",
+  "Knows": "Yang diketahui",
 };

@@ -7,6 +7,7 @@ import { Plus, Search, PanelLeft, ChevronDown, Cpu, User, Crown, ShieldCheck, La
 import { loadAssistants, loadProjects } from "./spaces.js";   // v7.4 Workspaces in the sidebar
 import { tr } from "./i18n.js";
 import { useBackDepth } from "./backstack.js";
+import { SetupSideStrip } from "./setup-ui.jsx";   // v9.9.39 SB-4
 
 export const SIDE_W = 268;
 const WIDE_Q = "(min-width: 1024px)";
@@ -133,6 +134,7 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
         {setHits.filter((x) => x[3]).length ? <div className="mb-2" data-testid="side-set-hits">{setHits.filter((x) => x[3]).map(([, label, Icon, go]) => <button key={label} onClick={go} data-testid={"side-set-" + label.split(" ")[0].toLowerCase()}
           className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[14px] font-bold text-start text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]"><Icon size={17} className="text-[var(--c-mut)]" /><span className="truncate">{tr(label)}</span></button>)}</div> : null}
         {!nq ? (<>
+          <SetupSideStrip go={() => navTo("setup")} />
           {places.map(([id, label, Icon]) => id === "@"
             ? <p key={"@" + label} className="px-3 pt-3.5 pb-1 text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-acc)] m-0" data-testid="side-group">{tr(label)}</p>
             : <Row key={id} id={id} label={label} Icon={Icon} />)}
@@ -182,18 +184,16 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
       <div className="shrink-0 border-t border-[var(--c-ln)] p-2.5 space-y-1">
         {/* v6.50 (Ali picked A): How to use and Privacy open from the Home box ("/guide", "/privacy") and from Settings.
             v9.5 (Ali, 5 Nov: "where is how to use the app"): How to use is back in plain sight, above the engine */}
-        <button onClick={() => navTo("brain")} data-testid="side-brain" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[13.5px] font-bold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150">
-          <Brain size={16} className="text-[var(--c-acc)]" /><span className="flex-1 text-start truncate">{tr("What Attune knows")}</span></button>
-        <button onClick={() => navTo("setup")} data-testid="side-setup" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[13.5px] font-bold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150">
-          <Sparkles size={16} className="text-[var(--c-acc)]" /><span className="flex-1 text-start truncate">{tr("Set up your life")}</span></button>
+        {/* v9.9.39 SB-4 (Ali picked it): "What Attune knows" moved to the bottom bar; "Set up your life" is a strip at the top until done */}
         <button onClick={() => navTo("guide")} data-testid="side-guide" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[13.5px] font-bold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150">
           <HelpCircle size={16} className="text-[var(--c-acc)]" /><span className="flex-1 text-start truncate">{tr("How to use Attune")}</span></button>
         <button onClick={openEngine} data-testid="side-engine" className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[13.5px] font-bold text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150">
           <Cpu size={16} className={engineState === "ready" ? "text-[var(--c-acc)]" : engineState === "starting" ? "text-[var(--c-warn)]" : "text-[var(--c-mut)]"} />
           <span className="flex-1 text-start truncate">{engineLabel}</span>{airGap ? <Lock size={13} className="text-[var(--c-acc)]" /> : null}</button>
-        <div className="grid grid-cols-2 gap-1">
-          {/* v6.50 (Ali picked A — Settings at the bottom): Backup stays one tap away (your data); Profile and Plan open from the box */}
-          {[[openBackup, ShieldCheck, "Backup", "side-backup"], [openSettings, LayoutGrid, "Settings", "side-settings"]].map(([f, Ic, label, tid]) => (
+        <div className="grid grid-cols-3 gap-1">
+          {/* v6.50 (Ali picked A — Settings at the bottom): Backup stays one tap away (your data); Profile and Plan open from the box
+              v9.9.39 SB-4: what Attune knows sits with your data, next to Backup */}
+          {[[() => navTo("brain"), Brain, "Knows", "side-brain"], [openBackup, ShieldCheck, "Backup", "side-backup"], [openSettings, LayoutGrid, "Settings", "side-settings"]].map(([f, Ic, label, tid]) => (
             <button key={tid} onClick={f} data-testid={tid} title={tr(label)} aria-label={tr(label)}
               className="min-h-[48px] flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-[12px] text-[11px] font-bold text-[var(--c-mut)] hover:bg-[var(--c-surf-2)] hover:text-[var(--c-ink)] transition-colors duration-150">
               <Ic size={16} />{tr(label)}</button>))}

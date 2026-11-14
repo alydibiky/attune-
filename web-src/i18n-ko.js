@@ -12740,4 +12740,5 @@ export const KO = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**{a}를 썼어요** ({p}, {f} → {t}) · 1건",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**{a}를 썼어요** ({p}, {f} → {t}) · {n}건",
   "- …and {n} more (open Money to see all).": "- …그 밖에 {n}건 (‘돈’을 열면 모두 볼 수 있어요).",
+  "Knows": "아는 것",
 };

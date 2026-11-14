@@ -12741,4 +12741,5 @@ export const IT = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**Hai speso {a}** {p} ({f} → {t}) · 1 movimento",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**Hai speso {a}** {p} ({f} → {t}) · {n} movimenti",
   "- …and {n} more (open Money to see all).": "- …e altri {n} (apri Soldi per vederli tutti).",
+  "Knows": "Cosa sa",
 };

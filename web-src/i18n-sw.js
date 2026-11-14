@@ -12741,4 +12741,5 @@ export const SW = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**Ulitumia {a}** {p} ({f} → {t}) · rekodi 1",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**Ulitumia {a}** {p} ({f} → {t}) · rekodi {n}",
   "- …and {n} more (open Money to see all).": "- …na {n} zaidi (fungua Pesa kuona zote).",
+  "Knows": "Anachojua",
 };

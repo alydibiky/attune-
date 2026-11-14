@@ -12741,4 +12741,5 @@ export const UR = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**آپ نے {a} خرچ کیے** {p} ({f} ← {t}) · 1 اندراج",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**آپ نے {a} خرچ کیے** {p} ({f} ← {t}) · {n} اندراج",
   "- …and {n} more (open Money to see all).": "- …اور {n} (سب دیکھنے کے لیے پیسے کھولیں)۔",
+  "Knows": "معلومات",
 };

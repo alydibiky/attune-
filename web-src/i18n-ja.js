@@ -12740,4 +12740,5 @@ export const JA = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**{a} 使いました**（{p}、{f} → {t}）· 1 件",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**{a} 使いました**（{p}、{f} → {t}）· {n} 件",
   "- …and {n} more (open Money to see all).": "- …ほか {n} 件（すべて見るには「お金」を開いてください）。",
+  "Knows": "知っていること",
 };

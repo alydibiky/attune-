@@ -9842,4 +9842,5 @@ export const AR = {
   "Biggest: ": "الأكبر: ",
   "**Each entry:**": "**كل عملية:**",
   "_Added up from your Money records on this phone._": "_اتجمعت من سجلات الفلوس على موبايلك._",
+  "Knows": "يعرف إيه",
 };

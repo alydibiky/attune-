@@ -12740,4 +12740,5 @@ export const TH = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**คุณจ่าย {a}** {p} ({f} → {t}) · 1 รายการ",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**คุณจ่าย {a}** {p} ({f} → {t}) · {n} รายการ",
   "- …and {n} more (open Money to see all).": "- …และอีก {n} รายการ (เปิด เงิน เพื่อดูทั้งหมด)",
+  "Knows": "สิ่งที่รู้",
 };

@@ -12741,4 +12741,5 @@ export const FR = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**Vous avez dépensé {a}** {p} ({f} → {t}) · 1 opération",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**Vous avez dépensé {a}** {p} ({f} → {t}) · {n} opérations",
   "- …and {n} more (open Money to see all).": "- …et {n} de plus (ouvrez Argent pour tout voir).",
+  "Knows": "Ce qu'il sait",
 };

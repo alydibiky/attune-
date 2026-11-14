@@ -12741,4 +12741,5 @@ export const TRK = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**{a} harcadın** {p} ({f} → {t}) · 1 kayıt",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**{a} harcadın** {p} ({f} → {t}) · {n} kayıt",
   "- …and {n} more (open Money to see all).": "- …ve {n} tane daha (hepsini görmek için Para'yı aç).",
+  "Knows": "Bildikleri",
 };

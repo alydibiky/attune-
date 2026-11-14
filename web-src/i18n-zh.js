@@ -12740,4 +12740,5 @@ export const ZH = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**你花了 {a}**（{p}，{f} → {t}）· 1 条",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**你花了 {a}**（{p}，{f} → {t}）· {n} 条",
   "- …and {n} more (open Money to see all).": "- …还有 {n} 条（打开“钱”查看全部）。",
+  "Knows": "已知",
 };

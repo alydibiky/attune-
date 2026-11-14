@@ -12741,4 +12741,5 @@ export const HI = {
   "**You spent {a}** {p} ({f} → {t}) · 1 entry": "**आपने {a} खर्च किए** {p} ({f} → {t}) · 1 एंट्री",
   "**You spent {a}** {p} ({f} → {t}) · {n} entries": "**आपने {a} खर्च किए** {p} ({f} → {t}) · {n} एंट्री",
   "- …and {n} more (open Money to see all).": "- …और {n} (सब देखने के लिए पैसे खोलें)।",
+  "Knows": "जानकारी",
 };
