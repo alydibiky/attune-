@@ -1,14 +1,14 @@
-# The 1,000,000-case test — 1,040,133 cases, 1,038,435 right (99.837%)
+# The 1,000,000-case test — 1,103,245 cases, 1,102,651 right (99.946%)
 
 Every case is different and checked against an expectation written in the test (never "it didn't crash"). Each part's own report has every failure class with examples.
 
 | part | cases | right | % | report |
 |---|---|---|---|---|
-| A1 · 100,000 hard sentences (new seed) | 100,000 | 99,503 | 99.503% | [A1-mega-s1.md](A1-mega-s1.md) |
-| A2 · 100,000 chat orders (new seed) | 100,000 | 99,366 | 99.366% | [A2-chat-s1.md](A2-chat-s1.md) |
+| A1 · 100,000 hard sentences (new seed) | 100,000 | 99,897 | 99.897% | [A1-mega-s1.md](A1-mega-s1.md) |
+| A2 · 100,000 chat orders (new seed) | 100,000 | 99,996 | 99.996% | [A2-chat-s1.md](A2-chat-s1.md) |
 | A3 · 100,000 sentences in 20 languages + Franco | 100,000 | 99,952 | 99.952% | [A3-langs.md](A3-langs.md) |
 | B · every feature's own generator (new seed) | 404,893 | 404,456 | 99.892% | [B-features-s1.md](B-features-s1.md) |
-| C · UI and UX checks | 135,240 | 135,160 | 99.941% | [C-uiux.md](C-uiux.md) |
+| C · UI and UX checks | 198,352 | 198,352 | 100.000% | [C-uiux.md](C-uiux.md) |
 | D · answers by code vs the truth | 150,000 | 149,998 | 99.999% | [D-answers.md](D-answers.md) |
 | E · journeys in the real page | 50,000 | 50,000 | 100.000% | [E-flows.md](E-flows.md) |
 
