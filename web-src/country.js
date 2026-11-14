@@ -192,6 +192,22 @@ export function setCountry(code, store = typeof localStorage !== "undefined" ? l
 }
 /** The emergency numbers as short lines: ["Police 122", "Ambulance 123", "Fire 180"] or ["Emergency 112"]. */
 /** v9.9.18 (Ali: "all countries"): the weekend days (0 = Sunday) — "weekdays" reminders skip these, not Egypt's Fri + Sat everywhere. */
+/* v9.9.38 WK-1 + WK-2 (Ali's picks): the week starts on the country's own day (Saturday in Egypt and the Gulf, Sunday in the US and
+   Saudi Arabia, Monday in Europe — the phone's locale data, CLDR), and Settings → Language & region can change it. 0 = Sunday … 6 = Saturday. */
+export const WEEK_KEY = "attune:week-start";
+const WEEK_FALLBACK = { eg: 6, kw: 6, qa: 6, bh: 6, om: 6, jo: 6, dz: 6, sa: 0, us: 0, ca: 0, in: 0, pk: 0, id: 0, br: 0, mx: 0, ae: 1, lb: 1, ma: 1, tn: 1, tr: 1, my: 1, gb: 1, de: 1, fr: 1, es: 1, it: 1, pt: 1, nl: 1, ng: 1, za: 0 };
+export function countryWeekStart(code) {
+  const cc = String(ALIASES[code] || code || myCountry() || "eg").toLowerCase();
+  try { const L = new Intl.Locale("und-" + cc.toUpperCase()), w = L.getWeekInfo ? L.getWeekInfo() : L.weekInfo; if (w && w.firstDay >= 1 && w.firstDay <= 7) return w.firstDay % 7; } catch (e) {}
+  return WEEK_FALLBACK[cc] != null ? WEEK_FALLBACK[cc] : 6;
+}
+/** The first day of the week: what you chose in Settings, else your country's. */
+export function weekStart(code, store = typeof localStorage !== "undefined" ? localStorage : null) {
+  try { const v = store && store.getItem(WEEK_KEY); if (v != null && /^[0-6]$/.test(v)) return +v; } catch (e) {}
+  return countryWeekStart(code);
+}
+/** The first day (at local midnight) of the week holding `date`. */
+export function weekStartOf(date, ws = weekStart()) { const d = new Date(date); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() - ws + 7) % 7)); return d; }
 export function weekendOf(code) { try { const c = COUNTRIES[ALIASES[code] || code] || COUNTRIES[myCountry()] || COUNTRIES.eg; return (c.weekend && c.weekend.length ? c.weekend : [5, 6]).slice(); } catch (e) { return [5, 6]; } }
 export function emergencyLines(code) {
   const t = (COUNTRIES[code] || {}).tel || {};

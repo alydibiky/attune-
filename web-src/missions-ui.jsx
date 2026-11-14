@@ -2,7 +2,7 @@
    your data, forecasts the chance, re-plans and shows the ONE step for today; a morning notification gives the debrief.
    The numbers are code (missions.js). A buy mission also starts a Scout search, so the night search watches the ads.   */
 import React, { useEffect, useMemo, useState } from "react";
-import { Target, Trash2, Check, Pause, Play, ChevronDown, ChevronUp, AlertTriangle, Binoculars } from "lucide-react";
+import { Target, Trash2, Check, Pause, Play, ChevronDown, ChevronUp, AlertTriangle, Binoculars, Plus, Undo2, Paperclip, BookOpen, X } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as M from "./missions.js";
 import * as S from "./scout.js";
@@ -20,7 +20,7 @@ function useFleet() {
 const dataNow = () => ({ ledger: j("ledger.v3", null), fit: j("attune:fit:v1", null), market: S.loadMarket(), courses: j("attune:daily:courses:v1", []), fleet: FLEET });
 const EXAMPLES = [["Save 60,000 by June", "عايز أوفر 60 ألف قبل يونيو"], ["Lose 6 kg before 20 January", "عايز أخس 6 كيلو قبل 20 يناير"], ["Buy a Corolla 2022 under 900k by 1 December", "أشتري كورولا 2022 بأقل من 900 ألف قبل 1 ديسمبر"]];
 // v6.44: what was read, per kind ({t} the number, {c} the spending category)
-const READ = { save: "Save {t}", weight: "Lose {t} kg", buy: "Buy it for {t} or less", cap: "Spend at most {t} on {c}", debt: "Pay off the debt (from Money → People)", learn: "Finish the course (from Learn)", revenue: "Company: Fleet earns {t}", collect: "Company: collect {t} from clients" };
+const READ = { count: "Count {t} — +1 each time", save: "Save {t}", weight: "Lose {t} kg", buy: "Buy it for {t} or less", cap: "Spend at most {t} on {c}", debt: "Pay off the debt (from Money → People)", learn: "Finish the course (from Learn)", revenue: "Company: Fleet earns {t}", collect: "Company: collect {t} from clients" };
 const CAT_NAME = { food: "food", groceries: "groceries", transport: "transport", shopping: "shopping", fun: "going out", coffee: "coffee", health: "health", gifts: "gifts" };
 const STATE = { done: ["Done", "ok"], ahead: ["Ahead", "ok"], "on-track": ["On track", "due"], behind: ["Behind", "late"], late: ["Deadline passed", "late"], unknown: ["Needs data", ""] };
 const n = (v, d = 0) => (Math.round(Number(v) * 10 ** d) / 10 ** d).toLocaleString("en-US", { maximumFractionDigits: d });
@@ -49,7 +49,57 @@ function Spark({ log }) {
     </svg>);
 }
 
-function Card({ m, e, onChange, onDelete, openScout }) {
+// v9.9.38 CG-3 + BK-2 (Ali's picks): a goal you count. +1 (or "finished a book" in Chat / Home) adds one, Undo takes the last back;
+// for books the +1 opens the book: its title, and only if you want the plot, your review, what you learned, and its PDF / e-book
+// (that goes into the Library, where Chat can answer from it).
+// (whole phrases, so a short word like "time" never takes another screen's translation)
+const UNIT = { book: ["+1 book", "{n} / {t} books"], course: ["+1 course", "{n} / {t} courses"], run: ["+1 run", "{n} / {t} runs"], workout: ["+1 workout", "{n} / {t} workouts"],
+  movie: ["+1 film", "{n} / {t} films"], gym: ["+1 gym visit", "{n} / {t} gym visits"], swim: ["+1 swim", "{n} / {t} swims"], time: ["+1", "{n} / {t} times"] };
+export const plusLabel = (u) => tr((UNIT[u] || UNIT.time)[0]);
+export const countLabel = (u, n0, t) => tr((UNIT[u] || UNIT.time)[1], { n: n0, t });
+export const BOOKS_TOPIC = "Books I read";
+function BookSheet({ m, onSave, onClose }) {
+  const [b, setB] = useState({ title: "", author: "", plot: "", stars: 0, review: "", lessons: "" });
+  const set = (k, v) => setB((x) => ({ ...x, [k]: v }));
+  const save = (attach) => {
+    if (!b.title.trim()) return;
+    const entry = { title: b.title.trim().slice(0, 120), author: b.author.trim().slice(0, 80), plot: b.plot.trim().slice(0, 2000), stars: b.stars || 0, review: b.review.trim().slice(0, 1000),
+      lessons: b.lessons.split(/\n+/).map((x) => x.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, "").trim()).filter(Boolean).slice(0, 20), file: !!attach };
+    onSave(entry, attach);
+  };
+  const lbl = "block text-[12px] font-bold c-sub mb-1";
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center" role="dialog" aria-modal="true" aria-label={tr("Book {n} of {t}", { n: (m.done || []).length + 1, t: m.target })} data-testid="book-sheet">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="calm relative w-full sm:max-w-[520px] max-h-[92vh] overflow-y-auto rounded-t-[24px] sm:rounded-[24px] bg-[var(--c-surf)] p-4 space-y-3" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}>
+        <div className="flex items-center gap-2"><b className="flex-1 text-[16px] font-black">{tr("Book {n} of {t}", { n: (m.done || []).length + 1, t: m.target })}</b>
+          <button onClick={onClose} className="w-11 h-11 grid place-items-center c-sub" aria-label={tr("Close")}><X size={18} /></button></div>
+        <div><label className={lbl} htmlFor="bk-title">{tr("Title")}</label><input id="bk-title" className={inp} value={b.title} onChange={(e) => set("title", e.target.value)} dir="auto" autoFocus data-testid="book-title" /></div>
+        <div><label className={lbl} htmlFor="bk-author">{tr("Author (optional)")}</label><input id="bk-author" className={inp} value={b.author} onChange={(e) => set("author", e.target.value)} dir="auto" data-testid="book-author" /></div>
+        <div><label className={lbl} htmlFor="bk-plot">{tr("The plot, in your words (optional)")}</label><textarea id="bk-plot" className={area} rows={3} value={b.plot} onChange={(e) => set("plot", e.target.value)} dir="auto" data-testid="book-plot" /></div>
+        <div><span className={lbl}>{tr("Your review (optional)")}</span>
+          <div className="flex items-center gap-1" role="radiogroup" aria-label={tr("Stars")}>{[1, 2, 3, 4, 5].map((k) => <button key={k} role="radio" aria-checked={b.stars === k} aria-label={tr("{n} stars", { n: k })} onClick={() => set("stars", b.stars === k ? 0 : k)} className={"w-11 h-11 text-[22px] " + (k <= b.stars ? "c-acc" : "c-sub")} data-testid={"book-star-" + k}>{k <= b.stars ? "★" : "☆"}</button>)}</div>
+          <textarea className={area + " mt-1"} rows={2} value={b.review} onChange={(e) => set("review", e.target.value)} dir="auto" aria-label={tr("Your review (optional)")} data-testid="book-review" /></div>
+        <div><label className={lbl} htmlFor="bk-lessons">{tr("What you learned — one per line (optional)")}</label><textarea id="bk-lessons" className={area} rows={3} value={b.lessons} onChange={(e) => set("lessons", e.target.value)} dir="auto" data-testid="book-lessons" /></div>
+        <div className="flex flex-wrap gap-2">
+          <button className={btnP} disabled={!b.title.trim()} onClick={() => save(false)} data-testid="book-save"><Check size={16} />{tr("Save")}</button>
+          <button className={chip(false)} disabled={!b.title.trim()} onClick={() => save(true)} data-testid="book-attach"><Paperclip size={15} />{tr("Save and attach the PDF / e-book")}</button>
+        </div>
+        {!b.title.trim() ? <p className="text-[12px] c-sub m-0">{tr("Only the title is needed — the rest you can leave empty.")}</p> : null}
+      </div>
+    </div>);
+}
+
+function Card({ m, e, onChange, onDelete, openScout, flash }) {
+  const [sheet, setSheet] = useState(false);
+  const count = m.kind === "count";
+  const plusOne = () => { if (m.unit === "book") { setSheet(true); return; } onChange(M.addDone(m, {}, Date.now())); flash && flash(tr("Counted: {n} of {t}", { n: (m.done || []).length + 1, t: m.target })); };
+  const saveBook = (entry, attach) => {
+    onChange(M.addDone(m, entry, Date.now())); setSheet(false);
+    flash && flash(tr("Counted: {n} of {t}", { n: (m.done || []).length + 1, t: m.target }));
+    if (attach) { try { localStorage.setItem("attune:booklib:pick", JSON.stringify({ topic: tr(BOOKS_TOPIC), at: Date.now() })); } catch (x) {}
+      try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "booklib" } })); } catch (x) {} }
+  };
   const [why, setWhy] = useState(false);
   const ar = getLang() === "ar";
   const [label, cls] = STATE[e.state] || STATE.unknown;
@@ -66,13 +116,24 @@ function Card({ m, e, onChange, onDelete, openScout }) {
       </div>
       <div className="flex items-center gap-3">
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--c-ln)" }} aria-hidden="true"><div className="h-full rounded-full" style={{ width: e.pct + "%", background: "var(--c-acc)" }} /></div>
-        <span className="c-num tabular-nums text-[13px] font-extrabold shrink-0" data-testid="mission-progress">{m.kind === "cap" ? tr("spent") + " " : ""}{n(e.value, m.kind === "weight" ? 1 : 0)}{m.kind === "learn" ? "" : unit} / {n(e.target, m.kind === "weight" ? 1 : 0)}{unit}</span>
+        <span className="c-num tabular-nums text-[13px] font-extrabold shrink-0" data-testid="mission-progress">{count ? countLabel(m.unit, n(e.value), n(e.target)) : <>{m.kind === "cap" ? tr("spent") + " " : ""}{n(e.value, m.kind === "weight" ? 1 : 0)}{m.kind === "learn" ? "" : unit} / {n(e.target, m.kind === "weight" ? 1 : 0)}{unit}</>}</span>
       </div>
       <div className="flex items-center justify-between gap-3">
         <span className="text-[13px]">{e.chance == null ? <span className="c-sub">{tr("No forecast yet")}</span> : <><span className="c-sub">{tr("Chance by the deadline")}</span> <b className="c-num tabular-nums text-[16px] font-black" data-testid="mission-chance">{Math.round(e.chance * 100)}%</b></>}</span>
         <span className="c-acc"><Spark log={m.log} /></span>
       </div>
-      {e.step ? <p className="text-[13.5px] rounded-[20px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b>{ar ? e.step.ar : tr(e.step.en)}</p> : null}
+      {e.step ? <p className="text-[13.5px] rounded-[20px] p-3 m-0 bg-[var(--c-soft)]" dir="auto" data-testid="mission-step"><b>{tr("Today")}: </b>{e.step.t ? tr(e.step.t, e.step.v) : ar ? e.step.ar : tr(e.step.en)}</p> : null}
+      {count ? <div className="flex flex-wrap items-center gap-2">
+        <button className={btnP + " !h-11 !min-h-[44px] !text-[14px]"} onClick={plusOne} data-testid="mission-plus"><Plus size={16} />{plusLabel(m.unit)}</button>
+        {(m.done || []).length ? <button className="min-h-[44px] px-3 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => onChange(M.undoDone(m))} data-testid="mission-undo"><Undo2 size={15} />{tr("Undo last")}</button> : null}
+      </div> : null}
+      {count && m.unit === "book" && (m.done || []).some((x) => x.title) ? <div className="space-y-1.5" data-testid="mission-books">
+        <b className="block text-[12px] font-bold c-sub">{tr("Books you read")}</b>
+        {(m.done || []).filter((x) => x.title).slice(-3).reverse().map((x) => <div key={x.id} className="flex items-center gap-2 text-[13px]" data-testid="mission-book">
+          <BookOpen size={15} className="c-acc shrink-0" /><span className="flex-1 min-w-0 truncate font-bold" dir="auto">{x.title}</span>
+          <span className="c-sub text-[12px] shrink-0">{[x.stars ? "★".repeat(x.stars) : "", (x.lessons || []).length ? tr("{n} lessons", { n: x.lessons.length }) : "", x.file ? "📎" : ""].filter(Boolean).join(" · ")}</span></div>)}
+      </div> : null}
+      {sheet ? <BookSheet m={m} onSave={saveBook} onClose={() => setSheet(false)} /> : null}
       <div className="flex flex-wrap items-center gap-2">
         <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => setWhy(!why)} aria-expanded={why} data-testid="mission-why">{why ? <ChevronUp size={14} /> : <ChevronDown size={14} />}{tr("Why")}</button>
         {m.kind === "buy" ? <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick={() => openScout(m)} data-testid="mission-scout"><Binoculars size={14} />{tr("Ads in Scout")}</button> : null}
@@ -80,7 +141,7 @@ function Card({ m, e, onChange, onDelete, openScout }) {
         {e.state === "done" ? <button className={btnP + " !h-11 !min-h-[44px] !text-[14px]"} onClick={() => onChange({ ...m, status: "done" })} data-testid="mission-done"><Check size={15} />{tr("Mark done")}</button> : null}
         <button className="w-11 h-11 grid place-items-center rounded-[12px] c-sub hover:text-[var(--c-neg)] ms-auto" aria-label={tr("Delete")} onClick={() => onDelete(m)}><Trash2 size={15} /></button>
       </div>
-      {why ? <ul className="c-sub text-[12.5px] m-0 ps-5 grid gap-1" data-testid="mission-evidence">{e.evidence.map((x, i) => <li key={i} dir="auto">{ar ? x.ar : tr(x.en)}</li>)}
+      {why ? <ul className="c-sub text-[12.5px] m-0 ps-5 grid gap-1" data-testid="mission-evidence">{e.evidence.map((x, i) => <li key={i} dir="auto">{x.t ? tr(x.t, x.v) : ar ? x.ar : tr(x.en)}</li>)}
         {e.perDayNeed != null && e.left > 0 ? <li dir="auto">{m.kind === "weight" ? tr("Needed from now: {x} kg a week", { x: n(e.perDayNeed * 7, 1) }) : tr("Needed from now: {x} a month", { x: n(e.perDayNeed * 30) })}</li> : null}</ul> : null}
     </div>);
 }
@@ -133,7 +194,7 @@ export function MissionsPage({ flash }) {
       </div>
       {conflict ? <div className={cardPad + " flex gap-2 text-[13px] !border-[var(--c-warn)]/40"} data-testid="missions-conflict"><AlertTriangle size={16} className="shrink-0 mt-0.5 text-[var(--c-warn)]" />
         <span>{tr("Your money missions need {a} a month together, but you keep about {b}. Pause one, or move a date.", { a: n(conflict.need), b: n(conflict.keep) })}</span></div> : null}
-      {rows.length ? rows.map(({ m, e }) => <Card key={m.id} m={m} e={e} onChange={(x) => put(data.items.map((y) => (y.id === x.id ? x : y)))} onDelete={(x) => put(data.items.filter((y) => y.id !== x.id))}
+      {rows.length ? rows.map(({ m, e }) => <Card key={m.id} m={m} e={e} flash={flash} onChange={(x) => put(data.items.map((y) => (y.id === x.id ? x : y)))} onDelete={(x) => put(data.items.filter((y) => y.id !== x.id))}
         openScout={() => window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "scout" } }))} />)
         : <p className={cardPad + " c-sub text-[13px] text-center !py-6 m-0"}>{tr("No missions yet. Start one above — a saving goal, a weight goal, something to buy, a spending limit, a debt or a course.")}</p>}
       <DecisionLab />

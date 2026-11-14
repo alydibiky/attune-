@@ -179,6 +179,8 @@ export function parseListCommand(text, now = Date.now()) {
   m = /^\s*(?:my\s+|the\s+)?([\p{L}][\p{L} '’-]{1,28}?)\s+(?:check\s?list|list)\s*[:\-]\s*(.{2,400})$/iu.exec(t) || /^\s*(?:ليسته|ليستة|قايمه|قايمة|لستة|قائمة)\s+([\p{L} ]{2,28}?)\s*[:\-]\s*(.{2,400})$/u.exec(t);
   if (m && !/^(to-?dos?|todos?|tasks?|المهام)$/i.test(m[1].trim())) { const items = splitItems(m[2]); if (items.length) return { op: "add", name: m[1].replace(/^(my|the)\s+/i, "").trim(), items }; }
   m = /^\s*(?:we'?re|we are|i'?m|i am)\s+(?:all\s+)?out of\s+(.{2,200}?)\s*[.!]?$/i.exec(t) || /^\s*(?:خلص|خلصت|خلصو|خلصوا|مفيش)\s+(.{2,200}?)\s*$/.exec(t);
+  // v9.9.38 CG-3: «خلصت كتاب» / «خلصت الكورس» is a book or course FINISHED, not one to buy
+  if (m && /^(?:خلصت|خلّصت)\s/.test(t.trim()) && /^(?:كتاب|كتابين|روايه|رواية|الكتاب|الرواية|الروايه|كورس|الكورس|[\d٠-٩]{1,2}\s+كتب)/.test(m[1])) m = null;
   if (m && !/[\d٠-٩]/.test(m[1]) && !/\b(time|money|battery|ideas?|patience|breath|options|luck)\b|(?:^|\s)(?:الوقت|الفلوس|الشحن|البطارية|الشغل|الامتحان|المذاكرة)/i.test(m[1])) { const items = splitItems(m[1].replace(/^(?:ال)/, "")).map((x) => x.replace(/^(?:some|the)\s+/i, "").replace(/^ال(?=\S{2,})/, "")); if (items.length && items.length <= 12) return { op: "add", name: /[\u0600-\u06ff]/.test(t) ? "المشتريات" : "Shopping", items }; }
   m = t.match(SHOW_FOR);
   if (m) return { op: "show", name: m[7].trim() };

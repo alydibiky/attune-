@@ -112,7 +112,7 @@ import { recallDocs as RDOCS } from "./lookback.js";
 import { loadBooking as loadBookingProfile } from "./agent-ui.jsx";
 import { saveDir as savePeopleDir, addCard as addPeopleCard, updateCard as updatePeopleCard } from "./entities.js";
 import { loadDir as loadPeopleDir } from "./entities.js";
-import { parseMission } from "./missions.js";
+import { parseMission, readCountDone, countTarget, addDone, loadMissions, saveMissions } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
 const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
@@ -159,7 +159,7 @@ import * as RS from "./rulestore.js";
 import { DoneForYouPage } from "./donelog-ui.jsx";
 import { SalaryPage } from "./salary-ui.jsx";   // v9.9.18 M1 salary sorter
 import { GroupsPage } from "./groups-ui.jsx";   // v9.9.18 M3 split with anyone   // v9.9.18 B1: nag levels, notification Paid → balance, Done for you
-import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST, weekendOf } from "./country.js";
+import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST, weekendOf, WEEK_KEY, countryWeekStart } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
 const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
 import { parseAgent, loadAgents, saveAgents, makeAgent } from "./agents.js";
@@ -9832,6 +9832,7 @@ export default function App() {
     doSure: (t) => { try { const now = Date.now();
       if (metroAsk(t) || parseAutomation(t) || parseWatch(t) || HG.parseHaggle(t) || RS.ruleFor(t)) return true;   // (v9.8 N1: "negotiate …" is done, not answered)
       const pm = parseMission(t, now); if (pm && pm.deadline) return true;
+      if (readCountDone(t)) return true;   // v9.9.38 CG-3
       const ag = parseAgent(t, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return true;
       return doSure(t, { now, stores: loadLifeStores() }); } catch (e) { return true; } },
     openIt: (t) => { try { return AL.readOpen(t) ? (doRef.current ? doRef.current(t) : null) : null; } catch (e) { return null; } },   // v9.9.3 W2
@@ -10161,6 +10162,14 @@ export default function App() {
       return { lines: [{ text: (ar ? "هقولك أول ما توصل: " : tr("I'll tell you the moment it comes: ")) + ruleText(pw, ar) + (okAccess ? "" : (ar ? " — شغّل «الوصول للإشعارات» الأول" : tr(" — turn on Notification access first"))), open: "reminders" }],
         undo: () => saveWatch(loadWatch().filter((x) => x.id !== r.id), ar ? "ar" : "en") }; } }
     // v6.37: a goal with a number and a date («عايز أوفر 60 ألف قبل يونيو», "lose 6 kg before 20 January") → Missions, ready to start
+    // v9.9.38 CG-3: "finished another book" / «خلصت كتاب» / "went to the gym" → +1 in the goal you count (with Undo)
+    { const cd = readCountDone(text0) || (text !== text0 ? readCountDone(text) : null);
+      if (cd) { const before = loadMissions(), g = countTarget(before, cd);
+        if (!g) return { lines: [{ text: tr("No goal counts this yet — say “read 12 books this year” to start one"), open: "missions" }], undo: null };
+        let m = g; for (let i = 0; i < cd.n; i++) m = addDone(m, i === 0 && cd.title ? { title: cd.title } : {}, now + i);
+        saveMissions({ ...before, items: before.items.map((x) => (x.id === g.id ? m : x)) });
+        try { window.dispatchEvent(new Event("storage")); } catch (e) {}
+        return { lines: [{ text: tr("Counted: {n} of {t}", { n: m.done.length, t: m.target }) + (cd.title ? " · " + cd.title : ""), open: "missions" }], undo: () => { saveMissions(before); try { window.dispatchEvent(new Event("storage")); } catch (e) {} } }; } }
     { const pm = parseMission(text, now); if (pm && pm.deadline) { try { localStorage.setItem("attune:missions:draft", text); } catch (e) {} navTo("missions");
       return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : tr("Your mission is ready — tap Start the mission"), open: "missions" }], undo: null }; } }
     // v9.8 N1: "negotiate a Tucson 2022 under 1,050,000…" / «فاصلي على…» → the Haggler, opened on its page
@@ -10331,6 +10340,7 @@ export default function App() {
         const now = Date.now(); let doActions = 0;
         // a plain "remember …" note is Mind's job here (to-dos, where things are, /remember read it better) — the rest counts
         try { doActions = doUnderstand(text, { now, stores: loadLifeStores() }).actions.filter((a) => a.kind !== "note").length; } catch (e) {}
+        try { if (readCountDone(text)) doActions = Math.max(doActions, 1); } catch (e) {}   // v9.9.38 CG-3: "finished another book" is done here
         let mission = false; try { const pm = parseMission(text, now); mission = !!(pm && pm.deadline); } catch (e) {}
         // v8.6: an order for an agent ("buy me …", "order my usual …", "tell me when … is under …", "track my Amazon order")
         let agent = ""; try { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["buy", "order", "watch", "track"].includes(ag.kind)) agent = ag.kind; } catch (e) {}
@@ -11688,6 +11698,7 @@ export default function App() {
                   <div><p className="text-[13.5px] font-bold text-[var(--c-ink)] mt-0 mb-2">{tr("Text size")}</p><TextSize /></div>
                   <KeyboardRow />
                   <CountryRow />
+                  <WeekRow />
                 </div>
                 <div><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
@@ -11757,6 +11768,7 @@ export default function App() {
                 <div className="flex items-center justify-between gap-3 mb-3"><span className="text-[13px] font-bold text-[var(--c-ink)]">{tr("Text size")}</span><TextSize /></div>
                 <KeyboardRow />
                 <CountryRow />
+                  <WeekRow />
                 <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
               <p className="text-center text-[11px] text-[var(--c-mut)] tabular-nums mt-3 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
@@ -12085,6 +12097,20 @@ function KeyboardRowIn() {
     </div>);
 }
 
+/* v9.9.38 WK-1 + WK-2 (Ali's picks): the first day of the week — your country's day unless you choose another */
+function WeekRow() {
+  const [, bump] = useState(0);
+  let v = ""; try { v = localStorage.getItem(WEEK_KEY) || ""; } catch (e) {}
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const set = (x) => { try { x === "" ? localStorage.removeItem(WEEK_KEY) : localStorage.setItem(WEEK_KEY, x); } catch (e) {} bump((k) => k + 1); try { window.dispatchEvent(new Event("attune:data-changed")); } catch (e) {} };
+  return (
+    <div className="flex items-center justify-between gap-3 mb-3" data-testid="week-row"><label htmlFor="week-start" className="text-[13px] font-bold text-[var(--c-ink)]">{tr("Week starts on")}</label>
+      <select id="week-start" value={v} onChange={(e) => set(e.target.value)} data-testid="week-select"
+        className="min-h-[44px] h-11 max-w-[60%] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] font-bold text-[13.5px] px-3 focus:outline-none focus:ring-2 focus:ring-[var(--c-acc)]">
+        <option value="">{tr("Your country's day — {d}", { d: tr(DAYS[countryWeekStart()]) })}</option>
+        {[6, 0, 1].map((k) => <option key={k} value={String(k)}>{tr(DAYS[k])}</option>)}
+      </select></div>);
+}
 function LangSwitch({ className = "" }) {
   // v9.9.33 (Ali: "app languages in the settings to be a drop down list"): one dropdown, each language written in its own words
   const cur = getLang();

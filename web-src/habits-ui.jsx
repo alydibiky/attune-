@@ -1,6 +1,7 @@
 /* ---- v9.9.19 T2 Habits (Ali picked A — a Home card with week dots). Each habit: this week's 7 dots (done / due / not due / ahead)
    and its streak; tap today's dot to tick (tap again to untick). "+ Habit" adds one: a name and its days (every day, or chosen
    weekdays). Streak / dots / goal = b4time.js (a day the habit wasn't due never breaks a streak; a day counts once — 10,000 cases). */
+import { weekStart } from "./country.js";   // v9.9.38 WK: the week starts on your day
 import React, { useEffect, useMemo, useState } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { streak, weekDots, goalCount } from "./b4time.js";
@@ -22,7 +23,7 @@ export function HabitsCard() {
   const put = (x) => setV(save(x));
   // Home stays calm (Ali: no "set it up" adverts): with no habits the card is hidden; "+ Habit" next to the countdown chips opens the form
   useEffect(() => { const f = () => setAdd({ name: "", days: [] }); window.addEventListener("attune-habit-add", f); return () => window.removeEventListener("attune-habit-add", f); }, []);
-  const rows = useMemo(() => v.items.map((h) => ({ h, dots: weekDots(h, v.done[h.id], now, 0), st: streak(h, v.done[h.id], now), n: goalCount(h, v.done[h.id]) })), [v]);
+  const rows = useMemo(() => v.items.map((h) => ({ h, dots: weekDots(h, v.done[h.id], now, weekStart()), st: streak(h, v.done[h.id], now), n: goalCount(h, v.done[h.id]) })), [v]);
   if (!rows.length && !add) return null;
   return (
     <div className={rows.length ? "c-card space-y-1" : ""} data-testid="home-habits">

@@ -166,6 +166,12 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
     if (scanned) flash && flash(tr("{n} pages are pictures (scans) — Ask a PDF can read them with the AI", { n: scanned }));
   };
   const add = (folder) => { if (nat) { N.booksPick(JSON.stringify({ topic, folder: !!folder })); flash && flash(tr("Pick the books — they are read in the background; you can leave this page")); } else fileRef.current && fileRef.current.click(); };
+  // v9.9.38 BK-2: "Save and attach the PDF / e-book" on a book goal opens here — in the "Books I read" topic, the picker already open
+  useEffect(() => { let p = null; try { p = JSON.parse(localStorage.getItem("attune:booklib:pick") || "null"); localStorage.removeItem("attune:booklib:pick"); } catch (e) {}
+    if (!p || !p.topic || Date.now() - (+p.at || 0) > 120000) return;
+    if (!(topics || []).includes(p.topic)) addTopic(p.topic); else setTopic(p.topic);
+    const t = setTimeout(() => { try { if (nat) N.booksPick(JSON.stringify({ topic: p.topic, folder: false })); else fileRef.current && fileRef.current.click(); } catch (e) {} }, 350);
+    return () => clearTimeout(t); }, []);
 
   const ask = async (text0) => {
     const text = String(text0 || q).trim(); if (!text || asking) return;

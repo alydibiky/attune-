@@ -21,7 +21,7 @@ import { chatLifeIntent } from "../../web-src/life.js";
 import { parseAgent } from "../../web-src/agents.js";
 import { parseAutomation } from "../../web-src/autom.js";
 import { parseWatch } from "../../web-src/watch.js";
-import { parseMission } from "../../web-src/missions.js";
+import { parseMission, readCountDone } from "../../web-src/missions.js";
 import { looksLikeGoal } from "../../web-src/scout.js";
 import { metroAsk } from "../../web-src/metro.js";
 import * as NT from "../../web-src/noteteach.js";
@@ -48,6 +48,7 @@ function doFromHome(text0, now) {
   if (T(() => parseAutomation(text))) return { k: "automation" };
   if (!teachFirst && T(() => parseWatch(text))) return { k: "alert" };
   { const pm = T(() => parseMission(text, now)); if (pm && pm.deadline) return { k: "mission" }; }
+  if (T(() => readCountDone(text))) return { k: "count" };   // v9.9.38 CG-3 (doFromHome counts it in the goal)
   if (T(() => HG.parseHaggle(text))) return { k: "agent", sub: "haggle" };
   { const ag = teachFirst ? null : T(() => parseAgent(text, { now, country: "EG", usual: {}, prefs: {} })); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return { k: "agent", sub: ag.kind, ag }; }
   if (!teachFirst && T(() => WT.readWebTask(text, now))) return { k: "agent", sub: "web" };
@@ -66,7 +67,7 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
   let typed = readable(String(typed0 || "").trim());   // v9.9.32: chat.jsx reads it without the wake word / fillers / thanks / indirect asking
   if (negatedOrder(typed)) return { k: "chat" };   // chat.jsx: a negated order is not routed
   // Chat first: what Mind does by code (to-dos, lists, where things are, a note, an email)
-  { const det = (text) => { const u = T(() => understand(text, { now, stores: {} }), { actions: [] }); const doActions = (u.actions || []).filter((a) => a.kind !== "note").length;
+  { const det = (text) => { const u = T(() => understand(text, { now, stores: {} }), { actions: [] }); const doActions = Math.max((u.actions || []).filter((a) => a.kind !== "note").length, T(() => readCountDone(text)) ? 1 : 0);
       const pm = T(() => parseMission(text, now)); const ag = T(() => parseAgent(text, { now, country: "EG", usual: {}, prefs: {} }));
       const agent = ag && ["buy", "order", "watch", "track"].includes(ag.kind) ? ag.kind : "";
       let teach = T(() => { const tx = NT.readTeach(text, { items: [] }); return !!(tx && (tx.kind === "rule" || (tx.kind === "who" && text.split(/\s+/).length <= 7))); }, false);

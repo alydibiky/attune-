@@ -25,7 +25,7 @@ const latin = (t) => String(t || "").replace(/[٠-٩]/g, (d) => String(d.charCod
 // ---------- 1. reading the goal ----------
 const MONTHS = [["يناير|jan(?:uary)?", 0], ["فبراير|feb(?:ruary)?", 1], ["مارس|mar(?:ch)?", 2], ["ابريل|apr(?:il)?", 3], ["مايو|may", 4], ["يونيو|jun(?:e)?", 5],
   ["يوليو|jul(?:y)?", 6], ["اغسطس|aug(?:ust)?", 7], ["سبتمبر|sep(?:t|tember)?", 8], ["اكتوبر|oct(?:ober)?", 9], ["نوفمبر|nov(?:ember)?", 10], ["ديسمبر|dec(?:ember)?", 11]];
-const MRX = MONTHS.map((m) => m[0]).join("|");
+const MRX = "(?:" + MONTHS.map((m) => m[0]).join("|") + ")(?![a-z])";   // (v9.9.38: "18 novels" is not 18 November, "maybe" not May)
 const monthIdx = (w) => (MONTHS.find(([rx]) => new RegExp("^(?:" + rx + ")$", "i").test(w)) || [, -1])[1];
 
 /** The deadline in the sentence: "by June" (the month's last day), "before 20 January", «قبل 1 ديسمبر», "in 3 months",
@@ -33,7 +33,7 @@ const monthIdx = (w) => (MONTHS.find(([rx]) => new RegExp("^(?:" + rx + ")$", "i
 export function deadlineIn(text, now = Date.now()) {
   const t = latin(text).toLowerCase(), n = new Date(now), y = n.getFullYear(), today = iso(now);
   const fix = (d) => (d <= today ? iso(new Date(at12(d)).setFullYear(new Date(at12(d)).getFullYear() + 1)) : d);
-  let m = t.match(new RegExp("(\\d{1,2})\\s*(" + MRX + ")(?:\\s*(\\d{4}))?|(" + MRX + ")\\s*(\\d{1,2})(?:,?\\s*(\\d{4}))?", "i"));
+  let m = t.match(new RegExp("(\\d{1,2})(?!\\d)\\s*(" + MRX + ")(?:\\s*(\\d{4}))?|(" + MRX + ")\\s*(\\d{1,2})(?!\\d)(?:,?\\s*(\\d{4}))?", "i"));
   if (m) {
     const day = +(m[1] || m[5]), mon = monthIdx(m[2] || m[4]), yr = +(m[3] || m[6]) || y;
     if (mon >= 0 && day >= 1 && day <= 31) { const d = iso(new Date(yr, mon, day, 12)); return m[3] || m[6] ? d : fix(d); }
@@ -75,6 +75,8 @@ export function parseMission(text, now = Date.now()) {
     const target = parseFloat(kg[1].replace(",", "."));
     return target > 0 && target < 60 ? { kind: "weight", target, deadline, title: raw.slice(0, 80) } : null;
   }
+  // v9.9.38 CG-3 (Ali: "read 20 books"): a goal you COUNT — a number of books, runs, gym visits, courses… by a date
+  { const c = countGoal(raw, t); if (c) return { kind: "count", target: c.n, unit: c.unit, deadline, title: raw.slice(0, 80) }; }
   // v6.44 phases 3–4: never a question ("how much did Fleet earn this month?" is answered, not made a mission)
   const asks = /[?؟]|how (much|many)|\bكام\b|\bايه\b|\bقد ايه\b/.test(t), wants = /(want|goal|target|aim|need to|i will|i'll|let's|عايز|عاوز|هدف|نفسي|لازم|محتاج|هخلي|خلي)/.test(t) || /^(collect|make|earn|get|bring|حصل|احصل|خلي)/.test(t);
   // v6.44 phase 4 — company missions (Fleet & rentals)
@@ -107,6 +109,61 @@ export function parseMission(text, now = Date.now()) {
   return null;
 }
 
+// v9.9.38 CG-3: "read 14 books before Dec 2027" · "go to the gym 50 times this year" · "run 30 times by June" · "finish 3 courses" ·
+// «اقرا 20 كتاب السنة دي» · «اروح الجيم 40 مرة» — the number of things, never money or kilos
+const COUNT_UNITS = [["book", /\b(?:books?|novels?)\b|(?<![ء-ي])(?:كتاب|كتب|روايه|رواية|روايات)(?![ء-ي])/i], ["course", /\bcourses?\b|(?<![ء-ي])(?:كورس|كورسات)(?![ء-ي])/i],
+  ["run", /\bruns?\b/i], ["workout", /\bworkouts?\b|(?<![ء-ي])(?:تمرين|تمارين)(?![ء-ي])/i], ["movie", /\b(?:movies?|films?)\b|(?<![ء-ي])(?:فيلم|افلام|أفلام)(?![ء-ي])/i],
+  ["time", /\btimes\b|(?<![ء-ي])(?:مره|مرة|مرات)(?![ء-ي])/i]];
+export function countGoal(raw, t = String(raw || "").toLowerCase()) {
+  const s = String(raw || ""); if (/[?؟]\s*$/.test(s) || /\b(?:how many|how much)\b|كام\s/i.test(s)) return null;
+  if (!/\b(?:read|finish|complete|do|go|run|watch|visit|train|work ?out|swim|walk|cook|write|learn)\b|(?<![ء-ي])(?:[هح]?(?:اقرا|أقرا|اقرأ|أقرأ|اخلص|أخلص|اروح|أروح|اجري|أجري|اتمرن|أتمرن|اشوف|أشوف|اتفرج|اكتب|اتعلم)|[هح](?:قرا|قرأ|خلص|روح|جري|تمرن|شوف|تفرج|كتب|تعلم))(?![ء-ي])/i.test(s)) return null;
+  const m = /([\d٠-٩]{1,4})\s*([^\d\s٠-٩][^\d٠-٩]{0,24})/u.exec(s.replace(/\b(?:19|20)\d\d\b/g, " ")); if (!m) return null;
+  const n = +String(m[1]).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)); if (!(n >= 2 && n <= 1000)) return null;
+  const u = COUNT_UNITS.find(([, re]) => re.test(m[2].split(/\s+(?:before|by|until|in|this|a|per|قبل|لحد|في|السنه|السنة)\b/i)[0]));
+  if (!u) return null;
+  if (u[0] === "time" && !/\b(?:gym|run|swim|walk|train|work ?out|visit|go)\b|الجيم|جيم|اجري|اتمرن|اروح|أروح|امشي/i.test(s)) return null;
+  const unit = u[0] !== "time" ? u[0] : /gym|جيم|الجيم/i.test(s) ? "gym" : /\brun\b|اجري|أجري/i.test(s) ? "run" : /\bswim\b|اعوم/i.test(s) ? "swim" : "time";
+  return { n, unit };
+}
+/** CG-3: "finished another book", "finished reading Atomic Habits", "read 2 more books", "went to the gym", «خلصت كتاب», «قريت كتابين»,
+ *  "khalast ketab" → { unit, n, title } — what a goal you count moves by (null when the sentence is not that). */
+const NUMW = { a: 1, an: 1, one: 1, another: 1, my: 1, the: 1, two: 2, three: 3, four: 4, five: 5 };
+export function readCountDone(text) {
+  const t = String(text || "").trim().replace(/[\s.!]*(?:\p{Extended_Pictographic}\uFE0F?[\s.!]*)*$/u, "").replace(/[.!]+$/, "").replace(/\s+(?:today|النهارد[ةه])$/i, "").trim(); if (!t || t.length > 140 || /[?؟]$/.test(t)) return null;
+  let m = /^(?:i\s+)?(?:just\s+)?(?:(?:finished|completed|done with)\s+(?:reading\s+)?(another|an?|one|my|the|\d{1,2}|two|three|four|five)|read\s+(another|\d{1,2}|two|three|four|five)(?:\s+more)?)(?:\s+more)?\s+(books?|novels?|courses?|runs?|workouts?)\b[\s:,—-]*(?:called\s+)?(.*)$/i.exec(t);
+  if (m && /^(?:before|after|for|in|at|to|with|about|on|by|from|today|yesterday|tonight|and)\b/i.test(m[4])) m = null;   // "read the book before the meeting" is not a book finished
+  if (m) { m = [m[0], m[1] || m[2], m[3], m[4]]; const n = /^\d/.test(m[1]) ? +m[1] : NUMW[m[1].toLowerCase()] || 1, u = /^(?:book|novel)/i.test(m[2]) ? "book" : /^course/i.test(m[2]) ? "course" : /^run/i.test(m[2]) ? "run" : "workout";
+    return { unit: u, n: Math.min(n, 20), title: n === 1 ? m[3].replace(/^["“«]|["”»]$/g, "").trim().slice(0, 120) : "" }; }
+  if ((m = /^(?:i\s+)?(?:just\s+)?finished reading\s+(?!a\b|another\b|my\b|it\b|this\b|that\b|the (?:book|novel|report|article|news|chapter)\b)(.{2,120})$/i.exec(t))) return { unit: "book", n: 1, title: m[1].replace(/^["“«]|["”»]$/g, "").trim() };
+  if (/^(?:i\s+)?(?:just\s+)?(?:went to the gym|did (?:my|a) workout|worked out|trained) ?(?:today)?$/i.test(t)) return { unit: /gym/i.test(t) ? "gym" : "workout", n: 1, title: "" };
+  if (/^(?:i\s+)?(?:just\s+)?(?:went for a run|ran) ?(?:today)?$/i.test(t)) return { unit: "run", n: 1, title: "" };
+  if ((m = /^(?:انا\s+)?(?:لسه\s+)?(?:خلصت|خلّصت|خالص|خالصة|خالصه|قريت|قرأت|خلصت قراية)\s+(كتابين|كتاب|روايه|رواية|(?:[\d٠-٩]{1,2})\s+(?:كتب|كتاب))(?:\s+(?:كمان|تاني))?(?:\s*[:،,]?\s*(.{2,120}))?$/u.exec(t))) {
+    const n = m[1] === "كتابين" ? 2 : /[\d٠-٩]/.test(m[1]) ? +m[1].replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\D/g, "") : 1;
+    return { unit: "book", n: Math.min(n, 20), title: n === 1 && m[2] ? m[2].replace(/^(?:اسمه|اسمها)\s+/, "").trim() : "" }; }
+  if (/^(?:انا\s+)?(?:رحت|روحت)\s+(?:ال)?جيم(?:\s+النهارد[ةه])?$|^(?:انا\s+)?اتمرنت(?:\s+النهارد[ةه])?$/u.test(t)) return { unit: /جيم/.test(t) ? "gym" : "workout", n: 1, title: "" };
+  if (/^(?:ana\s+)?(?:khalast|5alast|khlast|2areet|areet)\s+(?:ketab|kitab|ktab)\b/i.test(t)) return { unit: "book", n: 1, title: t.replace(/^(?:ana\s+)?\S+\s+\S+\s*/i, "").trim().slice(0, 120) };
+  return null;
+}
+/** The goal a "done" sentence counts in: the active count goal of that unit (a gym visit also counts in a workout goal), the newest first. */
+export function countTarget(missions, d) {
+  const live = ((missions && missions.items) || []).filter((m) => m.kind === "count" && m.status === "active");
+  return live.filter((m) => m.unit === d.unit).pop() || (d.unit === "gym" || d.unit === "workout" ? live.filter((m) => m.unit === "gym" || m.unit === "workout" || m.unit === "time").pop() : null) || null;
+}
+/** CG-3: one more done (a book with its details, or a run…) — and Undo takes the last one back. */
+export function addDone(m, entry = {}, now = Date.now()) { return { ...m, done: [...(m.done || []), { id: "d" + now.toString(36) + Math.random().toString(36).slice(2, 5), at: iso(now), ...entry }] }; }
+export const undoDone = (m) => ({ ...m, done: (m.done || []).slice(0, -1) });
+function evalCount(m, now, days, ev, out) {
+  const done = (m.done || []).length, target = m.target, left = Math.max(0, target - done), today = iso(now);
+  const since = Math.max(1, daysBetween(m.created || today, today)), rate = done / since;
+  const chance = left <= 0 ? 1 : days > 0 && done > 0 ? poissonAtLeast(left, rate * days) : null;
+  const U = { book: ["book", "books"], course: ["course", "courses"], run: ["run", "runs"], workout: ["workout", "workouts"], movie: ["film", "films"], gym: ["gym visit", "gym visits"], swim: ["swim", "swims"], time: ["time", "times"] }[m.unit] || ["time", "times"];
+  ev.push({ t: "{n} of {t} done so far.", v: { n: done, t: target }, en: `${done} of ${target} done so far.`, ar: `خلصت ${done} من ${target} لحد دلوقتي.` });
+  let step = null;
+  if (left > 0 && days > 0) { const every = Math.max(1, Math.floor(days / left)); step = every >= 7
+    ? { t: "1 every {w} weeks keeps you on time", v: { w: Math.round(every / 7) }, en: `1 every ${Math.round(every / 7)} weeks keeps you on time`, ar: `واحد كل ${Math.round(every / 7)} أسبوع يخليك في المعاد` }
+    : { t: "1 every {d} days keeps you on time", v: { d: every }, en: `1 every ${every} days keeps you on time`, ar: `واحد كل ${every} يوم يخليك في المعاد` }; }
+  return out({ value: done, target, left, pct: pctOf(done, target), perDayNeed: null, perDayNow: null, chance, state: stateOf(left, days, chance), step, unit: U });
+}
 // v6.44 cap: the words for each Money category (the ledger's own ids)
 const CAP_WORDS = [["food", /(eating out|restaurant|takeaway|delivery|food|الاكل|اكل|مطاعم|دليفري|ديليفري)/], ["groceries", /(grocer|supermarket|بقاله|سوبر ?ماركت)/],
   ["transport", /(transport|uber|careem|taxi|fuel|petrol|مواصلات|اوبر|كريم|تاكسي|بنزين)/], ["shopping", /(shopping|clothes|شوبينج|لبس|هدوم)/],
@@ -256,6 +313,7 @@ export function evaluate(m, data, now = Date.now()) {
   if (m.kind === "cap") return evalCap(m, data, now, days, ev, out);
   if (m.kind === "debt") return evalDebt(m, data, now, days, ev, out);
   if (m.kind === "learn") return evalLearn(m, data, now, days, ev, out);
+  if (m.kind === "count") return evalCount(m, now, days, ev, out);
   if (m.kind === "revenue") return evalRevenue(m, data, now, days, ev, out);
   if (m.kind === "collect") return evalCollect(m, data, now, days, ev, out);
   return out({ value: 0, target: m.target, left: m.target, pct: 0, chance: null, state: "unknown", step: null });

@@ -1,3 +1,4 @@
+import { weekStart } from "./country.js";   // v9.9.38 WK: the week starts on your day
 /* ---- v6.12: questions about your OWN money, answered by code from the Money ledger ------------------------------------------
    Ali asked Instant "What are my expenses in the last 4 days" and got "I need your expense data… please provide the data":
    the money is on the phone (Money / Yusr keeps it in localStorage "ledger.v3"), but only the Money tab ever read it.
@@ -62,8 +63,8 @@ export function spanOf(q, now = Date.now()) {
   }
   if (/\btoday\b|النهار ?ده|النهارده|اليوم/.test(t)) return { from: iso(today), to: iso(today), label: ["today", "النهارده"] };
   if (/\byesterday\b|امبارح|أمس|البارحة/.test(t)) { const y = back(2); return { from: iso(y), to: iso(y), label: ["yesterday", "امبارح"] }; }
-  if (/\bthis week\b|الأسبوع ده|الاسبوع ده|هذا الأسبوع/.test(t)) { const f = new Date(today); f.setDate(f.getDate() - ((f.getDay() + 1) % 7)); return { from: iso(f), to: iso(today), label: ["this week", "الأسبوع ده"] }; }   // the week starts Saturday in Egypt
-  if (/\blast week\b|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي/.test(t)) { const e = new Date(today); e.setDate(e.getDate() - ((e.getDay() + 1) % 7) - 1); const f = new Date(e); f.setDate(f.getDate() - 6); return { from: iso(f), to: iso(e), label: ["last week", "الأسبوع اللي فات"] }; }
+  if (/\bthis week\b|الأسبوع ده|الاسبوع ده|هذا الأسبوع/.test(t)) { const f = new Date(today); f.setDate(f.getDate() - ((f.getDay() - weekStart() + 7) % 7)); return { from: iso(f), to: iso(today), label: ["this week", "الأسبوع ده"] }; }   // the week starts Saturday in Egypt
+  if (/\blast week\b|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي/.test(t)) { const e = new Date(today); e.setDate(e.getDate() - ((e.getDay() - weekStart() + 7) % 7) - 1); const f = new Date(e); f.setDate(f.getDate() - 6); return { from: iso(f), to: iso(e), label: ["last week", "الأسبوع اللي فات"] }; }
   if (/\blast month\b|الشهر اللي فات|الشهر الماضي/.test(t)) { const f = new Date(today.getFullYear(), today.getMonth() - 1, 1), e = new Date(today.getFullYear(), today.getMonth(), 0); return { from: iso(f), to: iso(e), label: ["last month", "الشهر اللي فات"] }; }
   if (/\bthis year\b|السنة دي|هذا العام|السنه دي/.test(t)) return { from: `${today.getFullYear()}-01-01`, to: iso(today), label: ["this year", "السنة دي"] };
   // v8.7 (persona 4, idea 5 — "how much did I spend on uber in September?" was answered for this month): a month by name is that
