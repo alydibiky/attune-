@@ -16,9 +16,12 @@ const key = (s) => norm(s).split(" ").map(sing).join(" ");
 const FILLER = /^(?:we need|need|please get|please buy|get|buy|pls|please|also|and|plus|محتاجين|عايزين|هات|هاتي|جيب|جيبي|ابقى هات|ابقي هاتي|و|كمان|e7na me7tageen|hat|geeb)\s+/i;
 const RAN_OUT = /\s+(?:خلص|خلصت|خلصو|خلصوا|مفيش|ran out|is out|are out|finished|5eles|5elset)\s*[.!]*$/i;
 const NOT_ITEMS = /[?؟]|^(?:ok|okay|yes|no|thanks|where|when|who|why|how|call|i'?m|i am|on my way|انا|فين|امتى|ليه|مين|ازاي|تمام|حاضر|ماشي|شكرا)\b/i;
+// (the 10,000-conversation run: "the weather is nice today", «انا وصلت», "saw Sara today" in the list chat became items) — a sentence
+// is not a list: a pronoun, a verb or a time word means somebody is SAYING something, not naming things to buy
+const SENTENCE = /\b(?:i|i'm|im|you|we|he|she|they|it's|its|is|are|was|were|am|be|been|have|has|had|do|does|did|will|would|can|could|should|went|go|going|came|come|coming|arrived|saw|see|seen|said|told|think|know|love|like|home|today|tonight|yesterday|now|here|there|weather|nice|good|bad|ok|okay|thanks|please call|call me|where|when|why|how|what|who)\b|(?:^|\s)(?:انا|أنا|انت|انتي|إنت|احنا|إحنا|هو|هي|هما|وصلت|وصل|روحت|رحت|شفت|شوفت|قلت|قال|عملت|هعمل|هنروح|جاي|جايه|جاية|فين|امتى|إمتى|ليه|ازاي|ازيك|عامل|كويس|حلو|البيت|النهارده|انهارده|امبارح|دلوقتي|بكره|بكرة|ana|enta|e7na|wasalt|ro7t|sheft|fen|feen|emta|leh|ezay|ezayak|kwayes|el beit|ennaharda|eh|eih|ehh|akhbar|el akhbar|ezayek|3amel|3amla|wa7ashteny|w7shtny|ba7ebak|ba7ebek)(?=\s|$|[،,.!?؟])|\b(?:miss|love|tired|happy|sad|great|awesome|sorry|congrats|congratulations|good luck|what's up|whats up|sup)\b|(?:^|\s)[ء-ي]{2,}(?:تني|تيني|تينا|تنا)(?=\s|$|[،,.!?؟])|(?:^|\s)(?:وحشتني|وحشتيني|بحبك|مبروك|ربنا معاك|الحمد لله|ازاي|اخبارك|عامله ايه|عامل ايه)(?=\s|$|[،,.!?؟])/i;
 export function itemsOf(text0) {
   const text = String(text0 || "").trim();
-  if (!text || NOT_ITEMS.test(text) || text.length > 200) return [];
+  if (!text || NOT_ITEMS.test(text) || text.length > 200 || SENTENCE.test(text.replace(/\s+(?:خلص|خلصت|خلصو|خلصوا|مفيش|ran out|is out|are out|finished|5eles)\s*[.!]*$/i, ""))) return [];
   const parts = text.split(/\s*(?:\n|,|،|;|\+|\band\b|&|\s+و(?=[ء-ي]))\s*/i).map((x) => x.replace(FILLER, "").replace(FILLER, "").replace(RAN_OUT, "").replace(/\s*(?:pls|please|لو سمحت|بليز)\s*$/i, "").trim()).filter(Boolean);
   // a detail ("the frozen ones", "from Spinneys") belongs to the item before it, it is not an item
   const out = [];
