@@ -12815,4 +12815,11 @@ export const BN = {
   "{c} = news and offers": "{c} = খবর ও অফার",
   "{c} = never important": "{c} = কখনো জরুরি নয়",
   "{n} still on the list": "তালিকায় এখনো {n}টি",
+  "{c} · {n} items still to buy:": "{c} · এখনো {n}টি কেনার বাকি:",
+  "{c}: nothing left to buy": "{c}: কেনার কিছু বাকি নেই",
+  "{t} came up in {c} on {n} days:": "{t} নিয়ে {c}-এ {n} দিন কথা হয়েছে:",
+  "Show all {n} messages": "সব {n}টি বার্তা দেখান",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n}টি বার্তা রাখা আছে — একটা বিষয় জিজ্ঞেস করুন, যেমন “{c} গ্যারেজ নিয়ে কবে কথা বলেছে?”",
+  "From your chats — {c}": "আপনার চ্যাট থেকে — {c}",
+  "All {n} messages": "সব {n}টি বার্তা",
 };

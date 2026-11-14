@@ -12816,4 +12816,11 @@ export const TRK = {
   "{c} = news and offers": "{c} = haberler ve teklifler",
   "{c} = never important": "{c} = asla önemli değil",
   "{n} still on the list": "listede hâlâ {n}",
+  "{c} · {n} items still to buy:": "{c} · alınacak {n} şey kaldı:",
+  "{c}: nothing left to buy": "{c}: alınacak bir şey kalmadı",
+  "{t} came up in {c} on {n} days:": "{t}, {c} içinde {n} gün konuşuldu:",
+  "Show all {n} messages": "{n} mesajın hepsini göster",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} mesaj saklandı — bir konu sor, örn. “{c} garajı ne zaman konuştu?”",
+  "From your chats — {c}": "Sohbetlerinden — {c}",
+  "All {n} messages": "{n} mesajın hepsi",
 };

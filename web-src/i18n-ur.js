@@ -12816,4 +12816,11 @@ export const UR = {
   "{c} = news and offers": "{c} = خبریں اور آفرز",
   "{c} = never important": "{c} = کبھی اہم نہیں",
   "{n} still on the list": "فہرست میں ابھی {n} باقی",
+  "{c} · {n} items still to buy:": "{c} · ابھی {n} چیزیں خریدنی ہیں:",
+  "{c}: nothing left to buy": "{c}: خریدنے کو کچھ نہیں بچا",
+  "{t} came up in {c} on {n} days:": "{t} کی بات {c} میں {n} دن ہوئی:",
+  "Show all {n} messages": "تمام {n} پیغامات دکھائیں",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} پیغامات رکھے ہیں — کوئی موضوع پوچھیں، جیسے “{c} نے گیراج کی بات کب کی؟”",
+  "From your chats — {c}": "آپ کی چیٹس سے — {c}",
+  "All {n} messages": "تمام {n} پیغامات",
 };

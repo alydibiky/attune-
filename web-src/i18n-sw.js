@@ -12816,4 +12816,11 @@ export const SW = {
   "{c} = news and offers": "{c} = habari na ofa",
   "{c} = never important": "{c} = si muhimu kamwe",
   "{n} still on the list": "bado {n} kwenye orodha",
+  "{c} · {n} items still to buy:": "{c} · bado vitu {n} vya kununua:",
+  "{c}: nothing left to buy": "{c}: hakuna kilichobaki kununua",
+  "{t} came up in {c} on {n} days:": "{t} kilizungumzwa katika {c} siku {n}:",
+  "Show all {n} messages": "Onyesha jumbe zote {n}",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: jumbe {n} zimehifadhiwa — uliza kuhusu mada, k.m. “{c} walizungumza lini kuhusu gereji?”",
+  "From your chats — {c}": "Kutoka kwa gumzo zako — {c}",
+  "All {n} messages": "Jumbe zote {n}",
 };

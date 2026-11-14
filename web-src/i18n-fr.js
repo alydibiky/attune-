@@ -12816,4 +12816,11 @@ export const FR = {
   "{c} = news and offers": "{c} = infos et offres",
   "{c} = never important": "{c} = jamais important",
   "{n} still on the list": "encore {n} sur la liste",
+  "{c} · {n} items still to buy:": "{c} · encore {n} choses à acheter :",
+  "{c}: nothing left to buy": "{c} : plus rien à acheter",
+  "{t} came up in {c} on {n} days:": "{t} a été évoqué dans {c} sur {n} jours :",
+  "Show all {n} messages": "Voir les {n} messages",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c} : {n} messages gardés — demande un sujet, p. ex. « quand {c} a parlé du garage ? »",
+  "From your chats — {c}": "De tes discussions — {c}",
+  "All {n} messages": "Les {n} messages",
 };

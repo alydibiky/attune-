@@ -12816,4 +12816,11 @@ export const IT = {
   "{c} = news and offers": "{c} = notizie e offerte",
   "{c} = never important": "{c} = mai importante",
   "{n} still on the list": "ancora {n} nella lista",
+  "{c} · {n} items still to buy:": "{c} · ancora {n} cose da comprare:",
+  "{c}: nothing left to buy": "{c}: niente da comprare",
+  "{t} came up in {c} on {n} days:": "{t} è uscito in {c} in {n} giorni:",
+  "Show all {n} messages": "Vedi tutti i {n} messaggi",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} messaggi tenuti — chiedi di un argomento, es. «quando {c} ha parlato del garage?»",
+  "From your chats — {c}": "Dalle tue chat — {c}",
+  "All {n} messages": "Tutti i {n} messaggi",
 };

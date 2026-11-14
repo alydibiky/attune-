@@ -12816,4 +12816,11 @@ export const HI = {
   "{c} = news and offers": "{c} = खबरें और ऑफ़र",
   "{c} = never important": "{c} = कभी ज़रूरी नहीं",
   "{n} still on the list": "सूची में अभी {n} बाकी",
+  "{c} · {n} items still to buy:": "{c} · अभी {n} चीज़ें खरीदनी हैं:",
+  "{c}: nothing left to buy": "{c}: खरीदने को कुछ नहीं बचा",
+  "{t} came up in {c} on {n} days:": "{t} की बात {c} में {n} दिन हुई:",
+  "Show all {n} messages": "सभी {n} मैसेज दिखाएँ",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} मैसेज रखे हैं — कोई विषय पूछें, जैसे “{c} ने गैराज की बात कब की?”",
+  "From your chats — {c}": "आपकी चैट से — {c}",
+  "All {n} messages": "सभी {n} मैसेज",
 };

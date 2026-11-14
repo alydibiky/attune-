@@ -12815,4 +12815,11 @@ export const VI = {
   "{c} = news and offers": "{c} = tin tức và ưu đãi",
   "{c} = never important": "{c} = không bao giờ quan trọng",
   "{n} still on the list": "còn {n} trong danh sách",
+  "{c} · {n} items still to buy:": "{c} · còn {n} món cần mua:",
+  "{c}: nothing left to buy": "{c}: không còn gì cần mua",
+  "{t} came up in {c} on {n} days:": "{t} được nhắc trong {c} vào {n} ngày:",
+  "Show all {n} messages": "Xem tất cả {n} tin nhắn",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: đã giữ {n} tin nhắn — hãy hỏi về một chủ đề, vd. “{c} bàn về nhà xe khi nào?”",
+  "From your chats — {c}": "Từ cuộc trò chuyện của bạn — {c}",
+  "All {n} messages": "Tất cả {n} tin nhắn",
 };

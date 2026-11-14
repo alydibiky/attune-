@@ -12807,4 +12807,11 @@ export const ARB = {
   "{c} = news and offers": "{c} = أخبار وعروض",
   "{c} = never important": "{c} = غير مهمة أبدًا",
   "{n} still on the list": "لا يزال {n} في القائمة",
+  "{c} · {n} items still to buy:": "{c} · لا يزال {n} عنصر للشراء:",
+  "{c}: nothing left to buy": "{c}: لا شيء متبقٍ للشراء",
+  "{t} came up in {c} on {n} days:": "ورد ذكر {t} في {c} في {n} أيام:",
+  "Show all {n} messages": "اعرض كل الرسائل الـ{n}",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} رسالة محفوظة — اسأل عن موضوع، مثل «متى ناقشت {c} المرآب؟»",
+  "From your chats — {c}": "من محادثاتك — {c}",
+  "All {n} messages": "كل الرسائل الـ{n}",
 };

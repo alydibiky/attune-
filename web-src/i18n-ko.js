@@ -12815,4 +12815,11 @@ export const KO = {
   "{c} = news and offers": "{c} = 뉴스와 할인",
   "{c} = never important": "{c} = 절대 중요하지 않음",
   "{n} still on the list": "목록에 아직 {n}개",
+  "{c} · {n} items still to buy:": "{c} · 아직 살 것 {n}개:",
+  "{c}: nothing left to buy": "{c}: 살 것이 남아 있지 않아요",
+  "{t} came up in {c} on {n} days:": "{t} 이야기가 {c}에서 {n}일 나왔어요:",
+  "Show all {n} messages": "메시지 {n}개 모두 보기",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: 메시지 {n}개 보관 중 — 주제를 물어보세요, 예: “{c}에서 주차장 얘기 언제 했어?”",
+  "From your chats — {c}": "내 채팅에서 — {c}",
+  "All {n} messages": "메시지 {n}개 전부",
 };

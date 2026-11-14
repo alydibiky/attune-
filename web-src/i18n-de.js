@@ -12815,4 +12815,11 @@ export const DE = {
   "{c} = news and offers": "{c} = News und Angebote",
   "{c} = never important": "{c} = nie wichtig",
   "{n} still on the list": "noch {n} auf der Liste",
+  "{c} · {n} items still to buy:": "{c} · noch {n} Dinge zu kaufen:",
+  "{c}: nothing left to buy": "{c}: nichts mehr zu kaufen",
+  "{t} came up in {c} on {n} days:": "{t} kam in {c} an {n} Tagen vor:",
+  "Show all {n} messages": "Alle {n} Nachrichten zeigen",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} Nachrichten behalten — frag nach einem Thema, z. B. „wann hat {c} über die Garage gesprochen?“",
+  "From your chats — {c}": "Aus deinen Chats — {c}",
+  "All {n} messages": "Alle {n} Nachrichten",
 };

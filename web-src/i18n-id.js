@@ -12816,4 +12816,11 @@ export const IDN = {
   "{c} = news and offers": "{c} = berita dan penawaran",
   "{c} = never important": "{c} = tidak pernah penting",
   "{n} still on the list": "masih {n} di daftar",
+  "{c} · {n} items still to buy:": "{c} · masih {n} barang untuk dibeli:",
+  "{c}: nothing left to buy": "{c}: tidak ada lagi yang perlu dibeli",
+  "{t} came up in {c} on {n} days:": "{t} dibahas di {c} pada {n} hari:",
+  "Show all {n} messages": "Tampilkan semua {n} pesan",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} pesan disimpan — tanyakan topik, mis. “kapan {c} membahas garasi?”",
+  "From your chats — {c}": "Dari obrolanmu — {c}",
+  "All {n} messages": "Semua {n} pesan",
 };

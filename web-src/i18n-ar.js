@@ -9917,4 +9917,11 @@ export const AR = {
   "{c} = news and offers": "{c} = أخبار وعروض",
   "{c} = never important": "{c} = عمره ما يكون مهم",
   "{n} still on the list": "لسه {n} في القايمة",
+  "{c} · {n} items still to buy:": "{c} · لسه {n} حاجة عايزين نشتريها:",
+  "{c}: nothing left to buy": "{c}: مفيش حاجة فاضلة نشتريها",
+  "{t} came up in {c} on {n} days:": "{t} اتكلموا عنه في {c} في {n} أيام:",
+  "Show all {n} messages": "وريني كل الـ{n} رسالة",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} رسالة محفوظة — اسأل عن موضوع، زي «امتى {c} اتكلموا عن الجراج؟»",
+  "From your chats — {c}": "من شاتاتك — {c}",
+  "All {n} messages": "كل الـ{n} رسالة",
 };

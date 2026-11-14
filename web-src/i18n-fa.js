@@ -12815,4 +12815,11 @@ export const FA = {
   "{c} = news and offers": "{c} = خبرها و پیشنهادها",
   "{c} = never important": "{c} = هرگز مهم نیست",
   "{n} still on the list": "هنوز {n} در فهرست",
+  "{c} · {n} items still to buy:": "{c} · هنوز {n} چیز برای خرید:",
+  "{c}: nothing left to buy": "{c}: چیزی برای خرید نمانده",
+  "{t} came up in {c} on {n} days:": "{t} در {c} در {n} روز مطرح شد:",
+  "Show all {n} messages": "نمایش همه {n} پیام",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: {n} پیام نگه داشته شده — درباره موضوعی بپرس، مثلاً «{c} کی درباره پارکینگ حرف زد؟»",
+  "From your chats — {c}": "از گفتگوهایت — {c}",
+  "All {n} messages": "همه {n} پیام",
 };

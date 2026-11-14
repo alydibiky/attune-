@@ -12815,4 +12815,11 @@ export const TH = {
   "{c} = news and offers": "{c} = ข่าวและข้อเสนอ",
   "{c} = never important": "{c} = ไม่สำคัญเลย",
   "{n} still on the list": "ยังเหลือ {n} ในลิสต์",
+  "{c} · {n} items still to buy:": "{c} · ยังต้องซื้ออีก {n} อย่าง:",
+  "{c}: nothing left to buy": "{c}: ไม่มีอะไรต้องซื้อแล้ว",
+  "{t} came up in {c} on {n} days:": "{t} ถูกพูดถึงใน {c} {n} วัน:",
+  "Show all {n} messages": "แสดงข้อความทั้ง {n}",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: เก็บไว้ {n} ข้อความ — ถามเรื่องที่สนใจ เช่น “{c} คุยเรื่องโรงรถเมื่อไร?”",
+  "From your chats — {c}": "จากแชทของคุณ — {c}",
+  "All {n} messages": "ข้อความทั้ง {n}",
 };

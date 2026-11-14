@@ -12815,4 +12815,11 @@ export const RU = {
   "{c} = news and offers": "{c} = новости и предложения",
   "{c} = never important": "{c} = никогда не важно",
   "{n} still on the list": "в списке ещё {n}",
+  "{c} · {n} items still to buy:": "{c} · ещё {n} купить:",
+  "{c}: nothing left to buy": "{c}: покупать больше нечего",
+  "{t} came up in {c} on {n} days:": "{t} обсуждали в {c} в {n} дн.:",
+  "Show all {n} messages": "Показать все {n} сообщ.",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}: сохранено сообщений: {n} — спроси о теме, напр. «когда {c} обсуждали гараж?»",
+  "From your chats — {c}": "Из твоих чатов — {c}",
+  "All {n} messages": "Все сообщения ({n})",
 };

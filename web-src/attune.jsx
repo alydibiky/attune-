@@ -142,6 +142,23 @@ import { AgentsPage } from "./agents-ui.jsx";
 import { ListsPage, lineText as listLine } from "./lists-ui.jsx";
 import * as LISTS from "./lists.js";
 import { boughtOf as shopBought, applyBought as shopApply } from "./shoplist.js";   // v9.9.40 K3
+import { messagesByChat as cpMessagesByChat } from "./chatpilot.js";   // v9.9.40 K5
+import { askChat as cpAskChat } from "./chatask.js";
+import { loadRoles as cpLoadRoles } from "./chatroles.js";
+import { loadGroups as waLoadGroups, loadRaw as waLoadRaw } from "./wagroups-store.js";
+// v9.9.40 rule 6: the WhatsApp exports shared to Attune (the groups library keeps them) are read once at start, for questions (K5)
+let WA_EXPORTS = [];
+try { setTimeout(async () => { try { const gs = await waLoadGroups(); const out = []; for (const g of gs.slice(0, 40)) { const t = await waLoadRaw(g.id); if (t) out.push({ title: g.title, text: t }); } WA_EXPORTS = out; } catch (e) {} }, 1500); } catch (e) {}
+/** v9.9.40 K5 (Ali: "when I ask what or when did Address East discuss the garage it should know"): { r (chatask), msgs [{ who, ts, text }] } or null */
+function askChatsNow(q) {
+  try { const N = typeof window !== "undefined" && window.AttuneNative, notes = N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : [];
+    const roles = cpLoadRoles(), mb = cpMessagesByChat(notes, WA_EXPORTS, roles);
+    const chats = mb.chats.map((c) => ({ ...c, role: (roles[c.key] || {}).role || c.role || "" }));
+    const r = cpAskChat(q, chats, mb.byKey); if (!r || (r.kind === "topic" && !r.total)) return null;
+    const ids = new Set(r.ids || []);
+    return { r, msgs: (mb.byKey[r.key] || []).filter((m) => ids.has(m.id)).map((m) => ({ who: m.who, ts: m.ts, text: m.text })) };
+  } catch (e) { return null; }
+}
 /** v9.9.40 K3 (Ali: "understand when I tell it I bought the shopping list"): the list chats' lists (Talabat…) and what this sentence
  *  takes off them → { list, ids, names } or null. All of it, all but some, or only the named items (shoplist.js, 10,000 cases). */
 function boughtFromLists(text) {
@@ -10011,6 +10028,7 @@ export default function App() {
     },
     // ---- reminders & phone actions (see actions.js) ----
     looksLikeAction,
+    askChats: (q) => askChatsNow(q),   // v9.9.40 K5
     readAction: async (text) => {
       const now = Date.now();
       // (the 1M test: "cancel my reminder to call the bank" — with the AI on, the model made a NEW reminder): what code knows is NOT a

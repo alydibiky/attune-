@@ -12815,4 +12815,11 @@ export const JA = {
   "{c} = news and offers": "{c} = ニュースとお得情報",
   "{c} = never important": "{c} = 重要ではない",
   "{n} still on the list": "リストにまだ {n} 件",
+  "{c} · {n} items still to buy:": "{c} · まだ買う物 {n} 件：",
+  "{c}: nothing left to buy": "{c}：買う物はもうありません",
+  "{t} came up in {c} on {n} days:": "{t} は {c} で {n} 日話題になりました：",
+  "Show all {n} messages": "{n} 件のメッセージをすべて表示",
+  "{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”": "{c}：{n} 件のメッセージを保存 — 話題を聞いてください（例：「{c} が駐車場の話をしたのはいつ？」）",
+  "From your chats — {c}": "あなたのチャットから — {c}",
+  "All {n} messages": "全 {n} 件のメッセージ",
 };

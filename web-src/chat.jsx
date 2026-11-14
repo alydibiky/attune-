@@ -1104,6 +1104,19 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           actions: [...cx.people.slice(0, 1).map((p) => [p.name, "person:" + p.id]), ...opens.map((o) => [OPEN[o], "open:" + o]), ["Just answer", "answer"]] } }] }));
       setText("");
     };
+    // v9.9.40 K5 / AS-2 (Ali's OK): "when did Address East discuss the garage?", "what are all the talabat?" — from the kept messages of
+    // that chat (notifications + the exports shared to Attune): every day it came up, who wrote, and every message used, in full
+    if (route && !img && api.askChats) { const ac = api.askChats(typed);
+      if (ac) { const cid = ensureChat(typed), r = ac.r, d = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch (e) { return iso; } };
+        let detail = "", actions = [];
+        if (r.kind === "list") { const l = (() => { try { return JSON.parse(localStorage.getItem("attune:lists:v1") || "{}").lists.find((x) => x.chatKey === r.key); } catch (e) { return null; } })(), its = l ? l.items.filter((i) => !i.done).map((i) => i.text) : [];
+          detail = its.length ? tr("{c} · {n} items still to buy:", { c: r.chat, n: its.length }) + "\n" + its.map((x) => "• " + x).join("\n") : tr("{c}: nothing left to buy", { c: r.chat }); actions = [["Open the list", "open:lists"]]; }
+        else if (r.kind === "topic") { detail = tr("{t} came up in {c} on {n} days:", { t: r.topic, c: r.chat, n: r.days.length }) + "\n" + r.days.map((x) => "• " + d(x.iso) + " — " + x.who.join(", ") + ": “" + String(x.quote.text).slice(0, 120) + "”").join("\n");
+          actions = [[tr("Show all {n} messages", { n: r.total }), "chatmsgs"]]; }
+        else { detail = tr("{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”", { c: r.chat, n: r.total }); }
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
+          { id: newId(), role: "assistant", chatMsgs: ac.msgs, card: { tone: "emerald", title: tr("From your chats — {c}", { c: r.chat }), detail, actions } }] }));
+        setText(""); return; } }
     if (route && cx && cx.answer && (cx.people.length || cx.goals.length) && (!only || only === "money-ask")) { cxCard(); return; }
     if (route && !img && (myMoneyIntent(typed) || only === "money-ask") && ok("money-ask")) {
       const m = answerMyMoney(typed, loadLedger(), { ar: /[\u0600-\u06FF]/.test(typed) });
@@ -2186,6 +2199,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "radar") window.dispatchEvent(new CustomEvent("attune-radar", { detail: { text: m.radarText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
     else if (act.startsWith("open:")) window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: act.slice(5) } }));   // v6.28 Ask your life
+    else if (act === "chatmsgs") {   // v9.9.40 K5 + Ali's wish "display the full message of everything": every message the answer used, in full
+      const all = (m.chatMsgs || []).map((x) => { let w = ""; try { w = new Date(x.ts).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) {} return w + " · " + (x.who || "") + "\n" + x.text; }).join("\n\n");
+      patchChat(chat.id, (c) => ({ ...c, messages: [...c.messages, { id: newId(), role: "assistant", card: { tone: "emerald", title: tr("All {n} messages", { n: (m.chatMsgs || []).length }), detail: all || "—", actions: [] } }] }));
+    }
     else if (act === "pick-do" || act === "pick-chat") {   // v9.1 "Which did you mean?" — remembered for this shape of sentence
       const q = m.pickText || "", at = messages.findIndex((x) => x.id === m.id), hist = messages.slice(0, Math.max(0, at - 1));
       UND.learn(q, act === "pick-do" ? (m.pickKind || "money-log") : "chat");
