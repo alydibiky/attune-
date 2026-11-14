@@ -17,4 +17,4 @@ for (let i = 0; i < N; i++) {
   if (err) bad[err] = (bad[err] || 0) + 1; else ok++;
 }
 const s = `# Categories-learn run — ${N} ledgers, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n` + Object.entries(bad).map(([k, v]) => `\n- ✗ ${k} × ${v}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-catlearn-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s); console.log(s);
+if (N === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-catlearn-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s); console.log(s);

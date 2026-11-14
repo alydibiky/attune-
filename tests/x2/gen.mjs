@@ -5,7 +5,7 @@
 // — with a Money expense only when there is a cost.
 const U = await import(process.env.X2 || "../../web-src/upkeep.js");
 const { SERVICES } = await import("../../web-src/car.js");
-function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 22695477 + 1) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (Math.imul(s, 22695477) + 1) >>> 0) / 4294967296); }
 const NOW = Date.parse("2026-11-12T12:00:00"), DAY = 864e5;
 const iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const T = (s) => Date.parse(s + "T12:00:00");

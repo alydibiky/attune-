@@ -91,13 +91,13 @@ const NAMES0 = { en: ["Ahmed", "Sara", "John", "Maria"], ar: ["احمد", "سا�
 const HO = process.env.HELDOUT ? await import("./langs-heldout.mjs") : null;   // the held-out phrasings (langs-heldout.mjs)
 const L = HO ? HO.L : L0, NAMES = HO ? HO.NAMES : NAMES0;
 if (HO) seed += 104729;
-const KINDS = [["spend", 25, ["money", "confirm"], "money-log"], ["remind", 25, ["reminder"], "action"], ["owe", 20, ["life", "confirm"], "life"], ["watch", 15, ["agent"], "agent"], ["ask", 7.5, ["money-ask", "ask:money", "ask:owed-in", "ask:owed-out", "ask:life"], "money-ask"], ["chat", 7.5, null, null]];
+const KINDS = [["ask", 7.5, ["money-ask", "ask:money", "ask:owed-in", "ask:owed-out", "ask:life"], "money-ask"], ["chat", 7.5, null, null], ["watch", 15, ["agent"], "agent"], ["owe", 20, ["life", "confirm"], "life"], ["remind", 25, ["reminder"], "action"], ["spend", 25, ["money", "confirm"], "money-log"]];
 const LANGS = Object.keys(L);
 const seen = new Set(), rows = [];
-const per = Math.round(TOTAL / LANGS.length);
-for (const lg of LANGS) { const D = L[lg], N = NAMES[lg];
-  for (const [kind, share, accept, label] of KINDS) { const want = Math.round(per * share / 100); let made = 0, tries = 0;
-    while (made < want) { if (tries++ > want * 4000) break;
+const per0 = Math.floor(TOTAL / LANGS.length), extra = TOTAL - per0 * LANGS.length;   // exactly TOTAL in all
+for (const [li, lg] of LANGS.entries()) { const D = L[lg], N = NAMES[lg], per = per0 + (li < extra ? 1 : 0); let carry = 0, madeLg = 0;
+  for (const [ki, [kind, share, accept, label]] of KINDS.entries()) { const want = ki === KINDS.length - 1 ? per - madeLg : Math.round(per * share / 100) + carry; let made = 0, tries = 0;
+    while (made < want) { if (tries++ > want * 400 + 20000) break;
       const a = pick(AMT), h = int(6, 11), n = pick(N), w = pick(D.wrap) + "";
       const dir = kind === "owe" ? (rnd() < 0.5 ? "in" : "out") : "";
       let s = kind === "spend" ? pick(D.spend) : kind === "remind" ? pick(D.remind) : kind === "owe" ? pick(dir === "in" ? D.owe_in : D.owe_out) : kind === "watch" ? pick(D.watch) : kind === "ask" ? pick(D.ask) : pick(D.chat);
@@ -116,7 +116,9 @@ for (const lg of LANGS) { const D = L[lg], N = NAMES[lg];
       if (ok && kind === "spend" && r.k === "money" && r.u && r.u.actions) { const it = (r.u.actions.find((x) => x.kind === "money") || { items: [] }).items[0];
         const v2 = /\bribu\b/.test(s) ? val * 1000 : val;   // "50 ribu" is 50,000 rupiah
         if (it && Math.round(it.amount) !== v2) why = "amount " + it.amount + " ≠ " + v2; }
-      rows.push({ lg, kind, s, k: why ? r.k + " (" + why + ")" : r.k, ok: ok && !why, model: ok && !why && model && !accept.includes(r.k) }); } } }
+      rows.push({ lg, kind, s, k: why ? r.k + " (" + why + ")" : r.k, ok: ok && !why, model: ok && !why && model && !accept.includes(r.k) }); }
+    madeLg += made; carry = want - made; } }
+if (rows.length !== TOTAL) throw new Error("made " + rows.length + " different sentences, not " + TOTAL);
 const total = rows.length, bad = rows.filter((r) => !r.ok).length, toModel = rows.filter((r) => r.model).length;
 let md = `# 1M part A3${HO ? " (HELD-OUT phrasings)" : ""} — ${total} sentences in 20 languages + Franco, ${total - bad} right (${(100 * (total - bad) / total).toFixed(2)}%), ${toModel} of them handed to the model with the right kind among its choices\n\n| language | sentences | wrong | by code | left to the model | right % |\n|---|---|---|---|---|---|\n`;
 const byL = {}; for (const r of rows) { const b = (byL[r.lg] = byL[r.lg] || { n: 0, bad: 0, model: 0, ex: {} }); b.n++; if (r.model) b.model++; if (!r.ok) { b.bad++; const k = r.kind + " → " + r.k; (b.ex[k] = b.ex[k] || []).push(r.s); } }

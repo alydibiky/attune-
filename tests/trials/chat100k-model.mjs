@@ -10,7 +10,7 @@ import { judgeMessages, parseJudge, looksFranco, francoToArabic } from "../../we
 import { readable } from "../../web-src/wrapclean.js";
 const PORT = process.env.TRIAL_PORT || 8099, rows = JSON.parse(fs.readFileSync(process.argv[2])), N = +(process.argv[3] || 300);
 const pool = rows.filter((r) => r.model && r.cands && r.cands.length);
-let seed = 7; const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
+let seed = 7; const rnd = () => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296);
 const sample = pool.length <= N ? pool : pool.map((r) => [rnd(), r]).sort((a, b) => a[0] - b[0]).slice(0, N).map((x) => x[1]);
 async function ask(messages) {
   const r = await fetch(`http://127.0.0.1:${PORT}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json" },

@@ -32,4 +32,4 @@ for (let i = 0; i < N; i++) {
     if (focused(ev, plan) === Math.min(s, plan * 60000)) res.focus++; else bad["focus"] = (bad["focus"] || 0) + 1; }
 }
 const out = `# B4 time run (${process.env.TZ || "local"}) — countdowns ${res.countdown}/${N} · habits ${res.habit}/${N} · focus ${res.focus}/${N} (${(100 * (res.countdown + res.habit + res.focus) / (3 * N)).toFixed(2)}%)` + Object.entries(bad).slice(0, 8).map(([k, v]) => `\n- ✗ ${k} × ${v}`).join("") + "\n";
-if (N === 10000 && process.env.TZ === "Africa/Cairo") fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-b4time-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), out); console.log(out);
+if (N === 10000 && process.env.TZ === "Africa/Cairo") fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-b4time-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), out); console.log(out);

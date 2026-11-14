@@ -96,5 +96,5 @@ for (let i = 0; i < N; i++) {
 const byL = {}; for (const k of Object.keys(bad)) { const L = k.split(" · ")[0]; byL[L] = (byL[L] || 0) + bad[k].length; }
 let md = `# Rules run — ${N} sentences, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n\nWrong per language: ${Object.entries(byL).sort((a, b) => b[1] - a[1]).map(([l, n]) => l + " " + n).join(" · ") || "none"}\n`;
 for (const [k, v] of Object.entries(bad).sort((a, b) => b[1].length - a[1].length).slice(0, 60)) md += `\n- **${k}** × ${v.length}: «${v[0]}»`;
-if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-rules-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md + "\n");
+if (N === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-rules-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md + "\n");
 console.log(md.slice(0, 6000));

@@ -1,11 +1,11 @@
-# 1M part A3 — 74316 sentences in 20 languages + Franco, 74291 right (99.97%), 15 of them handed to the model with the right kind among its choices
+# 1M part A3 — 74316 sentences in 20 languages + Franco, 74291 right (99.97%), 303 of them handed to the model with the right kind among its choices
 
 | language | sentences | wrong | by code | left to the model | right % |
 |---|---|---|---|---|---|
 | id | 3378 | 25 | 3353 | 0 | 99.26 |
 | en | 3378 | 0 | 3378 | 0 | 100.00 |
 | ar | 3378 | 0 | 3363 | 15 | 100.00 |
-| arb | 3378 | 0 | 3378 | 0 | 100.00 |
+| arb | 3378 | 0 | 3090 | 288 | 100.00 |
 | fr | 3378 | 0 | 3378 | 0 | 100.00 |
 | es | 3378 | 0 | 3378 | 0 | 100.00 |
 | de | 3378 | 0 | 3378 | 0 | 100.00 |

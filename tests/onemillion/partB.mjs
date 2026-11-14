@@ -13,6 +13,12 @@ const run = (d) => new Promise((res) => { const t0 = Date.now(); let out = "";
   p.on("close", (code) => res({ d, code, out, s: Math.round((Date.now() - t0) / 1000) })); });
 function score(out) {
   for (const line of out.trim().split("\n").reverse()) { try { const j = JSON.parse(line); if (j && typeof j.pass === "number" && typeof j.N === "number") return { pass: j.pass, N: j.N, bad: j.bad }; } catch {} }
+  // "# Groups run — 10000 groups, 10000 right (100.00%)" · "300 saved agents, 300 without a fault" · "notifications 10000 · all right 9896"
+  { const x = /(\d[\d,]*)\s+[\p{L}\s/-]{2,40}?,\s*(\d[\d,]*)\s+(?:right|without a fault|correct|pass(?:ed)?)\b/u.exec(out) || /(\d[\d,]*)\s*·\s*all right\s*(\d[\d,]*)/.exec(out);
+    if (x) { const N = +x[1].replace(/,/g, ""), pass = +x[2].replace(/,/g, ""); if (N >= 1000 && pass <= N) return { pass, N }; } }
+  // several groups, each "x / y" on its own "- **group**:" line (b5): their sum
+  { const g = [...out.matchAll(/^- \*\*[^*]+\*\*:\s*(\d[\d,]*)\s*\/\s*(\d[\d,]*)/gm)].map((y) => [+y[1].replace(/,/g, ""), +y[2].replace(/,/g, "")]);
+    if (g.length > 1) return { pass: g.reduce((a, y) => a + y[0], 0), N: g.reduce((a, y) => a + y[1], 0) }; }
   const m = [...out.matchAll(/(\d[\d,]*)\s*(?:\/|of)\s*(\d[\d,]*)\s*(?:right|pass|ok|correct|cases)?/gi)].map((x) => [+x[1].replace(/,/g, ""), +x[2].replace(/,/g, "")]).filter(([a, b]) => b >= 1000 && a <= b);
   if (m.length) { const [pass, N] = m.sort((x, y) => y[1] - x[1])[0]; return { pass, N }; }
   return null;

@@ -6,7 +6,7 @@
 //     shows; an open debt shows its amount left.
 const BM = await import(process.env.P2 || "../../web-src/beforemeet.js");
 const { scenario } = await import("../n1/gen.mjs");
-function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296); }
 const NOW = Date.parse("2026-11-12T12:00:00");
 const VERB = [["Meeting ", "Meeting with "], ["Call ", "Lunch with "], ["اقابل ", "مكالمة مع "]];
 export function run(N = 10000, from = 0) {

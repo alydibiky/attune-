@@ -155,7 +155,9 @@ export const DOC_NAME = { passport: "Passport", visa: "Visa", licence: "Driving 
  */
 // v9.9.22 (a photo's text: "2O26", "17,5O0", "1l/03", "SAR l0O"): inside a run of digits, the letters a camera mistakes for them are digits
 export function fixOcrDigits(s) {
-  return String(s || "").replace(/[0-9OoIl|][0-9OoIl|,./:-]*[0-9OoIl|]/g, (m) => (/\d/.test(m) ? m.replace(/[Oo]/g, "0").replace(/[Il|]/g, "1") : m));
+  return String(s || "").replace(/[0-9OoIl|][0-9OoIl|,./:-]*[0-9OoIl|]/g, (m) => (/\d/.test(m) ? m.replace(/[Oo]/g, "0").replace(/[Il|]/g, "1") : m))
+    // v9.9.38 (the 1M test): a lone l / I / | before a month is the day 1 ("ends l Dec 2026" was read as the end of December)
+    .replace(/(^|[\s(:,])[lI|](?=\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{4}\b)/gi, "$11");
 }
 export function readDeadlines(text, opts = {}) {
   const raw = fixOcrDigits(String(text || "").trim()); if (!raw || raw.length > 6000) return [];

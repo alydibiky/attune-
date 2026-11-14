@@ -6,7 +6,7 @@ const mem = {}; globalThis.localStorage = { getItem: (k) => mem[k] ?? null, setI
 const F = await import("../../web-src/fit.js"); const R = await import("../../web-src/fitread.js"); const P = await import("../../web-src/fitplus.js");
 const words = ["2","٣","نص","ربع","half","x3","kg","g","كيلو","طبق","كوباية","and","و","بال","مع","with","+",",","،","رز","بيض","بيضتين","فول","pizza","cola","بيبسي","burger","meal","no sugar","سكر","0","-5","99999","1/0","NaN","","  ","???","😀","<b>","كبير","small","fried","مقلي","تلت","فرخة","chicken","كشري","ساندوتش","sandwich","طعمية","milk","بلبن","شاي","tea","بطيخة","pizza hut","kfc","من عند","ورز","egs","1.5","0.0001","1e9","ـــ","ال","ب","و و و","بامية","باللحمة","wholeN","constructor","__proto__","toString"];
 const bad = []; let n = 0;
-let seed = 20260928; const random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);   // the same sentences every run
+let seed = 20260928; const random = () => ((seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff) / 2147483648);   // the same sentences every run
 const rnd = (k) => Array.from({ length: k }, () => words[Math.floor(random() * words.length)]).join(" ");
 const okItem = (x) => x && typeof x.grams === "number" && isFinite(x.grams) && x.grams > 0 && x.grams <= 5000 && (x.kcal == null || (isFinite(x.kcal) && x.kcal >= 0)) && ["p","c","f"].every((k) => x[k] == null || (isFinite(x[k]) && x[k] >= 0)) && x.id;
 for (let i = 0; i < 8000; i++) {

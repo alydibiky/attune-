@@ -271,6 +271,6 @@ for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].
 md += "\n## What went wrong (examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad || b.kbad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 4).map(show).join(" · ")}\n`;
   for (const [k, ex] of Object.entries(b.kex).sort((a, b) => b[1].length - a[1].length)) md += `- kind read as **${k}** × ${ex.length}: ${ex.slice(0, 3).map(show).join(" · ")}\n`; }
-if (TOTAL === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-notifs-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md);
+if (TOTAL === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-notifs-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md);
 if (process.env.NOTIF_JSON) fs.writeFileSync(process.env.NOTIF_JSON, JSON.stringify(rows));
 console.log(md.split("\n## What")[0]); console.log(TOTAL === 10000 ? "report: tests/notifs/report.md" : "(a smaller run — the report file is written only by the full 10,000)");

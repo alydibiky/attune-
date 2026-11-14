@@ -5,7 +5,7 @@
 import fs from "fs";
 const E = await import(process.env.AGENTEDIT || "../../web-src/agentedit.js");
 const N = +(process.argv[2] || 10000), now = Date.parse("2026-11-12T10:00:00");
-let seed = 7 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), pick = (l) => l[Math.floor(rnd() * l.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+let seed = 7 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff) / 2147483648), pick = (l) => l[Math.floor(rnd() * l.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const day = (n) => iso(now + n * 864e5), span = (a, b) => Math.round((Date.parse(b + "T12:00:00") - Date.parse(a + "T12:00:00")) / 864e5);
 const CITIES = ["Masjid al-Haram, Makkah", "Madinah", "Dubai Marina", "Sharm El Sheikh", "Istanbul", "Paris", "London", "Cairo", "Jeddah", "Riyadh", "Kuala Lumpur", "Bali"];
@@ -52,6 +52,6 @@ let pass = 0; const miss = {};
 for (const c of cases) { let b, why; try { b = E.applyEdit(c.a, c.key, c.v, now); why = c.want(b); } catch (e) { why = "crash: " + e.message; } if (!why) pass++; else { const k = c.kind + "/" + c.key + ": " + why; (miss[k] = miss[k] || []).push(c.i); } }
 const pct = (100 * pass / cases.length).toFixed(2);
 const rep = ["# Agent edits — " + cases.length + " cases", "", "Passed: **" + pass + " / " + cases.length + " (" + pct + "%)**", "", ...Object.entries(miss).sort((x, y) => y[1].length - x[1].length).map(([k, l]) => "- " + k + " — " + l.length + " (e.g. #" + l.slice(0, 3).join(", #") + ")")].join("\n");
-if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-agentedit-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), rep + "\n");
+if (N === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-agentedit-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), rep + "\n");
 console.log(rep.split("\n").slice(0, 14).join("\n"));
 export const result = { pass, total: cases.length, pct: +pct };

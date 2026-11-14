@@ -135,6 +135,6 @@ let md = `# 100,000 chat orders — ${total} orders, ${total - bad} right (${(10
 for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n)) md += `| ${g} | ${b.n} | ${b.bad} | ${b.model} | ${(100 * (b.n - b.bad) / b.n).toFixed(2)} |\n`;
 md += "\n## What went wrong (examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length).slice(0, 12)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 6).map((x) => "«" + x.replace(/\n/g, " ⏎ ") + "»").join(" · ")}\n`; }
-if (TOTAL === 100000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/A2-chat-s" + process.env.SEED_SHIFT + ".md" : "./chat100k-report.md", import.meta.url), md);
+if (TOTAL === 100000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/A2-chat-s" + process.env.SEED_SHIFT + ".md" : "./chat100k-report.md", import.meta.url), md);
 if (process.env.CHAT_JSON) fs.writeFileSync(process.env.CHAT_JSON, JSON.stringify(rows));
 console.log(md.split("\n## What")[0]);

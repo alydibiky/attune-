@@ -37,5 +37,5 @@ for (let i = 0; i < N; i++) {
   if (why) (bad[why.replace(/b\d+-/g, "b-")] = bad[why.replace(/b\d+-/g, "b-")] || []).push(JSON.stringify(taps.map((t) => t.act + (t.acct ? ":" + t.acct : "") + "@" + t.rid.slice(-1)))); else ok++;
 }
 const s = `# Notification buttons run — ${N} tap sequences, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n` + Object.entries(bad).slice(0, 12).map(([k, v]) => `\n- ✗ ${k} × ${v.length}: ${v[0]}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-notifpay-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s);
+if (N === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-notifpay-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s);
 console.log(s);

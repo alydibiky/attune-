@@ -4,7 +4,7 @@
 import fs from "fs";
 const E = await import(process.env.EGID || "../../web-src/egid.js");
 const N = +(process.argv[2] || 10000), now = Date.parse("2026-11-12T12:00:00");
-let seed = 17 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
+let seed = 17 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
 const AR = "٠١٢٣٤٥٦٧٨٩", G = Object.keys(E.GOVS), pad = (n, k = 2) => String(n).padStart(k, "0");
 let pass = 0; const miss = {};
 for (let i = 0; i < N; i++) {
@@ -21,13 +21,15 @@ for (let i = 0; i < N; i++) {
   else if (born > now) why = "future";
   const shown = (rnd() < 0.4 ? [...num].map((c) => AR[c]).join("") : num).replace(/(.{4})/g, (m) => (rnd() < 0.3 ? m + pick([" ", "-"]) : m));
   const text = pick(["", "الرقم القومي ", "National ID: ", "بطاقة رقم "]) + shown + pick(["", "\nمحافظة", " · ok"]);
-  let res; const found = E.findIds(text); res = E.decodeId(found[0] || shown);
+  let res; const found = E.findIds(text); res = E.decodeId(found[0] || shown, now);
   let bad = "";
   if (!why) { if (!res.ok) bad = "a real number rejected (" + res.why + ")"; else if (res.birth !== y + "-" + pad(mm) + "-" + pad(dd)) bad = "birth date wrong"; else if (res.governorate !== E.GOVS[g]) bad = "governorate wrong"; else if (res.sex !== (male ? "M" : "F")) bad = "sex wrong"; else if (found.length !== 1) bad = "not found in the text"; }
   else if (res.ok) bad = "a broken number (" + why + ") accepted";
-  else if (res.why !== why && !(why === "length" && found.length === 0)) bad = "wrong reason: " + res.why + " for " + why;
+  // (v9.9.38: a number with TWO problems — a birth day still to come plus a bad governorate, or 29 Feb moved to a year without one — may be
+  // reported by either; both are true)
+  else if (res.why !== why && !(why === "length" && found.length === 0) && !(born > now && res.why === "future") && !(why === "future" && res.why === "date" && mm === 2 && dd === 29)) bad = "wrong reason: " + res.why + " for " + why;
   if (!bad) pass++; else (miss[bad] = miss[bad] || []).push(i);
 }
 const rep = ["# Egyptian national ID — " + N, "", "Passed: **" + pass + " / " + N + " (" + (100 * pass / N).toFixed(2) + "%)**", "", ...Object.entries(miss).map(([k, l]) => "- " + k + " — " + l.length)].join("\n");
-if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-egid-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), rep + "\n");
+if (N === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-egid-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), rep + "\n");
 console.log(rep);

@@ -39,4 +39,4 @@ for (let i = 0; i < N; i++) {
     if (err) bad["week: " + err] = (bad["week: " + err] || 0) + 1; else okW++; }
 }
 const s = `# B4 plan run — places ${okP}/${N} · week plans ${okW}/${N} (${(100 * (okP + okW) / (2 * N)).toFixed(2)}%)` + Object.entries(bad).slice(0, 10).map(([k, v]) => `\n- ✗ ${k} × ${v}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-b4plan-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s); console.log(s);
+if (N === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-b4plan-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s); console.log(s);

@@ -172,7 +172,9 @@ export function organise(text, { now = Date.now() } = {}) {
   const items = []; let carry = null, lastSi = -1;
   const all = clauses(text, true);
   for (let i = all.length - 2; i >= 0; i--) { const a = all[i], b = all[i + 1];
-    const w = b.c.trim().split(/\s+/), verbLast = has("buy", w[w.length - 1]) && !has("buy", w[0]);
+    // (v9.9.38, the 1M test: "süt, yumurta ve ekmek satın al" — a two-word verb; «빵 하고 계란 사기 수요일» — a day after the verb: the verb
+    // still comes last, so a bare item before it belongs to this list)
+    const w = (dayIn(b.c, now).rest || b.c).trim().split(/\s+/), verbLast = (has("buy", w[w.length - 1]) || (w.length > 1 && has("buy", w.slice(-2).join(" ")))) && !has("buy", w[0]);
     const before = i > 0 && all[i - 1].si === a.si && has("buy", all[i - 1].c) && !verbLast;
     if (a.si === b.si && !before && has("buy", b.c) && !ACTION(a.c) && amountIn(a.c) == null && !timeIn(a.c).time && !(dayIn(a.c).date && dayIn(b.c).date) && dayIn(a.c).rest.trim().split(/\s+/).length <= 3 && !has("buy", b.c.split(/\s+/)[0])) { b.c = a.c + ", " + b.c; all.splice(i, 1); } }
   const raw = all.map((x) => x.c);

@@ -82,5 +82,5 @@ let md = `# Scenario run — ${total} sentences, ${total - bad} right (${(100 * 
 for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n)) md += `| ${g} | ${b.n} | ${b.bad} | ${(100 * (b.n - b.bad) / b.n).toFixed(1)} |\n`;
 md += "\n## What went wrong (a few examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 6).map((x) => "«" + x + "»").join(" · ")}\n`; }
-fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-scenarios-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md);
+fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-scenarios-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md);
 console.log(md.split("\n## What")[0]); console.log("report: tests/scenarios/report.md");

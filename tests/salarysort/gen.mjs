@@ -18,4 +18,4 @@ for (let i = 0; i < N; i++) {
   if (err) bad[err.replace(/[\d.]+/g, "#")] = (bad[err.replace(/[\d.]+/g, "#")] || 0) + 1; else ok++;
 }
 const out = `# Salary sorter run — ${N} salaries, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n` + Object.entries(bad).map(([k, v]) => `\n- ✗ ${k} × ${v}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-salarysort-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), out); console.log(out);
+if (N === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-salarysort-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), out); console.log(out);

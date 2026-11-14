@@ -45,5 +45,5 @@ for (let i = 0; i < N; i++) {
   if (err) fail(err, i); else ok++;
 }
 const s = `# Done-for-you run — ${N} days, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n` + Object.entries(bad).map(([k, v]) => `\n- ✗ ${k} × ${v.length}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-donelog-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s);
+if (N === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-donelog-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s);
 console.log(s);
