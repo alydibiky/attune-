@@ -20,6 +20,7 @@ timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={() => did(x
 
 ## Title
 actions-ui.jsx: <input dir="auto" value={a.title} onChange={(e) => setA({ ...a, title: e.target.value })} className={field} aria-label={tr("Title")} data-te
+missions-ui.jsx: <div><label className={lbl} htmlFor="bk-title">{tr("Title")}</label><input id="bk-title" className={inp} value={b.title} onChange={(e) => se
 shelf-ui.jsx: <input value={title} onChange={set(setTitle)} dir="auto" placeholder={tr("Title")} data-testid="shelf-note-title"
 shelf-ui.jsx: <option value="edited">{tr("Last edited")}</option><option value="created">{tr("Date created")}</option><option value="title">{tr("Title")}<
 spaces-ui.jsx: <input value={note.name} onChange={(e) => setNote({ ...note, name: e.target.value })} placeholder={tr("Title")} dir="auto" className={input}
