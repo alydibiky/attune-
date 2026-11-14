@@ -19,5 +19,10 @@ ok(st3.done[0].from.text === "tortilla" && st3.done[0].undo.itemIds[0] === "i1" 
 const ex = "14/11/2026, 19:00 - Noudy: tortilla\n14/11/2026, 19:05 - Ali: ok\n10/11/2026, 10:00 - Noudy: milk";
 const mb = P.messagesByChat([wa("1", "Talabat", "Noudy: tortilla", Date.parse("2026-11-14T19:00:20"))], [{ title: "Talabat", text: ex }], roles);
 ok(mb.byKey["whatsapp|g:talabat"] && mb.byKey["whatsapp|g:talabat"].length === 3, "export + notification of the same message → kept once (3 messages): " + JSON.stringify((mb.byKey["whatsapp|g:talabat"] || []).map((m) => m.text)));
+// the first Talabat messages arrived while it was asking "what is Talabat?" → acted on once Ali says Right
+{ const t = [wa("t1", "Talabat", "Noudy: tortilla", now - 600e3), wa("t2", "Talabat", "Noudy: chicken strips", now - 500e3)];
+  const a1 = P.step(t, P.emptyCP(), { roles: {}, now }); ok(a1.effects.length === 0 && a1.st.ask.length === 1, "before Right: asked, nothing done");
+  const a2 = P.step(t, { ...a1.st, ask: [] }, { roles, now: now + 1000 });
+  ok(a2.effects.length === 2 && a2.effects.map((e) => e.items[0]).join() === "tortilla,chicken strips", "after Right: both waiting items go on the list"); }
 console.log(fail ? `FAIL ${fail} of ${n}` : `ALL PASSED (${n} checks)`);
 process.exit(fail ? 1 : 0);

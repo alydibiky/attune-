@@ -77,7 +77,7 @@ export function guessRole(chat = {}, messages = []) {
   const writers = new Set(messages.map((m) => m.who || m.author).filter(Boolean));
   const byName = readDescription(name);
   if (byName && byName.role && byName.role !== "person" && byName.role !== "quiet") return { role: byName.role, sure: false, because: { t: "from the chat's name “{n}”", v: { n: name } } };
-  if (real.length >= 4) {
+  if (real.length >= 2) {   // (2 are enough to SUGGEST it — a guess is only ever shown with "Right?", never acted on)
     const listy = real.filter((m) => itemsOf(m.text).length > 0 && String(m.text).length <= 60).length;
     if (listy / real.length >= 0.6 && writers.size <= 4) return { role: "shopping", sure: false, because: { t: "{n} of {m} messages are things to buy", v: { n: listy, m: real.length } } };
   }

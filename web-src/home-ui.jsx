@@ -14,6 +14,7 @@ import { FlightDayCard, nextFlight } from "./trip-ui.jsx";
 import { loadTrip } from "./travel.js";
 import { enterSends } from "./keys.js";
 import { AutopilotCard } from "./autopilot-ui.jsx";
+import { ChatPilotCard } from "./chatpilot-ui.jsx";   // v9.9.40 the new Autopilot
 import { myCountry } from "./country.js";
 import { SuggestCard } from "./suggest-ui.jsx";
 import { SalaryHomeCard } from "./salary-ui.jsx";
@@ -381,6 +382,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         onTickTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} /> : null}
       {/* v9.9.19 T2 (Ali picked A): habits with this week's dots */}
       {minimal && !rep ? <HabitsCard /> : null}
+      {/* v9.9.40 the new Autopilot (Ali's OK on K1–K6): chats by their role — the list chat's Shopping line, Done for you with the full
+          message, "What I understood" for a new group, Kept quietly today */}
+      {minimal && !rep ? <ChatPilotCard /> : null}
       {minimal && !rep ? <AutopilotCard /> : null}
       {minimal && rep && !freshApp() ? <HeroCards data={data} navTo={navTo} /> : null}
       {minimal && rep ? <><ReportTiles safe={data.safe} spentMonth={data.hasLedger ? data.o.monthOut : null} cur={data.o && data.o.cur} kcal={data.kcal} goal={data.fitOn ? data.goal : 0}

@@ -25,7 +25,8 @@ export function decide(n, { roles = {}, known = {}, me = [], list = [] } = {}) {
   const c = chatOf(n, known); if (!c) return null;
   const from = src(c, n), nz = noiseOf(c.text);
   if (nz) return { kind: "keep", quiet: nz, from, why: { t: "kept quietly ({k})", v: { k: nz } } };
-  const role = confirmedRole(roles, c.key);
+  // a one-to-one chat is certainly one person (code knows it — no need to ask about every contact); "What is this chat?" is for groups
+  const role = confirmedRole(roles, c.key) || (!c.group && !roles[c.key] ? { role: "person", ok: true } : null);
   if (!role) {
     const seen = roles[c.key];
     return seen ? { kind: "keep", from, why: { t: "waiting for you to say what {c} is", v: { c: c.chat } } }

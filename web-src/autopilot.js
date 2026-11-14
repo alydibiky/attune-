@@ -170,6 +170,8 @@ export function suggestions(notes = [], { now = Date.now(), s = emptyState(), le
   const list = [...notes].filter((n) => (n.ts || 0) >= since).sort((a, b) => (b.ts || 0) - (a.ts || 0));
   for (const n of list) {
     const x = suggestFrom(n, { now, recent: list, s }); if (!x || x.kind === "delivered") continue;
+    // v9.9.40 the new Autopilot (chatpilot.js) handles chat messages by the chat's role — this card keeps money, bills, deliveries, calls
+    if (x.kind === "todo" && !s.oldTodos) continue;
     if (x.kind !== "subscription" && (n.ts || 0) < now - days * DAY) continue;
     if (keys.has(x.key) || s.ok[x.key] || s.no[x.key] || inLedger(x, ledger)) continue;
     // a subscription whose expense is already in Money (the bank SMS came first) adds only the plan

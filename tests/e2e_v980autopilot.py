@@ -30,17 +30,19 @@ with sync_playwright() as p:
     # listed under "Done for you" with Undo — nothing waits for a tap
     check(page.locator("[data-testid=autopilot-item]").count() == 0, "nothing waits for a tap")
     done = page.locator("[data-testid=autopilot-done]").inner_text()
-    check("Call back Mama" in done and "Ahmed Salah" in done and "Amazon" in done, "done by itself: call back Mama, Ahmed's request, the Amazon delivery: " + done.replace("\n", " | "))
+    check("Call back Mama" in done and "Amazon" in done, "done by itself: call back Mama, the Amazon delivery: " + done.replace("\n", " | "))
+    # v9.9.40 the new Autopilot (Ali's OK on K1–K6): a request in a CHAT is handled by the chat card, by the chat's role — Ahmed is
+    # one person, so his request is a to-do there, with its message and Undo
+    page.wait_for_selector("[data-testid=chatpilot]", timeout=8000); page.wait_for_timeout(600)
     check("talabat" not in done.lower() and "Jumia" not in done, "the sale and Talabat's '300 EGP OFF' are nothing")
     check("CARREFOUR" not in done, "the CIB debit is left to Money, which adds it by itself (one copy: the SMS is the same payment)")
     rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')"); rem = rem if isinstance(rem, list) else rem.get("items", [])
-    check(any("Ahmed Salah" in r.get("title", "") and r.get("source") == "autopilot" for r in rem), "Ahmed's message → a reminder for tomorrow")
+    check(any("Ahmed Salah" in r.get("title", "") and r.get("source") == "chatpilot" for r in rem), "Ahmed's message → a reminder for tomorrow (the chat card)")
     check(any("Call back Mama" in r.get("title", "") for r in rem) and any("Amazon" in r.get("title", "") for r in rem), "…and the call back and the delivery are reminders")
-    row = page.locator("[data-testid=autopilot-done] div", has_text="Ahmed Salah").first
-    row.locator("[data-testid=autopilot-undo]").click(); page.wait_for_timeout(300)
+    page.locator("[data-testid=cp-line][data-kind=todo]").first.click(); page.wait_for_selector("[data-testid=cp-sheet]", timeout=3000)
+    page.click("[data-testid=cp-undo]"); page.wait_for_timeout(300)
     rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')"); rem = rem if isinstance(rem, list) else rem.get("items", [])
     check(not any("Ahmed Salah" in r.get("title", "") for r in rem), "Undo takes the reminder back")
-    check("todo:WhatsApp" in page.evaluate("JSON.parse(localStorage.getItem('attune:autopilot:v1')).manual"), "…and from now on such a request from WhatsApp waits for a tap")
     n0 = len(rem)
     page.reload(); page.wait_for_timeout(1800)
     rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')"); rem = rem if isinstance(rem, list) else rem.get("items", [])

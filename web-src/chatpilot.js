@@ -24,9 +24,12 @@ export function step(notes = [], st0 = emptyCP(), { roles = {}, me = [], listOf 
   for (const k of Object.keys(roles)) if (k.includes("|g:")) known[k] = { group: true };
   const fresh = notes.filter((n) => n && (n.ts || 0) >= st.since && !st.seen[idOf(n)] && chatOf(n, known)).sort((a, b) => (a.ts || 0) - (b.ts || 0));
   for (const n of fresh) {
-    const id = idOf(n); st.seen[id] = 1;
+    const id = idOf(n);
     const c = chatOf(n, known); if (c && c.group) known[c.key] = { group: true };
     const d = decide(n, { roles, known, me, list: c ? listOf(c.key) : [] }); if (!d) continue;
+    // a message waiting for "what is this chat?" is NOT marked as looked at — once you say Right it is acted on (Talabat's first items)
+    const waiting = d.kind === "ask" || (d.kind === "keep" && !d.quiet && /^waiting for you/.test((d.why && d.why.t) || ""));
+    if (!waiting) st.seen[id] = 1;
     const rec = { id, kind: d.kind, at: n.ts || now, from: d.from, why: d.why };
     if (d.kind === "keep") { const k = day(n.ts || now); st.quiet[k] = st.quiet[k] || {}; st.quiet[k][d.from.chat] = (st.quiet[k][d.from.chat] || 0) + 1; continue; }
     if (d.kind === "ask") { if (!st.ask.some((a) => a.key === d.from.chatKey) && !(roles[d.from.chatKey])) st.ask.push({ key: d.from.chatKey, chat: d.from.chat, group: c ? c.group : false, guess: d.guess, from: d.from, at: n.ts || now }); continue; }
