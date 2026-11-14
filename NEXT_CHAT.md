@@ -1,5 +1,22 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (14 Nov 2026 night — v9.9.39 on main; the NEW AUTOPILOT is being built on branch ccr-7db1d9fc-iyie83)
+> Ali (14 Nov): "the whole autopilot idea is very stupid". Agreed SIX rules: 1 ignore by default · 2 not sure → don't act alone ·
+> 3 every action shows the original message + why + Undo / Open chat / Never from this chat · 4 everything kept and understood by
+> chat and topic ("when did Address East discuss the garage?") · 5 describe any chat in your own words → "What I understood" → OK ·
+> 6 export a chat (WhatsApp/Telegram) for its whole history. Picks: CH-1 EX-1 SL-1 DN-1 NS-2 AS-2 + his wishes ("understand when I
+> tell it I bought the shopping list"; "display the full message of everything") → combined page K1–K6 (K6 = the computer's bigger AI
+> re-checks the phone's work) → **Ali's OK on K1–K6** (docs/mockups/autopilot-combined.html → https://claude.ai/artifact/AycGYSNBDP34oSUnukivrt).
+> Context: Ali's WhatsApp group "Talabat" = him + his wife Noudy writing what ran out at home (his shopping list), NOT the delivery app.
+> Also asked: sync FREE and automatic through Google on every device (plan.js "sync" is Pro-only now; SETUP_CLOUD.md §A Google Cloud
+> steps still need Ali).
+> Done (each with 10,000 cases + held-out, all 100%): **AP-1** web-src/waexport.js (WhatsApp export reader, EN/AR) ·
+> **AP-2** web-src/chats.js (chat / writer / group / noise) + RecallLog v2 keeps who/convo/grp (Kotlin: check the branch APK build
+> run 43643886809 compiled) · **AP-4 part 1** web-src/shoplist.js (items from a message; "I bought …" all / except / only).
+> Next: AP-3 chat roles + "What I understood" (model + code) · AP-4 part 2 (list chat → Shopping list on Home, SL-1) · AP-5 Autopilot
+> decides by role, Done for you with full message (DN-1, K4), Kept quietly line (NS-2) · AP-6 ask about a chat (AS-2, K5) · AP-7
+> computer second look (K6) + sync free & automatic · all UI in 20 languages · full suite · main · APK.
+
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
 
