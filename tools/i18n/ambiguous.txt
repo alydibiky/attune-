@@ -374,6 +374,10 @@ messages-ui.jsx: <textarea value={m.text} onChange={(e) => set("text", e.target.
 agents-ui.jsx: <CardActions primary={{ label: tr("Schedule"), icon: Clock, onClick: () => ok && onDone({ kind: "send", who: who.trim(), phone, text: text.t
 messages-ui.jsx: <button onClick={save} className={U.btnP + " w-full"} data-testid="msg-save"><Clock size={16} />{tr("Schedule")}</button>
 
+## due now
+agents-ui.jsx: <span className={U.tag(x.daysLeft <= 0 ? "red" : x.daysLeft <= 2 ? "amber" : "gray")}>{x.daysLeft <= 0 ? tr("due now") : T("{n} days left", 
+insights.js: en: tr("You pay {name} {every} (about {amt}) — the next one is {when}.", { name: g.name, every: everyT, amt: (n0(amt) + " " + cur).trim(), w
+
 ## Remind me
 agents-ui.jsx: <button onClick={() => remindOn(x)} className={U.btnS + " h-10! min-h-[40px]!"} data-testid="restock-remind">{tr("Remind me")}</button></div
 attune.jsx: title={tr("Remind me")} aria-label={tr("Remind me")} className={`mt-0.5 ${reminders.some((r) => r.id === "p-" + c.id) ? "text-teal-400" : "t
@@ -834,8 +838,13 @@ doit-ui.jsx: {undone ? <span className="c-sub text-[13px]" data-testid="do-undon
 donelog-ui.jsx: const undo = (e) => { if (undoDone(e.id, { loadLedger, saveLedger })) { setSt(D.load()); flash && flash(tr("Undone")); } };
 notelabels-ui.jsx: NT.saveTeach(NL.undoLabel(NT.loadTeach(), i.id)); setV((x) => x + 1); flash && flash(tr("Undone"));
 
+## every week
+b5-ui.jsx: const everyText = (n) => (n === 1 ? tr("every day") : n === 7 ? tr("every week") : n === 14 ? tr("every 2 weeks") : n === 30 ? tr("every mon
+insights.js: const everyT = beat >= 27 && beat <= 33 ? tr("every month") : beat >= 6 && beat <= 8 ? tr("every week") : tr("every ~{n} days", { n: Math.ro
+
 ## every month
 b5-ui.jsx: const everyText = (n) => (n === 1 ? tr("every day") : n === 7 ? tr("every week") : n === 14 ? tr("every 2 weeks") : n === 30 ? tr("every mon
+insights.js: const everyT = beat >= 27 && beat <= 33 ? tr("every month") : beat >= 6 && beat <= 8 ? tr("every week") : tr("every ~{n} days", { n: Math.ro
 notelabels-ui.jsx: <p className="m-0 text-[15px] font-extrabold tabular-nums" dir="auto" data-testid="note-paid-amount">{fmtAmt(e)}{monthly ? <span className="
 
 ## On track
