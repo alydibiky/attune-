@@ -42,9 +42,23 @@ export function dayIn(text, now) {
 // a message that asks you to do something (or says when)
 // v9.9.17 (the 10,000-notification run): "see you tomorrow", "tonight was fun", "I'll call you tomorrow", "thanks for calling" made
 // to-dos — a day word alone asks for nothing, and "I'll call you" is THEIR job; a to-do needs a request
-const ASKS0 = /\b(send|bring|pay|transfer|remind|don't forget|dont forget|please|pls|can you|could you|pick up|call (?:me|us|him|her|them|the|dr|mr|your))\b|ابعت|ابعتلي|هات|كلمني|اتصل|(?<![ء-ي])حول|حوّل|ادفع|متنساش|ماتنساش|لو سمحت|ممكن/i;
+const ASKS0 = /\b(send|bring|pay|transfer|remind|don't forget|dont forget|please|pls|can you|could you|pick up|call (?:me|us|him|her|them|the|dr|mr|your))\b|ابعت|ابعتلي|هات|كلمني|اتصل|(?<![ء-ي])حول|حوّل|ادفع|متنساش|ماتنساش|لو سمحت|ممكن|\b(?:eb3a?t(?:ly|li|lena)?|ib3at(?:ly)?|kalem(?:ny|ni|na)|etasel|ettasel|7awel(?:ly|li)?|7awl(?:ly|li)|edfa3|hat(?:ly|li)|gib(?:ly|li)?|geeb(?:ly)?|matnsash|mat(?:e)?nsash|law sama7t|momken t[a-z0-9]{2,}|kallem(?:ny|ni))\b/i;
 const NOT_ASK = /^\s*(?:thanks?|thank you|شكرا)\b|\b(?:i'?ll|i will|we'?ll|i can|let me) (?:call|send|bring|pay|transfer|pick)\b|\b(?:i|we) (?:sent|paid|transferred|called|brought)\b|\bthanks for (?:calling|sending|paying)\b|(?<![ء-ي])ه(?:بعت|كلم|جيب|دفع|حول)/i;
 const ASKS = { test: (x) => ASKS0.test(x) && !NOT_ASK.test(x) };
+// v9.9.39 (Ali's phone, 14 Nov: "the to-do list has many things added that should have not been added at all"): «ممكن» alone is
+// "maybe" («وكده كده ممكن بكرة اجرب…» = maybe tomorrow I'll try) — a request only as «ممكن تـ…» / «ممكن لو سمحت»
+const MAYBE_ONLY = /ممكن/;
+const MUMKIN_ASK = /ممكن\s+(?:ت[ء-ي]{2,}|حضرتك|لو سمحت|نتكلم)/;
+// «لا حول ولا قوة إلا بالله» is a saying, not «حوّل» (transfer)
+export const asksYou = (x) => { const t = String(x || "").replace(/لا\s*حول\s*و\s*(?:لا)?\s*قو[ةه]?\s*(?:إلا|الا)?\s*(?:بالله)?/g, " "); if (!ASKS.test(t)) return false;
+  return !(MAYBE_ONLY.test(t) && !MUMKIN_ASK.test(t) && !ASKS0.test(t.replace(/ممكن/g, " "))); };
+/** A message in a GROUP chat ("ADDRESS EAST MARKETPLACE: ~Rowan Soliman", «صيانة الاوناش: M. Mohamed», text "~Rowan: …") was
+ *  written to everyone, not to you — never a to-do (unless it @-mentions someone). */
+export function isGroupChat(n) {
+  const title = String((n && n.title) || ""), text = String((n && n.text) || "");
+  if (!isChatApp(n)) return false;
+  return /\S\s*:\s*\S/.test(title.replace(/\(\d+ [^)]*\)\s*$/, "")) || /(?:^|\s|:)~\s?\S/.test(title) || /^\s*~\s?[^:\n]{1,40}:\s/.test(text);
+}
 
 // v9.9 (Ali, 9 Nov: "there was a Google one which told me the payment of Gemini, and it wasn't recorded in subscriptions automatically —
 // I want users to make low effort and the app makes the most effort"): a payment to a service that only comes as a subscription →
@@ -75,6 +89,8 @@ export function paidDayOf(t, now = Date.now()) {
   const ms = Date.parse(d + "T12:00:00");
   return ms && ms <= now + 864e5 && ms > now - 60 * 864e5 ? d : "";
 }
+// the same message shown twice (WhatsApp posts it again with "(2 messages)") is one to-do
+const tdKey = (who, text) => String(who || "").replace(/\s*\(.*\)\s*$/, "").trim().toLowerCase() + ":" + String(text || "").replace(/\s+/g, " ").trim().slice(0, 60).toLowerCase();
 /** One notification → one suggestion (or null). s = the Autopilot state; recent = the other notifications (for missed calls). */
 export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState() } = {}) {
   if (!n) return null;
@@ -120,13 +136,14 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   }
   // v9.9.31: a request the model understood (Russian, Chinese, Franco, a long message) — its reading is kept by notification id
   const mind = (() => { try { return (typeof localStorage !== "undefined" && (JSON.parse(localStorage.getItem("attune:notifmind:v1") || "{}") || {})[String(n.id)]) || null; } catch (e) { return null; } })();
-  if (u.kind === "message" && u.who && !ASKS.test(text) && mind && mind.by === "code+model" && mind.sure && mind.intent === "request" && /^(?:do|pay|submit|call_back|pickup)$/.test(mind.action)) {
+  const group = isGroupChat(n) && !/@\S/.test(text);
+  if (u.kind === "message" && u.who && !group && !asksYou(text) && mind && mind.by === "code+model" && mind.sure && mind.intent === "request" && /^(?:do|pay|submit|call_back|pickup)$/.test(mind.action)) {
     const when = mind.due && mind.due.date ? Date.parse(mind.due.date + "T" + (mind.due.time || "09:00") + ":00") : at9((n.ts || now) + DAY);
-    return { ...base, kind: "todo", sure: true, at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "") + ": " + (mind.summary || text).slice(0, 80), key: "td:" + String(n.id), line: "To-do" };
+    return { ...base, kind: "todo", sure: true, at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "") + ": " + (mind.summary || text).slice(0, 80), key: "td:" + tdKey(u.who, mind.summary || text), line: "To-do" };
   }
-  if (u.kind === "message" && u.who && ASKS.test(text)) {
+  if (u.kind === "message" && u.who && !group && asksYou(text)) {
     const when = dayIn(text, n.ts || now) || at9((n.ts || now) + DAY);
-    return { ...base, kind: "todo", sure: true, at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "").replace(/\s+\d[\d ]*$/, "") + ": " + text.slice(0, 80), key: "td:" + String(n.id), line: "To-do" };
+    return { ...base, kind: "todo", sure: true, at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "").replace(/\s+\d[\d ]*$/, "") + ": " + text.slice(0, 80), key: "td:" + tdKey(u.who, text), line: "To-do" };
   }
   if (u.kind === "call" && u.who) {
     const same = (recent || []).filter((r) => r.id !== n.id && Math.abs((r.ts || 0) - (n.ts || 0)) < DAY && (() => { const v = understandNote(r); return v.kind === "call" && v.who === u.who; })());
@@ -204,3 +221,24 @@ export function actionsFor(x) {
 }
 export function loadAP() { try { return { ...emptyState(), ...JSON.parse(localStorage.getItem(AP_KEY) || "{}") }; } catch (e) { return emptyState(); } }
 export function saveAP(s) { try { localStorage.setItem(AP_KEY, JSON.stringify(s)); } catch (e) {} return s; }
+
+/** v9.9.39 (Ali's phone, 14 Nov): the to-dos Autopilot added BY ITSELF before the group / «ممكن» / Scout fixes, checked again with
+ *  today's rules — a group post ("ADDRESS EAST MARKETPLACE: ~Rowan Soliman: …"), a "maybe" («وكده كده ممكن بكرة اجرب…»), the same
+ *  message twice, or Scout's alert go; a real request stays. Returns { keep, gone } (gone = the ids to take off the phone too). */
+export function cleanAutoTodos(list = []) {
+  const keep = [], gone = [], seen = new Set();
+  for (const r of list || []) {
+    if (!r || r.done) { keep.push(r); continue; }
+    if (r.source === "scout") { gone.push(r.id); continue; }
+    if (r.source === "autopilot") {
+      const t = String(r.title || ""), m = /^([^:]{1,60}):\s*([\s\S]*)$/.exec(t);
+      if (m && !/^call back\b/i.test(t)) {
+        const k = m[1].trim().toLowerCase() + ":" + m[2].replace(/\s+/g, " ").trim().slice(0, 60).toLowerCase();
+        if (/~/.test(t) || /^\s*[^:]{1,40}:\s/.test(m[2]) || !asksYou(m[2]) || seen.has(k)) { gone.push(r.id); continue; }
+        seen.add(k);
+      }
+    }
+    keep.push(r);
+  }
+  return { keep, gone };
+}

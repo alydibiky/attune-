@@ -34,7 +34,7 @@ export function useLists() {
 /** Reminders that are late (not done, time passed in the last 3 days) or still to come today. */
 export function todayReminders(now = Date.now()) {
   const end = new Date(now); end.setHours(23, 59, 59, 999);
-  return loadReminders().filter((r) => r && !r.done && r.at && r.at <= end.getTime() && (r.at >= now || ((!r.repeat || r.repeat === "none") && r.at >= now - 3 * 86400000)))
+  return loadReminders().filter((r) => r && !r.done && r.source !== "scout" /* v9.9.39 an alert, not a to-do */ && r.at && r.at <= end.getTime() && (r.at >= now || ((!r.repeat || r.repeat === "none") && r.at >= now - 3 * 86400000)))
     .sort((a, b) => a.at - b.at).map((r) => ({ ...r, late: r.at < now }));
 }
 const markReminderDone = (id) => { saveReminders(loadReminders().map((r) => (r.id === id ? { ...r, done: true, doneAt: Date.now() } : r))); window.dispatchEvent(new CustomEvent("attune-lists")); };

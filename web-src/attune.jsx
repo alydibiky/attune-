@@ -7829,6 +7829,9 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
+import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
+const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
+const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
 const PAGE_VERSION = "9.9.38";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
@@ -8045,6 +8048,11 @@ export default function App() {
   const [showBackup, setShowBackup] = useState(false);   // encrypted backup / restore
   const [reminders, setRemindersRaw] = useState(() => loadReminders());
   const setReminders = (list) => { setRemindersRaw(saveReminders(list)); };
+  // v9.9.39 (Ali's phone, 14 Nov): once — the to-dos Autopilot added by itself are checked again with the new rules (group posts,
+  // «ممكن» = maybe, the same message twice, Scout's alerts go); a real request stays
+  useEffect(() => { try { if (localStorage.getItem("attune:mig:todojunk1")) return; const { keep, gone } = cleanAutoTodos(loadReminders());
+    if (gone.length) { setReminders(keep); for (const id of gone) { try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} } }
+    localStorage.setItem("attune:mig:todojunk1", String(gone.length)); } catch (e) {} }, []);
   // The phone rings reminders; the page owns the list. Re-sent at every start,
   // so a restored backup or a reinstall gets its reminders back.
   useEffect(() => { try { syncToPhone(NATIVE, reminders); } catch (e) {} try { syncDaily(NATIVE); } catch (e) {} }, []);
@@ -8063,8 +8071,9 @@ export default function App() {
       if (lines.length) flash(lines.join(" · ")); } catch (e) {} };
     run(); const v = () => { if (document.visibilityState === "visible") run(); }; document.addEventListener("visibilitychange", v); return () => document.removeEventListener("visibilitychange", v); }, []);
   const scheduleReminder = (r) => {
-    const list = [...loadReminders().filter((x) => x.id !== r.id), r];
-    setReminders(list);
+    // v9.9.39 (Ali: "Scout: 1 strong new find" sat in his to-dos as late): an ALERT (Scout's find) only rings the phone — it is not
+    // something to do, so it is not kept in the reminders list
+    if (!ALERT_ONLY.has(r.source)) { const list = [...loadReminders().filter((x) => x.id !== r.id), r]; setReminders(list); }
     let res = { ok: true, exact: true, notify: true };
     if (NATIVE && NATIVE.schedule) {
       try { res = JSON.parse(NATIVE.schedule(JSON.stringify({ id: r.id, at: r.at, title: r.title, body: r.body || "", repeat: r.repeat || "none", off: weekendOf() /* v9.9.18 the country's weekend */,
@@ -8456,6 +8465,9 @@ export default function App() {
     });
     return r;
   };
+  // v9.9.39 once: the to-dos saved before with their "Remind me to …" words keep only the to-do ("Try aldibiki website")
+  useEffect(() => { try { if (localStorage.getItem("attune:mig:todowords1")) return; localStorage.setItem("attune:mig:todowords1", "1");
+    setMemory((m) => m.map((r) => (r && r.kind === "todo" && /^\s*(?:remind me|don'?t let me forget|فكرني|ذكرني)/i.test(r.title || "") ? { ...r, title: cleanTodo(r.title).slice(0, 90), text: cleanTodo(r.text || r.title) } : r))); } catch (e) {} }, []);
   const togglePin = (id) =>
     setMemory((m) => m.map((r) => (r.id === id ? { ...r, pinned: !r.pinned } : r)));
   // v6.8 Mind: change one record in place (its title, tags, note, the model's filing, a reminder)
@@ -10084,7 +10096,7 @@ export default function App() {
     // (v9.8, Ali: "I want to reply to it and tell it how to add it — a reminder, a subscription…"): Autopilot's reply box goes through
     // the Home box (doFromHome), its To-do button into the to-do list
     window.__attuneDoIt = (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } };   // (Autopilot's box: the person said how to save it)
-    window.__attuneAddTodo = (t) => { try { remember({ kind: "todo", title: String(t).slice(0, 90), text: String(t), tags: ["todo"], meta: { todo: true, done: false } }); return true; } catch (e) { return false; } };
+    window.__attuneAddTodo = (t0) => { const t = cleanTodo(t0); try { remember({ kind: "todo", title: String(t).slice(0, 90), text: String(t), tags: ["todo"], meta: { todo: true, done: false } }); return true; } catch (e) { return false; } };
     // v9.9.21 T1 brain dump: what it saves goes through the app's own stores (reminders on the phone too, notes in Mind)
     window.__attuneAddReminder = (r) => { try { const l = [...loadReminders(), r]; setReminders(l); try { NATIVE && syncToPhone(NATIVE, l); } catch (e) {} return true; } catch (e) { return false; } };
     window.__attuneAddNote = (t) => { try { remember({ kind: "note", title: String(t).slice(0, 90), text: String(t), tags: ["note"] }); return true; } catch (e) { return false; } };
@@ -10418,8 +10430,8 @@ export default function App() {
         return { tone: "emerald", title: tr("Added to {p}: {t}", { p: o.name, t: o.text }), detail: "", actions: [["Open the project", "open:projects"]] }; }
       case "list": { const r = LISTS.applyListCommand(LISTS.loadLists(), o.cmd); if (!r) return null; if (r.st) LISTS.saveLists(r.st);
         return { tone: "emerald", title: listLine(r.line), detail: r.list ? r.list.items.map((x) => (x.done ? "☑ " : "☐ ") + x.text).join("\n") : "", actions: [["Open my lists", "open:lists"]] }; }
-      case "todoAdd": remember({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } });
-        return { tone: "emerald", title: tr("Added to your to-do list"), detail: o.item, actions: [["Open in Mind", "open:memory"]] };
+      case "todoAdd": { const it = cleanTodo(o.item); remember({ kind: "todo", title: it.slice(0, 90), text: it, tags: ["todo"], meta: { todo: true, done: false } });
+        return { tone: "emerald", title: tr("Added to your to-do list"), detail: it, actions: [["Open in Mind", "open:memory"]] }; }
       case "todos": return { tone: "emerald", title: tr("Your to-do list") + " · " + o.items.length, detail: o.items.map((x) => "☐ " + (x.title || x.text)).join("\n") || tr("Nothing left — say “add … to my to-do list” to add one."), actions: [["Open in Mind", "open:memory"]] };
       case "whereSave": remember(W2.whereRecord(o.set)); return { tone: "emerald", title: tr("Got it"), detail: o.set.thing + " — " + o.set.place, actions: [["Open in Mind", "open:memory"]] };
       case "confirm": return { tone: "sky", title: L(o.q), detail: "", actions: [["Yes", "where-yes"], ["No", "where-no"]], whereSet: o.set };
@@ -11103,7 +11115,7 @@ export default function App() {
             } />
         ) : mode === "lists" ? (
           <ListsPage records={memory} flash={flash} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))}
-            onAddTodo={(t) => remember({ kind: "todo", title: t.slice(0, 90), text: t, tags: ["todo"], meta: { todo: true, done: false } })} />
+            onAddTodo={(t0) => { const t = cleanTodo(t0); return remember({ kind: "todo", title: t.slice(0, 90), text: t, tags: ["todo"], meta: { todo: true, done: false } }); }} />
         ) : mode === "agents" ? (
           <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()} pro={proActive} openPlan={() => setShowUpgrade(true)}
             understandRule={modelUsable ? async (rule) => {   // v9.2 (Ali: "set any rules I want and it understands"): a rule code can't read → the phone's model, as JSON (agent-rules.js cleans it)

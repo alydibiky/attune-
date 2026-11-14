@@ -150,6 +150,15 @@ export const READERS = RX;
 /** "add buy milk to my to-do list" → "buy milk"; «ضيف اشتري لبن للمهام» → «اشتري لبن». */
 // v9.9.15 C1: "buy milk", «اشتري لبن» — a few words, no "me", no price, no shop: something to do
 export const BARE_BUY = /^\s*(?:please\s+)?(?:buy|purchase|pick up)\s+(?!me\b|for me\b)(?!.*\b(?:under|below|less than|from|on amazon|on noon|tickets?|online)\b)(?:\S+\s*){1,6}[.!]?$|^\s*اشتري\s+(?!لي(?![ء-ي]))(?!.*(?:اقل من|أقل من|تحت|من امازون|من نون|تذاكر|تذكره|تذكرة|اونلاين))(?:\S+\s*){1,6}$/i;
+/** v9.9.39 (Ali's phone: "Remind me to try aldibiki website" sat in To-dos with its "Remind me to"): the to-do's own words —
+ *  "remind me to X" / "don't let me forget to X" / "I need to X" / «فكرني اني X» → "X" (first letter up). */
+export function cleanTodo(text) {
+  let t = String(text || "").replace(/\s+/g, " ").trim();
+  t = t.replace(/^(?:hey |ya )?(?:attune[,: ]+)?(?:please |pls )?(?:can you |could you )?(?:remind me (?:to|that i (?:need|have) to|about)|don'?t let me forget (?:to|about)|make sure i|i (?:need|have|must|gotta|got) to|note to self:?|to-?do:?)\s+/i, "")
+       .replace(/^(?:فكرني|فكّرني|ذكرني|افتكرلي|متنسانيش|ماتنسانيش|متخلينيش انسى)\s+(?:اني |إني |ان |إن |ب)?/, "")
+       .replace(/[.!]+$/, "").trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : String(text || "").trim();
+}
 export function todoText(text) {
   let t = String(text || "").trim();
   let m = t.match(/^\s*(?:to-?do|todo|مهمه|مهمة|تودو)\s*[:\-]\s*(.+)$/i); if (m) return m[1].trim();

@@ -96,10 +96,10 @@ function runKind(kind, text, { cmd = null, files = [], api = {}, slash = false }
       return { type: "doit", text: slash ? (/^(find|look|دور|ابحث)/i.test(arg) ? arg : "find me " + arg) : arg, scout: true };
     case "todo": {
       const add = cmd ? cmd.add : "";
-      if (add) return { type: "todoAdd", item: add };
+      if (add) return { type: "todoAdd", item: K.cleanTodo(add) };
       return { type: "todos", items: openTodos(records) };
     }
-    case "todoAdd": { const item = K.todoText(arg) || arg; return item ? { type: "todoAdd", item } : { type: "need", what: "text", cmd: "todo" }; }
+    case "todoAdd": { const item = K.todoText(arg) || K.cleanTodo(arg); return item ? { type: "todoAdd", item } : { type: "need", what: "text", cmd: "todo" }; }
     case "todoList": return { type: "todos", items: openTodos(records) };
     case "whereSet": {
       const set = W.parseWhereSet(arg);
